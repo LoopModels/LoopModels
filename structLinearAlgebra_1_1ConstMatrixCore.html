@@ -83,16 +83,13 @@ Inheritance diagram for LinearAlgebra::ConstMatrixCore&lt; T, A &gt;:</div>
  <div class="center">
   <img src="structLinearAlgebra_1_1ConstMatrixCore.png" usemap="#LinearAlgebra::ConstMatrixCore_3C_20T_2C_20A_20_3E_map" alt=""/>
   <map id="LinearAlgebra::ConstMatrixCore_3C_20T_2C_20A_20_3E_map" name="LinearAlgebra::ConstMatrixCore_3C_20T_2C_20A_20_3E_map">
-<area href="structLinearAlgebra_1_1MutMatrixCore.html" alt="LinearAlgebra::MutMatrixCore&lt; T, Matrix&lt; T, 0, 0, S &gt; &gt;" shape="rect" coords="376,56,742,80"/>
-<area href="structLinearAlgebra_1_1MutMatrixCore.html" alt="LinearAlgebra::MutMatrixCore&lt; T, Matrix&lt; T, M, 0, S &gt; &gt;" shape="rect" coords="376,112,742,136"/>
-<area href="structLinearAlgebra_1_1MutMatrixCore.html" alt="LinearAlgebra::MutMatrixCore&lt; T, Matrix&lt; T, 0, N, S &gt; &gt;" shape="rect" coords="376,168,742,192"/>
-<area href="structLinearAlgebra_1_1MutMatrixCore.html" alt="LinearAlgebra::MutMatrixCore&lt; T, Matrix&lt; T, 0, 0, 64 &gt; &gt;" shape="rect" coords="376,224,742,248"/>
-<area href="structLinearAlgebra_1_1MutMatrixCore.html" alt="LinearAlgebra::MutMatrixCore&lt; T, MutSquarePtrMatrix&lt; T &gt; &gt;" shape="rect" coords="376,280,742,304"/>
-<area href="structLinearAlgebra_1_1MutMatrixCore.html" alt="LinearAlgebra::MutMatrixCore&lt; T, MutPtrMatrix&lt; T &gt; &gt;" shape="rect" coords="376,336,742,360"/>
-<area href="structLinearAlgebra_1_1MutMatrixCore.html" alt="LinearAlgebra::MutMatrixCore&lt; T, DenseMutPtrMatrix&lt; T &gt; &gt;" shape="rect" coords="376,392,742,416"/>
-<area href="structLinearAlgebra_1_1MutMatrixCore.html" alt="LinearAlgebra::MutMatrixCore&lt; T, SquareMatrix&lt; T, 8 &gt; &gt;" shape="rect" coords="376,448,742,472"/>
-<area href="structLinearAlgebra_1_1PtrMatrix.html" alt="LinearAlgebra::PtrMatrix&lt; int64_t &gt;" shape="rect" coords="376,504,742,528"/>
-<area href="structLinearAlgebra_1_1MutMatrixCore.html" alt="LinearAlgebra::MutMatrixCore&lt; T, A &gt;" shape="rect" coords="376,560,742,584"/>
+<area href="structLinearAlgebra_1_1MutMatrixCore.html" alt="LinearAlgebra::MutMatrixCore&lt; T, MutPtrMatrix&lt; T, D &gt; &gt;" shape="rect" coords="0,56,344,80"/>
+<area href="structLinearAlgebra_1_1MutMatrixCore.html" alt="LinearAlgebra::MutMatrixCore&lt; T, Matrix&lt; T, D, 64 &gt; &gt;" shape="rect" coords="354,56,698,80"/>
+<area href="structLinearAlgebra_1_1PtrMatrix.html" alt="LinearAlgebra::PtrMatrix&lt; int64_t &gt;" shape="rect" coords="708,56,1052,80"/>
+<area href="structLinearAlgebra_1_1MutMatrixCore.html" alt="LinearAlgebra::MutMatrixCore&lt; T, A &gt;" shape="rect" coords="1062,56,1406,80"/>
+<area href="structLinearAlgebra_1_1MutPtrMatrix.html" alt="LinearAlgebra::MutPtrMatrix&lt; T, D &gt;" shape="rect" coords="0,112,344,136"/>
+<area href="structLinearAlgebra_1_1Matrix.html" alt="LinearAlgebra::Matrix&lt; T, D, S &gt;" shape="rect" coords="354,112,698,136"/>
+<area href="structLinearAlgebra_1_1Matrix.html" alt="LinearAlgebra::Matrix&lt; int64_t, 0, 0, 0 &gt;" shape="rect" coords="1062,112,1406,136"/>
   </map>
 </div></div>
 <table class="memberdecls">
@@ -110,6 +107,9 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>numCol</b> 
 <tr class="memitem:a56f16879d2d7c8bd2e6e545f619d8345"><td class="memItemLeft" align="right" valign="top"><a id="a56f16879d2d7c8bd2e6e545f619d8345"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>rowStride</b> () const -&gt; <a class="el" href="structLinearAlgebra_1_1AxisInt.html">RowStride</a></td></tr>
 <tr class="separator:a56f16879d2d7c8bd2e6e545f619d8345"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a558aaf2bdb86b3d45dc41c9b80d72160"><td class="memItemLeft" align="right" valign="top"><a id="a558aaf2bdb86b3d45dc41c9b80d72160"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>dim</b> () const</td></tr>
+<tr class="separator:a558aaf2bdb86b3d45dc41c9b80d72160"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa75bc646dcee21d5f6a2823dd74c7355"><td class="memItemLeft" align="right" valign="top"><a id="aa75bc646dcee21d5f6a2823dd74c7355"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (auto m, auto n) const -&gt; decltype(auto)</td></tr>
 <tr class="separator:aa75bc646dcee21d5f6a2823dd74c7355"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -134,18 +134,18 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>checkSquare
 <tr class="memitem:abed9c8226f6b805d3fc320792d8a0b7d"><td class="memItemLeft" align="right" valign="top"><a id="abed9c8226f6b805d3fc320792d8a0b7d"></a>
 constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>operator PtrMatrix&lt; T &gt;</b> () const</td></tr>
 <tr class="separator:abed9c8226f6b805d3fc320792d8a0b7d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1b9c67cf2327116e9ff9386305c0578d"><td class="memItemLeft" align="right" valign="top"><a id="a1b9c67cf2327116e9ff9386305c0578d"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>view</b> () const -&gt; <a class="el" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix</a>&lt; T &gt;</td></tr>
-<tr class="separator:a1b9c67cf2327116e9ff9386305c0578d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a610ae5135351d5cea388c2f5a4ca2b8c"><td class="memItemLeft" align="right" valign="top"><a id="a610ae5135351d5cea388c2f5a4ca2b8c"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>transpose</b> () const -&gt; <a class="el" href="structLinearAlgebra_1_1Transpose.html">Transpose</a>&lt; <a class="el" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix</a>&lt; T &gt;&gt;</td></tr>
-<tr class="separator:a610ae5135351d5cea388c2f5a4ca2b8c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a363315b01b9f0f20932dd84768eac4d9"><td class="memItemLeft" align="right" valign="top"><a id="a363315b01b9f0f20932dd84768eac4d9"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>isExchangeMatrix</b> () const -&gt; bool</td></tr>
-<tr class="separator:a363315b01b9f0f20932dd84768eac4d9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:adb7c2511d01e0d3e6cfa9b4af71e1fbe"><td class="memItemLeft" align="right" valign="top"><a id="adb7c2511d01e0d3e6cfa9b4af71e1fbe"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>isDiagonal</b> () const -&gt; bool</td></tr>
-<tr class="separator:adb7c2511d01e0d3e6cfa9b4af71e1fbe"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7e8c9afc70f8b992d0b0c886ac03f4f1"><td class="memItemLeft" align="right" valign="top"><a id="a7e8c9afc70f8b992d0b0c886ac03f4f1"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>view</b> () const</td></tr>
+<tr class="separator:a7e8c9afc70f8b992d0b0c886ac03f4f1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af551859f1a45366d09a72a8afeea6d49"><td class="memItemLeft" align="right" valign="top"><a id="af551859f1a45366d09a72a8afeea6d49"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>transpose</b> () const</td></tr>
+<tr class="separator:af551859f1a45366d09a72a8afeea6d49"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a00be03573498857c7d58146d141773da"><td class="memItemLeft" align="right" valign="top"><a id="a00be03573498857c7d58146d141773da"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>isExchangeMatrix</b> () const -&gt; bool</td></tr>
+<tr class="separator:a00be03573498857c7d58146d141773da"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a616189c0ec43ca9eb9823e0ebc2cf0d0"><td class="memItemLeft" align="right" valign="top"><a id="a616189c0ec43ca9eb9823e0ebc2cf0d0"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>isDiagonal</b> () const -&gt; bool</td></tr>
+<tr class="separator:a616189c0ec43ca9eb9823e0ebc2cf0d0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><h3>template&lt;typename T, typename A&gt;<br />

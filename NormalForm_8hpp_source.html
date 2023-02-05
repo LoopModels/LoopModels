@@ -96,7 +96,7 @@ $(function() {
 <div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;}</div>
 <div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;<span class="comment">// zero out below diagonal</span></div>
 <div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;<span class="keyword">inline</span> <span class="keywordtype">void</span> zeroSupDiagonal(<a class="code" href="structLinearAlgebra_1_1MutPtrMatrix.html">MutPtrMatrix&lt;int64_t&gt;</a> A,</div>
-<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;                            <a class="code" href="structLinearAlgebra_1_1MutSquarePtrMatrix.html">MutSquarePtrMatrix&lt;int64_t&gt;</a> K, <span class="keywordtype">size_t</span> i, Row M,</div>
+<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;                            MutSquarePtrMatrix&lt;int64_t&gt; K, <span class="keywordtype">size_t</span> i, Row M,</div>
 <div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;                            Col N) {</div>
 <div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;  <span class="keywordtype">size_t</span> minMN = std::min(<span class="keywordtype">size_t</span>(M), <span class="keywordtype">size_t</span>(N));</div>
 <div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;  <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> j = i + 1; j &lt; M; ++j) {</div>
@@ -137,7 +137,7 @@ $(function() {
 <div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;<span class="comment">// This method is only called by orthogonalize, hence we can assume</span></div>
 <div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;<span class="comment">// (Akk == 1) || (Akk == -1)</span></div>
 <div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;<span class="keyword">inline</span> <span class="keywordtype">void</span> zeroSubDiagonal(<a class="code" href="structLinearAlgebra_1_1MutPtrMatrix.html">MutPtrMatrix&lt;int64_t&gt;</a> A,</div>
-<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;                            <a class="code" href="structLinearAlgebra_1_1MutSquarePtrMatrix.html">MutSquarePtrMatrix&lt;int64_t&gt;</a> K, <span class="keywordtype">size_t</span> k, Row M,</div>
+<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;                            MutSquarePtrMatrix&lt;int64_t&gt; K, <span class="keywordtype">size_t</span> k, Row M,</div>
 <div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;                            Col N) {</div>
 <div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;  int64_t Akk = A(k, k);</div>
 <div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;  <span class="keywordflow">if</span> (Akk == -1) {</div>
@@ -183,7 +183,7 @@ $(function() {
 <div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;  }</div>
 <div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;  <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
 <div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;}</div>
-<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> pivotRows(<a class="code" href="structLinearAlgebra_1_1MutPtrMatrix.html">MutPtrMatrix&lt;int64_t&gt;</a> A, <a class="code" href="structLinearAlgebra_1_1MutSquarePtrMatrix.html">MutSquarePtrMatrix&lt;int64_t&gt;</a> K,</div>
+<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> pivotRows(<a class="code" href="structLinearAlgebra_1_1MutPtrMatrix.html">MutPtrMatrix&lt;int64_t&gt;</a> A, MutSquarePtrMatrix&lt;int64_t&gt; K,</div>
 <div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;                      <span class="keywordtype">size_t</span> i, Row M) -&gt; <span class="keywordtype">bool</span> {</div>
 <div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;  <span class="keywordflow">return</span> pivotRows(solvePair(A, K), Col{i}, M, Row{i});</div>
 <div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;}</div>
@@ -211,7 +211,7 @@ $(function() {
 <div class="line"><a name="l00140"></a><span class="lineno">  140</span>&#160;  <span class="comment">// we try to orthogonalize with respect to as many rows of `A` as we can</span></div>
 <div class="line"><a name="l00141"></a><span class="lineno">  141</span>&#160;  <span class="comment">// prioritizing earlier rows.</span></div>
 <div class="line"><a name="l00142"></a><span class="lineno">  142</span>&#160;  <span class="keyword">auto</span> [M, N] = A.size();</div>
-<div class="line"><a name="l00143"></a><span class="lineno">  143</span>&#160;  <a class="code" href="structLinearAlgebra_1_1SquareMatrix.html">SquareMatrix&lt;int64_t&gt;</a> K = <a class="code" href="structLinearAlgebra_1_1SquareMatrix.html">SquareMatrix&lt;int64_t&gt;::identity</a>(<span class="keywordtype">size_t</span>(M));</div>
+<div class="line"><a name="l00143"></a><span class="lineno">  143</span>&#160;  SquareMatrix&lt;int64_t&gt; K = SquareMatrix&lt;int64_t&gt;::identity(<span class="keywordtype">size_t</span>(M));</div>
 <div class="line"><a name="l00144"></a><span class="lineno">  144</span>&#160;  llvm::SmallVector&lt;unsigned&gt; included;</div>
 <div class="line"><a name="l00145"></a><span class="lineno">  145</span>&#160;  included.reserve(std::min(<span class="keywordtype">size_t</span>(M), <span class="keywordtype">size_t</span>(N)));</div>
 <div class="line"><a name="l00146"></a><span class="lineno">  146</span>&#160;  <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0, j = 0; i &lt; std::min(<span class="keywordtype">size_t</span>(M), <span class="keywordtype">size_t</span>(N)); ++j) {</div>
@@ -435,7 +435,7 @@ $(function() {
 <div class="line"><a name="l00367"></a><span class="lineno">  367</span>&#160;}</div>
 <div class="line"><a name="l00368"></a><span class="lineno">  368</span>&#160;[[nodiscard]] <span class="keyword">inline</span> <span class="keyword">auto</span> hermite(IntMatrix A)</div>
 <div class="line"><a name="l00369"></a><span class="lineno">  369</span>&#160;  -&gt; std::pair&lt;IntMatrix, SquareMatrix&lt;int64_t&gt;&gt; {</div>
-<div class="line"><a name="l00370"></a><span class="lineno">  370</span>&#160;  <a class="code" href="structLinearAlgebra_1_1SquareMatrix.html">SquareMatrix&lt;int64_t&gt;</a> U{<a class="code" href="structLinearAlgebra_1_1SquareMatrix.html">SquareMatrix&lt;int64_t&gt;::identity</a>(<span class="keywordtype">size_t</span>(A.numRow()))};</div>
+<div class="line"><a name="l00370"></a><span class="lineno">  370</span>&#160;  SquareMatrix&lt;int64_t&gt; U{SquareMatrix&lt;int64_t&gt;::identity(<span class="keywordtype">size_t</span>(A.numRow()))};</div>
 <div class="line"><a name="l00371"></a><span class="lineno">  371</span>&#160;  simplifySystemImpl(solvePair(A, U));</div>
 <div class="line"><a name="l00372"></a><span class="lineno">  372</span>&#160;  <span class="keywordflow">return</span> std::make_pair(std::move(A), std::move(U));</div>
 <div class="line"><a name="l00373"></a><span class="lineno">  373</span>&#160;}</div>
@@ -620,15 +620,15 @@ $(function() {
 <div class="line"><a name="l00559"></a><span class="lineno">  559</span>&#160;<span class="keyword">inline</span> <span class="keywordtype">void</span> solveSystem(<a class="code" href="structLinearAlgebra_1_1MutPtrMatrix.html">MutPtrMatrix&lt;int64_t&gt;</a> A) {</div>
 <div class="line"><a name="l00560"></a><span class="lineno">  560</span>&#160;  solveSystem(A, <span class="keywordtype">size_t</span>(A.numCol()) - 1);</div>
 <div class="line"><a name="l00561"></a><span class="lineno">  561</span>&#160;}</div>
-<div class="line"><a name="l00567"></a><span class="lineno">  567</span>&#160;[[nodiscard]] <span class="keyword">inline</span> <span class="keyword">auto</span> inv(<a class="code" href="structLinearAlgebra_1_1SquareMatrix.html">SquareMatrix&lt;int64_t, 4&gt;</a> A)</div>
+<div class="line"><a name="l00567"></a><span class="lineno">  567</span>&#160;[[nodiscard]] <span class="keyword">inline</span> <span class="keyword">auto</span> inv(SquareMatrix&lt;int64_t, 4&gt; A)</div>
 <div class="line"><a name="l00568"></a><span class="lineno">  568</span>&#160;  -&gt; std::pair&lt;IntMatrix, SquareMatrix&lt;int64_t, 4&gt;&gt; {</div>
-<div class="line"><a name="l00569"></a><span class="lineno">  569</span>&#160;  <span class="keyword">auto</span> B = <a class="code" href="structLinearAlgebra_1_1SquareMatrix.html">SquareMatrix&lt;int64_t, 4&gt;::identity</a>(A.numCol());</div>
+<div class="line"><a name="l00569"></a><span class="lineno">  569</span>&#160;  <span class="keyword">auto</span> B = SquareMatrix&lt;int64_t, 4&gt;::identity(A.numCol());</div>
 <div class="line"><a name="l00570"></a><span class="lineno">  570</span>&#160;  solveSystem(A, B);</div>
 <div class="line"><a name="l00571"></a><span class="lineno">  571</span>&#160;  <span class="keywordflow">return</span> std::make_pair(A, B);</div>
 <div class="line"><a name="l00572"></a><span class="lineno">  572</span>&#160;}</div>
-<div class="line"><a name="l00580"></a><span class="lineno">  580</span>&#160;[[nodiscard]] <span class="keyword">inline</span> <span class="keyword">auto</span> scaledInv(<a class="code" href="structLinearAlgebra_1_1SquareMatrix.html">SquareMatrix&lt;int64_t, 4&gt;</a> A)</div>
+<div class="line"><a name="l00580"></a><span class="lineno">  580</span>&#160;[[nodiscard]] <span class="keyword">inline</span> <span class="keyword">auto</span> scaledInv(SquareMatrix&lt;int64_t, 4&gt; A)</div>
 <div class="line"><a name="l00581"></a><span class="lineno">  581</span>&#160;  -&gt; std::pair&lt;SquareMatrix&lt;int64_t, 4&gt;, int64_t&gt; {</div>
-<div class="line"><a name="l00582"></a><span class="lineno">  582</span>&#160;  <span class="keyword">auto</span> B = <a class="code" href="structLinearAlgebra_1_1SquareMatrix.html">SquareMatrix&lt;int64_t, 4&gt;::identity</a>(A.numCol());</div>
+<div class="line"><a name="l00582"></a><span class="lineno">  582</span>&#160;  <span class="keyword">auto</span> B = SquareMatrix&lt;int64_t, 4&gt;::identity(A.numCol());</div>
 <div class="line"><a name="l00583"></a><span class="lineno">  583</span>&#160;  solveSystem(A, B);</div>
 <div class="line"><a name="l00584"></a><span class="lineno">  584</span>&#160;  <span class="keyword">auto</span> [s, nonUnity] = lcmNonUnity(A.diag());</div>
 <div class="line"><a name="l00585"></a><span class="lineno">  585</span>&#160;  <span class="keywordflow">if</span> (nonUnity)</div>
@@ -660,10 +660,8 @@ $(function() {
 <div class="line"><a name="l00611"></a><span class="lineno">  611</span>&#160; </div>
 <div class="line"><a name="l00612"></a><span class="lineno">  612</span>&#160;} <span class="comment">// namespace NormalForm</span></div>
 <div class="ttc" id="astructEmptyMatrix_html"><div class="ttname"><a href="structEmptyMatrix.html">EmptyMatrix</a></div><div class="ttdef"><b>Definition:</b> EmptyArrays.hpp:6</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1MutPtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutPtrMatrix.html">LinearAlgebra::MutPtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Matrix.hpp:275</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1MutSquarePtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutSquarePtrMatrix.html">LinearAlgebra::MutSquarePtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Matrix.hpp:583</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1PtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrMatrix.html">LinearAlgebra::PtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Matrix.hpp:227</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1SquareMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1SquareMatrix.html">LinearAlgebra::SquareMatrix</a></div><div class="ttdef"><b>Definition:</b> Matrix.hpp:612</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1MutPtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutPtrMatrix.html">LinearAlgebra::MutPtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Matrix.hpp:281</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1PtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrMatrix.html">LinearAlgebra::PtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Matrix.hpp:238</div></div>
 <div class="ttc" id="astructOptional_html"><div class="ttname"><a href="structOptional.html">Optional</a></div><div class="ttdef"><b>Definition:</b> Optional.hpp:9</div></div>
 <div class="ttc" id="astructRange_html"><div class="ttname"><a href="structRange.html">Range</a></div><div class="ttdef"><b>Definition:</b> Iterators.hpp:3</div></div>
 </div><!-- fragment --></div><!-- contents -->

@@ -103,10 +103,10 @@ $(function() {
 <div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;  <span class="comment">// this is because of hnf prioritizing diagonalizing leading rows</span></div>
 <div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;  <span class="comment">// empty fields sorted first to make it easier for compiler to alias them</span></div>
 <div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160; </div>
-<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;  <span class="keyword">auto</span> getA() -&gt; <a class="code" href="structLinearAlgebra_1_1DenseMutPtrMatrix.html">DenseMutPtrMatrix&lt;int64_t&gt;</a> {</div>
+<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;  <span class="keyword">auto</span> getA() -&gt; DenseMutPtrMatrix&lt;int64_t&gt; {</div>
 <div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;    <span class="keywordflow">return</span> *<span class="keyword">static_cast&lt;</span>P *<span class="keyword">&gt;</span>(<span class="keyword">this</span>)-&gt;getAImpl();</div>
 <div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;  }</div>
-<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;  <span class="keyword">auto</span> getE() -&gt; <a class="code" href="structLinearAlgebra_1_1DenseMutPtrMatrix.html">DenseMutPtrMatrix&lt;int64_t&gt;</a> {</div>
+<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;  <span class="keyword">auto</span> getE() -&gt; DenseMutPtrMatrix&lt;int64_t&gt; {</div>
 <div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;    static_assert(HasEqualities);</div>
 <div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;    <span class="keywordflow">return</span> *<span class="keyword">static_cast&lt;</span>P *<span class="keyword">&gt;</span>(<span class="keyword">this</span>)-&gt;getAImpl();</div>
 <div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;  }</div>
@@ -299,8 +299,7 @@ $(function() {
 <div class="line"><a name="l00263"></a><span class="lineno">  263</span>&#160;                llvm::SmallVector&lt;const llvm::SCEV *&gt;, <span class="keyword">true</span>&gt;;</div>
 <div class="ttc" id="astructBasePolyhedra_html"><div class="ttname"><a href="structBasePolyhedra.html">BasePolyhedra</a></div><div class="ttdef"><b>Definition:</b> Polyhedra.hpp:64</div></div>
 <div class="ttc" id="astructBumpAlloc_html"><div class="ttname"><a href="structBumpAlloc.html">BumpAlloc</a></div><div class="ttdef"><b>Definition:</b> Allocators.hpp:25</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1DenseMutPtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1DenseMutPtrMatrix.html">LinearAlgebra::DenseMutPtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Matrix.hpp:348</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1Vector_html"><div class="ttname"><a href="structLinearAlgebra_1_1Vector.html">LinearAlgebra::Vector</a></div><div class="ttdef"><b>Definition:</b> Vector.hpp:253</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1Vector_html"><div class="ttname"><a href="structLinearAlgebra_1_1Vector.html">LinearAlgebra::Vector</a></div><div class="ttdef"><b>Definition:</b> Vector.hpp:254</div></div>
 <div class="ttc" id="astructcomparator_1_1LinearSymbolicComparator_html"><div class="ttname"><a href="structcomparator_1_1LinearSymbolicComparator.html">comparator::LinearSymbolicComparator</a></div><div class="ttdef"><b>Definition:</b> Comparators.hpp:590</div></div>
 <div class="ttc" id="astructcomparator_1_1PtrSymbolicComparator_html"><div class="ttname"><a href="structcomparator_1_1PtrSymbolicComparator.html">comparator::PtrSymbolicComparator</a></div><div class="ttdef"><b>Definition:</b> Comparators.hpp:658</div></div>
 </div><!-- fragment --></div><!-- contents -->

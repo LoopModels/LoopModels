@@ -91,7 +91,7 @@ $(function() {
 <div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;  [[no_unique_address]] <span class="keywordtype">bool</span> isStoreFlag;</div>
 <div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;  int64_t mem[1]; <span class="comment">// NOLINT(modernize-avoid-c-arrays)</span></div>
 <div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;  <a class="code" href="structAddress.html">Address</a>(<a class="code" href="structNotNull.html">NotNull</a>&lt;<a class="code" href="structAffineLoopNest.html">AffineLoopNest&lt;false&gt;</a>&gt; explicitLoop, <a class="code" href="structNotNull.html">NotNull&lt;MemoryAccess&gt;</a> ma,</div>
-<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;          <a class="code" href="structLinearAlgebra_1_1SquarePtrMatrix.html">SquarePtrMatrix&lt;int64_t&gt;</a> Pinv, int64_t denom,</div>
+<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;          SquarePtrMatrix&lt;int64_t&gt; Pinv, int64_t denom,</div>
 <div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;          <a class="code" href="structLinearAlgebra_1_1PtrVector.html">PtrVector&lt;int64_t&gt;</a> omega, <span class="keywordtype">bool</span> isStr)</div>
 <div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;    : oldMemAccess(ma), loop(explicitLoop), isStoreFlag(isStr) {</div>
 <div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;    <a class="code" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix&lt;int64_t&gt;</a> M = oldMemAccess-&gt;indexMatrix();</div>
@@ -107,7 +107,7 @@ $(function() {
 <div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;  <span class="keyword">static</span> <span class="keyword">auto</span> construct(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc,</div>
 <div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;                        <a class="code" href="structNotNull.html">NotNull</a>&lt;<a class="code" href="structAffineLoopNest.html">AffineLoopNest&lt;false&gt;</a>&gt; explicitLoop,</div>
 <div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;                        <a class="code" href="structNotNull.html">NotNull&lt;MemoryAccess&gt;</a> ma, <span class="keywordtype">bool</span> isStr,</div>
-<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;                        <a class="code" href="structLinearAlgebra_1_1SquarePtrMatrix.html">SquarePtrMatrix&lt;int64_t&gt;</a> Pinv, int64_t denom,</div>
+<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;                        SquarePtrMatrix&lt;int64_t&gt; Pinv, int64_t denom,</div>
 <div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;                        <a class="code" href="structLinearAlgebra_1_1PtrVector.html">PtrVector&lt;int64_t&gt;</a> omega) -&gt; <a class="code" href="structNotNull.html">NotNull&lt;Address&gt;</a> {</div>
 <div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160; </div>
 <div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;    <span class="keywordtype">size_t</span> memSz = ma-&gt;getNumLoops() * (1 + ma-&gt;getArrayDim());</div>
@@ -154,11 +154,10 @@ $(function() {
 <div class="ttc" id="astructAddress_html_a944d66eb4736af541f573f74f8eba277"><div class="ttname"><a href="structAddress.html#a944d66eb4736af541f573f74f8eba277">Address::indexMatrix</a></div><div class="ttdeci">constexpr auto indexMatrix() -&gt; MutPtrMatrix&lt; int64_t &gt;</div><div class="ttdoc">indexMatrix() -&gt; arrayDim() x getNumLoops()</div><div class="ttdef"><b>Definition:</b> Address.hpp:112</div></div>
 <div class="ttc" id="astructAffineLoopNest_html"><div class="ttname"><a href="structAffineLoopNest.html">AffineLoopNest</a></div><div class="ttdef"><b>Definition:</b> Loops.hpp:176</div></div>
 <div class="ttc" id="astructBumpAlloc_html"><div class="ttname"><a href="structBumpAlloc.html">BumpAlloc</a></div><div class="ttdef"><b>Definition:</b> Allocators.hpp:25</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1MutPtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutPtrMatrix.html">LinearAlgebra::MutPtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Matrix.hpp:275</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1MutPtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutPtrVector.html">LinearAlgebra::MutPtrVector</a></div><div class="ttdef"><b>Definition:</b> Vector.hpp:91</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1PtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrMatrix.html">LinearAlgebra::PtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Matrix.hpp:227</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1PtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrVector.html">LinearAlgebra::PtrVector</a></div><div class="ttdef"><b>Definition:</b> Vector.hpp:25</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1SquarePtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1SquarePtrMatrix.html">LinearAlgebra::SquarePtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Matrix.hpp:562</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1MutPtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutPtrMatrix.html">LinearAlgebra::MutPtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Matrix.hpp:281</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1MutPtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutPtrVector.html">LinearAlgebra::MutPtrVector</a></div><div class="ttdef"><b>Definition:</b> Vector.hpp:92</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1PtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrMatrix.html">LinearAlgebra::PtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Matrix.hpp:238</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1PtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrVector.html">LinearAlgebra::PtrVector</a></div><div class="ttdef"><b>Definition:</b> Vector.hpp:26</div></div>
 <div class="ttc" id="astructNotNull_html"><div class="ttname"><a href="structNotNull.html">NotNull&lt; MemoryAccess &gt;</a></div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->

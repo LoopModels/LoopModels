@@ -134,7 +134,7 @@ $(function() {
 <div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;                 llvm::ArrayRef&lt;MemoryAccess *&gt; memAccess) <span class="keyword">const</span></div>
 <div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;    -&gt; llvm::SmallVector&lt;Address *&gt; {</div>
 <div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;    <span class="comment">// First, we invert the schedule matrix.</span></div>
-<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;    <a class="code" href="structLinearAlgebra_1_1SquarePtrMatrix.html">SquarePtrMatrix&lt;int64_t&gt;</a> Phi = schedule.getPhi();</div>
+<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;    SquarePtrMatrix&lt;int64_t&gt; Phi = schedule.getPhi();</div>
 <div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;    <span class="keyword">auto</span> [Pinv, s] = NormalForm::scaledInv(Phi);</div>
 <div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;    <span class="keywordflow">if</span> (s == 1) {</div>
 <div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;    }</div>
@@ -200,10 +200,10 @@ $(function() {
 <div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;    -&gt; <a class="code" href="structRange.html">Range&lt;size_t, size_t&gt;</a> {</div>
 <div class="line"><a name="l00136"></a><span class="lineno">  136</span>&#160;    <span class="keywordflow">return</span> _(phiOffset - numLoops, phiOffset);</div>
 <div class="line"><a name="l00137"></a><span class="lineno">  137</span>&#160;  }</div>
-<div class="line"><a name="l00138"></a><span class="lineno">  138</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getPhi() -&gt; <a class="code" href="structLinearAlgebra_1_1MutSquarePtrMatrix.html">MutSquarePtrMatrix&lt;int64_t&gt;</a> {</div>
+<div class="line"><a name="l00138"></a><span class="lineno">  138</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getPhi() -&gt; MutSquarePtrMatrix&lt;int64_t&gt; {</div>
 <div class="line"><a name="l00139"></a><span class="lineno">  139</span>&#160;    <span class="keywordflow">return</span> schedule.getPhi();</div>
 <div class="line"><a name="l00140"></a><span class="lineno">  140</span>&#160;  }</div>
-<div class="line"><a name="l00141"></a><span class="lineno">  141</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getPhi() <span class="keyword">const</span> -&gt; <a class="code" href="structLinearAlgebra_1_1SquarePtrMatrix.html">SquarePtrMatrix&lt;int64_t&gt;</a> {</div>
+<div class="line"><a name="l00141"></a><span class="lineno">  141</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getPhi() <span class="keyword">const</span> -&gt; SquarePtrMatrix&lt;int64_t&gt; {</div>
 <div class="line"><a name="l00142"></a><span class="lineno">  142</span>&#160;    <span class="keywordflow">return</span> schedule.getPhi();</div>
 <div class="line"><a name="l00143"></a><span class="lineno">  143</span>&#160;  }</div>
 <div class="line"><a name="l00144"></a><span class="lineno">  144</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getOffsetOmega(<span class="keywordtype">size_t</span> i) -&gt; int64_t &amp; {</div>
@@ -242,7 +242,7 @@ $(function() {
 <div class="line"><a name="l00177"></a><span class="lineno">  177</span>&#160;    <span class="comment">// so, indMat is indvars[inside&lt;-&gt;outside] x array dim</span></div>
 <div class="line"><a name="l00178"></a><span class="lineno">  178</span>&#160;    <span class="comment">// phi is loop[inside&lt;-&gt;outside] x</span></div>
 <div class="line"><a name="l00179"></a><span class="lineno">  179</span>&#160;    <span class="comment">// indvars[inside&lt;-&gt;outside]</span></div>
-<div class="line"><a name="l00180"></a><span class="lineno">  180</span>&#160;    <a class="code" href="structLinearAlgebra_1_1MutSquarePtrMatrix.html">MutSquarePtrMatrix&lt;int64_t&gt;</a> phi = getPhi();</div>
+<div class="line"><a name="l00180"></a><span class="lineno">  180</span>&#160;    MutSquarePtrMatrix&lt;int64_t&gt; phi = getPhi();</div>
 <div class="line"><a name="l00181"></a><span class="lineno">  181</span>&#160;    <span class="keyword">const</span> <span class="keywordtype">size_t</span> indR = size_t(indMat.numRow());</div>
 <div class="line"><a name="l00182"></a><span class="lineno">  182</span>&#160;    <span class="keyword">const</span> <span class="keywordtype">size_t</span> phiOff = size_t(phi.numCol()) - indR;</div>
 <div class="line"><a name="l00183"></a><span class="lineno">  183</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; r; ++i) {</div>
@@ -1310,13 +1310,11 @@ $(function() {
 <div class="ttc" id="astructDependence_html_a6cc677c17009dae397e882a80eb727a4"><div class="ttname"><a href="structDependence.html#a6cc677c17009dae397e882a80eb727a4">Dependence::getInIndMat</a></div><div class="ttdeci">auto getInIndMat() const -&gt; PtrMatrix&lt; int64_t &gt;</div><div class="ttdoc">getInIndMat() -&gt; getInNumLoops() x arrayDim()</div><div class="ttdef"><b>Definition:</b> DependencyPolyhedra.hpp:491</div></div>
 <div class="ttc" id="astructDependence_html_a8f03cfecfe1734c6c395bf3184269536"><div class="ttname"><a href="structDependence.html#a8f03cfecfe1734c6c395bf3184269536">Dependence::isForward</a></div><div class="ttdeci">constexpr auto isForward() const -&gt; bool</div><div class="ttdoc">indicates whether forward is non-empty</div><div class="ttdef"><b>Definition:</b> DependencyPolyhedra.hpp:476</div></div>
 <div class="ttc" id="astructEndSentinel_html"><div class="ttname"><a href="structEndSentinel.html">EndSentinel</a></div><div class="ttdef"><b>Definition:</b> BitSets.hpp:17</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1MutPtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutPtrMatrix.html">LinearAlgebra::MutPtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Matrix.hpp:275</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1MutPtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutPtrVector.html">LinearAlgebra::MutPtrVector</a></div><div class="ttdef"><b>Definition:</b> Vector.hpp:91</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1MutSquarePtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutSquarePtrMatrix.html">LinearAlgebra::MutSquarePtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Matrix.hpp:583</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1PtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrMatrix.html">LinearAlgebra::PtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Matrix.hpp:227</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1PtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrVector.html">LinearAlgebra::PtrVector</a></div><div class="ttdef"><b>Definition:</b> Vector.hpp:25</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1SquarePtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1SquarePtrMatrix.html">LinearAlgebra::SquarePtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Matrix.hpp:562</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1Vector_html"><div class="ttname"><a href="structLinearAlgebra_1_1Vector.html">LinearAlgebra::Vector</a></div><div class="ttdef"><b>Definition:</b> Vector.hpp:253</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1MutPtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutPtrMatrix.html">LinearAlgebra::MutPtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Matrix.hpp:281</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1MutPtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutPtrVector.html">LinearAlgebra::MutPtrVector</a></div><div class="ttdef"><b>Definition:</b> Vector.hpp:92</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1PtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrMatrix.html">LinearAlgebra::PtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Matrix.hpp:238</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1PtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrVector.html">LinearAlgebra::PtrVector</a></div><div class="ttdef"><b>Definition:</b> Vector.hpp:26</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1Vector_html"><div class="ttname"><a href="structLinearAlgebra_1_1Vector.html">LinearAlgebra::Vector</a></div><div class="ttdef"><b>Definition:</b> Vector.hpp:254</div></div>
 <div class="ttc" id="astructLinearProgramLoopBlock_1_1Graph_html"><div class="ttname"><a href="structLinearProgramLoopBlock_1_1Graph.html">LinearProgramLoopBlock::Graph</a></div><div class="ttdef"><b>Definition:</b> LoopBlock.hpp:526</div></div>
 <div class="ttc" id="astructLinearProgramLoopBlock_1_1Graph_html_a625c1bc32023c0d53aec7f1745216b8c"><div class="ttname"><a href="structLinearProgramLoopBlock_1_1Graph.html#a625c1bc32023c0d53aec7f1745216b8c">LinearProgramLoopBlock::Graph::missingNode</a></div><div class="ttdeci">auto missingNode(const Dependence &amp;e) const -&gt; bool</div><div class="ttdef"><b>Definition:</b> LoopBlock.hpp:584</div></div>
 <div class="ttc" id="astructLinearProgramLoopBlock_1_1OutNeighbors_html"><div class="ttname"><a href="structLinearProgramLoopBlock_1_1OutNeighbors.html">LinearProgramLoopBlock::OutNeighbors</a></div><div class="ttdef"><b>Definition:</b> LoopBlock.hpp:359</div></div>

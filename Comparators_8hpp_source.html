@@ -329,19 +329,19 @@ $(function() {
 <div class="line"><a name="l00267"></a><span class="lineno">  267</span>&#160;  <span class="keyword">using</span> BaseT::greaterEqual;</div>
 <div class="line"><a name="l00268"></a><span class="lineno">  268</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getNumConstTermsImpl() <span class="keyword">const</span> -&gt; <span class="keywordtype">size_t</span> { <span class="keywordflow">return</span> numVar; }</div>
 <div class="line"><a name="l00269"></a><span class="lineno">  269</span>&#160; </div>
-<div class="line"><a name="l00270"></a><span class="lineno">  270</span>&#160;  constexpr <span class="keyword">auto</span> getV() -&gt; <a class="code" href="structLinearAlgebra_1_1DenseMutPtrMatrix.html">DenseMutPtrMatrix&lt;int64_t&gt;</a> {</div>
+<div class="line"><a name="l00270"></a><span class="lineno">  270</span>&#160;  constexpr <span class="keyword">auto</span> getV() -&gt; DenseMutPtrMatrix&lt;int64_t&gt; {</div>
 <div class="line"><a name="l00271"></a><span class="lineno">  271</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">static_cast&lt;</span>T *<span class="keyword">&gt;</span>(<span class="keyword">this</span>)-&gt;getVImpl();</div>
 <div class="line"><a name="l00272"></a><span class="lineno">  272</span>&#160;  }</div>
-<div class="line"><a name="l00273"></a><span class="lineno">  273</span>&#160;  constexpr <span class="keyword">auto</span> getU() -&gt; <a class="code" href="structLinearAlgebra_1_1DenseMutPtrMatrix.html">DenseMutPtrMatrix&lt;int64_t&gt;</a> {</div>
+<div class="line"><a name="l00273"></a><span class="lineno">  273</span>&#160;  constexpr <span class="keyword">auto</span> getU() -&gt; DenseMutPtrMatrix&lt;int64_t&gt; {</div>
 <div class="line"><a name="l00274"></a><span class="lineno">  274</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">static_cast&lt;</span>T *<span class="keyword">&gt;</span>(<span class="keyword">this</span>)-&gt;getUImpl();</div>
 <div class="line"><a name="l00275"></a><span class="lineno">  275</span>&#160;  }</div>
 <div class="line"><a name="l00276"></a><span class="lineno">  276</span>&#160;  constexpr <span class="keyword">auto</span> getD() -&gt; <a class="code" href="structLinearAlgebra_1_1MutPtrVector.html">MutPtrVector&lt;int64_t&gt;</a> {</div>
 <div class="line"><a name="l00277"></a><span class="lineno">  277</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">static_cast&lt;</span>T *<span class="keyword">&gt;</span>(<span class="keyword">this</span>)-&gt;getDImpl();</div>
 <div class="line"><a name="l00278"></a><span class="lineno">  278</span>&#160;  }</div>
-<div class="line"><a name="l00279"></a><span class="lineno">  279</span>&#160;  constexpr <span class="keyword">auto</span> getV(Row r, Col c) -&gt; <a class="code" href="structLinearAlgebra_1_1DenseMutPtrMatrix.html">DenseMutPtrMatrix&lt;int64_t&gt;</a> {</div>
+<div class="line"><a name="l00279"></a><span class="lineno">  279</span>&#160;  constexpr <span class="keyword">auto</span> getV(Row r, Col c) -&gt; DenseMutPtrMatrix&lt;int64_t&gt; {</div>
 <div class="line"><a name="l00280"></a><span class="lineno">  280</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">static_cast&lt;</span>T *<span class="keyword">&gt;</span>(<span class="keyword">this</span>)-&gt;getVImpl(r, c);</div>
 <div class="line"><a name="l00281"></a><span class="lineno">  281</span>&#160;  }</div>
-<div class="line"><a name="l00282"></a><span class="lineno">  282</span>&#160;  constexpr <span class="keyword">auto</span> getU(Row r, Col c) -&gt; <a class="code" href="structLinearAlgebra_1_1DenseMutPtrMatrix.html">DenseMutPtrMatrix&lt;int64_t&gt;</a> {</div>
+<div class="line"><a name="l00282"></a><span class="lineno">  282</span>&#160;  constexpr <span class="keyword">auto</span> getU(Row r, Col c) -&gt; DenseMutPtrMatrix&lt;int64_t&gt; {</div>
 <div class="line"><a name="l00283"></a><span class="lineno">  283</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">static_cast&lt;</span>T *<span class="keyword">&gt;</span>(<span class="keyword">this</span>)-&gt;getUImpl(r, c);</div>
 <div class="line"><a name="l00284"></a><span class="lineno">  284</span>&#160;  }</div>
 <div class="line"><a name="l00285"></a><span class="lineno">  285</span>&#160;  constexpr <span class="keyword">auto</span> getD(Row n) -&gt; <a class="code" href="structLinearAlgebra_1_1MutPtrVector.html">MutPtrVector&lt;int64_t&gt;</a> {</div>
@@ -670,11 +670,11 @@ $(function() {
 <div class="line"><a name="l00608"></a><span class="lineno">  608</span>&#160;  <span class="comment">// void setVDimImpl(size_t x) { dimV = unsigned(x); }</span></div>
 <div class="line"><a name="l00609"></a><span class="lineno">  609</span>&#160;  <span class="comment">// void setDDimImpl(size_t x) { dimD = unsigned(x); }</span></div>
 <div class="line"><a name="l00610"></a><span class="lineno">  610</span>&#160; </div>
-<div class="line"><a name="l00611"></a><span class="lineno">  611</span>&#160;  <span class="keyword">auto</span> getUImpl(Row r, Col c) -&gt; <a class="code" href="structLinearAlgebra_1_1DenseMutPtrMatrix.html">DenseMutPtrMatrix&lt;int64_t&gt;</a> {</div>
+<div class="line"><a name="l00611"></a><span class="lineno">  611</span>&#160;  <span class="keyword">auto</span> getUImpl(Row r, Col c) -&gt; DenseMutPtrMatrix&lt;int64_t&gt; {</div>
 <div class="line"><a name="l00612"></a><span class="lineno">  612</span>&#160;    U.resizeForOverwrite(r, c);</div>
 <div class="line"><a name="l00613"></a><span class="lineno">  613</span>&#160;    <span class="keywordflow">return</span> U;</div>
 <div class="line"><a name="l00614"></a><span class="lineno">  614</span>&#160;  }</div>
-<div class="line"><a name="l00615"></a><span class="lineno">  615</span>&#160;  <span class="keyword">auto</span> getVImpl(Row r, Col c) -&gt; <a class="code" href="structLinearAlgebra_1_1DenseMutPtrMatrix.html">DenseMutPtrMatrix&lt;int64_t&gt;</a> {</div>
+<div class="line"><a name="l00615"></a><span class="lineno">  615</span>&#160;  <span class="keyword">auto</span> getVImpl(Row r, Col c) -&gt; DenseMutPtrMatrix&lt;int64_t&gt; {</div>
 <div class="line"><a name="l00616"></a><span class="lineno">  616</span>&#160;    V.setSize(r, c);</div>
 <div class="line"><a name="l00617"></a><span class="lineno">  617</span>&#160;    U.setSize(r, Col{size_t(r)});</div>
 <div class="line"><a name="l00618"></a><span class="lineno">  618</span>&#160;    <span class="keywordflow">return</span> V;</div>
@@ -741,11 +741,11 @@ $(function() {
 <div class="line"><a name="l00679"></a><span class="lineno">  679</span>&#160;  <span class="comment">// [[nodiscard]] constexpr auto dimV() const -&gt; unsigned {</span></div>
 <div class="line"><a name="l00680"></a><span class="lineno">  680</span>&#160;  <span class="comment">//   return 2 * numInEq + numEq;</span></div>
 <div class="line"><a name="l00681"></a><span class="lineno">  681</span>&#160;  <span class="comment">// }</span></div>
-<div class="line"><a name="l00682"></a><span class="lineno">  682</span>&#160;  constexpr <span class="keyword">auto</span> getUImpl() -&gt; <a class="code" href="structLinearAlgebra_1_1DenseMutPtrMatrix.html">DenseMutPtrMatrix&lt;int64_t&gt;</a> {</div>
+<div class="line"><a name="l00682"></a><span class="lineno">  682</span>&#160;  constexpr <span class="keyword">auto</span> getUImpl() -&gt; DenseMutPtrMatrix&lt;int64_t&gt; {</div>
 <div class="line"><a name="l00683"></a><span class="lineno">  683</span>&#160;    <span class="keywordflow">return</span> {mem, rankU, colU};</div>
 <div class="line"><a name="l00684"></a><span class="lineno">  684</span>&#160;  }</div>
 <div class="line"><a name="l00685"></a><span class="lineno">  685</span>&#160;  <span class="comment">// offset by (numVar + numInEq)*(numVar + numInEq)</span></div>
-<div class="line"><a name="l00686"></a><span class="lineno">  686</span>&#160;  constexpr <span class="keyword">auto</span> getVImpl() -&gt; <a class="code" href="structLinearAlgebra_1_1DenseMutPtrMatrix.html">DenseMutPtrMatrix&lt;int64_t&gt;</a> {</div>
+<div class="line"><a name="l00686"></a><span class="lineno">  686</span>&#160;  constexpr <span class="keyword">auto</span> getVImpl() -&gt; DenseMutPtrMatrix&lt;int64_t&gt; {</div>
 <div class="line"><a name="l00687"></a><span class="lineno">  687</span>&#160;    <span class="comment">// A = V</span></div>
 <div class="line"><a name="l00688"></a><span class="lineno">  688</span>&#160;    <span class="comment">// H = A</span></div>
 <div class="line"><a name="l00689"></a><span class="lineno">  689</span>&#160;    <span class="comment">// H.truncate(Row());</span></div>
@@ -758,7 +758,7 @@ $(function() {
 <div class="line"><a name="l00696"></a><span class="lineno">  696</span>&#160;    <span class="keywordflow">return</span> {getVImpl().end(), dimD};</div>
 <div class="line"><a name="l00697"></a><span class="lineno">  697</span>&#160;  }</div>
 <div class="line"><a name="l00698"></a><span class="lineno">  698</span>&#160;  <span class="comment">// constexpr auto getUImpl(Row r, Col c) -&gt; MutPtrMatrix&lt;int64_t&gt; {}</span></div>
-<div class="line"><a name="l00699"></a><span class="lineno">  699</span>&#160;  constexpr <span class="keyword">auto</span> getVImpl(Row r, Col c) -&gt; <a class="code" href="structLinearAlgebra_1_1DenseMutPtrMatrix.html">DenseMutPtrMatrix&lt;int64_t&gt;</a> {</div>
+<div class="line"><a name="l00699"></a><span class="lineno">  699</span>&#160;  constexpr <span class="keyword">auto</span> getVImpl(Row r, Col c) -&gt; DenseMutPtrMatrix&lt;int64_t&gt; {</div>
 <div class="line"><a name="l00700"></a><span class="lineno">  700</span>&#160;    rankU = unsigned(r);</div>
 <div class="line"><a name="l00701"></a><span class="lineno">  701</span>&#160;    colU = rankU;</div>
 <div class="line"><a name="l00702"></a><span class="lineno">  702</span>&#160;    dimV = unsigned(c);</div>
@@ -881,12 +881,11 @@ $(function() {
 <div class="line"><a name="l00819"></a><span class="lineno">  819</span>&#160;} <span class="comment">// namespace comparator</span></div>
 <div class="ttc" id="aclassWBumpAlloc_html"><div class="ttname"><a href="classWBumpAlloc.html">WBumpAlloc</a></div><div class="ttdef"><b>Definition:</b> Allocators.hpp:360</div></div>
 <div class="ttc" id="astructEmptyMatrix_html"><div class="ttname"><a href="structEmptyMatrix.html">EmptyMatrix</a></div><div class="ttdef"><b>Definition:</b> EmptyArrays.hpp:6</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1DenseMutPtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1DenseMutPtrMatrix.html">LinearAlgebra::DenseMutPtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Matrix.hpp:348</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1MutPtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutPtrVector.html">LinearAlgebra::MutPtrVector</a></div><div class="ttdef"><b>Definition:</b> Vector.hpp:91</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1PtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrMatrix.html">LinearAlgebra::PtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Matrix.hpp:227</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1PtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrVector.html">LinearAlgebra::PtrVector</a></div><div class="ttdef"><b>Definition:</b> Vector.hpp:25</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1StridedVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1StridedVector.html">LinearAlgebra::StridedVector</a></div><div class="ttdef"><b>Definition:</b> Vector.hpp:398</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1Vector_html"><div class="ttname"><a href="structLinearAlgebra_1_1Vector.html">LinearAlgebra::Vector</a></div><div class="ttdef"><b>Definition:</b> Vector.hpp:253</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1MutPtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutPtrVector.html">LinearAlgebra::MutPtrVector</a></div><div class="ttdef"><b>Definition:</b> Vector.hpp:92</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1PtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrMatrix.html">LinearAlgebra::PtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Matrix.hpp:238</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1PtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrVector.html">LinearAlgebra::PtrVector</a></div><div class="ttdef"><b>Definition:</b> Vector.hpp:26</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1StridedVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1StridedVector.html">LinearAlgebra::StridedVector</a></div><div class="ttdef"><b>Definition:</b> Vector.hpp:401</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1Vector_html"><div class="ttname"><a href="structLinearAlgebra_1_1Vector.html">LinearAlgebra::Vector</a></div><div class="ttdef"><b>Definition:</b> Vector.hpp:254</div></div>
 <div class="ttc" id="astructcomparator_1_1BaseComparator_html"><div class="ttname"><a href="structcomparator_1_1BaseComparator.html">comparator::BaseComparator</a></div><div class="ttdef"><b>Definition:</b> Comparators.hpp:107</div></div>
 <div class="ttc" id="astructcomparator_1_1BaseSymbolicComparator_html"><div class="ttname"><a href="structcomparator_1_1BaseSymbolicComparator.html">comparator::BaseSymbolicComparator</a></div><div class="ttdef"><b>Definition:</b> Comparators.hpp:262</div></div>
 <div class="ttc" id="astructcomparator_1_1EmptyComparator_html"><div class="ttname"><a href="structcomparator_1_1EmptyComparator.html">comparator::EmptyComparator</a></div><div class="ttdef"><b>Definition:</b> Comparators.hpp:22</div></div>

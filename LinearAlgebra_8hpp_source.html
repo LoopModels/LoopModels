@@ -74,7 +74,7 @@ $(function() {
 <div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="preprocessor">#include &quot;./Rational.hpp&quot;</span></div>
 <div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160; </div>
 <div class="line"><a name="l00005"></a><span class="lineno"><a class="line" href="structLU.html">    5</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structLU.html">LU</a> {</div>
-<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;  <a class="code" href="structLinearAlgebra_1_1SquareMatrix.html">SquareMatrix&lt;Rational&gt;</a> F;</div>
+<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;  SquareMatrix&lt;Rational&gt; F;</div>
 <div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;  llvm::SmallVector&lt;unsigned&gt; ipiv;</div>
 <div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160; </div>
 <div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> ldiv(<a class="code" href="structLinearAlgebra_1_1MutPtrMatrix.html">MutPtrMatrix&lt;Rational&gt;</a> rhs) <span class="keyword">const</span> -&gt; <span class="keywordtype">bool</span> {</div>
@@ -167,8 +167,8 @@ $(function() {
 <div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;  }</div>
 <div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160; </div>
 <div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> inv() <span class="keyword">const</span> -&gt; std::optional&lt;SquareMatrix&lt;Rational&gt;&gt; {</div>
-<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;    <a class="code" href="structLinearAlgebra_1_1SquareMatrix.html">SquareMatrix&lt;Rational&gt;</a> A =</div>
-<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;      <a class="code" href="structLinearAlgebra_1_1SquareMatrix.html">SquareMatrix&lt;Rational&gt;::identity</a>(<span class="keywordtype">size_t</span>(F.numCol()));</div>
+<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;    SquareMatrix&lt;Rational&gt; A =</div>
+<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;      SquareMatrix&lt;Rational&gt;::identity(<span class="keywordtype">size_t</span>(F.numCol()));</div>
 <div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;    <span class="keywordflow">if</span> (!ldiv(A)) <span class="keywordflow">return</span> A;</div>
 <div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;    <span class="keywordflow">else</span> <span class="keywordflow">return</span> {};</div>
 <div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;  }</div>
@@ -186,9 +186,9 @@ $(function() {
 <div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> m = 0; m &lt; M; ++m) std::swap(perm[m], perm[ipiv[m]]);</div>
 <div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;    <span class="keywordflow">return</span> perm;</div>
 <div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;  }</div>
-<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;  <span class="keyword">static</span> <span class="keyword">auto</span> fact(<span class="keyword">const</span> <a class="code" href="structLinearAlgebra_1_1SquareMatrix.html">SquareMatrix&lt;int64_t&gt;</a> &amp;B) -&gt; std::optional&lt;LU&gt; {</div>
+<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;  <span class="keyword">static</span> <span class="keyword">auto</span> fact(<span class="keyword">const</span> SquareMatrix&lt;int64_t&gt; &amp;B) -&gt; std::optional&lt;LU&gt; {</div>
 <div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;    <span class="keywordtype">size_t</span> M = B.M;</div>
-<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;    <a class="code" href="structLinearAlgebra_1_1SquareMatrix.html">SquareMatrix&lt;Rational&gt;</a> A(M);</div>
+<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;    SquareMatrix&lt;Rational&gt; A(M);</div>
 <div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> m = 0; m &lt; M * M; ++m) A[m] = B[m];</div>
 <div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;    llvm::SmallVector&lt;unsigned&gt; ipiv(M);</div>
 <div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; M; ++i) ipiv[i] = i;</div>
@@ -223,8 +223,7 @@ $(function() {
 <div class="line"><a name="l00152"></a><span class="lineno">  152</span>&#160;  }</div>
 <div class="line"><a name="l00153"></a><span class="lineno">  153</span>&#160;};</div>
 <div class="ttc" id="astructLU_html"><div class="ttname"><a href="structLU.html">LU</a></div><div class="ttdef"><b>Definition:</b> LinearAlgebra.hpp:5</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1MutPtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutPtrMatrix.html">LinearAlgebra::MutPtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Matrix.hpp:275</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1SquareMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1SquareMatrix.html">LinearAlgebra::SquareMatrix</a></div><div class="ttdef"><b>Definition:</b> Matrix.hpp:612</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1MutPtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutPtrMatrix.html">LinearAlgebra::MutPtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Matrix.hpp:281</div></div>
 <div class="ttc" id="astructRational_html"><div class="ttname"><a href="structRational.html">Rational</a></div><div class="ttdef"><b>Definition:</b> Rational.hpp:18</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->

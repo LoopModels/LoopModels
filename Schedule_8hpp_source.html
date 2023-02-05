@@ -142,11 +142,11 @@ $(function() {
 <div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;    getPhi().diag() = 1;</div>
 <div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;  }</div>
 <div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;  <span class="comment">// TODO: workaround for data.data() not being constexpr?</span></div>
-<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getPhi() -&gt; <a class="code" href="structLinearAlgebra_1_1MutSquarePtrMatrix.html">MutSquarePtrMatrix&lt;int64_t&gt;</a> {</div>
+<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getPhi() -&gt; MutSquarePtrMatrix&lt;int64_t&gt; {</div>
 <div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;    <span class="comment">// return MutSquarePtrMatrix&lt;int64_t&gt;(data.data(), numLoops);</span></div>
-<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="structLinearAlgebra_1_1MutSquarePtrMatrix.html">MutSquarePtrMatrix&lt;int64_t&gt;</a>{data.data(), numLoops};</div>
+<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;    <span class="keywordflow">return</span> MutSquarePtrMatrix&lt;int64_t&gt;{data.data(), numLoops};</div>
 <div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;  }</div>
-<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getPhi() <span class="keyword">const</span> -&gt; <a class="code" href="structLinearAlgebra_1_1SquarePtrMatrix.html">SquarePtrMatrix&lt;int64_t&gt;</a> {</div>
+<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getPhi() <span class="keyword">const</span> -&gt; SquarePtrMatrix&lt;int64_t&gt; {</div>
 <div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;    <span class="keywordflow">return</span> {data.data(), numLoops}; <span class="comment">//</span></div>
 <div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;  }</div>
 <div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getSchedule(<span class="keywordtype">size_t</span> d) <span class="keyword">const</span> -&gt; <a class="code" href="structLinearAlgebra_1_1PtrVector.html">PtrVector&lt;int64_t&gt;</a> {</div>
@@ -194,10 +194,8 @@ $(function() {
 <div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;    <span class="keywordflow">return</span> numLoops;</div>
 <div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;  }</div>
 <div class="line"><a name="l00136"></a><span class="lineno">  136</span>&#160;};</div>
-<div class="ttc" id="astructLinearAlgebra_1_1MutPtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutPtrVector.html">LinearAlgebra::MutPtrVector</a></div><div class="ttdef"><b>Definition:</b> Vector.hpp:91</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1MutSquarePtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutSquarePtrMatrix.html">LinearAlgebra::MutSquarePtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Matrix.hpp:583</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1PtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrVector.html">LinearAlgebra::PtrVector</a></div><div class="ttdef"><b>Definition:</b> Vector.hpp:25</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1SquarePtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1SquarePtrMatrix.html">LinearAlgebra::SquarePtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Matrix.hpp:562</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1MutPtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutPtrVector.html">LinearAlgebra::MutPtrVector</a></div><div class="ttdef"><b>Definition:</b> Vector.hpp:92</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1PtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrVector.html">LinearAlgebra::PtrVector</a></div><div class="ttdef"><b>Definition:</b> Vector.hpp:26</div></div>
 <div class="ttc" id="astructSchedule_html"><div class="ttname"><a href="structSchedule.html">Schedule</a></div><div class="ttdef"><b>Definition:</b> Schedule.hpp:31</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
