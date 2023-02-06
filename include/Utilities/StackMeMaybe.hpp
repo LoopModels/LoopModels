@@ -396,9 +396,7 @@ struct Buffer {
     T *newPtr = allocator.allocate(newCapacity);
 #endif
     if (U oldLen = U(sz)) std::uninitialized_copy_n((T *)(ptr), oldLen, newPtr);
-    maybeDeallocate();
-    ptr = newPtr;
-    capacity = newCapacity;
+    maybeDeallocate(newPtr, newCapacity);
   }
   [[nodiscard]] constexpr auto get_allocator() const noexcept -> A {
     return allocator;
