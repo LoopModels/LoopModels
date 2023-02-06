@@ -3,6 +3,7 @@
 #include "./NormalForm.hpp"
 #include "./Rational.hpp"
 #include "Math/Math.hpp"
+#include "Math/MatrixDimensions.hpp"
 #include <bit>
 #include <cstddef>
 #include <cstdint>
@@ -26,7 +27,7 @@ struct Simplex {
   // column 0: indicates whether that row (constraint) is basic,
   //           and if so which one
   // column 1: constraint values
-  Matrix<int64_t, 0, 0, 0> tableau;
+  Matrix<int64_t, LinearAlgebra::StridedDims, 0> tableau;
   size_t numSlackVar{0};
 #ifndef NDEBUG
   bool inCanonicalForm{false};
@@ -40,76 +41,83 @@ struct Simplex {
     return Col{j + numExtraCols};
   }
   // NOTE: all methods resizing the tableau may invalidate references to it
-  void resize(size_t numCon, size_t numVar) {
+  constexpr void resize(size_t numCon, size_t numVar) {
     tableau.resize(numTableauRows(numCon), numTableauCols(numVar));
   }
-  void resize(size_t numCon, size_t numVar, LinearAlgebra::RowStride stride) {
-    tableau.resize(numTableauRows(numCon), numTableauCols(numVar), stride);
+  constexpr void resize(size_t numCon, size_t numVar,
+                        LinearAlgebra::RowStride stride) {
+    tableau.resize(
+      StridedDims{numTableauRows(numCon), numTableauCols(numVar), stride});
   }
-  void addVars(size_t numVars) {
+  constexpr void addVars(size_t numVars) {
     Col numCol = tableau.numCol() + numVars;
-    tableau.resize(tableau.numRow(), numCol,
-                   LinearAlgebra::RowStride{
-                     std::max(size_t(numCol), size_t(tableau.rowStride()))});
+    tableau.resize(
+      StridedDims{tableau.numRow(), numCol,
+                  LinearAlgebra::RowStride{
+                    std::max(size_t(numCol), size_t(tableau.rowStride()))}});
   }
-  auto addConstraint() -> MutPtrVector<int64_t> {
-    tableau.resize(tableau.numRow() + 1, tableau.numCol(), tableau.rowStride());
+  constexpr auto addConstraint() -> MutPtrVector<int64_t> {
+    tableau.resize(
+      StridedDims{tableau.numRow() + 1, tableau.numCol(), tableau.rowStride()});
     tableau(last, _) << 0;
     return tableau(last, _(numExtraCols, end));
   }
-  auto addConstraintAndVar() -> MutPtrVector<int64_t> {
+  constexpr auto addConstraintAndVar() -> MutPtrVector<int64_t> {
     tableau.resize(tableau.numRow() + 1, tableau.numCol() + 1);
     tableau(last, _) << 0;
     return tableau(last, _(numExtraCols, end));
   }
-  auto addConstraintsAndVars(size_t i) -> MutPtrMatrix<int64_t> {
+  constexpr auto addConstraintsAndVars(size_t i) -> MutPtrMatrix<int64_t> {
     tableau.resize(tableau.numRow() + i, tableau.numCol() + i);
     tableau(_(last - i, end), _) << 0;
     return tableau(_(last - i, end), _(numExtraCols, end));
   }
-  void reserve(size_t numCon, size_t numVar) {
+  constexpr void reserve(size_t numCon, size_t numVar) {
     tableau.reserve(
       numTableauRows(numCon),
       Col{size_t(max(numTableauCols(numVar), tableau.rowStride()))});
   }
-  void clearReserve(size_t numCon, size_t numVar) {
+  constexpr void clearReserve(size_t numCon, size_t numVar) {
     numSlackVar = 0;
     tableau.clearReserve(
       numTableauRows(numCon),
       Col{size_t(max(numTableauCols(numVar), tableau.rowStride()))});
   }
-  void reserveExtraRows(size_t additionalRows) {
+  constexpr void reserveExtraRows(size_t additionalRows) {
     tableau.reserve(tableau.numRow() + additionalRows, tableau.rowStride());
   }
-  void reserveExtra(Row additionalRows, Col additionalCols) {
+  constexpr void reserveExtra(Row additionalRows, Col additionalCols) {
     LinearAlgebra::RowStride newStride =
       max(tableau.numCol() + additionalCols, tableau.rowStride());
     tableau.reserve(tableau.numRow() + additionalRows, newStride);
     if (newStride == tableau.rowStride()) return;
     // copy memory, so that incrementally adding columns is cheap later.
     Col nC = tableau.numCol();
-    tableau.resize(tableau.numRow(), nC, newStride);
+    tableau.resize(StridedDims{tableau.numRow(), nC, newStride});
   }
-  void reserveExtra(size_t additional) { reserveExtra(additional, additional); }
-  void truncateVars(size_t numVars) {
+  constexpr void reserveExtra(size_t additional) {
+    reserveExtra(additional, additional);
+  }
+  constexpr void truncateVars(size_t numVars) {
     tableau.truncate(numTableauCols(numVars));
   }
-  void truncateConstraints(size_t numCons) {
+  constexpr void truncateConstraints(size_t numCons) {
     tableau.truncate(numTableauRows(numCons));
   }
-  void resizeForOverwrite(size_t numCon, size_t numVar) {
+  constexpr void resizeForOverwrite(size_t numCon, size_t numVar) {
     tableau.resizeForOverwrite(numTableauRows(numCon), numTableauCols(numVar));
   }
-  void resizeForOverwrite(size_t numCon, size_t numVar, size_t stride) {
+  constexpr void resizeForOverwrite(size_t numCon, size_t numVar,
+                                    size_t stride) {
     tableau.resizeForOverwrite(numTableauRows(numCon), numTableauCols(numVar),
                                stride);
   }
   [[nodiscard]] constexpr auto getCostsAndConstraints()
-    -> MutPtrMatrix<int64_t> {
+    -> MutPtrMatrix<int64_t, StridedDims> {
     return tableau(_(numExtraRows - 1, end), _(numExtraCols, end));
   }
   [[nodiscard]] constexpr auto getCostsAndConstraints() const
-    -> PtrMatrix<int64_t> {
+    -> PtrMatrix<int64_t, StridedDims> {
     return tableau(_(numExtraRows - 1, end), _(numExtraCols, end));
   }
   [[nodiscard]] constexpr auto getConstraints() -> MutPtrMatrix<int64_t> {
@@ -127,16 +135,16 @@ struct Simplex {
     return size_t(tableau.numRow()) - numExtraRows;
   }
 
-  void hermiteNormalForm() {
+  constexpr void hermiteNormalForm() {
 #ifndef NDEBUG
     inCanonicalForm = false;
 #endif
     truncateConstraints(
       size_t(NormalForm::simplifySystemImpl(getConstraints(), 1)));
   }
-  void deleteConstraint(size_t c) {
+  constexpr void deleteConstraint(size_t c) {
     eraseConstraintImpl(tableau, numTableauRows(c));
-    --tableau.M;
+    tableau.truncate(tableau.numRow() - 1);
   }
   [[nodiscard]] constexpr auto getTableauRow(size_t i) const
     -> PtrVector<int64_t> {

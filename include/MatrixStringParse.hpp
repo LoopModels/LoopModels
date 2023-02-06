@@ -1,14 +1,16 @@
 #pragma once
 
 #include "Math/Math.hpp"
+#include "Math/MatrixDimensions.hpp"
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
 #include <llvm/ADT/SmallVector.h>
 
-[[nodiscard]] inline auto operator"" _mat(const char *s, size_t) -> IntMatrix {
+[[nodiscard]] constexpr auto operator"" _mat(const char *s, size_t)
+  -> Matrix<int64_t, LinearAlgebra::DenseDims> {
   assert(s[0] == '[');
-  llvm::SmallVector<int64_t, 64> content;
+  Buffer<int64_t, 64, unsigned> content;
   size_t cur = 1;
   size_t numRows = 1;
   while (s[cur] != ']') {
@@ -28,6 +30,7 @@
   }
   size_t numCols = content.size() / numRows;
   assert(content.size() % numRows == 0);
-  IntMatrix A(std::move(content), Row{numRows}, Col{numCols});
+  Matrix<int64_t, LinearAlgebra::DenseDims> A(std::move(content), Row{numRows},
+                                              Col{numCols});
   return A;
 }

@@ -167,71 +167,73 @@ template <typename T> struct MutPtrVector {
   constexpr operator llvm::MutableArrayRef<T>() {
     return llvm::MutableArrayRef<T>{mem, N};
   }
-  // llvm::ArrayRef<T> arrayref() const { return llvm::ArrayRef<T>(ptr, M); }
-  auto operator==(const MutPtrVector<T> x) const -> bool {
-    return llvm::ArrayRef<T>(*this) == llvm::ArrayRef<T>(x);
+  constexpr auto operator==(const MutPtrVector<T> x) const -> bool {
+    return std::equal(begin(), end(), x.begin(), x.end());
   }
-  auto operator==(const PtrVector<T> x) const -> bool {
-    return llvm::ArrayRef<T>(*this) == llvm::ArrayRef<T>(x);
+  constexpr auto operator==(const PtrVector<T> x) const -> bool {
+    return std::equal(begin(), end(), x.begin(), x.end());
   }
-  auto operator==(const llvm::ArrayRef<T> x) const -> bool {
-    return llvm::ArrayRef<T>(*this) == x;
+  constexpr auto operator==(const llvm::ArrayRef<T> x) const -> bool {
+    return std::equal(begin(), end(), x.begin(), x.end());
   }
   [[nodiscard]] constexpr auto view() const -> PtrVector<T> { return *this; };
-  [[gnu::flatten]] auto operator<<(PtrVector<T> x) -> MutPtrVector<T> {
-    return copyto(*this, x);
-  }
-  [[gnu::flatten]] auto operator<<(MutPtrVector<T> x) -> MutPtrVector<T> {
-    return copyto(*this, x);
-  }
-  [[gnu::flatten]] auto operator<<(const AbstractVector auto &x)
+  [[gnu::flatten]] constexpr auto operator<<(PtrVector<T> x)
     -> MutPtrVector<T> {
     return copyto(*this, x);
   }
-  [[gnu::flatten]] auto operator<<(std::integral auto x) -> MutPtrVector<T> {
+  [[gnu::flatten]] constexpr auto operator<<(MutPtrVector<T> x)
+    -> MutPtrVector<T> {
+    return copyto(*this, x);
+  }
+  [[gnu::flatten]] constexpr auto operator<<(const AbstractVector auto &x)
+    -> MutPtrVector<T> {
+    return copyto(*this, x);
+  }
+  [[gnu::flatten]] constexpr auto operator<<(std::integral auto x)
+    -> MutPtrVector<T> {
     for (auto &&y : *this) y = x;
     return *this;
   }
-  [[gnu::flatten]] auto operator+=(const AbstractVector auto &x)
+  [[gnu::flatten]] constexpr auto operator+=(const AbstractVector auto &x)
     -> MutPtrVector<T> {
     assert(N == x.size());
     for (size_t i = 0; i < N; ++i) mem[i] += x[i];
     return *this;
   }
-  [[gnu::flatten]] auto operator-=(const AbstractVector auto &x)
+  [[gnu::flatten]] constexpr auto operator-=(const AbstractVector auto &x)
     -> MutPtrVector<T> {
     assert(N == x.size());
     for (size_t i = 0; i < N; ++i) mem[i] -= x[i];
     return *this;
   }
-  [[gnu::flatten]] auto operator*=(const AbstractVector auto &x)
+  [[gnu::flatten]] constexpr auto operator*=(const AbstractVector auto &x)
     -> MutPtrVector<T> {
     assert(N == x.size());
     for (size_t i = 0; i < N; ++i) mem[i] *= x[i];
     return *this;
   }
-  [[gnu::flatten]] auto operator/=(const AbstractVector auto &x)
+  [[gnu::flatten]] constexpr auto operator/=(const AbstractVector auto &x)
     -> MutPtrVector<T> {
     assert(N == x.size());
     for (size_t i = 0; i < N; ++i) mem[i] /= x[i];
     return *this;
   }
-  [[gnu::flatten]] auto operator+=(const std::integral auto x)
+  [[gnu::flatten]] constexpr auto operator+=(const std::integral auto x)
     -> MutPtrVector<T> {
     for (size_t i = 0; i < N; ++i) mem[i] += x;
     return *this;
   }
-  [[gnu::flatten]] auto operator-=(const std::integral auto x)
+  [[gnu::flatten]] constexpr auto operator-=(const std::integral auto x)
     -> MutPtrVector<T> {
     for (size_t i = 0; i < N; ++i) mem[i] -= x;
     return *this;
   }
-  [[gnu::flatten]] auto operator*=(const std::integral auto x)
+  [[gnu::flatten]] constexpr auto operator*=(const std::integral auto x)
     -> MutPtrVector<T> {
     for (size_t i = 0; i < N; ++i) mem[i] *= x;
     return *this;
   }
-  [[gnu::flatten]] auto operator/=(const std::integral auto x)
+  [[gnu::flatten]] constexpr auto operator/=(const std::integral auto x)
     -> MutPtrVector<T> {
     for (size_t i = 0; i < N; ++i) mem[i] /= x;
     return *this;
@@ -266,6 +268,7 @@ template <typename T, size_t Stack = PreAllocStorage<T>()> struct Vector {
     for (size_t n = 0, N = x.size(); n < N; ++n) buf.data()[n] = x[n];
   }
   constexpr auto operator=(const Vector &) -> Vector & = default;
+  constexpr void reserve(unsigned N) { buf.reserve(N); }
   [[gnu::flatten]] constexpr auto operator[](const ScalarIndex auto i) -> T & {
     size_t j = canonicalize(i, buf.size());
     invariant(j < buf.size());

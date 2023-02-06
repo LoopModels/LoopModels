@@ -162,28 +162,31 @@ concept AbstractSlice = requires(T t, size_t M) {
 template <typename T>
 inline constexpr auto matrixGet(NotNull<const T> ptr, Row M, Col N, RowStride X,
                                 const AbstractSlice auto m,
-                                const AbstractSlice auto n) -> PtrMatrix<T> {
+                                const AbstractSlice auto n)
+  -> PtrMatrix<T, StridedDims> {
 #ifndef NDEBUG
   checkIndex(size_t(M), m);
   checkIndex(size_t(N), n);
 #endif
   Range<size_t, size_t> mr = canonicalizeRange(m, size_t(M));
   Range<size_t, size_t> nr = canonicalizeRange(n, size_t(N));
-  return PtrMatrix<T>{ptr + size_t(nr.b + X * mr.b), mr.e - mr.b, nr.e - nr.b,
-                      X};
+  return PtrMatrix{ptr + size_t(nr.b + X * mr.b),
+                   StridedDims{mr.e - mr.b, nr.e - nr.b, X}};
 }
 template <typename T>
 inline constexpr auto matrixGet(NotNull<T> ptr, Row M, Col N, RowStride X,
                                 const AbstractSlice auto m,
-                                const AbstractSlice auto n) -> MutPtrMatrix<T> {
+                                const AbstractSlice auto n)
+  -> MutPtrMatrix<T, StridedDims> {
 #ifndef NDEBUG
   checkIndex(size_t(M), m);
   checkIndex(size_t(N), n);
 #endif
   Range<size_t, size_t> mr = canonicalizeRange(m, size_t(M));
   Range<size_t, size_t> nr = canonicalizeRange(n, size_t(N));
-  return MutPtrMatrix<T>{ptr + size_t(nr.b + X * mr.b), Row{mr.e - mr.b},
-                         Col{nr.e - nr.b}, X};
+  return MutPtrMatrix<T, StridedDims>{
+    ptr + size_t(nr.b + X * mr.b),
+    StridedDims{Row{mr.e - mr.b}, Col{nr.e - nr.b}, X}};
 }
 
 template <typename T>

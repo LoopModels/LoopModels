@@ -5,6 +5,7 @@
 #include "Math/AxisTypes.hpp"
 #include "Math/Indexing.hpp"
 #include "Math/Matrix.hpp"
+#include "Math/MatrixDimensions.hpp"
 #include "Math/Vector.hpp"
 #include "TypePromotion.hpp"
 #include "Utilities/Valid.hpp"
@@ -92,6 +93,7 @@ template <typename Op, typename A> struct ElementwiseUnaryOp {
   auto operator()(size_t i, size_t j) const { return op(a(i, j)); }
 
   [[nodiscard]] constexpr auto size() const { return a.size(); }
+  [[nodiscard]] constexpr auto dim() const { return a.dim(); }
   [[nodiscard]] constexpr auto numRow() const -> Row { return a.numRow(); }
   [[nodiscard]] constexpr auto numCol() const -> Col { return a.numCol(); }
   [[nodiscard]] constexpr auto view() const { return *this; };
@@ -207,6 +209,9 @@ struct ElementwiseMatrixBinaryOp {
   [[nodiscard]] constexpr auto size() const -> std::pair<Row, Col> {
     return std::make_pair(numRow(), numCol());
   }
+  [[nodiscard]] constexpr auto dim() const -> DenseDims {
+    return {numRow(), numCol()};
+  }
   [[nodiscard]] constexpr auto view() const -> auto & { return *this; };
 };
 
@@ -228,6 +233,9 @@ template <typename A> struct Transpose {
   [[nodiscard]] constexpr auto size() const -> std::pair<Row, Col> {
     return std::make_pair(numRow(), numCol());
   }
+  [[nodiscard]] constexpr auto dim() const -> DenseDims {
+    return {numRow(), numCol()};
+  }
   Transpose(A b) : a(b) {}
 };
 template <typename A> Transpose(A) -> Transpose<A>;
@@ -245,6 +253,9 @@ template <AbstractMatrix A, AbstractMatrix B> struct MatMatMul {
   [[nodiscard]] constexpr auto numCol() const -> Col { return b.numCol(); }
   [[nodiscard]] constexpr auto size() const -> std::pair<Row, Col> {
     return std::make_pair(numRow(), numCol());
+  }
+  [[nodiscard]] constexpr auto dim() const -> DenseDims {
+    return {numRow(), numCol()};
   }
   [[nodiscard]] constexpr auto view() const { return *this; };
   [[nodiscard]] constexpr auto transpose() const { return Transpose{*this}; };
@@ -423,6 +434,8 @@ requires is_uint_v<64, T>
 
 template <typename T>
 concept TriviallyCopyable = std::is_trivially_copyable_v<T>;
+static_assert(
+  AbstractMatrix<MatMatMul<PtrMatrix<int64_t>, PtrMatrix<int64_t>>>);
 
 static_assert(std::copy_constructible<PtrMatrix<int64_t>>);
 // static_assert(std::is_trivially_copyable_v<MutPtrMatrix<int64_t>>);
@@ -540,8 +553,8 @@ template <typename T> struct SmallSparseMatrix {
   auto operator()(size_t i, size_t j) -> Reference {
     return Reference{this, i, j};
   }
-  operator Matrix<T>() {
-    Matrix<T> A(Row{numRow()}, Col{numCol()});
+  template <MatrixDimension D, size_t L> operator Matrix<T, D, L>() {
+    Matrix<T, D, L> A(Row{numRow()}, Col{numCol()});
     assert(numRow() == A.numRow());
     assert(numCol() == A.numCol());
     size_t k = 0;
@@ -594,7 +607,7 @@ inline auto operator<<(llvm::raw_ostream &os, PtrMatrix<T> A)
 template <AbstractMatrix T>
 inline auto operator<<(llvm::raw_ostream &os, const T &A)
   -> llvm::raw_ostream & {
-  Matrix<std::remove_const_t<typename T::eltype>> B{A};
+  Matrix<std::remove_const_t<typename T::eltype>, DenseDims> B{A};
   return printMatrix(os, PtrMatrix<typename T::eltype>(B));
 }
 
@@ -607,7 +620,7 @@ constexpr auto operator-(const AbstractMatrix auto &a) {
   return ElementwiseUnaryOp<Sub, decltype(AA)>{.op = Sub{}, .a = AA};
 }
 static_assert(AbstractMatrix<ElementwiseUnaryOp<Sub, PtrMatrix<int64_t>>>);
-static_assert(AbstractMatrix<SquareMatrix<int64_t>>);
+static_assert(AbstractMatrix<Matrix<int64_t, SquareDims>>);
 
 constexpr auto operator+(const AbstractMatrix auto &a, const auto &b) {
   return ElementwiseMatrixBinaryOp(Add{}, view(a), view(b));
@@ -711,37 +724,9 @@ static_assert(AbstractVector<Vector<int64_t> &>);
 static_assert(AbstractMatrix<IntMatrix>);
 static_assert(AbstractMatrix<IntMatrix &>);
 
-static_assert(std::copyable<Matrix<int64_t, 4, 4>>);
-static_assert(std::copyable<Matrix<int64_t, 4, 0>>);
-static_assert(std::copyable<Matrix<int64_t, 0, 4>>);
-static_assert(std::copyable<Matrix<int64_t, 0, 0>>);
-static_assert(std::copyable<SquareMatrix<int64_t>>);
-
-template <typename T>
-concept DerivedMatrix =
-  requires(T t, const T ct) {
-    {
-      t.data()
-      } -> std::convertible_to<typename std::add_pointer_t<
-        typename std::add_const_t<typename T::eltype>>>;
-    {
-      ct.data()
-      } -> std::same_as<typename std::add_pointer_t<
-        typename std::add_const_t<typename T::eltype>>>;
-    { t.numRow() } -> std::convertible_to<Row>;
-    { t.numCol() } -> std::convertible_to<Col>;
-    { t.rowStride() } -> std::convertible_to<RowStride>;
-  };
-static_assert(DerivedMatrix<Matrix<int64_t, 4, 4>>);
-static_assert(DerivedMatrix<Matrix<int64_t, 4, 0>>);
-static_assert(DerivedMatrix<Matrix<int64_t, 0, 4>>);
-static_assert(DerivedMatrix<Matrix<int64_t, 0, 0>>);
-static_assert(DerivedMatrix<IntMatrix>);
-static_assert(DerivedMatrix<IntMatrix>);
-static_assert(DerivedMatrix<IntMatrix>);
-
-static_assert(std::is_same_v<SquareMatrix<int64_t>::eltype, int64_t>);
-static_assert(std::is_same_v<IntMatrix::eltype, int64_t>);
+static_assert(std::copyable<Matrix<int64_t, StridedDims>>);
+static_assert(std::copyable<Matrix<int64_t, DenseDims>>);
+static_assert(std::copyable<Matrix<int64_t, SquareDims>>);
 
 template <typename T, typename I> struct SliceView {
   using eltype = T;
@@ -783,6 +768,12 @@ inline auto operator<<(std::ostream &os, const AbstractMatrix auto &x)
   -> std::ostream & {
   return adaptOStream(os, x);
 }
+
+template <typename T, size_t L = 16>
+using SquareMatrix = Matrix<T, SquareDims, L>;
+template <typename T> using MutSquarePtrMatrix = MutPtrMatrix<T, SquareDims>;
+template <typename T> using SquarePtrMatrix = PtrMatrix<T, SquareDims>;
+template <typename T> using DenseMutPtrMatrix = MutPtrMatrix<T, DenseDims>;
 
 } // namespace LinearAlgebra
 

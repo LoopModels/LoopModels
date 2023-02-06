@@ -74,8 +74,7 @@ constexpr void eraseConstraintImpl(MutPtrMatrix<int64_t> A, Row i) {
 [[nodiscard]] constexpr auto eraseConstraint(MutPtrMatrix<int64_t> A, Row i)
   -> MutPtrMatrix<int64_t> {
   eraseConstraintImpl(A, i);
-  A.truncate(A.numRow() - 1);
-  return A;
+  return A.truncate(A.numRow() - 1);
 }
 [[nodiscard]] constexpr auto eraseConstraint(MutPtrMatrix<int64_t> A, size_t _i,
                                              size_t _j)
@@ -97,8 +96,7 @@ constexpr void eraseConstraintImpl(MutPtrMatrix<int64_t> A, Row i) {
       A(j, n) = A(lastRow, n);
     }
   }
-  A.truncate(penuRow);
-  return A;
+  return A.truncate(penuRow);
 }
 constexpr void eraseConstraint(IntMatrix &A, size_t i, size_t j) {
   A.truncate(eraseConstraint(MutPtrMatrix<int64_t>(A), i, j).numRow());

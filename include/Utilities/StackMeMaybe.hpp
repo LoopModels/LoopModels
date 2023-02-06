@@ -12,8 +12,7 @@
 #include <utility>
 
 template <typename T>
-concept SizeMultiple8 = sizeof(T)
-% 8 == 0;
+concept SizeMultiple8 = (sizeof(T) % 8) == 0;
 
 template <typename T> struct DefaultCapacityType {
   using type = unsigned int;
@@ -45,45 +44,62 @@ struct Buffer {
   constexpr Buffer() noexcept : ptr{memory}, capacity{N} {}
   constexpr Buffer(S s) noexcept : ptr{memory}, capacity{N} {
     sz = s;
-    U len = sz;
+    U len = U(sz);
     if (len <= N) return;
     ptr = allocator.allocate(len);
     capacity = len;
   }
   constexpr Buffer(S s, T x) noexcept : ptr{memory}, capacity{N} {
     sz = s;
-    U len = sz;
+    U len = U(sz);
     if (len > N) {
       ptr = allocator.allocate(len);
       capacity = len;
     }
-    std::uninitialized_fill_n(ptr, len, x);
+    std::uninitialized_fill_n((T *)(ptr), len, x);
+  }
+  template <typename D, std::unsigned_integral I>
+  constexpr Buffer(const Buffer<T, N, D, A, I> &b) noexcept
+    : ptr{memory}, capacity{U(N)}, sz{S(b.size())}, allocator{
+                                                      b.get_allocator()} {
+    U len = U(sz);
+    growUndef(len);
+    std::uninitialized_copy_n((const T *)(b.data()), len, (T *)(ptr));
   }
 #pragma GCC diagnostic pop
   template <typename D, std::unsigned_integral I>
   constexpr Buffer(Buffer<T, N, D, A, I> &&b) noexcept
-    : ptr{b.ptr}, sz{b.sz}, capacity{b.capacity}, allocator{b.allocator} {
+    : ptr{b.data()}, capacity{U(b.getCapacity())}, sz{b.size()},
+      allocator{b.get_allocator()} {
+    assert(uint64_t(b.getCapacity()) == uint64_t(getCapacity()) &&
+           "capacity overflow");
     if (b.isSmall()) {
       ptr = memory;
-      std::uninitialized_copy_n(b.data(), N, ptr);
+      std::uninitialized_copy_n((T *)(b.data()), N, (T *)(ptr));
     }
     b.resetNoFree();
   }
   template <typename D, std::unsigned_integral I>
-  constexpr Buffer(const Buffer<T, N, D, A, I> &b) noexcept
-    : ptr{memory}, sz{b.sz}, capacity{N}, allocator{b.allocator} {
-    U len = sz;
-    growUndef(len);
-    std::uninitialized_copy_n(b.data(), len, ptr);
+  constexpr Buffer(Buffer<T, N, D, A, I> &&b, S s) noexcept
+    : ptr{b.data()}, capacity{U(b.getCapacity())}, sz{s}, allocator{
+                                                            b.get_allocator()} {
+    assert(U(s) == U(b.size()) && "size mismatch");
+    assert(uint64_t(b.getCapacity()) == uint64_t(getCapacity()) &&
+           "capacity overflow");
+    if (b.isSmall()) {
+      ptr = memory;
+      std::uninitialized_copy_n((T *)(b.data()), N, (T *)(ptr));
+    }
+    b.resetNoFree();
   }
   template <typename D, std::unsigned_integral I>
   constexpr auto operator=(const Buffer<T, N, D, A, I> &b) noexcept
     -> Buffer & {
     if (this == &b) return *this;
     sz = b.size();
-    U len = sz;
+    U len = U(sz);
     growUndef(len);
-    std::uninitialized_copy_n(b.data(), len, ptr);
+    std::uninitialized_copy_n((T *)(b.data()), len, (T *)(ptr));
     return *this;
   }
   template <typename D, std::unsigned_integral I>
@@ -95,7 +111,7 @@ struct Buffer {
     if (b.isSmall()) {
       // if `b` is small, we need to copy memory
       // no need to shrink our capacity
-      std::uninitialized_copy_n(b.data(), size_t(sz), ptr);
+      std::uninitialized_copy_n((T *)(b.data()), size_t(sz), (T *)(ptr));
     } else {
       // otherwise, we take its pointer
       maybeDeallocate();
@@ -112,12 +128,14 @@ struct Buffer {
 
   template <typename... Args> constexpr auto emplace_back(Args &&...args) {
     static_assert(std::is_integral_v<S>, "emplace_back requires integral size");
-    if (sz == capacity) resize(capacity + capacity);
+    if (sz == capacity) [[unlikely]]
+      resize(capacity + capacity);
     new (ptr + sz++) T(std::forward<Args>(args)...);
   }
   constexpr void push_back(T value) {
     static_assert(std::is_integral_v<S>, "push_back requires integral size");
-    if (sz == capacity) resize(capacity + capacity);
+    if (sz == capacity) [[unlikely]]
+      resize(capacity + capacity);
     new (ptr + sz++) T(std::move(value));
   }
   constexpr void pop_back() {
@@ -131,27 +149,28 @@ struct Buffer {
   // New memory outside of dims (i.e., stride larger), we leave uninitialized.
   //
   constexpr void resize(S nz) {
+    S oz = sz;
+    sz = nz;
     if constexpr (std::integral<S>) {
       if (nz <= capacity) return;
-      U newCapacity = nz;
+      U newCapacity = U(nz);
       T *newPtr = allocator.allocate(newCapacity);
-      std::uninitialized_copy_n(ptr, sz, newPtr);
+      std::uninitialized_copy_n((T *)(ptr), oz, newPtr);
       maybeDeallocate();
       ptr = newPtr;
       capacity = newCapacity;
-      sz = nz;
     } else {
       static_assert(LinearAlgebra::MatrixDimension<S>,
                     "Can only resize 1 or 2d containers.");
       auto newX = unsigned{LinearAlgebra::RowStride{nz}},
-           oldX = unsigned{LinearAlgebra::RowStride{sz}},
+           oldX = unsigned{LinearAlgebra::RowStride{oz}},
            newN = unsigned{LinearAlgebra::Col{nz}},
-           oldN = unsigned{LinearAlgebra::Col{sz}},
+           oldN = unsigned{LinearAlgebra::Col{oz}},
            newM = unsigned{LinearAlgebra::Row{nz}},
-           oldM = unsigned{LinearAlgebra::Row{sz}};
-      U len = nz;
+           oldM = unsigned{LinearAlgebra::Row{oz}};
+      U len = U(nz);
       bool newAlloc = U(len) > capacity;
-      T *npt = newAlloc ? allocator.allocate(len) : ptr;
+      T *npt = newAlloc ? allocator.allocate(len) : (T *)(ptr);
       // we can copy forward so long as the new stride is smaller
       // so that the start of the dst range is outside of the src range
       // we can also safely forward copy if we allocated a new ptr
@@ -186,7 +205,6 @@ struct Buffer {
       // zero init remaining rows
       for (size_t m = oldM; m < newM; ++m)
         std::fill_n(npt + m * newX, newN, T{});
-      sz = nz;
       if (newAlloc) {
         capacity = len;
         maybeDeallocate();
@@ -199,12 +217,12 @@ struct Buffer {
       return resize(S(r));
     } else if constexpr (LinearAlgebra::MatrixDimension<S>) {
       S nz = sz;
-      return resize(nz.setRow(r));
+      return resize(nz.set(r));
     }
   }
   constexpr void resizeForOverwrite(S M) {
-    U L = M;
-    if (L > sz) growUndef(L);
+    U L = U(M);
+    if (L > U(sz)) growUndef(L);
     sz = M;
   }
   constexpr void resizeForOverwrite(LinearAlgebra::Row r) {
@@ -226,7 +244,7 @@ struct Buffer {
   constexpr void erase(S i) {
     static_assert(std::integral<S>, "erase requires integral size");
     S oldLen = sz--;
-    if (i < sz) std::copy(ptr + i + 1, ptr + oldLen, ptr + i);
+    if (i < sz) std::copy((T *)(ptr) + i + 1, ptr + oldLen, (T *)(ptr) + i);
   }
   constexpr void erase(LinearAlgebra::Row r) {
     if constexpr (std::integral<S>) {
@@ -337,15 +355,27 @@ struct Buffer {
     invariant(i < size_t(size()));
     return ptr[i];
   }
-  constexpr void fill(T value) { std::fill_n(ptr, size_t(size()), value); }
+  constexpr void fill(T value) {
+    std::fill_n((T *)(ptr), size_t(size()), value);
+  }
   constexpr void reserve(S nz) {
-    U newCapacity = nz;
+    U newCapacity = U(nz);
     if (newCapacity <= capacity) return;
     // allocate new, copy, deallocate old
     T *newPtr = allocator.allocate(newCapacity);
-    if (U oldLen = sz) std::uninitialized_copy_n(ptr, oldLen, newPtr);
+    if (U oldLen = U(sz)) std::uninitialized_copy_n((T *)(ptr), oldLen, newPtr);
     maybeDeallocate();
     ptr = newPtr;
+  }
+  [[nodiscard]] constexpr auto get_allocator() const noexcept -> A {
+    return allocator;
+  }
+  [[nodiscard]] constexpr auto getCapacity() const -> U { return capacity; }
+  [[nodiscard]] constexpr auto isSmall() const -> bool { return ptr == memory; }
+  constexpr void resetNoFree() {
+    ptr = memory;
+    sz = S{};
+    capacity = N;
   }
 
 private:
@@ -355,14 +385,8 @@ private:
   [[no_unique_address]] A allocator{};
   T memory[N]; // NOLINT (modernize-avoid-c-style-arrays)
 
-  constexpr auto isSmall() -> bool { return ptr == memory; }
   constexpr void maybeDeallocate() {
     if (!isSmall()) allocator.deallocate(ptr, capacity);
-  }
-  constexpr void resetNoFree() {
-    ptr = memory;
-    sz = S{};
-    capacity = N;
   }
   // grow, discarding old data
   constexpr void growUndef(U M) {

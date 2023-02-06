@@ -6,6 +6,20 @@
 
 namespace LinearAlgebra {
 
+#ifndef NDEBUG
+template <std::integral I>
+constexpr auto checkedMul(std::integral auto a, std::integral auto b) -> I {
+  I result;
+  bool overflow = __builtin_mul_overflow(a, b, &result);
+  assert(!overflow && "overflow");
+  return result;
+}
+#else
+template <std::integral I>
+constexpr auto checkedMul(std::integral auto a, std::integral auto b) -> I {
+  return a * b;
+}
+#endif
 struct SquareDims;
 struct DenseDims;
 struct StridedDims {
@@ -13,18 +27,20 @@ struct StridedDims {
   unsigned int N{};
   unsigned int strideM{};
   constexpr StridedDims() = default;
-  constexpr StridedDims(Row M, Col N) : M(M), N(N), strideM(N) {}
-  constexpr StridedDims(Row M, Col N, RowStride X) : M(M), N(N), strideM(X) {}
-  constexpr operator unsigned int() const {
-    assert(size_t(M) * size_t(strideM) == size_t(M * strideM) && "overflow");
-    return M * strideM;
+  constexpr StridedDims(Row m, Col n) : M(m), N(n), strideM(n) {}
+  constexpr StridedDims(Row m, Col n, RowStride x) : M(m), N(n), strideM(x) {}
+  constexpr explicit operator uint32_t() const {
+    return checkedMul<uint32_t>(M, strideM);
+  }
+  constexpr explicit operator uint64_t() const {
+    return checkedMul<uint64_t>(M, strideM);
   }
   constexpr auto operator=(const DenseDims &D) -> StridedDims &;
   constexpr auto operator=(const SquareDims &D) -> StridedDims &;
   constexpr operator CarInd() const { return {M, N}; }
-  constexpr operator Row() const { return M; }
-  constexpr operator Col() const { return N; }
-  constexpr operator RowStride() const { return strideM; }
+  constexpr explicit operator Row() const { return M; }
+  constexpr explicit operator Col() const { return N; }
+  constexpr explicit operator RowStride() const { return strideM; }
   [[nodiscard]] constexpr auto truncate(Row r) const -> StridedDims {
     assert((r <= Row{M}) && "truncate cannot add rows.");
     return {unsigned(r), N, strideM};
@@ -52,18 +68,21 @@ struct StridedDims {
 struct DenseDims {
   unsigned int M{};
   unsigned int N{};
-  constexpr operator unsigned int() const {
-    assert(size_t(M) * size_t(N) == size_t(M * N) && "overflow");
-    return M * N;
+  constexpr explicit operator uint32_t() const {
+    return checkedMul<uint32_t>(M, N);
+  }
+  constexpr explicit operator uint64_t() const {
+    return checkedMul<uint64_t>(M, N);
   }
   constexpr DenseDims() = default;
-  constexpr DenseDims(Row M, Col N) : M(M), N(N) {}
+  constexpr DenseDims(Row m, Col n) : M(m), N(n) {}
+  constexpr explicit DenseDims(StridedDims d) : M(d.M), N(d.N) {}
   constexpr operator StridedDims() const { return {M, N, N}; }
   constexpr operator CarInd() const { return {M, N}; }
   constexpr auto operator=(const SquareDims &D) -> DenseDims &;
-  constexpr operator Row() const { return M; }
-  constexpr operator Col() const { return N; }
-  constexpr operator RowStride() const { return N; }
+  constexpr explicit operator Row() const { return M; }
+  constexpr explicit operator Col() const { return N; }
+  constexpr explicit operator RowStride() const { return N; }
   [[nodiscard]] constexpr auto truncate(Row r) const -> DenseDims {
     assert((r <= Row{M}) && "truncate cannot add rows.");
     return {unsigned(r), N};
@@ -89,17 +108,22 @@ struct DenseDims {
 };
 struct SquareDims {
   unsigned int M{};
-  constexpr operator unsigned int() const {
-    assert(size_t(M) * size_t(M) == size_t(M * M) && "overflow");
-    return M * M;
+  constexpr explicit operator uint32_t() const {
+    return checkedMul<uint32_t>(M, M);
+  }
+  constexpr explicit operator uint64_t() const {
+    return checkedMul<uint64_t>(M, M);
   }
   constexpr SquareDims() = default;
+  constexpr SquareDims(unsigned int d) : M{d} {}
+  constexpr SquareDims(Row d) : M{unsigned(d)} {}
+  constexpr SquareDims(Col d) : M{unsigned(d)} {}
   constexpr operator StridedDims() const { return {M, M, M}; }
   constexpr operator DenseDims() const { return {M, M}; }
   constexpr operator CarInd() const { return {M, M}; }
-  constexpr operator Row() const { return M; }
-  constexpr operator Col() const { return M; }
-  constexpr operator RowStride() const { return M; }
+  constexpr explicit operator Row() const { return M; }
+  constexpr explicit operator Col() const { return M; }
+  constexpr explicit operator RowStride() const { return M; }
   [[nodiscard]] constexpr auto truncate(Row r) const -> DenseDims {
     assert((r <= Row{M}) && "truncate cannot add rows.");
     return {unsigned(r), M};
@@ -142,3 +166,6 @@ static_assert(MatrixDimension<DenseDims>);
 static_assert(MatrixDimension<StridedDims>);
 
 } // namespace LinearAlgebra
+
+using LinearAlgebra::StridedDims, LinearAlgebra::DenseDims,
+  LinearAlgebra::SquareDims;

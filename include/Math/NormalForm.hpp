@@ -4,6 +4,7 @@
 #include "Math/GreatestCommonDivisor.hpp"
 #include "Math/Math.hpp"
 #include "Math/Matrix.hpp"
+#include "Math/MatrixDimensions.hpp"
 #include "Math/VectorGreatestCommonDivisor.hpp"
 #include <concepts>
 #include <cstddef>
@@ -24,9 +25,9 @@ constexpr inline auto gcdxScale(int64_t a, int64_t b)
   return std::make_tuple(p, q, a / g, b / g);
 }
 // zero out below diagonal
-inline void zeroSupDiagonal(MutPtrMatrix<int64_t> A,
-                            MutSquarePtrMatrix<int64_t> K, size_t i, Row M,
-                            Col N) {
+constexpr void zeroSupDiagonal(MutPtrMatrix<int64_t> A,
+                               MutSquarePtrMatrix<int64_t> K, size_t i, Row M,
+                               Col N) {
   size_t minMN = std::min(size_t(M), size_t(N));
   for (size_t j = i + 1; j < M; ++j) {
     int64_t Aii = A(i, i);
@@ -65,9 +66,9 @@ inline void zeroSupDiagonal(MutPtrMatrix<int64_t> A,
 }
 // This method is only called by orthogonalize, hence we can assume
 // (Akk == 1) || (Akk == -1)
-inline void zeroSubDiagonal(MutPtrMatrix<int64_t> A,
-                            MutSquarePtrMatrix<int64_t> K, size_t k, Row M,
-                            Col N) {
+constexpr void zeroSubDiagonal(MutPtrMatrix<int64_t> A,
+                               MutSquarePtrMatrix<int64_t> K, size_t k, Row M,
+                               Col N) {
   int64_t Akk = A(k, k);
   if (Akk == -1) {
     for (size_t m = 0; m < N; ++m) A(k, m) *= -1;
@@ -100,7 +101,7 @@ constexpr inline auto solvePair(LinearAlgebra::AbstractRowMajorMatrix auto &A,
   return std::make_pair(MutPtrMatrix(A), MutPtrMatrix(B));
 }
 
-inline auto
+constexpr auto
 pivotRows(std::pair<MutPtrMatrix<int64_t>, MutPtrMatrix<int64_t>> AK, Col i,
           Row M, Row piv) -> bool {
   Row j = piv;
@@ -112,22 +113,23 @@ pivotRows(std::pair<MutPtrMatrix<int64_t>, MutPtrMatrix<int64_t>> AK, Col i,
   }
   return false;
 }
-inline auto pivotRows(MutPtrMatrix<int64_t> A, MutSquarePtrMatrix<int64_t> K,
-                      size_t i, Row M) -> bool {
+constexpr auto pivotRows(MutPtrMatrix<int64_t> A, MutSquarePtrMatrix<int64_t> K,
+                         size_t i, Row M) -> bool {
   return pivotRows(solvePair(A, K), Col{i}, M, Row{i});
 }
-inline auto pivotRows(MutPtrMatrix<int64_t> A, Col i, Row M, Row piv) -> bool {
+constexpr auto pivotRows(MutPtrMatrix<int64_t> A, Col i, Row M, Row piv)
+  -> bool {
   Row j = piv;
   while (A(piv, i) == 0)
     if (++piv == size_t(M)) return true;
   if (j != piv) swap(A, j, piv);
   return false;
 }
-inline auto pivotRows(MutPtrMatrix<int64_t> A, size_t i, Row N) -> bool {
+constexpr auto pivotRows(MutPtrMatrix<int64_t> A, size_t i, Row N) -> bool {
   return pivotRows(A, Col{i}, N, Row{i});
 }
 
-inline void dropCol(MutPtrMatrix<int64_t> A, size_t i, Row M, Col N) {
+constexpr void dropCol(MutPtrMatrix<int64_t> A, size_t i, Row M, Col N) {
   // if any rows are left, we shift them up to replace it
   if (N <= i) return;
   for (size_t m = 0; m < M; ++m)
@@ -135,13 +137,13 @@ inline void dropCol(MutPtrMatrix<int64_t> A, size_t i, Row M, Col N) {
     for (size_t n = i; n < N; ++n) A(m, n) = A(m, n + 1);
 }
 
-inline auto orthogonalizeBang(MutPtrMatrix<int64_t> A)
-  -> std::pair<SquareMatrix<int64_t>, llvm::SmallVector<unsigned>> {
+constexpr auto orthogonalizeBang(MutPtrMatrix<int64_t> A)
+  -> std::pair<SquareMatrix<int64_t>, Vector<unsigned, 12>> {
   // we try to orthogonalize with respect to as many rows of `A` as we can
   // prioritizing earlier rows.
   auto [M, N] = A.size();
   SquareMatrix<int64_t> K = SquareMatrix<int64_t>::identity(size_t(M));
-  llvm::SmallVector<unsigned> included;
+  Vector<unsigned, 12> included;
   included.reserve(std::min(size_t(M), size_t(N)));
   for (size_t i = 0, j = 0; i < std::min(size_t(M), size_t(N)); ++j) {
     // zero ith row
@@ -165,12 +167,12 @@ inline auto orthogonalizeBang(MutPtrMatrix<int64_t> A)
   }
   return std::make_pair(std::move(K), std::move(included));
 }
-inline auto orthogonalize(IntMatrix A)
-  -> std::pair<SquareMatrix<int64_t>, llvm::SmallVector<unsigned>> {
+constexpr auto orthogonalize(IntMatrix A)
+  -> std::pair<SquareMatrix<int64_t>, Vector<unsigned, 12>> {
   return orthogonalizeBang(A);
 }
 
-inline void zeroSupDiagonal(MutPtrMatrix<int64_t> A, Col r, Row c) {
+constexpr void zeroSupDiagonal(MutPtrMatrix<int64_t> A, Col r, Row c) {
   auto [M, N] = A.size();
   for (Row j = c + 1; j < M; ++j) {
     int64_t Aii = A(c, r);
@@ -185,7 +187,7 @@ inline void zeroSupDiagonal(MutPtrMatrix<int64_t> A, Col r, Row c) {
     }
   }
 }
-inline void
+constexpr void
 zeroSupDiagonal(std::pair<MutPtrMatrix<int64_t>, MutPtrMatrix<int64_t>> AB,
                 Col r, Row c) {
   auto [A, B] = AB;
@@ -211,7 +213,7 @@ zeroSupDiagonal(std::pair<MutPtrMatrix<int64_t>, MutPtrMatrix<int64_t>> AB,
     }
   }
 }
-inline void reduceSubDiagonal(MutPtrMatrix<int64_t> A, Col r, Row c) {
+constexpr void reduceSubDiagonal(MutPtrMatrix<int64_t> A, Col r, Row c) {
   int64_t Akk = A(c, r);
   if (Akk < 0) {
     Akk = -Akk;
@@ -241,9 +243,9 @@ inline void reduceSubDiagonal(MutPtrMatrix<int64_t> A, Col r, Row c) {
     }
   }
 }
-inline void reduceSubDiagonalStack(MutPtrMatrix<int64_t> A,
-                                   MutPtrMatrix<int64_t> B, size_t r,
-                                   size_t c) {
+constexpr void reduceSubDiagonalStack(MutPtrMatrix<int64_t> A,
+                                      MutPtrMatrix<int64_t> B, size_t r,
+                                      size_t c) {
   int64_t Akk = A(c, r);
   if (Akk < 0) {
     Akk = -Akk;
@@ -266,7 +268,7 @@ inline void reduceSubDiagonalStack(MutPtrMatrix<int64_t> A,
     }
   }
 }
-inline void
+constexpr void
 reduceSubDiagonal(std::pair<MutPtrMatrix<int64_t>, MutPtrMatrix<int64_t>> AB,
                   Col r, Row c) {
   auto [A, B] = AB;
@@ -304,13 +306,13 @@ reduceSubDiagonal(std::pair<MutPtrMatrix<int64_t>, MutPtrMatrix<int64_t>> AB,
   }
 }
 
-inline void reduceColumn(MutPtrMatrix<int64_t> A, Col c, Row r) {
+constexpr void reduceColumn(MutPtrMatrix<int64_t> A, Col c, Row r) {
   zeroSupDiagonal(A, c, r);
   reduceSubDiagonal(A, c, r);
 }
 // treats A as stacked on top of B
-inline void reduceColumnStack(MutPtrMatrix<int64_t> A, MutPtrMatrix<int64_t> B,
-                              size_t c, size_t r) {
+constexpr void reduceColumnStack(MutPtrMatrix<int64_t> A,
+                                 MutPtrMatrix<int64_t> B, size_t c, size_t r) {
   zeroSupDiagonal(B, c, r);
   reduceSubDiagonalStack(B, A, c, r);
 }
@@ -324,13 +326,13 @@ constexpr auto numNonZeroRows(PtrMatrix<int64_t> A) -> Row {
   return Mnew;
 }
 // NormalForm version assumes zero rows are sorted to end due to pivoting
-inline void removeZeroRows(IntMatrix &A) { A.truncate(numNonZeroRows(A)); }
+constexpr void removeZeroRows(IntMatrix &A) { A.truncate(numNonZeroRows(A)); }
 [[nodiscard]] constexpr auto removeZeroRows(MutPtrMatrix<int64_t> A)
   -> MutPtrMatrix<int64_t> {
   return A.truncate(numNonZeroRows(A));
 }
 
-inline auto simplifySystemImpl(MutPtrMatrix<int64_t> A, size_t colInit = 0)
+constexpr auto simplifySystemImpl(MutPtrMatrix<int64_t> A, size_t colInit = 0)
   -> Row {
   auto [M, N] = A.size();
   for (size_t r = 0, c = colInit; c < N && r < M; ++c)
@@ -564,9 +566,9 @@ inline void solveSystem(MutPtrMatrix<int64_t> A) {
 /// \f$\textbf{B}\f$ so that \f$\textbf{D}^{-1}\textbf{B} = \textbf{A}^{-1}\f$,
 /// and \f$\textbf{D}\f$ is diagonal.
 /// NOTE: This function assumes non-singular
-[[nodiscard]] inline auto inv(SquareMatrix<int64_t, 4> A)
-  -> std::pair<IntMatrix, SquareMatrix<int64_t, 4>> {
-  auto B = SquareMatrix<int64_t, 4>::identity(A.numCol());
+[[nodiscard]] inline auto inv(SquareMatrix<int64_t> A)
+  -> std::pair<IntMatrix, SquareMatrix<int64_t>> {
+  auto B = SquareMatrix<int64_t>::identity(A.numCol());
   solveSystem(A, B);
   return std::make_pair(A, B);
 }
@@ -589,7 +591,7 @@ inline void solveSystem(MutPtrMatrix<int64_t> A) {
 
 inline void nullSpace11(IntMatrix &B, IntMatrix &A) {
   const Row M = A.numRow();
-  B.resizeForOverwrite(M, Col{size_t(M)});
+  B.resizeForOverwrite(LinearAlgebra::SquareDims{M});
   B << 0;
   B.diag() << 1;
   solveSystem(A, B);
@@ -600,7 +602,7 @@ inline void nullSpace11(IntMatrix &B, IntMatrix &A) {
   Row D = M - R;
   size_t o = size_t(R * M);
   // we keep `D` columns
-  for (size_t d = 0; d < M * D; ++d) B.mem[d] = B.mem[d + o];
+  std::copy_n(B.data() + o, size_t(D * M), B.data() + o);
   B.truncate(D);
 }
 [[nodiscard]] inline auto nullSpace(IntMatrix A) -> IntMatrix {

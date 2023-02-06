@@ -1,5 +1,6 @@
 #pragma once
 #include "Math/Math.hpp"
+#include "Math/MatrixDimensions.hpp"
 #include <cstddef>
 #include <llvm/ADT/SmallVector.h>
 
@@ -21,6 +22,9 @@ template <typename T> struct EmptyMatrix {
     return std::make_pair(Row{0}, Col{0});
   }
   static constexpr auto view() -> EmptyMatrix<T> { return EmptyMatrix<T>{}; }
+  static constexpr auto dim() -> LinearAlgebra::SquareDims {
+    return LinearAlgebra::SquareDims{unsigned(0)};
+  }
 };
 
 static_assert(AbstractMatrix<EmptyMatrix<ptrdiff_t>>);
@@ -34,19 +38,8 @@ constexpr auto matmul(PtrMatrix<const T>, EmptyMatrix<T>) -> EmptyMatrix<T> {
   return EmptyMatrix<T>{};
 }
 
-template <typename T, typename S>
-concept MaybeMatrix =
-  std::is_same_v<T, Matrix<S>> || std::is_same_v<T, EmptyMatrix<S>>;
-
 template <typename T> struct EmptyVector {
   static constexpr auto size() -> size_t { return 0; };
   static constexpr auto begin() -> T * { return nullptr; }
   static constexpr auto end() -> T * { return nullptr; }
 };
-
-template <typename T, typename S>
-concept MaybeVector =
-  std::is_same_v<T, EmptyVector<S>> || std::is_same_v<T, PtrVector<S>> ||
-  std::is_same_v<T, MutPtrVector<S>> || std::is_same_v<T, StridedVector<S>> ||
-  std::is_same_v<T, MutStridedVector<S>> || std::is_same_v<T, Vector<S>> ||
-  std::is_same_v<T, llvm::SmallVector<S>>;
