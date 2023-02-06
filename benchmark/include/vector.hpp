@@ -18,31 +18,31 @@ void BM_InlinedVectorFill(benchmark::State &state) {
   size_t len = state.range(0);
   for (auto b : state) fillVector(v, len);
 }
-BENCHMARK(BM_InlinedVectorFill)->RangeMultiplier(4)->Range(1, 1 << 8);
+BENCHMARK(BM_InlinedVectorFill)->RangeMultiplier(2)->Range(1, 1 << 8);
 void BM_SmallVector8Fill(benchmark::State &state) {
   llvm::SmallVector<size_t, 8> v;
   size_t len = state.range(0);
   for (auto b : state) fillVector(v, len);
 }
-BENCHMARK(BM_SmallVector8Fill)->RangeMultiplier(4)->Range(1, 1 << 8);
+BENCHMARK(BM_SmallVector8Fill)->RangeMultiplier(2)->Range(1, 1 << 8);
 void BM_SmallVectorFill(benchmark::State &state) {
   llvm::SmallVector<size_t> v;
   size_t len = state.range(0);
   for (auto b : state) fillVector(v, len);
 }
-BENCHMARK(BM_SmallVectorFill)->RangeMultiplier(4)->Range(1, 1 << 8);
+BENCHMARK(BM_SmallVectorFill)->RangeMultiplier(2)->Range(1, 1 << 8);
 void BM_StdVectorFill(benchmark::State &state) {
   std::vector<size_t> v;
   size_t len = state.range(0);
   for (auto b : state) fillVector(v, len);
 }
-BENCHMARK(BM_StdVectorFill)->RangeMultiplier(4)->Range(1, 1 << 8);
+BENCHMARK(BM_StdVectorFill)->RangeMultiplier(2)->Range(1, 1 << 8);
 void BM_BufferFill(benchmark::State &state) {
   Buffer<size_t, 8, unsigned, std::allocator<size_t>> v;
   size_t len = state.range(0);
   for (auto b : state) fillVector(v, len);
 }
-BENCHMARK(BM_BufferFill)->RangeMultiplier(4)->Range(1, 1 << 8);
+BENCHMARK(BM_BufferFill)->RangeMultiplier(2)->Range(1, 1 << 8);
 void BM_InlinedVectorAllocFill(benchmark::State &state) {
   size_t len = state.range(0);
   for (auto b : state) {
@@ -50,7 +50,7 @@ void BM_InlinedVectorAllocFill(benchmark::State &state) {
     fillVector(v, len);
   }
 }
-BENCHMARK(BM_InlinedVectorAllocFill)->RangeMultiplier(4)->Range(1, 1 << 8);
+BENCHMARK(BM_InlinedVectorAllocFill)->RangeMultiplier(2)->Range(1, 1 << 8);
 void BM_SmallVector8AllocFill(benchmark::State &state) {
   size_t len = state.range(0);
   for (auto b : state) {
@@ -58,7 +58,7 @@ void BM_SmallVector8AllocFill(benchmark::State &state) {
     fillVector(v, len);
   }
 }
-BENCHMARK(BM_SmallVector8AllocFill)->RangeMultiplier(4)->Range(1, 1 << 8);
+BENCHMARK(BM_SmallVector8AllocFill)->RangeMultiplier(2)->Range(1, 1 << 8);
 void BM_SmallVectorAllocFill(benchmark::State &state) {
   size_t len = state.range(0);
   for (auto b : state) {
@@ -66,7 +66,7 @@ void BM_SmallVectorAllocFill(benchmark::State &state) {
     fillVector(v, len);
   }
 }
-BENCHMARK(BM_SmallVectorAllocFill)->RangeMultiplier(4)->Range(1, 1 << 8);
+BENCHMARK(BM_SmallVectorAllocFill)->RangeMultiplier(2)->Range(1, 1 << 8);
 void BM_StdVectorAllocFill(benchmark::State &state) {
   size_t len = state.range(0);
   for (auto b : state) {
@@ -74,7 +74,7 @@ void BM_StdVectorAllocFill(benchmark::State &state) {
     fillVector(v, len);
   }
 }
-BENCHMARK(BM_StdVectorAllocFill)->RangeMultiplier(4)->Range(1, 1 << 8);
+BENCHMARK(BM_StdVectorAllocFill)->RangeMultiplier(2)->Range(1, 1 << 8);
 void BM_BufferAllocFill(benchmark::State &state) {
   size_t len = state.range(0);
   for (auto b : state) {
@@ -82,4 +82,4 @@ void BM_BufferAllocFill(benchmark::State &state) {
     fillVector(v, len);
   }
 }
-BENCHMARK(BM_BufferAllocFill)->RangeMultiplier(4)->Range(1, 1 << 8);
+BENCHMARK(BM_BufferAllocFill)->RangeMultiplier(2)->Range(1, 1 << 8);
