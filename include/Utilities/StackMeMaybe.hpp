@@ -368,7 +368,7 @@ struct Buffer {
       resize(newSz.set(c));
     }
   }
-
+  [[nodiscard]] constexpr auto empty() const -> bool { return sz == S{}; }
   constexpr ~Buffer() { maybeDeallocate(); }
   [[nodiscard]] constexpr auto size() const noexcept -> S { return sz; }
   // does not free memory, leaving capacity unchanged
