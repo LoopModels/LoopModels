@@ -47,15 +47,27 @@ struct Buffer {
     sz = s;
     U len = U(sz);
     if (len <= N) return;
+#if __cplusplus >= 202202L
+    std::allocation_result res = allocator.allocate_at_least(len);
+    ptr = res.ptr;
+    capacity = res.count;
+#else
     ptr = allocator.allocate(len);
     capacity = len;
+#endif
   }
   constexpr Buffer(S s, T x) noexcept : ptr{memory}, capacity{N} {
     sz = s;
     U len = U(sz);
     if (len > N) {
+#if __cplusplus >= 202202L
+      std::allocation_result res = allocator.allocate_at_least(len);
+      ptr = res.ptr;
+      capacity = res.count;
+#else
       ptr = allocator.allocate(len);
       capacity = len;
+#endif
     }
     std::uninitialized_fill_n((T *)(ptr), len, x);
   }
@@ -157,7 +169,13 @@ struct Buffer {
     if constexpr (std::integral<S>) {
       if (nz <= capacity) return;
       U newCapacity = U(nz);
+#if __cplusplus >= 202202L
+      std::allocation_result res = allocator.allocate_at_least(newCapacity);
+      T *newPtr = res.ptr;
+      newCapacity = U(res.count);
+#else
       T *newPtr = allocator.allocate(newCapacity);
+#endif
       if (oz) std::uninitialized_copy_n((T *)(ptr), oz, newPtr);
       maybeDeallocate(newPtr, newCapacity);
       invariant(newCapacity > oz);
@@ -173,7 +191,16 @@ struct Buffer {
            oldM = unsigned{LinearAlgebra::Row{oz}};
       U len = U(nz);
       bool newAlloc = U(len) > capacity;
+#if __cplusplus >= 202202L
+      T *npt = (T *)(ptr);
+      if (newAlloc) {
+        std::allocation_result res = allocator.allocate_at_least(len);
+        npt = res.ptr;
+        len = U(res.count);
+      }
+#else
       T *npt = newAlloc ? allocator.allocate(len) : (T *)(ptr);
+#endif
       // we can copy forward so long as the new stride is smaller
       // so that the start of the dst range is outside of the src range
       // we can also safely forward copy if we allocated a new ptr
@@ -360,8 +387,14 @@ struct Buffer {
   constexpr void reserve(S nz) {
     U newCapacity = U(nz);
     if (newCapacity <= capacity) return;
-    // allocate new, copy, deallocate old
+      // allocate new, copy, deallocate old
+#if __cplusplus >= 202202L
+    std::allocation_result res = allocator.allocate_at_least(newCapacity);
+    T *newPtr = res.ptr;
+    newCapacity = U(res.size);
+#else
     T *newPtr = allocator.allocate(newCapacity);
+#endif
     if (U oldLen = U(sz)) std::uninitialized_copy_n((T *)(ptr), oldLen, newPtr);
     maybeDeallocate();
     ptr = newPtr;
