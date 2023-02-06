@@ -3,7 +3,7 @@ var searchData=
   ['map_108',['Map',['../structPredicate_1_1Map.html',1,'Predicate']]],
   ['matmatmul_109',['MatMatMul',['../structLinearAlgebra_1_1MatMatMul.html',1,'LinearAlgebra']]],
   ['matrix_110',['Matrix',['../structLinearAlgebra_1_1Matrix.html',1,'LinearAlgebra']]],
-  ['matrix_3c_20int64_5ft_2c_200_2c_200_2c_200_20_3e_111',['Matrix&lt; int64_t, 0, 0, 0 &gt;',['../structLinearAlgebra_1_1Matrix.html',1,'LinearAlgebra']]],
+  ['matrix_3c_20int64_5ft_2c_20linearalgebra_3a_3astrideddims_2c_200_20_3e_111',['Matrix&lt; int64_t, LinearAlgebra::StridedDims, 0 &gt;',['../structLinearAlgebra_1_1Matrix.html',1,'LinearAlgebra']]],
   ['matvecmul_112',['MatVecMul',['../structLinearAlgebra_1_1MatVecMul.html',1,'LinearAlgebra']]],
   ['memoryaccess_113',['MemoryAccess',['../structMemoryAccess.html',1,'']]],
   ['mergingcost_114',['MergingCost',['../structMergingCost.html',1,'']]],

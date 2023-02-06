@@ -128,21 +128,21 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>dim</b> () 
 template&lt;typename M &gt; </td></tr>
 <tr class="memitem:a1a207d1ed04503e8b251dc23f0f637ac"><td class="memTemplItemLeft" align="right" valign="top">constexpr&#160;</td><td class="memTemplItemRight" valign="bottom"><b>operator PtrMatrix&lt; T, M &gt;</b> () const</td></tr>
 <tr class="separator:a1a207d1ed04503e8b251dc23f0f637ac"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6aac71104612865cb8957b970f7c78ed"><td class="memItemLeft" align="right" valign="top"><a id="a6aac71104612865cb8957b970f7c78ed"></a>
-constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>MutPtrMatrix</b> (const <a class="el" href="structLinearAlgebra_1_1MutPtrMatrix.html">MutPtrMatrix</a>&lt; T &gt; &amp;A)=default</td></tr>
-<tr class="separator:a6aac71104612865cb8957b970f7c78ed"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a173453409fbe5040ed36199efaabde62"><td class="memItemLeft" align="right" valign="top"><a id="a173453409fbe5040ed36199efaabde62"></a>
+constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>MutPtrMatrix</b> (const <a class="el" href="structLinearAlgebra_1_1MutPtrMatrix.html">MutPtrMatrix</a> &amp;A)=default</td></tr>
+<tr class="separator:a173453409fbe5040ed36199efaabde62"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab200c33ca76f7f044c1da2fc1fc6f7b5"><td class="memItemLeft" align="right" valign="top"><a id="ab200c33ca76f7f044c1da2fc1fc6f7b5"></a>
+constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>MutPtrMatrix</b> (T *pt, D dim)</td></tr>
+<tr class="separator:ab200c33ca76f7f044c1da2fc1fc6f7b5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a524a631d910741eba470fc23f60045c8"><td class="memItemLeft" align="right" valign="top"><a id="a524a631d910741eba470fc23f60045c8"></a>
 constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>MutPtrMatrix</b> (T *pt, <a class="el" href="structLinearAlgebra_1_1AxisInt.html">Row</a> M, <a class="el" href="structLinearAlgebra_1_1AxisInt.html">Col</a> N)</td></tr>
 <tr class="separator:a524a631d910741eba470fc23f60045c8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afd2126d06836e8d65a7dcf84c35e69b3"><td class="memItemLeft" align="right" valign="top"><a id="afd2126d06836e8d65a7dcf84c35e69b3"></a>
 constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>MutPtrMatrix</b> (T *pt, <a class="el" href="structLinearAlgebra_1_1AxisInt.html">Row</a> M, <a class="el" href="structLinearAlgebra_1_1AxisInt.html">Col</a> N, <a class="el" href="structLinearAlgebra_1_1AxisInt.html">RowStride</a> X)</td></tr>
 <tr class="separator:afd2126d06836e8d65a7dcf84c35e69b3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aca47cdf0a6b265df15cc09a116e48592"><td class="memItemLeft" align="right" valign="top"><a id="aca47cdf0a6b265df15cc09a116e48592"></a>
-constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>MutPtrMatrix</b> (AbstractMatrixCore auto &amp;A)</td></tr>
-<tr class="separator:aca47cdf0a6b265df15cc09a116e48592"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3f377fdec3ac17c5b74eb8aab4fc6dee"><td class="memItemLeft" align="right" valign="top"><a id="a3f377fdec3ac17c5b74eb8aab4fc6dee"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator=</b> (const <a class="el" href="structLinearAlgebra_1_1MutPtrMatrix.html">MutPtrMatrix</a>&lt; T &gt; &amp;A) -&gt; <a class="el" href="structLinearAlgebra_1_1MutPtrMatrix.html">MutPtrMatrix</a>&lt; T &gt; &amp;=default</td></tr>
-<tr class="separator:a3f377fdec3ac17c5b74eb8aab4fc6dee"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acad044dffc4de91e7361d065fc7cb822"><td class="memItemLeft" align="right" valign="top"><a id="acad044dffc4de91e7361d065fc7cb822"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator=</b> (const <a class="el" href="structLinearAlgebra_1_1MutPtrMatrix.html">MutPtrMatrix</a> &amp;A) -&gt; <a class="el" href="structLinearAlgebra_1_1MutPtrMatrix.html">MutPtrMatrix</a>&lt; T, D &gt; &amp;=default</td></tr>
+<tr class="separator:acad044dffc4de91e7361d065fc7cb822"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a10f8166787f6952c5fe9da902e9413e4"><td class="memItemLeft" align="right" valign="top"><a id="a10f8166787f6952c5fe9da902e9413e4"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>extendOrAssertSize</b> (<a class="el" href="structLinearAlgebra_1_1AxisInt.html">Row</a> MM, <a class="el" href="structLinearAlgebra_1_1AxisInt.html">Col</a> NN) const</td></tr>
 <tr class="separator:a10f8166787f6952c5fe9da902e9413e4"><td class="memSeparator" colspan="2">&#160;</td></tr>

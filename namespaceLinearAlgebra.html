@@ -156,6 +156,22 @@ using&#160;</td><td class="memItemRight" valign="bottom"><b>RowStride</b> = <a c
 <tr class="memitem:aa266b7faac805d3c94071d949cb82781"><td class="memItemLeft" align="right" valign="top"><a id="aa266b7faac805d3c94071d949cb82781"></a>
 using&#160;</td><td class="memItemRight" valign="bottom"><b>CarInd</b> = std::pair&lt; <a class="el" href="structLinearAlgebra_1_1AxisInt.html">Row</a>, <a class="el" href="structLinearAlgebra_1_1AxisInt.html">Col</a> &gt;</td></tr>
 <tr class="separator:aa266b7faac805d3c94071d949cb82781"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aeb1d9028b942299d25354a16f8f40d90"><td class="memTemplParams" colspan="2"><a id="aeb1d9028b942299d25354a16f8f40d90"></a>
+template&lt;typename T , size_t L = 16&gt; </td></tr>
+<tr class="memitem:aeb1d9028b942299d25354a16f8f40d90"><td class="memTemplItemLeft" align="right" valign="top">using&#160;</td><td class="memTemplItemRight" valign="bottom"><b>SquareMatrix</b> = <a class="el" href="structLinearAlgebra_1_1Matrix.html">Matrix</a>&lt; T, <a class="el" href="structLinearAlgebra_1_1SquareDims.html">SquareDims</a>, L &gt;</td></tr>
+<tr class="separator:aeb1d9028b942299d25354a16f8f40d90"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a14ca545a58cb261b7e938543fc3033c8"><td class="memTemplParams" colspan="2"><a id="a14ca545a58cb261b7e938543fc3033c8"></a>
+template&lt;typename T &gt; </td></tr>
+<tr class="memitem:a14ca545a58cb261b7e938543fc3033c8"><td class="memTemplItemLeft" align="right" valign="top">using&#160;</td><td class="memTemplItemRight" valign="bottom"><b>MutSquarePtrMatrix</b> = <a class="el" href="structLinearAlgebra_1_1MutPtrMatrix.html">MutPtrMatrix</a>&lt; T, <a class="el" href="structLinearAlgebra_1_1SquareDims.html">SquareDims</a> &gt;</td></tr>
+<tr class="separator:a14ca545a58cb261b7e938543fc3033c8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aaf972456b931c6f2a5e587d957926676"><td class="memTemplParams" colspan="2"><a id="aaf972456b931c6f2a5e587d957926676"></a>
+template&lt;typename T &gt; </td></tr>
+<tr class="memitem:aaf972456b931c6f2a5e587d957926676"><td class="memTemplItemLeft" align="right" valign="top">using&#160;</td><td class="memTemplItemRight" valign="bottom"><b>SquarePtrMatrix</b> = <a class="el" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix</a>&lt; T, <a class="el" href="structLinearAlgebra_1_1SquareDims.html">SquareDims</a> &gt;</td></tr>
+<tr class="separator:aaf972456b931c6f2a5e587d957926676"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a80f47b42e764d2ca276e3de3566b14e6"><td class="memTemplParams" colspan="2"><a id="a80f47b42e764d2ca276e3de3566b14e6"></a>
+template&lt;typename T &gt; </td></tr>
+<tr class="memitem:a80f47b42e764d2ca276e3de3566b14e6"><td class="memTemplItemLeft" align="right" valign="top">using&#160;</td><td class="memTemplItemRight" valign="bottom"><b>DenseMutPtrMatrix</b> = <a class="el" href="structLinearAlgebra_1_1MutPtrMatrix.html">MutPtrMatrix</a>&lt; T, <a class="el" href="structLinearAlgebra_1_1DenseDims.html">DenseDims</a> &gt;</td></tr>
+<tr class="separator:a80f47b42e764d2ca276e3de3566b14e6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa5bece4a13fb372ac80dc1772aa582fa"><td class="memItemLeft" align="right" valign="top"><a id="aa5bece4a13fb372ac80dc1772aa582fa"></a>
 using&#160;</td><td class="memItemRight" valign="bottom"><b>IntMatrix</b> = <a class="el" href="structLinearAlgebra_1_1Matrix.html">Matrix</a>&lt; int64_t, <a class="el" href="structLinearAlgebra_1_1StridedDims.html">StridedDims</a>, 64 &gt;</td></tr>
 <tr class="separator:aa5bece4a13fb372ac80dc1772aa582fa"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -336,10 +352,10 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>checkIndex</b> (size_
 template&lt;typename T &gt; </td></tr>
 <tr class="memitem:ae22c51eb98f3a19ed20873d6a6881b5e"><td class="memTemplItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>matrixGet</b> (<a class="el" href="structNotNull.html">NotNull</a>&lt; T &gt; ptr, <a class="el" href="structLinearAlgebra_1_1AxisInt.html">Row</a> M, <a class="el" href="structLinearAlgebra_1_1AxisInt.html">Col</a> N, <a class="el" href="structLinearAlgebra_1_1AxisInt.html">RowStride</a> X, const ScalarRowIndex auto mm, const ScalarColIndex auto nn) -&gt; T &amp;</td></tr>
 <tr class="separator:ae22c51eb98f3a19ed20873d6a6881b5e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2c190806827261d09a19d3522cec4052"><td class="memTemplParams" colspan="2"><a id="a2c190806827261d09a19d3522cec4052"></a>
+<tr class="memitem:a92a98718a0d0f87e41ea429eba9f084b"><td class="memTemplParams" colspan="2"><a id="a92a98718a0d0f87e41ea429eba9f084b"></a>
 template&lt;typename T &gt; </td></tr>
-<tr class="memitem:a2c190806827261d09a19d3522cec4052"><td class="memTemplItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>matrixGet</b> (<a class="el" href="structNotNull.html">NotNull</a>&lt; const T &gt; ptr, <a class="el" href="structLinearAlgebra_1_1AxisInt.html">Row</a> M, <a class="el" href="structLinearAlgebra_1_1AxisInt.html">Col</a> N, <a class="el" href="structLinearAlgebra_1_1AxisInt.html">RowStride</a> X, const AbstractSlice auto m, const AbstractSlice auto n) -&gt; <a class="el" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix</a>&lt; T &gt;</td></tr>
-<tr class="separator:a2c190806827261d09a19d3522cec4052"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a92a98718a0d0f87e41ea429eba9f084b"><td class="memTemplItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>matrixGet</b> (<a class="el" href="structNotNull.html">NotNull</a>&lt; const T &gt; ptr, <a class="el" href="structLinearAlgebra_1_1AxisInt.html">Row</a> M, <a class="el" href="structLinearAlgebra_1_1AxisInt.html">Col</a> N, <a class="el" href="structLinearAlgebra_1_1AxisInt.html">RowStride</a> X, const AbstractSlice auto m, const AbstractSlice auto n) -&gt; <a class="el" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix</a>&lt; T, <a class="el" href="structLinearAlgebra_1_1StridedDims.html">StridedDims</a> &gt;</td></tr>
+<tr class="separator:a92a98718a0d0f87e41ea429eba9f084b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7254378d2aae0e57969f9fb4f6f80623"><td class="memTemplParams" colspan="2"><a id="a7254378d2aae0e57969f9fb4f6f80623"></a>
 template&lt;typename T &gt; </td></tr>
 <tr class="memitem:a7254378d2aae0e57969f9fb4f6f80623"><td class="memTemplItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>matrixGet</b> (<a class="el" href="structNotNull.html">NotNull</a>&lt; const T &gt; ptr, <a class="el" href="structLinearAlgebra_1_1AxisInt.html">Row</a> M, <a class="el" href="structLinearAlgebra_1_1AxisInt.html">Col</a> N, <a class="el" href="structLinearAlgebra_1_1AxisInt.html">RowStride</a> X, const ScalarRowIndex auto mm, const AbstractSlice auto n) -&gt; <a class="el" href="structLinearAlgebra_1_1PtrVector.html">PtrVector</a>&lt; T &gt;</td></tr>
@@ -659,6 +675,10 @@ template&lt;typename T &gt; </td></tr>
 template&lt;typename T &gt; </td></tr>
 <tr class="memitem:a5720e30d55f64b50cb6acd421d98ff3d"><td class="memTemplItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>identity</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, size_t M) -&gt; <a class="el" href="structLinearAlgebra_1_1MutPtrMatrix.html">MutPtrMatrix</a>&lt; T, <a class="el" href="structLinearAlgebra_1_1SquareDims.html">SquareDims</a> &gt;</td></tr>
 <tr class="separator:a5720e30d55f64b50cb6acd421d98ff3d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a80d247795ee29b9062abb86b91ad8e16"><td class="memTemplParams" colspan="2"><a id="a80d247795ee29b9062abb86b91ad8e16"></a>
+template&lt;std::integral I&gt; </td></tr>
+<tr class="memitem:a80d247795ee29b9062abb86b91ad8e16"><td class="memTemplItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>checkedMul</b> (std::integral auto a, std::integral auto b) -&gt; I</td></tr>
+<tr class="separator:a80d247795ee29b9062abb86b91ad8e16"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a027485942318886611fd0157e8cfb731"><td class="memTemplParams" colspan="2"><a id="a027485942318886611fd0157e8cfb731"></a>
 template&lt;typename T &gt; </td></tr>
 <tr class="memitem:a027485942318886611fd0157e8cfb731"><td class="memTemplItemLeft" align="right" valign="top">consteval auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>PreAllocStorage</b> () -&gt; size_t</td></tr>
@@ -730,15 +750,23 @@ template&lt;typename T &gt; </td></tr>
 template&lt;typename T &gt; </td></tr>
 <tr class="memitem:a5d8b6e5746537ba1b11fce45abe690b9"><td class="memTemplItemLeft" align="right" valign="top">concept&#160;</td><td class="memTemplItemRight" valign="bottom"><b>TriviallyCopyable</b> = std::is_trivially_copyable_v&lt;T&gt;</td></tr>
 <tr class="separator:a5d8b6e5746537ba1b11fce45abe690b9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a678b12a140ee7e1ed064bbbfd5dca634"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
-<tr class="memitem:a678b12a140ee7e1ed064bbbfd5dca634"><td class="memTemplItemLeft" align="right" valign="top">concept&#160;</td><td class="memTemplItemRight" valign="bottom"><b>DerivedMatrix</b></td></tr>
-<tr class="separator:a678b12a140ee7e1ed064bbbfd5dca634"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2915eb3e274356e1dc0b1cb460f83f0a"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
 <tr class="memitem:a2915eb3e274356e1dc0b1cb460f83f0a"><td class="memTemplItemLeft" align="right" valign="top">concept&#160;</td><td class="memTemplItemRight" valign="bottom"><b>AbstractMatrixCore</b></td></tr>
 <tr class="separator:a2915eb3e274356e1dc0b1cb460f83f0a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0dcd2eacac175767a64e3104bf35dd24"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
 <tr class="memitem:a0dcd2eacac175767a64e3104bf35dd24"><td class="memTemplItemLeft" align="right" valign="top">concept&#160;</td><td class="memTemplItemRight" valign="bottom"><b>AbstractMatrix</b></td></tr>
 <tr class="separator:a0dcd2eacac175767a64e3104bf35dd24"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a737c293ec54205df41a39571d47598aa"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
+<tr class="memitem:a737c293ec54205df41a39571d47598aa"><td class="memTemplItemLeft" align="right" valign="top">concept&#160;</td><td class="memTemplItemRight" valign="bottom"><b>HasDataPtr</b></td></tr>
+<tr class="separator:a737c293ec54205df41a39571d47598aa"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a07c3d534f48ae86748321a8db6bdee54"><td class="memTemplParams" colspan="2"><a id="a07c3d534f48ae86748321a8db6bdee54"></a>
+template&lt;typename T &gt; </td></tr>
+<tr class="memitem:a07c3d534f48ae86748321a8db6bdee54"><td class="memTemplItemLeft" align="right" valign="top">concept&#160;</td><td class="memTemplItemRight" valign="bottom"><b>DataMatrix</b> = AbstractMatrix&lt;T&gt; &amp;&amp; HasDataPtr&lt;T&gt;</td></tr>
+<tr class="separator:a07c3d534f48ae86748321a8db6bdee54"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7ff53699e08be8843e6c1536731ab8d8"><td class="memTemplParams" colspan="2"><a id="a7ff53699e08be8843e6c1536731ab8d8"></a>
+template&lt;typename T &gt; </td></tr>
+<tr class="memitem:a7ff53699e08be8843e6c1536731ab8d8"><td class="memTemplItemLeft" align="right" valign="top">concept&#160;</td><td class="memTemplItemRight" valign="bottom"><b>TemplateMatrix</b> = AbstractMatrix&lt;T&gt; &amp;&amp; (!HasDataPtr&lt;T&gt;)</td></tr>
+<tr class="separator:a7ff53699e08be8843e6c1536731ab8d8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a337d2d125003558fe135899a5054c6c9"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
 <tr class="memitem:a337d2d125003558fe135899a5054c6c9"><td class="memTemplItemLeft" align="right" valign="top">concept&#160;</td><td class="memTemplItemRight" valign="bottom"><b>AbstractRowMajorMatrix</b></td></tr>
 <tr class="separator:a337d2d125003558fe135899a5054c6c9"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -872,8 +900,8 @@ template&lt;typename T &gt; </div>
 </div><!-- fragment -->
 </div>
 </div>
-<a id="a678b12a140ee7e1ed064bbbfd5dca634"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a678b12a140ee7e1ed064bbbfd5dca634">&#9670;&nbsp;</a></span>DerivedMatrix</h2>
+<a id="a737c293ec54205df41a39571d47598aa"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a737c293ec54205df41a39571d47598aa">&#9670;&nbsp;</a></span>HasDataPtr</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -881,24 +909,13 @@ template&lt;typename T &gt; </div>
 template&lt;typename T &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">concept LinearAlgebra::DerivedMatrix</td>
+          <td class="memname">concept LinearAlgebra::HasDataPtr</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<b>Initial value:</b><div class="fragment"><div class="line">=</div>
-<div class="line">  requires(T t, <span class="keyword">const</span> T ct) {</div>
-<div class="line">    {</div>
-<div class="line">      t.data()</div>
-<div class="line">      } -&gt; std::convertible_to&lt;<span class="keyword">typename</span> std::add_pointer_t&lt;</div>
-<div class="line">        <span class="keyword">typename</span> std::add_const_t&lt;typename T::eltype&gt;&gt;&gt;;</div>
-<div class="line">    {</div>
-<div class="line">      ct.data()</div>
-<div class="line">      } -&gt; std::same_as&lt;<span class="keyword">typename</span> std::add_pointer_t&lt;</div>
-<div class="line">        <span class="keyword">typename</span> std::add_const_t&lt;typename T::eltype&gt;&gt;&gt;;</div>
-<div class="line">    { t.numRow() } -&gt; std::convertible_to&lt;Row&gt;;</div>
-<div class="line">    { t.numCol() } -&gt; std::convertible_to&lt;Col&gt;;</div>
-<div class="line">    { t.rowStride() } -&gt; std::convertible_to&lt;RowStride&gt;;</div>
-<div class="line">  }</div>
+<b>Initial value:</b><div class="fragment"><div class="line">= requires(T t) {</div>
+<div class="line">                       { t.data() } -&gt; std::same_as&lt;eltype_t&lt;T&gt; *&gt;;</div>
+<div class="line">                     }</div>
 </div><!-- fragment -->
 </div>
 </div>

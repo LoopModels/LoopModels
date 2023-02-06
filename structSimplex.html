@@ -83,57 +83,57 @@ Classes</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:ac9f12392832367afd295ecdd3050e36e"><td class="memItemLeft" align="right" valign="top"><a id="ac9f12392832367afd295ecdd3050e36e"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>resize</b> (size_t numCon, size_t numVar)</td></tr>
-<tr class="separator:ac9f12392832367afd295ecdd3050e36e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a33c9ab4bfb47dcc34f5a6c8daffcecf7"><td class="memItemLeft" align="right" valign="top"><a id="a33c9ab4bfb47dcc34f5a6c8daffcecf7"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>resize</b> (size_t numCon, size_t numVar, <a class="el" href="structLinearAlgebra_1_1AxisInt.html">LinearAlgebra::RowStride</a> stride)</td></tr>
-<tr class="separator:a33c9ab4bfb47dcc34f5a6c8daffcecf7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4e753c6e7986795593839ea4e6b36345"><td class="memItemLeft" align="right" valign="top"><a id="a4e753c6e7986795593839ea4e6b36345"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>addVars</b> (size_t numVars)</td></tr>
-<tr class="separator:a4e753c6e7986795593839ea4e6b36345"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5c539a5ffbed2cb645b1ef28ca275b45"><td class="memItemLeft" align="right" valign="top"><a id="a5c539a5ffbed2cb645b1ef28ca275b45"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>addConstraint</b> () -&gt; <a class="el" href="structLinearAlgebra_1_1MutPtrVector.html">MutPtrVector</a>&lt; int64_t &gt;</td></tr>
-<tr class="separator:a5c539a5ffbed2cb645b1ef28ca275b45"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2abc5ddca78ba6625e564e3421683877"><td class="memItemLeft" align="right" valign="top"><a id="a2abc5ddca78ba6625e564e3421683877"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>addConstraintAndVar</b> () -&gt; <a class="el" href="structLinearAlgebra_1_1MutPtrVector.html">MutPtrVector</a>&lt; int64_t &gt;</td></tr>
-<tr class="separator:a2abc5ddca78ba6625e564e3421683877"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a174111789d97c3a724338b95b48c6d74"><td class="memItemLeft" align="right" valign="top"><a id="a174111789d97c3a724338b95b48c6d74"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>addConstraintsAndVars</b> (size_t i) -&gt; <a class="el" href="structLinearAlgebra_1_1MutPtrMatrix.html">MutPtrMatrix</a>&lt; int64_t &gt;</td></tr>
-<tr class="separator:a174111789d97c3a724338b95b48c6d74"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab28a5eea3f0263f2ff80a834b6342722"><td class="memItemLeft" align="right" valign="top"><a id="ab28a5eea3f0263f2ff80a834b6342722"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>reserve</b> (size_t numCon, size_t numVar)</td></tr>
-<tr class="separator:ab28a5eea3f0263f2ff80a834b6342722"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aafb6ac1939b4c00209f203446c5578d0"><td class="memItemLeft" align="right" valign="top"><a id="aafb6ac1939b4c00209f203446c5578d0"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>clearReserve</b> (size_t numCon, size_t numVar)</td></tr>
-<tr class="separator:aafb6ac1939b4c00209f203446c5578d0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af2e01a8fbe447b3bf558e932e98cf5b9"><td class="memItemLeft" align="right" valign="top"><a id="af2e01a8fbe447b3bf558e932e98cf5b9"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>reserveExtraRows</b> (size_t additionalRows)</td></tr>
-<tr class="separator:af2e01a8fbe447b3bf558e932e98cf5b9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1bb54d6d209eda502af323dd8bce53e7"><td class="memItemLeft" align="right" valign="top"><a id="a1bb54d6d209eda502af323dd8bce53e7"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>reserveExtra</b> (Row additionalRows, Col additionalCols)</td></tr>
-<tr class="separator:a1bb54d6d209eda502af323dd8bce53e7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4b3ce203138baa4a27961faea1905db9"><td class="memItemLeft" align="right" valign="top"><a id="a4b3ce203138baa4a27961faea1905db9"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>reserveExtra</b> (size_t additional)</td></tr>
-<tr class="separator:a4b3ce203138baa4a27961faea1905db9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afc220c5ffab6454b84c3d03fa71ca546"><td class="memItemLeft" align="right" valign="top"><a id="afc220c5ffab6454b84c3d03fa71ca546"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>truncateVars</b> (size_t numVars)</td></tr>
-<tr class="separator:afc220c5ffab6454b84c3d03fa71ca546"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3ced5e5d05edbe3584de602ab2efb7a1"><td class="memItemLeft" align="right" valign="top"><a id="a3ced5e5d05edbe3584de602ab2efb7a1"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>truncateConstraints</b> (size_t numCons)</td></tr>
-<tr class="separator:a3ced5e5d05edbe3584de602ab2efb7a1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a54794a7facbc854b06e1a701348ab9ce"><td class="memItemLeft" align="right" valign="top"><a id="a54794a7facbc854b06e1a701348ab9ce"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>resizeForOverwrite</b> (size_t numCon, size_t numVar)</td></tr>
-<tr class="separator:a54794a7facbc854b06e1a701348ab9ce"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9dfb3d74e281d9c6eb1a5745648876e0"><td class="memItemLeft" align="right" valign="top"><a id="a9dfb3d74e281d9c6eb1a5745648876e0"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>resizeForOverwrite</b> (size_t numCon, size_t numVar, size_t stride)</td></tr>
-<tr class="separator:a9dfb3d74e281d9c6eb1a5745648876e0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aefaac1f944b55b777486bdf1f2acd7eb"><td class="memItemLeft" align="right" valign="top"><a id="aefaac1f944b55b777486bdf1f2acd7eb"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getCostsAndConstraints</b> () -&gt; <a class="el" href="structLinearAlgebra_1_1MutPtrMatrix.html">MutPtrMatrix</a>&lt; int64_t &gt;</td></tr>
-<tr class="separator:aefaac1f944b55b777486bdf1f2acd7eb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a921018b2c00a158968bb762ab5e4d60a"><td class="memItemLeft" align="right" valign="top"><a id="a921018b2c00a158968bb762ab5e4d60a"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getCostsAndConstraints</b> () const -&gt; <a class="el" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix</a>&lt; int64_t &gt;</td></tr>
-<tr class="separator:a921018b2c00a158968bb762ab5e4d60a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a378ae4f3e1d4958f20e56d6d2789c7fb"><td class="memItemLeft" align="right" valign="top"><a id="a378ae4f3e1d4958f20e56d6d2789c7fb"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>resize</b> (size_t numCon, size_t numVar)</td></tr>
+<tr class="separator:a378ae4f3e1d4958f20e56d6d2789c7fb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a136f2ca1fb46c565c9ac7b1cfae1700b"><td class="memItemLeft" align="right" valign="top"><a id="a136f2ca1fb46c565c9ac7b1cfae1700b"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>resize</b> (size_t numCon, size_t numVar, <a class="el" href="structLinearAlgebra_1_1AxisInt.html">LinearAlgebra::RowStride</a> stride)</td></tr>
+<tr class="separator:a136f2ca1fb46c565c9ac7b1cfae1700b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3740ce2b030b74b56502101200da8bb0"><td class="memItemLeft" align="right" valign="top"><a id="a3740ce2b030b74b56502101200da8bb0"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>addVars</b> (size_t numVars)</td></tr>
+<tr class="separator:a3740ce2b030b74b56502101200da8bb0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6afffb9036f503b3ca1b5d59eae90744"><td class="memItemLeft" align="right" valign="top"><a id="a6afffb9036f503b3ca1b5d59eae90744"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>addConstraint</b> () -&gt; <a class="el" href="structLinearAlgebra_1_1MutPtrVector.html">MutPtrVector</a>&lt; int64_t &gt;</td></tr>
+<tr class="separator:a6afffb9036f503b3ca1b5d59eae90744"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1fe0003c8c6af8477109fdcd276adedc"><td class="memItemLeft" align="right" valign="top"><a id="a1fe0003c8c6af8477109fdcd276adedc"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>addConstraintAndVar</b> () -&gt; <a class="el" href="structLinearAlgebra_1_1MutPtrVector.html">MutPtrVector</a>&lt; int64_t &gt;</td></tr>
+<tr class="separator:a1fe0003c8c6af8477109fdcd276adedc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1b5fa6108fe5fd3e029e358fbb4e2133"><td class="memItemLeft" align="right" valign="top"><a id="a1b5fa6108fe5fd3e029e358fbb4e2133"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>addConstraintsAndVars</b> (size_t i) -&gt; <a class="el" href="structLinearAlgebra_1_1MutPtrMatrix.html">MutPtrMatrix</a>&lt; int64_t &gt;</td></tr>
+<tr class="separator:a1b5fa6108fe5fd3e029e358fbb4e2133"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aee71016f5ffaea40a7bf84d623c4aa64"><td class="memItemLeft" align="right" valign="top"><a id="aee71016f5ffaea40a7bf84d623c4aa64"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>reserve</b> (size_t numCon, size_t numVar)</td></tr>
+<tr class="separator:aee71016f5ffaea40a7bf84d623c4aa64"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ace7cb4ce2683c2eb3e91e20c4b281d28"><td class="memItemLeft" align="right" valign="top"><a id="ace7cb4ce2683c2eb3e91e20c4b281d28"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>clearReserve</b> (size_t numCon, size_t numVar)</td></tr>
+<tr class="separator:ace7cb4ce2683c2eb3e91e20c4b281d28"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1e5f8cd0ada4803e2ea8584b3f9f5b4b"><td class="memItemLeft" align="right" valign="top"><a id="a1e5f8cd0ada4803e2ea8584b3f9f5b4b"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>reserveExtraRows</b> (size_t additionalRows)</td></tr>
+<tr class="separator:a1e5f8cd0ada4803e2ea8584b3f9f5b4b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad9141b12a74b4e50d8398cc41bcf834a"><td class="memItemLeft" align="right" valign="top"><a id="ad9141b12a74b4e50d8398cc41bcf834a"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>reserveExtra</b> (Row additionalRows, Col additionalCols)</td></tr>
+<tr class="separator:ad9141b12a74b4e50d8398cc41bcf834a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a776a1b8f7e5bb8088d3ec35e845d4149"><td class="memItemLeft" align="right" valign="top"><a id="a776a1b8f7e5bb8088d3ec35e845d4149"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>reserveExtra</b> (size_t additional)</td></tr>
+<tr class="separator:a776a1b8f7e5bb8088d3ec35e845d4149"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a191241d28d23fc6a3a7523c42a6b9354"><td class="memItemLeft" align="right" valign="top"><a id="a191241d28d23fc6a3a7523c42a6b9354"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>truncateVars</b> (size_t numVars)</td></tr>
+<tr class="separator:a191241d28d23fc6a3a7523c42a6b9354"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abe8feb18ec7903f2928688e8cd5f047e"><td class="memItemLeft" align="right" valign="top"><a id="abe8feb18ec7903f2928688e8cd5f047e"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>truncateConstraints</b> (size_t numCons)</td></tr>
+<tr class="separator:abe8feb18ec7903f2928688e8cd5f047e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a366dbe4608515125779b550d0d5b34eb"><td class="memItemLeft" align="right" valign="top"><a id="a366dbe4608515125779b550d0d5b34eb"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>resizeForOverwrite</b> (size_t numCon, size_t numVar)</td></tr>
+<tr class="separator:a366dbe4608515125779b550d0d5b34eb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab58f362de5fec3ff8d55bfc625e586e8"><td class="memItemLeft" align="right" valign="top"><a id="ab58f362de5fec3ff8d55bfc625e586e8"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>resizeForOverwrite</b> (size_t numCon, size_t numVar, size_t stride)</td></tr>
+<tr class="separator:ab58f362de5fec3ff8d55bfc625e586e8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a764a9ea11a6a058957a427519663094b"><td class="memItemLeft" align="right" valign="top"><a id="a764a9ea11a6a058957a427519663094b"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getCostsAndConstraints</b> () -&gt; <a class="el" href="structLinearAlgebra_1_1MutPtrMatrix.html">MutPtrMatrix</a>&lt; int64_t, <a class="el" href="structLinearAlgebra_1_1StridedDims.html">StridedDims</a> &gt;</td></tr>
+<tr class="separator:a764a9ea11a6a058957a427519663094b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a78b5da74f0e1a17289a2cb3334ede5cf"><td class="memItemLeft" align="right" valign="top"><a id="a78b5da74f0e1a17289a2cb3334ede5cf"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getCostsAndConstraints</b> () const -&gt; <a class="el" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix</a>&lt; int64_t, <a class="el" href="structLinearAlgebra_1_1StridedDims.html">StridedDims</a> &gt;</td></tr>
+<tr class="separator:a78b5da74f0e1a17289a2cb3334ede5cf"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aaad0428a53be3c824183708abaacc265"><td class="memItemLeft" align="right" valign="top"><a id="aaad0428a53be3c824183708abaacc265"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getConstraints</b> () -&gt; <a class="el" href="structLinearAlgebra_1_1MutPtrMatrix.html">MutPtrMatrix</a>&lt; int64_t &gt;</td></tr>
 <tr class="separator:aaad0428a53be3c824183708abaacc265"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -146,12 +146,12 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumVar</
 <tr class="memitem:a3c148956d92a21d09db63f1d3daecb38"><td class="memItemLeft" align="right" valign="top"><a id="a3c148956d92a21d09db63f1d3daecb38"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumConstraints</b> () const -&gt; size_t</td></tr>
 <tr class="separator:a3c148956d92a21d09db63f1d3daecb38"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ababce97571940b07b54c458899ff05ea"><td class="memItemLeft" align="right" valign="top"><a id="ababce97571940b07b54c458899ff05ea"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>hermiteNormalForm</b> ()</td></tr>
-<tr class="separator:ababce97571940b07b54c458899ff05ea"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a56ec140a9595652433369492855b48a6"><td class="memItemLeft" align="right" valign="top"><a id="a56ec140a9595652433369492855b48a6"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>deleteConstraint</b> (size_t c)</td></tr>
-<tr class="separator:a56ec140a9595652433369492855b48a6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad4b89e763e057e3dcb8de0a9d3701e61"><td class="memItemLeft" align="right" valign="top"><a id="ad4b89e763e057e3dcb8de0a9d3701e61"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>hermiteNormalForm</b> ()</td></tr>
+<tr class="separator:ad4b89e763e057e3dcb8de0a9d3701e61"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab70b0b456401b78a19d71ccfa4bbd18e"><td class="memItemLeft" align="right" valign="top"><a id="ab70b0b456401b78a19d71ccfa4bbd18e"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>deleteConstraint</b> (size_t c)</td></tr>
+<tr class="separator:ab70b0b456401b78a19d71ccfa4bbd18e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3376b5d34d90d40b7bc1a3bd8428205a"><td class="memItemLeft" align="right" valign="top"><a id="a3376b5d34d90d40b7bc1a3bd8428205a"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getTableauRow</b> (size_t i) const -&gt; <a class="el" href="structLinearAlgebra_1_1PtrVector.html">PtrVector</a>&lt; int64_t &gt;</td></tr>
 <tr class="separator:a3376b5d34d90d40b7bc1a3bd8428205a"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -281,9 +281,9 @@ static auto&#160;</td><td class="memItemRight" valign="bottom"><b>toMask</b> (<a
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
-<tr class="memitem:a33808c29a394ed8b0df6b081379fcd59"><td class="memItemLeft" align="right" valign="top"><a id="a33808c29a394ed8b0df6b081379fcd59"></a>
-<a class="el" href="structLinearAlgebra_1_1Matrix.html">Matrix</a>&lt; int64_t, 0, 0, 0 &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>tableau</b></td></tr>
-<tr class="separator:a33808c29a394ed8b0df6b081379fcd59"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a92c75b63a938fee1274f8f3d27e02546"><td class="memItemLeft" align="right" valign="top"><a id="a92c75b63a938fee1274f8f3d27e02546"></a>
+<a class="el" href="structLinearAlgebra_1_1Matrix.html">Matrix</a>&lt; int64_t, <a class="el" href="structLinearAlgebra_1_1StridedDims.html">LinearAlgebra::StridedDims</a>, 0 &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>tableau</b></td></tr>
+<tr class="separator:a92c75b63a938fee1274f8f3d27e02546"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a90990f450f4156b3faea249d7d3d4bdc"><td class="memItemLeft" align="right" valign="top"><a id="a90990f450f4156b3faea249d7d3d4bdc"></a>
 size_t&#160;</td><td class="memItemRight" valign="bottom"><b>numSlackVar</b> {0}</td></tr>
 <tr class="separator:a90990f450f4156b3faea249d7d3d4bdc"><td class="memSeparator" colspan="2">&#160;</td></tr>

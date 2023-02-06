@@ -110,6 +110,16 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>data</b> ()
 <tr class="memitem:a62c3878fd04b82085dbaa1bfc74bf22b"><td class="memItemLeft" align="right" valign="top"><a id="a62c3878fd04b82085dbaa1bfc74bf22b"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>data</b> () const -&gt; const T *</td></tr>
 <tr class="separator:a62c3878fd04b82085dbaa1bfc74bf22b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a540bf3ca9b1dac4d10516abdc487cb13"><td class="memTemplParams" colspan="2"><a id="a540bf3ca9b1dac4d10516abdc487cb13"></a>
+template&lt;typename L &gt; </td></tr>
+<tr class="memitem:a540bf3ca9b1dac4d10516abdc487cb13"><td class="memTemplItemLeft" align="right" valign="top">constexpr&#160;</td><td class="memTemplItemRight" valign="bottom"><b>Matrix</b> (<a class="el" href="structBuffer.html">Buffer</a>&lt; T, S, L, std::allocator&lt; T &gt;&gt; &amp;&amp;b, <a class="el" href="structLinearAlgebra_1_1AxisInt.html">Row</a> M, <a class="el" href="structLinearAlgebra_1_1AxisInt.html">Col</a> N)</td></tr>
+<tr class="separator:a540bf3ca9b1dac4d10516abdc487cb13"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa97b528611817eb8c09fba30b2f3d40b"><td class="memItemLeft" align="right" valign="top"><a id="aa97b528611817eb8c09fba30b2f3d40b"></a>
+constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Matrix</b> (D d)</td></tr>
+<tr class="separator:aa97b528611817eb8c09fba30b2f3d40b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a006132835148aad29712dc76243ef50d"><td class="memItemLeft" align="right" valign="top"><a id="a006132835148aad29712dc76243ef50d"></a>
+constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Matrix</b> (D d, T init)</td></tr>
+<tr class="separator:a006132835148aad29712dc76243ef50d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7f1e3d4325b7d7d14f0bbf93ce0f3304"><td class="memItemLeft" align="right" valign="top"><a id="a7f1e3d4325b7d7d14f0bbf93ce0f3304"></a>
 constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Matrix</b> (<a class="el" href="structLinearAlgebra_1_1AxisInt.html">Row</a> M, <a class="el" href="structLinearAlgebra_1_1AxisInt.html">Col</a> N)</td></tr>
 <tr class="separator:a7f1e3d4325b7d7d14f0bbf93ce0f3304"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -402,9 +412,9 @@ Static Public Member Functions</h2></td></tr>
 <tr class="memitem:a5d172ec8dbc0791495b43664915b75eb"><td class="memItemLeft" align="right" valign="top"><a id="a5d172ec8dbc0791495b43664915b75eb"></a>
 static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>uninitialized</b> (<a class="el" href="structLinearAlgebra_1_1AxisInt.html">Row</a> MM, <a class="el" href="structLinearAlgebra_1_1AxisInt.html">Col</a> NN) -&gt; <a class="el" href="structLinearAlgebra_1_1Matrix.html">Matrix</a>&lt; T, D, S &gt;</td></tr>
 <tr class="separator:a5d172ec8dbc0791495b43664915b75eb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab3a5aa1c990710f02e57483c3de10585"><td class="memItemLeft" align="right" valign="top"><a id="ab3a5aa1c990710f02e57483c3de10585"></a>
-static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>identity</b> (size_t MM) -&gt; <a class="el" href="structLinearAlgebra_1_1Matrix.html">Matrix</a>&lt; T, D, S &gt;</td></tr>
-<tr class="separator:ab3a5aa1c990710f02e57483c3de10585"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7e74322a5fcc80b582f7648dfffb4d51"><td class="memItemLeft" align="right" valign="top"><a id="a7e74322a5fcc80b582f7648dfffb4d51"></a>
+static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>identity</b> (unsigned M) -&gt; <a class="el" href="structLinearAlgebra_1_1Matrix.html">Matrix</a>&lt; T, D, S &gt;</td></tr>
+<tr class="separator:a7e74322a5fcc80b582f7648dfffb4d51"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8cf5eeddb722c53173fefa836dca70c6"><td class="memItemLeft" align="right" valign="top"><a id="a8cf5eeddb722c53173fefa836dca70c6"></a>
 static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>identity</b> (<a class="el" href="structLinearAlgebra_1_1AxisInt.html">Row</a> N) -&gt; <a class="el" href="structLinearAlgebra_1_1Matrix.html">Matrix</a>&lt; T, D, S &gt;</td></tr>
 <tr class="separator:a8cf5eeddb722c53173fefa836dca70c6"><td class="memSeparator" colspan="2">&#160;</td></tr>
