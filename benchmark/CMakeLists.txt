@@ -81,5 +81,5 @@ set_target_properties(
 )
 
 target_compile_options(
-  ${PROJECT_NAME} PRIVATE -fno-exceptions -fno-rtti -fstrict-aliasing -Wall -Wshadow -Wextra
+  ${PROJECT_NAME} PRIVATE -fno-exceptions -fno-rtti -fstrict-aliasing -fstrict-overflow -Wall -Wshadow -Wextra -save-temps
 )

@@ -2,6 +2,7 @@
 
 #include "Math/AxisTypes.hpp"
 #include "Math/MatrixDimensions.hpp"
+#include "Utilities/Invariant.hpp"
 #include "Utilities/Valid.hpp"
 #include <algorithm>
 #include <concepts>
@@ -114,9 +115,7 @@ struct Buffer {
       std::uninitialized_copy_n((T *)(b.data()), size_t(sz), (T *)(ptr));
     } else {
       // otherwise, we take its pointer
-      maybeDeallocate();
-      ptr = b.ptr;
-      capacity = b.capacity;
+      maybeDeallocate(b.data(), b.getCapacity());
     }
     b.resetNoFree();
     return *this;
@@ -129,18 +128,22 @@ struct Buffer {
   template <typename... Args> constexpr auto emplace_back(Args &&...args) {
     static_assert(std::is_integral_v<S>, "emplace_back requires integral size");
     if (sz == capacity) [[unlikely]]
-      resize(capacity + capacity);
+      reserve(capacity + capacity);
+    // ptr[sz++] = T(std::forward<Args>(args)...);
     new (ptr + sz++) T(std::forward<Args>(args)...);
   }
   constexpr void push_back(T value) {
     static_assert(std::is_integral_v<S>, "push_back requires integral size");
     if (sz == capacity) [[unlikely]]
-      resize(capacity + capacity);
+      reserve(capacity + capacity);
+    // ptr[sz++] = value;
     new (ptr + sz++) T(std::move(value));
   }
   constexpr void pop_back() {
     static_assert(std::is_integral_v<S>, "pop_back requires integral size");
-    if (sz) ptr[--sz].~T();
+    assert(sz > 0 && "pop_back on empty buffer");
+    if constexpr (std::is_trivially_destructible_v<T>) --sz;
+    else ptr[--sz].~T();
   }
   // behavior
   // if S is StridedDims, then we copy data.
@@ -155,10 +158,10 @@ struct Buffer {
       if (nz <= capacity) return;
       U newCapacity = U(nz);
       T *newPtr = allocator.allocate(newCapacity);
-      std::uninitialized_copy_n((T *)(ptr), oz, newPtr);
-      maybeDeallocate();
-      ptr = newPtr;
-      capacity = newCapacity;
+      if (oz) std::uninitialized_copy_n((T *)(ptr), oz, newPtr);
+      maybeDeallocate(newPtr, newCapacity);
+      invariant(newCapacity > oz);
+      std::uninitialized_fill_n((T *)(newPtr + oz), newCapacity - oz, T{});
     } else {
       static_assert(LinearAlgebra::MatrixDimension<S>,
                     "Can only resize 1 or 2d containers.");
@@ -205,11 +208,7 @@ struct Buffer {
       // zero init remaining rows
       for (size_t m = oldM; m < newM; ++m)
         std::fill_n(npt + m * newX, newN, T{});
-      if (newAlloc) {
-        capacity = len;
-        maybeDeallocate();
-        ptr = npt;
-      }
+      if (newAlloc) maybeDeallocate(npt, len);
     }
   }
   constexpr void resize(LinearAlgebra::Row r) {
@@ -366,6 +365,7 @@ struct Buffer {
     if (U oldLen = U(sz)) std::uninitialized_copy_n((T *)(ptr), oldLen, newPtr);
     maybeDeallocate();
     ptr = newPtr;
+    capacity = newCapacity;
   }
   [[nodiscard]] constexpr auto get_allocator() const noexcept -> A {
     return allocator;
@@ -385,13 +385,23 @@ private:
   [[no_unique_address]] A allocator{};
   T memory[N]; // NOLINT (modernize-avoid-c-style-arrays)
 
+  // this method should only be called from the destructor
+  // (and the implementation taking the new ptr and capacity)
   constexpr void maybeDeallocate() {
     if (!isSmall()) allocator.deallocate(ptr, capacity);
+  }
+  // this method should be called whenever the buffer lives
+  constexpr void maybeDeallocate(NotNull<T> newPtr, U newCapacity) {
+    maybeDeallocate();
+    ptr = newPtr;
+    capacity = newCapacity;
   }
   // grow, discarding old data
   constexpr void growUndef(U M) {
     if (M <= capacity) return;
     maybeDeallocate();
+    // because this doesn't care about the old data,
+    // we can allocate after freeing, which may be faster
     ptr = allocator.allocate(M);
     capacity = M;
   }
