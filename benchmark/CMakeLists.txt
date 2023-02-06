@@ -60,7 +60,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE benchmark LLVM absl::base absl::fl
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   target_compile_options(${PROJECT_NAME} PRIVATE -ferror-limit=2 -fcolor-diagnostics)
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
-  target_compile_options(${PROJECT_NAME} PRIVATE -fmax-errors=2 -fconcepts-diagnostics-depth=4 -fno-semantic-interposition -fdiagnostics-color=always)
+  target_compile_options(${PROJECT_NAME} PRIVATE -fmax-errors=2 -fconcepts-diagnostics-depth=4 -fno-semantic-interposition -fdiagnostics-color=always -fverbose-asm)
 endif()
 
 if(ENABLE_NATIVE_COMPILATION)
@@ -81,5 +81,5 @@ set_target_properties(
 )
 
 target_compile_options(
-  ${PROJECT_NAME} PRIVATE -fno-exceptions -fno-rtti -fstrict-aliasing -fstrict-overflow -Wall -Wshadow -Wextra -save-temps
+  ${PROJECT_NAME} PRIVATE -fno-exceptions -fno-rtti -fstrict-aliasing -fno-plt -fstrict-overflow -Wall -Wshadow -Wextra -save-temps -masm=intel
 )
