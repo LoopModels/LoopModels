@@ -81,5 +81,8 @@ set_target_properties(
 )
 
 target_compile_options(
-  ${PROJECT_NAME} PRIVATE -fno-exceptions -fno-rtti -fstrict-aliasing -fno-plt -fstrict-overflow -Wall -Wshadow -Wextra -save-temps -masm=intel
+  ${PROJECT_NAME} PRIVATE -fno-exceptions -fno-rtti -fstrict-aliasing -fno-plt -fstrict-overflow -Wall -Wshadow -Wextra -save-temps
 )
+if (CMAKE_SYSTEM_PROCESSOR MATCHES "(x86)|(X86)|(amd64)|(AMD64)")
+  target_compile_options(  ${PROJECT_NAME} PRIVATE -masm=intel)
+endif()
