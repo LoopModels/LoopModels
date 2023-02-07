@@ -9,7 +9,7 @@
 
 static void BM_NullSpace(benchmark::State &state) {
 
-  IntMatrix B(Row{6}, Col{4});
+  IntMatrix B(Row{6}, Col{3});
   B(0, 0) = 1;
   B(1, 0) = 0;
   B(2, 0) = -3;
