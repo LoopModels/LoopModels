@@ -34,7 +34,6 @@ CPMAddPackage(
   GIT_TAG fnoexceptions
 )
 
-
 if(TEST_INSTALLED_VERSION)
   find_package(LoopModels REQUIRED)
 else()
@@ -133,6 +132,8 @@ if(NOT TEST_INSTALLED_VERSION)
     # target_compile_definitions(${PROJECT_NAME} PUBLIC DOCTEST_CONFIG_USE_STD_HEADERS)
   endif()
 endif()
+target_compile_options(LoopModels PRIVATE -D_GLIBCXX_ASSERTIONS)
+target_compile_options(${PROJECT_NAME} PRIVATE -D_GLIBCXX_ASSERTIONS)
 
 # ---- code coverage ----
 
