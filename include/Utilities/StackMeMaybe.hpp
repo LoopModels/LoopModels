@@ -79,6 +79,16 @@ struct Buffer {
     growUndef(len);
     std::uninitialized_copy_n(b.data(), len, (T *)(ptr));
   }
+  // template <typename Y, typename D, typename AY, std::unsigned_integral I,
+  // std::enable_if_t<std::is_convertible_v<Y, T>>>
+  template <typename Y, typename D, typename AY, std::unsigned_integral I>
+  constexpr Buffer(const Buffer<Y, N, D, AY, I> &b) noexcept
+    : ptr{memory}, capacity{Y(N)}, sz{S(b.size())}, allocator{
+                                                      b.get_allocator()} {
+    Y len = Y(sz);
+    growUndef(len);
+    for (size_t i = 0; i < len; ++i) new ((T *)(ptr) + i) T(b[i]);
+  }
   constexpr Buffer(const Buffer &b) noexcept
     : ptr{memory}, capacity{U(N)}, sz{S(b.size())}, allocator{
                                                       b.get_allocator()} {

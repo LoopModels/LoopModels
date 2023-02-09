@@ -1,12 +1,12 @@
 #pragma once
-#include "Math/Math.hpp"
 #include "./Rational.hpp"
+#include "Math/Math.hpp"
 
 struct LU {
   SquareMatrix<Rational> F;
-  llvm::SmallVector<unsigned> ipiv;
+  Vector<unsigned> ipiv;
 
-  [[nodiscard]] auto ldiv(MutPtrMatrix<Rational> rhs) const -> bool {
+  [[nodiscard]] constexpr auto ldiv(MutPtrMatrix<Rational> rhs) const -> bool {
     auto [M, N] = rhs.size();
     assert(F.numRow() == M);
     // // check unimodularity
@@ -54,7 +54,7 @@ struct LU {
     return false;
   }
 
-  [[nodiscard]] auto rdiv(MutPtrMatrix<Rational> rhs) const -> bool {
+  [[nodiscard]] constexpr auto rdiv(MutPtrMatrix<Rational> rhs) const -> bool {
     auto [M, N] = rhs.size();
     assert(F.numCol() == N);
     // // check unimodularity
@@ -95,31 +95,33 @@ struct LU {
     return false;
   }
 
-  [[nodiscard]] auto inv() const -> std::optional<SquareMatrix<Rational>> {
-    SquareMatrix<Rational> A =
-      SquareMatrix<Rational>::identity(size_t(F.numCol()));
+  [[nodiscard]] constexpr auto inv() const
+    -> std::optional<SquareMatrix<Rational>> {
+    SquareMatrix<Rational> A{
+      SquareMatrix<Rational>::identity(size_t(F.numCol()))};
     if (!ldiv(A)) return A;
     else return {};
   }
-  auto det() -> std::optional<Rational> {
+  [[nodiscard]] constexpr auto det() const -> std::optional<Rational> {
     Rational d = F(0, 0);
     for (size_t i = 1; i < F.numCol(); ++i)
       if (auto di = d.safeMul(F(i, i))) d = *di;
       else return {};
     return d;
   }
-  [[nodiscard]] auto perm() const -> llvm::SmallVector<unsigned> {
+  [[nodiscard]] constexpr auto perm() const -> Vector<unsigned> {
     Col M = F.numCol();
-    llvm::SmallVector<unsigned> perm;
+    Vector<unsigned> perm;
     for (size_t m = 0; m < M; ++m) perm.push_back(m);
     for (size_t m = 0; m < M; ++m) std::swap(perm[m], perm[ipiv[m]]);
     return perm;
   }
-  static auto fact(const SquareMatrix<int64_t> &B) -> std::optional<LU> {
-    size_t M = B.M;
-    SquareMatrix<Rational> A(M);
-    for (size_t m = 0; m < M * M; ++m) A[m] = B[m];
-    llvm::SmallVector<unsigned> ipiv(M);
+  [[nodiscard]] static constexpr auto fact(const SquareMatrix<int64_t> &B)
+    -> std::optional<LU> {
+    Row M = B.numRow();
+    SquareMatrix<Rational> A(B);
+    // for (size_t m = 0; m < M * M; ++m) A[m] = B[m];
+    Vector<unsigned> ipiv(M);
     for (size_t i = 0; i < M; ++i) ipiv[i] = i;
     for (size_t k = 0; k < M; ++k) {
       size_t kp = k;

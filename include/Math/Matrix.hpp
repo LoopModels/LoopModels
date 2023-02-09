@@ -431,7 +431,7 @@ struct Matrix : public MutMatrixCore<T, Matrix<T, D, S>> {
     Base::operator+=, Base::operator-=, Base::operator*=, Base::operator/=;
   using eltype = std::remove_reference_t<T>;
 
-  [[no_unique_address]] Buffer<int64_t, 64, D, std::allocator<T>> buf;
+  [[no_unique_address]] Buffer<T, 64, D, std::allocator<T>> buf;
 
   constexpr auto data() -> T * { return buf.data(); }
   [[nodiscard]] constexpr auto data() const -> const T * { return buf.data(); }
@@ -441,16 +441,18 @@ struct Matrix : public MutMatrixCore<T, Matrix<T, D, S>> {
   constexpr Matrix(Buffer<T, S, L, std::allocator<T>> &&b, Row M, Col N)
     : buf(std::move(b), DenseDims{M, N}) {}
 
-  constexpr Matrix(D d) : buf(d){};
-  constexpr Matrix(D d, T init) : buf(d, init){};
-  constexpr Matrix(Row M, Col N) : buf(DenseDims{M, N}){};
-  constexpr Matrix(Row M, Col N, T init) : buf(DenseDims{M, N}, init){};
+  constexpr Matrix(D d) : buf(d) {}
+  constexpr Matrix(D d, T init) : buf(d, init) {}
+  constexpr Matrix(Row M, Col N) : buf(DenseDims{M, N}) {}
+  constexpr Matrix(Row M, Col N, T init) : buf(DenseDims{M, N}, init) {}
   constexpr Matrix() = default;
   template <typename M, size_t L>
-  constexpr Matrix(Matrix<T, M, L> &&A) : buf(std::move(A.buf)){};
+  constexpr Matrix(Matrix<T, M, L> &&A) : buf(std::move(A.buf)) {}
 
   template <typename M, size_t L>
-  constexpr Matrix(const Matrix<T, M, L> &A) : buf(A.buf){};
+  constexpr Matrix(const Matrix<T, M, L> &A) : buf(A.buf) {}
+  template <typename Y, typename M, size_t L>
+  constexpr Matrix(const Matrix<Y, M, L> &A) : buf(A.buf) {}
   [[gnu::flatten]] constexpr Matrix(const AbstractMatrix auto &A)
     : buf(A.size()) {
     for (size_t m = 0; m < numRow(); ++m)

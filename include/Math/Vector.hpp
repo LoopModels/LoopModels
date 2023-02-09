@@ -23,6 +23,15 @@ concept AbstractVector =
                     // {t.extendOrAssertSize(i)};
                   };
 
+template <typename T> consteval auto PreAllocStorage() -> size_t {
+  constexpr size_t TotalBytes = 128;
+  constexpr size_t RemainingBytes =
+    TotalBytes - sizeof(llvm::SmallVector<T, 0>);
+  constexpr size_t N = RemainingBytes / sizeof(T);
+  return std::max<size_t>(1, N);
+}
+// template <typename T, size_t Stack = PreAllocStorage<T>()> struct Vector;
+
 template <typename T> struct PtrVector {
   static_assert(!std::is_const_v<T>, "const T is redundant");
   using eltype = T;
@@ -87,7 +96,8 @@ template <typename T> struct PtrVector {
   static constexpr void extendOrAssertSize(size_t) {}
 #endif
   constexpr PtrVector(NotNull<const T> pt, size_t NN) : mem(pt), N(NN) {}
-  PtrVector(llvm::ArrayRef<T> x) : mem(x.data()), N(x.size()) {}
+  constexpr PtrVector(llvm::ArrayRef<T> x) : mem(x.data()), N(x.size()) {}
+  // constexpr PtrVector(Vector<T> x) : mem(x.data()), N(x.size()) {}
 };
 template <typename T> struct MutPtrVector {
   static_assert(!std::is_const_v<T>, "T shouldn't be const");
@@ -245,18 +255,12 @@ template <typename T> struct MutPtrVector {
 #endif
 };
 
-template <typename T> consteval auto PreAllocStorage() -> size_t {
-  constexpr size_t TotalBytes = 128;
-  constexpr size_t RemainingBytes =
-    TotalBytes - sizeof(llvm::SmallVector<T, 0>);
-  constexpr size_t N = RemainingBytes / sizeof(T);
-  return std::max<size_t>(1, N);
-}
-
 template <typename T, size_t Stack = PreAllocStorage<T>()> struct Vector {
+  // template <typename T, size_t Stack> struct Vector {
   using eltype = T;
   constexpr Vector() : buf{} {};
   constexpr Vector(unsigned N) : buf(N){};
+  constexpr Vector(Row N) : buf(unsigned(N)){};
   constexpr Vector(Buffer<T, Stack, unsigned> b) : buf(std::move(b)){};
   constexpr Vector(const Vector &) = default;
   constexpr Vector(Vector &&) noexcept = default;
@@ -268,6 +272,7 @@ template <typename T, size_t Stack = PreAllocStorage<T>()> struct Vector {
     for (size_t n = 0, N = x.size(); n < N; ++n) buf.data()[n] = x[n];
   }
   constexpr auto operator=(const Vector &) -> Vector & = default;
+  constexpr auto data() -> T * { return buf.data(); }
   constexpr void reserve(unsigned N) { buf.reserve(N); }
   [[gnu::flatten]] constexpr auto operator[](const ScalarIndex auto i) -> T & {
     size_t j = canonicalize(i, buf.size());

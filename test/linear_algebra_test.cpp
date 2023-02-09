@@ -1,9 +1,13 @@
 #include "Math/LinearAlgebra.hpp"
 #include "Math/Math.hpp"
+#include "Math/Vector.hpp"
 #include <cstdint>
 #include <gtest/gtest.h>
 #include <iostream>
 #include <random>
+
+void test(PtrVector<unsigned>);
+template <typename T> void testtemplate(PtrVector<T>);
 
 // NOLINTNEXTLINE(modernize-use-trailing-return-type)
 TEST(LinearAlgebraTest, BasicAssertions) {
@@ -28,10 +32,19 @@ TEST(LinearAlgebraTest, BasicAssertions) {
 
   auto LUFopt = LU::fact(A);
   EXPECT_TRUE(LUFopt.has_value());
-  // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+  assert(LUFopt.has_value());
   auto &LUF = *LUFopt;
-  Matrix<Rational, 0, 0> B = A;
+  Matrix<Rational, StridedDims> B = A;
   llvm::errs() << "A = \n" << A << "\nB = \n" << B << "\n";
+  LinearAlgebra::printVector(llvm::errs() << "F = \n"
+                                          << LUF.F << "\nperm = \n",
+                             PtrVector<unsigned>(LUF.ipiv))
+    << "\n";
+  PtrVector<unsigned> ipiv = LUF.ipiv;
+  test(ipiv);
+  test(LUF.ipiv);
+  testtemplate(ipiv);
+  testtemplate(LUF.ipiv);
   LinearAlgebra::printVector(llvm::errs() << "F = \n"
                                           << LUF.F << "\nperm = \n",
                              LUF.ipiv)
