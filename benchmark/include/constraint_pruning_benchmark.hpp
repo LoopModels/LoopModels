@@ -43,6 +43,7 @@ BENCHMARK(BM_NullSpace);
 static void BM_NullSpace2000(benchmark::State &state) {
   const size_t N = 20;
   IntMatrix A(Row{N}, Col{N});
+  A << 0;
   A(0, 0) = 2;
   for (size_t i = 1; i < N; ++i) {
     A(i - 1, i) = -1;
@@ -74,6 +75,7 @@ BENCHMARK(BM_Orthogonalize);
 static void BM_Bareiss2000(benchmark::State &state) {
   const size_t N = 20;
   IntMatrix A(Row{N}, Col{N});
+  A << 0;
   A(0, 0) = 2;
   for (size_t i = 1; i < N; ++i) {
     A(i - 1, i) = -1;

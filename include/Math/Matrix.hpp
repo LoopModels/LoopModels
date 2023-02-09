@@ -292,12 +292,10 @@ template <typename T, MatrixDimension D>
 struct MutPtrMatrix : MutMatrixCore<T, MutPtrMatrix<T, D>> {
   using eltype = std::remove_reference_t<T>;
   using BaseT = MutMatrixCore<T, MutPtrMatrix<T, D>>;
-  using BaseT::diag, BaseT::antiDiag,
-    BaseT::operator(), BaseT::size, BaseT::view, BaseT::isSquare,
-    BaseT::transpose, BaseT::operator ::LinearAlgebra::PtrMatrix<T>,
-    // BaseT::operator ::LinearAlgebra::MutPtrMatrix<T>,
-    BaseT::operator=, BaseT::operator<<, BaseT::operator+=, BaseT::operator-=,
-    BaseT::operator*=, BaseT::operator/=;
+  using BaseT::diag, BaseT::antiDiag, BaseT::operator(), BaseT::size,
+    BaseT::view, BaseT::isSquare, BaseT::transpose,
+    BaseT::operator ::LinearAlgebra::PtrMatrix<T>, BaseT::operator<<,
+    BaseT::operator+=, BaseT::operator-=, BaseT::operator*=, BaseT::operator/=;
   static_assert(!std::is_const_v<T>, "MutPtrMatrix should never have const T");
   [[no_unique_address]] T *mem;
   [[no_unique_address]] D dims;
@@ -429,9 +427,8 @@ struct Matrix : public MutMatrixCore<T, Matrix<T, D, S>> {
   using Base::diag, Base::antiDiag,
     Base::operator(), Base::size, Base::view, Base::isSquare, Base::transpose,
     Base::operator ::LinearAlgebra::PtrMatrix<T>,
-    Base::operator ::LinearAlgebra::MutPtrMatrix<T>,
-    Base::operator=, Base::operator<<, Base::operator+=, Base::operator-=,
-    Base::operator*=, Base::operator/=;
+    Base::operator ::LinearAlgebra::MutPtrMatrix<T>, Base::operator<<,
+    Base::operator+=, Base::operator-=, Base::operator*=, Base::operator/=;
   using eltype = std::remove_reference_t<T>;
 
   [[no_unique_address]] Buffer<int64_t, 64, D, std::allocator<T>> buf;
@@ -451,6 +448,7 @@ struct Matrix : public MutMatrixCore<T, Matrix<T, D, S>> {
   constexpr Matrix() = default;
   template <typename M, size_t L>
   constexpr Matrix(Matrix<T, M, L> &&A) : buf(std::move(A.buf)){};
+
   template <typename M, size_t L>
   constexpr Matrix(const Matrix<T, M, L> &A) : buf(A.buf){};
   [[gnu::flatten]] constexpr Matrix(const AbstractMatrix auto &A)
@@ -458,6 +456,11 @@ struct Matrix : public MutMatrixCore<T, Matrix<T, D, S>> {
     for (size_t m = 0; m < numRow(); ++m)
       for (size_t n = 0; n < numCol(); ++n)
         buf[size_t(rowStride() * m + n)] = A(m, n);
+  }
+  template <typename M, size_t L>
+  constexpr auto operator=(Matrix<T, M, L> &&A) -> Matrix & {
+    buf = std::move(A.buf);
+    return *this;
   }
   [[nodiscard]] constexpr auto begin() -> T * { return buf.begin(); }
   [[nodiscard]] constexpr auto end() -> T * {

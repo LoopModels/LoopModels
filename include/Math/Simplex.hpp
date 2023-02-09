@@ -304,6 +304,7 @@ struct Simplex {
   }
   auto removeAugmentVars(llvm::ArrayRef<unsigned> augmentVars, ptrdiff_t numVar)
     -> bool {
+    // TODO: try to avoid reallocating, via reserving enough ahead of time
     addVars(augmentVars.size()); // NOTE: invalidates all refs
     MutPtrMatrix<int64_t> C{getConstraints()};
     MutStridedVector<int64_t> basicVars{getBasicVariables()};

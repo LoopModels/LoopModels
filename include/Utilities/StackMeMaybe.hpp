@@ -77,7 +77,14 @@ struct Buffer {
                                                       b.get_allocator()} {
     U len = U(sz);
     growUndef(len);
-    std::uninitialized_copy_n((const T *)(b.data()), len, (T *)(ptr));
+    std::uninitialized_copy_n(b.data(), len, (T *)(ptr));
+  }
+  constexpr Buffer(const Buffer &b) noexcept
+    : ptr{memory}, capacity{U(N)}, sz{S(b.size())}, allocator{
+                                                      b.get_allocator()} {
+    U len = U(sz);
+    growUndef(len);
+    std::uninitialized_copy_n(b.data(), len, (T *)(ptr));
   }
 #pragma GCC diagnostic pop
   template <typename D, std::unsigned_integral I>
@@ -88,7 +95,18 @@ struct Buffer {
            "capacity overflow");
     if (b.isSmall()) {
       ptr = memory;
-      std::uninitialized_copy_n((T *)(b.data()), N, (T *)(ptr));
+      std::uninitialized_copy_n(b.data(), N, (T *)(ptr));
+    }
+    b.resetNoFree();
+  }
+  constexpr Buffer(Buffer &&b) noexcept
+    : ptr{b.data()}, capacity{U(b.getCapacity())}, sz{b.size()},
+      allocator{b.get_allocator()} {
+    assert(uint64_t(b.getCapacity()) == uint64_t(getCapacity()) &&
+           "capacity overflow");
+    if (b.isSmall()) {
+      ptr = memory;
+      std::uninitialized_copy_n(b.data(), N, (T *)(ptr));
     }
     b.resetNoFree();
   }
@@ -101,7 +119,7 @@ struct Buffer {
            "capacity overflow");
     if (b.isSmall()) {
       ptr = memory;
-      std::uninitialized_copy_n((T *)(b.data()), N, (T *)(ptr));
+      std::uninitialized_copy_n(b.data(), N, (T *)(ptr));
     }
     b.resetNoFree();
   }
@@ -112,7 +130,7 @@ struct Buffer {
     sz = b.size();
     U len = U(sz);
     growUndef(len);
-    std::uninitialized_copy_n((T *)(b.data()), len, (T *)(ptr));
+    std::uninitialized_copy_n(b.data(), len, (T *)(ptr));
     return *this;
   }
   template <typename D, std::unsigned_integral I>
@@ -124,16 +142,46 @@ struct Buffer {
     if (b.isSmall()) {
       // if `b` is small, we need to copy memory
       // no need to shrink our capacity
-      std::uninitialized_copy_n((T *)(b.data()), size_t(sz), (T *)(ptr));
+      std::uninitialized_copy_n(b.data(), size_t(sz), (T *)(ptr));
     } else {
       // otherwise, we take its pointer
-      maybeDeallocate(b.data(), b.getCapacity());
+      maybeDeallocate(b.wrappedPtr(), b.getCapacity());
     }
     b.resetNoFree();
     return *this;
   }
-  [[nodiscard]] constexpr auto data() noexcept -> NotNull<T> { return ptr; }
-  [[nodiscard]] constexpr auto data() const noexcept -> NotNull<const T> {
+  constexpr auto operator=(const Buffer &b) noexcept -> Buffer & {
+    if (this == &b) return *this;
+    sz = b.size();
+    U len = U(sz);
+    growUndef(len);
+    std::uninitialized_copy_n(b.data(), len, (T *)(ptr));
+    return *this;
+  }
+  constexpr auto operator=(Buffer &&b) noexcept -> Buffer & {
+    if (this == &b) return *this;
+    // here, we commandeer `b`'s memory
+    sz = b.size();
+    allocator = std::move(b.allocator);
+    if (b.isSmall()) {
+      // if `b` is small, we need to copy memory
+      // no need to shrink our capacity
+      std::uninitialized_copy_n(b.data(), size_t(sz), (T *)(ptr));
+    } else {
+      // otherwise, we take its pointer
+      maybeDeallocate(b.wrappedPtr(), b.getCapacity());
+    }
+    b.resetNoFree();
+    return *this;
+  }
+  [[nodiscard, gnu::returns_nonnull]] constexpr auto data() noexcept -> T * {
+    return ptr;
+  }
+  [[nodiscard, gnu::returns_nonnull]] constexpr auto data() const noexcept
+    -> const T * {
+    return ptr;
+  }
+  [[nodiscard]] constexpr auto wrappedPtr() noexcept -> NotNull<T> {
     return ptr;
   }
 
@@ -141,14 +189,12 @@ struct Buffer {
     static_assert(std::is_integral_v<S>, "emplace_back requires integral size");
     if (sz == capacity) [[unlikely]]
       reserve(capacity + capacity);
-    // ptr[sz++] = T(std::forward<Args>(args)...);
     new (ptr + sz++) T(std::forward<Args>(args)...);
   }
   constexpr void push_back(T value) {
     static_assert(std::is_integral_v<S>, "push_back requires integral size");
     if (sz == capacity) [[unlikely]]
       reserve(capacity + capacity);
-    // ptr[sz++] = value;
     new (ptr + sz++) T(std::move(value));
   }
   constexpr void pop_back() {
@@ -156,6 +202,11 @@ struct Buffer {
     assert(sz > 0 && "pop_back on empty buffer");
     if constexpr (std::is_trivially_destructible_v<T>) --sz;
     else ptr[--sz].~T();
+  }
+  constexpr auto pop_back_val() -> T {
+    static_assert(std::is_integral_v<S>, "pop_back requires integral size");
+    assert(sz > 0 && "pop_back on empty buffer");
+    return std::move(ptr[--sz]);
   }
   // behavior
   // if S is StridedDims, then we copy data.
@@ -191,6 +242,7 @@ struct Buffer {
            oldM = unsigned{LinearAlgebra::Row{oz}};
       U len = U(nz);
       bool newAlloc = U(len) > capacity;
+      bool inPlace = !newAlloc;
 #if __cplusplus >= 202202L
       T *npt = (T *)(ptr);
       if (newAlloc) {
@@ -208,28 +260,35 @@ struct Buffer {
       unsigned colsToCopy = std::min(oldN, newN);
       // we only need to copy if memory shifts position
       bool copyCols = newAlloc || ((colsToCopy > 0) && (newX != oldX));
+      // if we're in place, we have 1 less row to copy
       unsigned rowsToCopy = std::min(oldM, newM);
       unsigned fillCount = newN - colsToCopy;
-      if (copyCols || fillCount) {
+      if ((rowsToCopy) && (copyCols || fillCount)) {
         if (forwardCopy) {
           // truncation, we need to copy rows to increase stride
-          for (size_t m = 1; m < rowsToCopy; ++m) {
-            T *src = ptr + m * oldX;
-            T *dst = npt + m * newX;
+          T *src = ptr + inPlace * oldX;
+          T *dst = npt + inPlace * newX;
+          rowsToCopy -= inPlace;
+          do {
             if (copyCols) std::copy(src, src + colsToCopy, dst);
             if (fillCount) std::fill_n(dst + colsToCopy, fillCount, T{});
-          }
+            src += oldX;
+            dst += newX;
+          } while (--rowsToCopy);
         } else /* [[unlikely]] */ {
           // backwards copy, only needed when we increasing stride but not
           // reallocating, which should be comparatively uncommon.
           // Should probably benchmark or determine actual frequency
           // before adding `[[unlikely]]`.
-          for (size_t m = rowsToCopy; --m != 0;) {
-            T *src = ptr + m * oldX;
-            T *dst = npt + m * newX;
+          T *src = ptr + rowsToCopy * oldX;
+          T *dst = npt + rowsToCopy * newX;
+          rowsToCopy -= inPlace;
+          do {
+            src -= oldX;
+            dst -= newX;
             if (colsToCopy) std::copy_backward(src, src + colsToCopy, dst);
             if (fillCount) std::fill_n(dst + colsToCopy, fillCount, T{});
-          }
+          } while (--rowsToCopy);
         }
       }
       // zero init remaining rows
@@ -344,12 +403,12 @@ struct Buffer {
     if constexpr (std::integral<S>) {
       return truncate(S(r));
     } else if constexpr (std::is_same_v<S, LinearAlgebra::StridedDims>) {
-      invariant(r < LinearAlgebra::Row{sz});
+      invariant(r <= LinearAlgebra::Row{sz});
       sz.set(r);
     } else { // if constexpr (std::is_same_v<S, LinearAlgebra::DenseDims>) {
       static_assert(std::is_same_v<S, LinearAlgebra::DenseDims>,
                     "if truncating a row, matrix must be strided or dense.");
-      invariant(r < LinearAlgebra::Row{sz});
+      invariant(r <= LinearAlgebra::Row{sz});
       LinearAlgebra::DenseDims newSz = sz;
       resize(newSz.set(r));
     }
@@ -358,12 +417,12 @@ struct Buffer {
     if constexpr (std::integral<S>) {
       return truncate(S(c));
     } else if constexpr (std::is_same_v<S, LinearAlgebra::StridedDims>) {
-      invariant(c < LinearAlgebra::Col{sz});
+      invariant(c <= LinearAlgebra::Col{sz});
       sz.set(c);
     } else { // if constexpr (std::is_same_v<S, LinearAlgebra::DenseDims>) {
       static_assert(std::is_same_v<S, LinearAlgebra::DenseDims>,
                     "if truncating a col, matrix must be strided or dense.");
-      invariant(c < LinearAlgebra::Col{sz});
+      invariant(c <= LinearAlgebra::Col{sz});
       LinearAlgebra::DenseDims newSz = sz;
       resize(newSz.set(c));
     }
