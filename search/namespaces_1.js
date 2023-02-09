@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['linearalgebra_353',['LinearAlgebra',['../namespaceLinearAlgebra.html',1,'']]]
+  ['linearalgebra_355',['LinearAlgebra',['../namespaceLinearAlgebra.html',1,'']]]
 ];
