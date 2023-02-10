@@ -3,7 +3,6 @@
 #include "TypePromotion.hpp"
 #include "Utilities/Allocators.hpp"
 #include "Utilities/Invariant.hpp"
-#include "Utilities/StackMeMaybe.hpp"
 #include "Utilities/Valid.hpp"
 #include <concepts>
 #include <cstddef>
@@ -23,13 +22,6 @@ concept AbstractVector =
                     // {t.extendOrAssertSize(i)};
                   };
 
-template <typename T> consteval auto PreAllocStorage() -> size_t {
-  constexpr size_t TotalBytes = 128;
-  constexpr size_t RemainingBytes =
-    TotalBytes - sizeof(llvm::SmallVector<T, 0>);
-  constexpr size_t N = RemainingBytes / sizeof(T);
-  return std::max<size_t>(1, N);
-}
 // template <typename T, size_t Stack = PreAllocStorage<T>()> struct Vector;
 
 template <typename T> struct PtrVector {

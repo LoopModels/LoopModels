@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Math/Array.hpp"
 #include "Math/Math.hpp"
 #include "Math/MatrixDimensions.hpp"
 #include <cassert>
@@ -10,7 +11,7 @@
 [[nodiscard]] constexpr auto operator"" _mat(const char *s, size_t)
   -> Matrix<int64_t, LinearAlgebra::DenseDims> {
   assert(s[0] == '[');
-  Buffer<int64_t, 64, unsigned> content;
+  ManagedArray<int64_t, unsigned, 64> content;
   size_t cur = 1;
   size_t numRows = 1;
   while (s[cur] != ']') {

@@ -1,8 +1,10 @@
 #pragma once
 #include "Math/AxisTypes.hpp"
 #include "Math/MatrixDimensions.hpp"
+#include "Utilities/Invariant.hpp"
 #include "Utilities/Iterators.hpp"
 #include "Utilities/Valid.hpp"
+#include <cstddef>
 
 namespace LinearAlgebra {
 
@@ -158,6 +160,8 @@ concept AbstractSlice = requires(T t, size_t M) {
                             canonicalizeRange(t, M)
                             } -> std::same_as<Range<size_t, size_t>>;
                         };
+static_assert(AbstractSlice<Range<size_t, size_t>>);
+static_assert(AbstractSlice<Colon>);
 
 template <typename T>
 inline constexpr auto matrixGet(NotNull<const T> ptr, Row M, Col N, RowStride X,
@@ -243,6 +247,79 @@ inline constexpr auto matrixGet(NotNull<T> ptr, Row M, Col N, RowStride X,
   Range<size_t, size_t> mr = canonicalizeRange(m, size_t(M));
   size_t ni = canonicalize(n, size_t(N));
   return MutStridedVector<T>{ptr + size_t(ni + X * mr.b), mr.e - mr.b, X};
+}
+
+[[nodiscard]] inline constexpr auto calcOffset(size_t len, size_t i) {
+  invariant(i < len);
+  return i;
+}
+// note that we don't check i.b < len because we want to allow
+// empty ranges, and r.b <= r.e <= len is checked in calcNewDim.
+template <std::integral B, class E>
+constexpr auto calcOffset(size_t, Range<B, E> i) -> B {
+  return i.b;
+}
+template <class E>
+constexpr auto calcOffset(size_t, Range<Begin, E>) -> size_t {
+  return 0;
+}
+template <class E>
+constexpr auto calcOffset(size_t, Range<OffsetBegin, E> i) -> size_t {
+  return i.b.offset;
+}
+constexpr auto calcOffset(size_t, Colon) -> size_t { return 0; }
+
+template <class R, class C>
+[[nodiscard]] inline constexpr auto calcOffset(StridedDims d,
+                                               CartesianIndex<R, C> i)
+  -> size_t {
+  return RowStride{d} * calcOffset(size_t(Row{d}), i.row) +
+         calcOffset(size_t(Col{d}), i.col);
+}
+
+struct StridedRange {
+  [[no_unique_address]] unsigned len;
+  [[no_unique_address]] unsigned stride;
+};
+template <class I> constexpr auto calcOffset(StridedRange d, I i) -> size_t {
+  return d.stride * calcOffset(d.len, i);
+};
+
+constexpr void calcNewDim(size_t, size_t){};
+template <class B, class E>
+constexpr auto calcNewDim(size_t len, Range<B, E> r) {
+  return calcNewDim(len, canonicalizeRange(r, len));
+};
+constexpr auto calcNewDim(size_t len, Range<size_t, size_t> r) {
+  invariant(r.e <= len);
+  invariant(r.b <= r.e);
+  return r.e - r.b;
+};
+template <std::integral R, std::integral C>
+constexpr void calcNewDim(StridedDims, CartesianIndex<R, C>) {}
+constexpr auto calcNewDim(std::integral auto len, Colon) { return len; };
+
+template <AbstractSlice B, std::integral C>
+constexpr auto calcNewDim(StridedDims d, CartesianIndex<B, C> i) {
+  auto rowDims = calcNewDim(size_t(Row{d}), i.row);
+  return StridedRange{rowDims, RowStride{d}};
+}
+
+template <std::integral R, AbstractSlice C>
+constexpr auto calcNewDim(StridedDims d, CartesianIndex<R, C> i) {
+  return calcNewDim(size_t(Col{d}), i.col);
+}
+
+template <AbstractSlice B, AbstractSlice C>
+constexpr auto calcNewDim(StridedDims d, CartesianIndex<B, C> i) {
+  auto rowDims = calcNewDim(size_t(Row{d}), i.row);
+  auto colDims = calcNewDim(size_t(Col{d}), i.col);
+  return StridedDims{Row{rowDims}, Col{colDims}, RowStride{d}};
+}
+template <AbstractSlice B>
+constexpr auto calcNewDim(DenseDims d, CartesianIndex<B, Colon> i) {
+  auto rowDims = calcNewDim(size_t(Row{d}), i.row);
+  return DenseDims{Row{rowDims}, Col{d}};
 }
 
 } // namespace LinearAlgebra

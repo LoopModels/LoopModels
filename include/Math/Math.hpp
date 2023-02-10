@@ -215,30 +215,6 @@ struct ElementwiseMatrixBinaryOp {
   [[nodiscard]] constexpr auto view() const -> auto & { return *this; };
 };
 
-template <typename A> struct Transpose {
-  static_assert(AbstractMatrix<A>, "Argument to transpose is not a matrix.");
-  static_assert(std::is_trivially_copyable_v<A>,
-                "Argument to transpose is not trivially copyable.");
-
-  using eltype = eltype_t<A>;
-  [[no_unique_address]] A a;
-  auto operator()(size_t i, size_t j) const { return a(j, i); }
-  [[nodiscard]] constexpr auto numRow() const -> Row {
-    return Row{size_t{a.numCol()}};
-  }
-  [[nodiscard]] constexpr auto numCol() const -> Col {
-    return Col{size_t{a.numRow()}};
-  }
-  [[nodiscard]] constexpr auto view() const -> auto & { return *this; };
-  [[nodiscard]] constexpr auto size() const -> std::pair<Row, Col> {
-    return std::make_pair(numRow(), numCol());
-  }
-  [[nodiscard]] constexpr auto dim() const -> DenseDims {
-    return {numRow(), numCol()};
-  }
-  Transpose(A b) : a(b) {}
-};
-template <typename A> Transpose(A) -> Transpose<A>;
 template <AbstractMatrix A, AbstractMatrix B> struct MatMatMul {
   using eltype = promote_eltype_t<A, B>;
   [[no_unique_address]] A a;

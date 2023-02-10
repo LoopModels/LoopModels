@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Math/AxisTypes.hpp"
+#include <concepts>
 #include <cstddef>
 #include <cstdint>
 
@@ -164,6 +165,22 @@ concept MatrixDimension = requires(D d) {
 static_assert(MatrixDimension<SquareDims>);
 static_assert(MatrixDimension<DenseDims>);
 static_assert(MatrixDimension<StridedDims>);
+
+template <class R, class C> struct CartesianIndex {
+  R row;
+  C col;
+  explicit constexpr operator Row() const { return row; }
+  explicit constexpr operator Col() const { return col; }
+};
+template <class R, class C> CartesianIndex(R r, C c) -> CartesianIndex<R, C>;
+
+// Concept for aligning array dimensions with indices.
+template <class I, class D>
+concept Index = (std::integral<D> && std::integral<I>) ||
+                (MatrixDimension<D> && requires(I i) {
+                                         { i.row };
+                                         { i.col };
+                                       });
 
 } // namespace LinearAlgebra
 
