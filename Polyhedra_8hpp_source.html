@@ -148,7 +148,7 @@ $(function() {
 <div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;  <span class="keywordtype">void</span> pruneBoundsUnchecked() {</div>
 <div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;    <span class="keyword">const</span> <span class="keywordtype">size_t</span> dyn = getNumDynamic();</div>
 <div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160; </div>
-<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;    <a class="code" href="structLinearAlgebra_1_1Vector.html">Vector&lt;int64_t&gt;</a> diff{size_t(getA().numCol())};</div>
+<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;    Vector&lt;int64_t&gt; diff{size_t(getA().numCol())};</div>
 <div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;    <span class="keywordflow">if</span> constexpr (HasEqualities) removeRedundantRows(getA(), getE());</div>
 <div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">auto</span> j = <span class="keywordtype">size_t</span>(getA().numRow()); j;) {</div>
 <div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;      <span class="keywordtype">bool</span> broke = <span class="keyword">false</span>;</div>
@@ -299,7 +299,6 @@ $(function() {
 <div class="line"><a name="l00263"></a><span class="lineno">  263</span>&#160;                llvm::SmallVector&lt;const llvm::SCEV *&gt;, <span class="keyword">true</span>&gt;;</div>
 <div class="ttc" id="astructBasePolyhedra_html"><div class="ttname"><a href="structBasePolyhedra.html">BasePolyhedra</a></div><div class="ttdef"><b>Definition:</b> Polyhedra.hpp:64</div></div>
 <div class="ttc" id="astructBumpAlloc_html"><div class="ttname"><a href="structBumpAlloc.html">BumpAlloc</a></div><div class="ttdef"><b>Definition:</b> Allocators.hpp:25</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1Vector_html"><div class="ttname"><a href="structLinearAlgebra_1_1Vector.html">LinearAlgebra::Vector</a></div><div class="ttdef"><b>Definition:</b> Vector.hpp:250</div></div>
 <div class="ttc" id="astructcomparator_1_1LinearSymbolicComparator_html"><div class="ttname"><a href="structcomparator_1_1LinearSymbolicComparator.html">comparator::LinearSymbolicComparator</a></div><div class="ttdef"><b>Definition:</b> Comparators.hpp:590</div></div>
 <div class="ttc" id="astructcomparator_1_1PtrSymbolicComparator_html"><div class="ttname"><a href="structcomparator_1_1PtrSymbolicComparator.html">comparator::PtrSymbolicComparator</a></div><div class="ttdef"><b>Definition:</b> Comparators.hpp:658</div></div>
 </div><!-- fragment --></div><!-- contents -->

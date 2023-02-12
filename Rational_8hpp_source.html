@@ -309,17 +309,16 @@ $(function() {
 <div class="line"><a name="l00238"></a><span class="lineno">  238</span>&#160;  <span class="keywordflow">return</span> <a class="code" href="structRational.html">Rational</a>{gcd(x.numerator, y.numerator),</div>
 <div class="line"><a name="l00239"></a><span class="lineno">  239</span>&#160;                  lcm(x.denominator, y.denominator)};</div>
 <div class="line"><a name="l00240"></a><span class="lineno">  240</span>&#160;}</div>
-<div class="line"><a name="l00241"></a><span class="lineno">  241</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> denomLCM(<a class="code" href="structLinearAlgebra_1_1PtrVector.html">PtrVector&lt;Rational&gt;</a> x) -&gt; int64_t {</div>
+<div class="line"><a name="l00241"></a><span class="lineno">  241</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> denomLCM(PtrVector&lt;Rational&gt; x) -&gt; int64_t {</div>
 <div class="line"><a name="l00242"></a><span class="lineno">  242</span>&#160;  int64_t l = 1;</div>
 <div class="line"><a name="l00243"></a><span class="lineno">  243</span>&#160;  <span class="keywordflow">for</span> (<span class="keyword">auto</span> r : x) l = lcm(l, r.denominator);</div>
 <div class="line"><a name="l00244"></a><span class="lineno">  244</span>&#160;  <span class="keywordflow">return</span> l;</div>
 <div class="line"><a name="l00245"></a><span class="lineno">  245</span>&#160;}</div>
 <div class="line"><a name="l00246"></a><span class="lineno">  246</span>&#160; </div>
-<div class="line"><a name="l00247"></a><span class="lineno">  247</span>&#160;static_assert(AbstractVector&lt;<a class="code" href="structLinearAlgebra_1_1PtrVector.html">PtrVector&lt;Rational&gt;</a>&gt;);</div>
+<div class="line"><a name="l00247"></a><span class="lineno">  247</span>&#160;static_assert(AbstractVector&lt;PtrVector&lt;Rational&gt;&gt;);</div>
 <div class="line"><a name="l00248"></a><span class="lineno">  248</span>&#160;static_assert(AbstractVector&lt;<a class="code" href="structLinearAlgebra_1_1ElementwiseVectorBinaryOp.html">LinearAlgebra::ElementwiseVectorBinaryOp</a>&lt;</div>
-<div class="line"><a name="l00249"></a><span class="lineno">  249</span>&#160;                <a class="code" href="structLinearAlgebra_1_1Sub.html">LinearAlgebra::Sub</a>, <a class="code" href="structLinearAlgebra_1_1PtrVector.html">PtrVector&lt;Rational&gt;</a>, <a class="code" href="structLinearAlgebra_1_1PtrVector.html">PtrVector&lt;Rational&gt;</a>&gt;&gt;);</div>
+<div class="line"><a name="l00249"></a><span class="lineno">  249</span>&#160;                <a class="code" href="structLinearAlgebra_1_1Sub.html">LinearAlgebra::Sub</a>, PtrVector&lt;Rational&gt;, PtrVector&lt;Rational&gt;&gt;&gt;);</div>
 <div class="ttc" id="astructLinearAlgebra_1_1ElementwiseVectorBinaryOp_html"><div class="ttname"><a href="structLinearAlgebra_1_1ElementwiseVectorBinaryOp.html">LinearAlgebra::ElementwiseVectorBinaryOp</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:143</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1PtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrVector.html">LinearAlgebra::PtrVector</a></div><div class="ttdef"><b>Definition:</b> Vector.hpp:27</div></div>
 <div class="ttc" id="astructLinearAlgebra_1_1Sub_html"><div class="ttname"><a href="structLinearAlgebra_1_1Sub.html">LinearAlgebra::Sub</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:78</div></div>
 <div class="ttc" id="astructRational_html"><div class="ttname"><a href="structRational.html">Rational</a></div><div class="ttdef"><b>Definition:</b> Rational.hpp:18</div></div>
 </div><!-- fragment --></div><!-- contents -->

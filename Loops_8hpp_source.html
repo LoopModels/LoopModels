@@ -255,7 +255,7 @@ $(function() {
 <div class="line"><a name="l00186"></a><span class="lineno">  186</span>&#160;  <span class="keyword">auto</span> findIndex(<span class="keyword">const</span> llvm::SCEV *v) <span class="keyword">const</span> -&gt; <span class="keywordtype">size_t</span> {</div>
 <div class="line"><a name="l00187"></a><span class="lineno">  187</span>&#160;    <span class="keywordflow">return</span> findSymbolicIndex(S, v);</div>
 <div class="line"><a name="l00188"></a><span class="lineno">  188</span>&#160;  }</div>
-<div class="line"><a name="l00196"></a><span class="lineno"><a class="line" href="structAffineLoopNest.html#a215506c9530da55d0671936af217dd6d">  196</a></span>&#160;  [[nodiscard]] <span class="keyword">auto</span> <a class="code" href="structAffineLoopNest.html#a215506c9530da55d0671936af217dd6d">rotate</a>(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, <a class="code" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix&lt;int64_t&gt;</a> R) <span class="keyword">const</span></div>
+<div class="line"><a name="l00196"></a><span class="lineno"><a class="line" href="structAffineLoopNest.html#a215506c9530da55d0671936af217dd6d">  196</a></span>&#160;  [[nodiscard]] <span class="keyword">auto</span> <a class="code" href="structAffineLoopNest.html#a215506c9530da55d0671936af217dd6d">rotate</a>(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, PtrMatrix&lt;int64_t&gt; R) <span class="keyword">const</span></div>
 <div class="line"><a name="l00197"></a><span class="lineno">  197</span>&#160;    -&gt; <a class="code" href="structNotNull.html">NotNull&lt;AffineLoopNest&lt;false&gt;</a>&gt; {</div>
 <div class="line"><a name="l00198"></a><span class="lineno">  198</span>&#160;    <span class="keywordtype">size_t</span> numExtraVar = 0;</div>
 <div class="line"><a name="l00199"></a><span class="lineno">  199</span>&#160;    <span class="keywordflow">if</span> constexpr (NonNegative) numExtraVar = getNumLoops();</div>
@@ -514,7 +514,7 @@ $(function() {
 <div class="line"><a name="l00457"></a><span class="lineno">  457</span>&#160;    <span class="keywordtype">size_t</span> numRemainingLoops = oldNumLoops - numToRemove;</div>
 <div class="line"><a name="l00458"></a><span class="lineno">  458</span>&#160;    <span class="keyword">auto</span> [M, N] = A.size();</div>
 <div class="line"><a name="l00459"></a><span class="lineno">  459</span>&#160;    <span class="keywordflow">if</span> (numRemainingLoops != numToRemove) {</div>
-<div class="line"><a name="l00460"></a><span class="lineno">  460</span>&#160;      <a class="code" href="structLinearAlgebra_1_1Vector.html">Vector&lt;int64_t&gt;</a> tmp;</div>
+<div class="line"><a name="l00460"></a><span class="lineno">  460</span>&#160;      Vector&lt;int64_t&gt; tmp;</div>
 <div class="line"><a name="l00461"></a><span class="lineno">  461</span>&#160;      <span class="keywordflow">if</span> (numRemainingLoops &gt; numToRemove) {</div>
 <div class="line"><a name="l00462"></a><span class="lineno">  462</span>&#160;        tmp.resizeForOverwrite(numToRemove);</div>
 <div class="line"><a name="l00463"></a><span class="lineno">  463</span>&#160;        <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> m = 0; m &lt; M; ++m) {</div>
@@ -578,7 +578,7 @@ $(function() {
 <div class="line"><a name="l00521"></a><span class="lineno">  521</span>&#160;        std::move(Am)){};</div>
 <div class="line"><a name="l00522"></a><span class="lineno">  522</span>&#160;  <a class="code" href="structAffineLoopNest.html">AffineLoopNest</a>() = <span class="keywordflow">default</span>;</div>
 <div class="line"><a name="l00523"></a><span class="lineno">  523</span>&#160; </div>
-<div class="line"><a name="l00524"></a><span class="lineno">  524</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getProgVars(<span class="keywordtype">size_t</span> j) <span class="keyword">const</span> -&gt; <a class="code" href="structLinearAlgebra_1_1PtrVector.html">PtrVector&lt;int64_t&gt;</a> {</div>
+<div class="line"><a name="l00524"></a><span class="lineno">  524</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getProgVars(<span class="keywordtype">size_t</span> j) <span class="keyword">const</span> -&gt; PtrVector&lt;int64_t&gt; {</div>
 <div class="line"><a name="l00525"></a><span class="lineno">  525</span>&#160;    <span class="keywordflow">return</span> A(j, _(0, getNumSymbols()));</div>
 <div class="line"><a name="l00526"></a><span class="lineno">  526</span>&#160;  }</div>
 <div class="line"><a name="l00527"></a><span class="lineno">  527</span>&#160;  <span class="keywordtype">void</span> removeLoopBang(<span class="keywordtype">size_t</span> i) {</div>
@@ -594,7 +594,7 @@ $(function() {
 <div class="line"><a name="l00537"></a><span class="lineno">  537</span>&#160;    L.removeLoopBang(i);</div>
 <div class="line"><a name="l00538"></a><span class="lineno">  538</span>&#160;    <span class="keywordflow">return</span> L;</div>
 <div class="line"><a name="l00539"></a><span class="lineno">  539</span>&#160;  }</div>
-<div class="line"><a name="l00540"></a><span class="lineno">  540</span>&#160;  <span class="keyword">auto</span> perm(<a class="code" href="structLinearAlgebra_1_1PtrVector.html">PtrVector&lt;unsigned&gt;</a> x)</div>
+<div class="line"><a name="l00540"></a><span class="lineno">  540</span>&#160;  <span class="keyword">auto</span> perm(PtrVector&lt;unsigned&gt; x)</div>
 <div class="line"><a name="l00541"></a><span class="lineno">  541</span>&#160;    -&gt; llvm::SmallVector&lt;AffineLoopNest&lt;NonNegative&gt;, 0&gt; {</div>
 <div class="line"><a name="l00542"></a><span class="lineno">  542</span>&#160;    llvm::SmallVector&lt;AffineLoopNest&lt;NonNegative&gt;, 0&gt; ret;</div>
 <div class="line"><a name="l00543"></a><span class="lineno">  543</span>&#160;    <span class="comment">// llvm::SmallVector&lt;UnboundedAffineLoopNest, 0&gt; ret;</span></div>
@@ -620,7 +620,7 @@ $(function() {
 <div class="line"><a name="l00563"></a><span class="lineno">  563</span>&#160;                                           _) = A(j, _);</div>
 <div class="line"><a name="l00564"></a><span class="lineno">  564</span>&#160;    <span class="keywordflow">return</span> ret;</div>
 <div class="line"><a name="l00565"></a><span class="lineno">  565</span>&#160;  }</div>
-<div class="line"><a name="l00566"></a><span class="lineno">  566</span>&#160;  <span class="keyword">auto</span> getBounds(<a class="code" href="structLinearAlgebra_1_1PtrVector.html">PtrVector&lt;unsigned&gt;</a> x)</div>
+<div class="line"><a name="l00566"></a><span class="lineno">  566</span>&#160;  <span class="keyword">auto</span> getBounds(PtrVector&lt;unsigned&gt; x)</div>
 <div class="line"><a name="l00567"></a><span class="lineno">  567</span>&#160;    -&gt; llvm::SmallVector&lt;std::pair&lt;IntMatrix, IntMatrix&gt;, 0&gt; {</div>
 <div class="line"><a name="l00568"></a><span class="lineno">  568</span>&#160;    llvm::SmallVector&lt;std::pair&lt;IntMatrix, IntMatrix&gt;, 0&gt; ret;</div>
 <div class="line"><a name="l00569"></a><span class="lineno">  569</span>&#160;    <span class="keywordtype">size_t</span> i = x.size();</div>
@@ -711,7 +711,7 @@ $(function() {
 <div class="line"><a name="l00654"></a><span class="lineno">  654</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">true</span>;</div>
 <div class="line"><a name="l00655"></a><span class="lineno">  655</span>&#160;  }</div>
 <div class="line"><a name="l00656"></a><span class="lineno">  656</span>&#160; </div>
-<div class="line"><a name="l00657"></a><span class="lineno">  657</span>&#160;  <span class="keywordtype">void</span> printSymbol(llvm::raw_ostream &amp;os, <a class="code" href="structLinearAlgebra_1_1PtrVector.html">PtrVector&lt;int64_t&gt;</a> x,</div>
+<div class="line"><a name="l00657"></a><span class="lineno">  657</span>&#160;  <span class="keywordtype">void</span> printSymbol(llvm::raw_ostream &amp;os, PtrVector&lt;int64_t&gt; x,</div>
 <div class="line"><a name="l00658"></a><span class="lineno">  658</span>&#160;                   int64_t mul)<span class="keyword"> const </span>{</div>
 <div class="line"><a name="l00659"></a><span class="lineno">  659</span>&#160;    <span class="keywordtype">bool</span> printed = x[0] != 0;</div>
 <div class="line"><a name="l00660"></a><span class="lineno">  660</span>&#160;    <span class="keywordflow">if</span> (printed) os &lt;&lt; mul * x[0];</div>
@@ -741,7 +741,7 @@ $(function() {
 <div class="line"><a name="l00684"></a><span class="lineno">  684</span>&#160;        os &lt;&lt; Aji &lt;&lt; <span class="stringliteral">&quot;*i_&quot;</span> &lt;&lt; numVarMinus1 - i</div>
 <div class="line"><a name="l00685"></a><span class="lineno">  685</span>&#160;           &lt;&lt; ((sign &lt; 0) ? <span class="stringliteral">&quot; &lt;= &quot;</span> : <span class="stringliteral">&quot; &gt;= &quot;</span>);</div>
 <div class="line"><a name="l00686"></a><span class="lineno">  686</span>&#160;      <span class="keywordflow">else</span> os &lt;&lt; <span class="stringliteral">&quot;i_&quot;</span> &lt;&lt; numVarMinus1 - i &lt;&lt; ((sign &lt; 0) ? <span class="stringliteral">&quot; &lt;= &quot;</span> : <span class="stringliteral">&quot; &gt;= &quot;</span>);</div>
-<div class="line"><a name="l00687"></a><span class="lineno">  687</span>&#160;      <a class="code" href="structLinearAlgebra_1_1PtrVector.html">PtrVector&lt;int64_t&gt;</a> b = getProgVars(j);</div>
+<div class="line"><a name="l00687"></a><span class="lineno">  687</span>&#160;      PtrVector&lt;int64_t&gt; b = getProgVars(j);</div>
 <div class="line"><a name="l00688"></a><span class="lineno">  688</span>&#160;      <span class="keywordtype">bool</span> printed = !allZero(b);</div>
 <div class="line"><a name="l00689"></a><span class="lineno">  689</span>&#160;      <span class="keywordflow">if</span> (printed) printSymbol(os, b, -sign);</div>
 <div class="line"><a name="l00690"></a><span class="lineno">  690</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> k = 0; k &lt; numVar; ++k) {</div>
@@ -792,9 +792,6 @@ $(function() {
 <div class="ttc" id="astructBasePolyhedra_html"><div class="ttname"><a href="structBasePolyhedra.html">BasePolyhedra</a></div><div class="ttdef"><b>Definition:</b> Polyhedra.hpp:64</div></div>
 <div class="ttc" id="astructBumpAlloc_html"><div class="ttname"><a href="structBumpAlloc.html">BumpAlloc</a></div><div class="ttdef"><b>Definition:</b> Allocators.hpp:25</div></div>
 <div class="ttc" id="astructEmptyMatrix_html"><div class="ttname"><a href="structEmptyMatrix.html">EmptyMatrix</a></div><div class="ttdef"><b>Definition:</b> EmptyArrays.hpp:7</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1PtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrMatrix.html">LinearAlgebra::PtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Indexing.hpp:154</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1PtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrVector.html">LinearAlgebra::PtrVector</a></div><div class="ttdef"><b>Definition:</b> Vector.hpp:27</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1Vector_html"><div class="ttname"><a href="structLinearAlgebra_1_1Vector.html">LinearAlgebra::Vector</a></div><div class="ttdef"><b>Definition:</b> Vector.hpp:250</div></div>
 <div class="ttc" id="astructNoWrapRewriter_html"><div class="ttname"><a href="structNoWrapRewriter.html">NoWrapRewriter</a></div><div class="ttdef"><b>Definition:</b> Loops.hpp:65</div></div>
 <div class="ttc" id="astructNotNull_html"><div class="ttname"><a href="structNotNull.html">NotNull</a></div><div class="ttdef"><b>Definition:</b> Valid.hpp:7</div></div>
 <div class="ttc" id="astructOptional_html"><div class="ttname"><a href="structOptional.html">Optional</a></div><div class="ttdef"><b>Definition:</b> Optional.hpp:9</div></div>

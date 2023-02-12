@@ -75,9 +75,9 @@ $(function() {
 <div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160; </div>
 <div class="line"><a name="l00005"></a><span class="lineno"><a class="line" href="structLU.html">    5</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structLU.html">LU</a> {</div>
 <div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;  SquareMatrix&lt;Rational&gt; F;</div>
-<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;  <a class="code" href="structLinearAlgebra_1_1Vector.html">Vector&lt;unsigned&gt;</a> ipiv;</div>
+<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;  Vector&lt;unsigned&gt; ipiv;</div>
 <div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160; </div>
-<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> ldiv(<a class="code" href="structLinearAlgebra_1_1MutPtrMatrix.html">MutPtrMatrix&lt;Rational&gt;</a> rhs) <span class="keyword">const</span> -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> ldiv(MutPtrMatrix&lt;Rational&gt; rhs) <span class="keyword">const</span> -&gt; <span class="keywordtype">bool</span> {</div>
 <div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;    <span class="keyword">auto</span> [M, N] = rhs.size();</div>
 <div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;    assert(F.numRow() == M);</div>
 <div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;    <span class="comment">// // check unimodularity</span></div>
@@ -125,7 +125,7 @@ $(function() {
 <div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
 <div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;  }</div>
 <div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160; </div>
-<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> rdiv(<a class="code" href="structLinearAlgebra_1_1MutPtrMatrix.html">MutPtrMatrix&lt;Rational&gt;</a> rhs) <span class="keyword">const</span> -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> rdiv(MutPtrMatrix&lt;Rational&gt; rhs) <span class="keyword">const</span> -&gt; <span class="keywordtype">bool</span> {</div>
 <div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;    <span class="keyword">auto</span> [M, N] = rhs.size();</div>
 <div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;    assert(F.numCol() == N);</div>
 <div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;    <span class="comment">// // check unimodularity</span></div>
@@ -180,9 +180,9 @@ $(function() {
 <div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;      <span class="keywordflow">else</span> <span class="keywordflow">return</span> {};</div>
 <div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;    <span class="keywordflow">return</span> d;</div>
 <div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;  }</div>
-<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> perm() <span class="keyword">const</span> -&gt; <a class="code" href="structLinearAlgebra_1_1Vector.html">Vector&lt;unsigned&gt;</a> {</div>
+<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> perm() <span class="keyword">const</span> -&gt; Vector&lt;unsigned&gt; {</div>
 <div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;    Col M = F.numCol();</div>
-<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;    <a class="code" href="structLinearAlgebra_1_1Vector.html">Vector&lt;unsigned&gt;</a> perm;</div>
+<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;    Vector&lt;unsigned&gt; perm;</div>
 <div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> m = 0; m &lt; M; ++m) perm.push_back(m);</div>
 <div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> m = 0; m &lt; M; ++m) std::swap(perm[m], perm[ipiv[m]]);</div>
 <div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;    <span class="keywordflow">return</span> perm;</div>
@@ -192,7 +192,7 @@ $(function() {
 <div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;    Row M = B.numRow();</div>
 <div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;    SquareMatrix&lt;Rational&gt; A(B);</div>
 <div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;    <span class="comment">// for (size_t m = 0; m &lt; M * M; ++m) A[m] = B[m];</span></div>
-<div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;    <a class="code" href="structLinearAlgebra_1_1Vector.html">Vector&lt;unsigned&gt;</a> ipiv(M);</div>
+<div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;    Vector&lt;unsigned&gt; ipiv(M);</div>
 <div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; M; ++i) ipiv[i] = i;</div>
 <div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> k = 0; k &lt; M; ++k) {</div>
 <div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;      <span class="keywordtype">size_t</span> kp = k;</div>
@@ -225,8 +225,6 @@ $(function() {
 <div class="line"><a name="l00154"></a><span class="lineno">  154</span>&#160;  }</div>
 <div class="line"><a name="l00155"></a><span class="lineno">  155</span>&#160;};</div>
 <div class="ttc" id="astructLU_html"><div class="ttname"><a href="structLU.html">LU</a></div><div class="ttdef"><b>Definition:</b> LinearAlgebra.hpp:5</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1MutPtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutPtrMatrix.html">LinearAlgebra::MutPtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Indexing.hpp:155</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1Vector_html"><div class="ttname"><a href="structLinearAlgebra_1_1Vector.html">LinearAlgebra::Vector</a></div><div class="ttdef"><b>Definition:</b> Vector.hpp:250</div></div>
 <div class="ttc" id="astructRational_html"><div class="ttname"><a href="structRational.html">Rational</a></div><div class="ttdef"><b>Definition:</b> Rational.hpp:18</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->

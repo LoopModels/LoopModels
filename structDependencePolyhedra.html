@@ -104,13 +104,13 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumPhiCoefficients
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumScheduleCoefficients</b> () const -&gt; size_t</td></tr>
 <tr class="separator:a96f42cf2f2e8dd09da68d69e989d2d39"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac34ff039dab1d3367bd1e06e4ab87b98"><td class="memItemLeft" align="right" valign="top"><a id="ac34ff039dab1d3367bd1e06e4ab87b98"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getSymbols</b> (size_t i) -&gt; <a class="el" href="structLinearAlgebra_1_1MutPtrVector.html">MutPtrVector</a>&lt; int64_t &gt;</td></tr>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getSymbols</b> (size_t i) -&gt; MutPtrVector&lt; int64_t &gt;</td></tr>
 <tr class="separator:ac34ff039dab1d3367bd1e06e4ab87b98"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab1077b8751e9126cd08f652e47b2e224"><td class="memItemLeft" align="right" valign="top"><a id="ab1077b8751e9126cd08f652e47b2e224"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>getInEqSymbols</b> (size_t i) const -&gt; <a class="el" href="structLinearAlgebra_1_1PtrVector.html">PtrVector</a>&lt; int64_t &gt;</td></tr>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getInEqSymbols</b> (size_t i) const -&gt; PtrVector&lt; int64_t &gt;</td></tr>
 <tr class="separator:ab1077b8751e9126cd08f652e47b2e224"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a333850b7898864d7bbb4a4b307f11e29"><td class="memItemLeft" align="right" valign="top"><a id="a333850b7898864d7bbb4a4b307f11e29"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>getEqSymbols</b> (size_t i) const -&gt; <a class="el" href="structLinearAlgebra_1_1PtrVector.html">PtrVector</a>&lt; int64_t &gt;</td></tr>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getEqSymbols</b> (size_t i) const -&gt; PtrVector&lt; int64_t &gt;</td></tr>
 <tr class="separator:a333850b7898864d7bbb4a4b307f11e29"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9064715ab86ea115080fd69c3a51848c"><td class="memItemLeft" align="right" valign="top"><a id="a9064715ab86ea115080fd69c3a51848c"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>getCompTimeInEqOffset</b> (size_t i) const -&gt; std::optional&lt; int64_t &gt;</td></tr>
@@ -216,7 +216,7 @@ Static Public Member Functions</h2></td></tr>
 static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumOmegaCoefficients</b> () -&gt; size_t</td></tr>
 <tr class="separator:aad7e832259ceda19d6cb613dd0f1a0e6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2cd37d0eab96797841c601291692fcc1"><td class="memItemLeft" align="right" valign="top"><a id="a2cd37d0eab96797841c601291692fcc1"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>findFirstNonEqual</b> (<a class="el" href="structLinearAlgebra_1_1PtrVector.html">PtrVector</a>&lt; int64_t &gt; x, <a class="el" href="structLinearAlgebra_1_1PtrVector.html">PtrVector</a>&lt; int64_t &gt; y) -&gt; size_t</td></tr>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>findFirstNonEqual</b> (PtrVector&lt; int64_t &gt; x, PtrVector&lt; int64_t &gt; y) -&gt; size_t</td></tr>
 <tr class="separator:a2cd37d0eab96797841c601291692fcc1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2a8825e3bda022057c541014aa28aea1"><td class="memItemLeft" align="right" valign="top"><a id="a2a8825e3bda022057c541014aa28aea1"></a>
 static auto&#160;</td><td class="memItemRight" valign="bottom"><b>nullSpace</b> (const <a class="el" href="structMemoryAccess.html">MemoryAccess</a> &amp;x, const <a class="el" href="structMemoryAccess.html">MemoryAccess</a> &amp;y) -&gt; IntMatrix</td></tr>

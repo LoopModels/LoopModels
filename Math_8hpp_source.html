@@ -323,34 +323,34 @@ $(function() {
 <div class="line"><a name="l00252"></a><span class="lineno">  252</span>&#160;  constexpr <span class="keyword">auto</span> view()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> *<span class="keyword">this</span>; };</div>
 <div class="line"><a name="l00253"></a><span class="lineno">  253</span>&#160;};</div>
 <div class="line"><a name="l00254"></a><span class="lineno">  254</span>&#160; </div>
-<div class="line"><a name="l00255"></a><span class="lineno">  255</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt; <a class="code" href="structLinearAlgebra_1_1PtrVector.html">PtrVector</a>(T *, <span class="keywordtype">size_t</span>) -&gt; <a class="code" href="structLinearAlgebra_1_1PtrVector.html">PtrVector&lt;T&gt;</a>;</div>
-<div class="line"><a name="l00256"></a><span class="lineno">  256</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt; <a class="code" href="structLinearAlgebra_1_1MutPtrVector.html">MutPtrVector</a>(T *, <span class="keywordtype">size_t</span>) -&gt; <a class="code" href="structLinearAlgebra_1_1MutPtrVector.html">MutPtrVector&lt;T&gt;</a>;</div>
-<div class="line"><a name="l00257"></a><span class="lineno">  257</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt; <a class="code" href="structLinearAlgebra_1_1PtrVector.html">PtrVector</a>(<a class="code" href="structNotNull.html">NotNull&lt;T&gt;</a>, <span class="keywordtype">size_t</span>) -&gt; <a class="code" href="structLinearAlgebra_1_1PtrVector.html">PtrVector&lt;T&gt;</a>;</div>
-<div class="line"><a name="l00258"></a><span class="lineno">  258</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt; <a class="code" href="structLinearAlgebra_1_1MutPtrVector.html">MutPtrVector</a>(<a class="code" href="structNotNull.html">NotNull&lt;T&gt;</a>, <span class="keywordtype">size_t</span>) -&gt; <a class="code" href="structLinearAlgebra_1_1MutPtrVector.html">MutPtrVector&lt;T&gt;</a>;</div>
+<div class="line"><a name="l00255"></a><span class="lineno">  255</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt; <a class="code" href="structLinearAlgebra_1_1Array.html">PtrVector</a>(T *, <span class="keywordtype">size_t</span>) -&gt; <a class="code" href="structLinearAlgebra_1_1Array.html">PtrVector&lt;T&gt;</a>;</div>
+<div class="line"><a name="l00256"></a><span class="lineno">  256</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt; MutPtrVector(T *, <span class="keywordtype">size_t</span>) -&gt; MutPtrVector&lt;T&gt;;</div>
+<div class="line"><a name="l00257"></a><span class="lineno">  257</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt; <a class="code" href="structLinearAlgebra_1_1Array.html">PtrVector</a>(<a class="code" href="structNotNull.html">NotNull&lt;T&gt;</a>, <span class="keywordtype">size_t</span>) -&gt; <a class="code" href="structLinearAlgebra_1_1Array.html">PtrVector&lt;T&gt;</a>;</div>
+<div class="line"><a name="l00258"></a><span class="lineno">  258</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt; MutPtrVector(<a class="code" href="structNotNull.html">NotNull&lt;T&gt;</a>, <span class="keywordtype">size_t</span>) -&gt; MutPtrVector&lt;T&gt;;</div>
 <div class="line"><a name="l00259"></a><span class="lineno">  259</span>&#160; </div>
 <div class="line"><a name="l00260"></a><span class="lineno">  260</span>&#160;<span class="comment">//</span></div>
 <div class="line"><a name="l00261"></a><span class="lineno">  261</span>&#160;<span class="comment">// Vectors</span></div>
 <div class="line"><a name="l00262"></a><span class="lineno">  262</span>&#160;<span class="comment">//</span></div>
 <div class="line"><a name="l00263"></a><span class="lineno">  263</span>&#160; </div>
 <div class="line"><a name="l00264"></a><span class="lineno">  264</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt; constexpr <span class="keyword">auto</span> view(llvm::SmallVectorImpl&lt;T&gt; &amp;x) {</div>
-<div class="line"><a name="l00265"></a><span class="lineno">  265</span>&#160;  <span class="keywordflow">return</span> <a class="code" href="structLinearAlgebra_1_1MutPtrVector.html">MutPtrVector&lt;T&gt;</a>{x.data(), x.size()};</div>
+<div class="line"><a name="l00265"></a><span class="lineno">  265</span>&#160;  <span class="keywordflow">return</span> MutPtrVector&lt;T&gt;{x.data(), x.size()};</div>
 <div class="line"><a name="l00266"></a><span class="lineno">  266</span>&#160;}</div>
 <div class="line"><a name="l00267"></a><span class="lineno">  267</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt; constexpr <span class="keyword">auto</span> view(<span class="keyword">const</span> llvm::SmallVectorImpl&lt;T&gt; &amp;x) {</div>
-<div class="line"><a name="l00268"></a><span class="lineno">  268</span>&#160;  <span class="keywordflow">return</span> <a class="code" href="structLinearAlgebra_1_1PtrVector.html">PtrVector&lt;T&gt;</a>{x.data(), x.size()};</div>
+<div class="line"><a name="l00268"></a><span class="lineno">  268</span>&#160;  <span class="keywordflow">return</span> PtrVector&lt;T&gt;{x.data(), x.size()};</div>
 <div class="line"><a name="l00269"></a><span class="lineno">  269</span>&#160;}</div>
 <div class="line"><a name="l00270"></a><span class="lineno">  270</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt; constexpr <span class="keyword">auto</span> view(llvm::MutableArrayRef&lt;T&gt; x) {</div>
-<div class="line"><a name="l00271"></a><span class="lineno">  271</span>&#160;  <span class="keywordflow">return</span> <a class="code" href="structLinearAlgebra_1_1MutPtrVector.html">MutPtrVector&lt;T&gt;</a>{x.data(), x.size()};</div>
+<div class="line"><a name="l00271"></a><span class="lineno">  271</span>&#160;  <span class="keywordflow">return</span> MutPtrVector&lt;T&gt;{x.data(), x.size()};</div>
 <div class="line"><a name="l00272"></a><span class="lineno">  272</span>&#160;}</div>
 <div class="line"><a name="l00273"></a><span class="lineno">  273</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt; constexpr <span class="keyword">auto</span> view(llvm::ArrayRef&lt;T&gt; x) {</div>
-<div class="line"><a name="l00274"></a><span class="lineno">  274</span>&#160;  <span class="keywordflow">return</span> <a class="code" href="structLinearAlgebra_1_1PtrVector.html">PtrVector&lt;T&gt;</a>{x.data(), x.size()};</div>
+<div class="line"><a name="l00274"></a><span class="lineno">  274</span>&#160;  <span class="keywordflow">return</span> PtrVector&lt;T&gt;{x.data(), x.size()};</div>
 <div class="line"><a name="l00275"></a><span class="lineno">  275</span>&#160;}</div>
-<div class="line"><a name="l00276"></a><span class="lineno">  276</span>&#160;static_assert(!AbstractMatrix&lt;<a class="code" href="structLinearAlgebra_1_1StridedVector.html">StridedVector&lt;int64_t&gt;</a>&gt;);</div>
+<div class="line"><a name="l00276"></a><span class="lineno">  276</span>&#160;static_assert(!AbstractMatrix&lt;StridedVector&lt;int64_t&gt;&gt;);</div>
 <div class="line"><a name="l00277"></a><span class="lineno">  277</span>&#160; </div>
 <div class="line"><a name="l00278"></a><span class="lineno">  278</span>&#160;<span class="comment">// static_assert(std::is_trivially_copyable_v&lt;MutStridedVector&lt;int64_t&gt;&gt;);</span></div>
 <div class="line"><a name="l00279"></a><span class="lineno">  279</span>&#160;static_assert(std::is_trivially_copyable_v&lt;</div>
-<div class="line"><a name="l00280"></a><span class="lineno">  280</span>&#160;              ElementwiseUnaryOp&lt;Sub, <a class="code" href="structLinearAlgebra_1_1StridedVector.html">StridedVector&lt;int64_t&gt;</a>&gt;&gt;);</div>
+<div class="line"><a name="l00280"></a><span class="lineno">  280</span>&#160;              ElementwiseUnaryOp&lt;Sub, StridedVector&lt;int64_t&gt;&gt;&gt;);</div>
 <div class="line"><a name="l00281"></a><span class="lineno">  281</span>&#160;static_assert(TriviallyCopyableVectorOrScalar&lt;</div>
-<div class="line"><a name="l00282"></a><span class="lineno">  282</span>&#160;              ElementwiseUnaryOp&lt;Sub, <a class="code" href="structLinearAlgebra_1_1StridedVector.html">StridedVector&lt;int64_t&gt;</a>&gt;&gt;);</div>
+<div class="line"><a name="l00282"></a><span class="lineno">  282</span>&#160;              ElementwiseUnaryOp&lt;Sub, StridedVector&lt;int64_t&gt;&gt;&gt;);</div>
 <div class="line"><a name="l00283"></a><span class="lineno">  283</span>&#160; </div>
 <div class="line"><a name="l00284"></a><span class="lineno">  284</span>&#160;<span class="keyword">auto</span> printVectorImpl(llvm::raw_ostream &amp;os, <span class="keyword">const</span> AbstractVector <span class="keyword">auto</span> &amp;a)</div>
 <div class="line"><a name="l00285"></a><span class="lineno">  285</span>&#160;  -&gt; llvm::raw_ostream &amp; {</div>
@@ -363,22 +363,22 @@ $(function() {
 <div class="line"><a name="l00292"></a><span class="lineno">  292</span>&#160;  <span class="keywordflow">return</span> os;</div>
 <div class="line"><a name="l00293"></a><span class="lineno">  293</span>&#160;}</div>
 <div class="line"><a name="l00294"></a><span class="lineno">  294</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
-<div class="line"><a name="l00295"></a><span class="lineno">  295</span>&#160;<span class="keyword">auto</span> printVector(llvm::raw_ostream &amp;os, <a class="code" href="structLinearAlgebra_1_1PtrVector.html">PtrVector&lt;T&gt;</a> a) -&gt; llvm::raw_ostream &amp; {</div>
+<div class="line"><a name="l00295"></a><span class="lineno">  295</span>&#160;<span class="keyword">auto</span> printVector(llvm::raw_ostream &amp;os, PtrVector&lt;T&gt; a) -&gt; llvm::raw_ostream &amp; {</div>
 <div class="line"><a name="l00296"></a><span class="lineno">  296</span>&#160;  <span class="keywordflow">return</span> printVectorImpl(os, a);</div>
 <div class="line"><a name="l00297"></a><span class="lineno">  297</span>&#160;}</div>
 <div class="line"><a name="l00298"></a><span class="lineno">  298</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
-<div class="line"><a name="l00299"></a><span class="lineno">  299</span>&#160;<span class="keyword">auto</span> printVector(llvm::raw_ostream &amp;os, <a class="code" href="structLinearAlgebra_1_1StridedVector.html">StridedVector&lt;T&gt;</a> a)</div>
+<div class="line"><a name="l00299"></a><span class="lineno">  299</span>&#160;<span class="keyword">auto</span> printVector(llvm::raw_ostream &amp;os, StridedVector&lt;T&gt; a)</div>
 <div class="line"><a name="l00300"></a><span class="lineno">  300</span>&#160;  -&gt; llvm::raw_ostream &amp; {</div>
 <div class="line"><a name="l00301"></a><span class="lineno">  301</span>&#160;  <span class="keywordflow">return</span> printVectorImpl(os, a);</div>
 <div class="line"><a name="l00302"></a><span class="lineno">  302</span>&#160;}</div>
 <div class="line"><a name="l00303"></a><span class="lineno">  303</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
 <div class="line"><a name="l00304"></a><span class="lineno">  304</span>&#160;<span class="keyword">auto</span> printVector(llvm::raw_ostream &amp;os, <span class="keyword">const</span> llvm::SmallVectorImpl&lt;T&gt; &amp;a)</div>
 <div class="line"><a name="l00305"></a><span class="lineno">  305</span>&#160;  -&gt; llvm::raw_ostream &amp; {</div>
-<div class="line"><a name="l00306"></a><span class="lineno">  306</span>&#160;  <span class="keywordflow">return</span> printVector(os, <a class="code" href="structLinearAlgebra_1_1PtrVector.html">PtrVector&lt;T&gt;</a>{a.data(), a.size()});</div>
+<div class="line"><a name="l00306"></a><span class="lineno">  306</span>&#160;  <span class="keywordflow">return</span> printVector(os, PtrVector&lt;T&gt;{a.data(), a.size()});</div>
 <div class="line"><a name="l00307"></a><span class="lineno">  307</span>&#160;}</div>
 <div class="line"><a name="l00308"></a><span class="lineno">  308</span>&#160; </div>
 <div class="line"><a name="l00309"></a><span class="lineno">  309</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
-<div class="line"><a name="l00310"></a><span class="lineno">  310</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> operator&lt;&lt;(llvm::raw_ostream &amp;os, <a class="code" href="structLinearAlgebra_1_1PtrVector.html">PtrVector&lt;T&gt;</a> <span class="keyword">const</span> &amp;A)</div>
+<div class="line"><a name="l00310"></a><span class="lineno">  310</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> operator&lt;&lt;(llvm::raw_ostream &amp;os, PtrVector&lt;T&gt; <span class="keyword">const</span> &amp;A)</div>
 <div class="line"><a name="l00311"></a><span class="lineno">  311</span>&#160;  -&gt; llvm::raw_ostream &amp; {</div>
 <div class="line"><a name="l00312"></a><span class="lineno">  312</span>&#160;  <span class="keywordflow">return</span> printVector(os, A);</div>
 <div class="line"><a name="l00313"></a><span class="lineno">  313</span>&#160;}</div>
@@ -396,14 +396,14 @@ $(function() {
 <div class="line"><a name="l00325"></a><span class="lineno">  325</span>&#160;  <span class="keywordflow">return</span> <span class="keyword">true</span>;</div>
 <div class="line"><a name="l00326"></a><span class="lineno">  326</span>&#160;}</div>
 <div class="line"><a name="l00327"></a><span class="lineno">  327</span>&#160; </div>
-<div class="line"><a name="l00328"></a><span class="lineno">  328</span>&#160;<span class="keyword">inline</span> <span class="keywordtype">void</span> swap(<a class="code" href="structLinearAlgebra_1_1MutPtrMatrix.html">MutPtrMatrix&lt;int64_t&gt;</a> A, Row i, Row j) {</div>
+<div class="line"><a name="l00328"></a><span class="lineno">  328</span>&#160;<span class="keyword">inline</span> <span class="keywordtype">void</span> swap(MutPtrMatrix&lt;int64_t&gt; A, Row i, Row j) {</div>
 <div class="line"><a name="l00329"></a><span class="lineno">  329</span>&#160;  <span class="keywordflow">if</span> (i == j) <span class="keywordflow">return</span>;</div>
 <div class="line"><a name="l00330"></a><span class="lineno">  330</span>&#160;  Col N = A.numCol();</div>
 <div class="line"><a name="l00331"></a><span class="lineno">  331</span>&#160;  assert((i &lt; A.numRow()) &amp;&amp; (j &lt; A.numRow()));</div>
 <div class="line"><a name="l00332"></a><span class="lineno">  332</span>&#160; </div>
 <div class="line"><a name="l00333"></a><span class="lineno">  333</span>&#160;  <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> n = 0; n &lt; N; ++n) std::swap(A(i, n), A(j, n));</div>
 <div class="line"><a name="l00334"></a><span class="lineno">  334</span>&#160;}</div>
-<div class="line"><a name="l00335"></a><span class="lineno">  335</span>&#160;<span class="keyword">inline</span> <span class="keywordtype">void</span> swap(<a class="code" href="structLinearAlgebra_1_1MutPtrMatrix.html">MutPtrMatrix&lt;int64_t&gt;</a> A, Col i, Col j) {</div>
+<div class="line"><a name="l00335"></a><span class="lineno">  335</span>&#160;<span class="keyword">inline</span> <span class="keywordtype">void</span> swap(MutPtrMatrix&lt;int64_t&gt; A, Col i, Col j) {</div>
 <div class="line"><a name="l00336"></a><span class="lineno">  336</span>&#160;  <span class="keywordflow">if</span> (i == j) <span class="keywordflow">return</span>;</div>
 <div class="line"><a name="l00337"></a><span class="lineno">  337</span>&#160;  Row M = A.numRow();</div>
 <div class="line"><a name="l00338"></a><span class="lineno">  338</span>&#160;  assert((i &lt; A.numCol()) &amp;&amp; (j &lt; A.numCol()));</div>
@@ -482,18 +482,18 @@ $(function() {
 <div class="line"><a name="l00411"></a><span class="lineno">  411</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
 <div class="line"><a name="l00412"></a><span class="lineno">  412</span>&#160;concept TriviallyCopyable = std::is_trivially_copyable_v&lt;T&gt;;</div>
 <div class="line"><a name="l00413"></a><span class="lineno">  413</span>&#160;static_assert(</div>
-<div class="line"><a name="l00414"></a><span class="lineno">  414</span>&#160;  AbstractMatrix&lt;MatMatMul&lt;<a class="code" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix&lt;int64_t&gt;</a>, <a class="code" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix&lt;int64_t&gt;</a>&gt;&gt;);</div>
+<div class="line"><a name="l00414"></a><span class="lineno">  414</span>&#160;  AbstractMatrix&lt;MatMatMul&lt;PtrMatrix&lt;int64_t&gt;, PtrMatrix&lt;int64_t&gt;&gt;&gt;);</div>
 <div class="line"><a name="l00415"></a><span class="lineno">  415</span>&#160; </div>
-<div class="line"><a name="l00416"></a><span class="lineno">  416</span>&#160;static_assert(std::copy_constructible&lt;<a class="code" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix&lt;int64_t&gt;</a>&gt;);</div>
+<div class="line"><a name="l00416"></a><span class="lineno">  416</span>&#160;static_assert(std::copy_constructible&lt;PtrMatrix&lt;int64_t&gt;&gt;);</div>
 <div class="line"><a name="l00417"></a><span class="lineno">  417</span>&#160;<span class="comment">// static_assert(std::is_trivially_copyable_v&lt;MutPtrMatrix&lt;int64_t&gt;&gt;);</span></div>
-<div class="line"><a name="l00418"></a><span class="lineno">  418</span>&#160;static_assert(std::is_trivially_copyable_v&lt;<a class="code" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix&lt;int64_t&gt;</a>&gt;);</div>
-<div class="line"><a name="l00419"></a><span class="lineno">  419</span>&#160;static_assert(TriviallyCopyableMatrixOrScalar&lt;<a class="code" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix&lt;int64_t&gt;</a>&gt;);</div>
+<div class="line"><a name="l00418"></a><span class="lineno">  418</span>&#160;static_assert(std::is_trivially_copyable_v&lt;PtrMatrix&lt;int64_t&gt;&gt;);</div>
+<div class="line"><a name="l00419"></a><span class="lineno">  419</span>&#160;static_assert(TriviallyCopyableMatrixOrScalar&lt;PtrMatrix&lt;int64_t&gt;&gt;);</div>
 <div class="line"><a name="l00420"></a><span class="lineno">  420</span>&#160;static_assert(TriviallyCopyableMatrixOrScalar&lt;int&gt;);</div>
 <div class="line"><a name="l00421"></a><span class="lineno">  421</span>&#160;static_assert(TriviallyCopyable&lt;Mul&gt;);</div>
 <div class="line"><a name="l00422"></a><span class="lineno">  422</span>&#160;static_assert(TriviallyCopyableMatrixOrScalar&lt;</div>
-<div class="line"><a name="l00423"></a><span class="lineno">  423</span>&#160;              ElementwiseMatrixBinaryOp&lt;Mul, <a class="code" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix&lt;int64_t&gt;</a>, <span class="keywordtype">int</span>&gt;&gt;);</div>
+<div class="line"><a name="l00423"></a><span class="lineno">  423</span>&#160;              ElementwiseMatrixBinaryOp&lt;Mul, PtrMatrix&lt;int64_t&gt;, <span class="keywordtype">int</span>&gt;&gt;);</div>
 <div class="line"><a name="l00424"></a><span class="lineno">  424</span>&#160;static_assert(TriviallyCopyableMatrixOrScalar&lt;</div>
-<div class="line"><a name="l00425"></a><span class="lineno">  425</span>&#160;              MatMatMul&lt;<a class="code" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix&lt;int64_t&gt;</a>, <a class="code" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix&lt;int64_t&gt;</a>&gt;&gt;);</div>
+<div class="line"><a name="l00425"></a><span class="lineno">  425</span>&#160;              MatMatMul&lt;PtrMatrix&lt;int64_t&gt;, PtrMatrix&lt;int64_t&gt;&gt;&gt;);</div>
 <div class="line"><a name="l00426"></a><span class="lineno">  426</span>&#160; </div>
 <div class="line"><a name="l00427"></a><span class="lineno">  427</span>&#160;<span class="keyword">template</span> &lt;TriviallyCopyable OP, TriviallyCopyableVectorOrScalar A,</div>
 <div class="line"><a name="l00428"></a><span class="lineno">  428</span>&#160;          TriviallyCopyableVectorOrScalar B&gt;</div>
@@ -511,7 +511,7 @@ $(function() {
 <div class="line"><a name="l00440"></a><span class="lineno">  440</span>&#160;constexpr <span class="keyword">auto</span> bin2(std::integral <span class="keyword">auto</span> x) { <span class="keywordflow">return</span> (x * (x - 1)) &gt;&gt; 1; }</div>
 <div class="line"><a name="l00441"></a><span class="lineno">  441</span>&#160; </div>
 <div class="line"><a name="l00442"></a><span class="lineno">  442</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
-<div class="line"><a name="l00443"></a><span class="lineno">  443</span>&#160;<span class="keyword">auto</span> printMatrix(llvm::raw_ostream &amp;os, <a class="code" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix&lt;T&gt;</a> A) -&gt; llvm::raw_ostream &amp; {</div>
+<div class="line"><a name="l00443"></a><span class="lineno">  443</span>&#160;<span class="keyword">auto</span> printMatrix(llvm::raw_ostream &amp;os, PtrMatrix&lt;T&gt; A) -&gt; llvm::raw_ostream &amp; {</div>
 <div class="line"><a name="l00444"></a><span class="lineno">  444</span>&#160;  <span class="comment">// llvm::raw_ostream &amp;printMatrix(llvm::raw_ostream &amp;os, T const &amp;A) {</span></div>
 <div class="line"><a name="l00445"></a><span class="lineno">  445</span>&#160;  <span class="keyword">auto</span> [m, n] = A.size();</div>
 <div class="line"><a name="l00446"></a><span class="lineno">  446</span>&#160;  <span class="keywordflow">if</span> (!m) <span class="keywordflow">return</span> os &lt;&lt; <span class="stringliteral">&quot;[ ]&quot;</span>;</div>
@@ -647,7 +647,7 @@ $(function() {
 <div class="line"><a name="l00576"></a><span class="lineno">  576</span>&#160;  <span class="keywordflow">return</span> os;</div>
 <div class="line"><a name="l00577"></a><span class="lineno">  577</span>&#160;}</div>
 <div class="line"><a name="l00578"></a><span class="lineno">  578</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
-<div class="line"><a name="l00579"></a><span class="lineno">  579</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> operator&lt;&lt;(llvm::raw_ostream &amp;os, <a class="code" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix&lt;T&gt;</a> A)</div>
+<div class="line"><a name="l00579"></a><span class="lineno">  579</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> operator&lt;&lt;(llvm::raw_ostream &amp;os, PtrMatrix&lt;T&gt; A)</div>
 <div class="line"><a name="l00580"></a><span class="lineno">  580</span>&#160;  -&gt; llvm::raw_ostream &amp; {</div>
 <div class="line"><a name="l00581"></a><span class="lineno">  581</span>&#160;  <span class="keywordflow">return</span> printMatrix(os, A);</div>
 <div class="line"><a name="l00582"></a><span class="lineno">  582</span>&#160;}</div>
@@ -655,7 +655,7 @@ $(function() {
 <div class="line"><a name="l00584"></a><span class="lineno">  584</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> operator&lt;&lt;(llvm::raw_ostream &amp;os, <span class="keyword">const</span> T &amp;A)</div>
 <div class="line"><a name="l00585"></a><span class="lineno">  585</span>&#160;  -&gt; llvm::raw_ostream &amp; {</div>
 <div class="line"><a name="l00586"></a><span class="lineno">  586</span>&#160;  Matrix&lt;std::remove_const_t&lt;typename T::eltype&gt;, <a class="code" href="structLinearAlgebra_1_1DenseDims.html">DenseDims</a>&gt; B{A};</div>
-<div class="line"><a name="l00587"></a><span class="lineno">  587</span>&#160;  <span class="keywordflow">return</span> printMatrix(os, <a class="code" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix&lt;typename T::eltype&gt;</a>(B));</div>
+<div class="line"><a name="l00587"></a><span class="lineno">  587</span>&#160;  <span class="keywordflow">return</span> printMatrix(os, PtrMatrix&lt;typename T::eltype&gt;(B));</div>
 <div class="line"><a name="l00588"></a><span class="lineno">  588</span>&#160;}</div>
 <div class="line"><a name="l00589"></a><span class="lineno">  589</span>&#160; </div>
 <div class="line"><a name="l00590"></a><span class="lineno">  590</span>&#160;constexpr <span class="keyword">auto</span> operator-(<span class="keyword">const</span> AbstractVector <span class="keyword">auto</span> &amp;a) {</div>
@@ -666,7 +666,7 @@ $(function() {
 <div class="line"><a name="l00595"></a><span class="lineno">  595</span>&#160;  <span class="keyword">auto</span> AA{a.view()};</div>
 <div class="line"><a name="l00596"></a><span class="lineno">  596</span>&#160;  <span class="keywordflow">return</span> ElementwiseUnaryOp&lt;Sub, decltype(AA)&gt;{.op = Sub{}, .a = AA};</div>
 <div class="line"><a name="l00597"></a><span class="lineno">  597</span>&#160;}</div>
-<div class="line"><a name="l00598"></a><span class="lineno">  598</span>&#160;static_assert(AbstractMatrix&lt;ElementwiseUnaryOp&lt;Sub, <a class="code" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix&lt;int64_t&gt;</a>&gt;&gt;);</div>
+<div class="line"><a name="l00598"></a><span class="lineno">  598</span>&#160;static_assert(AbstractMatrix&lt;ElementwiseUnaryOp&lt;Sub, PtrMatrix&lt;int64_t&gt;&gt;&gt;);</div>
 <div class="line"><a name="l00599"></a><span class="lineno">  599</span>&#160;static_assert(AbstractMatrix&lt;Matrix&lt;int64_t, SquareDims&gt;&gt;);</div>
 <div class="line"><a name="l00600"></a><span class="lineno">  600</span>&#160; </div>
 <div class="line"><a name="l00601"></a><span class="lineno">  601</span>&#160;constexpr <span class="keyword">auto</span> operator+(<span class="keyword">const</span> AbstractMatrix <span class="keyword">auto</span> &amp;a, <span class="keyword">const</span> <span class="keyword">auto</span> &amp;b) {</div>
@@ -742,15 +742,15 @@ $(function() {
 <div class="line"><a name="l00671"></a><span class="lineno">  671</span>&#160;<span class="comment">//     return MatMul&lt;decltype(AA), decltype(xx)&gt;{.a = AA, .b = xx};</span></div>
 <div class="line"><a name="l00672"></a><span class="lineno">  672</span>&#160;<span class="comment">// }</span></div>
 <div class="line"><a name="l00673"></a><span class="lineno">  673</span>&#160;static_assert(</div>
-<div class="line"><a name="l00674"></a><span class="lineno">  674</span>&#160;  AbstractMatrix&lt;ElementwiseMatrixBinaryOp&lt;Mul, <a class="code" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix&lt;int64_t&gt;</a>, <span class="keywordtype">int</span>&gt;&gt;,</div>
+<div class="line"><a name="l00674"></a><span class="lineno">  674</span>&#160;  AbstractMatrix&lt;ElementwiseMatrixBinaryOp&lt;Mul, PtrMatrix&lt;int64_t&gt;, <span class="keywordtype">int</span>&gt;&gt;,</div>
 <div class="line"><a name="l00675"></a><span class="lineno">  675</span>&#160;  <span class="stringliteral">&quot;ElementwiseBinaryOp isa AbstractMatrix failed&quot;</span>);</div>
 <div class="line"><a name="l00676"></a><span class="lineno">  676</span>&#160; </div>
 <div class="line"><a name="l00677"></a><span class="lineno">  677</span>&#160;static_assert(</div>
-<div class="line"><a name="l00678"></a><span class="lineno">  678</span>&#160;  !AbstractVector&lt;MatMatMul&lt;<a class="code" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix&lt;int64_t&gt;</a>, <a class="code" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix&lt;int64_t&gt;</a>&gt;&gt;,</div>
+<div class="line"><a name="l00678"></a><span class="lineno">  678</span>&#160;  !AbstractVector&lt;MatMatMul&lt;PtrMatrix&lt;int64_t&gt;, PtrMatrix&lt;int64_t&gt;&gt;&gt;,</div>
 <div class="line"><a name="l00679"></a><span class="lineno">  679</span>&#160;  <span class="stringliteral">&quot;MatMul should not be an AbstractVector!&quot;</span>);</div>
-<div class="line"><a name="l00680"></a><span class="lineno">  680</span>&#160;static_assert(AbstractMatrix&lt;MatMatMul&lt;<a class="code" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix&lt;int64_t&gt;</a>, <a class="code" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix&lt;int64_t&gt;</a>&gt;&gt;,</div>
+<div class="line"><a name="l00680"></a><span class="lineno">  680</span>&#160;static_assert(AbstractMatrix&lt;MatMatMul&lt;PtrMatrix&lt;int64_t&gt;, PtrMatrix&lt;int64_t&gt;&gt;&gt;,</div>
 <div class="line"><a name="l00681"></a><span class="lineno">  681</span>&#160;              <span class="stringliteral">&quot;MatMul is not an AbstractMatrix!&quot;</span>);</div>
-<div class="line"><a name="l00682"></a><span class="lineno">  682</span>&#160;static_assert(AbstractMatrix&lt;Transpose&lt;<a class="code" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix&lt;int64_t&gt;</a>&gt;&gt;);</div>
+<div class="line"><a name="l00682"></a><span class="lineno">  682</span>&#160;static_assert(AbstractMatrix&lt;Transpose&lt;PtrMatrix&lt;int64_t&gt;&gt;&gt;);</div>
 <div class="line"><a name="l00683"></a><span class="lineno">  683</span>&#160; </div>
 <div class="line"><a name="l00684"></a><span class="lineno">  684</span>&#160;<span class="keyword">template</span> &lt;AbstractVector V&gt;</div>
 <div class="line"><a name="l00685"></a><span class="lineno">  685</span>&#160;constexpr <span class="keyword">auto</span> operator*(<span class="keyword">const</span> Transpose&lt;V&gt; &amp;a, <span class="keyword">const</span> AbstractVector <span class="keyword">auto</span> &amp;b) {</div>
@@ -760,14 +760,14 @@ $(function() {
 <div class="line"><a name="l00689"></a><span class="lineno">  689</span>&#160;}</div>
 <div class="line"><a name="l00690"></a><span class="lineno">  690</span>&#160; </div>
 <div class="line"><a name="l00691"></a><span class="lineno">  691</span>&#160;static_assert(</div>
-<div class="line"><a name="l00692"></a><span class="lineno">  692</span>&#160;  AbstractVector&lt;decltype(-std::declval&lt;<a class="code" href="structLinearAlgebra_1_1StridedVector.html">StridedVector&lt;int64_t&gt;</a>&gt;())&gt;);</div>
+<div class="line"><a name="l00692"></a><span class="lineno">  692</span>&#160;  AbstractVector&lt;decltype(-std::declval&lt;StridedVector&lt;int64_t&gt;&gt;())&gt;);</div>
 <div class="line"><a name="l00693"></a><span class="lineno">  693</span>&#160;static_assert(</div>
-<div class="line"><a name="l00694"></a><span class="lineno">  694</span>&#160;  AbstractVector&lt;decltype(-std::declval&lt;<a class="code" href="structLinearAlgebra_1_1StridedVector.html">StridedVector&lt;int64_t&gt;</a>&gt;() * 0)&gt;);</div>
-<div class="line"><a name="l00695"></a><span class="lineno">  695</span>&#160;static_assert(std::ranges::range&lt;<a class="code" href="structLinearAlgebra_1_1StridedVector.html">StridedVector&lt;int64_t&gt;</a>&gt;);</div>
+<div class="line"><a name="l00694"></a><span class="lineno">  694</span>&#160;  AbstractVector&lt;decltype(-std::declval&lt;StridedVector&lt;int64_t&gt;&gt;() * 0)&gt;);</div>
+<div class="line"><a name="l00695"></a><span class="lineno">  695</span>&#160;static_assert(std::ranges::range&lt;StridedVector&lt;int64_t&gt;&gt;);</div>
 <div class="line"><a name="l00696"></a><span class="lineno">  696</span>&#160; </div>
-<div class="line"><a name="l00697"></a><span class="lineno">  697</span>&#160;static_assert(AbstractVector&lt;<a class="code" href="structLinearAlgebra_1_1Vector.html">Vector&lt;int64_t&gt;</a>&gt;);</div>
-<div class="line"><a name="l00698"></a><span class="lineno">  698</span>&#160;static_assert(AbstractVector&lt;<span class="keyword">const</span> <a class="code" href="structLinearAlgebra_1_1Vector.html">Vector&lt;int64_t&gt;</a>&gt;);</div>
-<div class="line"><a name="l00699"></a><span class="lineno">  699</span>&#160;static_assert(AbstractVector&lt;<a class="code" href="structLinearAlgebra_1_1Vector.html">Vector&lt;int64_t&gt;</a> &amp;&gt;);</div>
+<div class="line"><a name="l00697"></a><span class="lineno">  697</span>&#160;static_assert(AbstractVector&lt;Vector&lt;int64_t&gt;&gt;);</div>
+<div class="line"><a name="l00698"></a><span class="lineno">  698</span>&#160;static_assert(AbstractVector&lt;<span class="keyword">const</span> Vector&lt;int64_t&gt;&gt;);</div>
+<div class="line"><a name="l00699"></a><span class="lineno">  699</span>&#160;static_assert(AbstractVector&lt;Vector&lt;int64_t&gt; &amp;&gt;);</div>
 <div class="line"><a name="l00700"></a><span class="lineno">  700</span>&#160;static_assert(AbstractMatrix&lt;IntMatrix&gt;);</div>
 <div class="line"><a name="l00701"></a><span class="lineno">  701</span>&#160;static_assert(AbstractMatrix&lt;IntMatrix &amp;&gt;);</div>
 <div class="line"><a name="l00702"></a><span class="lineno">  702</span>&#160; </div>
@@ -777,10 +777,10 @@ $(function() {
 <div class="line"><a name="l00706"></a><span class="lineno">  706</span>&#160; </div>
 <div class="line"><a name="l00707"></a><span class="lineno"><a class="line" href="structLinearAlgebra_1_1SliceView.html">  707</a></span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T, <span class="keyword">typename</span> I&gt; <span class="keyword">struct </span><a class="code" href="structLinearAlgebra_1_1SliceView.html">SliceView</a> {</div>
 <div class="line"><a name="l00708"></a><span class="lineno">  708</span>&#160;  <span class="keyword">using</span> eltype = T;</div>
-<div class="line"><a name="l00709"></a><span class="lineno">  709</span>&#160;  [[no_unique_address]] <a class="code" href="structLinearAlgebra_1_1MutPtrVector.html">MutPtrVector&lt;T&gt;</a> a;</div>
+<div class="line"><a name="l00709"></a><span class="lineno">  709</span>&#160;  [[no_unique_address]] MutPtrVector&lt;T&gt; a;</div>
 <div class="line"><a name="l00710"></a><span class="lineno">  710</span>&#160;  [[no_unique_address]] llvm::ArrayRef&lt;I&gt; i;</div>
 <div class="line"><a name="l00711"></a><span class="lineno"><a class="line" href="structLinearAlgebra_1_1SliceView_1_1Iterator.html">  711</a></span>&#160;  <span class="keyword">struct </span><a class="code" href="structLinearAlgebra_1_1SliceView_1_1Iterator.html">Iterator</a> {</div>
-<div class="line"><a name="l00712"></a><span class="lineno">  712</span>&#160;    [[no_unique_address]] <a class="code" href="structLinearAlgebra_1_1MutPtrVector.html">MutPtrVector&lt;T&gt;</a> a;</div>
+<div class="line"><a name="l00712"></a><span class="lineno">  712</span>&#160;    [[no_unique_address]] MutPtrVector&lt;T&gt; a;</div>
 <div class="line"><a name="l00713"></a><span class="lineno">  713</span>&#160;    [[no_unique_address]] llvm::ArrayRef&lt;I&gt; i;</div>
 <div class="line"><a name="l00714"></a><span class="lineno">  714</span>&#160;    [[no_unique_address]] <span class="keywordtype">size_t</span> j;</div>
 <div class="line"><a name="l00715"></a><span class="lineno">  715</span>&#160;    <span class="keyword">auto</span> operator==(<span class="keyword">const</span> <a class="code" href="structLinearAlgebra_1_1SliceView_1_1Iterator.html">Iterator</a> &amp;k) <span class="keyword">const</span> -&gt; <span class="keywordtype">bool</span> { <span class="keywordflow">return</span> j == k.j; }</div>
@@ -818,9 +818,9 @@ $(function() {
 <div class="line"><a name="l00747"></a><span class="lineno">  747</span>&#160; </div>
 <div class="line"><a name="l00748"></a><span class="lineno">  748</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T, <span class="keywordtype">size_t</span> L = 16&gt;</div>
 <div class="line"><a name="l00749"></a><span class="lineno">  749</span>&#160;<span class="keyword">using</span> SquareMatrix = Matrix&lt;T, SquareDims, L&gt;;</div>
-<div class="line"><a name="l00750"></a><span class="lineno">  750</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt; <span class="keyword">using</span> MutSquarePtrMatrix = <a class="code" href="structLinearAlgebra_1_1MutPtrMatrix.html">MutPtrMatrix&lt;T, SquareDims&gt;</a>;</div>
-<div class="line"><a name="l00751"></a><span class="lineno">  751</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt; <span class="keyword">using</span> SquarePtrMatrix = <a class="code" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix&lt;T, SquareDims&gt;</a>;</div>
-<div class="line"><a name="l00752"></a><span class="lineno">  752</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt; <span class="keyword">using</span> DenseMutPtrMatrix = <a class="code" href="structLinearAlgebra_1_1MutPtrMatrix.html">MutPtrMatrix&lt;T, DenseDims&gt;</a>;</div>
+<div class="line"><a name="l00750"></a><span class="lineno">  750</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt; <span class="keyword">using</span> MutSquarePtrMatrix = MutPtrMatrix&lt;T, SquareDims&gt;;</div>
+<div class="line"><a name="l00751"></a><span class="lineno">  751</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt; <span class="keyword">using</span> SquarePtrMatrix = PtrMatrix&lt;T, SquareDims&gt;;</div>
+<div class="line"><a name="l00752"></a><span class="lineno">  752</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt; <span class="keyword">using</span> DenseMutPtrMatrix = MutPtrMatrix&lt;T, DenseDims&gt;;</div>
 <div class="line"><a name="l00753"></a><span class="lineno">  753</span>&#160; </div>
 <div class="line"><a name="l00754"></a><span class="lineno">  754</span>&#160;} <span class="comment">// namespace LinearAlgebra</span></div>
 <div class="line"><a name="l00755"></a><span class="lineno">  755</span>&#160; </div>
@@ -828,40 +828,35 @@ $(function() {
 <div class="line"><a name="l00757"></a><span class="lineno">  757</span>&#160;<span class="comment">// NOLINTNEXTLINE(bugprone-reserved-identifier)</span></div>
 <div class="line"><a name="l00758"></a><span class="lineno">  758</span>&#160;<span class="keyword">using</span> LinearAlgebra::_;</div>
 <div class="line"><a name="l00759"></a><span class="lineno">  759</span>&#160;<span class="keyword">using</span> LinearAlgebra::AbstractVector, LinearAlgebra::AbstractMatrix,</div>
-<div class="line"><a name="l00760"></a><span class="lineno">  760</span>&#160;  <a class="code" href="structLinearAlgebra_1_1PtrVector.html">LinearAlgebra::PtrVector</a>, <a class="code" href="structLinearAlgebra_1_1MutPtrVector.html">LinearAlgebra::MutPtrVector</a>, <a class="code" href="structLinearAlgebra_1_1Vector.html">LinearAlgebra::Vector</a>,</div>
+<div class="line"><a name="l00760"></a><span class="lineno">  760</span>&#160;  <a class="code" href="structLinearAlgebra_1_1Array.html">LinearAlgebra::PtrVector</a>, LinearAlgebra::MutPtrVector, <a class="code" href="structLinearAlgebra_1_1ManagedArray.html">LinearAlgebra::Vector</a>,</div>
 <div class="line"><a name="l00761"></a><span class="lineno">  761</span>&#160;  LinearAlgebra::Matrix, LinearAlgebra::SquareMatrix, LinearAlgebra::IntMatrix,</div>
-<div class="line"><a name="l00762"></a><span class="lineno">  762</span>&#160;  <a class="code" href="structLinearAlgebra_1_1PtrMatrix.html">LinearAlgebra::PtrMatrix</a>, <a class="code" href="structLinearAlgebra_1_1MutPtrMatrix.html">LinearAlgebra::MutPtrMatrix</a>, <a class="code" href="structLinearAlgebra_1_1AxisInt.html">LinearAlgebra::AxisInt</a>,</div>
+<div class="line"><a name="l00762"></a><span class="lineno">  762</span>&#160;  LinearAlgebra::PtrMatrix, LinearAlgebra::MutPtrMatrix, <a class="code" href="structLinearAlgebra_1_1AxisInt.html">LinearAlgebra::AxisInt</a>,</div>
 <div class="line"><a name="l00763"></a><span class="lineno">  763</span>&#160;  <a class="code" href="structLinearAlgebra_1_1AxisInt.html">LinearAlgebra::AxisInt</a>, <a class="code" href="structLinearAlgebra_1_1SmallSparseMatrix.html">LinearAlgebra::SmallSparseMatrix</a>,</div>
-<div class="line"><a name="l00764"></a><span class="lineno">  764</span>&#160;  <a class="code" href="structLinearAlgebra_1_1StridedVector.html">LinearAlgebra::StridedVector</a>, <a class="code" href="structLinearAlgebra_1_1MutStridedVector.html">LinearAlgebra::MutStridedVector</a>,</div>
-<div class="line"><a name="l00765"></a><span class="lineno">  765</span>&#160;  <a class="code" href="structLinearAlgebra_1_1MutPtrMatrix.html">LinearAlgebra::MutSquarePtrMatrix</a>, LinearAlgebra::begin, LinearAlgebra::end,</div>
-<div class="line"><a name="l00766"></a><span class="lineno">  766</span>&#160;  LinearAlgebra::swap, <a class="code" href="structLinearAlgebra_1_1PtrMatrix.html">LinearAlgebra::SquarePtrMatrix</a>, <a class="code" href="structLinearAlgebra_1_1AxisInt.html">LinearAlgebra::Row</a>,</div>
+<div class="line"><a name="l00764"></a><span class="lineno">  764</span>&#160;  LinearAlgebra::StridedVector, LinearAlgebra::MutStridedVector,</div>
+<div class="line"><a name="l00765"></a><span class="lineno">  765</span>&#160;  LinearAlgebra::MutSquarePtrMatrix, LinearAlgebra::begin, LinearAlgebra::end,</div>
+<div class="line"><a name="l00766"></a><span class="lineno">  766</span>&#160;  LinearAlgebra::swap, LinearAlgebra::SquarePtrMatrix, <a class="code" href="structLinearAlgebra_1_1AxisInt.html">LinearAlgebra::Row</a>,</div>
 <div class="line"><a name="l00767"></a><span class="lineno">  767</span>&#160;  <a class="code" href="structLinearAlgebra_1_1AxisInt.html">LinearAlgebra::RowStride</a>, <a class="code" href="structLinearAlgebra_1_1AxisInt.html">LinearAlgebra::Col</a>, LinearAlgebra::CarInd,</div>
-<div class="line"><a name="l00768"></a><span class="lineno">  768</span>&#160;  LinearAlgebra::last, <a class="code" href="structLinearAlgebra_1_1MutPtrMatrix.html">LinearAlgebra::DenseMutPtrMatrix</a>, LinearAlgebra::matrix,</div>
+<div class="line"><a name="l00768"></a><span class="lineno">  768</span>&#160;  LinearAlgebra::last, LinearAlgebra::DenseMutPtrMatrix, LinearAlgebra::matrix,</div>
 <div class="line"><a name="l00769"></a><span class="lineno">  769</span>&#160;  LinearAlgebra::identity;</div>
-<div class="ttc" id="anamespaceLinearAlgebra_html"><div class="ttname"><a href="namespaceLinearAlgebra.html">LinearAlgebra</a></div><div class="ttdef"><b>Definition:</b> Array.hpp:19</div></div>
+<div class="ttc" id="anamespaceLinearAlgebra_html"><div class="ttname"><a href="namespaceLinearAlgebra.html">LinearAlgebra</a></div><div class="ttdef"><b>Definition:</b> Array.hpp:20</div></div>
 <div class="ttc" id="astructLinearAlgebra_1_1Add_html"><div class="ttname"><a href="structLinearAlgebra_1_1Add.html">LinearAlgebra::Add</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:75</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1Array_html"><div class="ttname"><a href="structLinearAlgebra_1_1Array.html">LinearAlgebra::Array</a></div><div class="ttdoc">Constant Array.</div><div class="ttdef"><b>Definition:</b> Array.hpp:47</div></div>
 <div class="ttc" id="astructLinearAlgebra_1_1AxisInt_html"><div class="ttname"><a href="structLinearAlgebra_1_1AxisInt.html">LinearAlgebra::AxisInt</a></div><div class="ttdef"><b>Definition:</b> AxisTypes.hpp:46</div></div>
 <div class="ttc" id="astructLinearAlgebra_1_1DenseDims_html"><div class="ttname"><a href="structLinearAlgebra_1_1DenseDims.html">LinearAlgebra::DenseDims</a></div><div class="ttdef"><b>Definition:</b> MatrixDimensions.hpp:69</div></div>
 <div class="ttc" id="astructLinearAlgebra_1_1Div_html"><div class="ttname"><a href="structLinearAlgebra_1_1Div.html">LinearAlgebra::Div</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:85</div></div>
 <div class="ttc" id="astructLinearAlgebra_1_1ElementwiseMatrixBinaryOp_html"><div class="ttname"><a href="structLinearAlgebra_1_1ElementwiseMatrixBinaryOp.html">LinearAlgebra::ElementwiseMatrixBinaryOp</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:166</div></div>
 <div class="ttc" id="astructLinearAlgebra_1_1ElementwiseUnaryOp_html"><div class="ttname"><a href="structLinearAlgebra_1_1ElementwiseUnaryOp.html">LinearAlgebra::ElementwiseUnaryOp</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:89</div></div>
 <div class="ttc" id="astructLinearAlgebra_1_1ElementwiseVectorBinaryOp_html"><div class="ttname"><a href="structLinearAlgebra_1_1ElementwiseVectorBinaryOp.html">LinearAlgebra::ElementwiseVectorBinaryOp</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:143</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1ManagedArray_html"><div class="ttname"><a href="structLinearAlgebra_1_1ManagedArray.html">LinearAlgebra::ManagedArray</a></div><div class="ttdef"><b>Definition:</b> Array.hpp:658</div></div>
 <div class="ttc" id="astructLinearAlgebra_1_1MatMatMul_html"><div class="ttname"><a href="structLinearAlgebra_1_1MatMatMul.html">LinearAlgebra::MatMatMul</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:218</div></div>
 <div class="ttc" id="astructLinearAlgebra_1_1MatVecMul_html"><div class="ttname"><a href="structLinearAlgebra_1_1MatVecMul.html">LinearAlgebra::MatVecMul</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:239</div></div>
 <div class="ttc" id="astructLinearAlgebra_1_1Mul_html"><div class="ttname"><a href="structLinearAlgebra_1_1Mul.html">LinearAlgebra::Mul</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:82</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1MutPtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutPtrMatrix.html">LinearAlgebra::MutPtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Indexing.hpp:155</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1MutPtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutPtrVector.html">LinearAlgebra::MutPtrVector</a></div><div class="ttdef"><b>Definition:</b> Vector.hpp:94</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1MutStridedVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutStridedVector.html">LinearAlgebra::MutStridedVector</a></div><div class="ttdef"><b>Definition:</b> Vector.hpp:516</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1PtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrMatrix.html">LinearAlgebra::PtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Indexing.hpp:154</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1PtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrVector.html">LinearAlgebra::PtrVector</a></div><div class="ttdef"><b>Definition:</b> Vector.hpp:27</div></div>
 <div class="ttc" id="astructLinearAlgebra_1_1SliceView_1_1Iterator_html"><div class="ttname"><a href="structLinearAlgebra_1_1SliceView_1_1Iterator.html">LinearAlgebra::SliceView::Iterator</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:711</div></div>
 <div class="ttc" id="astructLinearAlgebra_1_1SliceView_html"><div class="ttname"><a href="structLinearAlgebra_1_1SliceView.html">LinearAlgebra::SliceView</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:707</div></div>
 <div class="ttc" id="astructLinearAlgebra_1_1SmallSparseMatrix_1_1Reference_html"><div class="ttname"><a href="structLinearAlgebra_1_1SmallSparseMatrix_1_1Reference.html">LinearAlgebra::SmallSparseMatrix::Reference</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:520</div></div>
 <div class="ttc" id="astructLinearAlgebra_1_1SmallSparseMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1SmallSparseMatrix.html">LinearAlgebra::SmallSparseMatrix</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:468</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1StridedVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1StridedVector.html">LinearAlgebra::StridedVector</a></div><div class="ttdef"><b>Definition:</b> Vector.hpp:401</div></div>
 <div class="ttc" id="astructLinearAlgebra_1_1Sub_html"><div class="ttname"><a href="structLinearAlgebra_1_1Sub.html">LinearAlgebra::Sub</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:78</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1Transpose_html"><div class="ttname"><a href="structLinearAlgebra_1_1Transpose.html">LinearAlgebra::Transpose</a></div><div class="ttdef"><b>Definition:</b> Matrix.hpp:50</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1Vector_html"><div class="ttname"><a href="structLinearAlgebra_1_1Vector.html">LinearAlgebra::Vector</a></div><div class="ttdef"><b>Definition:</b> Vector.hpp:250</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1Transpose_html"><div class="ttname"><a href="structLinearAlgebra_1_1Transpose.html">LinearAlgebra::Transpose</a></div><div class="ttdef"><b>Definition:</b> Matrix.hpp:44</div></div>
 <div class="ttc" id="astructNotNull_html"><div class="ttname"><a href="structNotNull.html">NotNull</a></div><div class="ttdef"><b>Definition:</b> Valid.hpp:7</div></div>
 <div class="ttc" id="astructRational_html"><div class="ttname"><a href="structRational.html">Rational</a></div><div class="ttdef"><b>Definition:</b> Rational.hpp:18</div></div>
 </div><!-- fragment --></div><!-- contents -->

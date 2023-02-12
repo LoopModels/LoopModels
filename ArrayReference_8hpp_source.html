@@ -87,11 +87,11 @@ $(function() {
 <div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;    : basePointer(p), loop(&amp;l), indMat(loop-&gt;getNumLoops(), dim),</div>
 <div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;      offMat(dim, 1), sizes(dim) {}</div>
 <div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;  <a class="code" href="structArrayReference.html">ArrayReference</a>(<span class="keyword">const</span> <a class="code" href="structArrayReference.html">ArrayReference</a> &amp;other, <a class="code" href="structAffineLoopNest.html">AffineLoopNest&lt;&gt;</a> *al,</div>
-<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;                 <a class="code" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix&lt;int64_t&gt;</a> iM)</div>
+<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;                 PtrMatrix&lt;int64_t&gt; iM)</div>
 <div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;    : basePointer(other.basePointer), loop(al), indMat(iM),</div>
 <div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;      offMat(other.offMat), sizes(other.sizes) {}</div>
-<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;  <span class="keyword">auto</span> indexMatrix() -&gt; <a class="code" href="structLinearAlgebra_1_1MutPtrMatrix.html">MutPtrMatrix&lt;int64_t&gt;</a> { <span class="keywordflow">return</span> indMat; }</div>
-<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;  <span class="keyword">auto</span> offsetMatrix() -&gt; <a class="code" href="structLinearAlgebra_1_1MutPtrMatrix.html">MutPtrMatrix&lt;int64_t&gt;</a> { <span class="keywordflow">return</span> offMat; }</div>
+<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;  <span class="keyword">auto</span> indexMatrix() -&gt; MutPtrMatrix&lt;int64_t&gt; { <span class="keywordflow">return</span> indMat; }</div>
+<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;  <span class="keyword">auto</span> offsetMatrix() -&gt; MutPtrMatrix&lt;int64_t&gt; { <span class="keywordflow">return</span> offMat; }</div>
 <div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getArrayDim() <span class="keyword">const</span> -&gt; <span class="keywordtype">size_t</span> {</div>
 <div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;    <span class="keywordflow">return</span> size_t(offMat.numRow());</div>
 <div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;  }</div>
@@ -108,8 +108,6 @@ $(function() {
 <div class="ttc" id="astructAffineLoopNest_html"><div class="ttname"><a href="structAffineLoopNest.html">AffineLoopNest</a></div><div class="ttdef"><b>Definition:</b> Loops.hpp:176</div></div>
 <div class="ttc" id="astructArrayReference_html"><div class="ttname"><a href="structArrayReference.html">ArrayReference</a></div><div class="ttdef"><b>Definition:</b> ArrayReference.hpp:9</div></div>
 <div class="ttc" id="astructBumpAlloc_html"><div class="ttname"><a href="structBumpAlloc.html">BumpAlloc</a></div><div class="ttdef"><b>Definition:</b> Allocators.hpp:25</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1MutPtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutPtrMatrix.html">LinearAlgebra::MutPtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Indexing.hpp:155</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1PtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrMatrix.html">LinearAlgebra::PtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Indexing.hpp:154</div></div>
 <div class="ttc" id="astructNotNull_html"><div class="ttname"><a href="structNotNull.html">NotNull&lt; MemoryAccess &gt;</a></div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->

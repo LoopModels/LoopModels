@@ -12,6 +12,5 @@ var searchData=
   ['array_9',['Array',['../structLinearAlgebra_1_1Array.html',1,'LinearAlgebra']]],
   ['arrayreference_10',['ArrayReference',['../structArrayReference.html',1,'']]],
   ['axisint_11',['AxisInt',['../structLinearAlgebra_1_1AxisInt.html',1,'LinearAlgebra']]],
-  ['axisint_3c_20axistype_3a_3acolumn_20_3e_12',['AxisInt&lt; AxisType::Column &gt;',['../structLinearAlgebra_1_1AxisInt.html',1,'LinearAlgebra']]],
-  ['axisint_3c_20axistype_3a_3arowstride_20_3e_13',['AxisInt&lt; AxisType::RowStride &gt;',['../structLinearAlgebra_1_1AxisInt.html',1,'LinearAlgebra']]]
+  ['axisint_3c_20axistype_3a_3acolumn_20_3e_12',['AxisInt&lt; AxisType::Column &gt;',['../structLinearAlgebra_1_1AxisInt.html',1,'LinearAlgebra']]]
 ];

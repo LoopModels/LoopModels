@@ -82,7 +82,7 @@ $(function() {
 <div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="preprocessor">#include &lt;llvm/Support/raw_ostream.h&gt;</span></div>
 <div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="preprocessor">#include &lt;sys/types.h&gt;</span></div>
 <div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160; </div>
-<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> printConstraints(llvm::raw_ostream &amp;os, <a class="code" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix&lt;int64_t&gt;</a> A,</div>
+<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> printConstraints(llvm::raw_ostream &amp;os, PtrMatrix&lt;int64_t&gt; A,</div>
 <div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;                             llvm::ArrayRef&lt;const llvm::SCEV *&gt; syms,</div>
 <div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;                             <span class="keywordtype">bool</span> inequality = <span class="keyword">true</span>) -&gt; llvm::raw_ostream &amp; {</div>
 <div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;  <span class="keyword">const</span> Row numConstraints = A.numRow();</div>
@@ -132,19 +132,19 @@ $(function() {
 <div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;  <span class="keywordflow">return</span> os;</div>
 <div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;}</div>
 <div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160; </div>
-<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;constexpr <span class="keywordtype">void</span> eraseConstraintImpl(<a class="code" href="structLinearAlgebra_1_1MutPtrMatrix.html">MutPtrMatrix&lt;int64_t&gt;</a> A, Row i) {</div>
+<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;constexpr <span class="keywordtype">void</span> eraseConstraintImpl(MutPtrMatrix&lt;int64_t&gt; A, Row i) {</div>
 <div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;  <span class="keyword">const</span> Row lastRow = A.numRow() - 1;</div>
 <div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;  assert(lastRow &gt;= i);</div>
 <div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;  <span class="keywordflow">if</span> (lastRow != i) A(i, _) &lt;&lt; A(lastRow, _);</div>
 <div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;}</div>
-<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;[[nodiscard]] constexpr <span class="keyword">auto</span> eraseConstraint(<a class="code" href="structLinearAlgebra_1_1MutPtrMatrix.html">MutPtrMatrix&lt;int64_t&gt;</a> A, Row i)</div>
-<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;  -&gt; <a class="code" href="structLinearAlgebra_1_1MutPtrMatrix.html">MutPtrMatrix&lt;int64_t&gt;</a> {</div>
+<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;[[nodiscard]] constexpr <span class="keyword">auto</span> eraseConstraint(MutPtrMatrix&lt;int64_t&gt; A, Row i)</div>
+<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;  -&gt; MutPtrMatrix&lt;int64_t&gt; {</div>
 <div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;  eraseConstraintImpl(A, i);</div>
 <div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;  <span class="keywordflow">return</span> A.truncate(A.numRow() - 1);</div>
 <div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;}</div>
-<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;[[nodiscard]] constexpr <span class="keyword">auto</span> eraseConstraint(<a class="code" href="structLinearAlgebra_1_1MutPtrMatrix.html">MutPtrMatrix&lt;int64_t&gt;</a> A, <span class="keywordtype">size_t</span> _i,</div>
+<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;[[nodiscard]] constexpr <span class="keyword">auto</span> eraseConstraint(MutPtrMatrix&lt;int64_t&gt; A, <span class="keywordtype">size_t</span> _i,</div>
 <div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;                                             <span class="keywordtype">size_t</span> _j)</div>
-<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;  -&gt; <a class="code" href="structLinearAlgebra_1_1MutPtrMatrix.html">MutPtrMatrix&lt;int64_t&gt;</a> {</div>
+<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;  -&gt; MutPtrMatrix&lt;int64_t&gt; {</div>
 <div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;  assert(_i != _j);</div>
 <div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;  Row i = std::min(_i, _j);</div>
 <div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;  Row j = std::max(_i, _j);</div>
@@ -165,11 +165,11 @@ $(function() {
 <div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;  <span class="keywordflow">return</span> A.truncate(penuRow);</div>
 <div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;}</div>
 <div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;constexpr <span class="keywordtype">void</span> eraseConstraint(IntMatrix &amp;A, <span class="keywordtype">size_t</span> i, <span class="keywordtype">size_t</span> j) {</div>
-<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;  A.truncate(eraseConstraint(<a class="code" href="structLinearAlgebra_1_1MutPtrMatrix.html">MutPtrMatrix&lt;int64_t&gt;</a>(A), i, j).numRow());</div>
+<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;  A.truncate(eraseConstraint(MutPtrMatrix&lt;int64_t&gt;(A), i, j).numRow());</div>
 <div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;}</div>
 <div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160; </div>
 <div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;constexpr <span class="keywordtype">void</span> eraseConstraint(IntMatrix &amp;A, Row i) {</div>
-<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;  A.truncate(eraseConstraint(<a class="code" href="structLinearAlgebra_1_1MutPtrMatrix.html">MutPtrMatrix&lt;int64_t&gt;</a>(A), i).numRow());</div>
+<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;  A.truncate(eraseConstraint(MutPtrMatrix&lt;int64_t&gt;(A), i).numRow());</div>
 <div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;}</div>
 <div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160; </div>
 <div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> substituteEqualityImpl(IntMatrix &amp;E, <span class="keyword">const</span> <span class="keywordtype">size_t</span> i) -&gt; Row {</div>
@@ -215,7 +215,7 @@ $(function() {
 <div class="line"><a name="l00149"></a><span class="lineno">  149</span>&#160;}</div>
 <div class="line"><a name="l00150"></a><span class="lineno">  150</span>&#160; </div>
 <div class="line"><a name="l00151"></a><span class="lineno">  151</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> substituteEqualityImpl(</div>
-<div class="line"><a name="l00152"></a><span class="lineno">  152</span>&#160;  std::pair&lt;<a class="code" href="structLinearAlgebra_1_1MutPtrMatrix.html">MutPtrMatrix&lt;int64_t&gt;</a>, <a class="code" href="structLinearAlgebra_1_1MutPtrMatrix.html">MutPtrMatrix&lt;int64_t&gt;</a>&gt; AE, <span class="keyword">const</span> <span class="keywordtype">size_t</span> i)</div>
+<div class="line"><a name="l00152"></a><span class="lineno">  152</span>&#160;  std::pair&lt;MutPtrMatrix&lt;int64_t&gt;, MutPtrMatrix&lt;int64_t&gt;&gt; AE, <span class="keyword">const</span> <span class="keywordtype">size_t</span> i)</div>
 <div class="line"><a name="l00153"></a><span class="lineno">  153</span>&#160;  -&gt; Row {</div>
 <div class="line"><a name="l00154"></a><span class="lineno">  154</span>&#160;  <span class="keyword">auto</span> [A, E] = AE;</div>
 <div class="line"><a name="l00155"></a><span class="lineno">  155</span>&#160;  <span class="keyword">const</span> <span class="keyword">auto</span> [numConstraints, numVar] = E.size();</div>
@@ -273,7 +273,7 @@ $(function() {
 <div class="line"><a name="l00207"></a><span class="lineno">  207</span>&#160;  -&gt; <span class="keywordtype">bool</span> {</div>
 <div class="line"><a name="l00208"></a><span class="lineno">  208</span>&#160; </div>
 <div class="line"><a name="l00209"></a><span class="lineno">  209</span>&#160;  Row minNonZero =</div>
-<div class="line"><a name="l00210"></a><span class="lineno">  210</span>&#160;    substituteEqualityImpl(std::make_pair(<a class="code" href="structLinearAlgebra_1_1MutPtrMatrix.html">MutPtrMatrix</a>(A), <a class="code" href="structLinearAlgebra_1_1MutPtrMatrix.html">MutPtrMatrix</a>(E)), i);</div>
+<div class="line"><a name="l00210"></a><span class="lineno">  210</span>&#160;    substituteEqualityImpl(std::make_pair(MutPtrMatrix(A), MutPtrMatrix(E)), i);</div>
 <div class="line"><a name="l00211"></a><span class="lineno">  211</span>&#160;  <span class="keywordflow">if</span> (minNonZero == E.numRow()) <span class="keywordflow">return</span> <span class="keyword">true</span>;</div>
 <div class="line"><a name="l00212"></a><span class="lineno">  212</span>&#160;  eraseConstraint(E, minNonZero);</div>
 <div class="line"><a name="l00213"></a><span class="lineno">  213</span>&#160;  <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
@@ -281,9 +281,9 @@ $(function() {
 <div class="line"><a name="l00215"></a><span class="lineno">  215</span>&#160; </div>
 <div class="line"><a name="l00216"></a><span class="lineno">  216</span>&#160;<span class="comment">// C = [ I A</span></div>
 <div class="line"><a name="l00217"></a><span class="lineno">  217</span>&#160;<span class="comment">//       0 B ]</span></div>
-<div class="line"><a name="l00218"></a><span class="lineno">  218</span>&#160;<span class="keyword">inline</span> <span class="keywordtype">void</span> slackEqualityConstraints(<a class="code" href="structLinearAlgebra_1_1MutPtrMatrix.html">MutPtrMatrix&lt;int64_t&gt;</a> C,</div>
-<div class="line"><a name="l00219"></a><span class="lineno">  219</span>&#160;                                     <a class="code" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix&lt;int64_t&gt;</a> A,</div>
-<div class="line"><a name="l00220"></a><span class="lineno">  220</span>&#160;                                     <a class="code" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix&lt;int64_t&gt;</a> B) {</div>
+<div class="line"><a name="l00218"></a><span class="lineno">  218</span>&#160;<span class="keyword">inline</span> <span class="keywordtype">void</span> slackEqualityConstraints(MutPtrMatrix&lt;int64_t&gt; C,</div>
+<div class="line"><a name="l00219"></a><span class="lineno">  219</span>&#160;                                     PtrMatrix&lt;int64_t&gt; A,</div>
+<div class="line"><a name="l00220"></a><span class="lineno">  220</span>&#160;                                     PtrMatrix&lt;int64_t&gt; B) {</div>
 <div class="line"><a name="l00221"></a><span class="lineno">  221</span>&#160;  <span class="keyword">const</span> Col numVar = A.numCol();</div>
 <div class="line"><a name="l00222"></a><span class="lineno">  222</span>&#160;  assert(numVar == B.numCol());</div>
 <div class="line"><a name="l00223"></a><span class="lineno">  223</span>&#160;  <span class="keyword">const</span> Row numSlack = A.numRow();</div>
@@ -305,7 +305,7 @@ $(function() {
 <div class="line"><a name="l00239"></a><span class="lineno">  239</span>&#160;}</div>
 <div class="line"><a name="l00240"></a><span class="lineno">  240</span>&#160;<span class="comment">// counts how many negative and positive elements there are in row `i`.</span></div>
 <div class="line"><a name="l00241"></a><span class="lineno">  241</span>&#160;<span class="comment">// A row corresponds to a particular variable in `A&#39;x &lt;= b`.</span></div>
-<div class="line"><a name="l00242"></a><span class="lineno">  242</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> countNonZeroSign(<a class="code" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix&lt;int64_t&gt;</a> A, <span class="keywordtype">size_t</span> i)</div>
+<div class="line"><a name="l00242"></a><span class="lineno">  242</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> countNonZeroSign(PtrMatrix&lt;int64_t&gt; A, <span class="keywordtype">size_t</span> i)</div>
 <div class="line"><a name="l00243"></a><span class="lineno">  243</span>&#160;  -&gt; std::pair&lt;size_t, size_t&gt; {</div>
 <div class="line"><a name="l00244"></a><span class="lineno">  244</span>&#160;  <span class="keywordtype">size_t</span> numNeg = 0;</div>
 <div class="line"><a name="l00245"></a><span class="lineno">  245</span>&#160;  <span class="keywordtype">size_t</span> numPos = 0;</div>
@@ -446,15 +446,15 @@ $(function() {
 <div class="line"><a name="l00380"></a><span class="lineno">  380</span>&#160;<span class="keyword">inline</span> <span class="keywordtype">void</span> eliminateVariable(IntMatrix &amp;A, IntMatrix &amp;E, <span class="keywordtype">size_t</span> v) {</div>
 <div class="line"><a name="l00381"></a><span class="lineno">  381</span>&#160;  <span class="keywordflow">if</span> (substituteEquality(A, E, v)) fourierMotzkin(A, v);</div>
 <div class="line"><a name="l00382"></a><span class="lineno">  382</span>&#160;}</div>
-<div class="line"><a name="l00384"></a><span class="lineno">  384</span>&#160;[[nodiscard]] constexpr <span class="keyword">auto</span> removeZeroRows(<a class="code" href="structLinearAlgebra_1_1MutPtrMatrix.html">MutPtrMatrix&lt;int64_t&gt;</a> A)</div>
-<div class="line"><a name="l00385"></a><span class="lineno">  385</span>&#160;  -&gt; <a class="code" href="structLinearAlgebra_1_1MutPtrMatrix.html">MutPtrMatrix&lt;int64_t&gt;</a> {</div>
+<div class="line"><a name="l00384"></a><span class="lineno">  384</span>&#160;[[nodiscard]] constexpr <span class="keyword">auto</span> removeZeroRows(MutPtrMatrix&lt;int64_t&gt; A)</div>
+<div class="line"><a name="l00385"></a><span class="lineno">  385</span>&#160;  -&gt; MutPtrMatrix&lt;int64_t&gt; {</div>
 <div class="line"><a name="l00386"></a><span class="lineno">  386</span>&#160;  <span class="keywordflow">for</span> (Row i = A.numRow(); i;)</div>
 <div class="line"><a name="l00387"></a><span class="lineno">  387</span>&#160;    <span class="keywordflow">if</span> (allZero(A(--i, _))) A = eraseConstraint(A, i);</div>
 <div class="line"><a name="l00388"></a><span class="lineno">  388</span>&#160;  <span class="keywordflow">return</span> A;</div>
 <div class="line"><a name="l00389"></a><span class="lineno">  389</span>&#160;}</div>
 <div class="line"><a name="l00390"></a><span class="lineno">  390</span>&#160; </div>
-<div class="line"><a name="l00394"></a><span class="lineno">  394</span>&#160;[[nodiscard]] constexpr <span class="keyword">auto</span> removeRedundantRows(<a class="code" href="structLinearAlgebra_1_1MutPtrMatrix.html">MutPtrMatrix&lt;int64_t&gt;</a> A,</div>
-<div class="line"><a name="l00395"></a><span class="lineno">  395</span>&#160;                                                 <a class="code" href="structLinearAlgebra_1_1MutPtrMatrix.html">MutPtrMatrix&lt;int64_t&gt;</a> B)</div>
+<div class="line"><a name="l00394"></a><span class="lineno">  394</span>&#160;[[nodiscard]] constexpr <span class="keyword">auto</span> removeRedundantRows(MutPtrMatrix&lt;int64_t&gt; A,</div>
+<div class="line"><a name="l00395"></a><span class="lineno">  395</span>&#160;                                                 MutPtrMatrix&lt;int64_t&gt; B)</div>
 <div class="line"><a name="l00396"></a><span class="lineno">  396</span>&#160;  -&gt; std::array&lt;MutPtrMatrix&lt;int64_t&gt;, 2&gt; {</div>
 <div class="line"><a name="l00397"></a><span class="lineno">  397</span>&#160;  <span class="keyword">auto</span> [M, N] = B.size();</div>
 <div class="line"><a name="l00398"></a><span class="lineno">  398</span>&#160;  <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> r = 0, c = 0; c &lt; N &amp;&amp; r &lt; M; ++c)</div>
@@ -470,7 +470,7 @@ $(function() {
 <div class="line"><a name="l00408"></a><span class="lineno">  408</span>&#160;    <span class="keywordflow">if</span> (allZero(A(--c, _))) eraseConstraint(A, c);</div>
 <div class="line"><a name="l00409"></a><span class="lineno">  409</span>&#160;}</div>
 <div class="line"><a name="l00410"></a><span class="lineno">  410</span>&#160; </div>
-<div class="line"><a name="l00411"></a><span class="lineno">  411</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> uniqueConstraint(<a class="code" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix&lt;int64_t&gt;</a> A, <span class="keywordtype">size_t</span> C) -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l00411"></a><span class="lineno">  411</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> uniqueConstraint(PtrMatrix&lt;int64_t&gt; A, <span class="keywordtype">size_t</span> C) -&gt; <span class="keywordtype">bool</span> {</div>
 <div class="line"><a name="l00412"></a><span class="lineno">  412</span>&#160;  <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> c = 0; c &lt; C; ++c) {</div>
 <div class="line"><a name="l00413"></a><span class="lineno">  413</span>&#160;    <span class="keywordtype">bool</span> allEqual = <span class="keyword">true</span>;</div>
 <div class="line"><a name="l00414"></a><span class="lineno">  414</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> r = 0; r &lt; A.numCol(); ++r) allEqual &amp;= (A(c, r) == A(C, r));</div>
@@ -479,7 +479,7 @@ $(function() {
 <div class="line"><a name="l00417"></a><span class="lineno">  417</span>&#160;  <span class="keywordflow">return</span> <span class="keyword">true</span>;</div>
 <div class="line"><a name="l00418"></a><span class="lineno">  418</span>&#160;}</div>
 <div class="line"><a name="l00419"></a><span class="lineno">  419</span>&#160; </div>
-<div class="line"><a name="l00420"></a><span class="lineno">  420</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> countSigns(<a class="code" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix&lt;int64_t&gt;</a> A, <span class="keywordtype">size_t</span> i)</div>
+<div class="line"><a name="l00420"></a><span class="lineno">  420</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> countSigns(PtrMatrix&lt;int64_t&gt; A, <span class="keywordtype">size_t</span> i)</div>
 <div class="line"><a name="l00421"></a><span class="lineno">  421</span>&#160;  -&gt; std::pair&lt;size_t, size_t&gt; {</div>
 <div class="line"><a name="l00422"></a><span class="lineno">  422</span>&#160;  <span class="keywordtype">size_t</span> numNeg = 0;</div>
 <div class="line"><a name="l00423"></a><span class="lineno">  423</span>&#160;  <span class="keywordtype">size_t</span> numPos = 0;</div>
@@ -504,8 +504,6 @@ $(function() {
 <div class="line"><a name="l00442"></a><span class="lineno">  442</span>&#160;    <span class="keywordflow">if</span> (A(--j, i)) eraseConstraint(A, j);</div>
 <div class="line"><a name="l00443"></a><span class="lineno">  443</span>&#160;}</div>
 <div class="ttc" id="astructEmptyMatrix_html"><div class="ttname"><a href="structEmptyMatrix.html">EmptyMatrix</a></div><div class="ttdef"><b>Definition:</b> EmptyArrays.hpp:7</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1MutPtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutPtrMatrix.html">LinearAlgebra::MutPtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Indexing.hpp:155</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1PtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrMatrix.html">LinearAlgebra::PtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Indexing.hpp:154</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
