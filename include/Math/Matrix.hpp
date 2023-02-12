@@ -1,13 +1,7 @@
 #pragma once
 #include "Math/AxisTypes.hpp"
-#include "Math/Indexing.hpp"
 #include "Math/MatrixDimensions.hpp"
-#include "Math/Vector.hpp"
 #include "TypePromotion.hpp"
-#include "Utilities/Allocators.hpp"
-#include "Utilities/Invariant.hpp"
-#include "Utilities/Optional.hpp"
-#include "Utilities/Valid.hpp"
 #include <concepts>
 #include <memory>
 #include <type_traits>
@@ -54,7 +48,7 @@ template <typename A> struct Transpose {
 
   using value_type = eltype_t<A>;
   [[no_unique_address]] A a;
-  auto operator()(size_t i, size_t j) const { return a(j, i); }
+  constexpr auto operator()(size_t i, size_t j) const { return a(j, i); }
   [[nodiscard]] constexpr auto numRow() const -> Row {
     return Row{size_t{a.numCol()}};
   }
@@ -68,8 +62,74 @@ template <typename A> struct Transpose {
   [[nodiscard]] constexpr auto dim() const -> DenseDims {
     return {numRow(), numCol()};
   }
-  Transpose(A b) : a(b) {}
+  constexpr Transpose(A b) : a(b) {}
 };
 template <typename A> Transpose(A) -> Transpose<A>;
+
+template <typename T> struct SmallSparseMatrix {
+  // non-zeros
+  [[no_unique_address]] llvm::SmallVector<T> nonZeros{};
+  // masks, the upper 8 bits give the number of elements in previous rows
+  // the remaining 24 bits are a mask indicating non-zeros within this row
+  static constexpr size_t maxElemPerRow = 24;
+  [[no_unique_address]] llvm::SmallVector<uint32_t> rows;
+  [[no_unique_address]] Col col;
+  [[nodiscard]] constexpr auto numRow() const -> Row {
+    return Row{rows.size()};
+  }
+  [[nodiscard]] constexpr auto numCol() const -> Col { return col; }
+  constexpr SmallSparseMatrix(Row numRows, Col numCols)
+    : rows{llvm::SmallVector<uint32_t>(size_t(numRows))}, col{numCols} {
+    assert(size_t(col) <= maxElemPerRow);
+  }
+  constexpr auto get(Row i, Col j) const -> T {
+    assert(j < col);
+    uint32_t r(rows[size_t(i)]);
+    uint32_t jshift = uint32_t(1) << size_t(j);
+    if (r & (jshift)) {
+      // offset from previous rows
+      uint32_t prevRowOffset = r >> maxElemPerRow;
+      uint32_t rowOffset = std::popcount(r & (jshift - 1));
+      return nonZeros[rowOffset + prevRowOffset];
+    } else {
+      return 0;
+    }
+  }
+  constexpr auto operator()(size_t i, size_t j) const -> T {
+    return get(Row{i}, Col{j});
+  }
+  constexpr void insert(T x, Row i, Col j) {
+    assert(j < col);
+    llvm::errs() << "inserting " << x << " at " << size_t(i) << ", "
+                 << size_t(j) << "; rows.size() = " << rows.size() << "\n";
+    uint32_t r{rows[size_t(i)]};
+    uint32_t jshift = uint32_t(1) << size_t(j);
+    // offset from previous rows
+    uint32_t prevRowOffset = r >> maxElemPerRow;
+    uint32_t rowOffset = std::popcount(r & (jshift - 1));
+    size_t k = rowOffset + prevRowOffset;
+    if (r & jshift) {
+      nonZeros[k] = std::move(x);
+    } else {
+      nonZeros.insert(nonZeros.begin() + k, std::move(x));
+      rows[size_t(i)] = r | jshift;
+      for (size_t l = size_t(i) + 1; l < rows.size(); ++l)
+        rows[l] += uint32_t(1) << maxElemPerRow;
+    }
+  }
+
+  struct Reference {
+    [[no_unique_address]] SmallSparseMatrix<T> *A;
+    [[no_unique_address]] size_t i, j;
+    constexpr operator T() const { return A->get(Row{i}, Col{j}); }
+    constexpr void operator=(T x) {
+      A->insert(std::move(x), Row{i}, Col{j});
+      return;
+    }
+  };
+  constexpr auto operator()(size_t i, size_t j) -> Reference {
+    return Reference{this, i, j};
+  }
+};
 
 } // namespace LinearAlgebra

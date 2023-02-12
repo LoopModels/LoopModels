@@ -4,6 +4,7 @@
 #include "Math/Indexing.hpp"
 #include "Math/Matrix.hpp"
 #include "Math/MatrixDimensions.hpp"
+#include "Math/Vector.hpp"
 #include "TypePromotion.hpp"
 #include "Utilities/Invariant.hpp"
 #include "Utilities/Optional.hpp"
@@ -36,6 +37,11 @@ static_assert(
 
 template <class T>
 using default_capacity_type_t = typename default_capacity_type<T>::type;
+
+template <class T, class S, size_t N = PreAllocStorage<T>(),
+          class A = std::allocator<T>,
+          std::unsigned_integral U = default_capacity_type_t<S>>
+struct ManagedArray;
 
 /// Constant Array
 template <class T, class S> struct Array {
@@ -142,7 +148,7 @@ template <class T, class S> struct Array {
     return true;
   }
 #ifndef NDEBUG
-  void extendOrAssertSize(Row MM, Col NN) const {
+  constexpr void extendOrAssertSize(Row MM, Col NN) const {
     assert(MM == numRow());
     assert(NN == numCol());
   }
@@ -150,10 +156,22 @@ template <class T, class S> struct Array {
   static constexpr void extendOrAssertSize(Row, Col) {}
 #endif
 
+  [[nodiscard]] constexpr auto deleteCol(size_t c) const -> ManagedArray<T, S> {
+    static_assert(MatrixDimension<S>);
+    auto newDim = dim().similar(numRow() - 1);
+    ManagedArray<T, decltype(newDim)> A(newDim);
+    for (size_t m = 0; m < numRow(); ++m) {
+      A(m, _(0, c)) = (*this)(m, _(0, c));
+      A(m, _(c, LinearAlgebra::end)) = (*this)(m, _(c + 1, LinearAlgebra::end));
+    }
+    return A;
+  }
+
 protected:
   [[no_unique_address]] NotNull<T> ptr;
   [[no_unique_address]] S sz{};
 };
+
 template <class T, class S> struct MutArray : Array<T, S> {
   using BaseT = Array<T, S>;
   [[nodiscard, gnu::returns_nonnull]] constexpr auto data() noexcept -> T * {
@@ -186,7 +204,7 @@ template <class T, class S> struct MutArray : Array<T, S> {
     return (*this)[CartesianIndex<R, C>{r, c}];
   }
   constexpr void fill(T value) {
-    std::fill_n((T *)(this->ptr), size_t(size()), value);
+    std::fill_n((T *)(this->ptr), size_t(this->dim()), value);
   }
 
   [[nodiscard]] constexpr auto diag() noexcept {
@@ -199,6 +217,7 @@ template <class T, class S> struct MutArray : Array<T, S> {
     StridedRange r{min(Row{this->sz}, c), unsigned(RowStride{this->sz}) - 1};
     return MutArray<T, StridedRange>{this->ptr + size_t(c) - 1, r};
   }
+
   [[gnu::flatten]] constexpr auto operator<<(const SmallSparseMatrix<T> &B)
     -> MutPtrMatrix<T> {
     assert(this->numRow() == B.numRow());
@@ -523,15 +542,6 @@ struct ManagedArrayView : MutArray<T, S> {
       resize(newSz.set(c));
     }
   }
-  // does not free memory, leaving capacity unchanged
-  constexpr auto operator[](size_t i) noexcept -> T & {
-    invariant(i < size_t(size()));
-    return this->ptr[i];
-  }
-  constexpr auto operator[](size_t i) const noexcept -> const T & {
-    invariant(i < size_t(size()));
-    return this->ptr[i];
-  }
   constexpr void reserve(S nz) {
     U newCapacity = U(nz);
     if (newCapacity <= capacity) return;
@@ -552,67 +562,59 @@ struct ManagedArrayView : MutArray<T, S> {
   }
   [[nodiscard]] constexpr auto getCapacity() const -> U { return capacity; }
 
-  constexpr void resize(D newDims) { resize(newDims); }
-  constexpr void resizeForOverwrite(D d) { resizeForOverwrite(d); }
   // set size and 0.
   constexpr void setSize(Row r, Col c) {
     resizeForOverwrite({r, c});
-    fill(0);
+    this->fill(0);
   }
   constexpr void resize(Row MM, Col NN) { resize(DenseDims{MM, NN}); }
   constexpr void reserve(Row M, Col N) {
-    if constexpr (std::is_same_v<D, StridedDims>)
-      reserve(StridedDims{M, N, max(N, RowStride{size()})});
-    else if constexpr (std::is_same_v<D, SquareDims>)
+    if constexpr (std::is_same_v<S, StridedDims>)
+      reserve(StridedDims{M, N, max(N, RowStride{this->dim()})});
+    else if constexpr (std::is_same_v<S, SquareDims>)
       reserve(SquareDims{unsigned(std::max(*M, *N))});
     else reserve(DenseDims{M, N});
   }
   constexpr void reserve(Row M, RowStride X) {
-    if constexpr (std::is_same_v<D, StridedDims>)
+    if constexpr (std::is_same_v<S, StridedDims>)
       reserve(StridedDims{*M, *X, *X});
-    else if constexpr (std::is_same_v<D, SquareDims>)
+    else if constexpr (std::is_same_v<S, SquareDims>)
       reserve(SquareDims{unsigned(std::max(*M, *X))});
     else reserve(DenseDims{*M, *X});
   }
   constexpr void clearReserve(Row M, Col N) {
-    clear();
+    this->clear();
     reserve(M, N);
   }
   constexpr void clearReserve(Row M, RowStride X) {
-    clear();
+    this->clear();
     reserve(M, X);
   }
   constexpr void resizeForOverwrite(Row M, Col N, RowStride X) {
     invariant(X >= N);
-    if constexpr (std::is_same_v<D, StridedDims>) resizeForOverwrite({M, N, X});
-    else if constexpr (std::is_same_v<D, SquareDims>) {
+    if constexpr (std::is_same_v<S, StridedDims>) resizeForOverwrite({M, N, X});
+    else if constexpr (std::is_same_v<S, SquareDims>) {
       invariant(*M == *N);
       resizeForOverwrite({*M});
     } else resizeForOverwrite({*M, *N});
   }
   constexpr void resizeForOverwrite(Row M, Col N) {
-    if constexpr (std::is_same_v<D, StridedDims>)
+    if constexpr (std::is_same_v<S, StridedDims>)
       resizeForOverwrite({M, N, *N});
-    else if constexpr (std::is_same_v<D, SquareDims>) {
+    else if constexpr (std::is_same_v<S, SquareDims>) {
       invariant(*M == *N);
       resizeForOverwrite({*M});
     } else resizeForOverwrite({*M, *N});
   }
 
-  constexpr void resize(Row r) { resize(r); }
-  constexpr void resizeForOverwrite(Row r) { resizeForOverwrite(r); }
-  constexpr void resize(Col c) { resize(c); }
-  constexpr void resizeForOverwrite(Col c) { resizeForOverwrite(c); }
-
-  constexpr void extendOrAssertSize(Row R, Col C) { resizeForOverwrite(R, C); }
-  constexpr void erase(Col c) { erase(c); }
-  constexpr void erase(Row r) { erase(r); }
-  constexpr void truncate(Col c) { truncate(c); }
-  constexpr void truncate(Row r) { truncate(r); }
+  constexpr void extendOrAssertSize(Row R, Col C) {
+    resizeForOverwrite(DenseDims{R, C});
+  }
   constexpr void moveLast(Col j) {
-    if (j == numCol()) return;
-    Col Nm1 = numCol() - 1;
-    for (size_t m = 0; m < numRow(); ++m) {
+    static_assert(MatrixDimension<S>);
+    if (j == this->numCol()) return;
+    Col Nm1 = this->numCol() - 1;
+    for (size_t m = 0; m < this->numRow(); ++m) {
       auto x = (*this)(m, j);
       for (Col n = j; n < Nm1;) {
         Col o = n++;
@@ -620,30 +622,6 @@ struct ManagedArrayView : MutArray<T, S> {
       }
       (*this)(m, Nm1) = x;
     }
-  }
-  [[nodiscard]] constexpr auto deleteCol(size_t c) const -> Matrix<T, D, S> {
-    auto newDim = size().similar(numRow() - 1);
-    Matrix<T, decltype(newDim), S> A(newDim);
-    for (size_t m = 0; m < numRow(); ++m) {
-      A(m, _(0, c)) = (*this)(m, _(0, c));
-      A(m, _(c, LinearAlgebra::end)) = (*this)(m, _(c + 1, LinearAlgebra::end));
-    }
-    return A;
-  }
-
-  [[nodiscard]] static constexpr auto identity(unsigned M) -> Matrix<T, D, S> {
-    static_assert(MatrixDimension<D>);
-    Matrix<T, D, S> A(SquareDims{M}, T{0});
-    A.diag() << 1;
-    return A;
-  }
-  [[nodiscard]] static constexpr auto identity(Row N) -> Matrix<T, D, S> {
-    static_assert(MatrixDimension<D>);
-    return identity(unsigned(N));
-  }
-  [[nodiscard]] static constexpr auto identity(Col N) -> Matrix<T, D, S> {
-    static_assert(MatrixDimension<D>);
-    return identity(unsigned(N));
   }
 
 protected:
@@ -683,7 +661,8 @@ struct ManagedArray : ManagedArrayView<T, S, A, U> {
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wuninitialized"
-  constexpr ManagedArray() noexcept : ManagedArrayView<T, S, A, U>{memory, N} {}
+  constexpr ManagedArray() noexcept
+    : ManagedArrayView<T, S, A, U>{memory, S{}, N} {}
   constexpr ManagedArray(S s) noexcept : BaseT{memory, s, N} {
     U len = U(this->sz);
     if (len <= N) return;
@@ -696,22 +675,23 @@ struct ManagedArray : ManagedArrayView<T, S, A, U> {
   }
   template <class D, std::unsigned_integral I>
   constexpr ManagedArray(const ManagedArray<T, D, N, A, I> &b) noexcept
-    : BaseT{memory, S(b.size()), U(N), b.get_allocator()} {
+    : BaseT{memory, S(b.dim()), U(N), b.get_allocator()} {
     U len = U(this->sz);
     growUndef(len);
     std::uninitialized_copy_n(b.data(), len, (T *)(this->ptr));
   }
   // template <class Y, class D, class AY, std::unsigned_integral I,
   // std::enable_if_t<std::is_convertible_v<Y, T>>>
-  template <class Y, class D, class AY, std::unsigned_integral I>
+  template <std::convertible_to<T> Y, class D, class AY,
+            std::unsigned_integral I>
   constexpr ManagedArray(const ManagedArray<Y, D, N, AY, I> &b) noexcept
-    : BaseT{memory, S(b.size()), U(N), b.get_allocator()} {
+    : BaseT{memory, S(b.dim()), U(N), b.get_allocator()} {
     U len = U(this->sz);
     growUndef(len);
     for (size_t i = 0; i < len; ++i) new ((T *)(this->ptr) + i) T(b[i]);
   }
   constexpr ManagedArray(const ManagedArray &b) noexcept
-    : BaseT{memory, S(b.size()), U(N), b.get_allocator()} {
+    : BaseT{memory, S(b.dim()), U(N), b.get_allocator()} {
     U len = U(this->sz);
     growUndef(len);
     std::uninitialized_copy_n(b.data(), len, (T *)(this->ptr));
@@ -719,7 +699,7 @@ struct ManagedArray : ManagedArrayView<T, S, A, U> {
 #pragma GCC diagnostic pop
   template <class D, std::unsigned_integral I>
   constexpr ManagedArray(ManagedArray<T, D, N, A, I> &&b) noexcept
-    : BaseT{b.data(), b.size(), U(b.getCapacity()), b.get_allocator()} {
+    : BaseT{b.data(), b.dim(), U(b.getCapacity()), b.get_allocator()} {
     assert(uint64_t(b.getCapacity()) == uint64_t(this->getCapacity()) &&
            "capacity overflow");
     if (b.isSmall()) {
@@ -729,7 +709,7 @@ struct ManagedArray : ManagedArrayView<T, S, A, U> {
     b.resetNoFree();
   }
   constexpr ManagedArray(ManagedArray &&b) noexcept
-    : BaseT{b.data(), b.size(), U(b.getCapacity()), b.get_allocator()} {
+    : BaseT{b.data(), b.dim(), U(b.getCapacity()), b.get_allocator()} {
     assert(uint64_t(b.getCapacity()) == uint64_t(this->getCapacity()) &&
            "capacity overflow");
     if (b.isSmall()) {
@@ -741,7 +721,7 @@ struct ManagedArray : ManagedArrayView<T, S, A, U> {
   template <class D, std::unsigned_integral I>
   constexpr ManagedArray(ManagedArray<T, D, N, A, I> &&b, S s) noexcept
     : BaseT{b.data(), s, U(b.getCapacity()), b.get_allocator()} {
-    assert(U(s) == U(b.size()) && "size mismatch");
+    assert(U(s) == U(b.dim()) && "size mismatch");
     assert(uint64_t(b.getCapacity()) == uint64_t(this->getCapacity()) &&
            "capacity overflow");
     if (b.isSmall()) {
@@ -750,11 +730,31 @@ struct ManagedArray : ManagedArrayView<T, S, A, U> {
     }
     b.resetNoFree();
   }
+  template <std::convertible_to<T> Y>
+  constexpr ManagedArray(const SmallSparseMatrix<Y> &B)
+    : ManagedArrayView<T, S, A, U>{memory, B.dim(), N} {
+    U len = U(this->sz);
+    growUndef(len);
+    this->fill(0);
+    size_t k = 0;
+    for (size_t i = 0; i < this->numRow(); ++i) {
+      uint32_t m = B.rows[i] & 0x00ffffff;
+      size_t j = 0;
+      while (m) {
+        uint32_t tz = std::countr_zero(m);
+        m >>= tz + 1;
+        j += tz;
+        (*this)(i, j++) = T(B.nonZeros[k++]);
+      }
+    }
+    assert(k == B.nonZeros.size());
+  }
+
   template <class D, std::unsigned_integral I>
   constexpr auto operator=(const ManagedArray<T, D, N, A, I> &b) noexcept
     -> ManagedArray & {
     if (this == &b) return *this;
-    this->sz = b.size();
+    this->sz = b.dim();
     U len = U(this->sz);
     growUndef(len);
     std::uninitialized_copy_n(b.data(), len, (T *)(this->ptr));
@@ -765,7 +765,7 @@ struct ManagedArray : ManagedArrayView<T, S, A, U> {
     -> ManagedArray & {
     if (this == &b) return *this;
     // here, we commandeer `b`'s memory
-    this->sz = b.size();
+    this->sz = b.dim();
     this->allocator = std::move(b.allocator);
     if (b.isSmall()) {
       // if `b` is small, we need to copy memory
@@ -780,7 +780,7 @@ struct ManagedArray : ManagedArrayView<T, S, A, U> {
   }
   constexpr auto operator=(const ManagedArray &b) noexcept -> ManagedArray & {
     if (this == &b) return *this;
-    this->sz = b.size();
+    this->sz = b.dim();
     U len = U(this->sz);
     growUndef(len);
     std::uninitialized_copy_n(b.data(), len, (T *)(this->ptr));
@@ -789,7 +789,7 @@ struct ManagedArray : ManagedArrayView<T, S, A, U> {
   constexpr auto operator=(ManagedArray &&b) noexcept -> ManagedArray & {
     if (this == &b) return *this;
     // here, we commandeer `b`'s memory
-    this->sz = b.size();
+    this->sz = b.dim();
     this->allocator = std::move(b.allocator);
     if (b.isSmall()) {
       // if `b` is small, we need to copy memory
@@ -811,6 +811,21 @@ struct ManagedArray : ManagedArrayView<T, S, A, U> {
     this->capacity = N;
   }
   constexpr ~ManagedArray() { maybeDeallocate(); }
+
+  [[nodiscard]] static constexpr auto identity(unsigned M) -> ManagedArray {
+    static_assert(MatrixDimension<S>);
+    ManagedArray B(SquareDims{M}, T{0});
+    B.diag() << 1;
+    return B;
+  }
+  [[nodiscard]] static constexpr auto identity(Row R) -> ManagedArray {
+    static_assert(MatrixDimension<S>);
+    return identity(unsigned(R));
+  }
+  [[nodiscard]] static constexpr auto identity(Col C) -> ManagedArray {
+    static_assert(MatrixDimension<S>);
+    return identity(unsigned(C));
+  }
 
 private:
   T memory[N]; // NOLINT (modernize-avoid-c-style-arrays)
@@ -855,6 +870,57 @@ static_assert(sizeof(ManagedArray<int64_t, LinearAlgebra::DenseDims, 64,
 // 8 + 1*4 + 4 + 0 + 64*8 = 16 + 512 = 528
 static_assert(sizeof(ManagedArray<int64_t, LinearAlgebra::SquareDims, 64,
                                   std::allocator<int64_t>>) == 528);
+
+template <class T> using Vector = ManagedArray<T, unsigned>;
+template <class T> using PtrVector = Array<T, unsigned>;
+
+static_assert(std::move_constructible<Vector<intptr_t>>);
+static_assert(std::copy_constructible<Vector<intptr_t>>);
+static_assert(std::copyable<Vector<intptr_t>>);
+static_assert(AbstractVector<Vector<int64_t>>);
+static_assert(!AbstractVector<int64_t>);
+
+static_assert(
+  std::weakly_incrementable<StridedVector<int64_t>::StridedIterator>);
+static_assert(
+  std::input_or_output_iterator<StridedVector<int64_t>::StridedIterator>);
+
+static_assert(std::indirectly_readable<StridedVector<int64_t>::StridedIterator>,
+              "failed indirectly readable");
+static_assert(
+  std::indirectly_readable<MutStridedVector<int64_t>::StridedIterator>,
+  "failed indirectly readable");
+static_assert(
+  std::output_iterator<MutStridedVector<int64_t>::StridedIterator, int>,
+  "failed output iterator");
+static_assert(std::forward_iterator<StridedVector<int64_t>::StridedIterator>,
+              "failed forward iterator");
+static_assert(std::input_iterator<StridedVector<int64_t>::StridedIterator>,
+              "failed input iterator");
+static_assert(
+  std::bidirectional_iterator<StridedVector<int64_t>::StridedIterator>,
+  "failed bidirectional iterator");
+
+static_assert(std::totally_ordered<StridedVector<int64_t>::StridedIterator>,
+              "failed random access iterator");
+static_assert(
+  std::random_access_iterator<StridedVector<int64_t>::StridedIterator>,
+  "failed random access iterator");
+static_assert(AbstractVector<StridedVector<int64_t>>);
+static_assert(std::is_trivially_copyable_v<StridedVector<int64_t>>);
+
+template <typename T>
+inline auto vector(std::allocator<T>, size_t M) -> Vector<T> {
+  return Vector<T>(M);
+}
+template <typename T>
+constexpr auto vector(WBumpAlloc<T> alloc, size_t M) -> MutPtrVector<T> {
+  return {alloc.allocate(M), M};
+}
+template <typename T>
+constexpr auto matrix(BumpAlloc<> &alloc, size_t M) -> MutPtrVector<T> {
+  return {alloc.allocate<T>(M), M};
+}
 
 static_assert(sizeof(PtrMatrix<int64_t>) <=
               4 * sizeof(unsigned int) + sizeof(int64_t *));

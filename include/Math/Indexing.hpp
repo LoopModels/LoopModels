@@ -3,7 +3,6 @@
 #include "Math/MatrixDimensions.hpp"
 #include "Utilities/Invariant.hpp"
 #include "Utilities/Iterators.hpp"
-#include "Utilities/Valid.hpp"
 #include <cstddef>
 
 namespace LinearAlgebra {
@@ -122,39 +121,6 @@ template <typename T>
 concept ScalarColIndex = ScalarIndex<T> || std::same_as<T, Col>;
 
 template <typename T>
-constexpr inline auto matrixGet(NotNull<T> ptr, Row M, Col N, RowStride X,
-                                const ScalarRowIndex auto mm,
-                                const ScalarColIndex auto nn) -> T & {
-  auto m = unwrapRow(mm);
-  auto n = unwrapCol(nn);
-#ifndef NDEBUG
-  checkIndex(size_t(M), m);
-  checkIndex(size_t(N), n);
-#endif
-  return *(ptr +
-           size_t(canonicalize(n, size_t(N)) + X * canonicalize(m, size_t(M))));
-}
-template <typename T>
-constexpr inline auto matrixGet(NotNull<const T> ptr, Row M, Col N, RowStride X,
-                                const ScalarRowIndex auto mm,
-                                const ScalarColIndex auto nn) -> const T & {
-  auto m = unwrapRow(mm);
-  auto n = unwrapCol(nn);
-#ifndef NDEBUG
-  checkIndex(size_t(M), m);
-  checkIndex(size_t(N), n);
-#endif
-  return *(ptr +
-           size_t(canonicalize(n, size_t(N)) + X * canonicalize(m, size_t(M))));
-}
-template <typename T> struct PtrVector;
-template <typename T> struct MutPtrVector;
-template <typename T> struct StridedVector;
-template <typename T> struct MutStridedVector;
-template <typename T, MatrixDimension D = StridedDims> struct PtrMatrix;
-template <typename T, MatrixDimension D = StridedDims> struct MutPtrMatrix;
-
-template <typename T>
 concept AbstractSlice = requires(T t, size_t M) {
                           {
                             canonicalizeRange(t, M)
@@ -162,92 +128,6 @@ concept AbstractSlice = requires(T t, size_t M) {
                         };
 static_assert(AbstractSlice<Range<size_t, size_t>>);
 static_assert(AbstractSlice<Colon>);
-
-template <typename T>
-inline constexpr auto matrixGet(NotNull<const T> ptr, Row M, Col N, RowStride X,
-                                const AbstractSlice auto m,
-                                const AbstractSlice auto n)
-  -> PtrMatrix<T, StridedDims> {
-#ifndef NDEBUG
-  checkIndex(size_t(M), m);
-  checkIndex(size_t(N), n);
-#endif
-  Range<size_t, size_t> mr = canonicalizeRange(m, size_t(M));
-  Range<size_t, size_t> nr = canonicalizeRange(n, size_t(N));
-  return PtrMatrix{ptr + size_t(nr.b + X * mr.b),
-                   StridedDims{mr.e - mr.b, nr.e - nr.b, X}};
-}
-template <typename T>
-inline constexpr auto matrixGet(NotNull<T> ptr, Row M, Col N, RowStride X,
-                                const AbstractSlice auto m,
-                                const AbstractSlice auto n)
-  -> MutPtrMatrix<T, StridedDims> {
-#ifndef NDEBUG
-  checkIndex(size_t(M), m);
-  checkIndex(size_t(N), n);
-#endif
-  Range<size_t, size_t> mr = canonicalizeRange(m, size_t(M));
-  Range<size_t, size_t> nr = canonicalizeRange(n, size_t(N));
-  return MutPtrMatrix<T, StridedDims>{
-    ptr + size_t(nr.b + X * mr.b),
-    StridedDims{Row{mr.e - mr.b}, Col{nr.e - nr.b}, X}};
-}
-
-template <typename T>
-inline constexpr auto matrixGet(NotNull<const T> ptr, Row M, Col N, RowStride X,
-                                const ScalarRowIndex auto mm,
-                                const AbstractSlice auto n) -> PtrVector<T> {
-  auto m = unwrapRow(mm);
-#ifndef NDEBUG
-  checkIndex(size_t(M), m);
-  checkIndex(size_t(N), n);
-#endif
-  size_t mi = canonicalize(m, size_t(M));
-  Range<size_t, size_t> nr = canonicalizeRange(n, size_t(N));
-  return PtrVector<T>{ptr + size_t(nr.b + X * mi), nr.e - nr.b};
-}
-template <typename T>
-inline constexpr auto matrixGet(NotNull<T> ptr, Row M, Col N, RowStride X,
-                                const ScalarRowIndex auto mm,
-                                const AbstractSlice auto n) -> MutPtrVector<T> {
-  auto m = unwrapRow(mm);
-#ifndef NDEBUG
-  checkIndex(size_t(M), m);
-  checkIndex(size_t(N), n);
-#endif
-  size_t mi = canonicalize(m, size_t(M));
-  Range<size_t, size_t> nr = canonicalizeRange(n, size_t(N));
-  return MutPtrVector<T>{ptr + size_t(nr.b + X * mi), nr.e - nr.b};
-}
-
-template <typename T>
-inline constexpr auto matrixGet(NotNull<const T> ptr, Row M, Col N, RowStride X,
-                                const AbstractSlice auto m,
-                                const ScalarColIndex auto nn)
-  -> StridedVector<T> {
-  auto n = unwrapCol(nn);
-#ifndef NDEBUG
-  checkIndex(size_t(M), m);
-  checkIndex(size_t(N), n);
-#endif
-  Range<size_t, size_t> mr = canonicalizeRange(m, size_t(M));
-  size_t ni = canonicalize(n, size_t(N));
-  return StridedVector<T>{ptr + size_t(ni + X * mr.b), mr.e - mr.b, X};
-}
-template <typename T>
-inline constexpr auto matrixGet(NotNull<T> ptr, Row M, Col N, RowStride X,
-                                const AbstractSlice auto m,
-                                const ScalarColIndex auto nn)
-  -> MutStridedVector<T> {
-  auto n = unwrapCol(nn);
-#ifndef NDEBUG
-  checkIndex(size_t(M), m);
-  checkIndex(size_t(N), n);
-#endif
-  Range<size_t, size_t> mr = canonicalizeRange(m, size_t(M));
-  size_t ni = canonicalize(n, size_t(N));
-  return MutStridedVector<T>{ptr + size_t(ni + X * mr.b), mr.e - mr.b, X};
-}
 
 [[nodiscard]] inline constexpr auto calcOffset(size_t len, size_t i) {
   invariant(i < len);
