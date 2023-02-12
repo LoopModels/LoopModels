@@ -82,9 +82,9 @@ Inheritance diagram for LinearAlgebra::ManagedArray&lt; T, S, N, A, U &gt;:</div
  <div class="center">
   <img src="structLinearAlgebra_1_1ManagedArray.png" usemap="#LinearAlgebra::ManagedArray_3C_20T_2C_20S_2C_20N_2C_20A_2C_20U_20_3E_map" alt=""/>
   <map id="LinearAlgebra::ManagedArray_3C_20T_2C_20S_2C_20N_2C_20A_2C_20U_20_3E_map" name="LinearAlgebra::ManagedArray_3C_20T_2C_20S_2C_20N_2C_20A_2C_20U_20_3E_map">
-<area href="structLinearAlgebra_1_1ManagedArrayView.html" alt="LinearAlgebra::ManagedArrayView&lt; T, S, std::allocator&lt; T &gt;, default_capacity_type_t&lt; S &gt; &gt;" shape="rect" coords="0,112,547,136"/>
-<area href="structLinearAlgebra_1_1MutArray.html" alt="LinearAlgebra::MutArray&lt; T, S &gt;" shape="rect" coords="0,56,547,80"/>
-<area href="structLinearAlgebra_1_1Array.html" title="Constant Array." alt="LinearAlgebra::Array&lt; T, S &gt;" shape="rect" coords="0,0,547,24"/>
+<area href="structLinearAlgebra_1_1ManagedArrayView.html" alt="LinearAlgebra::ManagedArrayView&lt; T, S, A, U &gt;" shape="rect" coords="0,112,296,136"/>
+<area href="structLinearAlgebra_1_1MutArray.html" alt="LinearAlgebra::MutArray&lt; T, S &gt;" shape="rect" coords="0,56,296,80"/>
+<area href="structLinearAlgebra_1_1Array.html" title="Constant Array." alt="LinearAlgebra::Array&lt; T, S &gt;" shape="rect" coords="0,0,296,24"/>
   </map>
 </div></div>
 <table class="memberdecls">
@@ -93,7 +93,7 @@ Public Types</h2></td></tr>
 <tr class="memitem:a84cd75b757fb7ae9f8717f60bcc7af85"><td class="memItemLeft" align="right" valign="top"><a id="a84cd75b757fb7ae9f8717f60bcc7af85"></a>
 using&#160;</td><td class="memItemRight" valign="bottom"><b>BaseT</b> = <a class="el" href="structLinearAlgebra_1_1ManagedArrayView.html">ManagedArrayView</a>&lt; T, S, A, U &gt;</td></tr>
 <tr class="separator:a84cd75b757fb7ae9f8717f60bcc7af85"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="inherit_header pub_types_structLinearAlgebra_1_1ManagedArrayView"><td colspan="2" onclick="javascript:toggleInherit('pub_types_structLinearAlgebra_1_1ManagedArrayView')"><img src="closed.png" alt="-"/>&#160;Public Types inherited from <a class="el" href="structLinearAlgebra_1_1ManagedArrayView.html">LinearAlgebra::ManagedArrayView&lt; T, S, std::allocator&lt; T &gt;, default_capacity_type_t&lt; S &gt; &gt;</a></td></tr>
+<tr class="inherit_header pub_types_structLinearAlgebra_1_1ManagedArrayView"><td colspan="2" onclick="javascript:toggleInherit('pub_types_structLinearAlgebra_1_1ManagedArrayView')"><img src="closed.png" alt="-"/>&#160;Public Types inherited from <a class="el" href="structLinearAlgebra_1_1ManagedArrayView.html">LinearAlgebra::ManagedArrayView&lt; T, S, A, U &gt;</a></td></tr>
 <tr class="memitem:ab2e3a44d5dbdaa26c9521916dcc3e5a2 inherit pub_types_structLinearAlgebra_1_1ManagedArrayView"><td class="memItemLeft" align="right" valign="top"><a id="ab2e3a44d5dbdaa26c9521916dcc3e5a2"></a>
 using&#160;</td><td class="memItemRight" valign="bottom"><b>BaseT</b> = <a class="el" href="structLinearAlgebra_1_1MutArray.html">MutArray</a>&lt; T, S &gt;</td></tr>
 <tr class="separator:ab2e3a44d5dbdaa26c9521916dcc3e5a2 inherit pub_types_structLinearAlgebra_1_1ManagedArrayView"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -184,7 +184,7 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>isSmall</b>
 <tr class="memitem:ab698ec087b4b331448d3636f119eb87a"><td class="memItemLeft" align="right" valign="top"><a id="ab698ec087b4b331448d3636f119eb87a"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>resetNoFree</b> ()</td></tr>
 <tr class="separator:ab698ec087b4b331448d3636f119eb87a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="inherit_header pub_methods_structLinearAlgebra_1_1ManagedArrayView"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_structLinearAlgebra_1_1ManagedArrayView')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="structLinearAlgebra_1_1ManagedArrayView.html">LinearAlgebra::ManagedArrayView&lt; T, S, std::allocator&lt; T &gt;, default_capacity_type_t&lt; S &gt; &gt;</a></td></tr>
+<tr class="inherit_header pub_methods_structLinearAlgebra_1_1ManagedArrayView"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_structLinearAlgebra_1_1ManagedArrayView')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="structLinearAlgebra_1_1ManagedArrayView.html">LinearAlgebra::ManagedArrayView&lt; T, S, A, U &gt;</a></td></tr>
 <tr class="memitem:a9ec83aa1363313ab77e35f8a6c890a36 inherit pub_methods_structLinearAlgebra_1_1ManagedArrayView"><td class="memItemLeft" align="right" valign="top"><a id="a9ec83aa1363313ab77e35f8a6c890a36"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>emplace_back</b> (Args &amp;&amp;...args)</td></tr>
 <tr class="separator:a9ec83aa1363313ab77e35f8a6c890a36 inherit pub_methods_structLinearAlgebra_1_1ManagedArrayView"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -249,7 +249,7 @@ constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>reserve</b>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>reserve</b> (<a class="el" href="structLinearAlgebra_1_1AxisInt.html">Row</a> M, <a class="el" href="structLinearAlgebra_1_1AxisInt.html">RowStride</a> X)</td></tr>
 <tr class="separator:ae79c3c4b62bcf7e03932ef0ac9956ef7 inherit pub_methods_structLinearAlgebra_1_1ManagedArrayView"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7232cfb495826cc2b6b6a8757f32da90 inherit pub_methods_structLinearAlgebra_1_1ManagedArrayView"><td class="memItemLeft" align="right" valign="top"><a id="a7232cfb495826cc2b6b6a8757f32da90"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>get_allocator</b> () const noexcept -&gt; std::allocator&lt; T &gt;</td></tr>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>get_allocator</b> () const noexcept -&gt; A</td></tr>
 <tr class="separator:a7232cfb495826cc2b6b6a8757f32da90 inherit pub_methods_structLinearAlgebra_1_1ManagedArrayView"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab7f59a3478307a2d1476469979926507 inherit pub_methods_structLinearAlgebra_1_1ManagedArrayView"><td class="memItemLeft" align="right" valign="top"><a id="ab7f59a3478307a2d1476469979926507"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getCapacity</b> () const -&gt; U</td></tr>
@@ -304,27 +304,27 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>diag</b> ()
 <tr class="memitem:ab71b8aee67646b045c1da4bb8b33291e inherit pub_methods_structLinearAlgebra_1_1MutArray"><td class="memItemLeft" align="right" valign="top"><a id="ab71b8aee67646b045c1da4bb8b33291e"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>antiDiag</b> () noexcept</td></tr>
 <tr class="separator:ab71b8aee67646b045c1da4bb8b33291e inherit pub_methods_structLinearAlgebra_1_1MutArray"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7533e8e3b4454621bba9802b657f4381 inherit pub_methods_structLinearAlgebra_1_1MutArray"><td class="memItemLeft" align="right" valign="top"><a id="a7533e8e3b4454621bba9802b657f4381"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> (const <a class="el" href="structLinearAlgebra_1_1SmallSparseMatrix.html">SmallSparseMatrix</a>&lt; T &gt; &amp;B) -&gt; MutPtrMatrix&lt; T &gt;</td></tr>
-<tr class="separator:a7533e8e3b4454621bba9802b657f4381 inherit pub_methods_structLinearAlgebra_1_1MutArray"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a996925a3317e35ad3f484d9577e52c9c inherit pub_methods_structLinearAlgebra_1_1MutArray"><td class="memItemLeft" align="right" valign="top"><a id="a996925a3317e35ad3f484d9577e52c9c"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> (const AbstractMatrix auto &amp;B) -&gt; MutPtrMatrix&lt; T &gt;</td></tr>
-<tr class="separator:a996925a3317e35ad3f484d9577e52c9c inherit pub_methods_structLinearAlgebra_1_1MutArray"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a586de9771aa29f4658391dc479611a71 inherit pub_methods_structLinearAlgebra_1_1MutArray"><td class="memItemLeft" align="right" valign="top"><a id="a586de9771aa29f4658391dc479611a71"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> (const std::integral auto b) -&gt; MutPtrMatrix&lt; T &gt;</td></tr>
-<tr class="separator:a586de9771aa29f4658391dc479611a71 inherit pub_methods_structLinearAlgebra_1_1MutArray"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab1f81dc19a2db163a006337aaff6e091 inherit pub_methods_structLinearAlgebra_1_1MutArray"><td class="memItemLeft" align="right" valign="top"><a id="ab1f81dc19a2db163a006337aaff6e091"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator+=</b> (const AbstractMatrix auto &amp;B) -&gt; MutPtrMatrix&lt; T &gt;</td></tr>
-<tr class="separator:ab1f81dc19a2db163a006337aaff6e091 inherit pub_methods_structLinearAlgebra_1_1MutArray"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9bfde88ca3cf6ecf803f9c2dabe39c74 inherit pub_methods_structLinearAlgebra_1_1MutArray"><td class="memItemLeft" align="right" valign="top"><a id="a9bfde88ca3cf6ecf803f9c2dabe39c74"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator-=</b> (const AbstractMatrix auto &amp;B) -&gt; MutPtrMatrix&lt; T &gt;</td></tr>
-<tr class="separator:a9bfde88ca3cf6ecf803f9c2dabe39c74 inherit pub_methods_structLinearAlgebra_1_1MutArray"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab1bc05be9092b17c3b01019c76e2b3a1 inherit pub_methods_structLinearAlgebra_1_1MutArray"><td class="memItemLeft" align="right" valign="top"><a id="ab1bc05be9092b17c3b01019c76e2b3a1"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator*=</b> (const std::integral auto b) -&gt; MutPtrMatrix&lt; T &gt;</td></tr>
-<tr class="separator:ab1bc05be9092b17c3b01019c76e2b3a1 inherit pub_methods_structLinearAlgebra_1_1MutArray"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a08e12a32671556ce7af785f16bca2aa5 inherit pub_methods_structLinearAlgebra_1_1MutArray"><td class="memItemLeft" align="right" valign="top"><a id="a08e12a32671556ce7af785f16bca2aa5"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator/=</b> (const std::integral auto b) -&gt; MutPtrMatrix&lt; T &gt;</td></tr>
-<tr class="separator:a08e12a32671556ce7af785f16bca2aa5 inherit pub_methods_structLinearAlgebra_1_1MutArray"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a015c27e7da9fef68704c2dda7cfb0903 inherit pub_methods_structLinearAlgebra_1_1MutArray"><td class="memItemLeft" align="right" valign="top"><a id="a015c27e7da9fef68704c2dda7cfb0903"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> (const <a class="el" href="structLinearAlgebra_1_1SmallSparseMatrix.html">SmallSparseMatrix</a>&lt; T &gt; &amp;B) -&gt; decltype(auto)</td></tr>
+<tr class="separator:a015c27e7da9fef68704c2dda7cfb0903 inherit pub_methods_structLinearAlgebra_1_1MutArray"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a051cbb75a4ca8509087f267dfc1bb891 inherit pub_methods_structLinearAlgebra_1_1MutArray"><td class="memItemLeft" align="right" valign="top"><a id="a051cbb75a4ca8509087f267dfc1bb891"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> (const AbstractMatrix auto &amp;B) -&gt; decltype(auto)</td></tr>
+<tr class="separator:a051cbb75a4ca8509087f267dfc1bb891 inherit pub_methods_structLinearAlgebra_1_1MutArray"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2eb799ad62da897bb5f49221b0c60ec7 inherit pub_methods_structLinearAlgebra_1_1MutArray"><td class="memItemLeft" align="right" valign="top"><a id="a2eb799ad62da897bb5f49221b0c60ec7"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> (const std::integral auto b) -&gt; decltype(auto)</td></tr>
+<tr class="separator:a2eb799ad62da897bb5f49221b0c60ec7 inherit pub_methods_structLinearAlgebra_1_1MutArray"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af1e27a079d09c558826898fc3d690b52 inherit pub_methods_structLinearAlgebra_1_1MutArray"><td class="memItemLeft" align="right" valign="top"><a id="af1e27a079d09c558826898fc3d690b52"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator+=</b> (const AbstractMatrix auto &amp;B) -&gt; decltype(auto)</td></tr>
+<tr class="separator:af1e27a079d09c558826898fc3d690b52 inherit pub_methods_structLinearAlgebra_1_1MutArray"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a112e2fe7b4875397e34cab45e7133368 inherit pub_methods_structLinearAlgebra_1_1MutArray"><td class="memItemLeft" align="right" valign="top"><a id="a112e2fe7b4875397e34cab45e7133368"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator-=</b> (const AbstractMatrix auto &amp;B) -&gt; decltype(auto)</td></tr>
+<tr class="separator:a112e2fe7b4875397e34cab45e7133368 inherit pub_methods_structLinearAlgebra_1_1MutArray"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8066a30862cf2177feeace4387104bce inherit pub_methods_structLinearAlgebra_1_1MutArray"><td class="memItemLeft" align="right" valign="top"><a id="a8066a30862cf2177feeace4387104bce"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator*=</b> (const std::integral auto b) -&gt; decltype(auto)</td></tr>
+<tr class="separator:a8066a30862cf2177feeace4387104bce inherit pub_methods_structLinearAlgebra_1_1MutArray"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a37f93f948b7a15a4945aa6abd3c66e7e inherit pub_methods_structLinearAlgebra_1_1MutArray"><td class="memItemLeft" align="right" valign="top"><a id="a37f93f948b7a15a4945aa6abd3c66e7e"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator/=</b> (const std::integral auto b) -&gt; decltype(auto)</td></tr>
+<tr class="separator:a37f93f948b7a15a4945aa6abd3c66e7e inherit pub_methods_structLinearAlgebra_1_1MutArray"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_methods_structLinearAlgebra_1_1Array"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_structLinearAlgebra_1_1Array')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="structLinearAlgebra_1_1Array.html">LinearAlgebra::Array&lt; T, S &gt;</a></td></tr>
 <tr class="memitem:aa7ad57d2ca296bc015edd8ff402a5ac7 inherit pub_methods_structLinearAlgebra_1_1Array"><td class="memItemLeft" align="right" valign="top"><a id="aa7ad57d2ca296bc015edd8ff402a5ac7"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>data</b> () const noexcept -&gt; const T *</td></tr>
@@ -332,12 +332,12 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>data</b> ()
 <tr class="memitem:ae6b613396b5a7920b7f66b9fb9267425 inherit pub_methods_structLinearAlgebra_1_1Array"><td class="memItemLeft" align="right" valign="top"><a id="ae6b613396b5a7920b7f66b9fb9267425"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>wrappedPtr</b> () noexcept -&gt; <a class="el" href="structNotNull.html">NotNull</a>&lt; T &gt;</td></tr>
 <tr class="separator:ae6b613396b5a7920b7f66b9fb9267425 inherit pub_methods_structLinearAlgebra_1_1Array"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a68390d6b8208df48bd77ce860831e9bc inherit pub_methods_structLinearAlgebra_1_1Array"><td class="memItemLeft" align="right" valign="top"><a id="a68390d6b8208df48bd77ce860831e9bc"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>begin</b> () const noexcept -&gt; const T *</td></tr>
-<tr class="separator:a68390d6b8208df48bd77ce860831e9bc inherit pub_methods_structLinearAlgebra_1_1Array"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8afe5cb9b8b0c46bff97cd14920d82f5 inherit pub_methods_structLinearAlgebra_1_1Array"><td class="memItemLeft" align="right" valign="top"><a id="a8afe5cb9b8b0c46bff97cd14920d82f5"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>end</b> () const noexcept -&gt; const T *</td></tr>
-<tr class="separator:a8afe5cb9b8b0c46bff97cd14920d82f5 inherit pub_methods_structLinearAlgebra_1_1Array"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a900ab383c05582138c5c0452639d86b5 inherit pub_methods_structLinearAlgebra_1_1Array"><td class="memItemLeft" align="right" valign="top"><a id="a900ab383c05582138c5c0452639d86b5"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>begin</b> () const noexcept</td></tr>
+<tr class="separator:a900ab383c05582138c5c0452639d86b5 inherit pub_methods_structLinearAlgebra_1_1Array"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:addc9cf70dee74b13caf9899e971e8e28 inherit pub_methods_structLinearAlgebra_1_1Array"><td class="memItemLeft" align="right" valign="top"><a id="addc9cf70dee74b13caf9899e971e8e28"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>end</b> () const noexcept</td></tr>
+<tr class="separator:addc9cf70dee74b13caf9899e971e8e28 inherit pub_methods_structLinearAlgebra_1_1Array"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2dba17e47cbd5d25d3809ab6c2a637e9 inherit pub_methods_structLinearAlgebra_1_1Array"><td class="memItemLeft" align="right" valign="top"><a id="a2dba17e47cbd5d25d3809ab6c2a637e9"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>rbegin</b> () const noexcept -&gt; const T *</td></tr>
 <tr class="separator:a2dba17e47cbd5d25d3809ab6c2a637e9 inherit pub_methods_structLinearAlgebra_1_1Array"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -396,6 +396,9 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>isExchangeM
 <tr class="memitem:a976f2494398129863de976350d387cea inherit pub_methods_structLinearAlgebra_1_1Array"><td class="memItemLeft" align="right" valign="top"><a id="a976f2494398129863de976350d387cea"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>isDiagonal</b> () const -&gt; bool</td></tr>
 <tr class="separator:a976f2494398129863de976350d387cea inherit pub_methods_structLinearAlgebra_1_1Array"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2c3fd489e40a6259bdbd4314a13a3109 inherit pub_methods_structLinearAlgebra_1_1Array"><td class="memItemLeft" align="right" valign="top"><a id="a2c3fd489e40a6259bdbd4314a13a3109"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>view</b> () const noexcept -&gt; <a class="el" href="structLinearAlgebra_1_1Array.html">Array</a>&lt; T, S &gt;</td></tr>
+<tr class="separator:a2c3fd489e40a6259bdbd4314a13a3109 inherit pub_methods_structLinearAlgebra_1_1Array"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9c07d7d271daa67e519036d538f6cc77 inherit pub_methods_structLinearAlgebra_1_1Array"><td class="memItemLeft" align="right" valign="top"><a id="a9c07d7d271daa67e519036d538f6cc77"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>extendOrAssertSize</b> (<a class="el" href="structLinearAlgebra_1_1AxisInt.html">Row</a> MM, <a class="el" href="structLinearAlgebra_1_1AxisInt.html">Col</a> NN) const</td></tr>
 <tr class="separator:a9c07d7d271daa67e519036d538f6cc77 inherit pub_methods_structLinearAlgebra_1_1Array"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -417,16 +420,16 @@ static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>iden
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="inherited"></a>
 Additional Inherited Members</h2></td></tr>
-<tr class="inherit_header pro_methods_structLinearAlgebra_1_1ManagedArrayView"><td colspan="2" onclick="javascript:toggleInherit('pro_methods_structLinearAlgebra_1_1ManagedArrayView')"><img src="closed.png" alt="-"/>&#160;Protected Member Functions inherited from <a class="el" href="structLinearAlgebra_1_1ManagedArrayView.html">LinearAlgebra::ManagedArrayView&lt; T, S, std::allocator&lt; T &gt;, default_capacity_type_t&lt; S &gt; &gt;</a></td></tr>
+<tr class="inherit_header pro_methods_structLinearAlgebra_1_1ManagedArrayView"><td colspan="2" onclick="javascript:toggleInherit('pro_methods_structLinearAlgebra_1_1ManagedArrayView')"><img src="closed.png" alt="-"/>&#160;Protected Member Functions inherited from <a class="el" href="structLinearAlgebra_1_1ManagedArrayView.html">LinearAlgebra::ManagedArrayView&lt; T, S, A, U &gt;</a></td></tr>
 <tr class="memitem:a3eb78ef75293344133fdb8c12925ee29 inherit pro_methods_structLinearAlgebra_1_1ManagedArrayView"><td class="memItemLeft" align="right" valign="top"><a id="a3eb78ef75293344133fdb8c12925ee29"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>allocateAtLeast</b> (U len)</td></tr>
 <tr class="separator:a3eb78ef75293344133fdb8c12925ee29 inherit pro_methods_structLinearAlgebra_1_1ManagedArrayView"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="inherit_header pro_attribs_structLinearAlgebra_1_1ManagedArrayView"><td colspan="2" onclick="javascript:toggleInherit('pro_attribs_structLinearAlgebra_1_1ManagedArrayView')"><img src="closed.png" alt="-"/>&#160;Protected Attributes inherited from <a class="el" href="structLinearAlgebra_1_1ManagedArrayView.html">LinearAlgebra::ManagedArrayView&lt; T, S, std::allocator&lt; T &gt;, default_capacity_type_t&lt; S &gt; &gt;</a></td></tr>
+<tr class="inherit_header pro_attribs_structLinearAlgebra_1_1ManagedArrayView"><td colspan="2" onclick="javascript:toggleInherit('pro_attribs_structLinearAlgebra_1_1ManagedArrayView')"><img src="closed.png" alt="-"/>&#160;Protected Attributes inherited from <a class="el" href="structLinearAlgebra_1_1ManagedArrayView.html">LinearAlgebra::ManagedArrayView&lt; T, S, A, U &gt;</a></td></tr>
 <tr class="memitem:a3c300cb809a518877ffb5481d37f3fd7 inherit pro_attribs_structLinearAlgebra_1_1ManagedArrayView"><td class="memItemLeft" align="right" valign="top"><a id="a3c300cb809a518877ffb5481d37f3fd7"></a>
 U&#160;</td><td class="memItemRight" valign="bottom"><b>capacity</b></td></tr>
 <tr class="separator:a3c300cb809a518877ffb5481d37f3fd7 inherit pro_attribs_structLinearAlgebra_1_1ManagedArrayView"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac49f3461dc2780097da89c6a4f563579 inherit pro_attribs_structLinearAlgebra_1_1ManagedArrayView"><td class="memItemLeft" align="right" valign="top"><a id="ac49f3461dc2780097da89c6a4f563579"></a>
-std::allocator&lt; T &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>allocator</b></td></tr>
+A&#160;</td><td class="memItemRight" valign="bottom"><b>allocator</b></td></tr>
 <tr class="separator:ac49f3461dc2780097da89c6a4f563579 inherit pro_attribs_structLinearAlgebra_1_1ManagedArrayView"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pro_attribs_structLinearAlgebra_1_1Array"><td colspan="2" onclick="javascript:toggleInherit('pro_attribs_structLinearAlgebra_1_1Array')"><img src="closed.png" alt="-"/>&#160;Protected Attributes inherited from <a class="el" href="structLinearAlgebra_1_1Array.html">LinearAlgebra::Array&lt; T, S &gt;</a></td></tr>
 <tr class="memitem:a0fe513ca0b1b207880827dd136ddd990 inherit pro_attribs_structLinearAlgebra_1_1Array"><td class="memItemLeft" align="right" valign="top"><a id="a0fe513ca0b1b207880827dd136ddd990"></a>
@@ -437,7 +440,7 @@ S&#160;</td><td class="memItemRight" valign="bottom"><b>sz</b> {}</td></tr>
 <tr class="separator:ad1ae937c1da85e0c28402e6ac6b0f5f6 inherit pro_attribs_structLinearAlgebra_1_1Array"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><h3>template&lt;class T, class S, size_t N = PreAllocStorage&lt;T&gt;(), class A = std::allocator&lt;T&gt;, std::unsigned_integral U = default_capacity_type_t&lt;S&gt;&gt;<br />
+<div class="textblock"><h3>template&lt;class T, class S, size_t N, class A, std::unsigned_integral U&gt;<br />
 struct LinearAlgebra::ManagedArray&lt; T, S, N, A, U &gt;</h3>
 
 <p>Stores memory, then pointer. Thus struct's alignment determines initial alignment of the stack memory. Information related to size is then grouped next to the pointer. </p>

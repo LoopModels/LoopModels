@@ -85,10 +85,10 @@ Inheritance diagram for LinearAlgebra::Array&lt; T, S &gt;:</div>
  <div class="center">
   <img src="structLinearAlgebra_1_1Array.png" usemap="#LinearAlgebra::Array_3C_20T_2C_20S_20_3E_map" alt=""/>
   <map id="LinearAlgebra::Array_3C_20T_2C_20S_20_3E_map" name="LinearAlgebra::Array_3C_20T_2C_20S_20_3E_map">
-<area href="structLinearAlgebra_1_1MutArray.html" alt="LinearAlgebra::MutArray&lt; T, S &gt;" shape="rect" coords="278,56,825,80"/>
-<area href="structLinearAlgebra_1_1ManagedArrayView.html" alt="LinearAlgebra::ManagedArrayView&lt; T, S, std::allocator&lt; T &gt;, default_capacity_type_t&lt; S &gt; &gt;" shape="rect" coords="0,112,547,136"/>
-<area href="structLinearAlgebra_1_1ManagedArrayView.html" alt="LinearAlgebra::ManagedArrayView&lt; T, S, A, U &gt;" shape="rect" coords="557,112,1104,136"/>
-<area href="structLinearAlgebra_1_1ManagedArray.html" alt="LinearAlgebra::ManagedArray&lt; T, S, N, A, U &gt;" shape="rect" coords="0,168,547,192"/>
+<area href="structLinearAlgebra_1_1MutArray.html" alt="LinearAlgebra::MutArray&lt; T, S &gt;" shape="rect" coords="153,56,449,80"/>
+<area href="structLinearAlgebra_1_1ManagedArrayView.html" alt="LinearAlgebra::ManagedArrayView&lt; T, S, A, U &gt;" shape="rect" coords="0,112,296,136"/>
+<area href="structLinearAlgebra_1_1ManagedArrayView.html" alt="LinearAlgebra::ManagedArrayView&lt; T, S, A, U &gt;" shape="rect" coords="306,112,602,136"/>
+<area href="structLinearAlgebra_1_1ManagedArray.html" alt="LinearAlgebra::ManagedArray&lt; T, S, N, A, U &gt;" shape="rect" coords="0,168,296,192"/>
   </map>
 </div></div>
 <table class="memberdecls">
@@ -130,12 +130,12 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>data</b> ()
 <tr class="memitem:ae6b613396b5a7920b7f66b9fb9267425"><td class="memItemLeft" align="right" valign="top"><a id="ae6b613396b5a7920b7f66b9fb9267425"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>wrappedPtr</b> () noexcept -&gt; <a class="el" href="structNotNull.html">NotNull</a>&lt; T &gt;</td></tr>
 <tr class="separator:ae6b613396b5a7920b7f66b9fb9267425"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a68390d6b8208df48bd77ce860831e9bc"><td class="memItemLeft" align="right" valign="top"><a id="a68390d6b8208df48bd77ce860831e9bc"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>begin</b> () const noexcept -&gt; const T *</td></tr>
-<tr class="separator:a68390d6b8208df48bd77ce860831e9bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8afe5cb9b8b0c46bff97cd14920d82f5"><td class="memItemLeft" align="right" valign="top"><a id="a8afe5cb9b8b0c46bff97cd14920d82f5"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>end</b> () const noexcept -&gt; const T *</td></tr>
-<tr class="separator:a8afe5cb9b8b0c46bff97cd14920d82f5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a900ab383c05582138c5c0452639d86b5"><td class="memItemLeft" align="right" valign="top"><a id="a900ab383c05582138c5c0452639d86b5"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>begin</b> () const noexcept</td></tr>
+<tr class="separator:a900ab383c05582138c5c0452639d86b5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:addc9cf70dee74b13caf9899e971e8e28"><td class="memItemLeft" align="right" valign="top"><a id="addc9cf70dee74b13caf9899e971e8e28"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>end</b> () const noexcept</td></tr>
+<tr class="separator:addc9cf70dee74b13caf9899e971e8e28"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2dba17e47cbd5d25d3809ab6c2a637e9"><td class="memItemLeft" align="right" valign="top"><a id="a2dba17e47cbd5d25d3809ab6c2a637e9"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>rbegin</b> () const noexcept -&gt; const T *</td></tr>
 <tr class="separator:a2dba17e47cbd5d25d3809ab6c2a637e9"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -194,6 +194,9 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>isExchangeM
 <tr class="memitem:a976f2494398129863de976350d387cea"><td class="memItemLeft" align="right" valign="top"><a id="a976f2494398129863de976350d387cea"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>isDiagonal</b> () const -&gt; bool</td></tr>
 <tr class="separator:a976f2494398129863de976350d387cea"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2c3fd489e40a6259bdbd4314a13a3109"><td class="memItemLeft" align="right" valign="top"><a id="a2c3fd489e40a6259bdbd4314a13a3109"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>view</b> () const noexcept -&gt; <a class="el" href="structLinearAlgebra_1_1Array.html">Array</a>&lt; T, S &gt;</td></tr>
+<tr class="separator:a2c3fd489e40a6259bdbd4314a13a3109"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9c07d7d271daa67e519036d538f6cc77"><td class="memItemLeft" align="right" valign="top"><a id="a9c07d7d271daa67e519036d538f6cc77"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>extendOrAssertSize</b> (<a class="el" href="structLinearAlgebra_1_1AxisInt.html">Row</a> MM, <a class="el" href="structLinearAlgebra_1_1AxisInt.html">Col</a> NN) const</td></tr>
 <tr class="separator:a9c07d7d271daa67e519036d538f6cc77"><td class="memSeparator" colspan="2">&#160;</td></tr>
