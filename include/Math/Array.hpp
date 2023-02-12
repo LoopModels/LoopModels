@@ -2,11 +2,12 @@
 
 #include "Math/AxisTypes.hpp"
 #include "Math/Indexing.hpp"
+#include "Math/Math.hpp"
 #include "Math/Matrix.hpp"
 #include "Math/MatrixDimensions.hpp"
 #include "Math/Vector.hpp"
-#include "TypePromotion.hpp"
 #include "Utilities/Invariant.hpp"
+#include "Utilities/Iterators.hpp"
 #include "Utilities/Optional.hpp"
 #include "Utilities/Valid.hpp"
 #include <algorithm>
@@ -38,6 +39,13 @@ static_assert(
 template <class T>
 using default_capacity_type_t = typename default_capacity_type<T>::type;
 
+template <class T> consteval auto PreAllocStorage() -> size_t {
+  constexpr size_t TotalBytes = 128;
+  constexpr size_t RemainingBytes =
+    TotalBytes - sizeof(llvm::SmallVector<T, 0>);
+  constexpr size_t N = RemainingBytes / sizeof(T);
+  return std::max<size_t>(1, N);
+}
 template <class T, class S, size_t N = PreAllocStorage<T>(),
           class A = std::allocator<T>,
           std::unsigned_integral U = default_capacity_type_t<S>>
@@ -66,11 +74,13 @@ template <class T, class S> struct Array {
     return this->ptr;
   }
 
-  [[nodiscard]] constexpr auto begin() const noexcept -> const T * {
-    return ptr;
+  [[nodiscard]] constexpr auto begin() const noexcept {
+    if constexpr (std::is_same_v<S, StridedRange>)
+      StridedIterator{(const T *)ptr, sz.stride};
+    else return (const T *)ptr;
   }
-  [[nodiscard]] constexpr auto end() const noexcept -> const T * {
-    return ptr + size_t(sz);
+  [[nodiscard]] constexpr auto end() const noexcept {
+    return begin() + size_t(sz);
   }
   [[nodiscard]] constexpr auto rbegin() const noexcept -> const T * {
     return std::reverse_iterator(end());
@@ -87,7 +97,7 @@ template <class T, class S> struct Array {
   constexpr auto operator[](Index<S> auto i) const noexcept {
     auto offset = calcOffset(sz, i);
     auto newDim = calcNewDim(sz, i);
-    if constexpr (std::is_same_v<decltype(newDim), void>) return ptr[offset];
+    if constexpr (std::is_same_v<decltype(newDim), Empty>) return ptr[offset];
     else return Array<T, decltype(newDim)>{ptr + offset, newDim};
   }
   // TODO: switch to operator[] when we enable c++23
@@ -147,6 +157,9 @@ template <class T, class S> struct Array {
         if (r != c && (*this)(r, c) != 0) return false;
     return true;
   }
+  constexpr auto view() const noexcept -> Array<T, S> {
+    return Array<T, S>{this->ptr, this->sz};
+  }
 #ifndef NDEBUG
   constexpr void extendOrAssertSize(Row MM, Col NN) const {
     assert(MM == numRow());
@@ -194,7 +207,7 @@ template <class T, class S> struct MutArray : Array<T, S> {
   constexpr auto operator[](Index<S> auto i) noexcept -> decltype(auto) {
     auto offset = calcOffset(this->sz, i);
     auto newDim = calcNewDim(this->sz, i);
-    if constexpr (std::is_same_v<decltype(newDim), void>)
+    if constexpr (std::is_same_v<decltype(newDim), Empty>)
       return this->ptr[offset];
     else return MutArray<T, decltype(newDim)>{this->ptr + offset, newDim};
   }
@@ -206,7 +219,6 @@ template <class T, class S> struct MutArray : Array<T, S> {
   constexpr void fill(T value) {
     std::fill_n((T *)(this->ptr), size_t(this->dim()), value);
   }
-
   [[nodiscard]] constexpr auto diag() noexcept {
     StridedRange r{min(Row{this->sz}, Col{this->sz}),
                    unsigned(RowStride{this->sz}) + 1};
@@ -219,7 +231,8 @@ template <class T, class S> struct MutArray : Array<T, S> {
   }
 
   [[gnu::flatten]] constexpr auto operator<<(const SmallSparseMatrix<T> &B)
-    -> MutPtrMatrix<T> {
+    -> decltype(auto) {
+    static_assert(MatrixDimension<S>);
     assert(this->numRow() == B.numRow());
     assert(this->numCol() == B.numCol());
     T *mem = data();
@@ -238,11 +251,11 @@ template <class T, class S> struct MutArray : Array<T, S> {
     return *this;
   }
   [[gnu::flatten]] constexpr auto operator<<(const AbstractMatrix auto &B)
-    -> MutPtrMatrix<T> {
+    -> decltype(auto) {
     return copyto(*this, B);
   }
   [[gnu::flatten]] constexpr auto operator<<(const std::integral auto b)
-    -> MutPtrMatrix<T> {
+    -> decltype(auto) {
     if constexpr (std::integral<S>) {
       for (size_t c = 0, L = this->sz; c < L; ++c) (*this)(c) = b;
     } else {
@@ -252,7 +265,7 @@ template <class T, class S> struct MutArray : Array<T, S> {
     return *this;
   }
   [[gnu::flatten]] constexpr auto operator+=(const AbstractMatrix auto &B)
-    -> MutPtrMatrix<T> {
+    -> decltype(auto) {
     static_assert(MatrixDimension<S>);
     invariant(this->numRow() == B.numRow());
     invariant(this->numCol() == B.numCol());
@@ -261,7 +274,7 @@ template <class T, class S> struct MutArray : Array<T, S> {
     return *this;
   }
   [[gnu::flatten]] constexpr auto operator-=(const AbstractMatrix auto &B)
-    -> MutPtrMatrix<T> {
+    -> decltype(auto) {
     static_assert(MatrixDimension<S>);
     invariant(this->numRow() == B.numRow());
     invariant(this->numCol() == B.numCol());
@@ -270,7 +283,7 @@ template <class T, class S> struct MutArray : Array<T, S> {
     return *this;
   }
   [[gnu::flatten]] constexpr auto operator*=(const std::integral auto b)
-    -> MutPtrMatrix<T> {
+    -> decltype(auto) {
     if constexpr (std::integral<S>) {
       for (size_t c = 0, L = this->sz; c < L; ++c) (*this)(c) *= b;
     } else {
@@ -280,7 +293,7 @@ template <class T, class S> struct MutArray : Array<T, S> {
     return *this;
   }
   [[gnu::flatten]] constexpr auto operator/=(const std::integral auto b)
-    -> MutPtrMatrix<T> {
+    -> decltype(auto) {
     if constexpr (std::integral<S>) {
       for (size_t c = 0, L = this->sz; c < L; ++c) (*this)(c) /= b;
     } else {
@@ -640,21 +653,11 @@ protected:
   }
 };
 
-template <class T> consteval auto PreAllocStorage() -> size_t {
-  constexpr size_t TotalBytes = 128;
-  constexpr size_t RemainingBytes =
-    TotalBytes - sizeof(llvm::SmallVector<T, 0>);
-  constexpr size_t N = RemainingBytes / sizeof(T);
-  return std::max<size_t>(1, N);
-}
-
 /// Stores memory, then pointer.
 /// Thus struct's alignment determines initial alignment
 /// of the stack memory.
 /// Information related to size is then grouped next to the pointer.
-template <class T, class S, size_t N = PreAllocStorage<T>(),
-          class A = std::allocator<T>,
-          std::unsigned_integral U = default_capacity_type_t<S>>
+template <class T, class S, size_t N, class A, std::unsigned_integral U>
 struct ManagedArray : ManagedArrayView<T, S, A, U> {
   static_assert(std::is_trivially_destructible_v<T>);
   using BaseT = ManagedArrayView<T, S, A, U>;
@@ -877,35 +880,14 @@ template <class T> using PtrVector = Array<T, unsigned>;
 static_assert(std::move_constructible<Vector<intptr_t>>);
 static_assert(std::copy_constructible<Vector<intptr_t>>);
 static_assert(std::copyable<Vector<intptr_t>>);
+static_assert(AbstractVector<Array<int64_t, unsigned>>);
+static_assert(AbstractVector<MutArray<int64_t, unsigned>>);
 static_assert(AbstractVector<Vector<int64_t>>);
 static_assert(!AbstractVector<int64_t>);
 
-static_assert(
-  std::weakly_incrementable<StridedVector<int64_t>::StridedIterator>);
-static_assert(
-  std::input_or_output_iterator<StridedVector<int64_t>::StridedIterator>);
+template <typename T> using StridedVector = Array<T, StridedRange>;
+template <typename T> using MutStridedVector = MutArray<T, StridedRange>;
 
-static_assert(std::indirectly_readable<StridedVector<int64_t>::StridedIterator>,
-              "failed indirectly readable");
-static_assert(
-  std::indirectly_readable<MutStridedVector<int64_t>::StridedIterator>,
-  "failed indirectly readable");
-static_assert(
-  std::output_iterator<MutStridedVector<int64_t>::StridedIterator, int>,
-  "failed output iterator");
-static_assert(std::forward_iterator<StridedVector<int64_t>::StridedIterator>,
-              "failed forward iterator");
-static_assert(std::input_iterator<StridedVector<int64_t>::StridedIterator>,
-              "failed input iterator");
-static_assert(
-  std::bidirectional_iterator<StridedVector<int64_t>::StridedIterator>,
-  "failed bidirectional iterator");
-
-static_assert(std::totally_ordered<StridedVector<int64_t>::StridedIterator>,
-              "failed random access iterator");
-static_assert(
-  std::random_access_iterator<StridedVector<int64_t>::StridedIterator>,
-  "failed random access iterator");
 static_assert(AbstractVector<StridedVector<int64_t>>);
 static_assert(std::is_trivially_copyable_v<StridedVector<int64_t>>);
 

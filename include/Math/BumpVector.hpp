@@ -1,5 +1,5 @@
 #pragma once
-#include "Math/Vector.hpp"
+#include "Math/Indexing.hpp"
 #include "Utilities/Allocators.hpp"
 #include <cstdint>
 #include <llvm/Support/Alignment.h>
@@ -34,16 +34,12 @@ template <typename T> struct BumpPtrVector {
     : mem(nullptr), Size(0), Capacity(0), Alloc(a.get_allocator()) {}
 
   [[gnu::flatten]] constexpr auto operator[](const ScalarIndex auto i) -> T & {
-#ifndef NDEBUG
-    checkIndex(size_t(Size), i);
-#endif
+    invariant(unsigned(i) < Size);
     return mem[canonicalize(i, Size)];
   }
   [[gnu::flatten]] constexpr auto operator[](const ScalarIndex auto i) const
     -> const T & {
-#ifndef NDEBUG
-    checkIndex(size_t(Size), i);
-#endif
+    invariant(unsigned(i) < Size);
     return mem[canonicalize(i, Size)];
   }
   [[nodiscard]] auto front() -> T & {

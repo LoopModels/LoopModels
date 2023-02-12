@@ -67,3 +67,92 @@ constexpr auto skipFirst(const auto &x) {
   auto b = x.begin();
   return Range{++b, x.end()};
 }
+
+template <typename T> struct StridedIterator {
+  using value_type = T;
+  T *ptr;
+  size_t stride;
+  constexpr auto operator==(const StridedIterator &other) const -> bool {
+    return ptr == other.ptr;
+  }
+  constexpr auto operator!=(const StridedIterator &other) const -> bool {
+    return ptr != other.ptr;
+  }
+  constexpr auto operator<(const StridedIterator &other) const -> bool {
+    return ptr < other.ptr;
+  }
+  constexpr auto operator>(const StridedIterator &other) const -> bool {
+    return ptr > other.ptr;
+  }
+  constexpr auto operator<=(const StridedIterator &other) const -> bool {
+    return ptr <= other.ptr;
+  }
+  constexpr auto operator>=(const StridedIterator &other) const -> bool {
+    return ptr >= other.ptr;
+  }
+  constexpr auto operator*() const -> T & { return *ptr; }
+  constexpr auto operator->() const -> T * { return ptr; }
+  constexpr auto operator++() -> StridedIterator & {
+    ptr += stride;
+    return *this;
+  }
+  constexpr auto operator++(int) -> StridedIterator {
+    auto tmp = *this;
+    ptr += stride;
+    return tmp;
+  }
+  constexpr auto operator--() -> StridedIterator & {
+    ptr -= stride;
+    return *this;
+  }
+  constexpr auto operator--(int) -> StridedIterator {
+    auto tmp = *this;
+    ptr -= stride;
+    return tmp;
+  }
+  constexpr auto operator+(size_t x) const -> StridedIterator {
+    return StridedIterator{ptr + x * stride, stride};
+  }
+  constexpr auto operator-(size_t x) const -> StridedIterator {
+    return StridedIterator{ptr - x * stride, stride};
+  }
+  constexpr auto operator+=(size_t x) -> StridedIterator & {
+    ptr += x * stride;
+    return *this;
+  }
+  constexpr auto operator-=(size_t x) -> StridedIterator & {
+    ptr -= x * stride;
+    return *this;
+  }
+  constexpr auto operator-(const StridedIterator &other) const -> ptrdiff_t {
+    invariant(stride == other.stride);
+    return (ptr - other.ptr) / stride;
+  }
+  constexpr auto operator+(const StridedIterator &other) const -> ptrdiff_t {
+    invariant(stride == other.stride);
+    return (ptr + other.ptr) / stride;
+  }
+  friend constexpr auto operator+(size_t x, const StridedIterator &it)
+    -> StridedIterator {
+    return it + x;
+  }
+};
+static_assert(std::weakly_incrementable<StridedIterator<int64_t>>);
+static_assert(std::input_or_output_iterator<StridedIterator<int64_t>>);
+static_assert(std::indirectly_readable<StridedIterator<int64_t>>,
+              "failed indirectly readable");
+static_assert(std::indirectly_readable<StridedIterator<int64_t>>,
+              "failed indirectly readable");
+static_assert(std::output_iterator<StridedIterator<int64_t>, size_t>,
+              "failed output iterator");
+static_assert(std::forward_iterator<StridedIterator<int64_t>>,
+              "failed forward iterator");
+static_assert(std::input_iterator<StridedIterator<int64_t>>,
+              "failed input iterator");
+static_assert(std::bidirectional_iterator<StridedIterator<int64_t>>,
+              "failed bidirectional iterator");
+
+static_assert(std::totally_ordered<StridedIterator<int64_t>>,
+              "failed random access iterator");
+static_assert(std::random_access_iterator<StridedIterator<int64_t>>,
+              "failed random access iterator");

@@ -99,22 +99,6 @@ constexpr auto canonicalizeRange(Colon, size_t M) -> Range<size_t, size_t> {
   return Range<size_t, size_t>{0, M};
 }
 
-#ifndef NDEBUG
-inline void checkIndex(size_t X, size_t x) { assert(x < X); }
-inline void checkIndex(size_t X, Begin) { assert(X > 0); }
-inline void checkIndex(size_t X, OffsetEnd x) { assert((x.offset - 1) < X); }
-inline void checkIndex(size_t X, OffsetBegin x) { assert(x.offset < X); }
-inline void checkIndex(size_t X, Range<size_t, size_t> x) {
-  assert(x.e >= x.b);
-  assert(X >= x.e);
-}
-template <typename B, typename E>
-inline void checkIndex(size_t M, Range<B, E> r) {
-  checkIndex(M, canonicalizeRange(r, M));
-}
-inline void checkIndex(size_t, Colon) {}
-#endif
-
 template <typename T>
 concept ScalarRowIndex = ScalarIndex<T> || std::same_as<T, Row>;
 template <typename T>
@@ -160,12 +144,15 @@ template <class R, class C>
 struct StridedRange {
   [[no_unique_address]] unsigned len;
   [[no_unique_address]] unsigned stride;
+  constexpr operator unsigned() const { return len; }
 };
 template <class I> constexpr auto calcOffset(StridedRange d, I i) -> size_t {
   return d.stride * calcOffset(d.len, i);
 };
 
-constexpr void calcNewDim(size_t, size_t){};
+struct Empty {};
+
+constexpr auto calcNewDim(size_t, size_t) -> Empty { return {}; };
 template <class B, class E>
 constexpr auto calcNewDim(size_t len, Range<B, E> r) {
   return calcNewDim(len, canonicalizeRange(r, len));
@@ -176,7 +163,9 @@ constexpr auto calcNewDim(size_t len, Range<size_t, size_t> r) {
   return r.e - r.b;
 };
 template <std::integral R, std::integral C>
-constexpr void calcNewDim(StridedDims, CartesianIndex<R, C>) {}
+constexpr auto calcNewDim(StridedDims, CartesianIndex<R, C>) -> Empty {
+  return {};
+}
 constexpr auto calcNewDim(std::integral auto len, Colon) { return len; };
 
 template <AbstractSlice B, std::integral C>
