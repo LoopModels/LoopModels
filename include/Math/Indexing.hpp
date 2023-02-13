@@ -137,8 +137,8 @@ template <class R, class C>
 [[nodiscard]] inline constexpr auto calcOffset(StridedDims d,
                                                CartesianIndex<R, C> i)
   -> size_t {
-  return size_t(RowStride{d} * calcOffset(size_t(Row{d}), i.row) +
-                calcOffset(size_t(Col{d}), i.col));
+  return size_t(RowStride{d} * calcOffset(size_t(Row{d}), size_t(i.row)) +
+                calcOffset(size_t(Col{d}), size_t(i.col)));
 }
 
 struct StridedRange {
@@ -171,7 +171,7 @@ constexpr auto calcNewDim(size_t len, Range<size_t, size_t> r) {
   invariant(r.b <= r.e);
   return r.e - r.b;
 };
-template <std::integral R, std::integral C>
+template <ScalarValueIndex R, ScalarValueIndex C>
 constexpr auto calcNewDim(StridedDims, CartesianIndex<R, C>) -> Empty {
   return {};
 }
@@ -185,7 +185,7 @@ constexpr auto calcNewDim(StridedDims d, CartesianIndex<B, C> i) {
 
 template <std::integral R, AbstractSlice C>
 constexpr auto calcNewDim(StridedDims d, CartesianIndex<R, C> i) {
-  return calcNewDim(size_t(Col{d}), i.col);
+  return calcNewDim(size_t(Col{d}), size_t(i.col));
 }
 
 template <AbstractSlice B, AbstractSlice C>

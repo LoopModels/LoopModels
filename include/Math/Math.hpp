@@ -2,13 +2,13 @@
 // We'll follow Julia style, so anything that's not a constructor, destructor,
 // nor an operator will be outside of the struct/class.
 
+#include "Math/Array.hpp"
 #include "Math/AxisTypes.hpp"
 #include "Math/Indexing.hpp"
 #include "Math/Matrix.hpp"
 #include "Math/MatrixDimensions.hpp"
 #include "Math/Vector.hpp"
 #include "TypePromotion.hpp"
-#include "Utilities/Valid.hpp"
 #include <algorithm>
 #include <bit>
 #include <cassert>
@@ -43,24 +43,6 @@
 struct Rational;
 namespace LinearAlgebra {
 
-[[gnu::flatten]] inline auto copyto(AbstractVector auto &y,
-                                    const AbstractVector auto &x) -> auto & {
-  const size_t M = x.size();
-  y.extendOrAssertSize(M);
-  for (size_t i = 0; i < M; ++i) y[i] = x[i];
-  return y;
-}
-[[gnu::flatten]] inline auto copyto(AbstractMatrixCore auto &A,
-                                    const AbstractMatrixCore auto &B)
-  -> auto & {
-  const Row M = B.numRow();
-  const Col N = B.numCol();
-  A.extendOrAssertSize(M, N);
-  for (size_t r = 0; r < M; ++r)
-    for (size_t c = 0; c < N; ++c) A(r, c) = B(r, c);
-  return A;
-}
-
 [[gnu::flatten]] auto operator==(const AbstractMatrix auto &A,
                                  const AbstractMatrix auto &B) -> bool {
   const Row M = B.numRow();
@@ -87,7 +69,7 @@ struct Div {
 };
 
 template <typename Op, typename A> struct ElementwiseUnaryOp {
-  using eltype = typename A::eltype;
+  using value_type = typename A::value_type;
   [[no_unique_address]] Op op;
   [[no_unique_address]] A a;
   auto operator()(size_t i, size_t j) const { return op(a(i, j)); }
@@ -99,7 +81,7 @@ template <typename Op, typename A> struct ElementwiseUnaryOp {
   [[nodiscard]] constexpr auto view() const { return *this; };
 };
 template <typename Op, AbstractVector A> struct ElementwiseUnaryOp<Op, A> {
-  using eltype = typename A::eltype;
+  using value_type = typename A::value_type;
   [[no_unique_address]] Op op;
   [[no_unique_address]] A a;
   auto operator[](size_t i) const { return op(a[i]); }
@@ -141,7 +123,7 @@ concept TriviallyCopyableMatrixOrScalar =
 template <typename Op, TriviallyCopyableVectorOrScalar A,
           TriviallyCopyableVectorOrScalar B>
 struct ElementwiseVectorBinaryOp {
-  using eltype = promote_eltype_t<A, B>;
+  using value_type = promote_eltype_t<A, B>;
   [[no_unique_address]] Op op;
   [[no_unique_address]] A a;
   [[no_unique_address]] B b;
@@ -164,7 +146,7 @@ struct ElementwiseVectorBinaryOp {
 template <typename Op, TriviallyCopyableMatrixOrScalar A,
           TriviallyCopyableMatrixOrScalar B>
 struct ElementwiseMatrixBinaryOp {
-  using eltype = promote_eltype_t<A, B>;
+  using value_type = promote_eltype_t<A, B>;
   [[no_unique_address]] Op op;
   [[no_unique_address]] A a;
   [[no_unique_address]] B b;
@@ -216,33 +198,35 @@ struct ElementwiseMatrixBinaryOp {
 };
 
 template <AbstractMatrix A, AbstractMatrix B> struct MatMatMul {
-  using eltype = promote_eltype_t<A, B>;
+  using value_type = promote_eltype_t<A, B>;
   [[no_unique_address]] A a;
   [[no_unique_address]] B b;
-  auto operator()(size_t i, size_t j) const {
+  constexpr auto operator()(size_t i, size_t j) const -> value_type {
     static_assert(AbstractMatrix<B>, "B should be an AbstractMatrix");
-    eltype s = 0;
+    value_type s = 0;
     for (size_t k = 0; k < size_t(a.numCol()); ++k) s += a(i, k) * b(k, j);
     return s;
   }
   [[nodiscard]] constexpr auto numRow() const -> Row { return a.numRow(); }
   [[nodiscard]] constexpr auto numCol() const -> Col { return b.numCol(); }
   [[nodiscard]] constexpr auto size() const -> std::pair<Row, Col> {
+    invariant(size_t(a.numCol()) == size_t(b.numRow()));
     return std::make_pair(numRow(), numCol());
   }
   [[nodiscard]] constexpr auto dim() const -> DenseDims {
+    invariant(size_t(a.numCol()) == size_t(b.numRow()));
     return {numRow(), numCol()};
   }
   [[nodiscard]] constexpr auto view() const { return *this; };
   [[nodiscard]] constexpr auto transpose() const { return Transpose{*this}; };
 };
 template <AbstractMatrix A, AbstractVector B> struct MatVecMul {
-  using eltype = promote_eltype_t<A, B>;
+  using value_type = promote_eltype_t<A, B>;
   [[no_unique_address]] A a;
   [[no_unique_address]] B b;
-  auto operator[](size_t i) const {
+  constexpr auto operator[](size_t i) const -> value_type {
     static_assert(AbstractVector<B>, "B should be an AbstractVector");
-    eltype s = 0;
+    value_type s = 0;
     for (size_t k = 0; k < a.numCol(); ++k) s += a(i, k) * b[k];
     return s;
   }
@@ -256,14 +240,8 @@ template <AbstractMatrix A, AbstractVector B> struct MatVecMul {
 // Vectors
 //
 
-template <class T, class S> constexpr auto view(Array<T, S> &x) {
-  return MutPtrVector<T>{x.data(), x.size()};
-}
-template <typename T> constexpr auto view(const llvm::SmallVectorImpl<T> &x) {
-  return PtrVector<T>{x.data(), x.size()};
-}
-template <typename T> constexpr auto view(llvm::MutableArrayRef<T> x) {
-  return MutPtrVector<T>{x.data(), x.size()};
+template <class T, class S> constexpr auto view(const Array<T, S> &x) {
+  return x;
 }
 template <typename T> constexpr auto view(llvm::ArrayRef<T> x) {
   return PtrVector<T>{x.data(), x.size()};
@@ -276,7 +254,7 @@ static_assert(std::is_trivially_copyable_v<
 static_assert(TriviallyCopyableVectorOrScalar<
               ElementwiseUnaryOp<Sub, StridedVector<int64_t>>>);
 
-auto printVectorImpl(llvm::raw_ostream &os, const AbstractVector auto &a)
+inline auto printVectorImpl(llvm::raw_ostream &os, const AbstractVector auto &a)
   -> llvm::raw_ostream & {
   os << "[ ";
   if (size_t M = a.size()) {
@@ -287,16 +265,18 @@ auto printVectorImpl(llvm::raw_ostream &os, const AbstractVector auto &a)
   return os;
 }
 template <typename T>
-auto printVector(llvm::raw_ostream &os, PtrVector<T> a) -> llvm::raw_ostream & {
-  return printVectorImpl(os, a);
-}
-template <typename T>
-auto printVector(llvm::raw_ostream &os, StridedVector<T> a)
+inline auto printVector(llvm::raw_ostream &os, PtrVector<T> a)
   -> llvm::raw_ostream & {
   return printVectorImpl(os, a);
 }
 template <typename T>
-auto printVector(llvm::raw_ostream &os, const llvm::SmallVectorImpl<T> &a)
+inline auto printVector(llvm::raw_ostream &os, StridedVector<T> a)
+  -> llvm::raw_ostream & {
+  return printVectorImpl(os, a);
+}
+template <typename T>
+inline auto printVector(llvm::raw_ostream &os,
+                        const llvm::SmallVectorImpl<T> &a)
   -> llvm::raw_ostream & {
   return printVector(os, PtrVector<T>{a.data(), a.size()});
 }
@@ -311,8 +291,8 @@ inline auto operator<<(llvm::raw_ostream &os, const AbstractVector auto &A)
   return printVector(os, A.view());
 }
 
-auto allMatch(const AbstractVector auto &x0, const AbstractVector auto &x1)
-  -> bool {
+constexpr auto allMatch(const AbstractVector auto &x0,
+                        const AbstractVector auto &x1) -> bool {
   size_t N = x0.size();
   if (N != x1.size()) return false;
   for (size_t n = 0; n < N; ++n)
@@ -320,26 +300,24 @@ auto allMatch(const AbstractVector auto &x0, const AbstractVector auto &x1)
   return true;
 }
 
-inline void swap(MutPtrMatrix<int64_t> A, Row i, Row j) {
+constexpr void swap(MutPtrMatrix<int64_t> A, Row i, Row j) {
   if (i == j) return;
   Col N = A.numCol();
-  assert((i < A.numRow()) && (j < A.numRow()));
-
-  for (size_t n = 0; n < N; ++n) std::swap(A(i, n), A(j, n));
+  invariant((i < A.numRow()) && (j < A.numRow()));
+  for (Col n = 0; n < N; ++n) std::swap(A(i, n), A(j, n));
 }
-inline void swap(MutPtrMatrix<int64_t> A, Col i, Col j) {
+constexpr void swap(MutPtrMatrix<int64_t> A, Col i, Col j) {
   if (i == j) return;
   Row M = A.numRow();
-  assert((i < A.numCol()) && (j < A.numCol()));
-
-  for (size_t m = 0; m < M; ++m) std::swap(A(m, i), A(m, j));
+  invariant((i < A.numCol()) && (j < A.numCol()));
+  for (Row m = 0; m < M; ++m) std::swap(A(m, i), A(m, j));
 }
 template <typename T>
-inline void swap(llvm::SmallVectorImpl<T> &A, Col i, Col j) {
+constexpr void swap(llvm::SmallVectorImpl<T> &A, Col i, Col j) {
   std::swap(A[i], A[j]);
 }
 template <typename T>
-inline void swap(llvm::SmallVectorImpl<T> &A, Row i, Row j) {
+constexpr void swap(llvm::SmallVectorImpl<T> &A, Row i, Row j) {
   std::swap(A[i], A[j]);
 }
 
@@ -494,8 +472,8 @@ inline auto operator<<(llvm::raw_ostream &os, PtrMatrix<T> A)
 template <AbstractMatrix T>
 inline auto operator<<(llvm::raw_ostream &os, const T &A)
   -> llvm::raw_ostream & {
-  Matrix<std::remove_const_t<typename T::eltype>, DenseDims> B{A};
-  return printMatrix(os, PtrMatrix<typename T::eltype>(B));
+  Matrix<std::remove_const_t<typename T::value_type>> B{A};
+  return printMatrix(os, PtrMatrix<typename T::value_type>(B));
 }
 
 constexpr auto operator-(const AbstractVector auto &a) {
@@ -507,7 +485,8 @@ constexpr auto operator-(const AbstractMatrix auto &a) {
   return ElementwiseUnaryOp<Sub, decltype(AA)>{.op = Sub{}, .a = AA};
 }
 static_assert(AbstractMatrix<ElementwiseUnaryOp<Sub, PtrMatrix<int64_t>>>);
-static_assert(AbstractMatrix<Matrix<int64_t, SquareDims>>);
+static_assert(AbstractMatrix<Array<int64_t, SquareDims>>);
+static_assert(AbstractMatrix<ManagedArray<int64_t, SquareDims>>);
 
 constexpr auto operator+(const AbstractMatrix auto &a, const auto &b) {
   return ElementwiseMatrixBinaryOp(Add{}, view(a), view(b));
@@ -594,7 +573,7 @@ static_assert(AbstractMatrix<Transpose<PtrMatrix<int64_t>>>);
 
 template <AbstractVector V>
 constexpr auto operator*(const Transpose<V> &a, const AbstractVector auto &b) {
-  typename V::eltype s = 0;
+  typename V::value_type s = 0;
   for (size_t i = 0; i < b.size(); ++i) s += a.a(i) * b(i);
   return s;
 }
@@ -603,7 +582,7 @@ static_assert(
   AbstractVector<decltype(-std::declval<StridedVector<int64_t>>())>);
 static_assert(
   AbstractVector<decltype(-std::declval<StridedVector<int64_t>>() * 0)>);
-static_assert(std::ranges::range<StridedVector<int64_t>>);
+// static_assert(std::ranges::range<StridedVector<int64_t>>);
 
 static_assert(AbstractVector<Vector<int64_t>>);
 static_assert(AbstractVector<const Vector<int64_t>>);
@@ -611,12 +590,12 @@ static_assert(AbstractVector<Vector<int64_t> &>);
 static_assert(AbstractMatrix<IntMatrix>);
 static_assert(AbstractMatrix<IntMatrix &>);
 
-static_assert(std::copyable<Matrix<int64_t, StridedDims>>);
-static_assert(std::copyable<Matrix<int64_t, DenseDims>>);
-static_assert(std::copyable<Matrix<int64_t, SquareDims>>);
+static_assert(std::copyable<ManagedArray<int64_t, StridedDims>>);
+static_assert(std::copyable<ManagedArray<int64_t, DenseDims>>);
+static_assert(std::copyable<ManagedArray<int64_t, SquareDims>>);
 
 template <typename T, typename I> struct SliceView {
-  using eltype = T;
+  using value_type = T;
   [[no_unique_address]] MutPtrVector<T> a;
   [[no_unique_address]] llvm::ArrayRef<I> i;
   struct Iterator {

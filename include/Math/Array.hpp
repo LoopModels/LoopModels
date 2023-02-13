@@ -19,32 +19,6 @@
 
 namespace LinearAlgebra {
 
-template <class T>
-concept SizeMultiple8 = (sizeof(T) % 8) == 0;
-
-template <class T> struct default_capacity_type {
-  using type = unsigned int;
-};
-template <SizeMultiple8 T> struct default_capacity_type<T> {
-  using type = std::size_t;
-};
-static_assert(!SizeMultiple8<uint32_t>);
-static_assert(SizeMultiple8<uint64_t>);
-static_assert(
-  std::is_same_v<typename default_capacity_type<uint32_t>::type, uint32_t>);
-static_assert(
-  std::is_same_v<typename default_capacity_type<uint64_t>::type, uint64_t>);
-
-template <class T>
-using default_capacity_type_t = typename default_capacity_type<T>::type;
-
-template <class T> consteval auto PreAllocStorage() -> size_t {
-  constexpr size_t TotalBytes = 128;
-  constexpr size_t RemainingBytes =
-    TotalBytes - sizeof(llvm::SmallVector<T, 0>);
-  constexpr size_t N = RemainingBytes / sizeof(T);
-  return std::max<size_t>(1, N);
-}
 template <class T, class S, size_t N = PreAllocStorage<T>(),
           class A = std::allocator<T>,
           std::unsigned_integral U = default_capacity_type_t<S>>
@@ -66,9 +40,9 @@ template <class T, class S> struct Array {
   using const_pointer = const T *;
 
   constexpr Array(const Array &) = default;
-  constexpr Array(Array &&) = default;
-  constexpr Array &operator=(const Array &) = default;
-  constexpr Array &operator=(Array &&) = default;
+  constexpr Array(Array &&) noexcept = default;
+  constexpr auto operator=(const Array &) -> Array & = default;
+  constexpr auto operator=(Array &&) noexcept -> Array & = default;
   constexpr Array(T *p, S s) : ptr(p), sz(s) {}
   constexpr Array(NotNull<T> p, S s) : ptr(p), sz(s) {}
   constexpr Array(T *p, Row r, Col c)
@@ -171,7 +145,7 @@ template <class T, class S> struct Array {
         if (r != c && (*this)(r, c) != 0) return false;
     return true;
   }
-  constexpr auto view() const noexcept -> Array<T, S> {
+  [[nodiscard]] constexpr auto view() const noexcept -> Array<T, S> {
     return Array<T, S>{this->ptr, this->sz};
   }
 #ifndef NDEBUG
@@ -205,9 +179,9 @@ template <class T, class S> struct MutArray : Array<T, S> {
   using BaseT::operator[], BaseT::operator();
 
   constexpr MutArray(const MutArray &) = default;
-  constexpr MutArray(MutArray &&) = default;
-  constexpr MutArray &operator=(const MutArray &) = default;
-  constexpr MutArray &operator=(MutArray &&) = default;
+  constexpr MutArray(MutArray &&) noexcept = default;
+  constexpr auto operator=(const MutArray &) -> MutArray & = default;
+  constexpr auto operator=(MutArray &&) noexcept -> MutArray & = default;
 
   template <class... Args>
   constexpr MutArray(Args &&...args)
@@ -280,12 +254,27 @@ template <class T, class S> struct MutArray : Array<T, S> {
   }
   [[gnu::flatten]] constexpr auto operator<<(const AbstractVector auto &B)
     -> decltype(auto) {
-    return copyto(*this, B);
+    if constexpr (MatrixDimension<S>) {
+      invariant(this->numRow() == B.size());
+      for (size_t i = 0; i < this->numRow(); ++i) {
+        T Bi = B[i];
+        for (size_t j = 0; j < this->numCol(); ++j) (*this)(i, j) = Bi;
+      }
+    } else {
+      invariant(this->size() == B.size());
+      for (size_t i = 0; i < this->size(); ++i) (*this)[i] = B[i];
+    }
+    return *this;
   }
 
   [[gnu::flatten]] constexpr auto operator<<(const AbstractMatrix auto &B)
     -> decltype(auto) {
-    return copyto(*this, B);
+    static_assert(MatrixDimension<S>);
+    invariant(this->numRow() == B.numRow());
+    invariant(this->numCol() == B.numCol());
+    for (size_t i = 0; i < this->numRow(); ++i)
+      for (size_t j = 0; j < this->numCol(); ++j) (*this)(i, j) = B(i, j);
+    return *this;
   }
   [[gnu::flatten]] constexpr auto operator<<(const std::integral auto b)
     -> decltype(auto) {

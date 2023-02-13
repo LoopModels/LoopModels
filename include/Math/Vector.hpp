@@ -18,4 +18,33 @@ concept AbstractVector =
                     // {t.extendOrAssertSize(i)};
                   };
 
+// This didn't work: #include "Math/Vector.hpp" NOLINT(unused-includes)
+// so I moved some code from "Math/Array.hpp" here instead.
+template <class T>
+concept SizeMultiple8 = (sizeof(T) % 8) == 0;
+
+template <class T> struct default_capacity_type {
+  using type = unsigned int;
+};
+template <SizeMultiple8 T> struct default_capacity_type<T> {
+  using type = std::size_t;
+};
+static_assert(!SizeMultiple8<uint32_t>);
+static_assert(SizeMultiple8<uint64_t>);
+static_assert(
+  std::is_same_v<typename default_capacity_type<uint32_t>::type, uint32_t>);
+static_assert(
+  std::is_same_v<typename default_capacity_type<uint64_t>::type, uint64_t>);
+
+template <class T>
+using default_capacity_type_t = typename default_capacity_type<T>::type;
+
+template <class T> consteval auto PreAllocStorage() -> size_t {
+  constexpr size_t TotalBytes = 128;
+  constexpr size_t RemainingBytes =
+    TotalBytes - sizeof(llvm::SmallVector<T, 0>);
+  constexpr size_t N = RemainingBytes / sizeof(T);
+  return std::max<size_t>(1, N);
+}
+
 } // namespace LinearAlgebra
