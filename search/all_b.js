@@ -12,5 +12,6 @@ var searchData=
   ['mockgraph_114',['MockGraph',['../structMockGraph.html',1,'']]],
   ['mockvertex_115',['MockVertex',['../structMockVertex.html',1,'']]],
   ['mul_116',['Mul',['../structLinearAlgebra_1_1Mul.html',1,'LinearAlgebra']]],
-  ['mutarray_117',['MutArray',['../structLinearAlgebra_1_1MutArray.html',1,'LinearAlgebra']]]
+  ['mutarray_117',['MutArray',['../structLinearAlgebra_1_1MutArray.html',1,'LinearAlgebra']]],
+  ['mutarray_3c_20t_20_3e_118',['MutArray&lt; T &gt;',['../structLinearAlgebra_1_1MutArray.html',1,'LinearAlgebra']]]
 ];

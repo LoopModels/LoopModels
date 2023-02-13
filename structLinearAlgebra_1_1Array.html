@@ -85,10 +85,11 @@ Inheritance diagram for LinearAlgebra::Array&lt; T, S &gt;:</div>
  <div class="center">
   <img src="structLinearAlgebra_1_1Array.png" usemap="#LinearAlgebra::Array_3C_20T_2C_20S_20_3E_map" alt=""/>
   <map id="LinearAlgebra::Array_3C_20T_2C_20S_20_3E_map" name="LinearAlgebra::Array_3C_20T_2C_20S_20_3E_map">
-<area href="structLinearAlgebra_1_1MutArray.html" alt="LinearAlgebra::MutArray&lt; T, S &gt;" shape="rect" coords="153,56,449,80"/>
-<area href="structLinearAlgebra_1_1ManagedArrayView.html" alt="LinearAlgebra::ManagedArrayView&lt; T, S, A, U &gt;" shape="rect" coords="0,112,296,136"/>
-<area href="structLinearAlgebra_1_1ManagedArrayView.html" alt="LinearAlgebra::ManagedArrayView&lt; T, S, A, U &gt;" shape="rect" coords="306,112,602,136"/>
-<area href="structLinearAlgebra_1_1ManagedArray.html" alt="LinearAlgebra::ManagedArray&lt; T, S, N, A, U &gt;" shape="rect" coords="0,168,296,192"/>
+<area href="structLinearAlgebra_1_1MutArray.html" alt="LinearAlgebra::MutArray&lt; T &gt;" shape="rect" coords="0,56,296,80"/>
+<area href="structLinearAlgebra_1_1MutArray.html" alt="LinearAlgebra::MutArray&lt; T, S &gt;" shape="rect" coords="306,56,602,80"/>
+<area href="structLinearAlgebra_1_1ManagedArrayView.html" alt="LinearAlgebra::ManagedArrayView&lt; T, S, A, U &gt;" shape="rect" coords="153,112,449,136"/>
+<area href="structLinearAlgebra_1_1ManagedArrayView.html" alt="LinearAlgebra::ManagedArrayView&lt; T, S, A, U &gt;" shape="rect" coords="459,112,755,136"/>
+<area href="structLinearAlgebra_1_1ManagedArray.html" alt="LinearAlgebra::ManagedArray&lt; T, S, N, A, U &gt;" shape="rect" coords="153,168,449,192"/>
   </map>
 </div></div>
 <table class="memberdecls">
@@ -124,6 +125,30 @@ using&#160;</td><td class="memItemRight" valign="bottom"><b>const_pointer</b> = 
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
+<tr class="memitem:aa29d000ef46c3b876795b7a21a8ca381"><td class="memItemLeft" align="right" valign="top"><a id="aa29d000ef46c3b876795b7a21a8ca381"></a>
+constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Array</b> (const <a class="el" href="structLinearAlgebra_1_1Array.html">Array</a> &amp;)=default</td></tr>
+<tr class="separator:aa29d000ef46c3b876795b7a21a8ca381"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a266002b013bb80e52fc45c26ad461065"><td class="memItemLeft" align="right" valign="top"><a id="a266002b013bb80e52fc45c26ad461065"></a>
+constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Array</b> (<a class="el" href="structLinearAlgebra_1_1Array.html">Array</a> &amp;&amp;)=default</td></tr>
+<tr class="separator:a266002b013bb80e52fc45c26ad461065"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aba7790635e12d7d49ec3d1e5a5c108c2"><td class="memItemLeft" align="right" valign="top"><a id="aba7790635e12d7d49ec3d1e5a5c108c2"></a>
+constexpr <a class="el" href="structLinearAlgebra_1_1Array.html">Array</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>operator=</b> (const <a class="el" href="structLinearAlgebra_1_1Array.html">Array</a> &amp;)=default</td></tr>
+<tr class="separator:aba7790635e12d7d49ec3d1e5a5c108c2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2e7a6725d69861a383ccc664c744b739"><td class="memItemLeft" align="right" valign="top"><a id="a2e7a6725d69861a383ccc664c744b739"></a>
+constexpr <a class="el" href="structLinearAlgebra_1_1Array.html">Array</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>operator=</b> (<a class="el" href="structLinearAlgebra_1_1Array.html">Array</a> &amp;&amp;)=default</td></tr>
+<tr class="separator:a2e7a6725d69861a383ccc664c744b739"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac15ec27d41dcf03d2dedcc28cd3f0d80"><td class="memItemLeft" align="right" valign="top"><a id="ac15ec27d41dcf03d2dedcc28cd3f0d80"></a>
+constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Array</b> (T *p, S s)</td></tr>
+<tr class="separator:ac15ec27d41dcf03d2dedcc28cd3f0d80"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad136d92a4aa865a7f44c75e17c924294"><td class="memItemLeft" align="right" valign="top"><a id="ad136d92a4aa865a7f44c75e17c924294"></a>
+constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Array</b> (<a class="el" href="structNotNull.html">NotNull</a>&lt; T &gt; p, S s)</td></tr>
+<tr class="separator:ad136d92a4aa865a7f44c75e17c924294"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2d241a2c984ec6c8cb441af365d7ac31"><td class="memItemLeft" align="right" valign="top"><a id="a2d241a2c984ec6c8cb441af365d7ac31"></a>
+constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Array</b> (T *p, <a class="el" href="structLinearAlgebra_1_1AxisInt.html">Row</a> r, <a class="el" href="structLinearAlgebra_1_1AxisInt.html">Col</a> c)</td></tr>
+<tr class="separator:a2d241a2c984ec6c8cb441af365d7ac31"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a876fd5ea46a1e5449332f60ebe584b9e"><td class="memItemLeft" align="right" valign="top"><a id="a876fd5ea46a1e5449332f60ebe584b9e"></a>
+constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Array</b> (<a class="el" href="structNotNull.html">NotNull</a>&lt; T &gt; p, <a class="el" href="structLinearAlgebra_1_1AxisInt.html">Row</a> r, <a class="el" href="structLinearAlgebra_1_1AxisInt.html">Col</a> c)</td></tr>
+<tr class="separator:a876fd5ea46a1e5449332f60ebe584b9e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa7ad57d2ca296bc015edd8ff402a5ac7"><td class="memItemLeft" align="right" valign="top"><a id="aa7ad57d2ca296bc015edd8ff402a5ac7"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>data</b> () const noexcept -&gt; const T *</td></tr>
 <tr class="separator:aa7ad57d2ca296bc015edd8ff402a5ac7"><td class="memSeparator" colspan="2">&#160;</td></tr>

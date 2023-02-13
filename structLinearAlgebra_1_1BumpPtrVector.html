@@ -141,14 +141,14 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>back</b> () const -&g
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>isEmpty</b> () const -&gt; bool</td></tr>
 <tr class="separator:abefb4ba7829100a9a4f7810ba01adb0b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a99ce027975957ad965cb54165d9100b5"><td class="memItemLeft" align="right" valign="top"><a id="a99ce027975957ad965cb54165d9100b5"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator[]</b> (<a class="el" href="structRange.html">Range</a>&lt; size_t, size_t &gt; i) -&gt; MutPtrVector&lt; T &gt;</td></tr>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator[]</b> (<a class="el" href="structRange.html">Range</a>&lt; size_t, size_t &gt; i) -&gt; <a class="el" href="structLinearAlgebra_1_1MutArray.html">MutPtrVector</a>&lt; T &gt;</td></tr>
 <tr class="separator:a99ce027975957ad965cb54165d9100b5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a072f119b94611b33c4d8e8d50702db60"><td class="memItemLeft" align="right" valign="top"><a id="a072f119b94611b33c4d8e8d50702db60"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator[]</b> (<a class="el" href="structRange.html">Range</a>&lt; size_t, size_t &gt; i) const -&gt; <a class="el" href="structLinearAlgebra_1_1Array.html">PtrVector</a>&lt; T &gt;</td></tr>
 <tr class="separator:a072f119b94611b33c4d8e8d50702db60"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae728cd2fd34ba80bea992394119745f2"><td class="memTemplParams" colspan="2"><a id="ae728cd2fd34ba80bea992394119745f2"></a>
 template&lt;typename F , typename L &gt; </td></tr>
-<tr class="memitem:ae728cd2fd34ba80bea992394119745f2"><td class="memTemplItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>operator[]</b> (<a class="el" href="structRange.html">Range</a>&lt; F, L &gt; i) -&gt; MutPtrVector&lt; T &gt;</td></tr>
+<tr class="memitem:ae728cd2fd34ba80bea992394119745f2"><td class="memTemplItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>operator[]</b> (<a class="el" href="structRange.html">Range</a>&lt; F, L &gt; i) -&gt; <a class="el" href="structLinearAlgebra_1_1MutArray.html">MutPtrVector</a>&lt; T &gt;</td></tr>
 <tr class="separator:ae728cd2fd34ba80bea992394119745f2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae949ff7719a82b2e516078a17cc599bd"><td class="memTemplParams" colspan="2"><a id="ae949ff7719a82b2e516078a17cc599bd"></a>
 template&lt;typename F , typename L &gt; </td></tr>
@@ -179,7 +179,7 @@ constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>operator llvm::A
 constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>operator llvm::MutableArrayRef&lt; T &gt;</b> ()</td></tr>
 <tr class="separator:ace3cd384a7e4c32bdcba0a74ce9283c0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4255c1d32eeb8a296491a3721c8f6ca0"><td class="memItemLeft" align="right" valign="top"><a id="a4255c1d32eeb8a296491a3721c8f6ca0"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator==</b> (const MutPtrVector&lt; T &gt; x) const -&gt; bool</td></tr>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator==</b> (const <a class="el" href="structLinearAlgebra_1_1MutArray.html">MutPtrVector</a>&lt; T &gt; x) const -&gt; bool</td></tr>
 <tr class="separator:a4255c1d32eeb8a296491a3721c8f6ca0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a443a3d29b9334b9233c1034057ff7a4a"><td class="memItemLeft" align="right" valign="top"><a id="a443a3d29b9334b9233c1034057ff7a4a"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator==</b> (const <a class="el" href="structLinearAlgebra_1_1Array.html">PtrVector</a>&lt; T &gt; x) const -&gt; bool</td></tr>
@@ -191,40 +191,40 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator==</b> (const
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>view</b> () const -&gt; <a class="el" href="structLinearAlgebra_1_1Array.html">PtrVector</a>&lt; T &gt;</td></tr>
 <tr class="separator:aaaf7542f32ce7f82e54293560d4ccea1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1e46a0b81e0d09c4b3d6297017b8abe2"><td class="memItemLeft" align="right" valign="top"><a id="a1e46a0b81e0d09c4b3d6297017b8abe2"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator=</b> (<a class="el" href="structLinearAlgebra_1_1Array.html">PtrVector</a>&lt; T &gt; x) -&gt; MutPtrVector&lt; T &gt;</td></tr>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator=</b> (<a class="el" href="structLinearAlgebra_1_1Array.html">PtrVector</a>&lt; T &gt; x) -&gt; <a class="el" href="structLinearAlgebra_1_1MutArray.html">MutPtrVector</a>&lt; T &gt;</td></tr>
 <tr class="separator:a1e46a0b81e0d09c4b3d6297017b8abe2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5df5830f770812ecd51c507233bea06c"><td class="memItemLeft" align="right" valign="top"><a id="a5df5830f770812ecd51c507233bea06c"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator=</b> (MutPtrVector&lt; T &gt; x) -&gt; MutPtrVector&lt; T &gt;</td></tr>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator=</b> (<a class="el" href="structLinearAlgebra_1_1MutArray.html">MutPtrVector</a>&lt; T &gt; x) -&gt; <a class="el" href="structLinearAlgebra_1_1MutArray.html">MutPtrVector</a>&lt; T &gt;</td></tr>
 <tr class="separator:a5df5830f770812ecd51c507233bea06c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a891bd9de21b0cd2efc130fd2e066f57c"><td class="memItemLeft" align="right" valign="top"><a id="a891bd9de21b0cd2efc130fd2e066f57c"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator=</b> (const AbstractVector auto &amp;x) -&gt; MutPtrVector&lt; T &gt;</td></tr>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator=</b> (const AbstractVector auto &amp;x) -&gt; <a class="el" href="structLinearAlgebra_1_1MutArray.html">MutPtrVector</a>&lt; T &gt;</td></tr>
 <tr class="separator:a891bd9de21b0cd2efc130fd2e066f57c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac67da2717f222210faad188e84847719"><td class="memItemLeft" align="right" valign="top"><a id="ac67da2717f222210faad188e84847719"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator=</b> (std::integral auto x) -&gt; MutPtrVector&lt; T &gt;</td></tr>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator=</b> (std::integral auto x) -&gt; <a class="el" href="structLinearAlgebra_1_1MutArray.html">MutPtrVector</a>&lt; T &gt;</td></tr>
 <tr class="separator:ac67da2717f222210faad188e84847719"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9e580b95453e1bc7903159c819b711b9"><td class="memItemLeft" align="right" valign="top"><a id="a9e580b95453e1bc7903159c819b711b9"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator+=</b> (const AbstractVector auto &amp;x) -&gt; MutPtrVector&lt; T &gt;</td></tr>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator+=</b> (const AbstractVector auto &amp;x) -&gt; <a class="el" href="structLinearAlgebra_1_1MutArray.html">MutPtrVector</a>&lt; T &gt;</td></tr>
 <tr class="separator:a9e580b95453e1bc7903159c819b711b9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aebfd778bcbb667ff167b31eb08c67010"><td class="memItemLeft" align="right" valign="top"><a id="aebfd778bcbb667ff167b31eb08c67010"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator-=</b> (const AbstractVector auto &amp;x) -&gt; MutPtrVector&lt; T &gt;</td></tr>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator-=</b> (const AbstractVector auto &amp;x) -&gt; <a class="el" href="structLinearAlgebra_1_1MutArray.html">MutPtrVector</a>&lt; T &gt;</td></tr>
 <tr class="separator:aebfd778bcbb667ff167b31eb08c67010"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab7ffebd84d5ad3556eba492ea07cfe1f"><td class="memItemLeft" align="right" valign="top"><a id="ab7ffebd84d5ad3556eba492ea07cfe1f"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator*=</b> (const AbstractVector auto &amp;x) -&gt; MutPtrVector&lt; T &gt;</td></tr>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator*=</b> (const AbstractVector auto &amp;x) -&gt; <a class="el" href="structLinearAlgebra_1_1MutArray.html">MutPtrVector</a>&lt; T &gt;</td></tr>
 <tr class="separator:ab7ffebd84d5ad3556eba492ea07cfe1f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad05158466fa629fa87c3b3959d35c5af"><td class="memItemLeft" align="right" valign="top"><a id="ad05158466fa629fa87c3b3959d35c5af"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator/=</b> (const AbstractVector auto &amp;x) -&gt; MutPtrVector&lt; T &gt;</td></tr>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator/=</b> (const AbstractVector auto &amp;x) -&gt; <a class="el" href="structLinearAlgebra_1_1MutArray.html">MutPtrVector</a>&lt; T &gt;</td></tr>
 <tr class="separator:ad05158466fa629fa87c3b3959d35c5af"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3ee7120f7b8faf5ee1062ae16d9ebf7f"><td class="memItemLeft" align="right" valign="top"><a id="a3ee7120f7b8faf5ee1062ae16d9ebf7f"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator+=</b> (const std::integral auto x) -&gt; MutPtrVector&lt; T &gt;</td></tr>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator+=</b> (const std::integral auto x) -&gt; <a class="el" href="structLinearAlgebra_1_1MutArray.html">MutPtrVector</a>&lt; T &gt;</td></tr>
 <tr class="separator:a3ee7120f7b8faf5ee1062ae16d9ebf7f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3dec7c53de8c93c0bd74009cb92dca9c"><td class="memItemLeft" align="right" valign="top"><a id="a3dec7c53de8c93c0bd74009cb92dca9c"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator-=</b> (const std::integral auto x) -&gt; MutPtrVector&lt; T &gt;</td></tr>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator-=</b> (const std::integral auto x) -&gt; <a class="el" href="structLinearAlgebra_1_1MutArray.html">MutPtrVector</a>&lt; T &gt;</td></tr>
 <tr class="separator:a3dec7c53de8c93c0bd74009cb92dca9c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a294308a7e4225eac120f3ae5e943f81f"><td class="memItemLeft" align="right" valign="top"><a id="a294308a7e4225eac120f3ae5e943f81f"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator*=</b> (const std::integral auto x) -&gt; MutPtrVector&lt; T &gt;</td></tr>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator*=</b> (const std::integral auto x) -&gt; <a class="el" href="structLinearAlgebra_1_1MutArray.html">MutPtrVector</a>&lt; T &gt;</td></tr>
 <tr class="separator:a294308a7e4225eac120f3ae5e943f81f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad5e1a1aba89d4fad0f984333db82c3ae"><td class="memItemLeft" align="right" valign="top"><a id="ad5e1a1aba89d4fad0f984333db82c3ae"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator/=</b> (const std::integral auto x) -&gt; MutPtrVector&lt; T &gt;</td></tr>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator/=</b> (const std::integral auto x) -&gt; <a class="el" href="structLinearAlgebra_1_1MutArray.html">MutPtrVector</a>&lt; T &gt;</td></tr>
 <tr class="separator:ad5e1a1aba89d4fad0f984333db82c3ae"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab83fe07ef7801b97e9ea7e6040053504"><td class="memItemLeft" align="right" valign="top"><a id="ab83fe07ef7801b97e9ea7e6040053504"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>reserveForOverwrite</b> (size_t N)</td></tr>
