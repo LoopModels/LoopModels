@@ -2,7 +2,6 @@
 
 #include "Math/AxisTypes.hpp"
 #include "Math/Indexing.hpp"
-#include "Math/Math.hpp"
 #include "Math/Matrix.hpp"
 #include "Math/MatrixDimensions.hpp"
 #include "Math/Vector.hpp"
@@ -66,6 +65,17 @@ template <class T, class S> struct Array {
   using pointer = T *;
   using const_pointer = const T *;
 
+  constexpr Array(const Array &) = default;
+  constexpr Array(Array &&) = default;
+  constexpr Array &operator=(const Array &) = default;
+  constexpr Array &operator=(Array &&) = default;
+  constexpr Array(T *p, S s) : ptr(p), sz(s) {}
+  constexpr Array(NotNull<T> p, S s) : ptr(p), sz(s) {}
+  constexpr Array(T *p, Row r, Col c)
+    : ptr(p), sz(MatrixDimension<S> ? DenseDims{r, c} : S(r)) {}
+  constexpr Array(NotNull<T> p, Row r, Col c)
+    : ptr(p), sz(MatrixDimension<S> ? DenseDims{r, c} : S(r)) {}
+
   [[nodiscard, gnu::returns_nonnull]] constexpr auto data() const noexcept
     -> const T * {
     return this->ptr;
@@ -101,9 +111,12 @@ template <class T, class S> struct Array {
     else return Array<T, decltype(newDim)>{ptr + offset, newDim};
   }
   // TODO: switch to operator[] when we enable c++23
+  // for vectors, we just drop the column, essentially broadcasting
   template <class R, class C>
   constexpr auto operator()(R r, C c) const noexcept {
-    return (*this)[CartesianIndex<R, C>{r, c}];
+    if constexpr (MatrixDimension<S>)
+      return (*this)[CartesianIndex<R, C>{r, c}];
+    else return (*this)[size_t(r)];
   }
   [[nodiscard]] constexpr auto minRowCol() const -> size_t {
     return std::min(size_t(numRow()), size_t(numCol()));
@@ -138,6 +151,7 @@ template <class T, class S> struct Array {
   [[nodiscard]] constexpr auto empty() const -> bool { return sz == S{}; }
   [[nodiscard]] constexpr auto size() const noexcept {
     if constexpr (std::integral<S>) return sz;
+    else if constexpr (std::is_same_v<S, StridedRange>) return size_t(sz);
     else return std::make_pair(Row{sz}, Col{sz});
   }
   [[nodiscard]] constexpr auto dim() const noexcept -> S { return sz; }
@@ -187,6 +201,18 @@ protected:
 
 template <class T, class S> struct MutArray : Array<T, S> {
   using BaseT = Array<T, S>;
+  // using BaseT::BaseT;
+  using BaseT::operator[], BaseT::operator();
+
+  constexpr MutArray(const MutArray &) = default;
+  constexpr MutArray(MutArray &&) = default;
+  constexpr MutArray &operator=(const MutArray &) = default;
+  constexpr MutArray &operator=(MutArray &&) = default;
+
+  template <class... Args>
+  constexpr MutArray(Args &&...args)
+    : Array<T, S>(std::forward<Args>(args)...) {}
+
   [[nodiscard, gnu::returns_nonnull]] constexpr auto data() noexcept -> T * {
     return this->ptr;
   }
@@ -214,7 +240,9 @@ template <class T, class S> struct MutArray : Array<T, S> {
   // TODO: switch to operator[] when we enable c++23
   template <class R, class C>
   constexpr auto operator()(R r, C c) noexcept -> decltype(auto) {
-    return (*this)[CartesianIndex<R, C>{r, c}];
+    if constexpr (MatrixDimension<S>)
+      return (*this)[CartesianIndex<R, C>{r, c}];
+    else return (*this)[size_t(r)];
   }
   constexpr void fill(T value) {
     std::fill_n((T *)(this->ptr), size_t(this->dim()), value);
@@ -250,6 +278,11 @@ template <class T, class S> struct MutArray : Array<T, S> {
     assert(k == B.nonZeros.size());
     return *this;
   }
+  [[gnu::flatten]] constexpr auto operator<<(const AbstractVector auto &B)
+    -> decltype(auto) {
+    return copyto(*this, B);
+  }
+
   [[gnu::flatten]] constexpr auto operator<<(const AbstractMatrix auto &B)
     -> decltype(auto) {
     return copyto(*this, B);
@@ -876,6 +909,7 @@ static_assert(sizeof(ManagedArray<int64_t, LinearAlgebra::SquareDims, 64,
 
 template <class T> using Vector = ManagedArray<T, unsigned>;
 template <class T> using PtrVector = Array<T, unsigned>;
+template <class T> using MutPtrVector = MutArray<T, unsigned>;
 
 static_assert(std::move_constructible<Vector<intptr_t>>);
 static_assert(std::copy_constructible<Vector<intptr_t>>);
@@ -889,31 +923,17 @@ template <typename T> using StridedVector = Array<T, StridedRange>;
 template <typename T> using MutStridedVector = MutArray<T, StridedRange>;
 
 static_assert(AbstractVector<StridedVector<int64_t>>);
+static_assert(AbstractVector<MutStridedVector<int64_t>>);
 static_assert(std::is_trivially_copyable_v<StridedVector<int64_t>>);
 
-template <typename T>
-inline auto vector(std::allocator<T>, size_t M) -> Vector<T> {
-  return Vector<T>(M);
-}
-template <typename T>
-constexpr auto vector(WBumpAlloc<T> alloc, size_t M) -> MutPtrVector<T> {
-  return {alloc.allocate(M), M};
-}
-template <typename T>
-constexpr auto matrix(BumpAlloc<> &alloc, size_t M) -> MutPtrVector<T> {
-  return {alloc.allocate<T>(M), M};
-}
+template <class T> using PtrMatrix = Array<T, LinearAlgebra::DenseDims>;
+template <class T> using MutPtrMatrix = MutArray<T, LinearAlgebra::DenseDims>;
+template <class T> using Matrix = ManagedArray<T, LinearAlgebra::DenseDims>;
 
-static_assert(sizeof(PtrMatrix<int64_t>) <=
-              4 * sizeof(unsigned int) + sizeof(int64_t *));
-static_assert(sizeof(MutPtrMatrix<int64_t>) <=
-              4 * sizeof(unsigned int) + sizeof(int64_t *));
-static_assert(std::is_trivially_copyable_v<Row>);
-static_assert(std::is_trivially_copyable_v<Col>);
-static_assert(std::is_trivially_copyable_v<RowStride>);
-static_assert(std::is_trivially_copyable_v<const Row>);
-static_assert(std::is_trivially_copyable_v<const Col>);
-static_assert(std::is_trivially_copyable_v<const RowStride>);
+static_assert(sizeof(PtrMatrix<int64_t>) ==
+              2 * sizeof(unsigned int) + sizeof(int64_t *));
+static_assert(sizeof(MutPtrMatrix<int64_t>) ==
+              2 * sizeof(unsigned int) + sizeof(int64_t *));
 static_assert(std::is_trivially_copyable_v<PtrMatrix<int64_t>>,
               "PtrMatrix<int64_t> is not trivially copyable!");
 static_assert(std::is_trivially_copyable_v<PtrVector<int64_t>>,
@@ -930,6 +950,9 @@ static_assert(!AbstractVector<const PtrMatrix<int64_t>>,
 
 static_assert(AbstractMatrix<PtrMatrix<int64_t>>,
               "PtrMatrix<int64_t> isa AbstractMatrix failed");
+static_assert(std::same_as<std::remove_reference_t<decltype(PtrMatrix<int64_t>(
+                             nullptr, Row{0}, Col{0})(size_t(0), size_t(0)))>,
+                           int64_t>);
 static_assert(
   std::same_as<std::remove_reference_t<decltype(MutPtrMatrix<int64_t>(
                  nullptr, Row{0}, Col{0})(size_t(0), size_t(0)))>,
@@ -963,42 +986,10 @@ static_assert(!AbstractMatrix<const PtrVector<int64_t>>,
 static_assert(!AbstractMatrix<const MutPtrVector<int64_t>>,
               "PtrVector<const int64_t> isa AbstractMatrix succeeded");
 
-using IntMatrix = Matrix<int64_t, StridedDims, 64>;
-static_assert(std::same_as<IntMatrix::eltype, int64_t>);
+using IntMatrix = Matrix<int64_t>;
+static_assert(std::same_as<IntMatrix::value_type, int64_t>);
 static_assert(AbstractMatrix<IntMatrix>);
 static_assert(std::copyable<IntMatrix>);
-static_assert(std::same_as<eltype_t<Matrix<int64_t, StridedDims>>, int64_t>);
-template <typename T>
-inline auto matrix(std::allocator<T>, size_t M, size_t N)
-  -> Matrix<T, DenseDims> {
-  return Matrix<T, DenseDims, 64>::undef(M, N);
-}
-template <typename T>
-constexpr auto matrix(WBumpAlloc<T> alloc, size_t M, size_t N)
-  -> MutPtrMatrix<T, DenseDims> {
-  return {alloc.allocate(M * N), M, N};
-}
-template <typename T>
-constexpr auto matrix(BumpAlloc<> &alloc, size_t M, size_t N)
-  -> MutPtrMatrix<T, DenseDims> {
-  return {alloc.allocate<T>(M * N), M, N};
-}
-template <typename T>
-inline auto identity(std::allocator<T>, size_t M) -> Matrix<T, SquareDims> {
-  return Matrix<T, SquareDims>::identity(M);
-}
-template <typename T>
-constexpr auto identity(WBumpAlloc<T> alloc, size_t M)
-  -> MutPtrMatrix<T, SquareDims> {
-  MutPtrMatrix<T, SquareDims> A = {alloc.allocate(M * M), M};
-  A << 0;
-  A.diag() << 1;
-  return A;
-}
-template <typename T>
-constexpr auto identity(BumpAlloc<> &alloc, size_t M)
-  -> MutPtrMatrix<T, SquareDims> {
-  return identity(WBumpAlloc<T>(alloc), M);
-}
+static_assert(std::same_as<eltype_t<Matrix<int64_t>>, int64_t>);
 
 } // namespace LinearAlgebra

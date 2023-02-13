@@ -132,6 +132,7 @@ template <typename T> struct StridedIterator {
     invariant(stride == other.stride);
     return (ptr + other.ptr) / stride;
   }
+  constexpr auto operator[](size_t x) const -> T & { return ptr[x * stride]; }
   friend constexpr auto operator+(size_t x, const StridedIterator &it)
     -> StridedIterator {
     return it + x;

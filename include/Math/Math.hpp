@@ -252,16 +252,11 @@ template <AbstractMatrix A, AbstractVector B> struct MatVecMul {
   constexpr auto view() const { return *this; };
 };
 
-template <typename T> PtrVector(T *, size_t) -> PtrVector<T>;
-template <typename T> MutPtrVector(T *, size_t) -> MutPtrVector<T>;
-template <typename T> PtrVector(NotNull<T>, size_t) -> PtrVector<T>;
-template <typename T> MutPtrVector(NotNull<T>, size_t) -> MutPtrVector<T>;
-
 //
 // Vectors
 //
 
-template <typename T> constexpr auto view(llvm::SmallVectorImpl<T> &x) {
+template <class T, class S> constexpr auto view(Array<T, S> &x) {
   return MutPtrVector<T>{x.data(), x.size()};
 }
 template <typename T> constexpr auto view(const llvm::SmallVectorImpl<T> &x) {

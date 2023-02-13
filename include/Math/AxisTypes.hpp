@@ -184,6 +184,12 @@ constexpr auto operator*(RowStride x, Row y) -> size_t { return (*x) * (*y); }
 constexpr auto operator>=(RowStride x, Col u) -> bool { return (*x) >= (*u); }
 constexpr auto operator<(RowStride x, Col u) -> bool { return (*x) < (*u); }
 
+static_assert(std::is_trivially_copyable_v<Row>);
+static_assert(std::is_trivially_copyable_v<Col>);
+static_assert(std::is_trivially_copyable_v<RowStride>);
+static_assert(std::is_trivially_copyable_v<const Row>);
+static_assert(std::is_trivially_copyable_v<const Col>);
+static_assert(std::is_trivially_copyable_v<const RowStride>);
 static_assert(sizeof(Row) == sizeof(size_t));
 static_assert(sizeof(Col) == sizeof(size_t));
 static_assert(sizeof(RowStride) == sizeof(size_t));

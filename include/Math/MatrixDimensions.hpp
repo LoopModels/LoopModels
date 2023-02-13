@@ -174,14 +174,6 @@ template <class R, class C> struct CartesianIndex {
 };
 template <class R, class C> CartesianIndex(R r, C c) -> CartesianIndex<R, C>;
 
-// Concept for aligning array dimensions with indices.
-template <class I, class D>
-concept Index = (std::integral<D> && std::integral<I>) ||
-                (MatrixDimension<D> && requires(I i) {
-                                         { i.row };
-                                         { i.col };
-                                       });
-
 } // namespace LinearAlgebra
 
 using LinearAlgebra::StridedDims, LinearAlgebra::DenseDims,

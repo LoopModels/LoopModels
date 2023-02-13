@@ -137,8 +137,8 @@ template <class R, class C>
 [[nodiscard]] inline constexpr auto calcOffset(StridedDims d,
                                                CartesianIndex<R, C> i)
   -> size_t {
-  return RowStride{d} * calcOffset(size_t(Row{d}), i.row) +
-         calcOffset(size_t(Col{d}), i.col);
+  return size_t(RowStride{d} * calcOffset(size_t(Row{d}), i.row) +
+                calcOffset(size_t(Col{d}), i.col));
 }
 
 struct StridedRange {
@@ -149,6 +149,15 @@ struct StridedRange {
 template <class I> constexpr auto calcOffset(StridedRange d, I i) -> size_t {
   return d.stride * calcOffset(d.len, i);
 };
+
+// Concept for aligning array dimensions with indices.
+template <class I, class D>
+concept Index = ((std::integral<D> || std::same_as<D, StridedRange>) &&
+                 std::integral<I>) ||
+                (MatrixDimension<D> && requires(I i) {
+                                         { i.row };
+                                         { i.col };
+                                       });
 
 struct Empty {};
 
