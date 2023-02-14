@@ -166,7 +166,7 @@ constexpr auto orthogonalizeBang(MutPtrMatrix<int64_t> A)
   return std::make_pair(std::move(K), std::move(included));
 }
 constexpr auto orthogonalize(IntMatrix A)
-  -> std::pair<SquareMatrix<int64_t>, Vector<unsigned, 12>> {
+  -> std::pair<SquareMatrix<int64_t>, Vector<unsigned>> {
   return orthogonalizeBang(A);
 }
 

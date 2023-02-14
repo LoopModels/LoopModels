@@ -113,9 +113,17 @@ concept AbstractSlice = requires(T t, size_t M) {
 static_assert(AbstractSlice<Range<size_t, size_t>>);
 static_assert(AbstractSlice<Colon>);
 
-[[nodiscard]] inline constexpr auto calcOffset(size_t len, size_t i) {
+[[nodiscard]] inline constexpr auto calcOffset(size_t len, size_t i) -> size_t {
   invariant(i < len);
   return i;
+}
+[[nodiscard]] inline constexpr auto calcOffset(size_t len, Col i) -> size_t {
+  invariant(*i < len);
+  return *i;
+}
+[[nodiscard]] inline constexpr auto calcOffset(size_t len, Row i) -> size_t {
+  invariant(*i < len);
+  return *i;
 }
 // note that we don't check i.b < len because we want to allow
 // empty ranges, and r.b <= r.e <= len is checked in calcNewDim.
@@ -137,8 +145,8 @@ template <class R, class C>
 [[nodiscard]] inline constexpr auto calcOffset(StridedDims d,
                                                CartesianIndex<R, C> i)
   -> size_t {
-  return size_t(RowStride{d} * calcOffset(size_t(Row{d}), size_t(i.row)) +
-                calcOffset(size_t(Col{d}), size_t(i.col)));
+  return size_t(RowStride{d} * calcOffset(size_t(Row{d}), i.row) +
+                calcOffset(size_t(Col{d}), i.col));
 }
 
 struct StridedRange {
@@ -177,15 +185,15 @@ constexpr auto calcNewDim(StridedDims, CartesianIndex<R, C>) -> Empty {
 }
 constexpr auto calcNewDim(std::integral auto len, Colon) { return len; };
 
-template <AbstractSlice B, std::integral C>
+template <AbstractSlice B, ScalarColIndex C>
 constexpr auto calcNewDim(StridedDims d, CartesianIndex<B, C> i) {
   auto rowDims = calcNewDim(size_t(Row{d}), i.row);
   return StridedRange{rowDims, RowStride{d}};
 }
 
-template <std::integral R, AbstractSlice C>
+template <ScalarRowIndex R, AbstractSlice C>
 constexpr auto calcNewDim(StridedDims d, CartesianIndex<R, C> i) {
-  return calcNewDim(size_t(Col{d}), size_t(i.col));
+  return calcNewDim(size_t(Col{d}), i.col);
 }
 
 template <AbstractSlice B, AbstractSlice C>

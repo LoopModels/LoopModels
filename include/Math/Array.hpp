@@ -286,7 +286,7 @@ template <class T, class S> struct MutArray : Array<T, S> {
   [[gnu::flatten]] constexpr auto operator<<(const std::integral auto b)
     -> decltype(auto) {
     if constexpr (std::integral<S>) {
-      for (size_t c = 0, L = this->sz; c < L; ++c) (*this)(c) = b;
+      for (size_t c = 0, L = this->sz; c < L; ++c) (*this)[c] = b;
     } else {
       for (size_t r = 0; r < this->numRow(); ++r)
         for (size_t c = 0; c < this->numCol(); ++c) (*this)(r, c) = b;
@@ -314,7 +314,7 @@ template <class T, class S> struct MutArray : Array<T, S> {
   [[gnu::flatten]] constexpr auto operator*=(const std::integral auto b)
     -> decltype(auto) {
     if constexpr (std::integral<S>) {
-      for (size_t c = 0, L = this->sz; c < L; ++c) (*this)(c) *= b;
+      for (size_t c = 0, L = this->sz; c < L; ++c) (*this)[c] *= b;
     } else {
       for (size_t r = 0; r < this->numRow(); ++r)
         for (size_t c = 0; c < this->numCol(); ++c) (*this)(r, c) *= b;
@@ -324,7 +324,7 @@ template <class T, class S> struct MutArray : Array<T, S> {
   [[gnu::flatten]] constexpr auto operator/=(const std::integral auto b)
     -> decltype(auto) {
     if constexpr (std::integral<S>) {
-      for (size_t c = 0, L = this->sz; c < L; ++c) (*this)(c) /= b;
+      for (size_t c = 0, L = this->sz; c < L; ++c) (*this)[c] /= b;
     } else {
       for (size_t r = 0; r < this->numRow(); ++r)
         for (size_t c = 0; c < this->numCol(); ++c) (*this)(r, c) /= b;
