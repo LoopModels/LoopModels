@@ -1,17 +1,20 @@
 #pragma once
+#include "Math/Array.hpp"
 #include "Math/Comparisons.hpp"
+#include "Math/Constructors.hpp"
 #include "Math/EmptyArrays.hpp"
 #include "Math/GreatestCommonDivisor.hpp"
 #include "Math/Math.hpp"
-#include "Math/Matrix.hpp"
 #include "Math/MatrixDimensions.hpp"
 #include "Math/VectorGreatestCommonDivisor.hpp"
+#include <array>
 #include <concepts>
 #include <cstddef>
 #include <cstdint>
 #include <limits>
 #include <llvm/ADT/SmallVector.h>
 #include <map>
+#include <memory>
 #include <numeric>
 #include <sys/types.h>
 #include <utility>
@@ -96,26 +99,21 @@ constexpr void zeroSubDiagonal(MutPtrMatrix<int64_t> A,
   }
 }
 
-constexpr auto solvePair(LinearAlgebra::AbstractRowMajorMatrix auto &A,
-                         LinearAlgebra::AbstractRowMajorMatrix auto &B) {
-  return std::make_pair(MutPtrMatrix(A), MutPtrMatrix(B));
-}
-
-constexpr auto
-pivotRows(std::pair<MutPtrMatrix<int64_t>, MutPtrMatrix<int64_t>> AK, Col i,
-          Row M, Row piv) -> bool {
+constexpr auto pivotRows(std::array<MutPtrMatrix<int64_t>, 2> AK, Col i, Row M,
+                         Row piv) -> bool {
   Row j = piv;
-  while (AK.first(piv, i) == 0)
+  while (AK[0](piv, i) == 0)
     if (++piv == M) return true;
   if (j != piv) {
-    swap(AK.first, j, piv);
-    swap(AK.second, j, piv);
+    swap(AK[0], j, piv);
+    swap(AK[1], j, piv);
   }
   return false;
 }
 constexpr auto pivotRows(MutPtrMatrix<int64_t> A, MutSquarePtrMatrix<int64_t> K,
                          size_t i, Row M) -> bool {
-  return pivotRows(solvePair(A, K), Col{i}, M, Row{i});
+  MutPtrMatrix<int64_t> B = K;
+  return pivotRows({A, B}, Col{i}, M, Row{i});
 }
 constexpr auto pivotRows(MutPtrMatrix<int64_t> A, Col i, Row M, Row piv)
   -> bool {
@@ -138,12 +136,12 @@ constexpr void dropCol(MutPtrMatrix<int64_t> A, size_t i, Row M, Col N) {
 }
 
 constexpr auto orthogonalizeBang(MutPtrMatrix<int64_t> A)
-  -> std::pair<SquareMatrix<int64_t>, Vector<unsigned, 12>> {
+  -> std::pair<SquareMatrix<int64_t>, Vector<unsigned>> {
   // we try to orthogonalize with respect to as many rows of `A` as we can
   // prioritizing earlier rows.
   auto [M, N] = A.size();
-  SquareMatrix<int64_t> K = SquareMatrix<int64_t>::identity(size_t(M));
-  Vector<unsigned, 12> included;
+  SquareMatrix<int64_t> K{identity(std::allocator<int64_t>{}, unsigned(M))};
+  Vector<unsigned> included;
   included.reserve(std::min(size_t(M), size_t(N)));
   for (size_t i = 0, j = 0; i < std::min(size_t(M), size_t(N)); ++j) {
     // zero ith row

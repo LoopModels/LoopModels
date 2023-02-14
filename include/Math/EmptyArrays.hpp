@@ -5,7 +5,7 @@
 #include <llvm/ADT/SmallVector.h>
 
 template <typename T> struct EmptyMatrix {
-  using eltype = T;
+  using value_type = T;
   static constexpr auto begin() -> T * { return nullptr; }
   static constexpr auto end() -> T * { return nullptr; }
 

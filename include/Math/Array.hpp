@@ -19,6 +19,10 @@
 
 namespace LinearAlgebra {
 
+template <class T>
+concept Scalar =
+  std::integral<T> || std::floating_point<T> || std::same_as<T, Rational>;
+
 template <class T, class S, size_t N = PreAllocStorage<T>(),
           class A = std::allocator<T>,
           std::unsigned_integral U = default_capacity_type_t<S>>
@@ -49,7 +53,8 @@ template <class T, class S> struct Array {
     : ptr(p), sz(MatrixDimension<S> ? DenseDims{r, c} : S(r)) {}
   constexpr Array(NotNull<T> p, Row r, Col c)
     : ptr(p), sz(MatrixDimension<S> ? DenseDims{r, c} : S(r)) {}
-
+  template <std::convertible_to<S> V>
+  constexpr Array(Array<T, V> a) : ptr(a.wrappedPtr()), sz(a.dim()) {}
   [[nodiscard, gnu::returns_nonnull]] constexpr auto data() const noexcept
     -> const T * {
     return this->ptr;
@@ -176,7 +181,7 @@ protected:
 template <class T, class S> struct MutArray : Array<T, S> {
   using BaseT = Array<T, S>;
   // using BaseT::BaseT;
-  using BaseT::operator[], BaseT::operator();
+  using BaseT::operator[], BaseT::operator(), BaseT::data;
 
   constexpr MutArray(const MutArray &) = default;
   constexpr MutArray(MutArray &&) noexcept = default;
@@ -187,6 +192,8 @@ template <class T, class S> struct MutArray : Array<T, S> {
   constexpr MutArray(Args &&...args)
     : Array<T, S>(std::forward<Args>(args)...) {}
 
+  template <std::convertible_to<T> U, std::convertible_to<S> V>
+  constexpr MutArray(Array<U, V> a) : Array<T, S>(a) {}
   [[nodiscard, gnu::returns_nonnull]] constexpr auto data() noexcept -> T * {
     return this->ptr;
   }
@@ -222,7 +229,7 @@ template <class T, class S> struct MutArray : Array<T, S> {
     std::fill_n((T *)(this->ptr), size_t(this->dim()), value);
   }
   [[nodiscard]] constexpr auto diag() noexcept {
-    StridedRange r{min(Row{this->sz}, Col{this->sz}),
+    StridedRange r{unsigned(min(Row{this->sz}, Col{this->sz})),
                    unsigned(RowStride{this->sz}) + 1};
     return MutArray<T, StridedRange>{this->ptr, r};
   }
@@ -325,6 +332,18 @@ template <class T, class S> struct MutArray : Array<T, S> {
     return *this;
   }
 };
+
+template <typename T, typename S> MutArray(T *, S) -> MutArray<T, S>;
+
+template <typename T, typename S> MutArray(MutArray<T, S>) -> MutArray<T, S>;
+
+static_assert(std::convertible_to<MutArray<int64_t, SquareDims>,
+                                  MutArray<int64_t, DenseDims>>);
+static_assert(std::convertible_to<MutArray<int64_t, SquareDims>,
+                                  MutArray<int64_t, StridedDims>>);
+static_assert(std::convertible_to<MutArray<int64_t, DenseDims>,
+                                  MutArray<int64_t, StridedDims>>);
+
 /// Non-owning view of a managed array, capable of reallocating, etc.
 /// It does not own memory. Mostly, it serves to drop the inlined
 /// stack capacity of the `ManagedArray` from the type.
@@ -332,6 +351,11 @@ template <class T, class S, class A = std::allocator<T>,
           std::unsigned_integral U = default_capacity_type_t<S>>
 struct ManagedArrayView : MutArray<T, S> {
   using BaseT = MutArray<T, S>;
+
+  constexpr ManagedArrayView(NotNull<T> p, S s, U c) noexcept
+    : BaseT(p, s), capacity(c) {}
+  constexpr ManagedArrayView(NotNull<T> p, S s, U c, A alloc) noexcept
+    : BaseT(p, s), capacity(c), allocator(alloc) {}
 
   template <class... Args> constexpr auto emplace_back(Args &&...args) {
     static_assert(std::is_integral_v<S>, "emplace_back requires integral size");
@@ -673,6 +697,30 @@ protected:
     capacity = len;
 #endif
   }
+  [[nodiscard]] constexpr auto isSmall() const -> bool {
+    return (reinterpret_cast<const std::byte *>(this->data())) ==
+           (reinterpret_cast<const std::byte *>(this) + sizeof(*this));
+  }
+  // this method should only be called from the destructor
+  // (and the implementation taking the new ptr and capacity)
+  constexpr void maybeDeallocate() {
+    if (!isSmall()) this->allocator.deallocate(this->ptr, this->capacity);
+  }
+  // this method should be called whenever the buffer lives
+  constexpr void maybeDeallocate(NotNull<T> newPtr, U newCapacity) {
+    maybeDeallocate();
+    this->ptr = newPtr;
+    this->capacity = newCapacity;
+  }
+  // grow, discarding old data
+  constexpr void growUndef(U M) {
+    if (M <= this->capacity) return;
+    maybeDeallocate();
+    // because this doesn't care about the old data,
+    // we can allocate after freeing, which may be faster
+    this->ptr = this->allocator.allocate(M);
+    this->capacity = M;
+  }
 };
 
 /// Stores memory, then pointer.
@@ -835,7 +883,7 @@ struct ManagedArray : ManagedArrayView<T, S, A, U> {
     this->sz = S{};
     this->capacity = N;
   }
-  constexpr ~ManagedArray() { maybeDeallocate(); }
+  constexpr ~ManagedArray() { this->maybeDeallocate(); }
 
   [[nodiscard]] static constexpr auto identity(unsigned M) -> ManagedArray {
     static_assert(MatrixDimension<S>);
@@ -854,27 +902,6 @@ struct ManagedArray : ManagedArrayView<T, S, A, U> {
 
 private:
   T memory[N]; // NOLINT (modernize-avoid-c-style-arrays)
-
-  // this method should only be called from the destructor
-  // (and the implementation taking the new ptr and capacity)
-  constexpr void maybeDeallocate() {
-    if (!isSmall()) this->allocator.deallocate(this->ptr, this->capacity);
-  }
-  // this method should be called whenever the buffer lives
-  constexpr void maybeDeallocate(NotNull<T> newPtr, U newCapacity) {
-    maybeDeallocate();
-    this->ptr = newPtr;
-    this->capacity = newCapacity;
-  }
-  // grow, discarding old data
-  constexpr void growUndef(U M) {
-    if (M <= this->capacity) return;
-    maybeDeallocate();
-    // because this doesn't care about the old data,
-    // we can allocate after freeing, which may be faster
-    this->ptr = this->allocator.allocate(M);
-    this->capacity = M;
-  }
 };
 
 static_assert(std::move_constructible<ManagedArray<intptr_t, unsigned>>);
@@ -915,20 +942,42 @@ static_assert(AbstractVector<StridedVector<int64_t>>);
 static_assert(AbstractVector<MutStridedVector<int64_t>>);
 static_assert(std::is_trivially_copyable_v<StridedVector<int64_t>>);
 
-template <class T> using PtrMatrix = Array<T, LinearAlgebra::DenseDims>;
-template <class T> using MutPtrMatrix = MutArray<T, LinearAlgebra::DenseDims>;
-template <class T> using Matrix = ManagedArray<T, LinearAlgebra::DenseDims>;
+template <class T> using PtrMatrix = Array<T, StridedDims>;
+template <class T> using MutPtrMatrix = MutArray<T, StridedDims>;
+template <class T, size_t L = 64>
+using Matrix = ManagedArray<T, StridedDims, L>;
+template <class T> using DensePtrMatrix = Array<T, DenseDims>;
+template <class T> using MutDensePtrMatrix = MutArray<T, DenseDims>;
+template <class T, size_t L = 64>
+using DenseMatrix = ManagedArray<T, DenseDims>;
+template <class T> using SquarePtrMatrix = Array<T, SquareDims>;
+template <class T> using MutSquarePtrMatrix = MutArray<T, SquareDims>;
+template <class T, size_t L = 16>
+using SquareMatrix = ManagedArray<T, SquareDims>;
 
 static_assert(sizeof(PtrMatrix<int64_t>) ==
-              2 * sizeof(unsigned int) + sizeof(int64_t *));
+              4 * sizeof(unsigned int) + sizeof(int64_t *));
 static_assert(sizeof(MutPtrMatrix<int64_t>) ==
+              4 * sizeof(unsigned int) + sizeof(int64_t *));
+static_assert(sizeof(DensePtrMatrix<int64_t>) ==
               2 * sizeof(unsigned int) + sizeof(int64_t *));
+static_assert(sizeof(MutDensePtrMatrix<int64_t>) ==
+              2 * sizeof(unsigned int) + sizeof(int64_t *));
+static_assert(sizeof(SquarePtrMatrix<int64_t>) ==
+              sizeof(size_t) + sizeof(int64_t *));
+static_assert(sizeof(MutSquarePtrMatrix<int64_t>) ==
+              sizeof(size_t) + sizeof(int64_t *));
 static_assert(std::is_trivially_copyable_v<PtrMatrix<int64_t>>,
               "PtrMatrix<int64_t> is not trivially copyable!");
 static_assert(std::is_trivially_copyable_v<PtrVector<int64_t>>,
               "PtrVector<int64_t,0> is not trivially copyable!");
 // static_assert(std::is_trivially_copyable_v<MutPtrMatrix<int64_t>>,
 //               "MutPtrMatrix<int64_t> is not trivially copyable!");
+static_assert(sizeof(ManagedArray<int32_t, DenseDims, 15>) ==
+              sizeof(int32_t *) + 4 * sizeof(unsigned int) +
+                16 * sizeof(int32_t));
+static_assert(sizeof(ManagedArrayView<int32_t, DenseDims>) ==
+              sizeof(int32_t *) + 4 * sizeof(unsigned int));
 
 static_assert(!AbstractVector<PtrMatrix<int64_t>>,
               "PtrMatrix<int64_t> isa AbstractVector succeeded");

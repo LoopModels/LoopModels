@@ -106,10 +106,6 @@ constexpr auto size(const std::floating_point auto) -> size_t { return 1; }
 constexpr auto size(const AbstractVector auto &x) -> size_t { return x.size(); }
 
 template <typename T>
-concept Scalar =
-  std::integral<T> || std::floating_point<T> || std::same_as<T, Rational>;
-
-template <typename T>
 concept VectorOrScalar = AbstractVector<T> || Scalar<T>;
 template <typename T>
 concept MatrixOrScalar = AbstractMatrix<T> || Scalar<T>;
@@ -635,12 +631,6 @@ inline auto operator<<(std::ostream &os, const AbstractMatrix auto &x)
   return adaptOStream(os, x);
 }
 
-template <typename T, size_t L = 16>
-using SquareMatrix = Matrix<T, SquareDims, L>;
-template <typename T> using MutSquarePtrMatrix = MutPtrMatrix<T, SquareDims>;
-template <typename T> using SquarePtrMatrix = PtrMatrix<T, SquareDims>;
-template <typename T> using DenseMutPtrMatrix = MutPtrMatrix<T, DenseDims>;
-
 } // namespace LinearAlgebra
 
 // exports:
@@ -655,5 +645,4 @@ using LinearAlgebra::AbstractVector, LinearAlgebra::AbstractMatrix,
   LinearAlgebra::MutSquarePtrMatrix, LinearAlgebra::begin, LinearAlgebra::end,
   LinearAlgebra::swap, LinearAlgebra::SquarePtrMatrix, LinearAlgebra::Row,
   LinearAlgebra::RowStride, LinearAlgebra::Col, LinearAlgebra::CarInd,
-  LinearAlgebra::last, LinearAlgebra::DenseMutPtrMatrix, LinearAlgebra::matrix,
-  LinearAlgebra::identity;
+  LinearAlgebra::last, LinearAlgebra::MutDensePtrMatrix;

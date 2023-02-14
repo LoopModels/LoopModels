@@ -23,21 +23,19 @@ concept AbstractVector =
 template <class T>
 concept SizeMultiple8 = (sizeof(T) % 8) == 0;
 
-template <class T> struct default_capacity_type {
+template <class S> struct default_capacity_type {
   using type = unsigned int;
 };
-template <SizeMultiple8 T> struct default_capacity_type<T> {
+template <SizeMultiple8 S> struct default_capacity_type<S> {
   using type = std::size_t;
 };
+template <class S>
+using default_capacity_type_t = typename default_capacity_type<S>::type;
+
 static_assert(!SizeMultiple8<uint32_t>);
 static_assert(SizeMultiple8<uint64_t>);
-static_assert(
-  std::is_same_v<typename default_capacity_type<uint32_t>::type, uint32_t>);
-static_assert(
-  std::is_same_v<typename default_capacity_type<uint64_t>::type, uint64_t>);
-
-template <class T>
-using default_capacity_type_t = typename default_capacity_type<T>::type;
+static_assert(std::is_same_v<default_capacity_type_t<uint32_t>, uint32_t>);
+static_assert(std::is_same_v<default_capacity_type_t<uint64_t>, uint64_t>);
 
 template <class T> consteval auto PreAllocStorage() -> size_t {
   constexpr size_t TotalBytes = 128;

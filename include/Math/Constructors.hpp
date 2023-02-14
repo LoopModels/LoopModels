@@ -1,54 +1,131 @@
 #pragma once
 
 #include "Math/Array.hpp"
+#include "Math/MatrixDimensions.hpp"
 #include "Utilities/Allocators.hpp"
 
 namespace LinearAlgebra {
 
-template <typename T>
-inline auto vector(std::allocator<T>, size_t M) -> Vector<T> {
+template <Scalar T>
+constexpr auto vector(std::allocator<T>, unsigned int M) -> Vector<T> {
   return Vector<T>(M);
 }
-template <typename T>
-constexpr auto vector(WBumpAlloc<T> alloc, size_t M) -> MutPtrVector<T> {
+template <Scalar T>
+constexpr auto vector(WBumpAlloc<T> alloc, unsigned int M) -> MutPtrVector<T> {
   return {alloc.allocate(M), M};
 }
-template <typename T>
-constexpr auto matrix(BumpAlloc<> &alloc, size_t M) -> MutPtrVector<T> {
+template <Scalar T>
+constexpr auto vector(BumpAlloc<> &alloc, unsigned int M) -> MutPtrVector<T> {
   return {alloc.allocate<T>(M), M};
 }
 
-template <typename T>
-inline auto matrix(std::allocator<T>, size_t M, size_t N)
-  -> Matrix<T, DenseDims> {
-  return Matrix<T, DenseDims, 64>::undef(M, N);
+template <Scalar T>
+constexpr auto vector(std::allocator<T>, unsigned int M, T x) -> Vector<T> {
+  return {M, x};
 }
-template <typename T>
-constexpr auto matrix(WBumpAlloc<T> alloc, size_t M, size_t N)
-  -> MutPtrMatrix<T, DenseDims> {
-  return {alloc.allocate(M * N), M, N};
+template <Scalar T>
+constexpr auto vector(WBumpAlloc<T> alloc, unsigned int M, T x)
+  -> MutPtrVector<T> {
+  MutPtrVector<T> a{alloc.allocate(M), M};
+  a.fill(x);
+  return a;
 }
-template <typename T>
-constexpr auto matrix(BumpAlloc<> &alloc, size_t M, size_t N)
-  -> MutPtrMatrix<T, DenseDims> {
-  return {alloc.allocate<T>(M * N), M, N};
+template <Scalar T>
+constexpr auto vector(BumpAlloc<> &alloc, unsigned int M, T x)
+  -> MutPtrVector<T> {
+  MutPtrVector<T> a{alloc.allocate<T>(M), M};
+  a.fill(x);
+  return a;
 }
-template <typename T>
-inline auto identity(std::allocator<T>, size_t M) -> Matrix<T, SquareDims> {
-  return Matrix<T, SquareDims>::identity(M);
+
+template <Scalar T>
+constexpr auto matrix(std::allocator<T>, unsigned int M) -> SquareMatrix<T> {
+  return SquareDims{M};
 }
-template <typename T>
-constexpr auto identity(WBumpAlloc<T> alloc, size_t M)
-  -> MutPtrMatrix<T, SquareDims> {
-  MutPtrMatrix<T, SquareDims> A = {alloc.allocate(M * M), M};
-  A << 0;
-  A.diag() << 1;
+template <Scalar T>
+constexpr auto matrix(WBumpAlloc<T> alloc, unsigned int M)
+  -> MutSquarePtrMatrix<T> {
+  return {alloc.allocate(M * M), SquareDims{M}};
+}
+template <Scalar T>
+constexpr auto matrix(BumpAlloc<> &alloc, unsigned int M)
+  -> MutSquarePtrMatrix<T> {
+  return {alloc.allocate<T>(M * M), SquareDims{M}};
+}
+template <Scalar T>
+constexpr auto matrix(std::allocator<T>, unsigned int M, T x)
+  -> SquareMatrix<T> {
+  return {SquareDims{M}, x};
+}
+template <Scalar T>
+constexpr auto matrix(WBumpAlloc<T> alloc, unsigned int M, T x)
+  -> MutSquarePtrMatrix<T> {
+  MutSquarePtrMatrix<T> A{alloc.allocate(M * M), SquareDims{M}};
+  A.fill(x);
   return A;
 }
-template <typename T>
-constexpr auto identity(BumpAlloc<> &alloc, size_t M)
-  -> MutPtrMatrix<T, SquareDims> {
-  return identity(WBumpAlloc<T>(alloc), M);
+template <Scalar T>
+constexpr auto matrix(BumpAlloc<> &alloc, unsigned int M, T x)
+  -> MutSquarePtrMatrix<T> {
+  MutSquarePtrMatrix<T> A{alloc.allocate<T>(M * M), SquareDims{M}};
+  A.fill(x);
+  return A;
+}
+
+template <Scalar T>
+constexpr auto matrix(std::allocator<T>, Row M, Col N) -> DenseMatrix<T> {
+  return DenseDims{M, N};
+}
+template <Scalar T>
+constexpr auto matrix(WBumpAlloc<T> alloc, Row M, Col N)
+  -> MutDensePtrMatrix<T> {
+  return {alloc.allocate(M * N), DenseDims{M, N}};
+}
+template <Scalar T>
+constexpr auto matrix(BumpAlloc<> &alloc, Row M, Col N)
+  -> MutDensePtrMatrix<T> {
+  return {alloc.allocate<T>(M * N), M, N};
+}
+template <Scalar T>
+constexpr auto matrix(std::allocator<T>, Row M, Col N, T x) -> DenseMatrix<T> {
+  return {DenseDims{M, N}, x};
+}
+template <Scalar T>
+constexpr auto matrix(WBumpAlloc<T> alloc, Row M, Col N, T x)
+  -> MutDensePtrMatrix<T> {
+  MutDensePtrMatrix<T> A{alloc.allocate(M * N), DenseDims{M, N}};
+  A.fill(x);
+  return A;
+}
+template <Scalar T>
+constexpr auto matrix(BumpAlloc<> &alloc, Row M, Col N, T x)
+  -> MutDensePtrMatrix<T> {
+  MutDensePtrMatrix<T> A{alloc.allocate<T>(M * N), DenseDims{M, N}};
+  A.fill(x);
+  return A;
+}
+
+template <Scalar T>
+constexpr auto identity(std::allocator<T>, unsigned int M) -> SquareMatrix<T> {
+  SquareMatrix<T> A{M, T{}};
+  A.diag() << T{1};
+  return A;
+}
+template <Scalar T>
+constexpr auto identity(WBumpAlloc<T> alloc, unsigned int M)
+  -> MutSquarePtrMatrix<T> {
+  MutSquarePtrMatrix<T> A{matrix(alloc, M, T{})};
+  A.diag() << T{1};
+  return A;
+}
+template <Scalar T>
+constexpr auto identity(BumpAlloc<> &alloc, unsigned int M)
+  -> MutSquarePtrMatrix<T> {
+  MutSquarePtrMatrix<T> A{matrix(alloc, M, T{})};
+  A.diag() << T{1};
+  return A;
 }
 
 } // namespace LinearAlgebra
+
+using LinearAlgebra::matrix, LinearAlgebra::vector, LinearAlgebra::identity;
