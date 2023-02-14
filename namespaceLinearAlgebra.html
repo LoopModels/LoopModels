@@ -137,7 +137,7 @@ Classes</h2></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structLinearAlgebra_1_1default__capacity__type.html">default_capacity_type</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structLinearAlgebra_1_1default__capacity__type_3_01T_01_4.html">default_capacity_type&lt; T &gt;</a></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structLinearAlgebra_1_1default__capacity__type_3_01S_01_4.html">default_capacity_type&lt; S &gt;</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="typedef-members"></a>
@@ -162,18 +162,42 @@ template&lt;typename T &gt; </td></tr>
 template&lt;typename T &gt; </td></tr>
 <tr class="memitem:a8ce186baa8a7afd7a0dc167ebf53e6be"><td class="memTemplItemLeft" align="right" valign="top">using&#160;</td><td class="memTemplItemRight" valign="bottom"><b>MutStridedVector</b> = <a class="el" href="structLinearAlgebra_1_1MutArray.html">MutArray</a>&lt; T, <a class="el" href="structLinearAlgebra_1_1StridedRange.html">StridedRange</a> &gt;</td></tr>
 <tr class="separator:a8ce186baa8a7afd7a0dc167ebf53e6be"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a69c2fc69243d29deba68a7b6c5469f9a"><td class="memTemplParams" colspan="2"><a id="a69c2fc69243d29deba68a7b6c5469f9a"></a>
+<tr class="memitem:a6cb15427f878b0589004f389b4985bf0"><td class="memTemplParams" colspan="2"><a id="a6cb15427f878b0589004f389b4985bf0"></a>
 template&lt;class T &gt; </td></tr>
-<tr class="memitem:a69c2fc69243d29deba68a7b6c5469f9a"><td class="memTemplItemLeft" align="right" valign="top">using&#160;</td><td class="memTemplItemRight" valign="bottom"><b>PtrMatrix</b> = <a class="el" href="structLinearAlgebra_1_1Array.html">Array</a>&lt; T, <a class="el" href="structLinearAlgebra_1_1DenseDims.html">LinearAlgebra::DenseDims</a> &gt;</td></tr>
-<tr class="separator:a69c2fc69243d29deba68a7b6c5469f9a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a67318353d7fcd9c66c71d16033d7f465"><td class="memTemplParams" colspan="2"><a id="a67318353d7fcd9c66c71d16033d7f465"></a>
+<tr class="memitem:a6cb15427f878b0589004f389b4985bf0"><td class="memTemplItemLeft" align="right" valign="top">using&#160;</td><td class="memTemplItemRight" valign="bottom"><b>PtrMatrix</b> = <a class="el" href="structLinearAlgebra_1_1Array.html">Array</a>&lt; T, <a class="el" href="structLinearAlgebra_1_1StridedDims.html">StridedDims</a> &gt;</td></tr>
+<tr class="separator:a6cb15427f878b0589004f389b4985bf0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a678ccaacb9ec9e6937e54160172ebba9"><td class="memTemplParams" colspan="2"><a id="a678ccaacb9ec9e6937e54160172ebba9"></a>
 template&lt;class T &gt; </td></tr>
-<tr class="memitem:a67318353d7fcd9c66c71d16033d7f465"><td class="memTemplItemLeft" align="right" valign="top">using&#160;</td><td class="memTemplItemRight" valign="bottom"><b>MutPtrMatrix</b> = <a class="el" href="structLinearAlgebra_1_1MutArray.html">MutArray</a>&lt; T, <a class="el" href="structLinearAlgebra_1_1DenseDims.html">LinearAlgebra::DenseDims</a> &gt;</td></tr>
-<tr class="separator:a67318353d7fcd9c66c71d16033d7f465"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3af265026fa0cf72ee2bc22c3cee474d"><td class="memTemplParams" colspan="2"><a id="a3af265026fa0cf72ee2bc22c3cee474d"></a>
+<tr class="memitem:a678ccaacb9ec9e6937e54160172ebba9"><td class="memTemplItemLeft" align="right" valign="top">using&#160;</td><td class="memTemplItemRight" valign="bottom"><b>MutPtrMatrix</b> = <a class="el" href="structLinearAlgebra_1_1MutArray.html">MutArray</a>&lt; T, <a class="el" href="structLinearAlgebra_1_1StridedDims.html">StridedDims</a> &gt;</td></tr>
+<tr class="separator:a678ccaacb9ec9e6937e54160172ebba9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a40a1602a537f10a74c3d96808d0b345b"><td class="memTemplParams" colspan="2"><a id="a40a1602a537f10a74c3d96808d0b345b"></a>
+template&lt;class T , size_t L = 64&gt; </td></tr>
+<tr class="memitem:a40a1602a537f10a74c3d96808d0b345b"><td class="memTemplItemLeft" align="right" valign="top">using&#160;</td><td class="memTemplItemRight" valign="bottom"><b>Matrix</b> = <a class="el" href="structLinearAlgebra_1_1ManagedArray.html">ManagedArray</a>&lt; T, <a class="el" href="structLinearAlgebra_1_1StridedDims.html">StridedDims</a>, L &gt;</td></tr>
+<tr class="separator:a40a1602a537f10a74c3d96808d0b345b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aac3d956ffccfb91e7b280d6a01d6a658"><td class="memTemplParams" colspan="2"><a id="aac3d956ffccfb91e7b280d6a01d6a658"></a>
 template&lt;class T &gt; </td></tr>
-<tr class="memitem:a3af265026fa0cf72ee2bc22c3cee474d"><td class="memTemplItemLeft" align="right" valign="top">using&#160;</td><td class="memTemplItemRight" valign="bottom"><b>Matrix</b> = <a class="el" href="structLinearAlgebra_1_1ManagedArray.html">ManagedArray</a>&lt; T, <a class="el" href="structLinearAlgebra_1_1DenseDims.html">LinearAlgebra::DenseDims</a> &gt;</td></tr>
-<tr class="separator:a3af265026fa0cf72ee2bc22c3cee474d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aac3d956ffccfb91e7b280d6a01d6a658"><td class="memTemplItemLeft" align="right" valign="top">using&#160;</td><td class="memTemplItemRight" valign="bottom"><b>DensePtrMatrix</b> = <a class="el" href="structLinearAlgebra_1_1Array.html">Array</a>&lt; T, <a class="el" href="structLinearAlgebra_1_1DenseDims.html">DenseDims</a> &gt;</td></tr>
+<tr class="separator:aac3d956ffccfb91e7b280d6a01d6a658"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a713eb797c7ab6e969e62316b6db1eb35"><td class="memTemplParams" colspan="2"><a id="a713eb797c7ab6e969e62316b6db1eb35"></a>
+template&lt;class T &gt; </td></tr>
+<tr class="memitem:a713eb797c7ab6e969e62316b6db1eb35"><td class="memTemplItemLeft" align="right" valign="top">using&#160;</td><td class="memTemplItemRight" valign="bottom"><b>MutDensePtrMatrix</b> = <a class="el" href="structLinearAlgebra_1_1MutArray.html">MutArray</a>&lt; T, <a class="el" href="structLinearAlgebra_1_1DenseDims.html">DenseDims</a> &gt;</td></tr>
+<tr class="separator:a713eb797c7ab6e969e62316b6db1eb35"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a27325f2de4e77552de4c942adef1593c"><td class="memTemplParams" colspan="2"><a id="a27325f2de4e77552de4c942adef1593c"></a>
+template&lt;class T , size_t L = 64&gt; </td></tr>
+<tr class="memitem:a27325f2de4e77552de4c942adef1593c"><td class="memTemplItemLeft" align="right" valign="top">using&#160;</td><td class="memTemplItemRight" valign="bottom"><b>DenseMatrix</b> = <a class="el" href="structLinearAlgebra_1_1ManagedArray.html">ManagedArray</a>&lt; T, <a class="el" href="structLinearAlgebra_1_1DenseDims.html">DenseDims</a> &gt;</td></tr>
+<tr class="separator:a27325f2de4e77552de4c942adef1593c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a01873c4b0df6f72fb75bacd32267f67e"><td class="memTemplParams" colspan="2"><a id="a01873c4b0df6f72fb75bacd32267f67e"></a>
+template&lt;class T &gt; </td></tr>
+<tr class="memitem:a01873c4b0df6f72fb75bacd32267f67e"><td class="memTemplItemLeft" align="right" valign="top">using&#160;</td><td class="memTemplItemRight" valign="bottom"><b>SquarePtrMatrix</b> = <a class="el" href="structLinearAlgebra_1_1Array.html">Array</a>&lt; T, <a class="el" href="structLinearAlgebra_1_1SquareDims.html">SquareDims</a> &gt;</td></tr>
+<tr class="separator:a01873c4b0df6f72fb75bacd32267f67e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac9e52dcf932d0784d7ecbbbeeeb708fb"><td class="memTemplParams" colspan="2"><a id="ac9e52dcf932d0784d7ecbbbeeeb708fb"></a>
+template&lt;class T &gt; </td></tr>
+<tr class="memitem:ac9e52dcf932d0784d7ecbbbeeeb708fb"><td class="memTemplItemLeft" align="right" valign="top">using&#160;</td><td class="memTemplItemRight" valign="bottom"><b>MutSquarePtrMatrix</b> = <a class="el" href="structLinearAlgebra_1_1MutArray.html">MutArray</a>&lt; T, <a class="el" href="structLinearAlgebra_1_1SquareDims.html">SquareDims</a> &gt;</td></tr>
+<tr class="separator:ac9e52dcf932d0784d7ecbbbeeeb708fb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8848e55b89052077875bcf1db72dc507"><td class="memTemplParams" colspan="2"><a id="a8848e55b89052077875bcf1db72dc507"></a>
+template&lt;class T , size_t L = 16&gt; </td></tr>
+<tr class="memitem:a8848e55b89052077875bcf1db72dc507"><td class="memTemplItemLeft" align="right" valign="top">using&#160;</td><td class="memTemplItemRight" valign="bottom"><b>SquareMatrix</b> = <a class="el" href="structLinearAlgebra_1_1ManagedArray.html">ManagedArray</a>&lt; T, <a class="el" href="structLinearAlgebra_1_1SquareDims.html">SquareDims</a> &gt;</td></tr>
+<tr class="separator:a8848e55b89052077875bcf1db72dc507"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4758c2d11a3fd413876108bf169a0e9d"><td class="memItemLeft" align="right" valign="top"><a id="a4758c2d11a3fd413876108bf169a0e9d"></a>
 using&#160;</td><td class="memItemRight" valign="bottom"><b>IntMatrix</b> = <a class="el" href="structLinearAlgebra_1_1ManagedArray.html">Matrix</a>&lt; int64_t &gt;</td></tr>
 <tr class="separator:a4758c2d11a3fd413876108bf169a0e9d"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -189,26 +213,10 @@ using&#160;</td><td class="memItemRight" valign="bottom"><b>RowStride</b> = <a c
 <tr class="memitem:aa266b7faac805d3c94071d949cb82781"><td class="memItemLeft" align="right" valign="top"><a id="aa266b7faac805d3c94071d949cb82781"></a>
 using&#160;</td><td class="memItemRight" valign="bottom"><b>CarInd</b> = std::pair&lt; <a class="el" href="structLinearAlgebra_1_1AxisInt.html">Row</a>, <a class="el" href="structLinearAlgebra_1_1AxisInt.html">Col</a> &gt;</td></tr>
 <tr class="separator:aa266b7faac805d3c94071d949cb82781"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aeb1d9028b942299d25354a16f8f40d90"><td class="memTemplParams" colspan="2"><a id="aeb1d9028b942299d25354a16f8f40d90"></a>
-template&lt;typename T , size_t L = 16&gt; </td></tr>
-<tr class="memitem:aeb1d9028b942299d25354a16f8f40d90"><td class="memTemplItemLeft" align="right" valign="top">using&#160;</td><td class="memTemplItemRight" valign="bottom"><b>SquareMatrix</b> = <a class="el" href="structLinearAlgebra_1_1ManagedArray.html">Matrix</a>&lt; T, <a class="el" href="structLinearAlgebra_1_1SquareDims.html">SquareDims</a>, L &gt;</td></tr>
-<tr class="separator:aeb1d9028b942299d25354a16f8f40d90"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a14ca545a58cb261b7e938543fc3033c8"><td class="memTemplParams" colspan="2"><a id="a14ca545a58cb261b7e938543fc3033c8"></a>
-template&lt;typename T &gt; </td></tr>
-<tr class="memitem:a14ca545a58cb261b7e938543fc3033c8"><td class="memTemplItemLeft" align="right" valign="top">using&#160;</td><td class="memTemplItemRight" valign="bottom"><b>MutSquarePtrMatrix</b> = <a class="el" href="structLinearAlgebra_1_1MutArray.html">MutPtrMatrix</a>&lt; T, <a class="el" href="structLinearAlgebra_1_1SquareDims.html">SquareDims</a> &gt;</td></tr>
-<tr class="separator:a14ca545a58cb261b7e938543fc3033c8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aaf972456b931c6f2a5e587d957926676"><td class="memTemplParams" colspan="2"><a id="aaf972456b931c6f2a5e587d957926676"></a>
-template&lt;typename T &gt; </td></tr>
-<tr class="memitem:aaf972456b931c6f2a5e587d957926676"><td class="memTemplItemLeft" align="right" valign="top">using&#160;</td><td class="memTemplItemRight" valign="bottom"><b>SquarePtrMatrix</b> = <a class="el" href="structLinearAlgebra_1_1Array.html">PtrMatrix</a>&lt; T, <a class="el" href="structLinearAlgebra_1_1SquareDims.html">SquareDims</a> &gt;</td></tr>
-<tr class="separator:aaf972456b931c6f2a5e587d957926676"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a80f47b42e764d2ca276e3de3566b14e6"><td class="memTemplParams" colspan="2"><a id="a80f47b42e764d2ca276e3de3566b14e6"></a>
-template&lt;typename T &gt; </td></tr>
-<tr class="memitem:a80f47b42e764d2ca276e3de3566b14e6"><td class="memTemplItemLeft" align="right" valign="top">using&#160;</td><td class="memTemplItemRight" valign="bottom"><b>DenseMutPtrMatrix</b> = <a class="el" href="structLinearAlgebra_1_1MutArray.html">MutPtrMatrix</a>&lt; T, <a class="el" href="structLinearAlgebra_1_1DenseDims.html">DenseDims</a> &gt;</td></tr>
-<tr class="separator:a80f47b42e764d2ca276e3de3566b14e6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a086ad52ed13bfbd8057fed44acd1f624"><td class="memTemplParams" colspan="2"><a id="a086ad52ed13bfbd8057fed44acd1f624"></a>
-template&lt;class T &gt; </td></tr>
-<tr class="memitem:a086ad52ed13bfbd8057fed44acd1f624"><td class="memTemplItemLeft" align="right" valign="top">using&#160;</td><td class="memTemplItemRight" valign="bottom"><b>default_capacity_type_t</b> = typename <a class="el" href="structLinearAlgebra_1_1default__capacity__type.html">default_capacity_type</a>&lt; T &gt;::type</td></tr>
-<tr class="separator:a086ad52ed13bfbd8057fed44acd1f624"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a40aa7ceecf41bf187005b22918fb0a00"><td class="memTemplParams" colspan="2"><a id="a40aa7ceecf41bf187005b22918fb0a00"></a>
+template&lt;class S &gt; </td></tr>
+<tr class="memitem:a40aa7ceecf41bf187005b22918fb0a00"><td class="memTemplItemLeft" align="right" valign="top">using&#160;</td><td class="memTemplItemRight" valign="bottom"><b>default_capacity_type_t</b> = typename <a class="el" href="structLinearAlgebra_1_1default__capacity__type.html">default_capacity_type</a>&lt; S &gt;::type</td></tr>
+<tr class="separator:a40aa7ceecf41bf187005b22918fb0a00"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="enum-members"></a>
 Enumerations</h2></td></tr>
@@ -220,6 +228,14 @@ Enumerations</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
+<tr class="memitem:aa81c8ece0a0b64c86fcf4556edb3c4b6"><td class="memTemplParams" colspan="2"><a id="aa81c8ece0a0b64c86fcf4556edb3c4b6"></a>
+template&lt;typename T , typename S &gt; </td></tr>
+<tr class="memitem:aa81c8ece0a0b64c86fcf4556edb3c4b6"><td class="memTemplItemLeft" align="right" valign="top">&#160;</td><td class="memTemplItemRight" valign="bottom"><b>MutArray</b> (T *, S) -&gt; <a class="el" href="structLinearAlgebra_1_1MutArray.html">MutArray</a>&lt; T, S &gt;</td></tr>
+<tr class="separator:aa81c8ece0a0b64c86fcf4556edb3c4b6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a07ecb6861fe1a5a473bb75f85c0a0176"><td class="memTemplParams" colspan="2"><a id="a07ecb6861fe1a5a473bb75f85c0a0176"></a>
+template&lt;typename T , typename S &gt; </td></tr>
+<tr class="memitem:a07ecb6861fe1a5a473bb75f85c0a0176"><td class="memTemplItemLeft" align="right" valign="top">&#160;</td><td class="memTemplItemRight" valign="bottom"><b>MutArray</b> (<a class="el" href="structLinearAlgebra_1_1MutArray.html">MutArray</a>&lt; T, S &gt;) -&gt; <a class="el" href="structLinearAlgebra_1_1MutArray.html">MutArray</a>&lt; T, S &gt;</td></tr>
+<tr class="separator:a07ecb6861fe1a5a473bb75f85c0a0176"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aaaa214c421109a947991231cc4dfc21d"><td class="memItemLeft" align="right" valign="top"><a id="aaaa214c421109a947991231cc4dfc21d"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> (llvm::raw_ostream &amp;os, AxisType x) -&gt; llvm::raw_ostream &amp;</td></tr>
 <tr class="separator:aaaa214c421109a947991231cc4dfc21d"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -317,42 +333,90 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>unwrapRow</
 <tr class="memitem:a5c4550ce1e7f8f15d8461ff84a139683"><td class="memItemLeft" align="right" valign="top"><a id="a5c4550ce1e7f8f15d8461ff84a139683"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>unwrapCol</b> (auto x)</td></tr>
 <tr class="separator:a5c4550ce1e7f8f15d8461ff84a139683"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a128f02dfe1f874b6462350093ebf0ee4"><td class="memTemplParams" colspan="2"><a id="a128f02dfe1f874b6462350093ebf0ee4"></a>
-template&lt;typename T &gt; </td></tr>
-<tr class="memitem:a128f02dfe1f874b6462350093ebf0ee4"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>vector</b> (std::allocator&lt; T &gt;, size_t M) -&gt; <a class="el" href="structLinearAlgebra_1_1ManagedArray.html">Vector</a>&lt; T &gt;</td></tr>
-<tr class="separator:a128f02dfe1f874b6462350093ebf0ee4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9814985fc21ec5f51437d47132cb1bba"><td class="memTemplParams" colspan="2"><a id="a9814985fc21ec5f51437d47132cb1bba"></a>
-template&lt;typename T &gt; </td></tr>
-<tr class="memitem:a9814985fc21ec5f51437d47132cb1bba"><td class="memTemplItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>vector</b> (<a class="el" href="classWBumpAlloc.html">WBumpAlloc</a>&lt; T &gt; alloc, size_t M) -&gt; <a class="el" href="structLinearAlgebra_1_1MutArray.html">MutPtrVector</a>&lt; T &gt;</td></tr>
-<tr class="separator:a9814985fc21ec5f51437d47132cb1bba"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af5521f7dee935db8ee21b876b198638b"><td class="memTemplParams" colspan="2"><a id="af5521f7dee935db8ee21b876b198638b"></a>
-template&lt;typename T &gt; </td></tr>
-<tr class="memitem:af5521f7dee935db8ee21b876b198638b"><td class="memTemplItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>matrix</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, size_t M) -&gt; <a class="el" href="structLinearAlgebra_1_1MutArray.html">MutPtrVector</a>&lt; T &gt;</td></tr>
-<tr class="separator:af5521f7dee935db8ee21b876b198638b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9ef7a9f57bfc17c7f8bab6ffbc765434"><td class="memTemplParams" colspan="2"><a id="a9ef7a9f57bfc17c7f8bab6ffbc765434"></a>
-template&lt;typename T &gt; </td></tr>
-<tr class="memitem:a9ef7a9f57bfc17c7f8bab6ffbc765434"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>matrix</b> (std::allocator&lt; T &gt;, size_t M, size_t N) -&gt; <a class="el" href="structLinearAlgebra_1_1ManagedArray.html">Matrix</a>&lt; T, <a class="el" href="structLinearAlgebra_1_1DenseDims.html">DenseDims</a> &gt;</td></tr>
-<tr class="separator:a9ef7a9f57bfc17c7f8bab6ffbc765434"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab88c48087e44220ca5fbce4ff0dbf237"><td class="memTemplParams" colspan="2"><a id="ab88c48087e44220ca5fbce4ff0dbf237"></a>
-template&lt;typename T &gt; </td></tr>
-<tr class="memitem:ab88c48087e44220ca5fbce4ff0dbf237"><td class="memTemplItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>matrix</b> (<a class="el" href="classWBumpAlloc.html">WBumpAlloc</a>&lt; T &gt; alloc, size_t M, size_t N) -&gt; <a class="el" href="structLinearAlgebra_1_1MutArray.html">MutPtrMatrix</a>&lt; T, <a class="el" href="structLinearAlgebra_1_1DenseDims.html">DenseDims</a> &gt;</td></tr>
-<tr class="separator:ab88c48087e44220ca5fbce4ff0dbf237"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6a460ecb61d2648d604a0e1e08813455"><td class="memTemplParams" colspan="2"><a id="a6a460ecb61d2648d604a0e1e08813455"></a>
-template&lt;typename T &gt; </td></tr>
-<tr class="memitem:a6a460ecb61d2648d604a0e1e08813455"><td class="memTemplItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>matrix</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, size_t M, size_t N) -&gt; <a class="el" href="structLinearAlgebra_1_1MutArray.html">MutPtrMatrix</a>&lt; T, <a class="el" href="structLinearAlgebra_1_1DenseDims.html">DenseDims</a> &gt;</td></tr>
-<tr class="separator:a6a460ecb61d2648d604a0e1e08813455"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6767dfd2cc20a9f68038bb173624e9f8"><td class="memTemplParams" colspan="2"><a id="a6767dfd2cc20a9f68038bb173624e9f8"></a>
-template&lt;typename T &gt; </td></tr>
-<tr class="memitem:a6767dfd2cc20a9f68038bb173624e9f8"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>identity</b> (std::allocator&lt; T &gt;, size_t M) -&gt; <a class="el" href="structLinearAlgebra_1_1ManagedArray.html">Matrix</a>&lt; T, <a class="el" href="structLinearAlgebra_1_1SquareDims.html">SquareDims</a> &gt;</td></tr>
-<tr class="separator:a6767dfd2cc20a9f68038bb173624e9f8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a32cd125f4a2e7e983853554e3c4a7a2b"><td class="memTemplParams" colspan="2"><a id="a32cd125f4a2e7e983853554e3c4a7a2b"></a>
-template&lt;typename T &gt; </td></tr>
-<tr class="memitem:a32cd125f4a2e7e983853554e3c4a7a2b"><td class="memTemplItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>identity</b> (<a class="el" href="classWBumpAlloc.html">WBumpAlloc</a>&lt; T &gt; alloc, size_t M) -&gt; <a class="el" href="structLinearAlgebra_1_1MutArray.html">MutPtrMatrix</a>&lt; T, <a class="el" href="structLinearAlgebra_1_1SquareDims.html">SquareDims</a> &gt;</td></tr>
-<tr class="separator:a32cd125f4a2e7e983853554e3c4a7a2b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5720e30d55f64b50cb6acd421d98ff3d"><td class="memTemplParams" colspan="2"><a id="a5720e30d55f64b50cb6acd421d98ff3d"></a>
-template&lt;typename T &gt; </td></tr>
-<tr class="memitem:a5720e30d55f64b50cb6acd421d98ff3d"><td class="memTemplItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>identity</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, size_t M) -&gt; <a class="el" href="structLinearAlgebra_1_1MutArray.html">MutPtrMatrix</a>&lt; T, <a class="el" href="structLinearAlgebra_1_1SquareDims.html">SquareDims</a> &gt;</td></tr>
-<tr class="separator:a5720e30d55f64b50cb6acd421d98ff3d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af2aefae03e5689d4765bd59f94df192d"><td class="memTemplParams" colspan="2"><a id="af2aefae03e5689d4765bd59f94df192d"></a>
+template&lt;Scalar T&gt; </td></tr>
+<tr class="memitem:af2aefae03e5689d4765bd59f94df192d"><td class="memTemplItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>vector</b> (std::allocator&lt; T &gt;, unsigned int M) -&gt; <a class="el" href="structLinearAlgebra_1_1ManagedArray.html">Vector</a>&lt; T &gt;</td></tr>
+<tr class="separator:af2aefae03e5689d4765bd59f94df192d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abdfcdef1aa20bf70bc01ef8436d61c03"><td class="memTemplParams" colspan="2"><a id="abdfcdef1aa20bf70bc01ef8436d61c03"></a>
+template&lt;Scalar T&gt; </td></tr>
+<tr class="memitem:abdfcdef1aa20bf70bc01ef8436d61c03"><td class="memTemplItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>vector</b> (<a class="el" href="classWBumpAlloc.html">WBumpAlloc</a>&lt; T &gt; alloc, unsigned int M) -&gt; <a class="el" href="structLinearAlgebra_1_1MutArray.html">MutPtrVector</a>&lt; T &gt;</td></tr>
+<tr class="separator:abdfcdef1aa20bf70bc01ef8436d61c03"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a92944a398424bdc3d2a319b3a63f1d86"><td class="memTemplParams" colspan="2"><a id="a92944a398424bdc3d2a319b3a63f1d86"></a>
+template&lt;Scalar T&gt; </td></tr>
+<tr class="memitem:a92944a398424bdc3d2a319b3a63f1d86"><td class="memTemplItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>vector</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, unsigned int M) -&gt; <a class="el" href="structLinearAlgebra_1_1MutArray.html">MutPtrVector</a>&lt; T &gt;</td></tr>
+<tr class="separator:a92944a398424bdc3d2a319b3a63f1d86"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac7c66764ba4a1bff85916b8e53943dc7"><td class="memTemplParams" colspan="2"><a id="ac7c66764ba4a1bff85916b8e53943dc7"></a>
+template&lt;Scalar T&gt; </td></tr>
+<tr class="memitem:ac7c66764ba4a1bff85916b8e53943dc7"><td class="memTemplItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>vector</b> (std::allocator&lt; T &gt;, unsigned int M, T x) -&gt; <a class="el" href="structLinearAlgebra_1_1ManagedArray.html">Vector</a>&lt; T &gt;</td></tr>
+<tr class="separator:ac7c66764ba4a1bff85916b8e53943dc7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a12aba0eb150e42c338505cb5629ea52e"><td class="memTemplParams" colspan="2"><a id="a12aba0eb150e42c338505cb5629ea52e"></a>
+template&lt;Scalar T&gt; </td></tr>
+<tr class="memitem:a12aba0eb150e42c338505cb5629ea52e"><td class="memTemplItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>vector</b> (<a class="el" href="classWBumpAlloc.html">WBumpAlloc</a>&lt; T &gt; alloc, unsigned int M, T x) -&gt; <a class="el" href="structLinearAlgebra_1_1MutArray.html">MutPtrVector</a>&lt; T &gt;</td></tr>
+<tr class="separator:a12aba0eb150e42c338505cb5629ea52e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afc7cdc7d9e224715a628b0e9eb834cb3"><td class="memTemplParams" colspan="2"><a id="afc7cdc7d9e224715a628b0e9eb834cb3"></a>
+template&lt;Scalar T&gt; </td></tr>
+<tr class="memitem:afc7cdc7d9e224715a628b0e9eb834cb3"><td class="memTemplItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>vector</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, unsigned int M, T x) -&gt; <a class="el" href="structLinearAlgebra_1_1MutArray.html">MutPtrVector</a>&lt; T &gt;</td></tr>
+<tr class="separator:afc7cdc7d9e224715a628b0e9eb834cb3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa86156edeb532fd81d5201875f30ab09"><td class="memTemplParams" colspan="2"><a id="aa86156edeb532fd81d5201875f30ab09"></a>
+template&lt;Scalar T&gt; </td></tr>
+<tr class="memitem:aa86156edeb532fd81d5201875f30ab09"><td class="memTemplItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>matrix</b> (std::allocator&lt; T &gt;, unsigned int M) -&gt; <a class="el" href="structLinearAlgebra_1_1ManagedArray.html">SquareMatrix</a>&lt; T &gt;</td></tr>
+<tr class="separator:aa86156edeb532fd81d5201875f30ab09"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9c58f58551a0734a5575a5927ef93734"><td class="memTemplParams" colspan="2"><a id="a9c58f58551a0734a5575a5927ef93734"></a>
+template&lt;Scalar T&gt; </td></tr>
+<tr class="memitem:a9c58f58551a0734a5575a5927ef93734"><td class="memTemplItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>matrix</b> (<a class="el" href="classWBumpAlloc.html">WBumpAlloc</a>&lt; T &gt; alloc, unsigned int M) -&gt; <a class="el" href="structLinearAlgebra_1_1MutArray.html">MutSquarePtrMatrix</a>&lt; T &gt;</td></tr>
+<tr class="separator:a9c58f58551a0734a5575a5927ef93734"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa3b7e014343ec63f29ae3b243a94510e"><td class="memTemplParams" colspan="2"><a id="aa3b7e014343ec63f29ae3b243a94510e"></a>
+template&lt;Scalar T&gt; </td></tr>
+<tr class="memitem:aa3b7e014343ec63f29ae3b243a94510e"><td class="memTemplItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>matrix</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, unsigned int M) -&gt; <a class="el" href="structLinearAlgebra_1_1MutArray.html">MutSquarePtrMatrix</a>&lt; T &gt;</td></tr>
+<tr class="separator:aa3b7e014343ec63f29ae3b243a94510e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab02f7ee71950bb1a5d7cb538b190bce3"><td class="memTemplParams" colspan="2"><a id="ab02f7ee71950bb1a5d7cb538b190bce3"></a>
+template&lt;Scalar T&gt; </td></tr>
+<tr class="memitem:ab02f7ee71950bb1a5d7cb538b190bce3"><td class="memTemplItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>matrix</b> (std::allocator&lt; T &gt;, unsigned int M, T x) -&gt; <a class="el" href="structLinearAlgebra_1_1ManagedArray.html">SquareMatrix</a>&lt; T &gt;</td></tr>
+<tr class="separator:ab02f7ee71950bb1a5d7cb538b190bce3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a780183cec6044f7cd31a8edb1b7644ff"><td class="memTemplParams" colspan="2"><a id="a780183cec6044f7cd31a8edb1b7644ff"></a>
+template&lt;Scalar T&gt; </td></tr>
+<tr class="memitem:a780183cec6044f7cd31a8edb1b7644ff"><td class="memTemplItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>matrix</b> (<a class="el" href="classWBumpAlloc.html">WBumpAlloc</a>&lt; T &gt; alloc, unsigned int M, T x) -&gt; <a class="el" href="structLinearAlgebra_1_1MutArray.html">MutSquarePtrMatrix</a>&lt; T &gt;</td></tr>
+<tr class="separator:a780183cec6044f7cd31a8edb1b7644ff"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a61df185ffa0c1887379f3351f48b79c3"><td class="memTemplParams" colspan="2"><a id="a61df185ffa0c1887379f3351f48b79c3"></a>
+template&lt;Scalar T&gt; </td></tr>
+<tr class="memitem:a61df185ffa0c1887379f3351f48b79c3"><td class="memTemplItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>matrix</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, unsigned int M, T x) -&gt; <a class="el" href="structLinearAlgebra_1_1MutArray.html">MutSquarePtrMatrix</a>&lt; T &gt;</td></tr>
+<tr class="separator:a61df185ffa0c1887379f3351f48b79c3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4e3f64613613dbe674402d45c6f59724"><td class="memTemplParams" colspan="2"><a id="a4e3f64613613dbe674402d45c6f59724"></a>
+template&lt;Scalar T&gt; </td></tr>
+<tr class="memitem:a4e3f64613613dbe674402d45c6f59724"><td class="memTemplItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>matrix</b> (std::allocator&lt; T &gt;, <a class="el" href="structLinearAlgebra_1_1AxisInt.html">Row</a> M, <a class="el" href="structLinearAlgebra_1_1AxisInt.html">Col</a> N) -&gt; <a class="el" href="structLinearAlgebra_1_1ManagedArray.html">DenseMatrix</a>&lt; T &gt;</td></tr>
+<tr class="separator:a4e3f64613613dbe674402d45c6f59724"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a235e1e843a6ba45dc733a85633754dc3"><td class="memTemplParams" colspan="2"><a id="a235e1e843a6ba45dc733a85633754dc3"></a>
+template&lt;Scalar T&gt; </td></tr>
+<tr class="memitem:a235e1e843a6ba45dc733a85633754dc3"><td class="memTemplItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>matrix</b> (<a class="el" href="classWBumpAlloc.html">WBumpAlloc</a>&lt; T &gt; alloc, <a class="el" href="structLinearAlgebra_1_1AxisInt.html">Row</a> M, <a class="el" href="structLinearAlgebra_1_1AxisInt.html">Col</a> N) -&gt; <a class="el" href="structLinearAlgebra_1_1MutArray.html">MutDensePtrMatrix</a>&lt; T &gt;</td></tr>
+<tr class="separator:a235e1e843a6ba45dc733a85633754dc3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a803ebf388dbc376de6e9fd8f059dc6a7"><td class="memTemplParams" colspan="2"><a id="a803ebf388dbc376de6e9fd8f059dc6a7"></a>
+template&lt;Scalar T&gt; </td></tr>
+<tr class="memitem:a803ebf388dbc376de6e9fd8f059dc6a7"><td class="memTemplItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>matrix</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, <a class="el" href="structLinearAlgebra_1_1AxisInt.html">Row</a> M, <a class="el" href="structLinearAlgebra_1_1AxisInt.html">Col</a> N) -&gt; <a class="el" href="structLinearAlgebra_1_1MutArray.html">MutDensePtrMatrix</a>&lt; T &gt;</td></tr>
+<tr class="separator:a803ebf388dbc376de6e9fd8f059dc6a7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4905cb7e99cfcc255f5dd9ce3f936045"><td class="memTemplParams" colspan="2"><a id="a4905cb7e99cfcc255f5dd9ce3f936045"></a>
+template&lt;Scalar T&gt; </td></tr>
+<tr class="memitem:a4905cb7e99cfcc255f5dd9ce3f936045"><td class="memTemplItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>matrix</b> (std::allocator&lt; T &gt;, <a class="el" href="structLinearAlgebra_1_1AxisInt.html">Row</a> M, <a class="el" href="structLinearAlgebra_1_1AxisInt.html">Col</a> N, T x) -&gt; <a class="el" href="structLinearAlgebra_1_1ManagedArray.html">DenseMatrix</a>&lt; T &gt;</td></tr>
+<tr class="separator:a4905cb7e99cfcc255f5dd9ce3f936045"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a38d6cda845e0e5e91ff9767700d8ba2c"><td class="memTemplParams" colspan="2"><a id="a38d6cda845e0e5e91ff9767700d8ba2c"></a>
+template&lt;Scalar T&gt; </td></tr>
+<tr class="memitem:a38d6cda845e0e5e91ff9767700d8ba2c"><td class="memTemplItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>matrix</b> (<a class="el" href="classWBumpAlloc.html">WBumpAlloc</a>&lt; T &gt; alloc, <a class="el" href="structLinearAlgebra_1_1AxisInt.html">Row</a> M, <a class="el" href="structLinearAlgebra_1_1AxisInt.html">Col</a> N, T x) -&gt; <a class="el" href="structLinearAlgebra_1_1MutArray.html">MutDensePtrMatrix</a>&lt; T &gt;</td></tr>
+<tr class="separator:a38d6cda845e0e5e91ff9767700d8ba2c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a666e068d4fee85b76817e1c3818651fe"><td class="memTemplParams" colspan="2"><a id="a666e068d4fee85b76817e1c3818651fe"></a>
+template&lt;Scalar T&gt; </td></tr>
+<tr class="memitem:a666e068d4fee85b76817e1c3818651fe"><td class="memTemplItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>matrix</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, <a class="el" href="structLinearAlgebra_1_1AxisInt.html">Row</a> M, <a class="el" href="structLinearAlgebra_1_1AxisInt.html">Col</a> N, T x) -&gt; <a class="el" href="structLinearAlgebra_1_1MutArray.html">MutDensePtrMatrix</a>&lt; T &gt;</td></tr>
+<tr class="separator:a666e068d4fee85b76817e1c3818651fe"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aecb983bd359272eeec7258c54e9c6520"><td class="memTemplParams" colspan="2"><a id="aecb983bd359272eeec7258c54e9c6520"></a>
+template&lt;Scalar T&gt; </td></tr>
+<tr class="memitem:aecb983bd359272eeec7258c54e9c6520"><td class="memTemplItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>identity</b> (std::allocator&lt; T &gt;, unsigned int M) -&gt; <a class="el" href="structLinearAlgebra_1_1ManagedArray.html">SquareMatrix</a>&lt; T &gt;</td></tr>
+<tr class="separator:aecb983bd359272eeec7258c54e9c6520"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2d2069763f5f69512f6313805fde9556"><td class="memTemplParams" colspan="2"><a id="a2d2069763f5f69512f6313805fde9556"></a>
+template&lt;Scalar T&gt; </td></tr>
+<tr class="memitem:a2d2069763f5f69512f6313805fde9556"><td class="memTemplItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>identity</b> (<a class="el" href="classWBumpAlloc.html">WBumpAlloc</a>&lt; T &gt; alloc, unsigned int M) -&gt; <a class="el" href="structLinearAlgebra_1_1MutArray.html">MutSquarePtrMatrix</a>&lt; T &gt;</td></tr>
+<tr class="separator:a2d2069763f5f69512f6313805fde9556"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6a3f3c46de1893e490e08b1d21e585d4"><td class="memTemplParams" colspan="2"><a id="a6a3f3c46de1893e490e08b1d21e585d4"></a>
+template&lt;Scalar T&gt; </td></tr>
+<tr class="memitem:a6a3f3c46de1893e490e08b1d21e585d4"><td class="memTemplItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>identity</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, unsigned int M) -&gt; <a class="el" href="structLinearAlgebra_1_1MutArray.html">MutSquarePtrMatrix</a>&lt; T &gt;</td></tr>
+<tr class="separator:a6a3f3c46de1893e490e08b1d21e585d4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a61047a12f0000b274836fdbb06647a4d"><td class="memItemLeft" align="right" valign="top"><a id="a61047a12f0000b274836fdbb06647a4d"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator+</b> (ScalarValueIndex auto x, Begin) -&gt; <a class="el" href="structLinearAlgebra_1_1OffsetBegin.html">OffsetBegin</a></td></tr>
 <tr class="separator:a61047a12f0000b274836fdbb06647a4d"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -660,6 +724,9 @@ template&lt;class T &gt; </td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="var-members"></a>
 Variables</h2></td></tr>
+<tr class="memitem:a3cc1dd2d5d10324089cc17a329b82df4"><td class="memTemplParams" colspan="2">template&lt;class T &gt; </td></tr>
+<tr class="memitem:a3cc1dd2d5d10324089cc17a329b82df4"><td class="memTemplItemLeft" align="right" valign="top">concept&#160;</td><td class="memTemplItemRight" valign="bottom"><b>Scalar</b></td></tr>
+<tr class="separator:a3cc1dd2d5d10324089cc17a329b82df4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a62766d37ab8364f0d1d27847988415a3"><td class="memTemplParams" colspan="2"><a id="a62766d37ab8364f0d1d27847988415a3"></a>
 template&lt;typename T &gt; </td></tr>
 <tr class="memitem:a62766d37ab8364f0d1d27847988415a3"><td class="memTemplItemLeft" align="right" valign="top">concept&#160;</td><td class="memTemplItemRight" valign="bottom"><b>RowOrCol</b> = std::same_as&lt;T, <a class="el" href="structLinearAlgebra_1_1AxisInt.html">Row</a>&gt; || std::same_as&lt;T, <a class="el" href="structLinearAlgebra_1_1AxisInt.html">Col</a>&gt;</td></tr>
@@ -691,9 +758,6 @@ template&lt;typename T &gt; </td></tr>
 <tr class="memitem:a6d78abcabff152e42338eb0e3b984fa7"><td class="memTemplParams" colspan="2">template&lt;class I , class D &gt; </td></tr>
 <tr class="memitem:a6d78abcabff152e42338eb0e3b984fa7"><td class="memTemplItemLeft" align="right" valign="top">concept&#160;</td><td class="memTemplItemRight" valign="bottom"><b>Index</b></td></tr>
 <tr class="separator:a6d78abcabff152e42338eb0e3b984fa7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3cc1dd2d5d10324089cc17a329b82df4"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
-<tr class="memitem:a3cc1dd2d5d10324089cc17a329b82df4"><td class="memTemplItemLeft" align="right" valign="top">concept&#160;</td><td class="memTemplItemRight" valign="bottom"><b>Scalar</b></td></tr>
-<tr class="separator:a3cc1dd2d5d10324089cc17a329b82df4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2836247f7577b732aeb5ac67eaeb98db"><td class="memTemplParams" colspan="2"><a id="a2836247f7577b732aeb5ac67eaeb98db"></a>
 template&lt;typename T &gt; </td></tr>
 <tr class="memitem:a2836247f7577b732aeb5ac67eaeb98db"><td class="memTemplItemLeft" align="right" valign="top">concept&#160;</td><td class="memTemplItemRight" valign="bottom"><b>VectorOrScalar</b> = AbstractVector&lt;T&gt; || Scalar&lt;T&gt;</td></tr>
@@ -979,7 +1043,7 @@ template&lt;typename T &gt; </div>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;typename T &gt; </div>
+template&lt;class T &gt; </div>
       <table class="memname">
         <tr>
           <td class="memname">concept LinearAlgebra::Scalar</td>
