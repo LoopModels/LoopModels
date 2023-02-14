@@ -460,9 +460,12 @@ template&lt;typename B , typename E &gt; </td></tr>
 <tr class="memitem:ac085d775fa0be6fd9d79d45341199f6c"><td class="memItemLeft" align="right" valign="top"><a id="ac085d775fa0be6fd9d79d45341199f6c"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>canonicalizeRange</b> (Colon, size_t M) -&gt; <a class="el" href="structRange.html">Range</a>&lt; size_t, size_t &gt;</td></tr>
 <tr class="separator:ac085d775fa0be6fd9d79d45341199f6c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a42f854825c639f3539eafa721b30a2e0"><td class="memItemLeft" align="right" valign="top"><a id="a42f854825c639f3539eafa721b30a2e0"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>calcOffset</b> (size_t len, size_t i)</td></tr>
-<tr class="separator:a42f854825c639f3539eafa721b30a2e0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac9ea9c5cbfb13051d71dead5ecbaac95"><td class="memItemLeft" align="right" valign="top"><a id="ac9ea9c5cbfb13051d71dead5ecbaac95"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>calcOffset</b> (size_t len, size_t i) -&gt; size_t</td></tr>
+<tr class="separator:ac9ea9c5cbfb13051d71dead5ecbaac95"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a93fb2a4da3f29bbb1de4d51d6f2b52ee"><td class="memItemLeft" align="right" valign="top"><a id="a93fb2a4da3f29bbb1de4d51d6f2b52ee"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>calcOffset</b> (size_t len, <a class="el" href="structLinearAlgebra_1_1AxisInt.html">Col</a> i) -&gt; size_t</td></tr>
+<tr class="separator:a93fb2a4da3f29bbb1de4d51d6f2b52ee"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac6a2f2fff9f3b5d95ea07649a9951ddd"><td class="memTemplParams" colspan="2"><a id="ac6a2f2fff9f3b5d95ea07649a9951ddd"></a>
 template&lt;std::integral B, class E &gt; </td></tr>
 <tr class="memitem:ac6a2f2fff9f3b5d95ea07649a9951ddd"><td class="memTemplItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>calcOffset</b> (size_t, <a class="el" href="structRange.html">Range</a>&lt; B, E &gt; i) -&gt; B</td></tr>
@@ -504,7 +507,7 @@ template&lt;ScalarValueIndex R, ScalarValueIndex C&gt; </td></tr>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>calcNewDim</b> (std::integral auto len, Colon)</td></tr>
 <tr class="separator:a374c387204130f924fbf4c409b314d24"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9bb5596593a076421372a8f9c3262da2"><td class="memTemplParams" colspan="2"><a id="a9bb5596593a076421372a8f9c3262da2"></a>
-template&lt;AbstractSlice B, std::integral C&gt; </td></tr>
+template&lt;AbstractSlice B, ScalarColIndex C&gt; </td></tr>
 <tr class="memitem:a9bb5596593a076421372a8f9c3262da2"><td class="memTemplItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>calcNewDim</b> (<a class="el" href="structLinearAlgebra_1_1StridedDims.html">StridedDims</a> d, <a class="el" href="structLinearAlgebra_1_1CartesianIndex.html">CartesianIndex</a>&lt; B, C &gt; i)</td></tr>
 <tr class="separator:a9bb5596593a076421372a8f9c3262da2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af51d42d3c62d814dc11472a8d4665ab7"><td class="memTemplParams" colspan="2"><a id="af51d42d3c62d814dc11472a8d4665ab7"></a>
