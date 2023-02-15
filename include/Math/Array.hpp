@@ -311,6 +311,34 @@ template <class T, class S> struct MutArray : Array<T, S> {
       for (size_t c = 0; c < this->numCol(); ++c) (*this)(r, c) -= B(r, c);
     return *this;
   }
+  [[gnu::flatten]] constexpr auto operator+=(const AbstractVector auto &B)
+    -> decltype(auto) {
+    if constexpr (MatrixDimension<S>) {
+      invariant(this->numRow() == B.size());
+      for (size_t r = 0; r < this->numRow(); ++r) {
+        auto Br = B[r];
+        for (size_t c = 0; c < this->numCol(); ++c) (*this)(r, c) += Br;
+      }
+    } else {
+      invariant(this->size() == B.size());
+      for (size_t i = 0; i < this->size(); ++i) (*this)[i] += B[i];
+    }
+    return *this;
+  }
+  [[gnu::flatten]] constexpr auto operator-=(const AbstractVector auto &B)
+    -> decltype(auto) {
+    if constexpr (MatrixDimension<S>) {
+      invariant(this->numRow() == B.size());
+      for (size_t r = 0; r < this->numRow(); ++r) {
+        auto Br = B[r];
+        for (size_t c = 0; c < this->numCol(); ++c) (*this)(r, c) -= Br;
+      }
+    } else {
+      invariant(this->size() == B.size());
+      for (size_t i = 0; i < this->size(); ++i) (*this)[i] -= B[i];
+    }
+    return *this;
+  }
   [[gnu::flatten]] constexpr auto operator*=(const std::integral auto b)
     -> decltype(auto) {
     if constexpr (std::integral<S>) {
@@ -404,19 +432,15 @@ struct ManagedArrayView : MutArray<T, S> {
       invariant(newCapacity > oz);
       std::uninitialized_fill_n((T *)(newPtr + oz), newCapacity - oz, T{});
     } else {
-      static_assert(LinearAlgebra::MatrixDimension<S>,
-                    "Can only resize 1 or 2d containers.");
-      auto newX = unsigned{LinearAlgebra::RowStride{nz}},
-           oldX = unsigned{LinearAlgebra::RowStride{oz}},
-           newN = unsigned{LinearAlgebra::Col{nz}},
-           oldN = unsigned{LinearAlgebra::Col{oz}},
-           newM = unsigned{LinearAlgebra::Row{nz}},
-           oldM = unsigned{LinearAlgebra::Row{oz}};
+      static_assert(MatrixDimension<S>, "Can only resize 1 or 2d containers.");
+      auto newX = unsigned{RowStride{nz}}, oldX = unsigned{RowStride{oz}},
+           newN = unsigned{Col{nz}}, oldN = unsigned{Col{oz}},
+           newM = unsigned{Row{nz}}, oldM = unsigned{Row{oz}};
       U len = U(nz);
       bool newAlloc = U(len) > this->capacity;
       bool inPlace = !newAlloc;
 #if __cplusplus >= 202202L
-      T *npt = (T *)(ptr);
+      T *npt = (T *)(this->ptr);
       if (newAlloc) {
         std::allocation_result res = allocator.allocate_at_least(len);
         npt = res.ptr;
@@ -469,10 +493,10 @@ struct ManagedArrayView : MutArray<T, S> {
       if (newAlloc) maybeDeallocate(npt, len);
     }
   }
-  constexpr void resize(LinearAlgebra::Row r) {
+  constexpr void resize(Row r) {
     if constexpr (std::integral<S>) {
       return resize(S(r));
-    } else if constexpr (LinearAlgebra::MatrixDimension<S>) {
+    } else if constexpr (MatrixDimension<S>) {
       S nz = this->sz;
       return resize(nz.set(r));
     }
@@ -482,18 +506,18 @@ struct ManagedArrayView : MutArray<T, S> {
     if (L > U(this->sz)) growUndef(L);
     this->sz = M;
   }
-  constexpr void resizeForOverwrite(LinearAlgebra::Row r) {
+  constexpr void resizeForOverwrite(Row r) {
     if constexpr (std::integral<S>) {
       return resizeForOverwrite(S(r));
-    } else if constexpr (LinearAlgebra::MatrixDimension<S>) {
+    } else if constexpr (MatrixDimension<S>) {
       S nz = this->sz;
       return resizeForOverwrite(nz.set(r));
     }
   }
-  constexpr void resizeForOverwrite(LinearAlgebra::Col c) {
+  constexpr void resizeForOverwrite(Col c) {
     if constexpr (std::integral<S>) {
       return resizeForOverwrite(S(c));
-    } else if constexpr (LinearAlgebra::MatrixDimension<S>) {
+    } else if constexpr (MatrixDimension<S>) {
       S nz = this->sz;
       return resizeForOverwrite(nz.set(c));
     }
@@ -505,15 +529,14 @@ struct ManagedArrayView : MutArray<T, S> {
       std::copy((T *)(this->ptr) + i + 1, this->ptr + oldLen,
                 (T *)(this->ptr) + i);
   }
-  constexpr void erase(LinearAlgebra::Row r) {
+  constexpr void erase(Row r) {
     if constexpr (std::integral<S>) {
       return erase(S(r));
-    } else if constexpr (std::is_same_v<S, LinearAlgebra::StridedDims>) {
+    } else if constexpr (std::is_same_v<S, StridedDims>) {
 
-      auto stride = unsigned{LinearAlgebra::RowStride{this->sz}},
-           col = unsigned{LinearAlgebra::Col{this->sz}},
-           newRow = unsigned{LinearAlgebra::Row{this->sz}} - 1;
-      this->sz.set(LinearAlgebra::Row{newRow});
+      auto stride = unsigned{RowStride{this->sz}},
+           col = unsigned{Col{this->sz}}, newRow = unsigned{Row{this->sz}} - 1;
+      this->sz.set(Row{newRow});
       if ((col == 0) || (r == newRow)) return;
       invariant(col <= stride);
       if ((col + (512 / (sizeof(T)))) <= stride) {
@@ -527,25 +550,23 @@ struct ManagedArrayView : MutArray<T, S> {
         T *dst = this->ptr + r * stride;
         std::copy_n(dst + stride, (newRow - unsigned(r)) * stride, dst);
       }
-    } else { // if constexpr (std::is_same_v<S, LinearAlgebra::DenseDims>) {
-      static_assert(std::is_same_v<S, LinearAlgebra::DenseDims>,
+    } else { // if constexpr (std::is_same_v<S, DenseDims>) {
+      static_assert(std::is_same_v<S, DenseDims>,
                     "if erasing a row, matrix must be strided or dense.");
-      auto col = unsigned{LinearAlgebra::Col{this->sz}},
-           newRow = unsigned{LinearAlgebra::Row{this->sz}} - 1;
-      this->sz.set(LinearAlgebra::Row{newRow});
+      auto col = unsigned{Col{this->sz}}, newRow = unsigned{Row{this->sz}} - 1;
+      this->sz.set(Row{newRow});
       if ((col == 0) || (r == newRow)) return;
       T *dst = this->ptr + r * col;
       std::copy_n(dst + col, (newRow - unsigned(r)) * col, dst);
     }
   }
-  constexpr void erase(LinearAlgebra::Col c) {
+  constexpr void erase(Col c) {
     if constexpr (std::integral<S>) {
       return erase(S(c));
-    } else if constexpr (std::is_same_v<S, LinearAlgebra::StridedDims>) {
-      auto stride = unsigned{LinearAlgebra::RowStride{this->sz}},
-           newCol = unsigned{LinearAlgebra::Col{this->sz}} - 1,
-           row = unsigned{LinearAlgebra::Row{this->sz}};
-      this->sz.set(LinearAlgebra::Col{newCol});
+    } else if constexpr (std::is_same_v<S, StridedDims>) {
+      auto stride = unsigned{RowStride{this->sz}},
+           newCol = unsigned{Col{this->sz}} - 1, row = unsigned{Row{this->sz}};
+      this->sz.set(Col{newCol});
       unsigned colsToCopy = newCol - unsigned(c);
       if ((colsToCopy == 0) || (row == 0)) return;
       // we only need to copy if memory shifts position
@@ -553,12 +574,12 @@ struct ManagedArrayView : MutArray<T, S> {
         T *dst = this->ptr + m * stride + unsigned(c);
         std::copy_n(dst + 1, colsToCopy, dst);
       }
-    } else { // if constexpr (std::is_same_v<S, LinearAlgebra::DenseDims>) {
-      static_assert(std::is_same_v<S, LinearAlgebra::DenseDims>,
+    } else { // if constexpr (std::is_same_v<S, DenseDims>) {
+      static_assert(std::is_same_v<S, DenseDims>,
                     "if erasing a col, matrix must be strided or dense.");
-      auto newCol = unsigned{LinearAlgebra::Col{this->sz}}, oldCol = newCol--,
-           row = unsigned{LinearAlgebra::Row{this->sz}};
-      this->sz.set(LinearAlgebra::Col{newCol});
+      auto newCol = unsigned{Col{this->sz}}, oldCol = newCol--,
+           row = unsigned{Row{this->sz}};
+      this->sz.set(Col{newCol});
       unsigned colsToCopy = newCol - unsigned(c);
       if ((colsToCopy == 0) || (row == 0)) return;
       // we only need to copy if memory shifts position
@@ -569,36 +590,74 @@ struct ManagedArrayView : MutArray<T, S> {
       }
     }
   }
-  constexpr void truncate(S newLen) {
-    invariant(U(newLen) <= this->capacity);
-    this->sz = newLen;
-  }
-  constexpr void truncate(LinearAlgebra::Row r) {
+  constexpr void truncate(S nz) {
+    S oz = this->sz;
+    this->sz = nz;
     if constexpr (std::integral<S>) {
-      return truncate(S(r));
-    } else if constexpr (std::is_same_v<S, LinearAlgebra::StridedDims>) {
-      invariant(r <= LinearAlgebra::Row{this->sz});
-      this->sz.set(r);
-    } else { // if constexpr (std::is_same_v<S, LinearAlgebra::DenseDims>) {
-      static_assert(std::is_same_v<S, LinearAlgebra::DenseDims>,
-                    "if truncating a row, matrix must be strided or dense.");
-      invariant(r <= LinearAlgebra::Row{this->sz});
-      LinearAlgebra::DenseDims newSz = this->sz;
-      resize(newSz.set(r));
+      invariant(U(nz) <= U(oz));
+      invariant(U(nz) <= this->capacity);
+    } else if constexpr (std::is_same_v<S, StridedDims>) {
+      invariant(nz.row() <= oz.row());
+      invariant(nz.col() <= oz.col());
+    } else {
+      static_assert(MatrixDimension<S>, "Can only resize 1 or 2d containers.");
+      auto newX = unsigned{RowStride{nz}}, oldX = unsigned{RowStride{oz}},
+           newN = unsigned{Col{nz}}, oldN = unsigned{Col{oz}},
+           newM = unsigned{Row{nz}}, oldM = unsigned{Row{oz}};
+      U len = U(nz);
+      invariant(U(len) <= this->capacity);
+      constexpr bool inPlace = true;
+      invariant(newX <= oldX);
+      unsigned colsToCopy = std::min(oldN, newN);
+      // we only need to copy if memory shifts position
+      bool copyCols = ((colsToCopy > 0) && (newX != oldX));
+      // if we're in place, we have 1 less row to copy
+      unsigned rowsToCopy = std::min(oldM, newM);
+      unsigned fillCount = newN - colsToCopy;
+      if ((rowsToCopy) && (copyCols || fillCount)) {
+        // truncation, we need to copy rows to increase stride
+        T *src = this->ptr + oldX;
+        T *dst = this->ptr + newX;
+        --rowsToCopy;
+        do {
+          if (copyCols) std::copy(src, src + colsToCopy, dst);
+          if (fillCount) std::fill_n(dst + colsToCopy, fillCount, T{});
+          src += oldX;
+          dst += newX;
+        } while (--rowsToCopy);
+      }
+      // zero init remaining rows
+      for (size_t m = oldM; m < newM; ++m)
+        std::fill_n(this->ptr + m * newX, newN, T{});
     }
   }
-  constexpr void truncate(LinearAlgebra::Col c) {
+
+  constexpr void truncate(Row r) {
+    if constexpr (std::integral<S>) {
+      return truncate(S(r));
+    } else if constexpr (std::is_same_v<S, StridedDims>) {
+      invariant(r <= Row{this->sz});
+      this->sz.set(r);
+    } else { // if constexpr (std::is_same_v<S, DenseDims>) {
+      static_assert(std::is_same_v<S, DenseDims>,
+                    "if truncating a row, matrix must be strided or dense.");
+      invariant(r <= Row{this->sz});
+      DenseDims newSz = this->sz;
+      truncate(newSz.set(r));
+    }
+  }
+  constexpr void truncate(Col c) {
     if constexpr (std::integral<S>) {
       return truncate(S(c));
-    } else if constexpr (std::is_same_v<S, LinearAlgebra::StridedDims>) {
-      invariant(c <= LinearAlgebra::Col{this->sz});
+    } else if constexpr (std::is_same_v<S, StridedDims>) {
+      invariant(c <= Col{this->sz});
       this->sz.set(c);
-    } else { // if constexpr (std::is_same_v<S, LinearAlgebra::DenseDims>) {
-      static_assert(std::is_same_v<S, LinearAlgebra::DenseDims>,
+    } else { // if constexpr (std::is_same_v<S, DenseDims>) {
+      static_assert(std::is_same_v<S, DenseDims>,
                     "if truncating a col, matrix must be strided or dense.");
-      invariant(c <= LinearAlgebra::Col{this->sz});
-      LinearAlgebra::DenseDims newSz = this->sz;
-      resize(newSz.set(c));
+      invariant(c <= Col{this->sz});
+      DenseDims newSz = this->sz;
+      truncate(newSz.set(c));
     }
   }
   constexpr void reserve(S nz) {
@@ -910,18 +969,20 @@ static_assert(std::copyable<ManagedArray<intptr_t, unsigned>>);
 // sizes should be:
 // [ptr, dims, capacity, allocator, array]
 // 8 + 3*4 + 4 + 0 + 64*8 = 24 + 512 = 536
-static_assert(sizeof(ManagedArray<int64_t, LinearAlgebra::StridedDims, 64,
-                                  std::allocator<int64_t>>) == 536);
+static_assert(
+  sizeof(ManagedArray<int64_t, StridedDims, 64, std::allocator<int64_t>>) ==
+  536);
 // sizes should be:
 // [ptr, dims, capacity, allocator, array]
 // 8 + 2*4 + 8 + 0 + 64*8 = 24 + 512 = 536
-static_assert(sizeof(ManagedArray<int64_t, LinearAlgebra::DenseDims, 64,
-                                  std::allocator<int64_t>>) == 536);
+static_assert(
+  sizeof(ManagedArray<int64_t, DenseDims, 64, std::allocator<int64_t>>) == 536);
 // sizes should be:
 // [ptr, dims, capacity, allocator, array]
 // 8 + 1*4 + 4 + 0 + 64*8 = 16 + 512 = 528
-static_assert(sizeof(ManagedArray<int64_t, LinearAlgebra::SquareDims, 64,
-                                  std::allocator<int64_t>>) == 528);
+static_assert(
+  sizeof(ManagedArray<int64_t, SquareDims, 64, std::allocator<int64_t>>) ==
+  528);
 
 template <class T> using Vector = ManagedArray<T, unsigned>;
 template <class T> using PtrVector = Array<T, unsigned>;
