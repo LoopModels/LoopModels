@@ -3,6 +3,7 @@
 #include "./NormalForm.hpp"
 #include "./Rational.hpp"
 #include "Math/Array.hpp"
+#include "Math/Indexing.hpp"
 #include "Math/Math.hpp"
 #include "Math/MatrixDimensions.hpp"
 #include <bit>
@@ -41,9 +42,19 @@ struct Simplex {
   static constexpr auto numTableauCols(size_t j) -> Col {
     return Col{j + numExtraCols};
   }
+  constexpr Simplex(size_t numCon, size_t numVar, size_t numSlack,
+                    size_t extraStride = 0)
+    : tableau(StridedDims{numCon + numExtraRows,
+                          numVar + numSlack + numExtraCols,
+                          numVar + numCon + 2 + extraStride}),
+      numSlackVar(numSlack) {
+    assert(numCon > 0);
+    assert(numVar > 0);
+    assert(numSlack > 0);
+  }
   // NOTE: all methods resizing the tableau may invalidate references to it
   constexpr void resize(size_t numCon, size_t numVar) {
-    tableau.resize(numTableauRows(numCon), numTableauCols(numVar));
+    tableau.resize({numTableauRows(numCon), numTableauCols(numVar)});
   }
   constexpr void resize(size_t numCon, size_t numVar,
                         LinearAlgebra::RowStride stride) {
@@ -114,11 +125,11 @@ struct Simplex {
                                stride);
   }
   [[nodiscard]] constexpr auto getCostsAndConstraints()
-    -> MutPtrMatrix<int64_t, StridedDims> {
+    -> MutPtrMatrix<int64_t> {
     return tableau(_(numExtraRows - 1, end), _(numExtraCols, end));
   }
   [[nodiscard]] constexpr auto getCostsAndConstraints() const
-    -> PtrMatrix<int64_t, StridedDims> {
+    -> PtrMatrix<int64_t> {
     return tableau(_(numExtraRows - 1, end), _(numExtraCols, end));
   }
   [[nodiscard]] constexpr auto getConstraints() -> MutPtrMatrix<int64_t> {
@@ -594,16 +605,14 @@ struct Simplex {
     -> std::optional<Simplex> {
     size_t numVar = size_t(A.numCol());
     assert(numVar == size_t(B.numCol()));
-    Simplex simplex{};
-    size_t numSlack = simplex.numSlackVar = size_t(A.numRow());
+    size_t numSlack = size_t(A.numRow());
     size_t numStrict = size_t(B.numRow());
     size_t numCon = numSlack + numStrict;
     size_t extraStride = 0;
     // see how many slack vars are infeasible as solution
     for (unsigned i = 0; i < numSlack; ++i) extraStride += A(i, 0) < 0;
     // try to avoid reallocating
-    size_t stride = numVar + numCon + extraStride + 2;
-    simplex.resizeForOverwrite(numCon, numVar + numSlack, stride);
+    Simplex simplex{numCon, numVar, numSlack, extraStride};
     // construct:
     // [ I A
     //   0 B ]

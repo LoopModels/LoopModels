@@ -125,19 +125,23 @@ static_assert(AbstractSlice<Colon>);
   invariant(*i < len);
   return *i;
 }
-// note that we don't check i.b < len because we want to allow
-// empty ranges, and r.b <= r.e <= len is checked in calcNewDim.
-template <std::integral B, class E>
-constexpr auto calcOffset(size_t, Range<B, E> i) -> B {
-  return i.b;
-}
-template <class E>
-constexpr auto calcOffset(size_t, Range<Begin, E>) -> size_t {
+[[nodiscard]] inline constexpr auto calcOffset(size_t, Begin) -> size_t {
   return 0;
 }
-template <class E>
-constexpr auto calcOffset(size_t, Range<OffsetBegin, E> i) -> size_t {
-  return i.b.offset;
+[[nodiscard]] inline constexpr auto calcOffset(size_t len, OffsetBegin i)
+  -> size_t {
+  return calcOffset(len, i.offset);
+}
+[[nodiscard]] inline constexpr auto calcOffset(size_t len, OffsetEnd i)
+  -> size_t {
+  invariant(i.offset <= len);
+  return len - i.offset;
+}
+// note that we don't check i.b < len because we want to allow
+// empty ranges, and r.b <= r.e <= len is checked in calcNewDim.
+template <class B, class E>
+constexpr auto calcOffset(size_t len, Range<B, E> i) -> size_t {
+  return calcOffset(len, i.b);
 }
 constexpr auto calcOffset(size_t, Colon) -> size_t { return 0; }
 
@@ -161,7 +165,7 @@ template <class I> constexpr auto calcOffset(StridedRange d, I i) -> size_t {
 // Concept for aligning array dimensions with indices.
 template <class I, class D>
 concept Index = ((std::integral<D> || std::same_as<D, StridedRange>) &&
-                 std::integral<I>) ||
+                 (std::integral<I> || AbstractSlice<I>)) ||
                 (MatrixDimension<D> && requires(I i) {
                                          { i.row };
                                          { i.col };
@@ -187,8 +191,8 @@ constexpr auto calcNewDim(std::integral auto len, Colon) { return len; };
 
 template <AbstractSlice B, ScalarColIndex C>
 constexpr auto calcNewDim(StridedDims d, CartesianIndex<B, C> i) {
-  auto rowDims = calcNewDim(size_t(Row{d}), i.row);
-  return StridedRange{rowDims, RowStride{d}};
+  unsigned rowDims = unsigned(calcNewDim(size_t(Row{d}), i.row));
+  return StridedRange{rowDims, unsigned(RowStride{d})};
 }
 
 template <ScalarRowIndex R, AbstractSlice C>

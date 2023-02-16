@@ -423,6 +423,87 @@ template <class T, class S> struct MutArray : Array<T, S> {
     }
     return *this;
   }
+  constexpr void erase(S i) {
+    static_assert(std::integral<S>, "erase requires integral size");
+    S oldLen = this->sz--;
+    if (i < this->sz)
+      std::copy((T *)(this->ptr) + i + 1, this->ptr + oldLen,
+                (T *)(this->ptr) + i);
+  }
+  constexpr void erase(Row r) {
+    if constexpr (std::integral<S>) {
+      return erase(S(r));
+    } else if constexpr (std::is_same_v<S, StridedDims>) {
+
+      auto stride = unsigned{RowStride{this->sz}},
+           col = unsigned{Col{this->sz}}, newRow = unsigned{Row{this->sz}} - 1;
+      this->sz.set(Row{newRow});
+      if ((col == 0) || (r == newRow)) return;
+      invariant(col <= stride);
+      if ((col + (512 / (sizeof(T)))) <= stride) {
+        T *dst = this->ptr + r * stride;
+        for (size_t m = *r; m < newRow; ++m) {
+          T *src = dst + stride;
+          std::copy_n(src, col, dst);
+          dst = src;
+        }
+      } else {
+        T *dst = this->ptr + r * stride;
+        std::copy_n(dst + stride, (newRow - unsigned(r)) * stride, dst);
+      }
+    } else { // if constexpr (std::is_same_v<S, DenseDims>) {
+      static_assert(std::is_same_v<S, DenseDims>,
+                    "if erasing a row, matrix must be strided or dense.");
+      auto col = unsigned{Col{this->sz}}, newRow = unsigned{Row{this->sz}} - 1;
+      this->sz.set(Row{newRow});
+      if ((col == 0) || (r == newRow)) return;
+      T *dst = this->ptr + r * col;
+      std::copy_n(dst + col, (newRow - unsigned(r)) * col, dst);
+    }
+  }
+  constexpr void erase(Col c) {
+    if constexpr (std::integral<S>) {
+      return erase(S(c));
+    } else if constexpr (std::is_same_v<S, StridedDims>) {
+      auto stride = unsigned{RowStride{this->sz}},
+           newCol = unsigned{Col{this->sz}} - 1, row = unsigned{Row{this->sz}};
+      this->sz.set(Col{newCol});
+      unsigned colsToCopy = newCol - unsigned(c);
+      if ((colsToCopy == 0) || (row == 0)) return;
+      // we only need to copy if memory shifts position
+      for (size_t m = 0; m < row; ++m) {
+        T *dst = this->ptr + m * stride + unsigned(c);
+        std::copy_n(dst + 1, colsToCopy, dst);
+      }
+    } else { // if constexpr (std::is_same_v<S, DenseDims>) {
+      static_assert(std::is_same_v<S, DenseDims>,
+                    "if erasing a col, matrix must be strided or dense.");
+      auto newCol = unsigned{Col{this->sz}}, oldCol = newCol--,
+           row = unsigned{Row{this->sz}};
+      this->sz.set(Col{newCol});
+      unsigned colsToCopy = newCol - unsigned(c);
+      if ((colsToCopy == 0) || (row == 0)) return;
+      // we only need to copy if memory shifts position
+      for (size_t m = 0; m < row; ++m) {
+        T *dst = this->ptr + m * newCol + unsigned(c);
+        T *src = this->ptr + m * oldCol + unsigned(c) + 1;
+        std::copy_n(src, colsToCopy, dst);
+      }
+    }
+  }
+  constexpr void moveLast(Col j) {
+    static_assert(MatrixDimension<S>);
+    if (j == this->numCol()) return;
+    Col Nm1 = this->numCol() - 1;
+    for (size_t m = 0; m < this->numRow(); ++m) {
+      auto x = (*this)(m, j);
+      for (Col n = j; n < Nm1;) {
+        Col o = n++;
+        (*this)(m, o) = (*this)(m, n);
+      }
+      (*this)(m, Nm1) = x;
+    }
+  }
 };
 
 template <typename T, typename S> MutArray(T *, S) -> MutArray<T, S>;
@@ -436,29 +517,24 @@ static_assert(std::convertible_to<MutArray<int64_t, SquareDims>,
 static_assert(std::convertible_to<MutArray<int64_t, DenseDims>,
                                   MutArray<int64_t, StridedDims>>);
 
-/// Non-owning view of a managed array, capable of reallocating, etc.
-/// It does not own memory. Mostly, it serves to drop the inlined
-/// stack capacity of the `ManagedArray` from the type.
-template <class T, class S, class A = std::allocator<T>,
+/// Non-owning view of a managed array, capable of resizing,
+/// but not of re-allocating in case the capacity is exceeded.
+template <class T, class S,
           std::unsigned_integral U = default_capacity_type_t<S>>
-struct ManagedArrayView : MutArray<T, S> {
+struct ResizeableView : MutArray<T, S> {
   using BaseT = MutArray<T, S>;
 
-  constexpr ManagedArrayView(NotNull<T> p, S s, U c) noexcept
+  constexpr ResizeableView(NotNull<T> p, S s, U c) noexcept
     : BaseT(p, s), capacity(c) {}
-  constexpr ManagedArrayView(NotNull<T> p, S s, U c, A alloc) noexcept
-    : BaseT(p, s), capacity(c), allocator(alloc) {}
 
   template <class... Args> constexpr auto emplace_back(Args &&...args) {
     static_assert(std::is_integral_v<S>, "emplace_back requires integral size");
-    if (this->sz == this->capacity) [[unlikely]]
-      reserve(this->capacity + this->capacity);
+    invariant(U(this->sz) < capacity);
     new (this->ptr + this->sz++) T(std::forward<Args>(args)...);
   }
   constexpr void push_back(T value) {
     static_assert(std::is_integral_v<S>, "push_back requires integral size");
-    if (this->sz == this->capacity) [[unlikely]]
-      reserve(this->capacity + this->capacity);
+    invariant(U(this->sz) < capacity);
     new (this->ptr + this->sz++) T(std::move(value));
   }
   constexpr void pop_back() {
@@ -471,6 +547,164 @@ struct ManagedArrayView : MutArray<T, S> {
     static_assert(std::is_integral_v<S>, "pop_back requires integral size");
     assert(this->sz > 0 && "pop_back on empty buffer");
     return std::move(this->ptr[--this->sz]);
+  }
+  // behavior
+  // if S is StridedDims, then we copy data.
+  // If the new dims are larger in rows or cols, we fill with 0.
+  // If the new dims are smaller in rows or cols, we truncate.
+  // New memory outside of dims (i.e., stride larger), we leave uninitialized.
+  //
+  constexpr void resize(S nz) {
+    S oz = this->sz;
+    this->sz = nz;
+    if constexpr (std::integral<S>) {
+      if (nz <= this->capacity) return;
+      U newCapacity = U(nz);
+#if __cplusplus >= 202202L
+      std::allocation_result res = allocator.allocate_at_least(newCapacity);
+      T *newPtr = res.ptr;
+      newCapacity = U(res.count);
+#else
+      T *newPtr = this->allocator.allocate(newCapacity);
+#endif
+      if (oz) std::uninitialized_copy_n((T *)(this->ptr), oz, newPtr);
+      maybeDeallocate(newPtr, newCapacity);
+      invariant(newCapacity > oz);
+      std::uninitialized_fill_n((T *)(newPtr + oz), newCapacity - oz, T{});
+    } else {
+      static_assert(MatrixDimension<S>, "Can only resize 1 or 2d containers.");
+      auto newX = unsigned{RowStride{nz}}, oldX = unsigned{RowStride{oz}},
+           newN = unsigned{Col{nz}}, oldN = unsigned{Col{oz}},
+           newM = unsigned{Row{nz}}, oldM = unsigned{Row{oz}};
+      invariant(U(nz) <= capacity);
+      U len = U(nz);
+      T *npt = (T *)(this->ptr);
+      // we can copy forward so long as the new stride is smaller
+      // so that the start of the dst range is outside of the src range
+      // we can also safely forward copy if we allocated a new ptr
+      bool forwardCopy = (newX <= oldX);
+      unsigned colsToCopy = std::min(oldN, newN);
+      // we only need to copy if memory shifts position
+      bool copyCols = ((colsToCopy > 0) && (newX != oldX));
+      // if we're in place, we have 1 less row to copy
+      unsigned rowsToCopy = std::min(oldM, newM) - 1;
+      unsigned fillCount = newN - colsToCopy;
+      if ((rowsToCopy) && (copyCols || fillCount)) {
+        if (forwardCopy) {
+          // truncation, we need to copy rows to increase stride
+          T *src = this->ptr + oldX;
+          T *dst = npt + newX;
+          do {
+            if (copyCols) std::copy_n(src, colsToCopy, dst);
+            if (fillCount) std::fill_n(dst + colsToCopy, fillCount, T{});
+            src += oldX;
+            dst += newX;
+          } while (--rowsToCopy);
+        } else /* [[unlikely]] */ {
+          // backwards copy, only needed when we increasing stride but not
+          // reallocating, which should be comparatively uncommon.
+          // Should probably benchmark or determine actual frequency
+          // before adding `[[unlikely]]`.
+          T *src = this->ptr + (rowsToCopy + 1) * oldX;
+          T *dst = npt + (rowsToCopy + 1) * newX;
+          do {
+            src -= oldX;
+            dst -= newX;
+            if (colsToCopy) std::copy_backward(src, src + colsToCopy, dst);
+            if (fillCount) std::fill_n(dst + colsToCopy, fillCount, T{});
+          } while (--rowsToCopy);
+        }
+      }
+      // zero init remaining rows
+      for (size_t m = oldM; m < newM; ++m)
+        std::fill_n(npt + m * newX, newN, T{});
+    }
+  }
+  constexpr void resize(Row r) {
+    if constexpr (std::integral<S>) {
+      return resize(S(r));
+    } else if constexpr (MatrixDimension<S>) {
+      S nz = this->sz;
+      return resize(nz.set(r));
+    }
+  }
+  constexpr void resizeForOverwrite(S M) {
+    U L = U(M);
+    if (L > U(this->sz)) growUndef(L);
+    this->sz = M;
+  }
+  constexpr void resizeForOverwrite(Row r) {
+    if constexpr (std::integral<S>) {
+      return resizeForOverwrite(S(r));
+    } else if constexpr (MatrixDimension<S>) {
+      S nz = this->sz;
+      return resizeForOverwrite(nz.set(r));
+    }
+  }
+  constexpr void resizeForOverwrite(Col c) {
+    if constexpr (std::integral<S>) {
+      return resizeForOverwrite(S(c));
+    } else if constexpr (MatrixDimension<S>) {
+      S nz = this->sz;
+      return resizeForOverwrite(nz.set(c));
+    }
+  }
+  [[nodiscard]] constexpr auto getCapacity() const -> U { return capacity; }
+
+  // set size and 0.
+  constexpr void setSize(Row r, Col c) {
+    resizeForOverwrite({r, c});
+    this->fill(0);
+  }
+  constexpr void resize(Row MM, Col NN) { resize(DenseDims{MM, NN}); }
+  constexpr void resizeForOverwrite(Row M, Col N, RowStride X) {
+    invariant(X >= N);
+    if constexpr (std::is_same_v<S, StridedDims>) resizeForOverwrite({M, N, X});
+    else if constexpr (std::is_same_v<S, SquareDims>) {
+      invariant(*M == *N);
+      resizeForOverwrite({*M});
+    } else resizeForOverwrite({*M, *N});
+  }
+  constexpr void resizeForOverwrite(Row M, Col N) {
+    if constexpr (std::is_same_v<S, StridedDims>)
+      resizeForOverwrite({M, N, *N});
+    else if constexpr (std::is_same_v<S, SquareDims>) {
+      invariant(*M == *N);
+      resizeForOverwrite({*M});
+    } else resizeForOverwrite({*M, *N});
+  }
+
+  constexpr void extendOrAssertSize(Row R, Col C) {
+    resizeForOverwrite(DenseDims{R, C});
+  }
+
+protected:
+  [[no_unique_address]] U capacity{0};
+};
+
+/// Non-owning view of a managed array, capable of reallocating, etc.
+/// It does not own memory. Mostly, it serves to drop the inlined
+/// stack capacity of the `ManagedArray` from the type.
+template <class T, class S, class A = std::allocator<T>,
+          std::unsigned_integral U = default_capacity_type_t<S>>
+struct ReallocView : ResizeableView<T, S, U> {
+  using BaseT = ResizeableView<T, S, U>;
+
+  constexpr ReallocView(NotNull<T> p, S s, U c) noexcept : BaseT(p, s, c) {}
+  constexpr ReallocView(NotNull<T> p, S s, U c, A alloc) noexcept
+    : BaseT(p, s, c), allocator(alloc) {}
+
+  template <class... Args> constexpr auto emplace_back(Args &&...args) {
+    static_assert(std::is_integral_v<S>, "emplace_back requires integral size");
+    if (this->sz == this->capacity) [[unlikely]]
+      reserve(this->capacity + this->capacity);
+    new (this->ptr + this->sz++) T(std::forward<Args>(args)...);
+  }
+  constexpr void push_back(T value) {
+    static_assert(std::is_integral_v<S>, "push_back requires integral size");
+    if (this->sz == this->capacity) [[unlikely]]
+      reserve(this->capacity + this->capacity);
+    new (this->ptr + this->sz++) T(std::move(value));
   }
   // behavior
   // if S is StridedDims, then we copy data.
@@ -584,77 +818,9 @@ struct ManagedArrayView : MutArray<T, S> {
       return resizeForOverwrite(nz.set(c));
     }
   }
-  constexpr void erase(S i) {
-    static_assert(std::integral<S>, "erase requires integral size");
-    S oldLen = this->sz--;
-    if (i < this->sz)
-      std::copy((T *)(this->ptr) + i + 1, this->ptr + oldLen,
-                (T *)(this->ptr) + i);
-  }
-  constexpr void erase(Row r) {
-    if constexpr (std::integral<S>) {
-      return erase(S(r));
-    } else if constexpr (std::is_same_v<S, StridedDims>) {
-
-      auto stride = unsigned{RowStride{this->sz}},
-           col = unsigned{Col{this->sz}}, newRow = unsigned{Row{this->sz}} - 1;
-      this->sz.set(Row{newRow});
-      if ((col == 0) || (r == newRow)) return;
-      invariant(col <= stride);
-      if ((col + (512 / (sizeof(T)))) <= stride) {
-        T *dst = this->ptr + r * stride;
-        for (size_t m = *r; m < newRow; ++m) {
-          T *src = dst + stride;
-          std::copy_n(src, col, dst);
-          dst = src;
-        }
-      } else {
-        T *dst = this->ptr + r * stride;
-        std::copy_n(dst + stride, (newRow - unsigned(r)) * stride, dst);
-      }
-    } else { // if constexpr (std::is_same_v<S, DenseDims>) {
-      static_assert(std::is_same_v<S, DenseDims>,
-                    "if erasing a row, matrix must be strided or dense.");
-      auto col = unsigned{Col{this->sz}}, newRow = unsigned{Row{this->sz}} - 1;
-      this->sz.set(Row{newRow});
-      if ((col == 0) || (r == newRow)) return;
-      T *dst = this->ptr + r * col;
-      std::copy_n(dst + col, (newRow - unsigned(r)) * col, dst);
-    }
-  }
-  constexpr void erase(Col c) {
-    if constexpr (std::integral<S>) {
-      return erase(S(c));
-    } else if constexpr (std::is_same_v<S, StridedDims>) {
-      auto stride = unsigned{RowStride{this->sz}},
-           newCol = unsigned{Col{this->sz}} - 1, row = unsigned{Row{this->sz}};
-      this->sz.set(Col{newCol});
-      unsigned colsToCopy = newCol - unsigned(c);
-      if ((colsToCopy == 0) || (row == 0)) return;
-      // we only need to copy if memory shifts position
-      for (size_t m = 0; m < row; ++m) {
-        T *dst = this->ptr + m * stride + unsigned(c);
-        std::copy_n(dst + 1, colsToCopy, dst);
-      }
-    } else { // if constexpr (std::is_same_v<S, DenseDims>) {
-      static_assert(std::is_same_v<S, DenseDims>,
-                    "if erasing a col, matrix must be strided or dense.");
-      auto newCol = unsigned{Col{this->sz}}, oldCol = newCol--,
-           row = unsigned{Row{this->sz}};
-      this->sz.set(Col{newCol});
-      unsigned colsToCopy = newCol - unsigned(c);
-      if ((colsToCopy == 0) || (row == 0)) return;
-      // we only need to copy if memory shifts position
-      for (size_t m = 0; m < row; ++m) {
-        T *dst = this->ptr + m * newCol + unsigned(c);
-        T *src = this->ptr + m * oldCol + unsigned(c) + 1;
-        std::copy_n(src, colsToCopy, dst);
-      }
-    }
-  }
   constexpr void reserve(S nz) {
     U newCapacity = U(nz);
-    if (newCapacity <= capacity) return;
+    if (newCapacity <= this->capacity) return;
       // allocate new, copy, deallocate old
 #if __cplusplus >= 202202L
     std::allocation_result res = allocator.allocate_at_least(newCapacity);
@@ -670,8 +836,6 @@ struct ManagedArrayView : MutArray<T, S> {
   [[nodiscard]] constexpr auto get_allocator() const noexcept -> A {
     return allocator;
   }
-  [[nodiscard]] constexpr auto getCapacity() const -> U { return capacity; }
-
   // set size and 0.
   constexpr void setSize(Row r, Col c) {
     resizeForOverwrite({r, c});
@@ -735,17 +899,16 @@ struct ManagedArrayView : MutArray<T, S> {
   }
 
 protected:
-  [[no_unique_address]] U capacity{0};
   [[no_unique_address]] A allocator{};
 
   constexpr void allocateAtLeast(U len) {
 #if __cplusplus >= 202202L
     std::allocation_result res = allocator.allocate_at_least(len);
     this->ptr = res.ptr;
-    capacity = res.count;
+    this->capacity = res.count;
 #else
     this->ptr = allocator.allocate(len);
-    capacity = len;
+    this->capacity = len;
 #endif
   }
   [[nodiscard]] constexpr auto isSmall() const -> bool {
@@ -779,14 +942,13 @@ protected:
 /// of the stack memory.
 /// Information related to size is then grouped next to the pointer.
 template <class T, class S, size_t N, class A, std::unsigned_integral U>
-struct ManagedArray : ManagedArrayView<T, S, A, U> {
+struct ManagedArray : ReallocView<T, S, A, U> {
   static_assert(std::is_trivially_destructible_v<T>);
-  using BaseT = ManagedArrayView<T, S, A, U>;
+  using BaseT = ReallocView<T, S, A, U>;
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wuninitialized"
-  constexpr ManagedArray() noexcept
-    : ManagedArrayView<T, S, A, U>{memory, S{}, N} {}
+  constexpr ManagedArray() noexcept : ReallocView<T, S, A, U>{memory, S{}, N} {}
   constexpr ManagedArray(S s) noexcept : BaseT{memory, s, N} {
     U len = U(this->sz);
     if (len <= N) return;
@@ -856,7 +1018,7 @@ struct ManagedArray : ManagedArrayView<T, S, A, U> {
   }
   template <std::convertible_to<T> Y>
   constexpr ManagedArray(const SmallSparseMatrix<Y> &B)
-    : ManagedArrayView<T, S, A, U>{memory, B.dim(), N} {
+    : ReallocView<T, S, A, U>{memory, B.dim(), N} {
     U len = U(this->sz);
     growUndef(len);
     this->fill(0);
@@ -955,9 +1117,9 @@ private:
   T memory[N]; // NOLINT (modernize-avoid-c-style-arrays)
 };
 template <class T, class S, class A, std::unsigned_integral U>
-struct ManagedArray<T, S, 0, A, U> {
+struct ManagedArray<T, S, 0, A, U> : ReallocView<T, S, A, U> {
   static_assert(std::is_trivially_destructible_v<T>);
-  using BaseT = ManagedArrayView<T, S, A, U>;
+  using BaseT = ReallocView<T, S, A, U>;
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wuninitialized"
   ManagedArray() = delete;
@@ -1012,8 +1174,7 @@ struct ManagedArray<T, S, 0, A, U> {
   }
   template <std::convertible_to<T> Y>
   constexpr ManagedArray(const SmallSparseMatrix<Y> &B)
-    : ManagedArrayView<T, S, A, U>{A{}.allocate(U(B.dim())), B.dim(),
-                                   U(B.dim())} {
+    : ReallocView<T, S, A, U>{A{}.allocate(U(B.dim())), B.dim(), U(B.dim())} {
     U len = U(this->sz);
     growUndef(len);
     this->fill(0);
@@ -1172,7 +1333,7 @@ static_assert(std::is_trivially_copyable_v<PtrVector<int64_t>>,
 static_assert(sizeof(ManagedArray<int32_t, DenseDims, 15>) ==
               sizeof(int32_t *) + 4 * sizeof(unsigned int) +
                 16 * sizeof(int32_t));
-static_assert(sizeof(ManagedArrayView<int32_t, DenseDims>) ==
+static_assert(sizeof(ReallocView<int32_t, DenseDims>) ==
               sizeof(int32_t *) + 4 * sizeof(unsigned int));
 
 static_assert(!AbstractVector<PtrMatrix<int64_t>>,
