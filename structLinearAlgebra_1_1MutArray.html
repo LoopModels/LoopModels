@@ -79,14 +79,15 @@ Inheritance diagram for LinearAlgebra::MutArray&lt; T, S &gt;:</div>
  <div class="center">
   <img src="structLinearAlgebra_1_1MutArray.png" usemap="#LinearAlgebra::MutArray_3C_20T_2C_20S_20_3E_map" alt=""/>
   <map id="LinearAlgebra::MutArray_3C_20T_2C_20S_20_3E_map" name="LinearAlgebra::MutArray_3C_20T_2C_20S_20_3E_map">
-<area href="structLinearAlgebra_1_1Array.html" title="Constant Array." alt="LinearAlgebra::Array&lt; T, S &gt;" shape="rect" coords="326,0,751,24"/>
-<area href="structLinearAlgebra_1_1ResizeableView.html" alt="LinearAlgebra::ResizeableView&lt; T, S, default_capacity_type_t&lt; S &gt; &gt;" shape="rect" coords="0,112,425,136"/>
-<area href="structLinearAlgebra_1_1ResizeableView.html" alt="LinearAlgebra::ResizeableView&lt; T, S, U &gt;" shape="rect" coords="652,112,1077,136"/>
-<area href="structLinearAlgebra_1_1ReallocView.html" alt="LinearAlgebra::ReallocView&lt; T, S, A, U &gt;" shape="rect" coords="0,168,425,192"/>
-<area href="structLinearAlgebra_1_1ReallocView.html" alt="LinearAlgebra::ReallocView&lt; T, S, A, U &gt;" shape="rect" coords="652,168,1077,192"/>
+<area href="structLinearAlgebra_1_1Array.html" title="Constant Array." alt="LinearAlgebra::Array&lt; T, S &gt;" shape="rect" coords="652,0,1077,24"/>
+<area href="structLinearAlgebra_1_1ResizeableView.html" alt="LinearAlgebra::ResizeableView&lt; T, S, default_capacity_type_t&lt; S &gt; &gt;" shape="rect" coords="217,112,642,136"/>
+<area href="structLinearAlgebra_1_1ResizeableView.html" alt="LinearAlgebra::ResizeableView&lt; T, S, U &gt;" shape="rect" coords="1087,112,1512,136"/>
+<area href="structLinearAlgebra_1_1ReallocView.html" alt="LinearAlgebra::ReallocView&lt; T, S, A, U &gt;" shape="rect" coords="217,168,642,192"/>
+<area href="structLinearAlgebra_1_1ReallocView.html" alt="LinearAlgebra::ReallocView&lt; T, S, A, U &gt;" shape="rect" coords="1087,168,1512,192"/>
 <area href="structLinearAlgebra_1_1ManagedArray.html" alt="LinearAlgebra::ManagedArray&lt; int64_t, LinearAlgebra::StridedDims, 0 &gt;" shape="rect" coords="0,224,425,248"/>
-<area href="structLinearAlgebra_1_1ManagedArray.html" alt="LinearAlgebra::ManagedArray&lt; T, S, N, A, U &gt;" shape="rect" coords="435,224,860,248"/>
-<area href="structLinearAlgebra_1_1ManagedArray_3_01T_00_01S_00_010_00_01A_00_01U_01_4.html" alt="LinearAlgebra::ManagedArray&lt; T, S, 0, A, U &gt;" shape="rect" coords="870,224,1295,248"/>
+<area href="structLinearAlgebra_1_1ManagedArray.html" alt="LinearAlgebra::ManagedArray&lt; int64_t, DenseDims &gt;" shape="rect" coords="435,224,860,248"/>
+<area href="structLinearAlgebra_1_1ManagedArray.html" alt="LinearAlgebra::ManagedArray&lt; T, S, N, A, U &gt;" shape="rect" coords="870,224,1295,248"/>
+<area href="structLinearAlgebra_1_1ManagedArray_3_01T_00_01S_00_010_00_01A_00_01U_01_4.html" alt="LinearAlgebra::ManagedArray&lt; T, S, 0, A, U &gt;" shape="rect" coords="1305,224,1730,248"/>
   </map>
 </div></div>
 <table class="memberdecls">
@@ -342,6 +343,12 @@ constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>extendOrAss
 <tr class="memitem:a87ad0d108ad07308b4f5c83da2e46682 inherit pub_methods_structLinearAlgebra_1_1Array"><td class="memItemLeft" align="right" valign="top"><a id="a87ad0d108ad07308b4f5c83da2e46682"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>deleteCol</b> (size_t c) const -&gt; <a class="el" href="structLinearAlgebra_1_1ManagedArray.html">ManagedArray</a>&lt; T, S &gt;</td></tr>
 <tr class="separator:a87ad0d108ad07308b4f5c83da2e46682 inherit pub_methods_structLinearAlgebra_1_1Array"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8a260c453c52f8408d5d656221acba3f inherit pub_methods_structLinearAlgebra_1_1Array"><td class="memItemLeft" align="right" valign="top"><a id="a8a260c453c52f8408d5d656221acba3f"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator==</b> (const <a class="el" href="structLinearAlgebra_1_1Array.html">Array</a> &amp;other) const noexcept -&gt; bool</td></tr>
+<tr class="separator:a8a260c453c52f8408d5d656221acba3f inherit pub_methods_structLinearAlgebra_1_1Array"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4760315fc3223ef8f52e9e123e9ffc86 inherit pub_methods_structLinearAlgebra_1_1Array"><td class="memItemLeft" align="right" valign="top"><a id="a4760315fc3223ef8f52e9e123e9ffc86"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator!=</b> (const <a class="el" href="structLinearAlgebra_1_1Array.html">Array</a> &amp;other) const noexcept -&gt; bool</td></tr>
+<tr class="separator:a4760315fc3223ef8f52e9e123e9ffc86 inherit pub_methods_structLinearAlgebra_1_1Array"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="inherited"></a>
 Additional Inherited Members</h2></td></tr>

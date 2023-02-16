@@ -154,6 +154,13 @@ template&lt;std::convertible_to&lt; T &gt; Y, class D , class AY , std::unsigned
 <tr class="memitem:afe1a6d2247100cdea334cc927756796b"><td class="memItemLeft" align="right" valign="top"><a id="afe1a6d2247100cdea334cc927756796b"></a>
 constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>ManagedArray</b> (const <a class="el" href="structLinearAlgebra_1_1ManagedArray.html">ManagedArray</a> &amp;b) noexcept</td></tr>
 <tr class="separator:afe1a6d2247100cdea334cc927756796b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0212c08abdb18468d3cae07db3866c6f"><td class="memItemLeft" align="right" valign="top"><a id="a0212c08abdb18468d3cae07db3866c6f"></a>
+constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>ManagedArray</b> (const <a class="el" href="structLinearAlgebra_1_1Array.html">Array</a>&lt; T, S &gt; &amp;b) noexcept</td></tr>
+<tr class="separator:a0212c08abdb18468d3cae07db3866c6f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aed69453490ecb189a66006fe17b1b154"><td class="memTemplParams" colspan="2"><a id="aed69453490ecb189a66006fe17b1b154"></a>
+template&lt;AbstractSimilar&lt; S &gt; V&gt; </td></tr>
+<tr class="memitem:aed69453490ecb189a66006fe17b1b154"><td class="memTemplItemLeft" align="right" valign="top">constexpr&#160;</td><td class="memTemplItemRight" valign="bottom"><b>ManagedArray</b> (const V &amp;b) noexcept</td></tr>
+<tr class="separator:aed69453490ecb189a66006fe17b1b154"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a424856f2eaa68839dc9ea882e1b6230e"><td class="memTemplParams" colspan="2"><a id="a424856f2eaa68839dc9ea882e1b6230e"></a>
 template&lt;class D , std::unsigned_integral I&gt; </td></tr>
 <tr class="memitem:a424856f2eaa68839dc9ea882e1b6230e"><td class="memTemplItemLeft" align="right" valign="top">constexpr&#160;</td><td class="memTemplItemRight" valign="bottom"><b>ManagedArray</b> (<a class="el" href="structLinearAlgebra_1_1ManagedArray.html">ManagedArray</a>&lt; T, D, N, A, I &gt; &amp;&amp;b) noexcept</td></tr>
@@ -520,6 +527,12 @@ constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>extendOrAss
 <tr class="memitem:a87ad0d108ad07308b4f5c83da2e46682 inherit pub_methods_structLinearAlgebra_1_1Array"><td class="memItemLeft" align="right" valign="top"><a id="a87ad0d108ad07308b4f5c83da2e46682"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>deleteCol</b> (size_t c) const -&gt; <a class="el" href="structLinearAlgebra_1_1ManagedArray.html">ManagedArray</a>&lt; T, S &gt;</td></tr>
 <tr class="separator:a87ad0d108ad07308b4f5c83da2e46682 inherit pub_methods_structLinearAlgebra_1_1Array"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8a260c453c52f8408d5d656221acba3f inherit pub_methods_structLinearAlgebra_1_1Array"><td class="memItemLeft" align="right" valign="top"><a id="a8a260c453c52f8408d5d656221acba3f"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator==</b> (const <a class="el" href="structLinearAlgebra_1_1Array.html">Array</a> &amp;other) const noexcept -&gt; bool</td></tr>
+<tr class="separator:a8a260c453c52f8408d5d656221acba3f inherit pub_methods_structLinearAlgebra_1_1Array"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4760315fc3223ef8f52e9e123e9ffc86 inherit pub_methods_structLinearAlgebra_1_1Array"><td class="memItemLeft" align="right" valign="top"><a id="a4760315fc3223ef8f52e9e123e9ffc86"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator!=</b> (const <a class="el" href="structLinearAlgebra_1_1Array.html">Array</a> &amp;other) const noexcept -&gt; bool</td></tr>
+<tr class="separator:a4760315fc3223ef8f52e9e123e9ffc86 inherit pub_methods_structLinearAlgebra_1_1Array"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>

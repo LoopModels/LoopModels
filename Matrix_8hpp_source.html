@@ -84,7 +84,7 @@ $(function() {
 <div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;                    { t(i, i) } -&gt; std::convertible_to&lt;eltype_t&lt;T&gt;&gt;;</div>
 <div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;                    { t.numRow() } -&gt; std::same_as&lt;Row&gt;;</div>
 <div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;                    { t.numCol() } -&gt; std::same_as&lt;Col&gt;;</div>
-<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;                    { t.size() } -&gt; std::same_as&lt;std::pair&lt;Row, Col&gt;&gt;;</div>
+<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;                    { t.size() } -&gt; std::same_as&lt;CartesianIndex&lt;Row, Col&gt;&gt;;</div>
 <div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;                    { t.dim() } -&gt; std::convertible_to&lt;StridedDims&gt;;</div>
 <div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;                    <span class="comment">// {</span></div>
 <div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;                    <span class="comment">//     std::remove_reference_t&lt;T&gt;::canResize</span></div>
@@ -127,8 +127,8 @@ $(function() {
 <div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="structLinearAlgebra_1_1AxisInt.html">Col</a>{<span class="keywordtype">size_t</span>{a.numRow()}};</div>
 <div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;  }</div>
 <div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> view() <span class="keyword">const</span> -&gt; <span class="keyword">auto</span> &amp; { <span class="keywordflow">return</span> *<span class="keyword">this</span>; };</div>
-<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> size() <span class="keyword">const</span> -&gt; std::pair&lt;Row, Col&gt; {</div>
-<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;    <span class="keywordflow">return</span> std::make_pair(numRow(), numCol());</div>
+<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> size() <span class="keyword">const</span> -&gt; <a class="code" href="structLinearAlgebra_1_1CartesianIndex.html">CartesianIndex&lt;Row, Col&gt;</a> {</div>
+<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;    <span class="keywordflow">return</span> {numRow(), numCol()};</div>
 <div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;  }</div>
 <div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> dim() <span class="keyword">const</span> -&gt; <a class="code" href="structLinearAlgebra_1_1DenseDims.html">DenseDims</a> {</div>
 <div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;    <span class="keywordflow">return</span> {numRow(), numCol()};</div>
@@ -206,7 +206,8 @@ $(function() {
 <div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;} <span class="comment">// namespace LinearAlgebra</span></div>
 <div class="ttc" id="anamespaceLinearAlgebra_html"><div class="ttname"><a href="namespaceLinearAlgebra.html">LinearAlgebra</a></div><div class="ttdef"><b>Definition:</b> Array.hpp:20</div></div>
 <div class="ttc" id="astructLinearAlgebra_1_1AxisInt_html"><div class="ttname"><a href="structLinearAlgebra_1_1AxisInt.html">LinearAlgebra::AxisInt</a></div><div class="ttdef"><b>Definition:</b> AxisTypes.hpp:46</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1DenseDims_html"><div class="ttname"><a href="structLinearAlgebra_1_1DenseDims.html">LinearAlgebra::DenseDims</a></div><div class="ttdef"><b>Definition:</b> MatrixDimensions.hpp:69</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1CartesianIndex_html"><div class="ttname"><a href="structLinearAlgebra_1_1CartesianIndex.html">LinearAlgebra::CartesianIndex</a></div><div class="ttdef"><b>Definition:</b> MatrixDimensions.hpp:9</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1DenseDims_html"><div class="ttname"><a href="structLinearAlgebra_1_1DenseDims.html">LinearAlgebra::DenseDims</a></div><div class="ttdef"><b>Definition:</b> MatrixDimensions.hpp:82</div></div>
 <div class="ttc" id="astructLinearAlgebra_1_1SmallSparseMatrix_1_1Reference_html"><div class="ttname"><a href="structLinearAlgebra_1_1SmallSparseMatrix_1_1Reference.html">LinearAlgebra::SmallSparseMatrix::Reference</a></div><div class="ttdef"><b>Definition:</b> Matrix.hpp:121</div></div>
 <div class="ttc" id="astructLinearAlgebra_1_1SmallSparseMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1SmallSparseMatrix.html">LinearAlgebra::SmallSparseMatrix</a></div><div class="ttdef"><b>Definition:</b> Matrix.hpp:69</div></div>
 <div class="ttc" id="astructLinearAlgebra_1_1Transpose_html"><div class="ttname"><a href="structLinearAlgebra_1_1Transpose.html">LinearAlgebra::Transpose</a></div><div class="ttdef"><b>Definition:</b> Matrix.hpp:44</div></div>

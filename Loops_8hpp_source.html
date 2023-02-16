@@ -569,11 +569,11 @@ $(function() {
 <div class="line"><a name="l00512"></a><span class="lineno">  512</span>&#160;  }</div>
 <div class="line"><a name="l00513"></a><span class="lineno">  513</span>&#160; </div>
 <div class="line"><a name="l00514"></a><span class="lineno">  514</span>&#160;  <a class="code" href="structAffineLoopNest.html">AffineLoopNest</a>(IntMatrix Am, llvm::SmallVector&lt;const llvm::SCEV *&gt; sym)</div>
-<div class="line"><a name="l00515"></a><span class="lineno">  515</span>&#160;    : <a class="code" href="structBasePolyhedra.html">BasePolyhedra</a>&lt;<a class="code" href="structEmptyMatrix.html">EmptyMatrix</a>&lt;int64_t&gt;, LinearSymbolicComparator,</div>
+<div class="line"><a name="l00515"></a><span class="lineno">  515</span>&#160;    : <a class="code" href="structBasePolyhedra.html">BasePolyhedra</a>&lt;<a class="code" href="structLinearAlgebra_1_1EmptyMatrix.html">EmptyMatrix</a>&lt;int64_t&gt;, LinearSymbolicComparator,</div>
 <div class="line"><a name="l00516"></a><span class="lineno">  516</span>&#160;                    llvm::SmallVector&lt;const llvm::SCEV *&gt;, NonNegative&gt;(</div>
 <div class="line"><a name="l00517"></a><span class="lineno">  517</span>&#160;        std::move(Am), std::move(sym)){};</div>
 <div class="line"><a name="l00518"></a><span class="lineno">  518</span>&#160;  <a class="code" href="structAffineLoopNest.html">AffineLoopNest</a>(IntMatrix Am)</div>
-<div class="line"><a name="l00519"></a><span class="lineno">  519</span>&#160;    : <a class="code" href="structBasePolyhedra.html">BasePolyhedra</a>&lt;<a class="code" href="structEmptyMatrix.html">EmptyMatrix</a>&lt;int64_t&gt;, LinearSymbolicComparator,</div>
+<div class="line"><a name="l00519"></a><span class="lineno">  519</span>&#160;    : <a class="code" href="structBasePolyhedra.html">BasePolyhedra</a>&lt;<a class="code" href="structLinearAlgebra_1_1EmptyMatrix.html">EmptyMatrix</a>&lt;int64_t&gt;, LinearSymbolicComparator,</div>
 <div class="line"><a name="l00520"></a><span class="lineno">  520</span>&#160;                    llvm::SmallVector&lt;const llvm::SCEV *&gt;, NonNegative&gt;(</div>
 <div class="line"><a name="l00521"></a><span class="lineno">  521</span>&#160;        std::move(Am)){};</div>
 <div class="line"><a name="l00522"></a><span class="lineno">  522</span>&#160;  <a class="code" href="structAffineLoopNest.html">AffineLoopNest</a>() = <span class="keywordflow">default</span>;</div>
@@ -791,7 +791,7 @@ $(function() {
 <div class="ttc" id="astructAffineLoopNest_html_ae7e3801c19a2587916894acf27894629"><div class="ttname"><a href="structAffineLoopNest.html#ae7e3801c19a2587916894acf27894629">AffineLoopNest::explicitLowerBounds</a></div><div class="ttdeci">auto explicitLowerBounds(BumpAlloc&lt;&gt; &amp;alloc) -&gt; NotNull&lt; AffineLoopNest&lt; false &gt;&gt;</div><div class="ttdoc">like rotate(identityMatrix)</div><div class="ttdef"><b>Definition:</b> Loops.hpp:220</div></div>
 <div class="ttc" id="astructBasePolyhedra_html"><div class="ttname"><a href="structBasePolyhedra.html">BasePolyhedra</a></div><div class="ttdef"><b>Definition:</b> Polyhedra.hpp:64</div></div>
 <div class="ttc" id="astructBumpAlloc_html"><div class="ttname"><a href="structBumpAlloc.html">BumpAlloc</a></div><div class="ttdef"><b>Definition:</b> Allocators.hpp:25</div></div>
-<div class="ttc" id="astructEmptyMatrix_html"><div class="ttname"><a href="structEmptyMatrix.html">EmptyMatrix</a></div><div class="ttdef"><b>Definition:</b> EmptyArrays.hpp:7</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1EmptyMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1EmptyMatrix.html">LinearAlgebra::EmptyMatrix</a></div><div class="ttdef"><b>Definition:</b> EmptyArrays.hpp:9</div></div>
 <div class="ttc" id="astructNoWrapRewriter_html"><div class="ttname"><a href="structNoWrapRewriter.html">NoWrapRewriter</a></div><div class="ttdef"><b>Definition:</b> Loops.hpp:65</div></div>
 <div class="ttc" id="astructNotNull_html"><div class="ttname"><a href="structNotNull.html">NotNull</a></div><div class="ttdef"><b>Definition:</b> Valid.hpp:7</div></div>
 <div class="ttc" id="astructOptional_html"><div class="ttname"><a href="structOptional.html">Optional</a></div><div class="ttdef"><b>Definition:</b> Optional.hpp:9</div></div>

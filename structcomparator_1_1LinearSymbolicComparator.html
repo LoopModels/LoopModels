@@ -91,6 +91,9 @@ Public Types</h2></td></tr>
 <tr class="memitem:a3c160099fd7c5354f737e6b6cb7f0997"><td class="memItemLeft" align="right" valign="top"><a id="a3c160099fd7c5354f737e6b6cb7f0997"></a>
 using&#160;</td><td class="memItemRight" valign="bottom"><b>Base</b> = <a class="el" href="structcomparator_1_1BaseSymbolicComparator.html">BaseSymbolicComparator</a>&lt; <a class="el" href="structcomparator_1_1LinearSymbolicComparator.html">LinearSymbolicComparator</a> &gt;</td></tr>
 <tr class="separator:a3c160099fd7c5354f737e6b6cb7f0997"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a73c262e729a4ff104bc03f833fccf39d"><td class="memItemLeft" align="right" valign="top"><a id="a73c262e729a4ff104bc03f833fccf39d"></a>
+using&#160;</td><td class="memItemRight" valign="bottom"><b>Matrix</b> = <a class="el" href="structLinearAlgebra_1_1ManagedArray.html">LinearAlgebra::ManagedArray</a>&lt; int64_t, <a class="el" href="structLinearAlgebra_1_1DenseDims.html">DenseDims</a> &gt;</td></tr>
+<tr class="separator:a73c262e729a4ff104bc03f833fccf39d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_types_structcomparator_1_1BaseSymbolicComparator"><td colspan="2" onclick="javascript:toggleInherit('pub_types_structcomparator_1_1BaseSymbolicComparator')"><img src="closed.png" alt="-"/>&#160;Public Types inherited from <a class="el" href="structcomparator_1_1BaseSymbolicComparator.html">comparator::BaseSymbolicComparator&lt; LinearSymbolicComparator &gt;</a></td></tr>
 <tr class="memitem:ad40b50ec7b51c29aaee8a77f3398d32b inherit pub_types_structcomparator_1_1BaseSymbolicComparator"><td class="memItemLeft" align="right" valign="top"><a id="ad40b50ec7b51c29aaee8a77f3398d32b"></a>
 using&#160;</td><td class="memItemRight" valign="bottom"><b>ThisT</b> = <a class="el" href="structcomparator_1_1BaseSymbolicComparator.html">BaseSymbolicComparator</a>&lt; <a class="el" href="structcomparator_1_1LinearSymbolicComparator.html">LinearSymbolicComparator</a> &gt;</td></tr>
@@ -101,43 +104,43 @@ using&#160;</td><td class="memItemRight" valign="bottom"><b>BaseT</b> = <a class
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:aaa706080b14998fd0c98b2439e2d19ab"><td class="memItemLeft" align="right" valign="top"><a id="aaa706080b14998fd0c98b2439e2d19ab"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getUImpl</b> () -&gt; IntMatrix &amp;</td></tr>
-<tr class="separator:aaa706080b14998fd0c98b2439e2d19ab"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aaad8714183d33bfc9406a0724eb20227"><td class="memItemLeft" align="right" valign="top"><a id="aaad8714183d33bfc9406a0724eb20227"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getVImpl</b> () -&gt; IntMatrix &amp;</td></tr>
-<tr class="separator:aaad8714183d33bfc9406a0724eb20227"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a810292fc22d461034670837f99da70e4"><td class="memItemLeft" align="right" valign="top"><a id="a810292fc22d461034670837f99da70e4"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getUImpl</b> () -&gt; <a class="el" href="structLinearAlgebra_1_1ManagedArray.html">Matrix</a> &amp;</td></tr>
+<tr class="separator:a810292fc22d461034670837f99da70e4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af740dfe80e22504859b6267646a7a337"><td class="memItemLeft" align="right" valign="top"><a id="af740dfe80e22504859b6267646a7a337"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getVImpl</b> () -&gt; <a class="el" href="structLinearAlgebra_1_1ManagedArray.html">Matrix</a> &amp;</td></tr>
+<tr class="separator:af740dfe80e22504859b6267646a7a337"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae412050e6ef2d8bc1bd680d258311d72"><td class="memItemLeft" align="right" valign="top"><a id="ae412050e6ef2d8bc1bd680d258311d72"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getDImpl</b> () -&gt; Vector&lt; int64_t &gt; &amp;</td></tr>
 <tr class="separator:ae412050e6ef2d8bc1bd680d258311d72"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abfd2d53d157712124e294122db7fdb53"><td class="memItemLeft" align="right" valign="top"><a id="abfd2d53d157712124e294122db7fdb53"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>setURankImpl</b> (Row r)</td></tr>
-<tr class="separator:abfd2d53d157712124e294122db7fdb53"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af700d061ba5a325a0cd350e5eeac19fb"><td class="memItemLeft" align="right" valign="top"><a id="af700d061ba5a325a0cd350e5eeac19fb"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>getUImpl</b> (Row r, Col c) -&gt; DenseMutPtrMatrix&lt; int64_t &gt;</td></tr>
-<tr class="separator:af700d061ba5a325a0cd350e5eeac19fb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a59462191d8734ed468479f06611be54d"><td class="memItemLeft" align="right" valign="top"><a id="a59462191d8734ed468479f06611be54d"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>getVImpl</b> (Row r, Col c) -&gt; DenseMutPtrMatrix&lt; int64_t &gt;</td></tr>
-<tr class="separator:a59462191d8734ed468479f06611be54d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aca4a1f881f28c4732fa2cda78ba2d6fd"><td class="memItemLeft" align="right" valign="top"><a id="aca4a1f881f28c4732fa2cda78ba2d6fd"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>getDImpl</b> (Row N) -&gt; MutPtrVector&lt; int64_t &gt;</td></tr>
-<tr class="separator:aca4a1f881f28c4732fa2cda78ba2d6fd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aaf342326457af0baa357791094ba3a84"><td class="memItemLeft" align="right" valign="top"><a id="aaf342326457af0baa357791094ba3a84"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>setURankImpl</b> (Row r)</td></tr>
+<tr class="separator:aaf342326457af0baa357791094ba3a84"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa9e4f4a46a9a0b6f2eb7bb1116214c4c"><td class="memItemLeft" align="right" valign="top"><a id="aa9e4f4a46a9a0b6f2eb7bb1116214c4c"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getUImpl</b> (Row r, Col c) -&gt; MutDensePtrMatrix&lt; int64_t &gt;</td></tr>
+<tr class="separator:aa9e4f4a46a9a0b6f2eb7bb1116214c4c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a956cbc4c4a465d68d304f10b1209bd29"><td class="memItemLeft" align="right" valign="top"><a id="a956cbc4c4a465d68d304f10b1209bd29"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getVImpl</b> (Row r, Col c) -&gt; MutDensePtrMatrix&lt; int64_t &gt;</td></tr>
+<tr class="separator:a956cbc4c4a465d68d304f10b1209bd29"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6f0c06f1b4e52624e73bad781f93315f"><td class="memItemLeft" align="right" valign="top"><a id="a6f0c06f1b4e52624e73bad781f93315f"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getDImpl</b> (Row N) -&gt; MutPtrVector&lt; int64_t &gt;</td></tr>
+<tr class="separator:a6f0c06f1b4e52624e73bad781f93315f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_methods_structcomparator_1_1BaseSymbolicComparator"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_structcomparator_1_1BaseSymbolicComparator')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="structcomparator_1_1BaseSymbolicComparator.html">comparator::BaseSymbolicComparator&lt; LinearSymbolicComparator &gt;</a></td></tr>
 <tr class="memitem:a589cc9067cf5d27cd004632047fd7a7f inherit pub_methods_structcomparator_1_1BaseSymbolicComparator"><td class="memItemLeft" align="right" valign="top"><a id="a589cc9067cf5d27cd004632047fd7a7f"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumConstTermsImpl</b> () const -&gt; size_t</td></tr>
 <tr class="separator:a589cc9067cf5d27cd004632047fd7a7f inherit pub_methods_structcomparator_1_1BaseSymbolicComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a678a723d847f0a6ce6ddaeb1f13f70c2 inherit pub_methods_structcomparator_1_1BaseSymbolicComparator"><td class="memItemLeft" align="right" valign="top"><a id="a678a723d847f0a6ce6ddaeb1f13f70c2"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getV</b> () -&gt; DenseMutPtrMatrix&lt; int64_t &gt;</td></tr>
-<tr class="separator:a678a723d847f0a6ce6ddaeb1f13f70c2 inherit pub_methods_structcomparator_1_1BaseSymbolicComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af7e364d4fb2da8add3645d1bfed501b1 inherit pub_methods_structcomparator_1_1BaseSymbolicComparator"><td class="memItemLeft" align="right" valign="top"><a id="af7e364d4fb2da8add3645d1bfed501b1"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getV</b> (Row r, Col c) -&gt; DenseMutPtrMatrix&lt; int64_t &gt;</td></tr>
-<tr class="separator:af7e364d4fb2da8add3645d1bfed501b1 inherit pub_methods_structcomparator_1_1BaseSymbolicComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aae0aa5600bdde357a54bc90b86518e4f inherit pub_methods_structcomparator_1_1BaseSymbolicComparator"><td class="memItemLeft" align="right" valign="top"><a id="aae0aa5600bdde357a54bc90b86518e4f"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getU</b> () -&gt; DenseMutPtrMatrix&lt; int64_t &gt;</td></tr>
-<tr class="separator:aae0aa5600bdde357a54bc90b86518e4f inherit pub_methods_structcomparator_1_1BaseSymbolicComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a373676ff27161e8188ef2049adec656e inherit pub_methods_structcomparator_1_1BaseSymbolicComparator"><td class="memItemLeft" align="right" valign="top"><a id="a373676ff27161e8188ef2049adec656e"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getU</b> (Row r, Col c) -&gt; DenseMutPtrMatrix&lt; int64_t &gt;</td></tr>
-<tr class="separator:a373676ff27161e8188ef2049adec656e inherit pub_methods_structcomparator_1_1BaseSymbolicComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a67dcfcf8fc4a00e7ffad16593130fbed inherit pub_methods_structcomparator_1_1BaseSymbolicComparator"><td class="memItemLeft" align="right" valign="top"><a id="a67dcfcf8fc4a00e7ffad16593130fbed"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getV</b> () -&gt; MutDensePtrMatrix&lt; int64_t &gt;</td></tr>
+<tr class="separator:a67dcfcf8fc4a00e7ffad16593130fbed inherit pub_methods_structcomparator_1_1BaseSymbolicComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6ffeb1251f65dedd2a8699883111c5ab inherit pub_methods_structcomparator_1_1BaseSymbolicComparator"><td class="memItemLeft" align="right" valign="top"><a id="a6ffeb1251f65dedd2a8699883111c5ab"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getV</b> (Row r, Col c) -&gt; MutDensePtrMatrix&lt; int64_t &gt;</td></tr>
+<tr class="separator:a6ffeb1251f65dedd2a8699883111c5ab inherit pub_methods_structcomparator_1_1BaseSymbolicComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a59b2d70a075d533bdd272f88eb566d89 inherit pub_methods_structcomparator_1_1BaseSymbolicComparator"><td class="memItemLeft" align="right" valign="top"><a id="a59b2d70a075d533bdd272f88eb566d89"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getU</b> () -&gt; MutDensePtrMatrix&lt; int64_t &gt;</td></tr>
+<tr class="separator:a59b2d70a075d533bdd272f88eb566d89 inherit pub_methods_structcomparator_1_1BaseSymbolicComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0182044fd5165a033d25890dd6eb53c4 inherit pub_methods_structcomparator_1_1BaseSymbolicComparator"><td class="memItemLeft" align="right" valign="top"><a id="a0182044fd5165a033d25890dd6eb53c4"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getU</b> (Row r, Col c) -&gt; MutDensePtrMatrix&lt; int64_t &gt;</td></tr>
+<tr class="separator:a0182044fd5165a033d25890dd6eb53c4 inherit pub_methods_structcomparator_1_1BaseSymbolicComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a93e16a139e3231b61efedaaafe9a49ca inherit pub_methods_structcomparator_1_1BaseSymbolicComparator"><td class="memItemLeft" align="right" valign="top"><a id="a93e16a139e3231b61efedaaafe9a49ca"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getD</b> () -&gt; MutPtrVector&lt; int64_t &gt;</td></tr>
 <tr class="separator:a93e16a139e3231b61efedaaafe9a49ca inherit pub_methods_structcomparator_1_1BaseSymbolicComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -147,21 +150,21 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getD</b> (R
 <tr class="memitem:a9e75e973a110dd70d1afda45f1df5703 inherit pub_methods_structcomparator_1_1BaseSymbolicComparator"><td class="memItemLeft" align="right" valign="top"><a id="a9e75e973a110dd70d1afda45f1df5703"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>setURank</b> (Row r)</td></tr>
 <tr class="separator:a9e75e973a110dd70d1afda45f1df5703 inherit pub_methods_structcomparator_1_1BaseSymbolicComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4de62516d647e6e197c06c67578691fa inherit pub_methods_structcomparator_1_1BaseSymbolicComparator"><td class="memItemLeft" align="right" valign="top"><a id="a4de62516d647e6e197c06c67578691fa"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>initNonNegative</b> (Allocator alloc, PtrMatrix&lt; int64_t &gt; A, <a class="el" href="structEmptyMatrix.html">EmptyMatrix</a>&lt; int64_t &gt;, size_t numNonNegative)</td></tr>
-<tr class="separator:a4de62516d647e6e197c06c67578691fa inherit pub_methods_structcomparator_1_1BaseSymbolicComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aec82977ed1ea8fde85e6b73f139472e3 inherit pub_methods_structcomparator_1_1BaseSymbolicComparator"><td class="memItemLeft" align="right" valign="top"><a id="aec82977ed1ea8fde85e6b73f139472e3"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>initNonNegative</b> (Allocator alloc, PtrMatrix&lt; int64_t &gt; A, <a class="el" href="structLinearAlgebra_1_1EmptyMatrix.html">EmptyMatrix</a>&lt; int64_t &gt;, size_t numNonNegative)</td></tr>
+<tr class="separator:aec82977ed1ea8fde85e6b73f139472e3 inherit pub_methods_structcomparator_1_1BaseSymbolicComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac38af3130a18c8aef09936e597603957 inherit pub_methods_structcomparator_1_1BaseSymbolicComparator"><td class="memItemLeft" align="right" valign="top"><a id="ac38af3130a18c8aef09936e597603957"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>initNonNegative</b> (Allocator alloc, PtrMatrix&lt; int64_t &gt; A, size_t numNonNegative)</td></tr>
 <tr class="separator:ac38af3130a18c8aef09936e597603957 inherit pub_methods_structcomparator_1_1BaseSymbolicComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af3912e693f5dced354706ac977310d99 inherit pub_methods_structcomparator_1_1BaseSymbolicComparator"><td class="memItemLeft" align="right" valign="top"><a id="af3912e693f5dced354706ac977310d99"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>initNonNegative</b> (Allocator alloc, PtrMatrix&lt; int64_t &gt; A, PtrMatrix&lt; int64_t &gt; E, size_t numNonNegative)</td></tr>
 <tr class="separator:af3912e693f5dced354706ac977310d99 inherit pub_methods_structcomparator_1_1BaseSymbolicComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a49e98df3b8b28a0676f4b87205d00ad1 inherit pub_methods_structcomparator_1_1BaseSymbolicComparator"><td class="memItemLeft" align="right" valign="top"><a id="a49e98df3b8b28a0676f4b87205d00ad1"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>init</b> (Allocator alloc, PtrMatrix&lt; int64_t &gt; A, bool pos0)</td></tr>
-<tr class="separator:a49e98df3b8b28a0676f4b87205d00ad1 inherit pub_methods_structcomparator_1_1BaseSymbolicComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac79cdf8f9e0b306f28065bac71c211e3 inherit pub_methods_structcomparator_1_1BaseSymbolicComparator"><td class="memItemLeft" align="right" valign="top"><a id="ac79cdf8f9e0b306f28065bac71c211e3"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>init</b> (Allocator alloc, PtrMatrix&lt; int64_t &gt; A, <a class="el" href="structEmptyMatrix.html">EmptyMatrix</a>&lt; int64_t &gt;, bool pos0)</td></tr>
-<tr class="separator:ac79cdf8f9e0b306f28065bac71c211e3 inherit pub_methods_structcomparator_1_1BaseSymbolicComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a68f3517b8d6b27df6190f8a3093e2f2f inherit pub_methods_structcomparator_1_1BaseSymbolicComparator"><td class="memItemLeft" align="right" valign="top"><a id="a68f3517b8d6b27df6190f8a3093e2f2f"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>init</b> (Allocator alloc, PtrMatrix&lt; int64_t &gt; A, bool pos0)</td></tr>
+<tr class="separator:a68f3517b8d6b27df6190f8a3093e2f2f inherit pub_methods_structcomparator_1_1BaseSymbolicComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad0da745d90dc43da64b32f4809a7c3ed inherit pub_methods_structcomparator_1_1BaseSymbolicComparator"><td class="memItemLeft" align="right" valign="top"><a id="ad0da745d90dc43da64b32f4809a7c3ed"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>init</b> (Allocator alloc, PtrMatrix&lt; int64_t &gt; A, <a class="el" href="structLinearAlgebra_1_1EmptyMatrix.html">EmptyMatrix</a>&lt; int64_t &gt;, bool pos0)</td></tr>
+<tr class="separator:ad0da745d90dc43da64b32f4809a7c3ed inherit pub_methods_structcomparator_1_1BaseSymbolicComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad178af27e448348fa3b9d3b6db56c116 inherit pub_methods_structcomparator_1_1BaseSymbolicComparator"><td class="memItemLeft" align="right" valign="top"><a id="ad178af27e448348fa3b9d3b6db56c116"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>init</b> (Allocator alloc, PtrMatrix&lt; int64_t &gt; A, PtrMatrix&lt; int64_t &gt; E, bool pos0)</td></tr>
 <tr class="separator:ad178af27e448348fa3b9d3b6db56c116 inherit pub_methods_structcomparator_1_1BaseSymbolicComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -174,109 +177,106 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>isEmpty</b> () -&gt; 
 <tr class="memitem:a926f9b3f4291841aadb18fd95a4d4ae1 inherit pub_methods_structcomparator_1_1BaseSymbolicComparator"><td class="memItemLeft" align="right" valign="top"><a id="a926f9b3f4291841aadb18fd95a4d4ae1"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>greaterEqual</b> (PtrVector&lt; int64_t &gt; query) const -&gt; bool</td></tr>
 <tr class="separator:a926f9b3f4291841aadb18fd95a4d4ae1 inherit pub_methods_structcomparator_1_1BaseSymbolicComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af47bab9291ab8b8480c39d9546e47624 inherit pub_methods_structcomparator_1_1BaseSymbolicComparator"><td class="memItemLeft" align="right" valign="top"><a id="af47bab9291ab8b8480c39d9546e47624"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>greaterEqual</b> (MutPtrVector&lt; int64_t &gt; delta, PtrVector&lt; int64_t &gt; x, PtrVector&lt; int64_t &gt; y) const -&gt; bool</td></tr>
-<tr class="separator:af47bab9291ab8b8480c39d9546e47624 inherit pub_methods_structcomparator_1_1BaseSymbolicComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abc7829cfd2b0348314f057cb00794b67 inherit pub_methods_structcomparator_1_1BaseSymbolicComparator"><td class="memItemLeft" align="right" valign="top"><a id="abc7829cfd2b0348314f057cb00794b67"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>greaterEqual</b> (PtrVector&lt; int64_t &gt; x, PtrVector&lt; int64_t &gt; y) const -&gt; bool</td></tr>
-<tr class="separator:abc7829cfd2b0348314f057cb00794b67 inherit pub_methods_structcomparator_1_1BaseSymbolicComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aef05e3c17e78d84664cc1225b4743c05 inherit pub_methods_structcomparator_1_1BaseSymbolicComparator"><td class="memItemLeft" align="right" valign="top"><a id="aef05e3c17e78d84664cc1225b4743c05"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>greaterEqual</b> (PtrVector&lt; int64_t &gt; x) const -&gt; bool</td></tr>
-<tr class="separator:aef05e3c17e78d84664cc1225b4743c05 inherit pub_methods_structcomparator_1_1BaseSymbolicComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abd160ff6d792616fae14ed35284047fe inherit pub_methods_structcomparator_1_1BaseSymbolicComparator"><td class="memItemLeft" align="right" valign="top"><a id="abd160ff6d792616fae14ed35284047fe"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>greaterEqual</b> (MutPtrVector&lt; int64_t &gt; delta, PtrVector&lt; int64_t &gt; x, PtrVector&lt; int64_t &gt; y) const -&gt; bool</td></tr>
+<tr class="separator:abd160ff6d792616fae14ed35284047fe inherit pub_methods_structcomparator_1_1BaseSymbolicComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a96702d6a9236c1d5275627c1a56a3811 inherit pub_methods_structcomparator_1_1BaseSymbolicComparator"><td class="memItemLeft" align="right" valign="top"><a id="a96702d6a9236c1d5275627c1a56a3811"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>greaterEqual</b> (PtrVector&lt; int64_t &gt; x, PtrVector&lt; int64_t &gt; y) const -&gt; bool</td></tr>
+<tr class="separator:a96702d6a9236c1d5275627c1a56a3811 inherit pub_methods_structcomparator_1_1BaseSymbolicComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9b1a403b49d9b607d7535749362f6bc0 inherit pub_methods_structcomparator_1_1BaseSymbolicComparator"><td class="memItemLeft" align="right" valign="top"><a id="a9b1a403b49d9b607d7535749362f6bc0"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>greaterEqual</b> (PtrVector&lt; int64_t &gt; x) const -&gt; bool</td></tr>
+<tr class="separator:a9b1a403b49d9b607d7535749362f6bc0 inherit pub_methods_structcomparator_1_1BaseSymbolicComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_methods_structcomparator_1_1BaseComparator"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_structcomparator_1_1BaseComparator')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="structcomparator_1_1BaseComparator.html">comparator::BaseComparator&lt; T &gt;</a></td></tr>
-<tr class="memitem:ae04332cc1cf6cc368453002570c44215 inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memItemLeft" align="right" valign="top"><a id="ae04332cc1cf6cc368453002570c44215"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumConstTerms</b> () const -&gt; size_t</td></tr>
-<tr class="separator:ae04332cc1cf6cc368453002570c44215 inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af47bab9291ab8b8480c39d9546e47624 inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memItemLeft" align="right" valign="top"><a id="af47bab9291ab8b8480c39d9546e47624"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>greaterEqual</b> (MutPtrVector&lt; int64_t &gt; delta, PtrVector&lt; int64_t &gt; x, PtrVector&lt; int64_t &gt; y) const -&gt; bool</td></tr>
-<tr class="separator:af47bab9291ab8b8480c39d9546e47624 inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abc7829cfd2b0348314f057cb00794b67 inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memItemLeft" align="right" valign="top"><a id="abc7829cfd2b0348314f057cb00794b67"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>greaterEqual</b> (PtrVector&lt; int64_t &gt; x, PtrVector&lt; int64_t &gt; y) const -&gt; bool</td></tr>
-<tr class="separator:abc7829cfd2b0348314f057cb00794b67 inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a31db8ce15700a4752e05351ff3033bf9 inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memItemLeft" align="right" valign="top"><a id="a31db8ce15700a4752e05351ff3033bf9"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>less</b> (PtrVector&lt; int64_t &gt; x, PtrVector&lt; int64_t &gt; y) const -&gt; bool</td></tr>
-<tr class="separator:a31db8ce15700a4752e05351ff3033bf9 inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acdf1faec05cbe98b5e682d080fecd873 inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memItemLeft" align="right" valign="top"><a id="acdf1faec05cbe98b5e682d080fecd873"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>greater</b> (PtrVector&lt; int64_t &gt; x, PtrVector&lt; int64_t &gt; y) const -&gt; bool</td></tr>
-<tr class="separator:acdf1faec05cbe98b5e682d080fecd873 inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3721462f0905703dfbfcfce9e2571913 inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memItemLeft" align="right" valign="top"><a id="a3721462f0905703dfbfcfce9e2571913"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>lessEqual</b> (PtrVector&lt; int64_t &gt; x, PtrVector&lt; int64_t &gt; y) const -&gt; bool</td></tr>
-<tr class="separator:a3721462f0905703dfbfcfce9e2571913 inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac37d1a7ddc31280a76db3d4c8a6692e6 inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memItemLeft" align="right" valign="top"><a id="ac37d1a7ddc31280a76db3d4c8a6692e6"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>equal</b> (PtrVector&lt; int64_t &gt; x, PtrVector&lt; int64_t &gt; y) const -&gt; bool</td></tr>
-<tr class="separator:ac37d1a7ddc31280a76db3d4c8a6692e6 inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aef05e3c17e78d84664cc1225b4743c05 inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memItemLeft" align="right" valign="top"><a id="aef05e3c17e78d84664cc1225b4743c05"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>greaterEqual</b> (PtrVector&lt; int64_t &gt; x) const -&gt; bool</td></tr>
-<tr class="separator:aef05e3c17e78d84664cc1225b4743c05 inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2b3a8aeec96cf6f26a98e4af87e10be4 inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memItemLeft" align="right" valign="top"><a id="a2b3a8aeec96cf6f26a98e4af87e10be4"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>lessEqual</b> (llvm::SmallVectorImpl&lt; int64_t &gt; &amp;x) const -&gt; bool</td></tr>
-<tr class="separator:a2b3a8aeec96cf6f26a98e4af87e10be4 inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a50efa462ae77a23ae6564f0597bb162b inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memItemLeft" align="right" valign="top"><a id="a50efa462ae77a23ae6564f0597bb162b"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>lessEqual</b> (MutPtrVector&lt; int64_t &gt; x) const -&gt; bool</td></tr>
-<tr class="separator:a50efa462ae77a23ae6564f0597bb162b inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4e5fc76b0ff095464cc4f46a5cd3490e inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memItemLeft" align="right" valign="top"><a id="a4e5fc76b0ff095464cc4f46a5cd3490e"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>lessEqual</b> (PtrVector&lt; int64_t &gt; x) const -&gt; bool</td></tr>
-<tr class="separator:a4e5fc76b0ff095464cc4f46a5cd3490e inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad5a20ada7180ca988c16fb3ba026fda8 inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memItemLeft" align="right" valign="top"><a id="ad5a20ada7180ca988c16fb3ba026fda8"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>lessEqual</b> (MutPtrVector&lt; int64_t &gt; x, int64_t y) const -&gt; bool</td></tr>
-<tr class="separator:ad5a20ada7180ca988c16fb3ba026fda8 inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a634dbc447e4ec6b52ac2d3779da1aaa7 inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memItemLeft" align="right" valign="top"><a id="a634dbc447e4ec6b52ac2d3779da1aaa7"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>lessEqual</b> (PtrVector&lt; int64_t &gt; x, int64_t y) const -&gt; bool</td></tr>
-<tr class="separator:a634dbc447e4ec6b52ac2d3779da1aaa7 inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:adff959f0097ca85c3babb1e840d96144 inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memItemLeft" align="right" valign="top"><a id="adff959f0097ca85c3babb1e840d96144"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>less</b> (MutPtrVector&lt; int64_t &gt; x) const -&gt; bool</td></tr>
-<tr class="separator:adff959f0097ca85c3babb1e840d96144 inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a68ebd727afe4567aec92c9e9b76812c9 inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memItemLeft" align="right" valign="top"><a id="a68ebd727afe4567aec92c9e9b76812c9"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>less</b> (PtrVector&lt; int64_t &gt; x) const -&gt; bool</td></tr>
-<tr class="separator:a68ebd727afe4567aec92c9e9b76812c9 inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6c9cfcf6a403e9fdbe8038c85e7306c2 inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memItemLeft" align="right" valign="top"><a id="a6c9cfcf6a403e9fdbe8038c85e7306c2"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>greater</b> (MutPtrVector&lt; int64_t &gt; x) const -&gt; bool</td></tr>
-<tr class="separator:a6c9cfcf6a403e9fdbe8038c85e7306c2 inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a892d52db4a9a1fed9d3c6efb9927145c inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memItemLeft" align="right" valign="top"><a id="a892d52db4a9a1fed9d3c6efb9927145c"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>greater</b> (PtrVector&lt; int64_t &gt; x) const -&gt; bool</td></tr>
-<tr class="separator:a892d52db4a9a1fed9d3c6efb9927145c inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a87bc9d18eeac7c6f62a402777657c3a7 inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memItemLeft" align="right" valign="top"><a id="a87bc9d18eeac7c6f62a402777657c3a7"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>greater</b> (Vector&lt; int64_t &gt; &amp;x) const -&gt; bool</td></tr>
-<tr class="separator:a87bc9d18eeac7c6f62a402777657c3a7 inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:adb7aa6b46ac417aa915dc393981be426 inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memItemLeft" align="right" valign="top"><a id="adb7aa6b46ac417aa915dc393981be426"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>less</b> (Vector&lt; int64_t &gt; &amp;x) const -&gt; bool</td></tr>
-<tr class="separator:adb7aa6b46ac417aa915dc393981be426 inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab22504dcf78a6f96a13909ff36de37f7 inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memItemLeft" align="right" valign="top"><a id="ab22504dcf78a6f96a13909ff36de37f7"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>lessEqual</b> (Vector&lt; int64_t &gt; &amp;x) const -&gt; bool</td></tr>
-<tr class="separator:ab22504dcf78a6f96a13909ff36de37f7 inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac49fbe7e9c287b0d1f222f07d6e5ff8b inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memItemLeft" align="right" valign="top"><a id="ac49fbe7e9c287b0d1f222f07d6e5ff8b"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>lessEqual</b> (Vector&lt; int64_t &gt; &amp;x, int64_t y) const -&gt; bool</td></tr>
-<tr class="separator:ac49fbe7e9c287b0d1f222f07d6e5ff8b inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7eb42bd2199e98a7873ab2290979269d inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memItemLeft" align="right" valign="top"><a id="a7eb42bd2199e98a7873ab2290979269d"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>equal</b> (PtrVector&lt; int64_t &gt; x) const -&gt; bool</td></tr>
-<tr class="separator:a7eb42bd2199e98a7873ab2290979269d inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6f84e6130e96c1a3ceae74624f3c2a56 inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memItemLeft" align="right" valign="top"><a id="a6f84e6130e96c1a3ceae74624f3c2a56"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>equalNegative</b> (PtrVector&lt; int64_t &gt; x, PtrVector&lt; int64_t &gt; y) const -&gt; bool</td></tr>
-<tr class="separator:a6f84e6130e96c1a3ceae74624f3c2a56 inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afee222052e58cfb205380b4e037c9d6c inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memItemLeft" align="right" valign="top"><a id="afee222052e58cfb205380b4e037c9d6c"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumConstTerms</b> () const -&gt; size_t</td></tr>
+<tr class="separator:afee222052e58cfb205380b4e037c9d6c inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abd160ff6d792616fae14ed35284047fe inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memItemLeft" align="right" valign="top"><a id="abd160ff6d792616fae14ed35284047fe"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>greaterEqual</b> (MutPtrVector&lt; int64_t &gt; delta, PtrVector&lt; int64_t &gt; x, PtrVector&lt; int64_t &gt; y) const -&gt; bool</td></tr>
+<tr class="separator:abd160ff6d792616fae14ed35284047fe inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a96702d6a9236c1d5275627c1a56a3811 inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memItemLeft" align="right" valign="top"><a id="a96702d6a9236c1d5275627c1a56a3811"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>greaterEqual</b> (PtrVector&lt; int64_t &gt; x, PtrVector&lt; int64_t &gt; y) const -&gt; bool</td></tr>
+<tr class="separator:a96702d6a9236c1d5275627c1a56a3811 inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad0efc246545f4f0271a403c2e7997eb4 inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memItemLeft" align="right" valign="top"><a id="ad0efc246545f4f0271a403c2e7997eb4"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>less</b> (PtrVector&lt; int64_t &gt; x, PtrVector&lt; int64_t &gt; y) const -&gt; bool</td></tr>
+<tr class="separator:ad0efc246545f4f0271a403c2e7997eb4 inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a85d37007865ebf275e5b181a2b97f93f inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memItemLeft" align="right" valign="top"><a id="a85d37007865ebf275e5b181a2b97f93f"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>greater</b> (PtrVector&lt; int64_t &gt; x, PtrVector&lt; int64_t &gt; y) const -&gt; bool</td></tr>
+<tr class="separator:a85d37007865ebf275e5b181a2b97f93f inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a71dcbcb39a92fe17f1c9cc925bee8c74 inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memItemLeft" align="right" valign="top"><a id="a71dcbcb39a92fe17f1c9cc925bee8c74"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>lessEqual</b> (PtrVector&lt; int64_t &gt; x, PtrVector&lt; int64_t &gt; y) const -&gt; bool</td></tr>
+<tr class="separator:a71dcbcb39a92fe17f1c9cc925bee8c74 inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a17ec42f3235788c5a184dff7a42f1e4b inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memItemLeft" align="right" valign="top"><a id="a17ec42f3235788c5a184dff7a42f1e4b"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>equal</b> (PtrVector&lt; int64_t &gt; x, PtrVector&lt; int64_t &gt; y) const -&gt; bool</td></tr>
+<tr class="separator:a17ec42f3235788c5a184dff7a42f1e4b inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9b1a403b49d9b607d7535749362f6bc0 inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memItemLeft" align="right" valign="top"><a id="a9b1a403b49d9b607d7535749362f6bc0"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>greaterEqual</b> (PtrVector&lt; int64_t &gt; x) const -&gt; bool</td></tr>
+<tr class="separator:a9b1a403b49d9b607d7535749362f6bc0 inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adb841a6c219588804d2d3f4a398ff1d3 inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memItemLeft" align="right" valign="top"><a id="adb841a6c219588804d2d3f4a398ff1d3"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>lessEqual</b> (MutPtrVector&lt; int64_t &gt; x) const -&gt; bool</td></tr>
+<tr class="separator:adb841a6c219588804d2d3f4a398ff1d3 inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac527017818226d1b2b02486481699909 inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memItemLeft" align="right" valign="top"><a id="ac527017818226d1b2b02486481699909"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>lessEqual</b> (PtrVector&lt; int64_t &gt; x) const -&gt; bool</td></tr>
+<tr class="separator:ac527017818226d1b2b02486481699909 inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1cba26fc1a87b6babe28d2877de1a882 inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memItemLeft" align="right" valign="top"><a id="a1cba26fc1a87b6babe28d2877de1a882"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>lessEqual</b> (MutPtrVector&lt; int64_t &gt; x, int64_t y) const -&gt; bool</td></tr>
+<tr class="separator:a1cba26fc1a87b6babe28d2877de1a882 inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5dd63fd620b43918252a8197f34d1c21 inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memItemLeft" align="right" valign="top"><a id="a5dd63fd620b43918252a8197f34d1c21"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>lessEqual</b> (PtrVector&lt; int64_t &gt; x, int64_t y) const -&gt; bool</td></tr>
+<tr class="separator:a5dd63fd620b43918252a8197f34d1c21 inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a684f9dd3b6489a44b98ea820be6ef960 inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memItemLeft" align="right" valign="top"><a id="a684f9dd3b6489a44b98ea820be6ef960"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>less</b> (MutPtrVector&lt; int64_t &gt; x) const -&gt; bool</td></tr>
+<tr class="separator:a684f9dd3b6489a44b98ea820be6ef960 inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9609244681db35fd54bb3a216f24de85 inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memItemLeft" align="right" valign="top"><a id="a9609244681db35fd54bb3a216f24de85"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>less</b> (PtrVector&lt; int64_t &gt; x) const -&gt; bool</td></tr>
+<tr class="separator:a9609244681db35fd54bb3a216f24de85 inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a84af347e972056e377c6b7569914898f inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memItemLeft" align="right" valign="top"><a id="a84af347e972056e377c6b7569914898f"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>greater</b> (MutPtrVector&lt; int64_t &gt; x) const -&gt; bool</td></tr>
+<tr class="separator:a84af347e972056e377c6b7569914898f inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa65c15ab50d3e7fbf53d16d55c23a8e2 inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memItemLeft" align="right" valign="top"><a id="aa65c15ab50d3e7fbf53d16d55c23a8e2"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>greater</b> (PtrVector&lt; int64_t &gt; x) const -&gt; bool</td></tr>
+<tr class="separator:aa65c15ab50d3e7fbf53d16d55c23a8e2 inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae6fe6cff8d22ee2b0cc04b98ba15eb46 inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memItemLeft" align="right" valign="top"><a id="ae6fe6cff8d22ee2b0cc04b98ba15eb46"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>greater</b> (Vector&lt; int64_t &gt; &amp;x) const -&gt; bool</td></tr>
+<tr class="separator:ae6fe6cff8d22ee2b0cc04b98ba15eb46 inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a198580e5169ae3fe0c1282abdf7d2940 inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memItemLeft" align="right" valign="top"><a id="a198580e5169ae3fe0c1282abdf7d2940"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>less</b> (Vector&lt; int64_t &gt; &amp;x) const -&gt; bool</td></tr>
+<tr class="separator:a198580e5169ae3fe0c1282abdf7d2940 inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afac443f5e13c75d3c113d5ace2dd2404 inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memItemLeft" align="right" valign="top"><a id="afac443f5e13c75d3c113d5ace2dd2404"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>lessEqual</b> (Vector&lt; int64_t &gt; &amp;x) const -&gt; bool</td></tr>
+<tr class="separator:afac443f5e13c75d3c113d5ace2dd2404 inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2ddb9a0df0dcc483865f6490366aa8d2 inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memItemLeft" align="right" valign="top"><a id="a2ddb9a0df0dcc483865f6490366aa8d2"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>lessEqual</b> (Vector&lt; int64_t &gt; &amp;x, int64_t y) const -&gt; bool</td></tr>
+<tr class="separator:a2ddb9a0df0dcc483865f6490366aa8d2 inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abbcb9576cfb3140a57423eb02a20d1f6 inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memItemLeft" align="right" valign="top"><a id="abbcb9576cfb3140a57423eb02a20d1f6"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>equal</b> (PtrVector&lt; int64_t &gt; x) const -&gt; bool</td></tr>
+<tr class="separator:abbcb9576cfb3140a57423eb02a20d1f6 inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad02f2fa559939e434085305b1d0bb415 inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memItemLeft" align="right" valign="top"><a id="ad02f2fa559939e434085305b1d0bb415"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>equalNegative</b> (PtrVector&lt; int64_t &gt; x, PtrVector&lt; int64_t &gt; y) const -&gt; bool</td></tr>
+<tr class="separator:ad02f2fa559939e434085305b1d0bb415 inherit pub_methods_structcomparator_1_1BaseComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
-<tr class="memitem:a698f002ac1d38c28cd8f614dfe423f7d"><td class="memItemLeft" align="right" valign="top"><a id="a698f002ac1d38c28cd8f614dfe423f7d"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>construct</b> (PtrMatrix&lt; int64_t &gt; Ap, <a class="el" href="structEmptyMatrix.html">EmptyMatrix</a>&lt; int64_t &gt;, bool pos0) -&gt; <a class="el" href="structcomparator_1_1LinearSymbolicComparator.html">LinearSymbolicComparator</a></td></tr>
-<tr class="separator:a698f002ac1d38c28cd8f614dfe423f7d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6ababbcbd1d0581eb34c0bfb52cbc5d9"><td class="memItemLeft" align="right" valign="top"><a id="a6ababbcbd1d0581eb34c0bfb52cbc5d9"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>construct</b> (PtrMatrix&lt; int64_t &gt; Ap, bool pos0) -&gt; <a class="el" href="structcomparator_1_1LinearSymbolicComparator.html">LinearSymbolicComparator</a></td></tr>
-<tr class="separator:a6ababbcbd1d0581eb34c0bfb52cbc5d9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a36e35d199b4baea3d1733d26a4544361"><td class="memItemLeft" align="right" valign="top"><a id="a36e35d199b4baea3d1733d26a4544361"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>construct</b> (PtrMatrix&lt; int64_t &gt; Ap, PtrMatrix&lt; int64_t &gt; Ep, bool pos0) -&gt; <a class="el" href="structcomparator_1_1LinearSymbolicComparator.html">LinearSymbolicComparator</a></td></tr>
-<tr class="separator:a36e35d199b4baea3d1733d26a4544361"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a07da724abf7774450e958e16519f7465"><td class="memItemLeft" align="right" valign="top"><a id="a07da724abf7774450e958e16519f7465"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>constructNonNeg</b> (PtrMatrix&lt; int64_t &gt; Ap, <a class="el" href="structEmptyMatrix.html">EmptyMatrix</a>&lt; int64_t &gt;, size_t numNonNeg) -&gt; <a class="el" href="structcomparator_1_1LinearSymbolicComparator.html">LinearSymbolicComparator</a></td></tr>
-<tr class="separator:a07da724abf7774450e958e16519f7465"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9cb29f63d3360dc4236c77ca33f36d35"><td class="memItemLeft" align="right" valign="top"><a id="a9cb29f63d3360dc4236c77ca33f36d35"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>constructNonNeg</b> (PtrMatrix&lt; int64_t &gt; Ap, size_t numNonNeg) -&gt; <a class="el" href="structcomparator_1_1LinearSymbolicComparator.html">LinearSymbolicComparator</a></td></tr>
-<tr class="separator:a9cb29f63d3360dc4236c77ca33f36d35"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1d81d9b112e75e118790e9e2e2cc88fe"><td class="memItemLeft" align="right" valign="top"><a id="a1d81d9b112e75e118790e9e2e2cc88fe"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>constructNonNeg</b> (PtrMatrix&lt; int64_t &gt; Ap, PtrMatrix&lt; int64_t &gt; Ep, size_t numNonNeg) -&gt; <a class="el" href="structcomparator_1_1LinearSymbolicComparator.html">LinearSymbolicComparator</a></td></tr>
-<tr class="separator:a1d81d9b112e75e118790e9e2e2cc88fe"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a96fa0f0cd6aad22c9bc391437b29bcdb"><td class="memItemLeft" align="right" valign="top"><a id="a96fa0f0cd6aad22c9bc391437b29bcdb"></a>
+static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>construct</b> (PtrMatrix&lt; int64_t &gt; Ap, <a class="el" href="structLinearAlgebra_1_1EmptyMatrix.html">EmptyMatrix</a>&lt; int64_t &gt;, bool pos0) -&gt; <a class="el" href="structcomparator_1_1LinearSymbolicComparator.html">LinearSymbolicComparator</a></td></tr>
+<tr class="separator:a96fa0f0cd6aad22c9bc391437b29bcdb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aac6e10908ffd257a471e22a490bd8065"><td class="memItemLeft" align="right" valign="top"><a id="aac6e10908ffd257a471e22a490bd8065"></a>
+static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>construct</b> (PtrMatrix&lt; int64_t &gt; Ap, bool pos0) -&gt; <a class="el" href="structcomparator_1_1LinearSymbolicComparator.html">LinearSymbolicComparator</a></td></tr>
+<tr class="separator:aac6e10908ffd257a471e22a490bd8065"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aae13302349f81a7e46d9b2e62458ad63"><td class="memItemLeft" align="right" valign="top"><a id="aae13302349f81a7e46d9b2e62458ad63"></a>
+static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>construct</b> (PtrMatrix&lt; int64_t &gt; Ap, PtrMatrix&lt; int64_t &gt; Ep, bool pos0) -&gt; <a class="el" href="structcomparator_1_1LinearSymbolicComparator.html">LinearSymbolicComparator</a></td></tr>
+<tr class="separator:aae13302349f81a7e46d9b2e62458ad63"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aceb6922b96658bd283b2babc0140122b"><td class="memItemLeft" align="right" valign="top"><a id="aceb6922b96658bd283b2babc0140122b"></a>
+static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>constructNonNeg</b> (PtrMatrix&lt; int64_t &gt; Ap, <a class="el" href="structLinearAlgebra_1_1EmptyMatrix.html">EmptyMatrix</a>&lt; int64_t &gt;, size_t numNonNeg) -&gt; <a class="el" href="structcomparator_1_1LinearSymbolicComparator.html">LinearSymbolicComparator</a></td></tr>
+<tr class="separator:aceb6922b96658bd283b2babc0140122b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acd40ab9178400c644a76ffc39d2f6621"><td class="memItemLeft" align="right" valign="top"><a id="acd40ab9178400c644a76ffc39d2f6621"></a>
+static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>constructNonNeg</b> (PtrMatrix&lt; int64_t &gt; Ap, size_t numNonNeg) -&gt; <a class="el" href="structcomparator_1_1LinearSymbolicComparator.html">LinearSymbolicComparator</a></td></tr>
+<tr class="separator:acd40ab9178400c644a76ffc39d2f6621"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af3508408a31618b4d362f886ff90b5c5"><td class="memItemLeft" align="right" valign="top"><a id="af3508408a31618b4d362f886ff90b5c5"></a>
+static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>constructNonNeg</b> (PtrMatrix&lt; int64_t &gt; Ap, PtrMatrix&lt; int64_t &gt; Ep, size_t numNonNeg) -&gt; <a class="el" href="structcomparator_1_1LinearSymbolicComparator.html">LinearSymbolicComparator</a></td></tr>
+<tr class="separator:af3508408a31618b4d362f886ff90b5c5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_static_methods_structcomparator_1_1BaseSymbolicComparator"><td colspan="2" onclick="javascript:toggleInherit('pub_static_methods_structcomparator_1_1BaseSymbolicComparator')"><img src="closed.png" alt="-"/>&#160;Static Public Member Functions inherited from <a class="el" href="structcomparator_1_1BaseSymbolicComparator.html">comparator::BaseSymbolicComparator&lt; LinearSymbolicComparator &gt;</a></td></tr>
 <tr class="memitem:aab1fc0f76d2c3f324319f7fa84572074 inherit pub_static_methods_structcomparator_1_1BaseSymbolicComparator"><td class="memItemLeft" align="right" valign="top"><a id="aab1fc0f76d2c3f324319f7fa84572074"></a>
-static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>memoryNeededNonNegative</b> (PtrMatrix&lt; int64_t &gt; A, <a class="el" href="structEmptyMatrix.html">EmptyMatrix</a>&lt; int64_t &gt;, size_t numNonNegative) -&gt; size_t</td></tr>
+static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>memoryNeededNonNegative</b> (PtrMatrix&lt; int64_t &gt; A, <a class="el" href="structLinearAlgebra_1_1EmptyMatrix.html">EmptyMatrix</a>&lt; int64_t &gt;, size_t numNonNegative) -&gt; size_t</td></tr>
 <tr class="separator:aab1fc0f76d2c3f324319f7fa84572074 inherit pub_static_methods_structcomparator_1_1BaseSymbolicComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab746c7daa8dd4ac2fbabd42f3ac57e8f inherit pub_static_methods_structcomparator_1_1BaseSymbolicComparator"><td class="memItemLeft" align="right" valign="top"><a id="ab746c7daa8dd4ac2fbabd42f3ac57e8f"></a>
 static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>memoryNeededNonNegative</b> (PtrMatrix&lt; int64_t &gt; A, size_t numNonNegative) -&gt; size_t</td></tr>
@@ -285,7 +285,7 @@ static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>memo
 static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>memoryNeededNonNegative</b> (PtrMatrix&lt; int64_t &gt; A, PtrMatrix&lt; int64_t &gt; E, size_t numNonNegative) -&gt; size_t</td></tr>
 <tr class="separator:ade25743e79171f643f383896d05c9c03 inherit pub_static_methods_structcomparator_1_1BaseSymbolicComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a70f37383488f84c13e07e5ef687d0c42 inherit pub_static_methods_structcomparator_1_1BaseSymbolicComparator"><td class="memItemLeft" align="right" valign="top"><a id="a70f37383488f84c13e07e5ef687d0c42"></a>
-static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>memoryNeeded</b> (PtrMatrix&lt; int64_t &gt; A, <a class="el" href="structEmptyMatrix.html">EmptyMatrix</a>&lt; int64_t &gt;, bool pos0) -&gt; size_t</td></tr>
+static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>memoryNeeded</b> (PtrMatrix&lt; int64_t &gt; A, <a class="el" href="structLinearAlgebra_1_1EmptyMatrix.html">EmptyMatrix</a>&lt; int64_t &gt;, bool pos0) -&gt; size_t</td></tr>
 <tr class="separator:a70f37383488f84c13e07e5ef687d0c42 inherit pub_static_methods_structcomparator_1_1BaseSymbolicComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a56eaa95c25a6fe0cdffb0b78df469b09 inherit pub_static_methods_structcomparator_1_1BaseSymbolicComparator"><td class="memItemLeft" align="right" valign="top"><a id="a56eaa95c25a6fe0cdffb0b78df469b09"></a>
 static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>memoryNeeded</b> (PtrMatrix&lt; int64_t &gt; A, bool pos0) -&gt; size_t</td></tr>
@@ -296,12 +296,12 @@ static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>memo
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
-<tr class="memitem:ac7aa0d03a891f19eba5f63fce2b4c2a9"><td class="memItemLeft" align="right" valign="top"><a id="ac7aa0d03a891f19eba5f63fce2b4c2a9"></a>
-IntMatrix&#160;</td><td class="memItemRight" valign="bottom"><b>U</b></td></tr>
-<tr class="separator:ac7aa0d03a891f19eba5f63fce2b4c2a9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a461827731f98b839d8e39df1f21c1877"><td class="memItemLeft" align="right" valign="top"><a id="a461827731f98b839d8e39df1f21c1877"></a>
-IntMatrix&#160;</td><td class="memItemRight" valign="bottom"><b>V</b></td></tr>
-<tr class="separator:a461827731f98b839d8e39df1f21c1877"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a518c4a046b779899afcc392b1097f1ba"><td class="memItemLeft" align="right" valign="top"><a id="a518c4a046b779899afcc392b1097f1ba"></a>
+<a class="el" href="structLinearAlgebra_1_1ManagedArray.html">Matrix</a>&#160;</td><td class="memItemRight" valign="bottom"><b>U</b></td></tr>
+<tr class="separator:a518c4a046b779899afcc392b1097f1ba"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1476001a4ebba5ed7acb4dd67a515a6d"><td class="memItemLeft" align="right" valign="top"><a id="a1476001a4ebba5ed7acb4dd67a515a6d"></a>
+<a class="el" href="structLinearAlgebra_1_1ManagedArray.html">Matrix</a>&#160;</td><td class="memItemRight" valign="bottom"><b>V</b></td></tr>
+<tr class="separator:a1476001a4ebba5ed7acb4dd67a515a6d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6efa2d1f5d768cddedd44de81b3b9ec2"><td class="memItemLeft" align="right" valign="top"><a id="a6efa2d1f5d768cddedd44de81b3b9ec2"></a>
 Vector&lt; int64_t &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>d</b></td></tr>
 <tr class="separator:a6efa2d1f5d768cddedd44de81b3b9ec2"><td class="memSeparator" colspan="2">&#160;</td></tr>
