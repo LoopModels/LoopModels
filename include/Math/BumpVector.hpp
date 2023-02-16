@@ -1,4 +1,5 @@
 #pragma once
+#include "Math/Array.hpp"
 #include "Math/Indexing.hpp"
 #include "Utilities/Allocators.hpp"
 #include <cstdint>

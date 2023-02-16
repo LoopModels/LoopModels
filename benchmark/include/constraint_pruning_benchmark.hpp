@@ -9,7 +9,7 @@
 
 static void BM_NullSpace(benchmark::State &state) {
 
-  IntMatrix B(Row{6}, Col{3});
+  IntMatrix B(DenseDims{Row{6}, Col{3}});
   B(0, 0) = 1;
   B(1, 0) = 0;
   B(2, 0) = -3;
@@ -42,7 +42,7 @@ BENCHMARK(BM_NullSpace);
 
 static void BM_NullSpace2000(benchmark::State &state) {
   const size_t N = 20;
-  IntMatrix A(Row{N}, Col{N});
+  IntMatrix A(DenseDims{Row{N}, Col{N}});
   A << 0;
   A(0, 0) = 2;
   for (size_t i = 1; i < N; ++i) {
@@ -74,7 +74,7 @@ BENCHMARK(BM_Orthogonalize);
 
 static void BM_Bareiss2000(benchmark::State &state) {
   const size_t N = 20;
-  IntMatrix A(Row{N}, Col{N});
+  IntMatrix A(DenseDims{Row{N}, Col{N}});
   A << 0;
   A(0, 0) = 2;
   for (size_t i = 1; i < N; ++i) {
@@ -93,11 +93,9 @@ static void BM_Bareiss2000(benchmark::State &state) {
   // std::cout << A << std::endl;
 
   // fourth row is 0
-  llvm::SmallVector<size_t, 16> pivots;
-  pivots.reserve(N);
+  Vector<size_t> pivots(N);
   IntMatrix B;
   for (auto b : state) {
-    pivots.clear();
     B = A;
     NormalForm::bareiss(B, pivots);
   }

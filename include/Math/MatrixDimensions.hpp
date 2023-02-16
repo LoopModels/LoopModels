@@ -40,6 +40,8 @@ struct StridedDims {
   constexpr StridedDims() = default;
   constexpr StridedDims(Row m, Col n) : M(m), N(n), strideM(n) {}
   constexpr StridedDims(Row m, Col n, RowStride x) : M(m), N(n), strideM(x) {}
+  constexpr StridedDims(CartesianIndex<Row, Col> ind)
+    : M(unsigned(ind.row)), N(unsigned(ind.col)), strideM(unsigned(ind.col)) {}
   constexpr explicit operator uint32_t() const {
     return checkedMul<uint32_t>(M, strideM);
   }
@@ -91,7 +93,8 @@ struct DenseDims {
   constexpr DenseDims() = default;
   constexpr DenseDims(Row m, Col n) : M(m), N(n) {}
   constexpr explicit DenseDims(StridedDims d) : M(d.M), N(d.N) {}
-  constexpr DenseDims(CartesianIndex<Row, Col> ind) : M(ind.row), N(ind.col) {}
+  constexpr DenseDims(CartesianIndex<Row, Col> ind)
+    : M(unsigned(ind.row)), N(unsigned(ind.col)) {}
   constexpr operator StridedDims() const { return {M, N, N}; }
   constexpr operator CarInd() const { return {M, N}; }
   constexpr auto operator=(const SquareDims &D) -> DenseDims &;

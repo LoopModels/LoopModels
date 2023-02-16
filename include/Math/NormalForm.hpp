@@ -505,13 +505,13 @@ constexpr auto pivotRowsBareiss(MutPtrMatrix<int64_t> A, size_t i, Row M,
   if (j != piv) swap(A, j, piv);
   return size_t(piv);
 }
-constexpr void bareiss(IntMatrix &A, Vector<size_t> &pivots) {
+constexpr void bareiss(MutPtrMatrix<int64_t> A, MutPtrVector<size_t> pivots) {
   const auto [M, N] = A.size();
-  pivots.reserve(min(M, N));
-  int64_t prev = 1;
+  invariant(pivots.size() == min(M, N));
+  int64_t prev = 1, pivInd = 0;
   for (size_t r = 0, c = 0; c < N && r < M; ++c) {
     if (auto piv = pivotRowsBareiss(A, c, M, r)) {
-      pivots.push_back(*piv);
+      pivots[pivInd++] = *piv;
       for (size_t k = r + 1; k < M; ++k) {
         for (size_t j = c + 1; j < N; ++j) {
           auto Akj_u = A(r, c) * A(k, j) - A(k, c) * A(r, j);
@@ -527,7 +527,7 @@ constexpr void bareiss(IntMatrix &A, Vector<size_t> &pivots) {
 }
 
 [[nodiscard]] constexpr auto bareiss(IntMatrix &A) -> Vector<size_t> {
-  Vector<size_t> pivots;
+  Vector<size_t> pivots(A.minRowCol());
   bareiss(A, pivots);
   return pivots;
 }

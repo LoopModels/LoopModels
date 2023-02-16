@@ -1,5 +1,6 @@
 #pragma once
 
+#include <type_traits>
 template <typename B, typename E> struct Range {
   [[no_unique_address]] B b;
   [[no_unique_address]] E e;
@@ -69,7 +70,7 @@ constexpr auto skipFirst(const auto &x) {
 }
 
 template <typename T> struct StridedIterator {
-  using value_type = T;
+  using value_type = std::remove_cvref_t<T>;
   T *ptr;
   size_t stride;
   constexpr auto operator==(const StridedIterator &other) const -> bool {
@@ -138,6 +139,7 @@ template <typename T> struct StridedIterator {
     return it + x;
   }
 };
+template <class T> StridedIterator(T *, size_t) -> StridedIterator<T>;
 static_assert(std::weakly_incrementable<StridedIterator<int64_t>>);
 static_assert(std::input_or_output_iterator<StridedIterator<int64_t>>);
 static_assert(std::indirectly_readable<StridedIterator<int64_t>>,

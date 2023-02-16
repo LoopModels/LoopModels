@@ -65,7 +65,7 @@ template <class T, class S> struct Array {
 
   [[nodiscard]] constexpr auto begin() const noexcept {
     if constexpr (std::is_same_v<S, StridedRange>)
-      StridedIterator{(const T *)ptr, sz.stride};
+      return StridedIterator{(const T *)ptr, sz.stride};
     else return (const T *)ptr;
   }
   [[nodiscard]] constexpr auto end() const noexcept {
@@ -194,7 +194,8 @@ protected:
 template <class T, class S> struct MutArray : Array<T, S> {
   using BaseT = Array<T, S>;
   // using BaseT::BaseT;
-  using BaseT::operator[], BaseT::operator(), BaseT::data;
+  using BaseT::operator[],
+    BaseT::operator(), BaseT::data, BaseT::begin, BaseT::end;
 
   constexpr MutArray(const MutArray &) = default;
   constexpr MutArray(MutArray &&) noexcept = default;
@@ -984,13 +985,20 @@ struct ManagedArray : ReallocView<T, S, A, U> {
     this->growUndef(len);
     std::uninitialized_copy_n(b.data(), len, (T *)(this->ptr));
   }
-  // template <class Y, class D, class AY, std::unsigned_integral I,
-  // std::enable_if_t<std::is_convertible_v<Y, T>>>
   template <std::convertible_to<T> Y, class D, class AY,
             std::unsigned_integral I>
   constexpr ManagedArray(const ManagedArray<Y, D, N, AY, I> &b) noexcept
     : BaseT{memory, S(b.dim()), U(N), b.get_allocator()} {
     U len = U(this->sz);
+    this->growUndef(len);
+    for (size_t i = 0; i < len; ++i) new ((T *)(this->ptr) + i) T(b[i]);
+  }
+  template <std::convertible_to<T> Y, class D, class AY,
+            std::unsigned_integral I>
+  constexpr ManagedArray(const ManagedArray<Y, D, N, AY, I> &b, S s) noexcept
+    : BaseT{memory, S(s), U(N), b.get_allocator()} {
+    U len = U(this->sz);
+    invariant(len == U(b.size()));
     this->growUndef(len);
     for (size_t i = 0; i < len; ++i) new ((T *)(this->ptr) + i) T(b[i]);
   }
@@ -1114,7 +1122,7 @@ struct ManagedArray : ReallocView<T, S, A, U> {
       std::uninitialized_copy_n(b.data(), size_t(this->sz), (T *)(this->ptr));
     } else {
       // otherwise, we take its pointer
-      maybeDeallocate(b.wrappedPtr(), b.getCapacity());
+      this->maybeDeallocate(b.wrappedPtr(), b.getCapacity());
     }
     b.resetNoFree();
     return *this;
@@ -1337,11 +1345,11 @@ using Matrix = ManagedArray<T, StridedDims, L>;
 template <class T> using DensePtrMatrix = Array<T, DenseDims>;
 template <class T> using MutDensePtrMatrix = MutArray<T, DenseDims>;
 template <class T, size_t L = 64>
-using DenseMatrix = ManagedArray<T, DenseDims>;
+using DenseMatrix = ManagedArray<T, DenseDims, L>;
 template <class T> using SquarePtrMatrix = Array<T, SquareDims>;
 template <class T> using MutSquarePtrMatrix = MutArray<T, SquareDims>;
 template <class T, size_t L = 16>
-using SquareMatrix = ManagedArray<T, SquareDims>;
+using SquareMatrix = ManagedArray<T, SquareDims, L>;
 
 static_assert(sizeof(PtrMatrix<int64_t>) ==
               4 * sizeof(unsigned int) + sizeof(int64_t *));
@@ -1419,3 +1427,8 @@ static_assert(std::copyable<IntMatrix>);
 static_assert(std::same_as<eltype_t<Matrix<int64_t>>, int64_t>);
 
 } // namespace LinearAlgebra
+using LinearAlgebra::AbstractVector, LinearAlgebra::AbstractMatrix,
+  LinearAlgebra::PtrVector, LinearAlgebra::MutPtrVector, LinearAlgebra::Vector,
+  LinearAlgebra::Matrix, LinearAlgebra::SquareMatrix, LinearAlgebra::IntMatrix,
+  LinearAlgebra::PtrMatrix, LinearAlgebra::MutPtrMatrix, LinearAlgebra::AxisInt,
+  LinearAlgebra::AxisInt;

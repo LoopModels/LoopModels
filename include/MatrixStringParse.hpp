@@ -9,9 +9,9 @@
 #include <llvm/ADT/SmallVector.h>
 
 [[nodiscard]] constexpr auto operator"" _mat(const char *s, size_t)
-  -> Matrix<int64_t, LinearAlgebra::DenseDims> {
+  -> LinearAlgebra::DenseMatrix<int64_t> {
   assert(s[0] == '[');
-  ManagedArray<int64_t, unsigned, 64> content;
+  LinearAlgebra::ManagedArray<int64_t, unsigned, 64> content;
   size_t cur = 1;
   size_t numRows = 1;
   while (s[cur] != ']') {
@@ -31,7 +31,7 @@
   }
   size_t numCols = content.size() / numRows;
   assert(content.size() % numRows == 0);
-  Matrix<int64_t, LinearAlgebra::DenseDims> A(std::move(content), Row{numRows},
-                                              Col{numCols});
+  LinearAlgebra::DenseMatrix<int64_t> A(std::move(content),
+                                        DenseDims{Row{numRows}, Col{numCols}});
   return A;
 }

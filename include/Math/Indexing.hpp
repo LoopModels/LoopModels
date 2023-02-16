@@ -137,11 +137,38 @@ static_assert(AbstractSlice<Colon>);
   invariant(i.offset <= len);
   return len - i.offset;
 }
+[[nodiscard]] inline constexpr auto calcRangeOffset(size_t len, size_t i)
+  -> size_t {
+  invariant(i <= len);
+  return i;
+}
+[[nodiscard]] inline constexpr auto calcRangeOffset(size_t len, Col i)
+  -> size_t {
+  invariant(*i <= len);
+  return *i;
+}
+[[nodiscard]] inline constexpr auto calcRangeOffset(size_t len, Row i)
+  -> size_t {
+  invariant(*i <= len);
+  return *i;
+}
+[[nodiscard]] inline constexpr auto calcRangeOffset(size_t, Begin) -> size_t {
+  return 0;
+}
+[[nodiscard]] inline constexpr auto calcRangeOffset(size_t len, OffsetBegin i)
+  -> size_t {
+  return calcRangeOffset(len, i.offset);
+}
+[[nodiscard]] inline constexpr auto calcRangeOffset(size_t len, OffsetEnd i)
+  -> size_t {
+  invariant(i.offset <= len);
+  return len - i.offset;
+}
 // note that we don't check i.b < len because we want to allow
 // empty ranges, and r.b <= r.e <= len is checked in calcNewDim.
 template <class B, class E>
 constexpr auto calcOffset(size_t len, Range<B, E> i) -> size_t {
-  return calcOffset(len, i.b);
+  return calcRangeOffset(len, i.b);
 }
 constexpr auto calcOffset(size_t, Colon) -> size_t { return 0; }
 

@@ -1,5 +1,5 @@
 #pragma once
-#include "Utilities/StackMeMaybe.hpp"
+#include "Math/Array.hpp"
 #include <absl/container/inlined_vector.h>
 #include <benchmark/benchmark.h>
 #include <cstddef>
@@ -38,7 +38,7 @@ void BM_StdVectorFill(benchmark::State &state) {
 }
 BENCHMARK(BM_StdVectorFill)->RangeMultiplier(2)->Range(1, 1 << 8);
 void BM_BufferFill(benchmark::State &state) {
-  Buffer<size_t, 8, unsigned, std::allocator<size_t>> v;
+  Vector<size_t> v;
   size_t len = state.range(0);
   for (auto b : state) fillVector(v, len);
 }
@@ -78,7 +78,7 @@ BENCHMARK(BM_StdVectorAllocFill)->RangeMultiplier(2)->Range(1, 1 << 8);
 void BM_BufferAllocFill(benchmark::State &state) {
   size_t len = state.range(0);
   for (auto b : state) {
-    Buffer<size_t, 8, unsigned, std::allocator<size_t>> v;
+    Vector<size_t> v;
     fillVector(v, len);
   }
 }

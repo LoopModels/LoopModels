@@ -1,9 +1,10 @@
 #pragma once
 #include "Math/Simplex.hpp"
+#include "MatrixStringParse.hpp"
 #include <benchmark/benchmark.h>
 
 static void BM_Simplex0(benchmark::State &state) {
-  IntMatrix tableau{
+  LinearAlgebra::DenseMatrix<int64_t> tableau{
     "[0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 "
     "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 "
     "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 "
@@ -923,7 +924,7 @@ static void BM_Simplex0(benchmark::State &state) {
   bool fail = simpBackup.initiateFeasible();
   assert(!fail);
   if (!fail) {
-    Simplex simp;
+    Simplex simp{simpBackup.getNumConstraints(), simpBackup.getNumVar(), 0};
     Vector<Rational> sol(37);
     for (auto b : state) {
       simp = simpBackup;
@@ -1133,7 +1134,7 @@ static void BM_Simplex1(benchmark::State &state) {
   bool fail = simpBackup.initiateFeasible();
   assert(!fail);
   if (!fail) {
-    Simplex simp;
+    Simplex simp{simpBackup.getNumConstraints(), simpBackup.getNumVar(), 0};
     Vector<Rational> sol(15);
     for (auto b : state) {
       simp = simpBackup;

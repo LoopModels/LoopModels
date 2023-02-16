@@ -42,6 +42,7 @@ struct Simplex {
   static constexpr auto numTableauCols(size_t j) -> Col {
     return Col{j + numExtraCols};
   }
+  constexpr Simplex(const AbstractMatrix auto &A) : tableau{A} {}
   constexpr Simplex(size_t numCon, size_t numVar, size_t numSlack,
                     size_t extraStride = 0)
     : tableau(StridedDims{numCon + numExtraRows,

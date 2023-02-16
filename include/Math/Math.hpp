@@ -7,7 +7,6 @@
 #include "Math/Indexing.hpp"
 #include "Math/Matrix.hpp"
 #include "Math/MatrixDimensions.hpp"
-#include "Math/Vector.hpp"
 #include "TypePromotion.hpp"
 #include <algorithm>
 #include <bit>
@@ -636,13 +635,9 @@ inline auto operator<<(std::ostream &os, const AbstractMatrix auto &x)
 // exports:
 // NOLINTNEXTLINE(bugprone-reserved-identifier)
 using LinearAlgebra::_;
-using LinearAlgebra::AbstractVector, LinearAlgebra::AbstractMatrix,
-  LinearAlgebra::PtrVector, LinearAlgebra::MutPtrVector, LinearAlgebra::Vector,
-  LinearAlgebra::Matrix, LinearAlgebra::SquareMatrix, LinearAlgebra::IntMatrix,
-  LinearAlgebra::PtrMatrix, LinearAlgebra::MutPtrMatrix, LinearAlgebra::AxisInt,
-  LinearAlgebra::AxisInt, LinearAlgebra::SmallSparseMatrix,
-  LinearAlgebra::StridedVector, LinearAlgebra::MutStridedVector,
-  LinearAlgebra::MutSquarePtrMatrix, LinearAlgebra::begin, LinearAlgebra::end,
-  LinearAlgebra::swap, LinearAlgebra::SquarePtrMatrix, LinearAlgebra::Row,
-  LinearAlgebra::RowStride, LinearAlgebra::Col, LinearAlgebra::CarInd,
-  LinearAlgebra::last, LinearAlgebra::MutDensePtrMatrix;
+using LinearAlgebra::SmallSparseMatrix, LinearAlgebra::StridedVector,
+  LinearAlgebra::MutStridedVector, LinearAlgebra::MutSquarePtrMatrix,
+  LinearAlgebra::begin, LinearAlgebra::end, LinearAlgebra::swap,
+  LinearAlgebra::SquarePtrMatrix, LinearAlgebra::Row, LinearAlgebra::RowStride,
+  LinearAlgebra::Col, LinearAlgebra::CarInd, LinearAlgebra::last,
+  LinearAlgebra::MutDensePtrMatrix;
