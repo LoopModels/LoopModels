@@ -80,7 +80,7 @@ $(function() {
 <div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160; </div>
 <div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="keyword">static</span> <span class="keywordtype">void</span> BM_NullSpace(benchmark::State &amp;state) {</div>
 <div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160; </div>
-<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;  IntMatrix B(Row{6}, Col{3});</div>
+<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;  IntMatrix B(<a class="code" href="structLinearAlgebra_1_1DenseDims.html">DenseDims</a>{Row{6}, Col{3}});</div>
 <div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;  B(0, 0) = 1;</div>
 <div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;  B(1, 0) = 0;</div>
 <div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;  B(2, 0) = -3;</div>
@@ -113,7 +113,7 @@ $(function() {
 <div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160; </div>
 <div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;<span class="keyword">static</span> <span class="keywordtype">void</span> BM_NullSpace2000(benchmark::State &amp;state) {</div>
 <div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;  <span class="keyword">const</span> <span class="keywordtype">size_t</span> N = 20;</div>
-<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;  IntMatrix A(Row{N}, Col{N});</div>
+<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;  IntMatrix A(<a class="code" href="structLinearAlgebra_1_1DenseDims.html">DenseDims</a>{Row{N}, Col{N}});</div>
 <div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;  A &lt;&lt; 0;</div>
 <div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;  A(0, 0) = 2;</div>
 <div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;  <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 1; i &lt; N; ++i) {</div>
@@ -145,7 +145,7 @@ $(function() {
 <div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160; </div>
 <div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;<span class="keyword">static</span> <span class="keywordtype">void</span> BM_Bareiss2000(benchmark::State &amp;state) {</div>
 <div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;  <span class="keyword">const</span> <span class="keywordtype">size_t</span> N = 20;</div>
-<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;  IntMatrix A(Row{N}, Col{N});</div>
+<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;  IntMatrix A(<a class="code" href="structLinearAlgebra_1_1DenseDims.html">DenseDims</a>{Row{N}, Col{N}});</div>
 <div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;  A &lt;&lt; 0;</div>
 <div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;  A(0, 0) = 2;</div>
 <div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;  <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 1; i &lt; N; ++i) {</div>
@@ -164,19 +164,18 @@ $(function() {
 <div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;  <span class="comment">// std::cout &lt;&lt; A &lt;&lt; std::endl;</span></div>
 <div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160; </div>
 <div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;  <span class="comment">// fourth row is 0</span></div>
-<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;  llvm::SmallVector&lt;size_t, 16&gt; pivots;</div>
-<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;  pivots.reserve(N);</div>
-<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;  IntMatrix B;</div>
-<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;  <span class="keywordflow">for</span> (<span class="keyword">auto</span> b : state) {</div>
-<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;    pivots.clear();</div>
-<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;    B = A;</div>
-<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;    NormalForm::bareiss(B, pivots);</div>
-<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;  }</div>
-<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;  <span class="comment">// std::cout &lt;&lt; &quot;NS.size() = (&quot; &lt;&lt; NS.numRow() &lt;&lt; &quot;, &quot; &lt;&lt; NS.numCol() &lt;&lt; &quot;)&quot;</span></div>
-<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;  <span class="comment">//           &lt;&lt; std::endl;</span></div>
-<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;}</div>
-<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;<span class="comment">// Register the function as a benchmark</span></div>
-<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;BENCHMARK(BM_Bareiss2000);</div>
+<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;  Vector&lt;size_t&gt; pivots(N);</div>
+<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;  IntMatrix B;</div>
+<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;  <span class="keywordflow">for</span> (<span class="keyword">auto</span> b : state) {</div>
+<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;    B = A;</div>
+<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;    NormalForm::bareiss(B, pivots);</div>
+<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;  }</div>
+<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;  <span class="comment">// std::cout &lt;&lt; &quot;NS.size() = (&quot; &lt;&lt; NS.numRow() &lt;&lt; &quot;, &quot; &lt;&lt; NS.numCol() &lt;&lt; &quot;)&quot;</span></div>
+<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;  <span class="comment">//           &lt;&lt; std::endl;</span></div>
+<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;}</div>
+<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;<span class="comment">// Register the function as a benchmark</span></div>
+<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;BENCHMARK(BM_Bareiss2000);</div>
+<div class="ttc" id="astructLinearAlgebra_1_1DenseDims_html"><div class="ttname"><a href="structLinearAlgebra_1_1DenseDims.html">LinearAlgebra::DenseDims</a></div><div class="ttdef"><b>Definition:</b> MatrixDimensions.hpp:84</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

@@ -190,10 +190,10 @@ template&lt;class T &gt; </td></tr>
 template&lt;class T &gt; </td></tr>
 <tr class="memitem:a713eb797c7ab6e969e62316b6db1eb35"><td class="memTemplItemLeft" align="right" valign="top">using&#160;</td><td class="memTemplItemRight" valign="bottom"><b>MutDensePtrMatrix</b> = <a class="el" href="structLinearAlgebra_1_1MutArray.html">MutArray</a>&lt; T, <a class="el" href="structLinearAlgebra_1_1DenseDims.html">DenseDims</a> &gt;</td></tr>
 <tr class="separator:a713eb797c7ab6e969e62316b6db1eb35"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a27325f2de4e77552de4c942adef1593c"><td class="memTemplParams" colspan="2"><a id="a27325f2de4e77552de4c942adef1593c"></a>
+<tr class="memitem:a0351b2a53252a2a395f7123e293e15cd"><td class="memTemplParams" colspan="2"><a id="a0351b2a53252a2a395f7123e293e15cd"></a>
 template&lt;class T , size_t L = 64&gt; </td></tr>
-<tr class="memitem:a27325f2de4e77552de4c942adef1593c"><td class="memTemplItemLeft" align="right" valign="top">using&#160;</td><td class="memTemplItemRight" valign="bottom"><b>DenseMatrix</b> = <a class="el" href="structLinearAlgebra_1_1ManagedArray.html">ManagedArray</a>&lt; T, <a class="el" href="structLinearAlgebra_1_1DenseDims.html">DenseDims</a> &gt;</td></tr>
-<tr class="separator:a27325f2de4e77552de4c942adef1593c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0351b2a53252a2a395f7123e293e15cd"><td class="memTemplItemLeft" align="right" valign="top">using&#160;</td><td class="memTemplItemRight" valign="bottom"><b>DenseMatrix</b> = <a class="el" href="structLinearAlgebra_1_1ManagedArray.html">ManagedArray</a>&lt; T, <a class="el" href="structLinearAlgebra_1_1DenseDims.html">DenseDims</a>, L &gt;</td></tr>
+<tr class="separator:a0351b2a53252a2a395f7123e293e15cd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a01873c4b0df6f72fb75bacd32267f67e"><td class="memTemplParams" colspan="2"><a id="a01873c4b0df6f72fb75bacd32267f67e"></a>
 template&lt;class T &gt; </td></tr>
 <tr class="memitem:a01873c4b0df6f72fb75bacd32267f67e"><td class="memTemplItemLeft" align="right" valign="top">using&#160;</td><td class="memTemplItemRight" valign="bottom"><b>SquarePtrMatrix</b> = <a class="el" href="structLinearAlgebra_1_1Array.html">Array</a>&lt; T, <a class="el" href="structLinearAlgebra_1_1SquareDims.html">SquareDims</a> &gt;</td></tr>
@@ -202,10 +202,10 @@ template&lt;class T &gt; </td></tr>
 template&lt;class T &gt; </td></tr>
 <tr class="memitem:ac9e52dcf932d0784d7ecbbbeeeb708fb"><td class="memTemplItemLeft" align="right" valign="top">using&#160;</td><td class="memTemplItemRight" valign="bottom"><b>MutSquarePtrMatrix</b> = <a class="el" href="structLinearAlgebra_1_1MutArray.html">MutArray</a>&lt; T, <a class="el" href="structLinearAlgebra_1_1SquareDims.html">SquareDims</a> &gt;</td></tr>
 <tr class="separator:ac9e52dcf932d0784d7ecbbbeeeb708fb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8848e55b89052077875bcf1db72dc507"><td class="memTemplParams" colspan="2"><a id="a8848e55b89052077875bcf1db72dc507"></a>
+<tr class="memitem:a0c07c63ceaf4df3feafed2d6871d4099"><td class="memTemplParams" colspan="2"><a id="a0c07c63ceaf4df3feafed2d6871d4099"></a>
 template&lt;class T , size_t L = 16&gt; </td></tr>
-<tr class="memitem:a8848e55b89052077875bcf1db72dc507"><td class="memTemplItemLeft" align="right" valign="top">using&#160;</td><td class="memTemplItemRight" valign="bottom"><b>SquareMatrix</b> = <a class="el" href="structLinearAlgebra_1_1ManagedArray.html">ManagedArray</a>&lt; T, <a class="el" href="structLinearAlgebra_1_1SquareDims.html">SquareDims</a> &gt;</td></tr>
-<tr class="separator:a8848e55b89052077875bcf1db72dc507"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0c07c63ceaf4df3feafed2d6871d4099"><td class="memTemplItemLeft" align="right" valign="top">using&#160;</td><td class="memTemplItemRight" valign="bottom"><b>SquareMatrix</b> = <a class="el" href="structLinearAlgebra_1_1ManagedArray.html">ManagedArray</a>&lt; T, <a class="el" href="structLinearAlgebra_1_1SquareDims.html">SquareDims</a>, L &gt;</td></tr>
+<tr class="separator:a0c07c63ceaf4df3feafed2d6871d4099"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4758c2d11a3fd413876108bf169a0e9d"><td class="memItemLeft" align="right" valign="top"><a id="a4758c2d11a3fd413876108bf169a0e9d"></a>
 using&#160;</td><td class="memItemRight" valign="bottom"><b>IntMatrix</b> = <a class="el" href="structLinearAlgebra_1_1ManagedArray.html">Matrix</a>&lt; int64_t &gt;</td></tr>
 <tr class="separator:a4758c2d11a3fd413876108bf169a0e9d"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -483,6 +483,21 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>calcOffset<
 <tr class="memitem:aba21fcdafe59cbff022c5bad2a943217"><td class="memItemLeft" align="right" valign="top"><a id="aba21fcdafe59cbff022c5bad2a943217"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>calcOffset</b> (size_t len, <a class="el" href="structLinearAlgebra_1_1OffsetEnd.html">OffsetEnd</a> i) -&gt; size_t</td></tr>
 <tr class="separator:aba21fcdafe59cbff022c5bad2a943217"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae4d949308ecefa799df903887213245f"><td class="memItemLeft" align="right" valign="top"><a id="ae4d949308ecefa799df903887213245f"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>calcRangeOffset</b> (size_t len, size_t i) -&gt; size_t</td></tr>
+<tr class="separator:ae4d949308ecefa799df903887213245f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a001a12f4daa6560ff07fb1f909680be6"><td class="memItemLeft" align="right" valign="top"><a id="a001a12f4daa6560ff07fb1f909680be6"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>calcRangeOffset</b> (size_t len, <a class="el" href="structLinearAlgebra_1_1AxisInt.html">Col</a> i) -&gt; size_t</td></tr>
+<tr class="separator:a001a12f4daa6560ff07fb1f909680be6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6bf4f9fc8d1ae9fc01cdb113ad8d62e8"><td class="memItemLeft" align="right" valign="top"><a id="a6bf4f9fc8d1ae9fc01cdb113ad8d62e8"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>calcRangeOffset</b> (size_t, Begin) -&gt; size_t</td></tr>
+<tr class="separator:a6bf4f9fc8d1ae9fc01cdb113ad8d62e8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa0af29e48236d59a6ad3569217ea1f3b"><td class="memItemLeft" align="right" valign="top"><a id="aa0af29e48236d59a6ad3569217ea1f3b"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>calcRangeOffset</b> (size_t len, <a class="el" href="structLinearAlgebra_1_1OffsetBegin.html">OffsetBegin</a> i) -&gt; size_t</td></tr>
+<tr class="separator:aa0af29e48236d59a6ad3569217ea1f3b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a673d19a3704d96ea73c726ab514166fe"><td class="memItemLeft" align="right" valign="top"><a id="a673d19a3704d96ea73c726ab514166fe"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>calcRangeOffset</b> (size_t len, <a class="el" href="structLinearAlgebra_1_1OffsetEnd.html">OffsetEnd</a> i) -&gt; size_t</td></tr>
+<tr class="separator:a673d19a3704d96ea73c726ab514166fe"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a86941bf0d7b7d1fe26181de97f40d430"><td class="memTemplParams" colspan="2"><a id="a86941bf0d7b7d1fe26181de97f40d430"></a>
 template&lt;class B , class E &gt; </td></tr>
 <tr class="memitem:a86941bf0d7b7d1fe26181de97f40d430"><td class="memTemplItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>calcOffset</b> (size_t len, <a class="el" href="structRange.html">Range</a>&lt; B, E &gt; i) -&gt; size_t</td></tr>
