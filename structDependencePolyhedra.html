@@ -77,11 +77,8 @@ $(function() {
 Inheritance diagram for DependencePolyhedra:</div>
 <div class="dyncontent">
  <div class="center">
-  <img src="structDependencePolyhedra.png" usemap="#DependencePolyhedra_map" alt=""/>
-  <map id="DependencePolyhedra_map" name="DependencePolyhedra_map">
-<area href="structBasePolyhedra.html" alt="BasePolyhedra&lt; HasEqualities, HasSymbols, NonNegative, P &gt;" shape="rect" coords="0,0,374,24"/>
-  </map>
-</div></div>
+  <img src="structDependencePolyhedra.png" alt=""/>
+ </div></div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
@@ -133,82 +130,6 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumLambd
 <tr class="memitem:a2c86ebcf8b00a7c4c3f9714f839330ea"><td class="memItemLeft" align="right" valign="top"><a id="a2c86ebcf8b00a7c4c3f9714f839330ea"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>farkasPair</b> () const -&gt; std::array&lt; <a class="el" href="structSimplex.html">Simplex</a>, 2 &gt;</td></tr>
 <tr class="separator:a2c86ebcf8b00a7c4c3f9714f839330ea"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="inherit_header pub_methods_structBasePolyhedra"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_structBasePolyhedra')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="structBasePolyhedra.html">BasePolyhedra&lt; HasEqualities, HasSymbols, NonNegative, P &gt;</a></td></tr>
-<tr class="memitem:a18e76a408020db3ea0ab8687160b9fdb inherit pub_methods_structBasePolyhedra"><td class="memItemLeft" align="right" valign="top"><a id="a18e76a408020db3ea0ab8687160b9fdb"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>getA</b> () -&gt; DenseMutPtrMatrix&lt; int64_t &gt;</td></tr>
-<tr class="separator:a18e76a408020db3ea0ab8687160b9fdb inherit pub_methods_structBasePolyhedra"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad34306c9b5839b6a05ea571792109d01 inherit pub_methods_structBasePolyhedra"><td class="memItemLeft" align="right" valign="top"><a id="ad34306c9b5839b6a05ea571792109d01"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>getE</b> () -&gt; DenseMutPtrMatrix&lt; int64_t &gt;</td></tr>
-<tr class="separator:ad34306c9b5839b6a05ea571792109d01 inherit pub_methods_structBasePolyhedra"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a305c56b912a583848f32479cfe71f8c1 inherit pub_methods_structBasePolyhedra"><td class="memItemLeft" align="right" valign="top"><a id="a305c56b912a583848f32479cfe71f8c1"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>getSyms</b> () -&gt; llvm::MutableArrayRef&lt; const llvm::SCEV * &gt;</td></tr>
-<tr class="separator:a305c56b912a583848f32479cfe71f8c1 inherit pub_methods_structBasePolyhedra"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8f1598eef2c0907d5f2c18b42ba21f93 inherit pub_methods_structBasePolyhedra"><td class="memItemLeft" align="right" valign="top"><a id="a8f1598eef2c0907d5f2c18b42ba21f93"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>initializeComparator</b> () -&gt; <a class="el" href="structcomparator_1_1LinearSymbolicComparator.html">comparator::LinearSymbolicComparator</a></td></tr>
-<tr class="separator:a8f1598eef2c0907d5f2c18b42ba21f93 inherit pub_methods_structBasePolyhedra"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:adb98dc783af545850398c63515037963 inherit pub_methods_structBasePolyhedra"><td class="memItemLeft" align="right" valign="top"><a id="adb98dc783af545850398c63515037963"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>initializeComparator</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc) -&gt; <a class="el" href="structcomparator_1_1PtrSymbolicComparator.html">comparator::PtrSymbolicComparator</a></td></tr>
-<tr class="separator:adb98dc783af545850398c63515037963 inherit pub_methods_structBasePolyhedra"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a24bd3611332644f1420f4d574bd54a74 inherit pub_methods_structBasePolyhedra"><td class="memItemLeft" align="right" valign="top"><a id="a24bd3611332644f1420f4d574bd54a74"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>calcIsEmpty</b> () -&gt; bool</td></tr>
-<tr class="separator:a24bd3611332644f1420f4d574bd54a74 inherit pub_methods_structBasePolyhedra"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9859e3cb5acfdc4b4599ca52dd5fd4e4 inherit pub_methods_structBasePolyhedra"><td class="memItemLeft" align="right" valign="top"><a id="a9859e3cb5acfdc4b4599ca52dd5fd4e4"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>calcIsEmpty</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc) -&gt; bool</td></tr>
-<tr class="separator:a9859e3cb5acfdc4b4599ca52dd5fd4e4 inherit pub_methods_structBasePolyhedra"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a52c77845bc2e6d691a51f56cf42197ab inherit pub_methods_structBasePolyhedra"><td class="memItemLeft" align="right" valign="top"><a id="a52c77845bc2e6d691a51f56cf42197ab"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>pruneBounds</b> ()</td></tr>
-<tr class="separator:a52c77845bc2e6d691a51f56cf42197ab inherit pub_methods_structBasePolyhedra"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad4e85b9d52436fc0b6d31bca483a605e inherit pub_methods_structBasePolyhedra"><td class="memItemLeft" align="right" valign="top"><a id="ad4e85b9d52436fc0b6d31bca483a605e"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>pruneBoundsUnchecked</b> ()</td></tr>
-<tr class="separator:ad4e85b9d52436fc0b6d31bca483a605e inherit pub_methods_structBasePolyhedra"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a19007d455eff8a703e59407181580efa inherit pub_methods_structBasePolyhedra"><td class="memItemLeft" align="right" valign="top"><a id="a19007d455eff8a703e59407181580efa"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumSymbols</b> () const -&gt; size_t</td></tr>
-<tr class="separator:a19007d455eff8a703e59407181580efa inherit pub_methods_structBasePolyhedra"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5b0c7506aba819b6452ca985cfb8b5e7 inherit pub_methods_structBasePolyhedra"><td class="memItemLeft" align="right" valign="top"><a id="a5b0c7506aba819b6452ca985cfb8b5e7"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumDynamic</b> () const -&gt; size_t</td></tr>
-<tr class="separator:a5b0c7506aba819b6452ca985cfb8b5e7 inherit pub_methods_structBasePolyhedra"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac4794c8be5a9cfd31a1eaf09d547566f inherit pub_methods_structBasePolyhedra"><td class="memItemLeft" align="right" valign="top"><a id="ac4794c8be5a9cfd31a1eaf09d547566f"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumVar</b> () const -&gt; size_t</td></tr>
-<tr class="separator:ac4794c8be5a9cfd31a1eaf09d547566f inherit pub_methods_structBasePolyhedra"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8308a7210a5ec0077183fa602ec3d509 inherit pub_methods_structBasePolyhedra"><td class="memItemLeft" align="right" valign="top"><a id="a8308a7210a5ec0077183fa602ec3d509"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumInequalityConstraints</b> () const -&gt; size_t</td></tr>
-<tr class="separator:a8308a7210a5ec0077183fa602ec3d509 inherit pub_methods_structBasePolyhedra"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4077cfca2662854cbf5a11a031dd5b48 inherit pub_methods_structBasePolyhedra"><td class="memItemLeft" align="right" valign="top"><a id="a4077cfca2662854cbf5a11a031dd5b48"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumEqualityConstraints</b> () const -&gt; size_t</td></tr>
-<tr class="separator:a4077cfca2662854cbf5a11a031dd5b48 inherit pub_methods_structBasePolyhedra"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1735eeca252864335fba78d2b45e38fb inherit pub_methods_structBasePolyhedra"><td class="memItemLeft" align="right" valign="top"><a id="a1735eeca252864335fba78d2b45e38fb"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>lessZero</b> (const size_t r) const -&gt; bool</td></tr>
-<tr class="separator:a1735eeca252864335fba78d2b45e38fb inherit pub_methods_structBasePolyhedra"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5819bea7f1dcd1a79739a4aab38e2030 inherit pub_methods_structBasePolyhedra"><td class="memItemLeft" align="right" valign="top"><a id="a5819bea7f1dcd1a79739a4aab38e2030"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>lessEqualZero</b> (const size_t r) const -&gt; bool</td></tr>
-<tr class="separator:a5819bea7f1dcd1a79739a4aab38e2030 inherit pub_methods_structBasePolyhedra"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab12ab4ea0a54bd0b6476324f786a6aae inherit pub_methods_structBasePolyhedra"><td class="memItemLeft" align="right" valign="top"><a id="ab12ab4ea0a54bd0b6476324f786a6aae"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>greaterZero</b> (const size_t r) const -&gt; bool</td></tr>
-<tr class="separator:ab12ab4ea0a54bd0b6476324f786a6aae inherit pub_methods_structBasePolyhedra"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a215602bd6a7e4d2cbaf1c6a1fab7ef27 inherit pub_methods_structBasePolyhedra"><td class="memItemLeft" align="right" valign="top"><a id="a215602bd6a7e4d2cbaf1c6a1fab7ef27"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>greaterEqualZero</b> (const size_t r) const -&gt; bool</td></tr>
-<tr class="separator:a215602bd6a7e4d2cbaf1c6a1fab7ef27 inherit pub_methods_structBasePolyhedra"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa1ddb81b4b7e67067802d89706f70864 inherit pub_methods_structBasePolyhedra"><td class="memItemLeft" align="right" valign="top"><a id="aa1ddb81b4b7e67067802d89706f70864"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>equalNegative</b> (const size_t i, const size_t j) const -&gt; bool</td></tr>
-<tr class="separator:aa1ddb81b4b7e67067802d89706f70864 inherit pub_methods_structBasePolyhedra"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6554fa40f8172e5673e90d812ca9675f inherit pub_methods_structBasePolyhedra"><td class="memItemLeft" align="right" valign="top"><a id="a6554fa40f8172e5673e90d812ca9675f"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>removeVariable</b> (const size_t i)</td></tr>
-<tr class="separator:a6554fa40f8172e5673e90d812ca9675f inherit pub_methods_structBasePolyhedra"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a962a558f55d005ae73d7bf5db86e1719 inherit pub_methods_structBasePolyhedra"><td class="memItemLeft" align="right" valign="top"><a id="a962a558f55d005ae73d7bf5db86e1719"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>removeVariableAndPrune</b> (const size_t i)</td></tr>
-<tr class="separator:a962a558f55d005ae73d7bf5db86e1719 inherit pub_methods_structBasePolyhedra"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aaa7acd5c7ce6634da12c8a2f83f3cc10 inherit pub_methods_structBasePolyhedra"><td class="memItemLeft" align="right" valign="top"><a id="aaa7acd5c7ce6634da12c8a2f83f3cc10"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>dropEmptyConstraints</b> ()</td></tr>
-<tr class="separator:aaa7acd5c7ce6634da12c8a2f83f3cc10 inherit pub_methods_structBasePolyhedra"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a33c8a8aa9066d46fef5d3431295b6b0b inherit pub_methods_structBasePolyhedra"><td class="memItemLeft" align="right" valign="top"><a id="a33c8a8aa9066d46fef5d3431295b6b0b"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>dump</b> () const</td></tr>
-<tr class="separator:a33c8a8aa9066d46fef5d3431295b6b0b inherit pub_methods_structBasePolyhedra"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa078dd6ff96811e2febfbc1150bcb6ab inherit pub_methods_structBasePolyhedra"><td class="memItemLeft" align="right" valign="top"><a id="aa078dd6ff96811e2febfbc1150bcb6ab"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>isEmpty</b> () const -&gt; bool</td></tr>
-<tr class="separator:aa078dd6ff96811e2febfbc1150bcb6ab inherit pub_methods_structBasePolyhedra"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a693594d585ee3c3754da8bf9beb725f1 inherit pub_methods_structBasePolyhedra"><td class="memItemLeft" align="right" valign="top"><a id="a693594d585ee3c3754da8bf9beb725f1"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>truncateVars</b> (size_t numVar)</td></tr>
-<tr class="separator:a693594d585ee3c3754da8bf9beb725f1 inherit pub_methods_structBasePolyhedra"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
