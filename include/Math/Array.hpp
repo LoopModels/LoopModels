@@ -1010,6 +1010,13 @@ struct ManagedArray : ReallocView<T, S, A, U> {
       for (size_t i = 0; i < len; ++i) new ((T *)(this->ptr) + i) T(b[i]);
     }
   }
+  template <std::convertible_to<T> Y>
+  constexpr ManagedArray(std::initializer_list<Y> il) noexcept
+    : BaseT{memory, S(il.size()), U(N)} {
+    U len = U(this->sz);
+    this->growUndef(len);
+    std::uninitialized_copy_n(il.begin(), len, (T *)(this->ptr));
+  }
   template <std::convertible_to<T> Y, class D, class AY,
             std::unsigned_integral I>
   constexpr ManagedArray(const ManagedArray<Y, D, N, AY, I> &b, S s) noexcept

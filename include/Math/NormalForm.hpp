@@ -575,9 +575,9 @@ constexpr void solveSystem(MutPtrMatrix<int64_t> A) {
 /// D0 * B^{-1} = Binv0
 /// (s/s) * D0 * B^{-1} = Binv0
 /// s * B^{-1} = (s/D0) * Binv0
-[[nodiscard]] constexpr auto scaledInv(SquareMatrix<int64_t, 4> A)
-  -> std::pair<SquareMatrix<int64_t, 4>, int64_t> {
-  auto B = SquareMatrix<int64_t, 4>::identity(A.numCol());
+[[nodiscard]] constexpr auto scaledInv(SquareMatrix<int64_t> A)
+  -> std::pair<SquareMatrix<int64_t>, int64_t> {
+  auto B = SquareMatrix<int64_t>::identity(A.numCol());
   solveSystem(A, B);
   auto [s, nonUnity] = lcmNonUnity(A.diag());
   if (nonUnity)

@@ -1,5 +1,6 @@
 #include "../include/Math/Math.hpp"
 #include "../include/MatrixStringParse.hpp"
+#include "Math/MatrixDimensions.hpp"
 #include <cstddef>
 #include <cstdint>
 #include <gtest/gtest.h>
@@ -17,15 +18,15 @@ TEST(SparseIndexingTest, BasicAssertions) {
   Asparse(2, 2) = -2;
   IntMatrix A = Asparse;
   {
-    IntMatrix A2(Row{3}, Col{4});
-    MutPtrMatrix MA2 = A2;
+    IntMatrix A2(DenseDims{3, 4});
+    MutPtrMatrix<int64_t> MA2 = A2;
     MA2 << Asparse;
     EXPECT_EQ(A, A2);
   }
   for (size_t i = 0; i < 3; ++i)
     for (size_t j = 0; j < 4; ++j) EXPECT_TRUE(A(i, j) == Asparse(i, j));
   // EXPECT_EQ(A(i, j), Asparse(i, j));
-  IntMatrix B(Row{4}, Col{5});
+  IntMatrix B(DenseDims{4, 5});
   EXPECT_FALSE(B.isSquare());
   B(0, 0) = 3;
   B(0, 1) = -1;
@@ -47,7 +48,7 @@ TEST(SparseIndexingTest, BasicAssertions) {
   B(3, 2) = 2;
   B(3, 3) = -3;
   B(3, 4) = 5;
-  IntMatrix C{Row{3}, Col{5}};
+  IntMatrix C{DenseDims{3, 5}};
   C(0, 0) = -20;
   C(0, 1) = 25;
   C(0, 2) = -5;
@@ -93,8 +94,8 @@ TEST(ExpressionTemplateTest, BasicAssertions) {
     "-20 0 40 -16 20 -12]"_mat};
   // IntMatrix B{A*4};
   auto A4tmplate{A * 4};
-  IntMatrix C << A4tmplate;
-  IntMatrix B << A * 4;
+  IntMatrix C{A4tmplate};
+  IntMatrix B{A * 4};
   EXPECT_EQ(A4, B);
   EXPECT_EQ(A4, C);
   IntMatrix Z = A * 4 - A4;

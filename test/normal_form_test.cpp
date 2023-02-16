@@ -2,6 +2,8 @@
 #include "../include/Math/Math.hpp"
 #include "../include/Math/NormalForm.hpp"
 #include "../include/MatrixStringParse.hpp"
+#include "Math/Array.hpp"
+#include "Math/MatrixDimensions.hpp"
 #include <cstddef>
 #include <cstdint>
 #include <gtest/gtest.h>
@@ -23,7 +25,7 @@ TEST(OrthogonalizationTest, BasicAssertions) {
   size_t luFailedCount = 0;
   size_t invFailedCount = 0;
   size_t numIters = 1000;
-  IntMatrix B(Row{4}, Col{8});
+  IntMatrix B(DenseDims{4, 8});
   SquareMatrix<int64_t> I4 = SquareMatrix<int64_t>::identity(4);
   for (size_t i = 0; i < numIters; ++i) {
     for (size_t n = 0; n < 4; ++n)
@@ -144,7 +146,7 @@ auto isHNF(PtrMatrix<int64_t> A) -> bool {
 // NOLINTNEXTLINE(modernize-use-trailing-return-type)
 TEST(Hermite, BasicAssertions) {
   {
-    IntMatrix A4x3(Row{4}, Col{3});
+    IntMatrix A4x3(DenseDims{4, 3});
     A4x3(0, 0) = 2;
     A4x3(1, 0) = 3;
     A4x3(2, 0) = 6;
@@ -254,18 +256,18 @@ TEST(NullSpaceTests, BasicAssertions) {
   // size_t numIters = 1000;
   size_t numIters = 1;
   for (size_t numCol = 2; numCol < 11; numCol += 2) {
-    IntMatrix B(Row{8}, Col{numCol});
+    IntMatrix B(DenseDims{8, numCol});
     size_t nullDim = 0;
     IntMatrix Z, NS;
     for (size_t i = 0; i < numIters; ++i) {
-      for (auto &&b : B.mem) {
+      for (auto &&b : B) {
         b = distrib(gen);
         b = b > 10 ? 0 : b;
       }
       NS = NormalForm::nullSpace(B);
       nullDim += size_t(NS.numRow());
       Z = NS * B;
-      for (auto &z : Z.mem) EXPECT_EQ(z, 0);
+      for (auto &z : Z) EXPECT_EQ(z, 0);
       EXPECT_EQ(NormalForm::nullSpace(std::move(NS)).numRow(), 0);
     }
     llvm::errs() << "Average tested null dim = "
@@ -325,7 +327,7 @@ TEST(InvTest, BasicAssertions) {
   std::uniform_int_distribution<> distrib(-10, 10);
   const size_t numIters = 1000;
   for (size_t dim = 1; dim < 5; ++dim) {
-    IntMatrix B(Row{dim}, Col{dim});
+    SquareMatrix<int64_t> B(SquareDims{unsigned(dim)});
     SquareMatrix<int64_t> D1 = SquareMatrix<int64_t>::identity(dim);
     for (size_t i = 0; i < numIters; ++i) {
       while (true) {
@@ -338,7 +340,7 @@ TEST(InvTest, BasicAssertions) {
       auto [Binv1, s] = NormalForm::scaledInv(B);
       EXPECT_TRUE(D0.isDiagonal());
       EXPECT_EQ((Binv0 * B), D0);
-      D1.diag() = s;
+      D1.diag() << s;
       if (B * Binv1 != D1) {
         llvm::errs() << "\nB = " << B << "\nD0 = " << D0
                      << "\nBinv0 = " << Binv0 << "\nBinv1 = " << Binv1

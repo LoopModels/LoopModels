@@ -78,6 +78,13 @@ template <typename T> struct SmallSparseMatrix {
     return Row{rows.size()};
   }
   [[nodiscard]] constexpr auto numCol() const -> Col { return col; }
+  [[nodiscard]] constexpr auto size() const -> CartesianIndex<Row, Col> {
+    return {numRow(), numCol()};
+  }
+  [[nodiscard]] constexpr auto dim() const -> DenseDims {
+    return {numRow(), numCol()};
+  }
+  // [[nodiscard]] constexpr auto view() const -> auto & { return *this; };
   constexpr SmallSparseMatrix(Row numRows, Col numCols)
     : rows{llvm::SmallVector<uint32_t>(size_t(numRows))}, col{numCols} {
     assert(size_t(col) <= maxElemPerRow);
