@@ -880,7 +880,7 @@ $(function() {
 <div class="line"><a name="l00817"></a><span class="lineno">  817</span>&#160;  constexpr <a class="code" href="structLinearAlgebra_1_1ManagedArray.html">ManagedArray</a>(<span class="keyword">const</span> <a class="code" href="structLinearAlgebra_1_1ManagedArray.html">ManagedArray</a> &amp;b) noexcept</div>
 <div class="line"><a name="l00818"></a><span class="lineno">  818</span>&#160;    : <a class="code" href="structLinearAlgebra_1_1Array.html">BaseT</a>{memory, S(b.dim()), U(N), b.get_allocator()} {</div>
 <div class="line"><a name="l00819"></a><span class="lineno">  819</span>&#160;    U len = U(this-&gt;sz);</div>
-<div class="line"><a name="l00820"></a><span class="lineno">  820</span>&#160;    growUndef(len);</div>
+<div class="line"><a name="l00820"></a><span class="lineno">  820</span>&#160;    this-&gt;growUndef(len);</div>
 <div class="line"><a name="l00821"></a><span class="lineno">  821</span>&#160;    std::uninitialized_copy_n(b.data(), len, (T *)(this-&gt;ptr));</div>
 <div class="line"><a name="l00822"></a><span class="lineno">  822</span>&#160;  }</div>
 <div class="line"><a name="l00823"></a><span class="lineno">  823</span>&#160;<span class="preprocessor">#pragma GCC diagnostic pop</span></div>
