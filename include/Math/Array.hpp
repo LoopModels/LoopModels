@@ -188,6 +188,70 @@ template <class T, class S> struct MutArray : Array<T, S> {
   constexpr auto operator=(const MutArray &) -> MutArray & = default;
   constexpr auto operator=(MutArray &&) noexcept -> MutArray & = default;
 
+  constexpr void truncate(S nz) {
+    S oz = this->sz;
+    this->sz = nz;
+    if constexpr (std::integral<S>) {
+      invariant(U(nz) <= U(oz));
+      invariant(U(nz) <= this->capacity);
+    } else if constexpr (std::is_same_v<S, StridedDims>) {
+      invariant(nz.row() <= oz.row());
+      invariant(nz.col() <= oz.col());
+    } else {
+      static_assert(MatrixDimension<S>, "Can only resize 1 or 2d containers.");
+      auto newX = unsigned{RowStride{nz}}, oldX = unsigned{RowStride{oz}},
+           newN = unsigned{Col{nz}}, oldN = unsigned{Col{oz}},
+           newM = unsigned{Row{nz}}, oldM = unsigned{Row{oz}};
+      invariant(newM <= oldM);
+      invariant(newN <= oldN);
+      invariant(newX <= oldX);
+      unsigned colsToCopy = newN;
+      // we only need to copy if memory shifts position
+      bool copyCols = ((colsToCopy > 0) && (newX != oldX));
+      // if we're in place, we have 1 less row to copy
+      unsigned rowsToCopy = newM;
+      if (rowsToCopy && (--rowsToCopy) && (copyCols)) {
+        // truncation, we need to copy rows to increase stride
+        T *src = this->ptr;
+        T *dst = this->ptr;
+        do {
+          src += oldX;
+          dst += newX;
+          std::copy_n(src, colsToCopy, dst);
+        } while (--rowsToCopy);
+      }
+    }
+  }
+
+  constexpr void truncate(Row r) {
+    if constexpr (std::integral<S>) {
+      return truncate(S(r));
+    } else if constexpr (std::is_same_v<S, StridedDims>) {
+      invariant(r <= Row{this->sz});
+      this->sz.set(r);
+    } else { // if constexpr (std::is_same_v<S, DenseDims>) {
+      static_assert(std::is_same_v<S, DenseDims>,
+                    "if truncating a row, matrix must be strided or dense.");
+      invariant(r <= Row{this->sz});
+      DenseDims newSz = this->sz;
+      truncate(newSz.set(r));
+    }
+  }
+  constexpr void truncate(Col c) {
+    if constexpr (std::integral<S>) {
+      return truncate(S(c));
+    } else if constexpr (std::is_same_v<S, StridedDims>) {
+      invariant(c <= Col{this->sz});
+      this->sz.set(c);
+    } else { // if constexpr (std::is_same_v<S, DenseDims>) {
+      static_assert(std::is_same_v<S, DenseDims>,
+                    "if truncating a col, matrix must be strided or dense.");
+      invariant(c <= Col{this->sz});
+      DenseDims newSz = this->sz;
+      truncate(newSz.set(c));
+    }
+  }
+
   template <class... Args>
   constexpr MutArray(Args &&...args)
     : Array<T, S>(std::forward<Args>(args)...) {}
@@ -457,16 +521,15 @@ struct ManagedArrayView : MutArray<T, S> {
       // we only need to copy if memory shifts position
       bool copyCols = newAlloc || ((colsToCopy > 0) && (newX != oldX));
       // if we're in place, we have 1 less row to copy
-      unsigned rowsToCopy = std::min(oldM, newM);
+      unsigned rowsToCopy = std::min(oldM, newM) - inPlace;
       unsigned fillCount = newN - colsToCopy;
       if ((rowsToCopy) && (copyCols || fillCount)) {
         if (forwardCopy) {
           // truncation, we need to copy rows to increase stride
           T *src = this->ptr + inPlace * oldX;
           T *dst = npt + inPlace * newX;
-          rowsToCopy -= inPlace;
           do {
-            if (copyCols) std::copy(src, src + colsToCopy, dst);
+            if (copyCols) std::copy_n(src, colsToCopy, dst);
             if (fillCount) std::fill_n(dst + colsToCopy, fillCount, T{});
             src += oldX;
             dst += newX;
@@ -476,9 +539,8 @@ struct ManagedArrayView : MutArray<T, S> {
           // reallocating, which should be comparatively uncommon.
           // Should probably benchmark or determine actual frequency
           // before adding `[[unlikely]]`.
-          T *src = this->ptr + rowsToCopy * oldX;
-          T *dst = npt + rowsToCopy * newX;
-          rowsToCopy -= inPlace;
+          T *src = this->ptr + (rowsToCopy + inPlace) * oldX;
+          T *dst = npt + (rowsToCopy + inPlace) * newX;
           do {
             src -= oldX;
             dst -= newX;
@@ -588,76 +650,6 @@ struct ManagedArrayView : MutArray<T, S> {
         T *src = this->ptr + m * oldCol + unsigned(c) + 1;
         std::copy_n(src, colsToCopy, dst);
       }
-    }
-  }
-  constexpr void truncate(S nz) {
-    S oz = this->sz;
-    this->sz = nz;
-    if constexpr (std::integral<S>) {
-      invariant(U(nz) <= U(oz));
-      invariant(U(nz) <= this->capacity);
-    } else if constexpr (std::is_same_v<S, StridedDims>) {
-      invariant(nz.row() <= oz.row());
-      invariant(nz.col() <= oz.col());
-    } else {
-      static_assert(MatrixDimension<S>, "Can only resize 1 or 2d containers.");
-      auto newX = unsigned{RowStride{nz}}, oldX = unsigned{RowStride{oz}},
-           newN = unsigned{Col{nz}}, oldN = unsigned{Col{oz}},
-           newM = unsigned{Row{nz}}, oldM = unsigned{Row{oz}};
-      U len = U(nz);
-      invariant(U(len) <= this->capacity);
-      constexpr bool inPlace = true;
-      invariant(newX <= oldX);
-      unsigned colsToCopy = std::min(oldN, newN);
-      // we only need to copy if memory shifts position
-      bool copyCols = ((colsToCopy > 0) && (newX != oldX));
-      // if we're in place, we have 1 less row to copy
-      unsigned rowsToCopy = std::min(oldM, newM);
-      unsigned fillCount = newN - colsToCopy;
-      if ((rowsToCopy) && (copyCols || fillCount)) {
-        // truncation, we need to copy rows to increase stride
-        T *src = this->ptr + oldX;
-        T *dst = this->ptr + newX;
-        --rowsToCopy;
-        do {
-          if (copyCols) std::copy(src, src + colsToCopy, dst);
-          if (fillCount) std::fill_n(dst + colsToCopy, fillCount, T{});
-          src += oldX;
-          dst += newX;
-        } while (--rowsToCopy);
-      }
-      // zero init remaining rows
-      for (size_t m = oldM; m < newM; ++m)
-        std::fill_n(this->ptr + m * newX, newN, T{});
-    }
-  }
-
-  constexpr void truncate(Row r) {
-    if constexpr (std::integral<S>) {
-      return truncate(S(r));
-    } else if constexpr (std::is_same_v<S, StridedDims>) {
-      invariant(r <= Row{this->sz});
-      this->sz.set(r);
-    } else { // if constexpr (std::is_same_v<S, DenseDims>) {
-      static_assert(std::is_same_v<S, DenseDims>,
-                    "if truncating a row, matrix must be strided or dense.");
-      invariant(r <= Row{this->sz});
-      DenseDims newSz = this->sz;
-      truncate(newSz.set(r));
-    }
-  }
-  constexpr void truncate(Col c) {
-    if constexpr (std::integral<S>) {
-      return truncate(S(c));
-    } else if constexpr (std::is_same_v<S, StridedDims>) {
-      invariant(c <= Col{this->sz});
-      this->sz.set(c);
-    } else { // if constexpr (std::is_same_v<S, DenseDims>) {
-      static_assert(std::is_same_v<S, DenseDims>,
-                    "if truncating a col, matrix must be strided or dense.");
-      invariant(c <= Col{this->sz});
-      DenseDims newSz = this->sz;
-      truncate(newSz.set(c));
     }
   }
   constexpr void reserve(S nz) {

@@ -7,6 +7,7 @@
 #include "Math/Math.hpp"
 #include "Math/MatrixDimensions.hpp"
 #include "Math/VectorGreatestCommonDivisor.hpp"
+#include <algorithm>
 #include <array>
 #include <concepts>
 #include <cstddef>
@@ -131,11 +132,10 @@ constexpr void dropCol(MutPtrMatrix<int64_t> A, size_t i, Row M, Col N) {
   // if any rows are left, we shift them up to replace it
   if (N <= i) return;
   for (size_t m = 0; m < M; ++m)
-
     for (size_t n = i; n < N; ++n) A(m, n) = A(m, n + 1);
 }
 
-constexpr auto orthogonalizeBang(MutPtrMatrix<int64_t> A)
+constexpr auto orthogonalizeBang(MutPtrMatrix<int64_t> &A)
   -> std::pair<SquareMatrix<int64_t>, Vector<unsigned>> {
   // we try to orthogonalize with respect to as many rows of `A` as we can
   // prioritizing earlier rows.
@@ -324,12 +324,11 @@ constexpr auto numNonZeroRows(PtrMatrix<int64_t> A) -> Row {
   return Mnew;
 }
 // NormalForm version assumes zero rows are sorted to end due to pivoting
-constexpr void removeZeroRows(IntMatrix &A) { A.truncate(numNonZeroRows(A)); }
-[[nodiscard]] constexpr auto removeZeroRows(MutPtrMatrix<int64_t> A)
-  -> MutPtrMatrix<int64_t> {
-  return A.truncate(numNonZeroRows(A));
+constexpr void removeZeroRows(MutPtrMatrix<int64_t> &A) {
+  A.truncate(numNonZeroRows(A));
 }
 
+// pass by value, returns number of rows to truncate
 constexpr auto simplifySystemImpl(MutPtrMatrix<int64_t> A, size_t colInit = 0)
   -> Row {
   auto [M, N] = A.size();
@@ -338,9 +337,15 @@ constexpr auto simplifySystemImpl(MutPtrMatrix<int64_t> A, size_t colInit = 0)
   return numNonZeroRows(A);
 }
 constexpr void simplifySystem(EmptyMatrix<int64_t>, size_t = 0) {}
-constexpr void simplifySystem(IntMatrix &E, size_t colInit = 0) {
+constexpr void simplifySystem(MutPtrMatrix<int64_t> &E, size_t colInit = 0) {
   E.truncate(simplifySystemImpl(E, colInit));
 }
+// TODO: `const IntMatrix &` can be copied to `MutPtrMatrix<int64_t>`
+// this happens via `const IntMatrix &` -> `const MutPtrMatrix<int64_t> &` ->
+// `MutPtrMatrix<int64_t>`.
+// Perhaps we should define `MutPtrMatrix(const MutPtrMatrix &) = delete;`?
+// 
+// NOLINTNEXTLINE(performance-unnecessary-value-param)
 constexpr auto rank(IntMatrix E) -> size_t {
   return size_t(simplifySystemImpl(E, 0));
 }
