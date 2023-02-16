@@ -624,9 +624,9 @@ $(function() {
 <div class="line"><a name="l00568"></a><span class="lineno">  568</span>&#160;  solveSystem(A, B);</div>
 <div class="line"><a name="l00569"></a><span class="lineno">  569</span>&#160;  <span class="keywordflow">return</span> std::make_pair(std::move(A), std::move(B));</div>
 <div class="line"><a name="l00570"></a><span class="lineno">  570</span>&#160;}</div>
-<div class="line"><a name="l00578"></a><span class="lineno">  578</span>&#160;[[nodiscard]] constexpr <span class="keyword">auto</span> scaledInv(SquareMatrix&lt;int64_t, 4&gt; A)</div>
-<div class="line"><a name="l00579"></a><span class="lineno">  579</span>&#160;  -&gt; std::pair&lt;SquareMatrix&lt;int64_t, 4&gt;, int64_t&gt; {</div>
-<div class="line"><a name="l00580"></a><span class="lineno">  580</span>&#160;  <span class="keyword">auto</span> B = SquareMatrix&lt;int64_t, 4&gt;::identity(A.numCol());</div>
+<div class="line"><a name="l00578"></a><span class="lineno">  578</span>&#160;[[nodiscard]] constexpr <span class="keyword">auto</span> scaledInv(SquareMatrix&lt;int64_t&gt; A)</div>
+<div class="line"><a name="l00579"></a><span class="lineno">  579</span>&#160;  -&gt; std::pair&lt;SquareMatrix&lt;int64_t&gt;, int64_t&gt; {</div>
+<div class="line"><a name="l00580"></a><span class="lineno">  580</span>&#160;  <span class="keyword">auto</span> B = SquareMatrix&lt;int64_t&gt;::identity(A.numCol());</div>
 <div class="line"><a name="l00581"></a><span class="lineno">  581</span>&#160;  solveSystem(A, B);</div>
 <div class="line"><a name="l00582"></a><span class="lineno">  582</span>&#160;  <span class="keyword">auto</span> [s, nonUnity] = lcmNonUnity(A.diag());</div>
 <div class="line"><a name="l00583"></a><span class="lineno">  583</span>&#160;  <span class="keywordflow">if</span> (nonUnity)</div>
