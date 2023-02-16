@@ -120,8 +120,7 @@ struct LU {
     -> std::optional<LU> {
     Row M = B.numRow();
     SquareMatrix<Rational> A(B);
-    // for (size_t m = 0; m < M * M; ++m) A[m] = B[m];
-    Vector<unsigned> ipiv(M);
+    Vector<unsigned> ipiv{unsigned(M)};
     for (size_t i = 0; i < M; ++i) ipiv[i] = i;
     for (size_t k = 0; k < M; ++k) {
       size_t kp = k;

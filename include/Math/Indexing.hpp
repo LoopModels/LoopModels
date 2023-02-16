@@ -43,7 +43,8 @@ constexpr auto operator+(ScalarValueIndex auto x, OffsetBegin y)
   -> OffsetBegin {
   return OffsetBegin{size_t(x) + y.offset};
 }
-inline auto operator+(OffsetBegin y, ScalarValueIndex auto x) -> OffsetBegin {
+constexpr auto operator+(OffsetBegin y, ScalarValueIndex auto x)
+  -> OffsetBegin {
   return OffsetBegin{size_t(x) + y.offset};
 }
 struct OffsetEnd {
@@ -192,7 +193,7 @@ template <class I> constexpr auto calcOffset(StridedRange d, I i) -> size_t {
 // Concept for aligning array dimensions with indices.
 template <class I, class D>
 concept Index = ((std::integral<D> || std::same_as<D, StridedRange>) &&
-                 (std::integral<I> || AbstractSlice<I>)) ||
+                 (ScalarIndex<I> || AbstractSlice<I>)) ||
                 (MatrixDimension<D> && requires(I i) {
                                          { i.row };
                                          { i.col };
@@ -200,7 +201,7 @@ concept Index = ((std::integral<D> || std::same_as<D, StridedRange>) &&
 
 struct Empty {};
 
-constexpr auto calcNewDim(size_t, size_t) -> Empty { return {}; };
+constexpr auto calcNewDim(size_t, ScalarIndex auto) -> Empty { return {}; };
 constexpr auto calcNewDim(size_t len, Range<size_t, size_t> r) {
   invariant(r.e <= len);
   invariant(r.b <= r.e);

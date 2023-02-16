@@ -1,10 +1,9 @@
 #pragma once
 
+#include "Math/Array.hpp"
 #include "Math/Comparators.hpp"
 #include "Math/Constraints.hpp"
-#include "Math/EmptyArrays.hpp"
 #include "Math/Math.hpp"
-#include "Math/Matrix.hpp"
 #include "Math/NormalForm.hpp"
 #include "Math/VectorGreatestCommonDivisor.hpp"
 #include "Utilities/Allocators.hpp"
@@ -16,6 +15,7 @@
 #include <llvm/ADT/Optional.h>
 #include <llvm/ADT/SmallVector.h>
 #include <llvm/Analysis/ScalarEvolution.h>
+#include <memory>
 #include <sys/types.h>
 #include <type_traits>
 
@@ -67,19 +67,21 @@ struct BasePolyhedra {
   // this is because of hnf prioritizing diagonalizing leading rows
   // empty fields sorted first to make it easier for compiler to alias them
 
-  auto getA() -> DenseMutPtrMatrix<int64_t> {
+  constexpr auto getA() -> MutDensePtrMatrix<int64_t> {
     return *static_cast<P *>(this)->getAImpl();
   }
-  auto getE() -> DenseMutPtrMatrix<int64_t> {
+  constexpr auto getE() -> MutDensePtrMatrix<int64_t> {
     static_assert(HasEqualities);
     return *static_cast<P *>(this)->getAImpl();
   }
-  auto getSyms() -> llvm::MutableArrayRef<const llvm::SCEV *> {
+  constexpr auto getSyms() -> llvm::MutableArrayRef<const llvm::SCEV *> {
     static_assert(HasSymbols);
     return *static_cast<P *>(this)->getSymsImpl();
   }
 
-  inline auto initializeComparator() -> comparator::LinearSymbolicComparator {
+  [[nodiscard]] constexpr auto initializeComparator(
+    std::allocator<int64_t> = {}) // NOLINT(performance-unnecessary-value-param)
+    -> comparator::LinearSymbolicComparator {
     if constexpr (HasEqualities)
       if constexpr (NonNegative)
         return comparator::linearNonNegative(getA(), getE(), getNumDynamic());
@@ -88,7 +90,7 @@ struct BasePolyhedra {
       return comparator::linearNonNegative(getA(), getNumDynamic());
     else return comparator::linear(getA(), true);
   }
-  inline auto initializeComparator(BumpAlloc<> &alloc)
+  [[nodiscard]] constexpr auto initializeComparator(WBumpAlloc<int64_t> alloc)
     -> comparator::PtrSymbolicComparator {
     if constexpr (HasEqualities)
       if constexpr (NonNegative)
@@ -99,20 +101,24 @@ struct BasePolyhedra {
       return comparator::linearNonNegative(alloc, getA(), getNumDynamic());
     else return comparator::linear(alloc, getA(), true);
   }
-  auto calcIsEmpty() -> bool { return initializeComparator().isEmpty(); }
-  auto calcIsEmpty(BumpAlloc<> &alloc) -> bool {
+  constexpr auto calcIsEmpty() -> bool {
+    return initializeComparator().isEmpty();
+  }
+  constexpr auto calcIsEmpty(BumpAlloc<> &alloc) -> bool {
     return initializeComparator(alloc).isEmpty();
   }
-  void pruneBounds() {
+  constexpr void pruneBounds() {
     if (calcIsEmpty()) {
       getA().truncate(Row{0});
       if constexpr (HasEqualities) getE().truncate(Row{0});
     } else pruneBoundsUnchecked();
   }
-  void pruneBoundsUnchecked() {
+  template <class Allocator>
+  constexpr void pruneBoundsUnchecked(Allocator alloc) {
     const size_t dyn = getNumDynamic();
-
-    Vector<int64_t> diff{size_t(getA().numCol())};
+    MutPtrMatrix<int64_t> A{getA()};
+    Vector<int64_t> diff{unsigned(A.numCol())};
+    auto C = initializeComparator(alloc);
     if constexpr (HasEqualities) removeRedundantRows(getA(), getE());
     for (auto j = size_t(getA().numRow()); j;) {
       bool broke = false;
@@ -121,7 +127,7 @@ struct BasePolyhedra {
         diff << A(--i, _) - A(j, _);
         if (C.greaterEqual(diff)) {
           eraseConstraint(A, i);
-          initializeComparator();
+          initializeComparator(alloc);
           --j; // `i < j`, and `i` has been removed
         } else if (diff *= -1; C.greaterEqual(diff)) {
           eraseConstraint(A, j);
@@ -137,7 +143,7 @@ struct BasePolyhedra {
             --diff[last - i];
             if (C.greaterEqual(diff)) {
               eraseConstraint(A, j);
-              initializeComparator();
+              initializeComparator(alloc);
               break; // `j` is gone
             }
           }
@@ -145,7 +151,7 @@ struct BasePolyhedra {
       }
     }
     if constexpr (HasEqualities)
-      for (size_t i = 0; i < E.numRow(); ++i) normalizeByGCD(E(i, _));
+      for (size_t i = 0; i < getE().numRow(); ++i) normalizeByGCD(getE()(i, _));
   }
 
   [[nodiscard]] constexpr auto getNumSymbols() const -> size_t {
@@ -153,59 +159,45 @@ struct BasePolyhedra {
     else return 1;
   }
   [[nodiscard]] constexpr auto getNumDynamic() const -> size_t {
-    return size_t(A.numCol()) - getNumSymbols();
+    return size_t(getA().numCol()) - getNumSymbols();
   }
   [[nodiscard]] constexpr auto getNumVar() const -> size_t {
-    return size_t(A.numCol()) - 1;
+    return size_t(getA().numCol()) - 1;
   }
   [[nodiscard]] constexpr auto getNumInequalityConstraints() const -> size_t {
-    return size_t(A.numRow());
+    return size_t(getA().numRow());
   }
   [[nodiscard]] constexpr auto getNumEqualityConstraints() const -> size_t {
-    return size_t(E.numRow());
+    return size_t(getE().numRow());
   }
 
-  // static bool lessZero(const IntMatrix &A, const size_t r) const {
-  //     return C.less(A(r, _));
+  // [[nodiscard]] auto lessZero(const size_t r) const -> bool {
+  //   return C.less(A(r, _));
   // }
-  // static bool lessEqualZero(const IntMatrix &A, const size_t r) const {
-  //     return C.lessEqual(A(r, _));
+  // [[nodiscard]] auto lessEqualZero(const size_t r) const -> bool {
+  //   return C.lessEqual(A(r, _));
   // }
-  // static bool greaterZero(const IntMatrix &A, const size_t r) const {
-  //     return C.greater(A(r, _));
+  // [[nodiscard]] auto greaterZero(const size_t r) const -> bool {
+  //   return C.greater(A(r, _));
   // }
-  // static bool greaterEqualZero(const IntMatrix &A, const size_t r) const {
-  //     return C.greaterEqual(A(r, _));
+  // [[nodiscard]] auto greaterEqualZero(const size_t r) const -> bool {
+  //   return C.greaterEqual(A(r, _));
   // }
-  [[nodiscard]] auto lessZero(const size_t r) const -> bool {
-    return C.less(A(r, _));
-  }
-  [[nodiscard]] auto lessEqualZero(const size_t r) const -> bool {
-    return C.lessEqual(A(r, _));
-  }
-  [[nodiscard]] auto greaterZero(const size_t r) const -> bool {
-    return C.greater(A(r, _));
-  }
-  [[nodiscard]] auto greaterEqualZero(const size_t r) const -> bool {
-    return C.greaterEqual(A(r, _));
-  }
 
-  [[nodiscard]] auto equalNegative(const size_t i, const size_t j) const
-    -> bool {
-    return C.equalNegative(A(i, _), A(j, _));
-  }
-  // static bool equalNegative(const IntMatrix &A, const size_t i,
-  //                    const size_t j) {
-  //     return C.equalNegative(A(i, _), A(j, _));
+  // [[nodiscard]] auto equalNegative(const size_t i, const size_t j) const
+  //   -> bool {
+  //   return C.equalNegative(A(i, _), A(j, _));
   // }
 
   // A'x >= 0
   // E'x = 0
   // removes variable `i` from system
-  void removeVariable(const size_t i) {
+  constexpr void removeVariable(const size_t i) {
+    auto A{getA()};
     if constexpr (HasEqualities) {
+      auto E{getE()};
       if (substituteEquality(A, E, i)) {
-        if constexpr (NonNegative) fourierMotzkinNonNegative(A, i);
+        if constexpr (NonNegative) fourierMotzkinNonNegative(getA(), i);
         else fourierMotzkin(A, i);
       }
       if (E.numRow() > 1) NormalForm::simplifySystem(E);
@@ -213,14 +205,14 @@ struct BasePolyhedra {
     if constexpr (NonNegative) fourierMotzkinNonNegative(A, i);
     else fourierMotzkin(A, i);
   }
-  void removeVariableAndPrune(const size_t i) {
+  constexpr void removeVariableAndPrune(const size_t i) {
     removeVariable(i);
     pruneBoundsUnchecked();
   }
 
-  void dropEmptyConstraints() {
-    dropEmptyConstraints(A);
-    if constexpr (HasEqualities) dropEmptyConstraints(E);
+  constexpr void dropEmptyConstraints() {
+    dropEmptyConstraints(getA());
+    if constexpr (HasEqualities) dropEmptyConstraints(getE());
   }
 
   friend inline auto operator<<(llvm::raw_ostream &os, const BasePolyhedra &p)
@@ -235,7 +227,7 @@ struct BasePolyhedra {
   }
   void dump() const { llvm::errs() << *this; }
   [[nodiscard]] auto isEmpty() const -> bool {
-    return A.numRow() == 0;
+    return getA().numRow() == 0;
     // if (A.numRow() == 0)
     //     return true;
     // for (size_t r = 0; r < A.numRow(); ++r)
@@ -244,20 +236,20 @@ struct BasePolyhedra {
     // return false;
   }
   void truncateVars(size_t numVar) {
-    if constexpr (HasEqualities) E.truncate(Col{numVar});
-    A.truncate(Col{numVar});
+    if constexpr (HasEqualities) getE().truncate(Col{numVar});
+    getA().truncate(Col{numVar});
   }
 };
 
-using SymbolicPolyhedra =
-  BasePolyhedra<EmptyMatrix<int64_t>, LinearSymbolicComparator,
-                llvm::SmallVector<const llvm::SCEV *>, false>;
-using NonNegativeSymbolicPolyhedra =
-  BasePolyhedra<EmptyMatrix<int64_t>, LinearSymbolicComparator,
-                llvm::SmallVector<const llvm::SCEV *>, true>;
-using SymbolicEqPolyhedra =
-  BasePolyhedra<IntMatrix, LinearSymbolicComparator,
-                llvm::SmallVector<const llvm::SCEV *>, false>;
-using NonNegativeSymbolicEqPolyhedra =
-  BasePolyhedra<IntMatrix, LinearSymbolicComparator,
-                llvm::SmallVector<const llvm::SCEV *>, true>;
+// using SymbolicPolyhedra =
+//   BasePolyhedra<EmptyMatrix<int64_t>, LinearSymbolicComparator,
+//                 llvm::SmallVector<const llvm::SCEV *>, false>;
+// using NonNegativeSymbolicPolyhedra =
+//   BasePolyhedra<EmptyMatrix<int64_t>, LinearSymbolicComparator,
+//                 llvm::SmallVector<const llvm::SCEV *>, true>;
+// using SymbolicEqPolyhedra =
+//   BasePolyhedra<IntMatrix, LinearSymbolicComparator,
+//                 llvm::SmallVector<const llvm::SCEV *>, false>;
+// using NonNegativeSymbolicEqPolyhedra =
+//   BasePolyhedra<IntMatrix, LinearSymbolicComparator,
+//                 llvm::SmallVector<const llvm::SCEV *>, true>;

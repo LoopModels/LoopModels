@@ -991,7 +991,24 @@ struct ManagedArray : ReallocView<T, S, A, U> {
     : BaseT{memory, S(b.dim()), U(N), b.get_allocator()} {
     U len = U(this->sz);
     this->growUndef(len);
-    for (size_t i = 0; i < len; ++i) new ((T *)(this->ptr) + i) T(b[i]);
+    if constexpr (DenseLayout<D> && DenseLayout<S>) {
+      std::uninitialized_copy_n(b.data(), len, (T *)(this->ptr));
+    } else if constexpr (MatrixDimension<D> && MatrixDimension<S>) {
+      invariant(b.numRow() == this->numRow());
+      invariant(b.numCol() == this->numCol());
+      for (size_t m = 0; m < this->numRow(); ++m)
+        for (size_t n = 0; n < this->numCol(); ++n) (*this)(m, n) = b(m, n);
+    } else if constexpr (MatrixDimension<D>) {
+      size_t j = 0;
+      for (size_t m = 0; m < b.numRow(); ++m)
+        for (size_t n = 0; n < b.numCol(); ++n) (*this)(j++) = b(m, n);
+    } else if constexpr (MatrixDimension<S>) {
+      size_t j = 0;
+      for (size_t m = 0; m < this->numRow(); ++m)
+        for (size_t n = 0; n < this->numCol(); ++n) (*this)(m, n) = b(j++);
+    } else {
+      for (size_t i = 0; i < len; ++i) new ((T *)(this->ptr) + i) T(b[i]);
+    }
   }
   template <std::convertible_to<T> Y, class D, class AY,
             std::unsigned_integral I>
