@@ -954,6 +954,149 @@ struct ManagedArray : ManagedArrayView<T, S, A, U> {
 private:
   T memory[N]; // NOLINT (modernize-avoid-c-style-arrays)
 };
+template <class T, class S, class A, std::unsigned_integral U>
+struct ManagedArray<T, S, 0, A, U> {
+  static_assert(std::is_trivially_destructible_v<T>);
+  using BaseT = ManagedArrayView<T, S, A, U>;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wuninitialized"
+  ManagedArray() = delete;
+  constexpr ManagedArray(S s) noexcept : BaseT{A{}.allocate(U(s)), s, U(s)} {}
+  constexpr ManagedArray(S s, T x) noexcept
+    : BaseT{A{}.allocate(U(s)), s, U(s)} {
+    std::uninitialized_fill_n((T *)(this->ptr), U(s), x);
+  }
+  template <class D, size_t N, std::unsigned_integral I>
+  constexpr ManagedArray(const ManagedArray<T, D, N, A, I> &b) noexcept
+    : BaseT{b.get_allocator().allocate(U(b.dim())), S(b.dim()), U(b.dim()),
+            b.get_allocator()} {
+    std::uninitialized_copy_n(b.data(), U(b.dim()), (T *)(this->ptr));
+  }
+  // template <class Y, class D, class AY, std::unsigned_integral I,
+  // std::enable_if_t<std::is_convertible_v<Y, T>>>
+  template <std::convertible_to<T> Y, class D, class AY,
+            std::unsigned_integral I, size_t N>
+  constexpr ManagedArray(const ManagedArray<Y, D, N, AY, I> &b) noexcept
+    : BaseT{b.get_allocator().allocate(U(b.dim())), S(b.dim()), U(b.dim()),
+            b.get_allocator()} {
+    U len = U(this->sz);
+    for (size_t i = 0; i < len; ++i) new ((T *)(this->ptr) + i) T(b[i]);
+  }
+  constexpr ManagedArray(const ManagedArray &b) noexcept
+    : BaseT{b.get_allocator().allocate(U(b.dim())), S(b.dim()), U(b.dim()),
+            b.get_allocator()} {
+    U len = U(this->sz);
+    std::uninitialized_copy_n(b.data(), len, (T *)(this->ptr));
+  }
+#pragma GCC diagnostic pop
+  template <class D, std::unsigned_integral I>
+  constexpr ManagedArray(ManagedArray<T, D, 0, A, I> &&b) noexcept
+    : BaseT{b.data(), b.dim(), U(b.getCapacity()), b.get_allocator()} {
+    assert(uint64_t(b.getCapacity()) == uint64_t(this->getCapacity()) &&
+           "capacity overflow");
+    b.resetNoFree();
+  }
+  constexpr ManagedArray(ManagedArray &&b) noexcept
+    : BaseT{b.data(), b.dim(), U(b.getCapacity()), b.get_allocator()} {
+    assert(uint64_t(b.getCapacity()) == uint64_t(this->getCapacity()) &&
+           "capacity overflow");
+    b.resetNoFree();
+  }
+  template <class D, std::unsigned_integral I>
+  constexpr ManagedArray(ManagedArray<T, D, 0, A, I> &&b, S s) noexcept
+    : BaseT{b.data(), s, U(b.getCapacity()), b.get_allocator()} {
+    assert(U(s) == U(b.dim()) && "size mismatch");
+    assert(uint64_t(b.getCapacity()) == uint64_t(this->getCapacity()) &&
+           "capacity overflow");
+    b.resetNoFree();
+  }
+  template <std::convertible_to<T> Y>
+  constexpr ManagedArray(const SmallSparseMatrix<Y> &B)
+    : ManagedArrayView<T, S, A, U>{A{}.allocate(U(B.dim())), B.dim(),
+                                   U(B.dim())} {
+    U len = U(this->sz);
+    growUndef(len);
+    this->fill(0);
+    size_t k = 0;
+    for (size_t i = 0; i < this->numRow(); ++i) {
+      uint32_t m = B.rows[i] & 0x00ffffff;
+      size_t j = 0;
+      while (m) {
+        uint32_t tz = std::countr_zero(m);
+        m >>= tz + 1;
+        j += tz;
+        (*this)(i, j++) = T(B.nonZeros[k++]);
+      }
+    }
+    assert(k == B.nonZeros.size());
+  }
+
+  template <class D, std::unsigned_integral I, size_t N>
+  constexpr auto operator=(const ManagedArray<T, D, N, A, I> &b) noexcept
+    -> ManagedArray & {
+    if (this == &b) return *this;
+    this->sz = b.dim();
+    U len = U(this->sz);
+    growUndef(len);
+    std::uninitialized_copy_n(b.data(), len, (T *)(this->ptr));
+    return *this;
+  }
+  template <class D, std::unsigned_integral I, size_t N>
+  constexpr auto operator=(ManagedArray<T, D, N, A, I> &&b) noexcept
+    -> ManagedArray & {
+    if (this == &b) return *this;
+    // here, we commandeer `b`'s memory
+    this->sz = b.dim();
+    this->allocator = std::move(b.allocator);
+    if (b.isSmall()) {
+      // if `b` is small, we need to copy memory
+      // no need to shrink our capacity
+      std::uninitialized_copy_n(b.data(), size_t(this->sz), (T *)(this->ptr));
+    } else {
+      // otherwise, we take its pointer
+      maybeDeallocate(b.wrappedPtr(), b.getCapacity());
+    }
+    b.resetNoFree();
+    return *this;
+  }
+  constexpr auto operator=(const ManagedArray &b) noexcept -> ManagedArray & {
+    if (this == &b) return *this;
+    this->sz = b.dim();
+    U len = U(this->sz);
+    growUndef(len);
+    std::uninitialized_copy_n(b.data(), len, (T *)(this->ptr));
+    return *this;
+  }
+  constexpr auto operator=(ManagedArray &&b) noexcept -> ManagedArray & {
+    if (this == &b) return *this;
+    // here, we commandeer `b`'s memory
+    this->sz = b.dim();
+    this->allocator = std::move(b.allocator);
+    maybeDeallocate(b.wrappedPtr(), b.getCapacity());
+    b.resetNoFree();
+    return *this;
+  }
+  constexpr void resetNoFree() {
+    this->sz = S{};
+    this->capacity = 0;
+  }
+  constexpr ~ManagedArray() { this->maybeDeallocate(); }
+  [[nodiscard]] constexpr auto isSmall() const -> bool { return false; }
+  [[nodiscard]] static constexpr auto identity(unsigned M) -> ManagedArray {
+    static_assert(MatrixDimension<S>);
+    ManagedArray B(SquareDims{M}, T{0});
+    B.diag() << 1;
+    return B;
+  }
+  [[nodiscard]] static constexpr auto identity(Row R) -> ManagedArray {
+    static_assert(MatrixDimension<S>);
+    return identity(unsigned(R));
+  }
+  [[nodiscard]] static constexpr auto identity(Col C) -> ManagedArray {
+    static_assert(MatrixDimension<S>);
+    return identity(unsigned(C));
+  }
+};
 
 static_assert(std::move_constructible<ManagedArray<intptr_t, unsigned>>);
 static_assert(std::copyable<ManagedArray<intptr_t, unsigned>>);

@@ -2,6 +2,7 @@
 #include "./Constraints.hpp"
 #include "./NormalForm.hpp"
 #include "./Rational.hpp"
+#include "Math/Array.hpp"
 #include "Math/Math.hpp"
 #include "Math/MatrixDimensions.hpp"
 #include <bit>
@@ -27,7 +28,7 @@ struct Simplex {
   // column 0: indicates whether that row (constraint) is basic,
   //           and if so which one
   // column 1: constraint values
-  Matrix<int64_t, LinearAlgebra::StridedDims, 0> tableau;
+  LinearAlgebra::ManagedArray<int64_t, LinearAlgebra::StridedDims, 0> tableau;
   size_t numSlackVar{0};
 #ifndef NDEBUG
   bool inCanonicalForm{false};
