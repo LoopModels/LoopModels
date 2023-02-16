@@ -170,14 +170,14 @@ concept Index = ((std::integral<D> || std::same_as<D, StridedRange>) &&
 struct Empty {};
 
 constexpr auto calcNewDim(size_t, size_t) -> Empty { return {}; };
-template <class B, class E>
-constexpr auto calcNewDim(size_t len, Range<B, E> r) {
-  return calcNewDim(len, canonicalizeRange(r, len));
-};
 constexpr auto calcNewDim(size_t len, Range<size_t, size_t> r) {
   invariant(r.e <= len);
   invariant(r.b <= r.e);
   return r.e - r.b;
+};
+template <class B, class E>
+constexpr auto calcNewDim(size_t len, Range<B, E> r) {
+  return calcNewDim(len, canonicalizeRange(r, len));
 };
 template <ScalarValueIndex R, ScalarValueIndex C>
 constexpr auto calcNewDim(StridedDims, CartesianIndex<R, C>) -> Empty {

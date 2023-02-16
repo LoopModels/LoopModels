@@ -817,7 +817,7 @@ struct ManagedArray : ManagedArrayView<T, S, A, U> {
   constexpr ManagedArray(const ManagedArray &b) noexcept
     : BaseT{memory, S(b.dim()), U(N), b.get_allocator()} {
     U len = U(this->sz);
-    growUndef(len);
+    this->growUndef(len);
     std::uninitialized_copy_n(b.data(), len, (T *)(this->ptr));
   }
 #pragma GCC diagnostic pop
