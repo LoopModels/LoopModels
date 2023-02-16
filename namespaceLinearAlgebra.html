@@ -81,7 +81,9 @@ Classes</h2></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structLinearAlgebra_1_1MutArray.html">MutArray</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structLinearAlgebra_1_1ManagedArrayView.html">ManagedArrayView</a></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structLinearAlgebra_1_1ResizeableView.html">ResizeableView</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structLinearAlgebra_1_1ReallocView.html">ReallocView</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structLinearAlgebra_1_1ManagedArray_3_01T_00_01S_00_010_00_01A_00_01U_01_4.html">ManagedArray&lt; T, S, 0, A, U &gt;</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -468,18 +470,19 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>calcOffset<
 <tr class="memitem:a93fb2a4da3f29bbb1de4d51d6f2b52ee"><td class="memItemLeft" align="right" valign="top"><a id="a93fb2a4da3f29bbb1de4d51d6f2b52ee"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>calcOffset</b> (size_t len, <a class="el" href="structLinearAlgebra_1_1AxisInt.html">Col</a> i) -&gt; size_t</td></tr>
 <tr class="separator:a93fb2a4da3f29bbb1de4d51d6f2b52ee"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac6a2f2fff9f3b5d95ea07649a9951ddd"><td class="memTemplParams" colspan="2"><a id="ac6a2f2fff9f3b5d95ea07649a9951ddd"></a>
-template&lt;std::integral B, class E &gt; </td></tr>
-<tr class="memitem:ac6a2f2fff9f3b5d95ea07649a9951ddd"><td class="memTemplItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>calcOffset</b> (size_t, <a class="el" href="structRange.html">Range</a>&lt; B, E &gt; i) -&gt; B</td></tr>
-<tr class="separator:ac6a2f2fff9f3b5d95ea07649a9951ddd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aace5125c9e090dfd78f6cdd87fa180fd"><td class="memTemplParams" colspan="2"><a id="aace5125c9e090dfd78f6cdd87fa180fd"></a>
-template&lt;class E &gt; </td></tr>
-<tr class="memitem:aace5125c9e090dfd78f6cdd87fa180fd"><td class="memTemplItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>calcOffset</b> (size_t, <a class="el" href="structRange.html">Range</a>&lt; Begin, E &gt;) -&gt; size_t</td></tr>
-<tr class="separator:aace5125c9e090dfd78f6cdd87fa180fd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1f616041c55c3df520b9b5be8f5a6ab3"><td class="memTemplParams" colspan="2"><a id="a1f616041c55c3df520b9b5be8f5a6ab3"></a>
-template&lt;class E &gt; </td></tr>
-<tr class="memitem:a1f616041c55c3df520b9b5be8f5a6ab3"><td class="memTemplItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>calcOffset</b> (size_t, <a class="el" href="structRange.html">Range</a>&lt; <a class="el" href="structLinearAlgebra_1_1OffsetBegin.html">OffsetBegin</a>, E &gt; i) -&gt; size_t</td></tr>
-<tr class="separator:a1f616041c55c3df520b9b5be8f5a6ab3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3ee78ae7e23386553ecb13751cdc7eb3"><td class="memItemLeft" align="right" valign="top"><a id="a3ee78ae7e23386553ecb13751cdc7eb3"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>calcOffset</b> (size_t, Begin) -&gt; size_t</td></tr>
+<tr class="separator:a3ee78ae7e23386553ecb13751cdc7eb3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa3c5382ef750f0239796dbecc1d0020b"><td class="memItemLeft" align="right" valign="top"><a id="aa3c5382ef750f0239796dbecc1d0020b"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>calcOffset</b> (size_t len, <a class="el" href="structLinearAlgebra_1_1OffsetBegin.html">OffsetBegin</a> i) -&gt; size_t</td></tr>
+<tr class="separator:aa3c5382ef750f0239796dbecc1d0020b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aba21fcdafe59cbff022c5bad2a943217"><td class="memItemLeft" align="right" valign="top"><a id="aba21fcdafe59cbff022c5bad2a943217"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>calcOffset</b> (size_t len, <a class="el" href="structLinearAlgebra_1_1OffsetEnd.html">OffsetEnd</a> i) -&gt; size_t</td></tr>
+<tr class="separator:aba21fcdafe59cbff022c5bad2a943217"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a86941bf0d7b7d1fe26181de97f40d430"><td class="memTemplParams" colspan="2"><a id="a86941bf0d7b7d1fe26181de97f40d430"></a>
+template&lt;class B , class E &gt; </td></tr>
+<tr class="memitem:a86941bf0d7b7d1fe26181de97f40d430"><td class="memTemplItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>calcOffset</b> (size_t len, <a class="el" href="structRange.html">Range</a>&lt; B, E &gt; i) -&gt; size_t</td></tr>
+<tr class="separator:a86941bf0d7b7d1fe26181de97f40d430"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a226c0232c8a0d9ae6c6518f1898b8cb2"><td class="memItemLeft" align="right" valign="top"><a id="a226c0232c8a0d9ae6c6518f1898b8cb2"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>calcOffset</b> (size_t, Colon) -&gt; size_t</td></tr>
 <tr class="separator:a226c0232c8a0d9ae6c6518f1898b8cb2"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -971,7 +974,7 @@ template&lt;class I , class D &gt; </div>
       </table>
 </div><div class="memdoc">
 <b>Initial value:</b><div class="fragment"><div class="line">= ((std::integral&lt;D&gt; || std::same_as&lt;D, StridedRange&gt;) &amp;&amp;</div>
-<div class="line">                 std::integral&lt;I&gt;) ||</div>
+<div class="line">                 (std::integral&lt;I&gt; || AbstractSlice&lt;I&gt;)) ||</div>
 <div class="line">                (MatrixDimension&lt;D&gt; &amp;&amp; requires(I i) {</div>
 <div class="line">                                         { i.row };</div>
 <div class="line">                                         { i.col };</div>

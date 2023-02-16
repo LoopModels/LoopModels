@@ -1,10 +1,8 @@
 var searchData=
 [
-  ['managedarray_260',['ManagedArray',['../structLinearAlgebra_1_1ManagedArray.html',1,'LinearAlgebra']]],
-  ['managedarray_3c_20int64_5ft_2c_20linearalgebra_3a_3astrideddims_2c_200_20_3e_261',['ManagedArray&lt; int64_t, LinearAlgebra::StridedDims, 0 &gt;',['../structLinearAlgebra_1_1ManagedArray.html',1,'LinearAlgebra']]],
-  ['managedarray_3c_20t_2c_20s_2c_200_2c_20a_2c_20u_20_3e_262',['ManagedArray&lt; T, S, 0, A, U &gt;',['../structLinearAlgebra_1_1ManagedArray_3_01T_00_01S_00_010_00_01A_00_01U_01_4.html',1,'LinearAlgebra']]],
-  ['managedarrayview_263',['ManagedArrayView',['../structLinearAlgebra_1_1ManagedArrayView.html',1,'LinearAlgebra']]],
-  ['managedarrayview_3c_20t_2c_20s_2c_20a_2c_20u_20_3e_264',['ManagedArrayView&lt; T, S, A, U &gt;',['../structLinearAlgebra_1_1ManagedArrayView.html',1,'LinearAlgebra']]],
+  ['managedarray_262',['ManagedArray',['../structLinearAlgebra_1_1ManagedArray.html',1,'LinearAlgebra']]],
+  ['managedarray_3c_20int64_5ft_2c_20linearalgebra_3a_3astrideddims_2c_200_20_3e_263',['ManagedArray&lt; int64_t, LinearAlgebra::StridedDims, 0 &gt;',['../structLinearAlgebra_1_1ManagedArray.html',1,'LinearAlgebra']]],
+  ['managedarray_3c_20t_2c_20s_2c_200_2c_20a_2c_20u_20_3e_264',['ManagedArray&lt; T, S, 0, A, U &gt;',['../structLinearAlgebra_1_1ManagedArray_3_01T_00_01S_00_010_00_01A_00_01U_01_4.html',1,'LinearAlgebra']]],
   ['map_265',['Map',['../structPredicate_1_1Map.html',1,'Predicate']]],
   ['matmatmul_266',['MatMatMul',['../structLinearAlgebra_1_1MatMatMul.html',1,'LinearAlgebra']]],
   ['matvecmul_267',['MatVecMul',['../structLinearAlgebra_1_1MatVecMul.html',1,'LinearAlgebra']]],

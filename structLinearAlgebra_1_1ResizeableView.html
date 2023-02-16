@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.9.1"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>LoopModels: LinearAlgebra::ManagedArrayView&lt; T, S, A, U &gt; Struct Template Reference</title>
+<title>LoopModels: LinearAlgebra::ResizeableView&lt; T, S, U &gt; Struct Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -61,39 +61,40 @@ $(function() {
 
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><a class="el" href="namespaceLinearAlgebra.html">LinearAlgebra</a></li><li class="navelem"><a class="el" href="structLinearAlgebra_1_1ManagedArrayView.html">ManagedArrayView</a></li>  </ul>
+<li class="navelem"><a class="el" href="namespaceLinearAlgebra.html">LinearAlgebra</a></li><li class="navelem"><a class="el" href="structLinearAlgebra_1_1ResizeableView.html">ResizeableView</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="header">
   <div class="summary">
 <a href="#pub-types">Public Types</a> &#124;
 <a href="#pub-methods">Public Member Functions</a> &#124;
-<a href="#pro-methods">Protected Member Functions</a> &#124;
 <a href="#pro-attribs">Protected Attributes</a> &#124;
-<a href="structLinearAlgebra_1_1ManagedArrayView-members.html">List of all members</a>  </div>
+<a href="structLinearAlgebra_1_1ResizeableView-members.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">LinearAlgebra::ManagedArrayView&lt; T, S, A, U &gt; Struct Template Reference</div>  </div>
+<div class="title">LinearAlgebra::ResizeableView&lt; T, S, U &gt; Struct Template Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
 
 <p><code>#include &lt;<a class="el" href="Array_8hpp_source.html">Array.hpp</a>&gt;</code></p>
 <div class="dynheader">
-Inheritance diagram for LinearAlgebra::ManagedArrayView&lt; T, S, A, U &gt;:</div>
+Inheritance diagram for LinearAlgebra::ResizeableView&lt; T, S, U &gt;:</div>
 <div class="dyncontent">
  <div class="center">
-  <img src="structLinearAlgebra_1_1ManagedArrayView.png" usemap="#LinearAlgebra::ManagedArrayView_3C_20T_2C_20S_2C_20A_2C_20U_20_3E_map" alt=""/>
-  <map id="LinearAlgebra::ManagedArrayView_3C_20T_2C_20S_2C_20A_2C_20U_20_3E_map" name="LinearAlgebra::ManagedArrayView_3C_20T_2C_20S_2C_20A_2C_20U_20_3E_map">
-<area href="structLinearAlgebra_1_1MutArray.html" alt="LinearAlgebra::MutArray&lt; T, S &gt;" shape="rect" coords="0,56,425,80"/>
-<area href="structLinearAlgebra_1_1Array.html" title="Constant Array." alt="LinearAlgebra::Array&lt; T, S &gt;" shape="rect" coords="0,0,425,24"/>
-<area href="structLinearAlgebra_1_1ManagedArray.html" alt="LinearAlgebra::ManagedArray&lt; int64_t, LinearAlgebra::StridedDims, 0 &gt;" shape="rect" coords="0,168,425,192"/>
+  <img src="structLinearAlgebra_1_1ResizeableView.png" usemap="#LinearAlgebra::ResizeableView_3C_20T_2C_20S_2C_20U_20_3E_map" alt=""/>
+  <map id="LinearAlgebra::ResizeableView_3C_20T_2C_20S_2C_20U_20_3E_map" name="LinearAlgebra::ResizeableView_3C_20T_2C_20S_2C_20U_20_3E_map">
+<area href="structLinearAlgebra_1_1MutArray.html" alt="LinearAlgebra::MutArray&lt; T, S &gt;" shape="rect" coords="148,56,434,80"/>
+<area href="structLinearAlgebra_1_1Array.html" title="Constant Array." alt="LinearAlgebra::Array&lt; T, S &gt;" shape="rect" coords="148,0,434,24"/>
+<area href="structLinearAlgebra_1_1ReallocView.html" alt="LinearAlgebra::ReallocView&lt; T, S, A, U &gt;" shape="rect" coords="148,168,434,192"/>
+<area href="structLinearAlgebra_1_1ManagedArray.html" alt="LinearAlgebra::ManagedArray&lt; T, S, N, A, U &gt;" shape="rect" coords="0,224,286,248"/>
+<area href="structLinearAlgebra_1_1ManagedArray_3_01T_00_01S_00_010_00_01A_00_01U_01_4.html" alt="LinearAlgebra::ManagedArray&lt; T, S, 0, A, U &gt;" shape="rect" coords="296,224,582,248"/>
   </map>
 </div></div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
 Public Types</h2></td></tr>
-<tr class="memitem:ab2e3a44d5dbdaa26c9521916dcc3e5a2"><td class="memItemLeft" align="right" valign="top"><a id="ab2e3a44d5dbdaa26c9521916dcc3e5a2"></a>
+<tr class="memitem:a5f8dd401d83305c9fbe56af4770dc0ee"><td class="memItemLeft" align="right" valign="top"><a id="a5f8dd401d83305c9fbe56af4770dc0ee"></a>
 using&#160;</td><td class="memItemRight" valign="bottom"><b>BaseT</b> = <a class="el" href="structLinearAlgebra_1_1MutArray.html">MutArray</a>&lt; T, S &gt;</td></tr>
-<tr class="separator:ab2e3a44d5dbdaa26c9521916dcc3e5a2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:a5f8dd401d83305c9fbe56af4770dc0ee"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_types_structLinearAlgebra_1_1MutArray"><td colspan="2" onclick="javascript:toggleInherit('pub_types_structLinearAlgebra_1_1MutArray')"><img src="closed.png" alt="-"/>&#160;Public Types inherited from <a class="el" href="structLinearAlgebra_1_1MutArray.html">LinearAlgebra::MutArray&lt; T, S &gt;</a></td></tr>
 <tr class="memitem:a9f24ca4cef38a9f11a1cda7931cef6aa inherit pub_types_structLinearAlgebra_1_1MutArray"><td class="memItemLeft" align="right" valign="top"><a id="a9f24ca4cef38a9f11a1cda7931cef6aa"></a>
 using&#160;</td><td class="memItemRight" valign="bottom"><b>BaseT</b> = <a class="el" href="structLinearAlgebra_1_1Array.html">Array</a>&lt; T, S &gt;</td></tr>
@@ -129,88 +130,55 @@ using&#160;</td><td class="memItemRight" valign="bottom"><b>const_pointer</b> = 
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:ad6e74fdc3c17593432e3d81c8fa2409b"><td class="memItemLeft" align="right" valign="top"><a id="ad6e74fdc3c17593432e3d81c8fa2409b"></a>
-constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>ManagedArrayView</b> (<a class="el" href="structNotNull.html">NotNull</a>&lt; T &gt; p, S s, U c) noexcept</td></tr>
-<tr class="separator:ad6e74fdc3c17593432e3d81c8fa2409b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a62a76615043e96f16480853641727518"><td class="memItemLeft" align="right" valign="top"><a id="a62a76615043e96f16480853641727518"></a>
-constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>ManagedArrayView</b> (<a class="el" href="structNotNull.html">NotNull</a>&lt; T &gt; p, S s, U c, A alloc) noexcept</td></tr>
-<tr class="separator:a62a76615043e96f16480853641727518"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9ec83aa1363313ab77e35f8a6c890a36"><td class="memTemplParams" colspan="2"><a id="a9ec83aa1363313ab77e35f8a6c890a36"></a>
+<tr class="memitem:a1711c0834747aa227c99de5c3a087645"><td class="memItemLeft" align="right" valign="top"><a id="a1711c0834747aa227c99de5c3a087645"></a>
+constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>ResizeableView</b> (<a class="el" href="structNotNull.html">NotNull</a>&lt; T &gt; p, S s, U c) noexcept</td></tr>
+<tr class="separator:a1711c0834747aa227c99de5c3a087645"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a590df7a8c1038ebc611378a3d8c8af83"><td class="memTemplParams" colspan="2"><a id="a590df7a8c1038ebc611378a3d8c8af83"></a>
 template&lt;class... Args&gt; </td></tr>
-<tr class="memitem:a9ec83aa1363313ab77e35f8a6c890a36"><td class="memTemplItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>emplace_back</b> (Args &amp;&amp;...args)</td></tr>
-<tr class="separator:a9ec83aa1363313ab77e35f8a6c890a36"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1963d22c7e65216f55b83128356b69db"><td class="memItemLeft" align="right" valign="top"><a id="a1963d22c7e65216f55b83128356b69db"></a>
+<tr class="memitem:a590df7a8c1038ebc611378a3d8c8af83"><td class="memTemplItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>emplace_back</b> (Args &amp;&amp;...args)</td></tr>
+<tr class="separator:a590df7a8c1038ebc611378a3d8c8af83"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afe8761acd094cd2de9c6fc084860c427"><td class="memItemLeft" align="right" valign="top"><a id="afe8761acd094cd2de9c6fc084860c427"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>push_back</b> (T value)</td></tr>
-<tr class="separator:a1963d22c7e65216f55b83128356b69db"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a824ba0c8c5d81130f3a1072347661684"><td class="memItemLeft" align="right" valign="top"><a id="a824ba0c8c5d81130f3a1072347661684"></a>
+<tr class="separator:afe8761acd094cd2de9c6fc084860c427"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a26261cad7270c412dc4803de2e724a1a"><td class="memItemLeft" align="right" valign="top"><a id="a26261cad7270c412dc4803de2e724a1a"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>pop_back</b> ()</td></tr>
-<tr class="separator:a824ba0c8c5d81130f3a1072347661684"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aef9e66569fd79eb6af551e9ff7a857e2"><td class="memItemLeft" align="right" valign="top"><a id="aef9e66569fd79eb6af551e9ff7a857e2"></a>
+<tr class="separator:a26261cad7270c412dc4803de2e724a1a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afad37aa04dbfe6b7d18ca47eea76da5f"><td class="memItemLeft" align="right" valign="top"><a id="afad37aa04dbfe6b7d18ca47eea76da5f"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>pop_back_val</b> () -&gt; T</td></tr>
-<tr class="separator:aef9e66569fd79eb6af551e9ff7a857e2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2a483ec06bb56fef4c461428ca50f749"><td class="memItemLeft" align="right" valign="top"><a id="a2a483ec06bb56fef4c461428ca50f749"></a>
+<tr class="separator:afad37aa04dbfe6b7d18ca47eea76da5f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0aece5289be97b413c3a9812b33b7241"><td class="memItemLeft" align="right" valign="top"><a id="a0aece5289be97b413c3a9812b33b7241"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>resize</b> (S nz)</td></tr>
-<tr class="separator:a2a483ec06bb56fef4c461428ca50f749"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af3f9b3d76a6cfc80bc499c5319c51db0"><td class="memItemLeft" align="right" valign="top"><a id="af3f9b3d76a6cfc80bc499c5319c51db0"></a>
+<tr class="separator:a0aece5289be97b413c3a9812b33b7241"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae7f4cad29173c8feb6c04f783e5c5111"><td class="memItemLeft" align="right" valign="top"><a id="ae7f4cad29173c8feb6c04f783e5c5111"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>resize</b> (<a class="el" href="structLinearAlgebra_1_1AxisInt.html">Row</a> r)</td></tr>
-<tr class="separator:af3f9b3d76a6cfc80bc499c5319c51db0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a945e9a63db01a654e820d343fca41c74"><td class="memItemLeft" align="right" valign="top"><a id="a945e9a63db01a654e820d343fca41c74"></a>
+<tr class="separator:ae7f4cad29173c8feb6c04f783e5c5111"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a59126181e75a45e83157f75681c73c3c"><td class="memItemLeft" align="right" valign="top"><a id="a59126181e75a45e83157f75681c73c3c"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>resizeForOverwrite</b> (S M)</td></tr>
-<tr class="separator:a945e9a63db01a654e820d343fca41c74"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a82bdc9f2658078f59823ae24a7594462"><td class="memItemLeft" align="right" valign="top"><a id="a82bdc9f2658078f59823ae24a7594462"></a>
+<tr class="separator:a59126181e75a45e83157f75681c73c3c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a883aa56116393d50317bd0fd5c742307"><td class="memItemLeft" align="right" valign="top"><a id="a883aa56116393d50317bd0fd5c742307"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>resizeForOverwrite</b> (<a class="el" href="structLinearAlgebra_1_1AxisInt.html">Row</a> r)</td></tr>
-<tr class="separator:a82bdc9f2658078f59823ae24a7594462"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a16630431639503239aea19e3e8300f71"><td class="memItemLeft" align="right" valign="top"><a id="a16630431639503239aea19e3e8300f71"></a>
+<tr class="separator:a883aa56116393d50317bd0fd5c742307"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abe54186e1edaa04ff944f83e094d32a2"><td class="memItemLeft" align="right" valign="top"><a id="abe54186e1edaa04ff944f83e094d32a2"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>resizeForOverwrite</b> (<a class="el" href="structLinearAlgebra_1_1AxisInt.html">Col</a> c)</td></tr>
-<tr class="separator:a16630431639503239aea19e3e8300f71"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aea0090e1cd35f59fe1177a3c900b3041"><td class="memItemLeft" align="right" valign="top"><a id="aea0090e1cd35f59fe1177a3c900b3041"></a>
-constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>erase</b> (S i)</td></tr>
-<tr class="separator:aea0090e1cd35f59fe1177a3c900b3041"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afd3555a7f284b948ce1d809653b81f4c"><td class="memItemLeft" align="right" valign="top"><a id="afd3555a7f284b948ce1d809653b81f4c"></a>
-constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>erase</b> (<a class="el" href="structLinearAlgebra_1_1AxisInt.html">Row</a> r)</td></tr>
-<tr class="separator:afd3555a7f284b948ce1d809653b81f4c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9de3c9922b042b11b727f95e031a8b7e"><td class="memItemLeft" align="right" valign="top"><a id="a9de3c9922b042b11b727f95e031a8b7e"></a>
-constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>erase</b> (<a class="el" href="structLinearAlgebra_1_1AxisInt.html">Col</a> c)</td></tr>
-<tr class="separator:a9de3c9922b042b11b727f95e031a8b7e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a81e4c4b51afb9dd63388ddca57331703"><td class="memItemLeft" align="right" valign="top"><a id="a81e4c4b51afb9dd63388ddca57331703"></a>
-constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>reserve</b> (S nz)</td></tr>
-<tr class="separator:a81e4c4b51afb9dd63388ddca57331703"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7232cfb495826cc2b6b6a8757f32da90"><td class="memItemLeft" align="right" valign="top"><a id="a7232cfb495826cc2b6b6a8757f32da90"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>get_allocator</b> () const noexcept -&gt; A</td></tr>
-<tr class="separator:a7232cfb495826cc2b6b6a8757f32da90"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab7f59a3478307a2d1476469979926507"><td class="memItemLeft" align="right" valign="top"><a id="ab7f59a3478307a2d1476469979926507"></a>
+<tr class="separator:abe54186e1edaa04ff944f83e094d32a2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac0e18dc3e7eb3c7ec47a49b51f25858d"><td class="memItemLeft" align="right" valign="top"><a id="ac0e18dc3e7eb3c7ec47a49b51f25858d"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getCapacity</b> () const -&gt; U</td></tr>
-<tr class="separator:ab7f59a3478307a2d1476469979926507"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a62df0e17dbe78c0cd9e0302cb45a79d3"><td class="memItemLeft" align="right" valign="top"><a id="a62df0e17dbe78c0cd9e0302cb45a79d3"></a>
+<tr class="separator:ac0e18dc3e7eb3c7ec47a49b51f25858d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8bd43c017944bb3920acbb7929689ffc"><td class="memItemLeft" align="right" valign="top"><a id="a8bd43c017944bb3920acbb7929689ffc"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>setSize</b> (<a class="el" href="structLinearAlgebra_1_1AxisInt.html">Row</a> r, <a class="el" href="structLinearAlgebra_1_1AxisInt.html">Col</a> c)</td></tr>
-<tr class="separator:a62df0e17dbe78c0cd9e0302cb45a79d3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3a96e02f22a91bafe7018479639cd8e9"><td class="memItemLeft" align="right" valign="top"><a id="a3a96e02f22a91bafe7018479639cd8e9"></a>
+<tr class="separator:a8bd43c017944bb3920acbb7929689ffc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a96529d221016cfbe0536094b3ed73524"><td class="memItemLeft" align="right" valign="top"><a id="a96529d221016cfbe0536094b3ed73524"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>resize</b> (<a class="el" href="structLinearAlgebra_1_1AxisInt.html">Row</a> MM, <a class="el" href="structLinearAlgebra_1_1AxisInt.html">Col</a> NN)</td></tr>
-<tr class="separator:a3a96e02f22a91bafe7018479639cd8e9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a730cdb74cbe92da3f640832252683442"><td class="memItemLeft" align="right" valign="top"><a id="a730cdb74cbe92da3f640832252683442"></a>
-constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>reserve</b> (<a class="el" href="structLinearAlgebra_1_1AxisInt.html">Row</a> M, <a class="el" href="structLinearAlgebra_1_1AxisInt.html">Col</a> N)</td></tr>
-<tr class="separator:a730cdb74cbe92da3f640832252683442"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae79c3c4b62bcf7e03932ef0ac9956ef7"><td class="memItemLeft" align="right" valign="top"><a id="ae79c3c4b62bcf7e03932ef0ac9956ef7"></a>
-constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>reserve</b> (<a class="el" href="structLinearAlgebra_1_1AxisInt.html">Row</a> M, <a class="el" href="structLinearAlgebra_1_1AxisInt.html">RowStride</a> X)</td></tr>
-<tr class="separator:ae79c3c4b62bcf7e03932ef0ac9956ef7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa947471f210c620f2d3fd5c7aeaca19a"><td class="memItemLeft" align="right" valign="top"><a id="aa947471f210c620f2d3fd5c7aeaca19a"></a>
-constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>clearReserve</b> (<a class="el" href="structLinearAlgebra_1_1AxisInt.html">Row</a> M, <a class="el" href="structLinearAlgebra_1_1AxisInt.html">Col</a> N)</td></tr>
-<tr class="separator:aa947471f210c620f2d3fd5c7aeaca19a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abfbc6a9b1a9594a92a0704fa0533a682"><td class="memItemLeft" align="right" valign="top"><a id="abfbc6a9b1a9594a92a0704fa0533a682"></a>
-constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>clearReserve</b> (<a class="el" href="structLinearAlgebra_1_1AxisInt.html">Row</a> M, <a class="el" href="structLinearAlgebra_1_1AxisInt.html">RowStride</a> X)</td></tr>
-<tr class="separator:abfbc6a9b1a9594a92a0704fa0533a682"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab8c85b75ddd0e2d475fcf5a942bf386d"><td class="memItemLeft" align="right" valign="top"><a id="ab8c85b75ddd0e2d475fcf5a942bf386d"></a>
+<tr class="separator:a96529d221016cfbe0536094b3ed73524"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6fcc2876923057324462e0dd1962386f"><td class="memItemLeft" align="right" valign="top"><a id="a6fcc2876923057324462e0dd1962386f"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>resizeForOverwrite</b> (<a class="el" href="structLinearAlgebra_1_1AxisInt.html">Row</a> M, <a class="el" href="structLinearAlgebra_1_1AxisInt.html">Col</a> N, <a class="el" href="structLinearAlgebra_1_1AxisInt.html">RowStride</a> X)</td></tr>
-<tr class="separator:ab8c85b75ddd0e2d475fcf5a942bf386d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3e946eb3e15fdcc354c64b04f1c3da3f"><td class="memItemLeft" align="right" valign="top"><a id="a3e946eb3e15fdcc354c64b04f1c3da3f"></a>
+<tr class="separator:a6fcc2876923057324462e0dd1962386f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab2f29127074c44d16e806560cbbf04b1"><td class="memItemLeft" align="right" valign="top"><a id="ab2f29127074c44d16e806560cbbf04b1"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>resizeForOverwrite</b> (<a class="el" href="structLinearAlgebra_1_1AxisInt.html">Row</a> M, <a class="el" href="structLinearAlgebra_1_1AxisInt.html">Col</a> N)</td></tr>
-<tr class="separator:a3e946eb3e15fdcc354c64b04f1c3da3f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a402d4f6fda553a7ab24575542b6684b4"><td class="memItemLeft" align="right" valign="top"><a id="a402d4f6fda553a7ab24575542b6684b4"></a>
+<tr class="separator:ab2f29127074c44d16e806560cbbf04b1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6b7464fdc42206e14238a579694e6d47"><td class="memItemLeft" align="right" valign="top"><a id="a6b7464fdc42206e14238a579694e6d47"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>extendOrAssertSize</b> (<a class="el" href="structLinearAlgebra_1_1AxisInt.html">Row</a> R, <a class="el" href="structLinearAlgebra_1_1AxisInt.html">Col</a> C)</td></tr>
-<tr class="separator:a402d4f6fda553a7ab24575542b6684b4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a69f5e293ee0e1f371271a8457ccf50bd"><td class="memItemLeft" align="right" valign="top"><a id="a69f5e293ee0e1f371271a8457ccf50bd"></a>
-constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>moveLast</b> (<a class="el" href="structLinearAlgebra_1_1AxisInt.html">Col</a> j)</td></tr>
-<tr class="separator:a69f5e293ee0e1f371271a8457ccf50bd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:a6b7464fdc42206e14238a579694e6d47"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_methods_structLinearAlgebra_1_1MutArray"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_structLinearAlgebra_1_1MutArray')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="structLinearAlgebra_1_1MutArray.html">LinearAlgebra::MutArray&lt; T, S &gt;</a></td></tr>
 <tr class="memitem:a2ca3030caa16ec457ff4df82404166d3 inherit pub_methods_structLinearAlgebra_1_1MutArray"><td class="memItemLeft" align="right" valign="top"><a id="a2ca3030caa16ec457ff4df82404166d3"></a>
 constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>MutArray</b> (const <a class="el" href="structLinearAlgebra_1_1MutArray.html">MutArray</a> &amp;)=default</td></tr>
@@ -305,6 +273,18 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator*=<
 <tr class="memitem:a37f93f948b7a15a4945aa6abd3c66e7e inherit pub_methods_structLinearAlgebra_1_1MutArray"><td class="memItemLeft" align="right" valign="top"><a id="a37f93f948b7a15a4945aa6abd3c66e7e"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator/=</b> (const std::integral auto b) -&gt; decltype(auto)</td></tr>
 <tr class="separator:a37f93f948b7a15a4945aa6abd3c66e7e inherit pub_methods_structLinearAlgebra_1_1MutArray"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a575408cde94bf3ca686dc82cec4b535c inherit pub_methods_structLinearAlgebra_1_1MutArray"><td class="memItemLeft" align="right" valign="top"><a id="a575408cde94bf3ca686dc82cec4b535c"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>erase</b> (S i)</td></tr>
+<tr class="separator:a575408cde94bf3ca686dc82cec4b535c inherit pub_methods_structLinearAlgebra_1_1MutArray"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0f90d4dad1f7c23eca36980febd1683f inherit pub_methods_structLinearAlgebra_1_1MutArray"><td class="memItemLeft" align="right" valign="top"><a id="a0f90d4dad1f7c23eca36980febd1683f"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>erase</b> (<a class="el" href="structLinearAlgebra_1_1AxisInt.html">Row</a> r)</td></tr>
+<tr class="separator:a0f90d4dad1f7c23eca36980febd1683f inherit pub_methods_structLinearAlgebra_1_1MutArray"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afaa511a8ece39ed9b14fbb860609649f inherit pub_methods_structLinearAlgebra_1_1MutArray"><td class="memItemLeft" align="right" valign="top"><a id="afaa511a8ece39ed9b14fbb860609649f"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>erase</b> (<a class="el" href="structLinearAlgebra_1_1AxisInt.html">Col</a> c)</td></tr>
+<tr class="separator:afaa511a8ece39ed9b14fbb860609649f inherit pub_methods_structLinearAlgebra_1_1MutArray"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a17102c25f274d9e7ec3335dd8364fd9b inherit pub_methods_structLinearAlgebra_1_1MutArray"><td class="memItemLeft" align="right" valign="top"><a id="a17102c25f274d9e7ec3335dd8364fd9b"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>moveLast</b> (<a class="el" href="structLinearAlgebra_1_1AxisInt.html">Col</a> j)</td></tr>
+<tr class="separator:a17102c25f274d9e7ec3335dd8364fd9b inherit pub_methods_structLinearAlgebra_1_1MutArray"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa7ad57d2ca296bc015edd8ff402a5ac7 inherit pub_methods_structLinearAlgebra_1_1MutArray"><td class="memItemLeft" align="right" valign="top"><a id="aa7ad57d2ca296bc015edd8ff402a5ac7"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>data</b> () const noexcept -&gt; const T *</td></tr>
 <tr class="separator:aa7ad57d2ca296bc015edd8ff402a5ac7 inherit pub_methods_structLinearAlgebra_1_1MutArray"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -417,32 +397,11 @@ constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>extendOrAss
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>deleteCol</b> (size_t c) const -&gt; <a class="el" href="structLinearAlgebra_1_1ManagedArray.html">ManagedArray</a>&lt; T, S &gt;</td></tr>
 <tr class="separator:a87ad0d108ad07308b4f5c83da2e46682 inherit pub_methods_structLinearAlgebra_1_1Array"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-methods"></a>
-Protected Member Functions</h2></td></tr>
-<tr class="memitem:a3eb78ef75293344133fdb8c12925ee29"><td class="memItemLeft" align="right" valign="top"><a id="a3eb78ef75293344133fdb8c12925ee29"></a>
-constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>allocateAtLeast</b> (U len)</td></tr>
-<tr class="separator:a3eb78ef75293344133fdb8c12925ee29"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8f152d8b6e31a6911da6567be42d41ba"><td class="memItemLeft" align="right" valign="top"><a id="a8f152d8b6e31a6911da6567be42d41ba"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>isSmall</b> () const -&gt; bool</td></tr>
-<tr class="separator:a8f152d8b6e31a6911da6567be42d41ba"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a39813e708f9895b71d3bf7927a8a350a"><td class="memItemLeft" align="right" valign="top"><a id="a39813e708f9895b71d3bf7927a8a350a"></a>
-constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>maybeDeallocate</b> ()</td></tr>
-<tr class="separator:a39813e708f9895b71d3bf7927a8a350a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aca94ca37dabe6bfb8934dce3a4a06863"><td class="memItemLeft" align="right" valign="top"><a id="aca94ca37dabe6bfb8934dce3a4a06863"></a>
-constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>maybeDeallocate</b> (<a class="el" href="structNotNull.html">NotNull</a>&lt; T &gt; newPtr, U newCapacity)</td></tr>
-<tr class="separator:aca94ca37dabe6bfb8934dce3a4a06863"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae2b235ae6e511f1696f872c004cce123"><td class="memItemLeft" align="right" valign="top"><a id="ae2b235ae6e511f1696f872c004cce123"></a>
-constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>growUndef</b> (U M)</td></tr>
-<tr class="separator:ae2b235ae6e511f1696f872c004cce123"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-attribs"></a>
 Protected Attributes</h2></td></tr>
-<tr class="memitem:a3c300cb809a518877ffb5481d37f3fd7"><td class="memItemLeft" align="right" valign="top"><a id="a3c300cb809a518877ffb5481d37f3fd7"></a>
+<tr class="memitem:a7b8ae1e635d4bb3c3cc378edf69fef08"><td class="memItemLeft" align="right" valign="top"><a id="a7b8ae1e635d4bb3c3cc378edf69fef08"></a>
 U&#160;</td><td class="memItemRight" valign="bottom"><b>capacity</b> {0}</td></tr>
-<tr class="separator:a3c300cb809a518877ffb5481d37f3fd7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac49f3461dc2780097da89c6a4f563579"><td class="memItemLeft" align="right" valign="top"><a id="ac49f3461dc2780097da89c6a4f563579"></a>
-A&#160;</td><td class="memItemRight" valign="bottom"><b>allocator</b> {}</td></tr>
-<tr class="separator:ac49f3461dc2780097da89c6a4f563579"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:a7b8ae1e635d4bb3c3cc378edf69fef08"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pro_attribs_structLinearAlgebra_1_1Array"><td colspan="2" onclick="javascript:toggleInherit('pro_attribs_structLinearAlgebra_1_1Array')"><img src="closed.png" alt="-"/>&#160;Protected Attributes inherited from <a class="el" href="structLinearAlgebra_1_1Array.html">LinearAlgebra::Array&lt; T, S &gt;</a></td></tr>
 <tr class="memitem:a0fe513ca0b1b207880827dd136ddd990 inherit pro_attribs_structLinearAlgebra_1_1Array"><td class="memItemLeft" align="right" valign="top"><a id="a0fe513ca0b1b207880827dd136ddd990"></a>
 <a class="el" href="structNotNull.html">NotNull</a>&lt; T &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>ptr</b></td></tr>
@@ -452,10 +411,10 @@ S&#160;</td><td class="memItemRight" valign="bottom"><b>sz</b> {}</td></tr>
 <tr class="separator:ad1ae937c1da85e0c28402e6ac6b0f5f6 inherit pro_attribs_structLinearAlgebra_1_1Array"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><h3>template&lt;class T, class S, class A = std::allocator&lt;T&gt;, std::unsigned_integral U = default_capacity_type_t&lt;S&gt;&gt;<br />
-struct LinearAlgebra::ManagedArrayView&lt; T, S, A, U &gt;</h3>
+<div class="textblock"><h3>template&lt;class T, class S, std::unsigned_integral U = default_capacity_type_t&lt;S&gt;&gt;<br />
+struct LinearAlgebra::ResizeableView&lt; T, S, U &gt;</h3>
 
-<p>Non-owning view of a managed array, capable of reallocating, etc. It does not own memory. Mostly, it serves to drop the inlined stack capacity of the <code><a class="el" href="structLinearAlgebra_1_1ManagedArray.html">ManagedArray</a></code> from the type. </p>
+<p>Non-owning view of a managed array, capable of resizing, but not of re-allocating in case the capacity is exceeded. </p>
 </div><hr/>The documentation for this struct was generated from the following file:<ul>
 <li>include/Math/<a class="el" href="Array_8hpp_source.html">Array.hpp</a></li>
 </ul>

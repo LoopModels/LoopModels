@@ -83,6 +83,9 @@ Classes</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
+<tr class="memitem:a6114d73748bad9988a494660f178f08d"><td class="memItemLeft" align="right" valign="top"><a id="a6114d73748bad9988a494660f178f08d"></a>
+constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Simplex</b> (size_t numCon, size_t numVar, size_t numSlack, size_t extraStride=0)</td></tr>
+<tr class="separator:a6114d73748bad9988a494660f178f08d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a378ae4f3e1d4958f20e56d6d2789c7fb"><td class="memItemLeft" align="right" valign="top"><a id="a378ae4f3e1d4958f20e56d6d2789c7fb"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>resize</b> (size_t numCon, size_t numVar)</td></tr>
 <tr class="separator:a378ae4f3e1d4958f20e56d6d2789c7fb"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -128,12 +131,12 @@ constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>resizeForOv
 <tr class="memitem:ab58f362de5fec3ff8d55bfc625e586e8"><td class="memItemLeft" align="right" valign="top"><a id="ab58f362de5fec3ff8d55bfc625e586e8"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>resizeForOverwrite</b> (size_t numCon, size_t numVar, size_t stride)</td></tr>
 <tr class="separator:ab58f362de5fec3ff8d55bfc625e586e8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a764a9ea11a6a058957a427519663094b"><td class="memItemLeft" align="right" valign="top"><a id="a764a9ea11a6a058957a427519663094b"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getCostsAndConstraints</b> () -&gt; MutPtrMatrix&lt; int64_t, <a class="el" href="structLinearAlgebra_1_1StridedDims.html">StridedDims</a> &gt;</td></tr>
-<tr class="separator:a764a9ea11a6a058957a427519663094b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a78b5da74f0e1a17289a2cb3334ede5cf"><td class="memItemLeft" align="right" valign="top"><a id="a78b5da74f0e1a17289a2cb3334ede5cf"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getCostsAndConstraints</b> () const -&gt; PtrMatrix&lt; int64_t, <a class="el" href="structLinearAlgebra_1_1StridedDims.html">StridedDims</a> &gt;</td></tr>
-<tr class="separator:a78b5da74f0e1a17289a2cb3334ede5cf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aefaac1f944b55b777486bdf1f2acd7eb"><td class="memItemLeft" align="right" valign="top"><a id="aefaac1f944b55b777486bdf1f2acd7eb"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getCostsAndConstraints</b> () -&gt; MutPtrMatrix&lt; int64_t &gt;</td></tr>
+<tr class="separator:aefaac1f944b55b777486bdf1f2acd7eb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a921018b2c00a158968bb762ab5e4d60a"><td class="memItemLeft" align="right" valign="top"><a id="a921018b2c00a158968bb762ab5e4d60a"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getCostsAndConstraints</b> () const -&gt; PtrMatrix&lt; int64_t &gt;</td></tr>
+<tr class="separator:a921018b2c00a158968bb762ab5e4d60a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aaad0428a53be3c824183708abaacc265"><td class="memItemLeft" align="right" valign="top"><a id="aaad0428a53be3c824183708abaacc265"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getConstraints</b> () -&gt; MutPtrMatrix&lt; int64_t &gt;</td></tr>
 <tr class="separator:aaad0428a53be3c824183708abaacc265"><td class="memSeparator" colspan="2">&#160;</td></tr>

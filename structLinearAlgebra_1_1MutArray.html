@@ -79,11 +79,14 @@ Inheritance diagram for LinearAlgebra::MutArray&lt; T, S &gt;:</div>
  <div class="center">
   <img src="structLinearAlgebra_1_1MutArray.png" usemap="#LinearAlgebra::MutArray_3C_20T_2C_20S_20_3E_map" alt=""/>
   <map id="LinearAlgebra::MutArray_3C_20T_2C_20S_20_3E_map" name="LinearAlgebra::MutArray_3C_20T_2C_20S_20_3E_map">
-<area href="structLinearAlgebra_1_1Array.html" title="Constant Array." alt="LinearAlgebra::Array&lt; T, S &gt;" shape="rect" coords="217,0,642,24"/>
-<area href="structLinearAlgebra_1_1ManagedArrayView.html" alt="LinearAlgebra::ManagedArrayView&lt; T, S, A, U &gt;" shape="rect" coords="0,112,425,136"/>
-<area href="structLinearAlgebra_1_1ManagedArrayView.html" alt="LinearAlgebra::ManagedArrayView&lt; T, S, A, U &gt;" shape="rect" coords="435,112,860,136"/>
-<area href="structLinearAlgebra_1_1ManagedArray.html" alt="LinearAlgebra::ManagedArray&lt; T, S, N, A, U &gt;" shape="rect" coords="0,168,425,192"/>
-<area href="structLinearAlgebra_1_1ManagedArray.html" alt="LinearAlgebra::ManagedArray&lt; int64_t, LinearAlgebra::StridedDims, 0 &gt;" shape="rect" coords="435,168,860,192"/>
+<area href="structLinearAlgebra_1_1Array.html" title="Constant Array." alt="LinearAlgebra::Array&lt; T, S &gt;" shape="rect" coords="326,0,751,24"/>
+<area href="structLinearAlgebra_1_1ResizeableView.html" alt="LinearAlgebra::ResizeableView&lt; T, S, default_capacity_type_t&lt; S &gt; &gt;" shape="rect" coords="0,112,425,136"/>
+<area href="structLinearAlgebra_1_1ResizeableView.html" alt="LinearAlgebra::ResizeableView&lt; T, S, U &gt;" shape="rect" coords="652,112,1077,136"/>
+<area href="structLinearAlgebra_1_1ReallocView.html" alt="LinearAlgebra::ReallocView&lt; T, S, A, U &gt;" shape="rect" coords="0,168,425,192"/>
+<area href="structLinearAlgebra_1_1ReallocView.html" alt="LinearAlgebra::ReallocView&lt; T, S, A, U &gt;" shape="rect" coords="652,168,1077,192"/>
+<area href="structLinearAlgebra_1_1ManagedArray.html" alt="LinearAlgebra::ManagedArray&lt; int64_t, LinearAlgebra::StridedDims, 0 &gt;" shape="rect" coords="0,224,425,248"/>
+<area href="structLinearAlgebra_1_1ManagedArray.html" alt="LinearAlgebra::ManagedArray&lt; T, S, N, A, U &gt;" shape="rect" coords="435,224,860,248"/>
+<area href="structLinearAlgebra_1_1ManagedArray_3_01T_00_01S_00_010_00_01A_00_01U_01_4.html" alt="LinearAlgebra::ManagedArray&lt; T, S, 0, A, U &gt;" shape="rect" coords="870,224,1295,248"/>
   </map>
 </div></div>
 <table class="memberdecls">
@@ -216,6 +219,18 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator*=<
 <tr class="memitem:a37f93f948b7a15a4945aa6abd3c66e7e"><td class="memItemLeft" align="right" valign="top"><a id="a37f93f948b7a15a4945aa6abd3c66e7e"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator/=</b> (const std::integral auto b) -&gt; decltype(auto)</td></tr>
 <tr class="separator:a37f93f948b7a15a4945aa6abd3c66e7e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a575408cde94bf3ca686dc82cec4b535c"><td class="memItemLeft" align="right" valign="top"><a id="a575408cde94bf3ca686dc82cec4b535c"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>erase</b> (S i)</td></tr>
+<tr class="separator:a575408cde94bf3ca686dc82cec4b535c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0f90d4dad1f7c23eca36980febd1683f"><td class="memItemLeft" align="right" valign="top"><a id="a0f90d4dad1f7c23eca36980febd1683f"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>erase</b> (<a class="el" href="structLinearAlgebra_1_1AxisInt.html">Row</a> r)</td></tr>
+<tr class="separator:a0f90d4dad1f7c23eca36980febd1683f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afaa511a8ece39ed9b14fbb860609649f"><td class="memItemLeft" align="right" valign="top"><a id="afaa511a8ece39ed9b14fbb860609649f"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>erase</b> (<a class="el" href="structLinearAlgebra_1_1AxisInt.html">Col</a> c)</td></tr>
+<tr class="separator:afaa511a8ece39ed9b14fbb860609649f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a17102c25f274d9e7ec3335dd8364fd9b"><td class="memItemLeft" align="right" valign="top"><a id="a17102c25f274d9e7ec3335dd8364fd9b"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>moveLast</b> (<a class="el" href="structLinearAlgebra_1_1AxisInt.html">Col</a> j)</td></tr>
+<tr class="separator:a17102c25f274d9e7ec3335dd8364fd9b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa7ad57d2ca296bc015edd8ff402a5ac7"><td class="memItemLeft" align="right" valign="top"><a id="aa7ad57d2ca296bc015edd8ff402a5ac7"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>data</b> () const noexcept -&gt; const T *</td></tr>
 <tr class="separator:aa7ad57d2ca296bc015edd8ff402a5ac7"><td class="memSeparator" colspan="2">&#160;</td></tr>
