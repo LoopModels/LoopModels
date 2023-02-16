@@ -630,7 +630,7 @@ struct ResizeableView : MutArray<T, S> {
   }
   constexpr void resizeForOverwrite(S M) {
     U L = U(M);
-    if (L > U(this->sz)) growUndef(L);
+    invariant(L <= U(this->sz));
     this->sz = M;
   }
   constexpr void resizeForOverwrite(Row r) {
@@ -963,7 +963,7 @@ struct ManagedArray : ReallocView<T, S, A, U> {
   constexpr ManagedArray(const ManagedArray<T, D, N, A, I> &b) noexcept
     : BaseT{memory, S(b.dim()), U(N), b.get_allocator()} {
     U len = U(this->sz);
-    growUndef(len);
+    this->growUndef(len);
     std::uninitialized_copy_n(b.data(), len, (T *)(this->ptr));
   }
   // template <class Y, class D, class AY, std::unsigned_integral I,
@@ -973,7 +973,7 @@ struct ManagedArray : ReallocView<T, S, A, U> {
   constexpr ManagedArray(const ManagedArray<Y, D, N, AY, I> &b) noexcept
     : BaseT{memory, S(b.dim()), U(N), b.get_allocator()} {
     U len = U(this->sz);
-    growUndef(len);
+    this->growUndef(len);
     for (size_t i = 0; i < len; ++i) new ((T *)(this->ptr) + i) T(b[i]);
   }
   constexpr ManagedArray(const ManagedArray &b) noexcept
@@ -1020,7 +1020,7 @@ struct ManagedArray : ReallocView<T, S, A, U> {
   constexpr ManagedArray(const SmallSparseMatrix<Y> &B)
     : ReallocView<T, S, A, U>{memory, B.dim(), N} {
     U len = U(this->sz);
-    growUndef(len);
+    this->growUndef(len);
     this->fill(0);
     size_t k = 0;
     for (size_t i = 0; i < this->numRow(); ++i) {
@@ -1042,7 +1042,7 @@ struct ManagedArray : ReallocView<T, S, A, U> {
     if (this == &b) return *this;
     this->sz = b.dim();
     U len = U(this->sz);
-    growUndef(len);
+    this->growUndef(len);
     std::uninitialized_copy_n(b.data(), len, (T *)(this->ptr));
     return *this;
   }
@@ -1068,7 +1068,7 @@ struct ManagedArray : ReallocView<T, S, A, U> {
     if (this == &b) return *this;
     this->sz = b.dim();
     U len = U(this->sz);
-    growUndef(len);
+    this->growUndef(len);
     std::uninitialized_copy_n(b.data(), len, (T *)(this->ptr));
     return *this;
   }
@@ -1176,7 +1176,7 @@ struct ManagedArray<T, S, 0, A, U> : ReallocView<T, S, A, U> {
   constexpr ManagedArray(const SmallSparseMatrix<Y> &B)
     : ReallocView<T, S, A, U>{A{}.allocate(U(B.dim())), B.dim(), U(B.dim())} {
     U len = U(this->sz);
-    growUndef(len);
+    this->growUndef(len);
     this->fill(0);
     size_t k = 0;
     for (size_t i = 0; i < this->numRow(); ++i) {
@@ -1198,7 +1198,7 @@ struct ManagedArray<T, S, 0, A, U> : ReallocView<T, S, A, U> {
     if (this == &b) return *this;
     this->sz = b.dim();
     U len = U(this->sz);
-    growUndef(len);
+    this->growUndef(len);
     std::uninitialized_copy_n(b.data(), len, (T *)(this->ptr));
     return *this;
   }
@@ -1224,7 +1224,7 @@ struct ManagedArray<T, S, 0, A, U> : ReallocView<T, S, A, U> {
     if (this == &b) return *this;
     this->sz = b.dim();
     U len = U(this->sz);
-    growUndef(len);
+    this->growUndef(len);
     std::uninitialized_copy_n(b.data(), len, (T *)(this->ptr));
     return *this;
   }

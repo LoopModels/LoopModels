@@ -50,7 +50,6 @@ struct Simplex {
       numSlackVar(numSlack) {
     assert(numCon > 0);
     assert(numVar > 0);
-    assert(numSlack > 0);
   }
   // NOTE: all methods resizing the tableau may invalidate references to it
   constexpr void resize(size_t numCon, size_t numVar) {
@@ -146,6 +145,9 @@ struct Simplex {
   [[nodiscard]] constexpr auto getNumConstraints() const -> size_t {
     return size_t(tableau.numRow()) - numExtraRows;
   }
+  [[nodiscard]] constexpr auto getNumSlack() const -> size_t {
+    return numSlackVar;
+  }
 
   constexpr void hermiteNormalForm() {
 #ifndef NDEBUG
@@ -219,7 +221,7 @@ struct Simplex {
   }
   // AbstractVector
   struct Solution {
-    using eltype = Rational;
+    using value_type = Rational;
     static constexpr bool canResize = false;
     // view of tableau dropping const column
     PtrMatrix<int64_t> tableauView;
@@ -628,7 +630,7 @@ struct Simplex {
   }
 
   void pruneBounds() {
-    Simplex simplex;
+    Simplex simplex{getNumConstraints(), getNumVar(), getNumSlack(), 0};
     for (size_t c = 0; c < getNumConstraints(); ++c) {
       simplex = *this;
       MutPtrMatrix<int64_t> constraints = simplex.getConstraints();
@@ -684,11 +686,10 @@ struct Simplex {
     // approach will be to move `x.size()` variables into the
     // equality constraints, and then check if the remaining sub-problem
     // is satisfiable.
-    Simplex subSimp;
     const size_t numCon = getNumConstraints();
     const size_t numVar = getNumVar();
     const size_t numFix = x.size();
-    subSimp.resizeForOverwrite(numCon, numVar - numFix);
+    Simplex subSimp{numCon, numVar - numFix, 0};
     subSimp.tableau(0, 0) = 0;
     subSimp.tableau(0, 1) = 0;
     auto fC{getCostsAndConstraints()};
@@ -717,10 +718,9 @@ struct Simplex {
     // approach will be to move `x.size()` variables into the
     // equality constraints, and then check if the remaining sub-problem
     // is satisfiable.
-    Simplex subSimp;
     assert(numRow <= getNumConstraints());
     const size_t numFix = x.size();
-    subSimp.resizeForOverwrite(numRow, 1 + off);
+    Simplex subSimp{numRow, 1 + off, 0};
     subSimp.tableau(0, 0) = 0;
     subSimp.tableau(0, 1) = 0;
     // auto fC{getCostsAndConstraints()};
