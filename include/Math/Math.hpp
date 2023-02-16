@@ -184,8 +184,8 @@ struct ElementwiseMatrixBinaryOp {
       return b.numCol();
     }
   }
-  [[nodiscard]] constexpr auto size() const -> std::pair<Row, Col> {
-    return std::make_pair(numRow(), numCol());
+  [[nodiscard]] constexpr auto size() const -> CartesianIndex<Row, Col> {
+    return {numRow(), numCol()};
   }
   [[nodiscard]] constexpr auto dim() const -> DenseDims {
     return {numRow(), numCol()};
@@ -205,9 +205,9 @@ template <AbstractMatrix A, AbstractMatrix B> struct MatMatMul {
   }
   [[nodiscard]] constexpr auto numRow() const -> Row { return a.numRow(); }
   [[nodiscard]] constexpr auto numCol() const -> Col { return b.numCol(); }
-  [[nodiscard]] constexpr auto size() const -> std::pair<Row, Col> {
+  [[nodiscard]] constexpr auto size() const -> CartesianIndex<Row, Col> {
     invariant(size_t(a.numCol()) == size_t(b.numRow()));
-    return std::make_pair(numRow(), numCol());
+    return {numRow(), numCol()};
   }
   [[nodiscard]] constexpr auto dim() const -> DenseDims {
     invariant(size_t(a.numCol()) == size_t(b.numRow()));

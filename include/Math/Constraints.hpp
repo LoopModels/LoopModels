@@ -232,6 +232,19 @@ constexpr void slackEqualityConstraints(MutPtrMatrix<int64_t> C,
     C(s + numSlack, _(numSlack, slackAndVar)) << B(s, _(begin, numVar));
   }
 }
+constexpr void slackEqualityConstraints(MutPtrMatrix<int64_t> C,
+                                        PtrMatrix<int64_t> A) {
+  const Col numVar = A.numCol();
+  const Row numSlack = A.numRow();
+  size_t slackAndVar = size_t(numSlack) + size_t(numVar);
+  assert(size_t(C.numCol()) == slackAndVar);
+  // [I A]
+  for (size_t s = 0; s < numSlack; ++s) {
+    C(s, _(begin, numSlack)) << 0;
+    C(s, s) = 1;
+    C(s, _(numSlack, slackAndVar)) << A(s, _(begin, numVar));
+  }
+}
 // counts how many negative and positive elements there are in row `i`.
 // A row corresponds to a particular variable in `A'x <= b`.
 constexpr auto countNonZeroSign(PtrMatrix<int64_t> A, size_t i)

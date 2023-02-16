@@ -628,6 +628,28 @@ struct Simplex {
     if (simplex.initiateFeasible()) return {};
     return simplex;
   }
+  static auto positiveVariables(PtrMatrix<int64_t> A)
+    -> std::optional<Simplex> {
+    size_t numVar = size_t(A.numCol());
+    size_t numSlack = size_t(A.numRow());
+    size_t numCon = numSlack;
+    size_t extraStride = 0;
+    // see how many slack vars are infeasible as solution
+    for (unsigned i = 0; i < numSlack; ++i) extraStride += A(i, 0) < 0;
+    // try to avoid reallocating
+    Simplex simplex{numCon, numVar, numSlack, extraStride};
+    // construct:
+    // [ I A
+    //   0 B ]
+    // then drop the extra variables
+    slackEqualityConstraints(
+      simplex.getConstraints()(_(0, numCon), _(1, numVar + numSlack)),
+      A(_(0, numSlack), _(1, numVar)));
+    auto consts{simplex.getConstants()};
+    for (size_t i = 0; i < numSlack; ++i) consts[i] = A(i, 0);
+    if (simplex.initiateFeasible()) return {};
+    return simplex;
+  }
 
   void pruneBounds() {
     Simplex simplex{getNumConstraints(), getNumVar(), getNumSlack(), 0};

@@ -6,6 +6,16 @@
 #include <cstdint>
 
 namespace LinearAlgebra {
+template <class R, class C> struct CartesianIndex {
+  R row;
+  C col;
+  explicit constexpr operator Row() const { return row; }
+  explicit constexpr operator Col() const { return col; }
+  constexpr auto operator==(const CartesianIndex &other) const {
+    return row == other.row && col == other.col;
+  }
+};
+template <class R, class C> CartesianIndex(R r, C c) -> CartesianIndex<R, C>;
 
 #ifndef NDEBUG
 template <std::integral I>
@@ -42,6 +52,9 @@ struct StridedDims {
   constexpr explicit operator Row() const { return M; }
   constexpr explicit operator Col() const { return N; }
   constexpr explicit operator RowStride() const { return strideM; }
+  constexpr auto operator==(const StridedDims &D) const -> bool {
+    return M == D.M && N == D.N && strideM == D.strideM;
+  }
   [[nodiscard]] constexpr auto truncate(Row r) const -> StridedDims {
     assert((r <= Row{M}) && "truncate cannot add rows.");
     return {unsigned(r), N, strideM};
@@ -78,6 +91,7 @@ struct DenseDims {
   constexpr DenseDims() = default;
   constexpr DenseDims(Row m, Col n) : M(m), N(n) {}
   constexpr explicit DenseDims(StridedDims d) : M(d.M), N(d.N) {}
+  constexpr DenseDims(CartesianIndex<Row, Col> ind) : M(ind.row), N(ind.col) {}
   constexpr operator StridedDims() const { return {M, N, N}; }
   constexpr operator CarInd() const { return {M, N}; }
   constexpr auto operator=(const SquareDims &D) -> DenseDims &;
@@ -165,14 +179,6 @@ concept MatrixDimension = requires(D d) {
 static_assert(MatrixDimension<SquareDims>);
 static_assert(MatrixDimension<DenseDims>);
 static_assert(MatrixDimension<StridedDims>);
-
-template <class R, class C> struct CartesianIndex {
-  R row;
-  C col;
-  explicit constexpr operator Row() const { return row; }
-  explicit constexpr operator Col() const { return col; }
-};
-template <class R, class C> CartesianIndex(R r, C c) -> CartesianIndex<R, C>;
 
 } // namespace LinearAlgebra
 

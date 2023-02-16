@@ -131,7 +131,7 @@ template <class T, class S> struct Array {
   [[nodiscard]] constexpr auto size() const noexcept {
     if constexpr (std::integral<S>) return sz;
     else if constexpr (std::is_same_v<S, StridedRange>) return size_t(sz);
-    else return std::make_pair(Row{sz}, Col{sz});
+    else return CartesianIndex{Row{sz}, Col{sz}};
   }
   [[nodiscard]] constexpr auto dim() const noexcept -> S { return sz; }
   constexpr void clear() { sz = S{}; }
@@ -171,6 +171,19 @@ template <class T, class S> struct Array {
       A(m, _(c, LinearAlgebra::end)) = (*this)(m, _(c + 1, LinearAlgebra::end));
     }
     return A;
+  }
+  constexpr auto operator==(const Array &other) const noexcept -> bool {
+    if (size() != other.size()) return false;
+    if constexpr (std::is_same_v<S, StridedDims>) {
+      // may not be dense, iterate over rows
+      for (Row i = 0; i < numRow(); ++i)
+        if ((*this)(i, _) != other(i, _)) return false;
+      return true;
+    }
+    return std::equal(begin(), end(), other.begin());
+  }
+  constexpr auto operator!=(const Array &other) const noexcept -> bool {
+    return !(*this == other);
   }
 
 protected:
@@ -937,6 +950,11 @@ protected:
   }
 };
 
+template <class T, class S>
+concept AbstractSimilar =
+  (MatrixDimension<S> && AbstractMatrix<T>) ||
+  ((std::integral<S> || std::is_same_v<S, StridedRange>) && AbstractVector<T>);
+
 /// Stores memory, then pointer.
 /// Thus struct's alignment determines initial alignment
 /// of the stack memory.
@@ -981,6 +999,19 @@ struct ManagedArray : ReallocView<T, S, A, U> {
     U len = U(this->sz);
     this->growUndef(len);
     std::uninitialized_copy_n(b.data(), len, (T *)(this->ptr));
+  }
+  constexpr ManagedArray(const Array<T, S> &b) noexcept
+    : BaseT{memory, S(b.dim()), U(N)} {
+    U len = U(this->sz);
+    this->growUndef(len);
+    std::uninitialized_copy_n(b.data(), len, (T *)(this->ptr));
+  }
+  template <AbstractSimilar<S> V>
+  constexpr ManagedArray(const V &b) noexcept
+    : BaseT{memory, S(b.size()), U(N)} {
+    U len = U(this->sz);
+    this->growUndef(len);
+    (*this) << b;
   }
 #pragma GCC diagnostic pop
   template <class D, std::unsigned_integral I>

@@ -1,8 +1,10 @@
 #pragma once
 
+#include "Math/Array.hpp"
 #include "Math/Constraints.hpp"
 #include "Math/EmptyArrays.hpp"
 #include "Math/Math.hpp"
+#include "Math/MatrixDimensions.hpp"
 #include "Math/NormalForm.hpp"
 #include "Math/Simplex.hpp"
 #include "Math/VectorGreatestCommonDivisor.hpp"
@@ -11,6 +13,7 @@
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
+#include <llvm/ADT/ArrayRef.h>
 #include <llvm/ADT/SmallVector.h>
 #include <llvm/Support/AllocatorBase.h>
 #include <memory>
@@ -56,40 +59,46 @@ struct EmptyComparator {
 // for non-symbolic constraints
 struct LiteralComparator {
   static constexpr auto getNumConstTerms() -> size_t { return 1; }
-  static inline auto greaterEqual(PtrVector<int64_t> x, PtrVector<int64_t> y)
+  static constexpr auto greaterEqual(PtrVector<int64_t> x, PtrVector<int64_t> y)
     -> bool {
     return x[0] >= y[0];
   }
-  static inline auto greater(PtrVector<int64_t> x, PtrVector<int64_t> y)
+  static constexpr auto greater(PtrVector<int64_t> x, PtrVector<int64_t> y)
     -> bool {
     return x[0] > y[0];
   }
-  static inline auto lessEqual(PtrVector<int64_t> x, PtrVector<int64_t> y)
+  static constexpr auto lessEqual(PtrVector<int64_t> x, PtrVector<int64_t> y)
     -> bool {
     return x[0] <= y[0];
   }
-  static inline auto less(PtrVector<int64_t> x, PtrVector<int64_t> y) -> bool {
+  static constexpr auto less(PtrVector<int64_t> x, PtrVector<int64_t> y)
+    -> bool {
     return x[0] < y[0];
   }
-  static inline auto equal(PtrVector<int64_t> x, PtrVector<int64_t> y) -> bool {
+  static constexpr auto equal(PtrVector<int64_t> x, PtrVector<int64_t> y)
+    -> bool {
     return x[0] == y[0];
   }
-  static inline auto greaterEqual(PtrVector<int64_t> x) -> bool {
+  static constexpr auto greaterEqual(PtrVector<int64_t> x) -> bool {
     return x[0] >= 0;
   }
-  static inline auto greater(PtrVector<int64_t> x) -> bool { return x[0] > 0; }
-  static inline auto lessEqual(PtrVector<int64_t> x) -> bool {
+  static constexpr auto greater(PtrVector<int64_t> x) -> bool {
+    return x[0] > 0;
+  }
+  static constexpr auto lessEqual(PtrVector<int64_t> x) -> bool {
     return x[0] <= 0;
   }
-  static inline auto less(PtrVector<int64_t> x) -> bool { return x[0] < 0; }
-  static inline auto equal(PtrVector<int64_t> x) -> bool { return x[0] == 0; }
-  static inline auto equalNegative(PtrVector<int64_t> x, PtrVector<int64_t> y)
-    -> bool {
+  static constexpr auto less(PtrVector<int64_t> x) -> bool { return x[0] < 0; }
+  static constexpr auto equal(PtrVector<int64_t> x) -> bool {
+    return x[0] == 0;
+  }
+  static constexpr auto equalNegative(PtrVector<int64_t> x,
+                                      PtrVector<int64_t> y) -> bool {
     // this version should return correct results for
     // `std::numeric_limits<int64_t>::min()`
     return (x[0] + y[0]) == 0;
   }
-  static inline auto lessEqual(PtrVector<int64_t> y, int64_t x) -> bool {
+  static constexpr auto lessEqual(PtrVector<int64_t> y, int64_t x) -> bool {
     return y[0] <= x;
   }
 };
@@ -103,12 +112,13 @@ struct LiteralComparator {
 /// Note: only allowed to return `true` if known
 /// therefore, `a > b -> false` does not imply `a <= b`
 template <typename T> struct BaseComparator {
-  [[nodiscard]] inline auto getNumConstTerms() const -> size_t {
+  [[nodiscard]] constexpr auto getNumConstTerms() const -> size_t {
     return static_cast<const T *>(this)->getNumConstTermsImpl();
   }
-  [[nodiscard]] inline auto greaterEqual(MutPtrVector<int64_t> delta,
-                                         PtrVector<int64_t> x,
-                                         PtrVector<int64_t> y) const -> bool {
+  [[nodiscard]] constexpr auto greaterEqual(MutPtrVector<int64_t> delta,
+                                            PtrVector<int64_t> x,
+                                            PtrVector<int64_t> y) const
+    -> bool {
     const size_t N = getNumConstTerms();
     assert(delta.size() >= N);
     assert(x.size() >= N);
@@ -116,43 +126,43 @@ template <typename T> struct BaseComparator {
     for (size_t n = 0; n < N; ++n) delta[n] = x[n] - y[n];
     return static_cast<const T *>(this)->greaterEqual(delta);
   }
-  [[nodiscard]] inline auto greaterEqual(PtrVector<int64_t> x,
-                                         PtrVector<int64_t> y) const -> bool {
-    llvm::SmallVector<int64_t> delta(getNumConstTerms());
+  [[nodiscard]] constexpr auto greaterEqual(PtrVector<int64_t> x,
+                                            PtrVector<int64_t> y) const
+    -> bool {
+    Vector<int64_t> delta(getNumConstTerms());
     return greaterEqual(delta, x, y);
   }
-  [[nodiscard]] inline auto less(PtrVector<int64_t> x,
-                                 PtrVector<int64_t> y) const -> bool {
+  [[nodiscard]] constexpr auto less(PtrVector<int64_t> x,
+                                    PtrVector<int64_t> y) const -> bool {
     return greater(y, x);
   }
-  [[nodiscard]] inline auto greater(PtrVector<int64_t> x,
-                                    PtrVector<int64_t> y) const -> bool {
+  [[nodiscard]] constexpr auto greater(PtrVector<int64_t> x,
+                                       PtrVector<int64_t> y) const -> bool {
     const size_t N = getNumConstTerms();
     assert(N <= x.size());
     assert(N <= y.size());
-    llvm::SmallVector<int64_t> delta(N);
+    Vector<int64_t> delta(N);
     for (size_t n = 0; n < N; ++n) delta[n] = x[n] - y[n];
     --delta[0];
     return static_cast<const T *>(this)->greaterEqual(delta);
   }
-  [[nodiscard]] inline auto lessEqual(PtrVector<int64_t> x,
-                                      PtrVector<int64_t> y) const -> bool {
+  [[nodiscard]] constexpr auto lessEqual(PtrVector<int64_t> x,
+                                         PtrVector<int64_t> y) const -> bool {
     return static_cast<const T *>(this)->greaterEqual(y, x);
   }
-  [[nodiscard]] inline auto equal(PtrVector<int64_t> x,
-                                  PtrVector<int64_t> y) const -> bool {
+  [[nodiscard]] constexpr auto equal(PtrVector<int64_t> x,
+                                     PtrVector<int64_t> y) const -> bool {
     // check cheap trivial first
     if (x == y) return true;
-    llvm::SmallVector<int64_t> delta(getNumConstTerms());
+    Vector<int64_t> delta(getNumConstTerms());
     return (greaterEqual(delta, x, y) && greaterEqual(delta, y, x));
   }
-  [[nodiscard]] inline auto greaterEqual(PtrVector<int64_t> x) const -> bool {
+  [[nodiscard]] constexpr auto greaterEqual(PtrVector<int64_t> x) const
+    -> bool {
     return static_cast<const T *>(this)->greaterEqual(x);
   }
-  inline auto lessEqual(llvm::SmallVectorImpl<int64_t> &x) const -> bool {
-    return lessEqual(LinearAlgebra::view(x));
-  }
-  [[nodiscard]] inline auto lessEqual(MutPtrVector<int64_t> x) const -> bool {
+  [[nodiscard]] constexpr auto lessEqual(MutPtrVector<int64_t> x) const
+    -> bool {
     const size_t N = getNumConstTerms();
     assert(N <= x.size());
     for (size_t n = 0; n < N; ++n) x[n] *= -1;
@@ -160,28 +170,28 @@ template <typename T> struct BaseComparator {
     for (size_t n = 0; n < N; ++n) x[n] *= -1;
     return ret;
   }
-  [[nodiscard]] inline auto lessEqual(PtrVector<int64_t> x) const -> bool {
+  [[nodiscard]] constexpr auto lessEqual(PtrVector<int64_t> x) const -> bool {
     const size_t N = getNumConstTerms();
     assert(N <= x.size());
-    llvm::SmallVector<int64_t, 16> y{x.begin(), x.begin() + N};
+    Vector<int64_t> y{x[_(0, N)]};
     return lessEqual(LinearAlgebra::view(y));
   }
-  [[nodiscard]] inline auto lessEqual(MutPtrVector<int64_t> x, int64_t y) const
-    -> bool {
+  [[nodiscard]] constexpr auto lessEqual(MutPtrVector<int64_t> x,
+                                         int64_t y) const -> bool {
     int64_t x0 = x[0];
     x[0] = x0 - y;
     bool ret = lessEqual(x);
     x[0] = x0;
     return ret;
   }
-  [[nodiscard]] inline auto lessEqual(PtrVector<int64_t> x, int64_t y) const
+  [[nodiscard]] constexpr auto lessEqual(PtrVector<int64_t> x, int64_t y) const
     -> bool {
     const size_t N = getNumConstTerms();
     assert(N <= x.size());
-    llvm::SmallVector<int64_t, 16> z{x.begin(), x.begin() + N};
+    Vector<int64_t> z{x[_(0, N)]};
     return lessEqual(z, y);
   }
-  [[nodiscard]] inline auto less(MutPtrVector<int64_t> x) const -> bool {
+  [[nodiscard]] constexpr auto less(MutPtrVector<int64_t> x) const -> bool {
     const size_t N = getNumConstTerms();
     assert(N <= x.size());
     int64_t x0 = x[0];
@@ -192,49 +202,51 @@ template <typename T> struct BaseComparator {
     for (size_t i = 1; i < N; ++i) x[i] *= -1;
     return ret;
   }
-  [[nodiscard]] inline auto less(PtrVector<int64_t> x) const -> bool {
+  [[nodiscard]] constexpr auto less(PtrVector<int64_t> x) const -> bool {
     const size_t N = getNumConstTerms();
     assert(N <= x.size());
-    llvm::SmallVector<int64_t, 16> y{x.begin(), x.begin() + N};
+    Vector<int64_t> y{x[_(0, N)]};
     return less(LinearAlgebra::view(y));
   }
-  [[nodiscard]] inline auto greater(MutPtrVector<int64_t> x) const -> bool {
+  [[nodiscard]] constexpr auto greater(MutPtrVector<int64_t> x) const -> bool {
     int64_t x0 = x[0]--;
     bool ret = static_cast<const T *>(this)->greaterEqual(x);
     x[0] = x0;
     return ret;
   }
-  [[nodiscard]] inline auto greater(PtrVector<int64_t> x) const -> bool {
+  [[nodiscard]] constexpr auto greater(PtrVector<int64_t> x) const -> bool {
     // TODO: avoid this needless memcopy and (possible) allocation?
     const size_t N = getNumConstTerms();
     assert(N <= x.size());
-    llvm::SmallVector<int64_t, 8> xm{x.begin(), x.begin() + N};
+    Vector<int64_t> xm{x[_(0, N)]};
     return greater(LinearAlgebra::view(xm));
   }
-  inline auto greater(Vector<int64_t> &x) const -> bool {
+  constexpr auto greater(Vector<int64_t> &x) const -> bool {
     return greater(MutPtrVector<int64_t>(x));
   }
-  inline auto less(Vector<int64_t> &x) const -> bool { return less(x.view()); }
-  inline auto lessEqual(Vector<int64_t> &x) const -> bool {
+  constexpr auto less(Vector<int64_t> &x) const -> bool {
+    return less(x.view());
+  }
+  constexpr auto lessEqual(Vector<int64_t> &x) const -> bool {
     return lessEqual(x.view());
   }
-  inline auto lessEqual(Vector<int64_t> &x, int64_t y) const -> bool {
+  constexpr auto lessEqual(Vector<int64_t> &x, int64_t y) const -> bool {
     return lessEqual(x.view(), y);
   }
 
-  [[nodiscard]] inline auto equal(PtrVector<int64_t> x) const -> bool {
+  [[nodiscard]] constexpr auto equal(PtrVector<int64_t> x) const -> bool {
     // check cheap trivial first
     return allZero(x) ||
            (static_cast<const T *>(this)->greaterEqual(x) && lessEqual(x));
   }
-  [[nodiscard]] inline auto equalNegative(PtrVector<int64_t> x,
-                                          PtrVector<int64_t> y) const -> bool {
+  [[nodiscard]] constexpr auto equalNegative(PtrVector<int64_t> x,
+                                             PtrVector<int64_t> y) const
+    -> bool {
     const size_t N = getNumConstTerms();
     assert(x.size() >= N);
     assert(y.size() >= N);
     if (x[_(0, N)] == y[_(0, N)]) return true;
-    llvm::SmallVector<int64_t, 8> delta(N);
-    for (size_t i = 0; i < N; ++i) delta[i] = x[i] + y[i];
+    Vector<int64_t> delta{x[_(0, N)] - y[_(0, N)]};
     return equal(delta);
   }
 };
@@ -265,19 +277,19 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
   using BaseT::greaterEqual;
   [[nodiscard]] auto getNumConstTermsImpl() const -> size_t { return numVar; }
 
-  constexpr auto getV() -> DenseMutPtrMatrix<int64_t> {
+  constexpr auto getV() -> MutDensePtrMatrix<int64_t> {
     return static_cast<T *>(this)->getVImpl();
   }
-  constexpr auto getU() -> DenseMutPtrMatrix<int64_t> {
+  constexpr auto getU() -> MutDensePtrMatrix<int64_t> {
     return static_cast<T *>(this)->getUImpl();
   }
   constexpr auto getD() -> MutPtrVector<int64_t> {
     return static_cast<T *>(this)->getDImpl();
   }
-  constexpr auto getV(Row r, Col c) -> DenseMutPtrMatrix<int64_t> {
+  constexpr auto getV(Row r, Col c) -> MutDensePtrMatrix<int64_t> {
     return static_cast<T *>(this)->getVImpl(r, c);
   }
-  constexpr auto getU(Row r, Col c) -> DenseMutPtrMatrix<int64_t> {
+  constexpr auto getU(Row r, Col c) -> MutDensePtrMatrix<int64_t> {
     return static_cast<T *>(this)->getUImpl(r, c);
   }
   constexpr auto getD(Row n) -> MutPtrVector<int64_t> {
@@ -286,8 +298,8 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
   void setURank(Row r) { static_cast<T *>(this)->setURankImpl(r); }
 
   template <typename Allocator>
-  inline void initNonNegative(Allocator alloc, PtrMatrix<int64_t> A,
-                              EmptyMatrix<int64_t>, size_t numNonNegative) {
+  constexpr void initNonNegative(Allocator alloc, PtrMatrix<int64_t> A,
+                                 EmptyMatrix<int64_t>, size_t numNonNegative) {
     initNonNegative(alloc, A, numNonNegative);
   }
   template <typename Allocator>
@@ -381,8 +393,8 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
     size_t colV = 2 * numInEqConTotal + numEqCon;
     return (rowV + colV + 1) + rowV;
   }
-  template <typename Allocator>
-  void init(Allocator alloc, PtrMatrix<int64_t> A, bool pos0) {
+  template <class Allocator>
+  constexpr void init(Allocator alloc, PtrMatrix<int64_t> A, bool pos0) {
     const size_t numCon = size_t(A.numRow()) + pos0;
     numVar = size_t(A.numCol());
     Row rowV = numVar + numCon;
@@ -399,9 +411,9 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
     numEquations = numCon;
     initCore(alloc);
   }
-  template <typename Allocator>
-  void init(Allocator alloc, PtrMatrix<int64_t> A, EmptyMatrix<int64_t>,
-            bool pos0) {
+  template <class Allocator>
+  constexpr void init(Allocator alloc, PtrMatrix<int64_t> A,
+                      EmptyMatrix<int64_t>, bool pos0) {
     init(alloc, A, pos0);
   }
   [[nodiscard]] static constexpr auto memoryNeeded(PtrMatrix<int64_t> A,
@@ -454,12 +466,12 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
   // needs to also set their size, which is only determined here.
   template <typename Allocator> void initCore(Allocator alloc) {
     // numVar + numInEq x 2*numInEq + numEq
-    auto B = getV();
+    MutPtrMatrix<int64_t> B = getV();
     Row R = B.numRow();
-    auto U = getU(); // numVar + numInEq x numVar + numInEq
+    MutPtrMatrix<int64_t> U = getU(); // numVar + numInEq x numVar + numInEq
     U.diag() << 1;
     // We will have query of the form Ax = q;
-    NormalForm::simplifySystemImpl(NormalForm::solvePair(B, U));
+    NormalForm::simplifySystemsImpl({B, U});
     while ((R) && allZero(B(R - 1, _))) --R;
     setURank(R);
     size_t numColB = size_t(B.numCol());
@@ -527,8 +539,7 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
           expandW(i, NSdim + 1 + j) = val;
         }
       }
-      IntMatrix Wcouple{Row{0}, expandW.numCol()};
-      std::optional<Simplex> optS{Simplex::positiveVariables(expandW, Wcouple)};
+      std::optional<Simplex> optS{Simplex::positiveVariables(expandW)};
       return optS.has_value();
     }
     return true;
@@ -578,8 +589,7 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
           expandW(i, NSdim + 1 + j) = val;
         }
       }
-      IntMatrix Wcouple{0, expandW.numCol()};
-      std::optional<Simplex> optS{Simplex::positiveVariables(expandW, Wcouple)};
+      std::optional<Simplex> optS{Simplex::positiveVariables(expandW)};
       return optS.has_value();
     }
   }
@@ -588,14 +598,15 @@ struct LinearSymbolicComparator
   : public BaseSymbolicComparator<LinearSymbolicComparator> {
   using Base = BaseSymbolicComparator<LinearSymbolicComparator>;
   using Base::init;
-  [[no_unique_address]] IntMatrix U;
-  [[no_unique_address]] IntMatrix V;
+  using Matrix = LinearAlgebra::ManagedArray<int64_t, DenseDims>;
+  [[no_unique_address]] Matrix U;
+  [[no_unique_address]] Matrix V;
   [[no_unique_address]] Vector<int64_t> d;
-  constexpr auto getUImpl() -> IntMatrix & { return U; }
-  constexpr auto getVImpl() -> IntMatrix & { return V; }
+  constexpr auto getUImpl() -> Matrix & { return U; }
+  constexpr auto getVImpl() -> Matrix & { return V; }
   constexpr auto getDImpl() -> Vector<int64_t> & { return d; }
 
-  void setURankImpl(Row r) {
+  constexpr void setURankImpl(Row r) {
     V.truncate(r);
     U.truncate(r);
   }
@@ -606,47 +617,49 @@ struct LinearSymbolicComparator
   // void setVDimImpl(size_t x) { dimV = unsigned(x); }
   // void setDDimImpl(size_t x) { dimD = unsigned(x); }
 
-  auto getUImpl(Row r, Col c) -> DenseMutPtrMatrix<int64_t> {
+  constexpr auto getUImpl(Row r, Col c) -> MutDensePtrMatrix<int64_t> {
     U.resizeForOverwrite(r, c);
     return U;
   }
-  auto getVImpl(Row r, Col c) -> DenseMutPtrMatrix<int64_t> {
+  constexpr auto getVImpl(Row r, Col c) -> MutDensePtrMatrix<int64_t> {
     V.setSize(r, c);
     U.setSize(r, Col{size_t(r)});
     return V;
   }
-  auto getDImpl(Row N) -> MutPtrVector<int64_t> {
+  constexpr auto getDImpl(Row N) -> MutPtrVector<int64_t> {
     d.resizeForOverwrite(size_t(N));
     return d;
   }
-  static auto construct(PtrMatrix<int64_t> Ap, EmptyMatrix<int64_t>, bool pos0)
-    -> LinearSymbolicComparator {
+  static constexpr auto construct(PtrMatrix<int64_t> Ap, EmptyMatrix<int64_t>,
+                                  bool pos0) -> LinearSymbolicComparator {
     return construct(Ap, pos0);
   };
-  static auto construct(PtrMatrix<int64_t> Ap, bool pos0)
+  static constexpr auto construct(PtrMatrix<int64_t> Ap, bool pos0)
     -> LinearSymbolicComparator {
     LinearSymbolicComparator cmp;
     cmp.init(std::allocator<int64_t>{}, Ap, pos0);
     return cmp;
   };
-  static auto construct(PtrMatrix<int64_t> Ap, PtrMatrix<int64_t> Ep, bool pos0)
-    -> LinearSymbolicComparator {
+  static constexpr auto construct(PtrMatrix<int64_t> Ap, PtrMatrix<int64_t> Ep,
+                                  bool pos0) -> LinearSymbolicComparator {
     LinearSymbolicComparator cmp;
     cmp.init(std::allocator<int64_t>{}, Ap, Ep, pos0);
     return cmp;
   };
-  static auto constructNonNeg(PtrMatrix<int64_t> Ap, EmptyMatrix<int64_t>,
-                              size_t numNonNeg) -> LinearSymbolicComparator {
+  static constexpr auto constructNonNeg(PtrMatrix<int64_t> Ap,
+                                        EmptyMatrix<int64_t>, size_t numNonNeg)
+    -> LinearSymbolicComparator {
     return constructNonNeg(Ap, numNonNeg);
   };
-  static auto constructNonNeg(PtrMatrix<int64_t> Ap, size_t numNonNeg)
+  static constexpr auto constructNonNeg(PtrMatrix<int64_t> Ap, size_t numNonNeg)
     -> LinearSymbolicComparator {
     LinearSymbolicComparator cmp;
     cmp.initNonNegative(std::allocator<int64_t>{}, Ap, numNonNeg);
     return cmp;
   };
-  static auto constructNonNeg(PtrMatrix<int64_t> Ap, PtrMatrix<int64_t> Ep,
-                              size_t numNonNeg) -> LinearSymbolicComparator {
+  static constexpr auto constructNonNeg(PtrMatrix<int64_t> Ap,
+                                        PtrMatrix<int64_t> Ep, size_t numNonNeg)
+    -> LinearSymbolicComparator {
     LinearSymbolicComparator cmp;
     cmp.initNonNegative(std::allocator<int64_t>{}, Ap, Ep, numNonNeg);
     return cmp;
@@ -665,7 +678,7 @@ struct PtrSymbolicComparator
   unsigned int dimV{0};
   unsigned int dimD{0};
 
-  void setURankImpl(Row r) { rankU = unsigned(r); }
+  constexpr void setURankImpl(Row r) { rankU = unsigned(r); }
   // void setUColImpl(Col c) { colU = unsigned(c); }
   // void setVDimImpl(size_t d) { dimV = unsigned(d); }
   // void setDDimImpl(size_t d) { dimD = int(d); }
@@ -677,16 +690,16 @@ struct PtrSymbolicComparator
   // [[nodiscard]] constexpr auto dimV() const -> unsigned {
   //   return 2 * numInEq + numEq;
   // }
-  constexpr auto getUImpl() -> DenseMutPtrMatrix<int64_t> {
-    return {mem, rankU, colU};
+  constexpr auto getUImpl() -> MutDensePtrMatrix<int64_t> {
+    return {mem, DenseDims{rankU, colU}};
   }
   // offset by (numVar + numInEq)*(numVar + numInEq)
-  constexpr auto getVImpl() -> DenseMutPtrMatrix<int64_t> {
+  constexpr auto getVImpl() -> MutDensePtrMatrix<int64_t> {
     // A = V
     // H = A
     // H.truncate(Row());
     // size is H.numCol() * H.numCol()
-    return {getUImpl().end(), dimD ? dimV : rankU, dimV};
+    return {getUImpl().end(), DenseDims{dimD ? dimV : rankU, dimV}};
   }
   // size D
   constexpr auto getDImpl() -> MutPtrVector<int64_t> {
@@ -694,7 +707,7 @@ struct PtrSymbolicComparator
     return {getVImpl().end(), dimD};
   }
   // constexpr auto getUImpl(Row r, Col c) -> MutPtrMatrix<int64_t> {}
-  constexpr auto getVImpl(Row r, Col c) -> DenseMutPtrMatrix<int64_t> {
+  constexpr auto getVImpl(Row r, Col c) -> MutDensePtrMatrix<int64_t> {
     rankU = unsigned(r);
     colU = rankU;
     dimV = unsigned(c);
@@ -707,38 +720,42 @@ struct PtrSymbolicComparator
     invariant(dimD > 0);
     return getDImpl();
   }
-  static auto construct(WBumpAlloc<int64_t> alloc, PtrMatrix<int64_t> Ap,
-                        EmptyMatrix<int64_t>, bool pos0)
-    -> PtrSymbolicComparator {
+  static constexpr auto construct(WBumpAlloc<int64_t> alloc,
+                                  PtrMatrix<int64_t> Ap, EmptyMatrix<int64_t>,
+                                  bool pos0) -> PtrSymbolicComparator {
     return construct(alloc, Ap, pos0);
   };
-  static auto construct(WBumpAlloc<int64_t> alloc, PtrMatrix<int64_t> Ap,
-                        bool pos0) -> PtrSymbolicComparator {
+  static constexpr auto construct(WBumpAlloc<int64_t> alloc,
+                                  PtrMatrix<int64_t> Ap, bool pos0)
+    -> PtrSymbolicComparator {
     PtrSymbolicComparator cmp(alloc.allocate(memoryNeeded(Ap, pos0)));
     cmp.init(WBumpAlloc<int64_t>(alloc), Ap, pos0);
     return cmp;
   };
-  static auto construct(WBumpAlloc<int64_t> alloc, PtrMatrix<int64_t> Ap,
-                        PtrMatrix<int64_t> Ep, bool pos0)
-    -> PtrSymbolicComparator {
+  static constexpr auto construct(WBumpAlloc<int64_t> alloc,
+                                  PtrMatrix<int64_t> Ap, PtrMatrix<int64_t> Ep,
+                                  bool pos0) -> PtrSymbolicComparator {
     PtrSymbolicComparator cmp(alloc.allocate(memoryNeeded(Ap, Ep, pos0)));
     cmp.init(alloc, Ap, Ep, pos0);
     return cmp;
   };
-  static auto constructNonNeg(WBumpAlloc<int64_t> alloc, PtrMatrix<int64_t> Ap,
-                              EmptyMatrix<int64_t>, size_t numNonNeg)
+  static constexpr auto constructNonNeg(WBumpAlloc<int64_t> alloc,
+                                        PtrMatrix<int64_t> Ap,
+                                        EmptyMatrix<int64_t>, size_t numNonNeg)
     -> PtrSymbolicComparator {
     return constructNonNeg(alloc, Ap, numNonNeg);
   };
-  static auto constructNonNeg(WBumpAlloc<int64_t> alloc, PtrMatrix<int64_t> Ap,
-                              size_t numNonNeg) -> PtrSymbolicComparator {
+  static constexpr auto constructNonNeg(WBumpAlloc<int64_t> alloc,
+                                        PtrMatrix<int64_t> Ap, size_t numNonNeg)
+    -> PtrSymbolicComparator {
     PtrSymbolicComparator cmp(
       alloc.allocate(memoryNeededNonNegative(Ap, numNonNeg)));
     cmp.initNonNegative(alloc, Ap, numNonNeg);
     return cmp;
   };
-  static auto constructNonNeg(WBumpAlloc<int64_t> alloc, PtrMatrix<int64_t> Ap,
-                              PtrMatrix<int64_t> Ep, size_t numNonNeg)
+  static constexpr auto constructNonNeg(WBumpAlloc<int64_t> alloc,
+                                        PtrMatrix<int64_t> Ap,
+                                        PtrMatrix<int64_t> Ep, size_t numNonNeg)
     -> PtrSymbolicComparator {
     PtrSymbolicComparator cmp(
       alloc.allocate(memoryNeededNonNegative(Ap, Ep, numNonNeg)));
@@ -747,7 +764,7 @@ struct PtrSymbolicComparator
   };
 
 private:
-  PtrSymbolicComparator(int64_t *mem) : mem(mem) {}
+  constexpr PtrSymbolicComparator(int64_t *mem) : mem(mem) {}
 };
 
 static_assert(Comparator<PtrSymbolicComparator>);
@@ -755,8 +772,8 @@ static_assert(Comparator<LinearSymbolicComparator>);
 
 static constexpr void moveEqualities(IntMatrix &, EmptyMatrix<int64_t> &,
                                      const Comparator auto &) {}
-static inline void moveEqualities(IntMatrix &A, IntMatrix &E,
-                                  const Comparator auto &C) {
+static constexpr void moveEqualities(IntMatrix &A, IntMatrix &E,
+                                     const Comparator auto &C) {
   const size_t numVar = size_t(E.numCol());
   assert(A.numCol() == numVar);
   if (A.numRow() <= 1) return;
@@ -780,37 +797,43 @@ static inline void moveEqualities(IntMatrix &A, IntMatrix &E,
   }
 }
 
-inline auto linear(std::allocator<int64_t>, PtrMatrix<int64_t> A,
-                   EmptyMatrix<int64_t>, bool pos0) {
+// NOLINTNEXTLINE(performance-unnecessary-value-param)
+constexpr auto linear(std::allocator<int64_t>, PtrMatrix<int64_t> A,
+                      EmptyMatrix<int64_t>, bool pos0) {
   return LinearSymbolicComparator::construct(A, pos0);
 }
-inline auto linear(WBumpAlloc<int64_t> alloc, PtrMatrix<int64_t> A,
-                   EmptyMatrix<int64_t>, bool pos0) {
+constexpr auto linear(WBumpAlloc<int64_t> alloc, PtrMatrix<int64_t> A,
+                      EmptyMatrix<int64_t>, bool pos0) {
   return PtrSymbolicComparator::construct(alloc, A, pos0);
 }
-inline auto linear(std::allocator<int64_t>, PtrMatrix<int64_t> A,
-                   PtrMatrix<int64_t> E, bool pos0) {
+// NOLINTNEXTLINE(performance-unnecessary-value-param)
+constexpr auto linear(std::allocator<int64_t>, PtrMatrix<int64_t> A,
+                      PtrMatrix<int64_t> E, bool pos0) {
   return LinearSymbolicComparator::construct(A, E, pos0);
 }
-inline auto linear(WBumpAlloc<int64_t> alloc, PtrMatrix<int64_t> A,
-                   PtrMatrix<int64_t> E, bool pos0) {
+constexpr auto linear(WBumpAlloc<int64_t> alloc, PtrMatrix<int64_t> A,
+                      PtrMatrix<int64_t> E, bool pos0) {
   return PtrSymbolicComparator::construct(alloc, A, E, pos0);
 }
 
-inline auto linearNonNegative(std::allocator<int64_t>, PtrMatrix<int64_t> A,
-                              EmptyMatrix<int64_t>, size_t numNonNeg) {
+// NOLINTNEXTLINE(performance-unnecessary-value-param)
+constexpr auto linearNonNegative(std::allocator<int64_t>, PtrMatrix<int64_t> A,
+                                 EmptyMatrix<int64_t>, size_t numNonNeg) {
   return LinearSymbolicComparator::constructNonNeg(A, numNonNeg);
 }
-inline auto linearNonNegative(WBumpAlloc<int64_t> alloc, PtrMatrix<int64_t> A,
-                              EmptyMatrix<int64_t>, size_t numNonNeg) {
+constexpr auto linearNonNegative(WBumpAlloc<int64_t> alloc,
+                                 PtrMatrix<int64_t> A, EmptyMatrix<int64_t>,
+                                 size_t numNonNeg) {
   return PtrSymbolicComparator::constructNonNeg(alloc, A, numNonNeg);
 }
-inline auto linearNonNegative(std::allocator<int64_t>, PtrMatrix<int64_t> A,
-                              PtrMatrix<int64_t> E, size_t numNonNeg) {
+// NOLINTNEXTLINE(performance-unnecessary-value-param)
+constexpr auto linearNonNegative(std::allocator<int64_t>, PtrMatrix<int64_t> A,
+                                 PtrMatrix<int64_t> E, size_t numNonNeg) {
   return LinearSymbolicComparator::constructNonNeg(A, E, numNonNeg);
 }
-inline auto linearNonNegative(WBumpAlloc<int64_t> alloc, PtrMatrix<int64_t> A,
-                              PtrMatrix<int64_t> E, size_t numNonNeg) {
+constexpr auto linearNonNegative(WBumpAlloc<int64_t> alloc,
+                                 PtrMatrix<int64_t> A, PtrMatrix<int64_t> E,
+                                 size_t numNonNeg) {
   return PtrSymbolicComparator::constructNonNeg(alloc, A, E, numNonNeg);
 }
 

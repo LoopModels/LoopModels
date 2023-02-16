@@ -13,7 +13,7 @@ concept AbstractMatrixCore =
                     { t(i, i) } -> std::convertible_to<eltype_t<T>>;
                     { t.numRow() } -> std::same_as<Row>;
                     { t.numCol() } -> std::same_as<Col>;
-                    { t.size() } -> std::same_as<std::pair<Row, Col>>;
+                    { t.size() } -> std::same_as<CartesianIndex<Row, Col>>;
                     { t.dim() } -> std::convertible_to<StridedDims>;
                     // {
                     //     std::remove_reference_t<T>::canResize
@@ -56,8 +56,8 @@ template <typename A> struct Transpose {
     return Col{size_t{a.numRow()}};
   }
   [[nodiscard]] constexpr auto view() const -> auto & { return *this; };
-  [[nodiscard]] constexpr auto size() const -> std::pair<Row, Col> {
-    return std::make_pair(numRow(), numCol());
+  [[nodiscard]] constexpr auto size() const -> CartesianIndex<Row, Col> {
+    return {numRow(), numCol()};
   }
   [[nodiscard]] constexpr auto dim() const -> DenseDims {
     return {numRow(), numCol()};
