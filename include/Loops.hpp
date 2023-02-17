@@ -338,9 +338,10 @@ struct AffineLoopNest
     // once we're done assembling these, we'll concatenate A and B
     size_t maxDepth = L->getLoopDepth();
     // size_t maxNumSymbols = BT->getExpressionSize();
-    A.resize(0, 1, 1 + BT->getExpressionSize());
-    B.resize(0, maxDepth, maxDepth);
-    size_t minDepth = addBackedgeTakenCount(B, L, BT, SE, 0, ORE);
+    A.resize(StridedDims{0, 1, 1 + BT->getExpressionSize()});
+    B.resize(StridedDims{0, maxDepth, maxDepth});
+    llvm::SmallVector<const llvm::SCEV *, 3> symbols;
+    size_t minDepth = loopNestCtor::addBackedgeTakenCount(B, L, BT, SE, 0, ORE);
     // We first check for loops in B that are shallower than minDepth
     // we include all loops such that L->getLoopDepth() > minDepth
     // note that the outer-most loop has a depth of 1.
@@ -360,9 +361,10 @@ struct AffineLoopNest
           }
           // TODO: find a more efficient way to get IntTyp
           llvm::Type *IntTyp = P->getInductionVariable(SE)->getType();
-          addSymbol(SE.getAddRecExpr(SE.getZero(IntTyp), SE.getOne(IntTyp), P,
-                                     llvm::SCEV::NoWrapMask),
-                    _(i, i + 1), Bid);
+          loopNestCtor::addSymbol(A, symbols, SE.getAddRecExpr(SE.getZero(IntTyp),
+                                                   SE.getOne(IntTyp), P,
+                                                   llvm::SCEV::NoWrapMask),
+                                  _(i, i + 1), Bid);
         }
       }
     }
@@ -371,7 +373,8 @@ struct AffineLoopNest
     A.resize(N + depth);
     // copy the included loops from B into A
     A(_, _(N, N + depth)) = B(_, _(0, depth));
-    initializeComparator();
+    // default is not to have an initialized comparator; initialize when used
+    // initializeComparator();
     // addZeroLowerBounds();
     // NOTE: pruneBounds() is not legal here if we wish to use
     // removeInnerMost later.
