@@ -77,15 +77,15 @@ Inheritance diagram for AffineLoopNest&lt; NonNegative &gt;:</div>
  <div class="center">
   <img src="structAffineLoopNest.png" usemap="#AffineLoopNest_3C_20NonNegative_20_3E_map" alt=""/>
   <map id="AffineLoopNest_3C_20NonNegative_20_3E_map" name="AffineLoopNest_3C_20NonNegative_20_3E_map">
-<area href="structBasePolyhedra.html" alt="BasePolyhedra&lt; EmptyMatrix&lt; int64_t &gt;, LinearSymbolicComparator, llvm::SmallVector&lt; const llvm::SCEV * &gt;, true &gt;" shape="rect" coords="0,0,683,24"/>
+<area href="structBasePolyhedra.html" alt="BasePolyhedra&lt; false, true, true, AffineLoopNest&lt; true &gt; &gt;" shape="rect" coords="0,0,353,24"/>
   </map>
 </div></div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
 Public Types</h2></td></tr>
-<tr class="memitem:a5e37d4f20a39bff35c3e7fc4a395563a"><td class="memItemLeft" align="right" valign="top"><a id="a5e37d4f20a39bff35c3e7fc4a395563a"></a>
-using&#160;</td><td class="memItemRight" valign="bottom"><b>BaseT</b> = <a class="el" href="structBasePolyhedra.html">BasePolyhedra</a>&lt; <a class="el" href="structLinearAlgebra_1_1EmptyMatrix.html">EmptyMatrix</a>&lt; int64_t &gt;, LinearSymbolicComparator, llvm::SmallVector&lt; const llvm::SCEV * &gt;, NonNegative &gt;</td></tr>
-<tr class="separator:a5e37d4f20a39bff35c3e7fc4a395563a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af3543269d22d3341b9de756840773787"><td class="memItemLeft" align="right" valign="top"><a id="af3543269d22d3341b9de756840773787"></a>
+using&#160;</td><td class="memItemRight" valign="bottom"><b>BaseT</b> = <a class="el" href="structBasePolyhedra.html">BasePolyhedra</a>&lt; false, true, NonNegative, <a class="el" href="structAffineLoopNest.html">AffineLoopNest</a>&lt; NonNegative &gt; &gt;</td></tr>
+<tr class="separator:af3543269d22d3341b9de756840773787"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
@@ -187,7 +187,7 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>initializeC
 <tr class="memitem:aa078dd6ff96811e2febfbc1150bcb6ab"><td class="memItemLeft" align="right" valign="top"><a id="aa078dd6ff96811e2febfbc1150bcb6ab"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>isEmpty</b> () const -&gt; bool</td></tr>
 <tr class="separator:aa078dd6ff96811e2febfbc1150bcb6ab"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="inherit_header pub_methods_structBasePolyhedra"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_structBasePolyhedra')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="structBasePolyhedra.html">BasePolyhedra&lt; EmptyMatrix&lt; int64_t &gt;, LinearSymbolicComparator, llvm::SmallVector&lt; const llvm::SCEV * &gt;, true &gt;</a></td></tr>
+<tr class="inherit_header pub_methods_structBasePolyhedra"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_structBasePolyhedra')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="structBasePolyhedra.html">BasePolyhedra&lt; false, true, true, AffineLoopNest&lt; true &gt; &gt;</a></td></tr>
 <tr class="memitem:acff0f8d0019a25088596916cb36ab81a inherit pub_methods_structBasePolyhedra"><td class="memItemLeft" align="right" valign="top"><a id="acff0f8d0019a25088596916cb36ab81a"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getA</b> () -&gt; MutDensePtrMatrix&lt; int64_t &gt;</td></tr>
 <tr class="separator:acff0f8d0019a25088596916cb36ab81a inherit pub_methods_structBasePolyhedra"><td class="memSeparator" colspan="2">&#160;</td></tr>
