@@ -172,11 +172,9 @@ findSymbolicIndex(llvm::ArrayRef<const llvm::SCEV *> symbols,
 //   x >= 0
 template <bool NonNegative = true>
 struct AffineLoopNest
-  : BasePolyhedra<EmptyMatrix<int64_t>, LinearSymbolicComparator,
-                  llvm::SmallVector<const llvm::SCEV *>, NonNegative> {
+  : BasePolyhedra<false, true, NonNegative, AffineLoopNest<NonNegative>> {
   using BaseT =
-    BasePolyhedra<EmptyMatrix<int64_t>, LinearSymbolicComparator,
-                  llvm::SmallVector<const llvm::SCEV *>, NonNegative>;
+    BasePolyhedra<false, true, NonNegative, AffineLoopNest<NonNegative>>;
   using BaseT::getNumDynamic, BaseT::getNumSymbols, BaseT::pruneBounds,
     BaseT::initializeComparator, BaseT::isEmpty, BaseT::A, BaseT::C, BaseT::S;
 

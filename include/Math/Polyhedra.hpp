@@ -113,6 +113,8 @@ struct BasePolyhedra {
       if constexpr (HasEqualities) getE().truncate(Row{0});
     } else pruneBoundsUnchecked();
   }
+  // TODO: upper bound allocation size for comparator
+  // then, reuse memory instead of reallocating
   template <class Allocator>
   constexpr void pruneBoundsUnchecked(Allocator alloc) {
     const size_t dyn = getNumDynamic();
@@ -127,11 +129,11 @@ struct BasePolyhedra {
         diff << A(--i, _) - A(j, _);
         if (C.greaterEqual(diff)) {
           eraseConstraint(A, i);
-          initializeComparator(alloc);
+          C = initializeComparator(alloc);
           --j; // `i < j`, and `i` has been removed
         } else if (diff *= -1; C.greaterEqual(diff)) {
           eraseConstraint(A, j);
-          initializeComparator();
+          C = initializeComparator(alloc);
           broke = true;
           break; // `j` is gone
         }
@@ -143,7 +145,7 @@ struct BasePolyhedra {
             --diff[last - i];
             if (C.greaterEqual(diff)) {
               eraseConstraint(A, j);
-              initializeComparator(alloc);
+              C = initializeComparator(alloc);
               break; // `j` is gone
             }
           }

@@ -380,7 +380,7 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
     size_t numVar = size_t(A.numCol());
     size_t rowV = numVar + numConTotal;
     size_t colV = 2 * numConTotal;
-    return (rowV + colV + 1) + rowV;
+    return (rowV + colV + 1) * rowV;
   }
   [[nodiscard]] static constexpr auto
   memoryNeededNonNegative(PtrMatrix<int64_t> A, PtrMatrix<int64_t> E,
@@ -391,7 +391,7 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
     size_t numVar = size_t(A.numCol());
     size_t rowV = numVar + numInEqConTotal;
     size_t colV = 2 * numInEqConTotal + numEqCon;
-    return (rowV + colV + 1) + rowV;
+    return (rowV + colV + 1) * rowV;
   }
   template <class Allocator>
   constexpr void init(Allocator alloc, PtrMatrix<int64_t> A, bool pos0) {
@@ -423,21 +423,21 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
   }
   [[nodiscard]] static constexpr auto memoryNeeded(PtrMatrix<int64_t> A,
                                                    bool pos0) -> size_t {
-    const size_t numCon = size_t(A.numRow()) + pos0;
+    const size_t numInEqCon = size_t(A.numRow()) + pos0;
     size_t numVar = size_t(A.numCol());
-    size_t rowV = numVar + numCon;
-    size_t colV = 2 * numCon;
-    return (rowV + colV + 1) + rowV;
+    size_t rowV = numVar + numInEqCon;
+    size_t colV = 2 * numInEqCon;
+    return (rowV + colV + 1) * rowV;
   }
   [[nodiscard]] static constexpr auto memoryNeeded(PtrMatrix<int64_t> A,
                                                    PtrMatrix<int64_t> E,
                                                    bool pos0) -> size_t {
     const size_t numInEqCon = size_t(A.numRow()) + pos0;
     size_t numVar = size_t(A.numCol());
-    const size_t numEqCon = size_t(E.numRow());
+    size_t numEqCon = size_t(E.numRow());
     size_t rowV = numVar + numInEqCon;
     size_t colV = 2 * numInEqCon + numEqCon;
-    return (rowV + colV + 1) + rowV;
+    return (rowV + colV + 1) * rowV;
   }
   template <typename Allocator>
   void init(Allocator alloc, PtrMatrix<int64_t> A, PtrMatrix<int64_t> E,
