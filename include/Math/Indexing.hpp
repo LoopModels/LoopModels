@@ -105,6 +105,8 @@ concept ScalarRowIndex = ScalarIndex<T> || std::same_as<T, Row>;
 template <typename T>
 concept ScalarColIndex = ScalarIndex<T> || std::same_as<T, Col>;
 
+static_assert(ScalarColIndex<OffsetEnd>);
+
 template <typename T>
 concept AbstractSlice = requires(T t, size_t M) {
                           {
@@ -211,7 +213,7 @@ template <class B, class E>
 constexpr auto calcNewDim(size_t len, Range<B, E> r) {
   return calcNewDim(len, canonicalizeRange(r, len));
 };
-template <ScalarValueIndex R, ScalarValueIndex C>
+template <ScalarRowIndex R, ScalarColIndex C>
 constexpr auto calcNewDim(StridedDims, CartesianIndex<R, C>) -> Empty {
   return {};
 }

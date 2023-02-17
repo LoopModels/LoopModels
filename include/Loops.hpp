@@ -1,10 +1,13 @@
 #pragma once
 
 #include "./RemarkAnalysis.hpp"
+#include "Math/Array.hpp"
 #include "Math/Comparators.hpp"
 #include "Math/Constraints.hpp"
 #include "Math/EmptyArrays.hpp"
+#include "Math/Indexing.hpp"
 #include "Math/Math.hpp"
+#include "Math/MatrixDimensions.hpp"
 #include "Math/Polyhedra.hpp"
 #include "Utilities/Allocators.hpp"
 #include "Utilities/Optional.hpp"
@@ -79,12 +82,6 @@ struct NoWrapRewriter : public llvm::SCEVRewriteVisitor<NoWrapRewriter> {
   }
 };
 
-// static std::optional<int64_t> getConstantInt(llvm::Value *v) {
-//     if (llvm::ConstantInt *c = llvm::dyn_cast<llvm::ConstantInt>(v))
-//         if (c->getBitWidth() <= 64)
-//             return c->getSExtValue();
-//     return {};
-// }
 inline auto getConstantInt(const llvm::SCEV *v) -> std::optional<int64_t> {
   if (const auto *sc = llvm::dyn_cast<const llvm::SCEVConstant>(v)) {
     llvm::ConstantInt *c = sc->getValue();
@@ -167,6 +164,159 @@ findSymbolicIndex(llvm::ArrayRef<const llvm::SCEV *> symbols,
   return S;
 }
 
+namespace loopNestCtor {
+/// add a symbol to row `r` of A
+/// we try to break down value `v`, so that adding
+/// N, N - 1, N - 3 only adds the variable `N`, and adds the constant
+/// offsets
+inline void addSymbol(IntMatrix &A,
+                      llvm::SmallVectorImpl<const llvm::SCEV *> &symbols,
+                      const llvm::SCEV *v, Range<size_t, size_t> lu,
+                      int64_t mlt) {
+  assert(lu.size());
+  symbols.push_back(v);
+  A.resize(A.numCol() + 1);
+  A(lu, symbols.size()) << mlt;
+}
+inline auto addRecMatchesLoop(const llvm::SCEV *S, llvm::Loop *L) -> bool {
+  if (const auto *x = llvm::dyn_cast<const llvm::SCEVAddRecExpr>(S))
+    return x->getLoop() == L;
+  return false;
+}
+[[nodiscard]] inline auto
+addSymbol(std::array<IntMatrix, 2> &AB,
+          llvm::SmallVectorImpl<const llvm::SCEV *> &symbols, llvm::Loop *L,
+          const llvm::SCEV *v, llvm::ScalarEvolution &SE,
+          Range<size_t, size_t> lu, int64_t mlt, size_t minDepth) -> size_t {
+  auto &[A, B] = AB;
+  // first, we check if `v` in `Symbols`
+  if (size_t i = findSymbolicIndex(symbols, v)) {
+    A(lu, i) += mlt;
+    return minDepth;
+  } else if (std::optional<int64_t> c = getConstantInt(v)) {
+    A(lu, 0) += mlt * (*c);
+    return minDepth;
+  } else if (const auto *ar = llvm::dyn_cast<const llvm::SCEVAddExpr>(v)) {
+    const llvm::SCEV *op0 = ar->getOperand(0);
+    const llvm::SCEV *op1 = ar->getOperand(1);
+    Row M = A.numRow();
+    minDepth = addSymbol(AB, symbols, L, op0, SE, lu, mlt, minDepth);
+    if (M != A.numRow())
+      minDepth =
+        addSymbol(AB, symbols, L, op1, SE, _(M, A.numRow()), mlt, minDepth);
+    return addSymbol(AB, symbols, L, op1, SE, lu, mlt, minDepth);
+  } else if (const auto *m = llvm::dyn_cast<const llvm::SCEVMulExpr>(v)) {
+    if (auto op0 = getConstantInt(m->getOperand(0)))
+      return addSymbol(AB, symbols, L, m->getOperand(1), SE, lu, mlt * (*op0),
+                       minDepth);
+    else if (auto op1 = getConstantInt(m->getOperand(1)))
+      return addSymbol(AB, symbols, L, m->getOperand(0), SE, lu, mlt * (*op1),
+                       minDepth);
+  } else if (const auto *x = llvm::dyn_cast<const llvm::SCEVAddRecExpr>(v)) {
+    size_t recDepth = x->getLoop()->getLoopDepth();
+    if (x->isAffine()) {
+      minDepth =
+        addSymbol(AB, symbols, L, x->getOperand(0), SE, lu, mlt, minDepth);
+      if (auto opc = getConstantInt(x->getOperand(1))) {
+        // swap order vs recDepth to go inner<->outer
+        B(lu, B.numCol() - recDepth) << mlt * (*opc);
+        return minDepth;
+      }
+      v = SE.getAddRecExpr(SE.getZero(x->getOperand(0)->getType()),
+                           x->getOperand(1), x->getLoop(), x->getNoWrapFlags());
+    }
+    // we only support affine SCEVAddRecExpr with constant steps
+    // we use a flag "minSupported", which defaults to 0
+    // 0 means we support all loops, as the outer most depth is 1
+    // Depth of 0 means toplevel.
+    minDepth = std::max(minDepth, recDepth);
+  } else if (const auto *mm = llvm::dyn_cast<const llvm::SCEVMinMaxExpr>(v)) {
+    auto Sm = simplifyMinMax(SE, mm);
+    if (Sm != v) return addSymbol(AB, symbols, L, Sm, SE, lu, mlt, minDepth);
+    bool isMin =
+      llvm::isa<llvm::SCEVSMinExpr>(mm) || llvm::isa<llvm::SCEVUMinExpr>(mm);
+    const llvm::SCEV *op0 = mm->getOperand(0);
+    const llvm::SCEV *op1 = mm->getOperand(1);
+    if (isMin ^ (mlt < 0)) { // we can represent this as additional constraints
+      Row M = A.numRow();
+      Row Mp = M + lu.size();
+      A.resize(Mp);
+      B.resize(Mp);
+      A(_(M, Mp), _) = A(lu, _);
+      B(_(M, Mp), _) = B(lu, _);
+      minDepth = addSymbol(AB, symbols, L, op0, SE, lu, mlt, minDepth);
+      minDepth = addSymbol(AB, symbols, L, op1, SE, _(M, Mp), mlt, minDepth);
+    } else if (addRecMatchesLoop(op0, L)) {
+      return addSymbol(AB, symbols, L, op1, SE, lu, mlt, minDepth);
+    } else if (addRecMatchesLoop(op1, L)) {
+      return addSymbol(AB, symbols, L, op0, SE, lu, mlt, minDepth);
+    }
+  } else if (const auto *ex = llvm::dyn_cast<llvm::SCEVCastExpr>(v))
+    return addSymbol(AB, symbols, L, ex->getOperand(0), SE, lu, mlt, minDepth);
+  addSymbol(A, symbols, v, lu, mlt);
+  return minDepth;
+}
+inline auto
+areSymbolsLoopInvariant(IntMatrix &A,
+                        llvm::SmallVectorImpl<const llvm::SCEV *> &symbols,
+                        llvm::Loop *L, llvm::ScalarEvolution &SE) -> bool {
+  for (size_t i = 0; i < symbols.size(); ++i)
+    if ((!allZero(A(_, i + 1))) && (!SE.isLoopInvariant(symbols[i], L)))
+      return false;
+  return true;
+}
+inline auto
+addBackedgeTakenCount(std::array<IntMatrix, 2> &AB,
+                      llvm::SmallVectorImpl<const llvm::SCEV *> &symbols,
+                      llvm::Loop *L, const llvm::SCEV *BT,
+                      llvm::ScalarEvolution &SE, size_t minDepth,
+                      llvm::OptimizationRemarkEmitter *ORE) -> size_t {
+  auto &[A, B] = AB;
+  Row M = A.numRow();
+  A.resize(M + 1);
+  B.resize(M + 1);
+  minDepth = addSymbol(AB, symbols, L, BT, SE, _(M, M + 1), 1, minDepth);
+  assert(A.numRow() == B.numRow());
+  size_t depth = L->getLoopDepth();
+  for (auto m = size_t(M); m < A.numRow(); ++m)
+    B(m, B.numCol() - depth) = -1; // indvar
+  // recurse, if possible to add an outer layer
+  if (llvm::Loop *P = L->getParentLoop()) {
+    if (areSymbolsLoopInvariant(A, symbols, P, SE)) {
+      // llvm::SmallVector<const llvm::SCEVPredicate *, 4> predicates;
+      // auto *BTI = SE.getPredicatedBackedgeTakenCount(L,
+      // predicates);
+      if (const llvm::SCEV *BTP = getBackedgeTakenCount(SE, P)) {
+        if (!llvm::isa<llvm::SCEVCouldNotCompute>(BTP))
+          return addBackedgeTakenCount(AB, symbols, P, BTP, SE, minDepth, ORE);
+        else if (ORE) [[unlikely]] {
+          llvm::SmallVector<char, 128> msg;
+          llvm::raw_svector_ostream os(msg);
+          os << "SCEVCouldNotCompute from loop: " << *P << "\n";
+          llvm::OptimizationRemarkAnalysis analysis{
+            remarkAnalysis("AffineLoopConstruction", L)};
+          ORE->emit(analysis << os.str());
+        }
+      }
+    } else if (ORE) [[unlikely]] {
+      llvm::SmallVector<char, 256> msg;
+      llvm::raw_svector_ostream os(msg);
+      os << "Fail because symbols are not loop invariant in loop:\n"
+         << *P << "\n";
+      if (auto b = L->getBounds(SE))
+        os << "Loop Bounds:\nInitial: " << b->getInitialIVValue()
+           << "\nStep: " << *b->getStepValue()
+           << "\nFinal: " << b->getFinalIVValue() << "\n";
+      for (auto s : symbols) os << *s << "\n";
+      llvm::OptimizationRemarkAnalysis analysis{
+        remarkAnalysis("AffineLoopConstruction", L)};
+      ORE->emit(analysis << os.str());
+    }
+  }
+  return std::max(depth - 1, minDepth);
+}
+} // namespace loopNestCtor
+
 // A * x >= 0
 // if constexpr(NonNegative)
 //   x >= 0
@@ -175,14 +325,68 @@ struct AffineLoopNest
   : BasePolyhedra<false, true, NonNegative, AffineLoopNest<NonNegative>> {
   using BaseT =
     BasePolyhedra<false, true, NonNegative, AffineLoopNest<NonNegative>>;
-  using BaseT::getNumDynamic, BaseT::getNumSymbols, BaseT::pruneBounds,
-    BaseT::initializeComparator, BaseT::isEmpty, BaseT::A, BaseT::C, BaseT::S;
+
+  static inline auto construct(BumpAlloc<> &alloc, llvm::Loop *L,
+                               const llvm::SCEV *BT, llvm::ScalarEvolution &SE,
+                               llvm::OptimizationRemarkEmitter *ORE = nullptr)
+    -> AffineLoopNest {
+    // A holds symbols
+    // B holds loop bounds
+    // they're separate so we can grow them independently
+    IntMatrix A;
+    IntMatrix B;
+    // once we're done assembling these, we'll concatenate A and B
+    size_t maxDepth = L->getLoopDepth();
+    // size_t maxNumSymbols = BT->getExpressionSize();
+    A.resize(0, 1, 1 + BT->getExpressionSize());
+    B.resize(0, maxDepth, maxDepth);
+    size_t minDepth = addBackedgeTakenCount(B, L, BT, SE, 0, ORE);
+    // We first check for loops in B that are shallower than minDepth
+    // we include all loops such that L->getLoopDepth() > minDepth
+    // note that the outer-most loop has a depth of 1.
+    // We turn these loops into `getAddRecExprs`s, so that we can
+    // add them as variables to `A`.
+    for (size_t d = 0; d < minDepth; ++d) {
+      // loop at depth d+1
+      llvm::Loop *P = nullptr;
+      // search B(_,end-d) for references
+      for (size_t i = 0; i < B.numRow(); ++i) {
+        // TODO; confirm `last` vs `end`
+        if (int64_t Bid = B(i, last - d)) {
+          if (!P) {
+            // find P
+            P = L;
+            for (size_t r = d + 1; r < maxDepth; ++r) P = P->getParentLoop();
+          }
+          // TODO: find a more efficient way to get IntTyp
+          llvm::Type *IntTyp = P->getInductionVariable(SE)->getType();
+          addSymbol(SE.getAddRecExpr(SE.getZero(IntTyp), SE.getOne(IntTyp), P,
+                                     llvm::SCEV::NoWrapMask),
+                    _(i, i + 1), Bid);
+        }
+      }
+    }
+    size_t depth = maxDepth - minDepth;
+    Col N = A.numCol();
+    A.resize(N + depth);
+    // copy the included loops from B into A
+    A(_, _(N, N + depth)) = B(_, _(0, depth));
+    initializeComparator();
+    // addZeroLowerBounds();
+    // NOTE: pruneBounds() is not legal here if we wish to use
+    // removeInnerMost later.
+    // pruneBounds();
+  }
+
+  auto getSyms() -> llvm::MutableArrayRef<const llvm::SCEV *> {
+    return symbols;
+  }
 
   [[nodiscard]] constexpr auto getNumLoops() const -> size_t {
-    return getNumDynamic();
+    return this->getNumDynamic();
   }
   auto findIndex(const llvm::SCEV *v) const -> size_t {
-    return findSymbolicIndex(S, v);
+    return findSymbolicIndex(symbols, v);
   }
   /// A.rotate( R )
   /// A(_,const) + A(_,var)*var >= 0
@@ -198,6 +402,7 @@ struct AffineLoopNest
     assert(R.numCol() == numExtraVar);
     assert(R.numRow() == numExtraVar);
     const size_t numConst = getNumSymbols();
+    MutDensePtrMatrix<int64_t> A{getA()};
     const auto [M, N] = A.size();
     auto pt = alloc.allocate<AffineLoopNest<false>>();
     NotNull<AffineLoopNest<false>> ret = new (pt) AffineLoopNest<false>{};
@@ -224,6 +429,7 @@ struct AffineLoopNest
     auto pt = alloc.allocate<AffineLoopNest<false>>();
     NotNull<AffineLoopNest<false>> ret = new (pt) AffineLoopNest<false>{};
     ret->S = S;
+    auto A{getA()};
     IntMatrix &B = ret->A;
     B.resizeForOverwrite(M + numExtraVar, N);
     B(_(0, M), _) = A;
@@ -234,146 +440,6 @@ struct AffineLoopNest
     return ret;
   }
 
-  /// add a symbol to row `r` of A
-  /// we try to break down value `v`, so that adding
-  /// N, N - 1, N - 3 only adds the variable `N`, and adds the constant
-  /// offsets
-  [[nodiscard]] auto addSymbol(IntMatrix &B, llvm::Loop *L, const llvm::SCEV *v,
-                               llvm::ScalarEvolution &SE,
-                               Range<size_t, size_t> lu, int64_t mlt,
-                               size_t minDepth) -> size_t {
-    // first, we check if `v` in `Symbols`
-    if (size_t i = findIndex(v)) {
-      A(lu, i) += mlt;
-      return minDepth;
-    } else if (std::optional<int64_t> c = getConstantInt(v)) {
-      A(lu, 0) += mlt * (*c);
-      return minDepth;
-    } else if (const auto *ar = llvm::dyn_cast<const llvm::SCEVAddExpr>(v)) {
-      const llvm::SCEV *op0 = ar->getOperand(0);
-      const llvm::SCEV *op1 = ar->getOperand(1);
-      Row M = A.numRow();
-      minDepth = addSymbol(B, L, op0, SE, lu, mlt, minDepth);
-      if (M != A.numRow())
-        minDepth = addSymbol(B, L, op1, SE, _(M, A.numRow()), mlt, minDepth);
-      return addSymbol(B, L, op1, SE, lu, mlt, minDepth);
-    } else if (const auto *m = llvm::dyn_cast<const llvm::SCEVMulExpr>(v)) {
-      if (auto op0 = getConstantInt(m->getOperand(0))) {
-        return addSymbol(B, L, m->getOperand(1), SE, lu, mlt * (*op0),
-                         minDepth);
-      } else if (auto op1 = getConstantInt(m->getOperand(1))) {
-        return addSymbol(B, L, m->getOperand(0), SE, lu, mlt * (*op1),
-                         minDepth);
-      }
-    } else if (const auto *x = llvm::dyn_cast<const llvm::SCEVAddRecExpr>(v)) {
-      size_t recDepth = x->getLoop()->getLoopDepth();
-      if (x->isAffine()) {
-        minDepth = addSymbol(B, L, x->getOperand(0), SE, lu, mlt, minDepth);
-        if (auto opc = getConstantInt(x->getOperand(1))) {
-          // swap order vs recDepth to go inner<->outer
-          B(lu, B.numCol() - recDepth) = mlt * (*opc);
-          return minDepth;
-        }
-        v =
-          SE.getAddRecExpr(SE.getZero(x->getOperand(0)->getType()),
-                           x->getOperand(1), x->getLoop(), x->getNoWrapFlags());
-      }
-      // we only support affine SCEVAddRecExpr with constant steps
-      // we use a flag "minSupported", which defaults to 0
-      // 0 means we support all loops, as the outer most depth is 1
-      // Depth of 0 means toplevel.
-      minDepth = std::max(minDepth, recDepth);
-    } else if (const auto *mm = llvm::dyn_cast<const llvm::SCEVMinMaxExpr>(v)) {
-      auto Sm = simplifyMinMax(SE, mm);
-      if (Sm != v) return addSymbol(B, L, Sm, SE, lu, mlt, minDepth);
-      bool isMin =
-        llvm::isa<llvm::SCEVSMinExpr>(mm) || llvm::isa<llvm::SCEVUMinExpr>(mm);
-      const llvm::SCEV *op0 = mm->getOperand(0);
-      const llvm::SCEV *op1 = mm->getOperand(1);
-      if (isMin ^
-          (mlt < 0)) { // we can represent this as additional constraints
-        Row M = A.numRow();
-        Row Mp = M + lu.size();
-        A.resize(Mp);
-        B.resize(Mp);
-        A(_(M, Mp), _) = A(lu, _);
-        B(_(M, Mp), _) = B(lu, _);
-        minDepth = addSymbol(B, L, op0, SE, lu, mlt, minDepth);
-        minDepth = addSymbol(B, L, op1, SE, _(M, Mp), mlt, minDepth);
-      } else if (addRecMatchesLoop(op0, L)) {
-        return addSymbol(B, L, op1, SE, lu, mlt, minDepth);
-      } else if (addRecMatchesLoop(op1, L)) {
-        return addSymbol(B, L, op0, SE, lu, mlt, minDepth);
-      }
-    } else if (const auto *ex = llvm::dyn_cast<llvm::SCEVCastExpr>(v))
-      return addSymbol(B, L, ex->getOperand(0), SE, lu, mlt, minDepth);
-    addSymbol(v, lu, mlt);
-    return minDepth;
-  }
-  void addSymbol(const llvm::SCEV *v, Range<size_t, size_t> lu, int64_t mlt) {
-    assert(lu.size());
-    S.push_back(v);
-    A.resize(A.numCol() + 1);
-    A(lu, S.size()) = mlt;
-  }
-  static auto addRecMatchesLoop(const llvm::SCEV *S, llvm::Loop *L) -> bool {
-    if (const auto *x = llvm::dyn_cast<const llvm::SCEVAddRecExpr>(S))
-      return x->getLoop() == L;
-    return false;
-  }
-  auto addBackedgeTakenCount(IntMatrix &B, llvm::Loop *L, const llvm::SCEV *BT,
-                             llvm::ScalarEvolution &SE, size_t minDepth,
-                             llvm::OptimizationRemarkEmitter *ORE) -> size_t {
-    Row M = A.numRow();
-    A.resize(M + 1);
-    B.resize(M + 1);
-    minDepth = addSymbol(B, L, BT, SE, _(M, M + 1), 1, minDepth);
-    assert(A.numRow() == B.numRow());
-    size_t depth = L->getLoopDepth();
-    for (auto m = size_t(M); m < A.numRow(); ++m)
-      B(m, B.numCol() - depth) = -1; // indvar
-    // recurse, if possible to add an outer layer
-    if (llvm::Loop *P = L->getParentLoop()) {
-      if (areSymbolsLoopInvariant(P, SE)) {
-        // llvm::SmallVector<const llvm::SCEVPredicate *, 4> predicates;
-        // auto *BTI = SE.getPredicatedBackedgeTakenCount(L,
-        // predicates);
-        if (const llvm::SCEV *BTP = getBackedgeTakenCount(SE, P)) {
-          if (!llvm::isa<llvm::SCEVCouldNotCompute>(BTP))
-            return addBackedgeTakenCount(B, P, BTP, SE, minDepth, ORE);
-          else if (ORE) {
-            llvm::SmallVector<char, 128> msg;
-            llvm::raw_svector_ostream os(msg);
-            os << "SCEVCouldNotCompute from loop: " << *P << "\n";
-            llvm::OptimizationRemarkAnalysis analysis{
-              remarkAnalysis("AffineLoopConstruction", L)};
-            ORE->emit(analysis << os.str());
-          }
-        }
-      } else if (ORE) {
-        llvm::SmallVector<char, 256> msg;
-        llvm::raw_svector_ostream os(msg);
-        os << "Fail because symbols are not loop invariant in loop:\n"
-           << *P << "\n";
-        if (auto b = L->getBounds(SE))
-          os << "Loop Bounds:\nInitial: " << b->getInitialIVValue()
-             << "\nStep: " << *b->getStepValue()
-             << "\nFinal: " << b->getFinalIVValue() << "\n";
-        for (auto s : S) os << *s << "\n";
-        llvm::OptimizationRemarkAnalysis analysis{
-          remarkAnalysis("AffineLoopConstruction", L)};
-        ORE->emit(analysis << os.str());
-      }
-    }
-    return std::max(depth - 1, minDepth);
-  }
-  auto areSymbolsLoopInvariant(llvm::Loop *L, llvm::ScalarEvolution &SE) const
-    -> bool {
-    for (size_t i = 0; i < S.size(); ++i)
-      if ((!allZero(A(_, i + 1))) && (!SE.isLoopInvariant(S[i], L)))
-        return false;
-    return true;
-  }
   static auto construct(llvm::Loop *L, llvm::ScalarEvolution &SE)
     -> std::optional<AffineLoopNest<NonNegative>> {
     auto BT = getBackedgeTakenCount(SE, L);
@@ -382,47 +448,7 @@ struct AffineLoopNest
   }
   AffineLoopNest(llvm::Loop *L, const llvm::SCEV *BT, llvm::ScalarEvolution &SE,
                  llvm::OptimizationRemarkEmitter *ORE = nullptr) {
-    IntMatrix B;
-    // once we're done assembling these, we'll concatenate A and B
-    size_t maxDepth = L->getLoopDepth();
-    // size_t maxNumSymbols = BT->getExpressionSize();
-    A.resize(0, 1, 1 + BT->getExpressionSize());
-    B.resize(0, maxDepth, maxDepth);
-    size_t minDepth = addBackedgeTakenCount(B, L, BT, SE, 0, ORE);
-    // We first check for loops in B that are shallower than minDepth
-    // we include all loops such that L->getLoopDepth() > minDepth
-    // note that the outer-most loop has a depth of 1.
-    // We turn these loops into `getAddRecExprs`s, so that we can
-    // add them as variables to `A`.
-    for (size_t d = 0; d < minDepth; ++d) {
-      // loop at depth d+1
-      llvm::Loop *P = nullptr;
-      // search B(_,end-d) for references
-      for (size_t i = 0; i < B.numRow(); ++i) {
-        if (int64_t Bid = B(i, end - d)) {
-          if (!P) {
-            // find P
-            P = L;
-            for (size_t r = d + 1; r < maxDepth; ++r) P = P->getParentLoop();
-          }
-          // TODO: find a more efficient way to get IntTyp
-          llvm::Type *IntTyp = P->getInductionVariable(SE)->getType();
-          addSymbol(SE.getAddRecExpr(SE.getZero(IntTyp), SE.getOne(IntTyp), P,
-                                     llvm::SCEV::NoWrapMask),
-                    _(i, i + 1), Bid);
-        }
-      }
-    }
-    size_t depth = maxDepth - minDepth;
-    Col N = A.numCol();
-    A.resize(N + depth);
-    // copy the included loops from B into A
-    A(_, _(N, N + depth)) = B(_, _(0, depth));
-    initializeComparator();
-    // addZeroLowerBounds();
-    // NOTE: pruneBounds() is not legal here if we wish to use
-    // removeInnerMost later.
-    // pruneBounds();
+    static_assert(false);
   }
   [[nodiscard]] auto removeInnerMost() const -> AffineLoopNest<NonNegative> {
     size_t innermostLoopInd = getNumSymbols();
@@ -666,7 +692,6 @@ struct AffineLoopNest
       }
   }
 
-  // void printBound(llvm::raw_ostream &os, const IntMatrix &A, size_t i,
   void printBound(llvm::raw_ostream &os, size_t i, int64_t sign) const {
     const size_t numVar = getNumLoops();
     const size_t numVarMinus1 = numVar - 1;
@@ -725,4 +750,12 @@ struct AffineLoopNest
     return os;
   }
   void dump(llvm::raw_ostream &os = llvm::errs()) const { os << *this; }
+
+  constexpr auto getA() -> MutDensePtrMatrix<int64_t>{
+
+  };
+
+private:
+  int64_t *ptr;
+  llvm::SmallVector<const llvm::SCEV *, 3> symbols;
 };

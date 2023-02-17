@@ -363,7 +363,7 @@ template <class T, class S> struct MutArray : Array<T, S> {
   }
   [[gnu::flatten]] constexpr auto operator<<(const std::integral auto b)
     -> decltype(auto) {
-    if constexpr (std::integral<S>) {
+    if constexpr (std::integral<S> || std::is_same_v<S, StridedRange>) {
       for (size_t c = 0, L = this->sz; c < L; ++c) (*this)[c] = b;
     } else {
       for (size_t r = 0; r < this->numRow(); ++r)
@@ -400,6 +400,16 @@ template <class T, class S> struct MutArray : Array<T, S> {
     } else {
       invariant(this->size() == B.size());
       for (size_t i = 0; i < this->size(); ++i) (*this)[i] += B[i];
+    }
+    return *this;
+  }
+  [[gnu::flatten]] constexpr auto operator+=(std::integral auto b)
+    -> decltype(auto) {
+    if constexpr (MatrixDimension<S> && !DenseLayout<S>) {
+      for (size_t r = 0; r < this->numRow(); ++r)
+        for (size_t c = 0; c < this->numCol(); ++c) (*this)(r, c) += b;
+    } else {
+      for (size_t i = 0; i < this->size(); ++i) (*this)[i] += b;
     }
     return *this;
   }
@@ -642,6 +652,14 @@ struct ResizeableView : MutArray<T, S> {
       return resize(nz.set(r));
     }
   }
+  constexpr void resize(Col c) {
+    if constexpr (std::integral<S>) {
+      return resize(S(c));
+    } else if constexpr (MatrixDimension<S>) {
+      S nz = this->sz;
+      return resize(nz.set(c));
+    }
+  }
   constexpr void resizeForOverwrite(S M) {
     U L = U(M);
     invariant(L <= U(this->sz));
@@ -809,6 +827,14 @@ struct ReallocView : ResizeableView<T, S, U> {
     } else if constexpr (MatrixDimension<S>) {
       S nz = this->sz;
       return resize(nz.set(r));
+    }
+  }
+  constexpr void resize(Col c) {
+    if constexpr (std::integral<S>) {
+      return resize(S(c));
+    } else if constexpr (MatrixDimension<S>) {
+      S nz = this->sz;
+      return resize(nz.set(c));
     }
   }
   constexpr void resizeForOverwrite(S M) {

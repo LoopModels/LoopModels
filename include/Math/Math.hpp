@@ -640,4 +640,4 @@ using LinearAlgebra::SmallSparseMatrix, LinearAlgebra::StridedVector,
   LinearAlgebra::begin, LinearAlgebra::end, LinearAlgebra::swap,
   LinearAlgebra::SquarePtrMatrix, LinearAlgebra::Row, LinearAlgebra::RowStride,
   LinearAlgebra::Col, LinearAlgebra::CarInd, LinearAlgebra::last,
-  LinearAlgebra::MutDensePtrMatrix;
+  LinearAlgebra::MutDensePtrMatrix, LinearAlgebra::DensePtrMatrix;

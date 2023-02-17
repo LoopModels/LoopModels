@@ -376,6 +376,10 @@ public:
   [[gnu::returns_nonnull]] constexpr auto allocate(size_t n) -> T * {
     return A->template allocate<T>(n);
   }
+  constexpr auto checkPoint() -> typename Alloc::CheckPoint {
+    return A->checkPoint();
+  }
+  constexpr void checkPoint(typename Alloc::CheckPoint p) { A->checkPoint(p); }
 };
 static_assert(std::same_as<
               std::allocator_traits<WBumpAlloc<int64_t *>>::size_type, size_t>);
@@ -409,3 +413,14 @@ concept Allocator =
   };
 static_assert(Allocator<WBumpAlloc<int64_t>>);
 static_assert(Allocator<std::allocator<int64_t>>);
+
+struct NoCheckpoint {};
+
+constexpr auto checkpoint(const auto &) { return NoCheckpoint{}; }
+template <class T> constexpr auto checkpoint(WBumpAlloc<T> alloc) {
+  return alloc.checkPoint();
+}
+constexpr void checkpoint(const auto &, NoCheckpoint) {}
+template <class T> constexpr void checkpoint(WBumpAlloc<T> alloc, auto p) {
+  alloc.checkPoint(p);
+}

@@ -6,7 +6,8 @@
 template <typename T>
 [[nodiscard]] inline auto copyRef(BumpAlloc<> &alloc, llvm::ArrayRef<T> ref)
   -> llvm::ArrayRef<T> {
-  T *p = alloc.allocate<T>(ref.size());
-  std::copy(ref.begin(), ref.end(), p);
-  return llvm::ArrayRef<T>(p, ref.size());
+  size_t N = ref.size();
+  T *p = alloc.allocate<T>(N);
+  std::copy_n(ref.begin(), N, p);
+  return llvm::ArrayRef<T>(p, N);
 }

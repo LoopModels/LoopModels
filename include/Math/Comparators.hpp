@@ -375,23 +375,16 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
   [[nodiscard]] static constexpr auto
   memoryNeededNonNegative(PtrMatrix<int64_t> A, size_t numNonNegative)
     -> size_t {
-    const size_t numConExplicit = size_t(A.numRow()) + 1;
-    const size_t numConTotal = numConExplicit + numNonNegative;
-    size_t numVar = size_t(A.numCol());
-    size_t rowV = numVar + numConTotal;
-    size_t colV = 2 * numConTotal;
-    return (rowV + colV + 1) * rowV;
+    size_t numConTotal = size_t(A.numRow()) + 1 + numNonNegative;
+    size_t rowV = size_t(A.numCol()) + numConTotal;
+    return (2 * numConTotal + rowV + 1) * rowV;
   }
   [[nodiscard]] static constexpr auto
   memoryNeededNonNegative(PtrMatrix<int64_t> A, PtrMatrix<int64_t> E,
                           size_t numNonNegative) -> size_t {
-    const size_t numInEqConExplicit = size_t(A.numRow()) + 1;
-    const size_t numInEqConTotal = numInEqConExplicit + numNonNegative;
-    const size_t numEqCon = size_t(E.numRow());
-    size_t numVar = size_t(A.numCol());
-    size_t rowV = numVar + numInEqConTotal;
-    size_t colV = 2 * numInEqConTotal + numEqCon;
-    return (rowV + colV + 1) * rowV;
+    size_t numInEqConTotal = size_t(A.numRow()) + 1 + numNonNegative;
+    size_t rowV = size_t(A.numCol()) + numInEqConTotal;
+    return (2 * numInEqConTotal + size_t(E.numRow()) + rowV + 1) * rowV;
   }
   template <class Allocator>
   constexpr void init(Allocator alloc, PtrMatrix<int64_t> A, bool pos0) {
@@ -423,21 +416,16 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
   }
   [[nodiscard]] static constexpr auto memoryNeeded(PtrMatrix<int64_t> A,
                                                    bool pos0) -> size_t {
-    const size_t numInEqCon = size_t(A.numRow()) + pos0;
-    size_t numVar = size_t(A.numCol());
-    size_t rowV = numVar + numInEqCon;
-    size_t colV = 2 * numInEqCon;
-    return (rowV + colV + 1) * rowV;
+    size_t numInEqCon = size_t(A.numRow()) + pos0;
+    size_t rowV = size_t(A.numCol()) + numInEqCon;
+    return (2 * numInEqCon + rowV + 1) * rowV;
   }
   [[nodiscard]] static constexpr auto memoryNeeded(PtrMatrix<int64_t> A,
                                                    PtrMatrix<int64_t> E,
                                                    bool pos0) -> size_t {
-    const size_t numInEqCon = size_t(A.numRow()) + pos0;
-    size_t numVar = size_t(A.numCol());
-    size_t numEqCon = size_t(E.numRow());
-    size_t rowV = numVar + numInEqCon;
-    size_t colV = 2 * numInEqCon + numEqCon;
-    return (rowV + colV + 1) * rowV;
+    size_t numInEqCon = size_t(A.numRow()) + pos0;
+    size_t rowV = size_t(A.numCol()) + numInEqCon;
+    return (2 * numInEqCon + size_t(E.numRow()) + rowV + 1) * rowV;
   }
   template <typename Allocator>
   void init(Allocator alloc, PtrMatrix<int64_t> A, PtrMatrix<int64_t> E,
@@ -770,10 +758,10 @@ private:
 static_assert(Comparator<PtrSymbolicComparator>);
 static_assert(Comparator<LinearSymbolicComparator>);
 
-static constexpr void moveEqualities(IntMatrix &, EmptyMatrix<int64_t> &,
-                                     const Comparator auto &) {}
-static constexpr void moveEqualities(IntMatrix &A, IntMatrix &E,
-                                     const Comparator auto &C) {
+constexpr void moveEqualities(IntMatrix &, EmptyMatrix<int64_t>,
+                              const Comparator auto &) {}
+constexpr void moveEqualities(IntMatrix &A, IntMatrix &E,
+                              const Comparator auto &C) {
   const size_t numVar = size_t(E.numCol());
   assert(A.numCol() == numVar);
   if (A.numRow() <= 1) return;

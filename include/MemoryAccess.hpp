@@ -63,8 +63,8 @@ private:
   int64_t mem[1]; // NOLINT(modernize-avoid-c-arrays)
   // schedule indicated by `1` top bit, remainder indicates loop
   [[nodiscard]] constexpr auto data() -> NotNull<int64_t> { return mem; }
-  [[nodiscard]] constexpr auto data() const -> NotNull<const int64_t> {
-    return mem;
+  [[nodiscard]] constexpr auto data() const -> NotNull<int64_t> {
+    return const_cast<int64_t *>(mem);
   }
   [[nodiscard]] auto omegaOffset() const -> size_t {
     return memoryOmegaOffset(getArrayDim(), getNumLoops(), getNumSymbols());
@@ -110,18 +110,18 @@ public:
     auto *mem =
       alloc.allocate(sizeof(MemoryAccess) + memNeeded * sizeof(int64_t), 8);
     auto *ma = new (mem) MemoryAccess(arrayPtr, loopRef, user, {sz, off});
-    ma->indexMatrix() = indMatT.transpose();
-    ma->offsetMatrix() = offsets;
-    ma->getFusionOmega() = o;
+    ma->indexMatrix() << indMatT.transpose();
+    ma->offsetMatrix() << offsets;
+    ma->getFusionOmega() << o;
     return ma;
   }
   /// omegas order is [outer <-> inner]
   [[nodiscard]] auto getFusionOmega() -> MutPtrVector<int64_t> {
-    return {data() + omegaOffset(), getNumLoops() + 1};
+    return {data() + omegaOffset(), unsigned(getNumLoops()) + 1};
   }
   /// omegas order is [outer <-> inner]
   [[nodiscard]] auto getFusionOmega() const -> PtrVector<int64_t> {
-    return {data() + omegaOffset(), getNumLoops() + 1};
+    return {data() + omegaOffset(), unsigned(getNumLoops()) + 1};
   }
   [[nodiscard]] constexpr auto inputEdges() const -> const BitSet & {
     return edgesIn;

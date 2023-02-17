@@ -3,6 +3,7 @@
 #include "Math/Array.hpp"
 #include "Math/Comparators.hpp"
 #include "Math/Constraints.hpp"
+#include "Math/EmptyArrays.hpp"
 #include "Math/Math.hpp"
 #include "Math/NormalForm.hpp"
 #include "Math/VectorGreatestCommonDivisor.hpp"
@@ -67,16 +68,29 @@ struct BasePolyhedra {
   // this is because of hnf prioritizing diagonalizing leading rows
   // empty fields sorted first to make it easier for compiler to alias them
 
-  constexpr auto getA() -> MutDensePtrMatrix<int64_t> {
-    return *static_cast<P *>(this)->getAImpl();
+  [[nodiscard]] constexpr auto getA() -> MutDensePtrMatrix<int64_t> {
+    return *static_cast<P *>(this)->getA();
   }
-  constexpr auto getE() -> MutDensePtrMatrix<int64_t> {
-    static_assert(HasEqualities);
-    return *static_cast<P *>(this)->getAImpl();
+  [[nodiscard]] constexpr auto getE() {
+    if constexpr (HasEqualities) return *static_cast<P *>(this)->getE();
+    else return EmptyMatrix<int64_t>();
   }
-  constexpr auto getSyms() -> llvm::MutableArrayRef<const llvm::SCEV *> {
+  [[nodiscard]] constexpr auto getSyms()
+    -> llvm::MutableArrayRef<const llvm::SCEV *> {
     static_assert(HasSymbols);
-    return *static_cast<P *>(this)->getSymsImpl();
+    return *static_cast<P *>(this)->getSyms();
+  }
+  [[nodiscard]] constexpr auto getA() const -> DensePtrMatrix<int64_t> {
+    return *static_cast<const P *>(this)->getA();
+  }
+  [[nodiscard]] constexpr auto getE() const {
+    if constexpr (HasEqualities) return *static_cast<const P *>(this)->getE();
+    else return EmptyMatrix<int64_t>();
+  }
+  [[nodiscard]] constexpr auto getSyms() const
+    -> llvm::ArrayRef<const llvm::SCEV *> {
+    static_assert(HasSymbols);
+    return *static_cast<const P *>(this)->getSyms();
   }
 
   [[nodiscard]] constexpr auto initializeComparator(
@@ -101,6 +115,16 @@ struct BasePolyhedra {
       return comparator::linearNonNegative(alloc, getA(), getNumDynamic());
     else return comparator::linear(alloc, getA(), true);
   }
+  constexpr void reinitComparator(WBumpAlloc<int64_t> alloc,
+                                  comparator::PtrSymbolicComparator &comp) {
+    if constexpr (HasEqualities)
+      if constexpr (NonNegative)
+        comp.initNonNegative(alloc, getA(), getE(), getNumDynamic());
+      else comp.init(alloc, getA(), getE(), true);
+    else if constexpr (NonNegative)
+      return comp.initNonNegative(alloc, getA(), getNumDynamic());
+    else return comp.init(alloc, getA(), true);
+  }
   constexpr auto calcIsEmpty() -> bool {
     return initializeComparator().isEmpty();
   }
@@ -120,6 +144,7 @@ struct BasePolyhedra {
     const size_t dyn = getNumDynamic();
     MutPtrMatrix<int64_t> A{getA()};
     Vector<int64_t> diff{unsigned(A.numCol())};
+    auto p = checkpoint(alloc);
     auto C = initializeComparator(alloc);
     if constexpr (HasEqualities) removeRedundantRows(getA(), getE());
     for (auto j = size_t(getA().numRow()); j;) {
@@ -129,11 +154,11 @@ struct BasePolyhedra {
         diff << A(--i, _) - A(j, _);
         if (C.greaterEqual(diff)) {
           eraseConstraint(A, i);
-          C = initializeComparator(alloc);
+          reinitComparator(alloc, C);
           --j; // `i < j`, and `i` has been removed
         } else if (diff *= -1; C.greaterEqual(diff)) {
           eraseConstraint(A, j);
-          C = initializeComparator(alloc);
+          reinitComparator(alloc, C);
           broke = true;
           break; // `j` is gone
         }
@@ -145,13 +170,14 @@ struct BasePolyhedra {
             --diff[last - i];
             if (C.greaterEqual(diff)) {
               eraseConstraint(A, j);
-              C = initializeComparator(alloc);
+              reinitComparator(alloc, C);
               break; // `j` is gone
             }
           }
         }
       }
     }
+    checkpoint(alloc, p);
     if constexpr (HasEqualities)
       for (size_t i = 0; i < getE().numRow(); ++i) normalizeByGCD(getE()(i, _));
   }
