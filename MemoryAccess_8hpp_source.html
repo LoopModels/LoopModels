@@ -134,8 +134,8 @@ $(function() {
 <div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;  int64_t mem[1]; <span class="comment">// NOLINT(modernize-avoid-c-arrays)</span></div>
 <div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;  <span class="comment">// schedule indicated by `1` top bit, remainder indicates loop</span></div>
 <div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> data() -&gt; <a class="code" href="structNotNull.html">NotNull&lt;int64_t&gt;</a> { <span class="keywordflow">return</span> mem; }</div>
-<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> data() <span class="keyword">const</span> -&gt; <a class="code" href="structNotNull.html">NotNull&lt;const int64_t&gt;</a> {</div>
-<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;    <span class="keywordflow">return</span> mem;</div>
+<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> data() <span class="keyword">const</span> -&gt; <a class="code" href="structNotNull.html">NotNull&lt;int64_t&gt;</a> {</div>
+<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">const_cast&lt;</span>int64_t *<span class="keyword">&gt;</span>(mem);</div>
 <div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;  }</div>
 <div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> omegaOffset() <span class="keyword">const</span> -&gt; <span class="keywordtype">size_t</span> {</div>
 <div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;    <span class="keywordflow">return</span> memoryOmegaOffset(getArrayDim(), getNumLoops(), getNumSymbols());</div>
@@ -181,16 +181,16 @@ $(function() {
 <div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;    <span class="keyword">auto</span> *mem =</div>
 <div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;      alloc.allocate(<span class="keyword">sizeof</span>(<a class="code" href="structMemoryAccess.html">MemoryAccess</a>) + memNeeded * <span class="keyword">sizeof</span>(int64_t), 8);</div>
 <div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;    <span class="keyword">auto</span> *ma = <span class="keyword">new</span> (mem) <a class="code" href="structMemoryAccess.html">MemoryAccess</a>(arrayPtr, loopRef, user, {sz, off});</div>
-<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;    ma-&gt;<a class="code" href="structMemoryAccess.html#af3e9f24fe6b5cb0b59091cea5dfdfcb0">indexMatrix</a>() = indMatT.transpose();</div>
-<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;    ma-&gt;offsetMatrix() = offsets;</div>
-<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;    ma-&gt;getFusionOmega() = o;</div>
+<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;    ma-&gt;<a class="code" href="structMemoryAccess.html#af3e9f24fe6b5cb0b59091cea5dfdfcb0">indexMatrix</a>() &lt;&lt; indMatT.transpose();</div>
+<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;    ma-&gt;offsetMatrix() &lt;&lt; offsets;</div>
+<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;    ma-&gt;getFusionOmega() &lt;&lt; o;</div>
 <div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;    <span class="keywordflow">return</span> ma;</div>
 <div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;  }</div>
 <div class="line"><a name="l00119"></a><span class="lineno"><a class="line" href="structMemoryAccess.html#a343e8ad8af62a3d1303005ad852c1d39">  119</a></span>&#160;  [[nodiscard]] <span class="keyword">auto</span> <a class="code" href="structMemoryAccess.html#a343e8ad8af62a3d1303005ad852c1d39">getFusionOmega</a>() -&gt; MutPtrVector&lt;int64_t&gt; {</div>
-<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;    <span class="keywordflow">return</span> {data() + omegaOffset(), getNumLoops() + 1};</div>
+<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;    <span class="keywordflow">return</span> {data() + omegaOffset(), unsigned(getNumLoops()) + 1};</div>
 <div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;  }</div>
 <div class="line"><a name="l00123"></a><span class="lineno"><a class="line" href="structMemoryAccess.html#a685e16ba012a1a0373eeb6c1d21a5666">  123</a></span>&#160;  [[nodiscard]] <span class="keyword">auto</span> <a class="code" href="structMemoryAccess.html#a685e16ba012a1a0373eeb6c1d21a5666">getFusionOmega</a>() const -&gt; PtrVector&lt;int64_t&gt; {</div>
-<div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;    <span class="keywordflow">return</span> {data() + omegaOffset(), getNumLoops() + 1};</div>
+<div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;    <span class="keywordflow">return</span> {data() + omegaOffset(), unsigned(getNumLoops()) + 1};</div>
 <div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160;  }</div>
 <div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> inputEdges() const -&gt; const <a class="code" href="structBitSet.html">BitSet</a> &amp; {</div>
 <div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;    <span class="keywordflow">return</span> edgesIn;</div>

@@ -86,18 +86,30 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:acff0f8d0019a25088596916cb36ab81a"><td class="memItemLeft" align="right" valign="top"><a id="acff0f8d0019a25088596916cb36ab81a"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getA</b> () -&gt; MutDensePtrMatrix&lt; int64_t &gt;</td></tr>
 <tr class="separator:acff0f8d0019a25088596916cb36ab81a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a561c5c308bca642481280a9a5a482ac9"><td class="memItemLeft" align="right" valign="top"><a id="a561c5c308bca642481280a9a5a482ac9"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getE</b> () -&gt; MutDensePtrMatrix&lt; int64_t &gt;</td></tr>
-<tr class="separator:a561c5c308bca642481280a9a5a482ac9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9c45ccc3623628efd576a8065fe3d586"><td class="memItemLeft" align="right" valign="top"><a id="a9c45ccc3623628efd576a8065fe3d586"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getE</b> ()</td></tr>
+<tr class="separator:a9c45ccc3623628efd576a8065fe3d586"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aaa7c8c865c746c7c13336363f245659b"><td class="memItemLeft" align="right" valign="top"><a id="aaa7c8c865c746c7c13336363f245659b"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getSyms</b> () -&gt; llvm::MutableArrayRef&lt; const llvm::SCEV * &gt;</td></tr>
 <tr class="separator:aaa7c8c865c746c7c13336363f245659b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a057c412f1554b31d87569e14645b4406"><td class="memItemLeft" align="right" valign="top"><a id="a057c412f1554b31d87569e14645b4406"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getA</b> () const -&gt; DensePtrMatrix&lt; int64_t &gt;</td></tr>
+<tr class="separator:a057c412f1554b31d87569e14645b4406"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a24fc89cde058ec755332271f8f0a9fa4"><td class="memItemLeft" align="right" valign="top"><a id="a24fc89cde058ec755332271f8f0a9fa4"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getE</b> () const</td></tr>
+<tr class="separator:a24fc89cde058ec755332271f8f0a9fa4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad3c486bfb20197e6d4ddb379b18cf52d"><td class="memItemLeft" align="right" valign="top"><a id="ad3c486bfb20197e6d4ddb379b18cf52d"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getSyms</b> () const -&gt; llvm::ArrayRef&lt; const llvm::SCEV * &gt;</td></tr>
+<tr class="separator:ad3c486bfb20197e6d4ddb379b18cf52d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae9f30771e97d882d8486d665a162b869"><td class="memItemLeft" align="right" valign="top"><a id="ae9f30771e97d882d8486d665a162b869"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>initializeComparator</b> (std::allocator&lt; int64_t &gt;={}) -&gt; <a class="el" href="structcomparator_1_1LinearSymbolicComparator.html">comparator::LinearSymbolicComparator</a></td></tr>
 <tr class="separator:ae9f30771e97d882d8486d665a162b869"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab9a2dce285d1f082dc791e5cb8761176"><td class="memItemLeft" align="right" valign="top"><a id="ab9a2dce285d1f082dc791e5cb8761176"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>initializeComparator</b> (<a class="el" href="classWBumpAlloc.html">WBumpAlloc</a>&lt; int64_t &gt; alloc) -&gt; <a class="el" href="structcomparator_1_1PtrSymbolicComparator.html">comparator::PtrSymbolicComparator</a></td></tr>
 <tr class="separator:ab9a2dce285d1f082dc791e5cb8761176"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a91aeee321f078710b5a23506b88d0756"><td class="memItemLeft" align="right" valign="top"><a id="a91aeee321f078710b5a23506b88d0756"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>reinitComparator</b> (<a class="el" href="classWBumpAlloc.html">WBumpAlloc</a>&lt; int64_t &gt; alloc, <a class="el" href="structcomparator_1_1PtrSymbolicComparator.html">comparator::PtrSymbolicComparator</a> &amp;comp)</td></tr>
+<tr class="separator:a91aeee321f078710b5a23506b88d0756"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8f3c7c7411e0ef2d9bd8f9f40decab52"><td class="memItemLeft" align="right" valign="top"><a id="a8f3c7c7411e0ef2d9bd8f9f40decab52"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>calcIsEmpty</b> () -&gt; bool</td></tr>
 <tr class="separator:a8f3c7c7411e0ef2d9bd8f9f40decab52"><td class="memSeparator" colspan="2">&#160;</td></tr>
