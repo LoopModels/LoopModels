@@ -9,6 +9,7 @@
 #include "Math/Math.hpp"
 #include "Math/MatrixDimensions.hpp"
 #include "Math/Polyhedra.hpp"
+#include "Memory.hpp"
 #include "Utilities/Allocators.hpp"
 #include "Utilities/Optional.hpp"
 #include <bit>
@@ -372,6 +373,9 @@ struct AffineLoopNest
     }
     size_t depth = maxDepth - minDepth;
     Col N = A.numCol();
+    size_t memNeeded = A.numRow() * (N + depth);
+    auto sym = copyRef(alloc, llvm::ArrayRef<const llvm::SCEV *>{symbols});
+
     A.resize(N + depth);
     // copy the included loops from B into A
     A(_, _(N, N + depth)) = B(_, _(0, depth));
@@ -383,7 +387,7 @@ struct AffineLoopNest
     // pruneBounds();
   }
 
-  auto getSyms() -> llvm::MutableArrayRef<const llvm::SCEV *> {
+  [[nodiscard]] auto getSyms() const -> llvm::ArrayRef<const llvm::SCEV *> {
     return symbols;
   }
 
@@ -756,11 +760,18 @@ struct AffineLoopNest
   }
   void dump(llvm::raw_ostream &os = llvm::errs()) const { os << *this; }
 
-  constexpr auto getA() -> MutDensePtrMatrix<int64_t>{
-
+  constexpr auto getA() -> MutDensePtrMatrix<int64_t> {
+    return {memory,
+            DenseDims{numConstraints, numLoops + this->getNumSymbols()}};
+  };
+  constexpr auto getA() const -> DensePtrMatrix<int64_t> {
+    return {memory,
+            DenseDims{numConstraints, numLoops + this->getNumSymbols()}};
   };
 
 private:
-  int64_t *ptr;
-  PtrVector<const llvm::SCEV *> symbols;
+  llvm::ArrayRef<const llvm::SCEV *> symbols;
+  unsigned int numConstraints;
+  unsigned int numLoops;
+  int64_t memory[1]; // NOLINT(modernize-avoid-c-arrays)
 };
