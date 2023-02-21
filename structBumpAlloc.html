@@ -152,7 +152,10 @@ static constexpr bool&#160;</td><td class="memItemRight" valign="bottom"><b>Bump
 <div class="textblock"><h3>template&lt;size_t SlabSize = 16384, bool BumpUp = false, size_t MinAlignment = alignof(std::max_align_t)&gt;<br />
 struct BumpAlloc&lt; SlabSize, BumpUp, MinAlignment &gt;</h3>
 
-<p>The motivation of this file is to support realloc, allowing us to reasonably use this allocator to back containers. </p>
+<p>The advantages over llvm's bumpallocator are:</p><ol type="1">
+<li>Support realloc</li>
+<li>Support support checkpointing </li>
+</ol>
 </div><h2 class="groupheader">Member Function Documentation</h2>
 <a id="a6a76e6f7de9051fea00955773e11a61b"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a6a76e6f7de9051fea00955773e11a61b">&#9670;&nbsp;</a></span>reallocate()</h2>
