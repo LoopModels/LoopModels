@@ -1,9 +1,9 @@
 #pragma once
 
-#include <memory>
 #define BUMP_ALLOC_LLVM_USE_ALLOCATOR
-/// The motivation of this file is to support realloc, allowing us to reasonably
-/// use this allocator to back containers.
+/// The advantages over llvm's bumpallocator are:
+/// 1. Support realloc
+/// 2. Support support checkpointing
 #include "Math/Utilities.hpp"
 #include "Utilities/Iterators.hpp"
 #include "Utilities/Valid.hpp"
@@ -15,8 +15,10 @@
 #include <llvm/Support/Compiler.h>
 #include <llvm/Support/MathExtras.h>
 #include <llvm/Support/MemAlloc.h>
+#include <memory>
 #include <type_traits>
 #ifndef BUMP_ALLOC_LLVM_USE_ALLOCATOR
+/// We can't use `std::allocator` because it doesn't support passing alignment
 #include <cstdlib>
 #endif
 

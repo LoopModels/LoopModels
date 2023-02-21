@@ -333,15 +333,16 @@ struct AffineLoopNest
     // A holds symbols
     // B holds loop bounds
     // they're separate so we can grow them independently
-    IntMatrix A;
-    IntMatrix B;
+    std::array<IntMatrix, 2> AB;
+    auto &[A, B] = AB;
     // once we're done assembling these, we'll concatenate A and B
     size_t maxDepth = L->getLoopDepth();
     // size_t maxNumSymbols = BT->getExpressionSize();
     A.resize(StridedDims{0, 1, 1 + BT->getExpressionSize()});
     B.resize(StridedDims{0, maxDepth, maxDepth});
     llvm::SmallVector<const llvm::SCEV *, 3> symbols;
-    size_t minDepth = loopNestCtor::addBackedgeTakenCount(B, L, BT, SE, 0, ORE);
+    size_t minDepth =
+      loopNestCtor::addBackedgeTakenCount(AB, symbols, L, BT, SE, 0, ORE);
     // We first check for loops in B that are shallower than minDepth
     // we include all loops such that L->getLoopDepth() > minDepth
     // note that the outer-most loop has a depth of 1.
@@ -361,7 +362,8 @@ struct AffineLoopNest
           }
           // TODO: find a more efficient way to get IntTyp
           llvm::Type *IntTyp = P->getInductionVariable(SE)->getType();
-          loopNestCtor::addSymbol(A, symbols, SE.getAddRecExpr(SE.getZero(IntTyp),
+          loopNestCtor::addSymbol(A, symbols,
+                                  SE.getAddRecExpr(SE.getZero(IntTyp),
                                                    SE.getOne(IntTyp), P,
                                                    llvm::SCEV::NoWrapMask),
                                   _(i, i + 1), Bid);
@@ -404,7 +406,7 @@ struct AffineLoopNest
     if constexpr (NonNegative) numExtraVar = getNumLoops();
     assert(R.numCol() == numExtraVar);
     assert(R.numRow() == numExtraVar);
-    const size_t numConst = getNumSymbols();
+    const size_t numConst = this->getNumSymbols();
     MutDensePtrMatrix<int64_t> A{getA()};
     const auto [M, N] = A.size();
     auto pt = alloc.allocate<AffineLoopNest<false>>();
@@ -760,5 +762,5 @@ struct AffineLoopNest
 
 private:
   int64_t *ptr;
-  llvm::SmallVector<const llvm::SCEV *, 3> symbols;
+  PtrVector<const llvm::SCEV *> symbols;
 };
