@@ -89,9 +89,9 @@ using&#160;</td><td class="memItemRight" valign="bottom"><b>BaseT</b> = <a class
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a5b23a1b4f949eec4211aaf87f1d1b000"><td class="memItemLeft" align="right" valign="top"><a id="a5b23a1b4f949eec4211aaf87f1d1b000"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>getSyms</b> () -&gt; llvm::MutableArrayRef&lt; const llvm::SCEV * &gt;</td></tr>
-<tr class="separator:a5b23a1b4f949eec4211aaf87f1d1b000"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae711e6c516d53d1debb2b3c0f6ee8884"><td class="memItemLeft" align="right" valign="top"><a id="ae711e6c516d53d1debb2b3c0f6ee8884"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getSyms</b> () const -&gt; llvm::ArrayRef&lt; const llvm::SCEV * &gt;</td></tr>
+<tr class="separator:ae711e6c516d53d1debb2b3c0f6ee8884"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab669d73f48a167b2643f563be669e365"><td class="memItemLeft" align="right" valign="top"><a id="ab669d73f48a167b2643f563be669e365"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumLoops</b> () const -&gt; size_t</td></tr>
 <tr class="separator:ab669d73f48a167b2643f563be669e365"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -164,6 +164,9 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>dump</b> (llvm::raw_o
 <tr class="memitem:a5fe2b9813b15a2ad29023a0c0d282b9e"><td class="memItemLeft" align="right" valign="top"><a id="a5fe2b9813b15a2ad29023a0c0d282b9e"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getA</b> () -&gt; MutDensePtrMatrix&lt; int64_t &gt;</td></tr>
 <tr class="separator:a5fe2b9813b15a2ad29023a0c0d282b9e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5d411d7b78fa3972d9c2949d1e104225"><td class="memItemLeft" align="right" valign="top"><a id="a5d411d7b78fa3972d9c2949d1e104225"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getA</b> () const -&gt; DensePtrMatrix&lt; int64_t &gt;</td></tr>
+<tr class="separator:a5d411d7b78fa3972d9c2949d1e104225"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_methods_structBasePolyhedra"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_structBasePolyhedra')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="structBasePolyhedra.html">BasePolyhedra&lt; false, true, true, AffineLoopNest&lt; true &gt; &gt;</a></td></tr>
 <tr class="memitem:acff0f8d0019a25088596916cb36ab81a inherit pub_methods_structBasePolyhedra"><td class="memItemLeft" align="right" valign="top"><a id="acff0f8d0019a25088596916cb36ab81a"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getA</b> () -&gt; MutDensePtrMatrix&lt; int64_t &gt;</td></tr>
