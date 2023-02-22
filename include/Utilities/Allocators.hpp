@@ -30,7 +30,8 @@ struct BumpAlloc {
 public:
   static constexpr bool BumpDown = !BumpUp;
   using value_type = std::byte;
-  [[gnu::returns_nonnull]] auto allocate(size_t Size, size_t Align) -> void * {
+  [[gnu::returns_nonnull]] constexpr auto allocate(size_t Size, size_t Align)
+    -> void * {
     if (Size > SlabSize / 2) {
 #ifdef BUMP_ALLOC_LLVM_USE_ALLOCATOR
       // void *p = llvm::allocate_buffer(Size, Align);
@@ -48,7 +49,8 @@ public:
     return p;
   }
   template <typename T>
-  [[gnu::returns_nonnull, gnu::flatten]] auto allocate(size_t N = 1) -> T * {
+  [[gnu::returns_nonnull, gnu::flatten]] constexpr auto allocate(size_t N = 1)
+    -> T * {
     static_assert(std::is_trivially_destructible_v<T>,
                   "BumpAlloc only supports trivially destructible types.");
     return reinterpret_cast<T *>(allocate(N * sizeof(T), alignof(T)));

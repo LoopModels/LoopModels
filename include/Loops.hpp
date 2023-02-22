@@ -371,31 +371,27 @@ struct AffineLoopNest
         }
       }
     }
+    assert(symbols.size() == A.numCol());
     size_t depth = maxDepth - minDepth;
-    Col N = A.numCol();
-    size_t memNeeded = A.numRow() * (N + depth);
-    auto sym = copyRef(alloc, llvm::ArrayRef<const llvm::SCEV *>{symbols});
-
-    A.resize(N + depth);
-    // copy the included loops from B into A
-    A(_, _(N, N + depth)) = B(_, _(0, depth));
-    // default is not to have an initialized comparator; initialize when used
-    // initializeComparator();
+    unsigned numConstraints = unsigned(A.numRow()), N = unsigned(A.numCol());
+    size_t memNeeded = numConstraints * (N + depth + 1) * sizeof(int64_t) +
+                       symbols.size() * sizeof(const llvm::SCEV *const *);
+    // auto sym = copyRef(alloc, llvm::ArrayRef<const llvm::SCEV *>{symbols});
+    auto *mem = alloc.allocate(sizeof(AffineLoopNest) - 8 + memNeeded,
+                               alignof(AffineLoopNest));
+    auto *aln = new (mem) AffineLoopNest(numConstraints, depth, N);
+    aln->getA()(_, _(0, N)) << A;
+    // copy the included loops from B
+    aln->getA()(_, _(N, N + depth)) << B(_, _(0, depth));
+    std::copy_n(symbols.begin(), symbols.size(), aln->getSymbols());
     // addZeroLowerBounds();
     // NOTE: pruneBounds() is not legal here if we wish to use
     // removeInnerMost later.
     // pruneBounds();
   }
 
-  [[nodiscard]] auto getSyms() const -> llvm::ArrayRef<const llvm::SCEV *> {
-    return symbols;
-  }
-
-  [[nodiscard]] constexpr auto getNumLoops() const -> size_t {
-    return this->getNumDynamic();
-  }
   auto findIndex(const llvm::SCEV *v) const -> size_t {
-    return findSymbolicIndex(symbols, v);
+    return findSymbolicIndex(getSyms(), v);
   }
   /// A.rotate( R )
   /// A(_,const) + A(_,var)*var >= 0
@@ -543,16 +539,6 @@ struct AffineLoopNest
     initializeComparator();
     pruneBounds();
   }
-
-  AffineLoopNest(IntMatrix Am, llvm::SmallVector<const llvm::SCEV *> sym)
-    : BasePolyhedra<EmptyMatrix<int64_t>, LinearSymbolicComparator,
-                    llvm::SmallVector<const llvm::SCEV *>, NonNegative>(
-        std::move(Am), std::move(sym)){};
-  AffineLoopNest(IntMatrix Am)
-    : BasePolyhedra<EmptyMatrix<int64_t>, LinearSymbolicComparator,
-                    llvm::SmallVector<const llvm::SCEV *>, NonNegative>(
-        std::move(Am)){};
-  AffineLoopNest() = default;
 
   [[nodiscard]] auto getProgVars(size_t j) const -> PtrVector<int64_t> {
     return A(j, _(0, getNumSymbols()));
@@ -761,17 +747,38 @@ struct AffineLoopNest
   void dump(llvm::raw_ostream &os = llvm::errs()) const { os << *this; }
 
   constexpr auto getA() -> MutDensePtrMatrix<int64_t> {
-    return {memory,
-            DenseDims{numConstraints, numLoops + this->getNumSymbols()}};
+    return {reinterpret_cast<int64_t *>(
+              memory + sizeof(const llvm::SCEV *const *) * numDynSymbols),
+            DenseDims{numConstraints, numLoops + numDynSymbols + 1}};
   };
   constexpr auto getA() const -> DensePtrMatrix<int64_t> {
-    return {memory,
-            DenseDims{numConstraints, numLoops + this->getNumSymbols()}};
+    return {reinterpret_cast<const int64_t *>(
+              memory + sizeof(const llvm::SCEV *const *) * numDynSymbols),
+            DenseDims{numConstraints, numLoops + numDynSymbols + 1}};
   };
+  [[nodiscard]] auto getSyms() -> llvm::MutableArrayRef<const llvm::SCEV *> {
+    return {reinterpret_cast<const llvm::SCEV **>(memory), numDynSymbols};
+  }
+  [[nodiscard]] auto getSyms() const -> llvm::ArrayRef<const llvm::SCEV *> {
+    return {reinterpret_cast<const llvm::SCEV *const *>(memory), numDynSymbols};
+  }
+  [[nodiscard]] constexpr auto getNumLoops() const -> size_t {
+    return numLoops;
+  }
 
 private:
-  llvm::ArrayRef<const llvm::SCEV *> symbols;
+  AffineLoopNest(IntMatrix Am, llvm::SmallVector<const llvm::SCEV *> sym)
+    : BasePolyhedra<EmptyMatrix<int64_t>, LinearSymbolicComparator,
+                    llvm::SmallVector<const llvm::SCEV *>, NonNegative>(
+        std::move(Am), std::move(sym)){};
+  AffineLoopNest(IntMatrix Am)
+    : BasePolyhedra<EmptyMatrix<int64_t>, LinearSymbolicComparator,
+                    llvm::SmallVector<const llvm::SCEV *>, NonNegative>(
+        std::move(Am)){};
+  AffineLoopNest() = default;
   unsigned int numConstraints;
   unsigned int numLoops;
-  int64_t memory[1]; // NOLINT(modernize-avoid-c-arrays)
+  unsigned int numDynSymbols;
+  unsigned int unused{0}; // capacity? A.numCol()?
+  std::byte memory[8];    // NOLINT(modernize-avoid-c-arrays) // FAM
 };

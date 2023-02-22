@@ -5,6 +5,7 @@
 #include "Math/Math.hpp"
 #include "Utilities/Valid.hpp"
 #include <algorithm>
+#include <bit>
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
@@ -46,8 +47,9 @@ private:
   // value, meaning that is the stored instruction, and thus we still have
   // access to it when it is available.
   NotNull<llvm::Instruction> loadOrStore;
-  llvm::ArrayRef<const llvm::SCEV *> sizes;
-  llvm::ArrayRef<const llvm::SCEV *> symbolicOffsets;
+  unsigned numDim, numSymbols;
+  // llvm::ArrayRef<const llvm::SCEV *> sizes;
+  // llvm::ArrayRef<const llvm::SCEV *> symbolicOffsets;
   // llvm::SmallVector<const llvm::SCEV *, 3> sizes;
   // llvm::SmallVector<const llvm::SCEV *, 3> symbolicOffsets;
   // unsigned (instead of ptr) as we build up edges
@@ -60,20 +62,33 @@ private:
   // so that I could use `mem[]` or `mem[0]` instead of `mem[1]`. See:
   // https://gcc.gnu.org/onlinedocs/gcc/Zero-Length.html
   // https://developers.redhat.com/articles/2022/09/29/benefits-limitations-flexible-array-members#flexible_array_members_vs__pointer_implementation
-  int64_t mem[1]; // NOLINT(modernize-avoid-c-arrays)
+  std::byte mem[8]; // NOLINT(modernize-avoid-c-arrays)
   // schedule indicated by `1` top bit, remainder indicates loop
-  [[nodiscard]] constexpr auto data() -> NotNull<int64_t> { return mem; }
-  [[nodiscard]] constexpr auto data() const -> NotNull<int64_t> {
-    return const_cast<int64_t *>(mem);
+  [[nodiscard]] inline auto data() -> NotNull<int64_t> {
+    std::byte *ptr =
+      mem + sizeof(const llvm::SCEV *const *) * (numDim + numSymbols);
+    return reinterpret_cast<int64_t *>(ptr);
+  }
+  [[nodiscard]] inline auto data() const -> NotNull<int64_t> {
+    const std::byte *ptr =
+      mem + sizeof(const llvm::SCEV *const *) * (numDim + numSymbols);
+    return reinterpret_cast<int64_t *>(const_cast<std::byte *>(ptr));
+  }
+  [[nodiscard]] inline auto scevPtr() -> const llvm::SCEV ** {
+    std::byte *ptr = mem;
+    return reinterpret_cast<const llvm::SCEV **>(ptr);
+  }
+  [[nodiscard]] inline auto scevPtr() const -> const llvm::SCEV *const * {
+    const std::byte *ptr = mem;
+    return reinterpret_cast<const llvm::SCEV *const *>(ptr);
   }
   [[nodiscard]] auto omegaOffset() const -> size_t {
     return memoryOmegaOffset(getArrayDim(), getNumLoops(), getNumSymbols());
   }
   MemoryAccess(const llvm::SCEVUnknown *arrayPtr, AffineLoopNest<true> &loopRef,
-               llvm::Instruction *user,
-               std::array<llvm::ArrayRef<const llvm::SCEV *>, 2> szOff)
-    : basePointer(arrayPtr), loop(loopRef), loadOrStore(user), sizes(szOff[0]),
-      symbolicOffsets(szOff[1]){};
+               llvm::Instruction *user, std::array<unsigned, 2> dimOff)
+    : basePointer(arrayPtr), loop(loopRef), loadOrStore(user),
+      numDim(dimOff[0]), numSymbols(dimOff[1]){};
   MemoryAccess(const llvm::SCEVUnknown *arrayPtr, AffineLoopNest<true> &loopRef,
                llvm::Instruction *user)
     : basePointer(arrayPtr), loop(loopRef), loadOrStore(user){};
@@ -89,7 +104,7 @@ public:
     auto *mem =
       alloc.allocate(sizeof(MemoryAccess) + memNeeded * sizeof(int64_t), 8);
     auto *ma = new (mem) MemoryAccess(arrayPointer, loopRef, user);
-    ma->getFusionOmega() = o;
+    ma->getFusionOmega() << o;
     return ma;
   }
   static auto
@@ -100,16 +115,21 @@ public:
             PtrMatrix<int64_t> offsets, PtrVector<unsigned> o)
     -> NotNull<MemoryAccess> {
     // we don't want to hold any other pointers that may need freeing
-    auto sz = copyRef(alloc, llvm::ArrayRef<const llvm::SCEV *>{szOff[0]});
-    auto off = copyRef(alloc, llvm::ArrayRef<const llvm::SCEV *>{szOff[1]});
-    size_t arrayDim = sz.size();
+    unsigned arrayDim = szOff[0].size(), nOff = szOff[1].size();
+    // auto sz = copyRef(alloc, llvm::ArrayRef<const llvm::SCEV *>{szOff[0]});
+    // auto off = copyRef(alloc, llvm::ArrayRef<const llvm::SCEV *>{szOff[1]});
     size_t numLoops = loopRef.getNumLoops();
     assert(o.size() == numLoops + 1);
     size_t numSymbols = size_t(offsets.numCol());
     size_t memNeeded = memoryTotalRequired(arrayDim, numLoops, numSymbols);
     auto *mem =
-      alloc.allocate(sizeof(MemoryAccess) + memNeeded * sizeof(int64_t), 8);
-    auto *ma = new (mem) MemoryAccess(arrayPtr, loopRef, user, {sz, off});
+      alloc.allocate(sizeof(MemoryAccess) + memNeeded * sizeof(int64_t) +
+                       (arrayDim + nOff) * sizeof(const llvm::SCEV *const *),
+                     alignof(MemoryAccess));
+    auto *ma =
+      new (mem) MemoryAccess(arrayPtr, loopRef, user, {arrayDim, nOff});
+    std::copy_n(szOff[0].begin(), arrayDim, ma->getSizes().begin());
+    std::copy_n(szOff[1].begin(), nOff, ma->getSymbolicOffsets().begin());
     ma->indexMatrix() << indMatT.transpose();
     ma->offsetMatrix() << offsets;
     ma->getFusionOmega() << o;
@@ -139,13 +159,21 @@ public:
   [[nodiscard]] constexpr auto getNodes() const -> const BitSet & {
     return nodeIndex;
   }
-  [[nodiscard]] auto getSizes() const
-    -> const llvm::ArrayRef<const llvm::SCEV *> & {
-    return sizes;
+  [[nodiscard]] inline auto getSizes()
+    -> llvm::MutableArrayRef<const llvm::SCEV *> {
+    return {scevPtr(), size_t(numDim)};
   }
-  [[nodiscard]] auto getSymbolicOffsets() const
-    -> const llvm::ArrayRef<const llvm::SCEV *> & {
-    return symbolicOffsets;
+  [[nodiscard]] inline auto getSymbolicOffsets()
+    -> llvm::MutableArrayRef<const llvm::SCEV *> {
+    return {scevPtr() + numDim, size_t(numSymbols)};
+  }
+  [[nodiscard]] inline auto getSizes() const
+    -> llvm::ArrayRef<const llvm::SCEV *> {
+    return {scevPtr(), size_t(numDim)};
+  }
+  [[nodiscard]] inline auto getSymbolicOffsets() const
+    -> llvm::ArrayRef<const llvm::SCEV *> {
+    return {scevPtr() + numDim, size_t(numSymbols)};
   }
   [[nodiscard]] auto isStore() const -> bool {
     return loadOrStore.isa<llvm::StoreInst>();
@@ -153,9 +181,7 @@ public:
   [[nodiscard]] auto isLoad() const -> bool { return !isStore(); }
   // TODO: `constexpr` once `llvm::SmallVector` supports it
   [[nodiscard]] auto getArrayDim() const -> size_t { return sizes.size(); }
-  [[nodiscard]] auto getNumSymbols() const -> size_t {
-    return 1 + symbolicOffsets.size();
-  }
+  [[nodiscard]] auto getNumSymbols() const -> size_t { return 1 + numSymbols; }
   [[nodiscard]] auto getNumLoops() const -> size_t {
     return loop->getNumLoops();
   }
@@ -270,8 +296,8 @@ public:
     std::copy(offOld, fusOld, offNew);
     std::copy(fusOld + numToPeel, fusOld + getNumLoops() + 1, fusNew);
   }
-  [[nodiscard]] auto allConstantIndices() const -> bool {
-    return symbolicOffsets.size() == 0;
+  [[nodiscard]] constexpr auto allConstantIndices() const -> bool {
+    return numSymbols == 0;
   }
   // Assumes strides and offsets are sorted
   [[nodiscard]] auto sizesMatch(const MemoryAccess &x) const -> bool {
