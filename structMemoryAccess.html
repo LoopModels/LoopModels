@@ -105,12 +105,18 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNodes</b
 <tr class="memitem:a5da703c983df441863485d44010f7e2c"><td class="memItemLeft" align="right" valign="top"><a id="a5da703c983df441863485d44010f7e2c"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNodes</b> () const -&gt; const <a class="el" href="structBitSet.html">BitSet</a> &amp;</td></tr>
 <tr class="separator:a5da703c983df441863485d44010f7e2c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aab1462e06bfa5b4601655c1bf8dd687e"><td class="memItemLeft" align="right" valign="top"><a id="aab1462e06bfa5b4601655c1bf8dd687e"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>getSizes</b> () const -&gt; const llvm::ArrayRef&lt; const llvm::SCEV * &gt; &amp;</td></tr>
-<tr class="separator:aab1462e06bfa5b4601655c1bf8dd687e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a847fabd2fae39a03b356a349812ac647"><td class="memItemLeft" align="right" valign="top"><a id="a847fabd2fae39a03b356a349812ac647"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>getSymbolicOffsets</b> () const -&gt; const llvm::ArrayRef&lt; const llvm::SCEV * &gt; &amp;</td></tr>
-<tr class="separator:a847fabd2fae39a03b356a349812ac647"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0c94c0eb1896fbdcabe93157c7330965"><td class="memItemLeft" align="right" valign="top"><a id="a0c94c0eb1896fbdcabe93157c7330965"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getSizes</b> () -&gt; llvm::MutableArrayRef&lt; const llvm::SCEV * &gt;</td></tr>
+<tr class="separator:a0c94c0eb1896fbdcabe93157c7330965"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afc2bb73ce277bcbf2de2c827d4d1f24f"><td class="memItemLeft" align="right" valign="top"><a id="afc2bb73ce277bcbf2de2c827d4d1f24f"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getSymbolicOffsets</b> () -&gt; llvm::MutableArrayRef&lt; const llvm::SCEV * &gt;</td></tr>
+<tr class="separator:afc2bb73ce277bcbf2de2c827d4d1f24f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a54123582887edc54ce5b1ae6d9751aaf"><td class="memItemLeft" align="right" valign="top"><a id="a54123582887edc54ce5b1ae6d9751aaf"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getSizes</b> () const -&gt; llvm::ArrayRef&lt; const llvm::SCEV * &gt;</td></tr>
+<tr class="separator:a54123582887edc54ce5b1ae6d9751aaf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3f64f000189f918f6d33f37fe2b0508c"><td class="memItemLeft" align="right" valign="top"><a id="a3f64f000189f918f6d33f37fe2b0508c"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getSymbolicOffsets</b> () const -&gt; llvm::ArrayRef&lt; const llvm::SCEV * &gt;</td></tr>
+<tr class="separator:a3f64f000189f918f6d33f37fe2b0508c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a985e9e2f717c2b8cdcc76d9ae5812ca1"><td class="memItemLeft" align="right" valign="top"><a id="a985e9e2f717c2b8cdcc76d9ae5812ca1"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>isStore</b> () const -&gt; bool</td></tr>
 <tr class="separator:a985e9e2f717c2b8cdcc76d9ae5812ca1"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -170,9 +176,9 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>fusedThrough</b> (<a 
 <tr class="memitem:a04b801a49a84cc09c8d24fcdcb12f157"><td class="memItemLeft" align="right" valign="top"><a id="a04b801a49a84cc09c8d24fcdcb12f157"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>peelLoops</b> (size_t numToPeel)</td></tr>
 <tr class="separator:a04b801a49a84cc09c8d24fcdcb12f157"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afc433034fc754e8307d0c673ca22e518"><td class="memItemLeft" align="right" valign="top"><a id="afc433034fc754e8307d0c673ca22e518"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>allConstantIndices</b> () const -&gt; bool</td></tr>
-<tr class="separator:afc433034fc754e8307d0c673ca22e518"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af5aa349f36e96c55c0830a16e7b2651a"><td class="memItemLeft" align="right" valign="top"><a id="af5aa349f36e96c55c0830a16e7b2651a"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>allConstantIndices</b> () const -&gt; bool</td></tr>
+<tr class="separator:af5aa349f36e96c55c0830a16e7b2651a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a403c83673f90f5908ab11eb646a193ac"><td class="memItemLeft" align="right" valign="top"><a id="a403c83673f90f5908ab11eb646a193ac"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>sizesMatch</b> (const <a class="el" href="structMemoryAccess.html">MemoryAccess</a> &amp;x) const -&gt; bool</td></tr>
 <tr class="separator:a403c83673f90f5908ab11eb646a193ac"><td class="memSeparator" colspan="2">&#160;</td></tr>
