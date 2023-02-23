@@ -12,6 +12,7 @@
 #include "Memory.hpp"
 #include "Utilities/Allocators.hpp"
 #include "Utilities/Optional.hpp"
+#include "Utilities/Valid.hpp"
 #include <bit>
 #include <cstddef>
 #include <cstdint>
@@ -330,7 +331,7 @@ struct AffineLoopNest
   static inline auto construct(BumpAlloc<> &alloc, llvm::Loop *L,
                                const llvm::SCEV *BT, llvm::ScalarEvolution &SE,
                                llvm::OptimizationRemarkEmitter *ORE = nullptr)
-    -> AffineLoopNest {
+    -> NotNull<AffineLoopNest> {
     // A holds symbols
     // B holds loop bounds
     // they're separate so we can grow them independently
@@ -374,16 +375,12 @@ struct AffineLoopNest
     assert(symbols.size() == A.numCol());
     size_t depth = maxDepth - minDepth;
     unsigned numConstraints = unsigned(A.numRow()), N = unsigned(A.numCol());
-    size_t memNeeded = numConstraints * (N + depth + 1) * sizeof(int64_t) +
-                       symbols.size() * sizeof(const llvm::SCEV *const *);
-    // auto sym = copyRef(alloc, llvm::ArrayRef<const llvm::SCEV *>{symbols});
-    auto *mem = alloc.allocate(sizeof(AffineLoopNest) - 8 + memNeeded,
-                               alignof(AffineLoopNest));
-    auto *aln = new (mem) AffineLoopNest(numConstraints, depth, N);
+    NotNull<AffineLoopNest<false>> aln{
+      AffineLoopNest<false>::allocate(alloc, numConstraints, depth, symbols)};
     aln->getA()(_, _(0, N)) << A;
     // copy the included loops from B
     aln->getA()(_, _(N, N + depth)) << B(_, _(0, depth));
-    std::copy_n(symbols.begin(), symbols.size(), aln->getSymbols());
+    return aln;
     // addZeroLowerBounds();
     // NOTE: pruneBounds() is not legal here if we wish to use
     // removeInnerMost later.
@@ -409,48 +406,48 @@ struct AffineLoopNest
     const size_t numConst = this->getNumSymbols();
     MutDensePtrMatrix<int64_t> A{getA()};
     const auto [M, N] = A.size();
-    auto pt = alloc.allocate<AffineLoopNest<false>>();
-    NotNull<AffineLoopNest<false>> ret = new (pt) AffineLoopNest<false>{};
-    ret->S = S;
-    IntMatrix &B = ret->A;
-    B.resizeForOverwrite(M + numExtraVar, N);
-    B(_(0, M), _(begin, numConst)) = A(_, _(begin, numConst));
-    B(_(0, M), _(numConst, end)) = A(_, _(numConst, end)) * R;
+    auto symbols{getSyms()};
+    NotNull<AffineLoopNest<false>> aln{AffineLoopNest<false>::allocate(
+      alloc, M + numExtraVar, numLoops, symbols)};
+    auto B{aln->getA()};
+    assert(B.numRow() == M + numExtraVar);
+    assert(B.numCol() == N);
+    B(_(0, M), _(begin, numConst)) << A(_, _(begin, numConst));
+    B(_(0, M), _(numConst, end)) << A(_, _(numConst, end)) * R;
     if constexpr (NonNegative) {
-      B(_(M, end), _(0, numConst)) = 0;
-      B(_(M, end), _(numConst, end)) = R;
+      B(_(M, end), _(0, numConst)) << 0;
+      B(_(M, end), _(numConst, end)) << R;
     }
-    ret->initializeComparator();
-    ret->pruneBounds();
-    return ret;
+    // ret->initializeComparator();
+    aln->pruneBounds(alloc);
+    return aln;
   }
-  /// like rotate(identityMatrix)
+  /// like rotate(identity Matrix)
   [[nodiscard]] auto explicitLowerBounds(BumpAlloc<> &alloc)
     -> NotNull<AffineLoopNest<false>> {
     if constexpr (!NonNegative) return this;
     const size_t numExtraVar = getNumLoops();
-    const size_t numConst = getNumSymbols();
-    const auto [M, N] = A.size();
-    auto pt = alloc.allocate<AffineLoopNest<false>>();
-    NotNull<AffineLoopNest<false>> ret = new (pt) AffineLoopNest<false>{};
-    ret->S = S;
+    const size_t numConst = this->getNumSymbols();
     auto A{getA()};
-    IntMatrix &B = ret->A;
-    B.resizeForOverwrite(M + numExtraVar, N);
-    B(_(0, M), _) = A;
-    B(_(M, end), _) = 0;
-    B(_(M, end), _(numConst, end)).diag() = 1;
-    ret->initializeComparator();
-    ret->pruneBounds();
+    const auto [M, N] = A.size();
+    auto symbols{getSyms()};
+    NotNull<AffineLoopNest<false>> ret{AffineLoopNest<false>::allocate(
+      alloc, M + numExtraVar, numLoops, symbols)};
+    auto B{ret->getA()};
+    B(_(0, M), _) << A;
+    B(_(M, end), _) << 0;
+    B(_(M, end), _(numConst, end)).diag() << 1;
+    // ret->initializeComparator();
+    ret->pruneBounds(alloc);
     return ret;
   }
 
-  static auto construct(llvm::Loop *L, llvm::ScalarEvolution &SE)
-    -> std::optional<AffineLoopNest<NonNegative>> {
-    auto BT = getBackedgeTakenCount(SE, L);
-    if (!BT || llvm::isa<llvm::SCEVCouldNotCompute>(BT)) return {};
-    return AffineLoopNest<NonNegative>(L, BT, SE);
-  }
+  // static auto construct(llvm::Loop *L, llvm::ScalarEvolution &SE)
+  //   -> AffineLoopNest<NonNegative>* {
+  //   auto BT = getBackedgeTakenCount(SE, L);
+  //   if (!BT || llvm::isa<llvm::SCEVCouldNotCompute>(BT)) return nullptr;
+  //   return AffineLoopNest<NonNegative>(L, BT, SE);
+  // }
   AffineLoopNest(llvm::Loop *L, const llvm::SCEV *BT, llvm::ScalarEvolution &SE,
                  llvm::OptimizationRemarkEmitter *ORE = nullptr) {
     static_assert(false);
@@ -746,14 +743,16 @@ struct AffineLoopNest
   }
   void dump(llvm::raw_ostream &os = llvm::errs()) const { os << *this; }
 
-  constexpr auto getA() -> MutDensePtrMatrix<int64_t> {
+  inline auto getA() -> MutDensePtrMatrix<int64_t> {
+    std::byte *ptr = memory;
     return {reinterpret_cast<int64_t *>(
-              memory + sizeof(const llvm::SCEV *const *) * numDynSymbols),
+              ptr + sizeof(const llvm::SCEV *const *) * numDynSymbols),
             DenseDims{numConstraints, numLoops + numDynSymbols + 1}};
   };
-  constexpr auto getA() const -> DensePtrMatrix<int64_t> {
+  inline auto getA() const -> DensePtrMatrix<int64_t> {
+    const std::byte *ptr = memory;
     return {reinterpret_cast<const int64_t *>(
-              memory + sizeof(const llvm::SCEV *const *) * numDynSymbols),
+              ptr + sizeof(const llvm::SCEV *const *) * numDynSymbols),
             DenseDims{numConstraints, numLoops + numDynSymbols + 1}};
   };
   [[nodiscard]] auto getSyms() -> llvm::MutableArrayRef<const llvm::SCEV *> {
@@ -776,6 +775,22 @@ private:
                     llvm::SmallVector<const llvm::SCEV *>, NonNegative>(
         std::move(Am)){};
   AffineLoopNest() = default;
+
+  static auto allocate(BumpAlloc<> &alloc, unsigned int numConstraints,
+                       unsigned int numLoops,
+                       llvm::ArrayRef<const llvm::SCEV *> syms)
+    -> NotNull<AffineLoopNest> {
+    size_t numDynSym = syms.size();
+    size_t N = numLoops + numDynSym + 1;
+    size_t memNeeded = numConstraints * N * sizeof(int64_t) +
+                       numDynSym * sizeof(const llvm::SCEV *const *);
+    auto *mem = alloc.allocate(sizeof(AffineLoopNest) - 8 + memNeeded,
+                               alignof(AffineLoopNest));
+    auto *aln = new (mem) AffineLoopNest(numConstraints, numLoops, numDynSym);
+    std::copy_n(syms.begin(), numDynSym, aln->getSyms());
+    return NotNull<AffineLoopNest>{aln};
+  }
+
   unsigned int numConstraints;
   unsigned int numLoops;
   unsigned int numDynSymbols;

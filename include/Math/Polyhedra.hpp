@@ -69,7 +69,7 @@ struct BasePolyhedra {
   // empty fields sorted first to make it easier for compiler to alias them
 
   [[nodiscard]] constexpr auto getA() -> MutDensePtrMatrix<int64_t> {
-    return *static_cast<P *>(this)->getA();
+    return static_cast<P *>(this)->getA();
   }
   [[nodiscard]] constexpr auto getE() {
     if constexpr (HasEqualities) return *static_cast<P *>(this)->getE();
@@ -78,10 +78,10 @@ struct BasePolyhedra {
   [[nodiscard]] constexpr auto getSyms()
     -> llvm::MutableArrayRef<const llvm::SCEV *> {
     static_assert(HasSymbols);
-    return *static_cast<P *>(this)->getSyms();
+    return static_cast<P *>(this)->getSyms();
   }
   [[nodiscard]] constexpr auto getA() const -> DensePtrMatrix<int64_t> {
-    return *static_cast<const P *>(this)->getA();
+    return static_cast<const P *>(this)->getA();
   }
   [[nodiscard]] constexpr auto getE() const {
     if constexpr (HasEqualities) return *static_cast<const P *>(this)->getE();
@@ -90,7 +90,7 @@ struct BasePolyhedra {
   [[nodiscard]] constexpr auto getSyms() const
     -> llvm::ArrayRef<const llvm::SCEV *> {
     static_assert(HasSymbols);
-    return *static_cast<const P *>(this)->getSyms();
+    return static_cast<const P *>(this)->getSyms();
   }
 
   [[nodiscard]] constexpr auto initializeComparator(
