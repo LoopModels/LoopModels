@@ -96,7 +96,7 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>findIndex</b> (const 
 <tr class="separator:a215506c9530da55d0671936af217dd6d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae7e3801c19a2587916894acf27894629"><td class="memItemLeft" align="right" valign="top"><a id="ae7e3801c19a2587916894acf27894629"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAffineLoopNest.html#ae7e3801c19a2587916894acf27894629">explicitLowerBounds</a> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc) -&gt; <a class="el" href="structNotNull.html">NotNull</a>&lt; <a class="el" href="structAffineLoopNest.html">AffineLoopNest</a>&lt; false &gt;&gt;</td></tr>
-<tr class="memdesc:ae7e3801c19a2587916894acf27894629"><td class="mdescLeft">&#160;</td><td class="mdescRight">like rotate(identityMatrix) <br /></td></tr>
+<tr class="memdesc:ae7e3801c19a2587916894acf27894629"><td class="mdescLeft">&#160;</td><td class="mdescRight">like rotate(identity Matrix) <br /></td></tr>
 <tr class="separator:ae7e3801c19a2587916894acf27894629"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a88a50b567317a823f0556c7743846fd9"><td class="memItemLeft" align="right" valign="top"><a id="a88a50b567317a823f0556c7743846fd9"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>AffineLoopNest</b> (llvm::Loop *L, const llvm::SCEV *BT, llvm::ScalarEvolution &amp;SE, llvm::OptimizationRemarkEmitter *ORE=nullptr)</td></tr>
@@ -149,12 +149,12 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>printUpperBound</b> (
 <tr class="memitem:a851e8080431e69712546822018856a1a"><td class="memItemLeft" align="right" valign="top"><a id="a851e8080431e69712546822018856a1a"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>dump</b> (llvm::raw_ostream &amp;os=llvm::errs()) const</td></tr>
 <tr class="separator:a851e8080431e69712546822018856a1a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5fe2b9813b15a2ad29023a0c0d282b9e"><td class="memItemLeft" align="right" valign="top"><a id="a5fe2b9813b15a2ad29023a0c0d282b9e"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getA</b> () -&gt; MutDensePtrMatrix&lt; int64_t &gt;</td></tr>
-<tr class="separator:a5fe2b9813b15a2ad29023a0c0d282b9e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5d411d7b78fa3972d9c2949d1e104225"><td class="memItemLeft" align="right" valign="top"><a id="a5d411d7b78fa3972d9c2949d1e104225"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getA</b> () const -&gt; DensePtrMatrix&lt; int64_t &gt;</td></tr>
-<tr class="separator:a5d411d7b78fa3972d9c2949d1e104225"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a81bdfcfc54c87599a854dd0c965dfb08"><td class="memItemLeft" align="right" valign="top"><a id="a81bdfcfc54c87599a854dd0c965dfb08"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getA</b> () -&gt; MutDensePtrMatrix&lt; int64_t &gt;</td></tr>
+<tr class="separator:a81bdfcfc54c87599a854dd0c965dfb08"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac2693fcb488dcc0861ff6d2afd8916d2"><td class="memItemLeft" align="right" valign="top"><a id="ac2693fcb488dcc0861ff6d2afd8916d2"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getA</b> () const -&gt; DensePtrMatrix&lt; int64_t &gt;</td></tr>
+<tr class="separator:ac2693fcb488dcc0861ff6d2afd8916d2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5b23a1b4f949eec4211aaf87f1d1b000"><td class="memItemLeft" align="right" valign="top"><a id="a5b23a1b4f949eec4211aaf87f1d1b000"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>getSyms</b> () -&gt; llvm::MutableArrayRef&lt; const llvm::SCEV * &gt;</td></tr>
 <tr class="separator:a5b23a1b4f949eec4211aaf87f1d1b000"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -240,12 +240,9 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>truncateVars</b> (siz
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
-<tr class="memitem:ac856128d6c76c2b52b70c8ee61135c0e"><td class="memItemLeft" align="right" valign="top"><a id="ac856128d6c76c2b52b70c8ee61135c0e"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>construct</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, llvm::Loop *L, const llvm::SCEV *BT, llvm::ScalarEvolution &amp;SE, llvm::OptimizationRemarkEmitter *ORE=nullptr) -&gt; <a class="el" href="structAffineLoopNest.html">AffineLoopNest</a></td></tr>
-<tr class="separator:ac856128d6c76c2b52b70c8ee61135c0e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:adf2e45472c3d8a28456eef225872e501"><td class="memItemLeft" align="right" valign="top"><a id="adf2e45472c3d8a28456eef225872e501"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>construct</b> (llvm::Loop *L, llvm::ScalarEvolution &amp;SE) -&gt; std::optional&lt; <a class="el" href="structAffineLoopNest.html">AffineLoopNest</a>&lt; NonNegative &gt;&gt;</td></tr>
-<tr class="separator:adf2e45472c3d8a28456eef225872e501"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1a4dcd1cb9ad25c6ced282c9b2dcc8fd"><td class="memItemLeft" align="right" valign="top"><a id="a1a4dcd1cb9ad25c6ced282c9b2dcc8fd"></a>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>construct</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, llvm::Loop *L, const llvm::SCEV *BT, llvm::ScalarEvolution &amp;SE, llvm::OptimizationRemarkEmitter *ORE=nullptr) -&gt; <a class="el" href="structNotNull.html">NotNull</a>&lt; <a class="el" href="structAffineLoopNest.html">AffineLoopNest</a> &gt;</td></tr>
+<tr class="separator:a1a4dcd1cb9ad25c6ced282c9b2dcc8fd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="friends"></a>
 Friends</h2></td></tr>

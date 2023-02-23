@@ -105,7 +105,7 @@ $(function() {
 <div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;  <span class="comment">// empty fields sorted first to make it easier for compiler to alias them</span></div>
 <div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160; </div>
 <div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getA() -&gt; MutDensePtrMatrix&lt;int64_t&gt; {</div>
-<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;    <span class="keywordflow">return</span> *<span class="keyword">static_cast&lt;</span>P *<span class="keyword">&gt;</span>(<span class="keyword">this</span>)-&gt;getA();</div>
+<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">static_cast&lt;</span>P *<span class="keyword">&gt;</span>(<span class="keyword">this</span>)-&gt;getA();</div>
 <div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;  }</div>
 <div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getE() {</div>
 <div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;    <span class="keywordflow">if</span> constexpr (HasEqualities) <span class="keywordflow">return</span> *<span class="keyword">static_cast&lt;</span>P *<span class="keyword">&gt;</span>(<span class="keyword">this</span>)-&gt;getE();</div>
@@ -114,10 +114,10 @@ $(function() {
 <div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getSyms()</div>
 <div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;    -&gt; llvm::MutableArrayRef&lt;const llvm::SCEV *&gt; {</div>
 <div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;    static_assert(HasSymbols);</div>
-<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;    <span class="keywordflow">return</span> *<span class="keyword">static_cast&lt;</span>P *<span class="keyword">&gt;</span>(<span class="keyword">this</span>)-&gt;getSyms();</div>
+<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">static_cast&lt;</span>P *<span class="keyword">&gt;</span>(<span class="keyword">this</span>)-&gt;getSyms();</div>
 <div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;  }</div>
 <div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getA() <span class="keyword">const</span> -&gt; DensePtrMatrix&lt;int64_t&gt; {</div>
-<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;    <span class="keywordflow">return</span> *<span class="keyword">static_cast&lt;</span><span class="keyword">const </span>P *<span class="keyword">&gt;</span>(<span class="keyword">this</span>)-&gt;getA();</div>
+<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">static_cast&lt;</span><span class="keyword">const </span>P *<span class="keyword">&gt;</span>(<span class="keyword">this</span>)-&gt;getA();</div>
 <div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;  }</div>
 <div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getE()<span class="keyword"> const </span>{</div>
 <div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;    <span class="keywordflow">if</span> constexpr (HasEqualities) <span class="keywordflow">return</span> *<span class="keyword">static_cast&lt;</span><span class="keyword">const </span>P *<span class="keyword">&gt;</span>(<span class="keyword">this</span>)-&gt;getE();</div>
@@ -126,7 +126,7 @@ $(function() {
 <div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getSyms() <span class="keyword">const</span></div>
 <div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;    -&gt; llvm::ArrayRef&lt;const llvm::SCEV *&gt; {</div>
 <div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;    static_assert(HasSymbols);</div>
-<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;    <span class="keywordflow">return</span> *<span class="keyword">static_cast&lt;</span><span class="keyword">const </span>P *<span class="keyword">&gt;</span>(<span class="keyword">this</span>)-&gt;getSyms();</div>
+<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">static_cast&lt;</span><span class="keyword">const </span>P *<span class="keyword">&gt;</span>(<span class="keyword">this</span>)-&gt;getSyms();</div>
 <div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;  }</div>
 <div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160; </div>
 <div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> initializeComparator(</div>
