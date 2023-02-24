@@ -119,18 +119,21 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>getProgVars</b> (size
 <tr class="memitem:a97e773d446f72d9de764126f9f89bacb"><td class="memItemLeft" align="right" valign="top"><a id="a97e773d446f72d9de764126f9f89bacb"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>removeLoopBang</b> (Allocator auto alloc, size_t i)</td></tr>
 <tr class="separator:a97e773d446f72d9de764126f9f89bacb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a48dcfce078a382ae7e62ab2462739810"><td class="memItemLeft" align="right" valign="top"><a id="a48dcfce078a382ae7e62ab2462739810"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>copy</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc) const -&gt; <a class="el" href="structNotNull.html">NotNull</a>&lt; <a class="el" href="structAffineLoopNest.html">AffineLoopNest</a>&lt; NonNegative &gt;&gt;</td></tr>
+<tr class="separator:a48dcfce078a382ae7e62ab2462739810"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acafe2b6ee2a4dac2fc70d4375270e04e"><td class="memItemLeft" align="right" valign="top"><a id="acafe2b6ee2a4dac2fc70d4375270e04e"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>removeLoop</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, size_t i) const -&gt; <a class="el" href="structNotNull.html">NotNull</a>&lt; <a class="el" href="structAffineLoopNest.html">AffineLoopNest</a>&lt; NonNegative &gt;&gt;</td></tr>
 <tr class="separator:acafe2b6ee2a4dac2fc70d4375270e04e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2689cfda5eafa0dd6672a9a41493f0c9"><td class="memItemLeft" align="right" valign="top"><a id="a2689cfda5eafa0dd6672a9a41493f0c9"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>perm</b> (PtrVector&lt; unsigned &gt; x) -&gt; llvm::SmallVector&lt; <a class="el" href="structAffineLoopNest.html">AffineLoopNest</a>&lt; NonNegative &gt;, 0 &gt;</td></tr>
 <tr class="separator:a2689cfda5eafa0dd6672a9a41493f0c9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a823875a08df937f353e1baab1c0abf61"><td class="memItemLeft" align="right" valign="top"><a id="a823875a08df937f353e1baab1c0abf61"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>bounds</b> (size_t i) const -&gt; std::pair&lt; IntMatrix, IntMatrix &gt;</td></tr>
-<tr class="separator:a823875a08df937f353e1baab1c0abf61"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a25adc932f153367f32e4fcb305fb0e4b"><td class="memItemLeft" align="right" valign="top"><a id="a25adc932f153367f32e4fcb305fb0e4b"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>getBounds</b> (PtrVector&lt; unsigned &gt; x) -&gt; llvm::SmallVector&lt; std::pair&lt; IntMatrix, IntMatrix &gt;, 0 &gt;</td></tr>
-<tr class="separator:a25adc932f153367f32e4fcb305fb0e4b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a931e90ab73e4d0d9b9ee37457c0573a9"><td class="memItemLeft" align="right" valign="top"><a id="a931e90ab73e4d0d9b9ee37457c0573a9"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>bounds</b> (size_t i) const -&gt; std::array&lt; IntMatrix, 2 &gt;</td></tr>
+<tr class="separator:a931e90ab73e4d0d9b9ee37457c0573a9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aeb2f91962340441060c25fcdd7f591ba"><td class="memItemLeft" align="right" valign="top"><a id="aeb2f91962340441060c25fcdd7f591ba"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getBounds</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, PtrVector&lt; unsigned &gt; x) -&gt; llvm::SmallVector&lt; std::pair&lt; IntMatrix, IntMatrix &gt;, 0 &gt;</td></tr>
+<tr class="separator:aeb2f91962340441060c25fcdd7f591ba"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0d7738d091e5ceea738a954f8545816b"><td class="memItemLeft" align="right" valign="top"><a id="a0d7738d091e5ceea738a954f8545816b"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>zeroExtraIterationsUponExtending</b> (size_t _i, bool extendLower) const -&gt; bool</td></tr>
 <tr class="separator:a0d7738d091e5ceea738a954f8545816b"><td class="memSeparator" colspan="2">&#160;</td></tr>
