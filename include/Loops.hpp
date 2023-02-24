@@ -406,9 +406,9 @@ struct AffineLoopNest
     const size_t numConst = this->getNumSymbols();
     MutDensePtrMatrix<int64_t> A{getA()};
     const auto [M, N] = A.size();
-    auto symbols{getSyms()};
-    NotNull<AffineLoopNest<false>> aln{AffineLoopNest<false>::allocate(
-      alloc, M + numExtraVar, numLoops, symbols)};
+    auto syms{getSyms()};
+    NotNull<AffineLoopNest<false>> aln{
+      AffineLoopNest<false>::allocate(alloc, M + numExtraVar, numLoops, syms)};
     auto B{aln->getA()};
     assert(B.numRow() == M + numExtraVar);
     assert(B.numCol() == N);
@@ -419,7 +419,7 @@ struct AffineLoopNest
       B(_(M, end), _(numConst, end)) << R;
     }
     // ret->initializeComparator();
-    aln->pruneBounds(alloc);
+    aln->pruneBounds(WBumpAlloc<int64_t>(alloc));
     return aln;
   }
   /// like rotate(identity Matrix)
@@ -438,7 +438,7 @@ struct AffineLoopNest
     B(_(M, end), _) << 0;
     B(_(M, end), _(numConst, end)).diag() << 1;
     // ret->initializeComparator();
-    ret->pruneBounds(alloc);
+    ret->pruneBounds(WBumpAlloc<int64_t>(alloc));
     return ret;
   }
 
@@ -448,30 +448,38 @@ struct AffineLoopNest
   //   if (!BT || llvm::isa<llvm::SCEVCouldNotCompute>(BT)) return nullptr;
   //   return AffineLoopNest<NonNegative>(L, BT, SE);
   // }
-  AffineLoopNest(llvm::Loop *L, const llvm::SCEV *BT, llvm::ScalarEvolution &SE,
-                 llvm::OptimizationRemarkEmitter *ORE = nullptr) {
-    static_assert(false);
-  }
-  [[nodiscard]] auto removeInnerMost() const -> AffineLoopNest<NonNegative> {
+
+  [[nodiscard]] auto removeInnerMost(BumpAlloc<> &alloc) const
+    -> NotNull<AffineLoopNest<NonNegative>> {
     size_t innermostLoopInd = getNumSymbols();
-    IntMatrix B = A.deleteCol(innermostLoopInd);
+    auto A{getA()};
+    auto ret = AffineLoopNest<NonNegative>::allocate(
+      alloc, A.numRow(), getNumLoops() - 1, getSyms());
+    MutPtrMatrix<int64_t> B{ret->getA()};
+    B(_, _(0, innermostLoopInd)) << A(_, _(0, innermostLoopInd));
+    B(_, _(innermostLoopInd, end)) << A(_, _(innermostLoopInd + 1, end));
     // no loop may be conditioned on the innermost loop
     // so we should be able to safely remove all constraints that reference
     // it
-    for (size_t m = size_t(B.numRow()); m--;) {
+    for (Row m = B.numRow(); m--;) {
       if (A(m, innermostLoopInd)) {
         // B(_(m,end-1),_) = B(_(m+1,end),_);
         // make sure we're explicit about the order we copy rows
-        Row M = B.numRow() - 1;
-        for (size_t r = m; r < M; ++r) B(r, _) = B(r + 1, _);
-        B.resize(M);
+        if (m != B.numRow() - 1) B(m, _) << B(last, _);
+        B.truncate(B.numRow() - 1);
       }
     }
-    return AffineLoopNest<NonNegative>(B, S);
+    ret->truncateConstraints(unsigned(B.numRow()));
+    return ret;
   }
-  void clear() {
-    A.resize(0, 1); // 0 x 1 so that getNumLoops() == 0
-    S.truncate(0);
+  constexpr void truncateConstraints(unsigned newNumConstraints) {
+    assert(newNumConstraints <= numConstraints);
+    numConstraints = newNumConstraints;
+  }
+  constexpr void clear() {
+    numConstraints = 0;
+    numLoops = 0;
+    numDynSymbols = 0;
   }
   void removeOuterMost(size_t numToRemove, llvm::Loop *L,
                        llvm::ScalarEvolution &SE) {
@@ -481,6 +489,7 @@ struct AffineLoopNest
     if (numToRemove >= oldNumLoops) return clear();
     size_t innermostLoopInd = getNumSymbols();
     size_t numRemainingLoops = oldNumLoops - numToRemove;
+    auto A{getA()};
     auto [M, N] = A.size();
     if (numRemainingLoops != numToRemove) {
       Vector<int64_t> tmp;
@@ -488,11 +497,11 @@ struct AffineLoopNest
         tmp.resizeForOverwrite(numToRemove);
         for (size_t m = 0; m < M; ++m) {
           // fill tmp
-          tmp = A(m, _(innermostLoopInd + numRemainingLoops, N));
+          tmp << A(m, _(innermostLoopInd + numRemainingLoops, N));
           for (size_t i = innermostLoopInd;
                i < numRemainingLoops + innermostLoopInd; ++i)
             A(m, i + numToRemove) = A(m, i);
-          A(m, _(numToRemove + innermostLoopInd, N)) = tmp;
+          A(m, _(numToRemove + innermostLoopInd, N)) << tmp;
         }
       } else {
         tmp.resizeForOverwrite(numRemainingLoops);
@@ -513,45 +522,50 @@ struct AffineLoopNest
 
     for (size_t i = 0; i < numRemainingLoops; ++i) L = L->getParentLoop();
     // L is now inner most loop getting removed
+    size_t oldNumDynSymbols = numDynSymbols;
+    numDynSymbols += numToRemove;
+    auto S{getSyms()};
     for (size_t i = 0; i < numToRemove; ++i) {
       llvm::Type *IntType = L->getInductionVariable(SE)->getType();
-      S.push_back(SE.getAddRecExpr(SE.getZero(IntType), SE.getOne(IntType), L,
-                                   llvm::SCEV::NoWrapMask));
+      S[i + oldNumDynSymbols] = SE.getAddRecExpr(
+        SE.getZero(IntType), SE.getOne(IntType), L, llvm::SCEV::NoWrapMask);
     }
-    initializeComparator();
+    numLoops = numRemainingLoops;
+    // initializeComparator();
   }
-  void addZeroLowerBounds() {
-    if (isEmpty()) return;
-    if constexpr (NonNegative) {
-      initializeComparator();
-      return pruneBounds();
-    }
+
+  void addZeroLowerBounds(Allocator auto alloc) {
+    if (this->isEmpty()) return;
+    if constexpr (NonNegative) return pruneBounds(alloc);
     // return initializeComparator();
-    auto [M, N] = A.size();
-    if (!N) return;
-    size_t numLoops = getNumLoops();
-    A.resize(M + numLoops);
-    A(_(M, M + numLoops), _) = 0;
-    for (size_t i = 0; i < numLoops; ++i) A(M + i, N - numLoops + i) = 1;
-    initializeComparator();
-    pruneBounds();
+    if (!numLoops) return;
+    size_t M = numConstraints;
+    numConstraints += numLoops;
+    auto A{getA()};
+    A(_(M, end), _) = 0;
+    for (size_t i = 0; i < numLoops; ++i) A(M + i, end - numLoops + i) = 1;
+    // initializeComparator();
+    pruneBounds(alloc);
   }
 
   [[nodiscard]] auto getProgVars(size_t j) const -> PtrVector<int64_t> {
     return A(j, _(0, getNumSymbols()));
   }
-  void removeLoopBang(size_t i) {
+  void removeLoopBang(Allocator auto alloc, size_t i) {
+    auto A{getA()};
     if constexpr (NonNegative)
       fourierMotzkinNonNegative(A, i + getNumSymbols());
     else fourierMotzkin(A, i + getNumSymbols());
-    initializeComparator();
-    pruneBounds();
+    // initializeComparator();
+    pruneBounds(alloc);
   }
-  [[nodiscard]] auto removeLoop(size_t i) const -> AffineLoopNest<NonNegative> {
-    AffineLoopNest<NonNegative> L{*this};
-    // UnboundedAffineLoopNest L = *this;
-    L.removeLoopBang(i);
-    return L;
+  [[nodiscard]] auto removeLoop(BumpAlloc<> &alloc, size_t i) const
+    -> NotNull<AffineLoopNest<NonNegative>> {
+    auto ret = AffineLoopNest<NonNegative>::allocate(alloc, numConstraints,
+                                                     numLoops, getSyms());
+    ret->getA() << getA();
+    ret->removeLoopBang(WBumpAlloc<int64_t>(alloc), i);
+    return ret;
   }
   auto perm(PtrVector<unsigned> x)
     -> llvm::SmallVector<AffineLoopNest<NonNegative>, 0> {
@@ -764,36 +778,53 @@ struct AffineLoopNest
   [[nodiscard]] constexpr auto getNumLoops() const -> size_t {
     return numLoops;
   }
+  [[nodiscard]] constexpr auto getNumSymbols() const -> size_t {
+    return numDynSymbols + 1;
+  }
+  constexpr void truncNumInEqCon(Row r) {
+    invariant(r < numConstraints);
+    numConstraints = unsigned(r);
+  }
 
 private:
-  AffineLoopNest(IntMatrix Am, llvm::SmallVector<const llvm::SCEV *> sym)
-    : BasePolyhedra<EmptyMatrix<int64_t>, LinearSymbolicComparator,
-                    llvm::SmallVector<const llvm::SCEV *>, NonNegative>(
-        std::move(Am), std::move(sym)){};
-  AffineLoopNest(IntMatrix Am)
-    : BasePolyhedra<EmptyMatrix<int64_t>, LinearSymbolicComparator,
-                    llvm::SmallVector<const llvm::SCEV *>, NonNegative>(
-        std::move(Am)){};
-  AffineLoopNest() = default;
+  // AffineLoopNest(llvm::Loop *L, const llvm::SCEV *BT, llvm::ScalarEvolution
+  // &SE,
+  //                llvm::OptimizationRemarkEmitter *ORE = nullptr) {
+  //   // static_assert(false);
+  // }
+  AffineLoopNest(unsigned int _numConstraints, unsigned int _numLoops,
+                 unsigned int _numDynSymbols, unsigned int _rowCapacity)
+    : numConstraints(_numConstraints), numLoops(_numLoops),
+      numDynSymbols(_numDynSymbols), rowCapacity(_rowCapacity) {}
 
-  static auto allocate(BumpAlloc<> &alloc, unsigned int numConstraints,
+  static auto allocate(BumpAlloc<> &alloc, unsigned int numCon,
                        unsigned int numLoops,
                        llvm::ArrayRef<const llvm::SCEV *> syms)
     -> NotNull<AffineLoopNest> {
     size_t numDynSym = syms.size();
     size_t N = numLoops + numDynSym + 1;
-    size_t memNeeded = numConstraints * N * sizeof(int64_t) +
-                       numDynSym * sizeof(const llvm::SCEV *const *);
+    // extra capacity for adding 0 lower bounds later, see `addZeroLowerBounds`.
+    size_t M = NonNegative ? numCon : numCon + numLoops;
+    // extra capacity for moving loops into symbols, see `removeOuterMost`.
+    size_t symCapacity = numDynSym + numLoops;
+    size_t memNeeded =
+      M * N * sizeof(int64_t) + symCapacity * sizeof(const llvm::SCEV *const *);
     auto *mem = alloc.allocate(sizeof(AffineLoopNest) - 8 + memNeeded,
                                alignof(AffineLoopNest));
-    auto *aln = new (mem) AffineLoopNest(numConstraints, numLoops, numDynSym);
+    auto *aln = new (mem) AffineLoopNest(numCon, numLoops, numDynSym, M);
     std::copy_n(syms.begin(), numDynSym, aln->getSyms());
     return NotNull<AffineLoopNest>{aln};
+  }
+  [[nodiscard]] constexpr auto getRowCapacity() const -> size_t {
+    return rowCapacity;
+  }
+  [[nodiscard]] constexpr auto getSymCapacity() const -> size_t {
+    return numDynSymbols + numLoops;
   }
 
   unsigned int numConstraints;
   unsigned int numLoops;
   unsigned int numDynSymbols;
-  unsigned int unused{0}; // capacity? A.numCol()?
-  std::byte memory[8];    // NOLINT(modernize-avoid-c-arrays) // FAM
+  unsigned int rowCapacity; //
+  std::byte memory[8];      // NOLINT(modernize-avoid-c-arrays) // FAM
 };

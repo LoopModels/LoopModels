@@ -275,7 +275,9 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
   using ThisT = BaseSymbolicComparator<T>;
   using BaseT = BaseComparator<ThisT>;
   using BaseT::greaterEqual;
-  [[nodiscard]] auto getNumConstTermsImpl() const -> size_t { return numVar; }
+  [[nodiscard]] constexpr auto getNumConstTermsImpl() const -> size_t {
+    return numVar;
+  }
 
   constexpr auto getV() -> MutDensePtrMatrix<int64_t> {
     return static_cast<T *>(this)->getVImpl();
@@ -295,7 +297,7 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
   constexpr auto getD(Row n) -> MutPtrVector<int64_t> {
     return static_cast<T *>(this)->getDImpl(n);
   }
-  void setURank(Row r) { static_cast<T *>(this)->setURankImpl(r); }
+  constexpr void setURank(Row r) { static_cast<T *>(this)->setURankImpl(r); }
 
   template <typename Allocator>
   constexpr void initNonNegative(Allocator alloc, PtrMatrix<int64_t> A,
@@ -303,8 +305,8 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
     initNonNegative(alloc, A, numNonNegative);
   }
   template <typename Allocator>
-  void initNonNegative(Allocator alloc, PtrMatrix<int64_t> A,
-                       size_t numNonNegative) {
+  constexpr void initNonNegative(Allocator alloc, PtrMatrix<int64_t> A,
+                                 size_t numNonNegative) {
     // we have an additional numNonNegative x numNonNegative identity matrix
     // as the lower right block of `A`.
     const size_t numConExplicit = size_t(A.numRow()) + 1;
@@ -332,8 +334,8 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
     initCore(alloc);
   }
   template <typename Allocator>
-  void initNonNegative(Allocator alloc, PtrMatrix<int64_t> A,
-                       PtrMatrix<int64_t> E, size_t numNonNegative) {
+  constexpr void initNonNegative(Allocator alloc, PtrMatrix<int64_t> A,
+                                 PtrMatrix<int64_t> E, size_t numNonNegative) {
     // we have an additional numNonNegative x numNonNegative identity matrix
     // as the lower right block of `A`.
     const size_t numInEqConExplicit = size_t(A.numRow()) + 1;
@@ -428,8 +430,8 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
     return (2 * numInEqCon + size_t(E.numRow()) + rowV + 1) * rowV;
   }
   template <typename Allocator>
-  void init(Allocator alloc, PtrMatrix<int64_t> A, PtrMatrix<int64_t> E,
-            bool pos0) {
+  constexpr void init(Allocator alloc, PtrMatrix<int64_t> A,
+                      PtrMatrix<int64_t> E, bool pos0) {
     const size_t numInEqCon = size_t(A.numRow()) + pos0;
     numVar = size_t(A.numCol());
     const size_t numEqCon = size_t(E.numRow());
@@ -452,7 +454,7 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
   }
   // sets U, V, and d.
   // needs to also set their size, which is only determined here.
-  template <typename Allocator> void initCore(Allocator alloc) {
+  template <typename Allocator> constexpr void initCore(Allocator alloc) {
     // numVar + numInEq x 2*numInEq + numEq
     MutPtrMatrix<int64_t> B = getV();
     Row R = B.numRow();
@@ -486,7 +488,7 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
 
   // Note that this is only valid when the comparator was constructed
   // with index `0` referring to >= 0 constants (i.e., the default).
-  auto isEmpty() -> bool {
+  constexpr auto isEmpty() -> bool {
     auto &&V = getV();
     auto &&U = getU();
     auto &&d = getD();
@@ -532,7 +534,8 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
     }
     return true;
   }
-  [[nodiscard]] auto greaterEqual(PtrVector<int64_t> query) const -> bool {
+  [[nodiscard]] constexpr auto greaterEqual(PtrVector<int64_t> query) const
+    -> bool {
     auto &&V = getV();
     auto &&U = getU();
     auto &&d = getD();
@@ -752,7 +755,7 @@ struct PtrSymbolicComparator
   };
 
 private:
-  constexpr PtrSymbolicComparator(int64_t *mem) : mem(mem) {}
+  constexpr PtrSymbolicComparator(int64_t *p) : mem(p) {}
 };
 
 static_assert(Comparator<PtrSymbolicComparator>);

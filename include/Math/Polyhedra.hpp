@@ -92,28 +92,27 @@ struct BasePolyhedra {
     static_assert(HasSymbols);
     return static_cast<const P *>(this)->getSyms();
   }
-
-  [[nodiscard]] constexpr auto initializeComparator(
-    std::allocator<int64_t> = {}) // NOLINT(performance-unnecessary-value-param)
+  constexpr void truncNumInEqCon(Row r) {
+    static_cast<P *>(this)->truncNumInEqCon(r);
+  }
+  constexpr void truncNumEqCon(Row r) {
+    if constexpr (HasEqualities) static_cast<P *>(this)->truncNumEqCon(r);
+  }
+  [[nodiscard]] constexpr auto
+  initializeComparator(std::allocator<int64_t> alloc =
+                         {}) // NOLINT(performance-unnecessary-value-param)
     -> comparator::LinearSymbolicComparator {
-    if constexpr (HasEqualities)
-      if constexpr (NonNegative)
-        return comparator::linearNonNegative(getA(), getE(), getNumDynamic());
-      else return comparator::linear(getA(), getE(), true);
-    else if constexpr (NonNegative)
-      return comparator::linearNonNegative(getA(), getNumDynamic());
-    else return comparator::linear(getA(), true);
+    if constexpr (NonNegative)
+      return comparator::linearNonNegative(alloc, getA(), getE(),
+                                           getNumDynamic());
+    else return comparator::linear(alloc, getA(), getE(), true);
   }
   [[nodiscard]] constexpr auto initializeComparator(WBumpAlloc<int64_t> alloc)
     -> comparator::PtrSymbolicComparator {
-    if constexpr (HasEqualities)
-      if constexpr (NonNegative)
-        return comparator::linearNonNegative(alloc, getA(), getE(),
-                                             getNumDynamic());
-      else return comparator::linear(alloc, getA(), getE(), true);
-    else if constexpr (NonNegative)
-      return comparator::linearNonNegative(alloc, getA(), getNumDynamic());
-    else return comparator::linear(alloc, getA(), true);
+    if constexpr (NonNegative)
+      return comparator::linearNonNegative(alloc, getA(), getE(),
+                                           getNumDynamic());
+    else return comparator::linear(alloc, getA(), getE(), true);
   }
   constexpr void reinitComparator(WBumpAlloc<int64_t> alloc,
                                   comparator::PtrSymbolicComparator &comp) {
@@ -131,11 +130,11 @@ struct BasePolyhedra {
   constexpr auto calcIsEmpty(BumpAlloc<> &alloc) -> bool {
     return initializeComparator(alloc).isEmpty();
   }
-  constexpr void pruneBounds() {
+  template <class Allocator> constexpr void pruneBounds(Allocator alloc) {
     if (calcIsEmpty()) {
       getA().truncate(Row{0});
       if constexpr (HasEqualities) getE().truncate(Row{0});
-    } else pruneBoundsUnchecked();
+    } else pruneBoundsUnchecked(alloc);
   }
   // TODO: upper bound allocation size for comparator
   // then, reuse memory instead of reallocating
@@ -180,6 +179,8 @@ struct BasePolyhedra {
     checkpoint(alloc, p);
     if constexpr (HasEqualities)
       for (size_t i = 0; i < getE().numRow(); ++i) normalizeByGCD(getE()(i, _));
+    truncNumInEqCon(A.numRow());
+    if constexpr (HasEqualities) truncNumEqCon(getE().numRow());
   }
 
   [[nodiscard]] constexpr auto getNumSymbols() const -> size_t {

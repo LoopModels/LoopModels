@@ -6,14 +6,14 @@
 
 using LinearAlgebra::PtrVector, LinearAlgebra::MutPtrVector;
 
-inline auto gcd(PtrVector<int64_t> x) -> int64_t {
+constexpr auto gcd(PtrVector<int64_t> x) -> int64_t {
   const size_t N = x.size();
   if (!N) return 0;
   int64_t g = constexpr_abs(x[0]);
   for (size_t n = 1; (n < N) & (g != 1); ++n) g = gcd(g, x[n]);
   return g;
 }
-inline void normalizeByGCD(MutPtrVector<int64_t> x) {
+constexpr void normalizeByGCD(MutPtrVector<int64_t> x) {
   size_t N = x.size();
   switch (N) {
   case 0:
@@ -28,12 +28,12 @@ inline void normalizeByGCD(MutPtrVector<int64_t> x) {
   }
 }
 
-inline auto lcm(AbstractVector auto x) -> int64_t {
+constexpr auto lcm(AbstractVector auto x) -> int64_t {
   int64_t l = x[0];
   for (int64_t xi : x[_(1, end)]) l = lcm(l, xi);
   return l;
 }
-inline auto lcmNonUnity(AbstractVector auto x) -> std::pair<int64_t, bool> {
+constexpr auto lcmNonUnity(AbstractVector auto x) -> std::pair<int64_t, bool> {
   int64_t l = x[0];
   bool nonUnity = (l != 1);
   for (int64_t xi : x[_(1, end)]) {
@@ -42,7 +42,7 @@ inline auto lcmNonUnity(AbstractVector auto x) -> std::pair<int64_t, bool> {
   }
   return {l, nonUnity};
 }
-inline auto lcmSkipZero(AbstractVector auto x) -> int64_t {
+constexpr auto lcmSkipZero(AbstractVector auto x) -> int64_t {
   int64_t l = 1;
   for (int64_t xi : x)
     if (xi) l = lcm(l, xi);
