@@ -98,30 +98,30 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>findIndex</b> (const 
 auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAffineLoopNest.html#ae7e3801c19a2587916894acf27894629">explicitLowerBounds</a> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc) -&gt; <a class="el" href="structNotNull.html">NotNull</a>&lt; <a class="el" href="structAffineLoopNest.html">AffineLoopNest</a>&lt; false &gt;&gt;</td></tr>
 <tr class="memdesc:ae7e3801c19a2587916894acf27894629"><td class="mdescLeft">&#160;</td><td class="mdescRight">like rotate(identity Matrix) <br /></td></tr>
 <tr class="separator:ae7e3801c19a2587916894acf27894629"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a88a50b567317a823f0556c7743846fd9"><td class="memItemLeft" align="right" valign="top"><a id="a88a50b567317a823f0556c7743846fd9"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>AffineLoopNest</b> (llvm::Loop *L, const llvm::SCEV *BT, llvm::ScalarEvolution &amp;SE, llvm::OptimizationRemarkEmitter *ORE=nullptr)</td></tr>
-<tr class="separator:a88a50b567317a823f0556c7743846fd9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2a7178a40c514f7af01aad2fb98b5740"><td class="memItemLeft" align="right" valign="top"><a id="a2a7178a40c514f7af01aad2fb98b5740"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>removeInnerMost</b> () const -&gt; <a class="el" href="structAffineLoopNest.html">AffineLoopNest</a>&lt; NonNegative &gt;</td></tr>
-<tr class="separator:a2a7178a40c514f7af01aad2fb98b5740"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acd34fbf1967926dd3a55e02cf192ea50"><td class="memItemLeft" align="right" valign="top"><a id="acd34fbf1967926dd3a55e02cf192ea50"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>clear</b> ()</td></tr>
-<tr class="separator:acd34fbf1967926dd3a55e02cf192ea50"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a72093512f88a839c4e82d628e27c15c4"><td class="memItemLeft" align="right" valign="top"><a id="a72093512f88a839c4e82d628e27c15c4"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>removeInnerMost</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc) const -&gt; <a class="el" href="structNotNull.html">NotNull</a>&lt; <a class="el" href="structAffineLoopNest.html">AffineLoopNest</a>&lt; NonNegative &gt;&gt;</td></tr>
+<tr class="separator:a72093512f88a839c4e82d628e27c15c4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9f774cbbd1729674d7194d4f38747e6e"><td class="memItemLeft" align="right" valign="top"><a id="a9f774cbbd1729674d7194d4f38747e6e"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>truncateConstraints</b> (unsigned newNumConstraints)</td></tr>
+<tr class="separator:a9f774cbbd1729674d7194d4f38747e6e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a45811c7edd93fd8db939ada619bf219f"><td class="memItemLeft" align="right" valign="top"><a id="a45811c7edd93fd8db939ada619bf219f"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>clear</b> ()</td></tr>
+<tr class="separator:a45811c7edd93fd8db939ada619bf219f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a767caf0af1c6123835e2c91f344a411d"><td class="memItemLeft" align="right" valign="top"><a id="a767caf0af1c6123835e2c91f344a411d"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>removeOuterMost</b> (size_t numToRemove, llvm::Loop *L, llvm::ScalarEvolution &amp;SE)</td></tr>
 <tr class="separator:a767caf0af1c6123835e2c91f344a411d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:adcf210dcbef9fe68903c1c18265096c4"><td class="memItemLeft" align="right" valign="top"><a id="adcf210dcbef9fe68903c1c18265096c4"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>addZeroLowerBounds</b> ()</td></tr>
-<tr class="separator:adcf210dcbef9fe68903c1c18265096c4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a12c6450374d67e63650358752d564600"><td class="memItemLeft" align="right" valign="top"><a id="a12c6450374d67e63650358752d564600"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>addZeroLowerBounds</b> (Allocator auto alloc)</td></tr>
+<tr class="separator:a12c6450374d67e63650358752d564600"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7b42b9010c9e810b74cd7edd65633a7d"><td class="memItemLeft" align="right" valign="top"><a id="a7b42b9010c9e810b74cd7edd65633a7d"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>getProgVars</b> (size_t j) const -&gt; PtrVector&lt; int64_t &gt;</td></tr>
 <tr class="separator:a7b42b9010c9e810b74cd7edd65633a7d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac6c7047853aa952be9f87ed18dd15341"><td class="memItemLeft" align="right" valign="top"><a id="ac6c7047853aa952be9f87ed18dd15341"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>removeLoopBang</b> (size_t i)</td></tr>
-<tr class="separator:ac6c7047853aa952be9f87ed18dd15341"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0d4791b2f188d334f13adcec7f390d50"><td class="memItemLeft" align="right" valign="top"><a id="a0d4791b2f188d334f13adcec7f390d50"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>removeLoop</b> (size_t i) const -&gt; <a class="el" href="structAffineLoopNest.html">AffineLoopNest</a>&lt; NonNegative &gt;</td></tr>
-<tr class="separator:a0d4791b2f188d334f13adcec7f390d50"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a97e773d446f72d9de764126f9f89bacb"><td class="memItemLeft" align="right" valign="top"><a id="a97e773d446f72d9de764126f9f89bacb"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>removeLoopBang</b> (Allocator auto alloc, size_t i)</td></tr>
+<tr class="separator:a97e773d446f72d9de764126f9f89bacb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acafe2b6ee2a4dac2fc70d4375270e04e"><td class="memItemLeft" align="right" valign="top"><a id="acafe2b6ee2a4dac2fc70d4375270e04e"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>removeLoop</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, size_t i) const -&gt; <a class="el" href="structNotNull.html">NotNull</a>&lt; <a class="el" href="structAffineLoopNest.html">AffineLoopNest</a>&lt; NonNegative &gt;&gt;</td></tr>
+<tr class="separator:acafe2b6ee2a4dac2fc70d4375270e04e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2689cfda5eafa0dd6672a9a41493f0c9"><td class="memItemLeft" align="right" valign="top"><a id="a2689cfda5eafa0dd6672a9a41493f0c9"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>perm</b> (PtrVector&lt; unsigned &gt; x) -&gt; llvm::SmallVector&lt; <a class="el" href="structAffineLoopNest.html">AffineLoopNest</a>&lt; NonNegative &gt;, 0 &gt;</td></tr>
 <tr class="separator:a2689cfda5eafa0dd6672a9a41493f0c9"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -164,6 +164,12 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>getSyms</b> () const 
 <tr class="memitem:ab669d73f48a167b2643f563be669e365"><td class="memItemLeft" align="right" valign="top"><a id="ab669d73f48a167b2643f563be669e365"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumLoops</b> () const -&gt; size_t</td></tr>
 <tr class="separator:ab669d73f48a167b2643f563be669e365"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a21057cc332132d1338abd35d91402808"><td class="memItemLeft" align="right" valign="top"><a id="a21057cc332132d1338abd35d91402808"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumSymbols</b> () const -&gt; size_t</td></tr>
+<tr class="separator:a21057cc332132d1338abd35d91402808"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a84a3109d521c5e546b76e43ad87b83bc"><td class="memItemLeft" align="right" valign="top"><a id="a84a3109d521c5e546b76e43ad87b83bc"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>truncNumInEqCon</b> (Row r)</td></tr>
+<tr class="separator:a84a3109d521c5e546b76e43ad87b83bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_methods_structBasePolyhedra"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_structBasePolyhedra')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="structBasePolyhedra.html">BasePolyhedra&lt; false, true, true, AffineLoopNest&lt; true &gt; &gt;</a></td></tr>
 <tr class="memitem:acff0f8d0019a25088596916cb36ab81a inherit pub_methods_structBasePolyhedra"><td class="memItemLeft" align="right" valign="top"><a id="acff0f8d0019a25088596916cb36ab81a"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getA</b> () -&gt; MutDensePtrMatrix&lt; int64_t &gt;</td></tr>
@@ -183,9 +189,15 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getSyms</b>
 <tr class="memitem:ad3c486bfb20197e6d4ddb379b18cf52d inherit pub_methods_structBasePolyhedra"><td class="memItemLeft" align="right" valign="top"><a id="ad3c486bfb20197e6d4ddb379b18cf52d"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getSyms</b> () const -&gt; llvm::ArrayRef&lt; const llvm::SCEV * &gt;</td></tr>
 <tr class="separator:ad3c486bfb20197e6d4ddb379b18cf52d inherit pub_methods_structBasePolyhedra"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae9f30771e97d882d8486d665a162b869 inherit pub_methods_structBasePolyhedra"><td class="memItemLeft" align="right" valign="top"><a id="ae9f30771e97d882d8486d665a162b869"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>initializeComparator</b> (std::allocator&lt; int64_t &gt;={}) -&gt; <a class="el" href="structcomparator_1_1LinearSymbolicComparator.html">comparator::LinearSymbolicComparator</a></td></tr>
-<tr class="separator:ae9f30771e97d882d8486d665a162b869 inherit pub_methods_structBasePolyhedra"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aadba62b4b74ae94edce0e9727570ffdf inherit pub_methods_structBasePolyhedra"><td class="memItemLeft" align="right" valign="top"><a id="aadba62b4b74ae94edce0e9727570ffdf"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>truncNumInEqCon</b> (Row r)</td></tr>
+<tr class="separator:aadba62b4b74ae94edce0e9727570ffdf inherit pub_methods_structBasePolyhedra"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a71e0f5ab6982b4d2c4c0158b75840296 inherit pub_methods_structBasePolyhedra"><td class="memItemLeft" align="right" valign="top"><a id="a71e0f5ab6982b4d2c4c0158b75840296"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>truncNumEqCon</b> (Row r)</td></tr>
+<tr class="separator:a71e0f5ab6982b4d2c4c0158b75840296 inherit pub_methods_structBasePolyhedra"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af5a4d71eb16c523d5674d62330f7220f inherit pub_methods_structBasePolyhedra"><td class="memItemLeft" align="right" valign="top"><a id="af5a4d71eb16c523d5674d62330f7220f"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>initializeComparator</b> (std::allocator&lt; int64_t &gt; alloc={}) -&gt; <a class="el" href="structcomparator_1_1LinearSymbolicComparator.html">comparator::LinearSymbolicComparator</a></td></tr>
+<tr class="separator:af5a4d71eb16c523d5674d62330f7220f inherit pub_methods_structBasePolyhedra"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab9a2dce285d1f082dc791e5cb8761176 inherit pub_methods_structBasePolyhedra"><td class="memItemLeft" align="right" valign="top"><a id="ab9a2dce285d1f082dc791e5cb8761176"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>initializeComparator</b> (<a class="el" href="classWBumpAlloc.html">WBumpAlloc</a>&lt; int64_t &gt; alloc) -&gt; <a class="el" href="structcomparator_1_1PtrSymbolicComparator.html">comparator::PtrSymbolicComparator</a></td></tr>
 <tr class="separator:ab9a2dce285d1f082dc791e5cb8761176 inherit pub_methods_structBasePolyhedra"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -198,9 +210,9 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>calcIsEmpty
 <tr class="memitem:a0cd90f4f3806add56b12fa920db4deb6 inherit pub_methods_structBasePolyhedra"><td class="memItemLeft" align="right" valign="top"><a id="a0cd90f4f3806add56b12fa920db4deb6"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>calcIsEmpty</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc) -&gt; bool</td></tr>
 <tr class="separator:a0cd90f4f3806add56b12fa920db4deb6 inherit pub_methods_structBasePolyhedra"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a43204558b8f376f937c61ce291af1510 inherit pub_methods_structBasePolyhedra"><td class="memItemLeft" align="right" valign="top"><a id="a43204558b8f376f937c61ce291af1510"></a>
-constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>pruneBounds</b> ()</td></tr>
-<tr class="separator:a43204558b8f376f937c61ce291af1510 inherit pub_methods_structBasePolyhedra"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a56c80c182e3ea812420f1b1b501dea98 inherit pub_methods_structBasePolyhedra"><td class="memItemLeft" align="right" valign="top"><a id="a56c80c182e3ea812420f1b1b501dea98"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>pruneBounds</b> (Allocator alloc)</td></tr>
+<tr class="separator:a56c80c182e3ea812420f1b1b501dea98 inherit pub_methods_structBasePolyhedra"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5a6613b22f3f4706df7ae3b9615eab6e inherit pub_methods_structBasePolyhedra"><td class="memItemLeft" align="right" valign="top"><a id="a5a6613b22f3f4706df7ae3b9615eab6e"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>pruneBoundsUnchecked</b> (Allocator alloc)</td></tr>
 <tr class="separator:a5a6613b22f3f4706df7ae3b9615eab6e inherit pub_methods_structBasePolyhedra"><td class="memSeparator" colspan="2">&#160;</td></tr>

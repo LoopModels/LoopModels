@@ -96,9 +96,9 @@ using&#160;</td><td class="memItemRight" valign="bottom"><b>BaseT</b> = <a class
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a589cc9067cf5d27cd004632047fd7a7f"><td class="memItemLeft" align="right" valign="top"><a id="a589cc9067cf5d27cd004632047fd7a7f"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumConstTermsImpl</b> () const -&gt; size_t</td></tr>
-<tr class="separator:a589cc9067cf5d27cd004632047fd7a7f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae203ec468c4adca413e4d8653f89c392"><td class="memItemLeft" align="right" valign="top"><a id="ae203ec468c4adca413e4d8653f89c392"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumConstTermsImpl</b> () const -&gt; size_t</td></tr>
+<tr class="separator:ae203ec468c4adca413e4d8653f89c392"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a67dcfcf8fc4a00e7ffad16593130fbed"><td class="memItemLeft" align="right" valign="top"><a id="a67dcfcf8fc4a00e7ffad16593130fbed"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getV</b> () -&gt; MutDensePtrMatrix&lt; int64_t &gt;</td></tr>
 <tr class="separator:a67dcfcf8fc4a00e7ffad16593130fbed"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -117,21 +117,21 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getU</b> (R
 <tr class="memitem:a41b2fbcd365b1b5cc424a8956639aaf4"><td class="memItemLeft" align="right" valign="top"><a id="a41b2fbcd365b1b5cc424a8956639aaf4"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getD</b> (Row n) -&gt; MutPtrVector&lt; int64_t &gt;</td></tr>
 <tr class="separator:a41b2fbcd365b1b5cc424a8956639aaf4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9e75e973a110dd70d1afda45f1df5703"><td class="memItemLeft" align="right" valign="top"><a id="a9e75e973a110dd70d1afda45f1df5703"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>setURank</b> (Row r)</td></tr>
-<tr class="separator:a9e75e973a110dd70d1afda45f1df5703"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad6d9115ea15853c6238fbc629298e8bd"><td class="memItemLeft" align="right" valign="top"><a id="ad6d9115ea15853c6238fbc629298e8bd"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>setURank</b> (Row r)</td></tr>
+<tr class="separator:ad6d9115ea15853c6238fbc629298e8bd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aec82977ed1ea8fde85e6b73f139472e3"><td class="memTemplParams" colspan="2"><a id="aec82977ed1ea8fde85e6b73f139472e3"></a>
 template&lt;typename Allocator &gt; </td></tr>
 <tr class="memitem:aec82977ed1ea8fde85e6b73f139472e3"><td class="memTemplItemLeft" align="right" valign="top">constexpr void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>initNonNegative</b> (Allocator alloc, PtrMatrix&lt; int64_t &gt; A, <a class="el" href="structLinearAlgebra_1_1EmptyMatrix.html">EmptyMatrix</a>&lt; int64_t &gt;, size_t numNonNegative)</td></tr>
 <tr class="separator:aec82977ed1ea8fde85e6b73f139472e3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac38af3130a18c8aef09936e597603957"><td class="memTemplParams" colspan="2"><a id="ac38af3130a18c8aef09936e597603957"></a>
+<tr class="memitem:a7a5cc3702cf783ca524e653ff0a03cf5"><td class="memTemplParams" colspan="2"><a id="a7a5cc3702cf783ca524e653ff0a03cf5"></a>
 template&lt;typename Allocator &gt; </td></tr>
-<tr class="memitem:ac38af3130a18c8aef09936e597603957"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>initNonNegative</b> (Allocator alloc, PtrMatrix&lt; int64_t &gt; A, size_t numNonNegative)</td></tr>
-<tr class="separator:ac38af3130a18c8aef09936e597603957"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af3912e693f5dced354706ac977310d99"><td class="memTemplParams" colspan="2"><a id="af3912e693f5dced354706ac977310d99"></a>
+<tr class="memitem:a7a5cc3702cf783ca524e653ff0a03cf5"><td class="memTemplItemLeft" align="right" valign="top">constexpr void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>initNonNegative</b> (Allocator alloc, PtrMatrix&lt; int64_t &gt; A, size_t numNonNegative)</td></tr>
+<tr class="separator:a7a5cc3702cf783ca524e653ff0a03cf5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5ba8562b83b4373c01e52d50bd5f8ecc"><td class="memTemplParams" colspan="2"><a id="a5ba8562b83b4373c01e52d50bd5f8ecc"></a>
 template&lt;typename Allocator &gt; </td></tr>
-<tr class="memitem:af3912e693f5dced354706ac977310d99"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>initNonNegative</b> (Allocator alloc, PtrMatrix&lt; int64_t &gt; A, PtrMatrix&lt; int64_t &gt; E, size_t numNonNegative)</td></tr>
-<tr class="separator:af3912e693f5dced354706ac977310d99"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5ba8562b83b4373c01e52d50bd5f8ecc"><td class="memTemplItemLeft" align="right" valign="top">constexpr void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>initNonNegative</b> (Allocator alloc, PtrMatrix&lt; int64_t &gt; A, PtrMatrix&lt; int64_t &gt; E, size_t numNonNegative)</td></tr>
+<tr class="separator:a5ba8562b83b4373c01e52d50bd5f8ecc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a68f3517b8d6b27df6190f8a3093e2f2f"><td class="memTemplParams" colspan="2"><a id="a68f3517b8d6b27df6190f8a3093e2f2f"></a>
 template&lt;class Allocator &gt; </td></tr>
 <tr class="memitem:a68f3517b8d6b27df6190f8a3093e2f2f"><td class="memTemplItemLeft" align="right" valign="top">constexpr void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>init</b> (Allocator alloc, PtrMatrix&lt; int64_t &gt; A, bool pos0)</td></tr>
@@ -140,20 +140,20 @@ template&lt;class Allocator &gt; </td></tr>
 template&lt;class Allocator &gt; </td></tr>
 <tr class="memitem:ad0da745d90dc43da64b32f4809a7c3ed"><td class="memTemplItemLeft" align="right" valign="top">constexpr void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>init</b> (Allocator alloc, PtrMatrix&lt; int64_t &gt; A, <a class="el" href="structLinearAlgebra_1_1EmptyMatrix.html">EmptyMatrix</a>&lt; int64_t &gt;, bool pos0)</td></tr>
 <tr class="separator:ad0da745d90dc43da64b32f4809a7c3ed"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad178af27e448348fa3b9d3b6db56c116"><td class="memTemplParams" colspan="2"><a id="ad178af27e448348fa3b9d3b6db56c116"></a>
+<tr class="memitem:a80cdbd5cec4efba786ef5c1b856e554c"><td class="memTemplParams" colspan="2"><a id="a80cdbd5cec4efba786ef5c1b856e554c"></a>
 template&lt;typename Allocator &gt; </td></tr>
-<tr class="memitem:ad178af27e448348fa3b9d3b6db56c116"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>init</b> (Allocator alloc, PtrMatrix&lt; int64_t &gt; A, PtrMatrix&lt; int64_t &gt; E, bool pos0)</td></tr>
-<tr class="separator:ad178af27e448348fa3b9d3b6db56c116"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0c87f2e9f2e3b15c869215d3575ccb13"><td class="memTemplParams" colspan="2"><a id="a0c87f2e9f2e3b15c869215d3575ccb13"></a>
+<tr class="memitem:a80cdbd5cec4efba786ef5c1b856e554c"><td class="memTemplItemLeft" align="right" valign="top">constexpr void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>init</b> (Allocator alloc, PtrMatrix&lt; int64_t &gt; A, PtrMatrix&lt; int64_t &gt; E, bool pos0)</td></tr>
+<tr class="separator:a80cdbd5cec4efba786ef5c1b856e554c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5a0514fb12e4b13bf2d5c80711667585"><td class="memTemplParams" colspan="2"><a id="a5a0514fb12e4b13bf2d5c80711667585"></a>
 template&lt;typename Allocator &gt; </td></tr>
-<tr class="memitem:a0c87f2e9f2e3b15c869215d3575ccb13"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>initCore</b> (Allocator alloc)</td></tr>
-<tr class="separator:a0c87f2e9f2e3b15c869215d3575ccb13"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af1b88fcd65d140c34088fffc61529326"><td class="memItemLeft" align="right" valign="top"><a id="af1b88fcd65d140c34088fffc61529326"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>isEmpty</b> () -&gt; bool</td></tr>
-<tr class="separator:af1b88fcd65d140c34088fffc61529326"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a926f9b3f4291841aadb18fd95a4d4ae1"><td class="memItemLeft" align="right" valign="top"><a id="a926f9b3f4291841aadb18fd95a4d4ae1"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>greaterEqual</b> (PtrVector&lt; int64_t &gt; query) const -&gt; bool</td></tr>
-<tr class="separator:a926f9b3f4291841aadb18fd95a4d4ae1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5a0514fb12e4b13bf2d5c80711667585"><td class="memTemplItemLeft" align="right" valign="top">constexpr void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>initCore</b> (Allocator alloc)</td></tr>
+<tr class="separator:a5a0514fb12e4b13bf2d5c80711667585"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a264488db35311162b7c0217406b493ac"><td class="memItemLeft" align="right" valign="top"><a id="a264488db35311162b7c0217406b493ac"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>isEmpty</b> () -&gt; bool</td></tr>
+<tr class="separator:a264488db35311162b7c0217406b493ac"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad781464316a35e13b8993dff759341b4"><td class="memItemLeft" align="right" valign="top"><a id="ad781464316a35e13b8993dff759341b4"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>greaterEqual</b> (PtrVector&lt; int64_t &gt; query) const -&gt; bool</td></tr>
+<tr class="separator:ad781464316a35e13b8993dff759341b4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abd160ff6d792616fae14ed35284047fe"><td class="memItemLeft" align="right" valign="top"><a id="abd160ff6d792616fae14ed35284047fe"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>greaterEqual</b> (MutPtrVector&lt; int64_t &gt; delta, PtrVector&lt; int64_t &gt; x, PtrVector&lt; int64_t &gt; y) const -&gt; bool</td></tr>
 <tr class="separator:abd160ff6d792616fae14ed35284047fe"><td class="memSeparator" colspan="2">&#160;</td></tr>

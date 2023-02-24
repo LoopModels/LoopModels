@@ -101,9 +101,15 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getE</b> ()
 <tr class="memitem:ad3c486bfb20197e6d4ddb379b18cf52d"><td class="memItemLeft" align="right" valign="top"><a id="ad3c486bfb20197e6d4ddb379b18cf52d"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getSyms</b> () const -&gt; llvm::ArrayRef&lt; const llvm::SCEV * &gt;</td></tr>
 <tr class="separator:ad3c486bfb20197e6d4ddb379b18cf52d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae9f30771e97d882d8486d665a162b869"><td class="memItemLeft" align="right" valign="top"><a id="ae9f30771e97d882d8486d665a162b869"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>initializeComparator</b> (std::allocator&lt; int64_t &gt;={}) -&gt; <a class="el" href="structcomparator_1_1LinearSymbolicComparator.html">comparator::LinearSymbolicComparator</a></td></tr>
-<tr class="separator:ae9f30771e97d882d8486d665a162b869"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aadba62b4b74ae94edce0e9727570ffdf"><td class="memItemLeft" align="right" valign="top"><a id="aadba62b4b74ae94edce0e9727570ffdf"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>truncNumInEqCon</b> (Row r)</td></tr>
+<tr class="separator:aadba62b4b74ae94edce0e9727570ffdf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a71e0f5ab6982b4d2c4c0158b75840296"><td class="memItemLeft" align="right" valign="top"><a id="a71e0f5ab6982b4d2c4c0158b75840296"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>truncNumEqCon</b> (Row r)</td></tr>
+<tr class="separator:a71e0f5ab6982b4d2c4c0158b75840296"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af5a4d71eb16c523d5674d62330f7220f"><td class="memItemLeft" align="right" valign="top"><a id="af5a4d71eb16c523d5674d62330f7220f"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>initializeComparator</b> (std::allocator&lt; int64_t &gt; alloc={}) -&gt; <a class="el" href="structcomparator_1_1LinearSymbolicComparator.html">comparator::LinearSymbolicComparator</a></td></tr>
+<tr class="separator:af5a4d71eb16c523d5674d62330f7220f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab9a2dce285d1f082dc791e5cb8761176"><td class="memItemLeft" align="right" valign="top"><a id="ab9a2dce285d1f082dc791e5cb8761176"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>initializeComparator</b> (<a class="el" href="classWBumpAlloc.html">WBumpAlloc</a>&lt; int64_t &gt; alloc) -&gt; <a class="el" href="structcomparator_1_1PtrSymbolicComparator.html">comparator::PtrSymbolicComparator</a></td></tr>
 <tr class="separator:ab9a2dce285d1f082dc791e5cb8761176"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -116,9 +122,10 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>calcIsEmpty
 <tr class="memitem:a0cd90f4f3806add56b12fa920db4deb6"><td class="memItemLeft" align="right" valign="top"><a id="a0cd90f4f3806add56b12fa920db4deb6"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>calcIsEmpty</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc) -&gt; bool</td></tr>
 <tr class="separator:a0cd90f4f3806add56b12fa920db4deb6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a43204558b8f376f937c61ce291af1510"><td class="memItemLeft" align="right" valign="top"><a id="a43204558b8f376f937c61ce291af1510"></a>
-constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>pruneBounds</b> ()</td></tr>
-<tr class="separator:a43204558b8f376f937c61ce291af1510"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a56c80c182e3ea812420f1b1b501dea98"><td class="memTemplParams" colspan="2"><a id="a56c80c182e3ea812420f1b1b501dea98"></a>
+template&lt;class Allocator &gt; </td></tr>
+<tr class="memitem:a56c80c182e3ea812420f1b1b501dea98"><td class="memTemplItemLeft" align="right" valign="top">constexpr void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>pruneBounds</b> (Allocator alloc)</td></tr>
+<tr class="separator:a56c80c182e3ea812420f1b1b501dea98"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5a6613b22f3f4706df7ae3b9615eab6e"><td class="memTemplParams" colspan="2"><a id="a5a6613b22f3f4706df7ae3b9615eab6e"></a>
 template&lt;class Allocator &gt; </td></tr>
 <tr class="memitem:a5a6613b22f3f4706df7ae3b9615eab6e"><td class="memTemplItemLeft" align="right" valign="top">constexpr void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>pruneBoundsUnchecked</b> (Allocator alloc)</td></tr>
