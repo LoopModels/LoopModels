@@ -559,11 +559,16 @@ struct AffineLoopNest
     // initializeComparator();
     pruneBounds(alloc);
   }
-  [[nodiscard]] auto removeLoop(BumpAlloc<> &alloc, size_t i) const
+  [[nodiscard]] auto copy(BumpAlloc<> &alloc) const
     -> NotNull<AffineLoopNest<NonNegative>> {
     auto ret = AffineLoopNest<NonNegative>::allocate(alloc, numConstraints,
                                                      numLoops, getSyms());
     ret->getA() << getA();
+    return ret;
+  }
+  [[nodiscard]] auto removeLoop(BumpAlloc<> &alloc, size_t i) const
+    -> NotNull<AffineLoopNest<NonNegative>> {
+    auto ret = copy(alloc);
     ret->removeLoopBang(WBumpAlloc<int64_t>(alloc), i);
     return ret;
   }
@@ -580,31 +585,30 @@ struct AffineLoopNest
     }
     return ret;
   }
-  [[nodiscard]] auto bounds(size_t i) const -> std::pair<IntMatrix, IntMatrix> {
+  [[nodiscard]] auto bounds(size_t i) const -> std::array<IntMatrix, 2> {
+    auto A{getA()};
     const auto [numNeg, numPos] = countSigns(A, i);
-    std::pair<IntMatrix, IntMatrix> ret;
-    ret.first.resizeForOverwrite(numNeg, A.numCol());
-    ret.second.resizeForOverwrite(numPos, A.numCol());
-    size_t negCount = 0;
-    size_t posCount = 0;
+    std::array<IntMatrix, 2> ret{{numNeg, A.numCol()}, {numPos, A.numCol()}};
+    size_t negCount = 0, posCount = 0;
     for (size_t j = 0; j < A.numRow(); ++j)
       if (int64_t Aji = A(j, i))
-        (Aji < 0 ? ret.first : ret.second)(Aji < 0 ? negCount++ : posCount++,
-                                           _) = A(j, _);
+        (ret[Aji > 0])(Aji < 0 ? negCount++ : posCount++, _) = A(j, _);
     return ret;
   }
-  auto getBounds(PtrVector<unsigned> x)
+  auto getBounds(BumpAlloc<> &alloc, PtrVector<unsigned> x)
     -> llvm::SmallVector<std::pair<IntMatrix, IntMatrix>, 0> {
     llvm::SmallVector<std::pair<IntMatrix, IntMatrix>, 0> ret;
     size_t i = x.size();
     ret.resize_for_overwrite(i);
-    AffineLoopNest<NonNegative> tmp = *this;
+    auto check = alloc.checkPoint();
+    auto tmp = copy(alloc);
     while (true) {
       size_t xi = x[--i];
-      ret[i] = tmp.bounds(xi);
+      ret[i] = tmp->bounds(xi);
       if (i == 0) break;
-      tmp.removeLoopBang(xi);
+      tmp->removeLoopBang(xi);
     }
+    alloc.checkPoint(check);
     return ret;
   }
   [[nodiscard]] auto zeroExtraIterationsUponExtending(size_t _i,
@@ -694,7 +698,7 @@ struct AffineLoopNest
         printed = true;
         int64_t absxi = constexpr_abs(xi);
         if (absxi != 1) os << absxi << " * ";
-        os << *S[i - 1];
+        os << getSyms()[i - 1];
       }
   }
 
@@ -703,6 +707,7 @@ struct AffineLoopNest
     const size_t numVarMinus1 = numVar - 1;
     const size_t numConst = getNumSymbols();
     bool hasPrintedLine = false;
+    auto A{getA()};
     for (size_t j = 0; j < A.numRow(); ++j) {
       int64_t Aji = A(j, i + numConst) * sign;
       if (Aji <= 0) continue;
@@ -763,10 +768,10 @@ struct AffineLoopNest
               ptr + sizeof(const llvm::SCEV *const *) * numDynSymbols),
             DenseDims{numConstraints, numLoops + numDynSymbols + 1}};
   };
-  inline auto getA() const -> DensePtrMatrix<int64_t> {
+  [[nodiscard]] inline auto getA() const -> DensePtrMatrix<int64_t> {
     const std::byte *ptr = memory;
-    return {reinterpret_cast<const int64_t *>(
-              ptr + sizeof(const llvm::SCEV *const *) * numDynSymbols),
+    return {const_cast<int64_t *>(reinterpret_cast<const int64_t *>(
+              ptr + sizeof(const llvm::SCEV *const *) * numDynSymbols)),
             DenseDims{numConstraints, numLoops + numDynSymbols + 1}};
   };
   [[nodiscard]] auto getSyms() -> llvm::MutableArrayRef<const llvm::SCEV *> {
@@ -803,7 +808,8 @@ private:
     -> NotNull<AffineLoopNest> {
     size_t numDynSym = syms.size();
     size_t N = numLoops + numDynSym + 1;
-    // extra capacity for adding 0 lower bounds later, see `addZeroLowerBounds`.
+    // extra capacity for adding 0 lower bounds later, see
+    // `addZeroLowerBounds`.
     size_t M = NonNegative ? numCon : numCon + numLoops;
     // extra capacity for moving loops into symbols, see `removeOuterMost`.
     size_t symCapacity = numDynSym + numLoops;
