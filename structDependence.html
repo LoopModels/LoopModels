@@ -217,15 +217,15 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>splitSatisfaction</b>
 <tr class="memitem:a3951e0510ef39f4dd26989f57e20bd9a"><td class="memItemLeft" align="right" valign="top"><a id="a3951e0510ef39f4dd26989f57e20bd9a"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>splitBounding</b> () const -&gt; std::tuple&lt; StridedVector&lt; int64_t &gt;, PtrMatrix&lt; int64_t &gt;, PtrMatrix&lt; int64_t &gt;, PtrMatrix&lt; int64_t &gt;, PtrMatrix&lt; int64_t &gt;, PtrMatrix&lt; int64_t &gt;&gt;</td></tr>
 <tr class="separator:a3951e0510ef39f4dd26989f57e20bd9a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a43dbbde1bff43d075737097312b7cfca"><td class="memItemLeft" align="right" valign="top"><a id="a43dbbde1bff43d075737097312b7cfca"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>isSatisfied</b> (const <a class="el" href="structSchedule.html">Schedule</a> &amp;schIn, const <a class="el" href="structSchedule.html">Schedule</a> &amp;schOut) const -&gt; bool</td></tr>
-<tr class="separator:a43dbbde1bff43d075737097312b7cfca"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4f0f928c7204189d1f0df8e5244213fd"><td class="memItemLeft" align="right" valign="top"><a id="a4f0f928c7204189d1f0df8e5244213fd"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>isSatisfied</b> (const <a class="el" href="structAffineSchedule.html">AffineSchedule</a> *schIn, const <a class="el" href="structAffineSchedule.html">AffineSchedule</a> *schOut) const -&gt; bool</td></tr>
+<tr class="separator:a4f0f928c7204189d1f0df8e5244213fd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac655237e4917640137b1eae4a8a56217"><td class="memItemLeft" align="right" valign="top"><a id="ac655237e4917640137b1eae4a8a56217"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>isSatisfied</b> (llvm::ArrayRef&lt; unsigned &gt; inFusOmega, llvm::ArrayRef&lt; unsigned &gt; outFusOmega) const -&gt; bool</td></tr>
 <tr class="separator:ac655237e4917640137b1eae4a8a56217"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a73d1dc4c268e0396b595a936b2a99bda"><td class="memItemLeft" align="right" valign="top"><a id="a73d1dc4c268e0396b595a936b2a99bda"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>isSatisfied</b> (const <a class="el" href="structSchedule.html">Schedule</a> &amp;sx, const <a class="el" href="structSchedule.html">Schedule</a> &amp;sy, size_t d) const -&gt; bool</td></tr>
-<tr class="separator:a73d1dc4c268e0396b595a936b2a99bda"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a37f6ae543d80f250023342cfe8f727cf"><td class="memItemLeft" align="right" valign="top"><a id="a37f6ae543d80f250023342cfe8f727cf"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>isSatisfied</b> (const <a class="el" href="structAffineSchedule.html">AffineSchedule</a> *sx, const <a class="el" href="structAffineSchedule.html">AffineSchedule</a> *sy, size_t d) const -&gt; bool</td></tr>
+<tr class="separator:a37f6ae543d80f250023342cfe8f727cf"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7efcc5616290933873ef0eaebf1dd32f"><td class="memItemLeft" align="right" valign="top"><a id="a7efcc5616290933873ef0eaebf1dd32f"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>isSatisfied</b> (size_t d) const -&gt; bool</td></tr>
 <tr class="separator:a7efcc5616290933873ef0eaebf1dd32f"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -236,7 +236,7 @@ Static Public Member Functions</h2></td></tr>
 static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumOmegaCoefficients</b> () -&gt; size_t</td></tr>
 <tr class="separator:aa3cfe49806135dc1170e16f268cb83a9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad725df69de9be8cc0840ba11203fa699"><td class="memItemLeft" align="right" valign="top"><a id="ad725df69de9be8cc0840ba11203fa699"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>checkDirection</b> (const std::array&lt; <a class="el" href="structSimplex.html">Simplex</a>, 2 &gt; &amp;p, const <a class="el" href="structMemoryAccess.html">MemoryAccess</a> &amp;x, const <a class="el" href="structMemoryAccess.html">MemoryAccess</a> &amp;y, const <a class="el" href="structSchedule.html">Schedule</a> &amp;xSchedule, const <a class="el" href="structSchedule.html">Schedule</a> &amp;ySchedule, size_t numLambda, Col nonTimeDim) -&gt; bool</td></tr>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>checkDirection</b> (const std::array&lt; <a class="el" href="structSimplex.html">Simplex</a>, 2 &gt; &amp;p, const <a class="el" href="structMemoryAccess.html">MemoryAccess</a> &amp;x, const <a class="el" href="structMemoryAccess.html">MemoryAccess</a> &amp;y, const Schedule &amp;xSchedule, const Schedule &amp;ySchedule, size_t numLambda, Col nonTimeDim) -&gt; bool</td></tr>
 <tr class="separator:ad725df69de9be8cc0840ba11203fa699"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a43145eb7ad840b228b458e32e30fca76"><td class="memItemLeft" align="right" valign="top"><a id="a43145eb7ad840b228b458e32e30fca76"></a>
 static auto&#160;</td><td class="memItemRight" valign="bottom"><b>checkDirection</b> (const std::array&lt; <a class="el" href="structSimplex.html">Simplex</a>, 2 &gt; &amp;p, const <a class="el" href="structMemoryAccess.html">MemoryAccess</a> &amp;x, const <a class="el" href="structMemoryAccess.html">MemoryAccess</a> &amp;y, size_t numLambda, Col nonTimeDim) -&gt; bool</td></tr>

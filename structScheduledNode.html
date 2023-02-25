@@ -95,9 +95,9 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getInNeighb
 <tr class="memitem:a6ca19cb14a3e0d62c3a9fd03b4a58e24"><td class="memItemLeft" align="right" valign="top"><a id="a6ca19cb14a3e0d62c3a9fd03b4a58e24"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getOutNeighbors</b> () -&gt; <a class="el" href="structBitSet.html">BitSet</a> &amp;</td></tr>
 <tr class="separator:a6ca19cb14a3e0d62c3a9fd03b4a58e24"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a525c534cdc84dd44711de39e3823c32d"><td class="memItemLeft" align="right" valign="top"><a id="a525c534cdc84dd44711de39e3823c32d"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getSchedule</b> () -&gt; <a class="el" href="structSchedule.html">Schedule</a> &amp;</td></tr>
-<tr class="separator:a525c534cdc84dd44711de39e3823c32d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6f26180504325d1b2815e5b139ea5feb"><td class="memItemLeft" align="right" valign="top"><a id="a6f26180504325d1b2815e5b139ea5feb"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getSchedule</b> () -&gt; <a class="el" href="structNotNull.html">NotNull</a>&lt; <a class="el" href="structAffineSchedule.html">AffineSchedule</a> &gt;</td></tr>
+<tr class="separator:a6f26180504325d1b2815e5b139ea5feb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3d3b676ee20d32d1d58f3788d841c593"><td class="memItemLeft" align="right" valign="top"><a id="a3d3b676ee20d32d1d58f3788d841c593"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getMemory</b> () const -&gt; const <a class="el" href="structBitSet.html">BitSet</a> &amp;</td></tr>
 <tr class="separator:a3d3b676ee20d32d1d58f3788d841c593"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -107,18 +107,18 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getInNeighb
 <tr class="memitem:a7027ac308c1fbec90347b36dcd395dcd"><td class="memItemLeft" align="right" valign="top"><a id="a7027ac308c1fbec90347b36dcd395dcd"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getOutNeighbors</b> () const -&gt; const <a class="el" href="structBitSet.html">BitSet</a> &amp;</td></tr>
 <tr class="separator:a7027ac308c1fbec90347b36dcd395dcd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4082b21c45377cf583cd9b03dc857ed5"><td class="memItemLeft" align="right" valign="top"><a id="a4082b21c45377cf583cd9b03dc857ed5"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getSchedule</b> () const -&gt; const <a class="el" href="structSchedule.html">Schedule</a> &amp;</td></tr>
-<tr class="separator:a4082b21c45377cf583cd9b03dc857ed5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a942208d010b8d1a86071859fc1a29fde"><td class="memItemLeft" align="right" valign="top"><a id="a942208d010b8d1a86071859fc1a29fde"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getSchedule</b> () const -&gt; <a class="el" href="structNotNull.html">NotNull</a>&lt; const <a class="el" href="structAffineSchedule.html">AffineSchedule</a> &gt;</td></tr>
+<tr class="separator:a942208d010b8d1a86071859fc1a29fde"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0b9d93971e4027db5d36861adf2d4a2a"><td class="memItemLeft" align="right" valign="top"><a id="a0b9d93971e4027db5d36861adf2d4a2a"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>addOutNeighbor</b> (unsigned int i)</td></tr>
 <tr class="separator:a0b9d93971e4027db5d36861adf2d4a2a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa0df04e793e7bc0527dd9146b475631b"><td class="memItemLeft" align="right" valign="top"><a id="aa0df04e793e7bc0527dd9146b475631b"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>addInNeighbor</b> (unsigned int i)</td></tr>
 <tr class="separator:aa0df04e793e7bc0527dd9146b475631b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0ce1598c2900abd98cd60ca0e21d62b8"><td class="memItemLeft" align="right" valign="top"><a id="a0ce1598c2900abd98cd60ca0e21d62b8"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>init</b> ()</td></tr>
-<tr class="separator:a0ce1598c2900abd98cd60ca0e21d62b8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4e20350a3cb72986da8f9d6bd869f159"><td class="memItemLeft" align="right" valign="top"><a id="a4e20350a3cb72986da8f9d6bd869f159"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>init</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc)</td></tr>
+<tr class="separator:a4e20350a3cb72986da8f9d6bd869f159"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a187ab74e6d4c17b0438a43de11b067e6"><td class="memItemLeft" align="right" valign="top"><a id="a187ab74e6d4c17b0438a43de11b067e6"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>addMemory</b> (unsigned memId, <a class="el" href="structMemoryAccess.html">MemoryAccess</a> *mem, unsigned nodeIndex)</td></tr>
 <tr class="separator:a187ab74e6d4c17b0438a43de11b067e6"><td class="memSeparator" colspan="2">&#160;</td></tr>

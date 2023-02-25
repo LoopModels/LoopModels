@@ -135,16 +135,16 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumLoops</b> () co
 <tr class="memitem:ab9995b068dc4bb0e4444c50ac8b46b96"><td class="memItemLeft" align="right" valign="top"><a id="ab9995b068dc4bb0e4444c50ac8b46b96"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>getAlign</b> () const -&gt; llvm::Align</td></tr>
 <tr class="separator:ab9995b068dc4bb0e4444c50ac8b46b96"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af3e9f24fe6b5cb0b59091cea5dfdfcb0"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structMemoryAccess.html#af3e9f24fe6b5cb0b59091cea5dfdfcb0">indexMatrix</a> () -&gt; MutPtrMatrix&lt; int64_t &gt;</td></tr>
-<tr class="separator:af3e9f24fe6b5cb0b59091cea5dfdfcb0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2d1006fd9552a0ef88f8fa33fac6c133"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structMemoryAccess.html#a2d1006fd9552a0ef88f8fa33fac6c133">indexMatrix</a> () const -&gt; PtrMatrix&lt; int64_t &gt;</td></tr>
-<tr class="separator:a2d1006fd9552a0ef88f8fa33fac6c133"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7cf0bb59a38e25ce01c82713ac665a7a"><td class="memItemLeft" align="right" valign="top"><a id="a7cf0bb59a38e25ce01c82713ac665a7a"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>offsetMatrix</b> () -&gt; MutPtrMatrix&lt; int64_t &gt;</td></tr>
-<tr class="separator:a7cf0bb59a38e25ce01c82713ac665a7a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9b73517a98a745434f158c77760f3bdc"><td class="memItemLeft" align="right" valign="top"><a id="a9b73517a98a745434f158c77760f3bdc"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>offsetMatrix</b> () const -&gt; PtrMatrix&lt; int64_t &gt;</td></tr>
-<tr class="separator:a9b73517a98a745434f158c77760f3bdc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae0eb994bd6fcffc012a91850a23a2bbb"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structMemoryAccess.html#ae0eb994bd6fcffc012a91850a23a2bbb">indexMatrix</a> () -&gt; MutDensePtrMatrix&lt; int64_t &gt;</td></tr>
+<tr class="separator:ae0eb994bd6fcffc012a91850a23a2bbb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2292852f834967257e3d40a1c9c99a58"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structMemoryAccess.html#a2292852f834967257e3d40a1c9c99a58">indexMatrix</a> () const -&gt; DensePtrMatrix&lt; int64_t &gt;</td></tr>
+<tr class="separator:a2292852f834967257e3d40a1c9c99a58"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a401dd74be90122dea66116103a59a9d7"><td class="memItemLeft" align="right" valign="top"><a id="a401dd74be90122dea66116103a59a9d7"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>offsetMatrix</b> () -&gt; MutDensePtrMatrix&lt; int64_t &gt;</td></tr>
+<tr class="separator:a401dd74be90122dea66116103a59a9d7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8120d9d355302d8431b45d0eb3738e0e"><td class="memItemLeft" align="right" valign="top"><a id="a8120d9d355302d8431b45d0eb3738e0e"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>offsetMatrix</b> () const -&gt; DensePtrMatrix&lt; int64_t &gt;</td></tr>
+<tr class="separator:a8120d9d355302d8431b45d0eb3738e0e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a156c66719006fae71fe80137630b1058"><td class="memItemLeft" align="right" valign="top"><a id="a156c66719006fae71fe80137630b1058"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>getInstruction</b> () -&gt; <a class="el" href="structNotNull.html">NotNull</a>&lt; llvm::Instruction &gt;</td></tr>
 <tr class="separator:a156c66719006fae71fe80137630b1058"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -200,8 +200,8 @@ constexpr static auto&#160;</td><td class="memItemRight" valign="bottom"><b>gcdK
 <tr class="separator:a057e4a8d91a6d30234785ebc30487d58"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Member Function Documentation</h2>
-<a id="af3e9f24fe6b5cb0b59091cea5dfdfcb0"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af3e9f24fe6b5cb0b59091cea5dfdfcb0">&#9670;&nbsp;</a></span>indexMatrix() <span class="overload">[1/2]</span></h2>
+<a id="ae0eb994bd6fcffc012a91850a23a2bbb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae0eb994bd6fcffc012a91850a23a2bbb">&#9670;&nbsp;</a></span>indexMatrix() <span class="overload">[1/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -213,7 +213,7 @@ constexpr static auto&#160;</td><td class="memItemRight" valign="bottom"><b>gcdK
           <td class="memname">auto MemoryAccess::indexMatrix </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
-          <td> -&gt; MutPtrMatrix&lt;int64_t&gt; </td>
+          <td> -&gt; MutDensePtrMatrix&lt;int64_t&gt; </td>
         </tr>
       </table>
   </td>
@@ -222,12 +222,12 @@ constexpr static auto&#160;</td><td class="memItemRight" valign="bottom"><b>gcdK
   </tr>
 </table>
 </div><div class="memdoc">
-<p><a class="el" href="structMemoryAccess.html#af3e9f24fe6b5cb0b59091cea5dfdfcb0">indexMatrix()</a> -&gt; getNumLoops() x arrayDim() loops are in [innermost -&gt; outermost] order Maps loop indVars to array indices Letting <code>i</code> be the indVars and <code>d</code> the indices: <a class="el" href="structMemoryAccess.html#af3e9f24fe6b5cb0b59091cea5dfdfcb0">indexMatrix()</a>' * i == d e.g. <code>indVars = [i, j]</code> and indexMatrix = [ 1 1; 0 1] corresponds to A[i, i + j] Note that <code>[i, j]</code> refers to loops in innermost -&gt; outermost order, i.e. for (j : J) for (i : I) A[i, i + j] </p>
+<p><a class="el" href="structMemoryAccess.html#ae0eb994bd6fcffc012a91850a23a2bbb">indexMatrix()</a> -&gt; getNumLoops() x arrayDim() loops are in [innermost -&gt; outermost] order Maps loop indVars to array indices Letting <code>i</code> be the indVars and <code>d</code> the indices: <a class="el" href="structMemoryAccess.html#ae0eb994bd6fcffc012a91850a23a2bbb">indexMatrix()</a>' * i == d e.g. <code>indVars = [i, j]</code> and indexMatrix = [ 1 1; 0 1] corresponds to A[i, i + j] Note that <code>[i, j]</code> refers to loops in innermost -&gt; outermost order, i.e. for (j : J) for (i : I) A[i, i + j] </p>
 
 </div>
 </div>
-<a id="a2d1006fd9552a0ef88f8fa33fac6c133"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a2d1006fd9552a0ef88f8fa33fac6c133">&#9670;&nbsp;</a></span>indexMatrix() <span class="overload">[2/2]</span></h2>
+<a id="a2292852f834967257e3d40a1c9c99a58"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2292852f834967257e3d40a1c9c99a58">&#9670;&nbsp;</a></span>indexMatrix() <span class="overload">[2/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -239,7 +239,7 @@ constexpr static auto&#160;</td><td class="memItemRight" valign="bottom"><b>gcdK
           <td class="memname">auto MemoryAccess::indexMatrix </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
-          <td> const -&gt; PtrMatrix&lt;int64_t&gt; </td>
+          <td> const -&gt; DensePtrMatrix&lt;int64_t&gt; </td>
         </tr>
       </table>
   </td>
@@ -248,7 +248,7 @@ constexpr static auto&#160;</td><td class="memItemRight" valign="bottom"><b>gcdK
   </tr>
 </table>
 </div><div class="memdoc">
-<p><a class="el" href="structMemoryAccess.html#af3e9f24fe6b5cb0b59091cea5dfdfcb0">indexMatrix()</a> -&gt; getNumLoops() x arrayDim() loops are in [innermost -&gt; outermost] order </p>
+<p><a class="el" href="structMemoryAccess.html#ae0eb994bd6fcffc012a91850a23a2bbb">indexMatrix()</a> -&gt; getNumLoops() x arrayDim() loops are in [innermost -&gt; outermost] order </p>
 
 </div>
 </div>

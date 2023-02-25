@@ -312,14 +312,20 @@ $(function() {
 <div class="line"><a name="l00241"></a><span class="lineno">  241</span>&#160;  <span class="keyword">auto</span> rowDims = calcNewDim(<span class="keywordtype">size_t</span>(Row{d}), i.row);</div>
 <div class="line"><a name="l00242"></a><span class="lineno">  242</span>&#160;  <span class="keywordflow">return</span> <a class="code" href="structLinearAlgebra_1_1DenseDims.html">DenseDims</a>{Row{rowDims}, Col{d}};</div>
 <div class="line"><a name="l00243"></a><span class="lineno">  243</span>&#160;}</div>
-<div class="line"><a name="l00244"></a><span class="lineno">  244</span>&#160; </div>
-<div class="line"><a name="l00245"></a><span class="lineno">  245</span>&#160;} <span class="comment">// namespace LinearAlgebra</span></div>
+<div class="line"><a name="l00244"></a><span class="lineno">  244</span>&#160;<span class="keyword">template</span> &lt;AbstractSlice B&gt;</div>
+<div class="line"><a name="l00245"></a><span class="lineno">  245</span>&#160;constexpr <span class="keyword">auto</span> calcNewDim(<a class="code" href="structLinearAlgebra_1_1SquareDims.html">SquareDims</a> d, CartesianIndex&lt;B, Colon&gt; i) {</div>
+<div class="line"><a name="l00246"></a><span class="lineno">  246</span>&#160;  <span class="keyword">auto</span> rowDims = calcNewDim(<span class="keywordtype">size_t</span>(Row{d}), i.row);</div>
+<div class="line"><a name="l00247"></a><span class="lineno">  247</span>&#160;  <span class="keywordflow">return</span> <a class="code" href="structLinearAlgebra_1_1DenseDims.html">DenseDims</a>{Row{rowDims}, Col{d}};</div>
+<div class="line"><a name="l00248"></a><span class="lineno">  248</span>&#160;}</div>
+<div class="line"><a name="l00249"></a><span class="lineno">  249</span>&#160; </div>
+<div class="line"><a name="l00250"></a><span class="lineno">  250</span>&#160;} <span class="comment">// namespace LinearAlgebra</span></div>
 <div class="ttc" id="anamespaceLinearAlgebra_html"><div class="ttname"><a href="namespaceLinearAlgebra.html">LinearAlgebra</a></div><div class="ttdef"><b>Definition:</b> Array.hpp:20</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1DenseDims_html"><div class="ttname"><a href="structLinearAlgebra_1_1DenseDims.html">LinearAlgebra::DenseDims</a></div><div class="ttdef"><b>Definition:</b> MatrixDimensions.hpp:84</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1DenseDims_html"><div class="ttname"><a href="structLinearAlgebra_1_1DenseDims.html">LinearAlgebra::DenseDims</a></div><div class="ttdef"><b>Definition:</b> MatrixDimensions.hpp:85</div></div>
 <div class="ttc" id="astructLinearAlgebra_1_1Empty_html"><div class="ttname"><a href="structLinearAlgebra_1_1Empty.html">LinearAlgebra::Empty</a></div><div class="ttdef"><b>Definition:</b> Indexing.hpp:204</div></div>
 <div class="ttc" id="astructLinearAlgebra_1_1OffsetBegin_html"><div class="ttname"><a href="structLinearAlgebra_1_1OffsetBegin.html">LinearAlgebra::OffsetBegin</a></div><div class="ttdef"><b>Definition:</b> Indexing.hpp:22</div></div>
 <div class="ttc" id="astructLinearAlgebra_1_1OffsetEnd_html"><div class="ttname"><a href="structLinearAlgebra_1_1OffsetEnd.html">LinearAlgebra::OffsetEnd</a></div><div class="ttdef"><b>Definition:</b> Indexing.hpp:50</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1StridedDims_html"><div class="ttname"><a href="structLinearAlgebra_1_1StridedDims.html">LinearAlgebra::StridedDims</a></div><div class="ttdef"><b>Definition:</b> MatrixDimensions.hpp:36</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1SquareDims_html"><div class="ttname"><a href="structLinearAlgebra_1_1SquareDims.html">LinearAlgebra::SquareDims</a></div><div class="ttdef"><b>Definition:</b> MatrixDimensions.hpp:128</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1StridedDims_html"><div class="ttname"><a href="structLinearAlgebra_1_1StridedDims.html">LinearAlgebra::StridedDims</a></div><div class="ttdef"><b>Definition:</b> MatrixDimensions.hpp:37</div></div>
 <div class="ttc" id="astructLinearAlgebra_1_1StridedRange_html"><div class="ttname"><a href="structLinearAlgebra_1_1StridedRange.html">LinearAlgebra::StridedRange</a></div><div class="ttdef"><b>Definition:</b> Indexing.hpp:186</div></div>
 <div class="ttc" id="astructRange_3_01B_00_01E_01_4_html"><div class="ttname"><a href="structRange_3_01B_00_01E_01_4.html">Range&lt; B, E &gt;</a></div><div class="ttdef"><b>Definition:</b> Iterators.hpp:10</div></div>
 <div class="ttc" id="astructRange_html"><div class="ttname"><a href="structRange.html">Range</a></div><div class="ttdef"><b>Definition:</b> Iterators.hpp:4</div></div>
