@@ -17,6 +17,155 @@
 
 // #define VERBOSESIMPLEX
 
+// We need a core Simplex type that is unmanaged
+// then for convenience, it would be nice to manage it.
+// Ideally, we could have a type hierarchy of
+// unmanaged -> managed
+// with some API to make the managed generic.
+// We also want the managed to be automatically demotable to unmanaged,
+// to avoid unnecessary specialization.
+
+struct Tableau {
+  int64_t *ptr;
+  unsigned numConstraints;
+  unsigned numVars;
+  unsigned constraintCapacity;
+  unsigned varCapacity;
+#ifndef NDEBUG
+  bool inCanonicalForm{false};
+#endif
+  // tableau is constraint * var matrix w/ extra col for LHS
+  // and extra row for objective function
+  [[nodiscard]] constexpr auto reservedTableau() const -> size_t {
+    return (size_t(constraintCapacity) + 1) * (size_t(varCapacity) + 1);
+  }
+  [[nodiscard]] constexpr auto reservedBasicConstraints() const -> size_t {
+    return varCapacity;
+  }
+  [[nodiscard]] constexpr auto reservedBasicVariables() const -> size_t {
+    return constraintCapacity;
+  }
+
+  [[nodiscard]] constexpr auto intsNeeded() const -> size_t {
+    return reservedTableau() + reservedBasicConstraints() +
+           reservedBasicVariables();
+  }
+  /// [ value | objective function ]
+  /// [ LHS   | tableau            ]
+  [[nodiscard]] constexpr auto getTableau() const -> PtrMatrix<int64_t> {
+    return {ptr + reservedBasicConstraints() + reservedBasicVariables(),
+            StridedDims{
+              numConstraints + 1,
+              numVars + 1,
+              varCapacity + 1,
+            }};
+  }
+  [[nodiscard]] constexpr auto getTableau() -> MutPtrMatrix<int64_t> {
+    return {ptr + reservedBasicConstraints() + reservedBasicVariables(),
+            StridedDims{
+              numConstraints + 1,
+              numVars + 1,
+              varCapacity + 1,
+            }};
+  }
+  [[nodiscard]] constexpr auto getConstraints() const -> PtrMatrix<int64_t> {
+    return {ptr + reservedBasicConstraints() + reservedBasicVariables() +
+              varCapacity + 1,
+            StridedDims{
+              numConstraints,
+              numVars + 1,
+              varCapacity + 1,
+            }};
+  }
+  [[nodiscard]] constexpr auto getConstraints() -> MutPtrMatrix<int64_t> {
+    return {ptr + reservedBasicConstraints() + reservedBasicVariables() +
+              varCapacity + 1,
+            StridedDims{
+              numConstraints,
+              numVars + 1,
+              varCapacity + 1,
+            }};
+  }
+  [[nodiscard]] constexpr auto getBasicConstraints() const
+    -> PtrVector<int64_t> {
+    return {ptr, numVars};
+  }
+  [[nodiscard]] constexpr auto getBasicConstraints() -> MutPtrVector<int64_t> {
+    return {ptr, numVars};
+  }
+  [[nodiscard]] constexpr auto getBasicVariables() const -> PtrVector<int64_t> {
+    return {ptr + reservedBasicVariables(), numConstraints};
+  }
+  [[nodiscard]] constexpr auto getBasicVariables() -> MutPtrVector<int64_t> {
+    return {ptr + reservedBasicVariables(), numConstraints};
+  }
+  [[nodiscard]] constexpr auto getObjective() const -> PtrVector<int64_t> {
+    return {ptr + reservedBasicConstraints() + reservedBasicVariables(),
+            numVars + 1};
+  }
+  [[nodiscard]] constexpr auto getObjective() -> MutPtrVector<int64_t> {
+    return {ptr + reservedBasicConstraints() + reservedBasicVariables(),
+            numVars + 1};
+  }
+  [[nodiscard]] constexpr auto getBasicConstraint(unsigned i) const -> int64_t {
+    return getBasicConstraints()[i];
+  }
+  [[nodiscard]] constexpr auto getBasicVariable(unsigned i) const -> int64_t {
+    return getBasicVariables()[i];
+  }
+  [[nodiscard]] constexpr auto getObjectiveCoefficient(unsigned i) const
+    -> int64_t {
+    return getObjective()[++i];
+  }
+  [[nodiscard]] constexpr auto getObjectiveValue() const -> int64_t {
+    return getObjective()[0];
+  }
+  constexpr void truncateConstraints(unsigned i) {
+    assert(i <= numConstraints);
+    numConstraints = i;
+  }
+  constexpr void hermiteNormalForm() {
+#ifndef NDEBUG
+    inCanonicalForm = false;
+#endif
+    truncateConstraints(
+      unsigned(NormalForm::simplifySystemImpl(getConstraints(), 1)));
+  }
+};
+
+struct PtrSimplex {
+  // we don't use FAM here, so that we can store multiple PtrSimplex
+  // in a `Dependence` struct, and to allow the managed version to
+  // reallocate the memory.
+  Tableau tableau;
+  unsigned numSlack;
+  unsigned numArtificial;
+
+  // AbstractVector
+  struct Solution {
+    using value_type = Rational;
+    // view of tableau dropping const column
+    PtrMatrix<int64_t> tableauView;
+    StridedVector<int64_t> consts;
+    constexpr auto operator[](size_t i) const -> Rational {
+      int64_t j = tableauView(0, i);
+      if (j < 0) return 0;
+      return Rational::create(consts[j], tableauView(j + numExtraRows, i));
+    }
+    template <typename B, typename E>
+    constexpr auto operator[](Range<B, E> r) -> Solution {
+      return Solution{tableauView(_, r), consts};
+    }
+    [[nodiscard]] constexpr auto size() const -> size_t {
+      return size_t(tableauView.numCol());
+    }
+    [[nodiscard]] constexpr auto view() const -> auto & { return *this; };
+  };
+  [[nodiscard]] constexpr auto getSolution() const -> Solution {
+    return Solution{tableau(_, _(numExtraCols, end)), getConstants()};
+  }
+};
+
 /// The goal here:
 /// this Simplex struct will orchestrate search through the solution space
 /// it will add constraints as it goes, e.g. corresponding to desired properties
@@ -29,6 +178,7 @@ struct Simplex {
   // column 0: indicates whether that row (constraint) is basic,
   //           and if so which one
   // column 1: constraint values
+  // note all constraints are basic once in canonical form.
   LinearAlgebra::ManagedArray<int64_t, LinearAlgebra::StridedDims, 0> tableau;
   size_t numSlackVar{0};
 #ifndef NDEBUG

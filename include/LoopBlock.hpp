@@ -957,6 +957,7 @@ public:
         }
       }
     }
+    addIndependentSolutionConstraints(g, d);
   }
   void updateConstraints(MutPtrMatrix<int64_t> C, const ScheduledNode &node,
                          PtrMatrix<int64_t> sat, PtrMatrix<int64_t> bnd,
@@ -1209,7 +1210,6 @@ public:
       return BitSet{};
     }
     instantiateOmniSimplex(g, d);
-    addIndependentSolutionConstraints(g, d);
     assert(!allZero(omniSimplex.getConstraints()(last, _)));
     if (omniSimplex.initiateFeasible()) {
       // llvm::errs() << "optimizeLevel = " << d << ": infeasible
@@ -1254,7 +1254,6 @@ public:
       countAuxParamsAndConstraints(g, d);
       setScheduleMemoryOffsets(g, d);
       instantiateOmniSimplex(g, d, true);
-      addIndependentSolutionConstraints(g, d);
       if (!omniSimplex.initiateFeasible()) {
         sol.resizeForOverwrite(getLambdaOffset() - 1);
         omniSimplex.lexMinimize(sol);
