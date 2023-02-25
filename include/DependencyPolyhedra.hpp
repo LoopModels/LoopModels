@@ -35,7 +35,8 @@
 /// 1 <= j_1 <= i_1
 /// i_0 == i_1
 /// j_0 == i_1
-struct DependencePolyhedra : SymbolicEqPolyhedra {
+struct DependencePolyhedra
+  : BasePolyhedra<true, true, false, DependencePolyhedra> {
   // size_t numLoops;
   [[no_unique_address]] size_t numDep0Var; // loops dep 0
   // size_t numDep1Var; // loops dep 1
@@ -709,8 +710,8 @@ public:
   //     W(_(satConstraints, end)) = BC(_, 0);
   //     U(_(satConstraints, end), _) = BC(_, _(1, end));
   // }
-  [[nodiscard]] auto isSatisfied(const Schedule &schIn,
-                                 const Schedule &schOut) const -> bool {
+  [[nodiscard]] auto isSatisfied(const AffineSchedule *schIn,
+                                 const AffineSchedule *schOut) const -> bool {
     size_t numLoopsIn = in->getNumLoops();
     size_t numLoopsOut = out->getNumLoops();
     size_t numLoopsCommon = std::min(numLoopsIn, numLoopsOut);
@@ -798,8 +799,9 @@ public:
     }
     return true;
   }
-  [[nodiscard]] auto isSatisfied(const Schedule &sx, const Schedule &sy,
-                                 size_t d) const -> bool {
+  [[nodiscard]] auto isSatisfied(const AffineSchedule *sx,
+                                 const AffineSchedule *sy, size_t d) const
+    -> bool {
     const size_t numLambda = depPoly.getNumLambda();
     const size_t nLoopX = depPoly.getDim0();
     const size_t nLoopY = depPoly.getDim1();

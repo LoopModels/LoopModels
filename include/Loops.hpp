@@ -458,9 +458,8 @@ struct AffineLoopNest
     MutPtrMatrix<int64_t> B{ret->getA()};
     B(_, _(0, innermostLoopInd)) << A(_, _(0, innermostLoopInd));
     B(_, _(innermostLoopInd, end)) << A(_, _(innermostLoopInd + 1, end));
-    // no loop may be conditioned on the innermost loop
-    // so we should be able to safely remove all constraints that reference
-    // it
+    // no loop may be conditioned on the innermost loop, so we should be able to
+    // safely remove all constraints that reference it
     for (Row m = B.numRow(); m--;) {
       if (A(m, innermostLoopInd)) {
         // B(_(m,end-1),_) = B(_(m+1,end),_);

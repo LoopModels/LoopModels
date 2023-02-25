@@ -70,17 +70,16 @@ private:
     dim = size_t(M.numCol());
     depth = size_t(M.numRow());
     MutPtrMatrix<int64_t> MStar{indexMatrix()};
-    MStar = (M.transpose() * Pinv).transpose();
+    MStar << (M.transpose() * Pinv).transpose();
     getDenominator() = denom;
-    getOffsetOmega() = ma->offsetMatrix()(_, 0) - MStar * omega;
+    getOffsetOmega() << ma->offsetMatrix()(_, 0) - MStar * omega;
   }
 
 public:
-  static auto construct(BumpAlloc<> &alloc,
-                        NotNull<AffineLoopNest<false>> explicitLoop,
-                        NotNull<MemoryAccess> ma, bool isStr,
-                        SquarePtrMatrix<int64_t> Pinv, int64_t denom,
-                        PtrVector<int64_t> omega) -> NotNull<Address> {
+  [[nodiscard]] static auto
+  construct(BumpAlloc<> &alloc, NotNull<AffineLoopNest<false>> explicitLoop,
+            NotNull<MemoryAccess> ma, bool isStr, SquarePtrMatrix<int64_t> Pinv,
+            int64_t denom, PtrVector<int64_t> omega) -> NotNull<Address> {
 
     size_t memSz = ma->getNumLoops() * (1 + ma->getArrayDim());
     auto *pt = alloc.allocate(sizeof(Address) + memSz * sizeof(int64_t), 8);
@@ -91,8 +90,10 @@ public:
   [[nodiscard]] auto getInstruction() const -> llvm::Instruction * {
     return oldMemAccess->getInstruction();
   }
-  auto getAlign() -> llvm::Align { return oldMemAccess->getAlign(); }
-  constexpr auto getDenominator() -> int64_t & { return mem[0]; }
+  [[nodiscard]] auto getAlign() const -> llvm::Align {
+    return oldMemAccess->getAlign();
+  }
+  [[nodiscard]] constexpr auto getDenominator() -> int64_t & { return mem[0]; }
   [[nodiscard]] constexpr auto getDenominator() const -> int64_t {
     return mem[0];
   }
@@ -102,21 +103,20 @@ public:
   // [[nodiscard]] constexpr auto getFusionOmega() const -> PtrVector<int64_t> {
   //   return {mem + 1, getNumLoops()+1};
   // }
-  constexpr auto getOffsetOmega() -> MutPtrVector<int64_t> {
-    return {mem + 1, getNumLoops()};
+  [[nodiscard]] constexpr auto getOffsetOmega() -> MutPtrVector<int64_t> {
+    return {mem + 1, unsigned(getNumLoops())};
   }
   [[nodiscard]] constexpr auto getOffsetOmega() const -> PtrVector<int64_t> {
-    return {mem + 1, getNumLoops()};
+    return {const_cast<int64_t *>(mem + 1), unsigned(getNumLoops())};
   }
   /// indexMatrix() -> arrayDim() x getNumLoops()
-  constexpr auto indexMatrix() -> MutPtrMatrix<int64_t> {
-    return {mem + 1 + getNumLoops(), getArrayDim(), getNumLoops(),
-            getNumLoops()};
+  [[nodiscard]] constexpr auto indexMatrix() -> MutDensePtrMatrix<int64_t> {
+    return {mem + 1 + getNumLoops(), DenseDims{getArrayDim(), getNumLoops()}};
   }
   /// indexMatrix() -> arrayDim() x getNumLoops()
-  [[nodiscard]] constexpr auto indexMatrix() const -> PtrMatrix<int64_t> {
-    return {mem + 1 + getNumLoops(), getArrayDim(), getNumLoops(),
-            getNumLoops()};
+  [[nodiscard]] constexpr auto indexMatrix() const -> DensePtrMatrix<int64_t> {
+    return {const_cast<int64_t *>(mem + 1 + getNumLoops()),
+            DenseDims{getArrayDim(), getNumLoops()}};
   }
   [[nodiscard]] auto isStore() -> bool { return isStoreFlag; }
   [[nodiscard]] auto getLoop() -> NotNull<AffineLoopNest<false>> {

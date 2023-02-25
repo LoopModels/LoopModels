@@ -71,10 +71,10 @@ template <class T, class S> struct Array {
   [[nodiscard]] constexpr auto end() const noexcept {
     return begin() + size_t(sz);
   }
-  [[nodiscard]] constexpr auto rbegin() const noexcept -> const T * {
+  [[nodiscard]] constexpr auto rbegin() const noexcept {
     return std::reverse_iterator(end());
   }
-  [[nodiscard]] constexpr auto rend() const noexcept -> const T * {
+  [[nodiscard]] constexpr auto rend() const noexcept {
     return std::reverse_iterator(begin());
   }
   // indexing has two components:
@@ -172,7 +172,8 @@ template <class T, class S> struct Array {
     }
     return A;
   }
-  constexpr auto operator==(const Array &other) const noexcept -> bool {
+  [[nodiscard]] constexpr auto operator==(const Array &other) const noexcept
+    -> bool {
     if (size() != other.size()) return false;
     if constexpr (std::is_same_v<S, StridedDims>) {
       // may not be dense, iterate over rows
@@ -182,9 +183,9 @@ template <class T, class S> struct Array {
     }
     return std::equal(begin(), end(), other.begin());
   }
-  constexpr auto operator!=(const Array &other) const noexcept -> bool {
-    return !(*this == other);
-  }
+  // constexpr auto operator!=(const Array &other) const noexcept -> bool {
+  //   return !(*this == other);
+  // }
 
 protected:
   [[no_unique_address]] NotNull<T> ptr;
@@ -283,10 +284,10 @@ template <class T, class S> struct MutArray : Array<T, S> {
   [[nodiscard]] constexpr auto end() noexcept -> T * {
     return this->ptr + size_t(this->sz);
   }
-  [[nodiscard]] constexpr auto rbegin() noexcept -> T * {
+  [[nodiscard]] constexpr auto rbegin() noexcept {
     return std::reverse_iterator(end());
   }
-  [[nodiscard]] constexpr auto rend() noexcept -> T * {
+  [[nodiscard]] constexpr auto rend() noexcept {
     return std::reverse_iterator(begin());
   }
   constexpr auto operator[](Index<S> auto i) noexcept -> decltype(auto) {

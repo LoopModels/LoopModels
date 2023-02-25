@@ -51,7 +51,7 @@ private:
   [[no_unique_address]] BitSet memory{};
   [[no_unique_address]] BitSet inNeighbors{};
   [[no_unique_address]] BitSet outNeighbors{};
-  [[no_unique_address]] Schedule schedule{};
+  [[no_unique_address]] AffineSchedule *schedule{};
   [[no_unique_address]] uint32_t storeId;
   [[no_unique_address]] uint32_t phiOffset{0};   // used in LoopBlock
   [[no_unique_address]] uint32_t omegaOffset{0}; // used in LoopBlock
@@ -69,7 +69,7 @@ public:
                  llvm::ArrayRef<MemoryAccess *> memAccess) const
     -> llvm::SmallVector<Address *> {
     // First, we invert the schedule matrix.
-    SquarePtrMatrix<int64_t> Phi = schedule.getPhi();
+    SquarePtrMatrix<int64_t> Phi = schedule->getPhi();
     auto [Pinv, s] = NormalForm::scaledInv(Phi);
     if (s == 1) {
     }
@@ -81,14 +81,14 @@ public:
         memAccess[i]->getLoop()->rotate(alloc, Pinv);
       accesses.push_back(Address::construct(alloc, loop, memAccess[i],
                                             i == storeId, Pinv, s,
-                                            schedule.getFusionOmega()));
+                                            schedule->getFusionOmega()));
     }
     return accesses;
   }
   constexpr auto getMemory() -> BitSet & { return memory; }
   constexpr auto getInNeighbors() -> BitSet & { return inNeighbors; }
   constexpr auto getOutNeighbors() -> BitSet & { return outNeighbors; }
-  constexpr auto getSchedule() -> Schedule & { return schedule; }
+  constexpr auto getSchedule() -> NotNull<AffineSchedule> { return schedule; }
   [[nodiscard]] constexpr auto getMemory() const -> const BitSet & {
     return memory;
   }
@@ -98,12 +98,15 @@ public:
   [[nodiscard]] constexpr auto getOutNeighbors() const -> const BitSet & {
     return outNeighbors;
   }
-  [[nodiscard]] constexpr auto getSchedule() const -> const Schedule & {
+  [[nodiscard]] constexpr auto getSchedule() const
+    -> NotNull<const AffineSchedule> {
     return schedule;
   }
   void addOutNeighbor(unsigned int i) { outNeighbors.insert(i); }
   void addInNeighbor(unsigned int i) { inNeighbors.insert(i); }
-  void init() { schedule.init(getNumLoops()); }
+  void init(BumpAlloc<> &alloc) {
+    schedule = AffineSchedule::construct(alloc, getNumLoops());
+  }
   void addMemory(unsigned memId, MemoryAccess *mem, unsigned nodeIndex) {
     mem->addNodeIndex(nodeIndex);
     memory.insert(memId);
@@ -136,40 +139,40 @@ public:
     return _(phiOffset - numLoops, phiOffset);
   }
   [[nodiscard]] auto getPhi() -> MutSquarePtrMatrix<int64_t> {
-    return schedule.getPhi();
+    return schedule->getPhi();
   }
   [[nodiscard]] auto getPhi() const -> SquarePtrMatrix<int64_t> {
-    return schedule.getPhi();
+    return schedule->getPhi();
   }
   [[nodiscard]] auto getOffsetOmega(size_t i) -> int64_t & {
-    return schedule.getOffsetOmega()[i];
+    return schedule->getOffsetOmega()[i];
   }
   [[nodiscard]] auto getOffsetOmega(size_t i) const -> int64_t {
-    return schedule.getOffsetOmega()[i];
+    return schedule->getOffsetOmega()[i];
   }
   [[nodiscard]] auto getFusionOmega(size_t i) -> int64_t & {
-    return schedule.getFusionOmega()[i];
+    return schedule->getFusionOmega()[i];
   }
   [[nodiscard]] auto getFusionOmega(size_t i) const -> int64_t {
-    return schedule.getFusionOmega()[i];
+    return schedule->getFusionOmega()[i];
   }
   [[nodiscard]] auto getOffsetOmega() -> MutPtrVector<int64_t> {
-    return schedule.getOffsetOmega();
+    return schedule->getOffsetOmega();
   }
   [[nodiscard]] auto getOffsetOmega() const -> PtrVector<int64_t> {
-    return schedule.getOffsetOmega();
+    return schedule->getOffsetOmega();
   }
   [[nodiscard]] auto getFusionOmega() -> MutPtrVector<int64_t> {
-    return schedule.getFusionOmega();
+    return schedule->getFusionOmega();
   }
   [[nodiscard]] auto getFusionOmega() const -> PtrVector<int64_t> {
-    return schedule.getFusionOmega();
+    return schedule->getFusionOmega();
   }
   [[nodiscard]] auto getSchedule(size_t d) const -> PtrVector<int64_t> {
-    return schedule.getSchedule(d);
+    return schedule->getSchedule(d);
   }
   [[nodiscard]] auto getSchedule(size_t d) -> MutPtrVector<int64_t> {
-    return schedule.getSchedule(d);
+    return schedule->getSchedule(d);
   }
   void schedulePhi(PtrMatrix<int64_t> indMat, size_t r) {
     // indMat indvars are indexed from inside<->outside
@@ -181,8 +184,8 @@ public:
     const size_t indR = size_t(indMat.numRow());
     const size_t phiOff = size_t(phi.numCol()) - indR;
     for (size_t i = 0; i < r; ++i) {
-      phi(last - i, _(begin, phiOff)) = 0;
-      phi(last - i, _(phiOff, phiOff + indR)) = indMat(_, i);
+      phi(last - i, _(begin, phiOff)) << 0;
+      phi(last - i, _(phiOff, phiOff + indR)) << indMat(_, i);
     }
     rank = r;
   }
@@ -519,7 +522,7 @@ public:
       visited.clear();
     }
     for (auto &e : edges) connect(e->nodesIn(), e->nodesOut());
-    for (auto &&node : nodes) node.init();
+    for (auto &&node : nodes) node.init(allocator);
     // now that we've assigned each MemoryAccess to a NodeIndex, we
     // build the actual graph
   }
@@ -704,9 +707,8 @@ public:
       if (!maybeIndex) continue;
       size_t index = *maybeIndex;
       ScheduledNode &node = nodes[index];
-      if (node.phiIsScheduled(0) || (edge.getInIndMat() != edge.getOutIndMat()))
-        continue;
       PtrMatrix<int64_t> indMat = edge.getInIndMat();
+      if (node.phiIsScheduled(0) || (indMat != edge.getOutIndMat())) continue;
       size_t r = NormalForm::rank(indMat);
       if (r == edge.getInNumLoops()) continue;
       // TODO handle linearly dependent acceses, filtering them out
@@ -829,7 +831,7 @@ public:
                                    1 + numBounding + numActiveEdges +
                                      numPhiCoefs + numOmegaCoefs + numLambda);
     auto C{omniSimplex.getConstraints()};
-    C = 0;
+    C << 0;
     // layout of omniSimplex:
     // Order: C, then priority to minimize
     // all : C, u, w, Phis, omegas, lambdas
@@ -868,7 +870,7 @@ public:
           Col uu = u + bndWU.numCol() - 1;
           C(_(cc, ccc), _(u, uu)) = bndWU(_, _(1, end));
           u = uu;
-          if (satisfyDeps) C(_(c, cc), 0) = satC + satW;
+          if (satisfyDeps) C(_(c, cc), 0) << satC + satW;
           else C(_(c, cc), 0) = satC;
           C(_(cc, ccc), 0) = bndC;
           // now, handle Phi and Omega
@@ -889,10 +891,10 @@ public:
                   // while Dependence seems to indicate 2
                   // loops why the disagreement?
                   auto phiChild = outNode.getPhiOffset();
-                  C(_(c, cc), _(phiChild - satPc.numCol(), phiChild)) =
-                    satPc + satPp;
-                  C(_(cc, ccc), _(phiChild - bndPc.numCol(), phiChild)) =
-                    bndPc + bndPp;
+                  C(_(c, cc), _(phiChild - satPc.numCol(), phiChild))
+                    << satPc + satPp;
+                  C(_(cc, ccc), _(phiChild - bndPc.numCol(), phiChild))
+                    << bndPc + bndPp;
                 }
               } else if (outNode.phiIsScheduled(d)) {
                 // add it constants
@@ -908,27 +910,30 @@ public:
                 auto phiChild = outNode.getPhiOffset();
                 Col P = satPc.numCol();
                 auto m = phiChild - P;
-                C(_(c, cc), _(phiChild - satPp.numCol(), m)) =
-                  satPp(_, _(begin, end - P));
-                C(_(cc, ccc), _(phiChild - bndPp.numCol(), m)) =
-                  bndPp(_, _(begin, end - P));
-                C(_(c, cc), _(m, phiChild)) = satPc + satPp(_, _(end - P, end));
-                C(_(cc, ccc), _(m, phiChild)) =
-                  bndPc + bndPp(_, _(end - P, end));
+                C(_(c, cc), _(phiChild - satPp.numCol(), m))
+                  << satPp(_, _(begin, end - P));
+                C(_(cc, ccc), _(phiChild - bndPp.numCol(), m))
+                  << bndPp(_, _(begin, end - P));
+                C(_(c, cc), _(m, phiChild))
+                  << satPc + satPp(_, _(end - P, end));
+                C(_(cc, ccc), _(m, phiChild))
+                  << bndPc + bndPp(_, _(end - P, end));
               } else /* if (satPc.numCol() > satPp.numCol()) */ {
                 auto phiChild = outNode.getPhiOffset();
                 Col P = satPp.numCol();
                 auto m = phiChild - P;
-                C(_(c, cc), _(phiChild - satPc.numCol(), m)) =
-                  satPc(_, _(begin, end - P));
-                C(_(cc, ccc), _(phiChild - bndPc.numCol(), m)) =
-                  bndPc(_, _(begin, end - P));
-                C(_(c, cc), _(m, phiChild)) = satPc(_, _(end - P, end)) + satPp;
-                C(_(cc, ccc), _(m, phiChild)) =
-                  bndPc(_, _(end - P, end)) + bndPp;
+                C(_(c, cc), _(phiChild - satPc.numCol(), m))
+                  << satPc(_, _(begin, end - P));
+                C(_(cc, ccc), _(phiChild - bndPc.numCol(), m))
+                  << bndPc(_, _(begin, end - P));
+                C(_(c, cc), _(m, phiChild))
+                  << satPc(_, _(end - P, end)) + satPp;
+                C(_(cc, ccc), _(m, phiChild))
+                  << bndPc(_, _(end - P, end)) + bndPp;
               }
-              C(_(c, cc), outNode.getOmegaOffset()) = satO(_, 0) + satO(_, 1);
-              C(_(cc, ccc), outNode.getOmegaOffset()) = bndO(_, 0) + bndO(_, 1);
+              C(_(c, cc), outNode.getOmegaOffset()) << satO(_, 0) + satO(_, 1);
+              C(_(cc, ccc), outNode.getOmegaOffset())
+                << bndO(_, 0) + bndO(_, 1);
             }
           } else {
             if (d < edge.getOutNumLoops())
@@ -937,15 +942,15 @@ public:
               updateConstraints(C, inNode, satPp, bndPp, d, c, cc, ccc);
             // Omegas are included regardless of rotation
             if (d < edge.getOutNumLoops()) {
-              C(_(c, cc), outNode.getOmegaOffset()) =
-                satO(_, !edge.isForward());
-              C(_(cc, ccc), outNode.getOmegaOffset()) =
-                bndO(_, !edge.isForward());
+              C(_(c, cc), outNode.getOmegaOffset())
+                << satO(_, !edge.isForward());
+              C(_(cc, ccc), outNode.getOmegaOffset())
+                << bndO(_, !edge.isForward());
             }
             if (d < edge.getInNumLoops()) {
-              C(_(c, cc), inNode.getOmegaOffset()) = satO(_, edge.isForward());
-              C(_(cc, ccc), inNode.getOmegaOffset()) =
-                bndO(_, edge.isForward());
+              C(_(c, cc), inNode.getOmegaOffset()) << satO(_, edge.isForward());
+              C(_(cc, ccc), inNode.getOmegaOffset())
+                << bndO(_, edge.isForward());
             }
           }
           c = ccc;
@@ -1005,7 +1010,7 @@ public:
       if (!hasActiveEdges(g, node)) {
         node.getOffsetOmega()[depth] = std::numeric_limits<int64_t>::min();
         if (!node.phiIsScheduled(depth))
-          node.getSchedule(depth) = std::numeric_limits<int64_t>::min();
+          node.getSchedule(depth) << std::numeric_limits<int64_t>::min();
         continue;
       }
       Rational sOmega = sol[node.getOmegaOffset() - 1];
@@ -1043,8 +1048,11 @@ public:
     }
   }
   [[nodiscard]] static auto lexSign(PtrVector<int64_t> x) -> int64_t {
-    for (int64_t it : llvm::reverse(x))
-      if (it) return 2 * (it > 0) - 1;
+    // TODO: `std::ranges::reverse_view(x)` is broken; update when
+    // upgrading to a compiler that supports it.
+    // NOLINTNEXTLINE(modernize-loop-convert)
+    for (auto b = x.rbegin(), e = x.rend(); b != e; ++b)
+      if (*b) return 2 * ((*b) > 0) - 1;
     return 0;
   }
   void addIndependentSolutionConstraints(const Graph &g, size_t depth) {
@@ -1055,7 +1063,7 @@ public:
         if (node.phiIsScheduled(depth) || (!hasActiveEdges(g, node))) continue;
         auto c{omniSimplex.addConstraintAndVar()};
         c[0] = 1;
-        c[node.getPhiOffsetRange()] = 1;
+        c[node.getPhiOffsetRange()] << 1;
         c[last] = -1; // for >=
       }
       return;
@@ -1065,7 +1073,7 @@ public:
       if (node.phiIsScheduled(depth) || (depth >= node.getNumLoops()) ||
           (!hasActiveEdges(g, node)))
         continue;
-      A = node.getPhi()(_(end - depth, end), _).transpose();
+      A << node.getPhi()(_(end - depth, end), _).transpose();
       NormalForm::nullSpace11(N, A);
       auto c{omniSimplex.addConstraintAndVar()};
       c[0] = 1;
@@ -1111,11 +1119,11 @@ public:
       if (!hasActiveEdges(g, node)) {
         node.getOffsetOmega(depth) = std::numeric_limits<int64_t>::min();
         if (!node.phiIsScheduled(depth))
-          node.getSchedule(depth) = std::numeric_limits<int64_t>::min();
+          node.getSchedule(depth) << std::numeric_limits<int64_t>::min();
         continue;
       }
       node.getOffsetOmega(depth) = 0;
-      node.getSchedule(depth) = std::numeric_limits<int64_t>::min();
+      node.getSchedule(depth) << std::numeric_limits<int64_t>::min();
     }
   }
   void resetPhiOffsets() {
@@ -1124,10 +1132,10 @@ public:
   [[nodiscard]] auto isSatisfied(Dependence &e, size_t d) -> bool {
     for (size_t inIndex : e.nodesIn()) {
       for (size_t outIndex : e.nodesOut()) {
-        Schedule *first = &(nodes[inIndex].getSchedule());
-        Schedule *second = &(nodes[outIndex].getSchedule());
+        AffineSchedule *first = nodes[inIndex].getSchedule();
+        AffineSchedule *second = nodes[outIndex].getSchedule();
         if (!e.isForward()) std::swap(first, second);
-        if (!e.isSatisfied(*first, *second, d)) return false;
+        if (!e.isSatisfied(first, second, d)) return false;
       }
     }
     return true;

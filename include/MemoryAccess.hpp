@@ -1,7 +1,6 @@
 #pragma once
 #include "./BitSets.hpp"
 #include "./Loops.hpp"
-#include "./Memory.hpp"
 #include "Math/Math.hpp"
 #include "Utilities/Valid.hpp"
 #include <algorithm>
@@ -47,7 +46,7 @@ private:
   // value, meaning that is the stored instruction, and thus we still have
   // access to it when it is available.
   NotNull<llvm::Instruction> loadOrStore;
-  unsigned numDim, numSymbols;
+  unsigned numDim, numDynSym;
   // llvm::ArrayRef<const llvm::SCEV *> sizes;
   // llvm::ArrayRef<const llvm::SCEV *> symbolicOffsets;
   // llvm::SmallVector<const llvm::SCEV *, 3> sizes;
@@ -66,12 +65,12 @@ private:
   // schedule indicated by `1` top bit, remainder indicates loop
   [[nodiscard]] inline auto data() -> NotNull<int64_t> {
     std::byte *ptr =
-      mem + sizeof(const llvm::SCEV *const *) * (numDim + numSymbols);
+      mem + sizeof(const llvm::SCEV *const *) * (numDim + numDynSym);
     return reinterpret_cast<int64_t *>(ptr);
   }
   [[nodiscard]] inline auto data() const -> NotNull<int64_t> {
     const std::byte *ptr =
-      mem + sizeof(const llvm::SCEV *const *) * (numDim + numSymbols);
+      mem + sizeof(const llvm::SCEV *const *) * (numDim + numDynSym);
     return reinterpret_cast<int64_t *>(const_cast<std::byte *>(ptr));
   }
   [[nodiscard]] inline auto scevPtr() -> const llvm::SCEV ** {
@@ -88,7 +87,7 @@ private:
   MemoryAccess(const llvm::SCEVUnknown *arrayPtr, AffineLoopNest<true> &loopRef,
                llvm::Instruction *user, std::array<unsigned, 2> dimOff)
     : basePointer(arrayPtr), loop(loopRef), loadOrStore(user),
-      numDim(dimOff[0]), numSymbols(dimOff[1]){};
+      numDim(dimOff[0]), numDynSym(dimOff[1]){};
   MemoryAccess(const llvm::SCEVUnknown *arrayPtr, AffineLoopNest<true> &loopRef,
                llvm::Instruction *user)
     : basePointer(arrayPtr), loop(loopRef), loadOrStore(user){};
@@ -165,7 +164,7 @@ public:
   }
   [[nodiscard]] inline auto getSymbolicOffsets()
     -> llvm::MutableArrayRef<const llvm::SCEV *> {
-    return {scevPtr() + numDim, size_t(numSymbols)};
+    return {scevPtr() + numDim, size_t(numDynSym)};
   }
   [[nodiscard]] inline auto getSizes() const
     -> llvm::ArrayRef<const llvm::SCEV *> {
@@ -173,15 +172,15 @@ public:
   }
   [[nodiscard]] inline auto getSymbolicOffsets() const
     -> llvm::ArrayRef<const llvm::SCEV *> {
-    return {scevPtr() + numDim, size_t(numSymbols)};
+    return {scevPtr() + numDim, size_t(numDynSym)};
   }
   [[nodiscard]] auto isStore() const -> bool {
     return loadOrStore.isa<llvm::StoreInst>();
   }
   [[nodiscard]] auto isLoad() const -> bool { return !isStore(); }
   // TODO: `constexpr` once `llvm::SmallVector` supports it
-  [[nodiscard]] auto getArrayDim() const -> size_t { return sizes.size(); }
-  [[nodiscard]] auto getNumSymbols() const -> size_t { return 1 + numSymbols; }
+  [[nodiscard]] auto getArrayDim() const -> size_t { return numDim; }
+  [[nodiscard]] auto getNumSymbols() const -> size_t { return 1 + numDynSym; }
   [[nodiscard]] auto getNumLoops() const -> size_t {
     return loop->getNumLoops();
   }
@@ -202,27 +201,25 @@ public:
   /// for (j : J)
   ///   for (i : I)
   ///      A[i, i + j]
-  [[nodiscard]] auto indexMatrix() -> MutPtrMatrix<int64_t> {
+  [[nodiscard]] auto indexMatrix() -> MutDensePtrMatrix<int64_t> {
     const size_t d = getArrayDim();
-    return MutPtrMatrix<int64_t>{data(), getNumLoops(), d, d};
+    return {data(), DenseDims{getNumLoops(), d}};
   }
   /// indexMatrix() -> getNumLoops() x arrayDim()
   /// loops are in [innermost -> outermost] order
-  [[nodiscard]] auto indexMatrix() const -> PtrMatrix<int64_t> {
+  [[nodiscard]] auto indexMatrix() const -> DensePtrMatrix<int64_t> {
     const size_t d = getArrayDim();
-    return PtrMatrix<int64_t>{data(), getNumLoops(), d, d};
+    return {data(), DenseDims{getNumLoops(), d}};
   }
-  [[nodiscard]] auto offsetMatrix() -> MutPtrMatrix<int64_t> {
+  [[nodiscard]] auto offsetMatrix() -> MutDensePtrMatrix<int64_t> {
     const size_t d = getArrayDim();
     const size_t numSymbols = getNumSymbols();
-    return MutPtrMatrix<int64_t>{data() + getNumLoops() * d, d, numSymbols,
-                                 numSymbols};
+    return {data() + getNumLoops() * d, DenseDims{d, numSymbols}};
   }
-  [[nodiscard]] auto offsetMatrix() const -> PtrMatrix<int64_t> {
+  [[nodiscard]] auto offsetMatrix() const -> DensePtrMatrix<int64_t> {
     const size_t d = getArrayDim();
     const size_t numSymbols = getNumSymbols();
-    return PtrMatrix<int64_t>{data() + getNumLoops() * d, d, numSymbols,
-                              numSymbols};
+    return {data() + getNumLoops() * d, DenseDims{d, numSymbols}};
   }
   [[nodiscard]] auto getInstruction() -> NotNull<llvm::Instruction> {
     return loadOrStore;
@@ -297,12 +294,13 @@ public:
     std::copy(fusOld + numToPeel, fusOld + getNumLoops() + 1, fusNew);
   }
   [[nodiscard]] constexpr auto allConstantIndices() const -> bool {
-    return numSymbols == 0;
+    return numDynSym == 0;
   }
   // Assumes strides and offsets are sorted
   [[nodiscard]] auto sizesMatch(const MemoryAccess &x) const -> bool {
-    return std::equal(sizes.begin(), sizes.end(), x.sizes.begin(),
-                      x.sizes.end());
+    auto thisSizes = getSizes(), xSizes = x.getSizes();
+    return std::equal(thisSizes.begin(), thisSizes.end(), xSizes.begin(),
+                      xSizes.end());
   }
   [[nodiscard]] constexpr static auto gcdKnownIndependent(const MemoryAccess &)
     -> bool {
@@ -361,7 +359,7 @@ inline auto operator<<(llvm::raw_ostream &os, const MemoryAccess &m)
         }
         if (j) {
           if (offij != 1) os << offij << '*';
-          os << *m.getLoop()->S[j - 1];
+          os << *m.getLoop()->getSyms()[j - 1];
         } else os << offij;
         printPlus = true;
       }

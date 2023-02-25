@@ -11,8 +11,9 @@ template <class R, class C> struct CartesianIndex {
   C col;
   explicit constexpr operator Row() const { return row; }
   explicit constexpr operator Col() const { return col; }
-  constexpr auto operator==(const CartesianIndex &other) const {
-    return row == other.row && col == other.col;
+  [[nodiscard]] constexpr auto operator==(const CartesianIndex &other) const
+    -> bool {
+    return (row == other.row) && (col == other.col);
   }
 };
 template <class R, class C> CartesianIndex(R r, C c) -> CartesianIndex<R, C>;
@@ -54,8 +55,8 @@ struct StridedDims {
   constexpr explicit operator Row() const { return M; }
   constexpr explicit operator Col() const { return N; }
   constexpr explicit operator RowStride() const { return strideM; }
-  constexpr auto operator==(const StridedDims &D) const -> bool {
-    return M == D.M && N == D.N && strideM == D.strideM;
+  [[nodiscard]] constexpr auto operator==(const StridedDims &D) const -> bool {
+    return (M == D.M) && (N == D.N) && (strideM == D.strideM);
   }
   [[nodiscard]] constexpr auto truncate(Row r) const -> StridedDims {
     assert((r <= Row{M}) && "truncate cannot add rows.");

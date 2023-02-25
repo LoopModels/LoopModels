@@ -241,5 +241,10 @@ constexpr auto calcNewDim(DenseDims d, CartesianIndex<B, Colon> i) {
   auto rowDims = calcNewDim(size_t(Row{d}), i.row);
   return DenseDims{Row{rowDims}, Col{d}};
 }
+template <AbstractSlice B>
+constexpr auto calcNewDim(SquareDims d, CartesianIndex<B, Colon> i) {
+  auto rowDims = calcNewDim(size_t(Row{d}), i.row);
+  return DenseDims{Row{rowDims}, Col{d}};
+}
 
 } // namespace LinearAlgebra
