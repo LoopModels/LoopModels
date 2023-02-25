@@ -8,6 +8,7 @@ var searchData=
   ['getinindmat_70',['getInIndMat',['../structDependence.html#a6cc677c17009dae397e882a80eb727a4',1,'Dependence']]],
   ['getinstruction_71',['getInstruction',['../structInstruction_1_1Cache.html#abe269ee408a3bb0ae54cc6989fa64d5c',1,'Instruction::Cache']]],
   ['getoutindmat_72',['getOutIndMat',['../structDependence.html#a42ac0a8c783d95ac08f2155a9640125b',1,'Dependence']]],
-  ['graph_73',['Graph',['../structLinearProgramLoopBlock_1_1Graph.html',1,'LinearProgramLoopBlock']]],
-  ['graphs_74',['Graphs',['../namespaceGraphs.html',1,'']]]
+  ['gettableau_73',['getTableau',['../structTableau.html#a2ba173815f058b2e8f5633b0f9c89019',1,'Tableau']]],
+  ['graph_74',['Graph',['../structLinearProgramLoopBlock_1_1Graph.html',1,'LinearProgramLoopBlock']]],
+  ['graphs_75',['Graphs',['../namespaceGraphs.html',1,'']]]
 ];
