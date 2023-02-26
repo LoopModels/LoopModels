@@ -81,6 +81,11 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a6888e3a4b2b949b38f5159fff2fbefdf"><td class="memItemLeft" align="right" valign="top"><a id="a6888e3a4b2b949b38f5159fff2fbefdf"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getSolution</b> () const -&gt; <a class="el" href="structPtrSimplex_1_1Solution.html">Solution</a></td></tr>
 <tr class="separator:a6888e3a4b2b949b38f5159fff2fbefdf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a77e967d9ad5e60d4d15403fe56dd7e1f"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPtrSimplex.html#a77e967d9ad5e60d4d15403fe56dd7e1f">initiateFeasible</a> () -&gt; bool</td></tr>
+<tr class="separator:a77e967d9ad5e60d4d15403fe56dd7e1f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac3d4815d2a2ded1e30d60f0a38a05012"><td class="memItemLeft" align="right" valign="top"><a id="ac3d4815d2a2ded1e30d60f0a38a05012"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>removeAugmentVars</b> (PtrVector&lt; unsigned &gt; augmentVars, ptrdiff_t numVar) -&gt; bool</td></tr>
+<tr class="separator:ac3d4815d2a2ded1e30d60f0a38a05012"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
@@ -94,6 +99,33 @@ unsigned&#160;</td><td class="memItemRight" valign="bottom"><b>numSlack</b></td>
 unsigned&#160;</td><td class="memItemRight" valign="bottom"><b>numArtificial</b></td></tr>
 <tr class="separator:ae8039711b6dcab7e25ff4d1cc2bea5d6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
+<h2 class="groupheader">Member Function Documentation</h2>
+<a id="a77e967d9ad5e60d4d15403fe56dd7e1f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a77e967d9ad5e60d4d15403fe56dd7e1f">&#9670;&nbsp;</a></span>initiateFeasible()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">auto PtrSimplex::initiateFeasible </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> -&gt; bool </td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>simplex.initiateFeasible() -&gt; bool returns <code>true</code> if infeasible, <code>false</code> if feasible The approach is to first put the equalities into HNF then, all diagonal elements are basic variables. For each non-diagonal element, we need to add an augment variable Then we try to set all augment variables to 0. If we fail, it is infeasible. If we succeed, then the problem is feasible, and we're in canonical form. </p>
+
+</div>
+</div>
 <hr/>The documentation for this struct was generated from the following file:<ul>
 <li>include/Math/<a class="el" href="Simplex_8hpp_source.html">Simplex.hpp</a></li>
 </ul>

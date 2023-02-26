@@ -86,25 +86,28 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:aafeb0fc54eead2b992eb7d0c3e7d1847"><td class="memItemLeft" align="right" valign="top"><a id="aafeb0fc54eead2b992eb7d0c3e7d1847"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator[]</b> (size_t i) const -&gt; <a class="el" href="structRational.html">Rational</a></td></tr>
 <tr class="separator:aafeb0fc54eead2b992eb7d0c3e7d1847"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa5b648a68dab9f6ad72a682dc0cb7e7b"><td class="memTemplParams" colspan="2"><a id="aa5b648a68dab9f6ad72a682dc0cb7e7b"></a>
+<tr class="memitem:a59ba610766a1e1a170f5c6feb4fac3eb"><td class="memTemplParams" colspan="2"><a id="a59ba610766a1e1a170f5c6feb4fac3eb"></a>
 template&lt;typename B , typename E &gt; </td></tr>
-<tr class="memitem:aa5b648a68dab9f6ad72a682dc0cb7e7b"><td class="memTemplItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>operator[]</b> (<a class="el" href="structRange.html">Range</a>&lt; B, E &gt; r) -&gt; <a class="el" href="structPtrSimplex_1_1Solution.html">Solution</a></td></tr>
-<tr class="separator:aa5b648a68dab9f6ad72a682dc0cb7e7b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a59ba610766a1e1a170f5c6feb4fac3eb"><td class="memTemplItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>operator[]</b> (<a class="el" href="structRange.html">Range</a>&lt; B, E &gt; r) const -&gt; <a class="el" href="structPtrSimplex_1_1Solution.html">Solution</a></td></tr>
+<tr class="separator:a59ba610766a1e1a170f5c6feb4fac3eb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a70bc22190dbadb04bd365b17543a9a40"><td class="memItemLeft" align="right" valign="top"><a id="a70bc22190dbadb04bd365b17543a9a40"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator[]</b> (<a class="el" href="structRange.html">Range</a>&lt; size_t, size_t &gt; r) const -&gt; <a class="el" href="structPtrSimplex_1_1Solution.html">Solution</a></td></tr>
+<tr class="separator:a70bc22190dbadb04bd365b17543a9a40"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abf3d869093ba96c811a515d4a70f9024"><td class="memItemLeft" align="right" valign="top"><a id="abf3d869093ba96c811a515d4a70f9024"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>size</b> () const -&gt; size_t</td></tr>
 <tr class="separator:abf3d869093ba96c811a515d4a70f9024"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a96ad871eea30828ba65964b6b633e61e"><td class="memItemLeft" align="right" valign="top"><a id="a96ad871eea30828ba65964b6b633e61e"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>view</b> () const -&gt; auto &amp;</td></tr>
-<tr class="separator:a96ad871eea30828ba65964b6b633e61e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a00254ac3c0843640849ae79146e5498a"><td class="memItemLeft" align="right" valign="top"><a id="a00254ac3c0843640849ae79146e5498a"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>view</b> () const -&gt; <a class="el" href="structPtrSimplex_1_1Solution.html">Solution</a></td></tr>
+<tr class="separator:a00254ac3c0843640849ae79146e5498a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
-<tr class="memitem:a3af2ce35992e1b91e139b02e5c56d3a4"><td class="memItemLeft" align="right" valign="top"><a id="a3af2ce35992e1b91e139b02e5c56d3a4"></a>
-PtrMatrix&lt; int64_t &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>tableauView</b></td></tr>
-<tr class="separator:a3af2ce35992e1b91e139b02e5c56d3a4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad4c73a096aa3184dc96e637469eca5c3"><td class="memItemLeft" align="right" valign="top"><a id="ad4c73a096aa3184dc96e637469eca5c3"></a>
-StridedVector&lt; int64_t &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>consts</b></td></tr>
-<tr class="separator:ad4c73a096aa3184dc96e637469eca5c3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af841ea6b6f200b314a7394f19d8a0142"><td class="memItemLeft" align="right" valign="top"><a id="af841ea6b6f200b314a7394f19d8a0142"></a>
+<a class="el" href="structTableau.html">Tableau</a>&#160;</td><td class="memItemRight" valign="bottom"><b>tableau</b></td></tr>
+<tr class="separator:af841ea6b6f200b314a7394f19d8a0142"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a82d4e8768ebf542507f5d6b13dbe1551"><td class="memItemLeft" align="right" valign="top"><a id="a82d4e8768ebf542507f5d6b13dbe1551"></a>
+size_t&#160;</td><td class="memItemRight" valign="bottom"><b>skippedVars</b> {0}</td></tr>
+<tr class="separator:a82d4e8768ebf542507f5d6b13dbe1551"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <hr/>The documentation for this struct was generated from the following file:<ul>
 <li>include/Math/<a class="el" href="Simplex_8hpp_source.html">Simplex.hpp</a></li>
