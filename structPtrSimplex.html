@@ -64,6 +64,7 @@ $(function() {
   <div class="summary">
 <a href="#nested-classes">Classes</a> &#124;
 <a href="#pub-methods">Public Member Functions</a> &#124;
+<a href="#pub-static-methods">Static Public Member Functions</a> &#124;
 <a href="#pub-attribs">Public Attributes</a> &#124;
 <a href="structPtrSimplex-members.html">List of all members</a>  </div>
   <div class="headertitle">
@@ -86,6 +87,24 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getSolution
 <tr class="memitem:ac3d4815d2a2ded1e30d60f0a38a05012"><td class="memItemLeft" align="right" valign="top"><a id="ac3d4815d2a2ded1e30d60f0a38a05012"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>removeAugmentVars</b> (PtrVector&lt; unsigned &gt; augmentVars, ptrdiff_t numVar) -&gt; bool</td></tr>
 <tr class="separator:ac3d4815d2a2ded1e30d60f0a38a05012"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acb5ffbc6b23746ba099d35a90292ecb4"><td class="memItemLeft" align="right" valign="top"><a id="acb5ffbc6b23746ba099d35a90292ecb4"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>makeBasic</b> (MutPtrMatrix&lt; int64_t &gt; C, int64_t f, unsigned int enteringVariable) -&gt; int64_t</td></tr>
+<tr class="separator:acb5ffbc6b23746ba099d35a90292ecb4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa1c427e4a2e1e06a3dc7525066e532a6"><td class="memItemLeft" align="right" valign="top"><a id="aa1c427e4a2e1e06a3dc7525066e532a6"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>runCore</b> (int64_t f=1) -&gt; <a class="el" href="structRational.html">Rational</a></td></tr>
+<tr class="separator:aa1c427e4a2e1e06a3dc7525066e532a6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a76634d1952aedba83c628b54ad90998c"><td class="memItemLeft" align="right" valign="top"><a id="a76634d1952aedba83c628b54ad90998c"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>run</b> () -&gt; <a class="el" href="structRational.html">Rational</a></td></tr>
+<tr class="separator:a76634d1952aedba83c628b54ad90998c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
+Static Public Member Functions</h2></td></tr>
+<tr class="memitem:a5a55c5b88d452556aeaef0e5e9a845cc"><td class="memItemLeft" align="right" valign="top"><a id="a5a55c5b88d452556aeaef0e5e9a845cc"></a>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>getEnteringVariable</b> (PtrVector&lt; int64_t &gt; costs) -&gt; <a class="el" href="structOptional.html">Optional</a>&lt; unsigned int &gt;</td></tr>
+<tr class="separator:a5a55c5b88d452556aeaef0e5e9a845cc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a39d803bdf1d3e3340d4753f1924eb0df"><td class="memItemLeft" align="right" valign="top"><a id="a39d803bdf1d3e3340d4753f1924eb0df"></a>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>getLeavingVariable</b> (MutPtrMatrix&lt; int64_t &gt; C, size_t enteringVariable) -&gt; <a class="el" href="structOptional.html">Optional</a>&lt; unsigned int &gt;</td></tr>
+<tr class="separator:a39d803bdf1d3e3340d4753f1924eb0df"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
