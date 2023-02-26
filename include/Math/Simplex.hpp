@@ -117,6 +117,9 @@ struct Tableau {
     -> int64_t {
     return getObjective()[++i];
   }
+  [[nodiscard]] constexpr auto getObjectiveValue() -> int64_t & {
+    return getObjective()[0];
+  }
   [[nodiscard]] constexpr auto getObjectiveValue() const -> int64_t {
     return getObjective()[0];
   }
@@ -124,6 +127,8 @@ struct Tableau {
     assert(i <= numConstraints);
     numConstraints = i;
   }
+  constexpr unsigned getNumVar() const { return numVars; }
+  constexpr unsigned getNumConstraints() const { return numConstraints; }
   constexpr void hermiteNormalForm() {
 #ifndef NDEBUG
     inCanonicalForm = false;
@@ -131,6 +136,30 @@ struct Tableau {
     truncateConstraints(
       unsigned(NormalForm::simplifySystemImpl(getConstraints(), 1)));
   }
+#ifndef NDEBUG
+  void assertCanonical() const {
+    PtrMatrix<int64_t> C{getCostsAndConstraints()};
+    StridedVector<int64_t> basicVars{getBasicVariables()};
+    PtrVector<int64_t> basicConstraints{getBasicConstraints()};
+    for (size_t v = 1; v < C.numCol(); ++v) {
+      int64_t c = basicConstraints[v];
+      if (c < 0) continue;
+      assert(allZero(C(_(1, 1 + c), v)));
+      assert(allZero(C(_(2 + c, end), v)));
+      assert(size_t(basicVars[c]) == v);
+    }
+    for (size_t c = 1; c < C.numRow(); ++c) {
+      int64_t v = basicVars[c - 1];
+      if (size_t(v) < basicConstraints.size()) {
+        assert(c - 1 == size_t(basicConstraints[v]));
+        assert(C(c, v) >= 0);
+      }
+      assert(C(c, 0) >= 0);
+    }
+  }
+// #else
+//   static constexpr void assertCanonical() {}
+#endif
 };
 
 struct PtrSimplex {
@@ -145,24 +174,159 @@ struct PtrSimplex {
   struct Solution {
     using value_type = Rational;
     // view of tableau dropping const column
-    PtrMatrix<int64_t> tableauView;
-    StridedVector<int64_t> consts;
-    constexpr auto operator[](size_t i) const -> Rational {
-      int64_t j = tableauView(0, i);
+    Tableau tableau;
+    size_t skippedVars{0};
+    [[nodiscard]] constexpr auto operator[](size_t i) const -> Rational {
+      i += skippedVars;
+      int64_t j = tableau.getBasicConstraint(i);
       if (j < 0) return 0;
-      return Rational::create(consts[j], tableauView(j + numExtraRows, i));
+      PtrMatrix<int64_t> constraints = tableau.getConstraints();
+      return Rational::create(constraints(j, 0), constraints(j, i + 1));
     }
     template <typename B, typename E>
-    constexpr auto operator[](Range<B, E> r) -> Solution {
-      return Solution{tableauView(_, r), consts};
+    constexpr auto operator[](Range<B, E> r) const -> Solution {
+      return (*this)[LinearAlgebra::canonicalizeRange(r, size())];
+    }
+    constexpr auto operator[](Range<size_t, size_t> r) const -> Solution {
+      Tableau t = tableau;
+      t.numVars = r.e;
+      return {t, skippedVars + r.b};
     }
     [[nodiscard]] constexpr auto size() const -> size_t {
-      return size_t(tableauView.numCol());
+      return size_t(tableau.numVars) - skippedVars;
     }
-    [[nodiscard]] constexpr auto view() const -> auto & { return *this; };
+    [[nodiscard]] constexpr auto view() const -> Solution { return *this; };
   };
   [[nodiscard]] constexpr auto getSolution() const -> Solution {
-    return Solution{tableau(_, _(numExtraCols, end)), getConstants()};
+    return {tableau, 0};
+  }
+
+  /// simplex.initiateFeasible() -> bool
+  /// returns `true` if infeasible, `false ` if feasible
+  /// The approach is to first put the equalities into HNF
+  /// then, all diagonal elements are basic variables.
+  /// For each non-diagonal element, we need to add an augment variable
+  /// Then we try to set all augment variables to 0.
+  /// If we fail, it is infeasible.
+  /// If we succeed, then the problem is feasible, and we're in
+  /// canonical form.
+  [[nodiscard("returns `true` if infeasible; should check when calling.")]] auto
+  initiateFeasible() -> bool {
+    // remove trivially redundant constraints
+    tableau.hermiteNormalForm();
+    // [ I;  X ; b ]
+    //
+    // original number of variables
+    const auto numVar = ptrdiff_t(tableau.getNumVar());
+    MutPtrMatrix<int64_t> C{tableau.getConstraints()};
+    MutPtrVector<int64_t> basicCons{tableau.getBasicConstraints()};
+    basicCons << -2;
+    // first pass, we make sure the equalities are >= 0
+    // and we eagerly try and find columns with
+    // only a single non-0 element.
+    for (ptrdiff_t c = 0; c < C.numRow(); ++c) {
+      int64_t &Ceq = C(c, 0);
+      if (Ceq >= 0) {
+        // close-open and close-close are out, open-open is in
+        for (ptrdiff_t v = 1; v < numVar; ++v) {
+          if (int64_t Ccv = C(c, v)) {
+            if (((basicCons[v] == -2) && (Ccv > 0))) basicCons[v] = c;
+            else basicCons[v] = -1;
+          }
+        }
+      } else {
+        Ceq *= -1;
+        for (ptrdiff_t v = 1; v < numVar; ++v) {
+          if (int64_t Ccv = -C(c, v)) {
+            if (((basicCons[v] == -2) && (Ccv > 0))) basicCons[v] = c;
+            else basicCons[v] = -1;
+            C(c, v) = Ccv;
+          }
+        }
+      }
+    }
+    // basicCons should now contain either `-1` or an integer >= 0
+    // indicating which row contains the only non-zero element; we'll
+    // now fill basicVars.
+    //
+    auto basicVars{tableau.getBasicVariables()};
+    basicVars << -1;
+    for (ptrdiff_t v = 1; v < numVar; ++v) {
+      int64_t r = basicCons[v];
+      if (r >= 0) {
+        if (basicVars[r] == -1) {
+          basicVars[r] = v;
+        } else {
+          // this is reachable, as we could have
+          // [ 1  1  0
+          //   0  0  1 ]
+          // TODO: is their actual harm in having multiple
+          // basicCons?
+          basicCons[v] = -1;
+        }
+      }
+    }
+#ifndef NDEBUG
+    tableau.inCanonicalForm = true;
+#endif
+    Vector<unsigned> augVars{};
+    // upper bound number of augmentVars is constraintCapacity
+    for (unsigned i = 0; i < basicVars.size(); ++i)
+      if (basicVars[i] == -1) augVars.push_back(i);
+    return (augVars.size() && removeAugmentVars(augVars, numVar));
+  }
+  auto removeAugmentVars(PtrVector<unsigned> augmentVars, ptrdiff_t numVar)
+    -> bool {
+    // TODO: try to avoid reallocating, via reserving enough ahead of time
+    assert(augmentVars.size() + tableau.numVars <= tableau.varCapacity);
+    unsigned numAugment = augmentVars.size(), oldNumVar = tableau.numVars;
+    tableau.numVars += numAugment;
+
+    tableau.addVars(augmentVars.size()); // NOTE: invalidates all refs
+    MutPtrMatrix<int64_t> C{getConstraints()};
+    MutStridedVector<int64_t> basicVars{getBasicVariables()};
+    MutPtrVector<int64_t> basicCons{getBasicConstraints()};
+    MutPtrVector<int64_t> costs{getCost()};
+    tableau(1, _) << 0;
+    for (ptrdiff_t i = 0; i < ptrdiff_t(augmentVars.size()); ++i) {
+      ptrdiff_t a = augmentVars[i];
+      basicVars[a] = i + numVar;
+      basicCons[i + numVar] = a;
+      C(a, numVar + i) = 1;
+      // we now zero out the implicit cost of `1`
+      costs[_(begin, numVar)] -= C(a, _(begin, numVar));
+    }
+    // false/0 means feasible
+    // true/non-zero infeasible
+    if (runCore() != 0) return true;
+    // check for any basic vars set to augment vars, and set them to some
+    // other variable (column) instead.
+    for (ptrdiff_t c = 0; c < C.numRow(); ++c) {
+      if (basicVars[c] >= numVar) {
+        assert(C(c, 0) == 0);
+        assert(c == basicCons[basicVars[c]]);
+        assert(C(c, basicVars[c]) >= 0);
+        // find var to make basic in its place
+        for (ptrdiff_t v = numVar; v != 0;) {
+          // search for a non-basic variable
+          // (basicConstraints<0)
+          assert(v > 1);
+          if ((basicCons[--v] >= 0) || (C(c, v) == 0)) continue;
+          if (C(c, v) < 0) C(c, _) *= -1;
+          for (size_t i = 0; i < C.numRow(); ++i)
+            if (i != size_t(c)) NormalForm::zeroWithRowOperation(C, i, c, v, 0);
+          basicVars[c] = v;
+          basicCons[v] = c;
+          break;
+        }
+      }
+    }
+    // all augment vars are now 0
+    truncateVars(numVar);
+#ifndef NDEBUG
+    tableau.assertCanonical();
+#endif
+    return false;
   }
 };
 

@@ -836,8 +836,6 @@ public:
     // Order: C, then priority to minimize
     // all : C, u, w, Phis, omegas, lambdas
     // rows give constraints; each edge gets its own
-    // constexpr size_t numOmega =
-    //     DependencePolyhedra::getNumOmegaCoefficients();
     size_t w = 1 + numBounding;
     Row c = 0;
     Col l = getLambdaOffset(), u = 1;
