@@ -185,6 +185,7 @@ struct Rational {
   constexpr operator double() {
     return double(numerator) / double(denominator);
   }
+  constexpr operator bool() { return numerator != 0; }
 
   constexpr auto operator==(Rational y) const -> bool {
     return (numerator == y.numerator) & (denominator == y.denominator);

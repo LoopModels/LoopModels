@@ -6,6 +6,7 @@
 #include "Math/Indexing.hpp"
 #include "Math/Math.hpp"
 #include "Math/MatrixDimensions.hpp"
+#include "Utilities/Allocators.hpp"
 #include <bit>
 #include <cstddef>
 #include <cstdint>
@@ -26,9 +27,9 @@
 // to avoid unnecessary specialization.
 
 struct Tableau {
-  int64_t *ptr;
-  unsigned numConstraints;
-  unsigned numVars;
+  int64_t *ptr{nullptr};
+  unsigned numConstraints{0};
+  unsigned numVars{0};
   unsigned constraintCapacity;
   unsigned varCapacity;
 #ifndef NDEBUG
@@ -127,8 +128,10 @@ struct Tableau {
     assert(i <= numConstraints);
     numConstraints = i;
   }
-  constexpr unsigned getNumVar() const { return numVars; }
-  constexpr unsigned getNumConstraints() const { return numConstraints; }
+  [[nodiscard]] constexpr auto getNumVar() const -> unsigned { return numVars; }
+  [[nodiscard]] constexpr auto getNumConstraints() const -> unsigned {
+    return numConstraints;
+  }
   constexpr void hermiteNormalForm() {
 #ifndef NDEBUG
     inCanonicalForm = false;
@@ -160,6 +163,16 @@ struct Tableau {
 // #else
 //   static constexpr void assertCanonical() {}
 #endif
+  static auto construct(BumpAlloc<> &alloc, unsigned conCap, unsigned varCap)
+    -> Tableau {
+    Tableau tab{{conCap, varCap}};
+    tab.ptr = alloc.allocate<int64_t>(tab.intsNeeded());
+    return tab;
+  }
+
+private:
+  constexpr Tableau(std::array<unsigned, 2> capacity)
+    : constraintCapacity(capacity[0]), varCapacity(capacity[1]) {}
 };
 
 struct PtrSimplex {
@@ -296,7 +309,7 @@ struct PtrSimplex {
     }
     // false/0 means feasible
     // true/non-zero infeasible
-    if (runCore() != 0) return true;
+    if (runCore()) return true;
     // check for any basic vars set to augment vars, and set them to some
     // other variable (column) instead.
     for (ptrdiff_t c = 0; c < C.numRow(); ++c) {
@@ -325,6 +338,98 @@ struct PtrSimplex {
     tableau.assertCanonical();
 #endif
     return false;
+  }
+
+  // 1 based to match getBasicConstraints
+  [[nodiscard]] static auto getEnteringVariable(PtrVector<int64_t> costs)
+    -> Optional<unsigned int> {
+    // Bland's algorithm; guaranteed to terminate
+    auto f = costs.begin();
+    auto l = costs.end();
+    auto neg = std::find_if(f + 1, l, [](int64_t c) { return c < 0; });
+    if (neg == l) return {};
+    return unsigned(std::distance(f, neg));
+  }
+  [[nodiscard]] static auto getLeavingVariable(MutPtrMatrix<int64_t> C,
+                                               size_t enteringVariable)
+    -> Optional<unsigned int> {
+    // inits guarantee first valid is selected
+    // we need
+    int64_t n = -1;
+    int64_t d = 0;
+    unsigned int j = 0;
+    for (size_t i = 1; i < C.numRow(); ++i) {
+      int64_t Civ = C(i, enteringVariable);
+      if (Civ > 0) {
+        int64_t Ci0 = C(i, 0);
+        if (Ci0 == 0) return --i;
+        assert(Ci0 > 0);
+        if ((n * Ci0) < (Civ * d)) {
+          n = Civ;
+          d = Ci0;
+          j = i;
+        }
+      }
+    }
+    // note, if we fail to find a leaving variable, then `j = 0`,
+    // and it will unsigned wrap to `size_t(-1)`, which indicates
+    // an empty `Optional<unsigned int>`
+    return --j;
+  }
+  auto makeBasic(MutPtrMatrix<int64_t> C, int64_t f,
+                 unsigned int enteringVariable) -> int64_t {
+    Optional<unsigned int> leaveOpt = getLeavingVariable(C, enteringVariable);
+    if (!leaveOpt) return 0; // unbounded
+    unsigned int leavingVariable = *leaveOpt;
+    for (size_t i = 0; i < C.numRow(); ++i)
+      if (i != leavingVariable + 1) {
+        int64_t m = NormalForm::zeroWithRowOperation(
+          C, i, leavingVariable + 1, enteringVariable, i == 0 ? f : 0);
+        if (i == 0) f = m;
+      }
+    // update baisc vars and constraints
+    MutPtrVector<int64_t> basicVars{tableau.getBasicVariables()};
+    int64_t oldBasicVar = basicVars[leavingVariable];
+    basicVars[leavingVariable] = enteringVariable;
+    MutPtrVector<int64_t> basicConstraints{tableau.getBasicConstraints()};
+    basicConstraints[oldBasicVar] = -1;
+    basicConstraints[enteringVariable] = leavingVariable;
+    return f;
+  }
+  // run the simplex algorithm, assuming basicVar's costs have been set to
+  // 0
+  auto runCore(int64_t f = 1) -> Rational {
+#ifndef NDEBUG
+    assert(tableau.inCanonicalForm);
+#endif
+    //     return runCore(getCostsAndConstraints(), f);
+    // }
+    // Rational runCore(MutPtrMatrix<int64_t> C, int64_t f = 1) {
+    auto C{tableau.getTableau()};
+    while (true) {
+      // entering variable is the column
+      Optional<unsigned int> enteringVariable = getEnteringVariable(C(0, _));
+      if (!enteringVariable) return Rational::create(C(0, 0), f);
+      f = makeBasic(C, f, *enteringVariable);
+      if (f == 0) return std::numeric_limits<int64_t>::max(); // unbounded
+    }
+  }
+  // set basicVar's costs to 0, and then runCore()
+  auto run() -> Rational {
+#ifndef NDEBUG
+    assert(tableau.inCanonicalForm);
+    tableau.assertCanonical();
+#endif
+    MutPtrVector<int64_t> basicVars{tableau.getBasicVariables()};
+    MutPtrMatrix<int64_t> C{tableau.getTableau()};
+    int64_t f = 1;
+    // zero cost of basic variables to put in canonical form
+    for (size_t c = 0; c < basicVars.size();) {
+      int64_t v = basicVars[c++];
+      if ((size_t(v) < C.numCol()) && C(0, v))
+        f = NormalForm::zeroWithRowOperation(C, 0, c, v, f);
+    }
+    return runCore(f);
   }
 };
 
