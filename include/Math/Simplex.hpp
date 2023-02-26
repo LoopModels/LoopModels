@@ -99,7 +99,7 @@ struct Tableau {
   [[nodiscard]] constexpr auto getBasicVariables() -> MutPtrVector<int64_t> {
     return {ptr + reservedBasicVariables(), numConstraints};
   }
-  [[nodiscard]] constexpr auto getObjective() const -> PtrVector<int64_t> {
+  [[nodiscard]] constexpr auto getCost() const -> PtrVector<int64_t> {
     return {ptr + reservedBasicConstraints() + reservedBasicVariables(),
             numVars + 1};
   }
@@ -115,13 +115,13 @@ struct Tableau {
   }
   [[nodiscard]] constexpr auto getObjectiveCoefficient(unsigned i) const
     -> int64_t {
-    return getObjective()[++i];
+    return getCost()[++i];
   }
   [[nodiscard]] constexpr auto getObjectiveValue() -> int64_t & {
     return getObjective()[0];
   }
   [[nodiscard]] constexpr auto getObjectiveValue() const -> int64_t {
-    return getObjective()[0];
+    return getCost()[0];
   }
   constexpr void truncateConstraints(unsigned i) {
     assert(i <= numConstraints);
@@ -138,8 +138,8 @@ struct Tableau {
   }
 #ifndef NDEBUG
   void assertCanonical() const {
-    PtrMatrix<int64_t> C{getCostsAndConstraints()};
-    StridedVector<int64_t> basicVars{getBasicVariables()};
+    PtrMatrix<int64_t> C{getTableau()};
+    PtrVector<int64_t> basicVars{getBasicVariables()};
     PtrVector<int64_t> basicConstraints{getBasicConstraints()};
     for (size_t v = 1; v < C.numCol(); ++v) {
       int64_t c = basicConstraints[v];
@@ -281,13 +281,11 @@ struct PtrSimplex {
     assert(augmentVars.size() + tableau.numVars <= tableau.varCapacity);
     unsigned numAugment = augmentVars.size(), oldNumVar = tableau.numVars;
     tableau.numVars += numAugment;
-
-    tableau.addVars(augmentVars.size()); // NOTE: invalidates all refs
-    MutPtrMatrix<int64_t> C{getConstraints()};
-    MutStridedVector<int64_t> basicVars{getBasicVariables()};
-    MutPtrVector<int64_t> basicCons{getBasicConstraints()};
-    MutPtrVector<int64_t> costs{getCost()};
-    tableau(1, _) << 0;
+    MutPtrMatrix<int64_t> C{tableau.getConstraints()};
+    MutPtrVector<int64_t> basicVars{tableau.getBasicVariables()};
+    MutPtrVector<int64_t> basicCons{tableau.getBasicConstraints()};
+    MutPtrVector<int64_t> costs{tableau.getCost()};
+    costs << 0;
     for (ptrdiff_t i = 0; i < ptrdiff_t(augmentVars.size()); ++i) {
       ptrdiff_t a = augmentVars[i];
       basicVars[a] = i + numVar;
@@ -322,7 +320,7 @@ struct PtrSimplex {
       }
     }
     // all augment vars are now 0
-    truncateVars(numVar);
+    tableau.numVars = oldNumVar;
 #ifndef NDEBUG
     tableau.assertCanonical();
 #endif
