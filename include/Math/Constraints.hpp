@@ -214,12 +214,11 @@ constexpr void slackEqualityConstraints(MutPtrMatrix<int64_t> C,
                                         PtrMatrix<int64_t> A,
                                         PtrMatrix<int64_t> B) {
   const Col numVar = A.numCol();
-  assert(numVar == B.numCol());
-  const Row numSlack = A.numRow();
-  const Row numStrict = B.numRow();
-  assert(C.numRow() == numSlack + numStrict);
+  invariant(numVar == B.numCol());
+  const Row numSlack = A.numRow(), numStrict = B.numRow();
+  invariant(C.numRow() == numSlack + numStrict);
   size_t slackAndVar = size_t(numSlack) + size_t(numVar);
-  assert(size_t(C.numCol()) == slackAndVar);
+  invariant(size_t(C.numCol()) == slackAndVar);
   // [I A]
   for (size_t s = 0; s < numSlack; ++s) {
     C(s, _(begin, numSlack)) << 0;
