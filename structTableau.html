@@ -144,12 +144,33 @@ constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>hermiteNorm
 <tr class="memitem:a4409fc1205f8ccedf668b02c839b3b06"><td class="memItemLeft" align="right" valign="top"><a id="a4409fc1205f8ccedf668b02c839b3b06"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>assertCanonical</b> () const</td></tr>
 <tr class="separator:a4409fc1205f8ccedf668b02c839b3b06"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa1732dc63a93da8ab114ebe67865e299"><td class="memItemLeft" align="right" valign="top"><a id="aa1732dc63a93da8ab114ebe67865e299"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getConstants</b> () -&gt; MutStridedVector&lt; int64_t &gt;</td></tr>
+<tr class="separator:aa1732dc63a93da8ab114ebe67865e299"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a44bc12bc9fb5cca7e1f5826aee3506be"><td class="memItemLeft" align="right" valign="top"><a id="a44bc12bc9fb5cca7e1f5826aee3506be"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getConstants</b> () const -&gt; StridedVector&lt; int64_t &gt;</td></tr>
+<tr class="separator:a44bc12bc9fb5cca7e1f5826aee3506be"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a53b5d7e4841021bc6cefd92ebede4909"><td class="memItemLeft" align="right" valign="top"><a id="a53b5d7e4841021bc6cefd92ebede4909"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>setNumCons</b> (unsigned i)</td></tr>
+<tr class="separator:a53b5d7e4841021bc6cefd92ebede4909"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6b235931838e421ce577025ad98d97d1"><td class="memItemLeft" align="right" valign="top"><a id="a6b235931838e421ce577025ad98d97d1"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>setNumVars</b> (unsigned i)</td></tr>
+<tr class="separator:a6b235931838e421ce577025ad98d97d1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a19cbef25c54d2a6d8bacef32ee30ccc9"><td class="memItemLeft" align="right" valign="top"><a id="a19cbef25c54d2a6d8bacef32ee30ccc9"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumCons</b> () const -&gt; unsigned</td></tr>
+<tr class="separator:a19cbef25c54d2a6d8bacef32ee30ccc9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aacfd26f3fe75d8222a9da3d08bcef251"><td class="memItemLeft" align="right" valign="top"><a id="aacfd26f3fe75d8222a9da3d08bcef251"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumVars</b> () const -&gt; unsigned</td></tr>
+<tr class="separator:aacfd26f3fe75d8222a9da3d08bcef251"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
-<tr class="memitem:aa36fe5b9217960169fde78da4e0f48fc"><td class="memItemLeft" align="right" valign="top"><a id="aa36fe5b9217960169fde78da4e0f48fc"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>construct</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, unsigned conCap, unsigned varCap) -&gt; <a class="el" href="structTableau.html">Tableau</a></td></tr>
-<tr class="separator:aa36fe5b9217960169fde78da4e0f48fc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a94885de0f40687cc6f912ac3ae625c14"><td class="memItemLeft" align="right" valign="top"><a id="a94885de0f40687cc6f912ac3ae625c14"></a>
+static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>create</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, unsigned conCap, unsigned varCap) -&gt; <a class="el" href="structTableau.html">Tableau</a></td></tr>
+<tr class="separator:a94885de0f40687cc6f912ac3ae625c14"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af57e520fbce12f7a2a63ada36e56b999"><td class="memItemLeft" align="right" valign="top"><a id="af57e520fbce12f7a2a63ada36e56b999"></a>
+static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>create</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, unsigned numCon, unsigned numVar, unsigned conCap, unsigned varCap) -&gt; <a class="el" href="structTableau.html">Tableau</a></td></tr>
+<tr class="separator:af57e520fbce12f7a2a63ada36e56b999"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>

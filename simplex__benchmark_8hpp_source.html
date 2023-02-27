@@ -991,11 +991,11 @@ $(function() {
 <div class="line"><a name="l00920"></a><span class="lineno">  920</span>&#160;    <span class="stringliteral">&quot;0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -1]&quot;</span>_mat};</div>
 <div class="line"><a name="l00921"></a><span class="lineno">  921</span>&#160; </div>
 <div class="line"><a name="l00922"></a><span class="lineno">  922</span>&#160;  tableau(_(0, 2), _) &lt;&lt; -5859553999884210514;</div>
-<div class="line"><a name="l00923"></a><span class="lineno">  923</span>&#160;  <a class="code" href="structSimplex.html">Simplex</a> simpBackup{tableau};</div>
+<div class="line"><a name="l00923"></a><span class="lineno">  923</span>&#160;  Simplex simpBackup{tableau};</div>
 <div class="line"><a name="l00924"></a><span class="lineno">  924</span>&#160;  <span class="keywordtype">bool</span> fail = simpBackup.initiateFeasible();</div>
 <div class="line"><a name="l00925"></a><span class="lineno">  925</span>&#160;  assert(!fail);</div>
 <div class="line"><a name="l00926"></a><span class="lineno">  926</span>&#160;  <span class="keywordflow">if</span> (!fail) {</div>
-<div class="line"><a name="l00927"></a><span class="lineno">  927</span>&#160;    <a class="code" href="structSimplex.html">Simplex</a> simp{simpBackup.getNumConstraints(), simpBackup.getNumVar(), 0};</div>
+<div class="line"><a name="l00927"></a><span class="lineno">  927</span>&#160;    Simplex simp{simpBackup.getNumConstraints(), simpBackup.getNumVar(), 0};</div>
 <div class="line"><a name="l00928"></a><span class="lineno">  928</span>&#160;    Vector&lt;Rational&gt; sol(37);</div>
 <div class="line"><a name="l00929"></a><span class="lineno">  929</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">auto</span> b : state) {</div>
 <div class="line"><a name="l00930"></a><span class="lineno">  930</span>&#160;      simp = simpBackup;</div>
@@ -1201,11 +1201,11 @@ $(function() {
 <div class="line"><a name="l01130"></a><span class="lineno"> 1130</span>&#160;    <span class="stringliteral">&quot;0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 &quot;</span></div>
 <div class="line"><a name="l01131"></a><span class="lineno"> 1131</span>&#160;    <span class="stringliteral">&quot;0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 &quot;</span></div>
 <div class="line"><a name="l01132"></a><span class="lineno"> 1132</span>&#160;    <span class="stringliteral">&quot;-1]&quot;</span>_mat};</div>
-<div class="line"><a name="l01133"></a><span class="lineno"> 1133</span>&#160;  <a class="code" href="structSimplex.html">Simplex</a> simpBackup{tableau};</div>
+<div class="line"><a name="l01133"></a><span class="lineno"> 1133</span>&#160;  Simplex simpBackup{tableau};</div>
 <div class="line"><a name="l01134"></a><span class="lineno"> 1134</span>&#160;  <span class="keywordtype">bool</span> fail = simpBackup.initiateFeasible();</div>
 <div class="line"><a name="l01135"></a><span class="lineno"> 1135</span>&#160;  assert(!fail);</div>
 <div class="line"><a name="l01136"></a><span class="lineno"> 1136</span>&#160;  <span class="keywordflow">if</span> (!fail) {</div>
-<div class="line"><a name="l01137"></a><span class="lineno"> 1137</span>&#160;    <a class="code" href="structSimplex.html">Simplex</a> simp{simpBackup.getNumConstraints(), simpBackup.getNumVar(), 0};</div>
+<div class="line"><a name="l01137"></a><span class="lineno"> 1137</span>&#160;    Simplex simp{simpBackup.getNumConstraints(), simpBackup.getNumVar(), 0};</div>
 <div class="line"><a name="l01138"></a><span class="lineno"> 1138</span>&#160;    Vector&lt;Rational&gt; sol(15);</div>
 <div class="line"><a name="l01139"></a><span class="lineno"> 1139</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">auto</span> b : state) {</div>
 <div class="line"><a name="l01140"></a><span class="lineno"> 1140</span>&#160;      simp = simpBackup;</div>
@@ -1215,7 +1215,6 @@ $(function() {
 <div class="line"><a name="l01144"></a><span class="lineno"> 1144</span>&#160;}</div>
 <div class="line"><a name="l01145"></a><span class="lineno"> 1145</span>&#160;BENCHMARK(BM_Simplex1);</div>
 <div class="ttc" id="astructLinearAlgebra_1_1ManagedArray_html"><div class="ttname"><a href="structLinearAlgebra_1_1ManagedArray.html">LinearAlgebra::ManagedArray</a></div><div class="ttdef"><b>Definition:</b> Array.hpp:991</div></div>
-<div class="ttc" id="astructSimplex_html"><div class="ttname"><a href="structSimplex.html">Simplex</a></div><div class="ttdef"><b>Definition:</b> Simplex.hpp:440</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
