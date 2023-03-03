@@ -163,59 +163,56 @@ $(function() {
 <div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;  constexpr <span class="keyword">auto</span> get(<a class="code" href="structLinearAlgebra_1_1AxisInt.html">Row</a> i, <a class="code" href="structLinearAlgebra_1_1AxisInt.html">Col</a> j) <span class="keyword">const</span> -&gt; T {</div>
 <div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;    assert(j &lt; col);</div>
 <div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;    uint32_t r(rows[<span class="keywordtype">size_t</span>(i)]);</div>
-<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;    uint32_t jshift = uint32_t(1) &lt;&lt; size_t(j);</div>
-<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;    <span class="keywordflow">if</span> (r &amp; (jshift)) {</div>
-<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;      <span class="comment">// offset from previous rows</span></div>
-<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;      uint32_t prevRowOffset = r &gt;&gt; maxElemPerRow;</div>
-<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;      uint32_t rowOffset = std::popcount(r &amp; (jshift - 1));</div>
-<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;      <span class="keywordflow">return</span> nonZeros[rowOffset + prevRowOffset];</div>
-<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;    } <span class="keywordflow">else</span> {</div>
-<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;      <span class="keywordflow">return</span> 0;</div>
-<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;    }</div>
+<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;    uint32_t jshift = uint32_t(1) &lt;&lt; uint32_t(j);</div>
+<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;    <span class="keywordflow">if</span> (!(r &amp; jshift)) <span class="keywordflow">return</span> T{};</div>
+<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;    <span class="comment">// offset from previous rows</span></div>
+<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;    uint32_t prevRowOffset = r &gt;&gt; maxElemPerRow;</div>
+<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;    uint32_t rowOffset = std::popcount(r &amp; (jshift - 1));</div>
+<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;    <span class="keywordflow">return</span> nonZeros[rowOffset + prevRowOffset];</div>
+<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;  }</div>
+<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;  constexpr <span class="keyword">auto</span> operator()(<span class="keywordtype">size_t</span> i, <span class="keywordtype">size_t</span> j) <span class="keyword">const</span> -&gt; T {</div>
+<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;    <span class="keywordflow">return</span> get(<a class="code" href="structLinearAlgebra_1_1AxisInt.html">Row</a>{i}, <a class="code" href="structLinearAlgebra_1_1AxisInt.html">Col</a>{j});</div>
 <div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;  }</div>
-<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;  constexpr <span class="keyword">auto</span> operator()(<span class="keywordtype">size_t</span> i, <span class="keywordtype">size_t</span> j) <span class="keyword">const</span> -&gt; T {</div>
-<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;    <span class="keywordflow">return</span> get(<a class="code" href="structLinearAlgebra_1_1AxisInt.html">Row</a>{i}, <a class="code" href="structLinearAlgebra_1_1AxisInt.html">Col</a>{j});</div>
-<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;  }</div>
-<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;  constexpr <span class="keywordtype">void</span> insert(T x, <a class="code" href="structLinearAlgebra_1_1AxisInt.html">Row</a> i, <a class="code" href="structLinearAlgebra_1_1AxisInt.html">Col</a> j) {</div>
-<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;    assert(j &lt; col);</div>
-<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;    llvm::errs() &lt;&lt; <span class="stringliteral">&quot;inserting &quot;</span> &lt;&lt; x &lt;&lt; <span class="stringliteral">&quot; at &quot;</span> &lt;&lt; size_t(i) &lt;&lt; <span class="stringliteral">&quot;, &quot;</span></div>
-<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;                 &lt;&lt; size_t(j) &lt;&lt; <span class="stringliteral">&quot;; rows.size() = &quot;</span> &lt;&lt; rows.size() &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
-<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;    uint32_t r{rows[size_t(i)]};</div>
-<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;    uint32_t jshift = uint32_t(1) &lt;&lt; size_t(j);</div>
-<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;    <span class="comment">// offset from previous rows</span></div>
-<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;    uint32_t prevRowOffset = r &gt;&gt; maxElemPerRow;</div>
-<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;    uint32_t rowOffset = std::popcount(r &amp; (jshift - 1));</div>
-<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;    <span class="keywordtype">size_t</span> k = rowOffset + prevRowOffset;</div>
-<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;    <span class="keywordflow">if</span> (r &amp; jshift) {</div>
-<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;      nonZeros[k] = std::move(x);</div>
-<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;    } <span class="keywordflow">else</span> {</div>
-<div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;      nonZeros.insert(nonZeros.begin() + k, std::move(x));</div>
-<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;      rows[size_t(i)] = r | jshift;</div>
-<div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> l = <span class="keywordtype">size_t</span>(i) + 1; l &lt; rows.size(); ++l)</div>
-<div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;        rows[l] += uint32_t(1) &lt;&lt; maxElemPerRow;</div>
-<div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160;    }</div>
-<div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;  }</div>
-<div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160; </div>
-<div class="line"><a name="l00128"></a><span class="lineno"><a class="line" href="structLinearAlgebra_1_1SmallSparseMatrix_1_1Reference.html">  128</a></span>&#160;  <span class="keyword">struct </span><a class="code" href="structLinearAlgebra_1_1SmallSparseMatrix_1_1Reference.html">Reference</a> {</div>
-<div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160;    [[no_unique_address]] <a class="code" href="structLinearAlgebra_1_1SmallSparseMatrix.html">SmallSparseMatrix&lt;T&gt;</a> *A;</div>
-<div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160;    [[no_unique_address]] <span class="keywordtype">size_t</span> i, j;</div>
-<div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160;    constexpr <span class="keyword">operator</span> T()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> A-&gt;get(<a class="code" href="structLinearAlgebra_1_1AxisInt.html">Row</a>{i}, <a class="code" href="structLinearAlgebra_1_1AxisInt.html">Col</a>{j}); }</div>
-<div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160;    constexpr <span class="keywordtype">void</span> operator=(T x) {</div>
-<div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;      A-&gt;insert(std::move(x), <a class="code" href="structLinearAlgebra_1_1AxisInt.html">Row</a>{i}, <a class="code" href="structLinearAlgebra_1_1AxisInt.html">Col</a>{j});</div>
-<div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;      <span class="keywordflow">return</span>;</div>
-<div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;    }</div>
-<div class="line"><a name="l00136"></a><span class="lineno">  136</span>&#160;  };</div>
-<div class="line"><a name="l00137"></a><span class="lineno">  137</span>&#160;  constexpr <span class="keyword">auto</span> operator()(<span class="keywordtype">size_t</span> i, <span class="keywordtype">size_t</span> j) -&gt; <a class="code" href="structLinearAlgebra_1_1SmallSparseMatrix_1_1Reference.html">Reference</a> {</div>
-<div class="line"><a name="l00138"></a><span class="lineno">  138</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="structLinearAlgebra_1_1SmallSparseMatrix_1_1Reference.html">Reference</a>{<span class="keyword">this</span>, i, j};</div>
-<div class="line"><a name="l00139"></a><span class="lineno">  139</span>&#160;  }</div>
-<div class="line"><a name="l00140"></a><span class="lineno">  140</span>&#160;};</div>
-<div class="line"><a name="l00141"></a><span class="lineno">  141</span>&#160; </div>
-<div class="line"><a name="l00142"></a><span class="lineno">  142</span>&#160;} <span class="comment">// namespace LinearAlgebra</span></div>
+<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;  constexpr <span class="keywordtype">void</span> insert(T x, <a class="code" href="structLinearAlgebra_1_1AxisInt.html">Row</a> i, <a class="code" href="structLinearAlgebra_1_1AxisInt.html">Col</a> j) {</div>
+<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;    assert(j &lt; col);</div>
+<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;    llvm::errs() &lt;&lt; <span class="stringliteral">&quot;inserting &quot;</span> &lt;&lt; x &lt;&lt; <span class="stringliteral">&quot; at &quot;</span> &lt;&lt; size_t(i) &lt;&lt; <span class="stringliteral">&quot;, &quot;</span></div>
+<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;                 &lt;&lt; size_t(j) &lt;&lt; <span class="stringliteral">&quot;; rows.size() = &quot;</span> &lt;&lt; rows.size() &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
+<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;    uint32_t r{rows[size_t(i)]};</div>
+<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;    uint32_t jshift = uint32_t(1) &lt;&lt; size_t(j);</div>
+<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;    <span class="comment">// offset from previous rows</span></div>
+<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;    uint32_t prevRowOffset = r &gt;&gt; maxElemPerRow;</div>
+<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;    uint32_t rowOffset = std::popcount(r &amp; (jshift - 1));</div>
+<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;    <span class="keywordtype">size_t</span> k = rowOffset + prevRowOffset;</div>
+<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;    <span class="keywordflow">if</span> (r &amp; jshift) {</div>
+<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;      nonZeros[k] = std::move(x);</div>
+<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;    } <span class="keywordflow">else</span> {</div>
+<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;      nonZeros.insert(nonZeros.begin() + k, std::move(x));</div>
+<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;      rows[size_t(i)] = r | jshift;</div>
+<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> l = <span class="keywordtype">size_t</span>(i) + 1; l &lt; rows.size(); ++l)</div>
+<div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;        rows[l] += uint32_t(1) &lt;&lt; maxElemPerRow;</div>
+<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;    }</div>
+<div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;  }</div>
+<div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160; </div>
+<div class="line"><a name="l00125"></a><span class="lineno"><a class="line" href="structLinearAlgebra_1_1SmallSparseMatrix_1_1Reference.html">  125</a></span>&#160;  <span class="keyword">struct </span><a class="code" href="structLinearAlgebra_1_1SmallSparseMatrix_1_1Reference.html">Reference</a> {</div>
+<div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;    [[no_unique_address]] <a class="code" href="structLinearAlgebra_1_1SmallSparseMatrix.html">SmallSparseMatrix&lt;T&gt;</a> *A;</div>
+<div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;    [[no_unique_address]] <span class="keywordtype">size_t</span> i, j;</div>
+<div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160;    constexpr <span class="keyword">operator</span> T()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> A-&gt;get(<a class="code" href="structLinearAlgebra_1_1AxisInt.html">Row</a>{i}, <a class="code" href="structLinearAlgebra_1_1AxisInt.html">Col</a>{j}); }</div>
+<div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160;    constexpr <span class="keywordtype">void</span> operator=(T x) {</div>
+<div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160;      A-&gt;insert(std::move(x), <a class="code" href="structLinearAlgebra_1_1AxisInt.html">Row</a>{i}, <a class="code" href="structLinearAlgebra_1_1AxisInt.html">Col</a>{j});</div>
+<div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160;      <span class="keywordflow">return</span>;</div>
+<div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160;    }</div>
+<div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;  };</div>
+<div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;  constexpr <span class="keyword">auto</span> operator()(<span class="keywordtype">size_t</span> i, <span class="keywordtype">size_t</span> j) -&gt; <a class="code" href="structLinearAlgebra_1_1SmallSparseMatrix_1_1Reference.html">Reference</a> {</div>
+<div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="structLinearAlgebra_1_1SmallSparseMatrix_1_1Reference.html">Reference</a>{<span class="keyword">this</span>, i, j};</div>
+<div class="line"><a name="l00136"></a><span class="lineno">  136</span>&#160;  }</div>
+<div class="line"><a name="l00137"></a><span class="lineno">  137</span>&#160;};</div>
+<div class="line"><a name="l00138"></a><span class="lineno">  138</span>&#160; </div>
+<div class="line"><a name="l00139"></a><span class="lineno">  139</span>&#160;} <span class="comment">// namespace LinearAlgebra</span></div>
 <div class="ttc" id="anamespaceLinearAlgebra_html"><div class="ttname"><a href="namespaceLinearAlgebra.html">LinearAlgebra</a></div><div class="ttdef"><b>Definition:</b> Array.hpp:20</div></div>
 <div class="ttc" id="astructLinearAlgebra_1_1AxisInt_html"><div class="ttname"><a href="structLinearAlgebra_1_1AxisInt.html">LinearAlgebra::AxisInt</a></div><div class="ttdef"><b>Definition:</b> AxisTypes.hpp:46</div></div>
 <div class="ttc" id="astructLinearAlgebra_1_1CartesianIndex_html"><div class="ttname"><a href="structLinearAlgebra_1_1CartesianIndex.html">LinearAlgebra::CartesianIndex</a></div><div class="ttdef"><b>Definition:</b> MatrixDimensions.hpp:9</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1DenseDims_html"><div class="ttname"><a href="structLinearAlgebra_1_1DenseDims.html">LinearAlgebra::DenseDims</a></div><div class="ttdef"><b>Definition:</b> MatrixDimensions.hpp:85</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1SmallSparseMatrix_1_1Reference_html"><div class="ttname"><a href="structLinearAlgebra_1_1SmallSparseMatrix_1_1Reference.html">LinearAlgebra::SmallSparseMatrix::Reference</a></div><div class="ttdef"><b>Definition:</b> Matrix.hpp:128</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1DenseDims_html"><div class="ttname"><a href="structLinearAlgebra_1_1DenseDims.html">LinearAlgebra::DenseDims</a></div><div class="ttdoc">Dimensions with a capacity.</div><div class="ttdef"><b>Definition:</b> MatrixDimensions.hpp:89</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1SmallSparseMatrix_1_1Reference_html"><div class="ttname"><a href="structLinearAlgebra_1_1SmallSparseMatrix_1_1Reference.html">LinearAlgebra::SmallSparseMatrix::Reference</a></div><div class="ttdef"><b>Definition:</b> Matrix.hpp:125</div></div>
 <div class="ttc" id="astructLinearAlgebra_1_1SmallSparseMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1SmallSparseMatrix.html">LinearAlgebra::SmallSparseMatrix</a></div><div class="ttdef"><b>Definition:</b> Matrix.hpp:69</div></div>
 <div class="ttc" id="astructLinearAlgebra_1_1Transpose_html"><div class="ttname"><a href="structLinearAlgebra_1_1Transpose.html">LinearAlgebra::Transpose</a></div><div class="ttdef"><b>Definition:</b> Matrix.hpp:44</div></div>
 </div><!-- fragment --></div><!-- contents -->

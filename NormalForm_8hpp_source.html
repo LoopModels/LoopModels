@@ -443,8 +443,8 @@ $(function() {
 <div class="line"><a name="l00375"></a><span class="lineno">  375</span>&#160;  <span class="keywordflow">return</span> std::make_pair(std::move(A), std::move(U));</div>
 <div class="line"><a name="l00376"></a><span class="lineno">  376</span>&#160;}</div>
 <div class="line"><a name="l00377"></a><span class="lineno">  377</span>&#160; </div>
-<div class="line"><a name="l00379"></a><span class="lineno">  379</span>&#160;constexpr <span class="keyword">auto</span> zeroWithRowOperation(MutPtrMatrix&lt;int64_t&gt; A, Row i, Row j,</div>
-<div class="line"><a name="l00380"></a><span class="lineno">  380</span>&#160;                                    Col k, int64_t f) -&gt; int64_t {</div>
+<div class="line"><a name="l00379"></a><span class="lineno">  379</span>&#160;constexpr <span class="keyword">auto</span> zeroWithRowOp(MutPtrMatrix&lt;int64_t&gt; A, Row i, Row j, Col k,</div>
+<div class="line"><a name="l00380"></a><span class="lineno">  380</span>&#160;                             int64_t f) -&gt; int64_t {</div>
 <div class="line"><a name="l00381"></a><span class="lineno">  381</span>&#160;  <span class="keywordflow">if</span> (int64_t Aik = A(i, k)) {</div>
 <div class="line"><a name="l00382"></a><span class="lineno">  382</span>&#160;    int64_t Ajk = A(j, k);</div>
 <div class="line"><a name="l00383"></a><span class="lineno">  383</span>&#160;    int64_t g = gcd(Aik, Ajk);</div>
@@ -658,7 +658,7 @@ $(function() {
 <div class="line"><a name="l00609"></a><span class="lineno">  609</span>&#160; </div>
 <div class="line"><a name="l00610"></a><span class="lineno">  610</span>&#160;} <span class="comment">// namespace NormalForm</span></div>
 <div class="ttc" id="astructLinearAlgebra_1_1EmptyMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1EmptyMatrix.html">LinearAlgebra::EmptyMatrix</a></div><div class="ttdef"><b>Definition:</b> EmptyArrays.hpp:9</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1SquareDims_html"><div class="ttname"><a href="structLinearAlgebra_1_1SquareDims.html">LinearAlgebra::SquareDims</a></div><div class="ttdef"><b>Definition:</b> MatrixDimensions.hpp:128</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1SquareDims_html"><div class="ttname"><a href="structLinearAlgebra_1_1SquareDims.html">LinearAlgebra::SquareDims</a></div><div class="ttdef"><b>Definition:</b> MatrixDimensions.hpp:132</div></div>
 <div class="ttc" id="astructOptional_html"><div class="ttname"><a href="structOptional.html">Optional</a></div><div class="ttdef"><b>Definition:</b> Optional.hpp:9</div></div>
 <div class="ttc" id="astructRange_html"><div class="ttname"><a href="structRange.html">Range</a></div><div class="ttdef"><b>Definition:</b> Iterators.hpp:4</div></div>
 </div><!-- fragment --></div><!-- contents -->
