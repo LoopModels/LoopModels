@@ -92,15 +92,12 @@ template <typename T> struct SmallSparseMatrix {
   constexpr auto get(Row i, Col j) const -> T {
     assert(j < col);
     uint32_t r(rows[size_t(i)]);
-    uint32_t jshift = uint32_t(1) << size_t(j);
-    if (r & (jshift)) {
-      // offset from previous rows
-      uint32_t prevRowOffset = r >> maxElemPerRow;
-      uint32_t rowOffset = std::popcount(r & (jshift - 1));
-      return nonZeros[rowOffset + prevRowOffset];
-    } else {
-      return 0;
-    }
+    uint32_t jshift = uint32_t(1) << uint32_t(j);
+    if (!(r & jshift)) return T{};
+    // offset from previous rows
+    uint32_t prevRowOffset = r >> maxElemPerRow;
+    uint32_t rowOffset = std::popcount(r & (jshift - 1));
+    return nonZeros[rowOffset + prevRowOffset];
   }
   constexpr auto operator()(size_t i, size_t j) const -> T {
     return get(Row{i}, Col{j});

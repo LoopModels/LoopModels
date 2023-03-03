@@ -57,16 +57,17 @@ template <class T, class S> struct Array {
   constexpr Array(Array<T, V> a) : ptr(a.wrappedPtr()), sz(a.dim()) {}
   [[nodiscard, gnu::returns_nonnull]] constexpr auto data() const noexcept
     -> const T * {
-    return this->ptr;
+    invariant(ptr != nullptr);
+    return ptr;
   }
   [[nodiscard]] constexpr auto wrappedPtr() noexcept -> NotNull<T> {
-    return this->ptr;
+    return ptr;
   }
 
   [[nodiscard]] constexpr auto begin() const noexcept {
     if constexpr (std::is_same_v<S, StridedRange>)
-      return StridedIterator{(const T *)ptr, sz.stride};
-    else return (const T *)ptr;
+      return StridedIterator{data(), sz.stride};
+    else return data();
   }
   [[nodiscard]] constexpr auto end() const noexcept {
     return begin() + size_t(sz);
@@ -86,6 +87,7 @@ template <class T, class S> struct Array {
   constexpr auto operator[](Index<S> auto i) const noexcept {
     auto offset = calcOffset(sz, i);
     auto newDim = calcNewDim(sz, i);
+    invariant(ptr != nullptr);
     if constexpr (std::is_same_v<decltype(newDim), Empty>) return ptr[offset];
     else return Array<T, decltype(newDim)>{ptr + offset, newDim};
   }
@@ -103,10 +105,12 @@ template <class T, class S> struct Array {
 
   [[nodiscard]] constexpr auto diag() const noexcept {
     StridedRange r{minRowCol(), unsigned(RowStride{sz}) + 1};
+    invariant(ptr != nullptr);
     return Array<T, StridedRange>{ptr, r};
   }
   [[nodiscard]] constexpr auto antiDiag() const noexcept {
     StridedRange r{minRowCol(), unsigned(RowStride{sz}) - 1};
+    invariant(ptr != nullptr);
     return Array<T, StridedRange>{ptr + size_t(Col{sz}) - 1, r};
   }
   [[nodiscard]] constexpr auto isSquare() const noexcept -> bool {
@@ -151,7 +155,8 @@ template <class T, class S> struct Array {
     return true;
   }
   [[nodiscard]] constexpr auto view() const noexcept -> Array<T, S> {
-    return Array<T, S>{this->ptr, this->sz};
+    invariant(ptr != nullptr);
+    return Array<T, S>{ptr, this->sz};
   }
 #ifndef NDEBUG
   constexpr void extendOrAssertSize(Row MM, Col NN) const {
@@ -188,7 +193,7 @@ template <class T, class S> struct Array {
   // }
 
 protected:
-  [[no_unique_address]] NotNull<T> ptr;
+  [[no_unique_address]] T *ptr;
   [[no_unique_address]] S sz{};
 };
 
@@ -227,8 +232,7 @@ template <class T, class S> struct MutArray : Array<T, S> {
       unsigned rowsToCopy = newM;
       if (rowsToCopy && (--rowsToCopy) && (copyCols)) {
         // truncation, we need to copy rows to increase stride
-        T *src = this->ptr;
-        T *dst = this->ptr;
+        T *src = data(), *dst = src;
         do {
           src += oldX;
           dst += newX;
@@ -274,14 +278,17 @@ template <class T, class S> struct MutArray : Array<T, S> {
   template <std::convertible_to<T> U, std::convertible_to<S> V>
   constexpr MutArray(Array<U, V> a) : Array<T, S>(a) {}
   [[nodiscard, gnu::returns_nonnull]] constexpr auto data() noexcept -> T * {
+    invariant(this->ptr != nullptr);
     return this->ptr;
   }
   [[nodiscard]] constexpr auto wrappedPtr() noexcept -> NotNull<T> {
     return this->ptr;
   }
 
-  [[nodiscard]] constexpr auto begin() noexcept -> T * { return this->ptr; }
-  [[nodiscard]] constexpr auto end() noexcept -> T * {
+  [[nodiscard, gnu::returns_nonnull]] constexpr auto begin() noexcept -> T * {
+    return this->ptr;
+  }
+  [[nodiscard, gnu::returns_nonnull]] constexpr auto end() noexcept -> T * {
     return this->ptr + size_t(this->sz);
   }
   [[nodiscard]] constexpr auto rbegin() noexcept {

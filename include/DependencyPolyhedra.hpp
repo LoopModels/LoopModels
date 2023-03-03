@@ -266,8 +266,8 @@ struct DependencePolyhedra
     MutPtrMatrix<int64_t> fC{fw.getConstraints()(_, _(1, end))};
     fC(_, 0) = 0;
     fC(0, 0) = 1; // lambda_0
-    fC(_, _(1, 1 + numInequalityConstraintsOld)) =
-      A(_, _(begin, numConstraintsNew)).transpose();
+    fC(_, _(1, 1 + numInequalityConstraintsOld))
+      << A(_, _(begin, numConstraintsNew)).transpose();
     // fC(_, _(ineqEnd, posEqEnd)) = E.transpose();
     // fC(_, _(posEqEnd, numVarNew)) = -E.transpose();
     // loading from `E` is expensive
@@ -313,7 +313,7 @@ struct DependencePolyhedra
     bw.resize(numConstraintsNew, numVarNew + 1);
     MutPtrMatrix<int64_t> bC{bw.getConstraints()(_, _(1, end))};
 
-    bC(_, _(begin, numVarNew)) = PtrMatrix<int64_t>(fC(_, _(begin, numVarNew)));
+    bC(_, _(begin, numVarNew)) << fC(_, _(begin, numVarNew));
     // for (size_t i = 0; i < numConstraintsNew; ++i)
     //     for (size_t j = 0; j < numVarNew; ++j)
     //         bC(i, j) = fC(i, j);

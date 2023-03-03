@@ -82,6 +82,10 @@ struct StridedDims {
     return {M, unsigned(c), strideM};
   }
 };
+/// Dimensions with a capacity
+// struct CapDims : StridedDims {
+//   unsigned int rowCapacity;
+// };
 struct DenseDims {
   unsigned int M{};
   unsigned int N{};
@@ -158,6 +162,11 @@ struct SquareDims {
     return {M, unsigned(c)};
   }
 };
+// [[nodiscard]] constexpr auto capacity(std::integral auto c) { return c; }
+// [[nodiscard]] constexpr auto capacity(auto c) -> unsigned int { return c; }
+// [[nodiscard]] constexpr auto capacity(CapDims c) -> unsigned int {
+//   return c.rowCapacity * c.strideM;
+// }
 
 constexpr auto StridedDims::operator=(const DenseDims &D) -> StridedDims & {
   M = D.M;
