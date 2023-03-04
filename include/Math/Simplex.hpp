@@ -18,14 +18,16 @@
 
 // #define VERBOSESIMPLEX
 
-// We need a core Simplex type that is unmanaged
-// then for convenience, it would be nice to manage it.
-// Ideally, we could have a type hierarchy of
-// unmanaged -> managed
-// with some API to make the managed generic.
-// We also want the managed to be automatically demotable to unmanaged,
-// to avoid unnecessary specialization.
-
+/// Tableau for the Simplex algorithm.
+/// We need a core Simplex type that is unmanaged
+/// then for convenience, it would be nice to manage it.
+/// Ideally, we could have a type hierarchy of
+/// unmanaged -> managed
+/// with some API to make the managed generic.
+/// We also want the managed to be automatically demotable to unmanaged,
+/// to avoid unnecessary specialization.
+///
+/// Slack variables are sorted first.
 struct Tableau {
   int64_t *ptr{nullptr};
   // DenseDims dims;
@@ -373,37 +375,32 @@ struct Simplex {
   }
 
   // 1 based to match getBasicConstraints
-  [[nodiscard]] static auto getEnteringVariable(PtrVector<int64_t> costs)
-    -> Optional<unsigned int> {
+  [[nodiscard]] static constexpr auto
+  getEnteringVariable(PtrVector<int64_t> costs) -> Optional<unsigned int> {
     // Bland's algorithm; guaranteed to terminate
-    auto f = costs.begin();
-    auto l = costs.end();
-    auto neg = std::find_if(f + 1, l, [](int64_t c) { return c < 0; });
+    auto f = costs.begin(), l = costs.end();
+    auto neg = std::find_if(f, l, [](int64_t c) { return c < 0; });
     if (neg == l) return {};
     return unsigned(std::distance(f, neg));
   }
-  [[nodiscard]] static auto getLeavingVariable(MutPtrMatrix<int64_t> C,
-                                               size_t enteringVariable)
+  [[nodiscard]] static constexpr auto
+  getLeavingVariable(PtrMatrix<int64_t> C, size_t enteringVariable)
     -> Optional<unsigned int> {
     // inits guarantee first valid is selected
-    // we need
-    int64_t n = -1;
-    int64_t d = 0;
+    int64_t n = -1, d = 0;
     unsigned int j = 0;
     for (size_t i = 1; i < C.numRow(); ++i) {
-      int64_t Civ = C(i, enteringVariable);
-      if (Civ > 0) {
-        int64_t Ci0 = C(i, 0);
-        if (Ci0 == 0) return --i;
-        assert(Ci0 > 0);
-        if ((n * Ci0) < (Civ * d)) {
-          n = Civ;
-          d = Ci0;
-          j = i;
-        }
-      }
+      int64_t Civ = C(i, enteringVariable + 1);
+      if (Civ <= 0) continue;
+      int64_t Ci0 = C(i, 0);
+      if (Ci0 == 0) return --i;
+      assert(Ci0 > 0);
+      if ((n * Ci0) >= (Civ * d)) continue;
+      n = Civ;
+      d = Ci0;
+      j = i;
     }
-    // note, if we fail to find a leaving variable, then `j = 0`,
+    // NOTE: if we fail to find a leaving variable, then `j = 0`,
     // and it will unsigned wrap to `size_t(-1)`, which indicates
     // an empty `Optional<unsigned int>`
     return --j;
@@ -440,7 +437,8 @@ struct Simplex {
     auto C{tableau.getTableau()};
     while (true) {
       // entering variable is the column
-      Optional<unsigned int> enteringVariable = getEnteringVariable(C(0, _));
+      Optional<unsigned int> enteringVariable =
+        getEnteringVariable(C(0, _(1, end)));
       if (!enteringVariable) return Rational::create(C(0, 0), f);
       f = makeBasic(C, f, *enteringVariable);
       if (f == 0) return std::numeric_limits<int64_t>::max(); // unbounded
@@ -475,13 +473,13 @@ struct Simplex {
         getEnteringVariable(C(0, _(v + 1, end)));
       if (!enteringVariable) break;
       auto ev = *enteringVariable + v;
-      auto leaveOpt = getLeavingVariable(C, ev + 1);
+      auto leaveOpt = getLeavingVariable(C, ev);
       if (!leaveOpt) break;
-      unsigned int _leavingVariable = *leaveOpt;
-      unsigned int leavingVariable = _leavingVariable++;
+      unsigned int _lVar = *leaveOpt;
+      unsigned int leavingVariable = _lVar++;
       for (size_t i = 0; i < C.numRow(); ++i)
-        if (i != size_t(_leavingVariable))
-          NormalForm::zeroWithRowOp(C, i, _leavingVariable, ev, 0);
+        if (i != size_t(_lVar))
+          NormalForm::zeroWithRowOp(C, i, _lVar, ev + 1, 0);
       // update baisc vars and constraints
       int64_t oldBasicVar = basicVars[leavingVariable];
       basicVars[leavingVariable] = ev;
@@ -491,13 +489,12 @@ struct Simplex {
     }
   }
   // Assumes all <v have already been lex-minimized
-  // v starts at 1
+  // v starts at 0
   // returns `false` if `0`, `true` if not zero
   // minimize v, not touching any variable lex < v
   auto lexMinimize(size_t v) -> bool {
 #ifndef NDEBUG
     assert(tableau.inCanonicalForm);
-    assert(v >= 1);
 #endif
     MutPtrMatrix<int64_t> C{tableau.getTableau()};
     MutPtrVector<int64_t> basicConstraints{tableau.getBasicConstraints()};
@@ -507,37 +504,47 @@ struct Simplex {
     // implicitly, set cost to -1, and then see if we can make it
     // basic
     C(0, 0) = -C(++c, 0);
-    C(0, _(1, v + 1)) << 0;
-    C(0, _(v + 1, end)) << -C(c, _(v + 1, end));
-    assert((C(c, v) != 0) || (C(c, 0) == 0));
-    assert(allZero(C(_(1, c), v)));
-    assert(allZero(C(_(c + 1, end), v)));
+    //   we set  all prev and `v` to 0
+    C(0, _(1, v + 2)) << 0;
+    C(0, _(v + 2, end)) << -C(c, _(v + 2, end));
+    assert((C(c, v + 1) != 0) || (C(c, 0) == 0));
+    assert(allZero(C(_(1, c), v + 1)));
+    assert(allZero(C(_(c + 1, end), v + 1)));
     lexCoreOpt(v);
     return makeZeroBasic(v);
   }
+  /// makeZeroBasic(unsigned int v) -> bool
+  /// Tries to make `v` non-basic if `v` is zero.
+  /// Returns `false` if `v` is zero, `true` otherwise
   auto makeZeroBasic(unsigned int v) -> bool {
     MutPtrMatrix<int64_t> C{tableau.getTableau()};
     MutPtrVector<int64_t> basicVars{tableau.getBasicVariables()};
     MutPtrVector<int64_t> basicConstraints{tableau.getBasicConstraints()};
     int64_t c = basicConstraints[v];
     int64_t cc = c++;
-    if ((cc < 0) || (C(c, 0))) return cc >= 0;
-// search for entering variable
+    // was not basic
+    // not basic, v is  zero
+    if (cc < 0) return false;
+    // v is basic, but not zero
+    if (C(c, 0) != 0) return true;
 #ifndef NDEBUG
     tableau.assertCanonical();
 #endif
-    for (auto ev = ptrdiff_t(C.numCol()); ev > v + 1;) {
+    // so v is basic and zero.
+    // We're going to try to make it non-basic
+    for (auto ev = ptrdiff_t(C.numCol()); --ev > v + 1;) {
       // search for a non-basic variable (basicConstraints<0)
-      if ((basicConstraints[--ev] >= 0) || (C(c, ev) == 0)) continue;
+      auto evm1 = ev - 1;
+      if ((basicConstraints[evm1] >= 0) || (C(c, ev) == 0)) continue;
       if (C(c, ev) < 0) C(c, _) *= -1;
       for (size_t i = 1; i < C.numRow(); ++i)
         if (i != size_t(c)) NormalForm::zeroWithRowOp(C, i, c, ev, 0);
       int64_t oldBasicVar = basicVars[cc];
       assert(oldBasicVar == int64_t(v));
-      basicVars[cc] = ev;
+      basicVars[cc] = evm1;
       // if (size_t(oldBasicVar) < basicConstraints.size())
       basicConstraints[oldBasicVar] = -1;
-      basicConstraints[ev] = cc;
+      basicConstraints[evm1] = cc;
       break;
     }
 #ifndef NDEBUG
@@ -545,27 +552,6 @@ struct Simplex {
 #endif
     return false;
   }
-  // lex min the range [l, u), not touching any variable lex < l
-  void lexMinimize(size_t l, size_t u) {
-#ifndef NDEBUG
-    assert(tableau.inCanonicalForm);
-    assert(l >= 1);
-    assert(u > l);
-#endif
-    MutPtrMatrix<int64_t> C{tableau.getTableau()};
-    MutPtrVector<int64_t> basicConstraints{tableau.getBasicConstraints()};
-    C(0, _) << 0;
-    // for (size_t v = l; v < u; ++v)
-    //     C(0, v) = (u - l) + u - v;
-    C(0, _(l, u)) << 1;
-    for (size_t v = l; v < u; ++v) {
-      int64_t c = basicConstraints[v];
-      if (c >= 0) NormalForm::zeroWithRowOp(C, 0, ++c, v, 0);
-    }
-    lexCoreOpt(l - 1);
-    for (size_t v = l; v < u; ++v) makeZeroBasic(v);
-  }
-  void lexMinimize(Range<size_t, size_t> r) { lexMinimize(r.b, r.e); }
   // lexicographically minimize vars [0, numVars)
   // false means no problems, true means there was a problem
   void lexMinimize(Vector<Rational> &sol) {
@@ -573,7 +559,7 @@ struct Simplex {
     assert(tableau.inCanonicalForm);
     tableau.assertCanonical();
 #endif
-    for (size_t v = 0; v < sol.size();) lexMinimize(++v);
+    for (size_t v = 0; v < sol.size(); v++) lexMinimize(v);
     copySolution(sol);
 #ifndef NDEBUG
     tableau.assertCanonical();
@@ -582,10 +568,9 @@ struct Simplex {
   void copySolution(Vector<Rational> &sol) {
     MutPtrMatrix<int64_t> C{tableau.getConstraints()};
     MutPtrVector<int64_t> basicConstraints{tableau.getBasicConstraints()};
-    for (size_t v = 0; v < sol.size();) {
-      size_t sv = v++;
+    for (size_t v = 0; v < sol.size(); v++) {
       int64_t c = basicConstraints[v];
-      sol[sv] = c >= 0 ? Rational::create(C(c, 0), C(c, v)) : Rational{0, 1};
+      sol[v] = c >= 0 ? Rational::create(C(c, 0), C(c, v + 1)) : Rational{0, 1};
     }
   }
   // A(:,1:end)*x <= A(:,0)
@@ -658,7 +643,7 @@ struct Simplex {
       int64_t bumpedBound = ++constraints(c, 0);
       MutPtrVector<int64_t> cost = simplex.tableau.getCost();
       for (size_t v = numSlack; v < cost.size(); ++v)
-        cost[v] = -constraints(c, v);
+        cost[v] = -constraints(c, v + 1);
       if (simplex.run() != bumpedBound) tableau.deleteConstraint(c--);
     }
     alloc.checkPoint(p);
@@ -708,9 +693,8 @@ struct Simplex {
     // approach will be to move `x.size()` variables into the
     // equality constraints, and then check if the remaining sub-problem
     // is satisfiable.
-    const size_t numCon = tableau.getNumConstraints();
-    const size_t numVar = tableau.getNumVar();
-    const size_t numFix = x.size();
+    const size_t numCon = tableau.getNumConstraints(),
+                 numVar = tableau.getNumVar(), numFix = x.size();
     auto p = alloc.checkPoint();
     Simplex subSimp{Simplex::create(alloc, numCon, numVar - numFix, 0)};
     // subSimp.tableau(0, 0) = 0;
