@@ -102,15 +102,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>lexCoreOpt</b> (unsig
 <tr class="memitem:a3ddb7aff5a17a5dd91f7d7b54266bc38"><td class="memItemLeft" align="right" valign="top"><a id="a3ddb7aff5a17a5dd91f7d7b54266bc38"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>lexMinimize</b> (size_t v) -&gt; bool</td></tr>
 <tr class="separator:a3ddb7aff5a17a5dd91f7d7b54266bc38"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa75f6c2b4a8094b1d8adb72757565ea9"><td class="memItemLeft" align="right" valign="top"><a id="aa75f6c2b4a8094b1d8adb72757565ea9"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>makeZeroBasic</b> (unsigned int v) -&gt; bool</td></tr>
+<tr class="memitem:aa75f6c2b4a8094b1d8adb72757565ea9"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSimplex.html#aa75f6c2b4a8094b1d8adb72757565ea9">makeZeroBasic</a> (unsigned int v) -&gt; bool</td></tr>
 <tr class="separator:aa75f6c2b4a8094b1d8adb72757565ea9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad20f919ae21fe94eeb03831b879a2b2a"><td class="memItemLeft" align="right" valign="top"><a id="ad20f919ae21fe94eeb03831b879a2b2a"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>lexMinimize</b> (size_t l, size_t u)</td></tr>
-<tr class="separator:ad20f919ae21fe94eeb03831b879a2b2a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae2be6618f2b817f85efd82f2a8558ab6"><td class="memItemLeft" align="right" valign="top"><a id="ae2be6618f2b817f85efd82f2a8558ab6"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>lexMinimize</b> (<a class="el" href="structRange.html">Range</a>&lt; size_t, size_t &gt; r)</td></tr>
-<tr class="separator:ae2be6618f2b817f85efd82f2a8558ab6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afa014fa75347122689656789d867e993"><td class="memItemLeft" align="right" valign="top"><a id="afa014fa75347122689656789d867e993"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>lexMinimize</b> (Vector&lt; <a class="el" href="structRational.html">Rational</a> &gt; &amp;sol)</td></tr>
 <tr class="separator:afa014fa75347122689656789d867e993"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -150,12 +143,12 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
-<tr class="memitem:a106b65db2873fe11d397ccb1a945b5ce"><td class="memItemLeft" align="right" valign="top"><a id="a106b65db2873fe11d397ccb1a945b5ce"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>getEnteringVariable</b> (PtrVector&lt; int64_t &gt; costs) -&gt; <a class="el" href="structOptional.html">Optional</a>&lt; unsigned int &gt;</td></tr>
-<tr class="separator:a106b65db2873fe11d397ccb1a945b5ce"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a71b0263b8bd4df985285a727704c971b"><td class="memItemLeft" align="right" valign="top"><a id="a71b0263b8bd4df985285a727704c971b"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>getLeavingVariable</b> (MutPtrMatrix&lt; int64_t &gt; C, size_t enteringVariable) -&gt; <a class="el" href="structOptional.html">Optional</a>&lt; unsigned int &gt;</td></tr>
-<tr class="separator:a71b0263b8bd4df985285a727704c971b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af06c66e266b4635318286da5f112755b"><td class="memItemLeft" align="right" valign="top"><a id="af06c66e266b4635318286da5f112755b"></a>
+static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getEnteringVariable</b> (PtrVector&lt; int64_t &gt; costs) -&gt; <a class="el" href="structOptional.html">Optional</a>&lt; unsigned int &gt;</td></tr>
+<tr class="separator:af06c66e266b4635318286da5f112755b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae8513cfc3b86e85a0dc86342283f824d"><td class="memItemLeft" align="right" valign="top"><a id="ae8513cfc3b86e85a0dc86342283f824d"></a>
+static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getLeavingVariable</b> (PtrMatrix&lt; int64_t &gt; C, size_t enteringVariable) -&gt; <a class="el" href="structOptional.html">Optional</a>&lt; unsigned int &gt;</td></tr>
+<tr class="separator:ae8513cfc3b86e85a0dc86342283f824d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6f9b0c435b61b10ac7e0aefeab90655e"><td class="memItemLeft" align="right" valign="top"><a id="a6f9b0c435b61b10ac7e0aefeab90655e"></a>
 static auto&#160;</td><td class="memItemRight" valign="bottom"><b>positiveVariables</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, PtrMatrix&lt; int64_t &gt; A, PtrMatrix&lt; int64_t &gt; B) -&gt; std::optional&lt; <a class="el" href="structSimplex.html">Simplex</a> &gt;</td></tr>
 <tr class="separator:a6f9b0c435b61b10ac7e0aefeab90655e"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -205,6 +198,33 @@ unsigned&#160;</td><td class="memItemRight" valign="bottom"><b>numSlack</b></td>
 </table>
 </div><div class="memdoc">
 <p>simplex.initiateFeasible() -&gt; bool returns <code>true</code> if infeasible, <code>false</code> if feasible The approach is to first put the equalities into HNF then, all diagonal elements are basic variables. For each non-diagonal element, we need to add an augment variable Then we try to set all augment variables to 0. If we fail, it is infeasible. If we succeed, then the problem is feasible, and we're in canonical form. </p>
+
+</div>
+</div>
+<a id="aa75f6c2b4a8094b1d8adb72757565ea9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa75f6c2b4a8094b1d8adb72757565ea9">&#9670;&nbsp;</a></span>makeZeroBasic()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">auto Simplex::makeZeroBasic </td>
+          <td>(</td>
+          <td class="paramtype">unsigned int&#160;</td>
+          <td class="paramname"><em>v</em></td><td>)</td>
+          <td> -&gt; bool </td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p><a class="el" href="structSimplex.html#aa75f6c2b4a8094b1d8adb72757565ea9">makeZeroBasic(unsigned int v)</a> -&gt; bool Tries to make <code>v</code> non-basic if <code>v</code> is zero. Returns <code>false</code> if <code>v</code> is zero, <code>true</code> otherwise </p>
 
 </div>
 </div>

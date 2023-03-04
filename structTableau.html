@@ -70,6 +70,8 @@ $(function() {
 <div class="title">Tableau Struct Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
+
+<p><code>#include &lt;<a class="el" href="Simplex_8hpp_source.html">Simplex.hpp</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
@@ -199,7 +201,10 @@ unsigned&#160;</td><td class="memItemRight" valign="bottom"><b>varCapacity</b></
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>inCanonicalForm</b> {false}</td></tr>
 <tr class="separator:ad83cc8f986c29e4bec720b5f5f35b78f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<h2 class="groupheader">Member Function Documentation</h2>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<div class="textblock"><p><a class="el" href="structTableau.html">Tableau</a> for the <a class="el" href="structSimplex.html">Simplex</a> algorithm. We need a core <a class="el" href="structSimplex.html">Simplex</a> type that is unmanaged then for convenience, it would be nice to manage it. Ideally, we could have a type hierarchy of unmanaged -&gt; managed with some API to make the managed generic. We also want the managed to be automatically demotable to unmanaged, to avoid unnecessary specialization.</p>
+<p>Slack variables are sorted first. </p>
+</div><h2 class="groupheader">Member Function Documentation</h2>
 <a id="a2ba173815f058b2e8f5633b0f9c89019"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a2ba173815f058b2e8f5633b0f9c89019">&#9670;&nbsp;</a></span>getTableau()</h2>
 
