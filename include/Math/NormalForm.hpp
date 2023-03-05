@@ -375,29 +375,30 @@ constexpr void simplifySystem(MutPtrMatrix<int64_t> &A,
   return std::make_pair(std::move(A), std::move(U));
 }
 
-/// zero A(i,k) with A(j,k)
+/// use A(j,k) to zero A(i,k)
 constexpr auto zeroWithRowOp(MutPtrMatrix<int64_t> A, Row i, Row j, Col k,
                              int64_t f) -> int64_t {
-  if (int64_t Aik = A(i, k)) {
-    int64_t Ajk = A(j, k);
-    int64_t g = gcd(Aik, Ajk);
-    Aik /= g;
-    Ajk /= g;
-    int64_t ret = f * Ajk;
-    g = ret;
-    for (size_t l = 0; l < A.numCol(); ++l) {
-      int64_t Ail = Ajk * A(i, l) - Aik * A(j, l);
-      A(i, l) = Ail;
-      g = gcd(Ail, g);
-    }
-    if (g > 1) {
-      for (size_t l = 0; l < A.numCol(); ++l)
-        if (int64_t Ail = A(i, l)) A(i, l) = Ail / g;
-      ret /= g;
-    }
-    return ret;
+  int64_t Aik = A(i, k);
+  if (!Aik) return f;
+  int64_t Ajk = A(j, k);
+  assert(Ajk != 0);
+  int64_t g = gcd(Aik, Ajk);
+  Aik /= g;
+  Ajk /= g;
+  int64_t ret = f * Ajk;
+  g = ret;
+  for (size_t l = 0; l < A.numCol(); ++l) {
+    int64_t Ail = Ajk * A(i, l) - Aik * A(j, l);
+    A(i, l) = Ail;
+    g = gcd(Ail, g);
   }
-  return f;
+  if (g > 1) {
+    for (size_t l = 0; l < A.numCol(); ++l)
+      if (int64_t Ail = A(i, l)) A(i, l) = Ail / g;
+    assert(ret % g == 0);
+    ret /= g;
+  }
+  return ret;
 }
 constexpr void zeroWithRowOperation(MutPtrMatrix<int64_t> A, Row i, Row j,
                                     Col k, Range<size_t, size_t> skip) {

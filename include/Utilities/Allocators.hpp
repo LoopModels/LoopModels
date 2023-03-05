@@ -205,21 +205,22 @@ public:
     if constexpr (BumpUp) return ((p + SlabSize) >= SlabEnd) && (p < SlabEnd);
     else return (p > SlabEnd) && (p <= (SlabEnd + SlabSize));
   }
-  class CheckPoint {
-    std::byte *p;
+  struct CheckPoint {
+    constexpr CheckPoint(std::byte *b) : p(b) {}
     constexpr auto isInSlab(std::byte *send) -> bool {
       if constexpr (BumpUp) return ((p + SlabSize) >= send) && (p < send);
       else return (p > send) && (p <= (send + SlabSize));
     }
+    std::byte *p;
   };
-  [[nodiscard]] auto checkPoint() -> CheckPoint { return SlabCur; }
-  void checkPoint(CheckPoint p) {
+  [[nodiscard]] constexpr auto checkPoint() -> CheckPoint { return SlabCur; }
+  constexpr void checkPoint(CheckPoint p) {
     if (p.isInSlab(SlabEnd)) {
 #if LLVM_ADDRESS_SANITIZER_BUILD
       if constexpr (BumpUp) __asan_poison_memory_region(p, SlabCur - p);
       else __asan_poison_memory_region(SlabCur, p - SlabCur);
 #endif
-      SlabCur = p;
+      SlabCur = p.p;
     } else initSlab(slabs.back());
   }
 

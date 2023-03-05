@@ -106,18 +106,18 @@ struct Tableau {
   }
   [[nodiscard]] constexpr auto getBasicVariables() const -> PtrVector<int64_t> {
     invariant(ptr != nullptr);
-    return {ptr + reservedBasicVariables(), numConstraints};
+    return {ptr + reservedBasicConstraints(), numConstraints};
   }
   [[nodiscard]] constexpr auto getBasicVariables() -> MutPtrVector<int64_t> {
     invariant(ptr != nullptr);
-    return {ptr + reservedBasicVariables(), numConstraints};
+    return {ptr + reservedBasicConstraints(), numConstraints};
   }
   [[nodiscard]] constexpr auto getCost() const -> PtrVector<int64_t> {
     invariant(ptr != nullptr);
     return {ptr + reservedBasicConstraints() + reservedBasicVariables(),
             numVars + 1};
   }
-  [[nodiscard]] constexpr auto getObjective() -> MutPtrVector<int64_t> {
+  [[nodiscard]] constexpr auto getCost() -> MutPtrVector<int64_t> {
     invariant(ptr != nullptr);
     return {ptr + reservedBasicConstraints() + reservedBasicVariables(),
             numVars + 1};
@@ -133,7 +133,7 @@ struct Tableau {
     return getCost()[++i];
   }
   [[nodiscard]] constexpr auto getObjectiveValue() -> int64_t & {
-    return getObjective()[0];
+    return getCost()[0];
   }
   [[nodiscard]] constexpr auto getObjectiveValue() const -> int64_t {
     return getCost()[0];
@@ -176,10 +176,10 @@ struct Tableau {
   }
 #endif
   [[nodiscard]] constexpr auto getConstants() -> MutStridedVector<int64_t> {
-    return getTableau()(_, 0);
+    return getTableau()(_(1, end), 0);
   }
   [[nodiscard]] constexpr auto getConstants() const -> StridedVector<int64_t> {
-    return getTableau()(_, 0);
+    return getTableau()(_(1, end), 0);
   }
   constexpr void setNumCons(unsigned i) {
     invariant(i <= constraintCapacity);
@@ -320,13 +320,12 @@ struct Simplex {
     // upper bound number of augmentVars is constraintCapacity
     for (unsigned i = 0; i < basicVars.size(); ++i)
       if (basicVars[i] == -1) augVars.push_back(i);
-    return (augVars.size() && removeAugmentVars(augVars, numVar));
+    return (augVars.size() && removeAugmentVars(augVars));
   }
-  auto removeAugmentVars(PtrVector<unsigned> augmentVars, ptrdiff_t numVar)
-    -> bool {
+  auto removeAugmentVars(PtrVector<unsigned> augmentVars) -> bool {
     // TODO: try to avoid reallocating, via reserving enough ahead of time
-    assert(augmentVars.size() + tableau.numVars <= tableau.varCapacity);
     unsigned numAugment = augmentVars.size(), oldNumVar = tableau.numVars;
+    assert(numAugment + tableau.numVars <= tableau.varCapacity);
     tableau.numVars += numAugment;
     MutPtrMatrix<int64_t> C{tableau.getConstraints()};
     MutPtrVector<int64_t> basicVars{tableau.getBasicVariables()};
@@ -335,24 +334,26 @@ struct Simplex {
     costs << 0;
     for (ptrdiff_t i = 0; i < ptrdiff_t(augmentVars.size()); ++i) {
       ptrdiff_t a = augmentVars[i];
-      basicVars[a] = i + numVar;
-      basicCons[i + numVar] = a;
-      C(a, numVar + i) = 1;
+      basicVars[a] = i + oldNumVar;
+      basicCons[i + oldNumVar] = a;
+      C(a, oldNumVar + i) = 1;
       // we now zero out the implicit cost of `1`
-      costs[_(begin, numVar)] -= C(a, _(begin, numVar));
+      costs[_(begin, oldNumVar)] -= C(a, _(begin, oldNumVar));
     }
+    assert(std::all_of(basicVars.begin(), basicVars.end(),
+                       [](int64_t i) { return i >= 0; }));
     // false/0 means feasible
     // true/non-zero infeasible
     if (runCore()) return true;
     // check for any basic vars set to augment vars, and set them to some
     // other variable (column) instead.
     for (ptrdiff_t c = 0; c < C.numRow(); ++c) {
-      if (basicVars[c] >= numVar) {
+      if (basicVars[c] >= oldNumVar) {
         assert(C(c, 0) == 0);
         assert(c == basicCons[basicVars[c]]);
         assert(C(c, basicVars[c]) >= 0);
         // find var to make basic in its place
-        for (ptrdiff_t v = numVar; v != 0;) {
+        for (ptrdiff_t v = oldNumVar; v != 0;) {
           // search for a non-basic variable
           // (basicConstraints<0)
           int64_t Ccv = C(c, v--);
@@ -434,7 +435,7 @@ struct Simplex {
     //     return runCore(getCostsAndConstraints(), f);
     // }
     // Rational runCore(MutPtrMatrix<int64_t> C, int64_t f = 1) {
-    auto C{tableau.getTableau()};
+    MutPtrMatrix<int64_t> C{tableau.getTableau()};
     while (true) {
       // entering variable is the column
       Optional<unsigned int> enteringVariable =
@@ -588,8 +589,8 @@ struct Simplex {
     for (unsigned i = 0; i < numSlack; ++i) varCap += A(i, 0) < 0;
     // try to avoid reallocating
     auto checkPoint{alloc.checkPoint()};
-    Simplex simplex{
-      Simplex::create(alloc, numCon, numVar, numCon, varCap, numSlack)};
+    Simplex simplex{Simplex::create(alloc, numCon, numVar + numSlack, numCon,
+                                    varCap, numSlack)};
     // construct:
     // [ I A
     //   0 B ]
@@ -773,11 +774,11 @@ struct Simplex {
     }
   }
   static constexpr auto
-  create(BumpAlloc<> &alloc, unsigned conCap,
-         unsigned varCap, // NOLINT(bugprone-easily-swappable-parameters)
+  create(BumpAlloc<> &alloc, unsigned numCon,
+         unsigned numVar, // NOLINT(bugprone-easily-swappable-parameters)
          unsigned numSlack) -> Simplex {
-    Tableau tableau = Tableau::create(alloc, conCap, varCap);
-    return Simplex{tableau, numSlack};
+    unsigned conCap = numCon, varCap = numVar + numSlack + numCon;
+    return create(alloc, numCon, numVar, conCap, varCap, numSlack);
   }
   static constexpr auto
   create(BumpAlloc<> &alloc, unsigned numCon, unsigned numVar, unsigned conCap,
@@ -790,6 +791,8 @@ struct Simplex {
     tableau.setNumCons(other.tableau.getNumCons());
     tableau.setNumVars(other.tableau.getNumVars());
     tableau.getTableau() << other.tableau.getTableau();
+    tableau.getBasicVariables() << other.tableau.getBasicVariables();
+    tableau.getBasicConstraints() << other.tableau.getBasicConstraints();
     numSlack = other.numSlack;
     return *this;
   }

@@ -920,17 +920,24 @@ static void BM_Simplex0(benchmark::State &state) {
     "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -1]"_mat};
 
   tableau(_(0, 2), _) << -5859553999884210514;
-  Simplex simpBackup{tableau};
+  BumpAlloc<> alloc;
+  unsigned numCon = unsigned(tableau.numRow()) - 2;
+  unsigned numVar = unsigned(tableau.numCol()) - 2;
+  Simplex simpBackup{Simplex::create(alloc, numCon, numVar, 0)};
+  simpBackup.tableau.getTableau() << tableau(_(1, end), _(1, end));
+  // Simplex simpBackup{tableau};
   bool fail = simpBackup.initiateFeasible();
   assert(!fail);
   if (!fail) {
-    Simplex simp{simpBackup.getNumConstraints(), simpBackup.getNumVar(), 0};
+    Simplex simp{Simplex::create(alloc, simpBackup.tableau.numConstraints,
+                                 simpBackup.tableau.numVars, 0)};
     Vector<Rational> sol(37);
     for (auto b : state) {
-      simp = simpBackup;
+      simp << simpBackup;
       simp.lexMinimize(sol);
     }
   }
+  alloc.reset();
 }
 BENCHMARK(BM_Simplex0);
 
@@ -1130,14 +1137,19 @@ static void BM_Simplex1(benchmark::State &state) {
     "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 "
     "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 "
     "-1]"_mat};
-  Simplex simpBackup{tableau};
+  BumpAlloc<> alloc;
+  unsigned numCon = unsigned(tableau.numRow()) - 1;
+  unsigned numVar = unsigned(tableau.numCol()) - 1;
+  Simplex simpBackup{Simplex::create(alloc, numCon, numVar, 0)};
+  simpBackup.tableau.getTableau() << tableau(_(1, end), _(1, end));
   bool fail = simpBackup.initiateFeasible();
   assert(!fail);
   if (!fail) {
-    Simplex simp{simpBackup.getNumConstraints(), simpBackup.getNumVar(), 0};
+    Simplex simp{Simplex::create(alloc, simpBackup.tableau.numConstraints,
+                                 simpBackup.tableau.numVars, 0)};
     Vector<Rational> sol(15);
     for (auto b : state) {
-      simp = simpBackup;
+      simp << simpBackup;
       simp.lexMinimize(sol);
     }
   }
