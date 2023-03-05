@@ -442,7 +442,7 @@ $(function() {
 <div class="line"><a name="l00372"></a><span class="lineno">  372</span>&#160;  [[gnu::flatten]] constexpr <span class="keyword">auto</span> operator&lt;&lt;(<span class="keyword">const</span> std::integral <span class="keyword">auto</span> b)</div>
 <div class="line"><a name="l00373"></a><span class="lineno">  373</span>&#160;    -&gt; decltype(<span class="keyword">auto</span>) {</div>
 <div class="line"><a name="l00374"></a><span class="lineno">  374</span>&#160;    <span class="keywordflow">if</span> constexpr (std::integral&lt;S&gt; || std::is_same_v&lt;S, StridedRange&gt;) {</div>
-<div class="line"><a name="l00375"></a><span class="lineno">  375</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> c = 0, L = this-&gt;sz; c &lt; L; ++c) (*<span class="keyword">this</span>)[c] = b;</div>
+<div class="line"><a name="l00375"></a><span class="lineno">  375</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> c = 0, L = <span class="keywordtype">size_t</span>(this-&gt;sz); c &lt; L; ++c) (*<span class="keyword">this</span>)[c] = b;</div>
 <div class="line"><a name="l00376"></a><span class="lineno">  376</span>&#160;    } <span class="keywordflow">else</span> {</div>
 <div class="line"><a name="l00377"></a><span class="lineno">  377</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> r = 0; r &lt; this-&gt;numRow(); ++r)</div>
 <div class="line"><a name="l00378"></a><span class="lineno">  378</span>&#160;        <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> c = 0; c &lt; this-&gt;numCol(); ++c) (*<span class="keyword">this</span>)(r, c) = b;</div>
@@ -508,7 +508,7 @@ $(function() {
 <div class="line"><a name="l00438"></a><span class="lineno">  438</span>&#160;  [[gnu::flatten]] constexpr <span class="keyword">auto</span> operator*=(<span class="keyword">const</span> std::integral <span class="keyword">auto</span> b)</div>
 <div class="line"><a name="l00439"></a><span class="lineno">  439</span>&#160;    -&gt; decltype(<span class="keyword">auto</span>) {</div>
 <div class="line"><a name="l00440"></a><span class="lineno">  440</span>&#160;    <span class="keywordflow">if</span> constexpr (std::integral&lt;S&gt;) {</div>
-<div class="line"><a name="l00441"></a><span class="lineno">  441</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> c = 0, L = this-&gt;sz; c &lt; L; ++c) (*<span class="keyword">this</span>)[c] *= b;</div>
+<div class="line"><a name="l00441"></a><span class="lineno">  441</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> c = 0, L = <span class="keywordtype">size_t</span>(this-&gt;sz); c &lt; L; ++c) (*<span class="keyword">this</span>)[c] *= b;</div>
 <div class="line"><a name="l00442"></a><span class="lineno">  442</span>&#160;    } <span class="keywordflow">else</span> {</div>
 <div class="line"><a name="l00443"></a><span class="lineno">  443</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> r = 0; r &lt; this-&gt;numRow(); ++r)</div>
 <div class="line"><a name="l00444"></a><span class="lineno">  444</span>&#160;        <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> c = 0; c &lt; this-&gt;numCol(); ++c) (*<span class="keyword">this</span>)(r, c) *= b;</div>
@@ -518,7 +518,7 @@ $(function() {
 <div class="line"><a name="l00448"></a><span class="lineno">  448</span>&#160;  [[gnu::flatten]] constexpr <span class="keyword">auto</span> operator/=(<span class="keyword">const</span> std::integral <span class="keyword">auto</span> b)</div>
 <div class="line"><a name="l00449"></a><span class="lineno">  449</span>&#160;    -&gt; decltype(<span class="keyword">auto</span>) {</div>
 <div class="line"><a name="l00450"></a><span class="lineno">  450</span>&#160;    <span class="keywordflow">if</span> constexpr (std::integral&lt;S&gt;) {</div>
-<div class="line"><a name="l00451"></a><span class="lineno">  451</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> c = 0, L = this-&gt;sz; c &lt; L; ++c) (*<span class="keyword">this</span>)[c] /= b;</div>
+<div class="line"><a name="l00451"></a><span class="lineno">  451</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> c = 0, L = <span class="keywordtype">size_t</span>(this-&gt;sz); c &lt; L; ++c) (*<span class="keyword">this</span>)[c] /= b;</div>
 <div class="line"><a name="l00452"></a><span class="lineno">  452</span>&#160;    } <span class="keywordflow">else</span> {</div>
 <div class="line"><a name="l00453"></a><span class="lineno">  453</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> r = 0; r &lt; this-&gt;numRow(); ++r)</div>
 <div class="line"><a name="l00454"></a><span class="lineno">  454</span>&#160;        <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> c = 0; c &lt; this-&gt;numCol(); ++c) (*<span class="keyword">this</span>)(r, c) /= b;</div>
@@ -1556,7 +1556,7 @@ $(function() {
 <div class="ttc" id="astructLinearAlgebra_1_1AxisInt_html"><div class="ttname"><a href="structLinearAlgebra_1_1AxisInt.html">LinearAlgebra::AxisInt</a></div><div class="ttdef"><b>Definition:</b> AxisTypes.hpp:46</div></div>
 <div class="ttc" id="astructLinearAlgebra_1_1CartesianIndex_html"><div class="ttname"><a href="structLinearAlgebra_1_1CartesianIndex.html">LinearAlgebra::CartesianIndex</a></div><div class="ttdef"><b>Definition:</b> MatrixDimensions.hpp:9</div></div>
 <div class="ttc" id="astructLinearAlgebra_1_1DenseDims_html"><div class="ttname"><a href="structLinearAlgebra_1_1DenseDims.html">LinearAlgebra::DenseDims</a></div><div class="ttdoc">Dimensions with a capacity.</div><div class="ttdef"><b>Definition:</b> MatrixDimensions.hpp:89</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1Empty_html"><div class="ttname"><a href="structLinearAlgebra_1_1Empty.html">LinearAlgebra::Empty</a></div><div class="ttdef"><b>Definition:</b> Indexing.hpp:204</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1Empty_html"><div class="ttname"><a href="structLinearAlgebra_1_1Empty.html">LinearAlgebra::Empty</a></div><div class="ttdef"><b>Definition:</b> Indexing.hpp:207</div></div>
 <div class="ttc" id="astructLinearAlgebra_1_1ManagedArray_html"><div class="ttname"><a href="structLinearAlgebra_1_1ManagedArray.html">LinearAlgebra::ManagedArray</a></div><div class="ttdef"><b>Definition:</b> Array.hpp:998</div></div>
 <div class="ttc" id="astructLinearAlgebra_1_1MutArray_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutArray.html">LinearAlgebra::MutArray</a></div><div class="ttdef"><b>Definition:</b> Array.hpp:200</div></div>
 <div class="ttc" id="astructLinearAlgebra_1_1ReallocView_html"><div class="ttname"><a href="structLinearAlgebra_1_1ReallocView.html">LinearAlgebra::ReallocView</a></div><div class="ttdef"><b>Definition:</b> Array.hpp:730</div></div>

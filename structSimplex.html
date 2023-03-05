@@ -84,9 +84,9 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getSolution
 <tr class="separator:a6650e2796abf437f34ebb341ac89ace3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8670b1057e7253c284dbf0f53a9fe78e"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSimplex.html#a8670b1057e7253c284dbf0f53a9fe78e">initiateFeasible</a> () -&gt; bool</td></tr>
 <tr class="separator:a8670b1057e7253c284dbf0f53a9fe78e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2c8f54367c0603abd33e98c9d6560bfc"><td class="memItemLeft" align="right" valign="top"><a id="a2c8f54367c0603abd33e98c9d6560bfc"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>removeAugmentVars</b> (PtrVector&lt; unsigned &gt; augmentVars, ptrdiff_t numVar) -&gt; bool</td></tr>
-<tr class="separator:a2c8f54367c0603abd33e98c9d6560bfc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a278510f3425847cb9fa10d311c0d33f5"><td class="memItemLeft" align="right" valign="top"><a id="a278510f3425847cb9fa10d311c0d33f5"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>removeAugmentVars</b> (PtrVector&lt; unsigned &gt; augmentVars) -&gt; bool</td></tr>
+<tr class="separator:a278510f3425847cb9fa10d311c0d33f5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a52cd0b8ffa97baef21766c805c01916c"><td class="memItemLeft" align="right" valign="top"><a id="a52cd0b8ffa97baef21766c805c01916c"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>makeBasic</b> (MutPtrMatrix&lt; int64_t &gt; C, int64_t f, unsigned int enteringVar) -&gt; int64_t</td></tr>
 <tr class="separator:a52cd0b8ffa97baef21766c805c01916c"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -158,9 +158,9 @@ static auto&#160;</td><td class="memItemRight" valign="bottom"><b>positiveVariab
 <tr class="memitem:aa22d6d0dc67b5593f5b33c40b2566843"><td class="memItemLeft" align="right" valign="top"><a id="aa22d6d0dc67b5593f5b33c40b2566843"></a>
 static auto&#160;</td><td class="memItemRight" valign="bottom"><b>toMask</b> (PtrVector&lt; int64_t &gt; x) -&gt; uint64_t</td></tr>
 <tr class="separator:aa22d6d0dc67b5593f5b33c40b2566843"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a73c7c190a77251f0ec13f0238496b102"><td class="memItemLeft" align="right" valign="top"><a id="a73c7c190a77251f0ec13f0238496b102"></a>
-static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>create</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, unsigned conCap, unsigned varCap, unsigned numSlack) -&gt; <a class="el" href="structSimplex.html">Simplex</a></td></tr>
-<tr class="separator:a73c7c190a77251f0ec13f0238496b102"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a350b2b2bc8d3ac022d1a04f4de14ed15"><td class="memItemLeft" align="right" valign="top"><a id="a350b2b2bc8d3ac022d1a04f4de14ed15"></a>
+static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>create</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, unsigned numCon, unsigned numVar, unsigned numSlack) -&gt; <a class="el" href="structSimplex.html">Simplex</a></td></tr>
+<tr class="separator:a350b2b2bc8d3ac022d1a04f4de14ed15"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aea7601b6b38883857048bb65a4752797"><td class="memItemLeft" align="right" valign="top"><a id="aea7601b6b38883857048bb65a4752797"></a>
 static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>create</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, unsigned numCon, unsigned numVar, unsigned conCap, unsigned varCap, unsigned numSlack) -&gt; <a class="el" href="structSimplex.html">Simplex</a></td></tr>
 <tr class="separator:aea7601b6b38883857048bb65a4752797"><td class="memSeparator" colspan="2">&#160;</td></tr>
