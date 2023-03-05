@@ -84,10 +84,14 @@ set_target_properties(
              CXX_VISIBILITY_PRESET hidden
              VISIBILITY_INLINES_HIDDEN ON
 )
-target_compile_options(${PROJECT_NAME} PRIVATE -fno-exceptions -fno-rtti -fstrict-aliasing -fno-plt -fstrict-overflow)
+target_compile_options(
+  ${PROJECT_NAME} PRIVATE -fno-exceptions -fno-rtti -fstrict-aliasing -fno-plt -fstrict-overflow
+)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
-  target_compile_options(${PROJECT_NAME} PRIVATE -fno-semantic-interposition -fdiagnostics-color=always)
+  target_compile_options(
+    ${PROJECT_NAME} PRIVATE -fno-semantic-interposition -fdiagnostics-color=always
+  )
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   target_compile_options(${PROJECT_NAME} PRIVATE -fcolor-diagnostics)
 endif()

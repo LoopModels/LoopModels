@@ -616,8 +616,8 @@ struct Simplex {
     for (unsigned i = 0; i < numSlack; ++i) varCap += A(i, 0) < 0;
     // try to avoid reallocating
     auto checkPoint{alloc.checkPoint()};
-    Simplex simplex{
-      Simplex::create(alloc, numCon, numVar, numCon, varCap, numSlack)};
+    Simplex simplex{Simplex::create(alloc, numCon, numVar + numSlack, numCon,
+                                    varCap, numSlack)};
     // construct:
     // [ I A ]
     // then drop the extra variables

@@ -10,24 +10,32 @@ TEST(SimplexTest, BasicAssertions) {
   IntMatrix A{"[10 3 2 1; 15 2 5 3]"_mat};
   IntMatrix B{DenseDims{0, 4}};
   BumpAlloc<> alloc;
-  std::optional<Simplex> optS{Simplex::positiveVariables(alloc, A, B)};
-  EXPECT_TRUE(optS.has_value());
-  assert(optS.has_value());
-  Simplex &S{*optS};
-  auto C{S.tableau.getCost()};
-  C[0] = 0;
-  C[1] = 0;
-  C[2] = 0;
-  C[3] = -2;
-  C[4] = -3;
-  C[5] = -4;
-  llvm::errs() << "S.tableau =" << S.tableau.getTableau() << "\n";
-  EXPECT_EQ(S.run(), 20);
+  std::optional<Simplex> optS0{Simplex::positiveVariables(alloc, A)};
+  EXPECT_TRUE(optS0.has_value());
+  std::optional<Simplex> optS1{Simplex::positiveVariables(alloc, A, B)};
+  EXPECT_TRUE(optS1.has_value());
+  assert(optS0.has_value());
+  assert(optS1.has_value());
+  for (size_t i = 0; i < 2; ++i) {
+    Simplex S{i ? *optS1 : *optS0};
+    auto C{S.tableau.getCost()};
+    C[0] = 0;
+    C[1] = 0;
+    C[2] = 0;
+    C[3] = -2;
+    C[4] = -3;
+    C[5] = -4;
+    llvm::errs() << "S.tableau =" << S.tableau.getTableau() << "\n";
+    EXPECT_EQ(S.run(), 20);
+  }
 }
 
+// NOLINTNEXTLINE(modernize-use-trailing-return-type)
+TEST(LexMinSmallTest, BasicAssertions) { BumpAlloc alloc; }
+
 auto simplexFromTableau(BumpAlloc<> &alloc, IntMatrix &tableau) -> Simplex {
-  unsigned numCon = unsigned(tableau.numRow()) - 1;
-  unsigned numVar = unsigned(tableau.numCol()) - 1;
+  unsigned numCon = unsigned(tableau.numRow()) - 2;
+  unsigned numVar = unsigned(tableau.numCol()) - 2;
   Simplex simp{Simplex::create(alloc, numCon, numVar, 0)};
   simp.tableau.getTableau() << tableau(_(1, end), _(1, end));
   return simp;
