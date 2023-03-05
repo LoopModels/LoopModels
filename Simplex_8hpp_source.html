@@ -663,8 +663,8 @@ $(function() {
 <div class="line"><a name="l00616"></a><span class="lineno">  616</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">unsigned</span> i = 0; i &lt; numSlack; ++i) varCap += A(i, 0) &lt; 0;</div>
 <div class="line"><a name="l00617"></a><span class="lineno">  617</span>&#160;    <span class="comment">// try to avoid reallocating</span></div>
 <div class="line"><a name="l00618"></a><span class="lineno">  618</span>&#160;    <span class="keyword">auto</span> checkPoint{alloc.checkPoint()};</div>
-<div class="line"><a name="l00619"></a><span class="lineno">  619</span>&#160;    <a class="code" href="structSimplex.html">Simplex</a> simplex{</div>
-<div class="line"><a name="l00620"></a><span class="lineno">  620</span>&#160;      Simplex::create(alloc, numCon, numVar, numCon, varCap, numSlack)};</div>
+<div class="line"><a name="l00619"></a><span class="lineno">  619</span>&#160;    <a class="code" href="structSimplex.html">Simplex</a> simplex{Simplex::create(alloc, numCon, numVar + numSlack, numCon,</div>
+<div class="line"><a name="l00620"></a><span class="lineno">  620</span>&#160;                                    varCap, numSlack)};</div>
 <div class="line"><a name="l00621"></a><span class="lineno">  621</span>&#160;    <span class="comment">// construct:</span></div>
 <div class="line"><a name="l00622"></a><span class="lineno">  622</span>&#160;    <span class="comment">// [ I A ]</span></div>
 <div class="line"><a name="l00623"></a><span class="lineno">  623</span>&#160;    <span class="comment">// then drop the extra variables</span></div>
