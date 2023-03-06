@@ -150,8 +150,11 @@ struct Tableau {
 #ifndef NDEBUG
     inCanonicalForm = false;
 #endif
-    truncateConstraints(
-      unsigned(NormalForm::simplifySystemImpl(getConstraints(), 1)));
+    auto C{getConstraints()};
+    NormalForm::solveSystemSkip(C);
+    truncateConstraints(unsigned(NormalForm::numNonZeroRows(C)));
+    // truncateConstraints(
+    //   unsigned(NormalForm::simplifySystemImpl(getConstraints(), 1)));
   }
 #ifndef NDEBUG
   void assertCanonical() const {

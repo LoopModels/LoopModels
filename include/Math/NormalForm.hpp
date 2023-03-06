@@ -541,13 +541,19 @@ constexpr void bareiss(MutPtrMatrix<int64_t> A, MutPtrVector<size_t> pivots) {
 /// Both inputs are overwritten with the product of the left multiplications.
 constexpr void solveSystem(MutPtrMatrix<int64_t> A, MutPtrMatrix<int64_t> B) {
   const auto [M, N] = A.size();
-  for (auto [r, c] = CarInd{0, 0}; c < N && r < M; ++c)
+  for (size_t r = 0, c = 0; c < N && r < M; ++c)
     if (!pivotRowsPair({A, B}, c, M, r)) zeroColumnPair({A, B}, c, r++);
 }
-// diagonalizes A(1:K,1:K)
+// diagonalizes A(0:K,0:K)
 constexpr void solveSystem(MutPtrMatrix<int64_t> A, size_t K) {
   const auto [M, N] = A.size();
-  for (auto [r, c] = CarInd{0, 0}; c < K && r < M; ++c)
+  for (size_t r = 0, c = 0; c < K && r < M; ++c)
+    if (!pivotRows(A, c, M, r)) zeroColumn(A, c, r++);
+}
+// diagonalizes A(0:K,1:K+1)
+constexpr void solveSystemSkip(MutPtrMatrix<int64_t> A) {
+  const auto [M, N] = A.size();
+  for (size_t r = 0, c = 1; c < N && r < M; ++c)
     if (!pivotRows(A, c, M, r)) zeroColumn(A, c, r++);
 }
 
