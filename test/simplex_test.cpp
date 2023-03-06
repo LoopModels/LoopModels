@@ -1,3 +1,4 @@
+#include "Math/Array.hpp"
 #include "Math/Math.hpp"
 #include "Math/Simplex.hpp"
 #include "MatrixStringParse.hpp"
@@ -7,6 +8,8 @@
 
 // NOLINTNEXTLINE(modernize-use-trailing-return-type)
 TEST(SimplexTest, BasicAssertions) {
+  // 10 >= 3x + 2y + z
+  // 15 >= 2x + 5y + 3z
   IntMatrix A{"[10 3 2 1; 15 2 5 3]"_mat};
   IntMatrix B{DenseDims{0, 4}};
   BumpAlloc<> alloc;
@@ -19,6 +22,7 @@ TEST(SimplexTest, BasicAssertions) {
   for (size_t i = 0; i < 2; ++i) {
     Simplex S{i ? *optS1 : *optS0};
     auto C{S.tableau.getCost()};
+    // minimize -2x - 3y - 4z
     C[0] = 0;
     C[1] = 0;
     C[2] = 0;
@@ -31,7 +35,79 @@ TEST(SimplexTest, BasicAssertions) {
 }
 
 // NOLINTNEXTLINE(modernize-use-trailing-return-type)
-TEST(LexMinSmallTest, BasicAssertions) { BumpAlloc alloc; }
+TEST(LexMinSmallTest, BasicAssertions) {
+  BumpAlloc alloc;
+  // -10 == -3x - 2y - z  + s0
+  // -15 == -2x - 5y - 3z + s1
+  IntMatrix tableau{"[-10 -3 -2 -1 1 0; -15 -2 -5 -3 0 1]"_mat};
+  // IntMatrix A{"[-10 -3 -2 -1; -15 -2 -5 -3]"_mat};
+  Simplex simp{Simplex::create(alloc, 2, 5, 0)};
+  simp.tableau.getConstraints() << tableau;
+  Vector<Rational> sol(5);
+  EXPECT_FALSE(simp.initiateFeasible());
+  llvm::errs() << "S.tableau =" << simp.tableau.getTableau() << "\n";
+  //       x  y  z s0  s1 a0 a1
+  // [  0  0  0  0  0  0  1  1
+  //   10  3  2  1 -1  0  1  0
+  //   15  2  5  3  0 -1  0  1 ]
+  //       x  y  z s0  s1 a0 a1
+  // [  0 -5 -7 -4  1  1  0  0
+  //   10  3  2  1 -1  0  1  0
+  //   15  2  5  3  0 -1  0  1 ]
+  // first entering variable: x
+  // first leaving variable: a0
+  //       x    y   z s0   s1  a0  a1
+  // [-25   0 -11  -7  -2   3   5   0    f: 3
+  //   10   3   2   1  -1   0   1   0
+  //   25   0  11   7   2  -3  -2   3 ]
+  // second entering variable: y
+  // second leaving variable: a1
+  //       x    y   z  s0  s1  a0  a1
+  // [  0   0   0   0   0   0   3   3    f: 3
+  //   60  33   0  -3 -15   6  15  -6
+  //   25   0  11   7   2  -3  -2   3 ]
+  // drop augment vars, divide rows by gcd
+  //       x    y   z  s0  s1
+  // [  0   0   0   0   0   0    f: 3
+  //   20  11   0  -1  -5   2
+  //   25   0  11   7   2  -3 ]
+  //
+  //
+  //        x  y  z  s0 s1
+  // [ 20  11  0 -1 -5 -30
+  //   25  0  11  7  2  1 ]
+  // x = 20 // 11
+  // y = 25 // 11
+  // -3*20/11 - 2*25/11 = (-60 - 50)/11 = -110/11 = -10
+  // -2*20/11 - 5*25/11 = (-40 - 125)/11 = -165/11 = -15
+  // our initial tableau is feasible
+  //
+  // [  0  11  0  0  0   0
+  //   20  11  0 -1 -5 -30
+  //   25  0  11  7  2  1 ]
+  //
+  // [-20   0  0  1  5  30
+  //   20  11  0 -1 -5 -30
+  //   25  0  11  7  2  1 ]
+
+  simp.lexMinimize(sol);
+  llvm::errs() << "S.tableau =" << simp.tableau.getTableau() << "\n";
+  //  0  1  2  3  4
+  //  0  0 10  0 15
+  // 70  0  0  0 25
+  //
+  // What should happen
+  //
+  // -10 == -3x - 2y - z  + s0
+  // -15 == -2x - 5y - 3z + s1
+  llvm::errs() << "sol = " << sol << "\n";
+  EXPECT_EQ(Rational::create(5, 1), 5);
+  EXPECT_EQ(sol[0], 0);
+  EXPECT_EQ(sol[1], 0);
+  EXPECT_EQ(sol[2], 10);
+  EXPECT_EQ(sol[3], 0);
+  EXPECT_EQ(sol[4], 15);
+}
 
 auto simplexFromTableau(BumpAlloc<> &alloc, IntMatrix &tableau) -> Simplex {
   unsigned numCon = unsigned(tableau.numRow()) - 2;
@@ -957,7 +1033,7 @@ TEST(LexMinSimplexTest, BasicAssertions) {
     "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 "
     "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 "
     "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -1]"_mat};
-
+  // llvm::errs() << "tableau3 =" << tableau << "\n";
   tableau(_(0, 2), _) << -5859553999884210514;
   BumpAlloc<> alloc;
   Simplex simp{simplexFromTableau(alloc, tableau)};
@@ -989,8 +1065,9 @@ TEST(LexMinSimplexTest, BasicAssertions) {
       EXPECT_EQ(r.denominator, 1);
     }
     EXPECT_EQ(sum, 3);
+    // llvm::errs() << "sol2: " << sol2 << "\n";
     for (size_t i = 0; i < 37; ++i)
-      EXPECT_EQ(sol2[i], (i == 29) || (i == 31) || (i == 34));
+      EXPECT_EQ(sol2[i], (i == 28) || (i == 30) || (i == 33));
   }
   {
     // test new simplex
@@ -1012,8 +1089,9 @@ TEST(LexMinSimplexTest, BasicAssertions) {
     }
     EXPECT_EQ(sum, 3);
     EXPECT_EQ(rsum, 3);
+    llvm::errs() << "sol2: " << sol2 << "\n";
     for (size_t i = 0; i < 37; ++i)
-      EXPECT_EQ(sol2[i], (i == 29) || (i == 31) || (i == 34));
+      EXPECT_EQ(sol2[i], (i == 28) || (i == 30) || (i == 33));
   }
 }
 // NOLINTNEXTLINE(modernize-use-trailing-return-type)
@@ -1213,6 +1291,7 @@ TEST(LexMinSimplexTest2, BasicAssertions) {
     "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 "
     "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 "
     "-1]"_mat};
+  // llvm::errs() << "tableau4 =" << tableau << "\n";
   BumpAlloc<> alloc;
   Simplex simp{simplexFromTableau(alloc, tableau)};
   Vector<Rational> sol(15);

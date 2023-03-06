@@ -332,13 +332,14 @@ struct Simplex {
     MutPtrVector<int64_t> basicCons{tableau.getBasicConstraints()};
     MutPtrVector<int64_t> costs{tableau.getCost()};
     costs << 0;
+    C(_, _(oldNumVar + 1, end)) << 0;
     for (ptrdiff_t i = 0; i < ptrdiff_t(augmentVars.size()); ++i) {
       ptrdiff_t a = augmentVars[i];
       basicVars[a] = i + oldNumVar;
       basicCons[i + oldNumVar] = a;
-      C(a, oldNumVar + i) = 1;
+      C(a, oldNumVar + 1 + i) = 1;
       // we now zero out the implicit cost of `1`
-      costs[_(begin, oldNumVar)] -= C(a, _(begin, oldNumVar));
+      costs[_(begin, oldNumVar + 1)] -= C(a, _(begin, oldNumVar + 1));
     }
     assert(std::all_of(basicVars.begin(), basicVars.end(),
                        [](int64_t i) { return i >= 0; }));
@@ -351,7 +352,7 @@ struct Simplex {
       if (basicVars[c] >= oldNumVar) {
         assert(C(c, 0) == 0);
         assert(c == basicCons[basicVars[c]]);
-        assert(C(c, basicVars[c]) >= 0);
+        assert(C(c, basicVars[c] + 1) >= 0);
         // find var to make basic in its place
         for (ptrdiff_t v = oldNumVar; v != 0;) {
           // search for a non-basic variable
@@ -763,7 +764,7 @@ struct Simplex {
       size_t v = basicVars[i];
       if (v <= numSlack) continue;
       if (C(i, 0)) {
-        if (v < C.numCol()) {
+        if (++v < C.numCol()) {
           llvm::errs() << "v_" << v - numSlack << " = " << C(i, 0) << " / "
                        << C(i, v) << "\n";
         } else {

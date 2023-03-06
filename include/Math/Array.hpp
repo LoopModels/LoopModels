@@ -191,6 +191,7 @@ template <class T, class S> struct Array {
   // constexpr auto operator!=(const Array &other) const noexcept -> bool {
   //   return !(*this == other);
   // }
+  void dump() { llvm::errs() << *this << "\n"; }
 
 protected:
   [[no_unique_address]] T *ptr;
