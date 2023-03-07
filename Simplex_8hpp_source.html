@@ -638,7 +638,7 @@ $(function() {
 <div class="line"><a name="l00591"></a><span class="lineno">  591</span>&#160;    <span class="comment">// for (size_t i = 0; i &lt; numSlack; ++i) consts[i] = A(i, 0);</span></div>
 <div class="line"><a name="l00592"></a><span class="lineno">  592</span>&#160;    <span class="comment">// for (size_t i = 0; i &lt; numStrict; ++i) consts[i + numSlack] = B(i, 0);</span></div>
 <div class="line"><a name="l00593"></a><span class="lineno">  593</span>&#160;    <span class="keywordflow">if</span> (!simplex.initiateFeasible()) <span class="keywordflow">return</span> simplex;</div>
-<div class="line"><a name="l00594"></a><span class="lineno">  594</span>&#160;    alloc.checkPoint(checkPoint);</div>
+<div class="line"><a name="l00594"></a><span class="lineno">  594</span>&#160;    alloc.rollBack(checkPoint);</div>
 <div class="line"><a name="l00595"></a><span class="lineno">  595</span>&#160;    <span class="keywordflow">return</span> {};</div>
 <div class="line"><a name="l00596"></a><span class="lineno">  596</span>&#160;  }</div>
 <div class="line"><a name="l00597"></a><span class="lineno">  597</span>&#160;  <span class="keyword">static</span> <span class="keyword">auto</span> positiveVariables(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, PtrMatrix&lt;int64_t&gt; A)</div>
@@ -662,7 +662,7 @@ $(function() {
 <div class="line"><a name="l00615"></a><span class="lineno">  615</span>&#160;    <span class="comment">// for (size_t i = 0; i &lt; numSlack; ++i) consts[i] = A(i, 0);</span></div>
 <div class="line"><a name="l00616"></a><span class="lineno">  616</span>&#160;    simplex.tableau.getConstants() &lt;&lt; A(_, 0);</div>
 <div class="line"><a name="l00617"></a><span class="lineno">  617</span>&#160;    <span class="keywordflow">if</span> (!simplex.initiateFeasible()) <span class="keywordflow">return</span> simplex;</div>
-<div class="line"><a name="l00618"></a><span class="lineno">  618</span>&#160;    alloc.checkPoint(checkPoint);</div>
+<div class="line"><a name="l00618"></a><span class="lineno">  618</span>&#160;    alloc.rollBack(checkPoint);</div>
 <div class="line"><a name="l00619"></a><span class="lineno">  619</span>&#160;    <span class="keywordflow">return</span> {};</div>
 <div class="line"><a name="l00620"></a><span class="lineno">  620</span>&#160;  }</div>
 <div class="line"><a name="l00621"></a><span class="lineno">  621</span>&#160; </div>
@@ -681,7 +681,7 @@ $(function() {
 <div class="line"><a name="l00634"></a><span class="lineno">  634</span>&#160;        cost[v] = -constraints(c, v + 1);</div>
 <div class="line"><a name="l00635"></a><span class="lineno">  635</span>&#160;      <span class="keywordflow">if</span> (simplex.run() != bumpedBound) tableau.deleteConstraint(c--);</div>
 <div class="line"><a name="l00636"></a><span class="lineno">  636</span>&#160;    }</div>
-<div class="line"><a name="l00637"></a><span class="lineno">  637</span>&#160;    alloc.checkPoint(p);</div>
+<div class="line"><a name="l00637"></a><span class="lineno">  637</span>&#160;    alloc.rollBack(p);</div>
 <div class="line"><a name="l00638"></a><span class="lineno">  638</span>&#160;  }</div>
 <div class="line"><a name="l00639"></a><span class="lineno">  639</span>&#160; </div>
 <div class="line"><a name="l00640"></a><span class="lineno">  640</span>&#160;  <span class="keywordtype">void</span> removeVariable(<span class="keywordtype">size_t</span> i) {</div>
@@ -744,7 +744,7 @@ $(function() {
 <div class="line"><a name="l00697"></a><span class="lineno">  697</span>&#160;    sC(_, _(1 + off, end)) &lt;&lt; fC(_, _(1 + off + numFix, end));</div>
 <div class="line"><a name="l00698"></a><span class="lineno">  698</span>&#160;    <span class="comment">// returns `true` if unsatisfiable</span></div>
 <div class="line"><a name="l00699"></a><span class="lineno">  699</span>&#160;    <span class="keywordtype">bool</span> res = subSimp.initiateFeasible();</div>
-<div class="line"><a name="l00700"></a><span class="lineno">  700</span>&#160;    alloc.checkPoint(p);</div>
+<div class="line"><a name="l00700"></a><span class="lineno">  700</span>&#160;    alloc.rollBack(p);</div>
 <div class="line"><a name="l00701"></a><span class="lineno">  701</span>&#160;    <span class="keywordflow">return</span> res;</div>
 <div class="line"><a name="l00702"></a><span class="lineno">  702</span>&#160;  }</div>
 <div class="line"><a name="l00703"></a><span class="lineno">  703</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> satisfiable(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, PtrVector&lt;int64_t&gt; x,</div>
@@ -781,7 +781,7 @@ $(function() {
 <div class="line"><a name="l00734"></a><span class="lineno">  734</span>&#160;    sC(_, _(1, 1 + off)) &lt;&lt; fC(_(begin, numRow), _(1, 1 + off));</div>
 <div class="line"><a name="l00735"></a><span class="lineno">  735</span>&#160;    assert(sC(_, _(1, 1 + off)) == fC(_(begin, numRow), _(1, 1 + off)));</div>
 <div class="line"><a name="l00736"></a><span class="lineno">  736</span>&#160;    <span class="keywordtype">bool</span> res = subSimp.initiateFeasible();</div>
-<div class="line"><a name="l00737"></a><span class="lineno">  737</span>&#160;    alloc.checkPoint(p);</div>
+<div class="line"><a name="l00737"></a><span class="lineno">  737</span>&#160;    alloc.rollBack(p);</div>
 <div class="line"><a name="l00738"></a><span class="lineno">  738</span>&#160;    <span class="keywordflow">return</span> res;</div>
 <div class="line"><a name="l00739"></a><span class="lineno">  739</span>&#160;  }</div>
 <div class="line"><a name="l00740"></a><span class="lineno">  740</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> satisfiableZeroRem(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc,</div>
