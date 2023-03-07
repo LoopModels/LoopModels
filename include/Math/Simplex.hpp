@@ -591,7 +591,7 @@ struct Simplex {
     // for (size_t i = 0; i < numSlack; ++i) consts[i] = A(i, 0);
     // for (size_t i = 0; i < numStrict; ++i) consts[i + numSlack] = B(i, 0);
     if (!simplex.initiateFeasible()) return simplex;
-    alloc.checkPoint(checkPoint);
+    alloc.rollBack(checkPoint);
     return {};
   }
   static auto positiveVariables(BumpAlloc<> &alloc, PtrMatrix<int64_t> A)
@@ -615,7 +615,7 @@ struct Simplex {
     // for (size_t i = 0; i < numSlack; ++i) consts[i] = A(i, 0);
     simplex.tableau.getConstants() << A(_, 0);
     if (!simplex.initiateFeasible()) return simplex;
-    alloc.checkPoint(checkPoint);
+    alloc.rollBack(checkPoint);
     return {};
   }
 
@@ -634,7 +634,7 @@ struct Simplex {
         cost[v] = -constraints(c, v + 1);
       if (simplex.run() != bumpedBound) tableau.deleteConstraint(c--);
     }
-    alloc.checkPoint(p);
+    alloc.rollBack(p);
   }
 
   void removeVariable(size_t i) {
@@ -697,7 +697,7 @@ struct Simplex {
     sC(_, _(1 + off, end)) << fC(_, _(1 + off + numFix, end));
     // returns `true` if unsatisfiable
     bool res = subSimp.initiateFeasible();
-    alloc.checkPoint(p);
+    alloc.rollBack(p);
     return res;
   }
   [[nodiscard]] auto satisfiable(BumpAlloc<> &alloc, PtrVector<int64_t> x,
@@ -734,7 +734,7 @@ struct Simplex {
     sC(_, _(1, 1 + off)) << fC(_(begin, numRow), _(1, 1 + off));
     assert(sC(_, _(1, 1 + off)) == fC(_(begin, numRow), _(1, 1 + off)));
     bool res = subSimp.initiateFeasible();
-    alloc.checkPoint(p);
+    alloc.rollBack(p);
     return res;
   }
   [[nodiscard]] auto satisfiableZeroRem(BumpAlloc<> &alloc,

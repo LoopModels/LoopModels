@@ -128,7 +128,7 @@ struct BasePolyhedra {
     return initializeComparator().isEmpty();
   }
   constexpr auto calcIsEmpty(BumpAlloc<> &alloc) -> bool {
-    return initializeComparator(alloc).isEmpty();
+    return initializeComparator(alloc).isEmpty(WBumpAlloc<int64_t>{alloc});
   }
   template <class Allocator> constexpr void pruneBounds(Allocator alloc) {
     if (calcIsEmpty()) {
@@ -143,7 +143,7 @@ struct BasePolyhedra {
     const size_t dyn = getNumDynamic();
     MutPtrMatrix<int64_t> A{getA()};
     Vector<int64_t> diff{unsigned(A.numCol())};
-    auto p = checkpoint(alloc);
+    auto p = rollback(alloc);
     auto C = initializeComparator(alloc);
     if constexpr (HasEqualities) removeRedundantRows(getA(), getE());
     for (auto j = size_t(getA().numRow()); j;) {
@@ -176,7 +176,7 @@ struct BasePolyhedra {
         }
       }
     }
-    checkpoint(alloc, p);
+    rollback(alloc, p);
     if constexpr (HasEqualities)
       for (size_t i = 0; i < getE().numRow(); ++i) normalizeByGCD(getE()(i, _));
     truncNumInEqCon(A.numRow());
@@ -269,16 +269,3 @@ struct BasePolyhedra {
     getA().truncate(Col{numVar});
   }
 };
-
-// using SymbolicPolyhedra =
-//   BasePolyhedra<EmptyMatrix<int64_t>, LinearSymbolicComparator,
-//                 llvm::SmallVector<const llvm::SCEV *>, false>;
-// using NonNegativeSymbolicPolyhedra =
-//   BasePolyhedra<EmptyMatrix<int64_t>, LinearSymbolicComparator,
-//                 llvm::SmallVector<const llvm::SCEV *>, true>;
-// using SymbolicEqPolyhedra =
-//   BasePolyhedra<IntMatrix, LinearSymbolicComparator,
-//                 llvm::SmallVector<const llvm::SCEV *>, false>;
-// using NonNegativeSymbolicEqPolyhedra =
-//   BasePolyhedra<IntMatrix, LinearSymbolicComparator,
-//                 llvm::SmallVector<const llvm::SCEV *>, true>;

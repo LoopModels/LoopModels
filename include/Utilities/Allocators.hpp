@@ -214,7 +214,7 @@ public:
     std::byte *p;
   };
   [[nodiscard]] constexpr auto checkPoint() -> CheckPoint { return SlabCur; }
-  constexpr void checkPoint(CheckPoint p) {
+  constexpr void rollBack(CheckPoint p) {
     if (p.isInSlab(SlabEnd)) {
 #if LLVM_ADDRESS_SANITIZER_BUILD
       if constexpr (BumpUp) __asan_poison_memory_region(p, SlabCur - p);
@@ -382,9 +382,9 @@ public:
     return A->template allocate<T>(n);
   }
   constexpr auto checkPoint() -> typename Alloc::CheckPoint {
-    return A->checkPoint();
+    return A->rollBack();
   }
-  constexpr void checkPoint(typename Alloc::CheckPoint p) { A->checkPoint(p); }
+  constexpr void rollBack(typename Alloc::CheckPoint p) { A->rollBack(p); }
 };
 static_assert(std::same_as<
               std::allocator_traits<WBumpAlloc<int64_t *>>::size_type, size_t>);
@@ -423,9 +423,12 @@ struct NoCheckpoint {};
 
 constexpr auto checkpoint(const auto &) { return NoCheckpoint{}; }
 template <class T> constexpr auto checkpoint(WBumpAlloc<T> alloc) {
-  return alloc.checkPoint();
+  return alloc.rollBack();
 }
-constexpr void checkpoint(const auto &, NoCheckpoint) {}
-template <class T> constexpr void checkpoint(WBumpAlloc<T> alloc, auto p) {
-  alloc.checkPoint(p);
+constexpr auto checkpoint(BumpAlloc<> &alloc) { return alloc.checkPoint(); }
+
+constexpr void rollback(const auto &, NoCheckpoint) {}
+template <class T> constexpr void rollback(WBumpAlloc<T> alloc, auto p) {
+  alloc.rollBack(p);
 }
+constexpr void rollback(BumpAlloc<> &alloc, auto p) { alloc.rollBack(p); }

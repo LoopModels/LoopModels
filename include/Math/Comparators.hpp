@@ -488,7 +488,7 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
 
   // Note that this is only valid when the comparator was constructed
   // with index `0` referring to >= 0 constants (i.e., the default).
-  constexpr auto isEmpty() -> bool {
+  constexpr auto isEmpty(Allocator auto alloc) -> bool {
     auto &&V = getV();
     auto &&U = getU();
     auto &&d = getD();
@@ -504,9 +504,8 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
         if (auto rhs = H(i, oldn))
           if ((rhs > 0) != (H(i, i) > 0)) return false;
       return true;
-    }
-    // Column rank deficient case
-    else {
+    } else {
+      // Column rank deficient case
       Row numSlack = V.numRow() - numEquations;
       // Vector<int64_t> dinv = d; // copy
       // We represent D martix as a vector, and multiply the lcm to the
@@ -533,6 +532,9 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
       return optS.has_value();
     }
     return true;
+  }
+  constexpr auto isEmpty() -> bool {
+    return isEmpty(std::allocator<int64_t>{});
   }
   [[nodiscard]] constexpr auto greaterEqual(PtrVector<int64_t> query) const
     -> bool {

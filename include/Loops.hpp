@@ -221,7 +221,7 @@ addSymbol(std::array<IntMatrix, 2> &AB,
         addSymbol(AB, symbols, L, x->getOperand(0), SE, lu, mlt, minDepth);
       if (auto opc = getConstantInt(x->getOperand(1))) {
         // swap order vs recDepth to go inner<->outer
-        B(lu, B.numCol() - recDepth) << mlt * (*opc);
+        B(lu, recDepth - 1) << mlt * (*opc);
         return minDepth;
       }
       v = SE.getAddRecExpr(SE.getZero(x->getOperand(0)->getType()),
@@ -273,15 +273,15 @@ addBackedgeTakenCount(std::array<IntMatrix, 2> &AB,
                       llvm::Loop *L, const llvm::SCEV *BT,
                       llvm::ScalarEvolution &SE, size_t minDepth,
                       llvm::OptimizationRemarkEmitter *ORE) -> size_t {
+  // A contains syms
   auto &[A, B] = AB;
   Row M = A.numRow();
   A.resize(M + 1);
   B.resize(M + 1);
   minDepth = addSymbol(AB, symbols, L, BT, SE, _(M, M + 1), 1, minDepth);
   assert(A.numRow() == B.numRow());
-  size_t depth = L->getLoopDepth();
-  for (auto m = size_t(M); m < A.numRow(); ++m)
-    B(m, B.numCol() - depth) = -1; // indvar
+  size_t depth = L->getLoopDepth() - 1;
+  for (auto m = size_t(M); m < A.numRow(); ++m) B(m, depth) = -1; // indvar
   // recurse, if possible to add an outer layer
   if (llvm::Loop *P = L->getParentLoop()) {
     if (areSymbolsLoopInvariant(A, symbols, P, SE)) {
@@ -315,7 +315,7 @@ addBackedgeTakenCount(std::array<IntMatrix, 2> &AB,
       ORE->emit(analysis << os.str());
     }
   }
-  return std::max(depth - 1, minDepth);
+  return std::max(depth, minDepth);
 }
 } // namespace loopNestCtor
 
@@ -353,12 +353,11 @@ struct AffineLoopNest
     for (size_t d = 0; d < minDepth; ++d) {
       // loop at depth d+1
       llvm::Loop *P = nullptr;
-      // search B(_,end-d) for references
+      // search B(_,d) for references
       for (size_t i = 0; i < B.numRow(); ++i) {
         // TODO; confirm `last` vs `end`
-        if (int64_t Bid = B(i, last - d)) {
-          if (!P) {
-            // find P
+        if (int64_t Bid = B(i, d)) {
+          if (!P) { // find P
             P = L;
             for (size_t r = d + 1; r < maxDepth; ++r) P = P->getParentLoop();
           }
@@ -379,7 +378,8 @@ struct AffineLoopNest
       AffineLoopNest<false>::allocate(alloc, numConstraints, depth, symbols)};
     aln->getA()(_, _(0, N)) << A;
     // copy the included loops from B
-    aln->getA()(_, _(N, N + depth)) << B(_, _(0, depth));
+    // we use outer <-> inner order, so we skip unsupported outer loops.
+    aln->getA()(_, _(N, N + depth)) << B(_, _(end - depth, end));
     return aln;
     // addZeroLowerBounds();
     // NOTE: pruneBounds() is not legal here if we wish to use
@@ -607,7 +607,7 @@ struct AffineLoopNest
       if (i == 0) break;
       tmp->removeLoopBang(xi);
     }
-    alloc.checkPoint(check);
+    alloc.rollBack(check);
     return ret;
   }
   [[nodiscard]] auto zeroExtraIterationsUponExtending(size_t _i,
