@@ -127,24 +127,26 @@ struct BasePolyhedra {
   constexpr auto calcIsEmpty() -> bool {
     return initializeComparator().isEmpty();
   }
+  constexpr auto calcIsEmpty(Allocator auto alloc) -> bool {
+    return initializeComparator(alloc).isEmpty(alloc);
+  }
   constexpr auto calcIsEmpty(BumpAlloc<> &alloc) -> bool {
     return initializeComparator(alloc).isEmpty(WBumpAlloc<int64_t>{alloc});
   }
-  template <class Allocator> constexpr void pruneBounds(Allocator alloc) {
-    if (calcIsEmpty()) {
+  constexpr void pruneBounds(Allocator auto alloc) {
+    auto p = checkpoint(alloc);
+    auto C = initializeComparator(alloc);
+    if (C.isEmpty(alloc)) {
       getA().truncate(Row{0});
       if constexpr (HasEqualities) getE().truncate(Row{0});
-    } else pruneBoundsUnchecked(alloc);
+    } else pruneBoundsUncheckedCore(alloc, C);
+    rollback(alloc, p);
   }
-  // TODO: upper bound allocation size for comparator
-  // then, reuse memory instead of reallocating
-  template <class Allocator>
-  constexpr void pruneBoundsUnchecked(Allocator alloc) {
-    const size_t dyn = getNumDynamic();
+  constexpr void pruneBoundsUncheckedCore(Allocator auto alloc,
+                                          comparator::PtrSymbolicComparator C) {
     MutPtrMatrix<int64_t> A{getA()};
-    Vector<int64_t> diff{unsigned(A.numCol())};
-    auto p = rollback(alloc);
-    auto C = initializeComparator(alloc);
+    const size_t dyn = getNumDynamic();
+    auto diff = vector(alloc, unsigned(A.numCol()));
     if constexpr (HasEqualities) removeRedundantRows(getA(), getE());
     for (auto j = size_t(getA().numRow()); j;) {
       bool broke = false;
@@ -176,10 +178,17 @@ struct BasePolyhedra {
         }
       }
     }
+  }
+  // TODO: upper bound allocation size for comparator
+  // then, reuse memory instead of reallocating
+  constexpr void pruneBoundsUnchecked(Allocator auto alloc) {
+    auto p = checkpoint(alloc);
+    auto C = initializeComparator(alloc);
+    pruneBoundsUncheckedCore(alloc, C);
     rollback(alloc, p);
     if constexpr (HasEqualities)
       for (size_t i = 0; i < getE().numRow(); ++i) normalizeByGCD(getE()(i, _));
-    truncNumInEqCon(A.numRow());
+    truncNumInEqCon(getA().numRow());
     if constexpr (HasEqualities) truncNumEqCon(getE().numRow());
   }
 
