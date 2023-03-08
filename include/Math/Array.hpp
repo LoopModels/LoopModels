@@ -78,6 +78,12 @@ template <class T, class S> struct Array {
   [[nodiscard]] constexpr auto rend() const noexcept {
     return std::reverse_iterator(begin());
   }
+  [[nodiscard]] constexpr auto front() const noexcept -> const T & {
+    return *begin();
+  }
+  [[nodiscard]] constexpr auto back() const noexcept -> const T & {
+    return *(end() - 1);
+  }
   // indexing has two components:
   // 1. offsetting the pointer
   // 2. calculating new dim
@@ -201,8 +207,8 @@ protected:
 template <class T, class S> struct MutArray : Array<T, S> {
   using BaseT = Array<T, S>;
   // using BaseT::BaseT;
-  using BaseT::operator[],
-    BaseT::operator(), BaseT::data, BaseT::begin, BaseT::end;
+  using BaseT::operator[], BaseT::operator(), BaseT::data, BaseT::begin,
+    BaseT::end, BaseT::rbegin, BaseT::rend, BaseT::front, BaseT::back;
 
   constexpr MutArray(const MutArray &) = default;
   constexpr MutArray(MutArray &&) noexcept = default;
@@ -213,8 +219,7 @@ template <class T, class S> struct MutArray : Array<T, S> {
     S oz = this->sz;
     this->sz = nz;
     if constexpr (std::integral<S>) {
-      invariant(U(nz) <= U(oz));
-      invariant(U(nz) <= this->capacity);
+      invariant(size_t(nz) <= size_t(oz));
     } else if constexpr (std::is_same_v<S, StridedDims>) {
       invariant(nz.row() <= oz.row());
       invariant(nz.col() <= oz.col());
@@ -298,6 +303,8 @@ template <class T, class S> struct MutArray : Array<T, S> {
   [[nodiscard]] constexpr auto rend() noexcept {
     return std::reverse_iterator(begin());
   }
+  constexpr auto front() noexcept -> T & { return *begin(); }
+  constexpr auto back() noexcept -> T & { return *(end() - 1); }
   constexpr auto operator[](Index<S> auto i) noexcept -> decltype(auto) {
     auto offset = calcOffset(this->sz, i);
     auto newDim = calcNewDim(this->sz, i);
@@ -1218,9 +1225,7 @@ template <class T, class S, class A, std::unsigned_integral U>
 struct ManagedArray<T, S, 0, A, U> : ReallocView<T, S, A, U> {
   static_assert(std::is_trivially_destructible_v<T>);
   using BaseT = ReallocView<T, S, A, U>;
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wuninitialized"
-  ManagedArray() = delete;
+  constexpr ManagedArray() noexcept : BaseT{nullptr, S{}, U{}} {};
   constexpr ManagedArray(S s) noexcept : BaseT{A{}.allocate(U(s)), s, U(s)} {}
   constexpr ManagedArray(S s, T x) noexcept
     : BaseT{A{}.allocate(U(s)), s, U(s)} {
@@ -1248,7 +1253,6 @@ struct ManagedArray<T, S, 0, A, U> : ReallocView<T, S, A, U> {
     U len = U(this->sz);
     std::uninitialized_copy_n(b.data(), len, (T *)(this->ptr));
   }
-#pragma GCC diagnostic pop
   template <class D, std::unsigned_integral I>
   constexpr ManagedArray(ManagedArray<T, D, 0, A, I> &&b) noexcept
     : BaseT{b.data(), b.dim(), U(b.getCapacity()), b.get_allocator()} {
@@ -1378,7 +1382,8 @@ static_assert(
   sizeof(ManagedArray<int64_t, SquareDims, 64, std::allocator<int64_t>>) ==
   528);
 
-template <class T> using Vector = ManagedArray<T, unsigned>;
+template <class T, size_t N = PreAllocStorage<T>()>
+using Vector = ManagedArray<T, unsigned, N>;
 template <class T> using PtrVector = Array<T, unsigned>;
 template <class T> using MutPtrVector = MutArray<T, unsigned>;
 

@@ -298,6 +298,9 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
     return static_cast<T *>(this)->getDImpl(n);
   }
   constexpr void setURank(Row r) { static_cast<T *>(this)->setURankImpl(r); }
+  constexpr auto getURank() -> size_t {
+    return static_cast<T *>(this)->getURankImpl();
+  }
 
   template <typename Allocator>
   constexpr void initNonNegative(Allocator alloc, PtrMatrix<int64_t> A,
@@ -488,7 +491,7 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
 
   // Note that this is only valid when the comparator was constructed
   // with index `0` referring to >= 0 constants (i.e., the default).
-  constexpr auto isEmpty(Allocator auto alloc) -> bool {
+  constexpr auto isEmpty(BumpAlloc<> &alloc) -> bool {
     auto &&V = getV();
     auto &&U = getU();
     auto &&d = getD();
@@ -528,63 +531,88 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
           expandW(i, NSdim + 1 + j) = val;
         }
       }
-      std::optional<Simplex> optS{Simplex::positiveVariables(expandW)};
+      auto p = checkpoint(alloc);
+      std::optional<Simplex> optS{Simplex::positiveVariables(alloc, expandW)};
+      rollback(alloc, p);
       return optS.has_value();
     }
     return true;
   }
   constexpr auto isEmpty() -> bool {
-    return isEmpty(std::allocator<int64_t>{});
+    BumpAlloc<> alloc;
+    return isEmpty(alloc);
   }
   [[nodiscard]] constexpr auto greaterEqual(PtrVector<int64_t> query) const
     -> bool {
+    BumpAlloc<> alloc;
+    return greaterEqual(alloc, query);
+  }
+  [[nodiscard]] constexpr auto greaterEqualFullRank(BumpAlloc<> &alloc,
+                                                    PtrVector<int64_t> b) const
+    -> bool {
     auto &&V = getV();
+    auto &&d = getD();
+    if (!allZero(b[_(V.numRow(), end)])) return false;
+    auto H = matrix<int64_t>(alloc, V.numRow(), V.numCol() + 1);
+    Col oldn = V.numCol();
+    H(_, _(0, oldn)) = V;
+    // H.numRow() == b.size(), because we're only here if dimD == 0,
+    // in which case V.numRow() == U.numRow() == b.size()
+    H(_, oldn) << b;
+    NormalForm::solveSystem(H);
+    for (size_t i = numEquations; i < H.numRow(); ++i)
+      if (auto rhs = H(i, oldn))
+        if ((rhs > 0) != (H(i, i) > 0)) return false;
+    return true;
+  }
+  [[nodiscard]] constexpr auto
+  greaterEqualRankDeficient(BumpAlloc<> &alloc, MutPtrVector<int64_t> b) const
+    -> bool {
+    auto &&V = getV();
+    auto &&d = getD();
+    Row numSlack = V.numRow() - numEquations;
+    auto dinv = vector<int64_t>(alloc, d.size());
+    dinv << d; // copy
+    // We represent D martix as a vector, and multiply the lcm to the
+    // linear equation to avoid store D^(-1) as rational type
+    int64_t Dlcm = lcm(dinv);
+    for (size_t i = 0; i < dinv.size(); ++i) {
+      auto x = Dlcm / dinv[i];
+      dinv[i] = x;
+      b[i] *= x;
+    }
+    size_t numRowTrunc = getURank();
+    auto c = vector<int64_t>(alloc, V.numRow() - numEquations);
+    c << V(_(numEquations, end), _(begin, numRowTrunc)) * b;
+    auto NSdim = V.numCol() - numRowTrunc;
+    // expand W stores [c -JV2 JV2]
+    //  we use simplex to solve [-JV2 JV2][y2+ y2-]' <= JV1D^(-1)Uq
+    // where y2 = y2+ - y2-
+    auto expandW = matrix<int64_t>(alloc, numSlack, NSdim * 2 + 1);
+    for (size_t i = 0; i < numSlack; ++i) {
+      expandW(i, 0) = c[i];
+      // expandW(i, 0) *= Dlcm;
+      for (size_t j = 0; j < NSdim; ++j) {
+        auto val = V(i + numEquations, numRowTrunc + j) * Dlcm;
+        expandW(i, j + 1) = -val;
+        expandW(i, NSdim + 1 + j) = val;
+      }
+    }
+    std::optional<Simplex> optS{Simplex::positiveVariables(alloc, expandW)};
+    return optS.has_value();
+  }
+  [[nodiscard]] constexpr auto greaterEqual(BumpAlloc<> &alloc,
+                                            PtrVector<int64_t> query) const
+    -> bool {
     auto &&U = getU();
     auto &&d = getD();
-    Vector<int64_t> b = U(_, _(begin, query.size())) * query;
-    // Full column rank case
-    if (d.size() == 0) {
-      if (!allZero(b[_(V.numRow(), end)])) return false;
-      auto H = V;
-      Col oldn = H.numCol();
-      H.resize(oldn + 1);
-      for (size_t i = 0; i < H.numRow(); ++i) H(i, oldn) = b[i];
-      NormalForm::solveSystem(H);
-      for (size_t i = numEquations; i < H.numRow(); ++i)
-        if (auto rhs = H(i, oldn))
-          if ((rhs > 0) != (H(i, i) > 0)) return false;
-      return true;
-    } else {
-      // Column rank deficient case
-      Row numSlack = V.numRow() - numEquations;
-      Vector<int64_t> dinv = d; // copy
-      // We represent D martix as a vector, and multiply the lcm to the
-      // linear equation to avoid store D^(-1) as rational type
-      int64_t Dlcm = lcm(dinv);
-      for (size_t i = 0; i < dinv.size(); ++i) {
-        auto x = Dlcm / dinv[i];
-        dinv[i] = x;
-        b[i] *= x;
-      }
-      size_t numRowTrunc = size_t(U.numRow());
-      Vector<int64_t> c = V(_(numEquations, end), _(begin, numRowTrunc)) * b;
-      auto NSdim = V.numCol() - numRowTrunc;
-      // expand W stores [c -JV2 JV2]
-      //  we use simplex to solve [-JV2 JV2][y2+ y2-]' <= JV1D^(-1)Uq
-      // where y2 = y2+ - y2-
-      IntMatrix expandW(numSlack, NSdim * 2 + 1);
-      for (size_t i = 0; i < numSlack; ++i) {
-        expandW(i, 0) = c[i];
-        // expandW(i, 0) *= Dlcm;
-        for (size_t j = 0; j < NSdim; ++j) {
-          auto val = V(i + numEquations, numRowTrunc + j) * Dlcm;
-          expandW(i, j + 1) = -val;
-          expandW(i, NSdim + 1 + j) = val;
-        }
-      }
-      std::optional<Simplex> optS{Simplex::positiveVariables(expandW)};
-      return optS.has_value();
-    }
+    auto p = checkpoint(alloc);
+    auto b = vector<int64_t>(alloc, U.numRow());
+    b << U(_, _(begin, query.size())) * query;
+    bool ge = d.size() ? greaterEqualRankDeficient(alloc, b)
+                       : greaterEqualFullRank(alloc, b);
+    rollback(alloc, p);
+    return ge;
   }
 };
 struct LinearSymbolicComparator
@@ -609,7 +637,9 @@ struct LinearSymbolicComparator
   // void setUColImpl(Col c) { colU = unsigned(c); }
   // void setVDimImpl(size_t x) { dimV = unsigned(x); }
   // void setDDimImpl(size_t x) { dimD = unsigned(x); }
-
+  [[nodiscard]] constexpr auto getURankImpl() const -> size_t {
+    return size_t(U.numRow());
+  }
   constexpr auto getUImpl(Row r, Col c) -> MutDensePtrMatrix<int64_t> {
     U.resizeForOverwrite(r, c);
     return U;
@@ -672,6 +702,7 @@ struct PtrSymbolicComparator
   unsigned int dimD{0};
 
   constexpr void setURankImpl(Row r) { rankU = unsigned(r); }
+  [[nodiscard]] constexpr auto getURankImpl() const -> size_t { return rankU; }
   // void setUColImpl(Col c) { colU = unsigned(c); }
   // void setVDimImpl(size_t d) { dimV = unsigned(d); }
   // void setDDimImpl(size_t d) { dimD = int(d); }

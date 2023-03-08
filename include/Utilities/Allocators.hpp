@@ -4,6 +4,7 @@
 /// The advantages over llvm's bumpallocator are:
 /// 1. Support realloc
 /// 2. Support support checkpointing
+#include "Math/Array.hpp"
 #include "Math/Utilities.hpp"
 #include "Utilities/Iterators.hpp"
 #include "Utilities/Valid.hpp"
@@ -70,7 +71,7 @@ public:
   //   std::free(slab);
   // }
 #endif
-  void deallocate(std::byte *Ptr, size_t Size) {
+  constexpr void deallocate(std::byte *Ptr, size_t Size) {
     (void)Ptr;
     (void)Size;
     __asan_poison_memory_region(Ptr, Size);
@@ -99,11 +100,11 @@ public:
     }
 #endif
   }
-  template <typename T> void deallocate(T *Ptr, size_t N = 1) {
+  template <typename T> constexpr void deallocate(T *Ptr, size_t N = 1) {
     deallocate(reinterpret_cast<std::byte *>(Ptr), N * sizeof(T));
   }
-  auto tryReallocate(std::byte *Ptr, size_t OldSize, size_t NewSize,
-                     size_t Align) -> std::byte * {
+  constexpr auto tryReallocate(std::byte *Ptr, size_t OldSize, size_t NewSize,
+                               size_t Align) -> std::byte * {
     Align = Align > MinAlignment ? toPowerOf2(Align) : MinAlignment;
     if constexpr (BumpUp) {
       if (Ptr == SlabCur - align(OldSize)) {
@@ -126,7 +127,7 @@ public:
     return nullptr;
   }
   template <typename T>
-  auto tryReallocate(T *Ptr, size_t OldSize, size_t NewSize) -> T * {
+  constexpr auto tryReallocate(T *Ptr, size_t OldSize, size_t NewSize) -> T * {
     return reinterpret_cast<T *>(
       tryReallocate(reinterpret_cast<std::byte *>(Ptr), OldSize * sizeof(T),
                     NewSize * sizeof(T), alignof(T)));
@@ -135,7 +136,7 @@ public:
   /// size_t Align) Should be safe with OldSize == 0, as it checks before
   /// copying
   template <bool ForOverwrite = false>
-  [[gnu::returns_nonnull, nodiscard]] auto
+  [[gnu::returns_nonnull, nodiscard]] constexpr auto
   reallocate(std::byte *Ptr, size_t OldSize, size_t NewSize, size_t Align)
     -> void * {
     if (OldSize >= NewSize) return Ptr;
@@ -173,31 +174,31 @@ public:
     deallocate(Ptr, OldSize);
     return NewPtr;
   }
-  void reset() {
+  constexpr void reset() {
     resetSlabs();
     resetCustomSlabs();
   }
   template <bool ForOverwrite = false, typename T>
-  [[gnu::returns_nonnull, gnu::flatten, nodiscard]] auto
+  [[gnu::returns_nonnull, gnu::flatten, nodiscard]] constexpr auto
   reallocate(T *Ptr, size_t OldSize, size_t NewSize) -> T * {
     return reinterpret_cast<T *>(reallocate<ForOverwrite>(
       reinterpret_cast<std::byte *>(Ptr), OldSize * sizeof(T),
       NewSize * sizeof(T), alignof(T)));
   }
-  BumpAlloc() : slabs({}), customSlabs({}) { newSlab(); }
-  BumpAlloc(BumpAlloc &&alloc) noexcept {
+  constexpr BumpAlloc() : slabs({}), customSlabs({}) { newSlab(); }
+  constexpr BumpAlloc(BumpAlloc &&alloc) noexcept {
     slabs = std::move(alloc.slabs);
     customSlabs = std::move(alloc.customSlabs);
     SlabCur = alloc.SlabCur;
     SlabEnd = alloc.SlabEnd;
   }
-  ~BumpAlloc() {
+  constexpr ~BumpAlloc() {
     for (auto Slab : slabs)
       llvm::deallocate_buffer(Slab, SlabSize, MinAlignment);
     resetCustomSlabs();
   }
   template <typename T, typename... Args>
-  auto construct(Args &&...args) -> T * {
+  constexpr auto construct(Args &&...args) -> T * {
     auto *p = allocate(sizeof(T), alignof(T));
     return new (p) T(std::forward<Args>(args)...);
   }
@@ -252,12 +253,12 @@ private:
     if constexpr (BumpUp) return cur >= lst;
     else return cur < lst;
   }
-  auto maybeNewSlab() -> bool {
+  constexpr auto maybeNewSlab() -> bool {
     if (!outOfSlab(SlabCur, SlabEnd)) return false;
     newSlab();
     return true;
   }
-  void initSlab(std::byte *p) {
+  constexpr void initSlab(std::byte *p) {
     __asan_poison_memory_region(p, SlabSize);
     if constexpr (BumpUp) {
       SlabCur = p;
@@ -267,14 +268,14 @@ private:
       SlabEnd = p;
     }
   }
-  void newSlab() {
+  constexpr void newSlab() {
     auto *p = reinterpret_cast<std::byte *>(
       llvm::allocate_buffer(SlabSize, MinAlignment));
     slabs.push_back(p);
     initSlab(p);
   }
   // updates SlabCur and returns the allocated pointer
-  [[gnu::returns_nonnull]] auto allocCore(size_t Size, size_t Align)
+  [[gnu::returns_nonnull]] constexpr auto allocCore(size_t Size, size_t Align)
     -> std::byte * {
 #if LLVM_ADDRESS_SANITIZER_BUILD
     SlabCur = bump(SlabCur, Align); // poisoned zone
@@ -290,7 +291,8 @@ private:
     }
   }
   // updates SlabCur and returns the allocated pointer
-  [[gnu::returns_nonnull]] auto allocCore(size_t Size) -> std::byte * {
+  [[gnu::returns_nonnull]] constexpr auto allocCore(size_t Size)
+    -> std::byte * {
     // we know we already have MinAlignment
     // and we need to preserve it.
     // Thus, we align `Size` and offset it.
@@ -308,19 +310,20 @@ private:
     }
   }
   //
-  [[gnu::returns_nonnull]] auto bumpAlloc(size_t Size, size_t Align) -> void * {
+  [[gnu::returns_nonnull]] constexpr auto bumpAlloc(size_t Size, size_t Align)
+    -> void * {
     Align = toPowerOf2(Align);
     std::byte *ret = allocCore(Size, Align);
     if (maybeNewSlab()) ret = allocCore(Size, Align);
     return reinterpret_cast<void *>(ret);
   }
-  [[gnu::returns_nonnull]] auto bumpAlloc(size_t Size) -> void * {
+  [[gnu::returns_nonnull]] constexpr auto bumpAlloc(size_t Size) -> void * {
     std::byte *ret = allocCore(Size);
     if (maybeNewSlab()) ret = allocCore(Size);
     return reinterpret_cast<void *>(ret);
   }
 
-  void resetSlabs() {
+  constexpr void resetSlabs() {
     size_t nSlabs = slabs.size();
     if (nSlabs == 0) return;
     if (nSlabs > 1) {
@@ -332,7 +335,7 @@ private:
     }
     initSlab(slabs.front());
   }
-  void resetCustomSlabs() {
+  constexpr void resetCustomSlabs() {
 #ifdef BUMP_ALLOC_LLVM_USE_ALLOCATOR
     for (auto [Ptr, Size] : customSlabs)
       llvm::deallocate_buffer(Ptr, Size, MinAlignment);
@@ -342,13 +345,13 @@ private:
     customSlabs.clear();
   }
 
-  std::byte *SlabCur{nullptr};                    // 8 bytes
-  std::byte *SlabEnd{nullptr};                    // 8 bytes
-  llvm::SmallVector<NotNull<std::byte>, 2> slabs; // 16 + 16 bytes
+  std::byte *SlabCur{nullptr};  // 8 bytes
+  std::byte *SlabEnd{nullptr};  // 8 bytes
+  Vector<std::byte *, 2> slabs; // 16 + 16 bytes
 #ifdef BUMP_ALLOC_LLVM_USE_ALLOCATOR
-  llvm::SmallVector<std::pair<void *, size_t>, 0> customSlabs; // 16 bytes
+  Vector<std::pair<void *, size_t>, 0> customSlabs; // 16 bytes
 #else
-  llvm::SmallVector<void *, 0> customSlabs; // 16 bytes
+  Vector<void *, 0> customSlabs; // 16 bytes
 #endif
 };
 static_assert(sizeof(BumpAlloc<>) == 64);
