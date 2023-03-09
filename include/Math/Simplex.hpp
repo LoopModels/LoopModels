@@ -153,7 +153,7 @@ struct Tableau {
     //   unsigned(NormalForm::simplifySystemImpl(getConstraints(), 1)));
   }
 #ifndef NDEBUG
-  void assertCanonical() const {
+  constexpr void assertCanonical() const {
     PtrMatrix<int64_t> C{getTableau()};
     PtrVector<int64_t> basicVars{getBasicVariables()};
     PtrVector<int64_t> basicCons{getBasicConstraints()};
@@ -321,7 +321,7 @@ struct Simplex {
       if (basicVars[i] == -1) augVars.push_back(i);
     return (augVars.size() && removeAugmentVars(augVars));
   }
-  auto removeAugmentVars(PtrVector<unsigned> augmentVars) -> bool {
+  constexpr auto removeAugmentVars(PtrVector<unsigned> augmentVars) -> bool {
     // TODO: try to avoid reallocating, via reserving enough ahead of time
     unsigned numAugment = augmentVars.size(), oldNumVar = tableau.numVars;
     assert(numAugment + tableau.numVars <= tableau.varCapacity);
@@ -547,7 +547,7 @@ struct Simplex {
 #endif
     return false;
   }
-  auto rLexMinLast(size_t n) -> Solution {
+  constexpr auto rLexMinLast(size_t n) -> Solution {
 #ifndef NDEBUG
     assert(tableau.inCanonicalForm);
     tableau.assertCanonical();
