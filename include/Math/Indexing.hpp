@@ -47,13 +47,13 @@ constexpr auto operator+(OffsetBegin y, ScalarValueIndex auto x)
   -> OffsetBegin {
   return OffsetBegin{size_t(x) + y.offset};
 }
-struct OffsetEnd {
+static constexpr inline struct OffsetEnd {
   [[no_unique_address]] size_t offset;
   friend inline auto operator<<(llvm::raw_ostream &os, OffsetEnd r)
     -> llvm::raw_ostream & {
     return os << "end - " << r.offset;
   }
-};
+} last{1};
 constexpr auto operator-(End, ScalarValueIndex auto x) -> OffsetEnd {
   return OffsetEnd{size_t(x)};
 }
@@ -63,7 +63,6 @@ constexpr auto operator-(OffsetEnd y, ScalarValueIndex auto x) -> OffsetEnd {
 constexpr auto operator+(OffsetEnd y, ScalarValueIndex auto x) -> OffsetEnd {
   return OffsetEnd{y.offset - size_t(x)};
 }
-static constexpr inline OffsetEnd last{1};
 template <typename T>
 concept RelativeOffset = std::same_as<T, End> || std::same_as<T, OffsetEnd> ||
                          std::same_as<T, Begin> || std::same_as<T, OffsetBegin>;
@@ -77,7 +76,7 @@ concept ScalarRelativeIndex =
 template <typename T>
 concept ScalarIndex = std::integral<T> || ScalarRelativeIndex<T>;
 
-static inline constexpr struct Colon {
+static constexpr inline struct Colon {
   [[nodiscard]] inline constexpr auto operator()(auto B, auto E) const {
     return Range{standardizeRangeBound(B), standardizeRangeBound(E)};
   }

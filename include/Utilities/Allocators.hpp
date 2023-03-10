@@ -218,8 +218,8 @@ public:
   constexpr void rollBack(CheckPoint p) {
     if (p.isInSlab(SlabEnd)) {
 #if LLVM_ADDRESS_SANITIZER_BUILD
-      if constexpr (BumpUp) __asan_poison_memory_region(p, SlabCur - p);
-      else __asan_poison_memory_region(SlabCur, p - SlabCur);
+      if constexpr (BumpUp) __asan_poison_memory_region(p.p, SlabCur - p.p);
+      else __asan_poison_memory_region(SlabCur, p.p - SlabCur);
 #endif
       SlabCur = p.p;
     } else initSlab(slabs.back());
@@ -345,13 +345,13 @@ private:
     customSlabs.clear();
   }
 
-  std::byte *SlabCur{nullptr};  // 8 bytes
-  std::byte *SlabEnd{nullptr};  // 8 bytes
-  Vector<std::byte *, 2> slabs; // 16 + 16 bytes
+  std::byte *SlabCur{nullptr};    // 8 bytes
+  std::byte *SlabEnd{nullptr};    // 8 bytes
+  Vector<std::byte *, 2> slabs{}; // 16 + 16 bytes
 #ifdef BUMP_ALLOC_LLVM_USE_ALLOCATOR
-  Vector<std::pair<void *, size_t>, 0> customSlabs; // 16 bytes
+  Vector<std::pair<void *, size_t>, 0> customSlabs{}; // 16 bytes
 #else
-  Vector<void *, 0> customSlabs; // 16 bytes
+  Vector<void *, 0> customSlabs{}; // 16 bytes
 #endif
 };
 static_assert(sizeof(BumpAlloc<>) == 64);

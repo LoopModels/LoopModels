@@ -734,7 +734,8 @@ protected:
 /// It does not own memory. Mostly, it serves to drop the inlined
 /// stack capacity of the `ManagedArray` from the type.
 template <class T, class S, class A = std::allocator<T>,
-          std::unsigned_integral U = default_capacity_type_t<S>>
+          std::unsigned_integral U = default_capacity_type_t<S>,
+          bool Init = false>
 struct ReallocView : ResizeableView<T, S, U> {
   using BaseT = ResizeableView<T, S, U>;
 
@@ -745,13 +746,13 @@ struct ReallocView : ResizeableView<T, S, U> {
   template <class... Args> constexpr auto emplace_back(Args &&...args) {
     static_assert(std::is_integral_v<S>, "emplace_back requires integral size");
     if (this->sz == this->capacity) [[unlikely]]
-      reserve(this->capacity + this->capacity);
+      reserve((Init && (this->capacity == 0)) ? U{1} : 2 * this->capacity);
     new (this->ptr + this->sz++) T(std::forward<Args>(args)...);
   }
   constexpr void push_back(T value) {
     static_assert(std::is_integral_v<S>, "push_back requires integral size");
     if (this->sz == this->capacity) [[unlikely]]
-      reserve(this->capacity + this->capacity);
+      reserve((Init && (this->capacity == 0)) ? U{1} : 2 * this->capacity);
     new (this->ptr + this->sz++) T(std::move(value));
   }
   // behavior
@@ -1222,9 +1223,9 @@ private:
   T memory[N]; // NOLINT (modernize-avoid-c-style-arrays)
 };
 template <class T, class S, class A, std::unsigned_integral U>
-struct ManagedArray<T, S, 0, A, U> : ReallocView<T, S, A, U> {
+struct ManagedArray<T, S, 0, A, U> : ReallocView<T, S, A, U, true> {
   static_assert(std::is_trivially_destructible_v<T>);
-  using BaseT = ReallocView<T, S, A, U>;
+  using BaseT = ReallocView<T, S, A, U, true>;
   constexpr ManagedArray() noexcept : BaseT{nullptr, S{}, U{}} {};
   constexpr ManagedArray(S s) noexcept : BaseT{A{}.allocate(U(s)), s, U(s)} {}
   constexpr ManagedArray(S s, T x) noexcept

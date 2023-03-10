@@ -7,6 +7,7 @@
 #include "Math/Math.hpp"
 #include "Math/MatrixDimensions.hpp"
 #include "Utilities/Allocators.hpp"
+#include "Utilities/Invariant.hpp"
 #include <bit>
 #include <cstddef>
 #include <cstdint>
@@ -251,6 +252,18 @@ struct Simplex {
       PtrMatrix<int64_t> constraints = tableau.getConstraints();
       return Rational::create(constraints(j, 0), constraints(j, i + 1));
     }
+    [[nodiscard]] constexpr auto operator[](LinearAlgebra::OffsetEnd k) const
+      -> Rational {
+      size_t i = size_t(tableau.numVars) - k.offset;
+      int64_t j = tableau.getBasicConstraint(i);
+      if (j < 0) return 0;
+      PtrMatrix<int64_t> constraints = tableau.getConstraints();
+      return Rational::create(constraints(j, 0), constraints(j, i + 1));
+    }
+    [[nodiscard]] constexpr auto
+    operator[](LinearAlgebra::RelativeOffset auto i) const -> Rational {
+      return (*this)[LinearAlgebra::calcOffset(size(), i)];
+    }
     template <typename B, typename E>
     constexpr auto operator[](Range<B, E> r) const -> Solution {
       return (*this)[LinearAlgebra::canonicalizeRange(r, size())];
@@ -468,6 +481,7 @@ struct Simplex {
     MutPtrMatrix<int64_t> C{tableau.getTableau()};
     MutPtrVector<int64_t> basicVars{tableau.getBasicVariables()};
     MutPtrVector<int64_t> basicConstraints{tableau.getBasicConstraints()};
+    invariant(v > 0);
     while (true) {
       // get new entering variable
       Optional<unsigned int> enteringVariable =
@@ -501,6 +515,7 @@ struct Simplex {
     MutPtrVector<int64_t> basicConstraints{tableau.getBasicConstraints()};
     int64_t c = basicConstraints[v];
     if (c < 0) return false;
+    if (v == 0) return true;
     // we try to zero `v` or at least minimize it.
     // set cost to 1, and then try to alkalize
     // set v and all > v to 0
