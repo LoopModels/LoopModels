@@ -1,5 +1,6 @@
 #include "../include/Math/Math.hpp"
 #include "../include/MatrixStringParse.hpp"
+#include "Math/Array.hpp"
 #include "Math/MatrixDimensions.hpp"
 #include <cstddef>
 #include <cstdint>
@@ -131,19 +132,20 @@ TEST(ExpressionTemplateTest, BasicAssertions) {
   c.push_back(14);
   c.push_back(6);
   EXPECT_EQ(b, c);
-  IntMatrix A1x1(Row{1}, Col{1});
+  IntMatrix A1x1(DenseDims{1, 1});
   EXPECT_TRUE(A1x1.isSquare());
-  IntMatrix A2x2(Row{2}, Col{2});
-  A1x1.antiDiag() = 1;
+  IntMatrix A2x2(DenseDims{2, 2});
+  A1x1.antiDiag() << 1;
   EXPECT_EQ(A1x1(0, 0), 1);
-  A2x2.antiDiag() = 1;
+  A2x2.antiDiag() << 1;
   EXPECT_EQ(A2x2(0, 0), 0);
   EXPECT_EQ(A2x2(0, 1), 1);
   EXPECT_EQ(A2x2(1, 0), 1);
   EXPECT_EQ(A2x2(1, 1), 0);
   for (size_t i = 1; i < 20; ++i) {
-    IntMatrix F(Row{i}, Col{i});
-    F.antiDiag() = 1;
+    IntMatrix F(DenseDims{i, i});
+    F << 0;
+    F.antiDiag() << 1;
     for (size_t j = 0; j < i; ++j)
       for (size_t k = 0; k < i; ++k) EXPECT_EQ(F(j, k), k + j == i - 1);
   }
@@ -157,9 +159,13 @@ TEST(ArrayPrint, BasicAssertions) {
     "[3 -5 1 10 -4 6 4 4; 4 6 3 -1 6 1 -4 0; -7 -2 0 0 -10 -2 3 7; 2 -7 -5 "
     "-5 -7 -5 1 -7; 2 -8 2 7 4 9 6 -3; -2 -8 -5 0 10 -4 5 -3]"_mat};
   os << A;
+  std::cout << "std::cout << A yields:" << A << std::endl;
+  std::cout << "PrintTo(A, &std::cout) yields:";
+  testing::internal::PrintTo(A, &std::cout);
+  std::cout << std::endl;
   EXPECT_EQ(os.str(), testing::PrintToString(A));
   Vector<int64_t> v;
-  for (size_t i = 0; i < 10; ++i) v.push_back(i);
+  for (ptrdiff_t i = 0; i < 10; ++i) v.push_back(i);
   s.clear();
   os << v;
   EXPECT_EQ(os.str(), testing::PrintToString(v));
@@ -167,7 +173,7 @@ TEST(ArrayPrint, BasicAssertions) {
 // NOLINTNEXTLINE(modernize-use-trailing-return-type)
 TEST(OffsetEnd, BasicAssertions) {
   auto A{"[3 3 3 3; 2 2 2 2; 1 1 1 1; 0 0 0 0]"_mat};
-  auto B = IntMatrix{Row{4}, Col{4}};
-  for (size_t i = 0; i < 4; ++i) B(last - i, _) = i;
+  auto B = IntMatrix{DenseDims{4, 4}};
+  for (size_t i = 0; i < 4; ++i) B(last - i, _) << i;
   EXPECT_EQ(A, B);
 }

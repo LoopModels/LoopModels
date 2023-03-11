@@ -2,6 +2,7 @@
 #include "Math/AxisTypes.hpp"
 #include "Math/MatrixDimensions.hpp"
 #include "TypePromotion.hpp"
+#include "Utilities/Invariant.hpp"
 #include <concepts>
 #include <memory>
 #include <type_traits>
@@ -87,10 +88,10 @@ template <typename T> struct SmallSparseMatrix {
   // [[nodiscard]] constexpr auto view() const -> auto & { return *this; };
   constexpr SmallSparseMatrix(Row numRows, Col numCols)
     : rows{llvm::SmallVector<uint32_t>(size_t(numRows))}, col{numCols} {
-    assert(size_t(col) <= maxElemPerRow);
+    invariant(size_t(col) <= maxElemPerRow);
   }
   constexpr auto get(Row i, Col j) const -> T {
-    assert(j < col);
+    invariant(j < col);
     uint32_t r(rows[size_t(i)]);
     uint32_t jshift = uint32_t(1) << uint32_t(j);
     if (!(r & jshift)) return T{};
@@ -103,9 +104,7 @@ template <typename T> struct SmallSparseMatrix {
     return get(Row{i}, Col{j});
   }
   constexpr void insert(T x, Row i, Col j) {
-    assert(j < col);
-    llvm::errs() << "inserting " << x << " at " << size_t(i) << ", "
-                 << size_t(j) << "; rows.size() = " << rows.size() << "\n";
+    invariant(j < col);
     uint32_t r{rows[size_t(i)]};
     uint32_t jshift = uint32_t(1) << size_t(j);
     // offset from previous rows

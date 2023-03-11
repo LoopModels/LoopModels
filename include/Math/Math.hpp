@@ -407,30 +407,104 @@ inline constexpr auto view(const AbstractMatrixCore auto &x) {
 
 constexpr auto bin2(std::integral auto x) { return (x * (x - 1)) >> 1; }
 
+template <std::integral T> struct MaxPow10 {
+  static constexpr T value = (sizeof(T) == 1)   ? 3
+                             : (sizeof(T) == 2) ? 5
+                             : (sizeof(T) == 4)
+                               ? 10
+                               : (std::signed_integral<T> ? 19 : 20);
+};
+template <std::unsigned_integral T> constexpr auto countDigits(T x) {
+  std::array<T, MaxPow10<T>::value + 1> powers;
+  powers[0] = 0;
+  powers[1] = 10;
+  for (size_t i = 2; i < powers.size(); i++) powers[i] = powers[i - 1] * 10;
+  std::array<T, sizeof(T) * 8 + 1> bits;
+  if constexpr (sizeof(T) == 8) {
+    bits = {1,  1,  1,  1,  2,  2,  2,  3,  3,  3,  4,  4,  4,  4,  5,  5,  5,
+            6,  6,  6,  7,  7,  7,  7,  8,  8,  8,  9,  9,  9,  10, 10, 10, 10,
+            11, 11, 11, 12, 12, 12, 13, 13, 13, 13, 14, 14, 14, 15, 15, 15, 16,
+            16, 16, 16, 17, 17, 17, 18, 18, 18, 19, 19, 19, 19, 20};
+  } else {
+    static_assert(sizeof(T) == 4);
+    bits = {1, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4, 4,  5,  5, 5,
+            6, 6, 6, 7, 7, 7, 7, 8, 8, 8, 9, 9, 9, 10, 10, 10};
+  }
+  T digits = bits[8 * sizeof(T) - std::countl_zero(x)];
+  return digits - (x < powers[digits - 1]);
+}
+template <std::signed_integral T> constexpr auto countDigits(T x) {
+  using U = std::make_unsigned_t<T>;
+  if (x == std::numeric_limits<T>::min()) return U{sizeof(T) == 8 ? 20 : 11};
+  return countDigits<U>(U(std::abs(x))) + U{x < 0};
+}
+
+template <std::unsigned_integral T>
+constexpr auto getMaxDigits(PtrMatrix<T> A) -> Vector<T> {
+  auto [M, N] = A.size();
+  Vector<T> maxDigits{unsigned(N), T{}};
+  assert(maxDigits.size() == N);
+  for (Row i = 0; i < M; i++) {
+    for (size_t j = 0; j < N; j++) {
+      // negative numbers need one more digit
+      // first, we find the maximum value per column,
+      // dividing positive numbers by -10
+      T Aij = A(i, j);
+      maxDigits[j] = std::max(maxDigits[j], Aij);
+    }
+  }
+  for (size_t j = 0; j < maxDigits.size(); j++)
+    maxDigits[j] = countDigits(maxDigits[j]);
+  return maxDigits;
+}
+template <std::signed_integral T>
+constexpr auto getMaxDigits(PtrMatrix<T> A) -> Vector<T> {
+  size_t M = size_t(A.numRow());
+  size_t N = size_t(A.numCol());
+  Vector<T> maxDigits{unsigned(N), T{}};
+  assert(maxDigits.size() == N);
+  for (Row i = 0; i < M; i++) {
+    for (size_t j = 0; j < N; j++) {
+      // negative numbers need one more digit
+      // first, we find the maximum value per column,
+      // dividing positive numbers by -10
+      T Aij = A(i, j);
+      maxDigits[j] = std::min(maxDigits[j], Aij > 0 ? Aij / -10 : Aij);
+    }
+  }
+  for (size_t j = 0; j < maxDigits.size(); j++)
+    maxDigits[j] = countDigits(maxDigits[j]);
+  return maxDigits;
+}
+
 template <typename T>
-auto printMatrix(llvm::raw_ostream &os, PtrMatrix<T> A) -> llvm::raw_ostream & {
+inline auto printMatrix(llvm::raw_ostream &os, PtrMatrix<T> A)
+  -> llvm::raw_ostream & {
   // llvm::raw_ostream &printMatrix(llvm::raw_ostream &os, T const &A) {
-  auto [m, n] = A.size();
-  if (!m) return os << "[ ]";
-  for (Row i = 0; i < m; i++) {
+  auto [M, N] = A.size();
+  if (!M) return os << "[ ]";
+  // first, we determine the number of digits needed per column
+  auto maxDigits{getMaxDigits(A)};
+  using U = std::make_unsigned_t<T>;
+  for (Row i = 0; i < M; i++) {
     if (i) os << "  ";
     else os << "\n[ ";
-    if (n) {
-      for (Col j = 0; j < n - 1; j++) {
+    if (N) {
+      for (size_t j = 0; j < N - 1; j++) {
         auto Aij = A(i, j);
-        if (Aij >= 0) os << " ";
+        for (U k = 0; k < U(maxDigits[j]) - countDigits(Aij); k++) os << " ";
         os << Aij << " ";
       }
     }
-    if (n) {
-      auto Aij = A(i, n - 1);
-      if (Aij >= 0) os << " ";
+    if (N) {
+      auto Aij = A(i, N - 1);
+      for (U k = 0; k < U(maxDigits[size_t(N) - 1]) - countDigits(Aij); k++)
+        os << " ";
       os << Aij;
     }
-    if (i != m - 1) os << "\n";
+    if (i != M - 1) os << "\n";
   }
-  os << " ]";
-  return os;
+  return os << " ]";
 }
 
 template <typename T>
@@ -621,14 +695,18 @@ inline auto adaptOStream(std::ostream &os, const auto &x) -> std::ostream & {
   llvm::raw_os_ostream(os) << x;
   return os;
 }
-inline auto operator<<(std::ostream &os, const AbstractVector auto &x)
-  -> std::ostream & {
-  return adaptOStream(os, x);
-}
-inline auto operator<<(std::ostream &os, const AbstractMatrix auto &x)
-  -> std::ostream & {
-  return adaptOStream(os, x);
-}
+// inline auto operator<<(std::ostream &os, const AbstractVector auto &x)
+//   -> std::ostream & {
+//   return adaptOStream(os, x);
+// }
+// inline auto operator<<(std::ostream &os, const AbstractMatrix auto &x)
+//   -> std::ostream & {
+//   return adaptOStream(os, x);
+// }
+// inline auto operator<<(std::ostream &os, const DenseMatrix<int64_t> &x)
+//   -> std::ostream & {
+//   return adaptOStream(os, x);
+// }
 
 } // namespace LinearAlgebra
 

@@ -258,7 +258,8 @@ TEST(NullSpaceTests, BasicAssertions) {
   for (size_t numCol = 2; numCol < 11; numCol += 2) {
     IntMatrix B(DenseDims{8, numCol});
     size_t nullDim = 0;
-    IntMatrix Z, NS;
+    IntMatrix Z;
+    LinearAlgebra::DenseMatrix<int64_t> NS;
     for (size_t i = 0; i < numIters; ++i) {
       for (auto &&b : B) {
         b = distrib(gen);
@@ -307,7 +308,7 @@ TEST(BareissTests, BasicAssertions) {
   IntMatrix B =
     "[-4 3 -2 2 -5; 0 11 -6 2 -5; 0 0 56 -37 32; 0 0 0 -278 136]"_mat;
   EXPECT_EQ(A, B);
-  llvm::SmallVector<size_t> truePiv{0, 1, 2, 3};
+  Vector<size_t> truePiv{0, 1, 2, 3};
   EXPECT_EQ(piv, truePiv);
 
   IntMatrix C = "[-2 -2 -1 -2 -1; 1 1 2 2 -2; -2 2 2 -1 "
@@ -316,7 +317,7 @@ TEST(BareissTests, BasicAssertions) {
                 "20; 0 0 0 -28 52; 0 0 0 0 -142]"_mat;
   auto pivots = NormalForm::bareiss(C);
   EXPECT_EQ(C, D);
-  auto truePivots = llvm::SmallVector<size_t, 16>{0, 2, 2, 3, 4};
+  auto truePivots = Vector<size_t, 16>{0, 2, 2, 3, 4};
   EXPECT_EQ(pivots, truePivots);
 }
 

@@ -197,6 +197,14 @@ template <class T, class S> struct Array {
   // constexpr auto operator!=(const Array &other) const noexcept -> bool {
   //   return !(*this == other);
   // }
+  friend inline auto operator<<(std::ostream &os, const Array &x)
+    -> std::ostream & {
+    return adaptOStream(os, x);
+  }
+  friend inline void PrintTo(const Array &x, std::ostream *os) {
+    adaptOStream(*os, x);
+  }
+
   void dump() { llvm::errs() << *this << "\n"; }
 
 protected:
@@ -329,26 +337,28 @@ template <class T, class S> struct MutArray : Array<T, S> {
   }
   [[nodiscard]] constexpr auto antiDiag() noexcept {
     Col c = Col{this->sz};
-    StridedRange r{min(Row{this->sz}, c), unsigned(RowStride{this->sz}) - 1};
+    StridedRange r{unsigned(min(Row{this->sz}, c)),
+                   unsigned(RowStride{this->sz}) - 1};
     return MutArray<T, StridedRange>{this->ptr + size_t(c) - 1, r};
   }
 
   [[gnu::flatten]] constexpr auto operator<<(const SmallSparseMatrix<T> &B)
     -> decltype(auto) {
     static_assert(MatrixDimension<S>);
-    assert(this->numRow() == B.numRow());
-    assert(this->numCol() == B.numCol());
+    size_t M = size_t(this->numRow()), N = size_t(this->numCol()), k = 0;
+    assert(M == B.numRow());
+    assert(N == B.numCol());
     T *mem = data();
-    size_t k = 0;
-    for (size_t i = 0; i < this->numRow(); ++i) {
+    for (size_t i = 0; i < M; ++i) {
       uint32_t m = B.rows[i] & 0x00ffffff;
-      size_t j = 0;
+      size_t j = 0, l = size_t(this->rowStride() * i);
       while (m) {
         uint32_t tz = std::countr_zero(m);
         m >>= tz + 1;
-        j += tz;
-        mem[this->rowStride() * i + (j++)] = B.nonZeros[k++];
+        for (; tz; --tz) mem[l + j++] = T{};
+        mem[l + j++] = B.nonZeros[k++];
       }
+      for (; j < N; ++j) mem[l + j] = T{};
     }
     assert(k == B.nonZeros.size());
     return *this;
@@ -1217,6 +1227,9 @@ struct ManagedArray : ReallocView<T, S, A, U> {
   [[nodiscard]] static constexpr auto identity(Col C) -> ManagedArray {
     static_assert(MatrixDimension<S>);
     return identity(unsigned(C));
+  }
+  friend inline void PrintTo(const ManagedArray &x, std::ostream *os) {
+    adaptOStream(*os, x);
   }
 
 private:
