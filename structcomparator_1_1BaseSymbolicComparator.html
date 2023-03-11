@@ -108,6 +108,15 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getU</b> ()
 <tr class="memitem:a93e16a139e3231b61efedaaafe9a49ca"><td class="memItemLeft" align="right" valign="top"><a id="a93e16a139e3231b61efedaaafe9a49ca"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getD</b> () -&gt; MutPtrVector&lt; int64_t &gt;</td></tr>
 <tr class="separator:a93e16a139e3231b61efedaaafe9a49ca"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8368ff4abb7af422991569a84811201b"><td class="memItemLeft" align="right" valign="top"><a id="a8368ff4abb7af422991569a84811201b"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getV</b> () const</td></tr>
+<tr class="separator:a8368ff4abb7af422991569a84811201b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8a690ab2394f62e8b5ac6ae531a2646b"><td class="memItemLeft" align="right" valign="top"><a id="a8a690ab2394f62e8b5ac6ae531a2646b"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getU</b> () const</td></tr>
+<tr class="separator:a8a690ab2394f62e8b5ac6ae531a2646b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a315acaabac83cf44bbd7e016fca88235"><td class="memItemLeft" align="right" valign="top"><a id="a315acaabac83cf44bbd7e016fca88235"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getD</b> () const -&gt; PtrVector&lt; int64_t &gt;</td></tr>
+<tr class="separator:a315acaabac83cf44bbd7e016fca88235"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6ffeb1251f65dedd2a8699883111c5ab"><td class="memItemLeft" align="right" valign="top"><a id="a6ffeb1251f65dedd2a8699883111c5ab"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getV</b> (Row r, Col c) -&gt; MutDensePtrMatrix&lt; int64_t &gt;</td></tr>
 <tr class="separator:a6ffeb1251f65dedd2a8699883111c5ab"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -120,9 +129,9 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getD</b> (R
 <tr class="memitem:ad6d9115ea15853c6238fbc629298e8bd"><td class="memItemLeft" align="right" valign="top"><a id="ad6d9115ea15853c6238fbc629298e8bd"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>setURank</b> (Row r)</td></tr>
 <tr class="separator:ad6d9115ea15853c6238fbc629298e8bd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa770583b0ff6527662a702a50c839aae"><td class="memItemLeft" align="right" valign="top"><a id="aa770583b0ff6527662a702a50c839aae"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getURank</b> () -&gt; size_t</td></tr>
-<tr class="separator:aa770583b0ff6527662a702a50c839aae"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae4dc561b395dc58ef71a2caf4c833672"><td class="memItemLeft" align="right" valign="top"><a id="ae4dc561b395dc58ef71a2caf4c833672"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getURank</b> () const -&gt; size_t</td></tr>
+<tr class="separator:ae4dc561b395dc58ef71a2caf4c833672"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aec82977ed1ea8fde85e6b73f139472e3"><td class="memTemplParams" colspan="2"><a id="aec82977ed1ea8fde85e6b73f139472e3"></a>
 template&lt;typename Allocator &gt; </td></tr>
 <tr class="memitem:aec82977ed1ea8fde85e6b73f139472e3"><td class="memTemplItemLeft" align="right" valign="top">constexpr void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>initNonNegative</b> (Allocator alloc, PtrMatrix&lt; int64_t &gt; A, <a class="el" href="structLinearAlgebra_1_1EmptyMatrix.html">EmptyMatrix</a>&lt; int64_t &gt;, size_t numNonNegative)</td></tr>
@@ -151,12 +160,12 @@ template&lt;typename Allocator &gt; </td></tr>
 template&lt;typename Allocator &gt; </td></tr>
 <tr class="memitem:a5a0514fb12e4b13bf2d5c80711667585"><td class="memTemplItemLeft" align="right" valign="top">constexpr void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>initCore</b> (Allocator alloc)</td></tr>
 <tr class="separator:a5a0514fb12e4b13bf2d5c80711667585"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3df10406f5e832c66fa151b2bdc96caf"><td class="memItemLeft" align="right" valign="top"><a id="a3df10406f5e832c66fa151b2bdc96caf"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>isEmpty</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc) -&gt; bool</td></tr>
-<tr class="separator:a3df10406f5e832c66fa151b2bdc96caf"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a264488db35311162b7c0217406b493ac"><td class="memItemLeft" align="right" valign="top"><a id="a264488db35311162b7c0217406b493ac"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>isEmpty</b> () -&gt; bool</td></tr>
-<tr class="separator:a264488db35311162b7c0217406b493ac"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a979d59527a8ca608b3a634297be09ed7"><td class="memItemLeft" align="right" valign="top"><a id="a979d59527a8ca608b3a634297be09ed7"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>isEmpty</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc) const -&gt; bool</td></tr>
+<tr class="separator:a979d59527a8ca608b3a634297be09ed7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2beb433c8b23d5db51d5991b5be61f0a"><td class="memItemLeft" align="right" valign="top"><a id="a2beb433c8b23d5db51d5991b5be61f0a"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>isEmpty</b> () const -&gt; bool</td></tr>
+<tr class="separator:a2beb433c8b23d5db51d5991b5be61f0a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad781464316a35e13b8993dff759341b4"><td class="memItemLeft" align="right" valign="top"><a id="ad781464316a35e13b8993dff759341b4"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>greaterEqual</b> (PtrVector&lt; int64_t &gt; query) const -&gt; bool</td></tr>
 <tr class="separator:ad781464316a35e13b8993dff759341b4"><td class="memSeparator" colspan="2">&#160;</td></tr>
