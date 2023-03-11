@@ -606,7 +606,13 @@ constexpr void nullSpace11(LinearAlgebra::DenseMatrix<int64_t> &B,
   Row D = M - R;
   size_t o = size_t(R * M);
   // we keep `D` columns
-  // TODO: shift pointer?
+  // TODO: shift pointer instead?
+  // This seems like a bad idea given ManagedArrays that must
+  // free their own ptrs; we'd have to still store either the old pointer or the
+  // offset.
+  // However, this may be reasonable given an implementation
+  // that takes a `BumpAlloc<>` as input to allocate `B`, as
+  // then we don't need to track the pointer.
   std::copy_n(B.data() + o, size_t(D * M), B.data());
   B.truncate(D);
 }

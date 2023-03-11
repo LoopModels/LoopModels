@@ -49,10 +49,9 @@ template <class T, class S> struct Array {
   constexpr auto operator=(Array &&) noexcept -> Array & = default;
   constexpr Array(T *p, S s) : ptr(p), sz(s) {}
   constexpr Array(NotNull<T> p, S s) : ptr(p), sz(s) {}
-  constexpr Array(T *p, Row r, Col c)
-    : ptr(p), sz(MatrixDimension<S> ? DenseDims{r, c} : S(r)) {}
+  constexpr Array(T *p, Row r, Col c) : ptr(p), sz(dimension<S>(r, c)) {}
   constexpr Array(NotNull<T> p, Row r, Col c)
-    : ptr(p), sz(MatrixDimension<S> ? DenseDims{r, c} : S(r)) {}
+    : ptr(p), sz(dimension<S>(r, c)) {}
   template <std::convertible_to<S> V>
   constexpr Array(Array<T, V> a) : ptr(a.wrappedPtr()), sz(a.dim()) {}
   [[nodiscard, gnu::returns_nonnull]] constexpr auto data() const noexcept
@@ -345,9 +344,9 @@ template <class T, class S> struct MutArray : Array<T, S> {
   [[gnu::flatten]] constexpr auto operator<<(const SmallSparseMatrix<T> &B)
     -> decltype(auto) {
     static_assert(MatrixDimension<S>);
+    invariant(this->numRow(), B.numRow());
+    invariant(this->numCol(), B.numCol());
     size_t M = size_t(this->numRow()), N = size_t(this->numCol()), k = 0;
-    assert(M == B.numRow());
-    assert(N == B.numCol());
     T *mem = data();
     for (size_t i = 0; i < M; ++i) {
       uint32_t m = B.rows[i] & 0x00ffffff;
@@ -366,13 +365,13 @@ template <class T, class S> struct MutArray : Array<T, S> {
   [[gnu::flatten]] constexpr auto operator<<(const AbstractVector auto &B)
     -> decltype(auto) {
     if constexpr (MatrixDimension<S>) {
-      invariant(this->numRow() == B.size());
+      invariant(this->numRow(), B.size());
       for (size_t i = 0; i < this->numRow(); ++i) {
         T Bi = B[i];
         for (size_t j = 0; j < this->numCol(); ++j) (*this)(i, j) = Bi;
       }
     } else {
-      invariant(this->size() == B.size());
+      invariant(size_t(this->size()), size_t(B.size()));
       for (size_t i = 0; i < this->size(); ++i) (*this)[i] = B[i];
     }
     return *this;
@@ -381,8 +380,8 @@ template <class T, class S> struct MutArray : Array<T, S> {
   [[gnu::flatten]] constexpr auto operator<<(const AbstractMatrix auto &B)
     -> decltype(auto) {
     static_assert(MatrixDimension<S>);
-    invariant(this->numRow() == B.numRow());
-    invariant(this->numCol() == B.numCol());
+    invariant(this->numRow(), B.numRow());
+    invariant(this->numCol(), B.numCol());
     for (size_t i = 0; i < this->numRow(); ++i)
       for (size_t j = 0; j < this->numCol(); ++j) (*this)(i, j) = B(i, j);
     return *this;
@@ -400,8 +399,8 @@ template <class T, class S> struct MutArray : Array<T, S> {
   [[gnu::flatten]] constexpr auto operator+=(const AbstractMatrix auto &B)
     -> decltype(auto) {
     static_assert(MatrixDimension<S>);
-    invariant(this->numRow() == B.numRow());
-    invariant(this->numCol() == B.numCol());
+    invariant(this->numRow(), B.numRow());
+    invariant(this->numCol(), B.numCol());
     for (size_t r = 0; r < this->numRow(); ++r)
       for (size_t c = 0; c < this->numCol(); ++c) (*this)(r, c) += B(r, c);
     return *this;
@@ -409,8 +408,8 @@ template <class T, class S> struct MutArray : Array<T, S> {
   [[gnu::flatten]] constexpr auto operator-=(const AbstractMatrix auto &B)
     -> decltype(auto) {
     static_assert(MatrixDimension<S>);
-    invariant(this->numRow() == B.numRow());
-    invariant(this->numCol() == B.numCol());
+    invariant(this->numRow(), B.numRow());
+    invariant(this->numCol(), B.numCol());
     for (size_t r = 0; r < this->numRow(); ++r)
       for (size_t c = 0; c < this->numCol(); ++c) (*this)(r, c) -= B(r, c);
     return *this;
@@ -418,13 +417,13 @@ template <class T, class S> struct MutArray : Array<T, S> {
   [[gnu::flatten]] constexpr auto operator+=(const AbstractVector auto &B)
     -> decltype(auto) {
     if constexpr (MatrixDimension<S>) {
-      invariant(this->numRow() == B.size());
+      invariant(this->numRow(), B.size());
       for (size_t r = 0; r < this->numRow(); ++r) {
         auto Br = B[r];
         for (size_t c = 0; c < this->numCol(); ++c) (*this)(r, c) += Br;
       }
     } else {
-      invariant(this->size() == B.size());
+      invariant(this->size(), B.size());
       for (size_t i = 0; i < this->size(); ++i) (*this)[i] += B[i];
     }
     return *this;

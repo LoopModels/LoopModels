@@ -96,7 +96,7 @@ struct DenseDims {
     return checkedMul<uint64_t>(M, N);
   }
   constexpr DenseDims() = default;
-  constexpr DenseDims(Row m, Col n) : M(m), N(n) {}
+  constexpr DenseDims(Row m, Col n) : M(unsigned(m)), N(unsigned(n)) {}
   constexpr explicit DenseDims(StridedDims d) : M(d.M), N(d.N) {}
   constexpr DenseDims(CartesianIndex<Row, Col> ind)
     : M(unsigned(ind.row)), N(unsigned(ind.col)) {}
@@ -196,6 +196,13 @@ static_assert(MatrixDimension<StridedDims>);
 template <class T>
 concept DenseLayout = std::integral<T> || std::is_same_v<T, DenseDims> ||
                       std::is_same_v<T, SquareDims>;
+
+template <std::integral T> constexpr auto dimension(Row r, Col c) -> T {
+  return T(r);
+}
+template <MatrixDimension T> constexpr auto dimension(Row r, Col c) -> T {
+  return DenseDims(r, c);
+}
 
 } // namespace LinearAlgebra
 

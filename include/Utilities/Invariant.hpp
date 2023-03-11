@@ -15,3 +15,21 @@ constexpr void invariant(bool condition) {
 #endif
   }
 }
+template <typename T> constexpr void invariant(const T &x, const T &y) {
+  if (x != y) {
+#ifdef NDEBUG
+#if __cplusplus >= 202202L
+    std::unreachable();
+#else
+#ifdef __has_builtin
+#if __has_builtin(__builtin_unreachable)
+    __builtin_unreachable();
+#endif
+#endif
+#endif
+#else
+    llvm::errs() << "invariant violation: " << x << " != " << y << "\n";
+    assert(false);
+#endif
+  }
+}
