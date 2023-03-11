@@ -655,17 +655,18 @@ $(function() {
 <div class="line"><a name="l00606"></a><span class="lineno">  606</span>&#160;  Row D = M - R;</div>
 <div class="line"><a name="l00607"></a><span class="lineno">  607</span>&#160;  <span class="keywordtype">size_t</span> o = size_t(R * M);</div>
 <div class="line"><a name="l00608"></a><span class="lineno">  608</span>&#160;  <span class="comment">// we keep `D` columns</span></div>
-<div class="line"><a name="l00609"></a><span class="lineno">  609</span>&#160;  std::copy_n(B.data() + o, <span class="keywordtype">size_t</span>(D * M), B.data() + o);</div>
-<div class="line"><a name="l00610"></a><span class="lineno">  610</span>&#160;  B.truncate(D);</div>
-<div class="line"><a name="l00611"></a><span class="lineno">  611</span>&#160;}</div>
-<div class="line"><a name="l00612"></a><span class="lineno">  612</span>&#160;[[nodiscard]] constexpr <span class="keyword">auto</span> nullSpace(IntMatrix A)</div>
-<div class="line"><a name="l00613"></a><span class="lineno">  613</span>&#160;  -&gt; <a class="code" href="structLinearAlgebra_1_1ManagedArray.html">LinearAlgebra::DenseMatrix&lt;int64_t&gt;</a> {</div>
-<div class="line"><a name="l00614"></a><span class="lineno">  614</span>&#160;  <a class="code" href="structLinearAlgebra_1_1ManagedArray.html">LinearAlgebra::DenseMatrix&lt;int64_t&gt;</a> B;</div>
-<div class="line"><a name="l00615"></a><span class="lineno">  615</span>&#160;  nullSpace11(B, A);</div>
-<div class="line"><a name="l00616"></a><span class="lineno">  616</span>&#160;  <span class="keywordflow">return</span> B;</div>
-<div class="line"><a name="l00617"></a><span class="lineno">  617</span>&#160;}</div>
-<div class="line"><a name="l00618"></a><span class="lineno">  618</span>&#160; </div>
-<div class="line"><a name="l00619"></a><span class="lineno">  619</span>&#160;} <span class="comment">// namespace NormalForm</span></div>
+<div class="line"><a name="l00609"></a><span class="lineno">  609</span>&#160;  <span class="comment">// TODO: shift pointer?</span></div>
+<div class="line"><a name="l00610"></a><span class="lineno">  610</span>&#160;  std::copy_n(B.data() + o, <span class="keywordtype">size_t</span>(D * M), B.data());</div>
+<div class="line"><a name="l00611"></a><span class="lineno">  611</span>&#160;  B.truncate(D);</div>
+<div class="line"><a name="l00612"></a><span class="lineno">  612</span>&#160;}</div>
+<div class="line"><a name="l00613"></a><span class="lineno">  613</span>&#160;[[nodiscard]] constexpr <span class="keyword">auto</span> nullSpace(IntMatrix A)</div>
+<div class="line"><a name="l00614"></a><span class="lineno">  614</span>&#160;  -&gt; <a class="code" href="structLinearAlgebra_1_1ManagedArray.html">LinearAlgebra::DenseMatrix&lt;int64_t&gt;</a> {</div>
+<div class="line"><a name="l00615"></a><span class="lineno">  615</span>&#160;  <a class="code" href="structLinearAlgebra_1_1ManagedArray.html">LinearAlgebra::DenseMatrix&lt;int64_t&gt;</a> B;</div>
+<div class="line"><a name="l00616"></a><span class="lineno">  616</span>&#160;  nullSpace11(B, A);</div>
+<div class="line"><a name="l00617"></a><span class="lineno">  617</span>&#160;  <span class="keywordflow">return</span> B;</div>
+<div class="line"><a name="l00618"></a><span class="lineno">  618</span>&#160;}</div>
+<div class="line"><a name="l00619"></a><span class="lineno">  619</span>&#160; </div>
+<div class="line"><a name="l00620"></a><span class="lineno">  620</span>&#160;} <span class="comment">// namespace NormalForm</span></div>
 <div class="ttc" id="astructLinearAlgebra_1_1EmptyMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1EmptyMatrix.html">LinearAlgebra::EmptyMatrix</a></div><div class="ttdef"><b>Definition:</b> EmptyArrays.hpp:9</div></div>
 <div class="ttc" id="astructLinearAlgebra_1_1ManagedArray_html"><div class="ttname"><a href="structLinearAlgebra_1_1ManagedArray.html">LinearAlgebra::ManagedArray</a></div><div class="ttdef"><b>Definition:</b> Array.hpp:1017</div></div>
 <div class="ttc" id="astructLinearAlgebra_1_1SquareDims_html"><div class="ttname"><a href="structLinearAlgebra_1_1SquareDims.html">LinearAlgebra::SquareDims</a></div><div class="ttdef"><b>Definition:</b> MatrixDimensions.hpp:132</div></div>
