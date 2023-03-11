@@ -494,7 +494,6 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
     // smaller based on rank
     getD(R) << Ht.diag(); // d.size() == R
     // upper bounded by 2*numInEq + numEq x 2*numInEq + numEq
-    // fewer cols based on rank?
     getV() << Vt.transpose();
   }
 
@@ -674,6 +673,7 @@ struct LinearSymbolicComparator
   }
   constexpr auto getDImpl(Row N) -> MutPtrVector<int64_t> {
     d.resizeForOverwrite(size_t(N));
+    V.resizeForOverwrite(Row{size_t{V.numCol()}});
     return d;
   }
   static constexpr auto construct(PtrMatrix<int64_t> Ap, EmptyMatrix<int64_t>,
