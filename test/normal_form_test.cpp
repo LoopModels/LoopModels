@@ -3,6 +3,7 @@
 #include "../include/Math/NormalForm.hpp"
 #include "../include/MatrixStringParse.hpp"
 #include "Math/Array.hpp"
+#include "Math/Comparisons.hpp"
 #include "Math/MatrixDimensions.hpp"
 #include <cstddef>
 #include <cstdint>
@@ -268,6 +269,12 @@ TEST(NullSpaceTests, BasicAssertions) {
       NS = NormalForm::nullSpace(B);
       nullDim += size_t(NS.numRow());
       Z = NS * B;
+      if (!allZero(Z)) {
+        llvm::errs() << "B = \n"
+                     << B << "\nNS = \n"
+                     << NS << "\nZ = \n"
+                     << Z << "\n";
+      }
       for (auto &z : Z) EXPECT_EQ(z, 0);
       EXPECT_EQ(NormalForm::nullSpace(std::move(NS)).numRow(), 0);
     }

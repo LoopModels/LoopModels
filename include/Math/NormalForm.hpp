@@ -606,7 +606,8 @@ constexpr void nullSpace11(LinearAlgebra::DenseMatrix<int64_t> &B,
   Row D = M - R;
   size_t o = size_t(R * M);
   // we keep `D` columns
-  std::copy_n(B.data() + o, size_t(D * M), B.data() + o);
+  // TODO: shift pointer?
+  std::copy_n(B.data() + o, size_t(D * M), B.data());
   B.truncate(D);
 }
 [[nodiscard]] constexpr auto nullSpace(IntMatrix A)

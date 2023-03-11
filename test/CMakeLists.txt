@@ -41,7 +41,7 @@ CPMAddPackage(
 
 # FIXME: re-enable tests file(GLOB tests CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
 file(GLOB tests CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/simplex_test.cpp
-     ${CMAKE_CURRENT_SOURCE_DIR}/matrix_test.cpp # ${CMAKE_CURRENT_SOURCE_DIR}/normal_form_test.cpp
+     ${CMAKE_CURRENT_SOURCE_DIR}/matrix_test.cpp ${CMAKE_CURRENT_SOURCE_DIR}/normal_form_test.cpp
 )
 
 # list(FILTER tests EXCLUDE REGEX "remarks.*") for remarks test

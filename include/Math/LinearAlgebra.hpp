@@ -1,5 +1,6 @@
 #pragma once
 #include "./Rational.hpp"
+#include "Math/Constructors.hpp"
 #include "Math/Math.hpp"
 
 struct LU {
@@ -120,7 +121,10 @@ struct LU {
     -> std::optional<LU> {
     Row M = B.numRow();
     SquareMatrix<Rational> A(B);
-    Vector<unsigned> ipiv{unsigned(M)};
+    // auto ipiv = Vector<unsigned>{.s = unsigned(M)};
+    auto ipiv{vector(std::allocator<unsigned>{}, unsigned(M))};
+    // Vector<unsigned> ipiv{.s = unsigned(M)};
+    assert(ipiv.size() == M);
     for (size_t i = 0; i < M; ++i) ipiv[i] = i;
     for (size_t k = 0; k < M; ++k) {
       size_t kp = k;
