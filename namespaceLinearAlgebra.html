@@ -129,6 +129,8 @@ Classes</h2></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structLinearAlgebra_1_1MatVecMul.html">MatVecMul</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structLinearAlgebra_1_1MaxPow10.html">MaxPow10</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structLinearAlgebra_1_1SliceView.html">SliceView</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structLinearAlgebra_1_1Transpose.html">Transpose</a></td></tr>
@@ -652,6 +654,14 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>view</b> (c
 <tr class="memitem:a77e52c807bb2bb832358421ab29800c9"><td class="memItemLeft" align="right" valign="top"><a id="a77e52c807bb2bb832358421ab29800c9"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>bin2</b> (std::integral auto x)</td></tr>
 <tr class="separator:a77e52c807bb2bb832358421ab29800c9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9736095c1aab9d7f34133d5d7f972f2e"><td class="memTemplParams" colspan="2"><a id="a9736095c1aab9d7f34133d5d7f972f2e"></a>
+template&lt;std::unsigned_integral T&gt; </td></tr>
+<tr class="memitem:a9736095c1aab9d7f34133d5d7f972f2e"><td class="memTemplItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>countDigits</b> (T x)</td></tr>
+<tr class="separator:a9736095c1aab9d7f34133d5d7f972f2e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a68dadd58daba217ce393678a633f71e3"><td class="memTemplParams" colspan="2"><a id="a68dadd58daba217ce393678a633f71e3"></a>
+template&lt;std::unsigned_integral T&gt; </td></tr>
+<tr class="memitem:a68dadd58daba217ce393678a633f71e3"><td class="memTemplItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>getMaxDigits</b> (<a class="el" href="structLinearAlgebra_1_1Array.html">PtrMatrix</a>&lt; T &gt; A) -&gt; <a class="el" href="structLinearAlgebra_1_1ManagedArray.html">Vector</a>&lt; T &gt;</td></tr>
+<tr class="separator:a68dadd58daba217ce393678a633f71e3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7d987b2c47b63fce693227f4a1e36148"><td class="memTemplParams" colspan="2"><a id="a7d987b2c47b63fce693227f4a1e36148"></a>
 template&lt;typename T &gt; </td></tr>
 <tr class="memitem:a7d987b2c47b63fce693227f4a1e36148"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>printMatrix</b> (llvm::raw_ostream &amp;os, <a class="el" href="structLinearAlgebra_1_1Array.html">PtrMatrix</a>&lt; T &gt; A) -&gt; llvm::raw_ostream &amp;</td></tr>
@@ -738,12 +748,6 @@ template&lt;AbstractVector V&gt; </td></tr>
 <tr class="memitem:a613f509c759d9ef1b6c60e037eee1433"><td class="memItemLeft" align="right" valign="top"><a id="a613f509c759d9ef1b6c60e037eee1433"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>adaptOStream</b> (std::ostream &amp;os, const auto &amp;x) -&gt; std::ostream &amp;</td></tr>
 <tr class="separator:a613f509c759d9ef1b6c60e037eee1433"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa5049f32c6623985e30f34d3a020f595"><td class="memItemLeft" align="right" valign="top"><a id="aa5049f32c6623985e30f34d3a020f595"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> (std::ostream &amp;os, const AbstractVector auto &amp;x) -&gt; std::ostream &amp;</td></tr>
-<tr class="separator:aa5049f32c6623985e30f34d3a020f595"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a96df7503a51c35e648937e27bb0762a9"><td class="memItemLeft" align="right" valign="top"><a id="a96df7503a51c35e648937e27bb0762a9"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> (std::ostream &amp;os, const AbstractMatrix auto &amp;x) -&gt; std::ostream &amp;</td></tr>
-<tr class="separator:a96df7503a51c35e648937e27bb0762a9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1c8b9ae247f20e5e00c1e9a868801789"><td class="memTemplParams" colspan="2"><a id="a1c8b9ae247f20e5e00c1e9a868801789"></a>
 template&lt;typename A &gt; </td></tr>
 <tr class="memitem:a1c8b9ae247f20e5e00c1e9a868801789"><td class="memTemplItemLeft" align="right" valign="top">&#160;</td><td class="memTemplItemRight" valign="bottom"><b>Transpose</b> (A) -&gt; <a class="el" href="structLinearAlgebra_1_1Transpose.html">Transpose</a>&lt; A &gt;</td></tr>
