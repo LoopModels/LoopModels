@@ -221,18 +221,6 @@ template <typename T> struct BaseComparator {
     Vector<int64_t> xm{x[_(0, N)]};
     return greater(LinearAlgebra::view(xm));
   }
-  constexpr auto greater(Vector<int64_t> &x) const -> bool {
-    return greater(MutPtrVector<int64_t>(x));
-  }
-  constexpr auto less(Vector<int64_t> &x) const -> bool {
-    return less(x.view());
-  }
-  constexpr auto lessEqual(Vector<int64_t> &x) const -> bool {
-    return lessEqual(x.view());
-  }
-  constexpr auto lessEqual(Vector<int64_t> &x, int64_t y) const -> bool {
-    return lessEqual(x.view(), y);
-  }
 
   [[nodiscard]] constexpr auto equal(PtrVector<int64_t> x) const -> bool {
     // check cheap trivial first
@@ -568,7 +556,7 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
     if (!allZero(b[_(V.numRow(), end)])) return false;
     auto H = matrix<int64_t>(alloc, V.numRow(), V.numCol() + 1);
     Col oldn = V.numCol();
-    H(_, _(0, oldn)) = V;
+    H(_, _(0, oldn)) << V;
     // H.numRow() == b.size(), because we're only here if dimD == 0,
     // in which case V.numRow() == U.numRow() == b.size()
     H(_, oldn) << b;

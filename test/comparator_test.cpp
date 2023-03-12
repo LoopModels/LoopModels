@@ -15,12 +15,15 @@ TEST(BasicCompare, BasicAssertions) {
   // Move all the variables to one side of the inequality and make it larger
   // than zero and represent them in a matrix A, such that we could have
   // assembled Ax >= 0
+  // [ -1  0  1 0 0
+  //    0 -1  1 0 0
+  //    0  0 -1 1 0
+  //    0  0 -1 0 1 ]
   IntMatrix A = "[-1 0 1 0 0; 0 -1 1 0 0; 0 0 -1 1 0; 0 0 -1 0 1]"_mat;
-  auto comp = comparator::linear(std::allocator<int64_t>{}, std::move(A),
+  auto comp = comparator::linear(std::allocator<int64_t>{}, A,
                                  EmptyMatrix<int64_t>{}, false);
   Vector<int64_t> query{{-1, 0, 0, 1, 0}};
 
-  // llvm::SmallVector<int64_t, 16> query{1, 0, 0, -1, 0};
   EXPECT_TRUE(comp.greaterEqual(query));
 
   // TEST column deficient rank case of A
@@ -28,8 +31,7 @@ TEST(BasicCompare, BasicAssertions) {
   //  we add x >= a; b >= a
   IntMatrix A2 = "[-1 0 1 0 0; 0 -1 1 0 0; 0 0 -1 1 0; 0 0 "
                  "-1 0 1; -1 1 0 0 0; -1 0 0 1 0]"_mat;
-  auto comp2 =
-    comparator::LinearSymbolicComparator::construct(std::move(A2), false);
+  auto comp2 = comparator::LinearSymbolicComparator::construct(A2, false);
   Vector<int64_t> query2{{-1, 0, 0, 0, 1}};
   Vector<int64_t> query3{{0, 0, 0, -1, 1}};
   EXPECT_TRUE(comp2.greaterEqual(query2));
@@ -40,8 +42,7 @@ TEST(BasicCompare, BasicAssertions) {
   // Vector representation of the diagonal matrix will become [1, ... , 1, 2]
   IntMatrix A3 = "[-1 0 1 0 0; 0 -1 1 0 0; 0 0 -1 1 0; 0 0 "
                  "-1 0 1; -1 1 0 0 0; -2 -1 0 1 0]"_mat;
-  auto comp3 =
-    comparator::LinearSymbolicComparator::construct(std::move(A3), false);
+  auto comp3 = comparator::LinearSymbolicComparator::construct(A3, false);
   // Vector<int64_t> query2{-1, 0, 0, 1, 0};
   //  Vector<int64_t> query3{0, 0, 0, -1, 1};
   Vector<int64_t> query4{{-3, 0, 0, 1, 0}}; // x >= 3a is expected to be true
@@ -129,7 +130,7 @@ TEST(TestEmpty, BasicAssertions) {
   IntMatrix E0{"[0 0 1 0 0 -1; 0 0 0 1 -1 0]"_mat};
   // not Empty
   IntMatrix E1{"[0 0 1 0 -1 0; 0 0 0 1 0 -1]"_mat};
-  Vector<int64_t> zeros{6, 0};
+  Vector<int64_t> zeros{unsigned(6), 0};
   auto compEmpty = comparator::LinearSymbolicComparator::construct(A, E0, true);
   // contradiction, 0 can't be less than 0
   EXPECT_TRUE(compEmpty.greater(zeros));

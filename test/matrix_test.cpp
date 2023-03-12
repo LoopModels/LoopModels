@@ -132,9 +132,9 @@ TEST(ExpressionTemplateTest, BasicAssertions) {
   c.push_back(14);
   c.push_back(6);
   EXPECT_EQ(b, c);
-  IntMatrix A1x1(DenseDims{1, 1});
+  IntMatrix A1x1(DenseDims{1, 1}, 0);
   EXPECT_TRUE(A1x1.isSquare());
-  IntMatrix A2x2(DenseDims{2, 2});
+  IntMatrix A2x2(DenseDims{2, 2}, 0);
   A1x1.antiDiag() << 1;
   EXPECT_EQ(A1x1(0, 0), 1);
   A2x2.antiDiag() << 1;
