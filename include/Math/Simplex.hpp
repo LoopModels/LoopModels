@@ -583,7 +583,7 @@ struct Simplex {
                                 PtrMatrix<int64_t> B)
     -> std::optional<Simplex> {
     invariant(A.numCol() == B.numCol());
-    unsigned numVar = unsigned(A.numCol()), numSlack = unsigned(A.numRow()),
+    unsigned numVar = unsigned(A.numCol()) - 1, numSlack = unsigned(A.numRow()),
              numStrict = unsigned(B.numRow()), numCon = numSlack + numStrict,
              varCap = numVar + numSlack;
     // see how many slack vars are infeasible as solution
@@ -597,9 +597,8 @@ struct Simplex {
     // [ I A
     //   0 B ]
     // then drop the extra variables
-    slackEqualityConstraints(
-      simplex.tableau.getConstraints()(_(0, numCon), _(1, numVar + numSlack)),
-      A(_(0, numSlack), _(1, numVar)), B(_(0, numStrict), _(1, numVar)));
+    slackEqualityConstraints(simplex.tableau.getConstraints()(_, _(1, end)),
+                             A(_, _(1, end)), B(_, _(1, end)));
     auto consts{simplex.tableau.getConstants()};
     consts[_(0, numSlack)] << A(_, 0);
     consts[_(numSlack, numSlack + numStrict)] << B(_, 0);
@@ -611,7 +610,7 @@ struct Simplex {
   }
   static auto positiveVariables(BumpAlloc<> &alloc, PtrMatrix<int64_t> A)
     -> std::optional<Simplex> {
-    unsigned numVar = unsigned(A.numCol()), numSlack = unsigned(A.numRow()),
+    unsigned numVar = unsigned(A.numCol()) - 1, numSlack = unsigned(A.numRow()),
              numCon = numSlack, varCap = numVar + numSlack;
     // see how many slack vars are infeasible as solution
     // each of these will require an augment variable
@@ -623,9 +622,8 @@ struct Simplex {
     // construct:
     // [ I A ]
     // then drop the extra variables
-    slackEqualityConstraints(
-      simplex.tableau.getConstraints()(_(0, numCon), _(1, numVar + numSlack)),
-      A(_(0, numSlack), _(1, numVar)));
+    slackEqualityConstraints(simplex.tableau.getConstraints()(_, _(1, end)),
+                             A(_, _(1, end)));
     // auto consts{simplex.tableau.getConstants()};
     // for (size_t i = 0; i < numSlack; ++i) consts[i] = A(i, 0);
     simplex.tableau.getConstants() << A(_, 0);

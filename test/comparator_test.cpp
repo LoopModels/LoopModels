@@ -1,3 +1,4 @@
+#include "Math/Array.hpp"
 #include "Math/Comparators.hpp"
 #include "Math/Math.hpp"
 #include "MatrixStringParse.hpp"
@@ -44,19 +45,46 @@ TEST(BasicCompare, BasicAssertions) {
                  "-1 0 1; -1 1 0 0 0; -2 -1 0 1 0]"_mat;
   auto comp3 = comparator::LinearSymbolicComparator::construct(A3, false);
   // Vector<int64_t> query2{-1, 0, 0, 1, 0};
-  //  Vector<int64_t> query3{0, 0, 0, -1, 1};
+  // Vector<int64_t> query3{0, 0, 0, -1, 1};
   Vector<int64_t> query4{{-3, 0, 0, 1, 0}}; // x >= 3a is expected to be true
   Vector<int64_t> query5{
     {0, 0, 0, 1, -1}}; // we could not identity the relation between x and y
   Vector<int64_t> query6{
     {0, -2, 0, 1, 0}}; // we could not know whether x is larger than 2b or not
-  EXPECT_TRUE(comp3.greaterEqual(query2));
-  // llvm::errs() <<  "comp3 wrong test " << comp3.greaterEqual(query3)
-  // <<"\n";
-  EXPECT_TRUE(!comp3.greaterEqual(query3));
-  EXPECT_TRUE(!comp3.greaterEqual(query5));
-  EXPECT_TRUE(comp3.greaterEqual(query4));
+  IntMatrix V = comp3.getV();
+  IntMatrix U = comp3.getU();
+  Vector<int64_t> d = comp3.getD();
+  Vector<int64_t> q6 = query6;
   EXPECT_TRUE(!comp3.greaterEqual(query6));
+  EXPECT_EQ(V, comp3.getV());
+  EXPECT_EQ(U, comp3.getU());
+  EXPECT_EQ(d, comp3.getD());
+  EXPECT_EQ(q6, query6);
+  EXPECT_TRUE(comp3.greaterEqual(query2));
+  EXPECT_EQ(V, comp3.getV());
+  EXPECT_EQ(U, comp3.getU());
+  EXPECT_EQ(d, comp3.getD());
+  EXPECT_EQ(q6, query6);
+  EXPECT_TRUE(!comp3.greaterEqual(query6));
+  EXPECT_EQ(V, comp3.getV());
+  EXPECT_EQ(U, comp3.getU());
+  EXPECT_EQ(d, comp3.getD());
+  EXPECT_TRUE(!comp3.greaterEqual(query3));
+  EXPECT_EQ(V, comp3.getV());
+  EXPECT_EQ(U, comp3.getU());
+  EXPECT_EQ(d, comp3.getD());
+  EXPECT_TRUE(!comp3.greaterEqual(query5));
+  EXPECT_EQ(V, comp3.getV());
+  EXPECT_EQ(U, comp3.getU());
+  EXPECT_EQ(d, comp3.getD());
+  EXPECT_TRUE(comp3.greaterEqual(query4));
+  EXPECT_EQ(V, comp3.getV());
+  EXPECT_EQ(U, comp3.getU());
+  EXPECT_EQ(d, comp3.getD());
+  EXPECT_TRUE(!comp3.greaterEqual(query6));
+  EXPECT_EQ(V, comp3.getV());
+  EXPECT_EQ(U, comp3.getU());
+  EXPECT_EQ(d, comp3.getD());
 }
 
 // NOLINTNEXTLINE(modernize-use-trailing-return-type)
@@ -80,7 +108,7 @@ TEST(V2Matrix, BasicAssertions) {
   // llvm::errs() << "Transposed V matrix:" << Vt << "\n";
   auto NSrow = NS.numRow();
   auto NScol = NS.numCol();
-  auto offset = Vt.numRow() - NS.numRow();
+  auto offset = Vt.numRow() - NSrow;
   for (size_t i = 0; i < NSrow; ++i)
     for (size_t j = 0; j < NScol; ++j) EXPECT_EQ(NS(i, j), Vt(offset + i, j));
 }
@@ -91,6 +119,7 @@ TEST(ConstantTest, BasicAssertions) {
   auto comp = comparator::LinearSymbolicComparator::construct(A, true);
   Vector<int64_t> query0{{-1, 0, 0}};
   Vector<int64_t> query1{{1, 0, 0}};
+  EXPECT_FALSE(comp.isEmpty());
   EXPECT_FALSE(comp.greaterEqual(query0));
   EXPECT_TRUE(comp.greaterEqual(query1));
   EXPECT_FALSE(comp.isEmpty());
@@ -114,6 +143,7 @@ TEST(EqTest, BasicAssertions) {
   IntMatrix E{"[1 0 0 1 0 -1 0; 1 0 0 0 1 0 -1]"_mat};
   auto comp = comparator::LinearSymbolicComparator::construct(A, E, true);
   Vector<int64_t> diff = A(7, _) - A(3, _);
+  EXPECT_FALSE(comp.isEmpty());
   EXPECT_TRUE(comp.greaterEqual(diff));
   EXPECT_TRUE(comp.greater(diff));
   diff *= -1;

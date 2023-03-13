@@ -593,10 +593,10 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
     for (size_t i = 0; i < numSlack; ++i) {
       expandW(i, 0) = c[i];
       // expandW(i, 0) *= Dlcm;
-      for (size_t j = 0; j < NSdim; ++j) {
-        auto val = V(i + numEquations, numRowTrunc + j) * Dlcm;
-        expandW(i, j + 1) = -val;
-        expandW(i, NSdim + 1 + j) = val;
+      for (size_t j = 0; j < NSdim;) {
+        auto val = V(i + numEquations, numRowTrunc + j++) * Dlcm;
+        expandW(i, j) = -val;
+        expandW(i, NSdim + j) = val;
       }
     }
     std::optional<Simplex> optS{Simplex::positiveVariables(alloc, expandW)};
@@ -606,12 +606,11 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
                                             PtrVector<int64_t> query) const
     -> bool {
     auto &&U = getU();
-    auto &&d = getD();
     auto p = checkpoint(alloc);
     auto b = vector<int64_t>(alloc, unsigned(U.numRow()));
     b << U(_, _(begin, query.size())) * query;
-    bool ge = d.size() ? greaterEqualRankDeficient(alloc, b)
-                       : greaterEqualFullRank(alloc, b);
+    bool ge = getD().size() ? greaterEqualRankDeficient(alloc, b)
+                            : greaterEqualFullRank(alloc, b);
     rollback(alloc, p);
     return ge;
   }
