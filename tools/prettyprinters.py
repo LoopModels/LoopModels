@@ -50,7 +50,7 @@ class DenseMatrixPrinter(Iterator):
     v = str(r)
     if r >= 0:
       v = ' ' + v
-    if (self.c == self.cols-1) and (self.r != self.rows-1)
+    if (self.c == self.cols-1) and (self.r != self.rows-1):
       v += '\n  '
     return ind, v
 
@@ -85,7 +85,7 @@ class StridedMatrixPrinter(Iterator):
     v = str(r)
     if r >= 0:
       v = ' ' + v
-    if (self.c == self.cols-1) and (self.r != self.rows-1)
+    if (self.c == self.cols-1) and (self.r != self.rows-1):
       v += '\n  '
     return ind, v
 
