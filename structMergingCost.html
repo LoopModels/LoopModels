@@ -85,8 +85,8 @@ Classes</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:aac70d5c2dafaec5277cb6ed6aceaacbc"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structMergingCost.html#aac70d5c2dafaec5277cb6ed6aceaacbc">initAncestors</a> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, <a class="el" href="structInstruction.html">Instruction</a> *key) -&gt; aset&lt; <a class="el" href="structInstruction.html">Instruction</a> * &gt; *</td></tr>
-<tr class="separator:aac70d5c2dafaec5277cb6ed6aceaacbc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab8bf2641ddbde2a207031e37c37b9269"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structMergingCost.html#ab8bf2641ddbde2a207031e37c37b9269">initAncestors</a> (llvm::BumpPtrAllocator &amp;alloc, <a class="el" href="structInstruction.html">Instruction</a> *key) -&gt; llvm::SmallPtrSet&lt; <a class="el" href="structInstruction.html">Instruction</a> *, 16 &gt; *</td></tr>
+<tr class="separator:ab8bf2641ddbde2a207031e37c37b9269"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a788180485e29709e6328542bb5ac4969"><td class="memItemLeft" align="right" valign="top"><a id="a788180485e29709e6328542bb5ac4969"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>begin</b> () -&gt; decltype(mergeList.begin())</td></tr>
 <tr class="separator:a788180485e29709e6328542bb5ac4969"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -96,12 +96,12 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>end</b> () -&gt; decl
 <tr class="memitem:afe071bb6a210b0d0f2f2ff2ead16d6c0"><td class="memItemLeft" align="right" valign="top"><a id="afe071bb6a210b0d0f2f2ff2ead16d6c0"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>visited</b> (<a class="el" href="structInstruction.html">Instruction</a> *key) const -&gt; bool</td></tr>
 <tr class="separator:afe071bb6a210b0d0f2f2ff2ead16d6c0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a67898de84bbeb5eaa581900d642152f7"><td class="memItemLeft" align="right" valign="top"><a id="a67898de84bbeb5eaa581900d642152f7"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>getAncestors</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, <a class="el" href="structInstruction.html">Instruction</a> *key) -&gt; aset&lt; <a class="el" href="structInstruction.html">Instruction</a> * &gt; *</td></tr>
-<tr class="separator:a67898de84bbeb5eaa581900d642152f7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6b3ed4481bf0ff8d42b108b9cae00d05"><td class="memItemLeft" align="right" valign="top"><a id="a6b3ed4481bf0ff8d42b108b9cae00d05"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>getAncestors</b> (<a class="el" href="structInstruction.html">Instruction</a> *key) -&gt; aset&lt; <a class="el" href="structInstruction.html">Instruction</a> * &gt; *</td></tr>
-<tr class="separator:a6b3ed4481bf0ff8d42b108b9cae00d05"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa1a31c3792af4e1ca8b9e5d5beb971e6"><td class="memItemLeft" align="right" valign="top"><a id="aa1a31c3792af4e1ca8b9e5d5beb971e6"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getAncestors</b> (llvm::BumpPtrAllocator &amp;alloc, <a class="el" href="structInstruction.html">Instruction</a> *key) -&gt; llvm::SmallPtrSet&lt; <a class="el" href="structInstruction.html">Instruction</a> *, 16 &gt; *</td></tr>
+<tr class="separator:aa1a31c3792af4e1ca8b9e5d5beb971e6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a68fea57af91092859d0426a0b0c9ff06"><td class="memItemLeft" align="right" valign="top"><a id="a68fea57af91092859d0426a0b0c9ff06"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getAncestors</b> (<a class="el" href="structInstruction.html">Instruction</a> *key) -&gt; llvm::SmallPtrSet&lt; <a class="el" href="structInstruction.html">Instruction</a> *, 16 &gt; *</td></tr>
+<tr class="separator:a68fea57af91092859d0426a0b0c9ff06"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae01767cd104275a29749c57786307b81"><td class="memItemLeft" align="right" valign="top"><a id="ae01767cd104275a29749c57786307b81"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>findMerge</b> (<a class="el" href="structInstruction.html">Instruction</a> *key) -&gt; <a class="el" href="structInstruction.html">Instruction</a> *</td></tr>
 <tr class="separator:ae01767cd104275a29749c57786307b81"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -112,16 +112,16 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>findMerge</b> (<a cla
 <tr class="separator:af9b5ac0cc98e21087c9eefccb31bce58"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0b7381c441c4860be32aab9e6348620a"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structMergingCost.html#a0b7381c441c4860be32aab9e6348620a">isMerged</a> (<a class="el" href="structInstruction.html">Instruction</a> *I, <a class="el" href="structInstruction.html">Instruction</a> *J) const -&gt; bool</td></tr>
 <tr class="separator:a0b7381c441c4860be32aab9e6348620a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a93bb6f4ce2a49227aaa3f947a901099e"><td class="memItemLeft" align="right" valign="top"><a id="a93bb6f4ce2a49227aaa3f947a901099e"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>cycleUpdateMerged</b> (aset&lt; <a class="el" href="structInstruction.html">Instruction</a> * &gt; *ancestors, <a class="el" href="structInstruction.html">Instruction</a> *E, <a class="el" href="structInstruction.html">Instruction</a> *H)</td></tr>
-<tr class="separator:a93bb6f4ce2a49227aaa3f947a901099e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2ab86a80af6cc375c531aed0e9f69bb6"><td class="memItemLeft" align="right" valign="top"><a id="a2ab86a80af6cc375c531aed0e9f69bb6"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>cycleUpdateMerged</b> (llvm::SmallPtrSet&lt; <a class="el" href="structInstruction.html">Instruction</a> *, 16 &gt; *ancestors, <a class="el" href="structInstruction.html">Instruction</a> *E, <a class="el" href="structInstruction.html">Instruction</a> *H)</td></tr>
+<tr class="separator:a2ab86a80af6cc375c531aed0e9f69bb6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a58eeaa3cc22b3501e5be0d3a7dd162e6"><td class="memTemplParams" colspan="2"><a id="a58eeaa3cc22b3501e5be0d3a7dd162e6"></a>
 template&lt;typename S &gt; </td></tr>
 <tr class="memitem:a58eeaa3cc22b3501e5be0d3a7dd162e6"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>mergeOperands</b> (<a class="el" href="structInstruction.html">Instruction</a> *A, <a class="el" href="structInstruction.html">Instruction</a> *B, S selects)</td></tr>
 <tr class="separator:a58eeaa3cc22b3501e5be0d3a7dd162e6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afc5ab77745f3d50a37f21d1adc1cd45a"><td class="memItemLeft" align="right" valign="top"><a id="afc5ab77745f3d50a37f21d1adc1cd45a"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>merge</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, llvm::TargetTransformInfo &amp;TTI, unsigned int vectorBits, <a class="el" href="structInstruction.html">Instruction</a> *A, <a class="el" href="structInstruction.html">Instruction</a> *B)</td></tr>
-<tr class="separator:afc5ab77745f3d50a37f21d1adc1cd45a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aeed456d8734304687325b185b0e729f0"><td class="memItemLeft" align="right" valign="top"><a id="aeed456d8734304687325b185b0e729f0"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>merge</b> (llvm::BumpPtrAllocator &amp;alloc, llvm::TargetTransformInfo &amp;TTI, unsigned int vectorBits, <a class="el" href="structInstruction.html">Instruction</a> *A, <a class="el" href="structInstruction.html">Instruction</a> *B)</td></tr>
+<tr class="separator:aeed456d8734304687325b185b0e729f0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a409d4a7c8b3162541bb04c458c658fc7"><td class="memItemLeft" align="right" valign="top"><a id="a409d4a7c8b3162541bb04c458c658fc7"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;</b> (const <a class="el" href="structMergingCost.html">MergingCost</a> &amp;other) const -&gt; bool</td></tr>
 <tr class="separator:a409d4a7c8b3162541bb04c458c658fc7"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -143,22 +143,22 @@ static auto&#160;</td><td class="memItemRight" valign="bottom"><b>init</b> (<a c
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
-<tr class="memitem:a3be551a3bf8743fcfbbb908d9ce302b6"><td class="memItemLeft" align="right" valign="top"><a id="a3be551a3bf8743fcfbbb908d9ce302b6"></a>
-amap&lt; <a class="el" href="structInstruction.html">Instruction</a> *, <a class="el" href="structInstruction.html">Instruction</a> * &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>mergeMap</b></td></tr>
-<tr class="separator:a3be551a3bf8743fcfbbb908d9ce302b6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5756dd23b98351b05a36f876efc476bb"><td class="memItemLeft" align="right" valign="top"><a id="a5756dd23b98351b05a36f876efc476bb"></a>
+llvm::DenseMap&lt; <a class="el" href="structInstruction.html">Instruction</a> *, <a class="el" href="structInstruction.html">Instruction</a> * &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>mergeMap</b></td></tr>
+<tr class="separator:a5756dd23b98351b05a36f876efc476bb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad7745fd32b9b926de2473256c7e11ca3"><td class="memItemLeft" align="right" valign="top"><a id="ad7745fd32b9b926de2473256c7e11ca3"></a>
 llvm::SmallVector&lt; std::pair&lt; <a class="el" href="structInstruction.html">Instruction</a> *, <a class="el" href="structInstruction.html">Instruction</a> * &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>mergeList</b></td></tr>
 <tr class="separator:ad7745fd32b9b926de2473256c7e11ca3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6c03c55301b5beb980423ef5d0bade18"><td class="memItemLeft" align="right" valign="top"><a id="a6c03c55301b5beb980423ef5d0bade18"></a>
-amap&lt; <a class="el" href="structInstruction.html">Instruction</a> *, aset&lt; <a class="el" href="structInstruction.html">Instruction</a> * &gt; * &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>ancestorMap</b></td></tr>
-<tr class="separator:a6c03c55301b5beb980423ef5d0bade18"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6edad376f4ddad5027b702bc7e1c8e4e"><td class="memItemLeft" align="right" valign="top"><a id="a6edad376f4ddad5027b702bc7e1c8e4e"></a>
+llvm::DenseMap&lt; <a class="el" href="structInstruction.html">Instruction</a> *, llvm::SmallPtrSet&lt; <a class="el" href="structInstruction.html">Instruction</a> *, 16 &gt; * &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>ancestorMap</b></td></tr>
+<tr class="separator:a6edad376f4ddad5027b702bc7e1c8e4e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad5d2ed8bf836a10f1540880966f0a29e"><td class="memItemLeft" align="right" valign="top"><a id="ad5d2ed8bf836a10f1540880966f0a29e"></a>
 llvm::InstructionCost&#160;</td><td class="memItemRight" valign="bottom"><b>cost</b></td></tr>
 <tr class="separator:ad5d2ed8bf836a10f1540880966f0a29e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Member Function Documentation</h2>
-<a id="aac70d5c2dafaec5277cb6ed6aceaacbc"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aac70d5c2dafaec5277cb6ed6aceaacbc">&#9670;&nbsp;</a></span>initAncestors()</h2>
+<a id="ab8bf2641ddbde2a207031e37c37b9269"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab8bf2641ddbde2a207031e37c37b9269">&#9670;&nbsp;</a></span>initAncestors()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -169,7 +169,7 @@ llvm::InstructionCost&#160;</td><td class="memItemRight" valign="bottom"><b>cost
         <tr>
           <td class="memname">auto MergingCost::initAncestors </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;&#160;</td>
+          <td class="paramtype">llvm::BumpPtrAllocator &amp;&#160;</td>
           <td class="paramname"><em>alloc</em>, </td>
         </tr>
         <tr>
@@ -181,7 +181,7 @@ llvm::InstructionCost&#160;</td><td class="memItemRight" valign="bottom"><b>cost
         <tr>
           <td></td>
           <td>)</td>
-          <td></td><td> -&gt; aset&lt;<a class="el" href="structInstruction.html">Instruction</a> *&gt; * </td>
+          <td></td><td> -&gt; llvm::SmallPtrSet&lt;<a class="el" href="structInstruction.html">Instruction</a> *, 16&gt; * </td>
         </tr>
       </table>
   </td>

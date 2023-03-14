@@ -71,18 +71,16 @@ $(function() {
 <div class="contents">
 <div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="preprocessor">#pragma once</span></div>
 <div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160; </div>
-<div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="preprocessor">#include &quot;Utilities/Allocators.hpp&quot;</span></div>
-<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor">#include &lt;llvm/ADT/ArrayRef.h&gt;</span></div>
+<div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="preprocessor">#include &lt;llvm/ADT/ArrayRef.h&gt;</span></div>
+<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor">#include &lt;llvm/Support/Allocator.h&gt;</span></div>
 <div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160; </div>
 <div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
-<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;[[nodiscard]] <span class="keyword">inline</span> <span class="keyword">auto</span> copyRef(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, llvm::ArrayRef&lt;T&gt; ref)</div>
-<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;  -&gt; llvm::ArrayRef&lt;T&gt; {</div>
-<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;  <span class="keywordtype">size_t</span> N = ref.size();</div>
-<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;  T *p = alloc.allocate&lt;T&gt;(N);</div>
-<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;  std::copy_n(ref.begin(), N, p);</div>
-<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;  <span class="keywordflow">return</span> llvm::ArrayRef&lt;T&gt;(p, N);</div>
-<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;}</div>
-<div class="ttc" id="astructBumpAlloc_html"><div class="ttname"><a href="structBumpAlloc.html">BumpAlloc</a></div><div class="ttdef"><b>Definition:</b> Allocators.hpp:28</div></div>
+<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;[[nodiscard]] <span class="keyword">inline</span> <span class="keyword">auto</span> copyRef(llvm::BumpPtrAllocator &amp;alloc,</div>
+<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;                                  llvm::ArrayRef&lt;T&gt; ref) -&gt; llvm::ArrayRef&lt;T&gt; {</div>
+<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;  T *p = alloc.Allocate&lt;T&gt;(ref.size());</div>
+<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;  std::copy(ref.begin(), ref.end(), p);</div>
+<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;  <span class="keywordflow">return</span> llvm::ArrayRef&lt;T&gt;(p, ref.size());</div>
+<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;}</div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

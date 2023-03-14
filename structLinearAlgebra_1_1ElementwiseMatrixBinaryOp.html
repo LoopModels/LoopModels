@@ -61,7 +61,7 @@ $(function() {
 
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><a class="el" href="namespaceLinearAlgebra.html">LinearAlgebra</a></li><li class="navelem"><a class="el" href="structLinearAlgebra_1_1ElementwiseMatrixBinaryOp.html">ElementwiseMatrixBinaryOp</a></li>  </ul>
+<li class="navelem"><b>LinearAlgebra</b></li><li class="navelem"><a class="el" href="structLinearAlgebra_1_1ElementwiseMatrixBinaryOp.html">ElementwiseMatrixBinaryOp</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="header">
@@ -77,9 +77,9 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
 Public Types</h2></td></tr>
-<tr class="memitem:ad48ba26e596ea7240970d40ebd73f600"><td class="memItemLeft" align="right" valign="top"><a id="ad48ba26e596ea7240970d40ebd73f600"></a>
-using&#160;</td><td class="memItemRight" valign="bottom"><b>value_type</b> = promote_eltype_t&lt; A, B &gt;</td></tr>
-<tr class="separator:ad48ba26e596ea7240970d40ebd73f600"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afa4c899090eb16e43d07a6fdb69f2496"><td class="memItemLeft" align="right" valign="top"><a id="afa4c899090eb16e43d07a6fdb69f2496"></a>
+using&#160;</td><td class="memItemRight" valign="bottom"><b>eltype</b> = promote_eltype_t&lt; A, B &gt;</td></tr>
+<tr class="separator:afa4c899090eb16e43d07a6fdb69f2496"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
@@ -95,12 +95,9 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>numRow</b> 
 <tr class="memitem:a7da4dde4c761f2890e34b2d2265ed35a"><td class="memItemLeft" align="right" valign="top"><a id="a7da4dde4c761f2890e34b2d2265ed35a"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>numCol</b> () const -&gt; <a class="el" href="structLinearAlgebra_1_1AxisInt.html">Col</a></td></tr>
 <tr class="separator:a7da4dde4c761f2890e34b2d2265ed35a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8cde53d5800ee94562a31801720437f8"><td class="memItemLeft" align="right" valign="top"><a id="a8cde53d5800ee94562a31801720437f8"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>size</b> () const -&gt; <a class="el" href="structLinearAlgebra_1_1CartesianIndex.html">CartesianIndex</a>&lt; <a class="el" href="structLinearAlgebra_1_1AxisInt.html">Row</a>, <a class="el" href="structLinearAlgebra_1_1AxisInt.html">Col</a> &gt;</td></tr>
-<tr class="separator:a8cde53d5800ee94562a31801720437f8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:adccb3377cf29ecd7ec8bae8dc8159fae"><td class="memItemLeft" align="right" valign="top"><a id="adccb3377cf29ecd7ec8bae8dc8159fae"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>dim</b> () const -&gt; <a class="el" href="structLinearAlgebra_1_1DenseDims.html">DenseDims</a></td></tr>
-<tr class="separator:adccb3377cf29ecd7ec8bae8dc8159fae"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4fad54b67ccc6201a5bd8475e1f8ca0a"><td class="memItemLeft" align="right" valign="top"><a id="a4fad54b67ccc6201a5bd8475e1f8ca0a"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>size</b> () const -&gt; std::pair&lt; <a class="el" href="structLinearAlgebra_1_1AxisInt.html">Row</a>, <a class="el" href="structLinearAlgebra_1_1AxisInt.html">Col</a> &gt;</td></tr>
+<tr class="separator:a4fad54b67ccc6201a5bd8475e1f8ca0a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af2c40de660fb7cf54f57318e19e85277"><td class="memItemLeft" align="right" valign="top"><a id="af2c40de660fb7cf54f57318e19e85277"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>view</b> () const -&gt; auto &amp;</td></tr>
 <tr class="separator:af2c40de660fb7cf54f57318e19e85277"><td class="memSeparator" colspan="2">&#160;</td></tr>
