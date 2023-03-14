@@ -72,20 +72,20 @@ $(function() {
 <div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="preprocessor">#pragma once</span></div>
 <div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="preprocessor">#include &lt;algorithm&gt;</span></div>
 <div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160; </div>
-<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;constexpr <span class="keyword">auto</span> allZero(<span class="keyword">const</span> <span class="keyword">auto</span> &amp;x) -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> allZero(<span class="keyword">const</span> <span class="keyword">auto</span> &amp;x) -&gt; <span class="keywordtype">bool</span> {</div>
 <div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;  <span class="keywordflow">return</span> std::all_of(x.begin(), x.end(), [](<span class="keyword">auto</span> a) { return a == 0; });</div>
 <div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;  <span class="comment">// return std::ranges::all_of(x, [](auto x) { return x == 0; });</span></div>
 <div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;}</div>
-<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;constexpr <span class="keyword">auto</span> allGEZero(<span class="keyword">const</span> <span class="keyword">auto</span> &amp;x) -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> allGEZero(<span class="keyword">const</span> <span class="keyword">auto</span> &amp;x) -&gt; <span class="keywordtype">bool</span> {</div>
 <div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;  <span class="keywordflow">return</span> std::all_of(x.begin(), x.end(), [](<span class="keyword">auto</span> a) { return a &gt;= 0; });</div>
 <div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;  <span class="comment">// return std::ranges::all_of(x, [](auto x) { return x &gt;= 0; });</span></div>
 <div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;}</div>
-<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;constexpr <span class="keyword">auto</span> allLEZero(<span class="keyword">const</span> <span class="keyword">auto</span> &amp;x) -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> allLEZero(<span class="keyword">const</span> <span class="keyword">auto</span> &amp;x) -&gt; <span class="keywordtype">bool</span> {</div>
 <div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;  <span class="keywordflow">return</span> std::all_of(x.begin(), x.end(), [](<span class="keyword">auto</span> a) { return a &lt;= 0; });</div>
 <div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;  <span class="comment">// return std::ranges::all_of(x, [](auto x) { return x &lt;= 0; });</span></div>
 <div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;}</div>
 <div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160; </div>
-<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;constexpr <span class="keyword">auto</span> countNonZero(<span class="keyword">const</span> <span class="keyword">auto</span> &amp;x) -&gt; <span class="keywordtype">size_t</span> {</div>
+<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> countNonZero(<span class="keyword">const</span> <span class="keyword">auto</span> &amp;x) -&gt; <span class="keywordtype">size_t</span> {</div>
 <div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;  <span class="keywordflow">return</span> std::count_if(x.begin(), x.end(), [](<span class="keyword">auto</span> a) { return a != 0; });</div>
 <div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;  <span class="comment">// return std::ranges::count_if(x, [](auto x) { return x != 0; });</span></div>
 <div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;}</div>
