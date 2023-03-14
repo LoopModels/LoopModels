@@ -1000,6 +1000,11 @@ protected:
     // we can allocate after freeing, which may be faster
     this->ptr = this->allocator.allocate(M);
     this->capacity = M;
+#ifndef NDEBUG
+    if constexpr (std::numeric_limits<T>::has_signaling_NaN)
+      std::fill_n(this->ptr, M, std::numeric_limits<T>::signaling_NaN());
+    else std::fill_n(this->ptr, M, std::numeric_limits<T>::min());
+#endif
   }
 };
 
@@ -1017,13 +1022,21 @@ struct ManagedArray : ReallocView<T, S, A, U> {
   static_assert(std::is_trivially_destructible_v<T>);
   using BaseT = ReallocView<T, S, A, U>;
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wuninitialized"
-  constexpr ManagedArray() noexcept : ReallocView<T, S, A, U>{memory, S{}, N} {}
+  constexpr ManagedArray() noexcept : ReallocView<T, S, A, U>{memory, S{}, N} {
+#ifndef NDEBUG
+    if constexpr (std::numeric_limits<T>::has_signaling_NaN)
+      std::fill_n(this->ptr, N, std::numeric_limits<T>::signaling_NaN());
+    else std::fill_n(this->ptr, N, std::numeric_limits<T>::min());
+#endif
+  }
   constexpr ManagedArray(S s) noexcept : BaseT{memory, s, N} {
     U len = U(this->sz);
-    if (len <= N) return;
-    this->allocateAtLeast(len);
+    if (len > N) this->allocateAtLeast(len);
+#ifndef NDEBUG
+    if constexpr (std::numeric_limits<T>::has_signaling_NaN)
+      std::fill_n(this->ptr, len, std::numeric_limits<T>::signaling_NaN());
+    else std::fill_n(this->ptr, len, std::numeric_limits<T>::min());
+#endif
   }
   constexpr ManagedArray(S s, T x) noexcept : BaseT{memory, s, N} {
     U len = U(this->sz);
@@ -1097,7 +1110,6 @@ struct ManagedArray : ReallocView<T, S, A, U> {
     this->growUndef(len);
     (*this) << b;
   }
-#pragma GCC diagnostic pop
   template <class D, std::unsigned_integral I>
   constexpr ManagedArray(ManagedArray<T, D, N, A, I> &&b) noexcept
     : BaseT{b.data(), b.dim(), U(b.getCapacity()), b.get_allocator()} {
@@ -1239,7 +1251,13 @@ struct ManagedArray<T, S, 0, A, U> : ReallocView<T, S, A, U, true> {
   static_assert(std::is_trivially_destructible_v<T>);
   using BaseT = ReallocView<T, S, A, U, true>;
   constexpr ManagedArray() noexcept : BaseT{nullptr, S{}, U{}} {};
-  constexpr ManagedArray(S s) noexcept : BaseT{A{}.allocate(U(s)), s, U(s)} {}
+  constexpr ManagedArray(S s) noexcept : BaseT{A{}.allocate(U(s)), s, U(s)} {
+#ifndef NDEBUG
+    if constexpr (std::numeric_limits<T>::has_signaling_NaN)
+      std::fill_n(this->ptr, U(s), std::numeric_limits<T>::signaling_NaN());
+    else std::fill_n(this->ptr, U(s), std::numeric_limits<T>::min());
+#endif
+  }
   constexpr ManagedArray(S s, T x) noexcept
     : BaseT{A{}.allocate(U(s)), s, U(s)} {
     std::uninitialized_fill_n((T *)(this->ptr), U(s), x);

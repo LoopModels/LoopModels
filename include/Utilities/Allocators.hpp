@@ -1,13 +1,16 @@
 #pragma once
 
+#include <limits>
 #define BUMP_ALLOC_LLVM_USE_ALLOCATOR
 /// The advantages over llvm's bumpallocator are:
 /// 1. Support realloc
 /// 2. Support support checkpointing
 #include "Math/Array.hpp"
 #include "Math/Utilities.hpp"
+#include "Utilities/Invariant.hpp"
 #include "Utilities/Iterators.hpp"
 #include "Utilities/Valid.hpp"
+#include <algorithm>
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
@@ -42,11 +45,20 @@ public:
       void *p = std::aligned_alloc(Align, Size);
       customSlabs.emplace_back(p);
 #endif
+#ifndef NDEBUG
+      std::fill_n(reinterpret_cast<std::byte *>(p), Size, std::byte{0xff});
+#endif
       return p;
     }
     auto p = (Align > MinAlignment) ? bumpAlloc(Size, Align) : bumpAlloc(Size);
     __asan_unpoison_memory_region(p, Size);
     __msan_allocated_memory(p, Size);
+#ifndef NDEBUG
+    if ((MinAlignment >= alignof(int64_t)) && ((Size & 7) == 0)) {
+      std::fill_n(reinterpret_cast<std::int64_t *>(p), Size >> 3,
+                  std::numeric_limits<std::int64_t>::min());
+    } else std::fill_n(reinterpret_cast<std::byte *>(p), Size, std::byte{0xff});
+#endif
     return p;
   }
   template <typename T>
@@ -60,9 +72,9 @@ public:
   static constexpr auto contains(std::pair<void *, size_t> P, void *p) -> bool {
     return P.first == p;
   }
-  // static deallocateCustomSlab(std::pair<void *, size_t> slab) {
-  //   llvm::deallocate_buffer(slab.first, slab.second, MinAlignment);
-  // }
+// static deallocateCustomSlab(std::pair<void *, size_t> slab) {
+//   llvm::deallocate_buffer(slab.first, slab.second, MinAlignment);
+// }
 #else
   static constexpr auto contains(void *P, void *p) -> bool {
     return P.first == p;
@@ -253,11 +265,6 @@ private:
     if constexpr (BumpUp) return cur >= lst;
     else return cur < lst;
   }
-  constexpr auto maybeNewSlab() -> bool {
-    if (!outOfSlab(SlabCur, SlabEnd)) return false;
-    newSlab();
-    return true;
-  }
   constexpr void initSlab(std::byte *p) {
     __asan_poison_memory_region(p, SlabSize);
     if constexpr (BumpUp) {
@@ -314,12 +321,18 @@ private:
     -> void * {
     Align = toPowerOf2(Align);
     std::byte *ret = allocCore(Size, Align);
-    if (maybeNewSlab()) ret = allocCore(Size, Align);
+    if (outOfSlab(SlabCur, SlabEnd)) [[unlikely]] {
+      newSlab();
+      ret = allocCore(Size, Align);
+    }
     return reinterpret_cast<void *>(ret);
   }
   [[gnu::returns_nonnull]] constexpr auto bumpAlloc(size_t Size) -> void * {
     std::byte *ret = allocCore(Size);
-    if (maybeNewSlab()) ret = allocCore(Size);
+    if (outOfSlab(SlabCur, SlabEnd)) [[unlikely]] {
+      newSlab();
+      ret = allocCore(Size);
+    }
     return reinterpret_cast<void *>(ret);
   }
 
