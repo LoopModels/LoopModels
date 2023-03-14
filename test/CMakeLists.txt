@@ -48,6 +48,8 @@ file(
   ${CMAKE_CURRENT_SOURCE_DIR}/matrix_test.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/normal_form_test.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/comparator_test.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/bumpmap_test.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/linear_algebra_test.cpp
 )
 
 # list(FILTER tests EXCLUDE REGEX "remarks.*") for remarks test

@@ -799,3 +799,12 @@ struct Simplex {
 };
 
 static_assert(AbstractVector<Simplex::Solution>);
+constexpr auto denomLCM(PtrVector<Rational> x) -> int64_t {
+  int64_t l = 1;
+  for (auto r : x) l = lcm(l, r.denominator);
+  return l;
+}
+
+static_assert(AbstractVector<PtrVector<Rational>>);
+static_assert(AbstractVector<LinearAlgebra::ElementwiseVectorBinaryOp<
+                LinearAlgebra::Sub, PtrVector<Rational>, PtrVector<Rational>>>);

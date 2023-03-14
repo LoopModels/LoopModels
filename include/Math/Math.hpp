@@ -7,6 +7,7 @@
 #include "Math/Indexing.hpp"
 #include "Math/Matrix.hpp"
 #include "Math/MatrixDimensions.hpp"
+#include "Math/Rational.hpp"
 #include "TypePromotion.hpp"
 #include <algorithm>
 #include <bit>
@@ -439,41 +440,47 @@ template <std::signed_integral T> constexpr auto countDigits(T x) {
   return countDigits<U>(U(std::abs(x))) + U{x < 0};
 }
 
-template <std::unsigned_integral T>
-constexpr auto getMaxDigits(PtrMatrix<T> A) -> Vector<T> {
-  auto [M, N] = A.size();
-  Vector<T> maxDigits{unsigned(N), T{}};
-  assert(maxDigits.size() == N);
-  for (Row i = 0; i < M; i++) {
-    for (size_t j = 0; j < N; j++) {
-      // negative numbers need one more digit
-      // first, we find the maximum value per column,
-      // dividing positive numbers by -10
-      T Aij = A(i, j);
-      maxDigits[j] = std::max(maxDigits[j], Aij);
-    }
-  }
-  for (size_t j = 0; j < maxDigits.size(); j++)
-    maxDigits[j] = countDigits(maxDigits[j]);
-  return maxDigits;
+constexpr auto countDigits(Rational x) -> size_t {
+  size_t num = countDigits(x.numerator);
+  return (x.denominator == 1) ? num : num + countDigits(x.denominator) + 2;
 }
-template <std::signed_integral T>
+
+template <std::integral T>
 constexpr auto getMaxDigits(PtrMatrix<T> A) -> Vector<T> {
   size_t M = size_t(A.numRow());
   size_t N = size_t(A.numCol());
   Vector<T> maxDigits{unsigned(N), T{}};
-  assert(maxDigits.size() == N);
+  invariant(size_t(maxDigits.size()), N);
+  // first, we find the digits with the maximum value per column
   for (Row i = 0; i < M; i++) {
     for (size_t j = 0; j < N; j++) {
       // negative numbers need one more digit
       // first, we find the maximum value per column,
       // dividing positive numbers by -10
       T Aij = A(i, j);
-      maxDigits[j] = std::min(maxDigits[j], Aij > 0 ? Aij / -10 : Aij);
+      if constexpr (std::signed_integral<T>)
+        maxDigits[j] = std::min(maxDigits[j], Aij > 0 ? Aij / -10 : Aij);
+      else maxDigits[j] = std::max(maxDigits[j], Aij);
     }
   }
+  // then, we count the digits of the maximum value per column
   for (size_t j = 0; j < maxDigits.size(); j++)
     maxDigits[j] = countDigits(maxDigits[j]);
+  return maxDigits;
+}
+constexpr auto getMaxDigits(PtrMatrix<Rational> A) -> Vector<size_t> {
+  size_t M = size_t(A.numRow());
+  size_t N = size_t(A.numCol());
+  Vector<size_t> maxDigits{unsigned(N), 0};
+  invariant(size_t(maxDigits.size()), N);
+  // this is slow, because we count the digits of every element
+  // we could optimize this by reducing the number of calls to countDigits
+  for (Row i = 0; i < M; i++) {
+    for (size_t j = 0; j < N; j++) {
+      size_t c = countDigits(A(i, j));
+      maxDigits[j] = std::max(maxDigits[j], c);
+    }
+  }
   return maxDigits;
 }
 
@@ -485,7 +492,7 @@ inline auto printMatrix(llvm::raw_ostream &os, PtrMatrix<T> A)
   if (!M) return os << "[ ]";
   // first, we determine the number of digits needed per column
   auto maxDigits{getMaxDigits(A)};
-  using U = std::make_unsigned_t<T>;
+  using U = decltype(countDigits(std::declval<T>()));
   for (Row i = 0; i < M; i++) {
     if (i) os << "  ";
     else os << "\n[ ";

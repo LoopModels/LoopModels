@@ -1,7 +1,6 @@
 #pragma once
 
 #include "./GreatestCommonDivisor.hpp"
-#include "Math/Math.hpp"
 #include <cstddef>
 #include <cstdint>
 #include <llvm/ADT/SmallVector.h>
@@ -239,12 +238,3 @@ constexpr auto gcd(Rational x, Rational y) -> std::optional<Rational> {
   return Rational{gcd(x.numerator, y.numerator),
                   lcm(x.denominator, y.denominator)};
 }
-inline auto denomLCM(PtrVector<Rational> x) -> int64_t {
-  int64_t l = 1;
-  for (auto r : x) l = lcm(l, r.denominator);
-  return l;
-}
-
-static_assert(AbstractVector<PtrVector<Rational>>);
-static_assert(AbstractVector<LinearAlgebra::ElementwiseVectorBinaryOp<
-                LinearAlgebra::Sub, PtrVector<Rational>, PtrVector<Rational>>>);
