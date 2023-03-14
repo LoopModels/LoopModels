@@ -83,9 +83,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a4663ea40276508a876f294b5e70ce768"><td class="memItemLeft" align="right" valign="top"><a id="a4663ea40276508a876f294b5e70ce768"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>ScheduledNode</b> (unsigned int sId, <a class="el" href="structMemoryAccess.html">MemoryAccess</a> *store, unsigned int nodeIndex)</td></tr>
 <tr class="separator:a4663ea40276508a876f294b5e70ce768"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a53de695712a758f29c53f500ed87a843"><td class="memItemLeft" align="right" valign="top"><a id="a53de695712a758f29c53f500ed87a843"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>getMemAccesses</b> (llvm::BumpPtrAllocator &amp;alloc, llvm::ArrayRef&lt; <a class="el" href="structMemoryAccess.html">MemoryAccess</a> * &gt; memAccess) const -&gt; llvm::SmallVector&lt; <a class="el" href="structAddress.html">Address</a> * &gt;</td></tr>
-<tr class="separator:a53de695712a758f29c53f500ed87a843"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad9d0070c38687d10f3e80c908d9bbc7c"><td class="memItemLeft" align="right" valign="top"><a id="ad9d0070c38687d10f3e80c908d9bbc7c"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getMemAccesses</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, llvm::ArrayRef&lt; <a class="el" href="structMemoryAccess.html">MemoryAccess</a> * &gt; memAccess) const -&gt; llvm::SmallVector&lt; <a class="el" href="structAddress.html">Address</a> * &gt;</td></tr>
+<tr class="separator:ad9d0070c38687d10f3e80c908d9bbc7c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5ed85a9e3b62c3e67839363608b721f2"><td class="memItemLeft" align="right" valign="top"><a id="a5ed85a9e3b62c3e67839363608b721f2"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getMemory</b> () -&gt; <a class="el" href="structBitSet.html">BitSet</a> &amp;</td></tr>
 <tr class="separator:a5ed85a9e3b62c3e67839363608b721f2"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -95,9 +95,9 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getInNeighb
 <tr class="memitem:a6ca19cb14a3e0d62c3a9fd03b4a58e24"><td class="memItemLeft" align="right" valign="top"><a id="a6ca19cb14a3e0d62c3a9fd03b4a58e24"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getOutNeighbors</b> () -&gt; <a class="el" href="structBitSet.html">BitSet</a> &amp;</td></tr>
 <tr class="separator:a6ca19cb14a3e0d62c3a9fd03b4a58e24"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a525c534cdc84dd44711de39e3823c32d"><td class="memItemLeft" align="right" valign="top"><a id="a525c534cdc84dd44711de39e3823c32d"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getSchedule</b> () -&gt; <a class="el" href="structSchedule.html">Schedule</a> &amp;</td></tr>
-<tr class="separator:a525c534cdc84dd44711de39e3823c32d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6f26180504325d1b2815e5b139ea5feb"><td class="memItemLeft" align="right" valign="top"><a id="a6f26180504325d1b2815e5b139ea5feb"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getSchedule</b> () -&gt; <a class="el" href="structNotNull.html">NotNull</a>&lt; <a class="el" href="structAffineSchedule.html">AffineSchedule</a> &gt;</td></tr>
+<tr class="separator:a6f26180504325d1b2815e5b139ea5feb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3d3b676ee20d32d1d58f3788d841c593"><td class="memItemLeft" align="right" valign="top"><a id="a3d3b676ee20d32d1d58f3788d841c593"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getMemory</b> () const -&gt; const <a class="el" href="structBitSet.html">BitSet</a> &amp;</td></tr>
 <tr class="separator:a3d3b676ee20d32d1d58f3788d841c593"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -107,18 +107,18 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getInNeighb
 <tr class="memitem:a7027ac308c1fbec90347b36dcd395dcd"><td class="memItemLeft" align="right" valign="top"><a id="a7027ac308c1fbec90347b36dcd395dcd"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getOutNeighbors</b> () const -&gt; const <a class="el" href="structBitSet.html">BitSet</a> &amp;</td></tr>
 <tr class="separator:a7027ac308c1fbec90347b36dcd395dcd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4082b21c45377cf583cd9b03dc857ed5"><td class="memItemLeft" align="right" valign="top"><a id="a4082b21c45377cf583cd9b03dc857ed5"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getSchedule</b> () const -&gt; const <a class="el" href="structSchedule.html">Schedule</a> &amp;</td></tr>
-<tr class="separator:a4082b21c45377cf583cd9b03dc857ed5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a942208d010b8d1a86071859fc1a29fde"><td class="memItemLeft" align="right" valign="top"><a id="a942208d010b8d1a86071859fc1a29fde"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getSchedule</b> () const -&gt; <a class="el" href="structNotNull.html">NotNull</a>&lt; const <a class="el" href="structAffineSchedule.html">AffineSchedule</a> &gt;</td></tr>
+<tr class="separator:a942208d010b8d1a86071859fc1a29fde"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0b9d93971e4027db5d36861adf2d4a2a"><td class="memItemLeft" align="right" valign="top"><a id="a0b9d93971e4027db5d36861adf2d4a2a"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>addOutNeighbor</b> (unsigned int i)</td></tr>
 <tr class="separator:a0b9d93971e4027db5d36861adf2d4a2a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa0df04e793e7bc0527dd9146b475631b"><td class="memItemLeft" align="right" valign="top"><a id="aa0df04e793e7bc0527dd9146b475631b"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>addInNeighbor</b> (unsigned int i)</td></tr>
 <tr class="separator:aa0df04e793e7bc0527dd9146b475631b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0ce1598c2900abd98cd60ca0e21d62b8"><td class="memItemLeft" align="right" valign="top"><a id="a0ce1598c2900abd98cd60ca0e21d62b8"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>init</b> ()</td></tr>
-<tr class="separator:a0ce1598c2900abd98cd60ca0e21d62b8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4e20350a3cb72986da8f9d6bd869f159"><td class="memItemLeft" align="right" valign="top"><a id="a4e20350a3cb72986da8f9d6bd869f159"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>init</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc)</td></tr>
+<tr class="separator:a4e20350a3cb72986da8f9d6bd869f159"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a187ab74e6d4c17b0438a43de11b067e6"><td class="memItemLeft" align="right" valign="top"><a id="a187ab74e6d4c17b0438a43de11b067e6"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>addMemory</b> (unsigned memId, <a class="el" href="structMemoryAccess.html">MemoryAccess</a> *mem, unsigned nodeIndex)</td></tr>
 <tr class="separator:a187ab74e6d4c17b0438a43de11b067e6"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -147,13 +147,13 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>updateOmega
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getPhiOffset</b> () const -&gt; size_t</td></tr>
 <tr class="separator:a39469b1b9de53b86b8c53856b2b485a1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afad9151ed5b8f5a93389cf6f3a1dfc8a"><td class="memItemLeft" align="right" valign="top"><a id="afad9151ed5b8f5a93389cf6f3a1dfc8a"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getPhiOffsetRange</b> () const -&gt; <a class="el" href="structLinearAlgebra_1_1Range.html">Range</a>&lt; size_t, size_t &gt;</td></tr>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getPhiOffsetRange</b> () const -&gt; <a class="el" href="structRange.html">Range</a>&lt; size_t, size_t &gt;</td></tr>
 <tr class="separator:afad9151ed5b8f5a93389cf6f3a1dfc8a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa43c10a2ef63c6e2d90a66ec2088b8b1"><td class="memItemLeft" align="right" valign="top"><a id="aa43c10a2ef63c6e2d90a66ec2088b8b1"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>getPhi</b> () -&gt; <a class="el" href="structLinearAlgebra_1_1MutSquarePtrMatrix.html">MutSquarePtrMatrix</a>&lt; int64_t &gt;</td></tr>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getPhi</b> () -&gt; MutSquarePtrMatrix&lt; int64_t &gt;</td></tr>
 <tr class="separator:aa43c10a2ef63c6e2d90a66ec2088b8b1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6aba9225797c88a832d2ab00b57c6943"><td class="memItemLeft" align="right" valign="top"><a id="a6aba9225797c88a832d2ab00b57c6943"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>getPhi</b> () const -&gt; <a class="el" href="structLinearAlgebra_1_1SquarePtrMatrix.html">SquarePtrMatrix</a>&lt; int64_t &gt;</td></tr>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getPhi</b> () const -&gt; SquarePtrMatrix&lt; int64_t &gt;</td></tr>
 <tr class="separator:a6aba9225797c88a832d2ab00b57c6943"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a97841dc892f9764e3df76312d7740471"><td class="memItemLeft" align="right" valign="top"><a id="a97841dc892f9764e3df76312d7740471"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>getOffsetOmega</b> (size_t i) -&gt; int64_t &amp;</td></tr>
@@ -168,25 +168,25 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>getFusionOmega</b> (s
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>getFusionOmega</b> (size_t i) const -&gt; int64_t</td></tr>
 <tr class="separator:a91604d8bb64c1316d892cb45ac5f82a3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6ecc43d1d3a60bcca68d4b7033d44359"><td class="memItemLeft" align="right" valign="top"><a id="a6ecc43d1d3a60bcca68d4b7033d44359"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>getOffsetOmega</b> () -&gt; <a class="el" href="structLinearAlgebra_1_1MutPtrVector.html">MutPtrVector</a>&lt; int64_t &gt;</td></tr>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getOffsetOmega</b> () -&gt; MutPtrVector&lt; int64_t &gt;</td></tr>
 <tr class="separator:a6ecc43d1d3a60bcca68d4b7033d44359"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adaac8d1bd83e8ae5b80ae0a2fa3854b2"><td class="memItemLeft" align="right" valign="top"><a id="adaac8d1bd83e8ae5b80ae0a2fa3854b2"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>getOffsetOmega</b> () const -&gt; <a class="el" href="structLinearAlgebra_1_1PtrVector.html">PtrVector</a>&lt; int64_t &gt;</td></tr>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getOffsetOmega</b> () const -&gt; PtrVector&lt; int64_t &gt;</td></tr>
 <tr class="separator:adaac8d1bd83e8ae5b80ae0a2fa3854b2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a10b63b5ebaf86faa6832feab355cd560"><td class="memItemLeft" align="right" valign="top"><a id="a10b63b5ebaf86faa6832feab355cd560"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>getFusionOmega</b> () -&gt; <a class="el" href="structLinearAlgebra_1_1MutPtrVector.html">MutPtrVector</a>&lt; int64_t &gt;</td></tr>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getFusionOmega</b> () -&gt; MutPtrVector&lt; int64_t &gt;</td></tr>
 <tr class="separator:a10b63b5ebaf86faa6832feab355cd560"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af2fccfd28be50d8ecbc6955cea4c0937"><td class="memItemLeft" align="right" valign="top"><a id="af2fccfd28be50d8ecbc6955cea4c0937"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>getFusionOmega</b> () const -&gt; <a class="el" href="structLinearAlgebra_1_1PtrVector.html">PtrVector</a>&lt; int64_t &gt;</td></tr>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getFusionOmega</b> () const -&gt; PtrVector&lt; int64_t &gt;</td></tr>
 <tr class="separator:af2fccfd28be50d8ecbc6955cea4c0937"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9033626f496a09911ecb3656404e1619"><td class="memItemLeft" align="right" valign="top"><a id="a9033626f496a09911ecb3656404e1619"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>getSchedule</b> (size_t d) const -&gt; <a class="el" href="structLinearAlgebra_1_1PtrVector.html">PtrVector</a>&lt; int64_t &gt;</td></tr>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getSchedule</b> (size_t d) const -&gt; PtrVector&lt; int64_t &gt;</td></tr>
 <tr class="separator:a9033626f496a09911ecb3656404e1619"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acf0c18c7c62fb809f0676ebe0dee636e"><td class="memItemLeft" align="right" valign="top"><a id="acf0c18c7c62fb809f0676ebe0dee636e"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>getSchedule</b> (size_t d) -&gt; <a class="el" href="structLinearAlgebra_1_1MutPtrVector.html">MutPtrVector</a>&lt; int64_t &gt;</td></tr>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getSchedule</b> (size_t d) -&gt; MutPtrVector&lt; int64_t &gt;</td></tr>
 <tr class="separator:acf0c18c7c62fb809f0676ebe0dee636e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad304fdd84e4bdeceaa5a5f65a7efbb7f"><td class="memItemLeft" align="right" valign="top"><a id="ad304fdd84e4bdeceaa5a5f65a7efbb7f"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>schedulePhi</b> (<a class="el" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix</a>&lt; int64_t &gt; indMat, size_t r)</td></tr>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>schedulePhi</b> (PtrMatrix&lt; int64_t &gt; indMat, size_t r)</td></tr>
 <tr class="separator:ad304fdd84e4bdeceaa5a5f65a7efbb7f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a93fa3f8ca7bce3d594f2c4886c4c0048"><td class="memItemLeft" align="right" valign="top"><a id="a93fa3f8ca7bce3d594f2c4886c4c0048"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>unschedulePhi</b> ()</td></tr>
