@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # sanitizers='Undefined'
 sanitizers='Address;Undefined'

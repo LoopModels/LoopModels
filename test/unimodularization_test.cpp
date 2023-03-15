@@ -1,5 +1,6 @@
 #include "Math/Math.hpp"
 #include "Math/Unimodularization.hpp"
+#include "MatrixStringParse.hpp"
 #include <cstdint>
 #include <gtest/gtest.h>
 #include <iostream>
@@ -7,28 +8,14 @@
 
 // NOLINTNEXTLINE(modernize-use-trailing-return-type)
 TEST(UnimodularizationTest, BasicAssertions) {
-  IntMatrix VE(4, 2);
-  VE(0, 0) = 0;
-  VE(1, 0) = 1;
-  VE(2, 0) = 0;
-  VE(3, 0) = 1;
-  VE(0, 1) = 1;
-  VE(1, 1) = 0;
-  VE(2, 1) = 1;
-  VE(3, 1) = 0;
+  IntMatrix VE{"[0 1; 1 0; 0 1; 1 0]"_mat};
   llvm::errs() << "VE=\n" << VE << "\n";
   auto VB = unimodularize(VE);
   EXPECT_TRUE(VB.has_value());
   assert(VB.has_value());
   llvm::errs() << "VB:\n" << *VB << "\n";
 
-  IntMatrix A23(3, 2);
-  A23(0, 0) = 9;
-  A23(1, 0) = -5;
-  A23(2, 0) = 1;
-  A23(0, 1) = 5;
-  A23(1, 1) = -2;
-  A23(2, 1) = 0;
+  IntMatrix A23{"[9 5; -5 -2; 1 0]"_mat};
   auto B = unimodularize(A23);
   EXPECT_TRUE(B.has_value());
   assert(B.has_value());
@@ -36,10 +23,7 @@ TEST(UnimodularizationTest, BasicAssertions) {
   // EXPECT_EQ(j, length(bsc));
   // EXPECT_EQ(j, length(bs));
 
-  IntMatrix A13(3, 1);
-  A13(0, 0) = 6;
-  A13(1, 0) = -5;
-  A13(2, 0) = 15;
+  IntMatrix A13{"[6; -5; 15]"_mat};
   auto test6_10_15 = unimodularize(A13); //, 1, 93, 1001);
   EXPECT_TRUE(test6_10_15.has_value());
   // if (test6_10_15.has_value()) {
