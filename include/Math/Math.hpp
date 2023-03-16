@@ -12,6 +12,7 @@
 #include <algorithm>
 #include <bit>
 #include <cassert>
+#include <charconv>
 #include <cmath>
 #include <concepts>
 #include <cstddef>
@@ -30,6 +31,7 @@
 #include <ostream>
 #include <ranges>
 #include <string>
+#include <string_view>
 #include <tuple>
 #include <type_traits>
 #include <utility>
@@ -448,6 +450,7 @@ constexpr auto countDigits(Rational x) -> size_t {
   return (x.denominator == 1) ? num : num + countDigits(x.denominator) + 2;
 }
 
+/// Returns the number of digits of the largest number in the matrix.
 template <std::integral T>
 constexpr auto getMaxDigits(PtrMatrix<T> A) -> Vector<T> {
   size_t M = size_t(A.numRow());
@@ -471,6 +474,7 @@ constexpr auto getMaxDigits(PtrMatrix<T> A) -> Vector<T> {
     maxDigits[j] = countDigits(maxDigits[j]);
   return maxDigits;
 }
+/// \brief Returns the maximum number of digits per column of a matrix.
 constexpr auto getMaxDigits(PtrMatrix<Rational> A) -> Vector<size_t> {
   size_t M = size_t(A.numRow());
   size_t N = size_t(A.numCol());
@@ -492,27 +496,85 @@ inline auto printMatrix(llvm::raw_ostream &os, PtrMatrix<T> A)
   -> llvm::raw_ostream & {
   // llvm::raw_ostream &printMatrix(llvm::raw_ostream &os, T const &A) {
   auto [M, N] = A.size();
-  if (!M) return os << "[ ]";
+  if ((!M) || (!N)) return os << "[ ]";
   // first, we determine the number of digits needed per column
   auto maxDigits{getMaxDigits(A)};
   using U = decltype(countDigits(std::declval<T>()));
   for (Row i = 0; i < M; i++) {
     if (i) os << "  ";
     else os << "\n[ ";
-    if (N) {
-      for (size_t j = 0; j < N - 1; j++) {
-        auto Aij = A(i, j);
-        for (U k = 0; k < U(maxDigits[j]) - countDigits(Aij); k++) os << " ";
-        os << Aij << " ";
+    for (size_t j = 0; j < N; j++) {
+      auto Aij = A(i, j);
+      for (U k = 0; k < U(maxDigits[j]) - countDigits(Aij); k++) os << " ";
+      os << Aij;
+      if (j != N - 1) os << " ";
+      else if (i != M - 1) os << "\n";
+    }
+  }
+  return os << " ]";
+}
+// We mirror `A` with a matrix of integers indicating sizes, and a vectors of
+// chars. We fill the matrix with the number of digits of each element, and the
+// vector with the characters of each element.
+// We could use a vector of vectors of chars to avoid needing to copy memory on
+// reallocation, but this would yield more complicated management.
+// We should also generally be able to avoid allocations.
+// We can use a Vector with a lot of initial capacity, and then resize based on
+// a conservative estimate of the number of chars per elements.
+inline auto printMatrix(llvm::raw_ostream &os, PtrMatrix<double> A)
+  -> llvm::raw_ostream & {
+  // llvm::raw_ostream &printMatrix(llvm::raw_ostream &os, T const &A) {
+  auto [M, N] = A.size();
+  if ((!M) || (!N)) return os << "[ ]";
+  // first, we determine the number of digits needed per column
+  Vector<char, 512> digits;
+  digits.resizeForOverwrite(512);
+  // we can't have more than 255 digits
+  DenseMatrix<uint8_t> numDigits{DenseDims{M, N}};
+  char *ptr = digits.begin();
+  char *pEnd = digits.end();
+  for (size_t m = 0; m < M; m++) {
+    for (size_t n = 0; n < N; n++) {
+      auto Aij = A(m, n);
+      while (true) {
+        auto [p, ec] = std::to_chars(ptr, pEnd, Aij);
+        if (ec == std::errc()) [[likely]] {
+          numDigits(m, n) = std::distance(ptr, p);
+          ptr = p;
+          break;
+        }
+        // we need more space
+        size_t elemSoFar = m * size_t(N) + n;
+        size_t charSoFar = std::distance(digits.begin(), ptr);
+        // cld
+        size_t charPerElem = (charSoFar + elemSoFar - 1) / elemSoFar;
+        size_t newCapacity = (1 + charPerElem) * M * N; // +1 for good measure
+        digits.resize(newCapacity);
+        ptr = digits.begin() + charSoFar;
+        pEnd = digits.end();
       }
     }
-    if (N) {
-      auto Aij = A(i, N - 1);
-      for (U k = 0; k < U(maxDigits[size_t(N) - 1]) - countDigits(Aij); k++)
-        os << " ";
-      os << Aij;
+  }
+  Vector<uint8_t> maxDigits;
+  maxDigits.resizeForOverwrite(N);
+  maxDigits << numDigits(0, _);
+  for (size_t m = 0; m < M; m++)
+    for (size_t n = 0; n < N; n++)
+      maxDigits[n] = std::max(maxDigits[n], numDigits(m, n));
+
+  ptr = digits.begin();
+  // we will allocate 512 bytes at a time
+  for (Row i = 0; i < M; i++) {
+    if (i) os << "  ";
+    else os << "\n[ ";
+    for (size_t j = 0; j < N; j++) {
+      size_t nD = numDigits(i, j);
+      for (size_t k = 0; k < maxDigits[j] - nD; k++) os << " ";
+      os << std::string_view(ptr, nD);
+      if (j != N - 1) os << " ";
+      else if (i != M - 1) os << "\n";
+      ptr += nD;
     }
-    if (i != M - 1) os << "\n";
   }
   return os << " ]";
 }
