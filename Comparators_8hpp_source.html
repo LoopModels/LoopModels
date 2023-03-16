@@ -879,9 +879,9 @@ $(function() {
 <div class="line"><a name="l00817"></a><span class="lineno">  817</span>&#160;static_assert(Comparator&lt;PtrSymbolicComparator&gt;);</div>
 <div class="line"><a name="l00818"></a><span class="lineno">  818</span>&#160;static_assert(Comparator&lt;LinearSymbolicComparator&gt;);</div>
 <div class="line"><a name="l00819"></a><span class="lineno">  819</span>&#160; </div>
-<div class="line"><a name="l00820"></a><span class="lineno">  820</span>&#160;constexpr <span class="keywordtype">void</span> moveEqualities(IntMatrix &amp;, <a class="code" href="structLinAlg_1_1EmptyMatrix.html">EmptyMatrix&lt;int64_t&gt;</a>,</div>
+<div class="line"><a name="l00820"></a><span class="lineno">  820</span>&#160;constexpr <span class="keywordtype">void</span> moveEqualities(DenseMatrix&lt;int64_t&gt; &amp;, <a class="code" href="structLinAlg_1_1EmptyMatrix.html">EmptyMatrix&lt;int64_t&gt;</a>,</div>
 <div class="line"><a name="l00821"></a><span class="lineno">  821</span>&#160;                              <span class="keyword">const</span> Comparator <span class="keyword">auto</span> &amp;) {}</div>
-<div class="line"><a name="l00822"></a><span class="lineno">  822</span>&#160;constexpr <span class="keywordtype">void</span> moveEqualities(IntMatrix &amp;A, IntMatrix &amp;E,</div>
+<div class="line"><a name="l00822"></a><span class="lineno">  822</span>&#160;constexpr <span class="keywordtype">void</span> moveEqualities(DenseMatrix&lt;int64_t&gt; &amp;A, IntMatrix &amp;E,</div>
 <div class="line"><a name="l00823"></a><span class="lineno">  823</span>&#160;                              <span class="keyword">const</span> Comparator <span class="keyword">auto</span> &amp;C) {</div>
 <div class="line"><a name="l00824"></a><span class="lineno">  824</span>&#160;  <span class="keyword">const</span> <span class="keywordtype">size_t</span> numVar = size_t(E.numCol());</div>
 <div class="line"><a name="l00825"></a><span class="lineno">  825</span>&#160;  assert(A.numCol() == numVar);</div>
