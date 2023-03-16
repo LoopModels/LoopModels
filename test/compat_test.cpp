@@ -47,14 +47,14 @@ TEST(TrivialPruneBounds, BasicAssertions) {
   auto A{"[0 1 0; -1 1 -1; 0 0 1; -2 1 -1; 1 0 1]"_mat};
   TestLoopFunction tlf;
   tlf.addLoop(std::move(A), 1);
-  AffineLoopNest<true> &aff = tlf.alns[0];
-  aff.pruneBounds();
-  llvm::errs() << aff << "\naff.A = " << aff.A << "\n";
+  AffineLoopNest<true> *aff = tlf.getLoopNest(0);
+  aff->pruneBounds();
+  llvm::errs() << *aff << "\naff.A = " << aff->getA() << "\n";
   // M >= 0 is redundant
   // because M - 1 >= m >= 0
   // hence, we should be left with 1 bound (-2 + M - m >= 0)
-  EXPECT_EQ(aff.A.numRow(), 1);
-  EXPECT_EQ(aff.A, "[-2 1 -1]"_mat);
+  EXPECT_EQ(aff->getA().numRow(), 1);
+  EXPECT_EQ(aff->getA(), "[-2 1 -1]"_mat);
 }
 
 // NOLINTNEXTLINE(modernize-use-trailing-return-type)
@@ -66,14 +66,14 @@ TEST(TrivialPruneBounds2, BasicAssertions) {
   auto A{"[-1 0 0 0 1 0; -1 1 0 0 0 0; -1 0 1 0 -1 0; -1 0 1 0 0 0]"_mat};
   TestLoopFunction tlf;
   tlf.addLoop(std::move(A), 2);
-  AffineLoopNest<true> &aff = tlf.alns[0];
-  aff.pruneBounds();
-  aff.dump();
-  llvm::errs() << "aff.A = " << aff.A << "\n";
+  AffineLoopNest<true> *aff = tlf.getLoopNest(0);
+  aff->pruneBounds(tlf.getAlloc());
+  aff->dump();
+  llvm::errs() << "aff.A = " << aff->getA() << "\n";
   // we expect J >= 1 to be dropped
   // because J >= i + 1 >= 2
   // because i >= 1
-  EXPECT_EQ(aff.A.numRow(), 3);
+  EXPECT_EQ(aff->getA().numRow(), 3);
 }
 // NOLINTNEXTLINE(modernize-use-trailing-return-type)
 TEST(LessTrivialPruneBounds, BasicAssertions) {
@@ -92,22 +92,22 @@ TEST(LessTrivialPruneBounds, BasicAssertions) {
 
   TestLoopFunction tlf;
   tlf.addLoop(std::move(A), 3);
-  AffineLoopNest<true> &aff = tlf.alns[0];
+  AffineLoopNest<true> &aff = *tlf.getLoopNest(0);
 
   aff.pruneBounds();
   llvm::errs() << "LessTrival test Bounds pruned:\n";
   aff.dump();
-  llvm::errs() << "aff.A = " << aff.A << "\n";
-  EXPECT_EQ(aff.A.numRow(), 3);
-  auto loop2Count = countSigns(aff.A, 2 + aff.getNumSymbols());
+  llvm::errs() << "aff.A = " << aff.getA() << "\n";
+  EXPECT_EQ(aff.getA().numRow(), 3);
+  auto loop2Count = countSigns(aff.getA(), 2 + aff.getNumSymbols());
   EXPECT_EQ(loop2Count.first, 1);
   EXPECT_EQ(loop2Count.second, 0);
-  aff.removeLoopBang(2);
-  auto loop1Count = countSigns(aff.A, 1 + aff.getNumSymbols());
+  aff.removeLoopBang(tlf.getAlloc(), 2);
+  auto loop1Count = countSigns(aff.getA(), 1 + aff.getNumSymbols());
   EXPECT_EQ(loop1Count.first, 1);
   EXPECT_EQ(loop1Count.second, 0);
-  aff.removeLoopBang(1);
-  auto loop0Count = countSigns(aff.A, 0 + aff.getNumSymbols());
+  aff.removeLoopBang(tlf.getAlloc(), 1);
+  auto loop0Count = countSigns(aff.getA(), 0 + aff.getNumSymbols());
   EXPECT_EQ(loop0Count.first, 1);
   EXPECT_EQ(loop0Count.second, 0);
 }
@@ -130,14 +130,14 @@ TEST(AffineTest0, BasicAssertions) {
   TestLoopFunction tlf;
   llvm::errs() << "About to construct affine obj\n";
   tlf.addLoop(std::move(A), 3);
-  AffineLoopNest<true> &aff = tlf.alns[0];
+  AffineLoopNest<true> &aff = *tlf.getLoopNest(0);
   aff.pruneBounds();
-  EXPECT_EQ(aff.A.numRow(), 3);
+  EXPECT_EQ(aff.getA().numRow(), 3);
 
   llvm::errs() << "Constructed affine obj\n";
   llvm::errs() << "About to run first compat test\n";
-  llvm::errs() << "aff.A.size() = (" << size_t(aff.A.numRow()) << ", "
-               << size_t(aff.A.numCol()) << ")\n";
+  llvm::errs() << "aff.A.size() = (" << size_t(aff.getA().numRow()) << ", "
+               << size_t(aff.getA().numCol()) << ")\n";
   EXPECT_FALSE(aff.zeroExtraIterationsUponExtending(0, false));
   EXPECT_FALSE(aff.zeroExtraIterationsUponExtending(0, true));
   EXPECT_TRUE(aff.zeroExtraIterationsUponExtending(1, false));
@@ -176,22 +176,21 @@ TEST(NonUnimodularExperiment, BasicAssertions) {
               " 0 1 0 0]"_mat};
   TestLoopFunction tlf;
   tlf.addLoop(std::move(A), 2);
-  AffineLoopNest<true> &aff = tlf.alns.back();
+  AffineLoopNest<true> &aff = *tlf.getLoopNest(tlf.getNumLoopNests() - 1);
   llvm::errs() << "Original order:\n";
   aff.dump();
   // -2 - i - j >= 0 -> i + j <= -2
   // but i >= 0 and j >= 0 -> isEmpty()
-  aff.initializeComparator();
   aff.pruneBounds();
   EXPECT_TRUE(aff.isEmpty());
 
-  A = "[0 2 1 -1; "
-      "-2 0 -1 1; "
-      "0 2 1 1; "
-      "8 0 -1 -1; "
-      " 0 1 0 0]"_mat;
-  tlf.addLoop(std::move(A), 2);
-  AffineLoopNest<true> &aff2 = tlf.alns.back();
+  DenseMatrix<int64_t> B = "[0 2 1 -1; "
+                           "-2 0 -1 1; "
+                           "0 2 1 1; "
+                           "8 0 -1 -1; "
+                           " 0 1 0 0]"_mat;
+  tlf.addLoop(std::move(B), 2);
+  AffineLoopNest<true> &aff2 = *tlf.getLoopNest(tlf.getNumLoopNests() - 1);
   EXPECT_FALSE(aff2.isEmpty());
   BumpAlloc<> allocator;
   NotNull<AffineLoopNest<false>> affp10{

@@ -1,6 +1,6 @@
 #pragma once
 #include "./Loops.hpp"
-#include "Math/Math.hpp"
+#include "Utilities/Allocators.hpp"
 #include <cstdint>
 #include <llvm/ADT/SmallPtrSet.h>
 #include <llvm/ADT/Triple.h>
@@ -19,7 +19,8 @@
 #include <llvm/Support/Casting.h>
 #include <string>
 
-struct TestLoopFunction {
+class TestLoopFunction {
+  BumpAlloc<> alloc;
   llvm::LLVMContext ctx;
   llvm::IRBuilder<> builder;
   llvm::FastMathFlags fmf;
@@ -42,6 +43,10 @@ struct TestLoopFunction {
   llvm::SmallPtrSet<llvm::Value *, 32> symsToDelete;
   size_t ptrIntOffset{0};
 
+public:
+  auto getAlloc() -> BumpAlloc<> & { return alloc; }
+  auto getLoopNest(size_t i) -> AffineLoopNest<true> * { return &alns[i]; }
+  auto getNumLoopNests() -> size_t { return alns.size(); }
   void addLoop(IntMatrix A, size_t numLoops) {
     size_t numSym = size_t(A.numCol()) - numLoops - 1;
     llvm::SmallVector<const llvm::SCEV *> symbols;
@@ -53,13 +58,13 @@ struct TestLoopFunction {
       AffineLoopNest<true> *symbolSource = nullptr;
       size_t numSymbolSource = 0;
       for (auto &aln : alns) {
-        if (numSymbolSource < aln.S.size()) {
-          numSymbolSource = aln.S.size();
+        if (numSymbolSource < aln.getSyms().size()) {
+          numSymbolSource = aln.getSyms().size();
           symbolSource = &aln;
         }
       }
       for (size_t i = 0; i < std::min(numSym, numSymbolSource); ++i)
-        symbols.push_back(symbolSource->S[i]);
+        symbols.push_back(symbolSource->getSyms()[i]);
       for (size_t i = numSymbolSource; i < numSym; ++i)
         symbols.push_back(SE.getUnknown(createInt64()));
     }

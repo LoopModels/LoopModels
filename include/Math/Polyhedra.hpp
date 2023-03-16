@@ -146,9 +146,9 @@ struct BasePolyhedra {
   }
   constexpr void pruneBoundsUncheckedCore(LinAlg::Alloc<int64_t> auto &alloc,
                                           comparator::PtrSymbolicComparator C) {
-    MutPtrMatrix<int64_t> A{getA()};
+    MutDensePtrMatrix<int64_t> A{getA()};
     const size_t dyn = getNumDynamic();
-    auto diff = vector(alloc, unsigned(A.numCol()));
+    auto diff = vector<int64_t>(alloc, unsigned(A.numCol()));
     if constexpr (HasEqualities) removeRedundantRows(getA(), getE());
     for (auto j = size_t(getA().numRow()); j;) {
       bool broke = false;

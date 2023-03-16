@@ -789,4 +789,4 @@ using LinAlg::SmallSparseMatrix, LinAlg::StridedVector,
   LinAlg::MutStridedVector, LinAlg::MutSquarePtrMatrix, LinAlg::begin,
   LinAlg::end, LinAlg::swap, LinAlg::SquarePtrMatrix, LinAlg::Row,
   LinAlg::RowStride, LinAlg::Col, LinAlg::CarInd, LinAlg::last,
-  LinAlg::MutDensePtrMatrix, LinAlg::DensePtrMatrix;
+  LinAlg::MutDensePtrMatrix, LinAlg::DensePtrMatrix, LinAlg::DenseMatrix;

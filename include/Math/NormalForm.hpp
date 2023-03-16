@@ -322,7 +322,7 @@ constexpr auto numNonZeroRows(PtrMatrix<int64_t> A) -> Row {
   return Mnew;
 }
 // NormalForm version assumes zero rows are sorted to end due to pivoting
-constexpr void removeZeroRows(MutPtrMatrix<int64_t> &A) {
+constexpr void removeZeroRows(MutDensePtrMatrix<int64_t> &A) {
   A.truncate(numNonZeroRows(A));
 }
 
@@ -592,8 +592,7 @@ constexpr void solveSystem(MutPtrMatrix<int64_t> A) {
   return std::make_pair(B, s);
 }
 
-constexpr void nullSpace11(LinAlg::DenseMatrix<int64_t> &B,
-                           IntMatrix &A) {
+constexpr void nullSpace11(LinAlg::DenseMatrix<int64_t> &B, IntMatrix &A) {
   const Row M = A.numRow();
   B.resizeForOverwrite(LinAlg::SquareDims{M});
   B << 0;

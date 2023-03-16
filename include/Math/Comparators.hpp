@@ -817,9 +817,9 @@ private:
 static_assert(Comparator<PtrSymbolicComparator>);
 static_assert(Comparator<LinearSymbolicComparator>);
 
-constexpr void moveEqualities(IntMatrix &, EmptyMatrix<int64_t>,
+constexpr void moveEqualities(DenseMatrix<int64_t> &, EmptyMatrix<int64_t>,
                               const Comparator auto &) {}
-constexpr void moveEqualities(IntMatrix &A, IntMatrix &E,
+constexpr void moveEqualities(DenseMatrix<int64_t> &A, IntMatrix &E,
                               const Comparator auto &C) {
   const size_t numVar = size_t(E.numCol());
   assert(A.numCol() == numVar);

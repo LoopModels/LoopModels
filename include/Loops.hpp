@@ -4,12 +4,10 @@
 #include "Math/Array.hpp"
 #include "Math/Comparators.hpp"
 #include "Math/Constraints.hpp"
-#include "Math/EmptyArrays.hpp"
 #include "Math/Indexing.hpp"
 #include "Math/Math.hpp"
 #include "Math/MatrixDimensions.hpp"
 #include "Math/Polyhedra.hpp"
-#include "Memory.hpp"
 #include "Utilities/Allocators.hpp"
 #include "Utilities/Optional.hpp"
 #include "Utilities/Valid.hpp"
@@ -186,7 +184,7 @@ inline auto addRecMatchesLoop(const llvm::SCEV *S, llvm::Loop *L) -> bool {
   return false;
 }
 [[nodiscard]] inline auto
-addSymbol(std::array<IntMatrix, 2> &AB,
+addSymbol(std::array<IntMatrix, 2> &AB, // NOLINT(misc-no-recursion)
           llvm::SmallVectorImpl<const llvm::SCEV *> &symbols, llvm::Loop *L,
           const llvm::SCEV *v, llvm::ScalarEvolution &SE,
           Range<size_t, size_t> lu, int64_t mlt, size_t minDepth) -> size_t {
@@ -267,7 +265,7 @@ areSymbolsLoopInvariant(IntMatrix &A,
       return false;
   return true;
 }
-inline auto
+inline auto // NOLINTNEXTLINE(misc-no-recursion)
 addBackedgeTakenCount(std::array<IntMatrix, 2> &AB,
                       llvm::SmallVectorImpl<const llvm::SCEV *> &symbols,
                       llvm::Loop *L, const llvm::SCEV *BT,
@@ -371,7 +369,7 @@ struct AffineLoopNest
         }
       }
     }
-    assert(symbols.size() == A.numCol());
+    invariant(symbols.size(), size_t(A.numCol()));
     size_t depth = maxDepth - minDepth;
     unsigned numConstraints = unsigned(A.numRow()), N = unsigned(A.numCol());
     NotNull<AffineLoopNest<false>> aln{
@@ -533,7 +531,7 @@ struct AffineLoopNest
     // initializeComparator();
   }
 
-  void addZeroLowerBounds(Allocator auto alloc) {
+  void addZeroLowerBounds(LinAlg::Alloc<int64_t> auto &alloc) {
     if (this->isEmpty()) return;
     if constexpr (NonNegative) return pruneBounds(alloc);
     // return initializeComparator();
@@ -550,7 +548,7 @@ struct AffineLoopNest
   [[nodiscard]] auto getProgVars(size_t j) const -> PtrVector<int64_t> {
     return A(j, _(0, getNumSymbols()));
   }
-  void removeLoopBang(Allocator auto alloc, size_t i) {
+  void removeLoopBang(LinAlg::Alloc<int64_t> auto &alloc, size_t i) {
     auto A{getA()};
     if constexpr (NonNegative)
       fourierMotzkinNonNegative(A, i + getNumSymbols());
@@ -796,8 +794,10 @@ private:
   //                llvm::OptimizationRemarkEmitter *ORE = nullptr) {
   //   // static_assert(false);
   // }
-  AffineLoopNest(unsigned int _numConstraints, unsigned int _numLoops,
-                 unsigned int _numDynSymbols, unsigned int _rowCapacity)
+  // NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
+  constexpr AffineLoopNest(unsigned int _numConstraints, unsigned int _numLoops,
+                           unsigned int _numDynSymbols,
+                           unsigned int _rowCapacity)
     : numConstraints(_numConstraints), numLoops(_numLoops),
       numDynSymbols(_numDynSymbols), rowCapacity(_rowCapacity) {}
 
@@ -816,7 +816,7 @@ private:
       M * N * sizeof(int64_t) + symCapacity * sizeof(const llvm::SCEV *const *);
     auto *mem = alloc.allocate(sizeof(AffineLoopNest) - 8 + memNeeded,
                                alignof(AffineLoopNest));
-    auto *aln = new (mem) AffineLoopNest(numCon, numLoops, numDynSym, M);
+    auto *aln = new (mem) AffineLoopNest({numCon, numLoops, numDynSym, M});
     std::copy_n(syms.begin(), numDynSym, aln->getSyms());
     return NotNull<AffineLoopNest>{aln};
   }

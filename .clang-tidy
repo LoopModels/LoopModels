@@ -1,5 +1,5 @@
 ---
-Checks:          'clang-diagnostic-*,clang-analyzer-*,performance-*,modernize-*,bugprone-*,cpp-core-guidelines-*'
+Checks:          'clang-diagnostic-*,clang-analyzer-*,performance-*,modernize-*,bugprone-*,cpp-core-guidelines-*,cert-*,misc-*,llvm-namespace-comment,llvm-prefer-isa-or-dyn-cast-in-conditionals'
 WarningsAsErrors: ''
 HeaderFilterRegex: ''
 AnalyzeTemporaryDtors: false
