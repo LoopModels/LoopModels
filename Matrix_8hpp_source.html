@@ -78,7 +78,7 @@ $(function() {
 <div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="preprocessor">#include &lt;memory&gt;</span></div>
 <div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="preprocessor">#include &lt;type_traits&gt;</span></div>
 <div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160; </div>
-<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="keyword">namespace </span><a class="code" href="namespaceLinearAlgebra.html">LinearAlgebra</a> {</div>
+<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="keyword">namespace </span><a class="code" href="namespaceLinAlg.html">LinAlg</a> {</div>
 <div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
 <div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;concept AbstractMatrixCore =</div>
 <div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;  HasEltype&lt;T&gt; &amp;&amp; requires(T t, <span class="keywordtype">size_t</span> i) {</div>
@@ -113,7 +113,7 @@ $(function() {
 <div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;                         { t.rowStride() } -&gt; std::same_as&lt;RowStride&gt;;</div>
 <div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;                       };</div>
 <div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160; </div>
-<div class="line"><a name="l00045"></a><span class="lineno"><a class="line" href="structLinearAlgebra_1_1Transpose.html">   45</a></span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> A&gt; <span class="keyword">struct </span><a class="code" href="structLinearAlgebra_1_1Transpose.html">Transpose</a> {</div>
+<div class="line"><a name="l00045"></a><span class="lineno"><a class="line" href="structLinAlg_1_1Transpose.html">   45</a></span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> A&gt; <span class="keyword">struct </span><a class="code" href="structLinAlg_1_1Transpose.html">Transpose</a> {</div>
 <div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;  static_assert(AbstractMatrix&lt;A&gt;, <span class="stringliteral">&quot;Argument to transpose is not a matrix.&quot;</span>);</div>
 <div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;  static_assert(std::is_trivially_copyable_v&lt;A&gt;,</div>
 <div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;                <span class="stringliteral">&quot;Argument to transpose is not trivially copyable.&quot;</span>);</div>
@@ -121,47 +121,47 @@ $(function() {
 <div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;  <span class="keyword">using</span> value_type = eltype_t&lt;A&gt;;</div>
 <div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;  [[no_unique_address]] A a;</div>
 <div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;  constexpr <span class="keyword">auto</span> operator()(<span class="keywordtype">size_t</span> i, <span class="keywordtype">size_t</span> j)<span class="keyword"> const </span>{ <span class="keywordflow">return</span> a(j, i); }</div>
-<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> numRow() <span class="keyword">const</span> -&gt; <a class="code" href="structLinearAlgebra_1_1AxisInt.html">Row</a> {</div>
-<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="structLinearAlgebra_1_1AxisInt.html">Row</a>{<span class="keywordtype">size_t</span>{a.numCol()}};</div>
+<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> numRow() <span class="keyword">const</span> -&gt; <a class="code" href="structLinAlg_1_1AxisInt.html">Row</a> {</div>
+<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="structLinAlg_1_1AxisInt.html">Row</a>{<span class="keywordtype">size_t</span>{a.numCol()}};</div>
 <div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;  }</div>
-<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> numCol() <span class="keyword">const</span> -&gt; <a class="code" href="structLinearAlgebra_1_1AxisInt.html">Col</a> {</div>
-<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="structLinearAlgebra_1_1AxisInt.html">Col</a>{<span class="keywordtype">size_t</span>{a.numRow()}};</div>
+<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> numCol() <span class="keyword">const</span> -&gt; <a class="code" href="structLinAlg_1_1AxisInt.html">Col</a> {</div>
+<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="structLinAlg_1_1AxisInt.html">Col</a>{<span class="keywordtype">size_t</span>{a.numRow()}};</div>
 <div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;  }</div>
 <div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> view() <span class="keyword">const</span> -&gt; <span class="keyword">auto</span> &amp; { <span class="keywordflow">return</span> *<span class="keyword">this</span>; };</div>
-<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> size() <span class="keyword">const</span> -&gt; <a class="code" href="structLinearAlgebra_1_1CartesianIndex.html">CartesianIndex&lt;Row, Col&gt;</a> {</div>
+<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> size() <span class="keyword">const</span> -&gt; <a class="code" href="structLinAlg_1_1CartesianIndex.html">CartesianIndex&lt;Row, Col&gt;</a> {</div>
 <div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;    <span class="keywordflow">return</span> {numRow(), numCol()};</div>
 <div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;  }</div>
-<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> dim() <span class="keyword">const</span> -&gt; <a class="code" href="structLinearAlgebra_1_1DenseDims.html">DenseDims</a> {</div>
+<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> dim() <span class="keyword">const</span> -&gt; <a class="code" href="structLinAlg_1_1DenseDims.html">DenseDims</a> {</div>
 <div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;    <span class="keywordflow">return</span> {numRow(), numCol()};</div>
 <div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;  }</div>
-<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;  constexpr <a class="code" href="structLinearAlgebra_1_1Transpose.html">Transpose</a>(A b) : a(b) {}</div>
+<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;  constexpr <a class="code" href="structLinAlg_1_1Transpose.html">Transpose</a>(A b) : a(b) {}</div>
 <div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;};</div>
-<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> A&gt; <a class="code" href="structLinearAlgebra_1_1Transpose.html">Transpose</a>(A) -&gt; <a class="code" href="structLinearAlgebra_1_1Transpose.html">Transpose&lt;A&gt;</a>;</div>
+<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> A&gt; <a class="code" href="structLinAlg_1_1Transpose.html">Transpose</a>(A) -&gt; <a class="code" href="structLinAlg_1_1Transpose.html">Transpose&lt;A&gt;</a>;</div>
 <div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160; </div>
-<div class="line"><a name="l00070"></a><span class="lineno"><a class="line" href="structLinearAlgebra_1_1SmallSparseMatrix.html">   70</a></span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt; <span class="keyword">struct </span><a class="code" href="structLinearAlgebra_1_1SmallSparseMatrix.html">SmallSparseMatrix</a> {</div>
+<div class="line"><a name="l00070"></a><span class="lineno"><a class="line" href="structLinAlg_1_1SmallSparseMatrix.html">   70</a></span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt; <span class="keyword">struct </span><a class="code" href="structLinAlg_1_1SmallSparseMatrix.html">SmallSparseMatrix</a> {</div>
 <div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;  <span class="comment">// non-zeros</span></div>
 <div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;  [[no_unique_address]] llvm::SmallVector&lt;T&gt; nonZeros{};</div>
 <div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;  <span class="comment">// masks, the upper 8 bits give the number of elements in previous rows</span></div>
 <div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;  <span class="comment">// the remaining 24 bits are a mask indicating non-zeros within this row</span></div>
 <div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;  <span class="keyword">static</span> constexpr <span class="keywordtype">size_t</span> maxElemPerRow = 24;</div>
 <div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;  [[no_unique_address]] llvm::SmallVector&lt;uint32_t&gt; rows;</div>
-<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;  [[no_unique_address]] <a class="code" href="structLinearAlgebra_1_1AxisInt.html">Col</a> col;</div>
-<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> numRow() <span class="keyword">const</span> -&gt; <a class="code" href="structLinearAlgebra_1_1AxisInt.html">Row</a> {</div>
-<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="structLinearAlgebra_1_1AxisInt.html">Row</a>{rows.size()};</div>
+<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;  [[no_unique_address]] <a class="code" href="structLinAlg_1_1AxisInt.html">Col</a> col;</div>
+<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> numRow() <span class="keyword">const</span> -&gt; <a class="code" href="structLinAlg_1_1AxisInt.html">Row</a> {</div>
+<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="structLinAlg_1_1AxisInt.html">Row</a>{rows.size()};</div>
 <div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;  }</div>
-<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> numCol() <span class="keyword">const</span> -&gt; <a class="code" href="structLinearAlgebra_1_1AxisInt.html">Col</a> { <span class="keywordflow">return</span> col; }</div>
-<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> size() <span class="keyword">const</span> -&gt; <a class="code" href="structLinearAlgebra_1_1CartesianIndex.html">CartesianIndex&lt;Row, Col&gt;</a> {</div>
+<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> numCol() <span class="keyword">const</span> -&gt; <a class="code" href="structLinAlg_1_1AxisInt.html">Col</a> { <span class="keywordflow">return</span> col; }</div>
+<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> size() <span class="keyword">const</span> -&gt; <a class="code" href="structLinAlg_1_1CartesianIndex.html">CartesianIndex&lt;Row, Col&gt;</a> {</div>
 <div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;    <span class="keywordflow">return</span> {numRow(), numCol()};</div>
 <div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;  }</div>
-<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> dim() <span class="keyword">const</span> -&gt; <a class="code" href="structLinearAlgebra_1_1DenseDims.html">DenseDims</a> {</div>
+<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> dim() <span class="keyword">const</span> -&gt; <a class="code" href="structLinAlg_1_1DenseDims.html">DenseDims</a> {</div>
 <div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;    <span class="keywordflow">return</span> {numRow(), numCol()};</div>
 <div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;  }</div>
 <div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;  <span class="comment">// [[nodiscard]] constexpr auto view() const -&gt; auto &amp; { return *this; };</span></div>
-<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;  constexpr <a class="code" href="structLinearAlgebra_1_1SmallSparseMatrix.html">SmallSparseMatrix</a>(<a class="code" href="structLinearAlgebra_1_1AxisInt.html">Row</a> numRows, <a class="code" href="structLinearAlgebra_1_1AxisInt.html">Col</a> numCols)</div>
+<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;  constexpr <a class="code" href="structLinAlg_1_1SmallSparseMatrix.html">SmallSparseMatrix</a>(<a class="code" href="structLinAlg_1_1AxisInt.html">Row</a> numRows, <a class="code" href="structLinAlg_1_1AxisInt.html">Col</a> numCols)</div>
 <div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;    : rows{llvm::SmallVector&lt;uint32_t&gt;(<span class="keywordtype">size_t</span>(numRows))}, col{numCols} {</div>
 <div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;    invariant(<span class="keywordtype">size_t</span>(col) &lt;= maxElemPerRow);</div>
 <div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;  }</div>
-<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;  constexpr <span class="keyword">auto</span> get(<a class="code" href="structLinearAlgebra_1_1AxisInt.html">Row</a> i, <a class="code" href="structLinearAlgebra_1_1AxisInt.html">Col</a> j) <span class="keyword">const</span> -&gt; T {</div>
+<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;  constexpr <span class="keyword">auto</span> get(<a class="code" href="structLinAlg_1_1AxisInt.html">Row</a> i, <a class="code" href="structLinAlg_1_1AxisInt.html">Col</a> j) <span class="keyword">const</span> -&gt; T {</div>
 <div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;    invariant(j &lt; col);</div>
 <div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;    uint32_t r(rows[<span class="keywordtype">size_t</span>(i)]);</div>
 <div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;    uint32_t jshift = uint32_t(1) &lt;&lt; uint32_t(j);</div>
@@ -172,9 +172,9 @@ $(function() {
 <div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;    <span class="keywordflow">return</span> nonZeros[rowOffset + prevRowOffset];</div>
 <div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;  }</div>
 <div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;  constexpr <span class="keyword">auto</span> operator()(<span class="keywordtype">size_t</span> i, <span class="keywordtype">size_t</span> j) <span class="keyword">const</span> -&gt; T {</div>
-<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;    <span class="keywordflow">return</span> get(<a class="code" href="structLinearAlgebra_1_1AxisInt.html">Row</a>{i}, <a class="code" href="structLinearAlgebra_1_1AxisInt.html">Col</a>{j});</div>
+<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;    <span class="keywordflow">return</span> get(<a class="code" href="structLinAlg_1_1AxisInt.html">Row</a>{i}, <a class="code" href="structLinAlg_1_1AxisInt.html">Col</a>{j});</div>
 <div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;  }</div>
-<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;  constexpr <span class="keywordtype">void</span> insert(T x, <a class="code" href="structLinearAlgebra_1_1AxisInt.html">Row</a> i, <a class="code" href="structLinearAlgebra_1_1AxisInt.html">Col</a> j) {</div>
+<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;  constexpr <span class="keywordtype">void</span> insert(T x, <a class="code" href="structLinAlg_1_1AxisInt.html">Row</a> i, <a class="code" href="structLinAlg_1_1AxisInt.html">Col</a> j) {</div>
 <div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;    invariant(j &lt; col);</div>
 <div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;    uint32_t r{rows[size_t(i)]};</div>
 <div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;    uint32_t jshift = uint32_t(1) &lt;&lt; size_t(j);</div>
@@ -192,28 +192,28 @@ $(function() {
 <div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;    }</div>
 <div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;  }</div>
 <div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160; </div>
-<div class="line"><a name="l00124"></a><span class="lineno"><a class="line" href="structLinearAlgebra_1_1SmallSparseMatrix_1_1Reference.html">  124</a></span>&#160;  <span class="keyword">struct </span><a class="code" href="structLinearAlgebra_1_1SmallSparseMatrix_1_1Reference.html">Reference</a> {</div>
-<div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160;    [[no_unique_address]] <a class="code" href="structLinearAlgebra_1_1SmallSparseMatrix.html">SmallSparseMatrix&lt;T&gt;</a> *A;</div>
+<div class="line"><a name="l00124"></a><span class="lineno"><a class="line" href="structLinAlg_1_1SmallSparseMatrix_1_1Reference.html">  124</a></span>&#160;  <span class="keyword">struct </span><a class="code" href="structLinAlg_1_1SmallSparseMatrix_1_1Reference.html">Reference</a> {</div>
+<div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160;    [[no_unique_address]] <a class="code" href="structLinAlg_1_1SmallSparseMatrix.html">SmallSparseMatrix&lt;T&gt;</a> *A;</div>
 <div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;    [[no_unique_address]] <span class="keywordtype">size_t</span> i, j;</div>
-<div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;    constexpr <span class="keyword">operator</span> T()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> A-&gt;get(<a class="code" href="structLinearAlgebra_1_1AxisInt.html">Row</a>{i}, <a class="code" href="structLinearAlgebra_1_1AxisInt.html">Col</a>{j}); }</div>
+<div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;    constexpr <span class="keyword">operator</span> T()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> A-&gt;get(<a class="code" href="structLinAlg_1_1AxisInt.html">Row</a>{i}, <a class="code" href="structLinAlg_1_1AxisInt.html">Col</a>{j}); }</div>
 <div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160;    constexpr <span class="keywordtype">void</span> operator=(T x) {</div>
-<div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160;      A-&gt;insert(std::move(x), <a class="code" href="structLinearAlgebra_1_1AxisInt.html">Row</a>{i}, <a class="code" href="structLinearAlgebra_1_1AxisInt.html">Col</a>{j});</div>
+<div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160;      A-&gt;insert(std::move(x), <a class="code" href="structLinAlg_1_1AxisInt.html">Row</a>{i}, <a class="code" href="structLinAlg_1_1AxisInt.html">Col</a>{j});</div>
 <div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160;      <span class="keywordflow">return</span>;</div>
 <div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160;    }</div>
 <div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160;  };</div>
-<div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;  constexpr <span class="keyword">auto</span> operator()(<span class="keywordtype">size_t</span> i, <span class="keywordtype">size_t</span> j) -&gt; <a class="code" href="structLinearAlgebra_1_1SmallSparseMatrix_1_1Reference.html">Reference</a> {</div>
-<div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="structLinearAlgebra_1_1SmallSparseMatrix_1_1Reference.html">Reference</a>{<span class="keyword">this</span>, i, j};</div>
+<div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;  constexpr <span class="keyword">auto</span> operator()(<span class="keywordtype">size_t</span> i, <span class="keywordtype">size_t</span> j) -&gt; <a class="code" href="structLinAlg_1_1SmallSparseMatrix_1_1Reference.html">Reference</a> {</div>
+<div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="structLinAlg_1_1SmallSparseMatrix_1_1Reference.html">Reference</a>{<span class="keyword">this</span>, i, j};</div>
 <div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;  }</div>
 <div class="line"><a name="l00136"></a><span class="lineno">  136</span>&#160;};</div>
 <div class="line"><a name="l00137"></a><span class="lineno">  137</span>&#160; </div>
-<div class="line"><a name="l00138"></a><span class="lineno">  138</span>&#160;} <span class="comment">// namespace LinearAlgebra</span></div>
-<div class="ttc" id="anamespaceLinearAlgebra_html"><div class="ttname"><a href="namespaceLinearAlgebra.html">LinearAlgebra</a></div><div class="ttdef"><b>Definition:</b> Array.hpp:20</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1AxisInt_html"><div class="ttname"><a href="structLinearAlgebra_1_1AxisInt.html">LinearAlgebra::AxisInt</a></div><div class="ttdef"><b>Definition:</b> AxisTypes.hpp:46</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1CartesianIndex_html"><div class="ttname"><a href="structLinearAlgebra_1_1CartesianIndex.html">LinearAlgebra::CartesianIndex</a></div><div class="ttdef"><b>Definition:</b> MatrixDimensions.hpp:9</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1DenseDims_html"><div class="ttname"><a href="structLinearAlgebra_1_1DenseDims.html">LinearAlgebra::DenseDims</a></div><div class="ttdoc">Dimensions with a capacity.</div><div class="ttdef"><b>Definition:</b> MatrixDimensions.hpp:89</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1SmallSparseMatrix_1_1Reference_html"><div class="ttname"><a href="structLinearAlgebra_1_1SmallSparseMatrix_1_1Reference.html">LinearAlgebra::SmallSparseMatrix::Reference</a></div><div class="ttdef"><b>Definition:</b> Matrix.hpp:124</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1SmallSparseMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1SmallSparseMatrix.html">LinearAlgebra::SmallSparseMatrix</a></div><div class="ttdef"><b>Definition:</b> Matrix.hpp:70</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1Transpose_html"><div class="ttname"><a href="structLinearAlgebra_1_1Transpose.html">LinearAlgebra::Transpose</a></div><div class="ttdef"><b>Definition:</b> Matrix.hpp:45</div></div>
+<div class="line"><a name="l00138"></a><span class="lineno">  138</span>&#160;} <span class="comment">// namespace LinAlg</span></div>
+<div class="ttc" id="anamespaceLinAlg_html"><div class="ttname"><a href="namespaceLinAlg.html">LinAlg</a></div><div class="ttdef"><b>Definition:</b> Array.hpp:20</div></div>
+<div class="ttc" id="astructLinAlg_1_1AxisInt_html"><div class="ttname"><a href="structLinAlg_1_1AxisInt.html">LinAlg::AxisInt</a></div><div class="ttdef"><b>Definition:</b> AxisTypes.hpp:46</div></div>
+<div class="ttc" id="astructLinAlg_1_1CartesianIndex_html"><div class="ttname"><a href="structLinAlg_1_1CartesianIndex.html">LinAlg::CartesianIndex</a></div><div class="ttdef"><b>Definition:</b> MatrixDimensions.hpp:9</div></div>
+<div class="ttc" id="astructLinAlg_1_1DenseDims_html"><div class="ttname"><a href="structLinAlg_1_1DenseDims.html">LinAlg::DenseDims</a></div><div class="ttdoc">Dimensions with a capacity.</div><div class="ttdef"><b>Definition:</b> MatrixDimensions.hpp:89</div></div>
+<div class="ttc" id="astructLinAlg_1_1SmallSparseMatrix_1_1Reference_html"><div class="ttname"><a href="structLinAlg_1_1SmallSparseMatrix_1_1Reference.html">LinAlg::SmallSparseMatrix::Reference</a></div><div class="ttdef"><b>Definition:</b> Matrix.hpp:124</div></div>
+<div class="ttc" id="astructLinAlg_1_1SmallSparseMatrix_html"><div class="ttname"><a href="structLinAlg_1_1SmallSparseMatrix.html">LinAlg::SmallSparseMatrix</a></div><div class="ttdef"><b>Definition:</b> Matrix.hpp:70</div></div>
+<div class="ttc" id="astructLinAlg_1_1Transpose_html"><div class="ttname"><a href="structLinAlg_1_1Transpose.html">LinAlg::Transpose</a></div><div class="ttdef"><b>Definition:</b> Matrix.hpp:45</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

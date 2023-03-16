@@ -120,7 +120,7 @@ $(function() {
 <div class="line"><a name="l00061"></a><span class="lineno"><a class="line" href="structTableau.html#a2ba173815f058b2e8f5633b0f9c89019">   61</a></span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> <a class="code" href="structTableau.html#a2ba173815f058b2e8f5633b0f9c89019">getTableau</a>() const -&gt; PtrMatrix&lt;int64_t&gt; {</div>
 <div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;    invariant(ptr != <span class="keyword">nullptr</span>);</div>
 <div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;    <span class="keywordflow">return</span> {ptr + reservedBasicConstraints() + reservedBasicVariables(),</div>
-<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;            <a class="code" href="structLinearAlgebra_1_1StridedDims.html">StridedDims</a>{</div>
+<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;            <a class="code" href="structLinAlg_1_1StridedDims.html">StridedDims</a>{</div>
 <div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;              numConstraints + 1,</div>
 <div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;              numVars + 1,</div>
 <div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;              varCapacity + 1,</div>
@@ -129,7 +129,7 @@ $(function() {
 <div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> <a class="code" href="structTableau.html#a2ba173815f058b2e8f5633b0f9c89019">getTableau</a>() -&gt; MutPtrMatrix&lt;int64_t&gt; {</div>
 <div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;    invariant(ptr != <span class="keyword">nullptr</span>);</div>
 <div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;    <span class="keywordflow">return</span> {ptr + reservedBasicConstraints() + reservedBasicVariables(),</div>
-<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;            <a class="code" href="structLinearAlgebra_1_1StridedDims.html">StridedDims</a>{</div>
+<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;            <a class="code" href="structLinAlg_1_1StridedDims.html">StridedDims</a>{</div>
 <div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;              numConstraints + 1,</div>
 <div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;              numVars + 1,</div>
 <div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;              varCapacity + 1,</div>
@@ -139,7 +139,7 @@ $(function() {
 <div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;    invariant(ptr != <span class="keyword">nullptr</span>);</div>
 <div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;    <span class="keywordflow">return</span> {ptr + reservedBasicConstraints() + reservedBasicVariables() +</div>
 <div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;              varCapacity + 1,</div>
-<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;            <a class="code" href="structLinearAlgebra_1_1StridedDims.html">StridedDims</a>{</div>
+<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;            <a class="code" href="structLinAlg_1_1StridedDims.html">StridedDims</a>{</div>
 <div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;              numConstraints,</div>
 <div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;              numVars + 1,</div>
 <div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;              varCapacity + 1,</div>
@@ -149,7 +149,7 @@ $(function() {
 <div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;    invariant(ptr != <span class="keyword">nullptr</span>);</div>
 <div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;    <span class="keywordflow">return</span> {ptr + reservedBasicConstraints() + reservedBasicVariables() +</div>
 <div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;              varCapacity + 1,</div>
-<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;            <a class="code" href="structLinearAlgebra_1_1StridedDims.html">StridedDims</a>{</div>
+<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;            <a class="code" href="structLinAlg_1_1StridedDims.html">StridedDims</a>{</div>
 <div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;              numConstraints,</div>
 <div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;              numVars + 1,</div>
 <div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;              varCapacity + 1,</div>
@@ -311,7 +311,7 @@ $(function() {
 <div class="line"><a name="l00252"></a><span class="lineno">  252</span>&#160;      PtrMatrix&lt;int64_t&gt; constraints = tableau.getConstraints();</div>
 <div class="line"><a name="l00253"></a><span class="lineno">  253</span>&#160;      <span class="keywordflow">return</span> Rational::create(constraints(j, 0), constraints(j, i + 1));</div>
 <div class="line"><a name="l00254"></a><span class="lineno">  254</span>&#160;    }</div>
-<div class="line"><a name="l00255"></a><span class="lineno">  255</span>&#160;    [[nodiscard]] constexpr <span class="keyword">auto</span> operator[](LinearAlgebra::OffsetEnd k) <span class="keyword">const</span></div>
+<div class="line"><a name="l00255"></a><span class="lineno">  255</span>&#160;    [[nodiscard]] constexpr <span class="keyword">auto</span> operator[](LinAlg::OffsetEnd k) <span class="keyword">const</span></div>
 <div class="line"><a name="l00256"></a><span class="lineno">  256</span>&#160;      -&gt; <a class="code" href="structRational.html">Rational</a> {</div>
 <div class="line"><a name="l00257"></a><span class="lineno">  257</span>&#160;      <span class="keywordtype">size_t</span> i = size_t(tableau.numVars) - k.offset;</div>
 <div class="line"><a name="l00258"></a><span class="lineno">  258</span>&#160;      int64_t j = tableau.getBasicConstraint(i);</div>
@@ -320,12 +320,12 @@ $(function() {
 <div class="line"><a name="l00261"></a><span class="lineno">  261</span>&#160;      <span class="keywordflow">return</span> Rational::create(constraints(j, 0), constraints(j, i + 1));</div>
 <div class="line"><a name="l00262"></a><span class="lineno">  262</span>&#160;    }</div>
 <div class="line"><a name="l00263"></a><span class="lineno">  263</span>&#160;    [[nodiscard]] constexpr <span class="keyword">auto</span></div>
-<div class="line"><a name="l00264"></a><span class="lineno">  264</span>&#160;    operator[](LinearAlgebra::RelativeOffset <span class="keyword">auto</span> i) <span class="keyword">const</span> -&gt; <a class="code" href="structRational.html">Rational</a> {</div>
-<div class="line"><a name="l00265"></a><span class="lineno">  265</span>&#160;      <span class="keywordflow">return</span> (*<span class="keyword">this</span>)[LinearAlgebra::calcOffset(size(), i)];</div>
+<div class="line"><a name="l00264"></a><span class="lineno">  264</span>&#160;    operator[](LinAlg::RelativeOffset <span class="keyword">auto</span> i) <span class="keyword">const</span> -&gt; <a class="code" href="structRational.html">Rational</a> {</div>
+<div class="line"><a name="l00265"></a><span class="lineno">  265</span>&#160;      <span class="keywordflow">return</span> (*<span class="keyword">this</span>)[LinAlg::calcOffset(size(), i)];</div>
 <div class="line"><a name="l00266"></a><span class="lineno">  266</span>&#160;    }</div>
 <div class="line"><a name="l00267"></a><span class="lineno">  267</span>&#160;    <span class="keyword">template</span> &lt;<span class="keyword">typename</span> B, <span class="keyword">typename</span> E&gt;</div>
 <div class="line"><a name="l00268"></a><span class="lineno">  268</span>&#160;    constexpr <span class="keyword">auto</span> operator[](<a class="code" href="structRange_3_01B_00_01E_01_4.html">Range&lt;B, E&gt;</a> r) <span class="keyword">const</span> -&gt; <a class="code" href="structSimplex_1_1Solution.html">Solution</a> {</div>
-<div class="line"><a name="l00269"></a><span class="lineno">  269</span>&#160;      <span class="keywordflow">return</span> (*<span class="keyword">this</span>)[LinearAlgebra::canonicalizeRange(r, size())];</div>
+<div class="line"><a name="l00269"></a><span class="lineno">  269</span>&#160;      <span class="keywordflow">return</span> (*<span class="keyword">this</span>)[LinAlg::canonicalizeRange(r, size())];</div>
 <div class="line"><a name="l00270"></a><span class="lineno">  270</span>&#160;    }</div>
 <div class="line"><a name="l00271"></a><span class="lineno">  271</span>&#160;    constexpr <span class="keyword">auto</span> operator[](<a class="code" href="structRange.html">Range&lt;size_t, size_t&gt;</a> r) <span class="keyword">const</span> -&gt; <a class="code" href="structSimplex_1_1Solution.html">Solution</a> {</div>
 <div class="line"><a name="l00272"></a><span class="lineno">  272</span>&#160;      <a class="code" href="structTableau.html">Tableau</a> t = tableau;</div>
@@ -853,12 +853,12 @@ $(function() {
 <div class="line"><a name="l00806"></a><span class="lineno">  806</span>&#160;}</div>
 <div class="line"><a name="l00807"></a><span class="lineno">  807</span>&#160; </div>
 <div class="line"><a name="l00808"></a><span class="lineno">  808</span>&#160;static_assert(AbstractVector&lt;PtrVector&lt;Rational&gt;&gt;);</div>
-<div class="line"><a name="l00809"></a><span class="lineno">  809</span>&#160;static_assert(AbstractVector&lt;<a class="code" href="structLinearAlgebra_1_1ElementwiseVectorBinaryOp.html">LinearAlgebra::ElementwiseVectorBinaryOp</a>&lt;</div>
-<div class="line"><a name="l00810"></a><span class="lineno">  810</span>&#160;                <a class="code" href="structLinearAlgebra_1_1Sub.html">LinearAlgebra::Sub</a>, PtrVector&lt;Rational&gt;, PtrVector&lt;Rational&gt;&gt;&gt;);</div>
+<div class="line"><a name="l00809"></a><span class="lineno">  809</span>&#160;static_assert(AbstractVector&lt;<a class="code" href="structLinAlg_1_1ElementwiseVectorBinaryOp.html">LinAlg::ElementwiseVectorBinaryOp</a>&lt;</div>
+<div class="line"><a name="l00810"></a><span class="lineno">  810</span>&#160;                <a class="code" href="structLinAlg_1_1Sub.html">LinAlg::Sub</a>, PtrVector&lt;Rational&gt;, PtrVector&lt;Rational&gt;&gt;&gt;);</div>
 <div class="ttc" id="astructBumpAlloc_html"><div class="ttname"><a href="structBumpAlloc.html">BumpAlloc</a></div><div class="ttdef"><b>Definition:</b> Allocators.hpp:31</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1ElementwiseVectorBinaryOp_html"><div class="ttname"><a href="structLinearAlgebra_1_1ElementwiseVectorBinaryOp.html">LinearAlgebra::ElementwiseVectorBinaryOp</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:123</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1StridedDims_html"><div class="ttname"><a href="structLinearAlgebra_1_1StridedDims.html">LinearAlgebra::StridedDims</a></div><div class="ttdef"><b>Definition:</b> MatrixDimensions.hpp:37</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1Sub_html"><div class="ttname"><a href="structLinearAlgebra_1_1Sub.html">LinearAlgebra::Sub</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:62</div></div>
+<div class="ttc" id="astructLinAlg_1_1ElementwiseVectorBinaryOp_html"><div class="ttname"><a href="structLinAlg_1_1ElementwiseVectorBinaryOp.html">LinAlg::ElementwiseVectorBinaryOp</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:123</div></div>
+<div class="ttc" id="astructLinAlg_1_1StridedDims_html"><div class="ttname"><a href="structLinAlg_1_1StridedDims.html">LinAlg::StridedDims</a></div><div class="ttdef"><b>Definition:</b> MatrixDimensions.hpp:37</div></div>
+<div class="ttc" id="astructLinAlg_1_1Sub_html"><div class="ttname"><a href="structLinAlg_1_1Sub.html">LinAlg::Sub</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:62</div></div>
 <div class="ttc" id="astructOptional_html"><div class="ttname"><a href="structOptional.html">Optional</a></div><div class="ttdef"><b>Definition:</b> Optional.hpp:9</div></div>
 <div class="ttc" id="astructRange_3_01B_00_01E_01_4_html"><div class="ttname"><a href="structRange_3_01B_00_01E_01_4.html">Range&lt; B, E &gt;</a></div><div class="ttdef"><b>Definition:</b> Iterators.hpp:10</div></div>
 <div class="ttc" id="astructRange_html"><div class="ttname"><a href="structRange.html">Range</a></div><div class="ttdef"><b>Definition:</b> Iterators.hpp:4</div></div>

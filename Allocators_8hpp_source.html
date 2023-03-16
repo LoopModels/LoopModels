@@ -462,7 +462,7 @@ $(function() {
 <div class="line"><a name="l00398"></a><span class="lineno">  398</span>&#160;    <span class="keywordflow">return</span> A-&gt;template allocate&lt;T&gt;(n);</div>
 <div class="line"><a name="l00399"></a><span class="lineno">  399</span>&#160;  }</div>
 <div class="line"><a name="l00400"></a><span class="lineno">  400</span>&#160;  constexpr <span class="keyword">auto</span> checkPoint() -&gt; <span class="keyword">typename</span> Alloc::CheckPoint {</div>
-<div class="line"><a name="l00401"></a><span class="lineno">  401</span>&#160;    <span class="keywordflow">return</span> A-&gt;rollBack();</div>
+<div class="line"><a name="l00401"></a><span class="lineno">  401</span>&#160;    <span class="keywordflow">return</span> A-&gt;checkPoint();</div>
 <div class="line"><a name="l00402"></a><span class="lineno">  402</span>&#160;  }</div>
 <div class="line"><a name="l00403"></a><span class="lineno">  403</span>&#160;  constexpr <span class="keywordtype">void</span> rollBack(<span class="keyword">typename</span> Alloc::CheckPoint p) { A-&gt;rollBack(p); }</div>
 <div class="line"><a name="l00404"></a><span class="lineno">  404</span>&#160;};</div>
@@ -503,7 +503,7 @@ $(function() {
 <div class="line"><a name="l00439"></a><span class="lineno">  439</span>&#160; </div>
 <div class="line"><a name="l00440"></a><span class="lineno">  440</span>&#160;constexpr <span class="keyword">auto</span> checkpoint(<span class="keyword">const</span> <span class="keyword">auto</span> &amp;) { <span class="keywordflow">return</span> <a class="code" href="structNoCheckpoint.html">NoCheckpoint</a>{}; }</div>
 <div class="line"><a name="l00441"></a><span class="lineno">  441</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">class</span> T&gt; constexpr <span class="keyword">auto</span> checkpoint(<a class="code" href="classWBumpAlloc.html">WBumpAlloc&lt;T&gt;</a> alloc) {</div>
-<div class="line"><a name="l00442"></a><span class="lineno">  442</span>&#160;  <span class="keywordflow">return</span> alloc.rollBack();</div>
+<div class="line"><a name="l00442"></a><span class="lineno">  442</span>&#160;  <span class="keywordflow">return</span> alloc.checkPoint();</div>
 <div class="line"><a name="l00443"></a><span class="lineno">  443</span>&#160;}</div>
 <div class="line"><a name="l00444"></a><span class="lineno">  444</span>&#160;constexpr <span class="keyword">auto</span> checkpoint(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc) { <span class="keywordflow">return</span> alloc.checkPoint(); }</div>
 <div class="line"><a name="l00445"></a><span class="lineno">  445</span>&#160; </div>

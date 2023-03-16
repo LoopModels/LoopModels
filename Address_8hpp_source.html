@@ -138,11 +138,11 @@ $(function() {
 <div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;    <span class="keywordflow">return</span> {<span class="keyword">const_cast&lt;</span>int64_t *<span class="keyword">&gt;</span>(mem + 1), <span class="keywordtype">unsigned</span>(getNumLoops())};</div>
 <div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;  }</div>
 <div class="line"><a name="l00113"></a><span class="lineno"><a class="line" href="structAddress.html#afad8e52958d1d85eef66ee44d4ceeb78">  113</a></span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> <a class="code" href="structAddress.html#afad8e52958d1d85eef66ee44d4ceeb78">indexMatrix</a>() -&gt; MutDensePtrMatrix&lt;int64_t&gt; {</div>
-<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;    <span class="keywordflow">return</span> {mem + 1 + getNumLoops(), <a class="code" href="structLinearAlgebra_1_1DenseDims.html">DenseDims</a>{getArrayDim(), getNumLoops()}};</div>
+<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;    <span class="keywordflow">return</span> {mem + 1 + getNumLoops(), <a class="code" href="structLinAlg_1_1DenseDims.html">DenseDims</a>{getArrayDim(), getNumLoops()}};</div>
 <div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;  }</div>
 <div class="line"><a name="l00117"></a><span class="lineno"><a class="line" href="structAddress.html#a297424995238c440069eecf32c6d5bb7">  117</a></span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> <a class="code" href="structAddress.html#a297424995238c440069eecf32c6d5bb7">indexMatrix</a>() const -&gt; DensePtrMatrix&lt;int64_t&gt; {</div>
 <div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;    <span class="keywordflow">return</span> {<span class="keyword">const_cast&lt;</span>int64_t *<span class="keyword">&gt;</span>(mem + 1 + getNumLoops()),</div>
-<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;            <a class="code" href="structLinearAlgebra_1_1DenseDims.html">DenseDims</a>{getArrayDim(), getNumLoops()}};</div>
+<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;            <a class="code" href="structLinAlg_1_1DenseDims.html">DenseDims</a>{getArrayDim(), getNumLoops()}};</div>
 <div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;  }</div>
 <div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> isStore() -&gt; <span class="keywordtype">bool</span> { <span class="keywordflow">return</span> isStoreFlag; }</div>
 <div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getLoop() -&gt; <a class="code" href="structNotNull.html">NotNull&lt;AffineLoopNest&lt;false&gt;</a>&gt; {</div>
@@ -154,7 +154,7 @@ $(function() {
 <div class="ttc" id="astructAddress_html_afad8e52958d1d85eef66ee44d4ceeb78"><div class="ttname"><a href="structAddress.html#afad8e52958d1d85eef66ee44d4ceeb78">Address::indexMatrix</a></div><div class="ttdeci">constexpr auto indexMatrix() -&gt; MutDensePtrMatrix&lt; int64_t &gt;</div><div class="ttdoc">indexMatrix() -&gt; arrayDim() x getNumLoops()</div><div class="ttdef"><b>Definition:</b> Address.hpp:113</div></div>
 <div class="ttc" id="astructAffineLoopNest_html"><div class="ttname"><a href="structAffineLoopNest.html">AffineLoopNest</a></div><div class="ttdef"><b>Definition:</b> Loops.hpp:327</div></div>
 <div class="ttc" id="astructBumpAlloc_html"><div class="ttname"><a href="structBumpAlloc.html">BumpAlloc</a></div><div class="ttdef"><b>Definition:</b> Allocators.hpp:31</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1DenseDims_html"><div class="ttname"><a href="structLinearAlgebra_1_1DenseDims.html">LinearAlgebra::DenseDims</a></div><div class="ttdoc">Dimensions with a capacity.</div><div class="ttdef"><b>Definition:</b> MatrixDimensions.hpp:89</div></div>
+<div class="ttc" id="astructLinAlg_1_1DenseDims_html"><div class="ttname"><a href="structLinAlg_1_1DenseDims.html">LinAlg::DenseDims</a></div><div class="ttdoc">Dimensions with a capacity.</div><div class="ttdef"><b>Definition:</b> MatrixDimensions.hpp:89</div></div>
 <div class="ttc" id="astructNotNull_html"><div class="ttname"><a href="structNotNull.html">NotNull&lt; MemoryAccess &gt;</a></div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->

@@ -76,7 +76,7 @@ $(function() {
 <div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="preprocessor">#include &lt;llvm/ADT/ArrayRef.h&gt;</span></div>
 <div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="preprocessor">#include &lt;llvm/ADT/SmallVector.h&gt;</span></div>
 <div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160; </div>
-<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="keyword">namespace </span><a class="code" href="namespaceLinearAlgebra.html">LinearAlgebra</a> {</div>
+<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="keyword">namespace </span><a class="code" href="namespaceLinAlg.html">LinAlg</a> {</div>
 <div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
 <div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;concept AbstractVector =</div>
 <div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;  HasEltype&lt;T&gt; &amp;&amp; requires(T t, <span class="keywordtype">size_t</span> i) {</div>
@@ -94,10 +94,10 @@ $(function() {
 <div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">class</span> T&gt;</div>
 <div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;concept SizeMultiple8 = (<span class="keyword">sizeof</span>(T) % 8) == 0;</div>
 <div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160; </div>
-<div class="line"><a name="l00026"></a><span class="lineno"><a class="line" href="structLinearAlgebra_1_1default__capacity__type.html">   26</a></span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">class</span> S&gt; <span class="keyword">struct </span><a class="code" href="structLinearAlgebra_1_1default__capacity__type.html">default_capacity_type</a> {</div>
+<div class="line"><a name="l00026"></a><span class="lineno"><a class="line" href="structLinAlg_1_1default__capacity__type.html">   26</a></span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">class</span> S&gt; <span class="keyword">struct </span><a class="code" href="structLinAlg_1_1default__capacity__type.html">default_capacity_type</a> {</div>
 <div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;  <span class="keyword">using</span> type = <span class="keywordtype">unsigned</span> int;</div>
 <div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;};</div>
-<div class="line"><a name="l00029"></a><span class="lineno"><a class="line" href="structLinearAlgebra_1_1default__capacity__type_3_01S_01_4.html">   29</a></span>&#160;<span class="keyword">template</span> &lt;SizeMultiple8 S&gt; <span class="keyword">struct </span><a class="code" href="structLinearAlgebra_1_1default__capacity__type.html">default_capacity_type</a>&lt;S&gt; {</div>
+<div class="line"><a name="l00029"></a><span class="lineno"><a class="line" href="structLinAlg_1_1default__capacity__type_3_01S_01_4.html">   29</a></span>&#160;<span class="keyword">template</span> &lt;SizeMultiple8 S&gt; <span class="keyword">struct </span><a class="code" href="structLinAlg_1_1default__capacity__type.html">default_capacity_type</a>&lt;S&gt; {</div>
 <div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;  <span class="keyword">using</span> type = std::size_t;</div>
 <div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;};</div>
 <div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">class</span> S&gt;</div>
@@ -116,9 +116,9 @@ $(function() {
 <div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;  <span class="keywordflow">return</span> std::max&lt;size_t&gt;(1, N);</div>
 <div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;}</div>
 <div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160; </div>
-<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;} <span class="comment">// namespace LinearAlgebra</span></div>
-<div class="ttc" id="anamespaceLinearAlgebra_html"><div class="ttname"><a href="namespaceLinearAlgebra.html">LinearAlgebra</a></div><div class="ttdef"><b>Definition:</b> Array.hpp:20</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1default__capacity__type_html"><div class="ttname"><a href="structLinearAlgebra_1_1default__capacity__type.html">LinearAlgebra::default_capacity_type</a></div><div class="ttdef"><b>Definition:</b> Vector.hpp:26</div></div>
+<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;} <span class="comment">// namespace LinAlg</span></div>
+<div class="ttc" id="anamespaceLinAlg_html"><div class="ttname"><a href="namespaceLinAlg.html">LinAlg</a></div><div class="ttdef"><b>Definition:</b> Array.hpp:20</div></div>
+<div class="ttc" id="astructLinAlg_1_1default__capacity__type_html"><div class="ttname"><a href="structLinAlg_1_1default__capacity__type.html">LinAlg::default_capacity_type</a></div><div class="ttdef"><b>Definition:</b> Vector.hpp:26</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
