@@ -1,7 +1,7 @@
 #pragma once
 #include <llvm/Support/raw_ostream.h>
 
-/// LinearAlgebra
+/// LinAlg
 ///
 /// This is the namespace for all mathematical functions.
 /// Semantics:
@@ -22,7 +22,7 @@
 /// All the PtrVector/PtrMatrix types are trivially destructible, copyable, etc
 /// Their lifetimes are governed by the BumpAlloc or RAII type used to back
 /// them.
-namespace LinearAlgebra {
+namespace LinAlg {
 enum class AxisType {
   Row,
   Column,
@@ -237,8 +237,8 @@ constexpr auto unwrapCol(Col x) -> size_t { return size_t(x); }
 constexpr auto unwrapRow(auto x) { return x; }
 constexpr auto unwrapCol(auto x) { return x; }
 
-} // namespace LinearAlgebra
+} // namespace LinAlg
 
-constexpr auto standardizeRangeBound(LinearAlgebra::RowOrCol auto x) {
+constexpr auto standardizeRangeBound(LinAlg::RowOrCol auto x) {
   return size_t(x);
 }

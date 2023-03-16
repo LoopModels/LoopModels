@@ -398,7 +398,7 @@ public:
     return A->template allocate<T>(n);
   }
   constexpr auto checkPoint() -> typename Alloc::CheckPoint {
-    return A->rollBack();
+    return A->checkPoint();
   }
   constexpr void rollBack(typename Alloc::CheckPoint p) { A->rollBack(p); }
 };
@@ -439,7 +439,7 @@ struct NoCheckpoint {};
 
 constexpr auto checkpoint(const auto &) { return NoCheckpoint{}; }
 template <class T> constexpr auto checkpoint(WBumpAlloc<T> alloc) {
-  return alloc.rollBack();
+  return alloc.checkPoint();
 }
 constexpr auto checkpoint(BumpAlloc<> &alloc) { return alloc.checkPoint(); }
 

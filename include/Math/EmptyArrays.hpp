@@ -4,7 +4,7 @@
 #include <cstddef>
 #include <llvm/ADT/SmallVector.h>
 
-namespace LinearAlgebra {
+namespace LinAlg {
 
 template <typename T> struct EmptyMatrix {
   using value_type = T;
@@ -41,5 +41,5 @@ template <typename T> struct EmptyVector {
   static constexpr auto begin() -> T * { return nullptr; }
   static constexpr auto end() -> T * { return nullptr; }
 };
-} // namespace LinearAlgebra
-using LinearAlgebra::EmptyMatrix;
+} // namespace LinAlg
+using LinAlg::EmptyMatrix;

@@ -1040,7 +1040,7 @@ TEST(LexMinSimplexTest, BasicAssertions) {
     EXPECT_EQ(sum, 3);
     EXPECT_EQ(rsum, 3);
     // llvm::errs() << "sol2: " << sol2 << "\n";
-    LinearAlgebra::printVectorImpl(llvm::errs() << "sol2: ", sol2) << "\n";
+    LinAlg::printVectorImpl(llvm::errs() << "sol2: ", sol2) << "\n";
     for (size_t i = 0; i < 37; ++i) {
       llvm::errs() << "sol2[last-" << i << "] = " << sol2[last - i] << "\n";
       EXPECT_EQ(sol2[last - i], (i == 28) || (i == 30) || (i == 33));

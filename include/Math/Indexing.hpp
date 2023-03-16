@@ -5,7 +5,7 @@
 #include "Utilities/Iterators.hpp"
 #include <cstddef>
 
-namespace LinearAlgebra {
+namespace LinAlg {
 
 static inline constexpr struct Begin {
   friend inline auto operator<<(llvm::raw_ostream &os, Begin)
@@ -258,4 +258,4 @@ constexpr auto calcNewDim(SquareDims d, CartesianIndex<B, Colon> i) {
   return DenseDims{Row{rowDims}, Col{d}};
 }
 
-} // namespace LinearAlgebra
+} // namespace LinAlg

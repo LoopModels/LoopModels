@@ -32,7 +32,7 @@ TEST(LinearAlgebraTest, BasicAssertions) {
   auto &LUF = *LUFopt;
   Matrix<Rational> B = A;
   llvm::errs() << "A = \n" << A << "\nB = \n" << B << "\n";
-  LinearAlgebra::printVector(llvm::errs() << "F = \n"
+  LinAlg::printVector(llvm::errs() << "F = \n"
                                           << LUF.F << "\nperm = \n",
                              PtrVector<unsigned>(LUF.ipiv))
     << "\n";

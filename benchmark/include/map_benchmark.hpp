@@ -18,7 +18,7 @@ template <typename K, typename V>
 using amap =
   ankerl::unordered_dense::map<K, V, ankerl::unordered_dense::hash<K>,
                                std::equal_to<K>,
-                               LinearAlgebra::BumpPtrVector<std::pair<K, V>>>;
+                               LinAlg::BumpPtrVector<std::pair<K, V>>>;
 
 template <typename D>
 void InsertLookup2(std::mt19937_64 &mt, D &map, uint64_t mask) {

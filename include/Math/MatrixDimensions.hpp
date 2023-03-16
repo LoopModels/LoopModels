@@ -5,7 +5,7 @@
 #include <cstddef>
 #include <cstdint>
 
-namespace LinearAlgebra {
+namespace LinAlg {
 template <class R, class C> struct CartesianIndex {
   R row;
   C col;
@@ -204,7 +204,7 @@ template <MatrixDimension T> constexpr auto dimension(Row r, Col c) -> T {
   return DenseDims(r, c);
 }
 
-} // namespace LinearAlgebra
+} // namespace LinAlg
 
-using LinearAlgebra::StridedDims, LinearAlgebra::DenseDims,
-  LinearAlgebra::SquareDims;
+using LinAlg::StridedDims, LinAlg::DenseDims,
+  LinAlg::SquareDims;

@@ -17,7 +17,7 @@
 #include <type_traits>
 #include <utility>
 
-namespace LinearAlgebra {
+namespace LinAlg {
 
 template <class T>
 concept Scalar =
@@ -178,7 +178,7 @@ template <class T, class S> struct Array {
     ManagedArray<T, decltype(newDim)> A(newDim);
     for (size_t m = 0; m < numRow(); ++m) {
       A(m, _(0, c)) = (*this)(m, _(0, c));
-      A(m, _(c, LinearAlgebra::end)) = (*this)(m, _(c + 1, LinearAlgebra::end));
+      A(m, _(c, LinAlg::end)) = (*this)(m, _(c + 1, LinAlg::end));
     }
     return A;
   }
@@ -1521,9 +1521,8 @@ static_assert(AbstractMatrix<IntMatrix>);
 static_assert(std::copyable<IntMatrix>);
 static_assert(std::same_as<eltype_t<Matrix<int64_t>>, int64_t>);
 
-} // namespace LinearAlgebra
-using LinearAlgebra::AbstractVector, LinearAlgebra::AbstractMatrix,
-  LinearAlgebra::PtrVector, LinearAlgebra::MutPtrVector, LinearAlgebra::Vector,
-  LinearAlgebra::Matrix, LinearAlgebra::SquareMatrix, LinearAlgebra::IntMatrix,
-  LinearAlgebra::PtrMatrix, LinearAlgebra::MutPtrMatrix, LinearAlgebra::AxisInt,
-  LinearAlgebra::AxisInt;
+} // namespace LinAlg
+using LinAlg::AbstractVector, LinAlg::AbstractMatrix, LinAlg::PtrVector,
+  LinAlg::MutPtrVector, LinAlg::Vector, LinAlg::Matrix, LinAlg::SquareMatrix,
+  LinAlg::IntMatrix, LinAlg::PtrMatrix, LinAlg::MutPtrMatrix, LinAlg::AxisInt,
+  LinAlg::AxisInt;

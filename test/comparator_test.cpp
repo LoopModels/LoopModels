@@ -51,10 +51,10 @@ TEST(BasicCompare, BasicAssertions) {
     {0, 0, 0, 1, -1}}; // we could not identity the relation between x and y
   Vector<int64_t> query6{
     {0, -2, 0, 1, 0}}; // we could not know whether x is larger than 2b or not
-  IntMatrix V = comp3.getV();
-  IntMatrix U = comp3.getU();
-  Vector<int64_t> d = comp3.getD();
-  Vector<int64_t> q6 = query6;
+  PtrMatrix<int64_t> V = comp3.getV();
+  PtrMatrix<int64_t> U = comp3.getU();
+  PtrVector<int64_t> d = comp3.getD();
+  PtrVector<int64_t> q6 = query6;
   EXPECT_TRUE(!comp3.greaterEqual(query6));
   EXPECT_EQ(V, comp3.getV());
   EXPECT_EQ(U, comp3.getU());

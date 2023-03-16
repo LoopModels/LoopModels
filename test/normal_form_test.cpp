@@ -47,7 +47,7 @@ TEST(OrthogonalizationTest, BasicAssertions) {
       EXPECT_TRUE(K * A == I4);
     } else {
       // llvm::errs() << "K= " << K << "\nB= " << B << "\n";
-      // LinearAlgebra::printVector(llvm::errs() << "included = ", included)
+      // LinAlg::printVector(llvm::errs() << "included = ", included)
       // << "\n";
       if (auto optlu = LU::fact(K)) {
         if (auto optA2 = (*optlu).inv()) {
@@ -106,7 +106,7 @@ TEST(OrthogonalizationTest, BasicAssertions) {
   B(3, 5) = 1;
   llvm::errs() << "B_orth_motivating_example = " << B << "\n";
   auto [K, included] = NormalForm::orthogonalize(B);
-  // LinearAlgebra::printVector(llvm::errs() << "K = " << K << "\nincluded = ",
+  // LinAlg::printVector(llvm::errs() << "K = " << K << "\nincluded = ",
   //                            included)
   //   << "\n";
   EXPECT_EQ(included.size(), 4);
@@ -260,7 +260,7 @@ TEST(NullSpaceTests, BasicAssertions) {
     IntMatrix B(DenseDims{8, numCol});
     size_t nullDim = 0;
     IntMatrix Z;
-    LinearAlgebra::DenseMatrix<int64_t> NS;
+    LinAlg::DenseMatrix<int64_t> NS;
     for (size_t i = 0; i < numIters; ++i) {
       for (auto &&b : B) {
         b = distrib(gen);

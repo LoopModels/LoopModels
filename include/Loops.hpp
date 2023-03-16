@@ -419,7 +419,7 @@ struct AffineLoopNest
       B(_(M, end), _(numConst, end)) << R;
     }
     // ret->initializeComparator();
-    aln->pruneBounds(WBumpAlloc<int64_t>(alloc));
+    aln->pruneBounds(alloc);
     return aln;
   }
   /// like rotate(identity Matrix)
@@ -438,7 +438,7 @@ struct AffineLoopNest
     B(_(M, end), _) << 0;
     B(_(M, end), _(numConst, end)).diag() << 1;
     // ret->initializeComparator();
-    ret->pruneBounds(WBumpAlloc<int64_t>(alloc));
+    ret->pruneBounds(alloc);
     return ret;
   }
 

@@ -5,7 +5,7 @@
 #include <llvm/ADT/ArrayRef.h>
 #include <llvm/ADT/SmallVector.h>
 
-namespace LinearAlgebra {
+namespace LinAlg {
 template <typename T>
 concept AbstractVector =
   HasEltype<T> && requires(T t, size_t i) {
@@ -45,4 +45,4 @@ template <class T> consteval auto PreAllocStorage() -> size_t {
   return std::max<size_t>(1, N);
 }
 
-} // namespace LinearAlgebra
+} // namespace LinAlg

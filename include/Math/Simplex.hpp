@@ -252,7 +252,7 @@ struct Simplex {
       PtrMatrix<int64_t> constraints = tableau.getConstraints();
       return Rational::create(constraints(j, 0), constraints(j, i + 1));
     }
-    [[nodiscard]] constexpr auto operator[](LinearAlgebra::OffsetEnd k) const
+    [[nodiscard]] constexpr auto operator[](LinAlg::OffsetEnd k) const
       -> Rational {
       size_t i = size_t(tableau.numVars) - k.offset;
       int64_t j = tableau.getBasicConstraint(i);
@@ -261,12 +261,12 @@ struct Simplex {
       return Rational::create(constraints(j, 0), constraints(j, i + 1));
     }
     [[nodiscard]] constexpr auto
-    operator[](LinearAlgebra::RelativeOffset auto i) const -> Rational {
-      return (*this)[LinearAlgebra::calcOffset(size(), i)];
+    operator[](LinAlg::RelativeOffset auto i) const -> Rational {
+      return (*this)[LinAlg::calcOffset(size(), i)];
     }
     template <typename B, typename E>
     constexpr auto operator[](Range<B, E> r) const -> Solution {
-      return (*this)[LinearAlgebra::canonicalizeRange(r, size())];
+      return (*this)[LinAlg::canonicalizeRange(r, size())];
     }
     constexpr auto operator[](Range<size_t, size_t> r) const -> Solution {
       Tableau t = tableau;
@@ -806,5 +806,5 @@ constexpr auto denomLCM(PtrVector<Rational> x) -> int64_t {
 }
 
 static_assert(AbstractVector<PtrVector<Rational>>);
-static_assert(AbstractVector<LinearAlgebra::ElementwiseVectorBinaryOp<
-                LinearAlgebra::Sub, PtrVector<Rational>, PtrVector<Rational>>>);
+static_assert(AbstractVector<LinAlg::ElementwiseVectorBinaryOp<
+                LinAlg::Sub, PtrVector<Rational>, PtrVector<Rational>>>);

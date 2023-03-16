@@ -219,7 +219,7 @@ template <typename T> struct BaseComparator {
     const size_t N = getNumConstTerms();
     assert(N <= x.size());
     Vector<int64_t> xm{x[_(0, N)]};
-    return greater(LinearAlgebra::view(xm));
+    return greater(LinAlg::view(xm));
   }
 
   [[nodiscard]] constexpr auto equal(PtrVector<int64_t> x) const -> bool {
@@ -299,14 +299,13 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
     return static_cast<const T *>(this)->getURankImpl();
   }
 
-  template <typename Allocator>
-  constexpr void initNonNegative(Allocator alloc, PtrMatrix<int64_t> A,
-                                 EmptyMatrix<int64_t>, size_t numNonNegative) {
+  constexpr void initNonNegative(LinAlg::Alloc<int64_t> auto &alloc,
+                                 PtrMatrix<int64_t> A, EmptyMatrix<int64_t>,
+                                 size_t numNonNegative) {
     initNonNegative(alloc, A, numNonNegative);
   }
-  template <typename Allocator>
-  constexpr void initNonNegative(Allocator alloc, PtrMatrix<int64_t> A,
-                                 size_t numNonNegative) {
+  constexpr void initNonNegative(LinAlg::Alloc<int64_t> auto &alloc,
+                                 PtrMatrix<int64_t> A, size_t numNonNegative) {
     // we have an additional numNonNegative x numNonNegative identity matrix
     // as the lower right block of `A`.
     const size_t numConExplicit = size_t(A.numRow()) + 1;
@@ -314,7 +313,7 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
     numVar = size_t(A.numCol());
     Row rowV = Row{numVar + numConTotal};
     Col colV = Col{2 * numConTotal};
-    auto &&B = getV(rowV, colV);
+    auto B = getV(rowV, colV);
     B(0, 0) = 1;
     // B = [ A_0 A_1
     //        0   I  ]
@@ -333,9 +332,9 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
     numEquations = numConTotal;
     initCore(alloc);
   }
-  template <typename Allocator>
-  constexpr void initNonNegative(Allocator alloc, PtrMatrix<int64_t> A,
-                                 PtrMatrix<int64_t> E, size_t numNonNegative) {
+  constexpr void initNonNegative(LinAlg::Alloc<int64_t> auto &alloc,
+                                 PtrMatrix<int64_t> A, PtrMatrix<int64_t> E,
+                                 size_t numNonNegative) {
     // we have an additional numNonNegative x numNonNegative identity matrix
     // as the lower right block of `A`.
     const size_t numInEqConExplicit = size_t(A.numRow()) + 1;
@@ -344,7 +343,7 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
     numVar = size_t(A.numCol());
     Row rowV = Row{numVar + numInEqConTotal};
     Col colV = Col{2 * numInEqConTotal + numEqCon};
-    auto &&B = getV(rowV, colV);
+    auto B = getV(rowV, colV);
     B(0, 0) = 1;
     // B is `A` augmented with the implicit non-negative constraints
     // B = [ A_0 A_1
@@ -388,13 +387,13 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
     size_t rowV = size_t(A.numCol()) + numInEqConTotal;
     return (2 * numInEqConTotal + size_t(E.numRow()) + rowV + 1) * rowV;
   }
-  template <class Allocator>
-  constexpr void init(Allocator alloc, PtrMatrix<int64_t> A, bool pos0) {
+  constexpr void init(LinAlg::Alloc<int64_t> auto &alloc, PtrMatrix<int64_t> A,
+                      bool pos0) {
     const size_t numCon = size_t(A.numRow()) + pos0;
     numVar = size_t(A.numCol());
     Row rowV = numVar + numCon;
     Col colV = 2 * numCon;
-    auto &&B = getV(rowV, colV);
+    auto B = getV(rowV, colV);
     B(0, 0) = pos0;
     // V = [A' 0
     //      S  I]
@@ -406,8 +405,7 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
     numEquations = numCon;
     initCore(alloc);
   }
-  template <class Allocator>
-  constexpr void init(Allocator alloc, PtrMatrix<int64_t> A,
+  constexpr void init(LinAlg::Alloc<int64_t> auto &alloc, PtrMatrix<int64_t> A,
                       EmptyMatrix<int64_t>, bool pos0) {
     init(alloc, A, pos0);
   }
@@ -429,15 +427,14 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
     size_t rowV = size_t(A.numCol()) + numInEqCon;
     return (2 * numInEqCon + size_t(E.numRow()) + rowV + 1) * rowV;
   }
-  template <typename Allocator>
-  constexpr void init(Allocator alloc, PtrMatrix<int64_t> A,
+  constexpr void init(LinAlg::Alloc<int64_t> auto &alloc, PtrMatrix<int64_t> A,
                       PtrMatrix<int64_t> E, bool pos0) {
     const size_t numInEqCon = size_t(A.numRow()) + pos0;
     numVar = size_t(A.numCol());
     const size_t numEqCon = size_t(E.numRow());
     Row rowV = Row{numVar + numInEqCon};
     Col colV = Col{2 * numInEqCon + numEqCon};
-    auto &&B = getV(rowV, colV);
+    auto B = getV(rowV, colV);
     // V = [A' E' 0
     //      S  0  I]
     B(0, 0) = pos0;
@@ -454,7 +451,7 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
   }
   // sets U, V, and d.
   // needs to also set their size, which is only determined here.
-  template <typename Allocator> constexpr void initCore(Allocator alloc) {
+  constexpr void initCore(LinAlg::Alloc<int64_t> auto &alloc) {
     // numVar + numInEq x 2*numInEq + numEq
     MutPtrMatrix<int64_t> B = getV();
     Row R = B.numRow();
@@ -471,10 +468,10 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
     if (R == numColB) return;
     // H (aliasing V and A) copied
     // R = B.numRow() < B.numCol()
-    auto Vt{identity(alloc, numColB)};
+    auto Vt{identity<int64_t>(alloc, numColB)};
     // Ht.numRow() > Ht.numCol() = R
     // (2*numInEq + numEq) x R
-    auto Ht = matrix(alloc, numColB, size_t(R));
+    auto Ht = matrix<int64_t>(alloc, Row{numColB}, Col{size_t(R)});
     Ht << B(_(0, R), _).transpose();
     NormalForm::solveSystem(Ht, Vt);
     // upper bounded by numVar + numInEq
@@ -488,9 +485,9 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
   // Note that this is only valid when the comparator was constructed
   // with index `0` referring to >= 0 constants (i.e., the default).
   constexpr auto isEmpty(BumpAlloc<> &alloc) const -> bool {
-    auto &&V = getV();
-    auto &&U = getU();
-    auto &&d = getD();
+    auto V = getV();
+    auto U = getU();
+    auto d = getD();
     StridedVector<int64_t> b{U(_, 0)};
     if (d.size() == 0) {
       if (!allZero(b[_(V.numRow(), end)])) return false;
@@ -552,7 +549,7 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
   [[nodiscard]] constexpr auto greaterEqualFullRank(BumpAlloc<> &alloc,
                                                     PtrVector<int64_t> b) const
     -> bool {
-    auto &&V = getV();
+    auto V = getV();
     if (!allZero(b[_(V.numRow(), end)])) return false;
     auto H = matrix<int64_t>(alloc, V.numRow(), V.numCol() + 1);
     Col oldn = V.numCol();
@@ -569,8 +566,8 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
   [[nodiscard]] constexpr auto
   greaterEqualRankDeficient(BumpAlloc<> &alloc, MutPtrVector<int64_t> b) const
     -> bool {
-    auto &&V = getV();
-    auto &&d = getD();
+    auto V = getV();
+    auto d = getD();
     Row numSlack = V.numRow() - numEquations;
     auto dinv = vector<int64_t>(alloc, d.size());
     dinv << d; // copy
@@ -605,7 +602,7 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
   [[nodiscard]] constexpr auto greaterEqual(BumpAlloc<> &alloc,
                                             PtrVector<int64_t> query) const
     -> bool {
-    auto &&U = getU();
+    auto U = getU();
     auto p = checkpoint(alloc);
     auto b = vector<int64_t>(alloc, unsigned(U.numRow()));
     b << U(_, _(begin, query.size())) * query;
@@ -619,17 +616,17 @@ struct LinearSymbolicComparator
   : public BaseSymbolicComparator<LinearSymbolicComparator> {
   using Base = BaseSymbolicComparator<LinearSymbolicComparator>;
   using Base::init;
-  using Matrix = LinearAlgebra::ManagedArray<int64_t, DenseDims>;
+  using Matrix = LinAlg::ManagedArray<int64_t, DenseDims>;
   [[no_unique_address]] Matrix U;
   [[no_unique_address]] Matrix V;
   [[no_unique_address]] Vector<int64_t> d;
-  constexpr auto getUImpl() -> Matrix & { return U; }
-  constexpr auto getVImpl() -> Matrix & { return V; }
-  constexpr auto getDImpl() -> Vector<int64_t> & { return d; }
-  [[nodiscard]] constexpr auto getUImpl() const -> PtrMatrix<int64_t> {
+  constexpr auto getUImpl() -> MutDensePtrMatrix<int64_t> { return U; }
+  constexpr auto getVImpl() -> MutDensePtrMatrix<int64_t> { return V; }
+  constexpr auto getDImpl() -> MutPtrVector<int64_t> { return d; }
+  [[nodiscard]] constexpr auto getUImpl() const -> DensePtrMatrix<int64_t> {
     return U;
   }
-  [[nodiscard]] constexpr auto getVImpl() const -> PtrMatrix<int64_t> {
+  [[nodiscard]] constexpr auto getVImpl() const -> DensePtrMatrix<int64_t> {
     return V;
   }
   [[nodiscard]] constexpr auto getDImpl() const -> PtrVector<int64_t> {
@@ -670,13 +667,15 @@ struct LinearSymbolicComparator
   static constexpr auto construct(PtrMatrix<int64_t> Ap, bool pos0)
     -> LinearSymbolicComparator {
     LinearSymbolicComparator cmp;
-    cmp.init(std::allocator<int64_t>{}, Ap, pos0);
+    std::allocator<int64_t> alloc{};
+    cmp.init(alloc, Ap, pos0);
     return cmp;
   };
   static constexpr auto construct(PtrMatrix<int64_t> Ap, PtrMatrix<int64_t> Ep,
                                   bool pos0) -> LinearSymbolicComparator {
     LinearSymbolicComparator cmp;
-    cmp.init(std::allocator<int64_t>{}, Ap, Ep, pos0);
+    std::allocator<int64_t> alloc{};
+    cmp.init(alloc, Ap, Ep, pos0);
     return cmp;
   };
   static constexpr auto constructNonNeg(PtrMatrix<int64_t> Ap,
@@ -687,14 +686,16 @@ struct LinearSymbolicComparator
   static constexpr auto constructNonNeg(PtrMatrix<int64_t> Ap, size_t numNonNeg)
     -> LinearSymbolicComparator {
     LinearSymbolicComparator cmp;
-    cmp.initNonNegative(std::allocator<int64_t>{}, Ap, numNonNeg);
+    std::allocator<int64_t> alloc{};
+    cmp.initNonNegative(alloc, Ap, numNonNeg);
     return cmp;
   };
   static constexpr auto constructNonNeg(PtrMatrix<int64_t> Ap,
                                         PtrMatrix<int64_t> Ep, size_t numNonNeg)
     -> LinearSymbolicComparator {
     LinearSymbolicComparator cmp;
-    cmp.initNonNegative(std::allocator<int64_t>{}, Ap, Ep, numNonNeg);
+    std::allocator<int64_t> alloc{};
+    cmp.initNonNegative(alloc, Ap, Ep, numNonNeg);
     return cmp;
   };
 };
@@ -727,18 +728,30 @@ struct PtrSymbolicComparator
   constexpr auto getUImpl() -> MutDensePtrMatrix<int64_t> {
     return {mem, DenseDims{rankU, colU}};
   }
+  // A = V
+  // H = A
+  // H.truncate(Row());
+  // size is H.numCol() * H.numCol()
+  [[nodiscard]] constexpr auto numVRows() const -> unsigned {
+    return dimD ? dimV : rankU;
+  }
   // offset by (numVar + numInEq)*(numVar + numInEq)
   constexpr auto getVImpl() -> MutDensePtrMatrix<int64_t> {
-    // A = V
-    // H = A
-    // H.truncate(Row());
-    // size is H.numCol() * H.numCol()
-    return {getUImpl().end(), DenseDims{dimD ? dimV : rankU, dimV}};
+    return {getUImpl().end(), DenseDims{numVRows(), dimV}};
   }
   // size D
   constexpr auto getDImpl() -> MutPtrVector<int64_t> {
     // d = Ht.diag()
     return {getVImpl().end(), dimD};
+  }
+  [[nodiscard]] constexpr auto getUImpl() const -> DensePtrMatrix<int64_t> {
+    return {mem, DenseDims{rankU, colU}};
+  }
+  [[nodiscard]] constexpr auto getVImpl() const -> DensePtrMatrix<int64_t> {
+    return {mem + size_t(rankU) * colU, DenseDims{numVRows(), dimV}};
+  }
+  [[nodiscard]] constexpr auto getDImpl() const -> PtrVector<int64_t> {
+    return {mem + size_t(rankU) * colU + size_t(numVRows()) * dimV, dimD};
   }
   // constexpr auto getUImpl(Row r, Col c) -> MutPtrMatrix<int64_t> {}
   constexpr auto getVImpl(Row r, Col c) -> MutDensePtrMatrix<int64_t> {
@@ -754,45 +767,45 @@ struct PtrSymbolicComparator
     invariant(dimD > 0);
     return getDImpl();
   }
-  static constexpr auto construct(WBumpAlloc<int64_t> alloc,
-                                  PtrMatrix<int64_t> Ap, EmptyMatrix<int64_t>,
-                                  bool pos0) -> PtrSymbolicComparator {
+  static constexpr auto construct(BumpAlloc<> &alloc, PtrMatrix<int64_t> Ap,
+                                  EmptyMatrix<int64_t>, bool pos0)
+    -> PtrSymbolicComparator {
     return construct(alloc, Ap, pos0);
   };
-  static constexpr auto construct(WBumpAlloc<int64_t> alloc,
-                                  PtrMatrix<int64_t> Ap, bool pos0)
-    -> PtrSymbolicComparator {
-    PtrSymbolicComparator cmp(alloc.allocate(memoryNeeded(Ap, pos0)));
-    cmp.init(WBumpAlloc<int64_t>(alloc), Ap, pos0);
+  static constexpr auto construct(BumpAlloc<> &alloc, PtrMatrix<int64_t> Ap,
+                                  bool pos0) -> PtrSymbolicComparator {
+    PtrSymbolicComparator cmp(alloc.allocate<int64_t>(memoryNeeded(Ap, pos0)));
+    cmp.init(alloc, Ap, pos0);
     return cmp;
   };
-  static constexpr auto construct(WBumpAlloc<int64_t> alloc,
-                                  PtrMatrix<int64_t> Ap, PtrMatrix<int64_t> Ep,
-                                  bool pos0) -> PtrSymbolicComparator {
-    PtrSymbolicComparator cmp(alloc.allocate(memoryNeeded(Ap, Ep, pos0)));
+  static constexpr auto construct(BumpAlloc<> &alloc, PtrMatrix<int64_t> Ap,
+                                  PtrMatrix<int64_t> Ep, bool pos0)
+    -> PtrSymbolicComparator {
+    PtrSymbolicComparator cmp(
+      alloc.allocate<int64_t>(memoryNeeded(Ap, Ep, pos0)));
     cmp.init(alloc, Ap, Ep, pos0);
     return cmp;
   };
-  static constexpr auto constructNonNeg(WBumpAlloc<int64_t> alloc,
+  static constexpr auto constructNonNeg(BumpAlloc<> &alloc,
                                         PtrMatrix<int64_t> Ap,
                                         EmptyMatrix<int64_t>, size_t numNonNeg)
     -> PtrSymbolicComparator {
     return constructNonNeg(alloc, Ap, numNonNeg);
   };
-  static constexpr auto constructNonNeg(WBumpAlloc<int64_t> alloc,
+  static constexpr auto constructNonNeg(BumpAlloc<> &alloc,
                                         PtrMatrix<int64_t> Ap, size_t numNonNeg)
     -> PtrSymbolicComparator {
     PtrSymbolicComparator cmp(
-      alloc.allocate(memoryNeededNonNegative(Ap, numNonNeg)));
+      alloc.allocate<int64_t>(memoryNeededNonNegative(Ap, numNonNeg)));
     cmp.initNonNegative(alloc, Ap, numNonNeg);
     return cmp;
   };
-  static constexpr auto constructNonNeg(WBumpAlloc<int64_t> alloc,
+  static constexpr auto constructNonNeg(BumpAlloc<> &alloc,
                                         PtrMatrix<int64_t> Ap,
                                         PtrMatrix<int64_t> Ep, size_t numNonNeg)
     -> PtrSymbolicComparator {
     PtrSymbolicComparator cmp(
-      alloc.allocate(memoryNeededNonNegative(Ap, Ep, numNonNeg)));
+      alloc.allocate<int64_t>(memoryNeededNonNegative(Ap, Ep, numNonNeg)));
     cmp.initNonNegative(alloc, Ap, Ep, numNonNeg);
     return cmp;
   };
@@ -836,7 +849,7 @@ constexpr auto linear(std::allocator<int64_t>, PtrMatrix<int64_t> A,
                       EmptyMatrix<int64_t>, bool pos0) {
   return LinearSymbolicComparator::construct(A, pos0);
 }
-constexpr auto linear(WBumpAlloc<int64_t> alloc, PtrMatrix<int64_t> A,
+constexpr auto linear(BumpAlloc<> &alloc, PtrMatrix<int64_t> A,
                       EmptyMatrix<int64_t>, bool pos0) {
   return PtrSymbolicComparator::construct(alloc, A, pos0);
 }
@@ -845,7 +858,7 @@ constexpr auto linear(std::allocator<int64_t>, PtrMatrix<int64_t> A,
                       PtrMatrix<int64_t> E, bool pos0) {
   return LinearSymbolicComparator::construct(A, E, pos0);
 }
-constexpr auto linear(WBumpAlloc<int64_t> alloc, PtrMatrix<int64_t> A,
+constexpr auto linear(BumpAlloc<> &alloc, PtrMatrix<int64_t> A,
                       PtrMatrix<int64_t> E, bool pos0) {
   return PtrSymbolicComparator::construct(alloc, A, E, pos0);
 }
@@ -855,9 +868,8 @@ constexpr auto linearNonNegative(std::allocator<int64_t>, PtrMatrix<int64_t> A,
                                  EmptyMatrix<int64_t>, size_t numNonNeg) {
   return LinearSymbolicComparator::constructNonNeg(A, numNonNeg);
 }
-constexpr auto linearNonNegative(WBumpAlloc<int64_t> alloc,
-                                 PtrMatrix<int64_t> A, EmptyMatrix<int64_t>,
-                                 size_t numNonNeg) {
+constexpr auto linearNonNegative(BumpAlloc<> &alloc, PtrMatrix<int64_t> A,
+                                 EmptyMatrix<int64_t>, size_t numNonNeg) {
   return PtrSymbolicComparator::constructNonNeg(alloc, A, numNonNeg);
 }
 // NOLINTNEXTLINE(performance-unnecessary-value-param)
@@ -865,9 +877,8 @@ constexpr auto linearNonNegative(std::allocator<int64_t>, PtrMatrix<int64_t> A,
                                  PtrMatrix<int64_t> E, size_t numNonNeg) {
   return LinearSymbolicComparator::constructNonNeg(A, E, numNonNeg);
 }
-constexpr auto linearNonNegative(WBumpAlloc<int64_t> alloc,
-                                 PtrMatrix<int64_t> A, PtrMatrix<int64_t> E,
-                                 size_t numNonNeg) {
+constexpr auto linearNonNegative(BumpAlloc<> &alloc, PtrMatrix<int64_t> A,
+                                 PtrMatrix<int64_t> E, size_t numNonNeg) {
   return PtrSymbolicComparator::constructNonNeg(alloc, A, E, numNonNeg);
 }
 

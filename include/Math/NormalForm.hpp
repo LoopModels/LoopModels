@@ -592,10 +592,10 @@ constexpr void solveSystem(MutPtrMatrix<int64_t> A) {
   return std::make_pair(B, s);
 }
 
-constexpr void nullSpace11(LinearAlgebra::DenseMatrix<int64_t> &B,
+constexpr void nullSpace11(LinAlg::DenseMatrix<int64_t> &B,
                            IntMatrix &A) {
   const Row M = A.numRow();
-  B.resizeForOverwrite(LinearAlgebra::SquareDims{M});
+  B.resizeForOverwrite(LinAlg::SquareDims{M});
   B << 0;
   B.diag() << 1;
   solveSystem(A, B);
@@ -617,8 +617,8 @@ constexpr void nullSpace11(LinearAlgebra::DenseMatrix<int64_t> &B,
   B.truncate(D);
 }
 [[nodiscard]] constexpr auto nullSpace(IntMatrix A)
-  -> LinearAlgebra::DenseMatrix<int64_t> {
-  LinearAlgebra::DenseMatrix<int64_t> B;
+  -> LinAlg::DenseMatrix<int64_t> {
+  LinAlg::DenseMatrix<int64_t> B;
   nullSpace11(B, A);
   return B;
 }

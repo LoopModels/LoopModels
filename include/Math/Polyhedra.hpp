@@ -107,14 +107,14 @@ struct BasePolyhedra {
                                            getNumDynamic());
     else return comparator::linear(alloc, getA(), getE(), true);
   }
-  [[nodiscard]] constexpr auto initializeComparator(WBumpAlloc<int64_t> alloc)
+  [[nodiscard]] constexpr auto initializeComparator(BumpAlloc<> &alloc)
     -> comparator::PtrSymbolicComparator {
     if constexpr (NonNegative)
       return comparator::linearNonNegative(alloc, getA(), getE(),
                                            getNumDynamic());
     else return comparator::linear(alloc, getA(), getE(), true);
   }
-  constexpr void reinitComparator(WBumpAlloc<int64_t> alloc,
+  constexpr void reinitComparator(BumpAlloc<> &alloc,
                                   comparator::PtrSymbolicComparator &comp) {
     if constexpr (HasEqualities)
       if constexpr (NonNegative)
@@ -127,13 +127,10 @@ struct BasePolyhedra {
   constexpr auto calcIsEmpty() -> bool {
     return initializeComparator().isEmpty();
   }
-  constexpr auto calcIsEmpty(Allocator auto alloc) -> bool {
+  constexpr auto calcIsEmpty(LinAlg::Alloc<int64_t> auto &alloc) -> bool {
     return initializeComparator(alloc).isEmpty(alloc);
   }
-  constexpr auto calcIsEmpty(BumpAlloc<> &alloc) -> bool {
-    return initializeComparator(alloc).isEmpty(WBumpAlloc<int64_t>{alloc});
-  }
-  constexpr void pruneBounds(Allocator auto alloc) {
+  constexpr void pruneBounds(LinAlg::Alloc<int64_t> auto &alloc) {
     auto p = checkpoint(alloc);
     auto C = initializeComparator(alloc);
     if (C.isEmpty(alloc)) {
@@ -142,7 +139,12 @@ struct BasePolyhedra {
     } else pruneBoundsUncheckedCore(alloc, C);
     rollback(alloc, p);
   }
-  constexpr void pruneBoundsUncheckedCore(Allocator auto alloc,
+  constexpr void pruneBounds() {
+    // std::allocator<int64_t> alloc;
+    BumpAlloc<> alloc;
+    pruneBounds(alloc);
+  }
+  constexpr void pruneBoundsUncheckedCore(LinAlg::Alloc<int64_t> auto &alloc,
                                           comparator::PtrSymbolicComparator C) {
     MutPtrMatrix<int64_t> A{getA()};
     const size_t dyn = getNumDynamic();
@@ -181,7 +183,7 @@ struct BasePolyhedra {
   }
   // TODO: upper bound allocation size for comparator
   // then, reuse memory instead of reallocating
-  constexpr void pruneBoundsUnchecked(Allocator auto alloc) {
+  constexpr void pruneBoundsUnchecked(LinAlg::Alloc<int64_t> auto &alloc) {
     auto p = checkpoint(alloc);
     auto C = initializeComparator(alloc);
     pruneBoundsUncheckedCore(alloc, C);

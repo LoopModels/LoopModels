@@ -4,7 +4,7 @@
 #include "Math/MatrixDimensions.hpp"
 #include "Utilities/Allocators.hpp"
 
-namespace LinearAlgebra {
+namespace LinAlg {
 
 template <Scalar T>
 constexpr auto vector(std::allocator<T>, unsigned int M) -> Vector<T> {
@@ -126,6 +126,26 @@ constexpr auto identity(BumpAlloc<> &alloc, unsigned int M)
   return A;
 }
 
-} // namespace LinearAlgebra
+template <typename T, typename I>
+concept Alloc = requires(T t, unsigned int M, Row r, Col c, I i) {
+                  {
+                    identity<I>(t, M)
+                    } -> std::convertible_to<MutSquarePtrMatrix<I>>;
+                  {
+                    matrix<I>(t, M)
+                    } -> std::convertible_to<MutSquarePtrMatrix<I>>;
+                  {
+                    matrix<I>(t, M, i)
+                    } -> std::convertible_to<MutSquarePtrMatrix<I>>;
+                  {
+                    matrix<I>(t, r, c)
+                    } -> std::convertible_to<MutDensePtrMatrix<I>>;
+                  {
+                    matrix(t, r, c, i)
+                    } -> std::convertible_to<MutDensePtrMatrix<I>>;
+                  { vector<I>(t, M) } -> std::convertible_to<MutPtrVector<I>>;
+                };
 
-using LinearAlgebra::matrix, LinearAlgebra::vector, LinearAlgebra::identity;
+} // namespace LinAlg
+
+using LinAlg::matrix, LinAlg::vector, LinAlg::identity;

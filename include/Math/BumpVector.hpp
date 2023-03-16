@@ -5,7 +5,7 @@
 #include <cstdint>
 #include <llvm/Support/Alignment.h>
 
-namespace LinearAlgebra {
+namespace LinAlg {
 // BumpPtrVector
 // Has reference semantics.
 template <typename T> struct BumpPtrVector {
@@ -213,4 +213,4 @@ template <typename T> struct BumpPtrVector {
 };
 static_assert(std::is_trivially_destructible_v<MutPtrVector<int64_t>>);
 static_assert(std::is_trivially_destructible_v<BumpPtrVector<int64_t>>);
-} // namespace LinearAlgebra
+} // namespace LinAlg

@@ -4,7 +4,7 @@
 #include <cstddef>
 #include <cstdint>
 
-using LinearAlgebra::PtrVector, LinearAlgebra::MutPtrVector;
+using LinAlg::PtrVector, LinAlg::MutPtrVector;
 
 constexpr auto gcd(PtrVector<int64_t> x) -> int64_t {
   const size_t N = x.size();

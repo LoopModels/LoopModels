@@ -7,7 +7,7 @@
 #include <memory>
 #include <type_traits>
 
-namespace LinearAlgebra {
+namespace LinAlg {
 template <typename T>
 concept AbstractMatrixCore =
   HasEltype<T> && requires(T t, size_t i) {
@@ -135,4 +135,4 @@ template <typename T> struct SmallSparseMatrix {
   }
 };
 
-} // namespace LinearAlgebra
+} // namespace LinAlg

@@ -4,7 +4,7 @@
 #include <benchmark/benchmark.h>
 
 static void BM_Simplex0(benchmark::State &state) {
-  LinearAlgebra::DenseMatrix<int64_t> tableau{
+  LinAlg::DenseMatrix<int64_t> tableau{
     "[0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 "
     "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 "
     "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 "

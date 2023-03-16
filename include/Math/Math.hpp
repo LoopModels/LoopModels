@@ -43,7 +43,7 @@
 // #endif
 
 struct Rational;
-namespace LinearAlgebra {
+namespace LinAlg {
 
 [[gnu::flatten]] auto operator==(const AbstractMatrix auto &A,
                                  const AbstractMatrix auto &B) -> bool {
@@ -507,8 +507,8 @@ inline auto printMatrix(llvm::raw_ostream &os, PtrMatrix<T> A)
       auto Aij = A(i, j);
       for (U k = 0; k < U(maxDigits[j]) - countDigits(Aij); k++) os << " ";
       os << Aij;
-      if (j != N - 1) os << " ";
-      else if (i != M - 1) os << "\n";
+      if (j != size_t(N) - 1) os << " ";
+      else if (i != size_t(M) - 1) os << "\n";
     }
   }
   return os << " ]";
@@ -571,8 +571,8 @@ inline auto printMatrix(llvm::raw_ostream &os, PtrMatrix<double> A)
       size_t nD = numDigits(i, j);
       for (size_t k = 0; k < maxDigits[j] - nD; k++) os << " ";
       os << std::string_view(ptr, nD);
-      if (j != N - 1) os << " ";
-      else if (i != M - 1) os << "\n";
+      if (j != size_t(N) - 1) os << " ";
+      else if (i != size_t(M) - 1) os << "\n";
       ptr += nD;
     }
   }
@@ -780,14 +780,13 @@ inline auto adaptOStream(std::ostream &os, const auto &x) -> std::ostream & {
 //   return adaptOStream(os, x);
 // }
 
-} // namespace LinearAlgebra
+} // namespace LinAlg
 
 // exports:
 // NOLINTNEXTLINE(bugprone-reserved-identifier)
-using LinearAlgebra::_;
-using LinearAlgebra::SmallSparseMatrix, LinearAlgebra::StridedVector,
-  LinearAlgebra::MutStridedVector, LinearAlgebra::MutSquarePtrMatrix,
-  LinearAlgebra::begin, LinearAlgebra::end, LinearAlgebra::swap,
-  LinearAlgebra::SquarePtrMatrix, LinearAlgebra::Row, LinearAlgebra::RowStride,
-  LinearAlgebra::Col, LinearAlgebra::CarInd, LinearAlgebra::last,
-  LinearAlgebra::MutDensePtrMatrix, LinearAlgebra::DensePtrMatrix;
+using LinAlg::_;
+using LinAlg::SmallSparseMatrix, LinAlg::StridedVector,
+  LinAlg::MutStridedVector, LinAlg::MutSquarePtrMatrix, LinAlg::begin,
+  LinAlg::end, LinAlg::swap, LinAlg::SquarePtrMatrix, LinAlg::Row,
+  LinAlg::RowStride, LinAlg::Col, LinAlg::CarInd, LinAlg::last,
+  LinAlg::MutDensePtrMatrix, LinAlg::DensePtrMatrix;
