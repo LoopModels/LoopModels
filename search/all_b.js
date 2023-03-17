@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['makezerobasic_111',['makeZeroBasic',['../structSimplex.html#aa75f6c2b4a8094b1d8adb72757565ea9',1,'Simplex']]],
+  ['makezerobasic_111',['makeZeroBasic',['../structSimplex.html#a2c05da7f58f22e2f7ebee6bb7763f6ee',1,'Simplex']]],
   ['managedarray_112',['ManagedArray',['../structLinAlg_1_1ManagedArray.html',1,'LinAlg']]],
   ['managedarray_3c_20int64_5ft_2c_20densedims_20_3e_113',['ManagedArray&lt; int64_t, DenseDims &gt;',['../structLinAlg_1_1ManagedArray.html',1,'LinAlg']]],
   ['managedarray_3c_20t_2c_20s_2c_200_2c_20a_2c_20u_20_3e_114',['ManagedArray&lt; T, S, 0, A, U &gt;',['../structLinAlg_1_1ManagedArray_3_01T_00_01S_00_010_00_01A_00_01U_01_4.html',1,'LinAlg']]],

@@ -1160,7 +1160,7 @@ $(function() {
 <div class="line"><a name="l01209"></a><span class="lineno"> 1209</span>&#160;    }</div>
 <div class="line"><a name="l01210"></a><span class="lineno"> 1210</span>&#160;    instantiateOmniSimplex(g, d);</div>
 <div class="line"><a name="l01211"></a><span class="lineno"> 1211</span>&#160;    assert(!allZero(omniSimplex.getConstraints()(last, _)));</div>
-<div class="line"><a name="l01212"></a><span class="lineno"> 1212</span>&#160;    <span class="keywordflow">if</span> (omniSimplex.<a class="code" href="structSimplex.html#a8670b1057e7253c284dbf0f53a9fe78e">initiateFeasible</a>()) {</div>
+<div class="line"><a name="l01212"></a><span class="lineno"> 1212</span>&#160;    <span class="keywordflow">if</span> (omniSimplex.<a class="code" href="structSimplex.html#ad38168a139d51cf9ad0b2123a15424f0">initiateFeasible</a>()) {</div>
 <div class="line"><a name="l01213"></a><span class="lineno"> 1213</span>&#160;      <span class="comment">// llvm::errs() &lt;&lt; &quot;optimizeLevel = &quot; &lt;&lt; d &lt;&lt; &quot;: infeasible</span></div>
 <div class="line"><a name="l01214"></a><span class="lineno"> 1214</span>&#160;      <span class="comment">// solution!!!\n&quot;;</span></div>
 <div class="line"><a name="l01215"></a><span class="lineno"> 1215</span>&#160;      <span class="keywordflow">return</span> {};</div>
@@ -1203,7 +1203,7 @@ $(function() {
 <div class="line"><a name="l01252"></a><span class="lineno"> 1252</span>&#160;      countAuxParamsAndConstraints(g, d);</div>
 <div class="line"><a name="l01253"></a><span class="lineno"> 1253</span>&#160;      setScheduleMemoryOffsets(g, d);</div>
 <div class="line"><a name="l01254"></a><span class="lineno"> 1254</span>&#160;      instantiateOmniSimplex(g, d, <span class="keyword">true</span>);</div>
-<div class="line"><a name="l01255"></a><span class="lineno"> 1255</span>&#160;      <span class="keywordflow">if</span> (!omniSimplex.<a class="code" href="structSimplex.html#a8670b1057e7253c284dbf0f53a9fe78e">initiateFeasible</a>()) {</div>
+<div class="line"><a name="l01255"></a><span class="lineno"> 1255</span>&#160;      <span class="keywordflow">if</span> (!omniSimplex.<a class="code" href="structSimplex.html#ad38168a139d51cf9ad0b2123a15424f0">initiateFeasible</a>()) {</div>
 <div class="line"><a name="l01256"></a><span class="lineno"> 1256</span>&#160;        sol.resizeForOverwrite(getLambdaOffset() - 1);</div>
 <div class="line"><a name="l01257"></a><span class="lineno"> 1257</span>&#160;        omniSimplex.lexMinimize(sol);</div>
 <div class="line"><a name="l01258"></a><span class="lineno"> 1258</span>&#160;        <span class="comment">// lexMinimize(g, sol, d);</span></div>
@@ -1334,7 +1334,7 @@ $(function() {
 <div class="ttc" id="astructRational_html"><div class="ttname"><a href="structRational.html">Rational</a></div><div class="ttdef"><b>Definition:</b> Rational.hpp:17</div></div>
 <div class="ttc" id="astructScheduledNode_html"><div class="ttname"><a href="structScheduledNode.html">ScheduledNode</a></div><div class="ttdef"><b>Definition:</b> LoopBlock.hpp:47</div></div>
 <div class="ttc" id="astructSimplex_html"><div class="ttname"><a href="structSimplex.html">Simplex</a></div><div class="ttdef"><b>Definition:</b> Simplex.hpp:235</div></div>
-<div class="ttc" id="astructSimplex_html_a8670b1057e7253c284dbf0f53a9fe78e"><div class="ttname"><a href="structSimplex.html#a8670b1057e7253c284dbf0f53a9fe78e">Simplex::initiateFeasible</a></div><div class="ttdeci">auto initiateFeasible() -&gt; bool</div><div class="ttdef"><b>Definition:</b> Simplex.hpp:295</div></div>
+<div class="ttc" id="astructSimplex_html_ad38168a139d51cf9ad0b2123a15424f0"><div class="ttname"><a href="structSimplex.html#ad38168a139d51cf9ad0b2123a15424f0">Simplex::initiateFeasible</a></div><div class="ttdeci">constexpr auto initiateFeasible() -&gt; bool</div><div class="ttdef"><b>Definition:</b> Simplex.hpp:296</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

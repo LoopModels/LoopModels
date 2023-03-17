@@ -3,7 +3,7 @@ var searchData=
   ['indexmatrix_373',['indexMatrix',['../structAddress.html#afad8e52958d1d85eef66ee44d4ceeb78',1,'Address::indexMatrix() -&gt; MutDensePtrMatrix&lt; int64_t &gt;'],['../structAddress.html#a297424995238c440069eecf32c6d5bb7',1,'Address::indexMatrix() const -&gt; DensePtrMatrix&lt; int64_t &gt;'],['../structMemoryAccess.html#ae0eb994bd6fcffc012a91850a23a2bbb',1,'MemoryAccess::indexMatrix() -&gt; MutDensePtrMatrix&lt; int64_t &gt;'],['../structMemoryAccess.html#a2292852f834967257e3d40a1c9c99a58',1,'MemoryAccess::indexMatrix() const -&gt; DensePtrMatrix&lt; int64_t &gt;']]],
   ['initancestors_374',['initAncestors',['../structMergingCost.html#aac70d5c2dafaec5277cb6ed6aceaacbc',1,'MergingCost']]],
   ['initializeloopforest_375',['initializeLoopForest',['../classTurboLoopPass.html#a61d15982d3d7c2d1918da31c454a2f10',1,'TurboLoopPass']]],
-  ['initiatefeasible_376',['initiateFeasible',['../structSimplex.html#a8670b1057e7253c284dbf0f53a9fe78e',1,'Simplex']]],
+  ['initiatefeasible_376',['initiateFeasible',['../structSimplex.html#ad38168a139d51cf9ad0b2123a15424f0',1,'Simplex']]],
   ['intersectionisempty_377',['intersectionIsEmpty',['../structPredicate_1_1Set.html#ad4a7c78b6c53cec5eb5ee53e291359e3',1,'Predicate::Set']]],
   ['intrinsic_378',['Intrinsic',['../structInstruction_1_1Intrinsic.html#a2ceb99f52e33be8c08e77fa0cd476a6b',1,'Instruction::Intrinsic']]],
   ['isempty_379',['isEmpty',['../structPredicate_1_1Intersection.html#a955076f74163093f46e90c5f1877ad93',1,'Predicate::Intersection']]],
