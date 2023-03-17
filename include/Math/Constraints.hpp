@@ -213,9 +213,9 @@ constexpr auto substituteEquality(MutDensePtrMatrix<int64_t> &A,
 
 // C = [ I A
 //       0 B ]
-constexpr void slackEqualityConstraints(MutDensePtrMatrix<int64_t> C,
-                                        DensePtrMatrix<int64_t> A,
-                                        DensePtrMatrix<int64_t> B) {
+constexpr void slackEqualityConstraints(MutPtrMatrix<int64_t> C,
+                                        PtrMatrix<int64_t> A,
+                                        PtrMatrix<int64_t> B) {
   const Col numVar = A.numCol();
   invariant(numVar, B.numCol());
   const Row numSlack = A.numRow(), numStrict = B.numRow();
@@ -234,8 +234,8 @@ constexpr void slackEqualityConstraints(MutDensePtrMatrix<int64_t> C,
     C(s + numSlack, _(numSlack, slackAndVar)) << B(s, _(begin, numVar));
   }
 }
-constexpr void slackEqualityConstraints(MutDensePtrMatrix<int64_t> C,
-                                        DensePtrMatrix<int64_t> A) {
+constexpr void slackEqualityConstraints(MutPtrMatrix<int64_t> C,
+                                        PtrMatrix<int64_t> A) {
   const Col numVar = A.numCol();
   const Row numSlack = A.numRow();
   size_t slackAndVar = size_t(numSlack) + size_t(numVar);
@@ -263,7 +263,7 @@ constexpr auto countNonZeroSign(DensePtrMatrix<int64_t> A, size_t i)
 }
 
 constexpr void fourierMotzkin(DenseMatrix<int64_t> &A, size_t v) {
-  assert(v < A.numCol());
+  invariant(v < A.numCol());
   const auto [numNeg, numPos] = countNonZeroSign(A, v);
   const Row numRowsOld = A.numRow();
   const Row numRowsNew = numRowsOld - numNeg - numPos + numNeg * numPos + 1;
@@ -318,7 +318,7 @@ constexpr void fourierMotzkin(DenseMatrix<int64_t> &A, size_t v) {
 }
 // non-negative Fourier-Motzkin
 constexpr void fourierMotzkinNonNegative(DenseMatrix<int64_t> &A, size_t v) {
-  assert(v < A.numCol());
+  invariant(v < A.numCol());
   const auto [numNeg, numPos] = countNonZeroSign(A, v);
   const size_t numPosP1 = numPos + 1;
   const size_t numRowsOld = size_t(A.numRow());

@@ -36,7 +36,7 @@ class TestLoopFunction {
   llvm::TargetLibraryInfo TLI;
   llvm::AssumptionCache AC;
   llvm::ScalarEvolution SE;
-  llvm::SmallVector<AffineLoopNest<true>, 0> alns;
+  llvm::SmallVector<AffineLoopNest<true> *, 0> alns;
   llvm::SmallVector<std::string, 0> names;
   // llvm::SmallVector<llvm::Value*> symbols;
   llvm::Value *ptrToLoadFrom;
@@ -45,9 +45,9 @@ class TestLoopFunction {
 
 public:
   auto getAlloc() -> BumpAlloc<> & { return alloc; }
-  auto getLoopNest(size_t i) -> AffineLoopNest<true> * { return &alns[i]; }
+  auto getLoopNest(size_t i) -> AffineLoopNest<true> * { return alns[i]; }
   auto getNumLoopNests() -> size_t { return alns.size(); }
-  void addLoop(IntMatrix A, size_t numLoops) {
+  void addLoop(PtrMatrix<int64_t> A, size_t numLoops) {
     size_t numSym = size_t(A.numCol()) - numLoops - 1;
     llvm::SmallVector<const llvm::SCEV *> symbols;
     symbols.reserve(numSym);
@@ -57,10 +57,10 @@ public:
       // to.
       AffineLoopNest<true> *symbolSource = nullptr;
       size_t numSymbolSource = 0;
-      for (auto &aln : alns) {
-        if (numSymbolSource < aln.getSyms().size()) {
-          numSymbolSource = aln.getSyms().size();
-          symbolSource = &aln;
+      for (auto aln : alns) {
+        if (numSymbolSource < aln->getSyms().size()) {
+          numSymbolSource = aln->getSyms().size();
+          symbolSource = aln;
         }
       }
       for (size_t i = 0; i < std::min(numSym, numSymbolSource); ++i)
@@ -68,7 +68,7 @@ public:
       for (size_t i = numSymbolSource; i < numSym; ++i)
         symbols.push_back(SE.getUnknown(createInt64()));
     }
-    alns.emplace_back(std::move(A), std::move(symbols));
+    alns.push_back(AffineLoopNest<true>::construct(alloc, A, symbols));
   }
   // for creating some black box value
   auto loadValueFromPtr(llvm::Type *typ) -> llvm::Value * {
@@ -88,15 +88,16 @@ public:
   }
   TestLoopFunction()
     : ctx{llvm::LLVMContext()}, builder{llvm::IRBuilder(ctx)},
-      fmf{llvm::FastMathFlags()}, mod("TestModule", ctx), LI{}, DT{},
-      FT{llvm::FunctionType::get(builder.getVoidTy(),
-                                 llvm::SmallVector<llvm::Type *, 0>(), false)},
+      fmf{llvm::FastMathFlags()},
+      mod("TestModule", ctx), FT{llvm::FunctionType::get(
+                                builder.getVoidTy(),
+                                llvm::SmallVector<llvm::Type *, 0>(), false)},
       F{llvm::Function::Create(
         FT, llvm::GlobalValue::LinkageTypes::ExternalLinkage, "foo", mod)},
-      dl{&mod}, TTI{dl}, targetTripple{}, TLII{targetTripple}, TLI{TLII},
-      AC{*F, &TTI}, SE{*F, TLI, AC, DT, LI}, alns{},
-      ptrToLoadFrom{
-        builder.CreateIntToPtr(builder.getInt64(16000), builder.getInt64Ty())} {
+      dl{&mod}, TTI{dl}, TLII{targetTripple}, TLI{TLII}, AC{*F, &TTI},
+      SE{*F, TLI, AC, DT, LI}, ptrToLoadFrom{
+                                 builder.CreateIntToPtr(builder.getInt64(16000),
+                                                        builder.getInt64Ty())} {
 
     fmf.set();
     builder.setFastMathFlags(fmf);
@@ -110,7 +111,7 @@ public:
   // }
   auto CreateLoad(llvm::Value *ptr, llvm::Value *offset) -> llvm::LoadInst * {
     llvm::Type *Float64 = builder.getDoubleTy();
-    auto load_m = builder.CreateAlignedLoad(
+    auto *load_m = builder.CreateAlignedLoad(
       Float64,
       builder.CreateGEP(Float64, ptr,
                         llvm::SmallVector<llvm::Value *, 1>{offset}),
@@ -121,7 +122,7 @@ public:
   auto CreateStore(llvm::Value *val, llvm::Value *ptr, llvm::Value *offset)
     -> llvm::StoreInst * {
     llvm::Type *Float64 = builder.getDoubleTy();
-    auto store_m = builder.CreateAlignedStore(
+    auto *store_m = builder.CreateAlignedStore(
       val,
       builder.CreateGEP(Float64, ptr,
                         llvm::SmallVector<llvm::Value *, 1>{offset}),
@@ -130,38 +131,38 @@ public:
     return store_m;
   }
   auto getZeroF64() -> llvm::Value * {
-    auto z = llvm::ConstantFP::getZero(builder.getDoubleTy());
+    auto *z = llvm::ConstantFP::getZero(builder.getDoubleTy());
     symsToDelete.insert(z);
     return z;
   }
   auto CreateUIToF64(llvm::Value *v) -> llvm::Value * {
-    auto uitofp = builder.CreateUIToFP(v, builder.getDoubleTy());
+    auto *uitofp = builder.CreateUIToFP(v, builder.getDoubleTy());
     symsToDelete.insert(uitofp);
     return uitofp;
   }
   auto CreateFAdd(llvm::Value *lhs, llvm::Value *rhs) -> llvm::Value * {
-    auto fadd = builder.CreateFAdd(lhs, rhs);
+    auto *fadd = builder.CreateFAdd(lhs, rhs);
     symsToDelete.insert(fadd);
     return fadd;
   }
   auto CreateFSub(llvm::Value *lhs, llvm::Value *rhs) -> llvm::Value * {
-    auto fsub = builder.CreateFSub(lhs, rhs);
+    auto *fsub = builder.CreateFSub(lhs, rhs);
     symsToDelete.insert(fsub);
     return fsub;
   }
   auto CreateFMul(llvm::Value *lhs, llvm::Value *rhs) -> llvm::Value * {
-    auto fmul = builder.CreateFMul(lhs, rhs);
+    auto *fmul = builder.CreateFMul(lhs, rhs);
     symsToDelete.insert(fmul);
     return fmul;
   }
   auto CreateFDiv(llvm::Value *lhs, llvm::Value *rhs) -> llvm::Value * {
-    auto fdiv = builder.CreateFDiv(lhs, rhs);
+    auto *fdiv = builder.CreateFDiv(lhs, rhs);
     symsToDelete.insert(fdiv);
     return fdiv;
   }
   auto CreateFDiv(llvm::Value *lhs, llvm::Value *rhs, const char *s)
     -> llvm::Value * {
-    auto fdiv = builder.CreateFDiv(lhs, rhs, s);
+    auto *fdiv = builder.CreateFDiv(lhs, rhs, s);
     symsToDelete.insert(fdiv);
     return fdiv;
   }
@@ -171,7 +172,7 @@ public:
       llvm::Intrinsic::getDeclaration(&mod, llvm::Intrinsic::sqrt, Float64);
     llvm::FunctionType *sqrtTyp =
       llvm::Intrinsic::getType(ctx, llvm::Intrinsic::sqrt, {Float64});
-    auto sqrtCall = builder.CreateCall(sqrtTyp, sqrt, {v});
+    auto *sqrtCall = builder.CreateCall(sqrtTyp, sqrt, {v});
     // auto sqrtCall = builder.CreateUnaryIntrinsic(llvm::Intrinsic::sqrt, v);
     symsToDelete.insert(sqrtCall);
     return sqrtCall;

@@ -549,6 +549,9 @@ struct AffineLoopNest
     return A(j, _(0, getNumSymbols()));
   }
   void removeLoopBang(LinAlg::Alloc<int64_t> auto &alloc, size_t i) {
+    // MutDensePtrMatrix<int64_t>
+    // TODO: fourierMotzkin(NonNegative) should work on MutPtrMatrices
+    // and support the truncation.
     auto A{getA()};
     if constexpr (NonNegative)
       fourierMotzkinNonNegative(A, i + getNumSymbols());
@@ -747,13 +750,14 @@ struct AffineLoopNest
     AffineLoopNest<NonNegative> aln{alnb};
     size_t numLoopsMinus1 = aln.getNumLoops() - 1;
     size_t i = 0;
+    BumpAlloc<> alloc;
     while (true) {
       os << "Loop " << numLoopsMinus1 - i << " lower bounds: ";
       aln.printLowerBound(os, i);
       os << "Loop " << numLoopsMinus1 - i << " upper bounds: ";
       aln.printUpperBound(os, i);
       if (i == numLoopsMinus1) break;
-      aln.removeLoopBang(i++);
+      aln.removeLoopBang(alloc, i++);
     }
     return os;
   }
@@ -786,6 +790,14 @@ struct AffineLoopNest
   constexpr void truncNumInEqCon(Row r) {
     invariant(r < numConstraints);
     numConstraints = unsigned(r);
+  }
+
+  static AffineLoopNest *construct(BumpAlloc<> &alloc, PtrMatrix<int64_t> A,
+                                   llvm::ArrayRef<const llvm::SCEV *> syms) {
+    unsigned numLoops = unsigned(A.numCol()) - 1 - syms.size();
+    AffineLoopNest *aln = allocate(alloc, unsigned(A.numRow()), numLoops, syms);
+    aln->getA() << A;
+    return aln;
   }
 
 private:

@@ -1,5 +1,5 @@
 ---
-Checks:          'clang-diagnostic-*,clang-analyzer-*,performance-*,modernize-*,bugprone-*,cpp-core-guidelines-*,cert-*,misc-*,llvm-namespace-comment,llvm-prefer-isa-or-dyn-cast-in-conditionals,portability-*,readability-*,-readability-braces-around-statements,-readability-identifier-length'
+Checks:          'clang-diagnostic-*,clang-analyzer-*,performance-*,modernize-*,bugprone-*,cpp-core-guidelines-*,cert-*,misc-*,llvm-namespace-comment,llvm-prefer-isa-or-dyn-cast-in-conditionals,portability-*,readability-*,-readability-braces-around-statements,-readability-identifier-length,-readability-isolate-declaration,-readability-implicit-bool-conversion,-readability-magic-numbers,-readability-function-cognitive-complexity'
 WarningsAsErrors: ''
 HeaderFilterRegex: ''
 AnalyzeTemporaryDtors: false
@@ -21,5 +21,6 @@ CheckOptions:
   modernize-loop-convert.NamingStyle: CamelCase
   readability-else-after-return.WarnOnUnfixable: 'false'
   google-readability-function-size.StatementThreshold: '800'
+  readability-function-cognitive-complexity.IgnoreMacros = 'true'
 ...
 

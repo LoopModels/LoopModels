@@ -1524,5 +1524,4 @@ static_assert(std::same_as<eltype_t<Matrix<int64_t>>, int64_t>);
 } // namespace LinAlg
 using LinAlg::AbstractVector, LinAlg::AbstractMatrix, LinAlg::PtrVector,
   LinAlg::MutPtrVector, LinAlg::Vector, LinAlg::Matrix, LinAlg::SquareMatrix,
-  LinAlg::IntMatrix, LinAlg::PtrMatrix, LinAlg::MutPtrMatrix, LinAlg::AxisInt,
-  LinAlg::AxisInt;
+  LinAlg::IntMatrix, LinAlg::PtrMatrix, LinAlg::MutPtrMatrix;
