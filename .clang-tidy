@@ -1,5 +1,5 @@
 ---
-Checks:          'clang-diagnostic-*,clang-analyzer-*,performance-*,modernize-*,bugprone-*,cpp-core-guidelines-*,cert-*,misc-*,llvm-namespace-comment,llvm-prefer-isa-or-dyn-cast-in-conditionals'
+Checks:          'clang-diagnostic-*,clang-analyzer-*,performance-*,modernize-*,bugprone-*,cpp-core-guidelines-*,cert-*,misc-*,llvm-namespace-comment,llvm-prefer-isa-or-dyn-cast-in-conditionals,portability-*,readability-*,-readability-braces-around-statements,-readability-identifier-length'
 WarningsAsErrors: ''
 HeaderFilterRegex: ''
 AnalyzeTemporaryDtors: false
@@ -15,14 +15,11 @@ CheckOptions:
   cert-oop54-cpp.WarnOnlyIfThisHasSuspiciousField: 'false'
   cert-dcl16-c.NewSuffixes: 'L;LL;LU;LLU'
   google-readability-braces-around-statements.ShortStatementLines: '1'
-  cppcoreguidelines-non-private-member-variables-in-classes.IgnoreClassesWithAllMemberVariablesBeingPublic: 'true'
   google-readability-namespace-comments.SpacesBeforeComments: '2'
-  modernize-loop-convert.MaxCopySize: '16'
   modernize-pass-by-value.IncludeStyle: llvm
   modernize-use-nullptr.NullMacros: 'NULL'
-  llvm-qualified-auto.AddConstToQualified: 'false'
   modernize-loop-convert.NamingStyle: CamelCase
-  llvm-else-after-return.WarnOnUnfixable: 'false'
+  readability-else-after-return.WarnOnUnfixable: 'false'
   google-readability-function-size.StatementThreshold: '800'
 ...
 
