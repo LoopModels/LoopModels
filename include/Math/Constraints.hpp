@@ -262,21 +262,14 @@ constexpr auto countNonZeroSign(DensePtrMatrix<int64_t> A, size_t i)
   return std::make_pair(numNeg, numPos);
 }
 
-constexpr void fourierMotzkin(DenseMatrix<int64_t> &A, size_t v) {
-  invariant(v < A.numCol());
-  const auto [numNeg, numPos] = countNonZeroSign(A, v);
-  const Row numRowsOld = A.numRow();
-  const Row numRowsNew = numRowsOld - numNeg - numPos + numNeg * numPos + 1;
+constexpr void fourierMotzkinCore(DenseMatrix<int64_t> &A, size_t v,
+                                  size_t numNeg, size_t numPos) {
   // we need one extra, as on the last overwrite, we still need to
   // read from two constraints we're deleting; we can't write into
   // both of them. Thus, we use a little extra memory here,
   // and then truncate.
-  if ((numNeg == 0) | (numPos == 0)) {
-    if ((numNeg == 0) & (numPos == 0)) return;
-    for (Row i = numRowsOld; i != 0;)
-      if (A(--i, v)) eraseConstraint(A, i);
-    return;
-  }
+  const Row numRowsOld = A.numRow();
+  const Row numRowsNew = numRowsOld - numNeg - numPos + numNeg * numPos + 1;
   A.resize(numRowsNew);
   // plan is to replace
   for (size_t i = 0, numRows = size_t(numRowsOld), posCount = numPos; posCount;
@@ -316,24 +309,27 @@ constexpr void fourierMotzkin(DenseMatrix<int64_t> &A, size_t v) {
   }
   // assert(numRows == (numRowsNew+1));
 }
-// non-negative Fourier-Motzkin
-constexpr void fourierMotzkinNonNegative(DenseMatrix<int64_t> &A, size_t v) {
+constexpr void fourierMotzkin(DenseMatrix<int64_t> &A, size_t v) {
   invariant(v < A.numCol());
   const auto [numNeg, numPos] = countNonZeroSign(A, v);
-  const size_t numPosP1 = numPos + 1;
-  const size_t numRowsOld = size_t(A.numRow());
+  const Row numRowsOld = A.numRow();
+  if ((numNeg == 0) | (numPos == 0)) {
+    if ((numNeg == 0) & (numPos == 0)) return;
+    for (Row i = numRowsOld; i != 0;)
+      if (A(--i, v)) eraseConstraint(A, i);
+    return;
+  }
+  fourierMotzkinCore(A, v, numNeg, numPos);
+} // non-negative Fourier-Motzkin
+constexpr void fourierMotzkinNonNegativeCore(DenseMatrix<int64_t> &A, size_t v,
+                                             size_t numNeg, size_t numPos,
+                                             size_t numRowsOld) {
   const size_t numRowsNew =
-    numRowsOld - numNeg - numPosP1 + numNeg * numPosP1 + 1;
+    numRowsOld - numNeg - numPos + numNeg * (numPos + 1);
   // we need one extra, as on the last overwrite, we still need to
   // read from two constraints we're deleting; we can't write into
   // both of them. Thus, we use a little extra memory here,
   // and then truncate.
-  if ((numNeg == 0) | (numPosP1 == 0)) {
-    if ((numNeg == 0) & (numPosP1 == 0)) return;
-    for (size_t i = numRowsOld; i != 0;)
-      if (A(--i, v)) eraseConstraint(A, i);
-    return;
-  }
   A.resize(Row{numRowsNew});
   // plan is to replace
   size_t numRows = numRowsOld;
@@ -380,17 +376,18 @@ constexpr void fourierMotzkinNonNegative(DenseMatrix<int64_t> &A, size_t v) {
     if (allZero) eraseConstraint(A, j--);
   }
 }
-// constexpr constexpr bool substituteEquality(IntMatrix &,
-// EmptyMatrix<int64_t>, size_t){
-//     return true;
-// }
-constexpr void eliminateVariable(DenseMatrix<int64_t> &A, EmptyMatrix<int64_t>,
-                                 size_t v) {
-  fourierMotzkin(A, v);
-}
-constexpr void eliminateVariable(DenseMatrix<int64_t> &A,
-                                 DenseMatrix<int64_t> &E, size_t v) {
-  if (substituteEquality(A, E, v)) fourierMotzkin(A, v);
+constexpr void fourierMotzkinNonNegative(DenseMatrix<int64_t> &A, size_t v) {
+  invariant(v < A.numCol());
+  const auto [numNeg, numPos] = countNonZeroSign(A, v);
+  const size_t numPosP1 = numPos + 1;
+  const size_t numRowsOld = size_t(A.numRow());
+  if ((numNeg == 0) | (numPosP1 == 0)) {
+    if ((numNeg == 0) & (numPosP1 == 0)) return;
+    for (size_t i = numRowsOld; i != 0;)
+      if (A(--i, v)) eraseConstraint(A, i);
+    return;
+  }
+  return fourierMotzkinNonNegativeCore(A, v, numNeg, numPos, numRowsOld);
 }
 /// Checks all rows, dropping those that are 0.
 constexpr void removeZeroRows(MutDensePtrMatrix<int64_t> &A) {

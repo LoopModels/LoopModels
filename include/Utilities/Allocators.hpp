@@ -34,8 +34,9 @@ struct BumpAlloc {
 public:
   static constexpr bool BumpDown = !BumpUp;
   using value_type = std::byte;
-  [[gnu::returns_nonnull]] constexpr auto allocate(size_t Size, size_t Align)
-    -> void * {
+  [[gnu::returns_nonnull, gnu::alloc_size(2), gnu::alloc_align(3),
+    gnu::malloc]] constexpr auto
+  allocate(size_t Size, size_t Align) -> void * {
     if (Size > SlabSize / 2) {
 #ifdef BUMP_ALLOC_LLVM_USE_ALLOCATOR
       // void *p = llvm::allocate_buffer(Size, Align);

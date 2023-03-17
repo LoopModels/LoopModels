@@ -260,8 +260,8 @@ struct Simplex {
       PtrMatrix<int64_t> constraints = tableau.getConstraints();
       return Rational::create(constraints(j, 0), constraints(j, i + 1));
     }
-    [[nodiscard]] constexpr auto
-    operator[](LinAlg::RelativeOffset auto i) const -> Rational {
+    [[nodiscard]] constexpr auto operator[](LinAlg::RelativeOffset auto i) const
+      -> Rational {
       return (*this)[LinAlg::calcOffset(size(), i)];
     }
     template <typename B, typename E>
@@ -291,7 +291,8 @@ struct Simplex {
   /// If we fail, it is infeasible.
   /// If we succeed, then the problem is feasible, and we're in
   /// canonical form.
-  [[nodiscard("returns `true` if infeasible; should check when calling.")]] auto
+  [[nodiscard(
+    "returns `true` if infeasible; should check when calling.")]] constexpr auto
   initiateFeasible() -> bool {
     // remove trivially redundant constraints
     tableau.hermiteNormalForm();
@@ -527,7 +528,7 @@ struct Simplex {
   /// makeZeroBasic(unsigned int v) -> bool
   /// Tries to make `v` non-basic if `v` is zero.
   /// Returns `false` if `v` is zero, `true` otherwise
-  auto makeZeroBasic(unsigned int v) -> bool {
+  constexpr auto makeZeroBasic(unsigned int v) -> bool {
     MutPtrMatrix<int64_t> C{tableau.getTableau()};
     MutPtrVector<int64_t> basicVars{tableau.getBasicVariables()};
     MutPtrVector<int64_t> basicConstraints{tableau.getBasicConstraints()};
@@ -575,12 +576,15 @@ struct Simplex {
   }
 
   // reverse lexicographic ally minimize vars
-  void rLexMin(Vector<Rational> &sol) { sol << rLexMinLast(sol.size()); }
+  constexpr void rLexMin(Vector<Rational> &sol) {
+    sol << rLexMinLast(sol.size());
+  }
   // A(:,1:end)*x <= A(:,0)
   // B(:,1:end)*x == B(:,0)
   // returns a Simplex if feasible, and an empty `Optional` otherwise
-  static auto positiveVariables(BumpAlloc<> &alloc, PtrMatrix<int64_t> A,
-                                PtrMatrix<int64_t> B)
+  static constexpr auto positiveVariables(BumpAlloc<> &alloc,
+                                          PtrMatrix<int64_t> A,
+                                          PtrMatrix<int64_t> B)
     -> std::optional<Simplex> {
     invariant(A.numCol() == B.numCol());
     unsigned numVar = unsigned(A.numCol()) - 1, numSlack = unsigned(A.numRow()),
@@ -608,7 +612,8 @@ struct Simplex {
     alloc.rollBack(checkPoint);
     return {};
   }
-  static auto positiveVariables(BumpAlloc<> &alloc, PtrMatrix<int64_t> A)
+  static constexpr auto positiveVariables(BumpAlloc<> &alloc,
+                                          PtrMatrix<int64_t> A)
     -> std::optional<Simplex> {
     unsigned numVar = unsigned(A.numCol()) - 1, numSlack = unsigned(A.numRow()),
              numCon = numSlack, varCap = numVar + numSlack;
@@ -632,7 +637,7 @@ struct Simplex {
     return {};
   }
 
-  void pruneBounds(BumpAlloc<> &alloc) {
+  constexpr void pruneBounds(BumpAlloc<> &alloc) {
     auto p = alloc.checkPoint();
     Simplex simplex{Simplex::create(alloc, tableau.numConstraints,
                                     tableau.numVars, tableau.constraintCapacity,
@@ -650,7 +655,7 @@ struct Simplex {
     alloc.rollBack(p);
   }
 
-  void removeVariable(size_t i) {
+  constexpr void dropVariable(size_t i) {
     // We remove a variable by isolating it, and then dropping the
     // constraint. This allows us to preserve canonical form
     MutPtrVector<int64_t> basicConstraints{tableau.getBasicConstraints()};
@@ -662,19 +667,19 @@ struct Simplex {
     if (lastRow != ind) swap(C, Row{ind}, Row{lastRow});
     tableau.truncateConstraints(lastRow);
   }
-  void removeExtraVariables(size_t i) {
+  constexpr void removeExtraVariables(size_t i) {
     for (size_t j = tableau.getNumVars(); j > i;) {
-      removeVariable(--j);
+      dropVariable(--j);
       tableau.truncateVars(j);
     }
   }
-  static auto toMask(PtrVector<int64_t> x) -> uint64_t {
+  static constexpr auto toMask(PtrVector<int64_t> x) -> uint64_t {
     assert(x.size() <= 64);
     uint64_t m = 0;
     for (auto y : x) m = ((m << 1) | (y != 0));
     return m;
   }
-  [[nodiscard]] auto getBasicTrueVarMask() const -> uint64_t {
+  [[nodiscard]] constexpr auto getBasicTrueVarMask() const -> uint64_t {
     const size_t numVarTotal = tableau.getNumVars();
     assert(numVarTotal <= 64);
     uint64_t m = 0;
@@ -685,8 +690,9 @@ struct Simplex {
   }
   // check if a solution exists such that `x` can be true.
   // returns `true` if unsatisfiable
-  [[nodiscard]] auto unSatisfiable(BumpAlloc<> &alloc, PtrVector<int64_t> x,
-                                   size_t off) const -> bool {
+  [[nodiscard]] constexpr auto unSatisfiable(BumpAlloc<> &alloc,
+                                             PtrVector<int64_t> x,
+                                             size_t off) const -> bool {
     // is it a valid solution to set the first `x.size()` variables to
     // `x`? first, check that >= 0 constraint is satisfied
     for (auto y : x)
@@ -713,15 +719,16 @@ struct Simplex {
     alloc.rollBack(p);
     return res;
   }
-  [[nodiscard]] auto satisfiable(BumpAlloc<> &alloc, PtrVector<int64_t> x,
-                                 size_t off) const -> bool {
+  [[nodiscard]] constexpr auto satisfiable(BumpAlloc<> &alloc,
+                                           PtrVector<int64_t> x,
+                                           size_t off) const -> bool {
     return !unSatisfiable(alloc, x, off);
   }
   // check if a solution exists such that `x` can be true.
   // zeros remaining rows
-  [[nodiscard]] auto unSatisfiableZeroRem(BumpAlloc<> &alloc,
-                                          PtrVector<int64_t> x, size_t off,
-                                          size_t numRow) const -> bool {
+  [[nodiscard]] constexpr auto
+  unSatisfiableZeroRem(BumpAlloc<> &alloc, PtrVector<int64_t> x, size_t off,
+                       size_t numRow) const -> bool {
     // is it a valid solution to set the first `x.size()` variables to
     // `x`? first, check that >= 0 constraint is satisfied
     for (auto y : x)
@@ -750,9 +757,10 @@ struct Simplex {
     alloc.rollBack(p);
     return res;
   }
-  [[nodiscard]] auto satisfiableZeroRem(BumpAlloc<> &alloc,
-                                        PtrVector<int64_t> x, size_t off,
-                                        size_t numRow) const -> bool {
+  [[nodiscard]] constexpr auto satisfiableZeroRem(BumpAlloc<> &alloc,
+                                                  PtrVector<int64_t> x,
+                                                  size_t off,
+                                                  size_t numRow) const -> bool {
     return !unSatisfiableZeroRem(alloc, x, off, numRow);
   }
   void printResult() {

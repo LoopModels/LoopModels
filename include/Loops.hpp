@@ -556,7 +556,6 @@ struct AffineLoopNest
     if constexpr (NonNegative)
       fourierMotzkinNonNegative(A, i + getNumSymbols());
     else fourierMotzkin(A, i + getNumSymbols());
-    // initializeComparator();
     pruneBounds(alloc);
   }
   [[nodiscard]] auto copy(BumpAlloc<> &alloc) const
@@ -842,6 +841,7 @@ private:
   unsigned int numConstraints;
   unsigned int numLoops;
   unsigned int numDynSymbols;
-  unsigned int rowCapacity; //
-  std::byte memory[8];      // NOLINT(modernize-avoid-c-arrays) // FAM
+  unsigned int rowCapacity;
+  // NOLINTNEXTLINE(modernize-avoid-c-arrays) // FAM
+  [[gnu::aligned(alignof(int64_t))]] std::byte memory[8];
 };

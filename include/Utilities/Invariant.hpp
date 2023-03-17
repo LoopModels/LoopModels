@@ -1,7 +1,7 @@
 #pragma once
 #include <cassert>
 
-constexpr void invariant(bool condition) {
+[[gnu::artificial]] constexpr inline void invariant(bool condition) {
   assert(condition && "invariant violation");
   if (!condition) {
 #if __cplusplus >= 202202L
@@ -15,7 +15,8 @@ constexpr void invariant(bool condition) {
 #endif
   }
 }
-template <typename T> constexpr void invariant(const T &x, const T &y) {
+template <typename T>
+[[gnu::artificial]] constexpr inline void invariant(const T &x, const T &y) {
   if (x != y) {
 #ifdef NDEBUG
 #if __cplusplus >= 202202L
