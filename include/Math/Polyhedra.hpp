@@ -5,7 +5,6 @@
 #include "Math/Constraints.hpp"
 #include "Math/EmptyArrays.hpp"
 #include "Math/Math.hpp"
-#include "Math/NormalForm.hpp"
 #include "Math/VectorGreatestCommonDivisor.hpp"
 #include "Utilities/Allocators.hpp"
 #include <algorithm>
@@ -228,28 +227,6 @@ struct BasePolyhedra {
   //   -> bool {
   //   return C.equalNegative(A(i, _), A(j, _));
   // }
-
-  // A'x >= 0
-  // E'x = 0
-  // removes variable `i` from system
-  constexpr void removeVariable(const size_t i) {
-    auto A{getA()};
-    if constexpr (HasEqualities) {
-      auto E{getE()};
-      if (substituteEquality(A, E, i)) {
-        if constexpr (NonNegative) fourierMotzkinNonNegative(getA(), i);
-        else fourierMotzkin(A, i);
-      }
-      if (E.numRow() > 1) NormalForm::simplifySystem(E);
-    }
-    if constexpr (NonNegative) fourierMotzkinNonNegative(A, i);
-    else fourierMotzkin(A, i);
-  }
-  constexpr void removeVariableAndPrune(LinAlg::Alloc<int64_t> auto &alloc,
-                                        const size_t i) {
-    removeVariable(i);
-    pruneBoundsUnchecked(alloc);
-  }
 
   constexpr void dropEmptyConstraints() {
     dropEmptyConstraints(getA());

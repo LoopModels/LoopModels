@@ -568,6 +568,7 @@ struct AffineLoopNest
                                                      numLoops - 1, getSyms());
     ret->numConstraints = unsigned(
       fourierMotzkinCore<NonNegative>(ret->getA(), getA(), v, {neg, pos}));
+    this->pruneBounds(alloc);
     return ret;
   }
   auto perm(PtrVector<unsigned> x)
@@ -620,7 +621,7 @@ struct AffineLoopNest
     AffineLoopNest<NonNegative> *tmp = copy(alloc);
     const size_t numPrevLoops = getNumLoops() - 1;
     for (size_t i = 0; i < numPrevLoops; ++i)
-      if (i != _i) tmp->removeVariableAndPrune(i + getNumSymbols());
+      if (i != _i) tmp = tmp->removeLoop(alloc, i);
     bool indep = true;
     const size_t numConst = getNumSymbols();
     auto A{tmp->getA()};
@@ -631,8 +632,7 @@ struct AffineLoopNest
       alloc.rollBack(p);
       return false;
     }
-    AffineLoopNest<NonNegative> *margi = tmp->copy(alloc);
-    margi->removeVariableAndPrune(numPrevLoops + getNumSymbols());
+    AffineLoopNest<NonNegative> *margi = tmp->removeLoop(alloc, numPrevLoops);
     AffineLoopNest<NonNegative> *tmp2;
     // margi contains extrema for `_i`
     // we can substitute extended for value of `_i`
