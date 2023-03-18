@@ -3,6 +3,7 @@
 #include "./RemarkAnalysis.hpp"
 #include "Math/Array.hpp"
 #include "Math/Comparators.hpp"
+#include "Math/Comparisons.hpp"
 #include "Math/Constraints.hpp"
 #include "Math/Indexing.hpp"
 #include "Math/Math.hpp"
@@ -46,7 +47,7 @@ inline auto isKnownOne(llvm::ScalarEvolution &SE, llvm::Value *v) -> bool {
     return SE.getBackedgeTakenCount(L);
   const llvm::SCEV *LB = SE.getSCEV(&b->getInitialIVValue());
   const llvm::SCEV *UB = SE.getSCEV(&b->getFinalIVValue());
-  if (auto *umm = llvm::dyn_cast<llvm::SCEVUMaxExpr>(UB)) {
+  if (const auto *umm = llvm::dyn_cast<llvm::SCEVUMaxExpr>(UB)) {
     const llvm::SCEV *m0 =
       SE.getMinusSCEV(umm->getOperand(0), LB, llvm::SCEV::NoWrapFlags::FlagNUW);
     const llvm::SCEV *m1 =
@@ -54,7 +55,7 @@ inline auto isKnownOne(llvm::ScalarEvolution &SE, llvm::Value *v) -> bool {
     // Does checking known negative make sense if we have NUW?
     if (SE.isKnownNegative(m0)) return m1;
     if (SE.isKnownNegative(m1)) return m0;
-  } else if (auto *smm = llvm::dyn_cast<llvm::SCEVSMaxExpr>(UB)) {
+  } else if (const auto *smm = llvm::dyn_cast<llvm::SCEVSMaxExpr>(UB)) {
     const llvm::SCEV *m0 =
       SE.getMinusSCEV(smm->getOperand(0), LB, llvm::SCEV::NoWrapFlags::FlagNSW);
     const llvm::SCEV *m1 =
@@ -114,14 +115,13 @@ findSymbolicIndex(llvm::ArrayRef<const llvm::SCEV *> symbols,
   // if (!SE.containsAddRecurrence(S))
   // 	return S;
   if ((!S) || (!(S->isAffine()))) return std::make_pair(S, S);
-  auto opStart = S->getStart();
-  auto opStep = S->getStepRecurrence(SE);
-  auto opFinal = SE.getSCEVAtScope(S, nullptr);
+  const auto *opStart = S->getStart();
+  const auto *opStep = S->getStepRecurrence(SE);
+  const auto *opFinal = SE.getSCEVAtScope(S, nullptr);
   // auto opFinal = SE.getSCEVAtScope(S, S->getLoop()->getParentLoop());
   // FIXME: what if there are more AddRecs nested inside?
   if (SE.isKnownNonNegative(opStep)) return std::make_pair(opStart, opFinal);
-  else if (SE.isKnownNonPositive(opStep))
-    return std::make_pair(opFinal, opStart);
+  if (SE.isKnownNonPositive(opStep)) return std::make_pair(opFinal, opStart);
   return std::make_pair(S, S);
 }
 // TODO: strengthen through recursion
@@ -147,13 +147,10 @@ findSymbolicIndex(llvm::ArrayRef<const llvm::SCEV *> symbols,
   const llvm::SCEV *op1 = S->getOperand(1);
   auto [LB0, UB0] = getMinMaxValueSCEV(SE, op0);
   auto [LB1, UB1] = getMinMaxValueSCEV(SE, op1);
-  if (SE.isKnownPredicate(GE, LB0, UB1)) {
-    // op0 >= op1
-    return isMin ? op1 : op0;
-  } else if (SE.isKnownPredicate(GE, LB1, UB0)) {
-    // op1 >= op0
-    return isMin ? op0 : op1;
-  }
+  // op0 >= op1
+  if (SE.isKnownPredicate(GE, LB0, UB1)) return isMin ? op1 : op0;
+  // op1 >= op0
+  if (SE.isKnownPredicate(GE, LB1, UB0)) return isMin ? op0 : op1;
   return S;
 }
 [[nodiscard]] inline auto simplifyMinMax(llvm::ScalarEvolution &SE,
@@ -193,10 +190,12 @@ addSymbol(std::array<IntMatrix, 2> &AB, // NOLINT(misc-no-recursion)
   if (size_t i = findSymbolicIndex(symbols, v)) {
     A(lu, i) += mlt;
     return minDepth;
-  } else if (std::optional<int64_t> c = getConstantInt(v)) {
+  }
+  if (std::optional<int64_t> c = getConstantInt(v)) {
     A(lu, 0) += mlt * (*c);
     return minDepth;
-  } else if (const auto *ar = llvm::dyn_cast<const llvm::SCEVAddExpr>(v)) {
+  }
+  if (const auto *ar = llvm::dyn_cast<const llvm::SCEVAddExpr>(v)) {
     const llvm::SCEV *op0 = ar->getOperand(0);
     const llvm::SCEV *op1 = ar->getOperand(1);
     Row M = A.numRow();
@@ -205,11 +204,12 @@ addSymbol(std::array<IntMatrix, 2> &AB, // NOLINT(misc-no-recursion)
       minDepth =
         addSymbol(AB, symbols, L, op1, SE, _(M, A.numRow()), mlt, minDepth);
     return addSymbol(AB, symbols, L, op1, SE, lu, mlt, minDepth);
-  } else if (const auto *m = llvm::dyn_cast<const llvm::SCEVMulExpr>(v)) {
+  }
+  if (const auto *m = llvm::dyn_cast<const llvm::SCEVMulExpr>(v)) {
     if (auto op0 = getConstantInt(m->getOperand(0)))
       return addSymbol(AB, symbols, L, m->getOperand(1), SE, lu, mlt * (*op0),
                        minDepth);
-    else if (auto op1 = getConstantInt(m->getOperand(1)))
+    if (auto op1 = getConstantInt(m->getOperand(1)))
       return addSymbol(AB, symbols, L, m->getOperand(0), SE, lu, mlt * (*op1),
                        minDepth);
   } else if (const auto *x = llvm::dyn_cast<const llvm::SCEVAddRecExpr>(v)) {
@@ -231,7 +231,7 @@ addSymbol(std::array<IntMatrix, 2> &AB, // NOLINT(misc-no-recursion)
     // Depth of 0 means toplevel.
     minDepth = std::max(minDepth, recDepth);
   } else if (const auto *mm = llvm::dyn_cast<const llvm::SCEVMinMaxExpr>(v)) {
-    auto Sm = simplifyMinMax(SE, mm);
+    const auto *Sm = simplifyMinMax(SE, mm);
     if (Sm != v) return addSymbol(AB, symbols, L, Sm, SE, lu, mlt, minDepth);
     bool isMin =
       llvm::isa<llvm::SCEVSMinExpr>(mm) || llvm::isa<llvm::SCEVUMinExpr>(mm);
@@ -289,7 +289,7 @@ addBackedgeTakenCount(std::array<IntMatrix, 2> &AB,
       if (const llvm::SCEV *BTP = getBackedgeTakenCount(SE, P)) {
         if (!llvm::isa<llvm::SCEVCouldNotCompute>(BTP))
           return addBackedgeTakenCount(AB, symbols, P, BTP, SE, minDepth, ORE);
-        else if (ORE) [[unlikely]] {
+        if (ORE) [[unlikely]] {
           llvm::SmallVector<char, 128> msg;
           llvm::raw_svector_ostream os(msg);
           os << "SCEVCouldNotCompute from loop: " << *P << "\n";
@@ -307,7 +307,7 @@ addBackedgeTakenCount(std::array<IntMatrix, 2> &AB,
         os << "Loop Bounds:\nInitial: " << b->getInitialIVValue()
            << "\nStep: " << *b->getStepValue()
            << "\nFinal: " << b->getFinalIVValue() << "\n";
-      for (auto s : symbols) os << *s << "\n";
+      for (const auto *s : symbols) os << *s << "\n";
       llvm::OptimizationRemarkAnalysis analysis{
         remarkAnalysis("AffineLoopConstruction", L)};
       ORE->emit(analysis << os.str());
@@ -545,30 +545,27 @@ struct AffineLoopNest
     pruneBounds(alloc);
   }
 
-  [[nodiscard]] auto getProgVars(size_t j) const -> PtrVector<int64_t> {
+  [[nodiscard]] constexpr auto getProgVars(size_t j) const
+    -> PtrVector<int64_t> {
     return A(j, _(0, getNumSymbols()));
   }
-  void removeLoopBang(LinAlg::Alloc<int64_t> auto &alloc, size_t i) {
-    // MutDensePtrMatrix<int64_t>
-    // TODO: fourierMotzkin(NonNegative) should work on MutPtrMatrices
-    // and support the truncation.
-    auto A{getA()};
-    if constexpr (NonNegative)
-      fourierMotzkinNonNegative(A, i + getNumSymbols());
-    else fourierMotzkin(A, i + getNumSymbols());
-    pruneBounds(alloc);
-  }
-  [[nodiscard]] auto copy(BumpAlloc<> &alloc) const
+  [[nodiscard]] constexpr auto copy(BumpAlloc<> &alloc) const
     -> NotNull<AffineLoopNest<NonNegative>> {
     auto ret = AffineLoopNest<NonNegative>::allocate(alloc, numConstraints,
                                                      numLoops, getSyms());
     ret->getA() << getA();
     return ret;
   }
-  [[nodiscard]] auto removeLoop(BumpAlloc<> &alloc, size_t i) const
+  [[nodiscard]] constexpr auto removeLoop(BumpAlloc<> &alloc, size_t v) const
     -> NotNull<AffineLoopNest<NonNegative>> {
-    auto ret = copy(alloc);
-    ret->removeLoopBang(WBumpAlloc<int64_t>(alloc), i);
+    auto A{getA()};
+    auto [neg, pos] = indsNegPos(A(_, v));
+    Row numCon = A.numRow() - pos.size() + size_t(neg.size()) * pos.size();
+    if constexpr (!NonNegative) numCon -= neg.size();
+    auto ret = AffineLoopNest<NonNegative>::allocate(alloc, numCon,
+                                                     numLoops - 1, getSyms());
+    ret->numConstraints = unsigned(
+      fourierMotzkinCore<NonNegative>(ret->getA(), getA(), v, {neg, pos}));
     return ret;
   }
   auto perm(PtrVector<unsigned> x)
@@ -594,22 +591,22 @@ struct AffineLoopNest
         (ret[Aji > 0])(Aji < 0 ? negCount++ : posCount++, _) = A(j, _);
     return ret;
   }
-  auto getBounds(BumpAlloc<> &alloc, PtrVector<unsigned> x)
-    -> llvm::SmallVector<std::pair<IntMatrix, IntMatrix>, 0> {
-    llvm::SmallVector<std::pair<IntMatrix, IntMatrix>, 0> ret;
-    size_t i = x.size();
-    ret.resize_for_overwrite(i);
-    auto check = alloc.checkPoint();
-    auto tmp = copy(alloc);
-    while (true) {
-      size_t xi = x[--i];
-      ret[i] = tmp->bounds(xi);
-      if (i == 0) break;
-      tmp->removeLoopBang(xi);
-    }
-    alloc.rollBack(check);
-    return ret;
-  }
+  // auto getBounds(BumpAlloc<> &alloc, PtrVector<unsigned> x)
+  //   -> llvm::SmallVector<std::pair<IntMatrix, IntMatrix>, 0> {
+  //   llvm::SmallVector<std::pair<IntMatrix, IntMatrix>, 0> ret;
+  //   size_t i = x.size();
+  //   ret.resize_for_overwrite(i);
+  //   auto check = alloc.checkPoint();
+  //   auto *tmp = this;
+  //   while (true) {
+  //     size_t xi = x[--i];
+  //     ret[i] = tmp->bounds(xi);
+  //     if (i == 0) break;
+  //     tmp = tmp->removeLoop(alloc, xi);
+  //   }
+  //   alloc.rollBack(check);
+  //   return ret;
+  // }
   [[nodiscard]] auto zeroExtraIterationsUponExtending(size_t _i,
                                                       bool extendLower) const
     -> bool {
@@ -700,34 +697,33 @@ struct AffineLoopNest
         os << getSyms()[i - 1];
       }
   }
-
-  void printBound(llvm::raw_ostream &os, size_t i, int64_t sign) const {
-    const size_t numVar = getNumLoops();
-    const size_t numVarMinus1 = numVar - 1;
-    const size_t numConst = getNumSymbols();
+  // prints the inner most loop.
+  // it is assumed that you iteratively pop off the inner most loop with
+  // `removeLoop` to print all bounds.
+  void printBound(llvm::raw_ostream &os, int64_t sign) const {
+    const size_t numVar = getNumLoops(), numVarMinus1 = numVar - 1,
+                 numConst = getNumSymbols();
     bool hasPrintedLine = false;
     auto A{getA()};
     for (size_t j = 0; j < A.numRow(); ++j) {
-      int64_t Aji = A(j, i + numConst) * sign;
-      if (Aji <= 0) continue;
+      int64_t Aj = A(j, end - 1) * sign;
+      if (Aj <= 0) continue;
       if (hasPrintedLine)
         for (size_t k = 0; k < 21; ++k) os << ' ';
       hasPrintedLine = true;
-      if (A(j, i + numConst) != sign)
-        os << Aji << "*i_" << numVarMinus1 - i
-           << ((sign < 0) ? " <= " : " >= ");
-      else os << "i_" << numVarMinus1 - i << ((sign < 0) ? " <= " : " >= ");
+      if (Aj != sign)
+        os << Aj << "*i_" << numVarMinus1 << ((sign < 0) ? " <= " : " >= ");
+      else os << "i_" << numVarMinus1 << ((sign < 0) ? " <= " : " >= ");
       PtrVector<int64_t> b = getProgVars(j);
-      bool printed = !allZero(b);
+      bool printed = anyNEZero(b);
       if (printed) printSymbol(os, b, -sign);
-      for (size_t k = 0; k < numVar; ++k) {
-        if (k == i) continue;
+      for (size_t k = 0; k < numVarMinus1; ++k) {
         if (int64_t lakj = A(j, k + numConst)) {
           if (lakj * sign > 0) os << " - ";
           else if (printed) os << " + ";
           lakj = constexpr_abs(lakj);
           if (lakj != 1) os << lakj << "*";
-          os << "i_" << numVarMinus1 - k;
+          os << "i_" << k;
           printed = true;
         }
       }
@@ -735,29 +731,30 @@ struct AffineLoopNest
       os << "\n";
     }
   }
-  void printLowerBound(llvm::raw_ostream &os, size_t i) const {
-    if constexpr (NonNegative) os << "i_" << getNumLoops() - 1 - i << " >= 0\n";
-    printBound(os, i, 1);
+  void printLowerBound(llvm::raw_ostream &os) const {
+    if constexpr (NonNegative) os << "i_" << getNumLoops() - 1 << " >= 0\n";
+    printBound(os, 1);
   }
-  void printUpperBound(llvm::raw_ostream &os, size_t i) const {
-    printBound(os, i, -1);
+  void printUpperBound(llvm::raw_ostream &os) const { printBound(os, -1); }
+  void dump(llvm::raw_ostream &os, BumpAlloc<> &alloc) const {
+    AffineLoopNest *tmp = this;
+    for (size_t i = getNumLoops();;) {
+      os << "Loop " << --i << " lower bounds: ";
+      tmp->printLowerBound(os);
+      os << "Loop " << i << " upper bounds: ";
+      tmp->printUpperBound(os);
+      if (!i) break;
+      tmp = tmp->removeLoop(alloc, i);
+    }
   }
   // prints loops from inner most to outer most.
+  // outer most loop is `i_0`, subscript increments for each level inside
+  // We pop off the outer most loop on every iteration.
   friend inline auto operator<<(llvm::raw_ostream &os,
-                                const AffineLoopNest &alnb)
+                                const AffineLoopNest &aln)
     -> llvm::raw_ostream & {
-    AffineLoopNest<NonNegative> aln{alnb};
-    size_t numLoopsMinus1 = aln.getNumLoops() - 1;
-    size_t i = 0;
     BumpAlloc<> alloc;
-    while (true) {
-      os << "Loop " << numLoopsMinus1 - i << " lower bounds: ";
-      aln.printLowerBound(os, i);
-      os << "Loop " << numLoopsMinus1 - i << " upper bounds: ";
-      aln.printUpperBound(os, i);
-      if (i == numLoopsMinus1) break;
-      aln.removeLoopBang(alloc, i++);
-    }
+    aln.dump(os, alloc);
     return os;
   }
   void dump(llvm::raw_ostream &os = llvm::errs()) const { os << *this; }
@@ -791,8 +788,9 @@ struct AffineLoopNest
     numConstraints = unsigned(r);
   }
 
-  static AffineLoopNest *construct(BumpAlloc<> &alloc, PtrMatrix<int64_t> A,
-                                   llvm::ArrayRef<const llvm::SCEV *> syms) {
+  static auto construct(BumpAlloc<> &alloc, PtrMatrix<int64_t> A,
+                        llvm::ArrayRef<const llvm::SCEV *> syms)
+    -> AffineLoopNest * {
     unsigned numLoops = unsigned(A.numCol()) - 1 - syms.size();
     AffineLoopNest *aln = allocate(alloc, unsigned(A.numRow()), numLoops, syms);
     aln->getA() << A;

@@ -14,7 +14,7 @@ constexpr inline auto constexpr_abs(std::signed_integral auto x) noexcept {
 
 constexpr auto gcd(int64_t x, int64_t y) -> int64_t {
   if (x == 0) return constexpr_abs(y);
-  else if (y == 0) return constexpr_abs(x);
+  if (y == 0) return constexpr_abs(x);
   assert(x != std::numeric_limits<int64_t>::min());
   assert(y != std::numeric_limits<int64_t>::min());
   int64_t a = constexpr_abs(x);
@@ -41,10 +41,21 @@ constexpr auto lcm(int64_t x, int64_t y) -> int64_t {
   if (ax == ay) return ax;
   return ax * (ay / gcd(ax, ay));
 }
+
+// inline auto copySign(double x, double s) -> double {
+//   // TODO: c++23 makes std::copysign constexpr
+//   return std::copysign(x, s);
+// }
+// NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
+template <std::integral I> constexpr auto copySign(I x, I s) -> I {
+  if (s >= 0) return constexpr_abs(x);
+  return -constexpr_abs(x);
+}
+
 // https://en.wikipedia.org/wiki/Extended_Euclidean_algorithm
-template <
-  std::integral T> // NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
-constexpr auto gcdx(T a, T b) -> std::tuple<T, T, T> {
+template <std::integral T>
+constexpr auto dgcdx(T a, T b)
+  -> std::array<T, 5> { // NOLINT(bugprone-easily-swappable-parameters)
   T old_r = a;
   T r = b;
   T old_s = 1;
@@ -64,22 +75,17 @@ constexpr auto gcdx(T a, T b) -> std::tuple<T, T, T> {
   // the `t` updates in the loop:
   // T t = (b == 0) ? 0 : ((old_r - old_s * a) / b);
   // For now, I'll favor forgoing the division.
-  return std::make_tuple(old_r, old_s, old_t);
+  return {old_r, old_s, old_t, copySign(t, a), copySign(s, b)};
+}
+template <
+  std::integral T> // NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
+constexpr auto gcdx(T a, T b) -> std::array<T, 3> {
+  auto [g, x, y, t, s] = dgcdx(a, b);
+  return {g, x, y};
 }
 
 /// divgcd(x, y) = (x / gcd(x, y), y / gcd(x, y))
-constexpr auto divgcd(int64_t x, int64_t y) -> std::pair<int64_t, int64_t> {
-  if (x) {
-    if (y) {
-      int64_t g = gcd(x, y);
-      assert(g == gcd(x, y));
-      return std::make_pair(x / g, y / g);
-    } else {
-      return std::make_pair(1, 0);
-    }
-  } else if (y) {
-    return std::make_pair(0, 1);
-  } else {
-    return std::make_pair(0, 0);
-  }
+constexpr auto divgcd(int64_t a, int64_t b) -> std::array<int64_t, 2> {
+  auto [g, x, y, t, s] = dgcdx(a, b);
+  return {t, s};
 }

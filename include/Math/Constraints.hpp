@@ -3,7 +3,10 @@
 
 #include "Math/Array.hpp"
 #include "Math/AxisTypes.hpp"
+#include "Math/Comparisons.hpp"
 #include "Math/EmptyArrays.hpp"
+#include "Math/GreatestCommonDivisor.hpp"
+#include "Math/Indexing.hpp"
 #include "Math/Math.hpp"
 #include "Math/NormalForm.hpp"
 #include <cstddef>
@@ -62,8 +65,8 @@ inline auto printConstraints(llvm::raw_ostream &os, DensePtrMatrix<int64_t> A,
   return os;
 }
 inline auto printConstraints(llvm::raw_ostream &os, EmptyMatrix<int64_t>,
-                             llvm::ArrayRef<const llvm::SCEV *>, bool = true,
-                             size_t = 0) -> llvm::raw_ostream & {
+                             llvm::ArrayRef<const llvm::SCEV *>, bool = false)
+  -> llvm::raw_ostream & {
   return os;
 }
 
@@ -262,8 +265,74 @@ constexpr auto countNonZeroSign(DensePtrMatrix<int64_t> A, size_t i)
   return std::make_pair(numNeg, numPos);
 }
 
+/// returns a pair of vectors, the first containing the indices of
+/// negative elements, the second containing the indices of positive
+/// elements.
+template <class T, LinAlg::VectorDimension S>
+constexpr auto indsNegPos(LinAlg::Array<T, S> a)
+  -> std::array<Vector<unsigned, 4>, 2> {
+  std::array<Vector<unsigned, 4>, 2> ret;
+  for (size_t j = 0; j < a.size(); ++j)
+    if (a[j] < 0) ret[0].push_back(j);
+    else if (a[j] > 0) ret[1].push_back(j);
+  return ret;
+}
+// 4*4 + 16 = 32
+static_assert(sizeof(std::array<Vector<unsigned, 4>, 2>) == 64);
+
+template <bool NonNegative>
+constexpr auto
+fourierMotzkinCore(MutDensePtrMatrix<int64_t> B, DensePtrMatrix<int64_t> A,
+                   size_t v, const std::array<Vector<unsigned, 4>, 2> &negPos)
+  -> Row {
+  const auto &[neg, pos] = negPos;
+  // we have the additional v >= 0
+  if constexpr (NonNegative)
+    invariant(B.numRow(),
+              A.numRow() - pos.size() + size_t(neg.size()) * pos.size());
+  else
+    invariant(B.numRow(), A.numRow() - pos.size() - neg.size() +
+                            size_t(neg.size()) * pos.size());
+  invariant(B.numCol() + 1, A.numCol());
+  Row r = 0;
+  // x - v >= 0 -> x >= v
+  // x + v >= 0 -> v >= -x
+  for (auto i : neg) {
+    // we  have implicit v >= 0, matching x >= v
+    if constexpr (NonNegative) {
+      B(r, _(0, v)) << A(i, _(0, v));
+      B(r, _(v, end)) << A(i, _(v + 1, end));
+      r += anyNEZero(B(r, _(0, end)));
+    }
+    int64_t Aiv = A(i, v);
+    invariant(Aiv < 0);
+    for (auto j : pos) {
+      int64_t Ajv = A(j, v);
+      invariant(Ajv > 0);
+      auto [ai, aj] = divgcd(Aiv, Ajv);
+      B(r, _(0, v)) << aj * A(i, _(0, v)) - ai * A(j, _(0, v));
+      B(r, _(v, end)) << aj * A(i, _(v + 1, end)) - ai * A(j, _(v + 1, end));
+      r += anyNEZero(B(r, _(0, end)));
+    }
+  }
+  return r;
+}
+template <bool NonNegative>
+constexpr auto fourierMotzkin(LinAlg::Alloc<int64_t> auto &alloc,
+                              DensePtrMatrix<int64_t> A, size_t v)
+  -> MutDensePtrMatrix<int64_t> {
+
+  auto [neg, pos] = indsNegPos(A(_, v));
+  Row r = A.numRow() - pos.size() + size_t(neg.size()) * pos.size();
+  if constexpr (!NonNegative) r -= neg.size();
+  auto B = matrix(alloc, r, A.numCol() - 1);
+  B.truncate(fourierMotzkinCore<NonNegative>(B, A, v, {neg, pos}));
+  return B;
+}
+
 constexpr void fourierMotzkinCore(DenseMatrix<int64_t> &A, size_t v,
-                                  size_t numNeg, size_t numPos) {
+                                  std::array<size_t, 2> negPos) {
+  auto [numNeg, numPos] = negPos;
   // we need one extra, as on the last overwrite, we still need to
   // read from two constraints we're deleting; we can't write into
   // both of them. Thus, we use a little extra memory here,
@@ -319,11 +388,12 @@ constexpr void fourierMotzkin(DenseMatrix<int64_t> &A, size_t v) {
       if (A(--i, v)) eraseConstraint(A, i);
     return;
   }
-  fourierMotzkinCore(A, v, numNeg, numPos);
+  fourierMotzkinCore(A, v, {numNeg, numPos});
 } // non-negative Fourier-Motzkin
 constexpr void fourierMotzkinNonNegativeCore(DenseMatrix<int64_t> &A, size_t v,
-                                             size_t numNeg, size_t numPos,
+                                             std::array<size_t, 2> negPos,
                                              size_t numRowsOld) {
+  auto [numNeg, numPos] = negPos;
   const size_t numRowsNew =
     numRowsOld - numNeg - numPos + numNeg * (numPos + 1);
   // we need one extra, as on the last overwrite, we still need to
@@ -387,7 +457,7 @@ constexpr void fourierMotzkinNonNegative(DenseMatrix<int64_t> &A, size_t v) {
       if (A(--i, v)) eraseConstraint(A, i);
     return;
   }
-  return fourierMotzkinNonNegativeCore(A, v, numNeg, numPos, numRowsOld);
+  return fourierMotzkinNonNegativeCore(A, v, {numNeg, numPos}, numRowsOld);
 }
 /// Checks all rows, dropping those that are 0.
 constexpr void removeZeroRows(MutDensePtrMatrix<int64_t> &A) {

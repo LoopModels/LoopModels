@@ -207,7 +207,9 @@ template <class T, class S> struct Array {
   void dump() { llvm::errs() << *this << "\n"; }
 
 protected:
+  // NOLINTNEXTLINE(misc-non-private-member-variables-in-classes)
   [[no_unique_address]] T *ptr;
+  // NOLINTNEXTLINE(misc-non-private-member-variables-in-classes)
   [[no_unique_address]] S sz{};
 };
 
@@ -736,6 +738,7 @@ struct ResizeableView : MutArray<T, S> {
   }
 
 protected:
+  // NOLINTNEXTLINE(misc-non-private-member-variables-in-classes)
   [[no_unique_address]] U capacity{0};
 };
 
@@ -965,6 +968,7 @@ struct ReallocView : ResizeableView<T, S, U> {
   }
 
 protected:
+  // NOLINTNEXTLINE(misc-non-private-member-variables-in-classes)
   [[no_unique_address]] A allocator{};
 
   constexpr void allocateAtLeast(U len) {
