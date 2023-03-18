@@ -33,6 +33,7 @@
 #include <llvm/Support/Allocator.h>
 #include <llvm/Support/Casting.h>
 #include <llvm/Support/raw_ostream.h>
+#include <string>
 #include <utility>
 
 inline auto isKnownOne(llvm::ScalarEvolution &SE, llvm::Value *v) -> bool {
@@ -405,11 +406,11 @@ struct AffineLoopNest
     MutDensePtrMatrix<int64_t> A{getA()};
     const auto [M, N] = A.size();
     auto syms{getSyms()};
-    NotNull<AffineLoopNest<false>> aln{
-      AffineLoopNest<false>::allocate(alloc, M + numExtraVar, numLoops, syms)};
+    NotNull<AffineLoopNest<false>> aln{AffineLoopNest<false>::allocate(
+      alloc, size_t(M) + numExtraVar, numLoops, syms)};
     auto B{aln->getA()};
-    assert(B.numRow() == M + numExtraVar);
-    assert(B.numCol() == N);
+    invariant(B.numRow(), M + numExtraVar);
+    invariant(B.numCol(), N);
     B(_(0, M), _(begin, numConst)) << A(_, _(begin, numConst));
     B(_(0, M), _(numConst, end)) << A(_, _(numConst, end)) * R;
     if constexpr (NonNegative) {
@@ -608,6 +609,10 @@ struct AffineLoopNest
   //   alloc.rollBack(check);
   //   return ret;
   // }
+  constexpr void eraseConstraint(size_t c) {
+    eraseConstraintImpl(getA(), c);
+    --numConstraints;
+  }
   [[nodiscard]] auto
   zeroExtraItersUponExtending(LinAlg::Alloc<int64_t> auto &alloc, size_t _i,
                               bool extendLower) const -> bool {
@@ -634,7 +639,7 @@ struct AffineLoopNest
     // in `tmp`
     int64_t sign = 2 * extendLower - 1; // extendLower ? 1 : -1
     for (size_t c = 0; c < margi->getNumInequalityConstraints(); ++c) {
-      int64_t b = sign * margi->A(c, _i + numConst);
+      int64_t b = sign * margi->getA()(c, _i + numConst);
       if (b <= 0) continue;
       tmp2 = tmp;
       // increment to increase bound
@@ -657,7 +662,7 @@ struct AffineLoopNest
       }
       for (size_t cc = size_t(tmp2->getNumConstraints()); cc;)
         if (tmp2->getA()(--cc, numPrevLoops + numConst) == 0)
-          eraseConstraint(tmp2->getA(), cc);
+          tmp2->eraseConstraint(cc);
       if (!(tmp2->calcIsEmpty())) {
         alloc.rollBack(p);
         return false;
@@ -684,7 +689,7 @@ struct AffineLoopNest
         }
         for (size_t cc = size_t(tmp->getNumConstraints()); cc;)
           if (tmp->getA()(--cc, numPrevLoops + numConst) == 0)
-            eraseConstraint(tmp->getA(), cc);
+            tmp->eraseConstraint(cc);
         if (!(tmp->calcIsEmpty())) {
           alloc.rollBack(p);
           return false;
@@ -748,7 +753,7 @@ struct AffineLoopNest
   }
   void printUpperBound(llvm::raw_ostream &os) const { printBound(os, -1); }
   void dump(llvm::raw_ostream &os, BumpAlloc<> &alloc) const {
-    AffineLoopNest *tmp = this;
+    const AffineLoopNest *tmp = this;
     for (size_t i = getNumLoops();;) {
       os << "Loop " << --i << " lower bounds: ";
       tmp->printLowerBound(os);
@@ -802,13 +807,32 @@ struct AffineLoopNest
     numConstraints = unsigned(r);
   }
 
-  static auto construct(BumpAlloc<> &alloc, PtrMatrix<int64_t> A,
-                        llvm::ArrayRef<const llvm::SCEV *> syms)
+  [[nodiscard]] static auto construct(BumpAlloc<> &alloc, PtrMatrix<int64_t> A,
+                                      llvm::ArrayRef<const llvm::SCEV *> syms)
     -> AffineLoopNest * {
     unsigned numLoops = unsigned(A.numCol()) - 1 - syms.size();
     AffineLoopNest *aln = allocate(alloc, unsigned(A.numRow()), numLoops, syms);
     aln->getA() << A;
     return aln;
+  }
+  [[nodiscard]] static auto allocate(BumpAlloc<> &alloc, unsigned int numCon,
+                                     unsigned int numLoops,
+                                     llvm::ArrayRef<const llvm::SCEV *> syms)
+    -> NotNull<AffineLoopNest> {
+    unsigned numDynSym = syms.size();
+    unsigned N = numLoops + numDynSym + 1;
+    // extra capacity for adding 0 lower bounds later, see
+    // `addZeroLowerBounds`.
+    unsigned M = NonNegative ? numCon : numCon + numLoops;
+    // extra capacity for moving loops into symbols, see `removeOuterMost`.
+    unsigned symCapacity = numDynSym + numLoops;
+    size_t memNeeded = size_t(M) * N * sizeof(int64_t) +
+                       symCapacity * sizeof(const llvm::SCEV *const *);
+    auto *mem = alloc.allocate(sizeof(AffineLoopNest) - 8 + memNeeded,
+                               alignof(AffineLoopNest));
+    auto *aln = new (mem) AffineLoopNest({numCon, numLoops, numDynSym, M});
+    std::copy_n(syms.begin(), numDynSym, aln->getSyms().begin());
+    return NotNull<AffineLoopNest>{aln};
   }
 
 private:
@@ -824,25 +848,6 @@ private:
     : numConstraints(_numConstraints), numLoops(_numLoops),
       numDynSymbols(_numDynSymbols), rowCapacity(_rowCapacity) {}
 
-  static auto allocate(BumpAlloc<> &alloc, unsigned int numCon,
-                       unsigned int numLoops,
-                       llvm::ArrayRef<const llvm::SCEV *> syms)
-    -> NotNull<AffineLoopNest> {
-    size_t numDynSym = syms.size();
-    size_t N = numLoops + numDynSym + 1;
-    // extra capacity for adding 0 lower bounds later, see
-    // `addZeroLowerBounds`.
-    size_t M = NonNegative ? numCon : numCon + numLoops;
-    // extra capacity for moving loops into symbols, see `removeOuterMost`.
-    size_t symCapacity = numDynSym + numLoops;
-    size_t memNeeded =
-      M * N * sizeof(int64_t) + symCapacity * sizeof(const llvm::SCEV *const *);
-    auto *mem = alloc.allocate(sizeof(AffineLoopNest) - 8 + memNeeded,
-                               alignof(AffineLoopNest));
-    auto *aln = new (mem) AffineLoopNest({numCon, numLoops, numDynSym, M});
-    std::copy_n(syms.begin(), numDynSym, aln->getSyms());
-    return NotNull<AffineLoopNest>{aln};
-  }
   [[nodiscard]] constexpr auto getRowCapacity() const -> size_t {
     return rowCapacity;
   }

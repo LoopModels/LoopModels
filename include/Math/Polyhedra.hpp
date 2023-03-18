@@ -245,9 +245,10 @@ struct BasePolyhedra {
     if constexpr (NonNegative) fourierMotzkinNonNegative(A, i);
     else fourierMotzkin(A, i);
   }
-  constexpr void removeVariableAndPrune(const size_t i) {
+  constexpr void removeVariableAndPrune(LinAlg::Alloc<int64_t> auto &alloc,
+                                        const size_t i) {
     removeVariable(i);
-    pruneBoundsUnchecked();
+    pruneBoundsUnchecked(alloc);
   }
 
   constexpr void dropEmptyConstraints() {
