@@ -128,9 +128,9 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>perm</b> (PtrVector&l
 <tr class="memitem:a931e90ab73e4d0d9b9ee37457c0573a9"><td class="memItemLeft" align="right" valign="top"><a id="a931e90ab73e4d0d9b9ee37457c0573a9"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>bounds</b> (size_t i) const -&gt; std::array&lt; IntMatrix, 2 &gt;</td></tr>
 <tr class="separator:a931e90ab73e4d0d9b9ee37457c0573a9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0d7738d091e5ceea738a954f8545816b"><td class="memItemLeft" align="right" valign="top"><a id="a0d7738d091e5ceea738a954f8545816b"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>zeroExtraIterationsUponExtending</b> (size_t _i, bool extendLower) const -&gt; bool</td></tr>
-<tr class="separator:a0d7738d091e5ceea738a954f8545816b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8c8f8611b363693893dcb53611278259"><td class="memItemLeft" align="right" valign="top"><a id="a8c8f8611b363693893dcb53611278259"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>zeroExtraItersUponExtending</b> (LinAlg::Alloc&lt; int64_t &gt; auto &amp;alloc, size_t _i, bool extendLower) const -&gt; bool</td></tr>
+<tr class="separator:a8c8f8611b363693893dcb53611278259"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1b4b8f17155e41b88dacffd1cfcc1454"><td class="memItemLeft" align="right" valign="top"><a id="a1b4b8f17155e41b88dacffd1cfcc1454"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>printSymbol</b> (llvm::raw_ostream &amp;os, PtrVector&lt; int64_t &gt; x, int64_t mul) const</td></tr>
 <tr class="separator:a1b4b8f17155e41b88dacffd1cfcc1454"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -149,12 +149,15 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>dump</b> (llvm::raw_o
 <tr class="memitem:a851e8080431e69712546822018856a1a"><td class="memItemLeft" align="right" valign="top"><a id="a851e8080431e69712546822018856a1a"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>dump</b> (llvm::raw_ostream &amp;os=llvm::errs()) const</td></tr>
 <tr class="separator:a851e8080431e69712546822018856a1a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a81bdfcfc54c87599a854dd0c965dfb08"><td class="memItemLeft" align="right" valign="top"><a id="a81bdfcfc54c87599a854dd0c965dfb08"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>getA</b> () -&gt; MutDensePtrMatrix&lt; int64_t &gt;</td></tr>
-<tr class="separator:a81bdfcfc54c87599a854dd0c965dfb08"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac2693fcb488dcc0861ff6d2afd8916d2"><td class="memItemLeft" align="right" valign="top"><a id="ac2693fcb488dcc0861ff6d2afd8916d2"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>getA</b> () const -&gt; DensePtrMatrix&lt; int64_t &gt;</td></tr>
-<tr class="separator:ac2693fcb488dcc0861ff6d2afd8916d2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa546e1b5e5c2794e3e48d3eff462f314"><td class="memItemLeft" align="right" valign="top"><a id="aa546e1b5e5c2794e3e48d3eff462f314"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumConstraints</b> () const -&gt; unsigned</td></tr>
+<tr class="separator:aa546e1b5e5c2794e3e48d3eff462f314"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5fe2b9813b15a2ad29023a0c0d282b9e"><td class="memItemLeft" align="right" valign="top"><a id="a5fe2b9813b15a2ad29023a0c0d282b9e"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getA</b> () -&gt; MutDensePtrMatrix&lt; int64_t &gt;</td></tr>
+<tr class="separator:a5fe2b9813b15a2ad29023a0c0d282b9e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5d411d7b78fa3972d9c2949d1e104225"><td class="memItemLeft" align="right" valign="top"><a id="a5d411d7b78fa3972d9c2949d1e104225"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getA</b> () const -&gt; DensePtrMatrix&lt; int64_t &gt;</td></tr>
+<tr class="separator:a5d411d7b78fa3972d9c2949d1e104225"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5b23a1b4f949eec4211aaf87f1d1b000"><td class="memItemLeft" align="right" valign="top"><a id="a5b23a1b4f949eec4211aaf87f1d1b000"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>getSyms</b> () -&gt; llvm::MutableArrayRef&lt; const llvm::SCEV * &gt;</td></tr>
 <tr class="separator:a5b23a1b4f949eec4211aaf87f1d1b000"><td class="memSeparator" colspan="2">&#160;</td></tr>

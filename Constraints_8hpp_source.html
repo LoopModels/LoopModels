@@ -552,7 +552,7 @@ $(function() {
 <div class="line"><a name="l00493"></a><span class="lineno">  493</span>&#160;}</div>
 <div class="line"><a name="l00494"></a><span class="lineno">  494</span>&#160; </div>
 <div class="line"><a name="l00495"></a><span class="lineno">  495</span>&#160;constexpr <span class="keyword">auto</span> countSigns(DensePtrMatrix&lt;int64_t&gt; A, <span class="keywordtype">size_t</span> i)</div>
-<div class="line"><a name="l00496"></a><span class="lineno">  496</span>&#160;  -&gt; std::pair&lt;size_t, size_t&gt; {</div>
+<div class="line"><a name="l00496"></a><span class="lineno">  496</span>&#160;  -&gt; std::array&lt;size_t, 2&gt; {</div>
 <div class="line"><a name="l00497"></a><span class="lineno">  497</span>&#160;  <span class="keywordtype">size_t</span> numNeg = 0;</div>
 <div class="line"><a name="l00498"></a><span class="lineno">  498</span>&#160;  <span class="keywordtype">size_t</span> numPos = 0;</div>
 <div class="line"><a name="l00499"></a><span class="lineno">  499</span>&#160;  <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> j = 0; j &lt; A.numRow(); ++j) {</div>
@@ -560,7 +560,7 @@ $(function() {
 <div class="line"><a name="l00501"></a><span class="lineno">  501</span>&#160;    numNeg += (Aij &lt; 0);</div>
 <div class="line"><a name="l00502"></a><span class="lineno">  502</span>&#160;    numPos += (Aij &gt; 0);</div>
 <div class="line"><a name="l00503"></a><span class="lineno">  503</span>&#160;  }</div>
-<div class="line"><a name="l00504"></a><span class="lineno">  504</span>&#160;  <span class="keywordflow">return</span> std::make_pair(numNeg, numPos);</div>
+<div class="line"><a name="l00504"></a><span class="lineno">  504</span>&#160;  <span class="keywordflow">return</span> {numNeg, numPos};</div>
 <div class="line"><a name="l00505"></a><span class="lineno">  505</span>&#160;}</div>
 <div class="line"><a name="l00506"></a><span class="lineno">  506</span>&#160; </div>
 <div class="line"><a name="l00507"></a><span class="lineno">  507</span>&#160;constexpr <span class="keywordtype">void</span> deleteBounds(MutDensePtrMatrix&lt;int64_t&gt; &amp;A, <span class="keywordtype">size_t</span> i) {</div>
