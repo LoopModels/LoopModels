@@ -548,7 +548,7 @@ struct AffineLoopNest
 
   [[nodiscard]] constexpr auto getProgVars(size_t j) const
     -> PtrVector<int64_t> {
-    return A(j, _(0, getNumSymbols()));
+    return getA()(j, _(0, getNumSymbols()));
   }
   [[nodiscard]] constexpr auto copy(BumpAlloc<> &alloc) const
     -> NotNull<AffineLoopNest<NonNegative>> {
@@ -568,7 +568,7 @@ struct AffineLoopNest
                                                      numLoops - 1, getSyms());
     ret->numConstraints = unsigned(
       fourierMotzkinCore<NonNegative>(ret->getA(), getA(), v, {neg, pos}));
-    this->pruneBounds(alloc);
+    ret->pruneBounds(alloc);
     return ret;
   }
   auto perm(PtrVector<unsigned> x)
