@@ -74,123 +74,123 @@ $(function() {
 <div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="preprocessor">#include &quot;./RemarkAnalysis.hpp&quot;</span></div>
 <div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor">#include &quot;Math/Array.hpp&quot;</span></div>
 <div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="preprocessor">#include &quot;Math/Comparators.hpp&quot;</span></div>
-<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="preprocessor">#include &quot;Math/Constraints.hpp&quot;</span></div>
-<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="preprocessor">#include &quot;Math/Indexing.hpp&quot;</span></div>
-<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="preprocessor">#include &quot;Math/Math.hpp&quot;</span></div>
-<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="preprocessor">#include &quot;Math/MatrixDimensions.hpp&quot;</span></div>
-<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="preprocessor">#include &quot;Math/Polyhedra.hpp&quot;</span></div>
-<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="preprocessor">#include &quot;Utilities/Allocators.hpp&quot;</span></div>
-<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="preprocessor">#include &quot;Utilities/Optional.hpp&quot;</span></div>
-<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="preprocessor">#include &quot;Utilities/Valid.hpp&quot;</span></div>
-<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;<span class="preprocessor">#include &lt;bit&gt;</span></div>
-<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;<span class="preprocessor">#include &lt;cstddef&gt;</span></div>
-<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;<span class="preprocessor">#include &lt;cstdint&gt;</span></div>
-<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;<span class="preprocessor">#include &lt;limits&gt;</span></div>
-<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;<span class="preprocessor">#include &lt;llvm/ADT/ArrayRef.h&gt;</span></div>
-<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;<span class="preprocessor">#include &lt;llvm/ADT/DenseMap.h&gt;</span></div>
-<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;<span class="preprocessor">#include &lt;llvm/ADT/SmallVector.h&gt;</span></div>
-<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;<span class="preprocessor">#include &lt;llvm/Analysis/LoopInfo.h&gt;</span></div>
-<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;<span class="preprocessor">#include &lt;llvm/Analysis/OptimizationRemarkEmitter.h&gt;</span></div>
-<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;<span class="preprocessor">#include &lt;llvm/Analysis/ScalarEvolution.h&gt;</span></div>
-<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;<span class="preprocessor">#include &lt;llvm/Analysis/ScalarEvolutionExpressions.h&gt;</span></div>
-<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;<span class="preprocessor">#include &lt;llvm/IR/Constant.h&gt;</span></div>
-<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;<span class="preprocessor">#include &lt;llvm/IR/Constants.h&gt;</span></div>
-<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;<span class="preprocessor">#include &lt;llvm/IR/InstrTypes.h&gt;</span></div>
-<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;<span class="preprocessor">#include &lt;llvm/IR/Instruction.h&gt;</span></div>
-<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;<span class="preprocessor">#include &lt;llvm/IR/Instructions.h&gt;</span></div>
-<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;<span class="preprocessor">#include &lt;llvm/IR/Intrinsics.h&gt;</span></div>
-<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;<span class="preprocessor">#include &lt;llvm/IR/Value.h&gt;</span></div>
-<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;<span class="preprocessor">#include &lt;llvm/Support/Allocator.h&gt;</span></div>
-<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;<span class="preprocessor">#include &lt;llvm/Support/Casting.h&gt;</span></div>
-<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;<span class="preprocessor">#include &lt;llvm/Support/raw_ostream.h&gt;</span></div>
-<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;<span class="preprocessor">#include &lt;utility&gt;</span></div>
-<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160; </div>
-<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> isKnownOne(llvm::ScalarEvolution &amp;SE, llvm::Value *v) -&gt; <span class="keywordtype">bool</span> {</div>
-<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;  <span class="keywordflow">return</span> v &amp;&amp; SE.getSCEV(v)-&gt;isOne();</div>
-<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;}</div>
-<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160; </div>
-<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;[[nodiscard]] <span class="keyword">inline</span> <span class="keyword">auto</span> getBackedgeTakenCount(llvm::ScalarEvolution &amp;SE,</div>
-<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;                                                llvm::Loop *L)</div>
-<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;  -&gt; <span class="keyword">const</span> llvm::SCEV * {</div>
-<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;  <span class="keyword">auto</span> b = L-&gt;getBounds(SE);</div>
-<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;  <span class="keywordflow">if</span> (!b || (!isKnownOne(SE, b-&gt;getStepValue())))</div>
-<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;    <span class="keywordflow">return</span> SE.getBackedgeTakenCount(L);</div>
-<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;  <span class="keyword">const</span> llvm::SCEV *LB = SE.getSCEV(&amp;b-&gt;getInitialIVValue());</div>
-<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;  <span class="keyword">const</span> llvm::SCEV *UB = SE.getSCEV(&amp;b-&gt;getFinalIVValue());</div>
-<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;  <span class="keywordflow">if</span> (<span class="keyword">auto</span> *umm = llvm::dyn_cast&lt;llvm::SCEVUMaxExpr&gt;(UB)) {</div>
-<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;    <span class="keyword">const</span> llvm::SCEV *m0 =</div>
-<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;      SE.getMinusSCEV(umm-&gt;getOperand(0), LB, llvm::SCEV::NoWrapFlags::FlagNUW);</div>
-<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;    <span class="keyword">const</span> llvm::SCEV *m1 =</div>
-<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;      SE.getMinusSCEV(umm-&gt;getOperand(1), LB, llvm::SCEV::NoWrapFlags::FlagNUW);</div>
-<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;    <span class="comment">// Does checking known negative make sense if we have NUW?</span></div>
-<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;    <span class="keywordflow">if</span> (SE.isKnownNegative(m0)) <span class="keywordflow">return</span> m1;</div>
-<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;    <span class="keywordflow">if</span> (SE.isKnownNegative(m1)) <span class="keywordflow">return</span> m0;</div>
-<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;  } <span class="keywordflow">else</span> <span class="keywordflow">if</span> (<span class="keyword">auto</span> *smm = llvm::dyn_cast&lt;llvm::SCEVSMaxExpr&gt;(UB)) {</div>
-<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;    <span class="keyword">const</span> llvm::SCEV *m0 =</div>
-<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;      SE.getMinusSCEV(smm-&gt;getOperand(0), LB, llvm::SCEV::NoWrapFlags::FlagNSW);</div>
-<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;    <span class="keyword">const</span> llvm::SCEV *m1 =</div>
-<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;      SE.getMinusSCEV(smm-&gt;getOperand(1), LB, llvm::SCEV::NoWrapFlags::FlagNSW);</div>
-<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;    <span class="keywordflow">if</span> (SE.isKnownNegative(m0)) <span class="keywordflow">return</span> m1;</div>
-<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;    <span class="keywordflow">if</span> (SE.isKnownNegative(m1)) <span class="keywordflow">return</span> m0;</div>
-<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;  }</div>
-<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;  <span class="keywordflow">return</span> SE.getMinusSCEV(UB, LB, llvm::SCEV::NoWrapMask);</div>
-<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;}</div>
-<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160; </div>
-<div class="line"><a name="l00068"></a><span class="lineno"><a class="line" href="structNoWrapRewriter.html">   68</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structNoWrapRewriter.html">NoWrapRewriter</a> : <span class="keyword">public</span> llvm::SCEVRewriteVisitor&lt;NoWrapRewriter&gt; {</div>
-<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;  <a class="code" href="structNoWrapRewriter.html">NoWrapRewriter</a>(llvm::ScalarEvolution &amp;ScEv) : SCEVRewriteVisitor(ScEv) {}</div>
-<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;  <span class="keyword">auto</span> visitAddRecExpr(<span class="keyword">const</span> llvm::SCEVAddRecExpr *ex) -&gt; <span class="keyword">const</span> llvm::SCEV * {</div>
-<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;    llvm::SmallVector&lt;const llvm::SCEV *, 2&gt; Operands;</div>
-<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">const</span> llvm::SCEV *Op : ex-&gt;operands()) Operands.push_back(visit(Op));</div>
-<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;    <span class="keywordflow">return</span> SE.getAddRecExpr(Operands, ex-&gt;getLoop(), llvm::SCEV::NoWrapMask);</div>
-<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;  }</div>
-<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;  <span class="keyword">auto</span> visitMulExpr(<span class="keyword">const</span> llvm::SCEVMulExpr *ex) -&gt; <span class="keyword">const</span> llvm::SCEV * {</div>
-<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;    <span class="keywordflow">return</span> SE.getMulExpr(visit(ex-&gt;getOperand(0)), visit(ex-&gt;getOperand(1)),</div>
-<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;                         llvm::SCEV::NoWrapMask);</div>
-<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;  }</div>
-<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;  <span class="keyword">auto</span> visitAddExpr(<span class="keyword">const</span> llvm::SCEVAddExpr *ex) -&gt; <span class="keyword">const</span> llvm::SCEV * {</div>
-<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;    <span class="keywordflow">return</span> SE.getAddExpr(visit(ex-&gt;getOperand(0)), visit(ex-&gt;getOperand(1)),</div>
-<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;                         llvm::SCEV::NoWrapMask);</div>
-<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;  }</div>
-<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;};</div>
-<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160; </div>
-<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> getConstantInt(<span class="keyword">const</span> llvm::SCEV *v) -&gt; std::optional&lt;int64_t&gt; {</div>
-<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;  <span class="keywordflow">if</span> (<span class="keyword">const</span> <span class="keyword">auto</span> *sc = llvm::dyn_cast&lt;const llvm::SCEVConstant&gt;(v)) {</div>
-<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;    llvm::ConstantInt *c = sc-&gt;getValue();</div>
-<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;    <span class="comment">// we need bit width of 64, for sake of negative numbers</span></div>
-<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;    <span class="keywordflow">if</span> (c-&gt;getBitWidth() &lt;= 64) <span class="keywordflow">return</span> c-&gt;getSExtValue();</div>
-<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;  }</div>
-<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;  <span class="keywordflow">return</span> {};</div>
-<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;}</div>
-<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160; </div>
-<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
-<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> findFirst(llvm::ArrayRef&lt;T&gt; v, <span class="keyword">const</span> T &amp;x) -&gt; <a class="code" href="structOptional.html">Optional&lt;size_t&gt;</a> {</div>
-<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;  <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; v.size(); ++i)</div>
-<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;    <span class="keywordflow">if</span> (v[i] == x) <span class="keywordflow">return</span> i;</div>
-<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;  <span class="keywordflow">return</span> {};</div>
-<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;}</div>
-<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160; </div>
-<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;[[nodiscard]] <span class="keyword">inline</span> <span class="keyword">auto</span></div>
-<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;findSymbolicIndex(llvm::ArrayRef&lt;const llvm::SCEV *&gt; symbols,</div>
-<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;                  <span class="keyword">const</span> llvm::SCEV *S) -&gt; <span class="keywordtype">size_t</span> {</div>
-<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;  <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; symbols.size();)</div>
-<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;    <span class="keywordflow">if</span> (symbols[i++] == S) <span class="keywordflow">return</span> i;</div>
-<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;  <span class="keywordflow">return</span> 0;</div>
-<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;}</div>
-<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160; </div>
-<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;[[nodiscard]] <span class="keyword">inline</span> <span class="keyword">auto</span> getMinMaxValueSCEV(llvm::ScalarEvolution &amp;SE,</div>
-<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;                                             <span class="keyword">const</span> llvm::SCEVAddRecExpr *S)</div>
-<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;  -&gt; std::pair&lt;const llvm::SCEV *, const llvm::SCEV *&gt; {</div>
-<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;  <span class="comment">// if (!SE.containsAddRecurrence(S))</span></div>
-<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;  <span class="comment">//    return S;</span></div>
-<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;  <span class="keywordflow">if</span> ((!S) || (!(S-&gt;isAffine()))) <span class="keywordflow">return</span> std::make_pair(S, S);</div>
-<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;  <span class="keyword">auto</span> opStart = S-&gt;getStart();</div>
-<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;  <span class="keyword">auto</span> opStep = S-&gt;getStepRecurrence(SE);</div>
-<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;  <span class="keyword">auto</span> opFinal = SE.getSCEVAtScope(S, <span class="keyword">nullptr</span>);</div>
-<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;  <span class="comment">// auto opFinal = SE.getSCEVAtScope(S, S-&gt;getLoop()-&gt;getParentLoop());</span></div>
-<div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;  <span class="comment">// FIXME: what if there are more AddRecs nested inside?</span></div>
-<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;  <span class="keywordflow">if</span> (SE.isKnownNonNegative(opStep)) <span class="keywordflow">return</span> std::make_pair(opStart, opFinal);</div>
-<div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;  <span class="keywordflow">else</span> <span class="keywordflow">if</span> (SE.isKnownNonPositive(opStep))</div>
-<div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;    <span class="keywordflow">return</span> std::make_pair(opFinal, opStart);</div>
+<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="preprocessor">#include &quot;Math/Comparisons.hpp&quot;</span></div>
+<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="preprocessor">#include &quot;Math/Constraints.hpp&quot;</span></div>
+<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="preprocessor">#include &quot;Math/Indexing.hpp&quot;</span></div>
+<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="preprocessor">#include &quot;Math/Math.hpp&quot;</span></div>
+<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="preprocessor">#include &quot;Math/MatrixDimensions.hpp&quot;</span></div>
+<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="preprocessor">#include &quot;Math/Polyhedra.hpp&quot;</span></div>
+<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="preprocessor">#include &quot;Utilities/Allocators.hpp&quot;</span></div>
+<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="preprocessor">#include &quot;Utilities/Optional.hpp&quot;</span></div>
+<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;<span class="preprocessor">#include &quot;Utilities/Valid.hpp&quot;</span></div>
+<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;<span class="preprocessor">#include &lt;bit&gt;</span></div>
+<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;<span class="preprocessor">#include &lt;cstddef&gt;</span></div>
+<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;<span class="preprocessor">#include &lt;cstdint&gt;</span></div>
+<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;<span class="preprocessor">#include &lt;limits&gt;</span></div>
+<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;<span class="preprocessor">#include &lt;llvm/ADT/ArrayRef.h&gt;</span></div>
+<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;<span class="preprocessor">#include &lt;llvm/ADT/DenseMap.h&gt;</span></div>
+<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;<span class="preprocessor">#include &lt;llvm/ADT/SmallVector.h&gt;</span></div>
+<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;<span class="preprocessor">#include &lt;llvm/Analysis/LoopInfo.h&gt;</span></div>
+<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;<span class="preprocessor">#include &lt;llvm/Analysis/OptimizationRemarkEmitter.h&gt;</span></div>
+<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;<span class="preprocessor">#include &lt;llvm/Analysis/ScalarEvolution.h&gt;</span></div>
+<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;<span class="preprocessor">#include &lt;llvm/Analysis/ScalarEvolutionExpressions.h&gt;</span></div>
+<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;<span class="preprocessor">#include &lt;llvm/IR/Constant.h&gt;</span></div>
+<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;<span class="preprocessor">#include &lt;llvm/IR/Constants.h&gt;</span></div>
+<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;<span class="preprocessor">#include &lt;llvm/IR/InstrTypes.h&gt;</span></div>
+<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;<span class="preprocessor">#include &lt;llvm/IR/Instruction.h&gt;</span></div>
+<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;<span class="preprocessor">#include &lt;llvm/IR/Instructions.h&gt;</span></div>
+<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;<span class="preprocessor">#include &lt;llvm/IR/Intrinsics.h&gt;</span></div>
+<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;<span class="preprocessor">#include &lt;llvm/IR/Value.h&gt;</span></div>
+<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;<span class="preprocessor">#include &lt;llvm/Support/Allocator.h&gt;</span></div>
+<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;<span class="preprocessor">#include &lt;llvm/Support/Casting.h&gt;</span></div>
+<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;<span class="preprocessor">#include &lt;llvm/Support/raw_ostream.h&gt;</span></div>
+<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;<span class="preprocessor">#include &lt;utility&gt;</span></div>
+<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160; </div>
+<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> isKnownOne(llvm::ScalarEvolution &amp;SE, llvm::Value *v) -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;  <span class="keywordflow">return</span> v &amp;&amp; SE.getSCEV(v)-&gt;isOne();</div>
+<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;}</div>
+<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160; </div>
+<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;[[nodiscard]] <span class="keyword">inline</span> <span class="keyword">auto</span> getBackedgeTakenCount(llvm::ScalarEvolution &amp;SE,</div>
+<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;                                                llvm::Loop *L)</div>
+<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;  -&gt; <span class="keyword">const</span> llvm::SCEV * {</div>
+<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;  <span class="keyword">auto</span> b = L-&gt;getBounds(SE);</div>
+<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;  <span class="keywordflow">if</span> (!b || (!isKnownOne(SE, b-&gt;getStepValue())))</div>
+<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;    <span class="keywordflow">return</span> SE.getBackedgeTakenCount(L);</div>
+<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;  <span class="keyword">const</span> llvm::SCEV *LB = SE.getSCEV(&amp;b-&gt;getInitialIVValue());</div>
+<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;  <span class="keyword">const</span> llvm::SCEV *UB = SE.getSCEV(&amp;b-&gt;getFinalIVValue());</div>
+<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;  <span class="keywordflow">if</span> (<span class="keyword">const</span> <span class="keyword">auto</span> *umm = llvm::dyn_cast&lt;llvm::SCEVUMaxExpr&gt;(UB)) {</div>
+<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;    <span class="keyword">const</span> llvm::SCEV *m0 =</div>
+<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;      SE.getMinusSCEV(umm-&gt;getOperand(0), LB, llvm::SCEV::NoWrapFlags::FlagNUW);</div>
+<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;    <span class="keyword">const</span> llvm::SCEV *m1 =</div>
+<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;      SE.getMinusSCEV(umm-&gt;getOperand(1), LB, llvm::SCEV::NoWrapFlags::FlagNUW);</div>
+<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;    <span class="comment">// Does checking known negative make sense if we have NUW?</span></div>
+<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;    <span class="keywordflow">if</span> (SE.isKnownNegative(m0)) <span class="keywordflow">return</span> m1;</div>
+<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;    <span class="keywordflow">if</span> (SE.isKnownNegative(m1)) <span class="keywordflow">return</span> m0;</div>
+<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;  } <span class="keywordflow">else</span> <span class="keywordflow">if</span> (<span class="keyword">const</span> <span class="keyword">auto</span> *smm = llvm::dyn_cast&lt;llvm::SCEVSMaxExpr&gt;(UB)) {</div>
+<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;    <span class="keyword">const</span> llvm::SCEV *m0 =</div>
+<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;      SE.getMinusSCEV(smm-&gt;getOperand(0), LB, llvm::SCEV::NoWrapFlags::FlagNSW);</div>
+<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;    <span class="keyword">const</span> llvm::SCEV *m1 =</div>
+<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;      SE.getMinusSCEV(smm-&gt;getOperand(1), LB, llvm::SCEV::NoWrapFlags::FlagNSW);</div>
+<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;    <span class="keywordflow">if</span> (SE.isKnownNegative(m0)) <span class="keywordflow">return</span> m1;</div>
+<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;    <span class="keywordflow">if</span> (SE.isKnownNegative(m1)) <span class="keywordflow">return</span> m0;</div>
+<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;  }</div>
+<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;  <span class="keywordflow">return</span> SE.getMinusSCEV(UB, LB, llvm::SCEV::NoWrapMask);</div>
+<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;}</div>
+<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160; </div>
+<div class="line"><a name="l00069"></a><span class="lineno"><a class="line" href="structNoWrapRewriter.html">   69</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structNoWrapRewriter.html">NoWrapRewriter</a> : <span class="keyword">public</span> llvm::SCEVRewriteVisitor&lt;NoWrapRewriter&gt; {</div>
+<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;  <a class="code" href="structNoWrapRewriter.html">NoWrapRewriter</a>(llvm::ScalarEvolution &amp;ScEv) : SCEVRewriteVisitor(ScEv) {}</div>
+<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;  <span class="keyword">auto</span> visitAddRecExpr(<span class="keyword">const</span> llvm::SCEVAddRecExpr *ex) -&gt; <span class="keyword">const</span> llvm::SCEV * {</div>
+<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;    llvm::SmallVector&lt;const llvm::SCEV *, 2&gt; Operands;</div>
+<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">const</span> llvm::SCEV *Op : ex-&gt;operands()) Operands.push_back(visit(Op));</div>
+<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;    <span class="keywordflow">return</span> SE.getAddRecExpr(Operands, ex-&gt;getLoop(), llvm::SCEV::NoWrapMask);</div>
+<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;  }</div>
+<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;  <span class="keyword">auto</span> visitMulExpr(<span class="keyword">const</span> llvm::SCEVMulExpr *ex) -&gt; <span class="keyword">const</span> llvm::SCEV * {</div>
+<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;    <span class="keywordflow">return</span> SE.getMulExpr(visit(ex-&gt;getOperand(0)), visit(ex-&gt;getOperand(1)),</div>
+<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;                         llvm::SCEV::NoWrapMask);</div>
+<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;  }</div>
+<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;  <span class="keyword">auto</span> visitAddExpr(<span class="keyword">const</span> llvm::SCEVAddExpr *ex) -&gt; <span class="keyword">const</span> llvm::SCEV * {</div>
+<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;    <span class="keywordflow">return</span> SE.getAddExpr(visit(ex-&gt;getOperand(0)), visit(ex-&gt;getOperand(1)),</div>
+<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;                         llvm::SCEV::NoWrapMask);</div>
+<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;  }</div>
+<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;};</div>
+<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160; </div>
+<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> getConstantInt(<span class="keyword">const</span> llvm::SCEV *v) -&gt; std::optional&lt;int64_t&gt; {</div>
+<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;  <span class="keywordflow">if</span> (<span class="keyword">const</span> <span class="keyword">auto</span> *sc = llvm::dyn_cast&lt;const llvm::SCEVConstant&gt;(v)) {</div>
+<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;    llvm::ConstantInt *c = sc-&gt;getValue();</div>
+<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;    <span class="comment">// we need bit width of 64, for sake of negative numbers</span></div>
+<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;    <span class="keywordflow">if</span> (c-&gt;getBitWidth() &lt;= 64) <span class="keywordflow">return</span> c-&gt;getSExtValue();</div>
+<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;  }</div>
+<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;  <span class="keywordflow">return</span> {};</div>
+<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;}</div>
+<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160; </div>
+<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
+<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> findFirst(llvm::ArrayRef&lt;T&gt; v, <span class="keyword">const</span> T &amp;x) -&gt; <a class="code" href="structOptional.html">Optional&lt;size_t&gt;</a> {</div>
+<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;  <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; v.size(); ++i)</div>
+<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;    <span class="keywordflow">if</span> (v[i] == x) <span class="keywordflow">return</span> i;</div>
+<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;  <span class="keywordflow">return</span> {};</div>
+<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;}</div>
+<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160; </div>
+<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;[[nodiscard]] <span class="keyword">inline</span> <span class="keyword">auto</span></div>
+<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;findSymbolicIndex(llvm::ArrayRef&lt;const llvm::SCEV *&gt; symbols,</div>
+<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;                  <span class="keyword">const</span> llvm::SCEV *S) -&gt; <span class="keywordtype">size_t</span> {</div>
+<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;  <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; symbols.size();)</div>
+<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;    <span class="keywordflow">if</span> (symbols[i++] == S) <span class="keywordflow">return</span> i;</div>
+<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;  <span class="keywordflow">return</span> 0;</div>
+<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;}</div>
+<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160; </div>
+<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;[[nodiscard]] <span class="keyword">inline</span> <span class="keyword">auto</span> getMinMaxValueSCEV(llvm::ScalarEvolution &amp;SE,</div>
+<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;                                             <span class="keyword">const</span> llvm::SCEVAddRecExpr *S)</div>
+<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;  -&gt; std::pair&lt;const llvm::SCEV *, const llvm::SCEV *&gt; {</div>
+<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;  <span class="comment">// if (!SE.containsAddRecurrence(S))</span></div>
+<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;  <span class="comment">//    return S;</span></div>
+<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;  <span class="keywordflow">if</span> ((!S) || (!(S-&gt;isAffine()))) <span class="keywordflow">return</span> std::make_pair(S, S);</div>
+<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;  <span class="keyword">const</span> <span class="keyword">auto</span> *opStart = S-&gt;getStart();</div>
+<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;  <span class="keyword">const</span> <span class="keyword">auto</span> *opStep = S-&gt;getStepRecurrence(SE);</div>
+<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;  <span class="keyword">const</span> <span class="keyword">auto</span> *opFinal = SE.getSCEVAtScope(S, <span class="keyword">nullptr</span>);</div>
+<div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;  <span class="comment">// auto opFinal = SE.getSCEVAtScope(S, S-&gt;getLoop()-&gt;getParentLoop());</span></div>
+<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;  <span class="comment">// FIXME: what if there are more AddRecs nested inside?</span></div>
+<div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;  <span class="keywordflow">if</span> (SE.isKnownNonNegative(opStep)) <span class="keywordflow">return</span> std::make_pair(opStart, opFinal);</div>
+<div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;  <span class="keywordflow">if</span> (SE.isKnownNonPositive(opStep)) <span class="keywordflow">return</span> std::make_pair(opFinal, opStart);</div>
 <div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160;  <span class="keywordflow">return</span> std::make_pair(S, S);</div>
 <div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;}</div>
 <div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;<span class="comment">// TODO: strengthen through recursion</span></div>
@@ -216,65 +216,65 @@ $(function() {
 <div class="line"><a name="l00147"></a><span class="lineno">  147</span>&#160;  <span class="keyword">const</span> llvm::SCEV *op1 = S-&gt;getOperand(1);</div>
 <div class="line"><a name="l00148"></a><span class="lineno">  148</span>&#160;  <span class="keyword">auto</span> [LB0, UB0] = getMinMaxValueSCEV(SE, op0);</div>
 <div class="line"><a name="l00149"></a><span class="lineno">  149</span>&#160;  <span class="keyword">auto</span> [LB1, UB1] = getMinMaxValueSCEV(SE, op1);</div>
-<div class="line"><a name="l00150"></a><span class="lineno">  150</span>&#160;  <span class="keywordflow">if</span> (SE.isKnownPredicate(GE, LB0, UB1)) {</div>
-<div class="line"><a name="l00151"></a><span class="lineno">  151</span>&#160;    <span class="comment">// op0 &gt;= op1</span></div>
-<div class="line"><a name="l00152"></a><span class="lineno">  152</span>&#160;    <span class="keywordflow">return</span> isMin ? op1 : op0;</div>
-<div class="line"><a name="l00153"></a><span class="lineno">  153</span>&#160;  } <span class="keywordflow">else</span> <span class="keywordflow">if</span> (SE.isKnownPredicate(GE, LB1, UB0)) {</div>
-<div class="line"><a name="l00154"></a><span class="lineno">  154</span>&#160;    <span class="comment">// op1 &gt;= op0</span></div>
-<div class="line"><a name="l00155"></a><span class="lineno">  155</span>&#160;    <span class="keywordflow">return</span> isMin ? op0 : op1;</div>
-<div class="line"><a name="l00156"></a><span class="lineno">  156</span>&#160;  }</div>
-<div class="line"><a name="l00157"></a><span class="lineno">  157</span>&#160;  <span class="keywordflow">return</span> S;</div>
-<div class="line"><a name="l00158"></a><span class="lineno">  158</span>&#160;}</div>
-<div class="line"><a name="l00159"></a><span class="lineno">  159</span>&#160;[[nodiscard]] <span class="keyword">inline</span> <span class="keyword">auto</span> simplifyMinMax(llvm::ScalarEvolution &amp;SE,</div>
-<div class="line"><a name="l00160"></a><span class="lineno">  160</span>&#160;                                         <span class="keyword">const</span> llvm::SCEV *S)</div>
-<div class="line"><a name="l00161"></a><span class="lineno">  161</span>&#160;  -&gt; <span class="keyword">const</span> llvm::SCEV * {</div>
-<div class="line"><a name="l00162"></a><span class="lineno">  162</span>&#160;  <span class="keywordflow">if</span> (<span class="keyword">const</span> <span class="keyword">auto</span> *MM = llvm::dyn_cast&lt;const llvm::SCEVMinMaxExpr&gt;(S))</div>
-<div class="line"><a name="l00163"></a><span class="lineno">  163</span>&#160;    <span class="keywordflow">return</span> simplifyMinMax(SE, MM);</div>
-<div class="line"><a name="l00164"></a><span class="lineno">  164</span>&#160;  <span class="keywordflow">return</span> S;</div>
-<div class="line"><a name="l00165"></a><span class="lineno">  165</span>&#160;}</div>
-<div class="line"><a name="l00166"></a><span class="lineno">  166</span>&#160; </div>
-<div class="line"><a name="l00167"></a><span class="lineno">  167</span>&#160;<span class="keyword">namespace </span>loopNestCtor {</div>
-<div class="line"><a name="l00172"></a><span class="lineno">  172</span>&#160;<span class="keyword">inline</span> <span class="keywordtype">void</span> addSymbol(IntMatrix &amp;A,</div>
-<div class="line"><a name="l00173"></a><span class="lineno">  173</span>&#160;                      llvm::SmallVectorImpl&lt;const llvm::SCEV *&gt; &amp;symbols,</div>
-<div class="line"><a name="l00174"></a><span class="lineno">  174</span>&#160;                      <span class="keyword">const</span> llvm::SCEV *v, <a class="code" href="structRange.html">Range&lt;size_t, size_t&gt;</a> lu,</div>
-<div class="line"><a name="l00175"></a><span class="lineno">  175</span>&#160;                      int64_t mlt) {</div>
-<div class="line"><a name="l00176"></a><span class="lineno">  176</span>&#160;  assert(lu.size());</div>
-<div class="line"><a name="l00177"></a><span class="lineno">  177</span>&#160;  symbols.push_back(v);</div>
-<div class="line"><a name="l00178"></a><span class="lineno">  178</span>&#160;  A.resize(A.numCol() + 1);</div>
-<div class="line"><a name="l00179"></a><span class="lineno">  179</span>&#160;  A(lu, symbols.size()) &lt;&lt; mlt;</div>
-<div class="line"><a name="l00180"></a><span class="lineno">  180</span>&#160;}</div>
-<div class="line"><a name="l00181"></a><span class="lineno">  181</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> addRecMatchesLoop(<span class="keyword">const</span> llvm::SCEV *S, llvm::Loop *L) -&gt; <span class="keywordtype">bool</span> {</div>
-<div class="line"><a name="l00182"></a><span class="lineno">  182</span>&#160;  <span class="keywordflow">if</span> (<span class="keyword">const</span> <span class="keyword">auto</span> *x = llvm::dyn_cast&lt;const llvm::SCEVAddRecExpr&gt;(S))</div>
-<div class="line"><a name="l00183"></a><span class="lineno">  183</span>&#160;    <span class="keywordflow">return</span> x-&gt;getLoop() == L;</div>
-<div class="line"><a name="l00184"></a><span class="lineno">  184</span>&#160;  <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
-<div class="line"><a name="l00185"></a><span class="lineno">  185</span>&#160;}</div>
-<div class="line"><a name="l00186"></a><span class="lineno">  186</span>&#160;[[nodiscard]] <span class="keyword">inline</span> <span class="keyword">auto</span></div>
-<div class="line"><a name="l00187"></a><span class="lineno">  187</span>&#160;addSymbol(std::array&lt;IntMatrix, 2&gt; &amp;AB, <span class="comment">// NOLINT(misc-no-recursion)</span></div>
-<div class="line"><a name="l00188"></a><span class="lineno">  188</span>&#160;          llvm::SmallVectorImpl&lt;const llvm::SCEV *&gt; &amp;symbols, llvm::Loop *L,</div>
-<div class="line"><a name="l00189"></a><span class="lineno">  189</span>&#160;          <span class="keyword">const</span> llvm::SCEV *v, llvm::ScalarEvolution &amp;SE,</div>
-<div class="line"><a name="l00190"></a><span class="lineno">  190</span>&#160;          <a class="code" href="structRange.html">Range&lt;size_t, size_t&gt;</a> lu, int64_t mlt, <span class="keywordtype">size_t</span> minDepth) -&gt; <span class="keywordtype">size_t</span> {</div>
-<div class="line"><a name="l00191"></a><span class="lineno">  191</span>&#160;  <span class="keyword">auto</span> &amp;[A, B] = AB;</div>
-<div class="line"><a name="l00192"></a><span class="lineno">  192</span>&#160;  <span class="comment">// first, we check if `v` in `Symbols`</span></div>
-<div class="line"><a name="l00193"></a><span class="lineno">  193</span>&#160;  <span class="keywordflow">if</span> (<span class="keywordtype">size_t</span> i = findSymbolicIndex(symbols, v)) {</div>
-<div class="line"><a name="l00194"></a><span class="lineno">  194</span>&#160;    A(lu, i) += mlt;</div>
-<div class="line"><a name="l00195"></a><span class="lineno">  195</span>&#160;    <span class="keywordflow">return</span> minDepth;</div>
-<div class="line"><a name="l00196"></a><span class="lineno">  196</span>&#160;  } <span class="keywordflow">else</span> <span class="keywordflow">if</span> (std::optional&lt;int64_t&gt; c = getConstantInt(v)) {</div>
-<div class="line"><a name="l00197"></a><span class="lineno">  197</span>&#160;    A(lu, 0) += mlt * (*c);</div>
-<div class="line"><a name="l00198"></a><span class="lineno">  198</span>&#160;    <span class="keywordflow">return</span> minDepth;</div>
-<div class="line"><a name="l00199"></a><span class="lineno">  199</span>&#160;  } <span class="keywordflow">else</span> <span class="keywordflow">if</span> (<span class="keyword">const</span> <span class="keyword">auto</span> *ar = llvm::dyn_cast&lt;const llvm::SCEVAddExpr&gt;(v)) {</div>
-<div class="line"><a name="l00200"></a><span class="lineno">  200</span>&#160;    <span class="keyword">const</span> llvm::SCEV *op0 = ar-&gt;getOperand(0);</div>
-<div class="line"><a name="l00201"></a><span class="lineno">  201</span>&#160;    <span class="keyword">const</span> llvm::SCEV *op1 = ar-&gt;getOperand(1);</div>
-<div class="line"><a name="l00202"></a><span class="lineno">  202</span>&#160;    Row M = A.numRow();</div>
-<div class="line"><a name="l00203"></a><span class="lineno">  203</span>&#160;    minDepth = addSymbol(AB, symbols, L, op0, SE, lu, mlt, minDepth);</div>
-<div class="line"><a name="l00204"></a><span class="lineno">  204</span>&#160;    <span class="keywordflow">if</span> (M != A.numRow())</div>
-<div class="line"><a name="l00205"></a><span class="lineno">  205</span>&#160;      minDepth =</div>
-<div class="line"><a name="l00206"></a><span class="lineno">  206</span>&#160;        addSymbol(AB, symbols, L, op1, SE, _(M, A.numRow()), mlt, minDepth);</div>
-<div class="line"><a name="l00207"></a><span class="lineno">  207</span>&#160;    <span class="keywordflow">return</span> addSymbol(AB, symbols, L, op1, SE, lu, mlt, minDepth);</div>
-<div class="line"><a name="l00208"></a><span class="lineno">  208</span>&#160;  } <span class="keywordflow">else</span> <span class="keywordflow">if</span> (<span class="keyword">const</span> <span class="keyword">auto</span> *m = llvm::dyn_cast&lt;const llvm::SCEVMulExpr&gt;(v)) {</div>
+<div class="line"><a name="l00150"></a><span class="lineno">  150</span>&#160;  <span class="comment">// op0 &gt;= op1</span></div>
+<div class="line"><a name="l00151"></a><span class="lineno">  151</span>&#160;  <span class="keywordflow">if</span> (SE.isKnownPredicate(GE, LB0, UB1)) <span class="keywordflow">return</span> isMin ? op1 : op0;</div>
+<div class="line"><a name="l00152"></a><span class="lineno">  152</span>&#160;  <span class="comment">// op1 &gt;= op0</span></div>
+<div class="line"><a name="l00153"></a><span class="lineno">  153</span>&#160;  <span class="keywordflow">if</span> (SE.isKnownPredicate(GE, LB1, UB0)) <span class="keywordflow">return</span> isMin ? op0 : op1;</div>
+<div class="line"><a name="l00154"></a><span class="lineno">  154</span>&#160;  <span class="keywordflow">return</span> S;</div>
+<div class="line"><a name="l00155"></a><span class="lineno">  155</span>&#160;}</div>
+<div class="line"><a name="l00156"></a><span class="lineno">  156</span>&#160;[[nodiscard]] <span class="keyword">inline</span> <span class="keyword">auto</span> simplifyMinMax(llvm::ScalarEvolution &amp;SE,</div>
+<div class="line"><a name="l00157"></a><span class="lineno">  157</span>&#160;                                         <span class="keyword">const</span> llvm::SCEV *S)</div>
+<div class="line"><a name="l00158"></a><span class="lineno">  158</span>&#160;  -&gt; <span class="keyword">const</span> llvm::SCEV * {</div>
+<div class="line"><a name="l00159"></a><span class="lineno">  159</span>&#160;  <span class="keywordflow">if</span> (<span class="keyword">const</span> <span class="keyword">auto</span> *MM = llvm::dyn_cast&lt;const llvm::SCEVMinMaxExpr&gt;(S))</div>
+<div class="line"><a name="l00160"></a><span class="lineno">  160</span>&#160;    <span class="keywordflow">return</span> simplifyMinMax(SE, MM);</div>
+<div class="line"><a name="l00161"></a><span class="lineno">  161</span>&#160;  <span class="keywordflow">return</span> S;</div>
+<div class="line"><a name="l00162"></a><span class="lineno">  162</span>&#160;}</div>
+<div class="line"><a name="l00163"></a><span class="lineno">  163</span>&#160; </div>
+<div class="line"><a name="l00164"></a><span class="lineno">  164</span>&#160;<span class="keyword">namespace </span>loopNestCtor {</div>
+<div class="line"><a name="l00169"></a><span class="lineno">  169</span>&#160;<span class="keyword">inline</span> <span class="keywordtype">void</span> addSymbol(IntMatrix &amp;A,</div>
+<div class="line"><a name="l00170"></a><span class="lineno">  170</span>&#160;                      llvm::SmallVectorImpl&lt;const llvm::SCEV *&gt; &amp;symbols,</div>
+<div class="line"><a name="l00171"></a><span class="lineno">  171</span>&#160;                      <span class="keyword">const</span> llvm::SCEV *v, <a class="code" href="structRange.html">Range&lt;size_t, size_t&gt;</a> lu,</div>
+<div class="line"><a name="l00172"></a><span class="lineno">  172</span>&#160;                      int64_t mlt) {</div>
+<div class="line"><a name="l00173"></a><span class="lineno">  173</span>&#160;  assert(lu.size());</div>
+<div class="line"><a name="l00174"></a><span class="lineno">  174</span>&#160;  symbols.push_back(v);</div>
+<div class="line"><a name="l00175"></a><span class="lineno">  175</span>&#160;  A.resize(A.numCol() + 1);</div>
+<div class="line"><a name="l00176"></a><span class="lineno">  176</span>&#160;  A(lu, symbols.size()) &lt;&lt; mlt;</div>
+<div class="line"><a name="l00177"></a><span class="lineno">  177</span>&#160;}</div>
+<div class="line"><a name="l00178"></a><span class="lineno">  178</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> addRecMatchesLoop(<span class="keyword">const</span> llvm::SCEV *S, llvm::Loop *L) -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l00179"></a><span class="lineno">  179</span>&#160;  <span class="keywordflow">if</span> (<span class="keyword">const</span> <span class="keyword">auto</span> *x = llvm::dyn_cast&lt;const llvm::SCEVAddRecExpr&gt;(S))</div>
+<div class="line"><a name="l00180"></a><span class="lineno">  180</span>&#160;    <span class="keywordflow">return</span> x-&gt;getLoop() == L;</div>
+<div class="line"><a name="l00181"></a><span class="lineno">  181</span>&#160;  <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
+<div class="line"><a name="l00182"></a><span class="lineno">  182</span>&#160;}</div>
+<div class="line"><a name="l00183"></a><span class="lineno">  183</span>&#160;[[nodiscard]] <span class="keyword">inline</span> <span class="keyword">auto</span></div>
+<div class="line"><a name="l00184"></a><span class="lineno">  184</span>&#160;addSymbol(std::array&lt;IntMatrix, 2&gt; &amp;AB, <span class="comment">// NOLINT(misc-no-recursion)</span></div>
+<div class="line"><a name="l00185"></a><span class="lineno">  185</span>&#160;          llvm::SmallVectorImpl&lt;const llvm::SCEV *&gt; &amp;symbols, llvm::Loop *L,</div>
+<div class="line"><a name="l00186"></a><span class="lineno">  186</span>&#160;          <span class="keyword">const</span> llvm::SCEV *v, llvm::ScalarEvolution &amp;SE,</div>
+<div class="line"><a name="l00187"></a><span class="lineno">  187</span>&#160;          <a class="code" href="structRange.html">Range&lt;size_t, size_t&gt;</a> lu, int64_t mlt, <span class="keywordtype">size_t</span> minDepth) -&gt; <span class="keywordtype">size_t</span> {</div>
+<div class="line"><a name="l00188"></a><span class="lineno">  188</span>&#160;  <span class="keyword">auto</span> &amp;[A, B] = AB;</div>
+<div class="line"><a name="l00189"></a><span class="lineno">  189</span>&#160;  <span class="comment">// first, we check if `v` in `Symbols`</span></div>
+<div class="line"><a name="l00190"></a><span class="lineno">  190</span>&#160;  <span class="keywordflow">if</span> (<span class="keywordtype">size_t</span> i = findSymbolicIndex(symbols, v)) {</div>
+<div class="line"><a name="l00191"></a><span class="lineno">  191</span>&#160;    A(lu, i) += mlt;</div>
+<div class="line"><a name="l00192"></a><span class="lineno">  192</span>&#160;    <span class="keywordflow">return</span> minDepth;</div>
+<div class="line"><a name="l00193"></a><span class="lineno">  193</span>&#160;  }</div>
+<div class="line"><a name="l00194"></a><span class="lineno">  194</span>&#160;  <span class="keywordflow">if</span> (std::optional&lt;int64_t&gt; c = getConstantInt(v)) {</div>
+<div class="line"><a name="l00195"></a><span class="lineno">  195</span>&#160;    A(lu, 0) += mlt * (*c);</div>
+<div class="line"><a name="l00196"></a><span class="lineno">  196</span>&#160;    <span class="keywordflow">return</span> minDepth;</div>
+<div class="line"><a name="l00197"></a><span class="lineno">  197</span>&#160;  }</div>
+<div class="line"><a name="l00198"></a><span class="lineno">  198</span>&#160;  <span class="keywordflow">if</span> (<span class="keyword">const</span> <span class="keyword">auto</span> *ar = llvm::dyn_cast&lt;const llvm::SCEVAddExpr&gt;(v)) {</div>
+<div class="line"><a name="l00199"></a><span class="lineno">  199</span>&#160;    <span class="keyword">const</span> llvm::SCEV *op0 = ar-&gt;getOperand(0);</div>
+<div class="line"><a name="l00200"></a><span class="lineno">  200</span>&#160;    <span class="keyword">const</span> llvm::SCEV *op1 = ar-&gt;getOperand(1);</div>
+<div class="line"><a name="l00201"></a><span class="lineno">  201</span>&#160;    Row M = A.numRow();</div>
+<div class="line"><a name="l00202"></a><span class="lineno">  202</span>&#160;    minDepth = addSymbol(AB, symbols, L, op0, SE, lu, mlt, minDepth);</div>
+<div class="line"><a name="l00203"></a><span class="lineno">  203</span>&#160;    <span class="keywordflow">if</span> (M != A.numRow())</div>
+<div class="line"><a name="l00204"></a><span class="lineno">  204</span>&#160;      minDepth =</div>
+<div class="line"><a name="l00205"></a><span class="lineno">  205</span>&#160;        addSymbol(AB, symbols, L, op1, SE, _(M, A.numRow()), mlt, minDepth);</div>
+<div class="line"><a name="l00206"></a><span class="lineno">  206</span>&#160;    <span class="keywordflow">return</span> addSymbol(AB, symbols, L, op1, SE, lu, mlt, minDepth);</div>
+<div class="line"><a name="l00207"></a><span class="lineno">  207</span>&#160;  }</div>
+<div class="line"><a name="l00208"></a><span class="lineno">  208</span>&#160;  <span class="keywordflow">if</span> (<span class="keyword">const</span> <span class="keyword">auto</span> *m = llvm::dyn_cast&lt;const llvm::SCEVMulExpr&gt;(v)) {</div>
 <div class="line"><a name="l00209"></a><span class="lineno">  209</span>&#160;    <span class="keywordflow">if</span> (<span class="keyword">auto</span> op0 = getConstantInt(m-&gt;getOperand(0)))</div>
 <div class="line"><a name="l00210"></a><span class="lineno">  210</span>&#160;      <span class="keywordflow">return</span> addSymbol(AB, symbols, L, m-&gt;getOperand(1), SE, lu, mlt * (*op0),</div>
 <div class="line"><a name="l00211"></a><span class="lineno">  211</span>&#160;                       minDepth);</div>
-<div class="line"><a name="l00212"></a><span class="lineno">  212</span>&#160;    <span class="keywordflow">else</span> <span class="keywordflow">if</span> (<span class="keyword">auto</span> op1 = getConstantInt(m-&gt;getOperand(1)))</div>
+<div class="line"><a name="l00212"></a><span class="lineno">  212</span>&#160;    <span class="keywordflow">if</span> (<span class="keyword">auto</span> op1 = getConstantInt(m-&gt;getOperand(1)))</div>
 <div class="line"><a name="l00213"></a><span class="lineno">  213</span>&#160;      <span class="keywordflow">return</span> addSymbol(AB, symbols, L, m-&gt;getOperand(0), SE, lu, mlt * (*op1),</div>
 <div class="line"><a name="l00214"></a><span class="lineno">  214</span>&#160;                       minDepth);</div>
 <div class="line"><a name="l00215"></a><span class="lineno">  215</span>&#160;  } <span class="keywordflow">else</span> <span class="keywordflow">if</span> (<span class="keyword">const</span> <span class="keyword">auto</span> *x = llvm::dyn_cast&lt;const llvm::SCEVAddRecExpr&gt;(v)) {</div>
@@ -296,7 +296,7 @@ $(function() {
 <div class="line"><a name="l00231"></a><span class="lineno">  231</span>&#160;    <span class="comment">// Depth of 0 means toplevel.</span></div>
 <div class="line"><a name="l00232"></a><span class="lineno">  232</span>&#160;    minDepth = std::max(minDepth, recDepth);</div>
 <div class="line"><a name="l00233"></a><span class="lineno">  233</span>&#160;  } <span class="keywordflow">else</span> <span class="keywordflow">if</span> (<span class="keyword">const</span> <span class="keyword">auto</span> *mm = llvm::dyn_cast&lt;const llvm::SCEVMinMaxExpr&gt;(v)) {</div>
-<div class="line"><a name="l00234"></a><span class="lineno">  234</span>&#160;    <span class="keyword">auto</span> Sm = simplifyMinMax(SE, mm);</div>
+<div class="line"><a name="l00234"></a><span class="lineno">  234</span>&#160;    <span class="keyword">const</span> <span class="keyword">auto</span> *Sm = simplifyMinMax(SE, mm);</div>
 <div class="line"><a name="l00235"></a><span class="lineno">  235</span>&#160;    <span class="keywordflow">if</span> (Sm != v) <span class="keywordflow">return</span> addSymbol(AB, symbols, L, Sm, SE, lu, mlt, minDepth);</div>
 <div class="line"><a name="l00236"></a><span class="lineno">  236</span>&#160;    <span class="keywordtype">bool</span> isMin =</div>
 <div class="line"><a name="l00237"></a><span class="lineno">  237</span>&#160;      llvm::isa&lt;llvm::SCEVSMinExpr&gt;(mm) || llvm::isa&lt;llvm::SCEVUMinExpr&gt;(mm);</div>
@@ -354,7 +354,7 @@ $(function() {
 <div class="line"><a name="l00289"></a><span class="lineno">  289</span>&#160;      <span class="keywordflow">if</span> (<span class="keyword">const</span> llvm::SCEV *BTP = getBackedgeTakenCount(SE, P)) {</div>
 <div class="line"><a name="l00290"></a><span class="lineno">  290</span>&#160;        <span class="keywordflow">if</span> (!llvm::isa&lt;llvm::SCEVCouldNotCompute&gt;(BTP))</div>
 <div class="line"><a name="l00291"></a><span class="lineno">  291</span>&#160;          <span class="keywordflow">return</span> addBackedgeTakenCount(AB, symbols, P, BTP, SE, minDepth, ORE);</div>
-<div class="line"><a name="l00292"></a><span class="lineno">  292</span>&#160;        <span class="keywordflow">else</span> <span class="keywordflow">if</span> (ORE) [[unlikely]] {</div>
+<div class="line"><a name="l00292"></a><span class="lineno">  292</span>&#160;        <span class="keywordflow">if</span> (ORE) [[unlikely]] {</div>
 <div class="line"><a name="l00293"></a><span class="lineno">  293</span>&#160;          llvm::SmallVector&lt;char, 128&gt; msg;</div>
 <div class="line"><a name="l00294"></a><span class="lineno">  294</span>&#160;          llvm::raw_svector_ostream os(msg);</div>
 <div class="line"><a name="l00295"></a><span class="lineno">  295</span>&#160;          os &lt;&lt; <span class="stringliteral">&quot;SCEVCouldNotCompute from loop: &quot;</span> &lt;&lt; *P &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
@@ -372,7 +372,7 @@ $(function() {
 <div class="line"><a name="l00307"></a><span class="lineno">  307</span>&#160;        os &lt;&lt; <span class="stringliteral">&quot;Loop Bounds:\nInitial: &quot;</span> &lt;&lt; b-&gt;getInitialIVValue()</div>
 <div class="line"><a name="l00308"></a><span class="lineno">  308</span>&#160;           &lt;&lt; <span class="stringliteral">&quot;\nStep: &quot;</span> &lt;&lt; *b-&gt;getStepValue()</div>
 <div class="line"><a name="l00309"></a><span class="lineno">  309</span>&#160;           &lt;&lt; <span class="stringliteral">&quot;\nFinal: &quot;</span> &lt;&lt; b-&gt;getFinalIVValue() &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
-<div class="line"><a name="l00310"></a><span class="lineno">  310</span>&#160;      <span class="keywordflow">for</span> (<span class="keyword">auto</span> s : symbols) os &lt;&lt; *s &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
+<div class="line"><a name="l00310"></a><span class="lineno">  310</span>&#160;      <span class="keywordflow">for</span> (<span class="keyword">const</span> <span class="keyword">auto</span> *s : symbols) os &lt;&lt; *s &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
 <div class="line"><a name="l00311"></a><span class="lineno">  311</span>&#160;      llvm::OptimizationRemarkAnalysis analysis{</div>
 <div class="line"><a name="l00312"></a><span class="lineno">  312</span>&#160;        remarkAnalysis(<span class="stringliteral">&quot;AffineLoopConstruction&quot;</span>, L)};</div>
 <div class="line"><a name="l00313"></a><span class="lineno">  313</span>&#160;      ORE-&gt;emit(analysis &lt;&lt; os.str());</div>
@@ -602,307 +602,304 @@ $(function() {
 <div class="line"><a name="l00545"></a><span class="lineno">  545</span>&#160;    pruneBounds(alloc);</div>
 <div class="line"><a name="l00546"></a><span class="lineno">  546</span>&#160;  }</div>
 <div class="line"><a name="l00547"></a><span class="lineno">  547</span>&#160; </div>
-<div class="line"><a name="l00548"></a><span class="lineno">  548</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getProgVars(<span class="keywordtype">size_t</span> j) <span class="keyword">const</span> -&gt; PtrVector&lt;int64_t&gt; {</div>
-<div class="line"><a name="l00549"></a><span class="lineno">  549</span>&#160;    <span class="keywordflow">return</span> A(j, _(0, getNumSymbols()));</div>
-<div class="line"><a name="l00550"></a><span class="lineno">  550</span>&#160;  }</div>
-<div class="line"><a name="l00551"></a><span class="lineno">  551</span>&#160;  <span class="keywordtype">void</span> removeLoopBang(LinAlg::Alloc&lt;int64_t&gt; <span class="keyword">auto</span> &amp;alloc, <span class="keywordtype">size_t</span> i) {</div>
-<div class="line"><a name="l00552"></a><span class="lineno">  552</span>&#160;    <span class="comment">// MutDensePtrMatrix&lt;int64_t&gt;</span></div>
-<div class="line"><a name="l00553"></a><span class="lineno">  553</span>&#160;    <span class="comment">// TODO: fourierMotzkin(NonNegative) should work on MutPtrMatrices</span></div>
-<div class="line"><a name="l00554"></a><span class="lineno">  554</span>&#160;    <span class="comment">// and support the truncation.</span></div>
-<div class="line"><a name="l00555"></a><span class="lineno">  555</span>&#160;    <span class="keyword">auto</span> A{getA()};</div>
-<div class="line"><a name="l00556"></a><span class="lineno">  556</span>&#160;    <span class="keywordflow">if</span> constexpr (NonNegative)</div>
-<div class="line"><a name="l00557"></a><span class="lineno">  557</span>&#160;      fourierMotzkinNonNegative(A, i + getNumSymbols());</div>
-<div class="line"><a name="l00558"></a><span class="lineno">  558</span>&#160;    <span class="keywordflow">else</span> fourierMotzkin(A, i + getNumSymbols());</div>
-<div class="line"><a name="l00559"></a><span class="lineno">  559</span>&#160;    pruneBounds(alloc);</div>
-<div class="line"><a name="l00560"></a><span class="lineno">  560</span>&#160;  }</div>
-<div class="line"><a name="l00561"></a><span class="lineno">  561</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> copy(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc) <span class="keyword">const</span></div>
-<div class="line"><a name="l00562"></a><span class="lineno">  562</span>&#160;    -&gt; <a class="code" href="structNotNull.html">NotNull&lt;AffineLoopNest&lt;NonNegative&gt;</a>&gt; {</div>
-<div class="line"><a name="l00563"></a><span class="lineno">  563</span>&#160;    <span class="keyword">auto</span> ret = <a class="code" href="structAffineLoopNest.html">AffineLoopNest&lt;NonNegative&gt;::allocate</a>(alloc, numConstraints,</div>
-<div class="line"><a name="l00564"></a><span class="lineno">  564</span>&#160;                                                     numLoops, getSyms());</div>
-<div class="line"><a name="l00565"></a><span class="lineno">  565</span>&#160;    ret-&gt;getA() &lt;&lt; getA();</div>
-<div class="line"><a name="l00566"></a><span class="lineno">  566</span>&#160;    <span class="keywordflow">return</span> ret;</div>
-<div class="line"><a name="l00567"></a><span class="lineno">  567</span>&#160;  }</div>
-<div class="line"><a name="l00568"></a><span class="lineno">  568</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> removeLoop(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, <span class="keywordtype">size_t</span> i) <span class="keyword">const</span></div>
-<div class="line"><a name="l00569"></a><span class="lineno">  569</span>&#160;    -&gt; <a class="code" href="structNotNull.html">NotNull&lt;AffineLoopNest&lt;NonNegative&gt;</a>&gt; {</div>
-<div class="line"><a name="l00570"></a><span class="lineno">  570</span>&#160;    <span class="keyword">auto</span> ret = copy(alloc);</div>
-<div class="line"><a name="l00571"></a><span class="lineno">  571</span>&#160;    ret-&gt;removeLoopBang(<a class="code" href="classWBumpAlloc.html">WBumpAlloc&lt;int64_t&gt;</a>(alloc), i);</div>
-<div class="line"><a name="l00572"></a><span class="lineno">  572</span>&#160;    <span class="keywordflow">return</span> ret;</div>
-<div class="line"><a name="l00573"></a><span class="lineno">  573</span>&#160;  }</div>
-<div class="line"><a name="l00574"></a><span class="lineno">  574</span>&#160;  <span class="keyword">auto</span> perm(PtrVector&lt;unsigned&gt; x)</div>
-<div class="line"><a name="l00575"></a><span class="lineno">  575</span>&#160;    -&gt; llvm::SmallVector&lt;AffineLoopNest&lt;NonNegative&gt;, 0&gt; {</div>
-<div class="line"><a name="l00576"></a><span class="lineno">  576</span>&#160;    llvm::SmallVector&lt;AffineLoopNest&lt;NonNegative&gt;, 0&gt; ret;</div>
-<div class="line"><a name="l00577"></a><span class="lineno">  577</span>&#160;    <span class="comment">// llvm::SmallVector&lt;UnboundedAffineLoopNest, 0&gt; ret;</span></div>
-<div class="line"><a name="l00578"></a><span class="lineno">  578</span>&#160;    ret.resize_for_overwrite(x.size());</div>
-<div class="line"><a name="l00579"></a><span class="lineno">  579</span>&#160;    ret.back() = *<span class="keyword">this</span>;</div>
-<div class="line"><a name="l00580"></a><span class="lineno">  580</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = x.size() - 1; i != 0;) {</div>
-<div class="line"><a name="l00581"></a><span class="lineno">  581</span>&#160;      <a class="code" href="structAffineLoopNest.html">AffineLoopNest&lt;NonNegative&gt;</a> &amp;prev = ret[i];</div>
-<div class="line"><a name="l00582"></a><span class="lineno">  582</span>&#160;      <span class="keywordtype">size_t</span> oldi = i;</div>
-<div class="line"><a name="l00583"></a><span class="lineno">  583</span>&#160;      ret[--i] = prev.removeLoop(x[oldi]);</div>
-<div class="line"><a name="l00584"></a><span class="lineno">  584</span>&#160;    }</div>
-<div class="line"><a name="l00585"></a><span class="lineno">  585</span>&#160;    <span class="keywordflow">return</span> ret;</div>
-<div class="line"><a name="l00586"></a><span class="lineno">  586</span>&#160;  }</div>
-<div class="line"><a name="l00587"></a><span class="lineno">  587</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> bounds(<span class="keywordtype">size_t</span> i) <span class="keyword">const</span> -&gt; std::array&lt;IntMatrix, 2&gt; {</div>
-<div class="line"><a name="l00588"></a><span class="lineno">  588</span>&#160;    <span class="keyword">auto</span> A{getA()};</div>
-<div class="line"><a name="l00589"></a><span class="lineno">  589</span>&#160;    <span class="keyword">const</span> <span class="keyword">auto</span> [numNeg, numPos] = countSigns(A, i);</div>
-<div class="line"><a name="l00590"></a><span class="lineno">  590</span>&#160;    std::array&lt;IntMatrix, 2&gt; ret{{numNeg, A.numCol()}, {numPos, A.numCol()}};</div>
-<div class="line"><a name="l00591"></a><span class="lineno">  591</span>&#160;    <span class="keywordtype">size_t</span> negCount = 0, posCount = 0;</div>
-<div class="line"><a name="l00592"></a><span class="lineno">  592</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> j = 0; j &lt; A.numRow(); ++j)</div>
-<div class="line"><a name="l00593"></a><span class="lineno">  593</span>&#160;      <span class="keywordflow">if</span> (int64_t Aji = A(j, i))</div>
-<div class="line"><a name="l00594"></a><span class="lineno">  594</span>&#160;        (ret[Aji &gt; 0])(Aji &lt; 0 ? negCount++ : posCount++, _) = A(j, _);</div>
-<div class="line"><a name="l00595"></a><span class="lineno">  595</span>&#160;    <span class="keywordflow">return</span> ret;</div>
-<div class="line"><a name="l00596"></a><span class="lineno">  596</span>&#160;  }</div>
-<div class="line"><a name="l00597"></a><span class="lineno">  597</span>&#160;  <span class="keyword">auto</span> getBounds(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, PtrVector&lt;unsigned&gt; x)</div>
-<div class="line"><a name="l00598"></a><span class="lineno">  598</span>&#160;    -&gt; llvm::SmallVector&lt;std::pair&lt;IntMatrix, IntMatrix&gt;, 0&gt; {</div>
-<div class="line"><a name="l00599"></a><span class="lineno">  599</span>&#160;    llvm::SmallVector&lt;std::pair&lt;IntMatrix, IntMatrix&gt;, 0&gt; ret;</div>
-<div class="line"><a name="l00600"></a><span class="lineno">  600</span>&#160;    <span class="keywordtype">size_t</span> i = x.size();</div>
-<div class="line"><a name="l00601"></a><span class="lineno">  601</span>&#160;    ret.resize_for_overwrite(i);</div>
-<div class="line"><a name="l00602"></a><span class="lineno">  602</span>&#160;    <span class="keyword">auto</span> check = alloc.checkPoint();</div>
-<div class="line"><a name="l00603"></a><span class="lineno">  603</span>&#160;    <span class="keyword">auto</span> tmp = copy(alloc);</div>
-<div class="line"><a name="l00604"></a><span class="lineno">  604</span>&#160;    <span class="keywordflow">while</span> (<span class="keyword">true</span>) {</div>
-<div class="line"><a name="l00605"></a><span class="lineno">  605</span>&#160;      <span class="keywordtype">size_t</span> xi = x[--i];</div>
-<div class="line"><a name="l00606"></a><span class="lineno">  606</span>&#160;      ret[i] = tmp-&gt;bounds(xi);</div>
-<div class="line"><a name="l00607"></a><span class="lineno">  607</span>&#160;      <span class="keywordflow">if</span> (i == 0) <span class="keywordflow">break</span>;</div>
-<div class="line"><a name="l00608"></a><span class="lineno">  608</span>&#160;      tmp-&gt;removeLoopBang(xi);</div>
-<div class="line"><a name="l00609"></a><span class="lineno">  609</span>&#160;    }</div>
-<div class="line"><a name="l00610"></a><span class="lineno">  610</span>&#160;    alloc.rollBack(check);</div>
-<div class="line"><a name="l00611"></a><span class="lineno">  611</span>&#160;    <span class="keywordflow">return</span> ret;</div>
-<div class="line"><a name="l00612"></a><span class="lineno">  612</span>&#160;  }</div>
-<div class="line"><a name="l00613"></a><span class="lineno">  613</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> zeroExtraIterationsUponExtending(<span class="keywordtype">size_t</span> _i,</div>
-<div class="line"><a name="l00614"></a><span class="lineno">  614</span>&#160;                                                      <span class="keywordtype">bool</span> extendLower) <span class="keyword">const</span></div>
-<div class="line"><a name="l00615"></a><span class="lineno">  615</span>&#160;    -&gt; <span class="keywordtype">bool</span> {</div>
-<div class="line"><a name="l00616"></a><span class="lineno">  616</span>&#160;    <a class="code" href="structAffineLoopNest.html">AffineLoopNest&lt;NonNegative&gt;</a> tmp{*<span class="keyword">this</span>};</div>
-<div class="line"><a name="l00617"></a><span class="lineno">  617</span>&#160;    <span class="keyword">const</span> <span class="keywordtype">size_t</span> numPrevLoops = getNumLoops() - 1;</div>
-<div class="line"><a name="l00618"></a><span class="lineno">  618</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; numPrevLoops; ++i)</div>
-<div class="line"><a name="l00619"></a><span class="lineno">  619</span>&#160;      <span class="keywordflow">if</span> (i != _i) tmp.removeVariableAndPrune(i + getNumSymbols());</div>
-<div class="line"><a name="l00620"></a><span class="lineno">  620</span>&#160;    <span class="keywordtype">bool</span> indep = <span class="keyword">true</span>;</div>
-<div class="line"><a name="l00621"></a><span class="lineno">  621</span>&#160;    <span class="keyword">const</span> <span class="keywordtype">size_t</span> numConst = getNumSymbols();</div>
-<div class="line"><a name="l00622"></a><span class="lineno">  622</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> n = 0; n &lt; tmp.A.numRow(); ++n)</div>
-<div class="line"><a name="l00623"></a><span class="lineno">  623</span>&#160;      <span class="keywordflow">if</span> ((tmp.A(n, _i + numConst) != 0) &amp;&amp;</div>
-<div class="line"><a name="l00624"></a><span class="lineno">  624</span>&#160;          (tmp.A(n, numPrevLoops + numConst) != 0))</div>
-<div class="line"><a name="l00625"></a><span class="lineno">  625</span>&#160;        indep = <span class="keyword">false</span>;</div>
-<div class="line"><a name="l00626"></a><span class="lineno">  626</span>&#160;    <span class="keywordflow">if</span> (indep) <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
-<div class="line"><a name="l00627"></a><span class="lineno">  627</span>&#160;    <a class="code" href="structAffineLoopNest.html">AffineLoopNest&lt;NonNegative&gt;</a> margi{tmp};</div>
-<div class="line"><a name="l00628"></a><span class="lineno">  628</span>&#160;    margi.removeVariableAndPrune(numPrevLoops + getNumSymbols());</div>
-<div class="line"><a name="l00629"></a><span class="lineno">  629</span>&#160;    <a class="code" href="structAffineLoopNest.html">AffineLoopNest&lt;NonNegative&gt;</a> tmp2;</div>
-<div class="line"><a name="l00630"></a><span class="lineno">  630</span>&#160;    <span class="comment">// margi contains extrema for `_i`</span></div>
-<div class="line"><a name="l00631"></a><span class="lineno">  631</span>&#160;    <span class="comment">// we can substitute extended for value of `_i`</span></div>
-<div class="line"><a name="l00632"></a><span class="lineno">  632</span>&#160;    <span class="comment">// in `tmp`</span></div>
-<div class="line"><a name="l00633"></a><span class="lineno">  633</span>&#160;    int64_t sign = 2 * extendLower - 1; <span class="comment">// extendLower ? 1 : -1</span></div>
-<div class="line"><a name="l00634"></a><span class="lineno">  634</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> c = 0; c &lt; margi.getNumInequalityConstraints(); ++c) {</div>
-<div class="line"><a name="l00635"></a><span class="lineno">  635</span>&#160;      int64_t b = sign * margi.A(c, _i + numConst);</div>
-<div class="line"><a name="l00636"></a><span class="lineno">  636</span>&#160;      <span class="keywordflow">if</span> (b &lt;= 0) <span class="keywordflow">continue</span>;</div>
-<div class="line"><a name="l00637"></a><span class="lineno">  637</span>&#160;      tmp2 = tmp;</div>
-<div class="line"><a name="l00638"></a><span class="lineno">  638</span>&#160;      <span class="comment">// increment to increase bound</span></div>
-<div class="line"><a name="l00639"></a><span class="lineno">  639</span>&#160;      <span class="comment">// this is correct for both extending lower and extending upper</span></div>
-<div class="line"><a name="l00640"></a><span class="lineno">  640</span>&#160;      <span class="comment">// lower: a&#39;x + i + b &gt;= 0 -&gt; i &gt;= -a&#39;x - b</span></div>
-<div class="line"><a name="l00641"></a><span class="lineno">  641</span>&#160;      <span class="comment">// upper: a&#39;x - i + b &gt;= 0 -&gt; i &lt;=  a&#39;x + b</span></div>
-<div class="line"><a name="l00642"></a><span class="lineno">  642</span>&#160;      <span class="comment">// to decrease the lower bound or increase the upper, we increment</span></div>
-<div class="line"><a name="l00643"></a><span class="lineno">  643</span>&#160;      <span class="comment">// `b`</span></div>
-<div class="line"><a name="l00644"></a><span class="lineno">  644</span>&#160;      ++margi.A(c, 0);</div>
-<div class="line"><a name="l00645"></a><span class="lineno">  645</span>&#160;      <span class="comment">// our approach here is to set `_i` equal to the extended bound</span></div>
-<div class="line"><a name="l00646"></a><span class="lineno">  646</span>&#160;      <span class="comment">// and then check if the resulting polyhedra is empty.</span></div>
-<div class="line"><a name="l00647"></a><span class="lineno">  647</span>&#160;      <span class="comment">// if not, then we may have &gt;0 iterations.</span></div>
-<div class="line"><a name="l00648"></a><span class="lineno">  648</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> cc = 0; cc &lt; tmp2.A.numRow(); ++cc) {</div>
-<div class="line"><a name="l00649"></a><span class="lineno">  649</span>&#160;        int64_t d = tmp2.A(cc, _i + numConst);</div>
-<div class="line"><a name="l00650"></a><span class="lineno">  650</span>&#160;        <span class="keywordflow">if</span> (d == 0) <span class="keywordflow">continue</span>;</div>
-<div class="line"><a name="l00651"></a><span class="lineno">  651</span>&#160;        d *= sign;</div>
-<div class="line"><a name="l00652"></a><span class="lineno">  652</span>&#160;        <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> v = 0; v &lt; tmp2.A.numCol(); ++v)</div>
-<div class="line"><a name="l00653"></a><span class="lineno">  653</span>&#160;          tmp2.A(cc, v) = b * tmp2.A(cc, v) - d * margi.A(c, v);</div>
-<div class="line"><a name="l00654"></a><span class="lineno">  654</span>&#160;      }</div>
-<div class="line"><a name="l00655"></a><span class="lineno">  655</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> cc = <span class="keywordtype">size_t</span>(tmp2.A.numRow()); cc;)</div>
-<div class="line"><a name="l00656"></a><span class="lineno">  656</span>&#160;        <span class="keywordflow">if</span> (tmp2.A(--cc, numPrevLoops + numConst) == 0)</div>
-<div class="line"><a name="l00657"></a><span class="lineno">  657</span>&#160;          eraseConstraint(tmp2.A, cc);</div>
-<div class="line"><a name="l00658"></a><span class="lineno">  658</span>&#160;      tmp2.initializeComparator();</div>
-<div class="line"><a name="l00659"></a><span class="lineno">  659</span>&#160;      <span class="keywordflow">if</span> (!(tmp2.calcIsEmpty())) <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
-<div class="line"><a name="l00660"></a><span class="lineno">  660</span>&#160;    }</div>
-<div class="line"><a name="l00661"></a><span class="lineno">  661</span>&#160;    <span class="keywordflow">if</span> constexpr (NonNegative) {</div>
-<div class="line"><a name="l00662"></a><span class="lineno">  662</span>&#160;      <span class="keywordflow">if</span> (extendLower) {</div>
-<div class="line"><a name="l00663"></a><span class="lineno">  663</span>&#160;        <span class="comment">// increment to increase bound</span></div>
-<div class="line"><a name="l00664"></a><span class="lineno">  664</span>&#160;        <span class="comment">// this is correct for both extending lower and extending upper</span></div>
-<div class="line"><a name="l00665"></a><span class="lineno">  665</span>&#160;        <span class="comment">// lower: a&#39;x + i + b &gt;= 0 -&gt; i &gt;= -a&#39;x - b</span></div>
-<div class="line"><a name="l00666"></a><span class="lineno">  666</span>&#160;        <span class="comment">// upper: a&#39;x - i + b &gt;= 0 -&gt; i &lt;=  a&#39;x + b</span></div>
-<div class="line"><a name="l00667"></a><span class="lineno">  667</span>&#160;        <span class="comment">// to decrease the lower bound or increase the upper, we</span></div>
-<div class="line"><a name="l00668"></a><span class="lineno">  668</span>&#160;        <span class="comment">// increment `b` our approach here is to set `_i` equal to the</span></div>
-<div class="line"><a name="l00669"></a><span class="lineno">  669</span>&#160;        <span class="comment">// extended bound and then check if the resulting polyhedra is</span></div>
-<div class="line"><a name="l00670"></a><span class="lineno">  670</span>&#160;        <span class="comment">// empty. if not, then we may have &gt;0 iterations.</span></div>
-<div class="line"><a name="l00671"></a><span class="lineno">  671</span>&#160;        <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> cc = 0; cc &lt; tmp.A.numRow(); ++cc) {</div>
-<div class="line"><a name="l00672"></a><span class="lineno">  672</span>&#160;          <span class="keywordflow">if</span> (int64_t d = tmp.A(cc, _i + numConst)) {</div>
-<div class="line"><a name="l00673"></a><span class="lineno">  673</span>&#160;            <span class="comment">// lower bound is i &gt;= 0</span></div>
-<div class="line"><a name="l00674"></a><span class="lineno">  674</span>&#160;            <span class="comment">// so setting equal to the extended lower bound now</span></div>
-<div class="line"><a name="l00675"></a><span class="lineno">  675</span>&#160;            <span class="comment">// means that i = -1 so we decrement `d` from the column</span></div>
-<div class="line"><a name="l00676"></a><span class="lineno">  676</span>&#160;            tmp.A(cc, 0) -= d;</div>
-<div class="line"><a name="l00677"></a><span class="lineno">  677</span>&#160;            tmp.A(cc, _i + numConst) = 0;</div>
-<div class="line"><a name="l00678"></a><span class="lineno">  678</span>&#160;          }</div>
-<div class="line"><a name="l00679"></a><span class="lineno">  679</span>&#160;        }</div>
-<div class="line"><a name="l00680"></a><span class="lineno">  680</span>&#160;        <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> cc = <span class="keywordtype">size_t</span>(tmp.A.numRow()); cc;)</div>
-<div class="line"><a name="l00681"></a><span class="lineno">  681</span>&#160;          <span class="keywordflow">if</span> (tmp.A(--cc, numPrevLoops + numConst) == 0)</div>
-<div class="line"><a name="l00682"></a><span class="lineno">  682</span>&#160;            eraseConstraint(tmp.A, cc);</div>
-<div class="line"><a name="l00683"></a><span class="lineno">  683</span>&#160;        tmp.initializeComparator();</div>
-<div class="line"><a name="l00684"></a><span class="lineno">  684</span>&#160;        <span class="keywordflow">if</span> (!(tmp.calcIsEmpty())) <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
-<div class="line"><a name="l00685"></a><span class="lineno">  685</span>&#160;      }</div>
-<div class="line"><a name="l00686"></a><span class="lineno">  686</span>&#160;    }</div>
-<div class="line"><a name="l00687"></a><span class="lineno">  687</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">true</span>;</div>
-<div class="line"><a name="l00688"></a><span class="lineno">  688</span>&#160;  }</div>
-<div class="line"><a name="l00689"></a><span class="lineno">  689</span>&#160; </div>
-<div class="line"><a name="l00690"></a><span class="lineno">  690</span>&#160;  <span class="keywordtype">void</span> printSymbol(llvm::raw_ostream &amp;os, PtrVector&lt;int64_t&gt; x,</div>
-<div class="line"><a name="l00691"></a><span class="lineno">  691</span>&#160;                   int64_t mul)<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l00692"></a><span class="lineno">  692</span>&#160;    <span class="keywordtype">bool</span> printed = x[0] != 0;</div>
-<div class="line"><a name="l00693"></a><span class="lineno">  693</span>&#160;    <span class="keywordflow">if</span> (printed) os &lt;&lt; mul * x[0];</div>
-<div class="line"><a name="l00694"></a><span class="lineno">  694</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 1; i &lt; x.size(); ++i)</div>
-<div class="line"><a name="l00695"></a><span class="lineno">  695</span>&#160;      <span class="keywordflow">if</span> (int64_t xi = x[i] * mul) {</div>
-<div class="line"><a name="l00696"></a><span class="lineno">  696</span>&#160;        <span class="keywordflow">if</span> (printed) os &lt;&lt; (xi &gt; 0 ? <span class="stringliteral">&quot; + &quot;</span> : <span class="stringliteral">&quot; - &quot;</span>);</div>
-<div class="line"><a name="l00697"></a><span class="lineno">  697</span>&#160;        printed = <span class="keyword">true</span>;</div>
-<div class="line"><a name="l00698"></a><span class="lineno">  698</span>&#160;        int64_t absxi = constexpr_abs(xi);</div>
-<div class="line"><a name="l00699"></a><span class="lineno">  699</span>&#160;        <span class="keywordflow">if</span> (absxi != 1) os &lt;&lt; absxi &lt;&lt; <span class="stringliteral">&quot; * &quot;</span>;</div>
-<div class="line"><a name="l00700"></a><span class="lineno">  700</span>&#160;        os &lt;&lt; getSyms()[i - 1];</div>
-<div class="line"><a name="l00701"></a><span class="lineno">  701</span>&#160;      }</div>
-<div class="line"><a name="l00702"></a><span class="lineno">  702</span>&#160;  }</div>
-<div class="line"><a name="l00703"></a><span class="lineno">  703</span>&#160; </div>
-<div class="line"><a name="l00704"></a><span class="lineno">  704</span>&#160;  <span class="keywordtype">void</span> printBound(llvm::raw_ostream &amp;os, <span class="keywordtype">size_t</span> i, int64_t sign)<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l00705"></a><span class="lineno">  705</span>&#160;    <span class="keyword">const</span> <span class="keywordtype">size_t</span> numVar = getNumLoops();</div>
-<div class="line"><a name="l00706"></a><span class="lineno">  706</span>&#160;    <span class="keyword">const</span> <span class="keywordtype">size_t</span> numVarMinus1 = numVar - 1;</div>
-<div class="line"><a name="l00707"></a><span class="lineno">  707</span>&#160;    <span class="keyword">const</span> <span class="keywordtype">size_t</span> numConst = getNumSymbols();</div>
-<div class="line"><a name="l00708"></a><span class="lineno">  708</span>&#160;    <span class="keywordtype">bool</span> hasPrintedLine = <span class="keyword">false</span>;</div>
-<div class="line"><a name="l00709"></a><span class="lineno">  709</span>&#160;    <span class="keyword">auto</span> A{getA()};</div>
-<div class="line"><a name="l00710"></a><span class="lineno">  710</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> j = 0; j &lt; A.numRow(); ++j) {</div>
-<div class="line"><a name="l00711"></a><span class="lineno">  711</span>&#160;      int64_t Aji = A(j, i + numConst) * sign;</div>
-<div class="line"><a name="l00712"></a><span class="lineno">  712</span>&#160;      <span class="keywordflow">if</span> (Aji &lt;= 0) <span class="keywordflow">continue</span>;</div>
-<div class="line"><a name="l00713"></a><span class="lineno">  713</span>&#160;      <span class="keywordflow">if</span> (hasPrintedLine)</div>
-<div class="line"><a name="l00714"></a><span class="lineno">  714</span>&#160;        <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> k = 0; k &lt; 21; ++k) os &lt;&lt; <span class="charliteral">&#39; &#39;</span>;</div>
-<div class="line"><a name="l00715"></a><span class="lineno">  715</span>&#160;      hasPrintedLine = <span class="keyword">true</span>;</div>
-<div class="line"><a name="l00716"></a><span class="lineno">  716</span>&#160;      <span class="keywordflow">if</span> (A(j, i + numConst) != sign)</div>
-<div class="line"><a name="l00717"></a><span class="lineno">  717</span>&#160;        os &lt;&lt; Aji &lt;&lt; <span class="stringliteral">&quot;*i_&quot;</span> &lt;&lt; numVarMinus1 - i</div>
-<div class="line"><a name="l00718"></a><span class="lineno">  718</span>&#160;           &lt;&lt; ((sign &lt; 0) ? <span class="stringliteral">&quot; &lt;= &quot;</span> : <span class="stringliteral">&quot; &gt;= &quot;</span>);</div>
-<div class="line"><a name="l00719"></a><span class="lineno">  719</span>&#160;      <span class="keywordflow">else</span> os &lt;&lt; <span class="stringliteral">&quot;i_&quot;</span> &lt;&lt; numVarMinus1 - i &lt;&lt; ((sign &lt; 0) ? <span class="stringliteral">&quot; &lt;= &quot;</span> : <span class="stringliteral">&quot; &gt;= &quot;</span>);</div>
-<div class="line"><a name="l00720"></a><span class="lineno">  720</span>&#160;      PtrVector&lt;int64_t&gt; b = getProgVars(j);</div>
-<div class="line"><a name="l00721"></a><span class="lineno">  721</span>&#160;      <span class="keywordtype">bool</span> printed = !allZero(b);</div>
-<div class="line"><a name="l00722"></a><span class="lineno">  722</span>&#160;      <span class="keywordflow">if</span> (printed) printSymbol(os, b, -sign);</div>
-<div class="line"><a name="l00723"></a><span class="lineno">  723</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> k = 0; k &lt; numVar; ++k) {</div>
-<div class="line"><a name="l00724"></a><span class="lineno">  724</span>&#160;        <span class="keywordflow">if</span> (k == i) <span class="keywordflow">continue</span>;</div>
-<div class="line"><a name="l00725"></a><span class="lineno">  725</span>&#160;        <span class="keywordflow">if</span> (int64_t lakj = A(j, k + numConst)) {</div>
-<div class="line"><a name="l00726"></a><span class="lineno">  726</span>&#160;          <span class="keywordflow">if</span> (lakj * sign &gt; 0) os &lt;&lt; <span class="stringliteral">&quot; - &quot;</span>;</div>
-<div class="line"><a name="l00727"></a><span class="lineno">  727</span>&#160;          <span class="keywordflow">else</span> <span class="keywordflow">if</span> (printed) os &lt;&lt; <span class="stringliteral">&quot; + &quot;</span>;</div>
-<div class="line"><a name="l00728"></a><span class="lineno">  728</span>&#160;          lakj = constexpr_abs(lakj);</div>
-<div class="line"><a name="l00729"></a><span class="lineno">  729</span>&#160;          <span class="keywordflow">if</span> (lakj != 1) os &lt;&lt; lakj &lt;&lt; <span class="stringliteral">&quot;*&quot;</span>;</div>
-<div class="line"><a name="l00730"></a><span class="lineno">  730</span>&#160;          os &lt;&lt; <span class="stringliteral">&quot;i_&quot;</span> &lt;&lt; numVarMinus1 - k;</div>
-<div class="line"><a name="l00731"></a><span class="lineno">  731</span>&#160;          printed = <span class="keyword">true</span>;</div>
-<div class="line"><a name="l00732"></a><span class="lineno">  732</span>&#160;        }</div>
-<div class="line"><a name="l00733"></a><span class="lineno">  733</span>&#160;      }</div>
-<div class="line"><a name="l00734"></a><span class="lineno">  734</span>&#160;      <span class="keywordflow">if</span> (!printed) os &lt;&lt; 0;</div>
-<div class="line"><a name="l00735"></a><span class="lineno">  735</span>&#160;      os &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
-<div class="line"><a name="l00736"></a><span class="lineno">  736</span>&#160;    }</div>
+<div class="line"><a name="l00548"></a><span class="lineno">  548</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getProgVars(<span class="keywordtype">size_t</span> j) <span class="keyword">const</span></div>
+<div class="line"><a name="l00549"></a><span class="lineno">  549</span>&#160;    -&gt; PtrVector&lt;int64_t&gt; {</div>
+<div class="line"><a name="l00550"></a><span class="lineno">  550</span>&#160;    <span class="keywordflow">return</span> A(j, _(0, getNumSymbols()));</div>
+<div class="line"><a name="l00551"></a><span class="lineno">  551</span>&#160;  }</div>
+<div class="line"><a name="l00552"></a><span class="lineno">  552</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> copy(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc) <span class="keyword">const</span></div>
+<div class="line"><a name="l00553"></a><span class="lineno">  553</span>&#160;    -&gt; <a class="code" href="structNotNull.html">NotNull&lt;AffineLoopNest&lt;NonNegative&gt;</a>&gt; {</div>
+<div class="line"><a name="l00554"></a><span class="lineno">  554</span>&#160;    <span class="keyword">auto</span> ret = <a class="code" href="structAffineLoopNest.html">AffineLoopNest&lt;NonNegative&gt;::allocate</a>(alloc, numConstraints,</div>
+<div class="line"><a name="l00555"></a><span class="lineno">  555</span>&#160;                                                     numLoops, getSyms());</div>
+<div class="line"><a name="l00556"></a><span class="lineno">  556</span>&#160;    ret-&gt;getA() &lt;&lt; getA();</div>
+<div class="line"><a name="l00557"></a><span class="lineno">  557</span>&#160;    <span class="keywordflow">return</span> ret;</div>
+<div class="line"><a name="l00558"></a><span class="lineno">  558</span>&#160;  }</div>
+<div class="line"><a name="l00559"></a><span class="lineno">  559</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> removeLoop(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, <span class="keywordtype">size_t</span> v) <span class="keyword">const</span></div>
+<div class="line"><a name="l00560"></a><span class="lineno">  560</span>&#160;    -&gt; <a class="code" href="structNotNull.html">NotNull&lt;AffineLoopNest&lt;NonNegative&gt;</a>&gt; {</div>
+<div class="line"><a name="l00561"></a><span class="lineno">  561</span>&#160;    <span class="keyword">auto</span> A{getA()};</div>
+<div class="line"><a name="l00562"></a><span class="lineno">  562</span>&#160;    <span class="keyword">auto</span> [neg, pos] = indsNegPos(A(_, v));</div>
+<div class="line"><a name="l00563"></a><span class="lineno">  563</span>&#160;    Row numCon = A.numRow() - pos.size() + size_t(neg.size()) * pos.size();</div>
+<div class="line"><a name="l00564"></a><span class="lineno">  564</span>&#160;    <span class="keywordflow">if</span> constexpr (!NonNegative) numCon -= neg.size();</div>
+<div class="line"><a name="l00565"></a><span class="lineno">  565</span>&#160;    <span class="keyword">auto</span> ret = <a class="code" href="structAffineLoopNest.html">AffineLoopNest&lt;NonNegative&gt;::allocate</a>(alloc, numCon,</div>
+<div class="line"><a name="l00566"></a><span class="lineno">  566</span>&#160;                                                     numLoops - 1, getSyms());</div>
+<div class="line"><a name="l00567"></a><span class="lineno">  567</span>&#160;    ret-&gt;numConstraints = unsigned(</div>
+<div class="line"><a name="l00568"></a><span class="lineno">  568</span>&#160;      fourierMotzkinCore&lt;NonNegative&gt;(ret-&gt;getA(), getA(), v, {neg, pos}));</div>
+<div class="line"><a name="l00569"></a><span class="lineno">  569</span>&#160;    <span class="keywordflow">return</span> ret;</div>
+<div class="line"><a name="l00570"></a><span class="lineno">  570</span>&#160;  }</div>
+<div class="line"><a name="l00571"></a><span class="lineno">  571</span>&#160;  <span class="keyword">auto</span> perm(PtrVector&lt;unsigned&gt; x)</div>
+<div class="line"><a name="l00572"></a><span class="lineno">  572</span>&#160;    -&gt; llvm::SmallVector&lt;AffineLoopNest&lt;NonNegative&gt;, 0&gt; {</div>
+<div class="line"><a name="l00573"></a><span class="lineno">  573</span>&#160;    llvm::SmallVector&lt;AffineLoopNest&lt;NonNegative&gt;, 0&gt; ret;</div>
+<div class="line"><a name="l00574"></a><span class="lineno">  574</span>&#160;    <span class="comment">// llvm::SmallVector&lt;UnboundedAffineLoopNest, 0&gt; ret;</span></div>
+<div class="line"><a name="l00575"></a><span class="lineno">  575</span>&#160;    ret.resize_for_overwrite(x.size());</div>
+<div class="line"><a name="l00576"></a><span class="lineno">  576</span>&#160;    ret.back() = *<span class="keyword">this</span>;</div>
+<div class="line"><a name="l00577"></a><span class="lineno">  577</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = x.size() - 1; i != 0;) {</div>
+<div class="line"><a name="l00578"></a><span class="lineno">  578</span>&#160;      <a class="code" href="structAffineLoopNest.html">AffineLoopNest&lt;NonNegative&gt;</a> &amp;prev = ret[i];</div>
+<div class="line"><a name="l00579"></a><span class="lineno">  579</span>&#160;      <span class="keywordtype">size_t</span> oldi = i;</div>
+<div class="line"><a name="l00580"></a><span class="lineno">  580</span>&#160;      ret[--i] = prev.removeLoop(x[oldi]);</div>
+<div class="line"><a name="l00581"></a><span class="lineno">  581</span>&#160;    }</div>
+<div class="line"><a name="l00582"></a><span class="lineno">  582</span>&#160;    <span class="keywordflow">return</span> ret;</div>
+<div class="line"><a name="l00583"></a><span class="lineno">  583</span>&#160;  }</div>
+<div class="line"><a name="l00584"></a><span class="lineno">  584</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> bounds(<span class="keywordtype">size_t</span> i) <span class="keyword">const</span> -&gt; std::array&lt;IntMatrix, 2&gt; {</div>
+<div class="line"><a name="l00585"></a><span class="lineno">  585</span>&#160;    <span class="keyword">auto</span> A{getA()};</div>
+<div class="line"><a name="l00586"></a><span class="lineno">  586</span>&#160;    <span class="keyword">const</span> <span class="keyword">auto</span> [numNeg, numPos] = countSigns(A, i);</div>
+<div class="line"><a name="l00587"></a><span class="lineno">  587</span>&#160;    std::array&lt;IntMatrix, 2&gt; ret{{numNeg, A.numCol()}, {numPos, A.numCol()}};</div>
+<div class="line"><a name="l00588"></a><span class="lineno">  588</span>&#160;    <span class="keywordtype">size_t</span> negCount = 0, posCount = 0;</div>
+<div class="line"><a name="l00589"></a><span class="lineno">  589</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> j = 0; j &lt; A.numRow(); ++j)</div>
+<div class="line"><a name="l00590"></a><span class="lineno">  590</span>&#160;      <span class="keywordflow">if</span> (int64_t Aji = A(j, i))</div>
+<div class="line"><a name="l00591"></a><span class="lineno">  591</span>&#160;        (ret[Aji &gt; 0])(Aji &lt; 0 ? negCount++ : posCount++, _) = A(j, _);</div>
+<div class="line"><a name="l00592"></a><span class="lineno">  592</span>&#160;    <span class="keywordflow">return</span> ret;</div>
+<div class="line"><a name="l00593"></a><span class="lineno">  593</span>&#160;  }</div>
+<div class="line"><a name="l00594"></a><span class="lineno">  594</span>&#160;  <span class="comment">// auto getBounds(BumpAlloc&lt;&gt; &amp;alloc, PtrVector&lt;unsigned&gt; x)</span></div>
+<div class="line"><a name="l00595"></a><span class="lineno">  595</span>&#160;  <span class="comment">//   -&gt; llvm::SmallVector&lt;std::pair&lt;IntMatrix, IntMatrix&gt;, 0&gt; {</span></div>
+<div class="line"><a name="l00596"></a><span class="lineno">  596</span>&#160;  <span class="comment">//   llvm::SmallVector&lt;std::pair&lt;IntMatrix, IntMatrix&gt;, 0&gt; ret;</span></div>
+<div class="line"><a name="l00597"></a><span class="lineno">  597</span>&#160;  <span class="comment">//   size_t i = x.size();</span></div>
+<div class="line"><a name="l00598"></a><span class="lineno">  598</span>&#160;  <span class="comment">//   ret.resize_for_overwrite(i);</span></div>
+<div class="line"><a name="l00599"></a><span class="lineno">  599</span>&#160;  <span class="comment">//   auto check = alloc.checkPoint();</span></div>
+<div class="line"><a name="l00600"></a><span class="lineno">  600</span>&#160;  <span class="comment">//   auto *tmp = this;</span></div>
+<div class="line"><a name="l00601"></a><span class="lineno">  601</span>&#160;  <span class="comment">//   while (true) {</span></div>
+<div class="line"><a name="l00602"></a><span class="lineno">  602</span>&#160;  <span class="comment">//     size_t xi = x[--i];</span></div>
+<div class="line"><a name="l00603"></a><span class="lineno">  603</span>&#160;  <span class="comment">//     ret[i] = tmp-&gt;bounds(xi);</span></div>
+<div class="line"><a name="l00604"></a><span class="lineno">  604</span>&#160;  <span class="comment">//     if (i == 0) break;</span></div>
+<div class="line"><a name="l00605"></a><span class="lineno">  605</span>&#160;  <span class="comment">//     tmp = tmp-&gt;removeLoop(alloc, xi);</span></div>
+<div class="line"><a name="l00606"></a><span class="lineno">  606</span>&#160;  <span class="comment">//   }</span></div>
+<div class="line"><a name="l00607"></a><span class="lineno">  607</span>&#160;  <span class="comment">//   alloc.rollBack(check);</span></div>
+<div class="line"><a name="l00608"></a><span class="lineno">  608</span>&#160;  <span class="comment">//   return ret;</span></div>
+<div class="line"><a name="l00609"></a><span class="lineno">  609</span>&#160;  <span class="comment">// }</span></div>
+<div class="line"><a name="l00610"></a><span class="lineno">  610</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> zeroExtraIterationsUponExtending(<span class="keywordtype">size_t</span> _i,</div>
+<div class="line"><a name="l00611"></a><span class="lineno">  611</span>&#160;                                                      <span class="keywordtype">bool</span> extendLower) <span class="keyword">const</span></div>
+<div class="line"><a name="l00612"></a><span class="lineno">  612</span>&#160;    -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l00613"></a><span class="lineno">  613</span>&#160;    <a class="code" href="structAffineLoopNest.html">AffineLoopNest&lt;NonNegative&gt;</a> tmp{*<span class="keyword">this</span>};</div>
+<div class="line"><a name="l00614"></a><span class="lineno">  614</span>&#160;    <span class="keyword">const</span> <span class="keywordtype">size_t</span> numPrevLoops = getNumLoops() - 1;</div>
+<div class="line"><a name="l00615"></a><span class="lineno">  615</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; numPrevLoops; ++i)</div>
+<div class="line"><a name="l00616"></a><span class="lineno">  616</span>&#160;      <span class="keywordflow">if</span> (i != _i) tmp.removeVariableAndPrune(i + getNumSymbols());</div>
+<div class="line"><a name="l00617"></a><span class="lineno">  617</span>&#160;    <span class="keywordtype">bool</span> indep = <span class="keyword">true</span>;</div>
+<div class="line"><a name="l00618"></a><span class="lineno">  618</span>&#160;    <span class="keyword">const</span> <span class="keywordtype">size_t</span> numConst = getNumSymbols();</div>
+<div class="line"><a name="l00619"></a><span class="lineno">  619</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> n = 0; n &lt; tmp.A.numRow(); ++n)</div>
+<div class="line"><a name="l00620"></a><span class="lineno">  620</span>&#160;      <span class="keywordflow">if</span> ((tmp.A(n, _i + numConst) != 0) &amp;&amp;</div>
+<div class="line"><a name="l00621"></a><span class="lineno">  621</span>&#160;          (tmp.A(n, numPrevLoops + numConst) != 0))</div>
+<div class="line"><a name="l00622"></a><span class="lineno">  622</span>&#160;        indep = <span class="keyword">false</span>;</div>
+<div class="line"><a name="l00623"></a><span class="lineno">  623</span>&#160;    <span class="keywordflow">if</span> (indep) <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
+<div class="line"><a name="l00624"></a><span class="lineno">  624</span>&#160;    <a class="code" href="structAffineLoopNest.html">AffineLoopNest&lt;NonNegative&gt;</a> margi{tmp};</div>
+<div class="line"><a name="l00625"></a><span class="lineno">  625</span>&#160;    margi.removeVariableAndPrune(numPrevLoops + getNumSymbols());</div>
+<div class="line"><a name="l00626"></a><span class="lineno">  626</span>&#160;    <a class="code" href="structAffineLoopNest.html">AffineLoopNest&lt;NonNegative&gt;</a> tmp2;</div>
+<div class="line"><a name="l00627"></a><span class="lineno">  627</span>&#160;    <span class="comment">// margi contains extrema for `_i`</span></div>
+<div class="line"><a name="l00628"></a><span class="lineno">  628</span>&#160;    <span class="comment">// we can substitute extended for value of `_i`</span></div>
+<div class="line"><a name="l00629"></a><span class="lineno">  629</span>&#160;    <span class="comment">// in `tmp`</span></div>
+<div class="line"><a name="l00630"></a><span class="lineno">  630</span>&#160;    int64_t sign = 2 * extendLower - 1; <span class="comment">// extendLower ? 1 : -1</span></div>
+<div class="line"><a name="l00631"></a><span class="lineno">  631</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> c = 0; c &lt; margi.getNumInequalityConstraints(); ++c) {</div>
+<div class="line"><a name="l00632"></a><span class="lineno">  632</span>&#160;      int64_t b = sign * margi.A(c, _i + numConst);</div>
+<div class="line"><a name="l00633"></a><span class="lineno">  633</span>&#160;      <span class="keywordflow">if</span> (b &lt;= 0) <span class="keywordflow">continue</span>;</div>
+<div class="line"><a name="l00634"></a><span class="lineno">  634</span>&#160;      tmp2 = tmp;</div>
+<div class="line"><a name="l00635"></a><span class="lineno">  635</span>&#160;      <span class="comment">// increment to increase bound</span></div>
+<div class="line"><a name="l00636"></a><span class="lineno">  636</span>&#160;      <span class="comment">// this is correct for both extending lower and extending upper</span></div>
+<div class="line"><a name="l00637"></a><span class="lineno">  637</span>&#160;      <span class="comment">// lower: a&#39;x + i + b &gt;= 0 -&gt; i &gt;= -a&#39;x - b</span></div>
+<div class="line"><a name="l00638"></a><span class="lineno">  638</span>&#160;      <span class="comment">// upper: a&#39;x - i + b &gt;= 0 -&gt; i &lt;=  a&#39;x + b</span></div>
+<div class="line"><a name="l00639"></a><span class="lineno">  639</span>&#160;      <span class="comment">// to decrease the lower bound or increase the upper, we increment</span></div>
+<div class="line"><a name="l00640"></a><span class="lineno">  640</span>&#160;      <span class="comment">// `b`</span></div>
+<div class="line"><a name="l00641"></a><span class="lineno">  641</span>&#160;      ++margi.A(c, 0);</div>
+<div class="line"><a name="l00642"></a><span class="lineno">  642</span>&#160;      <span class="comment">// our approach here is to set `_i` equal to the extended bound</span></div>
+<div class="line"><a name="l00643"></a><span class="lineno">  643</span>&#160;      <span class="comment">// and then check if the resulting polyhedra is empty.</span></div>
+<div class="line"><a name="l00644"></a><span class="lineno">  644</span>&#160;      <span class="comment">// if not, then we may have &gt;0 iterations.</span></div>
+<div class="line"><a name="l00645"></a><span class="lineno">  645</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> cc = 0; cc &lt; tmp2.A.numRow(); ++cc) {</div>
+<div class="line"><a name="l00646"></a><span class="lineno">  646</span>&#160;        int64_t d = tmp2.A(cc, _i + numConst);</div>
+<div class="line"><a name="l00647"></a><span class="lineno">  647</span>&#160;        <span class="keywordflow">if</span> (d == 0) <span class="keywordflow">continue</span>;</div>
+<div class="line"><a name="l00648"></a><span class="lineno">  648</span>&#160;        d *= sign;</div>
+<div class="line"><a name="l00649"></a><span class="lineno">  649</span>&#160;        <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> v = 0; v &lt; tmp2.A.numCol(); ++v)</div>
+<div class="line"><a name="l00650"></a><span class="lineno">  650</span>&#160;          tmp2.A(cc, v) = b * tmp2.A(cc, v) - d * margi.A(c, v);</div>
+<div class="line"><a name="l00651"></a><span class="lineno">  651</span>&#160;      }</div>
+<div class="line"><a name="l00652"></a><span class="lineno">  652</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> cc = <span class="keywordtype">size_t</span>(tmp2.A.numRow()); cc;)</div>
+<div class="line"><a name="l00653"></a><span class="lineno">  653</span>&#160;        <span class="keywordflow">if</span> (tmp2.A(--cc, numPrevLoops + numConst) == 0)</div>
+<div class="line"><a name="l00654"></a><span class="lineno">  654</span>&#160;          eraseConstraint(tmp2.A, cc);</div>
+<div class="line"><a name="l00655"></a><span class="lineno">  655</span>&#160;      tmp2.initializeComparator();</div>
+<div class="line"><a name="l00656"></a><span class="lineno">  656</span>&#160;      <span class="keywordflow">if</span> (!(tmp2.calcIsEmpty())) <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
+<div class="line"><a name="l00657"></a><span class="lineno">  657</span>&#160;    }</div>
+<div class="line"><a name="l00658"></a><span class="lineno">  658</span>&#160;    <span class="keywordflow">if</span> constexpr (NonNegative) {</div>
+<div class="line"><a name="l00659"></a><span class="lineno">  659</span>&#160;      <span class="keywordflow">if</span> (extendLower) {</div>
+<div class="line"><a name="l00660"></a><span class="lineno">  660</span>&#160;        <span class="comment">// increment to increase bound</span></div>
+<div class="line"><a name="l00661"></a><span class="lineno">  661</span>&#160;        <span class="comment">// this is correct for both extending lower and extending upper</span></div>
+<div class="line"><a name="l00662"></a><span class="lineno">  662</span>&#160;        <span class="comment">// lower: a&#39;x + i + b &gt;= 0 -&gt; i &gt;= -a&#39;x - b</span></div>
+<div class="line"><a name="l00663"></a><span class="lineno">  663</span>&#160;        <span class="comment">// upper: a&#39;x - i + b &gt;= 0 -&gt; i &lt;=  a&#39;x + b</span></div>
+<div class="line"><a name="l00664"></a><span class="lineno">  664</span>&#160;        <span class="comment">// to decrease the lower bound or increase the upper, we</span></div>
+<div class="line"><a name="l00665"></a><span class="lineno">  665</span>&#160;        <span class="comment">// increment `b` our approach here is to set `_i` equal to the</span></div>
+<div class="line"><a name="l00666"></a><span class="lineno">  666</span>&#160;        <span class="comment">// extended bound and then check if the resulting polyhedra is</span></div>
+<div class="line"><a name="l00667"></a><span class="lineno">  667</span>&#160;        <span class="comment">// empty. if not, then we may have &gt;0 iterations.</span></div>
+<div class="line"><a name="l00668"></a><span class="lineno">  668</span>&#160;        <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> cc = 0; cc &lt; tmp.A.numRow(); ++cc) {</div>
+<div class="line"><a name="l00669"></a><span class="lineno">  669</span>&#160;          <span class="keywordflow">if</span> (int64_t d = tmp.A(cc, _i + numConst)) {</div>
+<div class="line"><a name="l00670"></a><span class="lineno">  670</span>&#160;            <span class="comment">// lower bound is i &gt;= 0</span></div>
+<div class="line"><a name="l00671"></a><span class="lineno">  671</span>&#160;            <span class="comment">// so setting equal to the extended lower bound now</span></div>
+<div class="line"><a name="l00672"></a><span class="lineno">  672</span>&#160;            <span class="comment">// means that i = -1 so we decrement `d` from the column</span></div>
+<div class="line"><a name="l00673"></a><span class="lineno">  673</span>&#160;            tmp.A(cc, 0) -= d;</div>
+<div class="line"><a name="l00674"></a><span class="lineno">  674</span>&#160;            tmp.A(cc, _i + numConst) = 0;</div>
+<div class="line"><a name="l00675"></a><span class="lineno">  675</span>&#160;          }</div>
+<div class="line"><a name="l00676"></a><span class="lineno">  676</span>&#160;        }</div>
+<div class="line"><a name="l00677"></a><span class="lineno">  677</span>&#160;        <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> cc = <span class="keywordtype">size_t</span>(tmp.A.numRow()); cc;)</div>
+<div class="line"><a name="l00678"></a><span class="lineno">  678</span>&#160;          <span class="keywordflow">if</span> (tmp.A(--cc, numPrevLoops + numConst) == 0)</div>
+<div class="line"><a name="l00679"></a><span class="lineno">  679</span>&#160;            eraseConstraint(tmp.A, cc);</div>
+<div class="line"><a name="l00680"></a><span class="lineno">  680</span>&#160;        tmp.initializeComparator();</div>
+<div class="line"><a name="l00681"></a><span class="lineno">  681</span>&#160;        <span class="keywordflow">if</span> (!(tmp.calcIsEmpty())) <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
+<div class="line"><a name="l00682"></a><span class="lineno">  682</span>&#160;      }</div>
+<div class="line"><a name="l00683"></a><span class="lineno">  683</span>&#160;    }</div>
+<div class="line"><a name="l00684"></a><span class="lineno">  684</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">true</span>;</div>
+<div class="line"><a name="l00685"></a><span class="lineno">  685</span>&#160;  }</div>
+<div class="line"><a name="l00686"></a><span class="lineno">  686</span>&#160; </div>
+<div class="line"><a name="l00687"></a><span class="lineno">  687</span>&#160;  <span class="keywordtype">void</span> printSymbol(llvm::raw_ostream &amp;os, PtrVector&lt;int64_t&gt; x,</div>
+<div class="line"><a name="l00688"></a><span class="lineno">  688</span>&#160;                   int64_t mul)<span class="keyword"> const </span>{</div>
+<div class="line"><a name="l00689"></a><span class="lineno">  689</span>&#160;    <span class="keywordtype">bool</span> printed = x[0] != 0;</div>
+<div class="line"><a name="l00690"></a><span class="lineno">  690</span>&#160;    <span class="keywordflow">if</span> (printed) os &lt;&lt; mul * x[0];</div>
+<div class="line"><a name="l00691"></a><span class="lineno">  691</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 1; i &lt; x.size(); ++i)</div>
+<div class="line"><a name="l00692"></a><span class="lineno">  692</span>&#160;      <span class="keywordflow">if</span> (int64_t xi = x[i] * mul) {</div>
+<div class="line"><a name="l00693"></a><span class="lineno">  693</span>&#160;        <span class="keywordflow">if</span> (printed) os &lt;&lt; (xi &gt; 0 ? <span class="stringliteral">&quot; + &quot;</span> : <span class="stringliteral">&quot; - &quot;</span>);</div>
+<div class="line"><a name="l00694"></a><span class="lineno">  694</span>&#160;        printed = <span class="keyword">true</span>;</div>
+<div class="line"><a name="l00695"></a><span class="lineno">  695</span>&#160;        int64_t absxi = constexpr_abs(xi);</div>
+<div class="line"><a name="l00696"></a><span class="lineno">  696</span>&#160;        <span class="keywordflow">if</span> (absxi != 1) os &lt;&lt; absxi &lt;&lt; <span class="stringliteral">&quot; * &quot;</span>;</div>
+<div class="line"><a name="l00697"></a><span class="lineno">  697</span>&#160;        os &lt;&lt; getSyms()[i - 1];</div>
+<div class="line"><a name="l00698"></a><span class="lineno">  698</span>&#160;      }</div>
+<div class="line"><a name="l00699"></a><span class="lineno">  699</span>&#160;  }</div>
+<div class="line"><a name="l00700"></a><span class="lineno">  700</span>&#160;  <span class="comment">// prints the inner most loop.</span></div>
+<div class="line"><a name="l00701"></a><span class="lineno">  701</span>&#160;  <span class="comment">// it is assumed that you iteratively pop off the inner most loop with</span></div>
+<div class="line"><a name="l00702"></a><span class="lineno">  702</span>&#160;  <span class="comment">// `removeLoop` to print all bounds.</span></div>
+<div class="line"><a name="l00703"></a><span class="lineno">  703</span>&#160;  <span class="keywordtype">void</span> printBound(llvm::raw_ostream &amp;os, int64_t sign)<span class="keyword"> const </span>{</div>
+<div class="line"><a name="l00704"></a><span class="lineno">  704</span>&#160;    <span class="keyword">const</span> <span class="keywordtype">size_t</span> numVar = getNumLoops(), numVarMinus1 = numVar - 1,</div>
+<div class="line"><a name="l00705"></a><span class="lineno">  705</span>&#160;                 numConst = getNumSymbols();</div>
+<div class="line"><a name="l00706"></a><span class="lineno">  706</span>&#160;    <span class="keywordtype">bool</span> hasPrintedLine = <span class="keyword">false</span>;</div>
+<div class="line"><a name="l00707"></a><span class="lineno">  707</span>&#160;    <span class="keyword">auto</span> A{getA()};</div>
+<div class="line"><a name="l00708"></a><span class="lineno">  708</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> j = 0; j &lt; A.numRow(); ++j) {</div>
+<div class="line"><a name="l00709"></a><span class="lineno">  709</span>&#160;      int64_t Aj = A(j, end - 1) * sign;</div>
+<div class="line"><a name="l00710"></a><span class="lineno">  710</span>&#160;      <span class="keywordflow">if</span> (Aj &lt;= 0) <span class="keywordflow">continue</span>;</div>
+<div class="line"><a name="l00711"></a><span class="lineno">  711</span>&#160;      <span class="keywordflow">if</span> (hasPrintedLine)</div>
+<div class="line"><a name="l00712"></a><span class="lineno">  712</span>&#160;        <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> k = 0; k &lt; 21; ++k) os &lt;&lt; <span class="charliteral">&#39; &#39;</span>;</div>
+<div class="line"><a name="l00713"></a><span class="lineno">  713</span>&#160;      hasPrintedLine = <span class="keyword">true</span>;</div>
+<div class="line"><a name="l00714"></a><span class="lineno">  714</span>&#160;      <span class="keywordflow">if</span> (Aj != sign)</div>
+<div class="line"><a name="l00715"></a><span class="lineno">  715</span>&#160;        os &lt;&lt; Aj &lt;&lt; <span class="stringliteral">&quot;*i_&quot;</span> &lt;&lt; numVarMinus1 &lt;&lt; ((sign &lt; 0) ? <span class="stringliteral">&quot; &lt;= &quot;</span> : <span class="stringliteral">&quot; &gt;= &quot;</span>);</div>
+<div class="line"><a name="l00716"></a><span class="lineno">  716</span>&#160;      <span class="keywordflow">else</span> os &lt;&lt; <span class="stringliteral">&quot;i_&quot;</span> &lt;&lt; numVarMinus1 &lt;&lt; ((sign &lt; 0) ? <span class="stringliteral">&quot; &lt;= &quot;</span> : <span class="stringliteral">&quot; &gt;= &quot;</span>);</div>
+<div class="line"><a name="l00717"></a><span class="lineno">  717</span>&#160;      PtrVector&lt;int64_t&gt; b = getProgVars(j);</div>
+<div class="line"><a name="l00718"></a><span class="lineno">  718</span>&#160;      <span class="keywordtype">bool</span> printed = anyNEZero(b);</div>
+<div class="line"><a name="l00719"></a><span class="lineno">  719</span>&#160;      <span class="keywordflow">if</span> (printed) printSymbol(os, b, -sign);</div>
+<div class="line"><a name="l00720"></a><span class="lineno">  720</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> k = 0; k &lt; numVarMinus1; ++k) {</div>
+<div class="line"><a name="l00721"></a><span class="lineno">  721</span>&#160;        <span class="keywordflow">if</span> (int64_t lakj = A(j, k + numConst)) {</div>
+<div class="line"><a name="l00722"></a><span class="lineno">  722</span>&#160;          <span class="keywordflow">if</span> (lakj * sign &gt; 0) os &lt;&lt; <span class="stringliteral">&quot; - &quot;</span>;</div>
+<div class="line"><a name="l00723"></a><span class="lineno">  723</span>&#160;          <span class="keywordflow">else</span> <span class="keywordflow">if</span> (printed) os &lt;&lt; <span class="stringliteral">&quot; + &quot;</span>;</div>
+<div class="line"><a name="l00724"></a><span class="lineno">  724</span>&#160;          lakj = constexpr_abs(lakj);</div>
+<div class="line"><a name="l00725"></a><span class="lineno">  725</span>&#160;          <span class="keywordflow">if</span> (lakj != 1) os &lt;&lt; lakj &lt;&lt; <span class="stringliteral">&quot;*&quot;</span>;</div>
+<div class="line"><a name="l00726"></a><span class="lineno">  726</span>&#160;          os &lt;&lt; <span class="stringliteral">&quot;i_&quot;</span> &lt;&lt; k;</div>
+<div class="line"><a name="l00727"></a><span class="lineno">  727</span>&#160;          printed = <span class="keyword">true</span>;</div>
+<div class="line"><a name="l00728"></a><span class="lineno">  728</span>&#160;        }</div>
+<div class="line"><a name="l00729"></a><span class="lineno">  729</span>&#160;      }</div>
+<div class="line"><a name="l00730"></a><span class="lineno">  730</span>&#160;      <span class="keywordflow">if</span> (!printed) os &lt;&lt; 0;</div>
+<div class="line"><a name="l00731"></a><span class="lineno">  731</span>&#160;      os &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
+<div class="line"><a name="l00732"></a><span class="lineno">  732</span>&#160;    }</div>
+<div class="line"><a name="l00733"></a><span class="lineno">  733</span>&#160;  }</div>
+<div class="line"><a name="l00734"></a><span class="lineno">  734</span>&#160;  <span class="keywordtype">void</span> printLowerBound(llvm::raw_ostream &amp;os)<span class="keyword"> const </span>{</div>
+<div class="line"><a name="l00735"></a><span class="lineno">  735</span>&#160;    <span class="keywordflow">if</span> constexpr (NonNegative) os &lt;&lt; <span class="stringliteral">&quot;i_&quot;</span> &lt;&lt; getNumLoops() - 1 &lt;&lt; <span class="stringliteral">&quot; &gt;= 0\n&quot;</span>;</div>
+<div class="line"><a name="l00736"></a><span class="lineno">  736</span>&#160;    printBound(os, 1);</div>
 <div class="line"><a name="l00737"></a><span class="lineno">  737</span>&#160;  }</div>
-<div class="line"><a name="l00738"></a><span class="lineno">  738</span>&#160;  <span class="keywordtype">void</span> printLowerBound(llvm::raw_ostream &amp;os, <span class="keywordtype">size_t</span> i)<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l00739"></a><span class="lineno">  739</span>&#160;    <span class="keywordflow">if</span> constexpr (NonNegative) os &lt;&lt; <span class="stringliteral">&quot;i_&quot;</span> &lt;&lt; getNumLoops() - 1 - i &lt;&lt; <span class="stringliteral">&quot; &gt;= 0\n&quot;</span>;</div>
-<div class="line"><a name="l00740"></a><span class="lineno">  740</span>&#160;    printBound(os, i, 1);</div>
-<div class="line"><a name="l00741"></a><span class="lineno">  741</span>&#160;  }</div>
-<div class="line"><a name="l00742"></a><span class="lineno">  742</span>&#160;  <span class="keywordtype">void</span> printUpperBound(llvm::raw_ostream &amp;os, <span class="keywordtype">size_t</span> i)<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l00743"></a><span class="lineno">  743</span>&#160;    printBound(os, i, -1);</div>
-<div class="line"><a name="l00744"></a><span class="lineno">  744</span>&#160;  }</div>
-<div class="line"><a name="l00745"></a><span class="lineno">  745</span>&#160;  <span class="comment">// prints loops from inner most to outer most.</span></div>
-<div class="line"><a name="l00746"></a><span class="lineno">  746</span>&#160;  <span class="keyword">friend</span> <span class="keyword">inline</span> <span class="keyword">auto</span> operator&lt;&lt;(llvm::raw_ostream &amp;os,</div>
-<div class="line"><a name="l00747"></a><span class="lineno">  747</span>&#160;                                <span class="keyword">const</span> <a class="code" href="structAffineLoopNest.html">AffineLoopNest</a> &amp;alnb)</div>
-<div class="line"><a name="l00748"></a><span class="lineno">  748</span>&#160;    -&gt; llvm::raw_ostream &amp; {</div>
-<div class="line"><a name="l00749"></a><span class="lineno">  749</span>&#160;    <a class="code" href="structAffineLoopNest.html">AffineLoopNest&lt;NonNegative&gt;</a> aln{alnb};</div>
-<div class="line"><a name="l00750"></a><span class="lineno">  750</span>&#160;    <span class="keywordtype">size_t</span> numLoopsMinus1 = aln.getNumLoops() - 1;</div>
-<div class="line"><a name="l00751"></a><span class="lineno">  751</span>&#160;    <span class="keywordtype">size_t</span> i = 0;</div>
-<div class="line"><a name="l00752"></a><span class="lineno">  752</span>&#160;    <a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> alloc;</div>
-<div class="line"><a name="l00753"></a><span class="lineno">  753</span>&#160;    <span class="keywordflow">while</span> (<span class="keyword">true</span>) {</div>
-<div class="line"><a name="l00754"></a><span class="lineno">  754</span>&#160;      os &lt;&lt; <span class="stringliteral">&quot;Loop &quot;</span> &lt;&lt; numLoopsMinus1 - i &lt;&lt; <span class="stringliteral">&quot; lower bounds: &quot;</span>;</div>
-<div class="line"><a name="l00755"></a><span class="lineno">  755</span>&#160;      aln.printLowerBound(os, i);</div>
-<div class="line"><a name="l00756"></a><span class="lineno">  756</span>&#160;      os &lt;&lt; <span class="stringliteral">&quot;Loop &quot;</span> &lt;&lt; numLoopsMinus1 - i &lt;&lt; <span class="stringliteral">&quot; upper bounds: &quot;</span>;</div>
-<div class="line"><a name="l00757"></a><span class="lineno">  757</span>&#160;      aln.printUpperBound(os, i);</div>
-<div class="line"><a name="l00758"></a><span class="lineno">  758</span>&#160;      <span class="keywordflow">if</span> (i == numLoopsMinus1) <span class="keywordflow">break</span>;</div>
-<div class="line"><a name="l00759"></a><span class="lineno">  759</span>&#160;      aln.removeLoopBang(alloc, i++);</div>
-<div class="line"><a name="l00760"></a><span class="lineno">  760</span>&#160;    }</div>
-<div class="line"><a name="l00761"></a><span class="lineno">  761</span>&#160;    <span class="keywordflow">return</span> os;</div>
-<div class="line"><a name="l00762"></a><span class="lineno">  762</span>&#160;  }</div>
-<div class="line"><a name="l00763"></a><span class="lineno">  763</span>&#160;  <span class="keywordtype">void</span> dump(llvm::raw_ostream &amp;os = llvm::errs())<span class="keyword"> const </span>{ os &lt;&lt; *<span class="keyword">this</span>; }</div>
-<div class="line"><a name="l00764"></a><span class="lineno">  764</span>&#160; </div>
-<div class="line"><a name="l00765"></a><span class="lineno">  765</span>&#160;  <span class="keyword">inline</span> <span class="keyword">auto</span> getA() -&gt; MutDensePtrMatrix&lt;int64_t&gt; {</div>
-<div class="line"><a name="l00766"></a><span class="lineno">  766</span>&#160;    std::byte *ptr = memory;</div>
-<div class="line"><a name="l00767"></a><span class="lineno">  767</span>&#160;    <span class="keywordflow">return</span> {<span class="keyword">reinterpret_cast&lt;</span>int64_t *<span class="keyword">&gt;</span>(</div>
-<div class="line"><a name="l00768"></a><span class="lineno">  768</span>&#160;              ptr + <span class="keyword">sizeof</span>(<span class="keyword">const</span> llvm::SCEV *<span class="keyword">const</span> *) * numDynSymbols),</div>
-<div class="line"><a name="l00769"></a><span class="lineno">  769</span>&#160;            <a class="code" href="structLinAlg_1_1DenseDims.html">DenseDims</a>{numConstraints, numLoops + numDynSymbols + 1}};</div>
-<div class="line"><a name="l00770"></a><span class="lineno">  770</span>&#160;  };</div>
-<div class="line"><a name="l00771"></a><span class="lineno">  771</span>&#160;  [[nodiscard]] <span class="keyword">inline</span> <span class="keyword">auto</span> getA() const -&gt; DensePtrMatrix&lt;int64_t&gt; {</div>
-<div class="line"><a name="l00772"></a><span class="lineno">  772</span>&#160;    <span class="keyword">const</span> std::byte *ptr = memory;</div>
-<div class="line"><a name="l00773"></a><span class="lineno">  773</span>&#160;    <span class="keywordflow">return</span> {<span class="keyword">const_cast&lt;</span>int64_t *<span class="keyword">&gt;</span>(<span class="keyword">reinterpret_cast&lt;</span><span class="keyword">const </span>int64_t *<span class="keyword">&gt;</span>(</div>
-<div class="line"><a name="l00774"></a><span class="lineno">  774</span>&#160;              ptr + <span class="keyword">sizeof</span>(<span class="keyword">const</span> llvm::SCEV *<span class="keyword">const</span> *) * numDynSymbols)),</div>
-<div class="line"><a name="l00775"></a><span class="lineno">  775</span>&#160;            <a class="code" href="structLinAlg_1_1DenseDims.html">DenseDims</a>{numConstraints, numLoops + numDynSymbols + 1}};</div>
-<div class="line"><a name="l00776"></a><span class="lineno">  776</span>&#160;  };</div>
-<div class="line"><a name="l00777"></a><span class="lineno">  777</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getSyms() -&gt; llvm::MutableArrayRef&lt;const llvm::SCEV *&gt; {</div>
-<div class="line"><a name="l00778"></a><span class="lineno">  778</span>&#160;    <span class="keywordflow">return</span> {<span class="keyword">reinterpret_cast&lt;</span><span class="keyword">const </span>llvm::SCEV **<span class="keyword">&gt;</span>(memory), numDynSymbols};</div>
+<div class="line"><a name="l00738"></a><span class="lineno">  738</span>&#160;  <span class="keywordtype">void</span> printUpperBound(llvm::raw_ostream &amp;os)<span class="keyword"> const </span>{ printBound(os, -1); }</div>
+<div class="line"><a name="l00739"></a><span class="lineno">  739</span>&#160;  <span class="keywordtype">void</span> dump(llvm::raw_ostream &amp;os, <a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc)<span class="keyword"> const </span>{</div>
+<div class="line"><a name="l00740"></a><span class="lineno">  740</span>&#160;    <a class="code" href="structAffineLoopNest.html">AffineLoopNest</a> *tmp = <span class="keyword">this</span>;</div>
+<div class="line"><a name="l00741"></a><span class="lineno">  741</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = getNumLoops();;) {</div>
+<div class="line"><a name="l00742"></a><span class="lineno">  742</span>&#160;      os &lt;&lt; <span class="stringliteral">&quot;Loop &quot;</span> &lt;&lt; --i &lt;&lt; <span class="stringliteral">&quot; lower bounds: &quot;</span>;</div>
+<div class="line"><a name="l00743"></a><span class="lineno">  743</span>&#160;      tmp-&gt;printLowerBound(os);</div>
+<div class="line"><a name="l00744"></a><span class="lineno">  744</span>&#160;      os &lt;&lt; <span class="stringliteral">&quot;Loop &quot;</span> &lt;&lt; i &lt;&lt; <span class="stringliteral">&quot; upper bounds: &quot;</span>;</div>
+<div class="line"><a name="l00745"></a><span class="lineno">  745</span>&#160;      tmp-&gt;printUpperBound(os);</div>
+<div class="line"><a name="l00746"></a><span class="lineno">  746</span>&#160;      <span class="keywordflow">if</span> (!i) <span class="keywordflow">break</span>;</div>
+<div class="line"><a name="l00747"></a><span class="lineno">  747</span>&#160;      tmp = tmp-&gt;removeLoop(alloc, i);</div>
+<div class="line"><a name="l00748"></a><span class="lineno">  748</span>&#160;    }</div>
+<div class="line"><a name="l00749"></a><span class="lineno">  749</span>&#160;  }</div>
+<div class="line"><a name="l00750"></a><span class="lineno">  750</span>&#160;  <span class="comment">// prints loops from inner most to outer most.</span></div>
+<div class="line"><a name="l00751"></a><span class="lineno">  751</span>&#160;  <span class="comment">// outer most loop is `i_0`, subscript increments for each level inside</span></div>
+<div class="line"><a name="l00752"></a><span class="lineno">  752</span>&#160;  <span class="comment">// We pop off the outer most loop on every iteration.</span></div>
+<div class="line"><a name="l00753"></a><span class="lineno">  753</span>&#160;  <span class="keyword">friend</span> <span class="keyword">inline</span> <span class="keyword">auto</span> operator&lt;&lt;(llvm::raw_ostream &amp;os,</div>
+<div class="line"><a name="l00754"></a><span class="lineno">  754</span>&#160;                                <span class="keyword">const</span> <a class="code" href="structAffineLoopNest.html">AffineLoopNest</a> &amp;aln)</div>
+<div class="line"><a name="l00755"></a><span class="lineno">  755</span>&#160;    -&gt; llvm::raw_ostream &amp; {</div>
+<div class="line"><a name="l00756"></a><span class="lineno">  756</span>&#160;    <a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> alloc;</div>
+<div class="line"><a name="l00757"></a><span class="lineno">  757</span>&#160;    aln.dump(os, alloc);</div>
+<div class="line"><a name="l00758"></a><span class="lineno">  758</span>&#160;    <span class="keywordflow">return</span> os;</div>
+<div class="line"><a name="l00759"></a><span class="lineno">  759</span>&#160;  }</div>
+<div class="line"><a name="l00760"></a><span class="lineno">  760</span>&#160;  <span class="keywordtype">void</span> dump(llvm::raw_ostream &amp;os = llvm::errs())<span class="keyword"> const </span>{ os &lt;&lt; *<span class="keyword">this</span>; }</div>
+<div class="line"><a name="l00761"></a><span class="lineno">  761</span>&#160; </div>
+<div class="line"><a name="l00762"></a><span class="lineno">  762</span>&#160;  <span class="keyword">inline</span> <span class="keyword">auto</span> getA() -&gt; MutDensePtrMatrix&lt;int64_t&gt; {</div>
+<div class="line"><a name="l00763"></a><span class="lineno">  763</span>&#160;    std::byte *ptr = memory;</div>
+<div class="line"><a name="l00764"></a><span class="lineno">  764</span>&#160;    <span class="keywordflow">return</span> {<span class="keyword">reinterpret_cast&lt;</span>int64_t *<span class="keyword">&gt;</span>(</div>
+<div class="line"><a name="l00765"></a><span class="lineno">  765</span>&#160;              ptr + <span class="keyword">sizeof</span>(<span class="keyword">const</span> llvm::SCEV *<span class="keyword">const</span> *) * numDynSymbols),</div>
+<div class="line"><a name="l00766"></a><span class="lineno">  766</span>&#160;            <a class="code" href="structLinAlg_1_1DenseDims.html">DenseDims</a>{numConstraints, numLoops + numDynSymbols + 1}};</div>
+<div class="line"><a name="l00767"></a><span class="lineno">  767</span>&#160;  };</div>
+<div class="line"><a name="l00768"></a><span class="lineno">  768</span>&#160;  [[nodiscard]] <span class="keyword">inline</span> <span class="keyword">auto</span> getA() const -&gt; DensePtrMatrix&lt;int64_t&gt; {</div>
+<div class="line"><a name="l00769"></a><span class="lineno">  769</span>&#160;    <span class="keyword">const</span> std::byte *ptr = memory;</div>
+<div class="line"><a name="l00770"></a><span class="lineno">  770</span>&#160;    <span class="keywordflow">return</span> {<span class="keyword">const_cast&lt;</span>int64_t *<span class="keyword">&gt;</span>(<span class="keyword">reinterpret_cast&lt;</span><span class="keyword">const </span>int64_t *<span class="keyword">&gt;</span>(</div>
+<div class="line"><a name="l00771"></a><span class="lineno">  771</span>&#160;              ptr + <span class="keyword">sizeof</span>(<span class="keyword">const</span> llvm::SCEV *<span class="keyword">const</span> *) * numDynSymbols)),</div>
+<div class="line"><a name="l00772"></a><span class="lineno">  772</span>&#160;            <a class="code" href="structLinAlg_1_1DenseDims.html">DenseDims</a>{numConstraints, numLoops + numDynSymbols + 1}};</div>
+<div class="line"><a name="l00773"></a><span class="lineno">  773</span>&#160;  };</div>
+<div class="line"><a name="l00774"></a><span class="lineno">  774</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getSyms() -&gt; llvm::MutableArrayRef&lt;const llvm::SCEV *&gt; {</div>
+<div class="line"><a name="l00775"></a><span class="lineno">  775</span>&#160;    <span class="keywordflow">return</span> {<span class="keyword">reinterpret_cast&lt;</span><span class="keyword">const </span>llvm::SCEV **<span class="keyword">&gt;</span>(memory), numDynSymbols};</div>
+<div class="line"><a name="l00776"></a><span class="lineno">  776</span>&#160;  }</div>
+<div class="line"><a name="l00777"></a><span class="lineno">  777</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getSyms() const -&gt; llvm::ArrayRef&lt;const llvm::SCEV *&gt; {</div>
+<div class="line"><a name="l00778"></a><span class="lineno">  778</span>&#160;    <span class="keywordflow">return</span> {<span class="keyword">reinterpret_cast&lt;</span><span class="keyword">const </span>llvm::SCEV *<span class="keyword">const </span>*<span class="keyword">&gt;</span>(memory), numDynSymbols};</div>
 <div class="line"><a name="l00779"></a><span class="lineno">  779</span>&#160;  }</div>
-<div class="line"><a name="l00780"></a><span class="lineno">  780</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getSyms() const -&gt; llvm::ArrayRef&lt;const llvm::SCEV *&gt; {</div>
-<div class="line"><a name="l00781"></a><span class="lineno">  781</span>&#160;    <span class="keywordflow">return</span> {<span class="keyword">reinterpret_cast&lt;</span><span class="keyword">const </span>llvm::SCEV *<span class="keyword">const </span>*<span class="keyword">&gt;</span>(memory), numDynSymbols};</div>
+<div class="line"><a name="l00780"></a><span class="lineno">  780</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getNumLoops() const -&gt; <span class="keywordtype">size_t</span> {</div>
+<div class="line"><a name="l00781"></a><span class="lineno">  781</span>&#160;    <span class="keywordflow">return</span> numLoops;</div>
 <div class="line"><a name="l00782"></a><span class="lineno">  782</span>&#160;  }</div>
-<div class="line"><a name="l00783"></a><span class="lineno">  783</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getNumLoops() const -&gt; <span class="keywordtype">size_t</span> {</div>
-<div class="line"><a name="l00784"></a><span class="lineno">  784</span>&#160;    <span class="keywordflow">return</span> numLoops;</div>
+<div class="line"><a name="l00783"></a><span class="lineno">  783</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getNumSymbols() const -&gt; <span class="keywordtype">size_t</span> {</div>
+<div class="line"><a name="l00784"></a><span class="lineno">  784</span>&#160;    <span class="keywordflow">return</span> numDynSymbols + 1;</div>
 <div class="line"><a name="l00785"></a><span class="lineno">  785</span>&#160;  }</div>
-<div class="line"><a name="l00786"></a><span class="lineno">  786</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getNumSymbols() const -&gt; <span class="keywordtype">size_t</span> {</div>
-<div class="line"><a name="l00787"></a><span class="lineno">  787</span>&#160;    <span class="keywordflow">return</span> numDynSymbols + 1;</div>
-<div class="line"><a name="l00788"></a><span class="lineno">  788</span>&#160;  }</div>
-<div class="line"><a name="l00789"></a><span class="lineno">  789</span>&#160;  constexpr <span class="keywordtype">void</span> truncNumInEqCon(Row r) {</div>
-<div class="line"><a name="l00790"></a><span class="lineno">  790</span>&#160;    invariant(r &lt; numConstraints);</div>
-<div class="line"><a name="l00791"></a><span class="lineno">  791</span>&#160;    numConstraints = unsigned(r);</div>
-<div class="line"><a name="l00792"></a><span class="lineno">  792</span>&#160;  }</div>
-<div class="line"><a name="l00793"></a><span class="lineno">  793</span>&#160; </div>
-<div class="line"><a name="l00794"></a><span class="lineno">  794</span>&#160;  <span class="keyword">static</span> <a class="code" href="structAffineLoopNest.html">AffineLoopNest</a> *construct(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, PtrMatrix&lt;int64_t&gt; A,</div>
-<div class="line"><a name="l00795"></a><span class="lineno">  795</span>&#160;                                   llvm::ArrayRef&lt;const llvm::SCEV *&gt; syms) {</div>
-<div class="line"><a name="l00796"></a><span class="lineno">  796</span>&#160;    <span class="keywordtype">unsigned</span> numLoops = unsigned(A.numCol()) - 1 - syms.size();</div>
-<div class="line"><a name="l00797"></a><span class="lineno">  797</span>&#160;    <a class="code" href="structAffineLoopNest.html">AffineLoopNest</a> *aln = allocate(alloc, <span class="keywordtype">unsigned</span>(A.numRow()), numLoops, syms);</div>
-<div class="line"><a name="l00798"></a><span class="lineno">  798</span>&#160;    aln-&gt;getA() &lt;&lt; A;</div>
-<div class="line"><a name="l00799"></a><span class="lineno">  799</span>&#160;    <span class="keywordflow">return</span> aln;</div>
-<div class="line"><a name="l00800"></a><span class="lineno">  800</span>&#160;  }</div>
-<div class="line"><a name="l00801"></a><span class="lineno">  801</span>&#160; </div>
-<div class="line"><a name="l00802"></a><span class="lineno">  802</span>&#160;<span class="keyword">private</span>:</div>
-<div class="line"><a name="l00803"></a><span class="lineno">  803</span>&#160;  <span class="comment">// AffineLoopNest(llvm::Loop *L, const llvm::SCEV *BT, llvm::ScalarEvolution</span></div>
-<div class="line"><a name="l00804"></a><span class="lineno">  804</span>&#160;  <span class="comment">// &amp;SE,</span></div>
-<div class="line"><a name="l00805"></a><span class="lineno">  805</span>&#160;  <span class="comment">//                llvm::OptimizationRemarkEmitter *ORE = nullptr) {</span></div>
-<div class="line"><a name="l00806"></a><span class="lineno">  806</span>&#160;  <span class="comment">//   // static_assert(false);</span></div>
-<div class="line"><a name="l00807"></a><span class="lineno">  807</span>&#160;  <span class="comment">// }</span></div>
-<div class="line"><a name="l00808"></a><span class="lineno">  808</span>&#160;  <span class="comment">// NOLINTNEXTLINE(bugprone-easily-swappable-parameters)</span></div>
-<div class="line"><a name="l00809"></a><span class="lineno">  809</span>&#160;  constexpr <a class="code" href="structAffineLoopNest.html">AffineLoopNest</a>(<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> _numConstraints, <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> _numLoops,</div>
-<div class="line"><a name="l00810"></a><span class="lineno">  810</span>&#160;                           <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> _numDynSymbols,</div>
-<div class="line"><a name="l00811"></a><span class="lineno">  811</span>&#160;                           <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> _rowCapacity)</div>
-<div class="line"><a name="l00812"></a><span class="lineno">  812</span>&#160;    : numConstraints(_numConstraints), numLoops(_numLoops),</div>
-<div class="line"><a name="l00813"></a><span class="lineno">  813</span>&#160;      numDynSymbols(_numDynSymbols), rowCapacity(_rowCapacity) {}</div>
-<div class="line"><a name="l00814"></a><span class="lineno">  814</span>&#160; </div>
-<div class="line"><a name="l00815"></a><span class="lineno">  815</span>&#160;  <span class="keyword">static</span> <span class="keyword">auto</span> allocate(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> numCon,</div>
-<div class="line"><a name="l00816"></a><span class="lineno">  816</span>&#160;                       <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> numLoops,</div>
-<div class="line"><a name="l00817"></a><span class="lineno">  817</span>&#160;                       llvm::ArrayRef&lt;const llvm::SCEV *&gt; syms)</div>
-<div class="line"><a name="l00818"></a><span class="lineno">  818</span>&#160;    -&gt; <a class="code" href="structNotNull.html">NotNull&lt;AffineLoopNest&gt;</a> {</div>
-<div class="line"><a name="l00819"></a><span class="lineno">  819</span>&#160;    <span class="keywordtype">size_t</span> numDynSym = syms.size();</div>
-<div class="line"><a name="l00820"></a><span class="lineno">  820</span>&#160;    <span class="keywordtype">size_t</span> N = numLoops + numDynSym + 1;</div>
-<div class="line"><a name="l00821"></a><span class="lineno">  821</span>&#160;    <span class="comment">// extra capacity for adding 0 lower bounds later, see</span></div>
-<div class="line"><a name="l00822"></a><span class="lineno">  822</span>&#160;    <span class="comment">// `addZeroLowerBounds`.</span></div>
-<div class="line"><a name="l00823"></a><span class="lineno">  823</span>&#160;    <span class="keywordtype">size_t</span> M = NonNegative ? numCon : numCon + numLoops;</div>
-<div class="line"><a name="l00824"></a><span class="lineno">  824</span>&#160;    <span class="comment">// extra capacity for moving loops into symbols, see `removeOuterMost`.</span></div>
-<div class="line"><a name="l00825"></a><span class="lineno">  825</span>&#160;    <span class="keywordtype">size_t</span> symCapacity = numDynSym + numLoops;</div>
-<div class="line"><a name="l00826"></a><span class="lineno">  826</span>&#160;    <span class="keywordtype">size_t</span> memNeeded =</div>
-<div class="line"><a name="l00827"></a><span class="lineno">  827</span>&#160;      M * N * <span class="keyword">sizeof</span>(int64_t) + symCapacity * <span class="keyword">sizeof</span>(<span class="keyword">const</span> llvm::SCEV *<span class="keyword">const</span> *);</div>
-<div class="line"><a name="l00828"></a><span class="lineno">  828</span>&#160;    <span class="keyword">auto</span> *mem = alloc.allocate(<span class="keyword">sizeof</span>(<a class="code" href="structAffineLoopNest.html">AffineLoopNest</a>) - 8 + memNeeded,</div>
-<div class="line"><a name="l00829"></a><span class="lineno">  829</span>&#160;                               <span class="keyword">alignof</span>(<a class="code" href="structAffineLoopNest.html">AffineLoopNest</a>));</div>
-<div class="line"><a name="l00830"></a><span class="lineno">  830</span>&#160;    <span class="keyword">auto</span> *aln = <span class="keyword">new</span> (mem) <a class="code" href="structAffineLoopNest.html">AffineLoopNest</a>({numCon, numLoops, numDynSym, M});</div>
-<div class="line"><a name="l00831"></a><span class="lineno">  831</span>&#160;    std::copy_n(syms.begin(), numDynSym, aln-&gt;getSyms());</div>
-<div class="line"><a name="l00832"></a><span class="lineno">  832</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="structNotNull.html">NotNull&lt;AffineLoopNest&gt;</a>{aln};</div>
-<div class="line"><a name="l00833"></a><span class="lineno">  833</span>&#160;  }</div>
-<div class="line"><a name="l00834"></a><span class="lineno">  834</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getRowCapacity() const -&gt; <span class="keywordtype">size_t</span> {</div>
-<div class="line"><a name="l00835"></a><span class="lineno">  835</span>&#160;    <span class="keywordflow">return</span> rowCapacity;</div>
-<div class="line"><a name="l00836"></a><span class="lineno">  836</span>&#160;  }</div>
-<div class="line"><a name="l00837"></a><span class="lineno">  837</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getSymCapacity() const -&gt; <span class="keywordtype">size_t</span> {</div>
-<div class="line"><a name="l00838"></a><span class="lineno">  838</span>&#160;    <span class="keywordflow">return</span> numDynSymbols + numLoops;</div>
-<div class="line"><a name="l00839"></a><span class="lineno">  839</span>&#160;  }</div>
-<div class="line"><a name="l00840"></a><span class="lineno">  840</span>&#160; </div>
-<div class="line"><a name="l00841"></a><span class="lineno">  841</span>&#160;  <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> numConstraints;</div>
-<div class="line"><a name="l00842"></a><span class="lineno">  842</span>&#160;  <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> numLoops;</div>
-<div class="line"><a name="l00843"></a><span class="lineno">  843</span>&#160;  <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> numDynSymbols;</div>
-<div class="line"><a name="l00844"></a><span class="lineno">  844</span>&#160;  <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> rowCapacity;</div>
-<div class="line"><a name="l00845"></a><span class="lineno">  845</span>&#160;  <span class="comment">// NOLINTNEXTLINE(modernize-avoid-c-arrays) // FAM</span></div>
-<div class="line"><a name="l00846"></a><span class="lineno">  846</span>&#160;  [[gnu::aligned(<span class="keyword">alignof</span>(int64_t))]] std::byte memory[8];</div>
-<div class="line"><a name="l00847"></a><span class="lineno">  847</span>&#160;};</div>
-<div class="ttc" id="aclassWBumpAlloc_html"><div class="ttname"><a href="classWBumpAlloc.html">WBumpAlloc</a></div><div class="ttdef"><b>Definition:</b> Allocators.hpp:382</div></div>
+<div class="line"><a name="l00786"></a><span class="lineno">  786</span>&#160;  constexpr <span class="keywordtype">void</span> truncNumInEqCon(Row r) {</div>
+<div class="line"><a name="l00787"></a><span class="lineno">  787</span>&#160;    invariant(r &lt; numConstraints);</div>
+<div class="line"><a name="l00788"></a><span class="lineno">  788</span>&#160;    numConstraints = unsigned(r);</div>
+<div class="line"><a name="l00789"></a><span class="lineno">  789</span>&#160;  }</div>
+<div class="line"><a name="l00790"></a><span class="lineno">  790</span>&#160; </div>
+<div class="line"><a name="l00791"></a><span class="lineno">  791</span>&#160;  <span class="keyword">static</span> <span class="keyword">auto</span> construct(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, PtrMatrix&lt;int64_t&gt; A,</div>
+<div class="line"><a name="l00792"></a><span class="lineno">  792</span>&#160;                        llvm::ArrayRef&lt;const llvm::SCEV *&gt; syms)</div>
+<div class="line"><a name="l00793"></a><span class="lineno">  793</span>&#160;    -&gt; <a class="code" href="structAffineLoopNest.html">AffineLoopNest</a> * {</div>
+<div class="line"><a name="l00794"></a><span class="lineno">  794</span>&#160;    <span class="keywordtype">unsigned</span> numLoops = unsigned(A.numCol()) - 1 - syms.size();</div>
+<div class="line"><a name="l00795"></a><span class="lineno">  795</span>&#160;    <a class="code" href="structAffineLoopNest.html">AffineLoopNest</a> *aln = allocate(alloc, <span class="keywordtype">unsigned</span>(A.numRow()), numLoops, syms);</div>
+<div class="line"><a name="l00796"></a><span class="lineno">  796</span>&#160;    aln-&gt;getA() &lt;&lt; A;</div>
+<div class="line"><a name="l00797"></a><span class="lineno">  797</span>&#160;    <span class="keywordflow">return</span> aln;</div>
+<div class="line"><a name="l00798"></a><span class="lineno">  798</span>&#160;  }</div>
+<div class="line"><a name="l00799"></a><span class="lineno">  799</span>&#160; </div>
+<div class="line"><a name="l00800"></a><span class="lineno">  800</span>&#160;<span class="keyword">private</span>:</div>
+<div class="line"><a name="l00801"></a><span class="lineno">  801</span>&#160;  <span class="comment">// AffineLoopNest(llvm::Loop *L, const llvm::SCEV *BT, llvm::ScalarEvolution</span></div>
+<div class="line"><a name="l00802"></a><span class="lineno">  802</span>&#160;  <span class="comment">// &amp;SE,</span></div>
+<div class="line"><a name="l00803"></a><span class="lineno">  803</span>&#160;  <span class="comment">//                llvm::OptimizationRemarkEmitter *ORE = nullptr) {</span></div>
+<div class="line"><a name="l00804"></a><span class="lineno">  804</span>&#160;  <span class="comment">//   // static_assert(false);</span></div>
+<div class="line"><a name="l00805"></a><span class="lineno">  805</span>&#160;  <span class="comment">// }</span></div>
+<div class="line"><a name="l00806"></a><span class="lineno">  806</span>&#160;  <span class="comment">// NOLINTNEXTLINE(bugprone-easily-swappable-parameters)</span></div>
+<div class="line"><a name="l00807"></a><span class="lineno">  807</span>&#160;  constexpr <a class="code" href="structAffineLoopNest.html">AffineLoopNest</a>(<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> _numConstraints, <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> _numLoops,</div>
+<div class="line"><a name="l00808"></a><span class="lineno">  808</span>&#160;                           <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> _numDynSymbols,</div>
+<div class="line"><a name="l00809"></a><span class="lineno">  809</span>&#160;                           <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> _rowCapacity)</div>
+<div class="line"><a name="l00810"></a><span class="lineno">  810</span>&#160;    : numConstraints(_numConstraints), numLoops(_numLoops),</div>
+<div class="line"><a name="l00811"></a><span class="lineno">  811</span>&#160;      numDynSymbols(_numDynSymbols), rowCapacity(_rowCapacity) {}</div>
+<div class="line"><a name="l00812"></a><span class="lineno">  812</span>&#160; </div>
+<div class="line"><a name="l00813"></a><span class="lineno">  813</span>&#160;  <span class="keyword">static</span> <span class="keyword">auto</span> allocate(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> numCon,</div>
+<div class="line"><a name="l00814"></a><span class="lineno">  814</span>&#160;                       <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> numLoops,</div>
+<div class="line"><a name="l00815"></a><span class="lineno">  815</span>&#160;                       llvm::ArrayRef&lt;const llvm::SCEV *&gt; syms)</div>
+<div class="line"><a name="l00816"></a><span class="lineno">  816</span>&#160;    -&gt; <a class="code" href="structNotNull.html">NotNull&lt;AffineLoopNest&gt;</a> {</div>
+<div class="line"><a name="l00817"></a><span class="lineno">  817</span>&#160;    <span class="keywordtype">size_t</span> numDynSym = syms.size();</div>
+<div class="line"><a name="l00818"></a><span class="lineno">  818</span>&#160;    <span class="keywordtype">size_t</span> N = numLoops + numDynSym + 1;</div>
+<div class="line"><a name="l00819"></a><span class="lineno">  819</span>&#160;    <span class="comment">// extra capacity for adding 0 lower bounds later, see</span></div>
+<div class="line"><a name="l00820"></a><span class="lineno">  820</span>&#160;    <span class="comment">// `addZeroLowerBounds`.</span></div>
+<div class="line"><a name="l00821"></a><span class="lineno">  821</span>&#160;    <span class="keywordtype">size_t</span> M = NonNegative ? numCon : numCon + numLoops;</div>
+<div class="line"><a name="l00822"></a><span class="lineno">  822</span>&#160;    <span class="comment">// extra capacity for moving loops into symbols, see `removeOuterMost`.</span></div>
+<div class="line"><a name="l00823"></a><span class="lineno">  823</span>&#160;    <span class="keywordtype">size_t</span> symCapacity = numDynSym + numLoops;</div>
+<div class="line"><a name="l00824"></a><span class="lineno">  824</span>&#160;    <span class="keywordtype">size_t</span> memNeeded =</div>
+<div class="line"><a name="l00825"></a><span class="lineno">  825</span>&#160;      M * N * <span class="keyword">sizeof</span>(int64_t) + symCapacity * <span class="keyword">sizeof</span>(<span class="keyword">const</span> llvm::SCEV *<span class="keyword">const</span> *);</div>
+<div class="line"><a name="l00826"></a><span class="lineno">  826</span>&#160;    <span class="keyword">auto</span> *mem = alloc.allocate(<span class="keyword">sizeof</span>(<a class="code" href="structAffineLoopNest.html">AffineLoopNest</a>) - 8 + memNeeded,</div>
+<div class="line"><a name="l00827"></a><span class="lineno">  827</span>&#160;                               <span class="keyword">alignof</span>(<a class="code" href="structAffineLoopNest.html">AffineLoopNest</a>));</div>
+<div class="line"><a name="l00828"></a><span class="lineno">  828</span>&#160;    <span class="keyword">auto</span> *aln = <span class="keyword">new</span> (mem) <a class="code" href="structAffineLoopNest.html">AffineLoopNest</a>({numCon, numLoops, numDynSym, M});</div>
+<div class="line"><a name="l00829"></a><span class="lineno">  829</span>&#160;    std::copy_n(syms.begin(), numDynSym, aln-&gt;getSyms());</div>
+<div class="line"><a name="l00830"></a><span class="lineno">  830</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="structNotNull.html">NotNull&lt;AffineLoopNest&gt;</a>{aln};</div>
+<div class="line"><a name="l00831"></a><span class="lineno">  831</span>&#160;  }</div>
+<div class="line"><a name="l00832"></a><span class="lineno">  832</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getRowCapacity() const -&gt; <span class="keywordtype">size_t</span> {</div>
+<div class="line"><a name="l00833"></a><span class="lineno">  833</span>&#160;    <span class="keywordflow">return</span> rowCapacity;</div>
+<div class="line"><a name="l00834"></a><span class="lineno">  834</span>&#160;  }</div>
+<div class="line"><a name="l00835"></a><span class="lineno">  835</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getSymCapacity() const -&gt; <span class="keywordtype">size_t</span> {</div>
+<div class="line"><a name="l00836"></a><span class="lineno">  836</span>&#160;    <span class="keywordflow">return</span> numDynSymbols + numLoops;</div>
+<div class="line"><a name="l00837"></a><span class="lineno">  837</span>&#160;  }</div>
+<div class="line"><a name="l00838"></a><span class="lineno">  838</span>&#160; </div>
+<div class="line"><a name="l00839"></a><span class="lineno">  839</span>&#160;  <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> numConstraints;</div>
+<div class="line"><a name="l00840"></a><span class="lineno">  840</span>&#160;  <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> numLoops;</div>
+<div class="line"><a name="l00841"></a><span class="lineno">  841</span>&#160;  <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> numDynSymbols;</div>
+<div class="line"><a name="l00842"></a><span class="lineno">  842</span>&#160;  <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> rowCapacity;</div>
+<div class="line"><a name="l00843"></a><span class="lineno">  843</span>&#160;  <span class="comment">// NOLINTNEXTLINE(modernize-avoid-c-arrays) // FAM</span></div>
+<div class="line"><a name="l00844"></a><span class="lineno">  844</span>&#160;  [[gnu::aligned(<span class="keyword">alignof</span>(int64_t))]] std::byte memory[8];</div>
+<div class="line"><a name="l00845"></a><span class="lineno">  845</span>&#160;};</div>
 <div class="ttc" id="astructAffineLoopNest_html"><div class="ttname"><a href="structAffineLoopNest.html">AffineLoopNest</a></div><div class="ttdef"><b>Definition:</b> Loops.hpp:325</div></div>
 <div class="ttc" id="astructAffineLoopNest_html_a215506c9530da55d0671936af217dd6d"><div class="ttname"><a href="structAffineLoopNest.html#a215506c9530da55d0671936af217dd6d">AffineLoopNest::rotate</a></div><div class="ttdeci">auto rotate(BumpAlloc&lt;&gt; &amp;alloc, PtrMatrix&lt; int64_t &gt; R) const -&gt; NotNull&lt; AffineLoopNest&lt; false &gt;&gt;</div><div class="ttdef"><b>Definition:</b> Loops.hpp:398</div></div>
 <div class="ttc" id="astructAffineLoopNest_html_ae7e3801c19a2587916894acf27894629"><div class="ttname"><a href="structAffineLoopNest.html#ae7e3801c19a2587916894acf27894629">AffineLoopNest::explicitLowerBounds</a></div><div class="ttdeci">auto explicitLowerBounds(BumpAlloc&lt;&gt; &amp;alloc) -&gt; NotNull&lt; AffineLoopNest&lt; false &gt;&gt;</div><div class="ttdoc">like rotate(identity Matrix)</div><div class="ttdef"><b>Definition:</b> Loops.hpp:424</div></div>
@@ -910,7 +907,7 @@ $(function() {
 <div class="ttc" id="astructBumpAlloc_html"><div class="ttname"><a href="structBumpAlloc.html">BumpAlloc</a></div><div class="ttdef"><b>Definition:</b> Allocators.hpp:31</div></div>
 <div class="ttc" id="astructLinAlg_1_1DenseDims_html"><div class="ttname"><a href="structLinAlg_1_1DenseDims.html">LinAlg::DenseDims</a></div><div class="ttdoc">Dimensions with a capacity.</div><div class="ttdef"><b>Definition:</b> MatrixDimensions.hpp:89</div></div>
 <div class="ttc" id="astructLinAlg_1_1StridedDims_html"><div class="ttname"><a href="structLinAlg_1_1StridedDims.html">LinAlg::StridedDims</a></div><div class="ttdef"><b>Definition:</b> MatrixDimensions.hpp:37</div></div>
-<div class="ttc" id="astructNoWrapRewriter_html"><div class="ttname"><a href="structNoWrapRewriter.html">NoWrapRewriter</a></div><div class="ttdef"><b>Definition:</b> Loops.hpp:68</div></div>
+<div class="ttc" id="astructNoWrapRewriter_html"><div class="ttname"><a href="structNoWrapRewriter.html">NoWrapRewriter</a></div><div class="ttdef"><b>Definition:</b> Loops.hpp:69</div></div>
 <div class="ttc" id="astructNotNull_html"><div class="ttname"><a href="structNotNull.html">NotNull</a></div><div class="ttdef"><b>Definition:</b> Valid.hpp:7</div></div>
 <div class="ttc" id="astructOptional_html"><div class="ttname"><a href="structOptional.html">Optional</a></div><div class="ttdef"><b>Definition:</b> Optional.hpp:9</div></div>
 <div class="ttc" id="astructRange_html"><div class="ttname"><a href="structRange.html">Range</a></div><div class="ttdef"><b>Definition:</b> Iterators.hpp:4</div></div>

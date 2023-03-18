@@ -113,42 +113,39 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>removeOuterMost</b> (
 <tr class="memitem:a056bf732e3593248c7cb2ff8032dd243"><td class="memItemLeft" align="right" valign="top"><a id="a056bf732e3593248c7cb2ff8032dd243"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>addZeroLowerBounds</b> (LinAlg::Alloc&lt; int64_t &gt; auto &amp;alloc)</td></tr>
 <tr class="separator:a056bf732e3593248c7cb2ff8032dd243"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7b42b9010c9e810b74cd7edd65633a7d"><td class="memItemLeft" align="right" valign="top"><a id="a7b42b9010c9e810b74cd7edd65633a7d"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>getProgVars</b> (size_t j) const -&gt; PtrVector&lt; int64_t &gt;</td></tr>
-<tr class="separator:a7b42b9010c9e810b74cd7edd65633a7d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4a1319f6375d90df783421a6d367b2ac"><td class="memItemLeft" align="right" valign="top"><a id="a4a1319f6375d90df783421a6d367b2ac"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>removeLoopBang</b> (LinAlg::Alloc&lt; int64_t &gt; auto &amp;alloc, size_t i)</td></tr>
-<tr class="separator:a4a1319f6375d90df783421a6d367b2ac"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a48dcfce078a382ae7e62ab2462739810"><td class="memItemLeft" align="right" valign="top"><a id="a48dcfce078a382ae7e62ab2462739810"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>copy</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc) const -&gt; <a class="el" href="structNotNull.html">NotNull</a>&lt; <a class="el" href="structAffineLoopNest.html">AffineLoopNest</a>&lt; NonNegative &gt;&gt;</td></tr>
-<tr class="separator:a48dcfce078a382ae7e62ab2462739810"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acafe2b6ee2a4dac2fc70d4375270e04e"><td class="memItemLeft" align="right" valign="top"><a id="acafe2b6ee2a4dac2fc70d4375270e04e"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>removeLoop</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, size_t i) const -&gt; <a class="el" href="structNotNull.html">NotNull</a>&lt; <a class="el" href="structAffineLoopNest.html">AffineLoopNest</a>&lt; NonNegative &gt;&gt;</td></tr>
-<tr class="separator:acafe2b6ee2a4dac2fc70d4375270e04e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6b3d701758d8efb765fccfe95c7f885d"><td class="memItemLeft" align="right" valign="top"><a id="a6b3d701758d8efb765fccfe95c7f885d"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getProgVars</b> (size_t j) const -&gt; PtrVector&lt; int64_t &gt;</td></tr>
+<tr class="separator:a6b3d701758d8efb765fccfe95c7f885d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7f948a57420698f47744ac874661b440"><td class="memItemLeft" align="right" valign="top"><a id="a7f948a57420698f47744ac874661b440"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>copy</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc) const -&gt; <a class="el" href="structNotNull.html">NotNull</a>&lt; <a class="el" href="structAffineLoopNest.html">AffineLoopNest</a>&lt; NonNegative &gt;&gt;</td></tr>
+<tr class="separator:a7f948a57420698f47744ac874661b440"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1efdb445d5c7d759f1fa9777c249bf6f"><td class="memItemLeft" align="right" valign="top"><a id="a1efdb445d5c7d759f1fa9777c249bf6f"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>removeLoop</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, size_t v) const -&gt; <a class="el" href="structNotNull.html">NotNull</a>&lt; <a class="el" href="structAffineLoopNest.html">AffineLoopNest</a>&lt; NonNegative &gt;&gt;</td></tr>
+<tr class="separator:a1efdb445d5c7d759f1fa9777c249bf6f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2689cfda5eafa0dd6672a9a41493f0c9"><td class="memItemLeft" align="right" valign="top"><a id="a2689cfda5eafa0dd6672a9a41493f0c9"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>perm</b> (PtrVector&lt; unsigned &gt; x) -&gt; llvm::SmallVector&lt; <a class="el" href="structAffineLoopNest.html">AffineLoopNest</a>&lt; NonNegative &gt;, 0 &gt;</td></tr>
 <tr class="separator:a2689cfda5eafa0dd6672a9a41493f0c9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a931e90ab73e4d0d9b9ee37457c0573a9"><td class="memItemLeft" align="right" valign="top"><a id="a931e90ab73e4d0d9b9ee37457c0573a9"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>bounds</b> (size_t i) const -&gt; std::array&lt; IntMatrix, 2 &gt;</td></tr>
 <tr class="separator:a931e90ab73e4d0d9b9ee37457c0573a9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aeb2f91962340441060c25fcdd7f591ba"><td class="memItemLeft" align="right" valign="top"><a id="aeb2f91962340441060c25fcdd7f591ba"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>getBounds</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, PtrVector&lt; unsigned &gt; x) -&gt; llvm::SmallVector&lt; std::pair&lt; IntMatrix, IntMatrix &gt;, 0 &gt;</td></tr>
-<tr class="separator:aeb2f91962340441060c25fcdd7f591ba"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0d7738d091e5ceea738a954f8545816b"><td class="memItemLeft" align="right" valign="top"><a id="a0d7738d091e5ceea738a954f8545816b"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>zeroExtraIterationsUponExtending</b> (size_t _i, bool extendLower) const -&gt; bool</td></tr>
 <tr class="separator:a0d7738d091e5ceea738a954f8545816b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1b4b8f17155e41b88dacffd1cfcc1454"><td class="memItemLeft" align="right" valign="top"><a id="a1b4b8f17155e41b88dacffd1cfcc1454"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>printSymbol</b> (llvm::raw_ostream &amp;os, PtrVector&lt; int64_t &gt; x, int64_t mul) const</td></tr>
 <tr class="separator:a1b4b8f17155e41b88dacffd1cfcc1454"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a012ec8a761d02cf823d8c6e0af23ad16"><td class="memItemLeft" align="right" valign="top"><a id="a012ec8a761d02cf823d8c6e0af23ad16"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>printBound</b> (llvm::raw_ostream &amp;os, size_t i, int64_t sign) const</td></tr>
-<tr class="separator:a012ec8a761d02cf823d8c6e0af23ad16"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3753c1abc7fbe7a51093b92839f7c20a"><td class="memItemLeft" align="right" valign="top"><a id="a3753c1abc7fbe7a51093b92839f7c20a"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>printLowerBound</b> (llvm::raw_ostream &amp;os, size_t i) const</td></tr>
-<tr class="separator:a3753c1abc7fbe7a51093b92839f7c20a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac2e83360f48794cc0b64e2e12bcba82e"><td class="memItemLeft" align="right" valign="top"><a id="ac2e83360f48794cc0b64e2e12bcba82e"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>printUpperBound</b> (llvm::raw_ostream &amp;os, size_t i) const</td></tr>
-<tr class="separator:ac2e83360f48794cc0b64e2e12bcba82e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a88adaf2163285de2922496632ce08227"><td class="memItemLeft" align="right" valign="top"><a id="a88adaf2163285de2922496632ce08227"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>printBound</b> (llvm::raw_ostream &amp;os, int64_t sign) const</td></tr>
+<tr class="separator:a88adaf2163285de2922496632ce08227"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa3e596f53c7bd476cb2e2f26901dee22"><td class="memItemLeft" align="right" valign="top"><a id="aa3e596f53c7bd476cb2e2f26901dee22"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>printLowerBound</b> (llvm::raw_ostream &amp;os) const</td></tr>
+<tr class="separator:aa3e596f53c7bd476cb2e2f26901dee22"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad397ceecf0ef6e9fcc281a0ae3b97f10"><td class="memItemLeft" align="right" valign="top"><a id="ad397ceecf0ef6e9fcc281a0ae3b97f10"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>printUpperBound</b> (llvm::raw_ostream &amp;os) const</td></tr>
+<tr class="separator:ad397ceecf0ef6e9fcc281a0ae3b97f10"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a003fff949caa1e779093faf1fa497589"><td class="memItemLeft" align="right" valign="top"><a id="a003fff949caa1e779093faf1fa497589"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>dump</b> (llvm::raw_ostream &amp;os, <a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc) const</td></tr>
+<tr class="separator:a003fff949caa1e779093faf1fa497589"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a851e8080431e69712546822018856a1a"><td class="memItemLeft" align="right" valign="top"><a id="a851e8080431e69712546822018856a1a"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>dump</b> (llvm::raw_ostream &amp;os=llvm::errs()) const</td></tr>
 <tr class="separator:a851e8080431e69712546822018856a1a"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -264,15 +261,15 @@ Static Public Member Functions</h2></td></tr>
 <tr class="memitem:a1a4dcd1cb9ad25c6ced282c9b2dcc8fd"><td class="memItemLeft" align="right" valign="top"><a id="a1a4dcd1cb9ad25c6ced282c9b2dcc8fd"></a>
 static auto&#160;</td><td class="memItemRight" valign="bottom"><b>construct</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, llvm::Loop *L, const llvm::SCEV *BT, llvm::ScalarEvolution &amp;SE, llvm::OptimizationRemarkEmitter *ORE=nullptr) -&gt; <a class="el" href="structNotNull.html">NotNull</a>&lt; <a class="el" href="structAffineLoopNest.html">AffineLoopNest</a> &gt;</td></tr>
 <tr class="separator:a1a4dcd1cb9ad25c6ced282c9b2dcc8fd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aeba99db2b38ef7f4224b59d2cfc6d703"><td class="memItemLeft" align="right" valign="top"><a id="aeba99db2b38ef7f4224b59d2cfc6d703"></a>
-static <a class="el" href="structAffineLoopNest.html">AffineLoopNest</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>construct</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, PtrMatrix&lt; int64_t &gt; A, llvm::ArrayRef&lt; const llvm::SCEV * &gt; syms)</td></tr>
-<tr class="separator:aeba99db2b38ef7f4224b59d2cfc6d703"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2c5feef90746454b5ba55c3d6075f729"><td class="memItemLeft" align="right" valign="top"><a id="a2c5feef90746454b5ba55c3d6075f729"></a>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>construct</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, PtrMatrix&lt; int64_t &gt; A, llvm::ArrayRef&lt; const llvm::SCEV * &gt; syms) -&gt; <a class="el" href="structAffineLoopNest.html">AffineLoopNest</a> *</td></tr>
+<tr class="separator:a2c5feef90746454b5ba55c3d6075f729"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="friends"></a>
 Friends</h2></td></tr>
-<tr class="memitem:aba894013c95fa855bfba4bdaa86d9afc"><td class="memItemLeft" align="right" valign="top"><a id="aba894013c95fa855bfba4bdaa86d9afc"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> (llvm::raw_ostream &amp;os, const <a class="el" href="structAffineLoopNest.html">AffineLoopNest</a> &amp;alnb) -&gt; llvm::raw_ostream &amp;</td></tr>
-<tr class="separator:aba894013c95fa855bfba4bdaa86d9afc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abcfdd37e635d74cbd12cab93b6bb8a37"><td class="memItemLeft" align="right" valign="top"><a id="abcfdd37e635d74cbd12cab93b6bb8a37"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> (llvm::raw_ostream &amp;os, const <a class="el" href="structAffineLoopNest.html">AffineLoopNest</a> &amp;aln) -&gt; llvm::raw_ostream &amp;</td></tr>
+<tr class="separator:abcfdd37e635d74cbd12cab93b6bb8a37"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Member Function Documentation</h2>
 <a id="a215506c9530da55d0671936af217dd6d"></a>

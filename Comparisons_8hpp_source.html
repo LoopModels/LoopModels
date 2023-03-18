@@ -85,10 +85,14 @@ $(function() {
 <div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;  <span class="comment">// return std::ranges::all_of(x, [](auto x) { return x &lt;= 0; });</span></div>
 <div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;}</div>
 <div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160; </div>
-<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;constexpr <span class="keyword">auto</span> countNonZero(<span class="keyword">const</span> <span class="keyword">auto</span> &amp;x) -&gt; <span class="keywordtype">size_t</span> {</div>
-<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;  <span class="keywordflow">return</span> std::count_if(x.begin(), x.end(), [](<span class="keyword">auto</span> a) { return a != 0; });</div>
-<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;  <span class="comment">// return std::ranges::count_if(x, [](auto x) { return x != 0; });</span></div>
-<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;}</div>
+<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;constexpr <span class="keyword">auto</span> anyNEZero(<span class="keyword">const</span> <span class="keyword">auto</span> &amp;x) -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;  <span class="keywordflow">return</span> std::any_of(x.begin(), x.end(), [](int64_t y) { return y != 0; });</div>
+<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;}</div>
+<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160; </div>
+<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;constexpr <span class="keyword">auto</span> countNonZero(<span class="keyword">const</span> <span class="keyword">auto</span> &amp;x) -&gt; <span class="keywordtype">size_t</span> {</div>
+<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;  <span class="keywordflow">return</span> std::count_if(x.begin(), x.end(), [](<span class="keyword">auto</span> a) { return a != 0; });</div>
+<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;  <span class="comment">// return std::ranges::count_if(x, [](auto x) { return x != 0; });</span></div>
+<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;}</div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
