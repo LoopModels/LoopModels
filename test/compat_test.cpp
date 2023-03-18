@@ -100,16 +100,16 @@ TEST(LessTrivialPruneBounds, BasicAssertions) {
   llvm::errs() << "aff.A = " << aff.getA() << "\n";
   EXPECT_EQ(aff.getA().numRow(), 3);
   auto loop2Count = countSigns(aff.getA(), 2 + aff.getNumSymbols());
-  EXPECT_EQ(loop2Count.first, 1);
-  EXPECT_EQ(loop2Count.second, 0);
-  aff.removeLoopBang(tlf.getAlloc(), 2);
-  auto loop1Count = countSigns(aff.getA(), 1 + aff.getNumSymbols());
-  EXPECT_EQ(loop1Count.first, 1);
-  EXPECT_EQ(loop1Count.second, 0);
-  aff.removeLoopBang(tlf.getAlloc(), 1);
-  auto loop0Count = countSigns(aff.getA(), 0 + aff.getNumSymbols());
-  EXPECT_EQ(loop0Count.first, 1);
-  EXPECT_EQ(loop0Count.second, 0);
+  EXPECT_EQ(loop2Count[0], 1);
+  EXPECT_EQ(loop2Count[1], 0);
+  auto aff2 = aff.removeLoop(tlf.getAlloc(), 2);
+  auto loop1Count = countSigns(aff2->getA(), 1 + aff2->getNumSymbols());
+  EXPECT_EQ(loop1Count[0], 1);
+  EXPECT_EQ(loop1Count[1], 0);
+  auto aff3 = aff2->removeLoop(tlf.getAlloc(), 1);
+  auto loop0Count = countSigns(aff3->getA(), 0 + aff3->getNumSymbols());
+  EXPECT_EQ(loop0Count[0], 1);
+  EXPECT_EQ(loop0Count[1], 0);
 }
 
 // NOLINTNEXTLINE(modernize-use-trailing-return-type)
@@ -138,11 +138,11 @@ TEST(AffineTest0, BasicAssertions) {
   llvm::errs() << "About to run first compat test\n";
   llvm::errs() << "aff.A.size() = (" << size_t(aff.getA().numRow()) << ", "
                << size_t(aff.getA().numCol()) << ")\n";
-  EXPECT_FALSE(aff.zeroExtraIterationsUponExtending(0, false));
-  EXPECT_FALSE(aff.zeroExtraIterationsUponExtending(0, true));
-  EXPECT_TRUE(aff.zeroExtraIterationsUponExtending(1, false));
+  EXPECT_FALSE(aff.zeroExtraItersUponExtending(tlf.getAlloc(), 0, false));
+  EXPECT_FALSE(aff.zeroExtraItersUponExtending(tlf.getAlloc(), 0, true));
+  EXPECT_TRUE(aff.zeroExtraItersUponExtending(tlf.getAlloc(), 1, false));
   llvm::errs() << "About to run second compat test\n";
-  EXPECT_FALSE(aff.zeroExtraIterationsUponExtending(1, true));
+  EXPECT_FALSE(aff.zeroExtraItersUponExtending(tlf.getAlloc(), 1, true));
   aff.dump();
   llvm::errs() << "About to run first set of bounds tests\n";
   llvm::errs() << "\nPermuting loops 1 and 2\n";
@@ -160,9 +160,9 @@ TEST(AffineTest0, BasicAssertions) {
                << "\n";
   llvm::errs() << "Constructed affine obj\n";
   llvm::errs() << "About to run first compat test\n";
-  EXPECT_FALSE(affp021.zeroExtraIterationsUponExtending(1, false));
+  EXPECT_FALSE(affp021.zeroExtraItersUponExtending(tlf.getAlloc(), 1, false));
   llvm::errs() << "About to run second compat test\n";
-  EXPECT_TRUE(affp021.zeroExtraIterationsUponExtending(1, true));
+  EXPECT_TRUE(affp021.zeroExtraItersUponExtending(tlf.getAlloc(), 1, true));
 
   // affp021.zeroExtraIterationsUponExtending(poset, 1, )
 }

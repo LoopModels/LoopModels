@@ -560,7 +560,8 @@ struct AffineLoopNest
     -> NotNull<AffineLoopNest<NonNegative>> {
     auto A{getA()};
     auto [neg, pos] = indsNegPos(A(_, v));
-    Row numCon = A.numRow() - pos.size() + size_t(neg.size()) * pos.size();
+    unsigned numCon =
+      unsigned(A.numRow()) - pos.size() + neg.size() * pos.size();
     if constexpr (!NonNegative) numCon -= neg.size();
     auto ret = AffineLoopNest<NonNegative>::allocate(alloc, numCon,
                                                      numLoops - 1, getSyms());
@@ -607,29 +608,33 @@ struct AffineLoopNest
   //   alloc.rollBack(check);
   //   return ret;
   // }
-  [[nodiscard]] auto zeroExtraIterationsUponExtending(size_t _i,
-                                                      bool extendLower) const
-    -> bool {
-    AffineLoopNest<NonNegative> tmp{*this};
+  [[nodiscard]] auto
+  zeroExtraItersUponExtending(LinAlg::Alloc<int64_t> auto &alloc, size_t _i,
+                              bool extendLower) const -> bool {
+    auto p = alloc.checkPoint();
+    AffineLoopNest<NonNegative> *tmp = copy(alloc);
     const size_t numPrevLoops = getNumLoops() - 1;
     for (size_t i = 0; i < numPrevLoops; ++i)
-      if (i != _i) tmp.removeVariableAndPrune(i + getNumSymbols());
+      if (i != _i) tmp->removeVariableAndPrune(i + getNumSymbols());
     bool indep = true;
     const size_t numConst = getNumSymbols();
-    for (size_t n = 0; n < tmp.A.numRow(); ++n)
-      if ((tmp.A(n, _i + numConst) != 0) &&
-          (tmp.A(n, numPrevLoops + numConst) != 0))
+    auto A{tmp->getA()};
+    for (size_t n = 0; n < A.numRow(); ++n)
+      if ((A(n, _i + numConst) != 0) && (A(n, numPrevLoops + numConst) != 0))
         indep = false;
-    if (indep) return false;
-    AffineLoopNest<NonNegative> margi{tmp};
-    margi.removeVariableAndPrune(numPrevLoops + getNumSymbols());
-    AffineLoopNest<NonNegative> tmp2;
+    if (indep) {
+      alloc.rollBack(p);
+      return false;
+    }
+    AffineLoopNest<NonNegative> *margi = tmp->copy(alloc);
+    margi->removeVariableAndPrune(numPrevLoops + getNumSymbols());
+    AffineLoopNest<NonNegative> *tmp2;
     // margi contains extrema for `_i`
     // we can substitute extended for value of `_i`
     // in `tmp`
     int64_t sign = 2 * extendLower - 1; // extendLower ? 1 : -1
-    for (size_t c = 0; c < margi.getNumInequalityConstraints(); ++c) {
-      int64_t b = sign * margi.A(c, _i + numConst);
+    for (size_t c = 0; c < margi->getNumInequalityConstraints(); ++c) {
+      int64_t b = sign * margi->A(c, _i + numConst);
       if (b <= 0) continue;
       tmp2 = tmp;
       // increment to increase bound
@@ -638,22 +643,25 @@ struct AffineLoopNest
       // upper: a'x - i + b >= 0 -> i <=  a'x + b
       // to decrease the lower bound or increase the upper, we increment
       // `b`
-      ++margi.A(c, 0);
+      ++margi->getA()(c, 0);
       // our approach here is to set `_i` equal to the extended bound
       // and then check if the resulting polyhedra is empty.
       // if not, then we may have >0 iterations.
-      for (size_t cc = 0; cc < tmp2.A.numRow(); ++cc) {
-        int64_t d = tmp2.A(cc, _i + numConst);
+      for (size_t cc = 0; cc < tmp2->getNumConstraints(); ++cc) {
+        int64_t d = tmp2->getA()(cc, _i + numConst);
         if (d == 0) continue;
         d *= sign;
-        for (size_t v = 0; v < tmp2.A.numCol(); ++v)
-          tmp2.A(cc, v) = b * tmp2.A(cc, v) - d * margi.A(c, v);
+        for (size_t v = 0; v < tmp2->getA().numCol(); ++v)
+          tmp2->getA()(cc, v) =
+            b * tmp2->getA()(cc, v) - d * margi->getA()(c, v);
       }
-      for (size_t cc = size_t(tmp2.A.numRow()); cc;)
-        if (tmp2.A(--cc, numPrevLoops + numConst) == 0)
-          eraseConstraint(tmp2.A, cc);
-      tmp2.initializeComparator();
-      if (!(tmp2.calcIsEmpty())) return false;
+      for (size_t cc = size_t(tmp2->getNumConstraints()); cc;)
+        if (tmp2->getA()(--cc, numPrevLoops + numConst) == 0)
+          eraseConstraint(tmp2->getA(), cc);
+      if (!(tmp2->calcIsEmpty())) {
+        alloc.rollBack(p);
+        return false;
+      }
     }
     if constexpr (NonNegative) {
       if (extendLower) {
@@ -665,22 +673,25 @@ struct AffineLoopNest
         // increment `b` our approach here is to set `_i` equal to the
         // extended bound and then check if the resulting polyhedra is
         // empty. if not, then we may have >0 iterations.
-        for (size_t cc = 0; cc < tmp.A.numRow(); ++cc) {
-          if (int64_t d = tmp.A(cc, _i + numConst)) {
+        for (size_t cc = 0; cc < tmp->getNumConstraints(); ++cc) {
+          if (int64_t d = tmp->getA()(cc, _i + numConst)) {
             // lower bound is i >= 0
             // so setting equal to the extended lower bound now
             // means that i = -1 so we decrement `d` from the column
-            tmp.A(cc, 0) -= d;
-            tmp.A(cc, _i + numConst) = 0;
+            tmp->getA()(cc, 0) -= d;
+            tmp->getA()(cc, _i + numConst) = 0;
           }
         }
-        for (size_t cc = size_t(tmp.A.numRow()); cc;)
-          if (tmp.A(--cc, numPrevLoops + numConst) == 0)
-            eraseConstraint(tmp.A, cc);
-        tmp.initializeComparator();
-        if (!(tmp.calcIsEmpty())) return false;
+        for (size_t cc = size_t(tmp->getNumConstraints()); cc;)
+          if (tmp->getA()(--cc, numPrevLoops + numConst) == 0)
+            eraseConstraint(tmp->getA(), cc);
+        if (!(tmp->calcIsEmpty())) {
+          alloc.rollBack(p);
+          return false;
+        }
       }
     }
+    alloc.rollBack(p);
     return true;
   }
 
@@ -759,13 +770,16 @@ struct AffineLoopNest
   }
   void dump(llvm::raw_ostream &os = llvm::errs()) const { os << *this; }
 
-  inline auto getA() -> MutDensePtrMatrix<int64_t> {
+  [[nodiscard]] constexpr auto getNumConstraints() const -> unsigned {
+    return numConstraints;
+  }
+  [[nodiscard]] constexpr auto getA() -> MutDensePtrMatrix<int64_t> {
     std::byte *ptr = memory;
     return {reinterpret_cast<int64_t *>(
               ptr + sizeof(const llvm::SCEV *const *) * numDynSymbols),
             DenseDims{numConstraints, numLoops + numDynSymbols + 1}};
   };
-  [[nodiscard]] inline auto getA() const -> DensePtrMatrix<int64_t> {
+  [[nodiscard]] constexpr auto getA() const -> DensePtrMatrix<int64_t> {
     const std::byte *ptr = memory;
     return {const_cast<int64_t *>(reinterpret_cast<const int64_t *>(
               ptr + sizeof(const llvm::SCEV *const *) * numDynSymbols)),

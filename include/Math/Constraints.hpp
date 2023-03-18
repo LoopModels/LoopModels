@@ -493,7 +493,7 @@ constexpr auto uniqueConstraint(DensePtrMatrix<int64_t> A, size_t C) -> bool {
 }
 
 constexpr auto countSigns(DensePtrMatrix<int64_t> A, size_t i)
-  -> std::pair<size_t, size_t> {
+  -> std::array<size_t, 2> {
   size_t numNeg = 0;
   size_t numPos = 0;
   for (size_t j = 0; j < A.numRow(); ++j) {
@@ -501,7 +501,7 @@ constexpr auto countSigns(DensePtrMatrix<int64_t> A, size_t i)
     numNeg += (Aij < 0);
     numPos += (Aij > 0);
   }
-  return std::make_pair(numNeg, numPos);
+  return {numNeg, numPos};
 }
 
 constexpr void deleteBounds(MutDensePtrMatrix<int64_t> &A, size_t i) {
