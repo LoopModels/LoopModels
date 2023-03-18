@@ -281,41 +281,42 @@ $(function() {
 <div class="line"><a name="l00245"></a><span class="lineno">  245</span>&#160;    <span class="keywordflow">if</span> constexpr (NonNegative) fourierMotzkinNonNegative(A, i);</div>
 <div class="line"><a name="l00246"></a><span class="lineno">  246</span>&#160;    <span class="keywordflow">else</span> fourierMotzkin(A, i);</div>
 <div class="line"><a name="l00247"></a><span class="lineno">  247</span>&#160;  }</div>
-<div class="line"><a name="l00248"></a><span class="lineno">  248</span>&#160;  constexpr <span class="keywordtype">void</span> removeVariableAndPrune(<span class="keyword">const</span> <span class="keywordtype">size_t</span> i) {</div>
-<div class="line"><a name="l00249"></a><span class="lineno">  249</span>&#160;    removeVariable(i);</div>
-<div class="line"><a name="l00250"></a><span class="lineno">  250</span>&#160;    pruneBoundsUnchecked();</div>
-<div class="line"><a name="l00251"></a><span class="lineno">  251</span>&#160;  }</div>
-<div class="line"><a name="l00252"></a><span class="lineno">  252</span>&#160; </div>
-<div class="line"><a name="l00253"></a><span class="lineno">  253</span>&#160;  constexpr <span class="keywordtype">void</span> dropEmptyConstraints() {</div>
-<div class="line"><a name="l00254"></a><span class="lineno">  254</span>&#160;    dropEmptyConstraints(getA());</div>
-<div class="line"><a name="l00255"></a><span class="lineno">  255</span>&#160;    <span class="keywordflow">if</span> constexpr (HasEqualities) dropEmptyConstraints(getE());</div>
-<div class="line"><a name="l00256"></a><span class="lineno">  256</span>&#160;  }</div>
-<div class="line"><a name="l00257"></a><span class="lineno">  257</span>&#160; </div>
-<div class="line"><a name="l00258"></a><span class="lineno">  258</span>&#160;  <span class="keyword">friend</span> <span class="keyword">inline</span> <span class="keyword">auto</span> operator&lt;&lt;(llvm::raw_ostream &amp;os, <span class="keyword">const</span> <a class="code" href="structBasePolyhedra.html">BasePolyhedra</a> &amp;p)</div>
-<div class="line"><a name="l00259"></a><span class="lineno">  259</span>&#160;    -&gt; llvm::raw_ostream &amp; {</div>
-<div class="line"><a name="l00260"></a><span class="lineno">  260</span>&#160;    <span class="keyword">auto</span> &amp;&amp;os2 =</div>
-<div class="line"><a name="l00261"></a><span class="lineno">  261</span>&#160;      printConstraints(os &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>, p.A, llvm::ArrayRef&lt;const llvm::SCEV *&gt;());</div>
-<div class="line"><a name="l00262"></a><span class="lineno">  262</span>&#160;    <span class="keywordflow">if</span> constexpr (NonNegative) printPositive(os2, p.getNumDynamic());</div>
-<div class="line"><a name="l00263"></a><span class="lineno">  263</span>&#160;    <span class="keywordflow">if</span> constexpr (HasEqualities)</div>
-<div class="line"><a name="l00264"></a><span class="lineno">  264</span>&#160;      <span class="keywordflow">return</span> printConstraints(os2, p.E, llvm::ArrayRef&lt;const llvm::SCEV *&gt;(),</div>
-<div class="line"><a name="l00265"></a><span class="lineno">  265</span>&#160;                              <span class="keyword">false</span>);</div>
-<div class="line"><a name="l00266"></a><span class="lineno">  266</span>&#160;    <span class="keywordflow">return</span> os2;</div>
-<div class="line"><a name="l00267"></a><span class="lineno">  267</span>&#160;  }</div>
-<div class="line"><a name="l00268"></a><span class="lineno">  268</span>&#160;  <span class="keywordtype">void</span> dump()<span class="keyword"> const </span>{ llvm::errs() &lt;&lt; *<span class="keyword">this</span>; }</div>
-<div class="line"><a name="l00269"></a><span class="lineno">  269</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> isEmpty() <span class="keyword">const</span> -&gt; <span class="keywordtype">bool</span> {</div>
-<div class="line"><a name="l00270"></a><span class="lineno">  270</span>&#160;    <span class="keywordflow">return</span> getA().numRow() == 0;</div>
-<div class="line"><a name="l00271"></a><span class="lineno">  271</span>&#160;    <span class="comment">// if (A.numRow() == 0)</span></div>
-<div class="line"><a name="l00272"></a><span class="lineno">  272</span>&#160;    <span class="comment">//     return true;</span></div>
-<div class="line"><a name="l00273"></a><span class="lineno">  273</span>&#160;    <span class="comment">// for (size_t r = 0; r &lt; A.numRow(); ++r)</span></div>
-<div class="line"><a name="l00274"></a><span class="lineno">  274</span>&#160;    <span class="comment">//     if (C.less(A(r, _)))</span></div>
-<div class="line"><a name="l00275"></a><span class="lineno">  275</span>&#160;    <span class="comment">//         return true;</span></div>
-<div class="line"><a name="l00276"></a><span class="lineno">  276</span>&#160;    <span class="comment">// return false;</span></div>
-<div class="line"><a name="l00277"></a><span class="lineno">  277</span>&#160;  }</div>
-<div class="line"><a name="l00278"></a><span class="lineno">  278</span>&#160;  <span class="keywordtype">void</span> truncateVars(<span class="keywordtype">size_t</span> numVar) {</div>
-<div class="line"><a name="l00279"></a><span class="lineno">  279</span>&#160;    <span class="keywordflow">if</span> constexpr (HasEqualities) getE().truncate(Col{numVar});</div>
-<div class="line"><a name="l00280"></a><span class="lineno">  280</span>&#160;    getA().truncate(Col{numVar});</div>
-<div class="line"><a name="l00281"></a><span class="lineno">  281</span>&#160;  }</div>
-<div class="line"><a name="l00282"></a><span class="lineno">  282</span>&#160;};</div>
+<div class="line"><a name="l00248"></a><span class="lineno">  248</span>&#160;  constexpr <span class="keywordtype">void</span> removeVariableAndPrune(LinAlg::Alloc&lt;int64_t&gt; <span class="keyword">auto</span> &amp;alloc,</div>
+<div class="line"><a name="l00249"></a><span class="lineno">  249</span>&#160;                                        <span class="keyword">const</span> <span class="keywordtype">size_t</span> i) {</div>
+<div class="line"><a name="l00250"></a><span class="lineno">  250</span>&#160;    removeVariable(i);</div>
+<div class="line"><a name="l00251"></a><span class="lineno">  251</span>&#160;    pruneBoundsUnchecked(alloc);</div>
+<div class="line"><a name="l00252"></a><span class="lineno">  252</span>&#160;  }</div>
+<div class="line"><a name="l00253"></a><span class="lineno">  253</span>&#160; </div>
+<div class="line"><a name="l00254"></a><span class="lineno">  254</span>&#160;  constexpr <span class="keywordtype">void</span> dropEmptyConstraints() {</div>
+<div class="line"><a name="l00255"></a><span class="lineno">  255</span>&#160;    dropEmptyConstraints(getA());</div>
+<div class="line"><a name="l00256"></a><span class="lineno">  256</span>&#160;    <span class="keywordflow">if</span> constexpr (HasEqualities) dropEmptyConstraints(getE());</div>
+<div class="line"><a name="l00257"></a><span class="lineno">  257</span>&#160;  }</div>
+<div class="line"><a name="l00258"></a><span class="lineno">  258</span>&#160; </div>
+<div class="line"><a name="l00259"></a><span class="lineno">  259</span>&#160;  <span class="keyword">friend</span> <span class="keyword">inline</span> <span class="keyword">auto</span> operator&lt;&lt;(llvm::raw_ostream &amp;os, <span class="keyword">const</span> <a class="code" href="structBasePolyhedra.html">BasePolyhedra</a> &amp;p)</div>
+<div class="line"><a name="l00260"></a><span class="lineno">  260</span>&#160;    -&gt; llvm::raw_ostream &amp; {</div>
+<div class="line"><a name="l00261"></a><span class="lineno">  261</span>&#160;    <span class="keyword">auto</span> &amp;&amp;os2 =</div>
+<div class="line"><a name="l00262"></a><span class="lineno">  262</span>&#160;      printConstraints(os &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>, p.A, llvm::ArrayRef&lt;const llvm::SCEV *&gt;());</div>
+<div class="line"><a name="l00263"></a><span class="lineno">  263</span>&#160;    <span class="keywordflow">if</span> constexpr (NonNegative) printPositive(os2, p.getNumDynamic());</div>
+<div class="line"><a name="l00264"></a><span class="lineno">  264</span>&#160;    <span class="keywordflow">if</span> constexpr (HasEqualities)</div>
+<div class="line"><a name="l00265"></a><span class="lineno">  265</span>&#160;      <span class="keywordflow">return</span> printConstraints(os2, p.E, llvm::ArrayRef&lt;const llvm::SCEV *&gt;(),</div>
+<div class="line"><a name="l00266"></a><span class="lineno">  266</span>&#160;                              <span class="keyword">false</span>);</div>
+<div class="line"><a name="l00267"></a><span class="lineno">  267</span>&#160;    <span class="keywordflow">return</span> os2;</div>
+<div class="line"><a name="l00268"></a><span class="lineno">  268</span>&#160;  }</div>
+<div class="line"><a name="l00269"></a><span class="lineno">  269</span>&#160;  <span class="keywordtype">void</span> dump()<span class="keyword"> const </span>{ llvm::errs() &lt;&lt; *<span class="keyword">this</span>; }</div>
+<div class="line"><a name="l00270"></a><span class="lineno">  270</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> isEmpty() <span class="keyword">const</span> -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l00271"></a><span class="lineno">  271</span>&#160;    <span class="keywordflow">return</span> getA().numRow() == 0;</div>
+<div class="line"><a name="l00272"></a><span class="lineno">  272</span>&#160;    <span class="comment">// if (A.numRow() == 0)</span></div>
+<div class="line"><a name="l00273"></a><span class="lineno">  273</span>&#160;    <span class="comment">//     return true;</span></div>
+<div class="line"><a name="l00274"></a><span class="lineno">  274</span>&#160;    <span class="comment">// for (size_t r = 0; r &lt; A.numRow(); ++r)</span></div>
+<div class="line"><a name="l00275"></a><span class="lineno">  275</span>&#160;    <span class="comment">//     if (C.less(A(r, _)))</span></div>
+<div class="line"><a name="l00276"></a><span class="lineno">  276</span>&#160;    <span class="comment">//         return true;</span></div>
+<div class="line"><a name="l00277"></a><span class="lineno">  277</span>&#160;    <span class="comment">// return false;</span></div>
+<div class="line"><a name="l00278"></a><span class="lineno">  278</span>&#160;  }</div>
+<div class="line"><a name="l00279"></a><span class="lineno">  279</span>&#160;  <span class="keywordtype">void</span> truncateVars(<span class="keywordtype">size_t</span> numVar) {</div>
+<div class="line"><a name="l00280"></a><span class="lineno">  280</span>&#160;    <span class="keywordflow">if</span> constexpr (HasEqualities) getE().truncate(Col{numVar});</div>
+<div class="line"><a name="l00281"></a><span class="lineno">  281</span>&#160;    getA().truncate(Col{numVar});</div>
+<div class="line"><a name="l00282"></a><span class="lineno">  282</span>&#160;  }</div>
+<div class="line"><a name="l00283"></a><span class="lineno">  283</span>&#160;};</div>
 <div class="ttc" id="astructBasePolyhedra_html"><div class="ttname"><a href="structBasePolyhedra.html">BasePolyhedra</a></div><div class="ttdef"><b>Definition:</b> Polyhedra.hpp:65</div></div>
 <div class="ttc" id="astructBumpAlloc_html"><div class="ttname"><a href="structBumpAlloc.html">BumpAlloc</a></div><div class="ttdef"><b>Definition:</b> Allocators.hpp:31</div></div>
 <div class="ttc" id="astructLinAlg_1_1EmptyMatrix_html"><div class="ttname"><a href="structLinAlg_1_1EmptyMatrix.html">LinAlg::EmptyMatrix</a></div><div class="ttdef"><b>Definition:</b> EmptyArrays.hpp:9</div></div>
