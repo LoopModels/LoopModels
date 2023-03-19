@@ -137,6 +137,12 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>zeroExtraItersUponExt
 <tr class="memitem:a1b4b8f17155e41b88dacffd1cfcc1454"><td class="memItemLeft" align="right" valign="top"><a id="a1b4b8f17155e41b88dacffd1cfcc1454"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>printSymbol</b> (llvm::raw_ostream &amp;os, PtrVector&lt; int64_t &gt; x, int64_t mul) const</td></tr>
 <tr class="separator:a1b4b8f17155e41b88dacffd1cfcc1454"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a542657c669cd6f870a8d2d94ba327a72"><td class="memItemLeft" align="right" valign="top"><a id="a542657c669cd6f870a8d2d94ba327a72"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>setNumConstraints</b> (size_t numCon)</td></tr>
+<tr class="separator:a542657c669cd6f870a8d2d94ba327a72"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2fd6ed7aaf7deb75f7d8d3a30e659a59"><td class="memItemLeft" align="right" valign="top"><a id="a2fd6ed7aaf7deb75f7d8d3a30e659a59"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>decrementNumConstraints</b> ()</td></tr>
+<tr class="separator:a2fd6ed7aaf7deb75f7d8d3a30e659a59"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a88adaf2163285de2922496632ce08227"><td class="memItemLeft" align="right" valign="top"><a id="a88adaf2163285de2922496632ce08227"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>printBound</b> (llvm::raw_ostream &amp;os, int64_t sign) const</td></tr>
 <tr class="separator:a88adaf2163285de2922496632ce08227"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -216,12 +222,24 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>calcIsEmpty
 <tr class="memitem:a0691423c239a9e804ea52838001a031f inherit pub_methods_structBasePolyhedra"><td class="memItemLeft" align="right" valign="top"><a id="a0691423c239a9e804ea52838001a031f"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>calcIsEmpty</b> (LinAlg::Alloc&lt; int64_t &gt; auto &amp;alloc) -&gt; bool</td></tr>
 <tr class="separator:a0691423c239a9e804ea52838001a031f inherit pub_methods_structBasePolyhedra"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a48b1f9643a052ca1fa82f03de11f6933 inherit pub_methods_structBasePolyhedra"><td class="memItemLeft" align="right" valign="top"><a id="a48b1f9643a052ca1fa82f03de11f6933"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>setNumConstraints</b> (size_t numCon)</td></tr>
+<tr class="separator:a48b1f9643a052ca1fa82f03de11f6933 inherit pub_methods_structBasePolyhedra"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8d0effd8876ce8a9398cebf60a016b29 inherit pub_methods_structBasePolyhedra"><td class="memItemLeft" align="right" valign="top"><a id="a8d0effd8876ce8a9398cebf60a016b29"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>setNumEqConstraints</b> (size_t numCon)</td></tr>
+<tr class="separator:a8d0effd8876ce8a9398cebf60a016b29 inherit pub_methods_structBasePolyhedra"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8e915fb94898149c8b8636a326e43128 inherit pub_methods_structBasePolyhedra"><td class="memItemLeft" align="right" valign="top"><a id="a8e915fb94898149c8b8636a326e43128"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>decrementNumConstraints</b> ()</td></tr>
+<tr class="separator:a8e915fb94898149c8b8636a326e43128 inherit pub_methods_structBasePolyhedra"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a97cda00938133ff0e4318e66a4e8bbd1 inherit pub_methods_structBasePolyhedra"><td class="memItemLeft" align="right" valign="top"><a id="a97cda00938133ff0e4318e66a4e8bbd1"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>pruneBounds</b> (LinAlg::Alloc&lt; int64_t &gt; auto &amp;alloc)</td></tr>
 <tr class="separator:a97cda00938133ff0e4318e66a4e8bbd1 inherit pub_methods_structBasePolyhedra"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a43204558b8f376f937c61ce291af1510 inherit pub_methods_structBasePolyhedra"><td class="memItemLeft" align="right" valign="top"><a id="a43204558b8f376f937c61ce291af1510"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>pruneBounds</b> ()</td></tr>
 <tr class="separator:a43204558b8f376f937c61ce291af1510 inherit pub_methods_structBasePolyhedra"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a479e29ae61633e0f5e6a063edf5bbbba inherit pub_methods_structBasePolyhedra"><td class="memItemLeft" align="right" valign="top"><a id="a479e29ae61633e0f5e6a063edf5bbbba"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>eraseConstraint</b> (size_t constraint)</td></tr>
+<tr class="separator:a479e29ae61633e0f5e6a063edf5bbbba inherit pub_methods_structBasePolyhedra"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a71466d8e829956276fee60bf811af104 inherit pub_methods_structBasePolyhedra"><td class="memItemLeft" align="right" valign="top"><a id="a71466d8e829956276fee60bf811af104"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>pruneBoundsUncheckedCore</b> (LinAlg::Alloc&lt; int64_t &gt; auto &amp;alloc, <a class="el" href="structcomparator_1_1PtrSymbolicComparator.html">comparator::PtrSymbolicComparator</a> C)</td></tr>
 <tr class="separator:a71466d8e829956276fee60bf811af104 inherit pub_methods_structBasePolyhedra"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -261,6 +279,9 @@ Static Public Member Functions</h2></td></tr>
 <tr class="memitem:a1a4dcd1cb9ad25c6ced282c9b2dcc8fd"><td class="memItemLeft" align="right" valign="top"><a id="a1a4dcd1cb9ad25c6ced282c9b2dcc8fd"></a>
 static auto&#160;</td><td class="memItemRight" valign="bottom"><b>construct</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, llvm::Loop *L, const llvm::SCEV *BT, llvm::ScalarEvolution &amp;SE, llvm::OptimizationRemarkEmitter *ORE=nullptr) -&gt; <a class="el" href="structNotNull.html">NotNull</a>&lt; <a class="el" href="structAffineLoopNest.html">AffineLoopNest</a> &gt;</td></tr>
 <tr class="separator:a1a4dcd1cb9ad25c6ced282c9b2dcc8fd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a927acad7bd9c20dee07a8d850d5be73a"><td class="memItemLeft" align="right" valign="top"><a id="a927acad7bd9c20dee07a8d850d5be73a"></a>
+static constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>setNumEqConstraints</b> (size_t)</td></tr>
+<tr class="separator:a927acad7bd9c20dee07a8d850d5be73a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2c5feef90746454b5ba55c3d6075f729"><td class="memItemLeft" align="right" valign="top"><a id="a2c5feef90746454b5ba55c3d6075f729"></a>
 static auto&#160;</td><td class="memItemRight" valign="bottom"><b>construct</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, PtrMatrix&lt; int64_t &gt; A, llvm::ArrayRef&lt; const llvm::SCEV * &gt; syms) -&gt; <a class="el" href="structAffineLoopNest.html">AffineLoopNest</a> *</td></tr>
 <tr class="separator:a2c5feef90746454b5ba55c3d6075f729"><td class="memSeparator" colspan="2">&#160;</td></tr>
