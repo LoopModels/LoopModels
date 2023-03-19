@@ -22,11 +22,10 @@
 
 namespace NormalForm {
 
-constexpr auto gcdxScale(int64_t a, int64_t b)
-  -> std::tuple<int64_t, int64_t, int64_t, int64_t> {
-  if (constexpr_abs(a) == 1) return std::make_tuple(a, 0, a, b);
-  auto [g, p, q] = gcdx(a, b);
-  return std::make_tuple(p, q, a / g, b / g);
+constexpr auto gcdxScale(int64_t a, int64_t b) -> std::array<int64_t, 4> {
+  if (constexpr_abs(a) == 1) return {a, 0, a, b};
+  auto [g, p, q, adg, bdg] = dgcdx(a, b);
+  return {p, q, adg, bdg};
 }
 // zero out below diagonal
 constexpr void zeroSupDiagonal(MutPtrMatrix<int64_t> A,
@@ -366,7 +365,6 @@ constexpr void simplifySystem(MutPtrMatrix<int64_t> &A,
     A.truncate(Mnew);
     B.truncate(Mnew);
   }
-  return;
 }
 [[nodiscard]] constexpr auto hermite(IntMatrix A)
   -> std::pair<IntMatrix, SquareMatrix<int64_t>> {

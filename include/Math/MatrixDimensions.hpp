@@ -18,20 +18,6 @@ template <class R, class C> struct CartesianIndex {
 };
 template <class R, class C> CartesianIndex(R r, C c) -> CartesianIndex<R, C>;
 
-#ifndef NDEBUG
-template <std::integral I>
-constexpr auto checkedMul(std::integral auto a, std::integral auto b) -> I {
-  I result;
-  bool overflow = __builtin_mul_overflow(a, b, &result);
-  assert(!overflow && "overflow");
-  return result;
-}
-#else
-template <std::integral I>
-constexpr auto checkedMul(std::integral auto a, std::integral auto b) -> I {
-  return a * b;
-}
-#endif
 struct SquareDims;
 struct DenseDims;
 struct StridedDims {
@@ -43,12 +29,8 @@ struct StridedDims {
   constexpr StridedDims(Row m, Col n, RowStride x) : M(m), N(n), strideM(x) {}
   constexpr StridedDims(CartesianIndex<Row, Col> ind)
     : M(unsigned(ind.row)), N(unsigned(ind.col)), strideM(unsigned(ind.col)) {}
-  constexpr explicit operator uint32_t() const {
-    return checkedMul<uint32_t>(M, strideM);
-  }
-  constexpr explicit operator uint64_t() const {
-    return checkedMul<uint64_t>(M, strideM);
-  }
+  constexpr explicit operator uint32_t() const { return uint32_t(M * strideM); }
+  constexpr explicit operator uint64_t() const { return uint64_t(M * strideM); }
   constexpr auto operator=(const DenseDims &D) -> StridedDims &;
   constexpr auto operator=(const SquareDims &D) -> StridedDims &;
   constexpr operator CarInd() const { return {M, N}; }
@@ -89,12 +71,8 @@ struct StridedDims {
 struct DenseDims {
   unsigned int M{};
   unsigned int N{};
-  constexpr explicit operator uint32_t() const {
-    return checkedMul<uint32_t>(M, N);
-  }
-  constexpr explicit operator uint64_t() const {
-    return checkedMul<uint64_t>(M, N);
-  }
+  constexpr explicit operator uint32_t() const { return uint32_t(M * N); }
+  constexpr explicit operator uint64_t() const { return uint64_t(M * N); }
   constexpr DenseDims() = default;
   constexpr DenseDims(Row m, Col n) : M(unsigned(m)), N(unsigned(n)) {}
   constexpr explicit DenseDims(StridedDims d) : M(d.M), N(d.N) {}
@@ -131,12 +109,8 @@ struct DenseDims {
 };
 struct SquareDims {
   unsigned int M{};
-  constexpr explicit operator uint32_t() const {
-    return checkedMul<uint32_t>(M, M);
-  }
-  constexpr explicit operator uint64_t() const {
-    return checkedMul<uint64_t>(M, M);
-  }
+  constexpr explicit operator uint32_t() const { return uint32_t(M * M); }
+  constexpr explicit operator uint64_t() const { return uint64_t(M * M); }
   constexpr SquareDims() = default;
   constexpr SquareDims(unsigned int d) : M{d} {}
   constexpr SquareDims(Row d) : M{unsigned(d)} {}
@@ -206,5 +180,4 @@ template <MatrixDimension T> constexpr auto dimension(Row r, Col c) -> T {
 
 } // namespace LinAlg
 
-using LinAlg::StridedDims, LinAlg::DenseDims,
-  LinAlg::SquareDims;
+using LinAlg::StridedDims, LinAlg::DenseDims, LinAlg::SquareDims;

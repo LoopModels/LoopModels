@@ -10,6 +10,7 @@
 #include "Math/VectorGreatestCommonDivisor.hpp"
 #include "Utilities/Allocators.hpp"
 #include "Utilities/Invariant.hpp"
+#include <algorithm>
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
@@ -308,12 +309,18 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
                                  PtrMatrix<int64_t> A, size_t numNonNegative) {
     // we have an additional numNonNegative x numNonNegative identity matrix
     // as the lower right block of `A`.
+    // numConExplicit has +1 to indicate positive.
+    // I.e., first variable (probably const offsets) is positive.
     const size_t numConExplicit = size_t(A.numRow()) + 1;
     const size_t numConTotal = numConExplicit + numNonNegative;
     numVar = size_t(A.numCol());
     Row rowV = Row{numVar + numConTotal};
     Col colV = Col{2 * numConTotal};
+    /// B.size() == (A.numCol() + A.numRow() + 1 + numNonNegative) x
+    ///             (2 * (A.numRow() + 1 + numNonNegative))
+    ///
     auto B = getV(rowV, colV);
+    std::fill_n(B.begin(), B.numRow() * B.numCol(), 0);
     B(0, 0) = 1;
     // B = [ A_0 A_1
     //        0   I  ]
@@ -344,6 +351,7 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
     Row rowV = Row{numVar + numInEqConTotal};
     Col colV = Col{2 * numInEqConTotal + numEqCon};
     auto B = getV(rowV, colV);
+    std::fill_n(B.begin(), B.numRow() * B.numCol(), 0);
     B(0, 0) = 1;
     // B is `A` augmented with the implicit non-negative constraints
     // B = [ A_0 A_1
@@ -376,16 +384,30 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
   [[nodiscard]] static constexpr auto
   memoryNeededNonNegative(PtrMatrix<int64_t> A, size_t numNonNegative)
     -> size_t {
+    // we need memory for...
+    /// 1. the matrix V: (dimD ? dimV : rankU) x dimV
+    /// 2. the matrix U: rankU x colU
+    /// 3. the vector d: dimD <= R
+    /// Total:
+    /// mem + size_t(rankU) * colU + size_t(numVRows()) * dimV + dimD
+    ///
+    /// numColB = A.numRow() +
     size_t numConTotal = size_t(A.numRow()) + 1 + numNonNegative;
+    size_t colV = numConTotal + numConTotal;
     size_t rowV = size_t(A.numCol()) + numConTotal;
-    return (2 * numConTotal + rowV + 1) * rowV;
+    // U is <= rowV * rowV
+    // V is <= colV * colV
+    // d is <= colV
+    return rowV * rowV + colV * colV + colV;
   }
   [[nodiscard]] static constexpr auto
   memoryNeededNonNegative(PtrMatrix<int64_t> A, PtrMatrix<int64_t> E,
                           size_t numNonNegative) -> size_t {
     size_t numInEqConTotal = size_t(A.numRow()) + 1 + numNonNegative;
+    size_t colV = (numInEqConTotal << 1) + size_t(E.numRow());
     size_t rowV = size_t(A.numCol()) + numInEqConTotal;
-    return (2 * numInEqConTotal + size_t(E.numRow()) + rowV + 1) * rowV;
+    return rowV * rowV + colV * colV + colV;
+    // return (2 * numInEqConTotal + size_t(E.numRow()) + rowV + 1) * rowV;
   }
   constexpr void init(LinAlg::Alloc<int64_t> auto &alloc, PtrMatrix<int64_t> A,
                       bool pos0) {
@@ -394,6 +416,7 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
     Row rowV = numVar + numCon;
     Col colV = 2 * numCon;
     auto B = getV(rowV, colV);
+    std::fill_n(B.begin(), B.numRow() * B.numCol(), 0);
     B(0, 0) = pos0;
     // V = [A' 0
     //      S  I]
@@ -435,6 +458,7 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
     Row rowV = Row{numVar + numInEqCon};
     Col colV = Col{2 * numInEqCon + numEqCon};
     auto B = getV(rowV, colV);
+    std::fill_n(B.begin(), B.numRow() * B.numCol(), 0);
     // V = [A' E' 0
     //      S  0  I]
     B(0, 0) = pos0;
@@ -466,6 +490,7 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
     // if V is square, it is full rank and there is 1 solution
     // if V has fewer rows, there are infinitely many solutions
     if (R == numColB) return;
+    invariant(R < numColB);
     // H (aliasing V and A) copied
     // R = B.numRow() < B.numCol()
     auto Vt{identity<int64_t>(alloc, numColB)};
@@ -485,6 +510,7 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
   // Note that this is only valid when the comparator was constructed
   // with index `0` referring to >= 0 constants (i.e., the default).
   constexpr auto isEmpty(BumpAlloc<> &alloc) const -> bool {
+    auto p = checkpoint(alloc);
     auto V = getV();
     auto U = getU();
     auto d = getD();
@@ -497,45 +523,47 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
       H(_, _(0, oldn)) = V;
       H(_, oldn) << -b;
       NormalForm::solveSystem(H);
+      bool ret = true;
       for (size_t i = numEquations; i < H.numRow(); ++i)
         if (auto rhs = H(i, oldn))
-          if ((rhs > 0) != (H(i, i) > 0)) return false;
-      return true;
-    } else {
-      // Column rank deficient case
-      Row numSlack = V.numRow() - numEquations;
-      // Vector<int64_t> dinv = d; // copy
-      // We represent D martix as a vector, and multiply the lcm to the
-      // linear equation to avoid store D^(-1) as rational type
-      int64_t Dlcm = lcm(d);
-      auto b2{vector<int64_t>(alloc, d.size())};
-      b2 << -b * Dlcm / d;
-      // Vector<int64_t> b2 = -b * Dlcm / d;
-      size_t numRowTrunc = size_t(U.numRow());
-      auto c{vector<int64_t>(alloc, size_t(V.numRow() - numEquations))};
-      c << V(_(numEquations, end), _(begin, numRowTrunc)) * b2;
-      // Vector<int64_t> c = V(_(numEquations, end), _(begin, numRowTrunc)) *
-      // b2;
-      auto NSdim = V.numCol() - numRowTrunc;
-      // expand W stores [c -JV2 JV2]
-      //  we use simplex to solve [-JV2 JV2][y2+ y2-]' <= JV1D^(-1)Uq
-      // where y2 = y2+ - y2-
-      auto expandW{matrix<int64_t>(alloc, Row{numSlack}, Col{NSdim * 2 + 1})};
-      for (size_t i = 0; i < numSlack; ++i) {
-        expandW(i, 0) = c[i];
-        // expandW(i, 0) *= Dlcm;
-        for (size_t j = 0; j < NSdim; ++j) {
-          auto val = V(i + numEquations, numRowTrunc + j) * Dlcm;
-          expandW(i, j + 1) = -val;
-          expandW(i, NSdim + 1 + j) = val;
-        }
-      }
-      auto p = checkpoint(alloc);
-      std::optional<Simplex> optS{Simplex::positiveVariables(alloc, expandW)};
+          if ((rhs > 0) != (H(i, i) > 0)) {
+            ret = false;
+            break;
+          }
       rollback(alloc, p);
-      return optS.has_value();
+      return ret;
     }
-    return true;
+    // Column rank deficient case
+    Row numSlack = V.numRow() - numEquations;
+    // Vector<int64_t> dinv = d; // copy
+    // We represent D martix as a vector, and multiply the lcm to the
+    // linear equation to avoid store D^(-1) as rational type
+    int64_t Dlcm = lcm(d);
+    auto b2{vector<int64_t>(alloc, d.size())};
+    b2 << -b * Dlcm / d;
+    // Vector<int64_t> b2 = -b * Dlcm / d;
+    size_t numRowTrunc = size_t(U.numRow());
+    auto c{vector<int64_t>(alloc, size_t(V.numRow() - numEquations))};
+    c << V(_(numEquations, end), _(begin, numRowTrunc)) * b2;
+    // Vector<int64_t> c = V(_(numEquations, end), _(begin, numRowTrunc)) *
+    // b2;
+    auto NSdim = V.numCol() - numRowTrunc;
+    // expand W stores [c -JV2 JV2]
+    //  we use simplex to solve [-JV2 JV2][y2+ y2-]' <= JV1D^(-1)Uq
+    // where y2 = y2+ - y2-
+    auto expandW{matrix<int64_t>(alloc, Row{numSlack}, Col{NSdim * 2 + 1})};
+    for (size_t i = 0; i < numSlack; ++i) {
+      expandW(i, 0) = c[i];
+      // expandW(i, 0) *= Dlcm;
+      for (size_t j = 0; j < NSdim; ++j) {
+        auto val = V(i + numEquations, numRowTrunc + j) * Dlcm;
+        expandW(i, j + 1) = -val;
+        expandW(i, NSdim + 1 + j) = val;
+      }
+    }
+    std::optional<Simplex> optS{Simplex::positiveVariables(alloc, expandW)};
+    rollback(alloc, p);
+    return optS.has_value();
   }
   [[nodiscard]] constexpr auto isEmpty() const -> bool {
     BumpAlloc<> alloc;
@@ -755,8 +783,7 @@ struct PtrSymbolicComparator
   }
   // constexpr auto getUImpl(Row r, Col c) -> MutPtrMatrix<int64_t> {}
   constexpr auto getVImpl(Row r, Col c) -> MutDensePtrMatrix<int64_t> {
-    rankU = unsigned(r);
-    colU = rankU;
+    colU = rankU = unsigned(r);
     dimV = unsigned(c);
     getUImpl() << 0;
     dimD = 0;

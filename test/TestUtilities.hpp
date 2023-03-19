@@ -57,7 +57,7 @@ public:
       // to.
       AffineLoopNest<true> *symbolSource = nullptr;
       size_t numSymbolSource = 0;
-      for (auto aln : alns) {
+      for (auto *aln : alns) {
         if (numSymbolSource < aln->getSyms().size()) {
           numSymbolSource = aln->getSyms().size();
           symbolSource = aln;
@@ -73,12 +73,15 @@ public:
   // for creating some black box value
   auto loadValueFromPtr(llvm::Type *typ) -> llvm::Value * {
     names.emplace_back("value_" + std::to_string(names.size()));
-    return builder.CreateAlignedLoad(
+    auto *offset = builder.getInt64(ptrIntOffset++);
+    auto *ret = builder.CreateAlignedLoad(
       typ,
-      builder.CreateGEP(
-        builder.getInt64Ty(), ptrToLoadFrom,
-        llvm::SmallVector<llvm::Value *, 1>{builder.getInt64(ptrIntOffset++)}),
+      builder.CreateGEP(builder.getInt64Ty(), ptrToLoadFrom,
+                        llvm::SmallVector<llvm::Value *, 1>{offset}),
       llvm::MaybeAlign(8), names.back());
+    symsToDelete.insert(ret);
+    symsToDelete.insert(offset);
+    return ret;
   }
   auto createArray() -> llvm::Value * {
     return loadValueFromPtr(builder.getPtrTy());
@@ -95,19 +98,25 @@ public:
       F{llvm::Function::Create(
         FT, llvm::GlobalValue::LinkageTypes::ExternalLinkage, "foo", mod)},
       dl{&mod}, TTI{dl}, TLII{targetTripple}, TLI{TLII}, AC{*F, &TTI},
-      SE{*F, TLI, AC, DT, LI}, ptrToLoadFrom{
-                                 builder.CreateIntToPtr(builder.getInt64(16000),
-                                                        builder.getInt64Ty())} {
+      SE{*F, TLI, AC, DT, LI}, ptrToLoadFrom{nullptr} {
 
     fmf.set();
     builder.setFastMathFlags(fmf);
+
+    auto *offset = builder.getInt64(16000);
+    ptrToLoadFrom = builder.CreateIntToPtr(offset, builder.getInt64Ty());
+    symsToDelete.insert(offset);
+    symsToDelete.insert(ptrToLoadFrom);
   }
   auto getSCEVUnknown(llvm::Value *v) -> const llvm::SCEVUnknown * {
     return llvm::dyn_cast<llvm::SCEVUnknown>(SE.getUnknown(v));
   }
   ~TestLoopFunction() = default;
   // ~TestLoopFunction() {
-  //   for (auto s : symsToDelete) s->deleteValue();
+  //   for (auto *s : symsToDelete) {
+  //     llvm::errs() << "deleting " << s << ": " << *s << "\n";
+  //     s->deleteValue();
+  //   }
   // }
   auto CreateLoad(llvm::Value *ptr, llvm::Value *offset) -> llvm::LoadInst * {
     llvm::Type *Float64 = builder.getDoubleTy();

@@ -53,7 +53,7 @@ TEST(TrivialPruneBounds, BasicAssertions) {
   // M >= 0 is redundant
   // because M - 1 >= m >= 0
   // hence, we should be left with 1 bound (-2 + M - m >= 0)
-  EXPECT_EQ(aff->getA().numRow(), 1);
+  EXPECT_EQ(unsigned(aff->getA().numRow()), 1);
   EXPECT_EQ(aff->getA(), "[-2 1 -1]"_mat);
 }
 

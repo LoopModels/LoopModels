@@ -129,12 +129,21 @@ struct BasePolyhedra {
   constexpr auto calcIsEmpty(LinAlg::Alloc<int64_t> auto &alloc) -> bool {
     return initializeComparator(alloc).isEmpty(alloc);
   }
+  constexpr void setNumConstraints(size_t numCon) {
+    static_cast<P *>(this)->setNumConstraints(numCon);
+  }
+  constexpr void setNumEqConstraints(size_t numCon) {
+    static_cast<P *>(this)->setNumEqConstraints(numCon);
+  }
+  constexpr void decrementNumConstraints() {
+    static_cast<P *>(this)->decrementNumConstraints();
+  }
   constexpr void pruneBounds(LinAlg::Alloc<int64_t> auto &alloc) {
     auto p = checkpoint(alloc);
     auto C = initializeComparator(alloc);
     if (C.isEmpty(alloc)) {
-      getA().truncate(Row{0});
-      if constexpr (HasEqualities) getE().truncate(Row{0});
+      setNumConstraints(0);
+      if constexpr (HasEqualities) setNumEqConstraints(0);
     } else pruneBoundsUncheckedCore(alloc, C);
     rollback(alloc, p);
   }
@@ -142,6 +151,10 @@ struct BasePolyhedra {
     // std::allocator<int64_t> alloc;
     BumpAlloc<> alloc;
     pruneBounds(alloc);
+  }
+  constexpr void eraseConstraint(size_t constraint) {
+    eraseConstraintImpl(getA(), constraint);
+    decrementNumConstraints();
   }
   constexpr void pruneBoundsUncheckedCore(LinAlg::Alloc<int64_t> auto &alloc,
                                           comparator::PtrSymbolicComparator C) {
@@ -155,11 +168,11 @@ struct BasePolyhedra {
         if (A.numRow() <= 1) return;
         diff << A(--i, _) - A(j, _);
         if (C.greaterEqual(diff)) {
-          eraseConstraint(A, i);
+          eraseConstraint(i);
           reinitComparator(alloc, C);
           --j; // `i < j`, and `i` has been removed
         } else if (diff *= -1; C.greaterEqual(diff)) {
-          eraseConstraint(A, j);
+          eraseConstraint(j);
           reinitComparator(alloc, C);
           broke = true;
           break; // `j` is gone
@@ -168,10 +181,10 @@ struct BasePolyhedra {
       if constexpr (NonNegative) {
         if (!broke) {
           for (size_t i = 0; i < dyn; ++i) {
-            diff = A(j, _);
+            diff << A(j, _);
             --diff[last - i];
             if (C.greaterEqual(diff)) {
-              eraseConstraint(A, j);
+              eraseConstraint(j);
               reinitComparator(alloc, C);
               break; // `j` is gone
             }

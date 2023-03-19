@@ -15,7 +15,6 @@ include(../cmake/CPM.cmake)
 # ---- compile_commands.json ----
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-
 CPMAddPackage(
   NAME benchmark
   GITHUB_REPOSITORY google/benchmark
@@ -46,21 +45,29 @@ file(GLOB benchmarks CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
 find_package(LLVM 15 REQUIRED CONFIG)
 list(APPEND CMAKE_MODULE_PATH ${LLVM_CMAKE_DIR})
 include(${LLVM_DIR}/AddLLVM.cmake)
-# message(STATUS "headers: ${headers}")
-# add_executable(${PROJECT_NAME} ${headers} ${benchmarks})
+# message(STATUS "headers: ${headers}") add_executable(${PROJECT_NAME} ${headers} ${benchmarks})
 add_executable(${PROJECT_NAME} ${benchmarks})
 
 message(STATUS "PROJECT_BINARY_DIR: ${PROJECT_BINARY_DIR}")
 message(STATUS "PROJECT_SOURCE_DIR: ${PROJECT_SOURCE_DIR}")
 message(STATUS "LLVM_INCLUDE_DIRS: ${LLVM_INCLUDE_DIRS}")
 
-target_include_directories(${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/../include ${PROJECT_SOURCE_DIR}/include ${LLVM_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME} PRIVATE benchmark LLVM absl::base absl::flat_hash_map unordered_dense::unordered_dense)
+target_include_directories(
+  ${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/../include ${PROJECT_SOURCE_DIR}/include
+                          ${LLVM_INCLUDE_DIRS}
+)
+target_link_libraries(
+  ${PROJECT_NAME} PRIVATE benchmark LLVM absl::base absl::flat_hash_map
+                          unordered_dense::unordered_dense
+)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   target_compile_options(${PROJECT_NAME} PRIVATE -ferror-limit=2 -fcolor-diagnostics)
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
-  target_compile_options(${PROJECT_NAME} PRIVATE -fmax-errors=2 -fconcepts-diagnostics-depth=4 -fno-semantic-interposition -fdiagnostics-color=always -fverbose-asm)
+  target_compile_options(
+    ${PROJECT_NAME} PRIVATE -fmax-errors=2 -fconcepts-diagnostics-depth=4
+                            -fno-semantic-interposition -fdiagnostics-color=always -fverbose-asm
+  )
 endif()
 
 if(ENABLE_NATIVE_COMPILATION)
@@ -81,8 +88,22 @@ set_target_properties(
 )
 
 target_compile_options(
-  ${PROJECT_NAME} PRIVATE -fno-exceptions -fno-rtti -fstrict-aliasing -fno-plt -fstrict-overflow -Wall -Wshadow -Wextra -save-temps
+  ${PROJECT_NAME}
+  PRIVATE -fno-exceptions
+          -fno-rtti
+          -fstrict-aliasing
+          -fno-plt
+          -fstrict-overflow
+          -fomit-frame-pointer
+          -fno-signed-zeros
+          -fassociative-math
+          -ffinite-math-only
+          -fno-trapping-math
+          -Wall
+          -Wshadow
+          -Wextra
+          -save-temps
 )
-if (CMAKE_SYSTEM_PROCESSOR MATCHES "(x86)|(X86)|(amd64)|(AMD64)")
-  target_compile_options(  ${PROJECT_NAME} PRIVATE -masm=intel)
+if(CMAKE_SYSTEM_PROCESSOR MATCHES "(x86)|(X86)|(amd64)|(AMD64)")
+  target_compile_options(${PROJECT_NAME} PRIVATE -masm=intel)
 endif()

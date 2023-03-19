@@ -9,6 +9,11 @@ project(
   LANGUAGES C CXX
 )
 # TODO: disable C when this is fixed: https://github.com/llvm/llvm-project/issues/53950
+set(OMIT_FRAME_POINTER
+    "ReleaseOnly"
+    CACHE STRING "Omit frame pointers (ON/OFF/ReleaseOnly)"
+)
+set_property(CACHE OMIT_FRAME_POINTER PROPERTY STRINGS ON OFF ReleaseOnly)
 
 # ---- Include guards ----
 
@@ -87,6 +92,15 @@ set_target_properties(
 target_compile_options(
   ${PROJECT_NAME} PRIVATE -fno-exceptions -fno-rtti -fstrict-aliasing -fno-plt -fstrict-overflow
 )
+if(OMIT_FRAME_POINTER STREQUAL "ReleaseOnly")
+  target_compile_options(
+    ${PROJECRT_NAME} PRIVATE "$<IF:$<CONFIG:Release>,-fomit-frame-pointer,-fno-omit-frame-pointer>"
+  )
+elseif(OMIT_FRAME_POINTER)
+  target_compile_options(${PROJECRT_NAME} PRIVATE -fomit-frame-pointer)
+else()
+  target_compile_options(${PROJECRT_NAME} PRIVATE -fno-omit-frame-pointer)
+endif()
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
   target_compile_options(

@@ -710,16 +710,20 @@ struct AffineLoopNest
         printed = true;
         int64_t absxi = constexpr_abs(xi);
         if (absxi != 1) os << absxi << " * ";
-        os << getSyms()[i - 1];
+        os << *getSyms()[i - 1];
       }
   }
+  constexpr void setNumConstraints(size_t numCon) { numConstraints = numCon; }
+  static constexpr void setNumEqConstraints(size_t) {}
+  constexpr void decrementNumConstraints() { --numConstraints; }
+
   // prints the inner most loop.
   // it is assumed that you iteratively pop off the inner most loop with
   // `removeLoop` to print all bounds.
   void printBound(llvm::raw_ostream &os, int64_t sign) const {
     const size_t numVar = getNumLoops(), numVarMinus1 = numVar - 1,
                  numConst = getNumSymbols();
-    bool hasPrintedLine = false;
+    bool hasPrintedLine = NonNegative && (sign == 1);
     auto A{getA()};
     for (size_t j = 0; j < A.numRow(); ++j) {
       int64_t Aj = A(j, end - 1) * sign;
