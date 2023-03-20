@@ -569,6 +569,10 @@ struct AffineLoopNest
     ret->numConstraints = unsigned(
       fourierMotzkinCore<NonNegative>(ret->getA(), getA(), v, {neg, pos}));
     ret->pruneBounds(alloc);
+    // either we remove one loop, or remaining loops are empty
+    assert(((ret->getNumLoops() == getNumLoops() - 1) ||
+            (ret->getNumLoops() == 0)) &&
+           "didn't remove loop");
     return ret;
   }
   auto perm(PtrVector<unsigned> x)
@@ -721,17 +725,19 @@ struct AffineLoopNest
   // it is assumed that you iteratively pop off the inner most loop with
   // `removeLoop` to print all bounds.
   void printBound(llvm::raw_ostream &os, int64_t sign) const {
-    const size_t numVar = getNumLoops(), numVarMinus1 = numVar - 1,
-                 numConst = getNumSymbols();
+    const size_t numVar = getNumLoops();
+    if (numVar == 0) return;
+    const size_t numVarMinus1 = numVar - 1, numConst = getNumSymbols();
     bool hasPrintedLine = NonNegative && (sign == 1);
     auto A{getA()};
     for (size_t j = 0; j < A.numRow(); ++j) {
-      int64_t Aj = A(j, end - 1) * sign;
+      int64_t Ajraw = A(j, end - 1);
+      int64_t Aj = Ajraw * sign;
       if (Aj <= 0) continue;
       if (hasPrintedLine)
         for (size_t k = 0; k < 21; ++k) os << ' ';
       hasPrintedLine = true;
-      if (Aj != sign)
+      if (Ajraw != sign)
         os << Aj << "*i_" << numVarMinus1 << ((sign < 0) ? " <= " : " >= ");
       else os << "i_" << numVarMinus1 << ((sign < 0) ? " <= " : " >= ");
       PtrVector<int64_t> b = getProgVars(j);
@@ -751,18 +757,16 @@ struct AffineLoopNest
       os << "\n";
     }
   }
-  void printLowerBound(llvm::raw_ostream &os) const {
-    if constexpr (NonNegative) os << "i_" << getNumLoops() - 1 << " >= 0\n";
-    printBound(os, 1);
-  }
-  void printUpperBound(llvm::raw_ostream &os) const { printBound(os, -1); }
   void dump(llvm::raw_ostream &os, BumpAlloc<> &alloc) const {
     const AffineLoopNest *tmp = this;
     for (size_t i = getNumLoops();;) {
+      assert((tmp->getNumLoops() == 0 || (i == tmp->getNumLoops())) &&
+             "loop count mismatch");
       os << "Loop " << --i << " lower bounds: ";
-      tmp->printLowerBound(os);
+      if constexpr (NonNegative) os << "i_" << i << " >= 0\n";
+      tmp->printBound(os, 1); // 1 for lower bound
       os << "Loop " << i << " upper bounds: ";
-      tmp->printUpperBound(os);
+      tmp->printBound(os, -1); // -1 for upper bound
       if (!i) break;
       tmp = tmp->removeLoop(alloc, i);
     }

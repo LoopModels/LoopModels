@@ -39,6 +39,8 @@ class BaseMatrixPrinter(Iterator):
         self.c = -1
 
     def __next__(self):
+        if (self.rows == 0) or (self.cols == 0):
+            raise StopIteration
         self.c += 1
         if self.c == self.cols:
             self.c = 0

@@ -520,7 +520,7 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
       Col oldn = V.numCol();
       auto H{matrix<int64_t>(alloc, V.numRow(), oldn + 1)};
       // IntMatrix H{V.numRow(), oldn + 1};
-      H(_, _(0, oldn)) = V;
+      H(_, _(0, oldn)) << V;
       H(_, oldn) << -b;
       NormalForm::solveSystem(H);
       bool ret = true;
