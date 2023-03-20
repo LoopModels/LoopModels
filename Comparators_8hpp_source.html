@@ -572,7 +572,7 @@ $(function() {
 <div class="line"><a name="l00520"></a><span class="lineno">  520</span>&#160;      Col oldn = V.numCol();</div>
 <div class="line"><a name="l00521"></a><span class="lineno">  521</span>&#160;      <span class="keyword">auto</span> H{matrix&lt;int64_t&gt;(alloc, V.numRow(), oldn + 1)};</div>
 <div class="line"><a name="l00522"></a><span class="lineno">  522</span>&#160;      <span class="comment">// IntMatrix H{V.numRow(), oldn + 1};</span></div>
-<div class="line"><a name="l00523"></a><span class="lineno">  523</span>&#160;      H(_, _(0, oldn)) = V;</div>
+<div class="line"><a name="l00523"></a><span class="lineno">  523</span>&#160;      H(_, _(0, oldn)) &lt;&lt; V;</div>
 <div class="line"><a name="l00524"></a><span class="lineno">  524</span>&#160;      H(_, oldn) &lt;&lt; -b;</div>
 <div class="line"><a name="l00525"></a><span class="lineno">  525</span>&#160;      NormalForm::solveSystem(H);</div>
 <div class="line"><a name="l00526"></a><span class="lineno">  526</span>&#160;      <span class="keywordtype">bool</span> ret = <span class="keyword">true</span>;</div>
