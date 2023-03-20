@@ -102,11 +102,11 @@ TEST(LessTrivialPruneBounds, BasicAssertions) {
   auto loop2Count = countSigns(aff.getA(), 2 + aff.getNumSymbols());
   EXPECT_EQ(loop2Count[0], 1);
   EXPECT_EQ(loop2Count[1], 0);
-  auto aff2 = aff.removeLoop(tlf.getAlloc(), 2);
+  auto *aff2 = aff.removeLoop(tlf.getAlloc(), 2);
   auto loop1Count = countSigns(aff2->getA(), 1 + aff2->getNumSymbols());
   EXPECT_EQ(loop1Count[0], 1);
   EXPECT_EQ(loop1Count[1], 0);
-  auto aff3 = aff2->removeLoop(tlf.getAlloc(), 1);
+  auto *aff3 = aff2->removeLoop(tlf.getAlloc(), 1);
   auto loop0Count = countSigns(aff3->getA(), 0 + aff3->getNumSymbols());
   EXPECT_EQ(loop0Count[0], 1);
   EXPECT_EQ(loop0Count[1], 0);

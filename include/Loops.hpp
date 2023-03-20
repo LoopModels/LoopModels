@@ -558,21 +558,24 @@ struct AffineLoopNest
     return ret;
   }
   [[nodiscard]] constexpr auto removeLoop(BumpAlloc<> &alloc, size_t v) const
-    -> NotNull<AffineLoopNest<NonNegative>> {
+    -> AffineLoopNest<NonNegative> * {
     auto A{getA()};
     auto [neg, pos] = indsNegPos(A(_, v));
     unsigned numCon =
       unsigned(A.numRow()) - pos.size() + neg.size() * pos.size();
     if constexpr (!NonNegative) numCon -= neg.size();
+    auto p = checkpoint(alloc);
     auto ret = AffineLoopNest<NonNegative>::allocate(alloc, numCon,
                                                      numLoops - 1, getSyms());
     ret->numConstraints = unsigned(
       fourierMotzkinCore<NonNegative>(ret->getA(), getA(), v, {neg, pos}));
     ret->pruneBounds(alloc);
+    if (ret->getNumLoops() == 0) {
+      rollback(alloc, p);
+      return nullptr;
+    }
     // either we remove one loop, or remaining loops are empty
-    assert(((ret->getNumLoops() == getNumLoops() - 1) ||
-            (ret->getNumLoops() == 0)) &&
-           "didn't remove loop");
+    assert((ret->getNumLoops() == getNumLoops() - 1) && "didn't remove loop");
     return ret;
   }
   auto perm(PtrVector<unsigned> x)
@@ -759,9 +762,8 @@ struct AffineLoopNest
   }
   void dump(llvm::raw_ostream &os, BumpAlloc<> &alloc) const {
     const AffineLoopNest *tmp = this;
-    for (size_t i = getNumLoops();;) {
-      assert((tmp->getNumLoops() == 0 || (i == tmp->getNumLoops())) &&
-             "loop count mismatch");
+    for (size_t i = getNumLoops(); tmp;) {
+      assert((i == tmp->getNumLoops()) && "loop count mismatch");
       os << "Loop " << --i << " lower bounds: ";
       if constexpr (NonNegative) os << "i_" << i << " >= 0\n";
       tmp->printBound(os, 1); // 1 for lower bound
