@@ -384,10 +384,11 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
   }
   [[nodiscard]] inline static constexpr auto
   memoryNeededImpl(Row Ar, Col Ac, Row Er, size_t numPos) -> size_t {
+    // alternative:
     size_t numInEqConTotal = size_t(Ar) + numPos;
     size_t colV = (numInEqConTotal << 1) + size_t(Er);
     size_t rowV = size_t(Ac) + numInEqConTotal;
-    return rowV * rowV + colV * colV + colV;
+    return rowV * rowV + std::max(rowV, colV) * colV + colV;
   }
   [[nodiscard]] static constexpr auto
   memoryNeededNonNegative(PtrMatrix<int64_t> A, size_t numNonNegative)

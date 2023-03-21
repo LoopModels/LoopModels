@@ -675,11 +675,10 @@ struct AffineLoopNest
       // and then check if the resulting polyhedra is empty.
       // if not, then we may have >0 iterations.
       for (size_t cc = 0; cc < tmp2->getNumConstraints(); ++cc) {
-        int64_t d = tmp2->getA()(cc, numConst);
-        if (d == 0) continue;
-        d *= sign;
-        tmp2->getA()(cc, _(0, last))
-          << b * tmp2->getA()(cc, _(0, last)) - d * margi->getA()(c, _);
+        if (int64_t d = tmp2->getA()(cc, numConst)) {
+          tmp2->getA()(cc, _(0, last)) << b * tmp2->getA()(cc, _(0, last)) -
+                                            (d * sign) * margi->getA()(c, _);
+        }
       }
       for (size_t cc = size_t(tmp2->getNumConstraints()); cc;)
         if (tmp2->getA()(--cc, 1 + numConst) == 0) tmp2->eraseConstraint(cc);
