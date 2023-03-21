@@ -1,4 +1,5 @@
 #pragma once
+#include "Math/Array.hpp"
 #include <bit>
 #include <cassert>
 #include <cstddef>
@@ -9,8 +10,6 @@
 #include <istream>
 #include <iterator>
 #include <limits>
-#include <llvm/ADT/ArrayRef.h>
-#include <llvm/ADT/SmallVector.h>
 #include <llvm/Support/raw_ostream.h>
 #include <string>
 
@@ -71,38 +70,38 @@ constexpr auto operator!=(EndSentinel, const BitSetIterator &it) -> bool {
 
 /// A set of `size_t` elements.
 /// Initially constructed
-template <typename T = llvm::SmallVector<uint64_t, 1>> struct BitSet {
+template <typename T = Vector<uint64_t, 1>> struct BitSet {
   [[no_unique_address]] T data{};
   // size_t operator[](size_t i) const {
   //     return data[i];
   // } // allow `getindex` but not `setindex`
-  BitSet() = default;
+  constexpr BitSet() = default;
   static constexpr auto numElementsNeeded(size_t N) -> size_t {
     return ((N + 63) >> 6);
   }
-  BitSet(size_t N) : data(numElementsNeeded(N)) {}
-  void resize64(size_t N) {
+  constexpr BitSet(size_t N) : data(numElementsNeeded(N)) {}
+  constexpr void resize64(size_t N) {
     if constexpr (CanResize<T>) data.resize(N);
     else assert(N <= data.size());
   }
-  void resize(size_t N) {
+  constexpr void resize(size_t N) {
     if constexpr (CanResize<T>) data.resize(numElementsNeeded(N));
     else assert(N <= data.size() * 64);
   }
-  void resize(size_t N, uint64_t x) {
+  constexpr void resize(size_t N, uint64_t x) {
     if constexpr (CanResize<T>) data.resize(numElementsNeeded(N), x);
     else {
       assert(N <= data.size() * 64);
       std::fill(data.begin(), data.end(), x);
     }
   }
-  void maybeResize(size_t N) {
+  constexpr void maybeResize(size_t N) {
     if constexpr (CanResize<T>) {
       size_t M = numElementsNeeded(N);
       if (M > data.size()) data.resize(M);
     } else assert(N <= data.size() * 64);
   }
-  static auto dense(size_t N) -> BitSet {
+  static constexpr auto dense(size_t N) -> BitSet {
     BitSet b;
     size_t M = numElementsNeeded(N);
     if (!M) return b;
@@ -113,7 +112,7 @@ template <typename T = llvm::SmallVector<uint64_t, 1>> struct BitSet {
     if (size_t rem = N & 63) b.data[M - 1] = (size_t(1) << rem) - 1;
     return b;
   }
-  [[nodiscard]] auto maxValue() const -> size_t {
+  [[nodiscard]] constexpr auto maxValue() const -> size_t {
     size_t N = data.size();
     return N ? (64 * N - std::countl_zero(data[N - 1])) : 0;
   }
@@ -126,15 +125,15 @@ template <typename T = llvm::SmallVector<uint64_t, 1>> struct BitSet {
     BitSetIterator it{b, e, *b};
     return ++it;
   }
-  [[nodiscard]] constexpr static auto end() -> EndSentinel {
+  [[nodiscard]] static constexpr auto end() -> EndSentinel {
     return EndSentinel{};
   };
-  [[nodiscard]] inline auto front() const -> size_t {
+  [[nodiscard]] constexpr auto front() const -> size_t {
     for (size_t i = 0; i < data.size(); ++i)
       if (data[i]) return 64 * i + std::countr_zero(data[i]);
     return std::numeric_limits<size_t>::max();
   }
-  static inline auto contains(llvm::ArrayRef<uint64_t> data, size_t x)
+  static constexpr auto contains(PtrVector<uint64_t> data, size_t x)
     -> uint64_t {
     if (data.empty()) return 0;
     size_t d = x >> size_t(6);
@@ -142,11 +141,11 @@ template <typename T = llvm::SmallVector<uint64_t, 1>> struct BitSet {
     uint64_t mask = uint64_t(1) << r;
     return (data[d] & (mask));
   }
-  [[nodiscard]] auto contains(size_t i) const -> uint64_t {
+  [[nodiscard]] constexpr auto contains(size_t i) const -> uint64_t {
     return contains(data, i);
   }
 
-  auto insert(size_t x) -> bool {
+  constexpr auto insert(size_t x) -> bool {
     size_t d = x >> size_t(6);
     uint64_t r = uint64_t(x) & uint64_t(63);
     uint64_t mask = uint64_t(1) << r;
@@ -155,7 +154,7 @@ template <typename T = llvm::SmallVector<uint64_t, 1>> struct BitSet {
     if (!contained) data[d] |= (mask);
     return contained;
   }
-  void uncheckedInsert(size_t x) {
+  constexpr void uncheckedInsert(size_t x) {
     size_t d = x >> size_t(6);
     uint64_t r = uint64_t(x) & uint64_t(63);
     uint64_t mask = uint64_t(1) << r;
@@ -163,7 +162,7 @@ template <typename T = llvm::SmallVector<uint64_t, 1>> struct BitSet {
     data[d] |= (mask);
   }
 
-  auto remove(size_t x) -> bool {
+  constexpr auto remove(size_t x) -> bool {
     size_t d = x >> size_t(6);
     uint64_t r = uint64_t(x) & uint64_t(63);
     uint64_t mask = uint64_t(1) << r;
@@ -171,44 +170,52 @@ template <typename T = llvm::SmallVector<uint64_t, 1>> struct BitSet {
     if (contained) data[d] &= (~mask);
     return contained;
   }
-  static void set(uint64_t &d, size_t r, bool b) {
+  static constexpr void set(uint64_t &d, size_t r, bool b) {
     uint64_t mask = uint64_t(1) << r;
     if (b == ((d & mask) != 0)) return;
     if (b) d |= mask;
     else d &= (~mask);
   }
-  static void set(llvm::MutableArrayRef<uint64_t> data, size_t x, bool b) {
+  static constexpr void set(MutPtrVector<uint64_t> data, size_t x, bool b) {
     size_t d = x >> size_t(6);
     uint64_t r = uint64_t(x) & uint64_t(63);
     set(data[d], r, b);
   }
 
-  struct Reference {
-    [[no_unique_address]] llvm::MutableArrayRef<uint64_t> data;
+  class Reference {
+    [[no_unique_address]] MutPtrVector<uint64_t> data;
     [[no_unique_address]] size_t i;
-    operator bool() const { return contains(data, i); }
-    void operator=(bool b) {
+
+  public:
+    constexpr Reference(MutPtrVector<uint64_t> dd, size_t ii)
+      : data(dd), i(ii) {}
+    constexpr operator bool() const { return contains(data, i); }
+    constexpr auto operator=(bool b) -> Reference & {
       BitSet::set(data, i, b);
-      return;
+      return *this;
     }
   };
 
-  auto operator[](size_t i) const -> bool { return contains(data, i); }
-  auto operator[](size_t i) -> Reference {
-    maybeResize(i + 1);
-    return Reference{llvm::MutableArrayRef<uint64_t>(data), i};
+  constexpr auto operator[](size_t i) const -> bool {
+    return contains(data, i);
   }
-  [[nodiscard]] auto size() const -> size_t {
+  constexpr auto operator[](size_t i) -> Reference {
+    maybeResize(i + 1);
+    MutPtrVector<uint64_t> d{data};
+    return Reference{d, i};
+  }
+  [[nodiscard]] constexpr auto size() const -> size_t {
     size_t s = 0;
     for (auto u : data) s += std::popcount(u);
     return s;
   }
-  [[nodiscard]] auto any() const -> bool {
-    for (auto u : data)
-      if (u) return true;
-    return false;
+  [[nodiscard]] constexpr auto any() const -> bool {
+    return std::ranges::any_of(data, [](auto u) { return u != 0; });
+    // for (auto u : data)
+    //   if (u) return true;
+    // return false;
   }
-  void setUnion(const BitSet &bs) {
+  constexpr void setUnion(const BitSet &bs) {
     size_t O = bs.data.size(), N = data.size();
     if (O > N) resize64(O);
     for (size_t i = 0; i < O; ++i) {
@@ -216,31 +223,33 @@ template <typename T = llvm::SmallVector<uint64_t, 1>> struct BitSet {
       data[i] = d;
     }
   }
-  auto operator&=(const BitSet &bs) -> BitSet & {
+  constexpr auto operator&=(const BitSet &bs) -> BitSet & {
     if (bs.data.size() < data.size()) resize64(bs.data.size());
     for (size_t i = 0; i < data.size(); ++i) data[i] &= bs.data[i];
     return *this;
   }
   // &!
-  auto operator-=(const BitSet &bs) -> BitSet & {
+  constexpr auto operator-=(const BitSet &bs) -> BitSet & {
     if (bs.data.size() < data.size()) resize64(bs.data.size());
     for (size_t i = 0; i < data.size(); ++i) data[i] &= (~bs.data[i]);
     return *this;
   }
-  auto operator|=(const BitSet &bs) -> BitSet & {
+  constexpr auto operator|=(const BitSet &bs) -> BitSet & {
     if (bs.data.size() > data.size()) resize64(bs.data.size());
     for (size_t i = 0; i < bs.data.size(); ++i) data[i] |= bs.data[i];
     return *this;
   }
-  auto operator&(const BitSet &bs) const -> BitSet {
+  constexpr auto operator&(const BitSet &bs) const -> BitSet {
     BitSet r = *this;
     return r &= bs;
   }
-  auto operator|(const BitSet &bs) const -> BitSet {
+  constexpr auto operator|(const BitSet &bs) const -> BitSet {
     BitSet r = *this;
     return r |= bs;
   }
-  auto operator==(const BitSet &bs) const -> bool { return data == bs.data; }
+  constexpr auto operator==(const BitSet &bs) const -> bool {
+    return data == bs.data;
+  }
 
   friend inline auto operator<<(llvm::raw_ostream &os, BitSet const &x)
     -> llvm::raw_ostream & {
@@ -254,10 +263,11 @@ template <typename T = llvm::SmallVector<uint64_t, 1>> struct BitSet {
     os << "]";
     return os;
   }
-  [[nodiscard]] auto isEmpty() const -> bool {
-    for (auto u : data)
-      if (u) return false;
-    return true;
+  [[nodiscard]] constexpr auto isEmpty() const -> bool {
+    return std::ranges::all_of(data, [](auto u) { return u == 0; });
+    // for (auto u : data)
+    //   if (u) return false;
+    // return true;
   }
 };
 
@@ -266,10 +276,10 @@ template <unsigned N> using FixedSizeBitSet = BitSet<std::array<uint64_t, N>>;
 using BitSet64 = FixedSizeBitSet<1>;
 
 template <typename T, typename B = BitSet<>> struct BitSliceView {
-  [[no_unique_address]] llvm::MutableArrayRef<T> a;
+  [[no_unique_address]] MutPtrVector<T> a;
   [[no_unique_address]] const B &i;
   struct Iterator {
-    [[no_unique_address]] llvm::MutableArrayRef<T> a;
+    [[no_unique_address]] MutPtrVector<T> a;
     [[no_unique_address]] BitSetIterator it;
     constexpr auto operator==(EndSentinel) const -> bool {
       return it == EndSentinel{};
@@ -283,14 +293,14 @@ template <typename T, typename B = BitSet<>> struct BitSliceView {
       ++it;
       return temp;
     }
-    auto operator*() -> T & { return a[*it]; }
-    auto operator*() const -> const T & { return a[*it]; }
-    auto operator->() -> T * { return &a[*it]; }
-    auto operator->() const -> const T * { return &a[*it]; }
+    constexpr auto operator*() -> T & { return a[*it]; }
+    constexpr auto operator*() const -> const T & { return a[*it]; }
+    constexpr auto operator->() -> T * { return &a[*it]; }
+    constexpr auto operator->() const -> const T * { return &a[*it]; }
   };
   constexpr auto begin() -> Iterator { return {a, i.begin()}; }
   struct ConstIterator {
-    [[no_unique_address]] llvm::ArrayRef<T> a;
+    [[no_unique_address]] PtrVector<T> a;
     [[no_unique_address]] BitSetIterator it;
     constexpr auto operator==(EndSentinel) const -> bool {
       return it == EndSentinel{};
@@ -307,8 +317,8 @@ template <typename T, typename B = BitSet<>> struct BitSliceView {
       ++it;
       return temp;
     }
-    auto operator*() const -> const T & { return a[*it]; }
-    auto operator->() const -> const T * { return &a[*it]; }
+    constexpr auto operator*() const -> const T & { return a[*it]; }
+    constexpr auto operator->() const -> const T * { return &a[*it]; }
   };
   [[nodiscard]] constexpr auto begin() const -> ConstIterator {
     return {a, i.begin()};
@@ -327,7 +337,7 @@ template <typename T, typename B = BitSet<>> struct BitSliceView {
   return EndSentinel{} - v.it;
 }
 template <typename T, typename B>
-BitSliceView(llvm::MutableArrayRef<T>, const B &) -> BitSliceView<T, B>;
+BitSliceView(MutPtrVector<T>, const B &) -> BitSliceView<T, B>;
 // typedef
 // std::iterator_traits<BitSliceView<int64_t>::Iterator>::iterator_category;
 

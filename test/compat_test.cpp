@@ -136,8 +136,7 @@ TEST(AffineTest0, BasicAssertions) {
 
   llvm::errs() << "Constructed affine obj\n";
   llvm::errs() << "About to run first compat test\n";
-  llvm::errs() << "aff.A.size() = (" << size_t(aff.getA().numRow()) << ", "
-               << size_t(aff.getA().numCol()) << ")\n";
+  llvm::errs() << "aff.getA() = " << aff.getA();
   EXPECT_FALSE(aff.zeroExtraItersUponExtending(tlf.getAlloc(), 0, false));
   EXPECT_FALSE(aff.zeroExtraItersUponExtending(tlf.getAlloc(), 0, true));
   EXPECT_TRUE(aff.zeroExtraItersUponExtending(tlf.getAlloc(), 1, false));

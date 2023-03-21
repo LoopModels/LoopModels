@@ -561,16 +561,16 @@ struct AffineLoopNest
     -> AffineLoopNest<NonNegative> * {
     auto A{getA()};
     v += getNumSymbols();
-    auto negPos = indsNegPos(A(_, v));
-    auto &[neg, pos] = negPos;
+    auto zeroNegPos = indsZeroNegPos(A(_, v));
+    auto &[zer, neg, pos] = zeroNegPos;
     unsigned numCon =
       unsigned(A.numRow()) - pos.size() + neg.size() * pos.size();
     if constexpr (!NonNegative) numCon -= neg.size();
     auto p = checkpoint(alloc);
     auto ret = AffineLoopNest<NonNegative>::allocate(alloc, numCon,
                                                      numLoops - 1, getSyms());
-    ret->numConstraints = unsigned(fourierMotzkinCore<NonNegative>(
-      ret->getA(), getA(), v, std::move(negPos)));
+    ret->numConstraints = unsigned(
+      fourierMotzkinCore<NonNegative>(ret->getA(), getA(), v, zeroNegPos));
     ret->pruneBounds(alloc);
     if (ret->getNumLoops() == 0) {
       rollback(alloc, p);

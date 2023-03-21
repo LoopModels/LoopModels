@@ -54,6 +54,8 @@ template <class T, class S> struct Array {
     : ptr(p), sz(dimension<S>(r, c)) {}
   template <std::convertible_to<S> V>
   constexpr Array(Array<T, V> a) : ptr(a.wrappedPtr()), sz(a.dim()) {}
+  template <size_t N>
+  constexpr Array(const std::array<T, N> &a) : ptr(a.data()), sz(N) {}
   [[nodiscard, gnu::returns_nonnull]] constexpr auto data() const noexcept
     -> const T * {
     invariant(ptr != nullptr);
@@ -292,6 +294,8 @@ template <class T, class S> struct MutArray : Array<T, S> {
 
   template <std::convertible_to<T> U, std::convertible_to<S> V>
   constexpr MutArray(Array<U, V> a) : Array<T, S>(a) {}
+  template <size_t N>
+  constexpr MutArray(std::array<T, N> &a) : Array<T, S>(a.data(), N) {}
   [[nodiscard, gnu::returns_nonnull]] constexpr auto data() noexcept -> T * {
     invariant(this->ptr != nullptr);
     return this->ptr;

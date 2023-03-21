@@ -1,6 +1,7 @@
 
 #pragma once
 
+#include "BitSets.hpp"
 #include "Math/Array.hpp"
 #include "Math/AxisTypes.hpp"
 #include "Math/Comparisons.hpp"
@@ -265,27 +266,26 @@ constexpr auto countNonZeroSign(DensePtrMatrix<int64_t> A, size_t i)
   return std::make_pair(numNeg, numPos);
 }
 
-/// returns a pair of vectors, the first containing the indices of
-/// negative elements, the second containing the indices of positive
-/// elements.
+/// x == 0 -> 0, x < 0 -> 1, x > 0 -> 2
+inline constexpr auto orderedCmp(auto x) -> size_t {
+  return (x < 0) | (2 * (x > 0));
+}
+/// returns three bitsets, indicating indices that are 0, negative, and positive
 template <class T, LinAlg::VectorDimension S>
-constexpr auto indsNegPos(LinAlg::Array<T, S> a)
-  -> std::array<Vector<unsigned, 4>, 2> {
-  std::array<Vector<unsigned, 4>, 2> ret;
-  for (size_t j = 0; j < a.size(); ++j)
-    if (a[j] < 0) ret[0].push_back(j);
-    else if (a[j] > 0) ret[1].push_back(j);
+constexpr auto indsZeroNegPos(LinAlg::Array<T, S> a)
+  -> std::array<BitSet64, 3> {
+  std::array<BitSet64, 3> ret;
+  for (size_t j = 0; j < a.size(); ++j) ret[orderedCmp(a[j])].insert(j);
   return ret;
 }
 // 4*4 + 16 = 32
 static_assert(sizeof(std::array<Vector<unsigned, 4>, 2>) == 64);
 
 template <bool NonNegative>
-constexpr auto
-fourierMotzkinCore(MutDensePtrMatrix<int64_t> B, DensePtrMatrix<int64_t> A,
-                   size_t v, const std::array<Vector<unsigned, 4>, 2> &negPos)
-  -> Row {
-  const auto &[neg, pos] = negPos;
+constexpr auto fourierMotzkinCore(MutDensePtrMatrix<int64_t> B,
+                                  DensePtrMatrix<int64_t> A, size_t v,
+                                  const std::array<BitSet64, 3> &znp) -> Row {
+  const auto &[zero, neg, pos] = znp;
   // we have the additional v >= 0
   if constexpr (NonNegative)
     invariant(B.numRow(),
@@ -315,18 +315,25 @@ fourierMotzkinCore(MutDensePtrMatrix<int64_t> B, DensePtrMatrix<int64_t> A,
       r += anyNEZero(B(r, _(0, end)));
     }
   }
+  for (auto i : zero) {
+    B(r, _(0, v)) << A(i, _(0, v));
+    B(r, _(v, end)) << A(i, _(v + 1, end));
+    r += anyNEZero(B(r, _(0, end)));
+  }
   return r;
 }
+
 template <bool NonNegative>
 constexpr auto fourierMotzkin(LinAlg::Alloc<int64_t> auto &alloc,
                               DensePtrMatrix<int64_t> A, size_t v)
   -> MutDensePtrMatrix<int64_t> {
 
-  auto [neg, pos] = indsNegPos(A(_, v));
+  auto znp = indsZeroNegPos(A(_, v));
+  auto &[zero, neg, pos] = znp;
   Row r = A.numRow() - pos.size() + size_t(neg.size()) * pos.size();
   if constexpr (!NonNegative) r -= neg.size();
   auto B = matrix(alloc, r, A.numCol() - 1);
-  B.truncate(fourierMotzkinCore<NonNegative>(B, A, v, {neg, pos}));
+  B.truncate(fourierMotzkinCore<NonNegative>(B, A, v, znp));
   return B;
 }
 
