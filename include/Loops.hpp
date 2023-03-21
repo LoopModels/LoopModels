@@ -560,15 +560,17 @@ struct AffineLoopNest
   [[nodiscard]] constexpr auto removeLoop(BumpAlloc<> &alloc, size_t v) const
     -> AffineLoopNest<NonNegative> * {
     auto A{getA()};
-    auto [neg, pos] = indsNegPos(A(_, v));
+    v += getNumSymbols();
+    auto negPos = indsNegPos(A(_, v));
+    auto &[neg, pos] = negPos;
     unsigned numCon =
       unsigned(A.numRow()) - pos.size() + neg.size() * pos.size();
     if constexpr (!NonNegative) numCon -= neg.size();
     auto p = checkpoint(alloc);
     auto ret = AffineLoopNest<NonNegative>::allocate(alloc, numCon,
                                                      numLoops - 1, getSyms());
-    ret->numConstraints = unsigned(
-      fourierMotzkinCore<NonNegative>(ret->getA(), getA(), v, {neg, pos}));
+    ret->numConstraints = unsigned(fourierMotzkinCore<NonNegative>(
+      ret->getA(), getA(), v, std::move(negPos)));
     ret->pruneBounds(alloc);
     if (ret->getNumLoops() == 0) {
       rollback(alloc, p);
@@ -626,51 +628,62 @@ struct AffineLoopNest
                               bool extendLower) const -> bool {
     auto p = alloc.checkPoint();
     AffineLoopNest<NonNegative> *tmp = copy(alloc);
+    // question is, does the inner most loop have 0 extra iterations?
     const size_t numPrevLoops = getNumLoops() - 1;
-    for (size_t i = 0; i < numPrevLoops; ++i)
-      if (i != _i) tmp = tmp->removeLoop(alloc, i);
+    // we changed the behavior of removeLoop to actually drop loops that are
+    // no longer present.
+    for (size_t i = 0; i < numPrevLoops - 1; ++i)
+      tmp = tmp->removeLoop(alloc, i >= _i);
+    // for (size_t i = 0; i < numPrevLoops; ++i)
+    //   if (i != _i) tmp = tmp->removeLoop(alloc, i);
+    // loop _i is now loop 0
+    // innermost loop is now loop 1
     bool indep = true;
     const size_t numConst = getNumSymbols();
     auto A{tmp->getA()};
     for (size_t n = 0; n < A.numRow(); ++n)
-      if ((A(n, _i + numConst) != 0) && (A(n, numPrevLoops + numConst) != 0))
-        indep = false;
+      if ((A(n, numConst) != 0) && (A(n, 1 + numConst) != 0)) indep = false;
     if (indep) {
       alloc.rollBack(p);
       return false;
     }
-    AffineLoopNest<NonNegative> *margi = tmp->removeLoop(alloc, numPrevLoops);
+    AffineLoopNest<NonNegative> *margi = tmp->removeLoop(alloc, 1);
     AffineLoopNest<NonNegative> *tmp2;
+    invariant(margi->getNumLoops(), size_t(1));
+    invariant(tmp->getNumLoops(), size_t(2));
+    invariant(margi->getA().numCol() + 1, tmp->getA().numCol());
     // margi contains extrema for `_i`
     // we can substitute extended for value of `_i`
     // in `tmp`
+    auto p2 = alloc.checkPoint();
     int64_t sign = 2 * extendLower - 1; // extendLower ? 1 : -1
     for (size_t c = 0; c < margi->getNumInequalityConstraints(); ++c) {
-      int64_t b = sign * margi->getA()(c, _i + numConst);
+      int64_t b = sign * margi->getA()(c, numConst);
       if (b <= 0) continue;
-      tmp2 = tmp;
+      alloc.rollBack(p2);
+      tmp2 = tmp->copy(alloc);
+      invariant(tmp2->getNumLoops(), size_t(2));
+      invariant(margi->getNumLoops() + 1, tmp2->getNumLoops());
       // increment to increase bound
       // this is correct for both extending lower and extending upper
       // lower: a'x + i + b >= 0 -> i >= -a'x - b
       // upper: a'x - i + b >= 0 -> i <=  a'x + b
       // to decrease the lower bound or increase the upper, we increment
       // `b`
-      ++margi->getA()(c, 0);
+      ++(margi->getA())(c, 0);
       // our approach here is to set `_i` equal to the extended bound
       // and then check if the resulting polyhedra is empty.
       // if not, then we may have >0 iterations.
       for (size_t cc = 0; cc < tmp2->getNumConstraints(); ++cc) {
-        int64_t d = tmp2->getA()(cc, _i + numConst);
+        int64_t d = tmp2->getA()(cc, numConst);
         if (d == 0) continue;
         d *= sign;
-        for (size_t v = 0; v < tmp2->getA().numCol(); ++v)
-          tmp2->getA()(cc, v) =
-            b * tmp2->getA()(cc, v) - d * margi->getA()(c, v);
+        tmp2->getA()(cc, _(0, last))
+          << b * tmp2->getA()(cc, _(0, last)) - d * margi->getA()(c, _);
       }
       for (size_t cc = size_t(tmp2->getNumConstraints()); cc;)
-        if (tmp2->getA()(--cc, numPrevLoops + numConst) == 0)
-          tmp2->eraseConstraint(cc);
-      if (!(tmp2->calcIsEmpty())) {
+        if (tmp2->getA()(--cc, 1 + numConst) == 0) tmp2->eraseConstraint(cc);
+      if (!(tmp2->calcIsEmpty(alloc))) {
         alloc.rollBack(p);
         return false;
       }
@@ -686,18 +699,17 @@ struct AffineLoopNest
         // extended bound and then check if the resulting polyhedra is
         // empty. if not, then we may have >0 iterations.
         for (size_t cc = 0; cc < tmp->getNumConstraints(); ++cc) {
-          if (int64_t d = tmp->getA()(cc, _i + numConst)) {
+          if (int64_t d = tmp->getA()(cc, numConst)) {
             // lower bound is i >= 0
             // so setting equal to the extended lower bound now
             // means that i = -1 so we decrement `d` from the column
             tmp->getA()(cc, 0) -= d;
-            tmp->getA()(cc, _i + numConst) = 0;
+            tmp->getA()(cc, numConst) = 0;
           }
         }
         for (size_t cc = size_t(tmp->getNumConstraints()); cc;)
-          if (tmp->getA()(--cc, numPrevLoops + numConst) == 0)
-            tmp->eraseConstraint(cc);
-        if (!(tmp->calcIsEmpty())) {
+          if (tmp->getA()(--cc, 1 + numConst) == 0) tmp->eraseConstraint(cc);
+        if (!(tmp->calcIsEmpty(alloc))) {
           alloc.rollBack(p);
           return false;
         }

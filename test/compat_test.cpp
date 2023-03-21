@@ -20,7 +20,7 @@ TEST(FourierMotzkin, BasicAssertions) {
 }
 
 // NOLINTNEXTLINE(modernize-use-trailing-return-type)
-TEST(TrivialPruneBounds, BasicAssertions) {
+TEST(TrivialPruneBounds0, BasicAssertions) {
   // A(5, 3) [1, M, m] constants, symbolic vars, loop vars
   //[0 1 0;
   //  -1 1 -1;
@@ -58,7 +58,7 @@ TEST(TrivialPruneBounds, BasicAssertions) {
 }
 
 // NOLINTNEXTLINE(modernize-use-trailing-return-type)
-TEST(TrivialPruneBounds2, BasicAssertions) {
+TEST(TrivialPruneBounds1, BasicAssertions) {
   // i >= 1
   // I >= 1
   // i <= J - 1
@@ -118,14 +118,14 @@ TEST(AffineTest0, BasicAssertions) {
   // the loop is
   // for m in 0:M-1, n in 0:N-1, k in n+1:N-1
   //
-  IntMatrix A{"[-1 1 0 -1 0 0; "
-              "0 0 0 1 0 0; "
-              "-1 0 1 0 -1 0; "
-              "0 0 0 0 1 0; "
-              "-1 0 1 0 0 -1; "
-              "-1 0 0 0 -1 1; "
-              "0 1 0 0 0 0; "
-              "0 0 1 0 0 0]"_mat};
+  IntMatrix A{"[-1 1 0 -1 0 0; "   // m <= M - 1
+              "0 0 0 1 0 0; "      // m >= 0
+              "-1 0 1 0 -1 0; "    // n <= N - 1
+              "0 0 0 0 1 0; "      // n >= 0
+              "-1 0 1 0 0 -1; "    // k <= N - 1
+              "-1 0 0 0 -1 1; "    // k >= n + 1
+              "0 1 0 0 0 0; "      // M >= 0
+              "0 0 1 0 0 0]"_mat}; // N >= 0
 
   TestLoopFunction tlf;
   llvm::errs() << "About to construct affine obj\n";

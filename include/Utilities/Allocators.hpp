@@ -206,7 +206,7 @@ public:
     SlabEnd = alloc.SlabEnd;
   }
   constexpr ~BumpAlloc() {
-    for (auto Slab : slabs)
+    for (auto *Slab : slabs)
       llvm::deallocate_buffer(Slab, SlabSize, MinAlignment);
     resetCustomSlabs();
   }

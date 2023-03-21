@@ -178,8 +178,9 @@ template <class R, class C>
 [[nodiscard]] inline constexpr auto calcOffset(StridedDims d,
                                                CartesianIndex<R, C> i)
   -> size_t {
-  return size_t(RowStride{d} * calcOffset(size_t(Row{d}), i.row) +
-                calcOffset(size_t(Col{d}), i.col));
+  size_t r = size_t(RowStride{d} * calcOffset(size_t(Row{d}), i.row));
+  size_t c = calcOffset(size_t(Col{d}), i.col);
+  return r + c;
 }
 
 struct StridedRange {

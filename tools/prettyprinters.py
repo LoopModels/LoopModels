@@ -101,6 +101,7 @@ class StridedMatrixPrinter(BaseMatrixPrinter):
 
 pp = gdb.printing.RegexpCollectionPrettyPrinter("LoopModels")
 pp.add_printer("LinAlg::Array", "^LinAlg::Array<.*, unsigned int>$", VectorPrinter)
+pp.add_printer("LinAlg::ManagedArray", "^LinAlg::ManagedArray<.*, unsigned int, .*, std::allocator<.*>, .*>$", VectorPrinter)
 pp.add_printer(
     "LinAlg::Array",
     "^LinAlg::Array<.*, LinAlg::SquareDims>$",

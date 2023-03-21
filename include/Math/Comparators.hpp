@@ -376,38 +376,43 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
     }
     initCore(alloc);
   }
+
   [[nodiscard]] static constexpr auto
   memoryNeededNonNegative(PtrMatrix<int64_t> A, EmptyMatrix<int64_t>,
                           size_t numNonNegative) -> size_t {
-    return memoryNeededNonNegative(A, numNonNegative);
+    return memoryNeededImpl(A.numRow(), A.numCol(), Row{0}, ++numNonNegative);
+  }
+  [[nodiscard]] inline static constexpr auto
+  memoryNeededImpl(Row Ar, Col Ac, Row Er, size_t numPos) -> size_t {
+    size_t numInEqConTotal = size_t(Ar) + numPos;
+    size_t colV = (numInEqConTotal << 1) + size_t(Er);
+    size_t rowV = size_t(Ac) + numInEqConTotal;
+    return rowV * rowV + colV * colV + colV;
   }
   [[nodiscard]] static constexpr auto
   memoryNeededNonNegative(PtrMatrix<int64_t> A, size_t numNonNegative)
     -> size_t {
-    // we need memory for...
-    /// 1. the matrix V: (dimD ? dimV : rankU) x dimV
-    /// 2. the matrix U: rankU x colU
-    /// 3. the vector d: dimD <= R
-    /// Total:
-    /// mem + size_t(rankU) * colU + size_t(numVRows()) * dimV + dimD
-    ///
-    /// numColB = A.numRow() +
-    size_t numConTotal = size_t(A.numRow()) + 1 + numNonNegative;
-    size_t colV = numConTotal + numConTotal;
-    size_t rowV = size_t(A.numCol()) + numConTotal;
-    // U is <= rowV * rowV
-    // V is <= colV * colV
-    // d is <= colV
-    return rowV * rowV + colV * colV + colV;
+    return memoryNeededImpl(A.numRow(), A.numCol(), Row{0}, ++numNonNegative);
   }
   [[nodiscard]] static constexpr auto
   memoryNeededNonNegative(PtrMatrix<int64_t> A, PtrMatrix<int64_t> E,
                           size_t numNonNegative) -> size_t {
-    size_t numInEqConTotal = size_t(A.numRow()) + 1 + numNonNegative;
-    size_t colV = (numInEqConTotal << 1) + size_t(E.numRow());
-    size_t rowV = size_t(A.numCol()) + numInEqConTotal;
-    return rowV * rowV + colV * colV + colV;
-    // return (2 * numInEqConTotal + size_t(E.numRow()) + rowV + 1) * rowV;
+    return memoryNeededImpl(A.numRow(), A.numCol(), E.numRow(),
+                            ++numNonNegative);
+  }
+  [[nodiscard]] static constexpr auto memoryNeeded(PtrMatrix<int64_t> A,
+                                                   EmptyMatrix<int64_t>,
+                                                   bool pos0) -> size_t {
+    return memoryNeededImpl(A.numRow(), A.numCol(), Row{0}, pos0);
+  }
+  [[nodiscard]] static constexpr auto memoryNeeded(PtrMatrix<int64_t> A,
+                                                   bool pos0) -> size_t {
+    return memoryNeededImpl(A.numRow(), A.numCol(), Row{0}, pos0);
+  }
+  [[nodiscard]] static constexpr auto memoryNeeded(PtrMatrix<int64_t> A,
+                                                   PtrMatrix<int64_t> E,
+                                                   bool pos0) -> size_t {
+    return memoryNeededImpl(A.numRow(), A.numCol(), E.numRow(), pos0);
   }
   constexpr void init(LinAlg::Alloc<int64_t> auto &alloc, PtrMatrix<int64_t> A,
                       bool pos0) {
@@ -431,24 +436,6 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
   constexpr void init(LinAlg::Alloc<int64_t> auto &alloc, PtrMatrix<int64_t> A,
                       EmptyMatrix<int64_t>, bool pos0) {
     init(alloc, A, pos0);
-  }
-  [[nodiscard]] static constexpr auto memoryNeeded(PtrMatrix<int64_t> A,
-                                                   EmptyMatrix<int64_t>,
-                                                   bool pos0) -> size_t {
-    return memoryNeeded(A, pos0);
-  }
-  [[nodiscard]] static constexpr auto memoryNeeded(PtrMatrix<int64_t> A,
-                                                   bool pos0) -> size_t {
-    size_t numInEqCon = size_t(A.numRow()) + pos0;
-    size_t rowV = size_t(A.numCol()) + numInEqCon;
-    return (2 * numInEqCon + rowV + 1) * rowV;
-  }
-  [[nodiscard]] static constexpr auto memoryNeeded(PtrMatrix<int64_t> A,
-                                                   PtrMatrix<int64_t> E,
-                                                   bool pos0) -> size_t {
-    size_t numInEqCon = size_t(A.numRow()) + pos0;
-    size_t rowV = size_t(A.numCol()) + numInEqCon;
-    return (2 * numInEqCon + size_t(E.numRow()) + rowV + 1) * rowV;
   }
   constexpr void init(LinAlg::Alloc<int64_t> auto &alloc, PtrMatrix<int64_t> A,
                       PtrMatrix<int64_t> E, bool pos0) {

@@ -113,21 +113,14 @@ struct BasePolyhedra {
                                            getNumDynamic());
     else return comparator::linear(alloc, getA(), getE(), true);
   }
-  constexpr void reinitComparator(BumpAlloc<> &alloc,
-                                  comparator::PtrSymbolicComparator &comp) {
-    if constexpr (HasEqualities)
-      if constexpr (NonNegative)
-        comp.initNonNegative(alloc, getA(), getE(), getNumDynamic());
-      else comp.init(alloc, getA(), getE(), true);
-    else if constexpr (NonNegative)
-      return comp.initNonNegative(alloc, getA(), getNumDynamic());
-    else return comp.init(alloc, getA(), true);
-  }
   constexpr auto calcIsEmpty() -> bool {
     return initializeComparator().isEmpty();
   }
   constexpr auto calcIsEmpty(LinAlg::Alloc<int64_t> auto &alloc) -> bool {
     return initializeComparator(alloc).isEmpty(alloc);
+  }
+  [[nodiscard]] constexpr auto getNumConstraints() const -> unsigned {
+    return static_cast<const P *>(this)->getNumConstraints();
   }
   constexpr void setNumConstraints(size_t numCon) {
     static_cast<P *>(this)->setNumConstraints(numCon);
@@ -138,17 +131,13 @@ struct BasePolyhedra {
   constexpr void decrementNumConstraints() {
     static_cast<P *>(this)->decrementNumConstraints();
   }
-  constexpr void pruneBounds(LinAlg::Alloc<int64_t> auto &alloc) {
+  constexpr void pruneBounds(BumpAlloc<> &alloc) {
+    if (getNumConstraints() == 0) return;
     auto p = checkpoint(alloc);
-    auto C = initializeComparator(alloc);
-    if (C.isEmpty(alloc)) {
-      setNumConstraints(0);
-      if constexpr (HasEqualities) setNumEqConstraints(0);
-    } else pruneBoundsUncheckedCore(alloc, C);
+    pruneBoundsCore<true>(alloc);
     rollback(alloc, p);
   }
   constexpr void pruneBounds() {
-    // std::allocator<int64_t> alloc;
     BumpAlloc<> alloc;
     pruneBounds(alloc);
   }
@@ -156,11 +145,20 @@ struct BasePolyhedra {
     eraseConstraintImpl(getA(), constraint);
     decrementNumConstraints();
   }
-  constexpr void pruneBoundsUncheckedCore(LinAlg::Alloc<int64_t> auto &alloc,
-                                          comparator::PtrSymbolicComparator C) {
+  template <bool CheckEmpty>
+  constexpr void pruneBoundsCore(BumpAlloc<> &alloc) {
     MutDensePtrMatrix<int64_t> A{getA()};
-    const size_t dyn = getNumDynamic();
     auto diff = vector<int64_t>(alloc, unsigned(A.numCol()));
+    auto p = checkpoint(alloc);
+    const size_t dyn = getNumDynamic();
+    auto C = initializeComparator(alloc);
+    if constexpr (CheckEmpty) {
+      if (C.isEmpty(alloc)) {
+        setNumConstraints(0);
+        if constexpr (HasEqualities) setNumEqConstraints(0);
+        return;
+      }
+    }
     if constexpr (HasEqualities) removeRedundantRows(getA(), getE());
     for (auto j = size_t(getA().numRow()); j;) {
       bool broke = false;
@@ -169,11 +167,13 @@ struct BasePolyhedra {
         diff << A(--i, _) - A(j, _);
         if (C.greaterEqual(diff)) {
           eraseConstraint(i);
-          reinitComparator(alloc, C);
+          rollback(alloc, p);
+          C = initializeComparator(alloc);
           --j; // `i < j`, and `i` has been removed
         } else if (diff *= -1; C.greaterEqual(diff)) {
           eraseConstraint(j);
-          reinitComparator(alloc, C);
+          rollback(alloc, p);
+          C = initializeComparator(alloc);
           broke = true;
           break; // `j` is gone
         }
@@ -185,7 +185,8 @@ struct BasePolyhedra {
             --diff[last - i];
             if (C.greaterEqual(diff)) {
               eraseConstraint(j);
-              reinitComparator(alloc, C);
+              rollback(alloc, p);
+              C = initializeComparator(alloc);
               break; // `j` is gone
             }
           }
@@ -197,8 +198,7 @@ struct BasePolyhedra {
   // then, reuse memory instead of reallocating
   constexpr void pruneBoundsUnchecked(LinAlg::Alloc<int64_t> auto &alloc) {
     auto p = checkpoint(alloc);
-    auto C = initializeComparator(alloc);
-    pruneBoundsUncheckedCore(alloc, C);
+    pruneBoundsCore<false>(alloc);
     rollback(alloc, p);
     if constexpr (HasEqualities)
       for (size_t i = 0; i < getE().numRow(); ++i) normalizeByGCD(getE()(i, _));
