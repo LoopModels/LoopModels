@@ -618,16 +618,16 @@ $(function() {
 <div class="line"><a name="l00561"></a><span class="lineno">  561</span>&#160;    -&gt; <a class="code" href="structAffineLoopNest.html">AffineLoopNest&lt;NonNegative&gt;</a> * {</div>
 <div class="line"><a name="l00562"></a><span class="lineno">  562</span>&#160;    <span class="keyword">auto</span> A{getA()};</div>
 <div class="line"><a name="l00563"></a><span class="lineno">  563</span>&#160;    v += getNumSymbols();</div>
-<div class="line"><a name="l00564"></a><span class="lineno">  564</span>&#160;    <span class="keyword">auto</span> negPos = indsNegPos(A(_, v));</div>
-<div class="line"><a name="l00565"></a><span class="lineno">  565</span>&#160;    <span class="keyword">auto</span> &amp;[neg, pos] = negPos;</div>
+<div class="line"><a name="l00564"></a><span class="lineno">  564</span>&#160;    <span class="keyword">auto</span> zeroNegPos = indsZeroNegPos(A(_, v));</div>
+<div class="line"><a name="l00565"></a><span class="lineno">  565</span>&#160;    <span class="keyword">auto</span> &amp;[zer, neg, pos] = zeroNegPos;</div>
 <div class="line"><a name="l00566"></a><span class="lineno">  566</span>&#160;    <span class="keywordtype">unsigned</span> numCon =</div>
 <div class="line"><a name="l00567"></a><span class="lineno">  567</span>&#160;      unsigned(A.numRow()) - pos.size() + neg.size() * pos.size();</div>
 <div class="line"><a name="l00568"></a><span class="lineno">  568</span>&#160;    <span class="keywordflow">if</span> constexpr (!NonNegative) numCon -= neg.size();</div>
 <div class="line"><a name="l00569"></a><span class="lineno">  569</span>&#160;    <span class="keyword">auto</span> p = checkpoint(alloc);</div>
 <div class="line"><a name="l00570"></a><span class="lineno">  570</span>&#160;    <span class="keyword">auto</span> ret = <a class="code" href="structAffineLoopNest.html">AffineLoopNest&lt;NonNegative&gt;::allocate</a>(alloc, numCon,</div>
 <div class="line"><a name="l00571"></a><span class="lineno">  571</span>&#160;                                                     numLoops - 1, getSyms());</div>
-<div class="line"><a name="l00572"></a><span class="lineno">  572</span>&#160;    ret-&gt;numConstraints = unsigned(fourierMotzkinCore&lt;NonNegative&gt;(</div>
-<div class="line"><a name="l00573"></a><span class="lineno">  573</span>&#160;      ret-&gt;getA(), getA(), v, std::move(negPos)));</div>
+<div class="line"><a name="l00572"></a><span class="lineno">  572</span>&#160;    ret-&gt;numConstraints = unsigned(</div>
+<div class="line"><a name="l00573"></a><span class="lineno">  573</span>&#160;      fourierMotzkinCore&lt;NonNegative&gt;(ret-&gt;getA(), getA(), v, zeroNegPos));</div>
 <div class="line"><a name="l00574"></a><span class="lineno">  574</span>&#160;    ret-&gt;pruneBounds(alloc);</div>
 <div class="line"><a name="l00575"></a><span class="lineno">  575</span>&#160;    <span class="keywordflow">if</span> (ret-&gt;getNumLoops() == 0) {</div>
 <div class="line"><a name="l00576"></a><span class="lineno">  576</span>&#160;      rollback(alloc, p);</div>

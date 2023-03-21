@@ -9,7 +9,7 @@ var searchData=
   ['reallocview_3c_20t_2c_20s_2c_20a_2c_20u_2c_20true_20_3e_163',['ReallocView&lt; T, S, A, U, true &gt;',['../structLinAlg_1_1ReallocView.html',1,'LinAlg']]],
   ['rebind_164',['rebind',['../structWBumpAlloc_1_1rebind.html',1,'WBumpAlloc']]],
   ['recipthroughputlatency_165',['RecipThroughputLatency',['../structRecipThroughputLatency.html',1,'']]],
-  ['reference_166',['Reference',['../structBitSet_1_1Reference.html',1,'BitSet&lt; T &gt;::Reference'],['../structLinAlg_1_1SmallSparseMatrix_1_1Reference.html',1,'LinAlg::SmallSparseMatrix&lt; T &gt;::Reference'],['../structPredicate_1_1Intersection_1_1Reference.html',1,'Predicate::Intersection::Reference']]],
+  ['reference_166',['Reference',['../classBitSet_1_1Reference.html',1,'BitSet&lt; T &gt;::Reference'],['../structLinAlg_1_1SmallSparseMatrix_1_1Reference.html',1,'LinAlg::SmallSparseMatrix&lt; T &gt;::Reference'],['../structPredicate_1_1Intersection_1_1Reference.html',1,'Predicate::Intersection::Reference']]],
   ['remapper_167',['ReMapper',['../structReMapper.html',1,'']]],
   ['removeemptymask_168',['removeEmptyMask',['../structPredicate_1_1Intersection.html#aa96f5013d74c11be8d75b23afd2431be',1,'Predicate::Intersection']]],
   ['replaceallotheruseswith_169',['replaceAllOtherUsesWith',['../structInstruction.html#ab525733a4cc5ea3ba5a153b0d009425e',1,'Instruction']]],
