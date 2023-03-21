@@ -240,7 +240,11 @@ Static Public Member Functions</h2></td></tr>
 <tr class="memitem:aab1fc0f76d2c3f324319f7fa84572074"><td class="memItemLeft" align="right" valign="top"><a id="aab1fc0f76d2c3f324319f7fa84572074"></a>
 static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>memoryNeededNonNegative</b> (PtrMatrix&lt; int64_t &gt; A, <a class="el" href="structLinAlg_1_1EmptyMatrix.html">EmptyMatrix</a>&lt; int64_t &gt;, size_t numNonNegative) -&gt; size_t</td></tr>
 <tr class="separator:aab1fc0f76d2c3f324319f7fa84572074"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab746c7daa8dd4ac2fbabd42f3ac57e8f"><td class="memItemLeft" align="right" valign="top">static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcomparator_1_1BaseSymbolicComparator.html#ab746c7daa8dd4ac2fbabd42f3ac57e8f">memoryNeededNonNegative</a> (PtrMatrix&lt; int64_t &gt; A, size_t numNonNegative) -&gt; size_t</td></tr>
+<tr class="memitem:a302db45f1f463f745bd2b460492faa4c"><td class="memItemLeft" align="right" valign="top"><a id="a302db45f1f463f745bd2b460492faa4c"></a>
+static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>memoryNeededImpl</b> (Row Ar, Col Ac, Row Er, size_t numPos) -&gt; size_t</td></tr>
+<tr class="separator:a302db45f1f463f745bd2b460492faa4c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab746c7daa8dd4ac2fbabd42f3ac57e8f"><td class="memItemLeft" align="right" valign="top"><a id="ab746c7daa8dd4ac2fbabd42f3ac57e8f"></a>
+static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>memoryNeededNonNegative</b> (PtrMatrix&lt; int64_t &gt; A, size_t numNonNegative) -&gt; size_t</td></tr>
 <tr class="separator:ab746c7daa8dd4ac2fbabd42f3ac57e8f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ade25743e79171f643f383896d05c9c03"><td class="memItemLeft" align="right" valign="top"><a id="ade25743e79171f643f383896d05c9c03"></a>
 static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>memoryNeededNonNegative</b> (PtrMatrix&lt; int64_t &gt; A, PtrMatrix&lt; int64_t &gt; E, size_t numNonNegative) -&gt; size_t</td></tr>
@@ -307,50 +311,6 @@ template&lt;typename T &gt; </div>
 </table>
 </div><div class="memdoc">
 <p>B.size() == (A.numCol() + A.numRow() + 1 + numNonNegative) x (2 * (A.numRow() + 1 + numNonNegative))</p>
-
-</div>
-</div>
-<a id="ab746c7daa8dd4ac2fbabd42f3ac57e8f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab746c7daa8dd4ac2fbabd42f3ac57e8f">&#9670;&nbsp;</a></span>memoryNeededNonNegative()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;typename T &gt; </div>
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">static constexpr auto <a class="el" href="structcomparator_1_1BaseSymbolicComparator.html">comparator::BaseSymbolicComparator</a>&lt; T &gt;::memoryNeededNonNegative </td>
-          <td>(</td>
-          <td class="paramtype">PtrMatrix&lt; int64_t &gt;&#160;</td>
-          <td class="paramname"><em>A</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">size_t&#160;</td>
-          <td class="paramname"><em>numNonNegative</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td> -&gt; size_t </td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">static</span><span class="mlabel">constexpr</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-<ol type="1">
-<li>the matrix V: (dimD ? dimV : rankU) x dimV</li>
-<li>the matrix U: rankU x colU</li>
-<li>the vector d: dimD &lt;= R Total: mem + size_t(rankU) * colU + size_t(numVRows()) * dimV + dimD</li>
-</ol>
-<p>numColB = A.numRow() +</p>
 
 </div>
 </div>

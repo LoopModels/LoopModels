@@ -9,12 +9,11 @@ var searchData=
   ['matvecmul_118',['MatVecMul',['../structLinAlg_1_1MatVecMul.html',1,'LinAlg']]],
   ['maxpow10_119',['MaxPow10',['../structLinAlg_1_1MaxPow10.html',1,'LinAlg']]],
   ['memoryaccess_120',['MemoryAccess',['../structMemoryAccess.html',1,'']]],
-  ['memoryneedednonnegative_121',['memoryNeededNonNegative',['../structcomparator_1_1BaseSymbolicComparator.html#ab746c7daa8dd4ac2fbabd42f3ac57e8f',1,'comparator::BaseSymbolicComparator']]],
-  ['mergingcost_122',['MergingCost',['../structMergingCost.html',1,'']]],
-  ['missingnode_123',['missingNode',['../structLinearProgramLoopBlock_1_1Graph.html#a625c1bc32023c0d53aec7f1745216b8c',1,'LinearProgramLoopBlock::Graph']]],
-  ['mockgraph_124',['MockGraph',['../structMockGraph.html',1,'']]],
-  ['mockvertex_125',['MockVertex',['../structMockVertex.html',1,'']]],
-  ['mul_126',['Mul',['../structLinAlg_1_1Mul.html',1,'LinAlg']]],
-  ['mutarray_127',['MutArray',['../structLinAlg_1_1MutArray.html',1,'LinAlg']]],
-  ['mutarray_3c_20t_20_3e_128',['MutArray&lt; T &gt;',['../structLinAlg_1_1MutArray.html',1,'LinAlg']]]
+  ['mergingcost_121',['MergingCost',['../structMergingCost.html',1,'']]],
+  ['missingnode_122',['missingNode',['../structLinearProgramLoopBlock_1_1Graph.html#a625c1bc32023c0d53aec7f1745216b8c',1,'LinearProgramLoopBlock::Graph']]],
+  ['mockgraph_123',['MockGraph',['../structMockGraph.html',1,'']]],
+  ['mockvertex_124',['MockVertex',['../structMockVertex.html',1,'']]],
+  ['mul_125',['Mul',['../structLinAlg_1_1Mul.html',1,'LinAlg']]],
+  ['mutarray_126',['MutArray',['../structLinAlg_1_1MutArray.html',1,'LinAlg']]],
+  ['mutarray_3c_20t_20_3e_127',['MutArray&lt; T &gt;',['../structLinAlg_1_1MutArray.html',1,'LinAlg']]]
 ];
