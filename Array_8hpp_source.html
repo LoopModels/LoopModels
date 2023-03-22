@@ -1056,11 +1056,11 @@ $(function() {
 <div class="line"><a name="l00991"></a><span class="lineno">  991</span>&#160;  }</div>
 <div class="line"><a name="l00992"></a><span class="lineno">  992</span>&#160;  <span class="comment">// this method should only be called from the destructor</span></div>
 <div class="line"><a name="l00993"></a><span class="lineno">  993</span>&#160;  <span class="comment">// (and the implementation taking the new ptr and capacity)</span></div>
-<div class="line"><a name="l00994"></a><span class="lineno">  994</span>&#160;  constexpr <span class="keywordtype">void</span> maybeDeallocate() {</div>
+<div class="line"><a name="l00994"></a><span class="lineno">  994</span>&#160;  constexpr <span class="keywordtype">void</span> maybeDeallocate() noexcept {</div>
 <div class="line"><a name="l00995"></a><span class="lineno">  995</span>&#160;    <span class="keywordflow">if</span> (!isSmall()) this-&gt;allocator.deallocate(this-&gt;ptr, this-&gt;capacity);</div>
 <div class="line"><a name="l00996"></a><span class="lineno">  996</span>&#160;  }</div>
 <div class="line"><a name="l00997"></a><span class="lineno">  997</span>&#160;  <span class="comment">// this method should be called whenever the buffer lives</span></div>
-<div class="line"><a name="l00998"></a><span class="lineno">  998</span>&#160;  constexpr <span class="keywordtype">void</span> maybeDeallocate(<a class="code" href="structNotNull.html">NotNull&lt;T&gt;</a> newPtr, U newCapacity) {</div>
+<div class="line"><a name="l00998"></a><span class="lineno">  998</span>&#160;  constexpr <span class="keywordtype">void</span> maybeDeallocate(<a class="code" href="structNotNull.html">NotNull&lt;T&gt;</a> newPtr, U newCapacity) noexcept {</div>
 <div class="line"><a name="l00999"></a><span class="lineno">  999</span>&#160;    maybeDeallocate();</div>
 <div class="line"><a name="l01000"></a><span class="lineno"> 1000</span>&#160;    this-&gt;ptr = newPtr;</div>
 <div class="line"><a name="l01001"></a><span class="lineno"> 1001</span>&#160;    this-&gt;capacity = newCapacity;</div>
@@ -1292,7 +1292,7 @@ $(function() {
 <div class="line"><a name="l01231"></a><span class="lineno"> 1231</span>&#160;    this-&gt;sz = S{};</div>
 <div class="line"><a name="l01232"></a><span class="lineno"> 1232</span>&#160;    this-&gt;capacity = N;</div>
 <div class="line"><a name="l01233"></a><span class="lineno"> 1233</span>&#160;  }</div>
-<div class="line"><a name="l01234"></a><span class="lineno"> 1234</span>&#160;  constexpr ~<a class="code" href="structLinAlg_1_1ManagedArray.html">ManagedArray</a>() { this-&gt;maybeDeallocate(); }</div>
+<div class="line"><a name="l01234"></a><span class="lineno"> 1234</span>&#160;  constexpr ~<a class="code" href="structLinAlg_1_1ManagedArray.html">ManagedArray</a>() noexcept { this-&gt;maybeDeallocate(); }</div>
 <div class="line"><a name="l01235"></a><span class="lineno"> 1235</span>&#160; </div>
 <div class="line"><a name="l01236"></a><span class="lineno"> 1236</span>&#160;  [[nodiscard]] <span class="keyword">static</span> constexpr <span class="keyword">auto</span> identity(<span class="keywordtype">unsigned</span> M) -&gt; <a class="code" href="structLinAlg_1_1ManagedArray.html">ManagedArray</a> {</div>
 <div class="line"><a name="l01237"></a><span class="lineno"> 1237</span>&#160;    static_assert(MatrixDimension&lt;S&gt;);</div>
