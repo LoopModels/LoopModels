@@ -991,11 +991,11 @@ protected:
   }
   // this method should only be called from the destructor
   // (and the implementation taking the new ptr and capacity)
-  constexpr void maybeDeallocate() {
+  constexpr void maybeDeallocate() noexcept {
     if (!isSmall()) this->allocator.deallocate(this->ptr, this->capacity);
   }
   // this method should be called whenever the buffer lives
-  constexpr void maybeDeallocate(NotNull<T> newPtr, U newCapacity) {
+  constexpr void maybeDeallocate(NotNull<T> newPtr, U newCapacity) noexcept {
     maybeDeallocate();
     this->ptr = newPtr;
     this->capacity = newCapacity;
@@ -1231,7 +1231,7 @@ struct ManagedArray : ReallocView<T, S, A, U> {
     this->sz = S{};
     this->capacity = N;
   }
-  constexpr ~ManagedArray() { this->maybeDeallocate(); }
+  constexpr ~ManagedArray() noexcept { this->maybeDeallocate(); }
 
   [[nodiscard]] static constexpr auto identity(unsigned M) -> ManagedArray {
     static_assert(MatrixDimension<S>);
