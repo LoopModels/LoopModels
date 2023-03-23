@@ -44,7 +44,7 @@ This project requires C++20.
 On Ubuntu 22.04 LTS or later (if you're on an older Ubuntu, I suggest upgrading), you can install the dependencies via
 ```
 # needed to build; g++ also works in place of clang
-sudo apt install meson clang llvm-dev libgtest-dev libbenchmark-dev ninja-build pkg-config cmake
+sudo apt install meson clang llvm-dev libgtest-dev libbenchmark-dev ninja-build pkg-config cmake libc++-15-dev
 # quality of life
 sudo apt install clangd clang-format ccache lld gcovr
 ```
