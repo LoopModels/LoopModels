@@ -71,8 +71,6 @@ $(function() {
 <div class="title">DependencePolyhedra Struct Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-
-<p><code>#include &lt;<a class="el" href="DependencyPolyhedra_8hpp_source.html">DependencyPolyhedra.hpp</a>&gt;</code></p>
 <div class="dynheader">
 Inheritance diagram for DependencePolyhedra:</div>
 <div class="dyncontent">
@@ -85,9 +83,9 @@ Inheritance diagram for DependencePolyhedra:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:aa7854fc734c6a066319938932acb281f"><td class="memItemLeft" align="right" valign="top"><a id="aa7854fc734c6a066319938932acb281f"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>getTimeDim</b> () const -&gt; size_t</td></tr>
-<tr class="separator:aa7854fc734c6a066319938932acb281f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aecbc61deabffb77ee5a715aef1ac134d"><td class="memItemLeft" align="right" valign="top"><a id="aecbc61deabffb77ee5a715aef1ac134d"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getTimeDim</b> () const -&gt; size_t</td></tr>
+<tr class="separator:aecbc61deabffb77ee5a715aef1ac134d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a67f89c2048237183b5fc23b9fbfa0020"><td class="memItemLeft" align="right" valign="top"><a id="a67f89c2048237183b5fc23b9fbfa0020"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getDim0</b> () const -&gt; size_t</td></tr>
 <tr class="separator:a67f89c2048237183b5fc23b9fbfa0020"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -245,9 +243,9 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:aa8b31b638cb5034b4ce44e2a01e32a26"><td class="memItemLeft" align="right" valign="top"><a id="aa8b31b638cb5034b4ce44e2a01e32a26"></a>
 size_t&#160;</td><td class="memItemRight" valign="bottom"><b>numDep0Var</b></td></tr>
 <tr class="separator:aa8b31b638cb5034b4ce44e2a01e32a26"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4fb0cb49fe17ea76db2ffd2fa3b9d2db"><td class="memItemLeft" align="right" valign="top"><a id="a4fb0cb49fe17ea76db2ffd2fa3b9d2db"></a>
-llvm::SmallVector&lt; int64_t, 2 &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>nullStep</b></td></tr>
-<tr class="separator:a4fb0cb49fe17ea76db2ffd2fa3b9d2db"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2609927becca4c278c788c392d114868"><td class="memItemLeft" align="right" valign="top"><a id="a2609927becca4c278c788c392d114868"></a>
+Vector&lt; int64_t, 2 &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>nullStep</b></td></tr>
+<tr class="separator:a2609927becca4c278c788c392d114868"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="friends"></a>
 Friends</h2></td></tr>
@@ -255,10 +253,7 @@ Friends</h2></td></tr>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> (llvm::raw_ostream &amp;os, const <a class="el" href="structDependencePolyhedra.html">DependencePolyhedra</a> &amp;p) -&gt; llvm::raw_ostream &amp;</td></tr>
 <tr class="separator:ac4f8af25ad6c86922b65bbae206acb4a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>for i = 1:N, j = 1:i A[i,j] = foo(A[i,i]) labels: 0 1</p>
-<p><a class="el" href="structDependence.html">Dependence</a> Poly: 1 &lt;= i_0 &lt;= N 1 &lt;= j_0 &lt;= i_0 1 &lt;= i_1 &lt;= N 1 &lt;= j_1 &lt;= i_1 i_0 == i_1 j_0 == i_1 </p>
-</div><hr/>The documentation for this struct was generated from the following file:<ul>
+<hr/>The documentation for this struct was generated from the following file:<ul>
 <li>include/<a class="el" href="DependencyPolyhedra_8hpp_source.html">DependencyPolyhedra.hpp</a></li>
 </ul>
 </div><!-- contents -->
