@@ -811,10 +811,12 @@ struct AffineLoopNest
               ptr + sizeof(const llvm::SCEV *const *) * numDynSymbols)),
             DenseDims{numConstraints, numLoops + numDynSymbols + 1}};
   };
-  [[nodiscard]] auto getSyms() -> llvm::MutableArrayRef<const llvm::SCEV *> {
+  [[nodiscard]] constexpr auto getSyms()
+    -> llvm::MutableArrayRef<const llvm::SCEV *> {
     return {reinterpret_cast<const llvm::SCEV **>(memory), numDynSymbols};
   }
-  [[nodiscard]] auto getSyms() const -> llvm::ArrayRef<const llvm::SCEV *> {
+  [[nodiscard]] constexpr auto getSyms() const
+    -> llvm::ArrayRef<const llvm::SCEV *> {
     return {reinterpret_cast<const llvm::SCEV *const *>(memory), numDynSymbols};
   }
   [[nodiscard]] constexpr auto getNumLoops() const -> size_t {

@@ -1,17 +1,18 @@
 #pragma once
-#include "Math/Math.hpp"
 #include "./NormalForm.hpp"
 #include "./Rational.hpp"
 #include "./VectorGreatestCommonDivisor.hpp"
+#include "Math/Math.hpp"
 #include <cstdint>
 #include <llvm/ADT/SmallVector.h>
 
-[[nodiscard]] inline auto orthogonalize(IntMatrix A) -> IntMatrix {
+[[nodiscard]] constexpr auto orthogonalize(DenseMatrix<int64_t> A)
+  -> DenseMatrix<int64_t> {
   if ((A.numCol() < 2) || (A.numRow() == 0)) return A;
   normalizeByGCD(A(0, _));
   if (A.numRow() == 1) return A;
-  llvm::SmallVector<Rational, 8> buff;
-  buff.resize_for_overwrite(size_t(A.numCol()));
+  Vector<Rational, 8> buff;
+  buff.resizeForOverwrite(size_t(A.numCol()));
   for (size_t i = 1; i < A.numRow(); ++i) {
     for (size_t j = 0; j < A.numCol(); ++j) buff[j] = A(i, j);
     for (size_t j = 0; j < i; ++j) {
@@ -32,6 +33,7 @@
   return A;
 }
 
-[[nodiscard]] inline auto orthogonalNullSpace(IntMatrix A) -> IntMatrix {
+[[nodiscard]] constexpr auto orthogonalNullSpace(DenseMatrix<int64_t> A)
+  -> DenseMatrix<int64_t> {
   return orthogonalize(NormalForm::nullSpace(std::move(A)));
 }

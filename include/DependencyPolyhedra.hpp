@@ -24,6 +24,41 @@
 #include <tuple>
 #include <utility>
 
+/// DepPoly is a Polyhedra with equality constraints, representing the
+/// overlapping iterations between two array accesses Given memory accesses
+/// 0. C0*i0, over polyhedra A0 * i0 + b0 >= 0
+/// 1. C1*i1, over polyhedra A1 * i1 + b1 >= 0
+/// We construct a dependency polyehdra with equalities
+/// C0*i0 == C1*i1
+/// and inequalities
+/// A0 * i0 + b0 >= 0
+/// A1 * i1 + b1 >= 0
+/// This can be represented as the inequality
+/// [ A0  0   * [ i0    + [ b0   >= 0
+///    0 A1 ]     i1 ]      b1 ]
+/// and the equality
+/// [ C0 -C1 ]  * [ i0    == [ 0 ]
+///                 i1 ]
+/// We require C0.numRow() == C1.numRow()
+/// This number of rows equals the array dimensionality of the memory accesses.
+/// The length of vector `i` equals the number of loops in the nest.
+/// `b` may contain dynamic symbols. We match them between b0 and b1, (adding 0s
+/// as necessary), so that b0 = b0_c + B0 * s b1 = b1_c + B1 * s where s is the
+/// vector of dynamic symbols.
+///
+/// Additionally, we may have some number of time dimensions corresponding to
+/// repeated memory accesses to the same address. E.g.,
+/// ```
+/// for (int i = 0; i < N; ++i)
+///   for (int j = 0; j < N; ++j)
+///     for (int k = 0; k < N; ++k)
+///       C[i,j] += A[i,k]*B[k,j];
+/// ```
+/// We repeatedly access `C` across `k`.
+/// We support arbitrary (so long as indexing is affine) repeat accesses to the
+/// same address; this is just a trivial (matrix multiply) example.
+///
+/// Example:
 /// for i = 1:N, j = 1:i
 ///     A[i,j] = foo(A[i,i])
 /// labels: 0           1
@@ -35,18 +70,147 @@
 /// 1 <= j_1 <= i_1
 /// i_0 == i_1
 /// j_0 == i_1
+class DepPoly : BasePolyhedra<true, true, false, DepPoly> {
+  // initially means that the polyhedra is constructed with those as initial
+  // values but that we may reduce these values through simplification/removal
+  // of redundancies
+  // Memory layout:
+  // A, E, nullStep, s
+  unsigned int numDep0Var;      // i0.size()
+  unsigned int numDep1Var;      // i1.size()
+  unsigned int numCon;          // initially: ineqConCapacity
+  unsigned int numEqCon;        // initially: eqConCapacity
+  unsigned int numDynSym;       // s.size()
+  unsigned int timeDim;         // null space of memory accesses
+  unsigned int ineqConCapacity; // A0.numRow() + A1.numRow()
+  unsigned int eqConCapacity;   // C0.numRow()
+  // NOLINTNEXTLINE(modernize-avoid-c-arrays) // FAM
+  [[gnu::aligned(alignof(int64_t))]] std::byte memory[8];
+
+public:
+  constexpr auto getTimeDim() const -> unsigned int { return timeDim; }
+  constexpr auto getNumDep0Var() const -> unsigned int { return numDep0Var; }
+  constexpr auto getNumDep1Var() const -> unsigned int { return numDep1Var; }
+  constexpr auto getNumDynSym() const -> unsigned int { return numDynSym; }
+  constexpr auto getNumEqCon() const -> unsigned int { return numEqCon; }
+  constexpr auto getNumIneqCon() const -> unsigned int { return numCon; }
+  constexpr auto getNumVar() const -> unsigned int {
+    return numDep0Var + numDep1Var + timeDim + numDynSym;
+  }
+  constexpr auto getNumPhiCoefficients() const -> unsigned int {
+    return numDep0Var + numDep1Var;
+  }
+  constexpr auto getNumScheduleCoefficients() const -> unsigned int {
+    return getNumPhiCoefficients() + 2;
+  }
+  [[nodiscard]] constexpr auto getNumLambda() const -> unsigned {
+    return 1 + numCon + 2 * numEqCon;
+  }
+  constexpr auto getNumSymbols() const -> unsigned int { return numDynSym + 1; }
+
+  auto getA() -> MutDensePtrMatrix<int64_t> {
+    return {reinterpret_cast<int64_t *>(memory),
+            DenseDims{numCon, getNumVar() + 1}};
+  }
+  auto getE() -> MutDensePtrMatrix<int64_t> {
+    std::int64_t *p = reinterpret_cast<int64_t *>(memory);
+    return {p + numCon * (getNumVar() + 1),
+            DenseDims{numEqCon, getNumVar() + 1}};
+  }
+  auto getNullStep() -> MutPtrVector<int64_t> {
+    std::int64_t *p = reinterpret_cast<int64_t *>(memory);
+    return {p + (numCon + numEqCon) * (getNumVar() + 1), timeDim};
+  }
+  auto getDynSym() -> llvm::MutableArrayRef<const llvm::SCEV *> {
+    std::byte *p = memory;
+    return {reinterpret_cast<const llvm::SCEV **>(
+              p + sizeof(int64_t) *
+                    ((numCon + numEqCon) * (getNumVar() + 1) + timeDim)),
+            numDynSym};
+  }
+  auto getA() const -> DensePtrMatrix<int64_t> {
+    const std::byte *p = memory;
+    return {const_cast<int64_t *>(reinterpret_cast<const int64_t *>(p)),
+            DenseDims{numCon, getNumVar() + 1}};
+  }
+  auto getE() const -> DensePtrMatrix<int64_t> {
+    const std::int64_t *p = reinterpret_cast<const int64_t *>(memory);
+    return {const_cast<int64_t *>(p + numCon * (getNumVar() + 1)),
+            DenseDims{numEqCon, getNumVar() + 1}};
+  }
+  auto getNullStep() const -> PtrVector<int64_t> {
+    const std::int64_t *p = reinterpret_cast<const int64_t *>(memory);
+    return {const_cast<int64_t *>(p + (numCon + numEqCon) * (getNumVar() + 1)),
+            timeDim};
+  }
+  auto getDynSym() const -> llvm::ArrayRef<const llvm::SCEV *> {
+    const std::byte *p = memory;
+    return {reinterpret_cast<const llvm::SCEV *const *>(
+              p + sizeof(int64_t) *
+                    ((numCon + numEqCon) * (getNumVar() + 1) + timeDim)),
+            numDynSym};
+  }
+  constexpr auto getSymbols(size_t i) -> MutPtrVector<int64_t> {
+    return getA()(i, _(begin, getNumSymbols()));
+  }
+  [[nodiscard]] auto getInEqSymbols(size_t i) const -> PtrVector<int64_t> {
+    return getA()(i, _(begin, getNumSymbols()));
+  }
+  [[nodiscard]] auto getEqSymbols(size_t i) const -> PtrVector<int64_t> {
+    return getE()(i, _(begin, getNumSymbols()));
+  }
+  [[nodiscard]] auto getCompTimeInEqOffset(size_t i) const
+    -> std::optional<int64_t> {
+    if (!allZero(getA()(i, _(1, getNumSymbols())))) return {};
+    return getA()(i, 0);
+  }
+  [[nodiscard]] auto getCompTimeEqOffset(size_t i) const
+    -> std::optional<int64_t> {
+    if (!allZero(getE()(i, _(1, getNumSymbols())))) return {};
+    return getE()(i, 0);
+  }
+  static constexpr auto findFirstNonEqual(PtrVector<int64_t> x,
+                                          PtrVector<int64_t> y) -> size_t {
+    const size_t M = std::min(x.size(), y.size());
+    return std::mismatch(x.begin(), x.begin() + M, y.begin()).first - x.begin();
+  }
+  static constexpr auto nullSpace(const MemoryAccess &x, const MemoryAccess &y)
+    -> DenseMatrix<int64_t> {
+    const size_t numLoopsCommon =
+      findFirstNonEqual(x.getFusionOmega(), y.getFusionOmega());
+    const size_t xDim = x.getArrayDim();
+    const size_t yDim = y.getArrayDim();
+    DenseMatrix<int64_t> A(DenseDims{numLoopsCommon, xDim + yDim});
+    if (!numLoopsCommon) return A;
+    // indMats cols are [innerMostLoop, ..., outerMostLoop]
+    PtrMatrix<int64_t> indMatX = x.indexMatrix();
+    PtrMatrix<int64_t> indMatY = y.indexMatrix();
+    for (size_t i = 0; i < numLoopsCommon; ++i) {
+      A(i, _(begin, xDim)) = indMatX(i, _);
+      A(i, _(xDim, end)) = indMatY(i, _);
+    }
+    // returns rank x num loops
+    return orthogonalNullSpace(std::move(A));
+  }
+
+}; // class DepPoly
+
 struct DependencePolyhedra
   : BasePolyhedra<true, true, false, DependencePolyhedra> {
   // size_t numLoops;
   [[no_unique_address]] size_t numDep0Var; // loops dep 0
   // size_t numDep1Var; // loops dep 1
-  [[no_unique_address]] llvm::SmallVector<int64_t, 2> nullStep;
+  [[no_unique_address]] Vector<int64_t, 2> nullStep;
   // TODO: `constexpr` once `llvm::SmallVector` supports it
-  [[nodiscard]] auto getTimeDim() const -> size_t { return nullStep.size(); }
+  [[nodiscard]] constexpr auto getTimeDim() const -> size_t {
+    return nullStep.size();
+  }
   [[nodiscard]] constexpr auto getDim0() const -> size_t { return numDep0Var; }
   // getDynSym() + 1 == getNumSym()
   [[nodiscard]] auto getDynSymDim() const -> size_t { return S.size(); }
   [[nodiscard]] auto getDim1() const -> size_t {
+    // getNumVar() - getDim0() - getTimeDim() - getNumDynSym() == getDim1();
+    // getNumVar() == getDim0() + getTimeDim() + getNumDynSym()+ getDim1();
     return getNumVar() - numDep0Var - nullStep.size() - S.size();
   }
   [[nodiscard]] auto getNumPhiCoefficients() const -> size_t {
@@ -364,7 +528,7 @@ struct DependencePolyhedra
       p.E, p.S, false);
   }
 
-}; // namespace DependencePolyhedra
+}; // DependencePolyhedra
 
 /// Dependence
 /// Represents a dependence relationship between two memory accesses.
