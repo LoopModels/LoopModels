@@ -1184,18 +1184,15 @@ struct ManagedArray : ReallocView<T, S, A, U> {
   template <class D, std::unsigned_integral I>
   constexpr auto operator=(ManagedArray<T, D, N, A, I> &&b) noexcept
     -> ManagedArray & {
-    if (this == &b) return *this;
+    if (this->begin() == b.begin()) return *this;
     // here, we commandeer `b`'s memory
     this->sz = b.dim();
-    this->allocator = std::move(b.allocator);
-    if (b.isSmall()) {
-      // if `b` is small, we need to copy memory
-      // no need to shrink our capacity
+    this->allocator = std::move(b.get_allocator());
+    // if `b` is small, we need to copy memory
+    // no need to shrink our capacity
+    if (b.isSmall())
       std::uninitialized_copy_n(b.data(), size_t(this->sz), (T *)(this->ptr));
-    } else {
-      // otherwise, we take its pointer
-      maybeDeallocate(b.wrappedPtr(), b.getCapacity());
-    }
+    else this->maybeDeallocate(b.wrappedPtr(), b.getCapacity());
     b.resetNoFree();
     return *this;
   }
@@ -1211,7 +1208,7 @@ struct ManagedArray : ReallocView<T, S, A, U> {
     if (this == &b) return *this;
     // here, we commandeer `b`'s memory
     this->sz = b.dim();
-    this->allocator = std::move(b.allocator);
+    this->allocator = std::move(b.get_allocator());
     if (b.isSmall()) {
       // if `b` is small, we need to copy memory
       // no need to shrink our capacity
@@ -1349,7 +1346,7 @@ struct ManagedArray<T, S, 0, A, U> : ReallocView<T, S, A, U, true> {
     if (this == &b) return *this;
     // here, we commandeer `b`'s memory
     this->sz = b.dim();
-    this->allocator = std::move(b.allocator);
+    this->allocator = std::move(b.get_allocator());
     if (b.isSmall()) {
       // if `b` is small, we need to copy memory
       // no need to shrink our capacity
@@ -1373,7 +1370,7 @@ struct ManagedArray<T, S, 0, A, U> : ReallocView<T, S, A, U, true> {
     if (this == &b) return *this;
     // here, we commandeer `b`'s memory
     this->sz = b.dim();
-    this->allocator = std::move(b.allocator);
+    this->allocator = std::move(b.get_allocator());
     maybeDeallocate(b.wrappedPtr(), b.getCapacity());
     b.resetNoFree();
     return *this;

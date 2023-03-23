@@ -885,7 +885,7 @@ static void BM_Simplex0(benchmark::State &state) {
     simp << simpBackup;
     bool fail = simp.initiateFeasible();
     assert(!fail);
-    simp.rLexMinLast(37);
+    if (!fail) simp.rLexMinLast(37);
   }
   alloc.reset();
 }
@@ -1122,7 +1122,7 @@ static void BM_Simplex1(benchmark::State &state) {
     simp << simpBackup;
     bool fail = simp.initiateFeasible();
     assert(!fail);
-    simp.rLexMinLast(15);
+    if (!fail) simp.rLexMinLast(15);
   }
 }
 BENCHMARK(BM_Simplex1);

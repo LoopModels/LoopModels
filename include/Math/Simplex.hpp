@@ -334,7 +334,7 @@ struct Simplex {
     // upper bound number of augmentVars is constraintCapacity
     for (unsigned i = 0; i < basicVars.size(); ++i)
       if (basicVars[i] == -1) augVars.push_back(i);
-    return (augVars.size() && removeAugmentVars(augVars));
+    return (!augVars.empty() && removeAugmentVars(augVars));
   }
   constexpr auto removeAugmentVars(PtrVector<unsigned> augmentVars) -> bool {
     // TODO: try to avoid reallocating, via reserving enough ahead of time
@@ -395,7 +395,7 @@ struct Simplex {
   getEnteringVariable(PtrVector<int64_t> costs) -> Optional<unsigned int> {
     // Bland's algorithm; guaranteed to terminate
     auto f = costs.begin(), l = costs.end();
-    auto neg = std::find_if(f, l, [](int64_t c) { return c < 0; });
+    const auto *neg = std::find_if(f, l, [](int64_t c) { return c < 0; });
     if (neg == l) return {};
     return unsigned(std::distance(f, neg));
   }

@@ -297,8 +297,8 @@ public:
     return numDynSym == 0;
   }
   // Assumes strides and offsets are sorted
-  [[nodiscard]] auto sizesMatch(const MemoryAccess &x) const -> bool {
-    auto thisSizes = getSizes(), xSizes = x.getSizes();
+  [[nodiscard]] auto sizesMatch(NotNull<const MemoryAccess> x) const -> bool {
+    auto thisSizes = getSizes(), xSizes = x->getSizes();
     return std::equal(thisSizes.begin(), thisSizes.end(), xSizes.begin(),
                       xSizes.end());
   }

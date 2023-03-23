@@ -191,7 +191,7 @@ struct StridedRange {
 };
 template <class I> constexpr auto calcOffset(StridedRange d, I i) -> size_t {
   return d.stride * calcOffset(d.len, i);
-};
+}
 
 template <class D>
 concept VectorDimension = std::integral<D> || std::same_as<D, StridedRange>;
@@ -208,23 +208,23 @@ struct Empty {};
 
 constexpr auto calcNewDim(VectorDimension auto, ScalarIndex auto) -> Empty {
   return {};
-};
+}
 constexpr auto calcNewDim(size_t len, Range<size_t, size_t> r) {
   invariant(r.e <= len);
   invariant(r.b <= r.e);
   return r.e - r.b;
-};
+}
 constexpr auto calcNewDim(StridedRange len, Range<size_t, size_t> r) {
   return calcNewDim(len.len, r);
-};
+}
 template <class B, class E>
 constexpr auto calcNewDim(size_t len, Range<B, E> r) {
   return calcNewDim(len, canonicalizeRange(r, len));
-};
+}
 template <class B, class E>
 constexpr auto calcNewDim(StridedRange len, Range<B, E> r) {
   return StridedRange{unsigned(calcNewDim(len.len, r)), len.stride};
-};
+}
 template <ScalarRowIndex R, ScalarColIndex C>
 constexpr auto calcNewDim(StridedDims, CartesianIndex<R, C>) -> Empty {
   return {};
