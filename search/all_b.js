@@ -9,11 +9,12 @@ var searchData=
   ['matvecmul_120',['MatVecMul',['../structLinAlg_1_1MatVecMul.html',1,'LinAlg']]],
   ['maxpow10_121',['MaxPow10',['../structLinAlg_1_1MaxPow10.html',1,'LinAlg']]],
   ['memoryaccess_122',['MemoryAccess',['../structMemoryAccess.html',1,'']]],
-  ['mergingcost_123',['MergingCost',['../structMergingCost.html',1,'']]],
-  ['missingnode_124',['missingNode',['../structLinearProgramLoopBlock_1_1Graph.html#a625c1bc32023c0d53aec7f1745216b8c',1,'LinearProgramLoopBlock::Graph']]],
-  ['mockgraph_125',['MockGraph',['../structMockGraph.html',1,'']]],
-  ['mockvertex_126',['MockVertex',['../structMockVertex.html',1,'']]],
-  ['mul_127',['Mul',['../structLinAlg_1_1Mul.html',1,'LinAlg']]],
-  ['mutarray_128',['MutArray',['../structLinAlg_1_1MutArray.html',1,'LinAlg']]],
-  ['mutarray_3c_20t_20_3e_129',['MutArray&lt; T &gt;',['../structLinAlg_1_1MutArray.html',1,'LinAlg']]]
+  ['mergemap_123',['mergeMap',['../classDepPoly.html#a672e011c355526212fbb3a008c3391ea',1,'DepPoly']]],
+  ['mergingcost_124',['MergingCost',['../structMergingCost.html',1,'']]],
+  ['missingnode_125',['missingNode',['../structLinearProgramLoopBlock_1_1Graph.html#a625c1bc32023c0d53aec7f1745216b8c',1,'LinearProgramLoopBlock::Graph']]],
+  ['mockgraph_126',['MockGraph',['../structMockGraph.html',1,'']]],
+  ['mockvertex_127',['MockVertex',['../structMockVertex.html',1,'']]],
+  ['mul_128',['Mul',['../structLinAlg_1_1Mul.html',1,'LinAlg']]],
+  ['mutarray_129',['MutArray',['../structLinAlg_1_1MutArray.html',1,'LinAlg']]],
+  ['mutarray_3c_20t_20_3e_130',['MutArray&lt; T &gt;',['../structLinAlg_1_1MutArray.html',1,'LinAlg']]]
 ];

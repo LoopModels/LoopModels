@@ -291,8 +291,8 @@ $(function() {
 <div class="line"><a name="l00227"></a><span class="lineno">  227</span>&#160;    }</div>
 <div class="line"><a name="l00228"></a><span class="lineno">  228</span>&#160;    std::byte *p;</div>
 <div class="line"><a name="l00229"></a><span class="lineno">  229</span>&#160;  };</div>
-<div class="line"><a name="l00230"></a><span class="lineno">  230</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> checkPoint() -&gt; <a class="code" href="structBumpAlloc_1_1CheckPoint.html">CheckPoint</a> { <span class="keywordflow">return</span> SlabCur; }</div>
-<div class="line"><a name="l00231"></a><span class="lineno">  231</span>&#160;  constexpr <span class="keywordtype">void</span> rollBack(CheckPoint p) {</div>
+<div class="line"><a name="l00230"></a><span class="lineno">  230</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> checkpoint() -&gt; <a class="code" href="structBumpAlloc_1_1CheckPoint.html">CheckPoint</a> { <span class="keywordflow">return</span> SlabCur; }</div>
+<div class="line"><a name="l00231"></a><span class="lineno">  231</span>&#160;  constexpr <span class="keywordtype">void</span> rollback(CheckPoint p) {</div>
 <div class="line"><a name="l00232"></a><span class="lineno">  232</span>&#160;    <span class="keywordflow">if</span> (p.isInSlab(SlabEnd)) {</div>
 <div class="line"><a name="l00233"></a><span class="lineno">  233</span>&#160;<span class="preprocessor">#if LLVM_ADDRESS_SANITIZER_BUILD</span></div>
 <div class="line"><a name="l00234"></a><span class="lineno">  234</span>&#160;      <span class="keywordflow">if</span> constexpr (BumpUp) __asan_poison_memory_region(p.p, SlabCur - p.p);</div>
@@ -462,10 +462,10 @@ $(function() {
 <div class="line"><a name="l00398"></a><span class="lineno">  398</span>&#160;  [[gnu::returns_nonnull]] constexpr <span class="keyword">auto</span> allocate(<span class="keywordtype">size_t</span> n) -&gt; T * {</div>
 <div class="line"><a name="l00399"></a><span class="lineno">  399</span>&#160;    <span class="keywordflow">return</span> A-&gt;template allocate&lt;T&gt;(n);</div>
 <div class="line"><a name="l00400"></a><span class="lineno">  400</span>&#160;  }</div>
-<div class="line"><a name="l00401"></a><span class="lineno">  401</span>&#160;  constexpr <span class="keyword">auto</span> checkPoint() -&gt; <span class="keyword">typename</span> Alloc::CheckPoint {</div>
-<div class="line"><a name="l00402"></a><span class="lineno">  402</span>&#160;    <span class="keywordflow">return</span> A-&gt;checkPoint();</div>
+<div class="line"><a name="l00401"></a><span class="lineno">  401</span>&#160;  constexpr <span class="keyword">auto</span> checkpoint() -&gt; <span class="keyword">typename</span> Alloc::CheckPoint {</div>
+<div class="line"><a name="l00402"></a><span class="lineno">  402</span>&#160;    <span class="keywordflow">return</span> A-&gt;checkpoint();</div>
 <div class="line"><a name="l00403"></a><span class="lineno">  403</span>&#160;  }</div>
-<div class="line"><a name="l00404"></a><span class="lineno">  404</span>&#160;  constexpr <span class="keywordtype">void</span> rollBack(<span class="keyword">typename</span> Alloc::CheckPoint p) { A-&gt;rollBack(p); }</div>
+<div class="line"><a name="l00404"></a><span class="lineno">  404</span>&#160;  constexpr <span class="keywordtype">void</span> rollback(<span class="keyword">typename</span> Alloc::CheckPoint p) { A-&gt;rollback(p); }</div>
 <div class="line"><a name="l00405"></a><span class="lineno">  405</span>&#160;};</div>
 <div class="line"><a name="l00406"></a><span class="lineno">  406</span>&#160;static_assert(std::same_as&lt;</div>
 <div class="line"><a name="l00407"></a><span class="lineno">  407</span>&#160;              std::allocator_traits&lt;<a class="code" href="classWBumpAlloc.html">WBumpAlloc&lt;int64_t *&gt;</a>&gt;::size_type, <span class="keywordtype">size_t</span>&gt;);</div>
@@ -504,15 +504,15 @@ $(function() {
 <div class="line"><a name="l00440"></a><span class="lineno">  440</span>&#160; </div>
 <div class="line"><a name="l00441"></a><span class="lineno">  441</span>&#160;constexpr <span class="keyword">auto</span> checkpoint(<span class="keyword">const</span> <span class="keyword">auto</span> &amp;) { <span class="keywordflow">return</span> <a class="code" href="structNoCheckpoint.html">NoCheckpoint</a>{}; }</div>
 <div class="line"><a name="l00442"></a><span class="lineno">  442</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">class</span> T&gt; constexpr <span class="keyword">auto</span> checkpoint(<a class="code" href="classWBumpAlloc.html">WBumpAlloc&lt;T&gt;</a> alloc) {</div>
-<div class="line"><a name="l00443"></a><span class="lineno">  443</span>&#160;  <span class="keywordflow">return</span> alloc.checkPoint();</div>
+<div class="line"><a name="l00443"></a><span class="lineno">  443</span>&#160;  <span class="keywordflow">return</span> alloc.checkpoint();</div>
 <div class="line"><a name="l00444"></a><span class="lineno">  444</span>&#160;}</div>
-<div class="line"><a name="l00445"></a><span class="lineno">  445</span>&#160;constexpr <span class="keyword">auto</span> checkpoint(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc) { <span class="keywordflow">return</span> alloc.checkPoint(); }</div>
+<div class="line"><a name="l00445"></a><span class="lineno">  445</span>&#160;constexpr <span class="keyword">auto</span> checkpoint(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc) { <span class="keywordflow">return</span> alloc.checkpoint(); }</div>
 <div class="line"><a name="l00446"></a><span class="lineno">  446</span>&#160; </div>
 <div class="line"><a name="l00447"></a><span class="lineno">  447</span>&#160;constexpr <span class="keywordtype">void</span> rollback(<span class="keyword">const</span> <span class="keyword">auto</span> &amp;, <a class="code" href="structNoCheckpoint.html">NoCheckpoint</a>) {}</div>
 <div class="line"><a name="l00448"></a><span class="lineno">  448</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">class</span> T&gt; constexpr <span class="keywordtype">void</span> rollback(<a class="code" href="classWBumpAlloc.html">WBumpAlloc&lt;T&gt;</a> alloc, <span class="keyword">auto</span> p) {</div>
-<div class="line"><a name="l00449"></a><span class="lineno">  449</span>&#160;  alloc.rollBack(p);</div>
+<div class="line"><a name="l00449"></a><span class="lineno">  449</span>&#160;  alloc.rollback(p);</div>
 <div class="line"><a name="l00450"></a><span class="lineno">  450</span>&#160;}</div>
-<div class="line"><a name="l00451"></a><span class="lineno">  451</span>&#160;constexpr <span class="keywordtype">void</span> rollback(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, <span class="keyword">auto</span> p) { alloc.rollBack(p); }</div>
+<div class="line"><a name="l00451"></a><span class="lineno">  451</span>&#160;constexpr <span class="keywordtype">void</span> rollback(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, <span class="keyword">auto</span> p) { alloc.rollback(p); }</div>
 <div class="ttc" id="aclassWBumpAlloc_html"><div class="ttname"><a href="classWBumpAlloc.html">WBumpAlloc</a></div><div class="ttdef"><b>Definition:</b> Allocators.hpp:382</div></div>
 <div class="ttc" id="astructBumpAlloc_1_1CheckPoint_html"><div class="ttname"><a href="structBumpAlloc_1_1CheckPoint.html">BumpAlloc::CheckPoint</a></div><div class="ttdef"><b>Definition:</b> Allocators.hpp:222</div></div>
 <div class="ttc" id="astructBumpAlloc_html"><div class="ttname"><a href="structBumpAlloc.html">BumpAlloc</a></div><div class="ttdef"><b>Definition:</b> Allocators.hpp:31</div></div>

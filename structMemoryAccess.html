@@ -222,7 +222,7 @@ constexpr static auto&#160;</td><td class="memItemRight" valign="bottom"><b>gcdK
   </tr>
 </table>
 </div><div class="memdoc">
-<p><a class="el" href="structMemoryAccess.html#ae0eb994bd6fcffc012a91850a23a2bbb">indexMatrix()</a> -&gt; getNumLoops() x arrayDim() loops are in [innermost -&gt; outermost] order Maps loop indVars to array indices Letting <code>i</code> be the indVars and <code>d</code> the indices: <a class="el" href="structMemoryAccess.html#ae0eb994bd6fcffc012a91850a23a2bbb">indexMatrix()</a>' * i == d e.g. <code>indVars = [i, j]</code> and indexMatrix = [ 1 1; 0 1] corresponds to A[i, i + j] Note that <code>[i, j]</code> refers to loops in innermost -&gt; outermost order, i.e. for (j : J) for (i : I) A[i, i + j] </p>
+<p><a class="el" href="structMemoryAccess.html#ae0eb994bd6fcffc012a91850a23a2bbb">indexMatrix()</a> -&gt; getNumLoops() x arrayDim() loops are in [outermost &lt;-&gt; innermost] order Maps loop indVars to array indices Letting <code>i</code> be the indVars and <code>d</code> the indices: <a class="el" href="structMemoryAccess.html#ae0eb994bd6fcffc012a91850a23a2bbb">indexMatrix()</a>' * i == d e.g. <code>indVars = [i, j]</code> and indexMatrix = [ 1 1; 0 1] corresponds to A[i, i + j] Note that <code>[i, j]</code> refers to loops in innermost -&gt; outermost order, i.e. for (i : I) for (j : J) A[i, i + j] </p>
 
 </div>
 </div>

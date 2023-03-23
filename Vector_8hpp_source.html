@@ -116,7 +116,13 @@ $(function() {
 <div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;  <span class="keywordflow">return</span> std::max&lt;size_t&gt;(1, N);</div>
 <div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;}</div>
 <div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160; </div>
-<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;} <span class="comment">// namespace LinAlg</span></div>
+<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;constexpr <span class="keyword">auto</span> selfDot(<span class="keyword">const</span> <span class="keyword">auto</span> &amp;a) {</div>
+<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;  eltype_t&lt;decltype(a)&gt; sum = 0;</div>
+<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;  <span class="keywordflow">for</span> (<span class="keyword">auto</span> x : a) sum += x * x;</div>
+<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;  <span class="keywordflow">return</span> sum;</div>
+<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;}</div>
+<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160; </div>
+<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;} <span class="comment">// namespace LinAlg</span></div>
 <div class="ttc" id="anamespaceLinAlg_html"><div class="ttname"><a href="namespaceLinAlg.html">LinAlg</a></div><div class="ttdef"><b>Definition:</b> Array.hpp:20</div></div>
 <div class="ttc" id="astructLinAlg_1_1default__capacity__type_html"><div class="ttname"><a href="structLinAlg_1_1default__capacity__type.html">LinAlg::default_capacity_type</a></div><div class="ttdef"><b>Definition:</b> Vector.hpp:26</div></div>
 </div><!-- fragment --></div><!-- contents -->
