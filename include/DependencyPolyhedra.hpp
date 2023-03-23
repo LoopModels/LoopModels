@@ -355,6 +355,7 @@ public:
   [[nodiscard]] auto farkasPair(BumpAlloc<> &alloc) const
     -> std::array<Simplex, 2> {
 
+    auto A{getA()}, E{getE()};
     const size_t numEqualityConstraintsOld = size_t(E.numRow());
     const size_t numInequalityConstraintsOld = size_t(A.numRow());
 
