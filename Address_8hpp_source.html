@@ -91,58 +91,58 @@ $(function() {
 <div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;  [[no_unique_address]] <span class="keywordtype">bool</span> isStoreFlag;</div>
 <div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;  int64_t mem[1]; <span class="comment">// NOLINT(modernize-avoid-c-arrays)</span></div>
 <div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;  <a class="code" href="structAddress.html">Address</a>(<a class="code" href="structNotNull.html">NotNull</a>&lt;<a class="code" href="structAffineLoopNest.html">AffineLoopNest&lt;false&gt;</a>&gt; explicitLoop, <a class="code" href="structNotNull.html">NotNull&lt;MemoryAccess&gt;</a> ma,</div>
-<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;          SquarePtrMatrix&lt;int64_t&gt; Pinv, int64_t denom,</div>
-<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;          PtrVector&lt;int64_t&gt; omega, <span class="keywordtype">bool</span> isStr)</div>
+<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;          <a class="code" href="structLinearAlgebra_1_1SquarePtrMatrix.html">SquarePtrMatrix&lt;int64_t&gt;</a> Pinv, int64_t denom,</div>
+<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;          <a class="code" href="structLinearAlgebra_1_1PtrVector.html">PtrVector&lt;int64_t&gt;</a> omega, <span class="keywordtype">bool</span> isStr)</div>
 <div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;    : oldMemAccess(ma), loop(explicitLoop), isStoreFlag(isStr) {</div>
-<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;    PtrMatrix&lt;int64_t&gt; M = oldMemAccess-&gt;indexMatrix();</div>
+<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;    <a class="code" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix&lt;int64_t&gt;</a> M = oldMemAccess-&gt;indexMatrix();</div>
 <div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;    dim = size_t(M.numCol());</div>
 <div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;    depth = size_t(M.numRow());</div>
-<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;    MutPtrMatrix&lt;int64_t&gt; MStar{<a class="code" href="structAddress.html#afad8e52958d1d85eef66ee44d4ceeb78">indexMatrix</a>()};</div>
-<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;    MStar &lt;&lt; (M.transpose() * Pinv).transpose();</div>
+<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;    <a class="code" href="structLinearAlgebra_1_1MutPtrMatrix.html">MutPtrMatrix&lt;int64_t&gt;</a> MStar{<a class="code" href="structAddress.html#a944d66eb4736af541f573f74f8eba277">indexMatrix</a>()};</div>
+<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;    MStar = (M.transpose() * Pinv).transpose();</div>
 <div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;    getDenominator() = denom;</div>
-<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;    getOffsetOmega() &lt;&lt; ma-&gt;offsetMatrix()(_, 0) - MStar * omega;</div>
+<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;    getOffsetOmega() = ma-&gt;offsetMatrix()(_, 0) - MStar * omega;</div>
 <div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;  }</div>
 <div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160; </div>
 <div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;<span class="keyword">public</span>:</div>
-<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;  [[nodiscard]] <span class="keyword">static</span> <span class="keyword">auto</span></div>
-<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;  construct(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, <a class="code" href="structNotNull.html">NotNull</a>&lt;<a class="code" href="structAffineLoopNest.html">AffineLoopNest&lt;false&gt;</a>&gt; explicitLoop,</div>
-<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;            <a class="code" href="structNotNull.html">NotNull&lt;MemoryAccess&gt;</a> ma, <span class="keywordtype">bool</span> isStr, SquarePtrMatrix&lt;int64_t&gt; Pinv,</div>
-<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;            int64_t denom, PtrVector&lt;int64_t&gt; omega) -&gt; <a class="code" href="structNotNull.html">NotNull&lt;Address&gt;</a> {</div>
-<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160; </div>
-<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;    <span class="keywordtype">size_t</span> memSz = ma-&gt;getNumLoops() * (1 + ma-&gt;getArrayDim());</div>
-<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;    <span class="keyword">auto</span> *pt = alloc.allocate(<span class="keyword">sizeof</span>(<a class="code" href="structAddress.html">Address</a>) + memSz * <span class="keyword">sizeof</span>(int64_t), 8);</div>
-<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">new</span> (pt) <a class="code" href="structAddress.html">Address</a>(explicitLoop, ma, Pinv, denom, omega, isStr);</div>
-<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;  }</div>
-<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getNumLoops() <span class="keyword">const</span> -&gt; <span class="keywordtype">size_t</span> { <span class="keywordflow">return</span> depth; }</div>
-<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getArrayDim() <span class="keyword">const</span> -&gt; <span class="keywordtype">size_t</span> { <span class="keywordflow">return</span> dim; }</div>
-<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getInstruction() <span class="keyword">const</span> -&gt; llvm::Instruction * {</div>
-<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;    <span class="keywordflow">return</span> oldMemAccess-&gt;getInstruction();</div>
-<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;  }</div>
-<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getAlign() <span class="keyword">const</span> -&gt; llvm::Align {</div>
-<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;    <span class="keywordflow">return</span> oldMemAccess-&gt;getAlign();</div>
-<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;  }</div>
-<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getDenominator() -&gt; int64_t &amp; { <span class="keywordflow">return</span> mem[0]; }</div>
-<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getDenominator() <span class="keyword">const</span> -&gt; int64_t {</div>
-<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;    <span class="keywordflow">return</span> mem[0];</div>
-<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;  }</div>
-<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;  <span class="comment">// constexpr auto getFusionOmega() -&gt; MutPtrVector&lt;int64_t&gt; {</span></div>
-<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;  <span class="comment">//   return {mem + 1, getNumLoops()+1};</span></div>
-<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;  <span class="comment">// }</span></div>
-<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;  <span class="comment">// [[nodiscard]] constexpr auto getFusionOmega() const -&gt; PtrVector&lt;int64_t&gt; {</span></div>
-<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;  <span class="comment">//   return {mem + 1, getNumLoops()+1};</span></div>
-<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;  <span class="comment">// }</span></div>
-<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getOffsetOmega() -&gt; MutPtrVector&lt;int64_t&gt; {</div>
-<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;    <span class="keywordflow">return</span> {mem + 1, unsigned(getNumLoops())};</div>
-<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;  }</div>
-<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getOffsetOmega() <span class="keyword">const</span> -&gt; PtrVector&lt;int64_t&gt; {</div>
-<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;    <span class="keywordflow">return</span> {<span class="keyword">const_cast&lt;</span>int64_t *<span class="keyword">&gt;</span>(mem + 1), <span class="keywordtype">unsigned</span>(getNumLoops())};</div>
-<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;  }</div>
-<div class="line"><a name="l00113"></a><span class="lineno"><a class="line" href="structAddress.html#afad8e52958d1d85eef66ee44d4ceeb78">  113</a></span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> <a class="code" href="structAddress.html#afad8e52958d1d85eef66ee44d4ceeb78">indexMatrix</a>() -&gt; MutDensePtrMatrix&lt;int64_t&gt; {</div>
-<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;    <span class="keywordflow">return</span> {mem + 1 + getNumLoops(), <a class="code" href="structLinAlg_1_1DenseDims.html">DenseDims</a>{getArrayDim(), getNumLoops()}};</div>
+<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;  <span class="keyword">static</span> <span class="keyword">auto</span> construct(llvm::BumpPtrAllocator &amp;alloc,</div>
+<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;                        <a class="code" href="structNotNull.html">NotNull</a>&lt;<a class="code" href="structAffineLoopNest.html">AffineLoopNest&lt;false&gt;</a>&gt; explicitLoop,</div>
+<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;                        <a class="code" href="structNotNull.html">NotNull&lt;MemoryAccess&gt;</a> ma, <span class="keywordtype">bool</span> isStr,</div>
+<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;                        <a class="code" href="structLinearAlgebra_1_1SquarePtrMatrix.html">SquarePtrMatrix&lt;int64_t&gt;</a> Pinv, int64_t denom,</div>
+<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;                        <a class="code" href="structLinearAlgebra_1_1PtrVector.html">PtrVector&lt;int64_t&gt;</a> omega) -&gt; <a class="code" href="structNotNull.html">NotNull&lt;Address&gt;</a> {</div>
+<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160; </div>
+<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;    <span class="keywordtype">size_t</span> memSz = ma-&gt;getNumLoops() * (1 + ma-&gt;getArrayDim());</div>
+<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;    <span class="keyword">auto</span> *pt = alloc.Allocate(<span class="keyword">sizeof</span>(<a class="code" href="structAddress.html">Address</a>) + memSz * <span class="keyword">sizeof</span>(int64_t), 8);</div>
+<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">new</span> (pt) <a class="code" href="structAddress.html">Address</a>(explicitLoop, ma, Pinv, denom, omega, isStr);</div>
+<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;  }</div>
+<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getNumLoops() <span class="keyword">const</span> -&gt; <span class="keywordtype">size_t</span> { <span class="keywordflow">return</span> depth; }</div>
+<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getArrayDim() <span class="keyword">const</span> -&gt; <span class="keywordtype">size_t</span> { <span class="keywordflow">return</span> dim; }</div>
+<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getInstruction() <span class="keyword">const</span> -&gt; llvm::Instruction * {</div>
+<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;    <span class="keywordflow">return</span> oldMemAccess-&gt;getInstruction();</div>
+<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;  }</div>
+<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;  <span class="keyword">auto</span> getAlign() -&gt; llvm::Align { <span class="keywordflow">return</span> oldMemAccess-&gt;getAlign(); }</div>
+<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;  constexpr <span class="keyword">auto</span> getDenominator() -&gt; int64_t &amp; { <span class="keywordflow">return</span> mem[0]; }</div>
+<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getDenominator() <span class="keyword">const</span> -&gt; int64_t {</div>
+<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;    <span class="keywordflow">return</span> mem[0];</div>
+<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;  }</div>
+<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;  <span class="comment">// constexpr auto getFusionOmega() -&gt; MutPtrVector&lt;int64_t&gt; {</span></div>
+<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;  <span class="comment">//   return {mem + 1, getNumLoops()+1};</span></div>
+<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;  <span class="comment">// }</span></div>
+<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;  <span class="comment">// [[nodiscard]] constexpr auto getFusionOmega() const -&gt; PtrVector&lt;int64_t&gt; {</span></div>
+<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;  <span class="comment">//   return {mem + 1, getNumLoops()+1};</span></div>
+<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;  <span class="comment">// }</span></div>
+<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;  constexpr <span class="keyword">auto</span> getOffsetOmega() -&gt; <a class="code" href="structLinearAlgebra_1_1MutPtrVector.html">MutPtrVector&lt;int64_t&gt;</a> {</div>
+<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;    <span class="keywordflow">return</span> {mem + 1, getNumLoops()};</div>
+<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;  }</div>
+<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getOffsetOmega() <span class="keyword">const</span> -&gt; <a class="code" href="structLinearAlgebra_1_1PtrVector.html">PtrVector&lt;int64_t&gt;</a> {</div>
+<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;    <span class="keywordflow">return</span> {mem + 1, getNumLoops()};</div>
+<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;  }</div>
+<div class="line"><a name="l00112"></a><span class="lineno"><a class="line" href="structAddress.html#a944d66eb4736af541f573f74f8eba277">  112</a></span>&#160;  constexpr <span class="keyword">auto</span> <a class="code" href="structAddress.html#a944d66eb4736af541f573f74f8eba277">indexMatrix</a>() -&gt; <a class="code" href="structLinearAlgebra_1_1MutPtrMatrix.html">MutPtrMatrix&lt;int64_t&gt;</a> {</div>
+<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;    <span class="keywordflow">return</span> {mem + 1 + getNumLoops(), getArrayDim(), getNumLoops(),</div>
+<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;            getNumLoops()};</div>
 <div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;  }</div>
-<div class="line"><a name="l00117"></a><span class="lineno"><a class="line" href="structAddress.html#a297424995238c440069eecf32c6d5bb7">  117</a></span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> <a class="code" href="structAddress.html#a297424995238c440069eecf32c6d5bb7">indexMatrix</a>() const -&gt; DensePtrMatrix&lt;int64_t&gt; {</div>
-<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;    <span class="keywordflow">return</span> {<span class="keyword">const_cast&lt;</span>int64_t *<span class="keyword">&gt;</span>(mem + 1 + getNumLoops()),</div>
-<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;            <a class="code" href="structLinAlg_1_1DenseDims.html">DenseDims</a>{getArrayDim(), getNumLoops()}};</div>
+<div class="line"><a name="l00117"></a><span class="lineno"><a class="line" href="structAddress.html#a340fbd656944acb792583c66186dd6ec">  117</a></span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> <a class="code" href="structAddress.html#a340fbd656944acb792583c66186dd6ec">indexMatrix</a>() const -&gt; <a class="code" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix</a>&lt;int64_t&gt; {</div>
+<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;    <span class="keywordflow">return</span> {mem + 1 + getNumLoops(), getArrayDim(), getNumLoops(),</div>
+<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;            getNumLoops()};</div>
 <div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;  }</div>
 <div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> isStore() -&gt; <span class="keywordtype">bool</span> { <span class="keywordflow">return</span> isStoreFlag; }</div>
 <div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getLoop() -&gt; <a class="code" href="structNotNull.html">NotNull&lt;AffineLoopNest&lt;false&gt;</a>&gt; {</div>
@@ -150,11 +150,14 @@ $(function() {
 <div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;  }</div>
 <div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160;};</div>
 <div class="ttc" id="astructAddress_html"><div class="ttname"><a href="structAddress.html">Address</a></div><div class="ttdef"><b>Definition:</b> Address.hpp:55</div></div>
-<div class="ttc" id="astructAddress_html_a297424995238c440069eecf32c6d5bb7"><div class="ttname"><a href="structAddress.html#a297424995238c440069eecf32c6d5bb7">Address::indexMatrix</a></div><div class="ttdeci">constexpr auto indexMatrix() const -&gt; DensePtrMatrix&lt; int64_t &gt;</div><div class="ttdoc">indexMatrix() -&gt; arrayDim() x getNumLoops()</div><div class="ttdef"><b>Definition:</b> Address.hpp:117</div></div>
-<div class="ttc" id="astructAddress_html_afad8e52958d1d85eef66ee44d4ceeb78"><div class="ttname"><a href="structAddress.html#afad8e52958d1d85eef66ee44d4ceeb78">Address::indexMatrix</a></div><div class="ttdeci">constexpr auto indexMatrix() -&gt; MutDensePtrMatrix&lt; int64_t &gt;</div><div class="ttdoc">indexMatrix() -&gt; arrayDim() x getNumLoops()</div><div class="ttdef"><b>Definition:</b> Address.hpp:113</div></div>
-<div class="ttc" id="astructAffineLoopNest_html"><div class="ttname"><a href="structAffineLoopNest.html">AffineLoopNest</a></div><div class="ttdef"><b>Definition:</b> Loops.hpp:326</div></div>
-<div class="ttc" id="astructBumpAlloc_html"><div class="ttname"><a href="structBumpAlloc.html">BumpAlloc</a></div><div class="ttdef"><b>Definition:</b> Allocators.hpp:31</div></div>
-<div class="ttc" id="astructLinAlg_1_1DenseDims_html"><div class="ttname"><a href="structLinAlg_1_1DenseDims.html">LinAlg::DenseDims</a></div><div class="ttdoc">Dimensions with a capacity.</div><div class="ttdef"><b>Definition:</b> MatrixDimensions.hpp:71</div></div>
+<div class="ttc" id="astructAddress_html_a340fbd656944acb792583c66186dd6ec"><div class="ttname"><a href="structAddress.html#a340fbd656944acb792583c66186dd6ec">Address::indexMatrix</a></div><div class="ttdeci">constexpr auto indexMatrix() const -&gt; PtrMatrix&lt; int64_t &gt;</div><div class="ttdoc">indexMatrix() -&gt; arrayDim() x getNumLoops()</div><div class="ttdef"><b>Definition:</b> Address.hpp:117</div></div>
+<div class="ttc" id="astructAddress_html_a944d66eb4736af541f573f74f8eba277"><div class="ttname"><a href="structAddress.html#a944d66eb4736af541f573f74f8eba277">Address::indexMatrix</a></div><div class="ttdeci">constexpr auto indexMatrix() -&gt; MutPtrMatrix&lt; int64_t &gt;</div><div class="ttdoc">indexMatrix() -&gt; arrayDim() x getNumLoops()</div><div class="ttdef"><b>Definition:</b> Address.hpp:112</div></div>
+<div class="ttc" id="astructAffineLoopNest_html"><div class="ttname"><a href="structAffineLoopNest.html">AffineLoopNest</a></div><div class="ttdef"><b>Definition:</b> Loops.hpp:175</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1MutPtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutPtrMatrix.html">LinearAlgebra::MutPtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Matrix.hpp:203</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1MutPtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutPtrVector.html">LinearAlgebra::MutPtrVector</a></div><div class="ttdef"><b>Definition:</b> Vector.hpp:86</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1PtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrMatrix.html">LinearAlgebra::PtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Matrix.hpp:153</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1PtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrVector.html">LinearAlgebra::PtrVector</a></div><div class="ttdef"><b>Definition:</b> Vector.hpp:20</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1SquarePtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1SquarePtrMatrix.html">LinearAlgebra::SquarePtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Matrix.hpp:466</div></div>
 <div class="ttc" id="astructNotNull_html"><div class="ttname"><a href="structNotNull.html">NotNull&lt; MemoryAccess &gt;</a></div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->

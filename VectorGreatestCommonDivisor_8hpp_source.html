@@ -75,16 +75,16 @@ $(function() {
 <div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor">#include &lt;cstddef&gt;</span></div>
 <div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="preprocessor">#include &lt;cstdint&gt;</span></div>
 <div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160; </div>
-<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="keyword">using</span> <a class="code" href="structLinAlg_1_1Array.html">LinAlg::PtrVector</a>, <a class="code" href="structLinAlg_1_1MutArray.html">LinAlg::MutPtrVector</a>;</div>
+<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="keyword">using</span> <a class="code" href="structLinearAlgebra_1_1PtrVector.html">LinearAlgebra::PtrVector</a>, <a class="code" href="structLinearAlgebra_1_1MutPtrVector.html">LinearAlgebra::MutPtrVector</a>;</div>
 <div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160; </div>
-<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;constexpr <span class="keyword">auto</span> gcd(PtrVector&lt;int64_t&gt; x) -&gt; int64_t {</div>
+<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> gcd(<a class="code" href="structLinearAlgebra_1_1PtrVector.html">PtrVector&lt;int64_t&gt;</a> x) -&gt; int64_t {</div>
 <div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;  <span class="keyword">const</span> <span class="keywordtype">size_t</span> N = x.size();</div>
 <div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;  <span class="keywordflow">if</span> (!N) <span class="keywordflow">return</span> 0;</div>
 <div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;  int64_t g = constexpr_abs(x[0]);</div>
 <div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;  <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> n = 1; (n &lt; N) &amp; (g != 1); ++n) g = gcd(g, x[n]);</div>
 <div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;  <span class="keywordflow">return</span> g;</div>
 <div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;}</div>
-<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;constexpr <span class="keywordtype">void</span> normalizeByGCD(MutPtrVector&lt;int64_t&gt; x) {</div>
+<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;<span class="keyword">inline</span> <span class="keywordtype">void</span> normalizeByGCD(<a class="code" href="structLinearAlgebra_1_1MutPtrVector.html">MutPtrVector&lt;int64_t&gt;</a> x) {</div>
 <div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;  <span class="keywordtype">size_t</span> N = x.size();</div>
 <div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;  <span class="keywordflow">switch</span> (N) {</div>
 <div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;  <span class="keywordflow">case</span> 0:</div>
@@ -99,12 +99,12 @@ $(function() {
 <div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;  }</div>
 <div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;}</div>
 <div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160; </div>
-<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;constexpr <span class="keyword">auto</span> lcm(AbstractVector <span class="keyword">auto</span> x) -&gt; int64_t {</div>
+<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> lcm(AbstractVector <span class="keyword">auto</span> x) -&gt; int64_t {</div>
 <div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;  int64_t l = x[0];</div>
 <div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;  <span class="keywordflow">for</span> (int64_t xi : x[_(1, end)]) l = lcm(l, xi);</div>
 <div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;  <span class="keywordflow">return</span> l;</div>
 <div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;}</div>
-<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;constexpr <span class="keyword">auto</span> lcmNonUnity(AbstractVector <span class="keyword">auto</span> x) -&gt; std::pair&lt;int64_t, bool&gt; {</div>
+<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> lcmNonUnity(AbstractVector <span class="keyword">auto</span> x) -&gt; std::pair&lt;int64_t, bool&gt; {</div>
 <div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;  int64_t l = x[0];</div>
 <div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;  <span class="keywordtype">bool</span> nonUnity = (l != 1);</div>
 <div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;  <span class="keywordflow">for</span> (int64_t xi : x[_(1, end)]) {</div>
@@ -113,14 +113,14 @@ $(function() {
 <div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;  }</div>
 <div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;  <span class="keywordflow">return</span> {l, nonUnity};</div>
 <div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;}</div>
-<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;constexpr <span class="keyword">auto</span> lcmSkipZero(AbstractVector <span class="keyword">auto</span> x) -&gt; int64_t {</div>
+<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> lcmSkipZero(AbstractVector <span class="keyword">auto</span> x) -&gt; int64_t {</div>
 <div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;  int64_t l = 1;</div>
 <div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;  <span class="keywordflow">for</span> (int64_t xi : x)</div>
 <div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;    <span class="keywordflow">if</span> (xi) l = lcm(l, xi);</div>
 <div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;  <span class="keywordflow">return</span> l;</div>
 <div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;}</div>
-<div class="ttc" id="astructLinAlg_1_1Array_html"><div class="ttname"><a href="structLinAlg_1_1Array.html">LinAlg::Array</a></div><div class="ttdoc">Constant Array.</div><div class="ttdef"><b>Definition:</b> Array.hpp:32</div></div>
-<div class="ttc" id="astructLinAlg_1_1MutArray_html"><div class="ttname"><a href="structLinAlg_1_1MutArray.html">LinAlg::MutArray</a></div><div class="ttdef"><b>Definition:</b> Array.hpp:218</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1MutPtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutPtrVector.html">LinearAlgebra::MutPtrVector</a></div><div class="ttdef"><b>Definition:</b> Vector.hpp:86</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1PtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrVector.html">LinearAlgebra::PtrVector</a></div><div class="ttdef"><b>Definition:</b> Vector.hpp:20</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

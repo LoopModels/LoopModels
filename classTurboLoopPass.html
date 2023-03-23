@@ -93,7 +93,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>split</b> (llvm::Smal
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>isLoopPreHeader</b> (const llvm::BasicBlock *BB) const -&gt; bool</td></tr>
 <tr class="separator:a5c4a65020e14d0d99344a6521a373bb0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a64d7c1746ed756d30f0d4dafd4846097"><td class="memItemLeft" align="right" valign="top"><a id="a64d7c1746ed756d30f0d4dafd4846097"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>fillAffineIndices</b> (MutPtrVector&lt; int64_t &gt; v, Vector&lt; int64_t &gt; &amp;offsets, llvm::SmallVector&lt; const llvm::SCEV *, 3 &gt; &amp;symbolicOffsets, const llvm::SCEV *S, int64_t mlt, size_t numPeeled) -&gt; uint64_t</td></tr>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>fillAffineIndices</b> (<a class="el" href="structLinearAlgebra_1_1MutPtrVector.html">MutPtrVector</a>&lt; int64_t &gt; v, <a class="el" href="structLinearAlgebra_1_1Vector.html">Vector</a>&lt; int64_t &gt; &amp;offsets, llvm::SmallVector&lt; const llvm::SCEV *, 3 &gt; &amp;symbolicOffsets, const llvm::SCEV *S, int64_t mlt, size_t numPeeled) -&gt; uint64_t</td></tr>
 <tr class="separator:a64d7c1746ed756d30f0d4dafd4846097"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a26291920f2e08ea42b60eeb444520713"><td class="memItemLeft" align="right" valign="top"><a id="a26291920f2e08ea42b60eeb444520713"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>arrayRef</b> (<a class="el" href="structLoopTree.html">LoopTree</a> &amp;LT, llvm::Instruction *ptr, const llvm::SCEV *elSize, llvm::Instruction *loadOrStore, llvm::MutableArrayRef&lt; unsigned &gt; omegas) -&gt; bool</td></tr>
@@ -153,7 +153,7 @@ Static Public Member Functions</h2></td></tr>
 static auto&#160;</td><td class="memItemRight" valign="bottom"><b>containsPeeled</b> (const llvm::SCEV *Sc, size_t numPeeled) -&gt; bool</td></tr>
 <tr class="separator:acd87d766809eb24f3b2344d2624d584e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aeeb013b38dda5774c526a10fcfe3058d"><td class="memItemLeft" align="right" valign="top"><a id="aeeb013b38dda5774c526a10fcfe3058d"></a>
-static void&#160;</td><td class="memItemRight" valign="bottom"><b>addSymbolic</b> (Vector&lt; int64_t &gt; &amp;offsets, llvm::SmallVector&lt; const llvm::SCEV *, 3 &gt; &amp;symbols, const llvm::SCEV *S, int64_t x=1)</td></tr>
+static void&#160;</td><td class="memItemRight" valign="bottom"><b>addSymbolic</b> (<a class="el" href="structLinearAlgebra_1_1Vector.html">Vector</a>&lt; int64_t &gt; &amp;offsets, llvm::SmallVector&lt; const llvm::SCEV *, 3 &gt; &amp;symbols, const llvm::SCEV *S, int64_t x=1)</td></tr>
 <tr class="separator:aeeb013b38dda5774c526a10fcfe3058d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac19e4f4cd2fcb6d7d18c7128667ede16"><td class="memItemLeft" align="right" valign="top"><a id="ac19e4f4cd2fcb6d7d18c7128667ede16"></a>
 static auto&#160;</td><td class="memItemRight" valign="bottom"><b>blackListAllDependentLoops</b> (const llvm::SCEV *S) -&gt; uint64_t</td></tr>
@@ -188,9 +188,9 @@ llvm::OptimizationRemarkEmitter *&#160;</td><td class="memItemRight" valign="bot
 <tr class="memitem:ab8972884e606b5d9c01f9dcc48919ea6"><td class="memItemLeft" align="right" valign="top"><a id="ab8972884e606b5d9c01f9dcc48919ea6"></a>
 <a class="el" href="structLinearProgramLoopBlock.html">LinearProgramLoopBlock</a>&#160;</td><td class="memItemRight" valign="bottom"><b>loopBlock</b></td></tr>
 <tr class="separator:ab8972884e606b5d9c01f9dcc48919ea6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad5c712d634e08e72018f5a41648b7787"><td class="memItemLeft" align="right" valign="top"><a id="ad5c712d634e08e72018f5a41648b7787"></a>
-<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&#160;</td><td class="memItemRight" valign="bottom"><b>allocator</b></td></tr>
-<tr class="separator:ad5c712d634e08e72018f5a41648b7787"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9284fc35b1143d1414252b05e14777eb"><td class="memItemLeft" align="right" valign="top"><a id="a9284fc35b1143d1414252b05e14777eb"></a>
+llvm::BumpPtrAllocator&#160;</td><td class="memItemRight" valign="bottom"><b>allocator</b></td></tr>
+<tr class="separator:a9284fc35b1143d1414252b05e14777eb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aaade521917a664df1ff4a0bb204936ec"><td class="memItemLeft" align="right" valign="top"><a id="aaade521917a664df1ff4a0bb204936ec"></a>
 <a class="el" href="structInstruction_1_1Cache.html">Instruction::Cache</a>&#160;</td><td class="memItemRight" valign="bottom"><b>instrCache</b></td></tr>
 <tr class="separator:aaade521917a664df1ff4a0bb204936ec"><td class="memSeparator" colspan="2">&#160;</td></tr>
