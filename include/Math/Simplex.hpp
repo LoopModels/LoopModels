@@ -40,6 +40,7 @@ struct Tableau {
 #ifndef NDEBUG
   bool inCanonicalForm{false};
 #endif
+
   // tableau is constraint * var matrix w/ extra col for LHS
   // and extra row for objective function
   [[nodiscard]] constexpr auto reservedTableau() const -> size_t {
@@ -594,7 +595,7 @@ struct Simplex {
     // each of these will require an augment variable
     for (unsigned i = 0; i < numSlack; ++i) varCap += A(i, 0) < 0;
     // try to avoid reallocating
-    auto checkPoint{alloc.checkPoint()};
+    auto checkpoint{alloc.checkpoint()};
     Simplex simplex{Simplex::create(alloc, numCon, numVar + numSlack, numCon,
                                     varCap, numSlack)};
     // construct:
@@ -609,7 +610,7 @@ struct Simplex {
     // for (size_t i = 0; i < numSlack; ++i) consts[i] = A(i, 0);
     // for (size_t i = 0; i < numStrict; ++i) consts[i + numSlack] = B(i, 0);
     if (!simplex.initiateFeasible()) return simplex;
-    alloc.rollBack(checkPoint);
+    alloc.rollback(checkpoint);
     return {};
   }
   static constexpr auto positiveVariables(BumpAlloc<> &alloc,
@@ -621,7 +622,7 @@ struct Simplex {
     // each of these will require an augment variable
     for (unsigned i = 0; i < numSlack; ++i) varCap += A(i, 0) < 0;
     // try to avoid reallocating
-    auto checkPoint{alloc.checkPoint()};
+    auto checkpoint{alloc.checkpoint()};
     Simplex simplex{Simplex::create(alloc, numCon, numVar + numSlack, numCon,
                                     varCap, numSlack)};
     // construct:
@@ -633,12 +634,12 @@ struct Simplex {
     // for (size_t i = 0; i < numSlack; ++i) consts[i] = A(i, 0);
     simplex.tableau.getConstants() << A(_, 0);
     if (!simplex.initiateFeasible()) return simplex;
-    alloc.rollBack(checkPoint);
+    alloc.rollback(checkpoint);
     return {};
   }
 
   constexpr void pruneBounds(BumpAlloc<> &alloc) {
-    auto p = alloc.checkPoint();
+    auto p = alloc.checkpoint();
     Simplex simplex{Simplex::create(alloc, tableau.numConstraints,
                                     tableau.numVars, tableau.constraintCapacity,
                                     tableau.varCapacity, numSlack)};
@@ -652,7 +653,7 @@ struct Simplex {
         cost[v] = -constraints(c, v + 1);
       if (simplex.run() != bumpedBound) tableau.deleteConstraint(c--);
     }
-    alloc.rollBack(p);
+    alloc.rollback(p);
   }
 
   constexpr void dropVariable(size_t i) {
@@ -702,7 +703,7 @@ struct Simplex {
     // is satisfiable.
     const size_t numCon = tableau.getNumCons(), numVar = tableau.getNumVars(),
                  numFix = x.size();
-    auto p = alloc.checkPoint();
+    auto p = alloc.checkpoint();
     Simplex subSimp{Simplex::create(alloc, numCon, numVar - numFix, 0)};
     // subSimp.tableau(0, 0) = 0;
     // subSimp.tableau(0, 1) = 0;
@@ -716,7 +717,7 @@ struct Simplex {
     sC(_, _(1 + off, end)) << fC(_, _(1 + off + numFix, end));
     // returns `true` if unsatisfiable
     bool res = subSimp.initiateFeasible();
-    alloc.rollBack(p);
+    alloc.rollback(p);
     return res;
   }
   [[nodiscard]] constexpr auto satisfiable(BumpAlloc<> &alloc,
@@ -738,7 +739,7 @@ struct Simplex {
     // is satisfiable.
     assert(numRow <= tableau.getNumCons());
     const size_t numFix = x.size();
-    auto p = alloc.checkPoint();
+    auto p = alloc.checkpoint();
     Simplex subSimp{Simplex::create(alloc, numRow, 1 + off, 0)};
     // subSimp.tableau(0, 0) = 0;
     // subSimp.tableau(0, 1) = 0;
@@ -754,7 +755,7 @@ struct Simplex {
     sC(_, _(1, 1 + off)) << fC(_(begin, numRow), _(1, 1 + off));
     assert(sC(_, _(1, 1 + off)) == fC(_(begin, numRow), _(1, 1 + off)));
     bool res = subSimp.initiateFeasible();
-    alloc.rollBack(p);
+    alloc.rollback(p);
     return res;
   }
   [[nodiscard]] constexpr auto satisfiableZeroRem(BumpAlloc<> &alloc,

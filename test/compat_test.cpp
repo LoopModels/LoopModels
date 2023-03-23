@@ -98,7 +98,7 @@ TEST(LessTrivialPruneBounds, BasicAssertions) {
   llvm::errs() << "LessTrival test Bounds pruned:\n";
   aff.dump();
   llvm::errs() << "aff.A = " << aff.getA() << "\n";
-  EXPECT_EQ(aff.getNumConstraints(), 3);
+  EXPECT_EQ(aff.getNumCon(), 3);
   auto loop2Count = countSigns(aff.getA(), 2 + aff.getNumSymbols());
   EXPECT_EQ(loop2Count[0], 1);
   EXPECT_EQ(loop2Count[1], 0);

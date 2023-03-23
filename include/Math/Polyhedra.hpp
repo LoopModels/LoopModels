@@ -71,7 +71,7 @@ struct BasePolyhedra {
     return static_cast<P *>(this)->getA();
   }
   [[nodiscard]] constexpr auto getE() {
-    if constexpr (HasEqualities) return *static_cast<P *>(this)->getE();
+    if constexpr (HasEqualities) return static_cast<P *>(this)->getE();
     else return EmptyMatrix<int64_t>();
   }
   [[nodiscard]] constexpr auto getSyms()
@@ -83,7 +83,7 @@ struct BasePolyhedra {
     return static_cast<const P *>(this)->getA();
   }
   [[nodiscard]] constexpr auto getE() const {
-    if constexpr (HasEqualities) return *static_cast<const P *>(this)->getE();
+    if constexpr (HasEqualities) return static_cast<const P *>(this)->getE();
     else return EmptyMatrix<int64_t>();
   }
   [[nodiscard]] constexpr auto getSyms() const
@@ -119,20 +119,20 @@ struct BasePolyhedra {
   constexpr auto calcIsEmpty(LinAlg::Alloc<int64_t> auto &alloc) -> bool {
     return initializeComparator(alloc).isEmpty(alloc);
   }
-  [[nodiscard]] constexpr auto getNumConstraints() const -> unsigned {
-    return static_cast<const P *>(this)->getNumConstraints();
+  [[nodiscard]] constexpr auto getNumCon() const -> unsigned {
+    return static_cast<const P *>(this)->getNumCon();
   }
-  constexpr void setNumConstraints(size_t numCon) {
+  constexpr void setNumConstraints(unsigned numCon) {
     static_cast<P *>(this)->setNumConstraints(numCon);
   }
-  constexpr void setNumEqConstraints(size_t numCon) {
+  constexpr void setNumEqConstraints(unsigned numCon) {
     static_cast<P *>(this)->setNumEqConstraints(numCon);
   }
   constexpr void decrementNumConstraints() {
     static_cast<P *>(this)->decrementNumConstraints();
   }
   constexpr void pruneBounds(BumpAlloc<> &alloc) {
-    if (getNumConstraints() == 0) return;
+    if (getNumCon() == 0) return;
     auto p = checkpoint(alloc);
     pruneBoundsCore<true>(alloc);
     rollback(alloc, p);
@@ -159,7 +159,11 @@ struct BasePolyhedra {
         return;
       }
     }
-    if constexpr (HasEqualities) removeRedundantRows(getA(), getE());
+    if constexpr (HasEqualities) {
+      auto [ar, er] = removeRedundantRows(getA(), getE());
+      setNumConstraints(unsigned(ar));
+      setNumEqConstraints(unsigned(er));
+    }
     for (auto j = size_t(getA().numRow()); j;) {
       bool broke = false;
       for (size_t i = --j; i;) {

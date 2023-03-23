@@ -608,7 +608,7 @@ struct AffineLoopNest
   //   llvm::SmallVector<std::pair<IntMatrix, IntMatrix>, 0> ret;
   //   size_t i = x.size();
   //   ret.resize_for_overwrite(i);
-  //   auto check = alloc.checkPoint();
+  //   auto check = alloc.checkpoint();
   //   auto *tmp = this;
   //   while (true) {
   //     size_t xi = x[--i];
@@ -616,7 +616,7 @@ struct AffineLoopNest
   //     if (i == 0) break;
   //     tmp = tmp->removeLoop(alloc, xi);
   //   }
-  //   alloc.rollBack(check);
+  //   alloc.rollback(check);
   //   return ret;
   // }
   constexpr void eraseConstraint(size_t c) {
@@ -626,7 +626,7 @@ struct AffineLoopNest
   [[nodiscard]] auto
   zeroExtraItersUponExtending(LinAlg::Alloc<int64_t> auto &alloc, size_t _i,
                               bool extendLower) const -> bool {
-    auto p = alloc.checkPoint();
+    auto p = alloc.checkpoint();
     AffineLoopNest<NonNegative> *tmp = copy(alloc);
     // question is, does the inner most loop have 0 extra iterations?
     const size_t numPrevLoops = getNumLoops() - 1;
@@ -644,7 +644,7 @@ struct AffineLoopNest
     for (size_t n = 0; n < A.numRow(); ++n)
       if ((A(n, numConst) != 0) && (A(n, 1 + numConst) != 0)) indep = false;
     if (indep) {
-      alloc.rollBack(p);
+      alloc.rollback(p);
       return false;
     }
     AffineLoopNest<NonNegative> *margi = tmp->removeLoop(alloc, 1);
@@ -655,12 +655,12 @@ struct AffineLoopNest
     // margi contains extrema for `_i`
     // we can substitute extended for value of `_i`
     // in `tmp`
-    auto p2 = alloc.checkPoint();
+    auto p2 = alloc.checkpoint();
     int64_t sign = 2 * extendLower - 1; // extendLower ? 1 : -1
     for (size_t c = 0; c < margi->getNumInequalityConstraints(); ++c) {
       int64_t b = sign * margi->getA()(c, numConst);
       if (b <= 0) continue;
-      alloc.rollBack(p2);
+      alloc.rollback(p2);
       tmp2 = tmp->copy(alloc);
       invariant(tmp2->getNumLoops(), size_t(2));
       invariant(margi->getNumLoops() + 1, tmp2->getNumLoops());
@@ -674,16 +674,16 @@ struct AffineLoopNest
       // our approach here is to set `_i` equal to the extended bound
       // and then check if the resulting polyhedra is empty.
       // if not, then we may have >0 iterations.
-      for (size_t cc = 0; cc < tmp2->getNumConstraints(); ++cc) {
+      for (size_t cc = 0; cc < tmp2->getNumCon(); ++cc) {
         if (int64_t d = tmp2->getA()(cc, numConst)) {
           tmp2->getA()(cc, _(0, last)) << b * tmp2->getA()(cc, _(0, last)) -
                                             (d * sign) * margi->getA()(c, _);
         }
       }
-      for (size_t cc = size_t(tmp2->getNumConstraints()); cc;)
+      for (size_t cc = size_t(tmp2->getNumCon()); cc;)
         if (tmp2->getA()(--cc, 1 + numConst) == 0) tmp2->eraseConstraint(cc);
       if (!(tmp2->calcIsEmpty(alloc))) {
-        alloc.rollBack(p);
+        alloc.rollback(p);
         return false;
       }
     }
@@ -697,7 +697,7 @@ struct AffineLoopNest
         // increment `b` our approach here is to set `_i` equal to the
         // extended bound and then check if the resulting polyhedra is
         // empty. if not, then we may have >0 iterations.
-        for (size_t cc = 0; cc < tmp->getNumConstraints(); ++cc) {
+        for (size_t cc = 0; cc < tmp->getNumCon(); ++cc) {
           if (int64_t d = tmp->getA()(cc, numConst)) {
             // lower bound is i >= 0
             // so setting equal to the extended lower bound now
@@ -706,15 +706,15 @@ struct AffineLoopNest
             tmp->getA()(cc, numConst) = 0;
           }
         }
-        for (size_t cc = size_t(tmp->getNumConstraints()); cc;)
+        for (size_t cc = size_t(tmp->getNumCon()); cc;)
           if (tmp->getA()(--cc, 1 + numConst) == 0) tmp->eraseConstraint(cc);
         if (!(tmp->calcIsEmpty(alloc))) {
-          alloc.rollBack(p);
+          alloc.rollback(p);
           return false;
         }
       }
     }
-    alloc.rollBack(p);
+    alloc.rollback(p);
     return true;
   }
 
@@ -796,7 +796,7 @@ struct AffineLoopNest
   }
   void dump(llvm::raw_ostream &os = llvm::errs()) const { os << *this; }
 
-  [[nodiscard]] constexpr auto getNumConstraints() const -> unsigned {
+  [[nodiscard]] constexpr auto getNumCon() const -> unsigned {
     return numConstraints;
   }
   [[nodiscard]] constexpr auto getA() -> MutDensePtrMatrix<int64_t> {

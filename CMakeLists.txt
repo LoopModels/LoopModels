@@ -94,12 +94,12 @@ target_compile_options(
 )
 if(OMIT_FRAME_POINTER STREQUAL "ReleaseOnly")
   target_compile_options(
-    ${PROJECRT_NAME} PRIVATE "$<IF:$<CONFIG:Release>,-fomit-frame-pointer,-fno-omit-frame-pointer>"
+    ${PROJECT_NAME} PRIVATE "$<IF:$<CONFIG:Release>,-fomit-frame-pointer,-fno-omit-frame-pointer>"
   )
 elseif(OMIT_FRAME_POINTER)
-  target_compile_options(${PROJECRT_NAME} PRIVATE -fomit-frame-pointer)
+  target_compile_options(${PROJECT_NAME} PRIVATE -fomit-frame-pointer)
 else()
-  target_compile_options(${PROJECRT_NAME} PRIVATE -fno-omit-frame-pointer)
+  target_compile_options(${PROJECT_NAME} PRIVATE -fno-omit-frame-pointer)
 endif()
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")

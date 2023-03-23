@@ -190,7 +190,7 @@ public:
     else return loadOrStore.cast<llvm::StoreInst>()->getAlign();
   }
   /// indexMatrix() -> getNumLoops() x arrayDim()
-  /// loops are in [innermost -> outermost] order
+  /// loops are in [outermost <-> innermost] order
   /// Maps loop indVars to array indices
   /// Letting `i` be the indVars and `d` the indices:
   /// indexMatrix()' * i == d
@@ -198,8 +198,8 @@ public:
   /// corresponds to A[i, i + j]
   /// Note that `[i, j]` refers to loops in
   /// innermost -> outermost order, i.e.
-  /// for (j : J)
-  ///   for (i : I)
+  /// for (i : I)
+  ///   for (j : J)
   ///      A[i, i + j]
   [[nodiscard]] auto indexMatrix() -> MutDensePtrMatrix<int64_t> {
     const size_t d = getArrayDim();

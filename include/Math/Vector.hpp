@@ -45,4 +45,10 @@ template <class T> consteval auto PreAllocStorage() -> size_t {
   return std::max<size_t>(1, N);
 }
 
+constexpr auto selfDot(const auto &a) {
+  eltype_t<decltype(a)> sum = 0;
+  for (auto x : a) sum += x * x;
+  return sum;
+}
+
 } // namespace LinAlg

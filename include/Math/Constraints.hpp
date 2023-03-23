@@ -475,14 +475,14 @@ constexpr void removeZeroRows(MutDensePtrMatrix<int64_t> &A) {
 /// A is an inequality matrix, A*x >= 0
 /// B is an equality matrix, E*x == 0
 /// Use the equality matrix B to remove redundant constraints both matrices
-constexpr void removeRedundantRows(MutDensePtrMatrix<int64_t> &A,
-                                   MutDensePtrMatrix<int64_t> &B) {
+[[nodiscard]] constexpr auto removeRedundantRows(MutDensePtrMatrix<int64_t> A,
+                                                 MutDensePtrMatrix<int64_t> B)
+  -> std::array<Row, 2> {
   auto [M, N] = B.size();
   for (size_t r = 0, c = 0; c < N && r < M; ++c)
     if (!NormalForm::pivotRows(B, c, M, r))
       NormalForm::reduceColumnStack(A, B, c, r++);
-  removeZeroRows(A);
-  NormalForm::removeZeroRows(B);
+  return {NormalForm::numNonZeroRows(A), NormalForm::numNonZeroRows(B)};
 }
 
 constexpr void dropEmptyConstraints(MutDensePtrMatrix<int64_t> &A) {
