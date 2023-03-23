@@ -1,13 +1,15 @@
 var searchData=
 [
-  ['indexmatrix_360',['indexMatrix',['../structAddress.html#a944d66eb4736af541f573f74f8eba277',1,'Address::indexMatrix() -&gt; MutPtrMatrix&lt; int64_t &gt;'],['../structAddress.html#a340fbd656944acb792583c66186dd6ec',1,'Address::indexMatrix() const -&gt; PtrMatrix&lt; int64_t &gt;'],['../structMemoryAccess.html#af3e9f24fe6b5cb0b59091cea5dfdfcb0',1,'MemoryAccess::indexMatrix() -&gt; MutPtrMatrix&lt; int64_t &gt;'],['../structMemoryAccess.html#a2d1006fd9552a0ef88f8fa33fac6c133',1,'MemoryAccess::indexMatrix() const -&gt; PtrMatrix&lt; int64_t &gt;']]],
-  ['initancestors_361',['initAncestors',['../structMergingCost.html#ab8bf2641ddbde2a207031e37c37b9269',1,'MergingCost']]],
-  ['initializeloopforest_362',['initializeLoopForest',['../classTurboLoopPass.html#a61d15982d3d7c2d1918da31c454a2f10',1,'TurboLoopPass']]],
-  ['intersectionisempty_363',['intersectionIsEmpty',['../structPredicate_1_1Set.html#ad4a7c78b6c53cec5eb5ee53e291359e3',1,'Predicate::Set']]],
-  ['intrinsic_364',['Intrinsic',['../structInstruction_1_1Intrinsic.html#a2ceb99f52e33be8c08e77fa0cd476a6b',1,'Instruction::Intrinsic']]],
-  ['isempty_365',['isEmpty',['../structPredicate_1_1Intersection.html#a955076f74163093f46e90c5f1877ad93',1,'Predicate::Intersection']]],
-  ['isforward_366',['isForward',['../structDependence.html#a8f03cfecfe1734c6c395bf3184269536',1,'Dependence']]],
-  ['ismerged_367',['isMerged',['../structMergingCost.html#af9b5ac0cc98e21087c9eefccb31bce58',1,'MergingCost::isMerged(Instruction *key) const -&gt; bool'],['../structMergingCost.html#a0b7381c441c4860be32aab9e6348620a',1,'MergingCost::isMerged(Instruction *I, Instruction *J) const -&gt; bool']]],
-  ['isshuffle_368',['isShuffle',['../structInstruction.html#a79a97b7e7551dab3035b126828c6fa5d',1,'Instruction']]],
-  ['isvalueloadorstore_369',['isValueLoadOrStore',['../structInstruction.html#a5d23d616588bd2d5b168945deffc7115',1,'Instruction']]]
+  ['indexmatrix_377',['indexMatrix',['../structAddress.html#afad8e52958d1d85eef66ee44d4ceeb78',1,'Address::indexMatrix() -&gt; MutDensePtrMatrix&lt; int64_t &gt;'],['../structAddress.html#a297424995238c440069eecf32c6d5bb7',1,'Address::indexMatrix() const -&gt; DensePtrMatrix&lt; int64_t &gt;'],['../structMemoryAccess.html#ae0eb994bd6fcffc012a91850a23a2bbb',1,'MemoryAccess::indexMatrix() -&gt; MutDensePtrMatrix&lt; int64_t &gt;'],['../structMemoryAccess.html#a2292852f834967257e3d40a1c9c99a58',1,'MemoryAccess::indexMatrix() const -&gt; DensePtrMatrix&lt; int64_t &gt;']]],
+  ['initancestors_378',['initAncestors',['../structMergingCost.html#aac70d5c2dafaec5277cb6ed6aceaacbc',1,'MergingCost']]],
+  ['initializeloopforest_379',['initializeLoopForest',['../classTurboLoopPass.html#a61d15982d3d7c2d1918da31c454a2f10',1,'TurboLoopPass']]],
+  ['initiatefeasible_380',['initiateFeasible',['../structSimplex.html#ad38168a139d51cf9ad0b2123a15424f0',1,'Simplex']]],
+  ['initnonnegative_381',['initNonNegative',['../structcomparator_1_1BaseSymbolicComparator.html#a7fcb77ad09ce4957e1412515f7c974e4',1,'comparator::BaseSymbolicComparator']]],
+  ['intersectionisempty_382',['intersectionIsEmpty',['../structPredicate_1_1Set.html#ad4a7c78b6c53cec5eb5ee53e291359e3',1,'Predicate::Set']]],
+  ['intrinsic_383',['Intrinsic',['../structInstruction_1_1Intrinsic.html#a2ceb99f52e33be8c08e77fa0cd476a6b',1,'Instruction::Intrinsic']]],
+  ['isempty_384',['isEmpty',['../structPredicate_1_1Intersection.html#a955076f74163093f46e90c5f1877ad93',1,'Predicate::Intersection']]],
+  ['isforward_385',['isForward',['../classDependence.html#a8f03cfecfe1734c6c395bf3184269536',1,'Dependence']]],
+  ['ismerged_386',['isMerged',['../structMergingCost.html#af9b5ac0cc98e21087c9eefccb31bce58',1,'MergingCost::isMerged(Instruction *key) const -&gt; bool'],['../structMergingCost.html#a0b7381c441c4860be32aab9e6348620a',1,'MergingCost::isMerged(Instruction *I, Instruction *J) const -&gt; bool']]],
+  ['isshuffle_387',['isShuffle',['../structInstruction.html#a79a97b7e7551dab3035b126828c6fa5d',1,'Instruction']]],
+  ['isvalueloadorstore_388',['isValueLoadOrStore',['../structInstruction.html#a5d23d616588bd2d5b168945deffc7115',1,'Instruction']]]
 ];

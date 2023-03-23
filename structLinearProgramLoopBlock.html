@@ -121,7 +121,7 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNode</b> (size_t i
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNodes</b> () -&gt; llvm::MutableArrayRef&lt; <a class="el" href="structScheduledNode.html">ScheduledNode</a> &gt;</td></tr>
 <tr class="separator:a857ed4a49491f9bd6b36c3cbedd5e8ba"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af2c55462eac9cceaf64e7c0e9b62332f"><td class="memItemLeft" align="right" valign="top"><a id="af2c55462eac9cceaf64e7c0e9b62332f"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>getEdges</b> () -&gt; llvm::MutableArrayRef&lt; <a class="el" href="structNotNull.html">NotNull</a>&lt; <a class="el" href="structDependence.html">Dependence</a> &gt;&gt;</td></tr>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getEdges</b> () -&gt; llvm::MutableArrayRef&lt; <a class="el" href="structNotNull.html">NotNull</a>&lt; <a class="el" href="classDependence.html">Dependence</a> &gt;&gt;</td></tr>
 <tr class="separator:af2c55462eac9cceaf64e7c0e9b62332f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa79288a1b82169777a183f85237f8599"><td class="memItemLeft" align="right" valign="top"><a id="aa79288a1b82169777a183f85237f8599"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>numNodes</b> () const -&gt; size_t</td></tr>
@@ -161,7 +161,7 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>calcNumStores</b> () 
 <tr class="memitem:a07a5af74d3682d24abc08a0490b55da8"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structLinearProgramLoopBlock.html#a07a5af74d3682d24abc08a0490b55da8">connectGraph</a> ()</td></tr>
 <tr class="separator:a07a5af74d3682d24abc08a0490b55da8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1e18b4db6c93ec5c3b340a8a6d4b8f59"><td class="memItemLeft" align="right" valign="top"><a id="a1e18b4db6c93ec5c3b340a8a6d4b8f59"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>connects</b> (const <a class="el" href="structDependence.html">Dependence</a> &amp;e, <a class="el" href="structLinearProgramLoopBlock_1_1Graph.html">Graph</a> &amp;g0, <a class="el" href="structLinearProgramLoopBlock_1_1Graph.html">Graph</a> &amp;g1) const -&gt; bool</td></tr>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>connects</b> (const <a class="el" href="classDependence.html">Dependence</a> &amp;e, <a class="el" href="structLinearProgramLoopBlock_1_1Graph.html">Graph</a> &amp;g0, <a class="el" href="structLinearProgramLoopBlock_1_1Graph.html">Graph</a> &amp;g1) const -&gt; bool</td></tr>
 <tr class="separator:a1e18b4db6c93ec5c3b340a8a6d4b8f59"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aab49c8a092a31b5e73442360e8e6caa5"><td class="memItemLeft" align="right" valign="top"><a id="aab49c8a092a31b5e73442360e8e6caa5"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>fullGraph</b> () -&gt; <a class="el" href="structLinearProgramLoopBlock_1_1Graph.html">Graph</a></td></tr>
@@ -170,7 +170,7 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>fullGraph</b> () -&gt
 void&#160;</td><td class="memItemRight" valign="bottom"><b>fillUserToMemoryMap</b> ()</td></tr>
 <tr class="separator:a8f1a89984757b4194d64c0e835aa6f0c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abbadfb32ed5aec74c081a5c509857ce1"><td class="memItemLeft" align="right" valign="top"><a id="abbadfb32ed5aec74c081a5c509857ce1"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>getOverlapIndex</b> (const <a class="el" href="structDependence.html">Dependence</a> &amp;edge) -&gt; <a class="el" href="structOptional.html">Optional</a>&lt; size_t &gt;</td></tr>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getOverlapIndex</b> (const <a class="el" href="classDependence.html">Dependence</a> &amp;edge) -&gt; <a class="el" href="structOptional.html">Optional</a>&lt; size_t &gt;</td></tr>
 <tr class="separator:abbadfb32ed5aec74c081a5c509857ce1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7b6f525f8674897c05393733ecca2f53"><td class="memItemLeft" align="right" valign="top"><a id="a7b6f525f8674897c05393733ecca2f53"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>optOrth</b> (<a class="el" href="structLinearProgramLoopBlock_1_1Graph.html">Graph</a> g) -&gt; std::optional&lt; <a class="el" href="structBitSet.html">BitSet</a> &gt;</td></tr>
@@ -215,7 +215,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>validateEdges</b> ()<
 void&#160;</td><td class="memItemRight" valign="bottom"><b>instantiateOmniSimplex</b> (const <a class="el" href="structLinearProgramLoopBlock_1_1Graph.html">Graph</a> &amp;g, size_t d, bool satisfyDeps=false)</td></tr>
 <tr class="separator:ae5aa7858de7883d9e6711c03b3cd25d7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a14d16e3f252055ae9987041efc9c77aa"><td class="memItemLeft" align="right" valign="top"><a id="a14d16e3f252055ae9987041efc9c77aa"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>updateConstraints</b> (<a class="el" href="structLinearAlgebra_1_1MutPtrMatrix.html">MutPtrMatrix</a>&lt; int64_t &gt; C, const <a class="el" href="structScheduledNode.html">ScheduledNode</a> &amp;node, <a class="el" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix</a>&lt; int64_t &gt; sat, <a class="el" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix</a>&lt; int64_t &gt; bnd, size_t d, Row c, Row cc, Row ccc)</td></tr>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>updateConstraints</b> (MutPtrMatrix&lt; int64_t &gt; C, const <a class="el" href="structScheduledNode.html">ScheduledNode</a> &amp;node, PtrMatrix&lt; int64_t &gt; sat, PtrMatrix&lt; int64_t &gt; bnd, size_t d, Row c, Row cc, Row ccc)</td></tr>
 <tr class="separator:a14d16e3f252055ae9987041efc9c77aa"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a22d1a04a65e44b2fad07e8835578876d"><td class="memItemLeft" align="right" valign="top"><a id="a22d1a04a65e44b2fad07e8835578876d"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>deactivateSatisfiedEdges</b> (<a class="el" href="structLinearProgramLoopBlock_1_1Graph.html">Graph</a> &amp;g, size_t d) -&gt; <a class="el" href="structBitSet.html">BitSet</a></td></tr>
@@ -233,7 +233,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>setSchedulesIndepende
 void&#160;</td><td class="memItemRight" valign="bottom"><b>resetPhiOffsets</b> ()</td></tr>
 <tr class="separator:a71d1cc12b31f844d6e43d3940949bf83"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0c17c37c04e16c21cd106c9c1ce62789"><td class="memItemLeft" align="right" valign="top"><a id="a0c17c37c04e16c21cd106c9c1ce62789"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>isSatisfied</b> (<a class="el" href="structDependence.html">Dependence</a> &amp;e, size_t d) -&gt; bool</td></tr>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>isSatisfied</b> (<a class="el" href="classDependence.html">Dependence</a> &amp;e, size_t d) -&gt; bool</td></tr>
 <tr class="separator:a0c17c37c04e16c21cd106c9c1ce62789"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6f5bd197b87aa4e24069a61d120276c4"><td class="memItemLeft" align="right" valign="top"><a id="a6f5bd197b87aa4e24069a61d120276c4"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>canFuse</b> (<a class="el" href="structLinearProgramLoopBlock_1_1Graph.html">Graph</a> &amp;g0, <a class="el" href="structLinearProgramLoopBlock_1_1Graph.html">Graph</a> &amp;g1, size_t d) -&gt; bool</td></tr>
@@ -256,7 +256,7 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>optimize</b> () -&gt;
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
 <tr class="memitem:a7a3fc15f234aa7e560125381c2381676"><td class="memItemLeft" align="right" valign="top"><a id="a7a3fc15f234aa7e560125381c2381676"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>lexSign</b> (<a class="el" href="structLinearAlgebra_1_1PtrVector.html">PtrVector</a>&lt; int64_t &gt; x) -&gt; int64_t</td></tr>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>lexSign</b> (PtrVector&lt; int64_t &gt; x) -&gt; int64_t</td></tr>
 <tr class="separator:a7a3fc15f234aa7e560125381c2381676"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1435d31cdc77012b890a2976c033ec7e"><td class="memItemLeft" align="right" valign="top"><a id="a1435d31cdc77012b890a2976c033ec7e"></a>
 static auto&#160;</td><td class="memItemRight" valign="bottom"><b>nonZeroMask</b> (const AbstractVector auto &amp;x) -&gt; uint64_t</td></tr>
@@ -279,7 +279,7 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> 
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>A loop block is a block of the program that may include multiple loops. These loops are either all executed (note iteration count may be 0, or loops may be in rotated form and the guard prevents execution; this is okay and counts as executed for our purposes here ), or none of them are. That is, the LoopBlock does not contain divergent control flow, or guards unrelated to loop bounds. The loops within a LoopBlock are optimized together, so we can consider optimizations such as reordering or fusing them together as a set.</p>
-<p>Initially, the <code>LoopBlock</code> is initialized as a set of <code>Read</code> and <code>Write</code>s, without any dependence polyhedra. Then, it builds <code><a class="el" href="structDependencePolyhedra.html">DependencePolyhedra</a></code>. These can be used to construct an ILP.</p>
+<p>Initially, the <code>LoopBlock</code> is initialized as a set of <code>Read</code> and <code>Write</code>s, without any dependence polyhedra. Then, it builds <code>DependencePolyhedra</code>. These can be used to construct an ILP.</p>
 <p>That is: fields that must be provided/filled:</p><ul>
 <li>refs</li>
 <li>memory</li>
