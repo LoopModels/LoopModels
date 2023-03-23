@@ -46,7 +46,7 @@ On Ubuntu 22.04 LTS or later (if you're on an older Ubuntu, I suggest upgrading)
 # needed to build; g++ also works in place of clang
 sudo apt install meson clang llvm-dev libgtest-dev libbenchmark-dev ninja-build pkg-config cmake
 # quality of life
-sudo apt install clangd clang-format ccache lld
+sudo apt install clangd clang-format ccache lld gcovr
 ```
 On Fedora 36:
 ```
