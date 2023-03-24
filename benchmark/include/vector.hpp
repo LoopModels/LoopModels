@@ -1,6 +1,5 @@
 #pragma once
 #include "Math/Array.hpp"
-#include <absl/container/inlined_vector.h>
 #include <benchmark/benchmark.h>
 #include <cstddef>
 #include <llvm/ADT/SmallVector.h>
@@ -13,12 +12,6 @@ void fillVector(auto &v, size_t len) {
   benchmark::DoNotOptimize(v);
 }
 
-void BM_InlinedVectorFill(benchmark::State &state) {
-  absl::InlinedVector<size_t, 8> v;
-  size_t len = state.range(0);
-  for (auto b : state) fillVector(v, len);
-}
-BENCHMARK(BM_InlinedVectorFill)->RangeMultiplier(2)->Range(1, 1 << 8);
 void BM_SmallVector8Fill(benchmark::State &state) {
   llvm::SmallVector<size_t, 8> v;
   size_t len = state.range(0);
@@ -43,14 +36,6 @@ void BM_BufferFill(benchmark::State &state) {
   for (auto b : state) fillVector(v, len);
 }
 BENCHMARK(BM_BufferFill)->RangeMultiplier(2)->Range(1, 1 << 8);
-void BM_InlinedVectorAllocFill(benchmark::State &state) {
-  size_t len = state.range(0);
-  for (auto b : state) {
-    absl::InlinedVector<size_t, 8> v;
-    fillVector(v, len);
-  }
-}
-BENCHMARK(BM_InlinedVectorAllocFill)->RangeMultiplier(2)->Range(1, 1 << 8);
 void BM_SmallVector8AllocFill(benchmark::State &state) {
   size_t len = state.range(0);
   for (auto b : state) {

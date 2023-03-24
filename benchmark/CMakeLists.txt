@@ -32,13 +32,6 @@ CPMAddPackage(
   GIT_TAG fnoexceptions
 )
 
-CPMFindPackage(
-  NAME absl
-  GITHUB_REPOSITORY abseil/abseil-cpp
-  VERSION 20220623
-)
-# set_target_properties(absl PROPERTIES CXX_STANDARD 17)
-
 # file(GLOB_RECURSE headers CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/include/*.hpp)
 file(GLOB benchmarks CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
 
@@ -56,10 +49,7 @@ target_include_directories(
   ${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/../include ${PROJECT_SOURCE_DIR}/include
                           ${LLVM_INCLUDE_DIRS}
 )
-target_link_libraries(
-  ${PROJECT_NAME} PRIVATE benchmark LLVM absl::base absl::flat_hash_map
-                          unordered_dense::unordered_dense
-)
+target_link_libraries(${PROJECT_NAME} PRIVATE benchmark LLVM unordered_dense::unordered_dense)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   target_compile_options(${PROJECT_NAME} PRIVATE -ferror-limit=2 -fcolor-diagnostics)

@@ -3,7 +3,6 @@
 #include "Containers/BumpMapSet.hpp"
 #include "Math/BumpVector.hpp"
 #include "Utilities/Allocators.hpp"
-#include <absl/container/flat_hash_map.h>
 #include <ankerl/unordered_dense.h>
 #include <benchmark/benchmark.h>
 #include <cassert>
@@ -12,7 +11,6 @@
 #include <llvm/ADT/DenseMap.h>
 #include <random>
 #include <unordered_map>
-// #include <absl/container/flat_hash_set.h>
 
 template <typename K, typename V>
 using amap =
@@ -73,15 +71,6 @@ static void BM_BumpMapInsertErase(benchmark::State &state) {
   }
 }
 BENCHMARK(BM_BumpMapInsertErase)->DenseRange(2, 8, 1);
-static void BM_AbslMapInsertErase(benchmark::State &state) {
-  uint64_t mask = ((1ull << state.range(0)) - 1) << 3ull;
-  std::mt19937_64 mt;
-  for (auto b : state) {
-    absl::flat_hash_map<void *, uint64_t> map;
-    InsertErase(mt, map, mask);
-  }
-}
-BENCHMARK(BM_AbslMapInsertErase)->DenseRange(2, 8, 1);
 static void BM_ankerlMapInsertErase(benchmark::State &state) {
   uint64_t mask = ((1ull << state.range(0)) - 1) << 3ull;
   std::mt19937_64 mt;
@@ -130,15 +119,6 @@ static void BM_BumpMapInsertLookup(benchmark::State &state) {
   }
 }
 BENCHMARK(BM_BumpMapInsertLookup)->DenseRange(2, 8, 1);
-static void BM_AbslMapInsertLookup(benchmark::State &state) {
-  uint64_t mask = ((1ull << state.range(0)) - 1) << 3ull;
-  std::mt19937_64 mt;
-  for (auto b : state) {
-    absl::flat_hash_map<void *, uint64_t> map;
-    InsertLookup2(mt, map, mask);
-  }
-}
-BENCHMARK(BM_AbslMapInsertLookup)->DenseRange(2, 8, 1);
 static void BM_ankerlMapInsertLookup(benchmark::State &state) {
   uint64_t mask = ((1ull << state.range(0)) - 1) << 3ull;
   std::mt19937_64 mt;
@@ -187,15 +167,6 @@ static void BM_BumpMapInsertLookup3(benchmark::State &state) {
   }
 }
 BENCHMARK(BM_BumpMapInsertLookup3)->DenseRange(2, 8, 1);
-static void BM_AbslMapInsertLookup3(benchmark::State &state) {
-  uint64_t mask = ((1ull << state.range(0)) - 1) << 3ull;
-  std::mt19937_64 mt;
-  for (auto b : state) {
-    absl::flat_hash_map<void *, uint64_t> map;
-    InsertLookup3(mt, map, mask);
-  }
-}
-BENCHMARK(BM_AbslMapInsertLookup3)->DenseRange(2, 8, 1);
 static void BM_ankerlMapInsertLookup3(benchmark::State &state) {
   uint64_t mask = ((1ull << state.range(0)) - 1) << 3ull;
   std::mt19937_64 mt;
@@ -251,29 +222,6 @@ static void BM_BumpMapSeq(benchmark::State &state) {
   }
 }
 BENCHMARK(BM_BumpMapSeq)->RangeMultiplier(2)->Range(1 << 2, 1 << 10);
-
-// template <typename K, typename V>
-// using amap =
-//   absl::flat_hash_map<K, V, absl::container_internal::hash_default_hash<K>,
-//                       absl::container_internal::hash_default_eq<K>,
-//                       WBumpAlloc<std::pair<const K, V>>>;
-// template <typename K, typename V>
-// using aset =
-//   absl::flat_hash_set<K, absl::container_internal::hash_default_hash<K>,
-//                       absl::container_internal::hash_default_eq<K>,
-//                       WBumpAlloc<K>>;
-
-static void BM_AbslMapSeq(benchmark::State &state) {
-  for (auto b : state) {
-    absl::flat_hash_map<void *, uint64_t> map;
-    for (uint64_t i = 1; i <= uint64_t(state.range(0)); ++i)
-      map[reinterpret_cast<void *>(8 * i)] = i;
-    for (uint64_t i = 1; i <= uint64_t(state.range(0)); ++i)
-      benchmark::DoNotOptimize(map[reinterpret_cast<void *>(8 * i)]);
-  }
-}
-
-BENCHMARK(BM_AbslMapSeq)->RangeMultiplier(2)->Range(1 << 2, 1 << 10);
 
 static void BM_AnkerlMapSeq(benchmark::State &state) {
   for (auto b : state) {
