@@ -7,6 +7,7 @@
 #include "./Loops.hpp"
 #include "./MemoryAccess.hpp"
 #include "./Schedule.hpp"
+#include "Math/Array.hpp"
 #include "Math/Math.hpp"
 #include "Math/NormalForm.hpp"
 #include "Math/Simplex.hpp"
@@ -27,9 +28,11 @@
 #include <llvm/Support/Allocator.h>
 #include <llvm/Support/Casting.h>
 #include <llvm/Support/raw_ostream.h>
+#include <type_traits>
 
 template <std::integral I>
-inline void insertSortedUnique(llvm::SmallVectorImpl<I> &v, const I &x) {
+constexpr void insertSortedUnique(LinAlg::ReallocView<I, unsigned> &v,
+                                  const I &x) {
   for (auto it = v.begin(), ite = v.end(); it != ite; ++it) {
     if (*it < x) continue;
     if (*it > x) v.insert(it, x);
@@ -60,20 +63,21 @@ private:
   [[no_unique_address]] bool visited{false};
 
 public:
-  ScheduledNode(unsigned int sId, MemoryAccess *store, unsigned int nodeIndex)
+  constexpr ScheduledNode(unsigned int sId, MemoryAccess *store,
+                          unsigned int nodeIndex)
     : storeId(sId) {
     addMemory(sId, store, nodeIndex);
   }
-  [[nodiscard]] auto
+  [[nodiscard]] constexpr auto
   getMemAccesses(BumpAlloc<> &alloc,
                  llvm::ArrayRef<MemoryAccess *> memAccess) const
-    -> llvm::SmallVector<Address *> {
+    -> Vector<Address *> {
     // First, we invert the schedule matrix.
     SquarePtrMatrix<int64_t> Phi = schedule->getPhi();
     auto [Pinv, s] = NormalForm::scaledInv(Phi);
     if (s == 1) {
     }
-    llvm::SmallVector<Address *> accesses;
+    Vector<Address *> accesses;
     accesses.reserve(memory.size());
     for (auto i : memory) {
       // TODO: cache!
@@ -102,12 +106,13 @@ public:
     -> NotNull<const AffineSchedule> {
     return schedule;
   }
-  void addOutNeighbor(unsigned int i) { outNeighbors.insert(i); }
-  void addInNeighbor(unsigned int i) { inNeighbors.insert(i); }
-  void init(BumpAlloc<> &alloc) {
+  constexpr void addOutNeighbor(unsigned int i) { outNeighbors.insert(i); }
+  constexpr void addInNeighbor(unsigned int i) { inNeighbors.insert(i); }
+  constexpr void init(BumpAlloc<> &alloc) {
     schedule = AffineSchedule::construct(alloc, getNumLoops());
   }
-  void addMemory(unsigned memId, MemoryAccess *mem, unsigned nodeIndex) {
+  constexpr void addMemory(unsigned memId, MemoryAccess *mem,
+                           unsigned nodeIndex) {
     mem->addNodeIndex(nodeIndex);
     memory.insert(memId);
     numLoops = std::max(numLoops, uint8_t(mem->getNumLoops()));
@@ -138,43 +143,44 @@ public:
     -> Range<size_t, size_t> {
     return _(phiOffset - numLoops, phiOffset);
   }
-  [[nodiscard]] auto getPhi() -> MutSquarePtrMatrix<int64_t> {
+  [[nodiscard]] constexpr auto getPhi() -> MutSquarePtrMatrix<int64_t> {
     return schedule->getPhi();
   }
-  [[nodiscard]] auto getPhi() const -> SquarePtrMatrix<int64_t> {
+  [[nodiscard]] constexpr auto getPhi() const -> SquarePtrMatrix<int64_t> {
     return schedule->getPhi();
   }
-  [[nodiscard]] auto getOffsetOmega(size_t i) -> int64_t & {
+  [[nodiscard]] constexpr auto getOffsetOmega(size_t i) -> int64_t & {
     return schedule->getOffsetOmega()[i];
   }
-  [[nodiscard]] auto getOffsetOmega(size_t i) const -> int64_t {
+  [[nodiscard]] constexpr auto getOffsetOmega(size_t i) const -> int64_t {
     return schedule->getOffsetOmega()[i];
   }
-  [[nodiscard]] auto getFusionOmega(size_t i) -> int64_t & {
+  [[nodiscard]] constexpr auto getFusionOmega(size_t i) -> int64_t & {
     return schedule->getFusionOmega()[i];
   }
-  [[nodiscard]] auto getFusionOmega(size_t i) const -> int64_t {
+  [[nodiscard]] constexpr auto getFusionOmega(size_t i) const -> int64_t {
     return schedule->getFusionOmega()[i];
   }
-  [[nodiscard]] auto getOffsetOmega() -> MutPtrVector<int64_t> {
+  [[nodiscard]] constexpr auto getOffsetOmega() -> MutPtrVector<int64_t> {
     return schedule->getOffsetOmega();
   }
-  [[nodiscard]] auto getOffsetOmega() const -> PtrVector<int64_t> {
+  [[nodiscard]] constexpr auto getOffsetOmega() const -> PtrVector<int64_t> {
     return schedule->getOffsetOmega();
   }
-  [[nodiscard]] auto getFusionOmega() -> MutPtrVector<int64_t> {
+  [[nodiscard]] constexpr auto getFusionOmega() -> MutPtrVector<int64_t> {
     return schedule->getFusionOmega();
   }
-  [[nodiscard]] auto getFusionOmega() const -> PtrVector<int64_t> {
+  [[nodiscard]] constexpr auto getFusionOmega() const -> PtrVector<int64_t> {
     return schedule->getFusionOmega();
   }
-  [[nodiscard]] auto getSchedule(size_t d) const -> PtrVector<int64_t> {
+  [[nodiscard]] constexpr auto getSchedule(size_t d) const
+    -> PtrVector<int64_t> {
     return schedule->getSchedule(d);
   }
-  [[nodiscard]] auto getSchedule(size_t d) -> MutPtrVector<int64_t> {
+  [[nodiscard]] constexpr auto getSchedule(size_t d) -> MutPtrVector<int64_t> {
     return schedule->getSchedule(d);
   }
-  void schedulePhi(PtrMatrix<int64_t> indMat, size_t r) {
+  constexpr void schedulePhi(PtrMatrix<int64_t> indMat, size_t r) {
     // indMat indvars are indexed from inside<->outside
     // phi indvars are indexed from inside<->outside
     // so, indMat is indvars[inside<->outside] x array dim
@@ -194,16 +200,18 @@ public:
     return omegaOffset;
   }
   void resetPhiOffset() { phiOffset = std::numeric_limits<unsigned>::max(); }
+  friend inline auto operator<<(llvm::raw_ostream &os,
+                                const ScheduledNode &node)
+    -> llvm::raw_ostream & {
+    os << "inNeighbors = ";
+    for (auto m : node.getInNeighbors()) os << "v_" << m << ", ";
+    os << "\noutNeighbors = ";
+    for (auto m : node.getOutNeighbors()) os << "v_" << m << ", ";
+    return os << "\n";
+    ;
+  }
 };
-inline auto operator<<(llvm::raw_ostream &os, const ScheduledNode &node)
-  -> llvm::raw_ostream & {
-  os << "inNeighbors = ";
-  for (auto m : node.getInNeighbors()) os << "v_" << m << ", ";
-  os << "\noutNeighbors = ";
-  for (auto m : node.getOutNeighbors()) os << "v_" << m << ", ";
-  return os << "\n";
-  ;
-}
+static_assert(std::is_trivially_destructible_v<ScheduledNode>);
 
 struct CarriedDependencyFlag {
   [[no_unique_address]] uint32_t flag{0};
@@ -219,8 +227,7 @@ struct CarriedDependencyFlag {
   // resets all but `d` deps
   constexpr void resetDeepDeps(size_t d) { flag &= resetMaskFlag(d); }
 };
-inline void resetDeepDeps(llvm::MutableArrayRef<CarriedDependencyFlag> v,
-                          size_t d) {
+constexpr void resetDeepDeps(MutPtrVector<CarriedDependencyFlag> v, size_t d) {
   uint32_t mask = CarriedDependencyFlag::resetMaskFlag(d);
   for (auto &&x : v) x.flag &= mask;
 }
@@ -290,25 +297,24 @@ struct LinearProgramLoopBlock {
   // identical)?
   // using VertexType = ScheduledNode;
 private:
-  [[no_unique_address]] llvm::SmallVector<MemoryAccess *, 14> memory;
-  [[no_unique_address]] llvm::SmallVector<ScheduledNode, 0> nodes;
-  // llvm::SmallVector<unsigned> memoryToNodeMap;
-  [[no_unique_address]] llvm::SmallVector<NotNull<Dependence>> edges;
+  [[no_unique_address]] Vector<MemoryAccess *, 14> memory;
+  [[no_unique_address]] Vector<ScheduledNode, 0> nodes;
+  // Vector<unsigned> memoryToNodeMap;
+  [[no_unique_address]] Vector<NotNull<Dependence>> edges;
   /// Flag indicating which depths carries dependencies
   /// One per node; held separately so we can copy/etc
-  [[no_unique_address]] llvm::SmallVector<CarriedDependencyFlag, 16>
-    carriedDeps;
-  // llvm::SmallVector<bool> visited; // visited, for traversing graph
+  [[no_unique_address]] Vector<CarriedDependencyFlag, 16> carriedDeps;
+  // Vector<bool> visited; // visited, for traversing graph
   [[no_unique_address]] llvm::DenseMap<llvm::User *, unsigned> userToMemory;
   [[no_unique_address]] BumpAlloc<> allocator;
-  // llvm::SmallVector<llvm::Value *> symbols;
+  // Vector<llvm::Value *> symbols;
   [[no_unique_address]] Simplex omniSimplex;
   // we may turn off edges because we've exceeded its loop depth
   // or because the dependence has already been satisfied at an
   // earlier level.
   [[no_unique_address]] Vector<Rational> sol;
-  // llvm::SmallVector<bool, 256> doNotAddEdge;
-  // llvm::SmallVector<bool, 256> scheduled;
+  // Vector<bool, 256> doNotAddEdge;
+  // Vector<bool, 256> scheduled;
   [[no_unique_address]] size_t numPhiCoefs{0};
   [[no_unique_address]] size_t numOmegaCoefs{0};
   [[no_unique_address]] size_t numLambda{0};
@@ -331,29 +337,24 @@ public:
     sol.clear();
     allocator.reset();
   }
-  // TODO: `constexpr` once `llvm::SmallVector` supports it
-  [[nodiscard]] auto numVerticies() const -> size_t { return nodes.size(); }
-  [[nodiscard]] auto getVerticies() -> llvm::MutableArrayRef<ScheduledNode> {
+  [[nodiscard]] constexpr auto numVerticies() const -> size_t {
+    return nodes.size();
+  }
+  [[nodiscard]] constexpr auto getVerticies() -> MutPtrVector<ScheduledNode> {
     return nodes;
   }
-  [[nodiscard]] auto getVerticies() const -> llvm::ArrayRef<ScheduledNode> {
+  [[nodiscard]] auto getVerticies() const -> PtrVector<ScheduledNode> {
     return nodes;
   }
-  auto getMemoryAccesses() const -> llvm::ArrayRef<MemoryAccess *> {
-    return memory;
-  }
-  auto getMemoryAccesses() -> llvm::MutableArrayRef<MemoryAccess *> {
-    return memory;
-  }
+  auto getMemoryAccesses() const -> PtrVector<MemoryAccess *> { return memory; }
+  auto getMemoryAccesses() -> MutPtrVector<MemoryAccess *> { return memory; }
   auto getMemoryAccess(size_t i) -> MemoryAccess * { return memory[i]; }
   auto getNode(size_t i) -> ScheduledNode & { return nodes[i]; }
   [[nodiscard]] auto getNode(size_t i) const -> const ScheduledNode & {
     return nodes[i];
   }
-  auto getNodes() -> llvm::MutableArrayRef<ScheduledNode> { return nodes; }
-  auto getEdges() -> llvm::MutableArrayRef<NotNull<Dependence>> {
-    return edges;
-  }
+  auto getNodes() -> MutPtrVector<ScheduledNode> { return nodes; }
+  auto getEdges() -> MutPtrVector<NotNull<Dependence>> { return edges; }
   [[nodiscard]] auto numNodes() const -> size_t { return nodes.size(); }
   [[nodiscard]] auto numEdges() const -> size_t { return edges.size(); }
   [[nodiscard]] auto numMemoryAccesses() const -> size_t {
@@ -530,9 +531,9 @@ public:
     // a subset of Nodes
     BitSet nodeIds{};
     BitSet activeEdges{};
-    llvm::MutableArrayRef<MemoryAccess *> mem;
-    llvm::MutableArrayRef<ScheduledNode> nodes;
-    llvm::ArrayRef<NotNull<Dependence>> edges;
+    MutPtrVector<MemoryAccess *> mem;
+    MutPtrVector<ScheduledNode> nodes;
+    PtrVector<NotNull<Dependence>> edges;
     // llvm::SmallVector<bool> visited;
     // BitSet visited;
     auto operator&(const Graph &g) -> Graph {
@@ -638,9 +639,9 @@ public:
     [[nodiscard]] auto subGraph(const BitSet &components) -> Graph {
       return {components, activeEdges, mem, nodes, edges};
     }
-    [[nodiscard]] auto split(const llvm::SmallVector<BitSet> &components)
-      -> llvm::SmallVector<Graph, 0> {
-      llvm::SmallVector<Graph, 0> graphs;
+    [[nodiscard]] auto split(const Vector<BitSet> &components)
+      -> Vector<Graph, 0> {
+      Vector<Graph, 0> graphs;
       graphs.reserve(components.size());
       for (auto &c : components) graphs.push_back(subGraph(c));
       return graphs;
@@ -1090,7 +1091,7 @@ public:
     for (auto y : x) m = ((m << 1) | (y != 0));
     return m;
   }
-  static void nonZeroMasks(llvm::SmallVector<uint64_t> &masks,
+  static void nonZeroMasks(Vector<uint64_t> &masks,
                            const AbstractMatrix auto &A) {
     const auto [M, N] = A.size();
     assert(N <= 64);
@@ -1098,8 +1099,8 @@ public:
     for (size_t m = 0; m < M; ++m) masks[m] = nonZeroMask(A(m, _));
   }
   [[nodiscard]] static auto nonZeroMasks(const AbstractMatrix auto &A)
-    -> llvm::SmallVector<uint64_t> {
-    llvm::SmallVector<uint64_t> masks;
+    -> Vector<uint64_t> {
+    Vector<uint64_t> masks;
     nonZeroMasks(masks, A);
     return masks;
   }
@@ -1148,7 +1149,7 @@ public:
     return true;
   }
   [[nodiscard]] auto breakGraph(Graph g, size_t d) -> std::optional<BitSet> {
-    llvm::SmallVector<BitSet> components;
+    Vector<BitSet> components;
     Graphs::stronglyConnectedComponents(components, g);
     if (components.size() <= 1) return {};
     // components are sorted in topological order.
@@ -1171,7 +1172,7 @@ public:
     // If fusion is legal, we don't increment the Omega offset.
     // else, we do.
     Graph *gp = &graphs[0];
-    llvm::SmallVector<unsigned> baseGraphs;
+    Vector<unsigned> baseGraphs;
     baseGraphs.push_back(0);
     for (size_t i = 1; i < components.size(); ++i) {
       Graph &gi = graphs[i];
@@ -1244,9 +1245,9 @@ public:
       // activeEdges was the old original; swap it in
       std::swap(g.activeEdges, activeEdges);
       BitSet nodeIds = g.nodeIds;
-      llvm::SmallVector<Schedule, 0> oldSchedules;
+      Vector<Schedule, 0> oldSchedules;
       for (auto &n : g) oldSchedules.push_back(n.getSchedule());
-      llvm::SmallVector<CarriedDependencyFlag, 16> oldCarriedDeps = carriedDeps;
+      Vector<CarriedDependencyFlag, 16> oldCarriedDeps = carriedDeps;
       resetDeepDeps(carriedDeps, d);
 
       countAuxParamsAndConstraints(g, d);

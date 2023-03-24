@@ -55,7 +55,8 @@ template <class T, class S> struct Array {
   template <std::convertible_to<S> V>
   constexpr Array(Array<T, V> a) : ptr(a.wrappedPtr()), sz(a.dim()) {}
   template <size_t N>
-  constexpr Array(const std::array<T, N> &a) : ptr(a.data()), sz(N) {}
+  constexpr Array(const std::array<T, N> &a)
+    : ptr(const_cast<T *>(a.data())), sz(N) {}
   [[nodiscard, gnu::returns_nonnull]] constexpr auto data() const noexcept
     -> const T * {
     invariant(ptr != nullptr);
@@ -91,7 +92,7 @@ template <class T, class S> struct Array {
   // static constexpr auto slice(NotNull<T>, Index<S> auto i){
   //   auto
   // }
-  constexpr auto operator[](Index<S> auto i) const noexcept {
+  constexpr auto operator[](Index<S> auto i) const noexcept -> decltype(auto) {
     auto offset = calcOffset(sz, i);
     auto newDim = calcNewDim(sz, i);
     invariant(ptr != nullptr);
@@ -101,7 +102,7 @@ template <class T, class S> struct Array {
   // TODO: switch to operator[] when we enable c++23
   // for vectors, we just drop the column, essentially broadcasting
   template <class R, class C>
-  constexpr auto operator()(R r, C c) const noexcept {
+  constexpr auto operator()(R r, C c) const noexcept -> decltype(auto) {
     if constexpr (MatrixDimension<S>)
       return (*this)[CartesianIndex<R, C>{r, c}];
     else return (*this)[size_t(r)];
@@ -582,10 +583,11 @@ struct ResizeableView : MutArray<T, S> {
   constexpr ResizeableView(NotNull<T> p, S s, U c) noexcept
     : BaseT(p, s), capacity(c) {}
 
-  template <class... Args> constexpr auto emplace_back(Args &&...args) {
+  template <class... Args>
+  constexpr auto emplace_back(Args &&...args) -> decltype(auto) {
     static_assert(std::is_integral_v<S>, "emplace_back requires integral size");
     invariant(U(this->sz) < capacity);
-    new (this->ptr + this->sz++) T(std::forward<Args>(args)...);
+    return *(new (this->ptr + this->sz++) T(std::forward<Args>(args)...));
   }
   constexpr void push_back(T value) {
     static_assert(std::is_integral_v<S>, "push_back requires integral size");
@@ -759,11 +761,12 @@ struct ReallocView : ResizeableView<T, S, U> {
   constexpr ReallocView(NotNull<T> p, S s, U c, A alloc) noexcept
     : BaseT(p, s, c), allocator(alloc) {}
 
-  template <class... Args> constexpr auto emplace_back(Args &&...args) {
+  template <class... Args>
+  constexpr auto emplace_back(Args &&...args) -> decltype(auto) {
     static_assert(std::is_integral_v<S>, "emplace_back requires integral size");
     if (this->sz == this->capacity) [[unlikely]]
       reserve((Init && (this->capacity == 0)) ? U{1} : 2 * this->capacity);
-    new (this->ptr + this->sz++) T(std::forward<Args>(args)...);
+    return *(new (this->ptr + this->sz++) T(std::forward<Args>(args)...));
   }
   constexpr void push_back(T value) {
     static_assert(std::is_integral_v<S>, "push_back requires integral size");

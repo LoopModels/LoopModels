@@ -34,9 +34,8 @@ struct Rational {
         d /= g;
       }
       return Rational{n, d};
-    } else {
-      return Rational{0, 1};
     }
+    return Rational{0, 1};
   }
   constexpr static auto createPositiveDenominator(int64_t n, int64_t d)
     -> Rational {
@@ -47,9 +46,8 @@ struct Rational {
         d /= g;
       }
       return Rational{n, d};
-    } else {
-      return Rational{0, 1};
     }
+    return Rational{0, 1};
   }
 
   [[nodiscard]] constexpr auto safeAdd(Rational y) const
