@@ -499,7 +499,7 @@ $(function() {
 <div class="line"><a name="l00429"></a><span class="lineno">  429</span>&#160;        <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> c = 0; c &lt; this-&gt;numCol(); ++c) (*<span class="keyword">this</span>)(r, c) += Br;</div>
 <div class="line"><a name="l00430"></a><span class="lineno">  430</span>&#160;      }</div>
 <div class="line"><a name="l00431"></a><span class="lineno">  431</span>&#160;    } <span class="keywordflow">else</span> {</div>
-<div class="line"><a name="l00432"></a><span class="lineno">  432</span>&#160;      invariant(this-&gt;size(), B.size());</div>
+<div class="line"><a name="l00432"></a><span class="lineno">  432</span>&#160;      invariant(<span class="keywordtype">size_t</span>(this-&gt;size()), <span class="keywordtype">size_t</span>(B.size()));</div>
 <div class="line"><a name="l00433"></a><span class="lineno">  433</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; this-&gt;size(); ++i) (*<span class="keyword">this</span>)[i] += B[i];</div>
 <div class="line"><a name="l00434"></a><span class="lineno">  434</span>&#160;    }</div>
 <div class="line"><a name="l00435"></a><span class="lineno">  435</span>&#160;    <span class="keywordflow">return</span> *<span class="keyword">this</span>;</div>

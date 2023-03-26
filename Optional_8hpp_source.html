@@ -165,7 +165,8 @@ $(function() {
 <div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;  }</div>
 <div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;  constexpr <a class="code" href="structOptional.html">Optional</a>() = <span class="keywordflow">default</span>;</div>
 <div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;  constexpr <a class="code" href="structOptional.html">Optional</a>(T *v) : value(v) {}</div>
-<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;};</div>
+<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;  constexpr <a class="code" href="structOptional.html">Optional</a>(<a class="code" href="structNotNull.html">NotNull&lt;T&gt;</a> v) : value(v) {}</div>
+<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;};</div>
 <div class="ttc" id="astructNotNull_html"><div class="ttname"><a href="structNotNull.html">NotNull</a></div><div class="ttdef"><b>Definition:</b> Valid.hpp:7</div></div>
 <div class="ttc" id="astructOptional_3_01T_01_4_html"><div class="ttname"><a href="structOptional_3_01T_01_4.html">Optional&lt; T &gt;</a></div><div class="ttdef"><b>Definition:</b> Optional.hpp:25</div></div>
 <div class="ttc" id="astructOptional_3_01T_01_5_01_4_html"><div class="ttname"><a href="structOptional_3_01T_01_5_01_4.html">Optional&lt; T * &gt;</a></div><div class="ttdef"><b>Definition:</b> Optional.hpp:79</div></div>

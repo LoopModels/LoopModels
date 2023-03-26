@@ -11,5 +11,6 @@ var searchData=
   ['notnull_3c_20deppoly_20_3e_138',['NotNull&lt; DepPoly &gt;',['../structNotNull.html',1,'']]],
   ['notnull_3c_20llvm_3a_3ainstruction_20_3e_139',['NotNull&lt; llvm::Instruction &gt;',['../structNotNull.html',1,'']]],
   ['notnull_3c_20memoryaccess_20_3e_140',['NotNull&lt; MemoryAccess &gt;',['../structNotNull.html',1,'']]],
-  ['nowraprewriter_141',['NoWrapRewriter',['../structNoWrapRewriter.html',1,'']]]
+  ['notnull_3c_20simplex_20_3e_141',['NotNull&lt; Simplex &gt;',['../structNotNull.html',1,'']]],
+  ['nowraprewriter_142',['NoWrapRewriter',['../structNoWrapRewriter.html',1,'']]]
 ];
