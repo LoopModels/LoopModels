@@ -343,7 +343,9 @@ public:
   [[nodiscard]] auto getVerticies() const -> PtrVector<ScheduledNode> {
     return nodes;
   }
-  auto getMemoryAccesses() const -> PtrVector<MemoryAccess *> { return memory; }
+  [[nodiscard]] auto getMemoryAccesses() const -> PtrVector<MemoryAccess *> {
+    return memory;
+  }
   auto getMemoryAccesses() -> MutPtrVector<MemoryAccess *> { return memory; }
   auto getMemoryAccess(size_t i) -> MemoryAccess * { return memory[i]; }
   auto getNode(size_t i) -> ScheduledNode & { return nodes[i]; }
@@ -367,7 +369,7 @@ public:
   }
   [[nodiscard]] auto calcMaxDepth() const -> size_t {
     size_t d = 0;
-    for (auto &mem : memory) d = std::max(d, mem->getNumLoops());
+    for (const auto &mem : memory) d = std::max(d, mem->getNumLoops());
     return d;
   }
 
@@ -429,7 +431,7 @@ public:
     for (llvm::User *use : user->users()) {
       if (visited.contains(use)) continue;
       if (llvm::isa<llvm::StoreInst>(use)) {
-        auto memAccess = userToMemory.find(use);
+        auto *memAccess = userToMemory.find(use);
         if (memAccess == userToMemory.end())
           continue; // load is not a part of the LoopBlock
         unsigned memId = memAccess->second;
@@ -441,11 +443,12 @@ public:
     }
     return false;
   }
+  // NOLINTNEXTLINE(misc-no-recursion)
   void checkUserForLoads(aset<llvm::User *> &visited, ScheduledNode &node,
                          llvm::User *user, unsigned nodeIndex) {
     if (!user || visited.contains(user)) return;
     if (llvm::isa<llvm::LoadInst>(user)) {
-      auto memAccess = userToMemory.find(user);
+      auto *memAccess = userToMemory.find(user);
       if (memAccess == userToMemory.end())
         return; // load is not a part of the LoopBlock
       unsigned memId = memAccess->second;
@@ -473,6 +476,7 @@ public:
   /// %z = call bar(y.reload)
   /// store %z, %c
   /// and we create a new edge from `store %y, %b` to `load %b`.
+  // NOLINTNEXTLINE(misc-no-recursion)
   void searchOperandsForLoads(aset<llvm::User *> &visited, ScheduledNode &node,
                               llvm::User *u, unsigned nodeIndex) {
     visited.insert(u);
@@ -497,7 +501,7 @@ public:
   }
   [[nodiscard]] auto calcNumStores() const -> size_t {
     size_t numStores = 0;
-    for (auto &m : memory) numStores += !(m->isLoad());
+    for (const auto &m : memory) numStores += !(m->isLoad());
     return numStores;
   }
   /// When connecting a graph, we draw direct connections between stores and
@@ -640,11 +644,11 @@ public:
     split(const llvm::SmallVector<BitSet> &components) -> Vector<Graph, 0> {
       Vector<Graph, 0> graphs;
       graphs.reserve(components.size());
-      for (auto &c : components) graphs.push_back(subGraph(c));
+      for (const auto &c : components) graphs.push_back(subGraph(c));
       return graphs;
     }
     [[nodiscard]] constexpr auto calcMaxDepth() const -> size_t {
-      if (nodeIds.data.size() == 0) return 0;
+      if (nodeIds.data.empty()) return 0;
       size_t d = 0;
       for (auto n : nodeIds) d = std::max(d, nodes[n].getNumLoops());
       return d;
@@ -655,7 +659,7 @@ public:
   //     return ((e.getInNumLoops() > d) && (e.getOutNumLoops() > d)) &&
   //            connects(e, g0, g1);
   // }
-  constexpr auto connects(const Dependence &e, Graph &g0, Graph &g1) const
+  static constexpr auto connects(const Dependence &e, Graph &g0, Graph &g1)
     -> bool {
     if (!e.inputIsLoad()) {
       // e.in is a store
@@ -688,7 +692,8 @@ public:
     for (unsigned i = 0; i < memory.size(); ++i)
       userToMemory.insert(std::make_pair(memory[i]->getInstruction(), i));
   }
-  constexpr auto getOverlapIndex(const Dependence &edge) -> Optional<size_t> {
+  static constexpr auto getOverlapIndex(const Dependence &edge)
+    -> Optional<size_t> {
     auto [store, other] = edge.getStoreAndOther();
     size_t index = *store->getNodeIndex().begin();
     if (other->getNodeIndex().contains(index)) return index;
@@ -807,8 +812,7 @@ public:
       if (hasActiveEdges(g, *memory[memId])) return true;
     return false;
   }
-  [[nodiscard]] constexpr void setScheduleMemoryOffsets(const Graph &g,
-                                                        size_t d) {
+  constexpr void setScheduleMemoryOffsets(const Graph &g, size_t d) {
     size_t pInit = numBounding + numActiveEdges + 1, p = pInit;
     numOmegaCoefs = 0;
     for (auto &&node : nodes) {
@@ -839,7 +843,7 @@ public:
                       1 + numBounding + numActiveEdges + numPhiCoefs +
                         2 * numOmegaCoefs + numLambda,
                       0);
-    auto C{omniSimplex.tableau.getConstraints()};
+    auto C{omniSimplex->getConstraints()};
     C << 0;
     // layout of omniSimplex:
     // Order: C, then priority to minimize
@@ -969,8 +973,8 @@ public:
     addIndependentSolutionConstraints(omniSimplex, g, d);
     // earlier, we only had this check in optimizeLevel, when satisfyDeps=false
     // what is this check doing?
-    assert(!allZero(omniSimplex.tableau.getConstraints()(last, _)));
-    return omniSimplex.initiateFeasible() ? nullptr : omniSimplex;
+    assert(!allZero(omniSimplex->getConstraints()(last, _)));
+    return omniSimplex->initiateFeasible() ? nullptr : omniSimplex;
   }
   static void updateConstraints(MutPtrMatrix<int64_t> C,
                                 const ScheduledNode &node,
@@ -1086,17 +1090,17 @@ public:
       if (*b) return 2 * ((*b) > 0) - 1;
     return 0;
   }
-  void addIndependentSolutionConstraints(Simplex &omniSimplex, const Graph &g,
-                                         size_t depth) {
-    // omniSimplex.tableau.setNumCons(omniSimplex.tableau.getNumCons() +
+  void addIndependentSolutionConstraints(NotNull<Simplex> omniSimplex,
+                                         const Graph &g, size_t depth) {
+    // omniSimplex->setNumCons(omniSimplex->getNumCons() +
     //                                memory.size());
-    // omniSimplex.tableau.reserveExtraRows(memory.size());
-    auto C{omniSimplex.tableau.getConstraints()};
+    // omniSimplex->reserveExtraRows(memory.size());
+    auto C{omniSimplex->getConstraints()};
     if (depth == 0) {
       // add ones >= 0
       for (auto &&node : nodes) {
         if (node.phiIsScheduled(depth) || (!hasActiveEdges(g, node))) continue;
-        auto c{omniSimplex.addConstraintAndVar()};
+        auto c{omniSimplex->addConstraintAndVar()};
         c[0] = 1;
         c[node.getPhiOffsetRange()] << 1;
         c[last] = -1; // for >=
@@ -1110,14 +1114,14 @@ public:
         continue;
       A << node.getPhi()(_(end - depth, end), _).transpose();
       NormalForm::nullSpace11(N, A);
-      auto c{omniSimplex.addConstraintAndVar()};
+      auto c{omniSimplex->addConstraintAndVar()};
       c[0] = 1;
       MutPtrVector<int64_t> cc{c[node.getPhiOffsetRange()]};
       // sum(N,dims=1) >= 1 after flipping row signs to be lex > 0
       for (size_t m = 0; m < N.numRow(); ++m) cc += N(m, _) * lexSign(N(m, _));
       c[last] = -1; // for >=
     }
-    assert(!allZero(omniSimplex.tableau.getConstraints()(last, _)));
+    assert(!allZero(omniSimplex->getConstraints()(last, _)));
   }
   [[nodiscard]] static auto nonZeroMask(const AbstractVector auto &x)
     -> uint64_t {
@@ -1183,6 +1187,7 @@ public:
     }
     return true;
   }
+  // NOLINTNEXTLINE(misc-no-recursion)
   [[nodiscard]] auto breakGraph(Graph g, size_t d) -> std::optional<BitSet> {
     llvm::SmallVector<BitSet> components;
     Graphs::stronglyConnectedComponents(components, g);
@@ -1206,7 +1211,7 @@ public:
     // we do this by setting the Omegas in a loop.
     // If fusion is legal, we don't increment the Omega offset.
     // else, we do.
-    Graph *gp = &graphs[0];
+    Graph *gp = graphs.data();
     Vector<unsigned> baseGraphs;
     baseGraphs.push_back(0);
     for (size_t i = 1; i < components.size(); ++i) {
@@ -1256,11 +1261,11 @@ public:
   // or active edges, so these BitSets can be given types.
   // But that sort of seems like abstraction for the sake of
   // abstraction, rather than actually a good idea?
-  [[nodiscard]] auto
-  optimizeSatDep(Graph g, size_t d, size_t maxDepth, BitSet depSatLevel,
-                 const BitSet   // NOLINT(bugprone-easily-swappable-parameters)
-                   &depSatNest, // NOLINT(bugprone-easily-swappable-parameters)
-                 BitSet activeEdges) -> BitSet {
+  // NOLINTNEXTLINE(misc-no-recursion)
+  [[nodiscard]] auto optimizeSatDep(Graph g, size_t d, size_t maxDepth,
+                                    BitSet depSatLevel,
+                                    const BitSet &depSatNest,
+                                    BitSet activeEdges) -> BitSet {
     // if we're here, there are satisfied deps in both
     // depSatLevel and depSatNest
     // what we want to know is, can we satisfy all the deps
@@ -1271,7 +1276,7 @@ public:
       // activeEdges was the old original; swap it in
       std::swap(g.activeEdges, activeEdges);
       BitSet nodeIds = g.nodeIds;
-      Vector<Schedule, 0> oldSchedules;
+      Vector<AffineSchedule *, 0> oldSchedules;
       for (auto &n : g) oldSchedules.push_back(n.getSchedule());
       Vector<CarriedDependencyFlag, 16> oldCarriedDeps = carriedDeps;
       resetDeepDeps(carriedDeps, d);
@@ -1284,7 +1289,7 @@ public:
       // we failed, so reset solved schedules
       std::swap(g.activeEdges, activeEdges);
       std::swap(g.nodeIds, nodeIds);
-      auto oldNodeIter = oldSchedules.begin();
+      auto *oldNodeIter = oldSchedules.begin();
       for (auto &&n : g) n.getSchedule() = *(oldNodeIter++);
       std::swap(carriedDeps, oldCarriedDeps);
     }
@@ -1293,6 +1298,7 @@ public:
   /// optimize at depth `d`
   /// receives graph by value, so that it is not invalidated when
   /// recursing
+  // NOLINTNEXTLINE(misc-no-recursion)
   [[nodiscard]] auto optimize(Graph g, size_t d, size_t maxDepth)
     -> std::optional<BitSet> {
     if (d >= maxDepth) return BitSet{};
@@ -1336,32 +1342,33 @@ public:
     }
     // BitSet
     os << "\nLoopBlock Edges (#edges = " << lblock.edges.size() << "):";
-    for (auto &edge : lblock.edges) {
+    for (const auto &edge : lblock.edges) {
       os << "\n\tEdge = " << *edge;
       for (size_t inIndex : edge->nodesIn()) {
-        const Schedule &sin = lblock.getNode(inIndex).getSchedule();
+        const AffineSchedule *sin = lblock.getNode(inIndex).getSchedule();
         os << "Schedule In: nodeIndex = " << edge->nodesIn() << "\ns.getPhi()"
-           << sin.getPhi() << "\ns.getFusionOmega() = " << sin.getFusionOmega()
-           << "\ns.getOffsetOmega() = " << sin.getOffsetOmega();
+           << sin->getPhi()
+           << "\ns.getFusionOmega() = " << sin->getFusionOmega()
+           << "\ns.getOffsetOmega() = " << sin->getOffsetOmega();
       }
       for (size_t outIndex : edge->nodesOut()) {
-        const Schedule &sout = lblock.getNode(outIndex).getSchedule();
+        const AffineSchedule *sout = lblock.getNode(outIndex).getSchedule();
         os << "\n\nSchedule Out:\nnodeIndex = " << edge->nodesOut()
-           << "\ns.getPhi()" << sout.getPhi()
-           << "\ns.getFusionOmega() = " << sout.getFusionOmega()
-           << "\ns.getOffsetOmega() = " << sout.getOffsetOmega();
+           << "\ns.getPhi()" << sout->getPhi()
+           << "\ns.getFusionOmega() = " << sout->getFusionOmega()
+           << "\ns.getOffsetOmega() = " << sout->getOffsetOmega();
       }
       llvm::errs() << "\n\n";
     }
     os << "\nLoopBlock schedule (#mem accesses = " << lblock.memory.size()
        << "):\n\n";
-    for (auto mem : lblock.memory) {
+    for (auto *mem : lblock.memory) {
       os << "Ref = " << *mem;
       for (size_t nodeIndex : mem->getNodeIndex()) {
-        const Schedule &s = lblock.getNode(nodeIndex).getSchedule();
-        os << "\nnodeIndex = " << nodeIndex << "\ns.getPhi()" << s.getPhi()
-           << "\ns.getFusionOmega() = " << s.getFusionOmega()
-           << "\ns.getOffsetOmega() = " << s.getOffsetOmega() << "\n";
+        const AffineSchedule *s = lblock.getNode(nodeIndex).getSchedule();
+        os << "\nnodeIndex = " << nodeIndex << "\ns.getPhi()" << s->getPhi()
+           << "\ns.getFusionOmega() = " << s->getFusionOmega()
+           << "\ns.getOffsetOmega() = " << s->getOffsetOmega() << "\n";
       }
     }
     return os << "\n";

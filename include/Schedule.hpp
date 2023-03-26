@@ -39,8 +39,7 @@ struct AffineSchedule {
   static auto construct(BumpAlloc<> &alloc, unsigned nL)
     -> NotNull<AffineSchedule> {
     auto *mem =
-      alloc.allocate(sizeof(AffineSchedule) + requiredScheduleStorage(nL),
-                     alignof(AffineSchedule));
+      alloc.allocate(requiredScheduleStorage(nL), alignof(AffineSchedule));
     return new (mem) AffineSchedule(nL);
   }
   constexpr void truncate(size_t newNumLoops) {
@@ -58,6 +57,7 @@ struct AffineSchedule {
   [[nodiscard]] constexpr auto data() const -> int64_t * {
     return const_cast<int64_t *>(mem + 1);
   }
+  // NOLINTNEXTLINE(readability-make-member-function-const)
   [[nodiscard]] constexpr auto getPhi() -> MutSquarePtrMatrix<int64_t> {
     return {data(), SquareDims{unsigned(getNumLoops())}};
   }
@@ -77,9 +77,11 @@ struct AffineSchedule {
   [[nodiscard]] constexpr auto getOffsetOmega(size_t i) const -> int64_t {
     return data()[getNumLoopsSquared() + getNumLoops() + 1 + i];
   }
+  // NOLINTNEXTLINE(readability-make-member-function-const)
   [[nodiscard]] constexpr auto getFusionOmega(size_t i) -> int64_t & {
     return data()[getNumLoopsSquared() + i];
   }
+  // NOLINTNEXTLINE(readability-make-member-function-const)
   [[nodiscard]] constexpr auto getOffsetOmega(size_t i) -> int64_t & {
     return data()[getNumLoopsSquared() + getNumLoops() + 1 + i];
   }
@@ -89,16 +91,18 @@ struct AffineSchedule {
   [[nodiscard]] constexpr auto getOffsetOmega() const -> PtrVector<int64_t> {
     return {data() + getNumLoopsSquared() + getNumLoops() + 1, getNumLoops()};
   }
+  // NOLINTNEXTLINE(readability-make-member-function-const)
   [[nodiscard]] constexpr auto getFusionOmega() -> MutPtrVector<int64_t> {
     return {data() + getNumLoopsSquared(), getNumLoops() + 1};
   }
+  // NOLINTNEXTLINE(readability-make-member-function-const)
   [[nodiscard]] constexpr auto getOffsetOmega() -> MutPtrVector<int64_t> {
     return {data() + getNumLoopsSquared() + getNumLoops() + 1, getNumLoops()};
   }
   [[nodiscard]] constexpr auto fusedThrough(const NotNull<AffineSchedule> y,
                                             const size_t numLoopsCommon) const
     -> bool {
-    auto o = getFusionOmega().begin();
+    const auto *o = getFusionOmega().begin();
     return std::equal(o, o + numLoopsCommon, y->getFusionOmega().begin());
   }
   [[nodiscard]] constexpr auto
@@ -108,5 +112,19 @@ struct AffineSchedule {
 
 private:
   constexpr AffineSchedule(unsigned numLoops) { mem[0] = numLoops; }
-  int64_t mem[1]; // NOLINT(modernize-avoid-c-arrays)
+#if !defined(__clang__) && defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
+#else
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wc99-extensions"
+#pragma clang diagnostic ignored "-Wgnu-empty-struct"
+#endif
+  int64_t mem[]; // NOLINT(modernize-avoid-c-arrays)
+#if !defined(__clang__) && defined(__GNUC__)
+#pragma GCC diagnostic pop
+#else
+#pragma clang diagnostic pop
+#endif
 };
+static_assert(sizeof(AffineSchedule) == 0);

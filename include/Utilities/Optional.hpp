@@ -94,4 +94,5 @@ template <typename T> struct Optional<T *> {
   }
   constexpr Optional() = default;
   constexpr Optional(T *v) : value(v) {}
+  constexpr Optional(NotNull<T> v) : value(v) {}
 };

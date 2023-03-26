@@ -261,6 +261,12 @@ public:
   [[nodiscard]] constexpr auto getNumVars() const -> unsigned {
     return numVars;
   }
+  [[nodiscard]] constexpr auto getConCap() const -> unsigned {
+    return constraintCapacity;
+  }
+  [[nodiscard]] constexpr auto getVarCap() const -> unsigned {
+    return varCapacity;
+  }
   void deleteConstraint(unsigned c) {
     auto basicCons = getBasicConstraints();
     auto basicVars = getBasicVariables();
@@ -875,6 +881,12 @@ public:
          unsigned numSlack) -> NotNull<Simplex> {
     unsigned conCap = numCon, varCap = numVar + numSlack + numCon;
     return create(alloc, numCon, numVar, conCap, varCap);
+  }
+  auto copy(BumpAlloc<> &alloc) const -> NotNull<Simplex> {
+    NotNull<Simplex> res =
+      create(alloc, getNumCons(), getNumVars(), getConCap(), getVarCap());
+    *res << *this;
+    return res;
   }
   auto operator<<(const Simplex &other) -> Simplex & {
     setNumCons(other.getNumCons());

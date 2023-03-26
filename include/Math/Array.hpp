@@ -429,7 +429,7 @@ template <class T, class S> struct MutArray : Array<T, S> {
         for (size_t c = 0; c < this->numCol(); ++c) (*this)(r, c) += Br;
       }
     } else {
-      invariant(this->size(), B.size());
+      invariant(size_t(this->size()), size_t(B.size()));
       for (size_t i = 0; i < this->size(); ++i) (*this)[i] += B[i];
     }
     return *this;
