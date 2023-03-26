@@ -1,7 +1,7 @@
 var searchData=
 [
   ['add_0',['Add',['../structLinAlg_1_1Add.html',1,'LinAlg']]],
-  ['addedge_1',['addEdge',['../structLinearProgramLoopBlock.html#a50c267ca49c6e8f135802004abe4eba9',1,'LinearProgramLoopBlock']]],
+  ['addedge_1',['addEdge',['../classLinearProgramLoopBlock.html#a50c267ca49c6e8f135802004abe4eba9',1,'LinearProgramLoopBlock']]],
   ['addinnermostschedule_2',['addInnermostSchedule',['../structLoopTreeSchedule.html#a947ea9d49d98e50acc751379ec41dbe3',1,'LoopTreeSchedule']]],
   ['addnodeindex_3',['addNodeIndex',['../structMemoryAccess.html#a245b41566ec8297df73f91e1829670d5',1,'MemoryAccess']]],
   ['address_4',['Address',['../structAddress.html',1,'']]],

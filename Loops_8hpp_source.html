@@ -908,7 +908,7 @@ $(function() {
 <div class="line"><a name="l00851"></a><span class="lineno">  851</span>&#160;    <span class="keywordtype">unsigned</span> symCapacity = numDynSym + numLoops;</div>
 <div class="line"><a name="l00852"></a><span class="lineno">  852</span>&#160;    <span class="keywordtype">size_t</span> memNeeded = size_t(M) * N * <span class="keyword">sizeof</span>(int64_t) +</div>
 <div class="line"><a name="l00853"></a><span class="lineno">  853</span>&#160;                       symCapacity * <span class="keyword">sizeof</span>(<span class="keyword">const</span> llvm::SCEV *<span class="keyword">const</span> *);</div>
-<div class="line"><a name="l00854"></a><span class="lineno">  854</span>&#160;    <span class="keyword">auto</span> *mem = alloc.allocate(<span class="keyword">sizeof</span>(<a class="code" href="structAffineLoopNest.html">AffineLoopNest</a>) - 8 + memNeeded,</div>
+<div class="line"><a name="l00854"></a><span class="lineno">  854</span>&#160;    <span class="keyword">auto</span> *mem = alloc.allocate(<span class="keyword">sizeof</span>(<a class="code" href="structAffineLoopNest.html">AffineLoopNest</a>) + memNeeded,</div>
 <div class="line"><a name="l00855"></a><span class="lineno">  855</span>&#160;                               <span class="keyword">alignof</span>(<a class="code" href="structAffineLoopNest.html">AffineLoopNest</a>));</div>
 <div class="line"><a name="l00856"></a><span class="lineno">  856</span>&#160;    <span class="keyword">auto</span> *aln = <span class="keyword">new</span> (mem) <a class="code" href="structAffineLoopNest.html">AffineLoopNest</a>({numCon, numLoops, numDynSym, M});</div>
 <div class="line"><a name="l00857"></a><span class="lineno">  857</span>&#160;    std::copy_n(syms.begin(), numDynSym, aln-&gt;getSyms().begin());</div>
@@ -939,9 +939,21 @@ $(function() {
 <div class="line"><a name="l00882"></a><span class="lineno">  882</span>&#160;  <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> numLoops;</div>
 <div class="line"><a name="l00883"></a><span class="lineno">  883</span>&#160;  <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> numDynSymbols;</div>
 <div class="line"><a name="l00884"></a><span class="lineno">  884</span>&#160;  <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> rowCapacity;</div>
-<div class="line"><a name="l00885"></a><span class="lineno">  885</span>&#160;  <span class="comment">// NOLINTNEXTLINE(modernize-avoid-c-arrays) // FAM</span></div>
-<div class="line"><a name="l00886"></a><span class="lineno">  886</span>&#160;  [[gnu::aligned(<span class="keyword">alignof</span>(int64_t))]] std::byte memory[8];</div>
-<div class="line"><a name="l00887"></a><span class="lineno">  887</span>&#160;};</div>
+<div class="line"><a name="l00885"></a><span class="lineno">  885</span>&#160;<span class="preprocessor">#if !defined(__clang__) &amp;&amp; defined(__GNUC__)</span></div>
+<div class="line"><a name="l00886"></a><span class="lineno">  886</span>&#160;<span class="preprocessor">#pragma GCC diagnostic push</span></div>
+<div class="line"><a name="l00887"></a><span class="lineno">  887</span>&#160;<span class="preprocessor">#pragma GCC diagnostic ignored &quot;-Wpedantic&quot;</span></div>
+<div class="line"><a name="l00888"></a><span class="lineno">  888</span>&#160;<span class="preprocessor">#else</span></div>
+<div class="line"><a name="l00889"></a><span class="lineno">  889</span>&#160;<span class="preprocessor">#pragma clang diagnostic push</span></div>
+<div class="line"><a name="l00890"></a><span class="lineno">  890</span>&#160;<span class="preprocessor">#pragma clang diagnostic ignored &quot;-Wc99-extensions&quot;</span></div>
+<div class="line"><a name="l00891"></a><span class="lineno">  891</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00892"></a><span class="lineno">  892</span>&#160;  <span class="comment">// NOLINTNEXTLINE(modernize-avoid-c-arrays) // FAM</span></div>
+<div class="line"><a name="l00893"></a><span class="lineno">  893</span>&#160;  [[gnu::aligned(<span class="keyword">alignof</span>(int64_t))]] std::byte memory[];</div>
+<div class="line"><a name="l00894"></a><span class="lineno">  894</span>&#160;<span class="preprocessor">#if !defined(__clang__) &amp;&amp; defined(__GNUC__)</span></div>
+<div class="line"><a name="l00895"></a><span class="lineno">  895</span>&#160;<span class="preprocessor">#pragma GCC diagnostic pop</span></div>
+<div class="line"><a name="l00896"></a><span class="lineno">  896</span>&#160;<span class="preprocessor">#else</span></div>
+<div class="line"><a name="l00897"></a><span class="lineno">  897</span>&#160;<span class="preprocessor">#pragma clang diagnostic pop</span></div>
+<div class="line"><a name="l00898"></a><span class="lineno">  898</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00899"></a><span class="lineno">  899</span>&#160;};</div>
 <div class="ttc" id="astructAffineLoopNest_html"><div class="ttname"><a href="structAffineLoopNest.html">AffineLoopNest</a></div><div class="ttdef"><b>Definition:</b> Loops.hpp:326</div></div>
 <div class="ttc" id="astructAffineLoopNest_html_a215506c9530da55d0671936af217dd6d"><div class="ttname"><a href="structAffineLoopNest.html#a215506c9530da55d0671936af217dd6d">AffineLoopNest::rotate</a></div><div class="ttdeci">auto rotate(BumpAlloc&lt;&gt; &amp;alloc, PtrMatrix&lt; int64_t &gt; R) const -&gt; NotNull&lt; AffineLoopNest&lt; false &gt;&gt;</div><div class="ttdef"><b>Definition:</b> Loops.hpp:399</div></div>
 <div class="ttc" id="astructAffineLoopNest_html_ae7e3801c19a2587916894acf27894629"><div class="ttname"><a href="structAffineLoopNest.html#ae7e3801c19a2587916894acf27894629">AffineLoopNest::explicitLowerBounds</a></div><div class="ttdeci">auto explicitLowerBounds(BumpAlloc&lt;&gt; &amp;alloc) -&gt; NotNull&lt; AffineLoopNest&lt; false &gt;&gt;</div><div class="ttdoc">like rotate(identity Matrix)</div><div class="ttdef"><b>Definition:</b> Loops.hpp:425</div></div>

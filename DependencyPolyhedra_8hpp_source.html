@@ -454,7 +454,7 @@ $(function() {
 <div class="line"><a name="l00431"></a><span class="lineno">  431</span>&#160;    <span class="keyword">const</span> <span class="keywordtype">size_t</span> numVarNew = numVarInterest + numLambda;</div>
 <div class="line"><a name="l00432"></a><span class="lineno">  432</span>&#160;    invariant(<span class="keywordtype">size_t</span>(getNumLambda()), numLambda);</div>
 <div class="line"><a name="l00433"></a><span class="lineno">  433</span>&#160;    <span class="comment">// std::array&lt;Simplex, 2&gt; pair;</span></div>
-<div class="line"><a name="l00434"></a><span class="lineno">  434</span>&#160;    <a class="code" href="structSimplex.html">Simplex</a> fw = Simplex::create(alloc, numConstraintsNew, numVarNew + 1, 0);</div>
+<div class="line"><a name="l00434"></a><span class="lineno">  434</span>&#160;    <a class="code" href="classSimplex.html">Simplex</a> fw = Simplex::create(alloc, numConstraintsNew, numVarNew + 1, 0);</div>
 <div class="line"><a name="l00435"></a><span class="lineno">  435</span>&#160;    <span class="comment">// Simplex &amp;fw(pair[0]);</span></div>
 <div class="line"><a name="l00436"></a><span class="lineno">  436</span>&#160;    <span class="comment">// fw.resize(numConstraintsNew, numVarNew + 1);</span></div>
 <div class="line"><a name="l00437"></a><span class="lineno">  437</span>&#160;    MutPtrMatrix&lt;int64_t&gt; fC{fw.tableau.getConstraints()(_, _(1, end))};</div>
@@ -506,7 +506,7 @@ $(function() {
 <div class="line"><a name="l00483"></a><span class="lineno">  483</span>&#160; </div>
 <div class="line"><a name="l00484"></a><span class="lineno">  484</span>&#160;    <span class="comment">// Simplex &amp;bw(pair[1]);</span></div>
 <div class="line"><a name="l00485"></a><span class="lineno">  485</span>&#160;    <span class="comment">// bw.resize(numConstraintsNew, numVarNew + 1);</span></div>
-<div class="line"><a name="l00486"></a><span class="lineno">  486</span>&#160;    <a class="code" href="structSimplex.html">Simplex</a> bw = Simplex::create(alloc, numConstraintsNew, numVarNew + 1, 0);</div>
+<div class="line"><a name="l00486"></a><span class="lineno">  486</span>&#160;    <a class="code" href="classSimplex.html">Simplex</a> bw = Simplex::create(alloc, numConstraintsNew, numVarNew + 1, 0);</div>
 <div class="line"><a name="l00487"></a><span class="lineno">  487</span>&#160;    MutPtrMatrix&lt;int64_t&gt; bC{bw.tableau.getConstraints()(_, _(1, end))};</div>
 <div class="line"><a name="l00488"></a><span class="lineno">  488</span>&#160; </div>
 <div class="line"><a name="l00489"></a><span class="lineno">  489</span>&#160;    bC(_, _(begin, numVarNew)) &lt;&lt; fC(_, _(begin, numVarNew));</div>
@@ -637,8 +637,8 @@ $(function() {
 <div class="line"><a name="l00623"></a><span class="lineno">  623</span>&#160;  <span class="comment">//</span></div>
 <div class="line"><a name="l00624"></a><span class="lineno">  624</span>&#160; </div>
 <div class="line"><a name="l00625"></a><span class="lineno">  625</span>&#160;  [[no_unique_address]] <a class="code" href="structNotNull.html">NotNull&lt;DepPoly&gt;</a> depPoly;</div>
-<div class="line"><a name="l00626"></a><span class="lineno">  626</span>&#160;  [[no_unique_address]] <a class="code" href="structSimplex.html">Simplex</a> dependenceSatisfaction;</div>
-<div class="line"><a name="l00627"></a><span class="lineno">  627</span>&#160;  [[no_unique_address]] <a class="code" href="structSimplex.html">Simplex</a> dependenceBounding;</div>
+<div class="line"><a name="l00626"></a><span class="lineno">  626</span>&#160;  [[no_unique_address]] <a class="code" href="classSimplex.html">Simplex</a> dependenceSatisfaction;</div>
+<div class="line"><a name="l00627"></a><span class="lineno">  627</span>&#160;  [[no_unique_address]] <a class="code" href="classSimplex.html">Simplex</a> dependenceBounding;</div>
 <div class="line"><a name="l00628"></a><span class="lineno">  628</span>&#160;  [[no_unique_address]] <a class="code" href="structNotNull.html">NotNull&lt;MemoryAccess&gt;</a> in;</div>
 <div class="line"><a name="l00629"></a><span class="lineno">  629</span>&#160;  [[no_unique_address]] <a class="code" href="structNotNull.html">NotNull&lt;MemoryAccess&gt;</a> out;</div>
 <div class="line"><a name="l00630"></a><span class="lineno">  630</span>&#160;  [[no_unique_address]] <span class="keywordtype">bool</span> forward;</div>
@@ -1330,15 +1330,15 @@ $(function() {
 <div class="ttc" id="aclassDependence_html_a89c5aef3716809617009a5f7d55c9499"><div class="ttname"><a href="classDependence.html#a89c5aef3716809617009a5f7d55c9499">Dependence::getOutIndMat</a></div><div class="ttdeci">constexpr auto getOutIndMat() const -&gt; PtrMatrix&lt; int64_t &gt;</div><div class="ttdoc">getOutIndMat() -&gt; getOutNumLoops() x arrayDim()</div><div class="ttdef"><b>Definition:</b> DependencyPolyhedra.hpp:678</div></div>
 <div class="ttc" id="aclassDependence_html_a8f03cfecfe1734c6c395bf3184269536"><div class="ttname"><a href="classDependence.html#a8f03cfecfe1734c6c395bf3184269536">Dependence::isForward</a></div><div class="ttdeci">constexpr auto isForward() const -&gt; bool</div><div class="ttdoc">indicates whether forward is non-empty</div><div class="ttdef"><b>Definition:</b> DependencyPolyhedra.hpp:651</div></div>
 <div class="ttc" id="aclassDependence_html_a98fb04129b3d7e0aef44b2f2f54f56a5"><div class="ttname"><a href="classDependence.html#a98fb04129b3d7e0aef44b2f2f54f56a5">Dependence::getInIndMat</a></div><div class="ttdeci">constexpr auto getInIndMat() const -&gt; PtrMatrix&lt; int64_t &gt;</div><div class="ttdoc">getInIndMat() -&gt; getInNumLoops() x arrayDim()</div><div class="ttdef"><b>Definition:</b> DependencyPolyhedra.hpp:674</div></div>
+<div class="ttc" id="aclassSimplex_html"><div class="ttname"><a href="classSimplex.html">Simplex</a></div><div class="ttdef"><b>Definition:</b> Simplex.hpp:33</div></div>
 <div class="ttc" id="astructBasePolyhedra_html"><div class="ttname"><a href="structBasePolyhedra.html">BasePolyhedra</a></div><div class="ttdef"><b>Definition:</b> Polyhedra.hpp:64</div></div>
 <div class="ttc" id="astructBitSet_html"><div class="ttname"><a href="structBitSet.html">BitSet</a></div><div class="ttdef"><b>Definition:</b> BitSets.hpp:73</div></div>
 <div class="ttc" id="astructBumpAlloc_html"><div class="ttname"><a href="structBumpAlloc.html">BumpAlloc</a></div><div class="ttdef"><b>Definition:</b> Allocators.hpp:31</div></div>
 <div class="ttc" id="astructLinAlg_1_1DenseDims_html"><div class="ttname"><a href="structLinAlg_1_1DenseDims.html">LinAlg::DenseDims</a></div><div class="ttdoc">Dimensions with a capacity.</div><div class="ttdef"><b>Definition:</b> MatrixDimensions.hpp:71</div></div>
-<div class="ttc" id="astructLinAlg_1_1ReallocView_html"><div class="ttname"><a href="structLinAlg_1_1ReallocView.html">LinAlg::ReallocView</a></div><div class="ttdef"><b>Definition:</b> Array.hpp:757</div></div>
+<div class="ttc" id="astructLinAlg_1_1ReallocView_html"><div class="ttname"><a href="structLinAlg_1_1ReallocView.html">LinAlg::ReallocView</a></div><div class="ttdef"><b>Definition:</b> Array.hpp:756</div></div>
 <div class="ttc" id="astructMemoryAccess_html"><div class="ttname"><a href="structMemoryAccess.html">MemoryAccess</a></div><div class="ttdef"><b>Definition:</b> MemoryAccess.hpp:23</div></div>
 <div class="ttc" id="astructNotNull_html"><div class="ttname"><a href="structNotNull.html">NotNull</a></div><div class="ttdef"><b>Definition:</b> Valid.hpp:7</div></div>
 <div class="ttc" id="astructOptional_html"><div class="ttname"><a href="structOptional.html">Optional</a></div><div class="ttdef"><b>Definition:</b> Optional.hpp:9</div></div>
-<div class="ttc" id="astructSimplex_html"><div class="ttname"><a href="structSimplex.html">Simplex</a></div><div class="ttdef"><b>Definition:</b> Simplex.hpp:236</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

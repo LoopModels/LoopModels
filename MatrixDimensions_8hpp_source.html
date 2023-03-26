@@ -101,7 +101,7 @@ $(function() {
 <div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;  constexpr <a class="code" href="structLinAlg_1_1StridedDims.html">StridedDims</a>(<a class="code" href="structLinAlg_1_1CartesianIndex.html">CartesianIndex&lt;Row, Col&gt;</a> ind)</div>
 <div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;    : M(<span class="keywordtype">unsigned</span>(ind.row)), N(<span class="keywordtype">unsigned</span>(ind.col)), strideM(<span class="keywordtype">unsigned</span>(ind.col)) {}</div>
 <div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;  constexpr <span class="keyword">explicit</span> <span class="keyword">operator</span> uint32_t()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> uint32_t(M * strideM); }</div>
-<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;  constexpr <span class="keyword">explicit</span> <span class="keyword">operator</span> uint64_t()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> uint64_t(M * strideM); }</div>
+<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;  constexpr <span class="keyword">explicit</span> <span class="keyword">operator</span> uint64_t()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> uint64_t(M) * strideM; }</div>
 <div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;  constexpr <span class="keyword">auto</span> operator=(<span class="keyword">const</span> <a class="code" href="structLinAlg_1_1DenseDims.html">DenseDims</a> &amp;D) -&gt; <a class="code" href="structLinAlg_1_1StridedDims.html">StridedDims</a> &amp;;</div>
 <div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;  constexpr <span class="keyword">auto</span> operator=(<span class="keyword">const</span> <a class="code" href="structLinAlg_1_1SquareDims.html">SquareDims</a> &amp;D) -&gt; <a class="code" href="structLinAlg_1_1StridedDims.html">StridedDims</a> &amp;;</div>
 <div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;  constexpr <span class="keyword">operator</span> CarInd()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> {M, N}; }</div>
@@ -128,10 +128,10 @@ $(function() {
 <div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;    strideM = std::max(strideM, N);</div>
 <div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;    <span class="keywordflow">return</span> *<span class="keyword">this</span>;</div>
 <div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;  }</div>
-<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> similar(<a class="code" href="structLinAlg_1_1AxisInt.html">Row</a> r) -&gt; <a class="code" href="structLinAlg_1_1StridedDims.html">StridedDims</a> {</div>
+<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> similar(<a class="code" href="structLinAlg_1_1AxisInt.html">Row</a> r) <span class="keyword">const</span> -&gt; <a class="code" href="structLinAlg_1_1StridedDims.html">StridedDims</a> {</div>
 <div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;    <span class="keywordflow">return</span> {unsigned(r), N, strideM};</div>
 <div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;  }</div>
-<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> similar(<a class="code" href="structLinAlg_1_1AxisInt.html">Col</a> c) -&gt; <a class="code" href="structLinAlg_1_1StridedDims.html">StridedDims</a> {</div>
+<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> similar(<a class="code" href="structLinAlg_1_1AxisInt.html">Col</a> c) <span class="keyword">const</span> -&gt; <a class="code" href="structLinAlg_1_1StridedDims.html">StridedDims</a> {</div>
 <div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;    <span class="keywordflow">return</span> {M, unsigned(c), strideM};</div>
 <div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;  }</div>
 <div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;};</div>
@@ -142,7 +142,7 @@ $(function() {
 <div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;  <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> M{};</div>
 <div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;  <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> N{};</div>
 <div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;  constexpr <span class="keyword">explicit</span> <span class="keyword">operator</span> uint32_t()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> uint32_t(M * N); }</div>
-<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;  constexpr <span class="keyword">explicit</span> <span class="keyword">operator</span> uint64_t()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> uint64_t(M * N); }</div>
+<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;  constexpr <span class="keyword">explicit</span> <span class="keyword">operator</span> uint64_t()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> uint64_t(M) * N; }</div>
 <div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;  constexpr <a class="code" href="structLinAlg_1_1DenseDims.html">DenseDims</a>() = <span class="keywordflow">default</span>;</div>
 <div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;  constexpr <a class="code" href="structLinAlg_1_1DenseDims.html">DenseDims</a>(<a class="code" href="structLinAlg_1_1AxisInt.html">Row</a> m, <a class="code" href="structLinAlg_1_1AxisInt.html">Col</a> n) : M(<span class="keywordtype">unsigned</span>(m)), N(<span class="keywordtype">unsigned</span>(n)) {}</div>
 <div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;  constexpr <span class="keyword">explicit</span> <a class="code" href="structLinAlg_1_1DenseDims.html">DenseDims</a>(<a class="code" href="structLinAlg_1_1StridedDims.html">StridedDims</a> d) : M(d.M), N(d.N) {}</div>
@@ -170,17 +170,17 @@ $(function() {
 <div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;    N = unsigned(c);</div>
 <div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;    <span class="keywordflow">return</span> *<span class="keyword">this</span>;</div>
 <div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;  }</div>
-<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> similar(<a class="code" href="structLinAlg_1_1AxisInt.html">Row</a> r) -&gt; <a class="code" href="structLinAlg_1_1DenseDims.html">DenseDims</a> {</div>
+<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> similar(<a class="code" href="structLinAlg_1_1AxisInt.html">Row</a> r) <span class="keyword">const</span> -&gt; <a class="code" href="structLinAlg_1_1DenseDims.html">DenseDims</a> {</div>
 <div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;    <span class="keywordflow">return</span> {unsigned(r), N};</div>
 <div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;  }</div>
-<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> similar(<a class="code" href="structLinAlg_1_1AxisInt.html">Col</a> c) -&gt; <a class="code" href="structLinAlg_1_1DenseDims.html">DenseDims</a> {</div>
+<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> similar(<a class="code" href="structLinAlg_1_1AxisInt.html">Col</a> c) <span class="keyword">const</span> -&gt; <a class="code" href="structLinAlg_1_1DenseDims.html">DenseDims</a> {</div>
 <div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;    <span class="keywordflow">return</span> {M, unsigned(c)};</div>
 <div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;  }</div>
 <div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;};</div>
 <div class="line"><a name="l00110"></a><span class="lineno"><a class="line" href="structLinAlg_1_1SquareDims.html">  110</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structLinAlg_1_1SquareDims.html">SquareDims</a> {</div>
 <div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;  <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> M{};</div>
 <div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;  constexpr <span class="keyword">explicit</span> <span class="keyword">operator</span> uint32_t()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> uint32_t(M * M); }</div>
-<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;  constexpr <span class="keyword">explicit</span> <span class="keyword">operator</span> uint64_t()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> uint64_t(M * M); }</div>
+<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;  constexpr <span class="keyword">explicit</span> <span class="keyword">operator</span> uint64_t()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> uint64_t(M) * M; }</div>
 <div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;  constexpr <a class="code" href="structLinAlg_1_1SquareDims.html">SquareDims</a>() = <span class="keywordflow">default</span>;</div>
 <div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;  constexpr <a class="code" href="structLinAlg_1_1SquareDims.html">SquareDims</a>(<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> d) : M{d} {}</div>
 <div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;  constexpr <a class="code" href="structLinAlg_1_1SquareDims.html">SquareDims</a>(<a class="code" href="structLinAlg_1_1AxisInt.html">Row</a> d) : M{unsigned(d)} {}</div>
@@ -199,10 +199,10 @@ $(function() {
 <div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160;    assert((c &lt;= <a class="code" href="structLinAlg_1_1AxisInt.html">Col</a>{M}) &amp;&amp; <span class="stringliteral">&quot;truncate cannot add columns.&quot;</span>);</div>
 <div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160;    <span class="keywordflow">return</span> {M, unsigned(c), M};</div>
 <div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160;  }</div>
-<div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> similar(<a class="code" href="structLinAlg_1_1AxisInt.html">Row</a> r) -&gt; <a class="code" href="structLinAlg_1_1DenseDims.html">DenseDims</a> {</div>
+<div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> similar(<a class="code" href="structLinAlg_1_1AxisInt.html">Row</a> r) <span class="keyword">const</span> -&gt; <a class="code" href="structLinAlg_1_1DenseDims.html">DenseDims</a> {</div>
 <div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;    <span class="keywordflow">return</span> {unsigned(r), M};</div>
 <div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;  }</div>
-<div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> similar(<a class="code" href="structLinAlg_1_1AxisInt.html">Col</a> c) -&gt; <a class="code" href="structLinAlg_1_1DenseDims.html">DenseDims</a> {</div>
+<div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> similar(<a class="code" href="structLinAlg_1_1AxisInt.html">Col</a> c) <span class="keyword">const</span> -&gt; <a class="code" href="structLinAlg_1_1DenseDims.html">DenseDims</a> {</div>
 <div class="line"><a name="l00136"></a><span class="lineno">  136</span>&#160;    <span class="keywordflow">return</span> {M, unsigned(c)};</div>
 <div class="line"><a name="l00137"></a><span class="lineno">  137</span>&#160;  }</div>
 <div class="line"><a name="l00138"></a><span class="lineno">  138</span>&#160;};</div>
@@ -249,7 +249,7 @@ $(function() {
 <div class="line"><a name="l00179"></a><span class="lineno">  179</span>&#160;}</div>
 <div class="line"><a name="l00180"></a><span class="lineno">  180</span>&#160; </div>
 <div class="line"><a name="l00181"></a><span class="lineno">  181</span>&#160;} <span class="comment">// namespace LinAlg</span></div>
-<div class="line"><a name="l00182"></a><span class="lineno">  182</span>&#160; </div>
+<div class="line"><a name="l00182"></a><span class="lineno">  182</span>&#160;<span class="comment">// NOLINTNEXTLINE(misc-unused-using-decls);</span></div>
 <div class="line"><a name="l00183"></a><span class="lineno">  183</span>&#160;<span class="keyword">using</span> <a class="code" href="structLinAlg_1_1StridedDims.html">LinAlg::StridedDims</a>, <a class="code" href="structLinAlg_1_1DenseDims.html">LinAlg::DenseDims</a>, <a class="code" href="structLinAlg_1_1SquareDims.html">LinAlg::SquareDims</a>;</div>
 <div class="ttc" id="anamespaceLinAlg_html"><div class="ttname"><a href="namespaceLinAlg.html">LinAlg</a></div><div class="ttdef"><b>Definition:</b> Array.hpp:20</div></div>
 <div class="ttc" id="astructLinAlg_1_1AxisInt_html"><div class="ttname"><a href="structLinAlg_1_1AxisInt.html">LinAlg::AxisInt</a></div><div class="ttdef"><b>Definition:</b> AxisTypes.hpp:46</div></div>

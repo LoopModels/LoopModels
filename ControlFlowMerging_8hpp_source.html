@@ -93,7 +93,7 @@ $(function() {
 <div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;<span class="preprocessor">#include &lt;sys/select.h&gt;</span></div>
 <div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160; </div>
 <div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;<span class="keywordtype">void</span> buildInstructionGraph(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, <a class="code" href="structInstruction_1_1Cache.html">Instruction::Cache</a> &amp;cache,</div>
-<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;                           <a class="code" href="structLinearProgramLoopBlock.html">LinearProgramLoopBlock</a> &amp;LB) {</div>
+<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;                           <a class="code" href="classLinearProgramLoopBlock.html">LinearProgramLoopBlock</a> &amp;LB) {</div>
 <div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;  <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;node : LB.getNodes()) {</div>
 <div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;    <span class="keyword">auto</span> access = node.getMemAccesses(alloc, LB.getMemoryAccesses());</div>
 <div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">auto</span> *mem : access) {</div>
@@ -492,12 +492,12 @@ $(function() {
 <div class="line"><a name="l00439"></a><span class="lineno">  439</span>&#160;  <span class="keywordflow">for</span> (<span class="keyword">auto</span> subLoop : loopForest-&gt;getSubLoops())</div>
 <div class="line"><a name="l00440"></a><span class="lineno">  440</span>&#160;    mergeInstructions(alloc, cache, subLoop, TTI, tAlloc, vectorBits);</div>
 <div class="line"><a name="l00441"></a><span class="lineno">  441</span>&#160;}</div>
+<div class="ttc" id="aclassLinearProgramLoopBlock_html"><div class="ttname"><a href="classLinearProgramLoopBlock.html">LinearProgramLoopBlock</a></div><div class="ttdef"><b>Definition:</b> LoopBlock.hpp:289</div></div>
 <div class="ttc" id="astructBumpAlloc_html"><div class="ttname"><a href="structBumpAlloc.html">BumpAlloc</a></div><div class="ttdef"><b>Definition:</b> Allocators.hpp:31</div></div>
 <div class="ttc" id="astructInstruction_1_1Cache_html"><div class="ttname"><a href="structInstruction_1_1Cache.html">Instruction::Cache</a></div><div class="ttdef"><b>Definition:</b> Instruction.hpp:290</div></div>
 <div class="ttc" id="astructInstruction_1_1Cache_html_a260eb7f9e8016fefe1260b085eed648a"><div class="ttname"><a href="structInstruction_1_1Cache.html#a260eb7f9e8016fefe1260b085eed648a">Instruction::Cache::createSelect</a></div><div class="ttdeci">auto createSelect(BumpAlloc&lt;&gt; &amp;alloc, Instruction *A, Instruction *B) -&gt; Instruction *</div><div class="ttdef"><b>Definition:</b> Instruction.hpp:481</div></div>
 <div class="ttc" id="astructInstruction_html"><div class="ttname"><a href="structInstruction.html">Instruction</a></div><div class="ttdef"><b>Definition:</b> Instruction.hpp:74</div></div>
 <div class="ttc" id="astructInstruction_html_a7c9e374d023ab4f16d882484fb87f325"><div class="ttname"><a href="structInstruction.html#a7c9e374d023ab4f16d882484fb87f325">Instruction::selectCost</a></div><div class="ttdeci">auto selectCost(llvm::TargetTransformInfo &amp;TTI, unsigned int vectorWidth) -&gt; llvm::InstructionCost</div><div class="ttdef"><b>Definition:</b> Instruction.hpp:862</div></div>
-<div class="ttc" id="astructLinearProgramLoopBlock_html"><div class="ttname"><a href="structLinearProgramLoopBlock.html">LinearProgramLoopBlock</a></div><div class="ttdef"><b>Definition:</b> LoopBlock.hpp:288</div></div>
 <div class="ttc" id="astructLoopTree_html"><div class="ttname"><a href="structLoopTree.html">LoopTree</a></div><div class="ttdef"><b>Definition:</b> LoopForest.hpp:24</div></div>
 <div class="ttc" id="astructMergingCost_1_1Allocate_html"><div class="ttname"><a href="structMergingCost_1_1Allocate.html">MergingCost::Allocate</a></div><div class="ttdef"><b>Definition:</b> ControlFlowMerging.hpp:144</div></div>
 <div class="ttc" id="astructMergingCost_1_1Count_html"><div class="ttname"><a href="structMergingCost_1_1Count.html">MergingCost::Count</a></div><div class="ttdef"><b>Definition:</b> ControlFlowMerging.hpp:149</div></div>
