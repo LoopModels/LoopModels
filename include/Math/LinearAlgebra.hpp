@@ -102,7 +102,7 @@ struct LU {
     SquareMatrix<Rational> A{
       SquareMatrix<Rational>::identity(size_t(F.numCol()))};
     if (!ldiv(A)) return A;
-    else return {};
+    return {};
   }
   [[nodiscard]] constexpr auto det() const -> std::optional<Rational> {
     Rational d = F(0, 0);

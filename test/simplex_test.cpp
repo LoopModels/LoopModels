@@ -13,15 +13,15 @@ TEST(SimplexTest, BasicAssertions) {
   IntMatrix A{"[10 3 2 1; 15 2 5 3]"_mat};
   IntMatrix B{DenseDims{0, 4}};
   BumpAlloc<> alloc;
-  std::optional<Simplex> optS0{Simplex::positiveVariables(alloc, A)};
-  EXPECT_TRUE(optS0.has_value());
-  std::optional<Simplex> optS1{Simplex::positiveVariables(alloc, A, B)};
-  EXPECT_TRUE(optS1.has_value());
-  assert(optS0.has_value());
-  assert(optS1.has_value());
+  Optional<Simplex *> optS0{Simplex::positiveVariables(alloc, A)};
+  EXPECT_TRUE(optS0.hasValue());
+  Optional<Simplex *> optS1{Simplex::positiveVariables(alloc, A, B)};
+  EXPECT_TRUE(optS1.hasValue());
+  assert(optS0.hasValue());
+  assert(optS1.hasValue());
   for (size_t i = 0; i < 2; ++i) {
-    Simplex S{i ? *optS1 : *optS0};
-    auto C{S.tableau.getCost()};
+    Simplex &S{i ? *optS1 : *optS0};
+    auto C{S.getCost()};
     // minimize -2x - 3y - 4z
     C[0] = 0;
     C[1] = 0;
@@ -29,7 +29,7 @@ TEST(SimplexTest, BasicAssertions) {
     C[3] = -2;
     C[4] = -3;
     C[5] = -4;
-    llvm::errs() << "S.tableau =" << S.tableau.getTableau() << "\n";
+    llvm::errs() << "S.tableau =" << S.getTableau() << "\n";
     EXPECT_EQ(S.run(), 20);
   }
 }
@@ -41,11 +41,11 @@ TEST(LexMinSmallTest, BasicAssertions) {
   // -15 == -2x - 5y - 3z + s1
   IntMatrix tableau{"[-10 0 1 -1 -2 -3; -15 1 0 -3 -5 -2]"_mat};
   // IntMatrix A{"[-10 -3 -2 -1; -15 -2 -5 -3]"_mat};
-  Simplex simp{Simplex::create(alloc, 2, 5, 0)};
-  simp.tableau.getConstraints() << tableau;
+  Simplex *simp{Simplex::create(alloc, 2, 5)};
+  simp->getConstraints() << tableau;
   Vector<Rational> sol(5);
-  EXPECT_FALSE(simp.initiateFeasible());
-  llvm::errs() << "S.tableau =" << simp.tableau.getTableau() << "\n";
+  EXPECT_FALSE(simp->initiateFeasible());
+  llvm::errs() << "S.tableau =" << simp->getTableau() << "\n";
   //       x  y  z s0  s1 a0 a1
   // [  0  0  0  0  0  0  1  1
   //   10  3  2  1 -1  0  1  0
@@ -90,8 +90,8 @@ TEST(LexMinSmallTest, BasicAssertions) {
   //   20  11  0 -1 -5 -30
   //   25  0  11  7  2  1 ]
 
-  simp.rLexMin(sol);
-  llvm::errs() << "S.tableau =" << simp.tableau.getTableau() << "\n";
+  simp->rLexMin(sol);
+  llvm::errs() << "S.tableau =" << simp->getTableau() << "\n";
   //  0  1  2  3  4
   //  0  0 10  0 15
   // 70  0  0  0 25
@@ -109,11 +109,12 @@ TEST(LexMinSmallTest, BasicAssertions) {
   EXPECT_EQ(sol[last - 4], 15);
 }
 
-auto simplexFromTableau(BumpAlloc<> &alloc, IntMatrix &tableau) -> Simplex {
+auto simplexFromTableau(BumpAlloc<> &alloc, IntMatrix &tableau)
+  -> NotNull<Simplex> {
   unsigned numCon = unsigned(tableau.numRow()) - 1;
   unsigned numVar = unsigned(tableau.numCol()) - 1;
-  Simplex simp{Simplex::create(alloc, numCon, numVar, 0)};
-  simp.tableau.getTableau() << tableau;
+  Simplex *simp{Simplex::create(alloc, numCon, numVar)};
+  simp->getTableau() << tableau;
   return simp;
 }
 
@@ -988,11 +989,11 @@ TEST(LexMinSimplexTest, BasicAssertions) {
   // llvm::errs() << "tableau3 =" << tableau << "\n";
   tableau(0, _) << -5859553999884210514;
   BumpAlloc<> alloc;
-  Simplex simp{simplexFromTableau(alloc, tableau)};
+  NotNull<Simplex> simp{simplexFromTableau(alloc, tableau)};
   Vector<Rational> sol(37);
   EXPECT_EQ(sol.size(), 37);
-  EXPECT_FALSE(simp.initiateFeasible());
-  simp.rLexMin(sol);
+  EXPECT_FALSE(simp->initiateFeasible());
+  simp->rLexMin(sol);
   size_t solSum = 0;
   for (auto s : sol) {
     solSum += s.numerator;
@@ -1004,11 +1005,11 @@ TEST(LexMinSimplexTest, BasicAssertions) {
   {
     // test that we didn't invalidate the simplex
     // note that we do not initiate feasible
-    auto C{simp.tableau.getCost()};
+    auto C{simp->getCost()};
     C[_(0, end - 36)] << 0;
     C[_(end - 36, end)] << 1;
-    EXPECT_EQ(simp.run(), -3);
-    Vector<Rational> sol2 = simp.getSolution();
+    EXPECT_EQ(simp->run(), -3);
+    Vector<Rational> sol2 = simp->getSolution();
     size_t sum = 0;
     for (size_t i = sol2.size() - 38; i < sol2.size(); ++i) {
       Rational r = sol2[i];
@@ -1022,13 +1023,13 @@ TEST(LexMinSimplexTest, BasicAssertions) {
   }
   {
     // test new simplex
-    Simplex simp2{simplexFromTableau(alloc, tableau)};
-    EXPECT_FALSE(simp2.initiateFeasible());
-    auto C{simp2.tableau.getCost()};
+    NotNull<Simplex> simp2{simplexFromTableau(alloc, tableau)};
+    EXPECT_FALSE(simp2->initiateFeasible());
+    auto C{simp2->getCost()};
     C[_(0, end - 36)] << 0;
     C[_(end - 36, end)] << 1;
-    EXPECT_EQ(simp2.run(), -3);
-    auto sol2 = simp2.getSolution();
+    EXPECT_EQ(simp2->run(), -3);
+    auto sol2 = simp2->getSolution();
     size_t sum = 0;
     Rational rsum = 0; // test summing rationals
     for (size_t i = sol2.size() - 38; i < sol2.size(); ++i) {
@@ -1270,12 +1271,12 @@ TEST(LexMinSimplexTest2, BasicAssertions) {
     "0 0 0 0 0 0 0 0 0 ]"_mat};
   // llvm::errs() << "tableau4 =" << tableau << "\n";
   BumpAlloc<> alloc;
-  Simplex simp{simplexFromTableau(alloc, tableau)};
+  NotNull<Simplex> simp{simplexFromTableau(alloc, tableau)};
   Vector<Rational> sol(15);
   EXPECT_EQ(sol.size(), 15);
-  EXPECT_FALSE(simp.initiateFeasible());
-  simp.rLexMinLast(15);
-  sol << simp.getSolution()[_(end - 15, end)];
+  EXPECT_FALSE(simp->initiateFeasible());
+  simp->rLexMinLast(15);
+  sol << simp->getSolution()[_(end - 15, end)];
   size_t solSum = 0;
   for (size_t i = 0; i < 5; ++i) {
     solSum += sol[i] != 0;
@@ -1294,11 +1295,11 @@ TEST(LexMinSimplexTest2, BasicAssertions) {
   {
     // test that we didn't invalidate the simplex
     // note that we do not initiate feasible
-    auto C{simp.tableau.getCost()};
+    auto C{simp->getCost()};
     C[_(0, end - 10)] << 0;
     C[_(end - 10, end)] << 1;
-    EXPECT_EQ(simp.run(), 0);
-    Vector<Rational> sol2 = simp.getSolution();
+    EXPECT_EQ(simp->run(), 0);
+    Vector<Rational> sol2 = simp->getSolution();
     llvm::errs() << "sol2 = " << sol2 << "\n";
     size_t sum = 0;
     for (size_t i = sol2.size() - 10; i < sol2.size(); ++i) {

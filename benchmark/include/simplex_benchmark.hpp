@@ -875,17 +875,17 @@ static void BM_Simplex0(benchmark::State &state) {
   BumpAlloc<> alloc;
   unsigned numCon = unsigned(tableau.numRow()) - 1;
   unsigned numVar = unsigned(tableau.numCol()) - 1;
-  Simplex simpBackup{Simplex::create(alloc, numCon, numVar, 0)};
-  simpBackup.tableau.getTableau() << tableau;
+  NotNull<Simplex> simpBackup{Simplex::create(alloc, numCon, numVar, 0)};
+  simpBackup->getTableau() << tableau;
   // Simplex simpBackup{tableau};
-  Simplex simp{Simplex::create(alloc, simpBackup.tableau.numConstraints,
-                               simpBackup.tableau.numVars, 0)};
+  NotNull<Simplex> simp{Simplex::create(alloc, simpBackup->getNumCons(),
+                                        simpBackup->getNumVars(), 0)};
   // Vector<Rational> sol(37);
   for (auto b : state) {
-    simp << simpBackup;
-    bool fail = simp.initiateFeasible();
+    *simp << *simpBackup;
+    bool fail = simp->initiateFeasible();
     assert(!fail);
-    if (!fail) simp.rLexMinLast(37);
+    if (!fail) simp->rLexMinLast(37);
   }
   alloc.reset();
 }
@@ -1114,15 +1114,15 @@ static void BM_Simplex1(benchmark::State &state) {
   BumpAlloc<> alloc;
   unsigned numCon = unsigned(tableau.numRow()) - 1;
   unsigned numVar = unsigned(tableau.numCol()) - 1;
-  Simplex simpBackup{Simplex::create(alloc, numCon, numVar, 0)};
-  simpBackup.tableau.getTableau() << tableau;
-  Simplex simp{Simplex::create(alloc, simpBackup.tableau.numConstraints,
-                               simpBackup.tableau.numVars, 0)};
+  NotNull<Simplex> simpBackup{Simplex::create(alloc, numCon, numVar, 0)};
+  simpBackup->getTableau() << tableau;
+  NotNull<Simplex> simp{Simplex::create(alloc, simpBackup->getNumCons(),
+                                        simpBackup->getNumVars(), 0)};
   for (auto b : state) {
-    simp << simpBackup;
-    bool fail = simp.initiateFeasible();
+    *simp << *simpBackup;
+    bool fail = simp->initiateFeasible();
     assert(!fail);
-    if (!fail) simp.rLexMinLast(15);
+    if (!fail) simp->rLexMinLast(15);
   }
 }
 BENCHMARK(BM_Simplex1);

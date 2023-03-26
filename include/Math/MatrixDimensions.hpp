@@ -30,7 +30,7 @@ struct StridedDims {
   constexpr StridedDims(CartesianIndex<Row, Col> ind)
     : M(unsigned(ind.row)), N(unsigned(ind.col)), strideM(unsigned(ind.col)) {}
   constexpr explicit operator uint32_t() const { return uint32_t(M * strideM); }
-  constexpr explicit operator uint64_t() const { return uint64_t(M * strideM); }
+  constexpr explicit operator uint64_t() const { return uint64_t(M) * strideM; }
   constexpr auto operator=(const DenseDims &D) -> StridedDims &;
   constexpr auto operator=(const SquareDims &D) -> StridedDims &;
   constexpr operator CarInd() const { return {M, N}; }
@@ -57,10 +57,10 @@ struct StridedDims {
     strideM = std::max(strideM, N);
     return *this;
   }
-  [[nodiscard]] constexpr auto similar(Row r) -> StridedDims {
+  [[nodiscard]] constexpr auto similar(Row r) const -> StridedDims {
     return {unsigned(r), N, strideM};
   }
-  [[nodiscard]] constexpr auto similar(Col c) -> StridedDims {
+  [[nodiscard]] constexpr auto similar(Col c) const -> StridedDims {
     return {M, unsigned(c), strideM};
   }
 };
@@ -72,7 +72,7 @@ struct DenseDims {
   unsigned int M{};
   unsigned int N{};
   constexpr explicit operator uint32_t() const { return uint32_t(M * N); }
-  constexpr explicit operator uint64_t() const { return uint64_t(M * N); }
+  constexpr explicit operator uint64_t() const { return uint64_t(M) * N; }
   constexpr DenseDims() = default;
   constexpr DenseDims(Row m, Col n) : M(unsigned(m)), N(unsigned(n)) {}
   constexpr explicit DenseDims(StridedDims d) : M(d.M), N(d.N) {}
@@ -100,17 +100,17 @@ struct DenseDims {
     N = unsigned(c);
     return *this;
   }
-  [[nodiscard]] constexpr auto similar(Row r) -> DenseDims {
+  [[nodiscard]] constexpr auto similar(Row r) const -> DenseDims {
     return {unsigned(r), N};
   }
-  [[nodiscard]] constexpr auto similar(Col c) -> DenseDims {
+  [[nodiscard]] constexpr auto similar(Col c) const -> DenseDims {
     return {M, unsigned(c)};
   }
 };
 struct SquareDims {
   unsigned int M{};
   constexpr explicit operator uint32_t() const { return uint32_t(M * M); }
-  constexpr explicit operator uint64_t() const { return uint64_t(M * M); }
+  constexpr explicit operator uint64_t() const { return uint64_t(M) * M; }
   constexpr SquareDims() = default;
   constexpr SquareDims(unsigned int d) : M{d} {}
   constexpr SquareDims(Row d) : M{unsigned(d)} {}
@@ -129,10 +129,10 @@ struct SquareDims {
     assert((c <= Col{M}) && "truncate cannot add columns.");
     return {M, unsigned(c), M};
   }
-  [[nodiscard]] constexpr auto similar(Row r) -> DenseDims {
+  [[nodiscard]] constexpr auto similar(Row r) const -> DenseDims {
     return {unsigned(r), M};
   }
-  [[nodiscard]] constexpr auto similar(Col c) -> DenseDims {
+  [[nodiscard]] constexpr auto similar(Col c) const -> DenseDims {
     return {M, unsigned(c)};
   }
 };
@@ -179,5 +179,5 @@ template <MatrixDimension T> constexpr auto dimension(Row r, Col c) -> T {
 }
 
 } // namespace LinAlg
-
+// NOLINTNEXTLINE(misc-unused-using-decls);
 using LinAlg::StridedDims, LinAlg::DenseDims, LinAlg::SquareDims;

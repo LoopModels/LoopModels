@@ -29,9 +29,9 @@ template <typename T> struct BumpPtrVector {
   [[no_unique_address]] unsigned Capacity;
   [[no_unique_address]] NotNull<BumpAlloc<>> Alloc;
 
-  BumpPtrVector(BumpAlloc<> &a)
+  constexpr BumpPtrVector(BumpAlloc<> &a)
     : mem(nullptr), Size(0), Capacity(0), Alloc(a) {}
-  BumpPtrVector(WBumpAlloc<T> a)
+  constexpr BumpPtrVector(WBumpAlloc<T> a)
     : mem(nullptr), Size(0), Capacity(0), Alloc(a.get_allocator()) {}
 
   [[gnu::flatten]] constexpr auto operator[](const ScalarIndex auto i) -> T & {
@@ -43,19 +43,19 @@ template <typename T> struct BumpPtrVector {
     invariant(unsigned(i) < Size);
     return mem[canonicalize(i, Size)];
   }
-  [[nodiscard]] auto front() -> T & {
+  [[nodiscard]] constexpr auto front() -> T & {
     assert(Size > 0);
     return mem[0];
   }
-  [[nodiscard]] auto back() -> T & {
+  [[nodiscard]] constexpr auto back() -> T & {
     assert(Size > 0);
     return mem[Size - 1];
   }
-  [[nodiscard]] auto front() const -> const T & {
+  [[nodiscard]] constexpr auto front() const -> const T & {
     assert(Size > 0);
     return mem[0];
   }
-  [[nodiscard]] auto back() const -> const T & {
+  [[nodiscard]] constexpr auto back() const -> const T & {
     assert(Size > 0);
     return mem[Size - 1];
   }
@@ -102,52 +102,48 @@ template <typename T> struct BumpPtrVector {
   constexpr operator llvm::MutableArrayRef<T>() {
     return llvm::MutableArrayRef<T>{mem, Size};
   }
-  // llvm::ArrayRef<T> arrayref() const { return llvm::ArrayRef<T>(ptr, M); }
-  auto operator==(const MutPtrVector<T> x) const -> bool {
-    return llvm::ArrayRef<T>(*this) == llvm::ArrayRef<T>(x);
-  }
-  auto operator==(const PtrVector<T> x) const -> bool {
-    return llvm::ArrayRef<T>(*this) == llvm::ArrayRef<T>(x);
+  constexpr auto operator==(PtrVector<T> x) const -> bool {
+    return PtrVector<T>(*this) == x;
   }
   auto operator==(const llvm::ArrayRef<T> x) const -> bool {
-    return llvm::ArrayRef<T>(*this) == x;
+    return std::equal(begin(), end(), x.begin(), x.end());
   }
   [[nodiscard]] constexpr auto view() const -> PtrVector<T> { return *this; };
-  [[gnu::flatten]] auto operator=(PtrVector<T> x) -> MutPtrVector<T> {
-    return copyto(*this, x);
+  [[gnu::flatten]] auto operator<<(PtrVector<T> x) -> MutPtrVector<T> {
+    return MutPtrVector<T>{*this} << x;
   }
-  [[gnu::flatten]] auto operator=(MutPtrVector<T> x) -> MutPtrVector<T> {
-    return copyto(*this, x);
+  [[gnu::flatten]] auto operator<<(MutPtrVector<T> x) -> MutPtrVector<T> {
+    return MutPtrVector<T>{*this} << x;
   }
-  [[gnu::flatten]] auto operator=(const AbstractVector auto &x)
+  [[gnu::flatten]] auto operator<<(const AbstractVector auto &x)
     -> MutPtrVector<T> {
-    return copyto(*this, x);
+    return MutPtrVector<T>{*this} << x;
   }
-  [[gnu::flatten]] auto operator=(std::integral auto x) -> MutPtrVector<T> {
+  [[gnu::flatten]] auto operator<<(std::integral auto x) -> MutPtrVector<T> {
     for (auto &&y : *this) y = x;
     return *this;
   }
   [[gnu::flatten]] auto operator+=(const AbstractVector auto &x)
     -> MutPtrVector<T> {
-    assert(Size == x.size());
+    invariant(Size, x.size());
     for (size_t i = 0; i < Size; ++i) mem[i] += x[i];
     return *this;
   }
   [[gnu::flatten]] auto operator-=(const AbstractVector auto &x)
     -> MutPtrVector<T> {
-    assert(Size == x.size());
+    invariant(Size, x.size());
     for (size_t i = 0; i < Size; ++i) mem[i] -= x[i];
     return *this;
   }
   [[gnu::flatten]] auto operator*=(const AbstractVector auto &x)
     -> MutPtrVector<T> {
-    assert(Size == x.size());
+    invariant(Size, x.size());
     for (size_t i = 0; i < Size; ++i) mem[i] *= x[i];
     return *this;
   }
   [[gnu::flatten]] auto operator/=(const AbstractVector auto &x)
     -> MutPtrVector<T> {
-    assert(Size == x.size());
+    invariant(Size, x.size());
     for (size_t i = 0; i < Size; ++i) mem[i] /= x[i];
     return *this;
   }

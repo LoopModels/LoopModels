@@ -347,7 +347,6 @@ template <class T, class S> struct MutArray : Array<T, S> {
                    unsigned(RowStride{this->sz}) - 1};
     return MutArray<T, StridedRange>{this->ptr + size_t(c) - 1, r};
   }
-
   [[gnu::flatten]] constexpr auto operator<<(const SmallSparseMatrix<T> &B)
     -> decltype(auto) {
     static_assert(MatrixDimension<S>);

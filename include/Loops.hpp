@@ -851,7 +851,7 @@ struct AffineLoopNest
     unsigned symCapacity = numDynSym + numLoops;
     size_t memNeeded = size_t(M) * N * sizeof(int64_t) +
                        symCapacity * sizeof(const llvm::SCEV *const *);
-    auto *mem = alloc.allocate(sizeof(AffineLoopNest) - 8 + memNeeded,
+    auto *mem = alloc.allocate(sizeof(AffineLoopNest) + memNeeded,
                                alignof(AffineLoopNest));
     auto *aln = new (mem) AffineLoopNest({numCon, numLoops, numDynSym, M});
     std::copy_n(syms.begin(), numDynSym, aln->getSyms().begin());
@@ -882,6 +882,18 @@ private:
   unsigned int numLoops;
   unsigned int numDynSymbols;
   unsigned int rowCapacity;
+#if !defined(__clang__) && defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
+#else
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wc99-extensions"
+#endif
   // NOLINTNEXTLINE(modernize-avoid-c-arrays) // FAM
-  [[gnu::aligned(alignof(int64_t))]] std::byte memory[8];
+  [[gnu::aligned(alignof(int64_t))]] std::byte memory[];
+#if !defined(__clang__) && defined(__GNUC__)
+#pragma GCC diagnostic pop
+#else
+#pragma clang diagnostic pop
+#endif
 };

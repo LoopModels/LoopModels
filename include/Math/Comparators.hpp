@@ -549,9 +549,9 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
         expandW(i, NSdim + 1 + j) = val;
       }
     }
-    std::optional<Simplex> optS{Simplex::positiveVariables(alloc, expandW)};
+    Optional<Simplex *> optS{Simplex::positiveVariables(alloc, expandW)};
     rollback(alloc, p);
-    return optS.has_value();
+    return optS.hasValue();
   }
   [[nodiscard]] constexpr auto isEmpty() const -> bool {
     BumpAlloc<> alloc;
@@ -612,8 +612,8 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
         expandW(i, NSdim + j) = val;
       }
     }
-    std::optional<Simplex> optS{Simplex::positiveVariables(alloc, expandW)};
-    return optS.has_value();
+    Optional<Simplex *> optS{Simplex::positiveVariables(alloc, expandW)};
+    return optS.hasValue();
   }
   [[nodiscard]] constexpr auto greaterEqual(BumpAlloc<> &alloc,
                                             PtrVector<int64_t> query) const

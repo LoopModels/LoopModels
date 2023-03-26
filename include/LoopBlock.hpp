@@ -7,6 +7,7 @@
 #include "./Loops.hpp"
 #include "./MemoryAccess.hpp"
 #include "./Schedule.hpp"
+#include "Containers/BumpMapSet.hpp"
 #include "Math/Array.hpp"
 #include "Math/Math.hpp"
 #include "Math/NormalForm.hpp"
@@ -285,8 +286,7 @@ constexpr void resetDeepDeps(MutPtrVector<CarriedDependencyFlag> v, size_t d) {
 /// for (i = eachindex(y)){
 ///   f(m, ...); // Omega = [2, _, 0]
 /// }
-struct LinearProgramLoopBlock {
-  using BitSet = ::MemoryAccess::BitSet;
+class LinearProgramLoopBlock {
   // TODO: figure out how to handle the graph's dependencies based on
   // operation/instruction chains.
   // Perhaps implicitly via the graph when using internal orthogonalization
@@ -296,8 +296,7 @@ struct LinearProgramLoopBlock {
   // and all other other shared schedule parameters are aliases (i.e.,
   // identical)?
   // using VertexType = ScheduledNode;
-private:
-  [[no_unique_address]] Vector<MemoryAccess *, 14> memory;
+  [[no_unique_address]] Vector<MemoryAccess *> memory;
   [[no_unique_address]] Vector<ScheduledNode, 0> nodes;
   // Vector<unsigned> memoryToNodeMap;
   [[no_unique_address]] Vector<NotNull<Dependence>> edges;
@@ -305,14 +304,12 @@ private:
   /// One per node; held separately so we can copy/etc
   [[no_unique_address]] Vector<CarriedDependencyFlag, 16> carriedDeps;
   // Vector<bool> visited; // visited, for traversing graph
-  [[no_unique_address]] llvm::DenseMap<llvm::User *, unsigned> userToMemory;
+  [[no_unique_address]] amap<llvm::User *, unsigned> userToMemory;
   [[no_unique_address]] BumpAlloc<> allocator;
   // Vector<llvm::Value *> symbols;
-  [[no_unique_address]] Simplex omniSimplex;
   // we may turn off edges because we've exceeded its loop depth
   // or because the dependence has already been satisfied at an
   // earlier level.
-  [[no_unique_address]] Vector<Rational> sol;
   // Vector<bool, 256> doNotAddEdge;
   // Vector<bool, 256> scheduled;
   [[no_unique_address]] size_t numPhiCoefs{0};
@@ -323,6 +320,7 @@ private:
   [[no_unique_address]] size_t numActiveEdges{0};
 
 public:
+  using BitSet = ::MemoryAccess::BitSet;
   void clear() {
     // TODO: maybe we shouldn't have to manually call destructors?
     // That would require handling more memory allocations via
@@ -334,7 +332,6 @@ public:
     edges.clear();
     carriedDeps.clear();
     userToMemory.clear();
-    sol.clear();
     allocator.reset();
   }
   [[nodiscard]] constexpr auto numVerticies() const -> size_t {
@@ -426,17 +423,16 @@ public:
   ///
   /// If an instruction was stored somewhere, we don't keep
   /// searching for placed it was loaded, and instead add a reload.
-  [[nodiscard]] auto
-  searchValueForStores(llvm::SmallPtrSet<llvm::User *, 32> &visited,
-                       ScheduledNode &node, llvm::User *user,
-                       unsigned nodeIndex) -> bool {
+  [[nodiscard]] auto searchValueForStores(aset<llvm::User *> &visited,
+                                          ScheduledNode &node, llvm::User *user,
+                                          unsigned nodeIndex) -> bool {
     for (llvm::User *use : user->users()) {
       if (visited.contains(use)) continue;
       if (llvm::isa<llvm::StoreInst>(use)) {
         auto memAccess = userToMemory.find(use);
         if (memAccess == userToMemory.end())
           continue; // load is not a part of the LoopBlock
-        unsigned memId = memAccess->getSecond();
+        unsigned memId = memAccess->second;
         MemoryAccess *store = memory[memId];
         // this store will be treated as a load
         node.addMemory(memId, store, nodeIndex);
@@ -445,15 +441,14 @@ public:
     }
     return false;
   }
-  void checkUserForLoads(llvm::SmallPtrSet<llvm::User *, 32> &visited,
-                         ScheduledNode &node, llvm::User *user,
-                         unsigned nodeIndex) {
+  void checkUserForLoads(aset<llvm::User *> &visited, ScheduledNode &node,
+                         llvm::User *user, unsigned nodeIndex) {
     if (!user || visited.contains(user)) return;
     if (llvm::isa<llvm::LoadInst>(user)) {
       auto memAccess = userToMemory.find(user);
       if (memAccess == userToMemory.end())
         return; // load is not a part of the LoopBlock
-      unsigned memId = memAccess->getSecond();
+      unsigned memId = memAccess->second;
       node.addMemory(memId, memory[memId], nodeIndex);
     } else if (!searchValueForStores(visited, node, user, nodeIndex))
       searchOperandsForLoads(visited, node, user, nodeIndex);
@@ -478,9 +473,8 @@ public:
   /// %z = call bar(y.reload)
   /// store %z, %c
   /// and we create a new edge from `store %y, %b` to `load %b`.
-  void searchOperandsForLoads(llvm::SmallPtrSet<llvm::User *, 32> &visited,
-                              ScheduledNode &node, llvm::User *u,
-                              unsigned nodeIndex) {
+  void searchOperandsForLoads(aset<llvm::User *> &visited, ScheduledNode &node,
+                              llvm::User *u, unsigned nodeIndex) {
     visited.insert(u);
     if (auto *s = llvm::dyn_cast<llvm::StoreInst>(u)) {
       if (auto *user = llvm::dyn_cast<llvm::User>(s->getValueOperand()))
@@ -512,7 +506,7 @@ public:
   /// amount of loads executed in the eventual generated code)
   void connectGraph() {
     // assembles direct connections in node graph
-    llvm::SmallPtrSet<llvm::User *, 32> visited;
+    aset<llvm::User *> visited{WBumpAlloc<llvm::User *>(allocator)};
     nodes.reserve(calcNumStores());
     for (unsigned i = 0; i < memory.size(); ++i) {
       MemoryAccess *mai = memory[i];
@@ -536,48 +530,49 @@ public:
     PtrVector<NotNull<Dependence>> edges;
     // llvm::SmallVector<bool> visited;
     // BitSet visited;
-    auto operator&(const Graph &g) -> Graph {
+    constexpr auto operator&(const Graph &g) -> Graph {
       return Graph{nodeIds & g.nodeIds, activeEdges & g.activeEdges, mem, nodes,
                    edges};
     }
-    auto operator|(const Graph &g) -> Graph {
+    constexpr auto operator|(const Graph &g) -> Graph {
       return Graph{nodeIds | g.nodeIds, activeEdges | g.activeEdges, mem, nodes,
                    edges};
     }
-    auto operator&=(const Graph &g) -> Graph & {
+    constexpr auto operator&=(const Graph &g) -> Graph & {
       nodeIds &= g.nodeIds;
       activeEdges &= g.activeEdges;
       return *this;
     }
-    auto operator|=(const Graph &g) -> Graph & {
+    constexpr auto operator|=(const Graph &g) -> Graph & {
       nodeIds |= g.nodeIds;
       activeEdges |= g.activeEdges;
       return *this;
     }
-    [[nodiscard]] auto inNeighbors(size_t i) -> BitSet & {
+    [[nodiscard]] constexpr auto inNeighbors(size_t i) -> BitSet & {
       return nodes[i].getInNeighbors();
     }
-    [[nodiscard]] auto outNeighbors(size_t i) -> BitSet & {
+    [[nodiscard]] constexpr auto outNeighbors(size_t i) -> BitSet & {
       return nodes[i].getOutNeighbors();
     }
-    [[nodiscard]] auto inNeighbors(size_t i) const -> const BitSet & {
+    [[nodiscard]] constexpr auto inNeighbors(size_t i) const -> const BitSet & {
       return nodes[i].getInNeighbors();
     }
-    [[nodiscard]] auto outNeighbors(size_t i) const -> const BitSet & {
+    [[nodiscard]] constexpr auto outNeighbors(size_t i) const
+      -> const BitSet & {
       return nodes[i].getOutNeighbors();
     }
-    [[nodiscard]] auto containsNode(size_t i) const -> bool {
+    [[nodiscard]] constexpr auto containsNode(size_t i) const -> bool {
       return nodeIds.contains(i);
     }
-    [[nodiscard]] auto containsNode(BitSet &b) const -> bool {
+    [[nodiscard]] constexpr auto containsNode(BitSet &b) const -> bool {
       for (size_t i : b)
         if (nodeIds.contains(i)) return true;
       return false;
     }
-    [[nodiscard]] auto missingNode(size_t i) const -> bool {
+    [[nodiscard]] constexpr auto missingNode(size_t i) const -> bool {
       return !containsNode(i);
     }
-    [[nodiscard]] auto missingNode(size_t i, size_t j) const -> bool {
+    [[nodiscard]] constexpr auto missingNode(size_t i, size_t j) const -> bool {
       return !(containsNode(i) && containsNode(j));
     }
     /// returns false iff e.in and e.out are both in graph
@@ -585,30 +580,32 @@ public:
     /// in case of multiple instances of the edge, we check all of them
     /// if any are not missing, returns false
     /// only returns true if every one of them is missing.
-    [[nodiscard]] auto missingNode(const Dependence &e) const -> bool {
+    [[nodiscard]] constexpr auto missingNode(const Dependence &e) const
+      -> bool {
       for (auto inIndex : e.nodesIn())
         for (auto outIndex : e.nodesOut())
           if (!missingNode(inIndex, outIndex)) return false;
       return true;
     }
 
-    [[nodiscard]] auto isInactive(const Dependence &edge, size_t d) const
-      -> bool {
+    [[nodiscard]] constexpr auto isInactive(const Dependence &edge,
+                                            size_t d) const -> bool {
       return edge.isInactive(d) || missingNode(edge);
     }
-    [[nodiscard]] auto isInactive(const Dependence &edge) const -> bool {
+    [[nodiscard]] constexpr auto isInactive(const Dependence &edge) const
+      -> bool {
       return missingNode(edge);
     }
-    [[nodiscard]] auto isInactive(size_t e, size_t d) const -> bool {
+    [[nodiscard]] constexpr auto isInactive(size_t e, size_t d) const -> bool {
       return !(activeEdges[e]) || isInactive(*edges[e], d);
     }
-    [[nodiscard]] auto isInactive(size_t e) const -> bool {
+    [[nodiscard]] constexpr auto isInactive(size_t e) const -> bool {
       return !(activeEdges[e]) || isInactive(*edges[e]);
     }
-    [[nodiscard]] auto isActive(size_t e, size_t d) const -> bool {
+    [[nodiscard]] constexpr auto isActive(size_t e, size_t d) const -> bool {
       return (activeEdges[e]) && (!isInactive(*edges[e], d));
     }
-    [[nodiscard]] auto isActive(size_t e) const -> bool {
+    [[nodiscard]] constexpr auto isActive(size_t e) const -> bool {
       return (activeEdges[e]) && (!isInactive(*edges[e]));
     }
     [[nodiscard]] constexpr auto begin()
@@ -621,32 +618,32 @@ public:
       return bsv.begin();
     }
     [[nodiscard]] static constexpr auto end() -> EndSentinel { return {}; }
-    [[nodiscard]] auto wasVisited(size_t i) const -> bool {
+    [[nodiscard]] constexpr auto wasVisited(size_t i) const -> bool {
       return nodes[i].wasVisited();
     }
-    void visit(size_t i) { nodes[i].visit(); }
-    void unVisit(size_t i) { nodes[i].unVisit(); }
-    [[nodiscard]] auto getNumVertices() const -> size_t {
+    constexpr void visit(size_t i) { nodes[i].visit(); }
+    constexpr void unVisit(size_t i) { nodes[i].unVisit(); }
+    [[nodiscard]] constexpr auto getNumVertices() const -> size_t {
       return nodeIds.size();
     }
-    [[nodiscard]] auto maxVertexId() const -> size_t {
+    [[nodiscard]] constexpr auto maxVertexId() const -> size_t {
       return nodeIds.maxValue();
     }
     [[nodiscard]] constexpr auto vertexIds() -> BitSet & { return nodeIds; }
     [[nodiscard]] constexpr auto vertexIds() const -> const BitSet & {
       return nodeIds;
     }
-    [[nodiscard]] auto subGraph(const BitSet &components) -> Graph {
+    [[nodiscard]] constexpr auto subGraph(const BitSet &components) -> Graph {
       return {components, activeEdges, mem, nodes, edges};
     }
-    [[nodiscard]] auto split(const Vector<BitSet> &components)
-      -> Vector<Graph, 0> {
+    [[nodiscard]] constexpr auto
+    split(const llvm::SmallVector<BitSet> &components) -> Vector<Graph, 0> {
       Vector<Graph, 0> graphs;
       graphs.reserve(components.size());
       for (auto &c : components) graphs.push_back(subGraph(c));
       return graphs;
     }
-    [[nodiscard]] auto calcMaxDepth() const -> size_t {
+    [[nodiscard]] constexpr auto calcMaxDepth() const -> size_t {
       if (nodeIds.data.size() == 0) return 0;
       size_t d = 0;
       for (auto n : nodeIds) d = std::max(d, nodes[n].getNumLoops());
@@ -658,7 +655,8 @@ public:
   //     return ((e.getInNumLoops() > d) && (e.getOutNumLoops() > d)) &&
   //            connects(e, g0, g1);
   // }
-  auto connects(const Dependence &e, Graph &g0, Graph &g1) const -> bool {
+  constexpr auto connects(const Dependence &e, Graph &g0, Graph &g1) const
+    -> bool {
     if (!e.inputIsLoad()) {
       // e.in is a store
       size_t nodeIn = *e.nodesIn().begin();
@@ -682,7 +680,7 @@ public:
     }
     return false;
   }
-  auto fullGraph() -> Graph {
+  constexpr auto fullGraph() -> Graph {
     return {BitSet::dense(nodes.size()), BitSet::dense(edges.size()), memory,
             nodes, edges};
   }
@@ -690,13 +688,13 @@ public:
     for (unsigned i = 0; i < memory.size(); ++i)
       userToMemory.insert(std::make_pair(memory[i]->getInstruction(), i));
   }
-  auto getOverlapIndex(const Dependence &edge) -> Optional<size_t> {
+  constexpr auto getOverlapIndex(const Dependence &edge) -> Optional<size_t> {
     auto [store, other] = edge.getStoreAndOther();
     size_t index = *store->getNodeIndex().begin();
     if (other->getNodeIndex().contains(index)) return index;
     return {};
   }
-  auto optOrth(Graph g) -> std::optional<BitSet> {
+  constexpr auto optOrth(Graph g) -> std::optional<BitSet> {
 
     const size_t maxDepth = calcMaxDepth();
     // check for orthogonalization opportunities
@@ -724,20 +722,21 @@ public:
     }
     return optimize(g, 0, maxDepth);
   }
-  [[nodiscard]] auto countNumLambdas(const Graph &g, size_t d) const -> size_t {
+  [[nodiscard]] constexpr auto countNumLambdas(const Graph &g, size_t d) const
+    -> size_t {
     size_t c = 0;
     for (size_t e = 0; e < edges.size(); ++e)
       c += ((g.isInactive(e, d)) ? 0 : edges[e]->getNumLambda());
     return c;
   }
-  [[nodiscard]] auto countNumBoundingCoefs(const Graph &g, size_t d) const
-    -> size_t {
+  [[nodiscard]] constexpr auto countNumBoundingCoefs(const Graph &g,
+                                                     size_t d) const -> size_t {
     size_t c = 0;
     for (size_t e = 0; e < edges.size(); ++e)
       c += (g.isInactive(e, d) ? 0 : edges[e]->getNumSymbols());
     return c;
   }
-  void countAuxParamsAndConstraints(const Graph &g, size_t d) {
+  constexpr void countAuxParamsAndConstraints(const Graph &g, size_t d) {
     size_t a = 0, b = 0, c = 0, ae = 0;
     for (size_t e = 0; e < edges.size(); ++e) {
       if (g.isInactive(e, d)) continue;
@@ -753,13 +752,13 @@ public:
     numConstraints = c;
     numActiveEdges = ae;
   }
-  void countNumParams(const Graph &g, size_t depth) {
-    setScheduleMemoryOffsets(g, depth);
-    countAuxParamsAndConstraints(g, depth);
-  }
-  void addMemory(MemoryAccess *m) {
+  // constexpr void countNumParams(const Graph &g, size_t depth) {
+  //   setScheduleMemoryOffsets(g, depth);
+  //   countAuxParamsAndConstraints(g, depth);
+  // }
+  constexpr void addMemory(MemoryAccess *m) {
 #ifndef NDEBUG
-    for (auto o : memory) assert(o->getInstruction() != m->getInstruction());
+    for (auto *o : memory) assert(o->getInstruction() != m->getInstruction());
 #endif
     memory.push_back(m);
   }
@@ -774,64 +773,73 @@ public:
   [[nodiscard]] constexpr auto getLambdaOffset() const -> size_t {
     return 1 + numBounding + numActiveEdges + numPhiCoefs + numOmegaCoefs;
   }
-  [[nodiscard]] auto hasActiveEdges(const Graph &g,
-                                    const MemoryAccess &mem) const -> bool {
+  [[nodiscard]] static constexpr auto hasActiveEdges(const Graph &g,
+                                                     const MemoryAccess &mem)
+    -> bool {
     for (auto e : mem.inputEdges())
       if (!g.isInactive(e)) return true;
     for (auto e : mem.outputEdges())
       if (!g.isInactive(e)) return true;
     return false;
   }
-  [[nodiscard]] auto hasActiveEdges(const Graph &g, const MemoryAccess &mem,
-                                    size_t d) const -> bool {
+  [[nodiscard]] static constexpr auto
+  hasActiveEdges(const Graph &g, const MemoryAccess &mem, size_t d) -> bool {
     for (auto e : mem.inputEdges())
       if (!g.isInactive(e, d)) return true;
     for (auto e : mem.outputEdges())
       if (!g.isInactive(e, d)) return true;
     return false;
   }
-  [[nodiscard]] auto hasActiveEdges(const Graph &g, const ScheduledNode &node,
-                                    size_t d) const -> bool {
+  [[nodiscard]] constexpr auto hasActiveEdges(const Graph &g,
+                                              const ScheduledNode &node,
+                                              size_t d) const -> bool {
+    // std::ranges::any_of(node.getMemory(), [&](auto memId) {
+    //   return hasActiveEdges(g, *memory[memId], d);
+    // });
     for (auto memId : node.getMemory())
       if (hasActiveEdges(g, *memory[memId], d)) return true;
     return false;
   }
-  [[nodiscard]] auto hasActiveEdges(const Graph &g,
-                                    const ScheduledNode &node) const -> bool {
+  [[nodiscard]] constexpr auto hasActiveEdges(const Graph &g,
+                                              const ScheduledNode &node) const
+    -> bool {
     for (auto memId : node.getMemory())
       if (hasActiveEdges(g, *memory[memId])) return true;
     return false;
   }
-  void setScheduleMemoryOffsets(const Graph &g, size_t d) {
+  [[nodiscard]] constexpr void setScheduleMemoryOffsets(const Graph &g,
+                                                        size_t d) {
     size_t pInit = numBounding + numActiveEdges + 1, p = pInit;
+    numOmegaCoefs = 0;
     for (auto &&node : nodes) {
+      // note, we had d > node.getNumLoops() for omegas earlier; why?
       if ((d >= node.getNumLoops()) || (!hasActiveEdges(g, node, d))) continue;
       if (!node.phiIsScheduled(d)) p = node.updatePhiOffset(p);
+      numOmegaCoefs = node.updateOmegaOffset(numOmegaCoefs);
     }
     numPhiCoefs = p - pInit;
-    size_t o = p;
-    for (auto &&node : nodes) {
-      if ((d > node.getNumLoops()) || (!hasActiveEdges(g, node, d))) continue;
-      o = node.updateOmegaOffset(o);
-    }
-    numOmegaCoefs = o - p;
   }
 #ifndef NDEBUG
   void validateEdges() {
     for (auto &edge : edges) edge->validate();
   }
 #endif
-  void instantiateOmniSimplex(const Graph &g, size_t d,
-                              bool satisfyDeps = false) {
+  auto instantiateOmniSimplex(const Graph &g, size_t d, bool satisfyDeps)
+    -> Optional<Simplex *> {
     // defines numScheduleCoefs, numLambda, numBounding, and
     // numConstraints
-    omniSimplex.clearReserve(numConstraints + numOmegaCoefs,
-                             1 + numBounding + numActiveEdges + numPhiCoefs +
-                               2 * numOmegaCoefs + numLambda);
-    omniSimplex.resizeForOverwrite(numConstraints,
-                                   1 + numBounding + numActiveEdges +
-                                     numPhiCoefs + numOmegaCoefs + numLambda);
-    auto C{omniSimplex.getConstraints()};
+    // omniSimplex.clearReserve(numConstraints + numOmegaCoefs,
+    //                          1 + numBounding + numActiveEdges + numPhiCoefs +
+    //                            2 * numOmegaCoefs + numLambda);
+    // omniSimplex.resizeForOverwrite(numConstraints,
+    //                                1 + numBounding + numActiveEdges +
+    //                                numPhiCoefs + numOmegaCoefs + numLambda);
+    auto omniSimplex =
+      Simplex::create(allocator, numConstraints + numOmegaCoefs,
+                      1 + numBounding + numActiveEdges + numPhiCoefs +
+                        2 * numOmegaCoefs + numLambda,
+                      0);
+    auto C{omniSimplex.tableau.getConstraints()};
     C << 0;
     // layout of omniSimplex:
     // Order: C, then priority to minimize
@@ -840,6 +848,8 @@ public:
     size_t w = 1 + numBounding;
     Row c = 0;
     Col l = getLambdaOffset(), u = 1;
+    size_t oOff = numPhiCoefs + numBounding + numActiveEdges + 1;
+    // TODO: add `oOff` to all omega coefs, then reverse
     for (size_t e = 0; e < edges.size(); ++e) {
       Dependence &edge = *edges[e];
       if (g.isInactive(e, d)) continue;
@@ -956,11 +966,16 @@ public:
         }
       }
     }
-    addIndependentSolutionConstraints(g, d);
+    addIndependentSolutionConstraints(omniSimplex, g, d);
+    // earlier, we only had this check in optimizeLevel, when satisfyDeps=false
+    // what is this check doing?
+    assert(!allZero(omniSimplex.tableau.getConstraints()(last, _)));
+    return omniSimplex.initiateFeasible() ? nullptr : omniSimplex;
   }
-  void updateConstraints(MutPtrMatrix<int64_t> C, const ScheduledNode &node,
-                         PtrMatrix<int64_t> sat, PtrMatrix<int64_t> bnd,
-                         size_t d, Row c, Row cc, Row ccc) {
+  static void updateConstraints(MutPtrMatrix<int64_t> C,
+                                const ScheduledNode &node,
+                                PtrMatrix<int64_t> sat, PtrMatrix<int64_t> bnd,
+                                size_t d, Row c, Row cc, Row ccc) {
     if (node.phiIsScheduled(d)) {
       // add it constants
       auto sch = node.getSchedule(d);
@@ -976,32 +991,48 @@ public:
       C(_(cc, ccc), _(phiChild - bnd.numCol(), phiChild)) = bnd;
     }
   }
-  [[nodiscard]] auto deactivateSatisfiedEdges(Graph &g, size_t d) -> BitSet {
+  [[nodiscard]] auto solveGraphCore(Graph &g, size_t depth, bool satisfyDeps)
+    -> std::optional<BitSet> {
+    auto omniSimplex = instantiateOmniSimplex(g, depth, satisfyDeps);
+    if (!omniSimplex) return {};
+    auto sol = omniSimplex->rLexMinLast(getLambdaOffset() - 1);
+    updateSchedules(g, depth, sol);
+    return deactivateSatisfiedEdges(g, depth, sol);
+  }
+  [[nodiscard]] auto solveGraph(Graph &g, size_t depth, bool satisfyDeps)
+    -> std::optional<BitSet> {
+    auto p = allocator.checkpoint();
+    auto ret = solveGraphCore(g, depth, satisfyDeps);
+    allocator.rollback(p);
+    return ret;
+  }
+  [[nodiscard]] auto deactivateSatisfiedEdges(Graph &g, size_t depth,
+                                              Simplex::Solution sol) -> BitSet {
     if (allZero(sol[_(begin, numBounding + numActiveEdges)])) return {};
     size_t u = 0, w = numBounding;
     BitSet deactivated;
     for (size_t e = 0; e < edges.size(); ++e) {
-      if (g.isInactive(e, d)) continue;
+      if (g.isInactive(e, depth)) continue;
       const Dependence &edge = *edges[e];
       Col uu = u + edge.getNumDynamicBoundingVar();
       if ((sol[w++] != 0) || (!(allZero(sol[_(u, uu)])))) {
         g.activeEdges.remove(e);
         deactivated.insert(e);
         for (size_t inIndex : edge.nodesIn())
-          carriedDeps[inIndex].setCarriedDependency(d);
+          carriedDeps[inIndex].setCarriedDependency(depth);
         for (size_t outIndex : edge.nodesOut())
-          carriedDeps[outIndex].setCarriedDependency(d);
+          carriedDeps[outIndex].setCarriedDependency(depth);
       }
       u = size_t(uu);
     }
     return deactivated;
   }
-  void updateSchedules(const Graph &g, size_t depth) {
+  void updateSchedules(const Graph &g, size_t depth, Simplex::Solution sol) {
 #ifndef NDEBUG
     if (depth & 1) {
       bool allZero = true;
-      for (auto &s : sol) allZero &= (s == 0);
-      if (allZero) llvm::errs() << "omniSimplex = " << omniSimplex << "\n";
+      for (auto s : sol) allZero &= (s == 0);
+      // if (allZero) llvm::errs() << "omniSimplex = " << omniSimplex << "\n";
       assert(!allZero);
     }
 #endif
@@ -1019,7 +1050,7 @@ public:
         auto phi = node.getSchedule(depth);
         auto s = sol[node.getPhiOffsetRange() - 1];
         int64_t baseDenom = sOmega.denominator;
-        int64_t l = lcm(denomLCM(s), baseDenom);
+        int64_t l = lcm(s.denomLCM(), baseDenom);
         for (size_t i = 0; i < phi.size(); ++i)
           assert(((s[i].numerator * l) / (s[i].denominator)) >= 0);
         if (l == 1) {
@@ -1039,7 +1070,7 @@ public:
       }
 #ifndef NDEBUG
       if (!node.phiIsScheduled(depth)) {
-        int64_t l = denomLCM(sol[node.getPhiOffsetRange() - 1]);
+        int64_t l = sol[node.getPhiOffsetRange() - 1].denomLCM();
         for (size_t i = 0; i < node.getPhi().numCol(); ++i)
           assert(node.getPhi()(last - depth, i) ==
                  sol[node.getPhiOffsetRange() - 1][i] * l);
@@ -1055,8 +1086,12 @@ public:
       if (*b) return 2 * ((*b) > 0) - 1;
     return 0;
   }
-  void addIndependentSolutionConstraints(const Graph &g, size_t depth) {
-    omniSimplex.reserveExtraRows(memory.size());
+  void addIndependentSolutionConstraints(Simplex &omniSimplex, const Graph &g,
+                                         size_t depth) {
+    // omniSimplex.tableau.setNumCons(omniSimplex.tableau.getNumCons() +
+    //                                memory.size());
+    // omniSimplex.tableau.reserveExtraRows(memory.size());
+    auto C{omniSimplex.tableau.getConstraints()};
     if (depth == 0) {
       // add ones >= 0
       for (auto &&node : nodes) {
@@ -1068,7 +1103,7 @@ public:
       }
       return;
     }
-    IntMatrix A, N;
+    DenseMatrix<int64_t> A, N;
     for (auto &&node : nodes) {
       if (node.phiIsScheduled(depth) || (depth >= node.getNumLoops()) ||
           (!hasActiveEdges(g, node)))
@@ -1082,7 +1117,7 @@ public:
       for (size_t m = 0; m < N.numRow(); ++m) cc += N(m, _) * lexSign(N(m, _));
       c[last] = -1; // for >=
     }
-    assert(!allZero(omniSimplex.getConstraints()(last, _)));
+    assert(!allZero(omniSimplex.tableau.getConstraints()(last, _)));
   }
   [[nodiscard]] static auto nonZeroMask(const AbstractVector auto &x)
     -> uint64_t {
@@ -1095,7 +1130,7 @@ public:
                            const AbstractMatrix auto &A) {
     const auto [M, N] = A.size();
     assert(N <= 64);
-    masks.resize_for_overwrite(M);
+    masks.resizeForOverwrite(M);
     for (size_t m = 0; m < M; ++m) masks[m] = nonZeroMask(A(m, _));
   }
   [[nodiscard]] static auto nonZeroMasks(const AbstractMatrix auto &A)
@@ -1135,7 +1170,7 @@ public:
         AffineSchedule *first = nodes[inIndex].getSchedule();
         AffineSchedule *second = nodes[outIndex].getSchedule();
         if (!e.isForward()) std::swap(first, second);
-        if (!e.isSatisfied(first, second, d)) return false;
+        if (!e.isSatisfied(allocator, first, second, d)) return false;
       }
     }
     return true;
@@ -1149,7 +1184,7 @@ public:
     return true;
   }
   [[nodiscard]] auto breakGraph(Graph g, size_t d) -> std::optional<BitSet> {
-    Vector<BitSet> components;
+    llvm::SmallVector<BitSet> components;
     Graphs::stronglyConnectedComponents(components, g);
     if (components.size() <= 1) return {};
     // components are sorted in topological order.
@@ -1205,20 +1240,12 @@ public:
   [[nodiscard]] auto optimizeLevel(Graph &g, size_t d)
     -> std::optional<BitSet> {
     if (numPhiCoefs == 0) {
+      // is this valid? what about omegas, or checking satisfiability?
+      // if it is, then why not do this for all solveGraph calls?
       setSchedulesIndependent(g, d);
       return BitSet{};
     }
-    instantiateOmniSimplex(g, d);
-    assert(!allZero(omniSimplex.getConstraints()(last, _)));
-    if (omniSimplex.initiateFeasible()) {
-      // llvm::errs() << "optimizeLevel = " << d << ": infeasible
-      // solution!!!\n";
-      return {};
-    }
-    sol.resizeForOverwrite(getLambdaOffset() - 1);
-    omniSimplex.lexMinimize(sol);
-    updateSchedules(g, d);
-    return deactivateSatisfiedEdges(g, d);
+    return solveGraph(g, d, false);
   }
   // NOTE: the NOLINTS, maybe we should come up with a way
   // to avoid easily swappable params. For now, we just
@@ -1239,8 +1266,7 @@ public:
     // what we want to know is, can we satisfy all the deps
     // in depSatNest?
     depSatLevel |= depSatNest;
-    const size_t numSatNest = depSatLevel.size();
-    if (numSatNest) {
+    if (size_t numSatNest = depSatLevel.size()) {
       // backup in case we fail
       // activeEdges was the old original; swap it in
       std::swap(g.activeEdges, activeEdges);
@@ -1252,16 +1278,9 @@ public:
 
       countAuxParamsAndConstraints(g, d);
       setScheduleMemoryOffsets(g, d);
-      instantiateOmniSimplex(g, d, true);
-      if (!omniSimplex.initiateFeasible()) {
-        sol.resizeForOverwrite(getLambdaOffset() - 1);
-        omniSimplex.lexMinimize(sol);
-        // lexMinimize(g, sol, d);
-        updateSchedules(g, d);
-        BitSet depSat = deactivateSatisfiedEdges(g, d);
+      if (auto depSat = solveGraph(g, d, true))
         if (std::optional<BitSet> depSatN = optimize(g, d + 1, maxDepth))
-          return depSat |= *depSatN;
-      }
+          return *depSat |= *depSatN;
       // we failed, so reset solved schedules
       std::swap(g.activeEdges, activeEdges);
       std::swap(g.nodeIds, nodeIds);
@@ -1358,3 +1377,4 @@ template <> struct std::iterator_traits<LinearProgramLoopBlock::Graph> {
 };
 // static_assert(std::ranges::range<LinearProgramLoopBlock::Graph>);
 static_assert(Graphs::AbstractGraph<LinearProgramLoopBlock::Graph>);
+static_assert(std::is_trivially_destructible_v<LinearProgramLoopBlock::Graph>);
