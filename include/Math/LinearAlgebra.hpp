@@ -33,16 +33,6 @@ struct LU {
         rhs(m, n) = Ymn;
       }
     }
-    /*
-    for (size_t k = 0; k < N; ++k) {
-        for (size_t j = 0; j < M; ++j) {
-            Rational rhsj = rhs(j, k);
-            for (size_t i = j + 1; i < M; ++i) {
-                rhs(i, k) -= (F(i, j) * rhsj).getValue();
-            }
-        }
-    }
-    */
     // U x = y
     for (size_t n = 0; n < N; ++n) {
       for (auto m = size_t(M); m--;) {
@@ -54,6 +44,39 @@ struct LU {
       }
     }
     return false;
+  }
+  template <typename T> constexpr void ldiv(MutPtrMatrix<T> rhs) const {
+    auto [M, N] = rhs.size();
+    assert(F.numRow() == M);
+    // // check unimodularity
+    // Rational unit = 1;
+    // for (size_t i = 0; i < FM; ++i)
+    //     unit *= F(i, i);
+    // assert(unit == 1);
+
+    // permute rhs
+    for (size_t i = 0; i < M; ++i) {
+      unsigned ip = ipiv[i];
+      if (i != ip)
+        for (size_t j = 0; j < M; ++j) std::swap(rhs(ip, j), rhs(i, j));
+    }
+    // LU x = rhs
+    // L y = rhs // L is UnitLowerTriangular
+    for (size_t n = 0; n < N; ++n) {
+      for (size_t m = 0; m < M; ++m) {
+        T Ymn = rhs(m, n);
+        for (size_t k = 0; k < m; ++k) Ymn -= F(m, k) * rhs(k, n);
+        rhs(m, n) = Ymn;
+      }
+    }
+    // U x = y
+    for (size_t n = 0; n < N; ++n) {
+      for (auto m = size_t(M); m--;) {
+        T Ymn = rhs(m, n);
+        for (size_t k = m + 1; k < M; ++k) Ymn -= F(m, k) * rhs(k, n);
+        rhs(m, n) = Ymn / F(m, m);
+      }
+    }
   }
 
   [[nodiscard]] constexpr auto rdiv(MutPtrMatrix<Rational> rhs) const -> bool {
@@ -95,6 +118,41 @@ struct LU {
     }
 
     return false;
+  }
+  template <typename T> constexpr void rdiv(MutPtrMatrix<Rational> rhs) const {
+    auto [M, N] = rhs.size();
+    assert(F.numCol() == N);
+    // // check unimodularity
+    // Rational unit = 1;
+    // for (size_t i = 0; i < FN; ++i)
+    //     unit *= F(i, i);
+    // assert(unit == 1);
+
+    // PA = LU
+    // x LU = rhs
+    // y U = rhs
+    for (size_t n = 0; n < N; ++n) {
+      for (size_t m = 0; m < M; ++m) {
+        T Ymn = rhs(m, n);
+        for (size_t k = 0; k < n; ++k) Ymn -= rhs(m, k) * F(k, n);
+        rhs(m, n) = Ymn / F(n, n);
+      }
+    }
+    // x L = y
+    for (auto n = size_t(N); n--;) {
+      // for (size_t n = 0; n < N; ++n) {
+      for (size_t m = 0; m < M; ++m) {
+        T Xmn = rhs(m, n);
+        for (size_t k = n + 1; k < N; ++k) Xmn -= rhs(m, k) * F(k, n);
+        rhs(m, n) = Xmn;
+      }
+    }
+    // permute rhs
+    for (auto j = size_t(N); j--;) {
+      unsigned jp = ipiv[j];
+      if (j != jp)
+        for (size_t i = 0; i < M; ++i) std::swap(rhs(i, jp), rhs(i, j));
+    }
   }
 
   [[nodiscard]] constexpr auto inv() const
