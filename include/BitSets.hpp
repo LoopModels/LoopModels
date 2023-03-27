@@ -1,6 +1,7 @@
 #pragma once
 #include "Math/Array.hpp"
 #include <bit>
+#include <bits/ranges_base.h>
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
@@ -28,6 +29,8 @@ template <typename T>
 concept CanResize = requires(T t) { t.resize(0); };
 
 struct BitSetIterator {
+  using value_type = size_t;
+  using difference_type = ptrdiff_t;
   [[no_unique_address]] const uint64_t *it;
   [[no_unique_address]] const uint64_t *end;
   [[no_unique_address]] uint64_t istate;
@@ -144,7 +147,15 @@ template <typename T = Vector<uint64_t, 1>> struct BitSet {
   [[nodiscard]] constexpr auto contains(size_t i) const -> uint64_t {
     return contains(data, i);
   }
-
+  struct Contains {
+    const T &d;
+    constexpr auto operator()(size_t i) const -> uint64_t {
+      return contains(d, i);
+    }
+  };
+  [[nodiscard]] constexpr auto contains() const -> Contains {
+    return Contains{data};
+  }
   constexpr auto insert(size_t x) -> bool {
     size_t d = x >> size_t(6);
     uint64_t r = uint64_t(x) & uint64_t(63);
@@ -274,6 +285,11 @@ template <typename T = Vector<uint64_t, 1>> struct BitSet {
 template <unsigned N> using FixedSizeBitSet = BitSet<std::array<uint64_t, N>>;
 // BitSet with length 64
 using BitSet64 = FixedSizeBitSet<1>;
+static_assert(std::is_trivially_destructible_v<BitSet64>);
+static_assert(std::is_trivially_destructible_v<FixedSizeBitSet<2>>);
+// static_assert(std::input_or_output_iterator<
+//               decltype(std::declval<FixedSizeBitSet<2>>().begin())>);
+static_assert(std::ranges::range<FixedSizeBitSet<2>>);
 
 template <typename T, typename B = BitSet<>> struct BitSliceView {
   [[no_unique_address]] MutPtrVector<T> a;

@@ -15,6 +15,7 @@
 #include "Utilities/Allocators.hpp"
 #include "Utilities/Optional.hpp"
 #include "Utilities/Valid.hpp"
+#include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <iterator>
@@ -569,9 +570,7 @@ public:
       return nodeIds.contains(i);
     }
     [[nodiscard]] constexpr auto containsNode(BitSet &b) const -> bool {
-      for (size_t i : b)
-        if (nodeIds.contains(i)) return true;
-      return false;
+      return std::ranges::any_of(b, nodeIds.contains());
     }
     [[nodiscard]] constexpr auto missingNode(size_t i) const -> bool {
       return !containsNode(i);
