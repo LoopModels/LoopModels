@@ -137,6 +137,8 @@ Classes</h2></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structLinAlg_1_1SmallSparseMatrix.html">SmallSparseMatrix</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structLinAlg_1_1UniformScaling.html">UniformScaling</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structLinAlg_1_1CartesianIndex.html">CartesianIndex</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structLinAlg_1_1StridedDims.html">StridedDims</a></td></tr>
@@ -145,6 +147,8 @@ Classes</h2></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Dimensions with a capacity.  <a href="structLinAlg_1_1DenseDims.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structLinAlg_1_1SquareDims.html">SquareDims</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structLinAlg_1_1Broadcast.html">Broadcast</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structLinAlg_1_1default__capacity__type.html">default_capacity_type</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -763,6 +767,10 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>adaptOStream</b> (std
 template&lt;typename A &gt; </td></tr>
 <tr class="memitem:a86154c708ec13c79bc99691d64f329af"><td class="memTemplItemLeft" align="right" valign="top">&#160;</td><td class="memTemplItemRight" valign="bottom"><b>Transpose</b> (A) -&gt; <a class="el" href="structLinAlg_1_1Transpose.html">Transpose</a>&lt; A &gt;</td></tr>
 <tr class="separator:a86154c708ec13c79bc99691d64f329af"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a43e26b76ae02003cde9e549cce4a4587"><td class="memTemplParams" colspan="2"><a id="a43e26b76ae02003cde9e549cce4a4587"></a>
+template&lt;class T &gt; </td></tr>
+<tr class="memitem:a43e26b76ae02003cde9e549cce4a4587"><td class="memTemplItemLeft" align="right" valign="top">&#160;</td><td class="memTemplItemRight" valign="bottom"><b>UniformScaling</b> (T) -&gt; <a class="el" href="structLinAlg_1_1UniformScaling.html">UniformScaling</a>&lt; T &gt;</td></tr>
+<tr class="separator:a43e26b76ae02003cde9e549cce4a4587"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afe312b3f673aaabec9433ca38416cecc"><td class="memTemplParams" colspan="2"><a id="afe312b3f673aaabec9433ca38416cecc"></a>
 template&lt;class R , class C &gt; </td></tr>
 <tr class="memitem:afe312b3f673aaabec9433ca38416cecc"><td class="memTemplItemLeft" align="right" valign="top">&#160;</td><td class="memTemplItemRight" valign="bottom"><b>CartesianIndex</b> (R r, C c) -&gt; <a class="el" href="structLinAlg_1_1CartesianIndex.html">CartesianIndex</a>&lt; R, C &gt;</td></tr>
@@ -872,6 +880,10 @@ template&lt;typename T &gt; </td></tr>
 <tr class="memitem:aee57882389a261cb5f5bdf9b6da68596"><td class="memTemplParams" colspan="2">template&lt;class T &gt; </td></tr>
 <tr class="memitem:aee57882389a261cb5f5bdf9b6da68596"><td class="memTemplItemLeft" align="right" valign="top">concept&#160;</td><td class="memTemplItemRight" valign="bottom"><b>DenseLayout</b></td></tr>
 <tr class="separator:aee57882389a261cb5f5bdf9b6da68596"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a36af3ca37d266d42bdee2739c1005300"><td class="memTemplParams" colspan="2"><a id="a36af3ca37d266d42bdee2739c1005300"></a>
+template&lt;class T , class U &gt; </td></tr>
+<tr class="memitem:a36af3ca37d266d42bdee2739c1005300"><td class="memTemplItemLeft" align="right" valign="top">concept&#160;</td><td class="memTemplItemRight" valign="bottom"><b>SameOrBroadcast</b> = std::same_as&lt;T, U&gt; || std::is_same_v&lt;T, <a class="el" href="structLinAlg_1_1Broadcast.html">Broadcast</a>&gt;</td></tr>
+<tr class="separator:a36af3ca37d266d42bdee2739c1005300"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a796719f0d6c850ab9f5e5288bcdb5195"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
 <tr class="memitem:a796719f0d6c850ab9f5e5288bcdb5195"><td class="memTemplItemLeft" align="right" valign="top">concept&#160;</td><td class="memTemplItemRight" valign="bottom"><b>AbstractVector</b></td></tr>
 <tr class="separator:a796719f0d6c850ab9f5e5288bcdb5195"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -924,9 +936,9 @@ template&lt;typename T &gt; </div>
 <b>Initial value:</b><div class="fragment"><div class="line">=</div>
 <div class="line">  HasEltype&lt;T&gt; &amp;&amp; requires(T t, <span class="keywordtype">size_t</span> i) {</div>
 <div class="line">                    { t(i, i) } -&gt; std::convertible_to&lt;eltype_t&lt;T&gt;&gt;;</div>
-<div class="line">                    { t.numRow() } -&gt; std::same_as&lt;Row&gt;;</div>
-<div class="line">                    { t.numCol() } -&gt; std::same_as&lt;Col&gt;;</div>
-<div class="line">                    { t.size() } -&gt; std::same_as&lt;CartesianIndex&lt;Row, Col&gt;&gt;;</div>
+<div class="line">                    { t.numRow() } -&gt; SameOrBroadcast&lt;Row&gt;;</div>
+<div class="line">                    { t.numCol() } -&gt; SameOrBroadcast&lt;Col&gt;;</div>
+<div class="line">                    { t.size() } -&gt; SameOrBroadcast&lt;CartesianIndex&lt;Row, Col&gt;&gt;;</div>
 <div class="line">                    { t.dim() } -&gt; std::convertible_to&lt;StridedDims&gt;;</div>
 <div class="line">                    </div>
 <div class="line">                    </div>

@@ -12,6 +12,7 @@ var searchData=
   ['bitset_22',['BitSet',['../structBitSet.html',1,'']]],
   ['bitsetiterator_23',['BitSetIterator',['../structBitSetIterator.html',1,'']]],
   ['bitsliceview_24',['BitSliceView',['../structBitSliceView.html',1,'']]],
-  ['bumpalloc_25',['BumpAlloc',['../structBumpAlloc.html',1,'']]],
-  ['bumpptrvector_26',['BumpPtrVector',['../structLinAlg_1_1BumpPtrVector.html',1,'LinAlg']]]
+  ['broadcast_25',['Broadcast',['../structLinAlg_1_1Broadcast.html',1,'LinAlg']]],
+  ['bumpalloc_26',['BumpAlloc',['../structBumpAlloc.html',1,'']]],
+  ['bumpptrvector_27',['BumpPtrVector',['../structLinAlg_1_1BumpPtrVector.html',1,'LinAlg']]]
 ];
