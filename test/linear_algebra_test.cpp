@@ -32,18 +32,30 @@ TEST(LinearAlgebraTest, BasicAssertions) {
   auto &LUF = *LUFopt;
   Matrix<Rational> B = A;
   llvm::errs() << "A = \n" << A << "\nB = \n" << B << "\n";
-  LinAlg::printVector(llvm::errs() << "F = \n"
-                                          << LUF.F << "\nperm = \n",
-                             PtrVector<unsigned>(LUF.ipiv))
-    << "\n";
+  llvm::errs() << LUF;
 
   auto Bcopy = B;
-  EXPECT_FALSE(LUF.ldiv(Bcopy));
+  EXPECT_FALSE(LUF.ldivrat(Bcopy));
   llvm::errs() << "LUF.ldiv(B) = \n" << Bcopy << "\n";
   EXPECT_TRUE(Bcopy == identity);
   llvm::errs() << "I = " << identity << "\n";
 
-  EXPECT_FALSE(LUF.rdiv(B));
+  EXPECT_FALSE(LUF.rdivrat(B));
   llvm::errs() << "LUF.rdiv(B) = \n" << B << "\n";
   EXPECT_TRUE(B == identity);
+}
+
+// NOLINTNEXTLINE(modernize-use-trailing-return-type)
+TEST(DoubleLU, BasicAssertions) {
+  SquareMatrix<double> A(4), B(4), C(4);
+  std::mt19937 gen(0);
+  for (size_t i = 0; i < 100; ++i) {
+    for (auto &a : A) a = std::uniform_real_distribution<double>(-1, 1)(gen);
+    for (auto &b : B) b = std::uniform_real_distribution<double>(-1, 1)(gen);
+    C << B;
+    // B = A \ B
+    // C == A*B == A * (A \ B)
+    LU::fact(A).ldiv(MutPtrMatrix<double>(B));
+    EXPECT_TRUE(norm2(A * B - C) < 1e-10);
+  }
 }

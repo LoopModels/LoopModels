@@ -14,6 +14,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <memory>
+#include <numeric>
 #include <type_traits>
 #include <utility>
 
@@ -195,6 +196,12 @@ template <class T, class S> struct Array {
       return true;
     }
     return std::equal(begin(), end(), other.begin());
+  }
+  [[nodiscard]] constexpr auto norm2() const noexcept -> value_type {
+    return std::transform_reduce(begin(), end(), begin(), 0.0);
+  }
+  [[nodiscard]] constexpr auto norm() const noexcept -> double {
+    return std::sqrt(norm2());
   }
   // constexpr auto operator!=(const Array &other) const noexcept -> bool {
   //   return !(*this == other);

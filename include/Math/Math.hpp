@@ -767,6 +767,20 @@ inline auto adaptOStream(std::ostream &os, const auto &x) -> std::ostream & {
   llvm::raw_os_ostream(os) << x;
   return os;
 }
+template <AbstractVector B> constexpr auto norm2(const B &A) {
+  using T = typename B::value_type;
+  T s = 0;
+  for (size_t j = 0; j < A.numCol(); ++j) s += A(j) * A(j);
+  return s;
+}
+template <AbstractMatrix B> constexpr auto norm2(const B &A) {
+  using T = typename B::value_type;
+  T s = 0;
+  for (size_t i = 0; i < A.numRow(); ++i)
+    for (size_t j = 0; j < A.numCol(); ++j) s += A(i, j) * A(i, j);
+  return s;
+}
+
 // inline auto operator<<(std::ostream &os, const AbstractVector auto &x)
 //   -> std::ostream & {
 //   return adaptOStream(os, x);

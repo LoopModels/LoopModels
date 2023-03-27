@@ -1,16 +1,26 @@
 #pragma once
 #include "./Rational.hpp"
+#include "Math/Array.hpp"
 #include "Math/Constructors.hpp"
 #include "Math/Math.hpp"
+#include "Math/MatrixDimensions.hpp"
 #include "Utilities/Invariant.hpp"
+#include <concepts>
 
-struct LU {
-  SquareMatrix<Rational> F;
+namespace LU {
+template <class T> class Fact {
+  SquareMatrix<T> F;
   Vector<unsigned> ipiv;
 
-  [[nodiscard]] constexpr auto ldiv(MutPtrMatrix<Rational> rhs) const -> bool {
+public:
+  constexpr Fact(SquareMatrix<T> f, Vector<unsigned> ip)
+    : F(std::move(f)), ipiv(std::move(ip)) {
+    invariant(size_t(F.numRow()), size_t(ipiv.size()));
+  }
+  [[nodiscard]] constexpr auto ldivrat(MutPtrMatrix<Rational> rhs) const
+    -> bool {
     auto [M, N] = rhs.size();
-    assert(F.numRow() == M);
+    invariant(size_t(F.numRow()), size_t(M));
     // // check unimodularity
     // Rational unit = 1;
     // for (size_t i = 0; i < FM; ++i)
@@ -45,9 +55,10 @@ struct LU {
     }
     return false;
   }
-  template <typename T> constexpr void ldiv(MutPtrMatrix<T> rhs) const {
+  template <std::floating_point S>
+  constexpr void ldiv(MutPtrMatrix<S> rhs) const {
     auto [M, N] = rhs.size();
-    assert(F.numRow() == M);
+    invariant(size_t(F.numRow()), size_t(M));
     // // check unimodularity
     // Rational unit = 1;
     // for (size_t i = 0; i < FM; ++i)
@@ -64,7 +75,7 @@ struct LU {
     // L y = rhs // L is UnitLowerTriangular
     for (size_t n = 0; n < N; ++n) {
       for (size_t m = 0; m < M; ++m) {
-        T Ymn = rhs(m, n);
+        S Ymn = rhs(m, n);
         for (size_t k = 0; k < m; ++k) Ymn -= F(m, k) * rhs(k, n);
         rhs(m, n) = Ymn;
       }
@@ -72,16 +83,17 @@ struct LU {
     // U x = y
     for (size_t n = 0; n < N; ++n) {
       for (auto m = size_t(M); m--;) {
-        T Ymn = rhs(m, n);
+        S Ymn = rhs(m, n);
         for (size_t k = m + 1; k < M; ++k) Ymn -= F(m, k) * rhs(k, n);
         rhs(m, n) = Ymn / F(m, m);
       }
     }
   }
 
-  [[nodiscard]] constexpr auto rdiv(MutPtrMatrix<Rational> rhs) const -> bool {
+  [[nodiscard]] constexpr auto rdivrat(MutPtrMatrix<Rational> rhs) const
+    -> bool {
     auto [M, N] = rhs.size();
-    assert(F.numCol() == N);
+    invariant(size_t(F.numCol()), size_t(N));
     // // check unimodularity
     // Rational unit = 1;
     // for (size_t i = 0; i < FN; ++i)
@@ -119,9 +131,10 @@ struct LU {
 
     return false;
   }
-  template <typename T> constexpr void rdiv(MutPtrMatrix<Rational> rhs) const {
+  template <std::floating_point S>
+  constexpr void rdiv(MutPtrMatrix<S> rhs) const {
     auto [M, N] = rhs.size();
-    assert(F.numCol() == N);
+    invariant(size_t(F.numCol()), size_t(N));
     // // check unimodularity
     // Rational unit = 1;
     // for (size_t i = 0; i < FN; ++i)
@@ -159,7 +172,7 @@ struct LU {
     -> std::optional<SquareMatrix<Rational>> {
     SquareMatrix<Rational> A{
       SquareMatrix<Rational>::identity(size_t(F.numCol()))};
-    if (!ldiv(A)) return A;
+    if (!ldivrat(A)) return A;
     return {};
   }
   [[nodiscard]] constexpr auto det() const -> std::optional<Rational> {
@@ -176,42 +189,69 @@ struct LU {
     for (size_t m = 0; m < M; ++m) std::swap(perm[m], perm[ipiv[m]]);
     return perm;
   }
-  [[nodiscard]] static constexpr auto fact(const SquareMatrix<int64_t> &B)
-    -> std::optional<LU> {
-    Row M = B.numRow();
-    SquareMatrix<Rational> A(B);
-    // auto ipiv = Vector<unsigned>{.s = unsigned(M)};
-    auto ipiv{vector(std::allocator<unsigned>{}, unsigned(M))};
-    // Vector<unsigned> ipiv{.s = unsigned(M)};
-    invariant(size_t(ipiv.size()), size_t(M));
-    for (size_t i = 0; i < M; ++i) ipiv[i] = i;
-    for (size_t k = 0; k < M; ++k) {
-      size_t kp = k;
-      for (; kp < M; ++kp) {
-        if (A(kp, k) != 0) {
-          ipiv[k] = kp;
-          break;
-        }
-      }
-      if (kp != k)
-        for (size_t j = 0; j < M; ++j) std::swap(A(kp, j), A(k, j));
-      Rational Akkinv = A(k, k).inv();
-      for (size_t i = k + 1; i < M; ++i)
-        if (std::optional<Rational> Aik = A(i, k).safeMul(Akkinv))
-          A(i, k) = *Aik;
-        else return {};
-      for (size_t j = k + 1; j < M; ++j) {
-        for (size_t i = k + 1; i < M; ++i) {
-          if (std::optional<Rational> Aikj = A(i, k).safeMul(A(k, j))) {
-            if (std::optional<Rational> Aij = A(i, j).safeSub(*Aikj)) {
-              A(i, j) = *Aij;
-              continue;
-            }
-          }
-          return {};
-        }
-      }
-    }
-    return LU{std::move(A), std::move(ipiv)};
+  friend auto operator<<(llvm::raw_ostream &os, const Fact &lu)
+    -> llvm::raw_ostream & {
+    return os << "LU fact:\n" << lu.F << "\nperm = \n" << lu.ipiv << '\n';
   }
 };
+[[nodiscard]] constexpr auto fact(const SquareMatrix<int64_t> &B)
+  -> std::optional<Fact<Rational>> {
+  Row M = B.numRow();
+  SquareMatrix<Rational> A(B);
+  // auto ipiv = Vector<unsigned>{.s = unsigned(M)};
+  auto ipiv{vector(std::allocator<unsigned>{}, unsigned(M))};
+  // Vector<unsigned> ipiv{.s = unsigned(M)};
+  invariant(size_t(ipiv.size()), size_t(M));
+  for (size_t i = 0; i < M; ++i) ipiv[i] = i;
+  for (size_t k = 0; k < M; ++k) {
+    size_t kp = k;
+    for (; kp < M; ++kp) {
+      if (A(kp, k) == 0) continue;
+      ipiv[k] = kp;
+      break;
+    }
+    if (kp != k)
+      for (size_t j = 0; j < M; ++j) std::swap(A(kp, j), A(k, j));
+    Rational Akkinv = A(k, k).inv();
+    for (size_t i = k + 1; i < M; ++i)
+      if (std::optional<Rational> Aik = A(i, k).safeMul(Akkinv)) A(i, k) = *Aik;
+      else return {};
+    for (size_t i = k + 1; i < M; ++i) {
+      for (size_t j = k + 1; j < M; ++j) {
+        if (std::optional<Rational> Aikj = A(i, k).safeMul(A(k, j))) {
+          if (std::optional<Rational> Aij = A(i, j).safeSub(*Aikj)) {
+            A(i, j) = *Aij;
+            continue;
+          }
+        }
+        return {};
+      }
+    }
+  }
+  return Fact<Rational>{std::move(A), std::move(ipiv)};
+}
+template <std::floating_point S>
+[[nodiscard]] constexpr auto fact(SquareMatrix<S> A) -> Fact<S> {
+  Row M = A.numRow();
+  // auto ipiv = Vector<unsigned>{.s = unsigned(M)};
+  auto ipiv{vector(std::allocator<unsigned>{}, unsigned(M))};
+  // Vector<unsigned> ipiv{.s = unsigned(M)};
+  invariant(size_t(ipiv.size()), size_t(M));
+  for (size_t i = 0; i < M; ++i) ipiv[i] = i;
+  for (size_t k = 0; k < M; ++k) {
+    size_t kp = k;
+    for (; kp < M; ++kp) {
+      if (A(kp, k) == 0) continue;
+      ipiv[k] = kp;
+      break;
+    }
+    if (kp != k)
+      for (size_t j = 0; j < M; ++j) std::swap(A(kp, j), A(k, j));
+    S Akkinv = 1 / A(k, k);
+    for (size_t i = k + 1; i < M; ++i) A(i, k) = A(i, k) * Akkinv;
+    for (size_t i = k + 1; i < M; ++i)
+      for (size_t j = k + 1; j < M; ++j) A(i, j) = A(i, j) - A(i, k) * A(k, j);
+  }
+  return Fact<S>{std::move(A), std::move(ipiv)};
+}
+} // namespace LU
