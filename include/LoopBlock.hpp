@@ -840,8 +840,7 @@ public:
     auto omniSimplex =
       Simplex::create(allocator, numConstraints + numOmegaCoefs,
                       1 + numBounding + numActiveEdges + numPhiCoefs +
-                        2 * numOmegaCoefs + numLambda,
-                      0);
+                        2 * numOmegaCoefs + numLambda);
     auto C{omniSimplex->getConstraints()};
     C << 0;
     // layout of omniSimplex:
@@ -1095,14 +1094,14 @@ public:
     //                                memory.size());
     // omniSimplex->reserveExtraRows(memory.size());
     auto C{omniSimplex->getConstraints()};
+    size_t i = size_t{C.numRow()} - numOmegaCoefs;
     if (depth == 0) {
       // add ones >= 0
       for (auto &&node : nodes) {
         if (node.phiIsScheduled(depth) || (!hasActiveEdges(g, node))) continue;
-        auto c{omniSimplex->addConstraintAndVar()};
-        c[0] = 1;
-        c[node.getPhiOffsetRange()] << 1;
-        c[last] = -1; // for >=
+        C(i, 0) = 1;
+        C(i, node.getPhiOffsetRange()) << 1;
+        C(i++, last) = -1; // for >=
       }
       return;
     }
@@ -1113,13 +1112,13 @@ public:
         continue;
       A << node.getPhi()(_(end - depth, end), _).transpose();
       NormalForm::nullSpace11(N, A);
-      auto c{omniSimplex->addConstraintAndVar()};
-      c[0] = 1;
-      MutPtrVector<int64_t> cc{c[node.getPhiOffsetRange()]};
+      C(i, 0) = 1;
+      MutPtrVector<int64_t> cc{C(i, node.getPhiOffsetRange())};
       // sum(N,dims=1) >= 1 after flipping row signs to be lex > 0
       for (size_t m = 0; m < N.numRow(); ++m) cc += N(m, _) * lexSign(N(m, _));
-      c[last] = -1; // for >=
+      C(i++, last) = -1; // for >=
     }
+    assert(i == C.numRow());
     assert(!allZero(omniSimplex->getConstraints()(last, _)));
   }
   [[nodiscard]] static auto nonZeroMask(const AbstractVector auto &x)
