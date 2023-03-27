@@ -347,6 +347,14 @@ template <class T, class S> struct MutArray : Array<T, S> {
                    unsigned(RowStride{this->sz}) - 1};
     return MutArray<T, StridedRange>{this->ptr + size_t(c) - 1, r};
   }
+  template <std::convertible_to<T> Y>
+  [[gnu::flatten]] constexpr auto operator<<(const UniformScaling<Y> &B)
+    -> decltype(auto) {
+    static_assert(MatrixDimension<S>);
+    std::fill_n((T *)(this->ptr), size_t(this->dim()), T{});
+    this->diag() << B.value;
+    return *this;
+  }
   [[gnu::flatten]] constexpr auto operator<<(const SmallSparseMatrix<T> &B)
     -> decltype(auto) {
     static_assert(MatrixDimension<S>);
@@ -392,8 +400,8 @@ template <class T, class S> struct MutArray : Array<T, S> {
       for (size_t j = 0; j < this->numCol(); ++j) (*this)(i, j) = B(i, j);
     return *this;
   }
-  [[gnu::flatten]] constexpr auto operator<<(const std::integral auto b)
-    -> decltype(auto) {
+  template <std::convertible_to<T> Y>
+  [[gnu::flatten]] constexpr auto operator<<(const Y b) -> decltype(auto) {
     if constexpr (std::integral<S> || std::is_same_v<S, StridedRange>) {
       for (size_t c = 0, L = size_t(this->sz); c < L; ++c) (*this)[c] = b;
     } else {

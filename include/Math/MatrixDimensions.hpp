@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Math/AxisTypes.hpp"
+#include "Utilities/Invariant.hpp"
 #include <concepts>
 #include <cstddef>
 #include <cstdint>
@@ -115,6 +116,9 @@ struct SquareDims {
   constexpr SquareDims(unsigned int d) : M{d} {}
   constexpr SquareDims(Row d) : M{unsigned(d)} {}
   constexpr SquareDims(Col d) : M{unsigned(d)} {}
+  constexpr SquareDims(CartesianIndex<Row, Col> ind) : M(unsigned(ind.row)) {
+    invariant(size_t(ind.row), size_t(ind.col));
+  }
   constexpr operator StridedDims() const { return {M, M, M}; }
   constexpr operator DenseDims() const { return {M, M}; }
   constexpr operator CarInd() const { return {M, M}; }
@@ -177,6 +181,14 @@ template <std::integral T> constexpr auto dimension(Row r, Col) -> T {
 template <MatrixDimension T> constexpr auto dimension(Row r, Col c) -> T {
   return DenseDims(r, c);
 }
+
+struct Broadcast {
+  constexpr operator StridedDims() const { return {0, 0, 0}; }
+  constexpr auto operator==(const auto &) const -> bool { return true; }
+};
+
+template <class T, class U>
+concept SameOrBroadcast = std::same_as<T, U> || std::is_same_v<T, Broadcast>;
 
 } // namespace LinAlg
 // NOLINTNEXTLINE(misc-unused-using-decls);

@@ -4,17 +4,19 @@
 #include "TypePromotion.hpp"
 #include "Utilities/Invariant.hpp"
 #include <concepts>
+#include <cstdint>
 #include <memory>
 #include <type_traits>
 
 namespace LinAlg {
+
 template <typename T>
 concept AbstractMatrixCore =
   HasEltype<T> && requires(T t, size_t i) {
                     { t(i, i) } -> std::convertible_to<eltype_t<T>>;
-                    { t.numRow() } -> std::same_as<Row>;
-                    { t.numCol() } -> std::same_as<Col>;
-                    { t.size() } -> std::same_as<CartesianIndex<Row, Col>>;
+                    { t.numRow() } -> SameOrBroadcast<Row>;
+                    { t.numCol() } -> SameOrBroadcast<Col>;
+                    { t.size() } -> SameOrBroadcast<CartesianIndex<Row, Col>>;
                     { t.dim() } -> std::convertible_to<StridedDims>;
                     // {
                     //     std::remove_reference_t<T>::canResize
@@ -125,9 +127,9 @@ template <typename T> struct SmallSparseMatrix {
     [[no_unique_address]] SmallSparseMatrix<T> *A;
     [[no_unique_address]] size_t i, j;
     constexpr operator T() const { return A->get(Row{i}, Col{j}); }
-    constexpr void operator=(T x) {
+    constexpr auto operator=(T x) -> Reference & {
       A->insert(std::move(x), Row{i}, Col{j});
-      return;
+      return *this;
     }
   };
   constexpr auto operator()(size_t i, size_t j) -> Reference {
@@ -135,4 +137,30 @@ template <typename T> struct SmallSparseMatrix {
   }
 };
 
+template <class T> struct UniformScaling {
+  using value_type = T;
+  T value;
+  constexpr UniformScaling(T x) : value(x) {}
+  constexpr auto operator()(Row r, Col c) const -> T {
+    return r == c ? value : T{};
+  }
+  static constexpr auto numRow() -> Row { return 0; }
+  static constexpr auto numCol() -> Col { return 0; }
+  static constexpr auto size() -> CartesianIndex<Row, Col> { return {0, 0}; }
+  static constexpr auto dim() -> DenseDims { return {0, 0}; }
+  [[nodiscard]] constexpr auto view() const -> auto{ return *this; };
+  template <class U> constexpr auto operator*(const U &x) const {
+    if constexpr (std::is_same_v<T, std::true_type>)
+      return UniformScaling<U>{x};
+    return UniformScaling<U>{value * x};
+  }
+};
+static constexpr inline UniformScaling<std::true_type> I{
+  std::true_type{}}; // identity
+
+template <class T> UniformScaling(T) -> UniformScaling<T>;
+static_assert(AbstractMatrixCore<UniformScaling<int64_t>>);
+
 } // namespace LinAlg
+
+using LinAlg::I;
