@@ -399,11 +399,8 @@ public:
   void addEdge(MemoryAccess &mai, MemoryAccess &maj) {
     // note, axes should be fully delinearized, so should line up
     // as a result of preprocessing.
-    auto [d0, d1] = Dependence::check(allocator, mai, maj);
-    if (!d0) return;
-    d0->pushToEdgeVector(edges);
-    if (!d1) return;
-    d1->pushToEdgeVector(edges);
+    auto d = Dependence::check(allocator, mai, maj);
+    for (auto &i : d) i.pushToEdgeVector(edges);
   }
   /// fills all the edges between memory accesses, checking for
   /// dependencies.

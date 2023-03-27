@@ -18,10 +18,10 @@ TEST(BitSetTest, BasicAssertions) {
   // EXPECT_EQ(std::ranges::end(bs), bs.end());
   llvm::SmallVector<size_t> bsc{0, 4, 10, 87, 117, 200, 991};
   size_t j = 0;
-  for (auto I = bs.begin(); I != bs.end(); ++I) {
-    EXPECT_EQ(*I, bsc[j++]);
-    EXPECT_TRUE(bs[*I]);
-    printf("We get: %zu\n", *I);
+  for (auto J = bs.begin(); J != decltype(bs)::end(); ++J) {
+    EXPECT_EQ(*J, bsc[j++]);
+    EXPECT_TRUE(bs[*J]);
+    printf("We get: %zu\n", *J);
   }
   j = 0;
   for (auto i : bs) {

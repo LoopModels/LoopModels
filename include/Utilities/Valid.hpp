@@ -5,7 +5,9 @@
 
 // TODO: communicate not-null to the compiler somehow?
 template <typename T> struct NotNull {
-  NotNull() = delete;
+  // we shouldn't be calling the default ctor
+  constexpr NotNull() : value(nullptr) { assert(false); }
+  // NotNull() = delete;
   constexpr NotNull(T &v) : value(&v) {}
   constexpr NotNull(T *v) : value(v) { invariant(value != nullptr); }
   constexpr explicit operator bool() const {

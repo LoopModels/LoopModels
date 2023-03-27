@@ -3,6 +3,7 @@
 #include "./Loops.hpp"
 #include "./MemoryAccess.hpp"
 #include "./Schedule.hpp"
+#include "Containers/TinyVector.hpp"
 #include "Math/Array.hpp"
 #include "Math/Comparisons.hpp"
 #include "Math/Math.hpp"
@@ -638,7 +639,7 @@ public:
     : depPoly(poly), dependenceSatisfaction(depSatBound[0]),
       dependenceBounding(depSatBound[1]), in(inOut[0]), out(inOut[1]),
       forward(fwd) {}
-
+  constexpr Dependence() = default;
   using BitSet = MemoryAccess::BitSet;
   constexpr void
   pushToEdgeVector(LinAlg::ReallocView<NotNull<Dependence>, unsigned> &vec) {
@@ -1161,7 +1162,7 @@ public:
   static constexpr auto timeCheck(BumpAlloc<> &alloc, NotNull<DepPoly> dxy,
                                   NotNull<MemoryAccess> x,
                                   NotNull<MemoryAccess> y)
-    -> std::array<std::optional<Dependence>, 2> {
+    -> TinyVector<Dependence, 2> {
     std::array<NotNull<Simplex>, 2> pair(dxy->farkasPair(alloc));
     // copy backup
     std::array<NotNull<Simplex>, 2> farkasBackups{pair[0]->copy(alloc),
@@ -1288,7 +1289,7 @@ public:
 
   static constexpr auto check(BumpAlloc<> &alloc, NotNull<MemoryAccess> x,
                               NotNull<MemoryAccess> y)
-    -> std::array<std::optional<Dependence>, 2> {
+    -> TinyVector<Dependence, 2> {
     // TODO: implement gcd test
     // if (x.gcdKnownIndependent(y)) return {};
     DepPoly *dxy{DepPoly::dependence(alloc, x, y)};
@@ -1300,7 +1301,7 @@ public:
     // dependence direction for the dependency we week, we'll
     // discard the program variables x then y
     if (dxy->getTimeDim()) return timeCheck(alloc, dxy, x, y);
-    return {timelessCheck(alloc, dxy, x, y), {}};
+    return {timelessCheck(alloc, dxy, x, y)};
   }
 
   friend inline auto operator<<(llvm::raw_ostream &os, const Dependence &d)
