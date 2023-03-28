@@ -16,10 +16,10 @@ template <AbstractMatrix T> constexpr auto evalpoly(const T &C, const auto &p) {
   using S = SquareMatrix<U>;
   assert(C.numRow() == C.numCol());
   S A{SquareDims{C.numRow()}}, B{SquareDims{C.numRow()}};
-  B << p[0] * C + LinAlg::UniformScaling(p[1]);
+  B << p[0] * C + I * p[1];
   for (size_t i = 2; i < p.size(); ++i) {
     std::swap(A, B);
-    B << A * C + LinAlg::UniformScaling(p[i]);
+    B << A * C + I * p[i];
   }
   return B;
 }
@@ -33,10 +33,10 @@ constexpr void evalpoly(T &B, const T &C, const auto &p) {
   invariant(size_t(B.numRow()), size_t(B.numCol()));
   invariant(size_t(B.numRow()), size_t(C.numRow()));
   S A{SquareDims{B.numRow()}};
-  B << p[0] * C + LinAlg::UniformScaling(p[1]);
+  B << p[0] * C + I * p[1];
   for (size_t i = 2; i < N; ++i) {
     std::swap(A, B);
-    B << A * C + LinAlg::UniformScaling(p[i]);
+    B << A * C + I * p[i];
   }
 }
 
@@ -48,7 +48,7 @@ template <AbstractMatrix T> constexpr auto opnorm1(const T &A) {
   v << A(0, _);
   for (size_t j = 0; j < n; ++j) v[j] = std::abs(A(0, j));
   for (size_t i = 1; i < n; ++i)
-    for (size_t j = 0; j < n; ++j) v[j] = std::abs(A(i, j));
+    for (size_t j = 0; j < n; ++j) v[j] += std::abs(A(i, j));
   return *std::max_element(v.begin(), v.end());
 }
 
@@ -76,9 +76,8 @@ template <AbstractMatrix T> constexpr auto expm(const T &A) {
     evalpoly(V, A2, p0);
     U << A * V;
     evalpoly(V, A2, p1);
-    // return (V - U) \ (V + U);
   } else {
-    s = std::max(unsigned(std::ceil(std::log2(nA / 5.4))), unsigned(0));
+    s = std::max(int(std::ceil(std::log2(nA / 5.4))), 0);
     if (s > 0) {
       S t = S(1) / std::exp2(s);
       A2 *= (t * t);
@@ -101,9 +100,8 @@ template <AbstractMatrix T> constexpr auto expm(const T &A) {
     *a = *v - *u;
     *v += *u;
   }
-  LU::fact(A2).ldiv(MutPtrMatrix<S>(V));
-  // A2 << V - U;
-  // LU::fact(A2).ldiv(MutPtrMatrix<S>(V += U));
+  // return (V - U) \ (V + U);
+  LU::fact(std::move(A2)).ldiv(MutPtrMatrix<S>(V));
   for (; s--;) {
     U = V * V;
     std::swap(U, V);

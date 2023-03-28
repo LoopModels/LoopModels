@@ -118,10 +118,30 @@ template <typename T>
 concept TriviallyCopyableMatrixOrScalar =
   std::is_trivially_copyable_v<T> && MatrixOrScalar<T>;
 
+template <typename T>
+concept HasConcreteSize =
+  requires(T) {
+    std::is_same_v<typename std::remove_reference_t<T>::concrete,
+                   std::true_type>;
+  };
+
+static_assert(HasConcreteSize<DenseMatrix<int64_t>>);
+static_assert(!HasConcreteSize<int64_t>);
+static_assert(!HasConcreteSize<UniformScaling<std::true_type>>);
+// template <typename T>
+// using is_concrete_t =
+//   std::conditional_t<HasConcreteSize<T>, std::true_type, std::false_type>;
+template <typename T, typename U>
+using is_concrete_t =
+  std::conditional_t<HasConcreteSize<T> || HasConcreteSize<U>, std::true_type,
+                     std::false_type>;
+
 template <typename Op, TriviallyCopyableVectorOrScalar A,
           TriviallyCopyableVectorOrScalar B>
 struct ElementwiseVectorBinaryOp {
   using value_type = promote_eltype_t<A, B>;
+  using concrete = is_concrete_t<A, B>;
+
   [[no_unique_address]] Op op;
   [[no_unique_address]] A a;
   [[no_unique_address]] B b;
@@ -140,11 +160,11 @@ struct ElementwiseVectorBinaryOp {
   }
   [[nodiscard]] constexpr auto view() const -> auto & { return *this; };
 };
-
 template <typename Op, TriviallyCopyableMatrixOrScalar A,
           TriviallyCopyableMatrixOrScalar B>
 struct ElementwiseMatrixBinaryOp {
   using value_type = promote_eltype_t<A, B>;
+  using concrete = is_concrete_t<A, B>;
   [[no_unique_address]] Op op;
   [[no_unique_address]] A a;
   [[no_unique_address]] B b;
@@ -160,14 +180,18 @@ struct ElementwiseMatrixBinaryOp {
                     std::floating_point<B>,
                   "Argument B to elementwise binary op is not a matrix.");
     if constexpr (AbstractMatrix<A> && AbstractMatrix<B>) {
-      if constexpr (std::is_same_v<A, UniformScaling<eltype_t<A>>>) {
+      if constexpr (HasConcreteSize<A>) {
+        if constexpr (HasConcreteSize<B>) {
+          const Row N = a.numRow();
+          invariant(N, b.numRow());
+          return N;
+        } else {
+          return a.numRow();
+        }
+      } else if constexpr (HasConcreteSize<B>) {
         return b.numRow();
-      } else if constexpr (std::is_same_v<B, UniformScaling<eltype_t<B>>>) {
-        return a.numRow();
       } else {
-        const Row N = a.numRow();
-        invariant(N, b.numRow());
-        return N;
+        return 0;
       }
     } else if constexpr (AbstractMatrix<A>) {
       return a.numRow();
@@ -183,14 +207,18 @@ struct ElementwiseMatrixBinaryOp {
                     std::floating_point<B>,
                   "Argument B to elementwise binary op is not a matrix.");
     if constexpr (AbstractMatrix<A> && AbstractMatrix<B>) {
-      if constexpr (std::is_same_v<A, UniformScaling<eltype_t<A>>>) {
+      if constexpr (HasConcreteSize<A>) {
+        if constexpr (HasConcreteSize<B>) {
+          const Col N = a.numCol();
+          invariant(N, b.numCol());
+          return N;
+        } else {
+          return a.numCol();
+        }
+      } else if constexpr (HasConcreteSize<B>) {
         return b.numCol();
-      } else if constexpr (std::is_same_v<B, UniformScaling<eltype_t<B>>>) {
-        return a.numCol();
       } else {
-        const Col N = a.numCol();
-        invariant(N, b.numCol());
-        return N;
+        return 0;
       }
     } else if constexpr (AbstractMatrix<A>) {
       return a.numCol();
@@ -209,6 +237,7 @@ struct ElementwiseMatrixBinaryOp {
 
 template <AbstractMatrix A, AbstractMatrix B> struct MatMatMul {
   using value_type = promote_eltype_t<A, B>;
+  using concrete = is_concrete_t<A, B>;
   [[no_unique_address]] A a;
   [[no_unique_address]] B b;
   constexpr auto operator()(size_t i, size_t j) const -> value_type {
@@ -232,6 +261,7 @@ template <AbstractMatrix A, AbstractMatrix B> struct MatMatMul {
 };
 template <AbstractMatrix A, AbstractVector B> struct MatVecMul {
   using value_type = promote_eltype_t<A, B>;
+  using concrete = is_concrete_t<A, B>;
   [[no_unique_address]] A a;
   [[no_unique_address]] B b;
   constexpr auto operator[](size_t i) const -> value_type {

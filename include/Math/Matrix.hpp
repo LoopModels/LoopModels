@@ -155,6 +155,12 @@ template <class T> struct UniformScaling {
     return UniformScaling<U>{value * x};
   }
 };
+template <class T, class U>
+constexpr auto operator*(const U &x, UniformScaling<T> d) {
+  if constexpr (std::is_same_v<T, std::true_type>) return UniformScaling<U>{x};
+  return UniformScaling<U>{d.value * x};
+}
+
 static constexpr inline UniformScaling<std::true_type> I{
   std::true_type{}}; // identity
 
