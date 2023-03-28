@@ -87,6 +87,8 @@ Classes</h2></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structLinAlg_1_1ManagedArray_3_01T_00_01S_00_010_00_01A_00_01U_01_4.html">ManagedArray&lt; T, S, 0, A, U &gt;</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classLinAlg_1_1ArrayOps.html">ArrayOps</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structLinAlg_1_1AxisInt.html">AxisInt</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structLinAlg_1_1BumpPtrVector.html">BumpPtrVector</a></td></tr>
@@ -149,6 +151,8 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structLinAlg_1_1SquareDims.html">SquareDims</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structLinAlg_1_1Broadcast.html">Broadcast</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classLinAlg_1_1StaticArray.html">StaticArray</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structLinAlg_1_1default__capacity__type.html">default_capacity_type</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -232,6 +236,10 @@ using&#160;</td><td class="memItemRight" valign="bottom"><b>CarInd</b> = std::pa
 template&lt;typename T , typename U &gt; </td></tr>
 <tr class="memitem:ab4d66612dbbacd9c47a53382c80d34b4"><td class="memTemplItemLeft" align="right" valign="top">using&#160;</td><td class="memTemplItemRight" valign="bottom"><b>is_concrete_t</b> = std::conditional_t&lt; HasConcreteSize&lt; T &gt;||HasConcreteSize&lt; U &gt;, std::true_type, std::false_type &gt;</td></tr>
 <tr class="separator:ab4d66612dbbacd9c47a53382c80d34b4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac1485f3430637242dbd11250d17ed75b"><td class="memTemplParams" colspan="2"><a id="ac1485f3430637242dbd11250d17ed75b"></a>
+template&lt;class T , size_t N&gt; </td></tr>
+<tr class="memitem:ac1485f3430637242dbd11250d17ed75b"><td class="memTemplItemLeft" align="right" valign="top">using&#160;</td><td class="memTemplItemRight" valign="bottom"><b>SVector</b> = <a class="el" href="classLinAlg_1_1StaticArray.html">StaticArray</a>&lt; T, std::integral_constant&lt; size_t, N &gt; &gt;</td></tr>
+<tr class="separator:ac1485f3430637242dbd11250d17ed75b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aee115ad5e22c63837c1d4a01be346fba"><td class="memTemplParams" colspan="2"><a id="aee115ad5e22c63837c1d4a01be346fba"></a>
 template&lt;class S &gt; </td></tr>
 <tr class="memitem:aee115ad5e22c63837c1d4a01be346fba"><td class="memTemplItemLeft" align="right" valign="top">using&#160;</td><td class="memTemplItemRight" valign="bottom"><b>default_capacity_type_t</b> = typename <a class="el" href="structLinAlg_1_1default__capacity__type.html">default_capacity_type</a>&lt; S &gt;::type</td></tr>
@@ -524,6 +532,13 @@ template&lt;class R , class C &gt; </td></tr>
 template&lt;class I &gt; </td></tr>
 <tr class="memitem:a7133226ef22c1d2950751bef9e3c531c"><td class="memTemplItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>calcOffset</b> (<a class="el" href="structLinAlg_1_1StridedRange.html">StridedRange</a> d, I i) -&gt; size_t</td></tr>
 <tr class="separator:a7133226ef22c1d2950751bef9e3c531c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7e03604b7ff36879e6b0c56ffd8e8c0e"><td class="memItemLeft" align="right" valign="top"><a id="a7e03604b7ff36879e6b0c56ffd8e8c0e"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>is_integral_const</b> (auto) -&gt; bool</td></tr>
+<tr class="separator:a7e03604b7ff36879e6b0c56ffd8e8c0e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2afe44f9a754594142bcc0de34cd4bea"><td class="memTemplParams" colspan="2"><a id="a2afe44f9a754594142bcc0de34cd4bea"></a>
+template&lt;typename T , T V&gt; </td></tr>
+<tr class="memitem:a2afe44f9a754594142bcc0de34cd4bea"><td class="memTemplItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>is_integral_const</b> (std::integral_constant&lt; T, V &gt;) -&gt; bool</td></tr>
+<tr class="separator:a2afe44f9a754594142bcc0de34cd4bea"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9367f348840d80e7823f51e096136f90"><td class="memItemLeft" align="right" valign="top"><a id="a9367f348840d80e7823f51e096136f90"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>calcNewDim</b> (VectorDimension auto, ScalarIndex auto) -&gt; <a class="el" href="structLinAlg_1_1Empty.html">Empty</a></td></tr>
 <tr class="separator:a9367f348840d80e7823f51e096136f90"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -754,12 +769,14 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator*</
 <tr class="memitem:a67db6f330f36e896f4b2884d1328c86f"><td class="memItemLeft" align="right" valign="top"><a id="a67db6f330f36e896f4b2884d1328c86f"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator*</b> (const AbstractVector auto &amp;a, std::integral auto b)</td></tr>
 <tr class="separator:a67db6f330f36e896f4b2884d1328c86f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa6edca07800da07852d250ad358d9945"><td class="memItemLeft" align="right" valign="top"><a id="aa6edca07800da07852d250ad358d9945"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator*</b> (Scalar auto a, const AbstractMatrix auto &amp;b)</td></tr>
-<tr class="separator:aa6edca07800da07852d250ad358d9945"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afffe3903202e51c667c9496ba80c4ae7"><td class="memItemLeft" align="right" valign="top"><a id="afffe3903202e51c667c9496ba80c4ae7"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator*</b> (Scalar auto a, const AbstractVector auto &amp;b)</td></tr>
-<tr class="separator:afffe3903202e51c667c9496ba80c4ae7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9d22605113fa40ddf02780f1b8bb5f2f"><td class="memTemplParams" colspan="2"><a id="a9d22605113fa40ddf02780f1b8bb5f2f"></a>
+template&lt;AbstractVector M, ScalarOf&lt; M &gt; S&gt; </td></tr>
+<tr class="memitem:a9d22605113fa40ddf02780f1b8bb5f2f"><td class="memTemplItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>operator*</b> (S a, const M &amp;b)</td></tr>
+<tr class="separator:a9d22605113fa40ddf02780f1b8bb5f2f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0fd7714cf9f9164e927764b1ed1ee5b3"><td class="memTemplParams" colspan="2"><a id="a0fd7714cf9f9164e927764b1ed1ee5b3"></a>
+template&lt;AbstractVector M, ScalarOf&lt; M &gt; S&gt; </td></tr>
+<tr class="memitem:a0fd7714cf9f9164e927764b1ed1ee5b3"><td class="memTemplItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>operator*</b> (const M &amp;b, S a)</td></tr>
+<tr class="separator:a0fd7714cf9f9164e927764b1ed1ee5b3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5298aa053caa2c94ccac1547c841262c"><td class="memTemplParams" colspan="2"><a id="a5298aa053caa2c94ccac1547c841262c"></a>
 template&lt;AbstractVector V&gt; </td></tr>
 <tr class="memitem:a5298aa053caa2c94ccac1547c841262c"><td class="memTemplItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>operator*</b> (const <a class="el" href="structLinAlg_1_1Transpose.html">Transpose</a>&lt; V &gt; &amp;a, const AbstractVector auto &amp;b)</td></tr>
@@ -838,13 +855,20 @@ template&lt;typename T &gt; </td></tr>
 <tr class="memitem:ab6cd8930c4e2518fa7c0733cb104af14"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
 <tr class="memitem:ab6cd8930c4e2518fa7c0733cb104af14"><td class="memTemplItemLeft" align="right" valign="top">concept&#160;</td><td class="memTemplItemRight" valign="bottom"><b>AbstractSlice</b></td></tr>
 <tr class="separator:ab6cd8930c4e2518fa7c0733cb104af14"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aecb0ab37191bd673c048823be7bf3fbb"><td class="memTemplParams" colspan="2"><a id="aecb0ab37191bd673c048823be7bf3fbb"></a>
-template&lt;class D &gt; </td></tr>
-<tr class="memitem:aecb0ab37191bd673c048823be7bf3fbb"><td class="memTemplItemLeft" align="right" valign="top">concept&#160;</td><td class="memTemplItemRight" valign="bottom"><b>VectorDimension</b> = std::integral&lt;D&gt; || std::same_as&lt;D, <a class="el" href="structLinAlg_1_1StridedRange.html">StridedRange</a>&gt;</td></tr>
+<tr class="memitem:a9f0d5ac3634a390f031ea0952546bdec"><td class="memTemplParams" colspan="2"><a id="a9f0d5ac3634a390f031ea0952546bdec"></a>
+template&lt;typename T &gt; </td></tr>
+<tr class="memitem:a9f0d5ac3634a390f031ea0952546bdec"><td class="memTemplItemLeft" align="right" valign="top">concept&#160;</td><td class="memTemplItemRight" valign="bottom"><b>StaticInt</b> = is_integral_const(T{})</td></tr>
+<tr class="separator:a9f0d5ac3634a390f031ea0952546bdec"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aecb0ab37191bd673c048823be7bf3fbb"><td class="memTemplParams" colspan="2">template&lt;class D &gt; </td></tr>
+<tr class="memitem:aecb0ab37191bd673c048823be7bf3fbb"><td class="memTemplItemLeft" align="right" valign="top">concept&#160;</td><td class="memTemplItemRight" valign="bottom"><b>VectorDimension</b></td></tr>
 <tr class="separator:aecb0ab37191bd673c048823be7bf3fbb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a83c9662bd77bb950d80404445b3a95ab"><td class="memTemplParams" colspan="2">template&lt;class I , class D &gt; </td></tr>
 <tr class="memitem:a83c9662bd77bb950d80404445b3a95ab"><td class="memTemplItemLeft" align="right" valign="top">concept&#160;</td><td class="memTemplItemRight" valign="bottom"><b>Index</b></td></tr>
 <tr class="separator:a83c9662bd77bb950d80404445b3a95ab"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad9083cd8b71bd462be2433db9491a019"><td class="memTemplParams" colspan="2"><a id="ad9083cd8b71bd462be2433db9491a019"></a>
+template&lt;class T , class C &gt; </td></tr>
+<tr class="memitem:ad9083cd8b71bd462be2433db9491a019"><td class="memTemplItemLeft" align="right" valign="top">concept&#160;</td><td class="memTemplItemRight" valign="bottom"><b>ScalarOf</b> = std::convertible_to&lt;T, eltype_t&lt;C&gt;&gt;</td></tr>
+<tr class="separator:ad9083cd8b71bd462be2433db9491a019"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4b35cc6b1584b49c06404c90642708b6"><td class="memTemplParams" colspan="2"><a id="a4b35cc6b1584b49c06404c90642708b6"></a>
 template&lt;typename T &gt; </td></tr>
 <tr class="memitem:a4b35cc6b1584b49c06404c90642708b6"><td class="memTemplItemLeft" align="right" valign="top">concept&#160;</td><td class="memTemplItemRight" valign="bottom"><b>VectorOrScalar</b> = AbstractVector&lt;T&gt; || Scalar&lt;T&gt;</td></tr>
@@ -899,6 +923,10 @@ template&lt;typename T &gt; </td></tr>
 template&lt;class T , class U &gt; </td></tr>
 <tr class="memitem:a36af3ca37d266d42bdee2739c1005300"><td class="memTemplItemLeft" align="right" valign="top">concept&#160;</td><td class="memTemplItemRight" valign="bottom"><b>SameOrBroadcast</b> = std::same_as&lt;T, U&gt; || std::is_same_v&lt;T, <a class="el" href="structLinAlg_1_1Broadcast.html">Broadcast</a>&gt;</td></tr>
 <tr class="separator:a36af3ca37d266d42bdee2739c1005300"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac7ff775c3d48f51f87f9ede31c5d77d3"><td class="memTemplParams" colspan="2"><a id="ac7ff775c3d48f51f87f9ede31c5d77d3"></a>
+template&lt;typename T &gt; </td></tr>
+<tr class="memitem:ac7ff775c3d48f51f87f9ede31c5d77d3"><td class="memTemplItemLeft" align="right" valign="top">concept&#160;</td><td class="memTemplItemRight" valign="bottom"><b>StaticSize</b> = StaticInt&lt;T&gt;</td></tr>
+<tr class="separator:ac7ff775c3d48f51f87f9ede31c5d77d3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a796719f0d6c850ab9f5e5288bcdb5195"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
 <tr class="memitem:a796719f0d6c850ab9f5e5288bcdb5195"><td class="memTemplItemLeft" align="right" valign="top">concept&#160;</td><td class="memTemplItemRight" valign="bottom"><b>AbstractVector</b></td></tr>
 <tr class="separator:a796719f0d6c850ab9f5e5288bcdb5195"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -996,9 +1024,10 @@ template&lt;class T , class S &gt; </div>
         </tr>
       </table>
 </div><div class="memdoc">
-<b>Initial value:</b><div class="fragment"><div class="line">=</div>
-<div class="line">  (MatrixDimension&lt;S&gt; &amp;&amp; AbstractMatrix&lt;T&gt;) ||</div>
-<div class="line">  ((std::integral&lt;S&gt; || std::is_same_v&lt;S, StridedRange&gt;) &amp;&amp; AbstractVector&lt;T&gt;)</div>
+<b>Initial value:</b><div class="fragment"><div class="line">= (MatrixDimension&lt;S&gt; &amp;&amp; AbstractMatrix&lt;T&gt;) ||</div>
+<div class="line">                          ((std::integral&lt;S&gt; ||</div>
+<div class="line">                            std::is_same_v&lt;S, StridedRange&gt; || StaticInt&lt;S&gt;) &amp;&amp;</div>
+<div class="line">                           AbstractVector&lt;T&gt;)</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -1238,8 +1267,13 @@ template&lt;class T &gt; </div>
         </tr>
       </table>
 </div><div class="memdoc">
-<b>Initial value:</b><div class="fragment"><div class="line">=</div>
-<div class="line">  std::integral&lt;T&gt; || std::floating_point&lt;T&gt; || std::same_as&lt;T, Rational&gt;</div>
+<b>Initial value:</b><div class="fragment"><div class="line">= requires(T t) {</div>
+<div class="line">                   { t + t } -&gt; std::convertible_to&lt;T&gt;;</div>
+<div class="line">                   { t - t } -&gt; std::convertible_to&lt;T&gt;;</div>
+<div class="line">                   { t *t } -&gt; std::convertible_to&lt;T&gt;;</div>
+<div class="line">                   { t / t } -&gt; std::convertible_to&lt;T&gt;;</div>
+<div class="line">                   { -t } -&gt; std::convertible_to&lt;T&gt;;</div>
+<div class="line">                 }</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -1313,6 +1347,24 @@ template&lt;typename T &gt; </div>
 </div><div class="memdoc">
 <b>Initial value:</b><div class="fragment"><div class="line">=</div>
 <div class="line">  std::is_trivially_copyable_v&lt;T&gt; &amp;&amp; VectorOrScalar&lt;T&gt;</div>
+</div><!-- fragment -->
+</div>
+</div>
+<a id="aecb0ab37191bd673c048823be7bf3fbb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aecb0ab37191bd673c048823be7bf3fbb">&#9670;&nbsp;</a></span>VectorDimension</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;class D &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">concept LinAlg::VectorDimension</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<b>Initial value:</b><div class="fragment"><div class="line">=</div>
+<div class="line">  std::integral&lt;D&gt; || std::same_as&lt;D, StridedRange&gt; || StaticInt&lt;D&gt;</div>
 </div><!-- fragment -->
 </div>
 </div>
