@@ -71,80 +71,131 @@ $(function() {
 <div class="contents">
 <div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="preprocessor">#pragma once</span></div>
 <div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160; </div>
-<div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="preprocessor">#include &quot;Math/Array.hpp&quot;</span></div>
-<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor">#include &quot;Math/Math.hpp&quot;</span></div>
-<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="preprocessor">#include &quot;Math/Matrix.hpp&quot;</span></div>
-<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="preprocessor">#include &lt;algorithm&gt;</span></div>
-<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="preprocessor">#include &lt;array&gt;</span></div>
-<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="preprocessor">#include &lt;benchmark/benchmark.h&gt;</span></div>
-<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="preprocessor">#include &lt;random&gt;</span></div>
-<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160; </div>
-<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="keyword">template</span> &lt;AbstractMatrix T, <span class="keywordtype">size_t</span> N&gt;</div>
-<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;constexpr <span class="keyword">auto</span> evalpoly(<span class="keyword">const</span> T &amp;C, <span class="keyword">const</span> std::array&lt;double, N&gt; &amp;p) {</div>
-<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;  <span class="keyword">using</span> U = <span class="keyword">typename</span> T::value_type;</div>
-<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;  <span class="keyword">using</span> S = SquareMatrix&lt;U&gt;;</div>
-<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;  static_assert(N &gt; 0);</div>
-<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;  assert(C.numRow() == C.numCol());</div>
-<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;  S A{C.numRow()}, B{<a class="code" href="structLinAlg_1_1SquareDims.html">SquareDims</a>{C.numRow()}};</div>
-<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;  A &lt;&lt; I * p[0];</div>
-<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;  <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 1; i &lt; p.size(); ++i) {</div>
-<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;    B &lt;&lt; A * C + <a class="code" href="structLinAlg_1_1UniformScaling.html">LinAlg::UniformScaling</a>(p[i]);</div>
+<div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="preprocessor">#include &quot;Containers/TinyVector.hpp&quot;</span></div>
+<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor">#include &quot;Math/Array.hpp&quot;</span></div>
+<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="preprocessor">#include &quot;Math/LinearAlgebra.hpp&quot;</span></div>
+<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="preprocessor">#include &quot;Math/Math.hpp&quot;</span></div>
+<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="preprocessor">#include &quot;Math/Matrix.hpp&quot;</span></div>
+<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="preprocessor">#include &lt;algorithm&gt;</span></div>
+<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="preprocessor">#include &lt;array&gt;</span></div>
+<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="preprocessor">#include &lt;benchmark/benchmark.h&gt;</span></div>
+<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="preprocessor">#include &lt;llvm/ADT/TinyPtrVector.h&gt;</span></div>
+<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="preprocessor">#include &lt;random&gt;</span></div>
+<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160; </div>
+<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;<span class="keyword">template</span> &lt;AbstractMatrix T&gt; constexpr <span class="keyword">auto</span> evalpoly(<span class="keyword">const</span> T &amp;C, <span class="keyword">const</span> <span class="keyword">auto</span> &amp;p) {</div>
+<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;  <span class="keyword">using</span> U = eltype_t&lt;T&gt;;</div>
+<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;  <span class="keyword">using</span> S = SquareMatrix&lt;U&gt;;</div>
+<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;  assert(C.numRow() == C.numCol());</div>
+<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;  S A{<a class="code" href="structLinAlg_1_1SquareDims.html">SquareDims</a>{C.numRow()}}, B{<a class="code" href="structLinAlg_1_1SquareDims.html">SquareDims</a>{C.numRow()}};</div>
+<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;  B &lt;&lt; p[0] * C + <a class="code" href="structLinAlg_1_1UniformScaling.html">LinAlg::UniformScaling</a>(p[1]);</div>
+<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;  <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 2; i &lt; p.size(); ++i) {</div>
 <div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;    std::swap(A, B);</div>
-<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;  }</div>
-<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;  <span class="keywordflow">return</span> A;</div>
-<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;}</div>
-<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160; </div>
-<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;<span class="keyword">template</span> &lt;AbstractMatrix T&gt; constexpr <span class="keyword">auto</span> expm(<span class="keyword">const</span> T &amp;A) {</div>
-<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;  <span class="keyword">using</span> U = <span class="keyword">typename</span> T::value_type;</div>
-<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;  <span class="keywordtype">size_t</span> n = size_t(A.numRow());</div>
-<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;  Vector&lt;U&gt; v{n};</div>
-<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;  v &lt;&lt; A(0, _);</div>
-<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;  <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> j = 0; j &lt; n; ++j) v[j] = std::abs(A(0, j));</div>
-<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;  <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 1; i &lt; n; ++i)</div>
-<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> j = 0; j &lt; n; ++j) v[j] = std::abs(A(i, j));</div>
-<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;  U nA = *std::max_element(v.begin(), v.end());</div>
-<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;  <span class="keywordflow">if</span> (nA &lt;= 2.1) {</div>
-<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;    SquareMatrix&lt;U&gt; A2{A * A};</div>
-<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;    <span class="keywordflow">if</span> (nA &gt; 0.95) {</div>
-<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;      std::array p0{1.0, 3960.0, 2162160.0, 302702400.0, 8821612800.0};</div>
-<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;      SquareMatrix&lt;U&gt; V{evalpoly(A2, p0)};</div>
-<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;      SquareMatrix&lt;U&gt; U{A * V};</div>
-<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;      std::array p1{90.0, 110880.0, 3.027024e7, 2.0756736e9, 1.76432256e10};</div>
-<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;      V &lt;&lt; evalpoly(A2, p1);</div>
-<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;    } <span class="keywordflow">else</span> <span class="keywordflow">if</span> (nA &gt; 0.25) {</div>
-<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;      std::array p0{1.0, 1512.0, 277200.0, 8.64864e6};</div>
-<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;      SquareMatrix&lt;U&gt; V{evalpoly(A2, p0)};</div>
-<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;      SquareMatrix&lt;U&gt; U{A * V};</div>
-<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;      std::array p1{56.0, 25200.0, 1.99584e6, 1.729728e7};</div>
-<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;      V &lt;&lt; evalpoly(A2, p1);</div>
-<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;    } <span class="keywordflow">else</span> <span class="keywordflow">if</span> (nA &gt; 0.015) {</div>
-<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;      std::array p0{1.0, 420.0, 15120.0};</div>
-<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;      SquareMatrix&lt;U&gt; V{evalpoly(A2, p0)};</div>
-<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;      SquareMatrix&lt;U&gt; U{A * V};</div>
-<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;      std::array p1{30.0, 3360.0, 30240.0};</div>
-<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;      V &lt;&lt; evalpoly(A2, p1);</div>
-<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;    } <span class="keywordflow">else</span> {</div>
-<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;      std::array p0{1.0, 60.0};</div>
-<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;      SquareMatrix&lt;U&gt; V{evalpoly(A2, p0)};</div>
-<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;      SquareMatrix&lt;U&gt; U{A * V};</div>
-<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;      std::array p1{12.0, 120.0};</div>
-<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;      V &lt;&lt; evalpoly(A2, p1);</div>
-<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;    }</div>
-<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;    <span class="comment">// return (V - U) \ (V + U);</span></div>
-<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;  } <span class="keywordflow">else</span> {</div>
-<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;  }</div>
-<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;}</div>
-<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160; </div>
-<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;<span class="keyword">static</span> <span class="keywordtype">void</span> BM_expm(benchmark::State &amp;state) {</div>
-<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;  <span class="keywordtype">size_t</span> dim = state.range(0);</div>
-<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;  std::mt19937_64 mt(0);</div>
-<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;  SquareMatrix&lt;double&gt; A{dim};</div>
-<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;  <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;a : A) a = std::uniform_real_distribution&lt;double&gt;(-1, 1)(mt);</div>
-<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;  <span class="keywordflow">for</span> (<span class="keyword">auto</span> b : state) expm(A);</div>
-<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;}</div>
-<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;BENCHMARK(BM_expm)-&gt;DenseRange(2, 8, 1);</div>
+<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;    B &lt;&lt; A * C + <a class="code" href="structLinAlg_1_1UniformScaling.html">LinAlg::UniformScaling</a>(p[i]);</div>
+<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;  }</div>
+<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;  <span class="keywordflow">return</span> B;</div>
+<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;}</div>
+<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;<span class="keyword">template</span> &lt;AbstractMatrix T&gt;</div>
+<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;constexpr <span class="keywordtype">void</span> evalpoly(T &amp;B, <span class="keyword">const</span> T &amp;C, <span class="keyword">const</span> <span class="keyword">auto</span> &amp;p) {</div>
+<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;  <span class="keyword">using</span> U = eltype_t&lt;T&gt;;</div>
+<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;  <span class="keyword">using</span> S = SquareMatrix&lt;U&gt;;</div>
+<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;  <span class="keywordtype">size_t</span> N = p.size();</div>
+<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;  invariant(N &gt; 0);</div>
+<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;  invariant(<span class="keywordtype">size_t</span>(C.numRow()), <span class="keywordtype">size_t</span>(C.numCol()));</div>
+<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;  invariant(<span class="keywordtype">size_t</span>(B.numRow()), <span class="keywordtype">size_t</span>(B.numCol()));</div>
+<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;  invariant(<span class="keywordtype">size_t</span>(B.numRow()), <span class="keywordtype">size_t</span>(C.numRow()));</div>
+<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;  S A{<a class="code" href="structLinAlg_1_1SquareDims.html">SquareDims</a>{B.numRow()}};</div>
+<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;  B &lt;&lt; p[0] * C + <a class="code" href="structLinAlg_1_1UniformScaling.html">LinAlg::UniformScaling</a>(p[1]);</div>
+<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;  <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 2; i &lt; N; ++i) {</div>
+<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;    std::swap(A, B);</div>
+<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;    B &lt;&lt; A * C + <a class="code" href="structLinAlg_1_1UniformScaling.html">LinAlg::UniformScaling</a>(p[i]);</div>
+<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;  }</div>
+<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;}</div>
+<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160; </div>
+<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;<span class="keyword">template</span> &lt;AbstractMatrix T&gt; constexpr <span class="keyword">auto</span> opnorm1(<span class="keyword">const</span> T &amp;A) {</div>
+<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;  <span class="keyword">using</span> S = eltype_t&lt;T&gt;;</div>
+<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;  <span class="keywordtype">size_t</span> n = size_t(A.numRow());</div>
+<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;  Vector&lt;S&gt; v;</div>
+<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;  v.resizeForOverwrite(n);</div>
+<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;  v &lt;&lt; A(0, _);</div>
+<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;  <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> j = 0; j &lt; n; ++j) v[j] = std::abs(A(0, j));</div>
+<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;  <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 1; i &lt; n; ++i)</div>
+<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> j = 0; j &lt; n; ++j) v[j] = std::abs(A(i, j));</div>
+<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;  <span class="keywordflow">return</span> *std::max_element(v.begin(), v.end());</div>
+<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;}</div>
+<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160; </div>
+<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;<span class="keyword">template</span> &lt;AbstractMatrix T&gt; constexpr <span class="keyword">auto</span> expm(<span class="keyword">const</span> T &amp;A) {</div>
+<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;  <span class="keyword">using</span> S = eltype_t&lt;T&gt;;</div>
+<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;  <span class="keywordtype">unsigned</span> n = unsigned(A.numRow());</div>
+<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;  S nA = opnorm1(A);</div>
+<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;  SquareMatrix&lt;S&gt; A2{A * A}, U{<a class="code" href="structLinAlg_1_1SquareDims.html">SquareDims</a>{n}}, V{<a class="code" href="structLinAlg_1_1SquareDims.html">SquareDims</a>{n}};</div>
+<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;  <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> s = 0;</div>
+<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;  <span class="keywordflow">if</span> (nA &lt;= 2.1) {</div>
+<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;    <a class="code" href="structTinyVector.html">TinyVector&lt;S, 5&gt;</a> p0, p1;</div>
+<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;    <span class="keywordflow">if</span> (nA &gt; 0.95) {</div>
+<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;      p0 = {1.0, 3960.0, 2162160.0, 302702400.0, 8821612800.0};</div>
+<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;      p1 = {90.0, 110880.0, 3.027024e7, 2.0756736e9, 1.76432256e10};</div>
+<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;    } <span class="keywordflow">else</span> <span class="keywordflow">if</span> (nA &gt; 0.25) {</div>
+<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;      p0 = {1.0, 1512.0, 277200.0, 8.64864e6};</div>
+<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;      p1 = {56.0, 25200.0, 1.99584e6, 1.729728e7};</div>
+<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;    } <span class="keywordflow">else</span> <span class="keywordflow">if</span> (nA &gt; 0.015) {</div>
+<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;      p0 = {1.0, 420.0, 15120.0};</div>
+<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;      p1 = {30.0, 3360.0, 30240.0};</div>
+<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;    } <span class="keywordflow">else</span> {</div>
+<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;      p0 = {1.0, 60.0};</div>
+<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;      p1 = {12.0, 120.0};</div>
+<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;    }</div>
+<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;    evalpoly(V, A2, p0);</div>
+<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;    U &lt;&lt; A * V;</div>
+<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;    evalpoly(V, A2, p1);</div>
+<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;    <span class="comment">// return (V - U) \ (V + U);</span></div>
+<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;  } <span class="keywordflow">else</span> {</div>
+<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;    s = std::max(<span class="keywordtype">unsigned</span>(std::ceil(std::log2(nA / 5.4))), <span class="keywordtype">unsigned</span>(0));</div>
+<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;    <span class="keywordflow">if</span> (s &gt; 0) {</div>
+<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;      S t = S(1) / std::exp2(s);</div>
+<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;      A2 *= (t * t);</div>
+<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;    }</div>
+<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;    SquareMatrix&lt;S&gt; A4{A2 * A2};</div>
+<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;    SquareMatrix&lt;S&gt; A6{A2 * A4};</div>
+<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160; </div>
+<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;    V &lt;&lt; A6 * (A6 + S(16380) * A4 + S(40840800) * A2) +</div>
+<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;           (S(33522128640) * A6 + S(10559470521600) * A4 +</div>
+<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;            S(1187353796428800) * A2) +</div>
+<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;           S(32382376266240000) * I;</div>
+<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;    U &lt;&lt; A * V;</div>
+<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;    V &lt;&lt; A6 * (S(182) * A6 + S(960960) * A4 + S(1323241920) * A2) +</div>
+<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;           (S(670442572800) * A6 + S(129060195264000) * A4 +</div>
+<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;            S(7771770303897600) * A2) +</div>
+<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;           S(64764752532480000) * I;</div>
+<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;  }</div>
+<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;  <span class="keywordflow">for</span> (<span class="keyword">auto</span> a = A2.begin(), v = V.begin(), u = U.begin(), e = A2.end(); a != e;</div>
+<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;       ++a, ++v, ++u) {</div>
+<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;    *a = *v - *u;</div>
+<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;    *v += *u;</div>
+<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;  }</div>
+<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;  LU::fact(A2).ldiv(MutPtrMatrix&lt;S&gt;(V));</div>
+<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;  <span class="comment">// A2 &lt;&lt; V - U;</span></div>
+<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;  <span class="comment">// LU::fact(A2).ldiv(MutPtrMatrix&lt;S&gt;(V += U));</span></div>
+<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;  <span class="keywordflow">for</span> (; s--;) {</div>
+<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;    U = V * V;</div>
+<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;    std::swap(U, V);</div>
+<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;  }</div>
+<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;  <span class="keywordflow">return</span> V;</div>
+<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;}</div>
+<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160; </div>
+<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;<span class="keyword">static</span> <span class="keywordtype">void</span> BM_expm(benchmark::State &amp;state) {</div>
+<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;  <span class="keywordtype">unsigned</span> dim = state.range(0);</div>
+<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;  std::mt19937_64 mt(0);</div>
+<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;  SquareMatrix&lt;double&gt; A{<a class="code" href="structLinAlg_1_1SquareDims.html">SquareDims</a>{dim}};</div>
+<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;  <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;a : A) a = std::uniform_real_distribution&lt;double&gt;(-1, 1)(mt);</div>
+<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;  <span class="comment">// llvm::errs() &lt;&lt; &quot;dim = &quot; &lt;&lt; dim &lt;&lt; &quot;; A = &quot; &lt;&lt; A &lt;&lt; &quot;\nexpm(A) = &quot; &lt;&lt;</span></div>
+<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;  <span class="comment">// expm(A)</span></div>
+<div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;  <span class="comment">//              &lt;&lt; &quot;\n&quot;;</span></div>
+<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;  <span class="keywordflow">for</span> (<span class="keyword">auto</span> b : state) expm(A);</div>
+<div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;}</div>
+<div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;BENCHMARK(BM_expm)-&gt;DenseRange(2, 10, 1);</div>
 <div class="ttc" id="astructLinAlg_1_1SquareDims_html"><div class="ttname"><a href="structLinAlg_1_1SquareDims.html">LinAlg::SquareDims</a></div><div class="ttdef"><b>Definition:</b> MatrixDimensions.hpp:111</div></div>
 <div class="ttc" id="astructLinAlg_1_1UniformScaling_html"><div class="ttname"><a href="structLinAlg_1_1UniformScaling.html">LinAlg::UniformScaling</a></div><div class="ttdef"><b>Definition:</b> Matrix.hpp:140</div></div>
+<div class="ttc" id="astructTinyVector_html"><div class="ttname"><a href="structTinyVector.html">TinyVector</a></div><div class="ttdef"><b>Definition:</b> TinyVector.hpp:6</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
