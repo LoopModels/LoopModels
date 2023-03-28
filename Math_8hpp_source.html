@@ -836,33 +836,47 @@ $(function() {
 <div class="line"><a name="l00767"></a><span class="lineno">  767</span>&#160;  llvm::raw_os_ostream(os) &lt;&lt; x;</div>
 <div class="line"><a name="l00768"></a><span class="lineno">  768</span>&#160;  <span class="keywordflow">return</span> os;</div>
 <div class="line"><a name="l00769"></a><span class="lineno">  769</span>&#160;}</div>
-<div class="line"><a name="l00770"></a><span class="lineno">  770</span>&#160;<span class="comment">// inline auto operator&lt;&lt;(std::ostream &amp;os, const AbstractVector auto &amp;x)</span></div>
-<div class="line"><a name="l00771"></a><span class="lineno">  771</span>&#160;<span class="comment">//   -&gt; std::ostream &amp; {</span></div>
-<div class="line"><a name="l00772"></a><span class="lineno">  772</span>&#160;<span class="comment">//   return adaptOStream(os, x);</span></div>
-<div class="line"><a name="l00773"></a><span class="lineno">  773</span>&#160;<span class="comment">// }</span></div>
-<div class="line"><a name="l00774"></a><span class="lineno">  774</span>&#160;<span class="comment">// inline auto operator&lt;&lt;(std::ostream &amp;os, const AbstractMatrix auto &amp;x)</span></div>
-<div class="line"><a name="l00775"></a><span class="lineno">  775</span>&#160;<span class="comment">//   -&gt; std::ostream &amp; {</span></div>
-<div class="line"><a name="l00776"></a><span class="lineno">  776</span>&#160;<span class="comment">//   return adaptOStream(os, x);</span></div>
-<div class="line"><a name="l00777"></a><span class="lineno">  777</span>&#160;<span class="comment">// }</span></div>
-<div class="line"><a name="l00778"></a><span class="lineno">  778</span>&#160;<span class="comment">// inline auto operator&lt;&lt;(std::ostream &amp;os, const DenseMatrix&lt;int64_t&gt; &amp;x)</span></div>
-<div class="line"><a name="l00779"></a><span class="lineno">  779</span>&#160;<span class="comment">//   -&gt; std::ostream &amp; {</span></div>
-<div class="line"><a name="l00780"></a><span class="lineno">  780</span>&#160;<span class="comment">//   return adaptOStream(os, x);</span></div>
-<div class="line"><a name="l00781"></a><span class="lineno">  781</span>&#160;<span class="comment">// }</span></div>
-<div class="line"><a name="l00782"></a><span class="lineno">  782</span>&#160; </div>
-<div class="line"><a name="l00783"></a><span class="lineno">  783</span>&#160;} <span class="comment">// namespace LinAlg</span></div>
-<div class="line"><a name="l00784"></a><span class="lineno">  784</span>&#160; </div>
-<div class="line"><a name="l00785"></a><span class="lineno">  785</span>&#160;<span class="comment">// exports:</span></div>
-<div class="line"><a name="l00786"></a><span class="lineno">  786</span>&#160;<span class="comment">// NOLINTNEXTLINE(bugprone-reserved-identifier)</span></div>
-<div class="line"><a name="l00787"></a><span class="lineno">  787</span>&#160;<span class="keyword">using</span> LinAlg::_;</div>
-<div class="line"><a name="l00788"></a><span class="lineno">  788</span>&#160;<span class="keyword">using</span> <a class="code" href="structLinAlg_1_1SmallSparseMatrix.html">LinAlg::SmallSparseMatrix</a>, <a class="code" href="structLinAlg_1_1Array.html">LinAlg::StridedVector</a>,</div>
-<div class="line"><a name="l00789"></a><span class="lineno">  789</span>&#160;  <a class="code" href="structLinAlg_1_1MutArray.html">LinAlg::MutStridedVector</a>, <a class="code" href="structLinAlg_1_1MutArray.html">LinAlg::MutSquarePtrMatrix</a>, LinAlg::begin,</div>
-<div class="line"><a name="l00790"></a><span class="lineno">  790</span>&#160;  LinAlg::end, LinAlg::swap, <a class="code" href="structLinAlg_1_1Array.html">LinAlg::SquarePtrMatrix</a>, <a class="code" href="structLinAlg_1_1AxisInt.html">LinAlg::Row</a>,</div>
-<div class="line"><a name="l00791"></a><span class="lineno">  791</span>&#160;  <a class="code" href="structLinAlg_1_1AxisInt.html">LinAlg::RowStride</a>, <a class="code" href="structLinAlg_1_1AxisInt.html">LinAlg::Col</a>, LinAlg::CarInd, LinAlg::last,</div>
-<div class="line"><a name="l00792"></a><span class="lineno">  792</span>&#160;  <a class="code" href="structLinAlg_1_1MutArray.html">LinAlg::MutDensePtrMatrix</a>, <a class="code" href="structLinAlg_1_1Array.html">LinAlg::DensePtrMatrix</a>, <a class="code" href="structLinAlg_1_1ManagedArray.html">LinAlg::DenseMatrix</a>;</div>
-<div class="ttc" id="anamespaceLinAlg_html"><div class="ttname"><a href="namespaceLinAlg.html">LinAlg</a></div><div class="ttdef"><b>Definition:</b> Array.hpp:20</div></div>
+<div class="line"><a name="l00770"></a><span class="lineno">  770</span>&#160;<span class="keyword">template</span> &lt;AbstractVector B&gt; constexpr <span class="keyword">auto</span> norm2(<span class="keyword">const</span> B &amp;A) {</div>
+<div class="line"><a name="l00771"></a><span class="lineno">  771</span>&#160;  <span class="keyword">using</span> T = <span class="keyword">typename</span> B::value_type;</div>
+<div class="line"><a name="l00772"></a><span class="lineno">  772</span>&#160;  T s = 0;</div>
+<div class="line"><a name="l00773"></a><span class="lineno">  773</span>&#160;  <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> j = 0; j &lt; A.numCol(); ++j) s += A(j) * A(j);</div>
+<div class="line"><a name="l00774"></a><span class="lineno">  774</span>&#160;  <span class="keywordflow">return</span> s;</div>
+<div class="line"><a name="l00775"></a><span class="lineno">  775</span>&#160;}</div>
+<div class="line"><a name="l00776"></a><span class="lineno">  776</span>&#160;<span class="keyword">template</span> &lt;AbstractMatrix B&gt; constexpr <span class="keyword">auto</span> norm2(<span class="keyword">const</span> B &amp;A) {</div>
+<div class="line"><a name="l00777"></a><span class="lineno">  777</span>&#160;  <span class="keyword">using</span> T = <span class="keyword">typename</span> B::value_type;</div>
+<div class="line"><a name="l00778"></a><span class="lineno">  778</span>&#160;  T s = 0;</div>
+<div class="line"><a name="l00779"></a><span class="lineno">  779</span>&#160;  <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; A.numRow(); ++i)</div>
+<div class="line"><a name="l00780"></a><span class="lineno">  780</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> j = 0; j &lt; A.numCol(); ++j) s += A(i, j) * A(i, j);</div>
+<div class="line"><a name="l00781"></a><span class="lineno">  781</span>&#160;  <span class="keywordflow">return</span> s;</div>
+<div class="line"><a name="l00782"></a><span class="lineno">  782</span>&#160;}</div>
+<div class="line"><a name="l00783"></a><span class="lineno">  783</span>&#160; </div>
+<div class="line"><a name="l00784"></a><span class="lineno">  784</span>&#160;<span class="comment">// inline auto operator&lt;&lt;(std::ostream &amp;os, const AbstractVector auto &amp;x)</span></div>
+<div class="line"><a name="l00785"></a><span class="lineno">  785</span>&#160;<span class="comment">//   -&gt; std::ostream &amp; {</span></div>
+<div class="line"><a name="l00786"></a><span class="lineno">  786</span>&#160;<span class="comment">//   return adaptOStream(os, x);</span></div>
+<div class="line"><a name="l00787"></a><span class="lineno">  787</span>&#160;<span class="comment">// }</span></div>
+<div class="line"><a name="l00788"></a><span class="lineno">  788</span>&#160;<span class="comment">// inline auto operator&lt;&lt;(std::ostream &amp;os, const AbstractMatrix auto &amp;x)</span></div>
+<div class="line"><a name="l00789"></a><span class="lineno">  789</span>&#160;<span class="comment">//   -&gt; std::ostream &amp; {</span></div>
+<div class="line"><a name="l00790"></a><span class="lineno">  790</span>&#160;<span class="comment">//   return adaptOStream(os, x);</span></div>
+<div class="line"><a name="l00791"></a><span class="lineno">  791</span>&#160;<span class="comment">// }</span></div>
+<div class="line"><a name="l00792"></a><span class="lineno">  792</span>&#160;<span class="comment">// inline auto operator&lt;&lt;(std::ostream &amp;os, const DenseMatrix&lt;int64_t&gt; &amp;x)</span></div>
+<div class="line"><a name="l00793"></a><span class="lineno">  793</span>&#160;<span class="comment">//   -&gt; std::ostream &amp; {</span></div>
+<div class="line"><a name="l00794"></a><span class="lineno">  794</span>&#160;<span class="comment">//   return adaptOStream(os, x);</span></div>
+<div class="line"><a name="l00795"></a><span class="lineno">  795</span>&#160;<span class="comment">// }</span></div>
+<div class="line"><a name="l00796"></a><span class="lineno">  796</span>&#160; </div>
+<div class="line"><a name="l00797"></a><span class="lineno">  797</span>&#160;} <span class="comment">// namespace LinAlg</span></div>
+<div class="line"><a name="l00798"></a><span class="lineno">  798</span>&#160; </div>
+<div class="line"><a name="l00799"></a><span class="lineno">  799</span>&#160;<span class="comment">// exports:</span></div>
+<div class="line"><a name="l00800"></a><span class="lineno">  800</span>&#160;<span class="comment">// NOLINTNEXTLINE(bugprone-reserved-identifier)</span></div>
+<div class="line"><a name="l00801"></a><span class="lineno">  801</span>&#160;<span class="keyword">using</span> LinAlg::_;</div>
+<div class="line"><a name="l00802"></a><span class="lineno">  802</span>&#160;<span class="keyword">using</span> <a class="code" href="structLinAlg_1_1SmallSparseMatrix.html">LinAlg::SmallSparseMatrix</a>, <a class="code" href="structLinAlg_1_1Array.html">LinAlg::StridedVector</a>,</div>
+<div class="line"><a name="l00803"></a><span class="lineno">  803</span>&#160;  <a class="code" href="structLinAlg_1_1MutArray.html">LinAlg::MutStridedVector</a>, <a class="code" href="structLinAlg_1_1MutArray.html">LinAlg::MutSquarePtrMatrix</a>, LinAlg::begin,</div>
+<div class="line"><a name="l00804"></a><span class="lineno">  804</span>&#160;  LinAlg::end, LinAlg::swap, <a class="code" href="structLinAlg_1_1Array.html">LinAlg::SquarePtrMatrix</a>, <a class="code" href="structLinAlg_1_1AxisInt.html">LinAlg::Row</a>,</div>
+<div class="line"><a name="l00805"></a><span class="lineno">  805</span>&#160;  <a class="code" href="structLinAlg_1_1AxisInt.html">LinAlg::RowStride</a>, <a class="code" href="structLinAlg_1_1AxisInt.html">LinAlg::Col</a>, LinAlg::CarInd, LinAlg::last,</div>
+<div class="line"><a name="l00806"></a><span class="lineno">  806</span>&#160;  <a class="code" href="structLinAlg_1_1MutArray.html">LinAlg::MutDensePtrMatrix</a>, <a class="code" href="structLinAlg_1_1Array.html">LinAlg::DensePtrMatrix</a>, <a class="code" href="structLinAlg_1_1ManagedArray.html">LinAlg::DenseMatrix</a>;</div>
+<div class="ttc" id="anamespaceLinAlg_html"><div class="ttname"><a href="namespaceLinAlg.html">LinAlg</a></div><div class="ttdef"><b>Definition:</b> Array.hpp:21</div></div>
 <div class="ttc" id="anamespaceLinAlg_html_a636fee1b1a5930a3c38e46eedbd57c67"><div class="ttname"><a href="namespaceLinAlg.html#a636fee1b1a5930a3c38e46eedbd57c67">LinAlg::getMaxDigits</a></div><div class="ttdeci">constexpr auto getMaxDigits(PtrMatrix&lt; T &gt; A) -&gt; Vector&lt; T &gt;</div><div class="ttdoc">Returns the number of digits of the largest number in the matrix.</div><div class="ttdef"><b>Definition:</b> Math.hpp:455</div></div>
 <div class="ttc" id="astructLinAlg_1_1Add_html"><div class="ttname"><a href="structLinAlg_1_1Add.html">LinAlg::Add</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:59</div></div>
-<div class="ttc" id="astructLinAlg_1_1Array_html"><div class="ttname"><a href="structLinAlg_1_1Array.html">LinAlg::Array</a></div><div class="ttdoc">Constant Array.</div><div class="ttdef"><b>Definition:</b> Array.hpp:32</div></div>
+<div class="ttc" id="astructLinAlg_1_1Array_html"><div class="ttname"><a href="structLinAlg_1_1Array.html">LinAlg::Array</a></div><div class="ttdoc">Constant Array.</div><div class="ttdef"><b>Definition:</b> Array.hpp:33</div></div>
 <div class="ttc" id="astructLinAlg_1_1AxisInt_html"><div class="ttname"><a href="structLinAlg_1_1AxisInt.html">LinAlg::AxisInt</a></div><div class="ttdef"><b>Definition:</b> AxisTypes.hpp:46</div></div>
 <div class="ttc" id="astructLinAlg_1_1CartesianIndex_html"><div class="ttname"><a href="structLinAlg_1_1CartesianIndex.html">LinAlg::CartesianIndex</a></div><div class="ttdef"><b>Definition:</b> MatrixDimensions.hpp:10</div></div>
 <div class="ttc" id="astructLinAlg_1_1DenseDims_html"><div class="ttname"><a href="structLinAlg_1_1DenseDims.html">LinAlg::DenseDims</a></div><div class="ttdoc">Dimensions with a capacity.</div><div class="ttdef"><b>Definition:</b> MatrixDimensions.hpp:72</div></div>
@@ -870,12 +884,12 @@ $(function() {
 <div class="ttc" id="astructLinAlg_1_1ElementwiseMatrixBinaryOp_html"><div class="ttname"><a href="structLinAlg_1_1ElementwiseMatrixBinaryOp.html">LinAlg::ElementwiseMatrixBinaryOp</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:146</div></div>
 <div class="ttc" id="astructLinAlg_1_1ElementwiseUnaryOp_html"><div class="ttname"><a href="structLinAlg_1_1ElementwiseUnaryOp.html">LinAlg::ElementwiseUnaryOp</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:73</div></div>
 <div class="ttc" id="astructLinAlg_1_1ElementwiseVectorBinaryOp_html"><div class="ttname"><a href="structLinAlg_1_1ElementwiseVectorBinaryOp.html">LinAlg::ElementwiseVectorBinaryOp</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:123</div></div>
-<div class="ttc" id="astructLinAlg_1_1ManagedArray_html"><div class="ttname"><a href="structLinAlg_1_1ManagedArray.html">LinAlg::ManagedArray</a></div><div class="ttdef"><b>Definition:</b> Array.hpp:1039</div></div>
+<div class="ttc" id="astructLinAlg_1_1ManagedArray_html"><div class="ttname"><a href="structLinAlg_1_1ManagedArray.html">LinAlg::ManagedArray</a></div><div class="ttdef"><b>Definition:</b> Array.hpp:1046</div></div>
 <div class="ttc" id="astructLinAlg_1_1MatMatMul_html"><div class="ttname"><a href="structLinAlg_1_1MatMatMul.html">LinAlg::MatMatMul</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:198</div></div>
 <div class="ttc" id="astructLinAlg_1_1MatVecMul_html"><div class="ttname"><a href="structLinAlg_1_1MatVecMul.html">LinAlg::MatVecMul</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:221</div></div>
 <div class="ttc" id="astructLinAlg_1_1MaxPow10_html"><div class="ttname"><a href="structLinAlg_1_1MaxPow10.html">LinAlg::MaxPow10</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:413</div></div>
 <div class="ttc" id="astructLinAlg_1_1Mul_html"><div class="ttname"><a href="structLinAlg_1_1Mul.html">LinAlg::Mul</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:66</div></div>
-<div class="ttc" id="astructLinAlg_1_1MutArray_html"><div class="ttname"><a href="structLinAlg_1_1MutArray.html">LinAlg::MutArray</a></div><div class="ttdef"><b>Definition:</b> Array.hpp:219</div></div>
+<div class="ttc" id="astructLinAlg_1_1MutArray_html"><div class="ttname"><a href="structLinAlg_1_1MutArray.html">LinAlg::MutArray</a></div><div class="ttdef"><b>Definition:</b> Array.hpp:226</div></div>
 <div class="ttc" id="astructLinAlg_1_1SliceView_1_1Iterator_html"><div class="ttname"><a href="structLinAlg_1_1SliceView_1_1Iterator.html">LinAlg::SliceView::Iterator</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:742</div></div>
 <div class="ttc" id="astructLinAlg_1_1SliceView_html"><div class="ttname"><a href="structLinAlg_1_1SliceView.html">LinAlg::SliceView</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:738</div></div>
 <div class="ttc" id="astructLinAlg_1_1SmallSparseMatrix_html"><div class="ttname"><a href="structLinAlg_1_1SmallSparseMatrix.html">LinAlg::SmallSparseMatrix</a></div><div class="ttdef"><b>Definition:</b> Matrix.hpp:72</div></div>

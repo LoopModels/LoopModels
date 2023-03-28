@@ -1,17 +1,9 @@
 var searchData=
 [
-  ['managedarray_290',['ManagedArray',['../structLinAlg_1_1ManagedArray.html',1,'LinAlg']]],
-  ['managedarray_3c_20int64_5ft_2c_20densedims_20_3e_291',['ManagedArray&lt; int64_t, DenseDims &gt;',['../structLinAlg_1_1ManagedArray.html',1,'LinAlg']]],
-  ['managedarray_3c_20t_2c_20s_2c_200_2c_20a_2c_20u_20_3e_292',['ManagedArray&lt; T, S, 0, A, U &gt;',['../structLinAlg_1_1ManagedArray_3_01T_00_01S_00_010_00_01A_00_01U_01_4.html',1,'LinAlg']]],
-  ['map_293',['Map',['../structPredicate_1_1Map.html',1,'Predicate']]],
-  ['matmatmul_294',['MatMatMul',['../structLinAlg_1_1MatMatMul.html',1,'LinAlg']]],
-  ['matvecmul_295',['MatVecMul',['../structLinAlg_1_1MatVecMul.html',1,'LinAlg']]],
-  ['maxpow10_296',['MaxPow10',['../structLinAlg_1_1MaxPow10.html',1,'LinAlg']]],
-  ['memoryaccess_297',['MemoryAccess',['../structMemoryAccess.html',1,'']]],
-  ['mergingcost_298',['MergingCost',['../structMergingCost.html',1,'']]],
-  ['mockgraph_299',['MockGraph',['../structMockGraph.html',1,'']]],
-  ['mockvertex_300',['MockVertex',['../structMockVertex.html',1,'']]],
-  ['mul_301',['Mul',['../structLinAlg_1_1Mul.html',1,'LinAlg']]],
-  ['mutarray_302',['MutArray',['../structLinAlg_1_1MutArray.html',1,'LinAlg']]],
-  ['mutarray_3c_20t_20_3e_303',['MutArray&lt; T &gt;',['../structLinAlg_1_1MutArray.html',1,'LinAlg']]]
+  ['linearprogramloopblock_284',['LinearProgramLoopBlock',['../classLinearProgramLoopBlock.html',1,'']]],
+  ['linearsymboliccomparator_285',['LinearSymbolicComparator',['../structcomparator_1_1LinearSymbolicComparator.html',1,'comparator']]],
+  ['literalcomparator_286',['LiteralComparator',['../structcomparator_1_1LiteralComparator.html',1,'comparator']]],
+  ['loopforestschedule_287',['LoopForestSchedule',['../structLoopForestSchedule.html',1,'']]],
+  ['looptree_288',['LoopTree',['../structLoopTree.html',1,'']]],
+  ['looptreeschedule_289',['LoopTreeSchedule',['../structLoopTreeSchedule.html',1,'']]]
 ];

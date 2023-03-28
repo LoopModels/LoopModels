@@ -1,15 +1,11 @@
 var searchData=
 [
-  ['range_333',['Range',['../structRange.html',1,'']]],
-  ['range_3c_20b_2c_20e_20_3e_334',['Range&lt; B, E &gt;',['../structRange_3_01B_00_01E_01_4.html',1,'']]],
-  ['rational_335',['Rational',['../structRational.html',1,'']]],
-  ['reallocview_336',['ReallocView',['../structLinAlg_1_1ReallocView.html',1,'LinAlg']]],
-  ['reallocview_3c_20t_2c_20s_2c_20a_2c_20u_20_3e_337',['ReallocView&lt; T, S, A, U &gt;',['../structLinAlg_1_1ReallocView.html',1,'LinAlg']]],
-  ['reallocview_3c_20t_2c_20s_2c_20a_2c_20u_2c_20true_20_3e_338',['ReallocView&lt; T, S, A, U, true &gt;',['../structLinAlg_1_1ReallocView.html',1,'LinAlg']]],
-  ['rebind_339',['rebind',['../structWBumpAlloc_1_1rebind.html',1,'WBumpAlloc']]],
-  ['recipthroughputlatency_340',['RecipThroughputLatency',['../structRecipThroughputLatency.html',1,'']]],
-  ['reference_341',['Reference',['../classBitSet_1_1Reference.html',1,'BitSet&lt; T &gt;::Reference'],['../structLinAlg_1_1SmallSparseMatrix_1_1Reference.html',1,'LinAlg::SmallSparseMatrix&lt; T &gt;::Reference'],['../structPredicate_1_1Intersection_1_1Reference.html',1,'Predicate::Intersection::Reference']]],
-  ['remapper_342',['ReMapper',['../structReMapper.html',1,'']]],
-  ['resizeableview_343',['ResizeableView',['../structLinAlg_1_1ResizeableView.html',1,'LinAlg']]],
-  ['resizeableview_3c_20t_2c_20s_2c_20default_5fcapacity_5ftype_5ft_3c_20s_20_3e_20_3e_344',['ResizeableView&lt; T, S, default_capacity_type_t&lt; S &gt; &gt;',['../structLinAlg_1_1ResizeableView.html',1,'LinAlg']]]
+  ['predicates_325',['Predicates',['../structInstruction_1_1Predicates.html',1,'Instruction']]],
+  ['promoteeltype_326',['PromoteEltype',['../structPromoteEltype.html',1,'']]],
+  ['promotetype_327',['PromoteType',['../structPromoteType.html',1,'']]],
+  ['promotetype_3c_20a_2c_20b_20_3e_328',['PromoteType&lt; A, B &gt;',['../structPromoteType_3_01A_00_01B_01_4.html',1,'']]],
+  ['promotetype_3c_20i_2c_20rational_20_3e_329',['PromoteType&lt; I, Rational &gt;',['../structPromoteType_3_01I_00_01Rational_01_4.html',1,'']]],
+  ['promotetype_3c_20rational_2c_20i_20_3e_330',['PromoteType&lt; Rational, I &gt;',['../structPromoteType_3_01Rational_00_01I_01_4.html',1,'']]],
+  ['promotetype_3c_20rational_2c_20rational_20_3e_331',['PromoteType&lt; Rational, Rational &gt;',['../structPromoteType_3_01Rational_00_01Rational_01_4.html',1,'']]],
+  ['ptrsymboliccomparator_332',['PtrSymbolicComparator',['../structcomparator_1_1PtrSymbolicComparator.html',1,'comparator']]]
 ];
