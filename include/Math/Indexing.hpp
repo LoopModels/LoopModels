@@ -192,9 +192,17 @@ struct StridedRange {
 template <class I> constexpr auto calcOffset(StridedRange d, I i) -> size_t {
   return d.stride * calcOffset(d.len, i);
 }
+constexpr auto is_integral_const(auto) -> bool { return false; }
+template <typename T, T V>
+constexpr auto is_integral_const(std::integral_constant<T, V>) -> bool {
+  return true;
+}
+template <typename T>
+concept StaticInt = is_integral_const(T{});
 
 template <class D>
-concept VectorDimension = std::integral<D> || std::same_as<D, StridedRange>;
+concept VectorDimension =
+  std::integral<D> || std::same_as<D, StridedRange> || StaticInt<D>;
 
 // Concept for aligning array dimensions with indices.
 template <class I, class D>

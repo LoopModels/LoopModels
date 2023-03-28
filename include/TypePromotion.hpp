@@ -20,7 +20,9 @@ template <std::floating_point A> struct GetEltype<A> {
 template <typename T>
 using eltype_t = typename GetEltype<std::remove_reference_t<T>>::value_type;
 
-template <typename A, typename B> struct PromoteType {};
+template <typename A, typename B> struct PromoteType {
+  using value_type = decltype(std::declval<A>() + std::declval<B>());
+};
 template <std::signed_integral A, std::signed_integral B>
 struct PromoteType<A, B> {
   using value_type = std::conditional_t<sizeof(A) >= sizeof(B), A, B>;

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Math/ArrayOps.hpp"
 #include "Math/AxisTypes.hpp"
 #include "Math/Indexing.hpp"
 #include "Math/Matrix.hpp"
@@ -20,9 +21,17 @@
 
 namespace LinAlg {
 
+// template <class T>
+// concept Scalar =
+//   std::integral<T> || std::floating_point<T> || std::same_as<T, Rational>;
 template <class T>
-concept Scalar =
-  std::integral<T> || std::floating_point<T> || std::same_as<T, Rational>;
+concept Scalar = requires(T t) {
+                   { t + t } -> std::convertible_to<T>;
+                   { t - t } -> std::convertible_to<T>;
+                   { t *t } -> std::convertible_to<T>;
+                   { t / t } -> std::convertible_to<T>;
+                   { -t } -> std::convertible_to<T>;
+                 };
 
 template <class T, class S, size_t N = PreAllocStorage<T>(),
           class A = std::allocator<T>,
@@ -143,6 +152,7 @@ template <class T, class S> struct Array {
   }
   [[nodiscard]] constexpr auto empty() const -> bool { return sz == S{}; }
   [[nodiscard]] constexpr auto size() const noexcept {
+    if constexpr (StaticInt<S>) return S{};
     if constexpr (std::integral<S>) return sz;
     else if constexpr (std::is_same_v<S, StridedRange>) return size_t(sz);
     else return CartesianIndex{Row{sz}, Col{sz}};
@@ -224,7 +234,8 @@ protected:
   [[no_unique_address]] S sz{};
 };
 
-template <class T, class S> struct MutArray : Array<T, S> {
+template <class T, class S>
+struct MutArray : Array<T, S>, ArrayOps<T, S, MutArray<T, S>> {
   using BaseT = Array<T, S>;
   // using BaseT::BaseT;
   using BaseT::operator[], BaseT::operator(), BaseT::data, BaseT::begin,
@@ -313,12 +324,21 @@ template <class T, class S> struct MutArray : Array<T, S> {
     return this->ptr;
   }
 
-  [[nodiscard, gnu::returns_nonnull]] constexpr auto begin() noexcept -> T * {
-    return this->ptr;
+  [[nodiscard]] constexpr auto begin() noexcept {
+    if constexpr (std::is_same_v<S, StridedRange>)
+      return StridedIterator{data(), this->sz.stride};
+    else return data();
   }
-  [[nodiscard, gnu::returns_nonnull]] constexpr auto end() noexcept -> T * {
-    return this->ptr + size_t(this->sz);
+  [[nodiscard]] constexpr auto end() noexcept {
+    return begin() + size_t(this->sz);
   }
+  // [[nodiscard, gnu::returns_nonnull]] constexpr auto begin() noexcept -> T *
+  // {
+  //   return this->ptr;
+  // }
+  // [[nodiscard, gnu::returns_nonnull]] constexpr auto end() noexcept -> T * {
+  //   return this->ptr + size_t(this->sz);
+  // }
   [[nodiscard]] constexpr auto rbegin() noexcept {
     return std::reverse_iterator(end());
   }
@@ -354,145 +374,6 @@ template <class T, class S> struct MutArray : Array<T, S> {
     StridedRange r{unsigned(min(Row{this->sz}, c)),
                    unsigned(RowStride{this->sz}) - 1};
     return MutArray<T, StridedRange>{this->ptr + size_t(c) - 1, r};
-  }
-  template <std::convertible_to<T> Y>
-  [[gnu::flatten]] constexpr auto operator<<(const UniformScaling<Y> &B)
-    -> decltype(auto) {
-    static_assert(MatrixDimension<S>);
-    std::fill_n((T *)(this->ptr), size_t(this->dim()), T{});
-    this->diag() << B.value;
-    return *this;
-  }
-  [[gnu::flatten]] constexpr auto operator<<(const SmallSparseMatrix<T> &B)
-    -> decltype(auto) {
-    static_assert(MatrixDimension<S>);
-    invariant(this->numRow(), B.numRow());
-    invariant(this->numCol(), B.numCol());
-    size_t M = size_t(this->numRow()), N = size_t(this->numCol()), k = 0;
-    T *mem = data();
-    for (size_t i = 0; i < M; ++i) {
-      uint32_t m = B.rows[i] & 0x00ffffff;
-      size_t j = 0, l = size_t(this->rowStride() * i);
-      while (m) {
-        uint32_t tz = std::countr_zero(m);
-        m >>= tz + 1;
-        for (; tz; --tz) mem[l + j++] = T{};
-        mem[l + j++] = B.nonZeros[k++];
-      }
-      for (; j < N; ++j) mem[l + j] = T{};
-    }
-    assert(k == B.nonZeros.size());
-    return *this;
-  }
-  [[gnu::flatten]] constexpr auto operator<<(const AbstractVector auto &B)
-    -> decltype(auto) {
-    if constexpr (MatrixDimension<S>) {
-      invariant(this->numRow(), B.size());
-      for (size_t i = 0; i < this->numRow(); ++i) {
-        T Bi = B[i];
-        for (size_t j = 0; j < this->numCol(); ++j) (*this)(i, j) = Bi;
-      }
-    } else {
-      invariant(size_t(this->size()), size_t(B.size()));
-      for (size_t i = 0; i < this->size(); ++i) (*this)[i] = B[i];
-    }
-    return *this;
-  }
-
-  [[gnu::flatten]] constexpr auto operator<<(const AbstractMatrix auto &B)
-    -> decltype(auto) {
-    static_assert(MatrixDimension<S>);
-    invariant(this->numRow(), B.numRow());
-    invariant(this->numCol(), B.numCol());
-    for (size_t i = 0; i < this->numRow(); ++i)
-      for (size_t j = 0; j < this->numCol(); ++j) (*this)(i, j) = B(i, j);
-    return *this;
-  }
-  template <std::convertible_to<T> Y>
-  [[gnu::flatten]] constexpr auto operator<<(const Y b) -> decltype(auto) {
-    if constexpr (std::integral<S> || std::is_same_v<S, StridedRange>) {
-      for (size_t c = 0, L = size_t(this->sz); c < L; ++c) (*this)[c] = b;
-    } else {
-      for (size_t r = 0; r < this->numRow(); ++r)
-        for (size_t c = 0; c < this->numCol(); ++c) (*this)(r, c) = b;
-    }
-    return *this;
-  }
-  [[gnu::flatten]] constexpr auto operator+=(const AbstractMatrix auto &B)
-    -> decltype(auto) {
-    static_assert(MatrixDimension<S>);
-    invariant(this->numRow(), B.numRow());
-    invariant(this->numCol(), B.numCol());
-    for (size_t r = 0; r < this->numRow(); ++r)
-      for (size_t c = 0; c < this->numCol(); ++c) (*this)(r, c) += B(r, c);
-    return *this;
-  }
-  [[gnu::flatten]] constexpr auto operator-=(const AbstractMatrix auto &B)
-    -> decltype(auto) {
-    static_assert(MatrixDimension<S>);
-    invariant(this->numRow(), B.numRow());
-    invariant(this->numCol(), B.numCol());
-    for (size_t r = 0; r < this->numRow(); ++r)
-      for (size_t c = 0; c < this->numCol(); ++c) (*this)(r, c) -= B(r, c);
-    return *this;
-  }
-  [[gnu::flatten]] constexpr auto operator+=(const AbstractVector auto &B)
-    -> decltype(auto) {
-    if constexpr (MatrixDimension<S>) {
-      invariant(this->numRow(), B.size());
-      for (size_t r = 0; r < this->numRow(); ++r) {
-        auto Br = B[r];
-        for (size_t c = 0; c < this->numCol(); ++c) (*this)(r, c) += Br;
-      }
-    } else {
-      invariant(size_t(this->size()), size_t(B.size()));
-      for (size_t i = 0; i < this->size(); ++i) (*this)[i] += B[i];
-    }
-    return *this;
-  }
-  template <std::convertible_to<T> Y>
-  [[gnu::flatten]] constexpr auto operator+=(Y b) -> decltype(auto) {
-    if constexpr (MatrixDimension<S> && !DenseLayout<S>) {
-      for (size_t r = 0; r < this->numRow(); ++r)
-        for (size_t c = 0; c < this->numCol(); ++c) (*this)(r, c) += b;
-    } else {
-      for (size_t i = 0; i < this->size(); ++i) (*this)[i] += b;
-    }
-    return *this;
-  }
-  [[gnu::flatten]] constexpr auto operator-=(const AbstractVector auto &B)
-    -> decltype(auto) {
-    if constexpr (MatrixDimension<S>) {
-      invariant(this->numRow() == B.size());
-      for (size_t r = 0; r < this->numRow(); ++r) {
-        auto Br = B[r];
-        for (size_t c = 0; c < this->numCol(); ++c) (*this)(r, c) -= Br;
-      }
-    } else {
-      invariant(this->size() == B.size());
-      for (size_t i = 0; i < this->size(); ++i) (*this)[i] -= B[i];
-    }
-    return *this;
-  }
-  template <std::convertible_to<T> Y>
-  [[gnu::flatten]] constexpr auto operator*=(Y b) -> decltype(auto) {
-    if constexpr (std::integral<S>) {
-      for (size_t c = 0, L = size_t(this->sz); c < L; ++c) (*this)[c] *= b;
-    } else {
-      for (size_t r = 0; r < this->numRow(); ++r)
-        for (size_t c = 0; c < this->numCol(); ++c) (*this)(r, c) *= b;
-    }
-    return *this;
-  }
-  template <std::convertible_to<T> Y>
-  [[gnu::flatten]] constexpr auto operator/=(Y b) -> decltype(auto) {
-    if constexpr (std::integral<S>) {
-      for (size_t c = 0, L = size_t(this->sz); c < L; ++c) (*this)[c] /= b;
-    } else {
-      for (size_t r = 0; r < this->numRow(); ++r)
-        for (size_t c = 0; c < this->numCol(); ++c) (*this)(r, c) /= b;
-    }
-    return *this;
   }
   constexpr void erase(S i) {
     static_assert(std::integral<S>, "erase requires integral size");
@@ -1035,9 +916,10 @@ protected:
 };
 
 template <class T, class S>
-concept AbstractSimilar =
-  (MatrixDimension<S> && AbstractMatrix<T>) ||
-  ((std::integral<S> || std::is_same_v<S, StridedRange>) && AbstractVector<T>);
+concept AbstractSimilar = (MatrixDimension<S> && AbstractMatrix<T>) ||
+                          ((std::integral<S> ||
+                            std::is_same_v<S, StridedRange> || StaticInt<S>) &&
+                           AbstractVector<T>);
 
 /// Stores memory, then pointer.
 /// Thus struct's alignment determines initial alignment

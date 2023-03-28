@@ -107,6 +107,13 @@ constexpr auto size(const std::integral auto) -> size_t { return 1; }
 constexpr auto size(const std::floating_point auto) -> size_t { return 1; }
 constexpr auto size(const AbstractVector auto &x) -> size_t { return x.size(); }
 
+template <class T, class C>
+concept ScalarOf = std::convertible_to<T, eltype_t<C>>;
+static_assert(ScalarOf<int, DenseMatrix<int64_t>>);
+static_assert(ScalarOf<int64_t, DenseMatrix<int64_t>>);
+static_assert(ScalarOf<int64_t, DenseMatrix<double>>);
+static_assert(!ScalarOf<DenseMatrix<double>, DenseMatrix<double>>);
+
 template <typename T>
 concept VectorOrScalar = AbstractVector<T> || Scalar<T>;
 template <typename T>
@@ -731,11 +738,23 @@ constexpr auto operator*(const AbstractVector auto &a,
 constexpr auto operator*(const AbstractVector auto &a, std::integral auto b) {
   return ElementwiseVectorBinaryOp(Mul{}, view(a), view(b));
 }
-constexpr auto operator*(Scalar auto a, const AbstractMatrix auto &b) {
+
+template <AbstractVector M, ScalarOf<M> S>
+constexpr auto operator*(S a, const M &b) {
+  return ElementwiseVectorBinaryOp(Mul{}, view(a), view(b));
+}
+template <AbstractVector M, ScalarOf<M> S>
+constexpr auto operator*(const M &b, S a) {
+  return ElementwiseVectorBinaryOp(Mul{}, view(b), view(a));
+}
+
+template <AbstractMatrix M, ScalarOf<M> S>
+constexpr auto operator*(S a, const M &b) {
   return ElementwiseMatrixBinaryOp(Mul{}, view(a), view(b));
 }
-constexpr auto operator*(Scalar auto a, const AbstractVector auto &b) {
-  return ElementwiseVectorBinaryOp(Mul{}, view(a), view(b));
+template <AbstractMatrix M, ScalarOf<M> S>
+constexpr auto operator*(const M &b, S a) {
+  return ElementwiseMatrixBinaryOp(Mul{}, view(b), view(a));
 }
 
 // constexpr auto operator*(AbstractMatrix auto &A, AbstractVector auto &x) {
