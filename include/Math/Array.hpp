@@ -200,9 +200,9 @@ template <class T, class S> struct Array {
   [[nodiscard]] constexpr auto norm2() const noexcept -> value_type {
     return std::transform_reduce(begin(), end(), begin(), 0.0);
   }
-  [[nodiscard]] constexpr auto norm() const noexcept -> double {
-    return std::sqrt(norm2());
-  }
+  // [[nodiscard]] constexpr auto norm() const noexcept -> double {
+  //   return std::sqrt(norm2());
+  // }
   // constexpr auto operator!=(const Array &other) const noexcept -> bool {
   //   return !(*this == other);
   // }
@@ -449,8 +449,8 @@ template <class T, class S> struct MutArray : Array<T, S> {
     }
     return *this;
   }
-  [[gnu::flatten]] constexpr auto operator+=(std::integral auto b)
-    -> decltype(auto) {
+  template <std::convertible_to<T> Y>
+  [[gnu::flatten]] constexpr auto operator+=(Y b) -> decltype(auto) {
     if constexpr (MatrixDimension<S> && !DenseLayout<S>) {
       for (size_t r = 0; r < this->numRow(); ++r)
         for (size_t c = 0; c < this->numCol(); ++c) (*this)(r, c) += b;
@@ -473,8 +473,8 @@ template <class T, class S> struct MutArray : Array<T, S> {
     }
     return *this;
   }
-  [[gnu::flatten]] constexpr auto operator*=(const std::integral auto b)
-    -> decltype(auto) {
+  template <std::convertible_to<T> Y>
+  [[gnu::flatten]] constexpr auto operator*=(Y b) -> decltype(auto) {
     if constexpr (std::integral<S>) {
       for (size_t c = 0, L = size_t(this->sz); c < L; ++c) (*this)[c] *= b;
     } else {
@@ -483,8 +483,8 @@ template <class T, class S> struct MutArray : Array<T, S> {
     }
     return *this;
   }
-  [[gnu::flatten]] constexpr auto operator/=(const std::integral auto b)
-    -> decltype(auto) {
+  template <std::convertible_to<T> Y>
+  [[gnu::flatten]] constexpr auto operator/=(Y b) -> decltype(auto) {
     if constexpr (std::integral<S>) {
       for (size_t c = 0, L = size_t(this->sz); c < L; ++c) (*this)[c] /= b;
     } else {
@@ -1536,6 +1536,13 @@ static_assert(!AbstractMatrix<const PtrVector<int64_t>>,
               "PtrVector<const int64_t> isa AbstractMatrix succeeded");
 static_assert(!AbstractMatrix<const MutPtrVector<int64_t>>,
               "PtrVector<const int64_t> isa AbstractMatrix succeeded");
+static_assert(std::is_convertible_v<DenseMatrix<int64_t>, Matrix<int64_t>>);
+static_assert(
+  std::is_convertible_v<DenseMatrix<int64_t>, DensePtrMatrix<int64_t>>);
+static_assert(std::is_convertible_v<DenseMatrix<int64_t>, PtrMatrix<int64_t>>);
+static_assert(std::is_convertible_v<SquareMatrix<int64_t>, Matrix<int64_t>>);
+static_assert(
+  std::is_convertible_v<SquareMatrix<int64_t>, MutPtrMatrix<int64_t>>);
 
 using IntMatrix = Matrix<int64_t>;
 static_assert(std::same_as<IntMatrix::value_type, int64_t>);

@@ -16,6 +16,13 @@ template <class T, size_t N> struct TinyVector {
   }
   constexpr TinyVector(T t) : len{1} { data[0] = std::move(t); }
 
+  constexpr auto operator=(const std::initializer_list<T> &list)
+    -> TinyVector & {
+    invariant(list.size() <= N);
+    len = list.size();
+    std::copy(list.begin(), list.end(), data);
+    return *this;
+  }
   constexpr auto operator[](size_t i) -> T & {
     invariant(i < len);
     return data[i];

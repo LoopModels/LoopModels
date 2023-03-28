@@ -159,7 +159,7 @@ static constexpr inline UniformScaling<std::true_type> I{
   std::true_type{}}; // identity
 
 template <class T> UniformScaling(T) -> UniformScaling<T>;
-static_assert(AbstractMatrixCore<UniformScaling<int64_t>>);
+static_assert(AbstractMatrix<UniformScaling<int64_t>>);
 
 } // namespace LinAlg
 

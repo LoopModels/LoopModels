@@ -55,8 +55,7 @@ public:
     }
     return false;
   }
-  template <std::floating_point S>
-  constexpr void ldiv(MutPtrMatrix<S> rhs) const {
+  template <class S> constexpr void ldiv(MutPtrMatrix<S> rhs) const {
     auto [M, N] = rhs.size();
     invariant(size_t(F.numRow()), size_t(M));
     // // check unimodularity
@@ -131,8 +130,7 @@ public:
 
     return false;
   }
-  template <std::floating_point S>
-  constexpr void rdiv(MutPtrMatrix<S> rhs) const {
+  template <class S> constexpr void rdiv(MutPtrMatrix<S> &rhs) const {
     auto [M, N] = rhs.size();
     invariant(size_t(F.numCol()), size_t(N));
     // // check unimodularity
@@ -146,7 +144,7 @@ public:
     // y U = rhs
     for (size_t n = 0; n < N; ++n) {
       for (size_t m = 0; m < M; ++m) {
-        T Ymn = rhs(m, n);
+        S Ymn = rhs(m, n);
         for (size_t k = 0; k < n; ++k) Ymn -= rhs(m, k) * F(k, n);
         rhs(m, n) = Ymn / F(n, n);
       }
@@ -155,7 +153,7 @@ public:
     for (auto n = size_t(N); n--;) {
       // for (size_t n = 0; n < N; ++n) {
       for (size_t m = 0; m < M; ++m) {
-        T Xmn = rhs(m, n);
+        S Xmn = rhs(m, n);
         for (size_t k = n + 1; k < N; ++k) Xmn -= rhs(m, k) * F(k, n);
         rhs(m, n) = Xmn;
       }

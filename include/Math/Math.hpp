@@ -160,9 +160,15 @@ struct ElementwiseMatrixBinaryOp {
                     std::floating_point<B>,
                   "Argument B to elementwise binary op is not a matrix.");
     if constexpr (AbstractMatrix<A> && AbstractMatrix<B>) {
-      const Row N = a.numRow();
-      assert(N == b.numRow());
-      return N;
+      if constexpr (std::is_same_v<A, UniformScaling<eltype_t<A>>>) {
+        return b.numRow();
+      } else if constexpr (std::is_same_v<B, UniformScaling<eltype_t<B>>>) {
+        return a.numRow();
+      } else {
+        const Row N = a.numRow();
+        invariant(N, b.numRow());
+        return N;
+      }
     } else if constexpr (AbstractMatrix<A>) {
       return a.numRow();
     } else if constexpr (AbstractMatrix<B>) {
@@ -177,9 +183,15 @@ struct ElementwiseMatrixBinaryOp {
                     std::floating_point<B>,
                   "Argument B to elementwise binary op is not a matrix.");
     if constexpr (AbstractMatrix<A> && AbstractMatrix<B>) {
-      const Col N = a.numCol();
-      assert(N == b.numCol());
-      return N;
+      if constexpr (std::is_same_v<A, UniformScaling<eltype_t<A>>>) {
+        return b.numCol();
+      } else if constexpr (std::is_same_v<B, UniformScaling<eltype_t<B>>>) {
+        return a.numCol();
+      } else {
+        const Col N = a.numCol();
+        invariant(N, b.numCol());
+        return N;
+      }
     } else if constexpr (AbstractMatrix<A>) {
       return a.numCol();
     } else if constexpr (AbstractMatrix<B>) {
@@ -780,6 +792,27 @@ template <AbstractMatrix B> constexpr auto norm2(const B &A) {
     for (size_t j = 0; j < A.numCol(); ++j) s += A(i, j) * A(i, j);
   return s;
 }
+
+// template <class T, size_t N> struct Zip {
+//   std::array<T, N> a;
+//   constexpr Zip(std::initializer_list<T> b) : a(b) {}
+//   constexpr auto operator[](size_t i) -> T & { return a[i]; }
+//   constexpr auto operator[](size_t i) const -> const T & { return a[i]; }
+//   constexpr auto size() const -> size_t { return N; }
+//   constexpr auto begin() -> typename std::array<T, N>::iterator {
+//     return a.begin();
+//   }
+//   constexpr auto end() -> typename std::array<T, N>::iterator {
+//     return a.end();
+//   }
+//   constexpr auto begin() const -> typename std::array<T, N>::const_iterator {
+//     return a.begin();
+//   }
+//   constexpr auto end() const -> typename std::array<T, N>::const_iterator {
+//     return a.end();
+//   }
+
+// };
 
 // inline auto operator<<(std::ostream &os, const AbstractVector auto &x)
 //   -> std::ostream & {

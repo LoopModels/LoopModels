@@ -43,6 +43,14 @@ template <std::floating_point A, std::integral B> struct PromoteType<A, B> {
 template <std::integral A, std::floating_point B> struct PromoteType<A, B> {
   using value_type = B;
 };
+template <std::floating_point A, std::integral B, B V>
+struct PromoteType<A, std::integral_constant<B, V>> {
+  using value_type = A;
+};
+template <std::integral A, std::floating_point B, A V>
+struct PromoteType<std::integral_constant<A, V>, B> {
+  using value_type = B;
+};
 template <std::floating_point A, std::floating_point B>
 struct PromoteType<A, B> {
   using value_type = decltype(A() + B());
