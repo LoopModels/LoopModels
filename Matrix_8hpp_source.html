@@ -226,15 +226,21 @@ $(function() {
 <div class="line"><a name="l00155"></a><span class="lineno">  155</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="structLinAlg_1_1UniformScaling.html">UniformScaling&lt;U&gt;</a>{value * x};</div>
 <div class="line"><a name="l00156"></a><span class="lineno">  156</span>&#160;  }</div>
 <div class="line"><a name="l00157"></a><span class="lineno">  157</span>&#160;};</div>
-<div class="line"><a name="l00158"></a><span class="lineno">  158</span>&#160;<span class="keyword">static</span> constexpr <span class="keyword">inline</span> <a class="code" href="structLinAlg_1_1UniformScaling.html">UniformScaling&lt;std::true_type&gt;</a> I{</div>
-<div class="line"><a name="l00159"></a><span class="lineno">  159</span>&#160;  std::true_type{}}; <span class="comment">// identity</span></div>
-<div class="line"><a name="l00160"></a><span class="lineno">  160</span>&#160; </div>
-<div class="line"><a name="l00161"></a><span class="lineno">  161</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">class</span> T&gt; UniformScaling(T) -&gt; UniformScaling&lt;T&gt;;</div>
-<div class="line"><a name="l00162"></a><span class="lineno">  162</span>&#160;static_assert(AbstractMatrix&lt;UniformScaling&lt;int64_t&gt;&gt;);</div>
+<div class="line"><a name="l00158"></a><span class="lineno">  158</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">class</span> T, <span class="keyword">class</span> U&gt;</div>
+<div class="line"><a name="l00159"></a><span class="lineno">  159</span>&#160;constexpr <span class="keyword">auto</span> operator*(<span class="keyword">const</span> U &amp;x, <a class="code" href="structLinAlg_1_1UniformScaling.html">UniformScaling&lt;T&gt;</a> d) {</div>
+<div class="line"><a name="l00160"></a><span class="lineno">  160</span>&#160;  <span class="keywordflow">if</span> constexpr (std::is_same_v&lt;T, std::true_type&gt;) <span class="keywordflow">return</span> <a class="code" href="structLinAlg_1_1UniformScaling.html">UniformScaling&lt;U&gt;</a>{x};</div>
+<div class="line"><a name="l00161"></a><span class="lineno">  161</span>&#160;  <span class="keywordflow">return</span> UniformScaling&lt;U&gt;{d.value * x};</div>
+<div class="line"><a name="l00162"></a><span class="lineno">  162</span>&#160;}</div>
 <div class="line"><a name="l00163"></a><span class="lineno">  163</span>&#160; </div>
-<div class="line"><a name="l00164"></a><span class="lineno">  164</span>&#160;} <span class="comment">// namespace LinAlg</span></div>
-<div class="line"><a name="l00165"></a><span class="lineno">  165</span>&#160; </div>
-<div class="line"><a name="l00166"></a><span class="lineno">  166</span>&#160;<span class="keyword">using</span> LinAlg::I;</div>
+<div class="line"><a name="l00164"></a><span class="lineno">  164</span>&#160;<span class="keyword">static</span> constexpr <span class="keyword">inline</span> UniformScaling&lt;std::true_type&gt; I{</div>
+<div class="line"><a name="l00165"></a><span class="lineno">  165</span>&#160;  std::true_type{}}; <span class="comment">// identity</span></div>
+<div class="line"><a name="l00166"></a><span class="lineno">  166</span>&#160; </div>
+<div class="line"><a name="l00167"></a><span class="lineno">  167</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">class</span> T&gt; UniformScaling(T) -&gt; UniformScaling&lt;T&gt;;</div>
+<div class="line"><a name="l00168"></a><span class="lineno">  168</span>&#160;static_assert(AbstractMatrix&lt;UniformScaling&lt;int64_t&gt;&gt;);</div>
+<div class="line"><a name="l00169"></a><span class="lineno">  169</span>&#160; </div>
+<div class="line"><a name="l00170"></a><span class="lineno">  170</span>&#160;} <span class="comment">// namespace LinAlg</span></div>
+<div class="line"><a name="l00171"></a><span class="lineno">  171</span>&#160; </div>
+<div class="line"><a name="l00172"></a><span class="lineno">  172</span>&#160;<span class="keyword">using</span> LinAlg::I;</div>
 <div class="ttc" id="anamespaceLinAlg_html"><div class="ttname"><a href="namespaceLinAlg.html">LinAlg</a></div><div class="ttdef"><b>Definition:</b> Array.hpp:21</div></div>
 <div class="ttc" id="astructLinAlg_1_1AxisInt_html"><div class="ttname"><a href="structLinAlg_1_1AxisInt.html">LinAlg::AxisInt</a></div><div class="ttdef"><b>Definition:</b> AxisTypes.hpp:46</div></div>
 <div class="ttc" id="astructLinAlg_1_1CartesianIndex_html"><div class="ttname"><a href="structLinAlg_1_1CartesianIndex.html">LinAlg::CartesianIndex</a></div><div class="ttdef"><b>Definition:</b> MatrixDimensions.hpp:10</div></div>

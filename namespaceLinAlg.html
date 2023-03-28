@@ -228,6 +228,10 @@ using&#160;</td><td class="memItemRight" valign="bottom"><b>RowStride</b> = <a c
 <tr class="memitem:a2f7b9b22d163a54fe93298de1ff142ef"><td class="memItemLeft" align="right" valign="top"><a id="a2f7b9b22d163a54fe93298de1ff142ef"></a>
 using&#160;</td><td class="memItemRight" valign="bottom"><b>CarInd</b> = std::pair&lt; <a class="el" href="structLinAlg_1_1AxisInt.html">Row</a>, <a class="el" href="structLinAlg_1_1AxisInt.html">Col</a> &gt;</td></tr>
 <tr class="separator:a2f7b9b22d163a54fe93298de1ff142ef"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab4d66612dbbacd9c47a53382c80d34b4"><td class="memTemplParams" colspan="2"><a id="ab4d66612dbbacd9c47a53382c80d34b4"></a>
+template&lt;typename T , typename U &gt; </td></tr>
+<tr class="memitem:ab4d66612dbbacd9c47a53382c80d34b4"><td class="memTemplItemLeft" align="right" valign="top">using&#160;</td><td class="memTemplItemRight" valign="bottom"><b>is_concrete_t</b> = std::conditional_t&lt; HasConcreteSize&lt; T &gt;||HasConcreteSize&lt; U &gt;, std::true_type, std::false_type &gt;</td></tr>
+<tr class="separator:ab4d66612dbbacd9c47a53382c80d34b4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aee115ad5e22c63837c1d4a01be346fba"><td class="memTemplParams" colspan="2"><a id="aee115ad5e22c63837c1d4a01be346fba"></a>
 template&lt;class S &gt; </td></tr>
 <tr class="memitem:aee115ad5e22c63837c1d4a01be346fba"><td class="memTemplItemLeft" align="right" valign="top">using&#160;</td><td class="memTemplItemRight" valign="bottom"><b>default_capacity_type_t</b> = typename <a class="el" href="structLinAlg_1_1default__capacity__type.html">default_capacity_type</a>&lt; S &gt;::type</td></tr>
@@ -771,6 +775,10 @@ template&lt;AbstractVector B&gt; </td></tr>
 template&lt;typename A &gt; </td></tr>
 <tr class="memitem:a86154c708ec13c79bc99691d64f329af"><td class="memTemplItemLeft" align="right" valign="top">&#160;</td><td class="memTemplItemRight" valign="bottom"><b>Transpose</b> (A) -&gt; <a class="el" href="structLinAlg_1_1Transpose.html">Transpose</a>&lt; A &gt;</td></tr>
 <tr class="separator:a86154c708ec13c79bc99691d64f329af"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afe6349a785d3c116922b66ca049d5db8"><td class="memTemplParams" colspan="2"><a id="afe6349a785d3c116922b66ca049d5db8"></a>
+template&lt;class T , class U &gt; </td></tr>
+<tr class="memitem:afe6349a785d3c116922b66ca049d5db8"><td class="memTemplItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>operator*</b> (const U &amp;x, <a class="el" href="structLinAlg_1_1UniformScaling.html">UniformScaling</a>&lt; T &gt; d)</td></tr>
+<tr class="separator:afe6349a785d3c116922b66ca049d5db8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a43e26b76ae02003cde9e549cce4a4587"><td class="memTemplParams" colspan="2"><a id="a43e26b76ae02003cde9e549cce4a4587"></a>
 template&lt;class T &gt; </td></tr>
 <tr class="memitem:a43e26b76ae02003cde9e549cce4a4587"><td class="memTemplItemLeft" align="right" valign="top">&#160;</td><td class="memTemplItemRight" valign="bottom"><b>UniformScaling</b> (T) -&gt; <a class="el" href="structLinAlg_1_1UniformScaling.html">UniformScaling</a>&lt; T &gt;</td></tr>
@@ -851,6 +859,9 @@ template&lt;typename T &gt; </td></tr>
 <tr class="memitem:acb681825c0dde079609df70e1bde6ddd"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
 <tr class="memitem:acb681825c0dde079609df70e1bde6ddd"><td class="memTemplItemLeft" align="right" valign="top">concept&#160;</td><td class="memTemplItemRight" valign="bottom"><b>TriviallyCopyableMatrixOrScalar</b></td></tr>
 <tr class="separator:acb681825c0dde079609df70e1bde6ddd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa43fca5e2f90631f5e4dab4f4a07f441"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
+<tr class="memitem:aa43fca5e2f90631f5e4dab4f4a07f441"><td class="memTemplItemLeft" align="right" valign="top">concept&#160;</td><td class="memTemplItemRight" valign="bottom"><b>HasConcreteSize</b></td></tr>
+<tr class="separator:aa43fca5e2f90631f5e4dab4f4a07f441"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a845d9813b73e9d00432348b987574b81"><td class="memTemplParams" colspan="2">template&lt;int Bits, class T &gt; </td></tr>
 <tr class="memitem:a845d9813b73e9d00432348b987574b81"><td class="memTemplItemLeft" align="right" valign="top">constexpr bool&#160;</td><td class="memTemplItemRight" valign="bottom"><b>is_uint_v</b></td></tr>
 <tr class="separator:a845d9813b73e9d00432348b987574b81"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -1087,6 +1098,27 @@ template&lt;class T &gt; </div>
 </div><div class="memdoc">
 <b>Initial value:</b><div class="fragment"><div class="line">= std::integral&lt;T&gt; || std::is_same_v&lt;T, DenseDims&gt; ||</div>
 <div class="line">                      std::is_same_v&lt;T, SquareDims&gt;</div>
+</div><!-- fragment -->
+</div>
+</div>
+<a id="aa43fca5e2f90631f5e4dab4f4a07f441"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa43fca5e2f90631f5e4dab4f4a07f441">&#9670;&nbsp;</a></span>HasConcreteSize</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename T &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">concept LinAlg::HasConcreteSize</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<b>Initial value:</b><div class="fragment"><div class="line">=</div>
+<div class="line">  requires(T) {</div>
+<div class="line">    std::is_same_v&lt;typename std::remove_reference_t&lt;T&gt;::concrete,</div>
+<div class="line">                   std::true_type&gt;;</div>
+<div class="line">  }</div>
 </div><!-- fragment -->
 </div>
 </div>
