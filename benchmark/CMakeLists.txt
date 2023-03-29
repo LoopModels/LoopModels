@@ -49,7 +49,10 @@ target_include_directories(
   ${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/../include ${PROJECT_SOURCE_DIR}/include
                           ${LLVM_INCLUDE_DIRS}
 )
-target_link_libraries(${PROJECT_NAME} PRIVATE benchmark LLVM unordered_dense::unordered_dense)
+find_package(OpenMP)
+target_link_libraries(
+  ${PROJECT_NAME} PRIVATE benchmark LLVM unordered_dense::unordered_dense OpenMP::OpenMP_CXX
+)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   target_compile_options(${PROJECT_NAME} PRIVATE -ferror-limit=2 -fcolor-diagnostics)
@@ -93,6 +96,7 @@ target_compile_options(
           -Wshadow
           -Wextra
           -save-temps
+          -fopenmp
 )
 if(CMAKE_SYSTEM_PROCESSOR MATCHES "(x86)|(X86)|(amd64)|(AMD64)")
   target_compile_options(${PROJECT_NAME} PRIVATE -masm=intel)

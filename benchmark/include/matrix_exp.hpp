@@ -10,6 +10,7 @@
 #include <array>
 #include <benchmark/benchmark.h>
 #include <concepts>
+#include <cstdint>
 #include <llvm/ADT/TinyPtrVector.h>
 #include <random>
 
@@ -160,7 +161,7 @@ template <class D> struct urand {
 };
 template <> struct urand<double> {
   auto operator()(std::mt19937_64 &mt) -> double {
-    return std::uniform_real_distribution<double>(-1, 1)(mt);
+    return std::uniform_real_distribution<double>(-2, 2)(mt);
   }
 };
 
@@ -271,15 +272,29 @@ template <AbstractMatrix T> constexpr auto expm(const T &A) {
   return V;
 }
 
+auto expwork(const auto &A) {
+  auto B = expm(A);
+  decltype(B) C{A.dim()};
+  for (size_t i = 0; i < 8; ++i) {
+    C << A * exp2(-double(i));
+    B += expm(C);
+  }
+  return B;
+}
+void expbench(const auto &A) {
+  auto B{expwork(A)};
+  for (auto &b : B) benchmark::DoNotOptimize(b);
+}
+
 static void BM_expm(benchmark::State &state) {
   unsigned dim = state.range(0);
   std::mt19937_64 mt(0);
   SquareMatrix<double> A{SquareDims{dim}};
-  for (auto &a : A) a = std::uniform_real_distribution<double>(-1, 1)(mt);
+  for (auto &a : A) a = urand<double>{}(mt);
   // llvm::errs() << "dim = " << dim << "; A = " << A << "\nexpm(A) = " <<
   // expm(A)
   //              << "\n";
-  for (auto b : state) expm(A);
+  for (auto b : state) expbench(A);
 }
 BENCHMARK(BM_expm)->DenseRange(2, 10, 1);
 static void BM_expm_dual4(benchmark::State &state) {
@@ -288,7 +303,7 @@ static void BM_expm_dual4(benchmark::State &state) {
   using D = Dual<double, 4>;
   SquareMatrix<D> A{SquareDims{dim}};
   for (auto &a : A) a = urand<D>{}(mt);
-  for (auto b : state) expm(A);
+  for (auto b : state) expbench(A);
 }
 BENCHMARK(BM_expm_dual4)->DenseRange(2, 10, 1);
 
@@ -301,6 +316,30 @@ static void BM_expm_dual4x2(benchmark::State &state) {
   // llvm::errs() << "dim = " << dim << "; A = " << A << "\nexpm(A) = " <<
   // expm(A)
   //              << "\n";
-  for (auto b : state) expm(A);
+  for (auto b : state) expbench(A);
 }
 BENCHMARK(BM_expm_dual4x2)->DenseRange(2, 10, 1);
+
+using D4D2 = Dual<Dual<double, 4>, 2>;
+using SMDD = SquareMatrix<D4D2>;
+#pragma omp declare reduction(+ : SMDD : omp_out += omp_in) \
+         initializer(omp_priv = SMDD{omp_orig.dim(), D4D2{}})
+
+static void BM_expm_dual4x2_threads(benchmark::State &state) {
+  unsigned dim = state.range(0);
+  std::mt19937_64 mt(0);
+  using D = Dual<Dual<double, 4>, 2>;
+  SquareMatrix<D> A{SquareDims{dim}};
+  for (auto &a : A) a = urand<D>{}(mt);
+  // llvm::errs() << "dim = " << dim << "; A = " << A << "\nexpm(A) = " <<
+  // expm(A)
+  //              << "\n";
+  for (auto bch : state) {
+    SquareMatrix<D> B{SquareDims{dim}};
+    B.fill(D{0});
+#pragma omp parallel for reduction(+ : B)
+    for (int i = 0; i < 1000; ++i) B += expwork(A);
+    for (auto &b : B) benchmark::DoNotOptimize(b);
+  }
+}
+BENCHMARK(BM_expm_dual4x2_threads)->DenseRange(2, 10, 1);
