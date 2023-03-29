@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['uniformscaling_212',['UniformScaling',['../structLinAlg_1_1UniformScaling.html',1,'LinAlg']]]
+  ['uniformscaling_214',['UniformScaling',['../structLinAlg_1_1UniformScaling.html',1,'LinAlg']]]
 ];
