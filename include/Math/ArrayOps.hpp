@@ -19,8 +19,11 @@ template <class T, class S, class P> class ArrayOps {
   constexpr auto index(size_t i, size_t j) -> T & {
     return (*static_cast<P *>(this))(i, j);
   }
-  constexpr auto nr() { return static_cast<const P *>(this)->numRow(); }
-  constexpr auto nc() { return static_cast<const P *>(this)->numCol(); }
+  constexpr auto nr() const { return static_cast<const P *>(this)->numRow(); }
+  constexpr auto nc() const { return static_cast<const P *>(this)->numCol(); }
+  constexpr auto rs() const {
+    return static_cast<const P *>(this)->rowStride();
+  }
 
 public:
   template <std::convertible_to<T> Y>
@@ -40,7 +43,7 @@ public:
     T *mem = data_();
     for (size_t i = 0; i < M; ++i) {
       uint32_t m = B.rows[i] & 0x00ffffff;
-      size_t j = 0, l = size_t(this->rowStride() * i);
+      size_t j = 0, l = size_t(rs() * i);
       while (m) {
         uint32_t tz = std::countr_zero(m);
         m >>= tz + 1;

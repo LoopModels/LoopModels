@@ -197,8 +197,13 @@ template <typename T, T V>
 constexpr auto is_integral_const(std::integral_constant<T, V>) -> bool {
   return true;
 }
+
 template <typename T>
-concept StaticInt = is_integral_const(T{});
+concept StaticInt =
+  std::is_same_v<T, std::integral_constant<typename T::value_type, T::value>>;
+
+static_assert(StaticInt<std::integral_constant<unsigned int, 3>>);
+static_assert(!StaticInt<int64_t>);
 
 template <class D>
 concept VectorDimension =

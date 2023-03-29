@@ -21,18 +21,6 @@
 
 namespace LinAlg {
 
-// template <class T>
-// concept Scalar =
-//   std::integral<T> || std::floating_point<T> || std::same_as<T, Rational>;
-template <class T>
-concept Scalar = requires(T t) {
-                   { t + t } -> std::convertible_to<T>;
-                   { t - t } -> std::convertible_to<T>;
-                   { t *t } -> std::convertible_to<T>;
-                   { t / t } -> std::convertible_to<T>;
-                   { -t } -> std::convertible_to<T>;
-                 };
-
 template <class T, class S, size_t N = PreAllocStorage<T>(),
           class A = std::allocator<T>,
           std::unsigned_integral U = default_capacity_type_t<S>>

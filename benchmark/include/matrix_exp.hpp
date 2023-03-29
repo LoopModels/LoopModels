@@ -3,7 +3,6 @@
 #include "Containers/TinyVector.hpp"
 #include "Math/Array.hpp"
 #include "Math/LinearAlgebra.hpp"
-#include "Math/Math.hpp"
 #include "Math/Matrix.hpp"
 #include "Math/StaticArrays.hpp"
 #include <algorithm>
@@ -29,8 +28,10 @@ public:
 
   constexpr auto value() -> T & { return val; }
   constexpr auto gradient() -> SVector<T, N> & { return partials; }
-  constexpr auto value() const -> const T & { return val; }
-  constexpr auto gradient() const -> const SVector<T, N> & { return partials; }
+  [[nodiscard]] constexpr auto value() const -> const T & { return val; }
+  [[nodiscard]] constexpr auto gradient() const -> const SVector<T, N> & {
+    return partials;
+  }
   // constexpr auto operator[](size_t i) const -> T { return grad[i]; }
   // constexpr auto operator[](size_t i) -> T & { return grad[i]; }
   constexpr auto operator-() const -> Dual { return Dual(-val, -partials); }
@@ -147,10 +148,6 @@ constexpr auto extractDualValRecurse(const Dual<T, N> &x) {
   return extractDualValRecurse(x.value());
   // return x.value();
 }
-
-auto x = Dual<double, 4>{1.0, {1.0, 2.0, 3.0, 4.0}};
-static_assert(
-  std::same_as<decltype(extractDualValRecurse(Dual<double, 4>{})), double>);
 
 template <AbstractMatrix T> constexpr auto evalpoly(const T &C, const auto &p) {
   using U = eltype_t<T>;
