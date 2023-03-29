@@ -123,6 +123,23 @@ public:
     return val >= other.val;
   }
 };
+template <class T, size_t N>
+constexpr auto operator+(T other, Dual<T, N> x) -> Dual<T, N> {
+  return Dual(x.value() + other, x.gradient());
+}
+template <class T, size_t N>
+constexpr auto operator-(T other, Dual<T, N> x) -> Dual<T, N> {
+  return Dual(x.value() - other, -x.gradient());
+}
+template <class T, size_t N>
+constexpr auto operator*(T other, Dual<T, N> x) -> Dual<T, N> {
+  return Dual(x.value() * other, other * x.gradient());
+}
+template <class T, size_t N>
+constexpr auto operator/(T other, Dual<T, N> x) -> Dual<T, N> {
+  return Dual(other / x.value(),
+              -other * x.gradient() / (x.value() * x.value()));
+}
 
 constexpr auto extractDualValRecurse(const auto &x) { return x; }
 template <class T, size_t N>
@@ -180,7 +197,7 @@ template <AbstractMatrix T> constexpr auto opnorm1(const T &A) {
 template <AbstractMatrix T> constexpr auto expm(const T &A) {
   using S = eltype_t<T>;
   unsigned n = unsigned(A.numRow());
-  S nA = opnorm1(A);
+  auto nA = opnorm1(A);
   SquareMatrix<S> A2{A * A}, U{SquareDims{n}}, V{SquareDims{n}};
   unsigned int s = 0;
   if (nA <= 2.1) {

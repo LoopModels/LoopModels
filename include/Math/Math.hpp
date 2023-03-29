@@ -92,12 +92,8 @@ template <typename Op, AbstractVector A> struct ElementwiseUnaryOp<Op, A> {
   [[nodiscard]] constexpr auto view() const { return *this; };
 };
 // scalars broadcast
-constexpr auto get(const std::integral auto A, size_t) { return A; }
-constexpr auto get(const std::floating_point auto A, size_t) { return A; }
-constexpr auto get(const std::integral auto A, size_t, size_t) { return A; }
-constexpr auto get(const std::floating_point auto A, size_t, size_t) {
-  return A;
-}
+constexpr auto get(const auto &A, size_t) { return A; }
+constexpr auto get(const auto &A, size_t, size_t) { return A; }
 inline auto get(const AbstractVector auto &A, size_t i) { return A[i]; }
 inline auto get(const AbstractMatrix auto &A, size_t i, size_t j) {
   return A(i, j);
@@ -107,12 +103,10 @@ constexpr auto size(const std::integral auto) -> size_t { return 1; }
 constexpr auto size(const std::floating_point auto) -> size_t { return 1; }
 constexpr auto size(const AbstractVector auto &x) -> size_t { return x.size(); }
 
-template <class T, class C>
-concept ScalarOf = std::convertible_to<T, eltype_t<C>>;
-static_assert(ScalarOf<int, DenseMatrix<int64_t>>);
-static_assert(ScalarOf<int64_t, DenseMatrix<int64_t>>);
-static_assert(ScalarOf<int64_t, DenseMatrix<double>>);
-static_assert(!ScalarOf<DenseMatrix<double>, DenseMatrix<double>>);
+static_assert(ElementOf<int, DenseMatrix<int64_t>>);
+static_assert(ElementOf<int64_t, DenseMatrix<int64_t>>);
+static_assert(ElementOf<int64_t, DenseMatrix<double>>);
+static_assert(!ElementOf<DenseMatrix<double>, DenseMatrix<double>>);
 
 template <typename T>
 concept VectorOrScalar = AbstractVector<T> || Scalar<T>;
@@ -180,12 +174,12 @@ struct ElementwiseMatrixBinaryOp {
     return op(get(a, i, j), get(b, i, j));
   }
   [[nodiscard]] constexpr auto numRow() const -> Row {
-    static_assert(AbstractMatrix<A> || std::integral<A> ||
-                    std::floating_point<A>,
-                  "Argument A to elementwise binary op is not a matrix.");
-    static_assert(AbstractMatrix<B> || std::integral<B> ||
-                    std::floating_point<B>,
-                  "Argument B to elementwise binary op is not a matrix.");
+    // static_assert(AbstractMatrix<A> || std::integral<A> ||
+    //                 std::floating_point<A>,
+    //               "Argument A to elementwise binary op is not a matrix.");
+    // static_assert(AbstractMatrix<B> || std::integral<B> ||
+    //                 std::floating_point<B>,
+    //               "Argument B to elementwise binary op is not a matrix.");
     if constexpr (AbstractMatrix<A> && AbstractMatrix<B>) {
       if constexpr (HasConcreteSize<A>) {
         if constexpr (HasConcreteSize<B>) {
@@ -207,12 +201,12 @@ struct ElementwiseMatrixBinaryOp {
     }
   }
   [[nodiscard]] constexpr auto numCol() const -> Col {
-    static_assert(AbstractMatrix<A> || std::integral<A> ||
-                    std::floating_point<A>,
-                  "Argument A to elementwise binary op is not a matrix.");
-    static_assert(AbstractMatrix<B> || std::integral<B> ||
-                    std::floating_point<B>,
-                  "Argument B to elementwise binary op is not a matrix.");
+    // static_assert(AbstractMatrix<A> || std::integral<A> ||
+    //                 std::floating_point<A>,
+    //               "Argument A to elementwise binary op is not a matrix.");
+    // static_assert(AbstractMatrix<B> || std::integral<B> ||
+    //                 std::floating_point<B>,
+    //               "Argument B to elementwise binary op is not a matrix.");
     if constexpr (AbstractMatrix<A> && AbstractMatrix<B>) {
       if constexpr (HasConcreteSize<A>) {
         if constexpr (HasConcreteSize<B>) {
@@ -678,42 +672,6 @@ static_assert(AbstractMatrix<ElementwiseUnaryOp<Sub, PtrMatrix<int64_t>>>);
 static_assert(AbstractMatrix<Array<int64_t, SquareDims>>);
 static_assert(AbstractMatrix<ManagedArray<int64_t, SquareDims>>);
 
-constexpr auto operator+(const AbstractMatrix auto &a, const auto &b) {
-  return ElementwiseMatrixBinaryOp(Add{}, view(a), view(b));
-}
-constexpr auto operator+(const AbstractVector auto &a, const auto &b) {
-  return ElementwiseVectorBinaryOp(Add{}, view(a), view(b));
-}
-constexpr auto operator+(Scalar auto a, const AbstractMatrix auto &b) {
-  return ElementwiseMatrixBinaryOp(Add{}, view(a), view(b));
-}
-constexpr auto operator+(Scalar auto a, const AbstractVector auto &b) {
-  return ElementwiseVectorBinaryOp(Add{}, view(a), view(b));
-}
-constexpr auto operator-(const AbstractMatrix auto &a, const auto &b) {
-  return ElementwiseMatrixBinaryOp(Sub{}, view(a), view(b));
-}
-constexpr auto operator-(const AbstractVector auto &a, const auto &b) {
-  return ElementwiseVectorBinaryOp(Sub{}, view(a), view(b));
-}
-constexpr auto operator-(Scalar auto a, const AbstractMatrix auto &b) {
-  return ElementwiseMatrixBinaryOp(Sub{}, view(a), view(b));
-}
-constexpr auto operator-(Scalar auto a, const AbstractVector auto &b) {
-  return ElementwiseVectorBinaryOp(Sub{}, view(a), view(b));
-}
-constexpr auto operator/(const AbstractMatrix auto &a, const auto &b) {
-  return ElementwiseMatrixBinaryOp(Div{}, view(a), view(b));
-}
-constexpr auto operator/(const AbstractVector auto &a, const auto &b) {
-  return ElementwiseVectorBinaryOp(Div{}, view(a), view(b));
-}
-constexpr auto operator/(Scalar auto a, const AbstractMatrix auto &b) {
-  return ElementwiseMatrixBinaryOp(Div{}, view(a), view(b));
-}
-constexpr auto operator/(Scalar auto a, const AbstractVector auto &b) {
-  return ElementwiseVectorBinaryOp(Div{}, view(a), view(b));
-}
 constexpr auto operator*(const AbstractMatrix auto &a,
                          const AbstractMatrix auto &b) {
   auto AA{a.view()};
@@ -735,26 +693,90 @@ constexpr auto operator*(const AbstractVector auto &a,
                          const AbstractVector auto &b) {
   return ElementwiseVectorBinaryOp(Mul{}, view(a), view(b));
 }
-constexpr auto operator*(const AbstractVector auto &a, std::integral auto b) {
+
+template <AbstractVector M, ElementOf<M> S>
+constexpr auto operator+(S a, const M &b) {
   return ElementwiseVectorBinaryOp(Mul{}, view(a), view(b));
 }
+template <AbstractVector M, ElementOf<M> S>
+constexpr auto operator+(const M &b, S a) {
+  return ElementwiseVectorBinaryOp(Mul{}, view(b), view(a));
+}
+template <AbstractMatrix M, ElementOf<M> S>
+constexpr auto operator+(S a, const M &b) {
+  return ElementwiseMatrixBinaryOp(Mul{}, view(a), view(b));
+}
+template <AbstractMatrix M, ElementOf<M> S>
+constexpr auto operator+(const M &b, S a) {
+  return ElementwiseMatrixBinaryOp(Mul{}, view(b), view(a));
+}
 
-template <AbstractVector M, ScalarOf<M> S>
+template <AbstractVector M, ElementOf<M> S>
+constexpr auto operator-(S a, const M &b) {
+  return ElementwiseVectorBinaryOp(Mul{}, view(a), view(b));
+}
+template <AbstractVector M, ElementOf<M> S>
+constexpr auto operator-(const M &b, S a) {
+  return ElementwiseVectorBinaryOp(Mul{}, view(b), view(a));
+}
+template <AbstractMatrix M, ElementOf<M> S>
+constexpr auto operator-(S a, const M &b) {
+  return ElementwiseMatrixBinaryOp(Mul{}, view(a), view(b));
+}
+template <AbstractMatrix M, ElementOf<M> S>
+constexpr auto operator-(const M &b, S a) {
+  return ElementwiseMatrixBinaryOp(Mul{}, view(b), view(a));
+}
+
+template <AbstractVector M, ElementOf<M> S>
 constexpr auto operator*(S a, const M &b) {
   return ElementwiseVectorBinaryOp(Mul{}, view(a), view(b));
 }
-template <AbstractVector M, ScalarOf<M> S>
+template <AbstractVector M, ElementOf<M> S>
 constexpr auto operator*(const M &b, S a) {
   return ElementwiseVectorBinaryOp(Mul{}, view(b), view(a));
 }
-
-template <AbstractMatrix M, ScalarOf<M> S>
+template <AbstractMatrix M, ElementOf<M> S>
 constexpr auto operator*(S a, const M &b) {
   return ElementwiseMatrixBinaryOp(Mul{}, view(a), view(b));
 }
-template <AbstractMatrix M, ScalarOf<M> S>
+template <AbstractMatrix M, ElementOf<M> S>
 constexpr auto operator*(const M &b, S a) {
   return ElementwiseMatrixBinaryOp(Mul{}, view(b), view(a));
+}
+
+template <AbstractVector M, ElementOf<M> S>
+constexpr auto operator/(S a, const M &b) {
+  return ElementwiseVectorBinaryOp(Mul{}, view(a), view(b));
+}
+template <AbstractVector M, ElementOf<M> S>
+constexpr auto operator/(const M &b, S a) {
+  return ElementwiseVectorBinaryOp(Mul{}, view(b), view(a));
+}
+template <AbstractMatrix M, ElementOf<M> S>
+constexpr auto operator/(S a, const M &b) {
+  return ElementwiseMatrixBinaryOp(Mul{}, view(a), view(b));
+}
+template <AbstractMatrix M, ElementOf<M> S>
+constexpr auto operator/(const M &b, S a) {
+  return ElementwiseMatrixBinaryOp(Mul{}, view(b), view(a));
+}
+
+constexpr auto operator+(const AbstractVector auto &a,
+                         const AbstractVector auto &b) {
+  return ElementwiseVectorBinaryOp(Mul{}, view(a), view(b));
+}
+constexpr auto operator+(const AbstractMatrix auto &a,
+                         const AbstractMatrix auto &b) {
+  return ElementwiseMatrixBinaryOp(Mul{}, view(a), view(b));
+}
+constexpr auto operator-(const AbstractVector auto &a,
+                         const AbstractVector auto &b) {
+  return ElementwiseVectorBinaryOp(Mul{}, view(a), view(b));
+}
+constexpr auto operator-(const AbstractMatrix auto &a,
+                         const AbstractMatrix auto &b) {
+  return ElementwiseMatrixBinaryOp(Mul{}, view(a), view(b));
 }
 
 // constexpr auto operator*(AbstractMatrix auto &A, AbstractVector auto &x) {

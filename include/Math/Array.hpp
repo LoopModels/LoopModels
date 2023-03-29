@@ -153,7 +153,7 @@ template <class T, class S> struct Array {
   [[nodiscard]] constexpr auto empty() const -> bool { return sz == S{}; }
   [[nodiscard]] constexpr auto size() const noexcept {
     if constexpr (StaticInt<S>) return S{};
-    if constexpr (std::integral<S>) return sz;
+    else if constexpr (std::integral<S>) return sz;
     else if constexpr (std::is_same_v<S, StridedRange>) return size_t(sz);
     else return CartesianIndex{Row{sz}, Col{sz}};
   }

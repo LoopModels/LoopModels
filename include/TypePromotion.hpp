@@ -20,6 +20,9 @@ template <std::floating_point A> struct GetEltype<A> {
 template <typename T>
 using eltype_t = typename GetEltype<std::remove_reference_t<T>>::value_type;
 
+template <class T, class C>
+concept ElementOf = std::convertible_to<T, eltype_t<C>>;
+
 template <typename A, typename B> struct PromoteType {
   using value_type = decltype(std::declval<A>() + std::declval<B>());
 };
@@ -62,6 +65,12 @@ using promote_type_t = typename PromoteType<A, B>::value_type;
 
 template <typename A, typename B> struct PromoteEltype {
   using value_type = typename PromoteType<eltype_t<A>, eltype_t<B>>::value_type;
+};
+template <typename A, ElementOf<A> B> struct PromoteEltype<A, B> {
+  using value_type = eltype_t<A>;
+};
+template <typename A, ElementOf<A> B> struct PromoteEltype<B, A> {
+  using value_type = eltype_t<A>;
 };
 template <typename A, typename B>
 using promote_eltype_t = typename PromoteEltype<A, B>::value_type;

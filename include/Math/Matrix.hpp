@@ -150,15 +150,16 @@ template <class T> struct UniformScaling {
   static constexpr auto dim() -> DenseDims { return {0, 0}; }
   [[nodiscard]] constexpr auto view() const -> auto{ return *this; };
   template <class U> constexpr auto operator*(const U &x) const {
-    if constexpr (std::is_same_v<T, std::true_type>)
+    if constexpr (std::is_same_v<std::remove_cvref_t<T>, std::true_type>)
       return UniformScaling<U>{x};
-    return UniformScaling<U>{value * x};
+    else return UniformScaling<U>{value * x};
   }
 };
 template <class T, class U>
 constexpr auto operator*(const U &x, UniformScaling<T> d) {
-  if constexpr (std::is_same_v<T, std::true_type>) return UniformScaling<U>{x};
-  return UniformScaling<U>{d.value * x};
+  if constexpr (std::is_same_v<std::remove_cvref_t<T>, std::true_type>)
+    return UniformScaling<U>{x};
+  else return UniformScaling<U>{d.value * x};
 }
 
 static constexpr inline UniformScaling<std::true_type> I{

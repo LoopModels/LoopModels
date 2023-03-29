@@ -228,7 +228,7 @@ public:
   }
   return Fact<Rational>{std::move(A), std::move(ipiv)};
 }
-template <std::floating_point S>
+template <class S>
 [[nodiscard]] constexpr auto fact(SquareMatrix<S> A) -> Fact<S> {
   Row M = A.numRow();
   // auto ipiv = Vector<unsigned>{.s = unsigned(M)};
@@ -245,7 +245,7 @@ template <std::floating_point S>
     }
     if (kp != k)
       for (size_t j = 0; j < M; ++j) std::swap(A(kp, j), A(k, j));
-    S Akkinv = 1 / A(k, k);
+    S Akkinv = S{1} / A(k, k);
     for (size_t i = k + 1; i < M; ++i) A(i, k) = A(i, k) * Akkinv;
     for (size_t i = k + 1; i < M; ++i)
       for (size_t j = k + 1; j < M; ++j) A(i, j) = A(i, j) - A(i, k) * A(k, j);
