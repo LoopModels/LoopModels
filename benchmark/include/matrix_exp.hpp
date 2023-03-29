@@ -5,9 +5,11 @@
 #include "Math/LinearAlgebra.hpp"
 #include "Math/Matrix.hpp"
 #include "Math/StaticArrays.hpp"
+#include "Utilities/Invariant.hpp"
 #include <algorithm>
 #include <array>
 #include <benchmark/benchmark.h>
+#include <concepts>
 #include <llvm/ADT/TinyPtrVector.h>
 #include <random>
 
@@ -16,16 +18,14 @@ template <class T, size_t N> class Dual {
   SVector<T, N> partials{};
 
 public:
+  using val_type = T;
+  static constexpr size_t num_partials = N;
   constexpr Dual() = default;
-  constexpr Dual(T v) : val(v), partials() {}
+  constexpr Dual(T v) : val(v) {}
+  constexpr Dual(T v, size_t n) : val(v) { partials[n] = T{1}; }
   constexpr Dual(T v, SVector<T, N> g) : val(v), partials(g) {}
-  constexpr Dual(const std::initializer_list<T> &list) {
-    invariant(list.size(), N + 1);
-    auto b = list.begin();
-    val = *b;
-    std::copy(++b, list.end(), partials.data());
-  }
-
+  constexpr Dual(std::integral auto v) : val(v) {}
+  constexpr Dual(std::floating_point auto v) : val(v) {}
   constexpr auto value() -> T & { return val; }
   constexpr auto gradient() -> SVector<T, N> & { return partials; }
   [[nodiscard]] constexpr auto value() const -> const T & { return val; }
@@ -36,17 +36,17 @@ public:
   // constexpr auto operator[](size_t i) -> T & { return grad[i]; }
   constexpr auto operator-() const -> Dual { return Dual(-val, -partials); }
   constexpr auto operator+(const Dual &other) const -> Dual {
-    return Dual(val + other.val, partials + other.partials);
+    return {val + other.val, partials + other.partials};
   }
   constexpr auto operator-(const Dual &other) const -> Dual {
-    return Dual(val - other.val, partials - other.partials);
+    return {val - other.val, partials - other.partials};
   }
   constexpr auto operator*(const Dual &other) const -> Dual {
-    return Dual(val * other.val, val * other.partials + other.val * partials);
+    return {val * other.val, val * other.partials + other.val * partials};
   }
   constexpr auto operator/(const Dual &other) const -> Dual {
-    return Dual(val / other.val, (other.val * partials - val * other.partials) /
-                                   (other.val * other.val));
+    return {val / other.val, (other.val * partials - val * other.partials) /
+                               (other.val * other.val)};
   }
   constexpr auto operator+=(const Dual &other) -> Dual & {
     val += other.val;
@@ -69,32 +69,32 @@ public:
       (other.val * partials - val * other.partials) / (other.val * other.val);
     return *this;
   }
-  constexpr auto operator+(T other) const -> Dual {
-    return Dual(val + other, partials);
+  constexpr auto operator+(double other) const -> Dual {
+    return {val + other, partials};
   }
-  constexpr auto operator-(T other) const -> Dual {
-    return Dual(val - other, partials);
+  constexpr auto operator-(double other) const -> Dual {
+    return {val - other, partials};
   }
-  constexpr auto operator*(T other) const -> Dual {
-    return Dual(val * other, other * partials);
+  constexpr auto operator*(double other) const -> Dual {
+    return {val * other, other * partials};
   }
-  constexpr auto operator/(T other) const -> Dual {
-    return Dual(val / other, partials / other);
+  constexpr auto operator/(double other) const -> Dual {
+    return {val / other, partials / other};
   }
-  constexpr auto operator+=(T other) -> Dual & {
+  constexpr auto operator+=(double other) -> Dual & {
     val += other;
     return *this;
   }
-  constexpr auto operator-=(T other) -> Dual & {
+  constexpr auto operator-=(double other) -> Dual & {
     val -= other;
     return *this;
   }
-  constexpr auto operator*=(T other) -> Dual & {
+  constexpr auto operator*=(double other) -> Dual & {
     val *= other;
     partials *= other;
     return *this;
   }
-  constexpr auto operator/=(T other) -> Dual & {
+  constexpr auto operator/=(double other) -> Dual & {
     val /= other;
     partials /= other;
     return *this;
@@ -105,12 +105,12 @@ public:
   constexpr auto operator!=(const Dual &other) const -> bool {
     return val != other.val; // || grad != other.grad;
   }
-  constexpr auto operator==(T other) const -> bool { return val == other; }
-  constexpr auto operator!=(T other) const -> bool { return val != other; }
-  constexpr auto operator<(T other) const -> bool { return val < other; }
-  constexpr auto operator>(T other) const -> bool { return val > other; }
-  constexpr auto operator<=(T other) const -> bool { return val <= other; }
-  constexpr auto operator>=(T other) const -> bool { return val >= other; }
+  constexpr auto operator==(double other) const -> bool { return val == other; }
+  constexpr auto operator!=(double other) const -> bool { return val != other; }
+  constexpr auto operator<(double other) const -> bool { return val < other; }
+  constexpr auto operator>(double other) const -> bool { return val > other; }
+  constexpr auto operator<=(double other) const -> bool { return val <= other; }
+  constexpr auto operator>=(double other) const -> bool { return val >= other; }
   constexpr auto operator<(const Dual &other) const -> bool {
     return val < other.val;
   }
@@ -124,23 +124,45 @@ public:
     return val >= other.val;
   }
 };
+template <class T, size_t N> Dual(T, SVector<T, N>) -> Dual<T, N>;
+
 template <class T, size_t N>
-constexpr auto operator+(T other, Dual<T, N> x) -> Dual<T, N> {
-  return Dual(x.value() + other, x.gradient());
+constexpr auto operator+(double other, Dual<T, N> x) -> Dual<T, N> {
+  return {x.value() + other, x.gradient()};
 }
 template <class T, size_t N>
-constexpr auto operator-(T other, Dual<T, N> x) -> Dual<T, N> {
-  return Dual(x.value() - other, -x.gradient());
+constexpr auto operator-(double other, Dual<T, N> x) -> Dual<T, N> {
+  return {x.value() - other, -x.gradient()};
 }
 template <class T, size_t N>
-constexpr auto operator*(T other, Dual<T, N> x) -> Dual<T, N> {
-  return Dual(x.value() * other, other * x.gradient());
+constexpr auto operator*(double other, Dual<T, N> x) -> Dual<T, N> {
+  return {x.value() * other, other * x.gradient()};
 }
 template <class T, size_t N>
-constexpr auto operator/(T other, Dual<T, N> x) -> Dual<T, N> {
-  return Dual(other / x.value(),
-              -other * x.gradient() / (x.value() * x.value()));
+constexpr auto operator/(double other, Dual<T, N> x) -> Dual<T, N> {
+  return {other / x.value(), -other * x.gradient() / (x.value() * x.value())};
 }
+static_assert(ElementOf<double, SquareMatrix<Dual<Dual<double, 4>, 2>>>);
+// auto x = Dual<Dual<double, 4>, 2>{1.0};
+// auto y = x * 3.4;
+
+static_assert(std::convertible_to<int, Dual<double, 4>>);
+static_assert(std::convertible_to<int, Dual<Dual<double, 4>, 2>>);
+
+template <class D> struct urand {
+  using T = typename D::val_type;
+  static constexpr size_t N = D::num_partials;
+  auto operator()(std::mt19937_64 &mt) -> D {
+    Dual<T, N> x{urand<T>{}(mt)};
+    for (size_t i = 0; i < N; ++i) x.gradient()[i] = urand<T>{}(mt);
+    return std::move(x);
+  }
+};
+template <> struct urand<double> {
+  auto operator()(std::mt19937_64 &mt) -> double {
+    return std::uniform_real_distribution<double>(-1, 1)(mt);
+  }
+};
 
 constexpr auto extractDualValRecurse(const auto &x) { return x; }
 template <class T, size_t N>
@@ -157,7 +179,7 @@ template <AbstractMatrix T> constexpr auto evalpoly(const T &C, const auto &p) {
   B << p[0] * C + I * p[1];
   for (size_t i = 2; i < p.size(); ++i) {
     std::swap(A, B);
-    B << A * C + I * p[i];
+    B << A * C + p[i] * I;
   }
   return B;
 }
@@ -171,10 +193,10 @@ constexpr void evalpoly(T &B, const T &C, const auto &p) {
   invariant(size_t(B.numRow()), size_t(B.numCol()));
   invariant(size_t(B.numRow()), size_t(C.numRow()));
   S A{SquareDims{B.numRow()}};
-  B << p[0] * C + I * p[1];
+  B << p[0] * C + p[1] * I;
   for (size_t i = 2; i < N; ++i) {
     std::swap(A, B);
-    B << A * C + I * p[i];
+    B << A * C + p[i] * I;
   }
 }
 
@@ -183,6 +205,7 @@ template <AbstractMatrix T> constexpr auto opnorm1(const T &A) {
   size_t n = size_t(A.numRow());
   Vector<S> v;
   v.resizeForOverwrite(n);
+  invariant(A.numRow() > 0);
   for (size_t j = 0; j < n; ++j)
     v[j] = std::abs(extractDualValRecurse(A(0, j)));
   for (size_t i = 1; i < n; ++i)
@@ -198,7 +221,7 @@ template <AbstractMatrix T> constexpr auto expm(const T &A) {
   SquareMatrix<S> A2{A * A}, U{SquareDims{n}}, V{SquareDims{n}};
   unsigned int s = 0;
   if (nA <= 2.1) {
-    TinyVector<S, 5> p0, p1;
+    TinyVector<double, 5> p0, p1;
     if (nA > 0.95) {
       p0 = {1.0, 3960.0, 2162160.0, 302702400.0, 8821612800.0};
       p1 = {90.0, 110880.0, 3.027024e7, 2.0756736e9, 1.76432256e10};
@@ -262,11 +285,22 @@ BENCHMARK(BM_expm)->DenseRange(2, 10, 1);
 static void BM_expm_dual4(benchmark::State &state) {
   unsigned dim = state.range(0);
   std::mt19937_64 mt(0);
-  SquareMatrix<Dual<double, 4>> A{SquareDims{dim}};
-  for (auto &a : A) a = std::uniform_real_distribution<double>(-1, 1)(mt);
+  using D = Dual<double, 4>;
+  SquareMatrix<D> A{SquareDims{dim}};
+  for (auto &a : A) a = urand<D>{}(mt);
+  for (auto b : state) expm(A);
+}
+BENCHMARK(BM_expm_dual4)->DenseRange(2, 10, 1);
+
+static void BM_expm_dual4x2(benchmark::State &state) {
+  unsigned dim = state.range(0);
+  std::mt19937_64 mt(0);
+  using D = Dual<Dual<double, 4>, 2>;
+  SquareMatrix<D> A{SquareDims{dim}};
+  for (auto &a : A) a = urand<D>{}(mt);
   // llvm::errs() << "dim = " << dim << "; A = " << A << "\nexpm(A) = " <<
   // expm(A)
   //              << "\n";
   for (auto b : state) expm(A);
 }
-BENCHMARK(BM_expm_dual4)->DenseRange(2, 10, 1);
+BENCHMARK(BM_expm_dual4x2)->DenseRange(2, 10, 1);

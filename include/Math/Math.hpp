@@ -232,7 +232,7 @@ template <AbstractMatrix A, AbstractMatrix B> struct MatMatMul {
   [[no_unique_address]] B b;
   constexpr auto operator()(size_t i, size_t j) const -> value_type {
     static_assert(AbstractMatrix<B>, "B should be an AbstractMatrix");
-    value_type s = 0;
+    value_type s{};
     for (size_t k = 0; k < size_t(a.numCol()); ++k) s += a(i, k) * b(k, j);
     return s;
   }

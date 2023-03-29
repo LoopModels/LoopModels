@@ -3,6 +3,9 @@
 
 namespace LinAlg {
 
+static_assert(
+  AbstractSimilar<PtrVector<int64_t>, std::integral_constant<unsigned int, 4>>);
+
 // TODO: add MatrixDimension support
 template <typename T>
 concept StaticSize = StaticInt<T>;
