@@ -62,24 +62,38 @@ $(function() {
 </div><!-- top -->
 <div class="header">
   <div class="summary">
+<a href="#pub-types">Public Types</a> &#124;
 <a href="#pub-methods">Public Member Functions</a> &#124;
+<a href="#pub-static-attribs">Static Public Attributes</a> &#124;
 <a href="classDual-members.html">List of all members</a>  </div>
   <div class="headertitle">
 <div class="title">Dual&lt; T, N &gt; Class Template Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
 <table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
+Public Types</h2></td></tr>
+<tr class="memitem:a438af7df5e5a27c92027f463db2f716f"><td class="memItemLeft" align="right" valign="top"><a id="a438af7df5e5a27c92027f463db2f716f"></a>
+using&#160;</td><td class="memItemRight" valign="bottom"><b>val_type</b> = T</td></tr>
+<tr class="separator:a438af7df5e5a27c92027f463db2f716f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
 <tr class="memitem:a251d03b9d2458657767a7e0eb269ba35"><td class="memItemLeft" align="right" valign="top"><a id="a251d03b9d2458657767a7e0eb269ba35"></a>
 constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Dual</b> (T v)</td></tr>
 <tr class="separator:a251d03b9d2458657767a7e0eb269ba35"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8eec7877e64a69745261b9811e471479"><td class="memItemLeft" align="right" valign="top"><a id="a8eec7877e64a69745261b9811e471479"></a>
+constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Dual</b> (T v, size_t n)</td></tr>
+<tr class="separator:a8eec7877e64a69745261b9811e471479"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aad03f565c4b3259355b9f6d1d55f044d"><td class="memItemLeft" align="right" valign="top"><a id="aad03f565c4b3259355b9f6d1d55f044d"></a>
 constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Dual</b> (T v, SVector&lt; T, N &gt; g)</td></tr>
 <tr class="separator:aad03f565c4b3259355b9f6d1d55f044d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2e796e6d8594f55bbcae086164ed5e11"><td class="memItemLeft" align="right" valign="top"><a id="a2e796e6d8594f55bbcae086164ed5e11"></a>
-constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Dual</b> (const std::initializer_list&lt; T &gt; &amp;list)</td></tr>
-<tr class="separator:a2e796e6d8594f55bbcae086164ed5e11"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afbaea915db2f8e921ff47811aa44bc6f"><td class="memItemLeft" align="right" valign="top"><a id="afbaea915db2f8e921ff47811aa44bc6f"></a>
+constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Dual</b> (std::integral auto v)</td></tr>
+<tr class="separator:afbaea915db2f8e921ff47811aa44bc6f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af7ea731533d1e27931315a8048e8938a"><td class="memItemLeft" align="right" valign="top"><a id="af7ea731533d1e27931315a8048e8938a"></a>
+constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Dual</b> (std::floating_point auto v)</td></tr>
+<tr class="separator:af7ea731533d1e27931315a8048e8938a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac14ebba116bbaa1e8eafb120f9d6f83f"><td class="memItemLeft" align="right" valign="top"><a id="ac14ebba116bbaa1e8eafb120f9d6f83f"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>value</b> () -&gt; T &amp;</td></tr>
 <tr class="separator:ac14ebba116bbaa1e8eafb120f9d6f83f"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -119,54 +133,54 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator*=<
 <tr class="memitem:a633127d52841a4ea6a3b6aa380f960cb"><td class="memItemLeft" align="right" valign="top"><a id="a633127d52841a4ea6a3b6aa380f960cb"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator/=</b> (const <a class="el" href="classDual.html">Dual</a> &amp;other) -&gt; <a class="el" href="classDual.html">Dual</a> &amp;</td></tr>
 <tr class="separator:a633127d52841a4ea6a3b6aa380f960cb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2159cbef4f88d9d23f9d43c6698fe5ad"><td class="memItemLeft" align="right" valign="top"><a id="a2159cbef4f88d9d23f9d43c6698fe5ad"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator+</b> (T other) const -&gt; <a class="el" href="classDual.html">Dual</a></td></tr>
-<tr class="separator:a2159cbef4f88d9d23f9d43c6698fe5ad"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3c21f69615e81df0c62cd830345ac3d7"><td class="memItemLeft" align="right" valign="top"><a id="a3c21f69615e81df0c62cd830345ac3d7"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator-</b> (T other) const -&gt; <a class="el" href="classDual.html">Dual</a></td></tr>
-<tr class="separator:a3c21f69615e81df0c62cd830345ac3d7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5830004c4dc90dd496f69f6b80483595"><td class="memItemLeft" align="right" valign="top"><a id="a5830004c4dc90dd496f69f6b80483595"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator*</b> (T other) const -&gt; <a class="el" href="classDual.html">Dual</a></td></tr>
-<tr class="separator:a5830004c4dc90dd496f69f6b80483595"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a53b98379e79c2adb54b09f6e999c35c4"><td class="memItemLeft" align="right" valign="top"><a id="a53b98379e79c2adb54b09f6e999c35c4"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator/</b> (T other) const -&gt; <a class="el" href="classDual.html">Dual</a></td></tr>
-<tr class="separator:a53b98379e79c2adb54b09f6e999c35c4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1e176f48d1d6d666b5df257025638183"><td class="memItemLeft" align="right" valign="top"><a id="a1e176f48d1d6d666b5df257025638183"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator+=</b> (T other) -&gt; <a class="el" href="classDual.html">Dual</a> &amp;</td></tr>
-<tr class="separator:a1e176f48d1d6d666b5df257025638183"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6e610ddb7a6760de5cbc19531f80b516"><td class="memItemLeft" align="right" valign="top"><a id="a6e610ddb7a6760de5cbc19531f80b516"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator-=</b> (T other) -&gt; <a class="el" href="classDual.html">Dual</a> &amp;</td></tr>
-<tr class="separator:a6e610ddb7a6760de5cbc19531f80b516"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a74350647a109c4777b1815a274d55f99"><td class="memItemLeft" align="right" valign="top"><a id="a74350647a109c4777b1815a274d55f99"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator*=</b> (T other) -&gt; <a class="el" href="classDual.html">Dual</a> &amp;</td></tr>
-<tr class="separator:a74350647a109c4777b1815a274d55f99"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6ffe0e27eb1ed74fd61f39d04caa6581"><td class="memItemLeft" align="right" valign="top"><a id="a6ffe0e27eb1ed74fd61f39d04caa6581"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator/=</b> (T other) -&gt; <a class="el" href="classDual.html">Dual</a> &amp;</td></tr>
-<tr class="separator:a6ffe0e27eb1ed74fd61f39d04caa6581"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a036a79a47bb1d491f571de3a0df60586"><td class="memItemLeft" align="right" valign="top"><a id="a036a79a47bb1d491f571de3a0df60586"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator+</b> (double other) const -&gt; <a class="el" href="classDual.html">Dual</a></td></tr>
+<tr class="separator:a036a79a47bb1d491f571de3a0df60586"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afd8254737336090dd8a22e1fafb34e1d"><td class="memItemLeft" align="right" valign="top"><a id="afd8254737336090dd8a22e1fafb34e1d"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator-</b> (double other) const -&gt; <a class="el" href="classDual.html">Dual</a></td></tr>
+<tr class="separator:afd8254737336090dd8a22e1fafb34e1d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a98b616c6562a1326c8ec335570d35d3e"><td class="memItemLeft" align="right" valign="top"><a id="a98b616c6562a1326c8ec335570d35d3e"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator*</b> (double other) const -&gt; <a class="el" href="classDual.html">Dual</a></td></tr>
+<tr class="separator:a98b616c6562a1326c8ec335570d35d3e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a238d4fef7e30d8f43c87380d9f4f696c"><td class="memItemLeft" align="right" valign="top"><a id="a238d4fef7e30d8f43c87380d9f4f696c"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator/</b> (double other) const -&gt; <a class="el" href="classDual.html">Dual</a></td></tr>
+<tr class="separator:a238d4fef7e30d8f43c87380d9f4f696c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0c46d658f7c78b7569fab81e8d742aa2"><td class="memItemLeft" align="right" valign="top"><a id="a0c46d658f7c78b7569fab81e8d742aa2"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator+=</b> (double other) -&gt; <a class="el" href="classDual.html">Dual</a> &amp;</td></tr>
+<tr class="separator:a0c46d658f7c78b7569fab81e8d742aa2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a348e07fa393e41ba6181b950a5ba4a26"><td class="memItemLeft" align="right" valign="top"><a id="a348e07fa393e41ba6181b950a5ba4a26"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator-=</b> (double other) -&gt; <a class="el" href="classDual.html">Dual</a> &amp;</td></tr>
+<tr class="separator:a348e07fa393e41ba6181b950a5ba4a26"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abe724f9ee4fea71e843a5e6cd893dc77"><td class="memItemLeft" align="right" valign="top"><a id="abe724f9ee4fea71e843a5e6cd893dc77"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator*=</b> (double other) -&gt; <a class="el" href="classDual.html">Dual</a> &amp;</td></tr>
+<tr class="separator:abe724f9ee4fea71e843a5e6cd893dc77"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a781d9f5a983e0e9752b0339503661aac"><td class="memItemLeft" align="right" valign="top"><a id="a781d9f5a983e0e9752b0339503661aac"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator/=</b> (double other) -&gt; <a class="el" href="classDual.html">Dual</a> &amp;</td></tr>
+<tr class="separator:a781d9f5a983e0e9752b0339503661aac"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa5f468ada58a7d0eb4aab9b30ecaad77"><td class="memItemLeft" align="right" valign="top"><a id="aa5f468ada58a7d0eb4aab9b30ecaad77"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator==</b> (const <a class="el" href="classDual.html">Dual</a> &amp;other) const -&gt; bool</td></tr>
 <tr class="separator:aa5f468ada58a7d0eb4aab9b30ecaad77"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3867d67ae0b70a66511b98aa7fe318fc"><td class="memItemLeft" align="right" valign="top"><a id="a3867d67ae0b70a66511b98aa7fe318fc"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator!=</b> (const <a class="el" href="classDual.html">Dual</a> &amp;other) const -&gt; bool</td></tr>
 <tr class="separator:a3867d67ae0b70a66511b98aa7fe318fc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac6893c7544f7d361ba4a9873ecc58106"><td class="memItemLeft" align="right" valign="top"><a id="ac6893c7544f7d361ba4a9873ecc58106"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator==</b> (T other) const -&gt; bool</td></tr>
-<tr class="separator:ac6893c7544f7d361ba4a9873ecc58106"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0cbc9e2e682537636ceb907f428b706c"><td class="memItemLeft" align="right" valign="top"><a id="a0cbc9e2e682537636ceb907f428b706c"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator!=</b> (T other) const -&gt; bool</td></tr>
-<tr class="separator:a0cbc9e2e682537636ceb907f428b706c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a80159cf35ef806e31747977376ef15da"><td class="memItemLeft" align="right" valign="top"><a id="a80159cf35ef806e31747977376ef15da"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;</b> (T other) const -&gt; bool</td></tr>
-<tr class="separator:a80159cf35ef806e31747977376ef15da"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac467dcf0d46fa74252a3ff7f2dee5e8b"><td class="memItemLeft" align="right" valign="top"><a id="ac467dcf0d46fa74252a3ff7f2dee5e8b"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&gt;</b> (T other) const -&gt; bool</td></tr>
-<tr class="separator:ac467dcf0d46fa74252a3ff7f2dee5e8b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acf301906aeae7a7dc6e5f2c86498e4a0"><td class="memItemLeft" align="right" valign="top"><a id="acf301906aeae7a7dc6e5f2c86498e4a0"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;=</b> (T other) const -&gt; bool</td></tr>
-<tr class="separator:acf301906aeae7a7dc6e5f2c86498e4a0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad2af982f73069d29a0f8c9d2384591b1"><td class="memItemLeft" align="right" valign="top"><a id="ad2af982f73069d29a0f8c9d2384591b1"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&gt;=</b> (T other) const -&gt; bool</td></tr>
-<tr class="separator:ad2af982f73069d29a0f8c9d2384591b1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a12cb3016a50ea05158c717df782db8e9"><td class="memItemLeft" align="right" valign="top"><a id="a12cb3016a50ea05158c717df782db8e9"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator==</b> (double other) const -&gt; bool</td></tr>
+<tr class="separator:a12cb3016a50ea05158c717df782db8e9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a77177f12390e2c345be37f8c49642d0e"><td class="memItemLeft" align="right" valign="top"><a id="a77177f12390e2c345be37f8c49642d0e"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator!=</b> (double other) const -&gt; bool</td></tr>
+<tr class="separator:a77177f12390e2c345be37f8c49642d0e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad8340408742770dd03af0c03725319cd"><td class="memItemLeft" align="right" valign="top"><a id="ad8340408742770dd03af0c03725319cd"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;</b> (double other) const -&gt; bool</td></tr>
+<tr class="separator:ad8340408742770dd03af0c03725319cd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac030448919ca3e50363a2ed56cb0d9f3"><td class="memItemLeft" align="right" valign="top"><a id="ac030448919ca3e50363a2ed56cb0d9f3"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&gt;</b> (double other) const -&gt; bool</td></tr>
+<tr class="separator:ac030448919ca3e50363a2ed56cb0d9f3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4745ddb9dbef804d620abaf3032da693"><td class="memItemLeft" align="right" valign="top"><a id="a4745ddb9dbef804d620abaf3032da693"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;=</b> (double other) const -&gt; bool</td></tr>
+<tr class="separator:a4745ddb9dbef804d620abaf3032da693"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac11308147ff6418fd0b8c02c3da10ac3"><td class="memItemLeft" align="right" valign="top"><a id="ac11308147ff6418fd0b8c02c3da10ac3"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&gt;=</b> (double other) const -&gt; bool</td></tr>
+<tr class="separator:ac11308147ff6418fd0b8c02c3da10ac3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad6abfc4dfce8e0d0d19db333a8a8063a"><td class="memItemLeft" align="right" valign="top"><a id="ad6abfc4dfce8e0d0d19db333a8a8063a"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;</b> (const <a class="el" href="classDual.html">Dual</a> &amp;other) const -&gt; bool</td></tr>
 <tr class="separator:ad6abfc4dfce8e0d0d19db333a8a8063a"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -179,6 +193,12 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt
 <tr class="memitem:a652211201fc6fbbeddf1d3a76e6941f7"><td class="memItemLeft" align="right" valign="top"><a id="a652211201fc6fbbeddf1d3a76e6941f7"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&gt;=</b> (const <a class="el" href="classDual.html">Dual</a> &amp;other) const -&gt; bool</td></tr>
 <tr class="separator:a652211201fc6fbbeddf1d3a76e6941f7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-attribs"></a>
+Static Public Attributes</h2></td></tr>
+<tr class="memitem:ac8cddcef4d1c74b33b01dcec18f015bf"><td class="memItemLeft" align="right" valign="top"><a id="ac8cddcef4d1c74b33b01dcec18f015bf"></a>
+static constexpr size_t&#160;</td><td class="memItemRight" valign="bottom"><b>num_partials</b> = N</td></tr>
+<tr class="separator:ac8cddcef4d1c74b33b01dcec18f015bf"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <hr/>The documentation for this class was generated from the following file:<ul>
 <li>benchmark/include/<a class="el" href="matrix__exp_8hpp_source.html">matrix_exp.hpp</a></li>

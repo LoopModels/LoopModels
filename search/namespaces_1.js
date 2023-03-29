@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['linalg_388',['LinAlg',['../namespaceLinAlg.html',1,'']]]
+  ['linalg_392',['LinAlg',['../namespaceLinAlg.html',1,'']]]
 ];
