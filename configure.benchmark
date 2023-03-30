@@ -1,2 +1,9 @@
+#!/bin/sh
+
 CXXFLAGS="" CXX=g++ cmake -G Ninja -S benchmark buildgcc/benchmark -DCMAKE_BUILD_TYPE=Release
 CXXFLAGS="" CXX=clang++ cmake -G Ninja -S benchmark buildclang/benchmark -DCMAKE_BUILD_TYPE=Release
+if test -z "$icpx"
+then
+else
+    CXXFLAGS="" CXX=icpx cmake -G Ninja -S benchmark buildintel/benchmark -DCMAKE_BUILD_TYPE=Release
+fi

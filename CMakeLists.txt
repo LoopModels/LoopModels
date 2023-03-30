@@ -1,7 +1,7 @@
 # Based on ModernCppStarter https://github.com/TheLartians/ModernCppStarter
 
-# 3.20 minimum for C++23
-cmake_minimum_required(VERSION 3.20)
+# 3.23 minimum for intel compilers
+cmake_minimum_required(VERSION 3.23)
 
 project(
   LoopModels

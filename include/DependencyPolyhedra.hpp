@@ -641,8 +641,7 @@ public:
       forward(fwd) {}
   constexpr Dependence() = default;
   using BitSet = MemoryAccess::BitSet;
-  constexpr void
-  pushToEdgeVector(LinAlg::ReallocView<NotNull<Dependence>, unsigned> &vec) {
+  constexpr void pushToEdgeVector(Vector<NotNull<Dependence>> &vec) {
     in->addEdgeOut(vec.size());
     out->addEdgeIn(vec.size());
     vec.push_back(this);

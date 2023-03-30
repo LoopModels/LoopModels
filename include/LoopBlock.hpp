@@ -33,8 +33,7 @@
 #include <type_traits>
 
 template <std::integral I>
-constexpr void insertSortedUnique(LinAlg::ReallocView<I, unsigned> &v,
-                                  const I &x) {
+constexpr void insertSortedUnique(Vector<I> &v, const I &x) {
   for (auto it = v.begin(), ite = v.end(); it != ite; ++it) {
     if (*it < x) continue;
     if (*it > x) v.insert(it, x);

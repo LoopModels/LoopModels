@@ -14,6 +14,7 @@
 #include <concepts>
 #include <cstddef>
 #include <cstdint>
+#include <cstdio>
 #include <memory>
 #include <numeric>
 #include <type_traits>
@@ -350,7 +351,7 @@ struct MutArray : Array<T, S>, ArrayOps<T, S, MutArray<T, S>> {
     else return (*this)[size_t(r)];
   }
   constexpr void fill(T value) {
-    std::fill_n((T *)(this->ptr), size_t(this->dim()), value);
+    std::fill_n(this->data(), size_t(this->dim()), value);
   }
   [[nodiscard]] constexpr auto diag() noexcept {
     StridedRange r{unsigned(min(Row{this->sz}, Col{this->sz})),
@@ -367,8 +368,7 @@ struct MutArray : Array<T, S>, ArrayOps<T, S, MutArray<T, S>> {
     static_assert(std::integral<S>, "erase requires integral size");
     S oldLen = this->sz--;
     if (i < this->sz)
-      std::copy((T *)(this->ptr) + i + 1, this->ptr + oldLen,
-                (T *)(this->ptr) + i);
+      std::copy(this->data() + i + 1, this->ptr + oldLen, this->data() + i);
   }
   constexpr void erase(Row r) {
     if constexpr (std::integral<S>) {
@@ -508,7 +508,7 @@ struct ResizeableView : MutArray<T, S> {
 #else
       T *newPtr = this->allocator.allocate(newCapacity);
 #endif
-      if (oz) std::uninitialized_copy_n((T *)(this->ptr), oz, newPtr);
+      if (oz) std::uninitialized_copy_n(this->data(), oz, newPtr);
       maybeDeallocate(newPtr, newCapacity);
       invariant(newCapacity > oz);
       std::uninitialized_fill_n((T *)(newPtr + oz), newCapacity - oz, T{});
@@ -519,7 +519,7 @@ struct ResizeableView : MutArray<T, S> {
            newM = unsigned{Row{nz}}, oldM = unsigned{Row{oz}};
       invariant(U(nz) <= capacity);
       U len = U(nz);
-      T *npt = (T *)(this->ptr);
+      T *npt = this->data();
       // we can copy forward so long as the new stride is smaller
       // so that the start of the dst range is outside of the src range
       // we can also safely forward copy if we allocated a new ptr
@@ -635,7 +635,7 @@ protected:
 /// Non-owning view of a managed array, capable of reallocating, etc.
 /// It does not own memory. Mostly, it serves to drop the inlined
 /// stack capacity of the `ManagedArray` from the type.
-template <class T, class S, class A = std::allocator<T>,
+template <class T, class S, class P, class A = std::allocator<T>,
           std::unsigned_integral U = default_capacity_type_t<S>,
           bool Init = false>
 struct ReallocView : ResizeableView<T, S, U> {
@@ -677,7 +677,7 @@ struct ReallocView : ResizeableView<T, S, U> {
 #else
       T *newPtr = this->allocator.allocate(newCapacity);
 #endif
-      if (oz) std::uninitialized_copy_n((T *)(this->ptr), oz, newPtr);
+      if (oz) std::uninitialized_copy_n(this->data(), oz, newPtr);
       maybeDeallocate(newPtr, newCapacity);
       invariant(newCapacity > oz);
       std::uninitialized_fill_n((T *)(newPtr + oz), newCapacity - oz, T{});
@@ -690,14 +690,14 @@ struct ReallocView : ResizeableView<T, S, U> {
       bool newAlloc = U(len) > this->capacity;
       bool inPlace = !newAlloc;
 #if __cplusplus >= 202202L
-      T *npt = (T *)(this->ptr);
+      T *npt = this->data();
       if (newAlloc) {
         std::allocation_result res = allocator.allocate_at_least(len);
         npt = res.ptr;
         len = U(res.count);
       }
 #else
-      T *npt = newAlloc ? this->allocator.allocate(len) : (T *)(this->ptr);
+      T *npt = newAlloc ? this->allocator.allocate(len) : this->data();
 #endif
       // we can copy forward so long as the new stride is smaller
       // so that the start of the dst range is outside of the src range
@@ -790,7 +790,7 @@ struct ReallocView : ResizeableView<T, S, U> {
     T *newPtr = allocator.allocate(newCapacity);
 #endif
     if (U oldLen = U(this->sz))
-      std::uninitialized_copy_n((T *)(this->ptr), oldLen, newPtr);
+      std::uninitialized_copy_n(this->data(), oldLen, newPtr);
     maybeDeallocate(newPtr, newCapacity);
   }
   [[nodiscard]] constexpr auto get_allocator() const noexcept -> A {
@@ -873,16 +873,19 @@ protected:
 #endif
   }
   [[nodiscard]] constexpr auto isSmall() const -> bool {
-    return (reinterpret_cast<const std::byte *>(this->data())) ==
-           (reinterpret_cast<const std::byte *>(this) + sizeof(*this));
+    return static_cast<const P *>(this)->isSmall();
   }
   // this method should only be called from the destructor
   // (and the implementation taking the new ptr and capacity)
   constexpr void maybeDeallocate() noexcept {
-    if (!isSmall()) this->allocator.deallocate(this->ptr, this->capacity);
+    bool wasAllocated = !isSmall();
+    if constexpr (Init) wasAllocated = this->ptr != nullptr;
+    if (wasAllocated) printf("deallocate %p\nthis = %p\n", this->ptr, this);
+    if (wasAllocated) allocator.deallocate(this->ptr, this->capacity);
   }
   // this method should be called whenever the buffer lives
-  constexpr void maybeDeallocate(NotNull<T> newPtr, U newCapacity) noexcept {
+  constexpr void maybeDeallocate(T *newPtr, U newCapacity) noexcept {
+    printf("old ptr %p; ew ptr = %p\n", this->ptr, newPtr);
     maybeDeallocate();
     this->ptr = newPtr;
     this->capacity = newCapacity;
@@ -914,11 +917,11 @@ concept AbstractSimilar = (MatrixDimension<S> && AbstractMatrix<T>) ||
 /// of the stack memory.
 /// Information related to size is then grouped next to the pointer.
 template <class T, class S, size_t N, class A, std::unsigned_integral U>
-struct ManagedArray : ReallocView<T, S, A, U> {
+struct ManagedArray : ReallocView<T, S, ManagedArray<T, S, N, A, U>, A, U> {
   static_assert(std::is_trivially_destructible_v<T>);
-  using BaseT = ReallocView<T, S, A, U>;
+  using BaseT = ReallocView<T, S, ManagedArray<T, S, N, A, U>, A, U>;
 
-  constexpr ManagedArray() noexcept : ReallocView<T, S, A, U>{memory, S{}, N} {
+  constexpr ManagedArray() noexcept : BaseT{memory, S{}, N} {
 #ifndef NDEBUG
     if constexpr (std::numeric_limits<T>::has_signaling_NaN)
       std::fill_n(this->ptr, N, std::numeric_limits<T>::signaling_NaN());
@@ -937,14 +940,14 @@ struct ManagedArray : ReallocView<T, S, A, U> {
   constexpr ManagedArray(S s, T x) noexcept : BaseT{memory, s, N} {
     U len = U(this->sz);
     if (len > N) this->allocateAtLeast(len);
-    std::uninitialized_fill_n((T *)(this->ptr), len, x);
+    std::uninitialized_fill_n(this->data(), len, x);
   }
   template <class D, std::unsigned_integral I>
   constexpr ManagedArray(const ManagedArray<T, D, N, A, I> &b) noexcept
     : BaseT{memory, S(b.dim()), U(N), b.get_allocator()} {
     U len = U(this->sz);
     this->growUndef(len);
-    std::uninitialized_copy_n(b.data(), len, (T *)(this->ptr));
+    std::uninitialized_copy_n(b.data(), len, this->data());
   }
   template <std::convertible_to<T> Y, class D, class AY,
             std::unsigned_integral I>
@@ -953,7 +956,7 @@ struct ManagedArray : ReallocView<T, S, A, U> {
     U len = U(this->sz);
     this->growUndef(len);
     if constexpr (DenseLayout<D> && DenseLayout<S>) {
-      std::uninitialized_copy_n(b.data(), len, (T *)(this->ptr));
+      std::uninitialized_copy_n(b.data(), len, this->data());
     } else if constexpr (MatrixDimension<D> && MatrixDimension<S>) {
       invariant(b.numRow() == this->numRow());
       invariant(b.numCol() == this->numCol());
@@ -968,7 +971,7 @@ struct ManagedArray : ReallocView<T, S, A, U> {
       for (size_t m = 0; m < this->numRow(); ++m)
         for (size_t n = 0; n < this->numCol(); ++n) (*this)(m, n) = b(j++);
     } else {
-      for (size_t i = 0; i < len; ++i) new ((T *)(this->ptr) + i) T(b[i]);
+      for (size_t i = 0; i < len; ++i) new (this->data() + i) T(b[i]);
     }
   }
   template <std::convertible_to<T> Y>
@@ -976,7 +979,7 @@ struct ManagedArray : ReallocView<T, S, A, U> {
     : BaseT{memory, S(il.size()), U(N)} {
     U len = U(this->sz);
     this->growUndef(len);
-    std::uninitialized_copy_n(il.begin(), len, (T *)(this->ptr));
+    std::uninitialized_copy_n(il.begin(), len, this->data());
   }
   template <std::convertible_to<T> Y, class D, class AY,
             std::unsigned_integral I>
@@ -985,19 +988,19 @@ struct ManagedArray : ReallocView<T, S, A, U> {
     U len = U(this->sz);
     invariant(len == U(b.size()));
     this->growUndef(len);
-    for (size_t i = 0; i < len; ++i) new ((T *)(this->ptr) + i) T(b[i]);
+    for (size_t i = 0; i < len; ++i) new (this->data() + i) T(b[i]);
   }
   constexpr ManagedArray(const ManagedArray &b) noexcept
     : BaseT{memory, S(b.dim()), U(N), b.get_allocator()} {
     U len = U(this->sz);
     this->growUndef(len);
-    std::uninitialized_copy_n(b.data(), len, (T *)(this->ptr));
+    std::uninitialized_copy_n(b.data(), len, this->data());
   }
   constexpr ManagedArray(const Array<T, S> &b) noexcept
     : BaseT{memory, S(b.dim()), U(N)} {
     U len = U(this->sz);
     this->growUndef(len);
-    std::uninitialized_copy_n(b.data(), len, (T *)(this->ptr));
+    std::uninitialized_copy_n(b.data(), len, this->data());
   }
   template <AbstractSimilar<S> V>
   constexpr ManagedArray(const V &b) noexcept
@@ -1008,40 +1011,42 @@ struct ManagedArray : ReallocView<T, S, A, U> {
   }
   template <class D, std::unsigned_integral I>
   constexpr ManagedArray(ManagedArray<T, D, N, A, I> &&b) noexcept
-    : BaseT{b.data(), b.dim(), U(b.getCapacity()), b.get_allocator()} {
-    assert(uint64_t(b.getCapacity()) == uint64_t(this->getCapacity()) &&
-           "capacity overflow");
-    if (b.isSmall()) {
-      this->ptr = memory;
-      std::uninitialized_copy_n(b.data(), N, (T *)(this->ptr));
+    : BaseT{memory, b.dim(), U(N), b.get_allocator()} {
+    if (b.isSmall()) { // copy
+      std::uninitialized_copy_n(b.data(), size_t(b.dim()), this->data());
+    } else { // steal
+      printf("old ptr %p; &&b<>.data() = %p\n", this->ptr, b.data());
+      this->ptr = b.data();
+      this->capacity = b.getCapacity();
     }
     b.resetNoFree();
   }
   constexpr ManagedArray(ManagedArray &&b) noexcept
-    : BaseT{b.data(), b.dim(), U(b.getCapacity()), b.get_allocator()} {
-    assert(uint64_t(b.getCapacity()) == uint64_t(this->getCapacity()) &&
-           "capacity overflow");
-    if (b.isSmall()) {
-      this->ptr = memory;
-      std::uninitialized_copy_n(b.data(), N, (T *)(this->ptr));
+    : BaseT{memory, b.dim(), U(N), b.get_allocator()} {
+    if (b.isSmall()) { // copy
+      std::uninitialized_copy_n(b.data(), size_t(b.dim()), this->data());
+    } else { // steal
+      printf("old ptr %p; &&b.data() = %p\n", this->ptr, b.data());
+      this->ptr = b.data();
+      this->capacity = b.getCapacity();
     }
     b.resetNoFree();
   }
   template <class D, std::unsigned_integral I>
   constexpr ManagedArray(ManagedArray<T, D, N, A, I> &&b, S s) noexcept
-    : BaseT{b.data(), s, U(b.getCapacity()), b.get_allocator()} {
-    assert(U(s) == U(b.dim()) && "size mismatch");
-    assert(uint64_t(b.getCapacity()) == uint64_t(this->getCapacity()) &&
-           "capacity overflow");
-    if (b.isSmall()) {
-      this->ptr = memory;
-      std::uninitialized_copy_n(b.data(), N, (T *)(this->ptr));
+    : BaseT{memory, s, U(N), b.get_allocator()} {
+    if (b.isSmall()) { // copy
+      std::uninitialized_copy_n(b.data(), size_t(b.dim()), this->data());
+    } else { // steal
+      printf("(set sz): old ptr %p; &&b<>.data() = %p\n", this->ptr, b.data());
+      this->ptr = b.data();
+      this->capacity = b.getCapacity();
     }
     b.resetNoFree();
   }
   template <std::convertible_to<T> Y>
   constexpr ManagedArray(const SmallSparseMatrix<Y> &B)
-    : ReallocView<T, S, A, U>{memory, B.dim(), N} {
+    : BaseT{memory, B.dim(), N} {
     U len = U(this->sz);
     this->growUndef(len);
     this->fill(0);
@@ -1066,7 +1071,7 @@ struct ManagedArray : ReallocView<T, S, A, U> {
     this->sz = b.dim();
     U len = U(this->sz);
     this->growUndef(len);
-    std::uninitialized_copy_n(b.data(), len, (T *)(this->ptr));
+    std::uninitialized_copy_n(b.data(), len, this->data());
     return *this;
   }
   template <class D, std::unsigned_integral I>
@@ -1079,8 +1084,8 @@ struct ManagedArray : ReallocView<T, S, A, U> {
     // if `b` is small, we need to copy memory
     // no need to shrink our capacity
     if (b.isSmall())
-      std::uninitialized_copy_n(b.data(), size_t(this->sz), (T *)(this->ptr));
-    else this->maybeDeallocate(b.wrappedPtr(), b.getCapacity());
+      std::uninitialized_copy_n(b.data(), size_t(this->sz), this->data());
+    else this->maybeDeallocate(b.data(), b.getCapacity());
     b.resetNoFree();
     return *this;
   }
@@ -1089,7 +1094,7 @@ struct ManagedArray : ReallocView<T, S, A, U> {
     this->sz = b.dim();
     U len = U(this->sz);
     this->growUndef(len);
-    std::uninitialized_copy_n(b.data(), len, (T *)(this->ptr));
+    std::uninitialized_copy_n(b.data(), len, this->data());
     return *this;
   }
   constexpr auto operator=(ManagedArray &&b) noexcept -> ManagedArray & {
@@ -1100,10 +1105,9 @@ struct ManagedArray : ReallocView<T, S, A, U> {
     if (b.isSmall()) {
       // if `b` is small, we need to copy memory
       // no need to shrink our capacity
-      std::uninitialized_copy_n(b.data(), size_t(this->sz), (T *)(this->ptr));
-    } else {
-      // otherwise, we take its pointer
-      this->maybeDeallocate(b.wrappedPtr(), b.getCapacity());
+      std::uninitialized_copy_n(b.data(), size_t(this->sz), this->data());
+    } else { // otherwise, we take its pointer
+      this->maybeDeallocate(b.data(), b.getCapacity());
     }
     b.resetNoFree();
     return *this;
@@ -1140,9 +1144,10 @@ private:
   T memory[N]; // NOLINT (modernize-avoid-c-style-arrays)
 };
 template <class T, class S, class A, std::unsigned_integral U>
-struct ManagedArray<T, S, 0, A, U> : ReallocView<T, S, A, U, true> {
+struct ManagedArray<T, S, 0, A, U>
+  : ReallocView<T, S, ManagedArray<T, S, 0, A, U>, A, U, true> {
   static_assert(std::is_trivially_destructible_v<T>);
-  using BaseT = ReallocView<T, S, A, U, true>;
+  using BaseT = ReallocView<T, S, ManagedArray<T, S, 0, A, U>, A, U, true>;
   constexpr ManagedArray() noexcept : BaseT{nullptr, S{}, U{}} {};
   constexpr ManagedArray(S s) noexcept : BaseT{A{}.allocate(U(s)), s, U(s)} {
 #ifndef NDEBUG
@@ -1153,13 +1158,13 @@ struct ManagedArray<T, S, 0, A, U> : ReallocView<T, S, A, U, true> {
   }
   constexpr ManagedArray(S s, T x) noexcept
     : BaseT{A{}.allocate(U(s)), s, U(s)} {
-    std::uninitialized_fill_n((T *)(this->ptr), U(s), x);
+    std::uninitialized_fill_n(this->data(), U(s), x);
   }
   template <class D, size_t N, std::unsigned_integral I>
   constexpr ManagedArray(const ManagedArray<T, D, N, A, I> &b) noexcept
     : BaseT{b.get_allocator().allocate(U(b.dim())), S(b.dim()), U(b.dim()),
             b.get_allocator()} {
-    std::uninitialized_copy_n(b.data(), U(b.dim()), (T *)(this->ptr));
+    std::uninitialized_copy_n(b.data(), U(b.dim()), this->data());
   }
   // template <class Y, class D, class AY, std::unsigned_integral I,
   // std::enable_if_t<std::is_convertible_v<Y, T>>>
@@ -1169,13 +1174,13 @@ struct ManagedArray<T, S, 0, A, U> : ReallocView<T, S, A, U, true> {
     : BaseT{b.get_allocator().allocate(U(b.dim())), S(b.dim()), U(b.dim()),
             b.get_allocator()} {
     U len = U(this->sz);
-    for (size_t i = 0; i < len; ++i) new ((T *)(this->ptr) + i) T(b[i]);
+    for (size_t i = 0; i < len; ++i) new (this->data() + i) T(b[i]);
   }
   constexpr ManagedArray(const ManagedArray &b) noexcept
     : BaseT{b.get_allocator().allocate(U(b.dim())), S(b.dim()), U(b.dim()),
             b.get_allocator()} {
     U len = U(this->sz);
-    std::uninitialized_copy_n(b.data(), len, (T *)(this->ptr));
+    std::uninitialized_copy_n(b.data(), len, this->data());
   }
   template <class D, std::unsigned_integral I>
   constexpr ManagedArray(ManagedArray<T, D, 0, A, I> &&b) noexcept
@@ -1200,7 +1205,7 @@ struct ManagedArray<T, S, 0, A, U> : ReallocView<T, S, A, U, true> {
   }
   template <std::convertible_to<T> Y>
   constexpr ManagedArray(const SmallSparseMatrix<Y> &B)
-    : ReallocView<T, S, A, U>{A{}.allocate(U(B.dim())), B.dim(), U(B.dim())} {
+    : BaseT{A{}.allocate(U(B.dim())), B.dim(), U(B.dim())} {
     U len = U(this->sz);
     this->growUndef(len);
     this->fill(0);
@@ -1225,7 +1230,7 @@ struct ManagedArray<T, S, 0, A, U> : ReallocView<T, S, A, U, true> {
     this->sz = b.dim();
     U len = U(this->sz);
     this->growUndef(len);
-    std::uninitialized_copy_n(b.data(), len, (T *)(this->ptr));
+    std::uninitialized_copy_n(b.data(), len, this->data());
     return *this;
   }
   template <class D, std::unsigned_integral I, size_t N>
@@ -1238,10 +1243,9 @@ struct ManagedArray<T, S, 0, A, U> : ReallocView<T, S, A, U, true> {
     if (b.isSmall()) {
       // if `b` is small, we need to copy memory
       // no need to shrink our capacity
-      std::uninitialized_copy_n(b.data(), size_t(this->sz), (T *)(this->ptr));
-    } else {
-      // otherwise, we take its pointer
-      maybeDeallocate(b.wrappedPtr(), b.getCapacity());
+      std::uninitialized_copy_n(b.data(), size_t(this->sz), this->data());
+    } else { // otherwise, we take its pointer
+      maybeDeallocate(b.data(), b.getCapacity());
     }
     b.resetNoFree();
     return *this;
@@ -1251,7 +1255,7 @@ struct ManagedArray<T, S, 0, A, U> : ReallocView<T, S, A, U, true> {
     this->sz = b.dim();
     U len = U(this->sz);
     this->growUndef(len);
-    std::uninitialized_copy_n(b.data(), len, (T *)(this->ptr));
+    std::uninitialized_copy_n(b.data(), len, this->data());
     return *this;
   }
   constexpr auto operator=(ManagedArray &&b) noexcept -> ManagedArray & {
@@ -1259,7 +1263,7 @@ struct ManagedArray<T, S, 0, A, U> : ReallocView<T, S, A, U, true> {
     // here, we commandeer `b`'s memory
     this->sz = b.dim();
     this->allocator = std::move(b.get_allocator());
-    maybeDeallocate(b.wrappedPtr(), b.getCapacity());
+    maybeDeallocate(b.data(), b.getCapacity());
     b.resetNoFree();
     return *this;
   }
@@ -1360,7 +1364,7 @@ static_assert(std::is_trivially_copyable_v<PtrVector<int64_t>>,
 static_assert(sizeof(ManagedArray<int32_t, DenseDims, 15>) ==
               sizeof(int32_t *) + 4 * sizeof(unsigned int) +
                 16 * sizeof(int32_t));
-static_assert(sizeof(ReallocView<int32_t, DenseDims>) ==
+static_assert(sizeof(ReallocView<int32_t, DenseDims, DenseMatrix<int32_t>>) ==
               sizeof(int32_t *) + 4 * sizeof(unsigned int));
 
 static_assert(!AbstractVector<PtrMatrix<int64_t>>,

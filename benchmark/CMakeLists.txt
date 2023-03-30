@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.20)
+cmake_minimum_required(VERSION 3.23)
 
 project(LoopModelsBenchmarks LANGUAGES C CXX)
 
@@ -19,7 +19,8 @@ CPMAddPackage(
   NAME benchmark
   GITHUB_REPOSITORY google/benchmark
   VERSION 1.7.1
-  OPTIONS "BENCHMARK_ENABLE_TESTING Off" "BENCHMARK_ENABLE_LIBPFM On"
+  OPTIONS "BENCHMARK_ENABLE_TESTING Off" "BENCHMARK_ENABLE_LIBPFM On" "BENCHMARK_ENABLE_WERROR Off"
+          "BENCHMARK_ENABLE_EXCEPTIONS Off"
 )
 if(benchmark_ADDED)
   # enable c++11 to avoid compilation errors
@@ -51,10 +52,11 @@ target_include_directories(
 )
 find_package(OpenMP)
 target_link_libraries(
-  ${PROJECT_NAME} PRIVATE benchmark LLVM unordered_dense::unordered_dense OpenMP::OpenMP_CXX
+  ${PROJECT_NAME} PRIVATE benchmark::benchmark LLVM unordered_dense::unordered_dense
+                          OpenMP::OpenMP_CXX
 )
 
-if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+if((CMAKE_CXX_COMPILER_ID MATCHES "Clang") OR (CMAKE_CXX_COMPILER_ID MATCHES "IntelLLVM"))
   target_compile_options(${PROJECT_NAME} PRIVATE -ferror-limit=2 -fcolor-diagnostics)
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
   target_compile_options(
@@ -64,10 +66,14 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
 endif()
 
 if(ENABLE_NATIVE_COMPILATION)
-  target_compile_options(${PROJECT_NAME} PRIVATE -march=native)
-  check_cxx_compiler_flag("-mprefer-vector-width=512" VEC512)
-  if(VEC512)
-    target_compile_options(${PROJECT_NAME} PRIVATE -mprefer-vector-width=512)
+  if(CMAKE_CXX_COMPILER_ID MATCHES "IntelLLVM")
+    target_compile_options(${PROJECT_NAME} PRIVATE -xhost -qopt-zmm-usage=high)
+  else()
+    target_compile_options(${PROJECT_NAME} PRIVATE -march=native)
+    check_cxx_compiler_flag("-mprefer-vector-width=512" VEC512)
+    if(VEC512)
+      target_compile_options(${PROJECT_NAME} PRIVATE -mprefer-vector-width=512)
+    endif()
   endif()
 endif()
 set_target_properties(
@@ -96,8 +102,12 @@ target_compile_options(
           -Wshadow
           -Wextra
           -save-temps
-          -fopenmp
 )
+if(CMAKE_CXX_COMPILER_ID MATCHES "IntelLLVM")
+  target_compile_options(${PROJECT_NAME} PRIVATE -fiopenmp)
+else()
+  target_compile_options(${PROJECT_NAME} PRIVATE -fopenmp)
+endif()
 if(CMAKE_SYSTEM_PROCESSOR MATCHES "(x86)|(X86)|(amd64)|(AMD64)")
   target_compile_options(${PROJECT_NAME} PRIVATE -masm=intel)
 endif()

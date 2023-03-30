@@ -254,6 +254,7 @@ template <AbstractMatrix T> constexpr auto expm(const T &A) {
     U << A * V;
     V << A6 * (182 * A6 + 960960 * A4 + 1323241920 * A2) +
            (670442572800 * A6 + 129060195264000 * A4 + 7771770303897600 * A2) +
+
            64764752532480000 * I;
   }
   for (auto a = A2.begin(), v = V.begin(), u = U.begin(), e = A2.end(); a != e;
