@@ -221,16 +221,16 @@ $(function() {
 <div class="line"><a name="l00150"></a><span class="lineno">  150</span>&#160;static_assert(std::convertible_to&lt;<span class="keywordtype">int</span>, <a class="code" href="classDual.html">Dual&lt;double, 4&gt;</a>&gt;);</div>
 <div class="line"><a name="l00151"></a><span class="lineno">  151</span>&#160;static_assert(std::convertible_to&lt;<span class="keywordtype">int</span>, <a class="code" href="classDual.html">Dual</a>&lt;<a class="code" href="classDual.html">Dual&lt;double, 4&gt;</a>, 2&gt;&gt;);</div>
 <div class="line"><a name="l00152"></a><span class="lineno">  152</span>&#160; </div>
-<div class="line"><a name="l00153"></a><span class="lineno"><a class="line" href="structurand.html">  153</a></span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">class</span> D&gt; <span class="keyword">struct </span><a class="code" href="structurand.html">urand</a> {</div>
+<div class="line"><a name="l00153"></a><span class="lineno"><a class="line" href="structURand.html">  153</a></span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">class</span> D&gt; <span class="keyword">struct </span><a class="code" href="structURand.html">URand</a> {</div>
 <div class="line"><a name="l00154"></a><span class="lineno">  154</span>&#160;  <span class="keyword">using</span> T = <span class="keyword">typename</span> D::val_type;</div>
 <div class="line"><a name="l00155"></a><span class="lineno">  155</span>&#160;  <span class="keyword">static</span> constexpr <span class="keywordtype">size_t</span> N = D::num_partials;</div>
 <div class="line"><a name="l00156"></a><span class="lineno">  156</span>&#160;  <span class="keyword">auto</span> operator()(std::mt19937_64 &amp;mt) -&gt; D {</div>
-<div class="line"><a name="l00157"></a><span class="lineno">  157</span>&#160;    <a class="code" href="classDual.html">Dual&lt;T, N&gt;</a> x{<a class="code" href="structurand.html">urand&lt;T&gt;</a>{}(mt)};</div>
-<div class="line"><a name="l00158"></a><span class="lineno">  158</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; N; ++i) x.gradient()[i] = <a class="code" href="structurand.html">urand&lt;T&gt;</a>{}(mt);</div>
+<div class="line"><a name="l00157"></a><span class="lineno">  157</span>&#160;    <a class="code" href="classDual.html">Dual&lt;T, N&gt;</a> x{<a class="code" href="structURand.html">URand&lt;T&gt;</a>{}(mt)};</div>
+<div class="line"><a name="l00158"></a><span class="lineno">  158</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; N; ++i) x.gradient()[i] = <a class="code" href="structURand.html">URand&lt;T&gt;</a>{}(mt);</div>
 <div class="line"><a name="l00159"></a><span class="lineno">  159</span>&#160;    <span class="keywordflow">return</span> std::move(x);</div>
 <div class="line"><a name="l00160"></a><span class="lineno">  160</span>&#160;  }</div>
 <div class="line"><a name="l00161"></a><span class="lineno">  161</span>&#160;};</div>
-<div class="line"><a name="l00162"></a><span class="lineno"><a class="line" href="structurand_3_01double_01_4.html">  162</a></span>&#160;<span class="keyword">template</span> &lt;&gt; <span class="keyword">struct </span><a class="code" href="structurand.html">urand</a>&lt;double&gt; {</div>
+<div class="line"><a name="l00162"></a><span class="lineno"><a class="line" href="structURand_3_01double_01_4.html">  162</a></span>&#160;<span class="keyword">template</span> &lt;&gt; <span class="keyword">struct </span><a class="code" href="structURand.html">URand</a>&lt;double&gt; {</div>
 <div class="line"><a name="l00163"></a><span class="lineno">  163</span>&#160;  <span class="keyword">auto</span> operator()(std::mt19937_64 &amp;mt) -&gt; <span class="keywordtype">double</span> {</div>
 <div class="line"><a name="l00164"></a><span class="lineno">  164</span>&#160;    <span class="keywordflow">return</span> std::uniform_real_distribution&lt;double&gt;(-2, 2)(mt);</div>
 <div class="line"><a name="l00165"></a><span class="lineno">  165</span>&#160;  }</div>
@@ -360,64 +360,61 @@ $(function() {
 <div class="line"><a name="l00289"></a><span class="lineno">  289</span>&#160;  <span class="keywordtype">unsigned</span> dim = state.range(0);</div>
 <div class="line"><a name="l00290"></a><span class="lineno">  290</span>&#160;  std::mt19937_64 mt(0);</div>
 <div class="line"><a name="l00291"></a><span class="lineno">  291</span>&#160;  SquareMatrix&lt;double&gt; A{<a class="code" href="structLinAlg_1_1SquareDims.html">SquareDims</a>{dim}};</div>
-<div class="line"><a name="l00292"></a><span class="lineno">  292</span>&#160;  <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;a : A) a = <a class="code" href="structurand_3_01double_01_4.html">urand&lt;double&gt;</a>{}(mt);</div>
-<div class="line"><a name="l00293"></a><span class="lineno">  293</span>&#160;  <span class="comment">// llvm::errs() &lt;&lt; &quot;dim = &quot; &lt;&lt; dim &lt;&lt; &quot;; A = &quot; &lt;&lt; A &lt;&lt; &quot;\nexpm(A) = &quot; &lt;&lt;</span></div>
-<div class="line"><a name="l00294"></a><span class="lineno">  294</span>&#160;  <span class="comment">// expm(A)</span></div>
-<div class="line"><a name="l00295"></a><span class="lineno">  295</span>&#160;  <span class="comment">//              &lt;&lt; &quot;\n&quot;;</span></div>
-<div class="line"><a name="l00296"></a><span class="lineno">  296</span>&#160;  <span class="keywordflow">for</span> (<span class="keyword">auto</span> b : state) expbench(A);</div>
-<div class="line"><a name="l00297"></a><span class="lineno">  297</span>&#160;}</div>
-<div class="line"><a name="l00298"></a><span class="lineno">  298</span>&#160;BENCHMARK(BM_expm)-&gt;DenseRange(2, 10, 1);</div>
-<div class="line"><a name="l00299"></a><span class="lineno">  299</span>&#160;<span class="keyword">static</span> <span class="keywordtype">void</span> BM_expm_dual4(benchmark::State &amp;state) {</div>
-<div class="line"><a name="l00300"></a><span class="lineno">  300</span>&#160;  <span class="keywordtype">unsigned</span> dim = state.range(0);</div>
-<div class="line"><a name="l00301"></a><span class="lineno">  301</span>&#160;  std::mt19937_64 mt(0);</div>
-<div class="line"><a name="l00302"></a><span class="lineno">  302</span>&#160;  <span class="keyword">using</span> D = <a class="code" href="classDual.html">Dual&lt;double, 4&gt;</a>;</div>
-<div class="line"><a name="l00303"></a><span class="lineno">  303</span>&#160;  SquareMatrix&lt;D&gt; A{<a class="code" href="structLinAlg_1_1SquareDims.html">SquareDims</a>{dim}};</div>
-<div class="line"><a name="l00304"></a><span class="lineno">  304</span>&#160;  <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;a : A) a = <a class="code" href="structurand.html">urand&lt;D&gt;</a>{}(mt);</div>
-<div class="line"><a name="l00305"></a><span class="lineno">  305</span>&#160;  <span class="keywordflow">for</span> (<span class="keyword">auto</span> b : state) expbench(A);</div>
-<div class="line"><a name="l00306"></a><span class="lineno">  306</span>&#160;}</div>
-<div class="line"><a name="l00307"></a><span class="lineno">  307</span>&#160;BENCHMARK(BM_expm_dual4)-&gt;DenseRange(2, 10, 1);</div>
-<div class="line"><a name="l00308"></a><span class="lineno">  308</span>&#160; </div>
-<div class="line"><a name="l00309"></a><span class="lineno">  309</span>&#160;<span class="keyword">static</span> <span class="keywordtype">void</span> BM_expm_dual4x2(benchmark::State &amp;state) {</div>
-<div class="line"><a name="l00310"></a><span class="lineno">  310</span>&#160;  <span class="keywordtype">unsigned</span> dim = state.range(0);</div>
-<div class="line"><a name="l00311"></a><span class="lineno">  311</span>&#160;  std::mt19937_64 mt(0);</div>
-<div class="line"><a name="l00312"></a><span class="lineno">  312</span>&#160;  <span class="keyword">using</span> D = <a class="code" href="classDual.html">Dual&lt;Dual&lt;double, 4&gt;</a>, 2&gt;;</div>
-<div class="line"><a name="l00313"></a><span class="lineno">  313</span>&#160;  SquareMatrix&lt;D&gt; A{<a class="code" href="structLinAlg_1_1SquareDims.html">SquareDims</a>{dim}};</div>
-<div class="line"><a name="l00314"></a><span class="lineno">  314</span>&#160;  <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;a : A) a = <a class="code" href="structurand.html">urand&lt;D&gt;</a>{}(mt);</div>
-<div class="line"><a name="l00315"></a><span class="lineno">  315</span>&#160;  <span class="comment">// llvm::errs() &lt;&lt; &quot;dim = &quot; &lt;&lt; dim &lt;&lt; &quot;; A = &quot; &lt;&lt; A &lt;&lt; &quot;\nexpm(A) = &quot; &lt;&lt;</span></div>
-<div class="line"><a name="l00316"></a><span class="lineno">  316</span>&#160;  <span class="comment">// expm(A)</span></div>
-<div class="line"><a name="l00317"></a><span class="lineno">  317</span>&#160;  <span class="comment">//              &lt;&lt; &quot;\n&quot;;</span></div>
-<div class="line"><a name="l00318"></a><span class="lineno">  318</span>&#160;  <span class="keywordflow">for</span> (<span class="keyword">auto</span> b : state) expbench(A);</div>
-<div class="line"><a name="l00319"></a><span class="lineno">  319</span>&#160;}</div>
-<div class="line"><a name="l00320"></a><span class="lineno">  320</span>&#160;BENCHMARK(BM_expm_dual4x2)-&gt;DenseRange(2, 10, 1);</div>
-<div class="line"><a name="l00321"></a><span class="lineno">  321</span>&#160; </div>
-<div class="line"><a name="l00322"></a><span class="lineno">  322</span>&#160;<span class="keyword">using</span> <a class="code" href="classDual.html">D4D2</a> = <a class="code" href="classDual.html">Dual&lt;Dual&lt;double, 4&gt;</a>, 2&gt;;</div>
-<div class="line"><a name="l00323"></a><span class="lineno">  323</span>&#160;<span class="keyword">using</span> SMDD = SquareMatrix&lt;D4D2&gt;;</div>
-<div class="line"><a name="l00324"></a><span class="lineno">  324</span>&#160;<span class="preprocessor">#pragma omp declare reduction(+ : SMDD : omp_out += omp_in) \</span></div>
-<div class="line"><a name="l00325"></a><span class="lineno">  325</span>&#160;<span class="preprocessor">         initializer(omp_priv = SMDD{omp_orig.dim(), D4D2{}})</span></div>
-<div class="line"><a name="l00326"></a><span class="lineno">  326</span>&#160; </div>
-<div class="line"><a name="l00327"></a><span class="lineno">  327</span>&#160;<span class="keyword">static</span> <span class="keywordtype">void</span> BM_expm_dual4x2_threads(benchmark::State &amp;state) {</div>
-<div class="line"><a name="l00328"></a><span class="lineno">  328</span>&#160;  <span class="keywordtype">unsigned</span> dim = state.range(0);</div>
-<div class="line"><a name="l00329"></a><span class="lineno">  329</span>&#160;  std::mt19937_64 mt(0);</div>
-<div class="line"><a name="l00330"></a><span class="lineno">  330</span>&#160;  <span class="keyword">using</span> D = <a class="code" href="classDual.html">Dual&lt;Dual&lt;double, 4&gt;</a>, 2&gt;;</div>
-<div class="line"><a name="l00331"></a><span class="lineno">  331</span>&#160;  SquareMatrix&lt;D&gt; A{<a class="code" href="structLinAlg_1_1SquareDims.html">SquareDims</a>{dim}};</div>
-<div class="line"><a name="l00332"></a><span class="lineno">  332</span>&#160;  <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;a : A) a = <a class="code" href="structurand.html">urand&lt;D&gt;</a>{}(mt);</div>
-<div class="line"><a name="l00333"></a><span class="lineno">  333</span>&#160;  <span class="comment">// llvm::errs() &lt;&lt; &quot;dim = &quot; &lt;&lt; dim &lt;&lt; &quot;; A = &quot; &lt;&lt; A &lt;&lt; &quot;\nexpm(A) = &quot; &lt;&lt;</span></div>
-<div class="line"><a name="l00334"></a><span class="lineno">  334</span>&#160;  <span class="comment">// expm(A)</span></div>
-<div class="line"><a name="l00335"></a><span class="lineno">  335</span>&#160;  <span class="comment">//              &lt;&lt; &quot;\n&quot;;</span></div>
-<div class="line"><a name="l00336"></a><span class="lineno">  336</span>&#160;  <span class="keywordflow">for</span> (<span class="keyword">auto</span> bch : state) {</div>
-<div class="line"><a name="l00337"></a><span class="lineno">  337</span>&#160;    SquareMatrix&lt;D&gt; B{<a class="code" href="structLinAlg_1_1SquareDims.html">SquareDims</a>{dim}};</div>
-<div class="line"><a name="l00338"></a><span class="lineno">  338</span>&#160;    B.fill(D{0});</div>
-<div class="line"><a name="l00339"></a><span class="lineno">  339</span>&#160;<span class="preprocessor">#pragma omp parallel for reduction(+ : B)</span></div>
-<div class="line"><a name="l00340"></a><span class="lineno">  340</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; 1000; ++i) B += expwork(A);</div>
-<div class="line"><a name="l00341"></a><span class="lineno">  341</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;b : B) benchmark::DoNotOptimize(b);</div>
-<div class="line"><a name="l00342"></a><span class="lineno">  342</span>&#160;  }</div>
-<div class="line"><a name="l00343"></a><span class="lineno">  343</span>&#160;}</div>
-<div class="line"><a name="l00344"></a><span class="lineno">  344</span>&#160;BENCHMARK(BM_expm_dual4x2_threads)-&gt;DenseRange(2, 10, 1);</div>
+<div class="line"><a name="l00292"></a><span class="lineno">  292</span>&#160;  <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;a : A) a = <a class="code" href="structURand_3_01double_01_4.html">URand&lt;double&gt;</a>{}(mt);</div>
+<div class="line"><a name="l00293"></a><span class="lineno">  293</span>&#160;  <span class="keywordflow">for</span> (<span class="keyword">auto</span> b : state) expbench(A);</div>
+<div class="line"><a name="l00294"></a><span class="lineno">  294</span>&#160;}</div>
+<div class="line"><a name="l00295"></a><span class="lineno">  295</span>&#160;BENCHMARK(BM_expm)-&gt;DenseRange(2, 10, 1);</div>
+<div class="line"><a name="l00296"></a><span class="lineno">  296</span>&#160;<span class="keyword">static</span> <span class="keywordtype">void</span> BM_expm_dual4(benchmark::State &amp;state) {</div>
+<div class="line"><a name="l00297"></a><span class="lineno">  297</span>&#160;  <span class="keywordtype">unsigned</span> dim = state.range(0);</div>
+<div class="line"><a name="l00298"></a><span class="lineno">  298</span>&#160;  std::mt19937_64 mt(0);</div>
+<div class="line"><a name="l00299"></a><span class="lineno">  299</span>&#160;  <span class="keyword">using</span> D = <a class="code" href="classDual.html">Dual&lt;double, 4&gt;</a>;</div>
+<div class="line"><a name="l00300"></a><span class="lineno">  300</span>&#160;  SquareMatrix&lt;D&gt; A{<a class="code" href="structLinAlg_1_1SquareDims.html">SquareDims</a>{dim}};</div>
+<div class="line"><a name="l00301"></a><span class="lineno">  301</span>&#160;  <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;a : A) a = <a class="code" href="structURand.html">URand&lt;D&gt;</a>{}(mt);</div>
+<div class="line"><a name="l00302"></a><span class="lineno">  302</span>&#160;  <span class="keywordflow">for</span> (<span class="keyword">auto</span> b : state) expbench(A);</div>
+<div class="line"><a name="l00303"></a><span class="lineno">  303</span>&#160;}</div>
+<div class="line"><a name="l00304"></a><span class="lineno">  304</span>&#160;BENCHMARK(BM_expm_dual4)-&gt;DenseRange(2, 10, 1);</div>
+<div class="line"><a name="l00305"></a><span class="lineno">  305</span>&#160; </div>
+<div class="line"><a name="l00306"></a><span class="lineno">  306</span>&#160;<span class="keyword">static</span> <span class="keywordtype">void</span> BM_expm_dual4x2(benchmark::State &amp;state) {</div>
+<div class="line"><a name="l00307"></a><span class="lineno">  307</span>&#160;  <span class="keywordtype">unsigned</span> dim = state.range(0);</div>
+<div class="line"><a name="l00308"></a><span class="lineno">  308</span>&#160;  std::mt19937_64 mt(0);</div>
+<div class="line"><a name="l00309"></a><span class="lineno">  309</span>&#160;  <span class="keyword">using</span> D = <a class="code" href="classDual.html">Dual&lt;Dual&lt;double, 4&gt;</a>, 2&gt;;</div>
+<div class="line"><a name="l00310"></a><span class="lineno">  310</span>&#160;  SquareMatrix&lt;D&gt; A{<a class="code" href="structLinAlg_1_1SquareDims.html">SquareDims</a>{dim}};</div>
+<div class="line"><a name="l00311"></a><span class="lineno">  311</span>&#160;  <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;a : A) a = <a class="code" href="structURand.html">URand&lt;D&gt;</a>{}(mt);</div>
+<div class="line"><a name="l00312"></a><span class="lineno">  312</span>&#160;  <span class="keywordflow">for</span> (<span class="keyword">auto</span> b : state) expbench(A);</div>
+<div class="line"><a name="l00313"></a><span class="lineno">  313</span>&#160;}</div>
+<div class="line"><a name="l00314"></a><span class="lineno">  314</span>&#160;BENCHMARK(BM_expm_dual4x2)-&gt;DenseRange(2, 10, 1);</div>
+<div class="line"><a name="l00315"></a><span class="lineno">  315</span>&#160; </div>
+<div class="line"><a name="l00316"></a><span class="lineno">  316</span>&#160;<span class="keyword">using</span> <a class="code" href="classDual.html">D4D2</a> = <a class="code" href="classDual.html">Dual&lt;Dual&lt;double, 4&gt;</a>, 2&gt;;</div>
+<div class="line"><a name="l00317"></a><span class="lineno">  317</span>&#160;<span class="keyword">using</span> SMDD = SquareMatrix&lt;D4D2&gt;;</div>
+<div class="line"><a name="l00318"></a><span class="lineno">  318</span>&#160;<span class="preprocessor">#ifdef __INTEL_LLVM_COMPILER</span></div>
+<div class="line"><a name="l00319"></a><span class="lineno">  319</span>&#160;<span class="keyword">using</span> <a class="code" href="structLinAlg_1_1ManagedArray.html">SMDD0</a> = <a class="code" href="structLinAlg_1_1ManagedArray.html">LinAlg::ManagedArray&lt;D4D2, SquareDims, 0&gt;</a>;</div>
+<div class="line"><a name="l00320"></a><span class="lineno">  320</span>&#160;<span class="preprocessor">#else</span></div>
+<div class="line"><a name="l00321"></a><span class="lineno">  321</span>&#160;<span class="keyword">using</span> <a class="code" href="structLinAlg_1_1ManagedArray.html">SMDD0</a> = <a class="code" href="structLinAlg_1_1ManagedArray.html">LinAlg::ManagedArray&lt;D4D2, SquareDims&gt;</a>;</div>
+<div class="line"><a name="l00322"></a><span class="lineno">  322</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00323"></a><span class="lineno">  323</span>&#160;<span class="preprocessor">#pragma omp declare reduction(+ : SMDD0 : omp_out += omp_in) \</span></div>
+<div class="line"><a name="l00324"></a><span class="lineno">  324</span>&#160;<span class="preprocessor">         initializer(omp_priv = SMDD0{omp_orig.dim(), D4D2{}})</span></div>
+<div class="line"><a name="l00325"></a><span class="lineno">  325</span>&#160; </div>
+<div class="line"><a name="l00326"></a><span class="lineno">  326</span>&#160;<span class="keyword">static</span> <span class="keywordtype">void</span> BM_expm_dual4x2_threads(benchmark::State &amp;state) {</div>
+<div class="line"><a name="l00327"></a><span class="lineno">  327</span>&#160;  <span class="keywordtype">unsigned</span> dim = state.range(0);</div>
+<div class="line"><a name="l00328"></a><span class="lineno">  328</span>&#160;  std::mt19937_64 mt(0);</div>
+<div class="line"><a name="l00329"></a><span class="lineno">  329</span>&#160;  <span class="keyword">using</span> D = <a class="code" href="classDual.html">Dual&lt;Dual&lt;double, 4&gt;</a>, 2&gt;;</div>
+<div class="line"><a name="l00330"></a><span class="lineno">  330</span>&#160;  SquareMatrix&lt;D&gt; A{<a class="code" href="structLinAlg_1_1SquareDims.html">SquareDims</a>{dim}};</div>
+<div class="line"><a name="l00331"></a><span class="lineno">  331</span>&#160;  <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;a : A) a = <a class="code" href="structURand.html">URand&lt;D&gt;</a>{}(mt);</div>
+<div class="line"><a name="l00332"></a><span class="lineno">  332</span>&#160;  <span class="keywordflow">for</span> (<span class="keyword">auto</span> bch : state) {</div>
+<div class="line"><a name="l00333"></a><span class="lineno">  333</span>&#160;    <a class="code" href="structLinAlg_1_1ManagedArray.html">SMDD0</a> B{<a class="code" href="structLinAlg_1_1SquareDims.html">SquareDims</a>{dim}};</div>
+<div class="line"><a name="l00334"></a><span class="lineno">  334</span>&#160;    B.fill(D{0});</div>
+<div class="line"><a name="l00335"></a><span class="lineno">  335</span>&#160;<span class="preprocessor">#pragma omp parallel for reduction(+ : B)</span></div>
+<div class="line"><a name="l00336"></a><span class="lineno">  336</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; 1000; ++i) B += expwork(A);</div>
+<div class="line"><a name="l00337"></a><span class="lineno">  337</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;b : B) benchmark::DoNotOptimize(b);</div>
+<div class="line"><a name="l00338"></a><span class="lineno">  338</span>&#160;  }</div>
+<div class="line"><a name="l00339"></a><span class="lineno">  339</span>&#160;}</div>
+<div class="line"><a name="l00340"></a><span class="lineno">  340</span>&#160;BENCHMARK(BM_expm_dual4x2_threads)-&gt;DenseRange(2, 10, 1);</div>
 <div class="ttc" id="aclassDual_html"><div class="ttname"><a href="classDual.html">Dual</a></div><div class="ttdef"><b>Definition:</b> matrix_exp.hpp:17</div></div>
+<div class="ttc" id="astructLinAlg_1_1ManagedArray_html"><div class="ttname"><a href="structLinAlg_1_1ManagedArray.html">LinAlg::ManagedArray</a></div><div class="ttdef"><b>Definition:</b> Array.hpp:927</div></div>
 <div class="ttc" id="astructLinAlg_1_1SquareDims_html"><div class="ttname"><a href="structLinAlg_1_1SquareDims.html">LinAlg::SquareDims</a></div><div class="ttdef"><b>Definition:</b> MatrixDimensions.hpp:111</div></div>
 <div class="ttc" id="astructTinyVector_html"><div class="ttname"><a href="structTinyVector.html">TinyVector</a></div><div class="ttdef"><b>Definition:</b> TinyVector.hpp:6</div></div>
-<div class="ttc" id="astructurand_3_01double_01_4_html"><div class="ttname"><a href="structurand_3_01double_01_4.html">urand&lt; double &gt;</a></div><div class="ttdef"><b>Definition:</b> matrix_exp.hpp:162</div></div>
-<div class="ttc" id="astructurand_html"><div class="ttname"><a href="structurand.html">urand</a></div><div class="ttdef"><b>Definition:</b> matrix_exp.hpp:153</div></div>
+<div class="ttc" id="astructURand_3_01double_01_4_html"><div class="ttname"><a href="structURand_3_01double_01_4.html">URand&lt; double &gt;</a></div><div class="ttdef"><b>Definition:</b> matrix_exp.hpp:162</div></div>
+<div class="ttc" id="astructURand_html"><div class="ttname"><a href="structURand.html">URand</a></div><div class="ttdef"><b>Definition:</b> matrix_exp.hpp:153</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
