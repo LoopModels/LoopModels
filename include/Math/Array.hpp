@@ -875,17 +875,19 @@ protected:
   [[nodiscard]] constexpr auto isSmall() const -> bool {
     return static_cast<const P *>(this)->isSmall();
   }
+  [[nodiscard]] constexpr auto getmemptr() const -> const T * {
+    return static_cast<const P *>(this)->getmemptr();
+  }
   // this method should only be called from the destructor
   // (and the implementation taking the new ptr and capacity)
   constexpr void maybeDeallocate() noexcept {
     bool wasAllocated = !isSmall();
     if constexpr (Init) wasAllocated = this->ptr != nullptr;
-    if (wasAllocated) printf("deallocate %p\nthis = %p\n", this->ptr, this);
-    if (wasAllocated) allocator.deallocate(this->ptr, this->capacity);
+    if (wasAllocated)
+      if (wasAllocated) allocator.deallocate(this->ptr, this->capacity);
   }
   // this method should be called whenever the buffer lives
   constexpr void maybeDeallocate(T *newPtr, U newCapacity) noexcept {
-    printf("old ptr %p; ew ptr = %p\n", this->ptr, newPtr);
     maybeDeallocate();
     this->ptr = newPtr;
     this->capacity = newCapacity;
@@ -916,6 +918,11 @@ concept AbstractSimilar = (MatrixDimension<S> && AbstractMatrix<T>) ||
 /// Thus struct's alignment determines initial alignment
 /// of the stack memory.
 /// Information related to size is then grouped next to the pointer.
+///
+/// The Intel compiler + OpenMP appears to memcpy data around,
+/// or at least build ManagedArrays bypassing the constructors listed here.
+/// This caused invalid frees, as the pointer still pointed to the old
+/// stack memory.
 template <class T, class S, size_t N, class A, std::unsigned_integral U>
 struct ManagedArray : ReallocView<T, S, ManagedArray<T, S, N, A, U>, A, U> {
   static_assert(std::is_trivially_destructible_v<T>);
@@ -1015,7 +1022,6 @@ struct ManagedArray : ReallocView<T, S, ManagedArray<T, S, N, A, U>, A, U> {
     if (b.isSmall()) { // copy
       std::uninitialized_copy_n(b.data(), size_t(b.dim()), this->data());
     } else { // steal
-      printf("old ptr %p; &&b<>.data() = %p\n", this->ptr, b.data());
       this->ptr = b.data();
       this->capacity = b.getCapacity();
     }
@@ -1026,7 +1032,6 @@ struct ManagedArray : ReallocView<T, S, ManagedArray<T, S, N, A, U>, A, U> {
     if (b.isSmall()) { // copy
       std::uninitialized_copy_n(b.data(), size_t(b.dim()), this->data());
     } else { // steal
-      printf("old ptr %p; &&b.data() = %p\n", this->ptr, b.data());
       this->ptr = b.data();
       this->capacity = b.getCapacity();
     }
@@ -1038,7 +1043,6 @@ struct ManagedArray : ReallocView<T, S, ManagedArray<T, S, N, A, U>, A, U> {
     if (b.isSmall()) { // copy
       std::uninitialized_copy_n(b.data(), size_t(b.dim()), this->data());
     } else { // steal
-      printf("(set sz): old ptr %p; &&b<>.data() = %p\n", this->ptr, b.data());
       this->ptr = b.data();
       this->capacity = b.getCapacity();
     }
@@ -1139,6 +1143,7 @@ struct ManagedArray : ReallocView<T, S, ManagedArray<T, S, N, A, U>, A, U> {
   friend inline void PrintTo(const ManagedArray &x, std::ostream *os) {
     adaptOStream(*os, x);
   }
+  [[nodiscard]] auto getmemptr() const -> const T * { return memory; }
 
 private:
   T memory[N]; // NOLINT (modernize-avoid-c-style-arrays)
@@ -1287,6 +1292,7 @@ struct ManagedArray<T, S, 0, A, U>
     static_assert(MatrixDimension<S>);
     return identity(unsigned(C));
   }
+  static constexpr auto getmemptr() -> const T * { return nullptr; }
 };
 
 static_assert(std::move_constructible<ManagedArray<intptr_t, unsigned>>);
@@ -1322,6 +1328,8 @@ static_assert(AbstractVector<Array<int64_t, unsigned>>);
 static_assert(AbstractVector<MutArray<int64_t, unsigned>>);
 static_assert(AbstractVector<Vector<int64_t>>);
 static_assert(!AbstractVector<int64_t>);
+static_assert(!std::is_trivially_copyable_v<Vector<int64_t>>);
+static_assert(!std::is_trivially_destructible_v<Vector<int64_t>>);
 
 template <typename T> using StridedVector = Array<T, StridedRange>;
 template <typename T> using MutStridedVector = MutArray<T, StridedRange>;

@@ -28,14 +28,14 @@ template <class T, class S, class P> class ArrayOps {
 public:
   template <std::convertible_to<T> Y>
   [[gnu::flatten]] constexpr auto operator<<(const UniformScaling<Y> &B)
-    -> decltype(auto) {
+    -> P & {
     static_assert(MatrixDimension<S>);
     std::fill_n((T *)(this->ptr), size_t(this->dim()), T{});
     this->diag() << B.value;
-    return *this;
+    return *static_cast<P *>(this);
   }
   [[gnu::flatten]] constexpr auto operator<<(const SmallSparseMatrix<T> &B)
-    -> decltype(auto) {
+    -> P & {
     static_assert(MatrixDimension<S>);
     invariant(nr(), B.numRow());
     invariant(nc(), B.numCol());
@@ -53,10 +53,10 @@ public:
       for (; j < N; ++j) mem[l + j] = T{};
     }
     assert(k == B.nonZeros.size());
-    return *this;
+    return *static_cast<P *>(this);
   }
   [[gnu::flatten]] constexpr auto operator<<(const AbstractVector auto &B)
-    -> decltype(auto) {
+    -> P & {
     if constexpr (MatrixDimension<S>) {
       invariant(nr(), B.size());
       for (size_t i = 0; i < nr(); ++i) {
@@ -67,48 +67,48 @@ public:
       invariant(size_t(size_()), size_t(B.size()));
       for (size_t i = 0; i < size_(); ++i) index(i) = B[i];
     }
-    return *this;
+    return *static_cast<P *>(this);
   }
 
   [[gnu::flatten]] constexpr auto operator<<(const AbstractMatrix auto &B)
-    -> decltype(auto) {
+    -> P & {
     static_assert(MatrixDimension<S>);
     invariant(nr(), B.numRow());
     invariant(nc(), B.numCol());
     for (size_t i = 0; i < nr(); ++i)
       for (size_t j = 0; j < nc(); ++j) index(i, j) = B(i, j);
-    return *this;
+    return *static_cast<P *>(this);
   }
   template <std::convertible_to<T> Y>
-  [[gnu::flatten]] constexpr auto operator<<(const Y b) -> decltype(auto) {
+  [[gnu::flatten]] constexpr auto operator<<(const Y b) -> P & {
     if constexpr (std::integral<S> || std::is_same_v<S, StridedRange>) {
       for (size_t c = 0, L = size_t(dim_()); c < L; ++c) index(c) = b;
     } else {
       for (size_t r = 0; r < nr(); ++r)
         for (size_t c = 0; c < nc(); ++c) index(r, c) = b;
     }
-    return *this;
+    return *static_cast<P *>(this);
   }
   [[gnu::flatten]] constexpr auto operator+=(const AbstractMatrix auto &B)
-    -> decltype(auto) {
+    -> P & {
     static_assert(MatrixDimension<S>);
     invariant(nr(), B.numRow());
     invariant(nc(), B.numCol());
     for (size_t r = 0; r < nr(); ++r)
       for (size_t c = 0; c < nc(); ++c) index(r, c) += B(r, c);
-    return *this;
+    return *static_cast<P *>(this);
   }
   [[gnu::flatten]] constexpr auto operator-=(const AbstractMatrix auto &B)
-    -> decltype(auto) {
+    -> P & {
     static_assert(MatrixDimension<S>);
     invariant(nr(), B.numRow());
     invariant(nc(), B.numCol());
     for (size_t r = 0; r < nr(); ++r)
       for (size_t c = 0; c < nc(); ++c) index(r, c) -= B(r, c);
-    return *this;
+    return *static_cast<P *>(this);
   }
   [[gnu::flatten]] constexpr auto operator+=(const AbstractVector auto &B)
-    -> decltype(auto) {
+    -> P & {
     if constexpr (MatrixDimension<S>) {
       invariant(nr(), B.size());
       for (size_t r = 0; r < nr(); ++r) {
@@ -119,20 +119,20 @@ public:
       invariant(size_t(size_()), size_t(B.size()));
       for (size_t i = 0; i < size_(); ++i) index(i) += B[i];
     }
-    return *this;
+    return *static_cast<P *>(this);
   }
   template <std::convertible_to<T> Y>
-  [[gnu::flatten]] constexpr auto operator+=(Y b) -> decltype(auto) {
+  [[gnu::flatten]] constexpr auto operator+=(Y b) -> P & {
     if constexpr (MatrixDimension<S> && !DenseLayout<S>) {
       for (size_t r = 0; r < nr(); ++r)
         for (size_t c = 0; c < nc(); ++c) index(r, c) += b;
     } else {
       for (size_t i = 0; i < size_(); ++i) index(i) += b;
     }
-    return *this;
+    return *static_cast<P *>(this);
   }
   [[gnu::flatten]] constexpr auto operator-=(const AbstractVector auto &B)
-    -> decltype(auto) {
+    -> P & {
     if constexpr (MatrixDimension<S>) {
       invariant(nr() == B.size());
       for (size_t r = 0; r < nr(); ++r) {
@@ -143,27 +143,27 @@ public:
       invariant(size_() == B.size());
       for (size_t i = 0; i < size_(); ++i) index(i) -= B[i];
     }
-    return *this;
+    return *static_cast<P *>(this);
   }
   template <std::convertible_to<T> Y>
-  [[gnu::flatten]] constexpr auto operator*=(Y b) -> decltype(auto) {
+  [[gnu::flatten]] constexpr auto operator*=(Y b) -> P & {
     if constexpr (std::integral<S>) {
       for (size_t c = 0, L = size_t(dim_()); c < L; ++c) index(c) *= b;
     } else {
       for (size_t r = 0; r < nr(); ++r)
         for (size_t c = 0; c < nc(); ++c) index(r, c) *= b;
     }
-    return *this;
+    return *static_cast<P *>(this);
   }
   template <std::convertible_to<T> Y>
-  [[gnu::flatten]] constexpr auto operator/=(Y b) -> decltype(auto) {
+  [[gnu::flatten]] constexpr auto operator/=(Y b) -> P & {
     if constexpr (std::integral<S>) {
       for (size_t c = 0, L = size_t(dim_()); c < L; ++c) index(c) /= b;
     } else {
       for (size_t r = 0; r < nr(); ++r)
         for (size_t c = 0; c < nc(); ++c) index(r, c) /= b;
     }
-    return *this;
+    return *static_cast<P *>(this);
   }
 };
 } // namespace LinAlg
