@@ -752,10 +752,6 @@ public:
     numConstraints = c;
     numActiveEdges = ae;
   }
-  // constexpr void countNumParams(const Graph &g, size_t depth) {
-  //   setScheduleMemoryOffsets(g, depth);
-  //   countAuxParamsAndConstraints(g, depth);
-  // }
   constexpr void addMemory(MemoryAccess *m) {
 #ifndef NDEBUG
     for (auto *o : memory) assert(o->getInstruction() != m->getInstruction());
@@ -771,7 +767,8 @@ public:
   // matches lexicographical ordering of minimization
   // bounding, however, is to be favoring minimizing `u` over `w`
   [[nodiscard]] constexpr auto getLambdaOffset() const -> size_t {
-    return 1 + numBounding + numActiveEdges + numPhiCoefs + numOmegaCoefs;
+    return 1;
+    // return 1 + numBounding + numActiveEdges + numPhiCoefs + numOmegaCoefs;
   }
   [[nodiscard]] static constexpr auto hasActiveEdges(const Graph &g,
                                                      const MemoryAccess &mem)
@@ -808,7 +805,8 @@ public:
     return false;
   }
   constexpr void setScheduleMemoryOffsets(const Graph &g, size_t d) {
-    size_t pInit = numBounding + numActiveEdges + 1, p = pInit;
+    // C, lambdas, omegas, Phis
+    size_t pInit = numLambda + 3, p = pInit;
     numOmegaCoefs = 0;
     for (auto &&node : nodes) {
       // note, we had d > node.getNumLoops() for omegas earlier; why?
@@ -823,6 +821,8 @@ public:
     for (auto &edge : edges) edge->validate();
   }
 #endif
+  // the plan is to generally avoid instantiating the omni-simplex
+  // first, we solve individual problems
   auto instantiateOmniSimplex(const Graph &g, size_t d, bool satisfyDeps)
     -> Optional<Simplex *> {
     // defines numScheduleCoefs, numLambda, numBounding, and
@@ -843,10 +843,15 @@ public:
     // Order: C, then priority to minimize
     // all : C, u, w, Phis, omegas, lambdas
     // rows give constraints; each edge gets its own
+    // new order
+    // C, lambdas, omegas, Phis, w, u
+    // numBounding = num u
+    // numActiveEdges = num w
     size_t w = 1 + numBounding;
     Row c = 0;
-    Col l = getLambdaOffset(), u = 1;
-    size_t oOff = numPhiCoefs + numBounding + numActiveEdges + 1;
+    Col l = getLambdaOffset(),
+        u = 1 + numActiveEdges + numPhiCoefs + 2 * numOmegaCoefs + numLambda;
+    size_t oOff = numBounding + numActiveEdges + 1;
     // TODO: add `oOff` to all omega coefs, then reverse
     for (size_t e = 0; e < edges.size(); ++e) {
       Dependence &edge = *edges[e];
@@ -937,8 +942,9 @@ public:
                 C(_(cc, ccc), _(m, phiChild))
                   << bndPc(_, _(end - P, end)) + bndPp;
               }
-              C(_(c, cc), outNode.getOmegaOffset()) << satO(_, 0) + satO(_, 1);
-              C(_(cc, ccc), outNode.getOmegaOffset())
+              C(_(c, cc), outNode.getOmegaOffset() + oOff)
+                << satO(_, 0) + satO(_, 1);
+              C(_(cc, ccc), outNode.getOmegaOffset() + oOff)
                 << bndO(_, 0) + bndO(_, 1);
             }
           } else {
@@ -948,14 +954,15 @@ public:
               updateConstraints(C, inNode, satPp, bndPp, d, c, cc, ccc);
             // Omegas are included regardless of rotation
             if (d < edge.getOutNumLoops()) {
-              C(_(c, cc), outNode.getOmegaOffset())
+              C(_(c, cc), outNode.getOmegaOffset() + oOff)
                 << satO(_, !edge.isForward());
-              C(_(cc, ccc), outNode.getOmegaOffset())
+              C(_(cc, ccc), outNode.getOmegaOffset() + oOff)
                 << bndO(_, !edge.isForward());
             }
             if (d < edge.getInNumLoops()) {
-              C(_(c, cc), inNode.getOmegaOffset()) << satO(_, edge.isForward());
-              C(_(cc, ccc), inNode.getOmegaOffset())
+              C(_(c, cc), inNode.getOmegaOffset() + oOff)
+                << satO(_, edge.isForward());
+              C(_(cc, ccc), inNode.getOmegaOffset() + oOff)
                 << bndO(_, edge.isForward());
             }
           }
