@@ -289,7 +289,7 @@ $(function() {
 <div class="line"><a name="l00225"></a><span class="lineno">  225</span>&#160;      <span class="keywordflow">if</span> constexpr (BumpUp) <span class="keywordflow">return</span> ((p + SlabSize) &gt;= send) &amp;&amp; (p &lt; send);</div>
 <div class="line"><a name="l00226"></a><span class="lineno">  226</span>&#160;      <span class="keywordflow">else</span> <span class="keywordflow">return</span> (p &gt; send) &amp;&amp; (p &lt;= (send + SlabSize));</div>
 <div class="line"><a name="l00227"></a><span class="lineno">  227</span>&#160;    }</div>
-<div class="line"><a name="l00228"></a><span class="lineno">  228</span>&#160;    std::byte *p;</div>
+<div class="line"><a name="l00228"></a><span class="lineno">  228</span>&#160;    std::byte *<span class="keyword">const</span> p; <span class="comment">// NOLINT(misc-non-private-member-variables-in-classes)</span></div>
 <div class="line"><a name="l00229"></a><span class="lineno">  229</span>&#160;  };</div>
 <div class="line"><a name="l00230"></a><span class="lineno">  230</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> checkpoint() -&gt; <a class="code" href="structBumpAlloc_1_1CheckPoint.html">CheckPoint</a> { <span class="keywordflow">return</span> SlabCur; }</div>
 <div class="line"><a name="l00231"></a><span class="lineno">  231</span>&#160;  constexpr <span class="keywordtype">void</span> rollback(CheckPoint p) {</div>
@@ -449,7 +449,7 @@ $(function() {
 <div class="line"><a name="l00385"></a><span class="lineno">  385</span>&#160; </div>
 <div class="line"><a name="l00386"></a><span class="lineno">  386</span>&#160;<span class="keyword">public</span>:</div>
 <div class="line"><a name="l00387"></a><span class="lineno">  387</span>&#160;  <span class="keyword">using</span> value_type = T;</div>
-<div class="line"><a name="l00388"></a><span class="lineno"><a class="line" href="structWBumpAlloc_1_1rebind.html">  388</a></span>&#160;  <span class="keyword">template</span> &lt;<span class="keyword">typename</span> U&gt; <span class="keyword">struct </span><a class="code" href="structWBumpAlloc_1_1rebind.html">rebind</a> {</div>
+<div class="line"><a name="l00388"></a><span class="lineno"><a class="line" href="structWBumpAlloc_1_1rebind.html">  388</a></span>&#160;  <span class="keyword">template</span> &lt;<span class="keyword">typename</span> U&gt; <span class="keyword">struct </span><a class="code" href="structWBumpAlloc_1_1rebind.html">rebind</a> { <span class="comment">// NOLINT(readability-identifier-naming)</span></div>
 <div class="line"><a name="l00389"></a><span class="lineno">  389</span>&#160;    <span class="keyword">using</span> <a class="code" href="classWBumpAlloc.html">other</a> = <a class="code" href="classWBumpAlloc.html">WBumpAlloc&lt;U, SlabSize, BumpUp, MinAlignment&gt;</a>;</div>
 <div class="line"><a name="l00390"></a><span class="lineno">  390</span>&#160;  };</div>
 <div class="line"><a name="l00391"></a><span class="lineno">  391</span>&#160;  constexpr <a class="code" href="classWBumpAlloc.html">WBumpAlloc</a>(<a class="code" href="structBumpAlloc.html">Alloc</a> &amp;alloc) : A(&amp;alloc) {}</div>
