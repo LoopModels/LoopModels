@@ -7,8 +7,10 @@
 namespace LinAlg {
 
 template <class T, class S, class P> class ArrayOps {
-  constexpr auto data_() -> T * { return static_cast<P *>(this)->data(); }
-  constexpr auto data_() const -> const T * {
+  [[gnu::returns_nonnull]] constexpr auto data_() -> T * {
+    return static_cast<P *>(this)->data();
+  }
+  [[gnu::returns_nonnull]] constexpr auto data_() const -> const T * {
     return static_cast<const P *>(this)->data();
   }
   constexpr auto size_() const { return static_cast<const P *>(this)->size(); }
@@ -19,10 +21,14 @@ template <class T, class S, class P> class ArrayOps {
   constexpr auto index(size_t i, size_t j) -> T & {
     return (*static_cast<P *>(this))(i, j);
   }
-  constexpr auto nr() const { return static_cast<const P *>(this)->numRow(); }
-  constexpr auto nc() const { return static_cast<const P *>(this)->numCol(); }
-  constexpr auto rs() const {
-    return static_cast<const P *>(this)->rowStride();
+  [[nodiscard]] constexpr auto nr() const -> size_t {
+    return size_t(static_cast<const P *>(this)->numRow());
+  }
+  [[nodiscard]] constexpr auto nc() const -> size_t {
+    return size_t(static_cast<const P *>(this)->numCol());
+  }
+  [[nodiscard]] constexpr auto rs() const -> size_t {
+    return size_t(static_cast<const P *>(this)->rowStride());
   }
 
 public:
@@ -30,20 +36,20 @@ public:
   [[gnu::flatten]] constexpr auto operator<<(const UniformScaling<Y> &B)
     -> P & {
     static_assert(MatrixDimension<S>);
-    std::fill_n((T *)(this->ptr), size_t(this->dim()), T{});
+    std::fill_n(data_(), size_t(this->dim()), T{});
     this->diag() << B.value;
     return *static_cast<P *>(this);
   }
   [[gnu::flatten]] constexpr auto operator<<(const SmallSparseMatrix<T> &B)
     -> P & {
     static_assert(MatrixDimension<S>);
-    invariant(nr(), B.numRow());
-    invariant(nc(), B.numCol());
-    size_t M = size_t(nr()), N = size_t(nc()), k = 0;
+    invariant(nr(), size_t(B.numRow()));
+    invariant(nc(), size_t(B.numCol()));
+    size_t M = nr(), N = nc(), k = 0;
     T *mem = data_();
     for (size_t i = 0; i < M; ++i) {
       uint32_t m = B.rows[i] & 0x00ffffff;
-      size_t j = 0, l = size_t(rs() * i);
+      size_t j = 0, l = rs() * i;
       while (m) {
         uint32_t tz = std::countr_zero(m);
         m >>= tz + 1;
@@ -73,8 +79,8 @@ public:
   [[gnu::flatten]] constexpr auto operator<<(const AbstractMatrix auto &B)
     -> P & {
     static_assert(MatrixDimension<S>);
-    invariant(nr(), B.numRow());
-    invariant(nc(), B.numCol());
+    invariant(nr(), size_t(B.numRow()));
+    invariant(nc(), size_t(B.numCol()));
     for (size_t i = 0; i < nr(); ++i)
       for (size_t j = 0; j < nc(); ++j) index(i, j) = B(i, j);
     return *static_cast<P *>(this);
@@ -92,8 +98,8 @@ public:
   [[gnu::flatten]] constexpr auto operator+=(const AbstractMatrix auto &B)
     -> P & {
     static_assert(MatrixDimension<S>);
-    invariant(nr(), B.numRow());
-    invariant(nc(), B.numCol());
+    invariant(nr(), size_t(B.numRow()));
+    invariant(nc(), size_t(B.numCol()));
     for (size_t r = 0; r < nr(); ++r)
       for (size_t c = 0; c < nc(); ++c) index(r, c) += B(r, c);
     return *static_cast<P *>(this);
@@ -101,8 +107,8 @@ public:
   [[gnu::flatten]] constexpr auto operator-=(const AbstractMatrix auto &B)
     -> P & {
     static_assert(MatrixDimension<S>);
-    invariant(nr(), B.numRow());
-    invariant(nc(), B.numCol());
+    invariant(nr(), size_t(B.numRow()));
+    invariant(nc(), size_t(B.numCol()));
     for (size_t r = 0; r < nr(); ++r)
       for (size_t c = 0; c < nc(); ++c) index(r, c) -= B(r, c);
     return *static_cast<P *>(this);
