@@ -225,7 +225,7 @@ public:
       if constexpr (BumpUp) return ((p + SlabSize) >= send) && (p < send);
       else return (p > send) && (p <= (send + SlabSize));
     }
-    std::byte *p;
+    std::byte *const p; // NOLINT(misc-non-private-member-variables-in-classes)
   };
   [[nodiscard]] constexpr auto checkpoint() -> CheckPoint { return SlabCur; }
   constexpr void rollback(CheckPoint p) {
@@ -385,7 +385,7 @@ class WBumpAlloc {
 
 public:
   using value_type = T;
-  template <typename U> struct rebind {
+  template <typename U> struct rebind { // NOLINT(readability-identifier-naming)
     using other = WBumpAlloc<U, SlabSize, BumpUp, MinAlignment>;
   };
   constexpr WBumpAlloc(Alloc &alloc) : A(&alloc) {}

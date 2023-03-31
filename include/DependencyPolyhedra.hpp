@@ -395,9 +395,12 @@ public:
   // `direction = true` means second dep follow first
   // lambda_0 + lambda*A*x = delta + c'x
   // x = [s, i]
+  // delta =
 
   // order of variables:
-  // [ lambda, schedule coefs on loops, const schedule coef, w, u ]
+  // [ lambda, phi, omega, w, u ]
+  // new, post-change:
+  // [ lambda, omega, phi, w, u ]
   //
   //
   // constraint order corresponds to old variables, will be in same order
@@ -469,12 +472,6 @@ public:
     // lambda_0 + lambda' * (b - A*i) - [0...numDep0Var) +
     // [numDep0Var...numVar) + offset == 0
     //
-    // if (direction==true & boundAbove == false){
-    //   sign = 1
-    // } else {
-    //   sign = -1
-    // }
-    //
     // boundAbove means we have
     // ... == w + u'*N + psi
     // -1 as we flip sign
@@ -483,16 +480,11 @@ public:
 
     // so far, both have been identical
 
-    // Simplex &bw(pair[1]);
-    // bw.resize(numConstraintsNew, numVarNew + 1);
     NotNull<Simplex> bw =
       Simplex::create(alloc, numConstraintsNew, numVarNew + 1, 0);
     MutPtrMatrix<int64_t> bC{bw->getConstraints()(_, _(1, end))};
 
     bC(_, _(begin, numVarNew)) << fC(_, _(begin, numVarNew));
-    // for (size_t i = 0; i < numConstraintsNew; ++i)
-    //     for (size_t j = 0; j < numVarNew; ++j)
-    //         bC(i, j) = fC(i, j);
 
     // equality constraints get expanded into two inequalities
     // a == 0 ->
@@ -501,36 +493,21 @@ public:
     // fw means x'Al = x'(depVar1 - depVar0)
     // x'Al + x'(depVar0 - depVar1) = 0
     // so, for fw, depVar0 is positive and depVar1 is negative
-    // note that we order the coefficients inner->outer
-    // so that the ILP minimizing coefficients
+    // note that we order the coefficients outer->inner
+    // so that the ILP rLexMin on coefficients
     // will tend to preserve the initial order (which is
-    // probably better than tending to reverse the initial order).
+    // better than tending to reverse the initial order).
+    fC(0, numPhiCoefs + numLambda) = 1;
+    fC(0, numPhiCoefs + 1 + numLambda) = -1;
+    bC(0, numPhiCoefs + numLambda) = -1;
+    bC(0, numPhiCoefs + 1 + numLambda) = 1;
     for (size_t i = 0; i < numPhiCoefs; ++i) {
       int64_t s = (2 * (i < numDep0Var) - 1);
-      fC(i + numBoundingCoefs, i + numLambda) = s;
-      bC(i + numBoundingCoefs, i + numLambda) = -s;
+      fC(i + numBoundingCoefs, i + numLambda + 2) = s;
+      bC(i + numBoundingCoefs, i + numLambda + 2) = -s;
     }
-    // for (size_t i = 0; i < numDep0Var; ++i) {
-    //     fC(numDep0Var - 1 - i + numBoundingCoefs, i + numLambda) = 1;
-    //     bC(numDep0Var - 1 - i + numBoundingCoefs, i + numLambda) = -1;
-    // }
-    // for (size_t i = 0; i < numPhiCoefs - numDep0Var; ++i) {
-    //     fC(numPhiCoefs - 1 - i + numBoundingCoefs,
-    //        i + numDep0Var + numLambda) = -1;
-    //     bC(numPhiCoefs - 1 - i + numBoundingCoefs,
-    //        i + numDep0Var + numLambda) = 1;
-    // }
-    fC(0, numScheduleCoefs - 2 + numLambda) = 1;
-    fC(0, numScheduleCoefs - 1 + numLambda) = -1;
-    bC(0, numScheduleCoefs - 2 + numLambda) = -1;
-    bC(0, numScheduleCoefs - 1 + numLambda) = 1;
     // note that delta/constant coef is handled as last `s`
     return {fw, bw};
-    // fw.removeExtraVariables(numVarKeep);
-    // bw.removeExtraVariables(numVarKeep);
-    // assert(fw.E.numRow() == fw.q.size());
-    // assert(bw.E.numRow() == bw.q.size());
-    // return pair;
   }
   friend inline auto operator<<(llvm::raw_ostream &os, const DepPoly &p)
     -> llvm::raw_ostream & {
@@ -756,36 +733,36 @@ public:
     return getBndConstraints()(_, _(1, 1 + depPoly->getNumLambda()));
   }
   [[nodiscard]] constexpr auto getSatPhiCoefs() const -> PtrMatrix<int64_t> {
-    auto l = 1 + depPoly->getNumLambda();
+    auto l = 3 + depPoly->getNumLambda();
     return getSatConstraints()(_, _(l, l + getNumPhiCoefficients()));
   }
   [[nodiscard]] constexpr auto getSatPhi0Coefs() const -> PtrMatrix<int64_t> {
-    auto l = 1 + depPoly->getNumLambda();
+    auto l = 3 + depPoly->getNumLambda();
     return getSatConstraints()(_, _(l, l + depPoly->getDim0()));
   }
   [[nodiscard]] constexpr auto getSatPhi1Coefs() const -> PtrMatrix<int64_t> {
-    auto l = 1 + depPoly->getNumLambda() + depPoly->getDim0();
+    auto l = 3 + depPoly->getNumLambda() + depPoly->getDim0();
     return getSatConstraints()(_, _(l, l + depPoly->getDim1()));
   }
   [[nodiscard]] constexpr auto getBndPhiCoefs() const -> PtrMatrix<int64_t> {
-    auto l = 1 + depPoly->getNumLambda();
+    auto l = 3 + depPoly->getNumLambda();
     return getBndConstraints()(_, _(l, l + getNumPhiCoefficients()));
   }
   [[nodiscard]] constexpr auto getBndPhi0Coefs() const -> PtrMatrix<int64_t> {
-    auto l = 1 + depPoly->getNumLambda();
+    auto l = 3 + depPoly->getNumLambda();
     return getBndConstraints()(_, _(l, l + depPoly->getDim0()));
   }
   [[nodiscard]] constexpr auto getBndPhi1Coefs() const -> PtrMatrix<int64_t> {
-    auto l = 1 + depPoly->getNumLambda() + depPoly->getDim0();
+    auto l = 3 + depPoly->getNumLambda() + depPoly->getDim0();
     return getBndConstraints()(_, _(l, l + depPoly->getDim1()));
   }
   [[nodiscard]] constexpr auto getSatOmegaCoefs() const -> PtrMatrix<int64_t> {
-    auto l = depPoly->getNumLambda() + getNumPhiCoefficients();
-    return getSatConstraints()(_, _(1 + l, 1 + l + getNumOmegaCoefficients()));
+    auto l = 1 + depPoly->getNumLambda();
+    return getSatConstraints()(_, _(l, l + getNumOmegaCoefficients()));
   }
   [[nodiscard]] constexpr auto getBndOmegaCoefs() const -> PtrMatrix<int64_t> {
-    auto l = depPoly->getNumLambda() + getNumPhiCoefficients();
-    return getBndConstraints()(_, _(1 + l, 1 + l + getNumOmegaCoefficients()));
+    auto l = 1 + depPoly->getNumLambda();
+    return getBndConstraints()(_, _(l, l + getNumOmegaCoefficients()));
   }
   [[nodiscard]] constexpr auto getSatW() const -> StridedVector<int64_t> {
     return getSatConstraints()(_, 1 + depPoly->getNumLambda() +
@@ -797,7 +774,6 @@ public:
                 getNumOmegaCoefficients();
     return getBndConstraints()(_, _(lb, end));
   }
-
   [[nodiscard]] constexpr auto splitSatisfaction() const
     -> std::tuple<StridedVector<int64_t>, PtrMatrix<int64_t>,
                   PtrMatrix<int64_t>, PtrMatrix<int64_t>, PtrMatrix<int64_t>,
@@ -820,72 +796,6 @@ public:
     return std::make_tuple(getBndConstants(), getBndLambda(), phiCoefsIn,
                            phiCoefsOut, getBndOmegaCoefs(), getBndCoefs());
   }
-  // // order of variables from Farkas:
-  // // [ lambda, Phi coefs, omega coefs, w, u ]
-  // // that is thus the order of arguments here
-  // // Note: we have two different sets of lambdas, so we store
-  // // A = [lambda_sat, lambda_bound]
-  // void copyLambda(MutPtrMatrix<int64_t> A, MutPtrMatrix<int64_t> Bp,
-  //                 MutPtrMatrix<int64_t> Bm, MutPtrMatrix<int64_t> C,
-  //                 MutStridedVector<int64_t> W, MutPtrMatrix<int64_t> U,
-  //                 MutStridedVector<int64_t> c) const {
-  //     // const size_t numBoundingConstraints =
-  //     //     dependenceBounding.getNumConstraints();
-  //     const auto satLambda = getSatLambda();
-  //     const auto bndLambda = getBndLambda();
-  //     const size_t satConstraints = size_t(satLambda.numRow());
-  //     const size_t numSatLambda = size_t(satLambda.numCol());
-  //     assert(numSatLambda + bndLambda.numCol() == A.numCol());
-
-  //     c(_(begin, satConstraints)) = dependenceSatisfaction.getConstants();
-  //     c(_(satConstraints, end)) = dependenceBounding.getConstants();
-
-  //     A(_(begin, satConstraints), _(begin, numSatLambda)) = satLambda;
-  //     // A(_(begin, satConstraints), _(numSatLambda, end)) = 0;
-  //     // A(_(satConstraints, end), _(begin, numSatLambda)) = 0;
-  //     A(_(satConstraints, end), _(numSatLambda, end)) = bndLambda;
-
-  //     // TODO: develop and suport fusion of statements like
-  //     // Bp(_(begin, satConstraints), _) = getSatPhiCoefs();
-  //     // Bm(_(begin, satConstraints), _) = -getSatPhiCoefs();
-  //     // Bp(_(satConstraints, end), _) = getBndPhiCoefs();
-  //     // Bm(_(satConstraints, end), _) = -getBndPhiCoefs();
-  //     // perhaps something like:
-  //     // std::make_pair(
-  //     //   Bp(_(begin, satConstraints), _),
-  //     //   Bm(_(begin, satConstraints), _)) =
-  //     //     elementwiseMap(
-  //     //       std::make_pair(Plus{},Minus{}),
-  //     //       getSatPhiCoefs()
-  //     //     );
-  //     auto SP{getSatPhiCoefs()};
-  //     assert(Bp.numCol() == SP.numCol());
-  //     assert(Bm.numCol() == SP.numCol());
-  //     assert(Bp.numRow() == Bm.numRow());
-  //     for (size_t i = 0; i < satConstraints; ++i) {
-  //         for (size_t j = 0; j < SP.numCol(); ++j) {
-  //             int64_t SOij = SP(i, j);
-  //             Bp(i, j) = SOij;
-  //             Bm(i, j) = -SOij;
-  //         }
-  //     }
-  //     auto BP{getBndPhiCoefs()};
-  //     assert(Bp.numCol() == BP.numCol());
-  //     for (size_t i = satConstraints; i < Bp.numRow(); ++i) {
-  //         for (size_t j = 0; j < BP.numCol(); ++j) {
-  //             int64_t BOij = BP(i - satConstraints, j);
-  //             Bp(i, j) = BOij;
-  //             Bm(i, j) = -BOij;
-  //         }
-  //     }
-
-  //     C(_(begin, satConstraints), _) = getSatOmegaCoefs();
-  //     C(_(satConstraints, end), _) = getBndOmegaCoefs();
-
-  //     auto BC{getBndCoefs()};
-  //     W(_(satConstraints, end)) = BC(_, 0);
-  //     U(_(satConstraints, end), _) = BC(_, _(1, end));
-  // }
   [[nodiscard]] constexpr auto
   isSatisfied(BumpAlloc<> &alloc, NotNull<const AffineSchedule> schIn,
               NotNull<const AffineSchedule> schOut) const -> bool {
@@ -893,8 +803,10 @@ public:
     size_t numLoopsOut = out->getNumLoops();
     size_t numLoopsCommon = std::min(numLoopsIn, numLoopsOut);
     size_t numLoopsTotal = numLoopsIn + numLoopsOut;
-    Vector<int64_t> schv;
-    schv.resizeForOverwrite(dependenceSatisfaction->getNumVars());
+    size_t numVar = numLoopsIn + numLoopsOut + 2;
+    invariant(dependenceSatisfaction->getNumVars() == numVar);
+    auto p = alloc.checkpoint();
+    auto schv = vector(alloc, numVar, int64_t(0));
     const SquarePtrMatrix<int64_t> inPhi = schIn->getPhi();
     const SquarePtrMatrix<int64_t> outPhi = schOut->getPhi();
     auto inFusOmega = schIn->getFusionOmega();
@@ -902,10 +814,13 @@ public:
     auto inOffOmega = schIn->getOffsetOmega();
     auto outOffOmega = schOut->getOffsetOmega();
     const size_t numLambda = getNumLambda();
+    bool sat = true;
     // when i == numLoopsCommon, we've passed the last loop
     for (size_t i = 0; i <= numLoopsCommon; ++i) {
-      if (int64_t o2idiff = outFusOmega[i] - inFusOmega[i])
-        return (o2idiff > 0);
+      if (int64_t o2idiff = outFusOmega[i] - inFusOmega[i]) {
+        sat = (o2idiff > 0);
+        break;
+      }
       // we should not be able to reach `numLoopsCommon`
       // because at the very latest, this last schedule value
       // should be different, because either:
@@ -918,20 +833,23 @@ public:
       //   present at that level
       // }
       assert(i != numLoopsCommon);
-      schv[_(begin, numLoopsIn)] = inPhi(last - i, _);
-      schv[_(numLoopsIn, numLoopsTotal)] = outPhi(last - i, _);
-      int64_t inO = inOffOmega[i], outO = outOffOmega[i];
       // forward means offset is 2nd - 1st
-      schv[numLoopsTotal] = outO - inO;
+      schv[0] = outOffOmega[i];
+      schv[1] = inOffOmega[i];
+      schv[_(2, 2 + numLoopsIn)] << inPhi(last - i, _);
+      schv[_(2 + numLoopsIn, 2 + numLoopsTotal)] << outPhi(last - i, _);
       // dependenceSatisfaction is phi_t - phi_s >= 0
       // dependenceBounding is w + u'N - (phi_t - phi_s) >= 0
       // we implicitly 0-out `w` and `u` here,
       if (dependenceSatisfaction->unSatisfiable(alloc, schv, numLambda) ||
-          dependenceBounding->unSatisfiable(alloc, schv, numLambda))
+          dependenceBounding->unSatisfiable(alloc, schv, numLambda)) {
         // if zerod-out bounding not >= 0, then that means
         // phi_t - phi_s > 0, so the dependence is satisfied
-        return false;
+        sat = false;
+        break;
+      }
     }
+    alloc.rollback(p);
     return true;
   }
   [[nodiscard]] constexpr auto
@@ -940,14 +858,19 @@ public:
     size_t numLoopsIn = in->getNumLoops();
     size_t numLoopsOut = out->getNumLoops();
     size_t numLoopsCommon = std::min(numLoopsIn, numLoopsOut);
-    size_t numLoopsTotal = numLoopsIn + numLoopsOut;
-    Vector<int64_t> schv;
-    schv.resizeForOverwrite(dependenceSatisfaction->getNumVars());
+    size_t numVar = numLoopsIn + numLoopsOut + 2;
+    invariant(dependenceSatisfaction->getNumVars() == numVar);
+    auto p = alloc.checkpoint();
+    auto schv = vector(alloc, numVar, int64_t(0));
+    // Vector<int64_t> schv(dependenceSatisfaction->getNumVars(),int64_t(0));
     const size_t numLambda = getNumLambda();
+    bool sat = true;
     // when i == numLoopsCommon, we've passed the last loop
     for (size_t i = 0; i <= numLoopsCommon; ++i) {
-      if (int64_t o2idiff = outFusOmega[i] - inFusOmega[i])
-        return (o2idiff > 0);
+      if (int64_t o2idiff = outFusOmega[i] - inFusOmega[i]) {
+        sat = (o2idiff > 0);
+        break;
+      }
       // we should not be able to reach `numLoopsCommon`
       // because at the very latest, this last schedule value
       // should be different, because either:
@@ -960,21 +883,24 @@ public:
       //   present at that level
       // }
       assert(i != numLoopsCommon);
-      schv = 0;
-      schv[numLoopsIn - i - 1] = 1;
-      schv[numLoopsTotal - i - 1] = 1;
+      schv[2 + i] = 1;
+      schv[2 + numLoopsIn + i] = 1;
       // forward means offset is 2nd - 1st
-      schv[numLoopsTotal] = 0;
       // dependenceSatisfaction is phi_t - phi_s >= 0
       // dependenceBounding is w + u'N - (phi_t - phi_s) >= 0
       // we implicitly 0-out `w` and `u` here,
       if (dependenceSatisfaction->unSatisfiable(alloc, schv, numLambda) ||
-          dependenceBounding->unSatisfiable(alloc, schv, numLambda))
+          dependenceBounding->unSatisfiable(alloc, schv, numLambda)) {
         // if zerod-out bounding not >= 0, then that means
         // phi_t - phi_s > 0, so the dependence is satisfied
-        return false;
+        sat = false;
+        break;
+      }
+      schv[2 + i] = 0;
+      schv[2 + numLoopsIn + i] = 0;
     }
-    return true;
+    alloc.rollback(p);
+    return sat;
   }
   [[nodiscard]] constexpr auto isSatisfied(BumpAlloc<> &alloc,
                                            NotNull<const AffineSchedule> sx,
@@ -983,15 +909,14 @@ public:
     const size_t numLambda = depPoly->getNumLambda();
     const size_t nLoopX = depPoly->getDim0();
     const size_t nLoopY = depPoly->getDim1();
-    // const size_t numLoopsX = sx.getNumLoops();
-    // const size_t numLoopsY = sy.getNumLoops();
     const size_t numLoopsTotal = nLoopX + nLoopY;
     Vector<int64_t> sch;
     sch.resizeForOverwrite(numLoopsTotal + 2);
-    sch[_(begin, nLoopX)] = sx->getSchedule(d)[_(end - nLoopX, end)];
-    sch[_(nLoopX, numLoopsTotal)] = sy->getSchedule(d)[_(end - nLoopY, end)];
-    sch[numLoopsTotal] = sx->getOffsetOmega()[d];
-    sch[numLoopsTotal + 1] = sy->getOffsetOmega()[d];
+    sch[0] = sx->getOffsetOmega()[d];
+    sch[1] = sy->getOffsetOmega()[d];
+    sch[_(2, nLoopX + 2)] << sx->getSchedule(d)[_(end - nLoopX, end)];
+    sch[_(nLoopX + 2, numLoopsTotal + 2)]
+      << sy->getSchedule(d)[_(end - nLoopY, end)];
     return dependenceSatisfaction->satisfiable(alloc, sch, numLambda);
   }
   [[nodiscard]] constexpr auto isSatisfied(BumpAlloc<> &alloc, size_t d) const
@@ -999,23 +924,13 @@ public:
     const size_t numLambda = depPoly->getNumLambda();
     const size_t numLoopsX = depPoly->getDim0();
     const size_t numLoopsY = depPoly->getDim1();
-    // const size_t numLoopsX = sx.getNumLoops();
-    // const size_t numLoopsY = sy.getNumLoops();
     const size_t numLoopsTotal = numLoopsX + numLoopsY;
-    Vector<int64_t> sch(numLoopsTotal + 2);
-    assert(sch.size() == numLoopsTotal + 2);
-    sch[numLoopsX - d - 1] = 1;
-    sch[numLoopsTotal - d - 1] = 1;
-    // sch(numLoopsTotal) = x[d];
-    // sch(numLoopsTotal + 1) = y[d];
+    Vector<int64_t> sch(numLoopsTotal + 2, int64_t(0));
+    invariant(size_t(sch.size()), numLoopsTotal + 2);
+    sch[2 + d] = 1;
+    sch[2 + d + numLoopsX] = 1;
     return dependenceSatisfaction->satisfiable(alloc, sch, numLambda);
   }
-  // bool isSatisfied(size_t d) {
-  //     return forward ? isSatisfied(in->getFusedOmega(),
-  //     out->getFusedOmega(), d)
-  //                    : isSatisfied(out->getFusedOmega(),
-  //                    in->getFusedOmega(), d);
-  // }
   static constexpr auto
   checkDirection(BumpAlloc<> &alloc, const std::array<NotNull<Simplex>, 2> &p,
                  NotNull<const MemoryAccess> x, NotNull<const MemoryAccess> y,
@@ -1052,10 +967,10 @@ public:
       //   present at that level
       // }
       assert(i != numLoopsCommon);
-      sch[_(begin, numLoopsX)] = xPhi(last - i, _);
-      sch[_(numLoopsX, numLoopsTotal)] = yPhi(last - i, _);
-      sch[numLoopsTotal] = xOffOmega[i];
-      sch[numLoopsTotal + 1] = yOffOmega[i];
+      sch[0] = xOffOmega[i];
+      sch[1] = yOffOmega[i];
+      sch[_(2, 2 + numLoopsX)] << xPhi(last - i, _);
+      sch[_(2 + numLoopsX, 2 + numLoopsTotal)] << yPhi(last - i, _);
       if (fxy->unSatisfiableZeroRem(alloc, sch, numLambda,
                                     size_t(nonTimeDim))) {
 #ifndef NDEBUG
@@ -1093,11 +1008,15 @@ public:
     const size_t numLoopsTotal = numLoopsX + numLoopsY;
     PtrVector<int64_t> xFusOmega = x->getFusionOmega();
     PtrVector<int64_t> yFusOmega = y->getFusionOmega();
-    Vector<int64_t> sch;
-    sch.resizeForOverwrite(numLoopsTotal + 2);
+    auto chkp = alloc.checkpoint();
+    PtrVector<int64_t> sch = vector(alloc, numLoopsTotal + 2, int64_t(0));
+    bool dir;
     // i iterates from outer-most to inner most common loop
     for (size_t i = 0; /*i <= numLoopsCommon*/; ++i) {
-      if (yFusOmega[i] != xFusOmega[i]) return yFusOmega[i] > xFusOmega[i];
+      if (yFusOmega[i] != xFusOmega[i]) {
+        dir = yFusOmega[i] > xFusOmega[i];
+        break;
+      }
       // we should not be able to reach `numLoopsCommon`
       // because at the very latest, this last schedule value
       // should be different, because either:
@@ -1109,33 +1028,26 @@ public:
       //   loop must appear either above or below the instructions
       //   present at that level
       // }
-      assert(i != numLoopsCommon);
-      sch = 0;
-      sch[numLoopsX - 1 - i] = 1;
-      sch[numLoopsTotal - 1 - i] = 1;
+      invariant(i < numLoopsCommon);
+      sch[2 + i] = 1;
+      sch[2 + numLoopsX + i] = 1;
       if (fxy->unSatisfiableZeroRem(alloc, sch, numLambda,
                                     size_t(nonTimeDim))) {
-#ifndef NDEBUG
         assert(!fyx->unSatisfiableZeroRem(alloc, sch, numLambda,
                                           size_t(nonTimeDim)));
-        // llvm::errs()
-        //     << "Dependence decided by forward violation with i = " <<
-        //     i
-        //     << "\n";
-#endif
-        return false;
+        dir = false;
+        break;
       }
-      if (fyx->unSatisfiableZeroRem(alloc, sch, numLambda, size_t(nonTimeDim)))
-#ifndef NDEBUG
-      // llvm::errs()
-      //     << "Dependence decided by backward violation with i = "
-      //     << i
-      //     << "\n";
-#endif
-        return true;
+      if (fyx->unSatisfiableZeroRem(alloc, sch, numLambda,
+                                    size_t(nonTimeDim))) {
+        dir = true;
+        break;
+      }
+      sch[2 + i] = 1;
+      sch[2 + numLoopsX + i] = 1;
     }
-    // assert(false);
-    // return false;
+    alloc.rollback(chkp);
+    return dir;
   }
   static constexpr auto timelessCheck(BumpAlloc<> &alloc, NotNull<DepPoly> dxy,
                                       NotNull<MemoryAccess> x,
@@ -1144,13 +1056,9 @@ public:
     const size_t numLambda = dxy->getNumLambda();
     assert(dxy->getTimeDim() == 0);
     if (checkDirection(alloc, pair, x, y, numLambda, dxy->getA().numCol())) {
-      // pair[0].truncateVars(pair[0].getNumVar() -
-      //                         dxy.getNumSymbols());
       pair[0]->truncateVars(2 + numLambda + dxy->getNumScheduleCoefficients());
       return Dependence{dxy, pair, {x, y}, true};
     }
-    // pair[1].truncateVars(pair[1].getNumVar() -
-    // dxy.getNumSymbols());
     pair[1]->truncateVars(2 + numLambda + dxy->getNumScheduleCoefficients());
     std::swap(pair[0], pair[1]);
     return Dependence{dxy, pair, {y, x}, false};
@@ -1173,7 +1081,7 @@ public:
     const size_t posEqEnd = ineqEnd + numEqualityConstraintsOld;
     const size_t numLambda = posEqEnd + numEqualityConstraintsOld;
     const size_t numScheduleCoefs = dxy->getNumScheduleCoefficients();
-    assert(numLambda == dxy->getNumLambda());
+    invariant(numLambda, size_t(dxy->getNumLambda()));
     NotNull<MemoryAccess> in = x, out = y;
     const bool isFwd = checkDirection(alloc, pair, x, y, numLambda,
                                       dxy->getA().numCol() - dxy->getTimeDim());
@@ -1185,20 +1093,18 @@ public:
     }
     pair[0]->truncateVars(2 + numLambda + numScheduleCoefs);
     auto dep0 = Dependence{dxy->copy(alloc), pair, {in, out}, isFwd};
-    assert(out->getNumLoops() + in->getNumLoops() ==
-           dep0.getNumPhiCoefficients());
+    invariant(out->getNumLoops() + in->getNumLoops(),
+              dep0.getNumPhiCoefficients());
     // pair is invalid
     const size_t timeDim = dxy->getTimeDim();
     assert(timeDim);
     const size_t numVarOld = size_t(dxy->getA().numCol());
     const size_t numVar = numVarOld - timeDim;
-    // const size_t numBoundingCoefs = numVarKeep - numLambda;
     // remove the time dims from the deps
     dep0.depPoly->truncateVars(numVar);
     dep0.depPoly->setTimeDim(0);
-    assert(out->getNumLoops() + in->getNumLoops() ==
-           dep0.getNumPhiCoefficients());
-    // dep0->depPoly.removeExtraVariables(numVar);
+    invariant(out->getNumLoops() + in->getNumLoops(),
+              dep0.getNumPhiCoefficients());
     // now we need to check the time direction for all times
     // anything approaching 16 time dimensions would be absolutely
     // insane

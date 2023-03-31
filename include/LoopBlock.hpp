@@ -871,7 +871,6 @@ public:
           C(_(c, cc), _(l, ll)) = satL;
           C(_(cc, ccc), _(ll, lll)) = bndL;
           l = lll;
-
           // bounding
           C(_(cc, ccc), w++) = bndWU(_, 0);
           Col uu = u + bndWU.numCol() - 1;
