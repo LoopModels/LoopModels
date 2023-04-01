@@ -42,7 +42,7 @@ orthogonalize(BumpAlloc<> &alloc,
   const size_t numSymbols = alnp.getNumSymbols();
   size_t numRow = 0;
   for (auto *a : ai) numRow += a->getArrayDim();
-  DenseMatrix<int64_t> S(DenseDims{numLoops, numRow});
+  DenseMatrix<int64_t> S(DenseDims{numLoops, numRow}, int64_t(0));
   Col i = 0;
   for (auto *a : ai) {
     PtrMatrix<int64_t> A = a->indexMatrix();
@@ -73,7 +73,7 @@ orthogonalize(BumpAlloc<> &alloc,
   i = 0;
   for (auto *a : ai) {
     Col j = i + a->getArrayDim();
-    newArrayRefs.emplace_back(*a, &ret.first, KS(_, _(i, j)));
+    newArrayRefs.emplace_back(*a, ret.first, KS(_, _(i, j)));
     EXPECT_EQ(newArrayRefs.back().indexMatrix(), KS(_, _(i, j)));
     i = j;
   }
