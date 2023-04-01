@@ -103,6 +103,7 @@ public:
     auto *offset = builder.getInt64(16000);
     ptrToLoadFrom = builder.CreateIntToPtr(offset, builder.getInt64Ty());
   }
+  auto getSE() -> llvm::ScalarEvolution & { return SE; }
   auto getSCEVUnknown(llvm::Value *v) -> const llvm::SCEVUnknown * {
     return llvm::dyn_cast<llvm::SCEVUnknown>(SE.getUnknown(v));
   }

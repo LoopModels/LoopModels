@@ -9,12 +9,12 @@
 struct ArrayReference {
   const llvm::SCEVUnknown *basePointer;
   AffineLoopNest<> *loop;
-  IntMatrix indMat;
-  IntMatrix offMat;
+  DenseMatrix<int64_t> indMat;
+  DenseMatrix<int64_t> offMat;
   llvm::SmallVector<const llvm::SCEV *, 3> sizes;
   ArrayReference(const llvm::SCEVUnknown *p, AffineLoopNest<> &l, size_t dim)
-    : basePointer(p), loop(&l), indMat(loop->getNumLoops(), dim),
-      offMat(dim, 1), sizes(dim) {}
+    : basePointer(p), loop(&l), indMat(DenseDims{loop->getNumLoops(), dim}),
+      offMat(DenseDims{dim, 1}), sizes(dim) {}
   ArrayReference(const ArrayReference &other, AffineLoopNest<> *al,
                  PtrMatrix<int64_t> iM)
     : basePointer(other.basePointer), loop(al), indMat(iM),
@@ -26,11 +26,10 @@ struct ArrayReference {
   }
 };
 inline auto createMemAccess(BumpAlloc<> &alloc, ArrayReference &ar,
-                            llvm::Instruction *I,
-                            llvm::ArrayRef<unsigned> omegas)
+                            llvm::Instruction *IC, PtrVector<unsigned> omegas)
   -> NotNull<MemoryAccess> {
 
   IntMatrix indMatT(ar.indMat.transpose());
-  return MemoryAccess::construct(alloc, ar.basePointer, *ar.loop, I, indMatT,
+  return MemoryAccess::construct(alloc, ar.basePointer, *ar.loop, IC, indMatT,
                                  {ar.sizes, {}}, ar.offsetMatrix(), omegas);
 }

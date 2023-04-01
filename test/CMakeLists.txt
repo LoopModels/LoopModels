@@ -55,7 +55,8 @@ file(
   ${CMAKE_CURRENT_SOURCE_DIR}/linear_diophantine_test.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/matrix_test.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/normal_form_test.cpp
-  # ${CMAKE_CURRENT_SOURCE_DIR}/orthogonalize_test.cpp ${CMAKE_CURRENT_SOURCE_DIR}/remarks_test.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/orthogonalize_test.cpp
+  # ${CMAKE_CURRENT_SOURCE_DIR}/remarks_test.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/simplex_test.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/string_to_intmat_test.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/unimodularization_test.cpp

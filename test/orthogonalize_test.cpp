@@ -23,9 +23,10 @@
 #include <random>
 
 [[maybe_unused]] static auto
-orthogonalize(llvm::SmallVectorImpl<ArrayReference *> const &ai)
+orthogonalize(BumpAlloc<> &alloc,
+              llvm::SmallVectorImpl<ArrayReference *> const &ai)
   -> std::optional<
-    std::pair<AffineLoopNest<true>, llvm::SmallVector<ArrayReference, 0>>> {
+    std::pair<AffineLoopNest<true> *, llvm::SmallVector<ArrayReference, 0>>> {
 
   // need to construct matrix `A` of relationship
   // B*L = I
@@ -35,12 +36,13 @@ orthogonalize(llvm::SmallVectorImpl<ArrayReference *> const &ai)
   // additionally, the loop is defined by the bounds
   // A*L = A*(B\^-1 * I) <= r
   // assuming that `B` is an invertible integer matrix (i.e. is unimodular),
+  // BumpAlloc<> alloc;
   const AffineLoopNest<true> &alnp = *(ai[0]->loop);
   const size_t numLoops = alnp.getNumLoops();
   const size_t numSymbols = alnp.getNumSymbols();
   size_t numRow = 0;
   for (auto a : ai) numRow += a->getArrayDim();
-  IntMatrix S(numLoops, numRow);
+  DenseMatrix<int64_t> S(DenseDims{numLoops, numRow});
   Col i = 0;
   for (auto a : ai) {
     PtrMatrix<int64_t> A = a->indexMatrix();
@@ -56,12 +58,15 @@ orthogonalize(llvm::SmallVectorImpl<ArrayReference *> const &ai)
   // A*L <= b
   // now, we have (A = alnp.aln->A, r = alnp.aln->r)
   // (A*K')*J <= r
-  IntMatrix AK{alnp.A};
-  AK(_, _(numSymbols, end)) = alnp.A(_, _(numSymbols, end)) * K.transpose();
-  AffineLoopNest<true> alnNew{std::move(AK), alnp.S};
-  alnNew.pruneBounds();
+  DenseMatrix<int64_t> AK{alnp.getA()};
+  AK(_, _(numSymbols, end))
+    << alnp.getA()(_, _(numSymbols, end)) * K.transpose();
+
+  auto *alnNew =
+    AffineLoopNest<true>::construct(alloc, std::move(AK), alnp.getSyms());
+  alnNew->pruneBounds();
   IntMatrix KS{K * S};
-  std::pair<AffineLoopNest<true>, llvm::SmallVector<ArrayReference, 0>> ret{
+  std::pair<AffineLoopNest<true> *, llvm::SmallVector<ArrayReference, 0>> ret{
     std::make_pair(std::move(alnNew), llvm::SmallVector<ArrayReference, 0>())};
   llvm::SmallVector<ArrayReference, 0> &newArrayRefs = ret.second;
   newArrayRefs.reserve(numRow);
@@ -92,9 +97,9 @@ TEST(OrthogonalizeTest, BasicAssertions) {
 
   TestLoopFunction tlf;
   tlf.addLoop(std::move(A), 4);
-  AffineLoopNest<true> &aln = tlf.alns.front();
-  EXPECT_FALSE(aln.isEmpty());
-  llvm::ScalarEvolution &SE{tlf.SE};
+  AffineLoopNest<true> *aln = tlf.getLoopNest(0);
+  EXPECT_FALSE(aln->isEmpty());
+  llvm::ScalarEvolution &SE{tlf.getSE()};
   llvm::IntegerType *Int64 = tlf.builder.getInt64Ty();
   const llvm::SCEV *N = aln.S[2];
   const llvm::SCEV *J = aln.S[3];
