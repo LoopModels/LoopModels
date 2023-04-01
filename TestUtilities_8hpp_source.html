@@ -152,7 +152,7 @@ $(function() {
 <div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;      llvm::MaybeAlign(8), names.back());</div>
 <div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;    <span class="keywordflow">return</span> ret;</div>
 <div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;  }</div>
-<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;  <span class="keyword">auto</span> createInt64Ty() -&gt; llvm::IntegerType * { <span class="keywordflow">return</span> builder.getInt64Ty(); }</div>
+<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;  <span class="keyword">auto</span> getInt64Ty() -&gt; llvm::IntegerType * { <span class="keywordflow">return</span> builder.getInt64Ty(); }</div>
 <div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;  <span class="keyword">auto</span> createInt64() -&gt; llvm::Value * { <span class="keywordflow">return</span> createArray(); }</div>
 <div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;  <span class="keyword">auto</span> createArray() -&gt; llvm::Value * {</div>
 <div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;    <span class="keywordflow">return</span> loadValueFromPtr(builder.getPtrTy());</div>
