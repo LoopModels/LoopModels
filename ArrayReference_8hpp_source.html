@@ -80,12 +80,12 @@ $(function() {
 <div class="line"><a name="l00009"></a><span class="lineno"><a class="line" href="structArrayReference.html">    9</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structArrayReference.html">ArrayReference</a> {</div>
 <div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;  <span class="keyword">const</span> llvm::SCEVUnknown *basePointer;</div>
 <div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;  <a class="code" href="structAffineLoopNest.html">AffineLoopNest&lt;&gt;</a> *loop;</div>
-<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;  IntMatrix indMat;</div>
-<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;  IntMatrix offMat;</div>
+<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;  DenseMatrix&lt;int64_t&gt; indMat;</div>
+<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;  DenseMatrix&lt;int64_t&gt; offMat;</div>
 <div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;  llvm::SmallVector&lt;const llvm::SCEV *, 3&gt; sizes;</div>
 <div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;  <a class="code" href="structArrayReference.html">ArrayReference</a>(<span class="keyword">const</span> llvm::SCEVUnknown *p, <a class="code" href="structAffineLoopNest.html">AffineLoopNest&lt;&gt;</a> &amp;l, <span class="keywordtype">size_t</span> dim)</div>
-<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;    : basePointer(p), loop(&amp;l), indMat(loop-&gt;getNumLoops(), dim),</div>
-<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;      offMat(dim, 1), sizes(dim) {}</div>
+<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;    : basePointer(p), loop(&amp;l), indMat(<a class="code" href="structLinAlg_1_1DenseDims.html">DenseDims</a>{loop-&gt;getNumLoops(), dim}),</div>
+<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;      offMat(<a class="code" href="structLinAlg_1_1DenseDims.html">DenseDims</a>{dim, 1}), sizes(dim) {}</div>
 <div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;  <a class="code" href="structArrayReference.html">ArrayReference</a>(<span class="keyword">const</span> <a class="code" href="structArrayReference.html">ArrayReference</a> &amp;other, <a class="code" href="structAffineLoopNest.html">AffineLoopNest&lt;&gt;</a> *al,</div>
 <div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;                 PtrMatrix&lt;int64_t&gt; iM)</div>
 <div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;    : basePointer(other.basePointer), loop(al), indMat(iM),</div>
@@ -97,17 +97,17 @@ $(function() {
 <div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;  }</div>
 <div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;};</div>
 <div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> createMemAccess(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, <a class="code" href="structArrayReference.html">ArrayReference</a> &amp;ar,</div>
-<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;                            llvm::Instruction *I,</div>
-<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;                            llvm::ArrayRef&lt;unsigned&gt; omegas)</div>
-<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;  -&gt; <a class="code" href="structNotNull.html">NotNull&lt;MemoryAccess&gt;</a> {</div>
-<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160; </div>
-<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;  IntMatrix indMatT(ar.indMat.transpose());</div>
-<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;  <span class="keywordflow">return</span> MemoryAccess::construct(alloc, ar.basePointer, *ar.loop, I, indMatT,</div>
-<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;                                 {ar.sizes, {}}, ar.offsetMatrix(), omegas);</div>
-<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;}</div>
+<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;                            llvm::Instruction *IC, PtrVector&lt;unsigned&gt; omegas)</div>
+<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;  -&gt; <a class="code" href="structNotNull.html">NotNull&lt;MemoryAccess&gt;</a> {</div>
+<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160; </div>
+<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;  IntMatrix indMatT(ar.indMat.transpose());</div>
+<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;  <span class="keywordflow">return</span> MemoryAccess::construct(alloc, ar.basePointer, *ar.loop, IC, indMatT,</div>
+<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;                                 {ar.sizes, {}}, ar.offsetMatrix(), omegas);</div>
+<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;}</div>
 <div class="ttc" id="astructAffineLoopNest_html"><div class="ttname"><a href="structAffineLoopNest.html">AffineLoopNest</a></div><div class="ttdef"><b>Definition:</b> Loops.hpp:326</div></div>
 <div class="ttc" id="astructArrayReference_html"><div class="ttname"><a href="structArrayReference.html">ArrayReference</a></div><div class="ttdef"><b>Definition:</b> ArrayReference.hpp:9</div></div>
 <div class="ttc" id="astructBumpAlloc_html"><div class="ttname"><a href="structBumpAlloc.html">BumpAlloc</a></div><div class="ttdef"><b>Definition:</b> Allocators.hpp:31</div></div>
+<div class="ttc" id="astructLinAlg_1_1DenseDims_html"><div class="ttname"><a href="structLinAlg_1_1DenseDims.html">LinAlg::DenseDims</a></div><div class="ttdoc">Dimensions with a capacity.</div><div class="ttdef"><b>Definition:</b> MatrixDimensions.hpp:72</div></div>
 <div class="ttc" id="astructNotNull_html"><div class="ttname"><a href="structNotNull.html">NotNull&lt; MemoryAccess &gt;</a></div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
