@@ -100,9 +100,9 @@ TEST(OrthogonalizeTest, BasicAssertions) {
   AffineLoopNest<true> *aln = tlf.getLoopNest(0);
   EXPECT_FALSE(aln->isEmpty());
   llvm::ScalarEvolution &SE{tlf.getSE()};
-  llvm::IntegerType *Int64 = tlf.builder.getInt64Ty();
-  const llvm::SCEV *N = aln.S[2];
-  const llvm::SCEV *J = aln.S[3];
+  auto *Int64 = tlf.createInt64Ty();
+  const llvm::SCEV *N = aln->getSyms()[2];
+  const llvm::SCEV *J = aln->getSyms()[3];
   const llvm::SCEVUnknown *scevW = tlf.getSCEVUnknown(tlf.createArray());
   const llvm::SCEVUnknown *scevC = tlf.getSCEVUnknown(tlf.createArray());
   const llvm::SCEVUnknown *scevB = tlf.getSCEVUnknown(tlf.createArray());

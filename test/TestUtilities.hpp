@@ -10,6 +10,7 @@
 #include <llvm/Analysis/ScalarEvolutionExpressions.h>
 #include <llvm/Analysis/TargetLibraryInfo.h>
 #include <llvm/Analysis/TargetTransformInfo.h>
+#include <llvm/IR/DerivedTypes.h>
 #include <llvm/IR/Dominators.h>
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/Instructions.h>
@@ -80,11 +81,10 @@ public:
       llvm::MaybeAlign(8), names.back());
     return ret;
   }
+  auto createInt64Ty() -> llvm::IntegerType * { return builder.getInt64Ty(); }
+  auto createInt64() -> llvm::Value * { return createArray(); }
   auto createArray() -> llvm::Value * {
     return loadValueFromPtr(builder.getPtrTy());
-  }
-  auto createInt64() -> llvm::Value * {
-    return loadValueFromPtr(builder.getInt64Ty());
   }
   TestLoopFunction()
     : mod(new llvm::Module("TestModule", ctx)),

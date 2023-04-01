@@ -766,10 +766,6 @@ public:
   // bounding, scheduled coefs, lambda
   // matches lexicographical ordering of minimization
   // bounding, however, is to be favoring minimizing `u` over `w`
-  [[nodiscard]] constexpr auto getLambdaOffset() const -> size_t {
-    return 1;
-    // return 1 + numBounding + numActiveEdges + numPhiCoefs + numOmegaCoefs;
-  }
   [[nodiscard]] static constexpr auto hasActiveEdges(const Graph &g,
                                                      const MemoryAccess &mem)
     -> bool {
@@ -825,14 +821,6 @@ public:
   // first, we solve individual problems
   auto instantiateOmniSimplex(const Graph &g, size_t d, bool satisfyDeps)
     -> Optional<Simplex *> {
-    // defines numScheduleCoefs, numLambda, numBounding, and
-    // numConstraints
-    // omniSimplex.clearReserve(numConstraints + numOmegaCoefs,
-    //                          1 + numBounding + numActiveEdges + numPhiCoefs +
-    //                            2 * numOmegaCoefs + numLambda);
-    // omniSimplex.resizeForOverwrite(numConstraints,
-    //                                1 + numBounding + numActiveEdges +
-    //                                numPhiCoefs + numOmegaCoefs + numLambda);
     auto omniSimplex =
       Simplex::create(allocator, numConstraints + numOmegaCoefs,
                       1 + numBounding + numActiveEdges + numPhiCoefs +
@@ -840,19 +828,14 @@ public:
     auto C{omniSimplex->getConstraints()};
     C << 0;
     // layout of omniSimplex:
-    // Order: C, then priority to minimize
-    // all : C, u, w, Phis, omegas, lambdas
-    // rows give constraints; each edge gets its own
-    // new order
+    // Order: C, then rev-priority to minimize
     // C, lambdas, omegas, Phis, w, u
+    // rows give constraints; each edge gets its own
     // numBounding = num u
     // numActiveEdges = num w
-    size_t w = 1 + numBounding;
     Row c = 0;
-    Col l = getLambdaOffset(),
-        u = 1 + numActiveEdges + numPhiCoefs + 2 * numOmegaCoefs + numLambda;
-    size_t oOff = numBounding + numActiveEdges + 1;
-    // TODO: add `oOff` to all omega coefs, then reverse
+    Col l = 1, o = l + numLambda, w = o + numOmegaCoefs + numPhiCoefs,
+        u = w + numActiveEdges;
     for (size_t e = 0; e < edges.size(); ++e) {
       Dependence &edge = *edges[e];
       if (g.isInactive(e, d)) continue;
@@ -942,9 +925,9 @@ public:
                 C(_(cc, ccc), _(m, phiChild))
                   << bndPc(_, _(end - P, end)) + bndPp;
               }
-              C(_(c, cc), outNode.getOmegaOffset() + oOff)
+              C(_(c, cc), outNode.getOmegaOffset() + o)
                 << satO(_, 0) + satO(_, 1);
-              C(_(cc, ccc), outNode.getOmegaOffset() + oOff)
+              C(_(cc, ccc), outNode.getOmegaOffset() + o)
                 << bndO(_, 0) + bndO(_, 1);
             }
           } else {
@@ -954,15 +937,15 @@ public:
               updateConstraints(C, inNode, satPp, bndPp, d, c, cc, ccc);
             // Omegas are included regardless of rotation
             if (d < edge.getOutNumLoops()) {
-              C(_(c, cc), outNode.getOmegaOffset() + oOff)
+              C(_(c, cc), outNode.getOmegaOffset() + o)
                 << satO(_, !edge.isForward());
-              C(_(cc, ccc), outNode.getOmegaOffset() + oOff)
+              C(_(cc, ccc), outNode.getOmegaOffset() + o)
                 << bndO(_, !edge.isForward());
             }
             if (d < edge.getInNumLoops()) {
-              C(_(c, cc), inNode.getOmegaOffset() + oOff)
+              C(_(c, cc), inNode.getOmegaOffset() + o)
                 << satO(_, edge.isForward());
-              C(_(cc, ccc), inNode.getOmegaOffset() + oOff)
+              C(_(cc, ccc), inNode.getOmegaOffset() + o)
                 << bndO(_, edge.isForward());
             }
           }
@@ -999,7 +982,7 @@ public:
     -> std::optional<BitSet> {
     auto omniSimplex = instantiateOmniSimplex(g, depth, satisfyDeps);
     if (!omniSimplex) return {};
-    auto sol = omniSimplex->rLexMinLast(getLambdaOffset() - 1);
+    auto sol = omniSimplex->rLexMinStop(numLambda);
     updateSchedules(g, depth, sol);
     return deactivateSatisfiedEdges(g, depth, sol);
   }

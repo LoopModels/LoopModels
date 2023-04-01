@@ -664,6 +664,17 @@ public:
 #endif
     return {*this, getNumVars() - n, getNumVars()};
   }
+  auto rLexMinStop(size_t skippedVars) -> Solution {
+#ifndef NDEBUG
+    assert(inCanonicalForm);
+    assertCanonical();
+#endif
+    for (size_t v = getNumVars(); v != skippedVars;) rLexMin(--v);
+#ifndef NDEBUG
+    assertCanonical();
+#endif
+    return {*this, skippedVars, getNumVars()};
+  }
 
   // reverse lexicographic ally minimize vars
   void rLexMin(Vector<Rational> &sol) { sol << rLexMinLast(sol.size()); }
