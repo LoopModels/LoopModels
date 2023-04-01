@@ -12,8 +12,8 @@ struct ArrayReference {
   DenseMatrix<int64_t> indMat;
   DenseMatrix<int64_t> offMat;
   llvm::SmallVector<const llvm::SCEV *, 3> sizes;
-  ArrayReference(const llvm::SCEVUnknown *p, AffineLoopNest<> &l, size_t dim)
-    : basePointer(p), loop(&l), indMat(DenseDims{loop->getNumLoops(), dim}),
+  ArrayReference(const llvm::SCEVUnknown *p, AffineLoopNest<> *l, size_t dim)
+    : basePointer(p), loop(l), indMat(DenseDims{loop->getNumLoops(), dim}),
       offMat(DenseDims{dim, 1}), sizes(dim) {}
   ArrayReference(const ArrayReference &other, AffineLoopNest<> *al,
                  PtrMatrix<int64_t> iM)

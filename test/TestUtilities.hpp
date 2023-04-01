@@ -81,7 +81,7 @@ public:
       llvm::MaybeAlign(8), names.back());
     return ret;
   }
-  auto createInt64Ty() -> llvm::IntegerType * { return builder.getInt64Ty(); }
+  auto getInt64Ty() -> llvm::IntegerType * { return builder.getInt64Ty(); }
   auto createInt64() -> llvm::Value * { return createArray(); }
   auto createArray() -> llvm::Value * {
     return loadValueFromPtr(builder.getPtrTy());
