@@ -142,13 +142,13 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>calcMaxDepth</b> () c
 <tr class="separator:a50c267ca49c6e8f135802004abe4eba9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1d76b0e8c6b7a221850327644f09dbb2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classLinearProgramLoopBlock.html#a1d76b0e8c6b7a221850327644f09dbb2">fillEdges</a> ()</td></tr>
 <tr class="separator:a1d76b0e8c6b7a221850327644f09dbb2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae9d35b4c02615c94e5184e2b83140a0c"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classLinearProgramLoopBlock.html#ae9d35b4c02615c94e5184e2b83140a0c">searchValueForStores</a> (aset&lt; llvm::User * &gt; &amp;visited, <a class="el" href="structScheduledNode.html">ScheduledNode</a> &amp;node, llvm::User *user, unsigned nodeIndex) -&gt; bool</td></tr>
-<tr class="separator:ae9d35b4c02615c94e5184e2b83140a0c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae224e137164c2a2e2e7f77047bcef636"><td class="memItemLeft" align="right" valign="top"><a id="ae224e137164c2a2e2e7f77047bcef636"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>checkUserForLoads</b> (aset&lt; llvm::User * &gt; &amp;visited, <a class="el" href="structScheduledNode.html">ScheduledNode</a> &amp;node, llvm::User *user, unsigned nodeIndex)</td></tr>
-<tr class="separator:ae224e137164c2a2e2e7f77047bcef636"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5360cb883d51690acb68ebfa7fc5983c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classLinearProgramLoopBlock.html#a5360cb883d51690acb68ebfa7fc5983c">searchOperandsForLoads</a> (aset&lt; llvm::User * &gt; &amp;visited, <a class="el" href="structScheduledNode.html">ScheduledNode</a> &amp;node, llvm::User *u, unsigned nodeIndex)</td></tr>
-<tr class="separator:a5360cb883d51690acb68ebfa7fc5983c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a920535b99ba5bc666835c9d4ac84ff2b"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classLinearProgramLoopBlock.html#a920535b99ba5bc666835c9d4ac84ff2b">searchValueForStores</a> (aset&lt; llvm::User * &gt; &amp;visited, <a class="el" href="structScheduledNode.html">ScheduledNode</a> &amp;node, amap&lt; llvm::User *, unsigned &gt; &amp;userToMemory, llvm::User *user, unsigned nodeIndex) -&gt; bool</td></tr>
+<tr class="separator:a920535b99ba5bc666835c9d4ac84ff2b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af96e9353d7339063b7035e8aea0be6ab"><td class="memItemLeft" align="right" valign="top"><a id="af96e9353d7339063b7035e8aea0be6ab"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>checkUserForLoads</b> (aset&lt; llvm::User * &gt; &amp;visited, <a class="el" href="structScheduledNode.html">ScheduledNode</a> &amp;node, amap&lt; llvm::User *, unsigned &gt; &amp;userToMemory, llvm::User *user, unsigned nodeIndex)</td></tr>
+<tr class="separator:af96e9353d7339063b7035e8aea0be6ab"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a419ffee319b60a0d8594b3ee7533b4ff"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classLinearProgramLoopBlock.html#a419ffee319b60a0d8594b3ee7533b4ff">searchOperandsForLoads</a> (aset&lt; llvm::User * &gt; &amp;visited, <a class="el" href="structScheduledNode.html">ScheduledNode</a> &amp;node, amap&lt; llvm::User *, unsigned &gt; &amp;userToMemory, llvm::User *u, unsigned nodeIndex)</td></tr>
+<tr class="separator:a419ffee319b60a0d8594b3ee7533b4ff"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a157c2506749e248374f59a6c5b2acea1"><td class="memItemLeft" align="right" valign="top"><a id="a157c2506749e248374f59a6c5b2acea1"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>connect</b> (unsigned inIndex, unsigned outIndex)</td></tr>
 <tr class="separator:a157c2506749e248374f59a6c5b2acea1"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -163,9 +163,6 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>calcNumStores</b> () 
 <tr class="memitem:a88b43494ac1c7b643efbcc6b9b081cb8"><td class="memItemLeft" align="right" valign="top"><a id="a88b43494ac1c7b643efbcc6b9b081cb8"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>fullGraph</b> () -&gt; <a class="el" href="structLinearProgramLoopBlock_1_1Graph.html">Graph</a></td></tr>
 <tr class="separator:a88b43494ac1c7b643efbcc6b9b081cb8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8f1a89984757b4194d64c0e835aa6f0c"><td class="memItemLeft" align="right" valign="top"><a id="a8f1a89984757b4194d64c0e835aa6f0c"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>fillUserToMemoryMap</b> ()</td></tr>
-<tr class="separator:a8f1a89984757b4194d64c0e835aa6f0c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7b6f525f8674897c05393733ecca2f53"><td class="memItemLeft" align="right" valign="top"><a id="a7b6f525f8674897c05393733ecca2f53"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>optOrth</b> (<a class="el" href="structLinearProgramLoopBlock_1_1Graph.html">Graph</a> g) -&gt; std::optional&lt; <a class="el" href="structBitSet.html">BitSet</a> &gt;</td></tr>
 <tr class="separator:a7b6f525f8674897c05393733ecca2f53"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -422,8 +419,8 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> 
 
 </div>
 </div>
-<a id="a5360cb883d51690acb68ebfa7fc5983c"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a5360cb883d51690acb68ebfa7fc5983c">&#9670;&nbsp;</a></span>searchOperandsForLoads()</h2>
+<a id="a419ffee319b60a0d8594b3ee7533b4ff"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a419ffee319b60a0d8594b3ee7533b4ff">&#9670;&nbsp;</a></span>searchOperandsForLoads()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -442,6 +439,12 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> 
           <td></td>
           <td class="paramtype"><a class="el" href="structScheduledNode.html">ScheduledNode</a> &amp;&#160;</td>
           <td class="paramname"><em>node</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">amap&lt; llvm::User *, unsigned &gt; &amp;&#160;</td>
+          <td class="paramname"><em>userToMemory</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -471,8 +474,8 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> 
 
 </div>
 </div>
-<a id="ae9d35b4c02615c94e5184e2b83140a0c"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae9d35b4c02615c94e5184e2b83140a0c">&#9670;&nbsp;</a></span>searchValueForStores()</h2>
+<a id="a920535b99ba5bc666835c9d4ac84ff2b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a920535b99ba5bc666835c9d4ac84ff2b">&#9670;&nbsp;</a></span>searchValueForStores()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -491,6 +494,12 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> 
           <td></td>
           <td class="paramtype"><a class="el" href="structScheduledNode.html">ScheduledNode</a> &amp;&#160;</td>
           <td class="paramname"><em>node</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">amap&lt; llvm::User *, unsigned &gt; &amp;&#160;</td>
+          <td class="paramname"><em>userToMemory</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
