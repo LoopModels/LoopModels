@@ -60,6 +60,11 @@ template <typename T> struct BumpPtrVector {
     return mem[Size - 1];
   }
   [[nodiscard]] constexpr auto isEmpty() const -> bool { return Size == 0; }
+  constexpr void clear() {
+    Size = 0;
+    Capacity = 0;
+    Alloc->deallocate(mem);
+  }
   // copy constructor
   // constexpr MutPtrVector() = default;
   // constexpr MutPtrVector(const MutPtrVector<T> &x) = default;

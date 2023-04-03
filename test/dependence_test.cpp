@@ -1156,7 +1156,8 @@ TEST(MeanStDevTest0, BasicAssertions) {
     llvm::errs() << "mem =" << memi << "\n";
     for (size_t nodeIndex : memi->getNodeIndex()) {
       AffineSchedule s = nodes[nodeIndex].getSchedule();
-      EXPECT_EQ(s, iOuterLoopNest.getNode(nodeIndex).getSchedule());
+      EXPECT_EQ(s.data(),
+                iOuterLoopNest.getNode(nodeIndex).getSchedule().data());
       llvm::errs() << "s.getPhi() =" << s.getPhi() << "\n";
       llvm::errs() << "s.getFusionOmega() =" << s.getFusionOmega() << "\n";
       llvm::errs() << "s.getOffsetOmega() =" << s.getOffsetOmega() << "\n";
@@ -1437,7 +1438,7 @@ TEST(ConvReversePass, BasicAssertions) {
   // }
   TestLoopFunction tlf;
   auto &builder = tlf.getBuilder();
-  IntMatrix Aloop{"[-1 0 1 0 0 0 0 0 -1; "
+  IntMatrix loopA{"[-1 0 1 0 0 0 0 0 -1; "
                   "0 0 0 0 0 0 0 0 1; "
                   "-1 1 0 0 0 0 0 -1 0; "
                   "0 0 0 0 0 0 0 1 0; "
@@ -1445,11 +1446,11 @@ TEST(ConvReversePass, BasicAssertions) {
                   "0 0 0 0 0 0 1 0 0; "
                   "-1 0 0 1 0 -1 0 0 0; "
                   "0 0 0 0 0 1 0 0 0]"_mat};
-  tlf.addLoop(std::move(Aloop), 4);
+  tlf.addLoop(std::move(loopA), 4);
   AffineLoopNest<true> *loop = tlf.getLoopNest(0);
 
   // create arrays
-  llvm::Type *Float64 = builder.getDoubleTy();
+  llvm::Type *f64 = builder.getDoubleTy();
   llvm::Value *ptrB = tlf.createArray();
   llvm::Value *ptrA = tlf.createArray();
   llvm::Value *ptrC = tlf.createArray();
@@ -1477,24 +1478,20 @@ TEST(ConvReversePass, BasicAssertions) {
     builder.CreateMul(builder.CreateAdd(nv, jv),
                       builder.CreateSub(builder.CreateAdd(Mv, Iv), one)));
   auto *Aload = builder.CreateAlignedLoad(
-    Float64,
-    builder.CreateGEP(Float64, ptrA,
-                      llvm::SmallVector<llvm::Value *, 1>{Aoffset}),
+    f64,
+    builder.CreateGEP(f64, ptrA, llvm::SmallVector<llvm::Value *, 1>{Aoffset}),
     llvm::MaybeAlign(8));
   auto *Bload = builder.CreateAlignedLoad(
-    Float64,
-    builder.CreateGEP(Float64, ptrB,
-                      llvm::SmallVector<llvm::Value *, 1>{Boffset}),
+    f64,
+    builder.CreateGEP(f64, ptrB, llvm::SmallVector<llvm::Value *, 1>{Boffset}),
     llvm::MaybeAlign(8));
   auto *Cload = builder.CreateAlignedLoad(
-    Float64,
-    builder.CreateGEP(Float64, ptrC,
-                      llvm::SmallVector<llvm::Value *, 1>{Coffset}),
+    f64,
+    builder.CreateGEP(f64, ptrC, llvm::SmallVector<llvm::Value *, 1>{Coffset}),
     llvm::MaybeAlign(8));
   auto *Cstore = builder.CreateAlignedStore(
     builder.CreateFAdd(Cload, builder.CreateFMul(Aload, Bload)),
-    builder.CreateGEP(Float64, ptrC,
-                      llvm::SmallVector<llvm::Value *, 1>{Coffset}),
+    builder.CreateGEP(f64, ptrC, llvm::SmallVector<llvm::Value *, 1>{Coffset}),
     llvm::MaybeAlign(8));
 
   // for (n = 0; n < N; ++n){

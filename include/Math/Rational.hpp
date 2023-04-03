@@ -58,14 +58,10 @@ struct Rational {
     bool o2 = __builtin_mul_overflow(y.numerator, xd, &b);
     bool o3 = __builtin_mul_overflow(denominator, yd, &d);
     bool o4 = __builtin_add_overflow(a, b, &n);
-    if ((o1 | o2) | (o3 | o4)) {
-      return {};
-    } else if (n) {
-      auto [nn, nd] = divgcd(n, d);
-      return Rational{nn, nd};
-    } else {
-      return Rational{0, 1};
-    }
+    if ((o1 | o2) | (o3 | o4)) return {};
+    if (!n) return Rational{0, 1};
+    auto [nn, nd] = divgcd(n, d);
+    return Rational{nn, nd};
   }
   constexpr auto operator+(Rational y) const -> Rational {
     return *safeAdd(y); // NOLINT(bugprone-unchecked-optional-access)
@@ -84,14 +80,10 @@ struct Rational {
     bool o2 = __builtin_mul_overflow(y.numerator, xd, &b);
     bool o3 = __builtin_mul_overflow(denominator, yd, &d);
     bool o4 = __builtin_sub_overflow(a, b, &n);
-    if ((o1 | o2) | (o3 | o4)) {
-      return {};
-    } else if (n) {
-      auto [nn, nd] = divgcd(n, d);
-      return Rational{nn, nd};
-    } else {
-      return Rational{0, 1};
-    }
+    if ((o1 | o2) | (o3 | o4)) return {};
+    if (!n) return Rational{0, 1};
+    auto [nn, nd] = divgcd(n, d);
+    return Rational{nn, nd};
   }
   constexpr auto operator-(Rational y) const -> Rational {
     return *safeSub(y); // NOLINT(bugprone-unchecked-optional-access)
@@ -107,21 +99,18 @@ struct Rational {
     auto [xd, yn] = divgcd(denominator, y);
     int64_t n;
     if (__builtin_mul_overflow(numerator, yn, &n)) return {};
-    else return Rational{n, xd};
+    return Rational{n, xd};
   }
   [[nodiscard]] constexpr auto safeMul(Rational y) const
     -> std::optional<Rational> {
-    if ((numerator != 0) & (y.numerator != 0)) {
-      auto [xn, yd] = divgcd(numerator, y.denominator);
-      auto [xd, yn] = divgcd(denominator, y.numerator);
-      int64_t n, d;
-      bool o1 = __builtin_mul_overflow(xn, yn, &n);
-      bool o2 = __builtin_mul_overflow(xd, yd, &d);
-      if (o1 | o2) return {};
-      else return Rational{n, d};
-    } else {
-      return Rational{0, 1};
-    }
+    if ((numerator == 0) | (y.numerator == 0)) return Rational{0, 1};
+    auto [xn, yd] = divgcd(numerator, y.denominator);
+    auto [xd, yn] = divgcd(denominator, y.numerator);
+    int64_t n, d;
+    bool o1 = __builtin_mul_overflow(xn, yn, &n);
+    bool o2 = __builtin_mul_overflow(xd, yd, &d);
+    if (o1 | o2) return {};
+    return Rational{n, d};
   }
   constexpr auto operator*(int64_t y) const -> Rational {
     return *safeMul(y); // NOLINT(bugprone-unchecked-optional-access)
@@ -142,17 +131,10 @@ struct Rational {
     return *this;
   }
   [[nodiscard]] constexpr auto inv() const -> Rational {
-    if (numerator < 0) {
-      // make sure we don't have overflow
-      assert(denominator != std::numeric_limits<int64_t>::min());
-      return Rational{-denominator, -numerator};
-    } else {
-      return Rational{denominator, numerator};
-    }
-    // return Rational{denominator, numerator};
-    // bool positive = numerator > 0;
-    // return Rational{positive ? denominator : -denominator,
-    //                 positive ? numerator : -numerator};
+    if (numerator > 0) return Rational{denominator, numerator};
+    assert(denominator != std::numeric_limits<int64_t>::min());
+    assert(numerator != 0);
+    return Rational{-denominator, -numerator};
   }
   [[nodiscard]] constexpr auto safeDiv(Rational y) const
     -> std::optional<Rational> {
@@ -179,10 +161,9 @@ struct Rational {
     return true;
   }
   // Rational operator/=(Rational y) { return (*this) *= y.inv(); }
-  constexpr operator double() {
+  constexpr operator double() const {
     return double(numerator) / double(denominator);
   }
-  constexpr operator bool() { return numerator != 0; }
 
   constexpr auto operator==(Rational y) const -> bool {
     return (numerator == y.numerator) & (denominator == y.denominator);
@@ -192,8 +173,8 @@ struct Rational {
   }
   [[nodiscard]] constexpr auto isEqual(int64_t y) const -> bool {
     if (denominator == 1) return (numerator == y);
-    else if (denominator == -1) return (numerator == -y);
-    else return false;
+    if (denominator == -1) return (numerator == -y);
+    return false;
   }
   constexpr auto operator==(int y) const -> bool { return isEqual(y); }
   constexpr auto operator==(int64_t y) const -> bool { return isEqual(y); }
@@ -236,3 +217,4 @@ constexpr auto gcd(Rational x, Rational y) -> std::optional<Rational> {
   return Rational{gcd(x.numerator, y.numerator),
                   lcm(x.denominator, y.denominator)};
 }
+constexpr auto operator==(int64_t x, Rational y) -> bool { return y == x; }

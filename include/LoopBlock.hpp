@@ -710,7 +710,7 @@ public:
       size_t r = NormalForm::rank(indMat);
       if (r == edge.getInNumLoops()) continue;
       // TODO handle linearly dependent acceses, filtering them out
-      if (r == indMat.numCol()) {
+      if (r == size_t(indMat.numCol())) {
         node.schedulePhi(indMat, r);
         tryOrth = true;
       }
@@ -1153,8 +1153,8 @@ public:
   [[nodiscard]] auto isSatisfied(Dependence &e, size_t d) -> bool {
     for (size_t inIndex : e.nodesIn()) {
       for (size_t outIndex : e.nodesOut()) {
-        AffineSchedule *first = nodes[inIndex].getSchedule();
-        AffineSchedule *second = nodes[outIndex].getSchedule();
+        AffineSchedule first = nodes[inIndex].getSchedule();
+        AffineSchedule second = nodes[outIndex].getSchedule();
         if (!e.isForward()) std::swap(first, second);
         if (!e.isSatisfied(allocator, first, second, d)) return false;
       }
@@ -1258,7 +1258,7 @@ public:
       // activeEdges was the old original; swap it in
       std::swap(g.activeEdges, activeEdges);
       BitSet nodeIds = g.nodeIds;
-      Vector<AffineSchedule *, 0> oldSchedules;
+      Vector<AffineSchedule, 0> oldSchedules;
       for (auto &n : g) oldSchedules.push_back(n.getSchedule());
       Vector<CarriedDependencyFlag, 16> oldCarriedDeps = carriedDeps;
       resetDeepDeps(carriedDeps, d);

@@ -635,18 +635,10 @@ public:
   [[nodiscard]] constexpr auto getDynSymDim() const -> size_t {
     return depPoly->getNumDynSym();
   }
-  [[nodiscard]] constexpr auto inputIsLoad() const -> bool {
-    return in->isLoad();
-  }
-  [[nodiscard]] constexpr auto outputIsLoad() const -> bool {
-    return out->isLoad();
-  }
-  [[nodiscard]] constexpr auto inputIsStore() const -> bool {
-    return in->isStore();
-  }
-  [[nodiscard]] constexpr auto outputIsStore() const -> bool {
-    return out->isStore();
-  }
+  [[nodiscard]] auto inputIsLoad() const -> bool { return in->isLoad(); }
+  [[nodiscard]] auto outputIsLoad() const -> bool { return out->isLoad(); }
+  [[nodiscard]] auto inputIsStore() const -> bool { return in->isStore(); }
+  [[nodiscard]] auto outputIsStore() const -> bool { return out->isStore(); }
   /// getInIndMat() -> getInNumLoops() x arrayDim()
   [[nodiscard]] constexpr auto getInIndMat() const -> PtrMatrix<int64_t> {
     return in->indexMatrix();
