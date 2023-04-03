@@ -220,6 +220,9 @@ template <typename T = Vector<uint64_t, 1>> struct BitSet {
     for (auto u : data) s += std::popcount(u);
     return s;
   }
+  [[nodiscard]] constexpr auto empty() const -> bool {
+    return std::ranges::all_of(data, [](auto u) { return u == 0; });
+  }
   [[nodiscard]] constexpr auto any() const -> bool {
     return std::ranges::any_of(data, [](auto u) { return u != 0; });
     // for (auto u : data)

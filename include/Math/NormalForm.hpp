@@ -105,8 +105,8 @@ constexpr auto pivotRowsPair(std::array<MutPtrMatrix<int64_t>, 2> AK, Col i,
   while (AK[0](piv, i) == 0)
     if (++piv == M) return true;
   if (j != piv) {
-    swap(AK[0], j, piv);
-    swap(AK[1], j, piv);
+    LinAlg::swap(AK[0], j, piv);
+    LinAlg::swap(AK[1], j, piv);
   }
   return false;
 }

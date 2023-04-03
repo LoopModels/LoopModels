@@ -888,6 +888,6 @@ template <AbstractMatrix B> constexpr auto norm2(const B &A) {
 using LinAlg::_;
 using LinAlg::SmallSparseMatrix, LinAlg::StridedVector,
   LinAlg::MutStridedVector, LinAlg::MutSquarePtrMatrix, LinAlg::begin,
-  LinAlg::end, LinAlg::swap, LinAlg::SquarePtrMatrix, LinAlg::Row,
-  LinAlg::RowStride, LinAlg::Col, LinAlg::CarInd, LinAlg::last,
-  LinAlg::MutDensePtrMatrix, LinAlg::DensePtrMatrix, LinAlg::DenseMatrix;
+  LinAlg::end, LinAlg::SquarePtrMatrix, LinAlg::Row, LinAlg::RowStride,
+  LinAlg::Col, LinAlg::CarInd, LinAlg::last, LinAlg::MutDensePtrMatrix,
+  LinAlg::DensePtrMatrix, LinAlg::DenseMatrix;

@@ -759,7 +759,7 @@ public:
     if (basicConstraints[i] < 0) makeBasic(C, 0, index_type(i));
     size_t ind = basicConstraints[i];
     size_t lastRow = size_t(C.numRow() - 1);
-    if (lastRow != ind) swap(C, Row{ind}, Row{lastRow});
+    if (lastRow != ind) LinAlg::swap(C, Row{ind}, Row{lastRow});
     truncateConstraints(lastRow);
   }
   void removeExtraVariables(size_t i) {

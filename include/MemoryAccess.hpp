@@ -179,15 +179,17 @@ public:
   }
   [[nodiscard]] auto isLoad() const -> bool { return !isStore(); }
   // TODO: `constexpr` once `llvm::SmallVector` supports it
-  [[nodiscard]] auto getArrayDim() const -> size_t { return numDim; }
-  [[nodiscard]] auto getNumSymbols() const -> size_t { return 1 + numDynSym; }
-  [[nodiscard]] auto getNumLoops() const -> size_t {
+  [[nodiscard]] constexpr auto getArrayDim() const -> size_t { return numDim; }
+  [[nodiscard]] constexpr auto getNumSymbols() const -> size_t {
+    return 1 + numDynSym;
+  }
+  [[nodiscard]] constexpr auto getNumLoops() const -> size_t {
     return loop->getNumLoops();
   }
 
   [[nodiscard]] auto getAlign() const -> llvm::Align {
-    if (auto l = loadOrStore.dyn_cast<llvm::LoadInst>()) return l->getAlign();
-    else return loadOrStore.cast<llvm::StoreInst>()->getAlign();
+    if (auto *l = loadOrStore.dyn_cast<llvm::LoadInst>()) return l->getAlign();
+    return loadOrStore.cast<llvm::StoreInst>()->getAlign();
   }
   /// indexMatrix() -> getNumLoops() x arrayDim()
   /// loops are in [outermost <-> innermost] order
@@ -235,7 +237,7 @@ public:
   }
   /// initialize alignment from an elSize SCEV.
   static auto typeAlignment(const llvm::SCEV *S) -> llvm::Align {
-    if (auto *C = llvm::dyn_cast<llvm::SCEVConstant>(S))
+    if (const auto *C = llvm::dyn_cast<llvm::SCEVConstant>(S))
       return llvm::Align(C->getAPInt().getZExtValue());
     return llvm::Align{1};
   }

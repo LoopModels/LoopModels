@@ -634,8 +634,8 @@ public:
     [[nodiscard]] constexpr auto subGraph(const BitSet &components) -> Graph {
       return {components, activeEdges, mem, nodes, edges};
     }
-    [[nodiscard]] constexpr auto
-    split(const llvm::SmallVector<BitSet> &components) -> Vector<Graph, 0> {
+    [[nodiscard]] auto split(const llvm::SmallVector<BitSet> &components)
+      -> Vector<Graph, 0> {
       Vector<Graph, 0> graphs;
       graphs.reserve(components.size());
       for (const auto &c : components) graphs.push_back(subGraph(c));
@@ -653,8 +653,7 @@ public:
   //     return ((e.getInNumLoops() > d) && (e.getOutNumLoops() > d)) &&
   //            connects(e, g0, g1);
   // }
-  static constexpr auto connects(const Dependence &e, Graph &g0, Graph &g1)
-    -> bool {
+  static auto connects(const Dependence &e, Graph &g0, Graph &g1) -> bool {
     if (!e.inputIsLoad()) {
       // e.in is a store
       size_t nodeIn = *e.nodesIn().begin();
@@ -686,14 +685,13 @@ public:
     for (unsigned i = 0; i < memory.size(); ++i)
       userToMemory.insert(std::make_pair(memory[i]->getInstruction(), i));
   }
-  static constexpr auto getOverlapIndex(const Dependence &edge)
-    -> Optional<size_t> {
+  static auto getOverlapIndex(const Dependence &edge) -> Optional<size_t> {
     auto [store, other] = edge.getStoreAndOther();
     size_t index = *store->getNodeIndex().begin();
     if (other->getNodeIndex().contains(index)) return index;
     return {};
   }
-  constexpr auto optOrth(Graph g) -> std::optional<BitSet> {
+  auto optOrth(Graph g) -> std::optional<BitSet> {
 
     const size_t maxDepth = calcMaxDepth();
     // check for orthogonalization opportunities
@@ -1102,7 +1100,7 @@ public:
       for (size_t m = 0; m < N.numRow(); ++m) cc += N(m, _) * lexSign(N(m, _));
       C(i++, last) = -1; // for >=
     }
-    assert(i == C.numRow());
+    assert(i == size_t(C.numRow()));
     assert(!allZero(omniSimplex->getConstraints()(last, _)));
   }
   [[nodiscard]] static auto nonZeroMask(const AbstractVector auto &x)
@@ -1253,7 +1251,7 @@ public:
     // what we want to know is, can we satisfy all the deps
     // in depSatNest?
     depSatLevel |= depSatNest;
-    if (size_t numSatNest = depSatLevel.size()) {
+    if (!depSatLevel.empty()) {
       // backup in case we fail
       // activeEdges was the old original; swap it in
       std::swap(g.activeEdges, activeEdges);
