@@ -24,7 +24,7 @@
 /// "i_1" for schedule "S_1"
 ///
 constexpr auto requiredScheduleStorage(unsigned n) -> unsigned {
-  return (n * (n + 2) + 1) * sizeof(int64_t);
+  return (n * (n + 2) + 1); // * sizeof(int64_t);
 }
 struct AffineSchedule {
 
@@ -36,11 +36,10 @@ struct AffineSchedule {
     return numLoops * numLoops;
   }
 
-  static auto construct(BumpAlloc<> &alloc, unsigned nL)
-    -> NotNull<AffineSchedule> {
-    auto *mem =
-      alloc.allocate(requiredScheduleStorage(nL), alignof(AffineSchedule));
-    return new (mem) AffineSchedule(nL);
+  constexpr AffineSchedule() : mem(nullptr) {}
+  constexpr AffineSchedule(BumpAlloc<> &alloc, unsigned nL)
+    : mem(alloc.allocate<int64_t>(requiredScheduleStorage(nL))) {
+    mem[0] = nL;
   }
   constexpr void truncate(size_t newNumLoops) {
     size_t numLoops = getNumLoops();
@@ -64,12 +63,13 @@ struct AffineSchedule {
   [[nodiscard]] constexpr auto getPhi() const -> SquarePtrMatrix<int64_t> {
     return {data(), SquareDims{getNumLoops()}}; //
   }
+  /// getSchedule, loops are always indexed from outer to inner
   [[nodiscard]] constexpr auto getSchedule(size_t d) const
     -> PtrVector<int64_t> {
-    return getPhi()(last - d, _);
+    return getPhi()(d, _);
   }
   [[nodiscard]] constexpr auto getSchedule(size_t d) -> MutPtrVector<int64_t> {
-    return getPhi()(last - d, _);
+    return getPhi()(d, _);
   }
   [[nodiscard]] constexpr auto getFusionOmega(size_t i) const -> int64_t {
     return data()[getNumLoopsSquared() + i];
@@ -111,20 +111,5 @@ struct AffineSchedule {
   }
 
 private:
-  constexpr AffineSchedule(unsigned numLoops) { mem[0] = numLoops; }
-#if !defined(__clang__) && defined(__GNUC__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wpedantic"
-#else
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wc99-extensions"
-#pragma clang diagnostic ignored "-Wgnu-empty-struct"
-#endif
-  int64_t mem[]; // NOLINT(modernize-avoid-c-arrays)
-#if !defined(__clang__) && defined(__GNUC__)
-#pragma GCC diagnostic pop
-#else
-#pragma clang diagnostic pop
-#endif
+  int64_t *mem;
 };
-static_assert(sizeof(AffineSchedule) == 0);

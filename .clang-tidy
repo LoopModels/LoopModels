@@ -1,6 +1,0 @@
----
-Checks:          'clang-diagnostic-*,clang-analyzer-*,performance-*,modernize-*,bugprone-*,cpp-core-guidelines-*,cert-*,misc-*,llvm-namespace-comment,llvm-prefer-isa-or-dyn-cast-in-conditionals,portability-*,readability-*,-readability-braces-around-statements,-readability-identifier-length,-readability-isolate-declaration,-readability-implicit-bool-conversion,-readability-magic-numbers,-readability-function-cognitive-complexity,-readability-named-parameter,-misc-non-private-member-variables-in-classes,-bugprone-easily-swappable-parameters'
-WarningsAsErrors: ''
-HeaderFilterRegex: ''
-FormatStyle:     none
-User:            chriselrod

@@ -55,7 +55,7 @@ private:
   [[no_unique_address]] BitSet memory{};
   [[no_unique_address]] BitSet inNeighbors{};
   [[no_unique_address]] BitSet outNeighbors{};
-  [[no_unique_address]] AffineSchedule *schedule{};
+  [[no_unique_address]] AffineSchedule schedule{};
   [[no_unique_address]] uint32_t storeId;
   [[no_unique_address]] uint32_t phiOffset{0};   // used in LoopBlock
   [[no_unique_address]] uint32_t omegaOffset{0}; // used in LoopBlock
@@ -74,7 +74,7 @@ public:
                  llvm::ArrayRef<MemoryAccess *> memAccess) const
     -> Vector<Address *> {
     // First, we invert the schedule matrix.
-    SquarePtrMatrix<int64_t> Phi = schedule->getPhi();
+    SquarePtrMatrix<int64_t> Phi = schedule.getPhi();
     auto [Pinv, s] = NormalForm::scaledInv(Phi);
     if (s == 1) {
     }
@@ -86,14 +86,14 @@ public:
         memAccess[i]->getLoop()->rotate(alloc, Pinv);
       accesses.push_back(Address::construct(alloc, loop, memAccess[i],
                                             i == storeId, Pinv, s,
-                                            schedule->getFusionOmega()));
+                                            schedule.getFusionOmega()));
     }
     return accesses;
   }
   constexpr auto getMemory() -> BitSet & { return memory; }
   constexpr auto getInNeighbors() -> BitSet & { return inNeighbors; }
   constexpr auto getOutNeighbors() -> BitSet & { return outNeighbors; }
-  constexpr auto getSchedule() -> NotNull<AffineSchedule> { return schedule; }
+  constexpr auto getSchedule() -> AffineSchedule { return schedule; }
   [[nodiscard]] constexpr auto getMemory() const -> const BitSet & {
     return memory;
   }
@@ -103,14 +103,13 @@ public:
   [[nodiscard]] constexpr auto getOutNeighbors() const -> const BitSet & {
     return outNeighbors;
   }
-  [[nodiscard]] constexpr auto getSchedule() const
-    -> NotNull<const AffineSchedule> {
+  [[nodiscard]] constexpr auto getSchedule() const -> AffineSchedule {
     return schedule;
   }
   constexpr void addOutNeighbor(unsigned int i) { outNeighbors.insert(i); }
   constexpr void addInNeighbor(unsigned int i) { inNeighbors.insert(i); }
   constexpr void init(BumpAlloc<> &alloc) {
-    schedule = AffineSchedule::construct(alloc, getNumLoops());
+    schedule = AffineSchedule(alloc, getNumLoops());
   }
   constexpr void addMemory(unsigned memId, MemoryAccess *mem,
                            unsigned nodeIndex) {
@@ -145,41 +144,41 @@ public:
     return _(phiOffset - numLoops, phiOffset);
   }
   [[nodiscard]] constexpr auto getPhi() -> MutSquarePtrMatrix<int64_t> {
-    return schedule->getPhi();
+    return schedule.getPhi();
   }
   [[nodiscard]] constexpr auto getPhi() const -> SquarePtrMatrix<int64_t> {
-    return schedule->getPhi();
+    return schedule.getPhi();
   }
   [[nodiscard]] constexpr auto getOffsetOmega(size_t i) -> int64_t & {
-    return schedule->getOffsetOmega()[i];
+    return schedule.getOffsetOmega()[i];
   }
   [[nodiscard]] constexpr auto getOffsetOmega(size_t i) const -> int64_t {
-    return schedule->getOffsetOmega()[i];
+    return schedule.getOffsetOmega()[i];
   }
   [[nodiscard]] constexpr auto getFusionOmega(size_t i) -> int64_t & {
-    return schedule->getFusionOmega()[i];
+    return schedule.getFusionOmega()[i];
   }
   [[nodiscard]] constexpr auto getFusionOmega(size_t i) const -> int64_t {
-    return schedule->getFusionOmega()[i];
+    return schedule.getFusionOmega()[i];
   }
   [[nodiscard]] constexpr auto getOffsetOmega() -> MutPtrVector<int64_t> {
-    return schedule->getOffsetOmega();
+    return schedule.getOffsetOmega();
   }
   [[nodiscard]] constexpr auto getOffsetOmega() const -> PtrVector<int64_t> {
-    return schedule->getOffsetOmega();
+    return schedule.getOffsetOmega();
   }
   [[nodiscard]] constexpr auto getFusionOmega() -> MutPtrVector<int64_t> {
-    return schedule->getFusionOmega();
+    return schedule.getFusionOmega();
   }
   [[nodiscard]] constexpr auto getFusionOmega() const -> PtrVector<int64_t> {
-    return schedule->getFusionOmega();
+    return schedule.getFusionOmega();
   }
   [[nodiscard]] constexpr auto getSchedule(size_t d) const
     -> PtrVector<int64_t> {
-    return schedule->getSchedule(d);
+    return schedule.getSchedule(d);
   }
   [[nodiscard]] constexpr auto getSchedule(size_t d) -> MutPtrVector<int64_t> {
-    return schedule->getSchedule(d);
+    return schedule.getSchedule(d);
   }
   constexpr void schedulePhi(PtrMatrix<int64_t> indMat, size_t r) {
     // indMat indvars are indexed from inside<->outside
@@ -1328,18 +1327,17 @@ public:
     for (const auto &edge : lblock.edges) {
       os << "\n\tEdge = " << *edge;
       for (size_t inIndex : edge->nodesIn()) {
-        const AffineSchedule *sin = lblock.getNode(inIndex).getSchedule();
+        const AffineSchedule sin = lblock.getNode(inIndex).getSchedule();
         os << "Schedule In: nodeIndex = " << edge->nodesIn() << "\ns.getPhi()"
-           << sin->getPhi()
-           << "\ns.getFusionOmega() = " << sin->getFusionOmega()
-           << "\ns.getOffsetOmega() = " << sin->getOffsetOmega();
+           << sin.getPhi() << "\ns.getFusionOmega() = " << sin.getFusionOmega()
+           << "\ns.getOffsetOmega() = " << sin.getOffsetOmega();
       }
       for (size_t outIndex : edge->nodesOut()) {
-        const AffineSchedule *sout = lblock.getNode(outIndex).getSchedule();
+        const AffineSchedule sout = lblock.getNode(outIndex).getSchedule();
         os << "\n\nSchedule Out:\nnodeIndex = " << edge->nodesOut()
-           << "\ns.getPhi()" << sout->getPhi()
-           << "\ns.getFusionOmega() = " << sout->getFusionOmega()
-           << "\ns.getOffsetOmega() = " << sout->getOffsetOmega();
+           << "\ns.getPhi()" << sout.getPhi()
+           << "\ns.getFusionOmega() = " << sout.getFusionOmega()
+           << "\ns.getOffsetOmega() = " << sout.getOffsetOmega();
       }
       llvm::errs() << "\n\n";
     }
@@ -1348,10 +1346,10 @@ public:
     for (auto *mem : lblock.memory) {
       os << "Ref = " << *mem;
       for (size_t nodeIndex : mem->getNodeIndex()) {
-        const AffineSchedule *s = lblock.getNode(nodeIndex).getSchedule();
-        os << "\nnodeIndex = " << nodeIndex << "\ns.getPhi()" << s->getPhi()
-           << "\ns.getFusionOmega() = " << s->getFusionOmega()
-           << "\ns.getOffsetOmega() = " << s->getOffsetOmega() << "\n";
+        const AffineSchedule s = lblock.getNode(nodeIndex).getSchedule();
+        os << "\nnodeIndex = " << nodeIndex << "\ns.getPhi()" << s.getPhi()
+           << "\ns.getFusionOmega() = " << s.getFusionOmega()
+           << "\ns.getOffsetOmega() = " << s.getOffsetOmega() << "\n";
       }
     }
     return os << "\n";

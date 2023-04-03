@@ -90,12 +90,11 @@ class DepPoly : public BasePolyhedra<true, true, false, DepPoly> {
   // NOLINTNEXTLINE(modernize-avoid-c-arrays) // FAM
   [[gnu::aligned(alignof(int64_t))]] std::byte memory[8];
 
-  constexpr DepPoly(unsigned int numDep0Var, unsigned int numDep1Var,
-                    unsigned int numDynSym, unsigned int timeDim,
-                    unsigned int conCapacity, unsigned int eqConCapacity)
-    : numDep0Var(numDep0Var), numDep1Var(numDep1Var), numCon(conCapacity),
-      numEqCon(eqConCapacity), numDynSym(numDynSym), timeDim(timeDim),
-      conCapacity(conCapacity), eqConCapacity(eqConCapacity) {}
+  constexpr DepPoly(unsigned int nd0, unsigned int nd1, unsigned int nds,
+                    unsigned int td, unsigned int conCap, unsigned int eqConCap)
+    : numDep0Var(nd0), numDep1Var(nd1), numCon(conCap), numEqCon(eqConCap),
+      numDynSym(nds), timeDim(td), conCapacity(conCap),
+      eqConCapacity(eqConCap) {}
   // [[nodiscard]] static auto allocate(BumpAlloc<> &alloc, unsigned int
   // numDep0Var, unsigned int numDep1Var, unsigned int numCon, unsigned int
   // numEqCon, unsigned int numDynSym, unsigned int timeDim, unsigned int
@@ -211,7 +210,7 @@ public:
               ((conCapacity + eqConCapacity) * (getNumVar() + 1) + timeDim)),
       numDynSym};
   }
-  constexpr auto getSymbols(size_t i) -> MutPtrVector<int64_t> {
+  auto getSymbols(size_t i) -> MutPtrVector<int64_t> {
     return getA()(i, _(begin, getNumSymbols()));
   }
   [[nodiscard]] auto getInEqSymbols(size_t i) const -> PtrVector<int64_t> {
@@ -235,9 +234,8 @@ public:
     return std::distance(
       x.begin(), std::mismatch(x.begin(), x.end(), y.begin(), y.end()).first);
   }
-  static constexpr auto nullSpace(NotNull<const MemoryAccess> x,
-                                  NotNull<const MemoryAccess> y)
-    -> DenseMatrix<int64_t> {
+  static auto nullSpace(NotNull<const MemoryAccess> x,
+                        NotNull<const MemoryAccess> y) -> DenseMatrix<int64_t> {
     const size_t numLoopsCommon =
       findFirstNonEqual(x->getFusionOmega(), y->getFusionOmega());
     const size_t xDim = x->getArrayDim();

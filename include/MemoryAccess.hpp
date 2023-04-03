@@ -244,10 +244,10 @@ public:
   }
   // inline void addEdgeIn(NotNull<Dependence> i) { edgesIn.push_back(i); }
   // inline void addEdgeOut(NotNull<Dependence> i) { edgesOut.push_back(i); }
-  inline void addEdgeIn(size_t i) { edgesIn.insert(i); }
-  inline void addEdgeOut(size_t i) { edgesOut.insert(i); }
+  constexpr void addEdgeIn(size_t i) { edgesIn.insert(i); }
+  constexpr void addEdgeOut(size_t i) { edgesOut.insert(i); }
   /// add a node index
-  inline void addNodeIndex(unsigned i) { nodeIndex.insert(i); }
+  constexpr void addNodeIndex(unsigned i) { nodeIndex.insert(i); }
 
   // inline void addEdgeIn(unsigned i) { edgesIn.push_back(i); }
   // inline void addEdgeOut(unsigned i) { edgesOut.push_back(i); }

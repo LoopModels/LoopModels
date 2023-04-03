@@ -49,7 +49,7 @@ file(
   ${CMAKE_CURRENT_SOURCE_DIR}/comparator_test.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/compat_test.cpp
   # ${CMAKE_CURRENT_SOURCE_DIR}/cost_modeling_test.cpp
-  # ${CMAKE_CURRENT_SOURCE_DIR}/dependence_test.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/dependence_test.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/graph_test.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/linear_algebra_test.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/linear_diophantine_test.cpp

@@ -107,6 +107,11 @@ public:
   auto getSCEVUnknown(llvm::Value *v) -> const llvm::SCEVUnknown * {
     return llvm::dyn_cast<llvm::SCEVUnknown>(SE.getUnknown(v));
   }
+  auto getConstInt(int64_t i) -> llvm::ConstantInt * {
+    return builder.getInt64(i);
+    // return llvm::ConstantInt::get(ctx, llvm::APInt(64, i));
+  }
+  auto getBuilder() -> llvm::IRBuilder<> & { return builder; }
   // ~TestLoopFunction() = default;
   auto CreateLoad(llvm::Value *ptr, llvm::Value *offset) -> llvm::LoadInst * {
     llvm::Type *Float64 = builder.getDoubleTy();
