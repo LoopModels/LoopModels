@@ -303,7 +303,6 @@ class LinearProgramLoopBlock {
   /// One per node; held separately so we can copy/etc
   [[no_unique_address]] Vector<CarriedDependencyFlag, 16> carriedDeps;
   // Vector<bool> visited; // visited, for traversing graph
-  [[no_unique_address]] amap<llvm::User *, unsigned> userToMemory;
   [[no_unique_address]] BumpAlloc<> allocator;
   // Vector<llvm::Value *> symbols;
   // we may turn off edges because we've exceeded its loop depth
@@ -330,7 +329,6 @@ public:
     for (auto &&x : edges) x->~Dependence();
     edges.clear();
     carriedDeps.clear();
-    userToMemory.clear();
     allocator.reset();
   }
   [[nodiscard]] constexpr auto numVerticies() const -> size_t {
@@ -421,9 +419,10 @@ public:
   ///
   /// If an instruction was stored somewhere, we don't keep
   /// searching for placed it was loaded, and instead add a reload.
-  [[nodiscard]] auto searchValueForStores(aset<llvm::User *> &visited,
-                                          ScheduledNode &node, llvm::User *user,
-                                          unsigned nodeIndex) -> bool {
+  [[nodiscard]] auto
+  searchValueForStores(aset<llvm::User *> &visited, ScheduledNode &node,
+                       amap<llvm::User *, unsigned> &userToMemory,
+                       llvm::User *user, unsigned nodeIndex) -> bool {
     for (llvm::User *use : user->users()) {
       if (visited.contains(use)) continue;
       if (llvm::isa<llvm::StoreInst>(use)) {
@@ -441,6 +440,7 @@ public:
   }
   // NOLINTNEXTLINE(misc-no-recursion)
   void checkUserForLoads(aset<llvm::User *> &visited, ScheduledNode &node,
+                         amap<llvm::User *, unsigned> &userToMemory,
                          llvm::User *user, unsigned nodeIndex) {
     if (!user || visited.contains(user)) return;
     if (llvm::isa<llvm::LoadInst>(user)) {
@@ -449,8 +449,9 @@ public:
         return; // load is not a part of the LoopBlock
       unsigned memId = memAccess->second;
       node.addMemory(memId, memory[memId], nodeIndex);
-    } else if (!searchValueForStores(visited, node, user, nodeIndex))
-      searchOperandsForLoads(visited, node, user, nodeIndex);
+    } else if (!searchValueForStores(visited, node, userToMemory, user,
+                                     nodeIndex))
+      searchOperandsForLoads(visited, node, userToMemory, user, nodeIndex);
   }
   /// We search uses of user `u` for any stores so that we can assign the use
   /// and the store the same schedule. This is done because it is assumed the
@@ -474,16 +475,17 @@ public:
   /// and we create a new edge from `store %y, %b` to `load %b`.
   // NOLINTNEXTLINE(misc-no-recursion)
   void searchOperandsForLoads(aset<llvm::User *> &visited, ScheduledNode &node,
+                              amap<llvm::User *, unsigned> &userToMemory,
                               llvm::User *u, unsigned nodeIndex) {
     visited.insert(u);
     if (auto *s = llvm::dyn_cast<llvm::StoreInst>(u)) {
       if (auto *user = llvm::dyn_cast<llvm::User>(s->getValueOperand()))
-        checkUserForLoads(visited, node, user, nodeIndex);
+        checkUserForLoads(visited, node, userToMemory, user, nodeIndex);
       return;
     }
     for (auto &&op : u->operands())
       if (auto *user = llvm::dyn_cast<llvm::User>(op.get()))
-        checkUserForLoads(visited, node, user, nodeIndex);
+        checkUserForLoads(visited, node, userToMemory, user, nodeIndex);
   }
   void connect(unsigned inIndex, unsigned outIndex) {
     nodes[inIndex].addOutNeighbor(outIndex);
@@ -506,6 +508,12 @@ public:
   /// amount of loads executed in the eventual generated code)
   void connectGraph() {
     // assembles direct connections in node graph
+    auto p = allocator.checkpoint();
+    amap<llvm::User *, unsigned> userToMemory{
+      WBumpAlloc<std::pair<llvm::User *, unsigned>>{allocator}};
+    for (unsigned i = 0; i < memory.size(); ++i)
+      userToMemory.insert(std::make_pair(memory[i]->getInstruction(), i));
+
     aset<llvm::User *> visited{WBumpAlloc<llvm::User *>(allocator)};
     nodes.reserve(calcNumStores());
     for (unsigned i = 0; i < memory.size(); ++i) {
@@ -513,9 +521,11 @@ public:
       if (mai->isLoad()) continue;
       unsigned nodeIndex = nodes.size();
       ScheduledNode &node = nodes.emplace_back(i, mai, nodeIndex);
-      searchOperandsForLoads(visited, node, mai->getInstruction(), nodeIndex);
+      searchOperandsForLoads(visited, node, userToMemory, mai->getInstruction(),
+                             nodeIndex);
       visited.clear();
     }
+    allocator.rollback(p);
     for (auto &e : edges) connect(e->nodesIn(), e->nodesOut());
     for (auto &&node : nodes) node.init(allocator);
     // now that we've assigned each MemoryAccess to a NodeIndex, we
@@ -680,10 +690,6 @@ public:
   constexpr auto fullGraph() -> Graph {
     return {BitSet::dense(nodes.size()), BitSet::dense(edges.size()), memory,
             nodes, edges};
-  }
-  void fillUserToMemoryMap() {
-    for (unsigned i = 0; i < memory.size(); ++i)
-      userToMemory.insert(std::make_pair(memory[i]->getInstruction(), i));
   }
   static auto getOverlapIndex(const Dependence &edge) -> Optional<size_t> {
     auto [store, other] = edge.getStoreAndOther();
@@ -1289,7 +1295,7 @@ public:
     if (std::optional<BitSet> depSat = optimizeLevel(g, d)) {
       const size_t numSat = depSat->size();
       if (std::optional<BitSet> depSatNest = optimize(g, d + 1, maxDepth)) {
-        if (numSat && depSatNest->size())
+        if (numSat && (!depSatNest->empty()))
           return optimizeSatDep(g, d, maxDepth, *depSat, *depSatNest,
                                 activeEdgesBackup);
         return *depSat |= *depSatNest;
@@ -1300,7 +1306,6 @@ public:
   // returns true on failure
   [[nodiscard]] auto optimize() -> std::optional<BitSet> {
     fillEdges();
-    fillUserToMemoryMap();
     connectGraph();
     carriedDeps.resize(nodes.size());
 #ifndef NDEBUG
