@@ -63,7 +63,6 @@ $(function() {
 <div class="header">
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
-<a href="#pub-static-methods">Static Public Member Functions</a> &#124;
 <a href="structAffineSchedule-members.html">List of all members</a>  </div>
   <div class="headertitle">
 <div class="title">AffineSchedule Struct Reference</div>  </div>
@@ -78,6 +77,9 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumLoops
 <tr class="memitem:a54f20dba2ad0962fd946ba5ab53c0ea2"><td class="memItemLeft" align="right" valign="top"><a id="a54f20dba2ad0962fd946ba5ab53c0ea2"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumLoopsSquared</b> () const -&gt; size_t</td></tr>
 <tr class="separator:a54f20dba2ad0962fd946ba5ab53c0ea2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a85580bb892d3b1c0bd9987cd018046eb"><td class="memItemLeft" align="right" valign="top"><a id="a85580bb892d3b1c0bd9987cd018046eb"></a>
+constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>AffineSchedule</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, unsigned nL)</td></tr>
+<tr class="separator:a85580bb892d3b1c0bd9987cd018046eb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aebed2c6cca052c412f6b90e9a71deceb"><td class="memItemLeft" align="right" valign="top"><a id="aebed2c6cca052c412f6b90e9a71deceb"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>truncate</b> (size_t newNumLoops)</td></tr>
 <tr class="separator:aebed2c6cca052c412f6b90e9a71deceb"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -91,7 +93,8 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getPhi</b> 
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getPhi</b> () const -&gt; SquarePtrMatrix&lt; int64_t &gt;</td></tr>
 <tr class="separator:afa6510245c6908fa8e73d93576bf336d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a534a966b0d6ba721ec2fb83725fbdad8"><td class="memItemLeft" align="right" valign="top"><a id="a534a966b0d6ba721ec2fb83725fbdad8"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getSchedule</b> (size_t d) const -&gt; PtrVector&lt; int64_t &gt;</td></tr>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAffineSchedule.html#a534a966b0d6ba721ec2fb83725fbdad8">getSchedule</a> (size_t d) const -&gt; PtrVector&lt; int64_t &gt;</td></tr>
+<tr class="memdesc:a534a966b0d6ba721ec2fb83725fbdad8"><td class="mdescLeft">&#160;</td><td class="mdescRight">getSchedule, loops are always indexed from outer to inner <br /></td></tr>
 <tr class="separator:a534a966b0d6ba721ec2fb83725fbdad8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a38ad80350edbb53b7da4da0ffe6c6c45"><td class="memItemLeft" align="right" valign="top"><a id="a38ad80350edbb53b7da4da0ffe6c6c45"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getSchedule</b> (size_t d) -&gt; MutPtrVector&lt; int64_t &gt;</td></tr>
@@ -126,12 +129,6 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>fusedThroug
 <tr class="memitem:a032aac28de0670200e2fbbbd07dbc1de"><td class="memItemLeft" align="right" valign="top"><a id="a032aac28de0670200e2fbbbd07dbc1de"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>fusedThrough</b> (const <a class="el" href="structNotNull.html">NotNull</a>&lt; <a class="el" href="structAffineSchedule.html">AffineSchedule</a> &gt; y) const -&gt; bool</td></tr>
 <tr class="separator:a032aac28de0670200e2fbbbd07dbc1de"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
-Static Public Member Functions</h2></td></tr>
-<tr class="memitem:a5f4419aef9edd6d034b0b37981e6298e"><td class="memItemLeft" align="right" valign="top"><a id="a5f4419aef9edd6d034b0b37981e6298e"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>construct</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, unsigned nL) -&gt; <a class="el" href="structNotNull.html">NotNull</a>&lt; <a class="el" href="structAffineSchedule.html">AffineSchedule</a> &gt;</td></tr>
-<tr class="separator:a5f4419aef9edd6d034b0b37981e6298e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <hr/>The documentation for this struct was generated from the following file:<ul>
 <li>include/<a class="el" href="Schedule_8hpp_source.html">Schedule.hpp</a></li>

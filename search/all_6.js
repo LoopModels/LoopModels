@@ -9,7 +9,8 @@ var searchData=
   ['getinstruction_80',['getInstruction',['../structInstruction_1_1Cache.html#abe269ee408a3bb0ae54cc6989fa64d5c',1,'Instruction::Cache']]],
   ['getmaxdigits_81',['getMaxDigits',['../namespaceLinAlg.html#a636fee1b1a5930a3c38e46eedbd57c67',1,'LinAlg::getMaxDigits(PtrMatrix&lt; T &gt; A) -&gt; Vector&lt; T &gt;'],['../namespaceLinAlg.html#a159c56bc82c7e302c1228e5148038ada',1,'LinAlg::getMaxDigits(PtrMatrix&lt; Rational &gt; A) -&gt; Vector&lt; size_t &gt;']]],
   ['getoutindmat_82',['getOutIndMat',['../classDependence.html#a89c5aef3716809617009a5f7d55c9499',1,'Dependence']]],
-  ['gettableau_83',['getTableau',['../classSimplex.html#ae90d8ffa4e0082b982fffc2092d80885',1,'Simplex']]],
-  ['graph_84',['Graph',['../structLinearProgramLoopBlock_1_1Graph.html',1,'LinearProgramLoopBlock']]],
-  ['graphs_85',['Graphs',['../namespaceGraphs.html',1,'']]]
+  ['getschedule_83',['getSchedule',['../structAffineSchedule.html#a534a966b0d6ba721ec2fb83725fbdad8',1,'AffineSchedule']]],
+  ['gettableau_84',['getTableau',['../classSimplex.html#ae90d8ffa4e0082b982fffc2092d80885',1,'Simplex']]],
+  ['graph_85',['Graph',['../structLinearProgramLoopBlock_1_1Graph.html',1,'LinearProgramLoopBlock']]],
+  ['graphs_86',['Graphs',['../namespaceGraphs.html',1,'']]]
 ];
