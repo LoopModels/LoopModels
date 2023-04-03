@@ -112,6 +112,7 @@ TEST(OrthogonalizeTest, BasicAssertions) {
   ArrayReference War{scevW, aln, 2};
   {
     MutPtrMatrix<int64_t> IndMat = War.indexMatrix();
+    IndMat << 0;
     IndMat(0, 0) = 1; // m
     IndMat(2, 0) = 1; // i
     IndMat(1, 1) = 1; // n
@@ -126,6 +127,7 @@ TEST(OrthogonalizeTest, BasicAssertions) {
   ArrayReference Bar{scevB, aln, 2};
   {
     MutPtrMatrix<int64_t> IndMat = Bar.indexMatrix();
+    IndMat << 0;
     IndMat(2, 0) = 1; // i
     IndMat(3, 1) = 1; // j
     Bar.sizes[0] = J;
@@ -137,6 +139,7 @@ TEST(OrthogonalizeTest, BasicAssertions) {
   ArrayReference Car{scevC, aln, 2};
   {
     MutPtrMatrix<int64_t> IndMat = Car.indexMatrix();
+    IndMat << 0;
     IndMat(0, 0) = 1; // m
     IndMat(1, 1) = 1; // n
     Car.sizes[0] = N;
@@ -231,6 +234,7 @@ TEST(BadMul, BasicAssertions) {
   ArrayReference War(scevW, aln, 2); //, axes, indTo
   {
     MutPtrMatrix<int64_t> IndMat = War.indexMatrix();
+    IndMat << 0;
     IndMat(jId, 0) = 1;  // j
     IndMat(iId, 1) = 1;  // i
     IndMat(lId, 1) = -1; // l
@@ -243,6 +247,7 @@ TEST(BadMul, BasicAssertions) {
   ArrayReference Bar(scevB, aln, 2); //, axes, indTo
   {
     MutPtrMatrix<int64_t> IndMat = Bar.indexMatrix();
+    IndMat << 0;
     IndMat(jId, 0) = 1;  // j
     IndMat(lId, 1) = 1;  // l
     IndMat(jId, 1) = -1; // j
@@ -255,6 +260,7 @@ TEST(BadMul, BasicAssertions) {
   ArrayReference Car(scevC, aln, 2); //, axes, indTo
   {
     MutPtrMatrix<int64_t> IndMat = Car.indexMatrix();
+    IndMat << 0;
     IndMat(lId, 0) = 1;  // l
     IndMat(jId, 0) = -1; // j
     IndMat(iId, 1) = 1;  // i
