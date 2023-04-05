@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['makezerobasic_426',['makeZeroBasic',['../classSimplex.html#aa75f6c2b4a8094b1d8adb72757565ea9',1,'Simplex']]],
-  ['mergemap_427',['mergeMap',['../classDepPoly.html#a672e011c355526212fbb3a008c3391ea',1,'DepPoly']]],
-  ['missingnode_428',['missingNode',['../structLinearProgramLoopBlock_1_1Graph.html#ad3bba31dae5c18d4852f30b91d28cf10',1,'LinearProgramLoopBlock::Graph']]]
+  ['makezerobasic_424',['makeZeroBasic',['../classSimplex.html#aa75f6c2b4a8094b1d8adb72757565ea9',1,'Simplex']]],
+  ['mergemap_425',['mergeMap',['../classDepPoly.html#a672e011c355526212fbb3a008c3391ea',1,'DepPoly']]],
+  ['missingnode_426',['missingNode',['../structLinearProgramLoopBlock_1_1Graph.html#ad3bba31dae5c18d4852f30b91d28cf10',1,'LinearProgramLoopBlock::Graph']]]
 ];

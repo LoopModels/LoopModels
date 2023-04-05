@@ -1112,11 +1112,9 @@ template&lt;typename T &gt; </div>
         </tr>
       </table>
 </div><div class="memdoc">
-<b>Initial value:</b><div class="fragment"><div class="line">=</div>
-<div class="line">  requires(T) {</div>
-<div class="line">    std::is_same_v&lt;typename std::remove_reference_t&lt;T&gt;::concrete,</div>
-<div class="line">                   std::true_type&gt;;</div>
-<div class="line">  }</div>
+<b>Initial value:</b><div class="fragment"><div class="line">= requires(T) {</div>
+<div class="line">  std::is_same_v&lt;typename std::remove_reference_t&lt;T&gt;::concrete, std::true_type&gt;;</div>
+<div class="line">}</div>
 </div><!-- fragment -->
 </div>
 </div>
