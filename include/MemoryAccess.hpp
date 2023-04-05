@@ -4,7 +4,6 @@
 #include "Math/Math.hpp"
 #include "Utilities/Valid.hpp"
 #include <algorithm>
-#include <bit>
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
@@ -61,24 +60,35 @@ private:
   // so that I could use `mem[]` or `mem[0]` instead of `mem[1]`. See:
   // https://gcc.gnu.org/onlinedocs/gcc/Zero-Length.html
   // https://developers.redhat.com/articles/2022/09/29/benefits-limitations-flexible-array-members#flexible_array_members_vs__pointer_implementation
-  std::byte mem[8]; // NOLINT(modernize-avoid-c-arrays)
+#if !defined(__clang__) && defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
+#else
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wc99-extensions"
+#endif
+  alignas(int64_t *) char mem[]; // NOLINT(modernize-avoid-c-arrays)
+#if !defined(__clang__) && defined(__GNUC__)
+#pragma GCC diagnostic pop
+#else
+#pragma clang diagnostic pop
+#endif
   // schedule indicated by `1` top bit, remainder indicates loop
   [[nodiscard]] inline auto data() -> NotNull<int64_t> {
-    std::byte *ptr =
-      mem + sizeof(const llvm::SCEV *const *) * (numDim + numDynSym);
+    char *ptr = mem + sizeof(const llvm::SCEV *const *) * (numDim + numDynSym);
     return reinterpret_cast<int64_t *>(ptr);
   }
   [[nodiscard]] inline auto data() const -> NotNull<int64_t> {
-    const std::byte *ptr =
+    const char *ptr =
       mem + sizeof(const llvm::SCEV *const *) * (numDim + numDynSym);
-    return reinterpret_cast<int64_t *>(const_cast<std::byte *>(ptr));
+    return reinterpret_cast<int64_t *>(const_cast<char *>(ptr));
   }
   [[nodiscard]] inline auto scevPtr() -> const llvm::SCEV ** {
-    std::byte *ptr = mem;
+    char *ptr = mem;
     return reinterpret_cast<const llvm::SCEV **>(ptr);
   }
   [[nodiscard]] inline auto scevPtr() const -> const llvm::SCEV *const * {
-    const std::byte *ptr = mem;
+    const char *ptr = mem;
     return reinterpret_cast<const llvm::SCEV *const *>(ptr);
   }
   [[nodiscard]] auto omegaOffset() const -> size_t {

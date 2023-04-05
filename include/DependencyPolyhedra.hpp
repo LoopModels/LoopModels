@@ -88,7 +88,20 @@ class DepPoly : public BasePolyhedra<true, true, false, DepPoly> {
   unsigned int conCapacity;   // A0.numRow() + A1.numRow()
   unsigned int eqConCapacity; // C0.numRow()
   // NOLINTNEXTLINE(modernize-avoid-c-arrays) // FAM
-  [[gnu::aligned(alignof(int64_t))]] std::byte memory[8];
+#if !defined(__clang__) && defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
+#else
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wc99-extensions"
+#endif
+  // NOLINTNEXTLINE(modernize-avoid-c-arrays) // FAM
+  alignas(int64_t) char memory[];
+#if !defined(__clang__) && defined(__GNUC__)
+#pragma GCC diagnostic pop
+#else
+#pragma clang diagnostic pop
+#endif
 
   constexpr DepPoly(unsigned int nd0, unsigned int nd1, unsigned int nds,
                     unsigned int td, unsigned int conCap, unsigned int eqConCap)
@@ -143,13 +156,13 @@ public:
   constexpr void setNumConstraints(unsigned int con) { numCon = con; }
   constexpr void setNumEqConstraints(unsigned int con) { numEqCon = con; }
   constexpr void decrementNumConstraints() { invariant(numCon-- > 0); }
-  auto getA() -> MutDensePtrMatrix<int64_t> {
-    return {reinterpret_cast<int64_t *>(memory),
-            DenseDims{numCon, getNumVar() + 1}};
+  constexpr auto getA() -> MutDensePtrMatrix<int64_t> {
+    void *p = memory;
+    return {(int64_t *)p, DenseDims{numCon, getNumVar() + 1}};
   }
-  auto getE() -> MutDensePtrMatrix<int64_t> {
-    auto *p = reinterpret_cast<int64_t *>(memory);
-    return {p + size_t(conCapacity) * (getNumVar() + 1),
+  constexpr auto getE() -> MutDensePtrMatrix<int64_t> {
+    void *p = memory;
+    return {(int64_t *)p + size_t(conCapacity) * (getNumVar() + 1),
             DenseDims{numEqCon, getNumVar() + 1}};
   }
   auto getNullStep() -> MutPtrVector<int64_t> {
@@ -163,7 +176,7 @@ public:
     return (p + (size_t(conCapacity) + eqConCapacity) * (getNumVar() + 1))[i];
   }
   auto getSyms() -> llvm::MutableArrayRef<const llvm::SCEV *> {
-    std::byte *p = memory;
+    char *p = memory;
     return {
       reinterpret_cast<const llvm::SCEV **>(
         p + sizeof(int64_t) *
@@ -171,7 +184,7 @@ public:
       numDynSym};
   }
   [[nodiscard]] auto getA() const -> DensePtrMatrix<int64_t> {
-    const std::byte *p = memory;
+    const char *p = memory;
     return {const_cast<int64_t *>(reinterpret_cast<const int64_t *>(p)),
             DenseDims{numCon, getNumVar() + 1}};
   }
@@ -203,7 +216,7 @@ public:
             timeDim};
   }
   auto getSyms() const -> llvm::ArrayRef<const llvm::SCEV *> {
-    const std::byte *p = memory;
+    const char *p = memory;
     return {
       reinterpret_cast<const llvm::SCEV *const *>(
         p + sizeof(int64_t) *

@@ -62,7 +62,7 @@ file(
 )
 
 # list(FILTER tests EXCLUDE REGEX "remarks.*") for remarks test
-find_package(LLVM 15 REQUIRED CONFIG)
+find_package(LLVM 16 REQUIRED CONFIG)
 list(APPEND CMAKE_MODULE_PATH ${LLVM_CMAKE_DIR})
 # include(AddLLVM)
 include(${LLVM_DIR}/AddLLVM.cmake)
@@ -81,7 +81,6 @@ target_precompile_headers(
   PRIVATE
   <cstddef>
   <algorithm>
-  <bit>
   <cassert>
   <cmath>
   <concepts>

@@ -3,8 +3,9 @@
 #include <type_traits>
 
 template <typename T>
-concept HasEltype = requires(
-  T) { std::is_scalar_v<typename std::remove_reference_t<T>::value_type>; };
+concept HasEltype = requires(T) {
+  std::is_scalar_v<typename std::remove_reference_t<T>::value_type>;
+};
 
 template <typename A> struct GetEltype {};
 template <HasEltype A> struct GetEltype<A> {
@@ -64,14 +65,19 @@ template <typename A, typename B>
 using promote_type_t = typename PromoteType<A, B>::value_type;
 
 template <typename A, typename B> struct PromoteEltype {
-  using value_type = typename PromoteType<eltype_t<A>, eltype_t<B>>::value_type;
+
+  // using value_type = promote_type_t<eltype_t<A>, eltype_t<B>>;
+  using elta = eltype_t<A>;
+  using eltb = eltype_t<B>;
+  using value_type = std::conditional_t<std::convertible_to<A, eltb>, eltb,
+                                        promote_type_t<elta, eltb>>;
 };
 template <typename A, ElementOf<A> B> struct PromoteEltype<A, B> {
   using value_type = eltype_t<A>;
 };
-template <typename A, ElementOf<A> B> struct PromoteEltype<B, A> {
-  using value_type = eltype_t<A>;
-};
+// template <typename B, ElementOf<B> A> struct PromoteEltype<A, B> {
+//   using value_type = eltype_t<B>;
+// };
 template <typename A, typename B>
 using promote_eltype_t = typename PromoteEltype<A, B>::value_type;
 

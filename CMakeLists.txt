@@ -45,7 +45,7 @@ CPMAddPackage("gh:TheLartians/PackageProject.cmake@1.8.0")
 # clang;clang-tools-extra;lld;lldb;polly;pstl" "LLVM_ENABLE_RUNTIMES all" "LLVM_ENABLE_RTTI OFF"
 # "BUILD_SHARED_LIBS OFF" "LLVM_CCACHE_BUILD ON"  "LLVM_OPTIMIZED_TABLEGEN ON" "LLVM_ENABLE_LTO ON"
 # "LLVM_ENABLE_Z3_SOLVER ON" )
-find_package(LLVM 15 REQUIRED CONFIG)
+find_package(LLVM 16 REQUIRED CONFIG)
 list(APPEND CMAKE_MODULE_PATH ${LLVM_CMAKE_DIR})
 # include(AddLLVM)
 include(${LLVM_DIR}/AddLLVM.cmake)
@@ -129,7 +129,6 @@ target_precompile_headers(
   ${PROJECT_NAME}
   PRIVATE
   <algorithm>
-  <bit>
   <cassert>
   <cmath>
   <cstddef>

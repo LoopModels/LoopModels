@@ -4,11 +4,10 @@
 #include "./LoopBlock.hpp"
 #include "./LoopForest.hpp"
 #include "./Loops.hpp"
-#include "Math/Math.hpp"
 #include "./MemoryAccess.hpp"
 #include "./RemarkAnalysis.hpp"
+#include "Math/Math.hpp"
 #include <algorithm>
-#include <bit>
 #include <cassert>
 #include <cmath>
 #include <cstddef>

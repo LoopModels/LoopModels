@@ -3,7 +3,6 @@
 #include "./Address.hpp"
 #include "./Predicate.hpp"
 #include <algorithm>
-#include <bit>
 #include <concepts>
 #include <cstddef>
 #include <cstdint>

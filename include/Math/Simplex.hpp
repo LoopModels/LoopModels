@@ -8,7 +8,6 @@
 #include "Math/MatrixDimensions.hpp"
 #include "Utilities/Allocators.hpp"
 #include "Utilities/Invariant.hpp"
-#include <bit>
 #include <bits/iterator_concepts.h>
 #include <cstddef>
 #include <cstdint>
@@ -49,14 +48,14 @@ class Simplex {
   }
   [[gnu::returns_nonnull, nodiscard]] inline auto tableauPointer() const
     -> value_type * {
-    std::byte *p = const_cast<std::byte *>(memory) + tableauOffset();
+    char *p = const_cast<char *>(memory) + tableauOffset();
     invariant((reinterpret_cast<uintptr_t>(p) & (alignof(value_type) - 1)) ==
               0);
     return reinterpret_cast<value_type *>(p);
   }
   [[gnu::returns_nonnull, nodiscard]] inline auto basicConsPointer() const
     -> index_type * {
-    return reinterpret_cast<index_type *>(const_cast<std::byte *>(memory));
+    return reinterpret_cast<index_type *>(const_cast<char *>(memory));
   }
   [[gnu::returns_nonnull, nodiscard]] inline auto basicVarsPointer() const
     -> index_type * {
@@ -93,21 +92,21 @@ class Simplex {
 #pragma clang diagnostic ignored "-Wc99-extensions"
 #endif
   // NOLINTNEXTLINE(modernize-avoid-c-arrays) // FAM
-  [[gnu::aligned(alignof(value_type))]] std::byte memory[];
+  alignas(value_type) char memory[];
 #if !defined(__clang__) && defined(__GNUC__)
 #pragma GCC diagnostic pop
 #else
 #pragma clang diagnostic pop
 #endif
   // NOLINTNEXTLINE(modernize-avoid-c-arrays) // FAM
-  // [[gnu::aligned(alignof(value_type))]] std::byte memory[];
+  // [[gnu::aligned(alignof(value_type))]] char memory[];
   // alternative implementation:
   // inline auto tableauPointer() const -> value_type * {
-  //   return reinterpret_cast<value_type *>(const_cast<std::byte *>(memory));
+  //   return reinterpret_cast<value_type *>(const_cast<char *>(memory));
   // }
   // inline auto basicConsPointer() const -> index_type * {
   //   return reinterpret_cast<index_type *>(
-  //     const_cast<std::byte *>(memory) + sizeof(value_type) *
+  //     const_cast<char *>(memory) + sizeof(value_type) *
   //     reservedTableau());
   // }
   // inline auto basicVarsPointer() const -> index_type * {

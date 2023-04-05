@@ -12,7 +12,6 @@
 #include "Utilities/Allocators.hpp"
 #include "Utilities/Optional.hpp"
 #include "Utilities/Valid.hpp"
-#include <bit>
 #include <cstddef>
 #include <cstdint>
 #include <limits>
@@ -777,7 +776,7 @@ struct AffineLoopNest
       assert((i == tmp->getNumLoops()) && "loop count mismatch");
       os << "Loop " << --i << " lower bounds: ";
       if constexpr (NonNegative) os << "i_" << i << " >= 0\n";
-      tmp->printBound(os, 1); // 1 for lower bound
+      tmp->printBound(os, 1);  // 1 for lower bound
       os << "Loop " << i << " upper bounds: ";
       tmp->printBound(os, -1); // -1 for upper bound
       if (!i) break;
@@ -800,13 +799,13 @@ struct AffineLoopNest
     return numConstraints;
   }
   [[nodiscard]] constexpr auto getA() -> MutDensePtrMatrix<int64_t> {
-    std::byte *ptr = memory;
+    char *ptr = memory;
     return {reinterpret_cast<int64_t *>(
               ptr + sizeof(const llvm::SCEV *const *) * numDynSymbols),
             DenseDims{numConstraints, numLoops + numDynSymbols + 1}};
   };
   [[nodiscard]] constexpr auto getA() const -> DensePtrMatrix<int64_t> {
-    const std::byte *ptr = memory;
+    const char *ptr = memory;
     return {const_cast<int64_t *>(reinterpret_cast<const int64_t *>(
               ptr + sizeof(const llvm::SCEV *const *) * numDynSymbols)),
             DenseDims{numConstraints, numLoops + numDynSymbols + 1}};
@@ -890,7 +889,7 @@ private:
 #pragma clang diagnostic ignored "-Wc99-extensions"
 #endif
   // NOLINTNEXTLINE(modernize-avoid-c-arrays) // FAM
-  [[gnu::aligned(alignof(int64_t))]] std::byte memory[];
+  alignas(int64_t) char memory[];
 #if !defined(__clang__) && defined(__GNUC__)
 #pragma GCC diagnostic pop
 #else

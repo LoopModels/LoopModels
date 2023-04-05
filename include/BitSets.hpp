@@ -1,6 +1,5 @@
 #pragma once
 #include "Math/Array.hpp"
-#include <bit>
 #include <bits/ranges_base.h>
 #include <cassert>
 #include <cstddef>

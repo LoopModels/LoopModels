@@ -33,7 +33,7 @@ struct BumpAlloc {
 
 public:
   static constexpr bool BumpDown = !BumpUp;
-  using value_type = std::byte;
+  using value_type = void;
   [[gnu::returns_nonnull, gnu::alloc_size(2), gnu::alloc_align(3),
     gnu::malloc]] constexpr auto
   allocate(size_t Size, size_t Align) -> void * {
@@ -47,7 +47,7 @@ public:
       customSlabs.emplace_back(p);
 #endif
 #ifndef NDEBUG
-      std::fill_n(reinterpret_cast<std::byte *>(p), Size, std::byte{0xff});
+      std::fill_n((char *)(p), Size, -1);
 #endif
       return p;
     }
@@ -58,7 +58,7 @@ public:
     if ((MinAlignment >= alignof(int64_t)) && ((Size & 7) == 0)) {
       std::fill_n(reinterpret_cast<std::int64_t *>(p), Size >> 3,
                   std::numeric_limits<std::int64_t>::min());
-    } else std::fill_n(reinterpret_cast<std::byte *>(p), Size, std::byte{0xff});
+    } else std::fill_n((char *)(p), Size, -1);
 #endif
     return p;
   }
@@ -84,14 +84,14 @@ public:
   //   std::free(slab);
   // }
 #endif
-  constexpr void deallocate(std::byte *Ptr, size_t Size) {
+  constexpr void deallocate(void *Ptr, size_t Size) {
     (void)Ptr;
     (void)Size;
     __asan_poison_memory_region(Ptr, Size);
     if constexpr (BumpUp) {
       if (Ptr + align(Size) == SlabCur) SlabCur = Ptr;
     } else if (Ptr == SlabCur) {
-      SlabCur += align(Size);
+      SlabCur = (char *)SlabCur + align(Size);
       return;
     }
 #ifdef BUMP_ALLOC_TRY_FREE
@@ -114,10 +114,10 @@ public:
 #endif
   }
   template <typename T> constexpr void deallocate(T *Ptr, size_t N = 1) {
-    deallocate(reinterpret_cast<std::byte *>(Ptr), N * sizeof(T));
+    deallocate((void *)Ptr, N * sizeof(T));
   }
-  constexpr auto tryReallocate(std::byte *Ptr, size_t OldSize, size_t NewSize,
-                               size_t Align) -> std::byte * {
+  constexpr auto tryReallocate(void *Ptr, size_t OldSize, size_t NewSize,
+                               size_t Align) -> void * {
     Align = Align > MinAlignment ? toPowerOf2(Align) : MinAlignment;
     if constexpr (BumpUp) {
       if (Ptr == SlabCur - align(OldSize)) {
@@ -130,7 +130,7 @@ public:
       }
     } else if (Ptr == SlabCur) {
       size_t extraSize = align(NewSize - OldSize, Align);
-      SlabCur -= extraSize;
+      SlabCur = (char *)SlabCur - extraSize;
       if (!outOfSlab(SlabCur, SlabEnd)) {
         __asan_unpoison_memory_region(SlabCur, extraSize);
         __msan_allocated_memory(SlabCur, extraSize);
@@ -142,20 +142,19 @@ public:
   template <typename T>
   constexpr auto tryReallocate(T *Ptr, size_t OldSize, size_t NewSize) -> T * {
     return reinterpret_cast<T *>(
-      tryReallocate(reinterpret_cast<std::byte *>(Ptr), OldSize * sizeof(T),
-                    NewSize * sizeof(T), alignof(T)));
+      tryReallocate(Ptr, OldSize * sizeof(T), NewSize * sizeof(T), alignof(T)));
   }
   /// reallocate<ForOverwrite>(void *Ptr, size_t OldSize, size_t NewSize,
   /// size_t Align) Should be safe with OldSize == 0, as it checks before
   /// copying
   template <bool ForOverwrite = false>
   [[gnu::returns_nonnull, nodiscard]] constexpr auto
-  reallocate(std::byte *Ptr, size_t OldSize, size_t NewSize, size_t Align)
+  reallocate(void *Ptr, size_t OldSize, size_t NewSize, size_t Align)
     -> void * {
     if (OldSize >= NewSize) return Ptr;
-    if (auto *p = tryReallocate(Ptr, OldSize, NewSize, Align)) {
+    if (void *p = tryReallocate(Ptr, OldSize, NewSize, Align)) {
       if constexpr ((BumpDown) & (!ForOverwrite))
-        std::copy(Ptr, Ptr + OldSize, p);
+        std::copy_n((char *)Ptr, OldSize, (char *)p);
       return p;
     }
     if (OldSize >= NewSize) return Ptr;
@@ -171,19 +170,19 @@ public:
       }
     } else if (Ptr == SlabCur) {
       size_t extraSize = align(NewSize - OldSize, Align);
-      SlabCur -= extraSize;
+      SlabCur = (char *)SlabCur - extraSize;
       if (!outOfSlab(SlabCur, SlabEnd)) {
-        auto *old = reinterpret_cast<std::byte *>(Ptr);
         __asan_unpoison_memory_region(SlabCur, extraSize);
         __msan_allocated_memory(SlabCur, extraSize);
-        if constexpr (!ForOverwrite) std::copy(old, old + OldSize, SlabCur);
+        if constexpr (!ForOverwrite)
+          std::copy_n((char *)Ptr, OldSize, (char *)SlabCur);
         return SlabCur;
       }
     }
     // we need to allocate new memory
     auto NewPtr = allocate(NewSize, Align);
     if constexpr (!ForOverwrite)
-      std::copy(Ptr, Ptr + OldSize, reinterpret_cast<std::byte *>(NewPtr));
+      std::copy_n((char *)Ptr, OldSize, (char *)NewPtr);
     deallocate(Ptr, OldSize);
     return NewPtr;
   }
@@ -195,8 +194,7 @@ public:
   [[gnu::returns_nonnull, gnu::flatten, nodiscard]] constexpr auto
   reallocate(T *Ptr, size_t OldSize, size_t NewSize) -> T * {
     return reinterpret_cast<T *>(reallocate<ForOverwrite>(
-      reinterpret_cast<std::byte *>(Ptr), OldSize * sizeof(T),
-      NewSize * sizeof(T), alignof(T)));
+      Ptr, OldSize * sizeof(T), NewSize * sizeof(T), alignof(T)));
   }
   constexpr BumpAlloc() : slabs({}), customSlabs({}) { newSlab(); }
   constexpr BumpAlloc(BumpAlloc &&alloc) noexcept {
@@ -215,17 +213,19 @@ public:
     auto *p = allocate(sizeof(T), alignof(T));
     return new (p) T(std::forward<Args>(args)...);
   }
-  constexpr auto isPointInSlab(std::byte *p) -> bool {
-    if constexpr (BumpUp) return ((p + SlabSize) >= SlabEnd) && (p < SlabEnd);
-    else return (p > SlabEnd) && (p <= (SlabEnd + SlabSize));
+  constexpr auto isPointInSlab(void *p) -> bool {
+    if constexpr (BumpUp)
+      return (((char *)p + SlabSize) >= SlabEnd) && (p < SlabEnd);
+    else return (p > SlabEnd) && ((char *)p <= ((char *)SlabEnd + SlabSize));
   }
   struct CheckPoint {
-    constexpr CheckPoint(std::byte *b) : p(b) {}
-    constexpr auto isInSlab(std::byte *send) -> bool {
-      if constexpr (BumpUp) return ((p + SlabSize) >= send) && (p < send);
-      else return (p > send) && (p <= (send + SlabSize));
+    constexpr CheckPoint(void *b) : p(b) {}
+    constexpr auto isInSlab(void *send) -> bool {
+      if constexpr (BumpUp)
+        return (((char *)p + SlabSize) >= send) && (p < send);
+      else return (p > send) && (p <= ((char *)send + SlabSize));
     }
-    std::byte *const p; // NOLINT(misc-non-private-member-variables-in-classes)
+    void *const p; // NOLINT(misc-non-private-member-variables-in-classes)
   };
   [[nodiscard]] constexpr auto checkpoint() -> CheckPoint { return SlabCur; }
   constexpr void rollback(CheckPoint p) {
@@ -245,62 +245,60 @@ private:
   static constexpr auto align(size_t x, size_t alignment) -> size_t {
     return (x + alignment - 1) & ~(alignment - 1);
   }
-  static constexpr auto align(std::byte *p) -> std::byte * {
+  static constexpr auto align(void *p) -> void * {
     uint64_t i = reinterpret_cast<uintptr_t>(p), j = i;
     if constexpr (BumpUp) i += MinAlignment - 1;
     i &= ~(MinAlignment - 1);
-    return p + (i - j);
+    return (char *)p + (i - j);
   }
-  static constexpr auto align(std::byte *p, size_t alignment) -> std::byte * {
-    assert(llvm::isPowerOf2_64(alignment));
+  static constexpr auto align(void *p, size_t alignment) -> void * {
+    invariant(llvm::isPowerOf2_64(alignment));
     uintptr_t i = reinterpret_cast<uintptr_t>(p), j = i;
     if constexpr (BumpUp) i += alignment - 1;
     i &= ~(alignment - 1);
-    return p + (i - j);
+    return (char *)p + (i - j);
   }
-  static constexpr auto bump(std::byte *ptr, size_t N) -> std::byte * {
-    if constexpr (BumpUp) return ptr + N;
-    else return ptr - N;
+  static constexpr auto bump(void *ptr, size_t N) -> void * {
+    if constexpr (BumpUp) return (char *)ptr + N;
+    else return (char *)ptr - N;
   }
-  static constexpr auto outOfSlab(std::byte *cur, std::byte *lst) -> bool {
+  static constexpr auto outOfSlab(void *cur, void *lst) -> bool {
     if constexpr (BumpUp) return cur >= lst;
     else return cur < lst;
   }
-  constexpr void initSlab(std::byte *p) {
+  constexpr void initSlab(void *p) {
     __asan_poison_memory_region(p, SlabSize);
     if constexpr (BumpUp) {
       SlabCur = p;
-      SlabEnd = p + SlabSize;
+      SlabEnd = (char *)p + SlabSize;
     } else {
-      SlabCur = p + SlabSize;
+      SlabCur = (char *)p + SlabSize;
       SlabEnd = p;
     }
   }
   constexpr void newSlab() {
-    auto *p = reinterpret_cast<std::byte *>(
-      llvm::allocate_buffer(SlabSize, MinAlignment));
+    auto *p = llvm::allocate_buffer(SlabSize, MinAlignment);
     slabs.push_back(p);
     initSlab(p);
   }
   // updates SlabCur and returns the allocated pointer
   [[gnu::returns_nonnull]] constexpr auto allocCore(size_t Size, size_t Align)
-    -> std::byte * {
+    -> void * {
 #if LLVM_ADDRESS_SANITIZER_BUILD
     SlabCur = bump(SlabCur, Align); // poisoned zone
 #endif
     if constexpr (BumpUp) {
       SlabCur = align(SlabCur, Align);
-      std::byte *old = SlabCur;
-      SlabCur += align(Size);
+      void *old = SlabCur;
+      SlabCur = (char *)SlabCur + align(Size);
       return old;
     } else {
-      SlabCur = align(SlabCur - Size, Align);
+      SlabCur = align((char *)SlabCur - Size, Align);
       return SlabCur;
     }
   }
   // updates SlabCur and returns the allocated pointer
-  [[gnu::returns_nonnull]] constexpr auto allocCore(size_t Size)
-    -> std::byte * {
+  [[gnu::returns_nonnull]] constexpr auto allocCore(size_t Size) -> void * {
     // we know we already have MinAlignment
     // and we need to preserve it.
     // Thus, we align `Size` and offset it.
@@ -309,11 +307,11 @@ private:
     SlabCur = bump(SlabCur, MinAlignment); // poisoned zone
 #endif
     if constexpr (BumpUp) {
-      std::byte *old = SlabCur;
-      SlabCur += align(Size);
+      void *old = SlabCur;
+      SlabCur = (char *)SlabCur + align(Size);
       return old;
     } else {
-      SlabCur -= align(Size);
+      SlabCur = (char *)SlabCur - align(Size);
       return SlabCur;
     }
   }
@@ -321,20 +319,20 @@ private:
   [[gnu::returns_nonnull]] constexpr auto bumpAlloc(size_t Size, size_t Align)
     -> void * {
     Align = toPowerOf2(Align);
-    std::byte *ret = allocCore(Size, Align);
+    void *ret = allocCore(Size, Align);
     if (outOfSlab(SlabCur, SlabEnd)) [[unlikely]] {
       newSlab();
       ret = allocCore(Size, Align);
     }
-    return reinterpret_cast<void *>(ret);
+    return ret;
   }
   [[gnu::returns_nonnull]] constexpr auto bumpAlloc(size_t Size) -> void * {
-    std::byte *ret = allocCore(Size);
+    void *ret = allocCore(Size);
     if (outOfSlab(SlabCur, SlabEnd)) [[unlikely]] {
       newSlab();
       ret = allocCore(Size);
     }
-    return reinterpret_cast<void *>(ret);
+    return ret;
   }
 
   constexpr void resetSlabs() {
@@ -359,9 +357,9 @@ private:
     customSlabs.clear();
   }
 
-  std::byte *SlabCur{nullptr};    // 8 bytes
-  std::byte *SlabEnd{nullptr};    // 8 bytes
-  Vector<std::byte *, 2> slabs{}; // 16 + 16 bytes
+  void *SlabCur{nullptr};                             // 8 bytes
+  void *SlabEnd{nullptr};                             // 8 bytes
+  Vector<void *, 2> slabs{};                          // 16 + 16 bytes
 #ifdef BUMP_ALLOC_LLVM_USE_ALLOCATOR
   Vector<std::pair<void *, size_t>, 0> customSlabs{}; // 16 bytes
 #else
@@ -422,17 +420,13 @@ template <size_t SlabSize, bool BumpUp, size_t MinAlignment>
 void operator delete(void *, BumpAlloc<SlabSize, BumpUp, MinAlignment> &) {}
 
 template <typename A>
-concept Allocator =
-  requires(A a) {
-    typename A::value_type;
-    {
-      a.allocate(1)
-      } -> std::same_as<typename std::allocator_traits<A>::pointer>;
-    {
-      a.deallocate(std::declval<typename std::allocator_traits<A>::pointer>(),
-                   1)
-    };
+concept Allocator = requires(A a) {
+  typename A::value_type;
+  { a.allocate(1) } -> std::same_as<typename std::allocator_traits<A>::pointer>;
+  {
+    a.deallocate(std::declval<typename std::allocator_traits<A>::pointer>(), 1)
   };
+};
 static_assert(Allocator<WBumpAlloc<int64_t>>);
 static_assert(Allocator<std::allocator<int64_t>>);
 
