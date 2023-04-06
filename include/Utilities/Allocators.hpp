@@ -89,9 +89,9 @@ public:
     (void)Size;
     __asan_poison_memory_region(Ptr, Size);
     if constexpr (BumpUp) {
-      if (Ptr + align(Size) == SlabCur) SlabCur = Ptr;
-    } else if (Ptr == SlabCur) {
-      SlabCur = (char *)SlabCur + align(Size);
+      if (Ptr + align(Size) == slab) slab = Ptr;
+    } else if (Ptr == slab) {
+      slab = (char *)slab + align(Size);
       return;
     }
 #ifdef BUMP_ALLOC_TRY_FREE
@@ -116,25 +116,25 @@ public:
   template <typename T> constexpr void deallocate(T *Ptr, size_t N = 1) {
     deallocate((void *)Ptr, N * sizeof(T));
   }
-  constexpr auto tryReallocate(void *Ptr, size_t OldSize, size_t NewSize,
+  constexpr auto tryReallocate(void *Ptr, size_t szOld, size_t szNew,
                                size_t Align) -> void * {
     Align = Align > MinAlignment ? toPowerOf2(Align) : MinAlignment;
     if constexpr (BumpUp) {
-      if (Ptr == SlabCur - align(OldSize)) {
-        SlabCur = Ptr + align(NewSize);
-        if (!outOfSlab(SlabCur, SlabEnd)) {
-          __asan_unpoison_memory_region(Ptr + OldSize, NewSize - OldSize);
-          __msan_allocated_memory(Ptr + OldSize, NewSize - OldSize);
+      if (Ptr == slab - align(szOld)) {
+        slab = Ptr + align(szNew);
+        if (!outOfSlab(slab, sEnd)) {
+          __asan_unpoison_memory_region((char *)Ptr + szOld, szNew - szOld);
+          __msan_allocated_memory((char *)Ptr + OldSize, NewSize - OldSize);
           return Ptr;
         }
       }
-    } else if (Ptr == SlabCur) {
-      size_t extraSize = align(NewSize - OldSize, Align);
-      SlabCur = (char *)SlabCur - extraSize;
-      if (!outOfSlab(SlabCur, SlabEnd)) {
-        __asan_unpoison_memory_region(SlabCur, extraSize);
+    } else if (Ptr == slab) {
+      size_t extraSize = align(szNew - szOld, Align);
+      slab = (char *)slab - extraSize;
+      if (!outOfSlab(slab, sEnd)) {
+        __asan_unpoison_memory_region(slab, extraSize);
         __msan_allocated_memory(SlabCur, extraSize);
-        return SlabCur;
+        return slab;
       }
     }
     return nullptr;
@@ -149,41 +149,40 @@ public:
   /// copying
   template <bool ForOverwrite = false>
   [[gnu::returns_nonnull, nodiscard]] constexpr auto
-  reallocate(void *Ptr, size_t OldSize, size_t NewSize, size_t Align)
-    -> void * {
-    if (OldSize >= NewSize) return Ptr;
-    if (void *p = tryReallocate(Ptr, OldSize, NewSize, Align)) {
+  reallocate(void *Ptr, size_t szOld, size_t szNew, size_t Align) -> void * {
+    if (szOld >= szNew) return Ptr;
+    if (void *p = tryReallocate(Ptr, szOld, szNew, Align)) {
       if constexpr ((BumpDown) & (!ForOverwrite))
-        std::copy_n((char *)Ptr, OldSize, (char *)p);
+        std::copy_n((char *)Ptr, szOld, (char *)p);
       return p;
     }
-    if (OldSize >= NewSize) return Ptr;
+    if (szOld >= szNew) return Ptr;
     Align = Align > MinAlignment ? toPowerOf2(Align) : MinAlignment;
     if constexpr (BumpUp) {
-      if (Ptr == SlabCur - align(OldSize)) {
-        SlabCur = Ptr + align(NewSize);
-        if (!outOfSlab(SlabCur, SlabEnd)) {
-          __asan_unpoison_memory_region(Ptr + OldSize, NewSize - OldSize);
-          __msan_allocated_memory(Ptr + OldSize, NewSize - OldSize);
+      if (Ptr == slab - align(szOld)) {
+        slab = Ptr + align(szNew);
+        if (!outOfSlab(slab, sEnd)) {
+          __asan_unpoison_memory_region((char *)Ptr + szOld, szNew - szOld);
+          __msan_allocated_memory((char *)Ptr + OldSize, NewSize - OldSize);
           return Ptr;
         }
       }
-    } else if (Ptr == SlabCur) {
-      size_t extraSize = align(NewSize - OldSize, Align);
-      SlabCur = (char *)SlabCur - extraSize;
-      if (!outOfSlab(SlabCur, SlabEnd)) {
-        __asan_unpoison_memory_region(SlabCur, extraSize);
+    } else if (Ptr == slab) {
+      size_t extraSize = align(szNew - szOld, Align);
+      slab = (char *)slab - extraSize;
+      if (!outOfSlab(slab, sEnd)) {
+        __asan_unpoison_memory_region(slab, extraSize);
         __msan_allocated_memory(SlabCur, extraSize);
         if constexpr (!ForOverwrite)
-          std::copy_n((char *)Ptr, OldSize, (char *)SlabCur);
-        return SlabCur;
+          std::copy_n((char *)Ptr, szOld, (char *)slab);
+        return slab;
       }
     }
     // we need to allocate new memory
-    auto NewPtr = allocate(NewSize, Align);
+    auto NewPtr = allocate(szNew, Align);
     if constexpr (!ForOverwrite)
-      std::copy_n((char *)Ptr, OldSize, (char *)NewPtr);
-    deallocate(Ptr, OldSize);
+      std::copy_n((char *)Ptr, szOld, (char *)NewPtr);
+    deallocate(Ptr, szOld);
     return NewPtr;
   }
   constexpr void reset() {
@@ -200,8 +199,8 @@ public:
   constexpr BumpAlloc(BumpAlloc &&alloc) noexcept {
     slabs = std::move(alloc.slabs);
     customSlabs = std::move(alloc.customSlabs);
-    SlabCur = alloc.SlabCur;
-    SlabEnd = alloc.SlabEnd;
+    slab = alloc.slab;
+    sEnd = alloc.sEnd;
   }
   constexpr ~BumpAlloc() {
     for (auto *Slab : slabs)
@@ -214,9 +213,8 @@ public:
     return new (p) T(std::forward<Args>(args)...);
   }
   constexpr auto isPointInSlab(void *p) -> bool {
-    if constexpr (BumpUp)
-      return (((char *)p + SlabSize) >= SlabEnd) && (p < SlabEnd);
-    else return (p > SlabEnd) && ((char *)p <= ((char *)SlabEnd + SlabSize));
+    if constexpr (BumpUp) return (((char *)p + SlabSize) >= sEnd) && (p < sEnd);
+    else return (p > sEnd) && ((char *)p <= ((char *)sEnd + SlabSize));
   }
   struct CheckPoint {
     constexpr CheckPoint(void *b) : p(b) {}
@@ -227,14 +225,15 @@ public:
     }
     void *const p; // NOLINT(misc-non-private-member-variables-in-classes)
   };
-  [[nodiscard]] constexpr auto checkpoint() -> CheckPoint { return SlabCur; }
+  [[nodiscard]] constexpr auto checkpoint() -> CheckPoint { return slab; }
   constexpr void rollback(CheckPoint p) {
-    if (p.isInSlab(SlabEnd)) {
+    if (p.isInSlab(sEnd)) {
 #if LLVM_ADDRESS_SANITIZER_BUILD
-      if constexpr (BumpUp) __asan_poison_memory_region(p.p, SlabCur - p.p);
-      else __asan_poison_memory_region(SlabCur, p.p - SlabCur);
+      if constexpr (BumpUp)
+        __asan_poison_memory_region(p.p, (char *)slab - (char *)p.p);
+      else __asan_poison_memory_region(slab, (char *)p.p - (char *)slab);
 #endif
-      SlabCur = p.p;
+      slab = p.p;
     } else initSlab(slabs.back());
   }
 
@@ -269,11 +268,11 @@ private:
   constexpr void initSlab(void *p) {
     __asan_poison_memory_region(p, SlabSize);
     if constexpr (BumpUp) {
-      SlabCur = p;
-      SlabEnd = (char *)p + SlabSize;
+      slab = p;
+      sEnd = (char *)p + SlabSize;
     } else {
-      SlabCur = (char *)p + SlabSize;
-      SlabEnd = p;
+      slab = (char *)p + SlabSize;
+      sEnd = p;
     }
   }
   constexpr void newSlab() {
@@ -285,16 +284,16 @@ private:
   [[gnu::returns_nonnull]] constexpr auto allocCore(size_t Size, size_t Align)
     -> void * {
 #if LLVM_ADDRESS_SANITIZER_BUILD
-    SlabCur = bump(SlabCur, Align); // poisoned zone
+    slab = bump(slab, Align); // poisoned zone
 #endif
     if constexpr (BumpUp) {
-      SlabCur = align(SlabCur, Align);
-      void *old = SlabCur;
-      SlabCur = (char *)SlabCur + align(Size);
+      slab = align(slab, Align);
+      void *old = slab;
+      slab = (char *)slab + align(Size);
       return old;
     } else {
-      SlabCur = align((char *)SlabCur - Size, Align);
-      return SlabCur;
+      slab = align((char *)slab - Size, Align);
+      return slab;
     }
   }
   // updates SlabCur and returns the allocated pointer
@@ -302,17 +301,17 @@ private:
     // we know we already have MinAlignment
     // and we need to preserve it.
     // Thus, we align `Size` and offset it.
-    invariant((reinterpret_cast<size_t>(SlabCur) % MinAlignment) == 0);
+    invariant((reinterpret_cast<size_t>(slab) % MinAlignment) == 0);
 #if LLVM_ADDRESS_SANITIZER_BUILD
-    SlabCur = bump(SlabCur, MinAlignment); // poisoned zone
+    slab = bump(slab, MinAlignment); // poisoned zone
 #endif
     if constexpr (BumpUp) {
-      void *old = SlabCur;
-      SlabCur = (char *)SlabCur + align(Size);
+      void *old = slab;
+      slab = (char *)slab + align(Size);
       return old;
     } else {
-      SlabCur = (char *)SlabCur - align(Size);
-      return SlabCur;
+      slab = (char *)slab - align(Size);
+      return slab;
     }
   }
   //
@@ -320,7 +319,7 @@ private:
     -> void * {
     Align = toPowerOf2(Align);
     void *ret = allocCore(Size, Align);
-    if (outOfSlab(SlabCur, SlabEnd)) [[unlikely]] {
+    if (outOfSlab(slab, sEnd)) [[unlikely]] {
       newSlab();
       ret = allocCore(Size, Align);
     }
@@ -328,7 +327,7 @@ private:
   }
   [[gnu::returns_nonnull]] constexpr auto bumpAlloc(size_t Size) -> void * {
     void *ret = allocCore(Size);
-    if (outOfSlab(SlabCur, SlabEnd)) [[unlikely]] {
+    if (outOfSlab(slab, sEnd)) [[unlikely]] {
       newSlab();
       ret = allocCore(Size);
     }
@@ -357,8 +356,8 @@ private:
     customSlabs.clear();
   }
 
-  void *SlabCur{nullptr};                             // 8 bytes
-  void *SlabEnd{nullptr};                             // 8 bytes
+  void *slab{nullptr};                                // 8 bytes
+  void *sEnd{nullptr};                                // 8 bytes
   Vector<void *, 2> slabs{};                          // 16 + 16 bytes
 #ifdef BUMP_ALLOC_LLVM_USE_ALLOCATOR
   Vector<std::pair<void *, size_t>, 0> customSlabs{}; // 16 bytes
