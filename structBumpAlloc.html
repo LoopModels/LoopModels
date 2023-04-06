@@ -102,16 +102,16 @@ constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>deallocate<
 template&lt;typename T &gt; </td></tr>
 <tr class="memitem:adb6dbe34708bd0727c72773995b7e7e1"><td class="memTemplItemLeft" align="right" valign="top">constexpr void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>deallocate</b> (T *Ptr, size_t N=1)</td></tr>
 <tr class="separator:adb6dbe34708bd0727c72773995b7e7e1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6eba0212ed3096577294e6bd90aee1d3"><td class="memItemLeft" align="right" valign="top"><a id="a6eba0212ed3096577294e6bd90aee1d3"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>tryReallocate</b> (void *Ptr, size_t OldSize, size_t NewSize, size_t Align) -&gt; void *</td></tr>
-<tr class="separator:a6eba0212ed3096577294e6bd90aee1d3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae2df46865cc1184188ad41cfa6cc9d8a"><td class="memItemLeft" align="right" valign="top"><a id="ae2df46865cc1184188ad41cfa6cc9d8a"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>tryReallocate</b> (void *Ptr, size_t szOld, size_t szNew, size_t Align) -&gt; void *</td></tr>
+<tr class="separator:ae2df46865cc1184188ad41cfa6cc9d8a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5aed613b2457682cbebfef9158c4bbca"><td class="memTemplParams" colspan="2"><a id="a5aed613b2457682cbebfef9158c4bbca"></a>
 template&lt;typename T &gt; </td></tr>
 <tr class="memitem:a5aed613b2457682cbebfef9158c4bbca"><td class="memTemplItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>tryReallocate</b> (T *Ptr, size_t OldSize, size_t NewSize) -&gt; T *</td></tr>
 <tr class="separator:a5aed613b2457682cbebfef9158c4bbca"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a42e92b60e3430a911d2ccd10f9367edd"><td class="memTemplParams" colspan="2">template&lt;bool ForOverwrite = false&gt; </td></tr>
-<tr class="memitem:a42e92b60e3430a911d2ccd10f9367edd"><td class="memTemplItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="structBumpAlloc.html#a42e92b60e3430a911d2ccd10f9367edd">reallocate</a> (void *Ptr, size_t OldSize, size_t NewSize, size_t Align) -&gt; void *</td></tr>
-<tr class="separator:a42e92b60e3430a911d2ccd10f9367edd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae4e8781c9a410275faa2849e0af9c7a2"><td class="memTemplParams" colspan="2">template&lt;bool ForOverwrite = false&gt; </td></tr>
+<tr class="memitem:ae4e8781c9a410275faa2849e0af9c7a2"><td class="memTemplItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="structBumpAlloc.html#ae4e8781c9a410275faa2849e0af9c7a2">reallocate</a> (void *Ptr, size_t szOld, size_t szNew, size_t Align) -&gt; void *</td></tr>
+<tr class="separator:ae4e8781c9a410275faa2849e0af9c7a2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0bbe688ab9845598da725306bf937c38"><td class="memItemLeft" align="right" valign="top"><a id="a0bbe688ab9845598da725306bf937c38"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>reset</b> ()</td></tr>
 <tr class="separator:a0bbe688ab9845598da725306bf937c38"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -157,8 +157,8 @@ struct BumpAlloc&lt; SlabSize, BumpUp, MinAlignment &gt;</h3>
 <li>Support support checkpointing </li>
 </ol>
 </div><h2 class="groupheader">Member Function Documentation</h2>
-<a id="a42e92b60e3430a911d2ccd10f9367edd"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a42e92b60e3430a911d2ccd10f9367edd">&#9670;&nbsp;</a></span>reallocate()</h2>
+<a id="ae4e8781c9a410275faa2849e0af9c7a2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae4e8781c9a410275faa2849e0af9c7a2">&#9670;&nbsp;</a></span>reallocate()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -180,13 +180,13 @@ template&lt;bool ForOverwrite = false&gt; </div>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">size_t&#160;</td>
-          <td class="paramname"><em>OldSize</em>, </td>
+          <td class="paramname"><em>szOld</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">size_t&#160;</td>
-          <td class="paramname"><em>NewSize</em>, </td>
+          <td class="paramname"><em>szNew</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>

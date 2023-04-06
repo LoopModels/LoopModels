@@ -3,7 +3,7 @@ var searchData=
   ['range_172',['Range',['../structRange.html',1,'']]],
   ['range_3c_20b_2c_20e_20_3e_173',['Range&lt; B, E &gt;',['../structRange_3_01B_00_01E_01_4.html',1,'']]],
   ['rational_174',['Rational',['../structRational.html',1,'']]],
-  ['reallocate_175',['reallocate',['../structBumpAlloc.html#a42e92b60e3430a911d2ccd10f9367edd',1,'BumpAlloc']]],
+  ['reallocate_175',['reallocate',['../structBumpAlloc.html#ae4e8781c9a410275faa2849e0af9c7a2',1,'BumpAlloc']]],
   ['reallocview_176',['ReallocView',['../structLinAlg_1_1ReallocView.html',1,'LinAlg']]],
   ['reallocview_3c_20t_2c_20s_2c_20managedarray_3c_20t_2c_20s_2c_200_2c_20a_2c_20u_20_3e_2c_20a_2c_20u_2c_20true_20_3e_177',['ReallocView&lt; T, S, ManagedArray&lt; T, S, 0, A, U &gt;, A, U, true &gt;',['../structLinAlg_1_1ReallocView.html',1,'LinAlg']]],
   ['reallocview_3c_20t_2c_20s_2c_20managedarray_3c_20t_2c_20s_2c_20n_2c_20a_2c_20u_20_3e_2c_20a_2c_20u_20_3e_178',['ReallocView&lt; T, S, ManagedArray&lt; T, S, N, A, U &gt;, A, U &gt;',['../structLinAlg_1_1ReallocView.html',1,'LinAlg']]],
