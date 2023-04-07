@@ -77,8 +77,8 @@ $(function() {
 <div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="comment">// TODO: communicate not-null to the compiler somehow?</span></div>
 <div class="line"><a name="l00007"></a><span class="lineno"><a class="line" href="structNotNull.html">    7</a></span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt; <span class="keyword">struct </span><a class="code" href="structNotNull.html">NotNull</a> {</div>
 <div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;  <span class="comment">// we shouldn&#39;t be calling the default ctor</span></div>
-<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;  constexpr <a class="code" href="structNotNull.html">NotNull</a>() : value(<span class="keyword">nullptr</span>) { assert(<span class="keyword">false</span>); }</div>
-<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;  <span class="comment">// NotNull() = delete;</span></div>
+<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;  <span class="comment">// constexpr NotNull() : value(nullptr) { assert(false); }</span></div>
+<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;  <a class="code" href="structNotNull.html">NotNull</a>() = <span class="keyword">delete</span>;</div>
 <div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;  constexpr <a class="code" href="structNotNull.html">NotNull</a>(T &amp;v) : value(&amp;v) {}</div>
 <div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;  constexpr <a class="code" href="structNotNull.html">NotNull</a>(T *v) : value(v) { invariant(value != <span class="keyword">nullptr</span>); }</div>
 <div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;  constexpr <span class="keyword">explicit</span> <span class="keyword">operator</span> bool()<span class="keyword"> const </span>{</div>

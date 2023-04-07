@@ -85,8 +85,6 @@ Classes</h2></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structLinAlg_1_1ReallocView.html">ReallocView</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structLinAlg_1_1ManagedArray_3_01T_00_01S_00_010_00_01A_00_01U_01_4.html">ManagedArray&lt; T, S, 0, A, U &gt;</a></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classLinAlg_1_1ArrayOps.html">ArrayOps</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structLinAlg_1_1AxisInt.html">AxisInt</a></td></tr>
@@ -993,10 +991,10 @@ template&lt;class T , class S &gt; </div>
         </tr>
       </table>
 </div><div class="memdoc">
-<b>Initial value:</b><div class="fragment"><div class="line">= (MatrixDimension&lt;S&gt; &amp;&amp; AbstractMatrix&lt;T&gt;) ||</div>
-<div class="line">                          ((std::integral&lt;S&gt; ||</div>
-<div class="line">                            std::is_same_v&lt;S, StridedRange&gt; || StaticInt&lt;S&gt;) &amp;&amp;</div>
-<div class="line">                           AbstractVector&lt;T&gt;)</div>
+<b>Initial value:</b><div class="fragment"><div class="line">=</div>
+<div class="line">  (MatrixDimension&lt;S&gt; &amp;&amp; AbstractMatrix&lt;T&gt;) ||</div>
+<div class="line">  ((std::integral&lt;S&gt; || std::is_same_v&lt;S, StridedRange&gt; ||</div>
+<div class="line">    StaticInt&lt;S&gt;)&amp;&amp;AbstractVector&lt;T&gt;)</div>
 </div><!-- fragment -->
 </div>
 </div>

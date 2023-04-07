@@ -82,13 +82,11 @@ Inheritance diagram for LinAlg::ResizeableView&lt; T, S, U &gt;:</div>
  <div class="center">
   <img src="structLinAlg_1_1ResizeableView.png" usemap="#LinAlg::ResizeableView_3C_20T_2C_20S_2C_20U_20_3E_map" alt=""/>
   <map id="LinAlg::ResizeableView_3C_20T_2C_20S_2C_20U_20_3E_map" name="LinAlg::ResizeableView_3C_20T_2C_20S_2C_20U_20_3E_map">
-<area href="structLinAlg_1_1MutArray.html" alt="LinAlg::MutArray&lt; T, S &gt;" shape="rect" coords="221,56,653,80"/>
-<area href="structLinAlg_1_1Array.html" title="Constant Array." alt="LinAlg::Array&lt; T, S &gt;" shape="rect" coords="0,0,432,24"/>
-<area href="classLinAlg_1_1ArrayOps.html" alt="LinAlg::ArrayOps&lt; T, S, MutArray&lt; T, S &gt; &gt;" shape="rect" coords="442,0,874,24"/>
-<area href="structLinAlg_1_1ReallocView.html" alt="LinAlg::ReallocView&lt; T, S, ManagedArray&lt; T, S, N, A, U &gt;, A, U &gt;" shape="rect" coords="0,168,432,192"/>
-<area href="structLinAlg_1_1ReallocView.html" alt="LinAlg::ReallocView&lt; T, S, ManagedArray&lt; T, S, 0, A, U &gt;, A, U, true &gt;" shape="rect" coords="442,168,874,192"/>
-<area href="structLinAlg_1_1ManagedArray.html" alt="LinAlg::ManagedArray&lt; T, S, N, A, U &gt;" shape="rect" coords="0,224,432,248"/>
-<area href="structLinAlg_1_1ManagedArray_3_01T_00_01S_00_010_00_01A_00_01U_01_4.html" alt="LinAlg::ManagedArray&lt; T, S, 0, A, U &gt;" shape="rect" coords="442,224,874,248"/>
+<area href="structLinAlg_1_1MutArray.html" alt="LinAlg::MutArray&lt; T, S &gt;" shape="rect" coords="206,56,609,80"/>
+<area href="structLinAlg_1_1Array.html" title="Constant Array." alt="LinAlg::Array&lt; T, S &gt;" shape="rect" coords="0,0,403,24"/>
+<area href="classLinAlg_1_1ArrayOps.html" alt="LinAlg::ArrayOps&lt; T, S, MutArray&lt; T, S &gt; &gt;" shape="rect" coords="413,0,816,24"/>
+<area href="structLinAlg_1_1ReallocView.html" alt="LinAlg::ReallocView&lt; T, S, ManagedArray&lt; T, S, N, A, U &gt;, A, U &gt;" shape="rect" coords="206,168,609,192"/>
+<area href="structLinAlg_1_1ManagedArray.html" alt="LinAlg::ManagedArray&lt; T, S, N, A, U &gt;" shape="rect" coords="206,224,609,248"/>
   </map>
 </div></div>
 <table class="memberdecls">
@@ -135,9 +133,9 @@ using&#160;</td><td class="memItemRight" valign="bottom"><b>concrete</b> = std::
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a6659615e7f4cbe149a208710c2bd9c3f"><td class="memItemLeft" align="right" valign="top"><a id="a6659615e7f4cbe149a208710c2bd9c3f"></a>
-constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>ResizeableView</b> (<a class="el" href="structNotNull.html">NotNull</a>&lt; T &gt; p, S s, U c) noexcept</td></tr>
-<tr class="separator:a6659615e7f4cbe149a208710c2bd9c3f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ace54be4f75bd01f63b1fe20f376fc7c9"><td class="memItemLeft" align="right" valign="top"><a id="ace54be4f75bd01f63b1fe20f376fc7c9"></a>
+constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>ResizeableView</b> (T *p, S s, U c) noexcept</td></tr>
+<tr class="separator:ace54be4f75bd01f63b1fe20f376fc7c9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afa6fc27903f4c08649d56c08107b8850"><td class="memTemplParams" colspan="2"><a id="afa6fc27903f4c08649d56c08107b8850"></a>
 template&lt;class... Args&gt; </td></tr>
 <tr class="memitem:afa6fc27903f4c08649d56c08107b8850"><td class="memTemplItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>emplace_back</b> (Args &amp;&amp;...args) -&gt; decltype(auto)</td></tr>
