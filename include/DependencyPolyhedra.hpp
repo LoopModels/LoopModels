@@ -87,7 +87,6 @@ class DepPoly : public BasePolyhedra<true, true, false, DepPoly> {
   unsigned int timeDim;       // null space of memory accesses
   unsigned int conCapacity;   // A0.numRow() + A1.numRow()
   unsigned int eqConCapacity; // C0.numRow()
-  // NOLINTNEXTLINE(modernize-avoid-c-arrays) // FAM
 #if !defined(__clang__) && defined(__GNUC__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"

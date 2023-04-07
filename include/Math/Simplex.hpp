@@ -46,18 +46,17 @@ class Simplex {
   [[nodiscard]] constexpr auto tableauOffset() const -> size_t {
     return tableauOffset(reservedBasicConstraints(), reservedBasicVariables());
   }
-  [[gnu::returns_nonnull, nodiscard]] inline auto tableauPointer() const
+  [[gnu::returns_nonnull, nodiscard]] constexpr auto tableauPointer() const
     -> value_type * {
-    char *p = const_cast<char *>(memory) + tableauOffset();
-    invariant((reinterpret_cast<uintptr_t>(p) & (alignof(value_type) - 1)) ==
-              0);
-    return reinterpret_cast<value_type *>(p);
+    void *p = const_cast<char *>(memory) + tableauOffset();
+    return (value_type *)p;
   }
-  [[gnu::returns_nonnull, nodiscard]] inline auto basicConsPointer() const
+  [[gnu::returns_nonnull, nodiscard]] constexpr auto basicConsPointer() const
     -> index_type * {
-    return reinterpret_cast<index_type *>(const_cast<char *>(memory));
+    void *p = const_cast<char *>(memory);
+    return (index_type *)p;
   }
-  [[gnu::returns_nonnull, nodiscard]] inline auto basicVarsPointer() const
+  [[gnu::returns_nonnull, nodiscard]] constexpr auto basicVarsPointer() const
     -> index_type * {
     return basicConsPointer() + reservedBasicConstraints();
   }
@@ -98,20 +97,6 @@ class Simplex {
 #else
 #pragma clang diagnostic pop
 #endif
-  // NOLINTNEXTLINE(modernize-avoid-c-arrays) // FAM
-  // [[gnu::aligned(alignof(value_type))]] char memory[];
-  // alternative implementation:
-  // inline auto tableauPointer() const -> value_type * {
-  //   return reinterpret_cast<value_type *>(const_cast<char *>(memory));
-  // }
-  // inline auto basicConsPointer() const -> index_type * {
-  //   return reinterpret_cast<index_type *>(
-  //     const_cast<char *>(memory) + sizeof(value_type) *
-  //     reservedTableau());
-  // }
-  // inline auto basicVarsPointer() const -> index_type * {
-  //   return basicConsPointer() + reservedBasicConstraints();
-  // }
 public:
   // tableau is constraint * var matrix w/ extra col for LHS
   // and extra row for objective function
@@ -137,7 +122,7 @@ public:
   // }
   /// [ value | objective function ]
   /// [ LHS   | tableau            ]
-  [[nodiscard]] auto getTableau() const -> PtrMatrix<value_type> {
+  [[nodiscard]] constexpr auto getTableau() const -> PtrMatrix<value_type> {
     //
     return {tableauPointer(), StridedDims{
                                 numConstraints + 1,
@@ -146,14 +131,14 @@ public:
                               }};
   }
   // NOLINTNEXTLINE(readability-make-member-function-const)
-  [[nodiscard]] auto getTableau() -> MutPtrMatrix<value_type> {
+  [[nodiscard]] constexpr auto getTableau() -> MutPtrMatrix<value_type> {
     return {tableauPointer(), StridedDims{
                                 numConstraints + 1,
                                 numVars + 1,
                                 varCapacity + 1,
                               }};
   }
-  [[nodiscard]] auto getConstraints() const -> PtrMatrix<value_type> {
+  [[nodiscard]] constexpr auto getConstraints() const -> PtrMatrix<value_type> {
     return {tableauPointer() + varCapacity + 1, StridedDims{
                                                   numConstraints,
                                                   numVars + 1,
@@ -161,52 +146,58 @@ public:
                                                 }};
   }
   // NOLINTNEXTLINE(readability-make-member-function-const)
-  [[nodiscard]] auto getConstraints() -> MutPtrMatrix<value_type> {
+  [[nodiscard]] constexpr auto getConstraints() -> MutPtrMatrix<value_type> {
     return {tableauPointer() + varCapacity + 1, StridedDims{
                                                   numConstraints,
                                                   numVars + 1,
                                                   varCapacity + 1,
                                                 }};
   }
-  [[nodiscard]] auto getBasicConstraints() const -> PtrVector<index_type> {
+  [[nodiscard]] constexpr auto getBasicConstraints() const
+    -> PtrVector<index_type> {
     return {basicConsPointer(), numVars};
   }
-  [[nodiscard]] auto getBasicConstraints() -> MutPtrVector<index_type> {
+  [[nodiscard]] constexpr auto getBasicConstraints()
+    -> MutPtrVector<index_type> {
     return {basicConsPointer(), numVars};
   }
-  [[nodiscard]] auto getBasicVariables() const -> PtrVector<index_type> {
+  [[nodiscard]] constexpr auto getBasicVariables() const
+    -> PtrVector<index_type> {
     return {basicVarsPointer(), numConstraints};
   }
-  [[nodiscard]] auto getBasicVariables() -> MutPtrVector<index_type> {
+  [[nodiscard]] constexpr auto getBasicVariables() -> MutPtrVector<index_type> {
     return {basicVarsPointer(), numConstraints};
   }
-  [[nodiscard]] auto getCost() const -> PtrVector<value_type> {
+  [[nodiscard]] constexpr auto getCost() const -> PtrVector<value_type> {
     return {tableauPointer(), numVars + 1};
   }
   // NOLINTNEXTLINE(readability-make-member-function-const)
-  [[nodiscard]] auto getCost() -> MutPtrVector<value_type> {
+  [[nodiscard]] constexpr auto getCost() -> MutPtrVector<value_type> {
     return {tableauPointer(), numVars + 1};
   }
-  [[nodiscard]] auto getBasicConstraint(unsigned i) const -> index_type {
+  [[nodiscard]] constexpr auto getBasicConstraint(unsigned i) const
+    -> index_type {
     return getBasicConstraints()[i];
   }
-  [[nodiscard]] auto getBasicVariable(unsigned i) const -> index_type {
+  [[nodiscard]] constexpr auto getBasicVariable(unsigned i) const
+    -> index_type {
     return getBasicVariables()[i];
   }
-  [[nodiscard]] auto getObjectiveCoefficient(unsigned i) const -> value_type {
+  [[nodiscard]] constexpr auto getObjectiveCoefficient(unsigned i) const
+    -> value_type {
     return getCost()[++i];
   }
-  [[nodiscard]] auto getObjectiveValue() -> value_type & {
+  [[nodiscard]] constexpr auto getObjectiveValue() -> value_type & {
     return getCost()[0];
   }
-  [[nodiscard]] auto getObjectiveValue() const -> value_type {
+  [[nodiscard]] constexpr auto getObjectiveValue() const -> value_type {
     return getCost()[0];
   }
   constexpr void truncateConstraints(unsigned i) {
     assert(i <= numConstraints);
     numConstraints = i;
   }
-  void hermiteNormalForm() {
+  constexpr void hermiteNormalForm() {
 #ifndef NDEBUG
     inCanonicalForm = false;
 #endif
@@ -236,10 +227,10 @@ public:
     }
   }
 #endif
-  [[nodiscard]] auto getConstants() -> MutStridedVector<int64_t> {
+  [[nodiscard]] constexpr auto getConstants() -> MutStridedVector<int64_t> {
     return getTableau()(_(1, end), 0);
   }
-  [[nodiscard]] auto getConstants() const -> StridedVector<int64_t> {
+  [[nodiscard]] constexpr auto getConstants() const -> StridedVector<int64_t> {
     return getTableau()(_(1, end), 0);
   }
   constexpr void setNumCons(unsigned i) {
@@ -266,7 +257,7 @@ public:
   [[nodiscard]] constexpr auto getVarCap() const -> unsigned {
     return varCapacity;
   }
-  void deleteConstraint(unsigned c) {
+  constexpr void deleteConstraint(unsigned c) {
     auto basicCons = getBasicConstraints();
     auto basicVars = getBasicVariables();
     auto constraints = getConstraints();
@@ -333,14 +324,15 @@ public:
       return {this, numVars - skippedVars};
     }
 
-    [[nodiscard]] auto operator[](size_t i) const -> Rational {
+    [[nodiscard]] constexpr auto operator[](size_t i) const -> Rational {
       i += skippedVars;
       int64_t j = simplex->getBasicConstraint(i);
       if (j < 0) return 0;
       PtrMatrix<int64_t> constraints = simplex->getConstraints();
       return Rational::create(constraints(j, 0), constraints(j, i + 1));
     }
-    [[nodiscard]] auto operator[](LinAlg::OffsetEnd k) const -> Rational {
+    [[nodiscard]] constexpr auto operator[](LinAlg::OffsetEnd k) const
+      -> Rational {
       size_t i = size_t(simplex->numVars) - k.offset;
       int64_t j = simplex->getBasicConstraint(i);
       if (j < 0) return 0;
@@ -382,7 +374,8 @@ public:
   /// If we fail, it is infeasible.
   /// If we succeed, then the problem is feasible, and we're in
   /// canonical form.
-  [[nodiscard("returns `true` if infeasible; should check when calling.")]] auto
+  [[nodiscard(
+    "returns `true` if infeasible; should check when calling.")]] constexpr auto
   initiateFeasible() -> bool {
     // remove trivially redundant constraints
     hermiteNormalForm();
@@ -426,7 +419,7 @@ public:
       if (basicVars[i] == -1) augVars.push_back(i);
     return (!augVars.empty() && removeAugmentVars(augVars));
   }
-  auto removeAugmentVars(PtrVector<unsigned> augmentVars) -> bool {
+  constexpr auto removeAugmentVars(PtrVector<unsigned> augmentVars) -> bool {
     // TODO: try to avoid reallocating, via reserving enough ahead of time
     unsigned numAugment = augmentVars.size(), oldNumVar = numVars;
     assert(numAugment + numVars <= varCapacity);
@@ -511,7 +504,7 @@ public:
     // an empty `Optional<unsigned int>`
     return --j;
   }
-  auto makeBasic(MutPtrMatrix<int64_t> C, int64_t f, int enteringVar)
+  constexpr auto makeBasic(MutPtrMatrix<int64_t> C, int64_t f, int enteringVar)
     -> int64_t {
     Optional<unsigned int> leaveOpt = getLeavingVariable(C, enteringVar);
     if (!leaveOpt) return 0; // unbounded
@@ -533,7 +526,7 @@ public:
   }
   // run the simplex algorithm, assuming basicVar's costs have been set to
   // 0
-  auto runCore(int64_t f = 1) -> Rational {
+  constexpr auto runCore(int64_t f = 1) -> Rational {
 #ifndef NDEBUG
     assert(inCanonicalForm);
 #endif
@@ -550,7 +543,7 @@ public:
     }
   }
   // set basicVar's costs to 0, and then runCore()
-  auto run() -> Rational {
+  constexpr auto run() -> Rational {
 #ifndef NDEBUG
     assert(inCanonicalForm);
     assertCanonical();
@@ -568,7 +561,7 @@ public:
   }
 
   // don't touch variables lex > v
-  void rLexCore(unsigned int v) {
+  constexpr void rLexCore(unsigned int v) {
     MutPtrMatrix<value_type> C{getTableau()};
     MutPtrVector<index_type> basicVars{getBasicVariables()};
     MutPtrVector<index_type> basicConstraints{getBasicConstraints()};
@@ -597,7 +590,7 @@ public:
   // v starts at numVars-1
   // returns `false` if `0`, `true` if not zero
   // minimize v, not touching any variable lex > v
-  auto rLexMin(size_t v) -> bool {
+  constexpr auto rLexMin(size_t v) -> bool {
 #ifndef NDEBUG
     assert(inCanonicalForm);
 #endif
@@ -617,7 +610,7 @@ public:
   /// makeZeroBasic(unsigned int v) -> bool
   /// Tries to make `v` non-basic if `v` is zero.
   /// Returns `false` if `v` is zero, `true` otherwise
-  auto makeZeroBasic(unsigned int v) -> bool {
+  constexpr auto makeZeroBasic(unsigned int v) -> bool {
     MutPtrMatrix<value_type> C{getTableau()};
     MutPtrVector<index_type> basicVars{getBasicVariables()};
     MutPtrVector<index_type> basicConstraints{getBasicConstraints()};
@@ -652,7 +645,7 @@ public:
 #endif
     return false;
   }
-  auto rLexMinLast(size_t n) -> Solution {
+  constexpr auto rLexMinLast(size_t n) -> Solution {
 #ifndef NDEBUG
     assert(inCanonicalForm);
     assertCanonical();
@@ -663,7 +656,7 @@ public:
 #endif
     return {*this, getNumVars() - n, getNumVars()};
   }
-  auto rLexMinStop(size_t skippedVars) -> Solution {
+  constexpr auto rLexMinStop(size_t skippedVars) -> Solution {
 #ifndef NDEBUG
     assert(inCanonicalForm);
     assertCanonical();
@@ -680,8 +673,10 @@ public:
   // A(:,1:end)*x <= A(:,0)
   // B(:,1:end)*x == B(:,0)
   // returns a Simplex if feasible, and an empty `Optional` otherwise
-  static auto positiveVariables(BumpAlloc<> &alloc, PtrMatrix<int64_t> A,
-                                PtrMatrix<int64_t> B) -> Optional<Simplex *> {
+  static constexpr auto positiveVariables(BumpAlloc<> &alloc,
+                                          PtrMatrix<int64_t> A,
+                                          PtrMatrix<int64_t> B)
+    -> Optional<Simplex *> {
     invariant(A.numCol() == B.numCol());
     unsigned numVar = unsigned(A.numCol()) - 1, numSlack = unsigned(A.numRow()),
              numStrict = unsigned(B.numRow()), numCon = numSlack + numStrict,
@@ -708,7 +703,8 @@ public:
     alloc.rollback(checkpoint);
     return nullptr;
   }
-  static auto positiveVariables(BumpAlloc<> &alloc, PtrMatrix<int64_t> A)
+  static constexpr auto positiveVariables(BumpAlloc<> &alloc,
+                                          PtrMatrix<int64_t> A)
     -> Optional<Simplex *> {
     unsigned numVar = unsigned(A.numCol()) - 1, numSlack = unsigned(A.numRow()),
              numCon = numSlack, varCap = numVar + numSlack;
@@ -732,7 +728,7 @@ public:
     return nullptr;
   }
 
-  void pruneBounds(BumpAlloc<> &alloc, size_t numSlack = 0) {
+  constexpr void pruneBounds(BumpAlloc<> &alloc, size_t numSlack = 0) {
     auto p = alloc.checkpoint();
     Simplex *simplex{Simplex::create(alloc, numConstraints, numVars,
                                      constraintCapacity, varCapacity)};
@@ -749,7 +745,7 @@ public:
     alloc.rollback(p);
   }
 
-  void dropVariable(size_t i) {
+  constexpr void dropVariable(size_t i) {
     // We remove a variable by isolating it, and then dropping the
     // constraint. This allows us to preserve canonical form
     MutPtrVector<index_type> basicConstraints{getBasicConstraints()};
@@ -761,7 +757,7 @@ public:
     if (lastRow != ind) LinAlg::swap(C, Row{ind}, Row{lastRow});
     truncateConstraints(lastRow);
   }
-  void removeExtraVariables(size_t i) {
+  constexpr void removeExtraVariables(size_t i) {
     for (size_t j = getNumVars(); j > i;) {
       dropVariable(--j);
       truncateVars(j);
@@ -784,8 +780,9 @@ public:
   // }
   // check if a solution exists such that `x` can be true.
   // returns `true` if unsatisfiable
-  [[nodiscard]] auto unSatisfiable(BumpAlloc<> &alloc, PtrVector<int64_t> x,
-                                   size_t off) const -> bool {
+  [[nodiscard]] constexpr auto unSatisfiable(BumpAlloc<> &alloc,
+                                             PtrVector<int64_t> x,
+                                             size_t off) const -> bool {
     // is it a valid solution to set the first `x.size()` variables to
     // `x`? first, check that >= 0 constraint is satisfied
     for (auto y : x)
@@ -812,15 +809,16 @@ public:
     alloc.rollback(p);
     return res;
   }
-  [[nodiscard]] auto satisfiable(BumpAlloc<> &alloc, PtrVector<int64_t> x,
-                                 size_t off) const -> bool {
+  [[nodiscard]] constexpr auto satisfiable(BumpAlloc<> &alloc,
+                                           PtrVector<int64_t> x,
+                                           size_t off) const -> bool {
     return !unSatisfiable(alloc, x, off);
   }
   // check if a solution exists such that `x` can be true.
   // zeros remaining rows
-  [[nodiscard]] auto unSatisfiableZeroRem(BumpAlloc<> &alloc,
-                                          PtrVector<int64_t> x, size_t off,
-                                          size_t numRow) const -> bool {
+  [[nodiscard]] constexpr auto
+  unSatisfiableZeroRem(BumpAlloc<> &alloc, PtrVector<int64_t> x, size_t off,
+                       size_t numRow) const -> bool {
     // is it a valid solution to set the first `x.size()` variables to
     // `x`? first, check that >= 0 constraint is satisfied
     for (auto y : x)
@@ -849,9 +847,10 @@ public:
     alloc.rollback(p);
     return res;
   }
-  [[nodiscard]] auto satisfiableZeroRem(BumpAlloc<> &alloc,
-                                        PtrVector<int64_t> x, size_t off,
-                                        size_t numRow) const -> bool {
+  [[nodiscard]] constexpr auto satisfiableZeroRem(BumpAlloc<> &alloc,
+                                                  PtrVector<int64_t> x,
+                                                  size_t off,
+                                                  size_t numRow) const -> bool {
     return !unSatisfiableZeroRem(alloc, x, off, numRow);
   }
   void printResult(size_t numSlack = 0) {
@@ -872,8 +871,8 @@ public:
       }
     }
   }
-  static auto create(BumpAlloc<> &alloc, unsigned numCon, unsigned numVar)
-    -> NotNull<Simplex> {
+  static constexpr auto create(BumpAlloc<> &alloc, unsigned numCon,
+                               unsigned numVar) -> NotNull<Simplex> {
     return create(alloc, numCon, numVar, numCon, numVar + numCon);
   }
   static auto create(BumpAlloc<> &alloc, unsigned numCon, unsigned numVar,
@@ -885,20 +884,20 @@ public:
     return new (mem) Simplex(numCon, numVar, conCap, varCap);
   }
 
-  static auto
+  static constexpr auto
   create(BumpAlloc<> &alloc, unsigned numCon,
          unsigned numVar, // NOLINT(bugprone-easily-swappable-parameters)
          unsigned numSlack) -> NotNull<Simplex> {
     unsigned conCap = numCon, varCap = numVar + numSlack + numCon;
     return create(alloc, numCon, numVar, conCap, varCap);
   }
-  auto copy(BumpAlloc<> &alloc) const -> NotNull<Simplex> {
+  constexpr auto copy(BumpAlloc<> &alloc) const -> NotNull<Simplex> {
     NotNull<Simplex> res =
       create(alloc, getNumCons(), getNumVars(), getConCap(), getVarCap());
     *res << *this;
     return res;
   }
-  auto operator<<(const Simplex &other) -> Simplex & {
+  constexpr auto operator<<(const Simplex &other) -> Simplex & {
     setNumCons(other.getNumCons());
     setNumVars(other.getNumVars());
     getTableau() << other.getTableau();
