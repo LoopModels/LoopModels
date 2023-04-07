@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Containers/Storage.hpp"
 #include "Math/ArrayOps.hpp"
 #include "Math/AxisTypes.hpp"
 #include "Math/Indexing.hpp"
@@ -464,7 +465,7 @@ template <class T, class S,
 struct ResizeableView : MutArray<T, S> {
   using BaseT = MutArray<T, S>;
 
-  constexpr ResizeableView(NotNull<T> p, S s, U c) noexcept
+  constexpr ResizeableView(T *p, S s, U c) noexcept
     : BaseT(p, s), capacity(c) {}
 
   template <class... Args>
@@ -636,26 +637,29 @@ protected:
 /// It does not own memory. Mostly, it serves to drop the inlined
 /// stack capacity of the `ManagedArray` from the type.
 template <class T, class S, class P, class A = std::allocator<T>,
-          std::unsigned_integral U = default_capacity_type_t<S>,
-          bool Init = false>
+
+          std::unsigned_integral U = default_capacity_type_t<S>>
 struct ReallocView : ResizeableView<T, S, U> {
   using BaseT = ResizeableView<T, S, U>;
 
-  constexpr ReallocView(NotNull<T> p, S s, U c) noexcept : BaseT(p, s, c) {}
-  constexpr ReallocView(NotNull<T> p, S s, U c, A alloc) noexcept
+  constexpr ReallocView(T *p, S s, U c) noexcept : BaseT(p, s, c) {}
+  constexpr ReallocView(T *p, S s, U c, A alloc) noexcept
     : BaseT(p, s, c), allocator(alloc) {}
 
+  constexpr U newCapacity() const {
+    return static_cast<const P *>(this)->newCapacity();
+  }
   template <class... Args>
   constexpr auto emplace_back(Args &&...args) -> decltype(auto) {
     static_assert(std::is_integral_v<S>, "emplace_back requires integral size");
     if (this->sz == this->capacity) [[unlikely]]
-      reserve((Init && (this->capacity == 0)) ? U{1} : 2 * this->capacity);
+      reserve(newCapacity());
     return *(new (this->ptr + this->sz++) T(std::forward<Args>(args)...));
   }
   constexpr void push_back(T value) {
     static_assert(std::is_integral_v<S>, "push_back requires integral size");
     if (this->sz == this->capacity) [[unlikely]]
-      reserve((Init && (this->capacity == 0)) ? U{1} : 2 * this->capacity);
+      reserve(newCapacity());
     new (this->ptr + this->sz++) T(std::move(value));
   }
   // behavior
@@ -878,13 +882,13 @@ protected:
   [[nodiscard]] constexpr auto getmemptr() const -> const T * {
     return static_cast<const P *>(this)->getmemptr();
   }
+  constexpr bool wasAllocated() const {
+    return static_cast<const P *>(this)->wasAllocated();
+  }
   // this method should only be called from the destructor
   // (and the implementation taking the new ptr and capacity)
   constexpr void maybeDeallocate() noexcept {
-    bool wasAllocated = !isSmall();
-    if constexpr (Init) wasAllocated = this->ptr != nullptr;
-    if (wasAllocated)
-      if (wasAllocated) allocator.deallocate(this->ptr, this->capacity);
+    if (wasAllocated()) allocator.deallocate(this->ptr, this->capacity);
   }
   // this method should be called whenever the buffer lives
   constexpr void maybeDeallocate(T *newPtr, U newCapacity) noexcept {
@@ -909,10 +913,10 @@ protected:
 };
 
 template <class T, class S>
-concept AbstractSimilar = (MatrixDimension<S> && AbstractMatrix<T>) ||
-                          ((std::integral<S> ||
-                            std::is_same_v<S, StridedRange> || StaticInt<S>) &&
-                           AbstractVector<T>);
+concept AbstractSimilar =
+  (MatrixDimension<S> && AbstractMatrix<T>) ||
+  ((std::integral<S> || std::is_same_v<S, StridedRange> ||
+    StaticInt<S>)&&AbstractVector<T>);
 
 /// Stores memory, then pointer.
 /// Thus struct's alignment determines initial alignment
@@ -927,31 +931,42 @@ template <class T, class S, size_t N, class A, std::unsigned_integral U>
 struct ManagedArray : ReallocView<T, S, ManagedArray<T, S, N, A, U>, A, U> {
   static_assert(std::is_trivially_destructible_v<T>);
   using BaseT = ReallocView<T, S, ManagedArray<T, S, N, A, U>, A, U>;
-
-  constexpr ManagedArray() noexcept : BaseT{memory, S{}, N} {
+  // We're deliberately not initializing storage.
+#if !defined(__clang__) && defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wuninitialized"
+#else
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wuninitialized"
+#endif
+  constexpr ManagedArray() noexcept : BaseT{memory.data(), S{}, N} {
 #ifndef NDEBUG
+    if (!N) return;
     if constexpr (std::numeric_limits<T>::has_signaling_NaN)
       std::fill_n(this->ptr, N, std::numeric_limits<T>::signaling_NaN());
-    else std::fill_n(this->ptr, N, std::numeric_limits<T>::min());
+    else if constexpr (std::numeric_limits<T>::is_specialized)
+      std::fill_n(this->ptr, N, std::numeric_limits<T>::min());
 #endif
   }
-  constexpr ManagedArray(S s) noexcept : BaseT{memory, s, N} {
+  constexpr ManagedArray(S s) noexcept : BaseT{memory.data(), s, N} {
     U len = U(this->sz);
     if (len > N) this->allocateAtLeast(len);
 #ifndef NDEBUG
+    if (!len) return;
     if constexpr (std::numeric_limits<T>::has_signaling_NaN)
       std::fill_n(this->ptr, len, std::numeric_limits<T>::signaling_NaN());
-    else std::fill_n(this->ptr, len, std::numeric_limits<T>::min());
+    else if constexpr (std::numeric_limits<T>::is_specialized)
+      std::fill_n(this->ptr, len, std::numeric_limits<T>::min());
 #endif
   }
-  constexpr ManagedArray(S s, T x) noexcept : BaseT{memory, s, N} {
+  constexpr ManagedArray(S s, T x) noexcept : BaseT{memory.data(), s, N} {
     U len = U(this->sz);
     if (len > N) this->allocateAtLeast(len);
-    std::uninitialized_fill_n(this->data(), len, x);
+    if (len) std::uninitialized_fill_n(this->data(), len, x);
   }
   template <class D, std::unsigned_integral I>
   constexpr ManagedArray(const ManagedArray<T, D, N, A, I> &b) noexcept
-    : BaseT{memory, S(b.dim()), U(N), b.get_allocator()} {
+    : BaseT{memory.data(), S(b.dim()), U(N), b.get_allocator()} {
     U len = U(this->sz);
     this->growUndef(len);
     std::uninitialized_copy_n(b.data(), len, this->data());
@@ -959,7 +974,7 @@ struct ManagedArray : ReallocView<T, S, ManagedArray<T, S, N, A, U>, A, U> {
   template <std::convertible_to<T> Y, class D, class AY,
             std::unsigned_integral I>
   constexpr ManagedArray(const ManagedArray<Y, D, N, AY, I> &b) noexcept
-    : BaseT{memory, S(b.dim()), U(N), b.get_allocator()} {
+    : BaseT{memory.data(), S(b.dim()), U(N), b.get_allocator()} {
     U len = U(this->sz);
     this->growUndef(len);
     if constexpr (DenseLayout<D> && DenseLayout<S>) {
@@ -983,7 +998,7 @@ struct ManagedArray : ReallocView<T, S, ManagedArray<T, S, N, A, U>, A, U> {
   }
   template <std::convertible_to<T> Y>
   constexpr ManagedArray(std::initializer_list<Y> il) noexcept
-    : BaseT{memory, S(il.size()), U(N)} {
+    : BaseT{memory.data(), S(il.size()), U(N)} {
     U len = U(this->sz);
     this->growUndef(len);
     std::uninitialized_copy_n(il.begin(), len, this->data());
@@ -991,47 +1006,47 @@ struct ManagedArray : ReallocView<T, S, ManagedArray<T, S, N, A, U>, A, U> {
   template <std::convertible_to<T> Y, class D, class AY,
             std::unsigned_integral I>
   constexpr ManagedArray(const ManagedArray<Y, D, N, AY, I> &b, S s) noexcept
-    : BaseT{memory, S(s), U(N), b.get_allocator()} {
+    : BaseT{memory.data(), S(s), U(N), b.get_allocator()} {
     U len = U(this->sz);
     invariant(len == U(b.size()));
     this->growUndef(len);
     for (size_t i = 0; i < len; ++i) new (this->data() + i) T(b[i]);
   }
   constexpr ManagedArray(const ManagedArray &b) noexcept
-    : BaseT{memory, S(b.dim()), U(N), b.get_allocator()} {
+    : BaseT{memory.data(), S(b.dim()), U(N), b.get_allocator()} {
     U len = U(this->sz);
     this->growUndef(len);
     std::uninitialized_copy_n(b.data(), len, this->data());
   }
   constexpr ManagedArray(const Array<T, S> &b) noexcept
-    : BaseT{memory, S(b.dim()), U(N)} {
+    : BaseT{memory.data(), S(b.dim()), U(N)} {
     U len = U(this->sz);
     this->growUndef(len);
     std::uninitialized_copy_n(b.data(), len, this->data());
   }
   template <AbstractSimilar<S> V>
   constexpr ManagedArray(const V &b) noexcept
-    : BaseT{memory, S(b.size()), U(N)} {
+    : BaseT{memory.data(), S(b.size()), U(N)} {
     U len = U(this->sz);
     this->growUndef(len);
     (*this) << b;
   }
   template <class D, std::unsigned_integral I>
   constexpr ManagedArray(ManagedArray<T, D, N, A, I> &&b) noexcept
-    : BaseT{memory, b.dim(), U(N), b.get_allocator()} {
+    : BaseT{memory.data(), b.dim(), U(N), b.get_allocator()} {
     if (b.isSmall()) { // copy
       std::uninitialized_copy_n(b.data(), size_t(b.dim()), this->data());
-    } else { // steal
+    } else {           // steal
       this->ptr = b.data();
       this->capacity = b.getCapacity();
     }
     b.resetNoFree();
   }
   constexpr ManagedArray(ManagedArray &&b) noexcept
-    : BaseT{memory, b.dim(), U(N), b.get_allocator()} {
+    : BaseT{memory.data(), b.dim(), U(N), b.get_allocator()} {
     if (b.isSmall()) { // copy
       std::uninitialized_copy_n(b.data(), size_t(b.dim()), this->data());
-    } else { // steal
+    } else {           // steal
       this->ptr = b.data();
       this->capacity = b.getCapacity();
     }
@@ -1039,10 +1054,10 @@ struct ManagedArray : ReallocView<T, S, ManagedArray<T, S, N, A, U>, A, U> {
   }
   template <class D, std::unsigned_integral I>
   constexpr ManagedArray(ManagedArray<T, D, N, A, I> &&b, S s) noexcept
-    : BaseT{memory, s, U(N), b.get_allocator()} {
+    : BaseT{memory.data(), s, U(N), b.get_allocator()} {
     if (b.isSmall()) { // copy
       std::uninitialized_copy_n(b.data(), size_t(b.dim()), this->data());
-    } else { // steal
+    } else {           // steal
       this->ptr = b.data();
       this->capacity = b.getCapacity();
     }
@@ -1050,7 +1065,7 @@ struct ManagedArray : ReallocView<T, S, ManagedArray<T, S, N, A, U>, A, U> {
   }
   template <std::convertible_to<T> Y>
   constexpr ManagedArray(const SmallSparseMatrix<Y> &B)
-    : BaseT{memory, B.dim(), N} {
+    : BaseT{memory.data(), B.dim(), N} {
     U len = U(this->sz);
     this->growUndef(len);
     this->fill(0);
@@ -1067,6 +1082,11 @@ struct ManagedArray : ReallocView<T, S, ManagedArray<T, S, N, A, U>, A, U> {
     }
     assert(k == B.nonZeros.size());
   }
+#if !defined(__clang__) && defined(__GNUC__)
+#pragma GCC diagnostic pop
+#else
+#pragma clang diagnostic pop
+#endif
 
   template <class D, std::unsigned_integral I>
   constexpr auto operator=(const ManagedArray<T, D, N, A, I> &b) noexcept
@@ -1117,10 +1137,10 @@ struct ManagedArray : ReallocView<T, S, ManagedArray<T, S, N, A, U>, A, U> {
     return *this;
   }
   [[nodiscard]] constexpr auto isSmall() const -> bool {
-    return this->ptr == memory;
+    return this->ptr == memory.data();
   }
   constexpr void resetNoFree() {
-    this->ptr = memory;
+    this->ptr = memory.data();
     this->sz = S{};
     this->capacity = N;
   }
@@ -1143,156 +1163,19 @@ struct ManagedArray : ReallocView<T, S, ManagedArray<T, S, N, A, U>, A, U> {
   friend inline void PrintTo(const ManagedArray &x, std::ostream *os) {
     adaptOStream(*os, x);
   }
-  [[nodiscard]] auto getmemptr() const -> const T * { return memory; }
+  [[nodiscard]] auto getmemptr() const -> const T * { return memory.data(); }
+  [[nodiscard]] constexpr U newCapacity() const {
+    if constexpr (N == 0)
+      return this->capacity == 0 ? U{1} : 2 * this->capacity;
+    else return 2 * this->capacity;
+  }
+  [[nodiscard]] constexpr bool wasAllocated() const {
+    if constexpr (N == 0) return this->ptr != nullptr;
+    else return !isSmall();
+  }
 
 private:
-  T memory[N]; // NOLINT (modernize-avoid-c-style-arrays)
-};
-template <class T, class S, class A, std::unsigned_integral U>
-struct ManagedArray<T, S, 0, A, U>
-  : ReallocView<T, S, ManagedArray<T, S, 0, A, U>, A, U, true> {
-  static_assert(std::is_trivially_destructible_v<T>);
-  using BaseT = ReallocView<T, S, ManagedArray<T, S, 0, A, U>, A, U, true>;
-  constexpr ManagedArray() noexcept : BaseT{nullptr, S{}, U{}} {};
-  constexpr ManagedArray(S s) noexcept : BaseT{A{}.allocate(U(s)), s, U(s)} {
-#ifndef NDEBUG
-    if constexpr (std::numeric_limits<T>::has_signaling_NaN)
-      std::fill_n(this->ptr, U(s), std::numeric_limits<T>::signaling_NaN());
-    else std::fill_n(this->ptr, U(s), std::numeric_limits<T>::min());
-#endif
-  }
-  constexpr ManagedArray(S s, T x) noexcept
-    : BaseT{A{}.allocate(U(s)), s, U(s)} {
-    std::uninitialized_fill_n(this->data(), U(s), x);
-  }
-  template <class D, size_t N, std::unsigned_integral I>
-  constexpr ManagedArray(const ManagedArray<T, D, N, A, I> &b) noexcept
-    : BaseT{b.get_allocator().allocate(U(b.dim())), S(b.dim()), U(b.dim()),
-            b.get_allocator()} {
-    std::uninitialized_copy_n(b.data(), U(b.dim()), this->data());
-  }
-  // template <class Y, class D, class AY, std::unsigned_integral I,
-  // std::enable_if_t<std::is_convertible_v<Y, T>>>
-  template <std::convertible_to<T> Y, class D, class AY,
-            std::unsigned_integral I, size_t N>
-  constexpr ManagedArray(const ManagedArray<Y, D, N, AY, I> &b) noexcept
-    : BaseT{b.get_allocator().allocate(U(b.dim())), S(b.dim()), U(b.dim()),
-            b.get_allocator()} {
-    U len = U(this->sz);
-    for (size_t i = 0; i < len; ++i) new (this->data() + i) T(b[i]);
-  }
-  constexpr ManagedArray(const ManagedArray &b) noexcept
-    : BaseT{b.get_allocator().allocate(U(b.dim())), S(b.dim()), U(b.dim()),
-            b.get_allocator()} {
-    U len = U(this->sz);
-    std::uninitialized_copy_n(b.data(), len, this->data());
-  }
-  template <class D, std::unsigned_integral I>
-  constexpr ManagedArray(ManagedArray<T, D, 0, A, I> &&b) noexcept
-    : BaseT{b.data(), b.dim(), U(b.getCapacity()), b.get_allocator()} {
-    assert(uint64_t(b.getCapacity()) == uint64_t(this->getCapacity()) &&
-           "capacity overflow");
-    b.resetNoFree();
-  }
-  constexpr ManagedArray(ManagedArray &&b) noexcept
-    : BaseT{b.data(), b.dim(), U(b.getCapacity()), b.get_allocator()} {
-    assert(uint64_t(b.getCapacity()) == uint64_t(this->getCapacity()) &&
-           "capacity overflow");
-    b.resetNoFree();
-  }
-  template <class D, std::unsigned_integral I>
-  constexpr ManagedArray(ManagedArray<T, D, 0, A, I> &&b, S s) noexcept
-    : BaseT{b.data(), s, U(b.getCapacity()), b.get_allocator()} {
-    assert(U(s) == U(b.dim()) && "size mismatch");
-    assert(uint64_t(b.getCapacity()) == uint64_t(this->getCapacity()) &&
-           "capacity overflow");
-    b.resetNoFree();
-  }
-  template <std::convertible_to<T> Y>
-  constexpr ManagedArray(const SmallSparseMatrix<Y> &B)
-    : BaseT{A{}.allocate(U(B.dim())), B.dim(), U(B.dim())} {
-    U len = U(this->sz);
-    this->growUndef(len);
-    this->fill(0);
-    size_t k = 0;
-    for (size_t i = 0; i < this->numRow(); ++i) {
-      uint32_t m = B.rows[i] & 0x00ffffff;
-      size_t j = 0;
-      while (m) {
-        uint32_t tz = std::countr_zero(m);
-        m >>= tz + 1;
-        j += tz;
-        (*this)(i, j++) = T(B.nonZeros[k++]);
-      }
-    }
-    assert(k == B.nonZeros.size());
-  }
-
-  template <class D, std::unsigned_integral I, size_t N>
-  constexpr auto operator=(const ManagedArray<T, D, N, A, I> &b) noexcept
-    -> ManagedArray & {
-    if (this == &b) return *this;
-    this->sz = b.dim();
-    U len = U(this->sz);
-    this->growUndef(len);
-    std::uninitialized_copy_n(b.data(), len, this->data());
-    return *this;
-  }
-  template <class D, std::unsigned_integral I, size_t N>
-  constexpr auto operator=(ManagedArray<T, D, N, A, I> &&b) noexcept
-    -> ManagedArray & {
-    if (this == &b) return *this;
-    // here, we commandeer `b`'s memory
-    this->sz = b.dim();
-    this->allocator = std::move(b.get_allocator());
-    if (b.isSmall()) {
-      // if `b` is small, we need to copy memory
-      // no need to shrink our capacity
-      std::uninitialized_copy_n(b.data(), size_t(this->sz), this->data());
-    } else { // otherwise, we take its pointer
-      maybeDeallocate(b.data(), b.getCapacity());
-    }
-    b.resetNoFree();
-    return *this;
-  }
-  constexpr auto operator=(const ManagedArray &b) noexcept -> ManagedArray & {
-    if (this == &b) return *this;
-    this->sz = b.dim();
-    U len = U(this->sz);
-    this->growUndef(len);
-    std::uninitialized_copy_n(b.data(), len, this->data());
-    return *this;
-  }
-  constexpr auto operator=(ManagedArray &&b) noexcept -> ManagedArray & {
-    if (this == &b) return *this;
-    // here, we commandeer `b`'s memory
-    this->sz = b.dim();
-    this->allocator = std::move(b.get_allocator());
-    maybeDeallocate(b.data(), b.getCapacity());
-    b.resetNoFree();
-    return *this;
-  }
-  constexpr void resetNoFree() {
-    this->sz = S{};
-    this->capacity = 0;
-  }
-  constexpr ~ManagedArray() { this->maybeDeallocate(); }
-  [[nodiscard]] constexpr auto isSmall() const -> bool { return false; }
-  [[nodiscard]] static constexpr auto identity(unsigned M) -> ManagedArray {
-    static_assert(MatrixDimension<S>);
-    ManagedArray B(SquareDims{M}, T{0});
-    B.diag() << 1;
-    return B;
-  }
-  [[nodiscard]] static constexpr auto identity(Row R) -> ManagedArray {
-    static_assert(MatrixDimension<S>);
-    return identity(unsigned(R));
-  }
-  [[nodiscard]] static constexpr auto identity(Col C) -> ManagedArray {
-    static_assert(MatrixDimension<S>);
-    return identity(unsigned(C));
-  }
-  static constexpr auto getmemptr() -> const T * { return nullptr; }
+  [[no_unique_address]] Storage<T, N> memory;
 };
 
 static_assert(std::move_constructible<ManagedArray<intptr_t, unsigned>>);

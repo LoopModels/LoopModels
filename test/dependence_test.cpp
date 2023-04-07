@@ -1082,54 +1082,46 @@ TEST(MeanStDevTest0, BasicAssertions) {
   iOuterMem.emplace_back(createMemAccess(alloc, xInd1, Xstore_0, sch0_0)); // 0
 
   iOuterMem.emplace_back(
-    createMemAccess(alloc, AIndIOuter, Aload_m, sch0_1_0)); // 1
+    createMemAccess(alloc, AIndIOuter, Aload_m, sch0_1_0));  // 1
   iOuterMem.emplace_back(
     createMemAccess(alloc, xInd2IOuter, Xload_0, sch0_1_1)); // 2
 
   iOuterMem.emplace_back(
-    createMemAccess(alloc, xInd2IOuter, Xstore_1, sch0_1_2)); // 3
+    createMemAccess(alloc, xInd2IOuter, Xstore_1, sch0_1_2));              // 3
 
   iOuterMem.emplace_back(createMemAccess(alloc, xInd1, Xload_1, sch0_2));  // 4
   iOuterMem.emplace_back(createMemAccess(alloc, xInd1, Xstore_2, sch0_3)); // 5
 
   iOuterMem.emplace_back(createMemAccess(alloc, sInd1, Sstore_0, sch0_4)); // 6
   iOuterMem.emplace_back(
-    createMemAccess(alloc, AIndIOuter, Aload_s, sch0_5_0)); // 7
+    createMemAccess(alloc, AIndIOuter, Aload_s, sch0_5_0));                // 7
   iOuterMem.emplace_back(
-    createMemAccess(alloc, xInd2IOuter, Xload_2, sch0_5_1)); // 8
+    createMemAccess(alloc, xInd2IOuter, Xload_2, sch0_5_1));               // 8
   iOuterMem.emplace_back(
-    createMemAccess(alloc, sInd2IOuter, Sload_0, sch0_5_2)); // 9
+    createMemAccess(alloc, sInd2IOuter, Sload_0, sch0_5_2));               // 9
   iOuterMem.emplace_back(
-    createMemAccess(alloc, sInd2IOuter, Sstore_1, sch0_5_3)); // 10
+    createMemAccess(alloc, sInd2IOuter, Sstore_1, sch0_5_3));              // 10
 
   iOuterMem.emplace_back(createMemAccess(alloc, sInd1, Sload_1, sch0_6));  // 11
   iOuterMem.emplace_back(createMemAccess(alloc, sInd1, Sstore_2, sch0_7)); // 12
   for (auto &&mem : iOuterMem) iOuterLoopNest.addMemory(mem);
   {
-    auto [d0, dt0] =
-      Dependence::check(alloc, *iOuterLoopNest.getMemoryAccess(3),
-                        *iOuterLoopNest.getMemoryAccess(5));
-    EXPECT_TRUE(d0);
-    EXPECT_FALSE(dt0);
-    EXPECT_TRUE(d0->isForward());
-    auto [d1, dt1] =
-      Dependence::check(alloc, *iOuterLoopNest.getMemoryAccess(5),
-                        *iOuterLoopNest.getMemoryAccess(3));
-    EXPECT_TRUE(d1);
-    EXPECT_FALSE(dt1);
-    EXPECT_FALSE(d1->isForward());
-    auto [d2, dt2] =
-      Dependence::check(alloc, *iOuterLoopNest.getMemoryAccess(4),
-                        *iOuterLoopNest.getMemoryAccess(5));
-    EXPECT_TRUE(d2);
-    EXPECT_FALSE(dt2);
-    EXPECT_TRUE(d2->isForward());
-    auto [d3, dt3] =
-      Dependence::check(alloc, *iOuterLoopNest.getMemoryAccess(5),
-                        *iOuterLoopNest.getMemoryAccess(4));
-    EXPECT_TRUE(d3);
-    EXPECT_FALSE(dt3);
-    EXPECT_FALSE(d3->isForward());
+    auto d0 = Dependence::check(alloc, *iOuterLoopNest.getMemoryAccess(3),
+                                *iOuterLoopNest.getMemoryAccess(5));
+    EXPECT_EQ(d0.size(), 1);
+    EXPECT_TRUE(d0[0].isForward());
+    auto d1 = Dependence::check(alloc, *iOuterLoopNest.getMemoryAccess(5),
+                                *iOuterLoopNest.getMemoryAccess(3));
+    EXPECT_EQ(d1.size(), 1);
+    EXPECT_FALSE(d1[0].isForward());
+    auto d2 = Dependence::check(alloc, *iOuterLoopNest.getMemoryAccess(4),
+                                *iOuterLoopNest.getMemoryAccess(5));
+    EXPECT_EQ(d2.size(), 1);
+    EXPECT_TRUE(d2[0].isForward());
+    auto d3 = Dependence::check(alloc, *iOuterLoopNest.getMemoryAccess(5),
+                                *iOuterLoopNest.getMemoryAccess(4));
+    EXPECT_EQ(d3.size(), 1);
+    EXPECT_FALSE(d3[0].isForward());
   }
   std::optional<BitSet<std::array<uint64_t, 2>>> optDeps =
     iOuterLoopNest.optimize();
@@ -1179,9 +1171,9 @@ TEST(MeanStDevTest0, BasicAssertions) {
   sch1_0_2[0] = 1;
   sch1_0_2[2] = 2;
   jOuterMem.emplace_back(
-    createMemAccess(alloc, AIndJOuter, Aload_m, sch1_0_0)); // 1
+    createMemAccess(alloc, AIndJOuter, Aload_m, sch1_0_0));   // 1
   jOuterMem.emplace_back(
-    createMemAccess(alloc, xInd2JOuter, Xload_0, sch1_0_1)); // 2
+    createMemAccess(alloc, xInd2JOuter, Xload_0, sch1_0_1));  // 2
   jOuterMem.emplace_back(
     createMemAccess(alloc, xInd2JOuter, Xstore_1, sch1_0_2)); // 3
 
@@ -1206,11 +1198,11 @@ TEST(MeanStDevTest0, BasicAssertions) {
   sch3_0_3[2] = 3;
 
   jOuterMem.emplace_back(
-    createMemAccess(alloc, AIndJOuter, Aload_s, sch3_0_0)); // 7
+    createMemAccess(alloc, AIndJOuter, Aload_s, sch3_0_0));   // 7
   jOuterMem.emplace_back(
-    createMemAccess(alloc, xInd2JOuter, Xload_2, sch3_0_1)); // 8
+    createMemAccess(alloc, xInd2JOuter, Xload_2, sch3_0_1));  // 8
   jOuterMem.emplace_back(
-    createMemAccess(alloc, sInd2JOuter, Sload_0, sch3_0_2)); // 9
+    createMemAccess(alloc, sInd2JOuter, Sload_0, sch3_0_2));  // 9
   jOuterMem.emplace_back(
     createMemAccess(alloc, sInd2JOuter, Sstore_1, sch3_0_3)); // 10
 
@@ -1380,13 +1372,12 @@ TEST(DoubleDependenceTest, BasicAssertions) {
   EXPECT_EQ(dep1->getNumEqualityConstraints(), 2);
   assert(dep1->getNumInequalityConstraints() == 4);
   assert(dep1->getNumEqualityConstraints() == 2);
-  auto [d, dt] = Dependence::check(alloc, *msrc, *mtgt0);
-  EXPECT_TRUE(d);
-  EXPECT_FALSE(dt);
-  EXPECT_TRUE(d->isForward());
-  llvm::errs() << *d << "\n";
-  assert(d->isForward());
-  assert(!allZero(d->getSatConstraints()(last, _)));
+  auto d = Dependence::check(alloc, *msrc, *mtgt0);
+  EXPECT_EQ(d.size(), 1);
+  EXPECT_TRUE(d[0].isForward());
+  llvm::errs() << d[0] << "\n";
+  assert(d[0].isForward());
+  assert(!allZero(d[0].getSatConstraints()(last, _)));
 
   LinearProgramLoopBlock loopBlock;
   MemoryAccess *mSchLoad0(createMemAccess(alloc, Atgt0, Aload_ip1_j, schLoad0));

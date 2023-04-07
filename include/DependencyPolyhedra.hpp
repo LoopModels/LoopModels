@@ -626,7 +626,6 @@ public:
     : depPoly(poly), dependenceSatisfaction(depSatBound[0]),
       dependenceBounding(depSatBound[1]), in(inOut[0]), out(inOut[1]),
       forward(fwd) {}
-  constexpr Dependence() = default;
   using BitSet = MemoryAccess::BitSet;
   constexpr void pushToEdgeVector(Vector<NotNull<Dependence>> &vec) {
     in->addEdgeOut(vec.size());

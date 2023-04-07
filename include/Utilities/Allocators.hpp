@@ -348,10 +348,12 @@ private:
   }
   constexpr void resetCustomSlabs() {
 #ifdef BUMP_ALLOC_LLVM_USE_ALLOCATOR
-    for (auto [Ptr, Size] : customSlabs)
-      llvm::deallocate_buffer(Ptr, Size, MinAlignment);
+    if (!customSlabs.empty())
+      for (auto [Ptr, Size] : customSlabs)
+        llvm::deallocate_buffer(Ptr, Size, MinAlignment);
 #else
-    for (auto Ptr : customSlabs) std::free(Ptr);
+    if (!customSlabs.empty())
+      for (auto Ptr : customSlabs) std::free(Ptr);
 #endif
     customSlabs.clear();
   }

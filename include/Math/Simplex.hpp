@@ -206,7 +206,7 @@ public:
     truncateConstraints(unsigned(NormalForm::numNonZeroRows(C)));
   }
 #ifndef NDEBUG
-  void assertCanonical() const {
+  constexpr void assertCanonical() const {
     PtrMatrix<value_type> C{getTableau()};
     PtrVector<index_type> basicVars{getBasicVariables()};
     PtrVector<index_type> basicCons{getBasicConstraints()};
@@ -669,7 +669,9 @@ public:
   }
 
   // reverse lexicographic ally minimize vars
-  void rLexMin(Vector<Rational> &sol) { sol << rLexMinLast(sol.size()); }
+  constexpr void rLexMin(Vector<Rational> &sol) {
+    sol << rLexMinLast(sol.size());
+  }
   // A(:,1:end)*x <= A(:,0)
   // B(:,1:end)*x == B(:,0)
   // returns a Simplex if feasible, and an empty `Optional` otherwise
@@ -875,13 +877,19 @@ public:
                                unsigned numVar) -> NotNull<Simplex> {
     return create(alloc, numCon, numVar, numCon, numVar + numCon);
   }
-  static auto create(BumpAlloc<> &alloc, unsigned numCon, unsigned numVar,
-                     unsigned conCap, unsigned varCap) -> NotNull<Simplex> {
+  static constexpr auto create(BumpAlloc<> &alloc, unsigned numCon,
+                               unsigned numVar, unsigned conCap,
+                               unsigned varCap) -> NotNull<Simplex> {
 
     size_t memNeeded = tableauOffset(conCap, varCap) +
                        sizeof(value_type) * reservedTableau(conCap, varCap);
-    auto *mem = alloc.allocate(sizeof(Simplex) + memNeeded, alignof(Simplex));
-    return new (mem) Simplex(numCon, numVar, conCap, varCap);
+    auto *mem =
+      (Simplex *)alloc.allocate(sizeof(Simplex) + memNeeded, alignof(Simplex));
+    mem->numConstraints = numCon;
+    mem->numVars = numVar;
+    mem->constraintCapacity = conCap;
+    mem->varCapacity = varCap;
+    return mem;
   }
 
   static constexpr auto

@@ -2,6 +2,7 @@
 
 #include "Math/Indexing.hpp"
 #include "Math/Matrix.hpp"
+#include "Math/MatrixDimensions.hpp"
 #include "Math/Vector.hpp"
 
 namespace LinAlg {
@@ -43,9 +44,9 @@ public:
   [[gnu::flatten]] constexpr auto operator<<(const SmallSparseMatrix<T> &B)
     -> P & {
     static_assert(MatrixDimension<S>);
-    invariant(nr(), size_t(B.numRow()));
-    invariant(nc(), size_t(B.numCol()));
     size_t M = nr(), N = nc(), k = 0;
+    invariant(M, size_t(B.numRow()));
+    invariant(N, size_t(B.numCol()));
     T *mem = data_();
     for (size_t i = 0; i < M; ++i) {
       uint32_t m = B.rows[i] & 0x00ffffff;
@@ -64,14 +65,16 @@ public:
   [[gnu::flatten]] constexpr auto operator<<(const AbstractVector auto &B)
     -> P & {
     if constexpr (MatrixDimension<S>) {
-      invariant(nr(), B.size());
-      for (size_t i = 0; i < nr(); ++i) {
+      size_t M = nr(), N = nc();
+      invariant(M, B.size());
+      for (size_t i = 0; i < M; ++i) {
         T Bi = B[i];
-        for (size_t j = 0; j < nc(); ++j) index(i, j) = Bi;
+        for (size_t j = 0; j < N; ++j) index(i, j) = Bi;
       }
     } else {
-      invariant(size_t(size_()), size_t(B.size()));
-      for (size_t i = 0; i < size_(); ++i) index(i) = B[i];
+      size_t L = size_();
+      invariant(L, size_t(B.size()));
+      for (size_t i = 0; i < L; ++i) index(i) = B[i];
     }
     return *static_cast<P *>(this);
   }
@@ -79,95 +82,106 @@ public:
   [[gnu::flatten]] constexpr auto operator<<(const AbstractMatrix auto &B)
     -> P & {
     static_assert(MatrixDimension<S>);
-    invariant(nr(), size_t(B.numRow()));
-    invariant(nc(), size_t(B.numCol()));
-    for (size_t i = 0; i < nr(); ++i)
-      for (size_t j = 0; j < nc(); ++j) index(i, j) = B(i, j);
+    size_t M = nr(), N = nc();
+    invariant(M, size_t(B.numRow()));
+    invariant(N, size_t(B.numCol()));
+    for (size_t i = 0; i < M; ++i)
+      for (size_t j = 0; j < N; ++j) index(i, j) = B(i, j);
     return *static_cast<P *>(this);
   }
   template <std::convertible_to<T> Y>
   [[gnu::flatten]] constexpr auto operator<<(const Y b) -> P & {
     if constexpr (std::integral<S> || std::is_same_v<S, StridedRange>) {
-      for (size_t c = 0, L = size_t(dim_()); c < L; ++c) index(c) = b;
+      for (size_t c = 0, L = size_(); c < L; ++c) index(c) = b;
     } else {
-      for (size_t r = 0; r < nr(); ++r)
-        for (size_t c = 0; c < nc(); ++c) index(r, c) = b;
+      size_t M = nr(), N = nc();
+      for (size_t r = 0; r < M; ++r)
+        for (size_t c = 0; c < N; ++c) index(r, c) = b;
     }
     return *static_cast<P *>(this);
   }
   [[gnu::flatten]] constexpr auto operator+=(const AbstractMatrix auto &B)
     -> P & {
     static_assert(MatrixDimension<S>);
-    invariant(nr(), size_t(B.numRow()));
-    invariant(nc(), size_t(B.numCol()));
-    for (size_t r = 0; r < nr(); ++r)
-      for (size_t c = 0; c < nc(); ++c) index(r, c) += B(r, c);
+    size_t M = nr(), N = nc();
+    invariant(M, size_t(B.numRow()));
+    invariant(N, size_t(B.numCol()));
+    for (size_t r = 0; r < M; ++r)
+      for (size_t c = 0; c < N; ++c) index(r, c) += B(r, c);
     return *static_cast<P *>(this);
   }
   [[gnu::flatten]] constexpr auto operator-=(const AbstractMatrix auto &B)
     -> P & {
     static_assert(MatrixDimension<S>);
-    invariant(nr(), size_t(B.numRow()));
-    invariant(nc(), size_t(B.numCol()));
-    for (size_t r = 0; r < nr(); ++r)
-      for (size_t c = 0; c < nc(); ++c) index(r, c) -= B(r, c);
+    size_t M = nr(), N = nc();
+    invariant(M, size_t(B.numRow()));
+    invariant(N, size_t(B.numCol()));
+    for (size_t r = 0; r < M; ++r)
+      for (size_t c = 0; c < N; ++c) index(r, c) -= B(r, c);
     return *static_cast<P *>(this);
   }
   [[gnu::flatten]] constexpr auto operator+=(const AbstractVector auto &B)
     -> P & {
     if constexpr (MatrixDimension<S>) {
-      invariant(nr(), B.size());
-      for (size_t r = 0; r < nr(); ++r) {
+      size_t M = nr(), N = nc();
+      invariant(M, B.size());
+      for (size_t r = 0; r < M; ++r) {
         auto Br = B[r];
-        for (size_t c = 0; c < nc(); ++c) index(r, c) += Br;
+        for (size_t c = 0; c < N; ++c) index(r, c) += Br;
       }
     } else {
-      invariant(size_t(size_()), size_t(B.size()));
-      for (size_t i = 0; i < size_(); ++i) index(i) += B[i];
+      size_t L = size_();
+      invariant(L, size_t(B.size()));
+      for (size_t i = 0; i < L; ++i) index(i) += B[i];
     }
     return *static_cast<P *>(this);
   }
   template <std::convertible_to<T> Y>
   [[gnu::flatten]] constexpr auto operator+=(Y b) -> P & {
     if constexpr (MatrixDimension<S> && !DenseLayout<S>) {
-      for (size_t r = 0; r < nr(); ++r)
-        for (size_t c = 0; c < nc(); ++c) index(r, c) += b;
+      size_t M = nr(), N = nc();
+      for (size_t r = 0; r < M; ++r)
+        for (size_t c = 0; c < N; ++c) index(r, c) += b;
     } else {
-      for (size_t i = 0; i < size_(); ++i) index(i) += b;
+      for (size_t i = 0, L = size_(); i < L; ++i) index(i) += b;
     }
     return *static_cast<P *>(this);
   }
   [[gnu::flatten]] constexpr auto operator-=(const AbstractVector auto &B)
     -> P & {
     if constexpr (MatrixDimension<S>) {
-      invariant(nr() == B.size());
-      for (size_t r = 0; r < nr(); ++r) {
+      size_t M = nr(), N = nc();
+      invariant(M == B.size());
+      for (size_t r = 0; r < M; ++r) {
         auto Br = B[r];
-        for (size_t c = 0; c < nc(); ++c) index(r, c) -= Br;
+        for (size_t c = 0; c < N; ++c) index(r, c) -= Br;
       }
     } else {
-      invariant(size_() == B.size());
-      for (size_t i = 0; i < size_(); ++i) index(i) -= B[i];
+      size_t L = size_();
+      invariant(L == B.size());
+      for (size_t i = 0; i < L; ++i) index(i) -= B[i];
     }
     return *static_cast<P *>(this);
   }
   template <std::convertible_to<T> Y>
   [[gnu::flatten]] constexpr auto operator*=(Y b) -> P & {
-    if constexpr (std::integral<S>) {
-      for (size_t c = 0, L = size_t(dim_()); c < L; ++c) index(c) *= b;
+    if constexpr (MatrixDimension<S> && !DenseLayout<S>) {
+      size_t M = nr(), N = nc();
+      for (size_t r = 0; r < M; ++r)
+        for (size_t c = 0; c < N; ++c) index(r, c) *= b;
     } else {
-      for (size_t r = 0; r < nr(); ++r)
-        for (size_t c = 0; c < nc(); ++c) index(r, c) *= b;
+      for (size_t c = 0, L = size_t(dim_()); c < L; ++c) index(c) *= b;
     }
     return *static_cast<P *>(this);
   }
   template <std::convertible_to<T> Y>
   [[gnu::flatten]] constexpr auto operator/=(Y b) -> P & {
-    if constexpr (std::integral<S>) {
-      for (size_t c = 0, L = size_t(dim_()); c < L; ++c) index(c) /= b;
+    if constexpr (MatrixDimension<S> && !DenseLayout<S>) {
+      size_t M = nr(), N = nc();
+      for (size_t r = 0; r < M; ++r)
+        for (size_t c = 0; c < N; ++c) index(r, c) /= b;
     } else {
-      for (size_t r = 0; r < nr(); ++r)
-        for (size_t c = 0; c < nc(); ++c) index(r, c) /= b;
+      for (size_t c = 0, L = size_t(dim_()); c < L; ++c) index(c) /= b;
     }
     return *static_cast<P *>(this);
   }
