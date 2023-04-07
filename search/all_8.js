@@ -5,7 +5,7 @@ var searchData=
   ['indexmatrix_91',['indexMatrix',['../structAddress.html#a297424995238c440069eecf32c6d5bb7',1,'Address::indexMatrix()'],['../structMemoryAccess.html#a2292852f834967257e3d40a1c9c99a58',1,'MemoryAccess::indexMatrix() const -&gt; DensePtrMatrix&lt; int64_t &gt;'],['../structMemoryAccess.html#ae0eb994bd6fcffc012a91850a23a2bbb',1,'MemoryAccess::indexMatrix() -&gt; MutDensePtrMatrix&lt; int64_t &gt;'],['../structAddress.html#afad8e52958d1d85eef66ee44d4ceeb78',1,'Address::indexMatrix()']]],
   ['initancestors_92',['initAncestors',['../structMergingCost.html#aac70d5c2dafaec5277cb6ed6aceaacbc',1,'MergingCost']]],
   ['initializeloopforest_93',['initializeLoopForest',['../classTurboLoopPass.html#a61d15982d3d7c2d1918da31c454a2f10',1,'TurboLoopPass']]],
-  ['initiatefeasible_94',['initiateFeasible',['../classSimplex.html#a8670b1057e7253c284dbf0f53a9fe78e',1,'Simplex']]],
+  ['initiatefeasible_94',['initiateFeasible',['../classSimplex.html#ad38168a139d51cf9ad0b2123a15424f0',1,'Simplex']]],
   ['initnonnegative_95',['initNonNegative',['../structcomparator_1_1BaseSymbolicComparator.html#a7fcb77ad09ce4957e1412515f7c974e4',1,'comparator::BaseSymbolicComparator']]],
   ['instruction_96',['Instruction',['../structInstruction.html',1,'']]],
   ['instructionblock_97',['InstructionBlock',['../structInstructionBlock.html',1,'']]],

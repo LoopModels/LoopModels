@@ -10,7 +10,7 @@ var searchData=
   ['getmaxdigits_81',['getMaxDigits',['../namespaceLinAlg.html#a636fee1b1a5930a3c38e46eedbd57c67',1,'LinAlg::getMaxDigits(PtrMatrix&lt; T &gt; A) -&gt; Vector&lt; T &gt;'],['../namespaceLinAlg.html#a159c56bc82c7e302c1228e5148038ada',1,'LinAlg::getMaxDigits(PtrMatrix&lt; Rational &gt; A) -&gt; Vector&lt; size_t &gt;']]],
   ['getoutindmat_82',['getOutIndMat',['../classDependence.html#a42ac0a8c783d95ac08f2155a9640125b',1,'Dependence']]],
   ['getschedule_83',['getSchedule',['../structAffineSchedule.html#a534a966b0d6ba721ec2fb83725fbdad8',1,'AffineSchedule']]],
-  ['gettableau_84',['getTableau',['../classSimplex.html#ae90d8ffa4e0082b982fffc2092d80885',1,'Simplex']]],
+  ['gettableau_84',['getTableau',['../classSimplex.html#a53d61a4338168f8fcfada149df9926d7',1,'Simplex']]],
   ['graph_85',['Graph',['../structLinearProgramLoopBlock_1_1Graph.html',1,'LinearProgramLoopBlock']]],
   ['graphs_86',['Graphs',['../namespaceGraphs.html',1,'']]]
 ];
