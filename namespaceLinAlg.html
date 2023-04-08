@@ -1069,23 +1069,13 @@ template&lt;typename T , typename I &gt; </div>
       </table>
 </div><div class="memdoc">
 <b>Initial value:</b><div class="fragment"><div class="line">= requires(T t, <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> M, Row r, Col c, I i) {</div>
-<div class="line">                  {</div>
-<div class="line">                    identity&lt;I&gt;(t, M)</div>
-<div class="line">                    } -&gt; std::convertible_to&lt;MutSquarePtrMatrix&lt;I&gt;&gt;;</div>
-<div class="line">                  {</div>
-<div class="line">                    matrix&lt;I&gt;(t, M)</div>
-<div class="line">                    } -&gt; std::convertible_to&lt;MutSquarePtrMatrix&lt;I&gt;&gt;;</div>
-<div class="line">                  {</div>
-<div class="line">                    matrix&lt;I&gt;(t, M, i)</div>
-<div class="line">                    } -&gt; std::convertible_to&lt;MutSquarePtrMatrix&lt;I&gt;&gt;;</div>
-<div class="line">                  {</div>
-<div class="line">                    matrix&lt;I&gt;(t, r, c)</div>
-<div class="line">                    } -&gt; std::convertible_to&lt;MutDensePtrMatrix&lt;I&gt;&gt;;</div>
-<div class="line">                  {</div>
-<div class="line">                    matrix(t, r, c, i)</div>
-<div class="line">                    } -&gt; std::convertible_to&lt;MutDensePtrMatrix&lt;I&gt;&gt;;</div>
-<div class="line">                  { vector&lt;I&gt;(t, M) } -&gt; std::convertible_to&lt;MutPtrVector&lt;I&gt;&gt;;</div>
-<div class="line">                }</div>
+<div class="line">  { identity&lt;I&gt;(t, M) } -&gt; std::convertible_to&lt;MutSquarePtrMatrix&lt;I&gt;&gt;;</div>
+<div class="line">  { matrix&lt;I&gt;(t, M) } -&gt; std::convertible_to&lt;MutSquarePtrMatrix&lt;I&gt;&gt;;</div>
+<div class="line">  { matrix&lt;I&gt;(t, M, i) } -&gt; std::convertible_to&lt;MutSquarePtrMatrix&lt;I&gt;&gt;;</div>
+<div class="line">  { matrix&lt;I&gt;(t, r, c) } -&gt; std::convertible_to&lt;MutDensePtrMatrix&lt;I&gt;&gt;;</div>
+<div class="line">  { matrix(t, r, c, i) } -&gt; std::convertible_to&lt;MutDensePtrMatrix&lt;I&gt;&gt;;</div>
+<div class="line">  { vector&lt;I&gt;(t, M) } -&gt; std::convertible_to&lt;MutPtrVector&lt;I&gt;&gt;;</div>
+<div class="line">}</div>
 </div><!-- fragment -->
 </div>
 </div>

@@ -227,7 +227,7 @@ $(function() {
 <div class="line"><a name="l00156"></a><span class="lineno">  156</span>&#160;  <span class="keyword">auto</span> operator()(std::mt19937_64 &amp;mt) -&gt; D {</div>
 <div class="line"><a name="l00157"></a><span class="lineno">  157</span>&#160;    <a class="code" href="classDual.html">Dual&lt;T, N&gt;</a> x{<a class="code" href="structURand.html">URand&lt;T&gt;</a>{}(mt)};</div>
 <div class="line"><a name="l00158"></a><span class="lineno">  158</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; N; ++i) x.gradient()[i] = <a class="code" href="structURand.html">URand&lt;T&gt;</a>{}(mt);</div>
-<div class="line"><a name="l00159"></a><span class="lineno">  159</span>&#160;    <span class="keywordflow">return</span> std::move(x);</div>
+<div class="line"><a name="l00159"></a><span class="lineno">  159</span>&#160;    <span class="keywordflow">return</span> x;</div>
 <div class="line"><a name="l00160"></a><span class="lineno">  160</span>&#160;  }</div>
 <div class="line"><a name="l00161"></a><span class="lineno">  161</span>&#160;};</div>
 <div class="line"><a name="l00162"></a><span class="lineno"><a class="line" href="structURand_3_01double_01_4.html">  162</a></span>&#160;<span class="keyword">template</span> &lt;&gt; <span class="keyword">struct </span><a class="code" href="structURand.html">URand</a>&lt;double&gt; {</div>
@@ -391,8 +391,8 @@ $(function() {
 <div class="line"><a name="l00320"></a><span class="lineno">  320</span>&#160;<span class="preprocessor">#else</span></div>
 <div class="line"><a name="l00321"></a><span class="lineno">  321</span>&#160;<span class="keyword">using</span> <a class="code" href="structLinAlg_1_1ManagedArray.html">SMDD0</a> = <a class="code" href="structLinAlg_1_1ManagedArray.html">LinAlg::ManagedArray&lt;D4D2, SquareDims&gt;</a>;</div>
 <div class="line"><a name="l00322"></a><span class="lineno">  322</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00323"></a><span class="lineno">  323</span>&#160;<span class="preprocessor">#pragma omp declare reduction(+ : SMDD0 : omp_out += omp_in) \</span></div>
-<div class="line"><a name="l00324"></a><span class="lineno">  324</span>&#160;<span class="preprocessor">         initializer(omp_priv = SMDD0{omp_orig.dim(), D4D2{}})</span></div>
+<div class="line"><a name="l00323"></a><span class="lineno">  323</span>&#160;<span class="preprocessor">#pragma omp declare reduction(+ : SMDD0 : omp_out += omp_in)                   \</span></div>
+<div class="line"><a name="l00324"></a><span class="lineno">  324</span>&#160;<span class="preprocessor">  initializer(omp_priv = SMDD0{omp_orig.dim(), D4D2{}})</span></div>
 <div class="line"><a name="l00325"></a><span class="lineno">  325</span>&#160; </div>
 <div class="line"><a name="l00326"></a><span class="lineno">  326</span>&#160;<span class="keyword">static</span> <span class="keywordtype">void</span> BM_expm_dual4x2_threads(benchmark::State &amp;state) {</div>
 <div class="line"><a name="l00327"></a><span class="lineno">  327</span>&#160;  <span class="keywordtype">unsigned</span> dim = state.range(0);</div>
@@ -411,7 +411,7 @@ $(function() {
 <div class="line"><a name="l00340"></a><span class="lineno">  340</span>&#160;BENCHMARK(BM_expm_dual4x2_threads)-&gt;DenseRange(2, 10, 1);</div>
 <div class="ttc" id="aclassDual_html"><div class="ttname"><a href="classDual.html">Dual</a></div><div class="ttdef"><b>Definition:</b> matrix_exp.hpp:17</div></div>
 <div class="ttc" id="aclassTinyVector_html"><div class="ttname"><a href="classTinyVector.html">TinyVector</a></div><div class="ttdef"><b>Definition:</b> TinyVector.hpp:7</div></div>
-<div class="ttc" id="astructLinAlg_1_1ManagedArray_html"><div class="ttname"><a href="structLinAlg_1_1ManagedArray.html">LinAlg::ManagedArray</a></div><div class="ttdef"><b>Definition:</b> Array.hpp:931</div></div>
+<div class="ttc" id="astructLinAlg_1_1ManagedArray_html"><div class="ttname"><a href="structLinAlg_1_1ManagedArray.html">LinAlg::ManagedArray</a></div><div class="ttdef"><b>Definition:</b> Array.hpp:934</div></div>
 <div class="ttc" id="astructLinAlg_1_1SquareDims_html"><div class="ttname"><a href="structLinAlg_1_1SquareDims.html">LinAlg::SquareDims</a></div><div class="ttdef"><b>Definition:</b> MatrixDimensions.hpp:111</div></div>
 <div class="ttc" id="astructURand_3_01double_01_4_html"><div class="ttname"><a href="structURand_3_01double_01_4.html">URand&lt; double &gt;</a></div><div class="ttdef"><b>Definition:</b> matrix_exp.hpp:162</div></div>
 <div class="ttc" id="astructURand_html"><div class="ttname"><a href="structURand.html">URand</a></div><div class="ttdef"><b>Definition:</b> matrix_exp.hpp:153</div></div>
