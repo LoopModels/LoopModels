@@ -302,28 +302,26 @@ $(function() {
 <div class="line"><a name="l00231"></a><span class="lineno">  231</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">class</span> S&gt;</div>
 <div class="line"><a name="l00232"></a><span class="lineno">  232</span>&#160;[[nodiscard]] constexpr <span class="keyword">auto</span> fact(SquareMatrix&lt;S&gt; A) -&gt; Fact&lt;S&gt; {</div>
 <div class="line"><a name="l00233"></a><span class="lineno">  233</span>&#160;  Row M = A.numRow();</div>
-<div class="line"><a name="l00234"></a><span class="lineno">  234</span>&#160;  <span class="comment">// auto ipiv = Vector&lt;unsigned&gt;{.s = unsigned(M)};</span></div>
-<div class="line"><a name="l00235"></a><span class="lineno">  235</span>&#160;  <span class="keyword">auto</span> ipiv{vector(std::allocator&lt;unsigned&gt;{}, unsigned(M))};</div>
-<div class="line"><a name="l00236"></a><span class="lineno">  236</span>&#160;  <span class="comment">// Vector&lt;unsigned&gt; ipiv{.s = unsigned(M)};</span></div>
-<div class="line"><a name="l00237"></a><span class="lineno">  237</span>&#160;  invariant(<span class="keywordtype">size_t</span>(ipiv.size()), <span class="keywordtype">size_t</span>(M));</div>
-<div class="line"><a name="l00238"></a><span class="lineno">  238</span>&#160;  <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; M; ++i) ipiv[i] = i;</div>
-<div class="line"><a name="l00239"></a><span class="lineno">  239</span>&#160;  <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> k = 0; k &lt; M; ++k) {</div>
-<div class="line"><a name="l00240"></a><span class="lineno">  240</span>&#160;    <span class="keywordtype">size_t</span> kp = k;</div>
-<div class="line"><a name="l00241"></a><span class="lineno">  241</span>&#160;    <span class="keywordflow">for</span> (; kp &lt; M; ++kp) {</div>
-<div class="line"><a name="l00242"></a><span class="lineno">  242</span>&#160;      <span class="keywordflow">if</span> (A(kp, k) == 0) <span class="keywordflow">continue</span>;</div>
-<div class="line"><a name="l00243"></a><span class="lineno">  243</span>&#160;      ipiv[k] = kp;</div>
-<div class="line"><a name="l00244"></a><span class="lineno">  244</span>&#160;      <span class="keywordflow">break</span>;</div>
-<div class="line"><a name="l00245"></a><span class="lineno">  245</span>&#160;    }</div>
-<div class="line"><a name="l00246"></a><span class="lineno">  246</span>&#160;    <span class="keywordflow">if</span> (kp != k)</div>
-<div class="line"><a name="l00247"></a><span class="lineno">  247</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> j = 0; j &lt; M; ++j) std::swap(A(kp, j), A(k, j));</div>
-<div class="line"><a name="l00248"></a><span class="lineno">  248</span>&#160;    S Akkinv = S{1} / A(k, k);</div>
-<div class="line"><a name="l00249"></a><span class="lineno">  249</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = k + 1; i &lt; M; ++i) A(i, k) = A(i, k) * Akkinv;</div>
-<div class="line"><a name="l00250"></a><span class="lineno">  250</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = k + 1; i &lt; M; ++i)</div>
-<div class="line"><a name="l00251"></a><span class="lineno">  251</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> j = k + 1; j &lt; M; ++j) A(i, j) = A(i, j) - A(i, k) * A(k, j);</div>
-<div class="line"><a name="l00252"></a><span class="lineno">  252</span>&#160;  }</div>
-<div class="line"><a name="l00253"></a><span class="lineno">  253</span>&#160;  <span class="keywordflow">return</span> Fact&lt;S&gt;{std::move(A), std::move(ipiv)};</div>
-<div class="line"><a name="l00254"></a><span class="lineno">  254</span>&#160;}</div>
-<div class="line"><a name="l00255"></a><span class="lineno">  255</span>&#160;} <span class="comment">// namespace LU</span></div>
+<div class="line"><a name="l00234"></a><span class="lineno">  234</span>&#160;  <span class="keyword">auto</span> ipiv{vector(std::allocator&lt;unsigned&gt;{}, unsigned(M))};</div>
+<div class="line"><a name="l00235"></a><span class="lineno">  235</span>&#160;  invariant(<span class="keywordtype">size_t</span>(ipiv.size()), <span class="keywordtype">size_t</span>(M));</div>
+<div class="line"><a name="l00236"></a><span class="lineno">  236</span>&#160;  <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; M; ++i) ipiv[i] = i;</div>
+<div class="line"><a name="l00237"></a><span class="lineno">  237</span>&#160;  <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> k = 0; k &lt; M; ++k) {</div>
+<div class="line"><a name="l00238"></a><span class="lineno">  238</span>&#160;    <span class="keywordtype">size_t</span> kp = k;</div>
+<div class="line"><a name="l00239"></a><span class="lineno">  239</span>&#160;    <span class="keywordflow">for</span> (; kp &lt; M; ++kp) {</div>
+<div class="line"><a name="l00240"></a><span class="lineno">  240</span>&#160;      <span class="keywordflow">if</span> (A(kp, k) == 0) <span class="keywordflow">continue</span>;</div>
+<div class="line"><a name="l00241"></a><span class="lineno">  241</span>&#160;      ipiv[k] = kp;</div>
+<div class="line"><a name="l00242"></a><span class="lineno">  242</span>&#160;      <span class="keywordflow">break</span>;</div>
+<div class="line"><a name="l00243"></a><span class="lineno">  243</span>&#160;    }</div>
+<div class="line"><a name="l00244"></a><span class="lineno">  244</span>&#160;    <span class="keywordflow">if</span> (kp != k)</div>
+<div class="line"><a name="l00245"></a><span class="lineno">  245</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> j = 0; j &lt; M; ++j) std::swap(A(kp, j), A(k, j));</div>
+<div class="line"><a name="l00246"></a><span class="lineno">  246</span>&#160;    S Akkinv = S{1} / A(k, k);</div>
+<div class="line"><a name="l00247"></a><span class="lineno">  247</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = k + 1; i &lt; M; ++i) A(i, k) = A(i, k) * Akkinv;</div>
+<div class="line"><a name="l00248"></a><span class="lineno">  248</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = k + 1; i &lt; M; ++i)</div>
+<div class="line"><a name="l00249"></a><span class="lineno">  249</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> j = k + 1; j &lt; M; ++j) A(i, j) = A(i, j) - A(i, k) * A(k, j);</div>
+<div class="line"><a name="l00250"></a><span class="lineno">  250</span>&#160;  }</div>
+<div class="line"><a name="l00251"></a><span class="lineno">  251</span>&#160;  <span class="keywordflow">return</span> Fact&lt;S&gt;{std::move(A), std::move(ipiv)};</div>
+<div class="line"><a name="l00252"></a><span class="lineno">  252</span>&#160;}</div>
+<div class="line"><a name="l00253"></a><span class="lineno">  253</span>&#160;} <span class="comment">// namespace LU</span></div>
 <div class="ttc" id="aclassLU_1_1Fact_html"><div class="ttname"><a href="classLU_1_1Fact.html">LU::Fact</a></div><div class="ttdef"><b>Definition:</b> LinearAlgebra.hpp:11</div></div>
 <div class="ttc" id="astructRational_html"><div class="ttname"><a href="structRational.html">Rational</a></div><div class="ttdef"><b>Definition:</b> Rational.hpp:17</div></div>
 </div><!-- fragment --></div><!-- contents -->

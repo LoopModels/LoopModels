@@ -304,20 +304,20 @@ $(function() {
 <div class="line"><a name="l00242"></a><span class="lineno">  242</span>&#160; </div>
 <div class="line"><a name="l00243"></a><span class="lineno">  243</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
 <div class="line"><a name="l00244"></a><span class="lineno">  244</span>&#160;concept Comparator = requires(T t, PtrVector&lt;int64_t&gt; x, int64_t y) {</div>
-<div class="line"><a name="l00245"></a><span class="lineno">  245</span>&#160;                       { t.getNumConstTerms() } -&gt; std::convertible_to&lt;size_t&gt;;</div>
-<div class="line"><a name="l00246"></a><span class="lineno">  246</span>&#160;                       { t.greaterEqual(x) } -&gt; std::convertible_to&lt;bool&gt;;</div>
-<div class="line"><a name="l00247"></a><span class="lineno">  247</span>&#160;                       { t.lessEqual(x) } -&gt; std::convertible_to&lt;bool&gt;;</div>
-<div class="line"><a name="l00248"></a><span class="lineno">  248</span>&#160;                       { t.greater(x) } -&gt; std::convertible_to&lt;bool&gt;;</div>
-<div class="line"><a name="l00249"></a><span class="lineno">  249</span>&#160;                       { t.less(x) } -&gt; std::convertible_to&lt;bool&gt;;</div>
-<div class="line"><a name="l00250"></a><span class="lineno">  250</span>&#160;                       { t.equal(x) } -&gt; std::convertible_to&lt;bool&gt;;</div>
-<div class="line"><a name="l00251"></a><span class="lineno">  251</span>&#160;                       { t.greaterEqual(x, x) } -&gt; std::convertible_to&lt;bool&gt;;</div>
-<div class="line"><a name="l00252"></a><span class="lineno">  252</span>&#160;                       { t.lessEqual(x, x) } -&gt; std::convertible_to&lt;bool&gt;;</div>
-<div class="line"><a name="l00253"></a><span class="lineno">  253</span>&#160;                       { t.greater(x, x) } -&gt; std::convertible_to&lt;bool&gt;;</div>
-<div class="line"><a name="l00254"></a><span class="lineno">  254</span>&#160;                       { t.less(x, x) } -&gt; std::convertible_to&lt;bool&gt;;</div>
-<div class="line"><a name="l00255"></a><span class="lineno">  255</span>&#160;                       { t.equal(x, x) } -&gt; std::convertible_to&lt;bool&gt;;</div>
-<div class="line"><a name="l00256"></a><span class="lineno">  256</span>&#160;                       { t.equalNegative(x, x) } -&gt; std::convertible_to&lt;bool&gt;;</div>
-<div class="line"><a name="l00257"></a><span class="lineno">  257</span>&#160;                       { t.lessEqual(x, y) } -&gt; std::convertible_to&lt;bool&gt;;</div>
-<div class="line"><a name="l00258"></a><span class="lineno">  258</span>&#160;                     };</div>
+<div class="line"><a name="l00245"></a><span class="lineno">  245</span>&#160;  { t.getNumConstTerms() } -&gt; std::convertible_to&lt;size_t&gt;;</div>
+<div class="line"><a name="l00246"></a><span class="lineno">  246</span>&#160;  { t.greaterEqual(x) } -&gt; std::convertible_to&lt;bool&gt;;</div>
+<div class="line"><a name="l00247"></a><span class="lineno">  247</span>&#160;  { t.lessEqual(x) } -&gt; std::convertible_to&lt;bool&gt;;</div>
+<div class="line"><a name="l00248"></a><span class="lineno">  248</span>&#160;  { t.greater(x) } -&gt; std::convertible_to&lt;bool&gt;;</div>
+<div class="line"><a name="l00249"></a><span class="lineno">  249</span>&#160;  { t.less(x) } -&gt; std::convertible_to&lt;bool&gt;;</div>
+<div class="line"><a name="l00250"></a><span class="lineno">  250</span>&#160;  { t.equal(x) } -&gt; std::convertible_to&lt;bool&gt;;</div>
+<div class="line"><a name="l00251"></a><span class="lineno">  251</span>&#160;  { t.greaterEqual(x, x) } -&gt; std::convertible_to&lt;bool&gt;;</div>
+<div class="line"><a name="l00252"></a><span class="lineno">  252</span>&#160;  { t.lessEqual(x, x) } -&gt; std::convertible_to&lt;bool&gt;;</div>
+<div class="line"><a name="l00253"></a><span class="lineno">  253</span>&#160;  { t.greater(x, x) } -&gt; std::convertible_to&lt;bool&gt;;</div>
+<div class="line"><a name="l00254"></a><span class="lineno">  254</span>&#160;  { t.less(x, x) } -&gt; std::convertible_to&lt;bool&gt;;</div>
+<div class="line"><a name="l00255"></a><span class="lineno">  255</span>&#160;  { t.equal(x, x) } -&gt; std::convertible_to&lt;bool&gt;;</div>
+<div class="line"><a name="l00256"></a><span class="lineno">  256</span>&#160;  { t.equalNegative(x, x) } -&gt; std::convertible_to&lt;bool&gt;;</div>
+<div class="line"><a name="l00257"></a><span class="lineno">  257</span>&#160;  { t.lessEqual(x, y) } -&gt; std::convertible_to&lt;bool&gt;;</div>
+<div class="line"><a name="l00258"></a><span class="lineno">  258</span>&#160;};</div>
 <div class="line"><a name="l00259"></a><span class="lineno">  259</span>&#160; </div>
 <div class="line"><a name="l00260"></a><span class="lineno">  260</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
 <div class="line"><a name="l00261"></a><span class="lineno"><a class="line" href="structcomparator_1_1BaseSymbolicComparator.html">  261</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structcomparator_1_1BaseSymbolicComparator.html">BaseSymbolicComparator</a> : <a class="code" href="structcomparator_1_1BaseComparator.html">BaseComparator</a>&lt;BaseSymbolicComparator&lt;T&gt;&gt; {</div>
@@ -505,7 +505,7 @@ $(function() {
 <div class="line"><a name="l00446"></a><span class="lineno">  446</span>&#160;    Row rowV = Row{numVar + numInEqCon};</div>
 <div class="line"><a name="l00447"></a><span class="lineno">  447</span>&#160;    Col colV = Col{2 * numInEqCon + numEqCon};</div>
 <div class="line"><a name="l00448"></a><span class="lineno">  448</span>&#160;    <span class="keyword">auto</span> B = getV(rowV, colV);</div>
-<div class="line"><a name="l00449"></a><span class="lineno">  449</span>&#160;    std::fill_n(B.begin(), B.numRow() * B.numCol(), 0);</div>
+<div class="line"><a name="l00449"></a><span class="lineno">  449</span>&#160;    B &lt;&lt; 0;</div>
 <div class="line"><a name="l00450"></a><span class="lineno">  450</span>&#160;    <span class="comment">// V = [A&#39; E&#39; 0</span></div>
 <div class="line"><a name="l00451"></a><span class="lineno">  451</span>&#160;    <span class="comment">//      S  0  I]</span></div>
 <div class="line"><a name="l00452"></a><span class="lineno">  452</span>&#160;    B(0, 0) = pos0;</div>

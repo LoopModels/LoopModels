@@ -522,6 +522,12 @@ template&lt;class B , class E &gt; </td></tr>
 <tr class="memitem:a4fa6f41913463181fe9b83b0cb28b601"><td class="memItemLeft" align="right" valign="top"><a id="a4fa6f41913463181fe9b83b0cb28b601"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>calcOffset</b> (size_t, Colon) -&gt; size_t</td></tr>
 <tr class="separator:a4fa6f41913463181fe9b83b0cb28b601"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a345a3ea3845b2ed48484b8f8231d8288"><td class="memItemLeft" align="right" valign="top"><a id="a345a3ea3845b2ed48484b8f8231d8288"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>calcOffset</b> (<a class="el" href="structLinAlg_1_1SquareDims.html">SquareDims</a>, size_t i) -&gt; size_t</td></tr>
+<tr class="separator:a345a3ea3845b2ed48484b8f8231d8288"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aee8611a2e40053a00c9aa8e7d9185cf9"><td class="memItemLeft" align="right" valign="top"><a id="aee8611a2e40053a00c9aa8e7d9185cf9"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>calcOffset</b> (<a class="el" href="structLinAlg_1_1DenseDims.html">DenseDims</a>, size_t i) -&gt; size_t</td></tr>
+<tr class="separator:aee8611a2e40053a00c9aa8e7d9185cf9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4dfd468cbfb60e55da9d7b8cb8edf5c8"><td class="memTemplParams" colspan="2"><a id="a4dfd468cbfb60e55da9d7b8cb8edf5c8"></a>
 template&lt;class R , class C &gt; </td></tr>
 <tr class="memitem:a4dfd468cbfb60e55da9d7b8cb8edf5c8"><td class="memTemplItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>calcOffset</b> (<a class="el" href="structLinAlg_1_1StridedDims.html">StridedDims</a> d, <a class="el" href="structLinAlg_1_1CartesianIndex.html">CartesianIndex</a>&lt; R, C &gt; i) -&gt; size_t</td></tr>
@@ -540,6 +546,12 @@ template&lt;typename T , T V&gt; </td></tr>
 <tr class="memitem:a9367f348840d80e7823f51e096136f90"><td class="memItemLeft" align="right" valign="top"><a id="a9367f348840d80e7823f51e096136f90"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>calcNewDim</b> (VectorDimension auto, ScalarIndex auto) -&gt; <a class="el" href="structLinAlg_1_1Empty.html">Empty</a></td></tr>
 <tr class="separator:a9367f348840d80e7823f51e096136f90"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac6c5c4c96b2f2bf66f2492321b70da59"><td class="memItemLeft" align="right" valign="top"><a id="ac6c5c4c96b2f2bf66f2492321b70da59"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>calcNewDim</b> (<a class="el" href="structLinAlg_1_1SquareDims.html">SquareDims</a>, size_t) -&gt; <a class="el" href="structLinAlg_1_1Empty.html">Empty</a></td></tr>
+<tr class="separator:ac6c5c4c96b2f2bf66f2492321b70da59"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5f7b2e1fe80df6abbab29945c0f157cd"><td class="memItemLeft" align="right" valign="top"><a id="a5f7b2e1fe80df6abbab29945c0f157cd"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>calcNewDim</b> (<a class="el" href="structLinAlg_1_1DenseDims.html">DenseDims</a>, size_t) -&gt; <a class="el" href="structLinAlg_1_1Empty.html">Empty</a></td></tr>
+<tr class="separator:a5f7b2e1fe80df6abbab29945c0f157cd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a50e07f937191c136e0f8da983a35f12a"><td class="memItemLeft" align="right" valign="top"><a id="a50e07f937191c136e0f8da983a35f12a"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>calcNewDim</b> (size_t len, <a class="el" href="structRange.html">Range</a>&lt; size_t, size_t &gt; r)</td></tr>
 <tr class="separator:a50e07f937191c136e0f8da983a35f12a"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -1012,10 +1024,8 @@ template&lt;typename T &gt; </div>
       </table>
 </div><div class="memdoc">
 <b>Initial value:</b><div class="fragment"><div class="line">= requires(T t, <span class="keywordtype">size_t</span> M) {</div>
-<div class="line">                          {</div>
-<div class="line">                            canonicalizeRange(t, M)</div>
-<div class="line">                            } -&gt; std::same_as&lt;Range&lt;size_t, size_t&gt;&gt;;</div>
-<div class="line">                        }</div>
+<div class="line">  { canonicalizeRange(t, M) } -&gt; std::same_as&lt;Range&lt;size_t, size_t&gt;&gt;;</div>
+<div class="line">}</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -1148,11 +1158,12 @@ template&lt;class I , class D &gt; </div>
         </tr>
       </table>
 </div><div class="memdoc">
-<b>Initial value:</b><div class="fragment"><div class="line">= (VectorDimension&lt;D&gt; &amp;&amp; (ScalarIndex&lt;I&gt; || AbstractSlice&lt;I&gt;)) ||</div>
-<div class="line">                (MatrixDimension&lt;D&gt; &amp;&amp; requires(I i) {</div>
-<div class="line">                                         { i.row };</div>
-<div class="line">                                         { i.col };</div>
-<div class="line">                                       })</div>
+<b>Initial value:</b><div class="fragment"><div class="line">=</div>
+<div class="line">  (VectorDimension&lt;D&gt; &amp;&amp; (ScalarIndex&lt;I&gt; || AbstractSlice&lt;I&gt;)) ||</div>
+<div class="line">  (DenseLayout&lt;D&gt; &amp;&amp; ScalarIndex&lt;I&gt;) || (MatrixDimension&lt;D&gt; &amp;&amp; requires(I i) {</div>
+<div class="line">    { i.row };</div>
+<div class="line">    { i.col };</div>
+<div class="line">  })</div>
 </div><!-- fragment -->
 </div>
 </div>
