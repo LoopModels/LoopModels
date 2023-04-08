@@ -129,23 +129,13 @@ constexpr auto identity(BumpAlloc<SlabSize, BumpUp, MinAlignment> &alloc,
 
 template <typename T, typename I>
 concept Alloc = requires(T t, unsigned int M, Row r, Col c, I i) {
-                  {
-                    identity<I>(t, M)
-                    } -> std::convertible_to<MutSquarePtrMatrix<I>>;
-                  {
-                    matrix<I>(t, M)
-                    } -> std::convertible_to<MutSquarePtrMatrix<I>>;
-                  {
-                    matrix<I>(t, M, i)
-                    } -> std::convertible_to<MutSquarePtrMatrix<I>>;
-                  {
-                    matrix<I>(t, r, c)
-                    } -> std::convertible_to<MutDensePtrMatrix<I>>;
-                  {
-                    matrix(t, r, c, i)
-                    } -> std::convertible_to<MutDensePtrMatrix<I>>;
-                  { vector<I>(t, M) } -> std::convertible_to<MutPtrVector<I>>;
-                };
+  { identity<I>(t, M) } -> std::convertible_to<MutSquarePtrMatrix<I>>;
+  { matrix<I>(t, M) } -> std::convertible_to<MutSquarePtrMatrix<I>>;
+  { matrix<I>(t, M, i) } -> std::convertible_to<MutSquarePtrMatrix<I>>;
+  { matrix<I>(t, r, c) } -> std::convertible_to<MutDensePtrMatrix<I>>;
+  { matrix(t, r, c, i) } -> std::convertible_to<MutDensePtrMatrix<I>>;
+  { vector<I>(t, M) } -> std::convertible_to<MutPtrVector<I>>;
+};
 
 } // namespace LinAlg
 

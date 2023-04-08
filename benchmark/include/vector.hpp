@@ -1,9 +1,26 @@
 #pragma once
 #include "Math/Array.hpp"
+#include "Math/Vector.hpp"
 #include <benchmark/benchmark.h>
 #include <cstddef>
 #include <llvm/ADT/SmallVector.h>
+#include <random>
 #include <vector>
+
+double randVecFillSum(std::mt19937 &gen, double p) {
+  std::uniform_real_distribution<> dis(0, 1);
+  size_t L = (dis(gen) < p) ? 10 : 10000;
+  Vector<double> v(L);
+  std::iota(v.begin(), v.end(), 1); // 1, 2, ..., L
+  return v.sum();
+}
+double randStdVecFillSum(std::mt19937 &gen, double p) {
+  std::uniform_real_distribution<> dis(0, 1);
+  size_t L = (dis(gen) < p) ? 10 : 10000;
+  std::vector<double> v(L);
+  std::iota(v.begin(), v.end(), 1); // 1, 2, ..., L
+  return std::reduce(v.begin(), v.end());
+}
 
 void fillVector(auto &v, size_t len) {
   v.clear();
@@ -68,3 +85,18 @@ void BM_BufferAllocFill(benchmark::State &state) {
   }
 }
 BENCHMARK(BM_BufferAllocFill)->RangeMultiplier(2)->Range(1, 1 << 8);
+
+void BM_VectorRandSum(benchmark::State &state) {
+  double p = state.range(0) / 100.0;
+  std::random_device rd;
+  std::mt19937 gen(rd());
+  for (auto b : state) randVecFillSum(gen, p);
+}
+BENCHMARK(BM_VectorRandSum)->DenseRange(95, 100, 1);
+void BM_VectorRandSumStd(benchmark::State &state) {
+  double p = state.range(0) / 100.0;
+  std::random_device rd;
+  std::mt19937 gen(rd());
+  for (auto b : state) randStdVecFillSum(gen, p);
+}
+BENCHMARK(BM_VectorRandSumStd)->DenseRange(95, 100, 1);

@@ -156,7 +156,7 @@ template <class D> struct URand {
   auto operator()(std::mt19937_64 &mt) -> D {
     Dual<T, N> x{URand<T>{}(mt)};
     for (size_t i = 0; i < N; ++i) x.gradient()[i] = URand<T>{}(mt);
-    return std::move(x);
+    return x;
   }
 };
 template <> struct URand<double> {
@@ -320,8 +320,8 @@ using SMDD0 = LinAlg::ManagedArray<D4D2, SquareDims, 0>;
 #else
 using SMDD0 = LinAlg::ManagedArray<D4D2, SquareDims>;
 #endif
-#pragma omp declare reduction(+ : SMDD0 : omp_out += omp_in) \
-         initializer(omp_priv = SMDD0{omp_orig.dim(), D4D2{}})
+#pragma omp declare reduction(+ : SMDD0 : omp_out += omp_in)                   \
+  initializer(omp_priv = SMDD0{omp_orig.dim(), D4D2{}})
 
 static void BM_expm_dual4x2_threads(benchmark::State &state) {
   unsigned dim = state.range(0);

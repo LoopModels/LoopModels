@@ -201,6 +201,9 @@ template <class T, class S> struct Array {
   [[nodiscard]] constexpr auto norm2() const noexcept -> value_type {
     return std::transform_reduce(begin(), end(), begin(), 0.0);
   }
+  [[nodiscard]] constexpr auto sum() const noexcept -> value_type {
+    return std::reduce(begin(), end());
+  }
   // [[nodiscard]] constexpr auto norm() const noexcept -> double {
   //   return std::sqrt(norm2());
   // }
@@ -1166,7 +1169,7 @@ struct ManagedArray : ReallocView<T, S, ManagedArray<T, S, N, A, U>, A, U> {
   [[nodiscard]] auto getmemptr() const -> const T * { return memory.data(); }
   [[nodiscard]] constexpr U newCapacity() const {
     if constexpr (N == 0)
-      return this->capacity == 0 ? U{1} : 2 * this->capacity;
+      return this->capacity == 0 ? U{4} : 2 * this->capacity;
     else return 2 * this->capacity;
   }
   [[nodiscard]] constexpr bool wasAllocated() const {
