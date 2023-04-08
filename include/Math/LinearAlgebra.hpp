@@ -231,9 +231,7 @@ public:
 template <class S>
 [[nodiscard]] constexpr auto fact(SquareMatrix<S> A) -> Fact<S> {
   Row M = A.numRow();
-  // auto ipiv = Vector<unsigned>{.s = unsigned(M)};
   auto ipiv{vector(std::allocator<unsigned>{}, unsigned(M))};
-  // Vector<unsigned> ipiv{.s = unsigned(M)};
   invariant(size_t(ipiv.size()), size_t(M));
   for (size_t i = 0; i < M; ++i) ipiv[i] = i;
   for (size_t k = 0; k < M; ++k) {

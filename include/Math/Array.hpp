@@ -934,7 +934,7 @@ struct ManagedArray : ReallocView<T, S, ManagedArray<T, S, N, A, U>, A, U> {
   // We're deliberately not initializing storage.
 #if !defined(__clang__) && defined(__GNUC__)
 #pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wuninitialized"
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
 #else
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wuninitialized"

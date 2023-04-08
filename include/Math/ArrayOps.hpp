@@ -4,6 +4,7 @@
 #include "Math/Matrix.hpp"
 #include "Math/MatrixDimensions.hpp"
 #include "Math/Vector.hpp"
+#include <type_traits>
 
 namespace LinAlg {
 
@@ -85,18 +86,26 @@ public:
     size_t M = nr(), N = nc();
     invariant(M, size_t(B.numRow()));
     invariant(N, size_t(B.numCol()));
-    for (size_t i = 0; i < M; ++i)
-      for (size_t j = 0; j < N; ++j) index(i, j) = B(i, j);
+    if constexpr (DenseLayout<S> &&
+                  DataMatrix<std::remove_cvref_t<decltype(B)>> &&
+                  DenseLayout<std::remove_cvref_t<decltype(B.dim())>>) {
+      std::copy_n(B.data(), M * N, data_());
+    } else {
+      for (size_t i = 0; i < M; ++i)
+        for (size_t j = 0; j < N; ++j) index(i, j) = B(i, j);
+    }
     return *static_cast<P *>(this);
   }
   template <std::convertible_to<T> Y>
   [[gnu::flatten]] constexpr auto operator<<(const Y b) -> P & {
-    if constexpr (std::integral<S> || std::is_same_v<S, StridedRange>) {
+    if constexpr (DenseLayout<S>) {
+      std::fill_n(data_(), size_t(dim_()), T(b));
+    } else if constexpr (std::is_same_v<S, StridedRange>) {
       for (size_t c = 0, L = size_(); c < L; ++c) index(c) = b;
     } else {
-      size_t M = nr(), N = nc();
-      for (size_t r = 0; r < M; ++r)
-        for (size_t c = 0; c < N; ++c) index(r, c) = b;
+      size_t M = nr(), N = nc(), X = rs();
+      T *p = data_();
+      for (size_t r = 0; r < M; ++r, p += X) std::fill_n(p, N, T(b));
     }
     return *static_cast<P *>(this);
   }

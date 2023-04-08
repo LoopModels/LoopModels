@@ -7,15 +7,11 @@ concept HasEltype = requires(T) {
   std::is_scalar_v<typename std::remove_reference_t<T>::value_type>;
 };
 
-template <typename A> struct GetEltype {};
+template <typename A> struct GetEltype {
+  using value_type = A;
+};
 template <HasEltype A> struct GetEltype<A> {
   using value_type = typename A::value_type;
-};
-template <std::integral A> struct GetEltype<A> {
-  using value_type = A;
-};
-template <std::floating_point A> struct GetEltype<A> {
-  using value_type = A;
 };
 
 template <typename T>

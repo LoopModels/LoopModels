@@ -130,6 +130,10 @@ else()
   target_compile_options(${PROJECT_NAME} PRIVATE -fno-omit-frame-pointer)
 endif()
 
+if(CMAKE_BUILD_TYPE MATCHES "Debug")
+  target_compile_options(${PROJECT_NAME} PRIVATE -ftrapv)
+endif()
+
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   target_compile_options(${PROJECT_NAME} PRIVATE -ferror-limit=8 -fcolor-diagnostics)
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU")

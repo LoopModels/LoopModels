@@ -1,4 +1,5 @@
 #pragma once
+#include <cstddef>
 
 template <typename T, size_t N> struct Storage {
   alignas(T) char mem[N * sizeof(T)]; // NOLINT (modernize-avoid-c-style-arrays)

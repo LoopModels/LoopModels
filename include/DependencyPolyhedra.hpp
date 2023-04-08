@@ -258,8 +258,8 @@ public:
     PtrMatrix<int64_t> indMatX = x->indexMatrix();
     PtrMatrix<int64_t> indMatY = y->indexMatrix();
     for (size_t i = 0; i < numLoopsCommon; ++i) {
-      A(i, _(begin, xDim)) = indMatX(i, _);
-      A(i, _(xDim, end)) = indMatY(i, _);
+      A(i, _(begin, xDim)) << indMatX(i, _);
+      A(i, _(xDim, end)) << indMatY(i, _);
     }
     // returns rank x num loops
     return orthogonalNullSpace(std::move(A));
@@ -297,7 +297,8 @@ public:
       if (unsigned j = map[i]; j >= n) s[j] = sa1[i];
   }
   [[nodiscard]] constexpr auto neededBytes() const -> size_t {
-    return sizeof(int64_t) *
+    return sizeof(DepPoly) +
+           sizeof(int64_t) *
              ((conCapacity + eqConCapacity) * (getNumVar() + 1) + timeDim) +
            sizeof(const llvm::SCEV *) * numDynSym;
   }
@@ -330,7 +331,7 @@ public:
     invariant(size_t(map.size()), size_t(S1.size()));
     unsigned numDynSym = S0.size() + map.size();
     unsigned numSym = numDynSym + 1;
-    IntMatrix NS{nullSpace(ma0, ma1)};
+    DenseMatrix<int64_t> NS{nullSpace(ma0, ma1)};
     unsigned timeDim = unsigned{NS.numRow()};
 
     unsigned numCols = numVar + timeDim + numDynSym + 1;
@@ -356,6 +357,8 @@ public:
     // const size_t numSymbols = getNumSymbols();
     auto A{dp->getA()};
     auto E{dp->getE()};
+    A << 0;
+    E << 0;
     // A.resize(nc + numVar, numSymbols + numVar + nullDim);
     // E.resize(indexDim + nullDim, A.numCol());
     // ma0 loop
@@ -379,7 +382,7 @@ public:
     // e.g. i_0 + j_0 + off_0 = i_1 + j_1 + off_1
     // i_0 + j_0 - i_1 - j_1 = off_1 - off_0
     for (size_t i = 0; i < indexDim; ++i) {
-      E(i, _(0, O0.numCol())) = O0(i, _(0, O0.numCol()));
+      E(i, _(0, O0.numCol())) << O0(i, _(0, O0.numCol()));
       E(i, _(numSym, numDep0Var + numSym)) << C0(_(0, numDep0Var), i);
       E(i, 0) -= O1(i, 0);
       for (size_t j = 0; j < O1.numCol() - 1; ++j)
@@ -446,11 +449,13 @@ public:
     invariant(size_t(getNumLambda()), numLambda);
     // std::array<NotNull<Simplex>, 2> pair;
     NotNull<Simplex> fw =
-      Simplex::create(alloc, numConstraintsNew, numVarNew + 1, 0);
+      Simplex::create(alloc, numConstraintsNew, numVarNew, 0);
     // Simplex &fw(pair[0]);
     // fw.resize(numConstraintsNew, numVarNew + 1);
-    MutPtrMatrix<int64_t> fC{fw->getConstraints()(_, _(1, end))};
-    fC(_, 0) << 0;
+    auto fCF{fw->getConstraints()};
+    fCF << 0;
+    MutPtrMatrix<int64_t> fC{fCF(_, _(1, end))};
+    // fC(_, 0) << 0;
     fC(0, 0) = 1; // lambda_0
     fC(_, _(1, 1 + numInequalityConstraintsOld))
       << A(_, _(begin, numConstraintsNew)).transpose();
@@ -491,10 +496,11 @@ public:
     // so far, both have been identical
 
     NotNull<Simplex> bw =
-      Simplex::create(alloc, numConstraintsNew, numVarNew + 1, 0);
-    MutPtrMatrix<int64_t> bC{bw->getConstraints()(_, _(1, end))};
-
-    bC(_, _(begin, numVarNew)) << fC(_, _(begin, numVarNew));
+      Simplex::create(alloc, numConstraintsNew, numVarNew, 0);
+    auto bCF{bw->getConstraints()};
+    bCF << fCF;
+    // bCF(_, _(0, numVarNew + 1)) << fCF(_, _(0, numVarNew + 1));
+    MutPtrMatrix<int64_t> bC{bCF(_, _(1, end))};
 
     // equality constraints get expanded into two inequalities
     // a == 0 ->
@@ -507,10 +513,10 @@ public:
     // so that the ILP rLexMin on coefficients
     // will tend to preserve the initial order (which is
     // better than tending to reverse the initial order).
-    fC(0, numPhiCoefs + numLambda) = 1;
-    fC(0, numPhiCoefs + 1 + numLambda) = -1;
-    bC(0, numPhiCoefs + numLambda) = -1;
-    bC(0, numPhiCoefs + 1 + numLambda) = 1;
+    fC(0, numLambda) = 1;
+    fC(0, 1 + numLambda) = -1;
+    bC(0, numLambda) = -1;
+    bC(0, 1 + numLambda) = 1;
     for (size_t i = 0; i < numPhiCoefs; ++i) {
       int64_t s = (2 * (i < numDep0Var) - 1);
       fC(i + numBoundingCoefs, i + numLambda + 2) = s;

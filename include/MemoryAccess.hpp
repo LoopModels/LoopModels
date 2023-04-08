@@ -27,11 +27,14 @@ private:
   // TODO: better yet, have some mechanism for allocating more space.
   static constexpr auto memoryOmegaOffset(size_t arrayDim, size_t numLoops,
                                           size_t numSymbols) -> size_t {
-    return arrayDim * numLoops + arrayDim * numSymbols;
+    // arrayDim * numLoops from indexMatrix
+    // arrayDim * numSymbols from offsetMatrix
+    return arrayDim * (numLoops + numSymbols);
   }
-  static constexpr auto memoryTotalRequired(size_t arrayDim, size_t numLoops,
-                                            size_t numSymbols) -> size_t {
-    return arrayDim * numLoops + numLoops + arrayDim * numSymbols;
+  static constexpr auto memoryIntsRequired(size_t arrayDim, size_t numLoops,
+                                           size_t numSymbols) -> size_t {
+    // numLoops + 1 from getFusionOmega
+    return memoryOmegaOffset(arrayDim, numLoops, numSymbols) + numLoops + 1;
   }
 
   NotNull<const llvm::SCEVUnknown> basePointer;
@@ -45,16 +48,16 @@ private:
   // value, meaning that is the stored instruction, and thus we still have
   // access to it when it is available.
   NotNull<llvm::Instruction> loadOrStore;
-  unsigned numDim, numDynSym;
+  unsigned numDim{}, numDynSym{};
   // llvm::ArrayRef<const llvm::SCEV *> sizes;
   // llvm::ArrayRef<const llvm::SCEV *> symbolicOffsets;
   // llvm::SmallVector<const llvm::SCEV *, 3> sizes;
   // llvm::SmallVector<const llvm::SCEV *, 3> symbolicOffsets;
   // unsigned (instead of ptr) as we build up edges
   // and I don't want to relocate pointers when resizing vector
-  BitSet edgesIn;
-  BitSet edgesOut;
-  BitSet nodeIndex;
+  BitSet edgesIn{};
+  BitSet edgesOut{};
+  BitSet nodeIndex{};
   // This is a flexible length array, declared as a length-1 array
   // I wish there were some way to opt into "I'm using a c99 extension"
   // so that I could use `mem[]` or `mem[0]` instead of `mem[1]`. See:
@@ -91,7 +94,7 @@ private:
     const char *ptr = mem;
     return reinterpret_cast<const llvm::SCEV *const *>(ptr);
   }
-  [[nodiscard]] auto omegaOffset() const -> size_t {
+  [[nodiscard]] constexpr auto omegaOffset() const -> size_t {
     return memoryOmegaOffset(getArrayDim(), getNumLoops(), getNumSymbols());
   }
   MemoryAccess(const llvm::SCEVUnknown *arrayPtr, AffineLoopNest<true> &loopRef,
@@ -103,6 +106,7 @@ private:
     : basePointer(arrayPtr), loop(loopRef), loadOrStore(user){};
 
 public:
+  /// Constructor for 0 dimensional memory access
   static auto construct(BumpAlloc<> &alloc,
                         const llvm::SCEVUnknown *arrayPointer,
                         AffineLoopNest<true> &loopRef, llvm::Instruction *user,
@@ -116,6 +120,7 @@ public:
     ma->getFusionOmega() << o;
     return ma;
   }
+  /// Constructor for regular indexing
   static auto
   construct(BumpAlloc<> &alloc, const llvm::SCEVUnknown *arrayPtr,
             AffineLoopNest<true> &loopRef, llvm::Instruction *user,
@@ -130,7 +135,7 @@ public:
     size_t numLoops = loopRef.getNumLoops();
     assert(o.size() == numLoops + 1);
     size_t numSymbols = size_t(offsets.numCol());
-    size_t memNeeded = memoryTotalRequired(arrayDim, numLoops, numSymbols);
+    size_t memNeeded = memoryIntsRequired(arrayDim, numLoops, numSymbols);
     auto *mem =
       alloc.allocate(sizeof(MemoryAccess) + memNeeded * sizeof(int64_t) +
                        (arrayDim + nOff) * sizeof(const llvm::SCEV *const *),

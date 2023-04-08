@@ -242,20 +242,20 @@ template <typename T> struct BaseComparator {
 
 template <typename T>
 concept Comparator = requires(T t, PtrVector<int64_t> x, int64_t y) {
-                       { t.getNumConstTerms() } -> std::convertible_to<size_t>;
-                       { t.greaterEqual(x) } -> std::convertible_to<bool>;
-                       { t.lessEqual(x) } -> std::convertible_to<bool>;
-                       { t.greater(x) } -> std::convertible_to<bool>;
-                       { t.less(x) } -> std::convertible_to<bool>;
-                       { t.equal(x) } -> std::convertible_to<bool>;
-                       { t.greaterEqual(x, x) } -> std::convertible_to<bool>;
-                       { t.lessEqual(x, x) } -> std::convertible_to<bool>;
-                       { t.greater(x, x) } -> std::convertible_to<bool>;
-                       { t.less(x, x) } -> std::convertible_to<bool>;
-                       { t.equal(x, x) } -> std::convertible_to<bool>;
-                       { t.equalNegative(x, x) } -> std::convertible_to<bool>;
-                       { t.lessEqual(x, y) } -> std::convertible_to<bool>;
-                     };
+  { t.getNumConstTerms() } -> std::convertible_to<size_t>;
+  { t.greaterEqual(x) } -> std::convertible_to<bool>;
+  { t.lessEqual(x) } -> std::convertible_to<bool>;
+  { t.greater(x) } -> std::convertible_to<bool>;
+  { t.less(x) } -> std::convertible_to<bool>;
+  { t.equal(x) } -> std::convertible_to<bool>;
+  { t.greaterEqual(x, x) } -> std::convertible_to<bool>;
+  { t.lessEqual(x, x) } -> std::convertible_to<bool>;
+  { t.greater(x, x) } -> std::convertible_to<bool>;
+  { t.less(x, x) } -> std::convertible_to<bool>;
+  { t.equal(x, x) } -> std::convertible_to<bool>;
+  { t.equalNegative(x, x) } -> std::convertible_to<bool>;
+  { t.lessEqual(x, y) } -> std::convertible_to<bool>;
+};
 
 template <typename T>
 struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
@@ -446,7 +446,7 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
     Row rowV = Row{numVar + numInEqCon};
     Col colV = Col{2 * numInEqCon + numEqCon};
     auto B = getV(rowV, colV);
-    std::fill_n(B.begin(), B.numRow() * B.numCol(), 0);
+    B << 0;
     // V = [A' E' 0
     //      S  0  I]
     B(0, 0) = pos0;

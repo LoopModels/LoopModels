@@ -1,4 +1,5 @@
 #pragma once
+#include <cstdlib>
 #include <llvm/Support/raw_ostream.h>
 
 /// LinAlg
@@ -32,13 +33,18 @@ inline auto operator<<(llvm::raw_ostream &os, AxisType x)
   -> llvm::raw_ostream & {
   switch (x) {
   case AxisType::Row:
-    return os << "Row";
+    os << "Row";
+    break;
   case AxisType::Column:
-    return os << "Column";
+    os << "Column";
+    break;
   case AxisType::RowStride:
-    return os << "RowStride";
+    os << "RowStride";
+    break;
+  default:
+    os << "invalid axis type";
+    abort();
   }
-  llvm_unreachable("Unknown AxisType");
   return os;
 }
 

@@ -3,6 +3,7 @@
 #include "./NormalForm.hpp"
 #include "./Rational.hpp"
 #include "Math/Array.hpp"
+#include "Math/Comparisons.hpp"
 #include "Math/Indexing.hpp"
 #include "Math/Math.hpp"
 #include "Math/MatrixDimensions.hpp"
@@ -197,7 +198,7 @@ public:
     assert(i <= numConstraints);
     numConstraints = i;
   }
-  constexpr void hermiteNormalForm() {
+  constexpr void simplifySystem() {
 #ifndef NDEBUG
     inCanonicalForm = false;
 #endif
@@ -378,7 +379,7 @@ public:
     "returns `true` if infeasible; should check when calling.")]] constexpr auto
   initiateFeasible() -> bool {
     // remove trivially redundant constraints
-    hermiteNormalForm();
+    simplifySystem();
     // [ I;  X ; b ]
     //
     // original number of variables
@@ -787,8 +788,7 @@ public:
                                              size_t off) const -> bool {
     // is it a valid solution to set the first `x.size()` variables to
     // `x`? first, check that >= 0 constraint is satisfied
-    for (auto y : x)
-      if (y < 0) return true;
+    if (!allGEZero(x)) return true;
     // approach will be to move `x.size()` variables into the
     // equality constraints, and then check if the remaining sub-problem
     // is satisfiable.
@@ -823,15 +823,14 @@ public:
                        size_t numRow) const -> bool {
     // is it a valid solution to set the first `x.size()` variables to
     // `x`? first, check that >= 0 constraint is satisfied
-    for (auto y : x)
-      if (y < 0) return true;
+    if (!allGEZero(x)) return true;
     // approach will be to move `x.size()` variables into the
     // equality constraints, and then check if the remaining sub-problem
     // is satisfiable.
     assert(numRow <= getNumCons());
     const size_t numFix = x.size();
     auto p = alloc.checkpoint();
-    Simplex *subSimp{Simplex::create(alloc, numRow, 1 + off)};
+    Simplex *subSimp{Simplex::create(alloc, numRow, off)};
     // subSimp.tableau(0, 0) = 0;
     // subSimp.tableau(0, 1) = 0;
     // auto fC{getCostsAndConstraints()};
