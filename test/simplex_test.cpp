@@ -1275,7 +1275,8 @@ TEST(LexMinSimplexTest2, BasicAssertions) {
   Vector<Rational> sol(15);
   EXPECT_EQ(sol.size(), 15);
   EXPECT_FALSE(simp->initiateFeasible());
-  simp->rLexMinLast(15);
+  auto s = simp->rLexMinLast(15);
+  for (auto x : s) EXPECT_EQ(x.denominator, 1);
   sol << simp->getSolution()[_(end - 15, end)];
   size_t solSum = 0;
   for (size_t i = 0; i < 5; ++i) {
@@ -1284,6 +1285,7 @@ TEST(LexMinSimplexTest2, BasicAssertions) {
     // EXPECT_EQ(sol[i].denominator, 1);
   }
   EXPECT_EQ(solSum, 2);
+
   solSum = 0;
   for (size_t i = 5; i < sol.size(); ++i) {
     solSum += sol[i].numerator;

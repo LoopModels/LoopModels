@@ -1030,11 +1030,6 @@ public:
       assert(!allZero);
     }
 #endif
-    // FIXME: rLexMinLast returns only the solutions it solved for,
-    // starting with index `0`. Thus, we need to index from that start,
-    // and not from the start of the constraints.
-    // node.getOmegaOffset() should currently be correct, but
-    // node.getPhiOffsetRange() needs updating
     size_t o = numOmegaCoefs;
     for (auto &&node : nodes) {
       if (depth >= node.getNumLoops()) continue;
