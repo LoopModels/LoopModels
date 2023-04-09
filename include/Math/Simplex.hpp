@@ -310,6 +310,7 @@ public:
     }
 
     [[nodiscard]] constexpr auto operator[](size_t i) const -> Rational {
+      invariant(ptrdiff_t(i) >= 0);
       i += skippedVars;
       int64_t j = simplex->getBasicConstraint(i);
       if (j < 0) return 0;
