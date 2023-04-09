@@ -334,7 +334,7 @@ public:
       return (*this)[LinAlg::canonicalizeRange(r, size())];
     }
     constexpr auto operator[](Range<size_t, size_t> r) const -> Solution {
-      return {simplex, skippedVars + r.b, r.e};
+      return {simplex, skippedVars + r.b, skippedVars + r.e};
     }
     [[nodiscard]] constexpr auto size() const -> size_t {
       return numVars - skippedVars;

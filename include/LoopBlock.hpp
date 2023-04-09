@@ -1064,7 +1064,7 @@ public:
       if (!node.phiIsScheduled(depth)) {
         int64_t l = sol[node.getPhiOffsetRange() + o].denomLCM();
         for (size_t i = 0; i < node.getPhi().numCol(); ++i)
-          assert(node.getPhi()(last - depth, i) ==
+          assert(node.getPhi()(depth, i) ==
                  sol[node.getPhiOffsetRange() + o][i] * l);
       }
 #endif

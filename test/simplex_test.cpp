@@ -1276,7 +1276,34 @@ TEST(LexMinSimplexTest2, BasicAssertions) {
   EXPECT_EQ(sol.size(), 15);
   EXPECT_FALSE(simp->initiateFeasible());
   auto s = simp->rLexMinLast(15);
-  for (auto x : s) EXPECT_EQ(x.denominator, 1);
+  {
+    size_t solSum = 0, i = 0;
+    bool allNumerZero = true;
+    for (auto x : s) {
+      if (i++ < 5) {
+        solSum += x != 0;
+      } else {
+        allNumerZero &= x.numerator == 0;
+        solSum += x.numerator;
+        EXPECT_EQ(x.denominator, 1);
+      }
+    }
+    EXPECT_EQ(solSum, 2);
+    EXPECT_TRUE(allNumerZero);
+  }
+  {
+    size_t solSum = 0;
+    for (auto x : s[_(0, 5)]) solSum += x != 0;
+    EXPECT_EQ(solSum, 2);
+  }
+  {
+    bool allNumerZero = true;
+    for (auto x : s[_(5, end)]) {
+      allNumerZero &= x.numerator == 0;
+      EXPECT_EQ(x.denominator, 1);
+    }
+    EXPECT_TRUE(allNumerZero);
+  }
   sol << simp->getSolution()[_(end - 15, end)];
   size_t solSum = 0;
   for (size_t i = 0; i < 5; ++i) {
