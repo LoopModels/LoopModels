@@ -120,9 +120,9 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNode</b> (size_t i
 <tr class="memitem:a26398ac98e014e0ef39e25c0b8da3d88"><td class="memItemLeft" align="right" valign="top"><a id="a26398ac98e014e0ef39e25c0b8da3d88"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNodes</b> () -&gt; MutPtrVector&lt; <a class="el" href="structScheduledNode.html">ScheduledNode</a> &gt;</td></tr>
 <tr class="separator:a26398ac98e014e0ef39e25c0b8da3d88"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9eff47a762b88f7ae3116978ce30b377"><td class="memItemLeft" align="right" valign="top"><a id="a9eff47a762b88f7ae3116978ce30b377"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>getEdges</b> () -&gt; MutPtrVector&lt; <a class="el" href="structNotNull.html">NotNull</a>&lt; <a class="el" href="classDependence.html">Dependence</a> &gt;&gt;</td></tr>
-<tr class="separator:a9eff47a762b88f7ae3116978ce30b377"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9e9700e99d07e2a345bc3b007c5b61ad"><td class="memItemLeft" align="right" valign="top"><a id="a9e9700e99d07e2a345bc3b007c5b61ad"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getEdges</b> () -&gt; MutPtrVector&lt; <a class="el" href="classDependence.html">Dependence</a> &gt;</td></tr>
+<tr class="separator:a9e9700e99d07e2a345bc3b007c5b61ad"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa79288a1b82169777a183f85237f8599"><td class="memItemLeft" align="right" valign="top"><a id="aa79288a1b82169777a183f85237f8599"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>numNodes</b> () const -&gt; size_t</td></tr>
 <tr class="separator:aa79288a1b82169777a183f85237f8599"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -138,7 +138,8 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>outNeighbors</b> (siz
 <tr class="memitem:aa271dbd6a12df5de96419bf371f59721"><td class="memItemLeft" align="right" valign="top"><a id="aa271dbd6a12df5de96419bf371f59721"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>calcMaxDepth</b> () const -&gt; size_t</td></tr>
 <tr class="separator:aa271dbd6a12df5de96419bf371f59721"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a50c267ca49c6e8f135802004abe4eba9"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classLinearProgramLoopBlock.html#a50c267ca49c6e8f135802004abe4eba9">addEdge</a> (<a class="el" href="structMemoryAccess.html">MemoryAccess</a> &amp;mai, <a class="el" href="structMemoryAccess.html">MemoryAccess</a> &amp;maj)</td></tr>
+<tr class="memitem:a50c267ca49c6e8f135802004abe4eba9"><td class="memItemLeft" align="right" valign="top"><a id="a50c267ca49c6e8f135802004abe4eba9"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>addEdge</b> (<a class="el" href="structMemoryAccess.html">MemoryAccess</a> &amp;mai, <a class="el" href="structMemoryAccess.html">MemoryAccess</a> &amp;maj)</td></tr>
 <tr class="separator:a50c267ca49c6e8f135802004abe4eba9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1d76b0e8c6b7a221850327644f09dbb2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classLinearProgramLoopBlock.html#a1d76b0e8c6b7a221850327644f09dbb2">fillEdges</a> ()</td></tr>
 <tr class="separator:a1d76b0e8c6b7a221850327644f09dbb2"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -160,6 +161,9 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>calcNumStores</b> () 
 <tr class="separator:a38b8e6e6c334ba725c32e7412bdf0fe9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a07a5af74d3682d24abc08a0490b55da8"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classLinearProgramLoopBlock.html#a07a5af74d3682d24abc08a0490b55da8">connectGraph</a> ()</td></tr>
 <tr class="separator:a07a5af74d3682d24abc08a0490b55da8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0eda5c24ab3f42f6348291b6ead89240"><td class="memItemLeft" align="right" valign="top"><a id="a0eda5c24ab3f42f6348291b6ead89240"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>buildGraph</b> ()</td></tr>
+<tr class="separator:a0eda5c24ab3f42f6348291b6ead89240"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a88b43494ac1c7b643efbcc6b9b081cb8"><td class="memItemLeft" align="right" valign="top"><a id="a88b43494ac1c7b643efbcc6b9b081cb8"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>fullGraph</b> () -&gt; <a class="el" href="structLinearProgramLoopBlock_1_1Graph.html">Graph</a></td></tr>
 <tr class="separator:a88b43494ac1c7b643efbcc6b9b081cb8"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -237,6 +241,8 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>optimize</b> () -&gt;
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
+<tr class="memitem:a2fe756cea77b64c3cdf5e5ad0de4f0d1"><td class="memItemLeft" align="right" valign="top">static constexpr void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classLinearProgramLoopBlock.html#a2fe756cea77b64c3cdf5e5ad0de4f0d1">pushToEdgeVector</a> (Vector&lt; <a class="el" href="classDependence.html">Dependence</a> &gt; &amp;vec, <a class="el" href="classDependence.html">Dependence</a> dep)</td></tr>
+<tr class="separator:a2fe756cea77b64c3cdf5e5ad0de4f0d1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a07783ad0d4f003076db2913e8d2e3aad"><td class="memItemLeft" align="right" valign="top"><a id="a07783ad0d4f003076db2913e8d2e3aad"></a>
 static auto&#160;</td><td class="memItemRight" valign="bottom"><b>connects</b> (const <a class="el" href="classDependence.html">Dependence</a> &amp;e, <a class="el" href="structLinearProgramLoopBlock_1_1Graph.html">Graph</a> &amp;g0, <a class="el" href="structLinearProgramLoopBlock_1_1Graph.html">Graph</a> &amp;g1) -&gt; bool</td></tr>
 <tr class="separator:a07783ad0d4f003076db2913e8d2e3aad"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -284,46 +290,6 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> 
 </ul>
 <p>NOTE: w/ respect to index linearization (e.g., going from Cartesian indexing to linear indexing), the current behavior will be to fully delinearize as a preprocessing step. Linear indexing may be used later as an optimization. This means that not only do we want to delinearize for (n = 0; n &lt; N; ++n){ for (m = 0; m &lt; M; ++m){ C(m + n*M) } } we would also want to delinearize for (i = 0; i &lt; M*N; ++i){ C(i) } into for (n = 0; n &lt; N; ++n){ for (m = 0; m &lt; M; ++m){ C(m, n) } } and then relinearize as an optimization later. Then we can compare fully delinearized loop accesses. Should be in same block: s = 0 for (i = eachindex(x)){ s += x[i]; // Omega = [0, _, 0] } m = s / length(x); // Omega = [1] for (i = eachindex(y)){ f(m, ...); // Omega = [2, _, 0] } </p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
-<a id="a50c267ca49c6e8f135802004abe4eba9"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a50c267ca49c6e8f135802004abe4eba9">&#9670;&nbsp;</a></span>addEdge()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">void LinearProgramLoopBlock::addEdge </td>
-          <td>(</td>
-          <td class="paramtype"><a class="el" href="structMemoryAccess.html">MemoryAccess</a> &amp;&#160;</td>
-          <td class="paramname"><em>mai</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="structMemoryAccess.html">MemoryAccess</a> &amp;&#160;</td>
-          <td class="paramname"><em>maj</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-<p>NOTE: this relies on two important assumptions:</p><ol type="1">
-<li>Code has been fully delinearized, so that axes all match (this means that even C[i], 0&lt;=i&lt;M*N -&gt; C[m*M*n]) (TODO: what if we have C[n+N*m] and C[m+M*n]???) (this of course means we have to see other uses in deciding whether to expand <code>C[i]</code>, and what to expand it into.)</li>
-<li>Reduction targets have been orthogonalized, so that the number of axes reflects the number of loops they depend on. if we have for (i = I, j = J, m = M, n = N) { C(m,n) = foo(C(m,n), ...) } then we have dependencies that the load C(m,n) [ i = x, j = y ] happens after the store C(m,n) [ i = x-1, j = y], and happens after the store C(m,n) [ i = x, j = y-1] and that the store C(m,n) [ i = x, j = y ] happens after the load C(m,n) [ i = x-1, j = y], and happens after the load C(m,n) [ i = x, j = y-1] </li>
-</ol>
-
-</div>
-</div>
 <a id="a07a5af74d3682d24abc08a0490b55da8"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a07a5af74d3682d24abc08a0490b55da8">&#9670;&nbsp;</a></span>connectGraph()</h2>
 
@@ -416,6 +382,46 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> 
 </table>
 </div><div class="memdoc">
 <p>optimize at depth <code>d</code> receives graph by value, so that it is not invalidated when recursing </p>
+
+</div>
+</div>
+<a id="a2fe756cea77b64c3cdf5e5ad0de4f0d1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2fe756cea77b64c3cdf5e5ad0de4f0d1">&#9670;&nbsp;</a></span>pushToEdgeVector()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static constexpr void LinearProgramLoopBlock::pushToEdgeVector </td>
+          <td>(</td>
+          <td class="paramtype">Vector&lt; <a class="el" href="classDependence.html">Dependence</a> &gt; &amp;&#160;</td>
+          <td class="paramname"><em>vec</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classDependence.html">Dependence</a>&#160;</td>
+          <td class="paramname"><em>dep</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">static</span><span class="mlabel">constexpr</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>NOTE: this relies on two important assumptions:</p><ol type="1">
+<li>Code has been fully delinearized, so that axes all match (this means that even C[i], 0&lt;=i&lt;M*N -&gt; C[m*M*n]) (TODO: what if we have C[n+N*m] and C[m+M*n]???) (this of course means we have to see other uses in deciding whether to expand <code>C[i]</code>, and what to expand it into.)</li>
+<li>Reduction targets have been orthogonalized, so that the number of axes reflects the number of loops they depend on. if we have for (i = I, j = J, m = M, n = N) { C(m,n) = foo(C(m,n), ...) } then we have dependencies that the load C(m,n) [ i = x, j = y ] happens after the store C(m,n) [ i = x-1, j = y], and happens after the store C(m,n) [ i = x, j = y-1] and that the store C(m,n) [ i = x, j = y ] happens after the load C(m,n) [ i = x-1, j = y], and happens after the load C(m,n) [ i = x, j = y-1] </li>
+</ol>
 
 </div>
 </div>

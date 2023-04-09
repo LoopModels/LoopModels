@@ -161,16 +161,18 @@ $(function() {
 <div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;  <span class="keywordtype">double</span> p = state.range(0) / 100.0;</div>
 <div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;  std::random_device rd;</div>
 <div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;  std::mt19937 gen(rd());</div>
-<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;  <span class="keywordflow">for</span> (<span class="keyword">auto</span> b : state) randVecFillSum(gen, p);</div>
-<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;}</div>
-<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;BENCHMARK(BM_VectorRandSum)-&gt;DenseRange(95, 100, 1);</div>
-<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;<span class="keywordtype">void</span> BM_VectorRandSumStd(benchmark::State &amp;state) {</div>
-<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;  <span class="keywordtype">double</span> p = state.range(0) / 100.0;</div>
-<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;  std::random_device rd;</div>
-<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;  std::mt19937 gen(rd());</div>
-<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;  <span class="keywordflow">for</span> (<span class="keyword">auto</span> b : state) randStdVecFillSum(gen, p);</div>
-<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;}</div>
-<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;BENCHMARK(BM_VectorRandSumStd)-&gt;DenseRange(95, 100, 1);</div>
+<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;  <span class="keywordflow">for</span> (<span class="keyword">auto</span> b : state)</div>
+<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; 1000; ++i) randVecFillSum(gen, p);</div>
+<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;}</div>
+<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;BENCHMARK(BM_VectorRandSum)-&gt;DenseRange(95, 100, 1);</div>
+<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;<span class="keywordtype">void</span> BM_VectorRandSumStd(benchmark::State &amp;state) {</div>
+<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;  <span class="keywordtype">double</span> p = state.range(0) / 100.0;</div>
+<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;  std::random_device rd;</div>
+<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;  std::mt19937 gen(rd());</div>
+<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;  <span class="keywordflow">for</span> (<span class="keyword">auto</span> b : state)</div>
+<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; 1000; ++i) randStdVecFillSum(gen, p);</div>
+<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;}</div>
+<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;BENCHMARK(BM_VectorRandSumStd)-&gt;DenseRange(95, 100, 1);</div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

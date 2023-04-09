@@ -85,9 +85,6 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:ab10dd79434fb82456b872fb391b6c730"><td class="memItemLeft" align="right" valign="top"><a id="ab10dd79434fb82456b872fb391b6c730"></a>
 constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Dependence</b> (<a class="el" href="structNotNull.html">NotNull</a>&lt; <a class="el" href="classDepPoly.html">DepPoly</a> &gt; poly, std::array&lt; <a class="el" href="structNotNull.html">NotNull</a>&lt; <a class="el" href="classSimplex.html">Simplex</a> &gt;, 2 &gt; depSatBound, std::array&lt; <a class="el" href="structNotNull.html">NotNull</a>&lt; <a class="el" href="structMemoryAccess.html">MemoryAccess</a> &gt;, 2 &gt; inOut, bool fwd)</td></tr>
 <tr class="separator:ab10dd79434fb82456b872fb391b6c730"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a305c72b1e1f102b32e27b0abf026c7aa"><td class="memItemLeft" align="right" valign="top"><a id="a305c72b1e1f102b32e27b0abf026c7aa"></a>
-constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>pushToEdgeVector</b> (Vector&lt; <a class="el" href="structNotNull.html">NotNull</a>&lt; <a class="el" href="classDependence.html">Dependence</a> &gt;&gt; &amp;vec)</td></tr>
-<tr class="separator:a305c72b1e1f102b32e27b0abf026c7aa"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aed2e6acdb5ebf8423a05672bad052957"><td class="memItemLeft" align="right" valign="top"><a id="aed2e6acdb5ebf8423a05672bad052957"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getArrayPointer</b> () -&gt; const llvm::SCEV *</td></tr>
 <tr class="separator:aed2e6acdb5ebf8423a05672bad052957"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -120,10 +117,13 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>outputIsStore</b> () 
 auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classDependence.html#a6cc677c17009dae397e882a80eb727a4">getInIndMat</a> () const -&gt; PtrMatrix&lt; int64_t &gt;</td></tr>
 <tr class="memdesc:a6cc677c17009dae397e882a80eb727a4"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classDependence.html#a6cc677c17009dae397e882a80eb727a4" title="getInIndMat() -&gt; getInNumLoops() x arrayDim()">getInIndMat()</a> -&gt; getInNumLoops() x arrayDim() <br /></td></tr>
 <tr class="separator:a6cc677c17009dae397e882a80eb727a4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a42ac0a8c783d95ac08f2155a9640125b"><td class="memItemLeft" align="right" valign="top"><a id="a42ac0a8c783d95ac08f2155a9640125b"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classDependence.html#a42ac0a8c783d95ac08f2155a9640125b">getOutIndMat</a> () const -&gt; PtrMatrix&lt; int64_t &gt;</td></tr>
-<tr class="memdesc:a42ac0a8c783d95ac08f2155a9640125b"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classDependence.html#a42ac0a8c783d95ac08f2155a9640125b" title="getOutIndMat() -&gt; getOutNumLoops() x arrayDim()">getOutIndMat()</a> -&gt; getOutNumLoops() x arrayDim() <br /></td></tr>
-<tr class="separator:a42ac0a8c783d95ac08f2155a9640125b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa732f5329d326ddfac8b9c41b9303aae"><td class="memItemLeft" align="right" valign="top"><a id="aa732f5329d326ddfac8b9c41b9303aae"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>addEdge</b> (size_t i)</td></tr>
+<tr class="separator:aa732f5329d326ddfac8b9c41b9303aae"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a89c5aef3716809617009a5f7d55c9499"><td class="memItemLeft" align="right" valign="top"><a id="a89c5aef3716809617009a5f7d55c9499"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classDependence.html#a89c5aef3716809617009a5f7d55c9499">getOutIndMat</a> () const -&gt; PtrMatrix&lt; int64_t &gt;</td></tr>
+<tr class="memdesc:a89c5aef3716809617009a5f7d55c9499"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classDependence.html#a89c5aef3716809617009a5f7d55c9499" title="getOutIndMat() -&gt; getOutNumLoops() x arrayDim()">getOutIndMat()</a> -&gt; getOutNumLoops() x arrayDim() <br /></td></tr>
+<tr class="separator:a89c5aef3716809617009a5f7d55c9499"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1295a3d97f4bdd81c24d7620daeba235"><td class="memItemLeft" align="right" valign="top"><a id="a1295a3d97f4bdd81c24d7620daeba235"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getInOutPair</b> () const -&gt; std::array&lt; <a class="el" href="structNotNull.html">NotNull</a>&lt; <a class="el" href="structMemoryAccess.html">MemoryAccess</a> &gt;, 2 &gt;</td></tr>
 <tr class="separator:a1295a3d97f4bdd81c24d7620daeba235"><td class="memSeparator" colspan="2">&#160;</td></tr>
