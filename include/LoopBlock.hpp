@@ -865,17 +865,17 @@ public:
 
           Col ll = l + satL.numCol();
           Col lll = ll + bndL.numCol();
-          C(_(c, cc), _(l, ll)) = satL;
-          C(_(cc, ccc), _(ll, lll)) = bndL;
+          C(_(c, cc), _(l, ll)) << satL;
+          C(_(cc, ccc), _(ll, lll)) << bndL;
           l = lll;
           // bounding
-          C(_(cc, ccc), w++) = bndWU(_, 0);
+          C(_(cc, ccc), w++) << bndWU(_, 0);
           Col uu = u + bndWU.numCol() - 1;
-          C(_(cc, ccc), _(u, uu)) = bndWU(_, _(1, end));
+          C(_(cc, ccc), _(u, uu)) << bndWU(_, _(1, end));
           u = uu;
           if (satisfyDeps) C(_(c, cc), 0) << satC + satW;
-          else C(_(c, cc), 0) = satC;
-          C(_(cc, ccc), 0) = bndC;
+          else C(_(c, cc), 0) << satC;
+          C(_(cc, ccc), 0) << bndC;
           // now, handle Phi and Omega
           // phis are not constrained to be 0
           if (outNodeIndex == inNodeIndex) {
@@ -911,8 +911,7 @@ public:
                 C(_(cc, ccc), 0) -= bndPc * schC + bndPp * schP;
               } else if (satPc.numCol() < satPp.numCol()) {
                 auto phiChild = outNode.getPhiOffset();
-                Col P = satPc.numCol();
-                auto m = phiChild - P;
+                Col P = satPc.numCol(), m = phiChild - P;
                 C(_(c, cc), _(phiChild - satPp.numCol(), m))
                   << satPp(_, _(begin, end - P));
                 C(_(cc, ccc), _(phiChild - bndPp.numCol(), m))
@@ -923,8 +922,7 @@ public:
                   << bndPc + bndPp(_, _(end - P, end));
               } else /* if (satPc.numCol() > satPp.numCol()) */ {
                 auto phiChild = outNode.getPhiOffset();
-                Col P = satPp.numCol();
-                auto m = phiChild - P;
+                Col P = satPp.numCol(), m = phiChild - P;
                 C(_(c, cc), _(phiChild - satPc.numCol(), m))
                   << satPc(_, _(begin, end - P));
                 C(_(cc, ccc), _(phiChild - bndPc.numCol(), m))
@@ -966,7 +964,7 @@ public:
     // earlier, we only had this check in optimizeLevel, when satisfyDeps=false
     // what is this check doing?
     assert(!allZero(omniSimplex->getConstraints()(last, _)));
-    return omniSimplex->initiateFeasible() ? nullptr : omniSimplex;
+    return omniSimplex->initiateFeasible() ? nullptr : (Simplex *)omniSimplex;
   }
   static void updateConstraints(MutPtrMatrix<int64_t> C,
                                 const ScheduledNode &node,
