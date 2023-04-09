@@ -181,17 +181,15 @@ public:
     return schedule.getSchedule(d);
   }
   constexpr void schedulePhi(PtrMatrix<int64_t> indMat, size_t r) {
-    // indMat indvars are indexed from inside<->outside
-    // phi indvars are indexed from inside<->outside
-    // so, indMat is indvars[inside<->outside] x array dim
-    // phi is loop[inside<->outside] x
-    // indvars[inside<->outside]
+    // indMat indvars are indexed from outer<->inner
+    // phi indvars are indexed from outer<->inner
+    // so, indMat is indvars[outer<->inner] x array dim
+    // phi is loop[outer<->inner] x indvars[outer<->inner]
     MutSquarePtrMatrix<int64_t> phi = getPhi();
-    const size_t indR = size_t(indMat.numRow());
-    const size_t phiOff = size_t(phi.numCol()) - indR;
+    size_t indR = size_t(indMat.numRow());
     for (size_t i = 0; i < r; ++i) {
-      phi(last - i, _(begin, phiOff)) << 0;
-      phi(last - i, _(phiOff, phiOff + indR)) << indMat(_, i);
+      phi(i, _(0, indR)) << indMat(_, i);
+      phi(i, _(indR, end)) << 0;
     }
     rank = r;
   }
@@ -298,7 +296,7 @@ class LinearProgramLoopBlock {
   [[no_unique_address]] Vector<MemoryAccess *> memory;
   [[no_unique_address]] Vector<ScheduledNode, 0> nodes;
   // Vector<unsigned> memoryToNodeMap;
-  [[no_unique_address]] Vector<NotNull<Dependence>> edges;
+  [[no_unique_address]] Vector<Dependence> edges;
   /// Flag indicating which depths carries dependencies
   /// One per node; held separately so we can copy/etc
   [[no_unique_address]] Vector<CarriedDependencyFlag, 16> carriedDeps;
@@ -326,7 +324,6 @@ public:
     // Some objects may need to reallocate/resize.
     memory.clear();
     nodes.clear();
-    for (auto &&x : edges) x->~Dependence();
     edges.clear();
     carriedDeps.clear();
     allocator.reset();
@@ -350,7 +347,7 @@ public:
     return nodes[i];
   }
   auto getNodes() -> MutPtrVector<ScheduledNode> { return nodes; }
-  auto getEdges() -> MutPtrVector<NotNull<Dependence>> { return edges; }
+  auto getEdges() -> MutPtrVector<Dependence> { return edges; }
   [[nodiscard]] auto numNodes() const -> size_t { return nodes.size(); }
   [[nodiscard]] auto numEdges() const -> size_t { return edges.size(); }
   [[nodiscard]] auto numMemoryAccesses() const -> size_t {
@@ -392,11 +389,16 @@ public:
   /// happens after the load C(m,n) [ i = x-1, j = y], and
   /// happens after the load C(m,n) [ i = x, j = y-1]
   ///
+  static constexpr void pushToEdgeVector(Vector<Dependence> &vec,
+                                         Dependence dep) {
+    dep.addEdge(vec.size());
+    vec.push_back(dep);
+  }
   void addEdge(MemoryAccess &mai, MemoryAccess &maj) {
     // note, axes should be fully delinearized, so should line up
     // as a result of preprocessing.
     auto d = Dependence::check(allocator, mai, maj);
-    for (auto &i : d) i.pushToEdgeVector(edges);
+    for (auto &i : d) pushToEdgeVector(edges, i);
   }
   /// fills all the edges between memory accesses, checking for
   /// dependencies.
@@ -525,11 +527,15 @@ public:
                              nodeIndex);
       visited.clear();
     }
-    allocator.rollback(p);
-    for (auto &e : edges) connect(e->nodesIn(), e->nodesOut());
-    for (auto &&node : nodes) node.init(allocator);
+    allocator.rollback(p); // free userToMemory and visited
+    // destructors of amap and aset poison memory
+  }
+  void buildGraph() {
+    connectGraph();
     // now that we've assigned each MemoryAccess to a NodeIndex, we
     // build the actual graph
+    for (auto e : edges) connect(e.nodesIn(), e.nodesOut());
+    for (auto &&node : nodes) node.init(allocator);
   }
   struct Graph {
     // a subset of Nodes
@@ -537,7 +543,7 @@ public:
     BitSet activeEdges{};
     MutPtrVector<MemoryAccess *> mem;
     MutPtrVector<ScheduledNode> nodes;
-    PtrVector<NotNull<Dependence>> edges;
+    PtrVector<Dependence> edges;
     // llvm::SmallVector<bool> visited;
     // BitSet visited;
     constexpr auto operator&(const Graph &g) -> Graph {
@@ -605,16 +611,16 @@ public:
       return missingNode(edge);
     }
     [[nodiscard]] constexpr auto isInactive(size_t e, size_t d) const -> bool {
-      return !(activeEdges[e]) || isInactive(*edges[e], d);
+      return !(activeEdges[e]) || isInactive(edges[e], d);
     }
     [[nodiscard]] constexpr auto isInactive(size_t e) const -> bool {
-      return !(activeEdges[e]) || isInactive(*edges[e]);
+      return !(activeEdges[e]) || isInactive(edges[e]);
     }
     [[nodiscard]] constexpr auto isActive(size_t e, size_t d) const -> bool {
-      return (activeEdges[e]) && (!isInactive(*edges[e], d));
+      return (activeEdges[e]) && (!isInactive(edges[e], d));
     }
     [[nodiscard]] constexpr auto isActive(size_t e) const -> bool {
-      return (activeEdges[e]) && (!isInactive(*edges[e]));
+      return (activeEdges[e]) && (!isInactive(edges[e]));
     }
     [[nodiscard]] constexpr auto begin()
       -> BitSliceView<ScheduledNode, BitSet>::Iterator {
@@ -703,7 +709,7 @@ public:
     // check for orthogonalization opportunities
     bool tryOrth = false;
     for (size_t e = 0; e < edges.size(); ++e) {
-      Dependence &edge = *edges[e];
+      Dependence &edge = edges[e];
       if (edge.inputIsLoad() == edge.outputIsLoad()) continue;
       Optional<size_t> maybeIndex = getOverlapIndex(edge);
       if (!maybeIndex) continue;
@@ -729,21 +735,21 @@ public:
     -> size_t {
     size_t c = 0;
     for (size_t e = 0; e < edges.size(); ++e)
-      c += ((g.isInactive(e, d)) ? 0 : edges[e]->getNumLambda());
+      c += ((g.isInactive(e, d)) ? 0 : edges[e].getNumLambda());
     return c;
   }
   [[nodiscard]] constexpr auto countNumBoundingCoefs(const Graph &g,
                                                      size_t d) const -> size_t {
     size_t c = 0;
     for (size_t e = 0; e < edges.size(); ++e)
-      c += (g.isInactive(e, d) ? 0 : edges[e]->getNumSymbols());
+      c += (g.isInactive(e, d) ? 0 : edges[e].getNumSymbols());
     return c;
   }
   constexpr void countAuxParamsAndConstraints(const Graph &g, size_t d) {
     size_t a = 0, b = 0, c = 0, ae = 0;
     for (size_t e = 0; e < edges.size(); ++e) {
       if (g.isInactive(e, d)) continue;
-      const Dependence &edge = *edges[e];
+      const Dependence &edge = edges[e];
       size_t mlt = edge.nodesIn().size() * edge.nodesOut().size();
       a += mlt * edge.getNumLambda();
       b += mlt * edge.getDynSymDim();
@@ -817,7 +823,7 @@ public:
   }
 #ifndef NDEBUG
   void validateEdges() {
-    for (auto &edge : edges) edge->validate();
+    for (auto edge : edges) edge.validate();
   }
 #endif
   // the plan is to generally avoid instantiating the omni-simplex
@@ -840,7 +846,7 @@ public:
     Col l = 1, o = l + numLambda, w = o + numOmegaCoefs + numPhiCoefs,
         u = w + numActiveEdges;
     for (size_t e = 0; e < edges.size(); ++e) {
-      Dependence &edge = *edges[e];
+      Dependence &edge = edges[e];
       if (g.isInactive(e, d)) continue;
       const BitSet &outNodeIndexSet = edge.nodesOut();
       const BitSet &inNodeIndexSet = edge.nodesIn();
@@ -1003,7 +1009,7 @@ public:
     BitSet deactivated;
     for (size_t e = 0; e < edges.size(); ++e) {
       if (g.isInactive(e, depth)) continue;
-      const Dependence &edge = *edges[e];
+      const Dependence &edge = edges[e];
       Col uu = u + edge.getNumDynamicBoundingVar();
       if ((sol[w++] != 0) || (!(allZero(sol[_(u, uu)])))) {
         g.activeEdges.remove(e);
@@ -1098,6 +1104,7 @@ public:
       if (node.phiIsScheduled(depth) || (depth >= node.getNumLoops()) ||
           (!hasActiveEdges(g, node)))
         continue;
+      A.resizeForOverwrite(Row{size_t(node.getPhi().numCol())}, Col{depth});
       A << node.getPhi()(_(end - depth, end), _).transpose();
       NormalForm::nullSpace11(N, A);
       C(i, 0) = 1;
@@ -1166,10 +1173,10 @@ public:
     return true;
   }
   [[nodiscard]] auto canFuse(Graph &g0, Graph &g1, size_t d) -> bool {
-    for (auto &e : edges) {
-      if ((e->getInNumLoops() <= d) || (e->getOutNumLoops() <= d)) return false;
-      if (connects(*e, g0, g1))
-        if (!isSatisfied(*e, d)) return false;
+    for (auto e : edges) {
+      if ((e.getInNumLoops() <= d) || (e.getOutNumLoops() <= d)) return false;
+      if (connects(e, g0, g1))
+        if (!isSatisfied(e, d)) return false;
     }
     return true;
   }
@@ -1306,7 +1313,7 @@ public:
   // returns true on failure
   [[nodiscard]] auto optimize() -> std::optional<BitSet> {
     fillEdges();
-    connectGraph();
+    buildGraph();
     carriedDeps.resize(nodes.size());
 #ifndef NDEBUG
     validateEdges();
@@ -1327,17 +1334,17 @@ public:
     }
     // BitSet
     os << "\nLoopBlock Edges (#edges = " << lblock.edges.size() << "):";
-    for (const auto &edge : lblock.edges) {
-      os << "\n\tEdge = " << *edge;
-      for (size_t inIndex : edge->nodesIn()) {
+    for (const auto edge : lblock.edges) {
+      os << "\n\tEdge = " << edge;
+      for (size_t inIndex : edge.nodesIn()) {
         const AffineSchedule sin = lblock.getNode(inIndex).getSchedule();
-        os << "Schedule In: nodeIndex = " << edge->nodesIn() << "\ns.getPhi()"
+        os << "Schedule In: nodeIndex = " << edge.nodesIn() << "\ns.getPhi()"
            << sin.getPhi() << "\ns.getFusionOmega() = " << sin.getFusionOmega()
            << "\ns.getOffsetOmega() = " << sin.getOffsetOmega();
       }
-      for (size_t outIndex : edge->nodesOut()) {
+      for (size_t outIndex : edge.nodesOut()) {
         const AffineSchedule sout = lblock.getNode(outIndex).getSchedule();
-        os << "\n\nSchedule Out:\nnodeIndex = " << edge->nodesOut()
+        os << "\n\nSchedule Out:\nnodeIndex = " << edge.nodesOut()
            << "\ns.getPhi()" << sout.getPhi()
            << "\ns.getFusionOmega() = " << sout.getFusionOmega()
            << "\ns.getOffsetOmega() = " << sout.getOffsetOmega();

@@ -23,8 +23,13 @@
 /// then "i_0" for schedule "S_0" happens before
 /// "i_1" for schedule "S_1"
 ///
-constexpr auto requiredScheduleStorage(unsigned n) -> unsigned {
-  return (n * (n + 2) + 1); // * sizeof(int64_t);
+constexpr auto requiredScheduleStorage(unsigned nL) -> unsigned {
+  // layout:
+  // [0: 1): nL (numLoops)
+  // [1: nL * nL + 1): Phi
+  // [nL * nL + 1: nL * nL + nL + 2): fusion omega
+  // [nL * nL + nL + 2: nL * nL + 2 * nL + 2): offset omega
+  return nL * (nL + 2) + 2; // * sizeof(int64_t);
 }
 struct AffineSchedule {
 

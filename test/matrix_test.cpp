@@ -177,3 +177,12 @@ TEST(OffsetEnd, BasicAssertions) {
   for (size_t i = 0; i < 4; ++i) B(last - i, _) << i;
   EXPECT_EQ(A, B);
 }
+TEST(SquareMatrixTest, BasicAssertions) {
+  SquareMatrix<int64_t> A{SquareDims{4}};
+  for (size_t i = 0; i < 4; ++i)
+    for (size_t j = 0; j < 4; ++j) A(i, j) = 4 * i + j;
+  DenseMatrix<int64_t> B{DenseDims{4, 2}};
+  B << A(_(end - 2, end), _).transpose();
+  for (size_t j = 0; j < 4; ++j)
+    for (size_t i = 0; i < 2; ++i) EXPECT_EQ(B(j, i), 4 * (i + 2) + j);
+}

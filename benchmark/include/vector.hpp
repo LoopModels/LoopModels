@@ -90,13 +90,15 @@ void BM_VectorRandSum(benchmark::State &state) {
   double p = state.range(0) / 100.0;
   std::random_device rd;
   std::mt19937 gen(rd());
-  for (auto b : state) randVecFillSum(gen, p);
+  for (auto b : state)
+    for (int i = 0; i < 1000; ++i) randVecFillSum(gen, p);
 }
 BENCHMARK(BM_VectorRandSum)->DenseRange(95, 100, 1);
 void BM_VectorRandSumStd(benchmark::State &state) {
   double p = state.range(0) / 100.0;
   std::random_device rd;
   std::mt19937 gen(rd());
-  for (auto b : state) randStdVecFillSum(gen, p);
+  for (auto b : state)
+    for (int i = 0; i < 1000; ++i) randStdVecFillSum(gen, p);
 }
 BENCHMARK(BM_VectorRandSumStd)->DenseRange(95, 100, 1);

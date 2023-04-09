@@ -227,8 +227,8 @@ TEST(SymmetricIndependentTest, BasicAssertions) {
   MemoryAccess *mtgt{createMemAccess(alloc, Atgt, Aloadji, schLoad)};
   DepPoly *dep{DepPoly::dependence(alloc, *msrc, *mtgt)};
   llvm::errs() << "Dep = \n" << dep << "\n";
-  EXPECT_TRUE(dep->isEmpty());
-  assert(dep->isEmpty());
+  EXPECT_TRUE(dep == nullptr);
+  assert(dep == nullptr);
   auto e = Dependence::check(alloc, *msrc, *mtgt);
   EXPECT_TRUE(e.empty());
 }
@@ -1130,8 +1130,8 @@ TEST(MeanStDevTest0, BasicAssertions) {
   MutPtrVector<MemoryAccess *> mem = iOuterLoopNest.getMemoryAccesses();
   for (size_t i = 0; i < mem.size(); ++i) memAccessIds[mem[i]] = i;
   for (auto &e : iOuterLoopNest.getEdges()) {
-    auto [in, out] = e->getInOutPair();
-    llvm::errs() << "\nEdge for array " << e->getArrayPointer()
+    auto [in, out] = e.getInOutPair();
+    llvm::errs() << "\nEdge for array " << e.getArrayPointer()
                  << ", in ID: " << memAccessIds[in]
                  << "; out ID: " << memAccessIds[out] << "\n";
   }
@@ -1393,8 +1393,8 @@ TEST(DoubleDependenceTest, BasicAssertions) {
   for (size_t i = 0; i < loopBlock.numMemoryAccesses(); ++i)
     memAccessIds[loopBlock.getMemoryAccess(i)] = i;
   for (auto &e : loopBlock.getEdges()) {
-    auto [in, out] = e->getInOutPair();
-    llvm::errs() << "\nEdge for array " << e->getArrayPointer()
+    auto [in, out] = e.getInOutPair();
+    llvm::errs() << "\nEdge for array " << e.getArrayPointer()
                  << ", in ID: " << memAccessIds[in]
                  << "; out ID: " << memAccessIds[out] << "\n";
   }
@@ -1543,7 +1543,7 @@ TEST(ConvReversePass, BasicAssertions) {
   LinearProgramLoopBlock loopBlock;
   Vector<unsigned, 8> sch_0(4 + 1, 0);
   Vector<unsigned, 8> sch_1{sch_0};
-  BumpAlloc<> alloc;
+  BumpAlloc<> &alloc = tlf.getAlloc();
   //         C[m+i,j+n] = C[m+i,j+n] + A[m,n] * -> B[i,j] <-;
   MemoryAccess *msch_0(createMemAccess(alloc, BmnInd, Bload, sch_0));
   loopBlock.addMemory(msch_0);

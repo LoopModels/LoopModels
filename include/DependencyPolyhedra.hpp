@@ -102,11 +102,6 @@ class DepPoly : public BasePolyhedra<true, true, false, DepPoly> {
 #pragma clang diagnostic pop
 #endif
 
-  constexpr DepPoly(unsigned int nd0, unsigned int nd1, unsigned int nds,
-                    unsigned int td, unsigned int conCap, unsigned int eqConCap)
-    : numDep0Var(nd0), numDep1Var(nd1), numCon(conCap), numEqCon(eqConCap),
-      numDynSym(nds), timeDim(td), conCapacity(conCap),
-      eqConCapacity(eqConCap) {}
   // [[nodiscard]] static auto allocate(BumpAlloc<> &alloc, unsigned int
   // numDep0Var, unsigned int numDep1Var, unsigned int numCon, unsigned int
   // numEqCon, unsigned int numDynSym, unsigned int timeDim, unsigned int
@@ -116,6 +111,12 @@ class DepPoly : public BasePolyhedra<true, true, false, DepPoly> {
   // }
 
 public:
+  constexpr explicit DepPoly(unsigned int nd0, unsigned int nd1,
+                             unsigned int nds, unsigned int td,
+                             unsigned int conCap, unsigned int eqConCap)
+    : numDep0Var(nd0), numDep1Var(nd1), numCon(conCap), numEqCon(eqConCap),
+      numDynSym(nds), timeDim(td), conCapacity(conCap),
+      eqConCapacity(eqConCap) {}
   [[nodiscard]] constexpr auto getTimeDim() const -> unsigned int {
     return timeDim;
   }
@@ -344,9 +345,10 @@ public:
       sizeof(const llvm::SCEV *) * numDynSym;
 
     auto p = alloc.checkpoint();
-    auto *mem = alloc.allocate(memNeeded, alignof(DepPoly));
-    auto *dp = new (mem) DepPoly(numDep0Var, numDep1Var, numDynSym, timeDim,
-                                 conCapacity, eqConCapacity);
+    auto *mem =
+      (DepPoly *)alloc.allocate(sizeof(DepPoly) + memNeeded, alignof(DepPoly));
+    auto *dp = std::construct_at(mem, numDep0Var, numDep1Var, numDynSym,
+                                 timeDim, conCapacity, eqConCapacity);
 
     // numDep1Var = nv1;
     const Row nc = nc0 + nc1;
@@ -633,11 +635,6 @@ public:
       dependenceBounding(depSatBound[1]), in(inOut[0]), out(inOut[1]),
       forward(fwd) {}
   using BitSet = MemoryAccess::BitSet;
-  constexpr void pushToEdgeVector(Vector<NotNull<Dependence>> &vec) {
-    in->addEdgeOut(vec.size());
-    out->addEdgeIn(vec.size());
-    vec.push_back(this);
-  }
   [[nodiscard]] constexpr auto getArrayPointer() -> const llvm::SCEV * {
     return in->getArrayPointer();
   }
@@ -660,8 +657,12 @@ public:
   [[nodiscard]] auto getInIndMat() const -> PtrMatrix<int64_t> {
     return in->indexMatrix();
   }
+  constexpr void addEdge(size_t i) {
+    in->addEdgeOut(i);
+    out->addEdgeIn(i);
+  }
   /// getOutIndMat() -> getOutNumLoops() x arrayDim()
-  [[nodiscard]] auto getOutIndMat() const -> PtrMatrix<int64_t> {
+  [[nodiscard]] constexpr auto getOutIndMat() const -> PtrMatrix<int64_t> {
     return out->indexMatrix();
   }
   [[nodiscard]] constexpr auto getInOutPair() const
@@ -709,7 +710,7 @@ public:
     assert(getInNumLoops() + getOutNumLoops() == getNumPhiCoefficients());
     // 2 == 1 for const offset + 1 for w
     assert(2 + depPoly->getNumLambda() + getNumPhiCoefficients() +
-             getNumOmegaCoefficients() ==
+             getNumOmegaCoefficients() + 1 ==
            size_t(dependenceSatisfaction->getConstraints().numCol()));
   }
   [[nodiscard]] constexpr auto getDepPoly() -> NotNull<DepPoly> {

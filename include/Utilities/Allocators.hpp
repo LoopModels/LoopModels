@@ -56,7 +56,7 @@ public:
     __msan_allocated_memory(p, Size);
 #ifndef NDEBUG
     if ((MinAlignment >= alignof(int64_t)) && ((Size & 7) == 0)) {
-      std::fill_n(reinterpret_cast<std::int64_t *>(p), Size >> 3,
+      std::fill_n(static_cast<std::int64_t *>(p), Size >> 3,
                   std::numeric_limits<std::int64_t>::min());
     } else std::fill_n((char *)(p), Size, -1);
 #endif
@@ -67,7 +67,7 @@ public:
     -> T * {
     static_assert(std::is_trivially_destructible_v<T>,
                   "BumpAlloc only supports trivially destructible types.");
-    return reinterpret_cast<T *>(allocate(N * sizeof(T), alignof(T)));
+    return static_cast<T *>(allocate(N * sizeof(T), alignof(T)));
   }
 #ifdef BUMP_ALLOC_LLVM_USE_ALLOCATOR
   static constexpr auto contains(std::pair<void *, size_t> P, void *p) -> bool {
@@ -85,8 +85,6 @@ public:
   // }
 #endif
   constexpr void deallocate(void *Ptr, size_t Size) {
-    (void)Ptr;
-    (void)Size;
     __asan_poison_memory_region(Ptr, Size);
     if constexpr (BumpUp) {
       if (Ptr + align(Size) == slab) slab = Ptr;
@@ -141,7 +139,7 @@ public:
   }
   template <typename T>
   constexpr auto tryReallocate(T *Ptr, size_t OldSize, size_t NewSize) -> T * {
-    return reinterpret_cast<T *>(
+    return static_cast<T *>(
       tryReallocate(Ptr, OldSize * sizeof(T), NewSize * sizeof(T), alignof(T)));
   }
   /// reallocate<ForOverwrite>(void *Ptr, size_t OldSize, size_t NewSize,
@@ -192,16 +190,13 @@ public:
   template <bool ForOverwrite = false, typename T>
   [[gnu::returns_nonnull, gnu::flatten, nodiscard]] constexpr auto
   reallocate(T *Ptr, size_t OldSize, size_t NewSize) -> T * {
-    return reinterpret_cast<T *>(reallocate<ForOverwrite>(
+    return static_cast<T *>(reallocate<ForOverwrite>(
       Ptr, OldSize * sizeof(T), NewSize * sizeof(T), alignof(T)));
   }
   constexpr BumpAlloc() : slabs({}), customSlabs({}) { newSlab(); }
-  constexpr BumpAlloc(BumpAlloc &&alloc) noexcept {
-    slabs = std::move(alloc.slabs);
-    customSlabs = std::move(alloc.customSlabs);
-    slab = alloc.slab;
-    sEnd = alloc.sEnd;
-  }
+  constexpr BumpAlloc(BumpAlloc &&alloc) noexcept
+    : slab{alloc.slab}, sEnd{alloc.sEnd}, slabs{std::move(alloc.slabs)},
+      customSlabs{std::move(alloc.customSlabs)} {}
   constexpr ~BumpAlloc() {
     for (auto *Slab : slabs)
       llvm::deallocate_buffer(Slab, SlabSize, MinAlignment);
@@ -336,7 +331,7 @@ private:
 
   constexpr void resetSlabs() {
     size_t nSlabs = slabs.size();
-    if (nSlabs == 0) return;
+    invariant(nSlabs != 0);
     if (nSlabs > 1) {
       for (size_t i = 1; i < nSlabs; ++i)
         llvm::deallocate_buffer(slabs[i], SlabSize, MinAlignment);

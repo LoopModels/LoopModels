@@ -127,11 +127,7 @@ if(NOT ((USE_SANITIZER MATCHES "([Uu]ndefined)") OR (USE_SANITIZER MATCHES
   # https://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html
   target_compile_options(${PROJECT_NAME} PRIVATE -fno-rtti)
 else()
-  target_compile_options(${PROJECT_NAME} PRIVATE -fno-omit-frame-pointer)
-endif()
-
-if(CMAKE_BUILD_TYPE MATCHES "Debug")
-  target_compile_options(${PROJECT_NAME} PRIVATE -ftrapv)
+  target_compile_options(${PROJECT_NAME} PRIVATE -fno-omit-frame-pointer -fno-sanitize-recover)
 endif()
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")

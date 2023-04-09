@@ -61,22 +61,6 @@ class Simplex {
     -> index_type * {
     return basicConsPointer() + reservedBasicConstraints();
   }
-  constexpr Simplex(unsigned numCon, unsigned numVar, unsigned conCap,
-                    unsigned varCap)
-    : numConstraints(numCon), numVars(numVar), constraintCapacity(conCap),
-      varCapacity(varCap) {
-    invariant(constraintCapacity > 0);
-    invariant(varCapacity > 0);
-    invariant(numConstraints <= constraintCapacity);
-    invariant(numVars <= varCapacity);
-    // invariant(intsNeeded() <= std::numeric_limits<index_type>::max());
-  }
-  constexpr Simplex(unsigned conCap, unsigned varCap)
-    : constraintCapacity(conCap), varCapacity(varCap) {
-    invariant(constraintCapacity > 0);
-    invariant(varCapacity > 0);
-    // invariant(intsNeeded() <= std::numeric_limits<index_type>::max());
-  }
   unsigned numConstraints{0};
   unsigned numVars{0};
   unsigned constraintCapacity;

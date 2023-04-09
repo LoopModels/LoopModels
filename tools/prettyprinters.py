@@ -105,7 +105,7 @@ pp.add_printer("LinAlg::ManagedArray", "^LinAlg::ManagedArray<.*, unsigned int, 
 pp.add_printer(
     "LinAlg::Array",
     "^LinAlg::Array<.*, LinAlg::SquareDims>$",
-    DenseMatrixPrinter,
+    SquareMatrixPrinter,
 )
 pp.add_printer(
     "LinAlg::Array",

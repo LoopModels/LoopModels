@@ -169,12 +169,12 @@ struct BasePolyhedra {
       for (size_t i = --j; i;) {
         if (A.numRow() <= 1) return;
         diff << A(--i, _) - A(j, _);
-        if (C.greaterEqual(diff)) {
+        if (C.greaterEqual(alloc, diff)) {
           eraseConstraint(i);
           rollback(alloc, p);
           C = initializeComparator(alloc);
           --j; // `i < j`, and `i` has been removed
-        } else if (diff *= -1; C.greaterEqual(diff)) {
+        } else if (diff *= -1; C.greaterEqual(alloc, diff)) {
           eraseConstraint(j);
           rollback(alloc, p);
           C = initializeComparator(alloc);
@@ -187,7 +187,7 @@ struct BasePolyhedra {
           for (size_t i = 0; i < dyn; ++i) {
             diff << A(j, _);
             --diff[last - i];
-            if (C.greaterEqual(diff)) {
+            if (C.greaterEqual(alloc, diff)) {
               eraseConstraint(j);
               rollback(alloc, p);
               C = initializeComparator(alloc);

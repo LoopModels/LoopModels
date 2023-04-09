@@ -77,35 +77,38 @@ private:
 #pragma clang diagnostic pop
 #endif
   // schedule indicated by `1` top bit, remainder indicates loop
-  [[nodiscard]] inline auto data() -> NotNull<int64_t> {
-    char *ptr = mem + sizeof(const llvm::SCEV *const *) * (numDim + numDynSym);
-    return reinterpret_cast<int64_t *>(ptr);
+  [[nodiscard]] constexpr auto data() -> NotNull<int64_t> {
+    void *ptr = mem + sizeof(const llvm::SCEV *const *) * (numDim + numDynSym);
+    return static_cast<int64_t *>(ptr);
   }
-  [[nodiscard]] inline auto data() const -> NotNull<int64_t> {
-    const char *ptr =
+  [[nodiscard]] constexpr auto data() const -> NotNull<int64_t> {
+    const void *ptr =
       mem + sizeof(const llvm::SCEV *const *) * (numDim + numDynSym);
-    return reinterpret_cast<int64_t *>(const_cast<char *>(ptr));
+    return static_cast<int64_t *>(const_cast<void *>(ptr));
   }
-  [[nodiscard]] inline auto scevPtr() -> const llvm::SCEV ** {
-    char *ptr = mem;
-    return reinterpret_cast<const llvm::SCEV **>(ptr);
+  [[nodiscard]] constexpr auto scevPtr() -> const llvm::SCEV ** {
+    void *ptr = mem;
+    return static_cast<const llvm::SCEV **>(ptr);
   }
-  [[nodiscard]] inline auto scevPtr() const -> const llvm::SCEV *const * {
-    const char *ptr = mem;
-    return reinterpret_cast<const llvm::SCEV *const *>(ptr);
+  [[nodiscard]] constexpr auto scevPtr() const -> const llvm::SCEV *const * {
+    const void *ptr = mem;
+    return static_cast<const llvm::SCEV *const *>(ptr);
   }
   [[nodiscard]] constexpr auto omegaOffset() const -> size_t {
     return memoryOmegaOffset(getArrayDim(), getNumLoops(), getNumSymbols());
   }
-  MemoryAccess(const llvm::SCEVUnknown *arrayPtr, AffineLoopNest<true> &loopRef,
-               llvm::Instruction *user, std::array<unsigned, 2> dimOff)
-    : basePointer(arrayPtr), loop(loopRef), loadOrStore(user),
-      numDim(dimOff[0]), numDynSym(dimOff[1]){};
-  MemoryAccess(const llvm::SCEVUnknown *arrayPtr, AffineLoopNest<true> &loopRef,
-               llvm::Instruction *user)
-    : basePointer(arrayPtr), loop(loopRef), loadOrStore(user){};
 
 public:
+  explicit constexpr MemoryAccess(const llvm::SCEVUnknown *arrayPtr,
+                                  AffineLoopNest<true> &loopRef,
+                                  llvm::Instruction *user,
+                                  std::array<unsigned, 2> dimOff)
+    : basePointer(arrayPtr), loop(loopRef), loadOrStore(user),
+      numDim(dimOff[0]), numDynSym(dimOff[1]){};
+  explicit constexpr MemoryAccess(const llvm::SCEVUnknown *arrayPtr,
+                                  AffineLoopNest<true> &loopRef,
+                                  llvm::Instruction *user)
+    : basePointer(arrayPtr), loop(loopRef), loadOrStore(user){};
   /// Constructor for 0 dimensional memory access
   static auto construct(BumpAlloc<> &alloc,
                         const llvm::SCEVUnknown *arrayPointer,
@@ -114,9 +117,9 @@ public:
     size_t numLoops = loopRef.getNumLoops();
     assert(o.size() == numLoops + 1);
     size_t memNeeded = numLoops;
-    auto *mem =
-      alloc.allocate(sizeof(MemoryAccess) + memNeeded * sizeof(int64_t), 8);
-    auto *ma = new (mem) MemoryAccess(arrayPointer, loopRef, user);
+    auto *mem = (MemoryAccess *)alloc.allocate(
+      sizeof(MemoryAccess) + memNeeded * sizeof(int64_t), 8);
+    auto *ma = std::construct_at(mem, arrayPointer, loopRef, user);
     ma->getFusionOmega() << o;
     return ma;
   }
@@ -136,12 +139,12 @@ public:
     assert(o.size() == numLoops + 1);
     size_t numSymbols = size_t(offsets.numCol());
     size_t memNeeded = memoryIntsRequired(arrayDim, numLoops, numSymbols);
-    auto *mem =
-      alloc.allocate(sizeof(MemoryAccess) + memNeeded * sizeof(int64_t) +
-                       (arrayDim + nOff) * sizeof(const llvm::SCEV *const *),
-                     alignof(MemoryAccess));
-    auto *ma =
-      new (mem) MemoryAccess(arrayPtr, loopRef, user, {arrayDim, nOff});
+    auto *mem = (MemoryAccess *)alloc.allocate(
+      sizeof(MemoryAccess) + memNeeded * sizeof(int64_t) +
+        (arrayDim + nOff) * sizeof(const llvm::SCEV *const *),
+      alignof(MemoryAccess));
+    auto *ma = std::construct_at(mem, arrayPtr, loopRef, user,
+                                 std::array<unsigned, 2>{arrayDim, nOff});
     std::copy_n(szOff[0].begin(), arrayDim, ma->getSizes().begin());
     std::copy_n(szOff[1].begin(), nOff, ma->getSymbolicOffsets().begin());
     ma->indexMatrix() << indMatT.transpose();
@@ -218,13 +221,13 @@ public:
   /// for (i : I)
   ///   for (j : J)
   ///      A[i, i + j]
-  [[nodiscard]] auto indexMatrix() -> MutDensePtrMatrix<int64_t> {
+  [[nodiscard]] constexpr auto indexMatrix() -> MutDensePtrMatrix<int64_t> {
     const size_t d = getArrayDim();
     return {data(), DenseDims{getNumLoops(), d}};
   }
   /// indexMatrix() -> getNumLoops() x arrayDim()
   /// loops are in [innermost -> outermost] order
-  [[nodiscard]] auto indexMatrix() const -> DensePtrMatrix<int64_t> {
+  [[nodiscard]] constexpr auto indexMatrix() const -> DensePtrMatrix<int64_t> {
     const size_t d = getArrayDim();
     return {data(), DenseDims{getNumLoops(), d}};
   }

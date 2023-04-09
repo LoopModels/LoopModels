@@ -8,7 +8,7 @@
 namespace LinAlg {
 // BumpPtrVector
 // Has reference semantics.
-template <typename T> struct BumpPtrVector {
+template <typename T, unsigned InitialCapacity = 8> struct BumpPtrVector {
   static_assert(!std::is_const_v<T>, "T shouldn't be const");
   static_assert(std::is_trivially_destructible_v<T>);
   using eltype = T;
@@ -29,10 +29,10 @@ template <typename T> struct BumpPtrVector {
   [[no_unique_address]] unsigned Capacity;
   [[no_unique_address]] NotNull<BumpAlloc<>> Alloc;
 
-  constexpr BumpPtrVector(BumpAlloc<> &a)
-    : mem(nullptr), Size(0), Capacity(0), Alloc(a) {}
   constexpr BumpPtrVector(WBumpAlloc<T> a)
-    : mem(nullptr), Size(0), Capacity(0), Alloc(a.get_allocator()) {}
+    : mem(a.allocate(InitialCapacity)), Size(0), Capacity(InitialCapacity),
+      Alloc(a.get_allocator()) {}
+  constexpr BumpPtrVector(BumpAlloc<> &a) : BumpPtrVector(WBumpAlloc<T>(a)) {}
 
   [[gnu::flatten]] constexpr auto operator[](const ScalarIndex auto i) -> T & {
     invariant(unsigned(i) < Size);
@@ -62,8 +62,10 @@ template <typename T> struct BumpPtrVector {
   [[nodiscard]] constexpr auto isEmpty() const -> bool { return Size == 0; }
   constexpr void clear() {
     Size = 0;
-    Capacity = 0;
-    Alloc->deallocate(mem);
+    if constexpr (InitialCapacity == 0) {
+      Capacity = 0;
+      Alloc->deallocate(mem);
+    }
   }
   // copy constructor
   // constexpr MutPtrVector() = default;
@@ -110,91 +112,94 @@ template <typename T> struct BumpPtrVector {
   constexpr auto operator==(PtrVector<T> x) const -> bool {
     return PtrVector<T>(*this) == x;
   }
-  auto operator==(const llvm::ArrayRef<T> x) const -> bool {
+  constexpr auto operator==(const llvm::ArrayRef<T> x) const -> bool {
     return std::equal(begin(), end(), x.begin(), x.end());
   }
   [[nodiscard]] constexpr auto view() const -> PtrVector<T> { return *this; };
-  [[gnu::flatten]] auto operator<<(PtrVector<T> x) -> MutPtrVector<T> {
-    return MutPtrVector<T>{*this} << x;
-  }
-  [[gnu::flatten]] auto operator<<(MutPtrVector<T> x) -> MutPtrVector<T> {
-    return MutPtrVector<T>{*this} << x;
-  }
-  [[gnu::flatten]] auto operator<<(const AbstractVector auto &x)
+  [[gnu::flatten]] constexpr auto operator<<(PtrVector<T> x)
     -> MutPtrVector<T> {
     return MutPtrVector<T>{*this} << x;
   }
-  [[gnu::flatten]] auto operator<<(std::integral auto x) -> MutPtrVector<T> {
+  [[gnu::flatten]] constexpr auto operator<<(MutPtrVector<T> x)
+    -> MutPtrVector<T> {
+    return MutPtrVector<T>{*this} << x;
+  }
+  [[gnu::flatten]] constexpr auto operator<<(const AbstractVector auto &x)
+    -> MutPtrVector<T> {
+    return MutPtrVector<T>{*this} << x;
+  }
+  [[gnu::flatten]] constexpr auto operator<<(std::integral auto x)
+    -> MutPtrVector<T> {
     for (auto &&y : *this) y = x;
     return *this;
   }
-  [[gnu::flatten]] auto operator+=(const AbstractVector auto &x)
+  [[gnu::flatten]] constexpr auto operator+=(const AbstractVector auto &x)
     -> MutPtrVector<T> {
     invariant(Size, x.size());
     for (size_t i = 0; i < Size; ++i) mem[i] += x[i];
     return *this;
   }
-  [[gnu::flatten]] auto operator-=(const AbstractVector auto &x)
+  [[gnu::flatten]] constexpr auto operator-=(const AbstractVector auto &x)
     -> MutPtrVector<T> {
     invariant(Size, x.size());
     for (size_t i = 0; i < Size; ++i) mem[i] -= x[i];
     return *this;
   }
-  [[gnu::flatten]] auto operator*=(const AbstractVector auto &x)
+  [[gnu::flatten]] constexpr auto operator*=(const AbstractVector auto &x)
     -> MutPtrVector<T> {
     invariant(Size, x.size());
     for (size_t i = 0; i < Size; ++i) mem[i] *= x[i];
     return *this;
   }
-  [[gnu::flatten]] auto operator/=(const AbstractVector auto &x)
+  [[gnu::flatten]] constexpr auto operator/=(const AbstractVector auto &x)
     -> MutPtrVector<T> {
     invariant(Size, x.size());
     for (size_t i = 0; i < Size; ++i) mem[i] /= x[i];
     return *this;
   }
-  [[gnu::flatten]] auto operator+=(const std::integral auto x)
+  [[gnu::flatten]] constexpr auto operator+=(const std::integral auto x)
     -> MutPtrVector<T> {
     for (size_t i = 0; i < Size; ++i) mem[i] += x;
     return *this;
   }
-  [[gnu::flatten]] auto operator-=(const std::integral auto x)
+  [[gnu::flatten]] constexpr auto operator-=(const std::integral auto x)
     -> MutPtrVector<T> {
     for (size_t i = 0; i < Size; ++i) mem[i] -= x;
     return *this;
   }
-  [[gnu::flatten]] auto operator*=(const std::integral auto x)
+  [[gnu::flatten]] constexpr auto operator*=(const std::integral auto x)
     -> MutPtrVector<T> {
     for (size_t i = 0; i < Size; ++i) mem[i] *= x;
     return *this;
   }
-  [[gnu::flatten]] auto operator/=(const std::integral auto x)
+  [[gnu::flatten]] constexpr auto operator/=(const std::integral auto x)
     -> MutPtrVector<T> {
     for (size_t i = 0; i < Size; ++i) mem[i] /= x;
     return *this;
   }
-  void reserveForOverwrite(size_t N) {
+  constexpr void reserveForOverwrite(size_t N) {
     if (N <= Capacity) return;
     mem = Alloc->reallocate<true>(mem, Capacity, N);
     Capacity = N;
   }
-  void reserve(size_t N) {
+  constexpr void reserve(size_t N) {
     if (N <= Capacity) return;
     mem = Alloc->reallocate<false>(mem, Capacity, N);
     Capacity = N;
   }
-  void truncate(size_t N) {
+  constexpr void truncate(size_t N) {
     assert(N <= Capacity);
     Size = N;
   }
-  void resize(size_t N) {
+  constexpr void resize(size_t N) {
     reserve(N);
     Size = N;
   }
-  void resizeForOverwrite(size_t N) {
+  constexpr void resizeForOverwrite(size_t N) {
     reserveForOverwrite(N);
     Size = N;
   }
-  void extendOrAssertSize(size_t N) {
+  constexpr void extendOrAssertSize(size_t N) {
     if (N != Size) resizeForOverwrite(N);
   }
   [[nodiscard]] constexpr auto get_allocator() -> WBumpAlloc<T> {
@@ -203,11 +208,11 @@ template <typename T> struct BumpPtrVector {
   template <typename... Args>
   constexpr auto emplace_back(Args &&...args) -> T & {
     size_t offset = Size++;
-    if (Size > Capacity) [[unlikely]]
-      reserve(Size + Size);
-    T *p = mem + offset;
-    ::new ((void *)p) T(std::forward<Args>(args)...);
-    return *p;
+    if (Size > Capacity) [[unlikely]] {
+      if constexpr (InitialCapacity == 0) reserve(Size + Size);
+      else reserve(offset + offset);
+    }
+    return *std::construct_at(mem + offset, std::forward<Args>(args)...);
   }
   [[nodiscard]] constexpr auto empty() const -> bool { return Size == 0; }
   constexpr void pop_back() { --Size; }
