@@ -510,7 +510,7 @@ public:
   /// amount of loads executed in the eventual generated code)
   void connectGraph() {
     // assembles direct connections in node graph
-    auto p = allocator.checkpoint();
+    auto p = allocator.scope();
     amap<llvm::User *, unsigned> userToMemory{
       WBumpAlloc<std::pair<llvm::User *, unsigned>>{allocator}};
     for (unsigned i = 0; i < memory.size(); ++i)
@@ -527,7 +527,6 @@ public:
                              nodeIndex);
       visited.clear();
     }
-    allocator.rollback(p); // free userToMemory and visited
     // destructors of amap and aset poison memory
   }
   void buildGraph() {
@@ -995,10 +994,8 @@ public:
   }
   [[nodiscard]] auto solveGraph(Graph &g, size_t depth, bool satisfyDeps)
     -> std::optional<BitSet> {
-    auto p = allocator.checkpoint();
-    auto ret = solveGraphCore(g, depth, satisfyDeps);
-    allocator.rollback(p);
-    return ret;
+    auto p = allocator.scope();
+    return solveGraphCore(g, depth, satisfyDeps);
   }
   [[nodiscard]] auto deactivateSatisfiedEdges(Graph &g, size_t depth,
                                               Simplex::Solution sol) -> BitSet {

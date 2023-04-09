@@ -133,9 +133,8 @@ struct BasePolyhedra {
   }
   constexpr void pruneBounds(BumpAlloc<> &alloc) {
     if (getNumCon() == 0) return;
-    auto p = checkpoint(alloc);
+    auto p = alloc.scope();
     pruneBoundsCore<true>(alloc);
-    rollback(alloc, p);
   }
   constexpr void pruneBounds() {
     BumpAlloc<> alloc;

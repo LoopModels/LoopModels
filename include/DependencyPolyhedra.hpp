@@ -401,11 +401,9 @@ public:
       E(indexDim + i, numSym + numDep0Var + numDep1Var + i) = 1;
     }
     dp->pruneBounds(alloc);
-    if (dp->getNumCon() == 0) {
-      alloc.rollback(p);
-      return nullptr;
-    }
-    return dp;
+    if (dp->getNumCon()) return dp;
+    alloc.rollback(p);
+    return nullptr;
   }
   // `direction = true` means second dep follow first
   // lambda_0 + lambda*A*x = delta + c'x
@@ -812,7 +810,7 @@ public:
     size_t numLoopsTotal = numLoopsIn + numLoopsOut;
     size_t numVar = numLoopsIn + numLoopsOut + 2;
     invariant(dependenceSatisfaction->getNumVars() == numVar);
-    auto p = alloc.checkpoint();
+    auto p = alloc.scope();
     auto schv = vector(alloc, numVar, int64_t(0));
     const SquarePtrMatrix<int64_t> inPhi = schIn->getPhi();
     const SquarePtrMatrix<int64_t> outPhi = schOut->getPhi();
@@ -821,13 +819,10 @@ public:
     auto inOffOmega = schIn->getOffsetOmega();
     auto outOffOmega = schOut->getOffsetOmega();
     const size_t numLambda = getNumLambda();
-    bool sat = true;
     // when i == numLoopsCommon, we've passed the last loop
     for (size_t i = 0; i <= numLoopsCommon; ++i) {
-      if (int64_t o2idiff = outFusOmega[i] - inFusOmega[i]) {
-        sat = (o2idiff > 0);
-        break;
-      }
+      if (int64_t o2idiff = outFusOmega[i] - inFusOmega[i])
+        return (o2idiff > 0);
       // we should not be able to reach `numLoopsCommon`
       // because at the very latest, this last schedule value
       // should be different, because either:
@@ -852,12 +847,10 @@ public:
           dependenceBounding->unSatisfiable(alloc, schv, numLambda)) {
         // if zerod-out bounding not >= 0, then that means
         // phi_t - phi_s > 0, so the dependence is satisfied
-        sat = false;
-        break;
+        return false;
       }
     }
-    alloc.rollback(p);
-    return sat;
+    return true;
   }
   [[nodiscard]] auto isSatisfied(BumpAlloc<> &alloc,
                                  PtrVector<unsigned> inFusOmega,
@@ -868,17 +861,14 @@ public:
     size_t numLoopsCommon = std::min(numLoopsIn, numLoopsOut);
     size_t numVar = numLoopsIn + numLoopsOut + 2;
     invariant(dependenceSatisfaction->getNumVars() == numVar);
-    auto p = alloc.checkpoint();
+    auto p = alloc.scope();
     auto schv = vector(alloc, numVar, int64_t(0));
     // Vector<int64_t> schv(dependenceSatisfaction->getNumVars(),int64_t(0));
     const size_t numLambda = getNumLambda();
-    bool sat = true;
     // when i == numLoopsCommon, we've passed the last loop
     for (size_t i = 0; i <= numLoopsCommon; ++i) {
-      if (int64_t o2idiff = outFusOmega[i] - inFusOmega[i]) {
-        sat = (o2idiff > 0);
-        break;
-      }
+      if (int64_t o2idiff = outFusOmega[i] - inFusOmega[i])
+        return (o2idiff > 0);
       // we should not be able to reach `numLoopsCommon`
       // because at the very latest, this last schedule value
       // should be different, because either:
@@ -901,14 +891,12 @@ public:
           dependenceBounding->unSatisfiable(alloc, schv, numLambda)) {
         // if zerod-out bounding not >= 0, then that means
         // phi_t - phi_s > 0, so the dependence is satisfied
-        sat = false;
-        break;
+        return false;
       }
       schv[2 + i] = 0;
       schv[2 + numLoopsIn + i] = 0;
     }
-    alloc.rollback(p);
-    return sat;
+    return true;
   }
   [[nodiscard]] auto isSatisfied(BumpAlloc<> &alloc,
                                  NotNull<const AffineSchedule> sx,
@@ -1017,15 +1005,11 @@ public:
     const size_t numLoopsTotal = numLoopsX + numLoopsY;
     PtrVector<int64_t> xFusOmega = x->getFusionOmega();
     PtrVector<int64_t> yFusOmega = y->getFusionOmega();
-    auto chkp = alloc.checkpoint();
+    auto chkp = alloc.scope();
     PtrVector<int64_t> sch = vector(alloc, numLoopsTotal + 2, int64_t(0));
-    bool dir;
     // i iterates from outer-most to inner most common loop
     for (size_t i = 0; /*i <= numLoopsCommon*/; ++i) {
-      if (yFusOmega[i] != xFusOmega[i]) {
-        dir = yFusOmega[i] > xFusOmega[i];
-        break;
-      }
+      if (yFusOmega[i] != xFusOmega[i]) return yFusOmega[i] > xFusOmega[i];
       // we should not be able to reach `numLoopsCommon`
       // because at the very latest, this last schedule value
       // should be different, because either:
@@ -1044,19 +1028,15 @@ public:
                                     size_t(nonTimeDim))) {
         assert(!fyx->unSatisfiableZeroRem(alloc, sch, numLambda,
                                           size_t(nonTimeDim)));
-        dir = false;
-        break;
+        return false;
       }
-      if (fyx->unSatisfiableZeroRem(alloc, sch, numLambda,
-                                    size_t(nonTimeDim))) {
-        dir = true;
-        break;
-      }
+      if (fyx->unSatisfiableZeroRem(alloc, sch, numLambda, size_t(nonTimeDim)))
+        return true;
       sch[2 + i] = 1;
       sch[2 + numLoopsX + i] = 1;
     }
-    alloc.rollback(chkp);
-    return dir;
+    invariant(false);
+    return false;
   }
   static auto timelessCheck(BumpAlloc<> &alloc, NotNull<DepPoly> dxy,
                             NotNull<MemoryAccess> x, NotNull<MemoryAccess> y)

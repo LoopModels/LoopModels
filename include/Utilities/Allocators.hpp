@@ -231,6 +231,16 @@ public:
       slab = p.p;
     } else initSlab(slabs.back());
   }
+  /// RAII version of CheckPoint
+  struct ScopeLifetime {
+    constexpr ScopeLifetime(BumpAlloc &a) : alloc(a), p(a.checkpoint()) {}
+    constexpr ~ScopeLifetime() { alloc.rollback(p); }
+
+  private:
+    BumpAlloc &alloc;
+    CheckPoint p;
+  };
+  constexpr auto scope() -> ScopeLifetime { return *this; }
 
 private:
   static constexpr auto align(size_t x) -> size_t {

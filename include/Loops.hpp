@@ -625,7 +625,7 @@ struct AffineLoopNest
   [[nodiscard]] auto
   zeroExtraItersUponExtending(LinAlg::Alloc<int64_t> auto &alloc, size_t _i,
                               bool extendLower) const -> bool {
-    auto p = alloc.checkpoint();
+    auto p = alloc.scope();
     AffineLoopNest<NonNegative> *tmp = copy(alloc);
     // question is, does the inner most loop have 0 extra iterations?
     const size_t numPrevLoops = getNumLoops() - 1;
@@ -642,10 +642,7 @@ struct AffineLoopNest
     auto A{tmp->getA()};
     for (size_t n = 0; n < A.numRow(); ++n)
       if ((A(n, numConst) != 0) && (A(n, 1 + numConst) != 0)) indep = false;
-    if (indep) {
-      alloc.rollback(p);
-      return false;
-    }
+    if (indep) return false;
     AffineLoopNest<NonNegative> *margi = tmp->removeLoop(alloc, 1);
     AffineLoopNest<NonNegative> *tmp2;
     invariant(margi->getNumLoops(), size_t(1));
@@ -681,10 +678,7 @@ struct AffineLoopNest
       }
       for (size_t cc = size_t(tmp2->getNumCon()); cc;)
         if (tmp2->getA()(--cc, 1 + numConst) == 0) tmp2->eraseConstraint(cc);
-      if (!(tmp2->calcIsEmpty(alloc))) {
-        alloc.rollback(p);
-        return false;
-      }
+      if (!(tmp2->calcIsEmpty(alloc))) return false;
     }
     if constexpr (NonNegative) {
       if (extendLower) {
@@ -707,13 +701,9 @@ struct AffineLoopNest
         }
         for (size_t cc = size_t(tmp->getNumCon()); cc;)
           if (tmp->getA()(--cc, 1 + numConst) == 0) tmp->eraseConstraint(cc);
-        if (!(tmp->calcIsEmpty(alloc))) {
-          alloc.rollback(p);
-          return false;
-        }
+        if (!(tmp->calcIsEmpty(alloc))) return false;
       }
     }
-    alloc.rollback(p);
     return true;
   }
 

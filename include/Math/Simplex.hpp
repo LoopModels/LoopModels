@@ -717,7 +717,7 @@ public:
   }
 
   constexpr void pruneBounds(BumpAlloc<> &alloc, size_t numSlack = 0) {
-    auto p = alloc.checkpoint();
+    auto p = alloc.scope();
     Simplex *simplex{Simplex::create(alloc, numConstraints, numVars,
                                      constraintCapacity, varCapacity)};
     // Simplex simplex{getNumCons(), getNumVars(), getNumSlack(), 0};
@@ -730,7 +730,6 @@ public:
         cost[v] = -constraints(c, v + 1);
       if (simplex->run() != bumpedBound) deleteConstraint(c--);
     }
-    alloc.rollback(p);
   }
 
   constexpr void dropVariable(size_t i) {
@@ -779,7 +778,7 @@ public:
     // is satisfiable.
     const size_t numCon = getNumCons(), numVar = getNumVars(),
                  numFix = x.size();
-    auto p = alloc.checkpoint();
+    auto p = alloc.scope();
     Simplex *subSimp{Simplex::create(alloc, numCon, numVar - numFix)};
     // subSimp.tableau(0, 0) = 0;
     // subSimp.tableau(0, 1) = 0;
@@ -792,9 +791,7 @@ public:
     sC(_, _(1, 1 + off)) << fC(_, _(1, 1 + off));
     sC(_, _(1 + off, end)) << fC(_, _(1 + off + numFix, end));
     // returns `true` if unsatisfiable
-    bool res = subSimp->initiateFeasible();
-    alloc.rollback(p);
-    return res;
+    return subSimp->initiateFeasible();
   }
   [[nodiscard]] constexpr auto satisfiable(BumpAlloc<> &alloc,
                                            PtrVector<int64_t> x,
@@ -814,7 +811,7 @@ public:
     // is satisfiable.
     assert(numRow <= getNumCons());
     const size_t numFix = x.size();
-    auto p = alloc.checkpoint();
+    auto p = alloc.scope();
     Simplex *subSimp{Simplex::create(alloc, numRow, off)};
     // subSimp.tableau(0, 0) = 0;
     // subSimp.tableau(0, 1) = 0;
@@ -829,9 +826,7 @@ public:
     //     sC(_, 0) -= x(i) * fC(_, i + 1 + off);
     sC(_, _(1, 1 + off)) << fC(_(begin, numRow), _(1, 1 + off));
     assert(sC(_, _(1, 1 + off)) == fC(_(begin, numRow), _(1, 1 + off)));
-    bool res = subSimp->initiateFeasible();
-    alloc.rollback(p);
-    return res;
+    return subSimp->initiateFeasible();
   }
   [[nodiscard]] constexpr auto satisfiableZeroRem(BumpAlloc<> &alloc,
                                                   PtrVector<int64_t> x,

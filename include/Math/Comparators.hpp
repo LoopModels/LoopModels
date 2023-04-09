@@ -498,12 +498,12 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
   // Note that this is only valid when the comparator was constructed
   // with index `0` referring to >= 0 constants (i.e., the default).
   constexpr auto isEmpty(BumpAlloc<> &alloc) const -> bool {
-    auto p = checkpoint(alloc);
+    auto p = alloc.scope();
     auto V = getV();
     auto U = getU();
     auto d = getD();
     StridedVector<int64_t> b{U(_, 0)};
-    if (d.size() == 0) {
+    if (d.empty()) {
       if (!allZero(b[_(V.numRow(), end)])) return false;
       Col oldn = V.numCol();
       auto H{matrix<int64_t>(alloc, V.numRow(), oldn + 1)};
@@ -518,7 +518,6 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
             ret = false;
             break;
           }
-      rollback(alloc, p);
       return ret;
     }
     // Column rank deficient case
@@ -549,9 +548,7 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
         expandW(i, NSdim + 1 + j) = val;
       }
     }
-    Optional<Simplex *> optS{Simplex::positiveVariables(alloc, expandW)};
-    rollback(alloc, p);
-    return optS.hasValue();
+    return Simplex::positiveVariables(alloc, expandW).hasValue();
   }
   [[nodiscard]] constexpr auto isEmpty() const -> bool {
     BumpAlloc<> alloc;
@@ -619,13 +616,11 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
                                             PtrVector<int64_t> query) const
     -> bool {
     auto U = getU();
-    auto p = checkpoint(alloc);
+    auto p = alloc.scope();
     auto b = vector<int64_t>(alloc, unsigned(U.numRow()));
     b << U(_, _(begin, query.size())) * query;
-    bool ge = getD().size() ? greaterEqualRankDeficient(alloc, b)
-                            : greaterEqualFullRank(alloc, b);
-    rollback(alloc, p);
-    return ge;
+    return getD().size() ? greaterEqualRankDeficient(alloc, b)
+                         : greaterEqualFullRank(alloc, b);
   }
 };
 struct LinearSymbolicComparator
