@@ -1105,7 +1105,7 @@ public:
           (!hasActiveEdges(g, node)))
         continue;
       A.resizeForOverwrite(Row{size_t(node.getPhi().numCol())}, Col{depth});
-      A << node.getPhi()(_(end - depth, end), _).transpose();
+      A << node.getPhi()(_(0, depth), _).transpose();
       NormalForm::nullSpace11(N, A);
       C(i, 0) = 1;
       MutPtrVector<int64_t> cc{C(i, node.getPhiOffsetRange())};
