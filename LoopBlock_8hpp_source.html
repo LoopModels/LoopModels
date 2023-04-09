@@ -1015,7 +1015,7 @@ $(function() {
 <div class="line"><a name="l01064"></a><span class="lineno"> 1064</span>&#160;      <span class="keywordflow">if</span> (!node.phiIsScheduled(depth)) {</div>
 <div class="line"><a name="l01065"></a><span class="lineno"> 1065</span>&#160;        int64_t l = sol[node.getPhiOffsetRange() + o].denomLCM();</div>
 <div class="line"><a name="l01066"></a><span class="lineno"> 1066</span>&#160;        <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; node.getPhi().numCol(); ++i)</div>
-<div class="line"><a name="l01067"></a><span class="lineno"> 1067</span>&#160;          assert(node.getPhi()(last - depth, i) ==</div>
+<div class="line"><a name="l01067"></a><span class="lineno"> 1067</span>&#160;          assert(node.getPhi()(depth, i) ==</div>
 <div class="line"><a name="l01068"></a><span class="lineno"> 1068</span>&#160;                 sol[node.getPhiOffsetRange() + o][i] * l);</div>
 <div class="line"><a name="l01069"></a><span class="lineno"> 1069</span>&#160;      }</div>
 <div class="line"><a name="l01070"></a><span class="lineno"> 1070</span>&#160;<span class="preprocessor">#endif</span></div>
