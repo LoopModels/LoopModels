@@ -73,7 +73,7 @@ template <typename Op, typename A> struct ElementwiseUnaryOp {
   using value_type = typename A::value_type;
   [[no_unique_address]] Op op;
   [[no_unique_address]] A a;
-  auto operator()(size_t i, size_t j) const { return op(a(i, j)); }
+  constexpr auto operator()(size_t i, size_t j) const { return op(a(i, j)); }
 
   [[nodiscard]] constexpr auto size() const { return a.size(); }
   [[nodiscard]] constexpr auto dim() const { return a.dim(); }
@@ -85,7 +85,7 @@ template <typename Op, AbstractVector A> struct ElementwiseUnaryOp<Op, A> {
   using value_type = typename A::value_type;
   [[no_unique_address]] Op op;
   [[no_unique_address]] A a;
-  auto operator[](size_t i) const { return op(a[i]); }
+  constexpr auto operator[](size_t i) const { return op(a[i]); }
 
   [[nodiscard]] constexpr auto size() const { return a.size(); }
   [[nodiscard]] constexpr auto view() const { return *this; };
@@ -93,8 +93,8 @@ template <typename Op, AbstractVector A> struct ElementwiseUnaryOp<Op, A> {
 // scalars broadcast
 constexpr auto get(const auto &A, size_t) { return A; }
 constexpr auto get(const auto &A, size_t, size_t) { return A; }
-inline auto get(const AbstractVector auto &A, size_t i) { return A[i]; }
-inline auto get(const AbstractMatrix auto &A, size_t i, size_t j) {
+constexpr auto get(const AbstractVector auto &A, size_t i) { return A[i]; }
+constexpr auto get(const AbstractMatrix auto &A, size_t i, size_t j) {
   return A(i, j);
 }
 
@@ -134,8 +134,9 @@ template <typename Op, Trivial A, Trivial B> struct ElementwiseVectorBinaryOp {
   [[no_unique_address]] Op op;
   [[no_unique_address]] A a;
   [[no_unique_address]] B b;
-  ElementwiseVectorBinaryOp(Op _op, A _a, B _b) : op(_op), a(_a), b(_b) {}
-  auto operator[](size_t i) const { return op(get(a, i), get(b, i)); }
+  constexpr ElementwiseVectorBinaryOp(Op _op, A _a, B _b)
+    : op(_op), a(_a), b(_b) {}
+  constexpr auto operator[](size_t i) const { return op(get(a, i), get(b, i)); }
   [[nodiscard]] constexpr auto size() const -> size_t {
     if constexpr (AbstractVector<A> && AbstractVector<B>) {
       const size_t N = a.size();
@@ -155,8 +156,9 @@ template <typename Op, Trivial A, Trivial B> struct ElementwiseMatrixBinaryOp {
   [[no_unique_address]] Op op;
   [[no_unique_address]] A a;
   [[no_unique_address]] B b;
-  ElementwiseMatrixBinaryOp(Op _op, A _a, B _b) : op(_op), a(_a), b(_b) {}
-  auto operator()(size_t i, size_t j) const {
+  constexpr ElementwiseMatrixBinaryOp(Op _op, A _a, B _b)
+    : op(_op), a(_a), b(_b) {}
+  constexpr auto operator()(size_t i, size_t j) const {
     return op(get(a, i, j), get(b, i, j));
   }
   [[nodiscard]] constexpr auto numRow() const -> Row {

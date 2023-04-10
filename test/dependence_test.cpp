@@ -78,17 +78,18 @@ TEST(DependenceTest, BasicAssertions) {
     builder.CreateFAdd(Aload10, Aload01, "A10 + A01"), Ageped11,
     llvm::MaybeAlign(8), false);
 
+  constexpr size_t i = 0, j = 1;
   // we have three array refs
   // A[i+1, j+1] // (i+1)*stride(A,1) + (j+1)*stride(A,2);
   ArrayReference Asrc(scevA, loop, 2);
   {
     MutPtrMatrix<int64_t> IndMat = Asrc.indexMatrix();
     //     l  d
-    IndMat(1, 0) = 1; // i (loop ind: 1)
-    IndMat(0, 1) = 1; // j (loop ind: 0)
+    IndMat(i, 0) = 1;
+    IndMat(j, 1) = 1;
     MutPtrMatrix<int64_t> OffMat = Asrc.offsetMatrix();
-    OffMat(0, 0) = 1;
-    OffMat(1, 0) = 1;
+    OffMat(i, 0) = 1;
+    OffMat(j, 0) = 1;
     Asrc.sizes[0] = M;
     Asrc.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
   }
@@ -98,9 +99,9 @@ TEST(DependenceTest, BasicAssertions) {
   {
     MutPtrMatrix<int64_t> IndMat = Atgt01.indexMatrix();
     //     l  d
-    IndMat(1, 0) = 1; // i
-    IndMat(0, 1) = 1; // j
-    Atgt01.offsetMatrix()(0, 0) = 1;
+    IndMat(i, 0) = 1;
+    IndMat(j, 1) = 1;
+    Atgt01.offsetMatrix()(i, 0) = 1;
     Atgt01.sizes[0] = M;
     Atgt01.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
   }
@@ -110,9 +111,9 @@ TEST(DependenceTest, BasicAssertions) {
   {
     MutPtrMatrix<int64_t> IndMat = Atgt10.indexMatrix();
     //     l  d
-    IndMat(1, 0) = 1; // i
-    IndMat(0, 1) = 1; // j
-    Atgt10.offsetMatrix()(1, 0) = 1;
+    IndMat(i, 0) = 1; // i
+    IndMat(j, 1) = 1; // j
+    Atgt10.offsetMatrix()(j, 0) = 1;
     Atgt10.sizes[0] = M;
     Atgt10.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
   }
@@ -196,14 +197,15 @@ TEST(SymmetricIndependentTest, BasicAssertions) {
   auto *Astoreij =
     builder.CreateAlignedStore(Aloadji, Agepedij, llvm::MaybeAlign(8), false);
 
+  constexpr size_t i = 0, j = 1;
   // we have three array refs
   // A[i, j]
   ArrayReference Asrc(scevA, loop, 2);
   {
     MutPtrMatrix<int64_t> IndMat = Asrc.indexMatrix();
     //     l  d
-    IndMat(1, 0) = 1; // i
-    IndMat(0, 1) = 1; // j
+    IndMat(i, 0) = 1;
+    IndMat(j, 1) = 1;
     Asrc.sizes[0] = loop->getSyms()[0];
     Asrc.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
   }
@@ -213,8 +215,8 @@ TEST(SymmetricIndependentTest, BasicAssertions) {
   {
     MutPtrMatrix<int64_t> IndMat = Atgt.indexMatrix();
     //     l  d
-    IndMat(0, 0) = 1; // j
-    IndMat(1, 1) = 1; // i
+    IndMat(j, 0) = 1;
+    IndMat(i, 1) = 1;
     Atgt.sizes[0] = loop->getSyms()[0];
     Atgt.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
   }
@@ -279,14 +281,14 @@ TEST(RankDeficientLoad, BasicAssertions) {
     Float64, ptrA, llvm::SmallVector<llvm::Value *, 1>{offsetij}, "gep_Aij");
   auto *Astoreij =
     builder.CreateAlignedStore(Aloadii, Agepedij, llvm::MaybeAlign(8), false);
-
+  constexpr size_t i = 0, j = 1;
   // we have three array refs
   // A[i, j] // i*stride(A,1) + j*stride(A,2);
   ArrayReference Asrc(scevA, loop, 2);
   {
     MutPtrMatrix<int64_t> IndMat = Asrc.indexMatrix();
-    IndMat(1, 0) = 1; // i
-    IndMat(0, 1) = 1; // j
+    IndMat(i, 0) = 1; // i
+    IndMat(j, 1) = 1; // j
     Asrc.sizes[0] = loop->getSyms()[0];
     Asrc.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
   }
@@ -295,8 +297,8 @@ TEST(RankDeficientLoad, BasicAssertions) {
   ArrayReference Atgt(scevA, loop, 2);
   {
     MutPtrMatrix<int64_t> IndMat = Atgt.indexMatrix();
-    IndMat(1, 0) = 1; // i
-    IndMat(1, 1) = 1; // i
+    IndMat(i, 0) = 1; // i
+    IndMat(i, 1) = 1; // i
     Atgt.sizes[0] = loop->getSyms()[0];
     Atgt.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
   }
@@ -338,6 +340,7 @@ TEST(TimeHidingInRankDeficiency, BasicAssertions) {
                   "0 0 0 0 0 1 0; "
                   "-1 0 0 1 -1 0 0; "
                   "0 0 0 0 1 0 0]"_mat};
+  constexpr size_t i = 0, j = 1, k = 2;
   TestLoopFunction tlf;
   tlf.addLoop(std::move(Aloop), 3);
   auto *loop = tlf.getLoopNest(0);
@@ -382,12 +385,12 @@ TEST(TimeHidingInRankDeficiency, BasicAssertions) {
   ArrayReference Aref(scevA, loop, 3);
   {
     MutPtrMatrix<int64_t> IndMat = Aref.indexMatrix();
-    IndMat(2, 0) = 1;  // i
-    IndMat(1, 0) = 1;  // + j
-    IndMat(1, 1) = 1;  // j
-    IndMat(0, 1) = 1;  // + k
-    IndMat(2, 2) = 1;  // i
-    IndMat(0, 2) = -1; // -k
+    IndMat(i, 0) = 1;  // i
+    IndMat(j, 0) = 1;  // + j
+    IndMat(j, 1) = 1;  // j
+    IndMat(k, 1) = 1;  // + k
+    IndMat(i, 2) = 1;  // i
+    IndMat(k, 2) = -1; // -k
     Aref.sizes[0] = SE.getAddExpr(J, K);
     Aref.sizes[1] = SE.getAddExpr(II, K);
     Aref.sizes[2] = SE.getConstant(Int64, 8, /*isSigned=*/false);
@@ -525,7 +528,7 @@ TEST(TriangularExampleTest, BasicAssertions) {
   const auto *scevB = tlf.getSCEVUnknown(ptrB);
   const auto *scevA = tlf.getSCEVUnknown(ptrA);
   const auto *scevU = tlf.getSCEVUnknown(ptrU);
-
+  constexpr size_t m = 0, n = 1, k = 2;
   // construct indices
   // ind mat, loops currently indexed from outside-in
   LinearProgramLoopBlock lblock;
@@ -534,8 +537,8 @@ TEST(TriangularExampleTest, BasicAssertions) {
   {
     MutPtrMatrix<int64_t> IndMat = BmnInd.indexMatrix();
     //     l  d
-    IndMat(0, 0) = 1; // n
-    IndMat(1, 1) = 1; // m
+    IndMat(n, 0) = 1; // n
+    IndMat(m, 1) = 1; // m
     BmnInd.sizes[0] = M;
     BmnInd.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
   }
@@ -544,8 +547,8 @@ TEST(TriangularExampleTest, BasicAssertions) {
   {
     MutPtrMatrix<int64_t> IndMat = Amn2Ind.indexMatrix();
     //     l  d
-    IndMat(0, 0) = 1; // n
-    IndMat(1, 1) = 1; // m
+    IndMat(n, 0) = 1; // n
+    IndMat(m, 1) = 1; // m
     Amn2Ind.sizes[0] = M;
     Amn2Ind.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
   }
@@ -554,8 +557,8 @@ TEST(TriangularExampleTest, BasicAssertions) {
   {
     MutPtrMatrix<int64_t> IndMat = Amn3Ind.indexMatrix();
     //     l  d
-    IndMat(1, 0) = 1; // n
-    IndMat(2, 1) = 1; // m
+    IndMat(n, 0) = 1; // n
+    IndMat(m, 1) = 1; // m
     Amn3Ind.sizes[0] = M;
     Amn3Ind.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
   }
@@ -564,8 +567,8 @@ TEST(TriangularExampleTest, BasicAssertions) {
   {
     MutPtrMatrix<int64_t> IndMat = AmkInd.indexMatrix();
     //     l  d
-    IndMat(0, 0) = 1; // k
-    IndMat(2, 1) = 1; // m
+    IndMat(k, 0) = 1; // k
+    IndMat(m, 1) = 1; // m
     AmkInd.sizes[0] = M;
     AmkInd.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
   }
@@ -574,8 +577,8 @@ TEST(TriangularExampleTest, BasicAssertions) {
   {
     MutPtrMatrix<int64_t> IndMat = UnkInd.indexMatrix();
     //     l  d
-    IndMat(1, 1) = 1; // n
-    IndMat(0, 0) = 1; // k
+    IndMat(n, 1) = 1; // n
+    IndMat(k, 0) = 1; // k
     UnkInd.sizes[0] = N;
     UnkInd.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
   }
@@ -584,8 +587,8 @@ TEST(TriangularExampleTest, BasicAssertions) {
   {
     MutPtrMatrix<int64_t> IndMat = UnnInd.indexMatrix();
     //     l  d
-    IndMat(0, 1) = 1; // n
-    IndMat(0, 0) = 1; // n
+    IndMat(n, 1) = 1; // n
+    IndMat(n, 0) = 1; // n
     UnnInd.sizes[0] = N;
     UnnInd.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
   }
@@ -880,7 +883,7 @@ TEST(MeanStDevTest0, BasicAssertions) {
   // for (i = 0; i < I; ++i){
   //   x(i) = 0; // [0]
   //   for (j = 0; j < J; ++j)
-  //     x(i) += A(j,i) // [1,0:2]
+  //     x(i) += A(j,i); // [1,0:2]
   //   x(i) /= J;
   //   s(i) = 0;
   //   for (j = 0; j < J; ++j){
@@ -889,7 +892,7 @@ TEST(MeanStDevTest0, BasicAssertions) {
   //   }
   //   s(i) = sqrt(s(i) / (J-1));
   // }
-
+  constexpr size_t i = 0, j = 1;
   // jOuter variant:
   //
   // for (i = 0; i < I; ++i){
@@ -898,7 +901,7 @@ TEST(MeanStDevTest0, BasicAssertions) {
   // }
   // for (j = 0; j < J; ++j){
   //   for (i = 0; i < I; ++i){
-  //      x(i) += A(j,i)
+  //      x(i) += A(j,i);
   // for (i = 0; i < I; ++i){
   //   x(i) /= J;
   // for (j = 0; j < J; ++j){
@@ -909,6 +912,7 @@ TEST(MeanStDevTest0, BasicAssertions) {
   // }
   // for (i = 0; i < I; ++i)
   //   s(i) = sqrt(s(i) / (J-1));
+  constexpr size_t jo = 0, ii = 1;
   TestLoopFunction tlf;
   IntMatrix TwoLoopsMat{"[-1 1 0 0 -1; "
                         "0 0 0 0 1; "
@@ -986,8 +990,8 @@ TEST(MeanStDevTest0, BasicAssertions) {
   {
     MutPtrMatrix<int64_t> IndMat = AIndIOuter.indexMatrix();
     //     l  d
-    IndMat(1, 1) = 1; // i
-    IndMat(0, 0) = 1; // j
+    IndMat(i, 1) = 1; // i
+    IndMat(j, 0) = 1; // j
     AIndIOuter.sizes[0] = II;
     AIndIOuter.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
   }
@@ -995,8 +999,8 @@ TEST(MeanStDevTest0, BasicAssertions) {
   {
     MutPtrMatrix<int64_t> IndMat = AIndJOuter.indexMatrix();
     //     l  d
-    IndMat(0, 1) = 1; // i
-    IndMat(1, 0) = 1; // j
+    IndMat(ii, 1) = 1; // i
+    IndMat(jo, 0) = 1; // j
     AIndJOuter.sizes[0] = II;
     AIndJOuter.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
   }
@@ -1005,21 +1009,21 @@ TEST(MeanStDevTest0, BasicAssertions) {
   {
     MutPtrMatrix<int64_t> IndMat = xInd1.indexMatrix();
     //     l  d
-    IndMat(0, 0) = 1; // i
+    IndMat(i, 0) = 1; // i
     xInd1.sizes[0] = SE.getConstant(Int64, 8, /*isSigned=*/false);
   }
   ArrayReference xInd2IOuter{scevX, loopJI, 1};
   {
     MutPtrMatrix<int64_t> IndMat = xInd2IOuter.indexMatrix();
     //     l  d
-    IndMat(1, 0) = 1; // i
+    IndMat(i, 0) = 1; // i
     xInd2IOuter.sizes[0] = SE.getConstant(Int64, 8, /*isSigned=*/false);
   }
   ArrayReference xInd2JOuter{scevX, loopIJ, 1};
   {
     MutPtrMatrix<int64_t> IndMat = xInd2JOuter.indexMatrix();
     //     l  d
-    IndMat(0, 0) = 1; // i
+    IndMat(ii, 0) = 1; // i
     xInd2JOuter.sizes[0] = SE.getConstant(Int64, 8, /*isSigned=*/false);
   }
 
@@ -1027,21 +1031,21 @@ TEST(MeanStDevTest0, BasicAssertions) {
   {
     MutPtrMatrix<int64_t> IndMat = sInd1.indexMatrix();
     //     l  d
-    IndMat(0, 0) = 1; // i
+    IndMat(i, 0) = 1; // i
     sInd1.sizes[0] = SE.getConstant(Int64, 8, /*isSigned=*/false);
   }
   ArrayReference sInd2IOuter{scevS, loopJI, 1};
   {
     MutPtrMatrix<int64_t> IndMat = sInd2IOuter.indexMatrix();
     //     l  d
-    IndMat(1, 0) = 1; // i
+    IndMat(i, 0) = 1; // i
     sInd2IOuter.sizes[0] = SE.getConstant(Int64, 8, /*isSigned=*/false);
   }
   ArrayReference sInd2JOuter{scevS, loopIJ, 1};
   {
     MutPtrMatrix<int64_t> IndMat = sInd2JOuter.indexMatrix();
     //     l  d
-    IndMat(0, 0) = 1; // i
+    IndMat(ii, 0) = 1; // i
     sInd2JOuter.sizes[0] = SE.getConstant(Int64, 8, /*isSigned=*/false);
   }
 
@@ -1128,7 +1132,7 @@ TEST(MeanStDevTest0, BasicAssertions) {
   EXPECT_TRUE(optDeps.has_value());
   llvm::DenseMap<MemoryAccess *, size_t> memAccessIds;
   MutPtrVector<MemoryAccess *> mem = iOuterLoopNest.getMemoryAccesses();
-  for (size_t i = 0; i < mem.size(); ++i) memAccessIds[mem[i]] = i;
+  for (size_t jj = 0; jj < mem.size(); ++jj) memAccessIds[mem[jj]] = jj;
   for (auto &e : iOuterLoopNest.getEdges()) {
     auto [in, out] = e.getInOutPair();
     llvm::errs() << "\nEdge for array " << e.getArrayPointer()
@@ -1136,9 +1140,9 @@ TEST(MeanStDevTest0, BasicAssertions) {
                  << "; out ID: " << memAccessIds[out] << "\n";
   }
   auto nodes = iOuterLoopNest.getNodes();
-  for (size_t i = 0; i < nodes.size(); ++i) {
-    const auto &v = nodes[i];
-    llvm::errs() << "v_" << i << ":\nmem = ";
+  for (size_t jj = 0; jj < nodes.size(); ++jj) {
+    const auto &v = nodes[jj];
+    llvm::errs() << "v_" << jj << ":\nmem = ";
     for (auto m : v.getMemory()) llvm::errs() << m << ", ";
     llvm::errs() << v;
   }
@@ -1220,9 +1224,9 @@ TEST(MeanStDevTest0, BasicAssertions) {
   for (auto &edge : jOuterLoopNest.getEdges())
     llvm::errs() << "\nedge = " << edge << "\n";
 
-  for (size_t i = 0; i < jOuterLoopNest.numNodes(); ++i) {
-    const auto &v = jOuterLoopNest.getNode(i);
-    llvm::errs() << "v_" << i << ":\nmem = ";
+  for (size_t jj = 0; jj < jOuterLoopNest.numNodes(); ++jj) {
+    const auto &v = jOuterLoopNest.getNode(jj);
+    llvm::errs() << "v_" << jj << ":\nmem = ";
     for (auto m : v.getMemory()) llvm::errs() << m << ", ";
     llvm::errs() << v;
   }
@@ -1301,7 +1305,7 @@ TEST(DoubleDependenceTest, BasicAssertions) {
   //   -2  0  1  0 -1      J
   //    0  0  0  0  1 ]    i
   //                       j ]
-
+  constexpr size_t i = 0, j = 1;
   // we have three array refs
   // A[i+1, j+1] // (i+1)*stride(A,1) + (j+1)*stride(A,2);
   llvm::ScalarEvolution &SE{tlf.getSE()};
@@ -1310,11 +1314,11 @@ TEST(DoubleDependenceTest, BasicAssertions) {
   {
     MutPtrMatrix<int64_t> IndMat = Asrc.indexMatrix();
     //     l  d
-    IndMat(1, 1) = 1; // i
-    IndMat(0, 0) = 1; // j
+    IndMat(i, 1) = 1; // i
+    IndMat(j, 0) = 1; // j
     MutPtrMatrix<int64_t> OffMat = Asrc.offsetMatrix();
-    OffMat(0, 0) = 1;
-    OffMat(1, 0) = 1;
+    OffMat(i, 0) = 1;
+    OffMat(j, 0) = 1;
     Asrc.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     Asrc.sizes[0] = II;
   }
@@ -1324,8 +1328,8 @@ TEST(DoubleDependenceTest, BasicAssertions) {
   {
     MutPtrMatrix<int64_t> IndMat = Atgt0.indexMatrix();
     //     l  d
-    IndMat(1, 1) = 1; // i
-    IndMat(0, 0) = 1; // j
+    IndMat(i, 1) = 1; // i
+    IndMat(j, 0) = 1; // j
                       //                   d  s
     Atgt0.offsetMatrix()(1, 0) = 1;
     Atgt0.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
@@ -1337,8 +1341,8 @@ TEST(DoubleDependenceTest, BasicAssertions) {
   {
     MutPtrMatrix<int64_t> IndMat = Atgt1.indexMatrix();
     //     l  d
-    IndMat(1, 1) = 1; // i
-    IndMat(0, 0) = 1; // j
+    IndMat(i, 1) = 1; // i
+    IndMat(j, 0) = 1; // j
     Atgt1.offsetMatrix()(0, 0) = 1;
     Atgt1.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     Atgt1.sizes[0] = II;
@@ -1390,17 +1394,17 @@ TEST(DoubleDependenceTest, BasicAssertions) {
   EXPECT_TRUE(loopBlock.optimize().has_value());
   EXPECT_EQ(loopBlock.numEdges(), 2);
   llvm::DenseMap<MemoryAccess *, size_t> memAccessIds;
-  for (size_t i = 0; i < loopBlock.numMemoryAccesses(); ++i)
-    memAccessIds[loopBlock.getMemoryAccess(i)] = i;
+  for (size_t jj = 0; jj < loopBlock.numMemoryAccesses(); ++jj)
+    memAccessIds[loopBlock.getMemoryAccess(jj)] = jj;
   for (auto &e : loopBlock.getEdges()) {
     auto [in, out] = e.getInOutPair();
     llvm::errs() << "\nEdge for array " << e.getArrayPointer()
                  << ", in ID: " << memAccessIds[in]
                  << "; out ID: " << memAccessIds[out] << "\n";
   }
-  for (size_t i = 0; i < loopBlock.numNodes(); ++i) {
-    const auto &v = loopBlock.getNode(i);
-    llvm::errs() << "v_" << i << ":\nmem = ";
+  for (size_t jj = 0; jj < loopBlock.numNodes(); ++jj) {
+    const auto &v = loopBlock.getNode(jj);
+    llvm::errs() << "v_" << jj << ":\nmem = ";
     for (auto m : v.getMemory()) llvm::errs() << m << ", ";
     llvm::errs() << v;
   }
@@ -1494,7 +1498,7 @@ TEST(ConvReversePass, BasicAssertions) {
   //     }
   //   }
   // }
-
+  constexpr size_t n = 0, m = 1, j = 2, i = 3;
   llvm::ScalarEvolution &SE{tlf.getSE()};
   llvm::Type *Int64 = builder.getInt64Ty();
   // B[j, i]
@@ -1502,8 +1506,8 @@ TEST(ConvReversePass, BasicAssertions) {
   {
     MutPtrMatrix<int64_t> IndMat = BmnInd.indexMatrix();
     //     l  d
-    IndMat(0, 1) = 1; // i
-    IndMat(1, 0) = 1; // j
+    IndMat(i, 1) = 1; // i
+    IndMat(j, 0) = 1; // j
     BmnInd.sizes[0] = II;
     BmnInd.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
   }
@@ -1512,8 +1516,8 @@ TEST(ConvReversePass, BasicAssertions) {
   {
     MutPtrMatrix<int64_t> IndMat = AmnInd.indexMatrix();
     //     l  d
-    IndMat(2, 1) = 1; // m
-    IndMat(3, 0) = 1; // n
+    IndMat(m, 1) = 1; // m
+    IndMat(n, 0) = 1; // n
     AmnInd.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     AmnInd.sizes[0] = II;
   }
@@ -1522,10 +1526,10 @@ TEST(ConvReversePass, BasicAssertions) {
   {
     MutPtrMatrix<int64_t> IndMat = CmijnInd.indexMatrix();
     //     l  d
-    IndMat(2, 1) = 1; // m
-    IndMat(0, 1) = 1; // i
-    IndMat(3, 0) = 1; // n
-    IndMat(1, 0) = 1; // j
+    IndMat(m, 1) = 1; // m
+    IndMat(i, 1) = 1; // i
+    IndMat(n, 0) = 1; // n
+    IndMat(j, 0) = 1; // j
     CmijnInd.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     CmijnInd.sizes[0] =
       SE.getAddExpr(SE.getAddExpr(M, II), SE.getMinusOne(Int64));

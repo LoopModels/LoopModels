@@ -809,23 +809,32 @@ public:
     // approach will be to move `x.size()` variables into the
     // equality constraints, and then check if the remaining sub-problem
     // is satisfiable.
-    assert(numRow <= getNumCons());
+    invariant(numRow <= getNumCons());
     const size_t numFix = x.size();
     auto p = alloc.scope();
-    Simplex *subSimp{Simplex::create(alloc, numRow, off)};
-    // subSimp.tableau(0, 0) = 0;
-    // subSimp.tableau(0, 1) = 0;
-    // auto fC{getCostsAndConstraints()};
-    // auto sC{subSimp.getCostsAndConstraints()};
+    Simplex *subSimp{Simplex::create(alloc, numRow, off++)};
     auto fC{getConstraints()};
     auto sC{subSimp->getConstraints()};
     sC(_, 0) << fC(_(begin, numRow), 0) -
-                  fC(_(begin, numRow), _(1 + off, 1 + off + numFix)) * x;
-    // sC(_, 0) = fC(_, 0);
-    // for (size_t i = 0; i < numFix; ++i)
-    //     sC(_, 0) -= x(i) * fC(_, i + 1 + off);
-    sC(_, _(1, 1 + off)) << fC(_(begin, numRow), _(1, 1 + off));
-    assert(sC(_, _(1, 1 + off)) == fC(_(begin, numRow), _(1, 1 + off)));
+                  fC(_(begin, numRow), _(off, off + numFix)) * x;
+    sC(_, _(1, off)) << fC(_(begin, numRow), _(1, off));
+    return subSimp->initiateFeasible();
+  }
+  /// indsFree gives how many variables are free to take  any >= 0 value
+  /// indOne is var ind greater than indsFree that's pinned to 1
+  /// (i.e., indsFree + indOne == index of var pinned to 1)
+  /// numRow is number of rows used, extras are dropped
+  [[nodiscard]] constexpr auto
+  unSatisfiableZeroRem(BumpAlloc<> &alloc, size_t indsFree, size_t indOne,
+                       size_t numRow) const -> bool {
+    invariant(numRow <= getNumCons());
+    auto p = alloc.scope();
+    Simplex *subSimp{Simplex::create(alloc, numRow, indsFree++)};
+    auto fC{getConstraints()};
+    auto sC{subSimp->getConstraints()};
+    sC(_, 0) << fC(_(begin, numRow), 0) -
+                  fC(_(begin, numRow), indOne + indsFree);
+    sC(_, _(1, indsFree)) << fC(_(begin, numRow), _(1, indsFree));
     return subSimp->initiateFeasible();
   }
   [[nodiscard]] constexpr auto satisfiableZeroRem(BumpAlloc<> &alloc,

@@ -969,23 +969,11 @@ public:
       sch[_(2 + numLoopsX, 2 + numLoopsTotal)] << yPhi(last - i, _);
       if (fxy->unSatisfiableZeroRem(alloc, sch, numLambda,
                                     size_t(nonTimeDim))) {
-#ifndef NDEBUG
         assert(!fyx->unSatisfiableZeroRem(alloc, sch, numLambda,
                                           size_t(nonTimeDim)));
-        // llvm::errs()
-        //     << "Dependence decided by forward violation with i = " <<
-        //     i
-        //     << "\n";
-#endif
         return false;
       }
       if (fyx->unSatisfiableZeroRem(alloc, sch, numLambda, size_t(nonTimeDim)))
-#ifndef NDEBUG
-      // llvm::errs()
-      //     << "Dependence decided by backward violation with i = "
-      //     << i
-      //     << "\n";
-#endif
         return true;
     }
     // assert(false);
@@ -997,16 +985,14 @@ public:
                              NotNull<const MemoryAccess> y, size_t numLambda,
                              Col nonTimeDim) -> bool {
     const auto &[fxy, fyx] = p;
-    const size_t numLoopsX = x->getNumLoops();
-    const size_t numLoopsY = y->getNumLoops();
+    size_t numLoopsX = x->getNumLoops(), numLoopsY = y->getNumLoops(),
+           nTD = size_t(nonTimeDim);
 #ifndef NDEBUG
     const size_t numLoopsCommon = std::min(numLoopsX, numLoopsY);
 #endif
-    const size_t numLoopsTotal = numLoopsX + numLoopsY;
     PtrVector<int64_t> xFusOmega = x->getFusionOmega();
     PtrVector<int64_t> yFusOmega = y->getFusionOmega();
     auto chkp = alloc.scope();
-    PtrVector<int64_t> sch = vector(alloc, numLoopsTotal + 2, int64_t(0));
     // i iterates from outer-most to inner most common loop
     for (size_t i = 0; /*i <= numLoopsCommon*/; ++i) {
       if (yFusOmega[i] != xFusOmega[i]) return yFusOmega[i] > xFusOmega[i];
@@ -1021,19 +1007,12 @@ public:
       //   loop must appear either above or below the instructions
       //   present at that level
       // }
-      invariant(i < numLoopsCommon);
-      sch[2 + i] = 1;
-      sch[2 + numLoopsX + i] = 1;
-      if (fxy->unSatisfiableZeroRem(alloc, sch, numLambda,
-                                    size_t(nonTimeDim))) {
-        assert(!fyx->unSatisfiableZeroRem(alloc, sch, numLambda,
-                                          size_t(nonTimeDim)));
+      assert(i < numLoopsCommon);
+      if (fxy->unSatisfiableZeroRem(alloc, numLambda, 2 + i, nTD)) {
+        assert(!fyx->unSatisfiableZeroRem(alloc, numLambda, 2 + i, nTD));
         return false;
       }
-      if (fyx->unSatisfiableZeroRem(alloc, sch, numLambda, size_t(nonTimeDim)))
-        return true;
-      sch[2 + i] = 1;
-      sch[2 + numLoopsX + i] = 1;
+      if (fyx->unSatisfiableZeroRem(alloc, numLambda, 2 + i, nTD)) return true;
     }
     invariant(false);
     return false;

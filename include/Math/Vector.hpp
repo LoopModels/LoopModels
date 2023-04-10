@@ -7,16 +7,15 @@
 
 namespace LinAlg {
 template <typename T>
-concept AbstractVector =
-  HasEltype<T> && requires(T t, size_t i) {
-                    { t[i] } -> std::convertible_to<eltype_t<T>>;
-                    { t.size() } -> std::convertible_to<size_t>;
-                    { t.view() };
-                    // {
-                    //     std::remove_reference_t<T>::canResize
-                    //     } -> std::same_as<const bool &>;
-                    // {t.extendOrAssertSize(i)};
-                  };
+concept AbstractVector = HasEltype<T> && requires(T t, size_t i) {
+  { t[i] } -> std::convertible_to<eltype_t<T>>;
+  { t.size() } -> std::convertible_to<size_t>;
+  { t.view() };
+  // {
+  //     std::remove_reference_t<T>::canResize
+  //     } -> std::same_as<const bool &>;
+  // {t.extendOrAssertSize(i)};
+};
 
 // This didn't work: #include "Math/Vector.hpp" NOLINT(unused-includes)
 // so I moved some code from "Math/Array.hpp" here instead.
