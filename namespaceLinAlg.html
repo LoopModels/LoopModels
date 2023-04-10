@@ -594,12 +594,12 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>get</b> (co
 <tr class="memitem:a3e66141a9a3332371c82f1135501434f"><td class="memItemLeft" align="right" valign="top"><a id="a3e66141a9a3332371c82f1135501434f"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>get</b> (const auto &amp;A, size_t, size_t)</td></tr>
 <tr class="separator:a3e66141a9a3332371c82f1135501434f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acb895c323cc80814bd0968d77894aa23"><td class="memItemLeft" align="right" valign="top"><a id="acb895c323cc80814bd0968d77894aa23"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>get</b> (const AbstractVector auto &amp;A, size_t i)</td></tr>
-<tr class="separator:acb895c323cc80814bd0968d77894aa23"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aff301af5b0fb191b0703261aca9c1d15"><td class="memItemLeft" align="right" valign="top"><a id="aff301af5b0fb191b0703261aca9c1d15"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>get</b> (const AbstractMatrix auto &amp;A, size_t i, size_t j)</td></tr>
-<tr class="separator:aff301af5b0fb191b0703261aca9c1d15"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a546522030db9a9442fa2bc5daeb65935"><td class="memItemLeft" align="right" valign="top"><a id="a546522030db9a9442fa2bc5daeb65935"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>get</b> (const AbstractVector auto &amp;A, size_t i)</td></tr>
+<tr class="separator:a546522030db9a9442fa2bc5daeb65935"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af239574db9df764f850e53f1d9574276"><td class="memItemLeft" align="right" valign="top"><a id="af239574db9df764f850e53f1d9574276"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>get</b> (const AbstractMatrix auto &amp;A, size_t i, size_t j)</td></tr>
+<tr class="separator:af239574db9df764f850e53f1d9574276"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a68930b2c540c08d48380ed62b5931210"><td class="memItemLeft" align="right" valign="top"><a id="a68930b2c540c08d48380ed62b5931210"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>size</b> (const std::integral auto) -&gt; size_t</td></tr>
 <tr class="separator:a68930b2c540c08d48380ed62b5931210"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -1042,16 +1042,15 @@ template&lt;typename T &gt; </div>
         </tr>
       </table>
 </div><div class="memdoc">
-<b>Initial value:</b><div class="fragment"><div class="line">=</div>
-<div class="line">  HasEltype&lt;T&gt; &amp;&amp; requires(T t, <span class="keywordtype">size_t</span> i) {</div>
-<div class="line">                    { t[i] } -&gt; std::convertible_to&lt;eltype_t&lt;T&gt;&gt;;</div>
-<div class="line">                    { t.size() } -&gt; std::convertible_to&lt;size_t&gt;;</div>
-<div class="line">                    { t.view() };</div>
-<div class="line">                    </div>
-<div class="line">                    </div>
-<div class="line">                    </div>
-<div class="line">                    </div>
-<div class="line">                  }</div>
+<b>Initial value:</b><div class="fragment"><div class="line">= HasEltype&lt;T&gt; &amp;&amp; requires(T t, <span class="keywordtype">size_t</span> i) {</div>
+<div class="line">  { t[i] } -&gt; std::convertible_to&lt;eltype_t&lt;T&gt;&gt;;</div>
+<div class="line">  { t.size() } -&gt; std::convertible_to&lt;size_t&gt;;</div>
+<div class="line">  { t.view() };</div>
+<div class="line">  </div>
+<div class="line">  </div>
+<div class="line">  </div>
+<div class="line">  </div>
+<div class="line">}</div>
 </div><!-- fragment -->
 </div>
 </div>
