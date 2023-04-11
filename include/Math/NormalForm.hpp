@@ -587,7 +587,7 @@ constexpr void solveSystem(MutPtrMatrix<int64_t> A) {
   auto [s, nonUnity] = lcmNonUnity(A.diag());
   if (nonUnity)
     for (size_t i = 0; i < A.numRow(); ++i) B(i, _) *= s / A(i, i);
-  return std::make_pair(B, s);
+  return {std::move(B), s};
 }
 
 constexpr void nullSpace11(LinAlg::DenseMatrix<int64_t> &B,

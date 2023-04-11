@@ -1008,11 +1008,12 @@ public:
       //   present at that level
       // }
       assert(i < numLoopsCommon);
-      if (fxy->unSatisfiableZeroRem(alloc, numLambda, 2 + i, nTD)) {
-        assert(!fyx->unSatisfiableZeroRem(alloc, numLambda, 2 + i, nTD));
+      std::array<size_t, 2> inds{2 + i, 2 + i + numLoopsX};
+      if (fxy->unSatisfiableZeroRem(alloc, numLambda, inds, nTD)) {
+        assert(!fyx->unSatisfiableZeroRem(alloc, numLambda, inds, nTD));
         return false;
       }
-      if (fyx->unSatisfiableZeroRem(alloc, numLambda, 2 + i, nTD)) return true;
+      if (fyx->unSatisfiableZeroRem(alloc, numLambda, inds, nTD)) return true;
     }
     invariant(false);
     return false;

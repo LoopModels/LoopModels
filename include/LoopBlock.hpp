@@ -76,8 +76,7 @@ public:
     // First, we invert the schedule matrix.
     SquarePtrMatrix<int64_t> Phi = schedule.getPhi();
     auto [Pinv, s] = NormalForm::scaledInv(Phi);
-    if (s == 1) {
-    }
+    // if (s == 1) {}
     Vector<Address *> accesses;
     accesses.reserve(memory.size());
     for (auto i : memory) {

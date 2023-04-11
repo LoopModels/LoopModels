@@ -825,15 +825,17 @@ public:
   /// (i.e., indsFree + indOne == index of var pinned to 1)
   /// numRow is number of rows used, extras are dropped
   [[nodiscard]] constexpr auto
-  unSatisfiableZeroRem(BumpAlloc<> &alloc, size_t indsFree, size_t indOne,
-                       size_t numRow) const -> bool {
+  unSatisfiableZeroRem(BumpAlloc<> &alloc, size_t indsFree,
+                       std::array<size_t, 2> inds, size_t numRow) const
+    -> bool {
     invariant(numRow <= getNumCons());
     auto p = alloc.scope();
     Simplex *subSimp{Simplex::create(alloc, numRow, indsFree++)};
     auto fC{getConstraints()};
     auto sC{subSimp->getConstraints()};
     sC(_, 0) << fC(_(begin, numRow), 0) -
-                  fC(_(begin, numRow), indOne + indsFree);
+                  fC(_(begin, numRow), inds[0] + indsFree) -
+                  fC(_(begin, numRow), inds[1] + indsFree);
     sC(_, _(1, indsFree)) << fC(_(begin, numRow), _(1, indsFree));
     return subSimp->initiateFeasible();
   }

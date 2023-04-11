@@ -151,8 +151,7 @@ TEST(DependenceTest, BasicAssertions) {
   EXPECT_EQ(e.size(), 1);
   EXPECT_TRUE(e.front().isForward());
   llvm::errs() << e.front() << "\n";
-  assert(e.front().isForward());
-  assert(!allZero(e.front().getSatConstraints()(last, _)));
+  EXPECT_FALSE(allZero(e.front().getSatConstraints()(last, _)));
 }
 
 // NOLINTNEXTLINE(modernize-use-trailing-return-type)
