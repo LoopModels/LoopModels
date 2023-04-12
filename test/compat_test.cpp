@@ -11,15 +11,6 @@
 #include <memory>
 
 // NOLINTNEXTLINE(modernize-use-trailing-return-type)
-TEST(FourierMotzkin, BasicAssertions) {
-  auto A{"[-2 1 0 -1 -1 0; -1 0 1 0 0 -1]"_mat};
-  fourierMotzkinNonNegative(A, 3);
-  auto B{"[-2 1 0 0 -1 0; -1 0 1 0 0 -1]"_mat};
-  llvm::errs() << "A = " << A << "\nB = " << B << "\n";
-  EXPECT_EQ(A, B);
-}
-
-// NOLINTNEXTLINE(modernize-use-trailing-return-type)
 TEST(TrivialPruneBounds0, BasicAssertions) {
   // A(5, 3) [1, M, m] constants, symbolic vars, loop vars
   //[0 1 0;

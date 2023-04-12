@@ -396,76 +396,8 @@ constexpr void fourierMotzkin(DenseMatrix<int64_t> &A, size_t v) {
     return;
   }
   fourierMotzkinCore(A, v, {numNeg, numPos});
-} // non-negative Fourier-Motzkin
-constexpr void fourierMotzkinNonNegativeCore(DenseMatrix<int64_t> &A, size_t v,
-                                             std::array<size_t, 2> negPos,
-                                             size_t numRowsOld) {
-  auto [numNeg, numPos] = negPos;
-  const size_t numRowsNew =
-    numRowsOld - numNeg - numPos + numNeg * (numPos + 1);
-  // we need one extra, as on the last overwrite, we still need to
-  // read from two constraints we're deleting; we can't write into
-  // both of them. Thus, we use a little extra memory here,
-  // and then truncate.
-  A.resize(Row{numRowsNew});
-  // plan is to replace
-  size_t numRows = numRowsOld;
-  for (size_t i = 0, posCount = numPos; posCount; ++i) {
-    int64_t Aiv = A(i, v);
-    if (Aiv <= 0) continue;
-    --posCount;
-    for (size_t negCount = numNeg, j = 0; negCount; ++j) {
-      int64_t Ajv = A(j, v);
-      if (Ajv >= 0) continue;
-      // for the last `negCount`, we overwrite `A(i, k)`
-      // note that `A(i,k)` is the positive element
-      size_t c = --negCount ? numRows++ : i;
-      int64_t Ai = Aiv, Aj = Ajv;
-      int64_t g = gcd(Aiv, Ajv);
-      if (g != 1) {
-        Ai /= g;
-        Aj /= g;
-      }
-      bool allZero = true;
-      for (size_t k = 0; k < A.numCol(); ++k) {
-        int64_t Ack = Ai * A(j, k) - Aj * A(i, k);
-        A(c, k) = Ack;
-        allZero &= (Ack == 0);
-      }
-      if (allZero) {
-        eraseConstraint(A, c);
-        if (negCount) --numRows;
-        else --i;
-      }
-    }
-  }
-  for (size_t negCount = numNeg, j = 0; negCount; ++j) {
-    int64_t Ajv = A(j, v);
-    if (Ajv >= 0) continue;
-    // we can always overwrite the old negCount here
-    --negCount;
-    bool allZero = true;
-    for (size_t k = 0; k < A.numCol(); ++k) {
-      int64_t Ajk = A(j, k) - Ajv * (k == v);
-      A(j, k) = Ajk;
-      allZero &= (Ajk == 0);
-    }
-    if (allZero) eraseConstraint(A, j--);
-  }
-}
-constexpr void fourierMotzkinNonNegative(DenseMatrix<int64_t> &A, size_t v) {
-  invariant(v < A.numCol());
-  const auto [numNeg, numPos] = countNonZeroSign(A, v);
-  const size_t numPosP1 = numPos + 1;
-  const size_t numRowsOld = size_t(A.numRow());
-  if ((numNeg == 0) | (numPosP1 == 0)) {
-    if ((numNeg == 0) & (numPosP1 == 0)) return;
-    for (size_t i = numRowsOld; i != 0;)
-      if (A(--i, v)) eraseConstraint(A, i);
-    return;
-  }
-  return fourierMotzkinNonNegativeCore(A, v, {numNeg, numPos}, numRowsOld);
-}
+} // non-negative Fourier-Motzki
+
 /// Checks all rows, dropping those that are 0.
 constexpr void removeZeroRows(MutDensePtrMatrix<int64_t> &A) {
   for (Row i = A.numRow(); i;)
