@@ -460,130 +460,62 @@ $(function() {
 <div class="line"><a name="l00396"></a><span class="lineno">  396</span>&#160;    <span class="keywordflow">return</span>;</div>
 <div class="line"><a name="l00397"></a><span class="lineno">  397</span>&#160;  }</div>
 <div class="line"><a name="l00398"></a><span class="lineno">  398</span>&#160;  fourierMotzkinCore(A, v, {numNeg, numPos});</div>
-<div class="line"><a name="l00399"></a><span class="lineno">  399</span>&#160;} <span class="comment">// non-negative Fourier-Motzkin</span></div>
-<div class="line"><a name="l00400"></a><span class="lineno">  400</span>&#160;constexpr <span class="keywordtype">void</span> fourierMotzkinNonNegativeCore(DenseMatrix&lt;int64_t&gt; &amp;A, <span class="keywordtype">size_t</span> v,</div>
-<div class="line"><a name="l00401"></a><span class="lineno">  401</span>&#160;                                             std::array&lt;size_t, 2&gt; negPos,</div>
-<div class="line"><a name="l00402"></a><span class="lineno">  402</span>&#160;                                             <span class="keywordtype">size_t</span> numRowsOld) {</div>
-<div class="line"><a name="l00403"></a><span class="lineno">  403</span>&#160;  <span class="keyword">auto</span> [numNeg, numPos] = negPos;</div>
-<div class="line"><a name="l00404"></a><span class="lineno">  404</span>&#160;  <span class="keyword">const</span> <span class="keywordtype">size_t</span> numRowsNew =</div>
-<div class="line"><a name="l00405"></a><span class="lineno">  405</span>&#160;    numRowsOld - numNeg - numPos + numNeg * (numPos + 1);</div>
-<div class="line"><a name="l00406"></a><span class="lineno">  406</span>&#160;  <span class="comment">// we need one extra, as on the last overwrite, we still need to</span></div>
-<div class="line"><a name="l00407"></a><span class="lineno">  407</span>&#160;  <span class="comment">// read from two constraints we&#39;re deleting; we can&#39;t write into</span></div>
-<div class="line"><a name="l00408"></a><span class="lineno">  408</span>&#160;  <span class="comment">// both of them. Thus, we use a little extra memory here,</span></div>
-<div class="line"><a name="l00409"></a><span class="lineno">  409</span>&#160;  <span class="comment">// and then truncate.</span></div>
-<div class="line"><a name="l00410"></a><span class="lineno">  410</span>&#160;  A.resize(Row{numRowsNew});</div>
-<div class="line"><a name="l00411"></a><span class="lineno">  411</span>&#160;  <span class="comment">// plan is to replace</span></div>
-<div class="line"><a name="l00412"></a><span class="lineno">  412</span>&#160;  <span class="keywordtype">size_t</span> numRows = numRowsOld;</div>
-<div class="line"><a name="l00413"></a><span class="lineno">  413</span>&#160;  <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0, posCount = numPos; posCount; ++i) {</div>
-<div class="line"><a name="l00414"></a><span class="lineno">  414</span>&#160;    int64_t Aiv = A(i, v);</div>
-<div class="line"><a name="l00415"></a><span class="lineno">  415</span>&#160;    <span class="keywordflow">if</span> (Aiv &lt;= 0) <span class="keywordflow">continue</span>;</div>
-<div class="line"><a name="l00416"></a><span class="lineno">  416</span>&#160;    --posCount;</div>
-<div class="line"><a name="l00417"></a><span class="lineno">  417</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> negCount = numNeg, j = 0; negCount; ++j) {</div>
-<div class="line"><a name="l00418"></a><span class="lineno">  418</span>&#160;      int64_t Ajv = A(j, v);</div>
-<div class="line"><a name="l00419"></a><span class="lineno">  419</span>&#160;      <span class="keywordflow">if</span> (Ajv &gt;= 0) <span class="keywordflow">continue</span>;</div>
-<div class="line"><a name="l00420"></a><span class="lineno">  420</span>&#160;      <span class="comment">// for the last `negCount`, we overwrite `A(i, k)`</span></div>
-<div class="line"><a name="l00421"></a><span class="lineno">  421</span>&#160;      <span class="comment">// note that `A(i,k)` is the positive element</span></div>
-<div class="line"><a name="l00422"></a><span class="lineno">  422</span>&#160;      <span class="keywordtype">size_t</span> c = --negCount ? numRows++ : i;</div>
-<div class="line"><a name="l00423"></a><span class="lineno">  423</span>&#160;      int64_t Ai = Aiv, Aj = Ajv;</div>
-<div class="line"><a name="l00424"></a><span class="lineno">  424</span>&#160;      int64_t g = gcd(Aiv, Ajv);</div>
-<div class="line"><a name="l00425"></a><span class="lineno">  425</span>&#160;      <span class="keywordflow">if</span> (g != 1) {</div>
-<div class="line"><a name="l00426"></a><span class="lineno">  426</span>&#160;        Ai /= g;</div>
-<div class="line"><a name="l00427"></a><span class="lineno">  427</span>&#160;        Aj /= g;</div>
-<div class="line"><a name="l00428"></a><span class="lineno">  428</span>&#160;      }</div>
-<div class="line"><a name="l00429"></a><span class="lineno">  429</span>&#160;      <span class="keywordtype">bool</span> allZero = <span class="keyword">true</span>;</div>
-<div class="line"><a name="l00430"></a><span class="lineno">  430</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> k = 0; k &lt; A.numCol(); ++k) {</div>
-<div class="line"><a name="l00431"></a><span class="lineno">  431</span>&#160;        int64_t Ack = Ai * A(j, k) - Aj * A(i, k);</div>
-<div class="line"><a name="l00432"></a><span class="lineno">  432</span>&#160;        A(c, k) = Ack;</div>
-<div class="line"><a name="l00433"></a><span class="lineno">  433</span>&#160;        allZero &amp;= (Ack == 0);</div>
-<div class="line"><a name="l00434"></a><span class="lineno">  434</span>&#160;      }</div>
-<div class="line"><a name="l00435"></a><span class="lineno">  435</span>&#160;      <span class="keywordflow">if</span> (allZero) {</div>
-<div class="line"><a name="l00436"></a><span class="lineno">  436</span>&#160;        eraseConstraint(A, c);</div>
-<div class="line"><a name="l00437"></a><span class="lineno">  437</span>&#160;        <span class="keywordflow">if</span> (negCount) --numRows;</div>
-<div class="line"><a name="l00438"></a><span class="lineno">  438</span>&#160;        <span class="keywordflow">else</span> --i;</div>
-<div class="line"><a name="l00439"></a><span class="lineno">  439</span>&#160;      }</div>
-<div class="line"><a name="l00440"></a><span class="lineno">  440</span>&#160;    }</div>
+<div class="line"><a name="l00399"></a><span class="lineno">  399</span>&#160;} <span class="comment">// non-negative Fourier-Motzki</span></div>
+<div class="line"><a name="l00400"></a><span class="lineno">  400</span>&#160; </div>
+<div class="line"><a name="l00402"></a><span class="lineno">  402</span>&#160;constexpr <span class="keywordtype">void</span> removeZeroRows(MutDensePtrMatrix&lt;int64_t&gt; &amp;A) {</div>
+<div class="line"><a name="l00403"></a><span class="lineno">  403</span>&#160;  <span class="keywordflow">for</span> (Row i = A.numRow(); i;)</div>
+<div class="line"><a name="l00404"></a><span class="lineno">  404</span>&#160;    <span class="keywordflow">if</span> (allZero(A(--i, _))) eraseConstraint(A, i);</div>
+<div class="line"><a name="l00405"></a><span class="lineno">  405</span>&#160;}</div>
+<div class="line"><a name="l00406"></a><span class="lineno">  406</span>&#160; </div>
+<div class="line"><a name="l00409"></a><span class="lineno">  409</span>&#160;constexpr <span class="keyword">auto</span> uniqueConstraint(DensePtrMatrix&lt;int64_t&gt; A, Row r) -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l00410"></a><span class="lineno">  410</span>&#160;  <span class="keywordflow">for</span> (Row i = r; i != 0;)</div>
+<div class="line"><a name="l00411"></a><span class="lineno">  411</span>&#160;    <span class="keywordflow">if</span> (A(--i, _) == A(r, _)) <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
+<div class="line"><a name="l00412"></a><span class="lineno">  412</span>&#160;  <span class="keywordflow">return</span> <span class="keyword">true</span>;</div>
+<div class="line"><a name="l00413"></a><span class="lineno">  413</span>&#160;}</div>
+<div class="line"><a name="l00414"></a><span class="lineno">  414</span>&#160; </div>
+<div class="line"><a name="l00418"></a><span class="lineno">  418</span>&#160;[[nodiscard]] constexpr <span class="keyword">auto</span> removeRedundantRows(MutDensePtrMatrix&lt;int64_t&gt; A,</div>
+<div class="line"><a name="l00419"></a><span class="lineno">  419</span>&#160;                                                 MutDensePtrMatrix&lt;int64_t&gt; B)</div>
+<div class="line"><a name="l00420"></a><span class="lineno">  420</span>&#160;  -&gt; std::array&lt;Row, 2&gt; {</div>
+<div class="line"><a name="l00421"></a><span class="lineno">  421</span>&#160;  <span class="keyword">auto</span> [M, N] = B.size();</div>
+<div class="line"><a name="l00422"></a><span class="lineno">  422</span>&#160;  <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> r = 0, c = 0; c &lt; N &amp;&amp; r &lt; M; ++c)</div>
+<div class="line"><a name="l00423"></a><span class="lineno">  423</span>&#160;    <span class="keywordflow">if</span> (!NormalForm::pivotRows(B, c, M, r))</div>
+<div class="line"><a name="l00424"></a><span class="lineno">  424</span>&#160;      NormalForm::reduceColumnStack(A, B, c, r++);</div>
+<div class="line"><a name="l00425"></a><span class="lineno">  425</span>&#160;  <span class="comment">// scan duplicate rows in `A`</span></div>
+<div class="line"><a name="l00426"></a><span class="lineno">  426</span>&#160;  <span class="keywordflow">for</span> (Row r = A.numRow(); r != 0;)</div>
+<div class="line"><a name="l00427"></a><span class="lineno">  427</span>&#160;    <span class="keywordflow">if</span> (!uniqueConstraint(A, --r)) eraseConstraint(A, r);</div>
+<div class="line"><a name="l00428"></a><span class="lineno">  428</span>&#160;  <span class="keywordflow">return</span> {NormalForm::numNonZeroRows(A), NormalForm::numNonZeroRows(B)};</div>
+<div class="line"><a name="l00429"></a><span class="lineno">  429</span>&#160;}</div>
+<div class="line"><a name="l00430"></a><span class="lineno">  430</span>&#160; </div>
+<div class="line"><a name="l00431"></a><span class="lineno">  431</span>&#160;constexpr <span class="keywordtype">void</span> dropEmptyConstraints(MutDensePtrMatrix&lt;int64_t&gt; &amp;A) {</div>
+<div class="line"><a name="l00432"></a><span class="lineno">  432</span>&#160;  <span class="keywordflow">for</span> (Row c = A.numRow(); c != 0;)</div>
+<div class="line"><a name="l00433"></a><span class="lineno">  433</span>&#160;    <span class="keywordflow">if</span> (allZero(A(--c, _))) eraseConstraint(A, c);</div>
+<div class="line"><a name="l00434"></a><span class="lineno">  434</span>&#160;}</div>
+<div class="line"><a name="l00435"></a><span class="lineno">  435</span>&#160; </div>
+<div class="line"><a name="l00436"></a><span class="lineno">  436</span>&#160;constexpr <span class="keyword">auto</span> uniqueConstraint(DensePtrMatrix&lt;int64_t&gt; A, <span class="keywordtype">size_t</span> C) -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l00437"></a><span class="lineno">  437</span>&#160;  <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> c = 0; c &lt; C; ++c) {</div>
+<div class="line"><a name="l00438"></a><span class="lineno">  438</span>&#160;    <span class="keywordtype">bool</span> allEqual = <span class="keyword">true</span>;</div>
+<div class="line"><a name="l00439"></a><span class="lineno">  439</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> r = 0; r &lt; A.numCol(); ++r) allEqual &amp;= (A(c, r) == A(C, r));</div>
+<div class="line"><a name="l00440"></a><span class="lineno">  440</span>&#160;    <span class="keywordflow">if</span> (allEqual) <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
 <div class="line"><a name="l00441"></a><span class="lineno">  441</span>&#160;  }</div>
-<div class="line"><a name="l00442"></a><span class="lineno">  442</span>&#160;  <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> negCount = numNeg, j = 0; negCount; ++j) {</div>
-<div class="line"><a name="l00443"></a><span class="lineno">  443</span>&#160;    int64_t Ajv = A(j, v);</div>
-<div class="line"><a name="l00444"></a><span class="lineno">  444</span>&#160;    <span class="keywordflow">if</span> (Ajv &gt;= 0) <span class="keywordflow">continue</span>;</div>
-<div class="line"><a name="l00445"></a><span class="lineno">  445</span>&#160;    <span class="comment">// we can always overwrite the old negCount here</span></div>
-<div class="line"><a name="l00446"></a><span class="lineno">  446</span>&#160;    --negCount;</div>
-<div class="line"><a name="l00447"></a><span class="lineno">  447</span>&#160;    <span class="keywordtype">bool</span> allZero = <span class="keyword">true</span>;</div>
-<div class="line"><a name="l00448"></a><span class="lineno">  448</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> k = 0; k &lt; A.numCol(); ++k) {</div>
-<div class="line"><a name="l00449"></a><span class="lineno">  449</span>&#160;      int64_t Ajk = A(j, k) - Ajv * (k == v);</div>
-<div class="line"><a name="l00450"></a><span class="lineno">  450</span>&#160;      A(j, k) = Ajk;</div>
-<div class="line"><a name="l00451"></a><span class="lineno">  451</span>&#160;      allZero &amp;= (Ajk == 0);</div>
-<div class="line"><a name="l00452"></a><span class="lineno">  452</span>&#160;    }</div>
-<div class="line"><a name="l00453"></a><span class="lineno">  453</span>&#160;    <span class="keywordflow">if</span> (allZero) eraseConstraint(A, j--);</div>
-<div class="line"><a name="l00454"></a><span class="lineno">  454</span>&#160;  }</div>
+<div class="line"><a name="l00442"></a><span class="lineno">  442</span>&#160;  <span class="keywordflow">return</span> <span class="keyword">true</span>;</div>
+<div class="line"><a name="l00443"></a><span class="lineno">  443</span>&#160;}</div>
+<div class="line"><a name="l00444"></a><span class="lineno">  444</span>&#160; </div>
+<div class="line"><a name="l00445"></a><span class="lineno">  445</span>&#160;constexpr <span class="keyword">auto</span> countSigns(DensePtrMatrix&lt;int64_t&gt; A, <span class="keywordtype">size_t</span> i)</div>
+<div class="line"><a name="l00446"></a><span class="lineno">  446</span>&#160;  -&gt; std::array&lt;size_t, 2&gt; {</div>
+<div class="line"><a name="l00447"></a><span class="lineno">  447</span>&#160;  <span class="keywordtype">size_t</span> numNeg = 0;</div>
+<div class="line"><a name="l00448"></a><span class="lineno">  448</span>&#160;  <span class="keywordtype">size_t</span> numPos = 0;</div>
+<div class="line"><a name="l00449"></a><span class="lineno">  449</span>&#160;  <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> j = 0; j &lt; A.numRow(); ++j) {</div>
+<div class="line"><a name="l00450"></a><span class="lineno">  450</span>&#160;    int64_t Aij = A(j, i);</div>
+<div class="line"><a name="l00451"></a><span class="lineno">  451</span>&#160;    numNeg += (Aij &lt; 0);</div>
+<div class="line"><a name="l00452"></a><span class="lineno">  452</span>&#160;    numPos += (Aij &gt; 0);</div>
+<div class="line"><a name="l00453"></a><span class="lineno">  453</span>&#160;  }</div>
+<div class="line"><a name="l00454"></a><span class="lineno">  454</span>&#160;  <span class="keywordflow">return</span> {numNeg, numPos};</div>
 <div class="line"><a name="l00455"></a><span class="lineno">  455</span>&#160;}</div>
-<div class="line"><a name="l00456"></a><span class="lineno">  456</span>&#160;constexpr <span class="keywordtype">void</span> fourierMotzkinNonNegative(DenseMatrix&lt;int64_t&gt; &amp;A, <span class="keywordtype">size_t</span> v) {</div>
-<div class="line"><a name="l00457"></a><span class="lineno">  457</span>&#160;  invariant(v &lt; A.numCol());</div>
-<div class="line"><a name="l00458"></a><span class="lineno">  458</span>&#160;  <span class="keyword">const</span> <span class="keyword">auto</span> [numNeg, numPos] = countNonZeroSign(A, v);</div>
-<div class="line"><a name="l00459"></a><span class="lineno">  459</span>&#160;  <span class="keyword">const</span> <span class="keywordtype">size_t</span> numPosP1 = numPos + 1;</div>
-<div class="line"><a name="l00460"></a><span class="lineno">  460</span>&#160;  <span class="keyword">const</span> <span class="keywordtype">size_t</span> numRowsOld = size_t(A.numRow());</div>
-<div class="line"><a name="l00461"></a><span class="lineno">  461</span>&#160;  <span class="keywordflow">if</span> ((numNeg == 0) | (numPosP1 == 0)) {</div>
-<div class="line"><a name="l00462"></a><span class="lineno">  462</span>&#160;    <span class="keywordflow">if</span> ((numNeg == 0) &amp; (numPosP1 == 0)) <span class="keywordflow">return</span>;</div>
-<div class="line"><a name="l00463"></a><span class="lineno">  463</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = numRowsOld; i != 0;)</div>
-<div class="line"><a name="l00464"></a><span class="lineno">  464</span>&#160;      <span class="keywordflow">if</span> (A(--i, v)) eraseConstraint(A, i);</div>
-<div class="line"><a name="l00465"></a><span class="lineno">  465</span>&#160;    <span class="keywordflow">return</span>;</div>
-<div class="line"><a name="l00466"></a><span class="lineno">  466</span>&#160;  }</div>
-<div class="line"><a name="l00467"></a><span class="lineno">  467</span>&#160;  <span class="keywordflow">return</span> fourierMotzkinNonNegativeCore(A, v, {numNeg, numPos}, numRowsOld);</div>
-<div class="line"><a name="l00468"></a><span class="lineno">  468</span>&#160;}</div>
-<div class="line"><a name="l00470"></a><span class="lineno">  470</span>&#160;constexpr <span class="keywordtype">void</span> removeZeroRows(MutDensePtrMatrix&lt;int64_t&gt; &amp;A) {</div>
-<div class="line"><a name="l00471"></a><span class="lineno">  471</span>&#160;  <span class="keywordflow">for</span> (Row i = A.numRow(); i;)</div>
-<div class="line"><a name="l00472"></a><span class="lineno">  472</span>&#160;    <span class="keywordflow">if</span> (allZero(A(--i, _))) eraseConstraint(A, i);</div>
-<div class="line"><a name="l00473"></a><span class="lineno">  473</span>&#160;}</div>
-<div class="line"><a name="l00474"></a><span class="lineno">  474</span>&#160; </div>
-<div class="line"><a name="l00477"></a><span class="lineno">  477</span>&#160;constexpr <span class="keyword">auto</span> uniqueConstraint(DensePtrMatrix&lt;int64_t&gt; A, Row r) -&gt; <span class="keywordtype">bool</span> {</div>
-<div class="line"><a name="l00478"></a><span class="lineno">  478</span>&#160;  <span class="keywordflow">for</span> (Row i = r; i != 0;)</div>
-<div class="line"><a name="l00479"></a><span class="lineno">  479</span>&#160;    <span class="keywordflow">if</span> (A(--i, _) == A(r, _)) <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
-<div class="line"><a name="l00480"></a><span class="lineno">  480</span>&#160;  <span class="keywordflow">return</span> <span class="keyword">true</span>;</div>
-<div class="line"><a name="l00481"></a><span class="lineno">  481</span>&#160;}</div>
-<div class="line"><a name="l00482"></a><span class="lineno">  482</span>&#160; </div>
-<div class="line"><a name="l00486"></a><span class="lineno">  486</span>&#160;[[nodiscard]] constexpr <span class="keyword">auto</span> removeRedundantRows(MutDensePtrMatrix&lt;int64_t&gt; A,</div>
-<div class="line"><a name="l00487"></a><span class="lineno">  487</span>&#160;                                                 MutDensePtrMatrix&lt;int64_t&gt; B)</div>
-<div class="line"><a name="l00488"></a><span class="lineno">  488</span>&#160;  -&gt; std::array&lt;Row, 2&gt; {</div>
-<div class="line"><a name="l00489"></a><span class="lineno">  489</span>&#160;  <span class="keyword">auto</span> [M, N] = B.size();</div>
-<div class="line"><a name="l00490"></a><span class="lineno">  490</span>&#160;  <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> r = 0, c = 0; c &lt; N &amp;&amp; r &lt; M; ++c)</div>
-<div class="line"><a name="l00491"></a><span class="lineno">  491</span>&#160;    <span class="keywordflow">if</span> (!NormalForm::pivotRows(B, c, M, r))</div>
-<div class="line"><a name="l00492"></a><span class="lineno">  492</span>&#160;      NormalForm::reduceColumnStack(A, B, c, r++);</div>
-<div class="line"><a name="l00493"></a><span class="lineno">  493</span>&#160;  <span class="comment">// scan duplicate rows in `A`</span></div>
-<div class="line"><a name="l00494"></a><span class="lineno">  494</span>&#160;  <span class="keywordflow">for</span> (Row r = A.numRow(); r != 0;)</div>
-<div class="line"><a name="l00495"></a><span class="lineno">  495</span>&#160;    <span class="keywordflow">if</span> (!uniqueConstraint(A, --r)) eraseConstraint(A, r);</div>
-<div class="line"><a name="l00496"></a><span class="lineno">  496</span>&#160;  <span class="keywordflow">return</span> {NormalForm::numNonZeroRows(A), NormalForm::numNonZeroRows(B)};</div>
-<div class="line"><a name="l00497"></a><span class="lineno">  497</span>&#160;}</div>
-<div class="line"><a name="l00498"></a><span class="lineno">  498</span>&#160; </div>
-<div class="line"><a name="l00499"></a><span class="lineno">  499</span>&#160;constexpr <span class="keywordtype">void</span> dropEmptyConstraints(MutDensePtrMatrix&lt;int64_t&gt; &amp;A) {</div>
-<div class="line"><a name="l00500"></a><span class="lineno">  500</span>&#160;  <span class="keywordflow">for</span> (Row c = A.numRow(); c != 0;)</div>
-<div class="line"><a name="l00501"></a><span class="lineno">  501</span>&#160;    <span class="keywordflow">if</span> (allZero(A(--c, _))) eraseConstraint(A, c);</div>
-<div class="line"><a name="l00502"></a><span class="lineno">  502</span>&#160;}</div>
-<div class="line"><a name="l00503"></a><span class="lineno">  503</span>&#160; </div>
-<div class="line"><a name="l00504"></a><span class="lineno">  504</span>&#160;constexpr <span class="keyword">auto</span> uniqueConstraint(DensePtrMatrix&lt;int64_t&gt; A, <span class="keywordtype">size_t</span> C) -&gt; <span class="keywordtype">bool</span> {</div>
-<div class="line"><a name="l00505"></a><span class="lineno">  505</span>&#160;  <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> c = 0; c &lt; C; ++c) {</div>
-<div class="line"><a name="l00506"></a><span class="lineno">  506</span>&#160;    <span class="keywordtype">bool</span> allEqual = <span class="keyword">true</span>;</div>
-<div class="line"><a name="l00507"></a><span class="lineno">  507</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> r = 0; r &lt; A.numCol(); ++r) allEqual &amp;= (A(c, r) == A(C, r));</div>
-<div class="line"><a name="l00508"></a><span class="lineno">  508</span>&#160;    <span class="keywordflow">if</span> (allEqual) <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
-<div class="line"><a name="l00509"></a><span class="lineno">  509</span>&#160;  }</div>
-<div class="line"><a name="l00510"></a><span class="lineno">  510</span>&#160;  <span class="keywordflow">return</span> <span class="keyword">true</span>;</div>
-<div class="line"><a name="l00511"></a><span class="lineno">  511</span>&#160;}</div>
-<div class="line"><a name="l00512"></a><span class="lineno">  512</span>&#160; </div>
-<div class="line"><a name="l00513"></a><span class="lineno">  513</span>&#160;constexpr <span class="keyword">auto</span> countSigns(DensePtrMatrix&lt;int64_t&gt; A, <span class="keywordtype">size_t</span> i)</div>
-<div class="line"><a name="l00514"></a><span class="lineno">  514</span>&#160;  -&gt; std::array&lt;size_t, 2&gt; {</div>
-<div class="line"><a name="l00515"></a><span class="lineno">  515</span>&#160;  <span class="keywordtype">size_t</span> numNeg = 0;</div>
-<div class="line"><a name="l00516"></a><span class="lineno">  516</span>&#160;  <span class="keywordtype">size_t</span> numPos = 0;</div>
-<div class="line"><a name="l00517"></a><span class="lineno">  517</span>&#160;  <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> j = 0; j &lt; A.numRow(); ++j) {</div>
-<div class="line"><a name="l00518"></a><span class="lineno">  518</span>&#160;    int64_t Aij = A(j, i);</div>
-<div class="line"><a name="l00519"></a><span class="lineno">  519</span>&#160;    numNeg += (Aij &lt; 0);</div>
-<div class="line"><a name="l00520"></a><span class="lineno">  520</span>&#160;    numPos += (Aij &gt; 0);</div>
-<div class="line"><a name="l00521"></a><span class="lineno">  521</span>&#160;  }</div>
-<div class="line"><a name="l00522"></a><span class="lineno">  522</span>&#160;  <span class="keywordflow">return</span> {numNeg, numPos};</div>
-<div class="line"><a name="l00523"></a><span class="lineno">  523</span>&#160;}</div>
-<div class="line"><a name="l00524"></a><span class="lineno">  524</span>&#160; </div>
-<div class="line"><a name="l00525"></a><span class="lineno">  525</span>&#160;constexpr <span class="keywordtype">void</span> deleteBounds(MutDensePtrMatrix&lt;int64_t&gt; &amp;A, <span class="keywordtype">size_t</span> i) {</div>
-<div class="line"><a name="l00526"></a><span class="lineno">  526</span>&#160;  <span class="keywordflow">for</span> (Row j = A.numRow(); j != 0;)</div>
-<div class="line"><a name="l00527"></a><span class="lineno">  527</span>&#160;    <span class="keywordflow">if</span> (A(--j, i)) eraseConstraint(A, j);</div>
-<div class="line"><a name="l00528"></a><span class="lineno">  528</span>&#160;}</div>
+<div class="line"><a name="l00456"></a><span class="lineno">  456</span>&#160; </div>
+<div class="line"><a name="l00457"></a><span class="lineno">  457</span>&#160;constexpr <span class="keywordtype">void</span> deleteBounds(MutDensePtrMatrix&lt;int64_t&gt; &amp;A, <span class="keywordtype">size_t</span> i) {</div>
+<div class="line"><a name="l00458"></a><span class="lineno">  458</span>&#160;  <span class="keywordflow">for</span> (Row j = A.numRow(); j != 0;)</div>
+<div class="line"><a name="l00459"></a><span class="lineno">  459</span>&#160;    <span class="keywordflow">if</span> (A(--j, i)) eraseConstraint(A, j);</div>
+<div class="line"><a name="l00460"></a><span class="lineno">  460</span>&#160;}</div>
 <div class="ttc" id="astructLinAlg_1_1Array_html"><div class="ttname"><a href="structLinAlg_1_1Array.html">LinAlg::Array</a></div><div class="ttdoc">Constant Array.</div><div class="ttdef"><b>Definition:</b> Array.hpp:32</div></div>
 <div class="ttc" id="astructLinAlg_1_1EmptyMatrix_html"><div class="ttname"><a href="structLinAlg_1_1EmptyMatrix.html">LinAlg::EmptyMatrix</a></div><div class="ttdef"><b>Definition:</b> EmptyArrays.hpp:9</div></div>
 </div><!-- fragment --></div><!-- contents -->
