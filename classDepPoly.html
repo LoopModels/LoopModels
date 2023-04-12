@@ -304,8 +304,8 @@ static auto&#160;</td><td class="memItemRight" valign="bottom"><b>nullSpace</b> 
 <tr class="memitem:a09212974817f1c0519c052a6fea12020"><td class="memItemLeft" align="right" valign="top"><a id="a09212974817f1c0519c052a6fea12020"></a>
 static auto&#160;</td><td class="memItemRight" valign="bottom"><b>symbolIndex</b> (llvm::ArrayRef&lt; const llvm::SCEV * &gt; s, const llvm::SCEV *v) -&gt; <a class="el" href="structOptional.html">Optional</a>&lt; unsigned int &gt;</td></tr>
 <tr class="separator:a09212974817f1c0519c052a6fea12020"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a672e011c355526212fbb3a008c3391ea"><td class="memItemLeft" align="right" valign="top">static auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classDepPoly.html#a672e011c355526212fbb3a008c3391ea">mergeMap</a> (llvm::ArrayRef&lt; const llvm::SCEV * &gt; s0, llvm::ArrayRef&lt; const llvm::SCEV * &gt; s1) -&gt; Vector&lt; unsigned int &gt;</td></tr>
-<tr class="separator:a672e011c355526212fbb3a008c3391ea"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9a6693af1ab0702d06dc3cebaecd9be9"><td class="memItemLeft" align="right" valign="top">static auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classDepPoly.html#a9a6693af1ab0702d06dc3cebaecd9be9">mergeMap</a> (Vector&lt; unsigned &gt; &amp;map, llvm::ArrayRef&lt; const llvm::SCEV * &gt; s0, llvm::ArrayRef&lt; const llvm::SCEV * &gt; s1) -&gt; unsigned</td></tr>
+<tr class="separator:a9a6693af1ab0702d06dc3cebaecd9be9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a741dbd24c10ef787b6cc2caade4a333b"><td class="memItemLeft" align="right" valign="top"><a id="a741dbd24c10ef787b6cc2caade4a333b"></a>
 static void&#160;</td><td class="memItemRight" valign="bottom"><b>fillSyms</b> (llvm::MutableArrayRef&lt; const llvm::SCEV * &gt; s, std::array&lt; llvm::ArrayRef&lt; const llvm::SCEV * &gt;, 2 &gt; sa, Vector&lt; unsigned int &gt; &amp;map)</td></tr>
 <tr class="separator:a741dbd24c10ef787b6cc2caade4a333b"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -331,8 +331,8 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> 
 <p>Example: for i = 1:N, j = 1:i A[i,j] = foo(A[i,i]) labels: 0 1</p>
 <p><a class="el" href="classDependence.html">Dependence</a> Poly: 1 &lt;= i_0 &lt;= N 1 &lt;= j_0 &lt;= i_0 1 &lt;= i_1 &lt;= N 1 &lt;= j_1 &lt;= i_1 i_0 == i_1 j_0 == i_1 </p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
-<a id="a672e011c355526212fbb3a008c3391ea"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a672e011c355526212fbb3a008c3391ea">&#9670;&nbsp;</a></span>mergeMap()</h2>
+<a id="a9a6693af1ab0702d06dc3cebaecd9be9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9a6693af1ab0702d06dc3cebaecd9be9">&#9670;&nbsp;</a></span>mergeMap()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -343,6 +343,12 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> 
         <tr>
           <td class="memname">static auto DepPoly::mergeMap </td>
           <td>(</td>
+          <td class="paramtype">Vector&lt; unsigned &gt; &amp;&#160;</td>
+          <td class="paramname"><em>map</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
           <td class="paramtype">llvm::ArrayRef&lt; const llvm::SCEV * &gt;&#160;</td>
           <td class="paramname"><em>s0</em>, </td>
         </tr>
@@ -355,7 +361,7 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> 
         <tr>
           <td></td>
           <td>)</td>
-          <td></td><td> -&gt; Vector&lt;unsigned int&gt; </td>
+          <td></td><td> -&gt; unsigned </td>
         </tr>
       </table>
   </td>
