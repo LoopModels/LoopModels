@@ -472,9 +472,17 @@ constexpr void removeZeroRows(MutDensePtrMatrix<int64_t> &A) {
     if (allZero(A(--i, _))) eraseConstraint(A, i);
 }
 
+/// checks whether `r` is a copy of any preceding rows
+/// NOTE: does not compare to any following rows
+constexpr auto uniqueConstraint(DensePtrMatrix<int64_t> A, Row r) -> bool {
+  for (Row i = r; i != 0;)
+    if (A(--i, _) == A(r, _)) return false;
+  return true;
+}
+
 /// A is an inequality matrix, A*x >= 0
 /// B is an equality matrix, E*x == 0
-/// Use the equality matrix B to remove redundant constraints both matrices
+/// Use the equality matrix B to remove redundant constraints
 [[nodiscard]] constexpr auto removeRedundantRows(MutDensePtrMatrix<int64_t> A,
                                                  MutDensePtrMatrix<int64_t> B)
   -> std::array<Row, 2> {
@@ -482,6 +490,9 @@ constexpr void removeZeroRows(MutDensePtrMatrix<int64_t> &A) {
   for (size_t r = 0, c = 0; c < N && r < M; ++c)
     if (!NormalForm::pivotRows(B, c, M, r))
       NormalForm::reduceColumnStack(A, B, c, r++);
+  // scan duplicate rows in `A`
+  for (Row r = A.numRow(); r != 0;)
+    if (!uniqueConstraint(A, --r)) eraseConstraint(A, r);
   return {NormalForm::numNonZeroRows(A), NormalForm::numNonZeroRows(B)};
 }
 

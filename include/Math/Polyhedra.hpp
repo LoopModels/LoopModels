@@ -146,10 +146,14 @@ struct BasePolyhedra {
   }
   template <bool CheckEmpty>
   constexpr void pruneBoundsCore(BumpAlloc<> &alloc) {
-    MutDensePtrMatrix<int64_t> A{getA()};
-    auto diff = vector<int64_t>(alloc, unsigned(A.numCol()));
+    auto diff = vector<int64_t>(alloc, unsigned(getA().numCol()));
     auto p = checkpoint(alloc);
     const size_t dyn = getNumDynamic();
+    if constexpr (HasEqualities) {
+      auto [ar, er] = removeRedundantRows(getA(), getE());
+      setNumConstraints(unsigned(ar));
+      setNumEqConstraints(unsigned(er));
+    }
     auto C = initializeComparator(alloc);
     if constexpr (CheckEmpty) {
       if (C.isEmpty(alloc)) {
@@ -158,16 +162,11 @@ struct BasePolyhedra {
         return;
       }
     }
-    if constexpr (HasEqualities) {
-      auto [ar, er] = removeRedundantRows(getA(), getE());
-      setNumConstraints(unsigned(ar));
-      setNumEqConstraints(unsigned(er));
-    }
     for (auto j = size_t(getA().numRow()); j;) {
       bool broke = false;
       for (size_t i = --j; i;) {
-        if (A.numRow() <= 1) return;
-        diff << A(--i, _) - A(j, _);
+        if (getA().numRow() <= 1) return;
+        diff << getA()(--i, _) - getA()(j, _);
         if (C.greaterEqual(alloc, diff)) {
           eraseConstraint(i);
           rollback(alloc, p);
@@ -184,7 +183,7 @@ struct BasePolyhedra {
       if constexpr (NonNegative) {
         if (!broke) {
           for (size_t i = 0; i < dyn; ++i) {
-            diff << A(j, _);
+            diff << getA()(j, _);
             --diff[last - i];
             if (C.greaterEqual(alloc, diff)) {
               eraseConstraint(j);

@@ -277,16 +277,16 @@ public:
   }
   /// Returns a map of s1's content's to s0's
   /// Values >= s0.size() are new symbols
-  static auto mergeMap(llvm::ArrayRef<const llvm::SCEV *> s0,
-                       llvm::ArrayRef<const llvm::SCEV *> s1)
-    -> Vector<unsigned int> {
-    Vector<unsigned int> map;
+  static auto mergeMap(Vector<unsigned> &map,
+                       llvm::ArrayRef<const llvm::SCEV *> s0,
+                       llvm::ArrayRef<const llvm::SCEV *> s1) -> unsigned {
     map.resizeForOverwrite(s1.size());
-    for (size_t n = s0.size(), i = 0; i < s1.size(); ++i) {
+    size_t n = s0.size();
+    for (size_t i = 0; i < s1.size(); ++i) {
       Optional<unsigned int> j = symbolIndex(s0, s1[i]);
       map[i] = j ? *j : n++;
     }
-    return map;
+    return n;
   }
   static void fillSyms(llvm::MutableArrayRef<const llvm::SCEV *> s,
                        std::array<llvm::ArrayRef<const llvm::SCEV *>, 2> sa,
@@ -327,10 +327,9 @@ public:
     unsigned numDep1Var = loop1->getNumLoops();
     unsigned numVar = numDep0Var + numDep1Var;
 
-    auto map = mergeMap(S0, S1);
-    invariant(unsigned(map.size()), unsigned(S1.size()));
+    Vector<unsigned> map;
+    unsigned numDynSym = mergeMap(map, S0, S1);
     invariant(size_t(map.size()), size_t(S1.size()));
-    unsigned numDynSym = S0.size() + map.size();
     unsigned numSym = numDynSym + 1;
     DenseMatrix<int64_t> NS{nullSpace(ma0, ma1)};
     unsigned timeDim = unsigned{NS.numRow()};
