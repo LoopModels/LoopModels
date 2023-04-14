@@ -256,9 +256,9 @@ Functions</h2></td></tr>
 <tr class="memitem:a8698e91790649943d685352cf2172323"><td class="memItemLeft" align="right" valign="top"><a id="a8698e91790649943d685352cf2172323"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>adaptOStream</b> (std::ostream &amp;os, const auto &amp;x) -&gt; std::ostream &amp;</td></tr>
 <tr class="separator:a8698e91790649943d685352cf2172323"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a891d41be4f4a631e83ea063720ae2207"><td class="memItemLeft" align="right" valign="top"><a id="a891d41be4f4a631e83ea063720ae2207"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>print_obj</b> (llvm::raw_ostream &amp;os, auto x)</td></tr>
-<tr class="separator:a891d41be4f4a631e83ea063720ae2207"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9431ef8d97a9d9d0ef687f2889ae4e33"><td class="memItemLeft" align="right" valign="top"><a id="a9431ef8d97a9d9d0ef687f2889ae4e33"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>print_obj</b> (llvm::raw_ostream &amp;os, Printable auto x)</td></tr>
+<tr class="separator:a9431ef8d97a9d9d0ef687f2889ae4e33"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a106ca2757aae7c80e5c19b0942eda652"><td class="memTemplParams" colspan="2"><a id="a106ca2757aae7c80e5c19b0942eda652"></a>
 template&lt;typename F , typename S &gt; </td></tr>
 <tr class="memitem:a106ca2757aae7c80e5c19b0942eda652"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>print_obj</b> (llvm::raw_ostream &amp;os, const std::pair&lt; F, S &gt; &amp;x)</td></tr>
@@ -849,9 +849,8 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>selfDot</b>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="var-members"></a>
 Variables</h2></td></tr>
-<tr class="memitem:a502cb2fe7ec1170a0d8736d80a0bbbd3"><td class="memTemplParams" colspan="2"><a id="a502cb2fe7ec1170a0d8736d80a0bbbd3"></a>
-template&lt;typename T &gt; </td></tr>
-<tr class="memitem:a502cb2fe7ec1170a0d8736d80a0bbbd3"><td class="memTemplItemLeft" align="right" valign="top">concept&#160;</td><td class="memTemplItemRight" valign="bottom"><b>Printable</b> = requires(llvm::raw_ostream &amp;os, T x) { print_oj(os, x); }</td></tr>
+<tr class="memitem:a502cb2fe7ec1170a0d8736d80a0bbbd3"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
+<tr class="memitem:a502cb2fe7ec1170a0d8736d80a0bbbd3"><td class="memTemplItemLeft" align="right" valign="top">concept&#160;</td><td class="memTemplItemRight" valign="bottom"><b>Printable</b></td></tr>
 <tr class="separator:a502cb2fe7ec1170a0d8736d80a0bbbd3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac715802c60f6d5721471d195e0ae4a97"><td class="memTemplParams" colspan="2">template&lt;class T , class S &gt; </td></tr>
 <tr class="memitem:ac715802c60f6d5721471d195e0ae4a97"><td class="memTemplItemLeft" align="right" valign="top">concept&#160;</td><td class="memTemplItemRight" valign="bottom"><b>AbstractSimilar</b></td></tr>
@@ -1235,6 +1234,25 @@ template&lt;typename D &gt; </div>
 <b>Initial value:</b><div class="fragment"><div class="line">= requires(D d) {</div>
 <div class="line">                            { d } -&gt; std::convertible_to&lt;StridedDims&gt;;</div>
 <div class="line">                          }</div>
+</div><!-- fragment -->
+</div>
+</div>
+<a id="a502cb2fe7ec1170a0d8736d80a0bbbd3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a502cb2fe7ec1170a0d8736d80a0bbbd3">&#9670;&nbsp;</a></span>Printable</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename T &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">concept LinAlg::Printable</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<b>Initial value:</b><div class="fragment"><div class="line">= requires(llvm::raw_ostream &amp;os, T x) {</div>
+<div class="line">  { os &lt;&lt; x } -&gt; std::same_as&lt;llvm::raw_ostream &amp;&gt;;</div>
+<div class="line">}</div>
 </div><!-- fragment -->
 </div>
 </div>
