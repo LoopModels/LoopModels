@@ -198,10 +198,10 @@ $(function() {
 <div class="line"><a name="l00162"></a><span class="lineno">  162</span>&#160;        <span class="keywordflow">return</span>;</div>
 <div class="line"><a name="l00163"></a><span class="lineno">  163</span>&#160;      }</div>
 <div class="line"><a name="l00164"></a><span class="lineno">  164</span>&#160;    }</div>
-<div class="line"><a name="l00165"></a><span class="lineno">  165</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">auto</span> j = <span class="keywordtype">size_t</span>(getA().numRow()); j;) {</div>
+<div class="line"><a name="l00165"></a><span class="lineno">  165</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">auto</span> j = getNumCon(); j;) {</div>
 <div class="line"><a name="l00166"></a><span class="lineno">  166</span>&#160;      <span class="keywordtype">bool</span> broke = <span class="keyword">false</span>;</div>
-<div class="line"><a name="l00167"></a><span class="lineno">  167</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = --j; i;) {</div>
-<div class="line"><a name="l00168"></a><span class="lineno">  168</span>&#160;        <span class="keywordflow">if</span> (getA().numRow() &lt;= 1) <span class="keywordflow">return</span>;</div>
+<div class="line"><a name="l00167"></a><span class="lineno">  167</span>&#160;      <span class="keywordflow">for</span> (<span class="keyword">auto</span> i = --j; i;) {</div>
+<div class="line"><a name="l00168"></a><span class="lineno">  168</span>&#160;        <span class="keywordflow">if</span> (getNumCon() &lt;= 1) <span class="keywordflow">return</span>;</div>
 <div class="line"><a name="l00169"></a><span class="lineno">  169</span>&#160;        diff &lt;&lt; getA()(--i, _) - getA()(j, _);</div>
 <div class="line"><a name="l00170"></a><span class="lineno">  170</span>&#160;        <span class="keywordflow">if</span> (C.greaterEqual(alloc, diff)) {</div>
 <div class="line"><a name="l00171"></a><span class="lineno">  171</span>&#160;          eraseConstraint(i);</div>
@@ -240,7 +240,7 @@ $(function() {
 <div class="line"><a name="l00204"></a><span class="lineno">  204</span>&#160;    rollback(alloc, p);</div>
 <div class="line"><a name="l00205"></a><span class="lineno">  205</span>&#160;    <span class="keywordflow">if</span> constexpr (HasEqualities)</div>
 <div class="line"><a name="l00206"></a><span class="lineno">  206</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; getE().numRow(); ++i) normalizeByGCD(getE()(i, _));</div>
-<div class="line"><a name="l00207"></a><span class="lineno">  207</span>&#160;    truncNumInEqCon(getA().numRow());</div>
+<div class="line"><a name="l00207"></a><span class="lineno">  207</span>&#160;    truncNumInEqCon(getNumCon());</div>
 <div class="line"><a name="l00208"></a><span class="lineno">  208</span>&#160;    <span class="keywordflow">if</span> constexpr (HasEqualities) truncNumEqCon(getE().numRow());</div>
 <div class="line"><a name="l00209"></a><span class="lineno">  209</span>&#160;  }</div>
 <div class="line"><a name="l00210"></a><span class="lineno">  210</span>&#160; </div>
@@ -255,7 +255,7 @@ $(function() {
 <div class="line"><a name="l00219"></a><span class="lineno">  219</span>&#160;    <span class="keywordflow">return</span> size_t(getA().numCol()) - 1;</div>
 <div class="line"><a name="l00220"></a><span class="lineno">  220</span>&#160;  }</div>
 <div class="line"><a name="l00221"></a><span class="lineno">  221</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getNumInequalityConstraints() <span class="keyword">const</span> -&gt; <span class="keywordtype">size_t</span> {</div>
-<div class="line"><a name="l00222"></a><span class="lineno">  222</span>&#160;    <span class="keywordflow">return</span> size_t(getA().numRow());</div>
+<div class="line"><a name="l00222"></a><span class="lineno">  222</span>&#160;    <span class="keywordflow">return</span> size_t(getNumCon());</div>
 <div class="line"><a name="l00223"></a><span class="lineno">  223</span>&#160;  }</div>
 <div class="line"><a name="l00224"></a><span class="lineno">  224</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getNumEqualityConstraints() <span class="keyword">const</span> -&gt; <span class="keywordtype">size_t</span> {</div>
 <div class="line"><a name="l00225"></a><span class="lineno">  225</span>&#160;    <span class="keywordflow">return</span> size_t(getE().numRow());</div>
@@ -296,7 +296,7 @@ $(function() {
 <div class="line"><a name="l00260"></a><span class="lineno">  260</span>&#160;  }</div>
 <div class="line"><a name="l00261"></a><span class="lineno">  261</span>&#160;  <span class="keywordtype">void</span> dump()<span class="keyword"> const </span>{ llvm::errs() &lt;&lt; *<span class="keyword">this</span>; }</div>
 <div class="line"><a name="l00262"></a><span class="lineno">  262</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> isEmpty() <span class="keyword">const</span> -&gt; <span class="keywordtype">bool</span> {</div>
-<div class="line"><a name="l00263"></a><span class="lineno">  263</span>&#160;    <span class="keywordflow">return</span> getA().numRow() == 0;</div>
+<div class="line"><a name="l00263"></a><span class="lineno">  263</span>&#160;    <span class="keywordflow">return</span> getNumCon() == 0;</div>
 <div class="line"><a name="l00264"></a><span class="lineno">  264</span>&#160;    <span class="comment">// if (A.numRow() == 0)</span></div>
 <div class="line"><a name="l00265"></a><span class="lineno">  265</span>&#160;    <span class="comment">//     return true;</span></div>
 <div class="line"><a name="l00266"></a><span class="lineno">  266</span>&#160;    <span class="comment">// for (size_t r = 0; r &lt; A.numRow(); ++r)</span></div>
