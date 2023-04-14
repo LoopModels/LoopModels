@@ -1137,7 +1137,7 @@ $(function() {
 <div class="line"><a name="l01186"></a><span class="lineno"> 1186</span>&#160;    <span class="comment">// allow it.</span></div>
 <div class="line"><a name="l01187"></a><span class="lineno"> 1187</span>&#160;    <span class="keyword">auto</span> graphs = g.split(components);</div>
 <div class="line"><a name="l01188"></a><span class="lineno"> 1188</span>&#160;    assert(graphs.size() == components.size());</div>
-<div class="line"><a name="l01189"></a><span class="lineno"> 1189</span>&#160;    <a class="code" href="structBitSet.html">BitSet</a> satDeps;</div>
+<div class="line"><a name="l01189"></a><span class="lineno"> 1189</span>&#160;    <a class="code" href="structBitSet.html">BitSet</a> satDeps{};</div>
 <div class="line"><a name="l01190"></a><span class="lineno"> 1190</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;sg : graphs) {</div>
 <div class="line"><a name="l01191"></a><span class="lineno"> 1191</span>&#160;      <span class="keywordflow">if</span> (d &gt;= sg.calcMaxDepth()) <span class="keywordflow">continue</span>;</div>
 <div class="line"><a name="l01192"></a><span class="lineno"> 1192</span>&#160;      countAuxParamsAndConstraints(sg, d);</div>
