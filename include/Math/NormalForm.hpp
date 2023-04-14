@@ -169,56 +169,56 @@ constexpr auto orthogonalize(IntMatrix A)
   return orthogonalizeBang(A);
 }
 
-constexpr void zeroSupDiagonal(MutPtrMatrix<int64_t> A, Col r, Row c) {
+constexpr void zeroSupDiagonal(MutPtrMatrix<int64_t> A, Col c, Row r) {
   auto [M, N] = A.size();
-  for (Row j = c + 1; j < M; ++j) {
-    int64_t Aii = A(c, r);
-    if (int64_t Aij = A(j, r)) {
+  for (Row j = r + 1; j < M; ++j) {
+    int64_t Aii = A(r, c);
+    if (int64_t Aij = A(j, c)) {
       const auto [p, q, Aiir, Aijr] = gcdxScale(Aii, Aij);
       for (Col k = 0; k < N; ++k) {
-        int64_t Aki = A(c, k);
+        int64_t Aki = A(r, k);
         int64_t Akj = A(j, k);
-        A(c, k) = p * Aki + q * Akj;
+        A(r, k) = p * Aki + q * Akj;
         A(j, k) = Aiir * Akj - Aijr * Aki;
       }
     }
   }
 }
-constexpr void zeroSupDiagonal(std::array<MutPtrMatrix<int64_t>, 2> AB, Col r,
-                               Row c) {
+constexpr void zeroSupDiagonal(std::array<MutPtrMatrix<int64_t>, 2> AB, Col c,
+                               Row r) {
   auto [A, B] = AB;
   auto [M, N] = A.size();
   const Col K = B.numCol();
   assert(M == B.numRow());
-  for (Row j = c + 1; j < M; ++j) {
-    int64_t Aii = A(c, r);
-    if (int64_t Aij = A(j, r)) {
+  for (Row j = r + 1; j < M; ++j) {
+    int64_t Aii = A(r, c);
+    if (int64_t Aij = A(j, c)) {
       const auto [p, q, Aiir, Aijr] = gcdxScale(Aii, Aij);
       for (Col k = 0; k < N; ++k) {
-        int64_t Ack = A(c, k);
+        int64_t Ack = A(r, k);
         int64_t Ajk = A(j, k);
-        A(c, k) = p * Ack + q * Ajk;
+        A(r, k) = p * Ack + q * Ajk;
         A(j, k) = Aiir * Ajk - Aijr * Ack;
       }
       for (Col k = 0; k < K; ++k) {
-        int64_t Bck = B(c, k);
+        int64_t Bck = B(r, k);
         int64_t Bjk = B(j, k);
-        B(c, k) = p * Bck + q * Bjk;
+        B(r, k) = p * Bck + q * Bjk;
         B(j, k) = Aiir * Bjk - Aijr * Bck;
       }
     }
   }
 }
-constexpr void reduceSubDiagonal(MutPtrMatrix<int64_t> A, Col r, Row c) {
-  int64_t Akk = A(c, r);
+constexpr void reduceSubDiagonal(MutPtrMatrix<int64_t> A, Col c, Row r) {
+  int64_t Akk = A(r, c);
   if (Akk < 0) {
     Akk = -Akk;
-    A(c, _) *= -1;
+    A(r, _) *= -1;
   }
-  for (size_t z = 0; z < c; ++z) {
+  for (size_t z = 0; z < r; ++z) {
     // try to eliminate `A(k,z)`
     // if Akk == 1, then this zeros out Akz
-    if (int64_t Azr = A(z, r)) {
+    if (int64_t Azr = A(z, c)) {
       // we want positive but smaller subdiagonals
       // e.g., `Akz = 5, Akk = 2`, then in the loop below when `i=k`, we
       // set A(k,z) = A(k,z) - (A(k,z)/Akk) * Akk
@@ -235,47 +235,47 @@ constexpr void reduceSubDiagonal(MutPtrMatrix<int64_t> A, Col r, Row c) {
       int64_t AzrOld = Azr;
       Azr /= Akk;
       if (AzrOld < 0) Azr -= (AzrOld != (Azr * Akk));
-      A(z, _) -= Azr * A(c, _);
+      A(z, _) -= Azr * A(r, _);
     }
   }
 }
 constexpr void reduceSubDiagonalStack(MutPtrMatrix<int64_t> A,
-                                      MutPtrMatrix<int64_t> B, size_t r,
-                                      size_t c) {
-  int64_t Akk = A(c, r);
+                                      MutPtrMatrix<int64_t> B, size_t c,
+                                      size_t r) {
+  int64_t Akk = A(r, c);
   if (Akk < 0) {
     Akk = -Akk;
-    A(c, _) *= -1;
+    A(r, _) *= -1;
   }
-  for (size_t z = 0; z < c; ++z) {
-    if (int64_t Akz = A(z, r)) {
+  for (size_t z = 0; z < r; ++z) {
+    if (int64_t Akz = A(z, c)) {
       int64_t AkzOld = Akz;
       Akz /= Akk;
       if (AkzOld < 0) Akz -= (AkzOld != (Akz * Akk));
-      A(z, _) -= Akz * A(c, _);
+      A(z, _) -= Akz * A(r, _);
     }
   }
   for (size_t z = 0; z < B.numRow(); ++z) {
-    if (int64_t Bzr = B(z, r)) {
+    if (int64_t Bzr = B(z, c)) {
       int64_t BzrOld = Bzr;
       Bzr /= Akk;
       if (BzrOld < 0) Bzr -= (BzrOld != (Bzr * Akk));
-      B(z, _) -= Bzr * A(c, _);
+      B(z, _) -= Bzr * A(r, _);
     }
   }
 }
-constexpr void reduceSubDiagonal(std::array<MutPtrMatrix<int64_t>, 2> AB, Col r,
-                                 Row c) {
+constexpr void reduceSubDiagonal(std::array<MutPtrMatrix<int64_t>, 2> AB, Col c,
+                                 Row r) {
   auto [A, B] = AB;
-  int64_t Akk = A(c, r);
+  int64_t Akk = A(r, c);
   if (Akk < 0) {
     Akk = -Akk;
-    A(c, _) *= -1;
-    B(c, _) *= -1;
+    A(r, _) *= -1;
+    B(r, _) *= -1;
   }
-  for (size_t z = 0; z < c; ++z) {
+  for (size_t z = 0; z < r; ++z) {
     // try to eliminate `A(k,z)`
-    if (int64_t Akz = A(z, r)) {
+    if (int64_t Akz = A(z, c)) {
       // if Akk == 1, then this zeros out Akz
       if (Akk != 1) {
         // we want positive but smaller subdiagonals
@@ -295,8 +295,8 @@ constexpr void reduceSubDiagonal(std::array<MutPtrMatrix<int64_t>, 2> AB, Col r,
         Akz /= Akk;
         if (AkzOld < 0) Akz -= (AkzOld != (Akz * Akk));
       }
-      A(z, _) -= Akz * A(c, _);
-      B(z, _) -= Akz * B(c, _);
+      A(z, _) -= Akz * A(r, _);
+      B(z, _) -= Akz * B(r, _);
     }
   }
 }

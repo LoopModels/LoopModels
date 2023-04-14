@@ -989,7 +989,8 @@ public:
     if (!omniSimplex) return {};
     auto sol = omniSimplex->rLexMinStop(numLambda);
     updateSchedules(g, depth, sol);
-    return deactivateSatisfiedEdges(g, depth, sol);
+    return deactivateSatisfiedEdges(g, depth,
+                                    sol[_(numPhiCoefs + numOmegaCoefs, end)]);
   }
   [[nodiscard]] auto solveGraph(Graph &g, size_t depth, bool satisfyDeps)
     -> std::optional<BitSet> {
@@ -999,8 +1000,9 @@ public:
   [[nodiscard]] auto deactivateSatisfiedEdges(Graph &g, size_t depth,
                                               Simplex::Solution sol) -> BitSet {
     if (allZero(sol[_(begin, numBounding + numActiveEdges)])) return {};
-    size_t u = 0, w = numBounding;
-    BitSet deactivated;
+    // size_t u = 0, w = numBounding;
+    size_t w = 0, u = numActiveEdges;
+    BitSet deactivated{};
     for (size_t e = 0; e < edges.size(); ++e) {
       if (g.isInactive(e, depth)) continue;
       const Dependence &edge = edges[e];
@@ -1042,8 +1044,10 @@ public:
         auto s = sol[node.getPhiOffsetRange() + o];
         int64_t baseDenom = sOmega.denominator;
         int64_t l = lcm(s.denomLCM(), baseDenom);
+#ifndef NDEBUG
         for (size_t i = 0; i < phi.size(); ++i)
           assert(((s[i].numerator * l) / (s[i].denominator)) >= 0);
+#endif
         if (l == 1) {
           node.getOffsetOmega(depth) = sOmega.numerator;
           for (size_t i = 0; i < phi.size(); ++i) phi[i] = s[i].numerator;

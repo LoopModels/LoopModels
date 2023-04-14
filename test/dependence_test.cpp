@@ -34,10 +34,10 @@ TEST(DependenceTest, BasicAssertions) {
   //   -2  0  1  0 -1      J
   //    0  0  0  0  1 ]    i
   //                       j ]
-  IntMatrix Aloop{"[-2 1 0 0 -1; "
-                  "0 0 0 0 1; "
-                  "-2 0 1 -1 0; "
-                  "0 0 0 1 0]"_mat};
+  IntMatrix Aloop{"[-2 1 0 0 -1; "   // j <= I - 2
+                  "0 0 0 0 1; "      // j >= 0
+                  "-2 0 1 -1 0; "    // i <= J - 2
+                  "0 0 0 1 0]"_mat}; // i >= 0
   TestLoopFunction tlf;
 
   tlf.addLoop(std::move(Aloop), 2);
@@ -60,7 +60,8 @@ TEST(DependenceTest, BasicAssertions) {
   llvm::Value *jvp1 = builder.CreateAdd(jv, one);
   llvm::Value *Mv = llvm::dyn_cast<llvm::SCEVUnknown>(M)->getValue();
 
-  llvm::Value *offset01 = builder.CreateAdd(jv, builder.CreateMul(ivp1, Mv));
+  llvm::Value *iOffset = builder.CreateMul(ivp1, Mv);
+  llvm::Value *offset01 = builder.CreateAdd(jv, iOffset);
   auto *Ageped01 = builder.CreateGEP(
     Float64, ptrA, llvm::SmallVector<llvm::Value *, 1>{offset01}, "gep_A01");
   auto *Aload01 = builder.CreateAlignedLoad(Float64, Ageped01,
@@ -71,7 +72,7 @@ TEST(DependenceTest, BasicAssertions) {
     Float64, ptrA, llvm::SmallVector<llvm::Value *, 1>{offset10}, "gep_A10");
   auto *Aload10 = builder.CreateAlignedLoad(Float64, Ageped10,
                                             llvm::MaybeAlign(8), "load_A10");
-  llvm::Value *offset11 = builder.CreateAdd(jvp1, builder.CreateMul(ivp1, Mv));
+  llvm::Value *offset11 = builder.CreateAdd(jvp1, iOffset);
   auto *Ageped11 = builder.CreateGEP(
     Float64, ptrA, llvm::SmallVector<llvm::Value *, 1>{offset11}, "gep_A11");
   auto *Astore11 = builder.CreateAlignedStore(
@@ -147,11 +148,23 @@ TEST(DependenceTest, BasicAssertions) {
   assert(dep1->getNumInequalityConstraints() == 4);
   assert(dep1->getNumEqualityConstraints() == 2);
   // MemoryAccess mtgt1{Atgt1,nullptr,schLoad,true};
-  auto e = Dependence::check(alloc, *msrc, *mtgt01);
-  EXPECT_EQ(e.size(), 1);
-  EXPECT_TRUE(e.front().isForward());
-  llvm::errs() << e.front() << "\n";
-  EXPECT_FALSE(allZero(e.front().getSatConstraints()(last, _)));
+  auto e01 = Dependence::check(alloc, *msrc, *mtgt01);
+  EXPECT_EQ(e01.size(), 1);
+  EXPECT_TRUE(e01.front().isForward());
+  llvm::errs() << e01.front() << "\n";
+  EXPECT_FALSE(allZero(e01.front().getSatConstraints()(last, _)));
+  auto e01_rev = Dependence::check(alloc, *mtgt01, *msrc);
+  EXPECT_EQ(e01_rev.size(), 1);
+  EXPECT_FALSE(e01_rev.front().isForward());
+
+  auto e10 = Dependence::check(alloc, *msrc, *mtgt10);
+  EXPECT_EQ(e10.size(), 1);
+  EXPECT_TRUE(e10.front().isForward());
+  llvm::errs() << e10.front() << "\n";
+  EXPECT_FALSE(allZero(e10.front().getSatConstraints()(last, _)));
+  auto e10_rev = Dependence::check(alloc, *mtgt10, *msrc);
+  EXPECT_EQ(e10_rev.size(), 1);
+  EXPECT_FALSE(e10_rev.front().isForward());
 }
 
 // NOLINTNEXTLINE(modernize-use-trailing-return-type)
@@ -248,10 +261,10 @@ TEST(RankDeficientLoad, BasicAssertions) {
   //  -1   1           <=    0
   //   0  -1 ]               0     ]
   //
-  IntMatrix Aloop{"[-1 1 0 -1; "
-                  "0 0 0 1; "
-                  "0 0 -1 1; "
-                  "0 0 1 0]"_mat};
+  IntMatrix Aloop{"[-1 1 -1 0; "   // i <= I-1
+                  "0 0 1 0; "      // i >= 0
+                  "0 0 1 -1; "     // j <= i
+                  "0 0 0 1]"_mat}; // j >= 0
   TestLoopFunction tlf;
   tlf.addLoop(std::move(Aloop), 2);
   auto *loop = tlf.getLoopNest(0);
@@ -411,16 +424,16 @@ TEST(TimeHidingInRankDeficiency, BasicAssertions) {
 
 // NOLINTNEXTLINE(modernize-use-trailing-return-type)
 TEST(TriangularExampleTest, BasicAssertions) {
-  IntMatrix AMN{"[-1 1 0 0 -1; "
-                "0 0 0 0 1; "
-                "-1 0 1 -1 0; "
-                "0 0 0 1 0]"_mat};
-  IntMatrix AMNK{"[-1 1 0 0 0 -1; "
-                 "0 0 0 0 0 1; "
+  IntMatrix AMN{"[-1 1 0 -1 0; "
+                "0 0 0 1 0; "
+                "-1 0 1 0 -1; "
+                "0 0 0 0 1]"_mat};
+  IntMatrix AMNK{"[-1 1 0 -1 0 0; "
+                 "0 0 0 1 0 0; "
                  "-1 0 1 0 -1 0; "
                  "0 0 0 0 1 0; "
-                 "-1 0 1 -1 0 0; "
-                 "-1 0 0 1 -1 0]"_mat};
+                 "-1 0 1 0 0 -1; "
+                 "-1 0 0 0 -1 1]"_mat};
 
   TestLoopFunction tlf;
   tlf.addLoop(std::move(AMN), 2);
@@ -913,19 +926,19 @@ TEST(MeanStDevTest0, BasicAssertions) {
   //   s(i) = sqrt(s(i) / (J-1));
   constexpr size_t jo = 0, ii = 1;
   TestLoopFunction tlf;
-  IntMatrix TwoLoopsMat{"[-1 1 0 0 -1; "
-                        "0 0 0 0 1; "
-                        "-1 0 1 -1 0; "
-                        "0 0 0 1 0]"_mat};
+  IntMatrix TwoLoopsMat{"[-1 1 0 -1 0; "
+                        "0 0 0 1 0; "
+                        "-1 0 1 0 -1; "
+                        "0 0 0 0 1]"_mat};
   tlf.addLoop(std::move(TwoLoopsMat), 2);
   IntMatrix OneLoopMat{"[-1 1 -1; "
                        "0 0 1]"_mat};
   tlf.addLoop(std::move(OneLoopMat), 1);
 
-  IntMatrix TwoLoopsMatJI{"[-1 0 1 0 -1; "
-                          "0 0 0 0 1; "
-                          "-1 1 0 -1 0; "
-                          "0 0 0 1 0]"_mat};
+  IntMatrix TwoLoopsMatJI{"[-1 0 1 -1 0; "
+                          "0 0 0 1 0; "
+                          "-1 1 0 0 -1; "
+                          "0 0 0 0 1]"_mat};
   tlf.addLoop(std::move(TwoLoopsMatJI), 2);
   AffineLoopNest<true> *loopJI = tlf.getLoopNest(0);
   AffineLoopNest<true> *loopI = tlf.getLoopNest(1);
@@ -1249,10 +1262,10 @@ TEST(DoubleDependenceTest, BasicAssertions) {
 
   TestLoopFunction tlf;
   auto &builder = tlf.getBuilder();
-  IntMatrix Aloop{"[-2 1 0 0 -1; "
-                  "0 0 0 0 1; "
-                  "-2 0 1 -1 0; "
-                  "0 0 0 1 0]"_mat};
+  IntMatrix Aloop{"[-2 1 0 -1 0; "
+                  "0 0 0 1 0; "
+                  "-2 0 1 0 -1; "
+                  "0 0 0 0 1]"_mat};
   tlf.addLoop(std::move(Aloop), 2);
   AffineLoopNest<true> *loop = tlf.getLoopNest(0);
 
@@ -1408,8 +1421,8 @@ TEST(DoubleDependenceTest, BasicAssertions) {
     llvm::errs() << v;
   }
   DenseMatrix<int64_t> optPhi(DenseDims{2, 2}, 0);
-  optPhi(0, _) << std::numeric_limits<int64_t>::min();
-  optPhi(1, _) << 1;
+  optPhi(0, _) << 1;
+  optPhi(1, _) << std::numeric_limits<int64_t>::min();
   // Graphs::print(iOuterLoopNest.fullGraph());
   for (auto &mem : loopBlock.getMemoryAccesses()) {
     for (size_t nodeIndex : mem->getNodeIndex()) {
@@ -1432,14 +1445,15 @@ TEST(ConvReversePass, BasicAssertions) {
   // }
   TestLoopFunction tlf;
   auto &builder = tlf.getBuilder();
-  IntMatrix loopA{"[-1 0 1 0 0 0 0 0 -1; "
+  // syms: N, M, J, I
+  IntMatrix loopA{"[-1 0 1 0 0 0 -1 0 0; "
+                  "0 0 0 0  0 0 1 0 0; "
+                  "-1 1 0 0 0 -1 0 0 0; "
+                  "0 0 0 0  0 1 0 0 0; "
+                  "-1 0 0 0 1 0 0 0 -1; "
                   "0 0 0 0 0 0 0 0 1; "
-                  "-1 1 0 0 0 0 0 -1 0; "
-                  "0 0 0 0 0 0 0 1 0; "
-                  "-1 0 0 0 1 0 -1 0 0; "
-                  "0 0 0 0 0 0 1 0 0; "
-                  "-1 0 0 1 0 -1 0 0 0; "
-                  "0 0 0 0 0 1 0 0 0]"_mat};
+                  "-1 0 0 1 0 0 0 -1 0; "
+                  "0 0 0 0 0 0 0 1 0]"_mat};
   tlf.addLoop(std::move(loopA), 4);
   AffineLoopNest<true> *loop = tlf.getLoopNest(0);
 

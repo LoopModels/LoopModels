@@ -1,8 +1,34 @@
 #pragma once
-#include <cassert>
 
+#ifndef NDEBUG
+#include <cstdlib>
+#include <source_location>
+[[gnu::artificial]] constexpr inline void
+invariant(bool condition,
+          std::source_location location = std::source_location::current()) {
+  if (!condition) {
+    llvm::errs() << "invariant violation\nfile: " << location.file_name() << ":"
+                 << location.line() << ":" << location.column() << " `"
+                 << location.function_name() << "`\n";
+  }
+}
+template <typename T>
+[[gnu::artificial]] constexpr inline void
+invariant(const T &x, const T &y,
+          std::source_location location = std::source_location::current()) {
+  if (x != y) {
+    llvm::errs() << "invariant violation: " << x << " != " << y
+                 << "\nfile: " << location.file_name() << ":" << location.line()
+                 << ":" << location.column() << " `" << location.function_name()
+                 << "`\n";
+    abort();
+  }
+}
+#else // ifdef NDEBUG
+#if __cplusplus >= 202202L
+#include <utility>
+#endif
 [[gnu::artificial]] constexpr inline void invariant(bool condition) {
-  assert(condition && "invariant violation");
   if (!condition) {
 #if __cplusplus >= 202202L
     std::unreachable();
@@ -18,7 +44,6 @@
 template <typename T>
 [[gnu::artificial]] constexpr inline void invariant(const T &x, const T &y) {
   if (x != y) {
-#ifdef NDEBUG
 #if __cplusplus >= 202202L
     std::unreachable();
 #else
@@ -28,9 +53,7 @@ template <typename T>
 #endif
 #endif
 #endif
-#else
-    llvm::errs() << "invariant violation: " << x << " != " << y << "\n";
-    assert(false);
-#endif
   }
 }
+
+#endif

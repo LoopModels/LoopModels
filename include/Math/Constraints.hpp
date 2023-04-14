@@ -73,7 +73,7 @@ inline auto printConstraints(llvm::raw_ostream &os, EmptyMatrix<int64_t>,
 
 constexpr void eraseConstraintImpl(MutDensePtrMatrix<int64_t> A, Row i) {
   const Row lastRow = A.numRow() - 1;
-  assert(lastRow >= i);
+  invariant(i <= lastRow);
   if (lastRow != i) A(i, _) << A(lastRow, _);
 }
 constexpr void eraseConstraint(MutDensePtrMatrix<int64_t> &A, Row i) {
@@ -409,7 +409,7 @@ constexpr void removeZeroRows(MutDensePtrMatrix<int64_t> &A) {
 constexpr auto uniqueConstraint(DensePtrMatrix<int64_t> A, Row r) -> bool {
   for (Row i = r; i != 0;)
     if (A(--i, _) == A(r, _)) return false;
-  return true;
+  return !allZero(A(r, _));
 }
 
 /// A is an inequality matrix, A*x >= 0
@@ -419,9 +419,9 @@ constexpr auto uniqueConstraint(DensePtrMatrix<int64_t> A, Row r) -> bool {
                                                  MutDensePtrMatrix<int64_t> B)
   -> std::array<Row, 2> {
   auto [M, N] = B.size();
-  for (size_t r = 0, c = 0; c < N && r < M; ++c)
-    if (!NormalForm::pivotRows(B, c, M, r))
-      NormalForm::reduceColumnStack(A, B, c, r++);
+  for (size_t r = 0, c = 0; c++ < N && r < M;)
+    if (!NormalForm::pivotRows(B, c == N ? 0 : c, M, r))
+      NormalForm::reduceColumnStack(A, B, c == N ? 0 : c, r++);
   // scan duplicate rows in `A`
   for (Row r = A.numRow(); r != 0;)
     if (!uniqueConstraint(A, --r)) eraseConstraint(A, r);

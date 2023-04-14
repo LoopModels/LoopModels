@@ -201,10 +201,18 @@ static_assert(sizeof(Col) == sizeof(size_t));
 static_assert(sizeof(RowStride) == sizeof(size_t));
 constexpr auto operator*(Row r, Col c) -> Row::V { return *r * *c; }
 
+constexpr auto operator==(size_t x, Row y) -> bool { return x == size_t(y); }
+constexpr auto operator!=(size_t x, Row y) -> bool { return x != size_t(y); }
+constexpr auto operator==(size_t x, Col y) -> bool { return x == size_t(y); }
+constexpr auto operator!=(size_t x, Col y) -> bool { return x != size_t(y); }
 constexpr auto operator<(size_t x, Row y) -> bool { return x < size_t(y); }
 constexpr auto operator<(size_t x, Col y) -> bool { return x < size_t(y); }
 constexpr auto operator>(size_t x, Row y) -> bool { return x > size_t(y); }
 constexpr auto operator>(size_t x, Col y) -> bool { return x > size_t(y); }
+constexpr auto operator<=(size_t x, Row y) -> bool { return x <= size_t(y); }
+constexpr auto operator<=(size_t x, Col y) -> bool { return x <= size_t(y); }
+constexpr auto operator>=(size_t x, Row y) -> bool { return x >= size_t(y); }
+constexpr auto operator>=(size_t x, Col y) -> bool { return x >= size_t(y); }
 
 constexpr auto operator+(size_t x, Col y) -> Col { return Col{x + size_t(y)}; }
 constexpr auto operator-(size_t x, Col y) -> Col { return Col{x - size_t(y)}; }

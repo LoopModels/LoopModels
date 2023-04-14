@@ -162,10 +162,10 @@ struct BasePolyhedra {
         return;
       }
     }
-    for (auto j = size_t(getA().numRow()); j;) {
+    for (auto j = getNumCon(); j;) {
       bool broke = false;
-      for (size_t i = --j; i;) {
-        if (getA().numRow() <= 1) return;
+      for (auto i = --j; i;) {
+        if (getNumCon() <= 1) return;
         diff << getA()(--i, _) - getA()(j, _);
         if (C.greaterEqual(alloc, diff)) {
           eraseConstraint(i);
@@ -204,7 +204,7 @@ struct BasePolyhedra {
     rollback(alloc, p);
     if constexpr (HasEqualities)
       for (size_t i = 0; i < getE().numRow(); ++i) normalizeByGCD(getE()(i, _));
-    truncNumInEqCon(getA().numRow());
+    truncNumInEqCon(getNumCon());
     if constexpr (HasEqualities) truncNumEqCon(getE().numRow());
   }
 
@@ -219,7 +219,7 @@ struct BasePolyhedra {
     return size_t(getA().numCol()) - 1;
   }
   [[nodiscard]] constexpr auto getNumInequalityConstraints() const -> size_t {
-    return size_t(getA().numRow());
+    return size_t(getNumCon());
   }
   [[nodiscard]] constexpr auto getNumEqualityConstraints() const -> size_t {
     return size_t(getE().numRow());
@@ -260,7 +260,7 @@ struct BasePolyhedra {
   }
   void dump() const { llvm::errs() << *this; }
   [[nodiscard]] auto isEmpty() const -> bool {
-    return getA().numRow() == 0;
+    return getNumCon() == 0;
     // if (A.numRow() == 0)
     //     return true;
     // for (size_t r = 0; r < A.numRow(); ++r)

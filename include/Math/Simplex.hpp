@@ -834,8 +834,8 @@ public:
     auto fC{getConstraints()};
     auto sC{subSimp->getConstraints()};
     sC(_, 0) << fC(_(begin, numRow), 0) -
-                  fC(_(begin, numRow), inds[0] + indsFree) -
-                  fC(_(begin, numRow), inds[1] + indsFree);
+                  (fC(_(begin, numRow), inds[0] + indsFree) +
+                   fC(_(begin, numRow), inds[1] + indsFree));
     sC(_, _(1, indsFree)) << fC(_(begin, numRow), _(1, indsFree));
     return subSimp->initiateFeasible();
   }
