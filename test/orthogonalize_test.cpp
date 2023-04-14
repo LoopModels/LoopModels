@@ -324,9 +324,16 @@ TEST(OrthogonalizeMatricesTest, BasicAssertions) {
     // but AA' is
     B = A * A.transpose();
     // llvm::errs() << "A'A =\n" << B << "\n";
+#if !defined(__clang__) && defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdangling-else"
+#endif
     for (size_t m = 0; m < M; ++m) {
       for (size_t n = 0; n < N; ++n)
         if (m != n) EXPECT_EQ(B(m, n), 0);
     }
+#if !defined(__clang__) && defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
   }
 }

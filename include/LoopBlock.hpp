@@ -228,6 +228,7 @@ constexpr void resetDeepDeps(MutPtrVector<CarriedDependencyFlag> v, size_t d) {
   uint32_t mask = CarriedDependencyFlag::resetMaskFlag(d);
   for (auto &&x : v) x.flag &= mask;
 }
+static_assert(!LinAlg::Printable<CarriedDependencyFlag>);
 
 /// A loop block is a block of the program that may include multiple loops.
 /// These loops are either all executed (note iteration count may be 0, or

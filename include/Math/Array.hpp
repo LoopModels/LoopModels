@@ -39,13 +39,16 @@ struct ManagedArray;
 //   -> llvm::raw_ostream &;
 
 inline auto adaptOStream(std::ostream &os, const auto &x) -> std::ostream &;
-void print_obj(llvm::raw_ostream &os, auto x) { os << x; };
+template <typename T>
+concept Printable = requires(llvm::raw_ostream &os, T x) {
+  { os << x } -> std::same_as<llvm::raw_ostream &>;
+};
+static_assert(Printable<int64_t>);
+void print_obj(llvm::raw_ostream &os, Printable auto x) { os << x; };
 template <typename F, typename S>
 void print_obj(llvm::raw_ostream &os, const std::pair<F, S> &x) {
   os << "(" << x.first << ", " << x.second << ")";
 };
-template <typename T>
-concept Printable = requires(llvm::raw_ostream &os, T x) { print_oj(os, x); };
 
 /// Constant Array
 template <class T, class S> struct Array {
