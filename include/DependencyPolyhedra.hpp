@@ -1064,12 +1064,12 @@ public:
               dep0.getNumPhiCoefficients());
     // pair is invalid
     const size_t timeDim = dxy->getTimeDim();
-    assert(timeDim);
+    invariant(timeDim > 0);
     const size_t numVarOld = size_t(dxy->getA().numCol());
     const size_t numVar = numVarOld - timeDim;
     // remove the time dims from the deps
-    dep0.depPoly->truncateVars(numVar);
-    dep0.depPoly->setTimeDim(0);
+    // dep0.depPoly->truncateVars(numVar);
+    // dep0.depPoly->setTimeDim(0);
     invariant(out->getNumLoops() + in->getNumLoops(),
               dep0.getNumPhiCoefficients());
     // now we need to check the time direction for all times
@@ -1086,43 +1086,30 @@ public:
       // we update the constant `c` via `c -= t*step`.
       // we have the problem that.
       int64_t step = dxy->getNullStep(t);
-      size_t v = numVar + t;
-      for (size_t c = 0; c < numInequalityConstraintsOld; ++c) {
-        if (int64_t Acv = dxy->getA(c, v)) {
+      size_t v = numVar + t, i = 0;
+      while (true) {
+        for (size_t c = 0; c < numInequalityConstraintsOld; ++c) {
+          int64_t Acv = dxy->getA(c, v);
+          if (!Acv) continue;
           Acv *= step;
           fE(0, c + 1) -= Acv; // *1
           sE(0, c + 1) -= Acv; // *1
         }
-      }
-      for (size_t c = 0; c < numEqualityConstraintsOld; ++c) {
-        // each of these actually represents 2 inds
-        int64_t Ecv = dxy->getE(c, v) * step;
-        fE(0, c + ineqEnd) -= Ecv;
-        fE(0, c + posEqEnd) += Ecv;
-        sE(0, c + ineqEnd) -= Ecv;
-        sE(0, c + posEqEnd) += Ecv;
-      }
-      // pair = farkasBackups;
-      // pair[0].removeExtraVariables(numVarKeep);
-      // pair[1].removeExtraVariables(numVarKeep);
-      // farkasBacklups is swapped with respect to
-      // checkDirection(..., *in, *out);
-      timeDirection[t] =
-        checkDirection(alloc, farkasBackups, *out, *in, numLambda,
-                       dxy->getA().numCol() - dxy->getTimeDim());
-      // fix
-      for (size_t c = 0; c < numInequalityConstraintsOld; ++c) {
-        int64_t Acv = dxy->getA(c, v) * step;
-        fE(0, c + 1) += Acv;
-        sE(0, c + 1) += Acv;
-      }
-      for (size_t c = 0; c < numEqualityConstraintsOld; ++c) {
-        // each of these actually represents 2 inds
-        int64_t Ecv = dxy->getE(c, v) * step;
-        fE(0, c + ineqEnd) += Ecv;
-        fE(0, c + posEqEnd) -= Ecv;
-        sE(0, c + ineqEnd) += Ecv;
-        sE(0, c + posEqEnd) -= Ecv;
+        for (size_t c = 0; c < numEqualityConstraintsOld; ++c) {
+          // each of these actually represents 2 inds
+          int64_t Ecv = dxy->getE(c, v);
+          if (!Ecv) continue;
+          Ecv *= step;
+          fE(0, c + ineqEnd) -= Ecv;
+          fE(0, c + posEqEnd) += Ecv;
+          sE(0, c + ineqEnd) -= Ecv;
+          sE(0, c + posEqEnd) += Ecv;
+        }
+        if (i++ != 0) break; // break after undoing
+        timeDirection[t] =
+          checkDirection(alloc, farkasBackups, *out, *in, numLambda,
+                         dxy->getA().numCol() - dxy->getTimeDim());
+        step *= -1; // flip to undo, then break
       }
     } while (++t < timeDim);
     t = 0;
@@ -1133,16 +1120,18 @@ public:
       int64_t step = (2 * timeDirection[t] - 1) * dxy->getNullStep(t);
       size_t v = numVar + t;
       for (size_t c = 0; c < numInequalityConstraintsOld; ++c) {
-        if (int64_t Acv = dxy->getA(c, v)) {
-          Acv *= step;
-          dxy->getA(c, 0) -= Acv;
-          fE(0, c + 1) -= Acv; // *1
-          sE(0, c + 1) -= Acv; // *-1
-        }
+        int64_t Acv = dxy->getA(c, v);
+        if (!Acv) continue;
+        Acv *= step;
+        dxy->getA(c, 0) -= Acv;
+        fE(0, c + 1) -= Acv; // *1
+        sE(0, c + 1) -= Acv; // *-1
       }
       for (size_t c = 0; c < numEqualityConstraintsOld; ++c) {
         // each of these actually represents 2 inds
-        int64_t Ecv = dxy->getE(c, v) * step;
+        int64_t Ecv = dxy->getE(c, v);
+        if (!Ecv) continue;
+        Ecv *= step;
         dxy->getE(c, 0) -= Ecv;
         fE(0, c + ineqEnd) -= Ecv;
         fE(0, c + posEqEnd) += Ecv;
@@ -1150,12 +1139,12 @@ public:
         sE(0, c + posEqEnd) += Ecv;
       }
     } while (++t < timeDim);
-    dxy->truncateVars(numVar);
-    dxy->setTimeDim(0);
+    // dxy->truncateVars(numVar);
+    // dxy->setTimeDim(0);
     farkasBackups[0]->truncateVars(2 + numLambda + numScheduleCoefs);
     auto dep1 = Dependence{dxy, farkasBackups, {out, in}, !isFwd};
-    assert(out->getNumLoops() + in->getNumLoops() ==
-           dep0.getNumPhiCoefficients());
+    invariant(out->getNumLoops() + in->getNumLoops(),
+              dep0.getNumPhiCoefficients());
     return {dep0, dep1};
   }
 

@@ -819,8 +819,8 @@ TEST(TriangularExampleTest, BasicAssertions) {
     EXPECT_TRUE(forward.isForward());
     EXPECT_FALSE(reverse.isForward());
     llvm::errs() << "dep# 14 and 15\n";
-    llvm::errs() << "\nforward dependence:" << forward;
-    llvm::errs() << "\nreverse dependence:" << reverse;
+    llvm::errs() << "\nforward dependence:\n" << forward;
+    llvm::errs() << "\nreverse dependence:\n" << reverse;
     assert(forward.isForward());
     assert(!reverse.isForward());
     auto fwdDepPoly = forward.getDepPoly();
@@ -865,16 +865,14 @@ TEST(TriangularExampleTest, BasicAssertions) {
   // orig order (inner <-> outer): n, m
   DenseMatrix<int64_t> optPhi2{DenseDims{2, 2}, 0};
   // phi2 loop order is
-  optPhi2.antiDiag() << 1;
+  optPhi2.diag() << 1;
   // the scheduler swaps the order, making `n` outermost,
   // and `m` as innermost
-  // orig order (inner <-> outer): k, n, m
-  DenseMatrix<int64_t> optPhi3{"[0 1 0; 0 0 1; 1 0 0]"_mat};
-  // phi3 loop order (inner<->outer) is [n, m, k]
-  // so the schedule below places `k` as the outermost loop,
-  // followed by `m`, and `n` as innermost. `n` is the reduction loop.
-  // optPhi3(end, _) = std::numeric_limits<int64_t>::min();
-  // assert(!optFail);
+  // orig order (outer <-> inner): m, n, k
+  DenseMatrix<int64_t> optPhi3{"[1 0 0; 0 0 1; 0 1 0]"_mat};
+  // phi3 loop order (outer <-> inner) is [m, k, n]
+  // so the schedule preserves `m` as the outermost loop,
+  // followed by `k`, and `n` as innermost. `n` is the reduction loop.
   for (auto *mem : lblock.getMemoryAccesses()) {
     for (size_t nodeIndex : mem->getNodeIndex()) {
       AffineSchedule s = lblock.getNode(nodeIndex).getSchedule();
@@ -1467,8 +1465,9 @@ TEST(ConvReversePass, BasicAssertions) {
   const auto *scevC = tlf.getSCEVUnknown(ptrC);
 
   // llvm::ConstantInt *Jv = builder.getInt64(100);
-  const llvm::SCEV *II = loop->getSyms()[3];
-  const llvm::SCEV *M = loop->getSyms()[1];
+  constexpr size_t n = 0, m = 1, j = 2, i = 3;
+  const llvm::SCEV *II = loop->getSyms()[i];
+  const llvm::SCEV *M = loop->getSyms()[m];
   llvm::Value *Iv = llvm::dyn_cast<llvm::SCEVUnknown>(II)->getValue();
   llvm::Value *Mv = llvm::dyn_cast<llvm::SCEVUnknown>(M)->getValue();
   // llvm::ConstantInt *Nv = builder.getInt64(400);
@@ -1511,7 +1510,6 @@ TEST(ConvReversePass, BasicAssertions) {
   //     }
   //   }
   // }
-  constexpr size_t n = 0, m = 1, j = 2, i = 3;
   llvm::ScalarEvolution &SE{tlf.getSE()};
   llvm::Type *Int64 = builder.getInt64Ty();
   // B[j, i]

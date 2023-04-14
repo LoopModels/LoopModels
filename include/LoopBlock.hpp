@@ -959,9 +959,6 @@ public:
       }
     }
     addIndependentSolutionConstraints(omniSimplex, g, d);
-    // earlier, we only had this check in optimizeLevel, when satisfyDeps=false
-    // what is this check doing?
-    assert(!allZero(omniSimplex->getConstraints()(last, _)));
     return omniSimplex->initiateFeasible() ? nullptr : (Simplex *)omniSimplex;
   }
   static void updateConstraints(MutPtrMatrix<int64_t> C,
@@ -1094,23 +1091,24 @@ public:
         C(i, node.getPhiOffsetRange() + o) << 1;
         C(i++, last) = -1; // for >=
       }
-      return;
+    } else {
+      DenseMatrix<int64_t> A, N;
+      for (auto &&node : nodes) {
+        if (node.phiIsScheduled(depth) || (depth >= node.getNumLoops()) ||
+            (!hasActiveEdges(g, node)))
+          continue;
+        A.resizeForOverwrite(Row{size_t(node.getPhi().numCol())}, Col{depth});
+        A << node.getPhi()(_(0, depth), _).transpose();
+        NormalForm::nullSpace11(N, A);
+        C(i, 0) = 1;
+        MutPtrVector<int64_t> cc{C(i, node.getPhiOffsetRange() + o)};
+        // sum(N,dims=1) >= 1 after flipping row signs to be lex > 0
+        for (size_t m = 0; m < N.numRow(); ++m)
+          cc += N(m, _) * lexSign(N(m, _));
+        C(i++, last) = -1; // for >=
+      }
     }
-    DenseMatrix<int64_t> A, N;
-    for (auto &&node : nodes) {
-      if (node.phiIsScheduled(depth) || (depth >= node.getNumLoops()) ||
-          (!hasActiveEdges(g, node)))
-        continue;
-      A.resizeForOverwrite(Row{size_t(node.getPhi().numCol())}, Col{depth});
-      A << node.getPhi()(_(0, depth), _).transpose();
-      NormalForm::nullSpace11(N, A);
-      C(i, 0) = 1;
-      MutPtrVector<int64_t> cc{C(i, node.getPhiOffsetRange() + o)};
-      // sum(N,dims=1) >= 1 after flipping row signs to be lex > 0
-      for (size_t m = 0; m < N.numRow(); ++m) cc += N(m, _) * lexSign(N(m, _));
-      C(i++, last) = -1; // for >=
-    }
-    assert(i == size_t(C.numRow()));
+    omniSimplex->truncateConstraints(i);
     assert(!allZero(omniSimplex->getConstraints()(last, _)));
   }
   [[nodiscard]] static auto nonZeroMask(const AbstractVector auto &x)
