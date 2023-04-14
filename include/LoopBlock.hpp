@@ -1186,7 +1186,7 @@ public:
     // allow it.
     auto graphs = g.split(components);
     assert(graphs.size() == components.size());
-    BitSet satDeps;
+    BitSet satDeps{};
     for (auto &sg : graphs) {
       if (d >= sg.calcMaxDepth()) continue;
       countAuxParamsAndConstraints(sg, d);

@@ -211,7 +211,9 @@ struct Rational {
     if (x.denominator != 1) os << " // " << x.denominator;
     return os;
   }
-  void dump() const { llvm::errs() << *this << "\n"; }
+#ifndef NDEBUG
+  [[gnu::used]] void dump() const { llvm::errs() << *this << "\n"; }
+#endif
 };
 constexpr auto gcd(Rational x, Rational y) -> std::optional<Rational> {
   return Rational{gcd(x.numerator, y.numerator),

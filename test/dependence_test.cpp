@@ -938,9 +938,9 @@ TEST(MeanStDevTest0, BasicAssertions) {
                           "-1 1 0 0 -1; "
                           "0 0 0 0 1]"_mat};
   tlf.addLoop(std::move(TwoLoopsMatJI), 2);
-  AffineLoopNest<true> *loopJI = tlf.getLoopNest(0);
+  AffineLoopNest<true> *loopIJ = tlf.getLoopNest(0);
   AffineLoopNest<true> *loopI = tlf.getLoopNest(1);
-  AffineLoopNest<true> *loopIJ = tlf.getLoopNest(2);
+  AffineLoopNest<true> *loopJI = tlf.getLoopNest(2);
 
   llvm::IRBuilder<> &builder = tlf.getBuilder();
 
@@ -1145,7 +1145,7 @@ TEST(MeanStDevTest0, BasicAssertions) {
   for (size_t jj = 0; jj < mem.size(); ++jj) memAccessIds[mem[jj]] = jj;
   for (auto &e : iOuterLoopNest.getEdges()) {
     auto [in, out] = e.getInOutPair();
-    llvm::errs() << "\nEdge for array " << e.getArrayPointer()
+    llvm::errs() << "Edge for array " << e.getArrayPointer()
                  << ", in ID: " << memAccessIds[in]
                  << "; out ID: " << memAccessIds[out] << "\n";
   }
@@ -1241,10 +1241,10 @@ TEST(MeanStDevTest0, BasicAssertions) {
     llvm::errs() << v;
   }
   DenseMatrix<int64_t> optS{SquareDims{2}, 0};
-  // we want diag, as that represents swapping loops
+  // we want antiDiag, as that represents swapping loops
   optS.antiDiag() << 1;
   IntMatrix optSinnerUndef = optS;
-  optSinnerUndef(0, _) << std::numeric_limits<int64_t>::min();
+  // optSinnerUndef(1, _) << std::numeric_limits<int64_t>::min();
   for (auto *memi : jOuterLoopNest.getMemoryAccesses()) {
     for (size_t nodeIndex : memi->getNodeIndex()) {
       AffineSchedule s = jOuterLoopNest.getNode(nodeIndex).getSchedule();
@@ -1532,7 +1532,7 @@ TEST(ConvReversePass, BasicAssertions) {
     AmnInd.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     AmnInd.sizes[0] = II;
   }
-  // C[m+i, n+j]
+  // C[n+j, m+i]
   ArrayReference CmijnInd{scevC, loop, 2};
   {
     MutPtrMatrix<int64_t> IndMat = CmijnInd.indexMatrix();

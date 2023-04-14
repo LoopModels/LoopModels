@@ -88,8 +88,9 @@ struct LoopTree {
     for (auto branch : tree.subLoops) os << *branch;
     return os << "\n";
   }
-  // NOLINTNEXTLINE(*-nodiscard)
-  auto dump() const -> llvm::raw_ostream & { return llvm::errs() << *this; }
+#ifndef NDEBUG
+  [[gnu::used]] void dump() const { llvm::errs() << *this; }
+#endif
   void addZeroLowerBounds(llvm::DenseMap<llvm::Loop *, LoopTree *> &loopMap) {
     affineLoop.addZeroLowerBounds();
     for (auto tree : subLoops) {

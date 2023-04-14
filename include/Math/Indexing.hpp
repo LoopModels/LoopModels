@@ -227,27 +227,32 @@ constexpr auto calcNewDim(VectorDimension auto, ScalarIndex auto) -> Empty {
 constexpr auto calcNewDim(SquareDims, size_t) -> Empty { return {}; }
 constexpr auto calcNewDim(DenseDims, size_t) -> Empty { return {}; }
 
-constexpr auto calcNewDim(size_t len, Range<size_t, size_t> r) {
+constexpr auto calcNewDim(size_t len, Range<size_t, size_t> r) -> unsigned {
   invariant(r.e <= len);
   invariant(r.b <= r.e);
-  return r.e - r.b;
+  return unsigned(r.e - r.b);
 }
-constexpr auto calcNewDim(StridedRange len, Range<size_t, size_t> r) {
+constexpr auto calcNewDim(StridedRange len, Range<size_t, size_t> r)
+  -> unsigned {
   return calcNewDim(len.len, r);
 }
 template <class B, class E>
-constexpr auto calcNewDim(size_t len, Range<B, E> r) {
+constexpr auto calcNewDim(size_t len, Range<B, E> r) -> unsigned {
   return calcNewDim(len, canonicalizeRange(r, len));
 }
 template <class B, class E>
-constexpr auto calcNewDim(StridedRange len, Range<B, E> r) {
+constexpr auto calcNewDim(StridedRange len, Range<B, E> r) -> StridedRange {
   return StridedRange{unsigned(calcNewDim(len.len, r)), len.stride};
 }
 template <ScalarRowIndex R, ScalarColIndex C>
 constexpr auto calcNewDim(StridedDims, CartesianIndex<R, C>) -> Empty {
   return {};
 }
-constexpr auto calcNewDim(VectorDimension auto len, Colon) { return len; };
+constexpr auto calcNewDim(std::integral auto len, Colon) -> unsigned {
+  return unsigned(len);
+};
+constexpr auto calcNewDim(StaticInt auto len, Colon) { return len; };
+constexpr auto calcNewDim(StridedRange len, Colon) { return len; };
 
 template <AbstractSlice B, ScalarColIndex C>
 constexpr auto calcNewDim(StridedDims d, CartesianIndex<B, C> i) {

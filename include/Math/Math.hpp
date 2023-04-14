@@ -282,43 +282,6 @@ static_assert(std::is_trivially_copyable_v<
               ElementwiseUnaryOp<Sub, StridedVector<int64_t>>>);
 static_assert(Trivial<ElementwiseUnaryOp<Sub, StridedVector<int64_t>>>);
 
-inline auto printVectorImpl(llvm::raw_ostream &os, const AbstractVector auto &a)
-  -> llvm::raw_ostream & {
-  os << "[ ";
-  if (size_t M = a.size()) {
-    os << a[0];
-    for (size_t m = 1; m < M; m++) os << ", " << a[m];
-  }
-  os << " ]";
-  return os;
-}
-template <typename T>
-inline auto printVector(llvm::raw_ostream &os, PtrVector<T> a)
-  -> llvm::raw_ostream & {
-  return printVectorImpl(os, a);
-}
-template <typename T>
-inline auto printVector(llvm::raw_ostream &os, StridedVector<T> a)
-  -> llvm::raw_ostream & {
-  return printVectorImpl(os, a);
-}
-template <typename T>
-inline auto printVector(llvm::raw_ostream &os,
-                        const llvm::SmallVectorImpl<T> &a)
-  -> llvm::raw_ostream & {
-  return printVector(os, PtrVector<T>{a.data(), a.size()});
-}
-
-template <typename T>
-inline auto operator<<(llvm::raw_ostream &os, PtrVector<T> const &A)
-  -> llvm::raw_ostream & {
-  return printVector(os, A);
-}
-inline auto operator<<(llvm::raw_ostream &os, const AbstractVector auto &A)
-  -> llvm::raw_ostream & {
-  return printVector(os, A.view());
-}
-
 constexpr auto allMatch(const AbstractVector auto &x0,
                         const AbstractVector auto &x1) -> bool {
   size_t N = x0.size();
@@ -433,175 +396,6 @@ inline constexpr auto view(const auto &x) { return x.view(); }
 
 constexpr auto bin2(std::integral auto x) { return (x * (x - 1)) >> 1; }
 
-template <std::integral T> struct MaxPow10 {
-  static constexpr T value = (sizeof(T) == 1)   ? 3
-                             : (sizeof(T) == 2) ? 5
-                             : (sizeof(T) == 4)
-                               ? 10
-                               : (std::signed_integral<T> ? 19 : 20);
-};
-template <std::unsigned_integral T> constexpr auto countDigits(T x) {
-  std::array<T, MaxPow10<T>::value + 1> powers;
-  powers[0] = 0;
-  powers[1] = 10;
-  for (size_t i = 2; i < powers.size(); i++) powers[i] = powers[i - 1] * 10;
-  std::array<T, sizeof(T) * 8 + 1> bits;
-  if constexpr (sizeof(T) == 8) {
-    bits = {1,  1,  1,  1,  2,  2,  2,  3,  3,  3,  4,  4,  4,  4,  5,  5,  5,
-            6,  6,  6,  7,  7,  7,  7,  8,  8,  8,  9,  9,  9,  10, 10, 10, 10,
-            11, 11, 11, 12, 12, 12, 13, 13, 13, 13, 14, 14, 14, 15, 15, 15, 16,
-            16, 16, 16, 17, 17, 17, 18, 18, 18, 19, 19, 19, 19, 20};
-  } else if constexpr (sizeof(T) == 4) {
-    bits = {1, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4, 4,  5,  5, 5,
-            6, 6, 6, 7, 7, 7, 7, 8, 8, 8, 9, 9, 9, 10, 10, 10};
-  } else if constexpr (sizeof(T) == 2) {
-    bits = {1, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5};
-  } else if constexpr (sizeof(T) == 1) {
-    bits = {1, 1, 1, 1, 2, 2, 2, 3, 3};
-  }
-  T digits = bits[8 * sizeof(T) - std::countl_zero(x)];
-  return digits - (x < powers[digits - 1]);
-}
-template <std::signed_integral T> constexpr auto countDigits(T x) {
-  using U = std::make_unsigned_t<T>;
-  if (x == std::numeric_limits<T>::min()) return U{sizeof(T) == 8 ? 20 : 11};
-  return countDigits<U>(U(std::abs(x))) + U{x < 0};
-}
-
-constexpr auto countDigits(Rational x) -> size_t {
-  size_t num = countDigits(x.numerator);
-  return (x.denominator == 1) ? num : num + countDigits(x.denominator) + 2;
-}
-
-/// Returns the number of digits of the largest number in the matrix.
-template <std::integral T>
-constexpr auto getMaxDigits(PtrMatrix<T> A) -> Vector<T> {
-  size_t M = size_t(A.numRow());
-  size_t N = size_t(A.numCol());
-  Vector<T> maxDigits{unsigned(N), T{}};
-  invariant(size_t(maxDigits.size()), N);
-  // first, we find the digits with the maximum value per column
-  for (Row i = 0; i < M; i++) {
-    for (size_t j = 0; j < N; j++) {
-      // negative numbers need one more digit
-      // first, we find the maximum value per column,
-      // dividing positive numbers by -10
-      T Aij = A(i, j);
-      if constexpr (std::signed_integral<T>)
-        maxDigits[j] = std::min(maxDigits[j], Aij > 0 ? Aij / -10 : Aij);
-      else maxDigits[j] = std::max(maxDigits[j], Aij);
-    }
-  }
-  // then, we count the digits of the maximum value per column
-  for (size_t j = 0; j < maxDigits.size(); j++)
-    maxDigits[j] = countDigits(maxDigits[j]);
-  return maxDigits;
-}
-/// \brief Returns the maximum number of digits per column of a matrix.
-constexpr auto getMaxDigits(PtrMatrix<Rational> A) -> Vector<size_t> {
-  size_t M = size_t(A.numRow());
-  size_t N = size_t(A.numCol());
-  Vector<size_t> maxDigits{unsigned(N), 0};
-  invariant(size_t(maxDigits.size()), N);
-  // this is slow, because we count the digits of every element
-  // we could optimize this by reducing the number of calls to countDigits
-  for (Row i = 0; i < M; i++) {
-    for (size_t j = 0; j < N; j++) {
-      size_t c = countDigits(A(i, j));
-      maxDigits[j] = std::max(maxDigits[j], c);
-    }
-  }
-  return maxDigits;
-}
-
-template <typename T>
-inline auto printMatrix(llvm::raw_ostream &os, PtrMatrix<T> A)
-  -> llvm::raw_ostream & {
-  // llvm::raw_ostream &printMatrix(llvm::raw_ostream &os, T const &A) {
-  auto [M, N] = A.size();
-  if ((!M) || (!N)) return os << "[ ]";
-  // first, we determine the number of digits needed per column
-  auto maxDigits{getMaxDigits(A)};
-  using U = decltype(countDigits(std::declval<T>()));
-  for (Row i = 0; i < M; i++) {
-    if (i) os << "  ";
-    else os << "\n[ ";
-    for (size_t j = 0; j < N; j++) {
-      auto Aij = A(i, j);
-      for (U k = 0; k < U(maxDigits[j]) - countDigits(Aij); k++) os << " ";
-      os << Aij;
-      if (j != size_t(N) - 1) os << " ";
-      else if (i != size_t(M) - 1) os << "\n";
-    }
-  }
-  return os << " ]";
-}
-// We mirror `A` with a matrix of integers indicating sizes, and a vectors of
-// chars. We fill the matrix with the number of digits of each element, and the
-// vector with the characters of each element.
-// We could use a vector of vectors of chars to avoid needing to copy memory on
-// reallocation, but this would yield more complicated management.
-// We should also generally be able to avoid allocations.
-// We can use a Vector with a lot of initial capacity, and then resize based on
-// a conservative estimate of the number of chars per elements.
-inline auto printMatrix(llvm::raw_ostream &os, PtrMatrix<double> A)
-  -> llvm::raw_ostream & {
-  // llvm::raw_ostream &printMatrix(llvm::raw_ostream &os, T const &A) {
-  auto [M, N] = A.size();
-  if ((!M) || (!N)) return os << "[ ]";
-  // first, we determine the number of digits needed per column
-  Vector<char, 512> digits;
-  digits.resizeForOverwrite(512);
-  // we can't have more than 255 digits
-  DenseMatrix<uint8_t> numDigits{DenseDims{M, N}};
-  char *ptr = digits.begin();
-  char *pEnd = digits.end();
-  for (size_t m = 0; m < M; m++) {
-    for (size_t n = 0; n < N; n++) {
-      auto Aij = A(m, n);
-      while (true) {
-        auto [p, ec] = std::to_chars(ptr, pEnd, Aij);
-        if (ec == std::errc()) [[likely]] {
-          numDigits(m, n) = std::distance(ptr, p);
-          ptr = p;
-          break;
-        }
-        // we need more space
-        size_t elemSoFar = m * size_t(N) + n;
-        size_t charSoFar = std::distance(digits.begin(), ptr);
-        // cld
-        size_t charPerElem = (charSoFar + elemSoFar - 1) / elemSoFar;
-        size_t newCapacity = (1 + charPerElem) * M * N; // +1 for good measure
-        digits.resize(newCapacity);
-        ptr = digits.begin() + charSoFar;
-        pEnd = digits.end();
-      }
-    }
-  }
-  Vector<uint8_t> maxDigits;
-  maxDigits.resizeForOverwrite(N);
-  maxDigits << numDigits(0, _);
-  for (size_t m = 0; m < M; m++)
-    for (size_t n = 0; n < N; n++)
-      maxDigits[n] = std::max(maxDigits[n], numDigits(m, n));
-
-  ptr = digits.begin();
-  // we will allocate 512 bytes at a time
-  for (Row i = 0; i < M; i++) {
-    if (i) os << "  ";
-    else os << "\n[ ";
-    for (size_t j = 0; j < N; j++) {
-      size_t nD = numDigits(i, j);
-      for (size_t k = 0; k < maxDigits[j] - nD; k++) os << " ";
-      os << std::string_view(ptr, nD);
-      if (j != size_t(N) - 1) os << " ";
-      else if (i != size_t(M) - 1) os << "\n";
-      ptr += nD;
-    }
-  }
-  return os << " ]";
-}
-
 template <typename T>
 inline auto operator<<(llvm::raw_ostream &os, SmallSparseMatrix<T> const &A)
   -> llvm::raw_ostream & {
@@ -627,11 +421,6 @@ inline auto operator<<(llvm::raw_ostream &os, SmallSparseMatrix<T> const &A)
   os << " ]";
   assert(k == A.nonZeros.size());
   return os;
-}
-template <typename T>
-inline auto operator<<(llvm::raw_ostream &os, PtrMatrix<T> A)
-  -> llvm::raw_ostream & {
-  return printMatrix(os, A);
 }
 template <AbstractMatrix T>
 inline auto operator<<(llvm::raw_ostream &os, const T &A)
@@ -828,10 +617,6 @@ template <typename T, typename I> struct SliceView {
 
 static_assert(AbstractVector<SliceView<int64_t, unsigned>>);
 
-inline auto adaptOStream(std::ostream &os, const auto &x) -> std::ostream & {
-  llvm::raw_os_ostream(os) << x;
-  return os;
-}
 template <AbstractVector B> constexpr auto norm2(const B &A) {
   using T = typename B::value_type;
   T s = 0;

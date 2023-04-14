@@ -250,15 +250,17 @@ struct BasePolyhedra {
 
   friend inline auto operator<<(llvm::raw_ostream &os, const BasePolyhedra &p)
     -> llvm::raw_ostream & {
-    auto &&os2 =
-      printConstraints(os << "\n", p.A, llvm::ArrayRef<const llvm::SCEV *>());
+    auto &&os2 = printConstraints(os << "\n", p.getA(),
+                                  llvm::ArrayRef<const llvm::SCEV *>());
     if constexpr (NonNegative) printPositive(os2, p.getNumDynamic());
     if constexpr (HasEqualities)
-      return printConstraints(os2, p.E, llvm::ArrayRef<const llvm::SCEV *>(),
-                              false);
+      return printConstraints(os2, p.getE(),
+                              llvm::ArrayRef<const llvm::SCEV *>(), false);
     return os2;
   }
-  void dump() const { llvm::errs() << *this; }
+#ifndef NDEBUG
+  [[gnu::used]] void dump() const { llvm::errs() << *this; }
+#endif
   [[nodiscard]] auto isEmpty() const -> bool {
     return getNumCon() == 0;
     // if (A.numRow() == 0)

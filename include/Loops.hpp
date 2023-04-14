@@ -773,6 +773,7 @@ struct AffineLoopNest
       tmp = tmp->removeLoop(alloc, i);
     }
   }
+
   // prints loops from inner most to outer most.
   // outer most loop is `i_0`, subscript increments for each level inside
   // We pop off the outer most loop on every iteration.
@@ -783,8 +784,9 @@ struct AffineLoopNest
     aln.dump(os, alloc);
     return os;
   }
-  void dump(llvm::raw_ostream &os = llvm::errs()) const { os << *this; }
-
+#ifndef NDEBUG
+  [[gnu::used]] void dump() const { llvm::errs() << *this; }
+#endif
   [[nodiscard]] constexpr auto getNumCon() const -> unsigned {
     return numConstraints;
   }
