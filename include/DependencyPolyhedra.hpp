@@ -781,23 +781,21 @@ public:
     -> std::tuple<StridedVector<int64_t>, PtrMatrix<int64_t>,
                   PtrMatrix<int64_t>, PtrMatrix<int64_t>, PtrMatrix<int64_t>,
                   StridedVector<int64_t>> {
-    PtrMatrix<int64_t> phiCoefsIn =
-      forward ? getSatPhi0Coefs() : getSatPhi1Coefs();
-    PtrMatrix<int64_t> phiCoefsOut =
-      forward ? getSatPhi1Coefs() : getSatPhi0Coefs();
-    return std::make_tuple(getSatConstants(), getSatLambda(), phiCoefsIn,
-                           phiCoefsOut, getSatOmegaCoefs(), getSatW());
+    PtrMatrix<int64_t> phiCoefsIn = getSatPhi1Coefs(),
+                       phiCoefsOut = getSatPhi0Coefs();
+    if (forward) std::swap(phiCoefsIn, phiCoefsOut);
+    return {getSatConstants(), getSatLambda(),     phiCoefsIn,
+            phiCoefsOut,       getSatOmegaCoefs(), getSatW()};
   }
   [[nodiscard]] auto splitBounding() const
     -> std::tuple<StridedVector<int64_t>, PtrMatrix<int64_t>,
                   PtrMatrix<int64_t>, PtrMatrix<int64_t>, PtrMatrix<int64_t>,
                   PtrMatrix<int64_t>> {
-    PtrMatrix<int64_t> phiCoefsIn =
-      forward ? getBndPhi0Coefs() : getBndPhi1Coefs();
-    PtrMatrix<int64_t> phiCoefsOut =
-      forward ? getBndPhi1Coefs() : getBndPhi0Coefs();
-    return std::make_tuple(getBndConstants(), getBndLambda(), phiCoefsIn,
-                           phiCoefsOut, getBndOmegaCoefs(), getBndCoefs());
+    PtrMatrix<int64_t> phiCoefsIn = getBndPhi1Coefs(),
+                       phiCoefsOut = getBndPhi0Coefs();
+    if (forward) std::swap(phiCoefsIn, phiCoefsOut);
+    return {getBndConstants(), getBndLambda(),     phiCoefsIn,
+            phiCoefsOut,       getBndOmegaCoefs(), getBndCoefs()};
   }
   [[nodiscard]] auto isSatisfied(BumpAlloc<> &alloc,
                                  NotNull<const AffineSchedule> schIn,

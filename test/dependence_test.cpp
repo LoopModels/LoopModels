@@ -1243,7 +1243,7 @@ TEST(MeanStDevTest0, BasicAssertions) {
   DenseMatrix<int64_t> optS{SquareDims{2}, 0};
   // we want antiDiag, as that represents swapping loops
   optS.antiDiag() << 1;
-  IntMatrix optSinnerUndef = optS;
+  DenseMatrix<int64_t> optSinnerUndef = optS;
   // optSinnerUndef(1, _) << std::numeric_limits<int64_t>::min();
   for (auto *memi : jOuterLoopNest.getMemoryAccesses()) {
     for (size_t nodeIndex : memi->getNodeIndex()) {
