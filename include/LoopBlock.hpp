@@ -308,12 +308,13 @@ class LinearProgramLoopBlock {
   // earlier level.
   // Vector<bool, 256> doNotAddEdge;
   // Vector<bool, 256> scheduled;
-  [[no_unique_address]] size_t numPhiCoefs{0};
-  [[no_unique_address]] size_t numOmegaCoefs{0};
-  [[no_unique_address]] size_t numLambda{0};
-  [[no_unique_address]] size_t numBounding{0};
-  [[no_unique_address]] size_t numConstraints{0};
-  [[no_unique_address]] size_t numActiveEdges{0};
+  [[no_unique_address]] unsigned numPhiCoefs{0};
+  [[no_unique_address]] unsigned numOmegaCoefs{0};
+  [[no_unique_address]] unsigned numSlack{0};
+  [[no_unique_address]] unsigned numLambda{0};
+  [[no_unique_address]] unsigned numBounding{0};
+  [[no_unique_address]] unsigned numConstraints{0};
+  [[no_unique_address]] unsigned numActiveEdges{0};
 
 public:
   using BitSet = ::MemoryAccess::BitSet;
@@ -812,11 +813,14 @@ public:
     // C, lambdas, omegas, Phis
     numOmegaCoefs = 0;
     numPhiCoefs = 0;
+    numSlack = 0;
     for (auto &&node : nodes) {
       // note, we had d > node.getNumLoops() for omegas earlier; why?
       if ((d >= node.getNumLoops()) || (!hasActiveEdges(g, node, d))) continue;
-      if (!node.phiIsScheduled(d))
+      if (!node.phiIsScheduled(d)) {
         numPhiCoefs = node.updatePhiOffset(numPhiCoefs);
+        ++numSlack;
+      }
       numOmegaCoefs = node.updateOmegaOffset(numOmegaCoefs);
     }
   }
@@ -825,25 +829,38 @@ public:
     for (auto edge : edges) edge.validate();
   }
 #endif
-  // the plan is to generally avoid instantiating the omni-simplex
-  // first, we solve individual problems
+  /// For now, we instantiate a dense simplex specifying the full problem.
+  ///
+  /// Eventually, the plan is to generally avoid instantiating the omni-simplex
+  /// first, we solve individual problems
+  ///
+  /// The order of variables in the simplex is:
+  /// C, lambdas, slack, omegas, Phis, w, u
+  /// where
+  /// C: constraints, rest of matrix * variables == C
+  /// lambdas: farkas multipliers
+  /// slack: slack variables from independent phi solution constraints
+  /// omegas: scheduling offsets
+  /// Phis: scheduling rotations
+  /// w: bounding offsets, independent of symbolic variables
+  /// u: bounding offsets, dependent on symbolic variables
   auto instantiateOmniSimplex(const Graph &g, size_t d, bool satisfyDeps)
     -> Optional<Simplex *> {
     auto omniSimplex =
-      Simplex::create(allocator, numConstraints + numOmegaCoefs,
+      Simplex::create(allocator, numConstraints + numSlack,
                       1 + numBounding + numActiveEdges + numPhiCoefs +
-                        2 * numOmegaCoefs + numLambda);
+                        numOmegaCoefs + numSlack + numLambda);
     auto C{omniSimplex->getConstraints()};
     C << 0;
     // layout of omniSimplex:
     // Order: C, then rev-priority to minimize
-    // C, lambdas, omegas, Phis, w, u
+    // C, lambdas, slack, omegas, Phis, w, u
     // rows give constraints; each edge gets its own
     // numBounding = num u
     // numActiveEdges = num w
     Row c = 0;
-    Col l = 1, o = 1 + numLambda, p = o + numOmegaCoefs, w = p + numPhiCoefs,
-        u = w + numActiveEdges;
+    Col l = 1, o = 1 + numLambda + numSlack, p = o + numOmegaCoefs,
+        w = p + numPhiCoefs, u = w + numActiveEdges;
     for (size_t e = 0; e < edges.size(); ++e) {
       Dependence &edge = edges[e];
       if (g.isInactive(e, d)) continue;
@@ -985,7 +1002,7 @@ public:
     -> std::optional<BitSet> {
     auto omniSimplex = instantiateOmniSimplex(g, depth, satisfyDeps);
     if (!omniSimplex) return {};
-    auto sol = omniSimplex->rLexMinStop(numLambda);
+    auto sol = omniSimplex->rLexMinStop(numLambda + numSlack);
     updateSchedules(g, depth, sol);
     return deactivateSatisfiedEdges(g, depth,
                                     sol[_(numPhiCoefs + numOmegaCoefs, end)]);
@@ -1077,39 +1094,39 @@ public:
     return 0;
   }
   void addIndependentSolutionConstraints(NotNull<Simplex> omniSimplex,
-                                         const Graph &g, size_t depth) {
+                                         const Graph &g, size_t d) {
     // omniSimplex->setNumCons(omniSimplex->getNumCons() +
     //                                memory.size());
     // omniSimplex->reserveExtraRows(memory.size());
     auto C{omniSimplex->getConstraints()};
-    size_t i = size_t{C.numRow()} - numOmegaCoefs;
-    size_t o = 1 + numLambda + numOmegaCoefs;
-    if (depth == 0) {
+    size_t i = size_t{C.numRow()} - numSlack, s = numLambda,
+           o = 1 + numSlack + numLambda + numOmegaCoefs;
+    if (d == 0) {
       // add ones >= 0
       for (auto &&node : nodes) {
-        if (node.phiIsScheduled(depth) || (!hasActiveEdges(g, node))) continue;
+        if (node.phiIsScheduled(d) || (!hasActiveEdges(g, node, d))) continue;
         C(i, 0) = 1;
         C(i, node.getPhiOffsetRange() + o) << 1;
-        C(i++, last) = -1; // for >=
+        C(i++, ++s) = -1; // for >=
       }
     } else {
       DenseMatrix<int64_t> A, N;
       for (auto &&node : nodes) {
-        if (node.phiIsScheduled(depth) || (depth >= node.getNumLoops()) ||
-            (!hasActiveEdges(g, node)))
+        if (node.phiIsScheduled(d) || (d >= node.getNumLoops()) ||
+            (!hasActiveEdges(g, node, d)))
           continue;
-        A.resizeForOverwrite(Row{size_t(node.getPhi().numCol())}, Col{depth});
-        A << node.getPhi()(_(0, depth), _).transpose();
+        A.resizeForOverwrite(Row{size_t(node.getPhi().numCol())}, Col{d});
+        A << node.getPhi()(_(0, d), _).transpose();
         NormalForm::nullSpace11(N, A);
         C(i, 0) = 1;
         MutPtrVector<int64_t> cc{C(i, node.getPhiOffsetRange() + o)};
         // sum(N,dims=1) >= 1 after flipping row signs to be lex > 0
         for (size_t m = 0; m < N.numRow(); ++m)
           cc += N(m, _) * lexSign(N(m, _));
-        C(i++, last) = -1; // for >=
+        C(i++, ++s) = -1; // for >=
       }
     }
-    omniSimplex->truncateConstraints(i);
+    assert(omniSimplex->getNumCons() == i);
     assert(!allZero(omniSimplex->getConstraints()(last, _)));
   }
   [[nodiscard]] static auto nonZeroMask(const AbstractVector auto &x)

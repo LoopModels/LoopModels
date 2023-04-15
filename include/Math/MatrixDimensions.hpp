@@ -66,7 +66,7 @@ struct StridedDims {
   }
   friend inline auto operator<<(llvm::raw_ostream &os, StridedDims x)
     -> llvm::raw_ostream & {
-    return os << x.M << " x " << x.N << "(stride " << x.strideM << ")";
+    return os << x.M << " x " << x.N << " (stride " << x.strideM << ")";
   }
 };
 /// Dimensions with a capacity
