@@ -13,6 +13,7 @@
 #include "Math/NormalForm.hpp"
 #include "Math/Simplex.hpp"
 #include "Utilities/Allocators.hpp"
+#include "Utilities/Invariant.hpp"
 #include "Utilities/Optional.hpp"
 #include "Utilities/Valid.hpp"
 #include <algorithm>
@@ -848,7 +849,7 @@ public:
     -> Optional<Simplex *> {
     auto omniSimplex =
       Simplex::create(allocator, numConstraints + numSlack,
-                      1 + numBounding + numActiveEdges + numPhiCoefs +
+                      numBounding + numActiveEdges + numPhiCoefs +
                         numOmegaCoefs + numSlack + numLambda);
     auto C{omniSimplex->getConstraints()};
     C << 0;
@@ -976,6 +977,7 @@ public:
         }
       }
     }
+    invariant(size_t(c), size_t(numConstraints));
     addIndependentSolutionConstraints(omniSimplex, g, d);
     return omniSimplex->initiateFeasible() ? nullptr : (Simplex *)omniSimplex;
   }
@@ -1126,7 +1128,7 @@ public:
         C(i++, ++s) = -1; // for >=
       }
     }
-    assert(omniSimplex->getNumCons() == i);
+    invariant(size_t(omniSimplex->getNumCons()), i);
     assert(!allZero(omniSimplex->getConstraints()(last, _)));
   }
   [[nodiscard]] static auto nonZeroMask(const AbstractVector auto &x)
