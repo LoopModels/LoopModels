@@ -64,6 +64,10 @@ struct StridedDims {
   [[nodiscard]] constexpr auto similar(Col c) const -> StridedDims {
     return {M, unsigned(c), strideM};
   }
+  friend inline auto operator<<(llvm::raw_ostream &os, StridedDims x)
+    -> llvm::raw_ostream & {
+    return os << x.M << " x " << x.N << "(stride " << x.strideM << ")";
+  }
 };
 /// Dimensions with a capacity
 // struct CapDims : StridedDims {
@@ -107,6 +111,10 @@ struct DenseDims {
   [[nodiscard]] constexpr auto similar(Col c) const -> DenseDims {
     return {M, unsigned(c)};
   }
+  friend inline auto operator<<(llvm::raw_ostream &os, DenseDims x)
+    -> llvm::raw_ostream & {
+    return os << x.M << " x " << x.N;
+  }
 };
 struct SquareDims {
   unsigned int M{};
@@ -139,6 +147,10 @@ struct SquareDims {
   [[nodiscard]] constexpr auto similar(Col c) const -> DenseDims {
     return {M, unsigned(c)};
   }
+  friend inline auto operator<<(llvm::raw_ostream &os, SquareDims x)
+    -> llvm::raw_ostream & {
+    return os << x.M << " x " << x.M;
+  }
 };
 // [[nodiscard]] constexpr auto capacity(std::integral auto c) { return c; }
 // [[nodiscard]] constexpr auto capacity(auto c) -> unsigned int { return c; }
@@ -165,8 +177,8 @@ constexpr auto DenseDims::operator=(const SquareDims &D) -> DenseDims & {
 }
 template <typename D>
 concept MatrixDimension = requires(D d) {
-                            { d } -> std::convertible_to<StridedDims>;
-                          };
+  { d } -> std::convertible_to<StridedDims>;
+};
 static_assert(MatrixDimension<SquareDims>);
 static_assert(MatrixDimension<DenseDims>);
 static_assert(MatrixDimension<StridedDims>);

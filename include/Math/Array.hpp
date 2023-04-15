@@ -239,10 +239,9 @@ template <class T, class S> struct Array {
   friend inline void PrintTo(const Array &x, std::ostream *os) {
     adaptOStream(*os, x);
   }
-
 #ifndef NDEBUG
   [[gnu::used]] void dump() const {
-    if constexpr (Printable<T>) std::cout << *this << "\n";
+    if constexpr (Printable<T>) llvm::errs() << "Size: " << sz << *this << "\n";
   }
 #endif
 protected:

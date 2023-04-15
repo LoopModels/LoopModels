@@ -189,6 +189,10 @@ struct StridedRange {
   [[no_unique_address]] unsigned stride;
   explicit constexpr operator unsigned() const { return len; }
   explicit constexpr operator size_t() const { return len; }
+  friend inline auto operator<<(llvm::raw_ostream &os, StridedRange x)
+    -> llvm::raw_ostream & {
+    return os << "Length: " << x.len << " (stride: " << x.stride << ")";
+  }
 };
 template <class I> constexpr auto calcOffset(StridedRange d, I i) -> size_t {
   return d.stride * calcOffset(d.len, i);

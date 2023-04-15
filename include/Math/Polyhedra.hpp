@@ -153,6 +153,10 @@ struct BasePolyhedra {
       auto [ar, er] = removeRedundantRows(getA(), getE());
       setNumConstraints(unsigned(ar));
       setNumEqConstraints(unsigned(er));
+      for (size_t i = 0; i < getNumEqualityConstraints(); ++i) {
+        auto l = gcd(getE()(i, _));
+        if (l != 1) getE()(i, _) /= l;
+      }
     }
     auto C = initializeComparator(alloc);
     if constexpr (CheckEmpty) {
@@ -224,25 +228,6 @@ struct BasePolyhedra {
   [[nodiscard]] constexpr auto getNumEqualityConstraints() const -> size_t {
     return size_t(getE().numRow());
   }
-
-  // [[nodiscard]] auto lessZero(const size_t r) const -> bool {
-  //   return C.less(A(r, _));
-  // }
-  // [[nodiscard]] auto lessEqualZero(const size_t r) const -> bool {
-  //   return C.lessEqual(A(r, _));
-  // }
-  // [[nodiscard]] auto greaterZero(const size_t r) const -> bool {
-  //   return C.greater(A(r, _));
-  // }
-  // [[nodiscard]] auto greaterEqualZero(const size_t r) const -> bool {
-  //   return C.greaterEqual(A(r, _));
-  // }
-
-  // [[nodiscard]] auto equalNegative(const size_t i, const size_t j) const
-  //   -> bool {
-  //   return C.equalNegative(A(i, _), A(j, _));
-  // }
-
   constexpr void dropEmptyConstraints() {
     dropEmptyConstraints(getA());
     if constexpr (HasEqualities) dropEmptyConstraints(getE());
