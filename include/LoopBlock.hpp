@@ -905,7 +905,7 @@ public:
                                     satPp * sch[_(end - satPp.numCol(), end)];
                   C(_(cc, ccc), 0) -=
                     bndPc * sch[_(end - bndPc.numCol(), end)] +
-                    bndPp * sch[_(end - satPp.numCol(), end)];
+                    bndPp * sch[_(end - bndPp.numCol(), end)];
                 } else {
                   // FIXME: phiChild = [14:18), 4 cols
                   // while Dependence seems to indicate 2
@@ -1088,11 +1088,8 @@ public:
     }
   }
   [[nodiscard]] static auto lexSign(PtrVector<int64_t> x) -> int64_t {
-    // TODO: `std::ranges::reverse_view(x)` is broken; update when
-    // upgrading to a compiler that supports it.
-    // NOLINTNEXTLINE(modernize-loop-convert)
-    for (auto b = x.rbegin(), e = x.rend(); b != e; ++b)
-      if (*b) return 2 * ((*b) > 0) - 1;
+    for (auto a : x)
+      if (a) return 2 * (a > 0) - 1;
     return 0;
   }
   void addIndependentSolutionConstraints(NotNull<Simplex> omniSimplex,

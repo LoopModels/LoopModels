@@ -139,13 +139,14 @@ public:
   [[nodiscard]] constexpr auto getNumVar() const -> unsigned int {
     return numDep0Var + numDep1Var + timeDim + numDynSym;
   }
-  [[nodiscard]] constexpr auto getNumPhiCoefficients() const -> unsigned int {
+  [[nodiscard]] constexpr auto getNumPhiCoef() const -> unsigned int {
     return numDep0Var + numDep1Var;
   }
-  static constexpr auto getNumOmegaCoefficients() -> unsigned int { return 2; }
-  [[nodiscard]] constexpr auto getNumScheduleCoefficients() const
-    -> unsigned int {
-    return getNumPhiCoefficients() + 2;
+  [[nodiscard]] static constexpr auto getNumOmegaCoef() -> unsigned int {
+    return 2;
+  }
+  [[nodiscard]] constexpr auto getNumScheduleCoef() const -> unsigned int {
+    return getNumPhiCoef() + 2;
   }
   [[nodiscard]] constexpr auto getNumLambda() const -> unsigned {
     return 1 + numCon + 2 * numEqCon;
@@ -165,15 +166,17 @@ public:
     return {(int64_t *)p + size_t(conCapacity) * (getNumVar() + 1),
             DenseDims{numEqCon, getNumVar() + 1}};
   }
-  auto getNullStep() -> MutPtrVector<int64_t> {
-    auto *p = reinterpret_cast<int64_t *>(memory);
-    return {p + (size_t(conCapacity) + eqConCapacity) * (getNumVar() + 1),
+  constexpr auto getNullStep() -> MutPtrVector<int64_t> {
+    void *p = memory;
+    return {((int64_t *)p) +
+              (size_t(conCapacity) + eqConCapacity) * (getNumVar() + 1),
             timeDim};
   }
-  [[nodiscard]] auto getNullStep(size_t i) const -> int64_t {
+  [[nodiscard]] constexpr auto getNullStep(size_t i) const -> int64_t {
     invariant(i < timeDim);
-    const auto *p = reinterpret_cast<const int64_t *>(memory);
-    return (p + (size_t(conCapacity) + eqConCapacity) * (getNumVar() + 1))[i];
+    const void *p = memory;
+    return ((int64_t *)
+              p)[(size_t(conCapacity) + eqConCapacity) * (getNumVar() + 1) + i];
   }
   auto getSyms() -> llvm::MutableArrayRef<const llvm::SCEV *> {
     char *p = memory;
@@ -425,8 +428,8 @@ public:
     const size_t numEqualityConstraintsOld = size_t(E.numRow());
     const size_t numInequalityConstraintsOld = size_t(A.numRow());
 
-    const size_t numPhiCoefs = getNumPhiCoefficients();
-    const size_t numScheduleCoefs = numPhiCoefs + getNumOmegaCoefficients();
+    const size_t numPhiCoefs = getNumPhiCoef();
+    const size_t numScheduleCoefs = numPhiCoefs + getNumOmegaCoef();
     const size_t numBoundingCoefs = getNumSymbols();
 
     const size_t numConstraintsNew = size_t(A.numCol()) - getTimeDim();
@@ -688,10 +691,10 @@ public:
     return depPoly->getNumSymbols();
   }
   [[nodiscard]] constexpr auto getNumPhiCoefficients() const -> size_t {
-    return depPoly->getNumPhiCoefficients();
+    return depPoly->getNumPhiCoef();
   }
   [[nodiscard]] static constexpr auto getNumOmegaCoefficients() -> size_t {
-    return DepPoly::getNumOmegaCoefficients();
+    return DepPoly::getNumOmegaCoef();
   }
   [[nodiscard]] constexpr auto getNumDepSatConstraintVar() const -> size_t {
     return dependenceSatisfaction->getNumVars();
@@ -703,11 +706,11 @@ public:
   [[nodiscard]] constexpr auto getNumDynamicBoundingVar() const -> size_t {
     return getNumDepBndConstraintVar() - getNumDepSatConstraintVar();
   }
-  void validate() {
+  constexpr void validate() {
     assert(getInNumLoops() + getOutNumLoops() == getNumPhiCoefficients());
     // 2 == 1 for const offset + 1 for w
     assert(2 + depPoly->getNumLambda() + getNumPhiCoefficients() +
-             getNumOmegaCoefficients() + 1 ==
+             getNumOmegaCoefficients() ==
            size_t(dependenceSatisfaction->getConstraints().numCol()));
   }
   [[nodiscard]] constexpr auto getDepPoly() -> NotNull<DepPoly> {
@@ -1022,10 +1025,10 @@ public:
     const size_t numLambda = dxy->getNumLambda();
     assert(dxy->getTimeDim() == 0);
     if (checkDirection(alloc, pair, x, y, numLambda, dxy->getA().numCol())) {
-      pair[0]->truncateVars(2 + numLambda + dxy->getNumScheduleCoefficients());
+      pair[0]->truncateVars(1 + numLambda + dxy->getNumScheduleCoef());
       return Dependence{dxy, pair, {x, y}, true};
     }
-    pair[1]->truncateVars(2 + numLambda + dxy->getNumScheduleCoefficients());
+    pair[1]->truncateVars(1 + numLambda + dxy->getNumScheduleCoef());
     std::swap(pair[0], pair[1]);
     return Dependence{dxy, pair, {y, x}, false};
   }
@@ -1045,7 +1048,7 @@ public:
     const size_t ineqEnd = 1 + numInequalityConstraintsOld;
     const size_t posEqEnd = ineqEnd + numEqualityConstraintsOld;
     const size_t numLambda = posEqEnd + numEqualityConstraintsOld;
-    const size_t numScheduleCoefs = dxy->getNumScheduleCoefficients();
+    const size_t numScheduleCoefs = dxy->getNumScheduleCoef();
     invariant(numLambda, size_t(dxy->getNumLambda()));
     NotNull<MemoryAccess> in = x, out = y;
     const bool isFwd = checkDirection(alloc, pair, x, y, numLambda,
@@ -1056,17 +1059,18 @@ public:
       std::swap(in, out);
       std::swap(pair[0], pair[1]);
     }
-    pair[0]->truncateVars(2 + numLambda + numScheduleCoefs);
+    pair[0]->truncateVars(1 + numLambda + numScheduleCoefs);
     auto dep0 = Dependence{dxy->copy(alloc), pair, {in, out}, isFwd};
     invariant(out->getNumLoops() + in->getNumLoops(),
               dep0.getNumPhiCoefficients());
     // pair is invalid
     const size_t timeDim = dxy->getTimeDim();
     invariant(timeDim > 0);
-    const size_t numVarOld = size_t(dxy->getA().numCol());
-    const size_t numVar = numVarOld - timeDim;
+    // 1 + because we're indexing into A and E, ignoring the constants
+    const size_t numVar = 1 + dxy->getNumVar() - timeDim;
     // remove the time dims from the deps
     // dep0.depPoly->truncateVars(numVar);
+
     // dep0.depPoly->setTimeDim(0);
     invariant(out->getNumLoops() + in->getNumLoops(),
               dep0.getNumPhiCoefficients());
@@ -1139,7 +1143,7 @@ public:
     } while (++t < timeDim);
     // dxy->truncateVars(numVar);
     // dxy->setTimeDim(0);
-    farkasBackups[0]->truncateVars(2 + numLambda + numScheduleCoefs);
+    farkasBackups[0]->truncateVars(1 + numLambda + numScheduleCoefs);
     auto dep1 = Dependence{dxy, farkasBackups, {out, in}, !isFwd};
     invariant(out->getNumLoops() + in->getNumLoops(),
               dep0.getNumPhiCoefficients());
@@ -1154,7 +1158,7 @@ public:
     if (!dxy) return {};
     assert(x->getNumLoops() == dxy->getDim0());
     assert(y->getNumLoops() == dxy->getDim1());
-    assert(x->getNumLoops() + y->getNumLoops() == dxy->getNumPhiCoefficients());
+    assert(x->getNumLoops() + y->getNumLoops() == dxy->getNumPhiCoef());
     // note that we set boundAbove=true, so we reverse the
     // dependence direction for the dependency we week, we'll
     // discard the program variables x then y
