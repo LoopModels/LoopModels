@@ -865,11 +865,11 @@ TEST(TriangularExampleTest, BasicAssertions) {
   // orig order (inner <-> outer): n, m
   DenseMatrix<int64_t> optPhi2{DenseDims{2, 2}, 0};
   // phi2 loop order is
-  optPhi2.diag() << 1;
+  optPhi2.antiDiag() << 1;
   // the scheduler swaps the order, making `n` outermost,
   // and `m` as innermost
   // orig order (outer <-> inner): m, n, k
-  DenseMatrix<int64_t> optPhi3{"[1 0 0; 0 0 1; 0 1 0]"_mat};
+  DenseMatrix<int64_t> optPhi3{"[0 0 1; 1 0 0; 0 1 0]"_mat};
   // phi3 loop order (outer <-> inner) is [m, k, n]
   // so the schedule preserves `m` as the outermost loop,
   // followed by `k`, and `n` as innermost. `n` is the reduction loop.
@@ -941,7 +941,7 @@ TEST(MeanStDevTest0, BasicAssertions) {
   AffineLoopNest<true> *loopIJ = tlf.getLoopNest(0);
   AffineLoopNest<true> *loopI = tlf.getLoopNest(1);
   AffineLoopNest<true> *loopJI = tlf.getLoopNest(2);
-
+  std::swap(loopJI->getSyms()[0], loopJI->getSyms()[1]);
   llvm::IRBuilder<> &builder = tlf.getBuilder();
 
   // create arrays
@@ -953,8 +953,8 @@ TEST(MeanStDevTest0, BasicAssertions) {
   const auto *scevS = tlf.getSCEVUnknown(ptrS);
 
   // llvm::ConstantInt *Iv = builder.getInt64(200);
-  const llvm::SCEV *II = loopJI->getSyms()[0];
-  const llvm::SCEV *J = loopJI->getSyms()[1];
+  const llvm::SCEV *II = loopIJ->getSyms()[0];
+  const llvm::SCEV *J = loopIJ->getSyms()[1];
   llvm::Value *Iv = llvm::dyn_cast<llvm::SCEVUnknown>(II)->getValue();
   llvm::Value *Jv = llvm::dyn_cast<llvm::SCEVUnknown>(J)->getValue();
   auto *Jfp = tlf.CreateUIToF64(Jv);
@@ -996,7 +996,7 @@ TEST(MeanStDevTest0, BasicAssertions) {
   // s: 2
   llvm::Type *Int64 = builder.getInt64Ty();
   llvm::ScalarEvolution &SE{tlf.getSE()};
-  ArrayReference AIndIOuter{scevA, loopJI, 2};
+  ArrayReference AIndIOuter{scevA, loopIJ, 2};
   {
     MutPtrMatrix<int64_t> IndMat = AIndIOuter.indexMatrix();
     //     l  d
@@ -1005,7 +1005,7 @@ TEST(MeanStDevTest0, BasicAssertions) {
     AIndIOuter.sizes[0] = II;
     AIndIOuter.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
   }
-  ArrayReference AIndJOuter{scevA, loopIJ, 2};
+  ArrayReference AIndJOuter{scevA, loopJI, 2};
   {
     MutPtrMatrix<int64_t> IndMat = AIndJOuter.indexMatrix();
     //     l  d
@@ -1022,14 +1022,14 @@ TEST(MeanStDevTest0, BasicAssertions) {
     IndMat(i, 0) = 1; // i
     xInd1.sizes[0] = SE.getConstant(Int64, 8, /*isSigned=*/false);
   }
-  ArrayReference xInd2IOuter{scevX, loopJI, 1};
+  ArrayReference xInd2IOuter{scevX, loopIJ, 1};
   {
     MutPtrMatrix<int64_t> IndMat = xInd2IOuter.indexMatrix();
     //     l  d
     IndMat(i, 0) = 1; // i
     xInd2IOuter.sizes[0] = SE.getConstant(Int64, 8, /*isSigned=*/false);
   }
-  ArrayReference xInd2JOuter{scevX, loopIJ, 1};
+  ArrayReference xInd2JOuter{scevX, loopJI, 1};
   {
     MutPtrMatrix<int64_t> IndMat = xInd2JOuter.indexMatrix();
     //     l  d
@@ -1044,14 +1044,14 @@ TEST(MeanStDevTest0, BasicAssertions) {
     IndMat(i, 0) = 1; // i
     sInd1.sizes[0] = SE.getConstant(Int64, 8, /*isSigned=*/false);
   }
-  ArrayReference sInd2IOuter{scevS, loopJI, 1};
+  ArrayReference sInd2IOuter{scevS, loopIJ, 1};
   {
     MutPtrMatrix<int64_t> IndMat = sInd2IOuter.indexMatrix();
     //     l  d
     IndMat(i, 0) = 1; // i
     sInd2IOuter.sizes[0] = SE.getConstant(Int64, 8, /*isSigned=*/false);
   }
-  ArrayReference sInd2JOuter{scevS, loopIJ, 1};
+  ArrayReference sInd2JOuter{scevS, loopJI, 1};
   {
     MutPtrMatrix<int64_t> IndMat = sInd2JOuter.indexMatrix();
     //     l  d
@@ -1244,7 +1244,7 @@ TEST(MeanStDevTest0, BasicAssertions) {
   // we want antiDiag, as that represents swapping loops
   optS.antiDiag() << 1;
   DenseMatrix<int64_t> optSinnerUndef = optS;
-  // optSinnerUndef(1, _) << std::numeric_limits<int64_t>::min();
+  optSinnerUndef(1, _) << std::numeric_limits<int64_t>::min();
   for (auto *memi : jOuterLoopNest.getMemoryAccesses()) {
     for (size_t nodeIndex : memi->getNodeIndex()) {
       AffineSchedule s = jOuterLoopNest.getNode(nodeIndex).getSchedule();

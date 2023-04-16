@@ -130,7 +130,8 @@ public:
   }
 
   [[nodiscard]] constexpr auto updatePhiOffset(size_t p) -> size_t {
-    return phiOffset = p + numLoops;
+    phiOffset = p;
+    return p + numLoops;
   }
   [[nodiscard]] constexpr auto updateOmegaOffset(size_t o) -> size_t {
     omegaOffset = o;
@@ -141,7 +142,7 @@ public:
   }
   [[nodiscard]] constexpr auto getPhiOffsetRange() const
     -> Range<size_t, size_t> {
-    return _(phiOffset - numLoops, phiOffset);
+    return _(phiOffset, phiOffset + numLoops);
   }
   [[nodiscard]] constexpr auto getPhi() -> MutSquarePtrMatrix<int64_t> {
     return schedule.getPhi();
@@ -870,8 +871,11 @@ public:
       const auto [satC, satL, satPp, satPc, satO, satW] =
         edge.splitSatisfaction();
       const auto [bndC, bndL, bndPp, bndPc, bndO, bndWU] = edge.splitBounding();
-      const size_t numSatConstraints = satC.size();
-      const size_t numBndConstraints = bndC.size();
+      const size_t numSatConstraints = satC.size(),
+                   numBndConstraints = bndC.size();
+      const Col nPc = satPc.numCol(), nPp = satPp.numCol();
+      invariant(nPc, bndPc.numCol());
+      invariant(nPp, bndPp.numCol());
       for (auto outNodeIndex : outNodeIndexSet) {
         const ScheduledNode &outNode = nodes[outNodeIndex];
         for (auto inNodeIndex : inNodeIndexSet) {
@@ -897,24 +901,21 @@ public:
           // phis are not constrained to be 0
           if (outNodeIndex == inNodeIndex) {
             if (d < outNode.getNumLoops()) {
-              if (satPc.numCol() == satPp.numCol()) {
+              if (nPc == nPp) {
                 if (outNode.phiIsScheduled(d)) {
                   // add it constants
                   auto sch = outNode.getSchedule(d);
-                  C(_(c, cc), 0) -= satPc * sch[_(end - satPc.numCol(), end)] +
-                                    satPp * sch[_(end - satPp.numCol(), end)];
+                  C(_(c, cc), 0) -=
+                    satPc * sch[_(0, nPc)] + satPp * sch[_(0, nPp)];
                   C(_(cc, ccc), 0) -=
-                    bndPc * sch[_(end - bndPc.numCol(), end)] +
-                    bndPp * sch[_(end - bndPp.numCol(), end)];
+                    bndPc * sch[_(0, nPc)] + bndPp * sch[_(0, nPp)];
                 } else {
                   // FIXME: phiChild = [14:18), 4 cols
                   // while Dependence seems to indicate 2
                   // loops why the disagreement?
-                  auto phiChild = outNode.getPhiOffset() + p;
-                  C(_(c, cc), _(phiChild - satPc.numCol(), phiChild))
-                    << satPc + satPp;
-                  C(_(cc, ccc), _(phiChild - bndPc.numCol(), phiChild))
-                    << bndPc + bndPp;
+                  auto po = outNode.getPhiOffset() + p;
+                  C(_(c, cc), _(po, po + nPc)) << satPc + satPp;
+                  C(_(cc, ccc), _(po, po + nPc)) << bndPc + bndPp;
                 }
               } else if (outNode.phiIsScheduled(d)) {
                 // add it constants
@@ -922,32 +923,25 @@ public:
                 // inner -> outer
                 // so we need to drop inner most if one has less
                 auto sch = outNode.getSchedule(d);
-                auto schP = sch[_(end - satPp.numCol(), end)];
-                auto schC = sch[_(end - satPc.numCol(), end)];
+                auto schP = sch[_(0, nPp)];
+                auto schC = sch[_(0, nPc)];
                 C(_(c, cc), 0) -= satPc * schC + satPp * schP;
                 C(_(cc, ccc), 0) -= bndPc * schC + bndPp * schP;
-              } else if (satPc.numCol() < satPp.numCol()) {
-                auto phiChild = outNode.getPhiOffset() + p;
-                Col P = satPc.numCol(), m = phiChild - P;
-                C(_(c, cc), _(phiChild - satPp.numCol(), m))
-                  << satPp(_, _(begin, end - P));
-                C(_(cc, ccc), _(phiChild - bndPp.numCol(), m))
-                  << bndPp(_, _(begin, end - P));
-                C(_(c, cc), _(m, phiChild))
-                  << satPc + satPp(_, _(end - P, end));
-                C(_(cc, ccc), _(m, phiChild))
-                  << bndPc + bndPp(_, _(end - P, end));
-              } else /* if (satPc.numCol() > satPp.numCol()) */ {
-                auto phiChild = outNode.getPhiOffset() + p;
-                Col P = satPp.numCol(), m = phiChild - P;
-                C(_(c, cc), _(phiChild - satPc.numCol(), m))
-                  << satPc(_, _(begin, end - P));
-                C(_(cc, ccc), _(phiChild - bndPc.numCol(), m))
-                  << bndPc(_, _(begin, end - P));
-                C(_(c, cc), _(m, phiChild))
-                  << satPc(_, _(end - P, end)) + satPp;
-                C(_(cc, ccc), _(m, phiChild))
-                  << bndPc(_, _(end - P, end)) + bndPp;
+              } else if (nPc < nPp) {
+                // Pp has more cols, so outer/leftmost overlap
+                auto po = outNode.getPhiOffset() + p, poc = po + nPc,
+                     pop = po + nPp;
+                C(_(c, cc), _(po, poc)) << satPc + satPp(_, _(0, nPc));
+                C(_(cc, ccc), _(po, poc)) << bndPc + bndPp(_, _(0, nPc));
+                C(_(c, cc), _(poc, pop)) << satPp(_, _(nPc, end));
+                C(_(cc, ccc), _(poc, pop)) << bndPp(_, _(nPc, end));
+              } else /* if (nPc > nPp) */ {
+                auto po = outNode.getPhiOffset() + p, poc = po + nPc,
+                     pop = po + nPp;
+                C(_(c, cc), _(po, pop)) << satPc(_, _(0, nPp)) + satPp;
+                C(_(cc, ccc), _(po, pop)) << bndPc(_, _(0, nPp)) + bndPp;
+                C(_(c, cc), _(pop, poc)) << satPc(_, _(nPp, end));
+                C(_(cc, ccc), _(pop, poc)) << bndPc(_, _(nPp, end));
               }
               C(_(c, cc), outNode.getOmegaOffset() + o)
                 << satO(_, 0) + satO(_, 1);
@@ -985,19 +979,19 @@ public:
                                 const ScheduledNode &node,
                                 PtrMatrix<int64_t> sat, PtrMatrix<int64_t> bnd,
                                 size_t d, Row c, Row cc, Row ccc, Col p) {
+    invariant(sat.numCol(), bnd.numCol());
     if (node.phiIsScheduled(d)) {
       // add it constants
       auto sch = node.getSchedule(d);
       // order is inner <-> outer
       // so we need the end of schedule if it is larger
-      C(_(c, cc), 0) -= sat * sch[_(end - sat.numCol(), end)];
-      C(_(cc, ccc), 0) -= bnd * sch[_(end - bnd.numCol(), end)];
+      C(_(c, cc), 0) -= sat * sch[_(0, sat.numCol())];
+      C(_(cc, ccc), 0) -= bnd * sch[_(0, bnd.numCol())];
     } else {
-      assert(sat.numCol() == bnd.numCol());
       // add it to C
-      auto phiChild = node.getPhiOffset() + p;
-      C(_(c, cc), _(phiChild - sat.numCol(), phiChild)) = sat;
-      C(_(cc, ccc), _(phiChild - bnd.numCol(), phiChild)) = bnd;
+      auto po = node.getPhiOffset() + p;
+      C(_(c, cc), _(po, po + sat.numCol())) << sat;
+      C(_(cc, ccc), _(po, po + bnd.numCol())) << bnd;
     }
   }
   [[nodiscard]] auto solveGraphCore(Graph &g, size_t depth, bool satisfyDeps)
@@ -1087,7 +1081,10 @@ public:
 #endif
     }
   }
-  [[nodiscard]] static auto lexSign(PtrVector<int64_t> x) -> int64_t {
+  // Note this is based on the assumption that original loops are in
+  // outer<->inner order. With that assumption, using lexSign on the null space
+  // will tend to preserve the original traversal order.
+  [[nodiscard]] static constexpr auto lexSign(PtrVector<int64_t> x) -> int64_t {
     for (auto a : x)
       if (a) return 2 * (a > 0) - 1;
     return 0;

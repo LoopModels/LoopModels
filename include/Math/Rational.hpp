@@ -203,7 +203,7 @@ struct Rational {
     return denominator == 1;
   }
   constexpr void negate() { numerator = -numerator; }
-  constexpr operator bool() const { return numerator != 0; }
+  constexpr explicit operator bool() const { return numerator != 0; }
 
   friend inline auto operator<<(llvm::raw_ostream &os, const Rational &x)
     -> llvm::raw_ostream & {

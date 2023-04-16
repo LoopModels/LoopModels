@@ -243,6 +243,27 @@ template <class T, class S> struct Array {
   [[gnu::used]] void dump() const {
     if constexpr (Printable<T>) llvm::errs() << "Size: " << sz << *this << "\n";
   }
+  [[gnu::used]] void dump(const char *filename) const {
+    if constexpr (std::integral<T>) {
+      std::FILE *f = std::fopen(filename, "w");
+      if (f == nullptr) return;
+      std::fprintf(f, "C= [");
+      if constexpr (MatrixDimension<S>) {
+        for (size_t i = 0; i < Row{sz}; ++i) {
+          if (i) std::fprintf(f, "\n");
+          std::fprintf(f, "%ld", int64_t((*this)(i, 0)));
+          for (size_t j = 1; j < Col{sz}; ++j)
+            std::fprintf(f, " %ld", int64_t((*this)(i, j)));
+        }
+      } else {
+        std::fprintf(f, "%ld", int64_t((*this)[0]));
+        for (size_t i = 1; (i < size_t(sz)); ++i)
+          std::fprintf(f, ", %ld", int64_t((*this)[i]));
+      }
+      std::fprintf(f, "]");
+      std::fclose(f);
+    }
+  }
 #endif
 protected:
   // NOLINTNEXTLINE(misc-non-private-member-variables-in-classes)
@@ -349,11 +370,13 @@ struct MutArray : Array<T, S>, ArrayOps<T, S, MutArray<T, S>> {
   [[nodiscard]] constexpr auto end() noexcept {
     return begin() + size_t(this->sz);
   }
-  // [[nodiscard, gnu::returns_nonnull]] constexpr auto begin() noexcept -> T *
+  // [[nodiscard, gnu::returns_nonnull]] constexpr auto begin() noexcept -> T
+  // *
   // {
   //   return this->ptr;
   // }
-  // [[nodiscard, gnu::returns_nonnull]] constexpr auto end() noexcept -> T * {
+  // [[nodiscard, gnu::returns_nonnull]] constexpr auto end() noexcept -> T *
+  // {
   //   return this->ptr + size_t(this->sz);
   // }
   [[nodiscard]] constexpr auto rbegin() noexcept {
@@ -1487,13 +1510,13 @@ inline auto printMatrix(llvm::raw_ostream &os, PtrMatrix<T> A)
   return os << " ]";
 }
 // We mirror `A` with a matrix of integers indicating sizes, and a vectors of
-// chars. We fill the matrix with the number of digits of each element, and the
-// vector with the characters of each element.
-// We could use a vector of vectors of chars to avoid needing to copy memory on
-// reallocation, but this would yield more complicated management.
-// We should also generally be able to avoid allocations.
-// We can use a Vector with a lot of initial capacity, and then resize based on
-// a conservative estimate of the number of chars per elements.
+// chars. We fill the matrix with the number of digits of each element, and
+// the vector with the characters of each element. We could use a vector of
+// vectors of chars to avoid needing to copy memory on reallocation, but this
+// would yield more complicated management. We should also generally be able
+// to avoid allocations. We can use a Vector with a lot of initial capacity,
+// and then resize based on a conservative estimate of the number of chars per
+// elements.
 inline auto printMatrix(llvm::raw_ostream &os, PtrMatrix<double> A)
   -> llvm::raw_ostream & {
   // llvm::raw_ostream &printMatrix(llvm::raw_ostream &os, T const &A) {

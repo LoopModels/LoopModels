@@ -10,6 +10,7 @@ invariant(bool condition,
     llvm::errs() << "invariant violation\nfile: " << location.file_name() << ":"
                  << location.line() << ":" << location.column() << " `"
                  << location.function_name() << "`\n";
+    abort();
   }
 }
 template <typename T>

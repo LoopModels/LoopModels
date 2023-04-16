@@ -199,7 +199,7 @@ template <typename T = Vector<uint64_t, 1>> struct BitSet {
   public:
     constexpr Reference(MutPtrVector<uint64_t> dd, size_t ii)
       : data(dd), i(ii) {}
-    constexpr operator bool() const { return contains(data, i); }
+    constexpr explicit operator bool() const { return contains(data, i); }
     constexpr auto operator=(bool b) -> Reference & {
       BitSet::set(data, i, b);
       return *this;

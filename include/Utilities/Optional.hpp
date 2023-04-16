@@ -34,7 +34,7 @@ template <std::signed_integral T> struct Optional<T> {
   }
   [[nodiscard]] constexpr auto operator*() -> T & { return getValue(); }
   constexpr auto operator->() -> T * { return &value; }
-  constexpr operator bool() const { return hasValue(); }
+  constexpr explicit operator bool() const { return hasValue(); }
   constexpr Optional() = default;
   constexpr Optional(T v) : value(v) {}
 };

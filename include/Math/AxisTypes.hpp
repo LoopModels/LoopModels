@@ -58,7 +58,7 @@ template <AxisType T> struct AxisInt {
   explicit constexpr operator size_t() const { return value; }
   explicit constexpr operator ptrdiff_t() const { return value; }
   explicit constexpr operator unsigned() const { return value; }
-  explicit constexpr operator bool() const { return value; }
+  constexpr explicit operator bool() const { return value; }
 
   constexpr auto operator+(V i) const -> AxisInt<T> { return value + i; }
   constexpr auto operator-(V i) const -> AxisInt<T> { return value - i; }
