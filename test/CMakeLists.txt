@@ -34,8 +34,11 @@ CPMAddPackage(
   GIT_TAG fnoexceptions
 )
 
-# FIXME: build LoopModels if(TEST_INSTALLED_VERSION) find_package(LoopModels REQUIRED) else()
-# CPMAddPackage(NAME LoopModels SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR}/..) endif()
+if(TEST_INSTALLED_VERSION)
+  find_package(LoopModels REQUIRED)
+else()
+  CPMAddPackage(NAME LoopModels SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR}/..)
+endif()
 
 # ---- Create binary ----
 
@@ -55,7 +58,7 @@ file(
   ${CMAKE_CURRENT_SOURCE_DIR}/matrix_test.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/normal_form_test.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/orthogonalize_test.cpp
-  # ${CMAKE_CURRENT_SOURCE_DIR}/remarks_test.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/remarks_test.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/simplex_test.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/string_to_intmat_test.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/unimodularization_test.cpp
@@ -72,7 +75,7 @@ add_executable(${PROJECT_NAME} ${tests})
 message(STATUS "PROJECT_BINARY_DIR: ${PROJECT_BINARY_DIR}")
 message(STATUS "PROJECT_SOURCE_DIR: ${PROJECT_SOURCE_DIR}")
 message(STATUS "LLVM_INCLUDE_DIRS: ${LLVM_INCLUDE_DIRS}")
-# FIXME: re-add dependency add_dependencies(${PROJECT_NAME} LoopModels)
+add_dependencies(${PROJECT_NAME} LoopModels)
 target_include_directories(
   ${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/../include ${LLVM_INCLUDE_DIRS}
 )
@@ -145,23 +148,22 @@ endif()
 # enable compiler warnings
 if(NOT TEST_INSTALLED_VERSION)
   if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU")
-    # -Werror? FIXME: re-add LoopModels target_compile_options(LoopModels PUBLIC -Wall -Wpedantic
-    # -Wextra -Wshadow)
+    # -Werror?
+    target_compile_options(LoopModels PUBLIC -Wall -Wpedantic -Wextra -Wshadow)
     target_compile_options(${PROJECT_NAME} PUBLIC -Wall -Wpedantic -Wextra -Wshadow)
   elseif(MSVC)
-    # FIXME: re-add LoopModels target_compile_options(LoopModels PUBLIC /W4 /WX)
-    # target_compile_definitions(${PROJECT_NAME} PUBLIC DOCTEST_CONFIG_USE_STD_HEADERS)
+    target_compile_options(LoopModels PUBLIC /W4 /WX)
   endif()
 endif()
-# FIXME: re-add LoopModels target_compile_options(LoopModels PRIVATE -D_GLIBCXX_ASSERTIONS)
+target_compile_options(LoopModels PRIVATE -D_GLIBCXX_ASSERTIONS)
 target_compile_options(${PROJECT_NAME} PRIVATE -D_GLIBCXX_ASSERTIONS)
 
 # ---- code coverage ----
 
 message(STATUS "ENABLE_TEST_COVERAGE: ${ENABLE_TEST_COVERAGE}")
 if(ENABLE_TEST_COVERAGE)
-  # FIXME: re-add LoopModels target_compile_options(LoopModels PUBLIC -O0 -g --coverage)
-  # target_link_options(LoopModels PUBLIC --coverage)
+  target_compile_options(LoopModels PUBLIC -O0 -g --coverage)
+  target_link_options(LoopModels PUBLIC --coverage)
   target_compile_options(${PROJECT_NAME} PUBLIC -O0 -g --coverage)
   target_link_options(${PROJECT_NAME} PUBLIC --coverage)
   add_custom_target(

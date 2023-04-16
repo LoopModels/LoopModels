@@ -18,6 +18,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>
+#include <llvm/Support/raw_os_ostream.h>
 #include <memory>
 #include <numeric>
 #include <type_traits>
