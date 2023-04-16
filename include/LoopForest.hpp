@@ -32,7 +32,7 @@ struct LoopTree {
 
   // in addition to requiring simplify form, we require a single exit block
   [[no_unique_address]] llvm::SmallVector<Predicate::Map> paths;
-  [[no_unique_address]] AffineLoopNest<true> affineLoop;
+  [[no_unique_address]] Optional<AffineLoopNest<true> *> affineLoop;
   [[no_unique_address]] Optional<LoopTree *> parentLoop{nullptr};
   [[no_unique_address]] llvm::SmallVector<NotNull<MemoryAccess>> memAccesses{};
 
@@ -62,15 +62,16 @@ struct LoopTree {
            llvm::SmallVector<Predicate::Map> pth)
     : loop(nullptr), subLoops(std::move(sL)), paths(std::move(pth)) {}
 
-  LoopTree(llvm::Loop *L, const llvm::SCEV *BT, llvm::ScalarEvolution &SE,
-           Predicate::Map pth)
-    : loop(L), paths({std::move(pth)}), affineLoop(L, BT, SE) {}
+  LoopTree(BumpAlloc<> &alloc, llvm::Loop *L, const llvm::SCEV *BT,
+           llvm::ScalarEvolution &SE, Predicate::Map pth)
+    : loop(L), paths({std::move(pth)}),
+      affineLoop{AffineLoopNest<true>::construct(alloc, L, BT, SE)} {}
 
-  LoopTree(llvm::Loop *L, AffineLoopNest<true> aln,
+  LoopTree(BumpAlloc<> &alloc, llvm::Loop *L, NotNull<AffineLoopNest<true>> aln,
            llvm::SmallVector<NotNull<LoopTree>> sL,
            llvm::SmallVector<Predicate::Map> pth)
     : loop(L), subLoops(std::move(sL)), paths(std::move(pth)),
-      affineLoop(std::move(aln)) {
+      affineLoop(aln->copy(alloc)) {
 #ifndef NDEBUG
     if (loop)
       for (auto &&chain : pth)
@@ -78,12 +79,11 @@ struct LoopTree {
 #endif
   }
   [[nodiscard]] auto getNumLoops() const -> size_t {
-    return affineLoop.getNumLoops();
+    return affineLoop->getNumLoops();
   }
-
   friend inline auto operator<<(llvm::raw_ostream &os, const LoopTree &tree)
     -> llvm::raw_ostream & {
-    if (tree.loop) os << (*tree.loop) << "\n" << tree.affineLoop << "\n";
+    if (tree.loop) os << (*tree.loop) << "\n" << *tree.affineLoop << "\n";
     else os << "top-level:\n";
     for (auto branch : tree.subLoops) os << *branch;
     return os << "\n";
@@ -91,10 +91,11 @@ struct LoopTree {
 #ifndef NDEBUG
   [[gnu::used]] void dump() const { llvm::errs() << *this; }
 #endif
-  void addZeroLowerBounds(llvm::DenseMap<llvm::Loop *, LoopTree *> &loopMap) {
-    affineLoop.addZeroLowerBounds();
+  void addZeroLowerBounds(BumpAlloc<> &alloc,
+                          llvm::DenseMap<llvm::Loop *, LoopTree *> &loopMap) {
+    affineLoop->addZeroLowerBounds(alloc);
     for (auto tree : subLoops) {
-      tree->addZeroLowerBounds(loopMap);
+      tree->addZeroLowerBounds(alloc, loopMap);
       tree->parentLoop = this;
     }
     if (loop) loopMap.insert(std::make_pair(loop, this));

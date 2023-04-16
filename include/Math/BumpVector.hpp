@@ -33,6 +33,30 @@ template <typename T, unsigned InitialCapacity = 8> struct BumpPtrVector {
     : mem(a.allocate(InitialCapacity)), Size(0), Capacity(InitialCapacity),
       Alloc(a.get_allocator()) {}
   constexpr BumpPtrVector(BumpAlloc<> &a) : BumpPtrVector(WBumpAlloc<T>(a)) {}
+  constexpr BumpPtrVector(const BumpPtrVector<T> &x) : BumpPtrVector(x.Alloc) {
+    resizeForOverwrite(x.Size);
+    *this << x;
+  }
+  BumpPtrVector &operator=(const BumpPtrVector &x) {
+    if (this != &x) {
+      clear();
+      resizeForOverwrite(x.Size);
+      *this << x;
+    }
+    return *this;
+  }
+  BumpPtrVector &operator=(BumpPtrVector &&x) {
+    if (this != &x) {
+      mem = x.mem;
+      Size = x.Size;
+      Capacity = x.Capacity;
+      Alloc = x.Alloc;
+      x.mem = nullptr;
+      x.Size = 0;
+      x.Capacity = 0;
+    }
+    return *this;
+  }
 
   [[gnu::flatten]] constexpr auto operator[](const ScalarIndex auto i) -> T & {
     invariant(unsigned(i) < Size);
@@ -195,6 +219,12 @@ template <typename T, unsigned InitialCapacity = 8> struct BumpPtrVector {
     reserve(N);
     Size = N;
   }
+  constexpr void resize(size_t N, T x) {
+    reserve(N);
+    unsigned oldSz = Size;
+    Size = N;
+    for (unsigned i = oldSz; i < N; ++i) mem[i] = x;
+  }
   constexpr void resizeForOverwrite(size_t N) {
     reserveForOverwrite(N);
     Size = N;
@@ -204,6 +234,14 @@ template <typename T, unsigned InitialCapacity = 8> struct BumpPtrVector {
   }
   [[nodiscard]] constexpr auto get_allocator() -> WBumpAlloc<T> {
     return Alloc;
+  }
+  constexpr auto push_back(T x) -> T & {
+    size_t offset = Size++;
+    if (Size > Capacity) [[unlikely]] {
+      if constexpr (InitialCapacity == 0) reserve(Size + Size);
+      else reserve(offset + offset);
+    }
+    return *std::construct_at(mem + offset, std::move(x));
   }
   template <typename... Args>
   constexpr auto emplace_back(Args &&...args) -> T & {
@@ -216,6 +254,12 @@ template <typename T, unsigned InitialCapacity = 8> struct BumpPtrVector {
   }
   [[nodiscard]] constexpr auto empty() const -> bool { return Size == 0; }
   constexpr void pop_back() { --Size; }
+  constexpr void erase(T *x) {
+    assert(x >= mem && x < mem + Size);
+    std::destroy_at(x);
+    std::copy_n(x + 1, Size, x);
+    --Size;
+  }
 };
 static_assert(std::is_trivially_destructible_v<MutPtrVector<int64_t>>);
 static_assert(std::is_trivially_destructible_v<BumpPtrVector<int64_t>>);

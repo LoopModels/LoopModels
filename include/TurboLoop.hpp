@@ -6,6 +6,7 @@
 #include "./Loops.hpp"
 #include "./MemoryAccess.hpp"
 #include "./RemarkAnalysis.hpp"
+#include "Math/Array.hpp"
 #include "Math/Math.hpp"
 #include <algorithm>
 #include <cassert>
@@ -353,8 +354,8 @@ public:
     return blackList | blackListAllDependentLoops(S, numPeeled);
   }
   auto arrayRef(LoopTree &LT, llvm::Instruction *ptr, const llvm::SCEV *elSize,
-                llvm::Instruction *loadOrStore,
-                llvm::MutableArrayRef<unsigned> omegas) -> bool {
+                llvm::Instruction *loadOrStore, MutPtrVector<unsigned> omegas)
+    -> bool {
     llvm::Loop *L = LT.loop;
     // code modified from
     // https://llvm.org/doxygen/Delinearization_8cpp_source.html#l00582
@@ -387,7 +388,7 @@ public:
     // IntMatrix R(numLoops, subscripts.size());
     size_t numPeeled = L->getLoopDepth() - numLoops;
     // numLoops x arrayDim
-    IntMatrix Rt(subscripts.size(), numLoops);
+    IntMatrix Rt{StridedDims{subscripts.size(), numLoops}};
     IntMatrix Bt;
     llvm::SmallVector<const llvm::SCEV *, 3> symbolicOffsets;
     uint64_t blackList{0};
@@ -395,7 +396,7 @@ public:
       Vector<int64_t> offsets;
       for (size_t i = 0; i < subscripts.size(); ++i) {
         offsets.clear();
-        offsets.pushBack(0);
+        offsets.push_back(0);
         blackList |= fillAffineIndices(Rt(i, _), offsets, symbolicOffsets,
                                        subscripts[i], 1, numPeeled);
         Bt.resize(subscripts.size(), offsets.size());
@@ -445,23 +446,23 @@ public:
   }
   // LoopTree &getLoopTree(unsigned i) { return loopTrees[i]; }
   auto getLoopTree(llvm::Loop *L) -> LoopTree * { return loopMap[L]; }
-  auto addRef(LoopTree &LT, LoadOrStoreInst auto *I,
-              llvm::SmallVector<unsigned> &omega) -> bool {
-    llvm::Value *ptr = I->getPointerOperand();
+  auto addRef(LoopTree &LT, LoadOrStoreInst auto *J, Vector<unsigned> &omega)
+    -> bool {
+    llvm::Value *ptr = J->getPointerOperand();
     // llvm::Type *type = I->getPointerOperandType();
-    const llvm::SCEV *elSize = SE->getElementSize(I);
+    const llvm::SCEV *elSize = SE->getElementSize(J);
     // TODO: support top level array refs
     if (LT.loop) {
       if (auto *iptr = llvm::dyn_cast<llvm::Instruction>(ptr)) {
-        if (!arrayRef(LT, iptr, elSize, I, omega)) {
+        if (!arrayRef(LT, iptr, elSize, J, omega)) {
           return false;
         } else if (ORE) [[unlikely]] {
           llvm::SmallVector<char> x;
           llvm::raw_svector_ostream os(x);
-          if (llvm::isa<llvm::LoadInst>(I))
-            os << "No affine representation for load: " << *I << "\n";
-          else os << "No affine representation for store: " << *I << "\n";
-          remark("AddAffineLoad", LT.loop, os.str(), I);
+          if (llvm::isa<llvm::LoadInst>(J))
+            os << "No affine representation for load: " << *J << "\n";
+          else os << "No affine representation for store: " << *J << "\n";
+          remark("AddAffineLoad", LT.loop, os.str(), J);
         }
       }
       return true;
@@ -471,30 +472,27 @@ public:
 
   void parseBB(LoopTree &LT, llvm::BasicBlock *BB,
 
-               llvm::SmallVector<unsigned> &omega) {
-    for (llvm::Instruction &I : *BB) {
-      if (LT.loop) assert(LT.loop->contains(&I));
-      if (I.mayReadFromMemory()) {
-        if (auto *LInst = llvm::dyn_cast<llvm::LoadInst>(&I))
+               Vector<unsigned> &omega) {
+    for (llvm::Instruction &J : *BB) {
+      if (LT.loop) assert(LT.loop->contains(&J));
+      if (J.mayReadFromMemory()) {
+        if (auto *LInst = llvm::dyn_cast<llvm::LoadInst>(&J))
           if (addRef(LT, LInst, omega)) return;
-      } else if (I.mayWriteToMemory())
-        if (auto *SInst = llvm::dyn_cast<llvm::StoreInst>(&I))
+      } else if (J.mayWriteToMemory())
+        if (auto *SInst = llvm::dyn_cast<llvm::StoreInst>(&J))
           if (addRef(LT, SInst, omega)) return;
     }
   }
-  void visit(LoopTree &LT, Predicate::Map &map,
-             llvm::SmallVector<unsigned> &omega,
-             llvm::SmallPtrSet<llvm::BasicBlock *, 16> visited,
-             llvm::BasicBlock *BB) {
+  void visit(LoopTree &LT, Predicate::Map &map, Vector<unsigned> &omega,
+             aset<llvm::BasicBlock *> visited, llvm::BasicBlock *BB) {
     if ((!map.isInPath(BB)) || visited.contains(BB)) return;
     visited.insert(BB);
     for (llvm::BasicBlock *pred : llvm::predecessors(BB))
       visit(LT, map, omega, visited, pred);
     parseBB(LT, BB, omega);
   }
-  void parseBBMap(LoopTree &LT, Predicate::Map &map,
-                  llvm::SmallVector<unsigned> &omega) {
-    llvm::SmallPtrSet<llvm::BasicBlock *, 16> visited;
+  void parseBBMap(LoopTree &LT, Predicate::Map &map, Vector<unsigned> &omega) {
+    aset<llvm::BasicBlock *> visited{allocator};
     for (auto &pair : map) visit(LT, map, omega, visited, pair.first);
   }
   // we fill omegas, we have loop pos only, not shifts
@@ -503,7 +501,7 @@ public:
   // pL: 0
   //
   // [0, 0]
-  void parseLoop(LoopTree &LT, llvm::SmallVector<unsigned> &omega) {
+  void parseLoop(LoopTree &LT, Vector<unsigned> &omega) {
 #ifndef NDEBUG
     size_t numOmegaInitial = omega.size();
     // FIXME:
@@ -532,7 +530,7 @@ public:
 #endif
   }
   void parseNest() {
-    llvm::SmallVector<unsigned> omega;
+    Vector<unsigned> omega;
     for (auto forest : loopForests) {
       omega.clear();
       parseLoop(*forest, omega);
@@ -667,9 +665,9 @@ public:
   // https://llvm.org/doxygen/LoopVectorize_8cpp_source.html#l00932
   void remark(const llvm::StringRef remarkName, llvm::Loop *L,
               const llvm::StringRef remarkMessage,
-              llvm::Instruction *I = nullptr) {
+              llvm::Instruction *J = nullptr) {
 
-    llvm::OptimizationRemarkAnalysis analysis{remarkAnalysis(remarkName, L, I)};
+    llvm::OptimizationRemarkAnalysis analysis{remarkAnalysis(remarkName, L, J)};
     ORE->emit(analysis << remarkMessage);
   }
   // void buildInstructionGraph(LoopTree &root) {

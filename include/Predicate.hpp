@@ -1,6 +1,8 @@
 #pragma once
 #include "./BitSets.hpp"
+#include "Math/BumpVector.hpp"
 #include "Math/Math.hpp"
+#include "Utilities/Allocators.hpp"
 #include <cstddef>
 #include <cstdint>
 #include <cwchar>
@@ -196,9 +198,18 @@ struct Intersection {
 /// (a & b) | (c & d) == ((a & b) | c) & ((a & b) | d)
 /// == (a | c) & (b | c) & (a | d) & (b | d)
 struct Set {
-  [[no_unique_address]] llvm::SmallVector<Intersection, 2> intersectUnion;
-  Set() = default;
-  Set(Intersection pred) : intersectUnion({pred}) {}
+  [[no_unique_address]] LinAlg::BumpPtrVector<Intersection> intersectUnion;
+  Set(BumpAlloc<> &alloc) : intersectUnion(alloc) {}
+  Set(BumpAlloc<> &alloc, Intersection pred) : intersectUnion(alloc) {
+    intersectUnion.push_back(pred);
+  }
+  Set(const Set &) = default;
+  Set(Set &&) = default;
+  Set &operator=(Set &&other) {
+    intersectUnion = std::move(other.intersectUnion);
+    // std::swap(intersectUnion, other.intersectUnion);
+    return *this;
+  };
   // TODO: constexpr these when llvm::SmallVector supports it
   [[nodiscard]] auto operator[](size_t index) -> Intersection {
     return intersectUnion[index];
@@ -325,8 +336,8 @@ struct Set {
     return *this;
   }
   [[nodiscard]] auto isEmpty() const -> bool { return intersectUnion.empty(); }
-  [[nodiscard]] auto operator&(const Set &other) const {
-    Set ret;
+  [[nodiscard]] auto intersect(BumpAlloc<> &alloc, const Set &other) const {
+    Set ret{alloc};
     for (auto &&pred : intersectUnion)
       for (auto &&otherPred : other) ret |= pred & otherPred;
     return ret;

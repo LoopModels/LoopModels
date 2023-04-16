@@ -2,6 +2,9 @@
 
 #include "./Address.hpp"
 #include "./Predicate.hpp"
+#include "Containers/BumpMapSet.hpp"
+#include "Math/BumpVector.hpp"
+#include "Utilities/Allocators.hpp"
 #include <algorithm>
 #include <concepts>
 #include <cstddef>
@@ -32,21 +35,18 @@
 #include <utility>
 #include <variant>
 
-auto containsCycle(const llvm::Instruction *,
-                   llvm::SmallPtrSet<llvm::Instruction const *, 8> &,
+auto containsCycle(const llvm::Instruction *, aset<llvm::Instruction const *> &,
                    const llvm::Value *) -> bool;
-inline auto
-containsCycleCore(const llvm::Instruction *J,
-                  llvm::SmallPtrSet<llvm::Instruction const *, 8> &visited,
-                  const llvm::Instruction *K) -> bool {
+inline auto containsCycleCore(const llvm::Instruction *J,
+                              aset<llvm::Instruction const *> &visited,
+                              const llvm::Instruction *K) -> bool {
   for (const llvm::Use &op : K->operands())
     if (containsCycle(J, visited, op.get())) return true;
   return false;
 }
-inline auto
-containsCycle(const llvm::Instruction *J,
-              llvm::SmallPtrSet<llvm::Instruction const *, 8> &visited,
-              const llvm::Value *V) -> bool {
+inline auto containsCycle(const llvm::Instruction *J,
+                          aset<llvm::Instruction const *> &visited,
+                          const llvm::Value *V) -> bool {
   const auto *S = llvm::dyn_cast<llvm::Instruction>(V);
   if (S == J) return true;
   if ((!S) || (visited.count(S))) return false;
@@ -54,9 +54,11 @@ containsCycle(const llvm::Instruction *J,
   return containsCycleCore(J, visited, S);
 }
 
-inline auto containsCycle(llvm::Instruction const *S) -> bool {
+inline auto containsCycle(BumpAlloc<> &alloc, llvm::Instruction const *S)
+  -> bool {
   // don't get trapped in a different cycle
-  llvm::SmallPtrSet<llvm::Instruction const *, 8> visited;
+  auto p = alloc.scope();
+  aset<llvm::Instruction const *> visited{alloc};
   return containsCycleCore(S, visited, S);
 }
 
@@ -156,9 +158,9 @@ struct Instruction {
   [[no_unique_address]] Predicate::Set predicates;
   [[no_unique_address]] llvm::MutableArrayRef<Instruction *> operands;
   // [[no_unique_address]] llvm::SmallVector<Instruction *> users;
-  [[no_unique_address]] llvm::SmallPtrSet<Instruction *, 8> users;
+  [[no_unique_address]] aset<Instruction *> users;
   /// costs[i] == cost for vector-width 2^i
-  [[no_unique_address]] llvm::SmallVector<RecipThroughputLatency> costs;
+  [[no_unique_address]] LinAlg::BumpPtrVector<RecipThroughputLatency> costs;
 
   void setOperands(llvm::MutableArrayRef<Instruction *> ops) {
     operands = ops;
@@ -229,9 +231,7 @@ struct Instruction {
   [[nodiscard]] auto getOperand(size_t i) const -> Instruction * {
     return operands[i];
   }
-  [[nodiscard]] auto getUsers() -> llvm::SmallPtrSetImpl<Instruction *> & {
-    return users;
-  }
+  [[nodiscard]] auto getUsers() -> aset<Instruction *> & { return users; }
   [[nodiscard]] auto getNumOperands() const -> size_t {
     return operands.size();
   }
@@ -283,11 +283,13 @@ struct Instruction {
   // type(type) {
   //     // this->TTI = TTI;
   // }
-  Instruction(Intrinsic idt, llvm::Type *typ) : idtf(idt), type(typ) {}
+  Instruction(BumpAlloc<> &alloc, Intrinsic idt, llvm::Type *typ)
+    : idtf(idt), type(typ), predicates(alloc), users(alloc), costs(alloc) {}
   // Instruction(UniqueIdentifier uid)
   // : id(std::get<0>(uid)), operands(std::get<1>(uid)) {}
-  Instruction(UniqueIdentifier uid, llvm::Type *typ)
-    : idtf(std::get<0>(uid)), type(typ), operands(std::get<1>(uid)) {}
+  Instruction(BumpAlloc<> &alloc, UniqueIdentifier uid, llvm::Type *typ)
+    : idtf(std::get<0>(uid)), type(typ), predicates(alloc),
+      operands(std::get<1>(uid)), users(alloc), costs(alloc) {}
   struct Cache {
     [[no_unique_address]] llvm::DenseMap<llvm::Value *, Instruction *>
       llvmToInternalMap;
@@ -346,7 +348,7 @@ struct Instruction {
     }
     auto createInstruction(BumpAlloc<> &alloc, UniqueIdentifier uid,
                            llvm::Type *typ) -> Instruction * {
-      auto *i = new (alloc) Instruction(uid, typ);
+      auto *i = new (alloc) Instruction(alloc, uid, typ);
       for (auto *op : i->operands) op->users.insert(i);
       argMap.insert({uid, i});
       return i;
@@ -427,7 +429,7 @@ struct Instruction {
       UniqueIdentifier uid{Identifier(c), {}};
       auto argMatch = argMap.find(uid);
       if (argMatch != argMap.end()) return argMatch->second;
-      return new (alloc) Instruction(uid, typ);
+      return new (alloc) Instruction(alloc, uid, typ);
     }
     auto getConstant(BumpAlloc<> &alloc, llvm::Type *typ, int64_t c)
       -> Instruction * {
@@ -589,7 +591,7 @@ struct Instruction {
   static auto createIsolated(BumpAlloc<> &alloc, llvm::Instruction *instr)
     -> Instruction * {
     Intrinsic id{instr};
-    auto *i = new (alloc) Instruction(id, instr->getType());
+    auto *i = new (alloc) Instruction(alloc, id, instr->getType());
     return i;
   }
 
@@ -1260,14 +1262,14 @@ struct Map {
     cache.predicates.emplace_back(I);
     return i;
   }
-  void reach(llvm::BasicBlock *BB, Intersection predicate) {
+  void reach(BumpAlloc<> &alloc, llvm::BasicBlock *BB, Intersection predicate) {
     // because we may have inserted into predMap, we need to look up
     // again rather than being able to reuse anything from the
     // `visit`.
     if (auto f = find(BB); f != rend()) {
       f->second |= predicate;
     } else {
-      map.insert({BB, predicate});
+      map.insert({BB, Set{alloc, predicate}});
       // map.insert(std::make_pair(BB, Set(predicate)));
     }
   }
@@ -1282,13 +1284,13 @@ struct Map {
   // correctly
   [[nodiscard]] static auto
   descendBlock(BumpAlloc<> &alloc, Instruction::Cache &cache,
-               llvm::SmallPtrSet<llvm::BasicBlock *, 16> &visited,
-               Predicate::Map &predMap, llvm::BasicBlock *BBsrc,
-               llvm::BasicBlock *BBdst, Predicate::Intersection predicate,
-               llvm::BasicBlock *BBhead, llvm::Loop *L) -> Destination {
+               aset<llvm::BasicBlock *> &visited, Predicate::Map &predMap,
+               llvm::BasicBlock *BBsrc, llvm::BasicBlock *BBdst,
+               Predicate::Intersection predicate, llvm::BasicBlock *BBhead,
+               llvm::Loop *L) -> Destination {
     if (BBsrc == BBdst) {
       assert(!predMap.contains(BBsrc));
-      predMap.insert({BBsrc, predicate});
+      predMap.insert({BBsrc, Set{alloc, predicate}});
       return Destination::Reached;
     } else if (L && (!(L->contains(BBsrc)))) {
       // oops, we seem to have skipped the preheader and escaped the
@@ -1320,7 +1322,7 @@ struct Map {
     if (BI->isUnconditional()) {
       auto rc = descendBlock(alloc, cache, visited, predMap,
                              BI->getSuccessor(0), BBdst, predicate, BBhead, L);
-      if (rc == Destination::Reached) predMap.reach(BBsrc, predicate);
+      if (rc == Destination::Reached) predMap.reach(alloc, BBsrc, predicate);
       return rc;
     }
     // We have a conditional branch.
@@ -1340,7 +1342,7 @@ struct Map {
         //  we're now assuming that !cond
         predMap.assume(
           Predicate::Intersection(predInd, Predicate::Relation::False));
-        predMap.reach(BBsrc, predicate);
+        predMap.reach(alloc, BBsrc, predicate);
       }
       return rc1;
     } else if ((rc1 == Destination::Returned) ||
@@ -1349,11 +1351,11 @@ struct Map {
         //  we're now assuming that cond
         predMap.assume(
           Predicate::Intersection(predInd, Predicate::Relation::True));
-        predMap.reach(BBsrc, predicate);
+        predMap.reach(alloc, BBsrc, predicate);
       }
       return rc0;
     } else if (rc0 == rc1) {
-      if (rc0 == Destination::Reached) predMap.reach(BBsrc, predicate);
+      if (rc0 == Destination::Reached) predMap.reach(alloc, BBsrc, predicate);
       return rc0;
     } else return Destination::Unknown;
   }
@@ -1364,7 +1366,7 @@ struct Map {
           llvm::BasicBlock *start, llvm::BasicBlock *stop, llvm::Loop *L)
     -> std::optional<Map> {
     Predicate::Map pm;
-    llvm::SmallPtrSet<llvm::BasicBlock *, 16> visited;
+    aset<llvm::BasicBlock *> visited(alloc);
     if (descendBlock(alloc, cache, visited, pm, start, stop, {}, start, L) ==
         Destination::Reached)
       return pm;
@@ -1379,9 +1381,9 @@ inline auto Instruction::Cache::getInstruction(BumpAlloc<> &alloc,
                                                llvm::Instruction *instr)
   -> Instruction * {
   if (Instruction *i = completeInstruction(alloc, predMap, instr)) return i;
-  if (containsCycle(instr)) {
-    auto *i =
-      new (alloc) Instruction(Instruction::Intrinsic(instr), instr->getType());
+  if (containsCycle(alloc, instr)) {
+    auto *i = new (alloc)
+      Instruction(alloc, Instruction::Intrinsic(instr), instr->getType());
     llvmToInternalMap[instr] = i;
     return i;
   }
@@ -1417,12 +1419,19 @@ inline auto Instruction::Cache::getInstruction(BumpAlloc<> &alloc,
   -> Instruction * {
 
   if (auto *instr = llvm::dyn_cast<llvm::Instruction>(v)) {
-    if (containsCycle(instr)) {
+    if (containsCycle(alloc, instr)) {
     }
     return getInstruction(alloc, predMap, instr);
   }
   return getInstruction(alloc, v);
 }
+static_assert(
+  std::is_trivially_destructible_v<
+    std::variant<std::monostate, llvm::Instruction *, llvm::ConstantInt *,
+                 llvm::ConstantFP *, Address *>>);
+static_assert(std::is_trivially_destructible_v<Predicate::Set>);
+static_assert(
+  std::is_trivially_destructible_v<LinAlg::BumpPtrVector<Instruction *>>);
 /*
 struct InstructionBlock {
     // we tend to heap allocate InstructionBlocks with a bump allocator,
