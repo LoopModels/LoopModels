@@ -33,9 +33,21 @@ template <typename T, unsigned InitialCapacity = 8> struct BumpPtrVector {
     : mem(a.allocate(InitialCapacity)), Size(0), Capacity(InitialCapacity),
       Alloc(a.get_allocator()) {}
   constexpr BumpPtrVector(BumpAlloc<> &a) : BumpPtrVector(WBumpAlloc<T>(a)) {}
-  constexpr BumpPtrVector(const BumpPtrVector<T> &x) : BumpPtrVector(x.Alloc) {
-    resizeForOverwrite(x.Size);
+  constexpr BumpPtrVector(const BumpPtrVector<T> &x, WBumpAlloc<T> alloc)
+    : mem(alloc.allocate(x.size())), Size(x.size()), Capacity(x.size()),
+      Alloc(alloc.get_allocator()) {
     *this << x;
+  }
+  constexpr BumpPtrVector(const BumpPtrVector<T> &x)
+    : BumpPtrVector(x, x.get_allocator()) {}
+  constexpr BumpPtrVector(BumpPtrVector &&x, WBumpAlloc<T> alloc)
+    : Alloc{alloc.get_allocator()} {
+    mem = x.mem;
+    Size = x.Size;
+    Capacity = x.Capacity;
+    x.mem = nullptr;
+    x.Size = 0;
+    x.Capacity = 0;
   }
   BumpPtrVector &operator=(const BumpPtrVector &x) {
     if (this != &x) {
@@ -232,7 +244,7 @@ template <typename T, unsigned InitialCapacity = 8> struct BumpPtrVector {
   constexpr void extendOrAssertSize(size_t N) {
     if (N != Size) resizeForOverwrite(N);
   }
-  [[nodiscard]] constexpr auto get_allocator() -> WBumpAlloc<T> {
+  [[nodiscard]] constexpr auto get_allocator() const -> WBumpAlloc<T> {
     return Alloc;
   }
   constexpr auto push_back(T x) -> T & {

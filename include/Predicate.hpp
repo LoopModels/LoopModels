@@ -207,7 +207,10 @@ struct Set {
   Set(Set &&) = default;
   Set &operator=(Set &&other) {
     intersectUnion = std::move(other.intersectUnion);
-    // std::swap(intersectUnion, other.intersectUnion);
+    return *this;
+  };
+  Set &operator=(const Set &other) {
+    intersectUnion = other.intersectUnion;
     return *this;
   };
   // TODO: constexpr these when llvm::SmallVector supports it

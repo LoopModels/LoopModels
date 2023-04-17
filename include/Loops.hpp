@@ -338,7 +338,7 @@ struct AffineLoopNest
     // once we're done assembling these, we'll concatenate A and B
     size_t maxDepth = L->getLoopDepth();
     // size_t maxNumSymbols = BT->getExpressionSize();
-    A.resize(StridedDims{0, 1, 1 + BT->getExpressionSize()});
+    A.resize(StridedDims{0, 1, unsigned(1) + BT->getExpressionSize()});
     B.resize(StridedDims{0, maxDepth, maxDepth});
     llvm::SmallVector<const llvm::SCEV *, 3> symbols;
     size_t minDepth =
@@ -372,8 +372,8 @@ struct AffineLoopNest
     invariant(symbols.size(), size_t(A.numCol()));
     size_t depth = maxDepth - minDepth;
     unsigned numConstraints = unsigned(A.numRow()), N = unsigned(A.numCol());
-    NotNull<AffineLoopNest<false>> aln{
-      AffineLoopNest<false>::allocate(alloc, numConstraints, depth, symbols)};
+    NotNull<AffineLoopNest> aln{
+      AffineLoopNest::allocate(alloc, numConstraints, depth, symbols)};
     aln->getA()(_, _(0, N)) << A;
     // copy the included loops from B
     // we use outer <-> inner order, so we skip unsupported outer loops.
@@ -533,16 +533,15 @@ struct AffineLoopNest
 
   void addZeroLowerBounds(LinAlg::Alloc<int64_t> auto &alloc) {
     if (this->isEmpty()) return;
-    if constexpr (NonNegative) return pruneBounds(alloc);
+    if constexpr (NonNegative) return this->pruneBounds(alloc);
     // return initializeComparator();
     if (!numLoops) return;
     size_t M = numConstraints;
     numConstraints += numLoops;
     auto A{getA()};
-    A(_(M, end), _) = 0;
+    A(_(M, end), _) << 0;
     for (size_t i = 0; i < numLoops; ++i) A(M + i, end - numLoops + i) = 1;
-    // initializeComparator();
-    pruneBounds(alloc);
+    this->pruneBounds(alloc);
   }
 
   [[nodiscard]] constexpr auto getProgVars(size_t j) const

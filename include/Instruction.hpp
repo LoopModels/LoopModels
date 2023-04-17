@@ -1194,6 +1194,11 @@ template <typename T> struct llvm::DenseMapInfo<llvm::MutableArrayRef<T>> {
 namespace Predicate {
 struct Map {
   MapVector<llvm::BasicBlock *, Set> map;
+  constexpr Map(BumpAlloc<> &alloc) : map(alloc) {}
+  Map(const Map &) = default;
+  Map(Map &&) = default;
+  auto operator=(const Map &) -> Map & = default;
+  auto operator=(Map &&) -> Map & = default;
   [[nodiscard]] auto size() const -> size_t { return map.size(); }
   [[nodiscard]] auto isEmpty() const -> bool { return map.empty(); }
   [[nodiscard]] auto isDivergent() const -> bool {
@@ -1212,7 +1217,7 @@ struct Map {
   [[nodiscard]] auto getEntry() const -> llvm::BasicBlock * {
     return map.back().first;
   }
-  [[nodiscard]] auto get(llvm::BasicBlock *bb) -> Set & { return map[bb]; }
+  // [[nodiscard]] auto get(llvm::BasicBlock *bb) -> Set & { return map[bb]; }
   [[nodiscard]] auto find(llvm::BasicBlock *bb) { return map.find(bb); }
   [[nodiscard]] auto find(llvm::Instruction *inst) {
     return map.find(inst->getParent());
@@ -1362,11 +1367,13 @@ struct Map {
   descend(BumpAlloc<> &alloc, Instruction::Cache &cache,
           llvm::BasicBlock *start, llvm::BasicBlock *stop, llvm::Loop *L)
     -> std::optional<Map> {
-    Predicate::Map pm;
-    aset<llvm::BasicBlock *> visited(alloc);
+    auto p = alloc.checkpoint();
+    Map pm{alloc};
+    aset<llvm::BasicBlock *> visited{alloc};
     if (descendBlock(alloc, cache, visited, pm, start, stop, {}, start, L) ==
         Destination::Reached)
       return pm;
+    alloc.rollback(p);
     return std::nullopt;
   }
 

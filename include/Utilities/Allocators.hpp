@@ -397,7 +397,9 @@ public:
   constexpr WBumpAlloc(const WBumpAlloc &other) = default;
   template <typename U>
   constexpr WBumpAlloc(WBumpAlloc<U> other) : A(other.get_allocator()) {}
-  [[nodiscard]] constexpr auto get_allocator() -> NotNull<Alloc> { return A; }
+  [[nodiscard]] constexpr auto get_allocator() const -> NotNull<Alloc> {
+    return A;
+  }
   constexpr void deallocate(T *p, size_t n) { A->deallocate(p, n); }
   [[gnu::returns_nonnull]] constexpr auto allocate(size_t n) -> T * {
     return A->template allocate<T>(n);
