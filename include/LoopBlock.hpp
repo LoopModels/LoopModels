@@ -514,12 +514,11 @@ public:
   void connectGraph() {
     // assembles direct connections in node graph
     auto p = allocator.scope();
-    amap<llvm::User *, unsigned> userToMemory{
-      WBumpAlloc<std::pair<llvm::User *, unsigned>>{allocator}};
+    amap<llvm::User *, unsigned> userToMemory{allocator};
     for (unsigned i = 0; i < memory.size(); ++i)
       userToMemory.insert(std::make_pair(memory[i]->getInstruction(), i));
 
-    aset<llvm::User *> visited{WBumpAlloc<llvm::User *>(allocator)};
+    aset<llvm::User *> visited{allocator};
     nodes.reserve(calcNumStores());
     for (unsigned i = 0; i < memory.size(); ++i) {
       MemoryAccess *mai = memory[i];
@@ -833,8 +832,8 @@ public:
 #endif
   /// For now, we instantiate a dense simplex specifying the full problem.
   ///
-  /// Eventually, the plan is to generally avoid instantiating the omni-simplex
-  /// first, we solve individual problems
+  /// Eventually, the plan is to generally avoid instantiating the
+  /// omni-simplex first, we solve individual problems
   ///
   /// The order of variables in the simplex is:
   /// C, lambdas, slack, omegas, Phis, w, u
@@ -1082,8 +1081,8 @@ public:
     }
   }
   // Note this is based on the assumption that original loops are in
-  // outer<->inner order. With that assumption, using lexSign on the null space
-  // will tend to preserve the original traversal order.
+  // outer<->inner order. With that assumption, using lexSign on the null
+  // space will tend to preserve the original traversal order.
   [[nodiscard]] static constexpr auto lexSign(PtrVector<int64_t> x) -> int64_t {
     for (auto a : x)
       if (a) return 2 * (a > 0) - 1;

@@ -120,7 +120,8 @@ public:
       NoWrapRewriter nwr(*SE);
       pushLoopTree(loopForests, nullptr, revLI, H, E, nwr);
     }
-    for (auto &forest : loopForests) forest->addZeroLowerBounds(loopMap);
+    for (auto &forest : loopForests)
+      forest->addZeroLowerBounds(allocator, loopMap);
   }
   ///
   /// pushLoopTree
@@ -222,8 +223,8 @@ public:
       // we're at the bottom of the recursion
       if (auto predMapAbridged =
             Predicate::Map::descend(allocator, instrCache, H, E, L)) {
-        auto *newTree = new (allocator)
-          LoopTree{L, nwr.visit(BT), *SE, {std::move(*predMapAbridged)}};
+        auto *newTree = new (allocator) LoopTree{
+          allocator, L, nwr.visit(BT), *SE, {std::move(*predMapAbridged)}};
         pForest.push_back(newTree);
         return 1;
       }
@@ -376,14 +377,14 @@ public:
     llvm::SmallVector<const llvm::SCEV *, 3> subscripts, sizes;
     llvm::delinearize(*SE, accessFn, subscripts, sizes, elSize);
     assert(subscripts.size() == sizes.size());
-    AffineLoopNest<true> &aln = loopMap[L]->affineLoop;
+    AffineLoopNest<true> *aln = loopMap[L]->affineLoop;
     if (sizes.size() == 0) {
       LT.memAccesses.push_back(MemoryAccess::construct(
-        allocator, basePointer, aln, loadOrStore, omegas));
+        allocator, basePointer, *aln, loadOrStore, omegas));
       ++omegas.back();
       return false;
     }
-    size_t numLoops{aln.getNumLoops()};
+    size_t numLoops{aln->getNumLoops()};
     // numLoops x arrayDim
     // IntMatrix R(numLoops, subscripts.size());
     size_t numPeeled = L->getLoopDepth() - numLoops;
@@ -439,7 +440,7 @@ public:
       Rt.truncate(Col{numLoops - numExtraLoopsToPeel});
     }
     LT.memAccesses.push_back(MemoryAccess::construct(
-      allocator, basePointer, aln, loadOrStore, Rt,
+      allocator, basePointer, *aln, loadOrStore, Rt,
       {std::move(sizes), std::move(symbolicOffsets)}, Bt, omegas));
     ++omegas.back();
     return false;
@@ -544,7 +545,7 @@ public:
   void peelOuterLoops(LoopTree &LT, size_t numToPeel) {
     for (auto SL : LT) peelOuterLoops(*SL, numToPeel);
     for (auto &MA : LT.memAccesses) MA->peelLoops(numToPeel);
-    LT.affineLoop.removeOuterMost(numToPeel, LT.loop, *SE);
+    LT.affineLoop->removeOuterMost(numToPeel, LT.loop, *SE);
   }
   // conditionOnLoop(llvm::Loop *L)
   // means to remove the loop L, and all those exterior to it.

@@ -147,3 +147,5 @@ private:
 };
 template <typename T> NotNull(T &) -> NotNull<T>;
 template <typename T> NotNull(T *) -> NotNull<T *>;
+static_assert(std::is_trivially_destructible_v<NotNull<size_t>>);
+static_assert(std::is_trivially_copy_constructible_v<NotNull<size_t>>);

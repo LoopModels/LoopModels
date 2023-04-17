@@ -3,6 +3,7 @@
 #include "./Address.hpp"
 #include "./Predicate.hpp"
 #include "Containers/BumpMapSet.hpp"
+#include "Containers/MapVector.hpp"
 #include "Math/BumpVector.hpp"
 #include "Utilities/Allocators.hpp"
 #include <algorithm>
@@ -1192,7 +1193,7 @@ template <typename T> struct llvm::DenseMapInfo<llvm::MutableArrayRef<T>> {
 
 namespace Predicate {
 struct Map {
-  llvm::MapVector<llvm::BasicBlock *, Set> map;
+  MapVector<llvm::BasicBlock *, Set> map;
   [[nodiscard]] auto size() const -> size_t { return map.size(); }
   [[nodiscard]] auto isEmpty() const -> bool { return map.empty(); }
   [[nodiscard]] auto isDivergent() const -> bool {
@@ -1212,19 +1213,15 @@ struct Map {
     return map.back().first;
   }
   [[nodiscard]] auto get(llvm::BasicBlock *bb) -> Set & { return map[bb]; }
-  [[nodiscard]] auto find(llvm::BasicBlock *bb)
-    -> llvm::MapVector<llvm::BasicBlock *, Set>::iterator {
-    return map.find(bb);
-  }
-  [[nodiscard]] auto find(llvm::Instruction *inst)
-    -> llvm::MapVector<llvm::BasicBlock *, Set>::iterator {
+  [[nodiscard]] auto find(llvm::BasicBlock *bb) { return map.find(bb); }
+  [[nodiscard]] auto find(llvm::Instruction *inst) {
     return map.find(inst->getParent());
   }
   // we insert into map in reverse order, so our iterators reverse
-  [[nodiscard]] auto begin() -> decltype(map.rbegin()) { return map.rbegin(); }
-  [[nodiscard]] auto end() -> decltype(map.rend()) { return map.rend(); }
-  [[nodiscard]] auto rbegin() -> decltype(map.begin()) { return map.begin(); }
-  [[nodiscard]] auto rend() -> decltype(map.end()) { return map.end(); }
+  [[nodiscard]] auto begin() { return std::reverse_iterator(map.end()); }
+  [[nodiscard]] auto end() { return std::reverse_iterator(map.begin()); }
+  [[nodiscard]] auto rbegin() { return map.begin(); }
+  [[nodiscard]] auto rend() { return map.end(); }
   [[nodiscard]] auto operator[](llvm::BasicBlock *bb) -> std::optional<Set> {
     auto it = map.find(bb);
     if (it == map.end()) return std::nullopt;

@@ -32,7 +32,7 @@ struct LoopTree {
 
   // in addition to requiring simplify form, we require a single exit block
   [[no_unique_address]] llvm::SmallVector<Predicate::Map> paths;
-  [[no_unique_address]] Optional<AffineLoopNest<true> *> affineLoop;
+  [[no_unique_address]] AffineLoopNest<true> *affineLoop;
   [[no_unique_address]] Optional<LoopTree *> parentLoop{nullptr};
   [[no_unique_address]] llvm::SmallVector<NotNull<MemoryAccess>> memAccesses{};
 
