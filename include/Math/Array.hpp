@@ -1098,11 +1098,16 @@ struct ManagedArray : ReallocView<T, S, ManagedArray<T, S, N, A, U>, A, U> {
   }
   constexpr ManagedArray(ManagedArray &&b) noexcept
     : BaseT{memory.data(), b.dim(), U(N), b.get_allocator()} {
-    if (b.isSmall()) { // copy
-      std::copy_n(b.data(), size_t(b.dim()), this->data());
-    } else {           // steal
-      this->ptr = b.data();
+    if constexpr (N > 0) {
+      if (b.isSmall()) { // copy
+        std::copy_n(b.data(), size_t(b.dim()), this->data());
+      } else {           // steal
+        this->ptr = b.data();
+        this->capacity = b.getCapacity();
+      }
+    } else {
       this->capacity = b.getCapacity();
+      if (this->capacity) this->ptr = b.data();
     }
     b.resetNoFree();
   }

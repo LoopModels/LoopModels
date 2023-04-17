@@ -115,7 +115,6 @@ public:
     // But we could consider specializing on top level vs not.
     llvm::SmallVector<llvm::Loop *> revLI{RLIB, RLIE + 1};
     // Track position within the loop nest
-    llvm::SmallVector<unsigned> omega;
     {
       NoWrapRewriter nwr(*SE);
       pushLoopTree(loopForests, nullptr, revLI, H, E, nwr);

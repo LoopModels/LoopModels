@@ -123,14 +123,14 @@ else()
   target_compile_options(${PROJECT_NAME} PRIVATE -fno-exceptions)
 endif()
 
-if(NOT ((USE_SANITIZER MATCHES "([Uu]ndefined)") OR (USE_SANITIZER MATCHES
-                                                     "([Aa]ddress);([Uu]ndefined)"))
+if((USE_SANITIZER MATCHES "([Uu]ndefined)") OR (USE_SANITIZER MATCHES "([Aa]ddress);([Uu]ndefined)"
+                                               )
 )
   # we use rtti, which is incompatible with the vptr check:
   # https://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html
-  target_compile_options(${PROJECT_NAME} PRIVATE -fno-rtti)
-else()
   target_compile_options(${PROJECT_NAME} PRIVATE -fno-omit-frame-pointer -fno-sanitize-recover)
+else()
+  target_compile_options(${PROJECT_NAME} PRIVATE -fno-rtti)
 endif()
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
@@ -155,8 +155,8 @@ if(NOT TEST_INSTALLED_VERSION)
     target_compile_options(LoopModels PUBLIC /W4 /WX)
   endif()
 endif()
-target_compile_options(LoopModels PRIVATE -D_GLIBCXX_ASSERTIONS)
-target_compile_options(${PROJECT_NAME} PRIVATE -D_GLIBCXX_ASSERTIONS)
+target_compile_options(LoopModels PRIVATE -D_GLIBCXX_DEBUG)
+target_compile_options(${PROJECT_NAME} PRIVATE -D_GLIBCXX_DEBUG)
 
 # ---- code coverage ----
 
