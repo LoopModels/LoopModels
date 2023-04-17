@@ -17,7 +17,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <limits>
-#include <llvm/ADT/DenseMap.h>
+
 #include <llvm/ADT/Optional.h>
 #include <llvm/ADT/SmallVector.h>
 #include <llvm/Analysis/ScalarEvolution.h>

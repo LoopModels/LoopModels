@@ -1,8 +1,0 @@
-leak:llvm::StringMapEntry<llvm::Value*>::Create<llvm::MallocAllocator>
-leak:llvm::SmallVectorBase<unsigned int>::grow_pod
-leak:llvm::DenseMap<llvm::BasicBlock*, unsigned int, llvm::DenseMapInfo<llvm::BasicBlock*, void>, llvm::detail::DenseMapPair<llvm::BasicBlock*, unsigned int> >::allocateBuckets(unsigned int)
-leak:std::__new_allocator<std::pair<llvm::BasicBlock*, Predicate::Set> >::allocate(unsigned long, void const*)
-leak:llvm::SmallVectorBase<unsigned int>::mallocForGrow(unsigned long, unsigned long, unsigned long&)
-leak:Builder::Builder(State*, BuildConfig const&, BuildLog*, DepsLog*, DiskInterface*)
-leak:llvm::PassManager<llvm::Function, llvm::AnalysisManager<llvm::Function>>::run(llvm::Function&, llvm::AnalysisManager<llvm::Function>&)
-leak:/usr/bin/ninja

@@ -11,7 +11,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <llvm/ADT/ArrayRef.h>
-#include <llvm/ADT/DenseMap.h>
+
 #include <llvm/ADT/SmallPtrSet.h>
 #include <llvm/ADT/SmallVector.h>
 #include <llvm/IR/BasicBlock.h>
@@ -44,7 +44,7 @@ inline void merge(aset<Instruction *> &merged, aset<Instruction *> &toMerge) {
   merged.insert(toMerge.begin(), toMerge.end());
 }
 struct ReMapper {
-  llvm::DenseMap<Instruction *, Instruction *> reMap;
+  map<Instruction *, Instruction *> reMap;
   auto operator[](Instruction *I) -> Instruction * {
     if (auto f = reMap.find(I); f != reMap.end()) return f->second;
     return I;

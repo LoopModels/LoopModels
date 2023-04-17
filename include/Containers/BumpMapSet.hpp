@@ -3,6 +3,10 @@
 #include "Utilities/Allocators.hpp"
 #include <ankerl/unordered_dense.h>
 
+template <typename K> using set = ankerl::unordered_dense::set<K>;
+template <typename K, typename V>
+using map = ankerl::unordered_dense::map<K, V>;
+
 template <typename K, typename V>
 struct amap
   : ankerl::unordered_dense::map<K, V, ankerl::unordered_dense::hash<K>,

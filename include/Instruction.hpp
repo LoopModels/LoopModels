@@ -4,16 +4,17 @@
 #include "./Predicate.hpp"
 #include "Containers/BumpMapSet.hpp"
 #include "Containers/MapVector.hpp"
+#include "Math/Array.hpp"
 #include "Math/BumpVector.hpp"
 #include "Utilities/Allocators.hpp"
 #include <algorithm>
 #include <concepts>
 #include <cstddef>
 #include <cstdint>
+#include <limits>
 #include <llvm/ADT/APInt.h>
 #include <llvm/ADT/ArrayRef.h>
-#include <llvm/ADT/DenseMap.h>
-#include <llvm/ADT/DenseMapInfo.h>
+
 #include <llvm/ADT/MapVector.h>
 #include <llvm/ADT/SmallPtrSet.h>
 #include <llvm/ADT/SmallVector.h>
@@ -35,6 +36,17 @@
 #include <tuple>
 #include <utility>
 #include <variant>
+
+template <typename T> struct std::hash<MutPtrVector<T>> {
+  std::size_t operator()(const MutPtrVector<T> &s) const noexcept {
+    if (s.empty()) return 0;
+    std::size_t h = std::hash<T>{}(*s.begin());
+    for (auto it = std::next(s.begin()); it != s.end(); ++it)
+      h = llvm::detail::combineHashValue(h, std::hash<T>{}(*it));
+    // h ^= std::hash<T>{}(*it) + 0x9e3779b9 + (h << 6) + (h >> 2);
+    return h;
+  }
+};
 
 auto containsCycle(const llvm::Instruction *, aset<llvm::Instruction const *> &,
                    const llvm::Value *) -> bool;
@@ -134,20 +146,16 @@ struct Instruction {
       return opcode == other.opcode && intrin == other.intrin;
     }
   };
-  struct IdentifierEmpty {
-    constexpr auto operator==(const IdentifierEmpty &) const -> bool {
-      return true;
+  using Identifier = std::variant<Intrinsic, llvm::Function *, int64_t, double>;
+  struct UniqueIdentifier {
+    Identifier idtf;
+    MutPtrVector<Instruction *> operands;
+    constexpr auto operator==(const UniqueIdentifier &other) const -> bool {
+      return idtf == other.idtf && operands == other.operands;
     }
   };
-  struct IdentifierTombstone {
-    constexpr auto operator==(const IdentifierTombstone &) const -> bool {
-      return true;
-    }
-  };
-  using Identifier = std::variant<Intrinsic, llvm::Function *, int64_t, double,
-                                  IdentifierEmpty, IdentifierTombstone>;
-  using UniqueIdentifier =
-    std::pair<Identifier, llvm::MutableArrayRef<Instruction *>>;
+  // using UniqueIdentifier = std::pair<Identifier, MutPtrVector<Instruction
+  // *>>;
 
   [[no_unique_address]] Identifier idtf;
   // Intrinsic id;
@@ -157,13 +165,14 @@ struct Instruction {
                                      Address *>
     ptr;
   [[no_unique_address]] Predicate::Set predicates;
-  [[no_unique_address]] llvm::MutableArrayRef<Instruction *> operands;
+  [[no_unique_address]] MutPtrVector<Instruction *> operands{nullptr,
+                                                             unsigned(0)};
   // [[no_unique_address]] llvm::SmallVector<Instruction *> users;
   [[no_unique_address]] aset<Instruction *> users;
   /// costs[i] == cost for vector-width 2^i
   [[no_unique_address]] LinAlg::BumpPtrVector<RecipThroughputLatency> costs;
 
-  void setOperands(llvm::MutableArrayRef<Instruction *> ops) {
+  void setOperands(MutPtrVector<Instruction *> ops) {
     operands = ops;
     for (auto op : ops) op->users.insert(this);
   }
@@ -220,10 +229,10 @@ struct Instruction {
   }
 
   [[nodiscard]] auto getType() const -> llvm::Type * { return type; }
-  [[nodiscard]] auto getOperands() -> llvm::MutableArrayRef<Instruction *> {
+  [[nodiscard]] auto getOperands() -> MutPtrVector<Instruction *> {
     return operands;
   }
-  [[nodiscard]] auto getOperands() const -> llvm::ArrayRef<Instruction *> {
+  [[nodiscard]] auto getOperands() const -> PtrVector<Instruction *> {
     return operands;
   }
   [[nodiscard]] auto getOperand(size_t i) -> Instruction * {
@@ -276,7 +285,7 @@ struct Instruction {
 
   struct Predicates {
     [[no_unique_address]] Predicate::Set predicates;
-    [[no_unique_address]] llvm::MutableArrayRef<Instruction *> instr;
+    [[no_unique_address]] MutPtrVector<Instruction *> instr;
   };
   // llvm::TargetTransformInfo &TTI;
 
@@ -289,13 +298,11 @@ struct Instruction {
   // Instruction(UniqueIdentifier uid)
   // : id(std::get<0>(uid)), operands(std::get<1>(uid)) {}
   Instruction(BumpAlloc<> &alloc, UniqueIdentifier uid, llvm::Type *typ)
-    : idtf(std::get<0>(uid)), type(typ), predicates(alloc),
-      operands(std::get<1>(uid)), users(alloc), costs(alloc) {}
+    : idtf(uid.idtf), type(typ), predicates(alloc), operands(uid.operands),
+      users(alloc), costs(alloc) {}
   struct Cache {
-    [[no_unique_address]] llvm::DenseMap<llvm::Value *, Instruction *>
-      llvmToInternalMap;
-    [[no_unique_address]] llvm::DenseMap<UniqueIdentifier, Instruction *>
-      argMap;
+    [[no_unique_address]] map<llvm::Value *, Instruction *> llvmToInternalMap;
+    [[no_unique_address]] map<UniqueIdentifier, Instruction *> argMap;
     [[no_unique_address]] llvm::SmallVector<Instruction *> predicates;
     // tmp is used in case we don't need an allocation
     // [[no_unique_address]] Instruction *tmp{nullptr};
@@ -317,25 +324,24 @@ struct Instruction {
       return nullptr;
     }
     auto operator[](UniqueIdentifier uid) -> Instruction * {
-      auto f = argMap.find(uid);
-      if (f != argMap.end()) return f->second;
+      if (auto f = argMap.find(uid); f != argMap.end()) return f->second;
       return nullptr;
     }
     auto argMapLoopup(Identifier idt) -> Instruction * {
-      UniqueIdentifier uid{idt, {}};
+      UniqueIdentifier uid{idt, {nullptr, unsigned(0)}};
       return (*this)[uid];
     }
     auto argMapLoopup(Identifier idt, Instruction *op) -> Instruction * {
       std::array<Instruction *, 1> ops;
       ops[0] = op;
-      llvm::MutableArrayRef<Instruction *> opsRef(ops);
+      MutPtrVector<Instruction *> opsRef(ops);
       UniqueIdentifier uid{idt, opsRef};
       return (*this)[uid];
     }
     template <size_t N>
     auto argMapLoopup(Identifier idt, std::array<Instruction *, N> ops)
       -> Instruction * {
-      llvm::MutableArrayRef<Instruction *> opsRef(ops);
+      MutPtrVector<Instruction *> opsRef(ops);
       UniqueIdentifier uid{idt, opsRef};
       return (*this)[uid];
     }
@@ -367,7 +373,7 @@ struct Instruction {
       return i;
     }
     auto getInstruction(BumpAlloc<> &alloc, Identifier idt, llvm::Type *typ) {
-      UniqueIdentifier uid{idt, {}};
+      UniqueIdentifier uid{idt, {nullptr, unsigned(0)}};
       return getInstruction(alloc, uid, typ);
     }
     auto getInstruction(BumpAlloc<> &alloc, Identifier idt, Instruction *op0,
@@ -376,7 +382,7 @@ struct Instruction {
       if (auto *i = argMapLoopup(idt, op0)) return i;
       auto **opptr = alloc.allocate<Instruction *>(1);
       opptr[0] = op0;
-      llvm::MutableArrayRef<Instruction *> ops(opptr, 1);
+      MutPtrVector<Instruction *> ops(opptr, 1);
       UniqueIdentifier uid{idt, ops};
       return createInstruction(alloc, uid, typ);
     }
@@ -387,7 +393,7 @@ struct Instruction {
       if (auto *i = argMapLoopup(idt, ops)) return i;
       auto **opptr = alloc.allocate<Instruction *>(2);
       for (size_t n = 0; n < N; n++) opptr[n] = ops[n];
-      llvm::MutableArrayRef<Instruction *> mops(opptr, N);
+      MutPtrVector<Instruction *> mops(opptr, N);
       UniqueIdentifier uid{idt, mops};
       return createInstruction(alloc, uid, typ);
     }
@@ -427,14 +433,14 @@ struct Instruction {
     }
     auto createConstant(BumpAlloc<> &alloc, llvm::Type *typ, int64_t c)
       -> Instruction * {
-      UniqueIdentifier uid{Identifier(c), {}};
+      UniqueIdentifier uid{Identifier(c), {nullptr, unsigned(0)}};
       auto argMatch = argMap.find(uid);
       if (argMatch != argMap.end()) return argMatch->second;
       return new (alloc) Instruction(alloc, uid, typ);
     }
     auto getConstant(BumpAlloc<> &alloc, llvm::Type *typ, int64_t c)
       -> Instruction * {
-      UniqueIdentifier uid{Identifier(c), {}};
+      UniqueIdentifier uid{Identifier(c), {nullptr, unsigned(0)}};
       if (auto *i = (*this)[uid]) return i;
       return createConstant(alloc, typ, c);
     }
@@ -533,34 +539,34 @@ struct Instruction {
                                                 Cache &cache,
                                                 llvm::Instruction *v)
     -> UniqueIdentifier {
-    return std::make_pair(Intrinsic(v), getOperands(alloc, cache, v));
+    return {Intrinsic(v), getOperands(alloc, cache, v)};
   }
   [[nodiscard]] auto getUniqueIdentifier(BumpAlloc<> &alloc, Cache &cache)
     -> UniqueIdentifier {
     llvm::Instruction *J = getInstruction();
-    return std::make_pair(idtf, getOperands(alloc, cache, J));
+    return {idtf, getOperands(alloc, cache, J)};
   }
   [[nodiscard]] auto static getUniqueIdentifier(BumpAlloc<> &alloc,
                                                 Cache &cache, llvm::Value *v)
     -> UniqueIdentifier {
     if (auto *J = llvm::dyn_cast<llvm::Instruction>(v))
       return getUniqueIdentifier(alloc, cache, J);
-    return {Intrinsic(v), {}};
+    return {Intrinsic(v), {nullptr, unsigned(0)}};
   }
   [[nodiscard]] static auto
   getUniqueIdentifier(BumpAlloc<> &alloc, Predicate::Map &predMap, Cache &cache,
                       llvm::Instruction *J) -> UniqueIdentifier {
-    return std::make_pair(Intrinsic(J), getOperands(alloc, predMap, cache, J));
+    return {Intrinsic(J), getOperands(alloc, predMap, cache, J)};
   }
   [[nodiscard]] auto getUniqueIdentifier(BumpAlloc<> &alloc,
                                          Predicate::Map &predMap, Cache &cache)
     -> UniqueIdentifier {
     llvm::Instruction *J = getInstruction();
-    return std::make_pair(idtf, getOperands(alloc, predMap, cache, J));
+    return {idtf, getOperands(alloc, predMap, cache, J)};
   }
   [[nodiscard]] static auto getOperands(BumpAlloc<> &alloc, Cache &cache,
                                         llvm::Instruction *instr)
-    -> llvm::MutableArrayRef<Instruction *> {
+    -> MutPtrVector<Instruction *> {
     if (llvm::isa<llvm::LoadInst>(instr)) return {nullptr, size_t(0)};
     auto ops{instr->operands()};
     auto OI = ops.begin();
@@ -576,7 +582,7 @@ struct Instruction {
   [[nodiscard]] static auto getOperands(BumpAlloc<> &alloc,
                                         Predicate::Map &BBpreds, Cache &cache,
                                         llvm::Instruction *instr)
-    -> llvm::MutableArrayRef<Instruction *> {
+    -> MutPtrVector<Instruction *> {
     if (llvm::isa<llvm::LoadInst>(instr)) return {nullptr, size_t(0)};
     auto ops{instr->operands()};
     auto OI = ops.begin();
@@ -1100,94 +1106,20 @@ struct Instruction {
   }
 };
 
-/// Provide DenseMapInfo for Identifier.
-template <> struct llvm::DenseMapInfo<Instruction::Intrinsic, void> {
-  static inline auto getEmptyKey() -> ::Instruction::Intrinsic {
-    auto K = llvm::DenseMapInfo<llvm::Intrinsic::ID>::getEmptyKey();
-    return ::Instruction::Intrinsic{::Instruction::Intrinsic::OpCode{K},
-                                    ::Instruction::Intrinsic::Intrin{K}};
+template <> struct std::hash<Instruction::Intrinsic> {
+  std::size_t operator()(const Instruction::Intrinsic &s) const noexcept {
+    return llvm::detail::combineHashValue(std::hash<unsigned>{}(s.opcode.id),
+                                          std::hash<unsigned>{}(s.intrin.id));
   }
+};
 
-  static inline auto getTombstoneKey() -> ::Instruction::Intrinsic {
-    auto K = llvm::DenseMapInfo<llvm::Intrinsic::ID>::getTombstoneKey();
-    return ::Instruction::Intrinsic{::Instruction::Intrinsic::OpCode{K},
-                                    ::Instruction::Intrinsic::Intrin{K}};
-  }
-
-  static auto getHashValue(const ::Instruction::Intrinsic &Key) -> unsigned {
+template <> struct std::hash<Instruction::UniqueIdentifier> {
+  std::size_t
+  operator()(const Instruction::UniqueIdentifier &s) const noexcept {
     return llvm::detail::combineHashValue(
-      llvm::DenseMapInfo<llvm::Intrinsic::ID>::getHashValue(Key.opcode.id),
-      llvm::DenseMapInfo<llvm::Intrinsic::ID>::getHashValue(Key.intrin.id));
-  }
-
-  static auto isEqual(const ::Instruction::Intrinsic &LHS,
-                      const ::Instruction::Intrinsic &RHS) -> bool {
-    return LHS == RHS;
-  }
-};
-template <> struct llvm::DenseMapInfo<::Instruction::Identifier> {
-  static inline auto getEmptyKey() -> ::Instruction::Identifier {
-    return ::Instruction::IdentifierEmpty{};
-  }
-
-  static inline auto getTombstoneKey() -> ::Instruction::Identifier {
-    return ::Instruction::IdentifierTombstone{};
-  }
-
-  struct Hash {
-    template <typename T> auto operator()(T &Key) const -> unsigned {
-      using CVT = std::remove_cvref_t<T>;
-      if constexpr (std::same_as<CVT, double>) {
-        return llvm::DenseMapInfo<uint64_t>::getHashValue(
-          static_cast<uint64_t>(Key));
-      } else if constexpr (std::same_as<CVT, ::Instruction::IdentifierEmpty>) {
-        return 0;
-      } else if constexpr (std::same_as<CVT,
-                                        ::Instruction::IdentifierTombstone>) {
-        return 1;
-      } else {
-        return llvm::DenseMapInfo<CVT>::getHashValue(Key);
-      }
-    }
-  };
-
-  static auto getHashValue(const ::Instruction::Identifier &Key) -> unsigned {
-    return std::visit<unsigned>(Hash{}, Key);
-  }
-  struct VariantEqual {
-    const ::Instruction::Identifier &rhs;
-    template <typename T> auto operator()(T &Key) const -> bool {
-      if (T *RHS = std::get_if<std::remove_cvref_t<T>>(&rhs))
-        return *RHS == Key;
-      return false;
-    }
-  };
-  static auto isEqual(const ::Instruction::Identifier &LHS,
-                      const ::Instruction::Identifier &RHS) -> bool {
-    return std::visit(VariantEqual{RHS}, LHS);
-  }
-};
-template <typename T> struct llvm::DenseMapInfo<llvm::MutableArrayRef<T>> {
-  static inline auto getEmptyKey() -> llvm::MutableArrayRef<T> {
-    return {llvm::DenseMapInfo<T *>::getEmptyKey(), size_t(0)};
-  }
-
-  static inline auto getTombstoneKey() -> llvm::MutableArrayRef<T> {
-    return {llvm::DenseMapInfo<T *>::getTombstoneKey(), size_t(0)};
-  }
-
-  static auto getHashValue(llvm::MutableArrayRef<T> Key) -> unsigned {
-    if (Key.empty()) return 0;
-    unsigned hash = llvm::DenseMapInfo<T>::getHashValue(Key.front());
-    for (size_t n = 1; n < Key.size(); ++n)
-      hash = llvm::detail::combineHashValue(
-        hash, llvm::DenseMapInfo<T>::getHashValue(Key[n]));
-    return hash;
-  }
-
-  static auto isEqual(llvm::MutableArrayRef<T> LHS,
-                      llvm::MutableArrayRef<T> RHS) -> bool {
-    return LHS == RHS;
+      std::hash<std::variant<Instruction::Intrinsic, llvm::Function *, int64_t,
+                             double>>{}(s.idtf),
+      std::hash<MutPtrVector<Instruction *>>{}(s.operands));
   }
 };
 
@@ -1411,7 +1343,7 @@ inline auto Instruction::Cache::completeInstruction(BumpAlloc<> &alloc,
     i->predicates = std::move(*pred);
     // we use dummy operands to avoid infinite recursion
     // the i->operands.size() > 0 check above will block this
-    i->operands = llvm::MutableArrayRef<Instruction *>{nullptr, 1};
+    i->operands = MutPtrVector<Instruction *>{nullptr, 1};
     i->operands = getOperands(alloc, predMap, *this, J);
     for (auto *op : i->operands) op->users.insert(i);
   }

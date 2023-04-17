@@ -67,6 +67,7 @@ template <class T, class S> struct Array {
   using const_pointer = const T *;
   using concrete = std::true_type;
 
+  constexpr Array() = default;
   constexpr Array(const Array &) = default;
   constexpr Array(Array &&) noexcept = default;
   constexpr auto operator=(const Array &) -> Array & = default;

@@ -68,7 +68,7 @@ public:
   // NDEBUG`
   // [[no_unique_address]] llvm::SmallVector<LoopTree, 0> loopTrees;
   [[no_unique_address]] llvm::SmallVector<NotNull<LoopTree>> loopForests;
-  [[no_unique_address]] llvm::DenseMap<llvm::Loop *, LoopTree *> loopMap;
+  [[no_unique_address]] map<llvm::Loop *, LoopTree *> loopMap;
   // [[no_unique_address]] BlockPredicates predicates;
   // llvm::AssumptionCache *AC;
   [[no_unique_address]] const llvm::TargetLibraryInfo *TLI;

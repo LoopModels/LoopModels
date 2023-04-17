@@ -1140,7 +1140,7 @@ TEST(MeanStDevTest0, BasicAssertions) {
   std::optional<BitSet<std::array<uint64_t, 2>>> optDeps =
     iOuterLoopNest.optimize();
   EXPECT_TRUE(optDeps.has_value());
-  llvm::DenseMap<MemoryAccess *, size_t> memAccessIds;
+  map<MemoryAccess *, size_t> memAccessIds;
   MutPtrVector<MemoryAccess *> mem = iOuterLoopNest.getMemoryAccesses();
   for (size_t jj = 0; jj < mem.size(); ++jj) memAccessIds[mem[jj]] = jj;
   for (auto &e : iOuterLoopNest.getEdges()) {
@@ -1403,7 +1403,7 @@ TEST(DoubleDependenceTest, BasicAssertions) {
 
   EXPECT_TRUE(loopBlock.optimize().has_value());
   EXPECT_EQ(loopBlock.numEdges(), 2);
-  llvm::DenseMap<MemoryAccess *, size_t> memAccessIds;
+  map<MemoryAccess *, size_t> memAccessIds;
   for (size_t jj = 0; jj < loopBlock.numMemoryAccesses(); ++jj)
     memAccessIds[loopBlock.getMemoryAccess(jj)] = jj;
   for (auto &e : loopBlock.getEdges()) {

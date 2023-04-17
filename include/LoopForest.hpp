@@ -8,7 +8,7 @@
 #include <cstddef>
 #include <iterator>
 #include <limits>
-#include <llvm/ADT/DenseMap.h>
+
 #include <llvm/ADT/SmallVector.h>
 #include <llvm/Analysis/LoopInfo.h>
 #include <llvm/Analysis/ScalarEvolution.h>
@@ -92,7 +92,7 @@ struct LoopTree {
   [[gnu::used]] void dump() const { llvm::errs() << *this; }
 #endif
   void addZeroLowerBounds(BumpAlloc<> &alloc,
-                          llvm::DenseMap<llvm::Loop *, LoopTree *> &loopMap) {
+                          map<llvm::Loop *, LoopTree *> &loopMap) {
     affineLoop->addZeroLowerBounds(alloc);
     for (auto tree : subLoops) {
       tree->addZeroLowerBounds(alloc, loopMap);
