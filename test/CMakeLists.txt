@@ -155,8 +155,10 @@ if(NOT TEST_INSTALLED_VERSION)
     target_compile_options(LoopModels PUBLIC /W4 /WX)
   endif()
 endif()
-target_compile_options(LoopModels PRIVATE -D_GLIBCXX_DEBUG)
-target_compile_options(${PROJECT_NAME} PRIVATE -D_GLIBCXX_DEBUG)
+# target_compile_options(LoopModels PRIVATE -D_GLIBCXX_DEBUG) target_compile_options(${PROJECT_NAME}
+# PRIVATE -D_GLIBCXX_DEBUG)
+target_compile_options(LoopModels PRIVATE -D_GLIBCXX_ASSERTIONS)
+target_compile_options(${PROJECT_NAME} PRIVATE -D_GLIBCXX_ASSERTIONS)
 
 # ---- code coverage ----
 

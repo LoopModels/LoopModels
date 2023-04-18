@@ -30,8 +30,8 @@ class TestLoopFunction {
   llvm::Function *F;
   llvm::DataLayout dl;
   llvm::TargetTransformInfo TTI;
-  llvm::Triple targetTripple;
-  llvm::TargetLibraryInfoImpl TLII;
+  llvm::Triple targetTripple{};
+  // llvm::TargetLibraryInfoImpl TLII;
   llvm::TargetLibraryInfo TLI;
   llvm::AssumptionCache AC;
   llvm::ScalarEvolution SE;
@@ -92,8 +92,9 @@ public:
                                  llvm::SmallVector<llvm::Type *, 0>(), false)},
       F{llvm::Function::Create(
         FT, llvm::GlobalValue::LinkageTypes::ExternalLinkage, "foo", mod)},
-      dl{mod}, TTI{dl}, TLII{targetTripple}, TLI{TLII}, AC{*F, &TTI},
-      SE{*F, TLI, AC, DT, LI}, BB{llvm::BasicBlock::Create(ctx, "entry", F)},
+      dl{mod}, TTI{dl}, TLI{llvm::TargetLibraryInfoImpl{targetTripple}, F},
+      AC{*F, &TTI}, SE{*F, TLI, AC, DT, LI},
+      BB{llvm::BasicBlock::Create(ctx, "entry", F)},
       builder{llvm::IRBuilder(BB)} {
 
     auto fmf{llvm::FastMathFlags()};
