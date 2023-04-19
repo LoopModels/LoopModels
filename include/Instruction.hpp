@@ -1127,8 +1127,8 @@ namespace Predicate {
 struct Map {
   MapVector<llvm::BasicBlock *, Set> map;
   constexpr Map(BumpAlloc<> &alloc) : map(alloc) {}
-  Map(const Map &) = default;
-  Map(Map &&) = default;
+  Map(const Map &x) : map(x.map){};
+  Map(Map &&x) : map{std::move(x.map)} {}
   auto operator=(const Map &) -> Map & = default;
   auto operator=(Map &&) -> Map & = default;
   [[nodiscard]] auto size() const -> size_t { return map.size(); }

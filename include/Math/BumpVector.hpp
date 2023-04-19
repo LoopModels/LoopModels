@@ -49,6 +49,13 @@ template <typename T, unsigned InitialCapacity = 8> struct BumpPtrVector {
     x.Size = 0;
     x.Capacity = 0;
   }
+  constexpr BumpPtrVector(BumpPtrVector &&x)
+    : mem{x.mem}, Size{x.Size}, Capacity{x.Capacity},
+      Alloc{x.get_allocator().get_allocator()} {
+    x.mem = nullptr;
+    x.Size = 0;
+    x.Capacity = 0;
+  }
   BumpPtrVector &operator=(const BumpPtrVector &x) {
     if (this != &x) {
       clear();

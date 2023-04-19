@@ -12,8 +12,8 @@ public:
   constexpr MapVector(BumpAlloc<> &alloc) : map(alloc), vector(alloc) {}
   MapVector(const MapVector &) = default;
   MapVector(MapVector &&) = default;
-  MapVector &operator=(const MapVector &) = default;
-  MapVector &operator=(MapVector &&) = default;
+  constexpr MapVector &operator=(const MapVector &) = default;
+  constexpr MapVector &operator=(MapVector &&) = default;
   constexpr auto find(const K &key) const {
     auto f = map.find(key);
     if (f == map.end()) return vector.end();
