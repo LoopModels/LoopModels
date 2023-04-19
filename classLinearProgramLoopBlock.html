@@ -143,12 +143,12 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>addEdge</b> (<a class
 <tr class="separator:a50c267ca49c6e8f135802004abe4eba9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1d76b0e8c6b7a221850327644f09dbb2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classLinearProgramLoopBlock.html#a1d76b0e8c6b7a221850327644f09dbb2">fillEdges</a> ()</td></tr>
 <tr class="separator:a1d76b0e8c6b7a221850327644f09dbb2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a920535b99ba5bc666835c9d4ac84ff2b"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classLinearProgramLoopBlock.html#a920535b99ba5bc666835c9d4ac84ff2b">searchValueForStores</a> (aset&lt; llvm::User * &gt; &amp;visited, <a class="el" href="structScheduledNode.html">ScheduledNode</a> &amp;node, amap&lt; llvm::User *, unsigned &gt; &amp;userToMemory, llvm::User *user, unsigned nodeIndex) -&gt; bool</td></tr>
+<tr class="memitem:a920535b99ba5bc666835c9d4ac84ff2b"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classLinearProgramLoopBlock.html#a920535b99ba5bc666835c9d4ac84ff2b">searchValueForStores</a> (<a class="el" href="structaset.html">aset</a>&lt; llvm::User * &gt; &amp;visited, <a class="el" href="structScheduledNode.html">ScheduledNode</a> &amp;node, <a class="el" href="structamap.html">amap</a>&lt; llvm::User *, unsigned &gt; &amp;userToMemory, llvm::User *user, unsigned nodeIndex) -&gt; bool</td></tr>
 <tr class="separator:a920535b99ba5bc666835c9d4ac84ff2b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af96e9353d7339063b7035e8aea0be6ab"><td class="memItemLeft" align="right" valign="top"><a id="af96e9353d7339063b7035e8aea0be6ab"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>checkUserForLoads</b> (aset&lt; llvm::User * &gt; &amp;visited, <a class="el" href="structScheduledNode.html">ScheduledNode</a> &amp;node, amap&lt; llvm::User *, unsigned &gt; &amp;userToMemory, llvm::User *user, unsigned nodeIndex)</td></tr>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>checkUserForLoads</b> (<a class="el" href="structaset.html">aset</a>&lt; llvm::User * &gt; &amp;visited, <a class="el" href="structScheduledNode.html">ScheduledNode</a> &amp;node, <a class="el" href="structamap.html">amap</a>&lt; llvm::User *, unsigned &gt; &amp;userToMemory, llvm::User *user, unsigned nodeIndex)</td></tr>
 <tr class="separator:af96e9353d7339063b7035e8aea0be6ab"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a419ffee319b60a0d8594b3ee7533b4ff"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classLinearProgramLoopBlock.html#a419ffee319b60a0d8594b3ee7533b4ff">searchOperandsForLoads</a> (aset&lt; llvm::User * &gt; &amp;visited, <a class="el" href="structScheduledNode.html">ScheduledNode</a> &amp;node, amap&lt; llvm::User *, unsigned &gt; &amp;userToMemory, llvm::User *u, unsigned nodeIndex)</td></tr>
+<tr class="memitem:a419ffee319b60a0d8594b3ee7533b4ff"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classLinearProgramLoopBlock.html#a419ffee319b60a0d8594b3ee7533b4ff">searchOperandsForLoads</a> (<a class="el" href="structaset.html">aset</a>&lt; llvm::User * &gt; &amp;visited, <a class="el" href="structScheduledNode.html">ScheduledNode</a> &amp;node, <a class="el" href="structamap.html">amap</a>&lt; llvm::User *, unsigned &gt; &amp;userToMemory, llvm::User *u, unsigned nodeIndex)</td></tr>
 <tr class="separator:a419ffee319b60a0d8594b3ee7533b4ff"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a157c2506749e248374f59a6c5b2acea1"><td class="memItemLeft" align="right" valign="top"><a id="a157c2506749e248374f59a6c5b2acea1"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>connect</b> (unsigned inIndex, unsigned outIndex)</td></tr>
@@ -194,8 +194,7 @@ constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>setSchedule
 <tr class="memitem:a6205b023ab029b2f33a1be92aecd741c"><td class="memItemLeft" align="right" valign="top"><a id="a6205b023ab029b2f33a1be92aecd741c"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>validateEdges</b> ()</td></tr>
 <tr class="separator:a6205b023ab029b2f33a1be92aecd741c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3a142120e6fee8467975cfff916922e4"><td class="memItemLeft" align="right" valign="top"><a id="a3a142120e6fee8467975cfff916922e4"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>instantiateOmniSimplex</b> (const <a class="el" href="structLinearProgramLoopBlock_1_1Graph.html">Graph</a> &amp;g, size_t d, bool satisfyDeps) -&gt; <a class="el" href="structOptional.html">Optional</a>&lt; <a class="el" href="classSimplex.html">Simplex</a> * &gt;</td></tr>
+<tr class="memitem:a3a142120e6fee8467975cfff916922e4"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classLinearProgramLoopBlock.html#a3a142120e6fee8467975cfff916922e4">instantiateOmniSimplex</a> (const <a class="el" href="structLinearProgramLoopBlock_1_1Graph.html">Graph</a> &amp;g, size_t d, bool satisfyDeps) -&gt; <a class="el" href="structOptional.html">Optional</a>&lt; <a class="el" href="classSimplex.html">Simplex</a> * &gt;</td></tr>
 <tr class="separator:a3a142120e6fee8467975cfff916922e4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad2ad48e61813e3275051d90d0268a566"><td class="memItemLeft" align="right" valign="top"><a id="ad2ad48e61813e3275051d90d0268a566"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>solveGraphCore</b> (<a class="el" href="structLinearProgramLoopBlock_1_1Graph.html">Graph</a> &amp;g, size_t depth, bool satisfyDeps) -&gt; std::optional&lt; <a class="el" href="structBitSet.html">BitSet</a> &gt;</td></tr>
@@ -209,9 +208,9 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>deactivateSatisfiedEd
 <tr class="memitem:a8e21ac83ecc396afef751fcf2b0cd61a"><td class="memItemLeft" align="right" valign="top"><a id="a8e21ac83ecc396afef751fcf2b0cd61a"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>updateSchedules</b> (const <a class="el" href="structLinearProgramLoopBlock_1_1Graph.html">Graph</a> &amp;g, size_t depth, <a class="el" href="structSimplex_1_1Solution.html">Simplex::Solution</a> sol)</td></tr>
 <tr class="separator:a8e21ac83ecc396afef751fcf2b0cd61a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a56f2225677d07ce27170c584171ab419"><td class="memItemLeft" align="right" valign="top"><a id="a56f2225677d07ce27170c584171ab419"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>addIndependentSolutionConstraints</b> (<a class="el" href="structNotNull.html">NotNull</a>&lt; <a class="el" href="classSimplex.html">Simplex</a> &gt; omniSimplex, const <a class="el" href="structLinearProgramLoopBlock_1_1Graph.html">Graph</a> &amp;g, size_t depth)</td></tr>
-<tr class="separator:a56f2225677d07ce27170c584171ab419"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2445dcc64791a310466ee5df2e2ccfa7"><td class="memItemLeft" align="right" valign="top"><a id="a2445dcc64791a310466ee5df2e2ccfa7"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>addIndependentSolutionConstraints</b> (<a class="el" href="structNotNull.html">NotNull</a>&lt; <a class="el" href="classSimplex.html">Simplex</a> &gt; omniSimplex, const <a class="el" href="structLinearProgramLoopBlock_1_1Graph.html">Graph</a> &amp;g, size_t d)</td></tr>
+<tr class="separator:a2445dcc64791a310466ee5df2e2ccfa7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a444c7b62050dfab63ec23668fc2847d5"><td class="memItemLeft" align="right" valign="top"><a id="a444c7b62050dfab63ec23668fc2847d5"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>setSchedulesIndependent</b> (const <a class="el" href="structLinearProgramLoopBlock_1_1Graph.html">Graph</a> &amp;g, size_t depth)</td></tr>
 <tr class="separator:a444c7b62050dfab63ec23668fc2847d5"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -258,9 +257,9 @@ static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>hasA
 <tr class="memitem:a84115ca122b3a60bc76619af806ff711"><td class="memItemLeft" align="right" valign="top"><a id="a84115ca122b3a60bc76619af806ff711"></a>
 static void&#160;</td><td class="memItemRight" valign="bottom"><b>updateConstraints</b> (MutPtrMatrix&lt; int64_t &gt; C, const <a class="el" href="structScheduledNode.html">ScheduledNode</a> &amp;node, PtrMatrix&lt; int64_t &gt; sat, PtrMatrix&lt; int64_t &gt; bnd, size_t d, Row c, Row cc, Row ccc, Col p)</td></tr>
 <tr class="separator:a84115ca122b3a60bc76619af806ff711"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7a3fc15f234aa7e560125381c2381676"><td class="memItemLeft" align="right" valign="top"><a id="a7a3fc15f234aa7e560125381c2381676"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>lexSign</b> (PtrVector&lt; int64_t &gt; x) -&gt; int64_t</td></tr>
-<tr class="separator:a7a3fc15f234aa7e560125381c2381676"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a383e3e9861ad990e6554ab94ccc5455e"><td class="memItemLeft" align="right" valign="top"><a id="a383e3e9861ad990e6554ab94ccc5455e"></a>
+static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>lexSign</b> (PtrVector&lt; int64_t &gt; x) -&gt; int64_t</td></tr>
+<tr class="separator:a383e3e9861ad990e6554ab94ccc5455e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1435d31cdc77012b890a2976c033ec7e"><td class="memItemLeft" align="right" valign="top"><a id="a1435d31cdc77012b890a2976c033ec7e"></a>
 static auto&#160;</td><td class="memItemRight" valign="bottom"><b>nonZeroMask</b> (const AbstractVector auto &amp;x) -&gt; uint64_t</td></tr>
 <tr class="separator:a1435d31cdc77012b890a2976c033ec7e"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -339,6 +338,51 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> 
 </table>
 </div><div class="memdoc">
 <p>fills all the edges between memory accesses, checking for dependencies. </p>
+
+</div>
+</div>
+<a id="a3a142120e6fee8467975cfff916922e4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3a142120e6fee8467975cfff916922e4">&#9670;&nbsp;</a></span>instantiateOmniSimplex()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">auto LinearProgramLoopBlock::instantiateOmniSimplex </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="structLinearProgramLoopBlock_1_1Graph.html">Graph</a> &amp;&#160;</td>
+          <td class="paramname"><em>g</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>d</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>satisfyDeps</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> -&gt; <a class="el" href="structOptional.html">Optional</a>&lt;<a class="el" href="classSimplex.html">Simplex</a> *&gt; </td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>For now, we instantiate a dense simplex specifying the full problem.</p>
+<p>Eventually, the plan is to generally avoid instantiating the omni-simplex first, we solve individual problems</p>
+<p>The order of variables in the simplex is: C, lambdas, slack, omegas, Phis, w, u where C: constraints, rest of matrix * variables == C lambdas: farkas multipliers slack: slack variables from independent phi solution constraints omegas: scheduling offsets Phis: scheduling rotations w: bounding offsets, independent of symbolic variables u: bounding offsets, dependent on symbolic variables </p>
 
 </div>
 </div>
@@ -437,7 +481,7 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> 
         <tr>
           <td class="memname">void LinearProgramLoopBlock::searchOperandsForLoads </td>
           <td>(</td>
-          <td class="paramtype">aset&lt; llvm::User * &gt; &amp;&#160;</td>
+          <td class="paramtype"><a class="el" href="structaset.html">aset</a>&lt; llvm::User * &gt; &amp;&#160;</td>
           <td class="paramname"><em>visited</em>, </td>
         </tr>
         <tr>
@@ -449,7 +493,7 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> 
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">amap&lt; llvm::User *, unsigned &gt; &amp;&#160;</td>
+          <td class="paramtype"><a class="el" href="structamap.html">amap</a>&lt; llvm::User *, unsigned &gt; &amp;&#160;</td>
           <td class="paramname"><em>userToMemory</em>, </td>
         </tr>
         <tr>
@@ -492,7 +536,7 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> 
         <tr>
           <td class="memname">auto LinearProgramLoopBlock::searchValueForStores </td>
           <td>(</td>
-          <td class="paramtype">aset&lt; llvm::User * &gt; &amp;&#160;</td>
+          <td class="paramtype"><a class="el" href="structaset.html">aset</a>&lt; llvm::User * &gt; &amp;&#160;</td>
           <td class="paramname"><em>visited</em>, </td>
         </tr>
         <tr>
@@ -504,7 +548,7 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> 
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">amap&lt; llvm::User *, unsigned &gt; &amp;&#160;</td>
+          <td class="paramtype"><a class="el" href="structamap.html">amap</a>&lt; llvm::User *, unsigned &gt; &amp;&#160;</td>
           <td class="paramname"><em>userToMemory</em>, </td>
         </tr>
         <tr>

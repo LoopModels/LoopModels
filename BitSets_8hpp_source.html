@@ -268,7 +268,7 @@ $(function() {
 <div class="line"><a name="l00199"></a><span class="lineno">  199</span>&#160;  <span class="keyword">public</span>:</div>
 <div class="line"><a name="l00200"></a><span class="lineno">  200</span>&#160;    constexpr <a class="code" href="classBitSet_1_1Reference.html">Reference</a>(MutPtrVector&lt;uint64_t&gt; dd, <span class="keywordtype">size_t</span> ii)</div>
 <div class="line"><a name="l00201"></a><span class="lineno">  201</span>&#160;      : data(dd), i(ii) {}</div>
-<div class="line"><a name="l00202"></a><span class="lineno">  202</span>&#160;    constexpr <span class="keyword">operator</span> bool()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> contains(data, i); }</div>
+<div class="line"><a name="l00202"></a><span class="lineno">  202</span>&#160;    constexpr <span class="keyword">explicit</span> <span class="keyword">operator</span> bool()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> contains(data, i); }</div>
 <div class="line"><a name="l00203"></a><span class="lineno">  203</span>&#160;    constexpr <span class="keyword">auto</span> operator=(<span class="keywordtype">bool</span> b) -&gt; <a class="code" href="classBitSet_1_1Reference.html">Reference</a> &amp; {</div>
 <div class="line"><a name="l00204"></a><span class="lineno">  204</span>&#160;      BitSet::set(data, i, b);</div>
 <div class="line"><a name="l00205"></a><span class="lineno">  205</span>&#160;      <span class="keywordflow">return</span> *<span class="keyword">this</span>;</div>

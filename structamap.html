@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.9.1"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>LoopModels: llvm::DenseMapInfo&lt; llvm::MutableArrayRef&lt; T &gt; &gt; Struct Template Reference</title>
+<title>LoopModels: amap&lt; K, V &gt; Struct Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -59,37 +59,37 @@ $(function() {
 </iframe>
 </div>
 
-<div id="nav-path" class="navpath">
-  <ul>
-<li class="navelem"><b>llvm</b></li><li class="navelem"><a class="el" href="structllvm_1_1DenseMapInfo_3_01llvm_1_1MutableArrayRef_3_01T_01_4_01_4.html">DenseMapInfo&lt; llvm::MutableArrayRef&lt; T &gt; &gt;</a></li>  </ul>
-</div>
 </div><!-- top -->
 <div class="header">
   <div class="summary">
-<a href="#pub-static-methods">Static Public Member Functions</a> &#124;
-<a href="structllvm_1_1DenseMapInfo_3_01llvm_1_1MutableArrayRef_3_01T_01_4_01_4-members.html">List of all members</a>  </div>
+<a href="#pub-types">Public Types</a> &#124;
+<a href="#pub-methods">Public Member Functions</a> &#124;
+<a href="structamap-members.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">llvm::DenseMapInfo&lt; llvm::MutableArrayRef&lt; T &gt; &gt; Struct Template Reference</div>  </div>
+<div class="title">amap&lt; K, V &gt; Struct Template Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
+<div class="dynheader">
+Inheritance diagram for amap&lt; K, V &gt;:</div>
+<div class="dyncontent">
+ <div class="center">
+  <img src="structamap.png" alt=""/>
+ </div></div>
 <table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
-Static Public Member Functions</h2></td></tr>
-<tr class="memitem:a8a350e7687106c6489fce637762b8bc9"><td class="memItemLeft" align="right" valign="top"><a id="a8a350e7687106c6489fce637762b8bc9"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>getEmptyKey</b> () -&gt; llvm::MutableArrayRef&lt; T &gt;</td></tr>
-<tr class="separator:a8a350e7687106c6489fce637762b8bc9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a035e0abc4c082042d5aa8cbedbb707d7"><td class="memItemLeft" align="right" valign="top"><a id="a035e0abc4c082042d5aa8cbedbb707d7"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>getTombstoneKey</b> () -&gt; llvm::MutableArrayRef&lt; T &gt;</td></tr>
-<tr class="separator:a035e0abc4c082042d5aa8cbedbb707d7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac20b0aec75285bd589323d7cf5703b18"><td class="memItemLeft" align="right" valign="top"><a id="ac20b0aec75285bd589323d7cf5703b18"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>getHashValue</b> (llvm::MutableArrayRef&lt; T &gt; Key) -&gt; unsigned</td></tr>
-<tr class="separator:ac20b0aec75285bd589323d7cf5703b18"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a534e8b5dcbcf4071f4c6c97cc724fe9a"><td class="memItemLeft" align="right" valign="top"><a id="a534e8b5dcbcf4071f4c6c97cc724fe9a"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>isEqual</b> (llvm::MutableArrayRef&lt; T &gt; LHS, llvm::MutableArrayRef&lt; T &gt; RHS) -&gt; bool</td></tr>
-<tr class="separator:a534e8b5dcbcf4071f4c6c97cc724fe9a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
+Public Types</h2></td></tr>
+<tr class="memitem:a2cc3f737adb45925a4774be97ceb4f50"><td class="memItemLeft" align="right" valign="top"><a id="a2cc3f737adb45925a4774be97ceb4f50"></a>
+using&#160;</td><td class="memItemRight" valign="bottom"><b>Base</b> = ankerl::unordered_dense::map&lt; K, V, ankerl::unordered_dense::hash&lt; K &gt;, std::equal_to&lt; K &gt;, <a class="el" href="structLinAlg_1_1BumpPtrVector.html">LinAlg::BumpPtrVector</a>&lt; std::pair&lt; K, V &gt; &gt;&gt;</td></tr>
+<tr class="separator:a2cc3f737adb45925a4774be97ceb4f50"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
+Public Member Functions</h2></td></tr>
+<tr class="memitem:a97c316042b260c0afc0b237d303444d2"><td class="memItemLeft" align="right" valign="top"><a id="a97c316042b260c0afc0b237d303444d2"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>amap</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc)</td></tr>
+<tr class="separator:a97c316042b260c0afc0b237d303444d2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <hr/>The documentation for this struct was generated from the following file:<ul>
-<li>include/<a class="el" href="Instruction_8hpp_source.html">Instruction.hpp</a></li>
+<li>include/Containers/<a class="el" href="BumpMapSet_8hpp_source.html">BumpMapSet.hpp</a></li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->

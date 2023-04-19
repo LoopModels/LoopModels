@@ -119,6 +119,24 @@ constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>BumpPtrVector</b
 <tr class="memitem:ac36e343c8d66a0078c09c60c6a2f45c8"><td class="memItemLeft" align="right" valign="top"><a id="ac36e343c8d66a0078c09c60c6a2f45c8"></a>
 constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>BumpPtrVector</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;a)</td></tr>
 <tr class="separator:ac36e343c8d66a0078c09c60c6a2f45c8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8d9dd90f9641a6478438ff457206c026"><td class="memItemLeft" align="right" valign="top"><a id="a8d9dd90f9641a6478438ff457206c026"></a>
+constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>BumpPtrVector</b> (const <a class="el" href="structLinAlg_1_1BumpPtrVector.html">BumpPtrVector</a>&lt; T &gt; &amp;x, <a class="el" href="classWBumpAlloc.html">WBumpAlloc</a>&lt; T &gt; alloc)</td></tr>
+<tr class="separator:a8d9dd90f9641a6478438ff457206c026"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a694ce22e5f82e41a92c4ed9c8fffea2a"><td class="memItemLeft" align="right" valign="top"><a id="a694ce22e5f82e41a92c4ed9c8fffea2a"></a>
+constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>BumpPtrVector</b> (const <a class="el" href="structLinAlg_1_1BumpPtrVector.html">BumpPtrVector</a>&lt; T &gt; &amp;x)</td></tr>
+<tr class="separator:a694ce22e5f82e41a92c4ed9c8fffea2a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a953dd665f81df5c81382ecc76b2d0c22"><td class="memItemLeft" align="right" valign="top"><a id="a953dd665f81df5c81382ecc76b2d0c22"></a>
+constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>BumpPtrVector</b> (<a class="el" href="structLinAlg_1_1BumpPtrVector.html">BumpPtrVector</a> &amp;&amp;x, <a class="el" href="classWBumpAlloc.html">WBumpAlloc</a>&lt; T &gt; alloc)</td></tr>
+<tr class="separator:a953dd665f81df5c81382ecc76b2d0c22"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a19ca03025c327bb6781cf1db6c944bf0"><td class="memItemLeft" align="right" valign="top"><a id="a19ca03025c327bb6781cf1db6c944bf0"></a>
+constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>BumpPtrVector</b> (<a class="el" href="structLinAlg_1_1BumpPtrVector.html">BumpPtrVector</a> &amp;&amp;x)</td></tr>
+<tr class="separator:a19ca03025c327bb6781cf1db6c944bf0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3a529d0af1da2c77297c43d444bc5031"><td class="memItemLeft" align="right" valign="top"><a id="a3a529d0af1da2c77297c43d444bc5031"></a>
+<a class="el" href="structLinAlg_1_1BumpPtrVector.html">BumpPtrVector</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>operator=</b> (const <a class="el" href="structLinAlg_1_1BumpPtrVector.html">BumpPtrVector</a> &amp;x)</td></tr>
+<tr class="separator:a3a529d0af1da2c77297c43d444bc5031"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a09640e1cdb2bb7e3181cbd57fcedc4e7"><td class="memItemLeft" align="right" valign="top"><a id="a09640e1cdb2bb7e3181cbd57fcedc4e7"></a>
+<a class="el" href="structLinAlg_1_1BumpPtrVector.html">BumpPtrVector</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>operator=</b> (<a class="el" href="structLinAlg_1_1BumpPtrVector.html">BumpPtrVector</a> &amp;&amp;x)</td></tr>
+<tr class="separator:a09640e1cdb2bb7e3181cbd57fcedc4e7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab864c74d29b4038f74fa64280ee0b931"><td class="memItemLeft" align="right" valign="top"><a id="ab864c74d29b4038f74fa64280ee0b931"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator[]</b> (const ScalarIndex auto i) -&gt; T &amp;</td></tr>
 <tr class="separator:ab864c74d29b4038f74fa64280ee0b931"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -238,15 +256,21 @@ constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>truncate</b
 <tr class="memitem:a497d6ca0cd853e498b6bb65773dc5e6b"><td class="memItemLeft" align="right" valign="top"><a id="a497d6ca0cd853e498b6bb65773dc5e6b"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>resize</b> (size_t N)</td></tr>
 <tr class="separator:a497d6ca0cd853e498b6bb65773dc5e6b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6bf9088e1b5a5da05ba01aff776a0a62"><td class="memItemLeft" align="right" valign="top"><a id="a6bf9088e1b5a5da05ba01aff776a0a62"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>resize</b> (size_t N, T x)</td></tr>
+<tr class="separator:a6bf9088e1b5a5da05ba01aff776a0a62"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a096106b3520753a40508e5c9b4d6847c"><td class="memItemLeft" align="right" valign="top"><a id="a096106b3520753a40508e5c9b4d6847c"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>resizeForOverwrite</b> (size_t N)</td></tr>
 <tr class="separator:a096106b3520753a40508e5c9b4d6847c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1baf71dd141a477738747f2d2b7dbe2d"><td class="memItemLeft" align="right" valign="top"><a id="a1baf71dd141a477738747f2d2b7dbe2d"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>extendOrAssertSize</b> (size_t N)</td></tr>
 <tr class="separator:a1baf71dd141a477738747f2d2b7dbe2d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a710efe50820f7efe65d89f1b8ea5ce56"><td class="memItemLeft" align="right" valign="top"><a id="a710efe50820f7efe65d89f1b8ea5ce56"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>get_allocator</b> () -&gt; <a class="el" href="classWBumpAlloc.html">WBumpAlloc</a>&lt; T &gt;</td></tr>
-<tr class="separator:a710efe50820f7efe65d89f1b8ea5ce56"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a846aa3c46f5767e75dbbdcf9eb9a7a49"><td class="memItemLeft" align="right" valign="top"><a id="a846aa3c46f5767e75dbbdcf9eb9a7a49"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>get_allocator</b> () const -&gt; <a class="el" href="classWBumpAlloc.html">WBumpAlloc</a>&lt; T &gt;</td></tr>
+<tr class="separator:a846aa3c46f5767e75dbbdcf9eb9a7a49"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a24e0b5f2d26f284f66fc9cf43e9bf648"><td class="memItemLeft" align="right" valign="top"><a id="a24e0b5f2d26f284f66fc9cf43e9bf648"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>push_back</b> (T x) -&gt; T &amp;</td></tr>
+<tr class="separator:a24e0b5f2d26f284f66fc9cf43e9bf648"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af0b5a00860f71b7d00c4932a156c4abc"><td class="memTemplParams" colspan="2"><a id="af0b5a00860f71b7d00c4932a156c4abc"></a>
 template&lt;typename... Args&gt; </td></tr>
 <tr class="memitem:af0b5a00860f71b7d00c4932a156c4abc"><td class="memTemplItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>emplace_back</b> (Args &amp;&amp;...args) -&gt; T &amp;</td></tr>
@@ -257,6 +281,9 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>empty</b> (
 <tr class="memitem:a5c36374dda2d5ce3f49703b602a35def"><td class="memItemLeft" align="right" valign="top"><a id="a5c36374dda2d5ce3f49703b602a35def"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>pop_back</b> ()</td></tr>
 <tr class="separator:a5c36374dda2d5ce3f49703b602a35def"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afa66f96dbb047f392dfd83b7ce5053e6"><td class="memItemLeft" align="right" valign="top"><a id="afa66f96dbb047f392dfd83b7ce5053e6"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>erase</b> (T *x)</td></tr>
+<tr class="separator:afa66f96dbb047f392dfd83b7ce5053e6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>

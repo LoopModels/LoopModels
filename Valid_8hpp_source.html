@@ -218,6 +218,8 @@ $(function() {
 <div class="line"><a name="l00147"></a><span class="lineno">  147</span>&#160;};</div>
 <div class="line"><a name="l00148"></a><span class="lineno">  148</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt; <a class="code" href="structNotNull.html">NotNull</a>(T &amp;) -&gt; <a class="code" href="structNotNull.html">NotNull&lt;T&gt;</a>;</div>
 <div class="line"><a name="l00149"></a><span class="lineno">  149</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt; <a class="code" href="structNotNull.html">NotNull</a>(T *) -&gt; <a class="code" href="structNotNull.html">NotNull&lt;T *&gt;</a>;</div>
+<div class="line"><a name="l00150"></a><span class="lineno">  150</span>&#160;static_assert(std::is_trivially_destructible_v&lt;<a class="code" href="structNotNull.html">NotNull&lt;size_t&gt;</a>&gt;);</div>
+<div class="line"><a name="l00151"></a><span class="lineno">  151</span>&#160;static_assert(std::is_trivially_copy_constructible_v&lt;<a class="code" href="structNotNull.html">NotNull&lt;size_t&gt;</a>&gt;);</div>
 <div class="ttc" id="astructNotNull_html"><div class="ttname"><a href="structNotNull.html">NotNull</a></div><div class="ttdef"><b>Definition:</b> Valid.hpp:7</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
