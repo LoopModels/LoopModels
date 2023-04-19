@@ -64,8 +64,10 @@ struct LoopTree {
 
   LoopTree(BumpAlloc<> &alloc, llvm::Loop *L, const llvm::SCEV *BT,
            llvm::ScalarEvolution &SE, Predicate::Map pth)
-    : loop(L), paths({std::move(pth)}),
-      affineLoop{AffineLoopNest<true>::construct(alloc, L, BT, SE)} {}
+    : loop(L), paths{},
+      affineLoop{AffineLoopNest<true>::construct(alloc, L, BT, SE)} {
+    paths.push_back(std::move(pth));
+  }
 
   LoopTree(BumpAlloc<> &alloc, llvm::Loop *L, NotNull<AffineLoopNest<true>> aln,
            llvm::SmallVector<NotNull<LoopTree>> sL,

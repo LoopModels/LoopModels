@@ -356,7 +356,8 @@ struct Instruction {
     auto createInstruction(BumpAlloc<> &alloc, UniqueIdentifier uid,
                            llvm::Type *typ) -> Instruction * {
       auto *i = new (alloc) Instruction(alloc, uid, typ);
-      for (auto *op : i->operands) op->users.insert(i);
+      if (i->operands.size())
+        for (auto *op : i->operands) op->users.insert(i);
       argMap.insert({uid, i});
       return i;
     }

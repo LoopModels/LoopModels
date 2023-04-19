@@ -369,7 +369,7 @@ struct AffineLoopNest
         }
       }
     }
-    invariant(symbols.size(), size_t(A.numCol()));
+    invariant(1 + symbols.size(), size_t(A.numCol()));
     size_t depth = maxDepth - minDepth;
     unsigned numConstraints = unsigned(A.numRow()), N = unsigned(A.numCol());
     NotNull<AffineLoopNest> aln{

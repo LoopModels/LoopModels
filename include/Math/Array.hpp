@@ -741,11 +741,12 @@ struct ReallocView : ResizeableView<T, S, U> {
       std::fill_n((T *)(newPtr + oz), newCapacity - oz, T{});
     } else {
       static_assert(MatrixDimension<S>, "Can only resize 1 or 2d containers.");
+      U len = U(nz);
+      if (len == 0) return;
       auto newX = unsigned{RowStride{nz}}, oldX = unsigned{RowStride{oz}},
            newN = unsigned{Col{nz}}, oldN = unsigned{Col{oz}},
            newM = unsigned{Row{nz}}, oldM = unsigned{Row{oz}};
-      U len = U(nz);
-      bool newAlloc = U(len) > this->capacity;
+      bool newAlloc = len > this->capacity;
       bool inPlace = !newAlloc;
 #if __cplusplus >= 202202L
       T *npt = this->data();
