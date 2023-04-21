@@ -338,8 +338,9 @@ struct AffineLoopNest
     // once we're done assembling these, we'll concatenate A and B
     size_t maxDepth = L->getLoopDepth();
     // size_t maxNumSymbols = BT->getExpressionSize();
-    A.resize(StridedDims{0, 1, unsigned(1) + BT->getExpressionSize()});
-    B.resize(StridedDims{0, maxDepth, maxDepth});
+    A.resizeForOverwrite(
+      StridedDims{0, 1, unsigned(1) + BT->getExpressionSize()});
+    B.resizeForOverwrite(StridedDims{0, maxDepth, maxDepth});
     llvm::SmallVector<const llvm::SCEV *, 3> symbols;
     size_t minDepth =
       loopNestCtor::addBackedgeTakenCount(AB, symbols, L, BT, SE, 0, ORE);

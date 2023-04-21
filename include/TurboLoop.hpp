@@ -113,13 +113,13 @@ public:
     // specializations for `llvm::reverse(*LoopInfo)` and
     // `llvm::Loop->getSubLoops()`.
     // But we could consider specializing on top level vs not.
-    llvm::SmallVector<llvm::Loop *> revLI{RLIB, RLIE + 1};
     // Track position within the loop nest
     {
+      llvm::SmallVector<llvm::Loop *> revLI{RLIB, RLIE + 1};
       NoWrapRewriter nwr(*SE);
       pushLoopTree(loopForests, nullptr, revLI, H, E, nwr);
     }
-    for (auto &forest : loopForests)
+    for (auto forest : loopForests)
       forest->addZeroLowerBounds(allocator, loopMap);
   }
   ///

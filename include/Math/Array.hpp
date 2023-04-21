@@ -766,30 +766,33 @@ struct ReallocView : ResizeableView<T, S, U> {
       // we only need to copy if memory shifts position
       bool copyCols = newAlloc || ((colsToCopy > 0) && (newX != oldX));
       // if we're in place, we have 1 less row to copy
-      unsigned rowsToCopy = std::min(oldM, newM) - inPlace;
+      unsigned rowsToCopy = std::min(oldM, newM);
       unsigned fillCount = newN - colsToCopy;
       if ((rowsToCopy) && (copyCols || fillCount)) {
         if (forwardCopy) {
           // truncation, we need to copy rows to increase stride
-          T *src = this->ptr + inPlace * oldX;
-          T *dst = npt + inPlace * newX;
+          T *src = this->ptr;
+          T *dst = npt;
           do {
-            if (copyCols) std::copy_n(src, colsToCopy, dst);
+            if (copyCols && (!inPlace)) std::copy_n(src, colsToCopy, dst);
             if (fillCount) std::fill_n(dst + colsToCopy, fillCount, T{});
             src += oldX;
             dst += newX;
+            inPlace = false;
           } while (--rowsToCopy);
         } else /* [[unlikely]] */ {
           // backwards copy, only needed when we increasing stride but not
           // reallocating, which should be comparatively uncommon.
           // Should probably benchmark or determine actual frequency
           // before adding `[[unlikely]]`.
+          invariant(inPlace);
           T *src = this->ptr + (rowsToCopy + inPlace) * oldX;
           T *dst = npt + (rowsToCopy + inPlace) * newX;
           do {
             src -= oldX;
             dst -= newX;
-            if (colsToCopy) std::copy_backward(src, src + colsToCopy, dst);
+            if (colsToCopy && (rowsToCopy > inPlace))
+              std::copy_backward(src, src + colsToCopy, dst);
             if (fillCount) std::fill_n(dst + colsToCopy, fillCount, T{});
           } while (--rowsToCopy);
         }

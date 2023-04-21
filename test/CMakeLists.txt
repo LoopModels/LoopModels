@@ -128,7 +128,9 @@ if((USE_SANITIZER MATCHES "([Uu]ndefined)") OR (USE_SANITIZER MATCHES "([Aa]ddre
 )
   # we use rtti, which is incompatible with the vptr check:
   # https://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html
-  target_compile_options(${PROJECT_NAME} PRIVATE -fno-omit-frame-pointer -fno-sanitize-recover)
+  target_compile_options(${PROJECT_NAME} PRIVATE -fno-omit-frame-pointer -fsanitize-trap=all)
+  # target_compile_options(${PROJECT_NAME} PRIVATE -fno-omit-frame-pointer
+  # -fno-sanitize-recover=all)
 else()
   target_compile_options(${PROJECT_NAME} PRIVATE -fno-rtti)
 endif()

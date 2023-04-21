@@ -22,7 +22,7 @@
 #include <vector>
 
 struct LoopTree {
-  [[no_unique_address]] llvm::Loop *loop;
+  [[no_unique_address]] llvm::Loop *loop{nullptr};
   [[no_unique_address]] llvm::SmallVector<NotNull<LoopTree>> subLoops;
   // length number of sub loops + 1
   // - this loop's header to first loop preheader
@@ -32,7 +32,7 @@ struct LoopTree {
 
   // in addition to requiring simplify form, we require a single exit block
   [[no_unique_address]] llvm::SmallVector<Predicate::Map> paths;
-  [[no_unique_address]] AffineLoopNest<true> *affineLoop;
+  [[no_unique_address]] AffineLoopNest<true> *affineLoop{nullptr};
   [[no_unique_address]] Optional<LoopTree *> parentLoop{nullptr};
   [[no_unique_address]] llvm::SmallVector<NotNull<MemoryAccess>> memAccesses{};
 
@@ -54,8 +54,8 @@ struct LoopTree {
       if (auto *L = subLoop->getOuterLoop()) return L;
     return nullptr;
   }
-  LoopTree(const LoopTree &) = default;
-  LoopTree(LoopTree &&) = default;
+  // LoopTree(const LoopTree &) = default;
+  // LoopTree(LoopTree &&) = default;
   auto operator=(const LoopTree &) -> LoopTree & = default;
   auto operator=(LoopTree &&) -> LoopTree & = default;
   LoopTree(llvm::SmallVector<NotNull<LoopTree>> sL,
@@ -95,7 +95,7 @@ struct LoopTree {
 #endif
   void addZeroLowerBounds(BumpAlloc<> &alloc,
                           map<llvm::Loop *, LoopTree *> &loopMap) {
-    affineLoop->addZeroLowerBounds(alloc);
+    if (affineLoop) affineLoop->addZeroLowerBounds(alloc);
     for (auto tree : subLoops) {
       tree->addZeroLowerBounds(alloc, loopMap);
       tree->parentLoop = this;
