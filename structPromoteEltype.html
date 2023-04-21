@@ -71,9 +71,15 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
 Public Types</h2></td></tr>
-<tr class="memitem:a3732ae058727e71339236ab33061e37d"><td class="memItemLeft" align="right" valign="top"><a id="a3732ae058727e71339236ab33061e37d"></a>
-using&#160;</td><td class="memItemRight" valign="bottom"><b>eltype</b> = typename <a class="el" href="structPromoteType.html">PromoteType</a>&lt; eltype_t&lt; A &gt;, eltype_t&lt; B &gt; &gt;::eltype</td></tr>
-<tr class="separator:a3732ae058727e71339236ab33061e37d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab31fb7aacdad6634679b783cbb55a17d"><td class="memItemLeft" align="right" valign="top"><a id="ab31fb7aacdad6634679b783cbb55a17d"></a>
+using&#160;</td><td class="memItemRight" valign="bottom"><b>elta</b> = eltype_t&lt; A &gt;</td></tr>
+<tr class="separator:ab31fb7aacdad6634679b783cbb55a17d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3b7a56b59d8e5878af1a9a66e1ab9efd"><td class="memItemLeft" align="right" valign="top"><a id="a3b7a56b59d8e5878af1a9a66e1ab9efd"></a>
+using&#160;</td><td class="memItemRight" valign="bottom"><b>eltb</b> = eltype_t&lt; B &gt;</td></tr>
+<tr class="separator:a3b7a56b59d8e5878af1a9a66e1ab9efd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aac0fed65d0e2f6cf894d36a92cf274e3"><td class="memItemLeft" align="right" valign="top"><a id="aac0fed65d0e2f6cf894d36a92cf274e3"></a>
+using&#160;</td><td class="memItemRight" valign="bottom"><b>value_type</b> = std::conditional_t&lt; std::convertible_to&lt; A, eltb &gt;, eltb, promote_type_t&lt; elta, eltb &gt; &gt;</td></tr>
+<tr class="separator:aac0fed65d0e2f6cf894d36a92cf274e3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <hr/>The documentation for this struct was generated from the following file:<ul>
 <li>include/<a class="el" href="TypePromotion_8hpp_source.html">TypePromotion.hpp</a></li>

@@ -76,9 +76,9 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a3bd71fc8f9d9c5a4863254bc9b3c62ae"><td class="memItemLeft" align="right" valign="top"><a id="a3bd71fc8f9d9c5a4863254bc9b3c62ae"></a>
-constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>operator llvm::MutableArrayRef&lt; Instruction * &gt;</b> () const</td></tr>
-<tr class="separator:a3bd71fc8f9d9c5a4863254bc9b3c62ae"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4991171f3dcba6367a67fb51ff0d690b"><td class="memItemLeft" align="right" valign="top"><a id="a4991171f3dcba6367a67fb51ff0d690b"></a>
+constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>operator MutPtrVector&lt; Instruction * &gt;</b> () const</td></tr>
+<tr class="separator:a4991171f3dcba6367a67fb51ff0d690b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ada21d6f997254214d4c888e15c5fd2ad"><td class="memItemLeft" align="right" valign="top"><a id="ada21d6f997254214d4c888e15c5fd2ad"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>merge</b> (size_t i, <a class="el" href="structInstruction.html">Instruction</a> *A, <a class="el" href="structInstruction.html">Instruction</a> *B)</td></tr>
 <tr class="separator:ada21d6f997254214d4c888e15c5fd2ad"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -88,18 +88,18 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>select</b> (size_t i,
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
-<tr class="memitem:a6ae23c3459703d08625fcc11ae755c16"><td class="memItemLeft" align="right" valign="top"><a id="a6ae23c3459703d08625fcc11ae755c16"></a>
-llvm::BumpPtrAllocator &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>alloc</b></td></tr>
-<tr class="separator:a6ae23c3459703d08625fcc11ae755c16"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af3356967b029c7ac87fc068232a68059"><td class="memItemLeft" align="right" valign="top"><a id="af3356967b029c7ac87fc068232a68059"></a>
+<a class="el" href="structBumpAlloc.html">BumpAlloc</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>alloc</b></td></tr>
+<tr class="separator:af3356967b029c7ac87fc068232a68059"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae571711f088b8a9c7181e104288015ee"><td class="memItemLeft" align="right" valign="top"><a id="ae571711f088b8a9c7181e104288015ee"></a>
 <a class="el" href="structInstruction_1_1Cache.html">Instruction::Cache</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>cache</b></td></tr>
 <tr class="separator:ae571711f088b8a9c7181e104288015ee"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a71806af1062113c1f37bb1d299c108f9"><td class="memItemLeft" align="right" valign="top"><a id="a71806af1062113c1f37bb1d299c108f9"></a>
 <a class="el" href="structReMapper.html">ReMapper</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>reMap</b></td></tr>
 <tr class="separator:a71806af1062113c1f37bb1d299c108f9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3521d728ba984cf02dc48c71c8c19674"><td class="memItemLeft" align="right" valign="top"><a id="a3521d728ba984cf02dc48c71c8c19674"></a>
-llvm::MutableArrayRef&lt; <a class="el" href="structInstruction.html">Instruction</a> * &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>operands</b></td></tr>
-<tr class="separator:a3521d728ba984cf02dc48c71c8c19674"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a364f88e9511aa730bdd85f6e2f06a369"><td class="memItemLeft" align="right" valign="top"><a id="a364f88e9511aa730bdd85f6e2f06a369"></a>
+MutPtrVector&lt; <a class="el" href="structInstruction.html">Instruction</a> * &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>operands</b></td></tr>
+<tr class="separator:a364f88e9511aa730bdd85f6e2f06a369"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <hr/>The documentation for this struct was generated from the following file:<ul>
 <li>include/<a class="el" href="ControlFlowMerging_8hpp_source.html">ControlFlowMerging.hpp</a></li>
