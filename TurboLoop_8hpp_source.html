@@ -177,13 +177,13 @@ $(function() {
 <div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;    <span class="comment">// specializations for `llvm::reverse(*LoopInfo)` and</span></div>
 <div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;    <span class="comment">// `llvm::Loop-&gt;getSubLoops()`.</span></div>
 <div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;    <span class="comment">// But we could consider specializing on top level vs not.</span></div>
-<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;    llvm::SmallVector&lt;llvm::Loop *&gt; revLI{RLIB, RLIE + 1};</div>
-<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;    <span class="comment">// Track position within the loop nest</span></div>
-<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;    {</div>
+<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;    <span class="comment">// Track position within the loop nest</span></div>
+<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;    {</div>
+<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;      llvm::SmallVector&lt;llvm::Loop *&gt; revLI{RLIB, RLIE + 1};</div>
 <div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;      <a class="code" href="structNoWrapRewriter.html">NoWrapRewriter</a> nwr(*SE);</div>
 <div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;      <a class="code" href="classTurboLoopPass.html#ac430c03ee4d721c534b9a5816a513597">pushLoopTree</a>(loopForests, <span class="keyword">nullptr</span>, revLI, H, E, nwr);</div>
 <div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;    }</div>
-<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;forest : loopForests)</div>
+<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">auto</span> forest : loopForests)</div>
 <div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;      forest-&gt;addZeroLowerBounds(allocator, loopMap);</div>
 <div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;  }</div>
 <div class="line"><a name="l00154"></a><span class="lineno"><a class="line" href="classTurboLoopPass.html#ac430c03ee4d721c534b9a5816a513597">  154</a></span>&#160;  <span class="keyword">auto</span> <a class="code" href="classTurboLoopPass.html#ac430c03ee4d721c534b9a5816a513597">pushLoopTree</a>(llvm::SmallVectorImpl&lt;<a class="code" href="structNotNull.html">NotNull&lt;LoopTree&gt;</a>&gt; &amp;pForest,</div>

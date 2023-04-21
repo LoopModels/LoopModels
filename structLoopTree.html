@@ -92,12 +92,6 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>isLoopSimplifyForm</b
 <tr class="memitem:a7e65a04199089597b99fcd04ca0bb1ce"><td class="memItemLeft" align="right" valign="top"><a id="a7e65a04199089597b99fcd04ca0bb1ce"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>getOuterLoop</b> () const -&gt; llvm::Loop *</td></tr>
 <tr class="separator:a7e65a04199089597b99fcd04ca0bb1ce"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab09a6bc647f8bdf3a3670e83da4290a7"><td class="memItemLeft" align="right" valign="top"><a id="ab09a6bc647f8bdf3a3670e83da4290a7"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>LoopTree</b> (const <a class="el" href="structLoopTree.html">LoopTree</a> &amp;)=default</td></tr>
-<tr class="separator:ab09a6bc647f8bdf3a3670e83da4290a7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aef959c18a61e0a247537a12443f55d30"><td class="memItemLeft" align="right" valign="top"><a id="aef959c18a61e0a247537a12443f55d30"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>LoopTree</b> (<a class="el" href="structLoopTree.html">LoopTree</a> &amp;&amp;)=default</td></tr>
-<tr class="separator:aef959c18a61e0a247537a12443f55d30"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac2a35572c599f1ac0d23f0f5f6cde04b"><td class="memItemLeft" align="right" valign="top"><a id="ac2a35572c599f1ac0d23f0f5f6cde04b"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator=</b> (const <a class="el" href="structLoopTree.html">LoopTree</a> &amp;) -&gt; <a class="el" href="structLoopTree.html">LoopTree</a> &amp;=default</td></tr>
 <tr class="separator:ac2a35572c599f1ac0d23f0f5f6cde04b"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -150,7 +144,7 @@ static void&#160;</td><td class="memItemRight" valign="bottom"><b>split</b> (<a 
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
 <tr class="memitem:a4373811944eb9ca6f1b72efb73a5bec3"><td class="memItemLeft" align="right" valign="top"><a id="a4373811944eb9ca6f1b72efb73a5bec3"></a>
-llvm::Loop *&#160;</td><td class="memItemRight" valign="bottom"><b>loop</b></td></tr>
+llvm::Loop *&#160;</td><td class="memItemRight" valign="bottom"><b>loop</b> {nullptr}</td></tr>
 <tr class="separator:a4373811944eb9ca6f1b72efb73a5bec3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a46f9985a0befab74c885d502cbc403a3"><td class="memItemLeft" align="right" valign="top"><a id="a46f9985a0befab74c885d502cbc403a3"></a>
 llvm::SmallVector&lt; <a class="el" href="structNotNull.html">NotNull</a>&lt; <a class="el" href="structLoopTree.html">LoopTree</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>subLoops</b></td></tr>
@@ -159,7 +153,7 @@ llvm::SmallVector&lt; <a class="el" href="structNotNull.html">NotNull</a>&lt; <a
 llvm::SmallVector&lt; <a class="el" href="structPredicate_1_1Map.html">Predicate::Map</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>paths</b></td></tr>
 <tr class="separator:af0e01210bccf8cd59a75112f08b833f7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9a983796abed31d583b02f36ecdc7cf9"><td class="memItemLeft" align="right" valign="top"><a id="a9a983796abed31d583b02f36ecdc7cf9"></a>
-<a class="el" href="structAffineLoopNest.html">AffineLoopNest</a>&lt; true &gt; *&#160;</td><td class="memItemRight" valign="bottom"><b>affineLoop</b></td></tr>
+<a class="el" href="structAffineLoopNest.html">AffineLoopNest</a>&lt; true &gt; *&#160;</td><td class="memItemRight" valign="bottom"><b>affineLoop</b> {nullptr}</td></tr>
 <tr class="separator:a9a983796abed31d583b02f36ecdc7cf9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a51b6985ec3880b4c066aecb16af232dd"><td class="memItemLeft" align="right" valign="top"><a id="a51b6985ec3880b4c066aecb16af232dd"></a>
 <a class="el" href="structOptional.html">Optional</a>&lt; <a class="el" href="structLoopTree.html">LoopTree</a> * &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>parentLoop</b> {nullptr}</td></tr>
