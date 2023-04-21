@@ -509,7 +509,7 @@ struct AffineLoopNest
           for (size_t i = innermostLoopInd; i < numToRemove + innermostLoopInd;
                ++i)
             A(m, i) = A(m, i + numRemainingLoops);
-          A(m, _(numToRemove + innermostLoopInd, N)) = tmp;
+          A(m, _(numToRemove + innermostLoopInd, N)) << tmp;
         }
       }
     } else

@@ -7,11 +7,11 @@
 #include "BitSets.hpp"
 #include "Containers/BumpMapSet.hpp"
 #include "Utilities/Allocators.hpp"
+#include <Math/BumpVector.hpp>
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
 #include <llvm/ADT/ArrayRef.h>
-
 #include <llvm/ADT/SmallPtrSet.h>
 #include <llvm/ADT/SmallVector.h>
 #include <llvm/IR/BasicBlock.h>
@@ -21,8 +21,8 @@
 #include <set>
 #include <sys/select.h>
 
-void buildInstructionGraph(BumpAlloc<> &alloc, Instruction::Cache &cache,
-                           LinearProgramLoopBlock &LB) {
+inline void buildInstructionGraph(BumpAlloc<> &alloc, Instruction::Cache &cache,
+                                  LinearProgramLoopBlock &LB) {
   for (auto &node : LB.getNodes()) {
     auto access = node.getMemAccesses(alloc, LB.getMemoryAccesses());
     for (auto *mem : access) {
@@ -45,11 +45,11 @@ inline void merge(aset<Instruction *> &merged, aset<Instruction *> &toMerge) {
 }
 struct ReMapper {
   map<Instruction *, Instruction *> reMap;
-  auto operator[](Instruction *I) -> Instruction * {
-    if (auto f = reMap.find(I); f != reMap.end()) return f->second;
-    return I;
+  auto operator[](Instruction *J) -> Instruction * {
+    if (auto f = reMap.find(J); f != reMap.end()) return f->second;
+    return J;
   }
-  void remapFromTo(Instruction *I, Instruction *J) { reMap[I] = J; }
+  void remapFromTo(Instruction *K, Instruction *J) { reMap[K] = J; }
 };
 
 // represents the cost of merging key=>values; cost is hopefully negative.
@@ -119,10 +119,10 @@ struct MergingCost {
   // however, isMerged(I, J) == isMerged(J, I)
   // so we ignore easily swappable parameters
   // NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
-  auto isMerged(Instruction *I, Instruction *J) const -> bool {
+  auto isMerged(Instruction *L, Instruction *J) const -> bool {
     Instruction *K = J;
     do {
-      if (I == K) return true;
+      if (L == K) return true;
       K = findMerge(K);
     } while (K && K != J);
     return false;
@@ -160,10 +160,8 @@ struct MergingCost {
     BumpAlloc<> &alloc;
     Instruction::Cache &cache;
     ReMapper &reMap;
-    llvm::MutableArrayRef<Instruction *> operands;
-    constexpr operator llvm::MutableArrayRef<Instruction *>() const {
-      return operands;
-    }
+    MutPtrVector<Instruction *> operands;
+    constexpr operator MutPtrVector<Instruction *>() const { return operands; }
     void merge(size_t i, Instruction *A, Instruction *B) {
       operands[i] = reMap[A]->replaceAllUsesOf(reMap[B]);
     }
@@ -178,7 +176,7 @@ struct MergingCost {
   static auto init(Allocate a, Instruction *A) -> SelectAllocator {
     size_t numOps = A->getNumOperands();
     auto **operandsPtr = a.alloc.allocate<Instruction *>(numOps);
-    llvm::MutableArrayRef<Instruction *> operands(operandsPtr, numOps);
+    MutPtrVector<Instruction *> operands{operandsPtr, numOps};
     return SelectAllocator{a.alloc, a.cache, a.reMap, operands};
   }
   static auto init(Count, Instruction *) -> SelectCounter {
@@ -212,8 +210,8 @@ struct MergingCost {
     // so we need to check if any operand pairs are merged with each other.
     // note `isMerged(a,a) == true`, so that's the one query we need to use.
     auto selector = init(selects, A);
-    llvm::MutableArrayRef<Instruction *> operandsA = A->getOperands();
-    llvm::MutableArrayRef<Instruction *> operandsB = B->getOperands();
+    MutPtrVector<Instruction *> operandsA = A->getOperands();
+    MutPtrVector<Instruction *> operandsB = B->getOperands();
     size_t numOperands = operandsA.size();
     assert(numOperands == operandsB.size());
     uint8_t associativeOpsFlag = B->associativeOperandsFlag();
@@ -316,20 +314,20 @@ struct MergingCost {
   }
 };
 
-void mergeInstructions(
+inline void mergeInstructions(
   BumpAlloc<> &alloc, Instruction::Cache &cache, Predicate::Map &predMap,
   llvm::TargetTransformInfo &TTI, unsigned int vectorBits,
   amap<std::pair<Instruction::Intrinsic, llvm::Type *>,
-       llvm::SmallVector<std::pair<Instruction *, Predicate::Set>>> &opMap,
-  llvm::SmallVectorImpl<MergingCost *> &mergingCosts, Instruction *I,
+       BumpPtrVector<std::pair<Instruction *, Predicate::Set>>> &opMap,
+  llvm::SmallVectorImpl<MergingCost *> &mergingCosts, Instruction *J,
   llvm::BasicBlock *BB, Predicate::Set &preds) {
   // have we already visited?
-  if (mergingCosts.front()->visited(I)) return;
+  if (mergingCosts.front()->visited(J)) return;
   for (auto C : mergingCosts) {
-    if (C->visited(I)) return;
-    C->initAncestors(alloc, I);
+    if (C->visited(J)) return;
+    C->initAncestors(alloc, J);
   }
-  auto op = I->getOpType();
+  auto op = J->getOpType();
   // TODO: confirm that `vec` doesn't get moved if `opMap` is resized
   auto &vec = opMap[op];
   // consider merging with every instruction sharing an opcode
@@ -351,7 +349,7 @@ void mergeInstructions(
     // invalidation, we use an indexed loop
     for (size_t i = 0; i < numMerges; ++i) {
       MergingCost *C = mergingCosts[i];
-      if (C->getAncestors(I)->contains(other)) continue;
+      if (C->getAncestors(J)->contains(other)) continue;
       // we shouldn't have to check the opposite condition
       // if (C->getAncestors(other)->contains(I))
       // because we are traversing in topological order
@@ -359,11 +357,11 @@ void mergeInstructions(
       // so only an ancestor had a chance
       auto *MC = alloc.construct<MergingCost>(*C);
       // MC is a copy of C, except we're now merging
-      MC->merge(alloc, TTI, vectorBits, other, I);
+      MC->merge(alloc, TTI, vectorBits, other, J);
     }
   }
   // descendants aren't legal merge candidates, so check before merging
-  for (Instruction *U : I->getUsers()) {
+  for (Instruction *U : J->getUsers()) {
     if (llvm::BasicBlock *BBU = U->getBasicBlock()) {
       if (BBU == BB) {
         // fast path, skip lookup
@@ -376,7 +374,7 @@ void mergeInstructions(
     }
   }
   // descendants aren't legal merge candidates, so push after merging
-  vec.push_back({I, preds});
+  vec.push_back({J, preds});
   // TODO: prune bad candidates from mergingCosts
 }
 
@@ -391,21 +389,22 @@ void mergeInstructions(
 /// merging as it allocates a lot of memory that it can free when it is done.
 /// TODO: this algorithm is exponential in time and memory.
 /// Odds are that there's way smarter things we can do.
-void mergeInstructions(BumpAlloc<> &alloc, Instruction::Cache &cache,
-                       Predicate::Map &predMap, llvm::TargetTransformInfo &TTI,
-                       BumpAlloc<> &tAlloc, unsigned int vectorBits) {
+inline void mergeInstructions(BumpAlloc<> &alloc, Instruction::Cache &cache,
+                              Predicate::Map &predMap,
+                              llvm::TargetTransformInfo &TTI,
+                              BumpAlloc<> &tAlloc, unsigned int vectorBits) {
   if (!predMap.isDivergent()) return;
   // there is a divergence in the control flow that we can ideally merge
   amap<std::pair<Instruction::Intrinsic, llvm::Type *>,
-       llvm::SmallVector<std::pair<Instruction *, Predicate::Set>>>
-    opMap{};
+       BumpPtrVector<std::pair<Instruction *, Predicate::Set>>>
+    opMap{tAlloc};
   llvm::SmallVector<MergingCost *> mergingCosts;
-  mergingCosts.push_back(alloc.construct<MergingCost>());
+  mergingCosts.emplace_back(alloc);
   for (auto &pred : predMap) {
     for (llvm::Instruction &lI : *pred.first) {
-      if (Instruction *I = cache[&lI]) {
+      if (Instruction *J = cache[&lI]) {
         mergeInstructions(tAlloc, cache, predMap, TTI, vectorBits, opMap,
-                          mergingCosts, I, pred.first, pred.second);
+                          mergingCosts, J, pred.first, pred.second);
       }
     }
   }
@@ -421,9 +420,8 @@ void mergeInstructions(BumpAlloc<> &alloc, Instruction::Cache &cache,
     auto [A, B] = pair;
     A = reMap[A];
     B = reMap[B];
-    llvm::MutableArrayRef<Instruction *> operands =
-      minCostStrategy->mergeOperands(
-        A, B, MergingCost::Allocate{alloc, cache, reMap});
+    auto operands = minCostStrategy->mergeOperands(
+      A, B, MergingCost::Allocate{alloc, cache, reMap});
     A->replaceAllUsesOf(B)->setOperands(operands);
     reMap.remapFromTo(B, A);
   }
@@ -431,9 +429,10 @@ void mergeInstructions(BumpAlloc<> &alloc, Instruction::Cache &cache,
   tAlloc.reset();
 }
 
-void mergeInstructions(BumpAlloc<> &alloc, Instruction::Cache &cache,
-                       LoopTree *loopForest, llvm::TargetTransformInfo &TTI,
-                       BumpAlloc<> &tAlloc, unsigned int vectorBits) {
+inline void mergeInstructions(BumpAlloc<> &alloc, Instruction::Cache &cache,
+                              LoopTree *loopForest,
+                              llvm::TargetTransformInfo &TTI,
+                              BumpAlloc<> &tAlloc, unsigned int vectorBits) {
   for (auto &predMap : loopForest->getPaths())
     mergeInstructions(alloc, cache, predMap, TTI, tAlloc, vectorBits);
   for (auto subLoop : loopForest->getSubLoops())

@@ -8,7 +8,6 @@
 #include <cstddef>
 #include <iterator>
 #include <limits>
-
 #include <llvm/ADT/SmallVector.h>
 #include <llvm/Analysis/LoopInfo.h>
 #include <llvm/Analysis/ScalarEvolution.h>
@@ -36,6 +35,10 @@ struct LoopTree {
   [[no_unique_address]] Optional<LoopTree *> parentLoop{nullptr};
   [[no_unique_address]] llvm::SmallVector<NotNull<MemoryAccess>> memAccesses{};
 
+  ~LoopTree() {
+    for (auto subLoop : subLoops) subLoop->~LoopTree();
+  }
+
   auto getPaths() -> llvm::MutableArrayRef<Predicate::Map> { return paths; }
   auto getPaths() const -> llvm::ArrayRef<Predicate::Map> { return paths; }
   auto getSubLoops() -> llvm::MutableArrayRef<NotNull<LoopTree>> {
@@ -56,8 +59,8 @@ struct LoopTree {
   }
   // LoopTree(const LoopTree &) = default;
   // LoopTree(LoopTree &&) = default;
-  auto operator=(const LoopTree &) -> LoopTree & = default;
-  auto operator=(LoopTree &&) -> LoopTree & = default;
+  auto operator=(const LoopTree &) -> LoopTree & = delete;
+  auto operator=(LoopTree &&) -> LoopTree & = delete;
   LoopTree(llvm::SmallVector<NotNull<LoopTree>> sL,
            llvm::SmallVector<Predicate::Map> pth)
     : loop(nullptr), subLoops(std::move(sL)), paths(std::move(pth)) {}
@@ -109,9 +112,9 @@ struct LoopTree {
   [[nodiscard]] auto size() const -> size_t { return subLoops.size(); }
 
   static void split(BumpAlloc<> &alloc,
-                    llvm::SmallVectorImpl<NotNull<LoopTree>> &trees,
-                    llvm::SmallVectorImpl<Predicate::Map> &paths,
-                    llvm::SmallVectorImpl<NotNull<LoopTree>> &subTree) {
+                    llvm::SmallVector<NotNull<LoopTree>> &trees,
+                    llvm::SmallVector<Predicate::Map> &paths,
+                    llvm::SmallVector<NotNull<LoopTree>> &subTree) {
     if (subTree.size()) {
       assert(1 + subTree.size() == paths.size());
       auto *newTree =

@@ -197,6 +197,7 @@ public:
   constexpr BumpAlloc(BumpAlloc &&alloc) noexcept
     : slab{alloc.slab}, sEnd{alloc.sEnd}, slabs{std::move(alloc.slabs)},
       customSlabs{std::move(alloc.customSlabs)} {}
+  BumpAlloc(const BumpAlloc &) = delete;
   constexpr ~BumpAlloc() {
     for (auto *Slab : slabs)
       llvm::deallocate_buffer(Slab, SlabSize, MinAlignment);

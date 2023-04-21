@@ -254,7 +254,7 @@ constexpr void slackEqualityConstraints(MutPtrMatrix<int64_t> C,
 // counts how many negative and positive elements there are in row `i`.
 // A row corresponds to a particular variable in `A'x <= b`.
 constexpr auto countNonZeroSign(DensePtrMatrix<int64_t> A, size_t i)
-  -> std::pair<size_t, size_t> {
+  -> std::array<size_t, 2> {
   size_t numNeg = 0;
   size_t numPos = 0;
   Row numRow = A.numRow();
@@ -263,7 +263,7 @@ constexpr auto countNonZeroSign(DensePtrMatrix<int64_t> A, size_t i)
     numNeg += (Aij < 0);
     numPos += (Aij > 0);
   }
-  return std::make_pair(numNeg, numPos);
+  return {numNeg, numPos};
 }
 
 /// x == 0 -> 0, x < 0 -> 1, x > 0 -> 2

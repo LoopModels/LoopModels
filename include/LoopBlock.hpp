@@ -71,8 +71,7 @@ public:
     addMemory(sId, store, nodeIndex);
   }
   [[nodiscard]] constexpr auto
-  getMemAccesses(BumpAlloc<> &alloc,
-                 llvm::ArrayRef<MemoryAccess *> memAccess) const
+  getMemAccesses(BumpAlloc<> &alloc, PtrVector<MemoryAccess *> memAccess) const
     -> Vector<Address *> {
     // First, we invert the schedule matrix.
     SquarePtrMatrix<int64_t> Phi = schedule.getPhi();
@@ -110,6 +109,7 @@ public:
   constexpr void addInNeighbor(unsigned int i) { inNeighbors.insert(i); }
   constexpr void init(BumpAlloc<> &alloc) {
     schedule = AffineSchedule(alloc, getNumLoops());
+    schedule.getFusionOmega() << 0;
   }
   constexpr void addMemory(unsigned memId, MemoryAccess *mem,
                            unsigned nodeIndex) {
@@ -1042,7 +1042,7 @@ public:
     for (auto &&node : nodes) {
       if (depth >= node.getNumLoops()) continue;
       if (!hasActiveEdges(g, node)) {
-        node.getOffsetOmega()[depth] = std::numeric_limits<int64_t>::min();
+        node.getOffsetOmega(depth) = std::numeric_limits<int64_t>::min();
         if (!node.phiIsScheduled(depth))
           node.getSchedule(depth) << std::numeric_limits<int64_t>::min();
         continue;
@@ -1219,7 +1219,7 @@ public:
       Graph &gi = graphs[i];
       if (!canFuse(*gp, gi, d)) {
         // do not fuse
-        for (auto &&v : *gp) v.getFusionOmega()[d] = unfusedOffset;
+        for (auto &&v : *gp) v.getFusionOmega(d) = unfusedOffset;
         ++unfusedOffset;
         // gi is the new base graph
         gp = &gi;
@@ -1228,7 +1228,7 @@ public:
         (*gp) |= gi;
     }
     // set omegas for gp
-    for (auto &&v : *gp) v.getFusionOmega()[d] = unfusedOffset;
+    for (auto &&v : *gp) v.getFusionOmega(d) = unfusedOffset;
     ++d;
     // size_t numSat = satDeps.size();
     for (auto i : baseGraphs)

@@ -283,7 +283,8 @@ struct MutArray : Array<T, S>, ArrayOps<T, S, MutArray<T, S>> {
 
   constexpr MutArray(const MutArray &) = default;
   constexpr MutArray(MutArray &&) noexcept = default;
-  constexpr auto operator=(const MutArray &) -> MutArray & = default;
+  constexpr auto operator=(const MutArray &) -> MutArray & = delete;
+  // constexpr auto operator=(const MutArray &) -> MutArray & = default;
   constexpr auto operator=(MutArray &&) noexcept -> MutArray & = default;
 
   constexpr void truncate(S nz) {
@@ -851,7 +852,8 @@ struct ReallocView : ResizeableView<T, S, U> {
 #else
     T *newPtr = allocator.allocate(newCapacity);
 #endif
-    if (U oldLen = U(this->sz)) std::copy_n(this->data(), oldLen, newPtr);
+    if (U oldLen = U(this->sz))
+      std::uninitialized_copy_n(this->data(), oldLen, newPtr);
     maybeDeallocate(newPtr, newCapacity);
   }
   [[nodiscard]] constexpr auto get_allocator() const noexcept -> A {

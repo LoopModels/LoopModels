@@ -273,3 +273,4 @@ template <typename T, unsigned InitialCapacity = 8> struct BumpPtrVector {
 static_assert(std::is_trivially_destructible_v<MutPtrVector<int64_t>>);
 static_assert(std::is_trivially_destructible_v<BumpPtrVector<int64_t>>);
 } // namespace LinAlg
+using LinAlg::BumpPtrVector;

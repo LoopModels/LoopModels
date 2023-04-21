@@ -173,7 +173,7 @@ struct Instruction {
   [[no_unique_address]] LinAlg::BumpPtrVector<RecipThroughputLatency> costs;
 
   void setOperands(MutPtrVector<Instruction *> ops) {
-    operands = ops;
+    operands << ops;
     for (auto op : ops) op->users.insert(this);
   }
 
@@ -1311,6 +1311,7 @@ struct Map {
   }
 
 }; // struct Map
+
 } // namespace Predicate
 
 inline auto Instruction::Cache::getInstruction(BumpAlloc<> &alloc,

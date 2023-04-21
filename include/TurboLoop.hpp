@@ -81,6 +81,13 @@ public:
   [[no_unique_address]] Instruction::Cache instrCache;
   [[no_unique_address]] unsigned registerCount;
 
+  TurboLoopPass() = default;
+  TurboLoopPass(const TurboLoopPass &) = delete;
+  TurboLoopPass(TurboLoopPass &&) = default;
+  ~TurboLoopPass() {
+    for (auto l : loopForests) l->~LoopTree();
+  }
+
   /// the process of building the LoopForest has the following steps:
   /// 1. build initial forest of trees
   /// 2. instantiate AffineLoopNest<true>s; any non-affine loops
@@ -151,7 +158,7 @@ public:
   /// the first sub-loop's preheader
   /// 6. `llvm::BasicBlock *E`: Exit - we need a direct path from the last
   /// sub-loop's exit block to this.
-  auto pushLoopTree(llvm::SmallVectorImpl<NotNull<LoopTree>> &pForest,
+  auto pushLoopTree(llvm::SmallVector<NotNull<LoopTree>> &pForest,
                     llvm::Loop *L, llvm::ArrayRef<llvm::Loop *> subLoops,
                     llvm::BasicBlock *H, llvm::BasicBlock *E,
                     NoWrapRewriter &nwr) -> size_t {
@@ -231,8 +238,8 @@ public:
     // Finally, we need `H` to have a direct path to `E`.
     return 0;
   }
-  void split(llvm::SmallVectorImpl<NotNull<LoopTree>> &branches,
-             llvm::SmallVectorImpl<Predicate::Map> &branchBlocks,
+  void split(llvm::SmallVector<NotNull<LoopTree>> &branches,
+             llvm::SmallVector<Predicate::Map> &branchBlocks,
              llvm::BasicBlock *BB, llvm::Loop *L) {
 
     auto predMapAbridged =
@@ -365,7 +372,7 @@ public:
     const auto *basePointer = llvm::dyn_cast<llvm::SCEVUnknown>(pb);
     // Do not delinearize if we cannot find the base pointer.
     if (!basePointer) {
-      if (ORE && L) {
+      if (ORE && L) [[unlikely]] {
         remark("ArrayRefDeliniarize", LT.loop,
                "ArrayReference failed because !basePointer\n", ptr);
       }
@@ -388,7 +395,7 @@ public:
     // IntMatrix R(numLoops, subscripts.size());
     size_t numPeeled = L->getLoopDepth() - numLoops;
     // numLoops x arrayDim
-    IntMatrix Rt{StridedDims{subscripts.size(), numLoops}};
+    IntMatrix Rt{StridedDims{subscripts.size(), numLoops}, 0};
     IntMatrix Bt;
     llvm::SmallVector<const llvm::SCEV *, 3> symbolicOffsets;
     uint64_t blackList{0};
@@ -400,7 +407,7 @@ public:
         blackList |= fillAffineIndices(Rt(i, _), offsets, symbolicOffsets,
                                        subscripts[i], 1, numPeeled);
         Bt.resize(subscripts.size(), offsets.size());
-        Bt(i, _) = offsets;
+        Bt(i, _) << offsets;
       }
     }
     if (blackList) {
@@ -432,7 +439,7 @@ public:
         } else {
           Col N = Bt.numCol();
           Bt.resize(N + 1);
-          Bt(_, N) = Rt(_, i);
+          Bt(_, N) << Rt(_, i);
           symbolicOffsets.push_back(S);
         }
       }
