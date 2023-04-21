@@ -117,6 +117,8 @@ struct LoopTree {
                     llvm::SmallVector<NotNull<LoopTree>> &subTree) {
     if (subTree.size()) {
       assert(1 + subTree.size() == paths.size());
+      llvm::errs() << "splitting loop tree\nSubTrees:\n";
+      for (auto sub : subTree) llvm::errs() << *sub << "\n";
       auto *newTree =
         new (alloc) LoopTree{std::move(subTree), std::move(paths)};
       trees.push_back(newTree);

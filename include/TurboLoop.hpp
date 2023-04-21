@@ -215,10 +215,25 @@ public:
         }
       }
       if (!anyFail) {
+        // branches.size() > 0 because we have numSubLoops > 0 and !anyFail
+        // !anyFail means we called pushLoopTree, and returned depth > 0
+        // which means it must have called pushLoopTree, pushing into branches
+        // (pushLoopTree pushes into first arg, pForest, whenever ret > 0)
+        invariant(branches.size() > 0);
         if (auto predMapAbridged =
               Predicate::Map::descend(allocator, instrCache, H, E, L)) {
           branchBlocks.push_back(std::move(*predMapAbridged));
-          LoopTree::split(allocator, pForest, branchBlocks, branches);
+
+          auto *newTree = new (allocator)
+            LoopTree{allocator, L,
+                     branches.front()->affineLoop->removeInnerMost(allocator),
+                     branches, branchBlocks};
+          pForest.push_back(newTree);
+
+          // if (L) llvm::errs() << "Splitting loop0: " << *L << "\n";
+          // else llvm::errs() << "Splitting top loop0\n";
+          // LoopTree::split(allocator, pForest, branchBlocks, branches);
+          // pForest.back()->loop = L;
           return ++interiorDepth;
         }
       }
@@ -246,6 +261,7 @@ public:
       Predicate::Map::descend(allocator, instrCache, BB, BB, L);
     assert(predMapAbridged);
     branchBlocks.push_back(std::move(*predMapAbridged));
+    llvm::errs() << "Splitting loop1: " << *L << "\n";
     LoopTree::split(allocator, loopForests, branchBlocks, branches);
   }
 
@@ -455,15 +471,16 @@ public:
   auto getLoopTree(llvm::Loop *L) -> LoopTree * { return loopMap[L]; }
   auto addRef(LoopTree &LT, LoadOrStoreInst auto *J, Vector<unsigned> &omega)
     -> bool {
+    llvm::errs() << "addRef (" << LT.loop << "): " << *J << "\n";
     llvm::Value *ptr = J->getPointerOperand();
     // llvm::Type *type = I->getPointerOperandType();
     const llvm::SCEV *elSize = SE->getElementSize(J);
     // TODO: support top level array refs
     if (LT.loop) {
       if (auto *iptr = llvm::dyn_cast<llvm::Instruction>(ptr)) {
-        if (!arrayRef(LT, iptr, elSize, J, omega)) {
-          return false;
-        } else if (ORE) [[unlikely]] {
+        llvm::errs() << "ptr: " << *ptr << "\n";
+        if (!arrayRef(LT, iptr, elSize, J, omega)) return false;
+        if (ORE) [[unlikely]] {
           llvm::SmallVector<char> x;
           llvm::raw_svector_ostream os(x);
           if (llvm::isa<llvm::LoadInst>(J))
