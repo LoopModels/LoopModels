@@ -188,21 +188,23 @@ $(function() {
 <div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;                    llvm::SmallVector&lt;<a class="code" href="structNotNull.html">NotNull&lt;LoopTree&gt;</a>&gt; &amp;subTree) {</div>
 <div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;    <span class="keywordflow">if</span> (subTree.size()) {</div>
 <div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;      assert(1 + subTree.size() == paths.size());</div>
-<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;      <span class="keyword">auto</span> *newTree =</div>
-<div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;        <span class="keyword">new</span> (alloc) <a class="code" href="structLoopTree.html">LoopTree</a>{std::move(subTree), std::move(paths)};</div>
-<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;      trees.push_back(newTree);</div>
-<div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;      subTree.clear();</div>
-<div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;    }</div>
-<div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160;    paths.clear();</div>
-<div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;  }</div>
-<div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;  <span class="keywordtype">void</span> dumpAllMemAccess()<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160;    llvm::errs() &lt;&lt; <span class="stringliteral">&quot;dumpAllMemAccess for &quot;</span>;</div>
-<div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160;    <span class="keywordflow">if</span> (loop) llvm::errs() &lt;&lt; *loop &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
-<div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160;    <span class="keywordflow">else</span> llvm::errs() &lt;&lt; <span class="stringliteral">&quot;toplevel\n&quot;</span>;</div>
-<div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;mem : memAccesses) llvm::errs() &lt;&lt; <span class="stringliteral">&quot;mem = &quot;</span> &lt;&lt; mem &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
-<div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">auto</span> sL : subLoops) sL-&gt;dumpAllMemAccess();</div>
-<div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;  }</div>
-<div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;};</div>
+<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;      llvm::errs() &lt;&lt; <span class="stringliteral">&quot;splitting loop tree\nSubTrees:\n&quot;</span>;</div>
+<div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;      <span class="keywordflow">for</span> (<span class="keyword">auto</span> sub : subTree) llvm::errs() &lt;&lt; *sub &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
+<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;      <span class="keyword">auto</span> *newTree =</div>
+<div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;        <span class="keyword">new</span> (alloc) <a class="code" href="structLoopTree.html">LoopTree</a>{std::move(subTree), std::move(paths)};</div>
+<div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;      trees.push_back(newTree);</div>
+<div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160;      subTree.clear();</div>
+<div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;    }</div>
+<div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;    paths.clear();</div>
+<div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160;  }</div>
+<div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160;  <span class="keywordtype">void</span> dumpAllMemAccess()<span class="keyword"> const </span>{</div>
+<div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160;    llvm::errs() &lt;&lt; <span class="stringliteral">&quot;dumpAllMemAccess for &quot;</span>;</div>
+<div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160;    <span class="keywordflow">if</span> (loop) llvm::errs() &lt;&lt; *loop &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
+<div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160;    <span class="keywordflow">else</span> llvm::errs() &lt;&lt; <span class="stringliteral">&quot;toplevel\n&quot;</span>;</div>
+<div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;mem : memAccesses) llvm::errs() &lt;&lt; <span class="stringliteral">&quot;mem = &quot;</span> &lt;&lt; mem &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
+<div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">auto</span> sL : subLoops) sL-&gt;dumpAllMemAccess();</div>
+<div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;  }</div>
+<div class="line"><a name="l00136"></a><span class="lineno">  136</span>&#160;};</div>
 <div class="ttc" id="astructAffineLoopNest_html"><div class="ttname"><a href="structAffineLoopNest.html">AffineLoopNest&lt; true &gt;</a></div></div>
 <div class="ttc" id="astructBumpAlloc_html"><div class="ttname"><a href="structBumpAlloc.html">BumpAlloc</a></div><div class="ttdef"><b>Definition:</b> Allocators.hpp:31</div></div>
 <div class="ttc" id="astructLoopTree_html"><div class="ttname"><a href="structLoopTree.html">LoopTree</a></div><div class="ttdef"><b>Definition:</b> LoopForest.hpp:23</div></div>
