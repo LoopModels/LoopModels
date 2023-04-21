@@ -1,14 +1,9 @@
 var searchData=
 [
-  ['predicates_359',['Predicates',['../structInstruction_1_1Predicates.html',1,'Instruction']]],
-  ['promoteeltype_360',['PromoteEltype',['../structPromoteEltype.html',1,'']]],
-  ['promoteeltype_3c_20a_2c_20b_20_3e_361',['PromoteEltype&lt; A, B &gt;',['../structPromoteEltype_3_01A_00_01B_01_4.html',1,'']]],
-  ['promotetype_362',['PromoteType',['../structPromoteType.html',1,'']]],
-  ['promotetype_3c_20a_2c_20b_20_3e_363',['PromoteType&lt; A, B &gt;',['../structPromoteType_3_01A_00_01B_01_4.html',1,'']]],
-  ['promotetype_3c_20a_2c_20std_3a_3aintegral_5fconstant_3c_20b_2c_20v_20_3e_20_3e_364',['PromoteType&lt; A, std::integral_constant&lt; B, V &gt; &gt;',['../structPromoteType_3_01A_00_01std_1_1integral__constant_3_01B_00_01V_01_4_01_4.html',1,'']]],
-  ['promotetype_3c_20i_2c_20rational_20_3e_365',['PromoteType&lt; I, Rational &gt;',['../structPromoteType_3_01I_00_01Rational_01_4.html',1,'']]],
-  ['promotetype_3c_20rational_2c_20i_20_3e_366',['PromoteType&lt; Rational, I &gt;',['../structPromoteType_3_01Rational_00_01I_01_4.html',1,'']]],
-  ['promotetype_3c_20rational_2c_20rational_20_3e_367',['PromoteType&lt; Rational, Rational &gt;',['../structPromoteType_3_01Rational_00_01Rational_01_4.html',1,'']]],
-  ['promotetype_3c_20std_3a_3aintegral_5fconstant_3c_20a_2c_20v_20_3e_2c_20b_20_3e_368',['PromoteType&lt; std::integral_constant&lt; A, V &gt;, B &gt;',['../structPromoteType_3_01std_1_1integral__constant_3_01A_00_01V_01_4_00_01B_01_4.html',1,'']]],
-  ['ptrsymboliccomparator_369',['PtrSymbolicComparator',['../structcomparator_1_1PtrSymbolicComparator.html',1,'comparator']]]
+  ['range_310',['Range',['../structLinearAlgebra_1_1Range.html',1,'LinearAlgebra']]],
+  ['range_3c_20b_2c_20e_20_3e_311',['Range&lt; B, E &gt;',['../structLinearAlgebra_1_1Range_3_01B_00_01E_01_4.html',1,'LinearAlgebra']]],
+  ['rational_312',['Rational',['../structRational.html',1,'']]],
+  ['recipthroughputlatency_313',['RecipThroughputLatency',['../structRecipThroughputLatency.html',1,'']]],
+  ['reference_314',['Reference',['../structBitSet_1_1Reference.html',1,'BitSet&lt; T &gt;::Reference'],['../structLinearAlgebra_1_1SmallSparseMatrix_1_1Reference.html',1,'LinearAlgebra::SmallSparseMatrix&lt; T &gt;::Reference'],['../structPredicate_1_1Intersection_1_1Reference.html',1,'Predicate::Intersection::Reference']]],
+  ['remapper_315',['ReMapper',['../structReMapper.html',1,'']]]
 ];
