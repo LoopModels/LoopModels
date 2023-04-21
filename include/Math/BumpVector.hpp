@@ -103,13 +103,7 @@ template <typename T, unsigned InitialCapacity = 8> struct BumpPtrVector {
     return mem[Size - 1];
   }
   [[nodiscard]] constexpr auto isEmpty() const -> bool { return Size == 0; }
-  constexpr void clear() {
-    Size = 0;
-    if constexpr (InitialCapacity == 0) {
-      Capacity = 0;
-      Alloc->deallocate(mem);
-    }
-  }
+  constexpr void clear() { Size = 0; }
   // copy constructor
   // constexpr MutPtrVector() = default;
   // constexpr MutPtrVector(const MutPtrVector<T> &x) = default;
@@ -256,19 +250,15 @@ template <typename T, unsigned InitialCapacity = 8> struct BumpPtrVector {
   }
   constexpr auto push_back(T x) -> T & {
     size_t offset = Size++;
-    if (Size > Capacity) [[unlikely]] {
-      if constexpr (InitialCapacity == 0) reserve(Size + Size);
-      else reserve(offset + offset);
-    }
+    if (Size > Capacity) [[unlikely]]
+      reserve(Size + Size);
     return *std::construct_at(mem + offset, std::move(x));
   }
   template <typename... Args>
   constexpr auto emplace_back(Args &&...args) -> T & {
     size_t offset = Size++;
-    if (Size > Capacity) [[unlikely]] {
-      if constexpr (InitialCapacity == 0) reserve(Size + Size);
-      else reserve(offset + offset);
-    }
+    if (Size > Capacity) [[unlikely]]
+      reserve(Size + Size);
     return *std::construct_at(mem + offset, std::forward<Args>(args)...);
   }
   [[nodiscard]] constexpr auto empty() const -> bool { return Size == 0; }
