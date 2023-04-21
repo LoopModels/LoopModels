@@ -566,7 +566,7 @@ $(function() {
 <div class="line"><a name="l00509"></a><span class="lineno">  509</span>&#160;          <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = innermostLoopInd; i &lt; numToRemove + innermostLoopInd;</div>
 <div class="line"><a name="l00510"></a><span class="lineno">  510</span>&#160;               ++i)</div>
 <div class="line"><a name="l00511"></a><span class="lineno">  511</span>&#160;            A(m, i) = A(m, i + numRemainingLoops);</div>
-<div class="line"><a name="l00512"></a><span class="lineno">  512</span>&#160;          A(m, _(numToRemove + innermostLoopInd, N)) = tmp;</div>
+<div class="line"><a name="l00512"></a><span class="lineno">  512</span>&#160;          A(m, _(numToRemove + innermostLoopInd, N)) &lt;&lt; tmp;</div>
 <div class="line"><a name="l00513"></a><span class="lineno">  513</span>&#160;        }</div>
 <div class="line"><a name="l00514"></a><span class="lineno">  514</span>&#160;      }</div>
 <div class="line"><a name="l00515"></a><span class="lineno">  515</span>&#160;    } <span class="keywordflow">else</span></div>

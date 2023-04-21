@@ -92,12 +92,12 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>isLoopSimplifyForm</b
 <tr class="memitem:a7e65a04199089597b99fcd04ca0bb1ce"><td class="memItemLeft" align="right" valign="top"><a id="a7e65a04199089597b99fcd04ca0bb1ce"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>getOuterLoop</b> () const -&gt; llvm::Loop *</td></tr>
 <tr class="separator:a7e65a04199089597b99fcd04ca0bb1ce"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac2a35572c599f1ac0d23f0f5f6cde04b"><td class="memItemLeft" align="right" valign="top"><a id="ac2a35572c599f1ac0d23f0f5f6cde04b"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator=</b> (const <a class="el" href="structLoopTree.html">LoopTree</a> &amp;) -&gt; <a class="el" href="structLoopTree.html">LoopTree</a> &amp;=default</td></tr>
-<tr class="separator:ac2a35572c599f1ac0d23f0f5f6cde04b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac836944aef0bd253ff09a9e4a7287d7d"><td class="memItemLeft" align="right" valign="top"><a id="ac836944aef0bd253ff09a9e4a7287d7d"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator=</b> (<a class="el" href="structLoopTree.html">LoopTree</a> &amp;&amp;) -&gt; <a class="el" href="structLoopTree.html">LoopTree</a> &amp;=default</td></tr>
-<tr class="separator:ac836944aef0bd253ff09a9e4a7287d7d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9b7c1748214784c88fc004a8dbe93fe5"><td class="memItemLeft" align="right" valign="top"><a id="a9b7c1748214784c88fc004a8dbe93fe5"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator=</b> (const <a class="el" href="structLoopTree.html">LoopTree</a> &amp;) -&gt; <a class="el" href="structLoopTree.html">LoopTree</a> &amp;=delete</td></tr>
+<tr class="separator:a9b7c1748214784c88fc004a8dbe93fe5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a004d6a22a0869ffe26acb3cd5371a93c"><td class="memItemLeft" align="right" valign="top"><a id="a004d6a22a0869ffe26acb3cd5371a93c"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator=</b> (<a class="el" href="structLoopTree.html">LoopTree</a> &amp;&amp;) -&gt; <a class="el" href="structLoopTree.html">LoopTree</a> &amp;=delete</td></tr>
+<tr class="separator:a004d6a22a0869ffe26acb3cd5371a93c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a08b4810e14e93d4be74293b2e72cf8c6"><td class="memItemLeft" align="right" valign="top"><a id="a08b4810e14e93d4be74293b2e72cf8c6"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>LoopTree</b> (llvm::SmallVector&lt; <a class="el" href="structNotNull.html">NotNull</a>&lt; <a class="el" href="structLoopTree.html">LoopTree</a> &gt;&gt; sL, llvm::SmallVector&lt; <a class="el" href="structPredicate_1_1Map.html">Predicate::Map</a> &gt; pth)</td></tr>
 <tr class="separator:a08b4810e14e93d4be74293b2e72cf8c6"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -137,9 +137,9 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>dumpAllMemAccess</b> 
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
-<tr class="memitem:a5641f64d8ab5efcc616290ac05a3bb16"><td class="memItemLeft" align="right" valign="top"><a id="a5641f64d8ab5efcc616290ac05a3bb16"></a>
-static void&#160;</td><td class="memItemRight" valign="bottom"><b>split</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, llvm::SmallVectorImpl&lt; <a class="el" href="structNotNull.html">NotNull</a>&lt; <a class="el" href="structLoopTree.html">LoopTree</a> &gt;&gt; &amp;trees, llvm::SmallVectorImpl&lt; <a class="el" href="structPredicate_1_1Map.html">Predicate::Map</a> &gt; &amp;paths, llvm::SmallVectorImpl&lt; <a class="el" href="structNotNull.html">NotNull</a>&lt; <a class="el" href="structLoopTree.html">LoopTree</a> &gt;&gt; &amp;subTree)</td></tr>
-<tr class="separator:a5641f64d8ab5efcc616290ac05a3bb16"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa8e3069a8ead1c137cd03752ae32db1b"><td class="memItemLeft" align="right" valign="top"><a id="aa8e3069a8ead1c137cd03752ae32db1b"></a>
+static void&#160;</td><td class="memItemRight" valign="bottom"><b>split</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, llvm::SmallVector&lt; <a class="el" href="structNotNull.html">NotNull</a>&lt; <a class="el" href="structLoopTree.html">LoopTree</a> &gt;&gt; &amp;trees, llvm::SmallVector&lt; <a class="el" href="structPredicate_1_1Map.html">Predicate::Map</a> &gt; &amp;paths, llvm::SmallVector&lt; <a class="el" href="structNotNull.html">NotNull</a>&lt; <a class="el" href="structLoopTree.html">LoopTree</a> &gt;&gt; &amp;subTree)</td></tr>
+<tr class="separator:aa8e3069a8ead1c137cd03752ae32db1b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>

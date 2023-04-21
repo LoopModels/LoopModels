@@ -320,7 +320,7 @@ $(function() {
 <div class="line"><a name="l00254"></a><span class="lineno">  254</span>&#160;<span class="comment">// counts how many negative and positive elements there are in row `i`.</span></div>
 <div class="line"><a name="l00255"></a><span class="lineno">  255</span>&#160;<span class="comment">// A row corresponds to a particular variable in `A&#39;x &lt;= b`.</span></div>
 <div class="line"><a name="l00256"></a><span class="lineno">  256</span>&#160;constexpr <span class="keyword">auto</span> countNonZeroSign(DensePtrMatrix&lt;int64_t&gt; A, <span class="keywordtype">size_t</span> i)</div>
-<div class="line"><a name="l00257"></a><span class="lineno">  257</span>&#160;  -&gt; std::pair&lt;size_t, size_t&gt; {</div>
+<div class="line"><a name="l00257"></a><span class="lineno">  257</span>&#160;  -&gt; std::array&lt;size_t, 2&gt; {</div>
 <div class="line"><a name="l00258"></a><span class="lineno">  258</span>&#160;  <span class="keywordtype">size_t</span> numNeg = 0;</div>
 <div class="line"><a name="l00259"></a><span class="lineno">  259</span>&#160;  <span class="keywordtype">size_t</span> numPos = 0;</div>
 <div class="line"><a name="l00260"></a><span class="lineno">  260</span>&#160;  Row numRow = A.numRow();</div>
@@ -329,7 +329,7 @@ $(function() {
 <div class="line"><a name="l00263"></a><span class="lineno">  263</span>&#160;    numNeg += (Aij &lt; 0);</div>
 <div class="line"><a name="l00264"></a><span class="lineno">  264</span>&#160;    numPos += (Aij &gt; 0);</div>
 <div class="line"><a name="l00265"></a><span class="lineno">  265</span>&#160;  }</div>
-<div class="line"><a name="l00266"></a><span class="lineno">  266</span>&#160;  <span class="keywordflow">return</span> std::make_pair(numNeg, numPos);</div>
+<div class="line"><a name="l00266"></a><span class="lineno">  266</span>&#160;  <span class="keywordflow">return</span> {numNeg, numPos};</div>
 <div class="line"><a name="l00267"></a><span class="lineno">  267</span>&#160;}</div>
 <div class="line"><a name="l00268"></a><span class="lineno">  268</span>&#160; </div>
 <div class="line"><a name="l00270"></a><span class="lineno">  270</span>&#160;<span class="keyword">inline</span> constexpr <span class="keyword">auto</span> orderedCmp(<span class="keyword">auto</span> x) -&gt; <span class="keywordtype">size_t</span> {</div>

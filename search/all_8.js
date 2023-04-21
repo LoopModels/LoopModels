@@ -14,7 +14,7 @@ var searchData=
   ['intrinsic_108',['Intrinsic',['../structInstruction_1_1Intrinsic.html',1,'Instruction::Intrinsic'],['../structInstruction_1_1Intrinsic.html#a2ceb99f52e33be8c08e77fa0cd476a6b',1,'Instruction::Intrinsic::Intrinsic()']]],
   ['isempty_109',['isEmpty',['../structPredicate_1_1Intersection.html#a955076f74163093f46e90c5f1877ad93',1,'Predicate::Intersection']]],
   ['isforward_110',['isForward',['../classDependence.html#a8f03cfecfe1734c6c395bf3184269536',1,'Dependence']]],
-  ['ismerged_111',['isMerged',['../structMergingCost.html#a0b7381c441c4860be32aab9e6348620a',1,'MergingCost::isMerged(Instruction *I, Instruction *J) const -&gt; bool'],['../structMergingCost.html#af9b5ac0cc98e21087c9eefccb31bce58',1,'MergingCost::isMerged(Instruction *key) const -&gt; bool']]],
+  ['ismerged_111',['isMerged',['../structMergingCost.html#af05a38ba5258fe216ebb8c2f36320f8d',1,'MergingCost::isMerged(Instruction *L, Instruction *J) const -&gt; bool'],['../structMergingCost.html#af9b5ac0cc98e21087c9eefccb31bce58',1,'MergingCost::isMerged(Instruction *key) const -&gt; bool']]],
   ['isshuffle_112',['isShuffle',['../structInstruction.html#a79a97b7e7551dab3035b126828c6fa5d',1,'Instruction']]],
   ['isvalueloadorstore_113',['isValueLoadOrStore',['../structInstruction.html#a5d23d616588bd2d5b168945deffc7115',1,'Instruction']]],
   ['iterator_114',['Iterator',['../structBitSliceView_1_1Iterator.html',1,'BitSliceView&lt; T, B &gt;::Iterator'],['../structLinAlg_1_1SliceView_1_1Iterator.html',1,'LinAlg::SliceView&lt; T, I &gt;::Iterator'],['../structRange_3_01B_00_01E_01_4_1_1Iterator.html',1,'Range&lt; B, E &gt;::Iterator']]],
