@@ -502,10 +502,8 @@ public:
     }
     return false;
   }
-
-  void parseBB(LoopTree &LT, llvm::BasicBlock *BB,
-
-               Vector<unsigned> &omega) {
+  void parseBB(LoopTree &LT, llvm::BasicBlock *BB, Vector<unsigned> &omega) {
+    llvm::errs() << "Parsing BB: " << BB->getName() << "\n";
     for (llvm::Instruction &J : *BB) {
       if (LT.loop) assert(LT.loop->contains(&J));
       if (J.mayReadFromMemory()) {
@@ -517,11 +515,12 @@ public:
     }
   }
   void visit(LoopTree &LT, Predicate::Map &map, Vector<unsigned> &omega,
-             aset<llvm::BasicBlock *> visited, llvm::BasicBlock *BB) {
+             aset<llvm::BasicBlock *> &visited, llvm::BasicBlock *BB) {
     if ((!map.isInPath(BB)) || visited.contains(BB)) return;
     visited.insert(BB);
     for (llvm::BasicBlock *pred : llvm::predecessors(BB))
       visit(LT, map, omega, visited, pred);
+    llvm::errs() << "About to visit BB:" << BB->getName() << "; ";
     parseBB(LT, BB, omega);
   }
   void parseBBMap(LoopTree &LT, Predicate::Map &map, Vector<unsigned> &omega) {
@@ -691,9 +690,9 @@ public:
     return false;
   }
   void fillLoopBlock(LoopTree &root) {
-    llvm::errs() << "Found memory base pointers:\n";
+    llvm::errs() << "Found memory accesses:\n";
     for (auto mem : root.memAccesses)
-      llvm::errs() << *mem->getArrayPointer() << "\n";
+      llvm::errs() << *mem->getInstruction() << "\n";
     for (auto mem : root.memAccesses) loopBlock.addMemory(mem);
     for (auto sub : root.subLoops) fillLoopBlock(*sub);
   }
