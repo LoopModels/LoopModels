@@ -509,7 +509,7 @@ $(function() {
 <div class="line"><a name="l00452"></a><span class="lineno">  452</span>&#160;    <span class="keywordtype">size_t</span> innermostLoopInd = getNumSymbols();</div>
 <div class="line"><a name="l00453"></a><span class="lineno">  453</span>&#160;    <span class="keyword">auto</span> A{getA()};</div>
 <div class="line"><a name="l00454"></a><span class="lineno">  454</span>&#160;    <span class="keyword">auto</span> ret = <a class="code" href="structAffineLoopNest.html">AffineLoopNest&lt;NonNegative&gt;::allocate</a>(</div>
-<div class="line"><a name="l00455"></a><span class="lineno">  455</span>&#160;      alloc, A.numRow(), getNumLoops() - 1, getSyms());</div>
+<div class="line"><a name="l00455"></a><span class="lineno">  455</span>&#160;      alloc, <span class="keywordtype">unsigned</span>(A.numRow()), getNumLoops() - 1, getSyms());</div>
 <div class="line"><a name="l00456"></a><span class="lineno">  456</span>&#160;    MutPtrMatrix&lt;int64_t&gt; B{ret-&gt;getA()};</div>
 <div class="line"><a name="l00457"></a><span class="lineno">  457</span>&#160;    B(_, _(0, innermostLoopInd)) &lt;&lt; A(_, _(0, innermostLoopInd));</div>
 <div class="line"><a name="l00458"></a><span class="lineno">  458</span>&#160;    B(_, _(innermostLoopInd, end)) &lt;&lt; A(_, _(innermostLoopInd + 1, end));</div>
