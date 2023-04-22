@@ -56,15 +56,14 @@ template <typename T, unsigned InitialCapacity = 8> struct BumpPtrVector {
     x.Size = 0;
     x.Capacity = 0;
   }
-  BumpPtrVector &operator=(const BumpPtrVector &x) {
+  auto operator=(const BumpPtrVector &x) -> BumpPtrVector & {
     if (this != &x) {
-      clear();
       resizeForOverwrite(x.Size);
       *this << x;
     }
     return *this;
   }
-  BumpPtrVector &operator=(BumpPtrVector &&x) {
+  auto operator=(BumpPtrVector &&x) noexcept -> BumpPtrVector & {
     if (this != &x) {
       mem = x.mem;
       Size = x.Size;

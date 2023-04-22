@@ -48,9 +48,9 @@
 
 inline auto countNumLoopsPlusLeaves(const llvm::Loop *L) -> size_t {
   const std::vector<llvm::Loop *> &subLoops = L->getSubLoops();
-  if (subLoops.size() == 0) return 1;
+  if (subLoops.empty()) return 1;
   size_t numLoops = subLoops.size();
-  for (auto &SL : subLoops) numLoops += countNumLoopsPlusLeaves(SL);
+  for (const auto &SL : subLoops) numLoops += countNumLoopsPlusLeaves(SL);
   return numLoops;
 }
 template <typename T>
@@ -129,6 +129,27 @@ public:
     for (auto forest : loopForests)
       forest->addZeroLowerBounds(allocator, loopMap);
   }
+
+  auto initLoopTree(llvm::SmallVector<NotNull<LoopTree>> &pForest,
+                    llvm::Loop *L, llvm::ArrayRef<llvm::Loop *> subLoops,
+                    llvm::BasicBlock *H, llvm::BasicBlock *E,
+                    NoWrapRewriter &nwr) -> size_t {
+    invariant(subLoops.empty());
+    if (const auto *BT = getBackedgeTakenCount(*SE, L);
+        !llvm::isa<llvm::SCEVCouldNotCompute>(BT)) {
+      // we're at the bottom of the recursion
+      if (auto predMapAbridged =
+            Predicate::Map::descend(allocator, instrCache, H, E, L)) {
+        auto *newTree = new (allocator) LoopTree{
+          allocator, L, nwr.visit(BT), *SE, {std::move(*predMapAbridged)}};
+        pForest.push_back(newTree);
+        return 1;
+      }
+    }
+    // Finally, we need `H` to have a direct path to `E`.
+    return 0;
+  }
+
   ///
   /// pushLoopTree
   ///
@@ -163,94 +184,82 @@ public:
                     llvm::BasicBlock *H, llvm::BasicBlock *E,
                     NoWrapRewriter &nwr) -> size_t {
 
-    if (size_t numSubLoops = subLoops.size()) {
-      // branches of this tree;
-      llvm::SmallVector<NotNull<LoopTree>> branches;
-      branches.reserve(numSubLoops);
-      llvm::SmallVector<Predicate::Map> branchBlocks;
-      branchBlocks.reserve(numSubLoops + 1);
-      bool anyFail = false;
-      size_t interiorDepth = 0;
-      for (size_t i = 0; i < numSubLoops; ++i) {
-        llvm::Loop *subLoop = subLoops[i];
-        if (size_t depth = pushLoopTree(
-              branches, subLoop, subLoop->getSubLoops(), subLoop->getHeader(),
-              subLoop->getExitingBlock(), nwr)) {
-          // pushLoopTree succeeded, and we have `depth` inner loops
-          // within `subLoop` (inclusive, i.e. `depth == 1` would
-          // indicate that `subLoop` doesn't have any subLoops itself,
-          // which we check with the following assertion:
-          assert((depth > 1) || (subLoop->getSubLoops().empty()));
+    size_t numSubLoops = subLoops.size();
+    if (!numSubLoops) return initLoopTree(pForest, L, subLoops, H, E, nwr);
+    // branches of this tree;
+    llvm::SmallVector<NotNull<LoopTree>> branches;
+    branches.reserve(numSubLoops);
+    llvm::SmallVector<Predicate::Map> branchBlocks;
+    branchBlocks.reserve(numSubLoops + 1);
+    bool anyFail = false;
+    size_t interiorDepth = 0;
+    for (size_t i = 0; i < numSubLoops; ++i) {
+      llvm::Loop *subLoop = subLoops[i];
+      if (size_t depth = pushLoopTree(branches, subLoop, subLoop->getSubLoops(),
+                                      subLoop->getHeader(),
+                                      subLoop->getExitingBlock(), nwr)) {
+        // pushLoopTree succeeded, and we have `depth` inner loops
+        // within `subLoop` (inclusive, i.e. `depth == 1` would
+        // indicate that `subLoop` doesn't have any subLoops itself,
+        // which we check with the following assertion:
+        assert((depth > 1) || (subLoop->getSubLoops().empty()));
 
-          // Now we check if we can create a direct path from `H` to
-          // `subLoop->getLoopPreheader();`
-          llvm::BasicBlock *subLoopPreheader = subLoop->getLoopPreheader();
-          if (auto predMap = Predicate::Map::descend(allocator, instrCache, H,
-                                                     subLoopPreheader, L)) {
-            interiorDepth = std::max(interiorDepth, depth);
-            branchBlocks.push_back(std::move(*predMap));
-            H = subLoop->getExitBlock();
-          } else {
-            // oops, no direct path, we split
-            anyFail = true;
-            if (branches.size() > 1) {
-              // we need to split off the last tree
-              LoopTree *lastTree = branches.pop_back_val();
-              // so we can push previous branches as one set
-              // for the final branchBlocks, we'll push H->H
-              split(branches, branchBlocks, H, L);
-              // reinsert last tree
-              branches.push_back(lastTree);
-            }
-            if (i + 1 < numSubLoops) H = subLoops[i + 1]->getLoopPreheader();
-          }
-          // for the next loop, we'll want a path to its preheader
-          // from this loop's exit block.
+        // Now we check if we can create a direct path from `H` to
+        // `subLoop->getLoopPreheader();`
+        llvm::BasicBlock *subLoopPreheader = subLoop->getLoopPreheader();
+        if (auto predMap = Predicate::Map::descend(allocator, instrCache, H,
+                                                   subLoopPreheader, L)) {
+          interiorDepth = std::max(interiorDepth, depth);
+          branchBlocks.push_back(std::move(*predMap));
+          H = subLoop->getExitBlock();
         } else {
-          // `depth == 0` indicates failure, therefore we need to
-          // split loops
+          // oops, no direct path, we split
           anyFail = true;
-          if (branches.size()) split(branches, branchBlocks, H, L);
+          if (branches.size() > 1) {
+            // we need to split off the last tree
+            LoopTree *lastTree = branches.pop_back_val();
+            // so we can push previous branches as one set
+            // for the final branchBlocks, we'll push H->H
+            split(branches, branchBlocks, H, L);
+            // reinsert last tree
+            branches.push_back(lastTree);
+          }
           if (i + 1 < numSubLoops) H = subLoops[i + 1]->getLoopPreheader();
         }
-      }
-      if (!anyFail) {
-        // branches.size() > 0 because we have numSubLoops > 0 and !anyFail
-        // !anyFail means we called pushLoopTree, and returned depth > 0
-        // which means it must have called pushLoopTree, pushing into branches
-        // (pushLoopTree pushes into first arg, pForest, whenever ret > 0)
-        invariant(branches.size() > 0);
-        if (auto predMapAbridged =
-              Predicate::Map::descend(allocator, instrCache, H, E, L)) {
-          branchBlocks.push_back(std::move(*predMapAbridged));
-
-          auto *newTree = new (allocator)
-            LoopTree{allocator, L,
-                     branches.front()->affineLoop->removeInnerMost(allocator),
-                     branches, branchBlocks};
-          pForest.push_back(newTree);
-
-          // if (L) llvm::errs() << "Splitting loop0: " << *L << "\n";
-          // else llvm::errs() << "Splitting top loop0\n";
-          // LoopTree::split(allocator, pForest, branchBlocks, branches);
-          // pForest.back()->loop = L;
-          return ++interiorDepth;
-        }
-      }
-      if (branches.size()) split(branches, branchBlocks, H, L);
-      return 0;
-    } else if (auto BT = getBackedgeTakenCount(*SE, L);
-               !llvm::isa<llvm::SCEVCouldNotCompute>(BT)) {
-      // we're at the bottom of the recursion
-      if (auto predMapAbridged =
-            Predicate::Map::descend(allocator, instrCache, H, E, L)) {
-        auto *newTree = new (allocator) LoopTree{
-          allocator, L, nwr.visit(BT), *SE, {std::move(*predMapAbridged)}};
-        pForest.push_back(newTree);
-        return 1;
+        // for the next loop, we'll want a path to its preheader
+        // from this loop's exit block.
+      } else {
+        // `depth == 0` indicates failure, therefore we need to
+        // split loops
+        anyFail = true;
+        if (branches.size()) split(branches, branchBlocks, H, L);
+        if (i + 1 < numSubLoops) H = subLoops[i + 1]->getLoopPreheader();
       }
     }
-    // Finally, we need `H` to have a direct path to `E`.
+    if (!anyFail) {
+      // branches.size() > 0 because we have numSubLoops > 0 and !anyFail
+      // !anyFail means we called pushLoopTree, and returned depth > 0
+      // which means it must have called pushLoopTree, pushing into branches
+      // (pushLoopTree pushes into first arg, pForest, whenever ret > 0)
+      invariant(!branches.empty());
+      if (auto predMapAbridged =
+            Predicate::Map::descend(allocator, instrCache, H, E, L)) {
+        branchBlocks.push_back(std::move(*predMapAbridged));
+
+        auto *newTree = new (allocator)
+          LoopTree{allocator, L,
+                   branches.front()->affineLoop->removeInnerMost(allocator),
+                   std::move(branches), std::move(branchBlocks)};
+        pForest.push_back(newTree);
+
+        // if (L) llvm::errs() << "Splitting loop0: " << *L << "\n";
+        // else llvm::errs() << "Splitting top loop0\n";
+        // LoopTree::split(allocator, pForest, branchBlocks, branches);
+        // pForest.back()->loop = L;
+        return ++interiorDepth;
+      }
+    }
+    if (!branches.empty()) split(branches, branchBlocks, H, L);
     return 0;
   }
   void split(llvm::SmallVector<NotNull<LoopTree>> &branches,
@@ -274,7 +283,7 @@ public:
   inline static auto containsPeeled(const llvm::SCEV *Sc, size_t numPeeled)
     -> bool {
     return llvm::SCEVExprContains(Sc, [numPeeled](const llvm::SCEV *S) {
-      if (auto r = llvm::dyn_cast<llvm::SCEVAddRecExpr>(S))
+      if (const auto *r = llvm::dyn_cast<llvm::SCEVAddRecExpr>(S))
         if (r->getLoop()->getLoopDepth() <= numPeeled) return true;
       return false;
     });
@@ -672,24 +681,26 @@ public:
     return false;
   }
   auto isLoopDependent(llvm::Value *v) const -> bool {
-    for (auto &L : *LI)
+    for (const auto &L : *LI)
       if (!L->isLoopInvariant(v)) return true;
     return false;
   }
   auto mayReadOrWriteMemory(llvm::Value *v) const -> bool {
-    if (auto inst = llvm::dyn_cast<llvm::Instruction>(v))
+    if (auto *inst = llvm::dyn_cast<llvm::Instruction>(v))
       if (inst->mayReadOrWriteMemory()) return true;
     return false;
   }
   void fillLoopBlock(LoopTree &root) {
-    for (auto &&mem : root.memAccesses) loopBlock.addMemory(mem);
-    for (auto &&sub : root.subLoops) fillLoopBlock(*sub);
+    llvm::errs() << "Found memory base pointers:\n";
+    for (auto mem : root.memAccesses)
+      llvm::errs() << *mem->getArrayPointer() << "\n";
+    for (auto mem : root.memAccesses) loopBlock.addMemory(mem);
+    for (auto sub : root.subLoops) fillLoopBlock(*sub);
   }
-
   // https://llvm.org/doxygen/LoopVectorize_8cpp_source.html#l00932
   void remark(const llvm::StringRef remarkName, llvm::Loop *L,
               const llvm::StringRef remarkMessage,
-              llvm::Instruction *J = nullptr) {
+              llvm::Instruction *J = nullptr) const {
 
     llvm::OptimizationRemarkAnalysis analysis{remarkAnalysis(remarkName, L, J)};
     ORE->emit(analysis << remarkMessage);

@@ -356,7 +356,7 @@ struct Instruction {
     auto createInstruction(BumpAlloc<> &alloc, UniqueIdentifier uid,
                            llvm::Type *typ) -> Instruction * {
       auto *i = new (alloc) Instruction(alloc, uid, typ);
-      if (i->operands.size())
+      if (!i->operands.empty())
         for (auto *op : i->operands) op->users.insert(i);
       argMap.insert({uid, i});
       return i;
@@ -522,9 +522,9 @@ struct Instruction {
       assert(!P.isEmpty() && "No conflict between predicates");
       bool swap = P.countFalse() <= P.countTrue();
       Instruction *cond = createCondition(alloc, P, swap);
-      Instruction *op0 = swap ? B : A;
-      Instruction *op1 = swap ? A : B;
-      Instruction *S = getInstruction(alloc, idt, cond, op0, op1, A->getType());
+      Instruction *op1 = swap ? B : A;
+      Instruction *op2 = swap ? A : B;
+      Instruction *S = getInstruction(alloc, idt, cond, op1, op2, A->getType());
       S->predicates |= A->predicates;
       S->predicates |= B->predicates;
       return S;
