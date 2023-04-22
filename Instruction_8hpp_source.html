@@ -421,7 +421,7 @@ $(function() {
 <div class="line"><a name="l00356"></a><span class="lineno">  356</span>&#160;    <span class="keyword">auto</span> createInstruction(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, <a class="code" href="structInstruction_1_1UniqueIdentifier.html">UniqueIdentifier</a> uid,</div>
 <div class="line"><a name="l00357"></a><span class="lineno">  357</span>&#160;                           llvm::Type *typ) -&gt; <a class="code" href="structInstruction.html">Instruction</a> * {</div>
 <div class="line"><a name="l00358"></a><span class="lineno">  358</span>&#160;      <span class="keyword">auto</span> *i = <span class="keyword">new</span> (alloc) <a class="code" href="structInstruction.html">Instruction</a>(alloc, uid, typ);</div>
-<div class="line"><a name="l00359"></a><span class="lineno">  359</span>&#160;      <span class="keywordflow">if</span> (i-&gt;operands.size())</div>
+<div class="line"><a name="l00359"></a><span class="lineno">  359</span>&#160;      <span class="keywordflow">if</span> (!i-&gt;operands.empty())</div>
 <div class="line"><a name="l00360"></a><span class="lineno">  360</span>&#160;        <span class="keywordflow">for</span> (<span class="keyword">auto</span> *op : i-&gt;operands) op-&gt;users.insert(i);</div>
 <div class="line"><a name="l00361"></a><span class="lineno">  361</span>&#160;      argMap.insert({uid, i});</div>
 <div class="line"><a name="l00362"></a><span class="lineno">  362</span>&#160;      <span class="keywordflow">return</span> i;</div>
@@ -568,9 +568,9 @@ $(function() {
 <div class="line"><a name="l00522"></a><span class="lineno">  522</span>&#160;      assert(!P.isEmpty() &amp;&amp; <span class="stringliteral">&quot;No conflict between predicates&quot;</span>);</div>
 <div class="line"><a name="l00523"></a><span class="lineno">  523</span>&#160;      <span class="keywordtype">bool</span> swap = P.countFalse() &lt;= P.countTrue();</div>
 <div class="line"><a name="l00524"></a><span class="lineno">  524</span>&#160;      <a class="code" href="structInstruction.html">Instruction</a> *cond = createCondition(alloc, P, swap);</div>
-<div class="line"><a name="l00525"></a><span class="lineno">  525</span>&#160;      <a class="code" href="structInstruction.html">Instruction</a> *op0 = swap ? B : A;</div>
-<div class="line"><a name="l00526"></a><span class="lineno">  526</span>&#160;      <a class="code" href="structInstruction.html">Instruction</a> *op1 = swap ? A : B;</div>
-<div class="line"><a name="l00527"></a><span class="lineno">  527</span>&#160;      <a class="code" href="structInstruction.html">Instruction</a> *S = getInstruction(alloc, idt, cond, op0, op1, A-&gt;getType());</div>
+<div class="line"><a name="l00525"></a><span class="lineno">  525</span>&#160;      <a class="code" href="structInstruction.html">Instruction</a> *op1 = swap ? B : A;</div>
+<div class="line"><a name="l00526"></a><span class="lineno">  526</span>&#160;      <a class="code" href="structInstruction.html">Instruction</a> *op2 = swap ? A : B;</div>
+<div class="line"><a name="l00527"></a><span class="lineno">  527</span>&#160;      <a class="code" href="structInstruction.html">Instruction</a> *S = getInstruction(alloc, idt, cond, op1, op2, A-&gt;getType());</div>
 <div class="line"><a name="l00528"></a><span class="lineno">  528</span>&#160;      S-&gt;predicates |= A-&gt;predicates;</div>
 <div class="line"><a name="l00529"></a><span class="lineno">  529</span>&#160;      S-&gt;predicates |= B-&gt;predicates;</div>
 <div class="line"><a name="l00530"></a><span class="lineno">  530</span>&#160;      <span class="keywordflow">return</span> S;</div>
@@ -1455,7 +1455,7 @@ $(function() {
 <div class="ttc" id="astructPredicate_1_1Intersection_html"><div class="ttname"><a href="structPredicate_1_1Intersection.html">Predicate::Intersection</a></div><div class="ttdef"><b>Definition:</b> Predicate.hpp:43</div></div>
 <div class="ttc" id="astructPredicate_1_1Map_html"><div class="ttname"><a href="structPredicate_1_1Map.html">Predicate::Map</a></div><div class="ttdef"><b>Definition:</b> Instruction.hpp:1128</div></div>
 <div class="ttc" id="astructPredicate_1_1Map_html_a57f40d19415e36a269545855e59668f0"><div class="ttname"><a href="structPredicate_1_1Map.html#a57f40d19415e36a269545855e59668f0">Predicate::Map::descend</a></div><div class="ttdeci">static auto descend(BumpAlloc&lt;&gt; &amp;alloc, Instruction::Cache &amp;cache, llvm::BasicBlock *start, llvm::BasicBlock *stop, llvm::Loop *L) -&gt; std::optional&lt; Map &gt;</div><div class="ttdef"><b>Definition:</b> Instruction.hpp:1302</div></div>
-<div class="ttc" id="astructPredicate_1_1Set_html"><div class="ttname"><a href="structPredicate_1_1Set.html">Predicate::Set</a></div><div class="ttdef"><b>Definition:</b> Predicate.hpp:200</div></div>
+<div class="ttc" id="astructPredicate_1_1Set_html"><div class="ttname"><a href="structPredicate_1_1Set.html">Predicate::Set</a></div><div class="ttdef"><b>Definition:</b> Predicate.hpp:197</div></div>
 <div class="ttc" id="astructRecipThroughputLatency_html"><div class="ttname"><a href="structRecipThroughputLatency.html">RecipThroughputLatency</a></div><div class="ttdef"><b>Definition:</b> Instruction.hpp:78</div></div>
 <div class="ttc" id="astructaset_html"><div class="ttname"><a href="structaset.html">aset</a></div><div class="ttdef"><b>Definition:</b> BumpMapSet.hpp:24</div></div>
 </div><!-- fragment --></div><!-- contents -->

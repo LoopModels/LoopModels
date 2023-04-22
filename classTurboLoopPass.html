@@ -90,6 +90,9 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>run</b> (llvm::Functi
 <tr class="separator:a68ea157f74ea8ad9e824a9d3bccb9255"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a61d15982d3d7c2d1918da31c454a2f10"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classTurboLoopPass.html#a61d15982d3d7c2d1918da31c454a2f10">initializeLoopForest</a> ()</td></tr>
 <tr class="separator:a61d15982d3d7c2d1918da31c454a2f10"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad08891354c99ee4ce70a7809bae00de3"><td class="memItemLeft" align="right" valign="top"><a id="ad08891354c99ee4ce70a7809bae00de3"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>initLoopTree</b> (llvm::SmallVector&lt; <a class="el" href="structNotNull.html">NotNull</a>&lt; <a class="el" href="structLoopTree.html">LoopTree</a> &gt;&gt; &amp;pForest, llvm::Loop *L, llvm::ArrayRef&lt; llvm::Loop * &gt; subLoops, llvm::BasicBlock *H, llvm::BasicBlock *E, <a class="el" href="structNoWrapRewriter.html">NoWrapRewriter</a> &amp;nwr) -&gt; size_t</td></tr>
+<tr class="separator:ad08891354c99ee4ce70a7809bae00de3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af347cd84f4fe2f72b4a93d322f3a2d8c"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classTurboLoopPass.html#af347cd84f4fe2f72b4a93d322f3a2d8c">pushLoopTree</a> (llvm::SmallVector&lt; <a class="el" href="structNotNull.html">NotNull</a>&lt; <a class="el" href="structLoopTree.html">LoopTree</a> &gt;&gt; &amp;pForest, llvm::Loop *L, llvm::ArrayRef&lt; llvm::Loop * &gt; subLoops, llvm::BasicBlock *H, llvm::BasicBlock *E, <a class="el" href="structNoWrapRewriter.html">NoWrapRewriter</a> &amp;nwr) -&gt; size_t</td></tr>
 <tr class="separator:af347cd84f4fe2f72b4a93d322f3a2d8c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a584c251388b3bb0d01b707a4877d6524"><td class="memItemLeft" align="right" valign="top"><a id="a584c251388b3bb0d01b707a4877d6524"></a>
@@ -149,9 +152,9 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>mayReadOrWriteMemory<
 <tr class="memitem:a86158dc4a0a190dfc6d3ef4cf8e52ea5"><td class="memItemLeft" align="right" valign="top"><a id="a86158dc4a0a190dfc6d3ef4cf8e52ea5"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>fillLoopBlock</b> (<a class="el" href="structLoopTree.html">LoopTree</a> &amp;root)</td></tr>
 <tr class="separator:a86158dc4a0a190dfc6d3ef4cf8e52ea5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aea6d20dc21d5ee2d19d05b9b5e258cd9"><td class="memItemLeft" align="right" valign="top"><a id="aea6d20dc21d5ee2d19d05b9b5e258cd9"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>remark</b> (const llvm::StringRef remarkName, llvm::Loop *L, const llvm::StringRef remarkMessage, llvm::Instruction *J=nullptr)</td></tr>
-<tr class="separator:aea6d20dc21d5ee2d19d05b9b5e258cd9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aefac38bb17ae02962634dd6579079038"><td class="memItemLeft" align="right" valign="top"><a id="aefac38bb17ae02962634dd6579079038"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>remark</b> (const llvm::StringRef remarkName, llvm::Loop *L, const llvm::StringRef remarkMessage, llvm::Instruction *J=nullptr) const</td></tr>
+<tr class="separator:aefac38bb17ae02962634dd6579079038"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
