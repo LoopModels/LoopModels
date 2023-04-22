@@ -452,7 +452,7 @@ struct AffineLoopNest
     size_t innermostLoopInd = getNumSymbols();
     auto A{getA()};
     auto ret = AffineLoopNest<NonNegative>::allocate(
-      alloc, A.numRow(), getNumLoops() - 1, getSyms());
+      alloc, unsigned(A.numRow()), getNumLoops() - 1, getSyms());
     MutPtrMatrix<int64_t> B{ret->getA()};
     B(_, _(0, innermostLoopInd)) << A(_, _(0, innermostLoopInd));
     B(_, _(innermostLoopInd, end)) << A(_, _(innermostLoopInd + 1, end));
