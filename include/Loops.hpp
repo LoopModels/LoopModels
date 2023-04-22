@@ -16,7 +16,6 @@
 #include <cstdint>
 #include <limits>
 #include <llvm/ADT/ArrayRef.h>
-
 #include <llvm/ADT/SmallVector.h>
 #include <llvm/Analysis/LoopInfo.h>
 #include <llvm/Analysis/OptimizationRemarkEmitter.h>
