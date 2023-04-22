@@ -1329,6 +1329,15 @@ public:
     return optOrth(fullGraph());
   }
 
+  auto summarizeMemoryAccesses(llvm::raw_ostream &os) const
+    -> llvm::raw_ostream & {
+    os << "MemoryAccesses:\n";
+    for (auto *m : memory) {
+      os << "Inst: " << *m->getInstruction()
+         << "\nOrder: " << m->getFusionOmega() << "\n";
+    }
+    return os;
+  }
   friend inline auto operator<<(llvm::raw_ostream &os,
                                 const LinearProgramLoopBlock &lblock)
     -> llvm::raw_ostream & {

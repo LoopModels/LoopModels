@@ -90,10 +90,17 @@ TurboLoopPass::run(llvm::Function &F, llvm::FunctionAnalysisManager &FAM)
   // TODO: fill schedules
   for (auto forest : loopForests) {
     fillLoopBlock(*forest);
+    if (ORE) [[unlikely]] {
+      llvm::SmallVector<char, 512> str;
+      llvm::raw_svector_ostream os(str);
+      // loopBlock.initialSummary(os << "Initial summary:") << "\n";
+      loopBlock.summarizeMemoryAccesses(os) << "\n";
+      remark("LinearProgram LoopSet", forest->getOuterLoop(), os.str());
+    }
     std::optional<MemoryAccess::BitSet> optDeps = loopBlock.optimize();
     // NOTE: we're not actually changing anything yet
     changed |= optDeps.has_value();
-    if (ORE) {
+    if (ORE) [[unlikely]] {
       if (optDeps) {
         llvm::SmallVector<char, 512> str;
         llvm::raw_svector_ostream os(str);
