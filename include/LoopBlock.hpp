@@ -1334,7 +1334,8 @@ public:
     os << "MemoryAccesses:\n";
     for (auto *m : memory) {
       os << "Inst: " << *m->getInstruction()
-         << "\nOrder: " << m->getFusionOmega() << "\n";
+         << "\nOrder: " << m->getFusionOmega() << "\nLoop:" << *m->getLoop()
+         << "\n";
     }
     return os;
   }

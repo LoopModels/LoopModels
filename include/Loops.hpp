@@ -449,19 +449,16 @@ struct AffineLoopNest
 
   [[nodiscard]] auto removeInnerMost(BumpAlloc<> &alloc) const
     -> NotNull<AffineLoopNest<NonNegative>> {
-    size_t innermostLoopInd = getNumSymbols();
+    // order is outer<->inner
     auto A{getA()};
     auto ret = AffineLoopNest<NonNegative>::allocate(
       alloc, unsigned(A.numRow()), getNumLoops() - 1, getSyms());
     MutPtrMatrix<int64_t> B{ret->getA()};
-    B(_, _(0, innermostLoopInd)) << A(_, _(0, innermostLoopInd));
-    B(_, _(innermostLoopInd, end)) << A(_, _(innermostLoopInd + 1, end));
+    B << A(_, _(0, last));
     // no loop may be conditioned on the innermost loop, so we should be able to
     // safely remove all constraints that reference it
     for (Row m = B.numRow(); m--;) {
-      if (A(m, innermostLoopInd)) {
-        // B(_(m,end-1),_) = B(_(m+1,end),_);
-        // make sure we're explicit about the order we copy rows
+      if (A(m, last)) {
         if (m != B.numRow() - 1) B(m, _) << B(last, _);
         B.truncate(B.numRow() - 1);
       }
@@ -482,6 +479,7 @@ struct AffineLoopNest
                        llvm::ScalarEvolution &SE) {
     // basically, we move the outermost loops to the symbols section,
     // and add the appropriate addressees
+    // order is outer<->inner
     size_t oldNumLoops = getNumLoops();
     if (numToRemove >= oldNumLoops) return clear();
     size_t innermostLoopInd = getNumSymbols();
