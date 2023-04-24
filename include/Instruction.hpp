@@ -1229,11 +1229,13 @@ struct Map {
       assert(!predMap.contains(BBsrc));
       predMap.insert({BBsrc, Set{alloc, predicate}});
       return Destination::Reached;
-    } else if (L && (!(L->contains(BBsrc)))) {
+    }
+    if (L && (!(L->contains(BBsrc)))) {
       // oops, we seem to have skipped the preheader and escaped the
       // loop.
       return Destination::Returned;
-    } else if (visited.contains(BBsrc)) {
+    }
+    if (visited.contains(BBsrc)) {
       // FIXME: This is terribly hacky.
       // if `BBsrc == BBhead`, then we assume we hit a path that
       // bypasses the following loop, e.g. there was a loop guard.
@@ -1251,10 +1253,9 @@ struct Map {
     visited.insert(BBsrc);
     const llvm::Instruction *I = BBsrc->getTerminator();
     if (!I) return Destination::Unknown;
-    else if (llvm::isa<llvm::ReturnInst>(I)) return Destination::Returned;
-    else if (llvm::isa<llvm::UnreachableInst>(I))
-      return Destination::Unreachable;
-    auto *BI = llvm::dyn_cast<llvm::BranchInst>(I);
+    if (llvm::isa<llvm::ReturnInst>(I)) return Destination::Returned;
+    if (llvm::isa<llvm::UnreachableInst>(I)) return Destination::Unreachable;
+    const auto *BI = llvm::dyn_cast<llvm::BranchInst>(I);
     if (!BI) return Destination::Unknown;
     if (BI->isUnconditional()) {
       auto rc = descendBlock(alloc, cache, visited, predMap,
@@ -1282,8 +1283,8 @@ struct Map {
         predMap.reach(alloc, BBsrc, predicate);
       }
       return rc1;
-    } else if ((rc1 == Destination::Returned) ||
-               (rc1 == Destination::Unreachable)) {
+    }
+    if ((rc1 == Destination::Returned) || (rc1 == Destination::Unreachable)) {
       if (rc0 == Destination::Reached) {
         //  we're now assuming that cond
         predMap.assume(
@@ -1291,10 +1292,10 @@ struct Map {
         predMap.reach(alloc, BBsrc, predicate);
       }
       return rc0;
-    } else if (rc0 == rc1) {
-      if (rc0 == Destination::Reached) predMap.reach(alloc, BBsrc, predicate);
-      return rc0;
-    } else return Destination::Unknown;
+    }
+    if (rc0 != rc1) return Destination::Unknown;
+    if (rc0 == Destination::Reached) predMap.reach(alloc, BBsrc, predicate);
+    return rc0;
   }
   /// We bail if there are more than 32 conditions; control flow that
   /// branchy is probably not worth trying to vectorize.

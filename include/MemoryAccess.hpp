@@ -355,7 +355,7 @@ inline auto operator<<(llvm::raw_ostream &os, const MemoryAccess &m)
   for (size_t i = 0; i < A.numCol(); ++i) {
     if (i) os << ", ";
     bool printPlus = false;
-    for (size_t j = numLoops; j-- > 0;) {
+    for (size_t j = 0; j < numLoops; ++j) {
       if (int64_t Aji = A(j, i)) {
         if (printPlus) {
           if (Aji <= 0) {
@@ -364,7 +364,7 @@ inline auto operator<<(llvm::raw_ostream &os, const MemoryAccess &m)
           } else os << " + ";
         }
         if (Aji != 1) os << Aji << '*';
-        os << "i_" << numLoops - j - 1 << " ";
+        os << "i_" << j << " ";
         printPlus = true;
       }
     }

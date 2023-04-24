@@ -345,10 +345,11 @@ public:
         if (loopInd >= 0) {
           if (auto c = getConstantInt(x->getOperand(1))) {
             // we want the innermost loop to have index 0
-            v[last - loopInd] += *c;
+            v[loopInd] += *c;
             return fillAffineIndices(v, offsets, symbolicOffsets,
                                      x->getOperand(0), mlt, numPeeled);
-          } else blackList |= (uint64_t(1) << uint64_t(loopInd));
+          }
+          blackList |= (uint64_t(1) << uint64_t(loopInd));
         }
         // we separate out the addition
         // the multiplication was either peeled or involved
@@ -361,7 +362,8 @@ public:
           x->getLoop(), x->getNoWrapFlags());
         addSymbolic(offsets, symbolicOffsets, addRec, mlt);
         return blackList;
-      } else if (loopInd >= 0) blackList |= (uint64_t(1) << uint64_t(loopInd));
+      }
+      if (loopInd >= 0) blackList |= (uint64_t(1) << uint64_t(loopInd));
     } else if (std::optional<int64_t> c = getConstantInt(S)) {
       offsets[0] += *c;
       return 0;
@@ -374,8 +376,8 @@ public:
       if (auto op0 = getConstantInt(m->getOperand(0))) {
         return fillAffineIndices(v, offsets, symbolicOffsets, m->getOperand(1),
                                  mlt * (*op0), numPeeled);
-
-      } else if (auto op1 = getConstantInt(m->getOperand(1))) {
+      }
+      if (auto op1 = getConstantInt(m->getOperand(1))) {
         return fillAffineIndices(v, offsets, symbolicOffsets, m->getOperand(0),
                                  mlt * (*op1), numPeeled);
       }
@@ -407,9 +409,10 @@ public:
     accessFn = SE->getMinusSCEV(accessFn, basePointer);
     llvm::SmallVector<const llvm::SCEV *, 3> subscripts, sizes;
     llvm::delinearize(*SE, accessFn, subscripts, sizes, elSize);
-    assert(subscripts.size() == sizes.size());
+    size_t numDims = subscripts.size();
+    invariant(numDims, sizes.size());
     AffineLoopNest<true> *aln = loopMap[L]->affineLoop;
-    if (sizes.size() == 0) {
+    if (numDims == 0) {
       LT.memAccesses.push_back(MemoryAccess::construct(
         allocator, basePointer, *aln, loadOrStore, omegas));
       ++omegas.back();
@@ -417,28 +420,29 @@ public:
     }
     size_t numLoops{aln->getNumLoops()};
     // numLoops x arrayDim
-    // IntMatrix R(numLoops, subscripts.size());
+    // IntMatrix R(numLoops, numDims);
     size_t numPeeled = L->getLoopDepth() - numLoops;
     // numLoops x arrayDim
-    IntMatrix Rt{StridedDims{subscripts.size(), numLoops}, 0};
+    IntMatrix Rt{StridedDims{numDims, numLoops}, 0};
     IntMatrix Bt;
     llvm::SmallVector<const llvm::SCEV *, 3> symbolicOffsets;
     uint64_t blackList{0};
     {
       Vector<int64_t> offsets;
-      for (size_t i = 0; i < subscripts.size(); ++i) {
+      for (size_t i = 0; i < numDims; ++i) {
         offsets.clear();
         offsets.push_back(0);
         blackList |= fillAffineIndices(Rt(i, _), offsets, symbolicOffsets,
                                        subscripts[i], 1, numPeeled);
-        Bt.resize(subscripts.size(), offsets.size());
+        Bt.resize(numDims, offsets.size());
         Bt(i, _) << offsets;
       }
     }
+    uint64_t numExtraLoopsToPeel = 0;
     if (blackList) {
       // blacklist: inner - outer
       uint64_t leadingZeros = std::countl_zero(blackList);
-      uint64_t numExtraLoopsToPeel = 64 - leadingZeros;
+      numExtraLoopsToPeel = 64 - leadingZeros;
       // need to condition on loop
       // remove the numExtraLoopsToPeel from Rt
       // that is, we want to move Rt(_,_(end-numExtraLoopsToPeel,end))
@@ -452,13 +456,13 @@ public:
       for (size_t i = 1; i < remainingLoops; ++i) P = P->getParentLoop();
       // remove
       conditionOnLoop(P->getParentLoop());
-      for (size_t i = remainingLoops; i < numLoops; ++i) {
+      for (size_t i = 0; i < numExtraLoopsToPeel; ++i) {
         P = P->getParentLoop();
         if (allZero(Rt(_, i))) continue;
         // push the SCEV
-        auto IntType = P->getInductionVariable(*SE)->getType();
+        auto *intType = P->getInductionVariable(*SE)->getType();
         const llvm::SCEV *S = SE->getAddRecExpr(
-          SE->getZero(IntType), SE->getOne(IntType), P, llvm::SCEV::NoWrapMask);
+          SE->getZero(intType), SE->getOne(intType), P, llvm::SCEV::NoWrapMask);
         if (size_t j = findSymbolicIndex(symbolicOffsets, S)) {
           Bt(_, j) += Rt(_, i);
         } else {
@@ -468,10 +472,10 @@ public:
           symbolicOffsets.push_back(S);
         }
       }
-      Rt.truncate(Col{numLoops - numExtraLoopsToPeel});
     }
     LT.memAccesses.push_back(MemoryAccess::construct(
-      allocator, basePointer, *aln, loadOrStore, Rt,
+      allocator, basePointer, *aln, loadOrStore,
+      Rt(_, _(numExtraLoopsToPeel, end)),
       {std::move(sizes), std::move(symbolicOffsets)}, Bt, omegas));
     ++omegas.back();
     return false;
@@ -491,7 +495,7 @@ public:
         if (!arrayRef(LT, iptr, elSize, J, omega)) return false;
         if (ORE) [[unlikely]] {
           llvm::SmallVector<char> x;
-          llvm::raw_svector_ostream os(x);
+          llvm::raw_svector_ostream os{x};
           if (llvm::isa<llvm::LoadInst>(J))
             os << "No affine representation for load: " << *J << "\n";
           else os << "No affine representation for store: " << *J << "\n";

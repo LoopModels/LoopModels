@@ -950,7 +950,7 @@ public:
     sch.resizeForOverwrite(numLoopsTotal + 2);
     // i iterates from outer-most to inner most common loop
     for (size_t i = 0; /*i <= numLoopsCommon*/; ++i) {
-      if (int64_t o2idiff = yFusOmega[i] - xFusOmega[i]) return o2idiff > 0;
+      if (yFusOmega[i] != xFusOmega[i]) return yFusOmega[i] > xFusOmega[i];
       // we should not be able to reach `numLoopsCommon`
       // because at the very latest, this last schedule value
       // should be different, because either:
@@ -979,6 +979,7 @@ public:
     // assert(false);
     // return false;
   }
+  // returns `true` if forward, x->y
   static auto checkDirection(BumpAlloc<> &alloc,
                              const std::array<NotNull<Simplex>, 2> &p,
                              NotNull<const MemoryAccess> x,
@@ -994,7 +995,17 @@ public:
     PtrVector<int64_t> yFusOmega = y->getFusionOmega();
     auto chkp = alloc.scope();
     // i iterates from outer-most to inner most common loop
+    llvm::errs() << "MemAccess Direction:\nx = " << *x->getInstruction()
+                 << "\ny = " << *y->getInstruction()
+                 << "\nxInds = " << x->indexMatrix()
+                 << "\nyInds = " << y->indexMatrix() << "\nxSize = [";
+    for (const auto *s : x->getSizes()) llvm::errs() << *s << ",";
+    llvm::errs() << "]\nySize = [";
+    for (const auto *s : y->getSizes()) llvm::errs() << *s << ",";
+    llvm::errs() << "]\n";
     for (size_t i = 0; /*i <= numLoopsCommon*/; ++i) {
+      llvm::errs() << "i = " << i << ": xFusOmega[i], yFusOmega[i] = ("
+                   << xFusOmega[i] << "," << yFusOmega[i] << ")\n";
       if (yFusOmega[i] != xFusOmega[i]) return yFusOmega[i] > xFusOmega[i];
       // we should not be able to reach `numLoopsCommon`
       // because at the very latest, this last schedule value
@@ -1021,6 +1032,9 @@ public:
   static auto timelessCheck(BumpAlloc<> &alloc, NotNull<DepPoly> dxy,
                             NotNull<MemoryAccess> x, NotNull<MemoryAccess> y)
     -> Dependence {
+    // llvm::errs() << "timelessCheck: " << *x->getInstruction() << " -> "
+    //              << *y->getInstruction() << "\nDepPoly, A=" << dxy->getA()
+    //              << "\nE = " << dxy->getE() << "\n";
     std::array<NotNull<Simplex>, 2> pair{dxy->farkasPair(alloc)};
     const size_t numLambda = dxy->getNumLambda();
     assert(dxy->getTimeDim() == 0);
