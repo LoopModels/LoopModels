@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['unsatisfiablezerorem_462',['unSatisfiableZeroRem',['../classSimplex.html#a7a0954210f826890281c37648820bd3e',1,'Simplex']]]
+  ['unsatisfiablezerorem_462',['unSatisfiableZeroRem',['../classSimplex.html#a7c38aa8f3847a45543a0be7d3053f284',1,'Simplex']]]
 ];

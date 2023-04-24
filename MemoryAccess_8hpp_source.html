@@ -406,7 +406,7 @@ $(function() {
 <div class="line"><a name="l00355"></a><span class="lineno">  355</span>&#160;  <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; A.numCol(); ++i) {</div>
 <div class="line"><a name="l00356"></a><span class="lineno">  356</span>&#160;    <span class="keywordflow">if</span> (i) os &lt;&lt; <span class="stringliteral">&quot;, &quot;</span>;</div>
 <div class="line"><a name="l00357"></a><span class="lineno">  357</span>&#160;    <span class="keywordtype">bool</span> printPlus = <span class="keyword">false</span>;</div>
-<div class="line"><a name="l00358"></a><span class="lineno">  358</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> j = numLoops; j-- &gt; 0;) {</div>
+<div class="line"><a name="l00358"></a><span class="lineno">  358</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> j = 0; j &lt; numLoops; ++j) {</div>
 <div class="line"><a name="l00359"></a><span class="lineno">  359</span>&#160;      <span class="keywordflow">if</span> (int64_t Aji = A(j, i)) {</div>
 <div class="line"><a name="l00360"></a><span class="lineno">  360</span>&#160;        <span class="keywordflow">if</span> (printPlus) {</div>
 <div class="line"><a name="l00361"></a><span class="lineno">  361</span>&#160;          <span class="keywordflow">if</span> (Aji &lt;= 0) {</div>
@@ -415,7 +415,7 @@ $(function() {
 <div class="line"><a name="l00364"></a><span class="lineno">  364</span>&#160;          } <span class="keywordflow">else</span> os &lt;&lt; <span class="stringliteral">&quot; + &quot;</span>;</div>
 <div class="line"><a name="l00365"></a><span class="lineno">  365</span>&#160;        }</div>
 <div class="line"><a name="l00366"></a><span class="lineno">  366</span>&#160;        <span class="keywordflow">if</span> (Aji != 1) os &lt;&lt; Aji &lt;&lt; <span class="charliteral">&#39;*&#39;</span>;</div>
-<div class="line"><a name="l00367"></a><span class="lineno">  367</span>&#160;        os &lt;&lt; <span class="stringliteral">&quot;i_&quot;</span> &lt;&lt; numLoops - j - 1 &lt;&lt; <span class="stringliteral">&quot; &quot;</span>;</div>
+<div class="line"><a name="l00367"></a><span class="lineno">  367</span>&#160;        os &lt;&lt; <span class="stringliteral">&quot;i_&quot;</span> &lt;&lt; j &lt;&lt; <span class="stringliteral">&quot; &quot;</span>;</div>
 <div class="line"><a name="l00368"></a><span class="lineno">  368</span>&#160;        printPlus = <span class="keyword">true</span>;</div>
 <div class="line"><a name="l00369"></a><span class="lineno">  369</span>&#160;      }</div>
 <div class="line"><a name="l00370"></a><span class="lineno">  370</span>&#160;    }</div>
