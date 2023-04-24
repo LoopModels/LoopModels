@@ -976,22 +976,24 @@ public:
     }
     invariant(size_t(c), size_t(numConstraints));
     addIndependentSolutionConstraints(omniSimplex, g, d);
-    {
-      llvm::SmallVector<char> x;
-      llvm::raw_svector_ostream os{x};
-      os << "omnisimplexd" << d << "l" << numLambda << "s" << numSlack
-         << "depSat" << satisfyDeps << ".jl";
-      omniSimplex->getConstraints().dump(os.str().data());
-      llvm::errs() << "Rows = "
-                   << size_t(omniSimplex->getConstraints().numRow())
-                   << ", Cols = "
-                   << size_t(omniSimplex->getConstraints().numCol()) << "\n";
-    }
-    bool unfeasible = omniSimplex->initiateFeasible();
-    llvm::errs() << "Unfeasible = " << unfeasible << "; depth = " << d
-                 << "; numLambda = " << numLambda << "; numSlack = " << numSlack
-                 << "\n";
-    return unfeasible ? nullptr : (Simplex *)omniSimplex;
+    // {
+    //   llvm::SmallVector<char> x;
+    //   llvm::raw_svector_ostream os{x};
+    //   os << "omnisimplexd" << d << "l" << numLambda << "s" << numSlack
+    //      << "depSat" << satisfyDeps << ".jl";
+    //   omniSimplex->getConstraints().dump(os.str().data());
+    //   llvm::errs() << "Rows = "
+    //                << size_t(omniSimplex->getConstraints().numRow())
+    //                << ", Cols = "
+    //                << size_t(omniSimplex->getConstraints().numCol()) << "\n";
+    // }
+    // bool unfeasible = omniSimplex->initiateFeasible();
+    // llvm::errs() << "Unfeasible = " << unfeasible << "; depth = " << d
+    //              << "; numLambda = " << numLambda << "; numSlack = " <<
+    //              numSlack
+    //              << "\n";
+    // return unfeasible ? nullptr : (Simplex *)omniSimplex;
+    return omniSimplex->initiateFeasible() ? nullptr : (Simplex *)omniSimplex;
   }
   static void updateConstraints(MutPtrMatrix<int64_t> C,
                                 const ScheduledNode &node,
@@ -1050,12 +1052,8 @@ public:
   }
   void updateSchedules(const Graph &g, size_t depth, Simplex::Solution sol) {
 #ifndef NDEBUG
-    if (depth & 1) {
-      bool allZero = true;
-      for (auto s : sol) allZero &= (s == 0);
-      // if (allZero) llvm::errs() << "omniSimplex = " << omniSimplex << "\n";
-      assert(!allZero);
-    }
+    if (depth & 1)
+      assert(std::ranges::any_of(sol, [](auto s) { return s != 0; }));
 #endif
     size_t o = numOmegaCoefs;
     for (auto &&node : nodes) {

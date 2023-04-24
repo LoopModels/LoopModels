@@ -318,10 +318,9 @@ public:
     NotNull<AffineLoopNest<>> loop1 = ma1->getLoop();
     DensePtrMatrix<int64_t> A0{loop0->getA()}, A1{loop1->getA()};
     auto S0{loop0->getSyms()}, S1{loop1->getSyms()};
-    PtrMatrix<int64_t> C0 = ma0->indexMatrix(); // numLoops x numDim
-    PtrMatrix<int64_t> C1 = ma1->indexMatrix();
-    PtrMatrix<int64_t> O0 = ma0->offsetMatrix();
-    PtrMatrix<int64_t> O1 = ma1->offsetMatrix();
+    // numLoops x numDim
+    PtrMatrix<int64_t> C0{ma0->indexMatrix()}, C1{ma1->indexMatrix()},
+      O0{ma0->offsetMatrix()}, O1{ma1->offsetMatrix()};
     invariant(C0.numCol(), C1.numCol());
 
     auto [nc0, nv0] = A0.size();
@@ -1037,7 +1036,7 @@ public:
     //              << "\nE = " << dxy->getE() << "\n";
     std::array<NotNull<Simplex>, 2> pair{dxy->farkasPair(alloc)};
     const size_t numLambda = dxy->getNumLambda();
-    assert(dxy->getTimeDim() == 0);
+    invariant(dxy->getTimeDim(), unsigned(0));
     if (checkDirection(alloc, pair, x, y, numLambda, dxy->getA().numCol())) {
       pair[0]->truncateVars(1 + numLambda + dxy->getNumScheduleCoef());
       return Dependence{dxy, pair, {x, y}, true};
@@ -1185,11 +1184,12 @@ public:
     os << "Dependence Poly ";
     if (d.forward) os << "x -> y:";
     else os << "y -> x:";
-    // os << d.depPoly << "\nA = " << d.depPoly.A << "\nE = " << d.depPoly.E
-    //    << "\nSchedule Constraints:" << d.dependenceSatisfaction
-    //    << "\nBounding Constraints:" << d.dependenceBounding;
     if (d.in) os << "\n\tInput:\n" << *d.in;
     if (d.out) os << "\n\tOutput:\n" << *d.out;
+    os << "\nA = " << d.depPoly->getA() << "\nE = " << d.depPoly->getE()
+       << "\nSchedule Constraints:"
+       << d.dependenceSatisfaction->getConstraints()
+       << "\nBounding Constraints:" << d.dependenceBounding->getConstraints();
     return os << "\n";
   }
 };

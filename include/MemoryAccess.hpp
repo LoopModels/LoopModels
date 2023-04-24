@@ -385,7 +385,7 @@ inline auto operator<<(llvm::raw_ostream &os, const MemoryAccess &m)
       }
     }
   }
-  return os << "]\nSchedule Omega: " << m.getFusionOmega()
+  return os << "]\nInitial Fusion Omega: " << m.getFusionOmega()
             << "\nAffineLoopNest:\n"
             << *m.getLoop();
 }
