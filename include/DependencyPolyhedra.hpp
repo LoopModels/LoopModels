@@ -401,6 +401,10 @@ public:
       }
       E(indexDim + i, numSym + numDep0Var + numDep1Var + i) = 1;
     }
+    llvm::errs() << "ma0 = " << *ma0->getInstruction()
+                 << "\nma1 = " << *ma1->getInstruction()
+                 << "\ndp->getA() = " << dp->getA()
+                 << "\ndp->getE() = " << dp->getE() << "\n";
     dp->pruneBounds(alloc);
     if (dp->getNumCon()) return dp;
     alloc.rollback(p);
