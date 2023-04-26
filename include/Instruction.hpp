@@ -1223,8 +1223,6 @@ struct Map {
                llvm::BasicBlock *BBsrc, llvm::BasicBlock *BBdst,
                Predicate::Intersection predicate, llvm::BasicBlock *BBhead,
                llvm::Loop *L) -> Destination {
-    llvm::errs() << "BBdst = " << BBdst->getName()
-                 << "; BBsrc = " << BBsrc->getName() << "\n";
     if (BBsrc == BBdst) {
       assert(!predMap.contains(BBsrc));
       predMap.insert({BBsrc, Set{alloc, predicate}});

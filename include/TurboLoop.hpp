@@ -251,11 +251,6 @@ public:
                    branches.front()->affineLoop->removeInnerMost(allocator),
                    std::move(branches), std::move(branchBlocks)};
         pForest.push_back(newTree);
-
-        // if (L) llvm::errs() << "Splitting loop0: " << *L << "\n";
-        // else llvm::errs() << "Splitting top loop0\n";
-        // LoopTree::split(allocator, pForest, branchBlocks, branches);
-        // pForest.back()->loop = L;
         return ++interiorDepth;
       }
     }
@@ -270,7 +265,6 @@ public:
       Predicate::Map::descend(allocator, instrCache, BB, BB, L);
     assert(predMapAbridged);
     branchBlocks.push_back(std::move(*predMapAbridged));
-    llvm::errs() << "Splitting loop1: " << *L << "\n";
     LoopTree::split(allocator, loopForests, branchBlocks, branches);
   }
 
@@ -484,14 +478,12 @@ public:
   auto getLoopTree(llvm::Loop *L) -> LoopTree * { return loopMap[L]; }
   auto addRef(LoopTree &LT, LoadOrStoreInst auto *J, Vector<unsigned> &omega)
     -> bool {
-    llvm::errs() << "addRef (" << LT.loop << "): " << *J << "\n";
     llvm::Value *ptr = J->getPointerOperand();
     // llvm::Type *type = I->getPointerOperandType();
     const llvm::SCEV *elSize = SE->getElementSize(J);
     // TODO: support top level array refs
     if (LT.loop) {
       if (auto *iptr = llvm::dyn_cast<llvm::Instruction>(ptr)) {
-        llvm::errs() << "ptr: " << *ptr << "\n";
         if (!arrayRef(LT, iptr, elSize, J, omega)) return false;
         if (ORE) [[unlikely]] {
           llvm::SmallVector<char> x;
@@ -507,7 +499,6 @@ public:
     return false;
   }
   void parseBB(LoopTree &LT, llvm::BasicBlock *BB, Vector<unsigned> &omega) {
-    llvm::errs() << "Parsing BB: " << BB->getName() << "\n";
     for (llvm::Instruction &J : *BB) {
       if (LT.loop) assert(LT.loop->contains(&J));
       if (J.mayReadFromMemory()) {
@@ -524,7 +515,6 @@ public:
     visited.insert(BB);
     for (llvm::BasicBlock *pred : llvm::predecessors(BB))
       visit(LT, map, omega, visited, pred);
-    llvm::errs() << "About to visit BB:" << BB->getName() << "; ";
     parseBB(LT, BB, omega);
   }
   void parseBBMap(LoopTree &LT, Predicate::Map &map, Vector<unsigned> &omega) {
@@ -619,8 +609,6 @@ public:
     LT->parentLoop = nullptr; // LT is now top of the tree
     loopForests.push_back(LT);
     llvm::SmallVector<NotNull<LoopTree>> &friendLoops = PT.subLoops;
-    for (auto id : friendLoops) llvm::errs() << ", " << id;
-    llvm::errs() << "\n";
     if (friendLoops.front() != LT) {
       // we're cutting off the front
       size_t numFriendLoops = friendLoops.size();
@@ -661,28 +649,6 @@ public:
     }
     conditionOnLoop(&PT);
   }
-
-  auto parseLoopPrint(auto B, auto E) -> bool {
-    // Schedule sch(depth);
-    size_t omega = 0;
-    for (auto &&it = B; it != E; ++it, ++omega) {
-      llvm::Loop *LP = *it;
-      if (auto *inductOuter = LP->getInductionVariable(*SE)) {
-        llvm::errs() << "Outer InductionVariable: " << *inductOuter << "\n";
-        if (const llvm::SCEV *backEdgeTaken = getBackedgeTakenCount(*SE, LP)) {
-          llvm::errs() << "Back edge taken count: " << *backEdgeTaken
-                       << "\n\ttrip count: "
-                       << *(SE->getAddExpr(
-                            backEdgeTaken,
-                            SE->getOne(backEdgeTaken->getType())))
-                       << "\n";
-          continue;
-        }
-      }
-      return true;
-    }
-    return false;
-  }
   auto isLoopDependent(llvm::Value *v) const -> bool {
     for (const auto &L : *LI)
       if (!L->isLoopInvariant(v)) return true;
@@ -694,9 +660,6 @@ public:
     return false;
   }
   void fillLoopBlock(LoopTree &root) {
-    llvm::errs() << "Found memory accesses:\n";
-    for (auto mem : root.memAccesses)
-      llvm::errs() << *mem->getInstruction() << "\n";
     for (auto mem : root.memAccesses) loopBlock.addMemory(mem);
     for (auto sub : root.subLoops) fillLoopBlock(*sub);
   }

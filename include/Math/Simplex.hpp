@@ -833,9 +833,6 @@ public:
     auto p = alloc.scope();
     Simplex *subSimp{Simplex::create(alloc, numRow, iFree++)};
     auto fC{getConstraints()};
-    // llvm::errs() << "fC= " << fC << "\niFree = " << iFree
-    //              << "\ninds[0] = " << inds[0] << "\ninds[1] = " << inds[1]
-    //              << "\n";
     auto sC{subSimp->getConstraints()};
     auto r = _(0, numRow);
     sC(_, 0) << fC(r, 0) - (fC(r, inds[0] + iFree) + fC(r, inds[1] + iFree));
@@ -851,7 +848,6 @@ public:
   void printResult(size_t numSlack = 0) {
     auto C{getConstraints()};
     auto basicVars{getBasicVariables()};
-    // llvm::errs() << "Simplex solution:" << "\n";
     for (size_t i = 0; i < basicVars.size(); ++i) {
       size_t v = basicVars[i];
       if (v <= numSlack) continue;

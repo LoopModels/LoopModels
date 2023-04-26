@@ -73,10 +73,6 @@ TurboLoopPass::run(llvm::Function &F, llvm::FunctionAnalysisManager &FAM)
                         TTI->getNumberOfRegisters(1));
     remark("VectorRegisterCount", *LI->begin(), str);
   }
-  // llvm::errs() << "Scalar registers: " << TTI->getNumberOfRegisters(0) <<
-  // "\n"; llvm::errs() << "Vector registers: " << TTI->getNumberOfRegisters(1)
-  // << "\n";
-
   // Builds the loopForest, constructing predicate chains and loop nests
   initializeLoopForest();
   if (loopForests.empty()) return llvm::PreservedAnalyses::all();

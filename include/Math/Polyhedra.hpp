@@ -157,8 +157,6 @@ struct BasePolyhedra {
         auto l = gcd(getE()(i, _));
         if (l != 1) getE()(i, _) /= l;
       }
-      llvm::errs() << "During pruning, getA() = " << getA()
-                   << "\ngetE() = " << getE() << "\n";
     }
     auto C = initializeComparator(alloc);
     if constexpr (CheckEmpty) {

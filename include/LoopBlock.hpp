@@ -727,13 +727,8 @@ public:
       }
     }
     if (tryOrth) {
-      llvm::errs() << "tryOrth\n";
-      if (std::optional<BitSet> opt = optimize(g, 0, maxDepth)) {
-        llvm::errs() << "tryOrth succeeded\n";
-        return opt;
-      }
+      if (std::optional<BitSet> opt = optimize(g, 0, maxDepth)) return opt;
       for (auto &&n : nodes) n.unschedulePhi();
-      llvm::errs() << "tryOrth failed\n";
     }
     return optimize(g, 0, maxDepth);
   }
@@ -890,31 +885,6 @@ public:
           Col lll = ll + bndL.numCol();
           C(_(c, cc), _(l, ll)) << satL;
           C(_(cc, ccc), _(ll, lll)) << bndL;
-          if (d == 0 && (!satisfyDeps)) {
-            llvm::errs() << "c = " << size_t(c) << "; cc = " << size_t(cc)
-                         << "; l = " << size_t(l) << "; ll = " << size_t(ll)
-                         << "; outNodeIndex = " << outNodeIndex
-                         << "; inNodeIndex = " << inNodeIndex
-                         << "\nedge.isForward = " << edge.isForward()
-                         << "; outNumLoops = " << outNode.getNumLoops()
-                         << "; inNumLoops = " << inNode.getNumLoops()
-                         << "\noutNode.getOmegaOffset() = "
-                         << outNode.getOmegaOffset()
-                         << "; inNode.getOmegaOffset() = "
-                         << inNode.getOmegaOffset() << "\nsatC = " << satC
-                         << "\nsatL = " << satL
-                         << "\nsatPp = " << satPp.transpose()
-                         << "\nsatPc = " << satPc.transpose()
-                         << "\nsatO = " << satO.transpose()
-                         << "\nsatW = " << satW << "\n";
-            llvm::errs() << "cc = " << size_t(cc) << "; ccc = " << size_t(ccc)
-                         << "; ll = " << size_t(ll) << "; lll = " << size_t(lll)
-                         << "\nbndC = " << bndC << "\nbndL = " << bndL
-                         << "\nbndPp = " << bndPp.transpose()
-                         << "\nbndPc = " << bndPc.transpose()
-                         << "\nbndO = " << bndO.transpose()
-                         << "\nbndWU = " << bndWU.transpose() << "\n";
-          }
           l = lll;
           // bounding
           C(_(cc, ccc), w++) << bndWU(_, 0);
@@ -924,13 +894,6 @@ public:
           if (satisfyDeps) C(_(c, cc), 0) << satC + satW;
           else C(_(c, cc), 0) << satC;
           C(_(cc, ccc), 0) << bndC;
-          if (d == 0 && (!satisfyDeps)) {
-            llvm::errs() << "nPc = " << size_t(nPc) << "; nPp = " << size_t(nPp)
-                         << "; outNode.phiIsScheduled(" << d
-                         << ")=" << outNode.phiIsScheduled(d)
-                         << "; inNode.phiIsScheduled(" << d
-                         << ")=" << inNode.phiIsScheduled(d) << "\n";
-          }
           // now, handle Phi and Omega
           // phis are not constrained to be 0
           if (outNodeIndex == inNodeIndex) {
@@ -939,8 +902,6 @@ public:
                 if (outNode.phiIsScheduled(d)) {
                   // add it constants
                   auto sch = outNode.getSchedule(d);
-                  if (d == 0 && (!satisfyDeps))
-                    llvm::errs() << "sch = " << sch << "\n";
                   C(_(c, cc), 0) -=
                     satPc * sch[_(0, nPc)] + satPp * sch[_(0, nPp)];
                   C(_(cc, ccc), 0) -=
@@ -961,8 +922,6 @@ public:
                 auto sch = outNode.getSchedule(d);
                 auto schP = sch[_(0, nPp)];
                 auto schC = sch[_(0, nPc)];
-                if (d == 0 && (!satisfyDeps))
-                  llvm::errs() << "sch = " << sch << "\n";
                 C(_(c, cc), 0) -= satPc * schC + satPp * schP;
                 C(_(cc, ccc), 0) -= bndPc * schC + bndPp * schP;
               } else if (nPc < nPp) {
@@ -1019,23 +978,6 @@ public:
     invariant(size_t(l), size_t(1 + numLambda));
     invariant(size_t(c), size_t(numConstraints));
     addIndependentSolutionConstraints(omniSimplex, g, d);
-    // {
-    //   llvm::SmallVector<char> x;
-    //   llvm::raw_svector_ostream os{x};
-    //   os << "omnisimplexd" << d << "l" << numLambda << "s" << numSlack
-    //      << "depSat" << satisfyDeps << ".jl";
-    //   omniSimplex->getConstraints().dump(os.str().data());
-    //   llvm::errs() << "Rows = "
-    //                << size_t(omniSimplex->getConstraints().numRow())
-    //                << ", Cols = "
-    //                << size_t(omniSimplex->getConstraints().numCol()) << "\n";
-    // }
-    // bool unfeasible = omniSimplex->initiateFeasible();
-    // llvm::errs() << "Unfeasible = " << unfeasible << "; depth = " << d
-    //              << "; numLambda = " << numLambda << "; numSlack = " <<
-    //              numSlack
-    //              << "\n";
-    // return unfeasible ? nullptr : (Simplex *)omniSimplex;
     return omniSimplex->initiateFeasible() ? nullptr : (Simplex *)omniSimplex;
   }
   static void updateConstraints(MutPtrMatrix<int64_t> C,
@@ -1046,7 +988,6 @@ public:
     if (node.phiIsScheduled(d)) {
       // add it constants
       auto sch = node.getSchedule(d)[_(0, sat.numCol())];
-      llvm::errs() << "sch = " << sch << "\n";
       // order is inner <-> outer
       // so we need the end of schedule if it is larger
       C(_(c, cc), 0) -= sat * sch;
@@ -1062,14 +1003,10 @@ public:
     -> std::optional<BitSet> {
     auto p = allocator.scope();
     auto omniSimplex = instantiateOmniSimplex(g, depth, satisfyDeps);
-    llvm::errs() << "SolHasVal = " << omniSimplex.hasValue() << "\n";
     if (!omniSimplex) return std::nullopt;
     auto sol = omniSimplex->rLexMinStop(numLambda + numSlack);
     assert(sol.size() ==
            numBounding + numActiveEdges + numPhiCoefs + numOmegaCoefs);
-    llvm::errs() << "omniSimplex solution (depth = " << depth << "): [";
-    for (auto s : omniSimplex->getSolution()) llvm::errs() << s << ", ";
-    llvm::errs() << "]\n";
     updateSchedules(g, depth, sol);
     return deactivateSatisfiedEdges(g, depth,
                                     sol[_(numPhiCoefs + numOmegaCoefs, end)]);
@@ -1320,7 +1257,6 @@ public:
   [[nodiscard]] auto optimizeSatDep(Graph g, size_t d, size_t maxDepth,
                                     BitSet depSatLevel, BitSet activeEdges)
     -> BitSet {
-    llvm::errs() << "Trying to satisify deps\n";
     // if we're here, there are satisfied deps in both
     // depSatLevel and depSatNest
     // what we want to know is, can we satisfy all the deps
@@ -1335,13 +1271,9 @@ public:
     resetDeepDeps(carriedDeps, d);
     countAuxParamsAndConstraints(g, d);
     setScheduleMemoryOffsets(g, d);
-    if (auto depSat = solveGraph(g, d, true)) {
-      llvm::errs() << "Satisfied deps depth = " << d << "\n";
-      if (std::optional<BitSet> depSatN = optimize(g, d + 1, maxDepth)) {
-        llvm::errs() << "Satisfied internal deps depth = " << d << "\n";
+    if (auto depSat = solveGraph(g, d, true))
+      if (std::optional<BitSet> depSatN = optimize(g, d + 1, maxDepth))
         return *depSat |= *depSatN;
-      }
-    }
     // we failed, so reset solved schedules
     std::swap(g.activeEdges, activeEdges);
     std::swap(g.nodeIds, nodeIds);
@@ -1370,7 +1302,6 @@ public:
         return *depSat;
       }
     }
-    llvm::errs() << "breaking graph at depth " << d << "\n";
     return breakGraph(g, d);
   }
   // returns true on failure
@@ -1423,7 +1354,7 @@ public:
            << "\ns.getFusionOmega() = " << sout.getFusionOmega()
            << "\ns.getOffsetOmega() = " << sout.getOffsetOmega();
       }
-      llvm::errs() << "\n\n";
+      os << "\n\n";
     }
     os << "\nLoopBlock schedule (#mem accesses = " << lblock.memory.size()
        << "):\n\n";

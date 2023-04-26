@@ -401,10 +401,6 @@ public:
       }
       E(indexDim + i, numSym + numDep0Var + numDep1Var + i) = 1;
     }
-    llvm::errs() << "ma0 = " << *ma0->getInstruction()
-                 << "\nma1 = " << *ma1->getInstruction()
-                 << "\ndp->getA() = " << dp->getA()
-                 << "\ndp->getE() = " << dp->getE() << "\n";
     dp->pruneBounds(alloc);
     if (dp->getNumCon()) return dp;
     alloc.rollback(p);
@@ -998,17 +994,7 @@ public:
     PtrVector<int64_t> yFusOmega = y->getFusionOmega();
     auto chkp = alloc.scope();
     // i iterates from outer-most to inner most common loop
-    llvm::errs() << "MemAccess Direction:\nx = " << *x->getInstruction()
-                 << "\ny = " << *y->getInstruction()
-                 << "\nxInds = " << x->indexMatrix()
-                 << "\nyInds = " << y->indexMatrix() << "\nxSize = [";
-    for (const auto *s : x->getSizes()) llvm::errs() << *s << ",";
-    llvm::errs() << "]\nySize = [";
-    for (const auto *s : y->getSizes()) llvm::errs() << *s << ",";
-    llvm::errs() << "]\n";
     for (size_t i = 0; /*i <= numLoopsCommon*/; ++i) {
-      llvm::errs() << "i = " << i << ": xFusOmega[i], yFusOmega[i] = ("
-                   << xFusOmega[i] << "," << yFusOmega[i] << ")\n";
       if (yFusOmega[i] != xFusOmega[i]) return yFusOmega[i] > xFusOmega[i];
       // we should not be able to reach `numLoopsCommon`
       // because at the very latest, this last schedule value
@@ -1035,9 +1021,6 @@ public:
   static auto timelessCheck(BumpAlloc<> &alloc, NotNull<DepPoly> dxy,
                             NotNull<MemoryAccess> x, NotNull<MemoryAccess> y)
     -> Dependence {
-    // llvm::errs() << "timelessCheck: " << *x->getInstruction() << " -> "
-    //              << *y->getInstruction() << "\nDepPoly, A=" << dxy->getA()
-    //              << "\nE = " << dxy->getE() << "\n";
     std::array<NotNull<Simplex>, 2> pair{dxy->farkasPair(alloc)};
     const size_t numLambda = dxy->getNumLambda();
     invariant(dxy->getTimeDim(), unsigned(0));
