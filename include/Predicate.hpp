@@ -72,9 +72,6 @@ struct Intersection {
       return *this;
     }
   };
-  [[nodiscard]] static constexpr auto Tombstone() -> Intersection {
-    return {~0ULL};
-  }
   [[nodiscard]] auto operator[](size_t index) -> Reference {
     return {predicates, 2 * index};
   }
@@ -137,7 +134,7 @@ struct Intersection {
     -> std::variant<std::monostate, Intersection,
                     std::pair<Intersection, Intersection>> {
     if (isEmpty()) return other;
-    else if (other.isEmpty()) return *this;
+    if (other.isEmpty()) return *this;
     uint64_t x = predicates, y = other.predicates;
     // 010000 = 010100 & 010000
     uint64_t intersect = x & y;
@@ -164,7 +161,7 @@ struct Intersection {
       // 010000 | 010001
       uint64_t wz = w & z;
       if (wz == w) return std::make_pair(*this, Intersection{z});
-      else if (wz == z) return std::make_pair(Intersection{w}, other);
+      if (wz == z) return std::make_pair(Intersection{w}, other);
     }
     return {};
   }
@@ -205,14 +202,11 @@ struct Set {
   }
   Set(const Set &) = default;
   Set(Set &&) = default;
-  Set &operator=(Set &&other) {
+  auto operator=(Set &&other) noexcept -> Set & {
     intersectUnion = std::move(other.intersectUnion);
     return *this;
   };
-  Set &operator=(const Set &other) {
-    intersectUnion = other.intersectUnion;
-    return *this;
-  };
+  auto operator=(const Set &other) -> Set & = default;
   // TODO: constexpr these when llvm::SmallVector supports it
   [[nodiscard]] auto operator[](size_t index) -> Intersection {
     return intersectUnion[index];
@@ -224,9 +218,6 @@ struct Set {
     return intersectUnion[i][j];
   }
   [[nodiscard]] auto size() const -> size_t { return intersectUnion.size(); }
-  // [[nodiscard]] static auto Tombstone() -> Set {
-  //     return {Intersection::Tombstone()};
-  // }
   /// Cases we simplify:
   /// a | {} = a
   /// Impl: if either empty, set to other
@@ -247,7 +238,7 @@ struct Set {
   /// TODO: handle more cases? Smarter algorithm that applies rewrite rules?
   auto operator|=(Intersection other) -> Set & {
     if (other.isEmpty()) return *this;
-    else if (intersectUnion.empty()) {
+    if (intersectUnion.empty()) {
       intersectUnion.push_back(other);
       return *this;
     }
@@ -255,11 +246,12 @@ struct Set {
     bool simplifyPreds = false;
     for (auto &&pred : intersectUnion) {
       auto u = pred.compactUnion(other);
-      if (auto compact = std::get_if<Intersection>(&u)) {
+      if (auto *compact = std::get_if<Intersection>(&u)) {
         pred = *compact;
         return *this;
-      } else if (auto simplify =
-                   std::get_if<std::pair<Intersection, Intersection>>(&u)) {
+      }
+      if (auto *simplify =
+            std::get_if<std::pair<Intersection, Intersection>>(&u)) {
         pred = simplify->first;
         other = simplify->second;
         simplifyPreds = true;
@@ -271,13 +263,13 @@ struct Set {
       for (size_t i = 0; i < intersectUnion.size(); ++i) {
         for (size_t j = i + 1; j < intersectUnion.size();) {
           auto u = intersectUnion[i].compactUnion(intersectUnion[j]);
-          if (auto compact = std::get_if<Intersection>(&u)) {
+          if (auto *compact = std::get_if<Intersection>(&u)) {
             // delete `j`, update `i`
             intersectUnion[i] = *compact;
             intersectUnion.erase(intersectUnion.begin() + j);
             simplifyPreds = true;
           } else {
-            if (auto simplify =
+            if (auto *simplify =
                   std::get_if<std::pair<Intersection, Intersection>>(&u)) {
               // assert forward progress
               assert((std::popcount(simplify->first.predicates) +

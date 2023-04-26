@@ -48,9 +48,9 @@
 
 inline auto countNumLoopsPlusLeaves(const llvm::Loop *L) -> size_t {
   const std::vector<llvm::Loop *> &subLoops = L->getSubLoops();
-  if (subLoops.size() == 0) return 1;
+  if (subLoops.empty()) return 1;
   size_t numLoops = subLoops.size();
-  for (auto &SL : subLoops) numLoops += countNumLoopsPlusLeaves(SL);
+  for (const auto &SL : subLoops) numLoops += countNumLoopsPlusLeaves(SL);
   return numLoops;
 }
 template <typename T>
@@ -129,6 +129,27 @@ public:
     for (auto forest : loopForests)
       forest->addZeroLowerBounds(allocator, loopMap);
   }
+
+  auto initLoopTree(llvm::SmallVector<NotNull<LoopTree>> &pForest,
+                    llvm::Loop *L, llvm::ArrayRef<llvm::Loop *> subLoops,
+                    llvm::BasicBlock *H, llvm::BasicBlock *E,
+                    NoWrapRewriter &nwr) -> size_t {
+    invariant(subLoops.empty());
+    if (const auto *BT = getBackedgeTakenCount(*SE, L);
+        !llvm::isa<llvm::SCEVCouldNotCompute>(BT)) {
+      // we're at the bottom of the recursion
+      if (auto predMapAbridged =
+            Predicate::Map::descend(allocator, instrCache, H, E, L)) {
+        auto *newTree = new (allocator) LoopTree{
+          allocator, L, nwr.visit(BT), *SE, {std::move(*predMapAbridged)}};
+        pForest.push_back(newTree);
+        return 1;
+      }
+    }
+    // Finally, we need `H` to have a direct path to `E`.
+    return 0;
+  }
+
   ///
   /// pushLoopTree
   ///
@@ -163,79 +184,77 @@ public:
                     llvm::BasicBlock *H, llvm::BasicBlock *E,
                     NoWrapRewriter &nwr) -> size_t {
 
-    if (size_t numSubLoops = subLoops.size()) {
-      // branches of this tree;
-      llvm::SmallVector<NotNull<LoopTree>> branches;
-      branches.reserve(numSubLoops);
-      llvm::SmallVector<Predicate::Map> branchBlocks;
-      branchBlocks.reserve(numSubLoops + 1);
-      bool anyFail = false;
-      size_t interiorDepth = 0;
-      for (size_t i = 0; i < numSubLoops; ++i) {
-        llvm::Loop *subLoop = subLoops[i];
-        if (size_t depth = pushLoopTree(
-              branches, subLoop, subLoop->getSubLoops(), subLoop->getHeader(),
-              subLoop->getExitingBlock(), nwr)) {
-          // pushLoopTree succeeded, and we have `depth` inner loops
-          // within `subLoop` (inclusive, i.e. `depth == 1` would
-          // indicate that `subLoop` doesn't have any subLoops itself,
-          // which we check with the following assertion:
-          assert((depth > 1) || (subLoop->getSubLoops().empty()));
+    size_t numSubLoops = subLoops.size();
+    if (!numSubLoops) return initLoopTree(pForest, L, subLoops, H, E, nwr);
+    // branches of this tree;
+    llvm::SmallVector<NotNull<LoopTree>> branches;
+    branches.reserve(numSubLoops);
+    llvm::SmallVector<Predicate::Map> branchBlocks;
+    branchBlocks.reserve(numSubLoops + 1);
+    bool anyFail = false;
+    size_t interiorDepth = 0;
+    for (size_t i = 0; i < numSubLoops; ++i) {
+      llvm::Loop *subLoop = subLoops[i];
+      if (size_t depth = pushLoopTree(branches, subLoop, subLoop->getSubLoops(),
+                                      subLoop->getHeader(),
+                                      subLoop->getExitingBlock(), nwr)) {
+        // pushLoopTree succeeded, and we have `depth` inner loops
+        // within `subLoop` (inclusive, i.e. `depth == 1` would
+        // indicate that `subLoop` doesn't have any subLoops itself,
+        // which we check with the following assertion:
+        assert((depth > 1) || (subLoop->getSubLoops().empty()));
 
-          // Now we check if we can create a direct path from `H` to
-          // `subLoop->getLoopPreheader();`
-          llvm::BasicBlock *subLoopPreheader = subLoop->getLoopPreheader();
-          if (auto predMap = Predicate::Map::descend(allocator, instrCache, H,
-                                                     subLoopPreheader, L)) {
-            interiorDepth = std::max(interiorDepth, depth);
-            branchBlocks.push_back(std::move(*predMap));
-            H = subLoop->getExitBlock();
-          } else {
-            // oops, no direct path, we split
-            anyFail = true;
-            if (branches.size() > 1) {
-              // we need to split off the last tree
-              LoopTree *lastTree = branches.pop_back_val();
-              // so we can push previous branches as one set
-              // for the final branchBlocks, we'll push H->H
-              split(branches, branchBlocks, H, L);
-              // reinsert last tree
-              branches.push_back(lastTree);
-            }
-            if (i + 1 < numSubLoops) H = subLoops[i + 1]->getLoopPreheader();
-          }
-          // for the next loop, we'll want a path to its preheader
-          // from this loop's exit block.
+        // Now we check if we can create a direct path from `H` to
+        // `subLoop->getLoopPreheader();`
+        llvm::BasicBlock *subLoopPreheader = subLoop->getLoopPreheader();
+        if (auto predMap = Predicate::Map::descend(allocator, instrCache, H,
+                                                   subLoopPreheader, L)) {
+          interiorDepth = std::max(interiorDepth, depth);
+          branchBlocks.push_back(std::move(*predMap));
+          H = subLoop->getExitBlock();
         } else {
-          // `depth == 0` indicates failure, therefore we need to
-          // split loops
+          // oops, no direct path, we split
           anyFail = true;
-          if (branches.size()) split(branches, branchBlocks, H, L);
+          if (branches.size() > 1) {
+            // we need to split off the last tree
+            LoopTree *lastTree = branches.pop_back_val();
+            // so we can push previous branches as one set
+            // for the final branchBlocks, we'll push H->H
+            split(branches, branchBlocks, H, L);
+            // reinsert last tree
+            branches.push_back(lastTree);
+          }
           if (i + 1 < numSubLoops) H = subLoops[i + 1]->getLoopPreheader();
         }
-      }
-      if (!anyFail) {
-        if (auto predMapAbridged =
-              Predicate::Map::descend(allocator, instrCache, H, E, L)) {
-          branchBlocks.push_back(std::move(*predMapAbridged));
-          LoopTree::split(allocator, pForest, branchBlocks, branches);
-          return ++interiorDepth;
-        }
-      }
-      if (branches.size()) split(branches, branchBlocks, H, L);
-      return 0;
-    } else if (auto BT = getBackedgeTakenCount(*SE, L);
-               !llvm::isa<llvm::SCEVCouldNotCompute>(BT)) {
-      // we're at the bottom of the recursion
-      if (auto predMapAbridged =
-            Predicate::Map::descend(allocator, instrCache, H, E, L)) {
-        auto *newTree = new (allocator) LoopTree{
-          allocator, L, nwr.visit(BT), *SE, {std::move(*predMapAbridged)}};
-        pForest.push_back(newTree);
-        return 1;
+        // for the next loop, we'll want a path to its preheader
+        // from this loop's exit block.
+      } else {
+        // `depth == 0` indicates failure, therefore we need to
+        // split loops
+        anyFail = true;
+        if (branches.size()) split(branches, branchBlocks, H, L);
+        if (i + 1 < numSubLoops) H = subLoops[i + 1]->getLoopPreheader();
       }
     }
-    // Finally, we need `H` to have a direct path to `E`.
+    if (!anyFail) {
+      // branches.size() > 0 because we have numSubLoops > 0 and !anyFail
+      // !anyFail means we called pushLoopTree, and returned depth > 0
+      // which means it must have called pushLoopTree, pushing into branches
+      // (pushLoopTree pushes into first arg, pForest, whenever ret > 0)
+      invariant(!branches.empty());
+      if (auto predMapAbridged =
+            Predicate::Map::descend(allocator, instrCache, H, E, L)) {
+        branchBlocks.push_back(std::move(*predMapAbridged));
+
+        auto *newTree = new (allocator)
+          LoopTree{allocator, L,
+                   branches.front()->affineLoop->removeInnerMost(allocator),
+                   std::move(branches), std::move(branchBlocks)};
+        pForest.push_back(newTree);
+        return ++interiorDepth;
+      }
+    }
+    if (!branches.empty()) split(branches, branchBlocks, H, L);
     return 0;
   }
   void split(llvm::SmallVector<NotNull<LoopTree>> &branches,
@@ -258,7 +277,7 @@ public:
   inline static auto containsPeeled(const llvm::SCEV *Sc, size_t numPeeled)
     -> bool {
     return llvm::SCEVExprContains(Sc, [numPeeled](const llvm::SCEV *S) {
-      if (auto r = llvm::dyn_cast<llvm::SCEVAddRecExpr>(S))
+      if (const auto *r = llvm::dyn_cast<llvm::SCEVAddRecExpr>(S))
         if (r->getLoop()->getLoopDepth() <= numPeeled) return true;
       return false;
     });
@@ -320,10 +339,11 @@ public:
         if (loopInd >= 0) {
           if (auto c = getConstantInt(x->getOperand(1))) {
             // we want the innermost loop to have index 0
-            v[last - loopInd] += *c;
+            v[loopInd] += *c;
             return fillAffineIndices(v, offsets, symbolicOffsets,
                                      x->getOperand(0), mlt, numPeeled);
-          } else blackList |= (uint64_t(1) << uint64_t(loopInd));
+          }
+          blackList |= (uint64_t(1) << uint64_t(loopInd));
         }
         // we separate out the addition
         // the multiplication was either peeled or involved
@@ -336,7 +356,8 @@ public:
           x->getLoop(), x->getNoWrapFlags());
         addSymbolic(offsets, symbolicOffsets, addRec, mlt);
         return blackList;
-      } else if (loopInd >= 0) blackList |= (uint64_t(1) << uint64_t(loopInd));
+      }
+      if (loopInd >= 0) blackList |= (uint64_t(1) << uint64_t(loopInd));
     } else if (std::optional<int64_t> c = getConstantInt(S)) {
       offsets[0] += *c;
       return 0;
@@ -349,8 +370,8 @@ public:
       if (auto op0 = getConstantInt(m->getOperand(0))) {
         return fillAffineIndices(v, offsets, symbolicOffsets, m->getOperand(1),
                                  mlt * (*op0), numPeeled);
-
-      } else if (auto op1 = getConstantInt(m->getOperand(1))) {
+      }
+      if (auto op1 = getConstantInt(m->getOperand(1))) {
         return fillAffineIndices(v, offsets, symbolicOffsets, m->getOperand(0),
                                  mlt * (*op1), numPeeled);
       }
@@ -382,9 +403,10 @@ public:
     accessFn = SE->getMinusSCEV(accessFn, basePointer);
     llvm::SmallVector<const llvm::SCEV *, 3> subscripts, sizes;
     llvm::delinearize(*SE, accessFn, subscripts, sizes, elSize);
-    assert(subscripts.size() == sizes.size());
+    size_t numDims = subscripts.size();
+    invariant(numDims, sizes.size());
     AffineLoopNest<true> *aln = loopMap[L]->affineLoop;
-    if (sizes.size() == 0) {
+    if (numDims == 0) {
       LT.memAccesses.push_back(MemoryAccess::construct(
         allocator, basePointer, *aln, loadOrStore, omegas));
       ++omegas.back();
@@ -392,28 +414,29 @@ public:
     }
     size_t numLoops{aln->getNumLoops()};
     // numLoops x arrayDim
-    // IntMatrix R(numLoops, subscripts.size());
+    // IntMatrix R(numLoops, numDims);
     size_t numPeeled = L->getLoopDepth() - numLoops;
     // numLoops x arrayDim
-    IntMatrix Rt{StridedDims{subscripts.size(), numLoops}, 0};
+    IntMatrix Rt{StridedDims{numDims, numLoops}, 0};
     IntMatrix Bt;
     llvm::SmallVector<const llvm::SCEV *, 3> symbolicOffsets;
     uint64_t blackList{0};
     {
       Vector<int64_t> offsets;
-      for (size_t i = 0; i < subscripts.size(); ++i) {
+      for (size_t i = 0; i < numDims; ++i) {
         offsets.clear();
         offsets.push_back(0);
         blackList |= fillAffineIndices(Rt(i, _), offsets, symbolicOffsets,
                                        subscripts[i], 1, numPeeled);
-        Bt.resize(subscripts.size(), offsets.size());
+        Bt.resize(numDims, offsets.size());
         Bt(i, _) << offsets;
       }
     }
+    uint64_t numExtraLoopsToPeel = 0;
     if (blackList) {
       // blacklist: inner - outer
       uint64_t leadingZeros = std::countl_zero(blackList);
-      uint64_t numExtraLoopsToPeel = 64 - leadingZeros;
+      numExtraLoopsToPeel = 64 - leadingZeros;
       // need to condition on loop
       // remove the numExtraLoopsToPeel from Rt
       // that is, we want to move Rt(_,_(end-numExtraLoopsToPeel,end))
@@ -427,13 +450,13 @@ public:
       for (size_t i = 1; i < remainingLoops; ++i) P = P->getParentLoop();
       // remove
       conditionOnLoop(P->getParentLoop());
-      for (size_t i = remainingLoops; i < numLoops; ++i) {
+      for (size_t i = 0; i < numExtraLoopsToPeel; ++i) {
         P = P->getParentLoop();
         if (allZero(Rt(_, i))) continue;
         // push the SCEV
-        auto IntType = P->getInductionVariable(*SE)->getType();
+        auto *intType = P->getInductionVariable(*SE)->getType();
         const llvm::SCEV *S = SE->getAddRecExpr(
-          SE->getZero(IntType), SE->getOne(IntType), P, llvm::SCEV::NoWrapMask);
+          SE->getZero(intType), SE->getOne(intType), P, llvm::SCEV::NoWrapMask);
         if (size_t j = findSymbolicIndex(symbolicOffsets, S)) {
           Bt(_, j) += Rt(_, i);
         } else {
@@ -443,10 +466,10 @@ public:
           symbolicOffsets.push_back(S);
         }
       }
-      Rt.truncate(Col{numLoops - numExtraLoopsToPeel});
     }
     LT.memAccesses.push_back(MemoryAccess::construct(
-      allocator, basePointer, *aln, loadOrStore, Rt,
+      allocator, basePointer, *aln, loadOrStore,
+      Rt(_, _(numExtraLoopsToPeel, end)),
       {std::move(sizes), std::move(symbolicOffsets)}, Bt, omegas));
     ++omegas.back();
     return false;
@@ -461,11 +484,10 @@ public:
     // TODO: support top level array refs
     if (LT.loop) {
       if (auto *iptr = llvm::dyn_cast<llvm::Instruction>(ptr)) {
-        if (!arrayRef(LT, iptr, elSize, J, omega)) {
-          return false;
-        } else if (ORE) [[unlikely]] {
+        if (!arrayRef(LT, iptr, elSize, J, omega)) return false;
+        if (ORE) [[unlikely]] {
           llvm::SmallVector<char> x;
-          llvm::raw_svector_ostream os(x);
+          llvm::raw_svector_ostream os{x};
           if (llvm::isa<llvm::LoadInst>(J))
             os << "No affine representation for load: " << *J << "\n";
           else os << "No affine representation for store: " << *J << "\n";
@@ -476,10 +498,7 @@ public:
     }
     return false;
   }
-
-  void parseBB(LoopTree &LT, llvm::BasicBlock *BB,
-
-               Vector<unsigned> &omega) {
+  void parseBB(LoopTree &LT, llvm::BasicBlock *BB, Vector<unsigned> &omega) {
     for (llvm::Instruction &J : *BB) {
       if (LT.loop) assert(LT.loop->contains(&J));
       if (J.mayReadFromMemory()) {
@@ -491,7 +510,7 @@ public:
     }
   }
   void visit(LoopTree &LT, Predicate::Map &map, Vector<unsigned> &omega,
-             aset<llvm::BasicBlock *> visited, llvm::BasicBlock *BB) {
+             aset<llvm::BasicBlock *> &visited, llvm::BasicBlock *BB) {
     if ((!map.isInPath(BB)) || visited.contains(BB)) return;
     visited.insert(BB);
     for (llvm::BasicBlock *pred : llvm::predecessors(BB))
@@ -590,8 +609,6 @@ public:
     LT->parentLoop = nullptr; // LT is now top of the tree
     loopForests.push_back(LT);
     llvm::SmallVector<NotNull<LoopTree>> &friendLoops = PT.subLoops;
-    for (auto id : friendLoops) llvm::errs() << ", " << id;
-    llvm::errs() << "\n";
     if (friendLoops.front() != LT) {
       // we're cutting off the front
       size_t numFriendLoops = friendLoops.size();
@@ -632,47 +649,24 @@ public:
     }
     conditionOnLoop(&PT);
   }
-
-  auto parseLoopPrint(auto B, auto E) -> bool {
-    // Schedule sch(depth);
-    size_t omega = 0;
-    for (auto &&it = B; it != E; ++it, ++omega) {
-      llvm::Loop *LP = *it;
-      if (auto *inductOuter = LP->getInductionVariable(*SE)) {
-        llvm::errs() << "Outer InductionVariable: " << *inductOuter << "\n";
-        if (const llvm::SCEV *backEdgeTaken = getBackedgeTakenCount(*SE, LP)) {
-          llvm::errs() << "Back edge taken count: " << *backEdgeTaken
-                       << "\n\ttrip count: "
-                       << *(SE->getAddExpr(
-                            backEdgeTaken,
-                            SE->getOne(backEdgeTaken->getType())))
-                       << "\n";
-          continue;
-        }
-      }
-      return true;
-    }
-    return false;
-  }
   auto isLoopDependent(llvm::Value *v) const -> bool {
-    for (auto &L : *LI)
+    for (const auto &L : *LI)
       if (!L->isLoopInvariant(v)) return true;
     return false;
   }
   auto mayReadOrWriteMemory(llvm::Value *v) const -> bool {
-    if (auto inst = llvm::dyn_cast<llvm::Instruction>(v))
+    if (auto *inst = llvm::dyn_cast<llvm::Instruction>(v))
       if (inst->mayReadOrWriteMemory()) return true;
     return false;
   }
   void fillLoopBlock(LoopTree &root) {
-    for (auto &&mem : root.memAccesses) loopBlock.addMemory(mem);
-    for (auto &&sub : root.subLoops) fillLoopBlock(*sub);
+    for (auto mem : root.memAccesses) loopBlock.addMemory(mem);
+    for (auto sub : root.subLoops) fillLoopBlock(*sub);
   }
-
   // https://llvm.org/doxygen/LoopVectorize_8cpp_source.html#l00932
   void remark(const llvm::StringRef remarkName, llvm::Loop *L,
               const llvm::StringRef remarkMessage,
-              llvm::Instruction *J = nullptr) {
+              llvm::Instruction *J = nullptr) const {
 
     llvm::OptimizationRemarkAnalysis analysis{remarkAnalysis(remarkName, L, J)};
     ORE->emit(analysis << remarkMessage);

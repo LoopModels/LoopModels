@@ -448,10 +448,10 @@ TEST(TriangularExampleTest, BasicAssertions) {
 
   llvm::ScalarEvolution &SE{tlf.getSE()};
   auto &builder = tlf.getBuilder();
-  llvm::IntegerType *Int64 = builder.getInt64Ty();
+  llvm::IntegerType *i64 = builder.getInt64Ty();
 
   // create arrays
-  llvm::Type *Float64 = builder.getDoubleTy();
+  llvm::Type *f64 = builder.getDoubleTy();
   llvm::Value *ptrB = tlf.createArray();
   llvm::Value *ptrA = tlf.createArray();
   llvm::Value *ptrU = tlf.createArray();
@@ -466,63 +466,60 @@ TEST(TriangularExampleTest, BasicAssertions) {
 
   llvm::Value *Mv = llvm::dyn_cast<llvm::SCEVUnknown>(M)->getValue();
   llvm::Value *Nv = llvm::dyn_cast<llvm::SCEVUnknown>(N)->getValue();
-  llvm::Value *Boffset = builder.CreateAdd(mv, builder.CreateMul(nv, Mv));
+  llvm::Value *offsetB = builder.CreateAdd(mv, builder.CreateMul(nv, Mv));
   // for (m = 0; m < M; ++m){
   //   for (n = 0; n < N; ++n){
   //     A(n,m) = B(n,m);
   //   }
-  llvm::LoadInst *Bload = builder.CreateAlignedLoad(
-    Float64,
-    builder.CreateGEP(Float64, ptrB,
-                      llvm::SmallVector<llvm::Value *, 1>{Boffset}),
+  llvm::LoadInst *loadB = builder.CreateAlignedLoad(
+    f64,
+    builder.CreateGEP(f64, ptrB, llvm::SmallVector<llvm::Value *, 1>{offsetB}),
     llvm::MaybeAlign(8), "load_Bnm");
-  llvm::StoreInst *Astore0 = builder.CreateAlignedStore(
-    Bload,
-    builder.CreateGEP(Float64, ptrA,
-                      llvm::SmallVector<llvm::Value *, 1>{Boffset}),
+  llvm::StoreInst *storeA0 = builder.CreateAlignedStore(
+    loadB,
+    builder.CreateGEP(f64, ptrA, llvm::SmallVector<llvm::Value *, 1>{offsetB}),
     llvm::MaybeAlign(8), false);
 
   // for (m = 0; m < M; ++m){
   //   for (n = 0; n < N; ++n){
   //     A(n,m) = A(n,m) / U(n,n);
-  llvm::Value *Uoffsetnn = builder.CreateAdd(nv, builder.CreateMul(nv, Nv));
-  auto *Uloadnn = builder.CreateAlignedLoad(
-    Float64,
-    builder.CreateGEP(Float64, ptrU,
-                      llvm::SmallVector<llvm::Value *, 1>{Uoffsetnn}),
+  llvm::Value *offsetUnn = builder.CreateAdd(nv, builder.CreateMul(nv, Nv));
+  auto *loadUnn = builder.CreateAlignedLoad(
+    f64,
+    builder.CreateGEP(f64, ptrU,
+                      llvm::SmallVector<llvm::Value *, 1>{offsetUnn}),
     llvm::MaybeAlign(8), "load_Unn");
-  auto *Ageped0 = builder.CreateGEP(
-    Float64, ptrA, llvm::SmallVector<llvm::Value *, 1>{Boffset}, "gep_Anm");
-  auto *Aload0 = builder.CreateAlignedLoad(Float64, Ageped0,
-                                           llvm::MaybeAlign(8), "load_Anm");
-  auto *AstoreFDiv =
-    builder.CreateAlignedStore(builder.CreateFDiv(Aload0, Uloadnn, "fdiv"),
-                               Ageped0, llvm::MaybeAlign(8), false);
+  auto *gepA0 = builder.CreateGEP(
+    f64, ptrA, llvm::SmallVector<llvm::Value *, 1>{offsetB}, "gep_Anm");
+  auto *loadA0 =
+    builder.CreateAlignedLoad(f64, gepA0, llvm::MaybeAlign(8), "load_Anm");
+  auto *storeAFDiv =
+    builder.CreateAlignedStore(builder.CreateFDiv(loadA0, loadUnn, "fdiv"),
+                               gepA0, llvm::MaybeAlign(8), false);
 
   // for (m = 0; m < M; ++m){
   //     for (k = n+1; k < N; ++k){
   //       A(k,m) = A(k,m) - A(n,m)*U(k,n);
   //     }
-  llvm::Value *Uoffsetnk = builder.CreateAdd(nv, builder.CreateMul(kv, Nv));
-  auto *Uloadnk = builder.CreateAlignedLoad(
-    Float64,
-    builder.CreateGEP(Float64, ptrU,
-                      llvm::SmallVector<llvm::Value *, 1>{Uoffsetnk}),
+  llvm::Value *offsetUnk = builder.CreateAdd(nv, builder.CreateMul(kv, Nv));
+  auto *loadUnk = builder.CreateAlignedLoad(
+    f64,
+    builder.CreateGEP(f64, ptrU,
+                      llvm::SmallVector<llvm::Value *, 1>{offsetUnk}),
     llvm::MaybeAlign(8), "load_Ukn");
-  llvm::Value *Aoffsetmk = builder.CreateAdd(mv, builder.CreateMul(kv, Mv));
-  auto *Ageped1mk = builder.CreateGEP(
-    Float64, ptrA, llvm::SmallVector<llvm::Value *, 1>{Aoffsetmk}, "gep_Akm");
-  auto *Aload1mk = builder.CreateAlignedLoad(Float64, Ageped1mk,
-                                             llvm::MaybeAlign(8), "load_Akm");
-  auto *Aload1mn = builder.CreateAlignedLoad(
-    Float64,
-    builder.CreateGEP(Float64, ptrA,
-                      llvm::SmallVector<llvm::Value *, 1>{Boffset}),
+  llvm::Value *offsetAmk = builder.CreateAdd(mv, builder.CreateMul(kv, Mv));
+  auto *getA1mk = builder.CreateGEP(
+    f64, ptrA, llvm::SmallVector<llvm::Value *, 1>{offsetAmk}, "gep_Akm");
+  auto *loadA1mk =
+    builder.CreateAlignedLoad(f64, getA1mk, llvm::MaybeAlign(8), "load_Akm");
+  auto *loadA1mn = builder.CreateAlignedLoad(
+    f64,
+    builder.CreateGEP(f64, ptrA, llvm::SmallVector<llvm::Value *, 1>{offsetB}),
     llvm::MaybeAlign(8), "load_Anm");
-  auto *Astore2mk = builder.CreateAlignedStore(
-    builder.CreateFSub(Aload1mk, builder.CreateFMul(Aload1mn, Uloadnk, "fmul"),
+  auto *storeA2mk = builder.CreateAlignedStore(
+    builder.CreateFSub(loadA1mk, builder.CreateFMul(loadA1mn, loadUnk, "fmul"),
                        "fsub"),
-    Ageped0, llvm::MaybeAlign(8), false);
+    gepA0, llvm::MaybeAlign(8), false);
 
   // badly written triangular solve:
   // for (m = 0; m < M; ++m){
@@ -545,64 +542,64 @@ TEST(TriangularExampleTest, BasicAssertions) {
   // ind mat, loops currently indexed from outside-in
   LinearProgramLoopBlock lblock;
   // B[n, m]
-  ArrayReference BmnInd{scevB, loopMN, 2};
+  ArrayReference indBmn{scevB, loopMN, 2};
   {
-    MutPtrMatrix<int64_t> IndMat = BmnInd.indexMatrix();
+    MutPtrMatrix<int64_t> indMat = indBmn.indexMatrix();
     //     l  d
-    IndMat(n, 0) = 1; // n
-    IndMat(m, 1) = 1; // m
-    BmnInd.sizes[0] = M;
-    BmnInd.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
+    indMat(n, 0) = 1; // n
+    indMat(m, 1) = 1; // m
+    indBmn.sizes[0] = M;
+    indBmn.sizes[1] = SE.getConstant(i64, 8, /*isSigned=*/false);
   }
   // A[n, m]
-  ArrayReference Amn2Ind{scevA, loopMN, 2};
+  ArrayReference indAmn2{scevA, loopMN, 2};
   {
-    MutPtrMatrix<int64_t> IndMat = Amn2Ind.indexMatrix();
+    MutPtrMatrix<int64_t> indMat = indAmn2.indexMatrix();
     //     l  d
-    IndMat(n, 0) = 1; // n
-    IndMat(m, 1) = 1; // m
-    Amn2Ind.sizes[0] = M;
-    Amn2Ind.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
+    indMat(n, 0) = 1; // n
+    indMat(m, 1) = 1; // m
+    indAmn2.sizes[0] = M;
+    indAmn2.sizes[1] = SE.getConstant(i64, 8, /*isSigned=*/false);
   }
   // A[n, m]
-  ArrayReference Amn3Ind{scevA, loopMNK, 2};
+  ArrayReference indAmn3{scevA, loopMNK, 2};
   {
-    MutPtrMatrix<int64_t> IndMat = Amn3Ind.indexMatrix();
+    MutPtrMatrix<int64_t> indMat = indAmn3.indexMatrix();
     //     l  d
-    IndMat(n, 0) = 1; // n
-    IndMat(m, 1) = 1; // m
-    Amn3Ind.sizes[0] = M;
-    Amn3Ind.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
+    indMat(n, 0) = 1; // n
+    indMat(m, 1) = 1; // m
+    indAmn3.sizes[0] = M;
+    indAmn3.sizes[1] = SE.getConstant(i64, 8, /*isSigned=*/false);
   }
   // A[k, m]
-  ArrayReference AmkInd{scevA, loopMNK, 2};
+  ArrayReference indAmk{scevA, loopMNK, 2};
   {
-    MutPtrMatrix<int64_t> IndMat = AmkInd.indexMatrix();
+    MutPtrMatrix<int64_t> indMat = indAmk.indexMatrix();
     //     l  d
-    IndMat(k, 0) = 1; // k
-    IndMat(m, 1) = 1; // m
-    AmkInd.sizes[0] = M;
-    AmkInd.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
+    indMat(k, 0) = 1; // k
+    indMat(m, 1) = 1; // m
+    indAmk.sizes[0] = M;
+    indAmk.sizes[1] = SE.getConstant(i64, 8, /*isSigned=*/false);
   }
   // U[k, n]
-  ArrayReference UnkInd{scevU, loopMNK, 2};
+  ArrayReference indUnk{scevU, loopMNK, 2};
   {
-    MutPtrMatrix<int64_t> IndMat = UnkInd.indexMatrix();
+    MutPtrMatrix<int64_t> indMat = indUnk.indexMatrix();
     //     l  d
-    IndMat(n, 1) = 1; // n
-    IndMat(k, 0) = 1; // k
-    UnkInd.sizes[0] = N;
-    UnkInd.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
+    indMat(n, 1) = 1; // n
+    indMat(k, 0) = 1; // k
+    indUnk.sizes[0] = N;
+    indUnk.sizes[1] = SE.getConstant(i64, 8, /*isSigned=*/false);
   }
   // U[n, n]
-  ArrayReference UnnInd{scevU, loopMN, 2};
+  ArrayReference indUnn{scevU, loopMN, 2};
   {
-    MutPtrMatrix<int64_t> IndMat = UnnInd.indexMatrix();
+    MutPtrMatrix<int64_t> indMat = indUnn.indexMatrix();
     //     l  d
-    IndMat(n, 1) = 1; // n
-    IndMat(n, 0) = 1; // n
-    UnnInd.sizes[0] = N;
-    UnnInd.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
+    indMat(n, 1) = 1; // n
+    indMat(n, 0) = 1; // n
+    indUnn.sizes[0] = N;
+    indUnn.sizes[1] = SE.getConstant(i64, 8, /*isSigned=*/false);
   }
 
   // for (m = 0; m < M; ++m){
@@ -625,32 +622,32 @@ TEST(TriangularExampleTest, BasicAssertions) {
   Vector<unsigned, 4> sch2_0_1{sch2_0_0};
   BumpAlloc<> alloc;
   // A(n,m) = -> B(n,m) <-
-  MemoryAccess *mSch2_0_0(createMemAccess(alloc, BmnInd, Bload, sch2_0_0));
+  MemoryAccess *mSch2_0_0(createMemAccess(alloc, indBmn, loadB, sch2_0_0));
   lblock.addMemory(mSch2_0_0);
   sch2_0_1[2] = 1;
   Vector<unsigned, 4> sch2_1_0{sch2_0_1};
   // -> A(n,m) <- = B(n,m)
-  MemoryAccess *mSch2_0_1(createMemAccess(alloc, Amn2Ind, Astore0, sch2_0_1));
-  assert(mSch2_0_1->getInstruction() == Astore0);
-  assert(mSch2_0_1->getStore() == Astore0);
+  MemoryAccess *mSch2_0_1(createMemAccess(alloc, indAmn2, storeA0, sch2_0_1));
+  assert(mSch2_0_1->getInstruction() == storeA0);
+  assert(mSch2_0_1->getStore() == storeA0);
   lblock.addMemory(mSch2_0_1);
   sch2_1_0[1] = 1;
   sch2_1_0[2] = 0;
   Vector<unsigned, 4> sch2_1_1{sch2_1_0};
   // A(n,m) = -> A(n,m) <- / U(n,n); // sch2
-  MemoryAccess *mSch2_1_0(createMemAccess(alloc, Amn2Ind, Aload0, sch2_1_0));
-  assert(mSch2_1_0->getInstruction() == Aload0);
-  assert(mSch2_1_0->getLoad() == Aload0);
+  MemoryAccess *mSch2_1_0(createMemAccess(alloc, indAmn2, loadA0, sch2_1_0));
+  assert(mSch2_1_0->getInstruction() == loadA0);
+  assert(mSch2_1_0->getLoad() == loadA0);
   lblock.addMemory(mSch2_1_0);
   sch2_1_1[2] = 1;
   Vector<unsigned, 4> sch2_1_2{sch2_1_1};
   // A(n,m) = A(n,m) / -> U(n,n) <-;
-  MemoryAccess *mSch2_1_1(createMemAccess(alloc, UnnInd, Uloadnn, sch2_1_1));
+  MemoryAccess *mSch2_1_1(createMemAccess(alloc, indUnn, loadUnn, sch2_1_1));
   lblock.addMemory(mSch2_1_1);
   sch2_1_2[2] = 2;
   // -> A(n,m) <- = A(n,m) / U(n,n); // sch2
   MemoryAccess *mSch2_1_2(
-    createMemAccess(alloc, Amn2Ind, AstoreFDiv, sch2_1_2));
+    createMemAccess(alloc, indAmn2, storeAFDiv, sch2_1_2));
   lblock.addMemory(mSch2_1_2);
 
   Vector<unsigned, 4> sch3_0(3 + 1, 0);
@@ -658,21 +655,21 @@ TEST(TriangularExampleTest, BasicAssertions) {
   sch3_0[2] = 3;
   Vector<unsigned, 4> sch3_1{sch3_0};
   // A(k,m) = A(k,m) - A(n,m)* -> U(k,n) <-;
-  MemoryAccess *mSch3_0(createMemAccess(alloc, UnkInd, Uloadnk, sch3_0));
+  MemoryAccess *mSch3_0(createMemAccess(alloc, indUnk, loadUnk, sch3_0));
   lblock.addMemory(mSch3_0);
   sch3_1[3] = 1;
   Vector<unsigned, 4> sch3_2{sch3_1};
   // A(k,m) = A(k,m) - -> A(n,m) <- *U(k,n);
-  MemoryAccess *mSch3_1(createMemAccess(alloc, Amn3Ind, Aload1mn, sch3_1));
+  MemoryAccess *mSch3_1(createMemAccess(alloc, indAmn3, loadA1mn, sch3_1));
   lblock.addMemory(mSch3_1);
   sch3_2[3] = 2;
   Vector<unsigned, 8> sch3_3{sch3_2};
   // A(k,m) = -> A(k,m) <- - A(n,m)*U(k,n);
-  MemoryAccess *mSch3_2(createMemAccess(alloc, AmkInd, Aload1mk, sch3_2));
+  MemoryAccess *mSch3_2(createMemAccess(alloc, indAmk, loadA1mk, sch3_2));
   lblock.addMemory(mSch3_2);
   sch3_3[3] = 3;
   // -> A(k,m) <- = A(k,m) - A(n,m)*U(k,n);
-  MemoryAccess *mSch3_3(createMemAccess(alloc, AmkInd, Astore2mk, sch3_3));
+  MemoryAccess *mSch3_3(createMemAccess(alloc, indAmk, storeA2mk, sch3_3));
   lblock.addMemory(mSch3_3);
 
   // for (m = 0; m < M; ++m){createMemAccess(
@@ -882,6 +879,8 @@ TEST(TriangularExampleTest, BasicAssertions) {
         assert(mem->getNumLoops() == 3);
         EXPECT_EQ(s.getPhi(), optPhi3);
       }
+      EXPECT_TRUE(allZero(s.getFusionOmega()));
+      EXPECT_TRUE(allZero(s.getOffsetOmega()));
       //       //       llvm::errs() << "\n";
     }
   }

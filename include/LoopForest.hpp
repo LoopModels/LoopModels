@@ -63,12 +63,11 @@ struct LoopTree {
   auto operator=(LoopTree &&) -> LoopTree & = delete;
   LoopTree(llvm::SmallVector<NotNull<LoopTree>> sL,
            llvm::SmallVector<Predicate::Map> pth)
-    : loop(nullptr), subLoops(std::move(sL)), paths(std::move(pth)) {}
+    : subLoops(std::move(sL)), paths(std::move(pth)) {}
 
   LoopTree(BumpAlloc<> &alloc, llvm::Loop *L, const llvm::SCEV *BT,
            llvm::ScalarEvolution &SE, Predicate::Map pth)
-    : loop(L), paths{},
-      affineLoop{AffineLoopNest<true>::construct(alloc, L, BT, SE)} {
+    : loop(L), affineLoop{AffineLoopNest<true>::construct(alloc, L, BT, SE)} {
     paths.push_back(std::move(pth));
   }
 
@@ -115,7 +114,7 @@ struct LoopTree {
                     llvm::SmallVector<NotNull<LoopTree>> &trees,
                     llvm::SmallVector<Predicate::Map> &paths,
                     llvm::SmallVector<NotNull<LoopTree>> &subTree) {
-    if (subTree.size()) {
+    if (!subTree.empty()) {
       assert(1 + subTree.size() == paths.size());
       auto *newTree =
         new (alloc) LoopTree{std::move(subTree), std::move(paths)};
@@ -128,7 +127,7 @@ struct LoopTree {
     llvm::errs() << "dumpAllMemAccess for ";
     if (loop) llvm::errs() << *loop << "\n";
     else llvm::errs() << "toplevel\n";
-    for (auto &mem : memAccesses) llvm::errs() << "mem = " << mem << "\n";
+    for (const auto &mem : memAccesses) llvm::errs() << "mem = " << mem << "\n";
     for (auto sL : subLoops) sL->dumpAllMemAccess();
   }
 };

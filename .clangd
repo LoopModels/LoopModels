@@ -1,13 +1,12 @@
 Diagnostics:
-  UnusedIncludes: Strict
   ClangTidy:
     Add: [performance*, modernize*, readability*, clang-diagnostic-*, clang-analyzer-*, bugprone-*, cpp-core-guidelines-*, cert-*, misc-*, llvm-namespace-comment,llvm-prefer-isa-or-dyn-cast-in-conditionals,portability-*]
-    Remove: [bugprone-easily-swappable-parameters, readability-braces-around-statements, readability-identifier-length, readability-isolate-declaration, readability-implicit-bool-conversion, readability-magic-numbers, readability-function-cognitive-complexity, readability-named-parameter, misc-non-private-member-variables-in-classes]
+    Remove: [bugprone-easily-swappable-parameters, readability-braces-around-statements,readability-identifier-length,readability-isolate-declaration,readability-implicit-bool-conversion,readability-magic-numbers,readability-function-cognitive-complexity,readability-named-parameter,misc-non-private-member-variables-in-classes,]
     CheckOptions:
       readability-identifier-naming.LocalVariableCase: camelBack
-      readability-identifier-naming.LocalVariableIgnoredRegexp: "\w{1,3}"
+      readability-identifier-naming.LocalVariableIgnoredRegexp: "^[A-Za-z0-9]{1,3}$"
       readability-identifier-naming.ClassCase: CamelCase
       readability-identifier-naming.ClassMethodCase: camelBack
-
+  UnusedIncludes: Strict
 Hover:
   ShowAKA: Yes

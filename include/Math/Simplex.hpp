@@ -824,19 +824,19 @@ public:
   /// indOne is var ind greater than indsFree that's pinned to 1
   /// (i.e., indsFree + indOne == index of var pinned to 1)
   /// numRow is number of rows used, extras are dropped
-  [[nodiscard]] constexpr auto
-  unSatisfiableZeroRem(BumpAlloc<> &alloc, size_t indsFree,
-                       std::array<size_t, 2> inds, size_t numRow) const
-    -> bool {
+  // [[nodiscard]] constexpr auto
+  [[nodiscard]] inline auto unSatisfiableZeroRem(BumpAlloc<> &alloc,
+                                                 size_t iFree,
+                                                 std::array<size_t, 2> inds,
+                                                 size_t numRow) const -> bool {
     invariant(numRow <= getNumCons());
     auto p = alloc.scope();
-    Simplex *subSimp{Simplex::create(alloc, numRow, indsFree++)};
+    Simplex *subSimp{Simplex::create(alloc, numRow, iFree++)};
     auto fC{getConstraints()};
     auto sC{subSimp->getConstraints()};
-    sC(_, 0) << fC(_(begin, numRow), 0) -
-                  (fC(_(begin, numRow), inds[0] + indsFree) +
-                   fC(_(begin, numRow), inds[1] + indsFree));
-    sC(_, _(1, indsFree)) << fC(_(begin, numRow), _(1, indsFree));
+    auto r = _(0, numRow);
+    sC(_, 0) << fC(r, 0) - (fC(r, inds[0] + iFree) + fC(r, inds[1] + iFree));
+    sC(_, _(1, iFree)) << fC(r, _(1, iFree));
     return subSimp->initiateFeasible();
   }
   [[nodiscard]] constexpr auto satisfiableZeroRem(BumpAlloc<> &alloc,
@@ -848,7 +848,6 @@ public:
   void printResult(size_t numSlack = 0) {
     auto C{getConstraints()};
     auto basicVars{getBasicVariables()};
-    // llvm::errs() << "Simplex solution:" << "\n";
     for (size_t i = 0; i < basicVars.size(); ++i) {
       size_t v = basicVars[i];
       if (v <= numSlack) continue;
