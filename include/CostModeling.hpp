@@ -51,7 +51,7 @@ struct CPURegisterFile {
                                          llvm::TargetTransformInfo &TTI)
     -> uint8_t {
     uint8_t twiceMaxVectorWidth = 2;
-    auto f32 = llvm::Type::getFloatTy(C);
+    auto *f32 = llvm::Type::getFloatTy(C);
     llvm::InstructionCost prevCost = TTI.getArithmeticInstrCost(
       llvm::Instruction::FAdd,
       llvm::FixedVectorType::get(f32, twiceMaxVectorWidth));
@@ -128,10 +128,9 @@ struct LoopTreeSchedule;
 struct InstructionBlock {
   [[no_unique_address]] llvm::SmallVector<Address *> memAccesses;
 };
-struct LoopTreeSchedule;
-using LoopAndExit = std::pair<LoopTreeSchedule, InstructionBlock>;
 
 struct LoopTreeSchedule {
+  using LoopAndExit = std::pair<LoopTreeSchedule, InstructionBlock>;
   /// Header of the loop.
   [[no_unique_address]] InstructionBlock header;
   /// Variable number of sub loops and their associated exits.
@@ -174,8 +173,8 @@ struct LoopTreeSchedule {
                             BumpAlloc<> &tAlloc, LoopTree *loopForest,
                             LinearProgramLoopBlock &LB, ScheduledNode &node,
                             llvm::TargetTransformInfo &TTI,
-                            unsigned int vectorBits, Schedule &sch,
-                            size_t depth) {
+                            unsigned int vectorBits, AffineSchedule sch,
+                            size_t depth_) {
     // TODO: emplace all memory accesses that occur here
     assert(subTrees.empty());
   }
@@ -184,7 +183,7 @@ struct LoopTreeSchedule {
                  BumpAlloc<> &tAlloc, LoopTree *loopForest,
                  LinearProgramLoopBlock &LB, ScheduledNode &node,
                  llvm::TargetTransformInfo &TTI, unsigned int vectorBits,
-                 Schedule &sch, size_t d) {
+                 AffineSchedule sch, size_t d) {
     depth = d++;
     if (d == sch.getNumLoops()) {
       assert(sch.getFusionOmega(d) == 0);
@@ -214,7 +213,7 @@ struct LoopTreeSchedule {
     // then, we licm
     for (auto &node : LB.getNodes()) {
       // now we walk the scheduled nodes to build the loop tree.
-      Schedule &sch = node.getSchedule();
+      AffineSchedule sch = node.getSchedule();
       // TODO: preprocess all memory accesses to compute their rotated indMats
       addMemory(alloc, cache, tAlloc, loopForest, LB, node, TTI, vectorBits,
                 sch, 0);

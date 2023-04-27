@@ -54,14 +54,28 @@
 // clang-format on
 struct Address {
 private:
+  /// Original (untransformed) memory access
   NotNull<MemoryAccess> oldMemAccess;
+  /// transformed loop
   NotNull<AffineLoopNest<false>> loop;
-  uint8_t dim;
-  uint8_t depth;
+  [[no_unique_address]] uint8_t dim;
+  [[no_unique_address]] uint8_t depth;
   // may be `false` while `oldMemAccess->isStore()==true`
   // which indicates a reload from this address.
   [[no_unique_address]] bool isStoreFlag;
-  int64_t mem[1]; // NOLINT(modernize-avoid-c-arrays)
+#if !defined(__clang__) && defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
+#else
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wc99-extensions"
+#endif
+  alignas(int64_t *) char mem[]; // NOLINT(modernize-avoid-c-arrays)
+#if !defined(__clang__) && defined(__GNUC__)
+#pragma GCC diagnostic pop
+#else
+#pragma clang diagnostic pop
+#endif
   Address(NotNull<AffineLoopNest<false>> explicitLoop, NotNull<MemoryAccess> ma,
           SquarePtrMatrix<int64_t> Pinv, int64_t denom,
           PtrVector<int64_t> omega, bool isStr)
@@ -69,10 +83,14 @@ private:
     PtrMatrix<int64_t> M = oldMemAccess->indexMatrix();
     dim = size_t(M.numCol());
     depth = size_t(M.numRow());
-    MutPtrMatrix<int64_t> MStar{indexMatrix()};
-    MStar << (M.transpose() * Pinv).transpose();
+    MutPtrMatrix<int64_t> mStar{indexMatrix()};
+    mStar << (M.transpose() * Pinv).transpose();
     getDenominator() = denom;
-    getOffsetOmega() << ma->offsetMatrix()(_, 0) - MStar * omega;
+    getOffsetOmega() << ma->offsetMatrix()(_, 0) - mStar * omega;
+  }
+  [[nodiscard]] constexpr auto getMemory() const -> int64_t * {
+    void *p = const_cast<void *>(static_cast<const void *>(mem));
+    return static_cast<int64_t *>(p);
   }
 
 public:
@@ -83,6 +101,13 @@ public:
 
     size_t memSz = ma->getNumLoops() * (1 + ma->getArrayDim());
     auto *pt = alloc.allocate(sizeof(Address) + memSz * sizeof(int64_t), 8);
+    // we could use the passkey idiom to make the constructor public yet
+    // un-callable so that we can use std::construct_at (which requires a public
+    // constructor) or, we can just use placement new and not mark this function
+    // which will never be constant evaluated anyway constexpr (main benefit of
+    // constexpr is UB is not allowed, so we get more warnings).
+    // return std::construct_at((Address *)pt, explicitLoop, ma, Pinv, denom,
+    // omega, isStr);
     return new (pt) Address(explicitLoop, ma, Pinv, denom, omega, isStr);
   }
   [[nodiscard]] constexpr auto getNumLoops() const -> size_t { return depth; }
@@ -93,9 +118,11 @@ public:
   [[nodiscard]] auto getAlign() const -> llvm::Align {
     return oldMemAccess->getAlign();
   }
-  [[nodiscard]] constexpr auto getDenominator() -> int64_t & { return mem[0]; }
+  [[nodiscard]] constexpr auto getDenominator() -> int64_t & {
+    return getMemory()[0];
+  }
   [[nodiscard]] constexpr auto getDenominator() const -> int64_t {
-    return mem[0];
+    return getMemory()[0];
   }
   // constexpr auto getFusionOmega() -> MutPtrVector<int64_t> {
   //   return {mem + 1, getNumLoops()+1};
@@ -104,21 +131,22 @@ public:
   //   return {mem + 1, getNumLoops()+1};
   // }
   [[nodiscard]] constexpr auto getOffsetOmega() -> MutPtrVector<int64_t> {
-    return {mem + 1, unsigned(getNumLoops())};
+    return {getMemory() + 1, unsigned(getNumLoops())};
   }
   [[nodiscard]] constexpr auto getOffsetOmega() const -> PtrVector<int64_t> {
-    return {const_cast<int64_t *>(mem + 1), unsigned(getNumLoops())};
+    return {getMemory() + 1, unsigned(getNumLoops())};
   }
   /// indexMatrix() -> arrayDim() x getNumLoops()
   [[nodiscard]] constexpr auto indexMatrix() -> MutDensePtrMatrix<int64_t> {
-    return {mem + 1 + getNumLoops(), DenseDims{getArrayDim(), getNumLoops()}};
+    return {getMemory() + 1 + getNumLoops(),
+            DenseDims{getArrayDim(), getNumLoops()}};
   }
   /// indexMatrix() -> arrayDim() x getNumLoops()
   [[nodiscard]] constexpr auto indexMatrix() const -> DensePtrMatrix<int64_t> {
-    return {const_cast<int64_t *>(mem + 1 + getNumLoops()),
+    return {getMemory() + 1 + getNumLoops(),
             DenseDims{getArrayDim(), getNumLoops()}};
   }
-  [[nodiscard]] auto isStore() -> bool { return isStoreFlag; }
+  [[nodiscard]] auto isStore() const -> bool { return isStoreFlag; }
   [[nodiscard]] auto getLoop() -> NotNull<AffineLoopNest<false>> {
     return loop;
   }
