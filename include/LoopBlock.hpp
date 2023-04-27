@@ -1287,10 +1287,12 @@ public:
     // if we fail on this level, break the graph
     BitSet activeEdgesBackup = g.activeEdges;
     if (std::optional<BitSet> depSat = solveGraph(g, d, false)) {
-      const size_t numSat = depSat->size();
-      if (std::optional<BitSet> depSatNest = optimize(g, d + 1, maxDepth)) {
+      const size_t dp1 = d + 1;
+      if (dp1 == maxDepth) return *depSat;
+      if (std::optional<BitSet> depSatNest = optimize(g, dp1, maxDepth)) {
+        bool depSatEmpty = depSat->empty();
         *depSat |= *depSatNest;
-        if (numSat && (!depSatNest->empty()))
+        if (!(depSatEmpty || depSatNest->empty()))
           return optimizeSatDep(g, d, maxDepth, *depSat, activeEdgesBackup);
         return *depSat;
       }
