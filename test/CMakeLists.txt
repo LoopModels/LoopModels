@@ -174,14 +174,15 @@ if(ENABLE_TEST_COVERAGE)
   target_link_options(LoopModels PUBLIC --coverage)
   target_compile_options(${PROJECT_NAME} PUBLIC -O0 -g --coverage)
   target_link_options(${PROJECT_NAME} PUBLIC --coverage)
-  add_custom_target(
-    clean_coverage
-    COMMAND rm -f ${PROJECT_BINARY_DIR}/CMakeFiles/LoopModelsTests.dir/*.gcno
-    COMMAND rm -f ${PROJECT_BINARY_DIR}/CMakeFiles/LoopModelsTests.dir/*.gcda
-    COMMAND rm -f ${PROJECT_BINARY_DIR}/_deps/loopmodels-build/CMakeFiles/LoopModels.dir/lib/*.gcda
-    COMMENT "Clearing out old coverage data."
-  )
-  add_dependencies(${PROJECT_NAME} clean_coverage)
+  # add_custom_target(
+  #   clean_coverage
+  #   COMMAND rm -f ${PROJECT_BINARY_DIR}/CMakeFiles/LoopModelsTests.dir/*.gcno
+  #   COMMAND rm -f ${PROJECT_BINARY_DIR}/CMakeFiles/LoopModelsTests.dir/*.gcda
+  #   COMMAND rm -f ${PROJECT_BINARY_DIR}/_deps/loopmodels-build/CMakeFiles/LoopModels.dir/lib/*.gcno
+  #   COMMAND rm -f ${PROJECT_BINARY_DIR}/_deps/loopmodels-build/CMakeFiles/LoopModels.dir/lib/*.gcda
+  #   COMMENT "Clearing out old coverage data."
+  # )
+  # add_dependencies(${PROJECT_NAME} clean_coverage)
   message(STATUS "Test coverage enabled.")
 endif()
 
