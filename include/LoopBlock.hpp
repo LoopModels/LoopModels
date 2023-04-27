@@ -1001,6 +1001,10 @@ public:
   }
   [[nodiscard]] auto solveGraph(Graph &g, size_t depth, bool satisfyDeps)
     -> std::optional<BitSet> {
+    if (numLambda == 0) {
+      setSchedulesIndependent(g, depth);
+      return BitSet{};
+    }
     auto p = allocator.scope();
     auto omniSimplex = instantiateOmniSimplex(g, depth, satisfyDeps);
     if (!omniSimplex) return std::nullopt;
@@ -1014,7 +1018,6 @@ public:
   [[nodiscard]] auto deactivateSatisfiedEdges(Graph &g, size_t depth,
                                               Simplex::Solution sol) -> BitSet {
     if (allZero(sol[_(begin, numBounding + numActiveEdges)])) return {};
-    // size_t u = 0, w = numBounding;
     size_t w = 0, u = numActiveEdges;
     BitSet deactivated{};
     for (size_t e = 0; e < edges.size(); ++e) {
@@ -1035,7 +1038,7 @@ public:
   }
   void updateSchedules(const Graph &g, size_t depth, Simplex::Solution sol) {
 #ifndef NDEBUG
-    if (depth & 1)
+    if (numPhiCoefs > 0)
       assert(std::ranges::any_of(sol, [](auto s) { return s != 0; }));
 #endif
     size_t o = numOmegaCoefs;
@@ -1204,7 +1207,7 @@ public:
       if (d >= sg.calcMaxDepth()) continue;
       countAuxParamsAndConstraints(sg, d);
       setScheduleMemoryOffsets(sg, d);
-      if (std::optional<BitSet> sat = optimizeLevel(sg, d)) satDeps |= *sat;
+      if (std::optional<BitSet> sat = solveGraph(sg, d, false)) satDeps |= *sat;
       else return {}; // give up
     }
     int64_t unfusedOffset = 0;
@@ -1242,16 +1245,6 @@ public:
       }
     // remove
     return satDeps;
-  }
-  [[nodiscard]] auto optimizeLevel(Graph &g, size_t d)
-    -> std::optional<BitSet> {
-    if (numPhiCoefs == 0) {
-      // is this valid? what about omegas, or checking satisfiability?
-      // if it is, then why not do this for all solveGraph calls?
-      setSchedulesIndependent(g, d);
-      return BitSet{};
-    }
-    return solveGraph(g, d, false);
   }
   // NOLINTNEXTLINE(misc-no-recursion)
   [[nodiscard]] auto optimizeSatDep(Graph g, size_t d, size_t maxDepth,
@@ -1293,7 +1286,7 @@ public:
     setScheduleMemoryOffsets(g, d);
     // if we fail on this level, break the graph
     BitSet activeEdgesBackup = g.activeEdges;
-    if (std::optional<BitSet> depSat = optimizeLevel(g, d)) {
+    if (std::optional<BitSet> depSat = solveGraph(g, d, false)) {
       const size_t numSat = depSat->size();
       if (std::optional<BitSet> depSatNest = optimize(g, d + 1, maxDepth)) {
         *depSat |= *depSatNest;
@@ -1304,7 +1297,7 @@ public:
     }
     return breakGraph(g, d);
   }
-  // returns true on failure
+  // returns a BitSet indicating satisfied dependencies
   [[nodiscard]] auto optimize() -> std::optional<BitSet> {
     fillEdges();
     buildGraph();
@@ -1312,7 +1305,8 @@ public:
 #ifndef NDEBUG
     validateEdges();
 #endif
-    return optOrth(fullGraph());
+    auto b = optOrth(fullGraph());
+    return b;
   }
 
   auto summarizeMemoryAccesses(llvm::raw_ostream &os) const
