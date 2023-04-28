@@ -223,6 +223,17 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>canFuse</b> (<a class
 <tr class="memitem:a2278f2e81797f5e98d48db7f4dd9b419"><td class="memItemLeft" align="right" valign="top"><a id="a2278f2e81797f5e98d48db7f4dd9b419"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>breakGraph</b> (<a class="el" href="structLinearProgramLoopBlock_1_1Graph.html">Graph</a> g, size_t d) -&gt; std::optional&lt; <a class="el" href="structBitSet.html">BitSet</a> &gt;</td></tr>
 <tr class="separator:a2278f2e81797f5e98d48db7f4dd9b419"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aef63213bb35b488a292097048a37793d"><td class="memTemplParams" colspan="2"><a id="aef63213bb35b488a292097048a37793d"></a>
+template&lt;typename F &gt; </td></tr>
+<tr class="memitem:aef63213bb35b488a292097048a37793d"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>for_each_edge</b> (const <a class="el" href="structLinearProgramLoopBlock_1_1Graph.html">Graph</a> &amp;g, size_t d, F &amp;&amp;f)</td></tr>
+<tr class="separator:aef63213bb35b488a292097048a37793d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa532e9b35d5799d6af62139e5a28a7b7"><td class="memTemplParams" colspan="2"><a id="aa532e9b35d5799d6af62139e5a28a7b7"></a>
+template&lt;typename F &gt; </td></tr>
+<tr class="memitem:aa532e9b35d5799d6af62139e5a28a7b7"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>transform_reduce_edge</b> (const <a class="el" href="structLinearProgramLoopBlock_1_1Graph.html">Graph</a> &amp;g, size_t d, F &amp;&amp;f)</td></tr>
+<tr class="separator:aa532e9b35d5799d6af62139e5a28a7b7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8e345e328af597bfa032a459c99bde3a"><td class="memItemLeft" align="right" valign="top"><a id="a8e345e328af597bfa032a459c99bde3a"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>countParamsStashDeps</b> (const <a class="el" href="structLinearProgramLoopBlock_1_1Graph.html">Graph</a> &amp;g, size_t d)</td></tr>
+<tr class="separator:a8e345e328af597bfa032a459c99bde3a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa977c10db911b7c84f44170ac103cb37"><td class="memItemLeft" align="right" valign="top"><a id="aa977c10db911b7c84f44170ac103cb37"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>optimizeSatDep</b> (<a class="el" href="structLinearProgramLoopBlock_1_1Graph.html">Graph</a> g, size_t d, size_t maxDepth, <a class="el" href="structBitSet.html">BitSet</a> depSatLevel, <a class="el" href="structBitSet.html">BitSet</a> activeEdges) -&gt; <a class="el" href="structBitSet.html">BitSet</a></td></tr>
 <tr class="separator:aa977c10db911b7c84f44170ac103cb37"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -275,6 +286,9 @@ static auto&#160;</td><td class="memItemRight" valign="bottom"><b>nonZeroMasks</
 <tr class="memitem:a18b91c94c3f0fa2966f7ff2bb4fdc7f0"><td class="memItemLeft" align="right" valign="top"><a id="a18b91c94c3f0fa2966f7ff2bb4fdc7f0"></a>
 static auto&#160;</td><td class="memItemRight" valign="bottom"><b>nonZeroMask</b> (const AbstractMatrix auto A) -&gt; uint64_t</td></tr>
 <tr class="separator:a18b91c94c3f0fa2966f7ff2bb4fdc7f0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4331e3f5cf555de8b97759fd2e13870b"><td class="memItemLeft" align="right" valign="top"><a id="a4331e3f5cf555de8b97759fd2e13870b"></a>
+static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>numParams</b> (const <a class="el" href="classDependence.html">Dependence</a> &amp;edge) -&gt; <a class="el" href="classLinAlg_1_1StaticArray.html">LinAlg::SVector</a>&lt; size_t, 4 &gt;</td></tr>
+<tr class="separator:a4331e3f5cf555de8b97759fd2e13870b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="friends"></a>
 Friends</h2></td></tr>
