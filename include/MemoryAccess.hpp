@@ -1,6 +1,6 @@
 #pragma once
-#include "./BitSets.hpp"
-#include "./Loops.hpp"
+#include "BitSets.hpp"
+#include "Loops.hpp"
 #include "Math/Math.hpp"
 #include "Utilities/Valid.hpp"
 #include <algorithm>

@@ -8,6 +8,7 @@
 #include "Math/MatrixDimensions.hpp"
 #include "Math/Rational.hpp"
 #include "Math/Vector.hpp"
+#include "TypePromotion.hpp"
 #include "Utilities/Invariant.hpp"
 #include "Utilities/Iterators.hpp"
 #include "Utilities/Optional.hpp"
@@ -606,7 +607,8 @@ struct ResizeableView : MutArray<T, S> {
           do {
             src -= oldX;
             dst -= newX;
-            if (colsToCopy) std::copy_backward(src, src + colsToCopy, dst);
+            if (colsToCopy)
+              std::copy_backward(src, src + colsToCopy, dst + colsToCopy);
             if (fillCount) std::fill_n(dst + colsToCopy, fillCount, T{});
           } while (--rowsToCopy);
         }
@@ -793,7 +795,7 @@ struct ReallocView : ResizeableView<T, S, U> {
             src -= oldX;
             dst -= newX;
             if (colsToCopy && (rowsToCopy > inPlace))
-              std::copy_backward(src, src + colsToCopy, dst);
+              std::copy_backward(src, src + colsToCopy, dst + colsToCopy);
             if (fillCount) std::fill_n(dst + colsToCopy, fillCount, T{});
           } while (--rowsToCopy);
         }
@@ -1418,7 +1420,9 @@ inline auto operator<<(llvm::raw_ostream &os, PtrVector<T> const &A)
 }
 inline auto operator<<(llvm::raw_ostream &os, const AbstractVector auto &A)
   -> llvm::raw_ostream & {
-  return printVector(os, A.view());
+  Vector<eltype_t<decltype(A)>> B(A.size());
+  B << A;
+  return printVector(os, B);
 }
 template <std::integral T> struct MaxPow10 {
   static constexpr T value = (sizeof(T) == 1)   ? 3

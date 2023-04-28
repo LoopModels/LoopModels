@@ -1,11 +1,11 @@
 #pragma once
 #include <algorithm>
+#include <array>
 #include <cassert>
 #include <cmath>
 #include <concepts>
 #include <cstdint>
 #include <limits>
-#include <tuple>
 
 constexpr inline auto constexpr_abs(std::signed_integral auto x) noexcept {
   return x < 0 ? -x : x;

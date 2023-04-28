@@ -1,17 +1,19 @@
 #pragma once
 
-#include "./Address.hpp"
-#include "./BitSets.hpp"
-#include "./DependencyPolyhedra.hpp"
-#include "./Graphs.hpp"
-#include "./Loops.hpp"
-#include "./MemoryAccess.hpp"
-#include "./Schedule.hpp"
+#include "Address.hpp"
+#include "BitSets.hpp"
 #include "Containers/BumpMapSet.hpp"
+#include "DependencyPolyhedra.hpp"
+#include "Graphs.hpp"
+#include "Loops.hpp"
 #include "Math/Array.hpp"
+#include "Math/Comparisons.hpp"
 #include "Math/Math.hpp"
 #include "Math/NormalForm.hpp"
 #include "Math/Simplex.hpp"
+#include "Math/StaticArrays.hpp"
+#include "MemoryAccess.hpp"
+#include "Schedule.hpp"
 #include "Utilities/Allocators.hpp"
 #include "Utilities/Invariant.hpp"
 #include "Utilities/Optional.hpp"
@@ -23,7 +25,6 @@
 #include <iterator>
 #include <limits>
 #include <llvm/ADT/ArrayRef.h>
-
 #include <llvm/ADT/STLExtras.h>
 #include <llvm/ADT/SmallVector.h>
 #include <llvm/IR/Instructions.h>
@@ -302,7 +303,7 @@ class LinearProgramLoopBlock {
   [[no_unique_address]] Vector<Dependence> edges;
   /// Flag indicating which depths carries dependencies
   /// One per node; held separately so we can copy/etc
-  [[no_unique_address]] Vector<CarriedDependencyFlag, 16> carriedDeps;
+  [[no_unique_address]] Vector<CarriedDependencyFlag> carriedDeps;
   // Vector<bool> visited; // visited, for traversing graph
   [[no_unique_address]] BumpAlloc<> allocator;
   // Vector<llvm::Value *> symbols;
@@ -665,6 +666,49 @@ public:
       for (auto n : nodeIds) d = std::max(d, nodes[n].getNumLoops());
       return d;
     }
+    class EdgeIterator {
+      Graph &g;
+      size_t d;
+      class Iterator {
+        Graph &g;
+        size_t d;
+        size_t e;
+        constexpr auto findNext() -> void {
+          while (e < g.edges.size() && g.isInactive(e, d)) ++e;
+        }
+
+      public:
+        constexpr Iterator(Graph &_g, size_t _d, size_t _e)
+          : g(_g), d(_d), e(_e) {
+          findNext();
+        }
+        auto operator++() -> Iterator & {
+          ++e;
+          findNext();
+          return *this;
+        }
+        constexpr auto operator*() const -> Dependence & { return g.edges[e]; }
+        // constexpr auto operator*() const -> const Dependence & {
+        //   return g.edges[e];
+        // }
+        constexpr auto operator==(const Iterator &o) const -> bool {
+          invariant(&g == &o.g);
+          invariant(d == o.d);
+          return e == o.e;
+        }
+      };
+
+    public:
+      constexpr EdgeIterator(Graph &_g, size_t _d) : g(_g), d(_d) {}
+      constexpr auto begin() -> Iterator { return {g, d, 0}; }
+      constexpr auto end() -> Iterator { return {g, d, g.edges.size()}; }
+    };
+    [[nodiscard]] constexpr auto getEdges(size_t d) -> EdgeIterator {
+      return {*this, d};
+    }
+    [[nodiscard]] constexpr auto getEdges(size_t d) const -> EdgeIterator {
+      return {*const_cast<Graph *>(this), d};
+    }
   };
   // bool connects(const Dependence &e, Graph &g0, Graph &g1, size_t d) const
   // {
@@ -706,7 +750,6 @@ public:
     return {};
   }
   auto optOrth(Graph g) -> std::optional<BitSet> {
-
     const size_t maxDepth = calcMaxDepth();
     // check for orthogonalization opportunities
     bool tryOrth = false;
@@ -1022,11 +1065,12 @@ public:
     BitSet deactivated{};
     for (size_t e = 0; e < edges.size(); ++e) {
       if (g.isInactive(e, depth)) continue;
-      const Dependence &edge = edges[e];
+      Dependence &edge = edges[e];
       Col uu = u + edge.getNumDynamicBoundingVar();
       if ((sol[w++] != 0) || (!(allZero(sol[_(u, uu)])))) {
         g.activeEdges.remove(e);
         deactivated.insert(e);
+        edge.satLevel() = depth;
         for (size_t inIndex : edge.nodesIn())
           carriedDeps[inIndex].setCarriedDependency(depth);
         for (size_t outIndex : edge.nodesOut())
@@ -1246,6 +1290,36 @@ public:
     // remove
     return satDeps;
   }
+  static constexpr auto numParams(const Dependence &edge)
+    -> LinAlg::SVector<size_t, 4> {
+    size_t mlt = edge.nodesIn().size() * edge.nodesOut().size();
+    return {mlt * edge.getNumLambda(), mlt * edge.getDynSymDim(),
+            mlt * edge.getNumConstraints(), mlt};
+  }
+  template <typename F> void for_each_edge(const Graph &g, size_t d, F &&f) {
+    for (size_t e = 0; e < edges.size(); ++e) {
+      if (g.isInactive(e, d)) continue;
+      f(edges[e]);
+    }
+  }
+  template <typename F>
+  auto transform_reduce_edge(const Graph &g, size_t d, F &&f) {
+    decltype(f(edges[0])) res{};
+    for (size_t e = 0; e < edges.size(); ++e) {
+      if (g.isInactive(e, d)) continue;
+      res += f(edges[e]);
+    }
+    return res;
+  }
+  constexpr void countParamsStashDeps(const Graph &g, size_t d) {
+    LinAlg::SVector<size_t, 4> params{};
+    assert(allZero(params));
+    for (auto &&e : g.getEdges(d)) params += numParams(e.stashSatLevel());
+    numLambda = params[0];
+    numBounding = params[1];
+    numConstraints = params[2];
+    numActiveEdges = params[3];
+  }
   // NOLINTNEXTLINE(misc-no-recursion)
   [[nodiscard]] auto optimizeSatDep(Graph g, size_t d, size_t maxDepth,
                                     BitSet depSatLevel, BitSet activeEdges)
@@ -1258,11 +1332,12 @@ public:
     // activeEdges was the old original; swap it in
     std::swap(g.activeEdges, activeEdges);
     BitSet nodeIds = g.nodeIds;
-    Vector<AffineSchedule, 0> oldSchedules;
+    Vector<AffineSchedule> oldSchedules;
+    // oldSchedules.reserve(g.nodeIds.size()); // is this worth it?
     for (auto &n : g) oldSchedules.push_back(n.getSchedule());
-    Vector<CarriedDependencyFlag, 16> oldCarriedDeps = carriedDeps;
+    Vector<CarriedDependencyFlag> oldCarriedDeps = carriedDeps;
     resetDeepDeps(carriedDeps, d);
-    countAuxParamsAndConstraints(g, d);
+    countParamsStashDeps(g, d);
     setScheduleMemoryOffsets(g, d);
     if (auto depSat = solveGraph(g, d, true))
       if (std::optional<BitSet> depSatN = optimize(g, d + 1, maxDepth))
@@ -1273,6 +1348,7 @@ public:
     auto *oldNodeIter = oldSchedules.begin();
     for (auto &&n : g) n.getSchedule() = *(oldNodeIter++);
     std::swap(carriedDeps, oldCarriedDeps);
+    for (auto &&e : g.getEdges(d)) e.popSatLevel();
     return depSatLevel;
   }
   /// optimize at depth `d`

@@ -107,7 +107,7 @@ target_precompile_headers(
   <type_traits>
   <utility>
 )
-# target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(
   ${PROJECT_NAME} PRIVATE GTest::gtest_main LLVM unordered_dense::unordered_dense
 )

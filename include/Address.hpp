@@ -1,7 +1,7 @@
 #pragma once
-#include "./MemoryAccess.hpp"
 #include "Loops.hpp"
 #include "Math/Math.hpp"
+#include "MemoryAccess.hpp"
 #include "Utilities/Valid.hpp"
 #include <cstddef>
 #include <cstdint>

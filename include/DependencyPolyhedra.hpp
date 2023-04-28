@@ -624,6 +624,8 @@ class Dependence {
   [[no_unique_address]] NotNull<Simplex> dependenceBounding;
   [[no_unique_address]] NotNull<MemoryAccess> in;
   [[no_unique_address]] NotNull<MemoryAccess> out;
+  [[no_unique_address]] std::array<uint8_t, 7> satLvl{255, 255, 255, 255,
+                                                      255, 255, 255};
   [[no_unique_address]] bool forward;
 
 public:
@@ -634,6 +636,25 @@ public:
       dependenceBounding(depSatBound[1]), in(inOut[0]), out(inOut[1]),
       forward(fwd) {}
   using BitSet = MemoryAccess::BitSet;
+  [[nodiscard]] constexpr auto getSatLvl() -> std::array<uint8_t, 7> & {
+    return satLvl;
+  }
+  [[nodiscard]] constexpr auto getSatLvl() const -> std::array<uint8_t, 7> {
+    return satLvl;
+  }
+  constexpr auto stashSatLevel() -> Dependence & {
+    assert(satLvl.back() == 255 || "satLevel overflow");
+    std::copy_backward(satLvl.begin(), satLvl.end() - 1, satLvl.end());
+    satLvl.front() = 255;
+    return *this;
+  }
+  constexpr void popSatLevel() {
+    std::copy(satLvl.begin() + 1, satLvl.end(), satLvl.begin());
+#ifndef NDEBUG
+    satLvl.back() = 255;
+#endif
+  }
+  constexpr auto satLevel() -> uint8_t & { return satLvl.front(); }
   [[nodiscard]] constexpr auto getArrayPointer() -> const llvm::SCEV * {
     return in->getArrayPointer();
   }
@@ -808,7 +829,7 @@ public:
     size_t numLoopsCommon = std::min(numLoopsIn, numLoopsOut);
     size_t numLoopsTotal = numLoopsIn + numLoopsOut;
     size_t numVar = numLoopsIn + numLoopsOut + 2;
-    invariant(dependenceSatisfaction->getNumVars() == numVar);
+    invariant(size_t(dependenceSatisfaction->getNumVars()), numVar);
     auto p = alloc.scope();
     auto schv = vector(alloc, numVar, int64_t(0));
     const SquarePtrMatrix<int64_t> inPhi = schIn->getPhi();
