@@ -147,8 +147,8 @@ $(function() {
 <div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;  <span class="comment">//     return data[i];</span></div>
 <div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;  <span class="comment">// } // allow `getindex` but not `setindex`</span></div>
 <div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;  constexpr <a class="code" href="structBitSet.html">BitSet</a>() = <span class="keywordflow">default</span>;</div>
-<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> numElementsNeeded(<span class="keywordtype">size_t</span> N) -&gt; <span class="keywordtype">size_t</span> {</div>
-<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;    <span class="keywordflow">return</span> ((N + 63) &gt;&gt; 6);</div>
+<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> numElementsNeeded(<span class="keywordtype">size_t</span> N) -&gt; <span class="keywordtype">unsigned</span> {</div>
+<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;    <span class="keywordflow">return</span> unsigned(((N + 63) &gt;&gt; 6));</div>
 <div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;  }</div>
 <div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;  constexpr <a class="code" href="structBitSet.html">BitSet</a>(<span class="keywordtype">size_t</span> N) : data{numElementsNeeded(N), 0} {}</div>
 <div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;  constexpr <span class="keywordtype">void</span> resize64(<span class="keywordtype">size_t</span> N) {</div>
