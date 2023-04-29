@@ -4,9 +4,9 @@
 #include "./Instruction.hpp"
 #include "./LoopBlock.hpp"
 #include "./LoopForest.hpp"
-#include "./Loops.hpp"
 #include "./MemoryAccess.hpp"
 #include "./Schedule.hpp"
+#include "Math/Array.hpp"
 #include "Math/Math.hpp"
 #include <algorithm>
 #include <any>
@@ -64,16 +64,15 @@ struct CPURegisterFile {
     }
     return 16 * twiceMaxVectorWidth;
   }
-  CPURegisterFile(llvm::LLVMContext &C, llvm::TargetTransformInfo &TTI) {
+  constexpr CPURegisterFile(llvm::LLVMContext &C,
+                            llvm::TargetTransformInfo &TTI) {
     maximumVectorWidth = estimateMaximumVectorWidth(C, TTI);
     numVectorRegisters = TTI.getNumberOfRegisters(true);
     numGeneralPurposeRegisters = TTI.getNumberOfRegisters(false);
     numPredicateRegisters = estimateNumPredicateRegisters(C, TTI);
   }
 };
-struct CPUExecutionModel {};
-
-struct LoopTreeSchedule;
+// struct CPUExecutionModel {};
 
 // Plan for cost modeling:
 // 1. Build Instruction graph
@@ -125,47 +124,47 @@ struct LoopTreeSchedule;
 /// subTrees[i+1].first, which has exit block
 /// subTrees[i+1].second
 
-struct InstructionBlock {
-  [[no_unique_address]] llvm::SmallVector<Address *> memAccesses;
-};
-
-struct LoopTreeSchedule {
-  using LoopAndExit = std::pair<LoopTreeSchedule, InstructionBlock>;
+class LoopTreeSchedule {
+  template <typename T> using Vec = LinAlg::ResizeableView<T *, unsigned>;
+  struct InstructionBlock {
+    [[no_unique_address]] Vec<Address *> memAccesses;
+  };
+  struct LoopAndExit {
+    [[no_unique_address]] LoopTreeSchedule *subTree;
+    [[no_unique_address]] InstructionBlock exit;
+  };
   /// Header of the loop.
   [[no_unique_address]] InstructionBlock header;
   /// Variable number of sub loops and their associated exits.
   /// For the inner most loop, `subTrees.empty()`.
-  [[no_unique_address]] llvm::SmallVector<LoopAndExit *> subTrees;
+  [[no_unique_address]] Vec<LoopAndExit> subTrees;
   [[no_unique_address]] uint8_t depth;
   [[no_unique_address]] uint8_t vectorizationFactor{1};
   [[no_unique_address]] uint8_t unrollFactor{1};
   [[no_unique_address]] uint8_t unrollPredcedence{1};
-  [[nodiscard]] auto getNumSubTrees() const -> size_t {
+  [[nodiscard]] constexpr auto getNumSubTrees() const -> size_t {
     return subTrees.size();
   }
-  auto getLoopAndExit(BumpAlloc<> &tAlloc, size_t i) -> LoopAndExit * {
+  constexpr auto getLoopAndExit(BumpAlloc<> &tAlloc, size_t i)
+    -> LoopAndExit * {
     if (LoopAndExit *ret = subTrees[i]) return ret;
-    auto *loopAndExit = tAlloc.allocate<LoopAndExit>();
-    return subTrees[i] = loopAndExit;
+    return subTrees[i] = tAlloc.allocate<LoopAndExit>();
   }
   auto getLoopTripple(BumpAlloc<> &tAlloc, size_t i)
     -> std::tuple<InstructionBlock *, LoopTreeSchedule *, InstructionBlock *> {
-    InstructionBlock *H;
+    InstructionBlock *H, *E;
     LoopTreeSchedule *L;
-    InstructionBlock *E;
-    if (!i) {
-      H = &header;
-    } else {
+    if (i) {
       auto *loopAndExit = getLoopAndExit(tAlloc, i - 1);
-      H = &loopAndExit->second;
-    }
+      H = &loopAndExit->exit;
+    } else H = &header;
     auto *loopAndExit = getLoopAndExit(tAlloc, i);
-    L = &loopAndExit->first;
-    E = &loopAndExit->second;
+    L = loopAndExit->subTree;
+    E = &loopAndExit->exit;
     return {H, L, E};
   }
-  auto getLoop(BumpAlloc<> &tAlloc, size_t i) -> LoopTreeSchedule & {
-    return getLoopAndExit(tAlloc, i)->first;
+  auto getLoop(BumpAlloc<> &tAlloc, size_t i) -> LoopTreeSchedule * {
+    return getLoopAndExit(tAlloc, i)->subTree;
   }
   [[nodiscard]] auto getDepth() const -> size_t { return depth; }
   /// Adds the schedule corresponding for the innermost loop.
@@ -179,6 +178,7 @@ struct LoopTreeSchedule {
     assert(subTrees.empty());
   }
   // this method descends
+  // NOLINTNEXTLINE(misc-no-recursion)
   void addMemory(BumpAlloc<> &alloc, Instruction::Cache &cache,
                  BumpAlloc<> &tAlloc, LoopTree *loopForest,
                  LinearProgramLoopBlock &LB, ScheduledNode &node,
@@ -191,15 +191,16 @@ struct LoopTreeSchedule {
                                   TTI, vectorBits, sch, d);
     }
     size_t i = sch.getFusionOmega(d);
-    if (i >= subTrees.size()) subTrees.resize(i + 1);
+    assert(i < subTrees.size());
+    // if (i >= subTrees.size()) subTrees.resize(i + 1);
     // TODO: emplace all memory access that occur here in either H or E.
     // what we need is to first check:
     // 1. can we hoist the memory access out of the remaining inner loops?
     // 2. if so, do we place before or after the loop?
     // To hoist out, we need the intersection polyheda between the memory access
     // and all accesses explicitly dependent on inner loops to be empty.
-    getLoop(tAlloc, i).addMemory(alloc, cache, tAlloc, loopForest, LB, node,
-                                 TTI, vectorBits, sch, d);
+    getLoop(tAlloc, i)->addMemory(alloc, cache, tAlloc, loopForest, LB, node,
+                                  TTI, vectorBits, sch, d);
   }
   void init(BumpAlloc<> &alloc, Instruction::Cache &cache, BumpAlloc<> &tAlloc,
             LoopTree *loopForest, LinearProgramLoopBlock &LB,
@@ -218,16 +219,11 @@ struct LoopTreeSchedule {
       addMemory(alloc, cache, tAlloc, loopForest, LB, node, TTI, vectorBits,
                 sch, 0);
       // addSchedule(alloc, cache, tAlloc, loopForest, LB, node, TTI,
-      // vectorBits,
-      //             sch, 0);
+      // vectorBits, sch, 0);
     }
   }
 };
 
-struct LoopForestSchedule {
-  [[no_unique_address]] InstructionBlock enteringBlock;
-  [[no_unique_address]] llvm::SmallVector<LoopAndExit> loopNests;
-  [[no_unique_address]] llvm::SmallVector<llvm::SmallVector<LoopTreeSchedule *>>
-    depthTrees;
+struct LoopForestSchedule : LoopTreeSchedule {
   [[no_unique_address]] BumpAlloc<> &allocator;
 };

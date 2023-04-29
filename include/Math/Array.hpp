@@ -250,21 +250,21 @@ template <class T, class S> struct Array {
     if constexpr (std::integral<T>) {
       std::FILE *f = std::fopen(filename, "w");
       if (f == nullptr) return;
-      std::fprintf(f, "C= [");
+      (void)std::fprintf(f, "C= [");
       if constexpr (MatrixDimension<S>) {
         for (size_t i = 0; i < Row{sz}; ++i) {
-          if (i) std::fprintf(f, "\n");
-          std::fprintf(f, "%ld", int64_t((*this)(i, 0)));
+          if (i) (void)std::fprintf(f, "\n");
+          (void)std::fprintf(f, "%ld", int64_t((*this)(i, 0)));
           for (size_t j = 1; j < Col{sz}; ++j)
-            std::fprintf(f, " %ld", int64_t((*this)(i, j)));
+            (void)std::fprintf(f, " %ld", int64_t((*this)(i, j)));
         }
       } else {
-        std::fprintf(f, "%ld", int64_t((*this)[0]));
+        (void)std::fprintf(f, "%ld", int64_t((*this)[0]));
         for (size_t i = 1; (i < size_t(sz)); ++i)
-          std::fprintf(f, ", %ld", int64_t((*this)[i]));
+          (void)std::fprintf(f, ", %ld", int64_t((*this)[i]));
       }
-      std::fprintf(f, "]");
-      std::fclose(f);
+      (void)std::fprintf(f, "]");
+      (void)std::fclose(f);
     }
   }
 #endif
@@ -489,14 +489,14 @@ struct MutArray : Array<T, S>, ArrayOps<T, S, MutArray<T, S>> {
   constexpr void moveLast(Col j) {
     static_assert(MatrixDimension<S>);
     if (j == this->numCol()) return;
-    Col Nm1 = this->numCol() - 1;
+    Col Nd = this->numCol() - 1;
     for (size_t m = 0; m < this->numRow(); ++m) {
       auto x = (*this)(m, j);
-      for (Col n = j; n < Nm1;) {
+      for (Col n = j; n < Nd;) {
         Col o = n++;
         (*this)(m, o) = (*this)(m, n);
       }
-      (*this)(m, Nm1) = x;
+      (*this)(m, Nd) = x;
     }
   }
 };
@@ -522,6 +522,9 @@ struct ResizeableView : MutArray<T, S> {
   constexpr ResizeableView(T *p, S s, U c) noexcept
     : BaseT(p, s), capacity(c) {}
 
+  [[nodiscard]] constexpr auto isFull() const -> bool {
+    return U(this->sz) == capacity;
+  }
   template <class... Args>
   constexpr auto emplace_back(Args &&...args) -> decltype(auto) {
     static_assert(std::is_integral_v<S>, "emplace_back requires integral size");
@@ -702,7 +705,7 @@ struct ReallocView : ResizeableView<T, S, U> {
   constexpr ReallocView(T *p, S s, U c, A alloc) noexcept
     : BaseT(p, s, c), allocator(alloc) {}
 
-  constexpr U newCapacity() const {
+  [[nodiscard]] constexpr auto newCapacity() const -> U {
     return static_cast<const P *>(this)->newCapacity();
   }
   template <class... Args>
@@ -912,14 +915,14 @@ struct ReallocView : ResizeableView<T, S, U> {
   constexpr void moveLast(Col j) {
     static_assert(MatrixDimension<S>);
     if (j == this->numCol()) return;
-    Col Nm1 = this->numCol() - 1;
+    Col Nd = this->numCol() - 1;
     for (size_t m = 0; m < this->numRow(); ++m) {
       auto x = (*this)(m, j);
-      for (Col n = j; n < Nm1;) {
+      for (Col n = j; n < Nd;) {
         Col o = n++;
         (*this)(m, o) = (*this)(m, n);
       }
-      (*this)(m, Nm1) = x;
+      (*this)(m, Nd) = x;
     }
   }
 
@@ -943,7 +946,7 @@ protected:
   [[nodiscard]] constexpr auto getmemptr() const -> const T * {
     return static_cast<const P *>(this)->getmemptr();
   }
-  constexpr bool wasAllocated() const {
+  [[nodiscard]] constexpr auto wasAllocated() const -> bool {
     return static_cast<const P *>(this)->wasAllocated();
   }
   // this method should only be called from the destructor
@@ -1231,12 +1234,12 @@ struct ManagedArray : ReallocView<T, S, ManagedArray<T, S, N, A, U>, A, U> {
     adaptOStream(*os, x);
   }
   [[nodiscard]] auto getmemptr() const -> const T * { return memory.data(); }
-  [[nodiscard]] constexpr U newCapacity() const {
+  [[nodiscard]] constexpr auto newCapacity() const -> U {
     if constexpr (N == 0)
       return this->capacity == 0 ? U{4} : 2 * this->capacity;
     else return 2 * this->capacity;
   }
-  [[nodiscard]] constexpr bool wasAllocated() const {
+  [[nodiscard]] constexpr auto wasAllocated() const -> bool {
     if constexpr (N == 0) return this->ptr != nullptr;
     else return !isSmall();
   }

@@ -18,11 +18,10 @@
 #include <llvm/IR/Instruction.h>
 #include <llvm/Support/Allocator.h>
 #include <llvm/Support/InstructionCost.h>
-#include <set>
-#include <sys/select.h>
 
 inline void buildInstructionGraph(BumpAlloc<> &alloc, Instruction::Cache &cache,
                                   LinearProgramLoopBlock &LB) {
+  // each node is a separate instruction graph
   for (auto &node : LB.getNodes()) {
     auto access = node.getMemAccesses(alloc, LB.getMemoryAccesses());
     for (auto *mem : access) {
@@ -31,12 +30,6 @@ inline void buildInstructionGraph(BumpAlloc<> &alloc, Instruction::Cache &cache,
       inst->ptr = mem;
     }
   }
-  // for (auto mem : LB.getMemoryAccesses()) {
-  //   if (mem->nodeIndex.isEmpty()) continue;
-  //   // TODO: add a means for cache.get to stop adding operands
-  //   // that are outside of LB, as we don't care about that part of the
-  //   // graph.
-  // }
 }
 
 // merge all instructions from toMerge into merged
@@ -80,7 +73,7 @@ struct MergingCost {
     /// instructions are considered their own ancestor for our purposes
     set->insert(key);
     for (auto *op : key->operands)
-      if (auto f = ancestorMap.find(op); f != ancestorMap.end())
+      if (auto *f = ancestorMap.find(op); f != ancestorMap.end())
         set->insert(f->second->begin(), f->second->end());
     ancestorMap[key] = set;
     return set;
@@ -92,21 +85,22 @@ struct MergingCost {
   }
   auto getAncestors(BumpAlloc<> &alloc, Instruction *key)
     -> aset<Instruction *> * {
-    if (auto it = ancestorMap.find(key); it != ancestorMap.end())
+    if (auto *it = ancestorMap.find(key); it != ancestorMap.end())
       return it->second;
     return initAncestors(alloc, key);
   }
   auto getAncestors(Instruction *key) -> aset<Instruction *> * {
-    if (auto it = ancestorMap.find(key); it != ancestorMap.end())
+    if (auto *it = ancestorMap.find(key); it != ancestorMap.end())
       return it->second;
     return nullptr;
   }
   auto findMerge(Instruction *key) -> Instruction * {
-    if (auto it = mergeMap.find(key); it != mergeMap.end()) return it->second;
+    if (auto *it = mergeMap.find(key); it != mergeMap.end()) return it->second;
     return nullptr;
   }
   auto findMerge(Instruction *key) const -> Instruction * {
-    if (auto it = mergeMap.find(key); it != mergeMap.end()) return it->second;
+    if (const auto *it = mergeMap.find(key); it != mergeMap.end())
+      return it->second;
     return nullptr;
   }
   /// isMerged(Instruction *key) const -> bool
@@ -230,7 +224,8 @@ struct MergingCost {
         selector.merge(i, opA, opB);
         // --numSelects;
         continue;
-      } else if (!((assoc) && (assocFlag))) {
+      }
+      if (!((assoc) && (assocFlag))) {
         // this op isn't associative with any remaining
         selector.select(i, opA, opB);
         continue;
@@ -252,7 +247,8 @@ struct MergingCost {
           selector.merge(i, opjA, opB);
           merged = true;
           break;
-        } else if (isMerged(opjB, opA)) {
+        }
+        if (isMerged(opjB, opA)) {
           std::swap(operandsB[i], operandsB[j]);
           selector.merge(i, opA, opjB);
           merged = true;
@@ -268,8 +264,8 @@ struct MergingCost {
   void merge(BumpAlloc<> &alloc, llvm::TargetTransformInfo &TTI,
              unsigned int vectorBits, Instruction *A, Instruction *B) {
     mergeList.emplace_back(A, B);
-    auto aA = ancestorMap.find(B);
-    auto aB = ancestorMap.find(A);
+    auto *aA = ancestorMap.find(B);
+    auto *aB = ancestorMap.find(A);
     assert(aA != ancestorMap.end());
     assert(aB != ancestorMap.end());
     // in the old MergingCost where they're separate instructions,
@@ -286,10 +282,10 @@ struct MergingCost {
     unsigned int W = vectorBits / B->getNumScalarBits();
     if (numSelects) cost += numSelects * B->selectCost(TTI, W);
     cost -= B->getCost(TTI, W).recipThroughput;
-    auto mB = findMerge(B);
+    auto *mB = findMerge(B);
     if (mB) cycleUpdateMerged(merged, B, mB);
     // fuse the merge map cycles
-    if (auto mA = findMerge(A)) {
+    if (auto *mA = findMerge(A)) {
       cycleUpdateMerged(merged, A, mA);
       if (mB) {
         mergeMap[B] = mA;
@@ -314,6 +310,7 @@ struct MergingCost {
   }
 };
 
+// NOLINTNEXTLINE(misc-no-recursion)
 inline void mergeInstructions(
   BumpAlloc<> &alloc, Instruction::Cache &cache, Predicate::Map &predMap,
   llvm::TargetTransformInfo &TTI, unsigned int vectorBits,
@@ -323,7 +320,7 @@ inline void mergeInstructions(
   llvm::BasicBlock *BB, Predicate::Set &preds) {
   // have we already visited?
   if (mergingCosts.front()->visited(J)) return;
-  for (auto C : mergingCosts) {
+  for (auto *C : mergingCosts) {
     if (C->visited(J)) return;
     C->initAncestors(alloc, J);
   }
@@ -367,7 +364,7 @@ inline void mergeInstructions(
         // fast path, skip lookup
         mergeInstructions(alloc, cache, predMap, TTI, vectorBits, opMap,
                           mergingCosts, U, BB, preds);
-      } else if (auto f = predMap.find(BBU); f != predMap.rend()) {
+      } else if (auto *f = predMap.find(BBU); f != predMap.rend()) {
         mergeInstructions(alloc, cache, predMap, TTI, vectorBits, opMap,
                           mergingCosts, U, BBU, f->second);
       }
@@ -429,6 +426,7 @@ inline void mergeInstructions(BumpAlloc<> &alloc, Instruction::Cache &cache,
   tAlloc.reset();
 }
 
+// NOLINTNEXTLINE(misc-no-recursion)
 inline void mergeInstructions(BumpAlloc<> &alloc, Instruction::Cache &cache,
                               LoopTree *loopForest,
                               llvm::TargetTransformInfo &TTI,

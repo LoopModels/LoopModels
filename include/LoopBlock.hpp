@@ -1383,10 +1383,8 @@ public:
 #ifndef NDEBUG
     validateEdges();
 #endif
-    auto b = optOrth(fullGraph());
-    return b;
+    return optOrth(fullGraph());
   }
-
   auto summarizeMemoryAccesses(llvm::raw_ostream &os) const
     -> llvm::raw_ostream & {
     os << "MemoryAccesses:\n";
