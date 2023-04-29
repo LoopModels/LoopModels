@@ -43,6 +43,7 @@ TEST(BitSetTest, BasicAssertions) {
 // NOLINTNEXTLINE(modernize-use-trailing-return-type)
 TEST(DynSizeBitSetTest, BasicAssertions) {
   BitSet bs;
+  EXPECT_EQ(bs.data.size(), 0);
   bs[4] = true;
   bs[10] = true;
   EXPECT_EQ(bs.data.size(), 1);
