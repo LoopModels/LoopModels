@@ -150,7 +150,7 @@ $(function() {
 <div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> numElementsNeeded(<span class="keywordtype">size_t</span> N) -&gt; <span class="keywordtype">size_t</span> {</div>
 <div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;    <span class="keywordflow">return</span> ((N + 63) &gt;&gt; 6);</div>
 <div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;  }</div>
-<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;  constexpr <a class="code" href="structBitSet.html">BitSet</a>(<span class="keywordtype">size_t</span> N) : data(numElementsNeeded(N)) {}</div>
+<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;  constexpr <a class="code" href="structBitSet.html">BitSet</a>(<span class="keywordtype">size_t</span> N) : data{numElementsNeeded(N), 0} {}</div>
 <div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;  constexpr <span class="keywordtype">void</span> resize64(<span class="keywordtype">size_t</span> N) {</div>
 <div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;    <span class="keywordflow">if</span> constexpr (CanResize&lt;T&gt;) data.resize(N);</div>
 <div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;    <span class="keywordflow">else</span> assert(N &lt;= data.size());</div>
