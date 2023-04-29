@@ -35,7 +35,7 @@ struct LoopTree {
   [[no_unique_address]] Optional<LoopTree *> parentLoop{nullptr};
   [[no_unique_address]] llvm::SmallVector<NotNull<MemoryAccess>> memAccesses{};
 
-  ~LoopTree() {
+  ~LoopTree() { // NOLINT(misc-no-recursion)
     for (auto subLoop : subLoops) subLoop->~LoopTree();
   }
 
@@ -51,6 +51,7 @@ struct LoopTree {
     return loop->isLoopSimplifyForm();
   }
   // mostly to get a loop to print
+  // NOLINTNEXTLINE(misc-no-recursion)
   [[nodiscard]] auto getOuterLoop() const -> llvm::Loop * {
     if (loop) return loop;
     for (auto subLoop : subLoops)
@@ -85,6 +86,7 @@ struct LoopTree {
   [[nodiscard]] auto getNumLoops() const -> size_t {
     return affineLoop->getNumLoops();
   }
+  // NOLINTNEXTLINE(misc-no-recursion)
   friend inline auto operator<<(llvm::raw_ostream &os, const LoopTree &tree)
     -> llvm::raw_ostream & {
     if (tree.loop) os << (*tree.loop) << "\n" << *tree.affineLoop << "\n";
@@ -95,6 +97,7 @@ struct LoopTree {
 #ifndef NDEBUG
   [[gnu::used]] void dump() const { llvm::errs() << *this; }
 #endif
+  // NOLINTNEXTLINE(misc-no-recursion)
   void addZeroLowerBounds(BumpAlloc<> &alloc,
                           map<llvm::Loop *, LoopTree *> &loopMap) {
     if (affineLoop) affineLoop->addZeroLowerBounds(alloc);
@@ -123,6 +126,7 @@ struct LoopTree {
     }
     paths.clear();
   }
+  // NOLINTNEXTLINE(misc-no-recursion)
   void dumpAllMemAccess() const {
     llvm::errs() << "dumpAllMemAccess for ";
     if (loop) llvm::errs() << *loop << "\n";

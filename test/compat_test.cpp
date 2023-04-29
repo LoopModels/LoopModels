@@ -59,7 +59,9 @@ TEST(TrivialPruneBounds1, BasicAssertions) {
   tlf.addLoop(std::move(A), 2);
   AffineLoopNest<true> *aff = tlf.getLoopNest(0);
   aff->pruneBounds(tlf.getAlloc());
+#ifndef NDEBUG
   aff->dump();
+#endif
   llvm::errs() << "aff.A = " << aff->getA() << "\n";
   // we expect J >= 1 to be dropped
   // because J >= i + 1 >= 2
@@ -87,7 +89,9 @@ TEST(LessTrivialPruneBounds, BasicAssertions) {
 
   aff.pruneBounds();
   llvm::errs() << "LessTrival test Bounds pruned:\n";
+#ifndef NDEBUG
   aff.dump();
+#endif
   llvm::errs() << "aff.A = " << aff.getA() << "\n";
   EXPECT_EQ(aff.getNumCon(), 3);
   auto loop2Count = countSigns(aff.getA(), 2 + aff.getNumSymbols());
@@ -133,7 +137,9 @@ TEST(AffineTest0, BasicAssertions) {
   EXPECT_TRUE(aff.zeroExtraItersUponExtending(tlf.getAlloc(), 1, false));
   llvm::errs() << "About to run second compat test\n";
   EXPECT_FALSE(aff.zeroExtraItersUponExtending(tlf.getAlloc(), 1, true));
+#ifndef NDEBUG
   aff.dump();
+#endif
   llvm::errs() << "About to run first set of bounds tests\n";
   llvm::errs() << "\nPermuting loops 1 and 2\n";
   BumpAlloc<> allocator;
@@ -142,7 +148,9 @@ TEST(AffineTest0, BasicAssertions) {
   AffineLoopNest<false> &affp021 = *affp021ptr;
   // Now that we've swapped loops 1 and 2, we should have
   // for m in 0:M-1, k in 1:N-1, n in 0:k-1
+#ifndef NDEBUG
   affp021.dump();
+#endif
   // For reference, the permuted loop bounds are:
   // for m in 0:M-1, k in 1:N-1, n in 0:k-1
   llvm::errs() << "Checking if the inner most loop iterates when adjusting "
@@ -168,7 +176,9 @@ TEST(NonUnimodularExperiment, BasicAssertions) {
   tlf.addLoop(std::move(A), 2);
   AffineLoopNest<true> &aff = *tlf.getLoopNest(tlf.getNumLoopNests() - 1);
   llvm::errs() << "Original order:\n";
+#ifndef NDEBUG
   aff.dump();
+#endif
   // -2 - i - j >= 0 -> i + j <= -2
   // but i >= 0 and j >= 0 -> isEmpty()
   aff.pruneBounds();
@@ -187,7 +197,8 @@ TEST(NonUnimodularExperiment, BasicAssertions) {
     aff2.rotate(allocator, "[0 1; 1 0]"_mat)};
 
   llvm::errs() << "Swapped order:\n";
+#ifndef NDEBUG
   affp10->dump();
-
+#endif
   EXPECT_FALSE(affp10->isEmpty());
 }

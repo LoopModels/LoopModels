@@ -25,6 +25,8 @@
 #include <llvm/IR/Type.h>
 #include <llvm/Support/Allocator.h>
 
+namespace CostModeling {
+
 struct CPURegisterFile {
   [[no_unique_address]] uint8_t maximumVectorWidth;
   [[no_unique_address]] uint8_t numVectorRegisters;
@@ -124,6 +126,15 @@ struct CPURegisterFile {
 /// subTrees[i+1].first, which has exit block
 /// subTrees[i+1].second
 
+/// Initialized from a LoopBlock
+/// First, all memory accesses are placed.
+///  - Topologically sort at the same level
+///  - Hoist out as far as posible
+/// Then, merge eligible loads.
+///  - I.e., merge loads that are in the same block with same address and not
+///  aliasing stores in between
+/// Finally, place instructions, seeded by stores, hoisted as far out as
+/// possible. With this, we can begin cost modeling.
 class LoopTreeSchedule {
   template <typename T> using Vec = LinAlg::ResizeableView<T *, unsigned>;
   struct InstructionBlock {
@@ -226,3 +237,4 @@ class LoopTreeSchedule {
 struct LoopForestSchedule : LoopTreeSchedule {
   [[no_unique_address]] BumpAlloc<> &allocator;
 };
+} // namespace CostModeling
