@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.9.1"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>LoopModels: LoopForestSchedule Struct Reference</title>
+<title>LoopModels: CostModeling::LoopTreeSchedule Class Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -59,32 +59,37 @@ $(function() {
 </iframe>
 </div>
 
+<div id="nav-path" class="navpath">
+  <ul>
+<li class="navelem"><b>CostModeling</b></li><li class="navelem"><a class="el" href="classCostModeling_1_1LoopTreeSchedule.html">LoopTreeSchedule</a></li>  </ul>
+</div>
 </div><!-- top -->
 <div class="header">
   <div class="summary">
-<a href="#pub-attribs">Public Attributes</a> &#124;
-<a href="structLoopForestSchedule-members.html">List of all members</a>  </div>
+<a href="#nested-classes">Classes</a> &#124;
+<a href="classCostModeling_1_1LoopTreeSchedule-members.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">LoopForestSchedule Struct Reference</div>  </div>
+<div class="title">CostModeling::LoopTreeSchedule Class Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
+
+<p><code>#include &lt;<a class="el" href="CostModeling_8hpp_source.html">CostModeling.hpp</a>&gt;</code></p>
 <div class="dynheader">
-Inheritance diagram for LoopForestSchedule:</div>
+Inheritance diagram for CostModeling::LoopTreeSchedule:</div>
 <div class="dyncontent">
  <div class="center">
-  <img src="structLoopForestSchedule.png" usemap="#LoopForestSchedule_map" alt=""/>
-  <map id="LoopForestSchedule_map" name="LoopForestSchedule_map">
-<area href="classLoopTreeSchedule.html" alt="LoopTreeSchedule" shape="rect" coords="0,0,129,24"/>
+  <img src="classCostModeling_1_1LoopTreeSchedule.png" usemap="#CostModeling::LoopTreeSchedule_map" alt=""/>
+  <map id="CostModeling::LoopTreeSchedule_map" name="CostModeling::LoopTreeSchedule_map">
+<area href="structCostModeling_1_1LoopForestSchedule.html" alt="CostModeling::LoopForestSchedule" shape="rect" coords="0,56,212,80"/>
   </map>
 </div></div>
-<table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
-Public Attributes</h2></td></tr>
-<tr class="memitem:a252b57de9a2a57005cef999834e16be7"><td class="memItemLeft" align="right" valign="top"><a id="a252b57de9a2a57005cef999834e16be7"></a>
-<a class="el" href="structBumpAlloc.html">BumpAlloc</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>allocator</b></td></tr>
-<tr class="separator:a252b57de9a2a57005cef999834e16be7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table>
-<hr/>The documentation for this struct was generated from the following file:<ul>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<div class="textblock"><p>Given: llvm::SmallVector&lt;LoopAndExit&gt; subTrees; subTrees[i].second is the preheader for subTrees[i+1].first, which has exit block subTrees[i+1].second Initialized from a LoopBlock First, all memory accesses are placed.</p><ul>
+<li>Topologically sort at the same level</li>
+<li>Hoist out as far as posible Then, merge eligible loads.</li>
+<li>I.e., merge loads that are in the same block with same address and not aliasing stores in between Finally, place instructions, seeded by stores, hoisted as far out as possible. With this, we can begin cost modeling. </li>
+</ul>
+</div><hr/>The documentation for this class was generated from the following file:<ul>
 <li>include/<a class="el" href="CostModeling_8hpp_source.html">CostModeling.hpp</a></li>
 </ul>
 </div><!-- contents -->

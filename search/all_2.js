@@ -12,6 +12,6 @@ var searchData=
   ['contains_47',['Contains',['../structBitSet_1_1Contains.html',1,'BitSet']]],
   ['costs_48',['costs',['../structInstruction.html#a766b0e6f5ee427309a63411c279f2f62',1,'Instruction']]],
   ['count_49',['Count',['../structMergingCost_1_1Count.html',1,'MergingCost']]],
-  ['cpuregisterfile_50',['CPURegisterFile',['../structCPURegisterFile.html',1,'']]],
+  ['cpuregisterfile_50',['CPURegisterFile',['../structCostModeling_1_1CPURegisterFile.html',1,'CostModeling']]],
   ['createselect_51',['createSelect',['../structInstruction_1_1Cache.html#a260eb7f9e8016fefe1260b085eed648a',1,'Instruction::Cache']]]
 ];

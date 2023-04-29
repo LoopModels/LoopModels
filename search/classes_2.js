@@ -7,5 +7,5 @@ var searchData=
   ['constiterator_272',['ConstIterator',['../structBitSliceView_1_1ConstIterator.html',1,'BitSliceView']]],
   ['contains_273',['Contains',['../structBitSet_1_1Contains.html',1,'BitSet']]],
   ['count_274',['Count',['../structMergingCost_1_1Count.html',1,'MergingCost']]],
-  ['cpuregisterfile_275',['CPURegisterFile',['../structCPURegisterFile.html',1,'']]]
+  ['cpuregisterfile_275',['CPURegisterFile',['../structCostModeling_1_1CPURegisterFile.html',1,'CostModeling']]]
 ];
