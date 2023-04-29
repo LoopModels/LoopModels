@@ -266,46 +266,39 @@ $(function() {
 <div class="line"><a name="l00212"></a><span class="lineno">  212</span>&#160;    getLoop(tAlloc, i)-&gt;addMemory(alloc, cache, tAlloc, loopForest, LB, node,</div>
 <div class="line"><a name="l00213"></a><span class="lineno">  213</span>&#160;                                  TTI, vectorBits, sch, d);</div>
 <div class="line"><a name="l00214"></a><span class="lineno">  214</span>&#160;  }</div>
-<div class="line"><a name="l00215"></a><span class="lineno">  215</span>&#160;  <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> placeAddresses(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc,</div>
-<div class="line"><a name="l00216"></a><span class="lineno">  216</span>&#160;                                    <a class="code" href="structInstruction_1_1Cache.html">Instruction::Cache</a> &amp;cache,</div>
-<div class="line"><a name="l00217"></a><span class="lineno">  217</span>&#160;                                    <a class="code" href="classLinearProgramLoopBlock.html">LinearProgramLoopBlock</a> &amp;LB) {</div>
-<div class="line"><a name="l00218"></a><span class="lineno">  218</span>&#160;    <span class="comment">// each node is a separate instruction graph</span></div>
-<div class="line"><a name="l00219"></a><span class="lineno">  219</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;node : LB.getNodes())</div>
-<div class="line"><a name="l00220"></a><span class="lineno">  220</span>&#160;      <span class="keyword">auto</span> access = node.getMemAccesses(alloc, LB.getMemoryAccesses());</div>
-<div class="line"><a name="l00221"></a><span class="lineno">  221</span>&#160;  }</div>
-<div class="line"><a name="l00222"></a><span class="lineno">  222</span>&#160;  <span class="keywordtype">void</span> init(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, <a class="code" href="structInstruction_1_1Cache.html">Instruction::Cache</a> &amp;cache, <a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;tAlloc,</div>
-<div class="line"><a name="l00223"></a><span class="lineno">  223</span>&#160;            <a class="code" href="structLoopTree.html">LoopTree</a> *loopForest, <a class="code" href="classLinearProgramLoopBlock.html">LinearProgramLoopBlock</a> &amp;LB,</div>
-<div class="line"><a name="l00224"></a><span class="lineno">  224</span>&#160;            llvm::TargetTransformInfo &amp;TTI, <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> vectorBits) {</div>
-<div class="line"><a name="l00225"></a><span class="lineno">  225</span>&#160;    <span class="comment">// TODO: can we shorten the life span of the instructions we</span></div>
-<div class="line"><a name="l00226"></a><span class="lineno">  226</span>&#160;    <span class="comment">// allocate here to `lalloc`? I.e., do we need them to live on after</span></div>
-<div class="line"><a name="l00227"></a><span class="lineno">  227</span>&#160;    <span class="comment">// this forest is scheduled?</span></div>
-<div class="line"><a name="l00228"></a><span class="lineno">  228</span>&#160; </div>
-<div class="line"><a name="l00229"></a><span class="lineno">  229</span>&#160;    placeAddresses(alloc, cache, LB);</div>
-<div class="line"><a name="l00230"></a><span class="lineno">  230</span>&#160;    mergeInstructions(alloc, cache, loopForest, TTI, tAlloc, vectorBits);</div>
-<div class="line"><a name="l00231"></a><span class="lineno">  231</span>&#160;    <span class="comment">// we first add all memory operands</span></div>
-<div class="line"><a name="l00232"></a><span class="lineno">  232</span>&#160;    <span class="comment">// then, we licm</span></div>
-<div class="line"><a name="l00233"></a><span class="lineno">  233</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;node : LB.getNodes()) {</div>
-<div class="line"><a name="l00234"></a><span class="lineno">  234</span>&#160;      <span class="comment">// now we walk the scheduled nodes to build the loop tree.</span></div>
-<div class="line"><a name="l00235"></a><span class="lineno">  235</span>&#160;      <a class="code" href="structAffineSchedule.html">AffineSchedule</a> sch = node.getSchedule();</div>
-<div class="line"><a name="l00236"></a><span class="lineno">  236</span>&#160;      <span class="comment">// TODO: preprocess all memory accesses to compute their rotated indMats</span></div>
-<div class="line"><a name="l00237"></a><span class="lineno">  237</span>&#160;      addMemory(alloc, cache, tAlloc, loopForest, LB, node, TTI, vectorBits,</div>
-<div class="line"><a name="l00238"></a><span class="lineno">  238</span>&#160;                sch, 0);</div>
-<div class="line"><a name="l00239"></a><span class="lineno">  239</span>&#160;      <span class="comment">// addSchedule(alloc, cache, tAlloc, loopForest, LB, node, TTI,</span></div>
-<div class="line"><a name="l00240"></a><span class="lineno">  240</span>&#160;      <span class="comment">// vectorBits, sch, 0);</span></div>
-<div class="line"><a name="l00241"></a><span class="lineno">  241</span>&#160;    }</div>
-<div class="line"><a name="l00242"></a><span class="lineno">  242</span>&#160;  }</div>
-<div class="line"><a name="l00243"></a><span class="lineno">  243</span>&#160;};</div>
-<div class="line"><a name="l00244"></a><span class="lineno">  244</span>&#160; </div>
-<div class="line"><a name="l00245"></a><span class="lineno"><a class="line" href="structCostModeling_1_1LoopForestSchedule.html">  245</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structCostModeling_1_1LoopForestSchedule.html">LoopForestSchedule</a> : <a class="code" href="classCostModeling_1_1LoopTreeSchedule.html">LoopTreeSchedule</a> {</div>
-<div class="line"><a name="l00246"></a><span class="lineno">  246</span>&#160;  [[no_unique_address]] <a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;allocator;</div>
-<div class="line"><a name="l00247"></a><span class="lineno">  247</span>&#160;};</div>
-<div class="line"><a name="l00248"></a><span class="lineno">  248</span>&#160;} <span class="comment">// namespace CostModeling</span></div>
+<div class="line"><a name="l00215"></a><span class="lineno">  215</span>&#160;  <span class="keywordtype">void</span> init(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, <a class="code" href="structInstruction_1_1Cache.html">Instruction::Cache</a> &amp;cache, <a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;tAlloc,</div>
+<div class="line"><a name="l00216"></a><span class="lineno">  216</span>&#160;            <a class="code" href="structLoopTree.html">LoopTree</a> *loopForest, <a class="code" href="classLinearProgramLoopBlock.html">LinearProgramLoopBlock</a> &amp;LB,</div>
+<div class="line"><a name="l00217"></a><span class="lineno">  217</span>&#160;            llvm::TargetTransformInfo &amp;TTI, <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> vectorBits) {</div>
+<div class="line"><a name="l00218"></a><span class="lineno">  218</span>&#160;    <span class="comment">// TODO: can we shorten the life span of the instructions we</span></div>
+<div class="line"><a name="l00219"></a><span class="lineno">  219</span>&#160;    <span class="comment">// allocate here to `lalloc`? I.e., do we need them to live on after</span></div>
+<div class="line"><a name="l00220"></a><span class="lineno">  220</span>&#160;    <span class="comment">// this forest is scheduled?</span></div>
+<div class="line"><a name="l00221"></a><span class="lineno">  221</span>&#160; </div>
+<div class="line"><a name="l00222"></a><span class="lineno">  222</span>&#160;    <span class="comment">// we first add all memory operands</span></div>
+<div class="line"><a name="l00223"></a><span class="lineno">  223</span>&#160;    <span class="comment">// then, we licm</span></div>
+<div class="line"><a name="l00224"></a><span class="lineno">  224</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;node : LB.getNodes()) {</div>
+<div class="line"><a name="l00225"></a><span class="lineno">  225</span>&#160;      <span class="comment">// now we walk the scheduled nodes to build the loop tree.</span></div>
+<div class="line"><a name="l00226"></a><span class="lineno">  226</span>&#160;      <a class="code" href="structAffineSchedule.html">AffineSchedule</a> sch = node.getSchedule();</div>
+<div class="line"><a name="l00227"></a><span class="lineno">  227</span>&#160;      <span class="comment">// TODO: preprocess all memory accesses to compute their rotated indMats</span></div>
+<div class="line"><a name="l00228"></a><span class="lineno">  228</span>&#160;      addMemory(alloc, cache, tAlloc, loopForest, LB, node, TTI, vectorBits,</div>
+<div class="line"><a name="l00229"></a><span class="lineno">  229</span>&#160;                sch, 0);</div>
+<div class="line"><a name="l00230"></a><span class="lineno">  230</span>&#160;      <span class="comment">// addSchedule(alloc, cache, tAlloc, loopForest, LB, node, TTI,</span></div>
+<div class="line"><a name="l00231"></a><span class="lineno">  231</span>&#160;      <span class="comment">// vectorBits, sch, 0);</span></div>
+<div class="line"><a name="l00232"></a><span class="lineno">  232</span>&#160;    }</div>
+<div class="line"><a name="l00233"></a><span class="lineno">  233</span>&#160;    <span class="comment">// buidInstructionGraph(alloc, cache);</span></div>
+<div class="line"><a name="l00234"></a><span class="lineno">  234</span>&#160;    mergeInstructions(alloc, cache, loopForest, TTI, tAlloc, vectorBits);</div>
+<div class="line"><a name="l00235"></a><span class="lineno">  235</span>&#160;  }</div>
+<div class="line"><a name="l00236"></a><span class="lineno">  236</span>&#160;};</div>
+<div class="line"><a name="l00237"></a><span class="lineno">  237</span>&#160; </div>
+<div class="line"><a name="l00238"></a><span class="lineno"><a class="line" href="structCostModeling_1_1LoopForestSchedule.html">  238</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structCostModeling_1_1LoopForestSchedule.html">LoopForestSchedule</a> : <a class="code" href="classCostModeling_1_1LoopTreeSchedule.html">LoopTreeSchedule</a> {</div>
+<div class="line"><a name="l00239"></a><span class="lineno">  239</span>&#160;  [[no_unique_address]] <a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;allocator;</div>
+<div class="line"><a name="l00240"></a><span class="lineno">  240</span>&#160;};</div>
+<div class="line"><a name="l00241"></a><span class="lineno">  241</span>&#160;} <span class="comment">// namespace CostModeling</span></div>
 <div class="ttc" id="aclassCostModeling_1_1LoopTreeSchedule_html"><div class="ttname"><a href="classCostModeling_1_1LoopTreeSchedule.html">CostModeling::LoopTreeSchedule</a></div><div class="ttdef"><b>Definition:</b> CostModeling.hpp:138</div></div>
 <div class="ttc" id="aclassLinearProgramLoopBlock_html"><div class="ttname"><a href="classLinearProgramLoopBlock.html">LinearProgramLoopBlock</a></div><div class="ttdef"><b>Definition:</b> LoopBlock.hpp:290</div></div>
 <div class="ttc" id="astructAffineSchedule_html"><div class="ttname"><a href="structAffineSchedule.html">AffineSchedule</a></div><div class="ttdef"><b>Definition:</b> Schedule.hpp:34</div></div>
 <div class="ttc" id="astructBumpAlloc_html"><div class="ttname"><a href="structBumpAlloc.html">BumpAlloc</a></div><div class="ttdef"><b>Definition:</b> Allocators.hpp:31</div></div>
 <div class="ttc" id="astructCostModeling_1_1CPURegisterFile_html"><div class="ttname"><a href="structCostModeling_1_1CPURegisterFile.html">CostModeling::CPURegisterFile</a></div><div class="ttdef"><b>Definition:</b> CostModeling.hpp:30</div></div>
-<div class="ttc" id="astructCostModeling_1_1LoopForestSchedule_html"><div class="ttname"><a href="structCostModeling_1_1LoopForestSchedule.html">CostModeling::LoopForestSchedule</a></div><div class="ttdef"><b>Definition:</b> CostModeling.hpp:245</div></div>
+<div class="ttc" id="astructCostModeling_1_1LoopForestSchedule_html"><div class="ttname"><a href="structCostModeling_1_1LoopForestSchedule.html">CostModeling::LoopForestSchedule</a></div><div class="ttdef"><b>Definition:</b> CostModeling.hpp:238</div></div>
 <div class="ttc" id="astructInstruction_1_1Cache_html"><div class="ttname"><a href="structInstruction_1_1Cache.html">Instruction::Cache</a></div><div class="ttdef"><b>Definition:</b> Instruction.hpp:307</div></div>
 <div class="ttc" id="astructLinAlg_1_1ResizeableView_html"><div class="ttname"><a href="structLinAlg_1_1ResizeableView.html">LinAlg::ResizeableView</a></div><div class="ttdef"><b>Definition:</b> Array.hpp:519</div></div>
 <div class="ttc" id="astructLoopTree_html"><div class="ttname"><a href="structLoopTree.html">LoopTree</a></div><div class="ttdef"><b>Definition:</b> LoopForest.hpp:23</div></div>
