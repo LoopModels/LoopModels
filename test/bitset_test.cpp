@@ -45,6 +45,8 @@ TEST(DynSizeBitSetTest, BasicAssertions) {
   BitSet bs;
   bs[4] = true;
   bs[10] = true;
+  EXPECT_EQ(bs.data.size(), 1);
+  EXPECT_EQ(bs.data.front(), 1040);
   llvm::SmallVector<size_t> sv;
   for (auto i : bs) sv.push_back(i);
   EXPECT_EQ(sv.size(), 2);
@@ -56,6 +58,8 @@ TEST(FixedSizeBitSetTest, BasicAssertions) {
   BitSet<std::array<uint64_t, 2>> bs;
   bs[4] = true;
   bs[10] = true;
+  EXPECT_EQ(bs.data[0], 1040);
+  EXPECT_EQ(bs.data[1], 0);
   llvm::SmallVector<size_t> sv;
   for (auto i : bs) sv.push_back(i);
   EXPECT_EQ(sv.size(), 2);

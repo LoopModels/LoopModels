@@ -235,7 +235,7 @@ class LoopTreeSchedule {
   }
 };
 
-struct LoopForestSchedule : LoopTreeSchedule {
-  [[no_unique_address]] BumpAlloc<> &allocator;
-};
+// class LoopForestSchedule : LoopTreeSchedule {
+//   [[no_unique_address]] BumpAlloc<> &allocator;
+// };
 } // namespace CostModeling
