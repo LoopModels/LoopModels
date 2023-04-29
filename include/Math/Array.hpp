@@ -558,22 +558,8 @@ struct ResizeableView : MutArray<T, S> {
     S oz = this->sz;
     this->sz = nz;
     if constexpr (std::integral<S>) {
-      if (nz <= this->capacity) {
-        if (nz > oz) std::fill(this->data() + oz, this->data() + nz, T{});
-        return;
-      }
-      U newCapacity = U(nz);
-#if __cplusplus >= 202202L
-      std::allocation_result res = allocator.allocate_at_least(newCapacity);
-      T *newPtr = res.ptr;
-      newCapacity = U(res.count);
-#else
-      T *newPtr = this->allocator.allocate(newCapacity);
-#endif
-      if (oz) std::copy_n(this->data(), oz, newPtr);
-      maybeDeallocate(newPtr, newCapacity);
-      invariant(newCapacity > oz);
-      std::fill_n((T *)(newPtr + oz), newCapacity - oz, T{});
+      invariant(U(nz) <= capacity);
+      if (nz > oz) std::fill(this->data() + oz, this->data() + nz, T{});
     } else {
       static_assert(MatrixDimension<S>, "Can only resize 1 or 2d containers.");
       auto newX = unsigned{RowStride{nz}}, oldX = unsigned{RowStride{oz}},
@@ -735,19 +721,21 @@ struct ReallocView : ResizeableView<T, S, U> {
     S oz = this->sz;
     this->sz = nz;
     if constexpr (std::integral<S>) {
-      if (nz <= this->capacity) return;
-      U newCapacity = U(nz);
+      if (nz <= oz) return;
+      if (nz > this->capacity) {
+        U newCapacity = U(nz);
 #if __cplusplus >= 202202L
-      std::allocation_result res = allocator.allocate_at_least(newCapacity);
-      T *newPtr = res.ptr;
-      newCapacity = U(res.count);
+        std::allocation_result res = allocator.allocate_at_least(newCapacity);
+        T *newPtr = res.ptr;
+        newCapacity = U(res.count);
 #else
-      T *newPtr = this->allocator.allocate(newCapacity);
+        T *newPtr = this->allocator.allocate(newCapacity);
 #endif
-      if (oz) std::copy_n(this->data(), oz, newPtr);
-      maybeDeallocate(newPtr, newCapacity);
-      invariant(newCapacity > oz);
-      std::fill_n((T *)(newPtr + oz), newCapacity - oz, T{});
+        if (oz) std::copy_n(this->data(), oz, newPtr);
+        maybeDeallocate(newPtr, newCapacity);
+        invariant(newCapacity > oz);
+      }
+      std::fill(this->data() + oz, this->data() + nz, T{});
     } else {
       static_assert(MatrixDimension<S>, "Can only resize 1 or 2d containers.");
       U len = U(nz);
