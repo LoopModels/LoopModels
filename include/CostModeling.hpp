@@ -152,15 +152,14 @@ class LoopTreeSchedule {
   }
   auto getLoopTripple(BumpAlloc<> &tAlloc, size_t i)
     -> std::tuple<InstructionBlock *, LoopTreeSchedule *, InstructionBlock *> {
-    InstructionBlock *H, *E;
-    LoopTreeSchedule *L;
+    InstructionBlock *H;
     if (i) {
       auto *loopAndExit = getLoopAndExit(tAlloc, i - 1);
       H = &loopAndExit->exit;
     } else H = &header;
     auto *loopAndExit = getLoopAndExit(tAlloc, i);
-    L = loopAndExit->subTree;
-    E = &loopAndExit->exit;
+    LoopTreeSchedule *L = loopAndExit->subTree;
+    InstructionBlock *E = &loopAndExit->exit;
     return {H, L, E};
   }
   auto getLoop(BumpAlloc<> &tAlloc, size_t i) -> LoopTreeSchedule * {
