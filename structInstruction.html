@@ -92,9 +92,9 @@ Classes</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
 Public Types</h2></td></tr>
-<tr class="memitem:ab1424289414d5e7feb4723a46fff8c40"><td class="memItemLeft" align="right" valign="top"><a id="ab1424289414d5e7feb4723a46fff8c40"></a>
-using&#160;</td><td class="memItemRight" valign="bottom"><b>Identifier</b> = std::variant&lt; <a class="el" href="structInstruction_1_1Intrinsic.html">Intrinsic</a>, llvm::Function *, int64_t, double &gt;</td></tr>
-<tr class="separator:ab1424289414d5e7feb4723a46fff8c40"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae8c2490b7961cbf4d71600672cad3f46"><td class="memItemLeft" align="right" valign="top"><a id="ae8c2490b7961cbf4d71600672cad3f46"></a>
+using&#160;</td><td class="memItemRight" valign="bottom"><b>Identifier</b> = std::variant&lt; <a class="el" href="structInstruction_1_1Intrinsic.html">Intrinsic</a>, <a class="el" href="structAddress.html">Address</a> *, llvm::Function *, int64_t, double &gt;</td></tr>
+<tr class="separator:ae8c2490b7961cbf4d71600672cad3f46"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
@@ -283,20 +283,20 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>operandIsLoad</b> (un
 <tr class="memitem:a604e3a5978e9ca30778cce6f18c3dc66"><td class="memItemLeft" align="right" valign="top"><a id="a604e3a5978e9ca30778cce6f18c3dc66"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>userIsStore</b> () const -&gt; bool</td></tr>
 <tr class="separator:a604e3a5978e9ca30778cce6f18c3dc66"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af941d9eff703133ab7a9cc45ff54a2e8"><td class="memItemLeft" align="right" valign="top"><a id="af941d9eff703133ab7a9cc45ff54a2e8"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>getCastContext</b> (llvm::TargetTransformInfo &amp;TTI) const -&gt; llvm::TargetTransformInfo::CastContextHint</td></tr>
-<tr class="separator:af941d9eff703133ab7a9cc45ff54a2e8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a70d69ee0ab6f3737c82b4b5e692e7db2"><td class="memItemLeft" align="right" valign="top"><a id="a70d69ee0ab6f3737c82b4b5e692e7db2"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getCastContext</b> (llvm::TargetTransformInfo &amp;) const -&gt; llvm::TargetTransformInfo::CastContextHint</td></tr>
+<tr class="separator:a70d69ee0ab6f3737c82b4b5e692e7db2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5182e0fb36b876ee09c0e8f932650f09"><td class="memItemLeft" align="right" valign="top"><a id="a5182e0fb36b876ee09c0e8f932650f09"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>calcCastCost</b> (llvm::TargetTransformInfo &amp;TTI, <a class="el" href="structInstruction_1_1Intrinsic_1_1OpCode.html">Intrinsic::OpCode</a> idt, unsigned int vectorWidth) -&gt; <a class="el" href="structRecipThroughputLatency.html">RecipThroughputLatency</a></td></tr>
 <tr class="separator:a5182e0fb36b876ee09c0e8f932650f09"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a371db6353b21e2e427f3678e5b0aa27c"><td class="memItemLeft" align="right" valign="top"><a id="a371db6353b21e2e427f3678e5b0aa27c"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>getPredicate</b> () const -&gt; llvm::CmpInst::Predicate</td></tr>
 <tr class="separator:a371db6353b21e2e427f3678e5b0aa27c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae74b2b7c904b78f12dd6851e779c6310"><td class="memItemLeft" align="right" valign="top"><a id="ae74b2b7c904b78f12dd6851e779c6310"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>calcCmpSelectCost</b> (llvm::TargetTransformInfo &amp;TTI, <a class="el" href="structInstruction_1_1Intrinsic_1_1OpCode.html">Intrinsic::OpCode</a> idt, unsigned int vectorWidth) -&gt; <a class="el" href="structRecipThroughputLatency.html">RecipThroughputLatency</a></td></tr>
-<tr class="separator:ae74b2b7c904b78f12dd6851e779c6310"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7c9e374d023ab4f16d882484fb87f325"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structInstruction.html#a7c9e374d023ab4f16d882484fb87f325">selectCost</a> (llvm::TargetTransformInfo &amp;TTI, unsigned int vectorWidth) -&gt; llvm::InstructionCost</td></tr>
-<tr class="separator:a7c9e374d023ab4f16d882484fb87f325"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a251d07ef9ffbeca9987611301eab0ffa"><td class="memItemLeft" align="right" valign="top"><a id="a251d07ef9ffbeca9987611301eab0ffa"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>calcCmpSelectCost</b> (llvm::TargetTransformInfo &amp;TTI, <a class="el" href="structInstruction_1_1Intrinsic_1_1OpCode.html">Intrinsic::OpCode</a> idt, unsigned int vectorWidth) const -&gt; <a class="el" href="structRecipThroughputLatency.html">RecipThroughputLatency</a></td></tr>
+<tr class="separator:a251d07ef9ffbeca9987611301eab0ffa"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5f1f568a7c35b55c492522e3f70e0ed4"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structInstruction.html#a5f1f568a7c35b55c492522e3f70e0ed4">selectCost</a> (llvm::TargetTransformInfo &amp;TTI, unsigned int vectorWidth) const -&gt; llvm::InstructionCost</td></tr>
+<tr class="separator:a5f1f568a7c35b55c492522e3f70e0ed4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af8c573fe3a7689fd9c66e7b68c5e471f"><td class="memItemLeft" align="right" valign="top"><a id="af8c573fe3a7689fd9c66e7b68c5e471f"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>calcCallCost</b> (llvm::TargetTransformInfo &amp;TTI, <a class="el" href="structInstruction_1_1Intrinsic_1_1Intrin.html">Intrinsic::Intrin</a> intrin, unsigned int vectorWidth) -&gt; <a class="el" href="structRecipThroughputLatency.html">RecipThroughputLatency</a></td></tr>
 <tr class="separator:af8c573fe3a7689fd9c66e7b68c5e471f"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -459,8 +459,8 @@ std::variant&lt; std::monostate, llvm::Instruction *, llvm::ConstantInt *, llvm:
 
 </div>
 </div>
-<a id="a7c9e374d023ab4f16d882484fb87f325"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a7c9e374d023ab4f16d882484fb87f325">&#9670;&nbsp;</a></span>selectCost()</h2>
+<a id="a5f1f568a7c35b55c492522e3f70e0ed4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5f1f568a7c35b55c492522e3f70e0ed4">&#9670;&nbsp;</a></span>selectCost()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -483,7 +483,7 @@ std::variant&lt; std::monostate, llvm::Instruction *, llvm::ConstantInt *, llvm:
         <tr>
           <td></td>
           <td>)</td>
-          <td></td><td> -&gt; llvm::InstructionCost </td>
+          <td></td><td> const -&gt; llvm::InstructionCost </td>
         </tr>
       </table>
   </td>

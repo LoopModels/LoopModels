@@ -1316,76 +1316,74 @@ $(function() {
 <div class="line"><a name="l01383"></a><span class="lineno"> 1383</span>&#160;<span class="preprocessor">#ifndef NDEBUG</span></div>
 <div class="line"><a name="l01384"></a><span class="lineno"> 1384</span>&#160;    validateEdges();</div>
 <div class="line"><a name="l01385"></a><span class="lineno"> 1385</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l01386"></a><span class="lineno"> 1386</span>&#160;    <span class="keyword">auto</span> b = optOrth(fullGraph());</div>
-<div class="line"><a name="l01387"></a><span class="lineno"> 1387</span>&#160;    <span class="keywordflow">return</span> b;</div>
-<div class="line"><a name="l01388"></a><span class="lineno"> 1388</span>&#160;  }</div>
-<div class="line"><a name="l01389"></a><span class="lineno"> 1389</span>&#160; </div>
-<div class="line"><a name="l01390"></a><span class="lineno"> 1390</span>&#160;  <span class="keyword">auto</span> summarizeMemoryAccesses(llvm::raw_ostream &amp;os) <span class="keyword">const</span></div>
-<div class="line"><a name="l01391"></a><span class="lineno"> 1391</span>&#160;    -&gt; llvm::raw_ostream &amp; {</div>
-<div class="line"><a name="l01392"></a><span class="lineno"> 1392</span>&#160;    os &lt;&lt; <span class="stringliteral">&quot;MemoryAccesses:\n&quot;</span>;</div>
-<div class="line"><a name="l01393"></a><span class="lineno"> 1393</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">auto</span> *m : memory) {</div>
-<div class="line"><a name="l01394"></a><span class="lineno"> 1394</span>&#160;      os &lt;&lt; <span class="stringliteral">&quot;Inst: &quot;</span> &lt;&lt; *m-&gt;getInstruction()</div>
-<div class="line"><a name="l01395"></a><span class="lineno"> 1395</span>&#160;         &lt;&lt; <span class="stringliteral">&quot;\nOrder: &quot;</span> &lt;&lt; m-&gt;getFusionOmega() &lt;&lt; <span class="stringliteral">&quot;\nLoop:&quot;</span> &lt;&lt; *m-&gt;getLoop()</div>
-<div class="line"><a name="l01396"></a><span class="lineno"> 1396</span>&#160;         &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
-<div class="line"><a name="l01397"></a><span class="lineno"> 1397</span>&#160;    }</div>
-<div class="line"><a name="l01398"></a><span class="lineno"> 1398</span>&#160;    <span class="keywordflow">return</span> os;</div>
-<div class="line"><a name="l01399"></a><span class="lineno"> 1399</span>&#160;  }</div>
-<div class="line"><a name="l01400"></a><span class="lineno"> 1400</span>&#160;  <span class="keyword">friend</span> <span class="keyword">inline</span> <span class="keyword">auto</span> operator&lt;&lt;(llvm::raw_ostream &amp;os,</div>
-<div class="line"><a name="l01401"></a><span class="lineno"> 1401</span>&#160;                                <span class="keyword">const</span> <a class="code" href="classLinearProgramLoopBlock.html">LinearProgramLoopBlock</a> &amp;lblock)</div>
-<div class="line"><a name="l01402"></a><span class="lineno"> 1402</span>&#160;    -&gt; llvm::raw_ostream &amp; {</div>
-<div class="line"><a name="l01403"></a><span class="lineno"> 1403</span>&#160;    os &lt;&lt; <span class="stringliteral">&quot;\nLoopBlock graph (#nodes = &quot;</span> &lt;&lt; lblock.nodes.size() &lt;&lt; <span class="stringliteral">&quot;):\n&quot;</span>;</div>
-<div class="line"><a name="l01404"></a><span class="lineno"> 1404</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; lblock.nodes.size(); ++i) {</div>
-<div class="line"><a name="l01405"></a><span class="lineno"> 1405</span>&#160;      <span class="keyword">const</span> <span class="keyword">auto</span> &amp;v = lblock.getNode(i);</div>
-<div class="line"><a name="l01406"></a><span class="lineno"> 1406</span>&#160;      os &lt;&lt; <span class="stringliteral">&quot;v_&quot;</span> &lt;&lt; i &lt;&lt; <span class="stringliteral">&quot;:\nmem =\n&quot;</span>;</div>
-<div class="line"><a name="l01407"></a><span class="lineno"> 1407</span>&#160;      <span class="keywordflow">for</span> (<span class="keyword">auto</span> m : v.getMemory())</div>
-<div class="line"><a name="l01408"></a><span class="lineno"> 1408</span>&#160;        os &lt;&lt; *lblock.memory[m]-&gt;getInstruction() &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
-<div class="line"><a name="l01409"></a><span class="lineno"> 1409</span>&#160;      os &lt;&lt; v &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
-<div class="line"><a name="l01410"></a><span class="lineno"> 1410</span>&#160;    }</div>
-<div class="line"><a name="l01411"></a><span class="lineno"> 1411</span>&#160;    <span class="comment">// BitSet</span></div>
-<div class="line"><a name="l01412"></a><span class="lineno"> 1412</span>&#160;    os &lt;&lt; <span class="stringliteral">&quot;\nLoopBlock Edges (#edges = &quot;</span> &lt;&lt; lblock.edges.size() &lt;&lt; <span class="stringliteral">&quot;):&quot;</span>;</div>
-<div class="line"><a name="l01413"></a><span class="lineno"> 1413</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">const</span> <span class="keyword">auto</span> edge : lblock.edges) {</div>
-<div class="line"><a name="l01414"></a><span class="lineno"> 1414</span>&#160;      os &lt;&lt; <span class="stringliteral">&quot;\n\n\tEdge = &quot;</span> &lt;&lt; edge;</div>
-<div class="line"><a name="l01415"></a><span class="lineno"> 1415</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> inIndex : edge.nodesIn()) {</div>
-<div class="line"><a name="l01416"></a><span class="lineno"> 1416</span>&#160;        <span class="keyword">const</span> <a class="code" href="structAffineSchedule.html">AffineSchedule</a> sin = lblock.getNode(inIndex).<a class="code" href="structAffineSchedule.html#a534a966b0d6ba721ec2fb83725fbdad8">getSchedule</a>();</div>
-<div class="line"><a name="l01417"></a><span class="lineno"> 1417</span>&#160;        os &lt;&lt; <span class="stringliteral">&quot;Schedule In: nodeIndex = &quot;</span> &lt;&lt; edge.nodesIn()</div>
-<div class="line"><a name="l01418"></a><span class="lineno"> 1418</span>&#160;           &lt;&lt; <span class="stringliteral">&quot;\ns.getPhi() =&quot;</span> &lt;&lt; sin.getPhi()</div>
-<div class="line"><a name="l01419"></a><span class="lineno"> 1419</span>&#160;           &lt;&lt; <span class="stringliteral">&quot;\ns.getFusionOmega() = &quot;</span> &lt;&lt; sin.getFusionOmega()</div>
-<div class="line"><a name="l01420"></a><span class="lineno"> 1420</span>&#160;           &lt;&lt; <span class="stringliteral">&quot;\ns.getOffsetOmega() = &quot;</span> &lt;&lt; sin.getOffsetOmega();</div>
-<div class="line"><a name="l01421"></a><span class="lineno"> 1421</span>&#160;      }</div>
-<div class="line"><a name="l01422"></a><span class="lineno"> 1422</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> outIndex : edge.nodesOut()) {</div>
-<div class="line"><a name="l01423"></a><span class="lineno"> 1423</span>&#160;        <span class="keyword">const</span> <a class="code" href="structAffineSchedule.html">AffineSchedule</a> sout = lblock.getNode(outIndex).<a class="code" href="structAffineSchedule.html#a534a966b0d6ba721ec2fb83725fbdad8">getSchedule</a>();</div>
-<div class="line"><a name="l01424"></a><span class="lineno"> 1424</span>&#160;        os &lt;&lt; <span class="stringliteral">&quot;\n\nSchedule Out: nodeIndex = &quot;</span> &lt;&lt; edge.nodesOut()</div>
-<div class="line"><a name="l01425"></a><span class="lineno"> 1425</span>&#160;           &lt;&lt; <span class="stringliteral">&quot;\ns.getPhi() =&quot;</span> &lt;&lt; sout.getPhi()</div>
-<div class="line"><a name="l01426"></a><span class="lineno"> 1426</span>&#160;           &lt;&lt; <span class="stringliteral">&quot;\ns.getFusionOmega() = &quot;</span> &lt;&lt; sout.getFusionOmega()</div>
-<div class="line"><a name="l01427"></a><span class="lineno"> 1427</span>&#160;           &lt;&lt; <span class="stringliteral">&quot;\ns.getOffsetOmega() = &quot;</span> &lt;&lt; sout.getOffsetOmega();</div>
-<div class="line"><a name="l01428"></a><span class="lineno"> 1428</span>&#160;      }</div>
-<div class="line"><a name="l01429"></a><span class="lineno"> 1429</span>&#160;      os &lt;&lt; <span class="stringliteral">&quot;\n\n&quot;</span>;</div>
-<div class="line"><a name="l01430"></a><span class="lineno"> 1430</span>&#160;    }</div>
-<div class="line"><a name="l01431"></a><span class="lineno"> 1431</span>&#160;    os &lt;&lt; <span class="stringliteral">&quot;\nLoopBlock schedule (#mem accesses = &quot;</span> &lt;&lt; lblock.memory.size()</div>
-<div class="line"><a name="l01432"></a><span class="lineno"> 1432</span>&#160;       &lt;&lt; <span class="stringliteral">&quot;):\n\n&quot;</span>;</div>
-<div class="line"><a name="l01433"></a><span class="lineno"> 1433</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">auto</span> *mem : lblock.memory) {</div>
-<div class="line"><a name="l01434"></a><span class="lineno"> 1434</span>&#160;      os &lt;&lt; <span class="stringliteral">&quot;Ref = &quot;</span> &lt;&lt; *mem;</div>
-<div class="line"><a name="l01435"></a><span class="lineno"> 1435</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> nodeIndex : mem-&gt;getNodeIndex()) {</div>
-<div class="line"><a name="l01436"></a><span class="lineno"> 1436</span>&#160;        <span class="keyword">const</span> <a class="code" href="structAffineSchedule.html">AffineSchedule</a> s = lblock.getNode(nodeIndex).<a class="code" href="structAffineSchedule.html#a534a966b0d6ba721ec2fb83725fbdad8">getSchedule</a>();</div>
-<div class="line"><a name="l01437"></a><span class="lineno"> 1437</span>&#160;        os &lt;&lt; <span class="stringliteral">&quot;\nnodeIndex = &quot;</span> &lt;&lt; nodeIndex &lt;&lt; <span class="stringliteral">&quot;\ns.getPhi()&quot;</span> &lt;&lt; s.getPhi()</div>
-<div class="line"><a name="l01438"></a><span class="lineno"> 1438</span>&#160;           &lt;&lt; <span class="stringliteral">&quot;\ns.getFusionOmega() = &quot;</span> &lt;&lt; s.getFusionOmega()</div>
-<div class="line"><a name="l01439"></a><span class="lineno"> 1439</span>&#160;           &lt;&lt; <span class="stringliteral">&quot;\ns.getOffsetOmega() = &quot;</span> &lt;&lt; s.getOffsetOmega() &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
-<div class="line"><a name="l01440"></a><span class="lineno"> 1440</span>&#160;      }</div>
-<div class="line"><a name="l01441"></a><span class="lineno"> 1441</span>&#160;    }</div>
-<div class="line"><a name="l01442"></a><span class="lineno"> 1442</span>&#160;    <span class="keywordflow">return</span> os &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
-<div class="line"><a name="l01443"></a><span class="lineno"> 1443</span>&#160;  }</div>
-<div class="line"><a name="l01444"></a><span class="lineno"> 1444</span>&#160;};</div>
-<div class="line"><a name="l01445"></a><span class="lineno"> 1445</span>&#160; </div>
-<div class="line"><a name="l01446"></a><span class="lineno"><a class="line" href="structstd_1_1iterator__traits_3_01LinearProgramLoopBlock_1_1Graph_01_4.html"> 1446</a></span>&#160;<span class="keyword">template</span> &lt;&gt; <span class="keyword">struct </span>std::iterator_traits&lt;<a class="code" href="classLinearProgramLoopBlock.html">LinearProgramLoopBlock</a>::Graph&gt; {</div>
-<div class="line"><a name="l01447"></a><span class="lineno"> 1447</span>&#160;  <span class="keyword">using</span> difference_type = ptrdiff_t;</div>
-<div class="line"><a name="l01448"></a><span class="lineno"> 1448</span>&#160;  <span class="keyword">using</span> iterator_category = std::forward_iterator_tag;</div>
-<div class="line"><a name="l01449"></a><span class="lineno"> 1449</span>&#160;  <span class="keyword">using</span> <a class="code" href="structScheduledNode.html">value_type</a> = <a class="code" href="structScheduledNode.html">ScheduledNode</a>;</div>
-<div class="line"><a name="l01450"></a><span class="lineno"> 1450</span>&#160;  <span class="keyword">using</span> <a class="code" href="structScheduledNode.html">reference_type</a> = <a class="code" href="structScheduledNode.html">ScheduledNode</a> &amp;;</div>
-<div class="line"><a name="l01451"></a><span class="lineno"> 1451</span>&#160;  <span class="keyword">using</span> <a class="code" href="structScheduledNode.html">pointer_type</a> = <a class="code" href="structScheduledNode.html">ScheduledNode</a> *;</div>
-<div class="line"><a name="l01452"></a><span class="lineno"> 1452</span>&#160;};</div>
-<div class="line"><a name="l01453"></a><span class="lineno"> 1453</span>&#160;<span class="comment">// static_assert(std::ranges::range&lt;LinearProgramLoopBlock::Graph&gt;);</span></div>
-<div class="line"><a name="l01454"></a><span class="lineno"> 1454</span>&#160;static_assert(Graphs::AbstractGraph&lt;LinearProgramLoopBlock::Graph&gt;);</div>
-<div class="line"><a name="l01455"></a><span class="lineno"> 1455</span>&#160;static_assert(std::is_trivially_destructible_v&lt;LinearProgramLoopBlock::Graph&gt;);</div>
+<div class="line"><a name="l01386"></a><span class="lineno"> 1386</span>&#160;    <span class="keywordflow">return</span> optOrth(fullGraph());</div>
+<div class="line"><a name="l01387"></a><span class="lineno"> 1387</span>&#160;  }</div>
+<div class="line"><a name="l01388"></a><span class="lineno"> 1388</span>&#160;  <span class="keyword">auto</span> summarizeMemoryAccesses(llvm::raw_ostream &amp;os) <span class="keyword">const</span></div>
+<div class="line"><a name="l01389"></a><span class="lineno"> 1389</span>&#160;    -&gt; llvm::raw_ostream &amp; {</div>
+<div class="line"><a name="l01390"></a><span class="lineno"> 1390</span>&#160;    os &lt;&lt; <span class="stringliteral">&quot;MemoryAccesses:\n&quot;</span>;</div>
+<div class="line"><a name="l01391"></a><span class="lineno"> 1391</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">auto</span> *m : memory) {</div>
+<div class="line"><a name="l01392"></a><span class="lineno"> 1392</span>&#160;      os &lt;&lt; <span class="stringliteral">&quot;Inst: &quot;</span> &lt;&lt; *m-&gt;getInstruction()</div>
+<div class="line"><a name="l01393"></a><span class="lineno"> 1393</span>&#160;         &lt;&lt; <span class="stringliteral">&quot;\nOrder: &quot;</span> &lt;&lt; m-&gt;getFusionOmega() &lt;&lt; <span class="stringliteral">&quot;\nLoop:&quot;</span> &lt;&lt; *m-&gt;getLoop()</div>
+<div class="line"><a name="l01394"></a><span class="lineno"> 1394</span>&#160;         &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
+<div class="line"><a name="l01395"></a><span class="lineno"> 1395</span>&#160;    }</div>
+<div class="line"><a name="l01396"></a><span class="lineno"> 1396</span>&#160;    <span class="keywordflow">return</span> os;</div>
+<div class="line"><a name="l01397"></a><span class="lineno"> 1397</span>&#160;  }</div>
+<div class="line"><a name="l01398"></a><span class="lineno"> 1398</span>&#160;  <span class="keyword">friend</span> <span class="keyword">inline</span> <span class="keyword">auto</span> operator&lt;&lt;(llvm::raw_ostream &amp;os,</div>
+<div class="line"><a name="l01399"></a><span class="lineno"> 1399</span>&#160;                                <span class="keyword">const</span> <a class="code" href="classLinearProgramLoopBlock.html">LinearProgramLoopBlock</a> &amp;lblock)</div>
+<div class="line"><a name="l01400"></a><span class="lineno"> 1400</span>&#160;    -&gt; llvm::raw_ostream &amp; {</div>
+<div class="line"><a name="l01401"></a><span class="lineno"> 1401</span>&#160;    os &lt;&lt; <span class="stringliteral">&quot;\nLoopBlock graph (#nodes = &quot;</span> &lt;&lt; lblock.nodes.size() &lt;&lt; <span class="stringliteral">&quot;):\n&quot;</span>;</div>
+<div class="line"><a name="l01402"></a><span class="lineno"> 1402</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; lblock.nodes.size(); ++i) {</div>
+<div class="line"><a name="l01403"></a><span class="lineno"> 1403</span>&#160;      <span class="keyword">const</span> <span class="keyword">auto</span> &amp;v = lblock.getNode(i);</div>
+<div class="line"><a name="l01404"></a><span class="lineno"> 1404</span>&#160;      os &lt;&lt; <span class="stringliteral">&quot;v_&quot;</span> &lt;&lt; i &lt;&lt; <span class="stringliteral">&quot;:\nmem =\n&quot;</span>;</div>
+<div class="line"><a name="l01405"></a><span class="lineno"> 1405</span>&#160;      <span class="keywordflow">for</span> (<span class="keyword">auto</span> m : v.getMemory())</div>
+<div class="line"><a name="l01406"></a><span class="lineno"> 1406</span>&#160;        os &lt;&lt; *lblock.memory[m]-&gt;getInstruction() &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
+<div class="line"><a name="l01407"></a><span class="lineno"> 1407</span>&#160;      os &lt;&lt; v &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
+<div class="line"><a name="l01408"></a><span class="lineno"> 1408</span>&#160;    }</div>
+<div class="line"><a name="l01409"></a><span class="lineno"> 1409</span>&#160;    <span class="comment">// BitSet</span></div>
+<div class="line"><a name="l01410"></a><span class="lineno"> 1410</span>&#160;    os &lt;&lt; <span class="stringliteral">&quot;\nLoopBlock Edges (#edges = &quot;</span> &lt;&lt; lblock.edges.size() &lt;&lt; <span class="stringliteral">&quot;):&quot;</span>;</div>
+<div class="line"><a name="l01411"></a><span class="lineno"> 1411</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">const</span> <span class="keyword">auto</span> edge : lblock.edges) {</div>
+<div class="line"><a name="l01412"></a><span class="lineno"> 1412</span>&#160;      os &lt;&lt; <span class="stringliteral">&quot;\n\n\tEdge = &quot;</span> &lt;&lt; edge;</div>
+<div class="line"><a name="l01413"></a><span class="lineno"> 1413</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> inIndex : edge.nodesIn()) {</div>
+<div class="line"><a name="l01414"></a><span class="lineno"> 1414</span>&#160;        <span class="keyword">const</span> <a class="code" href="structAffineSchedule.html">AffineSchedule</a> sin = lblock.getNode(inIndex).<a class="code" href="structAffineSchedule.html#a534a966b0d6ba721ec2fb83725fbdad8">getSchedule</a>();</div>
+<div class="line"><a name="l01415"></a><span class="lineno"> 1415</span>&#160;        os &lt;&lt; <span class="stringliteral">&quot;Schedule In: nodeIndex = &quot;</span> &lt;&lt; edge.nodesIn()</div>
+<div class="line"><a name="l01416"></a><span class="lineno"> 1416</span>&#160;           &lt;&lt; <span class="stringliteral">&quot;\ns.getPhi() =&quot;</span> &lt;&lt; sin.getPhi()</div>
+<div class="line"><a name="l01417"></a><span class="lineno"> 1417</span>&#160;           &lt;&lt; <span class="stringliteral">&quot;\ns.getFusionOmega() = &quot;</span> &lt;&lt; sin.getFusionOmega()</div>
+<div class="line"><a name="l01418"></a><span class="lineno"> 1418</span>&#160;           &lt;&lt; <span class="stringliteral">&quot;\ns.getOffsetOmega() = &quot;</span> &lt;&lt; sin.getOffsetOmega();</div>
+<div class="line"><a name="l01419"></a><span class="lineno"> 1419</span>&#160;      }</div>
+<div class="line"><a name="l01420"></a><span class="lineno"> 1420</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> outIndex : edge.nodesOut()) {</div>
+<div class="line"><a name="l01421"></a><span class="lineno"> 1421</span>&#160;        <span class="keyword">const</span> <a class="code" href="structAffineSchedule.html">AffineSchedule</a> sout = lblock.getNode(outIndex).<a class="code" href="structAffineSchedule.html#a534a966b0d6ba721ec2fb83725fbdad8">getSchedule</a>();</div>
+<div class="line"><a name="l01422"></a><span class="lineno"> 1422</span>&#160;        os &lt;&lt; <span class="stringliteral">&quot;\n\nSchedule Out: nodeIndex = &quot;</span> &lt;&lt; edge.nodesOut()</div>
+<div class="line"><a name="l01423"></a><span class="lineno"> 1423</span>&#160;           &lt;&lt; <span class="stringliteral">&quot;\ns.getPhi() =&quot;</span> &lt;&lt; sout.getPhi()</div>
+<div class="line"><a name="l01424"></a><span class="lineno"> 1424</span>&#160;           &lt;&lt; <span class="stringliteral">&quot;\ns.getFusionOmega() = &quot;</span> &lt;&lt; sout.getFusionOmega()</div>
+<div class="line"><a name="l01425"></a><span class="lineno"> 1425</span>&#160;           &lt;&lt; <span class="stringliteral">&quot;\ns.getOffsetOmega() = &quot;</span> &lt;&lt; sout.getOffsetOmega();</div>
+<div class="line"><a name="l01426"></a><span class="lineno"> 1426</span>&#160;      }</div>
+<div class="line"><a name="l01427"></a><span class="lineno"> 1427</span>&#160;      os &lt;&lt; <span class="stringliteral">&quot;\n\n&quot;</span>;</div>
+<div class="line"><a name="l01428"></a><span class="lineno"> 1428</span>&#160;    }</div>
+<div class="line"><a name="l01429"></a><span class="lineno"> 1429</span>&#160;    os &lt;&lt; <span class="stringliteral">&quot;\nLoopBlock schedule (#mem accesses = &quot;</span> &lt;&lt; lblock.memory.size()</div>
+<div class="line"><a name="l01430"></a><span class="lineno"> 1430</span>&#160;       &lt;&lt; <span class="stringliteral">&quot;):\n\n&quot;</span>;</div>
+<div class="line"><a name="l01431"></a><span class="lineno"> 1431</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">auto</span> *mem : lblock.memory) {</div>
+<div class="line"><a name="l01432"></a><span class="lineno"> 1432</span>&#160;      os &lt;&lt; <span class="stringliteral">&quot;Ref = &quot;</span> &lt;&lt; *mem;</div>
+<div class="line"><a name="l01433"></a><span class="lineno"> 1433</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> nodeIndex : mem-&gt;getNodeIndex()) {</div>
+<div class="line"><a name="l01434"></a><span class="lineno"> 1434</span>&#160;        <span class="keyword">const</span> <a class="code" href="structAffineSchedule.html">AffineSchedule</a> s = lblock.getNode(nodeIndex).<a class="code" href="structAffineSchedule.html#a534a966b0d6ba721ec2fb83725fbdad8">getSchedule</a>();</div>
+<div class="line"><a name="l01435"></a><span class="lineno"> 1435</span>&#160;        os &lt;&lt; <span class="stringliteral">&quot;\nnodeIndex = &quot;</span> &lt;&lt; nodeIndex &lt;&lt; <span class="stringliteral">&quot;\ns.getPhi()&quot;</span> &lt;&lt; s.getPhi()</div>
+<div class="line"><a name="l01436"></a><span class="lineno"> 1436</span>&#160;           &lt;&lt; <span class="stringliteral">&quot;\ns.getFusionOmega() = &quot;</span> &lt;&lt; s.getFusionOmega()</div>
+<div class="line"><a name="l01437"></a><span class="lineno"> 1437</span>&#160;           &lt;&lt; <span class="stringliteral">&quot;\ns.getOffsetOmega() = &quot;</span> &lt;&lt; s.getOffsetOmega() &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
+<div class="line"><a name="l01438"></a><span class="lineno"> 1438</span>&#160;      }</div>
+<div class="line"><a name="l01439"></a><span class="lineno"> 1439</span>&#160;    }</div>
+<div class="line"><a name="l01440"></a><span class="lineno"> 1440</span>&#160;    <span class="keywordflow">return</span> os &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
+<div class="line"><a name="l01441"></a><span class="lineno"> 1441</span>&#160;  }</div>
+<div class="line"><a name="l01442"></a><span class="lineno"> 1442</span>&#160;};</div>
+<div class="line"><a name="l01443"></a><span class="lineno"> 1443</span>&#160; </div>
+<div class="line"><a name="l01444"></a><span class="lineno"><a class="line" href="structstd_1_1iterator__traits_3_01LinearProgramLoopBlock_1_1Graph_01_4.html"> 1444</a></span>&#160;<span class="keyword">template</span> &lt;&gt; <span class="keyword">struct </span>std::iterator_traits&lt;<a class="code" href="classLinearProgramLoopBlock.html">LinearProgramLoopBlock</a>::Graph&gt; {</div>
+<div class="line"><a name="l01445"></a><span class="lineno"> 1445</span>&#160;  <span class="keyword">using</span> difference_type = ptrdiff_t;</div>
+<div class="line"><a name="l01446"></a><span class="lineno"> 1446</span>&#160;  <span class="keyword">using</span> iterator_category = std::forward_iterator_tag;</div>
+<div class="line"><a name="l01447"></a><span class="lineno"> 1447</span>&#160;  <span class="keyword">using</span> <a class="code" href="structScheduledNode.html">value_type</a> = <a class="code" href="structScheduledNode.html">ScheduledNode</a>;</div>
+<div class="line"><a name="l01448"></a><span class="lineno"> 1448</span>&#160;  <span class="keyword">using</span> <a class="code" href="structScheduledNode.html">reference_type</a> = <a class="code" href="structScheduledNode.html">ScheduledNode</a> &amp;;</div>
+<div class="line"><a name="l01449"></a><span class="lineno"> 1449</span>&#160;  <span class="keyword">using</span> <a class="code" href="structScheduledNode.html">pointer_type</a> = <a class="code" href="structScheduledNode.html">ScheduledNode</a> *;</div>
+<div class="line"><a name="l01450"></a><span class="lineno"> 1450</span>&#160;};</div>
+<div class="line"><a name="l01451"></a><span class="lineno"> 1451</span>&#160;<span class="comment">// static_assert(std::ranges::range&lt;LinearProgramLoopBlock::Graph&gt;);</span></div>
+<div class="line"><a name="l01452"></a><span class="lineno"> 1452</span>&#160;static_assert(Graphs::AbstractGraph&lt;LinearProgramLoopBlock::Graph&gt;);</div>
+<div class="line"><a name="l01453"></a><span class="lineno"> 1453</span>&#160;static_assert(std::is_trivially_destructible_v&lt;LinearProgramLoopBlock::Graph&gt;);</div>
 <div class="ttc" id="aclassDependence_html"><div class="ttname"><a href="classDependence.html">Dependence</a></div><div class="ttdef"><b>Definition:</b> DependencyPolyhedra.hpp:543</div></div>
 <div class="ttc" id="aclassDependence_html_a8f03cfecfe1734c6c395bf3184269536"><div class="ttname"><a href="classDependence.html#a8f03cfecfe1734c6c395bf3184269536">Dependence::isForward</a></div><div class="ttdeci">constexpr auto isForward() const -&gt; bool</div><div class="ttdoc">indicates whether forward is non-empty</div><div class="ttdef"><b>Definition:</b> DependencyPolyhedra.hpp:662</div></div>
 <div class="ttc" id="aclassLinAlg_1_1StaticArray_html"><div class="ttname"><a href="classLinAlg_1_1StaticArray.html">LinAlg::StaticArray</a></div><div class="ttdef"><b>Definition:</b> StaticArrays.hpp:14</div></div>

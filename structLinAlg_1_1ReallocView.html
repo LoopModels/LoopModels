@@ -144,9 +144,9 @@ constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>ReallocView</b> 
 <tr class="memitem:aeaf9be7d24f5534d5ea82816e1b90172"><td class="memItemLeft" align="right" valign="top"><a id="aeaf9be7d24f5534d5ea82816e1b90172"></a>
 constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>ReallocView</b> (T *p, S s, U c, A alloc) noexcept</td></tr>
 <tr class="separator:aeaf9be7d24f5534d5ea82816e1b90172"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4c459cf2ec5909ae278716951bbf4858"><td class="memItemLeft" align="right" valign="top"><a id="a4c459cf2ec5909ae278716951bbf4858"></a>
-constexpr U&#160;</td><td class="memItemRight" valign="bottom"><b>newCapacity</b> () const</td></tr>
-<tr class="separator:a4c459cf2ec5909ae278716951bbf4858"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a76a18fa4a9682dc821b2a01df6587136"><td class="memItemLeft" align="right" valign="top"><a id="a76a18fa4a9682dc821b2a01df6587136"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>newCapacity</b> () const -&gt; U</td></tr>
+<tr class="separator:a76a18fa4a9682dc821b2a01df6587136"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa5bd4b70f078c34df86e4d12c8fb7893"><td class="memTemplParams" colspan="2"><a id="aa5bd4b70f078c34df86e4d12c8fb7893"></a>
 template&lt;class... Args&gt; </td></tr>
 <tr class="memitem:aa5bd4b70f078c34df86e4d12c8fb7893"><td class="memTemplItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>emplace_back</b> (Args &amp;&amp;...args) -&gt; decltype(auto)</td></tr>
@@ -212,6 +212,9 @@ constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>moveLast</b
 <tr class="memitem:ace54be4f75bd01f63b1fe20f376fc7c9 inherit pub_methods_structLinAlg_1_1ResizeableView"><td class="memItemLeft" align="right" valign="top"><a id="ace54be4f75bd01f63b1fe20f376fc7c9"></a>
 constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>ResizeableView</b> (T *p, S s, U c) noexcept</td></tr>
 <tr class="separator:ace54be4f75bd01f63b1fe20f376fc7c9 inherit pub_methods_structLinAlg_1_1ResizeableView"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a52d6d6fef6300e9a40cb15e0e8b57bf5 inherit pub_methods_structLinAlg_1_1ResizeableView"><td class="memItemLeft" align="right" valign="top"><a id="a52d6d6fef6300e9a40cb15e0e8b57bf5"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>isFull</b> () const -&gt; bool</td></tr>
+<tr class="separator:a52d6d6fef6300e9a40cb15e0e8b57bf5 inherit pub_methods_structLinAlg_1_1ResizeableView"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afa6fc27903f4c08649d56c08107b8850 inherit pub_methods_structLinAlg_1_1ResizeableView"><td class="memItemLeft" align="right" valign="top"><a id="afa6fc27903f4c08649d56c08107b8850"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>emplace_back</b> (Args &amp;&amp;...args) -&gt; decltype(auto)</td></tr>
 <tr class="separator:afa6fc27903f4c08649d56c08107b8850 inherit pub_methods_structLinAlg_1_1ResizeableView"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -549,9 +552,9 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>isSmall</b>
 <tr class="memitem:a55607f1279b6558833d2d70de17aee59"><td class="memItemLeft" align="right" valign="top"><a id="a55607f1279b6558833d2d70de17aee59"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getmemptr</b> () const -&gt; const T *</td></tr>
 <tr class="separator:a55607f1279b6558833d2d70de17aee59"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8aac31697b2a149b788d8cb62ef27d2b"><td class="memItemLeft" align="right" valign="top"><a id="a8aac31697b2a149b788d8cb62ef27d2b"></a>
-constexpr bool&#160;</td><td class="memItemRight" valign="bottom"><b>wasAllocated</b> () const</td></tr>
-<tr class="separator:a8aac31697b2a149b788d8cb62ef27d2b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5ae79836263cd531a2f8dcf738cb3a66"><td class="memItemLeft" align="right" valign="top"><a id="a5ae79836263cd531a2f8dcf738cb3a66"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>wasAllocated</b> () const -&gt; bool</td></tr>
+<tr class="separator:a5ae79836263cd531a2f8dcf738cb3a66"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2d61d0c35d789656edeb1194d83133cc"><td class="memItemLeft" align="right" valign="top"><a id="a2d61d0c35d789656edeb1194d83133cc"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>maybeDeallocate</b> () noexcept</td></tr>
 <tr class="separator:a2d61d0c35d789656edeb1194d83133cc"><td class="memSeparator" colspan="2">&#160;</td></tr>

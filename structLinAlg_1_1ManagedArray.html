@@ -212,12 +212,12 @@ constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>resetNoFree
 <tr class="memitem:ad5dcbd1c8da0c23482287cb48864bd1d"><td class="memItemLeft" align="right" valign="top"><a id="ad5dcbd1c8da0c23482287cb48864bd1d"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>getmemptr</b> () const -&gt; const T *</td></tr>
 <tr class="separator:ad5dcbd1c8da0c23482287cb48864bd1d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad18835d4f8738cdb6cd027def05f9beb"><td class="memItemLeft" align="right" valign="top"><a id="ad18835d4f8738cdb6cd027def05f9beb"></a>
-constexpr U&#160;</td><td class="memItemRight" valign="bottom"><b>newCapacity</b> () const</td></tr>
-<tr class="separator:ad18835d4f8738cdb6cd027def05f9beb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a564f4d0ef21d3cd2bb4333dcd37b3750"><td class="memItemLeft" align="right" valign="top"><a id="a564f4d0ef21d3cd2bb4333dcd37b3750"></a>
-constexpr bool&#160;</td><td class="memItemRight" valign="bottom"><b>wasAllocated</b> () const</td></tr>
-<tr class="separator:a564f4d0ef21d3cd2bb4333dcd37b3750"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a31ce6b4321b1b66050c3fad4ee2396fa"><td class="memItemLeft" align="right" valign="top"><a id="a31ce6b4321b1b66050c3fad4ee2396fa"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>newCapacity</b> () const -&gt; U</td></tr>
+<tr class="separator:a31ce6b4321b1b66050c3fad4ee2396fa"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a470c5b92592bf08fe814a9897e872b73"><td class="memItemLeft" align="right" valign="top"><a id="a470c5b92592bf08fe814a9897e872b73"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>wasAllocated</b> () const -&gt; bool</td></tr>
+<tr class="separator:a470c5b92592bf08fe814a9897e872b73"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_methods_structLinAlg_1_1ReallocView"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_structLinAlg_1_1ReallocView')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="structLinAlg_1_1ReallocView.html">LinAlg::ReallocView&lt; T, S, ManagedArray&lt; T, S, N, A, U &gt;, A, U &gt;</a></td></tr>
 <tr class="memitem:a21b321d9d482f28b8137fafeefe0ec9b inherit pub_methods_structLinAlg_1_1ReallocView"><td class="memItemLeft" align="right" valign="top"><a id="a21b321d9d482f28b8137fafeefe0ec9b"></a>
 constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>ReallocView</b> (T *p, S s, U c) noexcept</td></tr>
@@ -225,9 +225,9 @@ constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>ReallocView</b> 
 <tr class="memitem:aeaf9be7d24f5534d5ea82816e1b90172 inherit pub_methods_structLinAlg_1_1ReallocView"><td class="memItemLeft" align="right" valign="top"><a id="aeaf9be7d24f5534d5ea82816e1b90172"></a>
 constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>ReallocView</b> (T *p, S s, U c, A alloc) noexcept</td></tr>
 <tr class="separator:aeaf9be7d24f5534d5ea82816e1b90172 inherit pub_methods_structLinAlg_1_1ReallocView"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4c459cf2ec5909ae278716951bbf4858 inherit pub_methods_structLinAlg_1_1ReallocView"><td class="memItemLeft" align="right" valign="top"><a id="a4c459cf2ec5909ae278716951bbf4858"></a>
-constexpr U&#160;</td><td class="memItemRight" valign="bottom"><b>newCapacity</b> () const</td></tr>
-<tr class="separator:a4c459cf2ec5909ae278716951bbf4858 inherit pub_methods_structLinAlg_1_1ReallocView"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a76a18fa4a9682dc821b2a01df6587136 inherit pub_methods_structLinAlg_1_1ReallocView"><td class="memItemLeft" align="right" valign="top"><a id="a76a18fa4a9682dc821b2a01df6587136"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>newCapacity</b> () const -&gt; U</td></tr>
+<tr class="separator:a76a18fa4a9682dc821b2a01df6587136 inherit pub_methods_structLinAlg_1_1ReallocView"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa5bd4b70f078c34df86e4d12c8fb7893 inherit pub_methods_structLinAlg_1_1ReallocView"><td class="memItemLeft" align="right" valign="top"><a id="aa5bd4b70f078c34df86e4d12c8fb7893"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>emplace_back</b> (Args &amp;&amp;...args) -&gt; decltype(auto)</td></tr>
 <tr class="separator:aa5bd4b70f078c34df86e4d12c8fb7893 inherit pub_methods_structLinAlg_1_1ReallocView"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -292,6 +292,9 @@ constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>moveLast</b
 <tr class="memitem:ace54be4f75bd01f63b1fe20f376fc7c9 inherit pub_methods_structLinAlg_1_1ResizeableView"><td class="memItemLeft" align="right" valign="top"><a id="ace54be4f75bd01f63b1fe20f376fc7c9"></a>
 constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>ResizeableView</b> (T *p, S s, U c) noexcept</td></tr>
 <tr class="separator:ace54be4f75bd01f63b1fe20f376fc7c9 inherit pub_methods_structLinAlg_1_1ResizeableView"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a52d6d6fef6300e9a40cb15e0e8b57bf5 inherit pub_methods_structLinAlg_1_1ResizeableView"><td class="memItemLeft" align="right" valign="top"><a id="a52d6d6fef6300e9a40cb15e0e8b57bf5"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>isFull</b> () const -&gt; bool</td></tr>
+<tr class="separator:a52d6d6fef6300e9a40cb15e0e8b57bf5 inherit pub_methods_structLinAlg_1_1ResizeableView"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afa6fc27903f4c08649d56c08107b8850 inherit pub_methods_structLinAlg_1_1ResizeableView"><td class="memTemplParams" colspan="2"><a id="afa6fc27903f4c08649d56c08107b8850"></a>
 template&lt;class... Args&gt; </td></tr>
 <tr class="memitem:afa6fc27903f4c08649d56c08107b8850 inherit pub_methods_structLinAlg_1_1ResizeableView"><td class="memTemplItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>emplace_back</b> (Args &amp;&amp;...args) -&gt; decltype(auto)</td></tr>
@@ -649,9 +652,9 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>isSmall</b>
 <tr class="memitem:a55607f1279b6558833d2d70de17aee59 inherit pro_methods_structLinAlg_1_1ReallocView"><td class="memItemLeft" align="right" valign="top"><a id="a55607f1279b6558833d2d70de17aee59"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getmemptr</b> () const -&gt; const T *</td></tr>
 <tr class="separator:a55607f1279b6558833d2d70de17aee59 inherit pro_methods_structLinAlg_1_1ReallocView"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8aac31697b2a149b788d8cb62ef27d2b inherit pro_methods_structLinAlg_1_1ReallocView"><td class="memItemLeft" align="right" valign="top"><a id="a8aac31697b2a149b788d8cb62ef27d2b"></a>
-constexpr bool&#160;</td><td class="memItemRight" valign="bottom"><b>wasAllocated</b> () const</td></tr>
-<tr class="separator:a8aac31697b2a149b788d8cb62ef27d2b inherit pro_methods_structLinAlg_1_1ReallocView"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5ae79836263cd531a2f8dcf738cb3a66 inherit pro_methods_structLinAlg_1_1ReallocView"><td class="memItemLeft" align="right" valign="top"><a id="a5ae79836263cd531a2f8dcf738cb3a66"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>wasAllocated</b> () const -&gt; bool</td></tr>
+<tr class="separator:a5ae79836263cd531a2f8dcf738cb3a66 inherit pro_methods_structLinAlg_1_1ReallocView"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2d61d0c35d789656edeb1194d83133cc inherit pro_methods_structLinAlg_1_1ReallocView"><td class="memItemLeft" align="right" valign="top"><a id="a2d61d0c35d789656edeb1194d83133cc"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>maybeDeallocate</b> () noexcept</td></tr>
 <tr class="separator:a2d61d0c35d789656edeb1194d83133cc inherit pro_methods_structLinAlg_1_1ReallocView"><td class="memSeparator" colspan="2">&#160;</td></tr>

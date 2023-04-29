@@ -90,12 +90,12 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a1f0b1c413584d60f720f16ee2adc797c"><td class="memItemLeft" align="right" valign="top"><a id="a1f0b1c413584d60f720f16ee2adc797c"></a>
 constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Map</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc)</td></tr>
 <tr class="separator:a1f0b1c413584d60f720f16ee2adc797c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa067ac3e6194c53a6c9a2e6c1c637709"><td class="memItemLeft" align="right" valign="top"><a id="aa067ac3e6194c53a6c9a2e6c1c637709"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>Map</b> (const <a class="el" href="structPredicate_1_1Map.html">Map</a> &amp;x)</td></tr>
-<tr class="separator:aa067ac3e6194c53a6c9a2e6c1c637709"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0a3ace94fe349297fa55dd8f19646808"><td class="memItemLeft" align="right" valign="top"><a id="a0a3ace94fe349297fa55dd8f19646808"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>Map</b> (<a class="el" href="structPredicate_1_1Map.html">Map</a> &amp;&amp;x)</td></tr>
-<tr class="separator:a0a3ace94fe349297fa55dd8f19646808"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab11076d20233afda844320275c7e5774"><td class="memItemLeft" align="right" valign="top"><a id="ab11076d20233afda844320275c7e5774"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>Map</b> (const <a class="el" href="structPredicate_1_1Map.html">Map</a> &amp;x)=default</td></tr>
+<tr class="separator:ab11076d20233afda844320275c7e5774"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af5477e5e1f8deda56e930d4c976e9433"><td class="memItemLeft" align="right" valign="top"><a id="af5477e5e1f8deda56e930d4c976e9433"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>Map</b> (<a class="el" href="structPredicate_1_1Map.html">Map</a> &amp;&amp;x) noexcept</td></tr>
+<tr class="separator:af5477e5e1f8deda56e930d4c976e9433"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a133795ebd328daa430a3b7a3373fc164"><td class="memItemLeft" align="right" valign="top"><a id="a133795ebd328daa430a3b7a3373fc164"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator=</b> (const <a class="el" href="structPredicate_1_1Map.html">Map</a> &amp;) -&gt; <a class="el" href="structPredicate_1_1Map.html">Map</a> &amp;=default</td></tr>
 <tr class="separator:a133795ebd328daa430a3b7a3373fc164"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -141,9 +141,9 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator[]</b> (llvm:
 <tr class="memitem:afe99e68cf91ed4385c5b2aee7d74d887"><td class="memItemLeft" align="right" valign="top"><a id="afe99e68cf91ed4385c5b2aee7d74d887"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>insert</b> (std::pair&lt; llvm::BasicBlock *, <a class="el" href="structPredicate_1_1Set.html">Set</a> &gt; &amp;&amp;pair)</td></tr>
 <tr class="separator:afe99e68cf91ed4385c5b2aee7d74d887"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3701a867ba887c64d9cbe6024f108a03"><td class="memItemLeft" align="right" valign="top"><a id="a3701a867ba887c64d9cbe6024f108a03"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>contains</b> (llvm::BasicBlock *BB) -&gt; bool</td></tr>
-<tr class="separator:a3701a867ba887c64d9cbe6024f108a03"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad1ee48b35e4cc1ffc11ed16cf8da1891"><td class="memItemLeft" align="right" valign="top"><a id="ad1ee48b35e4cc1ffc11ed16cf8da1891"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>contains</b> (llvm::BasicBlock *BB) const -&gt; bool</td></tr>
+<tr class="separator:ad1ee48b35e4cc1ffc11ed16cf8da1891"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa5df54c258903a80afefaf5f44d3848f"><td class="memItemLeft" align="right" valign="top"><a id="aa5df54c258903a80afefaf5f44d3848f"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>isInPath</b> (llvm::BasicBlock *BB) -&gt; bool</td></tr>
 <tr class="separator:aa5df54c258903a80afefaf5f44d3848f"><td class="memSeparator" colspan="2">&#160;</td></tr>
