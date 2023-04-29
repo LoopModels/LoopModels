@@ -558,7 +558,10 @@ struct ResizeableView : MutArray<T, S> {
     S oz = this->sz;
     this->sz = nz;
     if constexpr (std::integral<S>) {
-      if (nz <= this->capacity) return;
+      if (nz <= this->capacity) {
+        if (nz > oz) std::fill(this->data() + oz, this->data() + nz, T{});
+        return;
+      }
       U newCapacity = U(nz);
 #if __cplusplus >= 202202L
       std::allocation_result res = allocator.allocate_at_least(newCapacity);

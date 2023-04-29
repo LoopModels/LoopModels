@@ -212,13 +212,6 @@ class LoopTreeSchedule {
     getLoop(tAlloc, i)->addMemory(alloc, cache, tAlloc, loopForest, LB, node,
                                   TTI, vectorBits, sch, d);
   }
-  static inline void placeAddresses(BumpAlloc<> &alloc,
-                                    Instruction::Cache &cache,
-                                    LinearProgramLoopBlock &LB) {
-    // each node is a separate instruction graph
-    for (auto &node : LB.getNodes())
-      auto access = node.getMemAccesses(alloc, LB.getMemoryAccesses());
-  }
   void init(BumpAlloc<> &alloc, Instruction::Cache &cache, BumpAlloc<> &tAlloc,
             LoopTree *loopForest, LinearProgramLoopBlock &LB,
             llvm::TargetTransformInfo &TTI, unsigned int vectorBits) {
@@ -226,8 +219,6 @@ class LoopTreeSchedule {
     // allocate here to `lalloc`? I.e., do we need them to live on after
     // this forest is scheduled?
 
-    placeAddresses(alloc, cache, LB);
-    mergeInstructions(alloc, cache, loopForest, TTI, tAlloc, vectorBits);
     // we first add all memory operands
     // then, we licm
     for (auto &node : LB.getNodes()) {
@@ -239,6 +230,8 @@ class LoopTreeSchedule {
       // addSchedule(alloc, cache, tAlloc, loopForest, LB, node, TTI,
       // vectorBits, sch, 0);
     }
+    // buidInstructionGraph(alloc, cache);
+    mergeInstructions(alloc, cache, loopForest, TTI, tAlloc, vectorBits);
   }
 };
 
