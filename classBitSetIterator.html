@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.9.1"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>LoopModels: BitSetIterator Struct Reference</title>
+<title>LoopModels: BitSetIterator Class Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -64,10 +64,10 @@ $(function() {
   <div class="summary">
 <a href="#pub-types">Public Types</a> &#124;
 <a href="#pub-methods">Public Member Functions</a> &#124;
-<a href="#pub-attribs">Public Attributes</a> &#124;
-<a href="structBitSetIterator-members.html">List of all members</a>  </div>
+<a href="#friends">Friends</a> &#124;
+<a href="classBitSetIterator-members.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">BitSetIterator Struct Reference</div>  </div>
+<div class="title">BitSetIterator Class Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
 <table class="memberdecls">
@@ -82,14 +82,17 @@ using&#160;</td><td class="memItemRight" valign="bottom"><b>difference_type</b> 
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
+<tr class="memitem:a1c902c3f6a90a22fbb1804c6ce6d70ef"><td class="memItemLeft" align="right" valign="top"><a id="a1c902c3f6a90a22fbb1804c6ce6d70ef"></a>
+constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>BitSetIterator</b> (const uint64_t *_it, const uint64_t *_end, uint64_t _istate)</td></tr>
+<tr class="separator:a1c902c3f6a90a22fbb1804c6ce6d70ef"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aae0dbd7f29c34f4dd48077b0c7fd3fb4"><td class="memItemLeft" align="right" valign="top"><a id="aae0dbd7f29c34f4dd48077b0c7fd3fb4"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator*</b> () const -&gt; size_t</td></tr>
 <tr class="separator:aae0dbd7f29c34f4dd48077b0c7fd3fb4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae1c257f30b916ea2cd785f0d428c9f64"><td class="memItemLeft" align="right" valign="top"><a id="ae1c257f30b916ea2cd785f0d428c9f64"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator++</b> () -&gt; <a class="el" href="structBitSetIterator.html">BitSetIterator</a> &amp;</td></tr>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator++</b> () -&gt; <a class="el" href="classBitSetIterator.html">BitSetIterator</a> &amp;</td></tr>
 <tr class="separator:ae1c257f30b916ea2cd785f0d428c9f64"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7b3d9e32ad69a5f31ccd1bdd7bd67302"><td class="memItemLeft" align="right" valign="top"><a id="a7b3d9e32ad69a5f31ccd1bdd7bd67302"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator++</b> (int) -&gt; <a class="el" href="structBitSetIterator.html">BitSetIterator</a></td></tr>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator++</b> (int) -&gt; <a class="el" href="classBitSetIterator.html">BitSetIterator</a></td></tr>
 <tr class="separator:a7b3d9e32ad69a5f31ccd1bdd7bd67302"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab4e8f258629e75202b951155732e7379"><td class="memItemLeft" align="right" valign="top"><a id="ab4e8f258629e75202b951155732e7379"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator==</b> (<a class="el" href="structEndSentinel.html">EndSentinel</a>) const -&gt; bool</td></tr>
@@ -98,28 +101,19 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator==<
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator!=</b> (<a class="el" href="structEndSentinel.html">EndSentinel</a>) const -&gt; bool</td></tr>
 <tr class="separator:ae8e66798547c352d975a500a38ce5ac5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abee8f6205b252d00b6385fc55532bb1d"><td class="memItemLeft" align="right" valign="top"><a id="abee8f6205b252d00b6385fc55532bb1d"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator==</b> (<a class="el" href="structBitSetIterator.html">BitSetIterator</a> j) const -&gt; bool</td></tr>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator==</b> (<a class="el" href="classBitSetIterator.html">BitSetIterator</a> j) const -&gt; bool</td></tr>
 <tr class="separator:abee8f6205b252d00b6385fc55532bb1d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
-Public Attributes</h2></td></tr>
-<tr class="memitem:af77548683bfe6461df6fd9f8cd47fdd6"><td class="memItemLeft" align="right" valign="top"><a id="af77548683bfe6461df6fd9f8cd47fdd6"></a>
-const uint64_t *&#160;</td><td class="memItemRight" valign="bottom"><b>it</b></td></tr>
-<tr class="separator:af77548683bfe6461df6fd9f8cd47fdd6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a22b2340dc49989943214588d27ca5f15"><td class="memItemLeft" align="right" valign="top"><a id="a22b2340dc49989943214588d27ca5f15"></a>
-const uint64_t *&#160;</td><td class="memItemRight" valign="bottom"><b>end</b></td></tr>
-<tr class="separator:a22b2340dc49989943214588d27ca5f15"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a30d70184267b293b140898db5619f6a7"><td class="memItemLeft" align="right" valign="top"><a id="a30d70184267b293b140898db5619f6a7"></a>
-uint64_t&#160;</td><td class="memItemRight" valign="bottom"><b>istate</b></td></tr>
-<tr class="separator:a30d70184267b293b140898db5619f6a7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acc2c06efbba4bd22a192cd5c2806f796"><td class="memItemLeft" align="right" valign="top"><a id="acc2c06efbba4bd22a192cd5c2806f796"></a>
-size_t&#160;</td><td class="memItemRight" valign="bottom"><b>cstate0</b> {std::numeric_limits&lt;size_t&gt;::max()}</td></tr>
-<tr class="separator:acc2c06efbba4bd22a192cd5c2806f796"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac1ac234c0a621aca73ade4bf2e0e12d6"><td class="memItemLeft" align="right" valign="top"><a id="ac1ac234c0a621aca73ade4bf2e0e12d6"></a>
-size_t&#160;</td><td class="memItemRight" valign="bottom"><b>cstate1</b> {0}</td></tr>
-<tr class="separator:ac1ac234c0a621aca73ade4bf2e0e12d6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="friends"></a>
+Friends</h2></td></tr>
+<tr class="memitem:afd0c9b8248e992022b4c21d88d948b5d"><td class="memItemLeft" align="right" valign="top"><a id="afd0c9b8248e992022b4c21d88d948b5d"></a>
+constexpr friend auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator==</b> (<a class="el" href="structEndSentinel.html">EndSentinel</a>, const <a class="el" href="classBitSetIterator.html">BitSetIterator</a> &amp;bt) -&gt; bool</td></tr>
+<tr class="separator:afd0c9b8248e992022b4c21d88d948b5d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac94c9c7fde61ac3958a37ae99c6d2b1a"><td class="memItemLeft" align="right" valign="top"><a id="ac94c9c7fde61ac3958a37ae99c6d2b1a"></a>
+constexpr friend auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator!=</b> (<a class="el" href="structEndSentinel.html">EndSentinel</a>, const <a class="el" href="classBitSetIterator.html">BitSetIterator</a> &amp;bt) -&gt; bool</td></tr>
+<tr class="separator:ac94c9c7fde61ac3958a37ae99c6d2b1a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<hr/>The documentation for this struct was generated from the following file:<ul>
+<hr/>The documentation for this class was generated from the following file:<ul>
 <li>include/<a class="el" href="BitSets_8hpp_source.html">BitSets.hpp</a></li>
 </ul>
 </div><!-- contents -->

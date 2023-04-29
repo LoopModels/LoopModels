@@ -10,7 +10,7 @@ var searchData=
   ['basesymboliccomparator_3c_20linearsymboliccomparator_20_3e_27',['BaseSymbolicComparator&lt; LinearSymbolicComparator &gt;',['../structcomparator_1_1BaseSymbolicComparator.html',1,'comparator']]],
   ['basesymboliccomparator_3c_20ptrsymboliccomparator_20_3e_28',['BaseSymbolicComparator&lt; PtrSymbolicComparator &gt;',['../structcomparator_1_1BaseSymbolicComparator.html',1,'comparator']]],
   ['bitset_29',['BitSet',['../structBitSet.html',1,'']]],
-  ['bitsetiterator_30',['BitSetIterator',['../structBitSetIterator.html',1,'']]],
+  ['bitsetiterator_30',['BitSetIterator',['../classBitSetIterator.html',1,'']]],
   ['bitsliceview_31',['BitSliceView',['../structBitSliceView.html',1,'']]],
   ['broadcast_32',['Broadcast',['../structLinAlg_1_1Broadcast.html',1,'LinAlg']]],
   ['bumpalloc_33',['BumpAlloc',['../structBumpAlloc.html',1,'']]],

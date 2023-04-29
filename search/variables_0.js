@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['costs_461',['costs',['../structInstruction.html#a766b0e6f5ee427309a63411c279f2f62',1,'Instruction']]]
+  ['costs_459',['costs',['../structInstruction.html#a766b0e6f5ee427309a63411c279f2f62',1,'Instruction']]]
 ];
