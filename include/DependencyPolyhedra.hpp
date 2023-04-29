@@ -938,8 +938,7 @@ public:
   [[nodiscard]] auto isSatisfied(BumpAlloc<> &alloc, size_t d) const -> bool {
     const size_t numLambda = depPoly->getNumLambda();
     const size_t numLoopsX = depPoly->getDim0();
-    const size_t numLoopsY = depPoly->getDim1();
-    const size_t numLoopsTotal = numLoopsX + numLoopsY;
+    const size_t numLoopsTotal = numLoopsX + depPoly->getDim1();
     Vector<int64_t> sch(numLoopsTotal + 2, int64_t(0));
     invariant(size_t(sch.size()), numLoopsTotal + 2);
     sch[2 + d] = 1;
@@ -1006,10 +1005,9 @@ public:
                              NotNull<const MemoryAccess> y, size_t numLambda,
                              Col nonTimeDim) -> bool {
     const auto &[fxy, fyx] = p;
-    size_t numLoopsX = x->getNumLoops(), numLoopsY = y->getNumLoops(),
-           nTD = size_t(nonTimeDim);
+    size_t numLoopsX = x->getNumLoops(), nTD = size_t(nonTimeDim);
 #ifndef NDEBUG
-    const size_t numLoopsCommon = std::min(numLoopsX, numLoopsY);
+    const size_t numLoopsCommon = std::min(numLoopsX, y->getNumLoops());
 #endif
     PtrVector<int64_t> xFusOmega = x->getFusionOmega();
     PtrVector<int64_t> yFusOmega = y->getFusionOmega();

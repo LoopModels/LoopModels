@@ -19,19 +19,6 @@
 #include <llvm/Support/Allocator.h>
 #include <llvm/Support/InstructionCost.h>
 
-inline void buildInstructionGraph(BumpAlloc<> &alloc, Instruction::Cache &cache,
-                                  LinearProgramLoopBlock &LB) {
-  // each node is a separate instruction graph
-  for (auto &node : LB.getNodes()) {
-    auto access = node.getMemAccesses(alloc, LB.getMemoryAccesses());
-    for (auto *mem : access) {
-      // FIXME: this needs to duplicate reload instructions
-      Instruction *inst = cache.getInstruction(alloc, mem->getInstruction());
-      inst->ptr = mem;
-    }
-  }
-}
-
 // merge all instructions from toMerge into merged
 inline void merge(aset<Instruction *> &merged, aset<Instruction *> &toMerge) {
   merged.insert(toMerge.begin(), toMerge.end());
