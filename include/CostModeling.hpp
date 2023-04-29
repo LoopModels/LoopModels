@@ -216,14 +216,8 @@ class LoopTreeSchedule {
                                     Instruction::Cache &cache,
                                     LinearProgramLoopBlock &LB) {
     // each node is a separate instruction graph
-    for (auto &node : LB.getNodes()) {
+    for (auto &node : LB.getNodes())
       auto access = node.getMemAccesses(alloc, LB.getMemoryAccesses());
-      for (auto *mem : access) {
-        // FIXME: this needs to duplicate reload instructions
-        Instruction *inst = cache.getInstruction(alloc, mem->getInstruction());
-        inst->ptr = mem;
-      }
-    }
   }
   void init(BumpAlloc<> &alloc, Instruction::Cache &cache, BumpAlloc<> &tAlloc,
             LoopTree *loopForest, LinearProgramLoopBlock &LB,

@@ -2,5 +2,5 @@
 
 # sanitizers='Undefined'
 sanitizers='Address;Undefined'
-CXXFLAGS="-fuse-ld=lld" CXX=g++ cmake -S test -B buildgcc/testreldeb -DCMAKE_BUILD_TYPE=RelWithDebInfo -DUSE_SANITIZER=$sanitizers -DENABLE_TEST_COVERAGE=1 "$@"
+CXXFLAGS="-fuse-ld=lld" CXX=g++ cmake -S test -B buildgcc/testreldeb -DCMAKE_BUILD_TYPE=RelWithDebInfo -DUSE_SANITIZER=$sanitizers "$@"
 CXXFLAGS="" CXX=clang++ cmake -S test -B buildclang/testreldeb -DCMAKE_BUILD_TYPE=RelWithDebInfo -DUSE_SANITIZER=$sanitizers "$@"

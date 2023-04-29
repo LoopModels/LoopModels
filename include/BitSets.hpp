@@ -78,8 +78,8 @@ template <typename T = Vector<uint64_t, 1>> struct BitSet {
   //     return data[i];
   // } // allow `getindex` but not `setindex`
   constexpr BitSet() = default;
-  static constexpr auto numElementsNeeded(size_t N) -> size_t {
-    return ((N + 63) >> 6);
+  static constexpr auto numElementsNeeded(size_t N) -> unsigned {
+    return unsigned(((N + 63) >> 6));
   }
   constexpr BitSet(size_t N) : data{numElementsNeeded(N), 0} {}
   constexpr void resize64(size_t N) {
