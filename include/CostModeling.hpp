@@ -190,8 +190,11 @@ class LoopTreeSchedule {
   [[no_unique_address]] uint8_t vectorizationFactor{1};
   [[no_unique_address]] uint8_t unrollFactor{1};
   [[no_unique_address]] uint8_t unrollPredcedence{1};
-  [[nodiscard]] constexpr auto getNumSubTrees() const -> size_t {
+  [[nodiscard]] constexpr auto getNumSubTrees() const -> unsigned {
     return subTrees.size();
+  }
+  [[nodiscard]] constexpr auto numBlocks() const -> unsigned {
+    return getNumSubTrees() + 1;
   }
   constexpr auto getLoopAndExit(BumpAlloc<> &alloc, size_t i, size_t d)
     -> LoopAndExit & {
@@ -210,6 +213,18 @@ class LoopTreeSchedule {
   }
   auto getLoop(BumpAlloc<> &alloc, size_t i, uint8_t d) -> LoopTreeSchedule * {
     return getLoopAndExit(alloc, i, d).subTree;
+  }
+  auto getLoop(size_t i) -> LoopTreeSchedule * { return subTrees[i].subTree; }
+  [[nodiscard]] auto getLoop(size_t i) const -> const LoopTreeSchedule * {
+    return subTrees[i].subTree;
+  }
+  auto getBlock(size_t i) -> InstructionBlock & {
+    if (i) return subTrees[i - 1].exit;
+    return header;
+  }
+  [[nodiscard]] auto getBlock(size_t i) const -> const InstructionBlock & {
+    if (i) return subTrees[i - 1].exit;
+    return header;
   }
   [[nodiscard]] auto getDepth() const -> size_t { return depth; }
   /// Adds the schedule corresponding for the innermost loop.
@@ -234,13 +249,14 @@ class LoopTreeSchedule {
     // TODO: sort the memory accesses in the header and place in correct block.
     // On entry, all InstructionBlock in the `AndExit`s will be empty
     // as we only insert into  the header on construction.
+    // However, we may have hoisted them via topSort
   }
   // NOLINTNEXTLINE(misc-no-recursion)
   void topologicalSort(InstructionBlock &H, InstructionBlock &E) {
     topologicalSortCore();
     // TODO: hoist loads and stores, probably respectively into `H` and `E`
-    // (seems unlikely that a store doesn't depend on anything in the loop,
-    // or that a legal-to-hoist load does not)
+    for (size_t i = 0, B = numBlocks(); i < B; ++i) {
+    }
   }
   void init(BumpAlloc<> &alloc, Instruction::Cache &cache, BumpAlloc<> &tAlloc,
             LoopTree *loopForest, LinearProgramLoopBlock &LB,

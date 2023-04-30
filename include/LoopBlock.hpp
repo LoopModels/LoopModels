@@ -87,7 +87,7 @@ public:
         memAccess[i]->getLoop()->rotate(alloc, Pinv);
       accesses[j++] =
         Address::construct(alloc, loop, memAccess[i], i == storeId, Pinv, s,
-                           schedule.getFusionOmega());
+                           schedule.getOffsetOmega());
     }
   }
   [[nodiscard]] constexpr auto getNumMem() const -> size_t {
