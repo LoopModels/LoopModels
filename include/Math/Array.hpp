@@ -519,6 +519,7 @@ template <class T, class S,
 struct ResizeableView : MutArray<T, S> {
   using BaseT = MutArray<T, S>;
 
+  constexpr ResizeableView() noexcept : BaseT(nullptr, 0), capacity(0) {}
   constexpr ResizeableView(T *p, S s, U c) noexcept
     : BaseT(p, s), capacity(c) {}
 
@@ -610,6 +611,7 @@ struct ResizeableView : MutArray<T, S> {
         std::fill_n(npt + m * newX, newN, T{});
     }
   }
+
   constexpr void resize(Row r) {
     if constexpr (std::integral<S>) {
       return resize(S(r));
@@ -627,8 +629,7 @@ struct ResizeableView : MutArray<T, S> {
     }
   }
   constexpr void resizeForOverwrite(S M) {
-    U L = U(M);
-    invariant(L <= U(this->sz));
+    invariant(U(M) <= U(this->sz));
     this->sz = M;
   }
   constexpr void resizeForOverwrite(Row r) {
@@ -729,7 +730,7 @@ struct ReallocView : ResizeableView<T, S, U> {
         T *newPtr = res.ptr;
         newCapacity = U(res.count);
 #else
-        T *newPtr = this->allocator.allocate(newCapacity);
+        T *newPtr = allocator.allocate(newCapacity);
 #endif
         if (oz) std::copy_n(this->data(), oz, newPtr);
         maybeDeallocate(newPtr, newCapacity);
@@ -753,7 +754,7 @@ struct ReallocView : ResizeableView<T, S, U> {
         len = U(res.count);
       }
 #else
-      T *npt = newAlloc ? this->allocator.allocate(len) : this->data();
+      T *npt = newAlloc ? allocator.allocate(len) : this->data();
 #endif
       // we can copy forward so long as the new stride is smaller
       // so that the start of the dst range is outside of the src range

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <deque>
 #include <limits>
 #define BUMP_ALLOC_LLVM_USE_ALLOCATOR
 /// The advantages over llvm's bumpallocator are:
@@ -25,6 +26,16 @@
 /// We can't use `std::allocator` because it doesn't support passing alignment
 #include <cstdlib>
 #endif
+
+template <typename T> struct AllocResult {
+  T *ptr;
+  size_t size;
+};
+template <typename T> AllocResult(T *ptr, size_t size) -> AllocResult<T>;
+template <class A, typename T>
+constexpr void deallocate(A &&alloc, AllocResult<T> r) {
+  alloc.deallocate(r.ptr, r.size);
+}
 
 template <size_t SlabSize = 16384, bool BumpUp = false,
           size_t MinAlignment = alignof(std::max_align_t)>
@@ -68,6 +79,14 @@ public:
     static_assert(std::is_trivially_destructible_v<T>,
                   "BumpAlloc only supports trivially destructible types.");
     return static_cast<T *>(allocate(N * sizeof(T), alignof(T)));
+  }
+  template <typename T, class... Args>
+  [[gnu::returns_nonnull, gnu::flatten]] constexpr auto create(Args &&...args)
+    -> T * {
+    static_assert(std::is_trivially_destructible_v<T>,
+                  "BumpAlloc only supports trivially destructible types.");
+    return std::construct_at(static_cast<T *>(allocate(sizeof(T), alignof(T))),
+                             std::forward<Args>(args)...);
   }
 #ifdef BUMP_ALLOC_LLVM_USE_ALLOCATOR
   static constexpr auto contains(std::pair<void *, size_t> P, void *p) -> bool {
@@ -154,7 +173,6 @@ public:
         std::copy_n((char *)Ptr, szOld, (char *)p);
       return p;
     }
-    if (szOld >= szNew) return Ptr;
     Align = Align > MinAlignment ? toPowerOf2(Align) : MinAlignment;
     if constexpr (BumpUp) {
       if (Ptr == slab - align(szOld)) {
@@ -177,11 +195,11 @@ public:
       }
     }
     // we need to allocate new memory
-    auto NewPtr = allocate(szNew, Align);
+    auto newPtr = allocate(szNew, Align);
     if constexpr (!ForOverwrite)
-      std::copy_n((char *)Ptr, szOld, (char *)NewPtr);
+      std::copy_n((char *)Ptr, szOld, (char *)newPtr);
     deallocate(Ptr, szOld);
-    return NewPtr;
+    return newPtr;
   }
   constexpr void reset() {
     resetSlabs();
@@ -199,8 +217,7 @@ public:
       customSlabs{std::move(alloc.customSlabs)} {}
   BumpAlloc(const BumpAlloc &) = delete;
   constexpr ~BumpAlloc() {
-    for (auto *Slab : slabs)
-      llvm::deallocate_buffer(Slab, SlabSize, MinAlignment);
+    for (auto *s : slabs) llvm::deallocate_buffer(s, SlabSize, MinAlignment);
     resetCustomSlabs();
   }
   template <typename T, typename... Args>
@@ -364,11 +381,11 @@ private:
     customSlabs.clear();
   }
 
-  void *slab{nullptr};                                // 8 bytes
-  void *sEnd{nullptr};                                // 8 bytes
-  Vector<void *, 2> slabs{};                          // 16 + 16 bytes
+  void *slab{nullptr};                        // 8 bytes
+  void *sEnd{nullptr};                        // 8 bytes
+  Vector<void *, 2> slabs{};                  // 16 + 16 bytes
 #ifdef BUMP_ALLOC_LLVM_USE_ALLOCATOR
-  Vector<std::pair<void *, size_t>, 0> customSlabs{}; // 16 bytes
+  Vector<AllocResult<void>, 0> customSlabs{}; // 16 bytes
 #else
   Vector<void *, 0> customSlabs{}; // 16 bytes
 #endif

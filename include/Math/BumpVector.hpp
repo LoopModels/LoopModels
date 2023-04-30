@@ -49,7 +49,7 @@ template <typename T, unsigned InitialCapacity = 8> struct BumpPtrVector {
     x.Size = 0;
     x.Capacity = 0;
   }
-  constexpr BumpPtrVector(BumpPtrVector &&x)
+  constexpr BumpPtrVector(BumpPtrVector &&x) noexcept
     : mem{x.mem}, Size{x.Size}, Capacity{x.Capacity},
       Alloc{x.get_allocator().get_allocator()} {
     x.mem = nullptr;

@@ -72,24 +72,26 @@ public:
     : storeId(sId) {
     addMemory(sId, store, nodeIndex);
   }
-  [[nodiscard]] constexpr auto
-  getMemAccesses(BumpAlloc<> &alloc, PtrVector<MemoryAccess *> memAccess) const
-    -> Vector<Address *> {
+  constexpr void insertMemAccesses(BumpAlloc<> &alloc,
+                                   PtrVector<MemoryAccess *> memAccess,
+                                   MutPtrVector<Address *> accesses) const {
     // First, we invert the schedule matrix.
     SquarePtrMatrix<int64_t> Phi = schedule.getPhi();
     auto [Pinv, s] = NormalForm::scaledInv(Phi);
     // if (s == 1) {}
-    Vector<Address *> accesses;
-    accesses.reserve(memory.size());
+    assert(accesses.size() == memory.size());
+    size_t j = 0;
     for (auto i : memory) {
       // TODO: cache!
       NotNull<AffineLoopNest<false>> loop =
         memAccess[i]->getLoop()->rotate(alloc, Pinv);
-      accesses.push_back(Address::construct(alloc, loop, memAccess[i],
-                                            i == storeId, Pinv, s,
-                                            schedule.getFusionOmega()));
+      accesses[j++] =
+        Address::construct(alloc, loop, memAccess[i], i == storeId, Pinv, s,
+                           schedule.getFusionOmega());
     }
-    return accesses;
+  }
+  [[nodiscard]] constexpr auto getNumMem() const -> size_t {
+    return memory.size();
   }
   constexpr auto getMemory() -> BitSet & { return memory; }
   constexpr auto getInNeighbors() -> BitSet & { return inNeighbors; }
