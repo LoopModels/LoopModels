@@ -84,9 +84,12 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:acb491b0946ae10ae4094463dc0c9853c"><td class="memItemLeft" align="right" valign="top"><a id="acb491b0946ae10ae4094463dc0c9853c"></a>
 constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>ScheduledNode</b> (unsigned int sId, <a class="el" href="structMemoryAccess.html">MemoryAccess</a> *store, unsigned int nodeIndex)</td></tr>
 <tr class="separator:acb491b0946ae10ae4094463dc0c9853c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9855283058557e0f082b1d5a9deca48f"><td class="memItemLeft" align="right" valign="top"><a id="a9855283058557e0f082b1d5a9deca48f"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getMemAccesses</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, PtrVector&lt; <a class="el" href="structMemoryAccess.html">MemoryAccess</a> * &gt; memAccess) const -&gt; Vector&lt; <a class="el" href="structAddress.html">Address</a> * &gt;</td></tr>
-<tr class="separator:a9855283058557e0f082b1d5a9deca48f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a19722603f8fac9e322a152783960576c"><td class="memItemLeft" align="right" valign="top"><a id="a19722603f8fac9e322a152783960576c"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>insertMemAccesses</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, PtrVector&lt; <a class="el" href="structMemoryAccess.html">MemoryAccess</a> * &gt; memAccess, MutPtrVector&lt; <a class="el" href="structAddress.html">Address</a> * &gt; accesses) const</td></tr>
+<tr class="separator:a19722603f8fac9e322a152783960576c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a829fb7af566fd5c86340f68f9a1ee987"><td class="memItemLeft" align="right" valign="top"><a id="a829fb7af566fd5c86340f68f9a1ee987"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumMem</b> () const -&gt; size_t</td></tr>
+<tr class="separator:a829fb7af566fd5c86340f68f9a1ee987"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5ed85a9e3b62c3e67839363608b721f2"><td class="memItemLeft" align="right" valign="top"><a id="a5ed85a9e3b62c3e67839363608b721f2"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getMemory</b> () -&gt; <a class="el" href="structBitSet.html">BitSet</a> &amp;</td></tr>
 <tr class="separator:a5ed85a9e3b62c3e67839363608b721f2"><td class="memSeparator" colspan="2">&#160;</td></tr>

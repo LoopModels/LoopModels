@@ -72,8 +72,6 @@ $(function() {
 <div class="title">BumpAlloc&lt; SlabSize, BumpUp, MinAlignment &gt; Struct Template Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-
-<p><code>#include &lt;<a class="el" href="Allocators_8hpp_source.html">Allocators.hpp</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
 Classes</h2></td></tr>
@@ -98,6 +96,10 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>allocate</b
 template&lt;typename T &gt; </td></tr>
 <tr class="memitem:a9a4083769ebbf6c51becefbcdf517aec"><td class="memTemplItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>allocate</b> (size_t N=1) -&gt; T *</td></tr>
 <tr class="separator:a9a4083769ebbf6c51becefbcdf517aec"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a06bc3eac30dc5e5d68f75e5c5935b938"><td class="memTemplParams" colspan="2"><a id="a06bc3eac30dc5e5d68f75e5c5935b938"></a>
+template&lt;typename T , class... Args&gt; </td></tr>
+<tr class="memitem:a06bc3eac30dc5e5d68f75e5c5935b938"><td class="memTemplItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>create</b> (Args &amp;&amp;...args) -&gt; T *</td></tr>
+<tr class="separator:a06bc3eac30dc5e5d68f75e5c5935b938"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adaf8a267283d3fae357a7a4b257e5c18"><td class="memItemLeft" align="right" valign="top"><a id="adaf8a267283d3fae357a7a4b257e5c18"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>deallocate</b> (void *Ptr, size_t Size)</td></tr>
 <tr class="separator:adaf8a267283d3fae357a7a4b257e5c18"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -157,15 +159,7 @@ Static Public Attributes</h2></td></tr>
 static constexpr bool&#160;</td><td class="memItemRight" valign="bottom"><b>BumpDown</b> = !BumpUp</td></tr>
 <tr class="separator:a661c3a7ab97c1a6e13b6d6e2396dd961"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><h3>template&lt;size_t SlabSize = 16384, bool BumpUp = false, size_t MinAlignment = alignof(std::max_align_t)&gt;<br />
-struct BumpAlloc&lt; SlabSize, BumpUp, MinAlignment &gt;</h3>
-
-<p>The advantages over llvm's bumpallocator are:</p><ol type="1">
-<li>Support realloc</li>
-<li>Support support checkpointing </li>
-</ol>
-</div><h2 class="groupheader">Member Function Documentation</h2>
+<h2 class="groupheader">Member Function Documentation</h2>
 <a id="ae4e8781c9a410275faa2849e0af9c7a2"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ae4e8781c9a410275faa2849e0af9c7a2">&#9670;&nbsp;</a></span>reallocate()</h2>
 
