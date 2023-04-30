@@ -203,16 +203,10 @@ class LoopTreeSchedule {
     return subTrees[i];
   }
   auto getLoopTripple(size_t i)
-    -> std::tuple<InstructionBlock *, LoopTreeSchedule *, InstructionBlock *> {
-    InstructionBlock *H;
-    if (i) {
-      auto loopAndExit = subTrees[i - 1];
-      H = &loopAndExit.exit;
-    } else H = &header;
+    -> std::tuple<InstructionBlock &, LoopTreeSchedule *, InstructionBlock &> {
     auto loopAndExit = subTrees[i];
-    LoopTreeSchedule *L = loopAndExit.subTree;
-    InstructionBlock *E = &loopAndExit.exit;
-    return {H, L, E};
+    if (i) return {subTrees[i - 1].exit, loopAndExit.subTree, loopAndExit.exit};
+    return {header, loopAndExit.subTree, loopAndExit.exit};
   }
   auto getLoop(BumpAlloc<> &alloc, size_t i, uint8_t d) -> LoopTreeSchedule * {
     return getLoopAndExit(alloc, i, d).subTree;
@@ -232,6 +226,22 @@ class LoopTreeSchedule {
     node.insertMemAccesses(alloc, LB.getMemoryAccesses(),
                            L->header.reserveExtra(alloc, node.getNumMem()));
   }
+  void topologicalSortCore() { // NOLINT(misc-no-recursion)
+    for (size_t i = 0; i < getNumSubTrees(); ++i) {
+      auto [H, L, E] = getLoopTripple(i);
+      L->topologicalSort(H, E);
+    }
+    // TODO: sort the memory accesses in the header and place in correct block.
+    // On entry, all InstructionBlock in the `AndExit`s will be empty
+    // as we only insert into  the header on construction.
+  }
+  // NOLINTNEXTLINE(misc-no-recursion)
+  void topologicalSort(InstructionBlock &H, InstructionBlock &E) {
+    topologicalSortCore();
+    // TODO: hoist loads and stores, probably respectively into `H` and `E`
+    // (seems unlikely that a store doesn't depend on anything in the loop,
+    // or that a legal-to-hoist load does not)
+  }
   void init(BumpAlloc<> &alloc, Instruction::Cache &cache, BumpAlloc<> &tAlloc,
             LoopTree *loopForest, LinearProgramLoopBlock &LB,
             llvm::TargetTransformInfo &TTI, unsigned int vectorBits) {
@@ -249,6 +259,7 @@ class LoopTreeSchedule {
       // addSchedule(alloc, cache, tAlloc, loopForest, LB, node, TTI,
       // vectorBits, sch, 0);
     }
+    topologicalSortCore();
     // buidInstructionGraph(alloc, cache);
     mergeInstructions(alloc, cache, loopForest, TTI, tAlloc, vectorBits);
   }
