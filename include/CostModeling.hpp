@@ -278,13 +278,15 @@ private:
 
   // this method descends
   // NOLINTNEXTLINE(misc-no-recursion)
-  void allocLoopNodes(BumpAlloc<> &alloc, LinearProgramLoopBlock &LB,
-                      ScheduledNode &node, AffineSchedule sch) {
+  auto allocLoopNodes(BumpAlloc<> &alloc, LinearProgramLoopBlock &LB,
+                      ScheduledNode &node, AffineSchedule sch)
+    -> LoopTreeSchedule * {
     auto fO = sch.getFusionOmega();
     unsigned numLoops = sch.getNumLoops();
     invariant(fO.size() - 1, numLoops);
     LoopTreeSchedule *L = this;
     for (size_t i = 0; i < numLoops; ++i) L = L->getLoop(alloc, fO[i], i + 1);
+    return L;
     // node.insertMemAccesses(alloc, LB.getMemoryAccesses(),
     // L->header.reserveExtra(alloc, node.getNumMem()));
   }
@@ -311,9 +313,7 @@ private:
     return x[i];
   }
 
-  void init(BumpAlloc<> &alloc, Instruction::Cache &cache, BumpAlloc<> &tAlloc,
-            LoopTree *loopForest, LinearProgramLoopBlock &LB,
-            llvm::TargetTransformInfo &TTI, unsigned int vectorBits) {
+  void init(BumpAlloc<> &alloc, LinearProgramLoopBlock &LB) {
     // TODO: can we shorten the life span of the instructions we
     // allocate here to `lalloc`? I.e., do we need them to live on after
     // this forest is scheduled?
@@ -322,13 +322,16 @@ private:
     // then, we licm
     // nodes, sorted by depth
     llvm::SmallVector<
-      std::pair<llvm::SmallVector<const ScheduledNode *, 4>, size_t>, 4>
+      std::pair<llvm::SmallVector<
+                  std::pair<const ScheduledNode *, LoopTreeSchedule *>, 4>,
+                size_t>,
+      4>
       memOps;
     // size_t maxDepth = 0;
     for (auto &node : LB.getNodes()) {
-      allocLoopNodes(alloc, LB, node, node.getSchedule());
       auto &p{get(memOps, node.getNumLoops())};
-      p.first.push_back(&node);
+      p.first.emplace_back(&node,
+                           allocLoopNodes(alloc, LB, node, node.getSchedule()));
       p.second += node.getNumMem();
     }
     Vector<Address *> addresses{0};
@@ -336,21 +339,25 @@ private:
       auto &[nodes, numMem] = memOps[d];
       addresses.resize(numMem);
       for (size_t i = 0, j = 0; i < nodes.size();) {
-        size_t k = j + nodes[i]->getNumMem();
-        nodes[i]->insertMemAccesses(alloc, LB.getMemoryAccesses(),
-                                    addresses[_(j, k)]);
+        auto &[node, L] = nodes[i];
+        size_t k = j + node->getNumMem();
+        node->insertMemAccesses(alloc, LB.getMemoryAccesses(),
+                                addresses[_(j, k)]);
         j = k;
       }
     }
-    for (auto &nodes : std::ranges::views::reverse(memOps)) {
-      // d iterates from `maxDepth` to `0`, inclusive
-      // here, we iterate over
-    }
 
     topologicalSortCore();
-    // buidInstructionGraph(alloc, cache);
-    mergeInstructions(alloc, cache, loopForest, TTI, tAlloc, vectorBits);
   }
+  // void initializeInstrGraph(BumpAlloc<> &alloc, Instruction::Cache &cache,
+  //                           BumpAlloc<> &tAlloc, LoopTree *loopForest,
+  //                           LinearProgramLoopBlock &LB,
+  //                           llvm::TargetTransformInfo &TTI,
+  //                           unsigned int vectorBits) {
+
+  //   // buidInstructionGraph(alloc, cache);
+  //   mergeInstructions(alloc, cache, loopForest, TTI, tAlloc, vectorBits);
+  // }
 
 public:
   constexpr LoopTreeSchedule(LoopTreeSchedule *L, uint8_t d)

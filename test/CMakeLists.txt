@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.23)
+cmake_minimum_required(VERSION 3.25)
 
 project(LoopModelsTests LANGUAGES CXX)
 
@@ -7,6 +7,7 @@ project(LoopModelsTests LANGUAGES CXX)
 option(ENABLE_TEST_COVERAGE "Enable test coverage" OFF)
 option(ENABLE_TEST_EXCEPTIONS "Enable test exceptions" OFF)
 option(TEST_INSTALLED_VERSION "Test the version found by find_package" OFF)
+option(ENABLE_LLD "Use lld for linking" ON)
 
 # --- Import tools ----
 
@@ -21,12 +22,12 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # CPMAddPackage("gh:onqtam/doctest@2.4.9")
 CPMAddPackage("gh:TheLartians/Format.cmake@1.7.3")
-CPMFindPackage(
+CPMAddPackage(
   NAME googletest
   GITHUB_REPOSITORY google/googletest
   GIT_TAG v1.13.0
   VERSION 1.13.0
-  OPTIONS "INSTALL_GTEST OFF" "BUILD_GMOCK OFF" "gtest_hide_internal_symbols ON"
+  OPTIONS "INSTALL_GTEST OFF" "BUILD_GMOCK OFF" "gtest_hide_internal_symbols ON" SYSTEM TRUE
 )
 CPMAddPackage(
   NAME unordered_dense
@@ -77,7 +78,7 @@ message(STATUS "PROJECT_SOURCE_DIR: ${PROJECT_SOURCE_DIR}")
 message(STATUS "LLVM_INCLUDE_DIRS: ${LLVM_INCLUDE_DIRS}")
 add_dependencies(${PROJECT_NAME} LoopModels)
 target_include_directories(
-  ${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/../include ${LLVM_INCLUDE_DIRS}
+  ${PROJECT_NAME} SYSTEM PRIVATE ${PROJECT_SOURCE_DIR}/../include ${LLVM_INCLUDE_DIRS}
 )
 target_precompile_headers(
   ${PROJECT_NAME}
@@ -167,9 +168,10 @@ endif()
 # PRIVATE -D_GLIBCXX_DEBUG)
 target_compile_options(LoopModels PRIVATE -D_GLIBCXX_ASSERTIONS)
 target_compile_options(${PROJECT_NAME} PRIVATE -D_GLIBCXX_ASSERTIONS)
-target_link_options(${PROJECT_NAME} PRIVATE -fuse-ld=lld)
-target_link_options(LoopModels PRIVATE -fuse-ld=lld)
-
+if(ENABLE_LLD)
+  target_link_options(${PROJECT_NAME} PRIVATE -fuse-ld=lld)
+  target_link_options(LoopModels PRIVATE -fuse-ld=lld)
+endif()
 # ---- code coverage ----
 
 message(STATUS "ENABLE_TEST_COVERAGE: ${ENABLE_TEST_COVERAGE}")
