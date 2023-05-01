@@ -287,6 +287,7 @@ struct MutArray : Array<T, S>, ArrayOps<T, S, MutArray<T, S>> {
   constexpr auto operator=(const MutArray &) -> MutArray & = delete;
   // constexpr auto operator=(const MutArray &) -> MutArray & = default;
   constexpr auto operator=(MutArray &&) noexcept -> MutArray & = default;
+  constexpr MutArray(T *p, S s) : BaseT(p, s) {}
 
   constexpr void truncate(S nz) {
     S oz = this->sz;

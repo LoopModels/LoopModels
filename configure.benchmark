@@ -1,6 +1,6 @@
 #!/bin/sh
 
-CXXFLAGS="-fuse-ld=lld" CXX=g++ cmake -S benchmark buildgcc/benchmark -DCMAKE_BUILD_TYPE=Release
+CXXFLAGS="" CXX=g++ cmake -S benchmark buildgcc/benchmark -DCMAKE_BUILD_TYPE=Release
 CXXFLAGS="" CXX=clang++ cmake -S benchmark buildclang/benchmark -DCMAKE_BUILD_TYPE=Release
 if ! test -z "$icpx"
 then

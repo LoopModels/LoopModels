@@ -70,7 +70,7 @@ private:
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wc99-extensions"
 #endif
-  alignas(int64_t *) char mem[]; // NOLINT(modernize-avoid-c-arrays)
+  alignas(int64_t) char mem[]; // NOLINT(modernize-avoid-c-arrays)
 #if !defined(__clang__) && defined(__GNUC__)
 #pragma GCC diagnostic pop
 #else

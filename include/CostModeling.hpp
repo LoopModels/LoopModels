@@ -6,6 +6,8 @@
 #include "./LoopForest.hpp"
 #include "./MemoryAccess.hpp"
 #include "./Schedule.hpp"
+#include "DependencyPolyhedra.hpp"
+#include "Graphs.hpp"
 #include "Math/Array.hpp"
 #include "Math/Math.hpp"
 #include <algorithm>
@@ -138,6 +140,51 @@ struct CPURegisterFile {
 class LoopTreeSchedule {
   template <typename T> using Vec = LinAlg::ResizeableView<T, unsigned>;
 
+public:
+  struct AddressGraph {
+    using BitSet = ::LinearProgramLoopBlock::BitSet;
+    llvm::SmallVector<Address *> addresses;
+    PtrVector<Dependence> edges;
+    BitSet addrIds;
+    size_t depth;
+    [[nodiscard]] auto getNumVertices() const -> size_t {
+      return addresses.size();
+    }
+    [[nodiscard]] auto vertexIds() const -> const BitSet & { return addrIds; }
+    auto vertexIds() -> BitSet & { return addrIds; }
+    [[nodiscard]] constexpr auto maxVertexId() const -> size_t {
+      return addrIds.maxValue();
+    }
+    void setVisited(uint8_t x) {
+      for (auto *addr : addresses) addr->setVisited(x);
+    }
+    auto inNeighbors(size_t i) { return addresses[i]->inNeighbors(depth); }
+    auto outNeighbors(size_t i) { return addresses[i]->outNeighbors(depth); }
+    [[nodiscard]] auto inNeighbors(size_t i) const {
+      return addresses[i]->inNeighbors(depth);
+    }
+    [[nodiscard]] auto outNeighbors(size_t i) const {
+      return addresses[i]->outNeighbors(depth);
+    }
+    [[nodiscard]] auto wasVisited(size_t i) const -> bool {
+      return addresses[i]->wasVisited(1);
+    }
+    [[nodiscard]] auto wasVisited2(size_t i) const -> bool {
+      return addresses[i]->wasVisited(2);
+    }
+    void visit(size_t i) { addresses[i]->visit(1); }
+    void visit2(size_t i) { addresses[i]->visit(2); }
+    void unVisit(size_t i) { addresses[i]->clearVisited(); }
+    void unVisit2(size_t i) { addresses[i]->unVisit(~uint8_t(2)); }
+    void clearVisited() {
+      for (auto *addr : addresses) addr->clearVisited();
+    }
+    void clearVisited2() {
+      for (auto *addr : addresses) addr->unVisit(~uint8_t(2));
+    }
+  };
+
+private:
   template <typename T>
   static constexpr auto realloc(BumpAlloc<> &alloc, Vec<T> vec, unsigned nc)
     -> Vec<T> {
@@ -177,8 +224,9 @@ class LoopTreeSchedule {
     [[no_unique_address]] LoopTreeSchedule *subTree;
     [[no_unique_address]] InstructionBlock exit{};
     constexpr LoopAndExit(LoopTreeSchedule *subTree) : subTree(subTree) {}
-    static constexpr auto construct(BumpAlloc<> &alloc, uint8_t depth) {
-      return LoopAndExit(alloc.create<LoopTreeSchedule>(depth));
+    static constexpr auto construct(BumpAlloc<> &alloc, LoopTreeSchedule *L,
+                                    uint8_t d) {
+      return LoopAndExit(alloc.create<LoopTreeSchedule>(L, d));
     }
   };
   /// Header of the loop.
@@ -186,10 +234,19 @@ class LoopTreeSchedule {
   /// Variable number of sub loops and their associated exits.
   /// For the inner most loop, `subTrees.empty()`.
   [[no_unique_address]] Vec<LoopAndExit> subTrees{};
+  [[no_unique_address]] LoopTreeSchedule *parent{nullptr};
   [[no_unique_address]] uint8_t depth;
   [[no_unique_address]] uint8_t vectorizationFactor{1};
   [[no_unique_address]] uint8_t unrollFactor{1};
   [[no_unique_address]] uint8_t unrollPredcedence{1};
+  // i = 0 means self, i = 1 (default) returns parent, i = 2 parent's parent...
+  constexpr auto getParent(size_t i) -> LoopTreeSchedule * {
+    invariant(i <= depth);
+    LoopTreeSchedule *p = this;
+    while (i--) p = p->parent;
+    return p;
+  }
+  constexpr auto getParent() -> LoopTreeSchedule * { return parent; }
   [[nodiscard]] constexpr auto getNumSubTrees() const -> unsigned {
     return subTrees.size();
   }
@@ -201,7 +258,7 @@ class LoopTreeSchedule {
     if (i >= subTrees.size()) {
       subTrees = grow(alloc, subTrees, i + 1);
       for (size_t j = subTrees.size(); j <= i; ++j)
-        subTrees[j] = LoopAndExit::construct(alloc, d);
+        subTrees[j] = LoopAndExit::construct(alloc, this, d);
     }
     return subTrees[i];
   }
@@ -231,15 +288,15 @@ class LoopTreeSchedule {
 
   // this method descends
   // NOLINTNEXTLINE(misc-no-recursion)
-  void addMemory(BumpAlloc<> &alloc, LinearProgramLoopBlock &LB,
-                 ScheduledNode &node, AffineSchedule sch) {
+  void allocLoopNodes(BumpAlloc<> &alloc, LinearProgramLoopBlock &LB,
+                      ScheduledNode &node, AffineSchedule sch) {
     auto fO = sch.getFusionOmega();
     unsigned numLoops = sch.getNumLoops();
     invariant(fO.size() - 1, numLoops);
     LoopTreeSchedule *L = this;
     for (size_t i = 0; i < numLoops; ++i) L = L->getLoop(alloc, fO[i], i + 1);
-    node.insertMemAccesses(alloc, LB.getMemoryAccesses(),
-                           L->header.reserveExtra(alloc, node.getNumMem()));
+    // node.insertMemAccesses(alloc, LB.getMemoryAccesses(),
+    // L->header.reserveExtra(alloc, node.getNumMem()));
   }
   void topologicalSortCore() { // NOLINT(misc-no-recursion)
     for (size_t i = 0; i < getNumSubTrees(); ++i) {
@@ -258,6 +315,12 @@ class LoopTreeSchedule {
     for (size_t i = 0, B = numBlocks(); i < B; ++i) {
     }
   }
+  template <typename T>
+  static constexpr auto get(llvm::SmallVectorImpl<T> &x, size_t i) -> T & {
+    if (i >= x.size()) x.resize(i + 1);
+    return x[i];
+  }
+
   void init(BumpAlloc<> &alloc, Instruction::Cache &cache, BumpAlloc<> &tAlloc,
             LoopTree *loopForest, LinearProgramLoopBlock &LB,
             llvm::TargetTransformInfo &TTI, unsigned int vectorBits) {
@@ -267,23 +330,45 @@ class LoopTreeSchedule {
 
     // we first add all memory operands
     // then, we licm
+    // nodes, sorted by depth
+    llvm::SmallVector<
+      std::pair<llvm::SmallVector<const ScheduledNode *, 4>, size_t>, 4>
+      memOps;
+    // size_t maxDepth = 0;
     for (auto &node : LB.getNodes()) {
-      // now we walk the scheduled nodes to build the loop tree.
-      AffineSchedule sch = node.getSchedule();
-      // TODO: preprocess all memory accesses to compute their rotated indMats
-      addMemory(alloc, LB, node, sch);
-      // addSchedule(alloc, cache, tAlloc, loopForest, LB, node, TTI,
-      // vectorBits, sch, 0);
+      allocLoopNodes(alloc, LB, node, node.getSchedule());
+      auto &p{get(memOps, node.getNumLoops())};
+      p.first.push_back(&node);
+      p.second += node.getNumMem();
     }
+    Vector<Address *> addresses{0};
+    for (size_t d = memOps.size(); d--;) {
+      auto &[nodes, numMem] = memOps[d];
+      addresses.resize(numMem);
+      for (size_t i = 0, j = 0; i < nodes.size();) {
+        size_t k = j + nodes[i]->getNumMem();
+        nodes[i]->insertMemAccesses(alloc, LB.getMemoryAccesses(),
+                                    addresses[_(j, k)]);
+        j = k;
+      }
+    }
+    for (auto &nodes : std::ranges::views::reverse(memOps)) {
+      // d iterates from `maxDepth` to `0`, inclusive
+      // here, we iterate over
+    }
+
     topologicalSortCore();
     // buidInstructionGraph(alloc, cache);
     mergeInstructions(alloc, cache, loopForest, TTI, tAlloc, vectorBits);
   }
 
 public:
-  constexpr LoopTreeSchedule(uint8_t depth) : depth(depth) {}
+  constexpr LoopTreeSchedule(LoopTreeSchedule *L, uint8_t d)
+    : parent(L), depth(d) {}
 };
 
+static_assert(Graphs::AbstractGraphCore<LoopTreeSchedule::AddressGraph>);
+static_assert(Graphs::SecondVisit<LoopTreeSchedule::AddressGraph>);
 // class LoopForestSchedule : LoopTreeSchedule {
 //   [[no_unique_address]] BumpAlloc<> &allocator;
 // };

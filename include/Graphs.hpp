@@ -10,9 +10,9 @@
 namespace Graphs {
 template <typename R>
 concept AbstractRange = requires(R r) {
-                          { r.begin() };
-                          { r.end() };
-                        };
+  { r.begin() };
+  { r.end() };
+};
 inline auto printRange(llvm::raw_ostream &os, AbstractRange auto &r)
   -> llvm::raw_ostream & {
   os << "[ ";
@@ -26,43 +26,52 @@ inline auto printRange(llvm::raw_ostream &os, AbstractRange auto &r)
   return os;
 }
 
+// A graph where neighbors are pointers to other vertices
 template <typename G>
-concept AbstractGraph =
-  AbstractRange<G> && requires(G g, const G cg, size_t i) {
-                        { g.vertexIds() } -> AbstractRange;
-                        // { *std::ranges::begin(g.vertexIds()) } ->
-                        // std::convertible_to<unsigned>;
-                        {
-                          *g.vertexIds().begin()
-                          } -> std::convertible_to<unsigned>;
-                        { g.outNeighbors(i) } -> AbstractRange;
-                        { cg.outNeighbors(i) } -> AbstractRange;
-                        // { *std::ranges::begin(g.outNeighbors(i)) } ->
-                        // std::convertible_to<unsigned>;
-                        {
-                          *g.outNeighbors(i).begin()
-                          } -> std::convertible_to<unsigned>;
-                        { g.inNeighbors(i) } -> AbstractRange;
-                        { cg.inNeighbors(i) } -> AbstractRange;
-                        // { *std::ranges::begin(g.inNeighbors(i)) } ->
-                        // std::convertible_to<unsigned>;
-                        {
-                          *g.inNeighbors(i).begin()
-                          } -> std::convertible_to<unsigned>;
-                        { g.wasVisited(i) } -> std::same_as<bool>;
-                        { g.begin()->wasVisited() } -> std::same_as<bool>;
-                        { g.begin()->visit() };
-                        { g.begin()->unVisit() };
-                        { g.visit(i) };
-                        { g.getNumVertices() } -> std::convertible_to<unsigned>;
-                        { g.maxVertexId() } -> std::convertible_to<size_t>;
-                      };
+concept AbstractGraphCore = requires(G &g, const G &cg, size_t i) {
+  { g.inNeighbors(i) } -> AbstractRange;
+  { cg.inNeighbors(i) } -> AbstractRange;
+  { g.outNeighbors(i) } -> AbstractRange;
+  { cg.outNeighbors(i) } -> AbstractRange;
+  { g.getNumVertices() } -> std::convertible_to<unsigned>;
+  { g.wasVisited(i) } -> std::same_as<bool>;
+  { g.visit(i) };
+  { g.unVisit(i) };
+};
+template <typename G>
+concept SecondVisit = requires(G &g, const G &cg, size_t i) {
+  { g.visit2(i) };
+  { g.unVisit2(i) };
+  { cg.wasVisited2(i) };
+};
 
-inline void clearVisited(AbstractGraph auto &g) {
+template <typename G>
+concept AbstractIndexGraph =
+  AbstractGraphCore<G> && requires(G g, const G cg, size_t i) {
+    { g.vertexIds() } -> AbstractRange;
+    // { *std::ranges::begin(g.vertexIds()) } ->
+    // std::convertible_to<unsigned>;
+    { *g.vertexIds().begin() } -> std::convertible_to<unsigned>;
+    // { *std::ranges::begin(g.outNeighbors(i)) } ->
+    // std::convertible_to<unsigned>;
+    { *g.outNeighbors(i).begin() } -> std::convertible_to<unsigned>;
+    // { *std::ranges::begin(g.inNeighbors(i)) } ->
+    // std::convertible_to<unsigned>;
+    { *g.inNeighbors(i).begin() } -> std::convertible_to<unsigned>;
+    { g.maxVertexId() } -> std::convertible_to<size_t>;
+  };
+
+template <typename G>
+concept AbstractGraphClearVisited = AbstractGraphCore<G> && requires(G g) {
+  { g.clearVisited() };
+};
+
+inline void clearVisited(AbstractIndexGraph auto &g) {
   for (auto &&v : g) v.unVisit();
 }
+inline void clearVisited(AbstractGraphCore auto &g) { g.clearVisited(); }
 
-inline void weakVisit(AbstractGraph auto &g,
+inline void weakVisit(AbstractIndexGraph auto &g,
                       llvm::SmallVectorImpl<unsigned> &sorted, unsigned v) {
   g.visit(v);
   for (auto j : g.outNeighbors(v))
@@ -70,13 +79,12 @@ inline void weakVisit(AbstractGraph auto &g,
   sorted.push_back(v);
 }
 
-inline auto weaklyConnectedComponents(AbstractGraph auto &g) {
+inline auto weaklyConnectedComponents(AbstractIndexGraph auto &g) {
   llvm::SmallVector<llvm::SmallVector<unsigned>> components;
-  g.clearVisited();
+  clearVisited(g);
   for (auto j : g.vertexIds()) {
     if (g.wasVisited(j)) continue;
-    components.emplace_back();
-    llvm::SmallVector<unsigned> &sorted = components.back();
+    llvm::SmallVector<unsigned> &sorted = components.emplace_back();
     weakVisit(g, sorted, j);
     std::reverse(sorted.begin(), sorted.end());
   }
@@ -85,7 +93,7 @@ inline auto weaklyConnectedComponents(AbstractGraph auto &g) {
 
 template <typename B>
 inline auto
-strongConnect(AbstractGraph auto &g, llvm::SmallVectorImpl<B> &components,
+strongConnect(AbstractIndexGraph auto &g, llvm::SmallVectorImpl<B> &components,
               llvm::SmallVector<unsigned> &stack,
               llvm::MutableArrayRef<std::tuple<unsigned, unsigned, bool>>
                 indexLowLinkOnStack,
@@ -124,11 +132,11 @@ strongConnect(AbstractGraph auto &g, llvm::SmallVectorImpl<B> &components,
 
 template <typename B>
 inline void stronglyConnectedComponents(llvm::SmallVectorImpl<B> &cmpts,
-                                        AbstractGraph auto &g) {
+                                        AbstractIndexGraph auto &g) {
   size_t maxId = g.maxVertexId();
   cmpts.reserve(maxId);
-  llvm::SmallVector<std::tuple<unsigned, unsigned, bool>> indexLowLinkOnStack(
-    maxId);
+  llvm::SmallVector<std::tuple<unsigned, unsigned, bool>> indexLowLinkOnStack{
+    maxId};
   llvm::SmallVector<unsigned> stack;
   size_t index = 0;
   clearVisited(g);
@@ -136,14 +144,14 @@ inline void stronglyConnectedComponents(llvm::SmallVectorImpl<B> &cmpts,
     if (!g.wasVisited(v))
       index = strongConnect(g, cmpts, stack, indexLowLinkOnStack, index, v);
 }
-inline auto stronglyConnectedComponents(AbstractGraph auto &g)
+inline auto stronglyConnectedComponents(AbstractIndexGraph auto &g)
   -> llvm::SmallVector<BitSet<>> {
   llvm::SmallVector<BitSet<>> components;
   stronglyConnectedComponents(components, g);
   return components;
 }
 
-inline auto print(const AbstractGraph auto &g,
+inline auto print(const AbstractIndexGraph auto &g,
                   llvm::raw_ostream &os = llvm::errs()) -> llvm::raw_ostream & {
   for (auto i : g.vertexIds()) {
     os << "Vertex " << i << ":";

@@ -53,21 +53,12 @@ struct MockGraph {
     c.inNeighbors.insert(parent);
   }
 };
-template <> struct std::iterator_traits<MockGraph> {
-  using difference_type = ptrdiff_t;
-  using iterator_category = std::forward_iterator_tag;
-  using value_type = MockVertex;
-  using reference_type = MockVertex &;
-  using pointer_type = MockVertex *;
-};
 
-static_assert(Graphs::AbstractGraph<MockGraph>);
+static_assert(Graphs::AbstractIndexGraph<MockGraph>);
 
 // std::ranges::any_of not supported by libc++
 auto anyEquals(auto a, std::integral auto y) -> bool {
-  for (auto x : a)
-    if (x == y) return true;
-  return false;
+  return std::ranges::any_of(a, [y](auto x) { return x == y; });
 }
 
 // template <typename T> struct Equal {
@@ -77,7 +68,7 @@ auto anyEquals(auto a, std::integral auto y) -> bool {
 // template <typename T> static Equal<T> equals(T x) { return Equal<T>{x}; }
 
 // NOLINTNEXTLINE(modernize-use-trailing-return-type)
-TEST(GraphTest, BasicAssertions) {
+TEST(StronglyConnectedComponentsTest, BasicAssertions) {
   // graph
   //      0 -> 1 <---
   //      |    |    |

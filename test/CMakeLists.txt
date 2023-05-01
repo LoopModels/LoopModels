@@ -167,6 +167,8 @@ endif()
 # PRIVATE -D_GLIBCXX_DEBUG)
 target_compile_options(LoopModels PRIVATE -D_GLIBCXX_ASSERTIONS)
 target_compile_options(${PROJECT_NAME} PRIVATE -D_GLIBCXX_ASSERTIONS)
+target_link_options(${PROJECT_NAME} PRIVATE -fuse-ld=lld)
+target_link_options(LoopModels PRIVATE -fuse-ld=lld)
 
 # ---- code coverage ----
 

@@ -1,11 +1,18 @@
 #pragma once
+
+#include "BitSets.hpp"
 #include "Loops.hpp"
 #include "Math/Math.hpp"
 #include "MemoryAccess.hpp"
 #include "Utilities/Valid.hpp"
 #include <cstddef>
 #include <cstdint>
+#include <llvm/IR/PatternMatch.h>
 #include <llvm/Support/Allocator.h>
+
+namespace CostModeling {
+class LoopTreeSchedule;
+} // namespace CostModeling
 
 /// Represents a memory access that has been rotated according to some affine
 /// transform.
@@ -52,16 +59,21 @@
 /// Note that to get the new AffineLoopNest, we call
 /// `oldLoop->rotate(PhiInv)`
 // clang-format on
-struct Address {
-private:
+class Address {
+  using BitSet = ::MemoryAccess::BitSet;
   /// Original (untransformed) memory access
   NotNull<MemoryAccess> oldMemAccess;
   /// transformed loop
   NotNull<AffineLoopNest<false>> loop;
+  CostModeling::LoopTreeSchedule *node{nullptr};
+  [[no_unique_address]] unsigned numMemInputs;
+  [[no_unique_address]] unsigned numDirectEdges;
+  [[no_unique_address]] unsigned numMemOutputs;
   [[no_unique_address]] uint8_t dim;
   [[no_unique_address]] uint8_t depth;
   // may be `false` while `oldMemAccess->isStore()==true`
   // which indicates a reload from this address.
+  [[no_unique_address]] uint8_t visited{0};
   [[no_unique_address]] bool isStoreFlag;
 #if !defined(__clang__) && defined(__GNUC__)
 #pragma GCC diagnostic push
@@ -70,7 +82,7 @@ private:
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wc99-extensions"
 #endif
-  alignas(int64_t *) char mem[]; // NOLINT(modernize-avoid-c-arrays)
+  alignas(int64_t) char mem[]; // NOLINT(modernize-avoid-c-arrays)
 #if !defined(__clang__) && defined(__GNUC__)
 #pragma GCC diagnostic pop
 #else
@@ -88,12 +100,102 @@ private:
     getDenominator() = denom;
     getOffsetOmega() << ma->offsetMatrix()(_, 0) - mStar * omega;
   }
-  [[nodiscard]] constexpr auto getMemory() const -> int64_t * {
+  [[nodiscard]] constexpr auto getIntMemory() const -> int64_t * {
     void *p = const_cast<void *>(static_cast<const void *>(mem));
     return static_cast<int64_t *>(p);
   }
+  [[nodiscard]] constexpr auto getAddrMemory() const -> Address ** {
+    const void *m = mem + (1 + getNumLoops() + getArrayDim() * getNumLoops()) *
+                            sizeof(int64_t);
+    void *p = const_cast<void *>(static_cast<const void *>(m));
+    return (Address **)p;
+  }
+  [[nodiscard]] constexpr auto getDDepthMemory() const -> uint8_t * {
+    const void *m =
+      mem +
+      (1 + getNumLoops() + getArrayDim() * getNumLoops()) * sizeof(int64_t) +
+      (numMemInputs + numDirectEdges + numMemOutputs) * sizeof(Address *);
+    void *p = const_cast<void *>(static_cast<const void *>(m));
+    return (uint8_t *)p;
+  }
 
 public:
+  constexpr void setVisited(uint8_t x) { visited = x; }
+  constexpr void visit(uint8_t x) { visited |= x; }
+  constexpr void unVisit(uint8_t x) { visited &= x; }
+  [[nodiscard]] constexpr auto wasVisited(uint8_t x) const -> bool {
+    return visited & x;
+  }
+  constexpr void clearVisited() { visited = 0; }
+  struct EndSentinel {};
+  class ActiveEdgeIterator {
+    Address **p;
+    Address **e;
+    uint8_t *d;
+    uint8_t filtdepth;
+
+  public:
+    constexpr auto operator*() const -> Address * { return *p; }
+    constexpr auto operator++() -> ActiveEdgeIterator & {
+      do {
+        ++p;
+        ++d;
+      } while ((*d < filtdepth) && (p != e));
+      return *this;
+    }
+    constexpr auto operator==(EndSentinel) const -> bool { return p == e; }
+    constexpr auto operator!=(EndSentinel) const -> bool { return p != e; }
+    constexpr ActiveEdgeIterator(Address **_p, Address **_e, uint8_t *_d,
+                                 uint8_t fd)
+      : p(_p), e(_e), d(_d), filtdepth(fd) {
+      while ((*d < filtdepth) && (p != e)) {
+        ++p;
+        ++d;
+      }
+    }
+    constexpr auto operator++(int) -> ActiveEdgeIterator {
+      auto tmp = *this;
+      ++*this;
+      return tmp;
+    }
+    [[nodiscard]] constexpr auto begin() const -> ActiveEdgeIterator {
+      return *this;
+    }
+    [[nodiscard]] static constexpr auto end() -> EndSentinel { return {}; }
+  };
+  [[nodiscard]] constexpr auto numInNeighbors() const -> unsigned {
+    return isStoreFlag ? numMemInputs + numDirectEdges : numMemInputs;
+  }
+  [[nodiscard]] constexpr auto numOutNeighbors() const -> unsigned {
+    return isStoreFlag ? numMemOutputs : numDirectEdges + numMemOutputs;
+  }
+  [[nodiscard]] constexpr auto numNeighbors() const -> unsigned {
+    return numMemInputs + numDirectEdges + numMemOutputs;
+  }
+  [[nodiscard]] auto inNeighbors(uint8_t filtd) -> ActiveEdgeIterator {
+    Address **p = getAddrMemory();
+    return {p, p + numInNeighbors(), getDDepthMemory(), filtd};
+  }
+  [[nodiscard]] auto outNeighbors(uint8_t filtd) -> ActiveEdgeIterator {
+    unsigned n = numInNeighbors();
+    Address **p = getAddrMemory() + n;
+    return {p, p + numOutNeighbors(), getDDepthMemory() + n, filtd};
+  }
+
+  [[nodiscard]] auto inNeighbors() const -> PtrVector<Address *> {
+    return PtrVector<Address *>{getAddrMemory(), numInNeighbors()};
+  }
+  [[nodiscard]] auto outNeighbors() const -> PtrVector<Address *> {
+    return PtrVector<Address *>{getAddrMemory() + numInNeighbors(),
+                                numOutNeighbors()};
+  }
+  [[nodiscard]] auto inNeighbors() -> MutPtrVector<Address *> {
+    return MutPtrVector<Address *>{getAddrMemory(), numInNeighbors()};
+  }
+  [[nodiscard]] auto outNeighbors() -> MutPtrVector<Address *> {
+    return MutPtrVector<Address *>{getAddrMemory() + numInNeighbors(),
+                                   numOutNeighbors()};
+  }
   [[nodiscard]] static auto
   construct(BumpAlloc<> &alloc, NotNull<AffineLoopNest<false>> explicitLoop,
             NotNull<MemoryAccess> ma, bool isStr, SquarePtrMatrix<int64_t> Pinv,
@@ -119,10 +221,10 @@ public:
     return oldMemAccess->getAlign();
   }
   [[nodiscard]] constexpr auto getDenominator() -> int64_t & {
-    return getMemory()[0];
+    return getIntMemory()[0];
   }
   [[nodiscard]] constexpr auto getDenominator() const -> int64_t {
-    return getMemory()[0];
+    return getIntMemory()[0];
   }
   // constexpr auto getFusionOmega() -> MutPtrVector<int64_t> {
   //   return {mem + 1, getNumLoops()+1};
@@ -131,19 +233,19 @@ public:
   //   return {mem + 1, getNumLoops()+1};
   // }
   [[nodiscard]] constexpr auto getOffsetOmega() -> MutPtrVector<int64_t> {
-    return {getMemory() + 1, unsigned(getNumLoops())};
+    return {getIntMemory() + 1, unsigned(getNumLoops())};
   }
   [[nodiscard]] constexpr auto getOffsetOmega() const -> PtrVector<int64_t> {
-    return {getMemory() + 1, unsigned(getNumLoops())};
+    return {getIntMemory() + 1, unsigned(getNumLoops())};
   }
   /// indexMatrix() -> arrayDim() x getNumLoops()
   [[nodiscard]] constexpr auto indexMatrix() -> MutDensePtrMatrix<int64_t> {
-    return {getMemory() + 1 + getNumLoops(),
+    return {getIntMemory() + 1 + getNumLoops(),
             DenseDims{getArrayDim(), getNumLoops()}};
   }
   /// indexMatrix() -> arrayDim() x getNumLoops()
   [[nodiscard]] constexpr auto indexMatrix() const -> DensePtrMatrix<int64_t> {
-    return {getMemory() + 1 + getNumLoops(),
+    return {getIntMemory() + 1 + getNumLoops(),
             DenseDims{getArrayDim(), getNumLoops()}};
   }
   [[nodiscard]] auto isStore() const -> bool { return isStoreFlag; }

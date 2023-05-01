@@ -65,6 +65,7 @@ private:
   [[no_unique_address]] uint8_t numLoops{0};
   [[no_unique_address]] uint8_t rank{0};
   [[no_unique_address]] bool visited{false};
+  // [[no_unique_address]] bool visited2{false};
 
 public:
   constexpr ScheduledNode(unsigned int sId, MemoryAccess *store,
@@ -124,6 +125,9 @@ public:
   [[nodiscard]] constexpr auto wasVisited() const -> bool { return visited; }
   constexpr void visit() { visited = true; }
   constexpr void unVisit() { visited = false; }
+  // [[nodiscard]] constexpr auto wasVisited2() const -> bool { return visited2;
+  // } constexpr void visit2() { visited2 = true; } constexpr void unVisit2() {
+  // visited2 = false; }
   [[nodiscard]] constexpr auto getNumLoops() const -> size_t {
     return numLoops;
   }
@@ -642,6 +646,11 @@ public:
     }
     constexpr void visit(size_t i) { nodes[i].visit(); }
     constexpr void unVisit(size_t i) { nodes[i].unVisit(); }
+    // [[nodiscard]] constexpr auto wasVisited2(size_t i) const -> bool {
+    //   return nodes[i].wasVisited2();
+    // }
+    // constexpr void visit2(size_t i) { nodes[i].visit2(); }
+    // constexpr void unVisit2(size_t i) { nodes[i].unVisit2(); }
     [[nodiscard]] constexpr auto getNumVertices() const -> size_t {
       return nodeIds.size();
     }
@@ -1451,5 +1460,5 @@ template <> struct std::iterator_traits<LinearProgramLoopBlock::Graph> {
   using pointer_type = ScheduledNode *;
 };
 // static_assert(std::ranges::range<LinearProgramLoopBlock::Graph>);
-static_assert(Graphs::AbstractGraph<LinearProgramLoopBlock::Graph>);
+static_assert(Graphs::AbstractIndexGraph<LinearProgramLoopBlock::Graph>);
 static_assert(std::is_trivially_destructible_v<LinearProgramLoopBlock::Graph>);
