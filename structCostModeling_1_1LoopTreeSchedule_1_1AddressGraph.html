@@ -77,6 +77,9 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
 Public Types</h2></td></tr>
+<tr class="memitem:a156b6551b4d03471b49c85fd8d54bbf5"><td class="memItemLeft" align="right" valign="top"><a id="a156b6551b4d03471b49c85fd8d54bbf5"></a>
+using&#160;</td><td class="memItemRight" valign="bottom"><b>VertexType</b> = <a class="el" href="classAddress.html">Address</a></td></tr>
+<tr class="separator:a156b6551b4d03471b49c85fd8d54bbf5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a77dc82edc8cbf5201952d2ac34d28be1"><td class="memItemLeft" align="right" valign="top"><a id="a77dc82edc8cbf5201952d2ac34d28be1"></a>
 using&#160;</td><td class="memItemRight" valign="bottom"><b>BitSet</b> = ::LinearProgramLoopBlock::BitSet</td></tr>
 <tr class="separator:a77dc82edc8cbf5201952d2ac34d28be1"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -95,9 +98,6 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>vertexIds</b> () -&gt
 <tr class="memitem:a6da355e00dfd03876eb1b6145c17447f"><td class="memItemLeft" align="right" valign="top"><a id="a6da355e00dfd03876eb1b6145c17447f"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>maxVertexId</b> () const -&gt; size_t</td></tr>
 <tr class="separator:a6da355e00dfd03876eb1b6145c17447f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab8e59b8591f52642093767b4533778f7"><td class="memItemLeft" align="right" valign="top"><a id="ab8e59b8591f52642093767b4533778f7"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>setVisited</b> (uint8_t x)</td></tr>
-<tr class="separator:ab8e59b8591f52642093767b4533778f7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a707d9e4842e2320c7fb19aa3fbda72c6"><td class="memItemLeft" align="right" valign="top"><a id="a707d9e4842e2320c7fb19aa3fbda72c6"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>inNeighbors</b> (size_t i)</td></tr>
 <tr class="separator:a707d9e4842e2320c7fb19aa3fbda72c6"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -113,27 +113,15 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>outNeighbors</b> (siz
 <tr class="memitem:a8421d32997a621679a04604d207e011c"><td class="memItemLeft" align="right" valign="top"><a id="a8421d32997a621679a04604d207e011c"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>wasVisited</b> (size_t i) const -&gt; bool</td></tr>
 <tr class="separator:a8421d32997a621679a04604d207e011c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6e2ffb143ded499fcde71604e01314cd"><td class="memItemLeft" align="right" valign="top"><a id="a6e2ffb143ded499fcde71604e01314cd"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>wasVisited2</b> (size_t i) const -&gt; bool</td></tr>
-<tr class="separator:a6e2ffb143ded499fcde71604e01314cd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aad03f4323ab48782a173a8ba0fb149f5"><td class="memItemLeft" align="right" valign="top"><a id="aad03f4323ab48782a173a8ba0fb149f5"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (size_t i)</td></tr>
 <tr class="separator:aad03f4323ab48782a173a8ba0fb149f5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a68ad57554f3daff5b36532c5206aa2a8"><td class="memItemLeft" align="right" valign="top"><a id="a68ad57554f3daff5b36532c5206aa2a8"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>visit2</b> (size_t i)</td></tr>
-<tr class="separator:a68ad57554f3daff5b36532c5206aa2a8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a017dbeb9ab727bdee4ecda79b552f15d"><td class="memItemLeft" align="right" valign="top"><a id="a017dbeb9ab727bdee4ecda79b552f15d"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>unVisit</b> (size_t i)</td></tr>
 <tr class="separator:a017dbeb9ab727bdee4ecda79b552f15d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8b952469fced493d04877312ef33d777"><td class="memItemLeft" align="right" valign="top"><a id="a8b952469fced493d04877312ef33d777"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>unVisit2</b> (size_t i)</td></tr>
-<tr class="separator:a8b952469fced493d04877312ef33d777"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a119a5ebaf2047fbd71d280f171d82eb6"><td class="memItemLeft" align="right" valign="top"><a id="a119a5ebaf2047fbd71d280f171d82eb6"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>clearVisited</b> ()</td></tr>
 <tr class="separator:a119a5ebaf2047fbd71d280f171d82eb6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a63697b36d7ded026de161ce5d16e4c04"><td class="memItemLeft" align="right" valign="top"><a id="a63697b36d7ded026de161ce5d16e4c04"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>clearVisited2</b> ()</td></tr>
-<tr class="separator:a63697b36d7ded026de161ce5d16e4c04"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>

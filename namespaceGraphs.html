@@ -62,6 +62,7 @@ $(function() {
 </div><!-- top -->
 <div class="header">
   <div class="summary">
+<a href="#nested-classes">Classes</a> &#124;
 <a href="#func-members">Functions</a> &#124;
 <a href="#var-members">Variables</a>  </div>
   <div class="headertitle">
@@ -72,6 +73,11 @@ $(function() {
 <p>TODO: when we have better std::ranges support in compilers, use it?  
 <a href="namespaceGraphs.html#details">More...</a></p>
 <table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
+Classes</h2></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structGraphs_1_1SCC.html">SCC</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:a01c809ddf99553eec330c5c3ef311029"><td class="memItemLeft" align="right" valign="top"><a id="a01c809ddf99553eec330c5c3ef311029"></a>
@@ -83,19 +89,16 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>clearVisited</b> (Abs
 <tr class="memitem:a629707cd330548df64d1fbb0eb159900"><td class="memItemLeft" align="right" valign="top"><a id="a629707cd330548df64d1fbb0eb159900"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>clearVisited</b> (AbstractGraphCore auto &amp;g)</td></tr>
 <tr class="separator:a629707cd330548df64d1fbb0eb159900"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3518ec8f14d5605c09707dbaef43ecc7"><td class="memItemLeft" align="right" valign="top"><a id="a3518ec8f14d5605c09707dbaef43ecc7"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>clearVisited2</b> (AbstractIndexGraph auto &amp;g)</td></tr>
-<tr class="separator:a3518ec8f14d5605c09707dbaef43ecc7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1fea750e57b54f43fdaea9b317577530"><td class="memItemLeft" align="right" valign="top"><a id="a1fea750e57b54f43fdaea9b317577530"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>weakVisit</b> (AbstractIndexGraph auto &amp;g, llvm::SmallVectorImpl&lt; unsigned &gt; &amp;sorted, unsigned v)</td></tr>
 <tr class="separator:a1fea750e57b54f43fdaea9b317577530"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a66910801e32b49ea0e546fdc73a01166"><td class="memItemLeft" align="right" valign="top"><a id="a66910801e32b49ea0e546fdc73a01166"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>topologicalSort</b> (AbstractIndexGraph auto &amp;g)</td></tr>
 <tr class="separator:a66910801e32b49ea0e546fdc73a01166"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa5f03e808b78ea353001da72e3b41535"><td class="memTemplParams" colspan="2"><a id="aa5f03e808b78ea353001da72e3b41535"></a>
+<tr class="memitem:ae339d2ce0cbcb9791fc9a53af0aadf2f"><td class="memTemplParams" colspan="2"><a id="ae339d2ce0cbcb9791fc9a53af0aadf2f"></a>
 template&lt;typename B &gt; </td></tr>
-<tr class="memitem:aa5f03e808b78ea353001da72e3b41535"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>strongConnect</b> (AbstractIndexGraph auto &amp;g, llvm::SmallVectorImpl&lt; B &gt; &amp;components, llvm::SmallVector&lt; unsigned &gt; &amp;stack, llvm::MutableArrayRef&lt; std::tuple&lt; unsigned, unsigned, bool &gt;&gt; indexLowLinkOnStack, size_t index, size_t v) -&gt; size_t</td></tr>
-<tr class="separator:aa5f03e808b78ea353001da72e3b41535"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae339d2ce0cbcb9791fc9a53af0aadf2f"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>strongConnect</b> (AbstractIndexGraph auto &amp;g, llvm::SmallVectorImpl&lt; B &gt; &amp;components, llvm::SmallVector&lt; unsigned &gt; &amp;stack, llvm::MutableArrayRef&lt; <a class="el" href="structGraphs_1_1SCC.html">SCC</a> &gt; iLLOS, unsigned index, size_t v) -&gt; unsigned</td></tr>
+<tr class="separator:ae339d2ce0cbcb9791fc9a53af0aadf2f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adf63ffae0e75b3df409c5305bbc161b0"><td class="memTemplParams" colspan="2"><a id="adf63ffae0e75b3df409c5305bbc161b0"></a>
 template&lt;typename B &gt; </td></tr>
 <tr class="memitem:adf63ffae0e75b3df409c5305bbc161b0"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>stronglyConnectedComponents</b> (llvm::SmallVectorImpl&lt; B &gt; &amp;cmpts, AbstractIndexGraph auto &amp;g)</td></tr>
@@ -103,6 +106,18 @@ template&lt;typename B &gt; </td></tr>
 <tr class="memitem:a93dda533b0860343e23de57c78db3b57"><td class="memItemLeft" align="right" valign="top"><a id="a93dda533b0860343e23de57c78db3b57"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>stronglyConnectedComponents</b> (AbstractIndexGraph auto &amp;g) -&gt; llvm::SmallVector&lt; <a class="el" href="structBitSet.html">BitSet</a>&lt;&gt;&gt;</td></tr>
 <tr class="separator:a93dda533b0860343e23de57c78db3b57"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a869f9b0673950efbf2ba61065437621c"><td class="memTemplParams" colspan="2"><a id="a869f9b0673950efbf2ba61065437621c"></a>
+template&lt;typename B &gt; </td></tr>
+<tr class="memitem:a869f9b0673950efbf2ba61065437621c"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>strongConnect</b> (AbstractPtrGraph auto &amp;g, llvm::SmallVectorImpl&lt; llvm::SmallVector&lt; B *, 1 &gt;&gt; &amp;components, llvm::SmallVector&lt; B * &gt; &amp;stack, unsigned index, B *v) -&gt; unsigned</td></tr>
+<tr class="separator:a869f9b0673950efbf2ba61065437621c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6cd11f9718e34c76049bacbb443cec0d"><td class="memTemplParams" colspan="2"><a id="a6cd11f9718e34c76049bacbb443cec0d"></a>
+template&lt;typename B &gt; </td></tr>
+<tr class="memitem:a6cd11f9718e34c76049bacbb443cec0d"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>stronglyConnectedComponents</b> (llvm::SmallVectorImpl&lt; llvm::SmallVector&lt; B *, 1 &gt;&gt; &amp;cmpts, AbstractPtrGraph auto &amp;g)</td></tr>
+<tr class="separator:a6cd11f9718e34c76049bacbb443cec0d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae734badeab886c1302ae037f08f263ea"><td class="memTemplParams" colspan="2"><a id="ae734badeab886c1302ae037f08f263ea"></a>
+template&lt;AbstractPtrGraph G&gt; </td></tr>
+<tr class="memitem:ae734badeab886c1302ae037f08f263ea"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>stronglyConnectedComponents</b> (G &amp;g) -&gt; llvm::SmallVector&lt; llvm::SmallVector&lt; typename G::VertexType *, 1 &gt;&gt;</td></tr>
+<tr class="separator:ae734badeab886c1302ae037f08f263ea"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0e056e51495ba8022dd7e9fabdbf29a0"><td class="memItemLeft" align="right" valign="top"><a id="a0e056e51495ba8022dd7e9fabdbf29a0"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>print</b> (const AbstractIndexGraph auto &amp;g, llvm::raw_ostream &amp;os=llvm::errs()) -&gt; llvm::raw_ostream &amp;</td></tr>
 <tr class="separator:a0e056e51495ba8022dd7e9fabdbf29a0"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -115,19 +130,15 @@ Variables</h2></td></tr>
 <tr class="memitem:a597e7aa52a24cf44bc25e4e842ac86a6"><td class="memTemplParams" colspan="2">template&lt;typename G &gt; </td></tr>
 <tr class="memitem:a597e7aa52a24cf44bc25e4e842ac86a6"><td class="memTemplItemLeft" align="right" valign="top">concept&#160;</td><td class="memTemplItemRight" valign="bottom"><b>AbstractGraphCore</b></td></tr>
 <tr class="separator:a597e7aa52a24cf44bc25e4e842ac86a6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4b8770b919e003069911afe2fd183d31"><td class="memTemplParams" colspan="2">template&lt;typename G &gt; </td></tr>
-<tr class="memitem:a4b8770b919e003069911afe2fd183d31"><td class="memTemplItemLeft" align="right" valign="top">concept&#160;</td><td class="memTemplItemRight" valign="bottom"><b>SecondVisit</b></td></tr>
-<tr class="separator:a4b8770b919e003069911afe2fd183d31"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a43f3b37388532aece8eca83bd9b22cdd"><td class="memTemplParams" colspan="2">template&lt;typename G &gt; </td></tr>
 <tr class="memitem:a43f3b37388532aece8eca83bd9b22cdd"><td class="memTemplItemLeft" align="right" valign="top">concept&#160;</td><td class="memTemplItemRight" valign="bottom"><b>AbstractIndexGraph</b></td></tr>
 <tr class="separator:a43f3b37388532aece8eca83bd9b22cdd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a269237ed996d35c743150ef98767b92b"><td class="memTemplParams" colspan="2">template&lt;typename G &gt; </td></tr>
+<tr class="memitem:a269237ed996d35c743150ef98767b92b"><td class="memTemplItemLeft" align="right" valign="top">concept&#160;</td><td class="memTemplItemRight" valign="bottom"><b>AbstractPtrGraph</b></td></tr>
+<tr class="separator:a269237ed996d35c743150ef98767b92b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a61fe17ea8302a5423708e4ede94cbc32"><td class="memTemplParams" colspan="2">template&lt;typename G &gt; </td></tr>
 <tr class="memitem:a61fe17ea8302a5423708e4ede94cbc32"><td class="memTemplItemLeft" align="right" valign="top">concept&#160;</td><td class="memTemplItemRight" valign="bottom"><b>AbstractGraphClearVisited</b></td></tr>
 <tr class="separator:a61fe17ea8302a5423708e4ede94cbc32"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aec3f476e2388d2603a3fe09012e1393e"><td class="memTemplParams" colspan="2"><a id="aec3f476e2388d2603a3fe09012e1393e"></a>
-template&lt;typename G &gt; </td></tr>
-<tr class="memitem:aec3f476e2388d2603a3fe09012e1393e"><td class="memTemplItemLeft" align="right" valign="top">concept&#160;</td><td class="memTemplItemRight" valign="bottom"><b>AbstractIndexGraph2</b> = AbstractIndexGraph&lt;G&gt; &amp;&amp; SecondVisit&lt;G&gt;</td></tr>
-<tr class="separator:aec3f476e2388d2603a3fe09012e1393e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>TODO: when we have better std::ranges support in compilers, use it? </p>
@@ -207,6 +218,32 @@ template&lt;typename G &gt; </div>
 </div><!-- fragment -->
 </div>
 </div>
+<a id="a269237ed996d35c743150ef98767b92b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a269237ed996d35c743150ef98767b92b">&#9670;&nbsp;</a></span>AbstractPtrGraph</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename G &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">concept Graphs::AbstractPtrGraph</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<b>Initial value:</b><div class="fragment"><div class="line">=</div>
+<div class="line">  AbstractGraphCore&lt;G&gt; &amp;&amp; requires(G g, <span class="keyword">const</span> G cg, <span class="keywordtype">size_t</span> i) {</div>
+<div class="line">    { *g.outNeighbors(i).begin() } -&gt; std::same_as&lt;typename G::VertexType *&gt;;</div>
+<div class="line">    { *g.inNeighbors(i).begin() } -&gt; std::same_as&lt;typename G::VertexType *&gt;;</div>
+<div class="line">    { g.inNeighbors(i).begin()-&gt;index() } -&gt; std::same_as&lt;unsigned &amp;&gt;;</div>
+<div class="line">    { g.inNeighbors(i).begin()-&gt;lowLink() } -&gt; std::same_as&lt;unsigned &amp;&gt;;</div>
+<div class="line">    { g.inNeighbors(i).begin()-&gt;onStack() } -&gt; std::same_as&lt;bool&gt;;</div>
+<div class="line">    { g.inNeighbors(i).begin()-&gt;addToStack() };</div>
+<div class="line">    { g.inNeighbors(i).begin()-&gt;removeFromStack() };</div>
+<div class="line">  }</div>
+</div><!-- fragment -->
+</div>
+</div>
 <a id="afcb787ee6954f97a28e86718698e554a"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#afcb787ee6954f97a28e86718698e554a">&#9670;&nbsp;</a></span>AbstractRange</h2>
 
@@ -223,27 +260,6 @@ template&lt;typename R &gt; </div>
 <b>Initial value:</b><div class="fragment"><div class="line">= requires(R r) {</div>
 <div class="line">  { r.begin() };</div>
 <div class="line">  { r.end() };</div>
-<div class="line">}</div>
-</div><!-- fragment -->
-</div>
-</div>
-<a id="a4b8770b919e003069911afe2fd183d31"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a4b8770b919e003069911afe2fd183d31">&#9670;&nbsp;</a></span>SecondVisit</h2>
-
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;typename G &gt; </div>
-      <table class="memname">
-        <tr>
-          <td class="memname">concept Graphs::SecondVisit</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<b>Initial value:</b><div class="fragment"><div class="line">= requires(G &amp;g, <span class="keyword">const</span> G &amp;cg, <span class="keywordtype">size_t</span> i) {</div>
-<div class="line">  { g.visit2(i) };</div>
-<div class="line">  { g.unVisit2(i) };</div>
-<div class="line">  { cg.wasVisited2(i) };</div>
 <div class="line">}</div>
 </div><!-- fragment -->
 </div>

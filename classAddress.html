@@ -82,21 +82,36 @@ Classes</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a7ecec6969b9c453eebcbf7ff9d6635cf"><td class="memItemLeft" align="right" valign="top"><a id="a7ecec6969b9c453eebcbf7ff9d6635cf"></a>
-constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>setVisited</b> (uint8_t x)</td></tr>
-<tr class="separator:a7ecec6969b9c453eebcbf7ff9d6635cf"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af209816105772e5cdefa6767cb1f6337"><td class="memItemLeft" align="right" valign="top"><a id="af209816105772e5cdefa6767cb1f6337"></a>
-constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (uint8_t x)</td></tr>
-<tr class="separator:af209816105772e5cdefa6767cb1f6337"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6cf0776760e33ae947667e1436f2970d"><td class="memItemLeft" align="right" valign="top"><a id="a6cf0776760e33ae947667e1436f2970d"></a>
-constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>unVisit</b> (uint8_t x)</td></tr>
-<tr class="separator:a6cf0776760e33ae947667e1436f2970d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aab0bd870ea49c5d3ab4aebce15a9ab7f"><td class="memItemLeft" align="right" valign="top"><a id="aab0bd870ea49c5d3ab4aebce15a9ab7f"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>wasVisited</b> (uint8_t x) const -&gt; bool</td></tr>
-<tr class="separator:aab0bd870ea49c5d3ab4aebce15a9ab7f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a21379335becd3ef18dc371886a9580ca"><td class="memItemLeft" align="right" valign="top"><a id="a21379335becd3ef18dc371886a9580ca"></a>
-constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>clearVisited</b> ()</td></tr>
-<tr class="separator:a21379335becd3ef18dc371886a9580ca"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab18acb1159cbe0b12f63e1c576cf3b5a"><td class="memItemLeft" align="right" valign="top"><a id="ab18acb1159cbe0b12f63e1c576cf3b5a"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> ()</td></tr>
+<tr class="separator:ab18acb1159cbe0b12f63e1c576cf3b5a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acfebd7ab60926196ccf5255aa2482e94"><td class="memItemLeft" align="right" valign="top"><a id="acfebd7ab60926196ccf5255aa2482e94"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>unVisit</b> ()</td></tr>
+<tr class="separator:acfebd7ab60926196ccf5255aa2482e94"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab2bc1c461c8e033d19681cb1c8393c32"><td class="memItemLeft" align="right" valign="top"><a id="ab2bc1c461c8e033d19681cb1c8393c32"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>wasVisited</b> () const -&gt; bool</td></tr>
+<tr class="separator:ab2bc1c461c8e033d19681cb1c8393c32"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa32e2f31dba82236bebfa3bb9bae6b12"><td class="memItemLeft" align="right" valign="top"><a id="aa32e2f31dba82236bebfa3bb9bae6b12"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>addToStack</b> ()</td></tr>
+<tr class="separator:aa32e2f31dba82236bebfa3bb9bae6b12"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac1f7a881ac46411caf77e7156069dc37"><td class="memItemLeft" align="right" valign="top"><a id="ac1f7a881ac46411caf77e7156069dc37"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>removeFromStack</b> ()</td></tr>
+<tr class="separator:ac1f7a881ac46411caf77e7156069dc37"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af9eb56eb6dea05fbc682413a84bfe01b"><td class="memItemLeft" align="right" valign="top"><a id="af9eb56eb6dea05fbc682413a84bfe01b"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>onStack</b> () const -&gt; bool</td></tr>
+<tr class="separator:af9eb56eb6dea05fbc682413a84bfe01b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a225625a9a3f37de938b8f92fbcf044c6"><td class="memItemLeft" align="right" valign="top"><a id="a225625a9a3f37de938b8f92fbcf044c6"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>index</b> () -&gt; unsigned &amp;</td></tr>
+<tr class="separator:a225625a9a3f37de938b8f92fbcf044c6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5a78c93225d135d2aeffd6f2a1816575"><td class="memItemLeft" align="right" valign="top"><a id="a5a78c93225d135d2aeffd6f2a1816575"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>index</b> () const -&gt; unsigned</td></tr>
+<tr class="separator:a5a78c93225d135d2aeffd6f2a1816575"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4df21ba33eb63cf599c18a51ac0cc966"><td class="memItemLeft" align="right" valign="top"><a id="a4df21ba33eb63cf599c18a51ac0cc966"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>lowLink</b> () -&gt; unsigned &amp;</td></tr>
+<tr class="separator:a4df21ba33eb63cf599c18a51ac0cc966"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a46e975c852fb0fe820897707babf66b9"><td class="memItemLeft" align="right" valign="top"><a id="a46e975c852fb0fe820897707babf66b9"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>lowLink</b> () const -&gt; unsigned</td></tr>
+<tr class="separator:a46e975c852fb0fe820897707babf66b9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a80bbd781fd79102d579b0cfbf036f84e"><td class="memItemLeft" align="right" valign="top"><a id="a80bbd781fd79102d579b0cfbf036f84e"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>numInNeighbors</b> () const -&gt; unsigned</td></tr>
 <tr class="separator:a80bbd781fd79102d579b0cfbf036f84e"><td class="memSeparator" colspan="2">&#160;</td></tr>
