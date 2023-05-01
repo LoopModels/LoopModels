@@ -83,12 +83,15 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>clearVisited</b> (Abs
 <tr class="memitem:a629707cd330548df64d1fbb0eb159900"><td class="memItemLeft" align="right" valign="top"><a id="a629707cd330548df64d1fbb0eb159900"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>clearVisited</b> (AbstractGraphCore auto &amp;g)</td></tr>
 <tr class="separator:a629707cd330548df64d1fbb0eb159900"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3518ec8f14d5605c09707dbaef43ecc7"><td class="memItemLeft" align="right" valign="top"><a id="a3518ec8f14d5605c09707dbaef43ecc7"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>clearVisited2</b> (AbstractIndexGraph auto &amp;g)</td></tr>
+<tr class="separator:a3518ec8f14d5605c09707dbaef43ecc7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1fea750e57b54f43fdaea9b317577530"><td class="memItemLeft" align="right" valign="top"><a id="a1fea750e57b54f43fdaea9b317577530"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>weakVisit</b> (AbstractIndexGraph auto &amp;g, llvm::SmallVectorImpl&lt; unsigned &gt; &amp;sorted, unsigned v)</td></tr>
 <tr class="separator:a1fea750e57b54f43fdaea9b317577530"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5413e1c5aff7d0779690871907b04bcb"><td class="memItemLeft" align="right" valign="top"><a id="a5413e1c5aff7d0779690871907b04bcb"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>weaklyConnectedComponents</b> (AbstractIndexGraph auto &amp;g)</td></tr>
-<tr class="separator:a5413e1c5aff7d0779690871907b04bcb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a66910801e32b49ea0e546fdc73a01166"><td class="memItemLeft" align="right" valign="top"><a id="a66910801e32b49ea0e546fdc73a01166"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>topologicalSort</b> (AbstractIndexGraph auto &amp;g)</td></tr>
+<tr class="separator:a66910801e32b49ea0e546fdc73a01166"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa5f03e808b78ea353001da72e3b41535"><td class="memTemplParams" colspan="2"><a id="aa5f03e808b78ea353001da72e3b41535"></a>
 template&lt;typename B &gt; </td></tr>
 <tr class="memitem:aa5f03e808b78ea353001da72e3b41535"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>strongConnect</b> (AbstractIndexGraph auto &amp;g, llvm::SmallVectorImpl&lt; B &gt; &amp;components, llvm::SmallVector&lt; unsigned &gt; &amp;stack, llvm::MutableArrayRef&lt; std::tuple&lt; unsigned, unsigned, bool &gt;&gt; indexLowLinkOnStack, size_t index, size_t v) -&gt; size_t</td></tr>
@@ -121,6 +124,10 @@ Variables</h2></td></tr>
 <tr class="memitem:a61fe17ea8302a5423708e4ede94cbc32"><td class="memTemplParams" colspan="2">template&lt;typename G &gt; </td></tr>
 <tr class="memitem:a61fe17ea8302a5423708e4ede94cbc32"><td class="memTemplItemLeft" align="right" valign="top">concept&#160;</td><td class="memTemplItemRight" valign="bottom"><b>AbstractGraphClearVisited</b></td></tr>
 <tr class="separator:a61fe17ea8302a5423708e4ede94cbc32"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aec3f476e2388d2603a3fe09012e1393e"><td class="memTemplParams" colspan="2"><a id="aec3f476e2388d2603a3fe09012e1393e"></a>
+template&lt;typename G &gt; </td></tr>
+<tr class="memitem:aec3f476e2388d2603a3fe09012e1393e"><td class="memTemplItemLeft" align="right" valign="top">concept&#160;</td><td class="memTemplItemRight" valign="bottom"><b>AbstractIndexGraph2</b> = AbstractIndexGraph&lt;G&gt; &amp;&amp; SecondVisit&lt;G&gt;</td></tr>
+<tr class="separator:aec3f476e2388d2603a3fe09012e1393e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>TODO: when we have better std::ranges support in compilers, use it? </p>
