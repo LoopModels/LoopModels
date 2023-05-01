@@ -278,13 +278,15 @@ private:
 
   // this method descends
   // NOLINTNEXTLINE(misc-no-recursion)
-  void allocLoopNodes(BumpAlloc<> &alloc, LinearProgramLoopBlock &LB,
-                      ScheduledNode &node, AffineSchedule sch) {
+  auto allocLoopNodes(BumpAlloc<> &alloc, LinearProgramLoopBlock &LB,
+                      ScheduledNode &node, AffineSchedule sch)
+    -> LoopTreeSchedule * {
     auto fO = sch.getFusionOmega();
     unsigned numLoops = sch.getNumLoops();
     invariant(fO.size() - 1, numLoops);
     LoopTreeSchedule *L = this;
     for (size_t i = 0; i < numLoops; ++i) L = L->getLoop(alloc, fO[i], i + 1);
+    return L;
     // node.insertMemAccesses(alloc, LB.getMemoryAccesses(),
     // L->header.reserveExtra(alloc, node.getNumMem()));
   }
@@ -311,9 +313,7 @@ private:
     return x[i];
   }
 
-  void init(BumpAlloc<> &alloc, Instruction::Cache &cache, BumpAlloc<> &tAlloc,
-            LoopTree *loopForest, LinearProgramLoopBlock &LB,
-            llvm::TargetTransformInfo &TTI, unsigned int vectorBits) {
+  void init(BumpAlloc<> &alloc, LinearProgramLoopBlock &LB) {
     // TODO: can we shorten the life span of the instructions we
     // allocate here to `lalloc`? I.e., do we need them to live on after
     // this forest is scheduled?
@@ -322,13 +322,16 @@ private:
     // then, we licm
     // nodes, sorted by depth
     llvm::SmallVector<
-      std::pair<llvm::SmallVector<const ScheduledNode *, 4>, size_t>, 4>
+      std::pair<llvm::SmallVector<
+                  std::pair<const ScheduledNode *, LoopTreeSchedule *>, 4>,
+                size_t>,
+      4>
       memOps;
     // size_t maxDepth = 0;
     for (auto &node : LB.getNodes()) {
-      allocLoopNodes(alloc, LB, node, node.getSchedule());
       auto &p{get(memOps, node.getNumLoops())};
-      p.first.push_back(&node);
+      p.first.emplace_back(&node,
+                           allocLoopNodes(alloc, LB, node, node.getSchedule()));
       p.second += node.getNumMem();
     }
     Vector<Address *> addresses{0};
@@ -336,21 +339,46 @@ private:
       auto &[nodes, numMem] = memOps[d];
       addresses.resize(numMem);
       for (size_t i = 0, j = 0; i < nodes.size();) {
-        size_t k = j + nodes[i]->getNumMem();
-        nodes[i]->insertMemAccesses(alloc, LB.getMemoryAccesses(),
-                                    addresses[_(j, k)]);
+        auto &[node, L] = nodes[i];
+        size_t k = j + node->getNumMem();
+        // TODO: on insertMemAccesses: we need to build the mem graph
+        // some MemoryAccesses are implicitly duplicated; for Address,
+        // we make the duplication explicit.
+        // that is, every original store could also map to a load.
+        // This means that when we iterate over edges, e.g.
+        // e: s0 -> s1
+        // this may actually correspond to many edges.
+        // we thus build a memAccess->addr map, i.e.
+        // map<MemoryAccess*,llvm::SmallVector<Address*>>
+        //
+        // we build the addr graph in a few passes
+        // 1. construct all addr, and build the map. We set `numDirectEdges`
+        //    here
+        // 2. Iterate over all edges (`MemoryAccess*`->`MemoryAccess*`) to count
+        //    `numMemInputs` and `numMemOutputs` for each `Address*`
+        // 3. Allocate the `addr_` pointers, filling direct edges
+        //    We can iterate over Addresses via iterating over nodes.
+        // 4. iterate over edges, and fill in the `addr_` pointers,
+        //    can use `index_` and `lowLink_` for `numMemInputs` and
+        //    `numMemOutputs` inserted so far at this point.
+        //
+        node->insertMemAccesses(alloc, LB.getMemoryAccesses(),
+                                addresses[_(j, k)]);
         j = k;
       }
     }
-    for (auto &nodes : std::ranges::views::reverse(memOps)) {
-      // d iterates from `maxDepth` to `0`, inclusive
-      // here, we iterate over
-    }
 
     topologicalSortCore();
-    // buidInstructionGraph(alloc, cache);
-    mergeInstructions(alloc, cache, loopForest, TTI, tAlloc, vectorBits);
   }
+  // void initializeInstrGraph(BumpAlloc<> &alloc, Instruction::Cache &cache,
+  //                           BumpAlloc<> &tAlloc, LoopTree *loopForest,
+  //                           LinearProgramLoopBlock &LB,
+  //                           llvm::TargetTransformInfo &TTI,
+  //                           unsigned int vectorBits) {
+
+  //   // buidInstructionGraph(alloc, cache);
+  //   mergeInstructions(alloc, cache, loopForest, TTI, tAlloc, vectorBits);
+  // }
 
 public:
   constexpr LoopTreeSchedule(LoopTreeSchedule *L, uint8_t d)

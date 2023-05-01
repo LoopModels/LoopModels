@@ -153,11 +153,11 @@ public:
     return ma;
   }
   /// omegas order is [outer <-> inner]
-  [[nodiscard]] auto getFusionOmega() -> MutPtrVector<int64_t> {
+  [[nodiscard]] constexpr auto getFusionOmega() -> MutPtrVector<int64_t> {
     return {data() + omegaOffset(), unsigned(getNumLoops()) + 1};
   }
   /// omegas order is [outer <-> inner]
-  [[nodiscard]] auto getFusionOmega() const -> PtrVector<int64_t> {
+  [[nodiscard]] constexpr auto getFusionOmega() const -> PtrVector<int64_t> {
     return {data() + omegaOffset(), unsigned(getNumLoops()) + 1};
   }
   [[nodiscard]] constexpr auto inputEdges() const -> const BitSet & {
@@ -231,20 +231,21 @@ public:
     const size_t d = getArrayDim();
     return {data(), DenseDims{getNumLoops(), d}};
   }
-  [[nodiscard]] auto offsetMatrix() -> MutDensePtrMatrix<int64_t> {
+  [[nodiscard]] constexpr auto offsetMatrix() -> MutDensePtrMatrix<int64_t> {
     const size_t d = getArrayDim();
     const size_t numSymbols = getNumSymbols();
     return {data() + getNumLoops() * d, DenseDims{d, numSymbols}};
   }
-  [[nodiscard]] auto offsetMatrix() const -> DensePtrMatrix<int64_t> {
+  [[nodiscard]] constexpr auto offsetMatrix() const -> DensePtrMatrix<int64_t> {
     const size_t d = getArrayDim();
     const size_t numSymbols = getNumSymbols();
     return {data() + getNumLoops() * d, DenseDims{d, numSymbols}};
   }
-  [[nodiscard]] auto getInstruction() -> NotNull<llvm::Instruction> {
+  [[nodiscard]] constexpr auto getInstruction() -> NotNull<llvm::Instruction> {
     return loadOrStore;
   }
-  [[nodiscard]] auto getInstruction() const -> NotNull<llvm::Instruction> {
+  [[nodiscard]] constexpr auto getInstruction() const
+    -> NotNull<const llvm::Instruction> {
     return loadOrStore;
   }
   [[nodiscard]] auto getLoad() -> llvm::LoadInst * {

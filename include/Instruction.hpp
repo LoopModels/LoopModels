@@ -255,6 +255,9 @@ struct Instruction {
   // }
   struct ExtractValue {
     auto operator()(auto) const -> llvm::Value * { return nullptr; }
+    // auto operator()(llvm::Value *v) -> llvm::Value * { return v; }
+    // auto operator()(Address *v) -> llvm::Value * { return
+    // v->getInstruction(); }
     auto operator()(llvm::Value *v) const -> llvm::Value * { return v; }
     auto operator()(Address *v) const -> llvm::Value * {
       return v->getInstruction();

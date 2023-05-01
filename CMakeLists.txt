@@ -1,7 +1,7 @@
 # Based on ModernCppStarter https://github.com/TheLartians/ModernCppStarter
 
-# 3.23 minimum for intel compilers
-cmake_minimum_required(VERSION 3.23)
+# 3.25 for SYSTEM support
+cmake_minimum_required(VERSION 3.25)
 
 project(
   LoopModels
@@ -120,7 +120,7 @@ target_compile_options(${PROJECT_NAME} PUBLIC "$<$<COMPILE_LANG_AND_ID:CXX,MSVC>
 # Link dependencies
 target_link_libraries(${PROJECT_NAME} PRIVATE LLVM unordered_dense::unordered_dense)
 
-target_include_directories(${PROJECT_NAME} PRIVATE ${LLVM_INCLUDE_DIRS})
+target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${LLVM_INCLUDE_DIRS})
 target_include_directories(
   ${PROJECT_NAME} PRIVATE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
                           $<INSTALL_INTERFACE:include/${PROJECT_NAME}-${PROJECT_VERSION}>
