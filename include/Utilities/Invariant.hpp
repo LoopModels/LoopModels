@@ -1,7 +1,6 @@
 #pragma once
 
 #ifndef NDEBUG
-#include <cstdlib>
 #include <source_location>
 [[gnu::artificial]] constexpr inline void
 invariant(bool condition,
@@ -10,7 +9,7 @@ invariant(bool condition,
     llvm::errs() << "invariant violation\nfile: " << location.file_name() << ":"
                  << location.line() << ":" << location.column() << " `"
                  << location.function_name() << "`\n";
-    abort();
+    __builtin_trap();
   }
 }
 template <typename T>
@@ -22,7 +21,7 @@ invariant(const T &x, const T &y,
                  << "\nfile: " << location.file_name() << ":" << location.line()
                  << ":" << location.column() << " `" << location.function_name()
                  << "`\n";
-    abort();
+    __builtin_trap();
   }
 }
 #else // ifdef NDEBUG

@@ -1,5 +1,4 @@
 #pragma once
-#include <cstdlib>
 #include <llvm/Support/raw_ostream.h>
 
 /// LinAlg
@@ -43,7 +42,7 @@ inline auto operator<<(llvm::raw_ostream &os, AxisType x)
     break;
   default:
     os << "invalid axis type";
-    abort();
+    __builtin_trap();
   }
   return os;
 }
