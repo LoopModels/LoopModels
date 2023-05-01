@@ -142,6 +142,7 @@ class LoopTreeSchedule {
 
 public:
   struct AddressGraph {
+    using VertexType = Address;
     using BitSet = ::LinearProgramLoopBlock::BitSet;
     llvm::SmallVector<Address *> addresses;
     PtrVector<Dependence> edges;
@@ -155,9 +156,6 @@ public:
     [[nodiscard]] constexpr auto maxVertexId() const -> size_t {
       return addrIds.maxValue();
     }
-    void setVisited(uint8_t x) {
-      for (auto *addr : addresses) addr->setVisited(x);
-    }
     auto inNeighbors(size_t i) { return addresses[i]->inNeighbors(depth); }
     auto outNeighbors(size_t i) { return addresses[i]->outNeighbors(depth); }
     [[nodiscard]] auto inNeighbors(size_t i) const {
@@ -167,20 +165,12 @@ public:
       return addresses[i]->outNeighbors(depth);
     }
     [[nodiscard]] auto wasVisited(size_t i) const -> bool {
-      return addresses[i]->wasVisited(1);
+      return addresses[i]->wasVisited();
     }
-    [[nodiscard]] auto wasVisited2(size_t i) const -> bool {
-      return addresses[i]->wasVisited(2);
-    }
-    void visit(size_t i) { addresses[i]->visit(1); }
-    void visit2(size_t i) { addresses[i]->visit(2); }
-    void unVisit(size_t i) { addresses[i]->clearVisited(); }
-    void unVisit2(size_t i) { addresses[i]->unVisit(~uint8_t(2)); }
+    void visit(size_t i) { addresses[i]->visit(); }
+    void unVisit(size_t i) { addresses[i]->unVisit(); }
     void clearVisited() {
-      for (auto *addr : addresses) addr->clearVisited();
-    }
-    void clearVisited2() {
-      for (auto *addr : addresses) addr->unVisit(~uint8_t(2));
+      for (auto *addr : addresses) addr->unVisit();
     }
   };
 
@@ -367,8 +357,7 @@ public:
     : parent(L), depth(d) {}
 };
 
-static_assert(Graphs::AbstractGraphCore<LoopTreeSchedule::AddressGraph>);
-static_assert(Graphs::SecondVisit<LoopTreeSchedule::AddressGraph>);
+static_assert(Graphs::AbstractPtrGraph<LoopTreeSchedule::AddressGraph>);
 // class LoopForestSchedule : LoopTreeSchedule {
 //   [[no_unique_address]] BumpAlloc<> &allocator;
 // };

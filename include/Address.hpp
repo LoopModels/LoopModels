@@ -69,6 +69,8 @@ class Address {
   [[no_unique_address]] unsigned numMemInputs;
   [[no_unique_address]] unsigned numDirectEdges;
   [[no_unique_address]] unsigned numMemOutputs;
+  [[no_unique_address]] unsigned index_;
+  [[no_unique_address]] unsigned lowLink_;
   [[no_unique_address]] uint8_t dim;
   [[no_unique_address]] uint8_t depth;
   // may be `false` while `oldMemAccess->isStore()==true`
@@ -120,13 +122,18 @@ class Address {
   }
 
 public:
-  constexpr void setVisited(uint8_t x) { visited = x; }
-  constexpr void visit(uint8_t x) { visited |= x; }
-  constexpr void unVisit(uint8_t x) { visited &= x; }
-  [[nodiscard]] constexpr auto wasVisited(uint8_t x) const -> bool {
-    return visited & x;
+  constexpr void visit() { visited |= 1; }
+  constexpr void unVisit() { visited &= ~uint8_t(1); }
+  [[nodiscard]] constexpr auto wasVisited() const -> bool {
+    return visited & 1;
   }
-  constexpr void clearVisited() { visited = 0; }
+  constexpr void addToStack() { visited |= 2; }
+  constexpr void removeFromStack() { visited &= ~uint8_t(2); }
+  [[nodiscard]] constexpr auto onStack() const -> bool { return visited & 2; }
+  constexpr auto index() -> unsigned & { return index_; }
+  [[nodiscard]] constexpr auto index() const -> unsigned { return index_; }
+  constexpr auto lowLink() -> unsigned & { return lowLink_; }
+  [[nodiscard]] constexpr auto lowLink() const -> unsigned { return lowLink_; }
   struct EndSentinel {};
   class ActiveEdgeIterator {
     Address **p;
@@ -136,6 +143,7 @@ public:
 
   public:
     constexpr auto operator*() const -> Address * { return *p; }
+    constexpr auto operator->() const -> Address * { return *p; }
     constexpr auto operator++() -> ActiveEdgeIterator & {
       do {
         ++p;

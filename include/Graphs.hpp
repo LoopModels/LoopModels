@@ -38,12 +38,6 @@ concept AbstractGraphCore = requires(G &g, const G &cg, size_t i) {
   { g.visit(i) };
   { g.unVisit(i) };
 };
-template <typename G>
-concept SecondVisit = requires(G &g, const G &cg, size_t i) {
-  { g.visit2(i) };
-  { g.unVisit2(i) };
-  { cg.wasVisited2(i) };
-};
 
 // graphs as in LoopBlocks, where we use BitSets to subset portions
 template <typename G>
@@ -61,22 +55,27 @@ concept AbstractIndexGraph =
     { *g.inNeighbors(i).begin() } -> std::convertible_to<unsigned>;
     { g.maxVertexId() } -> std::convertible_to<size_t>;
   };
+template <typename G>
+concept AbstractPtrGraph =
+  AbstractGraphCore<G> && requires(G g, const G cg, size_t i) {
+    { *g.outNeighbors(i).begin() } -> std::same_as<typename G::VertexType *>;
+    { *g.inNeighbors(i).begin() } -> std::same_as<typename G::VertexType *>;
+    { g.inNeighbors(i).begin()->index() } -> std::same_as<unsigned &>;
+    { g.inNeighbors(i).begin()->lowLink() } -> std::same_as<unsigned &>;
+    { g.inNeighbors(i).begin()->onStack() } -> std::same_as<bool>;
+    { g.inNeighbors(i).begin()->addToStack() };
+    { g.inNeighbors(i).begin()->removeFromStack() };
+  };
 
 template <typename G>
 concept AbstractGraphClearVisited = AbstractGraphCore<G> && requires(G g) {
   { g.clearVisited() };
 };
 
-template <typename G>
-concept AbstractIndexGraph2 = AbstractIndexGraph<G> && SecondVisit<G>;
-
 inline void clearVisited(AbstractIndexGraph auto &g) {
   for (auto &&v : g) v.unVisit();
 }
 inline void clearVisited(AbstractGraphCore auto &g) { g.clearVisited(); }
-inline void clearVisited2(AbstractIndexGraph auto &g) {
-  for (auto &&v : g) v.unVisit2();
-}
 
 inline void weakVisit(AbstractIndexGraph auto &g,
                       llvm::SmallVectorImpl<unsigned> &sorted, unsigned v) {
@@ -97,39 +96,38 @@ inline auto topologicalSort(AbstractIndexGraph auto &g) {
   return sorted;
 }
 
+struct SCC {
+  unsigned index;
+  unsigned lowLink;
+  bool onStack;
+};
+
 template <typename B>
-inline auto
-strongConnect(AbstractIndexGraph auto &g, llvm::SmallVectorImpl<B> &components,
-              llvm::SmallVector<unsigned> &stack,
-              llvm::MutableArrayRef<std::tuple<unsigned, unsigned, bool>>
-                indexLowLinkOnStack,
-              size_t index, size_t v) -> size_t {
-  indexLowLinkOnStack[v] = std::make_tuple(index, index, true);
+inline auto strongConnect(AbstractIndexGraph auto &g,
+                          llvm::SmallVectorImpl<B> &components,
+                          llvm::SmallVector<unsigned> &stack,
+                          llvm::MutableArrayRef<SCC> iLLOS, unsigned index,
+                          size_t v) -> unsigned {
+  iLLOS[v] = {index, index, true};
   g.visit(v);
   ++index;
   stack.push_back(v);
   for (auto w : g.inNeighbors(v)) {
     if (g.wasVisited(w)) {
-      auto [wIndex, wLowLink, wOnStack] = indexLowLinkOnStack[w];
-      if (wOnStack) {
-        unsigned &vll = std::get<1>(indexLowLinkOnStack[v]);
-        vll = std::min(vll, wIndex);
-      }
+      auto [wIndex, wLowLink, wOnStack] = iLLOS[w];
+      if (wOnStack) iLLOS[v].lowLink = std::min(iLLOS[v].lowLink, wIndex);
     } else { // not visited
-      strongConnect<B>(g, components, stack, indexLowLinkOnStack, index, w);
-      unsigned &vll = std::get<1>(indexLowLinkOnStack[v]);
-      vll = std::min(vll, std::get<1>(indexLowLinkOnStack[w]));
+      strongConnect<B>(g, components, stack, iLLOS, index, w);
+      iLLOS[v].lowLink = std::min(iLLOS[v].lowLink, iLLOS[w].lowLink);
     }
   }
-  auto [vIndex, vLowLink, vOnStack] = indexLowLinkOnStack[v];
+  auto [vIndex, vLowLink, vOnStack] = iLLOS[v];
   if (vIndex == vLowLink) {
-    components.emplace_back();
-    B &component = components.back();
+    B &component = components.emplace_back();
     unsigned w;
     do {
-      w = stack.back();
-      stack.pop_back();
-      std::get<2>(indexLowLinkOnStack[w]) = false;
+      w = stack.pop_back_val();
+      iLLOS[w].onStack = false;
       component.insert(w);
     } while (w != v);
   }
@@ -141,11 +139,10 @@ inline void stronglyConnectedComponents(llvm::SmallVectorImpl<B> &cmpts,
                                         AbstractIndexGraph auto &g) {
   size_t maxId = g.maxVertexId();
   cmpts.reserve(maxId);
-  llvm::SmallVector<std::tuple<unsigned, unsigned, bool>> indexLowLinkOnStack{
-    maxId};
+  llvm::SmallVector<SCC> indexLowLinkOnStack{maxId};
   llvm::SmallVector<unsigned> stack;
-  size_t index = 0;
   clearVisited(g);
+  unsigned index = 0;
   for (auto v : g.vertexIds())
     if (!g.wasVisited(v))
       index = strongConnect(g, cmpts, stack, indexLowLinkOnStack, index, v);
@@ -153,6 +150,53 @@ inline void stronglyConnectedComponents(llvm::SmallVectorImpl<B> &cmpts,
 inline auto stronglyConnectedComponents(AbstractIndexGraph auto &g)
   -> llvm::SmallVector<BitSet<>> {
   llvm::SmallVector<BitSet<>> components;
+  stronglyConnectedComponents(components, g);
+  return components;
+}
+
+// TODO: address code duplication by abstracting between AbstractIndexGraph and
+// AbstractPtrGraph
+template <typename B>
+inline auto
+strongConnect(AbstractPtrGraph auto &g,
+              llvm::SmallVectorImpl<llvm::SmallVector<B *, 1>> &components,
+              llvm::SmallVector<B *> &stack, unsigned index, B *v) -> unsigned {
+  v->index() = v->lowLink() = index++;
+  v->setOnStack();
+  g.visit(v);
+  stack.push_back(v);
+  for (auto w : g.inNeighbors(v))
+    if (!g.wasVisited(w)) {
+      strongConnect<B>(g, components, stack, index, w);
+      v->lowLink() = std::min(v->lowLink(), w->lowLink());
+    } else if (w->onStack()) v->lowLink() = std::min(v->lowLink(), w->index());
+  if (v->index() == v->lowLink()) {
+    llvm::SmallVector<B *, 1> &component = components.emplace_back();
+    B *w;
+    do {
+      w = stack.pop_back_val();
+      w->removeFromStack();
+      component.insert(w);
+    } while (w != v);
+  }
+  return index;
+}
+
+template <typename B>
+inline void stronglyConnectedComponents(
+  llvm::SmallVectorImpl<llvm::SmallVector<B *, 1>> &cmpts,
+  AbstractPtrGraph auto &g) {
+  cmpts.reserve(g.getNumVertices());
+  llvm::SmallVector<B *> stack;
+  clearVisited(g);
+  unsigned index = 0;
+  for (auto v : g.vertexIds())
+    if (!g.wasVisited(v)) index = strongConnect(g, cmpts, stack, index, v);
+}
+template <AbstractPtrGraph G>
+inline auto stronglyConnectedComponents(G &g)
+  -> llvm::SmallVector<llvm::SmallVector<typename G::VertexType *, 1>> {
+  llvm::SmallVector<llvm::SmallVector<typename G::VertexType *, 1>> components;
   stronglyConnectedComponents(components, g);
   return components;
 }
