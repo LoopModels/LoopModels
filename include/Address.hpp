@@ -67,9 +67,9 @@ class Address {
   NotNull<AffineLoopNest<false>> loop;
   CostModeling::LoopTreeSchedule *node{nullptr};
   [[no_unique_address]] char *addr_{nullptr};
-  [[no_unique_address]] unsigned numMemInputs;
-  [[no_unique_address]] unsigned numDirectEdges;
-  [[no_unique_address]] unsigned numMemOutputs;
+  [[no_unique_address]] unsigned numMemInputs{0};
+  [[no_unique_address]] unsigned numDirectEdges{0};
+  [[no_unique_address]] unsigned numMemOutputs{0};
   [[no_unique_address]] unsigned index_;
   [[no_unique_address]] unsigned lowLink_;
   [[no_unique_address]] uint8_t dim;
@@ -85,7 +85,7 @@ class Address {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wc99-extensions"
 #endif
-  alignas(int64_t) int64_t mem[]; // NOLINT(modernize-avoid-c-arrays)
+  alignas(int64_t) char mem[]; // NOLINT(modernize-avoid-c-arrays)
 #if !defined(__clang__) && defined(__GNUC__)
 #pragma GCC diagnostic pop
 #else
@@ -104,9 +104,13 @@ class Address {
     getOffsetOmega() << ma->offsetMatrix()(_, 0) - mStar * omega;
   }
   [[nodiscard]] constexpr auto getIntMemory() const -> int64_t * {
-    return const_cast<int64_t *>(mem);
+    return (int64_t *)const_cast<void *>((const void *)mem);
+    // return const_cast<int64_t *>(mem);
   }
   [[nodiscard]] constexpr auto getAddrMemory() const -> Address ** {
+    // const void *m = mem +
+    //   (1 + getNumLoops() + (getArrayDim() * getNumLoops())) *
+    //   sizeof(int64_t);
     const void *m = addr_;
     void *p = const_cast<void *>(static_cast<const void *>(m));
     return (Address **)p;

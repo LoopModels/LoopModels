@@ -348,10 +348,20 @@ private:
         // This means that when we iterate over edges, e.g.
         // e: s0 -> s1
         // this may actually correspond to many edges.
-        // we thus build a store->addr graph.
-        // we build the addr in two passes.
-        // 1. construct them all, build the map.
-        // 2. insert the edges connecting them.
+        // we thus build a memAccess->addr map, i.e.
+        // map<MemoryAccess*,llvm::SmallVector<Address*>>
+        //
+        // we build the addr graph in a few passes
+        // 1. construct all addr, and build the map. We set `numDirectEdges`
+        //    here
+        // 2. Iterate over all edges (`MemoryAccess*`->`MemoryAccess*`) to count
+        //    `numMemInputs` and `numMemOutputs` for each `Address*`
+        // 3. Allocate the `addr_` pointers, filling direct edges
+        //    We can iterate over Addresses via iterating over nodes.
+        // 4. iterate over edges, and fill in the `addr_` pointers,
+        //    can use `index_` and `lowLink_` for `numMemInputs` and
+        //    `numMemOutputs` inserted so far at this point.
+        //
         node->insertMemAccesses(alloc, LB.getMemoryAccesses(),
                                 addresses[_(j, k)]);
         j = k;
