@@ -341,6 +341,17 @@ private:
       for (size_t i = 0, j = 0; i < nodes.size();) {
         auto &[node, L] = nodes[i];
         size_t k = j + node->getNumMem();
+        // TODO: on insertMemAccesses: we need to build the mem graph
+        // some MemoryAccesses are implicitly duplicated; for Address,
+        // we make the duplication explicit.
+        // that is, every original store could also map to a load.
+        // This means that when we iterate over edges, e.g.
+        // e: s0 -> s1
+        // this may actually correspond to many edges.
+        // we thus build a store->addr graph.
+        // we build the addr in two passes.
+        // 1. construct them all, build the map.
+        // 2. insert the edges connecting them.
         node->insertMemAccesses(alloc, LB.getMemoryAccesses(),
                                 addresses[_(j, k)]);
         j = k;

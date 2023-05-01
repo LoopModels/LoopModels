@@ -66,6 +66,7 @@ class Address {
   /// transformed loop
   NotNull<AffineLoopNest<false>> loop;
   CostModeling::LoopTreeSchedule *node{nullptr};
+  [[no_unique_address]] char *addr_{nullptr};
   [[no_unique_address]] unsigned numMemInputs;
   [[no_unique_address]] unsigned numDirectEdges;
   [[no_unique_address]] unsigned numMemOutputs;
@@ -84,15 +85,15 @@ class Address {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wc99-extensions"
 #endif
-  alignas(int64_t) char mem[]; // NOLINT(modernize-avoid-c-arrays)
+  alignas(int64_t) int64_t mem[]; // NOLINT(modernize-avoid-c-arrays)
 #if !defined(__clang__) && defined(__GNUC__)
 #pragma GCC diagnostic pop
 #else
 #pragma clang diagnostic pop
 #endif
-  Address(NotNull<AffineLoopNest<false>> explicitLoop, NotNull<MemoryAccess> ma,
-          SquarePtrMatrix<int64_t> Pinv, int64_t denom,
-          PtrVector<int64_t> omega, bool isStr)
+  constexpr Address(NotNull<AffineLoopNest<false>> explicitLoop,
+                    NotNull<MemoryAccess> ma, SquarePtrMatrix<int64_t> Pinv,
+                    int64_t denom, PtrVector<int64_t> omega, bool isStr)
     : oldMemAccess(ma), loop(explicitLoop), isStoreFlag(isStr) {
     PtrMatrix<int64_t> M = oldMemAccess->indexMatrix();
     dim = size_t(M.numCol());
@@ -103,20 +104,16 @@ class Address {
     getOffsetOmega() << ma->offsetMatrix()(_, 0) - mStar * omega;
   }
   [[nodiscard]] constexpr auto getIntMemory() const -> int64_t * {
-    void *p = const_cast<void *>(static_cast<const void *>(mem));
-    return static_cast<int64_t *>(p);
+    return const_cast<int64_t *>(mem);
   }
   [[nodiscard]] constexpr auto getAddrMemory() const -> Address ** {
-    const void *m = mem + (1 + getNumLoops() + getArrayDim() * getNumLoops()) *
-                            sizeof(int64_t);
+    const void *m = addr_;
     void *p = const_cast<void *>(static_cast<const void *>(m));
     return (Address **)p;
   }
   [[nodiscard]] constexpr auto getDDepthMemory() const -> uint8_t * {
-    const void *m =
-      mem +
-      (1 + getNumLoops() + getArrayDim() * getNumLoops()) * sizeof(int64_t) +
-      (numMemInputs + numDirectEdges + numMemOutputs) * sizeof(Address *);
+    const void *m = addr_ + (numMemInputs + numDirectEdges + numMemOutputs) *
+                              sizeof(Address *);
     void *p = const_cast<void *>(static_cast<const void *>(m));
     return (uint8_t *)p;
   }
@@ -222,7 +219,10 @@ public:
   }
   [[nodiscard]] constexpr auto getNumLoops() const -> size_t { return depth; }
   [[nodiscard]] constexpr auto getArrayDim() const -> size_t { return dim; }
-  [[nodiscard]] auto getInstruction() const -> llvm::Instruction * {
+  [[nodiscard]] auto getInstruction() -> llvm::Instruction * {
+    return oldMemAccess->getInstruction();
+  }
+  [[nodiscard]] auto getInstruction() const -> const llvm::Instruction * {
     return oldMemAccess->getInstruction();
   }
   [[nodiscard]] auto getAlign() const -> llvm::Align {
