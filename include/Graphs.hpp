@@ -45,6 +45,7 @@ concept SecondVisit = requires(G &g, const G &cg, size_t i) {
   { cg.wasVisited2(i) };
 };
 
+// graphs as in LoopBlocks, where we use BitSets to subset portions
 template <typename G>
 concept AbstractIndexGraph =
   AbstractGraphCore<G> && requires(G g, const G cg, size_t i) {
@@ -66,29 +67,34 @@ concept AbstractGraphClearVisited = AbstractGraphCore<G> && requires(G g) {
   { g.clearVisited() };
 };
 
+template <typename G>
+concept AbstractIndexGraph2 = AbstractIndexGraph<G> && SecondVisit<G>;
+
 inline void clearVisited(AbstractIndexGraph auto &g) {
   for (auto &&v : g) v.unVisit();
 }
 inline void clearVisited(AbstractGraphCore auto &g) { g.clearVisited(); }
+inline void clearVisited2(AbstractIndexGraph auto &g) {
+  for (auto &&v : g) v.unVisit2();
+}
 
 inline void weakVisit(AbstractIndexGraph auto &g,
                       llvm::SmallVectorImpl<unsigned> &sorted, unsigned v) {
   g.visit(v);
-  for (auto j : g.outNeighbors(v))
+  for (auto j : g.inNeighbors(v))
     if (!g.wasVisited(j)) weakVisit(g, sorted, j);
   sorted.push_back(v);
 }
 
-inline auto weaklyConnectedComponents(AbstractIndexGraph auto &g) {
-  llvm::SmallVector<llvm::SmallVector<unsigned>> components;
+inline auto topologicalSort(AbstractIndexGraph auto &g) {
+  llvm::SmallVector<unsigned> sorted;
+  sorted.reserve(g.getNumVertices());
   clearVisited(g);
   for (auto j : g.vertexIds()) {
     if (g.wasVisited(j)) continue;
-    llvm::SmallVector<unsigned> &sorted = components.emplace_back();
     weakVisit(g, sorted, j);
-    std::reverse(sorted.begin(), sorted.end());
   }
-  return components;
+  return sorted;
 }
 
 template <typename B>

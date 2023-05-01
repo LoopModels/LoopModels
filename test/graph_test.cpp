@@ -15,9 +15,13 @@ struct MockVertex {
   BitSet<> inNeighbors;
   BitSet<> outNeighbors;
   bool visited{false};
+  bool visited2{false};
   [[nodiscard]] auto wasVisited() const -> bool { return visited; }
   void visit() { visited = true; }
   void unVisit() { visited = false; }
+  [[nodiscard]] auto wasVisited2() const -> bool { return visited2; }
+  void visit2() { visited2 = true; }
+  void unVisit2() { visited2 = false; }
 };
 
 struct MockGraph {
@@ -120,4 +124,31 @@ TEST(StronglyConnectedComponentsTest, BasicAssertions) {
   // EXPECT_TRUE(std::ranges::any_of(scc0[2], equals(1)));
   // EXPECT_TRUE(std::ranges::any_of(scc0[2], equals(3)));
   // EXPECT_TRUE(std::ranges::any_of(scc0[2], equals(4)));
+}
+// NOLINTNEXTLINE(modernize-use-trailing-return-type)
+TEST(TopologicalSortTest, BasicAssertions) {
+  // graph
+  //  0 -> 1
+  //  |    |
+  //  v    v
+  //  2 -> 3 -> 4
+  MockGraph G;
+  G.vertices.resize(7);
+  G.connect(0, 1);
+  G.connect(0, 2);
+  G.connect(1, 3);
+  G.connect(2, 3);
+  G.connect(3, 4);
+  Graphs::print(G);
+  auto ts = Graphs::topologicalSort(G);
+  EXPECT_EQ(ts.size(), G.getNumVertices());
+  EXPECT_EQ(ts[0], 0);
+  if (ts[1] == 1) {
+    EXPECT_EQ(ts[2], 2);
+  } else {
+    EXPECT_EQ(ts[1], 2);
+    EXPECT_EQ(ts[2], 1);
+  }
+  EXPECT_EQ(ts[3], 3);
+  EXPECT_EQ(ts[4], 4);
 }
