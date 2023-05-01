@@ -85,14 +85,14 @@ constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>MemoryAccess</b>
 <tr class="memitem:a3af8c6c2e9e6e0a31c2f73eaa982a392"><td class="memItemLeft" align="right" valign="top"><a id="a3af8c6c2e9e6e0a31c2f73eaa982a392"></a>
 constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>MemoryAccess</b> (const llvm::SCEVUnknown *arrayPtr, <a class="el" href="structAffineLoopNest.html">AffineLoopNest</a>&lt; true &gt; &amp;loopRef, llvm::Instruction *user)</td></tr>
 <tr class="separator:a3af8c6c2e9e6e0a31c2f73eaa982a392"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a343e8ad8af62a3d1303005ad852c1d39"><td class="memItemLeft" align="right" valign="top"><a id="a343e8ad8af62a3d1303005ad852c1d39"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structMemoryAccess.html#a343e8ad8af62a3d1303005ad852c1d39">getFusionOmega</a> () -&gt; MutPtrVector&lt; int64_t &gt;</td></tr>
-<tr class="memdesc:a343e8ad8af62a3d1303005ad852c1d39"><td class="mdescLeft">&#160;</td><td class="mdescRight">omegas order is [outer &lt;-&gt; inner] <br /></td></tr>
-<tr class="separator:a343e8ad8af62a3d1303005ad852c1d39"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a685e16ba012a1a0373eeb6c1d21a5666"><td class="memItemLeft" align="right" valign="top"><a id="a685e16ba012a1a0373eeb6c1d21a5666"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structMemoryAccess.html#a685e16ba012a1a0373eeb6c1d21a5666">getFusionOmega</a> () const -&gt; PtrVector&lt; int64_t &gt;</td></tr>
-<tr class="memdesc:a685e16ba012a1a0373eeb6c1d21a5666"><td class="mdescLeft">&#160;</td><td class="mdescRight">omegas order is [outer &lt;-&gt; inner] <br /></td></tr>
-<tr class="separator:a685e16ba012a1a0373eeb6c1d21a5666"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae0990dc73d09b0b1bcd5bff09998cf52"><td class="memItemLeft" align="right" valign="top"><a id="ae0990dc73d09b0b1bcd5bff09998cf52"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structMemoryAccess.html#ae0990dc73d09b0b1bcd5bff09998cf52">getFusionOmega</a> () -&gt; MutPtrVector&lt; int64_t &gt;</td></tr>
+<tr class="memdesc:ae0990dc73d09b0b1bcd5bff09998cf52"><td class="mdescLeft">&#160;</td><td class="mdescRight">omegas order is [outer &lt;-&gt; inner] <br /></td></tr>
+<tr class="separator:ae0990dc73d09b0b1bcd5bff09998cf52"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a83187a91201e29b64d0f3cb40b8029f1"><td class="memItemLeft" align="right" valign="top"><a id="a83187a91201e29b64d0f3cb40b8029f1"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structMemoryAccess.html#a83187a91201e29b64d0f3cb40b8029f1">getFusionOmega</a> () const -&gt; PtrVector&lt; int64_t &gt;</td></tr>
+<tr class="memdesc:a83187a91201e29b64d0f3cb40b8029f1"><td class="mdescLeft">&#160;</td><td class="mdescRight">omegas order is [outer &lt;-&gt; inner] <br /></td></tr>
+<tr class="separator:a83187a91201e29b64d0f3cb40b8029f1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abb0f73736d991f77a14fab38777a80ab"><td class="memItemLeft" align="right" valign="top"><a id="abb0f73736d991f77a14fab38777a80ab"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>inputEdges</b> () const -&gt; const <a class="el" href="structBitSet.html">BitSet</a> &amp;</td></tr>
 <tr class="separator:abb0f73736d991f77a14fab38777a80ab"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -145,18 +145,18 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>getAlign</b> () const
 <tr class="separator:ab1cc444538dde0ecc2bee9c77988cbbe"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a24f0c9af64a2d853326cd5129f8bbf07"><td class="memItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structMemoryAccess.html#a24f0c9af64a2d853326cd5129f8bbf07">indexMatrix</a> () const -&gt; DensePtrMatrix&lt; int64_t &gt;</td></tr>
 <tr class="separator:a24f0c9af64a2d853326cd5129f8bbf07"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a401dd74be90122dea66116103a59a9d7"><td class="memItemLeft" align="right" valign="top"><a id="a401dd74be90122dea66116103a59a9d7"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>offsetMatrix</b> () -&gt; MutDensePtrMatrix&lt; int64_t &gt;</td></tr>
-<tr class="separator:a401dd74be90122dea66116103a59a9d7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8120d9d355302d8431b45d0eb3738e0e"><td class="memItemLeft" align="right" valign="top"><a id="a8120d9d355302d8431b45d0eb3738e0e"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>offsetMatrix</b> () const -&gt; DensePtrMatrix&lt; int64_t &gt;</td></tr>
-<tr class="separator:a8120d9d355302d8431b45d0eb3738e0e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a156c66719006fae71fe80137630b1058"><td class="memItemLeft" align="right" valign="top"><a id="a156c66719006fae71fe80137630b1058"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>getInstruction</b> () -&gt; <a class="el" href="structNotNull.html">NotNull</a>&lt; llvm::Instruction &gt;</td></tr>
-<tr class="separator:a156c66719006fae71fe80137630b1058"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac91ce500459b2053b22d56f9523f39ba"><td class="memItemLeft" align="right" valign="top"><a id="ac91ce500459b2053b22d56f9523f39ba"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>getInstruction</b> () const -&gt; <a class="el" href="structNotNull.html">NotNull</a>&lt; llvm::Instruction &gt;</td></tr>
-<tr class="separator:ac91ce500459b2053b22d56f9523f39ba"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a62915797eaf056f6f7b5a5a9410866c8"><td class="memItemLeft" align="right" valign="top"><a id="a62915797eaf056f6f7b5a5a9410866c8"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>offsetMatrix</b> () -&gt; MutDensePtrMatrix&lt; int64_t &gt;</td></tr>
+<tr class="separator:a62915797eaf056f6f7b5a5a9410866c8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8b4c40a10f3ccca19bf9a16da30d8003"><td class="memItemLeft" align="right" valign="top"><a id="a8b4c40a10f3ccca19bf9a16da30d8003"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>offsetMatrix</b> () const -&gt; DensePtrMatrix&lt; int64_t &gt;</td></tr>
+<tr class="separator:a8b4c40a10f3ccca19bf9a16da30d8003"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af8889b1a245e143fa482059494de39ac"><td class="memItemLeft" align="right" valign="top"><a id="af8889b1a245e143fa482059494de39ac"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getInstruction</b> () -&gt; <a class="el" href="structNotNull.html">NotNull</a>&lt; llvm::Instruction &gt;</td></tr>
+<tr class="separator:af8889b1a245e143fa482059494de39ac"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aeb08174920f0b4becfe82c299e84b9e8"><td class="memItemLeft" align="right" valign="top"><a id="aeb08174920f0b4becfe82c299e84b9e8"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getInstruction</b> () const -&gt; <a class="el" href="structNotNull.html">NotNull</a>&lt; const llvm::Instruction &gt;</td></tr>
+<tr class="separator:aeb08174920f0b4becfe82c299e84b9e8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4c213ffb008f3b021ab51c21dddd7c06"><td class="memItemLeft" align="right" valign="top"><a id="a4c213ffb008f3b021ab51c21dddd7c06"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>getLoad</b> () -&gt; llvm::LoadInst *</td></tr>
 <tr class="separator:a4c213ffb008f3b021ab51c21dddd7c06"><td class="memSeparator" colspan="2">&#160;</td></tr>
