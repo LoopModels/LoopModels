@@ -332,42 +332,42 @@ $(function() {
 <div class="line"><a name="l00278"></a><span class="lineno">  278</span>&#160; </div>
 <div class="line"><a name="l00279"></a><span class="lineno">  279</span>&#160;  <span class="comment">// this method descends</span></div>
 <div class="line"><a name="l00280"></a><span class="lineno">  280</span>&#160;  <span class="comment">// NOLINTNEXTLINE(misc-no-recursion)</span></div>
-<div class="line"><a name="l00281"></a><span class="lineno">  281</span>&#160;  <span class="keywordtype">void</span> allocLoopNodes(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, <a class="code" href="classLinearProgramLoopBlock.html">LinearProgramLoopBlock</a> &amp;LB,</div>
-<div class="line"><a name="l00282"></a><span class="lineno">  282</span>&#160;                      <a class="code" href="structScheduledNode.html">ScheduledNode</a> &amp;node, <a class="code" href="structAffineSchedule.html">AffineSchedule</a> sch) {</div>
-<div class="line"><a name="l00283"></a><span class="lineno">  283</span>&#160;    <span class="keyword">auto</span> fO = sch.getFusionOmega();</div>
-<div class="line"><a name="l00284"></a><span class="lineno">  284</span>&#160;    <span class="keywordtype">unsigned</span> numLoops = sch.getNumLoops();</div>
-<div class="line"><a name="l00285"></a><span class="lineno">  285</span>&#160;    invariant(fO.size() - 1, numLoops);</div>
-<div class="line"><a name="l00286"></a><span class="lineno">  286</span>&#160;    LoopTreeSchedule *L = <span class="keyword">this</span>;</div>
-<div class="line"><a name="l00287"></a><span class="lineno">  287</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; numLoops; ++i) L = L-&gt;getLoop(alloc, fO[i], i + 1);</div>
-<div class="line"><a name="l00288"></a><span class="lineno">  288</span>&#160;    <span class="comment">// node.insertMemAccesses(alloc, LB.getMemoryAccesses(),</span></div>
-<div class="line"><a name="l00289"></a><span class="lineno">  289</span>&#160;    <span class="comment">// L-&gt;header.reserveExtra(alloc, node.getNumMem()));</span></div>
-<div class="line"><a name="l00290"></a><span class="lineno">  290</span>&#160;  }</div>
-<div class="line"><a name="l00291"></a><span class="lineno">  291</span>&#160;  <span class="keywordtype">void</span> topologicalSortCore() { <span class="comment">// NOLINT(misc-no-recursion)</span></div>
-<div class="line"><a name="l00292"></a><span class="lineno">  292</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; getNumSubTrees(); ++i) {</div>
-<div class="line"><a name="l00293"></a><span class="lineno">  293</span>&#160;      <span class="keyword">auto</span> [H, L, E] = getLoopTripple(i);</div>
-<div class="line"><a name="l00294"></a><span class="lineno">  294</span>&#160;      L-&gt;topologicalSort(H, E);</div>
-<div class="line"><a name="l00295"></a><span class="lineno">  295</span>&#160;    }</div>
-<div class="line"><a name="l00296"></a><span class="lineno">  296</span>&#160;    <span class="comment">// TODO: sort the memory accesses in the header and place in correct block.</span></div>
-<div class="line"><a name="l00297"></a><span class="lineno">  297</span>&#160;    <span class="comment">// On entry, all InstructionBlock in the `AndExit`s will be empty</span></div>
-<div class="line"><a name="l00298"></a><span class="lineno">  298</span>&#160;    <span class="comment">// as we only insert into  the header on construction.</span></div>
-<div class="line"><a name="l00299"></a><span class="lineno">  299</span>&#160;    <span class="comment">// However, we may have hoisted them via topSort</span></div>
-<div class="line"><a name="l00300"></a><span class="lineno">  300</span>&#160;  }</div>
-<div class="line"><a name="l00301"></a><span class="lineno">  301</span>&#160;  <span class="comment">// NOLINTNEXTLINE(misc-no-recursion)</span></div>
-<div class="line"><a name="l00302"></a><span class="lineno">  302</span>&#160;  <span class="keywordtype">void</span> topologicalSort(InstructionBlock &amp;H, InstructionBlock &amp;E) {</div>
-<div class="line"><a name="l00303"></a><span class="lineno">  303</span>&#160;    topologicalSortCore();</div>
-<div class="line"><a name="l00304"></a><span class="lineno">  304</span>&#160;    <span class="comment">// TODO: hoist loads and stores, probably respectively into `H` and `E`</span></div>
-<div class="line"><a name="l00305"></a><span class="lineno">  305</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0, B = numBlocks(); i &lt; B; ++i) {</div>
-<div class="line"><a name="l00306"></a><span class="lineno">  306</span>&#160;    }</div>
-<div class="line"><a name="l00307"></a><span class="lineno">  307</span>&#160;  }</div>
-<div class="line"><a name="l00308"></a><span class="lineno">  308</span>&#160;  <span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
-<div class="line"><a name="l00309"></a><span class="lineno">  309</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> get(llvm::SmallVectorImpl&lt;T&gt; &amp;x, <span class="keywordtype">size_t</span> i) -&gt; T &amp; {</div>
-<div class="line"><a name="l00310"></a><span class="lineno">  310</span>&#160;    <span class="keywordflow">if</span> (i &gt;= x.size()) x.resize(i + 1);</div>
-<div class="line"><a name="l00311"></a><span class="lineno">  311</span>&#160;    <span class="keywordflow">return</span> x[i];</div>
-<div class="line"><a name="l00312"></a><span class="lineno">  312</span>&#160;  }</div>
-<div class="line"><a name="l00313"></a><span class="lineno">  313</span>&#160; </div>
-<div class="line"><a name="l00314"></a><span class="lineno">  314</span>&#160;  <span class="keywordtype">void</span> init(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, <a class="code" href="structInstruction_1_1Cache.html">Instruction::Cache</a> &amp;cache, <a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;tAlloc,</div>
-<div class="line"><a name="l00315"></a><span class="lineno">  315</span>&#160;            <a class="code" href="structLoopTree.html">LoopTree</a> *loopForest, <a class="code" href="classLinearProgramLoopBlock.html">LinearProgramLoopBlock</a> &amp;LB,</div>
-<div class="line"><a name="l00316"></a><span class="lineno">  316</span>&#160;            llvm::TargetTransformInfo &amp;TTI, <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> vectorBits) {</div>
+<div class="line"><a name="l00281"></a><span class="lineno">  281</span>&#160;  <span class="keyword">auto</span> allocLoopNodes(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, <a class="code" href="classLinearProgramLoopBlock.html">LinearProgramLoopBlock</a> &amp;LB,</div>
+<div class="line"><a name="l00282"></a><span class="lineno">  282</span>&#160;                      <a class="code" href="structScheduledNode.html">ScheduledNode</a> &amp;node, <a class="code" href="structAffineSchedule.html">AffineSchedule</a> sch)</div>
+<div class="line"><a name="l00283"></a><span class="lineno">  283</span>&#160;    -&gt; LoopTreeSchedule * {</div>
+<div class="line"><a name="l00284"></a><span class="lineno">  284</span>&#160;    <span class="keyword">auto</span> fO = sch.getFusionOmega();</div>
+<div class="line"><a name="l00285"></a><span class="lineno">  285</span>&#160;    <span class="keywordtype">unsigned</span> numLoops = sch.getNumLoops();</div>
+<div class="line"><a name="l00286"></a><span class="lineno">  286</span>&#160;    invariant(fO.size() - 1, numLoops);</div>
+<div class="line"><a name="l00287"></a><span class="lineno">  287</span>&#160;    LoopTreeSchedule *L = <span class="keyword">this</span>;</div>
+<div class="line"><a name="l00288"></a><span class="lineno">  288</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; numLoops; ++i) L = L-&gt;getLoop(alloc, fO[i], i + 1);</div>
+<div class="line"><a name="l00289"></a><span class="lineno">  289</span>&#160;    <span class="keywordflow">return</span> L;</div>
+<div class="line"><a name="l00290"></a><span class="lineno">  290</span>&#160;    <span class="comment">// node.insertMemAccesses(alloc, LB.getMemoryAccesses(),</span></div>
+<div class="line"><a name="l00291"></a><span class="lineno">  291</span>&#160;    <span class="comment">// L-&gt;header.reserveExtra(alloc, node.getNumMem()));</span></div>
+<div class="line"><a name="l00292"></a><span class="lineno">  292</span>&#160;  }</div>
+<div class="line"><a name="l00293"></a><span class="lineno">  293</span>&#160;  <span class="keywordtype">void</span> topologicalSortCore() { <span class="comment">// NOLINT(misc-no-recursion)</span></div>
+<div class="line"><a name="l00294"></a><span class="lineno">  294</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; getNumSubTrees(); ++i) {</div>
+<div class="line"><a name="l00295"></a><span class="lineno">  295</span>&#160;      <span class="keyword">auto</span> [H, L, E] = getLoopTripple(i);</div>
+<div class="line"><a name="l00296"></a><span class="lineno">  296</span>&#160;      L-&gt;topologicalSort(H, E);</div>
+<div class="line"><a name="l00297"></a><span class="lineno">  297</span>&#160;    }</div>
+<div class="line"><a name="l00298"></a><span class="lineno">  298</span>&#160;    <span class="comment">// TODO: sort the memory accesses in the header and place in correct block.</span></div>
+<div class="line"><a name="l00299"></a><span class="lineno">  299</span>&#160;    <span class="comment">// On entry, all InstructionBlock in the `AndExit`s will be empty</span></div>
+<div class="line"><a name="l00300"></a><span class="lineno">  300</span>&#160;    <span class="comment">// as we only insert into  the header on construction.</span></div>
+<div class="line"><a name="l00301"></a><span class="lineno">  301</span>&#160;    <span class="comment">// However, we may have hoisted them via topSort</span></div>
+<div class="line"><a name="l00302"></a><span class="lineno">  302</span>&#160;  }</div>
+<div class="line"><a name="l00303"></a><span class="lineno">  303</span>&#160;  <span class="comment">// NOLINTNEXTLINE(misc-no-recursion)</span></div>
+<div class="line"><a name="l00304"></a><span class="lineno">  304</span>&#160;  <span class="keywordtype">void</span> topologicalSort(InstructionBlock &amp;H, InstructionBlock &amp;E) {</div>
+<div class="line"><a name="l00305"></a><span class="lineno">  305</span>&#160;    topologicalSortCore();</div>
+<div class="line"><a name="l00306"></a><span class="lineno">  306</span>&#160;    <span class="comment">// TODO: hoist loads and stores, probably respectively into `H` and `E`</span></div>
+<div class="line"><a name="l00307"></a><span class="lineno">  307</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0, B = numBlocks(); i &lt; B; ++i) {</div>
+<div class="line"><a name="l00308"></a><span class="lineno">  308</span>&#160;    }</div>
+<div class="line"><a name="l00309"></a><span class="lineno">  309</span>&#160;  }</div>
+<div class="line"><a name="l00310"></a><span class="lineno">  310</span>&#160;  <span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
+<div class="line"><a name="l00311"></a><span class="lineno">  311</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> get(llvm::SmallVectorImpl&lt;T&gt; &amp;x, <span class="keywordtype">size_t</span> i) -&gt; T &amp; {</div>
+<div class="line"><a name="l00312"></a><span class="lineno">  312</span>&#160;    <span class="keywordflow">if</span> (i &gt;= x.size()) x.resize(i + 1);</div>
+<div class="line"><a name="l00313"></a><span class="lineno">  313</span>&#160;    <span class="keywordflow">return</span> x[i];</div>
+<div class="line"><a name="l00314"></a><span class="lineno">  314</span>&#160;  }</div>
+<div class="line"><a name="l00315"></a><span class="lineno">  315</span>&#160; </div>
+<div class="line"><a name="l00316"></a><span class="lineno">  316</span>&#160;  <span class="keywordtype">void</span> init(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, <a class="code" href="classLinearProgramLoopBlock.html">LinearProgramLoopBlock</a> &amp;LB) {</div>
 <div class="line"><a name="l00317"></a><span class="lineno">  317</span>&#160;    <span class="comment">// TODO: can we shorten the life span of the instructions we</span></div>
 <div class="line"><a name="l00318"></a><span class="lineno">  318</span>&#160;    <span class="comment">// allocate here to `lalloc`? I.e., do we need them to live on after</span></div>
 <div class="line"><a name="l00319"></a><span class="lineno">  319</span>&#160;    <span class="comment">// this forest is scheduled?</span></div>
@@ -376,46 +376,53 @@ $(function() {
 <div class="line"><a name="l00322"></a><span class="lineno">  322</span>&#160;    <span class="comment">// then, we licm</span></div>
 <div class="line"><a name="l00323"></a><span class="lineno">  323</span>&#160;    <span class="comment">// nodes, sorted by depth</span></div>
 <div class="line"><a name="l00324"></a><span class="lineno">  324</span>&#160;    llvm::SmallVector&lt;</div>
-<div class="line"><a name="l00325"></a><span class="lineno">  325</span>&#160;      std::pair&lt;llvm::SmallVector&lt;const ScheduledNode *, 4&gt;, <span class="keywordtype">size_t</span>&gt;, 4&gt;</div>
-<div class="line"><a name="l00326"></a><span class="lineno">  326</span>&#160;      memOps;</div>
-<div class="line"><a name="l00327"></a><span class="lineno">  327</span>&#160;    <span class="comment">// size_t maxDepth = 0;</span></div>
-<div class="line"><a name="l00328"></a><span class="lineno">  328</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;node : LB.getNodes()) {</div>
-<div class="line"><a name="l00329"></a><span class="lineno">  329</span>&#160;      allocLoopNodes(alloc, LB, node, node.getSchedule());</div>
-<div class="line"><a name="l00330"></a><span class="lineno">  330</span>&#160;      <span class="keyword">auto</span> &amp;p{get(memOps, node.getNumLoops())};</div>
-<div class="line"><a name="l00331"></a><span class="lineno">  331</span>&#160;      p.first.push_back(&amp;node);</div>
-<div class="line"><a name="l00332"></a><span class="lineno">  332</span>&#160;      p.second += node.getNumMem();</div>
-<div class="line"><a name="l00333"></a><span class="lineno">  333</span>&#160;    }</div>
-<div class="line"><a name="l00334"></a><span class="lineno">  334</span>&#160;    Vector&lt;Address *&gt; addresses{0};</div>
-<div class="line"><a name="l00335"></a><span class="lineno">  335</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> d = memOps.size(); d--;) {</div>
-<div class="line"><a name="l00336"></a><span class="lineno">  336</span>&#160;      <span class="keyword">auto</span> &amp;[nodes, numMem] = memOps[d];</div>
-<div class="line"><a name="l00337"></a><span class="lineno">  337</span>&#160;      addresses.resize(numMem);</div>
-<div class="line"><a name="l00338"></a><span class="lineno">  338</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0, j = 0; i &lt; nodes.size();) {</div>
-<div class="line"><a name="l00339"></a><span class="lineno">  339</span>&#160;        <span class="keywordtype">size_t</span> k = j + nodes[i]-&gt;getNumMem();</div>
-<div class="line"><a name="l00340"></a><span class="lineno">  340</span>&#160;        nodes[i]-&gt;insertMemAccesses(alloc, LB.getMemoryAccesses(),</div>
-<div class="line"><a name="l00341"></a><span class="lineno">  341</span>&#160;                                    addresses[_(j, k)]);</div>
-<div class="line"><a name="l00342"></a><span class="lineno">  342</span>&#160;        j = k;</div>
-<div class="line"><a name="l00343"></a><span class="lineno">  343</span>&#160;      }</div>
-<div class="line"><a name="l00344"></a><span class="lineno">  344</span>&#160;    }</div>
-<div class="line"><a name="l00345"></a><span class="lineno">  345</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;nodes : std::ranges::views::reverse(memOps)) {</div>
-<div class="line"><a name="l00346"></a><span class="lineno">  346</span>&#160;      <span class="comment">// d iterates from `maxDepth` to `0`, inclusive</span></div>
-<div class="line"><a name="l00347"></a><span class="lineno">  347</span>&#160;      <span class="comment">// here, we iterate over</span></div>
+<div class="line"><a name="l00325"></a><span class="lineno">  325</span>&#160;      std::pair&lt;llvm::SmallVector&lt;</div>
+<div class="line"><a name="l00326"></a><span class="lineno">  326</span>&#160;                  std::pair&lt;const ScheduledNode *, LoopTreeSchedule *&gt;, 4&gt;,</div>
+<div class="line"><a name="l00327"></a><span class="lineno">  327</span>&#160;                <span class="keywordtype">size_t</span>&gt;,</div>
+<div class="line"><a name="l00328"></a><span class="lineno">  328</span>&#160;      4&gt;</div>
+<div class="line"><a name="l00329"></a><span class="lineno">  329</span>&#160;      memOps;</div>
+<div class="line"><a name="l00330"></a><span class="lineno">  330</span>&#160;    <span class="comment">// size_t maxDepth = 0;</span></div>
+<div class="line"><a name="l00331"></a><span class="lineno">  331</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;node : LB.getNodes()) {</div>
+<div class="line"><a name="l00332"></a><span class="lineno">  332</span>&#160;      <span class="keyword">auto</span> &amp;p{get(memOps, node.getNumLoops())};</div>
+<div class="line"><a name="l00333"></a><span class="lineno">  333</span>&#160;      p.first.emplace_back(&amp;node,</div>
+<div class="line"><a name="l00334"></a><span class="lineno">  334</span>&#160;                           allocLoopNodes(alloc, LB, node, node.getSchedule()));</div>
+<div class="line"><a name="l00335"></a><span class="lineno">  335</span>&#160;      p.second += node.getNumMem();</div>
+<div class="line"><a name="l00336"></a><span class="lineno">  336</span>&#160;    }</div>
+<div class="line"><a name="l00337"></a><span class="lineno">  337</span>&#160;    Vector&lt;Address *&gt; addresses{0};</div>
+<div class="line"><a name="l00338"></a><span class="lineno">  338</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> d = memOps.size(); d--;) {</div>
+<div class="line"><a name="l00339"></a><span class="lineno">  339</span>&#160;      <span class="keyword">auto</span> &amp;[nodes, numMem] = memOps[d];</div>
+<div class="line"><a name="l00340"></a><span class="lineno">  340</span>&#160;      addresses.resize(numMem);</div>
+<div class="line"><a name="l00341"></a><span class="lineno">  341</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0, j = 0; i &lt; nodes.size();) {</div>
+<div class="line"><a name="l00342"></a><span class="lineno">  342</span>&#160;        <span class="keyword">auto</span> &amp;[node, L] = nodes[i];</div>
+<div class="line"><a name="l00343"></a><span class="lineno">  343</span>&#160;        <span class="keywordtype">size_t</span> k = j + node-&gt;getNumMem();</div>
+<div class="line"><a name="l00344"></a><span class="lineno">  344</span>&#160;        node-&gt;insertMemAccesses(alloc, LB.getMemoryAccesses(),</div>
+<div class="line"><a name="l00345"></a><span class="lineno">  345</span>&#160;                                addresses[_(j, k)]);</div>
+<div class="line"><a name="l00346"></a><span class="lineno">  346</span>&#160;        j = k;</div>
+<div class="line"><a name="l00347"></a><span class="lineno">  347</span>&#160;      }</div>
 <div class="line"><a name="l00348"></a><span class="lineno">  348</span>&#160;    }</div>
 <div class="line"><a name="l00349"></a><span class="lineno">  349</span>&#160; </div>
 <div class="line"><a name="l00350"></a><span class="lineno">  350</span>&#160;    topologicalSortCore();</div>
-<div class="line"><a name="l00351"></a><span class="lineno">  351</span>&#160;    <span class="comment">// buidInstructionGraph(alloc, cache);</span></div>
-<div class="line"><a name="l00352"></a><span class="lineno">  352</span>&#160;    mergeInstructions(alloc, cache, loopForest, TTI, tAlloc, vectorBits);</div>
-<div class="line"><a name="l00353"></a><span class="lineno">  353</span>&#160;  }</div>
-<div class="line"><a name="l00354"></a><span class="lineno">  354</span>&#160; </div>
-<div class="line"><a name="l00355"></a><span class="lineno">  355</span>&#160;<span class="keyword">public</span>:</div>
-<div class="line"><a name="l00356"></a><span class="lineno">  356</span>&#160;  constexpr LoopTreeSchedule(LoopTreeSchedule *L, uint8_t d)</div>
-<div class="line"><a name="l00357"></a><span class="lineno">  357</span>&#160;    : parent(L), depth(d) {}</div>
-<div class="line"><a name="l00358"></a><span class="lineno">  358</span>&#160;};</div>
-<div class="line"><a name="l00359"></a><span class="lineno">  359</span>&#160; </div>
-<div class="line"><a name="l00360"></a><span class="lineno">  360</span>&#160;static_assert(Graphs::AbstractPtrGraph&lt;LoopTreeSchedule::AddressGraph&gt;);</div>
-<div class="line"><a name="l00361"></a><span class="lineno">  361</span>&#160;<span class="comment">// class LoopForestSchedule : LoopTreeSchedule {</span></div>
-<div class="line"><a name="l00362"></a><span class="lineno">  362</span>&#160;<span class="comment">//   [[no_unique_address]] BumpAlloc&lt;&gt; &amp;allocator;</span></div>
-<div class="line"><a name="l00363"></a><span class="lineno">  363</span>&#160;<span class="comment">// };</span></div>
-<div class="line"><a name="l00364"></a><span class="lineno">  364</span>&#160;} <span class="comment">// namespace CostModeling</span></div>
+<div class="line"><a name="l00351"></a><span class="lineno">  351</span>&#160;  }</div>
+<div class="line"><a name="l00352"></a><span class="lineno">  352</span>&#160;  <span class="comment">// void initializeInstrGraph(BumpAlloc&lt;&gt; &amp;alloc, Instruction::Cache &amp;cache,</span></div>
+<div class="line"><a name="l00353"></a><span class="lineno">  353</span>&#160;  <span class="comment">//                           BumpAlloc&lt;&gt; &amp;tAlloc, LoopTree *loopForest,</span></div>
+<div class="line"><a name="l00354"></a><span class="lineno">  354</span>&#160;  <span class="comment">//                           LinearProgramLoopBlock &amp;LB,</span></div>
+<div class="line"><a name="l00355"></a><span class="lineno">  355</span>&#160;  <span class="comment">//                           llvm::TargetTransformInfo &amp;TTI,</span></div>
+<div class="line"><a name="l00356"></a><span class="lineno">  356</span>&#160;  <span class="comment">//                           unsigned int vectorBits) {</span></div>
+<div class="line"><a name="l00357"></a><span class="lineno">  357</span>&#160; </div>
+<div class="line"><a name="l00358"></a><span class="lineno">  358</span>&#160;  <span class="comment">//   // buidInstructionGraph(alloc, cache);</span></div>
+<div class="line"><a name="l00359"></a><span class="lineno">  359</span>&#160;  <span class="comment">//   mergeInstructions(alloc, cache, loopForest, TTI, tAlloc, vectorBits);</span></div>
+<div class="line"><a name="l00360"></a><span class="lineno">  360</span>&#160;  <span class="comment">// }</span></div>
+<div class="line"><a name="l00361"></a><span class="lineno">  361</span>&#160; </div>
+<div class="line"><a name="l00362"></a><span class="lineno">  362</span>&#160;<span class="keyword">public</span>:</div>
+<div class="line"><a name="l00363"></a><span class="lineno">  363</span>&#160;  constexpr LoopTreeSchedule(LoopTreeSchedule *L, uint8_t d)</div>
+<div class="line"><a name="l00364"></a><span class="lineno">  364</span>&#160;    : parent(L), depth(d) {}</div>
+<div class="line"><a name="l00365"></a><span class="lineno">  365</span>&#160;};</div>
+<div class="line"><a name="l00366"></a><span class="lineno">  366</span>&#160; </div>
+<div class="line"><a name="l00367"></a><span class="lineno">  367</span>&#160;static_assert(Graphs::AbstractPtrGraph&lt;LoopTreeSchedule::AddressGraph&gt;);</div>
+<div class="line"><a name="l00368"></a><span class="lineno">  368</span>&#160;<span class="comment">// class LoopForestSchedule : LoopTreeSchedule {</span></div>
+<div class="line"><a name="l00369"></a><span class="lineno">  369</span>&#160;<span class="comment">//   [[no_unique_address]] BumpAlloc&lt;&gt; &amp;allocator;</span></div>
+<div class="line"><a name="l00370"></a><span class="lineno">  370</span>&#160;<span class="comment">// };</span></div>
+<div class="line"><a name="l00371"></a><span class="lineno">  371</span>&#160;} <span class="comment">// namespace CostModeling</span></div>
 <div class="ttc" id="aclassAddress_html"><div class="ttname"><a href="classAddress.html">Address</a></div><div class="ttdef"><b>Definition:</b> Address.hpp:62</div></div>
 <div class="ttc" id="aclassCostModeling_1_1LoopTreeSchedule_html"><div class="ttname"><a href="classCostModeling_1_1LoopTreeSchedule.html">CostModeling::LoopTreeSchedule</a></div><div class="ttdef"><b>Definition:</b> CostModeling.hpp:140</div></div>
 <div class="ttc" id="aclassLinearProgramLoopBlock_html"><div class="ttname"><a href="classLinearProgramLoopBlock.html">LinearProgramLoopBlock</a></div><div class="ttdef"><b>Definition:</b> LoopBlock.hpp:296</div></div>
@@ -424,9 +431,7 @@ $(function() {
 <div class="ttc" id="astructBumpAlloc_html"><div class="ttname"><a href="structBumpAlloc.html">BumpAlloc</a></div><div class="ttdef"><b>Definition:</b> Allocators.hpp:42</div></div>
 <div class="ttc" id="astructCostModeling_1_1CPURegisterFile_html"><div class="ttname"><a href="structCostModeling_1_1CPURegisterFile.html">CostModeling::CPURegisterFile</a></div><div class="ttdef"><b>Definition:</b> CostModeling.hpp:32</div></div>
 <div class="ttc" id="astructCostModeling_1_1LoopTreeSchedule_1_1AddressGraph_html"><div class="ttname"><a href="structCostModeling_1_1LoopTreeSchedule_1_1AddressGraph.html">CostModeling::LoopTreeSchedule::AddressGraph</a></div><div class="ttdef"><b>Definition:</b> CostModeling.hpp:144</div></div>
-<div class="ttc" id="astructInstruction_1_1Cache_html"><div class="ttname"><a href="structInstruction_1_1Cache.html">Instruction::Cache</a></div><div class="ttdef"><b>Definition:</b> Instruction.hpp:307</div></div>
 <div class="ttc" id="astructLinAlg_1_1ResizeableView_html"><div class="ttname"><a href="structLinAlg_1_1ResizeableView.html">LinAlg::ResizeableView</a></div><div class="ttdef"><b>Definition:</b> Array.hpp:520</div></div>
-<div class="ttc" id="astructLoopTree_html"><div class="ttname"><a href="structLoopTree.html">LoopTree</a></div><div class="ttdef"><b>Definition:</b> LoopForest.hpp:23</div></div>
 <div class="ttc" id="astructScheduledNode_html"><div class="ttname"><a href="structScheduledNode.html">ScheduledNode</a></div><div class="ttdef"><b>Definition:</b> LoopBlock.hpp:54</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
