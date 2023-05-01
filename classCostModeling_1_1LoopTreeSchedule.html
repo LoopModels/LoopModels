@@ -76,11 +76,16 @@ $(function() {
 
 <p><code>#include &lt;<a class="el" href="CostModeling_8hpp_source.html">CostModeling.hpp</a>&gt;</code></p>
 <table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
+Classes</h2></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structCostModeling_1_1LoopTreeSchedule_1_1AddressGraph.html">AddressGraph</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a826879c6eb361a7810036e14fda2c090"><td class="memItemLeft" align="right" valign="top"><a id="a826879c6eb361a7810036e14fda2c090"></a>
-constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>LoopTreeSchedule</b> (uint8_t depth)</td></tr>
-<tr class="separator:a826879c6eb361a7810036e14fda2c090"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9a85e9398b41d6b67717b395bd6f235c"><td class="memItemLeft" align="right" valign="top"><a id="a9a85e9398b41d6b67717b395bd6f235c"></a>
+constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>LoopTreeSchedule</b> (<a class="el" href="classCostModeling_1_1LoopTreeSchedule.html">LoopTreeSchedule</a> *L, uint8_t d)</td></tr>
+<tr class="separator:a9a85e9398b41d6b67717b395bd6f235c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Given: llvm::SmallVector&lt;LoopAndExit&gt; subTrees; subTrees[i].second is the preheader for subTrees[i+1].first, which has exit block subTrees[i+1].second Initialized from a LoopBlock First, all memory accesses are placed.</p><ul>

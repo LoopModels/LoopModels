@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.9.1"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>LoopModels: Address Struct Reference</title>
+<title>LoopModels: Address Class Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -62,18 +62,68 @@ $(function() {
 </div><!-- top -->
 <div class="header">
   <div class="summary">
+<a href="#nested-classes">Classes</a> &#124;
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-static-methods">Static Public Member Functions</a> &#124;
-<a href="structAddress-members.html">List of all members</a>  </div>
+<a href="classAddress-members.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">Address Struct Reference</div>  </div>
+<div class="title">Address Class Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
 
 <p><code>#include &lt;<a class="el" href="Address_8hpp_source.html">Address.hpp</a>&gt;</code></p>
 <table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
+Classes</h2></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classAddress_1_1ActiveEdgeIterator.html">ActiveEdgeIterator</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAddress_1_1EndSentinel.html">EndSentinel</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
+<tr class="memitem:a7ecec6969b9c453eebcbf7ff9d6635cf"><td class="memItemLeft" align="right" valign="top"><a id="a7ecec6969b9c453eebcbf7ff9d6635cf"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>setVisited</b> (uint8_t x)</td></tr>
+<tr class="separator:a7ecec6969b9c453eebcbf7ff9d6635cf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af209816105772e5cdefa6767cb1f6337"><td class="memItemLeft" align="right" valign="top"><a id="af209816105772e5cdefa6767cb1f6337"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (uint8_t x)</td></tr>
+<tr class="separator:af209816105772e5cdefa6767cb1f6337"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6cf0776760e33ae947667e1436f2970d"><td class="memItemLeft" align="right" valign="top"><a id="a6cf0776760e33ae947667e1436f2970d"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>unVisit</b> (uint8_t x)</td></tr>
+<tr class="separator:a6cf0776760e33ae947667e1436f2970d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aab0bd870ea49c5d3ab4aebce15a9ab7f"><td class="memItemLeft" align="right" valign="top"><a id="aab0bd870ea49c5d3ab4aebce15a9ab7f"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>wasVisited</b> (uint8_t x) const -&gt; bool</td></tr>
+<tr class="separator:aab0bd870ea49c5d3ab4aebce15a9ab7f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a21379335becd3ef18dc371886a9580ca"><td class="memItemLeft" align="right" valign="top"><a id="a21379335becd3ef18dc371886a9580ca"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>clearVisited</b> ()</td></tr>
+<tr class="separator:a21379335becd3ef18dc371886a9580ca"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a80bbd781fd79102d579b0cfbf036f84e"><td class="memItemLeft" align="right" valign="top"><a id="a80bbd781fd79102d579b0cfbf036f84e"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>numInNeighbors</b> () const -&gt; unsigned</td></tr>
+<tr class="separator:a80bbd781fd79102d579b0cfbf036f84e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acf95b88091d4c41d7492d6a708c7f0c5"><td class="memItemLeft" align="right" valign="top"><a id="acf95b88091d4c41d7492d6a708c7f0c5"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>numOutNeighbors</b> () const -&gt; unsigned</td></tr>
+<tr class="separator:acf95b88091d4c41d7492d6a708c7f0c5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a00faa0432831a5e5a24fd8d6b1c9f9bd"><td class="memItemLeft" align="right" valign="top"><a id="a00faa0432831a5e5a24fd8d6b1c9f9bd"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>numNeighbors</b> () const -&gt; unsigned</td></tr>
+<tr class="separator:a00faa0432831a5e5a24fd8d6b1c9f9bd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ace76efe81c4a5d0f807be1f2ef3b708d"><td class="memItemLeft" align="right" valign="top"><a id="ace76efe81c4a5d0f807be1f2ef3b708d"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>inNeighbors</b> (uint8_t filtd) -&gt; <a class="el" href="classAddress_1_1ActiveEdgeIterator.html">ActiveEdgeIterator</a></td></tr>
+<tr class="separator:ace76efe81c4a5d0f807be1f2ef3b708d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5e368623af07eb34b4997abe95806dee"><td class="memItemLeft" align="right" valign="top"><a id="a5e368623af07eb34b4997abe95806dee"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>outNeighbors</b> (uint8_t filtd) -&gt; <a class="el" href="classAddress_1_1ActiveEdgeIterator.html">ActiveEdgeIterator</a></td></tr>
+<tr class="separator:a5e368623af07eb34b4997abe95806dee"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a00d5178ed0a682fa44148fcc365ca72e"><td class="memItemLeft" align="right" valign="top"><a id="a00d5178ed0a682fa44148fcc365ca72e"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>inNeighbors</b> () const -&gt; PtrVector&lt; <a class="el" href="classAddress.html">Address</a> * &gt;</td></tr>
+<tr class="separator:a00d5178ed0a682fa44148fcc365ca72e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2ea79a69de36f2e42d0ee1b09ac8253d"><td class="memItemLeft" align="right" valign="top"><a id="a2ea79a69de36f2e42d0ee1b09ac8253d"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>outNeighbors</b> () const -&gt; PtrVector&lt; <a class="el" href="classAddress.html">Address</a> * &gt;</td></tr>
+<tr class="separator:a2ea79a69de36f2e42d0ee1b09ac8253d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a76c4c78bd0fc7b7e9cf89351cabea836"><td class="memItemLeft" align="right" valign="top"><a id="a76c4c78bd0fc7b7e9cf89351cabea836"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>inNeighbors</b> () -&gt; MutPtrVector&lt; <a class="el" href="classAddress.html">Address</a> * &gt;</td></tr>
+<tr class="separator:a76c4c78bd0fc7b7e9cf89351cabea836"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5370bfc6d66bf1943ead27c80bceee38"><td class="memItemLeft" align="right" valign="top"><a id="a5370bfc6d66bf1943ead27c80bceee38"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>outNeighbors</b> () -&gt; MutPtrVector&lt; <a class="el" href="classAddress.html">Address</a> * &gt;</td></tr>
+<tr class="separator:a5370bfc6d66bf1943ead27c80bceee38"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a79b1b586a64ba8cd2b9d5440ee7b7551"><td class="memItemLeft" align="right" valign="top"><a id="a79b1b586a64ba8cd2b9d5440ee7b7551"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumLoops</b> () const -&gt; size_t</td></tr>
 <tr class="separator:a79b1b586a64ba8cd2b9d5440ee7b7551"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -99,12 +149,12 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getOffsetOm
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getOffsetOmega</b> () const -&gt; PtrVector&lt; int64_t &gt;</td></tr>
 <tr class="separator:af2c07eb0c49221b4714294f6572762f2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afad8e52958d1d85eef66ee44d4ceeb78"><td class="memItemLeft" align="right" valign="top"><a id="afad8e52958d1d85eef66ee44d4ceeb78"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAddress.html#afad8e52958d1d85eef66ee44d4ceeb78">indexMatrix</a> () -&gt; MutDensePtrMatrix&lt; int64_t &gt;</td></tr>
-<tr class="memdesc:afad8e52958d1d85eef66ee44d4ceeb78"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="structAddress.html#afad8e52958d1d85eef66ee44d4ceeb78" title="indexMatrix() -&gt; arrayDim() x getNumLoops()">indexMatrix()</a> -&gt; arrayDim() x getNumLoops() <br /></td></tr>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classAddress.html#afad8e52958d1d85eef66ee44d4ceeb78">indexMatrix</a> () -&gt; MutDensePtrMatrix&lt; int64_t &gt;</td></tr>
+<tr class="memdesc:afad8e52958d1d85eef66ee44d4ceeb78"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classAddress.html#afad8e52958d1d85eef66ee44d4ceeb78" title="indexMatrix() -&gt; arrayDim() x getNumLoops()">indexMatrix()</a> -&gt; arrayDim() x getNumLoops() <br /></td></tr>
 <tr class="separator:afad8e52958d1d85eef66ee44d4ceeb78"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a297424995238c440069eecf32c6d5bb7"><td class="memItemLeft" align="right" valign="top"><a id="a297424995238c440069eecf32c6d5bb7"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAddress.html#a297424995238c440069eecf32c6d5bb7">indexMatrix</a> () const -&gt; DensePtrMatrix&lt; int64_t &gt;</td></tr>
-<tr class="memdesc:a297424995238c440069eecf32c6d5bb7"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="structAddress.html#afad8e52958d1d85eef66ee44d4ceeb78" title="indexMatrix() -&gt; arrayDim() x getNumLoops()">indexMatrix()</a> -&gt; arrayDim() x getNumLoops() <br /></td></tr>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classAddress.html#a297424995238c440069eecf32c6d5bb7">indexMatrix</a> () const -&gt; DensePtrMatrix&lt; int64_t &gt;</td></tr>
+<tr class="memdesc:a297424995238c440069eecf32c6d5bb7"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classAddress.html#afad8e52958d1d85eef66ee44d4ceeb78" title="indexMatrix() -&gt; arrayDim() x getNumLoops()">indexMatrix()</a> -&gt; arrayDim() x getNumLoops() <br /></td></tr>
 <tr class="separator:a297424995238c440069eecf32c6d5bb7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1b093c9ed33699998b1a82810c52c9c2"><td class="memItemLeft" align="right" valign="top"><a id="a1b093c9ed33699998b1a82810c52c9c2"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>isStore</b> () const -&gt; bool</td></tr>
@@ -116,7 +166,7 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>getLoop</b> () -&gt; 
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
 <tr class="memitem:a1ff76299f43d49258b2146542729d963"><td class="memItemLeft" align="right" valign="top"><a id="a1ff76299f43d49258b2146542729d963"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>construct</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, <a class="el" href="structNotNull.html">NotNull</a>&lt; <a class="el" href="structAffineLoopNest.html">AffineLoopNest</a>&lt; false &gt;&gt; explicitLoop, <a class="el" href="structNotNull.html">NotNull</a>&lt; <a class="el" href="structMemoryAccess.html">MemoryAccess</a> &gt; ma, bool isStr, SquarePtrMatrix&lt; int64_t &gt; Pinv, int64_t denom, PtrVector&lt; int64_t &gt; omega) -&gt; <a class="el" href="structNotNull.html">NotNull</a>&lt; <a class="el" href="structAddress.html">Address</a> &gt;</td></tr>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>construct</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, <a class="el" href="structNotNull.html">NotNull</a>&lt; <a class="el" href="structAffineLoopNest.html">AffineLoopNest</a>&lt; false &gt;&gt; explicitLoop, <a class="el" href="structNotNull.html">NotNull</a>&lt; <a class="el" href="structMemoryAccess.html">MemoryAccess</a> &gt; ma, bool isStr, SquarePtrMatrix&lt; int64_t &gt; Pinv, int64_t denom, PtrVector&lt; int64_t &gt; omega) -&gt; <a class="el" href="structNotNull.html">NotNull</a>&lt; <a class="el" href="classAddress.html">Address</a> &gt;</td></tr>
 <tr class="separator:a1ff76299f43d49258b2146542729d963"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
@@ -128,7 +178,7 @@ static auto&#160;</td><td class="memItemRight" valign="bottom"><b>construct</b> 
 <img class="formulaDsp" alt="\begin{eqnarray*} \textbf{j} &amp;=&amp; \boldsymbol{\Phi}_*\textbf{i} + \boldsymbol{\omega}\\ % \textbf{i} &amp;=&amp; \boldsymbol{\Phi}_*^{-1}\left(j - \boldsymbol{\omega}\right)\\ % \textbf{x} &amp;=&amp; \textbf{M}'\textbf{i} + \textbf{c} + \textbf{Cs} \\ % \textbf{x} &amp;=&amp; \textbf{M}'\boldsymbol{\Phi}_*^{-1}\left(j - \boldsymbol{\omega}\right) + \textbf{c} + \textbf{Cs} \\ % \textbf{M}'_* &amp;=&amp; \textbf{M}'\boldsymbol{\Phi}_*^{-1}\\ % \textbf{x} &amp;=&amp; \textbf{M}'_*\left(j - \boldsymbol{\omega}\right) + \textbf{c} + \textbf{Cs} \\ % \textbf{x} &amp;=&amp; \textbf{M}'_*j - \textbf{M}'_*\boldsymbol{\omega} + \textbf{c} + \textbf{Cs} \\ % \textbf{c}_* &amp;=&amp; \textbf{c} - \textbf{M}'_*\boldsymbol{\omega} \\ % \textbf{x} &amp;=&amp; \textbf{M}'_*j + \textbf{c}_* + \textbf{Cs} \\ % \end{eqnarray*}" src="form_4.png"/>
 </p>
 <p> Therefore, to update the memory accesses from the old induction variables $i$ to the new variables $j$, we must simply compute the updated <img class="formulaInl" alt="$\textbf{c}_*$" src="form_5.png"/> and <img class="formulaInl" alt="$\textbf{M}'_*$" src="form_6.png"/>. We can also test for the case where <img class="formulaInl" alt="$\boldsymbol{\Phi} = \textbf{E}$" src="form_7.png"/>, or equivalently that $\textbf{E}\boldsymbol{\Phi} = \boldsymbol{\Phi}_* = \textbf{I}$. Note that to get the new <a class="el" href="structAffineLoopNest.html">AffineLoopNest</a>, we call <code>oldLoop-&gt;rotate(PhiInv)</code> </p>
-</div><hr/>The documentation for this struct was generated from the following file:<ul>
+</div><hr/>The documentation for this class was generated from the following file:<ul>
 <li>include/<a class="el" href="Address_8hpp_source.html">Address.hpp</a></li>
 </ul>
 </div><!-- contents -->
