@@ -82,6 +82,12 @@ Classes</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
+<tr class="memitem:ab2f9eaf0c9ddd9e9929018700c51fa78"><td class="memItemLeft" align="right" valign="top"><a id="ab2f9eaf0c9ddd9e9929018700c51fa78"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getLoop</b> () const -&gt; <a class="el" href="structNotNull.html">NotNull</a>&lt; <a class="el" href="structAffineLoopNest.html">AffineLoopNest</a>&lt; false &gt;&gt;</td></tr>
+<tr class="separator:ab2f9eaf0c9ddd9e9929018700c51fa78"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3d0aa51de7c31a5915d02dcda377f688"><td class="memItemLeft" align="right" valign="top"><a id="a3d0aa51de7c31a5915d02dcda377f688"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getLoopTreeSchedule</b> () const -&gt; <a class="el" href="classCostModeling_1_1LoopTreeSchedule.html">CostModeling::LoopTreeSchedule</a> *</td></tr>
+<tr class="separator:a3d0aa51de7c31a5915d02dcda377f688"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab18acb1159cbe0b12f63e1c576cf3b5a"><td class="memItemLeft" align="right" valign="top"><a id="ab18acb1159cbe0b12f63e1c576cf3b5a"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> ()</td></tr>
 <tr class="separator:ab18acb1159cbe0b12f63e1c576cf3b5a"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -127,6 +133,12 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>inNeighbors</b> (uint
 <tr class="memitem:a5e368623af07eb34b4997abe95806dee"><td class="memItemLeft" align="right" valign="top"><a id="a5e368623af07eb34b4997abe95806dee"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>outNeighbors</b> (uint8_t filtd) -&gt; <a class="el" href="classAddress_1_1ActiveEdgeIterator.html">ActiveEdgeIterator</a></td></tr>
 <tr class="separator:a5e368623af07eb34b4997abe95806dee"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a796d42cdd12f951ee28e81715bd1e750"><td class="memItemLeft" align="right" valign="top"><a id="a796d42cdd12f951ee28e81715bd1e750"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>directEdges</b> () -&gt; MutPtrVector&lt; <a class="el" href="classAddress.html">Address</a> * &gt;</td></tr>
+<tr class="separator:a796d42cdd12f951ee28e81715bd1e750"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a03ee8a4e42fc0786f493b21e4b504830"><td class="memItemLeft" align="right" valign="top"><a id="a03ee8a4e42fc0786f493b21e4b504830"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>directEdges</b> () const -&gt; PtrVector&lt; <a class="el" href="classAddress.html">Address</a> * &gt;</td></tr>
+<tr class="separator:a03ee8a4e42fc0786f493b21e4b504830"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a00d5178ed0a682fa44148fcc365ca72e"><td class="memItemLeft" align="right" valign="top"><a id="a00d5178ed0a682fa44148fcc365ca72e"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>inNeighbors</b> () const -&gt; PtrVector&lt; <a class="el" href="classAddress.html">Address</a> * &gt;</td></tr>
 <tr class="separator:a00d5178ed0a682fa44148fcc365ca72e"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -139,6 +151,18 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>inNeighbors</b> () -&
 <tr class="memitem:a5370bfc6d66bf1943ead27c80bceee38"><td class="memItemLeft" align="right" valign="top"><a id="a5370bfc6d66bf1943ead27c80bceee38"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>outNeighbors</b> () -&gt; MutPtrVector&lt; <a class="el" href="classAddress.html">Address</a> * &gt;</td></tr>
 <tr class="separator:a5370bfc6d66bf1943ead27c80bceee38"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5e7a6c47117418eb0ec7e952c0c5ea91"><td class="memItemLeft" align="right" valign="top"><a id="a5e7a6c47117418eb0ec7e952c0c5ea91"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>indirectInNeighbor</b> (<a class="el" href="classAddress.html">Address</a> *other, size_t i, uint8_t d)</td></tr>
+<tr class="separator:a5e7a6c47117418eb0ec7e952c0c5ea91"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad64900551f463e49777f3121b2736db2"><td class="memItemLeft" align="right" valign="top"><a id="ad64900551f463e49777f3121b2736db2"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>indirectOutNeighbor</b> (<a class="el" href="classAddress.html">Address</a> *other, size_t i, uint8_t d)</td></tr>
+<tr class="separator:ad64900551f463e49777f3121b2736db2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a64f49ffbbcd95050c2959c78872fd4e7"><td class="memItemLeft" align="right" valign="top"><a id="a64f49ffbbcd95050c2959c78872fd4e7"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>addDirectConnection</b> (<a class="el" href="classAddress.html">Address</a> *store, size_t loadEdge)</td></tr>
+<tr class="separator:a64f49ffbbcd95050c2959c78872fd4e7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac2596619232c52c0c3764e1fea87c191"><td class="memItemLeft" align="right" valign="top"><a id="ac2596619232c52c0c3764e1fea87c191"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>addOut</b> (<a class="el" href="classAddress.html">Address</a> *child, uint8_t d)</td></tr>
+<tr class="separator:ac2596619232c52c0c3764e1fea87c191"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a79b1b586a64ba8cd2b9d5440ee7b7551"><td class="memItemLeft" align="right" valign="top"><a id="a79b1b586a64ba8cd2b9d5440ee7b7551"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumLoops</b> () const -&gt; size_t</td></tr>
 <tr class="separator:a79b1b586a64ba8cd2b9d5440ee7b7551"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -183,9 +207,9 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>getLoop</b> () -&gt; 
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
-<tr class="memitem:a1ff76299f43d49258b2146542729d963"><td class="memItemLeft" align="right" valign="top"><a id="a1ff76299f43d49258b2146542729d963"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>construct</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, <a class="el" href="structNotNull.html">NotNull</a>&lt; <a class="el" href="structAffineLoopNest.html">AffineLoopNest</a>&lt; false &gt;&gt; explicitLoop, <a class="el" href="structNotNull.html">NotNull</a>&lt; <a class="el" href="structMemoryAccess.html">MemoryAccess</a> &gt; ma, bool isStr, SquarePtrMatrix&lt; int64_t &gt; Pinv, int64_t denom, PtrVector&lt; int64_t &gt; omega) -&gt; <a class="el" href="structNotNull.html">NotNull</a>&lt; <a class="el" href="classAddress.html">Address</a> &gt;</td></tr>
-<tr class="separator:a1ff76299f43d49258b2146542729d963"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a43bf3107921148e6afd65cc78c5f9fb1"><td class="memItemLeft" align="right" valign="top"><a id="a43bf3107921148e6afd65cc78c5f9fb1"></a>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>construct</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, <a class="el" href="structNotNull.html">NotNull</a>&lt; <a class="el" href="structAffineLoopNest.html">AffineLoopNest</a>&lt; false &gt;&gt; explicitLoop, <a class="el" href="structNotNull.html">NotNull</a>&lt; <a class="el" href="structMemoryAccess.html">MemoryAccess</a> &gt; ma, bool isStr, SquarePtrMatrix&lt; int64_t &gt; Pinv, int64_t denom, PtrVector&lt; int64_t &gt; omega, <a class="el" href="classCostModeling_1_1LoopTreeSchedule.html">CostModeling::LoopTreeSchedule</a> *L, unsigned inputEdges, unsigned directEdges, unsigned outputEdges) -&gt; <a class="el" href="structNotNull.html">NotNull</a>&lt; <a class="el" href="classAddress.html">Address</a> &gt;</td></tr>
+<tr class="separator:a43bf3107921148e6afd65cc78c5f9fb1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Represents a memory access that has been rotated according to some affine transform. Return the memory accesses after applying the Schedule. Let</p>

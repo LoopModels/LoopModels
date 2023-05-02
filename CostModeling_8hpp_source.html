@@ -410,33 +410,36 @@ $(function() {
 <div class="line"><a name="l00356"></a><span class="lineno">  356</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;edge : LB.getEdges()) {</div>
 <div class="line"><a name="l00357"></a><span class="lineno">  357</span>&#160;      <span class="comment">// here we add all connections to the addrs</span></div>
 <div class="line"><a name="l00358"></a><span class="lineno">  358</span>&#160;      <span class="comment">// edges -&gt; MA -&gt; Addr</span></div>
-<div class="line"><a name="l00359"></a><span class="lineno">  359</span>&#160;    }</div>
-<div class="line"><a name="l00360"></a><span class="lineno">  360</span>&#160; </div>
-<div class="line"><a name="l00361"></a><span class="lineno">  361</span>&#160;    topologicalSortCore();</div>
-<div class="line"><a name="l00362"></a><span class="lineno">  362</span>&#160;  }</div>
-<div class="line"><a name="l00363"></a><span class="lineno">  363</span>&#160;  <span class="comment">// void initializeInstrGraph(BumpAlloc&lt;&gt; &amp;alloc, Instruction::Cache &amp;cache,</span></div>
-<div class="line"><a name="l00364"></a><span class="lineno">  364</span>&#160;  <span class="comment">//                           BumpAlloc&lt;&gt; &amp;tAlloc, LoopTree *loopForest,</span></div>
-<div class="line"><a name="l00365"></a><span class="lineno">  365</span>&#160;  <span class="comment">//                           LinearProgramLoopBlock &amp;LB,</span></div>
-<div class="line"><a name="l00366"></a><span class="lineno">  366</span>&#160;  <span class="comment">//                           llvm::TargetTransformInfo &amp;TTI,</span></div>
-<div class="line"><a name="l00367"></a><span class="lineno">  367</span>&#160;  <span class="comment">//                           unsigned int vectorBits) {</span></div>
-<div class="line"><a name="l00368"></a><span class="lineno">  368</span>&#160; </div>
-<div class="line"><a name="l00369"></a><span class="lineno">  369</span>&#160;  <span class="comment">//   // buidInstructionGraph(alloc, cache);</span></div>
-<div class="line"><a name="l00370"></a><span class="lineno">  370</span>&#160;  <span class="comment">//   mergeInstructions(alloc, cache, loopForest, TTI, tAlloc, vectorBits);</span></div>
-<div class="line"><a name="l00371"></a><span class="lineno">  371</span>&#160;  <span class="comment">// }</span></div>
-<div class="line"><a name="l00372"></a><span class="lineno">  372</span>&#160; </div>
-<div class="line"><a name="l00373"></a><span class="lineno">  373</span>&#160;<span class="keyword">public</span>:</div>
-<div class="line"><a name="l00374"></a><span class="lineno">  374</span>&#160;  constexpr LoopTreeSchedule(LoopTreeSchedule *L, uint8_t d)</div>
-<div class="line"><a name="l00375"></a><span class="lineno">  375</span>&#160;    : parent(L), depth(d) {}</div>
-<div class="line"><a name="l00376"></a><span class="lineno">  376</span>&#160;};</div>
-<div class="line"><a name="l00377"></a><span class="lineno">  377</span>&#160; </div>
-<div class="line"><a name="l00378"></a><span class="lineno">  378</span>&#160;static_assert(Graphs::AbstractPtrGraph&lt;LoopTreeSchedule::AddressGraph&gt;);</div>
-<div class="line"><a name="l00379"></a><span class="lineno">  379</span>&#160;<span class="comment">// class LoopForestSchedule : LoopTreeSchedule {</span></div>
-<div class="line"><a name="l00380"></a><span class="lineno">  380</span>&#160;<span class="comment">//   [[no_unique_address]] BumpAlloc&lt;&gt; &amp;allocator;</span></div>
-<div class="line"><a name="l00381"></a><span class="lineno">  381</span>&#160;<span class="comment">// };</span></div>
-<div class="line"><a name="l00382"></a><span class="lineno">  382</span>&#160;} <span class="comment">// namespace CostModeling</span></div>
+<div class="line"><a name="l00359"></a><span class="lineno">  359</span>&#160;      <span class="keywordflow">for</span> (<a class="code" href="classAddress.html">Address</a> *in : edge.input()-&gt;getAddresses())</div>
+<div class="line"><a name="l00360"></a><span class="lineno">  360</span>&#160;        <span class="keywordflow">for</span> (<a class="code" href="classAddress.html">Address</a> *out : edge.output()-&gt;getAddresses())</div>
+<div class="line"><a name="l00361"></a><span class="lineno">  361</span>&#160;          in-&gt;addOut(out, edge.getSatLvl()[0]);</div>
+<div class="line"><a name="l00362"></a><span class="lineno">  362</span>&#160;    }</div>
+<div class="line"><a name="l00363"></a><span class="lineno">  363</span>&#160; </div>
+<div class="line"><a name="l00364"></a><span class="lineno">  364</span>&#160;    topologicalSortCore();</div>
+<div class="line"><a name="l00365"></a><span class="lineno">  365</span>&#160;  }</div>
+<div class="line"><a name="l00366"></a><span class="lineno">  366</span>&#160;  <span class="comment">// void initializeInstrGraph(BumpAlloc&lt;&gt; &amp;alloc, Instruction::Cache &amp;cache,</span></div>
+<div class="line"><a name="l00367"></a><span class="lineno">  367</span>&#160;  <span class="comment">//                           BumpAlloc&lt;&gt; &amp;tAlloc, LoopTree *loopForest,</span></div>
+<div class="line"><a name="l00368"></a><span class="lineno">  368</span>&#160;  <span class="comment">//                           LinearProgramLoopBlock &amp;LB,</span></div>
+<div class="line"><a name="l00369"></a><span class="lineno">  369</span>&#160;  <span class="comment">//                           llvm::TargetTransformInfo &amp;TTI,</span></div>
+<div class="line"><a name="l00370"></a><span class="lineno">  370</span>&#160;  <span class="comment">//                           unsigned int vectorBits) {</span></div>
+<div class="line"><a name="l00371"></a><span class="lineno">  371</span>&#160; </div>
+<div class="line"><a name="l00372"></a><span class="lineno">  372</span>&#160;  <span class="comment">//   // buidInstructionGraph(alloc, cache);</span></div>
+<div class="line"><a name="l00373"></a><span class="lineno">  373</span>&#160;  <span class="comment">//   mergeInstructions(alloc, cache, loopForest, TTI, tAlloc, vectorBits);</span></div>
+<div class="line"><a name="l00374"></a><span class="lineno">  374</span>&#160;  <span class="comment">// }</span></div>
+<div class="line"><a name="l00375"></a><span class="lineno">  375</span>&#160; </div>
+<div class="line"><a name="l00376"></a><span class="lineno">  376</span>&#160;<span class="keyword">public</span>:</div>
+<div class="line"><a name="l00377"></a><span class="lineno">  377</span>&#160;  constexpr LoopTreeSchedule(LoopTreeSchedule *L, uint8_t d)</div>
+<div class="line"><a name="l00378"></a><span class="lineno">  378</span>&#160;    : parent(L), depth(d) {}</div>
+<div class="line"><a name="l00379"></a><span class="lineno">  379</span>&#160;};</div>
+<div class="line"><a name="l00380"></a><span class="lineno">  380</span>&#160; </div>
+<div class="line"><a name="l00381"></a><span class="lineno">  381</span>&#160;static_assert(Graphs::AbstractPtrGraph&lt;LoopTreeSchedule::AddressGraph&gt;);</div>
+<div class="line"><a name="l00382"></a><span class="lineno">  382</span>&#160;<span class="comment">// class LoopForestSchedule : LoopTreeSchedule {</span></div>
+<div class="line"><a name="l00383"></a><span class="lineno">  383</span>&#160;<span class="comment">//   [[no_unique_address]] BumpAlloc&lt;&gt; &amp;allocator;</span></div>
+<div class="line"><a name="l00384"></a><span class="lineno">  384</span>&#160;<span class="comment">// };</span></div>
+<div class="line"><a name="l00385"></a><span class="lineno">  385</span>&#160;} <span class="comment">// namespace CostModeling</span></div>
 <div class="ttc" id="aclassAddress_html"><div class="ttname"><a href="classAddress.html">Address</a></div><div class="ttdef"><b>Definition:</b> Address.hpp:62</div></div>
 <div class="ttc" id="aclassCostModeling_1_1LoopTreeSchedule_html"><div class="ttname"><a href="classCostModeling_1_1LoopTreeSchedule.html">CostModeling::LoopTreeSchedule</a></div><div class="ttdef"><b>Definition:</b> CostModeling.hpp:140</div></div>
-<div class="ttc" id="aclassLinearProgramLoopBlock_html"><div class="ttname"><a href="classLinearProgramLoopBlock.html">LinearProgramLoopBlock</a></div><div class="ttdef"><b>Definition:</b> LoopBlock.hpp:319</div></div>
+<div class="ttc" id="aclassLinearProgramLoopBlock_html"><div class="ttname"><a href="classLinearProgramLoopBlock.html">LinearProgramLoopBlock</a></div><div class="ttdef"><b>Definition:</b> LoopBlock.hpp:332</div></div>
 <div class="ttc" id="astructAffineSchedule_html"><div class="ttname"><a href="structAffineSchedule.html">AffineSchedule</a></div><div class="ttdef"><b>Definition:</b> Schedule.hpp:34</div></div>
 <div class="ttc" id="astructBitSet_html"><div class="ttname"><a href="structBitSet.html">BitSet</a></div><div class="ttdef"><b>Definition:</b> BitSets.hpp:82</div></div>
 <div class="ttc" id="astructBumpAlloc_html"><div class="ttname"><a href="structBumpAlloc.html">BumpAlloc</a></div><div class="ttdef"><b>Definition:</b> Allocators.hpp:42</div></div>
