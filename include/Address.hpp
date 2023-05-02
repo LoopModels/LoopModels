@@ -1,7 +1,7 @@
 #pragma once
 
-#include "BitSets.hpp"
 #include "Loops.hpp"
+#include "Math/Array.hpp"
 #include "Math/Math.hpp"
 #include "MemoryAccess.hpp"
 #include "Utilities/Valid.hpp"
@@ -60,18 +60,16 @@ class LoopTreeSchedule;
 /// `oldLoop->rotate(PhiInv)`
 // clang-format on
 class Address {
-  using BitSet = ::MemoryAccess::BitSet;
   /// Original (untransformed) memory access
   NotNull<MemoryAccess> oldMemAccess;
   /// transformed loop
   NotNull<AffineLoopNest<false>> loop;
   CostModeling::LoopTreeSchedule *node{nullptr};
-  [[no_unique_address]] char *addr_{nullptr};
-  [[no_unique_address]] unsigned numMemInputs{0};
-  [[no_unique_address]] unsigned numDirectEdges{0};
-  [[no_unique_address]] unsigned numMemOutputs{0};
-  [[no_unique_address]] unsigned index_;
-  [[no_unique_address]] unsigned lowLink_;
+  [[no_unique_address]] unsigned numMemInputs;
+  [[no_unique_address]] unsigned numDirectEdges;
+  [[no_unique_address]] unsigned numMemOutputs;
+  [[no_unique_address]] unsigned index_{0};
+  [[no_unique_address]] unsigned lowLink_{0};
   [[no_unique_address]] uint8_t dim;
   [[no_unique_address]] uint8_t depth;
   // may be `false` while `oldMemAccess->isStore()==true`
@@ -93,11 +91,13 @@ class Address {
 #endif
   constexpr Address(NotNull<AffineLoopNest<false>> explicitLoop,
                     NotNull<MemoryAccess> ma, SquarePtrMatrix<int64_t> Pinv,
-                    int64_t denom, PtrVector<int64_t> omega, bool isStr)
-    : oldMemAccess(ma), loop(explicitLoop), isStoreFlag(isStr) {
+                    int64_t denom, PtrVector<int64_t> omega, bool isStr,
+                    CostModeling::LoopTreeSchedule *L, unsigned memInputs,
+                    unsigned directEdges, unsigned memOutputs)
+    : oldMemAccess(ma), loop(explicitLoop), node(L), numMemInputs(memInputs),
+      numDirectEdges(directEdges), numMemOutputs(memOutputs),
+      dim(ma->getArrayDim()), depth(ma->getNumLoops()), isStoreFlag(isStr) {
     PtrMatrix<int64_t> M = oldMemAccess->indexMatrix();
-    dim = size_t(M.numCol());
-    depth = size_t(M.numRow());
     MutPtrMatrix<int64_t> mStar{indexMatrix()};
     mStar << (M.transpose() * Pinv).transpose();
     getDenominator() = denom;
@@ -108,21 +108,31 @@ class Address {
     // return const_cast<int64_t *>(mem);
   }
   [[nodiscard]] constexpr auto getAddrMemory() const -> Address ** {
-    // const void *m = mem +
-    //   (1 + getNumLoops() + (getArrayDim() * getNumLoops())) *
-    //   sizeof(int64_t);
-    const void *m = addr_;
+    const void *m =
+      mem +
+      (1 + getNumLoops() + (getArrayDim() * getNumLoops())) * sizeof(int64_t);
+    // const void *m = addr_;
     void *p = const_cast<void *>(static_cast<const void *>(m));
     return (Address **)p;
   }
   [[nodiscard]] constexpr auto getDDepthMemory() const -> uint8_t * {
-    const void *m = addr_ + (numMemInputs + numDirectEdges + numMemOutputs) *
-                              sizeof(Address *);
+    const void *m =
+      mem +
+      (1 + getNumLoops() + (getArrayDim() * getNumLoops())) * sizeof(int64_t) +
+      (numMemInputs + numDirectEdges + numMemOutputs) * sizeof(Address *);
     void *p = const_cast<void *>(static_cast<const void *>(m));
     return (uint8_t *)p;
   }
 
 public:
+  [[nodiscard]] constexpr auto getLoop() const
+    -> NotNull<AffineLoopNest<false>> {
+    return loop;
+  }
+  [[nodiscard]] constexpr auto getLoopTreeSchedule() const
+    -> CostModeling::LoopTreeSchedule * {
+    return node;
+  }
   constexpr void visit() { visited |= 1; }
   constexpr void unVisit() { visited &= ~uint8_t(1); }
   [[nodiscard]] constexpr auto wasVisited() const -> bool {
@@ -190,6 +200,14 @@ public:
     Address **p = getAddrMemory() + n;
     return {p, p + numOutNeighbors(), getDDepthMemory() + n, filtd};
   }
+  [[nodiscard]] constexpr auto directEdges() -> MutPtrVector<Address *> {
+    Address **p = getAddrMemory() + numMemInputs;
+    return {p, numDirectEdges};
+  }
+  [[nodiscard]] constexpr auto directEdges() const -> PtrVector<Address *> {
+    Address **p = getAddrMemory() + numMemInputs;
+    return {p, numDirectEdges};
+  }
 
   [[nodiscard]] auto inNeighbors() const -> PtrVector<Address *> {
     return PtrVector<Address *>{getAddrMemory(), numInNeighbors()};
@@ -205,13 +223,29 @@ public:
     return MutPtrVector<Address *>{getAddrMemory() + numInNeighbors(),
                                    numOutNeighbors()};
   }
+  constexpr void indirectInNeighbor(Address *other, size_t i, uint8_t d) {
+    getAddrMemory()[i] = other;
+    getDDepthMemory()[i] = d;
+  }
+  constexpr void indirectOutNeighbor(Address *other, size_t i, uint8_t d) {
+    getAddrMemory()[numMemInputs + numDirectEdges + i] = other;
+    getDDepthMemory()[numMemInputs + numDirectEdges + i] = d;
+  }
+
   [[nodiscard]] static auto
   construct(BumpAlloc<> &alloc, NotNull<AffineLoopNest<false>> explicitLoop,
             NotNull<MemoryAccess> ma, bool isStr, SquarePtrMatrix<int64_t> Pinv,
-            int64_t denom, PtrVector<int64_t> omega) -> NotNull<Address> {
+            int64_t denom, PtrVector<int64_t> omega,
+            CostModeling::LoopTreeSchedule *L, unsigned inputEdges,
+            unsigned directEdges, unsigned outputEdges) -> NotNull<Address> {
 
-    size_t memSz = ma->getNumLoops() * (1 + ma->getArrayDim());
-    auto *pt = alloc.allocate(sizeof(Address) + memSz * sizeof(int64_t), 8);
+    size_t numLoops = ma->getNumLoops();
+    size_t memSz =
+      (1 + numLoops + (ma->getArrayDim() * numLoops)) * sizeof(int64_t) +
+      (inputEdges + directEdges + outputEdges) *
+        (sizeof(Address *) + sizeof(uint8_t));
+    // size_t memSz = ma->getNumLoops() * (1 + ma->getArrayDim());
+    auto *pt = alloc.allocate(memSz, 8);
     // we could use the passkey idiom to make the constructor public yet
     // un-callable so that we can use std::construct_at (which requires a public
     // constructor) or, we can just use placement new and not mark this function
@@ -219,7 +253,18 @@ public:
     // constexpr is UB is not allowed, so we get more warnings).
     // return std::construct_at((Address *)pt, explicitLoop, ma, Pinv, denom,
     // omega, isStr);
-    return new (pt) Address(explicitLoop, ma, Pinv, denom, omega, isStr);
+    return new (pt) Address(explicitLoop, ma, Pinv, denom, omega, isStr, L,
+                            inputEdges, directEdges, outputEdges);
+  }
+  constexpr void addDirectConnection(Address *store, size_t loadEdge) {
+    directEdges().front() = store;
+    store->directEdges()[loadEdge] = this;
+  }
+  constexpr void addOut(Address *child, uint8_t d) {
+    // we hijack index_ and lowLink_ before they're used for SCC
+    size_t inInd = index_++, outInd = child->lowLink_++;
+    indirectOutNeighbor(child, inInd, d);
+    child->indirectInNeighbor(this, outInd, d);
   }
   [[nodiscard]] constexpr auto getNumLoops() const -> size_t { return depth; }
   [[nodiscard]] constexpr auto getArrayDim() const -> size_t { return dim; }

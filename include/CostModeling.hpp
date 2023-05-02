@@ -356,6 +356,9 @@ private:
     for (auto &edge : LB.getEdges()) {
       // here we add all connections to the addrs
       // edges -> MA -> Addr
+      for (Address *in : edge.input()->getAddresses())
+        for (Address *out : edge.output()->getAddresses())
+          in->addOut(out, edge.getSatLvl()[0]);
     }
 
     topologicalSortCore();

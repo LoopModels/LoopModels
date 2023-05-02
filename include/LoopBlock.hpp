@@ -95,18 +95,31 @@ public:
                                    MutPtrVector<Address *> accesses) const {
     // First, we invert the schedule matrix.
     SquarePtrMatrix<int64_t> Phi = schedule.getPhi();
-    auto [Pinv, s] = NormalForm::scaledInv(Phi);
+    auto [Pinv, denom] = NormalForm::scaledInv(Phi);
     // if (s == 1) {}
+    unsigned numMem = accesses.size();
     assert(accesses.size() == memory.size());
     size_t j = 0;
-    for (auto i : memory) {
-      // TODO: cache!
-      NotNull<AffineLoopNest<false>> loop =
-        memAccess[i]->getLoop()->rotate(alloc, Pinv);
-      accesses[j++] =
-        Address::construct(alloc, loop, memAccess[i], i == storeId, Pinv, s,
-                           schedule.getOffsetOmega());
+    for (size_t i : memory) {
+      MemoryAccess *mem = memAccess[i];
+      NotNull<AffineLoopNest<false>> loop = mem->getLoop()->rotate(alloc, Pinv);
+      bool isStore = i == storeId;
+      size_t inputEdges = 0, outputEdges = 0;
+      for (size_t k : mem->inputEdges())
+        inputEdges += edges[k].input()->repCount();
+      for (size_t k : mem->outputEdges())
+        outputEdges += edges[k].output()->repCount();
+
+      Address *addr = accesses[j++] = Address::construct(
+        alloc, loop, mem, isStore, Pinv, denom, schedule.getOffsetOmega(), L,
+        inputEdges, isStore ? numMem - 1 : 1, outputEdges);
+      mem->push_back(alloc, addr);
     }
+    assert(j == numMem);
+    Address *store = accesses[storeId];
+    // addrs all need direct connections
+    for (size_t i = 0, k = 0; i < numMem; ++i)
+      if (i != storeId) accesses[i]->addDirectConnection(store, k++);
   }
   constexpr void
   incrementReplicationCounts(PtrVector<MemoryAccess *> memAccess) const {

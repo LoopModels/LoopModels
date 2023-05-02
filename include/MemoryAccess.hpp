@@ -1,6 +1,7 @@
 #pragma once
 #include "BitSets.hpp"
 #include "Loops.hpp"
+#include "Math/Array.hpp"
 #include "Math/Math.hpp"
 #include "Utilities/Valid.hpp"
 #include <algorithm>
@@ -16,7 +17,7 @@
 #include <llvm/Support/Allocator.h>
 #include <llvm/Support/raw_ostream.h>
 
-struct Address;
+class Address;
 // TODO:
 // refactor to use GraphTraits.h
 // https://github.com/llvm/llvm-project/blob/main/llvm/include/llvm/ADT/GraphTraits.h
@@ -59,9 +60,12 @@ private:
   BitSet edgesIn{};
   BitSet edgesOut{};
   BitSet nodeIndex{};
-  Address *addr{nullptr};
+  union {
+    Address **addrss{nullptr};
+    Address *addrs;
+  };
   size_t numAddr{0};
-  size_t addrReplications{1};
+  size_t addrReplications{0};
   // This is a flexible length array, declared as a length-1 array
   // I wish there were some way to opt into "I'm using a c99 extension"
   // so that I could use `mem[]` or `mem[0]` instead of `mem[1]`. See:
@@ -103,7 +107,27 @@ private:
   }
 
 public:
+  [[nodiscard]] constexpr auto repCount() const -> size_t {
+    return addrReplications + 1;
+  }
   void replicateAddr() { ++addrReplications; }
+  void push_back(BumpAlloc<> &alloc, Address *addr) {
+    if (addrReplications) {
+      if (numAddr == 0)
+        addrss = alloc.allocate<Address *>(addrReplications + 1);
+      invariant(numAddr <= addrReplications);
+      addrss[numAddr++] = addr;
+    } else addrs = addr;
+  }
+  // auto beginAddr() -> Address ** {
+  //   return (addrReplications) ? addrss : &addrs;
+  // }
+  // auto endAddr() -> Address ** {
+  //   return (addrReplications) ? addrss + numAddr : (&addrs) + 1;
+  // }
+  auto getAddresses() -> MutPtrVector<Address *> {
+    return {addrReplications ? addrss : &addrs, addrReplications ? numAddr : 1};
+  }
   explicit constexpr MemoryAccess(const llvm::SCEVUnknown *arrayPtr,
                                   AffineLoopNest<true> &loopRef,
                                   llvm::Instruction *user,

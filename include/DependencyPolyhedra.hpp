@@ -629,6 +629,12 @@ class Dependence {
   [[no_unique_address]] bool forward;
 
 public:
+  [[nodiscard]] constexpr auto input() const -> NotNull<MemoryAccess> {
+    return in;
+  }
+  [[nodiscard]] constexpr auto output() const -> NotNull<MemoryAccess> {
+    return out;
+  }
   constexpr Dependence(NotNull<DepPoly> poly,
                        std::array<NotNull<Simplex>, 2> depSatBound,
                        std::array<NotNull<MemoryAccess>, 2> inOut, bool fwd)
