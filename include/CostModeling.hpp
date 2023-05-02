@@ -327,45 +327,35 @@ private:
                 size_t>,
       4>
       memOps;
+    // the only kind of replication that occur are store reloads
     // size_t maxDepth = 0;
+    unsigned numAddr = 0;
     for (auto &node : LB.getNodes()) {
       auto &p{get(memOps, node.getNumLoops())};
       p.first.emplace_back(&node,
                            allocLoopNodes(alloc, LB, node, node.getSchedule()));
-      p.second += node.getNumMem();
+      unsigned numMem = node.getNumMem();
+      p.second += numMem;
+      numAddr += numMem;
+      node.incrementReplicationCounts(LB.getMemoryAccesses());
     }
-    Vector<Address *> addresses{0};
-    for (size_t d = memOps.size(); d--;) {
+
+    Vector<Address *> addresses{numAddr};
+    for (size_t d = memOps.size(), j = 0; d--;) {
       auto &[nodes, numMem] = memOps[d];
       addresses.resize(numMem);
-      for (size_t i = 0, j = 0; i < nodes.size();) {
+      for (size_t i = 0; i < nodes.size();) {
         auto &[node, L] = nodes[i];
         size_t k = j + node->getNumMem();
-        // TODO: on insertMemAccesses: we need to build the mem graph
-        // some MemoryAccesses are implicitly duplicated; for Address,
-        // we make the duplication explicit.
-        // that is, every original store could also map to a load.
-        // This means that when we iterate over edges, e.g.
-        // e: s0 -> s1
-        // this may actually correspond to many edges.
-        // we thus build a memAccess->addr map, i.e.
-        // map<MemoryAccess*,llvm::SmallVector<Address*>>
-        //
-        // we build the addr graph in a few passes
-        // 1. construct all addr, and build the map. We set `numDirectEdges`
-        //    here
-        // 2. Iterate over all edges (`MemoryAccess*`->`MemoryAccess*`) to count
-        //    `numMemInputs` and `numMemOutputs` for each `Address*`
-        // 3. Allocate the `addr_` pointers, filling direct edges
-        //    We can iterate over Addresses via iterating over nodes.
-        // 4. iterate over edges, and fill in the `addr_` pointers,
-        //    can use `index_` and `lowLink_` for `numMemInputs` and
-        //    `numMemOutputs` inserted so far at this point.
-        //
-        node->insertMemAccesses(alloc, LB.getMemoryAccesses(),
+        node->insertMemAccesses(alloc, LB.getMemoryAccesses(), LB.getEdges(), L,
                                 addresses[_(j, k)]);
         j = k;
       }
+    }
+    // we now have a vector of addrs
+    for (auto &edge : LB.getEdges()) {
+      // here we add all connections to the addrs
+      // edges -> MA -> Addr
     }
 
     topologicalSortCore();

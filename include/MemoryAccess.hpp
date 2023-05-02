@@ -16,6 +16,7 @@
 #include <llvm/Support/Allocator.h>
 #include <llvm/Support/raw_ostream.h>
 
+struct Address;
 // TODO:
 // refactor to use GraphTraits.h
 // https://github.com/llvm/llvm-project/blob/main/llvm/include/llvm/ADT/GraphTraits.h
@@ -58,6 +59,9 @@ private:
   BitSet edgesIn{};
   BitSet edgesOut{};
   BitSet nodeIndex{};
+  Address *addr{nullptr};
+  size_t numAddr{0};
+  size_t addrReplications{1};
   // This is a flexible length array, declared as a length-1 array
   // I wish there were some way to opt into "I'm using a c99 extension"
   // so that I could use `mem[]` or `mem[0]` instead of `mem[1]`. See:
@@ -99,6 +103,7 @@ private:
   }
 
 public:
+  void replicateAddr() { ++addrReplications; }
   explicit constexpr MemoryAccess(const llvm::SCEVUnknown *arrayPtr,
                                   AffineLoopNest<true> &loopRef,
                                   llvm::Instruction *user,

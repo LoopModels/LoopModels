@@ -45,6 +45,10 @@ constexpr void insertSortedUnique(Vector<I> &v, const I &x) {
   v.push_back(x);
 }
 
+namespace CostModeling {
+class LoopTreeSchedule;
+} // namespace CostModeling
+
 /// ScheduledNode
 /// Represents a set of memory accesses that are optimized together in the LP.
 /// These instructions are all connected directly by through registers.
@@ -73,8 +77,21 @@ public:
     : storeId(sId) {
     addMemory(sId, store, nodeIndex);
   }
+  // MemAccess addrCapacity field gives the replication count
+  // so for each memory access, we can count the number of edges in
+  // and the number of edges out through iterating edges in and summing
+  // repCounts
+  //
+  // we use these to
+  // 1. alloc enough memory for each Addresses*
+  // 2. add each created address to the MemoryAddress's remap
+  // TODO:
+  // 1. the above
+  // 2. add the direct Addr connections corresponding to the node
   constexpr void insertMemAccesses(BumpAlloc<> &alloc,
                                    PtrVector<MemoryAccess *> memAccess,
+                                   PtrVector<Dependence> edges,
+                                   CostModeling::LoopTreeSchedule *L,
                                    MutPtrVector<Address *> accesses) const {
     // First, we invert the schedule matrix.
     SquarePtrMatrix<int64_t> Phi = schedule.getPhi();
@@ -90,6 +107,12 @@ public:
         Address::construct(alloc, loop, memAccess[i], i == storeId, Pinv, s,
                            schedule.getOffsetOmega());
     }
+  }
+  constexpr void
+  incrementReplicationCounts(PtrVector<MemoryAccess *> memAccess) const {
+    for (auto i : memory)
+      if (i != storeId && (memAccess[i]->isStore()))
+        memAccess[i]->replicateAddr();
   }
   [[nodiscard]] constexpr auto getNumMem() const -> size_t {
     return memory.size();
