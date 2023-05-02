@@ -84,9 +84,12 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:acb491b0946ae10ae4094463dc0c9853c"><td class="memItemLeft" align="right" valign="top"><a id="acb491b0946ae10ae4094463dc0c9853c"></a>
 constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>ScheduledNode</b> (unsigned int sId, <a class="el" href="structMemoryAccess.html">MemoryAccess</a> *store, unsigned int nodeIndex)</td></tr>
 <tr class="separator:acb491b0946ae10ae4094463dc0c9853c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a19722603f8fac9e322a152783960576c"><td class="memItemLeft" align="right" valign="top"><a id="a19722603f8fac9e322a152783960576c"></a>
-constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>insertMemAccesses</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, PtrVector&lt; <a class="el" href="structMemoryAccess.html">MemoryAccess</a> * &gt; memAccess, MutPtrVector&lt; <a class="el" href="classAddress.html">Address</a> * &gt; accesses) const</td></tr>
-<tr class="separator:a19722603f8fac9e322a152783960576c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7de8b272842d3ea829ff3d030c046821"><td class="memItemLeft" align="right" valign="top"><a id="a7de8b272842d3ea829ff3d030c046821"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>insertMemAccesses</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, PtrVector&lt; <a class="el" href="structMemoryAccess.html">MemoryAccess</a> * &gt; memAccess, PtrVector&lt; <a class="el" href="classDependence.html">Dependence</a> &gt; edges, <a class="el" href="classCostModeling_1_1LoopTreeSchedule.html">CostModeling::LoopTreeSchedule</a> *L, MutPtrVector&lt; <a class="el" href="classAddress.html">Address</a> * &gt; accesses) const</td></tr>
+<tr class="separator:a7de8b272842d3ea829ff3d030c046821"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a33e58822a56e6bebecb5cf1e0bc9c8bf"><td class="memItemLeft" align="right" valign="top"><a id="a33e58822a56e6bebecb5cf1e0bc9c8bf"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>incrementReplicationCounts</b> (PtrVector&lt; <a class="el" href="structMemoryAccess.html">MemoryAccess</a> * &gt; memAccess) const</td></tr>
+<tr class="separator:a33e58822a56e6bebecb5cf1e0bc9c8bf"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a829fb7af566fd5c86340f68f9a1ee987"><td class="memItemLeft" align="right" valign="top"><a id="a829fb7af566fd5c86340f68f9a1ee987"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumMem</b> () const -&gt; size_t</td></tr>
 <tr class="separator:a829fb7af566fd5c86340f68f9a1ee987"><td class="memSeparator" colspan="2">&#160;</td></tr>
