@@ -14,8 +14,7 @@ var searchData=
   ['replaceallotheruseswith_190',['replaceAllOtherUsesWith',['../structInstruction.html#a9063e7ae413252a8cc47c0dc0e2471bb',1,'Instruction']]],
   ['replacealluseswith_191',['replaceAllUsesWith',['../structInstruction.html#a535643d61e3ca44af3c6f56fc88976eb',1,'Instruction']]],
   ['resizeableview_192',['ResizeableView',['../structLinAlg_1_1ResizeableView.html',1,'LinAlg']]],
-  ['resizeableview_3c_20address_20_2a_20_3e_193',['ResizeableView&lt; Address * &gt;',['../structLinAlg_1_1ResizeableView.html',1,'LinAlg']]],
-  ['resizeableview_3c_20loopandexit_20_3e_194',['ResizeableView&lt; LoopAndExit &gt;',['../structLinAlg_1_1ResizeableView.html',1,'LinAlg']]],
-  ['resizeableview_3c_20t_2c_20s_2c_20default_5fcapacity_5ftype_5ft_3c_20s_20_3e_20_3e_195',['ResizeableView&lt; T, S, default_capacity_type_t&lt; S &gt; &gt;',['../structLinAlg_1_1ResizeableView.html',1,'LinAlg']]],
-  ['rotate_196',['rotate',['../structAffineLoopNest.html#a215506c9530da55d0671936af217dd6d',1,'AffineLoopNest']]]
+  ['resizeableview_3c_20loopandexit_20_3e_193',['ResizeableView&lt; LoopAndExit &gt;',['../structLinAlg_1_1ResizeableView.html',1,'LinAlg']]],
+  ['resizeableview_3c_20t_2c_20s_2c_20default_5fcapacity_5ftype_5ft_3c_20s_20_3e_20_3e_194',['ResizeableView&lt; T, S, default_capacity_type_t&lt; S &gt; &gt;',['../structLinAlg_1_1ResizeableView.html',1,'LinAlg']]],
+  ['rotate_195',['rotate',['../structAffineLoopNest.html#a215506c9530da55d0671936af217dd6d',1,'AffineLoopNest']]]
 ];
