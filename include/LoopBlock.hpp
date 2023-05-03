@@ -47,6 +47,16 @@ constexpr void insertSortedUnique(Vector<I> &v, const I &x) {
 
 namespace CostModeling {
 class LoopTreeSchedule;
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wundefined-inline"
+#endif
+constexpr auto getInitAddr(LoopTreeSchedule *L, BumpAlloc<> &alloc)
+  -> LinAlg::ResizeableView<Address *, unsigned>;
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
+
 } // namespace CostModeling
 
 /// ScheduledNode
@@ -91,15 +101,13 @@ public:
   constexpr void insertMemAccesses(BumpAlloc<> &alloc,
                                    PtrVector<MemoryAccess *> memAccess,
                                    PtrVector<Dependence> edges,
-                                   CostModeling::LoopTreeSchedule *L,
-                                   MutPtrVector<Address *> accesses) const {
+                                   CostModeling::LoopTreeSchedule *L) const {
     // First, we invert the schedule matrix.
     SquarePtrMatrix<int64_t> Phi = schedule.getPhi();
     auto [Pinv, denom] = NormalForm::scaledInv(Phi);
-    // if (s == 1) {}
-    unsigned numMem = accesses.size();
-    assert(accesses.size() == memory.size());
-    size_t j = 0;
+    // TODO: if (s == 1) {}
+    auto accesses{getInitAddr(L, alloc)};
+    unsigned numMem = memory.size(), offset = accesses.size();
     for (size_t i : memory) {
       MemoryAccess *mem = memAccess[i];
       NotNull<AffineLoopNest<false>> loop = mem->getLoop()->rotate(alloc, Pinv);
@@ -110,16 +118,16 @@ public:
       for (size_t k : mem->outputEdges())
         outputEdges += edges[k].output()->repCount();
 
-      Address *addr = accesses[j++] = Address::construct(
+      Address *addr = Address::construct(
         alloc, loop, mem, isStore, Pinv, denom, schedule.getOffsetOmega(), L,
         inputEdges, isStore ? numMem - 1 : 1, outputEdges);
       mem->push_back(alloc, addr);
+      accesses.push_back(addr);
     }
-    assert(j == numMem);
-    Address *store = accesses[storeId];
+    Address *store = accesses[offset + storeId];
     // addrs all need direct connections
     for (size_t i = 0, k = 0; i < numMem; ++i)
-      if (i != storeId) accesses[i]->addDirectConnection(store, k++);
+      if (i != storeId) accesses[offset + i]->addDirectConnection(store, k++);
   }
   constexpr void
   incrementReplicationCounts(PtrVector<MemoryAccess *> memAccess) const {

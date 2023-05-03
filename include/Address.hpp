@@ -12,6 +12,15 @@
 
 namespace CostModeling {
 class LoopTreeSchedule;
+
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wundefined-inline"
+#endif
+constexpr auto getDepth(LoopTreeSchedule *) -> unsigned;
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
 } // namespace CostModeling
 
 /// Represents a memory access that has been rotated according to some affine
@@ -29,24 +38,21 @@ class LoopTreeSchedule;
 /// \textbf{x}\in\mathbb{R}^D &=& \text{the indices into the array}\\ %
 /// \textbf{M}\in\mathbb{R}^{N \times D} &=& \text{map from loop ind vars to array indices}\\ %
 /// \boldsymbol{\Phi}\in\mathbb{R}^{N \times N} &=& \text{the schedule matrix}\\ %
-/// \boldsymbol{\Phi}_*\in\mathbb{R}^{N \times N} &=& \textbf{E}\boldsymbol{\Phi}\\ %
 /// \boldsymbol{\omega}\in\mathbb{R}^N &=& \text{the offset vector}\\ %
 /// \textbf{c}\in\mathbb{R}^{N} &=& \text{the constant offset vector}\\ %
 /// \textbf{C}\in\mathbb{R}^{N \times V} &=& \text{runtime variable coefficient matrix}\\ %
 /// \textbf{s}\in\mathbb{R}^V &=& \text{the symbolic runtime variables}\\ %
 /// \f}
 /// 
-/// Where \f$\textbf{E}\f$ is an [exchange matrix](https://en.wikipedia.org/wiki/Exchange_matrix).
 /// The rows of \f$\boldsymbol{\Phi}\f$ are sorted from the outermost loop to
-/// the innermost loop, the opposite ordering used elsewhere. \f$\boldsymbol{\Phi}_*\f$
-/// corrects this. 
+/// the innermost loop.
 /// We have
 /// \f{eqnarray*}{
-/// \textbf{j} &=& \boldsymbol{\Phi}_*\textbf{i} + \boldsymbol{\omega}\\ %
-/// \textbf{i} &=& \boldsymbol{\Phi}_*^{-1}\left(j - \boldsymbol{\omega}\right)\\ %
+/// \textbf{j} &=& \boldsymbol{\Phi}\textbf{i} + \boldsymbol{\omega}\\ %
+/// \textbf{i} &=& \boldsymbol{\Phi}^{-1}\left(j - \boldsymbol{\omega}\right)\\ %
 /// \textbf{x} &=& \textbf{M}'\textbf{i} + \textbf{c} + \textbf{Cs} \\ %
-/// \textbf{x} &=& \textbf{M}'\boldsymbol{\Phi}_*^{-1}\left(j - \boldsymbol{\omega}\right) + \textbf{c} + \textbf{Cs} \\ %
-/// \textbf{M}'_* &=& \textbf{M}'\boldsymbol{\Phi}_*^{-1}\\ %
+/// \textbf{x} &=& \textbf{M}'\boldsymbol{\Phi}^{-1}\left(j - \boldsymbol{\omega}\right) + \textbf{c} + \textbf{Cs} \\ %
+/// \textbf{M}'_* &=& \textbf{M}'\boldsymbol{\Phi}^{-1}\\ %
 /// \textbf{x} &=& \textbf{M}'_*\left(j - \boldsymbol{\omega}\right) + \textbf{c} + \textbf{Cs} \\ %
 /// \textbf{x} &=& \textbf{M}'_*j - \textbf{M}'_*\boldsymbol{\omega} + \textbf{c} + \textbf{Cs} \\ %
 /// \textbf{c}_* &=& \textbf{c} - \textbf{M}'_*\boldsymbol{\omega} \\ %
@@ -55,7 +61,7 @@ class LoopTreeSchedule;
 /// Therefore, to update the memory accesses from the old induction variables $i$
 /// to the new variables $j$, we must simply compute the updated
 /// \f$\textbf{c}_*\f$ and \f$\textbf{M}'_*\f$.
-/// We can also test for the case where \f$\boldsymbol{\Phi} = \textbf{E}\f$, or equivalently that $\textbf{E}\boldsymbol{\Phi} = \boldsymbol{\Phi}_* = \textbf{I}$.
+/// We can also test for the case where \f$\boldsymbol{\Phi} = \textbf{E}\f$, or equivalently that $\textbf{E}\boldsymbol{\Phi} = \boldsymbol{\Phi} = \textbf{I}$.
 /// Note that to get the new AffineLoopNest, we call
 /// `oldLoop->rotate(PhiInv)`
 // clang-format on
@@ -96,10 +102,15 @@ class Address {
                     unsigned directEdges, unsigned memOutputs)
     : oldMemAccess(ma), loop(explicitLoop), node(L), numMemInputs(memInputs),
       numDirectEdges(directEdges), numMemOutputs(memOutputs),
-      dim(ma->getArrayDim()), depth(ma->getNumLoops()), isStoreFlag(isStr) {
-    PtrMatrix<int64_t> M = oldMemAccess->indexMatrix();
-    MutPtrMatrix<int64_t> mStar{indexMatrix()};
-    mStar << (M.transpose() * Pinv).transpose();
+      dim(ma->getArrayDim()), depth(unsigned(Pinv.numCol())),
+      isStoreFlag(isStr) {
+    PtrMatrix<int64_t> M = oldMemAccess->indexMatrix(); // nLma x aD
+    MutPtrMatrix<int64_t> mStar{indexMatrix()};         // aD x nLp
+    // M is implicitly padded with zeros, nLp >= nLma
+    size_t nLma = unsigned(ma->getNumLoops());
+    invariant(nLma <= depth);
+    invariant(nLma, size_t(M.numRow()));
+    mStar << M.transpose() * Pinv(_(0, nLma), _);
     getDenominator() = denom;
     getOffsetOmega() << ma->offsetMatrix()(_, 0) - mStar * omega;
   }
@@ -141,6 +152,9 @@ public:
   constexpr void addToStack() { visited |= 2; }
   constexpr void removeFromStack() { visited &= ~uint8_t(2); }
   [[nodiscard]] constexpr auto onStack() const -> bool { return visited & 2; }
+  constexpr void place() { visited |= 4; }
+  [[nodiscard]] constexpr auto wasPlaced() const -> bool { return visited & 4; }
+
   constexpr auto index() -> unsigned & { return index_; }
   [[nodiscard]] constexpr auto index() const -> unsigned { return index_; }
   constexpr auto lowLink() -> unsigned & { return lowLink_; }
@@ -156,6 +170,7 @@ public:
     constexpr auto operator*() const -> Address * { return *p; }
     constexpr auto operator->() const -> Address * { return *p; }
     constexpr auto operator++() -> ActiveEdgeIterator & {
+      // meaning of filtdepth 255?
       do {
         ++p;
         ++d;
@@ -209,17 +224,17 @@ public:
     return {p, numDirectEdges};
   }
 
-  [[nodiscard]] auto inNeighbors() const -> PtrVector<Address *> {
+  [[nodiscard]] constexpr auto inNeighbors() const -> PtrVector<Address *> {
     return PtrVector<Address *>{getAddrMemory(), numInNeighbors()};
   }
-  [[nodiscard]] auto outNeighbors() const -> PtrVector<Address *> {
+  [[nodiscard]] constexpr auto outNeighbors() const -> PtrVector<Address *> {
     return PtrVector<Address *>{getAddrMemory() + numInNeighbors(),
                                 numOutNeighbors()};
   }
-  [[nodiscard]] auto inNeighbors() -> MutPtrVector<Address *> {
+  [[nodiscard]] constexpr auto inNeighbors() -> MutPtrVector<Address *> {
     return MutPtrVector<Address *>{getAddrMemory(), numInNeighbors()};
   }
-  [[nodiscard]] auto outNeighbors() -> MutPtrVector<Address *> {
+  [[nodiscard]] constexpr auto outNeighbors() -> MutPtrVector<Address *> {
     return MutPtrVector<Address *>{getAddrMemory() + numInNeighbors(),
                                    numOutNeighbors()};
   }
@@ -239,7 +254,7 @@ public:
             CostModeling::LoopTreeSchedule *L, unsigned inputEdges,
             unsigned directEdges, unsigned outputEdges) -> NotNull<Address> {
 
-    size_t numLoops = ma->getNumLoops();
+    size_t numLoops = size_t(Pinv.numCol());
     size_t memSz =
       (1 + numLoops + (ma->getArrayDim() * numLoops)) * sizeof(int64_t) +
       (inputEdges + directEdges + outputEdges) *
@@ -259,6 +274,9 @@ public:
   constexpr void addDirectConnection(Address *store, size_t loadEdge) {
     directEdges().front() = store;
     store->directEdges()[loadEdge] = this;
+    // never ignored
+    getDDepthMemory()[numMemInputs] = 255;
+    store->getDDepthMemory()[numMemInputs + loadEdge] = 255;
   }
   constexpr void addOut(Address *child, uint8_t d) {
     // we hijack index_ and lowLink_ before they're used for SCC
@@ -308,5 +326,8 @@ public:
   [[nodiscard]] auto isStore() const -> bool { return isStoreFlag; }
   [[nodiscard]] auto getLoop() -> NotNull<AffineLoopNest<false>> {
     return loop;
+  }
+  [[nodiscard]] auto getCurrentDepth() -> unsigned {
+    return CostModeling::getDepth(node);
   }
 };

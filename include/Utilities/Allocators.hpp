@@ -168,37 +168,41 @@ public:
   [[gnu::returns_nonnull, nodiscard]] constexpr auto
   reallocate(void *Ptr, size_t szOld, size_t szNew, size_t Align) -> void * {
     if (szOld >= szNew) return Ptr;
-    if (void *p = tryReallocate(Ptr, szOld, szNew, Align)) {
-      if constexpr ((BumpDown) & (!ForOverwrite))
-        std::copy_n((char *)Ptr, szOld, (char *)p);
-      return p;
-    }
-    Align = Align > MinAlignment ? toPowerOf2(Align) : MinAlignment;
-    if constexpr (BumpUp) {
-      if (Ptr == slab - align(szOld)) {
-        slab = Ptr + align(szNew);
-        if (!outOfSlab(slab, sEnd)) {
-          __asan_unpoison_memory_region((char *)Ptr + szOld, szNew - szOld);
-          __msan_allocated_memory((char *)Ptr + OldSize, NewSize - OldSize);
-          return Ptr;
-        }
+    if (Ptr) {
+      if (void *p = tryReallocate(Ptr, szOld, szNew, Align)) {
+        if constexpr ((BumpDown) & (!ForOverwrite))
+          std::copy_n((char *)Ptr, szOld, (char *)p);
+        return p;
       }
-    } else if (Ptr == slab) {
-      size_t extraSize = align(szNew - szOld, Align);
-      slab = (char *)slab - extraSize;
-      if (!outOfSlab(slab, sEnd)) {
-        __asan_unpoison_memory_region(slab, extraSize);
-        __msan_allocated_memory(SlabCur, extraSize);
-        if constexpr (!ForOverwrite)
-          std::copy_n((char *)Ptr, szOld, (char *)slab);
-        return slab;
+      Align = Align > MinAlignment ? toPowerOf2(Align) : MinAlignment;
+      if constexpr (BumpUp) {
+        if (Ptr == slab - align(szOld)) {
+          slab = Ptr + align(szNew);
+          if (!outOfSlab(slab, sEnd)) {
+            __asan_unpoison_memory_region((char *)Ptr + szOld, szNew - szOld);
+            __msan_allocated_memory((char *)Ptr + OldSize, NewSize - OldSize);
+            return Ptr;
+          }
+        }
+      } else if (Ptr == slab) {
+        size_t extraSize = align(szNew - szOld, Align);
+        slab = (char *)slab - extraSize;
+        if (!outOfSlab(slab, sEnd)) {
+          __asan_unpoison_memory_region(slab, extraSize);
+          __msan_allocated_memory(SlabCur, extraSize);
+          if constexpr (!ForOverwrite)
+            std::copy_n((char *)Ptr, szOld, (char *)slab);
+          return slab;
+        }
       }
     }
     // we need to allocate new memory
     auto newPtr = allocate(szNew, Align);
-    if constexpr (!ForOverwrite)
-      std::copy_n((char *)Ptr, szOld, (char *)newPtr);
-    deallocate(Ptr, szOld);
+    if (szOld && Ptr) {
+      if constexpr (!ForOverwrite)
+        std::copy_n((char *)Ptr, szOld, (char *)newPtr);
+      deallocate(Ptr, szOld);
+    }
     return newPtr;
   }
   constexpr void reset() {

@@ -158,15 +158,15 @@ inline auto stronglyConnectedComponents(AbstractIndexGraph auto &g)
 // AbstractPtrGraph
 template <typename B>
 inline auto
-strongConnect(AbstractPtrGraph auto &g,
+strongConnect(const AbstractPtrGraph auto &g,
               llvm::SmallVectorImpl<llvm::SmallVector<B *, 1>> &components,
               llvm::SmallVector<B *> &stack, unsigned index, B *v) -> unsigned {
   v->index() = v->lowLink() = index++;
   v->setOnStack();
-  g.visit(v);
+  v->visit();
   stack.push_back(v);
   for (auto w : g.inNeighbors(v))
-    if (!g.wasVisited(w)) {
+    if (!w->wasVisited()) {
       strongConnect<B>(g, components, stack, index, w);
       v->lowLink() = std::min(v->lowLink(), w->lowLink());
     } else if (w->onStack()) v->lowLink() = std::min(v->lowLink(), w->index());
@@ -185,7 +185,7 @@ strongConnect(AbstractPtrGraph auto &g,
 template <typename B>
 inline void stronglyConnectedComponents(
   llvm::SmallVectorImpl<llvm::SmallVector<B *, 1>> &cmpts,
-  AbstractPtrGraph auto &g) {
+  const AbstractPtrGraph auto &g) {
   cmpts.reserve(g.getNumVertices());
   llvm::SmallVector<B *> stack;
   clearVisited(g);
@@ -194,7 +194,7 @@ inline void stronglyConnectedComponents(
     if (!g.wasVisited(v)) index = strongConnect(g, cmpts, stack, index, v);
 }
 template <AbstractPtrGraph G>
-inline auto stronglyConnectedComponents(G &g)
+inline auto stronglyConnectedComponents(const G &g)
   -> llvm::SmallVector<llvm::SmallVector<typename G::VertexType *, 1>> {
   llvm::SmallVector<llvm::SmallVector<typename G::VertexType *, 1>> components;
   stronglyConnectedComponents(components, g);

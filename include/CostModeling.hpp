@@ -6,15 +6,18 @@
 #include "./LoopForest.hpp"
 #include "./MemoryAccess.hpp"
 #include "./Schedule.hpp"
+#include "Address.hpp"
 #include "DependencyPolyhedra.hpp"
 #include "Graphs.hpp"
 #include "Math/Array.hpp"
 #include "Math/Math.hpp"
+#include "Utilities/Allocators.hpp"
 #include <algorithm>
 #include <any>
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
+#include <llvm/ADT/ArrayRef.h>
 #include <llvm/ADT/SmallPtrSet.h>
 #include <llvm/ADT/SmallVector.h>
 #include <llvm/Analysis/TargetTransformInfo.h>
@@ -26,6 +29,7 @@
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/Type.h>
 #include <llvm/Support/Allocator.h>
+#include <utility>
 
 namespace CostModeling {
 
@@ -143,18 +147,10 @@ class LoopTreeSchedule {
 public:
   struct AddressGraph {
     using VertexType = Address;
-    using BitSet = ::LinearProgramLoopBlock::BitSet;
-    llvm::SmallVector<Address *> addresses;
-    PtrVector<Dependence> edges;
-    BitSet addrIds;
-    size_t depth;
+    [[no_unique_address]] MutPtrVector<Address *> addresses;
+    [[no_unique_address]] unsigned depth;
     [[nodiscard]] auto getNumVertices() const -> size_t {
       return addresses.size();
-    }
-    [[nodiscard]] auto vertexIds() const -> const BitSet & { return addrIds; }
-    auto vertexIds() -> BitSet & { return addrIds; }
-    [[nodiscard]] constexpr auto maxVertexId() const -> size_t {
-      return addrIds.maxValue();
     }
     auto inNeighbors(size_t i) { return addresses[i]->inNeighbors(depth); }
     auto outNeighbors(size_t i) { return addresses[i]->outNeighbors(depth); }
@@ -170,7 +166,7 @@ public:
     void visit(size_t i) { addresses[i]->visit(); }
     void unVisit(size_t i) { addresses[i]->unVisit(); }
     void clearVisited() {
-      for (auto *addr : addresses) addr->unVisit();
+      for (auto *a : addresses) a->unVisit();
     }
   };
 
@@ -193,22 +189,39 @@ private:
     return vec;
   }
 
-  struct InstructionBlock {
-    [[no_unique_address]] Vec<Address *> memAccesses{};
-    [[nodiscard]] constexpr auto size() const -> unsigned {
-      return memAccesses.size();
+  class InstructionBlock {
+    Address **addresses{nullptr};
+    unsigned numAddr{0};
+    unsigned capacity{0};
+    // [[no_unique_address]] Vec<Address *> memAccesses{};
+  public:
+    [[nodiscard]] constexpr auto isInitialized() const -> bool {
+      return addresses;
     }
+    [[nodiscard]] constexpr auto getAddr() -> Vec<Address *> {
+      return {addresses, numAddr, capacity};
+    }
+    [[nodiscard]] constexpr auto size() const -> unsigned { return numAddr; }
     [[nodiscard]] constexpr auto getCapacity() const -> unsigned {
-      return memAccesses.getCapacity();
+      return capacity;
     }
     [[nodiscard]] constexpr auto operator[](unsigned i) const -> Address * {
-      return memAccesses[i];
+      invariant(i < numAddr);
+      invariant(i < capacity);
+      return addresses[i];
     }
-    constexpr auto reserveExtra(BumpAlloc<> &alloc, unsigned i)
-      -> MutPtrVector<Address *> {
-      memAccesses = grow(alloc, memAccesses, size() + i);
-      return memAccesses[_(end - i, end)];
+    /// add space for `i` extra slots
+    constexpr void reserveExtra(BumpAlloc<> &alloc, unsigned i) {
+      numAddr += i;
+      if (numAddr <= capacity) return;
+      unsigned oldCapacity = std::exchange(capacity, numAddr + numAddr);
+      addresses = alloc.reallocate<false>(addresses, oldCapacity, capacity);
     }
+    constexpr void initialize(BumpAlloc<> &alloc) {
+      addresses = alloc.allocate<Address *>(capacity);
+    }
+
+    constexpr void incNumAddr(unsigned x) { numAddr += x; }
   };
   struct LoopAndExit {
     [[no_unique_address]] LoopTreeSchedule *subTree;
@@ -225,17 +238,21 @@ private:
   /// For the inner most loop, `subTrees.empty()`.
   [[no_unique_address]] Vec<LoopAndExit> subTrees{};
   [[no_unique_address]] LoopTreeSchedule *parent{nullptr};
+  // [[no_unique_address]] Address *addr;
+  // [[no_unique_address]] unsigned numAddr{0};
   [[no_unique_address]] uint8_t depth;
   [[no_unique_address]] uint8_t vectorizationFactor{1};
   [[no_unique_address]] uint8_t unrollFactor{1};
   [[no_unique_address]] uint8_t unrollPredcedence{1};
   // i = 0 means self, i = 1 (default) returns parent, i = 2 parent's parent...
+
   constexpr auto getParent(size_t i) -> LoopTreeSchedule * {
     invariant(i <= depth);
     LoopTreeSchedule *p = this;
     while (i--) p = p->parent;
     return p;
   }
+  constexpr void incNumAddr(unsigned x) { header.incNumAddr(x); }
   constexpr auto getParent() -> LoopTreeSchedule * { return parent; }
   [[nodiscard]] constexpr auto getNumSubTrees() const -> unsigned {
     return subTrees.size();
@@ -273,39 +290,53 @@ private:
     if (i) return subTrees[i - 1].exit;
     return header;
   }
-  [[nodiscard]] auto getDepth() const -> size_t { return depth; }
   /// Adds the schedule corresponding for the innermost loop.
 
   // this method descends
   // NOLINTNEXTLINE(misc-no-recursion)
-  auto allocLoopNodes(BumpAlloc<> &alloc, LinearProgramLoopBlock &LB,
-                      ScheduledNode &node, AffineSchedule sch)
-    -> LoopTreeSchedule * {
+  static auto allocLoopNodes(BumpAlloc<> &alloc, AffineSchedule sch,
+                             LoopTreeSchedule *L) -> LoopTreeSchedule * {
     auto fO = sch.getFusionOmega();
     unsigned numLoops = sch.getNumLoops();
     invariant(fO.size() - 1, numLoops);
-    LoopTreeSchedule *L = this;
     for (size_t i = 0; i < numLoops; ++i) L = L->getLoop(alloc, fO[i], i + 1);
     return L;
     // node.insertMemAccesses(alloc, LB.getMemoryAccesses(),
     // L->header.reserveExtra(alloc, node.getNumMem()));
   }
-  void topologicalSortCore() { // NOLINT(misc-no-recursion)
-    for (size_t i = 0; i < getNumSubTrees(); ++i) {
-      auto [H, L, E] = getLoopTripple(i);
-      L->topologicalSort(H, E);
-    }
-    // TODO: sort the memory accesses in the header and place in correct block.
-    // On entry, all InstructionBlock in the `AndExit`s will be empty
-    // as we only insert into  the header on construction.
-    // However, we may have hoisted them via topSort
-  }
   // NOLINTNEXTLINE(misc-no-recursion)
-  void topologicalSort(InstructionBlock &H, InstructionBlock &E) {
-    topologicalSortCore();
-    // TODO: hoist loads and stores, probably respectively into `H` and `E`
-    for (size_t i = 0, B = numBlocks(); i < B; ++i) {
+  auto placeAddr(BumpAlloc<> &alloc, LinearProgramLoopBlock &LB,
+                 MutPtrVector<Address *> addr) -> unsigned {
+    // we sort via repeatedly calculating the strongly connected components
+    // of the address graph. The SCCs are in topological order.
+    // If a load or store are isolated within a SCC from a sub-loop, we hoist if
+    // it's indices do not depend on that loop.
+    //
+    // We will eventually insert all addr at this level and within sub-loops
+    // into `addr`. We process them in batches, iterating based on `omega`
+    // values. We only need to force separation here for those that are not
+    // already separated.
+    //
+    unsigned numAddr = header.size();
+    addr[_(0, numAddr)] << header.getAddr();
+    if (size_t numSubTrees = subTrees.size())
+      for (auto &L : subTrees)
+        numAddr += L.subTree->placeAddr(alloc, LB, addr[_(numAddr, end)]);
+    addr = addr[_(0, numAddr)];
+    auto sccs =
+      Graphs::stronglyConnectedComponents(AddressGraph{addr, getDepth()});
+    // sccs are in topological order
+    for (auto &&scc : sccs) {
+      if (scc.size() == 1) {
+        Address *adr = scc[0];
+        if (adr->wasPlaced()) continue;
+      } else {
+#ifndef NDEBUG
+        for (auto &&adr : scc) assert(adr->wasPlaced());
+#endif
+      }
     }
+    return numAddr;
   }
   template <typename T>
   static constexpr auto get(llvm::SmallVectorImpl<T> &x, size_t i) -> T & {
@@ -313,44 +344,35 @@ private:
     return x[i];
   }
 
-  void init(BumpAlloc<> &alloc, LinearProgramLoopBlock &LB) {
+  static auto init(BumpAlloc<> &alloc, LinearProgramLoopBlock &LB)
+    -> LoopTreeSchedule * {
     // TODO: can we shorten the life span of the instructions we
     // allocate here to `lalloc`? I.e., do we need them to live on after
     // this forest is scheduled?
 
     // we first add all memory operands
     // then, we licm
-    // nodes, sorted by depth
-    llvm::SmallVector<
-      std::pair<llvm::SmallVector<
-                  std::pair<const ScheduledNode *, LoopTreeSchedule *>, 4>,
-                size_t>,
-      4>
-      memOps;
     // the only kind of replication that occur are store reloads
     // size_t maxDepth = 0;
+    PtrVector<ScheduledNode> lnodes = LB.getNodes();
+    Vector<LoopTreeSchedule *> loops{lnodes.size()};
+    LoopTreeSchedule *root{alloc.create<LoopTreeSchedule>(nullptr, 0)};
     unsigned numAddr = 0;
-    for (auto &node : LB.getNodes()) {
-      auto &p{get(memOps, node.getNumLoops())};
-      p.first.emplace_back(&node,
-                           allocLoopNodes(alloc, LB, node, node.getSchedule()));
+    for (size_t i = 0; i < lnodes.size(); ++i) {
+      auto &node = lnodes[i];
+      LoopTreeSchedule *L = loops[i] =
+        allocLoopNodes(alloc, node.getSchedule(), root);
       unsigned numMem = node.getNumMem();
-      p.second += numMem;
+      L->incNumAddr(numMem);
       numAddr += numMem;
       node.incrementReplicationCounts(LB.getMemoryAccesses());
     }
-
-    Vector<Address *> addresses{numAddr};
-    for (size_t d = memOps.size(), j = 0; d--;) {
-      auto &[nodes, numMem] = memOps[d];
-      addresses.resize(numMem);
-      for (size_t i = 0; i < nodes.size();) {
-        auto &[node, L] = nodes[i];
-        size_t k = j + node->getNumMem();
-        node->insertMemAccesses(alloc, LB.getMemoryAccesses(), LB.getEdges(), L,
-                                addresses[_(j, k)]);
-        j = k;
-      }
+    for (size_t i = 0, j = 0; i < lnodes.size(); ++i) {
+      auto &node = lnodes[i];
+      auto *L = loops[i];
+      size_t k = j + node.getNumMem();
+      node.insertMemAccesses(alloc, LB.getMemoryAccesses(), LB.getEdges(), L);
+      j = k;
     }
     // we now have a vector of addrs
     for (auto &edge : LB.getEdges()) {
@@ -360,8 +382,9 @@ private:
         for (Address *out : edge.output()->getAddresses())
           in->addOut(out, edge.getSatLvl()[0]);
     }
-
-    topologicalSortCore();
+    MutPtrVector<Address *> addr{alloc.allocate<Address *>(numAddr), numAddr};
+    root->placeAddr(alloc, LB, addr);
+    return root;
   }
   // void initializeInstrGraph(BumpAlloc<> &alloc, Instruction::Cache &cache,
   //                           BumpAlloc<> &tAlloc, LoopTree *loopForest,
@@ -374,9 +397,22 @@ private:
   // }
 
 public:
+  [[nodiscard]] constexpr auto getInitAddr(BumpAlloc<> &alloc)
+    -> Vec<Address *> {
+    if (!header.isInitialized()) header.initialize(alloc);
+    return header.getAddr();
+  }
+  [[nodiscard]] constexpr auto getDepth() const -> unsigned { return depth; }
   constexpr LoopTreeSchedule(LoopTreeSchedule *L, uint8_t d)
     : parent(L), depth(d) {}
 };
+constexpr auto getDepth(LoopTreeSchedule *L) -> unsigned {
+  return L->getDepth();
+}
+constexpr auto getInitAddr(LoopTreeSchedule *L, BumpAlloc<> &alloc)
+  -> LinAlg::ResizeableView<Address *, unsigned> {
+  return L->getInitAddr(alloc);
+}
 
 static_assert(Graphs::AbstractPtrGraph<LoopTreeSchedule::AddressGraph>);
 // class LoopForestSchedule : LoopTreeSchedule {
