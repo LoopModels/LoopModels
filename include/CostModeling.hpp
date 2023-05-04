@@ -212,16 +212,31 @@ private:
     }
     /// add space for `i` extra slots
     constexpr void reserveExtra(BumpAlloc<> &alloc, unsigned i) {
-      numAddr += i;
-      if (numAddr <= capacity) return;
-      unsigned oldCapacity = std::exchange(capacity, numAddr + numAddr);
+      unsigned oldCapacity = std::exchange(capacity, capacity + i);
       addresses = alloc.reallocate<false>(addresses, oldCapacity, capacity);
     }
     constexpr void initialize(BumpAlloc<> &alloc) {
       addresses = alloc.allocate<Address *>(capacity);
     }
-
+    constexpr void push_back(Address *addr) {
+      invariant(numAddr < capacity);
+      addresses[numAddr++] = addr;
+    }
+    constexpr void push_back(BumpAlloc<> &alloc, Address *addr) {
+      if (numAddr >= capacity)
+        reserveExtra(alloc, std::max<unsigned>(4, numAddr));
+      addresses[numAddr++] = addr;
+    }
     constexpr void incNumAddr(unsigned x) { numAddr += x; }
+    [[nodiscard]] constexpr auto try_delete(Address *adr) -> bool {
+      for (size_t i = 0; i < numAddr; ++i) {
+        if (addresses[i] == adr) {
+          addresses[i] = addresses[--numAddr];
+          return true;
+        }
+      }
+      return false;
+    }
   };
   struct LoopAndExit {
     [[no_unique_address]] LoopTreeSchedule *subTree;
@@ -238,13 +253,19 @@ private:
   /// For the inner most loop, `subTrees.empty()`.
   [[no_unique_address]] Vec<LoopAndExit> subTrees{};
   [[no_unique_address]] LoopTreeSchedule *parent{nullptr};
-  // [[no_unique_address]] Address *addr;
-  // [[no_unique_address]] unsigned numAddr{0};
   [[no_unique_address]] uint8_t depth;
   [[no_unique_address]] uint8_t vectorizationFactor{1};
   [[no_unique_address]] uint8_t unrollFactor{1};
   [[no_unique_address]] uint8_t unrollPredcedence{1};
   // i = 0 means self, i = 1 (default) returns parent, i = 2 parent's parent...
+  constexpr auto try_delete(Address *adr) -> bool { // NOLINT(misc-no-recursion)
+    if (header.try_delete(adr)) return true;
+    for (auto &[subTree, exit] : subTrees) {
+      if (exit.try_delete(adr)) return true;
+      if (subTree->try_delete(adr)) return true;
+    }
+    return false;
+  }
 
   constexpr auto getParent(size_t i) -> LoopTreeSchedule * {
     invariant(i <= depth);
@@ -301,8 +322,18 @@ private:
     invariant(fO.size() - 1, numLoops);
     for (size_t i = 0; i < numLoops; ++i) L = L->getLoop(alloc, fO[i], i + 1);
     return L;
-    // node.insertMemAccesses(alloc, LB.getMemoryAccesses(),
-    // L->header.reserveExtra(alloc, node.getNumMem()));
+  }
+  void place(BumpAlloc<> &alloc, Address *adr, unsigned to) {
+    InstructionBlock *block;
+    if (adr->isStore()) block = &subTrees[to].exit;
+    else if (to) block = &subTrees[to - 1].exit;
+    else block = &header;
+    block->push_back(alloc, adr);
+  }
+  void hoist(BumpAlloc<> &alloc, Address *adr, LoopTreeSchedule *from,
+             unsigned to) {
+    place(alloc, adr, to);
+    invariant(from->try_delete(adr));
   }
   // NOLINTNEXTLINE(misc-no-recursion)
   auto placeAddr(BumpAlloc<> &alloc, LinearProgramLoopBlock &LB,
@@ -317,19 +348,25 @@ private:
     // values. We only need to force separation here for those that are not
     // already separated.
     //
-    unsigned numAddr = header.size();
+    unsigned numAddr = header.size(), subTreeInd{0};
     addr[_(0, numAddr)] << header.getAddr();
-    if (size_t numSubTrees = subTrees.size())
-      for (auto &L : subTrees)
-        numAddr += L.subTree->placeAddr(alloc, LB, addr[_(numAddr, end)]);
+    for (auto &L : subTrees)
+      numAddr += L.subTree->placeAddr(alloc, LB, addr[_(numAddr, end)]);
     addr = addr[_(0, numAddr)];
     auto sccs =
       Graphs::stronglyConnectedComponents(AddressGraph{addr, getDepth()});
     // sccs are in topological order
+    // we need to track progress of sccs w/ respect to loops
+    // are we before, w/in, between, or after a loop?
     for (auto &&scc : sccs) {
       if (scc.size() == 1) {
         Address *adr = scc[0];
-        if (adr->wasPlaced()) continue;
+        if (adr->wasPlaced()) {
+          if (allZero(adr->indexMatrix()(_, getDepth())))
+            hoist(alloc, adr, adr->getLoopTreeSchedule(), subTreeInd);
+          ++subTreeInd;
+        } else {
+        }
       } else {
 #ifndef NDEBUG
         for (auto &&adr : scc) assert(adr->wasPlaced());
@@ -343,7 +380,15 @@ private:
     if (i >= x.size()) x.resize(i + 1);
     return x[i];
   }
-
+#ifndef NDEBUG
+  void validate() { // NOLINT(misc-no-recursion)
+    for (auto &subTree : subTrees) {
+      assert(subTree.subTree->parent == this);
+      assert(subTree.subTree->getDepth() == getDepth() + 1);
+      subTree.subTree->validate();
+    }
+  }
+#endif
   static auto init(BumpAlloc<> &alloc, LinearProgramLoopBlock &LB)
     -> LoopTreeSchedule * {
     // TODO: can we shorten the life span of the instructions we
@@ -367,6 +412,9 @@ private:
       numAddr += numMem;
       node.incrementReplicationCounts(LB.getMemoryAccesses());
     }
+#ifndef NDEBUG
+    root->validate();
+#endif
     for (size_t i = 0, j = 0; i < lnodes.size(); ++i) {
       auto &node = lnodes[i];
       auto *L = loops[i];
