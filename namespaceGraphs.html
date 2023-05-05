@@ -235,8 +235,8 @@ template&lt;typename G &gt; </div>
 <div class="line">  AbstractGraphCore&lt;G&gt; &amp;&amp; requires(G g, <span class="keyword">const</span> G cg, <span class="keywordtype">size_t</span> i) {</div>
 <div class="line">    { *g.outNeighbors(i).begin() } -&gt; std::same_as&lt;typename G::VertexType *&gt;;</div>
 <div class="line">    { *g.inNeighbors(i).begin() } -&gt; std::same_as&lt;typename G::VertexType *&gt;;</div>
-<div class="line">    { g.inNeighbors(i).begin()-&gt;index() } -&gt; std::same_as&lt;unsigned &amp;&gt;;</div>
-<div class="line">    { g.inNeighbors(i).begin()-&gt;lowLink() } -&gt; std::same_as&lt;unsigned &amp;&gt;;</div>
+<div class="line">    { g.inNeighbors(i).begin()-&gt;index() } -&gt; std::assignable_from&lt;unsigned&gt;;</div>
+<div class="line">    { g.inNeighbors(i).begin()-&gt;lowLink() } -&gt; std::assignable_from&lt;unsigned&gt;;</div>
 <div class="line">    { g.inNeighbors(i).begin()-&gt;onStack() } -&gt; std::same_as&lt;bool&gt;;</div>
 <div class="line">    { g.inNeighbors(i).begin()-&gt;addToStack() };</div>
 <div class="line">    { g.inNeighbors(i).begin()-&gt;removeFromStack() };</div>

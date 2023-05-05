@@ -15,8 +15,9 @@ var searchData=
   ['isforward_110',['isForward',['../classDependence.html#a8f03cfecfe1734c6c395bf3184269536',1,'Dependence']]],
   ['ismerged_111',['isMerged',['../structMergingCost.html#af9b5ac0cc98e21087c9eefccb31bce58',1,'MergingCost::isMerged(Instruction *key) const -&gt; bool'],['../structMergingCost.html#af05a38ba5258fe216ebb8c2f36320f8d',1,'MergingCost::isMerged(Instruction *L, Instruction *J) const -&gt; bool']]],
   ['isshuffle_112',['isShuffle',['../structInstruction.html#a79a97b7e7551dab3035b126828c6fa5d',1,'Instruction']]],
-  ['isvalueloadorstore_113',['isValueLoadOrStore',['../structInstruction.html#a5d23d616588bd2d5b168945deffc7115',1,'Instruction']]],
-  ['iterator_114',['Iterator',['../structBitSliceView_1_1Iterator.html',1,'BitSliceView&lt; T, B &gt;::Iterator'],['../structLinAlg_1_1SliceView_1_1Iterator.html',1,'LinAlg::SliceView&lt; T, I &gt;::Iterator'],['../structRange_3_01B_00_01E_01_4_1_1Iterator.html',1,'Range&lt; B, E &gt;::Iterator']]],
-  ['iterator_115',['iterator',['../classSimplex_1_1Solution_1_1iterator.html',1,'Simplex::Solution']]],
-  ['iterator_5ftraits_3c_20linearprogramloopblock_3a_3agraph_20_3e_116',['iterator_traits&lt; LinearProgramLoopBlock::Graph &gt;',['../structstd_1_1iterator__traits_3_01LinearProgramLoopBlock_1_1Graph_01_4.html',1,'std']]]
+  ['isstore_113',['isStore',['../classAddress.html#a4149e00216f1c945543ac6154f4eb00c',1,'Address']]],
+  ['isvalueloadorstore_114',['isValueLoadOrStore',['../structInstruction.html#a5d23d616588bd2d5b168945deffc7115',1,'Instruction']]],
+  ['iterator_115',['Iterator',['../structBitSliceView_1_1Iterator.html',1,'BitSliceView&lt; T, B &gt;::Iterator'],['../structLinAlg_1_1SliceView_1_1Iterator.html',1,'LinAlg::SliceView&lt; T, I &gt;::Iterator'],['../structRange_3_01B_00_01E_01_4_1_1Iterator.html',1,'Range&lt; B, E &gt;::Iterator']]],
+  ['iterator_116',['iterator',['../classSimplex_1_1Solution_1_1iterator.html',1,'Simplex::Solution']]],
+  ['iterator_5ftraits_3c_20linearprogramloopblock_3a_3agraph_20_3e_117',['iterator_traits&lt; LinearProgramLoopBlock::Graph &gt;',['../structstd_1_1iterator__traits_3_01LinearProgramLoopBlock_1_1Graph_01_4.html',1,'std']]]
 ];
