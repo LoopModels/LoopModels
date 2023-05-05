@@ -12,15 +12,6 @@
 
 namespace CostModeling {
 class LoopTreeSchedule;
-
-#if defined(__clang__)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wundefined-inline"
-#endif
-constexpr auto getDepth(LoopTreeSchedule *) -> unsigned;
-#if defined(__clang__)
-#pragma clang diagnostic pop
-#endif
 } // namespace CostModeling
 
 /// Represents a memory access that has been rotated according to some affine
@@ -66,22 +57,22 @@ constexpr auto getDepth(LoopTreeSchedule *) -> unsigned;
 /// `oldLoop->rotate(PhiInv)`
 // clang-format on
 class Address {
+  using BitSet = MemoryAccess::BitSet;
   /// Original (untransformed) memory access
-  NotNull<MemoryAccess> oldMemAccess;
+  [[no_unique_address]] NotNull<MemoryAccess> oldMemAccess;
   /// transformed loop
-  NotNull<AffineLoopNest<false>> loop;
-  CostModeling::LoopTreeSchedule *node{nullptr};
-  [[no_unique_address]] unsigned numMemInputs;
-  [[no_unique_address]] unsigned numDirectEdges;
-  [[no_unique_address]] unsigned numMemOutputs;
-  [[no_unique_address]] unsigned index_{0};
-  [[no_unique_address]] unsigned lowLink_{0};
+  [[no_unique_address]] NotNull<AffineLoopNest<false>> loop;
+  [[no_unique_address]] CostModeling::LoopTreeSchedule *node{nullptr};
+  [[no_unique_address]] BitSet ancestors;
+  [[no_unique_address]] BitSet descendants;
+  [[no_unique_address]] uint8_t numMemInputs;
+  [[no_unique_address]] uint8_t numDirectEdges;
+  [[no_unique_address]] uint8_t numMemOutputs;
+  [[no_unique_address]] uint8_t index_{0};
+  [[no_unique_address]] uint8_t lowLink_{0};
   [[no_unique_address]] uint8_t dim;
   [[no_unique_address]] uint8_t depth;
-  // may be `false` while `oldMemAccess->isStore()==true`
-  // which indicates a reload from this address.
-  [[no_unique_address]] uint8_t visited{0};
-  [[no_unique_address]] bool isStoreFlag;
+  [[no_unique_address]] uint8_t bitfield;
 #if !defined(__clang__) && defined(__GNUC__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
@@ -98,16 +89,16 @@ class Address {
   constexpr Address(NotNull<AffineLoopNest<false>> explicitLoop,
                     NotNull<MemoryAccess> ma, SquarePtrMatrix<int64_t> Pinv,
                     int64_t denom, PtrVector<int64_t> omega, bool isStr,
-                    CostModeling::LoopTreeSchedule *L, unsigned memInputs,
-                    unsigned directEdges, unsigned memOutputs)
+                    CostModeling::LoopTreeSchedule *L, uint8_t memInputs,
+                    uint8_t directEdges, uint8_t memOutputs)
     : oldMemAccess(ma), loop(explicitLoop), node(L), numMemInputs(memInputs),
       numDirectEdges(directEdges), numMemOutputs(memOutputs),
-      dim(ma->getArrayDim()), depth(unsigned(Pinv.numCol())),
-      isStoreFlag(isStr) {
+      dim(ma->getArrayDim()), depth(uint8_t(Pinv.numCol())),
+      bitfield(uint8_t(isStr) << 3) {
     PtrMatrix<int64_t> M = oldMemAccess->indexMatrix(); // nLma x aD
     MutPtrMatrix<int64_t> mStar{indexMatrix()};         // aD x nLp
     // M is implicitly padded with zeros, nLp >= nLma
-    size_t nLma = unsigned(ma->getNumLoops());
+    size_t nLma = ma->getNumLoops();
     invariant(nLma <= depth);
     invariant(nLma, size_t(M.numRow()));
     mStar << M.transpose() * Pinv(_(0, nLma), _);
@@ -144,20 +135,26 @@ public:
     -> CostModeling::LoopTreeSchedule * {
     return node;
   }
-  constexpr void visit() { visited |= 1; }
-  constexpr void unVisit() { visited &= ~uint8_t(1); }
+  // bits: 0 = visited, 1 = on stack, 2 = placed
+  // 3 = isStore
+  constexpr void visit() { bitfield |= 1; }
+  constexpr void unVisit() { bitfield &= ~uint8_t(1); }
   [[nodiscard]] constexpr auto wasVisited() const -> bool {
-    return visited & 1;
+    return bitfield & 1;
   }
-  constexpr void addToStack() { visited |= 2; }
-  constexpr void removeFromStack() { visited &= ~uint8_t(2); }
-  [[nodiscard]] constexpr auto onStack() const -> bool { return visited & 2; }
-  constexpr void place() { visited |= 4; }
-  [[nodiscard]] constexpr auto wasPlaced() const -> bool { return visited & 4; }
-
-  constexpr auto index() -> unsigned & { return index_; }
+  constexpr void addToStack() { bitfield |= 2; }
+  constexpr void removeFromStack() { bitfield &= ~uint8_t(2); }
+  [[nodiscard]] constexpr auto onStack() const -> bool { return bitfield & 2; }
+  constexpr void place() { bitfield |= 4; }
+  [[nodiscard]] constexpr auto wasPlaced() const -> bool {
+    return bitfield & 4;
+  }
+  /// isStore() is true if the address is a store, false if it is a load
+  /// If the memory access is a store, this can still be a reload
+  [[nodiscard]] constexpr auto isStore() const -> bool { return bitfield & 8; }
+  constexpr auto index() -> uint8_t & { return index_; }
   [[nodiscard]] constexpr auto index() const -> unsigned { return index_; }
-  constexpr auto lowLink() -> unsigned & { return lowLink_; }
+  constexpr auto lowLink() -> uint8_t & { return lowLink_; }
   [[nodiscard]] constexpr auto lowLink() const -> unsigned { return lowLink_; }
   struct EndSentinel {};
   class ActiveEdgeIterator {
@@ -198,10 +195,10 @@ public:
     [[nodiscard]] static constexpr auto end() -> EndSentinel { return {}; }
   };
   [[nodiscard]] constexpr auto numInNeighbors() const -> unsigned {
-    return isStoreFlag ? numMemInputs + numDirectEdges : numMemInputs;
+    return isStore() ? numMemInputs + numDirectEdges : numMemInputs;
   }
   [[nodiscard]] constexpr auto numOutNeighbors() const -> unsigned {
-    return isStoreFlag ? numMemOutputs : numDirectEdges + numMemOutputs;
+    return isStore() ? numMemOutputs : numDirectEdges + numMemOutputs;
   }
   [[nodiscard]] constexpr auto numNeighbors() const -> unsigned {
     return numMemInputs + numDirectEdges + numMemOutputs;
@@ -323,11 +320,8 @@ public:
     return {getIntMemory() + 1 + getNumLoops(),
             DenseDims{getArrayDim(), getNumLoops()}};
   }
-  [[nodiscard]] auto isStore() const -> bool { return isStoreFlag; }
-  [[nodiscard]] auto getLoop() -> NotNull<AffineLoopNest<false>> {
+  [[nodiscard]] constexpr auto getLoop() -> NotNull<AffineLoopNest<false>> {
     return loop;
   }
-  [[nodiscard]] auto getCurrentDepth() -> unsigned {
-    return CostModeling::getDepth(node);
-  }
+  [[nodiscard]] constexpr auto getCurrentDepth() const -> unsigned;
 };

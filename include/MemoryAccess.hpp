@@ -64,8 +64,8 @@ private:
     Address **addrss{nullptr};
     Address *addrs;
   };
-  size_t numAddr{0};
-  size_t addrReplications{0};
+  unsigned numAddr{0};
+  unsigned addrReplications{0};
   // This is a flexible length array, declared as a length-1 array
   // I wish there were some way to opt into "I'm using a c99 extension"
   // so that I could use `mem[]` or `mem[0]` instead of `mem[1]`. See:

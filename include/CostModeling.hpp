@@ -1,9 +1,7 @@
 #pragma once
 
 #include "./ControlFlowMerging.hpp"
-#include "./Instruction.hpp"
 #include "./LoopBlock.hpp"
-#include "./LoopForest.hpp"
 #include "./MemoryAccess.hpp"
 #include "./Schedule.hpp"
 #include "Address.hpp"
@@ -30,6 +28,48 @@
 #include <llvm/IR/Type.h>
 #include <llvm/Support/Allocator.h>
 #include <utility>
+
+namespace CostModeling {
+class LoopTreeSchedule;
+constexpr auto getInitAddr(LoopTreeSchedule *L, BumpAlloc<> &alloc)
+  -> LinAlg::ResizeableView<Address *, unsigned>;
+constexpr auto getDepth(LoopTreeSchedule *) -> unsigned;
+} // namespace CostModeling
+
+constexpr void ScheduledNode::insertMemAccesses(
+  BumpAlloc<> &alloc, PtrVector<MemoryAccess *> memAccess,
+  PtrVector<Dependence> edges, CostModeling::LoopTreeSchedule *L) const {
+  // First, we invert the schedule matrix.
+  SquarePtrMatrix<int64_t> Phi = schedule.getPhi();
+  auto [Pinv, denom] = NormalForm::scaledInv(Phi);
+  // TODO: if (s == 1) {}
+  // TODO: make this function out of line
+  auto accesses{getInitAddr(L, alloc)};
+  unsigned numMem = memory.size(), offset = accesses.size();
+  for (size_t i : memory) {
+    MemoryAccess *mem = memAccess[i];
+    NotNull<AffineLoopNest<false>> loop = mem->getLoop()->rotate(alloc, Pinv);
+    bool isStore = i == storeId;
+    size_t inputEdges = 0, outputEdges = 0;
+    for (size_t k : mem->inputEdges())
+      inputEdges += edges[k].input()->repCount();
+    for (size_t k : mem->outputEdges())
+      outputEdges += edges[k].output()->repCount();
+
+    Address *addr = Address::construct(alloc, loop, mem, isStore, Pinv, denom,
+                                       schedule.getOffsetOmega(), L, inputEdges,
+                                       isStore ? numMem - 1 : 1, outputEdges);
+    mem->push_back(alloc, addr);
+    accesses.push_back(addr);
+  }
+  Address *store = accesses[offset + storeId];
+  // addrs all need direct connections
+  for (size_t i = 0, k = 0; i < numMem; ++i)
+    if (i != storeId) accesses[offset + i]->addDirectConnection(store, k++);
+}
+[[nodiscard]] constexpr auto Address::getCurrentDepth() const -> unsigned {
+  return CostModeling::getDepth(node);
+}
 
 namespace CostModeling {
 
@@ -193,7 +233,7 @@ private:
     Address **addresses{nullptr};
     unsigned numAddr{0};
     unsigned capacity{0};
-    // [[no_unique_address]] Vec<Address *> memAccesses{};
+
   public:
     [[nodiscard]] constexpr auto isInitialized() const -> bool {
       return addresses;
@@ -335,6 +375,16 @@ private:
     place(alloc, adr, to);
     invariant(from->try_delete(adr));
   }
+  // Two possible plans:
+  // 1.
+  // go from a ptr to an index-based approach
+  // we want the efficient set operations that `BitSet` provides
+  // The plan will be to add `addr`s from previous and following loops
+  // as extra edges, so that we can ensure the SCC algorithm does
+  // not mix addrs from different loops.
+  // 2.
+  // a) every addr has an index field
+  // b) we create BitSets of ancestors
   // NOLINTNEXTLINE(misc-no-recursion)
   auto placeAddr(BumpAlloc<> &alloc, LinearProgramLoopBlock &LB,
                  MutPtrVector<Address *> addr) -> unsigned {

@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Address.hpp"
 #include "BitSets.hpp"
 #include "Containers/BumpMapSet.hpp"
 #include "DependencyPolyhedra.hpp"
@@ -35,6 +34,10 @@
 #include <llvm/Support/raw_ostream.h>
 #include <type_traits>
 
+namespace CostModeling {
+class LoopTreeSchedule;
+} // namespace CostModeling
+
 template <std::integral I>
 constexpr void insertSortedUnique(Vector<I> &v, const I &x) {
   for (auto it = v.begin(), ite = v.end(); it != ite; ++it) {
@@ -44,20 +47,6 @@ constexpr void insertSortedUnique(Vector<I> &v, const I &x) {
   }
   v.push_back(x);
 }
-
-namespace CostModeling {
-class LoopTreeSchedule;
-#if defined(__clang__)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wundefined-inline"
-#endif
-constexpr auto getInitAddr(LoopTreeSchedule *L, BumpAlloc<> &alloc)
-  -> LinAlg::ResizeableView<Address *, unsigned>;
-#if defined(__clang__)
-#pragma clang diagnostic pop
-#endif
-
-} // namespace CostModeling
 
 /// ScheduledNode
 /// Represents a set of memory accesses that are optimized together in the LP.
@@ -101,34 +90,7 @@ public:
   constexpr void insertMemAccesses(BumpAlloc<> &alloc,
                                    PtrVector<MemoryAccess *> memAccess,
                                    PtrVector<Dependence> edges,
-                                   CostModeling::LoopTreeSchedule *L) const {
-    // First, we invert the schedule matrix.
-    SquarePtrMatrix<int64_t> Phi = schedule.getPhi();
-    auto [Pinv, denom] = NormalForm::scaledInv(Phi);
-    // TODO: if (s == 1) {}
-    auto accesses{getInitAddr(L, alloc)};
-    unsigned numMem = memory.size(), offset = accesses.size();
-    for (size_t i : memory) {
-      MemoryAccess *mem = memAccess[i];
-      NotNull<AffineLoopNest<false>> loop = mem->getLoop()->rotate(alloc, Pinv);
-      bool isStore = i == storeId;
-      size_t inputEdges = 0, outputEdges = 0;
-      for (size_t k : mem->inputEdges())
-        inputEdges += edges[k].input()->repCount();
-      for (size_t k : mem->outputEdges())
-        outputEdges += edges[k].output()->repCount();
-
-      Address *addr = Address::construct(
-        alloc, loop, mem, isStore, Pinv, denom, schedule.getOffsetOmega(), L,
-        inputEdges, isStore ? numMem - 1 : 1, outputEdges);
-      mem->push_back(alloc, addr);
-      accesses.push_back(addr);
-    }
-    Address *store = accesses[offset + storeId];
-    // addrs all need direct connections
-    for (size_t i = 0, k = 0; i < numMem; ++i)
-      if (i != storeId) accesses[offset + i]->addDirectConnection(store, k++);
-  }
+                                   CostModeling::LoopTreeSchedule *L) const;
   constexpr void
   incrementReplicationCounts(PtrVector<MemoryAccess *> memAccess) const {
     for (auto i : memory)

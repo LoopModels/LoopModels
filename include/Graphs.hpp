@@ -1,6 +1,7 @@
 #pragma once
 
 #include "./BitSets.hpp"
+#include <concepts>
 #include <llvm/ADT/SmallVector.h>
 #include <llvm/Support/raw_ostream.h>
 #include <tuple>
@@ -60,8 +61,8 @@ concept AbstractPtrGraph =
   AbstractGraphCore<G> && requires(G g, const G cg, size_t i) {
     { *g.outNeighbors(i).begin() } -> std::same_as<typename G::VertexType *>;
     { *g.inNeighbors(i).begin() } -> std::same_as<typename G::VertexType *>;
-    { g.inNeighbors(i).begin()->index() } -> std::same_as<unsigned &>;
-    { g.inNeighbors(i).begin()->lowLink() } -> std::same_as<unsigned &>;
+    { g.inNeighbors(i).begin()->index() } -> std::assignable_from<unsigned>;
+    { g.inNeighbors(i).begin()->lowLink() } -> std::assignable_from<unsigned>;
     { g.inNeighbors(i).begin()->onStack() } -> std::same_as<bool>;
     { g.inNeighbors(i).begin()->addToStack() };
     { g.inNeighbors(i).begin()->removeFromStack() };
@@ -97,9 +98,10 @@ inline auto topologicalSort(AbstractIndexGraph auto &g) {
 }
 
 struct SCC {
-  unsigned index;
-  unsigned lowLink;
-  bool onStack;
+  [[no_unique_address]] unsigned index;
+  [[no_unique_address]] unsigned lowLink;
+  [[no_unique_address]] bool onStack;
+  [[no_unique_address]] bool visited{false};
 };
 
 template <typename B>
@@ -108,21 +110,19 @@ inline auto strongConnect(AbstractIndexGraph auto &g,
                           llvm::SmallVector<unsigned> &stack,
                           llvm::MutableArrayRef<SCC> iLLOS, unsigned index,
                           size_t v) -> unsigned {
-  iLLOS[v] = {index, index, true};
-  g.visit(v);
+  iLLOS[v] = {index, index, true, true};
   ++index;
   stack.push_back(v);
   for (auto w : g.inNeighbors(v)) {
-    if (g.wasVisited(w)) {
-      auto [wIndex, wLowLink, wOnStack] = iLLOS[w];
-      if (wOnStack) iLLOS[v].lowLink = std::min(iLLOS[v].lowLink, wIndex);
+    if (iLLOS[w].visited) {
+      if (iLLOS[w].onStack)
+        iLLOS[v].lowLink = std::min(iLLOS[v].lowLink, iLLOS[w].index);
     } else { // not visited
       strongConnect<B>(g, components, stack, iLLOS, index, w);
       iLLOS[v].lowLink = std::min(iLLOS[v].lowLink, iLLOS[w].lowLink);
     }
   }
-  auto [vIndex, vLowLink, vOnStack] = iLLOS[v];
-  if (vIndex == vLowLink) {
+  if (iLLOS[v].index == iLLOS[v].lowLink) {
     B &component = components.emplace_back();
     unsigned w;
     do {
@@ -139,12 +139,15 @@ inline void stronglyConnectedComponents(llvm::SmallVectorImpl<B> &cmpts,
                                         AbstractIndexGraph auto &g) {
   size_t maxId = g.maxVertexId();
   cmpts.reserve(maxId);
+  // TODO: this vector may be sparse, so this is wasteful
   llvm::SmallVector<SCC> indexLowLinkOnStack{maxId};
+#ifndef NDEBUG
+  for (auto scc : indexLowLinkOnStack) assert(!scc.visited);
+#endif
   llvm::SmallVector<unsigned> stack;
-  clearVisited(g);
   unsigned index = 0;
   for (auto v : g.vertexIds())
-    if (!g.wasVisited(v))
+    if (!indexLowLinkOnStack[v].visited)
       index = strongConnect(g, cmpts, stack, indexLowLinkOnStack, index, v);
 }
 inline auto stronglyConnectedComponents(AbstractIndexGraph auto &g)
