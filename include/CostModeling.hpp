@@ -183,6 +183,7 @@ struct CPURegisterFile {
 /// possible. With this, we can begin cost modeling.
 class LoopTreeSchedule {
   template <typename T> using Vec = LinAlg::ResizeableView<T, unsigned>;
+  using BitSet = MemoryAccess::BitSet;
 
 public:
   struct AddressGraph {
@@ -375,6 +376,15 @@ private:
     place(alloc, adr, to);
     invariant(from->try_delete(adr));
   }
+  static constexpr auto sharedRelatives(MutPtrVector<Address *> loopAddrs)
+    -> std::array<BitSet, 2> {
+    BitSet ancestors{}, descendants{};
+    for (auto *adr : loopAddrs) {
+      ancestors |= adr->getAncestors();
+      descendants |= adr->getDescendants();
+    }
+    return {ancestors, descendants};
+  }
   // Two possible plans:
   // 1.
   // go from a ptr to an index-based approach
@@ -413,20 +423,16 @@ private:
       addr[i]->calcAncestors(getDepth());
       addr[i]->calcDescendants(getDepth());
     }
-    using BitSet = MemoryAccess::BitSet;
-    Vector<std::pair<BitSet, BitSet>> loopRelatives;
+    Vector<std::array<BitSet, 2>> loopRelatives;
     loopRelatives.reserve(subTrees.size());
     // iterate over loops
+    auto headerAddrs = addr[_(0, addrCounts[0])];
     for (size_t i = 0; i < subTrees.size(); ++i) {
       auto loopAddrs = addr[_(addrCounts[i], addrCounts[i + 1])];
-      BitSet ancestors{}, descendants{};
-      for (auto *adr : loopAddrs) {
-        ancestors |= adr->getAncestors();
-        descendants |= adr->getDescendants();
-      }
-      loopRelatives.emplace_back(ancestors, descendants);
+      auto [ancestors, descendants] = sharedRelatives(loopAddrs);
+      // TODO: iterate over headerAddrs to find out which can be placed ahead
+      // TODO: iterate over loopAddrs to find out which can be hoisted
     }
-    auto headerAddrs = addr[_(0, addrCounts[0])];
 
     auto sccs =
       Graphs::stronglyConnectedComponents(AddressGraph{addr, getDepth()});
