@@ -400,11 +400,37 @@ private:
     //
     unsigned numAddr = header.size(), subTreeInd{0};
     addr[_(0, numAddr)] << header.getAddr();
+    Vector<uint8_t> addrCounts;
+    addrCounts.reserve(subTrees.size() + 1);
+    addrCounts.emplace_back(numAddr);
     for (auto &L : subTrees)
-      numAddr += L.subTree->placeAddr(alloc, LB, addr[_(numAddr, end)]);
+      numAddr += addrCounts.emplace_back(
+        L.subTree->placeAddr(alloc, LB, addr[_(numAddr, end)]));
     addr = addr[_(0, numAddr)];
+    for (unsigned i = 0; i < numAddr; ++i) {
+      addr[i]->index() = i;
+      addr[i]->addToSubset();
+      addr[i]->calcAncestors(getDepth());
+      addr[i]->calcDescendants(getDepth());
+    }
+    using BitSet = MemoryAccess::BitSet;
+    Vector<std::pair<BitSet, BitSet>> loopRelatives;
+    loopRelatives.reserve(subTrees.size());
+    // iterate over loops
+    for (size_t i = 0; i < subTrees.size(); ++i) {
+      auto loopAddrs = addr[_(addrCounts[i], addrCounts[i + 1])];
+      BitSet ancestors{}, descendants{};
+      for (auto *adr : loopAddrs) {
+        ancestors |= adr->getAncestors();
+        descendants |= adr->getDescendants();
+      }
+      loopRelatives.emplace_back(ancestors, descendants);
+    }
+    auto headerAddrs = addr[_(0, addrCounts[0])];
+
     auto sccs =
       Graphs::stronglyConnectedComponents(AddressGraph{addr, getDepth()});
+
     // sccs are in topological order
     // we need to track progress of sccs w/ respect to loops
     // are we before, w/in, between, or after a loop?
@@ -423,6 +449,7 @@ private:
 #endif
       }
     }
+    for (auto *adr : addr) adr->removeFromStackUnVisit();
     return numAddr;
   }
   template <typename T>

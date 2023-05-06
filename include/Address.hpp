@@ -136,14 +136,57 @@ public:
     return node;
   }
   // bits: 0 = visited, 1 = on stack, 2 = placed
-  // 3 = isStore
+  // 3 = isStore, 4 = visited2, 5 = activeSubset
   constexpr void visit() { bitfield |= 1; }
   constexpr void unVisit() { bitfield &= ~uint8_t(1); }
   [[nodiscard]] constexpr auto wasVisited() const -> bool {
     return bitfield & 1;
   }
+  constexpr void visit2() { bitfield |= 16; }
+  constexpr void unVisit2() { bitfield &= ~uint8_t(16); }
+  [[nodiscard]] constexpr auto wasVisited2() const -> bool {
+    return bitfield & 16;
+  }
+  constexpr void addToSubset() { bitfield |= 32; }
+  constexpr void removeFromSubset() { bitfield &= ~uint8_t(32); }
+  [[nodiscard]] constexpr auto inActiveSubset() const -> bool {
+    return bitfield & 32;
+  }
   constexpr void addToStack() { bitfield |= 2; }
   constexpr void removeFromStack() { bitfield &= ~uint8_t(2); }
+  constexpr void removeFromStackUnVisit() { bitfield &= ~uint8_t(19); }
+  constexpr auto getAncestors() -> BitSet & { return ancestors; }
+  [[nodiscard]] constexpr auto getAncestors() const -> BitSet const & {
+    return ancestors;
+  }
+  constexpr auto getDescendants() -> BitSet & { return descendants; }
+  [[nodiscard]] constexpr auto getDescendants() const -> BitSet const & {
+    return descendants;
+  }
+  // NOLINTNEXTLINE(misc-no-recursion)
+  constexpr auto calcAncestors(uint8_t filtd) -> BitSet {
+    auto &A = getAncestors();
+    if (wasVisited()) return A;
+    visit();
+    A = {};
+    for (auto *e : inNeighbors(filtd)) {
+      A |= e->calcAncestors(filtd);
+      A.insert(e->index());
+    }
+    return A;
+  }
+  // NOLINTNEXTLINE(misc-no-recursion)
+  constexpr auto calcDescendants(uint8_t filtd) -> BitSet {
+    auto &D = getDescendants();
+    if (wasVisited2()) return D;
+    unVisit2();
+    D = {};
+    for (auto *e : outNeighbors(filtd)) {
+      D |= e->calcDescendants(filtd);
+      D.insert(e->index());
+    }
+    return D;
+  }
   [[nodiscard]] constexpr auto onStack() const -> bool { return bitfield & 2; }
   constexpr void place() { bitfield |= 4; }
   [[nodiscard]] constexpr auto wasPlaced() const -> bool {
@@ -152,10 +195,12 @@ public:
   /// isStore() is true if the address is a store, false if it is a load
   /// If the memory access is a store, this can still be a reload
   [[nodiscard]] constexpr auto isStore() const -> bool { return bitfield & 8; }
+  [[nodiscard]] constexpr auto isLoad() const -> bool { return !isStore(); }
   constexpr auto index() -> uint8_t & { return index_; }
   [[nodiscard]] constexpr auto index() const -> unsigned { return index_; }
   constexpr auto lowLink() -> uint8_t & { return lowLink_; }
   [[nodiscard]] constexpr auto lowLink() const -> unsigned { return lowLink_; }
+
   struct EndSentinel {};
   class ActiveEdgeIterator {
     Address **p;
@@ -166,12 +211,15 @@ public:
   public:
     constexpr auto operator*() const -> Address * { return *p; }
     constexpr auto operator->() const -> Address * { return *p; }
+    [[nodiscard]] constexpr auto hasNext() const -> bool {
+      return ((p != e) && ((*d < filtdepth) || (!((*p)->inActiveSubset()))));
+    }
     constexpr auto operator++() -> ActiveEdgeIterator & {
       // meaning of filtdepth 255?
       do {
         ++p;
         ++d;
-      } while ((*d < filtdepth) && (p != e));
+      } while (hasNext());
       return *this;
     }
     constexpr auto operator==(EndSentinel) const -> bool { return p == e; }
@@ -179,7 +227,7 @@ public:
     constexpr ActiveEdgeIterator(Address **_p, Address **_e, uint8_t *_d,
                                  uint8_t fd)
       : p(_p), e(_e), d(_d), filtdepth(fd) {
-      while ((*d < filtdepth) && (p != e)) {
+      while (hasNext()) {
         ++p;
         ++d;
       }
