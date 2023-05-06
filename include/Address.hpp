@@ -147,6 +147,7 @@ public:
   [[nodiscard]] constexpr auto wasVisited2() const -> bool {
     return bitfield & 16;
   }
+  // constexpr void unVisit02() { bitfield &= ~uint8_t(17); }
   constexpr void addToSubset() { bitfield |= 32; }
   constexpr void removeFromSubset() { bitfield &= ~uint8_t(32); }
   [[nodiscard]] constexpr auto inActiveSubset() const -> bool {
@@ -154,7 +155,7 @@ public:
   }
   constexpr void addToStack() { bitfield |= 2; }
   constexpr void removeFromStack() { bitfield &= ~uint8_t(2); }
-  constexpr void removeFromStackUnVisit() { bitfield &= ~uint8_t(19); }
+  constexpr void resetBitfield() { bitfield &= uint8_t(8); }
   constexpr auto getAncestors() -> BitSet & { return ancestors; }
   [[nodiscard]] constexpr auto getAncestors() const -> BitSet const & {
     return ancestors;

@@ -449,7 +449,7 @@ private:
 #endif
       }
     }
-    for (auto *adr : addr) adr->removeFromStackUnVisit();
+    for (auto *adr : addr) adr->resetBitfield();
     return numAddr;
   }
   template <typename T>
