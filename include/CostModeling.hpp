@@ -189,17 +189,30 @@ public:
   struct AddressGraph {
     using VertexType = Address;
     [[no_unique_address]] MutPtrVector<Address *> addresses;
-    [[no_unique_address]] unsigned depth;
+    // we restrict the SCC order to preserve relative ordering of the sub loops
+    // by adding loopNestAddrs. These contain arrays of [start, stop].
+    // Each start has the preceding end as an input.
+    // Each stop has the following start as an output.
+    // Each start also has the enclosed mem accesses as outputs,
+    // and each stop has the enclosed mem accesses as inputs (enclosed means the
+    // memory accesses of the corresponding loop).
+    [[no_unique_address]] MutPtrVector<std::array<BitSet, 2>> loopNestAddrs;
+    [[nodiscard]] constexpr auto maxVertexId() const -> unsigned {
+      return addresses.size() + loopNestAddrs.size();
+    }
+    [[nodiscard]] constexpr auto vertexIds() const -> Range<size_t, size_t> {
+      return _(0, maxVertexId());
+    }
     [[nodiscard]] auto getNumVertices() const -> size_t {
       return addresses.size();
     }
-    auto inNeighbors(size_t i) { return addresses[i]->inNeighbors(depth); }
-    auto outNeighbors(size_t i) { return addresses[i]->outNeighbors(depth); }
-    [[nodiscard]] auto inNeighbors(size_t i) const {
-      return addresses[i]->inNeighbors(depth);
+    [[nodiscard]] constexpr auto inNeighbors(size_t i) const -> BitSet {
+      if (i < addresses.size()) return addresses[i]->getParents();
+      return loopNestAddrs[i - addresses.size()][0];
     }
-    [[nodiscard]] auto outNeighbors(size_t i) const {
-      return addresses[i]->outNeighbors(depth);
+    [[nodiscard]] constexpr auto outNeighbors(size_t i) const -> BitSet {
+      if (i < addresses.size()) return addresses[i]->getChildren();
+      return loopNestAddrs[i - addresses.size()][1];
     }
     [[nodiscard]] auto wasVisited(size_t i) const -> bool {
       return addresses[i]->wasVisited();
@@ -295,15 +308,18 @@ private:
   [[no_unique_address]] Vec<LoopAndExit> subTrees{};
   [[no_unique_address]] LoopTreeSchedule *parent{nullptr};
   [[no_unique_address]] uint8_t depth;
+  // notused yet
+  /*
   [[no_unique_address]] uint8_t vectorizationFactor{1};
   [[no_unique_address]] uint8_t unrollFactor{1};
   [[no_unique_address]] uint8_t unrollPredcedence{1};
+  */
   // i = 0 means self, i = 1 (default) returns parent, i = 2 parent's parent...
-  constexpr auto try_delete(Address *adr) -> bool { // NOLINT(misc-no-recursion)
+  constexpr auto try_delete(Address *adr) -> bool {
     if (header.try_delete(adr)) return true;
     for (auto &[subTree, exit] : subTrees) {
       if (exit.try_delete(adr)) return true;
-      if (subTree->try_delete(adr)) return true;
+      // if (subTree->try_delete(adr)) return true;
     }
     return false;
   }
@@ -364,18 +380,6 @@ private:
     for (size_t i = 0; i < numLoops; ++i) L = L->getLoop(alloc, fO[i], i + 1);
     return L;
   }
-  void place(BumpAlloc<> &alloc, Address *adr, unsigned to) {
-    InstructionBlock *block;
-    if (adr->isStore()) block = &subTrees[to].exit;
-    else if (to) block = &subTrees[to - 1].exit;
-    else block = &header;
-    block->push_back(alloc, adr);
-  }
-  void hoist(BumpAlloc<> &alloc, Address *adr, LoopTreeSchedule *from,
-             unsigned to) {
-    place(alloc, adr, to);
-    invariant(from->try_delete(adr));
-  }
   static constexpr auto sharedRelatives(MutPtrVector<Address *> loopAddrs)
     -> std::array<BitSet, 2> {
     BitSet ancestors{}, descendants{};
@@ -384,6 +388,29 @@ private:
       descendants |= adr->getDescendants();
     }
     return {ancestors, descendants};
+  }
+  static constexpr void
+  calcLoopNestAddrs(Vector<std::array<BitSet, 2>> &loopRelatives,
+                    MutPtrVector<Address *> loopAddrs, unsigned numAddr) {
+    BitSet headParents{}, headChildren, exitParents{}, exitChildren{};
+    unsigned ind = numAddr + loopRelatives.size();
+    if (!loopRelatives.empty()) { // not first loop, connect headParents
+      loopRelatives.back()[1].insert(ind);
+      headParents.insert(ind - 1);
+    }
+    if (loopAddrs.empty()) {
+      headChildren.insert(ind + 1);
+      exitParents.insert(ind);
+    }
+    for (auto *a : loopAddrs) {
+      unsigned i = a->index();
+      headChildren.insert(i);
+      exitParents.insert(i);
+      a->addParent(ind);
+      a->addChild(ind + 1);
+    }
+    loopRelatives.push_back({headParents, headChildren});
+    loopRelatives.push_back({exitParents, exitChildren});
   }
   // Two possible plans:
   // 1.
@@ -408,7 +435,7 @@ private:
     // values. We only need to force separation here for those that are not
     // already separated.
     //
-    unsigned numAddr = header.size(), subTreeInd{0};
+    unsigned numAddr = header.size();
     addr[_(0, numAddr)] << header.getAddr();
     Vector<uint8_t> addrCounts;
     addrCounts.reserve(subTrees.size() + 1);
@@ -417,41 +444,78 @@ private:
       numAddr += addrCounts.emplace_back(
         L.subTree->placeAddr(alloc, LB, addr[_(numAddr, end)]));
     addr = addr[_(0, numAddr)];
-    for (unsigned i = 0; i < numAddr; ++i) {
-      addr[i]->index() = i;
-      addr[i]->addToSubset();
-      addr[i]->calcAncestors(getDepth());
-      addr[i]->calcDescendants(getDepth());
+    for (unsigned i = 0; i < numAddr; ++i) addr[i]->index() = i;
+    for (auto *a : addr) {
+      a->addToSubset();
+      a->calcAncestors(getDepth());
+      a->calcDescendants(getDepth());
     }
     Vector<std::array<BitSet, 2>> loopRelatives;
-    loopRelatives.reserve(subTrees.size());
-    // iterate over loops
-    auto headerAddrs = addr[_(0, addrCounts[0])];
-    for (size_t i = 0; i < subTrees.size(); ++i) {
-      auto loopAddrs = addr[_(addrCounts[i], addrCounts[i + 1])];
-      auto [ancestors, descendants] = sharedRelatives(loopAddrs);
-      // TODO: iterate over headerAddrs to find out which can be placed ahead
-      // TODO: iterate over loopAddrs to find out which can be hoisted
+    if (unsigned numSubTrees = subTrees.size()) {
+      loopRelatives.reserve(2 * numSubTrees);
+      // iterate over loops
+      for (size_t i = 0; i < subTrees.size(); ++i) {
+        calcLoopNestAddrs(loopRelatives,
+                          addr[_(addrCounts[i], addrCounts[i + 1])], numAddr);
+      }
     }
-
-    auto sccs =
-      Graphs::stronglyConnectedComponents(AddressGraph{addr, getDepth()});
-
-    // sccs are in topological order
-    // we need to track progress of sccs w/ respect to loops
-    // are we before, w/in, between, or after a loop?
-    for (auto &&scc : sccs) {
+    // auto headerAddrs = addr[_(0, addrCounts[0])];
+    llvm::SmallVector<BitSet> components;
+    {
+      AddressGraph g{addr, loopRelatives};
+      Graphs::stronglyConnectedComponents(components, g);
+    }
+    size_t currentLoop = 0;
+    InstructionBlock *B = &header;
+    LoopTreeSchedule *L;
+    bool inLoop = false;
+    for (BitSet scc : components) {
       if (scc.size() == 1) {
-        Address *adr = scc[0];
-        if (adr->wasPlaced()) {
-          if (allZero(adr->indexMatrix()(_, getDepth())))
-            hoist(alloc, adr, adr->getLoopTreeSchedule(), subTreeInd);
-          ++subTreeInd;
+        size_t ind = scc.front();
+        if (ind < numAddr) {
+          Address *a = addr[ind];
+          assert(!a->wasPlaced() || inLoop);
+          // three possibilities:
+          // 1. inLoop && wasPlaced
+          // 2. inLoop && !wasPlaced
+          // 3. !inLoop && !wasPlaced
+          if (inLoop) {
+            // header: B
+            // exit: subTrees[currentLoop].exit;
+            if (!a->wasPlaced() || allZero(a->indexMatrix()(_, getDepth()))) {
+              // hoist; do other loop members depend, or are depended on?
+              bool isParent = false, isChild = false;
+              BitSet ancestors{a->getAncestors()},
+                descendants{a->getDescendants()};
+              for (size_t j :
+                   _(addrCounts[currentLoop], addrCounts[currentLoop + 1])) {
+                if (j == ind) continue;
+                isParent |= bool(ancestors[j]);
+                isChild |= bool(descendants[j]);
+              }
+              if (!(isParent && isChild)) {
+                InstructionBlock *P =
+                  isParent ? B : &subTrees[currentLoop].exit;
+                P->push_back(alloc, a);
+                if (a->wasPlaced()) invariant(L->try_delete(a));
+              } else assert(a->wasPlaced());
+            }
+          } else {
+            invariant(!a->wasPlaced());
+            B->push_back(alloc, a);
+          }
+          a->place();
         } else {
+          invariant((ind - numAddr) & 1, size_t(inLoop));
+          invariant(currentLoop, (ind - numAddr) >> 1);
+          if (inLoop) B = &subTrees[currentLoop++].exit;
+          else L = subTrees[currentLoop].subTree;
+          inLoop = !inLoop;
         }
       } else {
+        assert(inLoop);
 #ifndef NDEBUG
-        for (auto &&adr : scc) assert(adr->wasPlaced());
+        for (size_t i : scc) assert(addr[i]->wasPlaced());
 #endif
       }
     }
@@ -545,7 +609,7 @@ constexpr auto getInitAddr(LoopTreeSchedule *L, BumpAlloc<> &alloc)
   return L->getInitAddr(alloc);
 }
 
-static_assert(Graphs::AbstractPtrGraph<LoopTreeSchedule::AddressGraph>);
+static_assert(Graphs::AbstractIndexGraph<LoopTreeSchedule::AddressGraph>);
 // class LoopForestSchedule : LoopTreeSchedule {
 //   [[no_unique_address]] BumpAlloc<> &allocator;
 // };

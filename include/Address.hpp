@@ -63,6 +63,8 @@ class Address {
   /// transformed loop
   [[no_unique_address]] NotNull<AffineLoopNest<false>> loop;
   [[no_unique_address]] CostModeling::LoopTreeSchedule *node{nullptr};
+  [[no_unique_address]] BitSet parents;
+  [[no_unique_address]] BitSet children;
   [[no_unique_address]] BitSet ancestors;
   [[no_unique_address]] BitSet descendants;
   [[no_unique_address]] uint8_t numMemInputs;
@@ -155,38 +157,47 @@ public:
   }
   constexpr void addToStack() { bitfield |= 2; }
   constexpr void removeFromStack() { bitfield &= ~uint8_t(2); }
-  constexpr void resetBitfield() { bitfield &= uint8_t(8); }
+  // doesn't reset isStore or wasPlaced
+  constexpr void resetBitfield() { bitfield &= uint8_t(12); }
+  [[nodiscard]] constexpr auto getParents() const -> BitSet { return parents; }
+  [[nodiscard]] constexpr auto getChildren() const -> BitSet {
+    return children;
+  }
   constexpr auto getAncestors() -> BitSet & { return ancestors; }
-  [[nodiscard]] constexpr auto getAncestors() const -> BitSet const & {
+  [[nodiscard]] constexpr auto getAncestors() const -> BitSet {
     return ancestors;
   }
   constexpr auto getDescendants() -> BitSet & { return descendants; }
-  [[nodiscard]] constexpr auto getDescendants() const -> BitSet const & {
+  [[nodiscard]] constexpr auto getDescendants() const -> BitSet {
     return descendants;
   }
+  constexpr void addParent(size_t i) { parents.insert(i); }
+  constexpr void addChild(size_t i) { children.insert(i); }
   // NOLINTNEXTLINE(misc-no-recursion)
   constexpr auto calcAncestors(uint8_t filtd) -> BitSet {
-    auto &A = getAncestors();
-    if (wasVisited()) return A;
+    if (wasVisited()) return ancestors;
     visit();
-    A = {};
+    ancestors = {};
+    parents = {};
     for (auto *e : inNeighbors(filtd)) {
-      A |= e->calcAncestors(filtd);
-      A.insert(e->index());
+      ancestors |= e->calcAncestors(filtd);
+      parents.insert(e->index());
     }
-    return A;
+    ancestors |= parents;
+    return ancestors;
   }
   // NOLINTNEXTLINE(misc-no-recursion)
   constexpr auto calcDescendants(uint8_t filtd) -> BitSet {
-    auto &D = getDescendants();
-    if (wasVisited2()) return D;
-    unVisit2();
-    D = {};
+    if (wasVisited2()) return descendants;
+    visit2();
+    descendants = {};
+    children = {};
     for (auto *e : outNeighbors(filtd)) {
-      D |= e->calcDescendants(filtd);
-      D.insert(e->index());
+      descendants |= e->calcDescendants(filtd);
+      children.insert(e->index());
     }
-    return D;
+    descendants |= children;
+    return descendants;
   }
   [[nodiscard]] constexpr auto onStack() const -> bool { return bitfield & 2; }
   constexpr void place() { bitfield |= 4; }
