@@ -83,21 +83,21 @@ using&#160;</td><td class="memItemRight" valign="bottom"><b>VertexType</b> = <a 
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
+<tr class="memitem:ad5ee9f49bf616b2af5992283d0d61e8b"><td class="memItemLeft" align="right" valign="top"><a id="ad5ee9f49bf616b2af5992283d0d61e8b"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>maxVertexId</b> () const -&gt; unsigned</td></tr>
+<tr class="separator:ad5ee9f49bf616b2af5992283d0d61e8b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aae44155c3742c1e43c984744f32e1110"><td class="memItemLeft" align="right" valign="top"><a id="aae44155c3742c1e43c984744f32e1110"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>vertexIds</b> () const -&gt; <a class="el" href="structRange.html">Range</a>&lt; size_t, size_t &gt;</td></tr>
+<tr class="separator:aae44155c3742c1e43c984744f32e1110"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab26a0fcb90a43f933a8f5d4d33090aee"><td class="memItemLeft" align="right" valign="top"><a id="ab26a0fcb90a43f933a8f5d4d33090aee"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumVertices</b> () const -&gt; size_t</td></tr>
 <tr class="separator:ab26a0fcb90a43f933a8f5d4d33090aee"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a707d9e4842e2320c7fb19aa3fbda72c6"><td class="memItemLeft" align="right" valign="top"><a id="a707d9e4842e2320c7fb19aa3fbda72c6"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>inNeighbors</b> (size_t i)</td></tr>
-<tr class="separator:a707d9e4842e2320c7fb19aa3fbda72c6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a742ef3af2265fd37d1888facb6805a55"><td class="memItemLeft" align="right" valign="top"><a id="a742ef3af2265fd37d1888facb6805a55"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>outNeighbors</b> (size_t i)</td></tr>
-<tr class="separator:a742ef3af2265fd37d1888facb6805a55"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a12f20cdf55e72a0f32c3e8eb1c744495"><td class="memItemLeft" align="right" valign="top"><a id="a12f20cdf55e72a0f32c3e8eb1c744495"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>inNeighbors</b> (size_t i) const</td></tr>
-<tr class="separator:a12f20cdf55e72a0f32c3e8eb1c744495"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aaf7418bdbb0d1e7f8953be231bf34fb0"><td class="memItemLeft" align="right" valign="top"><a id="aaf7418bdbb0d1e7f8953be231bf34fb0"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>outNeighbors</b> (size_t i) const</td></tr>
-<tr class="separator:aaf7418bdbb0d1e7f8953be231bf34fb0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3d597d73e9d969626ef44ce1f331f0a0"><td class="memItemLeft" align="right" valign="top"><a id="a3d597d73e9d969626ef44ce1f331f0a0"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>inNeighbors</b> (size_t i) const -&gt; <a class="el" href="structBitSet.html">BitSet</a></td></tr>
+<tr class="separator:a3d597d73e9d969626ef44ce1f331f0a0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa322c8d814402861a1e37e955659d1a3"><td class="memItemLeft" align="right" valign="top"><a id="aa322c8d814402861a1e37e955659d1a3"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>outNeighbors</b> (size_t i) const -&gt; <a class="el" href="structBitSet.html">BitSet</a></td></tr>
+<tr class="separator:aa322c8d814402861a1e37e955659d1a3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8421d32997a621679a04604d207e011c"><td class="memItemLeft" align="right" valign="top"><a id="a8421d32997a621679a04604d207e011c"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>wasVisited</b> (size_t i) const -&gt; bool</td></tr>
 <tr class="separator:a8421d32997a621679a04604d207e011c"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -116,9 +116,9 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:a13eb9d79b158eb6a68e9ed04659ed307"><td class="memItemLeft" align="right" valign="top"><a id="a13eb9d79b158eb6a68e9ed04659ed307"></a>
 MutPtrVector&lt; <a class="el" href="classAddress.html">Address</a> * &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>addresses</b></td></tr>
 <tr class="separator:a13eb9d79b158eb6a68e9ed04659ed307"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5623be71cc65249822b389838dd68f29"><td class="memItemLeft" align="right" valign="top"><a id="a5623be71cc65249822b389838dd68f29"></a>
-unsigned&#160;</td><td class="memItemRight" valign="bottom"><b>depth</b></td></tr>
-<tr class="separator:a5623be71cc65249822b389838dd68f29"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac07d6f9aeff47e4acac94ca4756cbc5a"><td class="memItemLeft" align="right" valign="top"><a id="ac07d6f9aeff47e4acac94ca4756cbc5a"></a>
+MutPtrVector&lt; std::array&lt; <a class="el" href="structBitSet.html">BitSet</a>, 2 &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>loopNestAddrs</b></td></tr>
+<tr class="separator:ac07d6f9aeff47e4acac94ca4756cbc5a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <hr/>The documentation for this struct was generated from the following file:<ul>
 <li>include/<a class="el" href="CostModeling_8hpp_source.html">CostModeling.hpp</a></li>
