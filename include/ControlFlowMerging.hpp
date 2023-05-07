@@ -246,7 +246,7 @@ struct MergingCost {
       if (!merged) selector.select(i, opA, opB);
     }
     return selector;
-  };
+  }
 
   void merge(BumpAlloc<> &alloc, llvm::TargetTransformInfo &TTI,
              unsigned int vectorBits, Instruction *A, Instruction *B) {
@@ -289,10 +289,10 @@ struct MergingCost {
       mergeMap[A] = B;
     }
   }
-  constexpr auto operator<(const MergingCost &other) const -> bool {
+  auto operator<(const MergingCost &other) const -> bool {
     return cost < other.cost;
   }
-  constexpr auto operator>(const MergingCost &other) const -> bool {
+  auto operator>(const MergingCost &other) const -> bool {
     return cost > other.cost;
   }
 };

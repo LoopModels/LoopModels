@@ -1,4 +1,5 @@
 #include "./ArrayReference.hpp"
+#include "./CostModeling.hpp"
 #include "./TestUtilities.hpp"
 #include "DependencyPolyhedra.hpp"
 #include "LoopBlock.hpp"
@@ -884,6 +885,7 @@ TEST(TriangularExampleTest, BasicAssertions) {
       //       //       llvm::errs() << "\n";
     }
   }
+  auto *LTS = CostModeling::LoopTreeSchedule::init(alloc, lblock);
 }
 
 // NOLINTNEXTLINE(modernize-use-trailing-return-type)

@@ -1,6 +1,8 @@
 #include "../include/TurboLoop.hpp"
+#include "../include/CostModeling.hpp"
 #include "../include/LoopBlock.hpp"
 #include "../include/LoopForest.hpp"
+#include "Address.hpp"
 #include <cstdio>
 #include <llvm/ADT/APInt.h>
 #include <llvm/ADT/DepthFirstIterator.h>
@@ -94,8 +96,11 @@ TurboLoopPass::run(llvm::Function &F, llvm::FunctionAnalysisManager &FAM)
       remark("LinearProgram LoopSet", forest->getOuterLoop(), os.str());
     }
     std::optional<MemoryAccess::BitSet> optDeps = loopBlock.optimize();
+    if (optDeps) {
+      changed = true;
+      CostModeling::LoopTreeSchedule::init(allocator, loopBlock);
+    }
     // NOTE: we're not actually changing anything yet
-    changed |= optDeps.has_value();
     if (ORE) [[unlikely]] {
       if (optDeps) {
         llvm::SmallVector<char, 512> str;

@@ -46,6 +46,7 @@
 #include <ranges>
 #include <utility>
 
+// NOLINTNEXTLINE(misc-no-recursion)
 inline auto countNumLoopsPlusLeaves(const llvm::Loop *L) -> size_t {
   const std::vector<llvm::Loop *> &subLoops = L->getSubLoops();
   if (subLoops.empty()) return 1;
@@ -179,6 +180,7 @@ public:
   /// the first sub-loop's preheader
   /// 6. `llvm::BasicBlock *E`: Exit - we need a direct path from the last
   /// sub-loop's exit block to this.
+  // NOLINTNEXTLINE(misc-no-recursion)
   auto pushLoopTree(llvm::SmallVector<NotNull<LoopTree>> &pForest,
                     llvm::Loop *L, llvm::ArrayRef<llvm::Loop *> subLoops,
                     llvm::BasicBlock *H, llvm::BasicBlock *E,
@@ -600,7 +602,7 @@ public:
   // approach: remove LoopIndex, and all loops that follow, unless it is
   // first in which case, just remove LoopIndex
   void conditionOnLoop(llvm::Loop *L) { conditionOnLoop(loopMap[L]); }
-  void conditionOnLoop(LoopTree *LT) {
+  void conditionOnLoop(LoopTree *LT) { // NOLINT(misc-no-recursion)
     if (!LT->parentLoop) return;
     LoopTree &PT = *LT->parentLoop;
     size_t numLoops = LT->getNumLoops();
@@ -659,7 +661,7 @@ public:
       if (inst->mayReadOrWriteMemory()) return true;
     return false;
   }
-  void fillLoopBlock(LoopTree &root) {
+  void fillLoopBlock(LoopTree &root) { // NOLINT(misc-no-recursion)
     for (auto mem : root.memAccesses) loopBlock.addMemory(mem);
     for (auto sub : root.subLoops) fillLoopBlock(*sub);
   }

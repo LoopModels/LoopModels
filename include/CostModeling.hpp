@@ -1,6 +1,6 @@
 #pragma once
 
-#include "./ControlFlowMerging.hpp"
+// #include "./ControlFlowMerging.hpp"
 #include "./LoopBlock.hpp"
 #include "./MemoryAccess.hpp"
 #include "./Schedule.hpp"
@@ -112,8 +112,7 @@ struct CPURegisterFile {
     }
     return 16 * twiceMaxVectorWidth;
   }
-  constexpr CPURegisterFile(llvm::LLVMContext &C,
-                            llvm::TargetTransformInfo &TTI) {
+  CPURegisterFile(llvm::LLVMContext &C, llvm::TargetTransformInfo &TTI) {
     maximumVectorWidth = estimateMaximumVectorWidth(C, TTI);
     numVectorRegisters = TTI.getNumberOfRegisters(true);
     numGeneralPurposeRegisters = TTI.getNumberOfRegisters(false);
@@ -295,7 +294,7 @@ private:
   struct LoopAndExit {
     [[no_unique_address]] LoopTreeSchedule *subTree;
     [[no_unique_address]] InstructionBlock exit{};
-    constexpr LoopAndExit(LoopTreeSchedule *subTree) : subTree(subTree) {}
+    constexpr LoopAndExit(LoopTreeSchedule *tree) : subTree(tree) {}
     static constexpr auto construct(BumpAlloc<> &alloc, LoopTreeSchedule *L,
                                     uint8_t d) {
       return LoopAndExit(alloc.create<LoopTreeSchedule>(L, d));
@@ -536,6 +535,7 @@ private:
     }
   }
 #endif
+public:
   static auto init(BumpAlloc<> &alloc, LinearProgramLoopBlock &LB)
     -> LoopTreeSchedule * {
     // TODO: can we shorten the life span of the instructions we
@@ -591,7 +591,6 @@ private:
   //   mergeInstructions(alloc, cache, loopForest, TTI, tAlloc, vectorBits);
   // }
 
-public:
   [[nodiscard]] constexpr auto getInitAddr(BumpAlloc<> &alloc)
     -> Vec<Address *> {
     if (!header.isInitialized()) header.initialize(alloc);
