@@ -15,6 +15,7 @@
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
+#include <limits>
 #include <llvm/ADT/ArrayRef.h>
 #include <llvm/ADT/SmallPtrSet.h>
 #include <llvm/ADT/SmallVector.h>
@@ -45,11 +46,22 @@ constexpr void ScheduledNode::insertMemAccesses(
   // TODO: if (s == 1) {}
   // TODO: make this function out of line
   auto accesses{getInitAddr(L, alloc)};
-  unsigned numMem = memory.size(), offset = accesses.size();
+  unsigned numMem = memory.size(), offset = accesses.size(),
+           sId = std::numeric_limits<unsigned>::max() >> 1, j = 0;
+  AffineLoopNest<false> *loop = nullptr;
+  // FIXME: start from store, search up for loop of depth `d`.
   for (size_t i : memory) {
     MemoryAccess *mem = memAccess[i];
-    NotNull<AffineLoopNest<false>> loop = mem->getLoop()->rotate(alloc, Pinv);
+    if (mem->getNumLoops() != Phi.numCol()) continue;
+    loop = mem->getLoop()->rotate(alloc, Pinv);
+    break;
+  }
+  invariant(loop != nullptr);
+  for (size_t i : memory) {
+    MemoryAccess *mem = memAccess[i];
     bool isStore = i == storeId;
+    if (isStore) sId = j;
+    ++j;
     size_t inputEdges = 0, outputEdges = 0;
     for (size_t k : mem->inputEdges())
       inputEdges += edges[k].input()->repCount();
@@ -62,10 +74,10 @@ constexpr void ScheduledNode::insertMemAccesses(
     mem->push_back(alloc, addr);
     accesses.push_back(addr);
   }
-  Address *store = accesses[offset + storeId];
+  Address *store = accesses[offset + sId];
   // addrs all need direct connections
   for (size_t i = 0, k = 0; i < numMem; ++i)
-    if (i != storeId) accesses[offset + i]->addDirectConnection(store, k++);
+    if (i != sId) accesses[offset + i]->addDirectConnection(store, k++);
 }
 [[nodiscard]] constexpr auto Address::getCurrentDepth() const -> unsigned {
   return CostModeling::getDepth(node);
@@ -249,7 +261,7 @@ private:
 
   public:
     [[nodiscard]] constexpr auto isInitialized() const -> bool {
-      return addresses;
+      return addresses != nullptr;
     }
     [[nodiscard]] constexpr auto getAddr() -> Vec<Address *> {
       return {addresses, numAddr, capacity};
@@ -280,7 +292,7 @@ private:
         reserveExtra(alloc, std::max<unsigned>(4, numAddr));
       addresses[numAddr++] = addr;
     }
-    constexpr void incNumAddr(unsigned x) { numAddr += x; }
+    constexpr void incNumAddr(unsigned x) { capacity += x; }
     [[nodiscard]] constexpr auto try_delete(Address *adr) -> bool {
       for (size_t i = 0; i < numAddr; ++i) {
         if (addresses[i] == adr) {
@@ -290,6 +302,7 @@ private:
       }
       return false;
     }
+    constexpr void clear() { numAddr = 0; }
   };
   struct LoopAndExit {
     [[no_unique_address]] LoopTreeSchedule *subTree;
@@ -339,9 +352,9 @@ private:
   }
   constexpr auto getLoopAndExit(BumpAlloc<> &alloc, size_t i, size_t d)
     -> LoopAndExit & {
-    if (i >= subTrees.size()) {
+    if (size_t J = subTrees.size(); i >= J) {
       subTrees = grow(alloc, subTrees, i + 1);
-      for (size_t j = subTrees.size(); j <= i; ++j)
+      for (size_t j = J; j <= i; ++j)
         subTrees[j] = LoopAndExit::construct(alloc, this, d);
     }
     return subTrees[i];
@@ -436,6 +449,7 @@ private:
     //
     unsigned numAddr = header.size();
     addr[_(0, numAddr)] << header.getAddr();
+    header.clear();
     Vector<uint8_t> addrCounts;
     addrCounts.reserve(subTrees.size() + 1);
     addrCounts.emplace_back(numAddr);
@@ -473,7 +487,8 @@ private:
         size_t ind = scc.front();
         if (ind < numAddr) {
           Address *a = addr[ind];
-          assert(!a->wasPlaced() || inLoop);
+          assert(!a->wasPlaced() ||
+                 (inLoop && (a->getLoopTreeSchedule() == L)));
           // three possibilities:
           // 1. inLoop && wasPlaced
           // 2. inLoop && !wasPlaced
@@ -481,7 +496,8 @@ private:
           if (inLoop) {
             // header: B
             // exit: subTrees[currentLoop].exit;
-            if (!a->wasPlaced() || allZero(a->indexMatrix()(_, getDepth()))) {
+            if (!a->wasPlaced() || ((L->getParent() == this) &&
+                                    allZero(a->indexMatrix()(_, getDepth())))) {
               // hoist; do other loop members depend, or are depended on?
               bool isParent = false, isChild = false;
               BitSet ancestors{a->getAncestors()},
@@ -496,7 +512,10 @@ private:
                 InstructionBlock *P =
                   isParent ? B : &subTrees[currentLoop].exit;
                 P->push_back(alloc, a);
-                if (a->wasPlaced()) invariant(L->try_delete(a));
+                if (a->wasPlaced()) {
+                  invariant(L->try_delete(a));
+                  a->setLoopTreeSchedule(this);
+                }
               } else assert(a->wasPlaced());
             }
           } else {
@@ -564,9 +583,9 @@ public:
 #endif
     for (size_t i = 0, j = 0; i < lnodes.size(); ++i) {
       auto &node = lnodes[i];
-      auto *L = loops[i];
       size_t k = j + node.getNumMem();
-      node.insertMemAccesses(alloc, LB.getMemoryAccesses(), LB.getEdges(), L);
+      node.insertMemAccesses(alloc, LB.getMemoryAccesses(), LB.getEdges(),
+                             loops[i]);
       j = k;
     }
     // we now have a vector of addrs
@@ -598,7 +617,7 @@ public:
   }
   [[nodiscard]] constexpr auto getDepth() const -> unsigned { return depth; }
   constexpr LoopTreeSchedule(LoopTreeSchedule *L, uint8_t d)
-    : parent(L), depth(d) {}
+    : subTrees{nullptr, 0, 0}, parent(L), depth(d) {}
 };
 constexpr auto getDepth(LoopTreeSchedule *L) -> unsigned {
   return L->getDepth();

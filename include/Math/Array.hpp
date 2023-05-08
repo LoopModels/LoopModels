@@ -93,9 +93,10 @@ template <class T, class S> struct Array {
   }
 
   [[nodiscard]] constexpr auto begin() const noexcept {
+    const T *p = ptr;
     if constexpr (std::is_same_v<S, StridedRange>)
-      return StridedIterator{data(), sz.stride};
-    else return data();
+      return StridedIterator{p, sz.stride};
+    else return p;
   }
   [[nodiscard]] constexpr auto end() const noexcept {
     return begin() + size_t(sz);
@@ -368,9 +369,10 @@ struct MutArray : Array<T, S>, ArrayOps<T, S, MutArray<T, S>> {
   }
 
   [[nodiscard]] constexpr auto begin() noexcept {
+    T *p = this->ptr;
     if constexpr (std::is_same_v<S, StridedRange>)
-      return StridedIterator{data(), this->sz.stride};
-    else return data();
+      return StridedIterator{p, this->sz.stride};
+    else return p;
   }
   [[nodiscard]] constexpr auto end() noexcept {
     return begin() + size_t(this->sz);

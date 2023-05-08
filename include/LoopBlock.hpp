@@ -62,16 +62,16 @@ private:
   [[no_unique_address]] BitSet inNeighbors{};
   [[no_unique_address]] BitSet outNeighbors{};
   [[no_unique_address]] AffineSchedule schedule{};
-  [[no_unique_address]] uint32_t storeId;
   [[no_unique_address]] uint32_t phiOffset{0};   // used in LoopBlock
   [[no_unique_address]] uint32_t omegaOffset{0}; // used in LoopBlock
+  [[no_unique_address]] uint8_t storeId;
   [[no_unique_address]] uint8_t numLoops{0};
   [[no_unique_address]] uint8_t rank{0};
   [[no_unique_address]] bool visited{false};
   // [[no_unique_address]] bool visited2{false};
 
 public:
-  constexpr ScheduledNode(unsigned int sId, MemoryAccess *store,
+  constexpr ScheduledNode(uint8_t sId, MemoryAccess *store,
                           unsigned int nodeIndex)
     : storeId(sId) {
     addMemory(sId, store, nodeIndex);

@@ -114,7 +114,7 @@ class Address {
   [[nodiscard]] constexpr auto getAddrMemory() const -> Address ** {
     const void *m =
       mem +
-      (1 + getNumLoops() + (getArrayDim() * getNumLoops())) * sizeof(int64_t);
+      (1 + getArrayDim() + (getArrayDim() * getNumLoops())) * sizeof(int64_t);
     // const void *m = addr_;
     void *p = const_cast<void *>(static_cast<const void *>(m));
     return (Address **)p;
@@ -122,7 +122,7 @@ class Address {
   [[nodiscard]] constexpr auto getDDepthMemory() const -> uint8_t * {
     const void *m =
       mem +
-      (1 + getNumLoops() + (getArrayDim() * getNumLoops())) * sizeof(int64_t) +
+      (1 + getArrayDim() + (getArrayDim() * getNumLoops())) * sizeof(int64_t) +
       (numMemInputs + numDirectEdges + numMemOutputs) * sizeof(Address *);
     void *p = const_cast<void *>(static_cast<const void *>(m));
     return (uint8_t *)p;
@@ -136,6 +136,9 @@ public:
   [[nodiscard]] constexpr auto getLoopTreeSchedule() const
     -> CostModeling::LoopTreeSchedule * {
     return node;
+  }
+  constexpr void setLoopTreeSchedule(CostModeling::LoopTreeSchedule *L) {
+    node = L;
   }
   // bits: 0 = visited, 1 = on stack, 2 = placed
   // 3 = isStore, 4 = visited2, 5 = activeSubset
@@ -311,11 +314,11 @@ public:
             CostModeling::LoopTreeSchedule *L, unsigned inputEdges,
             unsigned directEdges, unsigned outputEdges) -> NotNull<Address> {
 
-    size_t numLoops = size_t(Pinv.numCol());
-    size_t memSz =
-      (1 + numLoops + (ma->getArrayDim() * numLoops)) * sizeof(int64_t) +
-      (inputEdges + directEdges + outputEdges) *
-        (sizeof(Address *) + sizeof(uint8_t));
+    size_t numLoops = size_t(Pinv.numCol()), arrayDim = ma->getArrayDim(),
+           memSz = (1 + arrayDim + (arrayDim * numLoops)) * sizeof(int64_t) +
+                   (inputEdges + directEdges + outputEdges) *
+                     (sizeof(Address *) + sizeof(uint8_t)) +
+                   sizeof(Address);
     // size_t memSz = ma->getNumLoops() * (1 + ma->getArrayDim());
     auto *pt = alloc.allocate(memSz, 8);
     // we could use the passkey idiom to make the constructor public yet
@@ -329,6 +332,7 @@ public:
                             inputEdges, directEdges, outputEdges);
   }
   constexpr void addDirectConnection(Address *store, size_t loadEdge) {
+    assert(isLoad() && store->isStore());
     directEdges().front() = store;
     store->directEdges()[loadEdge] = this;
     // never ignored
@@ -358,26 +362,20 @@ public:
   [[nodiscard]] constexpr auto getDenominator() const -> int64_t {
     return getIntMemory()[0];
   }
-  // constexpr auto getFusionOmega() -> MutPtrVector<int64_t> {
-  //   return {mem + 1, getNumLoops()+1};
-  // }
-  // [[nodiscard]] constexpr auto getFusionOmega() const -> PtrVector<int64_t> {
-  //   return {mem + 1, getNumLoops()+1};
-  // }
   [[nodiscard]] constexpr auto getOffsetOmega() -> MutPtrVector<int64_t> {
-    return {getIntMemory() + 1, unsigned(getNumLoops())};
+    return {getIntMemory() + 1, unsigned(getArrayDim())};
   }
   [[nodiscard]] constexpr auto getOffsetOmega() const -> PtrVector<int64_t> {
-    return {getIntMemory() + 1, unsigned(getNumLoops())};
+    return {getIntMemory() + 1, unsigned(getArrayDim())};
   }
   /// indexMatrix() -> arrayDim() x getNumLoops()
   [[nodiscard]] constexpr auto indexMatrix() -> MutDensePtrMatrix<int64_t> {
-    return {getIntMemory() + 1 + getNumLoops(),
+    return {getIntMemory() + 1 + getArrayDim(),
             DenseDims{getArrayDim(), getNumLoops()}};
   }
   /// indexMatrix() -> arrayDim() x getNumLoops()
   [[nodiscard]] constexpr auto indexMatrix() const -> DensePtrMatrix<int64_t> {
-    return {getIntMemory() + 1 + getNumLoops(),
+    return {getIntMemory() + 1 + getArrayDim(),
             DenseDims{getArrayDim(), getNumLoops()}};
   }
   [[nodiscard]] constexpr auto getLoop() -> NotNull<AffineLoopNest<false>> {
