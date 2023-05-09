@@ -215,102 +215,102 @@ $(function() {
 <div class="line"><a name="l00186"></a><span class="lineno">  186</span>&#160;      ancestors |= e-&gt;calcAncestors(filtd);</div>
 <div class="line"><a name="l00187"></a><span class="lineno">  187</span>&#160;      parents.insert(e-&gt;index());</div>
 <div class="line"><a name="l00188"></a><span class="lineno">  188</span>&#160;    }</div>
-<div class="line"><a name="l00189"></a><span class="lineno">  189</span>&#160;    ancestors |= parents;</div>
-<div class="line"><a name="l00190"></a><span class="lineno">  190</span>&#160;    <span class="keywordflow">return</span> ancestors;</div>
-<div class="line"><a name="l00191"></a><span class="lineno">  191</span>&#160;  }</div>
-<div class="line"><a name="l00192"></a><span class="lineno">  192</span>&#160;  <span class="comment">// NOLINTNEXTLINE(misc-no-recursion)</span></div>
-<div class="line"><a name="l00193"></a><span class="lineno">  193</span>&#160;  constexpr <span class="keyword">auto</span> calcDescendants(uint8_t filtd) -&gt; <a class="code" href="structBitSet.html">BitSet</a> {</div>
-<div class="line"><a name="l00194"></a><span class="lineno">  194</span>&#160;    <span class="keywordflow">if</span> (wasVisited2()) <span class="keywordflow">return</span> descendants;</div>
-<div class="line"><a name="l00195"></a><span class="lineno">  195</span>&#160;    visit2();</div>
-<div class="line"><a name="l00196"></a><span class="lineno">  196</span>&#160;    descendants = {};</div>
-<div class="line"><a name="l00197"></a><span class="lineno">  197</span>&#160;    children = {};</div>
-<div class="line"><a name="l00198"></a><span class="lineno">  198</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">auto</span> *e : outNeighbors(filtd)) {</div>
-<div class="line"><a name="l00199"></a><span class="lineno">  199</span>&#160;      descendants |= e-&gt;calcDescendants(filtd);</div>
-<div class="line"><a name="l00200"></a><span class="lineno">  200</span>&#160;      children.insert(e-&gt;index());</div>
-<div class="line"><a name="l00201"></a><span class="lineno">  201</span>&#160;    }</div>
-<div class="line"><a name="l00202"></a><span class="lineno">  202</span>&#160;    descendants |= children;</div>
-<div class="line"><a name="l00203"></a><span class="lineno">  203</span>&#160;    <span class="keywordflow">return</span> descendants;</div>
-<div class="line"><a name="l00204"></a><span class="lineno">  204</span>&#160;  }</div>
-<div class="line"><a name="l00205"></a><span class="lineno">  205</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> onStack() <span class="keyword">const</span> -&gt; <span class="keywordtype">bool</span> { <span class="keywordflow">return</span> bitfield &amp; 2; }</div>
-<div class="line"><a name="l00206"></a><span class="lineno">  206</span>&#160;  constexpr <span class="keywordtype">void</span> place() { bitfield |= 4; }</div>
-<div class="line"><a name="l00207"></a><span class="lineno">  207</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> wasPlaced() <span class="keyword">const</span> -&gt; <span class="keywordtype">bool</span> {</div>
-<div class="line"><a name="l00208"></a><span class="lineno">  208</span>&#160;    <span class="keywordflow">return</span> bitfield &amp; 4;</div>
-<div class="line"><a name="l00209"></a><span class="lineno">  209</span>&#160;  }</div>
-<div class="line"><a name="l00212"></a><span class="lineno"><a class="line" href="classAddress.html#a4149e00216f1c945543ac6154f4eb00c">  212</a></span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> <a class="code" href="classAddress.html#a4149e00216f1c945543ac6154f4eb00c">isStore</a>() const -&gt; <span class="keywordtype">bool</span> { <span class="keywordflow">return</span> bitfield &amp; 8; }</div>
-<div class="line"><a name="l00213"></a><span class="lineno">  213</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> isLoad() const -&gt; <span class="keywordtype">bool</span> { <span class="keywordflow">return</span> !<a class="code" href="classAddress.html#a4149e00216f1c945543ac6154f4eb00c">isStore</a>(); }</div>
-<div class="line"><a name="l00214"></a><span class="lineno">  214</span>&#160;  constexpr <span class="keyword">auto</span> index() -&gt; uint8_t &amp; { <span class="keywordflow">return</span> index_; }</div>
-<div class="line"><a name="l00215"></a><span class="lineno">  215</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> index() const -&gt; <span class="keywordtype">unsigned</span> { <span class="keywordflow">return</span> index_; }</div>
-<div class="line"><a name="l00216"></a><span class="lineno">  216</span>&#160;  constexpr <span class="keyword">auto</span> lowLink() -&gt; uint8_t &amp; { <span class="keywordflow">return</span> lowLink_; }</div>
-<div class="line"><a name="l00217"></a><span class="lineno">  217</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> lowLink() const -&gt; <span class="keywordtype">unsigned</span> { <span class="keywordflow">return</span> lowLink_; }</div>
-<div class="line"><a name="l00218"></a><span class="lineno">  218</span>&#160; </div>
-<div class="line"><a name="l00219"></a><span class="lineno"><a class="line" href="structAddress_1_1EndSentinel.html">  219</a></span>&#160;  <span class="keyword">struct </span><a class="code" href="structAddress_1_1EndSentinel.html">EndSentinel</a> {};</div>
-<div class="line"><a name="l00220"></a><span class="lineno"><a class="line" href="classAddress_1_1ActiveEdgeIterator.html">  220</a></span>&#160;  <span class="keyword">class </span><a class="code" href="classAddress_1_1ActiveEdgeIterator.html">ActiveEdgeIterator</a> {</div>
-<div class="line"><a name="l00221"></a><span class="lineno">  221</span>&#160;    <a class="code" href="classAddress.html">Address</a> **p;</div>
-<div class="line"><a name="l00222"></a><span class="lineno">  222</span>&#160;    <a class="code" href="classAddress.html">Address</a> **e;</div>
-<div class="line"><a name="l00223"></a><span class="lineno">  223</span>&#160;    uint8_t *d;</div>
-<div class="line"><a name="l00224"></a><span class="lineno">  224</span>&#160;    uint8_t filtdepth;</div>
-<div class="line"><a name="l00225"></a><span class="lineno">  225</span>&#160; </div>
-<div class="line"><a name="l00226"></a><span class="lineno">  226</span>&#160;  <span class="keyword">public</span>:</div>
-<div class="line"><a name="l00227"></a><span class="lineno">  227</span>&#160;    constexpr <span class="keyword">auto</span> operator*() <span class="keyword">const</span> -&gt; <a class="code" href="classAddress.html">Address</a> * { <span class="keywordflow">return</span> *p; }</div>
-<div class="line"><a name="l00228"></a><span class="lineno">  228</span>&#160;    constexpr <span class="keyword">auto</span> operator-&gt;() <span class="keyword">const</span> -&gt; <a class="code" href="classAddress.html">Address</a> * { <span class="keywordflow">return</span> *p; }</div>
-<div class="line"><a name="l00229"></a><span class="lineno">  229</span>&#160;    [[nodiscard]] constexpr <span class="keyword">auto</span> hasNext() <span class="keyword">const</span> -&gt; <span class="keywordtype">bool</span> {</div>
-<div class="line"><a name="l00230"></a><span class="lineno">  230</span>&#160;      <span class="keywordflow">return</span> ((p != e) &amp;&amp; ((*d &lt; filtdepth) || (!((*p)-&gt;inActiveSubset()))));</div>
-<div class="line"><a name="l00231"></a><span class="lineno">  231</span>&#160;    }</div>
-<div class="line"><a name="l00232"></a><span class="lineno">  232</span>&#160;    constexpr <span class="keyword">auto</span> operator++() -&gt; <a class="code" href="classAddress_1_1ActiveEdgeIterator.html">ActiveEdgeIterator</a> &amp; {</div>
-<div class="line"><a name="l00233"></a><span class="lineno">  233</span>&#160;      <span class="comment">// meaning of filtdepth 255?</span></div>
-<div class="line"><a name="l00234"></a><span class="lineno">  234</span>&#160;      <span class="keywordflow">do</span> {</div>
-<div class="line"><a name="l00235"></a><span class="lineno">  235</span>&#160;        ++p;</div>
-<div class="line"><a name="l00236"></a><span class="lineno">  236</span>&#160;        ++d;</div>
-<div class="line"><a name="l00237"></a><span class="lineno">  237</span>&#160;      } <span class="keywordflow">while</span> (hasNext());</div>
-<div class="line"><a name="l00238"></a><span class="lineno">  238</span>&#160;      <span class="keywordflow">return</span> *<span class="keyword">this</span>;</div>
-<div class="line"><a name="l00239"></a><span class="lineno">  239</span>&#160;    }</div>
-<div class="line"><a name="l00240"></a><span class="lineno">  240</span>&#160;    constexpr <span class="keyword">auto</span> operator==(<a class="code" href="structAddress_1_1EndSentinel.html">EndSentinel</a>) <span class="keyword">const</span> -&gt; <span class="keywordtype">bool</span> { <span class="keywordflow">return</span> p == e; }</div>
-<div class="line"><a name="l00241"></a><span class="lineno">  241</span>&#160;    constexpr <span class="keyword">auto</span> operator!=(<a class="code" href="structAddress_1_1EndSentinel.html">EndSentinel</a>) <span class="keyword">const</span> -&gt; <span class="keywordtype">bool</span> { <span class="keywordflow">return</span> p != e; }</div>
-<div class="line"><a name="l00242"></a><span class="lineno">  242</span>&#160;    constexpr <a class="code" href="classAddress_1_1ActiveEdgeIterator.html">ActiveEdgeIterator</a>(<a class="code" href="classAddress.html">Address</a> **_p, <a class="code" href="classAddress.html">Address</a> **_e, uint8_t *_d,</div>
-<div class="line"><a name="l00243"></a><span class="lineno">  243</span>&#160;                                 uint8_t fd)</div>
-<div class="line"><a name="l00244"></a><span class="lineno">  244</span>&#160;      : p(_p), e(_e), d(_d), filtdepth(fd) {</div>
-<div class="line"><a name="l00245"></a><span class="lineno">  245</span>&#160;      <span class="keywordflow">while</span> (hasNext()) {</div>
-<div class="line"><a name="l00246"></a><span class="lineno">  246</span>&#160;        ++p;</div>
-<div class="line"><a name="l00247"></a><span class="lineno">  247</span>&#160;        ++d;</div>
-<div class="line"><a name="l00248"></a><span class="lineno">  248</span>&#160;      }</div>
-<div class="line"><a name="l00249"></a><span class="lineno">  249</span>&#160;    }</div>
-<div class="line"><a name="l00250"></a><span class="lineno">  250</span>&#160;    constexpr <span class="keyword">auto</span> operator++(<span class="keywordtype">int</span>) -&gt; <a class="code" href="classAddress_1_1ActiveEdgeIterator.html">ActiveEdgeIterator</a> {</div>
-<div class="line"><a name="l00251"></a><span class="lineno">  251</span>&#160;      <span class="keyword">auto</span> tmp = *<span class="keyword">this</span>;</div>
-<div class="line"><a name="l00252"></a><span class="lineno">  252</span>&#160;      ++*<span class="keyword">this</span>;</div>
-<div class="line"><a name="l00253"></a><span class="lineno">  253</span>&#160;      <span class="keywordflow">return</span> tmp;</div>
-<div class="line"><a name="l00254"></a><span class="lineno">  254</span>&#160;    }</div>
-<div class="line"><a name="l00255"></a><span class="lineno">  255</span>&#160;    [[nodiscard]] constexpr <span class="keyword">auto</span> begin() <span class="keyword">const</span> -&gt; <a class="code" href="classAddress_1_1ActiveEdgeIterator.html">ActiveEdgeIterator</a> {</div>
-<div class="line"><a name="l00256"></a><span class="lineno">  256</span>&#160;      <span class="keywordflow">return</span> *<span class="keyword">this</span>;</div>
-<div class="line"><a name="l00257"></a><span class="lineno">  257</span>&#160;    }</div>
-<div class="line"><a name="l00258"></a><span class="lineno">  258</span>&#160;    [[nodiscard]] <span class="keyword">static</span> constexpr <span class="keyword">auto</span> end() -&gt; <a class="code" href="structAddress_1_1EndSentinel.html">EndSentinel</a> { <span class="keywordflow">return</span> {}; }</div>
-<div class="line"><a name="l00259"></a><span class="lineno">  259</span>&#160;  };</div>
-<div class="line"><a name="l00260"></a><span class="lineno">  260</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> numInNeighbors() const -&gt; <span class="keywordtype">unsigned</span> {</div>
-<div class="line"><a name="l00261"></a><span class="lineno">  261</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="classAddress.html#a4149e00216f1c945543ac6154f4eb00c">isStore</a>() ? numMemInputs + numDirectEdges : numMemInputs;</div>
-<div class="line"><a name="l00262"></a><span class="lineno">  262</span>&#160;  }</div>
-<div class="line"><a name="l00263"></a><span class="lineno">  263</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> numOutNeighbors() const -&gt; <span class="keywordtype">unsigned</span> {</div>
-<div class="line"><a name="l00264"></a><span class="lineno">  264</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="classAddress.html#a4149e00216f1c945543ac6154f4eb00c">isStore</a>() ? numMemOutputs : numDirectEdges + numMemOutputs;</div>
-<div class="line"><a name="l00265"></a><span class="lineno">  265</span>&#160;  }</div>
-<div class="line"><a name="l00266"></a><span class="lineno">  266</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> numNeighbors() const -&gt; <span class="keywordtype">unsigned</span> {</div>
-<div class="line"><a name="l00267"></a><span class="lineno">  267</span>&#160;    <span class="keywordflow">return</span> numMemInputs + numDirectEdges + numMemOutputs;</div>
-<div class="line"><a name="l00268"></a><span class="lineno">  268</span>&#160;  }</div>
-<div class="line"><a name="l00269"></a><span class="lineno">  269</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> inNeighbors(uint8_t filtd) -&gt; ActiveEdgeIterator {</div>
-<div class="line"><a name="l00270"></a><span class="lineno">  270</span>&#160;    <a class="code" href="classAddress.html">Address</a> **p = getAddrMemory();</div>
-<div class="line"><a name="l00271"></a><span class="lineno">  271</span>&#160;    <span class="keywordflow">return</span> {p, p + numInNeighbors(), getDDepthMemory(), filtd};</div>
-<div class="line"><a name="l00272"></a><span class="lineno">  272</span>&#160;  }</div>
-<div class="line"><a name="l00273"></a><span class="lineno">  273</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> outNeighbors(uint8_t filtd) -&gt; ActiveEdgeIterator {</div>
-<div class="line"><a name="l00274"></a><span class="lineno">  274</span>&#160;    <span class="keywordtype">unsigned</span> n = numInNeighbors();</div>
-<div class="line"><a name="l00275"></a><span class="lineno">  275</span>&#160;    <a class="code" href="classAddress.html">Address</a> **p = getAddrMemory() + n;</div>
-<div class="line"><a name="l00276"></a><span class="lineno">  276</span>&#160;    <span class="keywordflow">return</span> {p, p + numOutNeighbors(), getDDepthMemory() + n, filtd};</div>
-<div class="line"><a name="l00277"></a><span class="lineno">  277</span>&#160;  }</div>
-<div class="line"><a name="l00278"></a><span class="lineno">  278</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> directEdges() -&gt; MutPtrVector&lt;Address *&gt; {</div>
-<div class="line"><a name="l00279"></a><span class="lineno">  279</span>&#160;    <a class="code" href="classAddress.html">Address</a> **p = getAddrMemory() + numMemInputs;</div>
-<div class="line"><a name="l00280"></a><span class="lineno">  280</span>&#160;    <span class="keywordflow">return</span> {p, numDirectEdges};</div>
-<div class="line"><a name="l00281"></a><span class="lineno">  281</span>&#160;  }</div>
-<div class="line"><a name="l00282"></a><span class="lineno">  282</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> directEdges() const -&gt; PtrVector&lt;<a class="code" href="classAddress.html">Address</a> *&gt; {</div>
-<div class="line"><a name="l00283"></a><span class="lineno">  283</span>&#160;    <a class="code" href="classAddress.html">Address</a> **p = getAddrMemory() + numMemInputs;</div>
-<div class="line"><a name="l00284"></a><span class="lineno">  284</span>&#160;    <span class="keywordflow">return</span> {p, numDirectEdges};</div>
-<div class="line"><a name="l00285"></a><span class="lineno">  285</span>&#160;  }</div>
-<div class="line"><a name="l00286"></a><span class="lineno">  286</span>&#160; </div>
+<div class="line"><a name="l00189"></a><span class="lineno">  189</span>&#160;    <span class="keywordflow">return</span> ancestors |= parents;</div>
+<div class="line"><a name="l00190"></a><span class="lineno">  190</span>&#160;  }</div>
+<div class="line"><a name="l00191"></a><span class="lineno">  191</span>&#160;  <span class="comment">// NOLINTNEXTLINE(misc-no-recursion)</span></div>
+<div class="line"><a name="l00192"></a><span class="lineno">  192</span>&#160;  constexpr <span class="keyword">auto</span> calcDescendants(uint8_t filtd) -&gt; <a class="code" href="structBitSet.html">BitSet</a> {</div>
+<div class="line"><a name="l00193"></a><span class="lineno">  193</span>&#160;    <span class="keywordflow">if</span> (wasVisited2()) <span class="keywordflow">return</span> descendants;</div>
+<div class="line"><a name="l00194"></a><span class="lineno">  194</span>&#160;    visit2();</div>
+<div class="line"><a name="l00195"></a><span class="lineno">  195</span>&#160;    descendants = {};</div>
+<div class="line"><a name="l00196"></a><span class="lineno">  196</span>&#160;    children = {};</div>
+<div class="line"><a name="l00197"></a><span class="lineno">  197</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">auto</span> *e : outNeighbors(filtd)) {</div>
+<div class="line"><a name="l00198"></a><span class="lineno">  198</span>&#160;      descendants |= e-&gt;calcDescendants(filtd);</div>
+<div class="line"><a name="l00199"></a><span class="lineno">  199</span>&#160;      children.insert(e-&gt;index());</div>
+<div class="line"><a name="l00200"></a><span class="lineno">  200</span>&#160;    }</div>
+<div class="line"><a name="l00201"></a><span class="lineno">  201</span>&#160;    <span class="keywordflow">return</span> descendants |= children;</div>
+<div class="line"><a name="l00202"></a><span class="lineno">  202</span>&#160;  }</div>
+<div class="line"><a name="l00203"></a><span class="lineno">  203</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> onStack() <span class="keyword">const</span> -&gt; <span class="keywordtype">bool</span> { <span class="keywordflow">return</span> bitfield &amp; 2; }</div>
+<div class="line"><a name="l00204"></a><span class="lineno">  204</span>&#160;  constexpr <span class="keywordtype">void</span> place() { bitfield |= 4; }</div>
+<div class="line"><a name="l00205"></a><span class="lineno">  205</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> wasPlaced() <span class="keyword">const</span> -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l00206"></a><span class="lineno">  206</span>&#160;    <span class="keywordflow">return</span> bitfield &amp; 4;</div>
+<div class="line"><a name="l00207"></a><span class="lineno">  207</span>&#160;  }</div>
+<div class="line"><a name="l00210"></a><span class="lineno"><a class="line" href="classAddress.html#a4149e00216f1c945543ac6154f4eb00c">  210</a></span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> <a class="code" href="classAddress.html#a4149e00216f1c945543ac6154f4eb00c">isStore</a>() const -&gt; <span class="keywordtype">bool</span> { <span class="keywordflow">return</span> bitfield &amp; 8; }</div>
+<div class="line"><a name="l00211"></a><span class="lineno">  211</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> isLoad() const -&gt; <span class="keywordtype">bool</span> { <span class="keywordflow">return</span> !<a class="code" href="classAddress.html#a4149e00216f1c945543ac6154f4eb00c">isStore</a>(); }</div>
+<div class="line"><a name="l00212"></a><span class="lineno">  212</span>&#160;  constexpr <span class="keyword">auto</span> index() -&gt; uint8_t &amp; { <span class="keywordflow">return</span> index_; }</div>
+<div class="line"><a name="l00213"></a><span class="lineno">  213</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> index() const -&gt; <span class="keywordtype">unsigned</span> { <span class="keywordflow">return</span> index_; }</div>
+<div class="line"><a name="l00214"></a><span class="lineno">  214</span>&#160;  constexpr <span class="keyword">auto</span> lowLink() -&gt; uint8_t &amp; { <span class="keywordflow">return</span> lowLink_; }</div>
+<div class="line"><a name="l00215"></a><span class="lineno">  215</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> lowLink() const -&gt; <span class="keywordtype">unsigned</span> { <span class="keywordflow">return</span> lowLink_; }</div>
+<div class="line"><a name="l00216"></a><span class="lineno">  216</span>&#160; </div>
+<div class="line"><a name="l00217"></a><span class="lineno"><a class="line" href="structAddress_1_1EndSentinel.html">  217</a></span>&#160;  <span class="keyword">struct </span><a class="code" href="structAddress_1_1EndSentinel.html">EndSentinel</a> {};</div>
+<div class="line"><a name="l00218"></a><span class="lineno"><a class="line" href="classAddress_1_1ActiveEdgeIterator.html">  218</a></span>&#160;  <span class="keyword">class </span><a class="code" href="classAddress_1_1ActiveEdgeIterator.html">ActiveEdgeIterator</a> {</div>
+<div class="line"><a name="l00219"></a><span class="lineno">  219</span>&#160;    <a class="code" href="classAddress.html">Address</a> **p;</div>
+<div class="line"><a name="l00220"></a><span class="lineno">  220</span>&#160;    <a class="code" href="classAddress.html">Address</a> **e;</div>
+<div class="line"><a name="l00221"></a><span class="lineno">  221</span>&#160;    uint8_t *d;</div>
+<div class="line"><a name="l00222"></a><span class="lineno">  222</span>&#160;    uint8_t filtdepth;</div>
+<div class="line"><a name="l00223"></a><span class="lineno">  223</span>&#160; </div>
+<div class="line"><a name="l00224"></a><span class="lineno">  224</span>&#160;  <span class="keyword">public</span>:</div>
+<div class="line"><a name="l00225"></a><span class="lineno">  225</span>&#160;    constexpr <span class="keyword">auto</span> operator*() <span class="keyword">const</span> -&gt; <a class="code" href="classAddress.html">Address</a> * { <span class="keywordflow">return</span> *p; }</div>
+<div class="line"><a name="l00226"></a><span class="lineno">  226</span>&#160;    constexpr <span class="keyword">auto</span> operator-&gt;() <span class="keyword">const</span> -&gt; <a class="code" href="classAddress.html">Address</a> * { <span class="keywordflow">return</span> *p; }</div>
+<div class="line"><a name="l00227"></a><span class="lineno">  227</span>&#160;    [[nodiscard]] constexpr <span class="keyword">auto</span> hasNext() <span class="keyword">const</span> -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l00228"></a><span class="lineno">  228</span>&#160;      <span class="keywordflow">return</span> ((p != e) &amp;&amp; ((*d &lt; filtdepth) || (!((*p)-&gt;inActiveSubset()))));</div>
+<div class="line"><a name="l00229"></a><span class="lineno">  229</span>&#160;    }</div>
+<div class="line"><a name="l00230"></a><span class="lineno">  230</span>&#160;    constexpr <span class="keyword">auto</span> operator++() -&gt; <a class="code" href="classAddress_1_1ActiveEdgeIterator.html">ActiveEdgeIterator</a> &amp; {</div>
+<div class="line"><a name="l00231"></a><span class="lineno">  231</span>&#160;      <span class="comment">// meaning of filtdepth 255?</span></div>
+<div class="line"><a name="l00232"></a><span class="lineno">  232</span>&#160;      <span class="keywordflow">do</span> {</div>
+<div class="line"><a name="l00233"></a><span class="lineno">  233</span>&#160;        ++p;</div>
+<div class="line"><a name="l00234"></a><span class="lineno">  234</span>&#160;        ++d;</div>
+<div class="line"><a name="l00235"></a><span class="lineno">  235</span>&#160;      } <span class="keywordflow">while</span> (hasNext());</div>
+<div class="line"><a name="l00236"></a><span class="lineno">  236</span>&#160;      <span class="keywordflow">return</span> *<span class="keyword">this</span>;</div>
+<div class="line"><a name="l00237"></a><span class="lineno">  237</span>&#160;    }</div>
+<div class="line"><a name="l00238"></a><span class="lineno">  238</span>&#160;    constexpr <span class="keyword">auto</span> operator==(<a class="code" href="structAddress_1_1EndSentinel.html">EndSentinel</a>) <span class="keyword">const</span> -&gt; <span class="keywordtype">bool</span> { <span class="keywordflow">return</span> p == e; }</div>
+<div class="line"><a name="l00239"></a><span class="lineno">  239</span>&#160;    constexpr <span class="keyword">auto</span> operator!=(<a class="code" href="structAddress_1_1EndSentinel.html">EndSentinel</a>) <span class="keyword">const</span> -&gt; <span class="keywordtype">bool</span> { <span class="keywordflow">return</span> p != e; }</div>
+<div class="line"><a name="l00240"></a><span class="lineno">  240</span>&#160;    constexpr <a class="code" href="classAddress_1_1ActiveEdgeIterator.html">ActiveEdgeIterator</a>(<a class="code" href="classAddress.html">Address</a> **_p, <a class="code" href="classAddress.html">Address</a> **_e, uint8_t *_d,</div>
+<div class="line"><a name="l00241"></a><span class="lineno">  241</span>&#160;                                 uint8_t fd)</div>
+<div class="line"><a name="l00242"></a><span class="lineno">  242</span>&#160;      : p(_p), e(_e), d(_d), filtdepth(fd) {</div>
+<div class="line"><a name="l00243"></a><span class="lineno">  243</span>&#160;      <span class="keywordflow">while</span> (hasNext()) {</div>
+<div class="line"><a name="l00244"></a><span class="lineno">  244</span>&#160;        ++p;</div>
+<div class="line"><a name="l00245"></a><span class="lineno">  245</span>&#160;        ++d;</div>
+<div class="line"><a name="l00246"></a><span class="lineno">  246</span>&#160;      }</div>
+<div class="line"><a name="l00247"></a><span class="lineno">  247</span>&#160;    }</div>
+<div class="line"><a name="l00248"></a><span class="lineno">  248</span>&#160;    constexpr <span class="keyword">auto</span> operator++(<span class="keywordtype">int</span>) -&gt; <a class="code" href="classAddress_1_1ActiveEdgeIterator.html">ActiveEdgeIterator</a> {</div>
+<div class="line"><a name="l00249"></a><span class="lineno">  249</span>&#160;      <span class="keyword">auto</span> tmp = *<span class="keyword">this</span>;</div>
+<div class="line"><a name="l00250"></a><span class="lineno">  250</span>&#160;      ++*<span class="keyword">this</span>;</div>
+<div class="line"><a name="l00251"></a><span class="lineno">  251</span>&#160;      <span class="keywordflow">return</span> tmp;</div>
+<div class="line"><a name="l00252"></a><span class="lineno">  252</span>&#160;    }</div>
+<div class="line"><a name="l00253"></a><span class="lineno">  253</span>&#160;    [[nodiscard]] constexpr <span class="keyword">auto</span> begin() <span class="keyword">const</span> -&gt; <a class="code" href="classAddress_1_1ActiveEdgeIterator.html">ActiveEdgeIterator</a> {</div>
+<div class="line"><a name="l00254"></a><span class="lineno">  254</span>&#160;      <span class="keywordflow">return</span> *<span class="keyword">this</span>;</div>
+<div class="line"><a name="l00255"></a><span class="lineno">  255</span>&#160;    }</div>
+<div class="line"><a name="l00256"></a><span class="lineno">  256</span>&#160;    [[nodiscard]] <span class="keyword">static</span> constexpr <span class="keyword">auto</span> end() -&gt; <a class="code" href="structAddress_1_1EndSentinel.html">EndSentinel</a> { <span class="keywordflow">return</span> {}; }</div>
+<div class="line"><a name="l00257"></a><span class="lineno">  257</span>&#160;  };</div>
+<div class="line"><a name="l00258"></a><span class="lineno">  258</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> numInNeighbors() const -&gt; <span class="keywordtype">unsigned</span> {</div>
+<div class="line"><a name="l00259"></a><span class="lineno">  259</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="classAddress.html#a4149e00216f1c945543ac6154f4eb00c">isStore</a>() ? numMemInputs + numDirectEdges : numMemInputs;</div>
+<div class="line"><a name="l00260"></a><span class="lineno">  260</span>&#160;  }</div>
+<div class="line"><a name="l00261"></a><span class="lineno">  261</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> numOutNeighbors() const -&gt; <span class="keywordtype">unsigned</span> {</div>
+<div class="line"><a name="l00262"></a><span class="lineno">  262</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="classAddress.html#a4149e00216f1c945543ac6154f4eb00c">isStore</a>() ? numMemOutputs : numDirectEdges + numMemOutputs;</div>
+<div class="line"><a name="l00263"></a><span class="lineno">  263</span>&#160;  }</div>
+<div class="line"><a name="l00264"></a><span class="lineno">  264</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> numNeighbors() const -&gt; <span class="keywordtype">unsigned</span> {</div>
+<div class="line"><a name="l00265"></a><span class="lineno">  265</span>&#160;    <span class="keywordflow">return</span> numMemInputs + numDirectEdges + numMemOutputs;</div>
+<div class="line"><a name="l00266"></a><span class="lineno">  266</span>&#160;  }</div>
+<div class="line"><a name="l00267"></a><span class="lineno">  267</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> inNeighbors(uint8_t filtd) -&gt; ActiveEdgeIterator {</div>
+<div class="line"><a name="l00268"></a><span class="lineno">  268</span>&#160;    <a class="code" href="classAddress.html">Address</a> **p = getAddrMemory();</div>
+<div class="line"><a name="l00269"></a><span class="lineno">  269</span>&#160;    <span class="keywordflow">return</span> {p, p + numInNeighbors(), getDDepthMemory(), filtd};</div>
+<div class="line"><a name="l00270"></a><span class="lineno">  270</span>&#160;  }</div>
+<div class="line"><a name="l00271"></a><span class="lineno">  271</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> outNeighbors(uint8_t filtd) -&gt; ActiveEdgeIterator {</div>
+<div class="line"><a name="l00272"></a><span class="lineno">  272</span>&#160;    <span class="keywordtype">unsigned</span> n = numInNeighbors();</div>
+<div class="line"><a name="l00273"></a><span class="lineno">  273</span>&#160;    <a class="code" href="classAddress.html">Address</a> **p = getAddrMemory() + n;</div>
+<div class="line"><a name="l00274"></a><span class="lineno">  274</span>&#160;    <span class="keywordflow">return</span> {p, p + numOutNeighbors(), getDDepthMemory() + n, filtd};</div>
+<div class="line"><a name="l00275"></a><span class="lineno">  275</span>&#160;  }</div>
+<div class="line"><a name="l00276"></a><span class="lineno">  276</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> directEdges() -&gt; MutPtrVector&lt;Address *&gt; {</div>
+<div class="line"><a name="l00277"></a><span class="lineno">  277</span>&#160;    <a class="code" href="classAddress.html">Address</a> **p = getAddrMemory() + numMemInputs;</div>
+<div class="line"><a name="l00278"></a><span class="lineno">  278</span>&#160;    <span class="keywordflow">return</span> {p, numDirectEdges};</div>
+<div class="line"><a name="l00279"></a><span class="lineno">  279</span>&#160;  }</div>
+<div class="line"><a name="l00280"></a><span class="lineno">  280</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> directEdges() const -&gt; PtrVector&lt;<a class="code" href="classAddress.html">Address</a> *&gt; {</div>
+<div class="line"><a name="l00281"></a><span class="lineno">  281</span>&#160;    <a class="code" href="classAddress.html">Address</a> **p = getAddrMemory() + numMemInputs;</div>
+<div class="line"><a name="l00282"></a><span class="lineno">  282</span>&#160;    <span class="keywordflow">return</span> {p, numDirectEdges};</div>
+<div class="line"><a name="l00283"></a><span class="lineno">  283</span>&#160;  }</div>
+<div class="line"><a name="l00284"></a><span class="lineno">  284</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> outDepSat() -&gt; PtrVector&lt;uint8_t&gt; {</div>
+<div class="line"><a name="l00285"></a><span class="lineno">  285</span>&#160;    <span class="keywordflow">return</span> {getDDepthMemory() + numInNeighbors(), numOutNeighbors()};</div>
+<div class="line"><a name="l00286"></a><span class="lineno">  286</span>&#160;  }</div>
 <div class="line"><a name="l00287"></a><span class="lineno">  287</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> inNeighbors() const -&gt; PtrVector&lt;<a class="code" href="classAddress.html">Address</a> *&gt; {</div>
 <div class="line"><a name="l00288"></a><span class="lineno">  288</span>&#160;    <span class="keywordflow">return</span> PtrVector&lt;Address *&gt;{getAddrMemory(), numInNeighbors()};</div>
 <div class="line"><a name="l00289"></a><span class="lineno">  289</span>&#160;  }</div>
@@ -407,14 +407,56 @@ $(function() {
 <div class="line"><a name="l00382"></a><span class="lineno">  382</span>&#160;    <span class="keywordflow">return</span> loop;</div>
 <div class="line"><a name="l00383"></a><span class="lineno">  383</span>&#160;  }</div>
 <div class="line"><a name="l00384"></a><span class="lineno">  384</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getCurrentDepth() const -&gt; <span class="keywordtype">unsigned</span>;</div>
-<div class="line"><a name="l00385"></a><span class="lineno">  385</span>&#160;};</div>
-<div class="ttc" id="aclassAddress_1_1ActiveEdgeIterator_html"><div class="ttname"><a href="classAddress_1_1ActiveEdgeIterator.html">Address::ActiveEdgeIterator</a></div><div class="ttdef"><b>Definition:</b> Address.hpp:220</div></div>
+<div class="line"><a name="l00385"></a><span class="lineno">  385</span>&#160;  <span class="keywordtype">void</span> printDotName(llvm::raw_ostream &amp;os)<span class="keyword"> const </span>{</div>
+<div class="line"><a name="l00386"></a><span class="lineno">  386</span>&#160;    <span class="keywordflow">if</span> (isLoad()) os &lt;&lt; <span class="stringliteral">&quot;... = &quot;</span>;</div>
+<div class="line"><a name="l00387"></a><span class="lineno">  387</span>&#160;    os &lt;&lt; *oldMemAccess-&gt;getArrayPointer() &lt;&lt; <span class="stringliteral">&quot;[&quot;</span>;</div>
+<div class="line"><a name="l00388"></a><span class="lineno">  388</span>&#160;    DensePtrMatrix&lt;int64_t&gt; A{<a class="code" href="classAddress.html#afad8e52958d1d85eef66ee44d4ceeb78">indexMatrix</a>()};</div>
+<div class="line"><a name="l00389"></a><span class="lineno">  389</span>&#160;    DensePtrMatrix&lt;int64_t&gt; B{oldMemAccess-&gt;offsetMatrix()};</div>
+<div class="line"><a name="l00390"></a><span class="lineno">  390</span>&#160;    PtrVector&lt;int64_t&gt; b{getOffsetOmega()};</div>
+<div class="line"><a name="l00391"></a><span class="lineno">  391</span>&#160;    <span class="keywordtype">size_t</span> numLoops = size_t(A.numCol());</div>
+<div class="line"><a name="l00392"></a><span class="lineno">  392</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; A.numRow(); ++i) {</div>
+<div class="line"><a name="l00393"></a><span class="lineno">  393</span>&#160;      <span class="keywordflow">if</span> (i) os &lt;&lt; <span class="stringliteral">&quot;, &quot;</span>;</div>
+<div class="line"><a name="l00394"></a><span class="lineno">  394</span>&#160;      <span class="keywordtype">bool</span> printPlus = <span class="keyword">false</span>;</div>
+<div class="line"><a name="l00395"></a><span class="lineno">  395</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> j = 0; j &lt; numLoops; ++j) {</div>
+<div class="line"><a name="l00396"></a><span class="lineno">  396</span>&#160;        <span class="keywordflow">if</span> (int64_t Aji = A(i, j)) {</div>
+<div class="line"><a name="l00397"></a><span class="lineno">  397</span>&#160;          <span class="keywordflow">if</span> (printPlus) {</div>
+<div class="line"><a name="l00398"></a><span class="lineno">  398</span>&#160;            <span class="keywordflow">if</span> (Aji &lt;= 0) {</div>
+<div class="line"><a name="l00399"></a><span class="lineno">  399</span>&#160;              Aji *= -1;</div>
+<div class="line"><a name="l00400"></a><span class="lineno">  400</span>&#160;              os &lt;&lt; <span class="stringliteral">&quot; - &quot;</span>;</div>
+<div class="line"><a name="l00401"></a><span class="lineno">  401</span>&#160;            } <span class="keywordflow">else</span> os &lt;&lt; <span class="stringliteral">&quot; + &quot;</span>;</div>
+<div class="line"><a name="l00402"></a><span class="lineno">  402</span>&#160;          }</div>
+<div class="line"><a name="l00403"></a><span class="lineno">  403</span>&#160;          <span class="keywordflow">if</span> (Aji != 1) os &lt;&lt; Aji &lt;&lt; <span class="charliteral">&#39;*&#39;</span>;</div>
+<div class="line"><a name="l00404"></a><span class="lineno">  404</span>&#160;          os &lt;&lt; <span class="stringliteral">&quot;i_&quot;</span> &lt;&lt; j;</div>
+<div class="line"><a name="l00405"></a><span class="lineno">  405</span>&#160;          printPlus = <span class="keyword">true</span>;</div>
+<div class="line"><a name="l00406"></a><span class="lineno">  406</span>&#160;        }</div>
+<div class="line"><a name="l00407"></a><span class="lineno">  407</span>&#160;      }</div>
+<div class="line"><a name="l00408"></a><span class="lineno">  408</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> j = 0; j &lt; B.numCol(); ++j) {</div>
+<div class="line"><a name="l00409"></a><span class="lineno">  409</span>&#160;        <span class="keywordflow">if</span> (int64_t offij = j ? B(i, j) : b[i]) {</div>
+<div class="line"><a name="l00410"></a><span class="lineno">  410</span>&#160;          <span class="keywordflow">if</span> (printPlus) {</div>
+<div class="line"><a name="l00411"></a><span class="lineno">  411</span>&#160;            <span class="keywordflow">if</span> (offij &lt;= 0) {</div>
+<div class="line"><a name="l00412"></a><span class="lineno">  412</span>&#160;              offij *= -1;</div>
+<div class="line"><a name="l00413"></a><span class="lineno">  413</span>&#160;              os &lt;&lt; <span class="stringliteral">&quot; - &quot;</span>;</div>
+<div class="line"><a name="l00414"></a><span class="lineno">  414</span>&#160;            } <span class="keywordflow">else</span> os &lt;&lt; <span class="stringliteral">&quot; + &quot;</span>;</div>
+<div class="line"><a name="l00415"></a><span class="lineno">  415</span>&#160;          }</div>
+<div class="line"><a name="l00416"></a><span class="lineno">  416</span>&#160;          <span class="keywordflow">if</span> (j) {</div>
+<div class="line"><a name="l00417"></a><span class="lineno">  417</span>&#160;            <span class="keywordflow">if</span> (offij != 1) os &lt;&lt; offij &lt;&lt; <span class="charliteral">&#39;*&#39;</span>;</div>
+<div class="line"><a name="l00418"></a><span class="lineno">  418</span>&#160;            os &lt;&lt; *oldMemAccess-&gt;getLoop()-&gt;getSyms()[j - 1];</div>
+<div class="line"><a name="l00419"></a><span class="lineno">  419</span>&#160;          } <span class="keywordflow">else</span> os &lt;&lt; offij;</div>
+<div class="line"><a name="l00420"></a><span class="lineno">  420</span>&#160;          printPlus = <span class="keyword">true</span>;</div>
+<div class="line"><a name="l00421"></a><span class="lineno">  421</span>&#160;        }</div>
+<div class="line"><a name="l00422"></a><span class="lineno">  422</span>&#160;      }</div>
+<div class="line"><a name="l00423"></a><span class="lineno">  423</span>&#160;    }</div>
+<div class="line"><a name="l00424"></a><span class="lineno">  424</span>&#160;    os &lt;&lt; <span class="stringliteral">&quot;]&quot;</span>;</div>
+<div class="line"><a name="l00425"></a><span class="lineno">  425</span>&#160;    <span class="keywordflow">if</span> (<a class="code" href="classAddress.html#a4149e00216f1c945543ac6154f4eb00c">isStore</a>()) os &lt;&lt; <span class="stringliteral">&quot; = ...&quot;</span>;</div>
+<div class="line"><a name="l00426"></a><span class="lineno">  426</span>&#160;  }</div>
+<div class="line"><a name="l00427"></a><span class="lineno">  427</span>&#160;};</div>
+<div class="ttc" id="aclassAddress_1_1ActiveEdgeIterator_html"><div class="ttname"><a href="classAddress_1_1ActiveEdgeIterator.html">Address::ActiveEdgeIterator</a></div><div class="ttdef"><b>Definition:</b> Address.hpp:218</div></div>
 <div class="ttc" id="aclassAddress_html"><div class="ttname"><a href="classAddress.html">Address</a></div><div class="ttdef"><b>Definition:</b> Address.hpp:59</div></div>
 <div class="ttc" id="aclassAddress_html_a297424995238c440069eecf32c6d5bb7"><div class="ttname"><a href="classAddress.html#a297424995238c440069eecf32c6d5bb7">Address::indexMatrix</a></div><div class="ttdeci">constexpr auto indexMatrix() const -&gt; DensePtrMatrix&lt; int64_t &gt;</div><div class="ttdoc">indexMatrix() -&gt; arrayDim() x getNumLoops()</div><div class="ttdef"><b>Definition:</b> Address.hpp:377</div></div>
-<div class="ttc" id="aclassAddress_html_a4149e00216f1c945543ac6154f4eb00c"><div class="ttname"><a href="classAddress.html#a4149e00216f1c945543ac6154f4eb00c">Address::isStore</a></div><div class="ttdeci">constexpr auto isStore() const -&gt; bool</div><div class="ttdef"><b>Definition:</b> Address.hpp:212</div></div>
+<div class="ttc" id="aclassAddress_html_a4149e00216f1c945543ac6154f4eb00c"><div class="ttname"><a href="classAddress.html#a4149e00216f1c945543ac6154f4eb00c">Address::isStore</a></div><div class="ttdeci">constexpr auto isStore() const -&gt; bool</div><div class="ttdef"><b>Definition:</b> Address.hpp:210</div></div>
 <div class="ttc" id="aclassAddress_html_afad8e52958d1d85eef66ee44d4ceeb78"><div class="ttname"><a href="classAddress.html#afad8e52958d1d85eef66ee44d4ceeb78">Address::indexMatrix</a></div><div class="ttdeci">constexpr auto indexMatrix() -&gt; MutDensePtrMatrix&lt; int64_t &gt;</div><div class="ttdoc">indexMatrix() -&gt; arrayDim() x getNumLoops()</div><div class="ttdef"><b>Definition:</b> Address.hpp:372</div></div>
-<div class="ttc" id="aclassCostModeling_1_1LoopTreeSchedule_html"><div class="ttname"><a href="classCostModeling_1_1LoopTreeSchedule.html">CostModeling::LoopTreeSchedule</a></div><div class="ttdef"><b>Definition:</b> CostModeling.hpp:195</div></div>
-<div class="ttc" id="astructAddress_1_1EndSentinel_html"><div class="ttname"><a href="structAddress_1_1EndSentinel.html">Address::EndSentinel</a></div><div class="ttdef"><b>Definition:</b> Address.hpp:219</div></div>
+<div class="ttc" id="aclassCostModeling_1_1LoopTreeSchedule_html"><div class="ttname"><a href="classCostModeling_1_1LoopTreeSchedule.html">CostModeling::LoopTreeSchedule</a></div><div class="ttdef"><b>Definition:</b> CostModeling.hpp:144</div></div>
+<div class="ttc" id="astructAddress_1_1EndSentinel_html"><div class="ttname"><a href="structAddress_1_1EndSentinel.html">Address::EndSentinel</a></div><div class="ttdef"><b>Definition:</b> Address.hpp:217</div></div>
 <div class="ttc" id="astructAffineLoopNest_html"><div class="ttname"><a href="structAffineLoopNest.html">AffineLoopNest</a></div><div class="ttdef"><b>Definition:</b> Loops.hpp:324</div></div>
 <div class="ttc" id="astructBitSet_html"><div class="ttname"><a href="structBitSet.html">BitSet</a></div><div class="ttdef"><b>Definition:</b> BitSets.hpp:82</div></div>
 <div class="ttc" id="astructBumpAlloc_html"><div class="ttname"><a href="structBumpAlloc.html">BumpAlloc</a></div><div class="ttdef"><b>Definition:</b> Allocators.hpp:42</div></div>

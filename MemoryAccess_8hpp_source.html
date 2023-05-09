@@ -433,23 +433,23 @@ $(function() {
 <div class="line"><a name="l00382"></a><span class="lineno">  382</span>&#160;  }</div>
 <div class="line"><a name="l00383"></a><span class="lineno">  383</span>&#160;  os &lt;&lt; <span class="stringliteral">&quot; ]\nSubscripts: [ &quot;</span>;</div>
 <div class="line"><a name="l00384"></a><span class="lineno">  384</span>&#160;  <span class="keywordtype">size_t</span> numLoops = size_t(A.numRow());</div>
-<div class="line"><a name="l00385"></a><span class="lineno">  385</span>&#160;  <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; A.numCol(); ++i) {</div>
-<div class="line"><a name="l00386"></a><span class="lineno">  386</span>&#160;    <span class="keywordflow">if</span> (i) os &lt;&lt; <span class="stringliteral">&quot;, &quot;</span>;</div>
-<div class="line"><a name="l00387"></a><span class="lineno">  387</span>&#160;    <span class="keywordtype">bool</span> printPlus = <span class="keyword">false</span>;</div>
-<div class="line"><a name="l00388"></a><span class="lineno">  388</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> j = 0; j &lt; numLoops; ++j) {</div>
-<div class="line"><a name="l00389"></a><span class="lineno">  389</span>&#160;      <span class="keywordflow">if</span> (int64_t Aji = A(j, i)) {</div>
-<div class="line"><a name="l00390"></a><span class="lineno">  390</span>&#160;        <span class="keywordflow">if</span> (printPlus) {</div>
-<div class="line"><a name="l00391"></a><span class="lineno">  391</span>&#160;          <span class="keywordflow">if</span> (Aji &lt;= 0) {</div>
-<div class="line"><a name="l00392"></a><span class="lineno">  392</span>&#160;            Aji *= -1;</div>
-<div class="line"><a name="l00393"></a><span class="lineno">  393</span>&#160;            os &lt;&lt; <span class="stringliteral">&quot; - &quot;</span>;</div>
-<div class="line"><a name="l00394"></a><span class="lineno">  394</span>&#160;          } <span class="keywordflow">else</span> os &lt;&lt; <span class="stringliteral">&quot; + &quot;</span>;</div>
-<div class="line"><a name="l00395"></a><span class="lineno">  395</span>&#160;        }</div>
-<div class="line"><a name="l00396"></a><span class="lineno">  396</span>&#160;        <span class="keywordflow">if</span> (Aji != 1) os &lt;&lt; Aji &lt;&lt; <span class="charliteral">&#39;*&#39;</span>;</div>
-<div class="line"><a name="l00397"></a><span class="lineno">  397</span>&#160;        os &lt;&lt; <span class="stringliteral">&quot;i_&quot;</span> &lt;&lt; j &lt;&lt; <span class="stringliteral">&quot; &quot;</span>;</div>
-<div class="line"><a name="l00398"></a><span class="lineno">  398</span>&#160;        printPlus = <span class="keyword">true</span>;</div>
-<div class="line"><a name="l00399"></a><span class="lineno">  399</span>&#160;      }</div>
-<div class="line"><a name="l00400"></a><span class="lineno">  400</span>&#160;    }</div>
-<div class="line"><a name="l00401"></a><span class="lineno">  401</span>&#160;    PtrMatrix&lt;int64_t&gt; offs = m.offsetMatrix();</div>
+<div class="line"><a name="l00385"></a><span class="lineno">  385</span>&#160;  PtrMatrix&lt;int64_t&gt; offs = m.offsetMatrix();</div>
+<div class="line"><a name="l00386"></a><span class="lineno">  386</span>&#160;  <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; A.numCol(); ++i) {</div>
+<div class="line"><a name="l00387"></a><span class="lineno">  387</span>&#160;    <span class="keywordflow">if</span> (i) os &lt;&lt; <span class="stringliteral">&quot;, &quot;</span>;</div>
+<div class="line"><a name="l00388"></a><span class="lineno">  388</span>&#160;    <span class="keywordtype">bool</span> printPlus = <span class="keyword">false</span>;</div>
+<div class="line"><a name="l00389"></a><span class="lineno">  389</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> j = 0; j &lt; numLoops; ++j) {</div>
+<div class="line"><a name="l00390"></a><span class="lineno">  390</span>&#160;      <span class="keywordflow">if</span> (int64_t Aji = A(j, i)) {</div>
+<div class="line"><a name="l00391"></a><span class="lineno">  391</span>&#160;        <span class="keywordflow">if</span> (printPlus) {</div>
+<div class="line"><a name="l00392"></a><span class="lineno">  392</span>&#160;          <span class="keywordflow">if</span> (Aji &lt;= 0) {</div>
+<div class="line"><a name="l00393"></a><span class="lineno">  393</span>&#160;            Aji *= -1;</div>
+<div class="line"><a name="l00394"></a><span class="lineno">  394</span>&#160;            os &lt;&lt; <span class="stringliteral">&quot; - &quot;</span>;</div>
+<div class="line"><a name="l00395"></a><span class="lineno">  395</span>&#160;          } <span class="keywordflow">else</span> os &lt;&lt; <span class="stringliteral">&quot; + &quot;</span>;</div>
+<div class="line"><a name="l00396"></a><span class="lineno">  396</span>&#160;        }</div>
+<div class="line"><a name="l00397"></a><span class="lineno">  397</span>&#160;        <span class="keywordflow">if</span> (Aji != 1) os &lt;&lt; Aji &lt;&lt; <span class="charliteral">&#39;*&#39;</span>;</div>
+<div class="line"><a name="l00398"></a><span class="lineno">  398</span>&#160;        os &lt;&lt; <span class="stringliteral">&quot;i_&quot;</span> &lt;&lt; j &lt;&lt; <span class="stringliteral">&quot; &quot;</span>;</div>
+<div class="line"><a name="l00399"></a><span class="lineno">  399</span>&#160;        printPlus = <span class="keyword">true</span>;</div>
+<div class="line"><a name="l00400"></a><span class="lineno">  400</span>&#160;      }</div>
+<div class="line"><a name="l00401"></a><span class="lineno">  401</span>&#160;    }</div>
 <div class="line"><a name="l00402"></a><span class="lineno">  402</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> j = 0; j &lt; offs.numCol(); ++j) {</div>
 <div class="line"><a name="l00403"></a><span class="lineno">  403</span>&#160;      <span class="keywordflow">if</span> (int64_t offij = offs(i, j)) {</div>
 <div class="line"><a name="l00404"></a><span class="lineno">  404</span>&#160;        <span class="keywordflow">if</span> (printPlus) {</div>
@@ -467,9 +467,8 @@ $(function() {
 <div class="line"><a name="l00416"></a><span class="lineno">  416</span>&#160;    }</div>
 <div class="line"><a name="l00417"></a><span class="lineno">  417</span>&#160;  }</div>
 <div class="line"><a name="l00418"></a><span class="lineno">  418</span>&#160;  <span class="keywordflow">return</span> os &lt;&lt; <span class="stringliteral">&quot;]\nInitial Fusion Omega: &quot;</span> &lt;&lt; m.getFusionOmega()</div>
-<div class="line"><a name="l00419"></a><span class="lineno">  419</span>&#160;            &lt;&lt; <span class="stringliteral">&quot;\nAffineLoopNest:\n&quot;</span></div>
-<div class="line"><a name="l00420"></a><span class="lineno">  420</span>&#160;            &lt;&lt; *m.getLoop();</div>
-<div class="line"><a name="l00421"></a><span class="lineno">  421</span>&#160;}</div>
+<div class="line"><a name="l00419"></a><span class="lineno">  419</span>&#160;            &lt;&lt; <span class="stringliteral">&quot;\nAffineLoopNest:&quot;</span> &lt;&lt; *m.getLoop();</div>
+<div class="line"><a name="l00420"></a><span class="lineno">  420</span>&#160;}</div>
 <div class="ttc" id="aclassAddress_html"><div class="ttname"><a href="classAddress.html">Address</a></div><div class="ttdef"><b>Definition:</b> Address.hpp:59</div></div>
 <div class="ttc" id="astructAffineLoopNest_html"><div class="ttname"><a href="structAffineLoopNest.html">AffineLoopNest&lt; true &gt;</a></div></div>
 <div class="ttc" id="astructBitSet_html"><div class="ttname"><a href="structBitSet.html">BitSet</a></div><div class="ttdef"><b>Definition:</b> BitSets.hpp:82</div></div>
