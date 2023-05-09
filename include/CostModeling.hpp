@@ -28,60 +28,9 @@
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/Type.h>
 #include <llvm/Support/Allocator.h>
+#include <llvm/Support/raw_ostream.h>
+#include <string_view>
 #include <utility>
-
-namespace CostModeling {
-class LoopTreeSchedule;
-constexpr auto getInitAddr(LoopTreeSchedule *L, BumpAlloc<> &alloc)
-  -> LinAlg::ResizeableView<Address *, unsigned>;
-constexpr auto getDepth(LoopTreeSchedule *) -> unsigned;
-} // namespace CostModeling
-
-constexpr void ScheduledNode::insertMemAccesses(
-  BumpAlloc<> &alloc, PtrVector<MemoryAccess *> memAccess,
-  PtrVector<Dependence> edges, CostModeling::LoopTreeSchedule *L) const {
-  // First, we invert the schedule matrix.
-  SquarePtrMatrix<int64_t> Phi = schedule.getPhi();
-  auto [Pinv, denom] = NormalForm::scaledInv(Phi);
-  // TODO: if (s == 1) {}
-  // TODO: make this function out of line
-  auto accesses{getInitAddr(L, alloc)};
-  unsigned numMem = memory.size(), offset = accesses.size(),
-           sId = std::numeric_limits<unsigned>::max() >> 1, j = 0;
-  AffineLoopNest<false> *loop = nullptr;
-  // FIXME: start from store, search up for loop of depth `d`.
-  for (size_t i : memory) {
-    MemoryAccess *mem = memAccess[i];
-    if (mem->getNumLoops() != Phi.numCol()) continue;
-    loop = mem->getLoop()->rotate(alloc, Pinv);
-    break;
-  }
-  invariant(loop != nullptr);
-  for (size_t i : memory) {
-    MemoryAccess *mem = memAccess[i];
-    bool isStore = i == storeId;
-    if (isStore) sId = j;
-    ++j;
-    size_t inputEdges = 0, outputEdges = 0;
-    for (size_t k : mem->inputEdges())
-      inputEdges += edges[k].input()->repCount();
-    for (size_t k : mem->outputEdges())
-      outputEdges += edges[k].output()->repCount();
-
-    Address *addr = Address::construct(alloc, loop, mem, isStore, Pinv, denom,
-                                       schedule.getOffsetOmega(), L, inputEdges,
-                                       isStore ? numMem - 1 : 1, outputEdges);
-    mem->push_back(alloc, addr);
-    accesses.push_back(addr);
-  }
-  Address *store = accesses[offset + sId];
-  // addrs all need direct connections
-  for (size_t i = 0, k = 0; i < numMem; ++i)
-    if (i != sId) accesses[offset + i]->addDirectConnection(store, k++);
-}
-[[nodiscard]] constexpr auto Address::getCurrentDepth() const -> unsigned {
-  return CostModeling::getDepth(node);
-}
 
 namespace CostModeling {
 
@@ -263,7 +212,7 @@ private:
     [[nodiscard]] constexpr auto isInitialized() const -> bool {
       return addresses != nullptr;
     }
-    [[nodiscard]] constexpr auto getAddr() -> Vec<Address *> {
+    [[nodiscard]] constexpr auto getAddr() -> PtrVector<Address *> {
       return {addresses, numAddr, capacity};
     }
     [[nodiscard]] constexpr auto size() const -> unsigned { return numAddr; }
@@ -303,7 +252,35 @@ private:
       return false;
     }
     constexpr void clear() { numAddr = 0; }
+    auto printDotNodes(llvm::raw_ostream &os, size_t i,
+                       llvm::SmallVectorImpl<std::string> &addrNames,
+                       const std::string &parentLoop) -> size_t {
+      for (auto *addr : getAddr()) {
+        os << " | ";
+        std::string f("f" + std::to_string(++i)), addrName = "\"";
+        addrName += parentLoop;
+        addrName += "\":";
+        addrName += f;
+        addrNames[addr->index()] = addrName;
+        addr->printDotName(os << "<" << f << "> ");
+      }
+      return i;
+    }
+
+    void printDotEdges(llvm::raw_ostream &os,
+                       llvm::ArrayRef<std::string> addrNames) {
+      for (auto *addr : getAddr()) {
+        auto outN{addr->outNeighbors()};
+        auto depS{addr->outDepSat()};
+        for (size_t n = 0; n < outN.size(); ++n) {
+          os << addrNames[addr->index()] << " -> "
+             << addrNames[outN[n]->index()]
+             << " [label = \"dep_sat=" << unsigned(depS[n]) << "\"];\n";
+        }
+      }
+    }
   };
+
   struct LoopAndExit {
     [[no_unique_address]] LoopTreeSchedule *subTree;
     [[no_unique_address]] InstructionBlock exit{};
@@ -320,13 +297,15 @@ private:
   [[no_unique_address]] Vec<LoopAndExit> subTrees{};
   [[no_unique_address]] LoopTreeSchedule *parent{nullptr};
   [[no_unique_address]] uint8_t depth;
+  [[no_unique_address]] uint8_t numAddr_;
   // notused yet
   /*
   [[no_unique_address]] uint8_t vectorizationFactor{1};
   [[no_unique_address]] uint8_t unrollFactor{1};
   [[no_unique_address]] uint8_t unrollPredcedence{1};
   */
-  // i = 0 means self, i = 1 (default) returns parent, i = 2 parent's parent...
+  // i = 0 means self, i = 1 (default) returns parent, i = 2 parent's
+  // parent...
   constexpr auto try_delete(Address *adr) -> bool {
     if (header.try_delete(adr)) return true;
     for (auto &[subTree, exit] : subTrees) {
@@ -439,8 +418,8 @@ private:
                  MutPtrVector<Address *> addr) -> unsigned {
     // we sort via repeatedly calculating the strongly connected components
     // of the address graph. The SCCs are in topological order.
-    // If a load or store are isolated within a SCC from a sub-loop, we hoist if
-    // it's indices do not depend on that loop.
+    // If a load or store are isolated within a SCC from a sub-loop, we hoist
+    // if it's indices do not depend on that loop.
     //
     // We will eventually insert all addr at this level and within sub-loops
     // into `addr`. We process them in batches, iterating based on `omega`
@@ -454,12 +433,17 @@ private:
     addrCounts.reserve(subTrees.size() + 1);
     addrCounts.emplace_back(numAddr);
     for (auto &L : subTrees)
-      numAddr += addrCounts.emplace_back(
-        L.subTree->placeAddr(alloc, LB, addr[_(numAddr, end)]));
+      addrCounts.emplace_back(
+        numAddr += L.subTree->placeAddr(alloc, LB, addr[_(numAddr, end)]));
+
     addr = addr[_(0, numAddr)];
-    for (unsigned i = 0; i < numAddr; ++i) addr[i]->index() = i;
+    numAddr_ = numAddr;
+    for (unsigned i = 0; i < numAddr; ++i) {
+      addr[i]->resetBitfield();
+      addr[i]->addToSubset();
+      addr[i]->index() = i;
+    }
     for (auto *a : addr) {
-      a->addToSubset();
       a->calcAncestors(getDepth());
       a->calcDescendants(getDepth());
     }
@@ -487,8 +471,7 @@ private:
         size_t ind = scc.front();
         if (ind < numAddr) {
           Address *a = addr[ind];
-          assert(!a->wasPlaced() ||
-                 (inLoop && (a->getLoopTreeSchedule() == L)));
+          invariant(!a->wasPlaced() || inLoop);
           // three possibilities:
           // 1. inLoop && wasPlaced
           // 2. inLoop && !wasPlaced
@@ -496,7 +479,7 @@ private:
           if (inLoop) {
             // header: B
             // exit: subTrees[currentLoop].exit;
-            if (!a->wasPlaced() || ((L->getParent() == this) &&
+            if (!a->wasPlaced() || ((a->getLoopTreeSchedule() == L) &&
                                     allZero(a->indexMatrix()(_, getDepth())))) {
               // hoist; do other loop members depend, or are depended on?
               bool isParent = false, isChild = false;
@@ -531,13 +514,12 @@ private:
           inLoop = !inLoop;
         }
       } else {
-        assert(inLoop);
+        invariant(inLoop);
 #ifndef NDEBUG
         for (size_t i : scc) assert(addr[i]->wasPlaced());
 #endif
       }
     }
-    for (auto *adr : addr) adr->resetBitfield();
     return numAddr;
   }
   template <typename T>
@@ -553,9 +535,10 @@ private:
       subTree.subTree->validate();
     }
   }
+  void validateMemPlacements() {}
 #endif
 public:
-  static auto init(BumpAlloc<> &alloc, LinearProgramLoopBlock &LB)
+  [[nodiscard]] static auto init(BumpAlloc<> &alloc, LinearProgramLoopBlock &LB)
     -> LoopTreeSchedule * {
     // TODO: can we shorten the life span of the instructions we
     // allocate here to `lalloc`? I.e., do we need them to live on after
@@ -576,18 +559,16 @@ public:
       unsigned numMem = node.getNumMem();
       L->incNumAddr(numMem);
       numAddr += numMem;
-      node.incrementReplicationCounts(LB.getMemoryAccesses());
+      node.incrementReplicationCounts(LB.getMem());
     }
 #ifndef NDEBUG
     root->validate();
 #endif
-    for (size_t i = 0, j = 0; i < lnodes.size(); ++i) {
-      auto &node = lnodes[i];
-      size_t k = j + node.getNumMem();
-      node.insertMemAccesses(alloc, LB.getMemoryAccesses(), LB.getEdges(),
-                             loops[i]);
-      j = k;
-    }
+    for (size_t i = 0; i < lnodes.size(); ++i)
+      lnodes[i].insertMem(alloc, LB.getMem(), LB.getEdges(), loops[i]);
+#ifndef NDEBUG
+    root->validateMemPlacements();
+#endif
     // we now have a vector of addrs
     for (auto &edge : LB.getEdges()) {
       // here we add all connections to the addrs
@@ -611,20 +592,76 @@ public:
   // }
 
   [[nodiscard]] constexpr auto getInitAddr(BumpAlloc<> &alloc)
-    -> Vec<Address *> {
+    -> InstructionBlock & {
     if (!header.isInitialized()) header.initialize(alloc);
-    return header.getAddr();
+    return header;
   }
   [[nodiscard]] constexpr auto getDepth() const -> unsigned { return depth; }
   constexpr LoopTreeSchedule(LoopTreeSchedule *L, uint8_t d)
     : subTrees{nullptr, 0, 0}, parent(L), depth(d) {}
+  // NOLINTNEXTLINE(misc-no-recursion)
+  void printDotEdges(llvm::raw_ostream &out,
+                     llvm::ArrayRef<std::string> addrNames) {
+    header.printDotEdges(out, addrNames);
+    for (auto &subTree : subTrees) {
+      subTree.subTree->printDotEdges(out, addrNames);
+      subTree.exit.printDotEdges(out, addrNames);
+    }
+  }
+  // NOLINTNEXTLINE(misc-no-recursion)
+  auto printSubDotFile(BumpAlloc<> &alloc, llvm::raw_ostream &out,
+                       map<LoopTreeSchedule *, std::string> &names,
+                       llvm::SmallVectorImpl<std::string> &addrNames,
+                       AffineLoopNest<false> *lret) -> AffineLoopNest<false> * {
+    AffineLoopNest<false> *loop{nullptr};
+    size_t j = 0;
+    for (auto *addr : header.getAddr()) loop = addr->getLoop();
+    for (auto &subTree : subTrees) {
+      // `names` might realloc, relocating `names[this]`
+      if (getDepth())
+        names[subTree.subTree] = names[this] + "SubLoop#" + std::to_string(j++);
+      else names[subTree.subTree] = "LoopNest#" + std::to_string(j++);
+      if (loop == nullptr)
+        for (auto *addr : subTree.exit.getAddr()) loop = addr->getLoop();
+      loop =
+        subTree.subTree->printSubDotFile(alloc, out, names, addrNames, loop);
+    }
+    const std::string &name = names[this];
+    out << "\"" << name << "\" [label = \"<f0> ";
+    // assert(depth == 0 || (loop != nullptr));
+    if (loop && (getDepth() > 0)) {
+      for (size_t i = loop->getNumLoops(), k = getDepth(); i > k;)
+        loop = loop->removeLoop(alloc, --i);
+      loop->printBounds(out);
+    }
+    size_t i = header.printDotNodes(out, 0, addrNames, name);
+    j = 0;
+    std::string loopEdges;
+    for (auto &subTree : subTrees) {
+      std::string label = "f" + std::to_string(++i);
+      out << " | <" << label << "> SubLoop#" << j++;
+      loopEdges += "\"" + name + "\":f" + std::to_string(i) + " -> \"" +
+                   names[subTree.subTree] + "\":f0;\n";
+      i = subTree.exit.printDotNodes(out, i, addrNames, name);
+    }
+    out << "\"];\n" << loopEdges;
+    if (lret) return lret;
+    if ((loop == nullptr) || (getDepth() <= 1)) return nullptr;
+    return loop->removeLoop(alloc, getDepth() - 1);
+  }
+
+  void printDotFile(BumpAlloc<> &alloc, llvm::raw_ostream &out) {
+    map<LoopTreeSchedule *, std::string> names;
+    llvm::SmallVector<std::string> addrNames(numAddr_);
+    names[this] = "toplevel";
+    out << "digraph LoopNest {\n";
+    printSubDotFile(alloc, out, names, addrNames, nullptr);
+    printDotEdges(out, addrNames);
+    out << "}\n";
+  }
 };
 constexpr auto getDepth(LoopTreeSchedule *L) -> unsigned {
   return L->getDepth();
-}
-constexpr auto getInitAddr(LoopTreeSchedule *L, BumpAlloc<> &alloc)
-  -> LinAlg::ResizeableView<Address *, unsigned> {
-  return L->getInitAddr(alloc);
 }
 
 static_assert(Graphs::AbstractIndexGraph<LoopTreeSchedule::AddressGraph>);
@@ -632,3 +669,49 @@ static_assert(Graphs::AbstractIndexGraph<LoopTreeSchedule::AddressGraph>);
 //   [[no_unique_address]] BumpAlloc<> &allocator;
 // };
 } // namespace CostModeling
+
+constexpr void ScheduledNode::insertMem(
+  BumpAlloc<> &alloc, PtrVector<MemoryAccess *> memAccess,
+  PtrVector<Dependence> edges, CostModeling::LoopTreeSchedule *L) const {
+  // First, we invert the schedule matrix.
+  SquarePtrMatrix<int64_t> Phi = schedule.getPhi();
+  auto [Pinv, denom] = NormalForm::scaledInv(Phi);
+  // TODO: if (s == 1) {}
+  // TODO: make this function out of line
+  auto &accesses{L->getInitAddr(alloc)};
+  unsigned numMem = memory.size(), offset = accesses.size(),
+           sId = std::numeric_limits<unsigned>::max() >> 1, j = 0;
+  AffineLoopNest<false> *loop = nullptr;
+  // FIXME: start from store, search up for loop of depth `d`.
+  for (size_t i : memory) {
+    MemoryAccess *mem = memAccess[i];
+    if (mem->getNumLoops() != Phi.numCol()) continue;
+    loop = mem->getLoop()->rotate(alloc, Pinv);
+    break;
+  }
+  invariant(loop != nullptr);
+  for (size_t i : memory) {
+    MemoryAccess *mem = memAccess[i];
+    bool isStore = i == storeId;
+    if (isStore) sId = j;
+    ++j;
+    size_t inputEdges = 0, outputEdges = 0;
+    for (size_t k : mem->inputEdges())
+      inputEdges += edges[k].input()->repCount();
+    for (size_t k : mem->outputEdges())
+      outputEdges += edges[k].output()->repCount();
+
+    Address *addr = Address::construct(alloc, loop, mem, isStore, Pinv, denom,
+                                       schedule.getOffsetOmega(), L, inputEdges,
+                                       isStore ? numMem - 1 : 1, outputEdges);
+    mem->push_back(alloc, addr);
+    accesses.push_back(addr);
+  }
+  Address *store = accesses[offset + sId];
+  // addrs all need direct connections
+  for (size_t i = 0, k = 0; i < numMem; ++i)
+    if (i != sId) accesses[offset + i]->addDirectConnection(store, k++);
+}
+[[nodiscard]] constexpr auto Address::getCurrentDepth() const -> unsigned {
+  return CostModeling::getDepth(node);
+}

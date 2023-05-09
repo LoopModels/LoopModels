@@ -382,6 +382,7 @@ inline auto operator<<(llvm::raw_ostream &os, const MemoryAccess &m)
   }
   os << " ]\nSubscripts: [ ";
   size_t numLoops = size_t(A.numRow());
+  PtrMatrix<int64_t> offs = m.offsetMatrix();
   for (size_t i = 0; i < A.numCol(); ++i) {
     if (i) os << ", ";
     bool printPlus = false;
@@ -398,7 +399,6 @@ inline auto operator<<(llvm::raw_ostream &os, const MemoryAccess &m)
         printPlus = true;
       }
     }
-    PtrMatrix<int64_t> offs = m.offsetMatrix();
     for (size_t j = 0; j < offs.numCol(); ++j) {
       if (int64_t offij = offs(i, j)) {
         if (printPlus) {
@@ -416,6 +416,5 @@ inline auto operator<<(llvm::raw_ostream &os, const MemoryAccess &m)
     }
   }
   return os << "]\nInitial Fusion Omega: " << m.getFusionOmega()
-            << "\nAffineLoopNest:\n"
-            << *m.getLoop();
+            << "\nAffineLoopNest:" << *m.getLoop();
 }

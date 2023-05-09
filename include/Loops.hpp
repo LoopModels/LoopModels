@@ -68,9 +68,9 @@ inline auto isKnownOne(llvm::ScalarEvolution &SE, llvm::Value *v) -> bool {
 struct NoWrapRewriter : public llvm::SCEVRewriteVisitor<NoWrapRewriter> {
   NoWrapRewriter(llvm::ScalarEvolution &ScEv) : SCEVRewriteVisitor(ScEv) {}
   auto visitAddRecExpr(const llvm::SCEVAddRecExpr *ex) -> const llvm::SCEV * {
-    llvm::SmallVector<const llvm::SCEV *, 2> Operands;
-    for (const llvm::SCEV *Op : ex->operands()) Operands.push_back(visit(Op));
-    return SE.getAddRecExpr(Operands, ex->getLoop(), llvm::SCEV::NoWrapMask);
+    llvm::SmallVector<const llvm::SCEV *, 2> operands;
+    for (const llvm::SCEV *Op : ex->operands()) operands.push_back(visit(Op));
+    return SE.getAddRecExpr(operands, ex->getLoop(), llvm::SCEV::NoWrapMask);
   }
   auto visitMulExpr(const llvm::SCEVMulExpr *ex) -> const llvm::SCEV * {
     return SE.getMulExpr(visit(ex->getOperand(0)), visit(ex->getOperand(1)),
@@ -360,10 +360,10 @@ struct AffineLoopNest
             for (size_t r = d + 1; r < maxDepth; ++r) P = P->getParentLoop();
           }
           // TODO: find a more efficient way to get IntTyp
-          llvm::Type *IntTyp = P->getInductionVariable(SE)->getType();
+          llvm::Type *intTyp = P->getInductionVariable(SE)->getType();
           loopNestCtor::addSymbol(A, symbols,
-                                  SE.getAddRecExpr(SE.getZero(IntTyp),
-                                                   SE.getOne(IntTyp), P,
+                                  SE.getAddRecExpr(SE.getZero(intTyp),
+                                                   SE.getOne(intTyp), P,
                                                    llvm::SCEV::NoWrapMask),
                                   _(i, i + 1), Bid);
         }
@@ -521,9 +521,9 @@ struct AffineLoopNest
     numDynSymbols += numToRemove;
     auto S{getSyms()};
     for (size_t i = 0; i < numToRemove; ++i) {
-      llvm::Type *IntType = L->getInductionVariable(SE)->getType();
+      llvm::Type *intTyp = L->getInductionVariable(SE)->getType();
       S[i + oldNumDynSymbols] = SE.getAddRecExpr(
-        SE.getZero(IntType), SE.getOne(IntType), L, llvm::SCEV::NoWrapMask);
+        SE.getZero(intTyp), SE.getOne(intTyp), L, llvm::SCEV::NoWrapMask);
     }
     numLoops = numRemainingLoops;
     // initializeComparator();
@@ -704,10 +704,9 @@ struct AffineLoopNest
     return true;
   }
 
-  void printSymbol(llvm::raw_ostream &os, PtrVector<int64_t> x,
-                   int64_t mul) const {
-    bool printed = x[0] != 0;
-    if (printed) os << mul * x[0];
+  auto printSymbol(llvm::raw_ostream &os, PtrVector<int64_t> x,
+                   int64_t mul) const -> bool {
+    bool printed = false;
     for (size_t i = 1; i < x.size(); ++i)
       if (int64_t xi = x[i] * mul) {
         if (printed) os << (xi > 0 ? " + " : " - ");
@@ -716,56 +715,130 @@ struct AffineLoopNest
         if (absxi != 1) os << absxi << " * ";
         os << *getSyms()[i - 1];
       }
+    if (int64_t x0 = x[0]) {
+      if (printed) os << (mul * x0 > 0 ? " + " : " - ") << constexpr_abs(x0);
+      else os << mul * x[0];
+    }
+    return printed;
   }
   constexpr void setNumConstraints(size_t numCon) { numConstraints = numCon; }
   static constexpr void setNumEqConstraints(size_t) {}
   constexpr void decrementNumConstraints() { --numConstraints; }
 
+  void printBound(llvm::raw_ostream &os, int64_t sign, size_t numVarMinus1,
+                  size_t numConst, size_t j) const {
+    PtrVector<int64_t> b = getProgVars(j);
+    DensePtrMatrix<int64_t> A{getA()};
+    bool printed = printSymbol(os, b, -sign);
+    for (size_t k = 0; k < numVarMinus1; ++k) {
+      if (int64_t lakj = A(j, k + numConst)) {
+        if (lakj * sign > 0) os << " - ";
+        else if (printed) os << " + ";
+        lakj = constexpr_abs(lakj);
+        if (lakj != 1) os << lakj << "*";
+        os << "i_" << k;
+        printed = true;
+      }
+    }
+    if (!printed) os << 0;
+  }
+  void printBoundShort(llvm::raw_ostream &os, int64_t sign, size_t numVarMinus1,
+                       size_t numConst, int64_t allAj, size_t numRow,
+                       bool separateLines) const {
+    bool isUpper = sign < 0;
+    if (separateLines || isUpper) {
+      if (allAj == 1) os << "i_" << numVarMinus1;
+      else os << allAj << "*i_" << numVarMinus1;
+      os << (isUpper ? " <= " : " >= ");
+    }
+    if (numRow > 1) os << (isUpper ? "min(" : "max(");
+    DensePtrMatrix<int64_t> A{getA()};
+    for (size_t j = 0, k = 0; j < A.numRow(); ++j) {
+      if (A(j, last) * sign <= 0) continue;
+      if (k++) os << ", ";
+      printBound(os, sign, numVarMinus1, numConst, j);
+    }
+    if constexpr (NonNegative) {
+      if (!isUpper) os << ", 0";
+    }
+    if (numRow > 1) os << ")";
+    if (!(separateLines || isUpper)) os << " <= ";
+  }
   // prints the inner most loop.
   // it is assumed that you iteratively pop off the inner most loop with
   // `removeLoop` to print all bounds.
+
   void printBound(llvm::raw_ostream &os, int64_t sign) const {
     const size_t numVar = getNumLoops();
     if (numVar == 0) return;
-    const size_t numVarMinus1 = numVar - 1, numConst = getNumSymbols();
-    bool hasPrintedLine = NonNegative && (sign == 1);
-    auto A{getA()};
+    const size_t numVarM1 = numVar - 1, numConst = getNumSymbols();
+    bool hasPrintedLine = NonNegative && (sign == 1), isUpper = sign < 0;
+    DensePtrMatrix<int64_t> A{getA()};
+    size_t numRow = 0;
+    int64_t allAj = 0;
     for (size_t j = 0; j < A.numRow(); ++j) {
-      int64_t Ajraw = A(j, end - 1);
-      int64_t Aj = Ajraw * sign;
+      int64_t Ajr = A(j, last);
+      int64_t Aj = Ajr * sign;
+      if (Aj <= 0) continue;
+      if (allAj) allAj = allAj == Aj ? allAj : -1;
+      else allAj = Aj;
+      ++numRow;
+    }
+    if (numRow == 0) {
+      if constexpr (NonNegative)
+        if (!isUpper) os << "i_" << numVarM1 << " >= 0";
+      return;
+    }
+    if constexpr (NonNegative)
+      if (!isUpper) ++numRow;
+    if (allAj > 0)
+      return printBoundShort(os, sign, numVarM1, numConst, allAj, numRow, true);
+    for (size_t j = 0; j < A.numRow(); ++j) {
+      int64_t Ajr = A(j, end - 1);
+      int64_t Aj = Ajr * sign;
       if (Aj <= 0) continue;
       if (hasPrintedLine)
         for (size_t k = 0; k < 21; ++k) os << ' ';
       hasPrintedLine = true;
-      if (Ajraw != sign)
-        os << Aj << "*i_" << numVarMinus1 << ((sign < 0) ? " <= " : " >= ");
-      else os << "i_" << numVarMinus1 << ((sign < 0) ? " <= " : " >= ");
-      PtrVector<int64_t> b = getProgVars(j);
-      bool printed = anyNEZero(b);
-      if (printed) printSymbol(os, b, -sign);
-      for (size_t k = 0; k < numVarMinus1; ++k) {
-        if (int64_t lakj = A(j, k + numConst)) {
-          if (lakj * sign > 0) os << " - ";
-          else if (printed) os << " + ";
-          lakj = constexpr_abs(lakj);
-          if (lakj != 1) os << lakj << "*";
-          os << "i_" << k;
-          printed = true;
-        }
-      }
-      if (!printed) os << 0;
+      if (Ajr != sign)
+        os << Aj << "*i_" << numVarM1 << (isUpper ? " <= " : " >= ");
+      else os << "i_" << numVarM1 << (isUpper ? " <= " : " >= ");
+      printBound(os, sign, numVarM1, numConst, j);
       os << "\n";
+    }
+    if constexpr (NonNegative)
+      if (!isUpper) os << "i_" << numVarM1 << " >= 0\n";
+  }
+  void printBounds(llvm::raw_ostream &os) const {
+    const size_t numVar = getNumLoops();
+    if (numVar == 0) return;
+    DensePtrMatrix<int64_t> A{getA()};
+    int64_t allAj = 0;
+    size_t numPos = 0, numNeg = 0;
+    for (size_t j = 0; j < A.numRow(); ++j) {
+      int64_t Ajr = A(j, last);
+      if (Ajr == 0) continue;
+      numPos += Ajr > 0;
+      numNeg += Ajr < 0;
+      int64_t x = std::abs(Ajr);
+      if (allAj) allAj = allAj == x ? allAj : -1;
+      else allAj = x;
+    }
+    if (allAj > 0) {
+      size_t numVarMinus1 = numVar - 1, numConst = getNumSymbols();
+      if constexpr (NonNegative) ++numPos;
+      printBoundShort(os, 1, numVarMinus1, numConst, allAj, numPos, false);
+      printBoundShort(os, -1, numVarMinus1, numConst, allAj, numNeg, false);
+    } else {
+      printBound(os, 1);
+      printBound(os << " && ", -1);
     }
   }
   void dump(llvm::raw_ostream &os, BumpAlloc<> &alloc) const {
     const AffineLoopNest *tmp = this;
     for (size_t i = getNumLoops(); tmp;) {
       assert((i == tmp->getNumLoops()) && "loop count mismatch");
-      os << "Loop " << --i << " lower bounds: ";
-      if constexpr (NonNegative) os << "i_" << i << " >= 0\n";
-      tmp->printBound(os, 1);  // 1 for lower bound
-      os << "Loop " << i << " upper bounds: ";
-      tmp->printBound(os, -1); // -1 for upper bound
+      tmp->printBounds(os << "\nLoop " << --i << ": ");
       if (!i) break;
       tmp = tmp->removeLoop(alloc, i);
     }

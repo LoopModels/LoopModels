@@ -186,8 +186,7 @@ public:
       ancestors |= e->calcAncestors(filtd);
       parents.insert(e->index());
     }
-    ancestors |= parents;
-    return ancestors;
+    return ancestors |= parents;
   }
   // NOLINTNEXTLINE(misc-no-recursion)
   constexpr auto calcDescendants(uint8_t filtd) -> BitSet {
@@ -199,8 +198,7 @@ public:
       descendants |= e->calcDescendants(filtd);
       children.insert(e->index());
     }
-    descendants |= children;
-    return descendants;
+    return descendants |= children;
   }
   [[nodiscard]] constexpr auto onStack() const -> bool { return bitfield & 2; }
   constexpr void place() { bitfield |= 4; }
@@ -283,7 +281,9 @@ public:
     Address **p = getAddrMemory() + numMemInputs;
     return {p, numDirectEdges};
   }
-
+  [[nodiscard]] constexpr auto outDepSat() -> PtrVector<uint8_t> {
+    return {getDDepthMemory() + numInNeighbors(), numOutNeighbors()};
+  }
   [[nodiscard]] constexpr auto inNeighbors() const -> PtrVector<Address *> {
     return PtrVector<Address *>{getAddrMemory(), numInNeighbors()};
   }
@@ -382,4 +382,46 @@ public:
     return loop;
   }
   [[nodiscard]] constexpr auto getCurrentDepth() const -> unsigned;
+  void printDotName(llvm::raw_ostream &os) const {
+    if (isLoad()) os << "... = ";
+    os << *oldMemAccess->getArrayPointer() << "[";
+    DensePtrMatrix<int64_t> A{indexMatrix()};
+    DensePtrMatrix<int64_t> B{oldMemAccess->offsetMatrix()};
+    PtrVector<int64_t> b{getOffsetOmega()};
+    size_t numLoops = size_t(A.numCol());
+    for (size_t i = 0; i < A.numRow(); ++i) {
+      if (i) os << ", ";
+      bool printPlus = false;
+      for (size_t j = 0; j < numLoops; ++j) {
+        if (int64_t Aji = A(i, j)) {
+          if (printPlus) {
+            if (Aji <= 0) {
+              Aji *= -1;
+              os << " - ";
+            } else os << " + ";
+          }
+          if (Aji != 1) os << Aji << '*';
+          os << "i_" << j;
+          printPlus = true;
+        }
+      }
+      for (size_t j = 0; j < B.numCol(); ++j) {
+        if (int64_t offij = j ? B(i, j) : b[i]) {
+          if (printPlus) {
+            if (offij <= 0) {
+              offij *= -1;
+              os << " - ";
+            } else os << " + ";
+          }
+          if (j) {
+            if (offij != 1) os << offij << '*';
+            os << *oldMemAccess->getLoop()->getSyms()[j - 1];
+          } else os << offij;
+          printPlus = true;
+        }
+      }
+    }
+    os << "]";
+    if (isStore()) os << " = ...";
+  }
 };

@@ -2,7 +2,6 @@
 #include "../include/CostModeling.hpp"
 #include "../include/LoopBlock.hpp"
 #include "../include/LoopForest.hpp"
-#include "Address.hpp"
 #include <cstdio>
 #include <llvm/ADT/APInt.h>
 #include <llvm/ADT/DepthFirstIterator.h>
@@ -96,9 +95,10 @@ TurboLoopPass::run(llvm::Function &F, llvm::FunctionAnalysisManager &FAM)
       remark("LinearProgram LoopSet", forest->getOuterLoop(), os.str());
     }
     std::optional<MemoryAccess::BitSet> optDeps = loopBlock.optimize();
+    CostModeling::LoopTreeSchedule *LTS = nullptr;
     if (optDeps) {
       changed = true;
-      CostModeling::LoopTreeSchedule::init(allocator, loopBlock);
+      LTS = CostModeling::LoopTreeSchedule::init(allocator, loopBlock);
     }
     // NOTE: we're not actually changing anything yet
     if (ORE) [[unlikely]] {
@@ -106,6 +106,7 @@ TurboLoopPass::run(llvm::Function &F, llvm::FunctionAnalysisManager &FAM)
         llvm::SmallVector<char, 512> str;
         llvm::raw_svector_ostream os(str);
         os << "Solved linear program:" << loopBlock << "\n";
+        // LTS->printDotFile(allocator, os);
         remark("LinearProgramSuccess", forest->getOuterLoop(), os.str());
       } else {
         remark("LinearProgramFailure", forest->getOuterLoop(),

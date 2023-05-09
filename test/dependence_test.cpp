@@ -871,7 +871,7 @@ TEST(TriangularExampleTest, BasicAssertions) {
   // phi3 loop order (outer <-> inner) is [m, k, n]
   // so the schedule preserves `m` as the outermost loop,
   // followed by `k`, and `n` as innermost. `n` is the reduction loop.
-  for (auto *mem : lblock.getMemoryAccesses()) {
+  for (auto *mem : lblock.getMem()) {
     for (size_t nodeIndex : mem->getNodeIndex()) {
       AffineSchedule s = lblock.getNode(nodeIndex).getSchedule();
       if (mem->getNumLoops() == 2) {
@@ -886,6 +886,7 @@ TEST(TriangularExampleTest, BasicAssertions) {
     }
   }
   auto *LTS = CostModeling::LoopTreeSchedule::init(alloc, lblock);
+  LTS->printDotFile(alloc, llvm::errs());
 }
 
 // NOLINTNEXTLINE(modernize-use-trailing-return-type)
@@ -1142,7 +1143,7 @@ TEST(MeanStDevTest0, BasicAssertions) {
     iOuterLoopNest.optimize();
   EXPECT_TRUE(optDeps.has_value());
   map<MemoryAccess *, size_t> memAccessIds;
-  MutPtrVector<MemoryAccess *> mem = iOuterLoopNest.getMemoryAccesses();
+  MutPtrVector<MemoryAccess *> mem = iOuterLoopNest.getMem();
   for (size_t jj = 0; jj < mem.size(); ++jj) memAccessIds[mem[jj]] = jj;
   for (auto &e : iOuterLoopNest.getEdges()) {
     auto [in, out] = e.getInOutPair();
@@ -1246,7 +1247,7 @@ TEST(MeanStDevTest0, BasicAssertions) {
   optS.antiDiag() << 1;
   DenseMatrix<int64_t> optSinnerUndef = optS;
   optSinnerUndef(1, _) << std::numeric_limits<int64_t>::min();
-  for (auto *memi : jOuterLoopNest.getMemoryAccesses()) {
+  for (auto *memi : jOuterLoopNest.getMem()) {
     for (size_t nodeIndex : memi->getNodeIndex()) {
       AffineSchedule s = jOuterLoopNest.getNode(nodeIndex).getSchedule();
       if (s.getNumLoops() == 1) EXPECT_EQ(s.getPhi()(0, 0), 1);
@@ -1423,7 +1424,7 @@ TEST(DoubleDependenceTest, BasicAssertions) {
   optPhi(0, _) << 1;
   optPhi(1, _) << std::numeric_limits<int64_t>::min();
   // Graphs::print(iOuterLoopNest.fullGraph());
-  for (auto &mem : loopBlock.getMemoryAccesses()) {
+  for (auto &mem : loopBlock.getMem()) {
     for (size_t nodeIndex : mem->getNodeIndex()) {
       AffineSchedule s = loopBlock.getNode(nodeIndex).getSchedule();
       EXPECT_EQ(s.getPhi(), optPhi);
@@ -1580,7 +1581,7 @@ TEST(ConvReversePass, BasicAssertions) {
 
   std::optional<BitSet<std::array<uint64_t, 2>>> optRes = loopBlock.optimize();
   EXPECT_TRUE(optRes.has_value());
-  for (auto &mem : loopBlock.getMemoryAccesses()) {
+  for (auto &mem : loopBlock.getMem()) {
     llvm::errs() << "mem->nodeIndex: " << mem->getNodeIndex() << "; ";
     llvm::errs() << "mem: " << mem << "\n";
     for (size_t nodeIndex : mem->getNodeIndex()) {

@@ -87,10 +87,10 @@ public:
   // TODO:
   // 1. the above
   // 2. add the direct Addr connections corresponding to the node
-  constexpr void insertMemAccesses(BumpAlloc<> &alloc,
-                                   PtrVector<MemoryAccess *> memAccess,
-                                   PtrVector<Dependence> edges,
-                                   CostModeling::LoopTreeSchedule *L) const;
+  constexpr void insertMem(BumpAlloc<> &alloc,
+                           PtrVector<MemoryAccess *> memAccess,
+                           PtrVector<Dependence> edges,
+                           CostModeling::LoopTreeSchedule *L) const;
   constexpr void
   incrementReplicationCounts(PtrVector<MemoryAccess *> memAccess) const {
     for (auto i : memory)
@@ -357,7 +357,7 @@ public:
   [[nodiscard]] auto getMemoryAccesses() const -> PtrVector<MemoryAccess *> {
     return memory;
   }
-  auto getMemoryAccesses() -> MutPtrVector<MemoryAccess *> { return memory; }
+  auto getMem() -> MutPtrVector<MemoryAccess *> { return memory; }
   auto getMemoryAccess(size_t i) -> MemoryAccess * { return memory[i]; }
   auto getNode(size_t i) -> ScheduledNode & { return nodes[i]; }
   [[nodiscard]] auto getNode(size_t i) const -> const ScheduledNode & {
