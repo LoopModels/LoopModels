@@ -168,7 +168,7 @@ $(function() {
 <div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> operator*() <span class="keyword">const</span> -&gt; <span class="keyword">const</span> T &amp; {</div>
 <div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;    <span class="keywordflow">return</span> getValue();</div>
 <div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;  }</div>
-<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;  [[nodiscard]] constexpr <span class="keyword">operator</span> <a class="code" href="structNotNull.html">NotNull&lt;T&gt;</a>() { <span class="keywordflow">return</span> value; }</div>
+<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;  [[nodiscard]] constexpr <span class="keyword">operator</span> <a class="code" href="classNotNull.html">NotNull&lt;T&gt;</a>() { <span class="keywordflow">return</span> value; }</div>
 <div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;  constexpr <span class="keyword">explicit</span> <span class="keyword">operator</span> bool()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> hasValue(); }</div>
 <div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;  constexpr <span class="keyword">auto</span> operator-&gt;() -&gt; T * {</div>
 <div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;    invariant(hasValue());</div>
@@ -180,9 +180,9 @@ $(function() {
 <div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;  }</div>
 <div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;  constexpr <a class="code" href="structOptional.html">Optional</a>() = <span class="keywordflow">default</span>;</div>
 <div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;  constexpr <a class="code" href="structOptional.html">Optional</a>(T *v) : value(v) {}</div>
-<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;  constexpr <a class="code" href="structOptional.html">Optional</a>(<a class="code" href="structNotNull.html">NotNull&lt;T&gt;</a> v) : value(v) {}</div>
+<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;  constexpr <a class="code" href="structOptional.html">Optional</a>(<a class="code" href="classNotNull.html">NotNull&lt;T&gt;</a> v) : value(v) {}</div>
 <div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;};</div>
-<div class="ttc" id="astructNotNull_html"><div class="ttname"><a href="structNotNull.html">NotNull</a></div><div class="ttdef"><b>Definition:</b> Valid.hpp:7</div></div>
+<div class="ttc" id="aclassNotNull_html"><div class="ttname"><a href="classNotNull.html">NotNull</a></div><div class="ttdef"><b>Definition:</b> Valid.hpp:7</div></div>
 <div class="ttc" id="astructOptional_3_01T_01_4_html"><div class="ttname"><a href="structOptional_3_01T_01_4.html">Optional&lt; T &gt;</a></div><div class="ttdef"><b>Definition:</b> Optional.hpp:26</div></div>
 <div class="ttc" id="astructOptional_3_01T_01_5_01_4_html"><div class="ttname"><a href="structOptional_3_01T_01_5_01_4.html">Optional&lt; T * &gt;</a></div><div class="ttdef"><b>Definition:</b> Optional.hpp:83</div></div>
 <div class="ttc" id="astructOptional_3_01T_01_6_01_4_html"><div class="ttname"><a href="structOptional_3_01T_01_6_01_4.html">Optional&lt; T &amp; &gt;</a></div><div class="ttdef"><b>Definition:</b> Optional.hpp:61</div></div>

@@ -193,10 +193,10 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>symbolIndex</b> (cons
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>neededBytes</b> () const -&gt; size_t</td></tr>
 <tr class="separator:aa1393fca2ef709424867ec2d6d8f9f90"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adf892aeda8680097b019f16ca37a58e6"><td class="memItemLeft" align="right" valign="top"><a id="adf892aeda8680097b019f16ca37a58e6"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>copy</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc) const -&gt; <a class="el" href="structNotNull.html">NotNull</a>&lt; <a class="el" href="classDepPoly.html">DepPoly</a> &gt;</td></tr>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>copy</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc) const -&gt; <a class="el" href="classNotNull.html">NotNull</a>&lt; <a class="el" href="classDepPoly.html">DepPoly</a> &gt;</td></tr>
 <tr class="separator:adf892aeda8680097b019f16ca37a58e6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5c4c6982e7ed7c14f61511fec57fc076"><td class="memItemLeft" align="right" valign="top"><a id="a5c4c6982e7ed7c14f61511fec57fc076"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>farkasPair</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc) const -&gt; std::array&lt; <a class="el" href="structNotNull.html">NotNull</a>&lt; <a class="el" href="classSimplex.html">Simplex</a> &gt;, 2 &gt;</td></tr>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>farkasPair</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc) const -&gt; std::array&lt; <a class="el" href="classNotNull.html">NotNull</a>&lt; <a class="el" href="classSimplex.html">Simplex</a> &gt;, 2 &gt;</td></tr>
 <tr class="separator:a5c4c6982e7ed7c14f61511fec57fc076"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_methods_structBasePolyhedra"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_structBasePolyhedra')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="structBasePolyhedra.html">BasePolyhedra&lt; true, true, false, DepPoly &gt;</a></td></tr>
 <tr class="memitem:acff0f8d0019a25088596916cb36ab81a inherit pub_methods_structBasePolyhedra"><td class="memItemLeft" align="right" valign="top"><a id="acff0f8d0019a25088596916cb36ab81a"></a>
@@ -299,7 +299,7 @@ static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getN
 static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>findFirstNonEqual</b> (PtrVector&lt; int64_t &gt; x, PtrVector&lt; int64_t &gt; y) -&gt; size_t</td></tr>
 <tr class="separator:ac088a628c40f172519516ec0681ffe05"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a64d77ca61d9fcea1a5e12188d4d7f66b"><td class="memItemLeft" align="right" valign="top"><a id="a64d77ca61d9fcea1a5e12188d4d7f66b"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>nullSpace</b> (<a class="el" href="structNotNull.html">NotNull</a>&lt; const <a class="el" href="classArrayIndex.html">ArrayIndex</a> &gt; x, <a class="el" href="structNotNull.html">NotNull</a>&lt; const <a class="el" href="classArrayIndex.html">ArrayIndex</a> &gt; y) -&gt; DenseMatrix&lt; int64_t &gt;</td></tr>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>nullSpace</b> (<a class="el" href="classNotNull.html">NotNull</a>&lt; const <a class="el" href="classArrayIndex.html">ArrayIndex</a> &gt; x, <a class="el" href="classNotNull.html">NotNull</a>&lt; const <a class="el" href="classArrayIndex.html">ArrayIndex</a> &gt; y) -&gt; DenseMatrix&lt; int64_t &gt;</td></tr>
 <tr class="separator:a64d77ca61d9fcea1a5e12188d4d7f66b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a09212974817f1c0519c052a6fea12020"><td class="memItemLeft" align="right" valign="top"><a id="a09212974817f1c0519c052a6fea12020"></a>
 static auto&#160;</td><td class="memItemRight" valign="bottom"><b>symbolIndex</b> (llvm::ArrayRef&lt; const llvm::SCEV * &gt; s, const llvm::SCEV *v) -&gt; <a class="el" href="structOptional.html">Optional</a>&lt; unsigned int &gt;</td></tr>
@@ -310,7 +310,7 @@ static auto&#160;</td><td class="memItemRight" valign="bottom"><b>symbolIndex</b
 static void&#160;</td><td class="memItemRight" valign="bottom"><b>fillSyms</b> (llvm::MutableArrayRef&lt; const llvm::SCEV * &gt; s, std::array&lt; llvm::ArrayRef&lt; const llvm::SCEV * &gt;, 2 &gt; sa, Vector&lt; unsigned int &gt; &amp;map)</td></tr>
 <tr class="separator:a741dbd24c10ef787b6cc2caade4a333b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aeddba526a7501446d9e80e4e0ced371e"><td class="memItemLeft" align="right" valign="top"><a id="aeddba526a7501446d9e80e4e0ced371e"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>dependence</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, <a class="el" href="structNotNull.html">NotNull</a>&lt; const <a class="el" href="classArrayIndex.html">ArrayIndex</a> &gt; aix, <a class="el" href="structNotNull.html">NotNull</a>&lt; const <a class="el" href="classArrayIndex.html">ArrayIndex</a> &gt; aiy) -&gt; <a class="el" href="classDepPoly.html">DepPoly</a> *</td></tr>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>dependence</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, <a class="el" href="classNotNull.html">NotNull</a>&lt; const <a class="el" href="classArrayIndex.html">ArrayIndex</a> &gt; aix, <a class="el" href="classNotNull.html">NotNull</a>&lt; const <a class="el" href="classArrayIndex.html">ArrayIndex</a> &gt; aiy) -&gt; <a class="el" href="classDepPoly.html">DepPoly</a> *</td></tr>
 <tr class="separator:aeddba526a7501446d9e80e4e0ced371e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="friends"></a>

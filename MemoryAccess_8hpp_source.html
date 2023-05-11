@@ -91,7 +91,7 @@ $(function() {
 <div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;  <span class="keyword">using</span> <a class="code" href="structBitSet.html">BitSet</a> = ::BitSet&lt;std::array&lt;uint64_t, 2&gt;&gt;;</div>
 <div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160; </div>
 <div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;<span class="keyword">private</span>:</div>
-<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;  <a class="code" href="structNotNull.html">NotNull&lt;ArrayIndex&gt;</a> arrayRef;</div>
+<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;  <a class="code" href="classNotNull.html">NotNull&lt;ArrayIndex&gt;</a> arrayRef;</div>
 <div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;  <span class="comment">// TODO: bail out gracefully if we need more than 128 elements</span></div>
 <div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;  <span class="comment">// TODO: better yet, have some mechanism for allocating more space.</span></div>
 <div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;  <span class="comment">// llvm::ArrayRef&lt;const llvm::SCEV *&gt; sizes;</span></div>
@@ -111,16 +111,16 @@ $(function() {
 <div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;  <span class="comment">// https://gcc.gnu.org/onlinedocs/gcc/Zero-Length.html</span></div>
 <div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;  <span class="comment">// https://developers.redhat.com/articles/2022/09/29/benefits-limitations-flexible-array-members#flexible_array_members_vs__pointer_implementation</span></div>
 <div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;<span class="keyword">public</span>:</div>
-<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;  constexpr <a class="code" href="structMemoryAccess.html">MemoryAccess</a>(<a class="code" href="structNotNull.html">NotNull&lt;ArrayIndex&gt;</a> arrayRef)</div>
+<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;  constexpr <a class="code" href="structMemoryAccess.html">MemoryAccess</a>(<a class="code" href="classNotNull.html">NotNull&lt;ArrayIndex&gt;</a> arrayRef)</div>
 <div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;    : arrayRef(arrayRef), load_(arrayRef-&gt;getLoad()) {}</div>
 <div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160; </div>
 <div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> isLoad() <span class="keyword">const</span> -&gt; <span class="keywordtype">bool</span> { <span class="keywordflow">return</span> load_; }</div>
 <div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> isStore() <span class="keyword">const</span> -&gt; <span class="keywordtype">bool</span> { <span class="keywordflow">return</span> !load_; }</div>
-<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getArrayRef() -&gt; <a class="code" href="structNotNull.html">NotNull&lt;ArrayIndex&gt;</a> {</div>
+<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getArrayRef() -&gt; <a class="code" href="classNotNull.html">NotNull&lt;ArrayIndex&gt;</a> {</div>
 <div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;    <span class="keywordflow">return</span> arrayRef;</div>
 <div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;  }</div>
 <div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getArrayRef() <span class="keyword">const</span></div>
-<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;    -&gt; <a class="code" href="structNotNull.html">NotNull&lt;const ArrayIndex&gt;</a> {</div>
+<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;    -&gt; <a class="code" href="classNotNull.html">NotNull&lt;const ArrayIndex&gt;</a> {</div>
 <div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;    <span class="keywordflow">return</span> arrayRef;</div>
 <div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;  }</div>
 <div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160; </div>
@@ -147,10 +147,10 @@ $(function() {
 <div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;    <span class="keywordflow">return</span> arrayRef-&gt;getInstruction();</div>
 <div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;  }</div>
 <div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getLoop() <span class="keyword">const</span></div>
-<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;    -&gt; <a class="code" href="structNotNull.html">NotNull&lt;const AffineLoopNest&lt;&gt;</a>&gt; {</div>
+<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;    -&gt; <a class="code" href="classNotNull.html">NotNull&lt;const AffineLoopNest&lt;&gt;</a>&gt; {</div>
 <div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;    <span class="keywordflow">return</span> arrayRef-&gt;getLoop();</div>
 <div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;  }</div>
-<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getLoop() -&gt; <a class="code" href="structNotNull.html">NotNull&lt;AffineLoopNest&lt;&gt;</a>&gt; {</div>
+<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getLoop() -&gt; <a class="code" href="classNotNull.html">NotNull&lt;AffineLoopNest&lt;&gt;</a>&gt; {</div>
 <div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;    <span class="keywordflow">return</span> arrayRef-&gt;getLoop();</div>
 <div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;  }</div>
 <div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getArrayDim() <span class="keyword">const</span> -&gt; <span class="keywordtype">size_t</span> {</div>
@@ -181,11 +181,11 @@ $(function() {
 <div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getArrayPointer() -&gt; <span class="keyword">const</span> llvm::SCEV * {</div>
 <div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;    <span class="keywordflow">return</span> arrayRef-&gt;getArrayPointer();</div>
 <div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;  }</div>
-<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;  constexpr <span class="keyword">auto</span> getAddress() -&gt; <a class="code" href="structNotNull.html">NotNull&lt;Address&gt;</a> { <span class="keywordflow">return</span> addrs; }</div>
+<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;  constexpr <span class="keyword">auto</span> getAddress() -&gt; <a class="code" href="classNotNull.html">NotNull&lt;Address&gt;</a> { <span class="keywordflow">return</span> addrs; }</div>
 <div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getNumLoops() <span class="keyword">const</span> -&gt; <span class="keywordtype">size_t</span> {</div>
 <div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;    <span class="keywordflow">return</span> arrayRef-&gt;getNumLoops();</div>
 <div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;  }</div>
-<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getAddress() <span class="keyword">const</span> -&gt; <a class="code" href="structNotNull.html">NotNull&lt;const Address&gt;</a> {</div>
+<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getAddress() <span class="keyword">const</span> -&gt; <a class="code" href="classNotNull.html">NotNull&lt;const Address&gt;</a> {</div>
 <div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;    <span class="keywordflow">return</span> addrs;</div>
 <div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;  }</div>
 <div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> inputEdges() <span class="keyword">const</span> -&gt; <span class="keyword">const</span> <a class="code" href="structBitSet.html">BitSet</a> &amp; {</div>
@@ -264,10 +264,10 @@ $(function() {
 <div class="line"><a name="l00195"></a><span class="lineno">  195</span>&#160;}</div>
 <div class="ttc" id="aclassAddress_html"><div class="ttname"><a href="classAddress.html">Address</a></div><div class="ttdef"><b>Definition:</b> Address.hpp:59</div></div>
 <div class="ttc" id="aclassArrayIndex_html"><div class="ttname"><a href="classArrayIndex.html">ArrayIndex</a></div><div class="ttdef"><b>Definition:</b> ArrayIndex.hpp:16</div></div>
+<div class="ttc" id="aclassNotNull_html"><div class="ttname"><a href="classNotNull.html">NotNull&lt; ArrayIndex &gt;</a></div></div>
 <div class="ttc" id="astructBitSet_html"><div class="ttname"><a href="structBitSet.html">BitSet</a></div><div class="ttdef"><b>Definition:</b> BitSets.hpp:82</div></div>
 <div class="ttc" id="astructMemoryAccess_html"><div class="ttname"><a href="structMemoryAccess.html">MemoryAccess</a></div><div class="ttdoc">A particular memory access instance.</div><div class="ttdef"><b>Definition:</b> MemoryAccess.hpp:20</div></div>
 <div class="ttc" id="astructMemoryAccess_html_aa55ad77260cac325bb277f79aa398dee"><div class="ttname"><a href="structMemoryAccess.html#aa55ad77260cac325bb277f79aa398dee">MemoryAccess::addNodeIndex</a></div><div class="ttdeci">constexpr void addNodeIndex(unsigned i)</div><div class="ttdoc">add a node index</div><div class="ttdef"><b>Definition:</b> MemoryAccess.hpp:137</div></div>
-<div class="ttc" id="astructNotNull_html"><div class="ttname"><a href="structNotNull.html">NotNull&lt; ArrayIndex &gt;</a></div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

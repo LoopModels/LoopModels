@@ -195,7 +195,7 @@ $(function() {
 <div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160;      forest-&gt;addZeroLowerBounds(allocator, loopMap);</div>
 <div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160;  }</div>
 <div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160; </div>
-<div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;  <span class="keyword">auto</span> initLoopTree(llvm::SmallVector&lt;<a class="code" href="structNotNull.html">NotNull&lt;LoopTree&gt;</a>&gt; &amp;pForest,</div>
+<div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;  <span class="keyword">auto</span> initLoopTree(llvm::SmallVector&lt;<a class="code" href="classNotNull.html">NotNull&lt;LoopTree&gt;</a>&gt; &amp;pForest,</div>
 <div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;                    llvm::Loop *L, llvm::ArrayRef&lt;llvm::Loop *&gt; subLoops,</div>
 <div class="line"><a name="l00136"></a><span class="lineno">  136</span>&#160;                    llvm::BasicBlock *H, llvm::BasicBlock *E,</div>
 <div class="line"><a name="l00137"></a><span class="lineno">  137</span>&#160;                    <a class="code" href="structNoWrapRewriter.html">NoWrapRewriter</a> &amp;nwr) -&gt; <span class="keywordtype">size_t</span> {</div>
@@ -216,7 +216,7 @@ $(function() {
 <div class="line"><a name="l00152"></a><span class="lineno">  152</span>&#160;  }</div>
 <div class="line"><a name="l00153"></a><span class="lineno">  153</span>&#160; </div>
 <div class="line"><a name="l00183"></a><span class="lineno">  183</span>&#160;  <span class="comment">// NOLINTNEXTLINE(misc-no-recursion)</span></div>
-<div class="line"><a name="l00184"></a><span class="lineno"><a class="line" href="classTurboLoopPass.html#af347cd84f4fe2f72b4a93d322f3a2d8c">  184</a></span>&#160;  <span class="keyword">auto</span> <a class="code" href="classTurboLoopPass.html#af347cd84f4fe2f72b4a93d322f3a2d8c">pushLoopTree</a>(llvm::SmallVector&lt;<a class="code" href="structNotNull.html">NotNull&lt;LoopTree&gt;</a>&gt; &amp;pForest,</div>
+<div class="line"><a name="l00184"></a><span class="lineno"><a class="line" href="classTurboLoopPass.html#af347cd84f4fe2f72b4a93d322f3a2d8c">  184</a></span>&#160;  <span class="keyword">auto</span> <a class="code" href="classTurboLoopPass.html#af347cd84f4fe2f72b4a93d322f3a2d8c">pushLoopTree</a>(llvm::SmallVector&lt;<a class="code" href="classNotNull.html">NotNull&lt;LoopTree&gt;</a>&gt; &amp;pForest,</div>
 <div class="line"><a name="l00185"></a><span class="lineno">  185</span>&#160;                    llvm::Loop *L, llvm::ArrayRef&lt;llvm::Loop *&gt; subLoops,</div>
 <div class="line"><a name="l00186"></a><span class="lineno">  186</span>&#160;                    llvm::BasicBlock *H, llvm::BasicBlock *E,</div>
 <div class="line"><a name="l00187"></a><span class="lineno">  187</span>&#160;                    <a class="code" href="structNoWrapRewriter.html">NoWrapRewriter</a> &amp;nwr) -&gt; <span class="keywordtype">size_t</span> {</div>
@@ -294,7 +294,7 @@ $(function() {
 <div class="line"><a name="l00259"></a><span class="lineno">  259</span>&#160;    <span class="keywordflow">if</span> (!branches.empty()) split(branches, branchBlocks, H, L);</div>
 <div class="line"><a name="l00260"></a><span class="lineno">  260</span>&#160;    <span class="keywordflow">return</span> 0;</div>
 <div class="line"><a name="l00261"></a><span class="lineno">  261</span>&#160;  }</div>
-<div class="line"><a name="l00262"></a><span class="lineno">  262</span>&#160;  <span class="keywordtype">void</span> split(llvm::SmallVector&lt;<a class="code" href="structNotNull.html">NotNull&lt;LoopTree&gt;</a>&gt; &amp;branches,</div>
+<div class="line"><a name="l00262"></a><span class="lineno">  262</span>&#160;  <span class="keywordtype">void</span> split(llvm::SmallVector&lt;<a class="code" href="classNotNull.html">NotNull&lt;LoopTree&gt;</a>&gt; &amp;branches,</div>
 <div class="line"><a name="l00263"></a><span class="lineno">  263</span>&#160;             llvm::SmallVector&lt;Predicate::Map&gt; &amp;branchBlocks,</div>
 <div class="line"><a name="l00264"></a><span class="lineno">  264</span>&#160;             llvm::BasicBlock *BB, llvm::Loop *L) {</div>
 <div class="line"><a name="l00265"></a><span class="lineno">  265</span>&#160; </div>
@@ -713,6 +713,7 @@ $(function() {
 <div class="line"><a name="l00678"></a><span class="lineno">  678</span>&#160;  <span class="comment">// }</span></div>
 <div class="line"><a name="l00679"></a><span class="lineno">  679</span>&#160;};</div>
 <div class="ttc" id="aclassLinearProgramLoopBlock_html"><div class="ttname"><a href="classLinearProgramLoopBlock.html">LinearProgramLoopBlock</a></div><div class="ttdef"><b>Definition:</b> LoopBlock.hpp:302</div></div>
+<div class="ttc" id="aclassNotNull_html"><div class="ttname"><a href="classNotNull.html">NotNull</a></div><div class="ttdef"><b>Definition:</b> Valid.hpp:7</div></div>
 <div class="ttc" id="aclassTurboLoopPass_html"><div class="ttname"><a href="classTurboLoopPass.html">TurboLoopPass</a></div><div class="ttdef"><b>Definition:</b> TurboLoop.hpp:63</div></div>
 <div class="ttc" id="aclassTurboLoopPass_html_a61d15982d3d7c2d1918da31c454a2f10"><div class="ttname"><a href="classTurboLoopPass.html#a61d15982d3d7c2d1918da31c454a2f10">TurboLoopPass::initializeLoopForest</a></div><div class="ttdeci">void initializeLoopForest()</div><div class="ttdef"><b>Definition:</b> TurboLoop.hpp:99</div></div>
 <div class="ttc" id="aclassTurboLoopPass_html_af347cd84f4fe2f72b4a93d322f3a2d8c"><div class="ttname"><a href="classTurboLoopPass.html#af347cd84f4fe2f72b4a93d322f3a2d8c">TurboLoopPass::pushLoopTree</a></div><div class="ttdeci">auto pushLoopTree(llvm::SmallVector&lt; NotNull&lt; LoopTree &gt;&gt; &amp;pForest, llvm::Loop *L, llvm::ArrayRef&lt; llvm::Loop * &gt; subLoops, llvm::BasicBlock *H, llvm::BasicBlock *E, NoWrapRewriter &amp;nwr) -&gt; size_t</div><div class="ttdef"><b>Definition:</b> TurboLoop.hpp:184</div></div>
@@ -722,7 +723,6 @@ $(function() {
 <div class="ttc" id="astructLinAlg_1_1StridedDims_html"><div class="ttname"><a href="structLinAlg_1_1StridedDims.html">LinAlg::StridedDims</a></div><div class="ttdef"><b>Definition:</b> MatrixDimensions.hpp:24</div></div>
 <div class="ttc" id="astructLoopTree_html"><div class="ttname"><a href="structLoopTree.html">LoopTree</a></div><div class="ttdef"><b>Definition:</b> LoopForest.hpp:23</div></div>
 <div class="ttc" id="astructNoWrapRewriter_html"><div class="ttname"><a href="structNoWrapRewriter.html">NoWrapRewriter</a></div><div class="ttdef"><b>Definition:</b> Loops.hpp:68</div></div>
-<div class="ttc" id="astructNotNull_html"><div class="ttname"><a href="structNotNull.html">NotNull</a></div><div class="ttdef"><b>Definition:</b> Valid.hpp:7</div></div>
 <div class="ttc" id="astructPredicate_1_1Map_html"><div class="ttname"><a href="structPredicate_1_1Map.html">Predicate::Map</a></div><div class="ttdef"><b>Definition:</b> Instruction.hpp:1136</div></div>
 <div class="ttc" id="astructPredicate_1_1Map_html_a57f40d19415e36a269545855e59668f0"><div class="ttname"><a href="structPredicate_1_1Map.html#a57f40d19415e36a269545855e59668f0">Predicate::Map::descend</a></div><div class="ttdeci">static auto descend(BumpAlloc&lt;&gt; &amp;alloc, Instruction::Cache &amp;cache, llvm::BasicBlock *start, llvm::BasicBlock *stop, llvm::Loop *L) -&gt; std::optional&lt; Map &gt;</div><div class="ttdef"><b>Definition:</b> Instruction.hpp:1305</div></div>
 <div class="ttc" id="astructaset_html"><div class="ttname"><a href="structaset.html">aset</a></div><div class="ttdef"><b>Definition:</b> BumpMapSet.hpp:24</div></div>

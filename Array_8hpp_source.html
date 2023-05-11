@@ -144,9 +144,9 @@ $(function() {
 <div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;  constexpr <span class="keyword">auto</span> operator=(<span class="keyword">const</span> <a class="code" href="structLinAlg_1_1Array.html">Array</a> &amp;) -&gt; <a class="code" href="structLinAlg_1_1Array.html">Array</a> &amp; = <span class="keywordflow">default</span>;</div>
 <div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;  constexpr <span class="keyword">auto</span> operator=(<a class="code" href="structLinAlg_1_1Array.html">Array</a> &amp;&amp;) noexcept -&gt; <a class="code" href="structLinAlg_1_1Array.html">Array</a> &amp; = <span class="keywordflow">default</span>;</div>
 <div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;  constexpr <a class="code" href="structLinAlg_1_1Array.html">Array</a>(T *p, S s) : ptr(p), sz(s) {}</div>
-<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;  constexpr <a class="code" href="structLinAlg_1_1Array.html">Array</a>(<a class="code" href="structNotNull.html">NotNull&lt;T&gt;</a> p, S s) : ptr(p), sz(s) {}</div>
+<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;  constexpr <a class="code" href="structLinAlg_1_1Array.html">Array</a>(<a class="code" href="classNotNull.html">NotNull&lt;T&gt;</a> p, S s) : ptr(p), sz(s) {}</div>
 <div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;  constexpr <a class="code" href="structLinAlg_1_1Array.html">Array</a>(T *p, <a class="code" href="structLinAlg_1_1AxisInt.html">Row</a> r, <a class="code" href="structLinAlg_1_1AxisInt.html">Col</a> c) : ptr(p), sz(dimension&lt;S&gt;(r, c)) {}</div>
-<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;  constexpr <a class="code" href="structLinAlg_1_1Array.html">Array</a>(<a class="code" href="structNotNull.html">NotNull&lt;T&gt;</a> p, <a class="code" href="structLinAlg_1_1AxisInt.html">Row</a> r, <a class="code" href="structLinAlg_1_1AxisInt.html">Col</a> c)</div>
+<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;  constexpr <a class="code" href="structLinAlg_1_1Array.html">Array</a>(<a class="code" href="classNotNull.html">NotNull&lt;T&gt;</a> p, <a class="code" href="structLinAlg_1_1AxisInt.html">Row</a> r, <a class="code" href="structLinAlg_1_1AxisInt.html">Col</a> c)</div>
 <div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;    : ptr(p), sz(dimension&lt;S&gt;(r, c)) {}</div>
 <div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;  <span class="keyword">template</span> &lt;std::convertible_to&lt;S&gt; V&gt;</div>
 <div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;  constexpr <a class="code" href="structLinAlg_1_1Array.html">Array</a>(<a class="code" href="structLinAlg_1_1Array.html">Array&lt;T, V&gt;</a> a) : ptr(a.wrappedPtr()), sz(a.dim()) {}</div>
@@ -158,7 +158,7 @@ $(function() {
 <div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;    invariant(ptr != <span class="keyword">nullptr</span>);</div>
 <div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;    <span class="keywordflow">return</span> ptr;</div>
 <div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;  }</div>
-<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> wrappedPtr() noexcept -&gt; <a class="code" href="structNotNull.html">NotNull&lt;T&gt;</a> {</div>
+<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> wrappedPtr() noexcept -&gt; <a class="code" href="classNotNull.html">NotNull&lt;T&gt;</a> {</div>
 <div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;    <span class="keywordflow">return</span> ptr;</div>
 <div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;  }</div>
 <div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160; </div>
@@ -434,7 +434,7 @@ $(function() {
 <div class="line"><a name="l00364"></a><span class="lineno">  364</span>&#160;    invariant(this-&gt;ptr != <span class="keyword">nullptr</span>);</div>
 <div class="line"><a name="l00365"></a><span class="lineno">  365</span>&#160;    <span class="keywordflow">return</span> this-&gt;ptr;</div>
 <div class="line"><a name="l00366"></a><span class="lineno">  366</span>&#160;  }</div>
-<div class="line"><a name="l00367"></a><span class="lineno">  367</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> wrappedPtr() noexcept -&gt; <a class="code" href="structNotNull.html">NotNull&lt;T&gt;</a> {</div>
+<div class="line"><a name="l00367"></a><span class="lineno">  367</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> wrappedPtr() noexcept -&gt; <a class="code" href="classNotNull.html">NotNull&lt;T&gt;</a> {</div>
 <div class="line"><a name="l00368"></a><span class="lineno">  368</span>&#160;    <span class="keywordflow">return</span> this-&gt;ptr;</div>
 <div class="line"><a name="l00369"></a><span class="lineno">  369</span>&#160;  }</div>
 <div class="line"><a name="l00370"></a><span class="lineno">  370</span>&#160; </div>
@@ -1670,6 +1670,7 @@ $(function() {
 <div class="line"><a name="l01616"></a><span class="lineno"> 1616</span>&#160;  <a class="code" href="structLinAlg_1_1MutArray.html">LinAlg::MutPtrVector</a>, <a class="code" href="structLinAlg_1_1ManagedArray.html">LinAlg::Vector</a>, <a class="code" href="structLinAlg_1_1ManagedArray.html">LinAlg::Matrix</a>, <a class="code" href="structLinAlg_1_1ManagedArray.html">LinAlg::SquareMatrix</a>,</div>
 <div class="line"><a name="l01617"></a><span class="lineno"> 1617</span>&#160;  <a class="code" href="structLinAlg_1_1ManagedArray.html">LinAlg::IntMatrix</a>, <a class="code" href="structLinAlg_1_1Array.html">LinAlg::PtrMatrix</a>, <a class="code" href="structLinAlg_1_1MutArray.html">LinAlg::MutPtrMatrix</a>;</div>
 <div class="ttc" id="aclassLinAlg_1_1ArrayOps_html"><div class="ttname"><a href="classLinAlg_1_1ArrayOps.html">LinAlg::ArrayOps</a></div><div class="ttdef"><b>Definition:</b> ArrayOps.hpp:11</div></div>
+<div class="ttc" id="aclassNotNull_html"><div class="ttname"><a href="classNotNull.html">NotNull</a></div><div class="ttdef"><b>Definition:</b> Valid.hpp:7</div></div>
 <div class="ttc" id="anamespaceLinAlg_html"><div class="ttname"><a href="namespaceLinAlg.html">LinAlg</a></div><div class="ttdef"><b>Definition:</b> Array.hpp:28</div></div>
 <div class="ttc" id="anamespaceLinAlg_html_a159c56bc82c7e302c1228e5148038ada"><div class="ttname"><a href="namespaceLinAlg.html#a159c56bc82c7e302c1228e5148038ada">LinAlg::getMaxDigits</a></div><div class="ttdeci">constexpr auto getMaxDigits(PtrMatrix&lt; Rational &gt; A) -&gt; Vector&lt; size_t &gt;</div><div class="ttdoc">Returns the maximum number of digits per column of a matrix.</div><div class="ttdef"><b>Definition:</b> Array.hpp:1464</div></div>
 <div class="ttc" id="astructLinAlg_1_1Array_html"><div class="ttname"><a href="structLinAlg_1_1Array.html">LinAlg::Array</a></div><div class="ttdoc">Constant Array.</div><div class="ttdef"><b>Definition:</b> Array.hpp:56</div></div>
@@ -1687,7 +1688,6 @@ $(function() {
 <div class="ttc" id="astructLinAlg_1_1StridedDims_html"><div class="ttname"><a href="structLinAlg_1_1StridedDims.html">LinAlg::StridedDims</a></div><div class="ttdef"><b>Definition:</b> MatrixDimensions.hpp:24</div></div>
 <div class="ttc" id="astructLinAlg_1_1StridedRange_html"><div class="ttname"><a href="structLinAlg_1_1StridedRange.html">LinAlg::StridedRange</a></div><div class="ttdef"><b>Definition:</b> Indexing.hpp:187</div></div>
 <div class="ttc" id="astructLinAlg_1_1Transpose_html"><div class="ttname"><a href="structLinAlg_1_1Transpose.html">LinAlg::Transpose</a></div><div class="ttdef"><b>Definition:</b> Matrix.hpp:47</div></div>
-<div class="ttc" id="astructNotNull_html"><div class="ttname"><a href="structNotNull.html">NotNull</a></div><div class="ttdef"><b>Definition:</b> Valid.hpp:7</div></div>
 <div class="ttc" id="astructOptional_html"><div class="ttname"><a href="structOptional.html">Optional</a></div><div class="ttdef"><b>Definition:</b> Optional.hpp:9</div></div>
 <div class="ttc" id="astructRational_html"><div class="ttname"><a href="structRational.html">Rational</a></div><div class="ttdef"><b>Definition:</b> Rational.hpp:17</div></div>
 <div class="ttc" id="astructStorage_html"><div class="ttname"><a href="structStorage.html">Storage</a></div><div class="ttdef"><b>Definition:</b> Storage.hpp:4</div></div>

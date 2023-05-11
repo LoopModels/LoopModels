@@ -470,7 +470,7 @@ $(function() {
 <div class="line"><a name="l00407"></a><span class="lineno">  407</span>&#160;          <span class="keywordtype">size_t</span> MinAlignment = <span class="keyword">alignof</span>(std::max_align_t)&gt;</div>
 <div class="line"><a name="l00408"></a><span class="lineno"><a class="line" href="classWBumpAlloc.html">  408</a></span>&#160;<span class="keyword">class</span> <a class="code" href="classWBumpAlloc.html">WBumpAlloc</a> {</div>
 <div class="line"><a name="l00409"></a><span class="lineno">  409</span>&#160;  <span class="keyword">using</span> <a class="code" href="structBumpAlloc.html">Alloc</a> = <a class="code" href="structBumpAlloc.html">BumpAlloc&lt;SlabSize, BumpUp, MinAlignment&gt;</a>;</div>
-<div class="line"><a name="l00410"></a><span class="lineno">  410</span>&#160;  [[no_unique_address]] <a class="code" href="structNotNull.html">NotNull&lt;Alloc&gt;</a> A;</div>
+<div class="line"><a name="l00410"></a><span class="lineno">  410</span>&#160;  [[no_unique_address]] <a class="code" href="classNotNull.html">NotNull&lt;Alloc&gt;</a> A;</div>
 <div class="line"><a name="l00411"></a><span class="lineno">  411</span>&#160; </div>
 <div class="line"><a name="l00412"></a><span class="lineno">  412</span>&#160;<span class="keyword">public</span>:</div>
 <div class="line"><a name="l00413"></a><span class="lineno">  413</span>&#160;  <span class="keyword">using</span> value_type = T;</div>
@@ -478,11 +478,11 @@ $(function() {
 <div class="line"><a name="l00415"></a><span class="lineno">  415</span>&#160;    <span class="keyword">using</span> <a class="code" href="classWBumpAlloc.html">other</a> = <a class="code" href="classWBumpAlloc.html">WBumpAlloc&lt;U, SlabSize, BumpUp, MinAlignment&gt;</a>;</div>
 <div class="line"><a name="l00416"></a><span class="lineno">  416</span>&#160;  };</div>
 <div class="line"><a name="l00417"></a><span class="lineno">  417</span>&#160;  constexpr <a class="code" href="classWBumpAlloc.html">WBumpAlloc</a>(<a class="code" href="structBumpAlloc.html">Alloc</a> &amp;alloc) : A(&amp;alloc) {}</div>
-<div class="line"><a name="l00418"></a><span class="lineno">  418</span>&#160;  constexpr <a class="code" href="classWBumpAlloc.html">WBumpAlloc</a>(<a class="code" href="structNotNull.html">NotNull&lt;Alloc&gt;</a> alloc) : A(alloc) {}</div>
+<div class="line"><a name="l00418"></a><span class="lineno">  418</span>&#160;  constexpr <a class="code" href="classWBumpAlloc.html">WBumpAlloc</a>(<a class="code" href="classNotNull.html">NotNull&lt;Alloc&gt;</a> alloc) : A(alloc) {}</div>
 <div class="line"><a name="l00419"></a><span class="lineno">  419</span>&#160;  constexpr <a class="code" href="classWBumpAlloc.html">WBumpAlloc</a>(<span class="keyword">const</span> <a class="code" href="classWBumpAlloc.html">WBumpAlloc</a> &amp;other) = <span class="keywordflow">default</span>;</div>
 <div class="line"><a name="l00420"></a><span class="lineno">  420</span>&#160;  <span class="keyword">template</span> &lt;<span class="keyword">typename</span> U&gt;</div>
 <div class="line"><a name="l00421"></a><span class="lineno">  421</span>&#160;  constexpr <a class="code" href="classWBumpAlloc.html">WBumpAlloc</a>(<a class="code" href="classWBumpAlloc.html">WBumpAlloc&lt;U&gt;</a> other) : A(other.get_allocator()) {}</div>
-<div class="line"><a name="l00422"></a><span class="lineno">  422</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> get_allocator() const -&gt; <a class="code" href="structNotNull.html">NotNull</a>&lt;Alloc&gt; {</div>
+<div class="line"><a name="l00422"></a><span class="lineno">  422</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> get_allocator() const -&gt; <a class="code" href="classNotNull.html">NotNull</a>&lt;Alloc&gt; {</div>
 <div class="line"><a name="l00423"></a><span class="lineno">  423</span>&#160;    <span class="keywordflow">return</span> A;</div>
 <div class="line"><a name="l00424"></a><span class="lineno">  424</span>&#160;  }</div>
 <div class="line"><a name="l00425"></a><span class="lineno">  425</span>&#160;  constexpr <span class="keywordtype">void</span> deallocate(T *p, <span class="keywordtype">size_t</span> n) { A-&gt;deallocate(p, n); }</div>
@@ -499,7 +499,7 @@ $(function() {
 <div class="line"><a name="l00436"></a><span class="lineno">  436</span>&#160;static_assert(</div>
 <div class="line"><a name="l00437"></a><span class="lineno">  437</span>&#160;  std::same_as&lt;std::allocator_traits&lt;<a class="code" href="classWBumpAlloc.html">WBumpAlloc&lt;int64_t&gt;</a>&gt;::pointer, int64_t *&gt;);</div>
 <div class="line"><a name="l00438"></a><span class="lineno">  438</span>&#160; </div>
-<div class="line"><a name="l00439"></a><span class="lineno">  439</span>&#160;static_assert(std::is_trivially_copyable_v&lt;<a class="code" href="structNotNull.html">NotNull</a>&lt;<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a>&gt;&gt;);</div>
+<div class="line"><a name="l00439"></a><span class="lineno">  439</span>&#160;static_assert(std::is_trivially_copyable_v&lt;<a class="code" href="classNotNull.html">NotNull</a>&lt;<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a>&gt;&gt;);</div>
 <div class="line"><a name="l00440"></a><span class="lineno">  440</span>&#160;static_assert(std::is_trivially_copyable_v&lt;<a class="code" href="classWBumpAlloc.html">WBumpAlloc&lt;int64_t&gt;</a>&gt;);</div>
 <div class="line"><a name="l00441"></a><span class="lineno">  441</span>&#160; </div>
 <div class="line"><a name="l00442"></a><span class="lineno">  442</span>&#160;<span class="keyword">template</span> &lt;<span class="keywordtype">size_t</span> SlabSize, <span class="keywordtype">bool</span> BumpUp, <span class="keywordtype">size_t</span> MinAlignment&gt;</div>
@@ -536,6 +536,7 @@ $(function() {
 <div class="line"><a name="l00473"></a><span class="lineno">  473</span>&#160;  alloc.rollback(p);</div>
 <div class="line"><a name="l00474"></a><span class="lineno">  474</span>&#160;}</div>
 <div class="line"><a name="l00475"></a><span class="lineno">  475</span>&#160;constexpr <span class="keywordtype">void</span> rollback(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, <span class="keyword">auto</span> p) { alloc.rollback(p); }</div>
+<div class="ttc" id="aclassNotNull_html"><div class="ttname"><a href="classNotNull.html">NotNull</a></div><div class="ttdef"><b>Definition:</b> Valid.hpp:7</div></div>
 <div class="ttc" id="aclassWBumpAlloc_html"><div class="ttname"><a href="classWBumpAlloc.html">WBumpAlloc</a></div><div class="ttdef"><b>Definition:</b> Allocators.hpp:408</div></div>
 <div class="ttc" id="astructAllocResult_html"><div class="ttname"><a href="structAllocResult.html">AllocResult</a></div><div class="ttdef"><b>Definition:</b> Allocators.hpp:30</div></div>
 <div class="ttc" id="astructBumpAlloc_1_1CheckPoint_html"><div class="ttname"><a href="structBumpAlloc_1_1CheckPoint.html">BumpAlloc::CheckPoint</a></div><div class="ttdef"><b>Definition:</b> Allocators.hpp:236</div></div>
@@ -543,7 +544,6 @@ $(function() {
 <div class="ttc" id="astructBumpAlloc_html"><div class="ttname"><a href="structBumpAlloc.html">BumpAlloc</a></div><div class="ttdef"><b>Definition:</b> Allocators.hpp:42</div></div>
 <div class="ttc" id="astructBumpAlloc_html_ae4e8781c9a410275faa2849e0af9c7a2"><div class="ttname"><a href="structBumpAlloc.html#ae4e8781c9a410275faa2849e0af9c7a2">BumpAlloc::reallocate</a></div><div class="ttdeci">constexpr auto reallocate(void *Ptr, size_t szOld, size_t szNew, size_t Align) -&gt; void *</div><div class="ttdef"><b>Definition:</b> Allocators.hpp:169</div></div>
 <div class="ttc" id="astructNoCheckpoint_html"><div class="ttname"><a href="structNoCheckpoint.html">NoCheckpoint</a></div><div class="ttdef"><b>Definition:</b> Allocators.hpp:463</div></div>
-<div class="ttc" id="astructNotNull_html"><div class="ttname"><a href="structNotNull.html">NotNull</a></div><div class="ttdef"><b>Definition:</b> Valid.hpp:7</div></div>
 <div class="ttc" id="astructWBumpAlloc_1_1rebind_html"><div class="ttname"><a href="structWBumpAlloc_1_1rebind.html">WBumpAlloc::rebind</a></div><div class="ttdef"><b>Definition:</b> Allocators.hpp:414</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->

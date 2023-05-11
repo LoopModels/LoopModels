@@ -275,8 +275,8 @@ $(function() {
 <div class="line"><a name="l00250"></a><span class="lineno">  250</span>&#160;    <span class="keywordflow">return</span> std::distance(</div>
 <div class="line"><a name="l00251"></a><span class="lineno">  251</span>&#160;      x.begin(), std::mismatch(x.begin(), x.end(), y.begin(), y.end()).first);</div>
 <div class="line"><a name="l00252"></a><span class="lineno">  252</span>&#160;  }</div>
-<div class="line"><a name="l00253"></a><span class="lineno">  253</span>&#160;  <span class="keyword">static</span> <span class="keyword">auto</span> nullSpace(<a class="code" href="structNotNull.html">NotNull&lt;const ArrayIndex&gt;</a> x,</div>
-<div class="line"><a name="l00254"></a><span class="lineno">  254</span>&#160;                        <a class="code" href="structNotNull.html">NotNull&lt;const ArrayIndex&gt;</a> y) -&gt; DenseMatrix&lt;int64_t&gt; {</div>
+<div class="line"><a name="l00253"></a><span class="lineno">  253</span>&#160;  <span class="keyword">static</span> <span class="keyword">auto</span> nullSpace(<a class="code" href="classNotNull.html">NotNull&lt;const ArrayIndex&gt;</a> x,</div>
+<div class="line"><a name="l00254"></a><span class="lineno">  254</span>&#160;                        <a class="code" href="classNotNull.html">NotNull&lt;const ArrayIndex&gt;</a> y) -&gt; DenseMatrix&lt;int64_t&gt; {</div>
 <div class="line"><a name="l00255"></a><span class="lineno">  255</span>&#160;    <span class="keyword">const</span> <span class="keywordtype">size_t</span> numLoopsCommon =</div>
 <div class="line"><a name="l00256"></a><span class="lineno">  256</span>&#160;      findFirstNonEqual(x-&gt;getFusionOmega(), y-&gt;getFusionOmega());</div>
 <div class="line"><a name="l00257"></a><span class="lineno">  257</span>&#160;    <span class="keyword">const</span> <span class="keywordtype">size_t</span> xDim = x-&gt;getArrayDim();</div>
@@ -329,16 +329,16 @@ $(function() {
 <div class="line"><a name="l00306"></a><span class="lineno">  306</span>&#160;             ((conCapacity + eqConCapacity) * (getNumVar() + 1) + timeDim) +</div>
 <div class="line"><a name="l00307"></a><span class="lineno">  307</span>&#160;           <span class="keyword">sizeof</span>(<span class="keyword">const</span> llvm::SCEV *) * numDynSym;</div>
 <div class="line"><a name="l00308"></a><span class="lineno">  308</span>&#160;  }</div>
-<div class="line"><a name="l00309"></a><span class="lineno">  309</span>&#160;  <span class="keyword">auto</span> copy(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc) <span class="keyword">const</span> -&gt; <a class="code" href="structNotNull.html">NotNull&lt;DepPoly&gt;</a> {</div>
+<div class="line"><a name="l00309"></a><span class="lineno">  309</span>&#160;  <span class="keyword">auto</span> copy(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc) <span class="keyword">const</span> -&gt; <a class="code" href="classNotNull.html">NotNull&lt;DepPoly&gt;</a> {</div>
 <div class="line"><a name="l00310"></a><span class="lineno">  310</span>&#160;    <span class="keyword">auto</span> *p = alloc.template allocate&lt;DepPoly&gt;(neededBytes());</div>
 <div class="line"><a name="l00311"></a><span class="lineno">  311</span>&#160;    std::memcpy(p, <span class="keyword">this</span>, neededBytes());</div>
-<div class="line"><a name="l00312"></a><span class="lineno">  312</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="structNotNull.html">NotNull&lt;DepPoly&gt;</a>{p};</div>
+<div class="line"><a name="l00312"></a><span class="lineno">  312</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="classNotNull.html">NotNull&lt;DepPoly&gt;</a>{p};</div>
 <div class="line"><a name="l00313"></a><span class="lineno">  313</span>&#160;  }</div>
-<div class="line"><a name="l00314"></a><span class="lineno">  314</span>&#160;  <span class="keyword">static</span> <span class="keyword">auto</span> dependence(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, <a class="code" href="structNotNull.html">NotNull&lt;const ArrayIndex&gt;</a> aix,</div>
-<div class="line"><a name="l00315"></a><span class="lineno">  315</span>&#160;                         <a class="code" href="structNotNull.html">NotNull&lt;const ArrayIndex&gt;</a> aiy) -&gt; <a class="code" href="classDepPoly.html">DepPoly</a> * {</div>
+<div class="line"><a name="l00314"></a><span class="lineno">  314</span>&#160;  <span class="keyword">static</span> <span class="keyword">auto</span> dependence(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, <a class="code" href="classNotNull.html">NotNull&lt;const ArrayIndex&gt;</a> aix,</div>
+<div class="line"><a name="l00315"></a><span class="lineno">  315</span>&#160;                         <a class="code" href="classNotNull.html">NotNull&lt;const ArrayIndex&gt;</a> aiy) -&gt; <a class="code" href="classDepPoly.html">DepPoly</a> * {</div>
 <div class="line"><a name="l00316"></a><span class="lineno">  316</span>&#160;    assert(aix-&gt;sizesMatch(aiy));</div>
-<div class="line"><a name="l00317"></a><span class="lineno">  317</span>&#160;    <a class="code" href="structNotNull.html">NotNull&lt;const AffineLoopNest&lt;&gt;</a>&gt; loopx = aix-&gt;getLoop();</div>
-<div class="line"><a name="l00318"></a><span class="lineno">  318</span>&#160;    <a class="code" href="structNotNull.html">NotNull&lt;const AffineLoopNest&lt;&gt;</a>&gt; loopy = aiy-&gt;getLoop();</div>
+<div class="line"><a name="l00317"></a><span class="lineno">  317</span>&#160;    <a class="code" href="classNotNull.html">NotNull&lt;const AffineLoopNest&lt;&gt;</a>&gt; loopx = aix-&gt;getLoop();</div>
+<div class="line"><a name="l00318"></a><span class="lineno">  318</span>&#160;    <a class="code" href="classNotNull.html">NotNull&lt;const AffineLoopNest&lt;&gt;</a>&gt; loopy = aiy-&gt;getLoop();</div>
 <div class="line"><a name="l00319"></a><span class="lineno">  319</span>&#160;    DensePtrMatrix&lt;int64_t&gt; Ax{loopx-&gt;getA()}, Ay{loopy-&gt;getA()};</div>
 <div class="line"><a name="l00320"></a><span class="lineno">  320</span>&#160;    <span class="keyword">auto</span> Sx{loopx-&gt;getSyms()}, Sy{loopy-&gt;getSyms()};</div>
 <div class="line"><a name="l00321"></a><span class="lineno">  321</span>&#160;    <span class="comment">// numLoops x numDim</span></div>
@@ -472,7 +472,7 @@ $(function() {
 <div class="line"><a name="l00449"></a><span class="lineno">  449</span>&#160;    <span class="keyword">const</span> <span class="keywordtype">size_t</span> numVarNew = numVarInterest + numLambda;</div>
 <div class="line"><a name="l00450"></a><span class="lineno">  450</span>&#160;    invariant(<span class="keywordtype">size_t</span>(getNumLambda()), numLambda);</div>
 <div class="line"><a name="l00451"></a><span class="lineno">  451</span>&#160;    <span class="comment">// std::array&lt;NotNull&lt;Simplex&gt;, 2&gt; pair;</span></div>
-<div class="line"><a name="l00452"></a><span class="lineno">  452</span>&#160;    <a class="code" href="structNotNull.html">NotNull&lt;Simplex&gt;</a> fw =</div>
+<div class="line"><a name="l00452"></a><span class="lineno">  452</span>&#160;    <a class="code" href="classNotNull.html">NotNull&lt;Simplex&gt;</a> fw =</div>
 <div class="line"><a name="l00453"></a><span class="lineno">  453</span>&#160;      Simplex::create(alloc, numConstraintsNew, numVarNew, 0);</div>
 <div class="line"><a name="l00454"></a><span class="lineno">  454</span>&#160;    <span class="comment">// Simplex &amp;fw(pair[0]);</span></div>
 <div class="line"><a name="l00455"></a><span class="lineno">  455</span>&#160;    <span class="comment">// fw.resize(numConstraintsNew, numVarNew + 1);</span></div>
@@ -519,7 +519,7 @@ $(function() {
 <div class="line"><a name="l00496"></a><span class="lineno">  496</span>&#160; </div>
 <div class="line"><a name="l00497"></a><span class="lineno">  497</span>&#160;    <span class="comment">// so far, both have been identical</span></div>
 <div class="line"><a name="l00498"></a><span class="lineno">  498</span>&#160; </div>
-<div class="line"><a name="l00499"></a><span class="lineno">  499</span>&#160;    <a class="code" href="structNotNull.html">NotNull&lt;Simplex&gt;</a> bw =</div>
+<div class="line"><a name="l00499"></a><span class="lineno">  499</span>&#160;    <a class="code" href="classNotNull.html">NotNull&lt;Simplex&gt;</a> bw =</div>
 <div class="line"><a name="l00500"></a><span class="lineno">  500</span>&#160;      Simplex::create(alloc, numConstraintsNew, numVarNew, 0);</div>
 <div class="line"><a name="l00501"></a><span class="lineno">  501</span>&#160;    <span class="keyword">auto</span> bCF{bw-&gt;getConstraints()};</div>
 <div class="line"><a name="l00502"></a><span class="lineno">  502</span>&#160;    bCF &lt;&lt; fCF;</div>
@@ -560,10 +560,10 @@ $(function() {
 <div class="line"><a name="l00537"></a><span class="lineno">  537</span>&#160;}; <span class="comment">// class DepPoly</span></div>
 <div class="ttc" id="aclassDepPoly_html"><div class="ttname"><a href="classDepPoly.html">DepPoly</a></div><div class="ttdef"><b>Definition:</b> DependencyPolyhedra.hpp:76</div></div>
 <div class="ttc" id="aclassDepPoly_html_a9a6693af1ab0702d06dc3cebaecd9be9"><div class="ttname"><a href="classDepPoly.html#a9a6693af1ab0702d06dc3cebaecd9be9">DepPoly::mergeMap</a></div><div class="ttdeci">static auto mergeMap(Vector&lt; unsigned &gt; &amp;map, llvm::ArrayRef&lt; const llvm::SCEV * &gt; s0, llvm::ArrayRef&lt; const llvm::SCEV * &gt; s1) -&gt; unsigned</div><div class="ttdef"><b>Definition:</b> DependencyPolyhedra.hpp:283</div></div>
+<div class="ttc" id="aclassNotNull_html"><div class="ttname"><a href="classNotNull.html">NotNull</a></div><div class="ttdef"><b>Definition:</b> Valid.hpp:7</div></div>
 <div class="ttc" id="astructBasePolyhedra_html"><div class="ttname"><a href="structBasePolyhedra.html">BasePolyhedra</a></div><div class="ttdef"><b>Definition:</b> Polyhedra.hpp:64</div></div>
 <div class="ttc" id="astructBumpAlloc_html"><div class="ttname"><a href="structBumpAlloc.html">BumpAlloc</a></div><div class="ttdef"><b>Definition:</b> Allocators.hpp:42</div></div>
 <div class="ttc" id="astructLinAlg_1_1DenseDims_html"><div class="ttname"><a href="structLinAlg_1_1DenseDims.html">LinAlg::DenseDims</a></div><div class="ttdoc">Dimensions with a capacity.</div><div class="ttdef"><b>Definition:</b> MatrixDimensions.hpp:76</div></div>
-<div class="ttc" id="astructNotNull_html"><div class="ttname"><a href="structNotNull.html">NotNull</a></div><div class="ttdef"><b>Definition:</b> Valid.hpp:7</div></div>
 <div class="ttc" id="astructOptional_html"><div class="ttname"><a href="structOptional.html">Optional</a></div><div class="ttdef"><b>Definition:</b> Optional.hpp:9</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->

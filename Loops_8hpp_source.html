@@ -393,7 +393,7 @@ $(function() {
 <div class="line"><a name="l00328"></a><span class="lineno">  328</span>&#160;  <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keyword">auto</span> construct(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, llvm::Loop *L,</div>
 <div class="line"><a name="l00329"></a><span class="lineno">  329</span>&#160;                               <span class="keyword">const</span> llvm::SCEV *BT, llvm::ScalarEvolution &amp;SE,</div>
 <div class="line"><a name="l00330"></a><span class="lineno">  330</span>&#160;                               llvm::OptimizationRemarkEmitter *ORE = <span class="keyword">nullptr</span>)</div>
-<div class="line"><a name="l00331"></a><span class="lineno">  331</span>&#160;    -&gt; <a class="code" href="structNotNull.html">NotNull&lt;AffineLoopNest&gt;</a> {</div>
+<div class="line"><a name="l00331"></a><span class="lineno">  331</span>&#160;    -&gt; <a class="code" href="classNotNull.html">NotNull&lt;AffineLoopNest&gt;</a> {</div>
 <div class="line"><a name="l00332"></a><span class="lineno">  332</span>&#160;    <span class="comment">// A holds symbols</span></div>
 <div class="line"><a name="l00333"></a><span class="lineno">  333</span>&#160;    <span class="comment">// B holds loop bounds</span></div>
 <div class="line"><a name="l00334"></a><span class="lineno">  334</span>&#160;    <span class="comment">// they&#39;re separate so we can grow them independently</span></div>
@@ -437,7 +437,7 @@ $(function() {
 <div class="line"><a name="l00372"></a><span class="lineno">  372</span>&#160;    invariant(1 + symbols.size(), <span class="keywordtype">size_t</span>(A.numCol()));</div>
 <div class="line"><a name="l00373"></a><span class="lineno">  373</span>&#160;    <span class="keywordtype">size_t</span> depth = maxDepth - minDepth;</div>
 <div class="line"><a name="l00374"></a><span class="lineno">  374</span>&#160;    <span class="keywordtype">unsigned</span> numConstraints = unsigned(A.numRow()), N = unsigned(A.numCol());</div>
-<div class="line"><a name="l00375"></a><span class="lineno">  375</span>&#160;    <a class="code" href="structNotNull.html">NotNull&lt;AffineLoopNest&gt;</a> aln{</div>
+<div class="line"><a name="l00375"></a><span class="lineno">  375</span>&#160;    <a class="code" href="classNotNull.html">NotNull&lt;AffineLoopNest&gt;</a> aln{</div>
 <div class="line"><a name="l00376"></a><span class="lineno">  376</span>&#160;      AffineLoopNest::allocate(alloc, numConstraints, depth, symbols)};</div>
 <div class="line"><a name="l00377"></a><span class="lineno">  377</span>&#160;    aln-&gt;getA()(_, _(0, N)) &lt;&lt; A;</div>
 <div class="line"><a name="l00378"></a><span class="lineno">  378</span>&#160;    <span class="comment">// copy the included loops from B</span></div>
@@ -454,7 +454,7 @@ $(function() {
 <div class="line"><a name="l00389"></a><span class="lineno">  389</span>&#160;    <span class="keywordflow">return</span> findSymbolicIndex(getSyms(), v);</div>
 <div class="line"><a name="l00390"></a><span class="lineno">  390</span>&#160;  }</div>
 <div class="line"><a name="l00398"></a><span class="lineno"><a class="line" href="structAffineLoopNest.html#a215506c9530da55d0671936af217dd6d">  398</a></span>&#160;  [[nodiscard]] <span class="keyword">auto</span> <a class="code" href="structAffineLoopNest.html#a215506c9530da55d0671936af217dd6d">rotate</a>(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, PtrMatrix&lt;int64_t&gt; R) <span class="keyword">const</span></div>
-<div class="line"><a name="l00399"></a><span class="lineno">  399</span>&#160;    -&gt; <a class="code" href="structNotNull.html">NotNull&lt;AffineLoopNest&lt;false&gt;</a>&gt; {</div>
+<div class="line"><a name="l00399"></a><span class="lineno">  399</span>&#160;    -&gt; <a class="code" href="classNotNull.html">NotNull&lt;AffineLoopNest&lt;false&gt;</a>&gt; {</div>
 <div class="line"><a name="l00400"></a><span class="lineno">  400</span>&#160;    <span class="keywordtype">size_t</span> numExtraVar = 0;</div>
 <div class="line"><a name="l00401"></a><span class="lineno">  401</span>&#160;    <span class="keywordflow">if</span> constexpr (NonNegative) numExtraVar = getNumLoops();</div>
 <div class="line"><a name="l00402"></a><span class="lineno">  402</span>&#160;    assert(R.numCol() == numExtraVar);</div>
@@ -463,7 +463,7 @@ $(function() {
 <div class="line"><a name="l00405"></a><span class="lineno">  405</span>&#160;    MutDensePtrMatrix&lt;int64_t&gt; A{getA()};</div>
 <div class="line"><a name="l00406"></a><span class="lineno">  406</span>&#160;    <span class="keyword">const</span> <span class="keyword">auto</span> [M, N] = A.size();</div>
 <div class="line"><a name="l00407"></a><span class="lineno">  407</span>&#160;    <span class="keyword">auto</span> syms{getSyms()};</div>
-<div class="line"><a name="l00408"></a><span class="lineno">  408</span>&#160;    <a class="code" href="structNotNull.html">NotNull&lt;AffineLoopNest&lt;false&gt;</a>&gt; aln{<a class="code" href="structAffineLoopNest.html">AffineLoopNest&lt;false&gt;::allocate</a>(</div>
+<div class="line"><a name="l00408"></a><span class="lineno">  408</span>&#160;    <a class="code" href="classNotNull.html">NotNull&lt;AffineLoopNest&lt;false&gt;</a>&gt; aln{<a class="code" href="structAffineLoopNest.html">AffineLoopNest&lt;false&gt;::allocate</a>(</div>
 <div class="line"><a name="l00409"></a><span class="lineno">  409</span>&#160;      alloc, <span class="keywordtype">size_t</span>(M) + numExtraVar, numLoops, syms)};</div>
 <div class="line"><a name="l00410"></a><span class="lineno">  410</span>&#160;    <span class="keyword">auto</span> B{aln-&gt;getA()};</div>
 <div class="line"><a name="l00411"></a><span class="lineno">  411</span>&#160;    invariant(B.numRow(), M + numExtraVar);</div>
@@ -479,14 +479,14 @@ $(function() {
 <div class="line"><a name="l00421"></a><span class="lineno">  421</span>&#160;    <span class="keywordflow">return</span> aln;</div>
 <div class="line"><a name="l00422"></a><span class="lineno">  422</span>&#160;  }</div>
 <div class="line"><a name="l00424"></a><span class="lineno"><a class="line" href="structAffineLoopNest.html#ae7e3801c19a2587916894acf27894629">  424</a></span>&#160;  [[nodiscard]] <span class="keyword">auto</span> <a class="code" href="structAffineLoopNest.html#ae7e3801c19a2587916894acf27894629">explicitLowerBounds</a>(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc)</div>
-<div class="line"><a name="l00425"></a><span class="lineno">  425</span>&#160;    -&gt; <a class="code" href="structNotNull.html">NotNull&lt;AffineLoopNest&lt;false&gt;</a>&gt; {</div>
+<div class="line"><a name="l00425"></a><span class="lineno">  425</span>&#160;    -&gt; <a class="code" href="classNotNull.html">NotNull&lt;AffineLoopNest&lt;false&gt;</a>&gt; {</div>
 <div class="line"><a name="l00426"></a><span class="lineno">  426</span>&#160;    <span class="keywordflow">if</span> constexpr (!NonNegative) <span class="keywordflow">return</span> <span class="keyword">this</span>;</div>
 <div class="line"><a name="l00427"></a><span class="lineno">  427</span>&#160;    <span class="keyword">const</span> <span class="keywordtype">size_t</span> numExtraVar = getNumLoops();</div>
 <div class="line"><a name="l00428"></a><span class="lineno">  428</span>&#160;    <span class="keyword">const</span> <span class="keywordtype">size_t</span> numConst = this-&gt;getNumSymbols();</div>
 <div class="line"><a name="l00429"></a><span class="lineno">  429</span>&#160;    <span class="keyword">auto</span> A{getA()};</div>
 <div class="line"><a name="l00430"></a><span class="lineno">  430</span>&#160;    <span class="keyword">const</span> <span class="keyword">auto</span> [M, N] = A.size();</div>
 <div class="line"><a name="l00431"></a><span class="lineno">  431</span>&#160;    <span class="keyword">auto</span> symbols{getSyms()};</div>
-<div class="line"><a name="l00432"></a><span class="lineno">  432</span>&#160;    <a class="code" href="structNotNull.html">NotNull&lt;AffineLoopNest&lt;false&gt;</a>&gt; ret{<a class="code" href="structAffineLoopNest.html">AffineLoopNest&lt;false&gt;::allocate</a>(</div>
+<div class="line"><a name="l00432"></a><span class="lineno">  432</span>&#160;    <a class="code" href="classNotNull.html">NotNull&lt;AffineLoopNest&lt;false&gt;</a>&gt; ret{<a class="code" href="structAffineLoopNest.html">AffineLoopNest&lt;false&gt;::allocate</a>(</div>
 <div class="line"><a name="l00433"></a><span class="lineno">  433</span>&#160;      alloc, M + numExtraVar, numLoops, symbols)};</div>
 <div class="line"><a name="l00434"></a><span class="lineno">  434</span>&#160;    <span class="keyword">auto</span> B{ret-&gt;getA()};</div>
 <div class="line"><a name="l00435"></a><span class="lineno">  435</span>&#160;    B(_(0, M), _) &lt;&lt; A;</div>
@@ -505,7 +505,7 @@ $(function() {
 <div class="line"><a name="l00448"></a><span class="lineno">  448</span>&#160;  <span class="comment">// }</span></div>
 <div class="line"><a name="l00449"></a><span class="lineno">  449</span>&#160; </div>
 <div class="line"><a name="l00450"></a><span class="lineno">  450</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> removeInnerMost(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc) <span class="keyword">const</span></div>
-<div class="line"><a name="l00451"></a><span class="lineno">  451</span>&#160;    -&gt; <a class="code" href="structNotNull.html">NotNull&lt;AffineLoopNest&lt;NonNegative&gt;</a>&gt; {</div>
+<div class="line"><a name="l00451"></a><span class="lineno">  451</span>&#160;    -&gt; <a class="code" href="classNotNull.html">NotNull&lt;AffineLoopNest&lt;NonNegative&gt;</a>&gt; {</div>
 <div class="line"><a name="l00452"></a><span class="lineno">  452</span>&#160;    <span class="comment">// order is outer&lt;-&gt;inner</span></div>
 <div class="line"><a name="l00453"></a><span class="lineno">  453</span>&#160;    <span class="keyword">auto</span> A{getA()};</div>
 <div class="line"><a name="l00454"></a><span class="lineno">  454</span>&#160;    <span class="keyword">auto</span> ret = <a class="code" href="structAffineLoopNest.html">AffineLoopNest&lt;NonNegative&gt;::allocate</a>(</div>
@@ -604,7 +604,7 @@ $(function() {
 <div class="line"><a name="l00547"></a><span class="lineno">  547</span>&#160;    <span class="keywordflow">return</span> getA()(j, _(0, getNumSymbols()));</div>
 <div class="line"><a name="l00548"></a><span class="lineno">  548</span>&#160;  }</div>
 <div class="line"><a name="l00549"></a><span class="lineno">  549</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> copy(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc) <span class="keyword">const</span></div>
-<div class="line"><a name="l00550"></a><span class="lineno">  550</span>&#160;    -&gt; <a class="code" href="structNotNull.html">NotNull&lt;AffineLoopNest&lt;NonNegative&gt;</a>&gt; {</div>
+<div class="line"><a name="l00550"></a><span class="lineno">  550</span>&#160;    -&gt; <a class="code" href="classNotNull.html">NotNull&lt;AffineLoopNest&lt;NonNegative&gt;</a>&gt; {</div>
 <div class="line"><a name="l00551"></a><span class="lineno">  551</span>&#160;    <span class="keyword">auto</span> ret = <a class="code" href="structAffineLoopNest.html">AffineLoopNest&lt;NonNegative&gt;::allocate</a>(alloc, numConstraints,</div>
 <div class="line"><a name="l00552"></a><span class="lineno">  552</span>&#160;                                                     numLoops, getSyms());</div>
 <div class="line"><a name="l00553"></a><span class="lineno">  553</span>&#160;    ret-&gt;getA() &lt;&lt; getA();</div>
@@ -959,7 +959,7 @@ $(function() {
 <div class="line"><a name="l00902"></a><span class="lineno">  902</span>&#160;  [[nodiscard]] <span class="keyword">static</span> <span class="keyword">auto</span> allocate(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> numCon,</div>
 <div class="line"><a name="l00903"></a><span class="lineno">  903</span>&#160;                                     <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> numLoops,</div>
 <div class="line"><a name="l00904"></a><span class="lineno">  904</span>&#160;                                     llvm::ArrayRef&lt;const llvm::SCEV *&gt; syms)</div>
-<div class="line"><a name="l00905"></a><span class="lineno">  905</span>&#160;    -&gt; <a class="code" href="structNotNull.html">NotNull&lt;AffineLoopNest&gt;</a> {</div>
+<div class="line"><a name="l00905"></a><span class="lineno">  905</span>&#160;    -&gt; <a class="code" href="classNotNull.html">NotNull&lt;AffineLoopNest&gt;</a> {</div>
 <div class="line"><a name="l00906"></a><span class="lineno">  906</span>&#160;    <span class="keywordtype">unsigned</span> numDynSym = syms.size();</div>
 <div class="line"><a name="l00907"></a><span class="lineno">  907</span>&#160;    <span class="keywordtype">unsigned</span> N = numLoops + numDynSym + 1;</div>
 <div class="line"><a name="l00908"></a><span class="lineno">  908</span>&#160;    <span class="comment">// extra capacity for adding 0 lower bounds later, see</span></div>
@@ -973,7 +973,7 @@ $(function() {
 <div class="line"><a name="l00916"></a><span class="lineno">  916</span>&#160;                               <span class="keyword">alignof</span>(<a class="code" href="structAffineLoopNest.html">AffineLoopNest</a>));</div>
 <div class="line"><a name="l00917"></a><span class="lineno">  917</span>&#160;    <span class="keyword">auto</span> *aln = <span class="keyword">new</span> (mem) <a class="code" href="structAffineLoopNest.html">AffineLoopNest</a>({numCon, numLoops, numDynSym, M});</div>
 <div class="line"><a name="l00918"></a><span class="lineno">  918</span>&#160;    std::copy_n(syms.begin(), numDynSym, aln-&gt;getSyms().begin());</div>
-<div class="line"><a name="l00919"></a><span class="lineno">  919</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="structNotNull.html">NotNull&lt;AffineLoopNest&gt;</a>{aln};</div>
+<div class="line"><a name="l00919"></a><span class="lineno">  919</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="classNotNull.html">NotNull&lt;AffineLoopNest&gt;</a>{aln};</div>
 <div class="line"><a name="l00920"></a><span class="lineno">  920</span>&#160;  }</div>
 <div class="line"><a name="l00921"></a><span class="lineno">  921</span>&#160; </div>
 <div class="line"><a name="l00922"></a><span class="lineno">  922</span>&#160;<span class="keyword">private</span>:</div>
@@ -1015,6 +1015,7 @@ $(function() {
 <div class="line"><a name="l00958"></a><span class="lineno">  958</span>&#160;<span class="preprocessor">#pragma clang diagnostic pop</span></div>
 <div class="line"><a name="l00959"></a><span class="lineno">  959</span>&#160;<span class="preprocessor">#endif</span></div>
 <div class="line"><a name="l00960"></a><span class="lineno">  960</span>&#160;};</div>
+<div class="ttc" id="aclassNotNull_html"><div class="ttname"><a href="classNotNull.html">NotNull</a></div><div class="ttdef"><b>Definition:</b> Valid.hpp:7</div></div>
 <div class="ttc" id="astructAffineLoopNest_html"><div class="ttname"><a href="structAffineLoopNest.html">AffineLoopNest</a></div><div class="ttdef"><b>Definition:</b> Loops.hpp:324</div></div>
 <div class="ttc" id="astructAffineLoopNest_html_a215506c9530da55d0671936af217dd6d"><div class="ttname"><a href="structAffineLoopNest.html#a215506c9530da55d0671936af217dd6d">AffineLoopNest::rotate</a></div><div class="ttdeci">auto rotate(BumpAlloc&lt;&gt; &amp;alloc, PtrMatrix&lt; int64_t &gt; R) const -&gt; NotNull&lt; AffineLoopNest&lt; false &gt;&gt;</div><div class="ttdef"><b>Definition:</b> Loops.hpp:398</div></div>
 <div class="ttc" id="astructAffineLoopNest_html_ae7e3801c19a2587916894acf27894629"><div class="ttname"><a href="structAffineLoopNest.html#ae7e3801c19a2587916894acf27894629">AffineLoopNest::explicitLowerBounds</a></div><div class="ttdeci">auto explicitLowerBounds(BumpAlloc&lt;&gt; &amp;alloc) -&gt; NotNull&lt; AffineLoopNest&lt; false &gt;&gt;</div><div class="ttdoc">like rotate(identity Matrix)</div><div class="ttdef"><b>Definition:</b> Loops.hpp:424</div></div>
@@ -1023,7 +1024,6 @@ $(function() {
 <div class="ttc" id="astructLinAlg_1_1DenseDims_html"><div class="ttname"><a href="structLinAlg_1_1DenseDims.html">LinAlg::DenseDims</a></div><div class="ttdoc">Dimensions with a capacity.</div><div class="ttdef"><b>Definition:</b> MatrixDimensions.hpp:76</div></div>
 <div class="ttc" id="astructLinAlg_1_1StridedDims_html"><div class="ttname"><a href="structLinAlg_1_1StridedDims.html">LinAlg::StridedDims</a></div><div class="ttdef"><b>Definition:</b> MatrixDimensions.hpp:24</div></div>
 <div class="ttc" id="astructNoWrapRewriter_html"><div class="ttname"><a href="structNoWrapRewriter.html">NoWrapRewriter</a></div><div class="ttdef"><b>Definition:</b> Loops.hpp:68</div></div>
-<div class="ttc" id="astructNotNull_html"><div class="ttname"><a href="structNotNull.html">NotNull</a></div><div class="ttdef"><b>Definition:</b> Valid.hpp:7</div></div>
 <div class="ttc" id="astructOptional_html"><div class="ttname"><a href="structOptional.html">Optional</a></div><div class="ttdef"><b>Definition:</b> Optional.hpp:9</div></div>
 <div class="ttc" id="astructRange_html"><div class="ttname"><a href="structRange.html">Range</a></div><div class="ttdef"><b>Definition:</b> Iterators.hpp:4</div></div>
 </div><!-- fragment --></div><!-- contents -->

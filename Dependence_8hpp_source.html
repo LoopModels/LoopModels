@@ -146,9 +146,9 @@ $(function() {
 <div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;  <span class="comment">//</span></div>
 <div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;  <span class="comment">//</span></div>
 <div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160; </div>
-<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;  [[no_unique_address]] <a class="code" href="structNotNull.html">NotNull&lt;DepPoly&gt;</a> depPoly;</div>
-<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;  [[no_unique_address]] <a class="code" href="structNotNull.html">NotNull&lt;Simplex&gt;</a> dependenceSatisfaction;</div>
-<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;  [[no_unique_address]] <a class="code" href="structNotNull.html">NotNull&lt;Simplex&gt;</a> dependenceBounding;</div>
+<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;  [[no_unique_address]] <a class="code" href="classNotNull.html">NotNull&lt;DepPoly&gt;</a> depPoly;</div>
+<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;  [[no_unique_address]] <a class="code" href="classNotNull.html">NotNull&lt;Simplex&gt;</a> dependenceSatisfaction;</div>
+<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;  [[no_unique_address]] <a class="code" href="classNotNull.html">NotNull&lt;Simplex&gt;</a> dependenceBounding;</div>
 <div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;  [[no_unique_address]] <a class="code" href="structMemoryAccess.html">MemoryAccess</a> in;</div>
 <div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;  [[no_unique_address]] <a class="code" href="structMemoryAccess.html">MemoryAccess</a> out;</div>
 <div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;  [[no_unique_address]] std::array&lt;uint8_t, 7&gt; satLvl{255, 255, 255, 255,</div>
@@ -162,9 +162,9 @@ $(function() {
 <div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> output() <span class="keyword">const</span> -&gt; <span class="keyword">const</span> <a class="code" href="structMemoryAccess.html">MemoryAccess</a> &amp; {</div>
 <div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;    <span class="keywordflow">return</span> out;</div>
 <div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;  }</div>
-<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;  constexpr <a class="code" href="classDependence.html">Dependence</a>(<a class="code" href="structNotNull.html">NotNull&lt;DepPoly&gt;</a> poly,</div>
-<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;                       std::array&lt;<a class="code" href="structNotNull.html">NotNull&lt;Simplex&gt;</a>, 2&gt; depSatBound,</div>
-<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;                       std::array&lt;<a class="code" href="structNotNull.html">NotNull&lt;ArrayIndex&gt;</a>, 2&gt; inOut, <span class="keywordtype">bool</span> fwd)</div>
+<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;  constexpr <a class="code" href="classDependence.html">Dependence</a>(<a class="code" href="classNotNull.html">NotNull&lt;DepPoly&gt;</a> poly,</div>
+<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;                       std::array&lt;<a class="code" href="classNotNull.html">NotNull&lt;Simplex&gt;</a>, 2&gt; depSatBound,</div>
+<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;                       std::array&lt;<a class="code" href="classNotNull.html">NotNull&lt;ArrayIndex&gt;</a>, 2&gt; inOut, <span class="keywordtype">bool</span> fwd)</div>
 <div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;    : depPoly(poly), dependenceSatisfaction(depSatBound[0]),</div>
 <div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;      dependenceBounding(depSatBound[1]), in(inOut[0]), out(inOut[1]),</div>
 <div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;      forward(fwd) {}</div>
@@ -262,7 +262,7 @@ $(function() {
 <div class="line"><a name="l00203"></a><span class="lineno">  203</span>&#160;             getNumOmegaCoefficients() ==</div>
 <div class="line"><a name="l00204"></a><span class="lineno">  204</span>&#160;           <span class="keywordtype">size_t</span>(dependenceSatisfaction-&gt;getConstraints().numCol()));</div>
 <div class="line"><a name="l00205"></a><span class="lineno">  205</span>&#160;  }</div>
-<div class="line"><a name="l00206"></a><span class="lineno">  206</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getDepPoly() -&gt; <a class="code" href="structNotNull.html">NotNull&lt;DepPoly&gt;</a> {</div>
+<div class="line"><a name="l00206"></a><span class="lineno">  206</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getDepPoly() -&gt; <a class="code" href="classNotNull.html">NotNull&lt;DepPoly&gt;</a> {</div>
 <div class="line"><a name="l00207"></a><span class="lineno">  207</span>&#160;    <span class="keywordflow">return</span> depPoly;</div>
 <div class="line"><a name="l00208"></a><span class="lineno">  208</span>&#160;  }</div>
 <div class="line"><a name="l00209"></a><span class="lineno">  209</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getNumConstraints() const -&gt; <span class="keywordtype">size_t</span> {</div>
@@ -350,8 +350,8 @@ $(function() {
 <div class="line"><a name="l00291"></a><span class="lineno">  291</span>&#160;            phiCoefsOut,       getBndOmegaCoefs(), getBndCoefs()};</div>
 <div class="line"><a name="l00292"></a><span class="lineno">  292</span>&#160;  }</div>
 <div class="line"><a name="l00293"></a><span class="lineno">  293</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> isSatisfied(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc,</div>
-<div class="line"><a name="l00294"></a><span class="lineno">  294</span>&#160;                                 <a class="code" href="structNotNull.html">NotNull&lt;const AffineSchedule&gt;</a> schIn,</div>
-<div class="line"><a name="l00295"></a><span class="lineno">  295</span>&#160;                                 <a class="code" href="structNotNull.html">NotNull&lt;const AffineSchedule&gt;</a> schOut) <span class="keyword">const</span></div>
+<div class="line"><a name="l00294"></a><span class="lineno">  294</span>&#160;                                 <a class="code" href="classNotNull.html">NotNull&lt;const AffineSchedule&gt;</a> schIn,</div>
+<div class="line"><a name="l00295"></a><span class="lineno">  295</span>&#160;                                 <a class="code" href="classNotNull.html">NotNull&lt;const AffineSchedule&gt;</a> schOut) <span class="keyword">const</span></div>
 <div class="line"><a name="l00296"></a><span class="lineno">  296</span>&#160;    -&gt; <span class="keywordtype">bool</span> {</div>
 <div class="line"><a name="l00297"></a><span class="lineno">  297</span>&#160;    <span class="keywordtype">size_t</span> numLoopsIn = in.getNumLoops();</div>
 <div class="line"><a name="l00298"></a><span class="lineno">  298</span>&#160;    <span class="keywordtype">size_t</span> numLoopsOut = out.getNumLoops();</div>
@@ -448,8 +448,8 @@ $(function() {
 <div class="line"><a name="l00389"></a><span class="lineno">  389</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">true</span>;</div>
 <div class="line"><a name="l00390"></a><span class="lineno">  390</span>&#160;  }</div>
 <div class="line"><a name="l00391"></a><span class="lineno">  391</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> isSatisfied(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc,</div>
-<div class="line"><a name="l00392"></a><span class="lineno">  392</span>&#160;                                 <a class="code" href="structNotNull.html">NotNull&lt;const AffineSchedule&gt;</a> sx,</div>
-<div class="line"><a name="l00393"></a><span class="lineno">  393</span>&#160;                                 <a class="code" href="structNotNull.html">NotNull&lt;const AffineSchedule&gt;</a> sy,</div>
+<div class="line"><a name="l00392"></a><span class="lineno">  392</span>&#160;                                 <a class="code" href="classNotNull.html">NotNull&lt;const AffineSchedule&gt;</a> sx,</div>
+<div class="line"><a name="l00393"></a><span class="lineno">  393</span>&#160;                                 <a class="code" href="classNotNull.html">NotNull&lt;const AffineSchedule&gt;</a> sy,</div>
 <div class="line"><a name="l00394"></a><span class="lineno">  394</span>&#160;                                 <span class="keywordtype">size_t</span> d) <span class="keyword">const</span> -&gt; <span class="keywordtype">bool</span> {</div>
 <div class="line"><a name="l00395"></a><span class="lineno">  395</span>&#160;    <span class="keyword">const</span> <span class="keywordtype">size_t</span> numLambda = depPoly-&gt;getNumLambda();</div>
 <div class="line"><a name="l00396"></a><span class="lineno">  396</span>&#160;    <span class="keyword">const</span> <span class="keywordtype">size_t</span> nLoopX = depPoly-&gt;getDim0();</div>
@@ -475,11 +475,11 @@ $(function() {
 <div class="line"><a name="l00416"></a><span class="lineno">  416</span>&#160;    <span class="keywordflow">return</span> dependenceSatisfaction-&gt;satisfiable(alloc, sch, numLambda);</div>
 <div class="line"><a name="l00417"></a><span class="lineno">  417</span>&#160;  }</div>
 <div class="line"><a name="l00418"></a><span class="lineno">  418</span>&#160;  <span class="keyword">static</span> <span class="keyword">auto</span> checkDirection(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc,</div>
-<div class="line"><a name="l00419"></a><span class="lineno">  419</span>&#160;                             <span class="keyword">const</span> std::array&lt;<a class="code" href="structNotNull.html">NotNull&lt;Simplex&gt;</a>, 2&gt; &amp;p,</div>
-<div class="line"><a name="l00420"></a><span class="lineno">  420</span>&#160;                             <a class="code" href="structNotNull.html">NotNull&lt;const ArrayIndex&gt;</a> x,</div>
-<div class="line"><a name="l00421"></a><span class="lineno">  421</span>&#160;                             <a class="code" href="structNotNull.html">NotNull&lt;const ArrayIndex&gt;</a> y,</div>
-<div class="line"><a name="l00422"></a><span class="lineno">  422</span>&#160;                             <a class="code" href="structNotNull.html">NotNull&lt;const AffineSchedule&gt;</a> xSchedule,</div>
-<div class="line"><a name="l00423"></a><span class="lineno">  423</span>&#160;                             <a class="code" href="structNotNull.html">NotNull&lt;const AffineSchedule&gt;</a> ySchedule,</div>
+<div class="line"><a name="l00419"></a><span class="lineno">  419</span>&#160;                             <span class="keyword">const</span> std::array&lt;<a class="code" href="classNotNull.html">NotNull&lt;Simplex&gt;</a>, 2&gt; &amp;p,</div>
+<div class="line"><a name="l00420"></a><span class="lineno">  420</span>&#160;                             <a class="code" href="classNotNull.html">NotNull&lt;const ArrayIndex&gt;</a> x,</div>
+<div class="line"><a name="l00421"></a><span class="lineno">  421</span>&#160;                             <a class="code" href="classNotNull.html">NotNull&lt;const ArrayIndex&gt;</a> y,</div>
+<div class="line"><a name="l00422"></a><span class="lineno">  422</span>&#160;                             <a class="code" href="classNotNull.html">NotNull&lt;const AffineSchedule&gt;</a> xSchedule,</div>
+<div class="line"><a name="l00423"></a><span class="lineno">  423</span>&#160;                             <a class="code" href="classNotNull.html">NotNull&lt;const AffineSchedule&gt;</a> ySchedule,</div>
 <div class="line"><a name="l00424"></a><span class="lineno">  424</span>&#160;                             <span class="keywordtype">size_t</span> numLambda, Col nonTimeDim) -&gt; <span class="keywordtype">bool</span> {</div>
 <div class="line"><a name="l00425"></a><span class="lineno">  425</span>&#160;    <span class="keyword">const</span> <span class="keyword">auto</span> &amp;[fxy, fyx] = p;</div>
 <div class="line"><a name="l00426"></a><span class="lineno">  426</span>&#160;    <span class="keyword">const</span> <span class="keywordtype">size_t</span> numLoopsX = x-&gt;getNumLoops();</div>
@@ -529,9 +529,9 @@ $(function() {
 <div class="line"><a name="l00470"></a><span class="lineno">  470</span>&#160;  }</div>
 <div class="line"><a name="l00471"></a><span class="lineno">  471</span>&#160;  <span class="comment">// returns `true` if forward, x-&gt;y</span></div>
 <div class="line"><a name="l00472"></a><span class="lineno">  472</span>&#160;  <span class="keyword">static</span> <span class="keyword">auto</span> checkDirection(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc,</div>
-<div class="line"><a name="l00473"></a><span class="lineno">  473</span>&#160;                             <span class="keyword">const</span> std::array&lt;<a class="code" href="structNotNull.html">NotNull&lt;Simplex&gt;</a>, 2&gt; &amp;p,</div>
-<div class="line"><a name="l00474"></a><span class="lineno">  474</span>&#160;                             <a class="code" href="structNotNull.html">NotNull&lt;const ArrayIndex&gt;</a> x,</div>
-<div class="line"><a name="l00475"></a><span class="lineno">  475</span>&#160;                             <a class="code" href="structNotNull.html">NotNull&lt;const ArrayIndex&gt;</a> y, <span class="keywordtype">size_t</span> numLambda,</div>
+<div class="line"><a name="l00473"></a><span class="lineno">  473</span>&#160;                             <span class="keyword">const</span> std::array&lt;<a class="code" href="classNotNull.html">NotNull&lt;Simplex&gt;</a>, 2&gt; &amp;p,</div>
+<div class="line"><a name="l00474"></a><span class="lineno">  474</span>&#160;                             <a class="code" href="classNotNull.html">NotNull&lt;const ArrayIndex&gt;</a> x,</div>
+<div class="line"><a name="l00475"></a><span class="lineno">  475</span>&#160;                             <a class="code" href="classNotNull.html">NotNull&lt;const ArrayIndex&gt;</a> y, <span class="keywordtype">size_t</span> numLambda,</div>
 <div class="line"><a name="l00476"></a><span class="lineno">  476</span>&#160;                             Col nonTimeDim) -&gt; <span class="keywordtype">bool</span> {</div>
 <div class="line"><a name="l00477"></a><span class="lineno">  477</span>&#160;    <span class="keyword">const</span> <span class="keyword">auto</span> &amp;[fxy, fyx] = p;</div>
 <div class="line"><a name="l00478"></a><span class="lineno">  478</span>&#160;    <span class="keywordtype">size_t</span> numLoopsX = x-&gt;getNumLoops(), nTD = size_t(nonTimeDim);</div>
@@ -566,8 +566,8 @@ $(function() {
 <div class="line"><a name="l00507"></a><span class="lineno">  507</span>&#160;    invariant(<span class="keyword">false</span>);</div>
 <div class="line"><a name="l00508"></a><span class="lineno">  508</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
 <div class="line"><a name="l00509"></a><span class="lineno">  509</span>&#160;  }</div>
-<div class="line"><a name="l00510"></a><span class="lineno">  510</span>&#160;  <span class="keyword">static</span> <span class="keyword">auto</span> timelessCheck(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, <a class="code" href="structNotNull.html">NotNull&lt;DepPoly&gt;</a> dxy,</div>
-<div class="line"><a name="l00511"></a><span class="lineno">  511</span>&#160;                            <a class="code" href="structNotNull.html">NotNull&lt;ArrayIndex&gt;</a> x, <a class="code" href="structNotNull.html">NotNull&lt;ArrayIndex&gt;</a> y)</div>
+<div class="line"><a name="l00510"></a><span class="lineno">  510</span>&#160;  <span class="keyword">static</span> <span class="keyword">auto</span> timelessCheck(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, <a class="code" href="classNotNull.html">NotNull&lt;DepPoly&gt;</a> dxy,</div>
+<div class="line"><a name="l00511"></a><span class="lineno">  511</span>&#160;                            <a class="code" href="classNotNull.html">NotNull&lt;ArrayIndex&gt;</a> x, <a class="code" href="classNotNull.html">NotNull&lt;ArrayIndex&gt;</a> y)</div>
 <div class="line"><a name="l00512"></a><span class="lineno">  512</span>&#160;    -&gt; <a class="code" href="classDependence.html">Dependence</a> {</div>
 <div class="line"><a name="l00513"></a><span class="lineno">  513</span>&#160;    std::array&lt;NotNull&lt;Simplex&gt;, 2&gt; pair{dxy-&gt;farkasPair(alloc)};</div>
 <div class="line"><a name="l00514"></a><span class="lineno">  514</span>&#160;    <span class="keyword">const</span> <span class="keywordtype">size_t</span> numLambda = dxy-&gt;getNumLambda();</div>
@@ -583,8 +583,8 @@ $(function() {
 <div class="line"><a name="l00524"></a><span class="lineno">  524</span>&#160; </div>
 <div class="line"><a name="l00525"></a><span class="lineno">  525</span>&#160;  <span class="comment">// emplaces dependencies with repeat accesses to the same memory across</span></div>
 <div class="line"><a name="l00526"></a><span class="lineno">  526</span>&#160;  <span class="comment">// time</span></div>
-<div class="line"><a name="l00527"></a><span class="lineno">  527</span>&#160;  <span class="keyword">static</span> <span class="keyword">auto</span> timeCheck(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, <a class="code" href="structNotNull.html">NotNull&lt;DepPoly&gt;</a> dxy,</div>
-<div class="line"><a name="l00528"></a><span class="lineno">  528</span>&#160;                        <a class="code" href="structNotNull.html">NotNull&lt;ArrayIndex&gt;</a> x, <a class="code" href="structNotNull.html">NotNull&lt;ArrayIndex&gt;</a> y)</div>
+<div class="line"><a name="l00527"></a><span class="lineno">  527</span>&#160;  <span class="keyword">static</span> <span class="keyword">auto</span> timeCheck(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, <a class="code" href="classNotNull.html">NotNull&lt;DepPoly&gt;</a> dxy,</div>
+<div class="line"><a name="l00528"></a><span class="lineno">  528</span>&#160;                        <a class="code" href="classNotNull.html">NotNull&lt;ArrayIndex&gt;</a> x, <a class="code" href="classNotNull.html">NotNull&lt;ArrayIndex&gt;</a> y)</div>
 <div class="line"><a name="l00529"></a><span class="lineno">  529</span>&#160;    -&gt; <a class="code" href="classTinyVector.html">TinyVector&lt;Dependence, 2&gt;</a> {</div>
 <div class="line"><a name="l00530"></a><span class="lineno">  530</span>&#160;    std::array&lt;NotNull&lt;Simplex&gt;, 2&gt; pair(dxy-&gt;farkasPair(alloc));</div>
 <div class="line"><a name="l00531"></a><span class="lineno">  531</span>&#160;    <span class="comment">// copy backup</span></div>
@@ -598,7 +598,7 @@ $(function() {
 <div class="line"><a name="l00539"></a><span class="lineno">  539</span>&#160;    <span class="keyword">const</span> <span class="keywordtype">size_t</span> numLambda = posEqEnd + numEqualityConstraintsOld;</div>
 <div class="line"><a name="l00540"></a><span class="lineno">  540</span>&#160;    <span class="keyword">const</span> <span class="keywordtype">size_t</span> numScheduleCoefs = dxy-&gt;getNumScheduleCoef();</div>
 <div class="line"><a name="l00541"></a><span class="lineno">  541</span>&#160;    invariant(numLambda, <span class="keywordtype">size_t</span>(dxy-&gt;getNumLambda()));</div>
-<div class="line"><a name="l00542"></a><span class="lineno">  542</span>&#160;    <a class="code" href="structNotNull.html">NotNull&lt;ArrayIndex&gt;</a> in = x, out = y;</div>
+<div class="line"><a name="l00542"></a><span class="lineno">  542</span>&#160;    <a class="code" href="classNotNull.html">NotNull&lt;ArrayIndex&gt;</a> in = x, out = y;</div>
 <div class="line"><a name="l00543"></a><span class="lineno">  543</span>&#160;    <span class="keyword">const</span> <span class="keywordtype">bool</span> isFwd = checkDirection(alloc, pair, x, y, numLambda,</div>
 <div class="line"><a name="l00544"></a><span class="lineno">  544</span>&#160;                                      dxy-&gt;getA().numCol() - dxy-&gt;getTimeDim());</div>
 <div class="line"><a name="l00545"></a><span class="lineno">  545</span>&#160;    <span class="keywordflow">if</span> (isFwd) {</div>
@@ -698,8 +698,8 @@ $(function() {
 <div class="line"><a name="l00639"></a><span class="lineno">  639</span>&#160;    <span class="keywordflow">return</span> {dep0, dep1};</div>
 <div class="line"><a name="l00640"></a><span class="lineno">  640</span>&#160;  }</div>
 <div class="line"><a name="l00641"></a><span class="lineno">  641</span>&#160; </div>
-<div class="line"><a name="l00642"></a><span class="lineno">  642</span>&#160;  <span class="keyword">static</span> <span class="keyword">auto</span> check(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, <a class="code" href="structNotNull.html">NotNull&lt;ArrayIndex&gt;</a> x,</div>
-<div class="line"><a name="l00643"></a><span class="lineno">  643</span>&#160;                    <a class="code" href="structNotNull.html">NotNull&lt;ArrayIndex&gt;</a> y) -&gt; <a class="code" href="classTinyVector.html">TinyVector&lt;Dependence, 2&gt;</a> {</div>
+<div class="line"><a name="l00642"></a><span class="lineno">  642</span>&#160;  <span class="keyword">static</span> <span class="keyword">auto</span> check(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, <a class="code" href="classNotNull.html">NotNull&lt;ArrayIndex&gt;</a> x,</div>
+<div class="line"><a name="l00643"></a><span class="lineno">  643</span>&#160;                    <a class="code" href="classNotNull.html">NotNull&lt;ArrayIndex&gt;</a> y) -&gt; <a class="code" href="classTinyVector.html">TinyVector&lt;Dependence, 2&gt;</a> {</div>
 <div class="line"><a name="l00644"></a><span class="lineno">  644</span>&#160;    <span class="comment">// TODO: implement gcd test</span></div>
 <div class="line"><a name="l00645"></a><span class="lineno">  645</span>&#160;    <span class="comment">// if (x.gcdKnownIndependent(y)) return {};</span></div>
 <div class="line"><a name="l00646"></a><span class="lineno">  646</span>&#160;    <a class="code" href="classDepPoly.html">DepPoly</a> *dxy{DepPoly::dependence(alloc, x, y)};</div>
@@ -714,7 +714,7 @@ $(function() {
 <div class="line"><a name="l00655"></a><span class="lineno">  655</span>&#160;    <span class="keywordflow">return</span> {timelessCheck(alloc, dxy, x, y)};</div>
 <div class="line"><a name="l00656"></a><span class="lineno">  656</span>&#160;  }</div>
 <div class="line"><a name="l00657"></a><span class="lineno">  657</span>&#160;  <span class="comment">// reload store `x`</span></div>
-<div class="line"><a name="l00658"></a><span class="lineno">  658</span>&#160;  <span class="keyword">static</span> <span class="keyword">auto</span> reload(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, <a class="code" href="structNotNull.html">NotNull&lt;ArrayIndex&gt;</a> x)</div>
+<div class="line"><a name="l00658"></a><span class="lineno">  658</span>&#160;  <span class="keyword">static</span> <span class="keyword">auto</span> reload(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, <a class="code" href="classNotNull.html">NotNull&lt;ArrayIndex&gt;</a> x)</div>
 <div class="line"><a name="l00659"></a><span class="lineno">  659</span>&#160;    -&gt; <a class="code" href="classTinyVector.html">TinyVector&lt;Dependence, 2&gt;</a> {</div>
 <div class="line"><a name="l00660"></a><span class="lineno">  660</span>&#160; </div>
 <div class="line"><a name="l00661"></a><span class="lineno">  661</span>&#160;    <span class="keywordflow">return</span> {};</div>
@@ -739,11 +739,11 @@ $(function() {
 <div class="ttc" id="aclassDependence_html_a6cc677c17009dae397e882a80eb727a4"><div class="ttname"><a href="classDependence.html#a6cc677c17009dae397e882a80eb727a4">Dependence::getInIndMat</a></div><div class="ttdeci">auto getInIndMat() const -&gt; PtrMatrix&lt; int64_t &gt;</div><div class="ttdoc">getInIndMat() -&gt; getInNumLoops() x arrayDim()</div><div class="ttdef"><b>Definition:</b> Dependence.hpp:148</div></div>
 <div class="ttc" id="aclassDependence_html_a89c5aef3716809617009a5f7d55c9499"><div class="ttname"><a href="classDependence.html#a89c5aef3716809617009a5f7d55c9499">Dependence::getOutIndMat</a></div><div class="ttdeci">constexpr auto getOutIndMat() const -&gt; PtrMatrix&lt; int64_t &gt;</div><div class="ttdoc">getOutIndMat() -&gt; getOutNumLoops() x arrayDim()</div><div class="ttdef"><b>Definition:</b> Dependence.hpp:156</div></div>
 <div class="ttc" id="aclassDependence_html_a8f03cfecfe1734c6c395bf3184269536"><div class="ttname"><a href="classDependence.html#a8f03cfecfe1734c6c395bf3184269536">Dependence::isForward</a></div><div class="ttdeci">constexpr auto isForward() const -&gt; bool</div><div class="ttdoc">indicates whether forward is non-empty</div><div class="ttdef"><b>Definition:</b> Dependence.hpp:133</div></div>
+<div class="ttc" id="aclassNotNull_html"><div class="ttname"><a href="classNotNull.html">NotNull&lt; DepPoly &gt;</a></div></div>
 <div class="ttc" id="aclassTinyVector_html"><div class="ttname"><a href="classTinyVector.html">TinyVector</a></div><div class="ttdef"><b>Definition:</b> TinyVector.hpp:7</div></div>
 <div class="ttc" id="astructBitSet_html"><div class="ttname"><a href="structBitSet.html">BitSet</a></div><div class="ttdef"><b>Definition:</b> BitSets.hpp:82</div></div>
 <div class="ttc" id="astructBumpAlloc_html"><div class="ttname"><a href="structBumpAlloc.html">BumpAlloc</a></div><div class="ttdef"><b>Definition:</b> Allocators.hpp:42</div></div>
 <div class="ttc" id="astructMemoryAccess_html"><div class="ttname"><a href="structMemoryAccess.html">MemoryAccess</a></div><div class="ttdoc">A particular memory access instance.</div><div class="ttdef"><b>Definition:</b> MemoryAccess.hpp:20</div></div>
-<div class="ttc" id="astructNotNull_html"><div class="ttname"><a href="structNotNull.html">NotNull&lt; DepPoly &gt;</a></div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
