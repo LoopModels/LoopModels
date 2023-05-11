@@ -445,13 +445,10 @@ public:
     for (llvm::User *use : user->users()) {
       if (visited.contains(use)) continue;
       if (llvm::isa<llvm::StoreInst>(use)) {
-        auto *memAccess = userToMemory.find(use);
-        if (memAccess == userToMemory.end())
-          continue; // load is not a part of the LoopBlock
-        unsigned memId = memAccess->second;
-        MemoryAccess &store = memory[memId];
+        auto *ma = userToMemory.find(use);
+        if (ma == userToMemory.end()) continue;
         // this store will be treated as a load
-        node.addMemory(memId, store, nodeIndex);
+        node.addMemory(ma->second, memory[ma->second], nodeIndex);
         return true;
       }
     }
@@ -463,11 +460,9 @@ public:
                          llvm::User *user, unsigned nodeIndex) {
     if (!user || visited.contains(user)) return;
     if (llvm::isa<llvm::LoadInst>(user)) {
-      auto *memAccess = userToMemory.find(user);
-      if (memAccess == userToMemory.end())
-        return; // load is not a part of the LoopBlock
-      unsigned memId = memAccess->second;
-      node.addMemory(memId, memory[memId], nodeIndex);
+      auto *ma = userToMemory.find(user);
+      if (ma != userToMemory.end()) // load is a part of the LoopBlock
+        node.addMemory(ma->second, memory[ma->second], nodeIndex);
     } else if (!searchValueForStores(visited, node, userToMemory, user,
                                      nodeIndex))
       searchOperandsForLoads(visited, node, userToMemory, user, nodeIndex);
@@ -530,7 +525,7 @@ public:
     auto p = allocator.scope();
     amap<llvm::User *, unsigned> userToMemory{allocator};
     for (unsigned i = 0; i < memory.size(); ++i)
-      userToMemory.insert(std::make_pair(memory[i].getInstruction(), i));
+      userToMemory.insert({memory[i].getInstruction(), i});
 
     aset<llvm::User *> visited{allocator};
     nodes.reserve(calcNumStores());
