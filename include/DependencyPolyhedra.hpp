@@ -250,8 +250,8 @@ public:
     return std::distance(
       x.begin(), std::mismatch(x.begin(), x.end(), y.begin(), y.end()).first);
   }
-  static auto nullSpace(NotNull<const MemoryAccess> x,
-                        NotNull<const MemoryAccess> y) -> DenseMatrix<int64_t> {
+  static auto nullSpace(NotNull<const ArrayIndex> x,
+                        NotNull<const ArrayIndex> y) -> DenseMatrix<int64_t> {
     const size_t numLoopsCommon =
       findFirstNonEqual(x->getFusionOmega(), y->getFusionOmega());
     const size_t xDim = x->getArrayDim();
@@ -311,35 +311,35 @@ public:
     std::memcpy(p, this, neededBytes());
     return NotNull<DepPoly>{p};
   }
-  static auto dependence(BumpAlloc<> &alloc, NotNull<const MemoryAccess> ma0,
-                         NotNull<const MemoryAccess> ma1) -> DepPoly * {
-    assert(ma0->sizesMatch(ma1));
-    NotNull<AffineLoopNest<>> loop0 = ma0->getLoop();
-    NotNull<AffineLoopNest<>> loop1 = ma1->getLoop();
-    DensePtrMatrix<int64_t> A0{loop0->getA()}, A1{loop1->getA()};
-    auto S0{loop0->getSyms()}, S1{loop1->getSyms()};
+  static auto dependence(BumpAlloc<> &alloc, NotNull<const ArrayIndex> aix,
+                         NotNull<const ArrayIndex> aiy) -> DepPoly * {
+    assert(aix->sizesMatch(aiy));
+    NotNull<const AffineLoopNest<>> loopx = aix->getLoop();
+    NotNull<const AffineLoopNest<>> loopy = aiy->getLoop();
+    DensePtrMatrix<int64_t> Ax{loopx->getA()}, Ay{loopy->getA()};
+    auto Sx{loopx->getSyms()}, Sy{loopy->getSyms()};
     // numLoops x numDim
-    PtrMatrix<int64_t> C0{ma0->indexMatrix()}, C1{ma1->indexMatrix()},
-      O0{ma0->offsetMatrix()}, O1{ma1->offsetMatrix()};
-    invariant(C0.numCol(), C1.numCol());
+    PtrMatrix<int64_t> Cx{aix->indexMatrix()}, Cy{aiy->indexMatrix()},
+      Ox{aix->offsetMatrix()}, Oy{aiy->offsetMatrix()};
+    invariant(Cx.numCol(), Cy.numCol());
 
-    auto [nc0, nv0] = A0.size();
-    auto [nc1, nv1] = A1.size();
-    unsigned numDep0Var = loop0->getNumLoops();
-    unsigned numDep1Var = loop1->getNumLoops();
+    auto [nc0, nv0] = Ax.size();
+    auto [nc1, nv1] = Ay.size();
+    unsigned numDep0Var = loopx->getNumLoops();
+    unsigned numDep1Var = loopy->getNumLoops();
     unsigned numVar = numDep0Var + numDep1Var;
 
     Vector<unsigned> map;
-    unsigned numDynSym = mergeMap(map, S0, S1);
-    invariant(size_t(map.size()), size_t(S1.size()));
+    unsigned numDynSym = mergeMap(map, Sx, Sy);
+    invariant(size_t(map.size()), size_t(Sy.size()));
     unsigned numSym = numDynSym + 1;
-    DenseMatrix<int64_t> NS{nullSpace(ma0, ma1)};
+    DenseMatrix<int64_t> NS{nullSpace(aix, aiy)};
     unsigned timeDim = unsigned{NS.numRow()};
 
     unsigned numCols = numVar + timeDim + numDynSym + 1;
 
-    unsigned conCapacity = unsigned(A0.numRow() + A1.numRow()) + numVar;
-    unsigned eqConCapacity = unsigned(C0.numCol()) + timeDim;
+    unsigned conCapacity = unsigned(Ax.numRow() + Ay.numRow()) + numVar;
+    unsigned eqConCapacity = unsigned(Cx.numCol()) + timeDim;
 
     size_t memNeeded =
       sizeof(int64_t) * ((conCapacity + eqConCapacity) * numCols + timeDim) +
@@ -353,7 +353,7 @@ public:
 
     // numDep1Var = nv1;
     const Row nc = nc0 + nc1;
-    const size_t indexDim{ma0->getArrayDim()};
+    const size_t indexDim{aix->getArrayDim()};
     auto nullStep{dp->getNullStep()};
     for (size_t i = 0; i < timeDim; ++i) nullStep[i] = selfDot(NS(i, _));
     //           column meansing in in order
@@ -366,16 +366,16 @@ public:
     // E.resize(indexDim + nullDim, A.numCol());
     // ma0 loop
     for (size_t i = 0; i < nc0; ++i) {
-      A(i, _(0, 1 + S0.size())) << A0(i, _(0, 1 + S0.size()));
+      A(i, _(0, 1 + Sx.size())) << Ax(i, _(0, 1 + Sx.size()));
       A(i, _(numSym, numSym + numDep0Var))
-        << A0(i, _(1 + S0.size(), 1 + S0.size() + numDep0Var));
+        << Ax(i, _(1 + Sx.size(), 1 + Sx.size() + numDep0Var));
     }
     for (size_t i = 0; i < nc1; ++i) {
-      A(nc0 + i, 0) = A1(i, 0);
+      A(nc0 + i, 0) = Ay(i, 0);
       for (size_t j = 0; j < map.size(); ++j)
-        A(nc0 + i, 1 + map[j]) = A1(i, 1 + j);
+        A(nc0 + i, 1 + map[j]) = Ay(i, 1 + j);
       for (size_t j = 0; j < numDep1Var; ++j)
-        A(nc0 + i, j + numSym + numDep0Var) = A1(i, j + 1 + S1.size());
+        A(nc0 + i, j + numSym + numDep0Var) = Ay(i, j + 1 + Sy.size());
     }
     A(_(nc, end), _(numSym, numSym + numVar)).diag() << 1;
     // L254: Assertion `col < numCol()` failed
@@ -385,13 +385,13 @@ public:
     // e.g. i_0 + j_0 + off_0 = i_1 + j_1 + off_1
     // i_0 + j_0 - i_1 - j_1 = off_1 - off_0
     for (size_t i = 0; i < indexDim; ++i) {
-      E(i, _(0, O0.numCol())) << O0(i, _(0, O0.numCol()));
-      E(i, _(numSym, numDep0Var + numSym)) << C0(_(0, numDep0Var), i);
-      E(i, 0) -= O1(i, 0);
-      for (size_t j = 0; j < O1.numCol() - 1; ++j)
-        E(i, 1 + map[j]) -= O1(i, 1 + j);
+      E(i, _(0, Ox.numCol())) << Ox(i, _(0, Ox.numCol()));
+      E(i, _(numSym, numDep0Var + numSym)) << Cx(_(0, numDep0Var), i);
+      E(i, 0) -= Oy(i, 0);
+      for (size_t j = 0; j < Oy.numCol() - 1; ++j)
+        E(i, 1 + map[j]) -= Oy(i, 1 + j);
       for (size_t j = 0; j < numDep1Var; ++j)
-        E(i, j + numSym + numDep0Var) = -C1(j, i);
+        E(i, j + numSym + numDep0Var) = -Cy(j, i);
     }
     for (size_t i = 0; i < timeDim; ++i) {
       for (size_t j = 0; j < NS.numCol(); ++j) {
@@ -622,22 +622,22 @@ class Dependence {
   [[no_unique_address]] NotNull<DepPoly> depPoly;
   [[no_unique_address]] NotNull<Simplex> dependenceSatisfaction;
   [[no_unique_address]] NotNull<Simplex> dependenceBounding;
-  [[no_unique_address]] NotNull<MemoryAccess> in;
-  [[no_unique_address]] NotNull<MemoryAccess> out;
+  [[no_unique_address]] MemoryAccess in;
+  [[no_unique_address]] MemoryAccess out;
   [[no_unique_address]] std::array<uint8_t, 7> satLvl{255, 255, 255, 255,
                                                       255, 255, 255};
   [[no_unique_address]] bool forward;
 
 public:
-  [[nodiscard]] constexpr auto input() const -> NotNull<MemoryAccess> {
+  [[nodiscard]] constexpr auto input() const -> const MemoryAccess & {
     return in;
   }
-  [[nodiscard]] constexpr auto output() const -> NotNull<MemoryAccess> {
+  [[nodiscard]] constexpr auto output() const -> const MemoryAccess & {
     return out;
   }
   constexpr Dependence(NotNull<DepPoly> poly,
                        std::array<NotNull<Simplex>, 2> depSatBound,
-                       std::array<NotNull<MemoryAccess>, 2> inOut, bool fwd)
+                       std::array<NotNull<ArrayIndex>, 2> inOut, bool fwd)
     : depPoly(poly), dependenceSatisfaction(depSatBound[0]),
       dependenceBounding(depSatBound[1]), in(inOut[0]), out(inOut[1]),
       forward(fwd) {}
@@ -662,53 +662,52 @@ public:
   }
   constexpr auto satLevel() -> uint8_t & { return satLvl.front(); }
   [[nodiscard]] constexpr auto getArrayPointer() -> const llvm::SCEV * {
-    return in->getArrayPointer();
+    return in.getArrayPointer();
   }
   /// indicates whether forward is non-empty
   [[nodiscard]] constexpr auto isForward() const -> bool { return forward; }
   [[nodiscard]] constexpr auto nodesIn() const -> const BitSet & {
-    return in->getNodes();
+    return in.getNodes();
   }
   [[nodiscard]] constexpr auto nodesOut() const -> const BitSet & {
-    return out->getNodes();
+    return out.getNodes();
   }
   [[nodiscard]] constexpr auto getDynSymDim() const -> size_t {
     return depPoly->getNumDynSym();
   }
-  [[nodiscard]] auto inputIsLoad() const -> bool { return in->isLoad(); }
-  [[nodiscard]] auto outputIsLoad() const -> bool { return out->isLoad(); }
-  [[nodiscard]] auto inputIsStore() const -> bool { return in->isStore(); }
-  [[nodiscard]] auto outputIsStore() const -> bool { return out->isStore(); }
+  [[nodiscard]] auto inputIsLoad() const -> bool { return in.isLoad(); }
+  [[nodiscard]] auto outputIsLoad() const -> bool { return out.isLoad(); }
+  [[nodiscard]] auto inputIsStore() const -> bool { return in.isStore(); }
+  [[nodiscard]] auto outputIsStore() const -> bool { return out.isStore(); }
   /// getInIndMat() -> getInNumLoops() x arrayDim()
   [[nodiscard]] auto getInIndMat() const -> PtrMatrix<int64_t> {
-    return in->indexMatrix();
+    return in.indexMatrix();
   }
   constexpr void addEdge(size_t i) {
-    in->addEdgeOut(i);
-    out->addEdgeIn(i);
+    in.addEdgeOut(i);
+    out.addEdgeIn(i);
   }
   /// getOutIndMat() -> getOutNumLoops() x arrayDim()
   [[nodiscard]] constexpr auto getOutIndMat() const -> PtrMatrix<int64_t> {
-    return out->indexMatrix();
+    return out.indexMatrix();
   }
   [[nodiscard]] constexpr auto getInOutPair() const
-    -> std::array<NotNull<MemoryAccess>, 2> {
+    -> std::array<MemoryAccess, 2> {
     return {in, out};
   }
   // returns the memory access pair, placing the store first in the pair
-  [[nodiscard]] auto getStoreAndOther() const
-    -> std::array<NotNull<MemoryAccess>, 2> {
-    if (in->isStore()) return {in, out};
+  [[nodiscard]] auto getStoreAndOther() const -> std::array<MemoryAccess, 2> {
+    if (in.isStore()) return {in, out};
     return {out, in};
   }
   [[nodiscard]] constexpr auto getInNumLoops() const -> size_t {
-    return in->getNumLoops();
+    return in.getNumLoops();
   }
   [[nodiscard]] constexpr auto getOutNumLoops() const -> size_t {
-    return out->getNumLoops();
+    return out.getNumLoops();
   }
   [[nodiscard]] constexpr auto isInactive(size_t depth) const -> bool {
-    return (depth >= std::min(out->getNumLoops(), in->getNumLoops()));
+    return (depth >= std::min(out.getNumLoops(), in.getNumLoops()));
   }
   [[nodiscard]] constexpr auto getNumLambda() const -> size_t {
     return depPoly->getNumLambda() << 1;
@@ -830,8 +829,8 @@ public:
                                  NotNull<const AffineSchedule> schIn,
                                  NotNull<const AffineSchedule> schOut) const
     -> bool {
-    size_t numLoopsIn = in->getNumLoops();
-    size_t numLoopsOut = out->getNumLoops();
+    size_t numLoopsIn = in.getNumLoops();
+    size_t numLoopsOut = out.getNumLoops();
     size_t numLoopsCommon = std::min(numLoopsIn, numLoopsOut);
     size_t numLoopsTotal = numLoopsIn + numLoopsOut;
     size_t numVar = numLoopsIn + numLoopsOut + 2;
@@ -882,8 +881,8 @@ public:
                                  PtrVector<unsigned> inFusOmega,
                                  PtrVector<unsigned> outFusOmega) const
     -> bool {
-    size_t numLoopsIn = in->getNumLoops();
-    size_t numLoopsOut = out->getNumLoops();
+    size_t numLoopsIn = in.getNumLoops();
+    size_t numLoopsOut = out.getNumLoops();
     size_t numLoopsCommon = std::min(numLoopsIn, numLoopsOut);
     size_t numVar = numLoopsIn + numLoopsOut + 2;
     invariant(dependenceSatisfaction->getNumVars() == numVar);
@@ -953,8 +952,8 @@ public:
   }
   static auto checkDirection(BumpAlloc<> &alloc,
                              const std::array<NotNull<Simplex>, 2> &p,
-                             NotNull<const MemoryAccess> x,
-                             NotNull<const MemoryAccess> y,
+                             NotNull<const ArrayIndex> x,
+                             NotNull<const ArrayIndex> y,
                              NotNull<const AffineSchedule> xSchedule,
                              NotNull<const AffineSchedule> ySchedule,
                              size_t numLambda, Col nonTimeDim) -> bool {
@@ -1007,8 +1006,8 @@ public:
   // returns `true` if forward, x->y
   static auto checkDirection(BumpAlloc<> &alloc,
                              const std::array<NotNull<Simplex>, 2> &p,
-                             NotNull<const MemoryAccess> x,
-                             NotNull<const MemoryAccess> y, size_t numLambda,
+                             NotNull<const ArrayIndex> x,
+                             NotNull<const ArrayIndex> y, size_t numLambda,
                              Col nonTimeDim) -> bool {
     const auto &[fxy, fyx] = p;
     size_t numLoopsX = x->getNumLoops(), nTD = size_t(nonTimeDim);
@@ -1044,7 +1043,7 @@ public:
     return false;
   }
   static auto timelessCheck(BumpAlloc<> &alloc, NotNull<DepPoly> dxy,
-                            NotNull<MemoryAccess> x, NotNull<MemoryAccess> y)
+                            NotNull<ArrayIndex> x, NotNull<ArrayIndex> y)
     -> Dependence {
     std::array<NotNull<Simplex>, 2> pair{dxy->farkasPair(alloc)};
     const size_t numLambda = dxy->getNumLambda();
@@ -1061,7 +1060,7 @@ public:
   // emplaces dependencies with repeat accesses to the same memory across
   // time
   static auto timeCheck(BumpAlloc<> &alloc, NotNull<DepPoly> dxy,
-                        NotNull<MemoryAccess> x, NotNull<MemoryAccess> y)
+                        NotNull<ArrayIndex> x, NotNull<ArrayIndex> y)
     -> TinyVector<Dependence, 2> {
     std::array<NotNull<Simplex>, 2> pair(dxy->farkasPair(alloc));
     // copy backup
@@ -1075,7 +1074,7 @@ public:
     const size_t numLambda = posEqEnd + numEqualityConstraintsOld;
     const size_t numScheduleCoefs = dxy->getNumScheduleCoef();
     invariant(numLambda, size_t(dxy->getNumLambda()));
-    NotNull<MemoryAccess> in = x, out = y;
+    NotNull<ArrayIndex> in = x, out = y;
     const bool isFwd = checkDirection(alloc, pair, x, y, numLambda,
                                       dxy->getA().numCol() - dxy->getTimeDim());
     if (isFwd) {
@@ -1175,8 +1174,8 @@ public:
     return {dep0, dep1};
   }
 
-  static auto check(BumpAlloc<> &alloc, NotNull<MemoryAccess> x,
-                    NotNull<MemoryAccess> y) -> TinyVector<Dependence, 2> {
+  static auto check(BumpAlloc<> &alloc, NotNull<ArrayIndex> x,
+                    NotNull<ArrayIndex> y) -> TinyVector<Dependence, 2> {
     // TODO: implement gcd test
     // if (x.gcdKnownIndependent(y)) return {};
     DepPoly *dxy{DepPoly::dependence(alloc, x, y)};
@@ -1196,8 +1195,8 @@ public:
     os << "Dependence Poly ";
     if (d.forward) os << "x -> y:";
     else os << "y -> x:";
-    if (d.in) os << "\n\tInput:\n" << *d.in;
-    if (d.out) os << "\n\tOutput:\n" << *d.out;
+    os << "\n\tInput:\n" << *d.in.getArrayRef();
+    os << "\n\tOutput:\n" << *d.out.getArrayRef();
     os << "\nA = " << d.depPoly->getA() << "\nE = " << d.depPoly->getE()
        << "\nSchedule Constraints:"
        << d.dependenceSatisfaction->getConstraints()

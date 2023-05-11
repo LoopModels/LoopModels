@@ -71,7 +71,7 @@ private:
   // [[no_unique_address]] bool visited2{false};
 
 public:
-  constexpr ScheduledNode(uint8_t sId, MemoryAccess *store,
+  constexpr ScheduledNode(uint8_t sId, MemoryAccess &store,
                           unsigned int nodeIndex)
     : storeId(sId) {
     addMemory(sId, store, nodeIndex);
@@ -91,12 +91,12 @@ public:
                            PtrVector<MemoryAccess *> memAccess,
                            PtrVector<Dependence> edges,
                            CostModeling::LoopTreeSchedule *L) const;
-  constexpr void
-  incrementReplicationCounts(PtrVector<MemoryAccess *> memAccess) const {
-    for (auto i : memory)
-      if (i != storeId && (memAccess[i]->isStore()))
-        memAccess[i]->replicateAddr();
-  }
+  // constexpr void
+  // incrementReplicationCounts(PtrVector<MemoryAccess *> memAccess) const {
+  //   for (auto i : memory)
+  //     if (i != storeId && (memAccess[i]->isStore()))
+  //       memAccess[i]->replicateAddr();
+  // }
   [[nodiscard]] constexpr auto getNumMem() const -> size_t {
     return memory.size();
   }
@@ -122,11 +122,11 @@ public:
     schedule = AffineSchedule(alloc, getNumLoops());
     schedule.getFusionOmega() << 0;
   }
-  constexpr void addMemory(unsigned memId, MemoryAccess *mem,
+  constexpr void addMemory(unsigned memId, MemoryAccess &mem,
                            unsigned nodeIndex) {
-    mem->addNodeIndex(nodeIndex);
+    mem.addNodeIndex(nodeIndex);
     memory.insert(memId);
-    numLoops = std::max(numLoops, uint8_t(mem->getNumLoops()));
+    numLoops = std::max(numLoops, uint8_t(mem.getNumLoops()));
   }
   [[nodiscard]] constexpr auto wasVisited() const -> bool { return visited; }
   constexpr void visit() { visited = true; }
@@ -309,8 +309,8 @@ class LinearProgramLoopBlock {
   // and all other other shared schedule parameters are aliases (i.e.,
   // identical)?
   // using VertexType = ScheduledNode;
-  [[no_unique_address]] Vector<MemoryAccess *> memory;
-  [[no_unique_address]] Vector<ScheduledNode, 0> nodes;
+  [[no_unique_address]] Vector<MemoryAccess> memory;
+  [[no_unique_address]] Vector<ScheduledNode> nodes;
   // Vector<unsigned> memoryToNodeMap;
   [[no_unique_address]] Vector<Dependence> edges;
   /// Flag indicating which depths carries dependencies
@@ -354,11 +354,11 @@ public:
   [[nodiscard]] auto getVerticies() const -> PtrVector<ScheduledNode> {
     return nodes;
   }
-  [[nodiscard]] auto getMemoryAccesses() const -> PtrVector<MemoryAccess *> {
+  [[nodiscard]] auto getMemoryAccesses() const -> PtrVector<MemoryAccess> {
     return memory;
   }
-  auto getMem() -> MutPtrVector<MemoryAccess *> { return memory; }
-  auto getMemoryAccess(size_t i) -> MemoryAccess * { return memory[i]; }
+  auto getMem() -> MutPtrVector<MemoryAccess> { return memory; }
+  auto getMemoryAccess(size_t i) -> MemoryAccess & { return memory[i]; }
   auto getNode(size_t i) -> ScheduledNode & { return nodes[i]; }
   [[nodiscard]] auto getNode(size_t i) const -> const ScheduledNode & {
     return nodes[i];
@@ -380,7 +380,7 @@ public:
   }
   [[nodiscard]] auto calcMaxDepth() const -> size_t {
     size_t d = 0;
-    for (const auto &mem : memory) d = std::max(d, mem->getNumLoops());
+    for (const auto &mem : memory) d = std::max(d, mem.getNumLoops());
     return d;
   }
 
@@ -414,7 +414,7 @@ public:
   void addEdge(MemoryAccess &mai, MemoryAccess &maj) {
     // note, axes should be fully delinearized, so should line up
     // as a result of preprocessing.
-    auto d = Dependence::check(allocator, mai, maj);
+    auto d = Dependence::check(allocator, mai.getArrayRef(), maj.getArrayRef());
     for (auto &i : d) pushToEdgeVector(edges, i);
   }
   /// fills all the edges between memory accesses, checking for
@@ -422,9 +422,9 @@ public:
   void fillEdges() {
     // TODO: handle predicates
     for (size_t i = 1; i < memory.size(); ++i) {
-      MemoryAccess &mai = *memory[i];
+      MemoryAccess &mai = memory[i];
       for (size_t j = 0; j < i; ++j) {
-        MemoryAccess &maj = *memory[j];
+        MemoryAccess &maj = memory[j];
         if ((mai.getArrayPointer() != maj.getArrayPointer()) ||
             ((mai.isLoad()) && (maj.isLoad())))
           continue;
@@ -449,7 +449,7 @@ public:
         if (memAccess == userToMemory.end())
           continue; // load is not a part of the LoopBlock
         unsigned memId = memAccess->second;
-        MemoryAccess *store = memory[memId];
+        MemoryAccess &store = memory[memId];
         // this store will be treated as a load
         node.addMemory(memId, store, nodeIndex);
         return true;
@@ -518,7 +518,7 @@ public:
   }
   [[nodiscard]] auto calcNumStores() const -> size_t {
     size_t numStores = 0;
-    for (const auto &m : memory) numStores += !(m->isLoad());
+    for (const auto &m : memory) numStores += !(m.isLoad());
     return numStores;
   }
   /// When connecting a graph, we draw direct connections between stores and
@@ -530,16 +530,16 @@ public:
     auto p = allocator.scope();
     amap<llvm::User *, unsigned> userToMemory{allocator};
     for (unsigned i = 0; i < memory.size(); ++i)
-      userToMemory.insert(std::make_pair(memory[i]->getInstruction(), i));
+      userToMemory.insert(std::make_pair(memory[i].getInstruction(), i));
 
     aset<llvm::User *> visited{allocator};
     nodes.reserve(calcNumStores());
     for (unsigned i = 0; i < memory.size(); ++i) {
-      MemoryAccess *mai = memory[i];
-      if (mai->isLoad()) continue;
+      MemoryAccess &mai = memory[i];
+      if (mai.isLoad()) continue;
       unsigned nodeIndex = nodes.size();
       ScheduledNode &node = nodes.emplace_back(i, mai, nodeIndex);
-      searchOperandsForLoads(visited, node, userToMemory, mai->getInstruction(),
+      searchOperandsForLoads(visited, node, userToMemory, mai.getInstruction(),
                              nodeIndex);
       visited.clear();
     }
@@ -556,7 +556,7 @@ public:
     // a subset of Nodes
     BitSet nodeIds{};
     BitSet activeEdges{};
-    MutPtrVector<MemoryAccess *> mem;
+    MutPtrVector<MemoryAccess> mem;
     MutPtrVector<ScheduledNode> nodes;
     PtrVector<Dependence> edges;
     // llvm::SmallVector<bool> visited;
@@ -762,8 +762,8 @@ public:
   }
   static auto getOverlapIndex(const Dependence &edge) -> Optional<size_t> {
     auto [store, other] = edge.getStoreAndOther();
-    size_t index = *store->getNodeIndex().begin();
-    if (other->getNodeIndex().contains(index)) return index;
+    size_t index = *store.getNodeIndex().begin();
+    if (other.getNodeIndex().contains(index)) return index;
     return {};
   }
   auto optOrth(Graph g) -> std::optional<BitSet> {
@@ -781,10 +781,9 @@ public:
       size_t r = NormalForm::rank(indMat);
       if (r == edge.getInNumLoops()) continue;
       // TODO handle linearly dependent acceses, filtering them out
-      if (r == size_t(indMat.numCol())) {
-        node.schedulePhi(indMat, r);
-        tryOrth = true;
-      }
+      if (r != size_t(indMat.numCol())) continue;
+      node.schedulePhi(indMat, r);
+      tryOrth = true;
     }
     if (tryOrth) {
       if (std::optional<BitSet> opt = optimize(g, 0, maxDepth)) return opt;
@@ -792,39 +791,9 @@ public:
     }
     return optimize(g, 0, maxDepth);
   }
-  [[nodiscard]] constexpr auto countNumLambdas(const Graph &g, size_t d) const
-    -> size_t {
-    size_t c = 0;
-    for (size_t e = 0; e < edges.size(); ++e)
-      c += ((g.isInactive(e, d)) ? 0 : edges[e].getNumLambda());
-    return c;
-  }
-  [[nodiscard]] constexpr auto countNumBoundingCoefs(const Graph &g,
-                                                     size_t d) const -> size_t {
-    size_t c = 0;
-    for (size_t e = 0; e < edges.size(); ++e)
-      c += (g.isInactive(e, d) ? 0 : edges[e].getNumSymbols());
-    return c;
-  }
-  constexpr void countAuxParamsAndConstraints(const Graph &g, size_t d) {
-    size_t a = 0, b = 0, c = 0, ae = 0;
-    for (size_t e = 0; e < edges.size(); ++e) {
-      if (g.isInactive(e, d)) continue;
-      const Dependence &edge = edges[e];
-      size_t mlt = edge.nodesIn().size() * edge.nodesOut().size();
-      a += mlt * edge.getNumLambda();
-      b += mlt * edge.getDynSymDim();
-      c += mlt * edge.getNumConstraints();
-      ae += mlt;
-    }
-    numLambda = a;
-    numBounding = b;
-    numConstraints = c;
-    numActiveEdges = ae;
-  }
-  constexpr void addMemory(MemoryAccess *m) {
+  constexpr void addMemory(const MemoryAccess &m) {
 #ifndef NDEBUG
-    for (auto *o : memory) assert(o->getInstruction() != m->getInstruction());
+    for (auto &o : memory) assert(o.getInstruction() != m.getInstruction());
 #endif
     memory.push_back(m);
   }
@@ -859,14 +828,14 @@ public:
                                               const ScheduledNode &node,
                                               size_t d) const -> bool {
     return std::ranges::any_of(node.getMemory(), [&](auto memId) {
-      return hasActiveEdges(g, *memory[memId], d);
+      return hasActiveEdges(g, memory[memId], d);
     });
   }
   [[nodiscard]] constexpr auto hasActiveEdges(const Graph &g,
                                               const ScheduledNode &node) const
     -> bool {
     return std::ranges::any_of(node.getMemory(), [&](auto memId) {
-      return hasActiveEdges(g, *memory[memId]);
+      return hasActiveEdges(g, memory[memId]);
     });
   }
   constexpr void setScheduleMemoryOffsets(const Graph &g, size_t d) {
@@ -1328,7 +1297,16 @@ public:
     }
     return res;
   }
-  constexpr void countParamsStashDeps(const Graph &g, size_t d) {
+  constexpr void countAuxParamsAndConstraints(const Graph &g, size_t d) {
+    LinAlg::SVector<size_t, 4> params{};
+    assert(allZero(params));
+    for (auto &&e : g.getEdges(d)) params += numParams(e);
+    numLambda = params[0];
+    numBounding = params[1];
+    numConstraints = params[2];
+    numActiveEdges = params[3];
+  }
+  constexpr void countAuxAndStash(const Graph &g, size_t d) {
     LinAlg::SVector<size_t, 4> params{};
     assert(allZero(params));
     for (auto &&e : g.getEdges(d)) params += numParams(e.stashSatLevel());
@@ -1354,7 +1332,7 @@ public:
     for (auto &n : g) oldSchedules.push_back(n.getSchedule());
     Vector<CarriedDependencyFlag> oldCarriedDeps = carriedDeps;
     resetDeepDeps(carriedDeps, d);
-    countParamsStashDeps(g, d);
+    countAuxAndStash(g, d);
     setScheduleMemoryOffsets(g, d);
     if (auto depSat = solveGraph(g, d, true))
       if (std::optional<BitSet> depSatN = optimize(g, d + 1, maxDepth))
@@ -1405,10 +1383,9 @@ public:
   auto summarizeMemoryAccesses(llvm::raw_ostream &os) const
     -> llvm::raw_ostream & {
     os << "MemoryAccesses:\n";
-    for (auto *m : memory) {
-      os << "Inst: " << *m->getInstruction()
-         << "\nOrder: " << m->getFusionOmega() << "\nLoop:" << *m->getLoop()
-         << "\n";
+    for (const auto &m : memory) {
+      os << "Inst: " << *m.getInstruction() << "\nOrder: " << m.getFusionOmega()
+         << "\nLoop:" << *m.getLoop() << "\n";
     }
     return os;
   }
@@ -1420,12 +1397,12 @@ public:
       const auto &v = lblock.getNode(i);
       os << "v_" << i << ":\nmem =\n";
       for (auto m : v.getMemory())
-        os << *lblock.memory[m]->getInstruction() << "\n";
+        os << *lblock.memory[m].getInstruction() << "\n";
       os << v << "\n";
     }
     // BitSet
     os << "\nLoopBlock Edges (#edges = " << lblock.edges.size() << "):";
-    for (const auto edge : lblock.edges) {
+    for (const auto &edge : lblock.edges) {
       os << "\n\n\tEdge = " << edge;
       for (size_t inIndex : edge.nodesIn()) {
         const AffineSchedule sin = lblock.getNode(inIndex).getSchedule();
@@ -1445,9 +1422,9 @@ public:
     }
     os << "\nLoopBlock schedule (#mem accesses = " << lblock.memory.size()
        << "):\n\n";
-    for (auto *mem : lblock.memory) {
-      os << "Ref = " << *mem;
-      for (size_t nodeIndex : mem->getNodeIndex()) {
+    for (const auto &mem : lblock.memory) {
+      os << "Ref = " << mem.getArrayRef();
+      for (size_t nodeIndex : mem.getNodeIndex()) {
         const AffineSchedule s = lblock.getNode(nodeIndex).getSchedule();
         os << "\nnodeIndex = " << nodeIndex << "\ns.getPhi()" << s.getPhi()
            << "\ns.getFusionOmega() = " << s.getFusionOmega()
