@@ -81,15 +81,12 @@ using&#160;</td><td class="memItemRight" valign="bottom"><b>BitSet</b> = ::Memor
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a0b55146892c7189e188c65bc51e5262c"><td class="memItemLeft" align="right" valign="top"><a id="a0b55146892c7189e188c65bc51e5262c"></a>
-constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>ScheduledNode</b> (uint8_t sId, <a class="el" href="structMemoryAccess.html">MemoryAccess</a> *store, unsigned int nodeIndex)</td></tr>
-<tr class="separator:a0b55146892c7189e188c65bc51e5262c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae53102f495100190cd10e51f6dda642c"><td class="memItemLeft" align="right" valign="top"><a id="ae53102f495100190cd10e51f6dda642c"></a>
+constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>ScheduledNode</b> (uint8_t sId, <a class="el" href="structMemoryAccess.html">MemoryAccess</a> &amp;store, unsigned int nodeIndex)</td></tr>
+<tr class="separator:ae53102f495100190cd10e51f6dda642c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a351cd797285ddc322c689780de5f4425"><td class="memItemLeft" align="right" valign="top"><a id="a351cd797285ddc322c689780de5f4425"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>insertMem</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, PtrVector&lt; <a class="el" href="structMemoryAccess.html">MemoryAccess</a> * &gt; memAccess, PtrVector&lt; <a class="el" href="classDependence.html">Dependence</a> &gt; edges, <a class="el" href="classCostModeling_1_1LoopTreeSchedule.html">CostModeling::LoopTreeSchedule</a> *L) const</td></tr>
 <tr class="separator:a351cd797285ddc322c689780de5f4425"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a33e58822a56e6bebecb5cf1e0bc9c8bf"><td class="memItemLeft" align="right" valign="top"><a id="a33e58822a56e6bebecb5cf1e0bc9c8bf"></a>
-constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>incrementReplicationCounts</b> (PtrVector&lt; <a class="el" href="structMemoryAccess.html">MemoryAccess</a> * &gt; memAccess) const</td></tr>
-<tr class="separator:a33e58822a56e6bebecb5cf1e0bc9c8bf"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a829fb7af566fd5c86340f68f9a1ee987"><td class="memItemLeft" align="right" valign="top"><a id="a829fb7af566fd5c86340f68f9a1ee987"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumMem</b> () const -&gt; size_t</td></tr>
 <tr class="separator:a829fb7af566fd5c86340f68f9a1ee987"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -126,9 +123,9 @@ constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>addInNeighb
 <tr class="memitem:a9b3dfee87f81f33951347cede59240e7"><td class="memItemLeft" align="right" valign="top"><a id="a9b3dfee87f81f33951347cede59240e7"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>init</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc)</td></tr>
 <tr class="separator:a9b3dfee87f81f33951347cede59240e7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1e6d05bc11ddac99534047e0ba73cc98"><td class="memItemLeft" align="right" valign="top"><a id="a1e6d05bc11ddac99534047e0ba73cc98"></a>
-constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>addMemory</b> (unsigned memId, <a class="el" href="structMemoryAccess.html">MemoryAccess</a> *mem, unsigned nodeIndex)</td></tr>
-<tr class="separator:a1e6d05bc11ddac99534047e0ba73cc98"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a929f071d1119c0f1e81d3febaf1caebf"><td class="memItemLeft" align="right" valign="top"><a id="a929f071d1119c0f1e81d3febaf1caebf"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>addMemory</b> (unsigned memId, <a class="el" href="structMemoryAccess.html">MemoryAccess</a> &amp;mem, unsigned nodeIndex)</td></tr>
+<tr class="separator:a929f071d1119c0f1e81d3febaf1caebf"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adc966d8c89abfb2b1e53ed5721b361a1"><td class="memItemLeft" align="right" valign="top"><a id="adc966d8c89abfb2b1e53ed5721b361a1"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>wasVisited</b> () const -&gt; bool</td></tr>
 <tr class="separator:adc966d8c89abfb2b1e53ed5721b361a1"><td class="memSeparator" colspan="2">&#160;</td></tr>

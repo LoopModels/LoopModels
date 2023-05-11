@@ -102,15 +102,15 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getVerticie
 <tr class="memitem:a61975076742eeaa78db5ccdaeed32b22"><td class="memItemLeft" align="right" valign="top"><a id="a61975076742eeaa78db5ccdaeed32b22"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>getVerticies</b> () const -&gt; PtrVector&lt; <a class="el" href="structScheduledNode.html">ScheduledNode</a> &gt;</td></tr>
 <tr class="separator:a61975076742eeaa78db5ccdaeed32b22"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab8d8eb7730555b9c06ce07945c265d20"><td class="memItemLeft" align="right" valign="top"><a id="ab8d8eb7730555b9c06ce07945c265d20"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>getMemoryAccesses</b> () const -&gt; PtrVector&lt; <a class="el" href="structMemoryAccess.html">MemoryAccess</a> * &gt;</td></tr>
-<tr class="separator:ab8d8eb7730555b9c06ce07945c265d20"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abb6c87a0fd5a5eba822e019275bff9c7"><td class="memItemLeft" align="right" valign="top"><a id="abb6c87a0fd5a5eba822e019275bff9c7"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>getMem</b> () -&gt; MutPtrVector&lt; <a class="el" href="structMemoryAccess.html">MemoryAccess</a> * &gt;</td></tr>
-<tr class="separator:abb6c87a0fd5a5eba822e019275bff9c7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac84935407e55a56890464e70c4d26248"><td class="memItemLeft" align="right" valign="top"><a id="ac84935407e55a56890464e70c4d26248"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>getMemoryAccess</b> (size_t i) -&gt; <a class="el" href="structMemoryAccess.html">MemoryAccess</a> *</td></tr>
-<tr class="separator:ac84935407e55a56890464e70c4d26248"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a264f8efd151f5f48bc04f31a1e72bd4b"><td class="memItemLeft" align="right" valign="top"><a id="a264f8efd151f5f48bc04f31a1e72bd4b"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getMemoryAccesses</b> () const -&gt; PtrVector&lt; <a class="el" href="structMemoryAccess.html">MemoryAccess</a> &gt;</td></tr>
+<tr class="separator:a264f8efd151f5f48bc04f31a1e72bd4b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a07edd9488e47aaa14d523d68a413981c"><td class="memItemLeft" align="right" valign="top"><a id="a07edd9488e47aaa14d523d68a413981c"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getMem</b> () -&gt; MutPtrVector&lt; <a class="el" href="structMemoryAccess.html">MemoryAccess</a> &gt;</td></tr>
+<tr class="separator:a07edd9488e47aaa14d523d68a413981c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad59ae2b9c5df07c46c6dd67a42fedc67"><td class="memItemLeft" align="right" valign="top"><a id="ad59ae2b9c5df07c46c6dd67a42fedc67"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getMemoryAccess</b> (size_t i) -&gt; <a class="el" href="structMemoryAccess.html">MemoryAccess</a> &amp;</td></tr>
+<tr class="separator:ad59ae2b9c5df07c46c6dd67a42fedc67"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7c96533c9ad334601cf7770457bc3dd3"><td class="memItemLeft" align="right" valign="top"><a id="a7c96533c9ad334601cf7770457bc3dd3"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNode</b> (size_t i) -&gt; <a class="el" href="structScheduledNode.html">ScheduledNode</a> &amp;</td></tr>
 <tr class="separator:a7c96533c9ad334601cf7770457bc3dd3"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -170,18 +170,9 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>fullGraph</
 <tr class="memitem:a7b6f525f8674897c05393733ecca2f53"><td class="memItemLeft" align="right" valign="top"><a id="a7b6f525f8674897c05393733ecca2f53"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>optOrth</b> (<a class="el" href="structLinearProgramLoopBlock_1_1Graph.html">Graph</a> g) -&gt; std::optional&lt; <a class="el" href="structBitSet.html">BitSet</a> &gt;</td></tr>
 <tr class="separator:a7b6f525f8674897c05393733ecca2f53"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afe0c845d60fc79aee571fbf7bb1c4cf9"><td class="memItemLeft" align="right" valign="top"><a id="afe0c845d60fc79aee571fbf7bb1c4cf9"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>countNumLambdas</b> (const <a class="el" href="structLinearProgramLoopBlock_1_1Graph.html">Graph</a> &amp;g, size_t d) const -&gt; size_t</td></tr>
-<tr class="separator:afe0c845d60fc79aee571fbf7bb1c4cf9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6a89d298b1594ca1f554dc0ca9e3ad93"><td class="memItemLeft" align="right" valign="top"><a id="a6a89d298b1594ca1f554dc0ca9e3ad93"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>countNumBoundingCoefs</b> (const <a class="el" href="structLinearProgramLoopBlock_1_1Graph.html">Graph</a> &amp;g, size_t d) const -&gt; size_t</td></tr>
-<tr class="separator:a6a89d298b1594ca1f554dc0ca9e3ad93"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a255c6bd9820eed2a716e40df42db71ae"><td class="memItemLeft" align="right" valign="top"><a id="a255c6bd9820eed2a716e40df42db71ae"></a>
-constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>countAuxParamsAndConstraints</b> (const <a class="el" href="structLinearProgramLoopBlock_1_1Graph.html">Graph</a> &amp;g, size_t d)</td></tr>
-<tr class="separator:a255c6bd9820eed2a716e40df42db71ae"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa1e1bf4908b664d80dbd5a9713af036e"><td class="memItemLeft" align="right" valign="top"><a id="aa1e1bf4908b664d80dbd5a9713af036e"></a>
-constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>addMemory</b> (<a class="el" href="structMemoryAccess.html">MemoryAccess</a> *m)</td></tr>
-<tr class="separator:aa1e1bf4908b664d80dbd5a9713af036e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aacb0fece6a8b01332a15d95d6c1181ef"><td class="memItemLeft" align="right" valign="top"><a id="aacb0fece6a8b01332a15d95d6c1181ef"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>addMemory</b> (const <a class="el" href="structMemoryAccess.html">MemoryAccess</a> &amp;m)</td></tr>
+<tr class="separator:aacb0fece6a8b01332a15d95d6c1181ef"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abcedfddee8c76b21d7c8b0baf82254d9"><td class="memItemLeft" align="right" valign="top"><a id="abcedfddee8c76b21d7c8b0baf82254d9"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>hasActiveEdges</b> (const <a class="el" href="structLinearProgramLoopBlock_1_1Graph.html">Graph</a> &amp;g, const <a class="el" href="structScheduledNode.html">ScheduledNode</a> &amp;node, size_t d) const -&gt; bool</td></tr>
 <tr class="separator:abcedfddee8c76b21d7c8b0baf82254d9"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -231,9 +222,12 @@ template&lt;typename F &gt; </td></tr>
 template&lt;typename F &gt; </td></tr>
 <tr class="memitem:aa532e9b35d5799d6af62139e5a28a7b7"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>transform_reduce_edge</b> (const <a class="el" href="structLinearProgramLoopBlock_1_1Graph.html">Graph</a> &amp;g, size_t d, F &amp;&amp;f)</td></tr>
 <tr class="separator:aa532e9b35d5799d6af62139e5a28a7b7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8e345e328af597bfa032a459c99bde3a"><td class="memItemLeft" align="right" valign="top"><a id="a8e345e328af597bfa032a459c99bde3a"></a>
-constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>countParamsStashDeps</b> (const <a class="el" href="structLinearProgramLoopBlock_1_1Graph.html">Graph</a> &amp;g, size_t d)</td></tr>
-<tr class="separator:a8e345e328af597bfa032a459c99bde3a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a255c6bd9820eed2a716e40df42db71ae"><td class="memItemLeft" align="right" valign="top"><a id="a255c6bd9820eed2a716e40df42db71ae"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>countAuxParamsAndConstraints</b> (const <a class="el" href="structLinearProgramLoopBlock_1_1Graph.html">Graph</a> &amp;g, size_t d)</td></tr>
+<tr class="separator:a255c6bd9820eed2a716e40df42db71ae"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a66af8b2d47164e9d04944fa45c93b866"><td class="memItemLeft" align="right" valign="top"><a id="a66af8b2d47164e9d04944fa45c93b866"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>countAuxAndStash</b> (const <a class="el" href="structLinearProgramLoopBlock_1_1Graph.html">Graph</a> &amp;g, size_t d)</td></tr>
+<tr class="separator:a66af8b2d47164e9d04944fa45c93b866"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa977c10db911b7c84f44170ac103cb37"><td class="memItemLeft" align="right" valign="top"><a id="aa977c10db911b7c84f44170ac103cb37"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>optimizeSatDep</b> (<a class="el" href="structLinearProgramLoopBlock_1_1Graph.html">Graph</a> g, size_t d, size_t maxDepth, <a class="el" href="structBitSet.html">BitSet</a> depSatLevel, <a class="el" href="structBitSet.html">BitSet</a> activeEdges) -&gt; <a class="el" href="structBitSet.html">BitSet</a></td></tr>
 <tr class="separator:aa977c10db911b7c84f44170ac103cb37"><td class="memSeparator" colspan="2">&#160;</td></tr>

@@ -15,12 +15,13 @@ var searchData=
   ['amap_3c_20instruction_20_2a_2c_20instruction_20_2a_20_3e_12',['amap&lt; Instruction *, Instruction * &gt;',['../structamap.html',1,'']]],
   ['amap_3c_20k_2c_20size_5ft_20_3e_13',['amap&lt; K, size_t &gt;',['../structamap.html',1,'']]],
   ['array_14',['Array',['../structLinAlg_1_1Array.html',1,'LinAlg']]],
-  ['arrayops_15',['ArrayOps',['../classLinAlg_1_1ArrayOps.html',1,'LinAlg']]],
-  ['arrayops_3c_20t_2c_20s_2c_20mutarray_3c_20t_2c_20s_20_3e_20_3e_16',['ArrayOps&lt; T, S, MutArray&lt; T, S &gt; &gt;',['../classLinAlg_1_1ArrayOps.html',1,'LinAlg']]],
-  ['arrayops_3c_20t_2c_20s_2c_20staticarray_3c_20t_2c_20s_20_3e_20_3e_17',['ArrayOps&lt; T, S, StaticArray&lt; T, S &gt; &gt;',['../classLinAlg_1_1ArrayOps.html',1,'LinAlg']]],
-  ['arrayreference_18',['ArrayReference',['../structArrayReference.html',1,'']]],
-  ['aset_19',['aset',['../structaset.html',1,'']]],
-  ['aset_3c_20instruction_20_2a_20_3e_20',['aset&lt; Instruction * &gt;',['../structaset.html',1,'']]],
-  ['axisint_21',['AxisInt',['../structLinAlg_1_1AxisInt.html',1,'LinAlg']]],
-  ['axisint_3c_20axistype_3a_3acolumn_20_3e_22',['AxisInt&lt; AxisType::Column &gt;',['../structLinAlg_1_1AxisInt.html',1,'LinAlg']]]
+  ['arrayindex_15',['ArrayIndex',['../classArrayIndex.html',1,'']]],
+  ['arrayops_16',['ArrayOps',['../classLinAlg_1_1ArrayOps.html',1,'LinAlg']]],
+  ['arrayops_3c_20t_2c_20s_2c_20mutarray_3c_20t_2c_20s_20_3e_20_3e_17',['ArrayOps&lt; T, S, MutArray&lt; T, S &gt; &gt;',['../classLinAlg_1_1ArrayOps.html',1,'LinAlg']]],
+  ['arrayops_3c_20t_2c_20s_2c_20staticarray_3c_20t_2c_20s_20_3e_20_3e_18',['ArrayOps&lt; T, S, StaticArray&lt; T, S &gt; &gt;',['../classLinAlg_1_1ArrayOps.html',1,'LinAlg']]],
+  ['arrayreference_19',['ArrayReference',['../structArrayReference.html',1,'']]],
+  ['aset_20',['aset',['../structaset.html',1,'']]],
+  ['aset_3c_20instruction_20_2a_20_3e_21',['aset&lt; Instruction * &gt;',['../structaset.html',1,'']]],
+  ['axisint_22',['AxisInt',['../structLinAlg_1_1AxisInt.html',1,'LinAlg']]],
+  ['axisint_3c_20axistype_3a_3acolumn_20_3e_23',['AxisInt&lt; AxisType::Column &gt;',['../structLinAlg_1_1AxisInt.html',1,'LinAlg']]]
 ];
