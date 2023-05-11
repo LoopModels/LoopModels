@@ -1,8 +1,8 @@
 #pragma once
 
-#include "BitSets.hpp"
+#include "Containers/BitSets.hpp"
 #include "Containers/BumpMapSet.hpp"
-#include "DependencyPolyhedra.hpp"
+#include "Dependence.hpp"
 #include "Graphs.hpp"
 #include "Loops.hpp"
 #include "Math/Array.hpp"

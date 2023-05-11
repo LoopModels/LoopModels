@@ -1,9 +1,9 @@
 #pragma once
 
-#include "./BitSets.hpp"
 #include "./Instruction.hpp"
 #include "./Loops.hpp"
 #include "./MemoryAccess.hpp"
+#include "Containers/BitSets.hpp"
 #include "Utilities/Valid.hpp"
 #include <cstddef>
 #include <iterator>

@@ -4,7 +4,7 @@
 #include "./LoopBlock.hpp"
 #include "./LoopForest.hpp"
 #include "./Predicate.hpp"
-#include "BitSets.hpp"
+#include "Containers/BitSets.hpp"
 #include "Containers/BumpMapSet.hpp"
 #include "Utilities/Allocators.hpp"
 #include <Math/BumpVector.hpp>
