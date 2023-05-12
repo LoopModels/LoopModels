@@ -1,5 +1,3 @@
-
-
 #pragma once
 
 #include "Containers/BitSets.hpp"
