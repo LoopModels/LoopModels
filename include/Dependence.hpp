@@ -276,11 +276,11 @@ public:
   }
   /// indicates whether forward is non-empty
   [[nodiscard]] constexpr auto isForward() const -> bool { return forward; }
-  [[nodiscard]] constexpr auto nodesIn() const -> const BitSet & {
-    return in->getNodes();
+  [[nodiscard]] constexpr auto nodeIn() const -> unsigned {
+    return in->getNode();
   }
-  [[nodiscard]] constexpr auto nodesOut() const -> const BitSet & {
-    return out->getNodes();
+  [[nodiscard]] constexpr auto nodeOut() const -> unsigned {
+    return out->getNode();
   }
   [[nodiscard]] constexpr auto getDynSymDim() const -> size_t {
     return depPoly->getNumDynSym();
@@ -313,7 +313,8 @@ public:
     return {in, out};
   }
   // returns the memory access pair, placing the store first in the pair
-  [[nodiscard]] auto getStoreAndOther() const -> std::array<MemoryAccess *, 2> {
+  [[nodiscard]] constexpr auto getStoreAndOther() const
+    -> std::array<MemoryAccess *, 2> {
     if (in->isStore()) return {in, out};
     return {out, in};
   }
@@ -693,6 +694,11 @@ public:
   constexpr auto replaceInput(NotNull<MemoryAccess> newIn) -> Dependence {
     Dependence edge = *this;
     edge.in = newIn;
+    return edge;
+  }
+  constexpr auto replaceOutput(NotNull<MemoryAccess> newOut) -> Dependence {
+    Dependence edge = *this;
+    edge.out = newOut;
     return edge;
   }
 

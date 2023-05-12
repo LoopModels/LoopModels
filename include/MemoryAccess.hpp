@@ -32,8 +32,8 @@ private:
   // and I don't want to relocate pointers when resizing vector
   BitSet edgesIn{};
   BitSet edgesOut{};
-  BitSet nodeIndex{};
   Address *addrs{nullptr};
+  unsigned nodeIndex{std::numeric_limits<unsigned>::max()};
   bool load_;
   // This is a flexible length array, declared as a length-1 array
   // I wish there were some way to opt into "I'm using a c99 extension"
@@ -147,23 +147,18 @@ public:
   [[nodiscard]] constexpr auto outputEdges() const -> const BitSet & {
     return edgesOut;
   }
-  [[nodiscard]] constexpr auto getNodeIndex() const -> const BitSet & {
-    return nodeIndex;
-  }
-  [[nodiscard]] constexpr auto getNodes() -> BitSet & { return nodeIndex; }
-  [[nodiscard]] constexpr auto getNodes() const -> const BitSet & {
-    return nodeIndex;
-  }
+  [[nodiscard]] constexpr auto getNode() const -> unsigned { return nodeIndex; }
   constexpr void addEdgeIn(size_t i) { edgesIn.insert(i); }
   constexpr void addEdgeOut(size_t i) { edgesOut.insert(i); }
   /// add a node index
-  constexpr void addNodeIndex(unsigned i) { nodeIndex.insert(i); }
+
   [[nodiscard]] auto getLoad() -> llvm::LoadInst * {
     return arrayRef->getLoad();
   }
   [[nodiscard]] auto getStore() -> llvm::StoreInst * {
     return arrayRef->getStore();
   }
+  constexpr void addNodeIndex(unsigned i) { nodeIndex = i; }
 };
 
 static_assert(std::is_trivially_copyable_v<MemoryAccess>);
