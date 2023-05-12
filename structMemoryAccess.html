@@ -165,31 +165,25 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>inputEdges<
 <tr class="memitem:a450e72166b0670c47f753c258d5f3763"><td class="memItemLeft" align="right" valign="top"><a id="a450e72166b0670c47f753c258d5f3763"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>outputEdges</b> () const -&gt; const <a class="el" href="structBitSet.html">BitSet</a> &amp;</td></tr>
 <tr class="separator:a450e72166b0670c47f753c258d5f3763"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4cec40bb80de6d4b5d3fdb2afa69a06c"><td class="memItemLeft" align="right" valign="top"><a id="a4cec40bb80de6d4b5d3fdb2afa69a06c"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNodeIndex</b> () const -&gt; const <a class="el" href="structBitSet.html">BitSet</a> &amp;</td></tr>
-<tr class="separator:a4cec40bb80de6d4b5d3fdb2afa69a06c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a388ad40c6d788e2af90142d4b57a8ef1"><td class="memItemLeft" align="right" valign="top"><a id="a388ad40c6d788e2af90142d4b57a8ef1"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNodes</b> () -&gt; <a class="el" href="structBitSet.html">BitSet</a> &amp;</td></tr>
-<tr class="separator:a388ad40c6d788e2af90142d4b57a8ef1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5da703c983df441863485d44010f7e2c"><td class="memItemLeft" align="right" valign="top"><a id="a5da703c983df441863485d44010f7e2c"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNodes</b> () const -&gt; const <a class="el" href="structBitSet.html">BitSet</a> &amp;</td></tr>
-<tr class="separator:a5da703c983df441863485d44010f7e2c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a91dbabdd485226747797f9265802efca"><td class="memItemLeft" align="right" valign="top"><a id="a91dbabdd485226747797f9265802efca"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNode</b> () const -&gt; unsigned</td></tr>
+<tr class="separator:a91dbabdd485226747797f9265802efca"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a191655a49f1bee03e110632810198cf1"><td class="memItemLeft" align="right" valign="top"><a id="a191655a49f1bee03e110632810198cf1"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>addEdgeIn</b> (size_t i)</td></tr>
 <tr class="separator:a191655a49f1bee03e110632810198cf1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2550a24218f0be0d2326d0df6991bf41"><td class="memItemLeft" align="right" valign="top"><a id="a2550a24218f0be0d2326d0df6991bf41"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>addEdgeOut</b> (size_t i)</td></tr>
 <tr class="separator:a2550a24218f0be0d2326d0df6991bf41"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa55ad77260cac325bb277f79aa398dee"><td class="memItemLeft" align="right" valign="top"><a id="aa55ad77260cac325bb277f79aa398dee"></a>
-constexpr void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structMemoryAccess.html#aa55ad77260cac325bb277f79aa398dee">addNodeIndex</a> (unsigned i)</td></tr>
-<tr class="memdesc:aa55ad77260cac325bb277f79aa398dee"><td class="mdescLeft">&#160;</td><td class="mdescRight">add a node index <br /></td></tr>
-<tr class="separator:aa55ad77260cac325bb277f79aa398dee"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4c213ffb008f3b021ab51c21dddd7c06"><td class="memItemLeft" align="right" valign="top"><a id="a4c213ffb008f3b021ab51c21dddd7c06"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>getLoad</b> () -&gt; llvm::LoadInst *</td></tr>
+auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structMemoryAccess.html#a4c213ffb008f3b021ab51c21dddd7c06">getLoad</a> () -&gt; llvm::LoadInst *</td></tr>
+<tr class="memdesc:a4c213ffb008f3b021ab51c21dddd7c06"><td class="mdescLeft">&#160;</td><td class="mdescRight">add a node index <br /></td></tr>
 <tr class="separator:a4c213ffb008f3b021ab51c21dddd7c06"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5bfa7420a8f6e5507c11c0093b5870e3"><td class="memItemLeft" align="right" valign="top"><a id="a5bfa7420a8f6e5507c11c0093b5870e3"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>getStore</b> () -&gt; llvm::StoreInst *</td></tr>
 <tr class="separator:a5bfa7420a8f6e5507c11c0093b5870e3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa55ad77260cac325bb277f79aa398dee"><td class="memItemLeft" align="right" valign="top"><a id="aa55ad77260cac325bb277f79aa398dee"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>addNodeIndex</b> (unsigned i)</td></tr>
+<tr class="separator:aa55ad77260cac325bb277f79aa398dee"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>

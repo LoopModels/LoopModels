@@ -143,19 +143,19 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>addEdge</b> (<a class
 <tr class="separator:a49c978246798f25aff011da65d08f04f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1d76b0e8c6b7a221850327644f09dbb2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classLinearProgramLoopBlock.html#a1d76b0e8c6b7a221850327644f09dbb2">fillEdges</a> ()</td></tr>
 <tr class="separator:a1d76b0e8c6b7a221850327644f09dbb2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a920535b99ba5bc666835c9d4ac84ff2b"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classLinearProgramLoopBlock.html#a920535b99ba5bc666835c9d4ac84ff2b">searchValueForStores</a> (<a class="el" href="structaset.html">aset</a>&lt; llvm::User * &gt; &amp;visited, <a class="el" href="structScheduledNode.html">ScheduledNode</a> &amp;node, <a class="el" href="structamap.html">amap</a>&lt; llvm::User *, unsigned &gt; &amp;userToMemory, llvm::User *user, unsigned nodeIndex) -&gt; bool</td></tr>
-<tr class="separator:a920535b99ba5bc666835c9d4ac84ff2b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af96e9353d7339063b7035e8aea0be6ab"><td class="memItemLeft" align="right" valign="top"><a id="af96e9353d7339063b7035e8aea0be6ab"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>checkUserForLoads</b> (<a class="el" href="structaset.html">aset</a>&lt; llvm::User * &gt; &amp;visited, <a class="el" href="structScheduledNode.html">ScheduledNode</a> &amp;node, <a class="el" href="structamap.html">amap</a>&lt; llvm::User *, unsigned &gt; &amp;userToMemory, llvm::User *user, unsigned nodeIndex)</td></tr>
-<tr class="separator:af96e9353d7339063b7035e8aea0be6ab"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a419ffee319b60a0d8594b3ee7533b4ff"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classLinearProgramLoopBlock.html#a419ffee319b60a0d8594b3ee7533b4ff">searchOperandsForLoads</a> (<a class="el" href="structaset.html">aset</a>&lt; llvm::User * &gt; &amp;visited, <a class="el" href="structScheduledNode.html">ScheduledNode</a> &amp;node, <a class="el" href="structamap.html">amap</a>&lt; llvm::User *, unsigned &gt; &amp;userToMemory, llvm::User *u, unsigned nodeIndex)</td></tr>
-<tr class="separator:a419ffee319b60a0d8594b3ee7533b4ff"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a720cbd2c565fd414966632b6408bab11"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classLinearProgramLoopBlock.html#a720cbd2c565fd414966632b6408bab11">searchValueForStores</a> (<a class="el" href="structaset.html">aset</a>&lt; llvm::User * &gt; &amp;visited, <a class="el" href="structScheduledNode.html">ScheduledNode</a> &amp;node, <a class="el" href="structamap.html">amap</a>&lt; llvm::User *, unsigned &gt; &amp;userToMem, llvm::User *user, unsigned nodeIdx) -&gt; bool</td></tr>
+<tr class="separator:a720cbd2c565fd414966632b6408bab11"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad135248998392a11c2014d9a9e21b2af"><td class="memItemLeft" align="right" valign="top"><a id="ad135248998392a11c2014d9a9e21b2af"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>duplicateLoad</b> (<a class="el" href="classNotNull.html">NotNull</a>&lt; <a class="el" href="structMemoryAccess.html">MemoryAccess</a> &gt; load, unsigned &amp;memId) -&gt; <a class="el" href="classNotNull.html">NotNull</a>&lt; <a class="el" href="structMemoryAccess.html">MemoryAccess</a> &gt;</td></tr>
+<tr class="separator:ad135248998392a11c2014d9a9e21b2af"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a61ea0efe0071f4fa54ebc7f37c010aeb"><td class="memItemLeft" align="right" valign="top"><a id="a61ea0efe0071f4fa54ebc7f37c010aeb"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>checkUserForLoads</b> (<a class="el" href="structaset.html">aset</a>&lt; llvm::User * &gt; &amp;visited, <a class="el" href="structScheduledNode.html">ScheduledNode</a> &amp;node, <a class="el" href="structamap.html">amap</a>&lt; llvm::User *, unsigned &gt; &amp;userToMem, llvm::User *user, unsigned nodeIdx)</td></tr>
+<tr class="separator:a61ea0efe0071f4fa54ebc7f37c010aeb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3fa61f7357b11b5fdc6ce77cfeadcd94"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classLinearProgramLoopBlock.html#a3fa61f7357b11b5fdc6ce77cfeadcd94">searchOperandsForLoads</a> (<a class="el" href="structaset.html">aset</a>&lt; llvm::User * &gt; &amp;visited, <a class="el" href="structScheduledNode.html">ScheduledNode</a> &amp;node, <a class="el" href="structamap.html">amap</a>&lt; llvm::User *, unsigned &gt; &amp;userToMem, llvm::User *u, unsigned nodeIdx)</td></tr>
+<tr class="separator:a3fa61f7357b11b5fdc6ce77cfeadcd94"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a157c2506749e248374f59a6c5b2acea1"><td class="memItemLeft" align="right" valign="top"><a id="a157c2506749e248374f59a6c5b2acea1"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>connect</b> (unsigned inIndex, unsigned outIndex)</td></tr>
 <tr class="separator:a157c2506749e248374f59a6c5b2acea1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a232293ff6bc3e04153cbab1a2fa722f9"><td class="memItemLeft" align="right" valign="top"><a id="a232293ff6bc3e04153cbab1a2fa722f9"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>connect</b> (const <a class="el" href="structBitSet.html">BitSet</a> &amp;inIndexSet, const <a class="el" href="structBitSet.html">BitSet</a> &amp;outIndexSet)</td></tr>
-<tr class="separator:a232293ff6bc3e04153cbab1a2fa722f9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a38b8e6e6c334ba725c32e7412bdf0fe9"><td class="memItemLeft" align="right" valign="top"><a id="a38b8e6e6c334ba725c32e7412bdf0fe9"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>calcNumStores</b> () const -&gt; size_t</td></tr>
 <tr class="separator:a38b8e6e6c334ba725c32e7412bdf0fe9"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -247,9 +247,9 @@ Static Public Member Functions</h2></td></tr>
 <tr class="memitem:a07783ad0d4f003076db2913e8d2e3aad"><td class="memItemLeft" align="right" valign="top"><a id="a07783ad0d4f003076db2913e8d2e3aad"></a>
 static auto&#160;</td><td class="memItemRight" valign="bottom"><b>connects</b> (const <a class="el" href="classDependence.html">Dependence</a> &amp;e, <a class="el" href="structLinearProgramLoopBlock_1_1Graph.html">Graph</a> &amp;g0, <a class="el" href="structLinearProgramLoopBlock_1_1Graph.html">Graph</a> &amp;g1) -&gt; bool</td></tr>
 <tr class="separator:a07783ad0d4f003076db2913e8d2e3aad"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af5a0787ba9f3116a44e820e2c0be32d5"><td class="memItemLeft" align="right" valign="top"><a id="af5a0787ba9f3116a44e820e2c0be32d5"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>getOverlapIndex</b> (const <a class="el" href="classDependence.html">Dependence</a> &amp;edge) -&gt; <a class="el" href="structOptional.html">Optional</a>&lt; size_t &gt;</td></tr>
-<tr class="separator:af5a0787ba9f3116a44e820e2c0be32d5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a447fb317d80648fb2a14a265db46ca9b"><td class="memItemLeft" align="right" valign="top"><a id="a447fb317d80648fb2a14a265db46ca9b"></a>
+static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getOverlapIndex</b> (const <a class="el" href="classDependence.html">Dependence</a> &amp;edge) -&gt; <a class="el" href="structOptional.html">Optional</a>&lt; size_t &gt;</td></tr>
+<tr class="separator:a447fb317d80648fb2a14a265db46ca9b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adafe36fb19d211917adf6c0c21184a89"><td class="memItemLeft" align="right" valign="top"><a id="adafe36fb19d211917adf6c0c21184a89"></a>
 static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>anyActive</b> (const <a class="el" href="structLinearProgramLoopBlock_1_1Graph.html">Graph</a> &amp;g, const <a class="el" href="structBitSet.html">BitSet</a> &amp;b) -&gt; bool</td></tr>
 <tr class="separator:adafe36fb19d211917adf6c0c21184a89"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -480,8 +480,8 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> 
 
 </div>
 </div>
-<a id="a419ffee319b60a0d8594b3ee7533b4ff"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a419ffee319b60a0d8594b3ee7533b4ff">&#9670;&nbsp;</a></span>searchOperandsForLoads()</h2>
+<a id="a3fa61f7357b11b5fdc6ce77cfeadcd94"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3fa61f7357b11b5fdc6ce77cfeadcd94">&#9670;&nbsp;</a></span>searchOperandsForLoads()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -505,7 +505,7 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> 
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype"><a class="el" href="structamap.html">amap</a>&lt; llvm::User *, unsigned &gt; &amp;&#160;</td>
-          <td class="paramname"><em>userToMemory</em>, </td>
+          <td class="paramname"><em>userToMem</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -517,7 +517,7 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> 
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">unsigned&#160;</td>
-          <td class="paramname"><em>nodeIndex</em>&#160;</td>
+          <td class="paramname"><em>nodeIdx</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -535,8 +535,8 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> 
 
 </div>
 </div>
-<a id="a920535b99ba5bc666835c9d4ac84ff2b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a920535b99ba5bc666835c9d4ac84ff2b">&#9670;&nbsp;</a></span>searchValueForStores()</h2>
+<a id="a720cbd2c565fd414966632b6408bab11"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a720cbd2c565fd414966632b6408bab11">&#9670;&nbsp;</a></span>searchValueForStores()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -560,7 +560,7 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> 
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype"><a class="el" href="structamap.html">amap</a>&lt; llvm::User *, unsigned &gt; &amp;&#160;</td>
-          <td class="paramname"><em>userToMemory</em>, </td>
+          <td class="paramname"><em>userToMem</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -572,7 +572,7 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> 
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">unsigned&#160;</td>
-          <td class="paramname"><em>nodeIndex</em>&#160;</td>
+          <td class="paramname"><em>nodeIdx</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -587,7 +587,7 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> 
 </table>
 </div><div class="memdoc">
 <p>used in searchOperandsForLoads if an operand is stored, we can reload it. This will insert a new store memory access.</p>
-<p>If an instruction was stored somewhere, we don't keep searching for placed it was loaded, and instead add a reload. </p>
+<p>If an instruction was stored somewhere, we don't keep searching for place it was loaded, and instead add a reload. </p>
 
 </div>
 </div>

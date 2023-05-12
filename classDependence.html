@@ -119,12 +119,12 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getArrayPoi
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classDependence.html#a8f03cfecfe1734c6c395bf3184269536">isForward</a> () const -&gt; bool</td></tr>
 <tr class="memdesc:a8f03cfecfe1734c6c395bf3184269536"><td class="mdescLeft">&#160;</td><td class="mdescRight">indicates whether forward is non-empty <br /></td></tr>
 <tr class="separator:a8f03cfecfe1734c6c395bf3184269536"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7008e908d734c593a4ede5f8e7386f07"><td class="memItemLeft" align="right" valign="top"><a id="a7008e908d734c593a4ede5f8e7386f07"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>nodesIn</b> () const -&gt; const <a class="el" href="structBitSet.html">BitSet</a> &amp;</td></tr>
-<tr class="separator:a7008e908d734c593a4ede5f8e7386f07"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5965ad6c4d06e9ad29237ebb46e5077d"><td class="memItemLeft" align="right" valign="top"><a id="a5965ad6c4d06e9ad29237ebb46e5077d"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>nodesOut</b> () const -&gt; const <a class="el" href="structBitSet.html">BitSet</a> &amp;</td></tr>
-<tr class="separator:a5965ad6c4d06e9ad29237ebb46e5077d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac234d7a4c629a157b4558bcba702843e"><td class="memItemLeft" align="right" valign="top"><a id="ac234d7a4c629a157b4558bcba702843e"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>nodeIn</b> () const -&gt; unsigned</td></tr>
+<tr class="separator:ac234d7a4c629a157b4558bcba702843e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7b37c8ae29f53cdf08eacdd8ef8bd2d1"><td class="memItemLeft" align="right" valign="top"><a id="a7b37c8ae29f53cdf08eacdd8ef8bd2d1"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>nodeOut</b> () const -&gt; unsigned</td></tr>
+<tr class="separator:a7b37c8ae29f53cdf08eacdd8ef8bd2d1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8cfee191048f32def997d8378d3ff422"><td class="memItemLeft" align="right" valign="top"><a id="a8cfee191048f32def997d8378d3ff422"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getDynSymDim</b> () const -&gt; size_t</td></tr>
 <tr class="separator:a8cfee191048f32def997d8378d3ff422"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -157,9 +157,9 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" 
 <tr class="memitem:a84fcbb7b57076d5f7ab6bd3c575b0141"><td class="memItemLeft" align="right" valign="top"><a id="a84fcbb7b57076d5f7ab6bd3c575b0141"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getInOutPair</b> () const -&gt; std::array&lt; <a class="el" href="structMemoryAccess.html">MemoryAccess</a> *, 2 &gt;</td></tr>
 <tr class="separator:a84fcbb7b57076d5f7ab6bd3c575b0141"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8c729d37dca96b6a820c53848ddd9a5f"><td class="memItemLeft" align="right" valign="top"><a id="a8c729d37dca96b6a820c53848ddd9a5f"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>getStoreAndOther</b> () const -&gt; std::array&lt; <a class="el" href="structMemoryAccess.html">MemoryAccess</a> *, 2 &gt;</td></tr>
-<tr class="separator:a8c729d37dca96b6a820c53848ddd9a5f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa6db141929f8efaf62510803f57aafe2"><td class="memItemLeft" align="right" valign="top"><a id="aa6db141929f8efaf62510803f57aafe2"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getStoreAndOther</b> () const -&gt; std::array&lt; <a class="el" href="structMemoryAccess.html">MemoryAccess</a> *, 2 &gt;</td></tr>
+<tr class="separator:aa6db141929f8efaf62510803f57aafe2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad0dfdf31b1382c7f7d515dd6a8f6799f"><td class="memItemLeft" align="right" valign="top"><a id="ad0dfdf31b1382c7f7d515dd6a8f6799f"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getInNumLoops</b> () const -&gt; unsigned</td></tr>
 <tr class="separator:ad0dfdf31b1382c7f7d515dd6a8f6799f"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -265,6 +265,9 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>isSatisfied</b> (<a c
 <tr class="memitem:a4846b88bb25fe22e9c0bf9671b61fb6d"><td class="memItemLeft" align="right" valign="top"><a id="a4846b88bb25fe22e9c0bf9671b61fb6d"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>replaceInput</b> (<a class="el" href="classNotNull.html">NotNull</a>&lt; <a class="el" href="structMemoryAccess.html">MemoryAccess</a> &gt; newIn) -&gt; <a class="el" href="classDependence.html">Dependence</a></td></tr>
 <tr class="separator:a4846b88bb25fe22e9c0bf9671b61fb6d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a86c8ff55fcbe2f4cc4dcc18bac661d17"><td class="memItemLeft" align="right" valign="top"><a id="a86c8ff55fcbe2f4cc4dcc18bac661d17"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>replaceOutput</b> (<a class="el" href="classNotNull.html">NotNull</a>&lt; <a class="el" href="structMemoryAccess.html">MemoryAccess</a> &gt; newOut) -&gt; <a class="el" href="classDependence.html">Dependence</a></td></tr>
+<tr class="separator:a86c8ff55fcbe2f4cc4dcc18bac661d17"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
