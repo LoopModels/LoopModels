@@ -143,9 +143,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>conditionOnLoop</b> (
 <tr class="memitem:ae198a11c02e4fe5c24f9c0b65a3b80a6"><td class="memItemLeft" align="right" valign="top"><a id="ae198a11c02e4fe5c24f9c0b65a3b80a6"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>isLoopDependent</b> (llvm::Value *v) const -&gt; bool</td></tr>
 <tr class="separator:ae198a11c02e4fe5c24f9c0b65a3b80a6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a11d61c8a4478f8cfb96fca9672c70b8c"><td class="memItemLeft" align="right" valign="top"><a id="a11d61c8a4478f8cfb96fca9672c70b8c"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>mayReadOrWriteMemory</b> (llvm::Value *v) const -&gt; bool</td></tr>
-<tr class="separator:a11d61c8a4478f8cfb96fca9672c70b8c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a86158dc4a0a190dfc6d3ef4cf8e52ea5"><td class="memItemLeft" align="right" valign="top"><a id="a86158dc4a0a190dfc6d3ef4cf8e52ea5"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>fillLoopBlock</b> (<a class="el" href="structLoopTree.html">LoopTree</a> &amp;root)</td></tr>
 <tr class="separator:a86158dc4a0a190dfc6d3ef4cf8e52ea5"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -167,6 +164,9 @@ static auto&#160;</td><td class="memItemRight" valign="bottom"><b>blackListAllDe
 <tr class="memitem:aeb696d6c05f9b16ca2f13da77a291bf3"><td class="memItemLeft" align="right" valign="top"><a id="aeb696d6c05f9b16ca2f13da77a291bf3"></a>
 static auto&#160;</td><td class="memItemRight" valign="bottom"><b>blackListAllDependentLoops</b> (const llvm::SCEV *S, size_t numPeeled) -&gt; uint64_t</td></tr>
 <tr class="separator:aeb696d6c05f9b16ca2f13da77a291bf3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7d40c1e27454c1e7e627f590cc4ae2a3"><td class="memItemLeft" align="right" valign="top"><a id="a7d40c1e27454c1e7e627f590cc4ae2a3"></a>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>mayReadOrWriteMemory</b> (llvm::Value *v) -&gt; bool</td></tr>
+<tr class="separator:a7d40c1e27454c1e7e627f590cc4ae2a3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>

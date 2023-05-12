@@ -699,8 +699,8 @@ $(function() {
 <div class="line"><a name="l00642"></a><span class="lineno">  642</span>&#160;    <span class="keywordflow">if</span> (indep) <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
 <div class="line"><a name="l00643"></a><span class="lineno">  643</span>&#160;    <a class="code" href="structAffineLoopNest.html">AffineLoopNest&lt;NonNegative&gt;</a> *margi = tmp-&gt;removeLoop(alloc, 1);</div>
 <div class="line"><a name="l00644"></a><span class="lineno">  644</span>&#160;    <a class="code" href="structAffineLoopNest.html">AffineLoopNest&lt;NonNegative&gt;</a> *tmp2;</div>
-<div class="line"><a name="l00645"></a><span class="lineno">  645</span>&#160;    invariant(margi-&gt;getNumLoops(), <span class="keywordtype">size_t</span>(1));</div>
-<div class="line"><a name="l00646"></a><span class="lineno">  646</span>&#160;    invariant(tmp-&gt;getNumLoops(), <span class="keywordtype">size_t</span>(2));</div>
+<div class="line"><a name="l00645"></a><span class="lineno">  645</span>&#160;    invariant(margi-&gt;getNumLoops(), <span class="keywordtype">unsigned</span>(1));</div>
+<div class="line"><a name="l00646"></a><span class="lineno">  646</span>&#160;    invariant(tmp-&gt;getNumLoops(), <span class="keywordtype">unsigned</span>(2));</div>
 <div class="line"><a name="l00647"></a><span class="lineno">  647</span>&#160;    invariant(margi-&gt;getA().numCol() + 1, tmp-&gt;getA().numCol());</div>
 <div class="line"><a name="l00648"></a><span class="lineno">  648</span>&#160;    <span class="comment">// margi contains extrema for `_i`</span></div>
 <div class="line"><a name="l00649"></a><span class="lineno">  649</span>&#160;    <span class="comment">// we can substitute extended for value of `_i`</span></div>
@@ -712,7 +712,7 @@ $(function() {
 <div class="line"><a name="l00655"></a><span class="lineno">  655</span>&#160;      <span class="keywordflow">if</span> (b &lt;= 0) <span class="keywordflow">continue</span>;</div>
 <div class="line"><a name="l00656"></a><span class="lineno">  656</span>&#160;      alloc.rollback(p2);</div>
 <div class="line"><a name="l00657"></a><span class="lineno">  657</span>&#160;      tmp2 = tmp-&gt;copy(alloc);</div>
-<div class="line"><a name="l00658"></a><span class="lineno">  658</span>&#160;      invariant(tmp2-&gt;getNumLoops(), <span class="keywordtype">size_t</span>(2));</div>
+<div class="line"><a name="l00658"></a><span class="lineno">  658</span>&#160;      invariant(tmp2-&gt;getNumLoops(), <span class="keywordtype">unsigned</span>(2));</div>
 <div class="line"><a name="l00659"></a><span class="lineno">  659</span>&#160;      invariant(margi-&gt;getNumLoops() + 1, tmp2-&gt;getNumLoops());</div>
 <div class="line"><a name="l00660"></a><span class="lineno">  660</span>&#160;      <span class="comment">// increment to increase bound</span></div>
 <div class="line"><a name="l00661"></a><span class="lineno">  661</span>&#160;      <span class="comment">// this is correct for both extending lower and extending upper</span></div>
