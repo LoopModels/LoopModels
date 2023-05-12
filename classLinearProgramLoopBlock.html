@@ -143,16 +143,16 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>addEdge</b> (<a class
 <tr class="separator:a49c978246798f25aff011da65d08f04f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1d76b0e8c6b7a221850327644f09dbb2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classLinearProgramLoopBlock.html#a1d76b0e8c6b7a221850327644f09dbb2">fillEdges</a> ()</td></tr>
 <tr class="separator:a1d76b0e8c6b7a221850327644f09dbb2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a720cbd2c565fd414966632b6408bab11"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classLinearProgramLoopBlock.html#a720cbd2c565fd414966632b6408bab11">searchValueForStores</a> (<a class="el" href="structaset.html">aset</a>&lt; llvm::User * &gt; &amp;visited, <a class="el" href="structScheduledNode.html">ScheduledNode</a> &amp;node, <a class="el" href="structamap.html">amap</a>&lt; llvm::User *, unsigned &gt; &amp;userToMem, llvm::User *user, unsigned nodeIdx) -&gt; bool</td></tr>
-<tr class="separator:a720cbd2c565fd414966632b6408bab11"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a06f63fe9b66d7b330be607bdba3f1d71"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classLinearProgramLoopBlock.html#a06f63fe9b66d7b330be607bdba3f1d71">searchValueForStores</a> (<a class="el" href="structScheduledNode.html">ScheduledNode</a> &amp;node, llvm::User *user, unsigned nodeIdx) -&gt; bool</td></tr>
+<tr class="separator:a06f63fe9b66d7b330be607bdba3f1d71"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad135248998392a11c2014d9a9e21b2af"><td class="memItemLeft" align="right" valign="top"><a id="ad135248998392a11c2014d9a9e21b2af"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>duplicateLoad</b> (<a class="el" href="classNotNull.html">NotNull</a>&lt; <a class="el" href="structMemoryAccess.html">MemoryAccess</a> &gt; load, unsigned &amp;memId) -&gt; <a class="el" href="classNotNull.html">NotNull</a>&lt; <a class="el" href="structMemoryAccess.html">MemoryAccess</a> &gt;</td></tr>
 <tr class="separator:ad135248998392a11c2014d9a9e21b2af"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a61ea0efe0071f4fa54ebc7f37c010aeb"><td class="memItemLeft" align="right" valign="top"><a id="a61ea0efe0071f4fa54ebc7f37c010aeb"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>checkUserForLoads</b> (<a class="el" href="structaset.html">aset</a>&lt; llvm::User * &gt; &amp;visited, <a class="el" href="structScheduledNode.html">ScheduledNode</a> &amp;node, <a class="el" href="structamap.html">amap</a>&lt; llvm::User *, unsigned &gt; &amp;userToMem, llvm::User *user, unsigned nodeIdx)</td></tr>
-<tr class="separator:a61ea0efe0071f4fa54ebc7f37c010aeb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3fa61f7357b11b5fdc6ce77cfeadcd94"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classLinearProgramLoopBlock.html#a3fa61f7357b11b5fdc6ce77cfeadcd94">searchOperandsForLoads</a> (<a class="el" href="structaset.html">aset</a>&lt; llvm::User * &gt; &amp;visited, <a class="el" href="structScheduledNode.html">ScheduledNode</a> &amp;node, <a class="el" href="structamap.html">amap</a>&lt; llvm::User *, unsigned &gt; &amp;userToMem, llvm::User *u, unsigned nodeIdx)</td></tr>
-<tr class="separator:a3fa61f7357b11b5fdc6ce77cfeadcd94"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a810cf7faefed2731c6278d856b13c7c3"><td class="memItemLeft" align="right" valign="top"><a id="a810cf7faefed2731c6278d856b13c7c3"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>checkUserForLoads</b> (<a class="el" href="structScheduledNode.html">ScheduledNode</a> &amp;node, llvm::User *user, unsigned nodeIdx)</td></tr>
+<tr class="separator:a810cf7faefed2731c6278d856b13c7c3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aba9f909e08e1c2088f72883b3dafdaae"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classLinearProgramLoopBlock.html#aba9f909e08e1c2088f72883b3dafdaae">searchOperandsForLoads</a> (<a class="el" href="structScheduledNode.html">ScheduledNode</a> &amp;node, llvm::User *u, unsigned nodeIdx)</td></tr>
+<tr class="separator:aba9f909e08e1c2088f72883b3dafdaae"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a157c2506749e248374f59a6c5b2acea1"><td class="memItemLeft" align="right" valign="top"><a id="a157c2506749e248374f59a6c5b2acea1"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>connect</b> (unsigned inIndex, unsigned outIndex)</td></tr>
 <tr class="separator:a157c2506749e248374f59a6c5b2acea1"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -480,8 +480,8 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> 
 
 </div>
 </div>
-<a id="a3fa61f7357b11b5fdc6ce77cfeadcd94"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a3fa61f7357b11b5fdc6ce77cfeadcd94">&#9670;&nbsp;</a></span>searchOperandsForLoads()</h2>
+<a id="aba9f909e08e1c2088f72883b3dafdaae"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aba9f909e08e1c2088f72883b3dafdaae">&#9670;&nbsp;</a></span>searchOperandsForLoads()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -492,20 +492,8 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> 
         <tr>
           <td class="memname">void LinearProgramLoopBlock::searchOperandsForLoads </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="structaset.html">aset</a>&lt; llvm::User * &gt; &amp;&#160;</td>
-          <td class="paramname"><em>visited</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
           <td class="paramtype"><a class="el" href="structScheduledNode.html">ScheduledNode</a> &amp;&#160;</td>
           <td class="paramname"><em>node</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="structamap.html">amap</a>&lt; llvm::User *, unsigned &gt; &amp;&#160;</td>
-          <td class="paramname"><em>userToMem</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -535,8 +523,8 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> 
 
 </div>
 </div>
-<a id="a720cbd2c565fd414966632b6408bab11"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a720cbd2c565fd414966632b6408bab11">&#9670;&nbsp;</a></span>searchValueForStores()</h2>
+<a id="a06f63fe9b66d7b330be607bdba3f1d71"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a06f63fe9b66d7b330be607bdba3f1d71">&#9670;&nbsp;</a></span>searchValueForStores()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -547,20 +535,8 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> 
         <tr>
           <td class="memname">auto LinearProgramLoopBlock::searchValueForStores </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="structaset.html">aset</a>&lt; llvm::User * &gt; &amp;&#160;</td>
-          <td class="paramname"><em>visited</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
           <td class="paramtype"><a class="el" href="structScheduledNode.html">ScheduledNode</a> &amp;&#160;</td>
           <td class="paramname"><em>node</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="structamap.html">amap</a>&lt; llvm::User *, unsigned &gt; &amp;&#160;</td>
-          <td class="paramname"><em>userToMem</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
