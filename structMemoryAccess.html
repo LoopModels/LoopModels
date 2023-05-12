@@ -86,6 +86,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a1dc80dccf264d973468edbdcbc5d44b5"><td class="memItemLeft" align="right" valign="top"><a id="a1dc80dccf264d973468edbdcbc5d44b5"></a>
 constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>MemoryAccess</b> (<a class="el" href="classNotNull.html">NotNull</a>&lt; <a class="el" href="classArrayIndex.html">ArrayIndex</a> &gt; arrayRef)</td></tr>
 <tr class="separator:a1dc80dccf264d973468edbdcbc5d44b5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adfb58d3bef8d1938f8eec994bb1090a3"><td class="memItemLeft" align="right" valign="top"><a id="adfb58d3bef8d1938f8eec994bb1090a3"></a>
+constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>MemoryAccess</b> (<a class="el" href="classNotNull.html">NotNull</a>&lt; <a class="el" href="classArrayIndex.html">ArrayIndex</a> &gt; arrayRef, bool load)</td></tr>
+<tr class="separator:adfb58d3bef8d1938f8eec994bb1090a3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2c66b871ca585164c9322efccdddf624"><td class="memItemLeft" align="right" valign="top"><a id="a2c66b871ca585164c9322efccdddf624"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>isLoad</b> () const -&gt; bool</td></tr>
 <tr class="separator:a2c66b871ca585164c9322efccdddf624"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -98,6 +101,9 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getArrayRef
 <tr class="memitem:af2271e94a50c58debb12c5fbe11fa2ca"><td class="memItemLeft" align="right" valign="top"><a id="af2271e94a50c58debb12c5fbe11fa2ca"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getArrayRef</b> () const -&gt; <a class="el" href="classNotNull.html">NotNull</a>&lt; const <a class="el" href="classArrayIndex.html">ArrayIndex</a> &gt;</td></tr>
 <tr class="separator:af2271e94a50c58debb12c5fbe11fa2ca"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0be44f97087e7c9ef4ec8014240f1c6d"><td class="memItemLeft" align="right" valign="top"><a id="a0be44f97087e7c9ef4ec8014240f1c6d"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>setAddress</b> (<a class="el" href="classAddress.html">Address</a> *addr)</td></tr>
+<tr class="separator:a0be44f97087e7c9ef4ec8014240f1c6d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a831635bddd9d96d611e7bae4a0f4431b"><td class="memItemLeft" align="right" valign="top"><a id="a831635bddd9d96d611e7bae4a0f4431b"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>getInstruction</b> () -&gt; llvm::Instruction *</td></tr>
 <tr class="separator:a831635bddd9d96d611e7bae4a0f4431b"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -140,9 +146,9 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getArrayPoi
 <tr class="memitem:a2285065587e511307a8ac953f9f5f0d6"><td class="memItemLeft" align="right" valign="top"><a id="a2285065587e511307a8ac953f9f5f0d6"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getAddress</b> () -&gt; <a class="el" href="classNotNull.html">NotNull</a>&lt; <a class="el" href="classAddress.html">Address</a> &gt;</td></tr>
 <tr class="separator:a2285065587e511307a8ac953f9f5f0d6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a96cdff3bbe5ccde973c2a45cc0518fca"><td class="memItemLeft" align="right" valign="top"><a id="a96cdff3bbe5ccde973c2a45cc0518fca"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumLoops</b> () const -&gt; size_t</td></tr>
-<tr class="separator:a96cdff3bbe5ccde973c2a45cc0518fca"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ada27c0ab8ecd722184f7535fb74b0182"><td class="memItemLeft" align="right" valign="top"><a id="ada27c0ab8ecd722184f7535fb74b0182"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumLoops</b> () const -&gt; unsigned</td></tr>
+<tr class="separator:ada27c0ab8ecd722184f7535fb74b0182"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a58c70f9a5ec76652c3868fbad8cca88b"><td class="memItemLeft" align="right" valign="top"><a id="a58c70f9a5ec76652c3868fbad8cca88b"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getAddress</b> () const -&gt; <a class="el" href="classNotNull.html">NotNull</a>&lt; const <a class="el" href="classAddress.html">Address</a> &gt;</td></tr>
 <tr class="separator:a58c70f9a5ec76652c3868fbad8cca88b"><td class="memSeparator" colspan="2">&#160;</td></tr>

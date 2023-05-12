@@ -937,10 +937,10 @@ $(function() {
 <div class="line"><a name="l00880"></a><span class="lineno">  880</span>&#160;    -&gt; llvm::ArrayRef&lt;const llvm::SCEV *&gt; {</div>
 <div class="line"><a name="l00881"></a><span class="lineno">  881</span>&#160;    <span class="keywordflow">return</span> {<span class="keyword">reinterpret_cast&lt;</span><span class="keyword">const </span>llvm::SCEV *<span class="keyword">const </span>*<span class="keyword">&gt;</span>(memory), numDynSymbols};</div>
 <div class="line"><a name="l00882"></a><span class="lineno">  882</span>&#160;  }</div>
-<div class="line"><a name="l00883"></a><span class="lineno">  883</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getNumLoops() const -&gt; <span class="keywordtype">size_t</span> {</div>
+<div class="line"><a name="l00883"></a><span class="lineno">  883</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getNumLoops() const -&gt; <span class="keywordtype">unsigned</span> {</div>
 <div class="line"><a name="l00884"></a><span class="lineno">  884</span>&#160;    <span class="keywordflow">return</span> numLoops;</div>
 <div class="line"><a name="l00885"></a><span class="lineno">  885</span>&#160;  }</div>
-<div class="line"><a name="l00886"></a><span class="lineno">  886</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getNumSymbols() const -&gt; <span class="keywordtype">size_t</span> {</div>
+<div class="line"><a name="l00886"></a><span class="lineno">  886</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getNumSymbols() const -&gt; <span class="keywordtype">unsigned</span> {</div>
 <div class="line"><a name="l00887"></a><span class="lineno">  887</span>&#160;    <span class="keywordflow">return</span> numDynSymbols + 1;</div>
 <div class="line"><a name="l00888"></a><span class="lineno">  888</span>&#160;  }</div>
 <div class="line"><a name="l00889"></a><span class="lineno">  889</span>&#160;  constexpr <span class="keywordtype">void</span> truncNumInEqCon(Row r) {</div>
