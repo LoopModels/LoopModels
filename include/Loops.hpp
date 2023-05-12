@@ -880,10 +880,10 @@ struct AffineLoopNest
     -> llvm::ArrayRef<const llvm::SCEV *> {
     return {reinterpret_cast<const llvm::SCEV *const *>(memory), numDynSymbols};
   }
-  [[nodiscard]] constexpr auto getNumLoops() const -> size_t {
+  [[nodiscard]] constexpr auto getNumLoops() const -> unsigned {
     return numLoops;
   }
-  [[nodiscard]] constexpr auto getNumSymbols() const -> size_t {
+  [[nodiscard]] constexpr auto getNumSymbols() const -> unsigned {
     return numDynSymbols + 1;
   }
   constexpr void truncNumInEqCon(Row r) {

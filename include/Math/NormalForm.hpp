@@ -232,9 +232,9 @@ constexpr void reduceSubDiagonal(MutPtrMatrix<int64_t> A, Col c, Row r) {
       // or if `Akz = -7, Akk = 39`, then in the loop below we get
       // A(k,z) = A(k,z) - ((A(k,z)/Akk) - ((A(k,z) % Akk) != 0) * Akk
       //        =  -7 - ((-7/39) - 1)*39 = = 6 - 5 = 1
-      int64_t AzrOld = Azr;
+      int64_t oAzr = Azr;
       Azr /= Akk;
-      if (AzrOld < 0) Azr -= (AzrOld != (Azr * Akk));
+      if (oAzr < 0) Azr -= (oAzr != (Azr * Akk));
       A(z, _) -= Azr * A(r, _);
     }
   }
@@ -249,17 +249,17 @@ constexpr void reduceSubDiagonalStack(MutPtrMatrix<int64_t> A,
   }
   for (size_t z = 0; z < r; ++z) {
     if (int64_t Akz = A(z, c)) {
-      int64_t AkzOld = Akz;
+      int64_t oAkz = Akz;
       Akz /= Akk;
-      if (AkzOld < 0) Akz -= (AkzOld != (Akz * Akk));
+      if (oAkz < 0) Akz -= (oAkz != (Akz * Akk));
       A(z, _) -= Akz * A(r, _);
     }
   }
   for (size_t z = 0; z < B.numRow(); ++z) {
     if (int64_t Bzr = B(z, c)) {
-      int64_t BzrOld = Bzr;
+      int64_t oBzr = Bzr;
       Bzr /= Akk;
-      if (BzrOld < 0) Bzr -= (BzrOld != (Bzr * Akk));
+      if (oBzr < 0) Bzr -= (oBzr != (Bzr * Akk));
       B(z, _) -= Bzr * A(r, _);
     }
   }
@@ -291,9 +291,9 @@ constexpr void reduceSubDiagonal(std::array<MutPtrMatrix<int64_t>, 2> AB, Col c,
         // or if `Akz = -7, Akk = 39`, then in the loop below we get
         // A(k,z) = A(k,z) - ((A(k,z)/Akk) - ((A(k,z) % Akk) != 0) * Akk
         //        =  -7 - ((-7/39) - 1)*39 = = 6 - 5 = 1
-        int64_t AkzOld = Akz;
+        int64_t oAkz = Akz;
         Akz /= Akk;
-        if (AkzOld < 0) Akz -= (AkzOld != (Akz * Akk));
+        if (oAkz < 0) Akz -= (oAkz != (Akz * Akk));
       }
       A(z, _) -= Akz * A(r, _);
       B(z, _) -= Akz * B(r, _);
@@ -316,9 +316,9 @@ constexpr void reduceColumnStack(MutPtrMatrix<int64_t> A,
 /// Assumes some number of the trailing rows have been
 /// zeroed out.  Returns the number of rows that are remaining.
 constexpr auto numNonZeroRows(PtrMatrix<int64_t> A) -> Row {
-  Row Mnew = A.numRow();
-  while (Mnew && allZero(A(Mnew - 1, _))) --Mnew;
-  return Mnew;
+  Row newM = A.numRow();
+  while (newM && allZero(A(newM - 1, _))) --newM;
+  return newM;
 }
 // NormalForm version assumes zero rows are sorted to end due to pivoting
 constexpr void removeZeroRows(MutDensePtrMatrix<int64_t> &A) {
@@ -360,10 +360,9 @@ constexpr void simplifySystemsImpl(std::array<MutPtrMatrix<int64_t>, 2> AB) {
 constexpr void simplifySystem(MutPtrMatrix<int64_t> &A,
                               MutPtrMatrix<int64_t> &B) {
   simplifySystemsImpl({A, B});
-  Row Mnew = numNonZeroRows(A);
-  if (Mnew < A.numRow()) {
-    A.truncate(Mnew);
-    B.truncate(Mnew);
+  if (Row newM = numNonZeroRows(A); newM < A.numRow()) {
+    A.truncate(newM);
+    B.truncate(newM);
   }
 }
 [[nodiscard]] constexpr auto hermite(IntMatrix A)
@@ -513,9 +512,9 @@ constexpr void bareiss(MutPtrMatrix<int64_t> A, MutPtrVector<size_t> pivots) {
       pivots[pivInd++] = *piv;
       for (size_t k = r + 1; k < M; ++k) {
         for (size_t j = c + 1; j < N; ++j) {
-          auto Akj_u = A(r, c) * A(k, j) - A(k, c) * A(r, j);
-          auto Akj = Akj_u / prev;
-          assert(Akj_u % prev == 0);
+          auto uAkj = A(r, c) * A(k, j) - A(k, c) * A(r, j);
+          auto Akj = uAkj / prev;
+          invariant(uAkj, Akj * prev);
           A(k, j) = Akj;
         }
         A(k, r) = 0;

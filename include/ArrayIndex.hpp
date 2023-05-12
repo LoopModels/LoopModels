@@ -169,7 +169,7 @@ public:
   [[nodiscard]] constexpr auto getNumSymbols() const -> size_t {
     return 1 + numDynSym;
   }
-  [[nodiscard]] constexpr auto getNumLoops() const -> size_t {
+  [[nodiscard]] constexpr auto getNumLoops() const -> unsigned {
     return loop->getNumLoops();
   }
 

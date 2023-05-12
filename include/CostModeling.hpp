@@ -5,7 +5,7 @@
 #include "./MemoryAccess.hpp"
 #include "./Schedule.hpp"
 #include "Address.hpp"
-#include "DependencyPolyhedra.hpp"
+#include "Dependence.hpp"
 #include "Graphs.hpp"
 #include "Math/Array.hpp"
 #include "Math/Math.hpp"
@@ -559,7 +559,6 @@ public:
       unsigned numMem = node.getNumMem();
       L->incNumAddr(numMem);
       numAddr += numMem;
-      node.incrementReplicationCounts(LB.getMem());
     }
 #ifndef NDEBUG
     root->validate();
@@ -573,9 +572,8 @@ public:
     for (auto &edge : LB.getEdges()) {
       // here we add all connections to the addrs
       // edges -> MA -> Addr
-      for (Address *in : edge.input()->getAddresses())
-        for (Address *out : edge.output()->getAddresses())
-          in->addOut(out, edge.getSatLvl()[0]);
+      edge.input()->getAddress()->addOut(edge.output()->getAddress(),
+                                         edge.getSatLvl()[0]);
     }
     MutPtrVector<Address *> addr{alloc.allocate<Address *>(numAddr), numAddr};
     root->placeAddr(alloc, LB, addr);
@@ -691,20 +689,16 @@ constexpr void ScheduledNode::insertMem(
   }
   invariant(loop != nullptr);
   for (size_t i : memory) {
-    MemoryAccess *mem = memAccess[i];
-    bool isStore = i == storeId;
+    NotNull<MemoryAccess> mem = memAccess[i];
+    bool isStore = mem->isStore();
     if (isStore) sId = j;
     ++j;
-    size_t inputEdges = 0, outputEdges = 0;
-    for (size_t k : mem->inputEdges())
-      inputEdges += edges[k].input()->repCount();
-    for (size_t k : mem->outputEdges())
-      outputEdges += edges[k].output()->repCount();
-
+    size_t inputEdges = mem->inputEdges().size(),
+           outputEdges = mem->outputEdges().size();
     Address *addr = Address::construct(alloc, loop, mem, isStore, Pinv, denom,
                                        schedule.getOffsetOmega(), L, inputEdges,
                                        isStore ? numMem - 1 : 1, outputEdges);
-    mem->push_back(alloc, addr);
+    mem->setAddress(addr);
     accesses.push_back(addr);
   }
   Address *store = accesses[offset + sId];

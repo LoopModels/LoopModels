@@ -1,6 +1,8 @@
 #pragma once
+#include "Containers/TinyVector.hpp"
 #include "DependencyPolyhedra.hpp"
-
+#include "Schedule.hpp"
+#include <MemoryAccess.hpp>
 /// Dependence
 /// Represents a dependence relationship between two memory accesses.
 /// It contains simplices representing constraints that affine schedules
@@ -87,22 +89,165 @@ class Dependence {
   [[no_unique_address]] NotNull<DepPoly> depPoly;
   [[no_unique_address]] NotNull<Simplex> dependenceSatisfaction;
   [[no_unique_address]] NotNull<Simplex> dependenceBounding;
-  [[no_unique_address]] MemoryAccess in;
-  [[no_unique_address]] MemoryAccess out;
+  [[no_unique_address]] NotNull<MemoryAccess> in;
+  [[no_unique_address]] NotNull<MemoryAccess> out;
   [[no_unique_address]] std::array<uint8_t, 7> satLvl{255, 255, 255, 255,
                                                       255, 255, 255};
   [[no_unique_address]] bool forward;
 
+  static auto timelessCheck(NotNull<DepPoly> dxy, NotNull<MemoryAccess> x,
+                            NotNull<MemoryAccess> y,
+                            std::array<NotNull<Simplex>, 2> pair, bool isFwd)
+    -> Dependence {
+    const size_t numLambda = dxy->getNumLambda();
+    invariant(dxy->getTimeDim(), unsigned(0));
+    if (isFwd) {
+      pair[0]->truncateVars(1 + numLambda + dxy->getNumScheduleCoef());
+      return Dependence{dxy, pair, {x, y}, true};
+    }
+    pair[1]->truncateVars(1 + numLambda + dxy->getNumScheduleCoef());
+    std::swap(pair[0], pair[1]);
+    return Dependence{dxy, pair, {y, x}, false};
+  }
+  static auto timelessCheck(BumpAlloc<> &alloc, NotNull<DepPoly> dxy,
+                            NotNull<MemoryAccess> x, NotNull<MemoryAccess> y,
+                            std::array<NotNull<Simplex>, 2> pair)
+    -> Dependence {
+    return timelessCheck(dxy, x, y, pair,
+                         checkDirection(alloc, pair, x, y, dxy->getNumLambda(),
+                                        dxy->getNumVar() + 1));
+    ;
+  }
+
+  // emplaces dependencies with repeat accesses to the same memory across
+  // time
+  static auto timeCheck(BumpAlloc<> &alloc, NotNull<DepPoly> dxy,
+                        NotNull<MemoryAccess> x, NotNull<MemoryAccess> y,
+                        std::array<NotNull<Simplex>, 2> pair)
+    -> TinyVector<Dependence, 2> {
+    // copy backup
+    std::array<NotNull<Simplex>, 2> farkasBackups{pair[0]->copy(alloc),
+                                                  pair[1]->copy(alloc)};
+    const size_t numInequalityConstraintsOld =
+                   dxy->getNumInequalityConstraints(),
+                 numEqualityConstraintsOld = dxy->getNumEqualityConstraints(),
+                 ineqEnd = 1 + numInequalityConstraintsOld,
+                 posEqEnd = ineqEnd + numEqualityConstraintsOld,
+                 numLambda = posEqEnd + numEqualityConstraintsOld,
+                 numScheduleCoefs = dxy->getNumScheduleCoef();
+    invariant(numLambda, size_t(dxy->getNumLambda()));
+    const bool isFwd = checkDirection(alloc, pair, x, y, numLambda,
+                                      dxy->getA().numCol() - dxy->getTimeDim());
+    NotNull<MemoryAccess> in = x, out = y;
+    if (isFwd) {
+      std::swap(farkasBackups[0], farkasBackups[1]);
+    } else {
+      std::swap(in, out);
+      std::swap(pair[0], pair[1]);
+    }
+    pair[0]->truncateVars(1 + numLambda + numScheduleCoefs);
+    auto dep0 = Dependence{dxy->copy(alloc), pair, {in, out}, isFwd};
+    invariant(out->getNumLoops() + in->getNumLoops(),
+              dep0.getNumPhiCoefficients());
+    // pair is invalid
+    const size_t timeDim = dxy->getTimeDim(),
+                 numVar = 1 + dxy->getNumVar() - timeDim;
+    invariant(timeDim > 0);
+    // 1 + because we're indexing into A and E, ignoring the constants
+    // remove the time dims from the deps
+    // dep0.depPoly->truncateVars(numVar);
+
+    // dep0.depPoly->setTimeDim(0);
+    invariant(out->getNumLoops() + in->getNumLoops(),
+              dep0.getNumPhiCoefficients());
+    // now we need to check the time direction for all times
+    // anything approaching 16 time dimensions would be absolutely
+    // insane
+    Vector<bool, 16> timeDirection(timeDim);
+    size_t t = 0;
+    auto fE{farkasBackups[0]->getConstraints()(_, _(1, end))};
+    auto sE{farkasBackups[1]->getConstraints()(_, _(1, end))};
+    do {
+      // set `t`th timeDim to +1/-1
+      // basically, what we do here is set it to `step` and pretend it was
+      // a constant. so a value of c = a'x + t*step -> c - t*step = a'x so
+      // we update the constant `c` via `c -= t*step`.
+      // we have the problem that.
+      int64_t step = dxy->getNullStep(t);
+      size_t v = numVar + t, i = 0;
+      while (true) {
+        for (size_t c = 0; c < numInequalityConstraintsOld; ++c) {
+          int64_t Acv = dxy->getA(c, v);
+          if (!Acv) continue;
+          Acv *= step;
+          fE(0, c + 1) -= Acv; // *1
+          sE(0, c + 1) -= Acv; // *1
+        }
+        for (size_t c = 0; c < numEqualityConstraintsOld; ++c) {
+          // each of these actually represents 2 inds
+          int64_t Ecv = dxy->getE(c, v);
+          if (!Ecv) continue;
+          Ecv *= step;
+          fE(0, c + ineqEnd) -= Ecv;
+          fE(0, c + posEqEnd) += Ecv;
+          sE(0, c + ineqEnd) -= Ecv;
+          sE(0, c + posEqEnd) += Ecv;
+        }
+        if (i++ != 0) break; // break after undoing
+        timeDirection[t] =
+          checkDirection(alloc, farkasBackups, *out, *in, numLambda,
+                         dxy->getA().numCol() - dxy->getTimeDim());
+        step *= -1; // flip to undo, then break
+      }
+    } while (++t < timeDim);
+    t = 0;
+    do {
+      // checkDirection(farkasBackups, x, y, numLambda) == false
+      // correct time direction would make it return true
+      // thus sign = timeDirection[t] ? 1 : -1
+      int64_t step = (2 * timeDirection[t] - 1) * dxy->getNullStep(t);
+      size_t v = numVar + t;
+      for (size_t c = 0; c < numInequalityConstraintsOld; ++c) {
+        int64_t Acv = dxy->getA(c, v);
+        if (!Acv) continue;
+        Acv *= step;
+        dxy->getA(c, 0) -= Acv;
+        fE(0, c + 1) -= Acv; // *1
+        sE(0, c + 1) -= Acv; // *-1
+      }
+      for (size_t c = 0; c < numEqualityConstraintsOld; ++c) {
+        // each of these actually represents 2 inds
+        int64_t Ecv = dxy->getE(c, v);
+        if (!Ecv) continue;
+        Ecv *= step;
+        dxy->getE(c, 0) -= Ecv;
+        fE(0, c + ineqEnd) -= Ecv;
+        fE(0, c + posEqEnd) += Ecv;
+        sE(0, c + ineqEnd) -= Ecv;
+        sE(0, c + posEqEnd) += Ecv;
+      }
+    } while (++t < timeDim);
+    // dxy->truncateVars(numVar);
+    // dxy->setTimeDim(0);
+    farkasBackups[0]->truncateVars(1 + numLambda + numScheduleCoefs);
+    auto dep1 = Dependence{dxy, farkasBackups, {out, in}, !isFwd};
+    invariant(out->getNumLoops() + in->getNumLoops(),
+              dep0.getNumPhiCoefficients());
+    return {dep0, dep1};
+  }
+
 public:
-  [[nodiscard]] constexpr auto input() const -> const MemoryAccess & {
+  [[nodiscard]] constexpr auto input() -> NotNull<MemoryAccess> { return in; }
+  [[nodiscard]] constexpr auto output() -> NotNull<MemoryAccess> { return out; }
+  [[nodiscard]] constexpr auto input() const -> NotNull<const MemoryAccess> {
     return in;
   }
-  [[nodiscard]] constexpr auto output() const -> const MemoryAccess & {
+  [[nodiscard]] constexpr auto output() const -> NotNull<const MemoryAccess> {
     return out;
   }
   constexpr Dependence(NotNull<DepPoly> poly,
                        std::array<NotNull<Simplex>, 2> depSatBound,
-                       std::array<NotNull<ArrayIndex>, 2> inOut, bool fwd)
+                       std::array<NotNull<MemoryAccess>, 2> inOut, bool fwd)
     : depPoly(poly), dependenceSatisfaction(depSatBound[0]),
       dependenceBounding(depSatBound[1]), in(inOut[0]), out(inOut[1]),
       forward(fwd) {}
@@ -127,73 +272,80 @@ public:
   }
   constexpr auto satLevel() -> uint8_t & { return satLvl.front(); }
   [[nodiscard]] constexpr auto getArrayPointer() -> const llvm::SCEV * {
-    return in.getArrayPointer();
+    return in->getArrayPointer();
   }
   /// indicates whether forward is non-empty
   [[nodiscard]] constexpr auto isForward() const -> bool { return forward; }
   [[nodiscard]] constexpr auto nodesIn() const -> const BitSet & {
-    return in.getNodes();
+    return in->getNodes();
   }
   [[nodiscard]] constexpr auto nodesOut() const -> const BitSet & {
-    return out.getNodes();
+    return out->getNodes();
   }
   [[nodiscard]] constexpr auto getDynSymDim() const -> size_t {
     return depPoly->getNumDynSym();
   }
-  [[nodiscard]] auto inputIsLoad() const -> bool { return in.isLoad(); }
-  [[nodiscard]] auto outputIsLoad() const -> bool { return out.isLoad(); }
-  [[nodiscard]] auto inputIsStore() const -> bool { return in.isStore(); }
-  [[nodiscard]] auto outputIsStore() const -> bool { return out.isStore(); }
+  [[nodiscard]] auto inputIsLoad() const -> bool { return in->isLoad(); }
+  [[nodiscard]] auto outputIsLoad() const -> bool { return out->isLoad(); }
+  [[nodiscard]] auto inputIsStore() const -> bool { return in->isStore(); }
+  [[nodiscard]] auto outputIsStore() const -> bool { return out->isStore(); }
   /// getInIndMat() -> getInNumLoops() x arrayDim()
   [[nodiscard]] auto getInIndMat() const -> PtrMatrix<int64_t> {
-    return in.indexMatrix();
+    return in->indexMatrix();
   }
-  constexpr void addEdge(size_t i) {
-    in.addEdgeOut(i);
-    out.addEdgeIn(i);
+  [[nodiscard]] auto checkEmptySat(BumpAlloc<> &alloc,
+                                   DensePtrMatrix<int64_t> inPhi,
+                                   DensePtrMatrix<int64_t> outPhi) -> bool {
+    if (!isForward()) std::swap(inPhi, outPhi);
+    return depPoly->checkSat(alloc, inPhi, outPhi);
+  }
+  constexpr auto addEdge(size_t i) -> Dependence & {
+    in->addEdgeOut(i);
+    out->addEdgeIn(i);
+    return *this;
   }
   /// getOutIndMat() -> getOutNumLoops() x arrayDim()
   [[nodiscard]] constexpr auto getOutIndMat() const -> PtrMatrix<int64_t> {
-    return out.indexMatrix();
+    return out->indexMatrix();
   }
   [[nodiscard]] constexpr auto getInOutPair() const
-    -> std::array<MemoryAccess, 2> {
+    -> std::array<MemoryAccess *, 2> {
     return {in, out};
   }
   // returns the memory access pair, placing the store first in the pair
-  [[nodiscard]] auto getStoreAndOther() const -> std::array<MemoryAccess, 2> {
-    if (in.isStore()) return {in, out};
+  [[nodiscard]] auto getStoreAndOther() const -> std::array<MemoryAccess *, 2> {
+    if (in->isStore()) return {in, out};
     return {out, in};
   }
-  [[nodiscard]] constexpr auto getInNumLoops() const -> size_t {
-    return in.getNumLoops();
+  [[nodiscard]] constexpr auto getInNumLoops() const -> unsigned {
+    return in->getNumLoops();
   }
-  [[nodiscard]] constexpr auto getOutNumLoops() const -> size_t {
-    return out.getNumLoops();
+  [[nodiscard]] constexpr auto getOutNumLoops() const -> unsigned {
+    return out->getNumLoops();
   }
   [[nodiscard]] constexpr auto isInactive(size_t depth) const -> bool {
-    return (depth >= std::min(out.getNumLoops(), in.getNumLoops()));
+    return (depth >= std::min(out->getNumLoops(), in->getNumLoops()));
   }
-  [[nodiscard]] constexpr auto getNumLambda() const -> size_t {
+  [[nodiscard]] constexpr auto getNumLambda() const -> unsigned {
     return depPoly->getNumLambda() << 1;
   }
-  [[nodiscard]] constexpr auto getNumSymbols() const -> size_t {
+  [[nodiscard]] constexpr auto getNumSymbols() const -> unsigned {
     return depPoly->getNumSymbols();
   }
-  [[nodiscard]] constexpr auto getNumPhiCoefficients() const -> size_t {
+  [[nodiscard]] constexpr auto getNumPhiCoefficients() const -> unsigned {
     return depPoly->getNumPhiCoef();
   }
-  [[nodiscard]] static constexpr auto getNumOmegaCoefficients() -> size_t {
+  [[nodiscard]] static constexpr auto getNumOmegaCoefficients() -> unsigned {
     return DepPoly::getNumOmegaCoef();
   }
-  [[nodiscard]] constexpr auto getNumDepSatConstraintVar() const -> size_t {
+  [[nodiscard]] constexpr auto getNumDepSatConstraintVar() const -> unsigned {
     return dependenceSatisfaction->getNumVars();
   }
-  [[nodiscard]] constexpr auto getNumDepBndConstraintVar() const -> size_t {
+  [[nodiscard]] constexpr auto getNumDepBndConstraintVar() const -> unsigned {
     return dependenceBounding->getNumVars();
   }
   // returns `w`
-  [[nodiscard]] constexpr auto getNumDynamicBoundingVar() const -> size_t {
+  [[nodiscard]] constexpr auto getNumDynamicBoundingVar() const -> unsigned {
     return getNumDepBndConstraintVar() - getNumDepSatConstraintVar();
   }
   constexpr void validate() {
@@ -206,7 +358,7 @@ public:
   [[nodiscard]] constexpr auto getDepPoly() -> NotNull<DepPoly> {
     return depPoly;
   }
-  [[nodiscard]] constexpr auto getNumConstraints() const -> size_t {
+  [[nodiscard]] constexpr auto getNumConstraints() const -> unsigned {
     return dependenceBounding->getNumCons() +
            dependenceSatisfaction->getNumCons();
   }
@@ -294,8 +446,8 @@ public:
                                  NotNull<const AffineSchedule> schIn,
                                  NotNull<const AffineSchedule> schOut) const
     -> bool {
-    size_t numLoopsIn = in.getNumLoops();
-    size_t numLoopsOut = out.getNumLoops();
+    size_t numLoopsIn = in->getNumLoops();
+    size_t numLoopsOut = out->getNumLoops();
     size_t numLoopsCommon = std::min(numLoopsIn, numLoopsOut);
     size_t numLoopsTotal = numLoopsIn + numLoopsOut;
     size_t numVar = numLoopsIn + numLoopsOut + 2;
@@ -346,8 +498,8 @@ public:
                                  PtrVector<unsigned> inFusOmega,
                                  PtrVector<unsigned> outFusOmega) const
     -> bool {
-    size_t numLoopsIn = in.getNumLoops();
-    size_t numLoopsOut = out.getNumLoops();
+    size_t numLoopsIn = in->getNumLoops();
+    size_t numLoopsOut = out->getNumLoops();
     size_t numLoopsCommon = std::min(numLoopsIn, numLoopsOut);
     size_t numVar = numLoopsIn + numLoopsOut + 2;
     invariant(dependenceSatisfaction->getNumVars() == numVar);
@@ -417,8 +569,8 @@ public:
   }
   static auto checkDirection(BumpAlloc<> &alloc,
                              const std::array<NotNull<Simplex>, 2> &p,
-                             NotNull<const ArrayIndex> x,
-                             NotNull<const ArrayIndex> y,
+                             NotNull<const MemoryAccess> x,
+                             NotNull<const MemoryAccess> y,
                              NotNull<const AffineSchedule> xSchedule,
                              NotNull<const AffineSchedule> ySchedule,
                              size_t numLambda, Col nonTimeDim) -> bool {
@@ -471,13 +623,13 @@ public:
   // returns `true` if forward, x->y
   static auto checkDirection(BumpAlloc<> &alloc,
                              const std::array<NotNull<Simplex>, 2> &p,
-                             NotNull<const ArrayIndex> x,
-                             NotNull<const ArrayIndex> y, size_t numLambda,
+                             NotNull<const MemoryAccess> x,
+                             NotNull<const MemoryAccess> y, size_t numLambda,
                              Col nonTimeDim) -> bool {
     const auto &[fxy, fyx] = p;
-    size_t numLoopsX = x->getNumLoops(), nTD = size_t(nonTimeDim);
+    unsigned numLoopsX = x->getNumLoops(), nTD = unsigned(nonTimeDim);
 #ifndef NDEBUG
-    const size_t numLoopsCommon = std::min(numLoopsX, y->getNumLoops());
+    const unsigned numLoopsCommon = std::min(numLoopsX, y->getNumLoops());
 #endif
     PtrVector<int64_t> xFusOmega = x->getFusionOmega();
     PtrVector<int64_t> yFusOmega = y->getFusionOmega();
@@ -507,158 +659,41 @@ public:
     invariant(false);
     return false;
   }
-  static auto timelessCheck(BumpAlloc<> &alloc, NotNull<DepPoly> dxy,
-                            NotNull<ArrayIndex> x, NotNull<ArrayIndex> y)
-    -> Dependence {
-    std::array<NotNull<Simplex>, 2> pair{dxy->farkasPair(alloc)};
-    const size_t numLambda = dxy->getNumLambda();
-    invariant(dxy->getTimeDim(), unsigned(0));
-    if (checkDirection(alloc, pair, x, y, numLambda, dxy->getA().numCol())) {
-      pair[0]->truncateVars(1 + numLambda + dxy->getNumScheduleCoef());
-      return Dependence{dxy, pair, {x, y}, true};
-    }
-    pair[1]->truncateVars(1 + numLambda + dxy->getNumScheduleCoef());
-    std::swap(pair[0], pair[1]);
-    return Dependence{dxy, pair, {y, x}, false};
-  }
 
-  // emplaces dependencies with repeat accesses to the same memory across
-  // time
-  static auto timeCheck(BumpAlloc<> &alloc, NotNull<DepPoly> dxy,
-                        NotNull<ArrayIndex> x, NotNull<ArrayIndex> y)
-    -> TinyVector<Dependence, 2> {
-    std::array<NotNull<Simplex>, 2> pair(dxy->farkasPair(alloc));
-    // copy backup
-    std::array<NotNull<Simplex>, 2> farkasBackups{pair[0]->copy(alloc),
-                                                  pair[1]->copy(alloc)};
-    const size_t numInequalityConstraintsOld =
-      dxy->getNumInequalityConstraints();
-    const size_t numEqualityConstraintsOld = dxy->getNumEqualityConstraints();
-    const size_t ineqEnd = 1 + numInequalityConstraintsOld;
-    const size_t posEqEnd = ineqEnd + numEqualityConstraintsOld;
-    const size_t numLambda = posEqEnd + numEqualityConstraintsOld;
-    const size_t numScheduleCoefs = dxy->getNumScheduleCoef();
-    invariant(numLambda, size_t(dxy->getNumLambda()));
-    NotNull<ArrayIndex> in = x, out = y;
-    const bool isFwd = checkDirection(alloc, pair, x, y, numLambda,
-                                      dxy->getA().numCol() - dxy->getTimeDim());
-    if (isFwd) {
-      std::swap(farkasBackups[0], farkasBackups[1]);
-    } else {
-      std::swap(in, out);
-      std::swap(pair[0], pair[1]);
-    }
-    pair[0]->truncateVars(1 + numLambda + numScheduleCoefs);
-    auto dep0 = Dependence{dxy->copy(alloc), pair, {in, out}, isFwd};
-    invariant(out->getNumLoops() + in->getNumLoops(),
-              dep0.getNumPhiCoefficients());
-    // pair is invalid
-    const size_t timeDim = dxy->getTimeDim();
-    invariant(timeDim > 0);
-    // 1 + because we're indexing into A and E, ignoring the constants
-    const size_t numVar = 1 + dxy->getNumVar() - timeDim;
-    // remove the time dims from the deps
-    // dep0.depPoly->truncateVars(numVar);
-
-    // dep0.depPoly->setTimeDim(0);
-    invariant(out->getNumLoops() + in->getNumLoops(),
-              dep0.getNumPhiCoefficients());
-    // now we need to check the time direction for all times
-    // anything approaching 16 time dimensions would be absolutely
-    // insane
-    Vector<bool, 16> timeDirection(timeDim);
-    size_t t = 0;
-    auto fE{farkasBackups[0]->getConstraints()(_, _(1, end))};
-    auto sE{farkasBackups[1]->getConstraints()(_, _(1, end))};
-    do {
-      // set `t`th timeDim to +1/-1
-      // basically, what we do here is set it to `step` and pretend it was
-      // a constant. so a value of c = a'x + t*step -> c - t*step = a'x so
-      // we update the constant `c` via `c -= t*step`.
-      // we have the problem that.
-      int64_t step = dxy->getNullStep(t);
-      size_t v = numVar + t, i = 0;
-      while (true) {
-        for (size_t c = 0; c < numInequalityConstraintsOld; ++c) {
-          int64_t Acv = dxy->getA(c, v);
-          if (!Acv) continue;
-          Acv *= step;
-          fE(0, c + 1) -= Acv; // *1
-          sE(0, c + 1) -= Acv; // *1
-        }
-        for (size_t c = 0; c < numEqualityConstraintsOld; ++c) {
-          // each of these actually represents 2 inds
-          int64_t Ecv = dxy->getE(c, v);
-          if (!Ecv) continue;
-          Ecv *= step;
-          fE(0, c + ineqEnd) -= Ecv;
-          fE(0, c + posEqEnd) += Ecv;
-          sE(0, c + ineqEnd) -= Ecv;
-          sE(0, c + posEqEnd) += Ecv;
-        }
-        if (i++ != 0) break; // break after undoing
-        timeDirection[t] =
-          checkDirection(alloc, farkasBackups, *out, *in, numLambda,
-                         dxy->getA().numCol() - dxy->getTimeDim());
-        step *= -1; // flip to undo, then break
-      }
-    } while (++t < timeDim);
-    t = 0;
-    do {
-      // checkDirection(farkasBackups, x, y, numLambda) == false
-      // correct time direction would make it return true
-      // thus sign = timeDirection[t] ? 1 : -1
-      int64_t step = (2 * timeDirection[t] - 1) * dxy->getNullStep(t);
-      size_t v = numVar + t;
-      for (size_t c = 0; c < numInequalityConstraintsOld; ++c) {
-        int64_t Acv = dxy->getA(c, v);
-        if (!Acv) continue;
-        Acv *= step;
-        dxy->getA(c, 0) -= Acv;
-        fE(0, c + 1) -= Acv; // *1
-        sE(0, c + 1) -= Acv; // *-1
-      }
-      for (size_t c = 0; c < numEqualityConstraintsOld; ++c) {
-        // each of these actually represents 2 inds
-        int64_t Ecv = dxy->getE(c, v);
-        if (!Ecv) continue;
-        Ecv *= step;
-        dxy->getE(c, 0) -= Ecv;
-        fE(0, c + ineqEnd) -= Ecv;
-        fE(0, c + posEqEnd) += Ecv;
-        sE(0, c + ineqEnd) -= Ecv;
-        sE(0, c + posEqEnd) += Ecv;
-      }
-    } while (++t < timeDim);
-    // dxy->truncateVars(numVar);
-    // dxy->setTimeDim(0);
-    farkasBackups[0]->truncateVars(1 + numLambda + numScheduleCoefs);
-    auto dep1 = Dependence{dxy, farkasBackups, {out, in}, !isFwd};
-    invariant(out->getNumLoops() + in->getNumLoops(),
-              dep0.getNumPhiCoefficients());
-    return {dep0, dep1};
-  }
-
-  static auto check(BumpAlloc<> &alloc, NotNull<ArrayIndex> x,
-                    NotNull<ArrayIndex> y) -> TinyVector<Dependence, 2> {
+  static auto check(BumpAlloc<> &alloc, NotNull<MemoryAccess> x,
+                    NotNull<MemoryAccess> y) -> TinyVector<Dependence, 2> {
     // TODO: implement gcd test
     // if (x.gcdKnownIndependent(y)) return {};
-    DepPoly *dxy{DepPoly::dependence(alloc, x, y)};
+    DepPoly *dxy{
+      DepPoly::dependence(alloc, x->getArrayRef(), y->getArrayRef())};
     if (!dxy) return {};
-    assert(x->getNumLoops() == dxy->getDim0());
-    assert(y->getNumLoops() == dxy->getDim1());
-    assert(x->getNumLoops() + y->getNumLoops() == dxy->getNumPhiCoef());
+    invariant(x->getNumLoops(), dxy->getDim0());
+    invariant(y->getNumLoops(), dxy->getDim1());
+    invariant(x->getNumLoops() + y->getNumLoops(), dxy->getNumPhiCoef());
     // note that we set boundAbove=true, so we reverse the
     // dependence direction for the dependency we week, we'll
     // discard the program variables x then y
-    if (dxy->getTimeDim()) return timeCheck(alloc, dxy, x, y);
-    return {timelessCheck(alloc, dxy, x, y)};
+    std::array<NotNull<Simplex>, 2> pair(dxy->farkasPair(alloc));
+    if (dxy->getTimeDim()) return timeCheck(alloc, dxy, x, y, pair);
+    return {timelessCheck(alloc, dxy, x, y, pair)};
   }
   // reload store `x`
-  static auto reload(BumpAlloc<> &alloc, NotNull<ArrayIndex> x)
-    -> TinyVector<Dependence, 2> {
-
-    return {};
+  static auto reload(BumpAlloc<> &alloc, NotNull<MemoryAccess> store)
+    -> std::pair<NotNull<MemoryAccess>, Dependence> {
+    NotNull<DepPoly> dxy{DepPoly::self(alloc, store->getArrayRef())};
+    std::array<NotNull<Simplex>, 2> pair(dxy->farkasPair(alloc));
+    NotNull<MemoryAccess> load =
+      alloc.create<MemoryAccess>(store->getArrayRef(), true);
+    // no need for a timeCheck, because if there is a time-dim, we have a
+    // store -> store dependence.
+    // when we add new load -> store edges for each store->store,
+    // that will cover the time-dependence
+    return {load, timelessCheck(dxy, store, load, pair, true)};
+  }
+  constexpr auto replaceInput(NotNull<MemoryAccess> newIn) -> Dependence {
+    Dependence edge = *this;
+    edge.in = newIn;
+    return edge;
   }
 
   friend inline auto operator<<(llvm::raw_ostream &os, const Dependence &d)
@@ -666,8 +701,8 @@ public:
     os << "Dependence Poly ";
     if (d.forward) os << "x -> y:";
     else os << "y -> x:";
-    os << "\n\tInput:\n" << *d.in.getArrayRef();
-    os << "\n\tOutput:\n" << *d.out.getArrayRef();
+    os << "\n\tInput:\n" << *d.in->getArrayRef();
+    os << "\n\tOutput:\n" << *d.out->getArrayRef();
     os << "\nA = " << d.depPoly->getA() << "\nE = " << d.depPoly->getE()
        << "\nSchedule Constraints:"
        << d.dependenceSatisfaction->getConstraints()

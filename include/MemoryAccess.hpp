@@ -43,6 +43,8 @@ private:
 public:
   constexpr MemoryAccess(NotNull<ArrayIndex> arrayRef)
     : arrayRef(arrayRef), load_(arrayRef->getLoad()) {}
+  constexpr MemoryAccess(NotNull<ArrayIndex> arrayRef, bool load)
+    : arrayRef(arrayRef), load_(load) {}
 
   [[nodiscard]] constexpr auto isLoad() const -> bool { return load_; }
   [[nodiscard]] constexpr auto isStore() const -> bool { return !load_; }
@@ -53,7 +55,7 @@ public:
     -> NotNull<const ArrayIndex> {
     return arrayRef;
   }
-
+  void setAddress(Address *addr) { addrs = addr; }
   // [[nodiscard]] constexpr auto repCount() const -> size_t {
   //   return addrReplications + 1;
   // }
@@ -112,7 +114,7 @@ public:
     return arrayRef->getArrayPointer();
   }
   constexpr auto getAddress() -> NotNull<Address> { return addrs; }
-  [[nodiscard]] constexpr auto getNumLoops() const -> size_t {
+  [[nodiscard]] constexpr auto getNumLoops() const -> unsigned {
     return arrayRef->getNumLoops();
   }
   [[nodiscard]] constexpr auto getAddress() const -> NotNull<const Address> {
