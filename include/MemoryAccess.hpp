@@ -41,11 +41,33 @@ private:
   // https://gcc.gnu.org/onlinedocs/gcc/Zero-Length.html
   // https://developers.redhat.com/articles/2022/09/29/benefits-limitations-flexible-array-members#flexible_array_members_vs__pointer_implementation
 public:
-  constexpr MemoryAccess(NotNull<ArrayIndex> arrayRef)
-    : arrayRef(arrayRef), load_(arrayRef->getLoad()) {}
-  constexpr MemoryAccess(NotNull<ArrayIndex> arrayRef, bool load)
-    : arrayRef(arrayRef), load_(load) {}
+  MemoryAccess(NotNull<ArrayIndex> ref)
+    : arrayRef(ref), load_(ref->getLoad()) {}
+  constexpr MemoryAccess(NotNull<ArrayIndex> ref, bool load)
+    : arrayRef(ref), load_(load) {}
 
+  constexpr auto operator==(const MemoryAccess &ma) const -> bool {
+    return *arrayRef == *ma.arrayRef && load_ == ma.load_;
+  }
+
+  [[nodiscard]] static auto
+  construct(BumpAlloc<> &alloc, const llvm::SCEVUnknown *arrayPtr,
+            AffineLoopNest<true> &loopRef, llvm::Instruction *user,
+            PtrMatrix<int64_t> indMatT,
+            std::array<llvm::SmallVector<const llvm::SCEV *, 3>, 2> szOff,
+            PtrMatrix<int64_t> offsets, PtrVector<unsigned> o)
+    -> NotNull<MemoryAccess> {
+    return alloc.create<MemoryAccess>(ArrayIndex::construct(
+      alloc, arrayPtr, loopRef, user, indMatT, std::move(szOff), offsets, o));
+  }
+  [[nodiscard]] static auto
+  construct(BumpAlloc<> &alloc, const llvm::SCEVUnknown *arrayPtr,
+            AffineLoopNest<true> &loopRef, llvm::Instruction *user,
+            PtrVector<unsigned> o) -> NotNull<MemoryAccess> {
+    return alloc.create<MemoryAccess>(
+      ArrayIndex::construct(alloc, arrayPtr, loopRef, user, o));
+  }
+  void peelLoops(size_t n) { arrayRef->peelLoops(n); }
   [[nodiscard]] constexpr auto isLoad() const -> bool { return load_; }
   [[nodiscard]] constexpr auto isStore() const -> bool { return !load_; }
   [[nodiscard]] constexpr auto getArrayRef() -> NotNull<ArrayIndex> {
@@ -88,8 +110,7 @@ public:
   [[nodiscard]] constexpr auto getArrayDim() const -> size_t {
     return arrayRef->getArrayDim();
   }
-  [[nodiscard]] constexpr auto sizesMatch(const MemoryAccess &ma) const
-    -> bool {
+  [[nodiscard]] auto sizesMatch(const MemoryAccess &ma) const -> bool {
     return arrayRef->sizesMatch(ma.getArrayRef());
   }
   constexpr auto indexMatrix() -> MutDensePtrMatrix<int64_t> {
@@ -137,6 +158,12 @@ public:
   constexpr void addEdgeOut(size_t i) { edgesOut.insert(i); }
   /// add a node index
   constexpr void addNodeIndex(unsigned i) { nodeIndex.insert(i); }
+  [[nodiscard]] auto getLoad() -> llvm::LoadInst * {
+    return arrayRef->getLoad();
+  }
+  [[nodiscard]] auto getStore() -> llvm::StoreInst * {
+    return arrayRef->getStore();
+  }
 };
 
 static_assert(std::is_trivially_copyable_v<MemoryAccess>);

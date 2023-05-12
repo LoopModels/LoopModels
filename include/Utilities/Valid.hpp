@@ -111,10 +111,10 @@ public:
     value -= offset;
     return *this;
   }
-  constexpr auto operator==(const NotNull<T> &other) const -> bool {
-    invariant(value != nullptr);
-    return value == other.value;
-  }
+  // constexpr auto operator==(const NotNull<T> &other) const -> bool {
+  //   invariant(value != nullptr);
+  //   return value == other.value;
+  // }
   // constexpr auto operator!=(const NotNull<T> &other) const -> bool {
   //   invariant(value != nullptr);
   //   return value != other.value;

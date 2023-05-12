@@ -1,3 +1,5 @@
+
+
 #pragma once
 #include "Loops.hpp"
 #include "Math/Array.hpp"
@@ -91,10 +93,10 @@ public:
                                 llvm::Instruction *user)
     : basePointer(arrayPtr), loop(loopRef), loadOrStore(user){};
   /// Constructor for 0 dimensional memory access
-  static auto construct(BumpAlloc<> &alloc,
-                        const llvm::SCEVUnknown *arrayPointer,
-                        AffineLoopNest<true> &loopRef, llvm::Instruction *user,
-                        PtrVector<unsigned> o) -> NotNull<ArrayIndex> {
+  [[nodiscard]] static auto
+  construct(BumpAlloc<> &alloc, const llvm::SCEVUnknown *arrayPointer,
+            AffineLoopNest<true> &loopRef, llvm::Instruction *user,
+            PtrVector<unsigned> o) -> NotNull<ArrayIndex> {
     unsigned numLoops = loopRef.getNumLoops();
     invariant(o.size(), numLoops + 1);
     size_t memNeeded = numLoops;
@@ -105,7 +107,7 @@ public:
     return ma;
   }
   /// Constructor for regular indexing
-  static auto
+  [[nodiscard]] static auto
   construct(BumpAlloc<> &alloc, const llvm::SCEVUnknown *arrayPtr,
             AffineLoopNest<true> &loopRef, llvm::Instruction *user,
             PtrMatrix<int64_t> indMatT,
@@ -294,5 +296,12 @@ public:
     // will have a stride of `2`, and the latter of `x[2i+1]`
     // Additionally, in the future, we do
     return false;
+  }
+  // doesn't check loadOrStoer or fusedOmegas
+  [[nodiscard]] constexpr auto operator==(const ArrayIndex &other) const
+    -> bool {
+    return basePointer == other.basePointer &&
+           indexMatrix() == other.indexMatrix() &&
+           offsetMatrix() == other.offsetMatrix();
   }
 };

@@ -642,8 +642,8 @@ struct AffineLoopNest
     if (indep) return false;
     AffineLoopNest<NonNegative> *margi = tmp->removeLoop(alloc, 1);
     AffineLoopNest<NonNegative> *tmp2;
-    invariant(margi->getNumLoops(), size_t(1));
-    invariant(tmp->getNumLoops(), size_t(2));
+    invariant(margi->getNumLoops(), unsigned(1));
+    invariant(tmp->getNumLoops(), unsigned(2));
     invariant(margi->getA().numCol() + 1, tmp->getA().numCol());
     // margi contains extrema for `_i`
     // we can substitute extended for value of `_i`
@@ -655,7 +655,7 @@ struct AffineLoopNest
       if (b <= 0) continue;
       alloc.rollback(p2);
       tmp2 = tmp->copy(alloc);
-      invariant(tmp2->getNumLoops(), size_t(2));
+      invariant(tmp2->getNumLoops(), unsigned(2));
       invariant(margi->getNumLoops() + 1, tmp2->getNumLoops());
       // increment to increase bound
       // this is correct for both extending lower and extending upper

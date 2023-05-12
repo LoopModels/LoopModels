@@ -313,6 +313,10 @@ public:
     std::memcpy(p, this, neededBytes());
     return NotNull<DepPoly>{p};
   }
+  static auto dependence(BumpAlloc<> &alloc, NotNull<const MemoryAccess> aix,
+                         NotNull<const MemoryAccess> aiy) {
+    return dependence(alloc, aix->getArrayRef(), aiy->getArrayRef());
+  }
   static auto dependence(BumpAlloc<> &alloc, NotNull<const ArrayIndex> aix,
                          NotNull<const ArrayIndex> aiy) -> DepPoly * {
     assert(aix->sizesMatch(aiy));
@@ -415,7 +419,7 @@ public:
     auto [nco, nv] = B.size();
     unsigned numDepVar = loop->getNumLoops(), numVar = numDepVar + numDepVar,
              numDynSym = S.size(), numSym = numDynSym + 1;
-    DenseMatrix<int64_t> NS{nullSpace(ai, ai)};
+    DenseMatrix<int64_t> NS{nullSpace(ai)};
     unsigned timeDim = unsigned{NS.numRow()},
              numCols = numVar + timeDim + numDynSym + 1,
              conCapacity = unsigned(2 * B.numRow()) + numVar,
