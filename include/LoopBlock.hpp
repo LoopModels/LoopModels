@@ -314,6 +314,8 @@ class LinearProgramLoopBlock {
   /// Flag indicating which depths carries dependencies
   /// One per node; held separately so we can copy/etc
   [[no_unique_address]] Vector<CarriedDependencyFlag> carriedDeps;
+  [[no_unique_address]] map<llvm::User *, unsigned> userToMem{};
+  [[no_unique_address]] set<llvm::User *> visited{};
   // Vector<bool> visited; // visited, for traversing graph
   [[no_unique_address]] BumpAlloc<> allocator;
   // Vector<llvm::Value *> symbols;
@@ -341,6 +343,8 @@ public:
     nodes.clear();
     edges.clear();
     carriedDeps.clear();
+    userToMem.clear();
+    visited.clear();
     allocator.reset();
   }
   [[nodiscard]] constexpr auto numVerticies() const -> size_t {
@@ -435,14 +439,12 @@ public:
   ///
   /// If an instruction was stored somewhere, we don't keep
   /// searching for place it was loaded, and instead add a reload.
-  [[nodiscard]] auto
-  searchValueForStores(aset<llvm::User *> &visited, ScheduledNode &node,
-                       amap<llvm::User *, unsigned> &userToMem,
-                       llvm::User *user, unsigned nodeIdx) -> bool {
+  [[nodiscard]] auto searchValueForStores(ScheduledNode &node, llvm::User *user,
+                                          unsigned nodeIdx) -> bool {
     for (llvm::User *use : user->users()) {
       if (visited.contains(use)) continue;
       if (llvm::isa<llvm::StoreInst>(use)) {
-        auto *ma = userToMem.find(use);
+        auto ma = userToMem.find(use);
         if (ma == userToMem.end()) continue;
         // we want to reload a store
         // this store will be treated as a load
@@ -476,21 +478,20 @@ public:
     return newLoad;
   }
   // NOLINTNEXTLINE(misc-no-recursion)
-  void checkUserForLoads(aset<llvm::User *> &visited, ScheduledNode &node,
-                         amap<llvm::User *, unsigned> &userToMem,
-                         llvm::User *user, unsigned nodeIdx) {
+  void checkUserForLoads(ScheduledNode &node, llvm::User *user,
+                         unsigned nodeIdx) {
     if (!user || visited.contains(user)) return;
     if (llvm::isa<llvm::LoadInst>(user)) {
       // check if load is a part of the LoopBlock
-      auto *ma = userToMem.find(user);
+      auto ma = userToMem.find(user);
       if (ma == userToMem.end()) return;
       unsigned memId = ma->second;
       NotNull<MemoryAccess> load = memory[memId];
       if (load->getNode() != std::numeric_limits<unsigned>::max())
         load = duplicateLoad(load, memId);
       node.addMemory(memId, load, nodeIdx);
-    } else if (!searchValueForStores(visited, node, userToMem, user, nodeIdx))
-      searchOperandsForLoads(visited, node, userToMem, user, nodeIdx);
+    } else if (!searchValueForStores(node, user, nodeIdx))
+      searchOperandsForLoads(node, user, nodeIdx);
   }
   /// We search uses of user `u` for any stores so that we can assign the use
   /// and the store the same schedule. This is done because it is assumed the
@@ -513,18 +514,17 @@ public:
   /// store %z, %c
   /// and we create a new edge from `store %y, %b` to `load %b`.
   // NOLINTNEXTLINE(misc-no-recursion)
-  void searchOperandsForLoads(aset<llvm::User *> &visited, ScheduledNode &node,
-                              amap<llvm::User *, unsigned> &userToMem,
-                              llvm::User *u, unsigned nodeIdx) {
+  void searchOperandsForLoads(ScheduledNode &node, llvm::User *u,
+                              unsigned nodeIdx) {
     visited.insert(u);
     if (auto *s = llvm::dyn_cast<llvm::StoreInst>(u)) {
       if (auto *user = llvm::dyn_cast<llvm::User>(s->getValueOperand()))
-        checkUserForLoads(visited, node, userToMem, user, nodeIdx);
+        checkUserForLoads(node, user, nodeIdx);
       return;
     }
     for (auto &&op : u->operands())
       if (auto *user = llvm::dyn_cast<llvm::User>(op.get()))
-        checkUserForLoads(visited, node, userToMem, user, nodeIdx);
+        checkUserForLoads(node, user, nodeIdx);
   }
   void connect(unsigned inIndex, unsigned outIndex) {
     nodes[inIndex].addOutNeighbor(outIndex);
@@ -541,19 +541,16 @@ public:
   /// amount of loads executed in the eventual generated code)
   void connectGraph() {
     // assembles direct connections in node graph
-    auto p = allocator.scope();
-    amap<llvm::User *, unsigned> userToMem{allocator};
     for (unsigned i = 0; i < memory.size(); ++i)
       userToMem.insert({memory[i]->getInstruction(), i});
 
-    aset<llvm::User *> visited{allocator};
     nodes.reserve(calcNumStores());
     for (unsigned i = 0; i < memory.size(); ++i) {
       MemoryAccess *mai = memory[i];
       if (mai->isLoad()) continue;
       unsigned nodeIdx = nodes.size();
-      searchOperandsForLoads(visited, nodes.emplace_back(i, mai, nodeIdx),
-                             userToMem, mai->getInstruction(), nodeIdx);
+      searchOperandsForLoads(nodes.emplace_back(i, mai, nodeIdx),
+                             mai->getInstruction(), nodeIdx);
       visited.clear();
     }
     // destructors of amap and aset poison memory
