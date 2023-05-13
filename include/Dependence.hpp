@@ -3,6 +3,8 @@
 #include "DependencyPolyhedra.hpp"
 #include "Schedule.hpp"
 #include <MemoryAccess.hpp>
+#include <Utilities/Invariant.hpp>
+#include <cstdint>
 /// Dependence
 /// Represents a dependence relationship between two memory accesses.
 /// It contains simplices representing constraints that affine schedules
@@ -91,6 +93,9 @@ class Dependence {
   [[no_unique_address]] NotNull<Simplex> dependenceBounding;
   [[no_unique_address]] NotNull<MemoryAccess> in;
   [[no_unique_address]] NotNull<MemoryAccess> out;
+  // the upper bit of satLvl indicates whether the satisfaction is because of
+  // conditional independence (value = 0), or whether it was because of offsets
+  // when solving the linear program (value = 1).
   [[no_unique_address]] std::array<uint8_t, 7> satLvl{255, 255, 255, 255,
                                                       255, 255, 255};
   [[no_unique_address]] bool forward;
@@ -252,12 +257,6 @@ public:
       dependenceBounding(depSatBound[1]), in(inOut[0]), out(inOut[1]),
       forward(fwd) {}
   using BitSet = MemoryAccess::BitSet;
-  [[nodiscard]] constexpr auto getSatLvl() -> std::array<uint8_t, 7> & {
-    return satLvl;
-  }
-  [[nodiscard]] constexpr auto getSatLvl() const -> std::array<uint8_t, 7> {
-    return satLvl;
-  }
   constexpr auto stashSatLevel() -> Dependence & {
     assert(satLvl.back() == 255 || "satLevel overflow");
     std::copy_backward(satLvl.begin(), satLvl.end() - 1, satLvl.end());
@@ -270,7 +269,14 @@ public:
     satLvl.back() = 255;
 #endif
   }
-  constexpr auto satLevel() -> uint8_t & { return satLvl.front(); }
+  constexpr void setSatLevelLP(uint8_t d) { satLvl.front() = uint8_t(128) | d; }
+  [[nodiscard]] constexpr auto satLevel() const -> uint8_t {
+    return satLvl.front() & uint8_t(127);
+  }
+  /// if true, then conditioned on the sat level,
+  [[nodiscard]] constexpr auto isCondIndep() const -> bool {
+    return (satLvl.front() & uint8_t(128)) == uint8_t(0);
+  }
   [[nodiscard]] constexpr auto getArrayPointer() -> const llvm::SCEV * {
     return in->getArrayPointer();
   }
@@ -297,7 +303,10 @@ public:
                                    DensePtrMatrix<int64_t> inPhi,
                                    DensePtrMatrix<int64_t> outPhi) -> bool {
     if (!isForward()) std::swap(inPhi, outPhi);
-    return depPoly->checkSat(alloc, inPhi, outPhi);
+    invariant(inPhi.numRow(), outPhi.numRow());
+    if (!depPoly->checkSat(alloc, inPhi, outPhi)) return false;
+    satLvl.front() = uint8_t(inPhi.numRow() - 1);
+    return true;
   }
   constexpr auto addEdge(size_t i) -> Dependence & {
     in->addEdgeOut(i);
@@ -429,7 +438,7 @@ public:
                   StridedVector<int64_t>> {
     PtrMatrix<int64_t> phiCoefsIn = getSatPhi1Coefs(),
                        phiCoefsOut = getSatPhi0Coefs();
-    if (forward) std::swap(phiCoefsIn, phiCoefsOut);
+    if (isForward()) std::swap(phiCoefsIn, phiCoefsOut);
     return {getSatConstants(), getSatLambda(),     phiCoefsIn,
             phiCoefsOut,       getSatOmegaCoefs(), getSatW()};
   }
@@ -439,7 +448,7 @@ public:
                   PtrMatrix<int64_t>> {
     PtrMatrix<int64_t> phiCoefsIn = getBndPhi1Coefs(),
                        phiCoefsOut = getBndPhi0Coefs();
-    if (forward) std::swap(phiCoefsIn, phiCoefsOut);
+    if (isForward()) std::swap(phiCoefsIn, phiCoefsOut);
     return {getBndConstants(), getBndLambda(),     phiCoefsIn,
             phiCoefsOut,       getBndOmegaCoefs(), getBndCoefs()};
   }
@@ -705,7 +714,7 @@ public:
   friend inline auto operator<<(llvm::raw_ostream &os, const Dependence &d)
     -> llvm::raw_ostream & {
     os << "Dependence Poly ";
-    if (d.forward) os << "x -> y:";
+    if (d.isForward()) os << "x -> y:";
     else os << "y -> x:";
     os << "\n\tInput:\n" << *d.in->getArrayRef();
     os << "\n\tOutput:\n" << *d.out->getArrayRef();
@@ -713,6 +722,7 @@ public:
        << "\nSchedule Constraints:"
        << d.dependenceSatisfaction->getConstraints()
        << "\nBounding Constraints:" << d.dependenceBounding->getConstraints();
-    return os << "\n";
+    return os << "\nSatisfied (isCondIndep() == " << d.isCondIndep()
+              << ") = " << int(d.satLevel()) << "\n";
   }
 };

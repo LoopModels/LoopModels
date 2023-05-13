@@ -97,8 +97,8 @@ class Address {
       numDirectEdges(directEdges), numMemOutputs(memOutputs),
       dim(ma->getArrayDim()), depth(uint8_t(Pinv.numCol())),
       bitfield(uint8_t(isStr) << 3) {
-    PtrMatrix<int64_t> M = oldMemAccess->indexMatrix(); // nLma x aD
-    MutPtrMatrix<int64_t> mStar{indexMatrix()};         // aD x nLp
+    PtrMatrix<int64_t> M{oldMemAccess->indexMatrix()}; // nLma x aD
+    MutPtrMatrix<int64_t> mStar{indexMatrix()};        // aD x nLp
     // M is implicitly padded with zeros, nLp >= nLma
     size_t nLma = ma->getNumLoops();
     invariant(nLma <= depth);
@@ -228,7 +228,7 @@ public:
       return ((p != e) && ((*d < filtdepth) || (!((*p)->inActiveSubset()))));
     }
     constexpr auto operator++() -> ActiveEdgeIterator & {
-      // meaning of filtdepth 255?
+      // meaning of filtdepth 127?
       do {
         ++p;
         ++d;
@@ -246,7 +246,7 @@ public:
       }
     }
     constexpr auto operator++(int) -> ActiveEdgeIterator {
-      auto tmp = *this;
+      ActiveEdgeIterator tmp = *this;
       ++*this;
       return tmp;
     }

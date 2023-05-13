@@ -564,7 +564,7 @@ public:
     root->validate();
 #endif
     for (size_t i = 0; i < lnodes.size(); ++i)
-      lnodes[i].insertMem(alloc, LB.getMem(), LB.getEdges(), loops[i]);
+      lnodes[i].insertMem(alloc, LB.getMem(), loops[i]);
 #ifndef NDEBUG
     root->validateMemPlacements();
 #endif
@@ -573,7 +573,7 @@ public:
       // here we add all connections to the addrs
       // edges -> MA -> Addr
       edge.input()->getAddress()->addOut(edge.output()->getAddress(),
-                                         edge.getSatLvl()[0]);
+                                         edge.satLevel());
     }
     MutPtrVector<Address *> addr{alloc.allocate<Address *>(numAddr), numAddr};
     root->placeAddr(alloc, LB, addr);
@@ -668,9 +668,10 @@ static_assert(Graphs::AbstractIndexGraph<LoopTreeSchedule::AddressGraph>);
 // };
 } // namespace CostModeling
 
-constexpr void ScheduledNode::insertMem(
-  BumpAlloc<> &alloc, PtrVector<MemoryAccess *> memAccess,
-  PtrVector<Dependence> edges, CostModeling::LoopTreeSchedule *L) const {
+constexpr void
+ScheduledNode::insertMem(BumpAlloc<> &alloc,
+                         PtrVector<MemoryAccess *> memAccess,
+                         CostModeling::LoopTreeSchedule *L) const {
   // First, we invert the schedule matrix.
   SquarePtrMatrix<int64_t> Phi = schedule.getPhi();
   auto [Pinv, denom] = NormalForm::scaledInv(Phi);

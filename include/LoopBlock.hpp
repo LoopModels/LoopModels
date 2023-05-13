@@ -87,7 +87,6 @@ public:
   // 2. add the direct Addr connections corresponding to the node
   constexpr void insertMem(BumpAlloc<> &alloc,
                            PtrVector<MemoryAccess *> memAccess,
-                           PtrVector<Dependence> edges,
                            CostModeling::LoopTreeSchedule *L) const;
   // constexpr void
   // incrementReplicationCounts(PtrVector<MemoryAccess *> memAccess) const {
@@ -1035,14 +1034,17 @@ public:
       if (g.isInactive(e, depth)) continue;
       Dependence &edge = edges[e];
       Col uu = u + edge.getNumDynamicBoundingVar();
-      if ((sol[w++] != 0) || (!(allZero(sol[_(u, uu)])))) {
+      size_t inIndex = edge.nodeIn(), outIndex = edge.nodeOut();
+      if ((sol[w++] != 0) || (anyNEZero(sol[_(u, uu)]))) {
         g.activeEdges.remove(e);
         deactivated.insert(e);
-        edge.satLevel() = depth;
-        size_t inIndex = edge.nodeIn();
+        edge.setSatLevelLP(depth);
         carriedDeps[inIndex].setCarriedDependency(depth);
-        size_t outIndex = edge.nodeOut();
         carriedDeps[outIndex].setCarriedDependency(depth);
+      } else if (edge.checkEmptySat(
+                   allocator, nodes[inIndex].getPhi()(_(0, depth + 1), _),
+                   nodes[outIndex].getPhi()(_(0, depth + 1), _))) {
+        g.activeEdges.remove(e);
       }
       u = size_t(uu);
     }

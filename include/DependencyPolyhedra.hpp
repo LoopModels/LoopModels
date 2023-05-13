@@ -600,6 +600,8 @@ public:
     // note that delta/constant coef is handled as last `s`
     return {fw, bw};
   }
+  /// returns `true` if the array accesses are guaranteed independent
+  /// conditioning on partial schedules xPhi and yPhi
   [[nodiscard]] auto checkSat(BumpAlloc<> &alloc, DensePtrMatrix<int64_t> xPhi,
                               DensePtrMatrix<int64_t> yPhi) -> bool {
     auto p = alloc.scope();
@@ -614,6 +616,7 @@ public:
       B(r + numEqCon, _(0, numSym)) << 0;
       B(r + numEqCon, _(0, numDep0Var) + numSym) << xPhi(r, _);
       B(r + numEqCon, _(0, numDep1Var) + numSym + numDep0Var) << yPhi(r, _);
+      if (timeDim) B(r + numEqCon, _(end - timeDim, end)) << 0;
     }
     Row rank = NormalForm::simplifySystemImpl(B);
     if (rank <= numEqCon) return false;
