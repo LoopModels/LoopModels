@@ -1050,18 +1050,81 @@ public:
     }
     return deactivated;
   }
+  static void setDepFreeSchedule(PtrVector<MemoryAccess *> mem,
+                                 ScheduledNode &node, size_t depth) {
+    node.getOffsetOmega(depth) = 0;
+    if (node.phiIsScheduled(depth)) return;
+    // we'll check the null space of the phi's so far
+    // and then search for array indices
+    if (depth == 0) {
+      // for now, if depth == 0, we just set last active
+      MutPtrVector<int64_t> phiv{node.getSchedule(0)};
+      phiv[_(0, last)] << 0;
+      phiv[last] = 1;
+      return;
+    }
+    DenseMatrix<int64_t> nullSpace; // d x lfull
+    DenseMatrix<int64_t> A{node.getPhi()(_(0, depth), _)};
+    NormalForm::nullSpace11(nullSpace, A);
+    invariant(size_t(nullSpace.numRow()), node.getNumLoops() - depth);
+    // now, we search index matrices for schedules not in the null space of
+    // existing phi.
+    // Here, we collect candidates for the next schedule
+    DenseMatrix<int64_t> candidates{DenseDims{0, node.getNumLoops() + 1}};
+    Vector<int64_t> indv;
+    indv.resizeForOverwrite(node.getNumLoops());
+    for (size_t ind : node.getMemory()) {
+      PtrMatrix<int64_t> indMat = mem[ind]->indexMatrix(); // lsub x d
+      A.resizeForOverwrite(DenseDims{nullSpace.numRow(), indMat.numCol()});
+      A = nullSpace(_, _(0, indMat.numRow())) * indMat;
+      // we search A for rows that aren't all zero
+      for (size_t d = 0; d < A.numCol(); ++d) {
+        if (allZero(A(_, d))) continue;
+        indv << indMat(_, d);
+        bool found = false;
+        for (size_t j = 0; j < candidates.numRow(); ++j) {
+          if (candidates(j, _(0, last)) != indv) continue;
+          found = true;
+          ++candidates(j, 0);
+          break;
+        }
+        if (!found) {
+          candidates.resize(candidates.numRow() + 1);
+          assert(candidates(last, 0) == 0);
+          candidates(last, _(1, end)) << indv;
+        }
+      }
+    }
+    if (Row R = candidates.numRow()) {
+      // >= 1 candidates, pick the one with with greatest lex, favoring
+      // number of repetitions (which were placed in first index)
+      size_t i = 0;
+      for (size_t j = 1; j < candidates.numRow(); ++j)
+        if (candidates(j, _) > candidates(i, _)) i = j;
+      node.getSchedule(depth) << candidates(i, _(1, end));
+      return;
+    }
+    // do we want to pick the outermost original loop,
+    // or do we want to pick the outermost lex null space?
+    node.getSchedule(depth) << 0;
+    for (size_t c = 0; c < nullSpace.numCol(); ++c) {
+      if (allZero(nullSpace(_, c))) continue;
+      node.getSchedule(depth)[c] = 1;
+      return;
+    }
+    invariant(false);
+  }
   void updateSchedules(const Graph &g, size_t depth, Simplex::Solution sol) {
 #ifndef NDEBUG
     if (numPhiCoefs > 0)
-      assert(std::ranges::any_of(sol, [](auto s) { return s != 0; }));
+      assert(
+        std::ranges::any_of(sol, [](Rational s) -> bool { return s != 0; }));
 #endif
     size_t o = numOmegaCoefs;
     for (auto &&node : nodes) {
       if (depth >= node.getNumLoops()) continue;
       if (!hasActiveEdges(g, node)) {
-        node.getOffsetOmega(depth) = std::numeric_limits<int64_t>::min();
-        if (!node.phiIsScheduled(depth))
-          node.getSchedule(depth) << std::numeric_limits<int64_t>::min();
+        setDepFreeSchedule(memory, node, depth);
         continue;
       }
       Rational sOmega = sol[node.getOmegaOffset()];
@@ -1103,6 +1166,7 @@ public:
   [[nodiscard]] static constexpr auto lexSign(PtrVector<int64_t> x) -> int64_t {
     for (auto a : x)
       if (a) return 2 * (a > 0) - 1;
+    invariant(false);
     return 0;
   }
   void addIndependentSolutionConstraints(NotNull<Simplex> omniSimplex,
@@ -1130,6 +1194,8 @@ public:
         A.resizeForOverwrite(Row{size_t(node.getPhi().numCol())}, Col{d});
         A << node.getPhi()(_(0, d), _).transpose();
         NormalForm::nullSpace11(N, A);
+        // we add sum(NullSpace,dims=1) >= 1
+        // via 1 = sum(NullSpace,dims=1) - s, s >= 0
         C(i, 0) = 1;
         MutPtrVector<int64_t> cc{C(i, node.getPhiOffsetRange() + o)};
         // sum(N,dims=1) >= 1 after flipping row signs to be lex > 0
@@ -1173,14 +1239,9 @@ public:
     // IntMatrix A, N;
     for (auto &&node : nodes) {
       if ((depth >= node.getNumLoops()) || node.phiIsScheduled(depth)) continue;
-      if (!hasActiveEdges(g, node)) {
-        node.getOffsetOmega(depth) = std::numeric_limits<int64_t>::min();
-        if (!node.phiIsScheduled(depth))
-          node.getSchedule(depth) << std::numeric_limits<int64_t>::min();
-        continue;
-      }
-      node.getOffsetOmega(depth) = 0;
-      node.getSchedule(depth) << std::numeric_limits<int64_t>::min();
+      // we should only be here if numLambda==0
+      assert(!hasActiveEdges(g, node));
+      setDepFreeSchedule(memory, node, depth);
     }
   }
   void resetPhiOffsets() {

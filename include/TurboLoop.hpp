@@ -9,14 +9,12 @@
 #include "Math/Array.hpp"
 #include "Math/Math.hpp"
 #include <algorithm>
-#include <bits/ranges_algo.h>
 #include <cassert>
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <limits>
 #include <llvm/ADT/ArrayRef.h>
-#include <llvm/ADT/SmallPtrSet.h>
 #include <llvm/ADT/SmallVector.h>
 #include <llvm/Analysis/AssumptionCache.h>
 #include <llvm/Analysis/Delinearization.h>

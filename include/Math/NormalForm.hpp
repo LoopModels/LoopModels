@@ -588,7 +588,7 @@ constexpr void solveSystem(MutPtrMatrix<int64_t> A) {
     for (size_t i = 0; i < A.numRow(); ++i) B(i, _) *= s / A(i, i);
   return {std::move(B), s};
 }
-
+// one row per null dim
 constexpr void nullSpace11(LinAlg::DenseMatrix<int64_t> &B,
                            LinAlg::DenseMatrix<int64_t> &A) {
   const Row M = A.numRow();
@@ -601,7 +601,6 @@ constexpr void nullSpace11(LinAlg::DenseMatrix<int64_t> &B,
   if (!R) return;
   // we keep last D columns
   Row D = M - R;
-  size_t o = size_t(R * M);
   // we keep `D` columns
   // TODO: shift pointer instead?
   // This seems like a bad idea given ManagedArrays that must
@@ -610,7 +609,7 @@ constexpr void nullSpace11(LinAlg::DenseMatrix<int64_t> &B,
   // However, this may be reasonable given an implementation
   // that takes a `BumpAlloc<>` as input to allocate `B`, as
   // then we don't need to track the pointer.
-  std::copy_n(B.data() + o, size_t(D * M), B.data());
+  std::copy_n(B.data() + size_t(R * M), size_t(D * M), B.data());
   B.truncate(D);
 }
 [[nodiscard]] constexpr auto nullSpace(LinAlg::DenseMatrix<int64_t> A)

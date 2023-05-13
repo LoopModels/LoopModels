@@ -224,6 +224,24 @@ template <class T, class S> struct Array {
     }
     return std::equal(begin(), end(), other.begin());
   }
+  [[nodiscard]] constexpr auto operator<(const Array &other) const noexcept
+    -> bool {
+    static_assert(std::integral<S>);
+    return std::lexicographical_compare(begin(), end(), other.begin(),
+                                        other.end());
+  }
+  [[nodiscard]] constexpr auto operator>(const Array &other) const noexcept
+    -> bool {
+    return other < *this;
+  }
+  [[nodiscard]] constexpr auto operator>=(const Array &other) const noexcept
+    -> bool {
+    return !(*this < other);
+  }
+  [[nodiscard]] constexpr auto operator<=(const Array &other) const noexcept
+    -> bool {
+    return !(*this > other);
+  }
   [[nodiscard]] constexpr auto norm2() const noexcept -> value_type {
     return std::transform_reduce(begin(), end(), begin(), 0.0);
   }

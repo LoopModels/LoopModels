@@ -113,6 +113,7 @@ public:
   [[nodiscard]] auto sizesMatch(const MemoryAccess &ma) const -> bool {
     return arrayRef->sizesMatch(ma.getArrayRef());
   }
+  /// indexMatrix() -> getNumLoops() x arrayDim()
   constexpr auto indexMatrix() -> MutDensePtrMatrix<int64_t> {
     return arrayRef->indexMatrix();
   }

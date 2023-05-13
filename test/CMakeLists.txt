@@ -83,26 +83,48 @@ target_include_directories(
 target_precompile_headers(
   ${PROJECT_NAME}
   PRIVATE
-  <cstddef>
-  <algorithm>
-  <cassert>
-  <cmath>
-  <concepts>
-  <cstddef>
-  <cstdint>
-  <gtest/gtest.h>
-  <iterator>
-  <limits>
   <llvm/ADT/ArrayRef.h>
   <llvm/ADT/Optional.h>
   <llvm/ADT/SmallVector.h>
-  <llvm/Support/raw_os_ostream.h>
+  <llvm/Analysis/LoopInfo.h>
+  <llvm/Analysis/ScalarEvolution.h>
+  <llvm/Analysis/ScalarEvolutionExpressions.h>
+  <llvm/Analysis/TargetLibraryInfo.h>
+  <llvm/Analysis/TargetTransformInfo.h>
+  <llvm/IR/BasicBlock.h>
+  <llvm/IR/CFG.h>
+  <llvm/IR/Constant.h>
+  <llvm/IR/Constants.h>
+  <llvm/IR/DataLayout.h>
+  <llvm/IR/Dominators.h>
+  <llvm/IR/IRBuilder.h>
+  <llvm/IR/InstrTypes.h>
+  <llvm/IR/Instruction.h>
+  <llvm/IR/Instructions.h>
+  <llvm/IR/PassManager.h>
+  <llvm/IR/Type.h>
+  <llvm/IR/Value.h>
+  <llvm/Support/Casting.h>
+  <llvm/Support/Debug.h>
   <llvm/Support/raw_ostream.h>
+  <llvm/Transforms/Utils/LoopUtils.h>
+  <algorithm>
+  <cassert>
+  <cmath>
+  <cstddef>
+  <cstdint>
+  <limits>
+  <ranges>
+  <utility>
+  <cstddef>
+  <concepts>
+  <gtest/gtest.h>
+  <iterator>
+  <limits>
   <numeric>
   <optional>
   <ostream>
   <random>
-  <ranges>
   <string>
   <tuple>
   <type_traits>

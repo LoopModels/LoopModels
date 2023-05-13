@@ -30,18 +30,18 @@
 #include <llvm/IR/IntrinsicInst.h>
 #include <llvm/IR/PassManager.h>
 #include <llvm/Pass.h>
-#include <llvm/Passes/OptimizationLevel.h>
 #include <llvm/Passes/PassBuilder.h>
 #include <llvm/Passes/PassPlugin.h>
-#include <llvm/Support/Casting.h>
 #include <llvm/Support/FormatVariadic.h>
 #include <llvm/Support/raw_ostream.h>
-#include <llvm/Transforms/Scalar/IndVarSimplify.h>
-#include <llvm/Transforms/Scalar/LoopRotation.h>
-#include <llvm/Transforms/Utils/LCSSA.h>
-#include <llvm/Transforms/Utils/LoopSimplify.h>
-#include <llvm/Transforms/Utils/LoopUtils.h>
-#include <llvm/Transforms/Utils/ScalarEvolutionExpander.h>
+// #include <llvm/Passes/OptimizationLevel.h>
+// #include <llvm/Support/Casting.h>
+// #include <llvm/Transforms/Scalar/IndVarSimplify.h>
+// #include <llvm/Transforms/Scalar/LoopRotation.h>
+// #include <llvm/Transforms/Utils/LCSSA.h>
+// #include <llvm/Transforms/Utils/LoopSimplify.h>
+// #include <llvm/Transforms/Utils/LoopUtils.h>
+// #include <llvm/Transforms/Utils/ScalarEvolutionExpander.h>
 
 // The TurboLoopPass represents each loop in function `F` using its own loop
 // representation, suitable for more aggressive analysis. However, the remaining
@@ -106,7 +106,7 @@ TurboLoopPass::run(llvm::Function &F, llvm::FunctionAnalysisManager &FAM)
         llvm::SmallVector<char, 512> str;
         llvm::raw_svector_ostream os(str);
         os << "Solved linear program:" << loopBlock << "\n";
-        // LTS->printDotFile(allocator, os);
+        LTS->printDotFile(allocator, os);
         remark("LinearProgramSuccess", forest->getOuterLoop(), os.str());
       } else {
         remark("LinearProgramFailure", forest->getOuterLoop(),
