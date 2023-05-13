@@ -623,46 +623,48 @@ $(function() {
 <div class="line"><a name="l00600"></a><span class="lineno">  600</span>&#160;    <span class="comment">// note that delta/constant coef is handled as last `s`</span></div>
 <div class="line"><a name="l00601"></a><span class="lineno">  601</span>&#160;    <span class="keywordflow">return</span> {fw, bw};</div>
 <div class="line"><a name="l00602"></a><span class="lineno">  602</span>&#160;  }</div>
-<div class="line"><a name="l00603"></a><span class="lineno">  603</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> checkSat(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, DensePtrMatrix&lt;int64_t&gt; xPhi,</div>
-<div class="line"><a name="l00604"></a><span class="lineno">  604</span>&#160;                              DensePtrMatrix&lt;int64_t&gt; yPhi) -&gt; <span class="keywordtype">bool</span> {</div>
-<div class="line"><a name="l00605"></a><span class="lineno">  605</span>&#160;    <span class="keyword">auto</span> p = alloc.scope();</div>
-<div class="line"><a name="l00606"></a><span class="lineno">  606</span>&#160;    <span class="keywordtype">unsigned</span> numSym = getNumSymbols();</div>
-<div class="line"><a name="l00607"></a><span class="lineno">  607</span>&#160;    Row numPhi = xPhi.numRow();</div>
-<div class="line"><a name="l00608"></a><span class="lineno">  608</span>&#160;    invariant(yPhi.numRow(), numPhi);</div>
-<div class="line"><a name="l00609"></a><span class="lineno">  609</span>&#160;    DensePtrMatrix&lt;int64_t&gt; E{getE()};</div>
-<div class="line"><a name="l00610"></a><span class="lineno">  610</span>&#160;    MutDensePtrMatrix&lt;int64_t&gt; B{</div>
-<div class="line"><a name="l00611"></a><span class="lineno">  611</span>&#160;      matrix&lt;int64_t&gt;(alloc, E.numRow() + numPhi, E.numCol())};</div>
-<div class="line"><a name="l00612"></a><span class="lineno">  612</span>&#160;    <span class="keywordflow">for</span> (Row r = 0; r &lt; numEqCon; ++r) B(r, _) &lt;&lt; E(r, _);</div>
-<div class="line"><a name="l00613"></a><span class="lineno">  613</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> r = 0; r &lt; numPhi; ++r) {</div>
-<div class="line"><a name="l00614"></a><span class="lineno">  614</span>&#160;      B(r + numEqCon, _(0, numSym)) &lt;&lt; 0;</div>
-<div class="line"><a name="l00615"></a><span class="lineno">  615</span>&#160;      B(r + numEqCon, _(0, numDep0Var) + numSym) &lt;&lt; xPhi(r, _);</div>
-<div class="line"><a name="l00616"></a><span class="lineno">  616</span>&#160;      B(r + numEqCon, _(0, numDep1Var) + numSym + numDep0Var) &lt;&lt; yPhi(r, _);</div>
-<div class="line"><a name="l00617"></a><span class="lineno">  617</span>&#160;    }</div>
-<div class="line"><a name="l00618"></a><span class="lineno">  618</span>&#160;    Row rank = NormalForm::simplifySystemImpl(B);</div>
-<div class="line"><a name="l00619"></a><span class="lineno">  619</span>&#160;    <span class="keywordflow">if</span> (rank &lt;= numEqCon) <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
-<div class="line"><a name="l00620"></a><span class="lineno">  620</span>&#160;    <span class="keywordtype">size_t</span> memNeeded =</div>
-<div class="line"><a name="l00621"></a><span class="lineno">  621</span>&#160;      <span class="keyword">sizeof</span>(int64_t) *</div>
-<div class="line"><a name="l00622"></a><span class="lineno">  622</span>&#160;        ((conCapacity + eqConCapacity) * size_t(E.numCol()) + timeDim) +</div>
-<div class="line"><a name="l00623"></a><span class="lineno">  623</span>&#160;      <span class="keyword">sizeof</span>(<span class="keyword">const</span> llvm::SCEV *) * numDynSym;</div>
-<div class="line"><a name="l00624"></a><span class="lineno">  624</span>&#160;    <span class="keyword">auto</span> *mem =</div>
-<div class="line"><a name="l00625"></a><span class="lineno">  625</span>&#160;      (<a class="code" href="classDepPoly.html">DepPoly</a> *)alloc.allocate(<span class="keyword">sizeof</span>(<a class="code" href="classDepPoly.html">DepPoly</a>) + memNeeded, <span class="keyword">alignof</span>(<a class="code" href="classDepPoly.html">DepPoly</a>));</div>
-<div class="line"><a name="l00626"></a><span class="lineno">  626</span>&#160;    <span class="keyword">auto</span> *dp = std::construct_at(mem, numDep0Var, numDep1Var, numDynSym,</div>
-<div class="line"><a name="l00627"></a><span class="lineno">  627</span>&#160;                                 timeDim, numCon, <span class="keywordtype">unsigned</span>(rank));</div>
-<div class="line"><a name="l00628"></a><span class="lineno">  628</span>&#160;    dp-&gt;getA() &lt;&lt; getA();</div>
-<div class="line"><a name="l00629"></a><span class="lineno">  629</span>&#160;    dp-&gt;getE() &lt;&lt; B(_(0, rank), _);</div>
-<div class="line"><a name="l00630"></a><span class="lineno">  630</span>&#160;    dp-&gt;pruneBounds(alloc);</div>
-<div class="line"><a name="l00631"></a><span class="lineno">  631</span>&#160;    <span class="keywordflow">return</span> dp-&gt;getNumCon() == 0;</div>
-<div class="line"><a name="l00632"></a><span class="lineno">  632</span>&#160;  }</div>
-<div class="line"><a name="l00633"></a><span class="lineno">  633</span>&#160;  <span class="keyword">friend</span> <span class="keyword">inline</span> <span class="keyword">auto</span> operator&lt;&lt;(llvm::raw_ostream &amp;os, <span class="keyword">const</span> <a class="code" href="classDepPoly.html">DepPoly</a> &amp;p)</div>
-<div class="line"><a name="l00634"></a><span class="lineno">  634</span>&#160;    -&gt; llvm::raw_ostream &amp; {</div>
-<div class="line"><a name="l00635"></a><span class="lineno">  635</span>&#160;    <span class="keywordflow">return</span> printConstraints(</div>
-<div class="line"><a name="l00636"></a><span class="lineno">  636</span>&#160;      printPositive(printConstraints(os &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>, p.getA(), p.getSyms()),</div>
-<div class="line"><a name="l00637"></a><span class="lineno">  637</span>&#160;                    p.getNumDynamic()),</div>
-<div class="line"><a name="l00638"></a><span class="lineno">  638</span>&#160;      p.getE(), p.getSyms(), <span class="keyword">false</span>);</div>
-<div class="line"><a name="l00639"></a><span class="lineno">  639</span>&#160;  }</div>
-<div class="line"><a name="l00640"></a><span class="lineno">  640</span>&#160; </div>
-<div class="line"><a name="l00641"></a><span class="lineno">  641</span>&#160;}; <span class="comment">// class DepPoly</span></div>
+<div class="line"><a name="l00605"></a><span class="lineno"><a class="line" href="classDepPoly.html#a88f00a95ebbd5d0ebafb1d25ac39862d">  605</a></span>&#160;  [[nodiscard]] <span class="keyword">auto</span> <a class="code" href="classDepPoly.html#a88f00a95ebbd5d0ebafb1d25ac39862d">checkSat</a>(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, DensePtrMatrix&lt;int64_t&gt; xPhi,</div>
+<div class="line"><a name="l00606"></a><span class="lineno">  606</span>&#160;                              DensePtrMatrix&lt;int64_t&gt; yPhi) -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l00607"></a><span class="lineno">  607</span>&#160;    <span class="keyword">auto</span> p = alloc.scope();</div>
+<div class="line"><a name="l00608"></a><span class="lineno">  608</span>&#160;    <span class="keywordtype">unsigned</span> numSym = getNumSymbols();</div>
+<div class="line"><a name="l00609"></a><span class="lineno">  609</span>&#160;    Row numPhi = xPhi.numRow();</div>
+<div class="line"><a name="l00610"></a><span class="lineno">  610</span>&#160;    invariant(yPhi.numRow(), numPhi);</div>
+<div class="line"><a name="l00611"></a><span class="lineno">  611</span>&#160;    DensePtrMatrix&lt;int64_t&gt; E{getE()};</div>
+<div class="line"><a name="l00612"></a><span class="lineno">  612</span>&#160;    MutDensePtrMatrix&lt;int64_t&gt; B{</div>
+<div class="line"><a name="l00613"></a><span class="lineno">  613</span>&#160;      matrix&lt;int64_t&gt;(alloc, E.numRow() + numPhi, E.numCol())};</div>
+<div class="line"><a name="l00614"></a><span class="lineno">  614</span>&#160;    <span class="keywordflow">for</span> (Row r = 0; r &lt; numEqCon; ++r) B(r, _) &lt;&lt; E(r, _);</div>
+<div class="line"><a name="l00615"></a><span class="lineno">  615</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> r = 0; r &lt; numPhi; ++r) {</div>
+<div class="line"><a name="l00616"></a><span class="lineno">  616</span>&#160;      B(r + numEqCon, _(0, numSym)) &lt;&lt; 0;</div>
+<div class="line"><a name="l00617"></a><span class="lineno">  617</span>&#160;      B(r + numEqCon, _(0, numDep0Var) + numSym) &lt;&lt; xPhi(r, _);</div>
+<div class="line"><a name="l00618"></a><span class="lineno">  618</span>&#160;      B(r + numEqCon, _(0, numDep1Var) + numSym + numDep0Var) &lt;&lt; yPhi(r, _);</div>
+<div class="line"><a name="l00619"></a><span class="lineno">  619</span>&#160;      <span class="keywordflow">if</span> (timeDim) B(r + numEqCon, _(end - timeDim, end)) &lt;&lt; 0;</div>
+<div class="line"><a name="l00620"></a><span class="lineno">  620</span>&#160;    }</div>
+<div class="line"><a name="l00621"></a><span class="lineno">  621</span>&#160;    Row rank = NormalForm::simplifySystemImpl(B);</div>
+<div class="line"><a name="l00622"></a><span class="lineno">  622</span>&#160;    <span class="keywordflow">if</span> (rank &lt;= numEqCon) <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
+<div class="line"><a name="l00623"></a><span class="lineno">  623</span>&#160;    <span class="keywordtype">size_t</span> memNeeded =</div>
+<div class="line"><a name="l00624"></a><span class="lineno">  624</span>&#160;      <span class="keyword">sizeof</span>(int64_t) *</div>
+<div class="line"><a name="l00625"></a><span class="lineno">  625</span>&#160;        ((conCapacity + eqConCapacity) * size_t(E.numCol()) + timeDim) +</div>
+<div class="line"><a name="l00626"></a><span class="lineno">  626</span>&#160;      <span class="keyword">sizeof</span>(<span class="keyword">const</span> llvm::SCEV *) * numDynSym;</div>
+<div class="line"><a name="l00627"></a><span class="lineno">  627</span>&#160;    <span class="keyword">auto</span> *mem =</div>
+<div class="line"><a name="l00628"></a><span class="lineno">  628</span>&#160;      (<a class="code" href="classDepPoly.html">DepPoly</a> *)alloc.allocate(<span class="keyword">sizeof</span>(<a class="code" href="classDepPoly.html">DepPoly</a>) + memNeeded, <span class="keyword">alignof</span>(<a class="code" href="classDepPoly.html">DepPoly</a>));</div>
+<div class="line"><a name="l00629"></a><span class="lineno">  629</span>&#160;    <span class="keyword">auto</span> *dp = std::construct_at(mem, numDep0Var, numDep1Var, numDynSym,</div>
+<div class="line"><a name="l00630"></a><span class="lineno">  630</span>&#160;                                 timeDim, numCon, <span class="keywordtype">unsigned</span>(rank));</div>
+<div class="line"><a name="l00631"></a><span class="lineno">  631</span>&#160;    dp-&gt;getA() &lt;&lt; getA();</div>
+<div class="line"><a name="l00632"></a><span class="lineno">  632</span>&#160;    dp-&gt;getE() &lt;&lt; B(_(0, rank), _);</div>
+<div class="line"><a name="l00633"></a><span class="lineno">  633</span>&#160;    dp-&gt;pruneBounds(alloc);</div>
+<div class="line"><a name="l00634"></a><span class="lineno">  634</span>&#160;    <span class="keywordflow">return</span> dp-&gt;getNumCon() == 0;</div>
+<div class="line"><a name="l00635"></a><span class="lineno">  635</span>&#160;  }</div>
+<div class="line"><a name="l00636"></a><span class="lineno">  636</span>&#160;  <span class="keyword">friend</span> <span class="keyword">inline</span> <span class="keyword">auto</span> operator&lt;&lt;(llvm::raw_ostream &amp;os, <span class="keyword">const</span> <a class="code" href="classDepPoly.html">DepPoly</a> &amp;p)</div>
+<div class="line"><a name="l00637"></a><span class="lineno">  637</span>&#160;    -&gt; llvm::raw_ostream &amp; {</div>
+<div class="line"><a name="l00638"></a><span class="lineno">  638</span>&#160;    <span class="keywordflow">return</span> printConstraints(</div>
+<div class="line"><a name="l00639"></a><span class="lineno">  639</span>&#160;      printPositive(printConstraints(os &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>, p.getA(), p.getSyms()),</div>
+<div class="line"><a name="l00640"></a><span class="lineno">  640</span>&#160;                    p.getNumDynamic()),</div>
+<div class="line"><a name="l00641"></a><span class="lineno">  641</span>&#160;      p.getE(), p.getSyms(), <span class="keyword">false</span>);</div>
+<div class="line"><a name="l00642"></a><span class="lineno">  642</span>&#160;  }</div>
+<div class="line"><a name="l00643"></a><span class="lineno">  643</span>&#160; </div>
+<div class="line"><a name="l00644"></a><span class="lineno">  644</span>&#160;}; <span class="comment">// class DepPoly</span></div>
 <div class="ttc" id="aclassDepPoly_html"><div class="ttname"><a href="classDepPoly.html">DepPoly</a></div><div class="ttdef"><b>Definition:</b> DependencyPolyhedra.hpp:74</div></div>
+<div class="ttc" id="aclassDepPoly_html_a88f00a95ebbd5d0ebafb1d25ac39862d"><div class="ttname"><a href="classDepPoly.html#a88f00a95ebbd5d0ebafb1d25ac39862d">DepPoly::checkSat</a></div><div class="ttdeci">auto checkSat(BumpAlloc&lt;&gt; &amp;alloc, DensePtrMatrix&lt; int64_t &gt; xPhi, DensePtrMatrix&lt; int64_t &gt; yPhi) -&gt; bool</div><div class="ttdef"><b>Definition:</b> DependencyPolyhedra.hpp:605</div></div>
 <div class="ttc" id="aclassDepPoly_html_a9a6693af1ab0702d06dc3cebaecd9be9"><div class="ttname"><a href="classDepPoly.html#a9a6693af1ab0702d06dc3cebaecd9be9">DepPoly::mergeMap</a></div><div class="ttdeci">static auto mergeMap(Vector&lt; unsigned &gt; &amp;map, llvm::ArrayRef&lt; const llvm::SCEV * &gt; s0, llvm::ArrayRef&lt; const llvm::SCEV * &gt; s1) -&gt; unsigned</div><div class="ttdef"><b>Definition:</b> DependencyPolyhedra.hpp:285</div></div>
 <div class="ttc" id="aclassNotNull_html"><div class="ttname"><a href="classNotNull.html">NotNull</a></div><div class="ttdef"><b>Definition:</b> Valid.hpp:7</div></div>
 <div class="ttc" id="astructBasePolyhedra_html"><div class="ttname"><a href="structBasePolyhedra.html">BasePolyhedra</a></div><div class="ttdef"><b>Definition:</b> Polyhedra.hpp:64</div></div>

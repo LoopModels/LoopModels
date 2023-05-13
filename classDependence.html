@@ -97,21 +97,22 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>output</b> 
 <tr class="memitem:ab10dd79434fb82456b872fb391b6c730"><td class="memItemLeft" align="right" valign="top"><a id="ab10dd79434fb82456b872fb391b6c730"></a>
 constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Dependence</b> (<a class="el" href="classNotNull.html">NotNull</a>&lt; <a class="el" href="classDepPoly.html">DepPoly</a> &gt; poly, std::array&lt; <a class="el" href="classNotNull.html">NotNull</a>&lt; <a class="el" href="classSimplex.html">Simplex</a> &gt;, 2 &gt; depSatBound, std::array&lt; <a class="el" href="classNotNull.html">NotNull</a>&lt; <a class="el" href="structMemoryAccess.html">MemoryAccess</a> &gt;, 2 &gt; inOut, bool fwd)</td></tr>
 <tr class="separator:ab10dd79434fb82456b872fb391b6c730"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aeb3f830e836281fa6159b53a6e839a7a"><td class="memItemLeft" align="right" valign="top"><a id="aeb3f830e836281fa6159b53a6e839a7a"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getSatLvl</b> () -&gt; std::array&lt; uint8_t, 7 &gt; &amp;</td></tr>
-<tr class="separator:aeb3f830e836281fa6159b53a6e839a7a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a89aef542c89023054fa6d00c4c124216"><td class="memItemLeft" align="right" valign="top"><a id="a89aef542c89023054fa6d00c4c124216"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getSatLvl</b> () const -&gt; std::array&lt; uint8_t, 7 &gt;</td></tr>
-<tr class="separator:a89aef542c89023054fa6d00c4c124216"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad948cb2464e0af8404236d20bc03d6bc"><td class="memItemLeft" align="right" valign="top"><a id="ad948cb2464e0af8404236d20bc03d6bc"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>stashSatLevel</b> () -&gt; <a class="el" href="classDependence.html">Dependence</a> &amp;</td></tr>
 <tr class="separator:ad948cb2464e0af8404236d20bc03d6bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aeba3ef3183c36f670ab0005b4642aa4a"><td class="memItemLeft" align="right" valign="top"><a id="aeba3ef3183c36f670ab0005b4642aa4a"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>popSatLevel</b> ()</td></tr>
 <tr class="separator:aeba3ef3183c36f670ab0005b4642aa4a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab5153c6d28367f850984401df4c503bc"><td class="memItemLeft" align="right" valign="top"><a id="ab5153c6d28367f850984401df4c503bc"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>satLevel</b> () -&gt; uint8_t &amp;</td></tr>
-<tr class="separator:ab5153c6d28367f850984401df4c503bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a310dbb095217e28eeb03b45c46a6d301"><td class="memItemLeft" align="right" valign="top"><a id="a310dbb095217e28eeb03b45c46a6d301"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>setSatLevelLP</b> (uint8_t d)</td></tr>
+<tr class="separator:a310dbb095217e28eeb03b45c46a6d301"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a99c074b14ca9fa01eda75253832736d5"><td class="memItemLeft" align="right" valign="top"><a id="a99c074b14ca9fa01eda75253832736d5"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>satLevel</b> () const -&gt; uint8_t</td></tr>
+<tr class="separator:a99c074b14ca9fa01eda75253832736d5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9b770acc8ce812529d0d853f6ba6b39e"><td class="memItemLeft" align="right" valign="top"><a id="a9b770acc8ce812529d0d853f6ba6b39e"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classDependence.html#a9b770acc8ce812529d0d853f6ba6b39e">isCondIndep</a> () const -&gt; bool</td></tr>
+<tr class="memdesc:a9b770acc8ce812529d0d853f6ba6b39e"><td class="mdescLeft">&#160;</td><td class="mdescRight">if true, then conditioned on the sat level, <br /></td></tr>
+<tr class="separator:a9b770acc8ce812529d0d853f6ba6b39e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aed2e6acdb5ebf8423a05672bad052957"><td class="memItemLeft" align="right" valign="top"><a id="aed2e6acdb5ebf8423a05672bad052957"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getArrayPointer</b> () -&gt; const llvm::SCEV *</td></tr>
 <tr class="separator:aed2e6acdb5ebf8423a05672bad052957"><td class="memSeparator" colspan="2">&#160;</td></tr>

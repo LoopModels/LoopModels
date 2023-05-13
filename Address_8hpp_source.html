@@ -126,8 +126,8 @@ $(function() {
 <div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;      numDirectEdges(directEdges), numMemOutputs(memOutputs),</div>
 <div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;      dim(ma-&gt;getArrayDim()), depth(uint8_t(Pinv.numCol())),</div>
 <div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;      bitfield(uint8_t(isStr) &lt;&lt; 3) {</div>
-<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;    PtrMatrix&lt;int64_t&gt; M = oldMemAccess-&gt;indexMatrix(); <span class="comment">// nLma x aD</span></div>
-<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;    MutPtrMatrix&lt;int64_t&gt; mStar{<a class="code" href="classAddress.html#afad8e52958d1d85eef66ee44d4ceeb78">indexMatrix</a>()};         <span class="comment">// aD x nLp</span></div>
+<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;    PtrMatrix&lt;int64_t&gt; M{oldMemAccess-&gt;indexMatrix()}; <span class="comment">// nLma x aD</span></div>
+<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;    MutPtrMatrix&lt;int64_t&gt; mStar{<a class="code" href="classAddress.html#afad8e52958d1d85eef66ee44d4ceeb78">indexMatrix</a>()};        <span class="comment">// aD x nLp</span></div>
 <div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;    <span class="comment">// M is implicitly padded with zeros, nLp &gt;= nLma</span></div>
 <div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;    <span class="keywordtype">size_t</span> nLma = ma-&gt;getNumLoops();</div>
 <div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;    invariant(nLma &lt;= depth);</div>
@@ -255,7 +255,7 @@ $(function() {
 <div class="line"><a name="l00228"></a><span class="lineno">  228</span>&#160;      <span class="keywordflow">return</span> ((p != e) &amp;&amp; ((*d &lt; filtdepth) || (!((*p)-&gt;inActiveSubset()))));</div>
 <div class="line"><a name="l00229"></a><span class="lineno">  229</span>&#160;    }</div>
 <div class="line"><a name="l00230"></a><span class="lineno">  230</span>&#160;    constexpr <span class="keyword">auto</span> operator++() -&gt; <a class="code" href="classAddress_1_1ActiveEdgeIterator.html">ActiveEdgeIterator</a> &amp; {</div>
-<div class="line"><a name="l00231"></a><span class="lineno">  231</span>&#160;      <span class="comment">// meaning of filtdepth 255?</span></div>
+<div class="line"><a name="l00231"></a><span class="lineno">  231</span>&#160;      <span class="comment">// meaning of filtdepth 127?</span></div>
 <div class="line"><a name="l00232"></a><span class="lineno">  232</span>&#160;      <span class="keywordflow">do</span> {</div>
 <div class="line"><a name="l00233"></a><span class="lineno">  233</span>&#160;        ++p;</div>
 <div class="line"><a name="l00234"></a><span class="lineno">  234</span>&#160;        ++d;</div>
@@ -273,7 +273,7 @@ $(function() {
 <div class="line"><a name="l00246"></a><span class="lineno">  246</span>&#160;      }</div>
 <div class="line"><a name="l00247"></a><span class="lineno">  247</span>&#160;    }</div>
 <div class="line"><a name="l00248"></a><span class="lineno">  248</span>&#160;    constexpr <span class="keyword">auto</span> operator++(<span class="keywordtype">int</span>) -&gt; <a class="code" href="classAddress_1_1ActiveEdgeIterator.html">ActiveEdgeIterator</a> {</div>
-<div class="line"><a name="l00249"></a><span class="lineno">  249</span>&#160;      <span class="keyword">auto</span> tmp = *<span class="keyword">this</span>;</div>
+<div class="line"><a name="l00249"></a><span class="lineno">  249</span>&#160;      <a class="code" href="classAddress_1_1ActiveEdgeIterator.html">ActiveEdgeIterator</a> tmp = *<span class="keyword">this</span>;</div>
 <div class="line"><a name="l00250"></a><span class="lineno">  250</span>&#160;      ++*<span class="keyword">this</span>;</div>
 <div class="line"><a name="l00251"></a><span class="lineno">  251</span>&#160;      <span class="keywordflow">return</span> tmp;</div>
 <div class="line"><a name="l00252"></a><span class="lineno">  252</span>&#160;    }</div>
