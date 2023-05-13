@@ -619,66 +619,66 @@ TEST(TriangularExampleTest, BasicAssertions) {
   //   foo(arg...) // [ 0, _, 2 ]
   // }
   // NOTE: shared ptrs get set to NULL when `lblock.memory` reallocs...
-  Vector<unsigned, 4> sch2_0_0(2 + 1, 0);
-  Vector<unsigned, 4> sch2_0_1{sch2_0_0};
+  Vector<unsigned, 4> sch2t0t0(2 + 1, 0);
+  Vector<unsigned, 4> sch2t0t1{sch2t0t0};
   BumpAlloc<> alloc;
   // A(n,m) = -> B(n,m) <-
-  MemoryAccess *mSch2_0_0(createMemAccess(alloc, indBmn, loadB, sch2_0_0));
-  lblock.addMemory(mSch2_0_0);
-  sch2_0_1[2] = 1;
-  Vector<unsigned, 4> sch2_1_0{sch2_0_1};
+  MemoryAccess *mSch2t0t0(createMemAccess(alloc, indBmn, loadB, sch2t0t0));
+  lblock.addMemory(mSch2t0t0);
+  sch2t0t1[2] = 1;
+  Vector<unsigned, 4> sch2t1t0{sch2t0t1};
   // -> A(n,m) <- = B(n,m)
-  MemoryAccess *mSch2_0_1(createMemAccess(alloc, indAmn2, storeA0, sch2_0_1));
-  assert(mSch2_0_1->getInstruction() == storeA0);
-  assert(mSch2_0_1->getStore() == storeA0);
-  lblock.addMemory(mSch2_0_1);
-  sch2_1_0[1] = 1;
-  sch2_1_0[2] = 0;
-  Vector<unsigned, 4> sch2_1_1{sch2_1_0};
+  MemoryAccess *mSch2t0t1(createMemAccess(alloc, indAmn2, storeA0, sch2t0t1));
+  assert(mSch2t0t1->getInstruction() == storeA0);
+  assert(mSch2t0t1->getStore() == storeA0);
+  lblock.addMemory(mSch2t0t1);
+  sch2t1t0[1] = 1;
+  sch2t1t0[2] = 0;
+  Vector<unsigned, 4> sch2t1t1{sch2t1t0};
   // A(n,m) = -> A(n,m) <- / U(n,n); // sch2
-  MemoryAccess *mSch2_1_0(createMemAccess(alloc, indAmn2, loadA0, sch2_1_0));
-  assert(mSch2_1_0->getInstruction() == loadA0);
-  assert(mSch2_1_0->getLoad() == loadA0);
-  lblock.addMemory(mSch2_1_0);
-  sch2_1_1[2] = 1;
-  Vector<unsigned, 4> sch2_1_2{sch2_1_1};
+  MemoryAccess *mSch2t1t0(createMemAccess(alloc, indAmn2, loadA0, sch2t1t0));
+  assert(mSch2t1t0->getInstruction() == loadA0);
+  assert(mSch2t1t0->getLoad() == loadA0);
+  lblock.addMemory(mSch2t1t0);
+  sch2t1t1[2] = 1;
+  Vector<unsigned, 4> sch2t1t2{sch2t1t1};
   // A(n,m) = A(n,m) / -> U(n,n) <-;
-  MemoryAccess *mSch2_1_1(createMemAccess(alloc, indUnn, loadUnn, sch2_1_1));
-  lblock.addMemory(mSch2_1_1);
-  sch2_1_2[2] = 2;
+  MemoryAccess *mSch2t1t1(createMemAccess(alloc, indUnn, loadUnn, sch2t1t1));
+  lblock.addMemory(mSch2t1t1);
+  sch2t1t2[2] = 2;
   // -> A(n,m) <- = A(n,m) / U(n,n); // sch2
-  MemoryAccess *mSch2_1_2(
-    createMemAccess(alloc, indAmn2, storeAFDiv, sch2_1_2));
-  lblock.addMemory(mSch2_1_2);
+  MemoryAccess *mSch2t1t2(
+    createMemAccess(alloc, indAmn2, storeAFDiv, sch2t1t2));
+  lblock.addMemory(mSch2t1t2);
 
-  Vector<unsigned, 4> sch3_0(3 + 1, 0);
-  sch3_0[1] = 1;
-  sch3_0[2] = 3;
-  Vector<unsigned, 4> sch3_1{sch3_0};
+  Vector<unsigned, 4> sch3t0(3 + 1, 0);
+  sch3t0[1] = 1;
+  sch3t0[2] = 3;
+  Vector<unsigned, 4> sch3t1{sch3t0};
   // A(k,m) = A(k,m) - A(n,m)* -> U(k,n) <-;
-  MemoryAccess *mSch3_0(createMemAccess(alloc, indUnk, loadUnk, sch3_0));
-  lblock.addMemory(mSch3_0);
-  sch3_1[3] = 1;
-  Vector<unsigned, 4> sch3_2{sch3_1};
+  MemoryAccess *mSch3t0(createMemAccess(alloc, indUnk, loadUnk, sch3t0));
+  lblock.addMemory(mSch3t0);
+  sch3t1[3] = 1;
+  Vector<unsigned, 4> sch3t2{sch3t1};
   // A(k,m) = A(k,m) - -> A(n,m) <- *U(k,n);
-  MemoryAccess *mSch3_1(createMemAccess(alloc, indAmn3, loadA1mn, sch3_1));
-  lblock.addMemory(mSch3_1);
-  sch3_2[3] = 2;
-  Vector<unsigned, 8> sch3_3{sch3_2};
+  MemoryAccess *mSch3t1(createMemAccess(alloc, indAmn3, loadA1mn, sch3t1));
+  lblock.addMemory(mSch3t1);
+  sch3t2[3] = 2;
+  Vector<unsigned, 8> sch3t3{sch3t2};
   // A(k,m) = -> A(k,m) <- - A(n,m)*U(k,n);
-  MemoryAccess *mSch3_2(createMemAccess(alloc, indAmk, loadA1mk, sch3_2));
-  lblock.addMemory(mSch3_2);
-  sch3_3[3] = 3;
+  MemoryAccess *mSch3t2(createMemAccess(alloc, indAmk, loadA1mk, sch3t2));
+  lblock.addMemory(mSch3t2);
+  sch3t3[3] = 3;
   // -> A(k,m) <- = A(k,m) - A(n,m)*U(k,n);
-  MemoryAccess *mSch3_3(createMemAccess(alloc, indAmk, storeA2mk, sch3_3));
-  lblock.addMemory(mSch3_3);
+  MemoryAccess *mSch3t3(createMemAccess(alloc, indAmk, storeA2mk, sch3t3));
+  lblock.addMemory(mSch3t3);
 
   // for (m = 0; m < M; ++m){createMemAccess(
   //   for (n = 0; n < N; ++n){
   //     A(n,m) = B(n,m); // sch2_0_{0-1)}
   //   }
   //   for (n = 0; n < N; ++n){
-  //     A(n,m) = A(n,m) / U(n,n); // sch2_2_{0-2}
+  //     A(n,m) = A(n,m) / U(n,n); // sch2t2_{0-2}
   //     for (k = n+1; k < N; ++k){
   //       A(k,m) = A(k,m) - A(n,m)*U(k,n); // sch3_{0-3}
   //     }
@@ -687,7 +687,7 @@ TEST(TriangularExampleTest, BasicAssertions) {
   // First, comparisons of store to `A(n,m) = B(n,m)` versus...
   // // load in `A(n,m) = A(n,m) / U(n,n)`
   {
-    auto dep = Dependence::check(alloc, *mSch2_0_1, *mSch2_1_0);
+    auto dep = Dependence::check(alloc, *mSch2t0t1, *mSch2t1t0);
     EXPECT_EQ(dep.size(), 1);
     EXPECT_TRUE(dep[0].isForward());
     llvm::errs() << "dep#" << 0 << ":\n" << dep[0] << "\n";
@@ -696,7 +696,7 @@ TEST(TriangularExampleTest, BasicAssertions) {
   //
   // store in `A(n,m) = A(n,m) / U(n,n)`
   {
-    auto dep = Dependence::check(alloc, *mSch2_0_1, *mSch2_1_2);
+    auto dep = Dependence::check(alloc, *mSch2t0t1, *mSch2t1t2);
     EXPECT_EQ(dep.size(), 1);
     EXPECT_TRUE(dep[0].isForward());
     llvm::errs() << "dep#" << 1 << ":\n" << dep[0] << "\n";
@@ -705,7 +705,7 @@ TEST(TriangularExampleTest, BasicAssertions) {
   // sch3_               3        0         1     2
   // load `A(n,m)` in 'A(k,m) = A(k,m) - A(n,m)*U(k,n)'
   {
-    auto dep = Dependence::check(alloc, *mSch2_0_1, *mSch3_1);
+    auto dep = Dependence::check(alloc, *mSch2t0t1, *mSch3t1);
     EXPECT_EQ(dep.size(), 1);
     EXPECT_TRUE(dep[0].isForward());
     llvm::errs() << "dep#" << 2 << ":\n" << dep[0] << "\n";
@@ -713,14 +713,14 @@ TEST(TriangularExampleTest, BasicAssertions) {
   // load `A(k,m)` in 'A(k,m) = A(k,m) - A(n,m)*U(k,n)'
   //
   {
-    auto dep = Dependence::check(alloc, *mSch2_0_1, *mSch3_2);
+    auto dep = Dependence::check(alloc, *mSch2t0t1, *mSch3t2);
     EXPECT_EQ(dep.size(), 1);
     EXPECT_TRUE(dep[0].isForward());
     llvm::errs() << "dep#" << 3 << ":\n" << dep[0] << "\n";
   }
   // store `A(k,m)` in 'A(k,m) = A(k,m) - A(n,m)*U(k,n)'
   {
-    auto dep = Dependence::check(alloc, *mSch2_0_1, *mSch3_3);
+    auto dep = Dependence::check(alloc, *mSch2t0t1, *mSch3t3);
     EXPECT_EQ(dep.size(), 1);
     EXPECT_TRUE(dep[0].isForward());
     llvm::errs() << "dep#" << 4 << ":\n" << dep[0] << "\n";
@@ -730,7 +730,7 @@ TEST(TriangularExampleTest, BasicAssertions) {
   // with...
   // store in `A(n,m) = A(n,m) / U(n,n)`
   {
-    auto dep = Dependence::check(alloc, *mSch2_1_0, *mSch2_1_2);
+    auto dep = Dependence::check(alloc, *mSch2t1t0, *mSch2t1t2);
     EXPECT_EQ(dep.size(), 1);
     EXPECT_TRUE(dep[0].isForward());
     llvm::errs() << "dep#" << 5 << ":\n" << dep[0] << "\n";
@@ -740,21 +740,21 @@ TEST(TriangularExampleTest, BasicAssertions) {
   // sch3_               3        0         1     2
   // load `A(n,m)` in 'A(k,m) = A(k,m) - A(n,m)*U(k,n)'
   {
-    auto dep = Dependence::check(alloc, *mSch2_1_0, *mSch3_1);
+    auto dep = Dependence::check(alloc, *mSch2t1t0, *mSch3t1);
     EXPECT_EQ(dep.size(), 1);
     EXPECT_TRUE(dep[0].isForward());
     llvm::errs() << "dep#" << 6 << ":\n" << dep[0] << "\n";
   }
   // load `A(k,m)` in 'A(k,m) = A(k,m) - A(n,m)*U(k,n)'
   {
-    auto dep = Dependence::check(alloc, *mSch2_1_0, *mSch3_2);
+    auto dep = Dependence::check(alloc, *mSch2t1t0, *mSch3t2);
     EXPECT_EQ(dep.size(), 1);
     EXPECT_FALSE(dep[0].isForward());
     llvm::errs() << "dep#" << 7 << ":\n" << dep[0] << "\n";
   }
   // store `A(k,m)` in 'A(k,m) = A(k,m) - A(n,m)*U(k,n)'
   {
-    auto dep = Dependence::check(alloc, *mSch2_1_0, *mSch3_3);
+    auto dep = Dependence::check(alloc, *mSch2t1t0, *mSch3t3);
     EXPECT_EQ(dep.size(), 1);
     EXPECT_FALSE(dep[0].isForward());
     llvm::errs() << "dep#" << 8 << ":\n" << dep[0] << "\n";
@@ -765,21 +765,21 @@ TEST(TriangularExampleTest, BasicAssertions) {
   // sch3_               3        0         1     2
   // load `A(n,m)` in 'A(k,m) = A(k,m) - A(n,m)*U(k,n)'
   {
-    auto dep = Dependence::check(alloc, *mSch2_1_2, *mSch3_1);
+    auto dep = Dependence::check(alloc, *mSch2t1t2, *mSch3t1);
     EXPECT_EQ(dep.size(), 1);
     EXPECT_TRUE(dep[0].isForward());
     llvm::errs() << "dep#" << 9 << ":\n" << dep[0] << "\n";
   }
   // load `A(k,m)` in 'A(k,m) = A(k,m) - A(n,m)*U(k,n)'
   {
-    auto dep = Dependence::check(alloc, *mSch2_1_2, *mSch3_2);
+    auto dep = Dependence::check(alloc, *mSch2t1t2, *mSch3t2);
     EXPECT_EQ(dep.size(), 1);
     EXPECT_FALSE(dep[0].isForward());
     llvm::errs() << "dep#" << 10 << ":\n" << dep[0] << "\n";
   }
   // store `A(k,m)` in 'A(k,m) = A(k,m) - A(n,m)*U(k,n)'
   {
-    auto dep = Dependence::check(alloc, *mSch2_1_2, *mSch3_3);
+    auto dep = Dependence::check(alloc, *mSch2t1t2, *mSch3t3);
     EXPECT_EQ(dep.size(), 1);
     EXPECT_FALSE(dep[0].isForward());
     llvm::errs() << "dep#" << 11 << ":\n" << dep[0] << "\n";
@@ -791,14 +791,14 @@ TEST(TriangularExampleTest, BasicAssertions) {
   // with...
   // load `A(k,m)` in 'A(k,m) = A(k,m) - A(n,m)*U(k,n)'
   {
-    auto dep = Dependence::check(alloc, *mSch3_1, *mSch3_2);
+    auto dep = Dependence::check(alloc, *mSch3t1, *mSch3t2);
     EXPECT_EQ(dep.size(), 1);
     EXPECT_FALSE(dep[0].isForward());
     llvm::errs() << "dep#" << 12 << ":\n" << dep[0] << "\n";
   }
   // store `A(k,m)` in 'A(k,m) = A(k,m) - A(n,m)*U(k,n)'
   {
-    auto dep = Dependence::check(alloc, *mSch3_1, *mSch3_3);
+    auto dep = Dependence::check(alloc, *mSch3t1, *mSch3t3);
     EXPECT_EQ(dep.size(), 1);
     EXPECT_FALSE(dep[0].isForward());
     llvm::errs() << "dep#" << 13 << ":\n" << dep[0] << "\n";
@@ -810,7 +810,7 @@ TEST(TriangularExampleTest, BasicAssertions) {
   // with...
   // store `A(k,m)` in 'A(k,m) = A(k,m) - A(n,m)*U(k,n)'
   {
-    auto fwdrev = Dependence::check(alloc, *mSch3_2, *mSch3_3);
+    auto fwdrev = Dependence::check(alloc, *mSch3t2, *mSch3t3);
     EXPECT_EQ(fwdrev.size(), 2);
     auto &forward = fwdrev[0];
     auto &reverse = fwdrev[1];
@@ -833,25 +833,25 @@ TEST(TriangularExampleTest, BasicAssertions) {
       EXPECT_FALSE((nonZeroInd != -1) & notZero);
       if (notZero) nonZeroInd = i;
     }
-    // v_1 is `n` for the load
+    // vt1 is `n` for the load
     // v_4 is `n` for the store
-    // thus, we expect v_1 = v_4 + 1
+    // thus, we expect vt1 = v_4 + 1
     // that is, the load depends on the store from the previous iteration
-    // (e.g., store when `v_4 = 0` is loaded when `v_1 = 1`.
+    // (e.g., store when `v_4 = 0` is loaded when `vt1 = 1`.
     auto nonZero = revDepPoly->getCompTimeEqOffset(nonZeroInd);
     const size_t numSymbols = revDepPoly->getNumSymbols();
     EXPECT_EQ(numSymbols, 3);
     EXPECT_TRUE(nonZero.has_value());
     assert(nonZero.has_value());
     if (*nonZero == 1) {
-      // v_1 - v_4 == 1
-      // 1 - v_1 + v_4 == 0
+      // vt1 - v_4 == 1
+      // 1 - vt1 + v_4 == 0
       EXPECT_EQ(revDepPoly->getE()(nonZeroInd, numSymbols + 1), -1);
       EXPECT_EQ(revDepPoly->getE()(nonZeroInd, numSymbols + 4), 1);
 
     } else {
-      // -v_1 + v_4 == -1
-      // -1 + v_1 - v_4 == 0
+      // -vt1 + v_4 == -1
+      // -1 + vt1 - v_4 == 0
       EXPECT_EQ(*nonZero, -1);
       EXPECT_EQ(revDepPoly->getE()(nonZeroInd, numSymbols + 1), 1);
       EXPECT_EQ(revDepPoly->getE()(nonZeroInd, numSymbols + 4), -1);
@@ -1059,65 +1059,65 @@ TEST(MeanStDevTest0, BasicAssertions) {
     sInd2JOuter.sizes[0] = SE.getConstant(i64, 8, /*isSigned=*/false);
   }
 
-  Vector<unsigned, 4> sch0_0(1 + 1, 0);
-  Vector<unsigned, 4> sch0_1_0(2 + 1, 0);
-  sch0_1_0[2] = 1;
-  Vector<unsigned, 4> sch0_1_1(2 + 1, 0);
-  sch0_1_1[1] = 1;
-  sch0_1_1[2] = 1;
-  Vector<unsigned, 4> sch0_1_2(2 + 1, 0);
-  sch0_1_2[1] = 1;
-  sch0_1_2[2] = 2;
-  Vector<unsigned, 4> sch0_2(1 + 1, 0);
-  sch0_2[1] = 2;
-  Vector<unsigned, 4> sch0_3(1 + 1, 0);
-  sch0_3[1] = 3;
-  Vector<unsigned, 4> sch0_4(1 + 1, 0);
-  sch0_4[1] = 4;
-  Vector<unsigned, 4> sch0_5_0(2 + 1, 0);
-  sch0_5_0[1] = 5;
-  Vector<unsigned, 4> sch0_5_1(2 + 1, 0);
-  sch0_5_1[1] = 5;
-  sch0_5_1[2] = 1;
-  Vector<unsigned, 4> sch0_5_2(2 + 1, 0);
-  sch0_5_2[1] = 5;
-  sch0_5_2[2] = 2;
-  Vector<unsigned, 4> sch0_5_3(2 + 1, 0);
-  sch0_5_3[1] = 5;
-  sch0_5_3[2] = 3;
-  Vector<unsigned, 4> sch0_6(1 + 1, 0);
-  sch0_6[1] = 6;
-  Vector<unsigned, 4> sch0_7(1 + 1, 0);
-  sch0_7[1] = 7;
+  Vector<unsigned, 4> sch0t0(1 + 1, 0);
+  Vector<unsigned, 4> sch0t1t0(2 + 1, 0);
+  sch0t1t0[2] = 1;
+  Vector<unsigned, 4> sch0t1t1(2 + 1, 0);
+  sch0t1t1[1] = 1;
+  sch0t1t1[2] = 1;
+  Vector<unsigned, 4> sch0t1t2(2 + 1, 0);
+  sch0t1t2[1] = 1;
+  sch0t1t2[2] = 2;
+  Vector<unsigned, 4> sch0t2(1 + 1, 0);
+  sch0t2[1] = 2;
+  Vector<unsigned, 4> sch0t3(1 + 1, 0);
+  sch0t3[1] = 3;
+  Vector<unsigned, 4> sch0t4(1 + 1, 0);
+  sch0t4[1] = 4;
+  Vector<unsigned, 4> sch0t5t0(2 + 1, 0);
+  sch0t5t0[1] = 5;
+  Vector<unsigned, 4> sch0t5t1(2 + 1, 0);
+  sch0t5t1[1] = 5;
+  sch0t5t1[2] = 1;
+  Vector<unsigned, 4> sch0t5t2(2 + 1, 0);
+  sch0t5t2[1] = 5;
+  sch0t5t2[2] = 2;
+  Vector<unsigned, 4> sch0t5t3(2 + 1, 0);
+  sch0t5t3[1] = 5;
+  sch0t5t3[2] = 3;
+  Vector<unsigned, 4> sch0t6(1 + 1, 0);
+  sch0t6[1] = 6;
+  Vector<unsigned, 4> sch0t7(1 + 1, 0);
+  sch0t7[1] = 7;
   LinearProgramLoopBlock iOuterLoopNest;
   llvm::SmallVector<MemoryAccess *> iOuterMem;
 
   BumpAlloc<> alloc;
-  iOuterMem.emplace_back(createMemAccess(alloc, xInd1, storeX0, sch0_0)); // 0
+  iOuterMem.emplace_back(createMemAccess(alloc, xInd1, storeX0, sch0t0)); // 0
 
   iOuterMem.emplace_back(
-    createMemAccess(alloc, indAiOuter, loadAm, sch0_1_0));  // 1
+    createMemAccess(alloc, indAiOuter, loadAm, sch0t1t0));  // 1
   iOuterMem.emplace_back(
-    createMemAccess(alloc, xInd2IOuter, loadX0, sch0_1_1)); // 2
+    createMemAccess(alloc, xInd2IOuter, loadX0, sch0t1t1)); // 2
 
   iOuterMem.emplace_back(
-    createMemAccess(alloc, xInd2IOuter, storeX1, sch0_1_2));              // 3
+    createMemAccess(alloc, xInd2IOuter, storeX1, sch0t1t2));              // 3
 
-  iOuterMem.emplace_back(createMemAccess(alloc, xInd1, loadX1, sch0_2));  // 4
-  iOuterMem.emplace_back(createMemAccess(alloc, xInd1, storeX2, sch0_3)); // 5
+  iOuterMem.emplace_back(createMemAccess(alloc, xInd1, loadX1, sch0t2));  // 4
+  iOuterMem.emplace_back(createMemAccess(alloc, xInd1, storeX2, sch0t3)); // 5
 
-  iOuterMem.emplace_back(createMemAccess(alloc, sInd1, storeS0, sch0_4)); // 6
+  iOuterMem.emplace_back(createMemAccess(alloc, sInd1, storeS0, sch0t4)); // 6
   iOuterMem.emplace_back(
-    createMemAccess(alloc, indAiOuter, loadAs, sch0_5_0));                // 7
+    createMemAccess(alloc, indAiOuter, loadAs, sch0t5t0));                // 7
   iOuterMem.emplace_back(
-    createMemAccess(alloc, xInd2IOuter, loadX2, sch0_5_1));               // 8
+    createMemAccess(alloc, xInd2IOuter, loadX2, sch0t5t1));               // 8
   iOuterMem.emplace_back(
-    createMemAccess(alloc, sInd2IOuter, loadS0, sch0_5_2));               // 9
+    createMemAccess(alloc, sInd2IOuter, loadS0, sch0t5t2));               // 9
   iOuterMem.emplace_back(
-    createMemAccess(alloc, sInd2IOuter, storeS1, sch0_5_3));              // 10
+    createMemAccess(alloc, sInd2IOuter, storeS1, sch0t5t3));              // 10
 
-  iOuterMem.emplace_back(createMemAccess(alloc, sInd1, loadS1, sch0_6));  // 11
-  iOuterMem.emplace_back(createMemAccess(alloc, sInd1, storeS2, sch0_7)); // 12
+  iOuterMem.emplace_back(createMemAccess(alloc, sInd1, loadS1, sch0t6));  // 11
+  iOuterMem.emplace_back(createMemAccess(alloc, sInd1, storeS2, sch0t7)); // 12
   for (auto &&mem : iOuterMem) iOuterLoopNest.addMemory(mem);
   {
     auto d0 = Dependence::check(alloc, *iOuterLoopNest.getMemoryAccess(3),
@@ -1170,61 +1170,61 @@ TEST(MeanStDevTest0, BasicAssertions) {
 
   LinearProgramLoopBlock jOuterLoopNest;
   llvm::SmallVector<MemoryAccess *> jOuterMem;
-  jOuterMem.emplace_back(createMemAccess(alloc, xInd1, storeX0, sch0_0)); // 0
-  Vector<unsigned, 4> sch0_1(1 + 1, 0);
-  sch0_1[1] = 1;
-  jOuterMem.emplace_back(createMemAccess(alloc, sInd1, storeS0, sch0_1)); // 6
-  Vector<unsigned, 4> sch1_0_0(2 + 1, 0);
-  sch1_0_0[0] = 1;
-  Vector<unsigned, 4> sch1_0_1(2 + 1, 0);
-  sch1_0_1[0] = 1;
-  sch1_0_1[2] = 1;
-  Vector<unsigned, 4> sch1_0_2(2 + 1, 0);
-  sch1_0_2[0] = 1;
-  sch1_0_2[2] = 2;
+  jOuterMem.emplace_back(createMemAccess(alloc, xInd1, storeX0, sch0t0)); // 0
+  Vector<unsigned, 4> sch0t1(1 + 1, 0);
+  sch0t1[1] = 1;
+  jOuterMem.emplace_back(createMemAccess(alloc, sInd1, storeS0, sch0t1)); // 6
+  Vector<unsigned, 4> sch1t0t0(2 + 1, 0);
+  sch1t0t0[0] = 1;
+  Vector<unsigned, 4> sch1t0t1(2 + 1, 0);
+  sch1t0t1[0] = 1;
+  sch1t0t1[2] = 1;
+  Vector<unsigned, 4> sch1t0t2(2 + 1, 0);
+  sch1t0t2[0] = 1;
+  sch1t0t2[2] = 2;
   jOuterMem.emplace_back(
-    createMemAccess(alloc, indAjOuter, loadAm, sch1_0_0));   // 1
+    createMemAccess(alloc, indAjOuter, loadAm, sch1t0t0));   // 1
   jOuterMem.emplace_back(
-    createMemAccess(alloc, xInd2JOuter, loadX0, sch1_0_1));  // 2
+    createMemAccess(alloc, xInd2JOuter, loadX0, sch1t0t1));  // 2
   jOuterMem.emplace_back(
-    createMemAccess(alloc, xInd2JOuter, storeX1, sch1_0_2)); // 3
+    createMemAccess(alloc, xInd2JOuter, storeX1, sch1t0t2)); // 3
 
-  Vector<unsigned, 4> sch2_0(1 + 1, 0);
-  sch2_0[0] = 2;
-  Vector<unsigned, 4> sch2_1(1 + 1, 0);
-  sch2_1[0] = 2;
-  sch2_1[1] = 1;
-  jOuterMem.emplace_back(createMemAccess(alloc, xInd1, loadX1, sch2_0));  // 4
-  jOuterMem.emplace_back(createMemAccess(alloc, xInd1, storeX2, sch2_1)); // 5
+  Vector<unsigned, 4> sch2t0(1 + 1, 0);
+  sch2t0[0] = 2;
+  Vector<unsigned, 4> sch2t1(1 + 1, 0);
+  sch2t1[0] = 2;
+  sch2t1[1] = 1;
+  jOuterMem.emplace_back(createMemAccess(alloc, xInd1, loadX1, sch2t0));  // 4
+  jOuterMem.emplace_back(createMemAccess(alloc, xInd1, storeX2, sch2t1)); // 5
 
-  Vector<unsigned, 4> sch3_0_0(2 + 1, 0);
-  sch3_0_0[0] = 3;
-  Vector<unsigned, 4> sch3_0_1(2 + 1, 0);
-  sch3_0_1[0] = 3;
-  sch3_0_1[2] = 1;
-  Vector<unsigned, 4> sch3_0_2(2 + 1, 0);
-  sch3_0_2[0] = 3;
-  sch3_0_2[2] = 2;
-  Vector<unsigned, 4> sch3_0_3(2 + 1, 0);
-  sch3_0_3[0] = 3;
-  sch3_0_3[2] = 3;
+  Vector<unsigned, 4> sch3t0t0(2 + 1, 0);
+  sch3t0t0[0] = 3;
+  Vector<unsigned, 4> sch3t0t1(2 + 1, 0);
+  sch3t0t1[0] = 3;
+  sch3t0t1[2] = 1;
+  Vector<unsigned, 4> sch3t0t2(2 + 1, 0);
+  sch3t0t2[0] = 3;
+  sch3t0t2[2] = 2;
+  Vector<unsigned, 4> sch3t0t3(2 + 1, 0);
+  sch3t0t3[0] = 3;
+  sch3t0t3[2] = 3;
 
   jOuterMem.emplace_back(
-    createMemAccess(alloc, indAjOuter, loadAs, sch3_0_0));   // 7
+    createMemAccess(alloc, indAjOuter, loadAs, sch3t0t0));   // 7
   jOuterMem.emplace_back(
-    createMemAccess(alloc, xInd2JOuter, loadX2, sch3_0_1));  // 8
+    createMemAccess(alloc, xInd2JOuter, loadX2, sch3t0t1));  // 8
   jOuterMem.emplace_back(
-    createMemAccess(alloc, sInd2JOuter, loadS0, sch3_0_2));  // 9
+    createMemAccess(alloc, sInd2JOuter, loadS0, sch3t0t2));  // 9
   jOuterMem.emplace_back(
-    createMemAccess(alloc, sInd2JOuter, storeS1, sch3_0_3)); // 10
+    createMemAccess(alloc, sInd2JOuter, storeS1, sch3t0t3)); // 10
 
-  Vector<unsigned, 4> sch4_0(1 + 1, 0);
-  sch4_0[0] = 4;
-  Vector<unsigned, 4> sch4_1(1 + 1, 0);
-  sch4_1[0] = 4;
-  sch4_1[1] = 1;
-  jOuterMem.emplace_back(createMemAccess(alloc, sInd1, loadS1, sch4_0));  // 11
-  jOuterMem.emplace_back(createMemAccess(alloc, sInd1, storeS2, sch4_1)); // 12
+  Vector<unsigned, 4> sch4t0(1 + 1, 0);
+  sch4t0[0] = 4;
+  Vector<unsigned, 4> sch4t1(1 + 1, 0);
+  sch4t1[0] = 4;
+  sch4t1[1] = 1;
+  jOuterMem.emplace_back(createMemAccess(alloc, sInd1, loadS1, sch4t0));  // 11
+  jOuterMem.emplace_back(createMemAccess(alloc, sInd1, storeS2, sch4t1)); // 12
 
   for (auto &&memj : jOuterMem) jOuterLoopNest.addMemory(memj);
 
@@ -1277,25 +1277,28 @@ TEST(DoubleDependenceTest, BasicAssertions) {
   llvm::Value *iv = builder.CreateAdd(zero, one);
   llvm::Value *jv = builder.CreateAdd(zero, one);
 
-  llvm::Value *Aip1jp1 =
+  llvm::Value *offsetAip1jp1 =
     builder.CreateAdd(builder.CreateAdd(iv, one),
                       builder.CreateMul(builder.CreateAdd(jv, one), Iv));
-  llvm::Value *Aip1j =
+  llvm::Value *offsetAip1j =
     builder.CreateAdd(iv, builder.CreateMul(builder.CreateAdd(jv, one), Iv));
-  llvm::Value *Aijp1 =
+  llvm::Value *offsetAijp1 =
     builder.CreateAdd(builder.CreateAdd(iv, one), builder.CreateMul(jv, Iv));
 
   auto *loadAip1j = builder.CreateAlignedLoad(
     f64,
-    builder.CreateGEP(f64, ptrA, llvm::SmallVector<llvm::Value *, 1>{Aip1j}),
+    builder.CreateGEP(f64, ptrA,
+                      llvm::SmallVector<llvm::Value *, 1>{offsetAip1j}),
     llvm::MaybeAlign(8));
   auto *loadijp1 = builder.CreateAlignedLoad(
     f64,
-    builder.CreateGEP(f64, ptrA, llvm::SmallVector<llvm::Value *, 1>{Aijp1}),
+    builder.CreateGEP(f64, ptrA,
+                      llvm::SmallVector<llvm::Value *, 1>{offsetAijp1}),
     llvm::MaybeAlign(8));
   auto *storeA = builder.CreateAlignedStore(
     builder.CreateFAdd(loadAip1j, loadijp1),
-    builder.CreateGEP(f64, ptrA, llvm::SmallVector<llvm::Value *, 1>{Aip1jp1}),
+    builder.CreateGEP(f64, ptrA,
+                      llvm::SmallVector<llvm::Value *, 1>{offsetAip1jp1}),
     llvm::MaybeAlign(8));
 
   // for (i = 0:I-2){
@@ -1549,26 +1552,26 @@ TEST(ConvReversePass, BasicAssertions) {
   //   }
   // }
   LinearProgramLoopBlock loopBlock;
-  Vector<unsigned, 8> sch_0(4 + 1, 0);
-  Vector<unsigned, 8> sch_1{sch_0};
+  Vector<unsigned, 8> scht0(4 + 1, 0);
+  Vector<unsigned, 8> scht1{scht0};
   BumpAlloc<> &alloc = tlf.getAlloc();
   //         C[m+i,j+n] = C[m+i,j+n] + A[m,n] * -> B[i,j] <-;
-  MemoryAccess *msch_0(createMemAccess(alloc, indBmn, loadB, sch_0));
-  loopBlock.addMemory(msch_0);
-  sch_1[4] = 1;
-  Vector<unsigned, 8> sch_2{sch_1};
+  MemoryAccess *mscht0(createMemAccess(alloc, indBmn, loadB, scht0));
+  loopBlock.addMemory(mscht0);
+  scht1[4] = 1;
+  Vector<unsigned, 8> scht2{scht1};
   //         C[m+i,j+n] = C[m+i,j+n] + -> A[m,n] <- * B[i,j];
-  MemoryAccess *msch_1(createMemAccess(alloc, indAmn, loadA, sch_1));
-  loopBlock.addMemory(msch_1);
-  sch_2[4] = 2;
-  Vector<unsigned, 8> sch_3{sch_2};
+  MemoryAccess *mscht1(createMemAccess(alloc, indAmn, loadA, scht1));
+  loopBlock.addMemory(mscht1);
+  scht2[4] = 2;
+  Vector<unsigned, 8> scht3{scht2};
   //         C[m+i,j+n] = -> C[m+i,j+n] <- + A[m,n] * B[i,j];
-  MemoryAccess *msch_2(createMemAccess(alloc, indCmijn, loadC, sch_2));
-  loopBlock.addMemory(msch_2);
-  sch_3[4] = 3;
+  MemoryAccess *mscht2(createMemAccess(alloc, indCmijn, loadC, scht2));
+  loopBlock.addMemory(mscht2);
+  scht3[4] = 3;
   //         -> C[m+i,j+n] <- = C[m+i,j+n] + A[m,n] * B[i,j];
-  MemoryAccess *msch_3(createMemAccess(alloc, indCmijn, storeC, sch_3));
-  loopBlock.addMemory(msch_3);
+  MemoryAccess *mscht3(createMemAccess(alloc, indCmijn, storeC, scht3));
+  loopBlock.addMemory(mscht3);
 
   std::optional<BitSet<std::array<uint64_t, 2>>> optRes = loopBlock.optimize();
   EXPECT_TRUE(optRes.has_value());
