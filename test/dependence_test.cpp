@@ -1241,13 +1241,10 @@ TEST(MeanStDevTest0, BasicAssertions) {
   DenseMatrix<int64_t> optS{SquareDims{2}, 0};
   // we want antiDiag, as that represents swapping loops
   optS.antiDiag() << 1;
-  DenseMatrix<int64_t> optSinnerUndef = optS;
-  optSinnerUndef(1, _) << std::numeric_limits<int64_t>::min();
   for (auto *memi : jOuterLoopNest.getMem()) {
     size_t nodeIndex = memi->getNode();
     AffineSchedule s = jOuterLoopNest.getNode(nodeIndex).getSchedule();
     if (s.getNumLoops() == 1) EXPECT_EQ(s.getPhi()(0, 0), 1);
-    else if (s.getFusionOmega()[1] < 3) EXPECT_EQ(s.getPhi(), optSinnerUndef);
     else EXPECT_EQ(s.getPhi(), optS);
   }
 }
@@ -1417,7 +1414,8 @@ TEST(DoubleDependenceTest, BasicAssertions) {
   }
   DenseMatrix<int64_t> optPhi(DenseDims{2, 2}, 0);
   optPhi(0, _) << 1;
-  optPhi(1, _) << std::numeric_limits<int64_t>::min();
+  optPhi(1, 0) = 1;
+  optPhi(1, 1) = 0;
   // Graphs::print(iOuterLoopNest.fullGraph());
   for (auto &mem : loopBlock.getMem()) {
     size_t nodeIndex = mem->getNode();

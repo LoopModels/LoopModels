@@ -1064,7 +1064,7 @@ public:
       return;
     }
     DenseMatrix<int64_t> nullSpace; // d x lfull
-    DenseMatrix<int64_t> A{node.getPhi()(_(0, depth), _)};
+    DenseMatrix<int64_t> A{node.getPhi()(_(0, depth), _).transpose()};
     NormalForm::nullSpace11(nullSpace, A);
     invariant(size_t(nullSpace.numRow()), node.getNumLoops() - depth);
     // now, we search index matrices for schedules not in the null space of
