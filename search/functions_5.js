@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['indexmatrix_440',['indexMatrix',['../classAddress.html#a297424995238c440069eecf32c6d5bb7',1,'Address::indexMatrix()'],['../classArrayIndex.html#a2607d77465585f6d60d9f71d998af759',1,'ArrayIndex::indexMatrix() -&gt; MutDensePtrMatrix&lt; int64_t &gt;'],['../classArrayIndex.html#abd53828a7c4da4199bb84242cfcdae30',1,'ArrayIndex::indexMatrix() const -&gt; DensePtrMatrix&lt; int64_t &gt;'],['../classAddress.html#afad8e52958d1d85eef66ee44d4ceeb78',1,'Address::indexMatrix()']]],
+  ['indexmatrix_440',['indexMatrix',['../classAddress.html#a297424995238c440069eecf32c6d5bb7',1,'Address::indexMatrix()'],['../classArrayIndex.html#a2607d77465585f6d60d9f71d998af759',1,'ArrayIndex::indexMatrix() -&gt; MutDensePtrMatrix&lt; int64_t &gt;'],['../classArrayIndex.html#abd53828a7c4da4199bb84242cfcdae30',1,'ArrayIndex::indexMatrix() const -&gt; DensePtrMatrix&lt; int64_t &gt;'],['../structMemoryAccess.html#ab1cc444538dde0ecc2bee9c77988cbbe',1,'MemoryAccess::indexMatrix()'],['../classAddress.html#afad8e52958d1d85eef66ee44d4ceeb78',1,'Address::indexMatrix()']]],
   ['initancestors_441',['initAncestors',['../structMergingCost.html#aac70d5c2dafaec5277cb6ed6aceaacbc',1,'MergingCost']]],
   ['initializeloopforest_442',['initializeLoopForest',['../classTurboLoopPass.html#a61d15982d3d7c2d1918da31c454a2f10',1,'TurboLoopPass']]],
   ['initiatefeasible_443',['initiateFeasible',['../classSimplex.html#ad38168a139d51cf9ad0b2123a15424f0',1,'Simplex']]],
