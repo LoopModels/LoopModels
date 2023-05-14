@@ -614,8 +614,9 @@ public:
     for (Row r = 0; r < numEqCon; ++r) B(r, _) << E(r, _);
     for (size_t r = 0; r < numPhi; ++r) {
       B(r + numEqCon, _(0, numSym)) << 0;
-      B(r + numEqCon, _(0, numDep0Var) + numSym) << xPhi(r, _);
-      B(r + numEqCon, _(0, numDep1Var) + numSym + numDep0Var) << yPhi(r, _);
+      B(r + numEqCon, _(0, numDep0Var) + numSym) << xPhi(r, _(0, numDep0Var));
+      B(r + numEqCon, _(0, numDep1Var) + numSym + numDep0Var)
+        << yPhi(r, _(0, numDep1Var));
       if (timeDim) B(r + numEqCon, _(end - timeDim, end)) << 0;
     }
     Row rank = NormalForm::simplifySystemImpl(B);

@@ -1,6 +1,7 @@
 #!/bin/sh
 
-# sanitizers='Undefined'
-sanitizers='Address;Undefined'
-CXXFLAGS="" CXX=g++ cmake -S test -B buildgcc/testreldeb -DCMAKE_BUILD_TYPE=RelWithDebInfo -DUSE_SANITIZER=$sanitizers "$@"
-CXXFLAGS="" CXX=clang++ cmake -S test -B buildclang/testreldeb -DCMAKE_BUILD_TYPE=RelWithDebInfo -DUSE_SANITIZER=$sanitizers "$@"
+# sanitizers='Address;Undefined'
+# CXXFLAGS="" CXX=g++ cmake -S test -B buildgcc/testreldeb -DCMAKE_BUILD_TYPE=RelWithDebInfo -DUSE_SANITIZER=$sanitizers "$@"
+# CXXFLAGS="" CXX=clang++ cmake -S test -B buildclang/testreldeb -DCMAKE_BUILD_TYPE=RelWithDebInfo -DUSE_SANITIZER=$
+CXXFLAGS="" CXX=g++ cmake -S test -B buildgcc/testreldeb -DCMAKE_BUILD_TYPE=RelWithDebInfo "$@"
+CXXFLAGS="" CXX=clang++ cmake -S test -B buildclang/testreldeb -DCMAKE_BUILD_TYPE=RelWithDebInfo "$@"

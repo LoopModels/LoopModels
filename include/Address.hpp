@@ -184,7 +184,8 @@ public:
     parents = {};
     for (auto *e : inNeighbors(filtd)) {
       ancestors |= e->calcAncestors(filtd);
-      parents.insert(e->index());
+      parents[e->index()] = true;
+      // invariant(!parents.insert(e->index()));
     }
     return ancestors |= parents;
   }
@@ -196,7 +197,8 @@ public:
     children = {};
     for (auto *e : outNeighbors(filtd)) {
       descendants |= e->calcDescendants(filtd);
-      children.insert(e->index());
+      children[e->index()] = true;
+      // invariant(!children.insert(e->index()));
     }
     return descendants |= children;
   }
@@ -284,20 +286,26 @@ public:
   [[nodiscard]] constexpr auto outDepSat() -> PtrVector<uint8_t> {
     return {getDDepthMemory() + numInNeighbors(), numOutNeighbors()};
   }
-  [[nodiscard]] constexpr auto inNeighbors() const -> PtrVector<Address *> {
+#ifndef NDEBUG
+  [[gnu::used, nodiscard]] constexpr auto inNeighbors() const
+    -> PtrVector<Address *> {
     return PtrVector<Address *>{getAddrMemory(), numInNeighbors()};
   }
-  [[nodiscard]] constexpr auto outNeighbors() const -> PtrVector<Address *> {
+  [[gnu::used, nodiscard]] constexpr auto outNeighbors() const
+    -> PtrVector<Address *> {
     return PtrVector<Address *>{getAddrMemory() + numInNeighbors(),
                                 numOutNeighbors()};
   }
-  [[nodiscard]] constexpr auto inNeighbors() -> MutPtrVector<Address *> {
+  [[gnu::used, nodiscard]] constexpr auto inNeighbors()
+    -> MutPtrVector<Address *> {
     return MutPtrVector<Address *>{getAddrMemory(), numInNeighbors()};
   }
-  [[nodiscard]] constexpr auto outNeighbors() -> MutPtrVector<Address *> {
+  [[gnu::used, nodiscard]] constexpr auto outNeighbors()
+    -> MutPtrVector<Address *> {
     return MutPtrVector<Address *>{getAddrMemory() + numInNeighbors(),
                                    numOutNeighbors()};
   }
+#endif
   constexpr void indirectInNeighbor(Address *other, size_t i, uint8_t d) {
     getAddrMemory()[i] = other;
     getDDepthMemory()[i] = d;

@@ -41,6 +41,18 @@ TEST(BitSetTest, BasicAssertions) {
   EXPECT_FALSE(d);
 }
 // NOLINTNEXTLINE(modernize-use-trailing-return-type)
+TEST(BitSetInsert, BasicAssertions) {
+  BitSet<std::array<uint64_t, 2>> bs;
+  bs.insert(1);
+  bs.insert(5);
+  bs.insert(6);
+  bs.insert(8);
+  EXPECT_EQ(bs.data[0], 354);
+  EXPECT_EQ(bs.data[1], 0);
+  bs.insert(5);
+  EXPECT_EQ(bs.data[0], 354);
+}
+// NOLINTNEXTLINE(modernize-use-trailing-return-type)
 TEST(DynSizeBitSetTest, BasicAssertions) {
   BitSet bs;
   EXPECT_EQ(bs.data.size(), 0);

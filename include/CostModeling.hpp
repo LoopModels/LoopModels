@@ -439,7 +439,6 @@ private:
     addr = addr[_(0, numAddr)];
     numAddr_ = numAddr;
     for (unsigned i = 0; i < numAddr; ++i) {
-      addr[i]->resetBitfield();
       addr[i]->addToSubset();
       addr[i]->index() = i;
     }
@@ -499,7 +498,7 @@ private:
                   invariant(L->try_delete(a));
                   a->setLoopTreeSchedule(this);
                 }
-              } else assert(a->wasPlaced());
+              } else invariant(a->wasPlaced());
             }
           } else {
             invariant(!a->wasPlaced());
@@ -520,6 +519,7 @@ private:
 #endif
       }
     }
+    for (auto *a : addr) a->resetBitfield();
     return numAddr;
   }
   template <typename T>
