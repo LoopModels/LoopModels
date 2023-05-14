@@ -497,6 +497,8 @@ private:
                 isParent |= bool(ancestors[j]);
                 isChild |= bool(descendants[j]);
               }
+              // need to work recursively, as these need to get updated
+              // i.e., we may be able to hoist some of these out
               if (!(isParent && isChild)) {
                 InstructionBlock *P =
                   isParent ? B : &subTrees[currentLoop].exit;

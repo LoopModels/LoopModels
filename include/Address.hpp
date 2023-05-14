@@ -275,18 +275,25 @@ public:
     Address **p = getAddrMemory() + n;
     return {p, p + numOutNeighbors(), getDDepthMemory() + n, filtd};
   }
-  [[nodiscard]] constexpr auto directEdges() -> MutPtrVector<Address *> {
+#ifndef NDEBUG
+  [[gnu::used, nodiscard]] constexpr auto directEdges()
+    -> MutPtrVector<Address *> {
     Address **p = getAddrMemory() + numMemInputs;
     return {p, numDirectEdges};
   }
-  [[nodiscard]] constexpr auto directEdges() const -> PtrVector<Address *> {
+  [[gnu::used, nodiscard]] constexpr auto directEdges() const
+    -> PtrVector<Address *> {
     Address **p = getAddrMemory() + numMemInputs;
     return {p, numDirectEdges};
   }
-  [[nodiscard]] constexpr auto outDepSat() -> PtrVector<uint8_t> {
+  [[gnu::used, nodiscard]] constexpr auto inDepSat() const
+    -> PtrVector<uint8_t> {
+    return {getDDepthMemory(), numInNeighbors()};
+  }
+  [[gnu::used, nodiscard]] constexpr auto outDepSat() const
+    -> PtrVector<uint8_t> {
     return {getDDepthMemory() + numInNeighbors(), numOutNeighbors()};
   }
-#ifndef NDEBUG
   [[gnu::used, nodiscard]] constexpr auto inNeighbors() const
     -> PtrVector<Address *> {
     return PtrVector<Address *>{getAddrMemory(), numInNeighbors()};
