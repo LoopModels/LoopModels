@@ -32,8 +32,8 @@ template <typename G>
 concept AbstractGraphCore = requires(G &g, const G &cg, size_t i) {
   { g.inNeighbors(i) } -> AbstractRange;
   { cg.inNeighbors(i) } -> AbstractRange;
-  { g.outNeighbors(i) } -> AbstractRange;
-  { cg.outNeighbors(i) } -> AbstractRange;
+  // { g.outNeighbors(i) } -> AbstractRange;
+  // { cg.outNeighbors(i) } -> AbstractRange;
   { g.getNumVertices() } -> std::convertible_to<unsigned>;
   { g.wasVisited(i) } -> std::same_as<bool>;
   { g.visit(i) };
@@ -50,7 +50,7 @@ concept AbstractIndexGraph =
     { *g.vertexIds().begin() } -> std::convertible_to<unsigned>;
     // { *std::ranges::begin(g.outNeighbors(i)) } ->
     // std::convertible_to<unsigned>;
-    { *g.outNeighbors(i).begin() } -> std::convertible_to<unsigned>;
+    // { *g.outNeighbors(i).begin() } -> std::convertible_to<unsigned>;
     // { *std::ranges::begin(g.inNeighbors(i)) } ->
     // std::convertible_to<unsigned>;
     { *g.inNeighbors(i).begin() } -> std::convertible_to<unsigned>;

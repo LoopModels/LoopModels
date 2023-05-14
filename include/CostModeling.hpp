@@ -8,6 +8,7 @@
 #include "Dependence.hpp"
 #include "Graphs.hpp"
 #include "Math/Array.hpp"
+#include "Math/Comparisons.hpp"
 #include "Math/Math.hpp"
 #include "Utilities/Allocators.hpp"
 #include <algorithm>
@@ -166,16 +167,13 @@ public:
     [[nodiscard]] auto getNumVertices() const -> size_t {
       return addresses.size();
     }
-    // TODO: update graph index ordering so that we have
-    // LoopEnds, ArrayRefs, LoopStarts
-    // this way ends will be as early as possible, and starts a late
+    // Graph index ordering: LoopEnds, ArrayRefs, LoopStarts
+    // so that we have ends as early as possible, and starts a late
     [[nodiscard]] constexpr auto inNeighbors(size_t i) const -> BitSet {
+      if (i < loopNestAddrs.size()) return loopNestAddrs[i][1]; // loop end
+      i -= loopNestAddrs.size();
       if (i < addresses.size()) return addresses[i]->getParents();
-      return loopNestAddrs[i - addresses.size()][0];
-    }
-    [[nodiscard]] constexpr auto outNeighbors(size_t i) const -> BitSet {
-      if (i < addresses.size()) return addresses[i]->getChildren();
-      return loopNestAddrs[i - addresses.size()][1];
+      return loopNestAddrs[i - addresses.size()][0]; // loop start
     }
     [[nodiscard]] auto wasVisited(size_t i) const -> bool {
       return addresses[i]->wasVisited();
@@ -385,27 +383,30 @@ private:
   }
   static constexpr void
   calcLoopNestAddrs(Vector<std::array<BitSet, 2>> &loopRelatives,
-                    MutPtrVector<Address *> loopAddrs, unsigned numAddr) {
+                    MutPtrVector<Address *> loopAddrs, unsigned numAddr,
+                    unsigned depth) {
     // TODO: only add dependencies for refs actually using the indvars
-    BitSet headParents{}, headChildren, exitParents{}, exitChildren{};
-    unsigned ind = numAddr + loopRelatives.size();
-    if (!loopRelatives.empty()) { // not first loop, connect headParents
-      loopRelatives.back()[1].insert(ind);
-      headParents.insert(ind - 1);
-    }
-    if (loopAddrs.empty()) {
-      headChildren.insert(ind + 1);
-      exitParents.insert(ind);
-    }
+    BitSet headParents{}, exitParents{};
+    unsigned indEnd = loopRelatives.size(), indStart = 2 * indEnd + numAddr;
+    // not first loop, connect headParents
+    if (!loopRelatives.empty()) headParents.insert(indStart - 1);
+    // if (loopAddrs.empty()) exitParents.insert(indStart);
+    bool empty = true;
     for (auto *a : loopAddrs) {
-      unsigned i = a->index();
-      headChildren.insert(i);
-      exitParents.insert(i);
-      a->addParent(ind);
-      a->addChild(ind + 1);
+      if (allZero(a->indexMatrix()(_, _(depth, end)))) continue;
+      exitParents.insert(a->index());
+      a->addParent(indStart);
+      empty = false;
     }
-    loopRelatives.push_back({headParents, headChildren});
-    loopRelatives.push_back({exitParents, exitChildren});
+    if (empty) exitParents.insert(indStart);
+    loopRelatives.push_back({headParents, exitParents});
+  }
+  // can we hoist forward out of this loop?
+  auto hoistForward(Address *a) -> bool { // NOLINT(misc-no-recursion)
+    // TODO:
+    // 1. check if this has already been hoited w/ respect to this loop
+    // 2. check if all parents have been hoisted (recurse)
+    return false;
   }
   // Two possible plans:
   // 1.
@@ -430,14 +431,14 @@ private:
     // values. We only need to force separation here for those that are not
     // already separated.
     //
-    unsigned numAddr = header.size();
+    unsigned numAddr = header.size(), numSubTrees = subTrees.size();
     addr[_(0, numAddr)] << header.getAddr();
 #ifndef NDEBUG
     for (auto *a : addr[_(0, numAddr)]) invariant(!a->wasPlaced());
 #endif
     header.clear();
     Vector<uint8_t> addrCounts;
-    addrCounts.reserve(subTrees.size() + 1);
+    addrCounts.reserve(numSubTrees + 1);
     addrCounts.emplace_back(numAddr);
     for (auto &L : subTrees)
       addrCounts.emplace_back(
@@ -447,7 +448,7 @@ private:
     numAddr_ = numAddr;
     for (unsigned i = 0; i < numAddr; ++i) {
       addr[i]->addToSubset();
-      addr[i]->index() = i;
+      addr[i]->index() = i + numSubTrees;
     }
     for (auto *a : addr) {
       a->calcAncestors(getDepth());
@@ -458,12 +459,13 @@ private:
       invariant(a->wasPlaced());
 #endif
     Vector<std::array<BitSet, 2>> loopRelatives;
-    if (unsigned numSubTrees = subTrees.size()) {
-      loopRelatives.reserve(2 * numSubTrees);
+    if (numSubTrees) {
+      loopRelatives.reserve(numSubTrees);
       // iterate over loops
       for (size_t i = 0; i < subTrees.size(); ++i) {
         calcLoopNestAddrs(loopRelatives,
-                          addr[_(addrCounts[i], addrCounts[i + 1])], numAddr);
+                          addr[_(addrCounts[i], addrCounts[i + 1])], numAddr,
+                          getDepth());
       }
     }
     // auto headerAddrs = addr[_(0, addrCounts[0])];
@@ -478,7 +480,7 @@ private:
     bool inLoop = false;
     for (BitSet scc : components) {
       if (scc.size() == 1) {
-        size_t ind = scc.front();
+        size_t indRaw = scc.front(), ind = indRaw - numSubTrees;
         if (ind < numAddr) {
           Address *a = addr[ind];
           invariant(!a->wasPlaced() || inLoop);
@@ -519,10 +521,8 @@ private:
               } else invariant(a->wasPlaced());
             }
           } else {
-            invariant(!a->wasPlaced());
             if (a->wasPlaced()) {
-              // maybe allow this while trying to encourage scc to restrict
-              // loops based on placement
+              // scc's top sort decided we can hoist
               invariant(a->getLoopTreeSchedule()->try_delete(a));
               a->setLoopTreeSchedule(this);
             }
@@ -530,8 +530,8 @@ private:
           }
           a->place();
         } else {
-          invariant((ind - numAddr) & 1, size_t(inLoop));
-          invariant(currentLoop, (ind - numAddr) >> 1);
+          // invariant((ind - numAddr) & 1, size_t(inLoop));
+          // invariant(currentLoop, (ind - numAddr) >> 1);
           if (inLoop) B = &subTrees[currentLoop++].exit;
           else L = subTrees[currentLoop].subTree;
           inLoop = !inLoop;
