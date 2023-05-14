@@ -102,8 +102,8 @@ $(function() {
 <div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;concept AbstractGraphCore = requires(G &amp;g, <span class="keyword">const</span> G &amp;cg, <span class="keywordtype">size_t</span> i) {</div>
 <div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;  { g.inNeighbors(i) } -&gt; AbstractRange;</div>
 <div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;  { cg.inNeighbors(i) } -&gt; AbstractRange;</div>
-<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;  { g.outNeighbors(i) } -&gt; AbstractRange;</div>
-<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;  { cg.outNeighbors(i) } -&gt; AbstractRange;</div>
+<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;  <span class="comment">// { g.outNeighbors(i) } -&gt; AbstractRange;</span></div>
+<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;  <span class="comment">// { cg.outNeighbors(i) } -&gt; AbstractRange;</span></div>
 <div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;  { g.getNumVertices() } -&gt; std::convertible_to&lt;unsigned&gt;;</div>
 <div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;  { g.wasVisited(i) } -&gt; std::same_as&lt;bool&gt;;</div>
 <div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;  { g.visit(i) };</div>
@@ -120,7 +120,7 @@ $(function() {
 <div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;    { *g.vertexIds().begin() } -&gt; std::convertible_to&lt;unsigned&gt;;</div>
 <div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;    <span class="comment">// { *std::ranges::begin(g.outNeighbors(i)) } -&gt;</span></div>
 <div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;    <span class="comment">// std::convertible_to&lt;unsigned&gt;;</span></div>
-<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;    { *g.outNeighbors(i).begin() } -&gt; std::convertible_to&lt;unsigned&gt;;</div>
+<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;    <span class="comment">// { *g.outNeighbors(i).begin() } -&gt; std::convertible_to&lt;unsigned&gt;;</span></div>
 <div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;    <span class="comment">// { *std::ranges::begin(g.inNeighbors(i)) } -&gt;</span></div>
 <div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;    <span class="comment">// std::convertible_to&lt;unsigned&gt;;</span></div>
 <div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;    { *g.inNeighbors(i).begin() } -&gt; std::convertible_to&lt;unsigned&gt;;</div>

@@ -178,8 +178,8 @@ template&lt;typename G &gt; </div>
 <b>Initial value:</b><div class="fragment"><div class="line">= requires(G &amp;g, <span class="keyword">const</span> G &amp;cg, <span class="keywordtype">size_t</span> i) {</div>
 <div class="line">  { g.inNeighbors(i) } -&gt; AbstractRange;</div>
 <div class="line">  { cg.inNeighbors(i) } -&gt; AbstractRange;</div>
-<div class="line">  { g.outNeighbors(i) } -&gt; AbstractRange;</div>
-<div class="line">  { cg.outNeighbors(i) } -&gt; AbstractRange;</div>
+<div class="line">  </div>
+<div class="line">  </div>
 <div class="line">  { g.getNumVertices() } -&gt; std::convertible_to&lt;unsigned&gt;;</div>
 <div class="line">  { g.wasVisited(i) } -&gt; std::same_as&lt;bool&gt;;</div>
 <div class="line">  { g.visit(i) };</div>
@@ -209,7 +209,7 @@ template&lt;typename G &gt; </div>
 <div class="line">    { *g.vertexIds().begin() } -&gt; std::convertible_to&lt;unsigned&gt;;</div>
 <div class="line">    </div>
 <div class="line">    </div>
-<div class="line">    { *g.outNeighbors(i).begin() } -&gt; std::convertible_to&lt;unsigned&gt;;</div>
+<div class="line">    </div>
 <div class="line">    </div>
 <div class="line">    </div>
 <div class="line">    { *g.inNeighbors(i).begin() } -&gt; std::convertible_to&lt;unsigned&gt;;</div>
