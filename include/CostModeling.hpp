@@ -166,6 +166,9 @@ public:
     [[nodiscard]] auto getNumVertices() const -> size_t {
       return addresses.size();
     }
+    // TODO: update graph index ordering so that we have
+    // LoopEnds, ArrayRefs, LoopStarts
+    // this way ends will be as early as possible, and starts a late
     [[nodiscard]] constexpr auto inNeighbors(size_t i) const -> BitSet {
       if (i < addresses.size()) return addresses[i]->getParents();
       return loopNestAddrs[i - addresses.size()][0];
@@ -383,6 +386,7 @@ private:
   static constexpr void
   calcLoopNestAddrs(Vector<std::array<BitSet, 2>> &loopRelatives,
                     MutPtrVector<Address *> loopAddrs, unsigned numAddr) {
+    // TODO: only add dependencies for refs actually using the indvars
     BitSet headParents{}, headChildren, exitParents{}, exitChildren{};
     unsigned ind = numAddr + loopRelatives.size();
     if (!loopRelatives.empty()) { // not first loop, connect headParents
@@ -485,6 +489,11 @@ private:
           if (inLoop) {
             // header: B
             // exit: subTrees[currentLoop].exit;
+            // Here, we want a recursive approach
+            // check children and check parents for hoistability
+            // if all parents are hoistable in front, it can be hoisted in front
+            // ditto if all children are hoistable behind
+            // we can reset visited before each search
             if (!a->wasPlaced() || ((a->getLoopTreeSchedule() == L) &&
                                     allZero(a->indexMatrix()(_, getDepth())))) {
               // hoist; do other loop members depend, or are depended on?
@@ -511,6 +520,12 @@ private:
             }
           } else {
             invariant(!a->wasPlaced());
+            if (a->wasPlaced()) {
+              // maybe allow this while trying to encourage scc to restrict
+              // loops based on placement
+              invariant(a->getLoopTreeSchedule()->try_delete(a));
+              a->setLoopTreeSchedule(this);
+            }
             B->push_back(alloc, a);
           }
           a->place();

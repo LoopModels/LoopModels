@@ -152,6 +152,11 @@ public:
   [[nodiscard]] constexpr auto wasVisited2() const -> bool {
     return bitfield & 16;
   }
+  constexpr void visit3() { bitfield |= 64; }
+  constexpr void unVisit3() { bitfield &= ~uint8_t(64); }
+  [[nodiscard]] constexpr auto wasVisited3() const -> bool {
+    return bitfield & 64;
+  }
   // constexpr void unVisit02() { bitfield &= ~uint8_t(17); }
   constexpr void addToSubset() { bitfield |= 32; }
   constexpr void removeFromSubset() { bitfield &= ~uint8_t(32); }
