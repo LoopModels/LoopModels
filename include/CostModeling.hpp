@@ -428,6 +428,9 @@ private:
     //
     unsigned numAddr = header.size();
     addr[_(0, numAddr)] << header.getAddr();
+#ifndef NDEBUG
+    for (auto *a : addr[_(0, numAddr)]) invariant(!a->wasPlaced());
+#endif
     header.clear();
     Vector<uint8_t> addrCounts;
     addrCounts.reserve(subTrees.size() + 1);
@@ -446,6 +449,10 @@ private:
       a->calcAncestors(getDepth());
       a->calcDescendants(getDepth());
     }
+#ifndef NDEBUG
+    for (auto *a : addr[_(addrCounts.front(), addrCounts.back())])
+      invariant(a->wasPlaced());
+#endif
     Vector<std::array<BitSet, 2>> loopRelatives;
     if (unsigned numSubTrees = subTrees.size()) {
       loopRelatives.reserve(2 * numSubTrees);
