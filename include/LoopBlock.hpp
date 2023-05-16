@@ -1330,15 +1330,6 @@ public:
       f(edges[e]);
     }
   }
-  template <typename F>
-  auto transform_reduce_edge(const Graph &g, size_t d, F &&f) {
-    decltype(f(edges[0])) res{};
-    for (size_t e = 0; e < edges.size(); ++e) {
-      if (g.isInactive(e, d)) continue;
-      res += f(edges[e]);
-    }
-    return res;
-  }
   constexpr void countAuxParamsAndConstraints(const Graph &g, size_t d) {
     LinAlg::SVector<size_t, 4> params{};
     assert(allZero(params));
@@ -1367,8 +1358,8 @@ public:
     // in depSatNest?
     // backup in case we fail
     // activeEdges was the old original; swap it in
-    std::swap(g.activeEdges, activeEdges);
-    BitSet nodeIds = g.nodeIds;
+    BitSet oldEdges = g.activeEdges, nodeIds = g.nodeIds;
+    g.activeEdges = activeEdges;
     Vector<AffineSchedule> oldSchedules;
     // oldSchedules.reserve(g.nodeIds.size()); // is this worth it?
     for (auto &n : g) oldSchedules.push_back(n.getSchedule());
@@ -1376,16 +1367,17 @@ public:
     resetDeepDeps(carriedDeps, d);
     countAuxAndStash(g, d);
     setScheduleMemoryOffsets(g, d);
-    if (auto depSat = solveGraph(g, d, true))
+    if (std::optional<BitSet> depSat = solveGraph(g, d, true))
       if (std::optional<BitSet> depSatN = optimize(g, d + 1, maxDepth))
         return *depSat |= *depSatN;
     // we failed, so reset solved schedules
-    std::swap(g.activeEdges, activeEdges);
     std::swap(g.nodeIds, nodeIds);
+    g.activeEdges = activeEdges; // undo such that g.getEdges(d) is correct
+    for (auto &&e : g.getEdges(d)) e.popSatLevel();
+    g.activeEdges = oldEdges;    // restore backup
     auto *oldNodeIter = oldSchedules.begin();
     for (auto &&n : g) n.getSchedule() = *(oldNodeIter++);
     std::swap(carriedDeps, oldCarriedDeps);
-    for (auto &&e : g.getEdges(d)) e.popSatLevel();
     return depSatLevel;
   }
   /// optimize at depth `d`
@@ -1405,7 +1397,7 @@ public:
       if (std::optional<BitSet> depSatNest = optimize(g, dp1, maxDepth)) {
         bool depSatEmpty = depSat->empty();
         *depSat |= *depSatNest;
-        if (!(depSatEmpty || depSatNest->empty()))
+        if (!(depSatEmpty || depSatNest->empty())) // try and sat all this level
           return optimizeSatDep(g, d, maxDepth, *depSat, activeEdgesBackup);
         return *depSat;
       }

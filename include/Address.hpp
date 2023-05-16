@@ -2,6 +2,7 @@
 
 #include "Loops.hpp"
 #include "Math/Array.hpp"
+#include "Math/Comparisons.hpp"
 #include "Math/Math.hpp"
 #include "MemoryAccess.hpp"
 #include "Utilities/Valid.hpp"
@@ -64,15 +65,13 @@ class Address {
   [[no_unique_address]] NotNull<AffineLoopNest<false>> loop;
   [[no_unique_address]] CostModeling::LoopTreeSchedule *node{nullptr};
   [[no_unique_address]] BitSet parents;
-  [[no_unique_address]] BitSet children;
   [[no_unique_address]] BitSet ancestors;
-  [[no_unique_address]] BitSet descendants;
   [[no_unique_address]] uint8_t numMemInputs;
   [[no_unique_address]] uint8_t numDirectEdges;
   [[no_unique_address]] uint8_t numMemOutputs;
   [[no_unique_address]] uint8_t index_{0};
   [[no_unique_address]] uint8_t lowLink_{0};
-  [[no_unique_address]] uint8_t dim;
+  [[no_unique_address]] uint8_t blckIdx{0};
   [[no_unique_address]] uint8_t depth;
   [[no_unique_address]] uint8_t bitfield;
 #if !defined(__clang__) && defined(__GNUC__)
@@ -95,8 +94,7 @@ class Address {
                     uint8_t directEdges, uint8_t memOutputs)
     : oldMemAccess(ma), loop(explicitLoop), node(L), numMemInputs(memInputs),
       numDirectEdges(directEdges), numMemOutputs(memOutputs),
-      dim(ma->getArrayDim()), depth(uint8_t(Pinv.numCol())),
-      bitfield(uint8_t(isStr) << 3) {
+      depth(uint8_t(Pinv.numCol())), bitfield(uint8_t(isStr) << 3) {
     PtrMatrix<int64_t> M{oldMemAccess->indexMatrix()}; // nLma x aD
     MutPtrMatrix<int64_t> mStar{indexMatrix()};        // aD x nLp
     // M is implicitly padded with zeros, nLp >= nLma
@@ -129,16 +127,30 @@ class Address {
   }
 
 public:
+  [[nodiscard]] constexpr auto dependsOnIndVars(size_t d) -> bool {
+    for (size_t i = 0, D = getArrayDim(); i < D; ++i)
+      if (anyNEZero(indexMatrix()(i, _(d, end)))) return true;
+    return false;
+  }
   [[nodiscard]] constexpr auto getLoop() const
     -> NotNull<AffineLoopNest<false>> {
     return loop;
   }
+  [[nodiscard]] constexpr auto getBlockIdx() const -> uint8_t {
+    return blckIdx;
+  }
+  constexpr void setBlockIdx(uint8_t idx) { blckIdx = idx; }
   [[nodiscard]] constexpr auto getLoopTreeSchedule() const
     -> CostModeling::LoopTreeSchedule * {
     return node;
   }
   constexpr void setLoopTreeSchedule(CostModeling::LoopTreeSchedule *L) {
     node = L;
+  }
+  constexpr void setLoopTreeSchedule(CostModeling::LoopTreeSchedule *L,
+                                     unsigned blockIdx) {
+    node = L;
+    blckIdx = blockIdx;
   }
   // bits: 0 = visited, 1 = on stack, 2 = placed
   // 3 = isStore, 4 = visited2, 5 = activeSubset
@@ -168,19 +180,19 @@ public:
   // doesn't reset isStore or wasPlaced
   constexpr void resetBitfield() { bitfield &= uint8_t(12); }
   [[nodiscard]] constexpr auto getParents() const -> BitSet { return parents; }
-  [[nodiscard]] constexpr auto getChildren() const -> BitSet {
-    return children;
-  }
+  // [[nodiscard]] constexpr auto getChildren() const -> BitSet {
+  //   return children;
+  // }
   constexpr auto getAncestors() -> BitSet & { return ancestors; }
   [[nodiscard]] constexpr auto getAncestors() const -> BitSet {
     return ancestors;
   }
-  constexpr auto getDescendants() -> BitSet & { return descendants; }
-  [[nodiscard]] constexpr auto getDescendants() const -> BitSet {
-    return descendants;
-  }
+  // constexpr auto getDescendants() -> BitSet & { return descendants; }
+  // [[nodiscard]] constexpr auto getDescendants() const -> BitSet {
+  //   return descendants;
+  // }
   constexpr void addParent(size_t i) { parents.insert(i); }
-  constexpr void addChild(size_t i) { children.insert(i); }
+  // constexpr void addChild(size_t i) { children.insert(i); }
   // NOLINTNEXTLINE(misc-no-recursion)
   constexpr auto calcAncestors(uint8_t filtd) -> BitSet {
     if (wasVisited()) return ancestors;
@@ -194,19 +206,19 @@ public:
     }
     return ancestors |= parents;
   }
-  // NOLINTNEXTLINE(misc-no-recursion)
-  constexpr auto calcDescendants(uint8_t filtd) -> BitSet {
-    if (wasVisited2()) return descendants;
-    visit2();
-    descendants = {};
-    children = {};
-    for (auto *e : outNeighbors(filtd)) {
-      descendants |= e->calcDescendants(filtd);
-      children[e->index()] = true;
-      // invariant(!children.insert(e->index()));
-    }
-    return descendants |= children;
-  }
+  // // NOLINTNEXTLINE(misc-no-recursion)
+  // constexpr auto calcDescendants(uint8_t filtd) -> BitSet {
+  //   if (wasVisited2()) return descendants;
+  //   visit2();
+  //   descendants = {};
+  //   children = {};
+  //   for (auto *e : outNeighbors(filtd)) {
+  //     descendants |= e->calcDescendants(filtd);
+  //     children[e->index()] = true;
+  //     // invariant(!children.insert(e->index()));
+  //   }
+  //   return descendants |= children;
+  // }
   [[nodiscard]] constexpr auto onStack() const -> bool { return bitfield & 2; }
   constexpr void place() { bitfield |= 4; }
   [[nodiscard]] constexpr auto wasPlaced() const -> bool {
@@ -366,7 +378,9 @@ public:
     child->indirectInNeighbor(this, outInd, d);
   }
   [[nodiscard]] constexpr auto getNumLoops() const -> size_t { return depth; }
-  [[nodiscard]] constexpr auto getArrayDim() const -> size_t { return dim; }
+  [[nodiscard]] constexpr auto getArrayDim() const -> size_t {
+    return oldMemAccess->getArrayDim();
+  }
   [[nodiscard]] auto getInstruction() -> llvm::Instruction * {
     return oldMemAccess->getInstruction();
   }

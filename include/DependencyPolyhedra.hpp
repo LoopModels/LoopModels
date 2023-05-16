@@ -611,12 +611,13 @@ public:
     DensePtrMatrix<int64_t> E{getE()};
     MutDensePtrMatrix<int64_t> B{
       matrix<int64_t>(alloc, E.numRow() + numPhi, E.numCol())};
-    for (Row r = 0; r < numEqCon; ++r) B(r, _) << E(r, _);
+    std::copy_n(E.begin(), E.numRow() * E.numCol(), B.begin());
+    // for (Row r = 0; r < numEqCon; ++r) B(r, _) << E(r, _);
     for (size_t r = 0; r < numPhi; ++r) {
       B(r + numEqCon, _(0, numSym)) << 0;
       B(r + numEqCon, _(0, numDep0Var) + numSym) << xPhi(r, _(0, numDep0Var));
       B(r + numEqCon, _(0, numDep1Var) + numSym + numDep0Var)
-        << yPhi(r, _(0, numDep1Var));
+        << -yPhi(r, _(0, numDep1Var));
       if (timeDim) B(r + numEqCon, _(end - timeDim, end)) << 0;
     }
     Row rank = NormalForm::simplifySystemImpl(B);
