@@ -82,15 +82,27 @@ Classes</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
+<tr class="memitem:ad121a72b33a8091e7657de8319374013"><td class="memItemLeft" align="right" valign="top"><a id="ad121a72b33a8091e7657de8319374013"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>dependsOnIndVars</b> (size_t d) -&gt; bool</td></tr>
+<tr class="separator:ad121a72b33a8091e7657de8319374013"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab2f9eaf0c9ddd9e9929018700c51fa78"><td class="memItemLeft" align="right" valign="top"><a id="ab2f9eaf0c9ddd9e9929018700c51fa78"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getLoop</b> () const -&gt; <a class="el" href="classNotNull.html">NotNull</a>&lt; <a class="el" href="structAffineLoopNest.html">AffineLoopNest</a>&lt; false &gt;&gt;</td></tr>
 <tr class="separator:ab2f9eaf0c9ddd9e9929018700c51fa78"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2326fa31c64eb66c83ea13648a8c0340"><td class="memItemLeft" align="right" valign="top"><a id="a2326fa31c64eb66c83ea13648a8c0340"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getBlockIdx</b> () const -&gt; uint8_t</td></tr>
+<tr class="separator:a2326fa31c64eb66c83ea13648a8c0340"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8b66ce2416c5591860ad310239f4ad60"><td class="memItemLeft" align="right" valign="top"><a id="a8b66ce2416c5591860ad310239f4ad60"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>setBlockIdx</b> (uint8_t idx)</td></tr>
+<tr class="separator:a8b66ce2416c5591860ad310239f4ad60"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3d0aa51de7c31a5915d02dcda377f688"><td class="memItemLeft" align="right" valign="top"><a id="a3d0aa51de7c31a5915d02dcda377f688"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getLoopTreeSchedule</b> () const -&gt; <a class="el" href="classCostModeling_1_1LoopTreeSchedule.html">CostModeling::LoopTreeSchedule</a> *</td></tr>
 <tr class="separator:a3d0aa51de7c31a5915d02dcda377f688"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a10e0128b27dc321980f5ab61c9246222"><td class="memItemLeft" align="right" valign="top"><a id="a10e0128b27dc321980f5ab61c9246222"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>setLoopTreeSchedule</b> (<a class="el" href="classCostModeling_1_1LoopTreeSchedule.html">CostModeling::LoopTreeSchedule</a> *L)</td></tr>
 <tr class="separator:a10e0128b27dc321980f5ab61c9246222"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aedb3da9b11b66e28782bb387b4667df3"><td class="memItemLeft" align="right" valign="top"><a id="aedb3da9b11b66e28782bb387b4667df3"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>setLoopTreeSchedule</b> (<a class="el" href="classCostModeling_1_1LoopTreeSchedule.html">CostModeling::LoopTreeSchedule</a> *L, unsigned blockIdx)</td></tr>
+<tr class="separator:aedb3da9b11b66e28782bb387b4667df3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab18acb1159cbe0b12f63e1c576cf3b5a"><td class="memItemLeft" align="right" valign="top"><a id="ab18acb1159cbe0b12f63e1c576cf3b5a"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> ()</td></tr>
 <tr class="separator:ab18acb1159cbe0b12f63e1c576cf3b5a"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -139,33 +151,18 @@ constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>resetBitfie
 <tr class="memitem:a7f9dd2d2056914400c43d8e8baf1ef3e"><td class="memItemLeft" align="right" valign="top"><a id="a7f9dd2d2056914400c43d8e8baf1ef3e"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getParents</b> () const -&gt; <a class="el" href="structBitSet.html">BitSet</a></td></tr>
 <tr class="separator:a7f9dd2d2056914400c43d8e8baf1ef3e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8ad219f26c6341bb639844f080b3dbdc"><td class="memItemLeft" align="right" valign="top"><a id="a8ad219f26c6341bb639844f080b3dbdc"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getChildren</b> () const -&gt; <a class="el" href="structBitSet.html">BitSet</a></td></tr>
-<tr class="separator:a8ad219f26c6341bb639844f080b3dbdc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abb22287692e296a09bc833357d4a410b"><td class="memItemLeft" align="right" valign="top"><a id="abb22287692e296a09bc833357d4a410b"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getAncestors</b> () -&gt; <a class="el" href="structBitSet.html">BitSet</a> &amp;</td></tr>
 <tr class="separator:abb22287692e296a09bc833357d4a410b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9d65bbbdab6e1a945d759e144ffcfaa1"><td class="memItemLeft" align="right" valign="top"><a id="a9d65bbbdab6e1a945d759e144ffcfaa1"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getAncestors</b> () const -&gt; <a class="el" href="structBitSet.html">BitSet</a></td></tr>
 <tr class="separator:a9d65bbbdab6e1a945d759e144ffcfaa1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a430437a3afe2a8478cce53f314727de3"><td class="memItemLeft" align="right" valign="top"><a id="a430437a3afe2a8478cce53f314727de3"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getDescendants</b> () -&gt; <a class="el" href="structBitSet.html">BitSet</a> &amp;</td></tr>
-<tr class="separator:a430437a3afe2a8478cce53f314727de3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae77dd862456eb83da52d7f476765e161"><td class="memItemLeft" align="right" valign="top"><a id="ae77dd862456eb83da52d7f476765e161"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getDescendants</b> () const -&gt; <a class="el" href="structBitSet.html">BitSet</a></td></tr>
-<tr class="separator:ae77dd862456eb83da52d7f476765e161"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a77b73ee3b9e751fb14ae37063ca3f78b"><td class="memItemLeft" align="right" valign="top"><a id="a77b73ee3b9e751fb14ae37063ca3f78b"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>addParent</b> (size_t i)</td></tr>
 <tr class="separator:a77b73ee3b9e751fb14ae37063ca3f78b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac2b1e11cebc8a8f883d9a5133a35a648"><td class="memItemLeft" align="right" valign="top"><a id="ac2b1e11cebc8a8f883d9a5133a35a648"></a>
-constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>addChild</b> (size_t i)</td></tr>
-<tr class="separator:ac2b1e11cebc8a8f883d9a5133a35a648"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae11355aa6711a247a4859c9e09d14fac"><td class="memItemLeft" align="right" valign="top"><a id="ae11355aa6711a247a4859c9e09d14fac"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>calcAncestors</b> (uint8_t filtd) -&gt; <a class="el" href="structBitSet.html">BitSet</a></td></tr>
 <tr class="separator:ae11355aa6711a247a4859c9e09d14fac"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac060f338eb1d07c2e93e493033aba6cf"><td class="memItemLeft" align="right" valign="top"><a id="ac060f338eb1d07c2e93e493033aba6cf"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>calcDescendants</b> (uint8_t filtd) -&gt; <a class="el" href="structBitSet.html">BitSet</a></td></tr>
-<tr class="separator:ac060f338eb1d07c2e93e493033aba6cf"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af9eb56eb6dea05fbc682413a84bfe01b"><td class="memItemLeft" align="right" valign="top"><a id="af9eb56eb6dea05fbc682413a84bfe01b"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>onStack</b> () const -&gt; bool</td></tr>
 <tr class="separator:af9eb56eb6dea05fbc682413a84bfe01b"><td class="memSeparator" colspan="2">&#160;</td></tr>
