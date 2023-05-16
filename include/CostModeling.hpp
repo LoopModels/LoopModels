@@ -438,7 +438,7 @@ private:
     bool placed = L != this;
     if ((placed && (L->getParent() != this || a->dependsOnIndVars(getDepth()))))
       return {};
-    // we're trying to hoist into
+    // we're trying to hoist into either idxFront or idxBack
     unsigned idxFront = 2 * currentLoop, idxBack = idxFront + 2;
     bool legalHoistFront = true, legalHoistBack = true;
     for (auto *p : a->inNeighbors(getDepth())) {
@@ -490,6 +490,9 @@ private:
       a->place();
       return currentLoop + 1;
     }
+    // FIXME: what if !placed, but hoist failed?
+    // what sort of ctrl path could produce that outcome?
+    invariant(placed);
     return {};
   }
   // Two possible plans:
@@ -557,8 +560,49 @@ private:
     InstructionBlock *B = &header;
     LoopTreeSchedule *L;
     bool inLoop = false;
+    // two passes, first to place the addrs that don't need hoisting
     for (BitSet scc : components) {
-      if (scc.size() == 1) {
+      size_t sccsz = scc.size();
+      if (sccsz == 1) {
+        size_t indRaw = scc.front(), ind = indRaw - numSubTrees;
+        if (ind < numAddr) {
+          // four possibilities:
+          // 1. inLoop && wasPlaced
+          // 2. inLoop && !wasPlaced
+          // 3. !inLoop && !wasPlaced
+          // 4. !inLoop && wasPlaced - scc hoisted
+          if (inLoop) continue;
+          Address *a = addr[ind];
+          invariant(!a->wasPlaced());
+          // if (a->wasPlaced()) {
+          //   // scc's top sort decided we can hoist
+          //   invariant(a->getLoopTreeSchedule()->try_delete(a));
+          //   a->setLoopTreeSchedule(this);
+          // }
+          a->setBlockIdx(currentLoop);
+          B->push_back(alloc, a);
+          a->place();
+          a->visit3();
+        } else {
+          // invariant((ind - numAddr) & 1, size_t(inLoop));
+          // invariant(currentLoop, (ind - numAddr) >> 1);
+          if (inLoop) B = &subTrees[currentLoop++].exit;
+          else L = subTrees[currentLoop].subTree;
+          inLoop = !inLoop;
+        }
+      } else {
+        invariant(inLoop);
+#ifndef NDEBUG
+        for (size_t i : scc) assert(addr[i - numSubTrees]->wasPlaced());
+#endif
+      }
+    }
+    invariant(!inLoop);
+    currentLoop = 0;
+    B = &header;
+    for (BitSet scc : components) {
+      size_t sccsz = scc.size();
+      if (sccsz == 1) {
         size_t indRaw = scc.front(), ind = indRaw - numSubTrees;
         if (ind < numAddr) {
           Address *a = addr[ind];
@@ -567,29 +611,19 @@ private:
           // 2. inLoop && !wasPlaced
           // 3. !inLoop && !wasPlaced
           // 4. !inLoop && wasPlaced - scc hoisted
-          if (inLoop) {
-            // header: B
-            // exit: subTrees[currentLoop].exit;
-            // Here, we want a recursive approach
-            // check children and check parents for hoistability
-            // if all parents are hoistable in front, it can be hoisted in front
-            // ditto if all children are hoistable behind
-            // we can reset visited before each search
-            if (!a->wasPlaced() || ((a->getLoopTreeSchedule() == L) &&
-                                    !a->dependsOnIndVars(getDepth()))) {
-              // hoist; do other loop members depend, or are depended on?
-              invariant(hoist(alloc, a, currentLoop).hasValue() ||
-                        a->wasPlaced());
-            }
-          } else {
-            invariant(!a->wasPlaced());
-            // if (a->wasPlaced()) {
-            //   // scc's top sort decided we can hoist
-            //   invariant(a->getLoopTreeSchedule()->try_delete(a));
-            //   a->setLoopTreeSchedule(this);
-            // }
-            a->setBlockIdx(currentLoop);
-            B->push_back(alloc, a);
+          if (!inLoop) continue;
+          // header: B
+          // exit: subTrees[currentLoop].exit;
+          // Here, we want a recursive approach
+          // check children and check parents for hoistability
+          // if all parents are hoistable in front, it can be hoisted in
+          // front ditto if all children are hoistable behind we can reset
+          // visited before each search
+          if (!a->wasPlaced() || ((a->getLoopTreeSchedule() == L) &&
+                                  !a->dependsOnIndVars(getDepth()))) {
+            // hoist; do other loop members depend, or are depended on?
+            invariant(hoist(alloc, a, currentLoop).hasValue() ||
+                      a->wasPlaced());
           }
           a->place();
         } else {

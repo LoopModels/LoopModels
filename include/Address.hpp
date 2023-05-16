@@ -127,6 +127,9 @@ class Address {
   }
 
 public:
+  [[nodiscard]] constexpr auto getArrayPointer() const -> const llvm::SCEV * {
+    return oldMemAccess->getArrayPointer();
+  }
   [[nodiscard]] constexpr auto dependsOnIndVars(size_t d) -> bool {
     for (size_t i = 0, D = getArrayDim(); i < D; ++i)
       if (anyNEZero(indexMatrix()(i, _(d, end)))) return true;
@@ -243,8 +246,10 @@ public:
   public:
     constexpr auto operator*() const -> Address * { return *p; }
     constexpr auto operator->() const -> Address * { return *p; }
+    /// true means skip, false means we evaluate
+    /// so *d <= filtdepth means we skip, evaluating only *d > filtdepth
     [[nodiscard]] constexpr auto hasNext() const -> bool {
-      return ((p != e) && ((*d < filtdepth) || (!((*p)->inActiveSubset()))));
+      return ((p != e) && ((*d <= filtdepth) || (!((*p)->inActiveSubset()))));
     }
     constexpr auto operator++() -> ActiveEdgeIterator & {
       // meaning of filtdepth 127?

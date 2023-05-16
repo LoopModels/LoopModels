@@ -132,7 +132,7 @@ public:
   [[nodiscard]] constexpr auto getFusionOmega() const -> PtrVector<int64_t> {
     return arrayRef->getFusionOmega();
   }
-  [[nodiscard]] constexpr auto getArrayPointer() -> const llvm::SCEV * {
+  [[nodiscard]] constexpr auto getArrayPointer() const -> const llvm::SCEV * {
     return arrayRef->getArrayPointer();
   }
   constexpr auto getAddress() -> NotNull<Address> { return addrs; }
