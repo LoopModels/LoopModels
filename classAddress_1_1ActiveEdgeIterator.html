@@ -82,8 +82,7 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator*</
 <tr class="memitem:ace7e6fd0b8491cab2fcc609685771faa"><td class="memItemLeft" align="right" valign="top"><a id="ace7e6fd0b8491cab2fcc609685771faa"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator-&gt;</b> () const -&gt; <a class="el" href="classAddress.html">Address</a> *</td></tr>
 <tr class="separator:ace7e6fd0b8491cab2fcc609685771faa"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a02d4f004ff516eaca51dff3c97e480dc"><td class="memItemLeft" align="right" valign="top"><a id="a02d4f004ff516eaca51dff3c97e480dc"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>hasNext</b> () const -&gt; bool</td></tr>
+<tr class="memitem:a02d4f004ff516eaca51dff3c97e480dc"><td class="memItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classAddress_1_1ActiveEdgeIterator.html#a02d4f004ff516eaca51dff3c97e480dc">hasNext</a> () const -&gt; bool</td></tr>
 <tr class="separator:a02d4f004ff516eaca51dff3c97e480dc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ace03cb6c9d56d96120706312abdc5df0"><td class="memItemLeft" align="right" valign="top"><a id="ace03cb6c9d56d96120706312abdc5df0"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator++</b> () -&gt; <a class="el" href="classAddress_1_1ActiveEdgeIterator.html">ActiveEdgeIterator</a> &amp;</td></tr>
@@ -110,6 +109,33 @@ Static Public Member Functions</h2></td></tr>
 static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>end</b> () -&gt; <a class="el" href="structAddress_1_1EndSentinel.html">EndSentinel</a></td></tr>
 <tr class="separator:a887a177006ff93b032e7bd3554d355bf"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
+<h2 class="groupheader">Member Function Documentation</h2>
+<a id="a02d4f004ff516eaca51dff3c97e480dc"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a02d4f004ff516eaca51dff3c97e480dc">&#9670;&nbsp;</a></span>hasNext()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">constexpr auto Address::ActiveEdgeIterator::hasNext </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const -&gt; bool </td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">constexpr</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>true means skip, false means we evaluate so *d &lt;= filtdepth means we skip, evaluating only *d &gt; filtdepth </p>
+
+</div>
+</div>
 <hr/>The documentation for this class was generated from the following file:<ul>
 <li>include/<a class="el" href="Address_8hpp_source.html">Address.hpp</a></li>
 </ul>
