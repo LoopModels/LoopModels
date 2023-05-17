@@ -291,9 +291,12 @@ private:
         auto depS{addr->outDepSat()};
         for (size_t n = 0; n < outN.size(); ++n) {
           os << addrNames[addr->index()] << " -> "
-             << addrNames[outN[n]->index()]
-             << " [label = \"dep_sat=" << unsigned(depS[n])
-             << "\", color=\"#0000ff\"];\n";
+             << addrNames[outN[n]->index()];
+          if (depS[n] == 255) os << " [color=\"#00ff00\"];\n";
+          else if (depS[n] == 127) os << " [color=\"#008080\"];\n";
+          else
+            os << " [label = \"dep_sat=" << unsigned(depS[n])
+               << "\", color=\"#0000ff\"];\n";
         }
       }
     }
@@ -756,7 +759,7 @@ public:
       for (size_t i = loop->getNumLoops(), k = getDepth(); i > k;)
         loop = loop->removeLoop(alloc, --i);
       loop->printBounds(out);
-    }
+    } else out << "Top Level";
     out << "</td></tr>\n";
     size_t i = header.printDotNodes(out, 0, addrNames, addrIndOffset, name);
     j = 0;

@@ -1041,11 +1041,12 @@ public:
         edge.setSatLevelLP(depth);
         carriedDeps[inIndex].setCarriedDependency(depth);
         carriedDeps[outIndex].setCarriedDependency(depth);
-      } else if (edge.checkEmptySat(
-                   allocator, nodes[inIndex].getPhi()(_(0, depth + 1), _),
-                   nodes[outIndex].getPhi()(_(0, depth + 1), _))) {
-        g.activeEdges.remove(e);
       }
+      // else if (edge.checkEmptySat(
+      //              allocator, nodes[inIndex].getPhi()(_(0, depth + 1), _),
+      //              nodes[outIndex].getPhi()(_(0, depth + 1), _))) {
+      //   g.activeEdges.remove(e);
+      // }
       u = size_t(uu);
     }
     return deactivated;
@@ -1360,9 +1361,13 @@ public:
     // activeEdges was the old original; swap it in
     BitSet oldEdges = g.activeEdges, nodeIds = g.nodeIds;
     g.activeEdges = activeEdges;
-    Vector<AffineSchedule> oldSchedules;
+    auto chckpt = allocator.checkpoint();
+    auto oldSchedules = vector<AffineSchedule>(allocator, g.nodeIds.size());
     // oldSchedules.reserve(g.nodeIds.size()); // is this worth it?
-    for (auto &n : g) oldSchedules.push_back(n.getSchedule());
+    size_t i = 0;
+    for (auto &n : g) oldSchedules[i++] = n.getSchedule().copy(allocator);
+    // auto oldCarriedDeps = vector<CarriedDependencyFlag>(allocator,
+    // carriedDeps.size()); oldCarriedDeps<<carriedDeps;
     Vector<CarriedDependencyFlag> oldCarriedDeps = carriedDeps;
     resetDeepDeps(carriedDeps, d);
     countAuxAndStash(g, d);
@@ -1378,6 +1383,7 @@ public:
     auto *oldNodeIter = oldSchedules.begin();
     for (auto &&n : g) n.getSchedule() = *(oldNodeIter++);
     std::swap(carriedDeps, oldCarriedDeps);
+    allocator.rollback(chckpt);
     return depSatLevel;
   }
   /// optimize at depth `d`
@@ -1458,7 +1464,7 @@ public:
     os << "\nLoopBlock schedule (#mem accesses = " << lblock.memory.size()
        << "):\n\n";
     for (const auto &mem : lblock.memory) {
-      os << "Ref = " << mem->getArrayRef();
+      os << "Ref = " << *mem->getArrayRef();
       size_t nodeIndex = mem->getNode();
       const AffineSchedule s = lblock.getNode(nodeIndex).getSchedule();
       os << "\nnodeIndex = " << nodeIndex << "\ns.getPhi()" << s.getPhi()

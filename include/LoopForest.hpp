@@ -100,6 +100,7 @@ struct LoopTree {
   // NOLINTNEXTLINE(misc-no-recursion)
   void addZeroLowerBounds(BumpAlloc<> &alloc,
                           map<llvm::Loop *, LoopTree *> &loopMap) {
+    // if (affineLoop) affineLoop->addZeroLowerBounds();
     if (affineLoop) affineLoop->addZeroLowerBounds(alloc);
     for (auto tree : subLoops) {
       tree->addZeroLowerBounds(alloc, loopMap);

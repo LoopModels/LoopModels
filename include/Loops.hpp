@@ -315,6 +315,9 @@ addBackedgeTakenCount(std::array<IntMatrix, 2> &AB,
   return std::max(depth, minDepth);
 }
 } // namespace loopNestCtor
+#ifndef NDEBUG
+[[gnu::used]] inline void dumpSCEV(const llvm::SCEV *S) { llvm::errs() << *S; }
+#endif
 
 // A * x >= 0
 // if constexpr(NonNegative)
@@ -410,7 +413,7 @@ struct AffineLoopNest
     auto B{aln->getA()};
     invariant(B.numRow(), M + numExtraVar);
     invariant(B.numCol(), N);
-    B(_(0, M), _(begin, numConst)) << A(_, _(begin, numConst));
+    B(_(0, M), _(0, numConst)) << A(_, _(0, numConst));
     B(_(0, M), _(numConst, end)) << A(_, _(numConst, end)) * R;
     if constexpr (NonNegative) {
       B(_(M, end), _(0, numConst)) << 0;
@@ -717,7 +720,7 @@ struct AffineLoopNest
       }
     if (int64_t x0 = x[0]) {
       if (printed) os << (mul * x0 > 0 ? " + " : " - ") << constexpr_abs(x0);
-      else os << mul * x[0];
+      else os << mul * x0;
       printed = true;
     }
     return printed;

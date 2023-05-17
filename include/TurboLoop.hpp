@@ -474,6 +474,12 @@ public:
       Rt(_, _(numExtraLoopsToPeel, end)),
       {std::move(sizes), std::move(symbolicOffsets)}, Bt, omegas));
     ++omegas.back();
+    if (ORE) [[unlikely]] {
+      llvm::SmallVector<char> x;
+      llvm::raw_svector_ostream os{x};
+      os << "Found ref: " << *LT.memAccesses.back()->getArrayRef();
+      remark("AffineRef", LT.loop, os.str());
+    }
     return false;
   }
   // LoopTree &getLoopTree(unsigned i) { return loopTrees[i]; }
