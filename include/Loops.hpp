@@ -718,6 +718,7 @@ struct AffineLoopNest
     if (int64_t x0 = x[0]) {
       if (printed) os << (mul * x0 > 0 ? " + " : " - ") << constexpr_abs(x0);
       else os << mul * x[0];
+      printed = true;
     }
     return printed;
   }
@@ -749,7 +750,7 @@ struct AffineLoopNest
     if (separateLines || isUpper) {
       if (allAj == 1) os << "i_" << numVarMinus1;
       else os << allAj << "*i_" << numVarMinus1;
-      os << (isUpper ? " <= " : " >= ");
+      os << (isUpper ? " ≤ " : " ≥ ");
     }
     if (numRow > 1) os << (isUpper ? "min(" : "max(");
     DensePtrMatrix<int64_t> A{getA()};
@@ -762,7 +763,7 @@ struct AffineLoopNest
       if (!isUpper) os << ", 0";
     }
     if (numRow > 1) os << ")";
-    if (!(separateLines || isUpper)) os << " <= ";
+    if (!(separateLines || isUpper)) os << " ≤ ";
   }
   // prints the inner most loop.
   // it is assumed that you iteratively pop off the inner most loop with
@@ -777,8 +778,7 @@ struct AffineLoopNest
     size_t numRow = 0;
     int64_t allAj = 0;
     for (size_t j = 0; j < A.numRow(); ++j) {
-      int64_t Ajr = A(j, last);
-      int64_t Aj = Ajr * sign;
+      int64_t Ajr = A(j, last), Aj = Ajr * sign;
       if (Aj <= 0) continue;
       if (allAj) allAj = allAj == Aj ? allAj : -1;
       else allAj = Aj;
@@ -786,7 +786,7 @@ struct AffineLoopNest
     }
     if (numRow == 0) {
       if constexpr (NonNegative)
-        if (!isUpper) os << "i_" << numVarM1 << " >= 0";
+        if (!isUpper) os << "i_" << numVarM1 << " ≥ 0";
       return;
     }
     if constexpr (NonNegative)
@@ -794,20 +794,19 @@ struct AffineLoopNest
     if (allAj > 0)
       return printBoundShort(os, sign, numVarM1, numConst, allAj, numRow, true);
     for (size_t j = 0; j < A.numRow(); ++j) {
-      int64_t Ajr = A(j, end - 1);
-      int64_t Aj = Ajr * sign;
+      int64_t Ajr = A(j, end - 1), Aj = Ajr * sign;
       if (Aj <= 0) continue;
       if (hasPrintedLine)
         for (size_t k = 0; k < 21; ++k) os << ' ';
       hasPrintedLine = true;
       if (Ajr != sign)
-        os << Aj << "*i_" << numVarM1 << (isUpper ? " <= " : " >= ");
-      else os << "i_" << numVarM1 << (isUpper ? " <= " : " >= ");
+        os << Aj << "*i_" << numVarM1 << (isUpper ? " ≤ " : " ≥ ");
+      else os << "i_" << numVarM1 << (isUpper ? " ≤ " : " ≥ ");
       printBound(os, sign, numVarM1, numConst, j);
       os << "\n";
     }
     if constexpr (NonNegative)
-      if (!isUpper) os << "i_" << numVarM1 << " >= 0\n";
+      if (!isUpper) os << "i_" << numVarM1 << " ≥ 0\n";
   }
   void printBounds(llvm::raw_ostream &os) const {
     const size_t numVar = getNumLoops();

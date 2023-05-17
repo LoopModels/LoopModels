@@ -271,14 +271,15 @@ private:
                        unsigned addrIndOffset, const std::string &parentLoop)
       -> size_t {
       for (auto *addr : getAddr()) {
-        os << " | ";
         std::string f("f" + std::to_string(++i)), addrName = "\"";
         addrName += parentLoop;
         addrName += "\":";
         addrName += f;
         unsigned ind = addr->index() -= addrIndOffset;
         addrNames[ind] = addrName;
-        addr->printDotName(os << "<" << f << "> ");
+        addr->printDotName(os << "<tr><td port=\"" << f << "\"> ");
+
+        os << "</td></tr>\n";
       }
       return i;
     }
@@ -291,7 +292,8 @@ private:
         for (size_t n = 0; n < outN.size(); ++n) {
           os << addrNames[addr->index()] << " -> "
              << addrNames[outN[n]->index()]
-             << " [label = \"dep_sat=" << unsigned(depS[n]) << "\"];\n";
+             << " [label = \"dep_sat=" << unsigned(depS[n])
+             << "\", color=\"#0000ff\"];\n";
         }
       }
     }
@@ -747,24 +749,27 @@ public:
                                               addrIndOffset, loop);
     }
     const std::string &name = names[this];
-    out << "\"" << name << "\" [label = \"<f0> ";
+    out << "\"" << name
+        << "\" [shape=plain\nlabel = <<table><tr><td port=\"f0\">";
     // assert(depth == 0 || (loop != nullptr));
     if (loop && (getDepth() > 0)) {
       for (size_t i = loop->getNumLoops(), k = getDepth(); i > k;)
         loop = loop->removeLoop(alloc, --i);
       loop->printBounds(out);
     }
+    out << "</td></tr>\n";
     size_t i = header.printDotNodes(out, 0, addrNames, addrIndOffset, name);
     j = 0;
     std::string loopEdges;
     for (auto &subTree : subTrees) {
       std::string label = "f" + std::to_string(++i);
-      out << " | <" << label << "> SubLoop#" << j++;
+      out << " <tr> <td port=\"" << label << "\"> SubLoop#" << j++
+          << "</td></tr>\n";
       loopEdges += "\"" + name + "\":f" + std::to_string(i) + " -> \"" +
-                   names[subTree.subTree] + "\":f0;\n";
+                   names[subTree.subTree] + "\":f0 [color=\"#ff0000\"];\n";
       i = subTree.exit.printDotNodes(out, i, addrNames, addrIndOffset, name);
     }
-    out << "\"];\n" << loopEdges;
+    out << "</table>>];\n" << loopEdges;
     if (lret) return lret;
     if ((loop == nullptr) || (getDepth() <= 1)) return nullptr;
     return loop->removeLoop(alloc, getDepth() - 1);
