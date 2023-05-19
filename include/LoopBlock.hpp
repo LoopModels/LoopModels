@@ -845,6 +845,16 @@ public:
     for (auto edge : edges) edge.validate();
   }
 #endif
+  void shiftOmega(ScheduledNode &node) {
+    // we check all memory accesses in the node, to see if applying the same
+    // omega offsets can zero dependence offsets. If so, we apply the shift.
+    BitSet64 candidates{BitSet64::dense(node.getNumLoops())};
+    // we look for offsets, then try and validate that the shift
+    // if not valid, we drop it from the potential candidates.
+  }
+  void shiftOmegas() {
+    for (auto &&node : nodes) shiftOmega(node);
+  }
   /// For now, we instantiate a dense simplex specifying the full problem.
   ///
   /// Eventually, the plan is to generally avoid instantiating the

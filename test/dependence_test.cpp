@@ -8,6 +8,7 @@
 #include "Math/Math.hpp"
 #include "MatrixStringParse.hpp"
 #include "MemoryAccess.hpp"
+#include <Math/Comparisons.hpp>
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
@@ -1402,7 +1403,7 @@ TEST(DoubleDependenceTest, BasicAssertions) {
     memAccessIds[loopBlock.getMemoryAccess(jj)] = jj;
   for (auto &e : loopBlock.getEdges()) {
     auto [in, out] = e.getInOutPair();
-    llvm::errs() << "\nEdge for array " << e.getArrayPointer()
+    llvm::errs() << "\nEdge for array " << *e.getArrayPointer()
                  << ", in ID: " << memAccessIds[in]
                  << "; out ID: " << memAccessIds[out] << "\n";
   }
@@ -1421,6 +1422,8 @@ TEST(DoubleDependenceTest, BasicAssertions) {
     size_t nodeIndex = mem->getNode();
     AffineSchedule s = loopBlock.getNode(nodeIndex).getSchedule();
     EXPECT_EQ(s.getPhi(), optPhi);
+    EXPECT_TRUE(allZero(s.getOffsetOmega()));
+    EXPECT_TRUE(allZero(s.getFusionOmega()));
   }
 }
 
