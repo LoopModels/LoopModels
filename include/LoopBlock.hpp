@@ -63,6 +63,7 @@ private:
   [[no_unique_address]] BitSet inNeighbors{};
   [[no_unique_address]] BitSet outNeighbors{};
   [[no_unique_address]] AffineSchedule schedule{};
+  [[no_unique_address]] int64_t *offsets{nullptr};
   [[no_unique_address]] uint32_t phiOffset{0};   // used in LoopBlock
   [[no_unique_address]] uint32_t omegaOffset{0}; // used in LoopBlock
   [[no_unique_address]] uint8_t numLoops{0};
@@ -75,6 +76,10 @@ public:
                           unsigned int nodeIndex) {
     addMemory(sId, store, nodeIndex);
   }
+  constexpr auto getLoopOffsets() -> MutPtrVector<int64_t> {
+    return {offsets, numLoops};
+  }
+  constexpr void setOffsets(int64_t *o) { offsets = o; }
   // MemAccess addrCapacity field gives the replication count
   // so for each memory access, we can count the number of edges in
   // and the number of edges out through iterating edges in and summing
@@ -849,7 +854,9 @@ public:
   void shiftOmega(ScheduledNode &node) {
     unsigned nLoops = node.getNumLoops();
     if (nLoops == 0) return;
-    auto s = allocator.scope();
+    auto p0 = allocator.checkpoint();
+    MutPtrVector<int64_t> offs = vector<int64_t>(allocator, nLoops);
+    auto p1 = allocator.checkpoint();
     MutSquarePtrMatrix<int64_t> A = matrix<int64_t>(allocator, nLoops + 1);
     // MutPtrVector<BumpPtrVector<int64_t>> offsets{
     //   vector<BumpPtrVector<int64_t>>(allocator, nLoops)};
@@ -927,17 +934,31 @@ public:
         }
       }
     }
-    if (!foundNonZeroOffset) return;
+    if (!foundNonZeroOffset) return allocator.rollback(p0);
+    bool nonZero = false;
     // matrix A is reasonably diagonalized, should indicate
-    for (size_t r = 0, c = 0; r < rank; ++r) {
+    size_t c = 0;
+    for (size_t r = 0; r < rank; ++r) {
       int64_t off = A(r, last);
       if (off == 0) continue;
-      for (; c < nLoops; ++c)
+      for (; c < nLoops; ++c) {
         if (A(r, c) != 0) break;
+        offs[L - c] = 0;
+      }
       if (c == nLoops) return;
       int64_t Arc = A(r, c), x = off / Arc;
       if (x * Arc != off) continue;
-      size_t l = L - c; // decrement loop `l` by `x`
+      offs[L - c++] = x; // decrement loop `L-c` by `x`
+      nonZero = true;
+    }
+    if (!nonZero) return allocator.rollback(p0);
+    allocator.rollback(p1);
+    for (; c < nLoops; ++c) offs[L - c] = 0;
+    node.setOffsets(offs.data());
+    for (size_t l = 0; l < nLoops; ++l) {
+      // TODO: shift the loop bounds by the offset
+      // this is equivalent to left-multiplying the simplex system of eqautions
+      // A*lambda = s
     }
   }
   void shiftOmegas() {
@@ -1477,7 +1498,7 @@ public:
     std::swap(g.nodeIds, nodeIds);
     g.activeEdges = activeEdges; // undo such that g.getEdges(d) is correct
     for (auto &&e : g.getEdges(d)) e.popSatLevel();
-    g.activeEdges = oldEdges;    // restore backup
+    g.activeEdges = oldEdges; // restore backup
     auto *oldNodeIter = oldSchedules.begin();
     for (auto &&n : g) n.getSchedule() = *(oldNodeIter++);
     std::swap(carriedDeps, oldCarriedDeps);
