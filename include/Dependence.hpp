@@ -3,6 +3,7 @@
 #include "DependencyPolyhedra.hpp"
 #include "Schedule.hpp"
 #include <MemoryAccess.hpp>
+#include <Utilities/Allocators.hpp>
 #include <Utilities/Invariant.hpp>
 #include <cstdint>
 /// Dependence
@@ -313,6 +314,10 @@ public:
     out->addEdgeIn(i);
     return *this;
   }
+  constexpr void copySimplices(BumpAlloc<> &alloc) {
+    dependenceSatisfaction = dependenceSatisfaction->copy(alloc);
+    dependenceBounding = dependenceBounding->copy(alloc);
+  }
   /// getOutIndMat() -> getOutNumLoops() x arrayDim()
   [[nodiscard]] constexpr auto getOutIndMat() const -> PtrMatrix<int64_t> {
     return out->indexMatrix();
@@ -366,6 +371,9 @@ public:
            size_t(dependenceSatisfaction->getConstraints().numCol()));
   }
   [[nodiscard]] constexpr auto getDepPoly() -> NotNull<DepPoly> {
+    return depPoly;
+  }
+  [[nodiscard]] constexpr auto getDepPoly() const -> NotNull<const DepPoly> {
     return depPoly;
   }
   [[nodiscard]] constexpr auto getNumConstraints() const -> unsigned {

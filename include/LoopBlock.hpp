@@ -873,8 +873,8 @@ public:
       MemoryAccess *mem = memory[i];
       unsigned nIdx = mem->getNode();
       for (size_t e : mem->inputEdges()) {
-        Dependence &dep = edges[e]; // other -> mem
-        DepPoly *depPoly = dep.getDepPoly();
+        const Dependence &dep = edges[e]; // other -> mem
+        const DepPoly *depPoly = dep.getDepPoly();
         unsigned numSyms = depPoly->getNumSymbols(), dep0 = depPoly->getDim0(),
                  dep1 = depPoly->getDim1();
         PtrMatrix<int64_t> E = depPoly->getE();
@@ -914,9 +914,9 @@ public:
         }
       }
       for (size_t e : mem->outputEdges()) {
-        Dependence &dep = edges[e];                    // mem -> other
+        const Dependence &dep = edges[e];              // mem -> other
         if (dep.output()->getNode() == nIdx) continue; // handled above
-        DepPoly *depPoly = dep.getDepPoly();
+        const DepPoly *depPoly = dep.getDepPoly();
         unsigned numSyms = depPoly->getNumSymbols(), dep0 = depPoly->getDim0(),
                  dep1 = depPoly->getDim1();
         PtrMatrix<int64_t> E = depPoly->getE();
@@ -955,10 +955,53 @@ public:
     allocator.rollback(p1);
     for (; c < nLoops; ++c) offs[L - c] = 0;
     node.setOffsets(offs.data());
-    for (size_t l = 0; l < nLoops; ++l) {
-      // TODO: shift the loop bounds by the offset
-      // this is equivalent to left-multiplying the simplex system of eqautions
-      // A*lambda = s
+    // now we iterate over the edges again
+    // perhaps this should be abstracted into higher order functions that
+    // iterate over the edges?
+    for (size_t i : node.getMemory()) {
+      MemoryAccess *mem = memory[i];
+      unsigned nIdx = mem->getNode();
+      for (size_t e : mem->inputEdges()) {
+        Dependence &dep = edges[e]; // other -> mem
+        dep.copySimplices(allocator);
+        DepPoly *depPoly = dep.getDepPoly();
+        unsigned numSyms = depPoly->getNumSymbols(), dep0 = depPoly->getDim0(),
+                 dep1 = depPoly->getDim1();
+        MutPtrMatrix<int64_t> satL = dep.getSatLambda();
+        MutPtrMatrix<int64_t> bndL = dep.getBndLambda();
+        bool pick = dep.isForward(), repeat = dep.output()->getNode() == nIdx;
+        while (true) {
+          unsigned offset = pick ? numSyms + dep0 : numSyms;
+          unsigned numDep = pick ? dep0 : dep1;
+          for (size_t l = 0; l < numDep; ++l) {
+            int64_t mlt = offs[l];
+            if (mlt == 0) continue;
+            satL(0, _) -= mlt * satL(offset + l, _);
+            bndL(0, _) -= mlt * bndL(offset + l, _);
+          }
+          if (!repeat) break;
+          repeat = false;
+          pick = !pick;
+        }
+      }
+      for (size_t e : mem->outputEdges()) {
+        Dependence &dep = edges[e];                    // mem -> other
+        if (dep.output()->getNode() == nIdx) continue; // handled above
+        dep.copySimplices(allocator); // we don't want to copy twice
+        DepPoly *depPoly = dep.getDepPoly();
+        unsigned numSyms = depPoly->getNumSymbols(), dep0 = depPoly->getDim0(),
+                 dep1 = depPoly->getDim1();
+        MutPtrMatrix<int64_t> satL = dep.getSatLambda();
+        MutPtrMatrix<int64_t> bndL = dep.getBndLambda();
+        unsigned offset = dep.isForward() ? numSyms : numSyms + dep0;
+        unsigned numDep = dep.isForward() ? dep0 : dep1;
+        for (size_t l = 0; l < numDep; ++l) {
+          int64_t mlt = offs[l];
+          if (mlt == 0) continue;
+          satL(0, _) -= mlt * satL(offset + l, _);
+          bndL(0, _) -= mlt * bndL(offset + l, _);
+        }
+      }
     }
   }
   void shiftOmegas() {
@@ -1498,7 +1541,7 @@ public:
     std::swap(g.nodeIds, nodeIds);
     g.activeEdges = activeEdges; // undo such that g.getEdges(d) is correct
     for (auto &&e : g.getEdges(d)) e.popSatLevel();
-    g.activeEdges = oldEdges; // restore backup
+    g.activeEdges = oldEdges;    // restore backup
     auto *oldNodeIter = oldSchedules.begin();
     for (auto &&n : g) n.getSchedule() = *(oldNodeIter++);
     std::swap(carriedDeps, oldCarriedDeps);
