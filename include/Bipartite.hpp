@@ -1,11 +1,12 @@
 #pragma once
-#include "Math/Math.hpp"
+#include "Math/Array.hpp"
 
-bool bipartiteMatch(Matrix<bool, 0, 0> &bpGraph, size_t u,
-                    llvm::SmallVectorImpl<bool> &seen,
-                    llvm::SmallVectorImpl<int> &matchR) {
+// NOLINTNEXTLINE(misc-no-recursion)
+inline auto bipartiteMatch(Matrix<bool> &bpGraph, int u,
+                           MutPtrVector<bool> seen, MutPtrVector<int> matchR)
+  -> bool {
   // Try every job one by one
-  for (size_t v = 0; v < bpGraph.numRow(); v++) {
+  for (int v = 0; v < bpGraph.numRow(); v++) {
     // If applicant u is interested in
     // job v and v is not visited
     if (bpGraph(v, u) && !seen[v]) {
@@ -29,8 +30,8 @@ bool bipartiteMatch(Matrix<bool, 0, 0> &bpGraph, size_t u,
 }
 /// Returns maximum number
 /// of matching from M to N
-std::pair<size_t, llvm::SmallVector<int>>
-maxBipartiteMatch(Matrix<bool, 0, 0> &bpGraph) {
+inline auto maxBipartiteMatch(Matrix<bool> &bpGraph)
+  -> std::pair<size_t, Vector<int>> {
   // An array to keep track of the
   // applicants assigned to jobs.
   // The value of matchR[i] is the
@@ -38,12 +39,13 @@ maxBipartiteMatch(Matrix<bool, 0, 0> &bpGraph) {
   // the value -1 indicates nobody is
   // assigned.
   auto [N, M] = bpGraph.size();
-  llvm::SmallVector<int> matchR(N, -1);
-  size_t result = 0;
+  std::pair<size_t, Vector<int>> res{0, {unsigned(N), -1}};
+  size_t &result = res.first;
+  Vector<int> &matchR{res.second};
   if (M) {
-    llvm::SmallVector<bool> seen(N);
+    Vector<bool> seen{unsigned(N)};
     // Count of jobs assigned to applicants
-    for (size_t u = 0; u < M; u++) {
+    for (int u = 0; u < M; u++) {
       // Mark all jobs as not seen
       // for next applicant.
       std::fill(seen.begin(), seen.end(), false);
@@ -52,5 +54,5 @@ maxBipartiteMatch(Matrix<bool, 0, 0> &bpGraph) {
       if (bipartiteMatch(bpGraph, u, seen, matchR)) result++;
     }
   }
-  return std::make_pair(result, matchR);
+  return res;
 }

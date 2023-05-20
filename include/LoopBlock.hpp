@@ -846,11 +846,89 @@ public:
   }
 #endif
   void shiftOmega(ScheduledNode &node) {
-    // we check all memory accesses in the node, to see if applying the same
+    unsigned nLoops = node.getNumLoops();
+    if (nLoops == 0) return;
+    auto s = allocator.scope();
+    MutSquarePtrMatrix<int64_t> A = matrix<int64_t>(allocator, nLoops + 1);
+    // MutPtrVector<BumpPtrVector<int64_t>> offsets{
+    //   vector<BumpPtrVector<int64_t>>(allocator, nLoops)};
+    // for (size_t i = 0; i < nLoops; ++i)
+    //   offsets[i] = BumpPtrVector<int64_t>(allocator);
+    // BumpPtrVector<std::pair<BitSet64, int64_t>> omegaOffsets{allocator};
+    // // we check all memory accesses in the node, to see if applying the same
     // omega offsets can zero dependence offsets. If so, we apply the shift.
-    BitSet64 candidates{BitSet64::dense(node.getNumLoops())};
     // we look for offsets, then try and validate that the shift
     // if not valid, we drop it from the potential candidates.
+    bool foundNonZeroOffset = false;
+    unsigned rank = 0;
+    for (size_t i : node.getMemory()) {
+      MemoryAccess *mem = memory[i];
+      unsigned nIdx = mem->getNode();
+      for (size_t e : mem->inputEdges()) {
+        Dependence &dep = edges[e]; // other -> mem
+        DepPoly *depPoly = dep.getDepPoly();
+        unsigned numSyms = depPoly->getNumSymbols(), dep0 = depPoly->getDim0(),
+                 dep1 = depPoly->getDim1();
+        PtrMatrix<int64_t> E = depPoly->getE();
+        if (dep.output()->getNode() == nIdx) {
+          unsigned depCommon = std::min(dep0, dep1),
+                   depMax = std::max(dep0, dep1);
+          invariant(nLoops >= depMax);
+          // input and output, no relative shift of shared loops possible
+          // but indices may of course differ.
+          for (size_t d = 0; d < E.numRow(); ++d) {
+            MutPtrVector<int64_t> x = A(rank, _);
+            x[last] = E(d, 0);
+            foundNonZeroOffset |= x[0] != 0;
+            size_t j = 0;
+            for (; j < depCommon; ++j)
+              x[j] = E(d, j + numSyms) + E(d, j + numSyms + dep0);
+            if (dep0 != dep1) {
+              size_t offset = dep0 > dep1 ? numSyms : numSyms + dep0;
+              for (; j < depMax; ++j) x[j] = E(d, j + offset);
+            }
+            for (; j < nLoops; ++j) x[j] = 0;
+            rank = NormalForm::updateForNewRow(A(_(0, rank + 1), _));
+          }
+        } else {
+          // is forward means other -> mem, else mem <- other
+          unsigned offset = dep.isForward() ? numSyms + dep0 : numSyms;
+          unsigned numDep = dep.isForward() ? dep0 : dep1;
+          for (size_t d = 0; d < E.numRow(); ++d) {
+            MutPtrVector<int64_t> x = A(rank, _);
+            x[last] = E(d, 0);
+            foundNonZeroOffset |= x[last] != 0;
+            size_t j = 0;
+            for (; j < numDep; ++j) x[j] = E(d, j + offset);
+            for (; j < nLoops; ++j) x[j] = 0;
+            rank = NormalForm::updateForNewRow(A(_(0, rank + 1), _));
+          }
+        }
+      }
+      for (size_t e : mem->outputEdges()) {
+        Dependence &dep = edges[e];                    // mem -> other
+        if (dep.output()->getNode() == nIdx) continue; // handled above
+        DepPoly *depPoly = dep.getDepPoly();
+        unsigned numSyms = depPoly->getNumSymbols(), dep0 = depPoly->getDim0(),
+                 dep1 = depPoly->getDim1();
+        PtrMatrix<int64_t> E = depPoly->getE();
+
+        unsigned offset = dep.isForward() ? numSyms : numSyms + dep0;
+        unsigned numDep = dep.isForward() ? dep0 : dep1;
+        for (size_t d = 0; d < E.numRow(); ++d) {
+          MutPtrVector<int64_t> x = A(rank, _);
+          x[last] = E(d, 0);
+          foundNonZeroOffset |= x[last] != 0;
+          size_t j = 0;
+          for (; j < numDep; ++j) x[j] = E(d, j + offset);
+          for (; j < nLoops; ++j) x[j] = 0;
+          rank = NormalForm::updateForNewRow(A(_(0, rank + 1), _));
+        }
+      }
+    }
+    if (!foundNonZeroOffset) return;
+    // we now do a bipartite match between loops and offsets
+    // to try and find the maximum number of shifts we can satisfy.
   }
   void shiftOmegas() {
     for (auto &&node : nodes) shiftOmega(node);
