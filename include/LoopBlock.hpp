@@ -7,6 +7,7 @@
 #include "Loops.hpp"
 #include "Math/Array.hpp"
 #include "Math/Comparisons.hpp"
+#include "Math/GreatestCommonDivisor.hpp"
 #include "Math/Math.hpp"
 #include "Math/NormalForm.hpp"
 #include "Math/Simplex.hpp"
@@ -860,7 +861,7 @@ public:
     // we look for offsets, then try and validate that the shift
     // if not valid, we drop it from the potential candidates.
     bool foundNonZeroOffset = false;
-    unsigned rank = 0;
+    unsigned rank = 0, L = nLoops - 1;
     for (size_t i : node.getMemory()) {
       MemoryAccess *mem = memory[i];
       unsigned nIdx = mem->getNode();
@@ -879,15 +880,15 @@ public:
           for (size_t d = 0; d < E.numRow(); ++d) {
             MutPtrVector<int64_t> x = A(rank, _);
             x[last] = E(d, 0);
-            foundNonZeroOffset |= x[0] != 0;
+            foundNonZeroOffset |= x[last] != 0;
             size_t j = 0;
             for (; j < depCommon; ++j)
-              x[j] = E(d, j + numSyms) + E(d, j + numSyms + dep0);
+              x[L - j] = E(d, j + numSyms) + E(d, j + numSyms + dep0);
             if (dep0 != dep1) {
               size_t offset = dep0 > dep1 ? numSyms : numSyms + dep0;
-              for (; j < depMax; ++j) x[j] = E(d, j + offset);
+              for (; j < depMax; ++j) x[L - j] = E(d, j + offset);
             }
-            for (; j < nLoops; ++j) x[j] = 0;
+            for (; j < nLoops; ++j) x[L - j] = 0;
             rank = NormalForm::updateForNewRow(A(_(0, rank + 1), _));
           }
         } else {
@@ -899,8 +900,8 @@ public:
             x[last] = E(d, 0);
             foundNonZeroOffset |= x[last] != 0;
             size_t j = 0;
-            for (; j < numDep; ++j) x[j] = E(d, j + offset);
-            for (; j < nLoops; ++j) x[j] = 0;
+            for (; j < numDep; ++j) x[L - j] = E(d, j + offset);
+            for (; j < nLoops; ++j) x[L - j] = 0;
             rank = NormalForm::updateForNewRow(A(_(0, rank + 1), _));
           }
         }
@@ -920,15 +921,24 @@ public:
           x[last] = E(d, 0);
           foundNonZeroOffset |= x[last] != 0;
           size_t j = 0;
-          for (; j < numDep; ++j) x[j] = E(d, j + offset);
-          for (; j < nLoops; ++j) x[j] = 0;
+          for (; j < numDep; ++j) x[L - j] = E(d, j + offset);
+          for (; j < nLoops; ++j) x[L - j] = 0;
           rank = NormalForm::updateForNewRow(A(_(0, rank + 1), _));
         }
       }
     }
     if (!foundNonZeroOffset) return;
-    // we now do a bipartite match between loops and offsets
-    // to try and find the maximum number of shifts we can satisfy.
+    // matrix A is reasonably diagonalized, should indicate
+    for (size_t r = 0, c = 0; r < rank; ++r) {
+      int64_t off = A(r, last);
+      if (off == 0) continue;
+      for (; c < nLoops; ++c)
+        if (A(r, c) != 0) break;
+      if (c == nLoops) return;
+      int64_t Arc = A(r, c), x = off / Arc;
+      if (x * Arc != off) continue;
+      size_t l = L - c; // decrement loop `l` by `x`
+    }
   }
   void shiftOmegas() {
     for (auto &&node : nodes) shiftOmega(node);
