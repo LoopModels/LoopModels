@@ -398,14 +398,21 @@ struct AffineLoopNest
   /// So that our new loop nest has matrix
   /// [A(_,const) (A(_,var)*R)]
   /// while the new `var' is `(R^{-1}*var)`
-  [[nodiscard]] auto rotate(BumpAlloc<> &alloc, PtrMatrix<int64_t> R) const
+  /// offset the loops by `offsets`, e.g. if we have
+  /// offsets[0] = 2, then the first loop is shifted by 2.
+  /// this shifting is applied before rotation.
+  [[nodiscard]] auto rotate(BumpAlloc<> &alloc, PtrMatrix<int64_t> R,
+                            const int64_t *offsets) const
     -> NotNull<AffineLoopNest<false>> {
-    size_t numExtraVar = 0;
+    // if offsets is not null, we have the equivalent of
+    // A * O * [I 0; 0 R]
+    // where O = I - [0 0; offsets 0],
+    // where offsets is a vector of length getNumLoops() and O is square
+    size_t numExtraVar = 0, numConst = this->getNumSymbols();
     if constexpr (NonNegative) numExtraVar = getNumLoops();
-    assert(R.numCol() == numExtraVar);
-    assert(R.numRow() == numExtraVar);
-    const size_t numConst = this->getNumSymbols();
-    MutDensePtrMatrix<int64_t> A{getA()};
+    invariant(unsigned(R.numCol()), getNumLoops());
+    invariant(unsigned(R.numRow()), getNumLoops());
+    auto A{getA()};
     const auto [M, N] = A.size();
     auto syms{getSyms()};
     NotNull<AffineLoopNest<false>> aln{AffineLoopNest<false>::allocate(
@@ -419,7 +426,23 @@ struct AffineLoopNest
       B(_(M, end), _(0, numConst)) << 0;
       B(_(M, end), _(numConst, end)) << R;
     }
-    // ret->initializeComparator();
+    // A * O * [I 0; 0 R] = A * [I 0; 0 R] - A * [0 0; offs 0] * [I 0; 0 R]
+    // above, we computed `A * [I 0; 0 R]`, now if offsets != nullptr,
+    // we subtract A * [0 0; offs 0] * [I 0; 0 R].
+    // note that we have (s = number of dynamic symbols, l = number of loops)
+    //      1    s  l         1  s l            1    s  l
+    // 1  [ 0    0  0       [ 1  0 0          [ 0    0  0
+    // s    0    0  0    *    0  I 0      =     0    0  0
+    // l   offs  0  0  ]      0  0 R ]          offs 0  0 ]
+    // thus, we can ignore R here, and simply update the result using A.
+    if (offsets) {
+      for (size_t l = 0, L = getNumLoops(); l < L; ++l) {
+        if (int64_t mlt = offsets[l]) {
+          B(_(0, M), 0) -= mlt * A(_, numConst + l);
+          if constexpr (NonNegative) B(M + l, 0) = -mlt;
+        }
+      }
+    }
     aln->pruneBounds(alloc);
     return aln;
   }
@@ -427,8 +450,7 @@ struct AffineLoopNest
   [[nodiscard]] auto explicitLowerBounds(BumpAlloc<> &alloc)
     -> NotNull<AffineLoopNest<false>> {
     if constexpr (!NonNegative) return this;
-    const size_t numExtraVar = getNumLoops();
-    const size_t numConst = this->getNumSymbols();
+    const size_t numExtraVar = getNumLoops(), numConst = this->getNumSymbols();
     auto A{getA()};
     const auto [M, N] = A.size();
     auto symbols{getSyms()};

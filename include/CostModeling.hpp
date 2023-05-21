@@ -812,7 +812,7 @@ ScheduledNode::insertMem(BumpAlloc<> &alloc,
   for (size_t i : memory) {
     MemoryAccess *mem = memAccess[i];
     if (mem->getNumLoops() != Phi.numCol()) continue;
-    loop = mem->getLoop()->rotate(alloc, Pinv);
+    loop = mem->getLoop()->rotate(alloc, Pinv, offsets);
     break;
   }
   invariant(loop != nullptr);
@@ -823,9 +823,9 @@ ScheduledNode::insertMem(BumpAlloc<> &alloc,
     ++j;
     size_t inputEdges = mem->inputEdges().size(),
            outputEdges = mem->outputEdges().size();
-    Address *addr = Address::construct(alloc, loop, mem, isStore, Pinv, denom,
-                                       schedule.getOffsetOmega(), L, inputEdges,
-                                       isStore ? numMem - 1 : 1, outputEdges);
+    Address *addr = Address::construct(
+      alloc, loop, mem, isStore, Pinv, denom, schedule.getOffsetOmega(), L,
+      inputEdges, isStore ? numMem - 1 : 1, outputEdges, offsets);
     mem->setAddress(addr);
     accesses.push_back(addr);
   }

@@ -91,19 +91,21 @@ class Address {
                     NotNull<MemoryAccess> ma, SquarePtrMatrix<int64_t> Pinv,
                     int64_t denom, PtrVector<int64_t> omega, bool isStr,
                     CostModeling::LoopTreeSchedule *L, uint8_t memInputs,
-                    uint8_t directEdges, uint8_t memOutputs)
+                    uint8_t directEdges, uint8_t memOutputs, int64_t *offsets)
     : oldMemAccess(ma), loop(explicitLoop), node(L), numMemInputs(memInputs),
       numDirectEdges(directEdges), numMemOutputs(memOutputs),
       depth(uint8_t(Pinv.numCol())), bitfield(uint8_t(isStr) << 3) {
     PtrMatrix<int64_t> M{oldMemAccess->indexMatrix()}; // nLma x aD
     MutPtrMatrix<int64_t> mStar{indexMatrix()};        // aD x nLp
     // M is implicitly padded with zeros, nLp >= nLma
-    size_t nLma = ma->getNumLoops();
+    unsigned nLma = ma->getNumLoops();
     invariant(nLma <= depth);
-    invariant(nLma, size_t(M.numRow()));
+    invariant(size_t(nLma), size_t(M.numRow()));
     mStar << M.transpose() * Pinv(_(0, nLma), _);
     getDenominator() = denom;
     getOffsetOmega() << ma->offsetMatrix()(_, 0) - mStar * omega;
+    if (offsets)
+      getOffsetOmega() -= M.transpose() * PtrVector<int64_t>{offsets, nLma};
   }
   [[nodiscard]] constexpr auto getIntMemory() const -> int64_t * {
     return (int64_t *)const_cast<void *>((const void *)mem);
@@ -349,7 +351,8 @@ public:
             NotNull<MemoryAccess> ma, bool isStr, SquarePtrMatrix<int64_t> Pinv,
             int64_t denom, PtrVector<int64_t> omega,
             CostModeling::LoopTreeSchedule *L, unsigned inputEdges,
-            unsigned directEdges, unsigned outputEdges) -> NotNull<Address> {
+            unsigned directEdges, unsigned outputEdges, int64_t *offsets)
+    -> NotNull<Address> {
 
     size_t numLoops = size_t(Pinv.numCol()), arrayDim = ma->getArrayDim(),
            memSz = (1 + arrayDim + (arrayDim * numLoops)) * sizeof(int64_t) +
@@ -366,7 +369,7 @@ public:
     // return std::construct_at((Address *)pt, explicitLoop, ma, Pinv, denom,
     // omega, isStr);
     return new (pt) Address(explicitLoop, ma, Pinv, denom, omega, isStr, L,
-                            inputEdges, directEdges, outputEdges);
+                            inputEdges, directEdges, outputEdges, offsets);
   }
   constexpr void addDirectConnection(Address *store, size_t loadEdge) {
     assert(isLoad() && store->isStore());

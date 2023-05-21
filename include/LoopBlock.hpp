@@ -878,7 +878,7 @@ public:
         unsigned numSyms = depPoly->getNumSymbols(), dep0 = depPoly->getDim0(),
                  dep1 = depPoly->getDim1();
         PtrMatrix<int64_t> E = depPoly->getE();
-        if (dep.output()->getNode() == nIdx) {
+        if (dep.input()->getNode() == nIdx) {
           unsigned depCommon = std::min(dep0, dep1),
                    depMax = std::max(dep0, dep1);
           invariant(nLoops >= depMax);
@@ -900,8 +900,8 @@ public:
           }
         } else {
           // is forward means other -> mem, else mem <- other
-          unsigned offset = dep.isForward() ? numSyms + dep0 : numSyms;
-          unsigned numDep = dep.isForward() ? dep0 : dep1;
+          unsigned offset = dep.isForward() ? numSyms + dep0 : numSyms,
+                   numDep = dep.isForward() ? dep1 : dep0;
           for (size_t d = 0; d < E.numRow(); ++d) {
             MutPtrVector<int64_t> x = A(rank, _);
             x[last] = E(d, 0);
@@ -920,9 +920,9 @@ public:
         unsigned numSyms = depPoly->getNumSymbols(), dep0 = depPoly->getDim0(),
                  dep1 = depPoly->getDim1();
         PtrMatrix<int64_t> E = depPoly->getE();
-
-        unsigned offset = dep.isForward() ? numSyms : numSyms + dep0;
-        unsigned numDep = dep.isForward() ? dep0 : dep1;
+        // is forward means mem -> other, else other <- mem
+        unsigned offset = dep.isForward() ? numSyms : numSyms + dep0,
+                 numDep = dep.isForward() ? dep0 : dep1;
         for (size_t d = 0; d < E.numRow(); ++d) {
           MutPtrVector<int64_t> x = A(rank, _);
           x[last] = E(d, 0);
@@ -969,10 +969,10 @@ public:
                  dep1 = depPoly->getDim1();
         MutPtrMatrix<int64_t> satL = dep.getSatLambda();
         MutPtrMatrix<int64_t> bndL = dep.getBndLambda();
-        bool pick = dep.isForward(), repeat = dep.output()->getNode() == nIdx;
+        bool pick = dep.isForward(), repeat = dep.input()->getNode() == nIdx;
         while (true) {
-          unsigned offset = pick ? numSyms + dep0 : numSyms;
-          unsigned numDep = pick ? dep0 : dep1;
+          unsigned offset = pick ? numSyms + dep0 : numSyms,
+                   numDep = pick ? dep1 : dep0;
           for (size_t l = 0; l < numDep; ++l) {
             int64_t mlt = offs[l];
             if (mlt == 0) continue;
@@ -993,8 +993,8 @@ public:
                  dep1 = depPoly->getDim1();
         MutPtrMatrix<int64_t> satL = dep.getSatLambda();
         MutPtrMatrix<int64_t> bndL = dep.getBndLambda();
-        unsigned offset = dep.isForward() ? numSyms : numSyms + dep0;
-        unsigned numDep = dep.isForward() ? dep0 : dep1;
+        unsigned offset = dep.isForward() ? numSyms : numSyms + dep0,
+                 numDep = dep.isForward() ? dep0 : dep1;
         for (size_t l = 0; l < numDep; ++l) {
           int64_t mlt = offs[l];
           if (mlt == 0) continue;
@@ -1576,6 +1576,7 @@ public:
   [[nodiscard]] auto optimize() -> std::optional<BitSet> {
     fillEdges();
     buildGraph();
+    shiftOmegas();
     carriedDeps.resize(nodes.size());
 #ifndef NDEBUG
     validateEdges();

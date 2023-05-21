@@ -545,7 +545,7 @@ constexpr auto updateForNewRow(MutPtrMatrix<int64_t> A) -> size_t {
       for (size_t k = j; k < N; ++k) std::swap(A(l, k), A(MM, k));
   } else {
     // maybe there is a non-zero value
-    j = n + 1;
+    j = n;
     for (; j < NN; ++j)
       if (A(MM, j) != 0) break;
     if (j == NN) return MM;

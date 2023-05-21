@@ -144,7 +144,7 @@ TEST(AffineTest0, BasicAssertions) {
   llvm::errs() << "\nPermuting loops 1 and 2\n";
   BumpAlloc<> allocator;
   NotNull<AffineLoopNest<false>> affp021ptr{
-    aff.rotate(allocator, "[1 0 0; 0 0 1; 0 1 0]"_mat)};
+    aff.rotate(allocator, "[1 0 0; 0 0 1; 0 1 0]"_mat, nullptr)};
   AffineLoopNest<false> &affp021 = *affp021ptr;
   // Now that we've swapped loops 1 and 2, we should have
   // for m in 0:M-1, k in 1:N-1, n in 0:k-1
@@ -194,7 +194,7 @@ TEST(NonUnimodularExperiment, BasicAssertions) {
   EXPECT_FALSE(aff2.isEmpty());
   BumpAlloc<> allocator;
   NotNull<AffineLoopNest<false>> affp10{
-    aff2.rotate(allocator, "[0 1; 1 0]"_mat)};
+    aff2.rotate(allocator, "[0 1; 1 0]"_mat, nullptr)};
 
   llvm::errs() << "Swapped order:\n";
 #ifndef NDEBUG
