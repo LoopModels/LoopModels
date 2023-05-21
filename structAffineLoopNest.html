@@ -92,8 +92,8 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a63489ba1782354820cec69596358f034"><td class="memItemLeft" align="right" valign="top"><a id="a63489ba1782354820cec69596358f034"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>findIndex</b> (const llvm::SCEV *v) const -&gt; size_t</td></tr>
 <tr class="separator:a63489ba1782354820cec69596358f034"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a215506c9530da55d0671936af217dd6d"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAffineLoopNest.html#a215506c9530da55d0671936af217dd6d">rotate</a> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, PtrMatrix&lt; int64_t &gt; R) const -&gt; <a class="el" href="classNotNull.html">NotNull</a>&lt; <a class="el" href="structAffineLoopNest.html">AffineLoopNest</a>&lt; false &gt;&gt;</td></tr>
-<tr class="separator:a215506c9530da55d0671936af217dd6d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab4b629ac517acc8a50c675b20fc52ed9"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAffineLoopNest.html#ab4b629ac517acc8a50c675b20fc52ed9">rotate</a> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, PtrMatrix&lt; int64_t &gt; R, const int64_t *offsets) const -&gt; <a class="el" href="classNotNull.html">NotNull</a>&lt; <a class="el" href="structAffineLoopNest.html">AffineLoopNest</a>&lt; false &gt;&gt;</td></tr>
+<tr class="separator:ab4b629ac517acc8a50c675b20fc52ed9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae7e3801c19a2587916894acf27894629"><td class="memItemLeft" align="right" valign="top"><a id="ae7e3801c19a2587916894acf27894629"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAffineLoopNest.html#ae7e3801c19a2587916894acf27894629">explicitLowerBounds</a> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc) -&gt; <a class="el" href="classNotNull.html">NotNull</a>&lt; <a class="el" href="structAffineLoopNest.html">AffineLoopNest</a>&lt; false &gt;&gt;</td></tr>
 <tr class="memdesc:ae7e3801c19a2587916894acf27894629"><td class="mdescLeft">&#160;</td><td class="mdescRight">like rotate(identity Matrix) <br /></td></tr>
@@ -299,8 +299,8 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> 
 <tr class="separator:abcfdd37e635d74cbd12cab93b6bb8a37"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Member Function Documentation</h2>
-<a id="a215506c9530da55d0671936af217dd6d"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a215506c9530da55d0671936af217dd6d">&#9670;&nbsp;</a></span>rotate()</h2>
+<a id="ab4b629ac517acc8a50c675b20fc52ed9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab4b629ac517acc8a50c675b20fc52ed9">&#9670;&nbsp;</a></span>rotate()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -320,7 +320,13 @@ template&lt;bool NonNegative = true&gt; </div>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">PtrMatrix&lt; int64_t &gt;&#160;</td>
-          <td class="paramname"><em>R</em>&#160;</td>
+          <td class="paramname"><em>R</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const int64_t *&#160;</td>
+          <td class="paramname"><em>offsets</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -334,7 +340,7 @@ template&lt;bool NonNegative = true&gt; </div>
   </tr>
 </table>
 </div><div class="memdoc">
-<p>A.rotate( R ) A(_,const) + A(_,var)*var &gt;= 0 this method applies rotation matrix R A(_,const) + (A(_,var)*R)*(R^{-1}*var) &gt;= 0 So that our new loop nest has matrix [A(_,const) (A(_,var)*R)] while the new &lsquo;var&rsquo; is <code>(R^{-1}*var)</code> </p>
+<p>A.rotate( R ) A(_,const) + A(_,var)*var &gt;= 0 this method applies rotation matrix R A(_,const) + (A(_,var)*R)*(R^{-1}*var) &gt;= 0 So that our new loop nest has matrix [A(_,const) (A(_,var)*R)] while the new &lsquo;var&rsquo; is <code>(R^{-1}*var)</code> offset the loops by <code>offsets</code>, e.g. if we have offsets[0] = 2, then the first loop is shifted by 2. this shifting is applied before rotation. </p>
 
 </div>
 </div>

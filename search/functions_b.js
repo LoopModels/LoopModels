@@ -4,5 +4,5 @@ var searchData=
   ['removeemptymask_466',['removeEmptyMask',['../structPredicate_1_1Intersection.html#aa96f5013d74c11be8d75b23afd2431be',1,'Predicate::Intersection']]],
   ['replaceallotheruseswith_467',['replaceAllOtherUsesWith',['../structInstruction.html#a9063e7ae413252a8cc47c0dc0e2471bb',1,'Instruction']]],
   ['replacealluseswith_468',['replaceAllUsesWith',['../structInstruction.html#a535643d61e3ca44af3c6f56fc88976eb',1,'Instruction']]],
-  ['rotate_469',['rotate',['../structAffineLoopNest.html#a215506c9530da55d0671936af217dd6d',1,'AffineLoopNest']]]
+  ['rotate_469',['rotate',['../structAffineLoopNest.html#ab4b629ac517acc8a50c675b20fc52ed9',1,'AffineLoopNest']]]
 ];

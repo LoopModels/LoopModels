@@ -865,7 +865,7 @@ $(function() {
 <div class="line"><a name="l00812"></a><span class="lineno">  812</span>&#160;  <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i : memory) {</div>
 <div class="line"><a name="l00813"></a><span class="lineno">  813</span>&#160;    <a class="code" href="structMemoryAccess.html">MemoryAccess</a> *mem = memAccess[i];</div>
 <div class="line"><a name="l00814"></a><span class="lineno">  814</span>&#160;    <span class="keywordflow">if</span> (mem-&gt;getNumLoops() != Phi.numCol()) <span class="keywordflow">continue</span>;</div>
-<div class="line"><a name="l00815"></a><span class="lineno">  815</span>&#160;    loop = mem-&gt;getLoop()-&gt;rotate(alloc, Pinv);</div>
+<div class="line"><a name="l00815"></a><span class="lineno">  815</span>&#160;    loop = mem-&gt;getLoop()-&gt;rotate(alloc, Pinv, offsets);</div>
 <div class="line"><a name="l00816"></a><span class="lineno">  816</span>&#160;    <span class="keywordflow">break</span>;</div>
 <div class="line"><a name="l00817"></a><span class="lineno">  817</span>&#160;  }</div>
 <div class="line"><a name="l00818"></a><span class="lineno">  818</span>&#160;  invariant(loop != <span class="keyword">nullptr</span>);</div>
@@ -876,9 +876,9 @@ $(function() {
 <div class="line"><a name="l00823"></a><span class="lineno">  823</span>&#160;    ++j;</div>
 <div class="line"><a name="l00824"></a><span class="lineno">  824</span>&#160;    <span class="keywordtype">size_t</span> inputEdges = mem-&gt;inputEdges().size(),</div>
 <div class="line"><a name="l00825"></a><span class="lineno">  825</span>&#160;           outputEdges = mem-&gt;outputEdges().size();</div>
-<div class="line"><a name="l00826"></a><span class="lineno">  826</span>&#160;    <a class="code" href="classAddress.html">Address</a> *addr = Address::construct(alloc, loop, mem, isStore, Pinv, denom,</div>
-<div class="line"><a name="l00827"></a><span class="lineno">  827</span>&#160;                                       schedule.getOffsetOmega(), L, inputEdges,</div>
-<div class="line"><a name="l00828"></a><span class="lineno">  828</span>&#160;                                       isStore ? numMem - 1 : 1, outputEdges);</div>
+<div class="line"><a name="l00826"></a><span class="lineno">  826</span>&#160;    <a class="code" href="classAddress.html">Address</a> *addr = Address::construct(</div>
+<div class="line"><a name="l00827"></a><span class="lineno">  827</span>&#160;      alloc, loop, mem, isStore, Pinv, denom, schedule.getOffsetOmega(), L,</div>
+<div class="line"><a name="l00828"></a><span class="lineno">  828</span>&#160;      inputEdges, isStore ? numMem - 1 : 1, outputEdges, offsets);</div>
 <div class="line"><a name="l00829"></a><span class="lineno">  829</span>&#160;    mem-&gt;setAddress(addr);</div>
 <div class="line"><a name="l00830"></a><span class="lineno">  830</span>&#160;    accesses.push_back(addr);</div>
 <div class="line"><a name="l00831"></a><span class="lineno">  831</span>&#160;  }</div>
