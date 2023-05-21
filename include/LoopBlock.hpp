@@ -1203,12 +1203,11 @@ public:
         edge.setSatLevelLP(depth);
         carriedDeps[inIndex].setCarriedDependency(depth);
         carriedDeps[outIndex].setCarriedDependency(depth);
+      } else if (edge.checkEmptySat(
+                   allocator, nodes[inIndex].getPhi()(_(0, depth + 1), _),
+                   nodes[outIndex].getPhi()(_(0, depth + 1), _))) {
+        g.activeEdges.remove(e);
       }
-      // else if (edge.checkEmptySat(
-      //              allocator, nodes[inIndex].getPhi()(_(0, depth + 1), _),
-      //              nodes[outIndex].getPhi()(_(0, depth + 1), _))) {
-      //   g.activeEdges.remove(e);
-      // }
       u = size_t(uu);
     }
     return deactivated;
