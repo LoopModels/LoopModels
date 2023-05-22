@@ -1,68 +1,116 @@
 remark: REPL[26]:8:0: there are 16 scalar registers
 remark: REPL[26]:8:0: there are 32 vector registers
+remark: REPL[26]:8:0: Found ref: Load:   %64 = load double, ptr addrspace(13) %63, align 8, !dbg !55, !tbaa !59
+ArrayIndex %52 (dim = 2, num loops: 2, element size: 8):
+Sizes: [ unknown, %20 ]
+Subscripts: [ i_1 , i_0 ]
+Initial Fusion Omega: [ 0, 0, 0 ]
+AffineLoopNest:
+Loop 1: , 0 ≤ i_1 ≤ %23 - 1
+Loop 0: , 0 ≤ i_0 ≤ %20 - 1
+remark: REPL[26]:8:0: Found ref: Store:   store double %64, ptr addrspace(13) %65, align 8, !dbg !61, !tbaa !59
+ArrayIndex %55 (dim = 2, num loops: 2, element size: 8):
+Sizes: [ unknown, %20 ]
+Subscripts: [ i_1 , i_0 ]
+Initial Fusion Omega: [ 0, 0, 1 ]
+AffineLoopNest:
+Loop 1: , 0 ≤ i_1 ≤ %23 - 1
+Loop 0: , 0 ≤ i_0 ≤ %20 - 1
+remark: REPL[26]:11:0: Found ref: Load:   %71 = load double, ptr addrspace(13) %70, align 8, !dbg !66, !tbaa !59
+ArrayIndex %55 (dim = 2, num loops: 2, element size: 8):
+Sizes: [ unknown, %20 ]
+Subscripts: [ i_1 , i_0 ]
+Initial Fusion Omega: [ 0, 1, 0 ]
+AffineLoopNest:
+Loop 1: , 0 ≤ i_1 ≤ %23 - 1
+Loop 0: , 0 ≤ i_0 ≤ %20 - 1
+remark: REPL[26]:11:0: Found ref: Load:   %75 = load double, ptr addrspace(13) %74, align 8, !dbg !66, !tbaa !59
+ArrayIndex %58 (dim = 2, num loops: 2, element size: 8):
+Sizes: [ unknown, %23 ]
+Subscripts: [ i_1 , i_1 ]
+Initial Fusion Omega: [ 0, 1, 1 ]
+AffineLoopNest:
+Loop 1: , 0 ≤ i_1 ≤ %23 - 1
+Loop 0: , 0 ≤ i_0 ≤ %20 - 1
+remark: REPL[26]:11:0: Found ref: Store:   store double %76, ptr addrspace(13) %70, align 8, !dbg !71, !tbaa !59
+ArrayIndex %55 (dim = 2, num loops: 2, element size: 8):
+Sizes: [ unknown, %20 ]
+Subscripts: [ i_1 , i_0 ]
+Initial Fusion Omega: [ 0, 1, 2 ]
+AffineLoopNest:
+Loop 1: , 0 ≤ i_1 ≤ %23 - 1
+Loop 0: , 0 ≤ i_0 ≤ %20 - 1
+remark: REPL[26]:13:0: Found ref: Load:   %83 = load double, ptr addrspace(13) %82, align 8, !dbg !89, !tbaa !59
+ArrayIndex %55 (dim = 2, num loops: 3, element size: 8):
+Sizes: [ unknown, %20 ]
+Subscripts: [ i_1  + i_2  + 1, i_0 ]
+Initial Fusion Omega: [ 0, 1, 3, 0 ]
+AffineLoopNest:
+Loop 2: , 0 ≤ i_2 ≤ %23 - 2 - i_1
+Loop 1: , 0 ≤ i_1 ≤ %23 - 2
+Loop 0: , 0 ≤ i_0 ≤ %20 - 1
+remark: REPL[26]:13:0: Found ref: Load:   %87 = load double, ptr addrspace(13) %86, align 8, !dbg !89, !tbaa !59
+ArrayIndex %58 (dim = 2, num loops: 3, element size: 8):
+Sizes: [ unknown, %23 ]
+Subscripts: [ i_1  + i_2  + 1, i_1 ]
+Initial Fusion Omega: [ 0, 1, 3, 1 ]
+AffineLoopNest:
+Loop 2: , 0 ≤ i_2 ≤ %23 - 2 - i_1
+Loop 1: , 0 ≤ i_1 ≤ %23 - 2
+Loop 0: , 0 ≤ i_0 ≤ %20 - 1
+remark: REPL[26]:13:0: Found ref: Store:   store double %89, ptr addrspace(13) %82, align 8, !dbg !95, !tbaa !59
+ArrayIndex %55 (dim = 2, num loops: 3, element size: 8):
+Sizes: [ unknown, %20 ]
+Subscripts: [ i_1  + i_2  + 1, i_0 ]
+Initial Fusion Omega: [ 0, 1, 3, 2 ]
+AffineLoopNest:
+Loop 2: , 0 ≤ i_2 ≤ %23 - 2 - i_1
+Loop 1: , 0 ≤ i_1 ≤ %23 - 2
+Loop 0: , 0 ≤ i_0 ≤ %20 - 1
 remark: REPL[26]:8:0: MemoryAccesses:
 Inst:   %64 = load double, ptr addrspace(13) %63, align 8, !dbg !55, !tbaa !59
 Order: [ 0, 0, 0 ]
-Loop:Loop 1 lower bounds: i_1 >= 0
-Loop 1 upper bounds: i_1 <= -1 + %23
-Loop 0 lower bounds: i_0 >= 0
-Loop 0 upper bounds: i_0 <= -1 + %20
-
+Loop:
+Loop 1: , 0 ≤ i_1 ≤ %23 - 1
+Loop 0: , 0 ≤ i_0 ≤ %20 - 1
 Inst:   store double %64, ptr addrspace(13) %65, align 8, !dbg !61, !tbaa !59
 Order: [ 0, 0, 1 ]
-Loop:Loop 1 lower bounds: i_1 >= 0
-Loop 1 upper bounds: i_1 <= -1 + %23
-Loop 0 lower bounds: i_0 >= 0
-Loop 0 upper bounds: i_0 <= -1 + %20
-
+Loop:
+Loop 1: , 0 ≤ i_1 ≤ %23 - 1
+Loop 0: , 0 ≤ i_0 ≤ %20 - 1
 Inst:   %71 = load double, ptr addrspace(13) %70, align 8, !dbg !66, !tbaa !59
 Order: [ 0, 1, 0 ]
-Loop:Loop 1 lower bounds: i_1 >= 0
-Loop 1 upper bounds: i_1 <= -1 + %23
-Loop 0 lower bounds: i_0 >= 0
-Loop 0 upper bounds: i_0 <= -1 + %20
-
+Loop:
+Loop 1: , 0 ≤ i_1 ≤ %23 - 1
+Loop 0: , 0 ≤ i_0 ≤ %20 - 1
 Inst:   %75 = load double, ptr addrspace(13) %74, align 8, !dbg !66, !tbaa !59
 Order: [ 0, 1, 1 ]
-Loop:Loop 1 lower bounds: i_1 >= 0
-Loop 1 upper bounds: i_1 <= -1 + %23
-Loop 0 lower bounds: i_0 >= 0
-Loop 0 upper bounds: i_0 <= -1 + %20
-
+Loop:
+Loop 1: , 0 ≤ i_1 ≤ %23 - 1
+Loop 0: , 0 ≤ i_0 ≤ %20 - 1
 Inst:   store double %76, ptr addrspace(13) %70, align 8, !dbg !71, !tbaa !59
 Order: [ 0, 1, 2 ]
-Loop:Loop 1 lower bounds: i_1 >= 0
-Loop 1 upper bounds: i_1 <= -1 + %23
-Loop 0 lower bounds: i_0 >= 0
-Loop 0 upper bounds: i_0 <= -1 + %20
-
+Loop:
+Loop 1: , 0 ≤ i_1 ≤ %23 - 1
+Loop 0: , 0 ≤ i_0 ≤ %20 - 1
 Inst:   %83 = load double, ptr addrspace(13) %82, align 8, !dbg !89, !tbaa !59
 Order: [ 0, 1, 3, 0 ]
-Loop:Loop 2 lower bounds: i_2 >= 0
-Loop 2 upper bounds: i_2 <= -2 + %23 - i_1
-Loop 1 lower bounds: i_1 >= 0
-Loop 1 upper bounds: i_1 <= -2 + %23
-Loop 0 lower bounds: i_0 >= 0
-Loop 0 upper bounds: i_0 <= -1 + %20
-
+Loop:
+Loop 2: , 0 ≤ i_2 ≤ %23 - 2 - i_1
+Loop 1: , 0 ≤ i_1 ≤ %23 - 2
+Loop 0: , 0 ≤ i_0 ≤ %20 - 1
 Inst:   %87 = load double, ptr addrspace(13) %86, align 8, !dbg !89, !tbaa !59
 Order: [ 0, 1, 3, 1 ]
-Loop:Loop 2 lower bounds: i_2 >= 0
-Loop 2 upper bounds: i_2 <= -2 + %23 - i_1
-Loop 1 lower bounds: i_1 >= 0
-Loop 1 upper bounds: i_1 <= -2 + %23
-Loop 0 lower bounds: i_0 >= 0
-Loop 0 upper bounds: i_0 <= -1 + %20
-
+Loop:
+Loop 2: , 0 ≤ i_2 ≤ %23 - 2 - i_1
+Loop 1: , 0 ≤ i_1 ≤ %23 - 2
+Loop 0: , 0 ≤ i_0 ≤ %20 - 1
 Inst:   store double %89, ptr addrspace(13) %82, align 8, !dbg !95, !tbaa !59
 Order: [ 0, 1, 3, 2 ]
-Loop:Loop 2 lower bounds: i_2 >= 0
-Loop 2 upper bounds: i_2 <= -2 + %23 - i_1
-Loop 1 lower bounds: i_1 >= 0
-Loop 1 upper bounds: i_1 <= -2 + %23
-Loop 0 lower bounds: i_0 >= 0
-Loop 0 upper bounds: i_0 <= -1 + %20
-
+Loop:
+Loop 2: , 0 ≤ i_2 ≤ %23 - 2 - i_1
+Loop 1: , 0 ≤ i_1 ≤ %23 - 2
+Loop 0: , 0 ≤ i_0 ≤ %20 - 1
 
 
 remark: REPL[26]:8:0: Solved linear program:
@@ -84,41 +132,35 @@ outNeighbors = v_1, v_2,
 
 v_2:
 mem =
-  store double %76, ptr addrspace(13) %70, align 8, !dbg !71, !tbaa !59
   %83 = load double, ptr addrspace(13) %82, align 8, !dbg !89, !tbaa !59
   %87 = load double, ptr addrspace(13) %86, align 8, !dbg !89, !tbaa !59
   store double %89, ptr addrspace(13) %82, align 8, !dbg !95, !tbaa !59
+  store double %76, ptr addrspace(13) %70, align 8, !dbg !71, !tbaa !59
 inNeighbors = v_0, v_1, v_2, 
 outNeighbors = v_1, v_2, 
 
 
-LoopBlock Edges (#edges = 10):
+LoopBlock Edges (#edges = 11):
 
 	Edge = Dependence Poly y -> x:
 	Input:
 Store:   store double %64, ptr addrspace(13) %65, align 8, !dbg !61, !tbaa !59
-ArrayReference %55 (dim = 2, num loops: 2, element size: 8):
+ArrayIndex %55 (dim = 2, num loops: 2, element size: 8):
 Sizes: [ unknown, %20 ]
 Subscripts: [ i_1 , i_0 ]
 Initial Fusion Omega: [ 0, 0, 1 ]
 AffineLoopNest:
-Loop 1 lower bounds: i_1 >= 0
-Loop 1 upper bounds: i_1 <= -1 + %23
-Loop 0 lower bounds: i_0 >= 0
-Loop 0 upper bounds: i_0 <= -1 + %20
-
+Loop 1: , 0 ≤ i_1 ≤ %23 - 1
+Loop 0: , 0 ≤ i_0 ≤ %20 - 1
 	Output:
 Load:   %71 = load double, ptr addrspace(13) %70, align 8, !dbg !66, !tbaa !59
-ArrayReference %55 (dim = 2, num loops: 2, element size: 8):
+ArrayIndex %55 (dim = 2, num loops: 2, element size: 8):
 Sizes: [ unknown, %20 ]
 Subscripts: [ i_1 , i_0 ]
 Initial Fusion Omega: [ 0, 1, 0 ]
 AffineLoopNest:
-Loop 1 lower bounds: i_1 >= 0
-Loop 1 upper bounds: i_1 <= -1 + %23
-Loop 0 lower bounds: i_0 >= 0
-Loop 0 upper bounds: i_0 <= -1 + %20
-
+Loop 1: , 0 ≤ i_1 ≤ %23 - 1
+Loop 0: , 0 ≤ i_0 ≤ %20 - 1
 A = 
 [ -1 0 1 0 0 -1  0
   -1 1 0 0 0  0 -1
@@ -143,14 +185,15 @@ Bounding Constraints:
   0 0  0  0 0 0  0  1  0 -1 0  0 0 1  0  0  0  0  0
   0 0 -1  0 1 0 -1  0  1  0 0  0 0 0 -1  0  0  0  0
   0 0  0 -1 0 1  0 -1  0  1 0  0 0 0  0 -1  0  0  0 ]
-Schedule In: nodeIndex = BitSet[0]
+Satisfied (isCondIndep() == 0) = 127
+Schedule In: nodeIndex = 0
 s.getPhi() =
 [ 0 1
   1 0 ]
 s.getFusionOmega() = [ 0, 0, 0 ]
 s.getOffsetOmega() = [ 0, 0 ]
 
-Schedule Out: nodeIndex = BitSet[1]
+Schedule Out: nodeIndex = 1
 s.getPhi() =
 [ 0 1
   1 0 ]
@@ -162,28 +205,22 @@ s.getOffsetOmega() = [ 0, 0 ]
 	Edge = Dependence Poly y -> x:
 	Input:
 Store:   store double %64, ptr addrspace(13) %65, align 8, !dbg !61, !tbaa !59
-ArrayReference %55 (dim = 2, num loops: 2, element size: 8):
+ArrayIndex %55 (dim = 2, num loops: 2, element size: 8):
 Sizes: [ unknown, %20 ]
 Subscripts: [ i_1 , i_0 ]
 Initial Fusion Omega: [ 0, 0, 1 ]
 AffineLoopNest:
-Loop 1 lower bounds: i_1 >= 0
-Loop 1 upper bounds: i_1 <= -1 + %23
-Loop 0 lower bounds: i_0 >= 0
-Loop 0 upper bounds: i_0 <= -1 + %20
-
+Loop 1: , 0 ≤ i_1 ≤ %23 - 1
+Loop 0: , 0 ≤ i_0 ≤ %20 - 1
 	Output:
 Store:   store double %76, ptr addrspace(13) %70, align 8, !dbg !71, !tbaa !59
-ArrayReference %55 (dim = 2, num loops: 2, element size: 8):
+ArrayIndex %55 (dim = 2, num loops: 2, element size: 8):
 Sizes: [ unknown, %20 ]
 Subscripts: [ i_1 , i_0 ]
 Initial Fusion Omega: [ 0, 1, 2 ]
 AffineLoopNest:
-Loop 1 lower bounds: i_1 >= 0
-Loop 1 upper bounds: i_1 <= -1 + %23
-Loop 0 lower bounds: i_0 >= 0
-Loop 0 upper bounds: i_0 <= -1 + %20
-
+Loop 1: , 0 ≤ i_1 ≤ %23 - 1
+Loop 0: , 0 ≤ i_0 ≤ %20 - 1
 A = 
 [ -1 0 1 0 0 -1  0
   -1 1 0 0 0  0 -1
@@ -208,55 +245,42 @@ Bounding Constraints:
   0 0  0  0 0 0  0  1  0 -1 0  0 0 1  0  0  0  0  0
   0 0 -1  0 1 0 -1  0  1  0 0  0 0 0 -1  0  0  0  0
   0 0  0 -1 0 1  0 -1  0  1 0  0 0 0  0 -1  0  0  0 ]
-Schedule In: nodeIndex = BitSet[0]
+Satisfied (isCondIndep() == 0) = 127
+Schedule In: nodeIndex = 0
 s.getPhi() =
 [ 0 1
   1 0 ]
 s.getFusionOmega() = [ 0, 0, 0 ]
 s.getOffsetOmega() = [ 0, 0 ]
 
-Schedule Out: nodeIndex = BitSet[1, 2]
+Schedule Out: nodeIndex = 1
 s.getPhi() =
 [ 0 1
   1 0 ]
 s.getFusionOmega() = [ 0, 0, 0 ]
 s.getOffsetOmega() = [ 0, 0 ]
-
-Schedule Out: nodeIndex = BitSet[1, 2]
-s.getPhi() =
-[ 0 1 1
-  1 0 0
-  0 1 0 ]
-s.getFusionOmega() = [ 0, 0, 0, 0 ]
-s.getOffsetOmega() = [ 1, 0, 0 ]
 
 
 
 	Edge = Dependence Poly y -> x:
 	Input:
 Load:   %71 = load double, ptr addrspace(13) %70, align 8, !dbg !66, !tbaa !59
-ArrayReference %55 (dim = 2, num loops: 2, element size: 8):
+ArrayIndex %55 (dim = 2, num loops: 2, element size: 8):
 Sizes: [ unknown, %20 ]
 Subscripts: [ i_1 , i_0 ]
 Initial Fusion Omega: [ 0, 1, 0 ]
 AffineLoopNest:
-Loop 1 lower bounds: i_1 >= 0
-Loop 1 upper bounds: i_1 <= -1 + %23
-Loop 0 lower bounds: i_0 >= 0
-Loop 0 upper bounds: i_0 <= -1 + %20
-
+Loop 1: , 0 ≤ i_1 ≤ %23 - 1
+Loop 0: , 0 ≤ i_0 ≤ %20 - 1
 	Output:
 Store:   store double %76, ptr addrspace(13) %70, align 8, !dbg !71, !tbaa !59
-ArrayReference %55 (dim = 2, num loops: 2, element size: 8):
+ArrayIndex %55 (dim = 2, num loops: 2, element size: 8):
 Sizes: [ unknown, %20 ]
 Subscripts: [ i_1 , i_0 ]
 Initial Fusion Omega: [ 0, 1, 2 ]
 AffineLoopNest:
-Loop 1 lower bounds: i_1 >= 0
-Loop 1 upper bounds: i_1 <= -1 + %23
-Loop 0 lower bounds: i_0 >= 0
-Loop 0 upper bounds: i_0 <= -1 + %20
-
+Loop 1: , 0 ≤ i_1 ≤ %23 - 1
+Loop 0: , 0 ≤ i_0 ≤ %20 - 1
 A = 
 [ -1 0 1 0 0 -1  0
   -1 1 0 0 0  0 -1
@@ -281,314 +305,275 @@ Bounding Constraints:
   0 0  0  0 0 0  0  1  0 -1 0  0 0 1  0  0  0  0  0
   0 0 -1  0 1 0 -1  0  1  0 0  0 0 0 -1  0  0  0  0
   0 0  0 -1 0 1  0 -1  0  1 0  0 0 0  0 -1  0  0  0 ]
-Schedule In: nodeIndex = BitSet[1]
+Satisfied (isCondIndep() == 0) = 127
+Schedule In: nodeIndex = 1
 s.getPhi() =
 [ 0 1
   1 0 ]
 s.getFusionOmega() = [ 0, 0, 0 ]
 s.getOffsetOmega() = [ 0, 0 ]
 
-Schedule Out: nodeIndex = BitSet[1, 2]
+Schedule Out: nodeIndex = 1
 s.getPhi() =
 [ 0 1
   1 0 ]
 s.getFusionOmega() = [ 0, 0, 0 ]
 s.getOffsetOmega() = [ 0, 0 ]
-
-Schedule Out: nodeIndex = BitSet[1, 2]
-s.getPhi() =
-[ 0 1 1
-  1 0 0
-  0 1 0 ]
-s.getFusionOmega() = [ 0, 0, 0, 0 ]
-s.getOffsetOmega() = [ 1, 0, 0 ]
 
 
 
 	Edge = Dependence Poly y -> x:
 	Input:
 Store:   store double %64, ptr addrspace(13) %65, align 8, !dbg !61, !tbaa !59
-ArrayReference %55 (dim = 2, num loops: 2, element size: 8):
+ArrayIndex %55 (dim = 2, num loops: 2, element size: 8):
 Sizes: [ unknown, %20 ]
 Subscripts: [ i_1 , i_0 ]
 Initial Fusion Omega: [ 0, 0, 1 ]
 AffineLoopNest:
-Loop 1 lower bounds: i_1 >= 0
-Loop 1 upper bounds: i_1 <= -1 + %23
-Loop 0 lower bounds: i_0 >= 0
-Loop 0 upper bounds: i_0 <= -1 + %20
-
+Loop 1: , 0 ≤ i_1 ≤ %23 - 1
+Loop 0: , 0 ≤ i_0 ≤ %20 - 1
 	Output:
 Load:   %83 = load double, ptr addrspace(13) %82, align 8, !dbg !89, !tbaa !59
-ArrayReference %55 (dim = 2, num loops: 3, element size: 8):
+ArrayIndex %55 (dim = 2, num loops: 3, element size: 8):
 Sizes: [ unknown, %20 ]
 Subscripts: [ i_1  + i_2  + 1, i_0 ]
 Initial Fusion Omega: [ 0, 1, 3, 0 ]
 AffineLoopNest:
-Loop 2 lower bounds: i_2 >= 0
-Loop 2 upper bounds: i_2 <= -2 + %23 - i_1
-Loop 1 lower bounds: i_1 >= 0
-Loop 1 upper bounds: i_1 <= -2 + %23
-Loop 0 lower bounds: i_0 >= 0
-Loop 0 upper bounds: i_0 <= -1 + %20
-
+Loop 2: , 0 ≤ i_2 ≤ %23 - 2 - i_1
+Loop 1: , 0 ≤ i_1 ≤ %23 - 2
+Loop 0: , 0 ≤ i_0 ≤ %20 - 1
 A = 
 [ -1 1 0 0 0  0  0 -1
+   0 0 0 0 0  0  1  0
   -1 0 1 0 0  0 -1  0
    0 0 0 0 0  1  0  0
-  -1 0 0 0 0 -1  0  1
-   0 0 0 0 0  0  1  0 ]
+  -1 0 0 0 0 -1  0  1 ]
 E = 
 [ 0 0 0 1 0 0 -1  0
   1 0 0 0 1 1  0 -1 ]
 Schedule Constraints:
-[ 0 1 -1 -1 0 -1 0  0  1  0 -1 -1 1  0  0  0 0 0 -1
-  0 0  1  0 0  0 0  0  0  0  0  0 0  0  0  0 0 0  0
-  0 0  0  1 0  0 0  0  0  0  0  0 0  0  0  0 0 0  0
-  0 0  0  0 0  0 0  1  0 -1  0  0 0 -1  0  0 0 0  0
-  0 0  0  0 0  0 0  0  1  0 -1  0 0  0 -1  0 0 0  0
-  0 0  0  0 1 -1 0  0  1  0 -1  0 0  0  0 -1 0 0  0
-  0 0  0 -1 0  0 1 -1  0  1  0  0 0  0  0  0 1 0  0
-  0 0 -1  0 0  1 0  0 -1  0  1  0 0  0  0  0 0 1  0 ]
+[ 0 1 -1 0 -1 -1  0  0  0  0  0 -1 1  0  0  0 0 0 -1
+  0 0  1 0  0  0  0  0  0  0  0  0 0  0  0  0 0 0  0
+  0 0  0 0  1  0  0  0  0  0  0  0 0  0  0  0 0 0  0
+  0 0  0 0  0  0  0  1  0 -1  0  0 0 -1  0  0 0 0  0
+  0 0  0 0  0  0  0  0  1  0 -1  0 0  0 -1  0 0 0  0
+  0 0  0 0  0  1 -1  0  1  0 -1  0 0  0  0 -1 0 0  0
+  0 0  0 1 -1  0  0 -1  0  1  0  0 0  0  0  0 1 0  0
+  0 0 -1 0  0  0  1  0 -1  0  1  0 0  0  0  0 0 1  0 ]
 Bounding Constraints:
-[ 0 1 -1 -1 0 -1 0  0  1  0 -1 1 -1 0 0 0  0  0 -1  0  0
-  0 0  1  0 0  0 0  0  0  0  0 0  0 0 0 0  0  0  0 -1  0
-  0 0  0  1 0  0 0  0  0  0  0 0  0 0 0 0  0  0  0  0 -1
-  0 0  0  0 0  0 0  1  0 -1  0 0  0 1 0 0  0  0  0  0  0
-  0 0  0  0 0  0 0  0  1  0 -1 0  0 0 1 0  0  0  0  0  0
-  0 0  0  0 1 -1 0  0  1  0 -1 0  0 0 0 1  0  0  0  0  0
-  0 0  0 -1 0  0 1 -1  0  1  0 0  0 0 0 0 -1  0  0  0  0
-  0 0 -1  0 0  1 0  0 -1  0  1 0  0 0 0 0  0 -1  0  0  0 ]
-Schedule In: nodeIndex = BitSet[0]
+[ 0 1 -1 0 -1 -1  0  0  0  0  0 1 -1 0 0 0  0  0 -1  0  0
+  0 0  1 0  0  0  0  0  0  0  0 0  0 0 0 0  0  0  0 -1  0
+  0 0  0 0  1  0  0  0  0  0  0 0  0 0 0 0  0  0  0  0 -1
+  0 0  0 0  0  0  0  1  0 -1  0 0  0 1 0 0  0  0  0  0  0
+  0 0  0 0  0  0  0  0  1  0 -1 0  0 0 1 0  0  0  0  0  0
+  0 0  0 0  0  1 -1  0  1  0 -1 0  0 0 0 1  0  0  0  0  0
+  0 0  0 1 -1  0  0 -1  0  1  0 0  0 0 0 0 -1  0  0  0  0
+  0 0 -1 0  0  0  1  0 -1  0  1 0  0 0 0 0  0 -1  0  0  0 ]
+Satisfied (isCondIndep() == 0) = 127
+Schedule In: nodeIndex = 0
 s.getPhi() =
 [ 0 1
   1 0 ]
 s.getFusionOmega() = [ 0, 0, 0 ]
 s.getOffsetOmega() = [ 0, 0 ]
 
-Schedule Out: nodeIndex = BitSet[2]
+Schedule Out: nodeIndex = 2
 s.getPhi() =
 [ 0 1 1
   1 0 0
   0 1 0 ]
 s.getFusionOmega() = [ 0, 0, 0, 0 ]
-s.getOffsetOmega() = [ 1, 0, 0 ]
+s.getOffsetOmega() = [ 0, 0, 0 ]
 
 
 
 	Edge = Dependence Poly x -> y:
 	Input:
 Load:   %83 = load double, ptr addrspace(13) %82, align 8, !dbg !89, !tbaa !59
-ArrayReference %55 (dim = 2, num loops: 3, element size: 8):
+ArrayIndex %55 (dim = 2, num loops: 3, element size: 8):
 Sizes: [ unknown, %20 ]
 Subscripts: [ i_1  + i_2  + 1, i_0 ]
 Initial Fusion Omega: [ 0, 1, 3, 0 ]
 AffineLoopNest:
-Loop 2 lower bounds: i_2 >= 0
-Loop 2 upper bounds: i_2 <= -2 + %23 - i_1
-Loop 1 lower bounds: i_1 >= 0
-Loop 1 upper bounds: i_1 <= -2 + %23
-Loop 0 lower bounds: i_0 >= 0
-Loop 0 upper bounds: i_0 <= -1 + %20
-
+Loop 2: , 0 ≤ i_2 ≤ %23 - 2 - i_1
+Loop 1: , 0 ≤ i_1 ≤ %23 - 2
+Loop 0: , 0 ≤ i_0 ≤ %20 - 1
 	Output:
 Store:   store double %76, ptr addrspace(13) %70, align 8, !dbg !71, !tbaa !59
-ArrayReference %55 (dim = 2, num loops: 2, element size: 8):
+ArrayIndex %55 (dim = 2, num loops: 2, element size: 8):
 Sizes: [ unknown, %20 ]
 Subscripts: [ i_1 , i_0 ]
 Initial Fusion Omega: [ 0, 1, 2 ]
 AffineLoopNest:
-Loop 1 lower bounds: i_1 >= 0
-Loop 1 upper bounds: i_1 <= -1 + %23
-Loop 0 lower bounds: i_0 >= 0
-Loop 0 upper bounds: i_0 <= -1 + %20
-
+Loop 1: , 0 ≤ i_1 ≤ %23 - 1
+Loop 0: , 0 ≤ i_0 ≤ %20 - 1
 A = 
 [ -1 1 0 0 0  0  0 -1
+   0 0 0 0 0  0  1  0
   -1 0 1 0 0  0 -1  0
    0 0 0 0 0  1  0  0
-  -1 0 0 0 0 -1  0  1
-   0 0 0 0 0  0  1  0 ]
+  -1 0 0 0 0 -1  0  1 ]
 E = 
 [ 0 0 0 1 0 0 -1  0
   1 0 0 0 1 1  0 -1 ]
 Schedule Constraints:
-[ 0 1 -1 -1 0 -1 0  0  1  0 -1 1 -1 0 0 0  0  0 -1
-  0 0  1  0 0  0 0  0  0  0  0 0  0 0 0 0  0  0  0
-  0 0  0  1 0  0 0  0  0  0  0 0  0 0 0 0  0  0  0
-  0 0  0  0 0  0 0  1  0 -1  0 0  0 1 0 0  0  0  0
-  0 0  0  0 0  0 0  0  1  0 -1 0  0 0 1 0  0  0  0
-  0 0  0  0 1 -1 0  0  1  0 -1 0  0 0 0 1  0  0  0
-  0 0  0 -1 0  0 1 -1  0  1  0 0  0 0 0 0 -1  0  0
-  0 0 -1  0 0  1 0  0 -1  0  1 0  0 0 0 0  0 -1  0 ]
+[ 0 1 -1 0 -1 -1  0  0  0  0  0 1 -1 0 0 0  0  0 -1
+  0 0  1 0  0  0  0  0  0  0  0 0  0 0 0 0  0  0  0
+  0 0  0 0  1  0  0  0  0  0  0 0  0 0 0 0  0  0  0
+  0 0  0 0  0  0  0  1  0 -1  0 0  0 1 0 0  0  0  0
+  0 0  0 0  0  0  0  0  1  0 -1 0  0 0 1 0  0  0  0
+  0 0  0 0  0  1 -1  0  1  0 -1 0  0 0 0 1  0  0  0
+  0 0  0 1 -1  0  0 -1  0  1  0 0  0 0 0 0 -1  0  0
+  0 0 -1 0  0  0  1  0 -1  0  1 0  0 0 0 0  0 -1  0 ]
 Bounding Constraints:
-[ 0 1 -1 -1 0 -1 0  0  1  0 -1 -1 1  0  0  0 0 0 -1  0  0
-  0 0  1  0 0  0 0  0  0  0  0  0 0  0  0  0 0 0  0 -1  0
-  0 0  0  1 0  0 0  0  0  0  0  0 0  0  0  0 0 0  0  0 -1
-  0 0  0  0 0  0 0  1  0 -1  0  0 0 -1  0  0 0 0  0  0  0
-  0 0  0  0 0  0 0  0  1  0 -1  0 0  0 -1  0 0 0  0  0  0
-  0 0  0  0 1 -1 0  0  1  0 -1  0 0  0  0 -1 0 0  0  0  0
-  0 0  0 -1 0  0 1 -1  0  1  0  0 0  0  0  0 1 0  0  0  0
-  0 0 -1  0 0  1 0  0 -1  0  1  0 0  0  0  0 0 1  0  0  0 ]
-Schedule In: nodeIndex = BitSet[2]
+[ 0 1 -1 0 -1 -1  0  0  0  0  0 -1 1  0  0  0 0 0 -1  0  0
+  0 0  1 0  0  0  0  0  0  0  0  0 0  0  0  0 0 0  0 -1  0
+  0 0  0 0  1  0  0  0  0  0  0  0 0  0  0  0 0 0  0  0 -1
+  0 0  0 0  0  0  0  1  0 -1  0  0 0 -1  0  0 0 0  0  0  0
+  0 0  0 0  0  0  0  0  1  0 -1  0 0  0 -1  0 0 0  0  0  0
+  0 0  0 0  0  1 -1  0  1  0 -1  0 0  0  0 -1 0 0  0  0  0
+  0 0  0 1 -1  0  0 -1  0  1  0  0 0  0  0  0 1 0  0  0  0
+  0 0 -1 0  0  0  1  0 -1  0  1  0 0  0  0  0 0 1  0  0  0 ]
+Satisfied (isCondIndep() == 0) = 127
+Schedule In: nodeIndex = 2
 s.getPhi() =
 [ 0 1 1
   1 0 0
   0 1 0 ]
 s.getFusionOmega() = [ 0, 0, 0, 0 ]
-s.getOffsetOmega() = [ 1, 0, 0 ]
+s.getOffsetOmega() = [ 0, 0, 0 ]
 
-Schedule Out: nodeIndex = BitSet[1, 2]
+Schedule Out: nodeIndex = 1
 s.getPhi() =
 [ 0 1
   1 0 ]
 s.getFusionOmega() = [ 0, 0, 0 ]
 s.getOffsetOmega() = [ 0, 0 ]
-
-Schedule Out: nodeIndex = BitSet[1, 2]
-s.getPhi() =
-[ 0 1 1
-  1 0 0
-  0 1 0 ]
-s.getFusionOmega() = [ 0, 0, 0, 0 ]
-s.getOffsetOmega() = [ 1, 0, 0 ]
 
 
 
 	Edge = Dependence Poly y -> x:
 	Input:
 Store:   store double %64, ptr addrspace(13) %65, align 8, !dbg !61, !tbaa !59
-ArrayReference %55 (dim = 2, num loops: 2, element size: 8):
+ArrayIndex %55 (dim = 2, num loops: 2, element size: 8):
 Sizes: [ unknown, %20 ]
 Subscripts: [ i_1 , i_0 ]
 Initial Fusion Omega: [ 0, 0, 1 ]
 AffineLoopNest:
-Loop 1 lower bounds: i_1 >= 0
-Loop 1 upper bounds: i_1 <= -1 + %23
-Loop 0 lower bounds: i_0 >= 0
-Loop 0 upper bounds: i_0 <= -1 + %20
-
+Loop 1: , 0 ≤ i_1 ≤ %23 - 1
+Loop 0: , 0 ≤ i_0 ≤ %20 - 1
 	Output:
 Store:   store double %89, ptr addrspace(13) %82, align 8, !dbg !95, !tbaa !59
-ArrayReference %55 (dim = 2, num loops: 3, element size: 8):
+ArrayIndex %55 (dim = 2, num loops: 3, element size: 8):
 Sizes: [ unknown, %20 ]
 Subscripts: [ i_1  + i_2  + 1, i_0 ]
 Initial Fusion Omega: [ 0, 1, 3, 2 ]
 AffineLoopNest:
-Loop 2 lower bounds: i_2 >= 0
-Loop 2 upper bounds: i_2 <= -2 + %23 - i_1
-Loop 1 lower bounds: i_1 >= 0
-Loop 1 upper bounds: i_1 <= -2 + %23
-Loop 0 lower bounds: i_0 >= 0
-Loop 0 upper bounds: i_0 <= -1 + %20
-
+Loop 2: , 0 ≤ i_2 ≤ %23 - 2 - i_1
+Loop 1: , 0 ≤ i_1 ≤ %23 - 2
+Loop 0: , 0 ≤ i_0 ≤ %20 - 1
 A = 
 [ -1 1 0 0 0  0  0 -1
+   0 0 0 0 0  0  1  0
   -1 0 1 0 0  0 -1  0
    0 0 0 0 0  1  0  0
-  -1 0 0 0 0 -1  0  1
-   0 0 0 0 0  0  1  0 ]
+  -1 0 0 0 0 -1  0  1 ]
 E = 
 [ 0 0 0 1 0 0 -1  0
   1 0 0 0 1 1  0 -1 ]
 Schedule Constraints:
-[ 0 1 -1 -1 0 -1 0  0  1  0 -1 -1 1  0  0  0 0 0 -1
-  0 0  1  0 0  0 0  0  0  0  0  0 0  0  0  0 0 0  0
-  0 0  0  1 0  0 0  0  0  0  0  0 0  0  0  0 0 0  0
-  0 0  0  0 0  0 0  1  0 -1  0  0 0 -1  0  0 0 0  0
-  0 0  0  0 0  0 0  0  1  0 -1  0 0  0 -1  0 0 0  0
-  0 0  0  0 1 -1 0  0  1  0 -1  0 0  0  0 -1 0 0  0
-  0 0  0 -1 0  0 1 -1  0  1  0  0 0  0  0  0 1 0  0
-  0 0 -1  0 0  1 0  0 -1  0  1  0 0  0  0  0 0 1  0 ]
+[ 0 1 -1 0 -1 -1  0  0  0  0  0 -1 1  0  0  0 0 0 -1
+  0 0  1 0  0  0  0  0  0  0  0  0 0  0  0  0 0 0  0
+  0 0  0 0  1  0  0  0  0  0  0  0 0  0  0  0 0 0  0
+  0 0  0 0  0  0  0  1  0 -1  0  0 0 -1  0  0 0 0  0
+  0 0  0 0  0  0  0  0  1  0 -1  0 0  0 -1  0 0 0  0
+  0 0  0 0  0  1 -1  0  1  0 -1  0 0  0  0 -1 0 0  0
+  0 0  0 1 -1  0  0 -1  0  1  0  0 0  0  0  0 1 0  0
+  0 0 -1 0  0  0  1  0 -1  0  1  0 0  0  0  0 0 1  0 ]
 Bounding Constraints:
-[ 0 1 -1 -1 0 -1 0  0  1  0 -1 1 -1 0 0 0  0  0 -1  0  0
-  0 0  1  0 0  0 0  0  0  0  0 0  0 0 0 0  0  0  0 -1  0
-  0 0  0  1 0  0 0  0  0  0  0 0  0 0 0 0  0  0  0  0 -1
-  0 0  0  0 0  0 0  1  0 -1  0 0  0 1 0 0  0  0  0  0  0
-  0 0  0  0 0  0 0  0  1  0 -1 0  0 0 1 0  0  0  0  0  0
-  0 0  0  0 1 -1 0  0  1  0 -1 0  0 0 0 1  0  0  0  0  0
-  0 0  0 -1 0  0 1 -1  0  1  0 0  0 0 0 0 -1  0  0  0  0
-  0 0 -1  0 0  1 0  0 -1  0  1 0  0 0 0 0  0 -1  0  0  0 ]
-Schedule In: nodeIndex = BitSet[0]
+[ 0 1 -1 0 -1 -1  0  0  0  0  0 1 -1 0 0 0  0  0 -1  0  0
+  0 0  1 0  0  0  0  0  0  0  0 0  0 0 0 0  0  0  0 -1  0
+  0 0  0 0  1  0  0  0  0  0  0 0  0 0 0 0  0  0  0  0 -1
+  0 0  0 0  0  0  0  1  0 -1  0 0  0 1 0 0  0  0  0  0  0
+  0 0  0 0  0  0  0  0  1  0 -1 0  0 0 1 0  0  0  0  0  0
+  0 0  0 0  0  1 -1  0  1  0 -1 0  0 0 0 1  0  0  0  0  0
+  0 0  0 1 -1  0  0 -1  0  1  0 0  0 0 0 0 -1  0  0  0  0
+  0 0 -1 0  0  0  1  0 -1  0  1 0  0 0 0 0  0 -1  0  0  0 ]
+Satisfied (isCondIndep() == 0) = 127
+Schedule In: nodeIndex = 0
 s.getPhi() =
 [ 0 1
   1 0 ]
 s.getFusionOmega() = [ 0, 0, 0 ]
 s.getOffsetOmega() = [ 0, 0 ]
 
-Schedule Out: nodeIndex = BitSet[2]
+Schedule Out: nodeIndex = 2
 s.getPhi() =
 [ 0 1 1
   1 0 0
   0 1 0 ]
 s.getFusionOmega() = [ 0, 0, 0, 0 ]
-s.getOffsetOmega() = [ 1, 0, 0 ]
+s.getOffsetOmega() = [ 0, 0, 0 ]
 
 
 
 	Edge = Dependence Poly x -> y:
 	Input:
 Store:   store double %89, ptr addrspace(13) %82, align 8, !dbg !95, !tbaa !59
-ArrayReference %55 (dim = 2, num loops: 3, element size: 8):
+ArrayIndex %55 (dim = 2, num loops: 3, element size: 8):
 Sizes: [ unknown, %20 ]
 Subscripts: [ i_1  + i_2  + 1, i_0 ]
 Initial Fusion Omega: [ 0, 1, 3, 2 ]
 AffineLoopNest:
-Loop 2 lower bounds: i_2 >= 0
-Loop 2 upper bounds: i_2 <= -2 + %23 - i_1
-Loop 1 lower bounds: i_1 >= 0
-Loop 1 upper bounds: i_1 <= -2 + %23
-Loop 0 lower bounds: i_0 >= 0
-Loop 0 upper bounds: i_0 <= -1 + %20
-
+Loop 2: , 0 ≤ i_2 ≤ %23 - 2 - i_1
+Loop 1: , 0 ≤ i_1 ≤ %23 - 2
+Loop 0: , 0 ≤ i_0 ≤ %20 - 1
 	Output:
 Load:   %71 = load double, ptr addrspace(13) %70, align 8, !dbg !66, !tbaa !59
-ArrayReference %55 (dim = 2, num loops: 2, element size: 8):
+ArrayIndex %55 (dim = 2, num loops: 2, element size: 8):
 Sizes: [ unknown, %20 ]
 Subscripts: [ i_1 , i_0 ]
 Initial Fusion Omega: [ 0, 1, 0 ]
 AffineLoopNest:
-Loop 1 lower bounds: i_1 >= 0
-Loop 1 upper bounds: i_1 <= -1 + %23
-Loop 0 lower bounds: i_0 >= 0
-Loop 0 upper bounds: i_0 <= -1 + %20
-
+Loop 1: , 0 ≤ i_1 ≤ %23 - 1
+Loop 0: , 0 ≤ i_0 ≤ %20 - 1
 A = 
 [ -1 1 0 0 0  0  0 -1
+   0 0 0 0 0  0  1  0
   -1 0 1 0 0  0 -1  0
    0 0 0 0 0  1  0  0
-  -1 0 0 0 0 -1  0  1
-   0 0 0 0 0  0  1  0 ]
+  -1 0 0 0 0 -1  0  1 ]
 E = 
 [ 0 0 0 1 0 0 -1  0
   1 0 0 0 1 1  0 -1 ]
 Schedule Constraints:
-[ 0 1 -1 -1 0 -1 0  0  1  0 -1 1 -1 0 0 0  0  0 -1
-  0 0  1  0 0  0 0  0  0  0  0 0  0 0 0 0  0  0  0
-  0 0  0  1 0  0 0  0  0  0  0 0  0 0 0 0  0  0  0
-  0 0  0  0 0  0 0  1  0 -1  0 0  0 1 0 0  0  0  0
-  0 0  0  0 0  0 0  0  1  0 -1 0  0 0 1 0  0  0  0
-  0 0  0  0 1 -1 0  0  1  0 -1 0  0 0 0 1  0  0  0
-  0 0  0 -1 0  0 1 -1  0  1  0 0  0 0 0 0 -1  0  0
-  0 0 -1  0 0  1 0  0 -1  0  1 0  0 0 0 0  0 -1  0 ]
+[ 0 1 -1 0 -1 -1  0  0  0  0  0 1 -1 0 0 0  0  0 -1
+  0 0  1 0  0  0  0  0  0  0  0 0  0 0 0 0  0  0  0
+  0 0  0 0  1  0  0  0  0  0  0 0  0 0 0 0  0  0  0
+  0 0  0 0  0  0  0  1  0 -1  0 0  0 1 0 0  0  0  0
+  0 0  0 0  0  0  0  0  1  0 -1 0  0 0 1 0  0  0  0
+  0 0  0 0  0  1 -1  0  1  0 -1 0  0 0 0 1  0  0  0
+  0 0  0 1 -1  0  0 -1  0  1  0 0  0 0 0 0 -1  0  0
+  0 0 -1 0  0  0  1  0 -1  0  1 0  0 0 0 0  0 -1  0 ]
 Bounding Constraints:
-[ 0 1 -1 -1 0 -1 0  0  1  0 -1 -1 1  0  0  0 0 0 -1  0  0
-  0 0  1  0 0  0 0  0  0  0  0  0 0  0  0  0 0 0  0 -1  0
-  0 0  0  1 0  0 0  0  0  0  0  0 0  0  0  0 0 0  0  0 -1
-  0 0  0  0 0  0 0  1  0 -1  0  0 0 -1  0  0 0 0  0  0  0
-  0 0  0  0 0  0 0  0  1  0 -1  0 0  0 -1  0 0 0  0  0  0
-  0 0  0  0 1 -1 0  0  1  0 -1  0 0  0  0 -1 0 0  0  0  0
-  0 0  0 -1 0  0 1 -1  0  1  0  0 0  0  0  0 1 0  0  0  0
-  0 0 -1  0 0  1 0  0 -1  0  1  0 0  0  0  0 0 1  0  0  0 ]
-Schedule In: nodeIndex = BitSet[2]
+[ 0 1 -1 0 -1 -1  0  0  0  0  0 -1 1  0  0  0 0 0 -1  0  0
+  0 0  1 0  0  0  0  0  0  0  0  0 0  0  0  0 0 0  0 -1  0
+  0 0  0 0  1  0  0  0  0  0  0  0 0  0  0  0 0 0  0  0 -1
+  0 0  0 0  0  0  0  1  0 -1  0  0 0 -1  0  0 0 0  0  0  0
+  0 0  0 0  0  0  0  0  1  0 -1  0 0  0 -1  0 0 0  0  0  0
+  0 0  0 0  0  1 -1  0  1  0 -1  0 0  0  0 -1 0 0  0  0  0
+  0 0  0 1 -1  0  0 -1  0  1  0  0 0  0  0  0 1 0  0  0  0
+  0 0 -1 0  0  0  1  0 -1  0  1  0 0  0  0  0 0 1  0  0  0 ]
+Satisfied (isCondIndep() == 0) = 127
+Schedule In: nodeIndex = 2
 s.getPhi() =
 [ 0 1 1
   1 0 0
   0 1 0 ]
 s.getFusionOmega() = [ 0, 0, 0, 0 ]
-s.getOffsetOmega() = [ 1, 0, 0 ]
+s.getOffsetOmega() = [ 0, 0, 0 ]
 
-Schedule Out: nodeIndex = BitSet[1]
+Schedule Out: nodeIndex = 1
 s.getPhi() =
 [ 0 1
   1 0 ]
@@ -600,252 +585,282 @@ s.getOffsetOmega() = [ 0, 0 ]
 	Edge = Dependence Poly x -> y:
 	Input:
 Store:   store double %89, ptr addrspace(13) %82, align 8, !dbg !95, !tbaa !59
-ArrayReference %55 (dim = 2, num loops: 3, element size: 8):
+ArrayIndex %55 (dim = 2, num loops: 3, element size: 8):
 Sizes: [ unknown, %20 ]
 Subscripts: [ i_1  + i_2  + 1, i_0 ]
 Initial Fusion Omega: [ 0, 1, 3, 2 ]
 AffineLoopNest:
-Loop 2 lower bounds: i_2 >= 0
-Loop 2 upper bounds: i_2 <= -2 + %23 - i_1
-Loop 1 lower bounds: i_1 >= 0
-Loop 1 upper bounds: i_1 <= -2 + %23
-Loop 0 lower bounds: i_0 >= 0
-Loop 0 upper bounds: i_0 <= -1 + %20
-
+Loop 2: , 0 ≤ i_2 ≤ %23 - 2 - i_1
+Loop 1: , 0 ≤ i_1 ≤ %23 - 2
+Loop 0: , 0 ≤ i_0 ≤ %20 - 1
 	Output:
 Store:   store double %76, ptr addrspace(13) %70, align 8, !dbg !71, !tbaa !59
-ArrayReference %55 (dim = 2, num loops: 2, element size: 8):
+ArrayIndex %55 (dim = 2, num loops: 2, element size: 8):
 Sizes: [ unknown, %20 ]
 Subscripts: [ i_1 , i_0 ]
 Initial Fusion Omega: [ 0, 1, 2 ]
 AffineLoopNest:
-Loop 1 lower bounds: i_1 >= 0
-Loop 1 upper bounds: i_1 <= -1 + %23
-Loop 0 lower bounds: i_0 >= 0
-Loop 0 upper bounds: i_0 <= -1 + %20
-
+Loop 1: , 0 ≤ i_1 ≤ %23 - 1
+Loop 0: , 0 ≤ i_0 ≤ %20 - 1
 A = 
 [ -1 1 0 0 0  0  0 -1
+   0 0 0 0 0  0  1  0
   -1 0 1 0 0  0 -1  0
    0 0 0 0 0  1  0  0
-  -1 0 0 0 0 -1  0  1
-   0 0 0 0 0  0  1  0 ]
+  -1 0 0 0 0 -1  0  1 ]
 E = 
 [ 0 0 0 1 0 0 -1  0
   1 0 0 0 1 1  0 -1 ]
 Schedule Constraints:
-[ 0 1 -1 -1 0 -1 0  0  1  0 -1 1 -1 0 0 0  0  0 -1
-  0 0  1  0 0  0 0  0  0  0  0 0  0 0 0 0  0  0  0
-  0 0  0  1 0  0 0  0  0  0  0 0  0 0 0 0  0  0  0
-  0 0  0  0 0  0 0  1  0 -1  0 0  0 1 0 0  0  0  0
-  0 0  0  0 0  0 0  0  1  0 -1 0  0 0 1 0  0  0  0
-  0 0  0  0 1 -1 0  0  1  0 -1 0  0 0 0 1  0  0  0
-  0 0  0 -1 0  0 1 -1  0  1  0 0  0 0 0 0 -1  0  0
-  0 0 -1  0 0  1 0  0 -1  0  1 0  0 0 0 0  0 -1  0 ]
+[ 0 1 -1 0 -1 -1  0  0  0  0  0 1 -1 0 0 0  0  0 -1
+  0 0  1 0  0  0  0  0  0  0  0 0  0 0 0 0  0  0  0
+  0 0  0 0  1  0  0  0  0  0  0 0  0 0 0 0  0  0  0
+  0 0  0 0  0  0  0  1  0 -1  0 0  0 1 0 0  0  0  0
+  0 0  0 0  0  0  0  0  1  0 -1 0  0 0 1 0  0  0  0
+  0 0  0 0  0  1 -1  0  1  0 -1 0  0 0 0 1  0  0  0
+  0 0  0 1 -1  0  0 -1  0  1  0 0  0 0 0 0 -1  0  0
+  0 0 -1 0  0  0  1  0 -1  0  1 0  0 0 0 0  0 -1  0 ]
 Bounding Constraints:
-[ 0 1 -1 -1 0 -1 0  0  1  0 -1 -1 1  0  0  0 0 0 -1  0  0
-  0 0  1  0 0  0 0  0  0  0  0  0 0  0  0  0 0 0  0 -1  0
-  0 0  0  1 0  0 0  0  0  0  0  0 0  0  0  0 0 0  0  0 -1
-  0 0  0  0 0  0 0  1  0 -1  0  0 0 -1  0  0 0 0  0  0  0
-  0 0  0  0 0  0 0  0  1  0 -1  0 0  0 -1  0 0 0  0  0  0
-  0 0  0  0 1 -1 0  0  1  0 -1  0 0  0  0 -1 0 0  0  0  0
-  0 0  0 -1 0  0 1 -1  0  1  0  0 0  0  0  0 1 0  0  0  0
-  0 0 -1  0 0  1 0  0 -1  0  1  0 0  0  0  0 0 1  0  0  0 ]
-Schedule In: nodeIndex = BitSet[2]
+[ 0 1 -1 0 -1 -1  0  0  0  0  0 -1 1  0  0  0 0 0 -1  0  0
+  0 0  1 0  0  0  0  0  0  0  0  0 0  0  0  0 0 0  0 -1  0
+  0 0  0 0  1  0  0  0  0  0  0  0 0  0  0  0 0 0  0  0 -1
+  0 0  0 0  0  0  0  1  0 -1  0  0 0 -1  0  0 0 0  0  0  0
+  0 0  0 0  0  0  0  0  1  0 -1  0 0  0 -1  0 0 0  0  0  0
+  0 0  0 0  0  1 -1  0  1  0 -1  0 0  0  0 -1 0 0  0  0  0
+  0 0  0 1 -1  0  0 -1  0  1  0  0 0  0  0  0 1 0  0  0  0
+  0 0 -1 0  0  0  1  0 -1  0  1  0 0  0  0  0 0 1  0  0  0 ]
+Satisfied (isCondIndep() == 0) = 127
+Schedule In: nodeIndex = 2
 s.getPhi() =
 [ 0 1 1
   1 0 0
   0 1 0 ]
 s.getFusionOmega() = [ 0, 0, 0, 0 ]
-s.getOffsetOmega() = [ 1, 0, 0 ]
+s.getOffsetOmega() = [ 0, 0, 0 ]
 
-Schedule Out: nodeIndex = BitSet[1, 2]
+Schedule Out: nodeIndex = 1
 s.getPhi() =
 [ 0 1
   1 0 ]
 s.getFusionOmega() = [ 0, 0, 0 ]
 s.getOffsetOmega() = [ 0, 0 ]
 
-Schedule Out: nodeIndex = BitSet[1, 2]
-s.getPhi() =
-[ 0 1 1
-  1 0 0
-  0 1 0 ]
-s.getFusionOmega() = [ 0, 0, 0, 0 ]
-s.getOffsetOmega() = [ 1, 0, 0 ]
-
 
 
 	Edge = Dependence Poly y -> x:
 	Input:
 Load:   %83 = load double, ptr addrspace(13) %82, align 8, !dbg !89, !tbaa !59
-ArrayReference %55 (dim = 2, num loops: 3, element size: 8):
+ArrayIndex %55 (dim = 2, num loops: 3, element size: 8):
 Sizes: [ unknown, %20 ]
 Subscripts: [ i_1  + i_2  + 1, i_0 ]
 Initial Fusion Omega: [ 0, 1, 3, 0 ]
 AffineLoopNest:
-Loop 2 lower bounds: i_2 >= 0
-Loop 2 upper bounds: i_2 <= -2 + %23 - i_1
-Loop 1 lower bounds: i_1 >= 0
-Loop 1 upper bounds: i_1 <= -2 + %23
-Loop 0 lower bounds: i_0 >= 0
-Loop 0 upper bounds: i_0 <= -1 + %20
-
+Loop 2: , 0 ≤ i_2 ≤ %23 - 2 - i_1
+Loop 1: , 0 ≤ i_1 ≤ %23 - 2
+Loop 0: , 0 ≤ i_0 ≤ %20 - 1
 	Output:
 Store:   store double %89, ptr addrspace(13) %82, align 8, !dbg !95, !tbaa !59
-ArrayReference %55 (dim = 2, num loops: 3, element size: 8):
+ArrayIndex %55 (dim = 2, num loops: 3, element size: 8):
 Sizes: [ unknown, %20 ]
 Subscripts: [ i_1  + i_2  + 1, i_0 ]
 Initial Fusion Omega: [ 0, 1, 3, 2 ]
 AffineLoopNest:
-Loop 2 lower bounds: i_2 >= 0
-Loop 2 upper bounds: i_2 <= -2 + %23 - i_1
-Loop 1 lower bounds: i_1 >= 0
-Loop 1 upper bounds: i_1 <= -2 + %23
-Loop 0 lower bounds: i_0 >= 0
-Loop 0 upper bounds: i_0 <= -1 + %20
-
+Loop 2: , 0 ≤ i_2 ≤ %23 - 2 - i_1
+Loop 1: , 0 ≤ i_1 ≤ %23 - 2
+Loop 0: , 0 ≤ i_0 ≤ %20 - 1
 A = 
 [ -2 1 0 0 0 0  0 -1 -1 0
+   0 0 0 0 0 1  0  0  0 0
   -1 0 1 0 0 0 -1  0  0 0
    0 0 0 0 0 0  0  0  1 0
-   0 0 0 0 0 0  0  1  0 0
-   0 0 0 0 0 0  1  0  0 0
    0 0 0 0 0 1  0  1 -1 1
-   0 0 0 0 0 1  0  0  0 0 ]
+   0 0 0 0 0 0  0  1  0 0
+   0 0 0 0 0 0  1  0  0 0 ]
 E = 
 [ 0 0 0 1 0 0 -1  0  0 0
   0 0 0 0 1 1  0 -1 -1 0
   0 0 0 0 0 2  0  0 -2 1 ]
 Schedule Constraints:
-[ 0 1 -2 -1 0 0 0  0 0  0  0  0  0  0  0 -1 1  0  0  0 0 0 0 -1
-  0 0  1  0 0 0 0  0 0  0  0  0  0  0  0  0 0  0  0  0 0 0 0  0
-  0 0  0  1 0 0 0  0 0  0  0  0  0  0  0  0 0  0  0  0 0 0 0  0
-  0 0  0  0 0 0 0  0 0  1  0  0 -1  0  0  0 0 -1  0  0 0 0 0  0
-  0 0  0  0 0 0 0  0 0  0  1  0  0 -1  0  0 0  0 -1  0 0 0 0  0
-  0 0  0  0 0 0 0  1 1  0  1  2  0 -1 -2  0 0  0  0 -1 0 0 0  0
-  0 0  0 -1 0 0 1  0 0 -1  0  0  1  0  0  0 0  0  0  0 1 0 0  0
-  0 0 -1  0 0 1 0  1 0  0 -1  0  0  1  0  0 0  0  0  0 0 1 0  0
-  0 0 -1  0 1 0 0 -1 0  0 -1 -2  0  1  2  0 0  0  0  0 0 0 1  0 ]
+[ 0 1 -1 -1 -1 -1  0 0 0  0  0  0  0  0  0 -1 1  0  0  0 0 0 0 -1
+  0 0  1  0  0  0  0 0 0  0  0  0  0  0  0  0 0  0  0  0 0 0 0  0
+  0 0  0  0  1  0  0 0 0  0  0  0  0  0  0  0 0  0  0  0 0 0 0  0
+  0 0  0  0  0  0  0 0 0  1  0  0 -1  0  0  0 0 -1  0  0 0 0 0  0
+  0 0  0  0  0  0  0 0 0  0  1  0  0 -1  0  0 0  0 -1  0 0 0 0  0
+  0 0  0  1  0  0  1 0 0  0  1  2  0 -1 -2  0 0  0  0 -1 0 0 0  0
+  0 0  0  0 -1  0  0 0 1 -1  0  0  1  0  0  0 0  0  0  0 1 0 0  0
+  0 0 -1  0  0  0  1 1 0  0 -1  0  0  1  0  0 0  0  0  0 0 1 0  0
+  0 0 -1  0  0  1 -1 0 0  0 -1 -2  0  1  2  0 0  0  0  0 0 0 1  0 ]
 Bounding Constraints:
-[ 0 1 -2 -1 0 0 0  0 0  0  0  0  0  0  0 1 -1 0 0 0  0  0  0 -1  0  0
-  0 0  1  0 0 0 0  0 0  0  0  0  0  0  0 0  0 0 0 0  0  0  0  0 -1  0
-  0 0  0  1 0 0 0  0 0  0  0  0  0  0  0 0  0 0 0 0  0  0  0  0  0 -1
-  0 0  0  0 0 0 0  0 0  1  0  0 -1  0  0 0  0 1 0 0  0  0  0  0  0  0
-  0 0  0  0 0 0 0  0 0  0  1  0  0 -1  0 0  0 0 1 0  0  0  0  0  0  0
-  0 0  0  0 0 0 0  1 1  0  1  2  0 -1 -2 0  0 0 0 1  0  0  0  0  0  0
-  0 0  0 -1 0 0 1  0 0 -1  0  0  1  0  0 0  0 0 0 0 -1  0  0  0  0  0
-  0 0 -1  0 0 1 0  1 0  0 -1  0  0  1  0 0  0 0 0 0  0 -1  0  0  0  0
-  0 0 -1  0 1 0 0 -1 0  0 -1 -2  0  1  2 0  0 0 0 0  0  0 -1  0  0  0 ]
-Schedule In: nodeIndex = BitSet[2]
+[ 0 1 -1 -1 -1 -1  0 0 0  0  0  0  0  0  0 1 -1 0 0 0  0  0  0 -1  0  0
+  0 0  1  0  0  0  0 0 0  0  0  0  0  0  0 0  0 0 0 0  0  0  0  0 -1  0
+  0 0  0  0  1  0  0 0 0  0  0  0  0  0  0 0  0 0 0 0  0  0  0  0  0 -1
+  0 0  0  0  0  0  0 0 0  1  0  0 -1  0  0 0  0 1 0 0  0  0  0  0  0  0
+  0 0  0  0  0  0  0 0 0  0  1  0  0 -1  0 0  0 0 1 0  0  0  0  0  0  0
+  0 0  0  1  0  0  1 0 0  0  1  2  0 -1 -2 0  0 0 0 1  0  0  0  0  0  0
+  0 0  0  0 -1  0  0 0 1 -1  0  0  1  0  0 0  0 0 0 0 -1  0  0  0  0  0
+  0 0 -1  0  0  0  1 1 0  0 -1  0  0  1  0 0  0 0 0 0  0 -1  0  0  0  0
+  0 0 -1  0  0  1 -1 0 0  0 -1 -2  0  1  2 0  0 0 0 0  0  0 -1  0  0  0 ]
+Satisfied (isCondIndep() == 0) = 127
+Schedule In: nodeIndex = 2
 s.getPhi() =
 [ 0 1 1
   1 0 0
   0 1 0 ]
 s.getFusionOmega() = [ 0, 0, 0, 0 ]
-s.getOffsetOmega() = [ 1, 0, 0 ]
+s.getOffsetOmega() = [ 0, 0, 0 ]
 
-Schedule Out: nodeIndex = BitSet[2]
+Schedule Out: nodeIndex = 2
 s.getPhi() =
 [ 0 1 1
   1 0 0
   0 1 0 ]
 s.getFusionOmega() = [ 0, 0, 0, 0 ]
-s.getOffsetOmega() = [ 1, 0, 0 ]
+s.getOffsetOmega() = [ 0, 0, 0 ]
 
 
 
 	Edge = Dependence Poly x -> y:
 	Input:
 Store:   store double %89, ptr addrspace(13) %82, align 8, !dbg !95, !tbaa !59
-ArrayReference %55 (dim = 2, num loops: 3, element size: 8):
+ArrayIndex %55 (dim = 2, num loops: 3, element size: 8):
 Sizes: [ unknown, %20 ]
 Subscripts: [ i_1  + i_2  + 1, i_0 ]
 Initial Fusion Omega: [ 0, 1, 3, 2 ]
 AffineLoopNest:
-Loop 2 lower bounds: i_2 >= 0
-Loop 2 upper bounds: i_2 <= -2 + %23 - i_1
-Loop 1 lower bounds: i_1 >= 0
-Loop 1 upper bounds: i_1 <= -2 + %23
-Loop 0 lower bounds: i_0 >= 0
-Loop 0 upper bounds: i_0 <= -1 + %20
-
+Loop 2: , 0 ≤ i_2 ≤ %23 - 2 - i_1
+Loop 1: , 0 ≤ i_1 ≤ %23 - 2
+Loop 0: , 0 ≤ i_0 ≤ %20 - 1
 	Output:
 Load:   %83 = load double, ptr addrspace(13) %82, align 8, !dbg !89, !tbaa !59
-ArrayReference %55 (dim = 2, num loops: 3, element size: 8):
+ArrayIndex %55 (dim = 2, num loops: 3, element size: 8):
 Sizes: [ unknown, %20 ]
 Subscripts: [ i_1  + i_2  + 1, i_0 ]
 Initial Fusion Omega: [ 0, 1, 3, 0 ]
 AffineLoopNest:
-Loop 2 lower bounds: i_2 >= 0
-Loop 2 upper bounds: i_2 <= -2 + %23 - i_1
-Loop 1 lower bounds: i_1 >= 0
-Loop 1 upper bounds: i_1 <= -2 + %23
-Loop 0 lower bounds: i_0 >= 0
-Loop 0 upper bounds: i_0 <= -1 + %20
-
+Loop 2: , 0 ≤ i_2 ≤ %23 - 2 - i_1
+Loop 1: , 0 ≤ i_1 ≤ %23 - 2
+Loop 0: , 0 ≤ i_0 ≤ %20 - 1
 A = 
 [ -2 1 0 0 0 0  0 -1 -1 0
+   0 0 0 0 0 1  0  0  0 0
   -1 0 1 0 0 0 -1  0  0 0
    0 0 0 0 0 0  0  0  1 0
-   0 0 0 0 0 0  0  1  0 0
-   0 0 0 0 0 0  1  0  0 0
   -2 0 0 0 0 1  0  1 -1 1
-   0 0 0 0 0 1  0  0  0 0 ]
+   0 0 0 0 0 0  0  1  0 0
+   0 0 0 0 0 0  1  0  0 0 ]
 E = 
 [  0 0 0 1 0 0 -1  0  0 0
    0 0 0 0 1 1  0 -1 -1 0
   -2 0 0 0 0 2  0  0 -2 1 ]
 Schedule Constraints:
-[ 0 1 -2 -1 0 0 0 -2 0  0  0 -2  0  0  2 1 -1 0 0 0  0  0  0 -1
-  0 0  1  0 0 0 0  0 0  0  0  0  0  0  0 0  0 0 0 0  0  0  0  0
-  0 0  0  1 0 0 0  0 0  0  0  0  0  0  0 0  0 0 0 0  0  0  0  0
-  0 0  0  0 0 0 0  0 0  1  0  0 -1  0  0 0  0 1 0 0  0  0  0  0
-  0 0  0  0 0 0 0  0 0  0  1  0  0 -1  0 0  0 0 1 0  0  0  0  0
-  0 0  0  0 0 0 0  1 1  0  1  2  0 -1 -2 0  0 0 0 1  0  0  0  0
-  0 0  0 -1 0 0 1  0 0 -1  0  0  1  0  0 0  0 0 0 0 -1  0  0  0
-  0 0 -1  0 0 1 0  1 0  0 -1  0  0  1  0 0  0 0 0 0  0 -1  0  0
-  0 0 -1  0 1 0 0 -1 0  0 -1 -2  0  1  2 0  0 0 0 0  0  0 -1  0 ]
+[ 0 1 -1 -1 -1 -1 -2 0 0  0  0 -2  0  0  2 1 -1 0 0 0  0  0  0 -1
+  0 0  1  0  0  0  0 0 0  0  0  0  0  0  0 0  0 0 0 0  0  0  0  0
+  0 0  0  0  1  0  0 0 0  0  0  0  0  0  0 0  0 0 0 0  0  0  0  0
+  0 0  0  0  0  0  0 0 0  1  0  0 -1  0  0 0  0 1 0 0  0  0  0  0
+  0 0  0  0  0  0  0 0 0  0  1  0  0 -1  0 0  0 0 1 0  0  0  0  0
+  0 0  0  1  0  0  1 0 0  0  1  2  0 -1 -2 0  0 0 0 1  0  0  0  0
+  0 0  0  0 -1  0  0 0 1 -1  0  0  1  0  0 0  0 0 0 0 -1  0  0  0
+  0 0 -1  0  0  0  1 1 0  0 -1  0  0  1  0 0  0 0 0 0  0 -1  0  0
+  0 0 -1  0  0  1 -1 0 0  0 -1 -2  0  1  2 0  0 0 0 0  0  0 -1  0 ]
 Bounding Constraints:
-[ 0 1 -2 -1 0 0 0 -2 0  0  0 -2  0  0  2 -1 1  0  0  0 0 0 0 -1  0  0
-  0 0  1  0 0 0 0  0 0  0  0  0  0  0  0  0 0  0  0  0 0 0 0  0 -1  0
-  0 0  0  1 0 0 0  0 0  0  0  0  0  0  0  0 0  0  0  0 0 0 0  0  0 -1
-  0 0  0  0 0 0 0  0 0  1  0  0 -1  0  0  0 0 -1  0  0 0 0 0  0  0  0
-  0 0  0  0 0 0 0  0 0  0  1  0  0 -1  0  0 0  0 -1  0 0 0 0  0  0  0
-  0 0  0  0 0 0 0  1 1  0  1  2  0 -1 -2  0 0  0  0 -1 0 0 0  0  0  0
-  0 0  0 -1 0 0 1  0 0 -1  0  0  1  0  0  0 0  0  0  0 1 0 0  0  0  0
-  0 0 -1  0 0 1 0  1 0  0 -1  0  0  1  0  0 0  0  0  0 0 1 0  0  0  0
-  0 0 -1  0 1 0 0 -1 0  0 -1 -2  0  1  2  0 0  0  0  0 0 0 1  0  0  0 ]
-Schedule In: nodeIndex = BitSet[2]
+[ 0 1 -1 -1 -1 -1 -2 0 0  0  0 -2  0  0  2 -1 1  0  0  0 0 0 0 -1  0  0
+  0 0  1  0  0  0  0 0 0  0  0  0  0  0  0  0 0  0  0  0 0 0 0  0 -1  0
+  0 0  0  0  1  0  0 0 0  0  0  0  0  0  0  0 0  0  0  0 0 0 0  0  0 -1
+  0 0  0  0  0  0  0 0 0  1  0  0 -1  0  0  0 0 -1  0  0 0 0 0  0  0  0
+  0 0  0  0  0  0  0 0 0  0  1  0  0 -1  0  0 0  0 -1  0 0 0 0  0  0  0
+  0 0  0  1  0  0  1 0 0  0  1  2  0 -1 -2  0 0  0  0 -1 0 0 0  0  0  0
+  0 0  0  0 -1  0  0 0 1 -1  0  0  1  0  0  0 0  0  0  0 1 0 0  0  0  0
+  0 0 -1  0  0  0  1 1 0  0 -1  0  0  1  0  0 0  0  0  0 0 1 0  0  0  0
+  0 0 -1  0  0  1 -1 0 0  0 -1 -2  0  1  2  0 0  0  0  0 0 0 1  0  0  0 ]
+Satisfied (isCondIndep() == 0) = 2
+Schedule In: nodeIndex = 2
 s.getPhi() =
 [ 0 1 1
   1 0 0
   0 1 0 ]
 s.getFusionOmega() = [ 0, 0, 0, 0 ]
-s.getOffsetOmega() = [ 1, 0, 0 ]
+s.getOffsetOmega() = [ 0, 0, 0 ]
 
-Schedule Out: nodeIndex = BitSet[2]
+Schedule Out: nodeIndex = 2
 s.getPhi() =
 [ 0 1 1
   1 0 0
   0 1 0 ]
 s.getFusionOmega() = [ 0, 0, 0, 0 ]
-s.getOffsetOmega() = [ 1, 0, 0 ]
+s.getOffsetOmega() = [ 0, 0, 0 ]
 
 
-LoopBlock schedule (#mem accesses = 8):
+
+	Edge = Dependence Poly x -> y:
+	Input:
+Store:   store double %76, ptr addrspace(13) %70, align 8, !dbg !71, !tbaa !59
+ArrayIndex %55 (dim = 2, num loops: 2, element size: 8):
+Sizes: [ unknown, %20 ]
+Subscripts: [ i_1 , i_0 ]
+Initial Fusion Omega: [ 0, 1, 2 ]
+AffineLoopNest:
+Loop 1: , 0 ≤ i_1 ≤ %23 - 1
+Loop 0: , 0 ≤ i_0 ≤ %20 - 1
+	Output:
+Store:   store double %76, ptr addrspace(13) %70, align 8, !dbg !71, !tbaa !59
+ArrayIndex %55 (dim = 2, num loops: 2, element size: 8):
+Sizes: [ unknown, %20 ]
+Subscripts: [ i_1 , i_0 ]
+Initial Fusion Omega: [ 0, 1, 2 ]
+AffineLoopNest:
+Loop 1: , 0 ≤ i_1 ≤ %23 - 1
+Loop 0: , 0 ≤ i_0 ≤ %20 - 1
+A = 
+[ -1 0 1 0 0 -1  0
+  -1 1 0 0 0  0 -1
+   0 0 0 0 0  1  0
+   0 0 0 0 0  0  1 ]
+E = 
+[ 0 0 0 1 0 -1  0
+  0 0 0 0 1  0 -1 ]
+Schedule Constraints:
+[ 0 1 -1 -1 0 0  0  0  0  0 1 -1 0 0  0  0 -1
+  0 0  0  1 0 0  0  0  0  0 0  0 0 0  0  0  0
+  0 0  1  0 0 0  0  0  0  0 0  0 0 0  0  0  0
+  0 0  0  0 0 0  1  0 -1  0 0  0 1 0  0  0  0
+  0 0  0  0 0 0  0  1  0 -1 0  0 0 1  0  0  0
+  0 0 -1  0 1 0 -1  0  1  0 0  0 0 0 -1  0  0
+  0 0  0 -1 0 1  0 -1  0  1 0  0 0 0  0 -1  0 ]
+Bounding Constraints:
+[ 0 1 -1 -1 0 0  0  0  0  0 -1 1  0  0 0 0 -1  0  0
+  0 0  0  1 0 0  0  0  0  0  0 0  0  0 0 0  0 -1  0
+  0 0  1  0 0 0  0  0  0  0  0 0  0  0 0 0  0  0 -1
+  0 0  0  0 0 0  1  0 -1  0  0 0 -1  0 0 0  0  0  0
+  0 0  0  0 0 0  0  1  0 -1  0 0  0 -1 0 0  0  0  0
+  0 0 -1  0 1 0 -1  0  1  0  0 0  0  0 1 0  0  0  0
+  0 0  0 -1 0 1  0 -1  0  1  0 0  0  0 0 1  0  0  0 ]
+Satisfied (isCondIndep() == 1) = 0
+Schedule In: nodeIndex = 1
+s.getPhi() =
+[ 0 1
+  1 0 ]
+s.getFusionOmega() = [ 0, 0, 0 ]
+s.getOffsetOmega() = [ 0, 0 ]
+
+Schedule Out: nodeIndex = 2
+s.getPhi() =
+[ 0 1 1
+  1 0 0
+  0 1 0 ]
+s.getFusionOmega() = [ 0, 0, 0, 0 ]
+s.getOffsetOmega() = [ 0, 0, 0 ]
+
+
+LoopBlock schedule (#mem accesses = 9):
 
 Ref = Load:   %64 = load double, ptr addrspace(13) %63, align 8, !dbg !55, !tbaa !59
-ArrayReference %52 (dim = 2, num loops: 2, element size: 8):
+ArrayIndex %52 (dim = 2, num loops: 2, element size: 8):
 Sizes: [ unknown, %20 ]
 Subscripts: [ i_1 , i_0 ]
 Initial Fusion Omega: [ 0, 0, 0 ]
 AffineLoopNest:
-Loop 1 lower bounds: i_1 >= 0
-Loop 1 upper bounds: i_1 <= -1 + %23
-Loop 0 lower bounds: i_0 >= 0
-Loop 0 upper bounds: i_0 <= -1 + %20
-
+Loop 1: , 0 ≤ i_1 ≤ %23 - 1
+Loop 0: , 0 ≤ i_0 ≤ %20 - 1
 nodeIndex = 0
 s.getPhi()
 [ 0 1
@@ -853,16 +868,13 @@ s.getPhi()
 s.getFusionOmega() = [ 0, 0, 0 ]
 s.getOffsetOmega() = [ 0, 0 ]
 Ref = Store:   store double %64, ptr addrspace(13) %65, align 8, !dbg !61, !tbaa !59
-ArrayReference %55 (dim = 2, num loops: 2, element size: 8):
+ArrayIndex %55 (dim = 2, num loops: 2, element size: 8):
 Sizes: [ unknown, %20 ]
 Subscripts: [ i_1 , i_0 ]
 Initial Fusion Omega: [ 0, 0, 1 ]
 AffineLoopNest:
-Loop 1 lower bounds: i_1 >= 0
-Loop 1 upper bounds: i_1 <= -1 + %23
-Loop 0 lower bounds: i_0 >= 0
-Loop 0 upper bounds: i_0 <= -1 + %20
-
+Loop 1: , 0 ≤ i_1 ≤ %23 - 1
+Loop 0: , 0 ≤ i_0 ≤ %20 - 1
 nodeIndex = 0
 s.getPhi()
 [ 0 1
@@ -870,16 +882,13 @@ s.getPhi()
 s.getFusionOmega() = [ 0, 0, 0 ]
 s.getOffsetOmega() = [ 0, 0 ]
 Ref = Load:   %71 = load double, ptr addrspace(13) %70, align 8, !dbg !66, !tbaa !59
-ArrayReference %55 (dim = 2, num loops: 2, element size: 8):
+ArrayIndex %55 (dim = 2, num loops: 2, element size: 8):
 Sizes: [ unknown, %20 ]
 Subscripts: [ i_1 , i_0 ]
 Initial Fusion Omega: [ 0, 1, 0 ]
 AffineLoopNest:
-Loop 1 lower bounds: i_1 >= 0
-Loop 1 upper bounds: i_1 <= -1 + %23
-Loop 0 lower bounds: i_0 >= 0
-Loop 0 upper bounds: i_0 <= -1 + %20
-
+Loop 1: , 0 ≤ i_1 ≤ %23 - 1
+Loop 0: , 0 ≤ i_0 ≤ %20 - 1
 nodeIndex = 1
 s.getPhi()
 [ 0 1
@@ -887,16 +896,13 @@ s.getPhi()
 s.getFusionOmega() = [ 0, 0, 0 ]
 s.getOffsetOmega() = [ 0, 0 ]
 Ref = Load:   %75 = load double, ptr addrspace(13) %74, align 8, !dbg !66, !tbaa !59
-ArrayReference %58 (dim = 2, num loops: 2, element size: 8):
+ArrayIndex %58 (dim = 2, num loops: 2, element size: 8):
 Sizes: [ unknown, %23 ]
 Subscripts: [ i_1 , i_1 ]
 Initial Fusion Omega: [ 0, 1, 1 ]
 AffineLoopNest:
-Loop 1 lower bounds: i_1 >= 0
-Loop 1 upper bounds: i_1 <= -1 + %23
-Loop 0 lower bounds: i_0 >= 0
-Loop 0 upper bounds: i_0 <= -1 + %20
-
+Loop 1: , 0 ≤ i_1 ≤ %23 - 1
+Loop 0: , 0 ≤ i_0 ≤ %20 - 1
 nodeIndex = 1
 s.getPhi()
 [ 0 1
@@ -904,90 +910,129 @@ s.getPhi()
 s.getFusionOmega() = [ 0, 0, 0 ]
 s.getOffsetOmega() = [ 0, 0 ]
 Ref = Store:   store double %76, ptr addrspace(13) %70, align 8, !dbg !71, !tbaa !59
-ArrayReference %55 (dim = 2, num loops: 2, element size: 8):
+ArrayIndex %55 (dim = 2, num loops: 2, element size: 8):
 Sizes: [ unknown, %20 ]
 Subscripts: [ i_1 , i_0 ]
 Initial Fusion Omega: [ 0, 1, 2 ]
 AffineLoopNest:
-Loop 1 lower bounds: i_1 >= 0
-Loop 1 upper bounds: i_1 <= -1 + %23
-Loop 0 lower bounds: i_0 >= 0
-Loop 0 upper bounds: i_0 <= -1 + %20
-
+Loop 1: , 0 ≤ i_1 ≤ %23 - 1
+Loop 0: , 0 ≤ i_0 ≤ %20 - 1
 nodeIndex = 1
 s.getPhi()
 [ 0 1
   1 0 ]
 s.getFusionOmega() = [ 0, 0, 0 ]
 s.getOffsetOmega() = [ 0, 0 ]
-
-nodeIndex = 2
-s.getPhi()
-[ 0 1 1
-  1 0 0
-  0 1 0 ]
-s.getFusionOmega() = [ 0, 0, 0, 0 ]
-s.getOffsetOmega() = [ 1, 0, 0 ]
 Ref = Load:   %83 = load double, ptr addrspace(13) %82, align 8, !dbg !89, !tbaa !59
-ArrayReference %55 (dim = 2, num loops: 3, element size: 8):
+ArrayIndex %55 (dim = 2, num loops: 3, element size: 8):
 Sizes: [ unknown, %20 ]
 Subscripts: [ i_1  + i_2  + 1, i_0 ]
 Initial Fusion Omega: [ 0, 1, 3, 0 ]
 AffineLoopNest:
-Loop 2 lower bounds: i_2 >= 0
-Loop 2 upper bounds: i_2 <= -2 + %23 - i_1
-Loop 1 lower bounds: i_1 >= 0
-Loop 1 upper bounds: i_1 <= -2 + %23
-Loop 0 lower bounds: i_0 >= 0
-Loop 0 upper bounds: i_0 <= -1 + %20
-
+Loop 2: , 0 ≤ i_2 ≤ %23 - 2 - i_1
+Loop 1: , 0 ≤ i_1 ≤ %23 - 2
+Loop 0: , 0 ≤ i_0 ≤ %20 - 1
 nodeIndex = 2
 s.getPhi()
 [ 0 1 1
   1 0 0
   0 1 0 ]
 s.getFusionOmega() = [ 0, 0, 0, 0 ]
-s.getOffsetOmega() = [ 1, 0, 0 ]
+s.getOffsetOmega() = [ 0, 0, 0 ]
 Ref = Load:   %87 = load double, ptr addrspace(13) %86, align 8, !dbg !89, !tbaa !59
-ArrayReference %58 (dim = 2, num loops: 3, element size: 8):
+ArrayIndex %58 (dim = 2, num loops: 3, element size: 8):
 Sizes: [ unknown, %23 ]
 Subscripts: [ i_1  + i_2  + 1, i_1 ]
 Initial Fusion Omega: [ 0, 1, 3, 1 ]
 AffineLoopNest:
-Loop 2 lower bounds: i_2 >= 0
-Loop 2 upper bounds: i_2 <= -2 + %23 - i_1
-Loop 1 lower bounds: i_1 >= 0
-Loop 1 upper bounds: i_1 <= -2 + %23
-Loop 0 lower bounds: i_0 >= 0
-Loop 0 upper bounds: i_0 <= -1 + %20
-
+Loop 2: , 0 ≤ i_2 ≤ %23 - 2 - i_1
+Loop 1: , 0 ≤ i_1 ≤ %23 - 2
+Loop 0: , 0 ≤ i_0 ≤ %20 - 1
 nodeIndex = 2
 s.getPhi()
 [ 0 1 1
   1 0 0
   0 1 0 ]
 s.getFusionOmega() = [ 0, 0, 0, 0 ]
-s.getOffsetOmega() = [ 1, 0, 0 ]
+s.getOffsetOmega() = [ 0, 0, 0 ]
 Ref = Store:   store double %89, ptr addrspace(13) %82, align 8, !dbg !95, !tbaa !59
-ArrayReference %55 (dim = 2, num loops: 3, element size: 8):
+ArrayIndex %55 (dim = 2, num loops: 3, element size: 8):
 Sizes: [ unknown, %20 ]
 Subscripts: [ i_1  + i_2  + 1, i_0 ]
 Initial Fusion Omega: [ 0, 1, 3, 2 ]
 AffineLoopNest:
-Loop 2 lower bounds: i_2 >= 0
-Loop 2 upper bounds: i_2 <= -2 + %23 - i_1
-Loop 1 lower bounds: i_1 >= 0
-Loop 1 upper bounds: i_1 <= -2 + %23
-Loop 0 lower bounds: i_0 >= 0
-Loop 0 upper bounds: i_0 <= -1 + %20
-
+Loop 2: , 0 ≤ i_2 ≤ %23 - 2 - i_1
+Loop 1: , 0 ≤ i_1 ≤ %23 - 2
+Loop 0: , 0 ≤ i_0 ≤ %20 - 1
 nodeIndex = 2
 s.getPhi()
 [ 0 1 1
   1 0 0
   0 1 0 ]
 s.getFusionOmega() = [ 0, 0, 0, 0 ]
-s.getOffsetOmega() = [ 1, 0, 0 ]
+s.getOffsetOmega() = [ 0, 0, 0 ]
+Ref = Store:   store double %76, ptr addrspace(13) %70, align 8, !dbg !71, !tbaa !59
+ArrayIndex %55 (dim = 2, num loops: 2, element size: 8):
+Sizes: [ unknown, %20 ]
+Subscripts: [ i_1 , i_0 ]
+Initial Fusion Omega: [ 0, 1, 2 ]
+AffineLoopNest:
+Loop 1: , 0 ≤ i_1 ≤ %23 - 1
+Loop 0: , 0 ≤ i_0 ≤ %20 - 1
+nodeIndex = 2
+s.getPhi()
+[ 0 1 1
+  1 0 0
+  0 1 0 ]
+s.getFusionOmega() = [ 0, 0, 0, 0 ]
+s.getOffsetOmega() = [ 0, 0, 0 ]
 
 
+
+remark: REPL[26]:8:0: digraph LoopNest {
+"LoopNest#0SubLoop#0SubLoop#0" [shape=plain
+label = <<table><tr><td port="f0">0 ≤ i_2 ≤ -1 + i_0</td></tr>
+<tr><td port="f1"> ... = %55[i_2, i_1]</td></tr>
+<tr><td port="f2"> ... = %58[i_0, i_2]</td></tr>
+</table>>];
+"LoopNest#0SubLoop#0" [shape=plain
+label = <<table><tr><td port="f0">0 ≤ i_1 ≤ %20 - 1</td></tr>
+<tr><td port="f1"> ... = %52[i_0, i_1]</td></tr>
+<tr><td port="f2"> %55[i_0, i_1] = ...</td></tr>
+<tr><td port="f3"> ... = %55[i_0, i_1]</td></tr>
+ <tr> <td port="f4"> SubLoop#0</td></tr>
+<tr><td port="f5"> %55[i_0, i_1] = ...</td></tr>
+<tr><td port="f6"> ... = %55[i_0, i_1]</td></tr>
+<tr><td port="f7"> %55[i_0, i_1] = ...</td></tr>
+</table>>];
+"LoopNest#0SubLoop#0":f4 -> "LoopNest#0SubLoop#0SubLoop#0":f0 [color="#ff0000"];
+"LoopNest#0" [shape=plain
+label = <<table><tr><td port="f0">0 ≤ i_0 ≤ %23 - 1</td></tr>
+<tr><td port="f1"> ... = %58[i_0, i_0]</td></tr>
+ <tr> <td port="f2"> SubLoop#0</td></tr>
+</table>>];
+"LoopNest#0":f2 -> "LoopNest#0SubLoop#0":f0 [color="#ff0000"];
+"toplevel" [shape=plain
+label = <<table><tr><td port="f0">Top Level</td></tr>
+ <tr> <td port="f1"> SubLoop#0</td></tr>
+</table>>];
+"toplevel":f1 -> "LoopNest#0":f0 [color="#ff0000"];
+"LoopNest#0":f1 -> "LoopNest#0SubLoop#0":f7 [color="#00ff00"];
+"LoopNest#0SubLoop#0":f1 -> "LoopNest#0SubLoop#0":f2 [color="#00ff00"];
+"LoopNest#0SubLoop#0":f2 -> "LoopNest#0SubLoop#0":f6 [color="#008080"];
+"LoopNest#0SubLoop#0":f2 -> "LoopNest#0SubLoop#0":f7 [color="#008080"];
+"LoopNest#0SubLoop#0":f2 -> "LoopNest#0SubLoop#0":f3 [color="#008080"];
+"LoopNest#0SubLoop#0":f2 -> "LoopNest#0SubLoop#0":f5 [color="#008080"];
+"LoopNest#0SubLoop#0":f3 -> "LoopNest#0SubLoop#0":f5 [color="#00ff00"];
+"LoopNest#0SubLoop#0":f3 -> "LoopNest#0SubLoop#0":f7 [color="#008080"];
+"LoopNest#0SubLoop#0":f3 -> "LoopNest#0SubLoop#0":f5 [color="#008080"];
+"LoopNest#0SubLoop#0SubLoop#0":f1 -> "LoopNest#0SubLoop#0":f5 [color="#00ff00"];
+"LoopNest#0SubLoop#0SubLoop#0":f2 -> "LoopNest#0SubLoop#0":f5 [color="#00ff00"];
+"LoopNest#0SubLoop#0":f5 -> "LoopNest#0SubLoop#0":f6 [color="#008080"];
+"LoopNest#0SubLoop#0":f5 -> "LoopNest#0SubLoop#0":f7 [color="#008080"];
+"LoopNest#0SubLoop#0":f5 -> "LoopNest#0SubLoop#0":f3 [label = "dep_sat=2", color="#0000ff"];
+"LoopNest#0SubLoop#0":f6 -> "LoopNest#0SubLoop#0":f7 [color="#00ff00"];
+"LoopNest#0SubLoop#0":f6 -> "LoopNest#0SubLoop#0":f7 [color="#008080"];
+"LoopNest#0SubLoop#0":f7 -> "LoopNest#0SubLoop#0SubLoop#0":f1 [label = "dep_sat=0", color="#0000ff"];
+}
 

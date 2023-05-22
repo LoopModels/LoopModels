@@ -1,4 +1,5 @@
 #include "./ArrayReference.hpp"
+#include "./CostModeling.hpp"
 #include "./TestUtilities.hpp"
 #include "DependencyPolyhedra.hpp"
 #include "LoopBlock.hpp"
@@ -7,6 +8,7 @@
 #include "Math/Math.hpp"
 #include "MatrixStringParse.hpp"
 #include "MemoryAccess.hpp"
+#include <Math/Comparisons.hpp>
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
@@ -34,22 +36,22 @@ TEST(DependenceTest, BasicAssertions) {
   //   -2  0  1  0 -1      J
   //    0  0  0  0  1 ]    i
   //                       j ]
-  IntMatrix Aloop{"[-2 1 0 0 -1; "   // j <= I - 2
+  IntMatrix loopA{"[-2 1 0 0 -1; "   // j <= I - 2
                   "0 0 0 0 1; "      // j >= 0
                   "-2 0 1 -1 0; "    // i <= J - 2
                   "0 0 0 1 0]"_mat}; // i >= 0
   TestLoopFunction tlf;
 
-  tlf.addLoop(std::move(Aloop), 2);
+  tlf.addLoop(std::move(loopA), 2);
   auto *loop = tlf.getLoopNest(0);
   llvm::ScalarEvolution &SE{tlf.getSE()};
-  llvm::Type *Int64 = tlf.getInt64Ty();
+  llvm::Type *i64 = tlf.getInt64Ty();
   auto *ptrA = tlf.createArray();
   const auto *scevA = tlf.getSCEVUnknown(ptrA);
 
   // create arrays
   auto &builder = tlf.getBuilder();
-  llvm::Type *Float64 = builder.getDoubleTy();
+  llvm::Type *f64 = builder.getDoubleTy();
 
   const llvm::SCEV *M = loop->getSyms()[0];
   llvm::Value *zero = tlf.getConstInt(0);
@@ -62,61 +64,61 @@ TEST(DependenceTest, BasicAssertions) {
 
   llvm::Value *iOffset = builder.CreateMul(ivp1, Mv);
   llvm::Value *offset01 = builder.CreateAdd(jv, iOffset);
-  auto *Ageped01 = builder.CreateGEP(
-    Float64, ptrA, llvm::SmallVector<llvm::Value *, 1>{offset01}, "gep_A01");
-  auto *Aload01 = builder.CreateAlignedLoad(Float64, Ageped01,
-                                            llvm::MaybeAlign(8), "load_A01");
+  auto *gepedA01 = builder.CreateGEP(
+    f64, ptrA, llvm::SmallVector<llvm::Value *, 1>{offset01}, "gep_A01");
+  auto *loadA01 =
+    builder.CreateAlignedLoad(f64, gepedA01, llvm::MaybeAlign(8), "load_A01");
 
   llvm::Value *offset10 = builder.CreateAdd(jvp1, builder.CreateMul(iv, Mv));
-  auto *Ageped10 = builder.CreateGEP(
-    Float64, ptrA, llvm::SmallVector<llvm::Value *, 1>{offset10}, "gep_A10");
-  auto *Aload10 = builder.CreateAlignedLoad(Float64, Ageped10,
-                                            llvm::MaybeAlign(8), "load_A10");
+  auto *gepedA10 = builder.CreateGEP(
+    f64, ptrA, llvm::SmallVector<llvm::Value *, 1>{offset10}, "gep_A10");
+  auto *loadA10 =
+    builder.CreateAlignedLoad(f64, gepedA10, llvm::MaybeAlign(8), "load_A10");
   llvm::Value *offset11 = builder.CreateAdd(jvp1, iOffset);
-  auto *Ageped11 = builder.CreateGEP(
-    Float64, ptrA, llvm::SmallVector<llvm::Value *, 1>{offset11}, "gep_A11");
-  auto *Astore11 = builder.CreateAlignedStore(
-    builder.CreateFAdd(Aload10, Aload01, "A10 + A01"), Ageped11,
+  auto *gepedA11 = builder.CreateGEP(
+    f64, ptrA, llvm::SmallVector<llvm::Value *, 1>{offset11}, "gep_A11");
+  auto *storeA11 = builder.CreateAlignedStore(
+    builder.CreateFAdd(loadA10, loadA01, "A10 + A01"), gepedA11,
     llvm::MaybeAlign(8), false);
 
   constexpr size_t i = 0, j = 1;
   // we have three array refs
   // A[i+1, j+1] // (i+1)*stride(A,1) + (j+1)*stride(A,2);
-  ArrayReference Asrc(scevA, loop, 2);
+  ArrayReference srcA(scevA, loop, 2);
   {
-    MutPtrMatrix<int64_t> IndMat = Asrc.indexMatrix();
+    MutPtrMatrix<int64_t> indMat = srcA.indexMatrix();
     //     l  d
-    IndMat(i, 0) = 1;
-    IndMat(j, 1) = 1;
-    MutPtrMatrix<int64_t> OffMat = Asrc.offsetMatrix();
-    OffMat(i, 0) = 1;
-    OffMat(j, 0) = 1;
-    Asrc.sizes[0] = M;
-    Asrc.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
+    indMat(i, 0) = 1;
+    indMat(j, 1) = 1;
+    MutPtrMatrix<int64_t> offMat = srcA.offsetMatrix();
+    offMat(i, 0) = 1;
+    offMat(j, 0) = 1;
+    srcA.sizes[0] = M;
+    srcA.sizes[1] = SE.getConstant(i64, 8, /*isSigned=*/false);
   }
 
   // A[i+1, j]
-  ArrayReference Atgt01(scevA, loop, 2);
+  ArrayReference tgtA01(scevA, loop, 2);
   {
-    MutPtrMatrix<int64_t> IndMat = Atgt01.indexMatrix();
+    MutPtrMatrix<int64_t> indMat = tgtA01.indexMatrix();
     //     l  d
-    IndMat(i, 0) = 1;
-    IndMat(j, 1) = 1;
-    Atgt01.offsetMatrix()(i, 0) = 1;
-    Atgt01.sizes[0] = M;
-    Atgt01.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
+    indMat(i, 0) = 1;
+    indMat(j, 1) = 1;
+    tgtA01.offsetMatrix()(i, 0) = 1;
+    tgtA01.sizes[0] = M;
+    tgtA01.sizes[1] = SE.getConstant(i64, 8, /*isSigned=*/false);
   }
 
   // A[i, j+1]
-  ArrayReference Atgt10(scevA, loop, 2);
+  ArrayReference tgtA10(scevA, loop, 2);
   {
-    MutPtrMatrix<int64_t> IndMat = Atgt10.indexMatrix();
+    MutPtrMatrix<int64_t> indMat = tgtA10.indexMatrix();
     //     l  d
-    IndMat(i, 0) = 1; // i
-    IndMat(j, 1) = 1; // j
-    Atgt10.offsetMatrix()(j, 0) = 1;
-    Atgt10.sizes[0] = M;
-    Atgt10.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
+    indMat(i, 0) = 1; // i
+    indMat(j, 1) = 1; // j
+    tgtA10.offsetMatrix()(j, 0) = 1;
+    tgtA10.sizes[0] = M;
+    tgtA10.sizes[1] = SE.getConstant(i64, 8, /*isSigned=*/false);
   }
 
   //
@@ -124,8 +126,8 @@ TEST(DependenceTest, BasicAssertions) {
   Vector<unsigned, 4> schStore(3, 0);
   schStore[2] = 2;
   BumpAlloc<> alloc;
-  MemoryAccess *msrc{createMemAccess(alloc, Asrc, Astore11, schStore)};
-  MemoryAccess *mtgt01{createMemAccess(alloc, Atgt01, Aload01, schLoad0)};
+  MemoryAccess *msrc{createMemAccess(alloc, srcA, storeA11, schStore)};
+  MemoryAccess *mtgt01{createMemAccess(alloc, tgtA01, loadA01, schLoad0)};
   DepPoly *dep0{DepPoly::dependence(alloc, *msrc, *mtgt01)};
   EXPECT_FALSE(dep0->isEmpty());
   dep0->pruneBounds();
@@ -138,7 +140,7 @@ TEST(DependenceTest, BasicAssertions) {
 
   Vector<unsigned, 4> schLoad1(3, 0);
   schLoad1[2] = 1;
-  MemoryAccess *mtgt10{createMemAccess(alloc, Atgt10, Aload10, schLoad1)};
+  MemoryAccess *mtgt10{createMemAccess(alloc, tgtA10, loadA10, schLoad1)};
   DepPoly *dep1{DepPoly::dependence(alloc, *msrc, *mtgt10)};
   EXPECT_FALSE(dep1->isEmpty());
   dep1->pruneBounds();
@@ -153,18 +155,18 @@ TEST(DependenceTest, BasicAssertions) {
   EXPECT_TRUE(e01.front().isForward());
   llvm::errs() << e01.front() << "\n";
   EXPECT_FALSE(allZero(e01.front().getSatConstraints()(last, _)));
-  auto e01_rev = Dependence::check(alloc, *mtgt01, *msrc);
-  EXPECT_EQ(e01_rev.size(), 1);
-  EXPECT_FALSE(e01_rev.front().isForward());
+  auto e01rev = Dependence::check(alloc, *mtgt01, *msrc);
+  EXPECT_EQ(e01rev.size(), 1);
+  EXPECT_FALSE(e01rev.front().isForward());
 
   auto e10 = Dependence::check(alloc, *msrc, *mtgt10);
   EXPECT_EQ(e10.size(), 1);
   EXPECT_TRUE(e10.front().isForward());
   llvm::errs() << e10.front() << "\n";
   EXPECT_FALSE(allZero(e10.front().getSatConstraints()(last, _)));
-  auto e10_rev = Dependence::check(alloc, *mtgt10, *msrc);
-  EXPECT_EQ(e10_rev.size(), 1);
-  EXPECT_FALSE(e10_rev.front().isForward());
+  auto e10rev = Dependence::check(alloc, *mtgt10, *msrc);
+  EXPECT_EQ(e10rev.size(), 1);
+  EXPECT_FALSE(e10rev.front().isForward());
 }
 
 // NOLINTNEXTLINE(modernize-use-trailing-return-type)
@@ -174,22 +176,22 @@ TEST(SymmetricIndependentTest, BasicAssertions) {
   //   for(j = 0:i-1)
   //     A(j,i) = A(i,j)
   //
-  IntMatrix Aloop{"[-1 1 0 -1; "
+  IntMatrix loopA{"[-1 1 0 -1; "
                   "0 0 0 1; "
                   "-1 0 -1 1; "
                   "0 0 1 0]"_mat};
 
   TestLoopFunction tlf;
-  tlf.addLoop(std::move(Aloop), 2);
+  tlf.addLoop(std::move(loopA), 2);
   auto *loop = tlf.getLoopNest(0);
   // loop.pruneBounds();
 
   llvm::ScalarEvolution &SE{tlf.getSE()};
-  llvm::Type *Int64 = tlf.getInt64Ty();
+  llvm::Type *i64 = tlf.getInt64Ty();
   auto *ptrA = tlf.createArray();
   const llvm::SCEVUnknown *scevA = tlf.getSCEVUnknown(ptrA);
   auto &builder = tlf.getBuilder();
-  llvm::Type *Float64 = builder.getDoubleTy();
+  llvm::Type *f64 = builder.getDoubleTy();
 
   const llvm::SCEV *M = loop->getSyms()[0];
   llvm::Value *zero = builder.getInt64(0);
@@ -199,46 +201,46 @@ TEST(SymmetricIndependentTest, BasicAssertions) {
   llvm::Value *Mv = llvm::dyn_cast<llvm::SCEVUnknown>(M)->getValue();
 
   llvm::Value *offsetji = builder.CreateAdd(jv, builder.CreateMul(iv, Mv));
-  auto *Agepedji = builder.CreateGEP(
-    Float64, ptrA, llvm::SmallVector<llvm::Value *, 1>{offsetji}, "gep_Aji");
-  auto *Aloadji = builder.CreateAlignedLoad(Float64, Agepedji,
-                                            llvm::MaybeAlign(8), "load_Aji");
+  auto *gepedAji = builder.CreateGEP(
+    f64, ptrA, llvm::SmallVector<llvm::Value *, 1>{offsetji}, "gep_Aji");
+  auto *loadAji =
+    builder.CreateAlignedLoad(f64, gepedAji, llvm::MaybeAlign(8), "load_Aji");
   llvm::Value *offsetij = builder.CreateAdd(iv, builder.CreateMul(jv, Mv));
-  auto *Agepedij = builder.CreateGEP(
-    Float64, ptrA, llvm::SmallVector<llvm::Value *, 1>{offsetij}, "gep_Aij");
-  auto *Astoreij =
-    builder.CreateAlignedStore(Aloadji, Agepedij, llvm::MaybeAlign(8), false);
+  auto *gepedAij = builder.CreateGEP(
+    f64, ptrA, llvm::SmallVector<llvm::Value *, 1>{offsetij}, "gep_Aij");
+  auto *storeAij =
+    builder.CreateAlignedStore(loadAji, gepedAij, llvm::MaybeAlign(8), false);
 
   constexpr size_t i = 0, j = 1;
   // we have three array refs
   // A[i, j]
-  ArrayReference Asrc(scevA, loop, 2);
+  ArrayReference srcA(scevA, loop, 2);
   {
-    MutPtrMatrix<int64_t> IndMat = Asrc.indexMatrix();
+    MutPtrMatrix<int64_t> indMat = srcA.indexMatrix();
     //     l  d
-    IndMat(i, 0) = 1;
-    IndMat(j, 1) = 1;
-    Asrc.sizes[0] = loop->getSyms()[0];
-    Asrc.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
+    indMat(i, 0) = 1;
+    indMat(j, 1) = 1;
+    srcA.sizes[0] = loop->getSyms()[0];
+    srcA.sizes[1] = SE.getConstant(i64, 8, /*isSigned=*/false);
   }
 
   // A[j, i]
-  ArrayReference Atgt(scevA, loop, 2);
+  ArrayReference tgtA(scevA, loop, 2);
   {
-    MutPtrMatrix<int64_t> IndMat = Atgt.indexMatrix();
+    MutPtrMatrix<int64_t> indMat = tgtA.indexMatrix();
     //     l  d
-    IndMat(j, 0) = 1;
-    IndMat(i, 1) = 1;
-    Atgt.sizes[0] = loop->getSyms()[0];
-    Atgt.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
+    indMat(j, 0) = 1;
+    indMat(i, 1) = 1;
+    tgtA.sizes[0] = loop->getSyms()[0];
+    tgtA.sizes[1] = SE.getConstant(i64, 8, /*isSigned=*/false);
   }
 
   Vector<unsigned, 4> schLoad(3, 0);
   Vector<unsigned, 4> schStore(3, 0);
   schStore[2] = 1;
   BumpAlloc<> alloc;
-  MemoryAccess *msrc{createMemAccess(alloc, Asrc, Astoreij, schStore)};
-  MemoryAccess *mtgt{createMemAccess(alloc, Atgt, Aloadji, schLoad)};
+  MemoryAccess *msrc{createMemAccess(alloc, srcA, storeAij, schStore)};
+  MemoryAccess *mtgt{createMemAccess(alloc, tgtA, loadAji, schLoad)};
   DepPoly *dep{DepPoly::dependence(alloc, *msrc, *mtgt)};
   llvm::errs() << "Dep = \n" << dep << "\n";
   EXPECT_TRUE(dep == nullptr);
@@ -261,19 +263,19 @@ TEST(RankDeficientLoad, BasicAssertions) {
   //  -1   1           <=    0
   //   0  -1 ]               0     ]
   //
-  IntMatrix Aloop{"[-1 1 -1 0; "   // i <= I-1
+  IntMatrix loopA{"[-1 1 -1 0; "   // i <= I-1
                   "0 0 1 0; "      // i >= 0
                   "0 0 1 -1; "     // j <= i
                   "0 0 0 1]"_mat}; // j >= 0
   TestLoopFunction tlf;
-  tlf.addLoop(std::move(Aloop), 2);
+  tlf.addLoop(std::move(loopA), 2);
   auto *loop = tlf.getLoopNest(0);
   llvm::ScalarEvolution &SE{tlf.getSE()};
-  llvm::Type *Int64 = tlf.getInt64Ty();
+  llvm::Type *i64 = tlf.getInt64Ty();
   auto *ptrA = tlf.createArray();
   const llvm::SCEVUnknown *scevA = tlf.getSCEVUnknown(ptrA);
   auto &builder = tlf.getBuilder();
-  llvm::Type *Float64 = builder.getDoubleTy();
+  llvm::Type *f64 = builder.getDoubleTy();
 
   const llvm::SCEV *M = loop->getSyms()[0];
   llvm::Value *zero = builder.getInt64(0);
@@ -283,44 +285,44 @@ TEST(RankDeficientLoad, BasicAssertions) {
   llvm::Value *Mv = llvm::dyn_cast<llvm::SCEVUnknown>(M)->getValue();
 
   llvm::Value *offsetii = builder.CreateAdd(iv, builder.CreateMul(iv, Mv));
-  auto *Agepedii = builder.CreateGEP(
-    Float64, ptrA, llvm::SmallVector<llvm::Value *, 1>{offsetii}, "gep_Aji");
-  auto *Aloadii = builder.CreateAlignedLoad(Float64, Agepedii,
-                                            llvm::MaybeAlign(8), "load_Aii");
+  auto *gepedAii = builder.CreateGEP(
+    f64, ptrA, llvm::SmallVector<llvm::Value *, 1>{offsetii}, "gep_Aji");
+  auto *loadAii =
+    builder.CreateAlignedLoad(f64, gepedAii, llvm::MaybeAlign(8), "load_Aii");
 
   llvm::Value *offsetij = builder.CreateAdd(iv, builder.CreateMul(jv, Mv));
-  auto *Agepedij = builder.CreateGEP(
-    Float64, ptrA, llvm::SmallVector<llvm::Value *, 1>{offsetij}, "gep_Aij");
-  auto *Astoreij =
-    builder.CreateAlignedStore(Aloadii, Agepedij, llvm::MaybeAlign(8), false);
+  auto *gepedAij = builder.CreateGEP(
+    f64, ptrA, llvm::SmallVector<llvm::Value *, 1>{offsetij}, "gep_Aij");
+  auto *storeAij =
+    builder.CreateAlignedStore(loadAii, gepedAij, llvm::MaybeAlign(8), false);
   constexpr size_t i = 0, j = 1;
   // we have three array refs
   // A[i, j] // i*stride(A,1) + j*stride(A,2);
-  ArrayReference Asrc(scevA, loop, 2);
+  ArrayReference srcA(scevA, loop, 2);
   {
-    MutPtrMatrix<int64_t> IndMat = Asrc.indexMatrix();
-    IndMat(i, 0) = 1; // i
-    IndMat(j, 1) = 1; // j
-    Asrc.sizes[0] = loop->getSyms()[0];
-    Asrc.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
+    MutPtrMatrix<int64_t> indMat = srcA.indexMatrix();
+    indMat(i, 0) = 1; // i
+    indMat(j, 1) = 1; // j
+    srcA.sizes[0] = loop->getSyms()[0];
+    srcA.sizes[1] = SE.getConstant(i64, 8, /*isSigned=*/false);
   }
 
   // A[i, i]
-  ArrayReference Atgt(scevA, loop, 2);
+  ArrayReference tgtA(scevA, loop, 2);
   {
-    MutPtrMatrix<int64_t> IndMat = Atgt.indexMatrix();
-    IndMat(i, 0) = 1; // i
-    IndMat(i, 1) = 1; // i
-    Atgt.sizes[0] = loop->getSyms()[0];
-    Atgt.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
+    MutPtrMatrix<int64_t> indMat = tgtA.indexMatrix();
+    indMat(i, 0) = 1; // i
+    indMat(i, 1) = 1; // i
+    tgtA.sizes[0] = loop->getSyms()[0];
+    tgtA.sizes[1] = SE.getConstant(i64, 8, /*isSigned=*/false);
   }
 
   Vector<unsigned, 4> schLoad(2 + 1, 0);
   Vector<unsigned, 4> schStore(2 + 1, 0);
   schStore[2] = 1;
   BumpAlloc<> alloc;
-  MemoryAccess *msrc{createMemAccess(alloc, Asrc, Astoreij, schStore)};
-  MemoryAccess *mtgt{createMemAccess(alloc, Atgt, Aloadii, schLoad)};
+  MemoryAccess *msrc{createMemAccess(alloc, srcA, storeAij, schStore)};
+  MemoryAccess *mtgt{createMemAccess(alloc, tgtA, loadAii, schLoad)};
 
   auto e = Dependence::check(alloc, *msrc, *mtgt);
   EXPECT_EQ(e.size(), 1);
@@ -346,7 +348,7 @@ TEST(TimeHidingInRankDeficiency, BasicAssertions) {
   //   0   0  1 ]               K - 1
   //   0   0 -1 ]               0     ]
   //
-  IntMatrix Aloop{"[-1 1 0 0 0 0 -1; "
+  IntMatrix loopA{"[-1 1 0 0 0 0 -1; "
                   "0 0 0 0 0 0 1; "
                   "-1 0 1 0 0 -1 0; "
                   "0 0 0 0 0 1 0; "
@@ -354,10 +356,10 @@ TEST(TimeHidingInRankDeficiency, BasicAssertions) {
                   "0 0 0 0 1 0 0]"_mat};
   constexpr size_t i = 0, j = 1, k = 2;
   TestLoopFunction tlf;
-  tlf.addLoop(std::move(Aloop), 3);
+  tlf.addLoop(std::move(loopA), 3);
   auto *loop = tlf.getLoopNest(0);
   llvm::ScalarEvolution &SE{tlf.getSE()};
-  llvm::Type *Int64 = tlf.getInt64Ty();
+  llvm::Type *i64 = tlf.getInt64Ty();
 
   const llvm::SCEV *II = loop->getSyms()[0];
   const llvm::SCEV *J = loop->getSyms()[1];
@@ -366,7 +368,7 @@ TEST(TimeHidingInRankDeficiency, BasicAssertions) {
   auto *ptrA = tlf.createArray();
   const llvm::SCEVUnknown *scevA = tlf.getSCEVUnknown(ptrA);
   auto &builder = tlf.getBuilder();
-  llvm::Type *Float64 = builder.getDoubleTy();
+  llvm::Type *f64 = builder.getDoubleTy();
 
   llvm::Value *zero = builder.getInt64(0);
   llvm::Value *one = builder.getInt64(1);
@@ -383,37 +385,37 @@ TEST(TimeHidingInRankDeficiency, BasicAssertions) {
       M, builder.CreateAdd(builder.CreateAdd(jv, kv),
                            builder.CreateMul(N, builder.CreateAdd(iv, jv)))));
 
-  auto *Ageped = builder.CreateGEP(
-    Float64, ptrA, llvm::SmallVector<llvm::Value *, 1>{offset}, "gep_A");
+  auto *gepedA = builder.CreateGEP(
+    f64, ptrA, llvm::SmallVector<llvm::Value *, 1>{offset}, "gep_A");
 
-  auto *Aload =
-    builder.CreateAlignedLoad(Float64, Ageped, llvm::MaybeAlign(8), "load_A");
+  auto *loadA =
+    builder.CreateAlignedLoad(f64, gepedA, llvm::MaybeAlign(8), "load_A");
 
-  auto *Astore =
-    builder.CreateAlignedStore(Aload, Ageped, llvm::MaybeAlign(8), false);
+  auto *storeA =
+    builder.CreateAlignedStore(loadA, gepedA, llvm::MaybeAlign(8), false);
 
   // we have three array refs
   // A[i+j, j+k, i - k]
-  ArrayReference Aref(scevA, loop, 3);
+  ArrayReference refA(scevA, loop, 3);
   {
-    MutPtrMatrix<int64_t> IndMat = Aref.indexMatrix();
-    IndMat(i, 0) = 1;  // i
-    IndMat(j, 0) = 1;  // + j
-    IndMat(j, 1) = 1;  // j
-    IndMat(k, 1) = 1;  // + k
-    IndMat(i, 2) = 1;  // i
-    IndMat(k, 2) = -1; // -k
-    Aref.sizes[0] = SE.getAddExpr(J, K);
-    Aref.sizes[1] = SE.getAddExpr(II, K);
-    Aref.sizes[2] = SE.getConstant(Int64, 8, /*isSigned=*/false);
+    MutPtrMatrix<int64_t> indMat = refA.indexMatrix();
+    indMat(i, 0) = 1;  // i
+    indMat(j, 0) = 1;  // + j
+    indMat(j, 1) = 1;  // j
+    indMat(k, 1) = 1;  // + k
+    indMat(i, 2) = 1;  // i
+    indMat(k, 2) = -1; // -k
+    refA.sizes[0] = SE.getAddExpr(J, K);
+    refA.sizes[1] = SE.getAddExpr(II, K);
+    refA.sizes[2] = SE.getConstant(i64, 8, /*isSigned=*/false);
   }
 
   Vector<unsigned, 4> schLoad(3 + 1, 0);
   Vector<unsigned, 4> schStore(3 + 1, 0);
   schStore[3] = 1;
   BumpAlloc<> alloc;
-  MemoryAccess *msrc{createMemAccess(alloc, Aref, Astore, schStore)};
-  MemoryAccess *mtgt{createMemAccess(alloc, Aref, Aload, schLoad)};
+  MemoryAccess *msrc{createMemAccess(alloc, refA, storeA, schStore)};
+  MemoryAccess *mtgt{createMemAccess(alloc, refA, loadA, schLoad)};
 
   auto e = Dependence::check(alloc, *msrc, *mtgt);
   EXPECT_EQ(e.size(), 2);
@@ -424,20 +426,20 @@ TEST(TimeHidingInRankDeficiency, BasicAssertions) {
 
 // NOLINTNEXTLINE(modernize-use-trailing-return-type)
 TEST(TriangularExampleTest, BasicAssertions) {
-  IntMatrix AMN{"[-1 1 0 -1 0; "
-                "0 0 0 1 0; "
-                "-1 0 1 0 -1; "
-                "0 0 0 0 1]"_mat};
-  IntMatrix AMNK{"[-1 1 0 -1 0 0; "
-                 "0 0 0 1 0 0; "
-                 "-1 0 1 0 -1 0; "
-                 "0 0 0 0 1 0; "
-                 "-1 0 1 0 0 -1; "
-                 "-1 0 0 0 -1 1]"_mat};
+  IntMatrix matAmn{"[-1 1 0 -1 0; "
+                   "0 0 0 1 0; "
+                   "-1 0 1 0 -1; "
+                   "0 0 0 0 1]"_mat};
+  IntMatrix matAmnk{"[-1 1 0 -1 0 0; "
+                    "0 0 0 1 0 0; "
+                    "-1 0 1 0 -1 0; "
+                    "0 0 0 0 1 0; "
+                    "-1 0 1 0 0 -1; "
+                    "-1 0 0 0 -1 1]"_mat};
 
   TestLoopFunction tlf;
-  tlf.addLoop(std::move(AMN), 2);
-  tlf.addLoop(std::move(AMNK), 3);
+  tlf.addLoop(std::move(matAmn), 2);
+  tlf.addLoop(std::move(matAmnk), 3);
   AffineLoopNest<true> *loopMN = tlf.getLoopNest(0);
   EXPECT_FALSE(loopMN->isEmpty());
   AffineLoopNest<true> *loopMNK = tlf.getLoopNest(1);
@@ -618,66 +620,66 @@ TEST(TriangularExampleTest, BasicAssertions) {
   //   foo(arg...) // [ 0, _, 2 ]
   // }
   // NOTE: shared ptrs get set to NULL when `lblock.memory` reallocs...
-  Vector<unsigned, 4> sch2_0_0(2 + 1, 0);
-  Vector<unsigned, 4> sch2_0_1{sch2_0_0};
+  Vector<unsigned, 4> sch2t0t0(2 + 1, 0);
+  Vector<unsigned, 4> sch2t0t1{sch2t0t0};
   BumpAlloc<> alloc;
   // A(n,m) = -> B(n,m) <-
-  MemoryAccess *mSch2_0_0(createMemAccess(alloc, indBmn, loadB, sch2_0_0));
-  lblock.addMemory(mSch2_0_0);
-  sch2_0_1[2] = 1;
-  Vector<unsigned, 4> sch2_1_0{sch2_0_1};
+  MemoryAccess *mSch2t0t0(createMemAccess(alloc, indBmn, loadB, sch2t0t0));
+  lblock.addMemory(mSch2t0t0);
+  sch2t0t1[2] = 1;
+  Vector<unsigned, 4> sch2t1t0{sch2t0t1};
   // -> A(n,m) <- = B(n,m)
-  MemoryAccess *mSch2_0_1(createMemAccess(alloc, indAmn2, storeA0, sch2_0_1));
-  assert(mSch2_0_1->getInstruction() == storeA0);
-  assert(mSch2_0_1->getStore() == storeA0);
-  lblock.addMemory(mSch2_0_1);
-  sch2_1_0[1] = 1;
-  sch2_1_0[2] = 0;
-  Vector<unsigned, 4> sch2_1_1{sch2_1_0};
+  MemoryAccess *mSch2t0t1(createMemAccess(alloc, indAmn2, storeA0, sch2t0t1));
+  assert(mSch2t0t1->getInstruction() == storeA0);
+  assert(mSch2t0t1->getStore() == storeA0);
+  lblock.addMemory(mSch2t0t1);
+  sch2t1t0[1] = 1;
+  sch2t1t0[2] = 0;
+  Vector<unsigned, 4> sch2t1t1{sch2t1t0};
   // A(n,m) = -> A(n,m) <- / U(n,n); // sch2
-  MemoryAccess *mSch2_1_0(createMemAccess(alloc, indAmn2, loadA0, sch2_1_0));
-  assert(mSch2_1_0->getInstruction() == loadA0);
-  assert(mSch2_1_0->getLoad() == loadA0);
-  lblock.addMemory(mSch2_1_0);
-  sch2_1_1[2] = 1;
-  Vector<unsigned, 4> sch2_1_2{sch2_1_1};
+  MemoryAccess *mSch2t1t0(createMemAccess(alloc, indAmn2, loadA0, sch2t1t0));
+  assert(mSch2t1t0->getInstruction() == loadA0);
+  assert(mSch2t1t0->getLoad() == loadA0);
+  lblock.addMemory(mSch2t1t0);
+  sch2t1t1[2] = 1;
+  Vector<unsigned, 4> sch2t1t2{sch2t1t1};
   // A(n,m) = A(n,m) / -> U(n,n) <-;
-  MemoryAccess *mSch2_1_1(createMemAccess(alloc, indUnn, loadUnn, sch2_1_1));
-  lblock.addMemory(mSch2_1_1);
-  sch2_1_2[2] = 2;
+  MemoryAccess *mSch2t1t1(createMemAccess(alloc, indUnn, loadUnn, sch2t1t1));
+  lblock.addMemory(mSch2t1t1);
+  sch2t1t2[2] = 2;
   // -> A(n,m) <- = A(n,m) / U(n,n); // sch2
-  MemoryAccess *mSch2_1_2(
-    createMemAccess(alloc, indAmn2, storeAFDiv, sch2_1_2));
-  lblock.addMemory(mSch2_1_2);
+  MemoryAccess *mSch2t1t2(
+    createMemAccess(alloc, indAmn2, storeAFDiv, sch2t1t2));
+  lblock.addMemory(mSch2t1t2);
 
-  Vector<unsigned, 4> sch3_0(3 + 1, 0);
-  sch3_0[1] = 1;
-  sch3_0[2] = 3;
-  Vector<unsigned, 4> sch3_1{sch3_0};
+  Vector<unsigned, 4> sch3t0(3 + 1, 0);
+  sch3t0[1] = 1;
+  sch3t0[2] = 3;
+  Vector<unsigned, 4> sch3t1{sch3t0};
   // A(k,m) = A(k,m) - A(n,m)* -> U(k,n) <-;
-  MemoryAccess *mSch3_0(createMemAccess(alloc, indUnk, loadUnk, sch3_0));
-  lblock.addMemory(mSch3_0);
-  sch3_1[3] = 1;
-  Vector<unsigned, 4> sch3_2{sch3_1};
+  MemoryAccess *mSch3t0(createMemAccess(alloc, indUnk, loadUnk, sch3t0));
+  lblock.addMemory(mSch3t0);
+  sch3t1[3] = 1;
+  Vector<unsigned, 4> sch3t2{sch3t1};
   // A(k,m) = A(k,m) - -> A(n,m) <- *U(k,n);
-  MemoryAccess *mSch3_1(createMemAccess(alloc, indAmn3, loadA1mn, sch3_1));
-  lblock.addMemory(mSch3_1);
-  sch3_2[3] = 2;
-  Vector<unsigned, 8> sch3_3{sch3_2};
+  MemoryAccess *mSch3t1(createMemAccess(alloc, indAmn3, loadA1mn, sch3t1));
+  lblock.addMemory(mSch3t1);
+  sch3t2[3] = 2;
+  Vector<unsigned, 8> sch3t3{sch3t2};
   // A(k,m) = -> A(k,m) <- - A(n,m)*U(k,n);
-  MemoryAccess *mSch3_2(createMemAccess(alloc, indAmk, loadA1mk, sch3_2));
-  lblock.addMemory(mSch3_2);
-  sch3_3[3] = 3;
+  MemoryAccess *mSch3t2(createMemAccess(alloc, indAmk, loadA1mk, sch3t2));
+  lblock.addMemory(mSch3t2);
+  sch3t3[3] = 3;
   // -> A(k,m) <- = A(k,m) - A(n,m)*U(k,n);
-  MemoryAccess *mSch3_3(createMemAccess(alloc, indAmk, storeA2mk, sch3_3));
-  lblock.addMemory(mSch3_3);
+  MemoryAccess *mSch3t3(createMemAccess(alloc, indAmk, storeA2mk, sch3t3));
+  lblock.addMemory(mSch3t3);
 
   // for (m = 0; m < M; ++m){createMemAccess(
   //   for (n = 0; n < N; ++n){
   //     A(n,m) = B(n,m); // sch2_0_{0-1)}
   //   }
   //   for (n = 0; n < N; ++n){
-  //     A(n,m) = A(n,m) / U(n,n); // sch2_2_{0-2}
+  //     A(n,m) = A(n,m) / U(n,n); // sch2t2_{0-2}
   //     for (k = n+1; k < N; ++k){
   //       A(k,m) = A(k,m) - A(n,m)*U(k,n); // sch3_{0-3}
   //     }
@@ -686,7 +688,7 @@ TEST(TriangularExampleTest, BasicAssertions) {
   // First, comparisons of store to `A(n,m) = B(n,m)` versus...
   // // load in `A(n,m) = A(n,m) / U(n,n)`
   {
-    auto dep = Dependence::check(alloc, *mSch2_0_1, *mSch2_1_0);
+    auto dep = Dependence::check(alloc, *mSch2t0t1, *mSch2t1t0);
     EXPECT_EQ(dep.size(), 1);
     EXPECT_TRUE(dep[0].isForward());
     llvm::errs() << "dep#" << 0 << ":\n" << dep[0] << "\n";
@@ -695,7 +697,7 @@ TEST(TriangularExampleTest, BasicAssertions) {
   //
   // store in `A(n,m) = A(n,m) / U(n,n)`
   {
-    auto dep = Dependence::check(alloc, *mSch2_0_1, *mSch2_1_2);
+    auto dep = Dependence::check(alloc, *mSch2t0t1, *mSch2t1t2);
     EXPECT_EQ(dep.size(), 1);
     EXPECT_TRUE(dep[0].isForward());
     llvm::errs() << "dep#" << 1 << ":\n" << dep[0] << "\n";
@@ -704,7 +706,7 @@ TEST(TriangularExampleTest, BasicAssertions) {
   // sch3_               3        0         1     2
   // load `A(n,m)` in 'A(k,m) = A(k,m) - A(n,m)*U(k,n)'
   {
-    auto dep = Dependence::check(alloc, *mSch2_0_1, *mSch3_1);
+    auto dep = Dependence::check(alloc, *mSch2t0t1, *mSch3t1);
     EXPECT_EQ(dep.size(), 1);
     EXPECT_TRUE(dep[0].isForward());
     llvm::errs() << "dep#" << 2 << ":\n" << dep[0] << "\n";
@@ -712,14 +714,14 @@ TEST(TriangularExampleTest, BasicAssertions) {
   // load `A(k,m)` in 'A(k,m) = A(k,m) - A(n,m)*U(k,n)'
   //
   {
-    auto dep = Dependence::check(alloc, *mSch2_0_1, *mSch3_2);
+    auto dep = Dependence::check(alloc, *mSch2t0t1, *mSch3t2);
     EXPECT_EQ(dep.size(), 1);
     EXPECT_TRUE(dep[0].isForward());
     llvm::errs() << "dep#" << 3 << ":\n" << dep[0] << "\n";
   }
   // store `A(k,m)` in 'A(k,m) = A(k,m) - A(n,m)*U(k,n)'
   {
-    auto dep = Dependence::check(alloc, *mSch2_0_1, *mSch3_3);
+    auto dep = Dependence::check(alloc, *mSch2t0t1, *mSch3t3);
     EXPECT_EQ(dep.size(), 1);
     EXPECT_TRUE(dep[0].isForward());
     llvm::errs() << "dep#" << 4 << ":\n" << dep[0] << "\n";
@@ -729,7 +731,7 @@ TEST(TriangularExampleTest, BasicAssertions) {
   // with...
   // store in `A(n,m) = A(n,m) / U(n,n)`
   {
-    auto dep = Dependence::check(alloc, *mSch2_1_0, *mSch2_1_2);
+    auto dep = Dependence::check(alloc, *mSch2t1t0, *mSch2t1t2);
     EXPECT_EQ(dep.size(), 1);
     EXPECT_TRUE(dep[0].isForward());
     llvm::errs() << "dep#" << 5 << ":\n" << dep[0] << "\n";
@@ -739,21 +741,21 @@ TEST(TriangularExampleTest, BasicAssertions) {
   // sch3_               3        0         1     2
   // load `A(n,m)` in 'A(k,m) = A(k,m) - A(n,m)*U(k,n)'
   {
-    auto dep = Dependence::check(alloc, *mSch2_1_0, *mSch3_1);
+    auto dep = Dependence::check(alloc, *mSch2t1t0, *mSch3t1);
     EXPECT_EQ(dep.size(), 1);
     EXPECT_TRUE(dep[0].isForward());
     llvm::errs() << "dep#" << 6 << ":\n" << dep[0] << "\n";
   }
   // load `A(k,m)` in 'A(k,m) = A(k,m) - A(n,m)*U(k,n)'
   {
-    auto dep = Dependence::check(alloc, *mSch2_1_0, *mSch3_2);
+    auto dep = Dependence::check(alloc, *mSch2t1t0, *mSch3t2);
     EXPECT_EQ(dep.size(), 1);
     EXPECT_FALSE(dep[0].isForward());
     llvm::errs() << "dep#" << 7 << ":\n" << dep[0] << "\n";
   }
   // store `A(k,m)` in 'A(k,m) = A(k,m) - A(n,m)*U(k,n)'
   {
-    auto dep = Dependence::check(alloc, *mSch2_1_0, *mSch3_3);
+    auto dep = Dependence::check(alloc, *mSch2t1t0, *mSch3t3);
     EXPECT_EQ(dep.size(), 1);
     EXPECT_FALSE(dep[0].isForward());
     llvm::errs() << "dep#" << 8 << ":\n" << dep[0] << "\n";
@@ -764,21 +766,21 @@ TEST(TriangularExampleTest, BasicAssertions) {
   // sch3_               3        0         1     2
   // load `A(n,m)` in 'A(k,m) = A(k,m) - A(n,m)*U(k,n)'
   {
-    auto dep = Dependence::check(alloc, *mSch2_1_2, *mSch3_1);
+    auto dep = Dependence::check(alloc, *mSch2t1t2, *mSch3t1);
     EXPECT_EQ(dep.size(), 1);
     EXPECT_TRUE(dep[0].isForward());
     llvm::errs() << "dep#" << 9 << ":\n" << dep[0] << "\n";
   }
   // load `A(k,m)` in 'A(k,m) = A(k,m) - A(n,m)*U(k,n)'
   {
-    auto dep = Dependence::check(alloc, *mSch2_1_2, *mSch3_2);
+    auto dep = Dependence::check(alloc, *mSch2t1t2, *mSch3t2);
     EXPECT_EQ(dep.size(), 1);
     EXPECT_FALSE(dep[0].isForward());
     llvm::errs() << "dep#" << 10 << ":\n" << dep[0] << "\n";
   }
   // store `A(k,m)` in 'A(k,m) = A(k,m) - A(n,m)*U(k,n)'
   {
-    auto dep = Dependence::check(alloc, *mSch2_1_2, *mSch3_3);
+    auto dep = Dependence::check(alloc, *mSch2t1t2, *mSch3t3);
     EXPECT_EQ(dep.size(), 1);
     EXPECT_FALSE(dep[0].isForward());
     llvm::errs() << "dep#" << 11 << ":\n" << dep[0] << "\n";
@@ -790,14 +792,14 @@ TEST(TriangularExampleTest, BasicAssertions) {
   // with...
   // load `A(k,m)` in 'A(k,m) = A(k,m) - A(n,m)*U(k,n)'
   {
-    auto dep = Dependence::check(alloc, *mSch3_1, *mSch3_2);
+    auto dep = Dependence::check(alloc, *mSch3t1, *mSch3t2);
     EXPECT_EQ(dep.size(), 1);
     EXPECT_FALSE(dep[0].isForward());
     llvm::errs() << "dep#" << 12 << ":\n" << dep[0] << "\n";
   }
   // store `A(k,m)` in 'A(k,m) = A(k,m) - A(n,m)*U(k,n)'
   {
-    auto dep = Dependence::check(alloc, *mSch3_1, *mSch3_3);
+    auto dep = Dependence::check(alloc, *mSch3t1, *mSch3t3);
     EXPECT_EQ(dep.size(), 1);
     EXPECT_FALSE(dep[0].isForward());
     llvm::errs() << "dep#" << 13 << ":\n" << dep[0] << "\n";
@@ -809,7 +811,7 @@ TEST(TriangularExampleTest, BasicAssertions) {
   // with...
   // store `A(k,m)` in 'A(k,m) = A(k,m) - A(n,m)*U(k,n)'
   {
-    auto fwdrev = Dependence::check(alloc, *mSch3_2, *mSch3_3);
+    auto fwdrev = Dependence::check(alloc, *mSch3t2, *mSch3t3);
     EXPECT_EQ(fwdrev.size(), 2);
     auto &forward = fwdrev[0];
     auto &reverse = fwdrev[1];
@@ -832,25 +834,25 @@ TEST(TriangularExampleTest, BasicAssertions) {
       EXPECT_FALSE((nonZeroInd != -1) & notZero);
       if (notZero) nonZeroInd = i;
     }
-    // v_1 is `n` for the load
+    // vt1 is `n` for the load
     // v_4 is `n` for the store
-    // thus, we expect v_1 = v_4 + 1
+    // thus, we expect vt1 = v_4 + 1
     // that is, the load depends on the store from the previous iteration
-    // (e.g., store when `v_4 = 0` is loaded when `v_1 = 1`.
+    // (e.g., store when `v_4 = 0` is loaded when `vt1 = 1`.
     auto nonZero = revDepPoly->getCompTimeEqOffset(nonZeroInd);
     const size_t numSymbols = revDepPoly->getNumSymbols();
     EXPECT_EQ(numSymbols, 3);
     EXPECT_TRUE(nonZero.has_value());
     assert(nonZero.has_value());
     if (*nonZero == 1) {
-      // v_1 - v_4 == 1
-      // 1 - v_1 + v_4 == 0
+      // vt1 - v_4 == 1
+      // 1 - vt1 + v_4 == 0
       EXPECT_EQ(revDepPoly->getE()(nonZeroInd, numSymbols + 1), -1);
       EXPECT_EQ(revDepPoly->getE()(nonZeroInd, numSymbols + 4), 1);
 
     } else {
-      // -v_1 + v_4 == -1
-      // -1 + v_1 - v_4 == 0
+      // -vt1 + v_4 == -1
+      // -1 + vt1 - v_4 == 0
       EXPECT_EQ(*nonZero, -1);
       EXPECT_EQ(revDepPoly->getE()(nonZeroInd, numSymbols + 1), 1);
       EXPECT_EQ(revDepPoly->getE()(nonZeroInd, numSymbols + 4), -1);
@@ -870,20 +872,20 @@ TEST(TriangularExampleTest, BasicAssertions) {
   // phi3 loop order (outer <-> inner) is [m, k, n]
   // so the schedule preserves `m` as the outermost loop,
   // followed by `k`, and `n` as innermost. `n` is the reduction loop.
-  for (auto *mem : lblock.getMemoryAccesses()) {
-    for (size_t nodeIndex : mem->getNodeIndex()) {
-      AffineSchedule s = lblock.getNode(nodeIndex).getSchedule();
-      if (mem->getNumLoops() == 2) {
-        EXPECT_EQ(s.getPhi(), optPhi2);
-      } else {
-        assert(mem->getNumLoops() == 3);
-        EXPECT_EQ(s.getPhi(), optPhi3);
-      }
-      EXPECT_TRUE(allZero(s.getFusionOmega()));
-      EXPECT_TRUE(allZero(s.getOffsetOmega()));
-      //       //       llvm::errs() << "\n";
+  for (auto *mem : lblock.getMem()) {
+    size_t nodeIndex = mem->getNode();
+    AffineSchedule s = lblock.getNode(nodeIndex).getSchedule();
+    if (mem->getNumLoops() == 2) {
+      EXPECT_EQ(s.getPhi(), optPhi2);
+    } else {
+      assert(mem->getNumLoops() == 3);
+      EXPECT_EQ(s.getPhi(), optPhi3);
     }
+    EXPECT_TRUE(allZero(s.getFusionOmega()));
+    EXPECT_TRUE(allZero(s.getOffsetOmega()));
   }
+  auto *LTS = CostModeling::LoopTreeSchedule::init(alloc, lblock);
+  LTS->printDotFile(alloc, llvm::errs());
 }
 
 // NOLINTNEXTLINE(modernize-use-trailing-return-type)
@@ -923,20 +925,20 @@ TEST(MeanStDevTest0, BasicAssertions) {
   //   s(i) = sqrt(s(i) / (J-1));
   constexpr size_t jo = 0, ii = 1;
   TestLoopFunction tlf;
-  IntMatrix TwoLoopsMat{"[-1 1 0 -1 0; "
+  IntMatrix twoLoopsMat{"[-1 1 0 -1 0; "
                         "0 0 0 1 0; "
                         "-1 0 1 0 -1; "
                         "0 0 0 0 1]"_mat};
-  tlf.addLoop(std::move(TwoLoopsMat), 2);
-  IntMatrix OneLoopMat{"[-1 1 -1; "
+  tlf.addLoop(std::move(twoLoopsMat), 2);
+  IntMatrix oneLoopMat{"[-1 1 -1; "
                        "0 0 1]"_mat};
-  tlf.addLoop(std::move(OneLoopMat), 1);
+  tlf.addLoop(std::move(oneLoopMat), 1);
 
-  IntMatrix TwoLoopsMatJI{"[-1 0 1 -1 0; "
+  IntMatrix twoLoopsMatJI{"[-1 0 1 -1 0; "
                           "0 0 0 1 0; "
                           "-1 1 0 0 -1; "
                           "0 0 0 0 1]"_mat};
-  tlf.addLoop(std::move(TwoLoopsMatJI), 2);
+  tlf.addLoop(std::move(twoLoopsMatJI), 2);
   AffineLoopNest<true> *loopIJ = tlf.getLoopNest(0);
   AffineLoopNest<true> *loopI = tlf.getLoopNest(1);
   AffineLoopNest<true> *loopJI = tlf.getLoopNest(2);
@@ -962,29 +964,29 @@ TEST(MeanStDevTest0, BasicAssertions) {
   llvm::Value *iv = builder.CreateAdd(zero, one);
   llvm::Value *jv = builder.CreateAdd(zero, one);
 
-  llvm::Value *Aoffset = builder.CreateAdd(iv, builder.CreateMul(jv, Iv));
-  auto *Aload_m = tlf.CreateLoad(ptrA, Aoffset);
-  auto *Aload_s = tlf.CreateLoad(ptrA, Aoffset);
-  auto *Xload_0 = tlf.CreateLoad(ptrX, iv);
-  auto *Xload_1 = tlf.CreateLoad(ptrX, iv);
-  auto *Xload_2 = tlf.CreateLoad(ptrX, iv);
+  llvm::Value *offsetA = builder.CreateAdd(iv, builder.CreateMul(jv, Iv));
+  auto *loadAm = tlf.CreateLoad(ptrA, offsetA);
+  auto *loadAs = tlf.CreateLoad(ptrA, offsetA);
+  auto *loadX0 = tlf.CreateLoad(ptrX, iv);
+  auto *loadX1 = tlf.CreateLoad(ptrX, iv);
+  auto *loadX2 = tlf.CreateLoad(ptrX, iv);
 
   auto *zeroFP = tlf.getZeroF64();
-  auto *Xstore_0 = tlf.CreateStore(zeroFP, ptrX, iv);
-  auto *Xstore_1 = tlf.CreateStore(tlf.CreateFAdd(Xload_0, Aload_m), ptrX, iv);
-  auto *Xstore_2 = tlf.CreateStore(tlf.CreateFDiv(Xload_1, Jfp), ptrX, iv);
+  auto *storeX0 = tlf.CreateStore(zeroFP, ptrX, iv);
+  auto *storeX1 = tlf.CreateStore(tlf.CreateFAdd(loadX0, loadAm), ptrX, iv);
+  auto *storeX2 = tlf.CreateStore(tlf.CreateFDiv(loadX1, Jfp), ptrX, iv);
 
-  auto *Sload_0 = tlf.CreateLoad(ptrS, iv);
-  auto *Sload_1 = tlf.CreateLoad(ptrS, iv);
+  auto *loadS0 = tlf.CreateLoad(ptrS, iv);
+  auto *loadS1 = tlf.CreateLoad(ptrS, iv);
 
-  auto *Sstore_0 = tlf.CreateStore(zeroFP, ptrS, iv);
-  auto *diff = tlf.CreateFSub(Aload_s, Xload_2);
+  auto *storeS0 = tlf.CreateStore(zeroFP, ptrS, iv);
+  auto *diff = tlf.CreateFSub(loadAs, loadX2);
   // llvm::Intrinsic::fmuladd
-  auto *Sstore_1 = tlf.CreateStore(
-    tlf.CreateFAdd(Sload_0, tlf.CreateFMul(diff, diff)), ptrS, iv);
+  auto *storeS1 = tlf.CreateStore(
+    tlf.CreateFAdd(loadS0, tlf.CreateFMul(diff, diff)), ptrS, iv);
 
-  auto *Sstore_2 =
-    tlf.CreateStore(tlf.CreateSqrt(tlf.CreateFDiv(Sload_1, Jfp)), ptrS, iv);
+  auto *storeS2 =
+    tlf.CreateStore(tlf.CreateSqrt(tlf.CreateFDiv(loadS1, Jfp)), ptrS, iv);
 
   // Now, create corresponding schedules
   // IntMatrix ILoop{IJLoop(_(0,2),_(0,3))};
@@ -993,130 +995,130 @@ TEST(MeanStDevTest0, BasicAssertions) {
   // A: 0
   // x: 1
   // s: 2
-  llvm::Type *Int64 = builder.getInt64Ty();
+  llvm::Type *i64 = builder.getInt64Ty();
   llvm::ScalarEvolution &SE{tlf.getSE()};
-  ArrayReference AIndIOuter{scevA, loopIJ, 2};
+  ArrayReference indAiOuter{scevA, loopIJ, 2};
   {
-    MutPtrMatrix<int64_t> IndMat = AIndIOuter.indexMatrix();
+    MutPtrMatrix<int64_t> indMat = indAiOuter.indexMatrix();
     //     l  d
-    IndMat(i, 1) = 1; // i
-    IndMat(j, 0) = 1; // j
-    AIndIOuter.sizes[0] = II;
-    AIndIOuter.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
+    indMat(i, 1) = 1; // i
+    indMat(j, 0) = 1; // j
+    indAiOuter.sizes[0] = II;
+    indAiOuter.sizes[1] = SE.getConstant(i64, 8, /*isSigned=*/false);
   }
-  ArrayReference AIndJOuter{scevA, loopJI, 2};
+  ArrayReference indAjOuter{scevA, loopJI, 2};
   {
-    MutPtrMatrix<int64_t> IndMat = AIndJOuter.indexMatrix();
+    MutPtrMatrix<int64_t> indMat = indAjOuter.indexMatrix();
     //     l  d
-    IndMat(ii, 1) = 1; // i
-    IndMat(jo, 0) = 1; // j
-    AIndJOuter.sizes[0] = II;
-    AIndJOuter.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
+    indMat(ii, 1) = 1; // i
+    indMat(jo, 0) = 1; // j
+    indAjOuter.sizes[0] = II;
+    indAjOuter.sizes[1] = SE.getConstant(i64, 8, /*isSigned=*/false);
   }
 
   ArrayReference xInd1{scevX, loopI, 1};
   {
-    MutPtrMatrix<int64_t> IndMat = xInd1.indexMatrix();
+    MutPtrMatrix<int64_t> indMat = xInd1.indexMatrix();
     //     l  d
-    IndMat(i, 0) = 1; // i
-    xInd1.sizes[0] = SE.getConstant(Int64, 8, /*isSigned=*/false);
+    indMat(i, 0) = 1; // i
+    xInd1.sizes[0] = SE.getConstant(i64, 8, /*isSigned=*/false);
   }
   ArrayReference xInd2IOuter{scevX, loopIJ, 1};
   {
-    MutPtrMatrix<int64_t> IndMat = xInd2IOuter.indexMatrix();
+    MutPtrMatrix<int64_t> indMat = xInd2IOuter.indexMatrix();
     //     l  d
-    IndMat(i, 0) = 1; // i
-    xInd2IOuter.sizes[0] = SE.getConstant(Int64, 8, /*isSigned=*/false);
+    indMat(i, 0) = 1; // i
+    xInd2IOuter.sizes[0] = SE.getConstant(i64, 8, /*isSigned=*/false);
   }
   ArrayReference xInd2JOuter{scevX, loopJI, 1};
   {
-    MutPtrMatrix<int64_t> IndMat = xInd2JOuter.indexMatrix();
+    MutPtrMatrix<int64_t> indMat = xInd2JOuter.indexMatrix();
     //     l  d
-    IndMat(ii, 0) = 1; // i
-    xInd2JOuter.sizes[0] = SE.getConstant(Int64, 8, /*isSigned=*/false);
+    indMat(ii, 0) = 1; // i
+    xInd2JOuter.sizes[0] = SE.getConstant(i64, 8, /*isSigned=*/false);
   }
 
   ArrayReference sInd1{scevS, loopI, 1};
   {
-    MutPtrMatrix<int64_t> IndMat = sInd1.indexMatrix();
+    MutPtrMatrix<int64_t> indMat = sInd1.indexMatrix();
     //     l  d
-    IndMat(i, 0) = 1; // i
-    sInd1.sizes[0] = SE.getConstant(Int64, 8, /*isSigned=*/false);
+    indMat(i, 0) = 1; // i
+    sInd1.sizes[0] = SE.getConstant(i64, 8, /*isSigned=*/false);
   }
   ArrayReference sInd2IOuter{scevS, loopIJ, 1};
   {
-    MutPtrMatrix<int64_t> IndMat = sInd2IOuter.indexMatrix();
+    MutPtrMatrix<int64_t> indMat = sInd2IOuter.indexMatrix();
     //     l  d
-    IndMat(i, 0) = 1; // i
-    sInd2IOuter.sizes[0] = SE.getConstant(Int64, 8, /*isSigned=*/false);
+    indMat(i, 0) = 1; // i
+    sInd2IOuter.sizes[0] = SE.getConstant(i64, 8, /*isSigned=*/false);
   }
   ArrayReference sInd2JOuter{scevS, loopJI, 1};
   {
-    MutPtrMatrix<int64_t> IndMat = sInd2JOuter.indexMatrix();
+    MutPtrMatrix<int64_t> indMat = sInd2JOuter.indexMatrix();
     //     l  d
-    IndMat(ii, 0) = 1; // i
-    sInd2JOuter.sizes[0] = SE.getConstant(Int64, 8, /*isSigned=*/false);
+    indMat(ii, 0) = 1; // i
+    sInd2JOuter.sizes[0] = SE.getConstant(i64, 8, /*isSigned=*/false);
   }
 
-  Vector<unsigned, 4> sch0_0(1 + 1, 0);
-  Vector<unsigned, 4> sch0_1_0(2 + 1, 0);
-  sch0_1_0[2] = 1;
-  Vector<unsigned, 4> sch0_1_1(2 + 1, 0);
-  sch0_1_1[1] = 1;
-  sch0_1_1[2] = 1;
-  Vector<unsigned, 4> sch0_1_2(2 + 1, 0);
-  sch0_1_2[1] = 1;
-  sch0_1_2[2] = 2;
-  Vector<unsigned, 4> sch0_2(1 + 1, 0);
-  sch0_2[1] = 2;
-  Vector<unsigned, 4> sch0_3(1 + 1, 0);
-  sch0_3[1] = 3;
-  Vector<unsigned, 4> sch0_4(1 + 1, 0);
-  sch0_4[1] = 4;
-  Vector<unsigned, 4> sch0_5_0(2 + 1, 0);
-  sch0_5_0[1] = 5;
-  Vector<unsigned, 4> sch0_5_1(2 + 1, 0);
-  sch0_5_1[1] = 5;
-  sch0_5_1[2] = 1;
-  Vector<unsigned, 4> sch0_5_2(2 + 1, 0);
-  sch0_5_2[1] = 5;
-  sch0_5_2[2] = 2;
-  Vector<unsigned, 4> sch0_5_3(2 + 1, 0);
-  sch0_5_3[1] = 5;
-  sch0_5_3[2] = 3;
-  Vector<unsigned, 4> sch0_6(1 + 1, 0);
-  sch0_6[1] = 6;
-  Vector<unsigned, 4> sch0_7(1 + 1, 0);
-  sch0_7[1] = 7;
+  Vector<unsigned, 4> sch0t0(1 + 1, 0);
+  Vector<unsigned, 4> sch0t1t0(2 + 1, 0);
+  sch0t1t0[2] = 1;
+  Vector<unsigned, 4> sch0t1t1(2 + 1, 0);
+  sch0t1t1[1] = 1;
+  sch0t1t1[2] = 1;
+  Vector<unsigned, 4> sch0t1t2(2 + 1, 0);
+  sch0t1t2[1] = 1;
+  sch0t1t2[2] = 2;
+  Vector<unsigned, 4> sch0t2(1 + 1, 0);
+  sch0t2[1] = 2;
+  Vector<unsigned, 4> sch0t3(1 + 1, 0);
+  sch0t3[1] = 3;
+  Vector<unsigned, 4> sch0t4(1 + 1, 0);
+  sch0t4[1] = 4;
+  Vector<unsigned, 4> sch0t5t0(2 + 1, 0);
+  sch0t5t0[1] = 5;
+  Vector<unsigned, 4> sch0t5t1(2 + 1, 0);
+  sch0t5t1[1] = 5;
+  sch0t5t1[2] = 1;
+  Vector<unsigned, 4> sch0t5t2(2 + 1, 0);
+  sch0t5t2[1] = 5;
+  sch0t5t2[2] = 2;
+  Vector<unsigned, 4> sch0t5t3(2 + 1, 0);
+  sch0t5t3[1] = 5;
+  sch0t5t3[2] = 3;
+  Vector<unsigned, 4> sch0t6(1 + 1, 0);
+  sch0t6[1] = 6;
+  Vector<unsigned, 4> sch0t7(1 + 1, 0);
+  sch0t7[1] = 7;
   LinearProgramLoopBlock iOuterLoopNest;
   llvm::SmallVector<MemoryAccess *> iOuterMem;
 
   BumpAlloc<> alloc;
-  iOuterMem.emplace_back(createMemAccess(alloc, xInd1, Xstore_0, sch0_0)); // 0
+  iOuterMem.emplace_back(createMemAccess(alloc, xInd1, storeX0, sch0t0)); // 0
 
   iOuterMem.emplace_back(
-    createMemAccess(alloc, AIndIOuter, Aload_m, sch0_1_0));  // 1
+    createMemAccess(alloc, indAiOuter, loadAm, sch0t1t0));  // 1
   iOuterMem.emplace_back(
-    createMemAccess(alloc, xInd2IOuter, Xload_0, sch0_1_1)); // 2
+    createMemAccess(alloc, xInd2IOuter, loadX0, sch0t1t1)); // 2
 
   iOuterMem.emplace_back(
-    createMemAccess(alloc, xInd2IOuter, Xstore_1, sch0_1_2));              // 3
+    createMemAccess(alloc, xInd2IOuter, storeX1, sch0t1t2));              // 3
 
-  iOuterMem.emplace_back(createMemAccess(alloc, xInd1, Xload_1, sch0_2));  // 4
-  iOuterMem.emplace_back(createMemAccess(alloc, xInd1, Xstore_2, sch0_3)); // 5
+  iOuterMem.emplace_back(createMemAccess(alloc, xInd1, loadX1, sch0t2));  // 4
+  iOuterMem.emplace_back(createMemAccess(alloc, xInd1, storeX2, sch0t3)); // 5
 
-  iOuterMem.emplace_back(createMemAccess(alloc, sInd1, Sstore_0, sch0_4)); // 6
+  iOuterMem.emplace_back(createMemAccess(alloc, sInd1, storeS0, sch0t4)); // 6
   iOuterMem.emplace_back(
-    createMemAccess(alloc, AIndIOuter, Aload_s, sch0_5_0));                // 7
+    createMemAccess(alloc, indAiOuter, loadAs, sch0t5t0));                // 7
   iOuterMem.emplace_back(
-    createMemAccess(alloc, xInd2IOuter, Xload_2, sch0_5_1));               // 8
+    createMemAccess(alloc, xInd2IOuter, loadX2, sch0t5t1));               // 8
   iOuterMem.emplace_back(
-    createMemAccess(alloc, sInd2IOuter, Sload_0, sch0_5_2));               // 9
+    createMemAccess(alloc, sInd2IOuter, loadS0, sch0t5t2));               // 9
   iOuterMem.emplace_back(
-    createMemAccess(alloc, sInd2IOuter, Sstore_1, sch0_5_3));              // 10
+    createMemAccess(alloc, sInd2IOuter, storeS1, sch0t5t3));              // 10
 
-  iOuterMem.emplace_back(createMemAccess(alloc, sInd1, Sload_1, sch0_6));  // 11
-  iOuterMem.emplace_back(createMemAccess(alloc, sInd1, Sstore_2, sch0_7)); // 12
+  iOuterMem.emplace_back(createMemAccess(alloc, sInd1, loadS1, sch0t6));  // 11
+  iOuterMem.emplace_back(createMemAccess(alloc, sInd1, storeS2, sch0t7)); // 12
   for (auto &&mem : iOuterMem) iOuterLoopNest.addMemory(mem);
   {
     auto d0 = Dependence::check(alloc, *iOuterLoopNest.getMemoryAccess(3),
@@ -1140,7 +1142,7 @@ TEST(MeanStDevTest0, BasicAssertions) {
     iOuterLoopNest.optimize();
   EXPECT_TRUE(optDeps.has_value());
   map<MemoryAccess *, size_t> memAccessIds;
-  MutPtrVector<MemoryAccess *> mem = iOuterLoopNest.getMemoryAccesses();
+  MutPtrVector<MemoryAccess *> mem = iOuterLoopNest.getMem();
   for (size_t jj = 0; jj < mem.size(); ++jj) memAccessIds[mem[jj]] = jj;
   for (auto &e : iOuterLoopNest.getEdges()) {
     auto [in, out] = e.getInOutPair();
@@ -1157,75 +1159,73 @@ TEST(MeanStDevTest0, BasicAssertions) {
   }
   // Graphs::print(iOuterLoopNest.fullGraph());
   for (auto *memi : mem) {
-    llvm::errs() << "mem->nodeIndex =" << memi->getNodeIndex() << ";";
+    llvm::errs() << "mem->nodeIndex =" << memi->getNode() << ";";
     llvm::errs() << "mem =" << memi << "\n";
-    for (size_t nodeIndex : memi->getNodeIndex()) {
-      AffineSchedule s = nodes[nodeIndex].getSchedule();
-      EXPECT_EQ(s.data(),
-                iOuterLoopNest.getNode(nodeIndex).getSchedule().data());
-      llvm::errs() << "s.getPhi() =" << s.getPhi() << "\n";
-      llvm::errs() << "s.getFusionOmega() =" << s.getFusionOmega() << "\n";
-      llvm::errs() << "s.getOffsetOmega() =" << s.getOffsetOmega() << "\n";
-    }
+    size_t nodeIndex = memi->getNode();
+    AffineSchedule s = nodes[nodeIndex].getSchedule();
+    EXPECT_EQ(s.data(), iOuterLoopNest.getNode(nodeIndex).getSchedule().data());
+    llvm::errs() << "s.getPhi() =" << s.getPhi() << "\n";
+    llvm::errs() << "s.getFusionOmega() =" << s.getFusionOmega() << "\n";
+    llvm::errs() << "s.getOffsetOmega() =" << s.getOffsetOmega() << "\n";
   }
 
   LinearProgramLoopBlock jOuterLoopNest;
   llvm::SmallVector<MemoryAccess *> jOuterMem;
-  jOuterMem.emplace_back(createMemAccess(alloc, xInd1, Xstore_0, sch0_0)); // 0
-  Vector<unsigned, 4> sch0_1(1 + 1, 0);
-  sch0_1[1] = 1;
-  jOuterMem.emplace_back(createMemAccess(alloc, sInd1, Sstore_0, sch0_1)); // 6
-  Vector<unsigned, 4> sch1_0_0(2 + 1, 0);
-  sch1_0_0[0] = 1;
-  Vector<unsigned, 4> sch1_0_1(2 + 1, 0);
-  sch1_0_1[0] = 1;
-  sch1_0_1[2] = 1;
-  Vector<unsigned, 4> sch1_0_2(2 + 1, 0);
-  sch1_0_2[0] = 1;
-  sch1_0_2[2] = 2;
+  jOuterMem.emplace_back(createMemAccess(alloc, xInd1, storeX0, sch0t0)); // 0
+  Vector<unsigned, 4> sch0t1(1 + 1, 0);
+  sch0t1[1] = 1;
+  jOuterMem.emplace_back(createMemAccess(alloc, sInd1, storeS0, sch0t1)); // 6
+  Vector<unsigned, 4> sch1t0t0(2 + 1, 0);
+  sch1t0t0[0] = 1;
+  Vector<unsigned, 4> sch1t0t1(2 + 1, 0);
+  sch1t0t1[0] = 1;
+  sch1t0t1[2] = 1;
+  Vector<unsigned, 4> sch1t0t2(2 + 1, 0);
+  sch1t0t2[0] = 1;
+  sch1t0t2[2] = 2;
   jOuterMem.emplace_back(
-    createMemAccess(alloc, AIndJOuter, Aload_m, sch1_0_0));   // 1
+    createMemAccess(alloc, indAjOuter, loadAm, sch1t0t0));   // 1
   jOuterMem.emplace_back(
-    createMemAccess(alloc, xInd2JOuter, Xload_0, sch1_0_1));  // 2
+    createMemAccess(alloc, xInd2JOuter, loadX0, sch1t0t1));  // 2
   jOuterMem.emplace_back(
-    createMemAccess(alloc, xInd2JOuter, Xstore_1, sch1_0_2)); // 3
+    createMemAccess(alloc, xInd2JOuter, storeX1, sch1t0t2)); // 3
 
-  Vector<unsigned, 4> sch2_0(1 + 1, 0);
-  sch2_0[0] = 2;
-  Vector<unsigned, 4> sch2_1(1 + 1, 0);
-  sch2_1[0] = 2;
-  sch2_1[1] = 1;
-  jOuterMem.emplace_back(createMemAccess(alloc, xInd1, Xload_1, sch2_0));  // 4
-  jOuterMem.emplace_back(createMemAccess(alloc, xInd1, Xstore_2, sch2_1)); // 5
+  Vector<unsigned, 4> sch2t0(1 + 1, 0);
+  sch2t0[0] = 2;
+  Vector<unsigned, 4> sch2t1(1 + 1, 0);
+  sch2t1[0] = 2;
+  sch2t1[1] = 1;
+  jOuterMem.emplace_back(createMemAccess(alloc, xInd1, loadX1, sch2t0));  // 4
+  jOuterMem.emplace_back(createMemAccess(alloc, xInd1, storeX2, sch2t1)); // 5
 
-  Vector<unsigned, 4> sch3_0_0(2 + 1, 0);
-  sch3_0_0[0] = 3;
-  Vector<unsigned, 4> sch3_0_1(2 + 1, 0);
-  sch3_0_1[0] = 3;
-  sch3_0_1[2] = 1;
-  Vector<unsigned, 4> sch3_0_2(2 + 1, 0);
-  sch3_0_2[0] = 3;
-  sch3_0_2[2] = 2;
-  Vector<unsigned, 4> sch3_0_3(2 + 1, 0);
-  sch3_0_3[0] = 3;
-  sch3_0_3[2] = 3;
+  Vector<unsigned, 4> sch3t0t0(2 + 1, 0);
+  sch3t0t0[0] = 3;
+  Vector<unsigned, 4> sch3t0t1(2 + 1, 0);
+  sch3t0t1[0] = 3;
+  sch3t0t1[2] = 1;
+  Vector<unsigned, 4> sch3t0t2(2 + 1, 0);
+  sch3t0t2[0] = 3;
+  sch3t0t2[2] = 2;
+  Vector<unsigned, 4> sch3t0t3(2 + 1, 0);
+  sch3t0t3[0] = 3;
+  sch3t0t3[2] = 3;
 
   jOuterMem.emplace_back(
-    createMemAccess(alloc, AIndJOuter, Aload_s, sch3_0_0));   // 7
+    createMemAccess(alloc, indAjOuter, loadAs, sch3t0t0));   // 7
   jOuterMem.emplace_back(
-    createMemAccess(alloc, xInd2JOuter, Xload_2, sch3_0_1));  // 8
+    createMemAccess(alloc, xInd2JOuter, loadX2, sch3t0t1));  // 8
   jOuterMem.emplace_back(
-    createMemAccess(alloc, sInd2JOuter, Sload_0, sch3_0_2));  // 9
+    createMemAccess(alloc, sInd2JOuter, loadS0, sch3t0t2));  // 9
   jOuterMem.emplace_back(
-    createMemAccess(alloc, sInd2JOuter, Sstore_1, sch3_0_3)); // 10
+    createMemAccess(alloc, sInd2JOuter, storeS1, sch3t0t3)); // 10
 
-  Vector<unsigned, 4> sch4_0(1 + 1, 0);
-  sch4_0[0] = 4;
-  Vector<unsigned, 4> sch4_1(1 + 1, 0);
-  sch4_1[0] = 4;
-  sch4_1[1] = 1;
-  jOuterMem.emplace_back(createMemAccess(alloc, sInd1, Sload_1, sch4_0));  // 11
-  jOuterMem.emplace_back(createMemAccess(alloc, sInd1, Sstore_2, sch4_1)); // 12
+  Vector<unsigned, 4> sch4t0(1 + 1, 0);
+  sch4t0[0] = 4;
+  Vector<unsigned, 4> sch4t1(1 + 1, 0);
+  sch4t1[0] = 4;
+  sch4t1[1] = 1;
+  jOuterMem.emplace_back(createMemAccess(alloc, sInd1, loadS1, sch4t0));  // 11
+  jOuterMem.emplace_back(createMemAccess(alloc, sInd1, storeS2, sch4t1)); // 12
 
   for (auto &&memj : jOuterMem) jOuterLoopNest.addMemory(memj);
 
@@ -1242,15 +1242,11 @@ TEST(MeanStDevTest0, BasicAssertions) {
   DenseMatrix<int64_t> optS{SquareDims{2}, 0};
   // we want antiDiag, as that represents swapping loops
   optS.antiDiag() << 1;
-  DenseMatrix<int64_t> optSinnerUndef = optS;
-  optSinnerUndef(1, _) << std::numeric_limits<int64_t>::min();
-  for (auto *memi : jOuterLoopNest.getMemoryAccesses()) {
-    for (size_t nodeIndex : memi->getNodeIndex()) {
-      AffineSchedule s = jOuterLoopNest.getNode(nodeIndex).getSchedule();
-      if (s.getNumLoops() == 1) EXPECT_EQ(s.getPhi()(0, 0), 1);
-      else if (s.getFusionOmega()[1] < 3) EXPECT_EQ(s.getPhi(), optSinnerUndef);
-      else EXPECT_EQ(s.getPhi(), optS);
-    }
+  for (auto *memi : jOuterLoopNest.getMem()) {
+    size_t nodeIndex = memi->getNode();
+    AffineSchedule s = jOuterLoopNest.getNode(nodeIndex).getSchedule();
+    if (s.getNumLoops() == 1) EXPECT_EQ(s.getPhi()(0, 0), 1);
+    else EXPECT_EQ(s.getPhi(), optS);
   }
 }
 
@@ -1259,15 +1255,15 @@ TEST(DoubleDependenceTest, BasicAssertions) {
 
   TestLoopFunction tlf;
   auto &builder = tlf.getBuilder();
-  IntMatrix Aloop{"[-2 1 0 -1 0; "
+  IntMatrix loopA{"[-2 1 0 -1 0; "
                   "0 0 0 1 0; "
                   "-2 0 1 0 -1; "
                   "0 0 0 0 1]"_mat};
-  tlf.addLoop(std::move(Aloop), 2);
+  tlf.addLoop(std::move(loopA), 2);
   AffineLoopNest<true> *loop = tlf.getLoopNest(0);
 
   // create arrays
-  llvm::Type *Float64 = builder.getDoubleTy();
+  llvm::Type *f64 = builder.getDoubleTy();
   llvm::Value *ptrA = tlf.createArray();
   const auto *scevA = tlf.getSCEVUnknown(ptrA);
 
@@ -1279,28 +1275,28 @@ TEST(DoubleDependenceTest, BasicAssertions) {
   llvm::Value *iv = builder.CreateAdd(zero, one);
   llvm::Value *jv = builder.CreateAdd(zero, one);
 
-  llvm::Value *A_ip1_jp1 =
+  llvm::Value *offsetAip1jp1 =
     builder.CreateAdd(builder.CreateAdd(iv, one),
                       builder.CreateMul(builder.CreateAdd(jv, one), Iv));
-  llvm::Value *A_ip1_j =
+  llvm::Value *offsetAip1j =
     builder.CreateAdd(iv, builder.CreateMul(builder.CreateAdd(jv, one), Iv));
-  llvm::Value *A_i_jp1 =
+  llvm::Value *offsetAijp1 =
     builder.CreateAdd(builder.CreateAdd(iv, one), builder.CreateMul(jv, Iv));
 
-  auto *Aload_ip1_j = builder.CreateAlignedLoad(
-    Float64,
-    builder.CreateGEP(Float64, ptrA,
-                      llvm::SmallVector<llvm::Value *, 1>{A_ip1_j}),
+  auto *loadAip1j = builder.CreateAlignedLoad(
+    f64,
+    builder.CreateGEP(f64, ptrA,
+                      llvm::SmallVector<llvm::Value *, 1>{offsetAip1j}),
     llvm::MaybeAlign(8));
-  auto *Aload_i_jp1 = builder.CreateAlignedLoad(
-    Float64,
-    builder.CreateGEP(Float64, ptrA,
-                      llvm::SmallVector<llvm::Value *, 1>{A_i_jp1}),
+  auto *loadijp1 = builder.CreateAlignedLoad(
+    f64,
+    builder.CreateGEP(f64, ptrA,
+                      llvm::SmallVector<llvm::Value *, 1>{offsetAijp1}),
     llvm::MaybeAlign(8));
-  auto *Astore = builder.CreateAlignedStore(
-    builder.CreateFAdd(Aload_ip1_j, Aload_i_jp1),
-    builder.CreateGEP(Float64, ptrA,
-                      llvm::SmallVector<llvm::Value *, 1>{A_ip1_jp1}),
+  auto *storeA = builder.CreateAlignedStore(
+    builder.CreateFAdd(loadAip1j, loadijp1),
+    builder.CreateGEP(f64, ptrA,
+                      llvm::SmallVector<llvm::Value *, 1>{offsetAip1jp1}),
     llvm::MaybeAlign(8));
 
   // for (i = 0:I-2){
@@ -1318,43 +1314,43 @@ TEST(DoubleDependenceTest, BasicAssertions) {
   // we have three array refs
   // A[i+1, j+1] // (i+1)*stride(A,1) + (j+1)*stride(A,2);
   llvm::ScalarEvolution &SE{tlf.getSE()};
-  llvm::Type *Int64 = builder.getInt64Ty();
-  ArrayReference Asrc(scevA, loop, 2);
+  llvm::Type *i64 = builder.getInt64Ty();
+  ArrayReference srcA(scevA, loop, 2);
   {
-    MutPtrMatrix<int64_t> IndMat = Asrc.indexMatrix();
+    MutPtrMatrix<int64_t> indMat = srcA.indexMatrix();
     //     l  d
-    IndMat(i, 1) = 1; // i
-    IndMat(j, 0) = 1; // j
-    MutPtrMatrix<int64_t> OffMat = Asrc.offsetMatrix();
-    OffMat(i, 0) = 1;
-    OffMat(j, 0) = 1;
-    Asrc.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
-    Asrc.sizes[0] = II;
+    indMat(i, 1) = 1; // i
+    indMat(j, 0) = 1; // j
+    MutPtrMatrix<int64_t> offMat = srcA.offsetMatrix();
+    offMat(i, 0) = 1;
+    offMat(j, 0) = 1;
+    srcA.sizes[1] = SE.getConstant(i64, 8, /*isSigned=*/false);
+    srcA.sizes[0] = II;
   }
 
   // A[i+1, j]
-  ArrayReference Atgt0(scevA, loop, 2);
+  ArrayReference tgtA0(scevA, loop, 2);
   {
-    MutPtrMatrix<int64_t> IndMat = Atgt0.indexMatrix();
+    MutPtrMatrix<int64_t> indMat = tgtA0.indexMatrix();
     //     l  d
-    IndMat(i, 1) = 1; // i
-    IndMat(j, 0) = 1; // j
+    indMat(i, 1) = 1; // i
+    indMat(j, 0) = 1; // j
                       //                   d  s
-    Atgt0.offsetMatrix()(1, 0) = 1;
-    Atgt0.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
-    Atgt0.sizes[0] = II;
+    tgtA0.offsetMatrix()(1, 0) = 1;
+    tgtA0.sizes[1] = SE.getConstant(i64, 8, /*isSigned=*/false);
+    tgtA0.sizes[0] = II;
   }
 
   // A[i, j+1]
-  ArrayReference Atgt1(scevA, loop, 2);
+  ArrayReference tgtA1(scevA, loop, 2);
   {
-    MutPtrMatrix<int64_t> IndMat = Atgt1.indexMatrix();
+    MutPtrMatrix<int64_t> indMat = tgtA1.indexMatrix();
     //     l  d
-    IndMat(i, 1) = 1; // i
-    IndMat(j, 0) = 1; // j
-    Atgt1.offsetMatrix()(0, 0) = 1;
-    Atgt1.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
-    Atgt1.sizes[0] = II;
+    indMat(i, 1) = 1; // i
+    indMat(j, 0) = 1; // j
+    tgtA1.offsetMatrix()(0, 0) = 1;
+    tgtA1.sizes[1] = SE.getConstant(i64, 8, /*isSigned=*/false);
+    tgtA1.sizes[0] = II;
   }
 
   //
@@ -1362,8 +1358,8 @@ TEST(DoubleDependenceTest, BasicAssertions) {
   Vector<unsigned, 4> schStore(2 + 1, 0);
   schStore[2] = 2;
   BumpAlloc<> alloc;
-  MemoryAccess *msrc{createMemAccess(alloc, Asrc, Astore, schStore)};
-  MemoryAccess *mtgt0{createMemAccess(alloc, Atgt0, Aload_ip1_j, schLoad0)};
+  MemoryAccess *msrc{createMemAccess(alloc, srcA, storeA, schStore)};
+  MemoryAccess *mtgt0{createMemAccess(alloc, tgtA0, loadAip1j, schLoad0)};
   DepPoly *dep0{DepPoly::dependence(alloc, *msrc, *mtgt0)};
   EXPECT_FALSE(dep0->isEmpty());
   dep0->pruneBounds();
@@ -1376,7 +1372,7 @@ TEST(DoubleDependenceTest, BasicAssertions) {
 
   Vector<unsigned, 4> schLoad1(2 + 1, 0);
   schLoad1[2] = 1;
-  MemoryAccess *mtgt1{createMemAccess(alloc, Atgt1, Aload_i_jp1, schLoad1)};
+  MemoryAccess *mtgt1{createMemAccess(alloc, tgtA1, loadijp1, schLoad1)};
   DepPoly *dep1{DepPoly::dependence(alloc, *msrc, *mtgt1)};
   EXPECT_FALSE(dep1->isEmpty());
   dep1->pruneBounds();
@@ -1393,11 +1389,11 @@ TEST(DoubleDependenceTest, BasicAssertions) {
   assert(!allZero(d[0].getSatConstraints()(last, _)));
 
   LinearProgramLoopBlock loopBlock;
-  MemoryAccess *mSchLoad0(createMemAccess(alloc, Atgt0, Aload_ip1_j, schLoad0));
+  MemoryAccess *mSchLoad0(createMemAccess(alloc, tgtA0, loadAip1j, schLoad0));
   loopBlock.addMemory(mSchLoad0);
-  MemoryAccess *mSchLoad1(createMemAccess(alloc, Atgt1, Aload_i_jp1, schLoad1));
+  MemoryAccess *mSchLoad1(createMemAccess(alloc, tgtA1, loadijp1, schLoad1));
   loopBlock.addMemory(mSchLoad1);
-  MemoryAccess *mSchStore(createMemAccess(alloc, Asrc, Astore, schStore));
+  MemoryAccess *mSchStore(createMemAccess(alloc, srcA, storeA, schStore));
   loopBlock.addMemory(mSchStore);
 
   EXPECT_TRUE(loopBlock.optimize().has_value());
@@ -1407,7 +1403,7 @@ TEST(DoubleDependenceTest, BasicAssertions) {
     memAccessIds[loopBlock.getMemoryAccess(jj)] = jj;
   for (auto &e : loopBlock.getEdges()) {
     auto [in, out] = e.getInOutPair();
-    llvm::errs() << "\nEdge for array " << e.getArrayPointer()
+    llvm::errs() << "\nEdge for array " << *e.getArrayPointer()
                  << ", in ID: " << memAccessIds[in]
                  << "; out ID: " << memAccessIds[out] << "\n";
   }
@@ -1419,13 +1415,15 @@ TEST(DoubleDependenceTest, BasicAssertions) {
   }
   DenseMatrix<int64_t> optPhi(DenseDims{2, 2}, 0);
   optPhi(0, _) << 1;
-  optPhi(1, _) << std::numeric_limits<int64_t>::min();
+  optPhi(1, 0) = 1;
+  optPhi(1, 1) = 0;
   // Graphs::print(iOuterLoopNest.fullGraph());
-  for (auto &mem : loopBlock.getMemoryAccesses()) {
-    for (size_t nodeIndex : mem->getNodeIndex()) {
-      AffineSchedule s = loopBlock.getNode(nodeIndex).getSchedule();
-      EXPECT_EQ(s.getPhi(), optPhi);
-    }
+  for (auto &mem : loopBlock.getMem()) {
+    size_t nodeIndex = mem->getNode();
+    AffineSchedule s = loopBlock.getNode(nodeIndex).getSchedule();
+    EXPECT_EQ(s.getPhi(), optPhi);
+    EXPECT_TRUE(allZero(s.getOffsetOmega()));
+    EXPECT_TRUE(allZero(s.getFusionOmega()));
   }
 }
 
@@ -1477,27 +1475,27 @@ TEST(ConvReversePass, BasicAssertions) {
   llvm::Value *jv = builder.CreateAdd(zero, one);
   llvm::Value *iv = builder.CreateAdd(zero, one);
 
-  llvm::Value *Aoffset = builder.CreateAdd(mv, builder.CreateMul(nv, Mv));
-  llvm::Value *Boffset = builder.CreateAdd(iv, builder.CreateMul(jv, Iv));
-  llvm::Value *Coffset = builder.CreateAdd(
+  llvm::Value *offseA = builder.CreateAdd(mv, builder.CreateMul(nv, Mv));
+  llvm::Value *offsetB = builder.CreateAdd(iv, builder.CreateMul(jv, Iv));
+  llvm::Value *offsetC = builder.CreateAdd(
     builder.CreateAdd(mv, iv),
     builder.CreateMul(builder.CreateAdd(nv, jv),
                       builder.CreateSub(builder.CreateAdd(Mv, Iv), one)));
-  auto *Aload = builder.CreateAlignedLoad(
+  auto *loadA = builder.CreateAlignedLoad(
     f64,
-    builder.CreateGEP(f64, ptrA, llvm::SmallVector<llvm::Value *, 1>{Aoffset}),
+    builder.CreateGEP(f64, ptrA, llvm::SmallVector<llvm::Value *, 1>{offseA}),
     llvm::MaybeAlign(8));
-  auto *Bload = builder.CreateAlignedLoad(
+  auto *loadB = builder.CreateAlignedLoad(
     f64,
-    builder.CreateGEP(f64, ptrB, llvm::SmallVector<llvm::Value *, 1>{Boffset}),
+    builder.CreateGEP(f64, ptrB, llvm::SmallVector<llvm::Value *, 1>{offsetB}),
     llvm::MaybeAlign(8));
-  auto *Cload = builder.CreateAlignedLoad(
+  auto *loadC = builder.CreateAlignedLoad(
     f64,
-    builder.CreateGEP(f64, ptrC, llvm::SmallVector<llvm::Value *, 1>{Coffset}),
+    builder.CreateGEP(f64, ptrC, llvm::SmallVector<llvm::Value *, 1>{offsetC}),
     llvm::MaybeAlign(8));
-  auto *Cstore = builder.CreateAlignedStore(
-    builder.CreateFAdd(Cload, builder.CreateFMul(Aload, Bload)),
-    builder.CreateGEP(f64, ptrC, llvm::SmallVector<llvm::Value *, 1>{Coffset}),
+  auto *storeC = builder.CreateAlignedStore(
+    builder.CreateFAdd(loadC, builder.CreateFMul(loadA, loadB)),
+    builder.CreateGEP(f64, ptrC, llvm::SmallVector<llvm::Value *, 1>{offsetC}),
     llvm::MaybeAlign(8));
 
   // for (n = 0; n < N; ++n){
@@ -1510,39 +1508,39 @@ TEST(ConvReversePass, BasicAssertions) {
   //   }
   // }
   llvm::ScalarEvolution &SE{tlf.getSE()};
-  llvm::Type *Int64 = builder.getInt64Ty();
+  llvm::Type *i64 = builder.getInt64Ty();
   // B[j, i]
-  ArrayReference BmnInd{scevB, loop, 2};
+  ArrayReference indBmn{scevB, loop, 2};
   {
-    MutPtrMatrix<int64_t> IndMat = BmnInd.indexMatrix();
+    MutPtrMatrix<int64_t> indMat = indBmn.indexMatrix();
     //     l  d
-    IndMat(i, 1) = 1; // i
-    IndMat(j, 0) = 1; // j
-    BmnInd.sizes[0] = II;
-    BmnInd.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
+    indMat(i, 1) = 1; // i
+    indMat(j, 0) = 1; // j
+    indBmn.sizes[0] = II;
+    indBmn.sizes[1] = SE.getConstant(i64, 8, /*isSigned=*/false);
   }
   // A[n, m]
-  ArrayReference AmnInd{scevA, loop, 2};
+  ArrayReference indAmn{scevA, loop, 2};
   {
-    MutPtrMatrix<int64_t> IndMat = AmnInd.indexMatrix();
+    MutPtrMatrix<int64_t> indMat = indAmn.indexMatrix();
     //     l  d
-    IndMat(m, 1) = 1; // m
-    IndMat(n, 0) = 1; // n
-    AmnInd.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
-    AmnInd.sizes[0] = II;
+    indMat(m, 1) = 1; // m
+    indMat(n, 0) = 1; // n
+    indAmn.sizes[1] = SE.getConstant(i64, 8, /*isSigned=*/false);
+    indAmn.sizes[0] = II;
   }
   // C[n+j, m+i]
-  ArrayReference CmijnInd{scevC, loop, 2};
+  ArrayReference indCmijn{scevC, loop, 2};
   {
-    MutPtrMatrix<int64_t> IndMat = CmijnInd.indexMatrix();
+    MutPtrMatrix<int64_t> indMat = indCmijn.indexMatrix();
     //     l  d
-    IndMat(m, 1) = 1; // m
-    IndMat(i, 1) = 1; // i
-    IndMat(n, 0) = 1; // n
-    IndMat(j, 0) = 1; // j
-    CmijnInd.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
-    CmijnInd.sizes[0] =
-      SE.getAddExpr(SE.getAddExpr(M, II), SE.getMinusOne(Int64));
+    indMat(m, 1) = 1; // m
+    indMat(i, 1) = 1; // i
+    indMat(n, 0) = 1; // n
+    indMat(j, 0) = 1; // j
+    indCmijn.sizes[1] = SE.getConstant(i64, 8, /*isSigned=*/false);
+    indCmijn.sizes[0] =
+      SE.getAddExpr(SE.getAddExpr(M, II), SE.getMinusOne(i64));
   }
 
   // for (n = 0; n < N; ++n){
@@ -1555,38 +1553,36 @@ TEST(ConvReversePass, BasicAssertions) {
   //   }
   // }
   LinearProgramLoopBlock loopBlock;
-  Vector<unsigned, 8> sch_0(4 + 1, 0);
-  Vector<unsigned, 8> sch_1{sch_0};
+  Vector<unsigned, 8> scht0(4 + 1, 0);
+  Vector<unsigned, 8> scht1{scht0};
   BumpAlloc<> &alloc = tlf.getAlloc();
   //         C[m+i,j+n] = C[m+i,j+n] + A[m,n] * -> B[i,j] <-;
-  MemoryAccess *msch_0(createMemAccess(alloc, BmnInd, Bload, sch_0));
-  loopBlock.addMemory(msch_0);
-  sch_1[4] = 1;
-  Vector<unsigned, 8> sch_2{sch_1};
+  MemoryAccess *mscht0(createMemAccess(alloc, indBmn, loadB, scht0));
+  loopBlock.addMemory(mscht0);
+  scht1[4] = 1;
+  Vector<unsigned, 8> scht2{scht1};
   //         C[m+i,j+n] = C[m+i,j+n] + -> A[m,n] <- * B[i,j];
-  MemoryAccess *msch_1(createMemAccess(alloc, AmnInd, Aload, sch_1));
-  loopBlock.addMemory(msch_1);
-  sch_2[4] = 2;
-  Vector<unsigned, 8> sch_3{sch_2};
+  MemoryAccess *mscht1(createMemAccess(alloc, indAmn, loadA, scht1));
+  loopBlock.addMemory(mscht1);
+  scht2[4] = 2;
+  Vector<unsigned, 8> scht3{scht2};
   //         C[m+i,j+n] = -> C[m+i,j+n] <- + A[m,n] * B[i,j];
-  MemoryAccess *msch_2(createMemAccess(alloc, CmijnInd, Cload, sch_2));
-  loopBlock.addMemory(msch_2);
-  sch_3[4] = 3;
+  MemoryAccess *mscht2(createMemAccess(alloc, indCmijn, loadC, scht2));
+  loopBlock.addMemory(mscht2);
+  scht3[4] = 3;
   //         -> C[m+i,j+n] <- = C[m+i,j+n] + A[m,n] * B[i,j];
-  MemoryAccess *msch_3(createMemAccess(alloc, CmijnInd, Cstore, sch_3));
-  loopBlock.addMemory(msch_3);
+  MemoryAccess *mscht3(createMemAccess(alloc, indCmijn, storeC, scht3));
+  loopBlock.addMemory(mscht3);
 
   std::optional<BitSet<std::array<uint64_t, 2>>> optRes = loopBlock.optimize();
   EXPECT_TRUE(optRes.has_value());
-  for (auto &mem : loopBlock.getMemoryAccesses()) {
-    llvm::errs() << "mem->nodeIndex: " << mem->getNodeIndex() << "; ";
+  for (auto &mem : loopBlock.getMem()) {
+    llvm::errs() << "mem->nodeIndex: " << mem->getNode() << "; ";
     llvm::errs() << "mem: " << mem << "\n";
-    for (size_t nodeIndex : mem->getNodeIndex()) {
-      AffineSchedule s = loopBlock.getNode(nodeIndex).getSchedule();
-      llvm::errs() << "s.getPhi(): " << s.getPhi() << "\n";
-      llvm::errs() << "s.getFusionOmega(): " << s.getFusionOmega() << "\n";
-      llvm::errs() << "s.getOffsetOmega(): " << s.getOffsetOmega() << "\n";
-      // EXPECT_EQ(s.getPhi(), optPhi);
-    }
+    size_t nodeIndex = mem->getNode();
+    AffineSchedule s = loopBlock.getNode(nodeIndex).getSchedule();
+    llvm::errs() << "s.getPhi(): " << s.getPhi() << "\n";
+    llvm::errs() << "s.getFusionOmega(): " << s.getFusionOmega() << "\n";
+    llvm::errs() << "s.getOffsetOmega(): " << s.getOffsetOmega() << "\n";
   }
 }

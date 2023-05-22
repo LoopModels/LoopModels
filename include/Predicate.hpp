@@ -1,5 +1,5 @@
 #pragma once
-#include "./BitSets.hpp"
+#include "Containers/BitSets.hpp"
 #include "Math/BumpVector.hpp"
 #include "Math/Math.hpp"
 #include "Utilities/Allocators.hpp"
@@ -152,7 +152,7 @@ struct Intersection {
     uint64_t mask = emptyMask(bitUnion);
     if (std::popcount(mask) == 1) { // a single b & !b case
       uint64_t remUnionMask =
-        ~(mask | (mask << 1));      // 0s `b`, meaning b can be either.
+        ~(mask | (mask << 1)); // 0s `b`, meaning b can be either.
       uint64_t w = remUnionMask & x;
       uint64_t z = remUnionMask & y;
       if (w == z) return Intersection{w};

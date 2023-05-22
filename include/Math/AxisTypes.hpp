@@ -1,5 +1,5 @@
 #pragma once
-#include <cstdlib>
+#include <Utilities/Invariant.hpp>
 #include <llvm/Support/raw_ostream.h>
 
 /// LinAlg
@@ -43,7 +43,7 @@ inline auto operator<<(llvm::raw_ostream &os, AxisType x)
     break;
   default:
     os << "invalid axis type";
-    abort();
+    __builtin_trap();
   }
   return os;
 }
@@ -56,9 +56,19 @@ template <AxisType T> struct AxisInt {
   constexpr AxisInt() = default;
   constexpr AxisInt(V v) : value(v) {}
   explicit constexpr operator size_t() const { return value; }
-  explicit constexpr operator ptrdiff_t() const { return value; }
-  explicit constexpr operator unsigned() const { return value; }
-  constexpr explicit operator bool() const { return value; }
+  explicit constexpr operator ptrdiff_t() const {
+    invariant(value <= std::numeric_limits<ptrdiff_t>::max());
+    return value;
+  }
+  explicit constexpr operator unsigned() const {
+    invariant(value <= std::numeric_limits<unsigned>::max());
+    return value;
+  }
+  explicit constexpr operator uint8_t() const {
+    invariant(value < 256);
+    return value;
+  }
+  explicit constexpr operator bool() const { return value; }
 
   constexpr auto operator+(V i) const -> AxisInt<T> { return value + i; }
   constexpr auto operator-(V i) const -> AxisInt<T> { return value - i; }

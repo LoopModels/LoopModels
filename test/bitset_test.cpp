@@ -1,4 +1,4 @@
-#include "../include/BitSets.hpp"
+#include "../include/Containers/BitSets.hpp"
 #include <array>
 #include <cstdint>
 #include <gtest/gtest.h>
@@ -41,10 +41,25 @@ TEST(BitSetTest, BasicAssertions) {
   EXPECT_FALSE(d);
 }
 // NOLINTNEXTLINE(modernize-use-trailing-return-type)
+TEST(BitSetInsert, BasicAssertions) {
+  BitSet<std::array<uint64_t, 2>> bs;
+  bs.insert(1);
+  bs.insert(5);
+  bs.insert(6);
+  bs.insert(8);
+  EXPECT_EQ(bs.data[0], 354);
+  EXPECT_EQ(bs.data[1], 0);
+  bs.insert(5);
+  EXPECT_EQ(bs.data[0], 354);
+}
+// NOLINTNEXTLINE(modernize-use-trailing-return-type)
 TEST(DynSizeBitSetTest, BasicAssertions) {
   BitSet bs;
+  EXPECT_EQ(bs.data.size(), 0);
   bs[4] = true;
   bs[10] = true;
+  EXPECT_EQ(bs.data.size(), 1);
+  EXPECT_EQ(bs.data.front(), 1040);
   llvm::SmallVector<size_t> sv;
   for (auto i : bs) sv.push_back(i);
   EXPECT_EQ(sv.size(), 2);
@@ -56,6 +71,8 @@ TEST(FixedSizeBitSetTest, BasicAssertions) {
   BitSet<std::array<uint64_t, 2>> bs;
   bs[4] = true;
   bs[10] = true;
+  EXPECT_EQ(bs.data[0], 1040);
+  EXPECT_EQ(bs.data[1], 0);
   llvm::SmallVector<size_t> sv;
   for (auto i : bs) sv.push_back(i);
   EXPECT_EQ(sv.size(), 2);

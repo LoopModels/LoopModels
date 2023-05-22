@@ -21,15 +21,26 @@ TEST(Remarks, BasicAssertions) {
   //         "../../test/examples/%s.ll 2>&1 | head -n300 | diff "
   //         "../../test/examples/%s.txt -",
   //         testfile, testfile);
-  sprintf(
+#if LLVM_ADDRESS_SANITIZER_BUILD
+  (void)sprintf(
     bufopt.data(),
     "LD_PRELOAD=/usr/lib64/libasan.so.8 opt -mcpu=skylake-avx512 "
     "--disable-output "
-    "-load-pass-plugin=_deps/loopmodels-build/libLoopModels.so "
+    "-load-pass-plugin=LoopModels/libLoopModels.so "
     "-passes=turbo-loop -pass-remarks-analysis=turbo-loop "
     "../../test/examples/%s.ll 2>&1 | sdiff -l - ../../test/examples/%s.txt",
     testfile, testfile);
-
+#else
+  (void)sprintf(
+    bufopt.data(),
+    "opt -mcpu=skylake-avx512 --disable-output "
+    "-load-pass-plugin=LoopModels/libLoopModels.so "
+    "-passes=turbo-loop -pass-remarks-analysis=turbo-loop "
+    "../../test/examples/%s.ll 2>&1 | sdiff -l - ../../test/examples/%s.txt",
+    testfile, testfile);
+#endif
+  // https://wiki.sei.cmu.edu/confluence/pages/viewpage.action?pageId=87152177
+  // NOLINTNEXTLINE(cert-env33-c)
   int rc = system(bufopt.data());
   EXPECT_EQ(rc, 0);
 }

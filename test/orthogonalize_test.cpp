@@ -22,9 +22,9 @@
 #include <memory>
 #include <random>
 
-[[maybe_unused]] static auto
-orthogonalize(BumpAlloc<> &alloc,
-              llvm::SmallVectorImpl<ArrayReference *> const &ai)
+namespace {
+auto orthogonalize(BumpAlloc<> &alloc,
+                   llvm::SmallVectorImpl<ArrayReference *> const &ai)
   -> std::optional<
     std::pair<AffineLoopNest<true> *, llvm::SmallVector<ArrayReference, 0>>> {
 
@@ -79,6 +79,7 @@ orthogonalize(BumpAlloc<> &alloc,
   }
   return ret;
 }
+} // namespace
 
 // NOLINTNEXTLINE(modernize-use-trailing-return-type)
 TEST(OrthogonalizeTest, BasicAssertions) {
@@ -100,7 +101,7 @@ TEST(OrthogonalizeTest, BasicAssertions) {
   AffineLoopNest<true> *aln = tlf.getLoopNest(0);
   EXPECT_FALSE(aln->isEmpty());
   llvm::ScalarEvolution &SE{tlf.getSE()};
-  auto *Int64 = tlf.getInt64Ty();
+  auto *i64 = tlf.getInt64Ty();
   const llvm::SCEV *N = aln->getSyms()[2];
   const llvm::SCEV *J = aln->getSyms()[3];
   const llvm::SCEVUnknown *scevW = tlf.getSCEVUnknown(tlf.createArray());
@@ -111,39 +112,39 @@ TEST(OrthogonalizeTest, BasicAssertions) {
   // llvm::SmallVector<std::pair<MPoly,MPoly>>
   ArrayReference War{scevW, aln, 2};
   {
-    MutPtrMatrix<int64_t> IndMat = War.indexMatrix();
-    IndMat << 0;
-    IndMat(0, 0) = 1; // m
-    IndMat(2, 0) = 1; // i
-    IndMat(1, 1) = 1; // n
-    IndMat(3, 1) = 1; // j
+    MutPtrMatrix<int64_t> indMat = War.indexMatrix();
+    indMat << 0;
+    indMat(0, 0) = 1; // m
+    indMat(2, 0) = 1; // i
+    indMat(1, 1) = 1; // n
+    indMat(3, 1) = 1; // j
                       // I + M -1
-    War.sizes[0] = SE.getAddExpr(N, SE.getAddExpr(J, SE.getMinusOne(Int64)));
-    War.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
+    War.sizes[0] = SE.getAddExpr(N, SE.getAddExpr(J, SE.getMinusOne(i64)));
+    War.sizes[1] = SE.getConstant(i64, 8, /*isSigned=*/false);
   }
   // llvm::errs() << "War = " << War << "\n";
 
   // B[i, j]
   ArrayReference Bar{scevB, aln, 2};
   {
-    MutPtrMatrix<int64_t> IndMat = Bar.indexMatrix();
-    IndMat << 0;
-    IndMat(2, 0) = 1; // i
-    IndMat(3, 1) = 1; // j
+    MutPtrMatrix<int64_t> indMat = Bar.indexMatrix();
+    indMat << 0;
+    indMat(2, 0) = 1; // i
+    indMat(3, 1) = 1; // j
     Bar.sizes[0] = J;
-    Bar.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
+    Bar.sizes[1] = SE.getConstant(i64, 8, /*isSigned=*/false);
   }
   // llvm::errs() << "Bar = " << Bar << "\n";
 
   // C[m, n]
   ArrayReference Car{scevC, aln, 2};
   {
-    MutPtrMatrix<int64_t> IndMat = Car.indexMatrix();
-    IndMat << 0;
-    IndMat(0, 0) = 1; // m
-    IndMat(1, 1) = 1; // n
+    MutPtrMatrix<int64_t> indMat = Car.indexMatrix();
+    indMat << 0;
+    indMat(0, 0) = 1; // m
+    indMat(1, 1) = 1; // n
     Car.sizes[0] = N;
-    Car.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
+    Car.sizes[1] = SE.getConstant(i64, 8, /*isSigned=*/false);
   }
   // llvm::errs() << "Car = " << Car << "\n";
 
@@ -208,7 +209,7 @@ TEST(BadMul, BasicAssertions) {
   AffineLoopNest<true> *aln = tlf.getLoopNest(0);
   EXPECT_FALSE(aln->isEmpty());
   llvm::ScalarEvolution &SE{tlf.getSE()};
-  llvm::IntegerType *Int64 = tlf.getInt64Ty();
+  llvm::IntegerType *i64 = tlf.getInt64Ty();
   const llvm::SCEV *N = aln->getSyms()[1];
   const llvm::SCEV *K = aln->getSyms()[2];
 
@@ -233,40 +234,40 @@ TEST(BadMul, BasicAssertions) {
   const int iId = 0, lId = 1, jId = 2;
   ArrayReference War(scevW, aln, 2); //, axes, indTo
   {
-    MutPtrMatrix<int64_t> IndMat = War.indexMatrix();
-    IndMat << 0;
-    IndMat(jId, 0) = 1;  // j
-    IndMat(iId, 1) = 1;  // i
-    IndMat(lId, 1) = -1; // l
+    MutPtrMatrix<int64_t> indMat = War.indexMatrix();
+    indMat << 0;
+    indMat(jId, 0) = 1;  // j
+    indMat(iId, 1) = 1;  // i
+    indMat(lId, 1) = -1; // l
     War.sizes[0] = N;
-    War.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
+    War.sizes[1] = SE.getConstant(i64, 8, /*isSigned=*/false);
   }
   // llvm::errs() << "War = " << War << "\n";
 
   // B[j, l - j] // M x K
   ArrayReference Bar(scevB, aln, 2); //, axes, indTo
   {
-    MutPtrMatrix<int64_t> IndMat = Bar.indexMatrix();
-    IndMat << 0;
-    IndMat(jId, 0) = 1;  // j
-    IndMat(lId, 1) = 1;  // l
-    IndMat(jId, 1) = -1; // j
+    MutPtrMatrix<int64_t> indMat = Bar.indexMatrix();
+    indMat << 0;
+    indMat(jId, 0) = 1;  // j
+    indMat(lId, 1) = 1;  // l
+    indMat(jId, 1) = -1; // j
     Bar.sizes[0] = K;
-    Bar.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
+    Bar.sizes[1] = SE.getConstant(i64, 8, /*isSigned=*/false);
   }
   // llvm::errs() << "Bar = " << Bar << "\n";
 
   // C[l-j,i-l] // K x N
   ArrayReference Car(scevC, aln, 2); //, axes, indTo
   {
-    MutPtrMatrix<int64_t> IndMat = Car.indexMatrix();
-    IndMat << 0;
-    IndMat(lId, 0) = 1;  // l
-    IndMat(jId, 0) = -1; // j
-    IndMat(iId, 1) = 1;  // i
-    IndMat(lId, 1) = -1; // l
+    MutPtrMatrix<int64_t> indMat = Car.indexMatrix();
+    indMat << 0;
+    indMat(lId, 0) = 1;  // l
+    indMat(jId, 0) = -1; // j
+    indMat(iId, 1) = 1;  // i
+    indMat(lId, 1) = -1; // l
     Car.sizes[0] = N;
-    Car.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
+    Car.sizes[1] = SE.getConstant(i64, 8, /*isSigned=*/false);
   }
   // llvm::errs() << "Car = " << Car << "\n";
 
@@ -328,10 +329,9 @@ TEST(OrthogonalizeMatricesTest, BasicAssertions) {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdangling-else"
 #endif
-    for (size_t m = 0; m < M; ++m) {
+    for (size_t m = 0; m < M; ++m)
       for (size_t n = 0; n < N; ++n)
         if (m != n) EXPECT_EQ(B(m, n), 0);
-    }
 #if !defined(__clang__) && defined(__GNUC__)
 #pragma GCC diagnostic pop
 #endif

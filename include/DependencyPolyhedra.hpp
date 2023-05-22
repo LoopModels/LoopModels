@@ -2,11 +2,10 @@
 
 #include "./Loops.hpp"
 #include "./MemoryAccess.hpp"
-#include "./Schedule.hpp"
-#include "Containers/TinyVector.hpp"
 #include "Math/Array.hpp"
 #include "Math/Comparisons.hpp"
 #include "Math/Math.hpp"
+#include "Math/NormalForm.hpp"
 #include "Math/Orthogonalize.hpp"
 #include "Math/Polyhedra.hpp"
 #include "Math/Simplex.hpp"
@@ -17,7 +16,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <limits>
-
 #include <llvm/ADT/Optional.h>
 #include <llvm/ADT/SmallVector.h>
 #include <llvm/Analysis/ScalarEvolution.h>
@@ -79,14 +77,14 @@ class DepPoly : public BasePolyhedra<true, true, false, DepPoly> {
   // of redundancies
   // Memory layout:
   // A, E, nullStep, s
-  unsigned int numDep0Var;    // i0.size()
-  unsigned int numDep1Var;    // i1.size()
-  unsigned int numCon;        // initially: ineqConCapacity
-  unsigned int numEqCon;      // initially: eqConCapacity
-  unsigned int numDynSym;     // s.size()
-  unsigned int timeDim;       // null space of memory accesses
-  unsigned int conCapacity;   // A0.numRow() + A1.numRow()
-  unsigned int eqConCapacity; // C0.numRow()
+  unsigned numDep0Var;    // i0.size()
+  unsigned numDep1Var;    // i1.size()
+  unsigned numCon;        // initially: ineqConCapacity
+  unsigned numEqCon;      // initially: eqConCapacity
+  unsigned numDynSym;     // s.size()
+  unsigned timeDim;       // null space of memory accesses
+  unsigned conCapacity;   // A0.numRow() + A1.numRow()
+  unsigned eqConCapacity; // C0.numRow()
 #if !defined(__clang__) && defined(__GNUC__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
@@ -102,60 +100,57 @@ class DepPoly : public BasePolyhedra<true, true, false, DepPoly> {
 #pragma clang diagnostic pop
 #endif
 
-  // [[nodiscard]] static auto allocate(BumpAlloc<> &alloc, unsigned int
-  // numDep0Var, unsigned int numDep1Var, unsigned int numCon, unsigned int
-  // numEqCon, unsigned int numDynSym, unsigned int timeDim, unsigned int
+  // [[nodiscard]] static auto allocate(BumpAlloc<> &alloc, unsigned
+  // numDep0Var, unsigned numDep1Var, unsigned numCon, unsigned
+  // numEqCon, unsigned numDynSym, unsigned timeDim, unsigned
   // conCapacity,
-  //                                    unsigned int eqConCapacity)->DepPoly * {
+  //                                    unsigned eqConCapacity)->DepPoly * {
 
   // }
 
 public:
-  constexpr explicit DepPoly(unsigned int nd0, unsigned int nd1,
-                             unsigned int nds, unsigned int td,
-                             unsigned int conCap, unsigned int eqConCap)
+  constexpr explicit DepPoly(unsigned nd0, unsigned nd1, unsigned nds,
+                             unsigned td, unsigned conCap, unsigned eqConCap)
     : numDep0Var(nd0), numDep1Var(nd1), numCon(conCap), numEqCon(eqConCap),
       numDynSym(nds), timeDim(td), conCapacity(conCap),
       eqConCapacity(eqConCap) {}
-  [[nodiscard]] constexpr auto getTimeDim() const -> unsigned int {
+  [[nodiscard]] constexpr auto getTimeDim() const -> unsigned {
     return timeDim;
   }
   constexpr void setTimeDim(unsigned dim) { timeDim = dim; }
-  [[nodiscard]] constexpr auto getDim0() const -> unsigned int {
+  [[nodiscard]] constexpr auto getDim0() const -> unsigned {
     return numDep0Var;
   }
-  [[nodiscard]] constexpr auto getDim1() const -> unsigned int {
+  [[nodiscard]] constexpr auto getDim1() const -> unsigned {
     return numDep1Var;
   }
-  [[nodiscard]] constexpr auto getNumDynSym() const -> unsigned int {
+  [[nodiscard]] constexpr auto getNumDynSym() const -> unsigned {
     return numDynSym;
   }
-  [[nodiscard]] constexpr auto getNumCon() const -> unsigned int {
-    return numCon;
-  }
-  [[nodiscard]] constexpr auto getNumEqCon() const -> unsigned int {
+  [[nodiscard]] constexpr auto getNumCon() const -> unsigned { return numCon; }
+  [[nodiscard]] constexpr auto getNumEqCon() const -> unsigned {
     return numEqCon;
   }
-  [[nodiscard]] constexpr auto getNumVar() const -> unsigned int {
+  [[nodiscard]] constexpr auto getNumVar() const -> unsigned {
     return numDep0Var + numDep1Var + timeDim + numDynSym;
   }
-  [[nodiscard]] constexpr auto getNumPhiCoef() const -> unsigned int {
+  [[nodiscard]] constexpr auto getNumPhiCoef() const -> unsigned {
     return numDep0Var + numDep1Var;
   }
-  [[nodiscard]] static constexpr auto getNumOmegaCoef() -> unsigned int {
+  [[nodiscard]] static constexpr auto getNumOmegaCoef() -> unsigned {
     return 2;
   }
-  [[nodiscard]] constexpr auto getNumScheduleCoef() const -> unsigned int {
+  [[nodiscard]] constexpr auto getNumScheduleCoef() const -> unsigned {
     return getNumPhiCoef() + 2;
   }
   [[nodiscard]] constexpr auto getNumLambda() const -> unsigned {
     return 1 + numCon + 2 * numEqCon;
   }
-  [[nodiscard]] constexpr auto getNumSymbols() const -> unsigned int {
+  [[nodiscard]] constexpr auto getNumSymbols() const -> unsigned {
     return numDynSym + 1;
   }
-  constexpr void setNumConstraints(unsigned int con) { numCon = con; }
-  constexpr void setNumEqConstraints(unsigned int con) { numEqCon = con; }
+  constexpr void setNumConstraints(unsigned con) { numCon = con; }
+  constexpr void setNumEqConstraints(unsigned con) { numEqCon = con; }
   constexpr void decrementNumConstraints() { invariant(numCon-- > 0); }
   constexpr auto getA() -> MutDensePtrMatrix<int64_t> {
     void *p = memory;
@@ -250,17 +245,15 @@ public:
     return std::distance(
       x.begin(), std::mismatch(x.begin(), x.end(), y.begin(), y.end()).first);
   }
-  static auto nullSpace(NotNull<const MemoryAccess> x,
-                        NotNull<const MemoryAccess> y) -> DenseMatrix<int64_t> {
+  static auto nullSpace(NotNull<const ArrayIndex> x,
+                        NotNull<const ArrayIndex> y) -> DenseMatrix<int64_t> {
     const size_t numLoopsCommon =
-      findFirstNonEqual(x->getFusionOmega(), y->getFusionOmega());
-    const size_t xDim = x->getArrayDim();
-    const size_t yDim = y->getArrayDim();
+                   findFirstNonEqual(x->getFusionOmega(), y->getFusionOmega()),
+                 xDim = x->getArrayDim(), yDim = y->getArrayDim();
     DenseMatrix<int64_t> A(DenseDims{numLoopsCommon, xDim + yDim});
     if (!numLoopsCommon) return A;
-    // indMats cols are [innerMostLoop, ..., outerMostLoop]
-    PtrMatrix<int64_t> indMatX = x->indexMatrix();
-    PtrMatrix<int64_t> indMatY = y->indexMatrix();
+    // indMats cols are [outerMostLoop,...,innerMostLoop]
+    PtrMatrix<int64_t> indMatX = x->indexMatrix(), indMatY = y->indexMatrix();
     for (size_t i = 0; i < numLoopsCommon; ++i) {
       A(i, _(begin, xDim)) << indMatX(i, _);
       A(i, _(xDim, end)) << indMatY(i, _);
@@ -268,14 +261,23 @@ public:
     // returns rank x num loops
     return orthogonalNullSpace(std::move(A));
   }
+  static auto nullSpace(NotNull<const ArrayIndex> x) -> DenseMatrix<int64_t> {
+    const size_t numLoopsCommon = x->getNumLoops(), dim = x->getArrayDim();
+    DenseMatrix<int64_t> A(DenseDims{numLoopsCommon, dim});
+    if (!numLoopsCommon) return A;
+    // indMats cols are [outerMostLoop,...,innerMostLoop]
+    A << x->indexMatrix();
+    // returns rank x num loops
+    return orthogonalNullSpace(std::move(A));
+  }
   static auto symbolIndex(llvm::ArrayRef<const llvm::SCEV *> s,
-                          const llvm::SCEV *v) -> Optional<unsigned int> {
+                          const llvm::SCEV *v) -> Optional<unsigned> {
     auto b = s.begin(), e = s.end();
     const auto *it = std::find(b, e, v);
     if (it == e) return {};
     return it - b;
   }
-  auto symbolIndex(const llvm::SCEV *v) -> Optional<unsigned int> {
+  auto symbolIndex(const llvm::SCEV *v) -> Optional<unsigned> {
     return symbolIndex(getSyms(), v);
   }
   /// Returns a map of s1's content's to s0's
@@ -286,14 +288,14 @@ public:
     map.resizeForOverwrite(s1.size());
     size_t n = s0.size();
     for (size_t i = 0; i < s1.size(); ++i) {
-      Optional<unsigned int> j = symbolIndex(s0, s1[i]);
+      Optional<unsigned> j = symbolIndex(s0, s1[i]);
       map[i] = j ? *j : n++;
     }
     return n;
   }
   static void fillSyms(llvm::MutableArrayRef<const llvm::SCEV *> s,
                        std::array<llvm::ArrayRef<const llvm::SCEV *>, 2> sa,
-                       Vector<unsigned int> &map) {
+                       Vector<unsigned> &map) {
     auto [sa0, sa1] = sa;
     size_t n = sa0.size();
     std::copy_n(sa0.begin(), n, s.begin());
@@ -311,35 +313,37 @@ public:
     std::memcpy(p, this, neededBytes());
     return NotNull<DepPoly>{p};
   }
-  static auto dependence(BumpAlloc<> &alloc, NotNull<const MemoryAccess> ma0,
-                         NotNull<const MemoryAccess> ma1) -> DepPoly * {
-    assert(ma0->sizesMatch(ma1));
-    NotNull<AffineLoopNest<>> loop0 = ma0->getLoop();
-    NotNull<AffineLoopNest<>> loop1 = ma1->getLoop();
-    DensePtrMatrix<int64_t> A0{loop0->getA()}, A1{loop1->getA()};
-    auto S0{loop0->getSyms()}, S1{loop1->getSyms()};
+  static auto dependence(BumpAlloc<> &alloc, NotNull<const MemoryAccess> aix,
+                         NotNull<const MemoryAccess> aiy) {
+    return dependence(alloc, aix->getArrayRef(), aiy->getArrayRef());
+  }
+  static auto dependence(BumpAlloc<> &alloc, NotNull<const ArrayIndex> aix,
+                         NotNull<const ArrayIndex> aiy) -> DepPoly * {
+    assert(aix->sizesMatch(aiy));
+    NotNull<const AffineLoopNest<>> loopx = aix->getLoop();
+    NotNull<const AffineLoopNest<>> loopy = aiy->getLoop();
+    DensePtrMatrix<int64_t> Ax{loopx->getA()}, Ay{loopy->getA()};
+    auto Sx{loopx->getSyms()}, Sy{loopy->getSyms()};
     // numLoops x numDim
-    PtrMatrix<int64_t> C0{ma0->indexMatrix()}, C1{ma1->indexMatrix()},
-      O0{ma0->offsetMatrix()}, O1{ma1->offsetMatrix()};
-    invariant(C0.numCol(), C1.numCol());
+    PtrMatrix<int64_t> Cx{aix->indexMatrix()}, Cy{aiy->indexMatrix()},
+      Ox{aix->offsetMatrix()}, Oy{aiy->offsetMatrix()};
+    invariant(Cx.numCol(), Cy.numCol());
 
-    auto [nc0, nv0] = A0.size();
-    auto [nc1, nv1] = A1.size();
-    unsigned numDep0Var = loop0->getNumLoops();
-    unsigned numDep1Var = loop1->getNumLoops();
-    unsigned numVar = numDep0Var + numDep1Var;
+    auto [nc0, nv0] = Ax.size();
+    auto [nc1, nv1] = Ay.size();
+    unsigned numDep0Var = loopx->getNumLoops(),
+             numDep1Var = loopy->getNumLoops(),
+             numVar = numDep0Var + numDep1Var;
 
     Vector<unsigned> map;
-    unsigned numDynSym = mergeMap(map, S0, S1);
-    invariant(size_t(map.size()), size_t(S1.size()));
+    unsigned numDynSym = mergeMap(map, Sx, Sy);
+    invariant(size_t(map.size()), size_t(Sy.size()));
     unsigned numSym = numDynSym + 1;
-    DenseMatrix<int64_t> NS{nullSpace(ma0, ma1)};
-    unsigned timeDim = unsigned{NS.numRow()};
-
-    unsigned numCols = numVar + timeDim + numDynSym + 1;
-
-    unsigned conCapacity = unsigned(A0.numRow() + A1.numRow()) + numVar;
-    unsigned eqConCapacity = unsigned(C0.numCol()) + timeDim;
+    DenseMatrix<int64_t> NS{nullSpace(aix, aiy)};
+    unsigned timeDim = unsigned{NS.numRow()},
+             numCols = numVar + timeDim + numDynSym + 1,
+             conCapacity = unsigned(Ax.numRow() + Ay.numRow()) + numVar,
+             eqConCapacity = unsigned(Cx.numCol()) + timeDim;
 
     size_t memNeeded =
       sizeof(int64_t) * ((conCapacity + eqConCapacity) * numCols + timeDim) +
@@ -353,7 +357,7 @@ public:
 
     // numDep1Var = nv1;
     const Row nc = nc0 + nc1;
-    const size_t indexDim{ma0->getArrayDim()};
+    const size_t indexDim{aix->getArrayDim()};
     auto nullStep{dp->getNullStep()};
     for (size_t i = 0; i < timeDim; ++i) nullStep[i] = selfDot(NS(i, _));
     //           column meansing in in order
@@ -366,16 +370,89 @@ public:
     // E.resize(indexDim + nullDim, A.numCol());
     // ma0 loop
     for (size_t i = 0; i < nc0; ++i) {
-      A(i, _(0, 1 + S0.size())) << A0(i, _(0, 1 + S0.size()));
+      A(i, _(0, 1 + Sx.size())) << Ax(i, _(0, 1 + Sx.size()));
       A(i, _(numSym, numSym + numDep0Var))
-        << A0(i, _(1 + S0.size(), 1 + S0.size() + numDep0Var));
+        << Ax(i, _(1 + Sx.size(), 1 + Sx.size() + numDep0Var));
     }
     for (size_t i = 0; i < nc1; ++i) {
-      A(nc0 + i, 0) = A1(i, 0);
+      A(nc0 + i, 0) = Ay(i, 0);
       for (size_t j = 0; j < map.size(); ++j)
-        A(nc0 + i, 1 + map[j]) = A1(i, 1 + j);
+        A(nc0 + i, 1 + map[j]) = Ay(i, 1 + j);
       for (size_t j = 0; j < numDep1Var; ++j)
-        A(nc0 + i, j + numSym + numDep0Var) = A1(i, j + 1 + S1.size());
+        A(nc0 + i, j + numSym + numDep0Var) = Ay(i, j + 1 + Sy.size());
+    }
+    A(_(nc, end), _(numSym, numSym + numVar)).diag() << 1;
+    // indMats are [outerMostLoop, ..., innerMostLoop] x arrayDim
+    // offsetMats are arrayDim x numSymbols
+    // E(i,:)* indVars = q[i]
+    // e.g. i_0 + j_0 + off_0 = i_1 + j_1 + off_1
+    // i_0 + j_0 - i_1 - j_1 = off_1 - off_0
+    for (size_t i = 0; i < indexDim; ++i) {
+      E(i, _(0, Ox.numCol())) << Ox(i, _);
+      E(i, _(numSym, numDep0Var + numSym)) << Cx(_(0, numDep0Var), i);
+      E(i, 0) -= Oy(i, 0);
+      for (size_t j = 0; j < Oy.numCol() - 1; ++j)
+        E(i, 1 + map[j]) -= Oy(i, 1 + j);
+      E(i, _(0, numDep1Var) + numSym + numDep0Var) << -Cy(_(0, numDep1Var), i);
+    }
+    for (size_t i = 0; i < timeDim; ++i) {
+      for (size_t j = 0; j < NS.numCol(); ++j) {
+        int64_t nsij = NS(i, j);
+        E(indexDim + i, j + numSym) = nsij;
+        E(indexDim + i, j + numSym + numDep0Var) = -nsij;
+      }
+      E(indexDim + i, numSym + numVar + i) = 1;
+    }
+    dp->pruneBounds(alloc);
+    if (dp->getNumCon()) return dp;
+    alloc.rollback(p);
+    return nullptr;
+  }
+  static auto self(BumpAlloc<> &alloc, NotNull<const ArrayIndex> ai)
+    -> NotNull<DepPoly> {
+    NotNull<const AffineLoopNest<>> loop = ai->getLoop();
+    DensePtrMatrix<int64_t> B{loop->getA()};
+    auto S{loop->getSyms()};
+    // numLoops x numDim
+    PtrMatrix<int64_t> C{ai->indexMatrix()}, O{ai->offsetMatrix()};
+
+    auto [nco, nv] = B.size();
+    unsigned numDepVar = loop->getNumLoops(), numVar = numDepVar + numDepVar,
+             numDynSym = S.size(), numSym = numDynSym + 1;
+    DenseMatrix<int64_t> NS{nullSpace(ai)};
+    unsigned timeDim = unsigned{NS.numRow()},
+             numCols = numVar + timeDim + numDynSym + 1,
+             conCapacity = unsigned(2 * B.numRow()) + numVar,
+             eqConCapacity = unsigned(C.numCol()) + timeDim;
+
+    size_t memNeeded =
+      sizeof(int64_t) * ((conCapacity + eqConCapacity) * numCols + timeDim) +
+      sizeof(const llvm::SCEV *) * numDynSym;
+
+    auto *mem =
+      (DepPoly *)alloc.allocate(sizeof(DepPoly) + memNeeded, alignof(DepPoly));
+    auto *dp = std::construct_at(mem, numDepVar, numDepVar, numDynSym, timeDim,
+                                 conCapacity, eqConCapacity);
+
+    // numDep1Var = nv1;
+    const Row nc = nco + nco;
+    const size_t indexDim{ai->getArrayDim()};
+    auto nullStep{dp->getNullStep()};
+    for (size_t i = 0; i < timeDim; ++i) nullStep[i] = selfDot(NS(i, _));
+    //           column meansing in in order
+    // const size_t numSymbols = getNumSymbols();
+    auto A{dp->getA()};
+    auto E{dp->getE()};
+    A << 0;
+    E << 0;
+    // A.resize(nc + numVar, numSymbols + numVar + nullDim);
+    // E.resize(indexDim + nullDim, A.numCol());
+    // ma0 loop
+    for (size_t i = 0; i < nco; ++i) {
+      for (size_t j = 0; j < numSym; ++j) A(i + nco, j) = A(i, j) = B(i, j);
+      for (size_t j = 0; j < numDepVar; ++j)
+        A(i + nco, j + numSym + numDepVar) = A(i, j + numSym) =
+          B(i, j + numSym);
     }
     A(_(nc, end), _(numSym, numSym + numVar)).diag() << 1;
     // L254: Assertion `col < numCol()` failed
@@ -385,26 +462,23 @@ public:
     // e.g. i_0 + j_0 + off_0 = i_1 + j_1 + off_1
     // i_0 + j_0 - i_1 - j_1 = off_1 - off_0
     for (size_t i = 0; i < indexDim; ++i) {
-      E(i, _(0, O0.numCol())) << O0(i, _(0, O0.numCol()));
-      E(i, _(numSym, numDep0Var + numSym)) << C0(_(0, numDep0Var), i);
-      E(i, 0) -= O1(i, 0);
-      for (size_t j = 0; j < O1.numCol() - 1; ++j)
-        E(i, 1 + map[j]) -= O1(i, 1 + j);
-      for (size_t j = 0; j < numDep1Var; ++j)
-        E(i, j + numSym + numDep0Var) = -C1(j, i);
+      for (size_t j = 0; j < numDepVar; ++j) {
+        int64_t Cji = C(j, i);
+        E(i, j + numSym) = Cji;
+        E(i, j + numSym + numDepVar) = -Cji;
+      }
     }
     for (size_t i = 0; i < timeDim; ++i) {
       for (size_t j = 0; j < NS.numCol(); ++j) {
         int64_t nsij = NS(i, j);
         E(indexDim + i, j + numSym) = nsij;
-        E(indexDim + i, j + numSym + numDep0Var) = -nsij;
+        E(indexDim + i, j + numSym + numDepVar) = -nsij;
       }
-      E(indexDim + i, numSym + numDep0Var + numDep1Var + i) = 1;
+      E(indexDim + i, numSym + numVar + i) = 1;
     }
     dp->pruneBounds(alloc);
-    if (dp->getNumCon()) return dp;
-    alloc.rollback(p);
-    return nullptr;
+    invariant(dp->getNumCon() > 0);
+    return dp;
   }
   // `direction = true` means second dep follow first
   // lambda_0 + lambda*A*x = delta + c'x
@@ -526,6 +600,105 @@ public:
     // note that delta/constant coef is handled as last `s`
     return {fw, bw};
   }
+
+  /// returns `true` if the array accesses are guaranteed independent
+  /// conditioning on partial schedules xPhi and yPhi
+  [[nodiscard]] auto checkSat(BumpAlloc<> &alloc,
+                              NotNull<const AffineLoopNest<>> xLoop,
+                              const int64_t *xOff, DensePtrMatrix<int64_t> xPhi,
+                              NotNull<const AffineLoopNest<>> yLoop,
+                              const int64_t *yOff, DensePtrMatrix<int64_t> yPhi)
+    -> bool {
+    // we take in loops because we might be moving deeper inside the loopnest
+    // we take in offsets, because we might be offsetting the loops
+    auto p = alloc.scope();
+    Row numPhi = xPhi.numRow();
+    invariant(yPhi.numRow(), numPhi);
+    DensePtrMatrix<int64_t> E{getE()};
+    unsigned xNumLoops = unsigned(xPhi.numCol()),
+             yNumLoops = unsigned(yPhi.numCol());
+    if ((numDep0Var == xNumLoops) || allZero(xPhi(_, _(numDep0Var, end))))
+      xNumLoops = numDep0Var;
+    else invariant(numDep0Var < xNumLoops);
+    if ((numDep1Var == yNumLoops) || allZero(yPhi(_, _(numDep1Var, end))))
+      yNumLoops = numDep1Var;
+    else invariant(numDep1Var < yNumLoops);
+    unsigned numSym = getNumSymbols(), numSymX = numSym + xNumLoops,
+             numSymD0 = numSym + numDep0Var, nCol = numSymX + yNumLoops;
+    MutDensePtrMatrix<int64_t> B{
+      matrix<int64_t>(alloc, numEqCon + numPhi, nCol)};
+    bool extend = (numDep0Var != xNumLoops) || (numDep1Var != yNumLoops);
+    // we truncate time dim
+    if (extend || timeDim) {
+      for (size_t r = 0; r < numEqCon; ++r) {
+        B(r, _(0, numSymD0)) << E(r, _(0, numSymD0));
+        B(r, _(numDep0Var, xNumLoops) + numSym) << 0;
+        B(r, _(0, numDep1Var) + numSymX) << E(r, _(0, numDep1Var) + numSymD0);
+        B(r, _(numDep1Var, yNumLoops) + numSymX) << 0;
+      }
+    } else std::copy_n(E.begin(), E.numRow() * E.numCol(), B.begin());
+    if (xOff)
+      for (size_t c = 0; c < numDep0Var; ++c)
+        if (int64_t mlt = xOff[c])
+          B(_(0, numEqCon), 0) -= mlt * B(_(0, numEqCon), numSym + c);
+    if (yOff)
+      for (size_t c = 0; c < numDep1Var; ++c)
+        if (int64_t mlt = yOff[c])
+          B(_(0, numEqCon), 0) -= mlt * B(_(0, numEqCon), numSymX + c);
+    for (size_t r = 0; r < numPhi; ++r) {
+      B(r + numEqCon, _(0, numSym)) << 0;
+      B(r + numEqCon, _(0, xNumLoops) + numSym) << xPhi(r, _(0, xNumLoops));
+      B(r + numEqCon, _(0, yNumLoops) + numSymX) << -yPhi(r, _(0, yNumLoops));
+    }
+    unsigned rank = unsigned(NormalForm::simplifySystemImpl(B));
+    if (rank <= numEqCon) return false;
+    unsigned numConstraints =
+      extend ? (xLoop->getNumCon() + xNumLoops + yLoop->getNumCon() + yNumLoops)
+             : numCon;
+    size_t memNeeded =
+      sizeof(int64_t) * (size_t(numConstraints + rank) * nCol) +
+      sizeof(const llvm::SCEV *) * numDynSym;
+    auto *mem =
+      (DepPoly *)alloc.allocate(sizeof(DepPoly) + memNeeded, alignof(DepPoly));
+    auto *dp = std::construct_at(mem, xNumLoops, yNumLoops, numDynSym, 0,
+                                 numConstraints, rank);
+    MutDensePtrMatrix<int64_t> A{dp->getA()};
+    if (extend) {
+      MutDensePtrMatrix<int64_t> Ax{xLoop->getA()}, Ay{yLoop->getA()};
+      auto xS{xLoop->getSyms()}, yS{yLoop->getSyms()};
+      Vector<unsigned> map;
+      unsigned xNumSym = xS.size() + 1, xCon = xLoop->getNumCon(),
+               yNumSym = yS.size() + 1, yCon = yLoop->getNumCon(),
+               nDS = mergeMap(map, xS, yS), nLoop = xNumLoops + yNumLoops;
+      // numSyms should be the same; we aren't pruning symbols
+      invariant(numSym, 1 + nDS);
+      for (size_t r = 0; r < xCon; ++r) {
+        A(r, _(0, xNumSym)) << Ax(r, _(0, xNumSym));
+        A(r, _(xNumSym, numSym)) << 0;
+        A(r, _(0, xNumLoops) + numSym) << Ax(r, _(0, xNumLoops) + xNumSym);
+        A(r, _(0, yNumLoops) + numSymX) << 0;
+      }
+      for (size_t r = 0; r < yCon; ++r) {
+        A(r + xCon, _(0, numSym)) << 0;
+        for (size_t j = 0; j < map.size(); ++j)
+          A(r + xCon, 1 + map[j]) = Ay(r, 1 + j);
+        A(r + xCon, _(0, xNumLoops) + numSym) << 0;
+        A(r + xCon, _(0, yNumLoops) + numSymX)
+          << Ay(r, _(0, yNumLoops) + yNumSym);
+      }
+      std::fill(A.begin() + size_t(xCon + yCon) * nCol, A.end(), 0);
+      A(_(0, nLoop) + (xCon + yCon), _(0, nLoop) + numSym).diag() << 1;
+    } else dp->getA() << getA()(_, _(0, nCol)); // truncate time
+    if (xOff)
+      for (size_t c = 0; c < xNumLoops; ++c)
+        if (int64_t mlt = xOff[c]) A(_, 0) -= mlt * A(_, numSym + c);
+    if (yOff)
+      for (size_t c = 0; c < yNumLoops; ++c)
+        if (int64_t mlt = yOff[c]) A(_, 0) -= mlt * A(_, numSymX + c);
+    dp->getE() << B(_(0, rank), _);
+    dp->pruneBounds(alloc);
+    return dp->getNumCon() == 0;
+  }
   friend inline auto operator<<(llvm::raw_ostream &os, const DepPoly &p)
     -> llvm::raw_ostream & {
     return printConstraints(
@@ -535,648 +708,3 @@ public:
   }
 
 }; // class DepPoly
-
-/// Dependence
-/// Represents a dependence relationship between two memory accesses.
-/// It contains simplices representing constraints that affine schedules
-/// are allowed to take.
-class Dependence {
-  // Plan here is...
-  // depPoly gives the constraints
-  // dependenceFwd gives forward constraints
-  // dependenceBwd gives forward constraints
-  // isBackward() indicates whether backward is non-empty
-  // bounding constraints, used for ILP solve, are reverse,
-  // i.e. fwd uses dependenceBwd and bwd uses dependenceFwd.
-  //
-  // Consider the following simple example dependencies:
-  // for (k = 0; k < K; ++k)
-  //   for (i = 0; i < I; ++i)
-  //     for (j = 0; j < J; ++j)
-  //       for (l = 0; l < L; ++l)
-  //         A(i, j) = f(A(i+1, j), A(i, j-1), A(j, j), A(j, i), A(i, j -
-  //         k))
-  // label:     0             1        2          3        4        5
-  // We have...
-  ////// 0 <-> 1 //////
-  // i_0 = i_1 + 1
-  // j_0 = j_1
-  // null spaces: [k_0, l_0], [k_1, l_1]
-  // forward:  k_0 <= k_1 - 1
-  //           l_0 <= l_1 - 1
-  // backward: k_0 >= k_1
-  //           l_0 >= l_1
-  //
-  //
-  ////// 0 <-> 2 //////
-  // i_0 = i_1
-  // j_0 = j_1 - 1
-  // null spaces: [k_0, l_0], [k_1, l_1]
-  // forward:  k_0 <= k_1 - 1
-  //           l_0 <= l_1 - 1
-  // backward: k_0 >= k_1
-  //           l_0 >= l_1
-  //
-  ////// 0 <-> 3 //////
-  // i_0 = j_1
-  // j_0 = j_1
-  // null spaces: [k_0, l_0], [i_1, k_1, l_1]
-  // forward:  k_0 <= k_1 - 1
-  //           l_0 <= l_1 - 1
-  // backward: k_0 >= k_1
-  //           l_0 >= l_1
-  //
-  // i_0 = j_1, we essentially lose the `i` dimension.
-  // Thus, to get fwd/bwd, we take the intersection of nullspaces to get
-  // the time dimension?
-  // TODO: try and come up with counter examples where this will fail.
-  //
-  ////// 0 <-> 4 //////
-  // i_0 = j_1
-  // j_0 = i_1
-  // null spaces: [k_0, l_0], [k_1, l_1]
-  // if j_0 > i_0) [store first]
-  //   forward:  k_0 >= k_1
-  //             l_0 >= l_1
-  //   backward: k_0 <= k_1 - 1
-  //             l_0 <= l_1 - 1
-  // else (if j_0 <= i_0) [load first]
-  //   forward:  k_0 <= k_1 - 1
-  //             l_0 <= l_1 - 1
-  //   backward: k_0 >= k_1
-  //             l_0 >= l_1
-  //
-  // Note that the dependency on `l` is broken when we can condition on
-  // `i_0
-  // != j_0`, meaning that we can fully reorder interior loops when we can
-  // break dependencies.
-  //
-  //
-  ////// 0 <-> 5 //////
-  // i_0 = i_1
-  // j_0 = j_1 - k_1
-  //
-  //
-  //
-
-  [[no_unique_address]] NotNull<DepPoly> depPoly;
-  [[no_unique_address]] NotNull<Simplex> dependenceSatisfaction;
-  [[no_unique_address]] NotNull<Simplex> dependenceBounding;
-  [[no_unique_address]] NotNull<MemoryAccess> in;
-  [[no_unique_address]] NotNull<MemoryAccess> out;
-  [[no_unique_address]] bool forward;
-
-public:
-  constexpr Dependence(NotNull<DepPoly> poly,
-                       std::array<NotNull<Simplex>, 2> depSatBound,
-                       std::array<NotNull<MemoryAccess>, 2> inOut, bool fwd)
-    : depPoly(poly), dependenceSatisfaction(depSatBound[0]),
-      dependenceBounding(depSatBound[1]), in(inOut[0]), out(inOut[1]),
-      forward(fwd) {}
-  using BitSet = MemoryAccess::BitSet;
-  [[nodiscard]] constexpr auto getArrayPointer() -> const llvm::SCEV * {
-    return in->getArrayPointer();
-  }
-  /// indicates whether forward is non-empty
-  [[nodiscard]] constexpr auto isForward() const -> bool { return forward; }
-  [[nodiscard]] constexpr auto nodesIn() const -> const BitSet & {
-    return in->getNodes();
-  }
-  [[nodiscard]] constexpr auto nodesOut() const -> const BitSet & {
-    return out->getNodes();
-  }
-  [[nodiscard]] constexpr auto getDynSymDim() const -> size_t {
-    return depPoly->getNumDynSym();
-  }
-  [[nodiscard]] auto inputIsLoad() const -> bool { return in->isLoad(); }
-  [[nodiscard]] auto outputIsLoad() const -> bool { return out->isLoad(); }
-  [[nodiscard]] auto inputIsStore() const -> bool { return in->isStore(); }
-  [[nodiscard]] auto outputIsStore() const -> bool { return out->isStore(); }
-  /// getInIndMat() -> getInNumLoops() x arrayDim()
-  [[nodiscard]] auto getInIndMat() const -> PtrMatrix<int64_t> {
-    return in->indexMatrix();
-  }
-  constexpr void addEdge(size_t i) {
-    in->addEdgeOut(i);
-    out->addEdgeIn(i);
-  }
-  /// getOutIndMat() -> getOutNumLoops() x arrayDim()
-  [[nodiscard]] constexpr auto getOutIndMat() const -> PtrMatrix<int64_t> {
-    return out->indexMatrix();
-  }
-  [[nodiscard]] constexpr auto getInOutPair() const
-    -> std::array<NotNull<MemoryAccess>, 2> {
-    return {in, out};
-  }
-  // returns the memory access pair, placing the store first in the pair
-  [[nodiscard]] auto getStoreAndOther() const
-    -> std::array<NotNull<MemoryAccess>, 2> {
-    if (in->isStore()) return {in, out};
-    return {out, in};
-  }
-  [[nodiscard]] constexpr auto getInNumLoops() const -> size_t {
-    return in->getNumLoops();
-  }
-  [[nodiscard]] constexpr auto getOutNumLoops() const -> size_t {
-    return out->getNumLoops();
-  }
-  [[nodiscard]] constexpr auto isInactive(size_t depth) const -> bool {
-    return (depth >= std::min(out->getNumLoops(), in->getNumLoops()));
-  }
-  [[nodiscard]] constexpr auto getNumLambda() const -> size_t {
-    return depPoly->getNumLambda() << 1;
-  }
-  [[nodiscard]] constexpr auto getNumSymbols() const -> size_t {
-    return depPoly->getNumSymbols();
-  }
-  [[nodiscard]] constexpr auto getNumPhiCoefficients() const -> size_t {
-    return depPoly->getNumPhiCoef();
-  }
-  [[nodiscard]] static constexpr auto getNumOmegaCoefficients() -> size_t {
-    return DepPoly::getNumOmegaCoef();
-  }
-  [[nodiscard]] constexpr auto getNumDepSatConstraintVar() const -> size_t {
-    return dependenceSatisfaction->getNumVars();
-  }
-  [[nodiscard]] constexpr auto getNumDepBndConstraintVar() const -> size_t {
-    return dependenceBounding->getNumVars();
-  }
-  // returns `w`
-  [[nodiscard]] constexpr auto getNumDynamicBoundingVar() const -> size_t {
-    return getNumDepBndConstraintVar() - getNumDepSatConstraintVar();
-  }
-  constexpr void validate() {
-    assert(getInNumLoops() + getOutNumLoops() == getNumPhiCoefficients());
-    // 2 == 1 for const offset + 1 for w
-    assert(2 + depPoly->getNumLambda() + getNumPhiCoefficients() +
-             getNumOmegaCoefficients() ==
-           size_t(dependenceSatisfaction->getConstraints().numCol()));
-  }
-  [[nodiscard]] constexpr auto getDepPoly() -> NotNull<DepPoly> {
-    return depPoly;
-  }
-  [[nodiscard]] constexpr auto getNumConstraints() const -> size_t {
-    return dependenceBounding->getNumCons() +
-           dependenceSatisfaction->getNumCons();
-  }
-  [[nodiscard]] auto getSatConstants() const -> StridedVector<int64_t> {
-    return dependenceSatisfaction->getConstants();
-  }
-  [[nodiscard]] auto getBndConstants() const -> StridedVector<int64_t> {
-    return dependenceBounding->getConstants();
-  }
-  [[nodiscard]] auto getSatConstraints() const -> PtrMatrix<int64_t> {
-    return dependenceSatisfaction->getConstraints();
-  }
-  [[nodiscard]] auto getBndConstraints() const -> PtrMatrix<int64_t> {
-    return dependenceBounding->getConstraints();
-  }
-  [[nodiscard]] auto getSatLambda() const -> PtrMatrix<int64_t> {
-    return getSatConstraints()(_, _(1, 1 + depPoly->getNumLambda()));
-  }
-  [[nodiscard]] auto getBndLambda() const -> PtrMatrix<int64_t> {
-    return getBndConstraints()(_, _(1, 1 + depPoly->getNumLambda()));
-  }
-  [[nodiscard]] auto getSatPhiCoefs() const -> PtrMatrix<int64_t> {
-    auto l = 3 + depPoly->getNumLambda();
-    return getSatConstraints()(_, _(l, l + getNumPhiCoefficients()));
-  }
-  [[nodiscard]] auto getSatPhi0Coefs() const -> PtrMatrix<int64_t> {
-    auto l = 3 + depPoly->getNumLambda();
-    return getSatConstraints()(_, _(l, l + depPoly->getDim0()));
-  }
-  [[nodiscard]] auto getSatPhi1Coefs() const -> PtrMatrix<int64_t> {
-    auto l = 3 + depPoly->getNumLambda() + depPoly->getDim0();
-    return getSatConstraints()(_, _(l, l + depPoly->getDim1()));
-  }
-  [[nodiscard]] auto getBndPhiCoefs() const -> PtrMatrix<int64_t> {
-    auto l = 3 + depPoly->getNumLambda();
-    return getBndConstraints()(_, _(l, l + getNumPhiCoefficients()));
-  }
-  [[nodiscard]] auto getBndPhi0Coefs() const -> PtrMatrix<int64_t> {
-    auto l = 3 + depPoly->getNumLambda();
-    return getBndConstraints()(_, _(l, l + depPoly->getDim0()));
-  }
-  [[nodiscard]] auto getBndPhi1Coefs() const -> PtrMatrix<int64_t> {
-    auto l = 3 + depPoly->getNumLambda() + depPoly->getDim0();
-    return getBndConstraints()(_, _(l, l + depPoly->getDim1()));
-  }
-  [[nodiscard]] auto getSatOmegaCoefs() const -> PtrMatrix<int64_t> {
-    auto l = 1 + depPoly->getNumLambda();
-    return getSatConstraints()(_, _(l, l + getNumOmegaCoefficients()));
-  }
-  [[nodiscard]] auto getBndOmegaCoefs() const -> PtrMatrix<int64_t> {
-    auto l = 1 + depPoly->getNumLambda();
-    return getBndConstraints()(_, _(l, l + getNumOmegaCoefficients()));
-  }
-  [[nodiscard]] auto getSatW() const -> StridedVector<int64_t> {
-    return getSatConstraints()(_, 1 + depPoly->getNumLambda() +
-                                    getNumPhiCoefficients() +
-                                    getNumOmegaCoefficients());
-  }
-  [[nodiscard]] auto getBndCoefs() const -> PtrMatrix<int64_t> {
-    size_t lb = 1 + depPoly->getNumLambda() + getNumPhiCoefficients() +
-                getNumOmegaCoefficients();
-    return getBndConstraints()(_, _(lb, end));
-  }
-  [[nodiscard]] auto splitSatisfaction() const
-    -> std::tuple<StridedVector<int64_t>, PtrMatrix<int64_t>,
-                  PtrMatrix<int64_t>, PtrMatrix<int64_t>, PtrMatrix<int64_t>,
-                  StridedVector<int64_t>> {
-    PtrMatrix<int64_t> phiCoefsIn = getSatPhi1Coefs(),
-                       phiCoefsOut = getSatPhi0Coefs();
-    if (forward) std::swap(phiCoefsIn, phiCoefsOut);
-    return {getSatConstants(), getSatLambda(),     phiCoefsIn,
-            phiCoefsOut,       getSatOmegaCoefs(), getSatW()};
-  }
-  [[nodiscard]] auto splitBounding() const
-    -> std::tuple<StridedVector<int64_t>, PtrMatrix<int64_t>,
-                  PtrMatrix<int64_t>, PtrMatrix<int64_t>, PtrMatrix<int64_t>,
-                  PtrMatrix<int64_t>> {
-    PtrMatrix<int64_t> phiCoefsIn = getBndPhi1Coefs(),
-                       phiCoefsOut = getBndPhi0Coefs();
-    if (forward) std::swap(phiCoefsIn, phiCoefsOut);
-    return {getBndConstants(), getBndLambda(),     phiCoefsIn,
-            phiCoefsOut,       getBndOmegaCoefs(), getBndCoefs()};
-  }
-  [[nodiscard]] auto isSatisfied(BumpAlloc<> &alloc,
-                                 NotNull<const AffineSchedule> schIn,
-                                 NotNull<const AffineSchedule> schOut) const
-    -> bool {
-    size_t numLoopsIn = in->getNumLoops();
-    size_t numLoopsOut = out->getNumLoops();
-    size_t numLoopsCommon = std::min(numLoopsIn, numLoopsOut);
-    size_t numLoopsTotal = numLoopsIn + numLoopsOut;
-    size_t numVar = numLoopsIn + numLoopsOut + 2;
-    invariant(dependenceSatisfaction->getNumVars() == numVar);
-    auto p = alloc.scope();
-    auto schv = vector(alloc, numVar, int64_t(0));
-    const SquarePtrMatrix<int64_t> inPhi = schIn->getPhi();
-    const SquarePtrMatrix<int64_t> outPhi = schOut->getPhi();
-    auto inFusOmega = schIn->getFusionOmega();
-    auto outFusOmega = schOut->getFusionOmega();
-    auto inOffOmega = schIn->getOffsetOmega();
-    auto outOffOmega = schOut->getOffsetOmega();
-    const size_t numLambda = getNumLambda();
-    // when i == numLoopsCommon, we've passed the last loop
-    for (size_t i = 0; i <= numLoopsCommon; ++i) {
-      if (int64_t o2idiff = outFusOmega[i] - inFusOmega[i])
-        return (o2idiff > 0);
-      // we should not be able to reach `numLoopsCommon`
-      // because at the very latest, this last schedule value
-      // should be different, because either:
-      // if (numLoopsX == numLoopsY){
-      //   we're at the inner most loop, where one of the instructions
-      //   must have appeared before the other.
-      // } else {
-      //   the loop nests differ in depth, in which case the deeper
-      //   loop must appear either above or below the instructions
-      //   present at that level
-      // }
-      assert(i != numLoopsCommon);
-      // forward means offset is 2nd - 1st
-      schv[0] = outOffOmega[i];
-      schv[1] = inOffOmega[i];
-      schv[_(2, 2 + numLoopsIn)] << inPhi(last - i, _);
-      schv[_(2 + numLoopsIn, 2 + numLoopsTotal)] << outPhi(last - i, _);
-      // dependenceSatisfaction is phi_t - phi_s >= 0
-      // dependenceBounding is w + u'N - (phi_t - phi_s) >= 0
-      // we implicitly 0-out `w` and `u` here,
-      if (dependenceSatisfaction->unSatisfiable(alloc, schv, numLambda) ||
-          dependenceBounding->unSatisfiable(alloc, schv, numLambda)) {
-        // if zerod-out bounding not >= 0, then that means
-        // phi_t - phi_s > 0, so the dependence is satisfied
-        return false;
-      }
-    }
-    return true;
-  }
-  [[nodiscard]] auto isSatisfied(BumpAlloc<> &alloc,
-                                 PtrVector<unsigned> inFusOmega,
-                                 PtrVector<unsigned> outFusOmega) const
-    -> bool {
-    size_t numLoopsIn = in->getNumLoops();
-    size_t numLoopsOut = out->getNumLoops();
-    size_t numLoopsCommon = std::min(numLoopsIn, numLoopsOut);
-    size_t numVar = numLoopsIn + numLoopsOut + 2;
-    invariant(dependenceSatisfaction->getNumVars() == numVar);
-    auto p = alloc.scope();
-    auto schv = vector(alloc, numVar, int64_t(0));
-    // Vector<int64_t> schv(dependenceSatisfaction->getNumVars(),int64_t(0));
-    const size_t numLambda = getNumLambda();
-    // when i == numLoopsCommon, we've passed the last loop
-    for (size_t i = 0; i <= numLoopsCommon; ++i) {
-      if (int64_t o2idiff = outFusOmega[i] - inFusOmega[i])
-        return (o2idiff > 0);
-      // we should not be able to reach `numLoopsCommon`
-      // because at the very latest, this last schedule value
-      // should be different, because either:
-      // if (numLoopsX == numLoopsY){
-      //   we're at the inner most loop, where one of the instructions
-      //   must have appeared before the other.
-      // } else {
-      //   the loop nests differ in depth, in which case the deeper
-      //   loop must appear either above or below the instructions
-      //   present at that level
-      // }
-      assert(i != numLoopsCommon);
-      schv[2 + i] = 1;
-      schv[2 + numLoopsIn + i] = 1;
-      // forward means offset is 2nd - 1st
-      // dependenceSatisfaction is phi_t - phi_s >= 0
-      // dependenceBounding is w + u'N - (phi_t - phi_s) >= 0
-      // we implicitly 0-out `w` and `u` here,
-      if (dependenceSatisfaction->unSatisfiable(alloc, schv, numLambda) ||
-          dependenceBounding->unSatisfiable(alloc, schv, numLambda)) {
-        // if zerod-out bounding not >= 0, then that means
-        // phi_t - phi_s > 0, so the dependence is satisfied
-        return false;
-      }
-      schv[2 + i] = 0;
-      schv[2 + numLoopsIn + i] = 0;
-    }
-    return true;
-  }
-  [[nodiscard]] auto isSatisfied(BumpAlloc<> &alloc,
-                                 NotNull<const AffineSchedule> sx,
-                                 NotNull<const AffineSchedule> sy,
-                                 size_t d) const -> bool {
-    const size_t numLambda = depPoly->getNumLambda();
-    const size_t nLoopX = depPoly->getDim0();
-    const size_t nLoopY = depPoly->getDim1();
-    const size_t numLoopsTotal = nLoopX + nLoopY;
-    Vector<int64_t> sch;
-    sch.resizeForOverwrite(numLoopsTotal + 2);
-    sch[0] = sx->getOffsetOmega()[d];
-    sch[1] = sy->getOffsetOmega()[d];
-    sch[_(2, nLoopX + 2)] << sx->getSchedule(d)[_(end - nLoopX, end)];
-    sch[_(nLoopX + 2, numLoopsTotal + 2)]
-      << sy->getSchedule(d)[_(end - nLoopY, end)];
-    return dependenceSatisfaction->satisfiable(alloc, sch, numLambda);
-  }
-  [[nodiscard]] auto isSatisfied(BumpAlloc<> &alloc, size_t d) const -> bool {
-    const size_t numLambda = depPoly->getNumLambda();
-    const size_t numLoopsX = depPoly->getDim0();
-    const size_t numLoopsY = depPoly->getDim1();
-    const size_t numLoopsTotal = numLoopsX + numLoopsY;
-    Vector<int64_t> sch(numLoopsTotal + 2, int64_t(0));
-    invariant(size_t(sch.size()), numLoopsTotal + 2);
-    sch[2 + d] = 1;
-    sch[2 + d + numLoopsX] = 1;
-    return dependenceSatisfaction->satisfiable(alloc, sch, numLambda);
-  }
-  static auto checkDirection(BumpAlloc<> &alloc,
-                             const std::array<NotNull<Simplex>, 2> &p,
-                             NotNull<const MemoryAccess> x,
-                             NotNull<const MemoryAccess> y,
-                             NotNull<const AffineSchedule> xSchedule,
-                             NotNull<const AffineSchedule> ySchedule,
-                             size_t numLambda, Col nonTimeDim) -> bool {
-    const auto &[fxy, fyx] = p;
-    const size_t numLoopsX = x->getNumLoops();
-    const size_t numLoopsY = y->getNumLoops();
-#ifndef NDEBUG
-    const size_t numLoopsCommon = std::min(numLoopsX, numLoopsY);
-#endif
-    const size_t numLoopsTotal = numLoopsX + numLoopsY;
-    SquarePtrMatrix<int64_t> xPhi = xSchedule->getPhi();
-    SquarePtrMatrix<int64_t> yPhi = ySchedule->getPhi();
-    PtrVector<int64_t> xOffOmega = xSchedule->getOffsetOmega();
-    PtrVector<int64_t> yOffOmega = ySchedule->getOffsetOmega();
-    PtrVector<int64_t> xFusOmega = xSchedule->getFusionOmega();
-    PtrVector<int64_t> yFusOmega = ySchedule->getFusionOmega();
-    Vector<int64_t> sch;
-    sch.resizeForOverwrite(numLoopsTotal + 2);
-    // i iterates from outer-most to inner most common loop
-    for (size_t i = 0; /*i <= numLoopsCommon*/; ++i) {
-      if (yFusOmega[i] != xFusOmega[i]) return yFusOmega[i] > xFusOmega[i];
-      // we should not be able to reach `numLoopsCommon`
-      // because at the very latest, this last schedule value
-      // should be different, because either:
-      // if (numLoopsX == numLoopsY){
-      //   we're at the inner most loop, where one of the instructions
-      //   must have appeared before the other.
-      // } else {
-      //   the loop nests differ in depth, in which case the deeper
-      //   loop must appear either above or below the instructions
-      //   present at that level
-      // }
-      assert(i != numLoopsCommon);
-      sch[0] = xOffOmega[i];
-      sch[1] = yOffOmega[i];
-      sch[_(2, 2 + numLoopsX)] << xPhi(last - i, _);
-      sch[_(2 + numLoopsX, 2 + numLoopsTotal)] << yPhi(last - i, _);
-      if (fxy->unSatisfiableZeroRem(alloc, sch, numLambda,
-                                    size_t(nonTimeDim))) {
-        assert(!fyx->unSatisfiableZeroRem(alloc, sch, numLambda,
-                                          size_t(nonTimeDim)));
-        return false;
-      }
-      if (fyx->unSatisfiableZeroRem(alloc, sch, numLambda, size_t(nonTimeDim)))
-        return true;
-    }
-    // assert(false);
-    // return false;
-  }
-  // returns `true` if forward, x->y
-  static auto checkDirection(BumpAlloc<> &alloc,
-                             const std::array<NotNull<Simplex>, 2> &p,
-                             NotNull<const MemoryAccess> x,
-                             NotNull<const MemoryAccess> y, size_t numLambda,
-                             Col nonTimeDim) -> bool {
-    const auto &[fxy, fyx] = p;
-    size_t numLoopsX = x->getNumLoops(), numLoopsY = y->getNumLoops(),
-           nTD = size_t(nonTimeDim);
-#ifndef NDEBUG
-    const size_t numLoopsCommon = std::min(numLoopsX, numLoopsY);
-#endif
-    PtrVector<int64_t> xFusOmega = x->getFusionOmega();
-    PtrVector<int64_t> yFusOmega = y->getFusionOmega();
-    auto chkp = alloc.scope();
-    // i iterates from outer-most to inner most common loop
-    for (size_t i = 0; /*i <= numLoopsCommon*/; ++i) {
-      if (yFusOmega[i] != xFusOmega[i]) return yFusOmega[i] > xFusOmega[i];
-      // we should not be able to reach `numLoopsCommon`
-      // because at the very latest, this last schedule value
-      // should be different, because either:
-      // if (numLoopsX == numLoopsY){
-      //   we're at the inner most loop, where one of the instructions
-      //   must have appeared before the other.
-      // } else {
-      //   the loop nests differ in depth, in which case the deeper
-      //   loop must appear either above or below the instructions
-      //   present at that level
-      // }
-      assert(i < numLoopsCommon);
-      std::array<size_t, 2> inds{2 + i, 2 + i + numLoopsX};
-      if (fxy->unSatisfiableZeroRem(alloc, numLambda, inds, nTD)) {
-        assert(!fyx->unSatisfiableZeroRem(alloc, numLambda, inds, nTD));
-        return false;
-      }
-      if (fyx->unSatisfiableZeroRem(alloc, numLambda, inds, nTD)) return true;
-    }
-    invariant(false);
-    return false;
-  }
-  static auto timelessCheck(BumpAlloc<> &alloc, NotNull<DepPoly> dxy,
-                            NotNull<MemoryAccess> x, NotNull<MemoryAccess> y)
-    -> Dependence {
-    std::array<NotNull<Simplex>, 2> pair{dxy->farkasPair(alloc)};
-    const size_t numLambda = dxy->getNumLambda();
-    invariant(dxy->getTimeDim(), unsigned(0));
-    if (checkDirection(alloc, pair, x, y, numLambda, dxy->getA().numCol())) {
-      pair[0]->truncateVars(1 + numLambda + dxy->getNumScheduleCoef());
-      return Dependence{dxy, pair, {x, y}, true};
-    }
-    pair[1]->truncateVars(1 + numLambda + dxy->getNumScheduleCoef());
-    std::swap(pair[0], pair[1]);
-    return Dependence{dxy, pair, {y, x}, false};
-  }
-
-  // emplaces dependencies with repeat accesses to the same memory across
-  // time
-  static auto timeCheck(BumpAlloc<> &alloc, NotNull<DepPoly> dxy,
-                        NotNull<MemoryAccess> x, NotNull<MemoryAccess> y)
-    -> TinyVector<Dependence, 2> {
-    std::array<NotNull<Simplex>, 2> pair(dxy->farkasPair(alloc));
-    // copy backup
-    std::array<NotNull<Simplex>, 2> farkasBackups{pair[0]->copy(alloc),
-                                                  pair[1]->copy(alloc)};
-    const size_t numInequalityConstraintsOld =
-      dxy->getNumInequalityConstraints();
-    const size_t numEqualityConstraintsOld = dxy->getNumEqualityConstraints();
-    const size_t ineqEnd = 1 + numInequalityConstraintsOld;
-    const size_t posEqEnd = ineqEnd + numEqualityConstraintsOld;
-    const size_t numLambda = posEqEnd + numEqualityConstraintsOld;
-    const size_t numScheduleCoefs = dxy->getNumScheduleCoef();
-    invariant(numLambda, size_t(dxy->getNumLambda()));
-    NotNull<MemoryAccess> in = x, out = y;
-    const bool isFwd = checkDirection(alloc, pair, x, y, numLambda,
-                                      dxy->getA().numCol() - dxy->getTimeDim());
-    if (isFwd) {
-      std::swap(farkasBackups[0], farkasBackups[1]);
-    } else {
-      std::swap(in, out);
-      std::swap(pair[0], pair[1]);
-    }
-    pair[0]->truncateVars(1 + numLambda + numScheduleCoefs);
-    auto dep0 = Dependence{dxy->copy(alloc), pair, {in, out}, isFwd};
-    invariant(out->getNumLoops() + in->getNumLoops(),
-              dep0.getNumPhiCoefficients());
-    // pair is invalid
-    const size_t timeDim = dxy->getTimeDim();
-    invariant(timeDim > 0);
-    // 1 + because we're indexing into A and E, ignoring the constants
-    const size_t numVar = 1 + dxy->getNumVar() - timeDim;
-    // remove the time dims from the deps
-    // dep0.depPoly->truncateVars(numVar);
-
-    // dep0.depPoly->setTimeDim(0);
-    invariant(out->getNumLoops() + in->getNumLoops(),
-              dep0.getNumPhiCoefficients());
-    // now we need to check the time direction for all times
-    // anything approaching 16 time dimensions would be absolutely
-    // insane
-    Vector<bool, 16> timeDirection(timeDim);
-    size_t t = 0;
-    auto fE{farkasBackups[0]->getConstraints()(_, _(1, end))};
-    auto sE{farkasBackups[1]->getConstraints()(_, _(1, end))};
-    do {
-      // set `t`th timeDim to +1/-1
-      // basically, what we do here is set it to `step` and pretend it was
-      // a constant. so a value of c = a'x + t*step -> c - t*step = a'x so
-      // we update the constant `c` via `c -= t*step`.
-      // we have the problem that.
-      int64_t step = dxy->getNullStep(t);
-      size_t v = numVar + t, i = 0;
-      while (true) {
-        for (size_t c = 0; c < numInequalityConstraintsOld; ++c) {
-          int64_t Acv = dxy->getA(c, v);
-          if (!Acv) continue;
-          Acv *= step;
-          fE(0, c + 1) -= Acv; // *1
-          sE(0, c + 1) -= Acv; // *1
-        }
-        for (size_t c = 0; c < numEqualityConstraintsOld; ++c) {
-          // each of these actually represents 2 inds
-          int64_t Ecv = dxy->getE(c, v);
-          if (!Ecv) continue;
-          Ecv *= step;
-          fE(0, c + ineqEnd) -= Ecv;
-          fE(0, c + posEqEnd) += Ecv;
-          sE(0, c + ineqEnd) -= Ecv;
-          sE(0, c + posEqEnd) += Ecv;
-        }
-        if (i++ != 0) break; // break after undoing
-        timeDirection[t] =
-          checkDirection(alloc, farkasBackups, *out, *in, numLambda,
-                         dxy->getA().numCol() - dxy->getTimeDim());
-        step *= -1; // flip to undo, then break
-      }
-    } while (++t < timeDim);
-    t = 0;
-    do {
-      // checkDirection(farkasBackups, x, y, numLambda) == false
-      // correct time direction would make it return true
-      // thus sign = timeDirection[t] ? 1 : -1
-      int64_t step = (2 * timeDirection[t] - 1) * dxy->getNullStep(t);
-      size_t v = numVar + t;
-      for (size_t c = 0; c < numInequalityConstraintsOld; ++c) {
-        int64_t Acv = dxy->getA(c, v);
-        if (!Acv) continue;
-        Acv *= step;
-        dxy->getA(c, 0) -= Acv;
-        fE(0, c + 1) -= Acv; // *1
-        sE(0, c + 1) -= Acv; // *-1
-      }
-      for (size_t c = 0; c < numEqualityConstraintsOld; ++c) {
-        // each of these actually represents 2 inds
-        int64_t Ecv = dxy->getE(c, v);
-        if (!Ecv) continue;
-        Ecv *= step;
-        dxy->getE(c, 0) -= Ecv;
-        fE(0, c + ineqEnd) -= Ecv;
-        fE(0, c + posEqEnd) += Ecv;
-        sE(0, c + ineqEnd) -= Ecv;
-        sE(0, c + posEqEnd) += Ecv;
-      }
-    } while (++t < timeDim);
-    // dxy->truncateVars(numVar);
-    // dxy->setTimeDim(0);
-    farkasBackups[0]->truncateVars(1 + numLambda + numScheduleCoefs);
-    auto dep1 = Dependence{dxy, farkasBackups, {out, in}, !isFwd};
-    invariant(out->getNumLoops() + in->getNumLoops(),
-              dep0.getNumPhiCoefficients());
-    return {dep0, dep1};
-  }
-
-  static auto check(BumpAlloc<> &alloc, NotNull<MemoryAccess> x,
-                    NotNull<MemoryAccess> y) -> TinyVector<Dependence, 2> {
-    // TODO: implement gcd test
-    // if (x.gcdKnownIndependent(y)) return {};
-    DepPoly *dxy{DepPoly::dependence(alloc, x, y)};
-    if (!dxy) return {};
-    assert(x->getNumLoops() == dxy->getDim0());
-    assert(y->getNumLoops() == dxy->getDim1());
-    assert(x->getNumLoops() + y->getNumLoops() == dxy->getNumPhiCoef());
-    // note that we set boundAbove=true, so we reverse the
-    // dependence direction for the dependency we week, we'll
-    // discard the program variables x then y
-    if (dxy->getTimeDim()) return timeCheck(alloc, dxy, x, y);
-    return {timelessCheck(alloc, dxy, x, y)};
-  }
-
-  friend inline auto operator<<(llvm::raw_ostream &os, const Dependence &d)
-    -> llvm::raw_ostream & {
-    os << "Dependence Poly ";
-    if (d.forward) os << "x -> y:";
-    else os << "y -> x:";
-    if (d.in) os << "\n\tInput:\n" << *d.in;
-    if (d.out) os << "\n\tOutput:\n" << *d.out;
-    os << "\nA = " << d.depPoly->getA() << "\nE = " << d.depPoly->getE()
-       << "\nSchedule Constraints:"
-       << d.dependenceSatisfaction->getConstraints()
-       << "\nBounding Constraints:" << d.dependenceBounding->getConstraints();
-    return os << "\n";
-  }
-};

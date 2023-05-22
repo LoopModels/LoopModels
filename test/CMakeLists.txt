@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.23)
+cmake_minimum_required(VERSION 3.25)
 
 project(LoopModelsTests LANGUAGES CXX)
 
@@ -7,6 +7,7 @@ project(LoopModelsTests LANGUAGES CXX)
 option(ENABLE_TEST_COVERAGE "Enable test coverage" OFF)
 option(ENABLE_TEST_EXCEPTIONS "Enable test exceptions" OFF)
 option(TEST_INSTALLED_VERSION "Test the version found by find_package" OFF)
+option(ENABLE_LLD "Use lld for linking" ON)
 
 # --- Import tools ----
 
@@ -21,12 +22,12 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # CPMAddPackage("gh:onqtam/doctest@2.4.9")
 CPMAddPackage("gh:TheLartians/Format.cmake@1.7.3")
-CPMFindPackage(
+CPMAddPackage(
   NAME googletest
   GITHUB_REPOSITORY google/googletest
   GIT_TAG v1.13.0
   VERSION 1.13.0
-  OPTIONS "INSTALL_GTEST OFF" "BUILD_GMOCK OFF" "gtest_hide_internal_symbols ON"
+  OPTIONS "INSTALL_GTEST OFF" "BUILD_GMOCK OFF" "gtest_hide_internal_symbols ON" SYSTEM TRUE
 )
 CPMAddPackage(
   NAME unordered_dense
@@ -37,7 +38,7 @@ CPMAddPackage(
 if(TEST_INSTALLED_VERSION)
   find_package(LoopModels REQUIRED)
 else()
-  CPMAddPackage(NAME LoopModels SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR}/..)
+  add_subdirectory(.. LoopModels)
 endif()
 
 # ---- Create binary ----
@@ -75,39 +76,61 @@ add_executable(${PROJECT_NAME} ${tests})
 message(STATUS "PROJECT_BINARY_DIR: ${PROJECT_BINARY_DIR}")
 message(STATUS "PROJECT_SOURCE_DIR: ${PROJECT_SOURCE_DIR}")
 message(STATUS "LLVM_INCLUDE_DIRS: ${LLVM_INCLUDE_DIRS}")
-add_dependencies(${PROJECT_NAME} LoopModels)
+
 target_include_directories(
-  ${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/../include ${LLVM_INCLUDE_DIRS}
+  ${PROJECT_NAME} SYSTEM PRIVATE ${PROJECT_SOURCE_DIR}/../include ${LLVM_INCLUDE_DIRS}
 )
 target_precompile_headers(
   ${PROJECT_NAME}
   PRIVATE
-  <cstddef>
-  <algorithm>
-  <cassert>
-  <cmath>
-  <concepts>
-  <cstddef>
-  <cstdint>
-  <gtest/gtest.h>
-  <iterator>
-  <limits>
   <llvm/ADT/ArrayRef.h>
   <llvm/ADT/Optional.h>
   <llvm/ADT/SmallVector.h>
-  <llvm/Support/raw_os_ostream.h>
+  <llvm/Analysis/LoopInfo.h>
+  <llvm/Analysis/ScalarEvolution.h>
+  <llvm/Analysis/ScalarEvolutionExpressions.h>
+  <llvm/Analysis/TargetLibraryInfo.h>
+  <llvm/Analysis/TargetTransformInfo.h>
+  <llvm/IR/BasicBlock.h>
+  <llvm/IR/CFG.h>
+  <llvm/IR/Constant.h>
+  <llvm/IR/Constants.h>
+  <llvm/IR/DataLayout.h>
+  <llvm/IR/Dominators.h>
+  <llvm/IR/IRBuilder.h>
+  <llvm/IR/InstrTypes.h>
+  <llvm/IR/Instruction.h>
+  <llvm/IR/Instructions.h>
+  <llvm/IR/PassManager.h>
+  <llvm/IR/Type.h>
+  <llvm/IR/Value.h>
+  <llvm/Support/Casting.h>
+  <llvm/Support/Debug.h>
   <llvm/Support/raw_ostream.h>
+  <llvm/Transforms/Utils/LoopUtils.h>
+  <algorithm>
+  <cassert>
+  <cmath>
+  <cstddef>
+  <cstdint>
+  <limits>
+  <ranges>
+  <utility>
+  <cstddef>
+  <concepts>
+  <gtest/gtest.h>
+  <iterator>
+  <limits>
   <numeric>
   <optional>
   <ostream>
   <random>
-  <ranges>
   <string>
   <tuple>
   <type_traits>
   <utility>
 )
-# target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(
   ${PROJECT_NAME} PRIVATE GTest::gtest_main LLVM unordered_dense::unordered_dense
 )
@@ -131,7 +154,9 @@ if((USE_SANITIZER MATCHES "([Uu]ndefined)") OR (USE_SANITIZER MATCHES "([Aa]ddre
   if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 13.0)
     target_compile_options(${PROJECT_NAME} PRIVATE -fno-omit-frame-pointer -fsanitize-trap=all)
   else()
-    target_compile_options(${PROJECT_NAME} PRIVATE -fno-omit-frame-pointer -fno-sanitize-recover=all)
+    target_compile_options(
+      ${PROJECT_NAME} PRIVATE -fno-omit-frame-pointer -fno-sanitize-recover=all
+    )
   endif()
   # target_compile_options(${PROJECT_NAME} PRIVATE -fno-omit-frame-pointer
   # -fno-sanitize-recover=all)
@@ -165,7 +190,10 @@ endif()
 # PRIVATE -D_GLIBCXX_DEBUG)
 target_compile_options(LoopModels PRIVATE -D_GLIBCXX_ASSERTIONS)
 target_compile_options(${PROJECT_NAME} PRIVATE -D_GLIBCXX_ASSERTIONS)
-
+if(ENABLE_LLD)
+  target_link_options(${PROJECT_NAME} PRIVATE -fuse-ld=lld)
+  target_link_options(LoopModels PRIVATE -fuse-ld=lld)
+endif()
 # ---- code coverage ----
 
 message(STATUS "ENABLE_TEST_COVERAGE: ${ENABLE_TEST_COVERAGE}")
@@ -174,15 +202,13 @@ if(ENABLE_TEST_COVERAGE)
   target_link_options(LoopModels PUBLIC --coverage)
   target_compile_options(${PROJECT_NAME} PUBLIC -O0 -g --coverage)
   target_link_options(${PROJECT_NAME} PUBLIC --coverage)
-  # add_custom_target(
-  #   clean_coverage
-  #   COMMAND rm -f ${PROJECT_BINARY_DIR}/CMakeFiles/LoopModelsTests.dir/*.gcno
-  #   COMMAND rm -f ${PROJECT_BINARY_DIR}/CMakeFiles/LoopModelsTests.dir/*.gcda
-  #   COMMAND rm -f ${PROJECT_BINARY_DIR}/_deps/loopmodels-build/CMakeFiles/LoopModels.dir/lib/*.gcno
-  #   COMMAND rm -f ${PROJECT_BINARY_DIR}/_deps/loopmodels-build/CMakeFiles/LoopModels.dir/lib/*.gcda
-  #   COMMENT "Clearing out old coverage data."
-  # )
-  # add_dependencies(${PROJECT_NAME} clean_coverage)
+  add_custom_target(
+    clean_coverage
+    COMMAND rm -f ${PROJECT_BINARY_DIR}/CMakeFiles/LoopModelsTests.dir/*.gcda
+    COMMAND rm -f ${PROJECT_BINARY_DIR}/_deps/loopmodels-build/CMakeFiles/LoopModels.dir/lib/*.gcda
+    COMMENT "Clearing out old coverage data."
+  )
+  add_dependencies(${PROJECT_NAME} clean_coverage)
   message(STATUS "Test coverage enabled.")
 endif()
 

@@ -262,7 +262,7 @@ public:
     NotNull<const Simplex> simplex;
     size_t skippedVars;
     size_t numVars;
-    class iterator {
+    class iterator { // NOLINT(readability-identifier-naming)
       const Solution *sol;
       size_t i;
 
@@ -477,12 +477,12 @@ public:
     for (size_t i = 1; i < C.numRow(); ++i) {
       int64_t Civ = C(i, enteringVariable + 1);
       if (Civ <= 0) continue;
-      int64_t Ci0 = C(i, 0);
-      if (Ci0 == 0) return --i;
-      assert(Ci0 > 0);
-      if ((n * Ci0) >= (Civ * d)) continue;
+      int64_t Cio = C(i, 0);
+      if (Cio == 0) return --i;
+      invariant(Cio > 0);
+      if ((n * Cio) >= (Civ * d)) continue;
       n = Civ;
-      d = Ci0;
+      d = Cio;
       j = i;
     }
     // NOTE: if we fail to find a leaving variable, then `j = 0`,
@@ -559,11 +559,10 @@ public:
       auto ev = *enteringVariable;
       auto leaveOpt = getLeavingVariable(C, ev);
       if (!leaveOpt) break;
-      unsigned int _lVar = *leaveOpt;
-      unsigned int leavingVariable = _lVar++;
+      unsigned int lVar = *leaveOpt;
+      unsigned int leavingVariable = lVar++;
       for (size_t i = 0; i < C.numRow(); ++i)
-        if (i != size_t(_lVar))
-          NormalForm::zeroWithRowOp(C, i, _lVar, ev + 1, 0);
+        if (i != size_t(lVar)) NormalForm::zeroWithRowOp(C, i, lVar, ev + 1, 0);
       // update baisc vars and constraints
       int64_t oldBasicVar = basicVars[leavingVariable];
       basicVars[leavingVariable] = ev;

@@ -8,6 +8,7 @@
 #include "Math/MatrixDimensions.hpp"
 #include "Math/Rational.hpp"
 #include "Math/Vector.hpp"
+#include "TypePromotion.hpp"
 #include "Utilities/Invariant.hpp"
 #include "Utilities/Iterators.hpp"
 #include "Utilities/Optional.hpp"
@@ -92,9 +93,10 @@ template <class T, class S> struct Array {
   }
 
   [[nodiscard]] constexpr auto begin() const noexcept {
+    const T *p = ptr;
     if constexpr (std::is_same_v<S, StridedRange>)
-      return StridedIterator{data(), sz.stride};
-    else return data();
+      return StridedIterator{p, sz.stride};
+    else return p;
   }
   [[nodiscard]] constexpr auto end() const noexcept {
     return begin() + size_t(sz);
@@ -222,9 +224,29 @@ template <class T, class S> struct Array {
     }
     return std::equal(begin(), end(), other.begin());
   }
+  [[nodiscard]] constexpr auto operator<(const Array &other) const noexcept
+    -> bool {
+    static_assert(std::integral<S>);
+    return std::lexicographical_compare(begin(), end(), other.begin(),
+                                        other.end());
+  }
+  [[nodiscard]] constexpr auto operator>(const Array &other) const noexcept
+    -> bool {
+    return other < *this;
+  }
+  [[nodiscard]] constexpr auto operator>=(const Array &other) const noexcept
+    -> bool {
+    return !(*this < other);
+  }
+  [[nodiscard]] constexpr auto operator<=(const Array &other) const noexcept
+    -> bool {
+    return !(*this > other);
+  }
+  // FIXME: strided should skip over elements
   [[nodiscard]] constexpr auto norm2() const noexcept -> value_type {
     return std::transform_reduce(begin(), end(), begin(), 0.0);
   }
+  // FIXME: strided should skips over elements
   [[nodiscard]] constexpr auto sum() const noexcept -> value_type {
     return std::reduce(begin(), end());
   }
@@ -249,21 +271,21 @@ template <class T, class S> struct Array {
     if constexpr (std::integral<T>) {
       std::FILE *f = std::fopen(filename, "w");
       if (f == nullptr) return;
-      std::fprintf(f, "C= [");
+      (void)std::fprintf(f, "C= [");
       if constexpr (MatrixDimension<S>) {
         for (size_t i = 0; i < Row{sz}; ++i) {
-          if (i) std::fprintf(f, "\n");
-          std::fprintf(f, "%ld", int64_t((*this)(i, 0)));
+          if (i) (void)std::fprintf(f, "\n");
+          (void)std::fprintf(f, "%ld", int64_t((*this)(i, 0)));
           for (size_t j = 1; j < Col{sz}; ++j)
-            std::fprintf(f, " %ld", int64_t((*this)(i, j)));
+            (void)std::fprintf(f, " %ld", int64_t((*this)(i, j)));
         }
       } else {
-        std::fprintf(f, "%ld", int64_t((*this)[0]));
+        (void)std::fprintf(f, "%ld", int64_t((*this)[0]));
         for (size_t i = 1; (i < size_t(sz)); ++i)
-          std::fprintf(f, ", %ld", int64_t((*this)[i]));
+          (void)std::fprintf(f, ", %ld", int64_t((*this)[i]));
       }
-      std::fprintf(f, "]");
-      std::fclose(f);
+      (void)std::fprintf(f, "]");
+      (void)std::fclose(f);
     }
   }
 #endif
@@ -286,6 +308,7 @@ struct MutArray : Array<T, S>, ArrayOps<T, S, MutArray<T, S>> {
   constexpr auto operator=(const MutArray &) -> MutArray & = delete;
   // constexpr auto operator=(const MutArray &) -> MutArray & = default;
   constexpr auto operator=(MutArray &&) noexcept -> MutArray & = default;
+  constexpr MutArray(T *p, S s) : BaseT(p, s) {}
 
   constexpr void truncate(S nz) {
     S oz = this->sz;
@@ -366,9 +389,10 @@ struct MutArray : Array<T, S>, ArrayOps<T, S, MutArray<T, S>> {
   }
 
   [[nodiscard]] constexpr auto begin() noexcept {
+    T *p = this->ptr;
     if constexpr (std::is_same_v<S, StridedRange>)
-      return StridedIterator{data(), this->sz.stride};
-    else return data();
+      return StridedIterator{p, this->sz.stride};
+    else return p;
   }
   [[nodiscard]] constexpr auto end() noexcept {
     return begin() + size_t(this->sz);
@@ -488,14 +512,14 @@ struct MutArray : Array<T, S>, ArrayOps<T, S, MutArray<T, S>> {
   constexpr void moveLast(Col j) {
     static_assert(MatrixDimension<S>);
     if (j == this->numCol()) return;
-    Col Nm1 = this->numCol() - 1;
+    Col Nd = this->numCol() - 1;
     for (size_t m = 0; m < this->numRow(); ++m) {
       auto x = (*this)(m, j);
-      for (Col n = j; n < Nm1;) {
+      for (Col n = j; n < Nd;) {
         Col o = n++;
         (*this)(m, o) = (*this)(m, n);
       }
-      (*this)(m, Nm1) = x;
+      (*this)(m, Nd) = x;
     }
   }
 };
@@ -518,9 +542,13 @@ template <class T, class S,
 struct ResizeableView : MutArray<T, S> {
   using BaseT = MutArray<T, S>;
 
+  constexpr ResizeableView() noexcept : BaseT(nullptr, 0), capacity(0) {}
   constexpr ResizeableView(T *p, S s, U c) noexcept
     : BaseT(p, s), capacity(c) {}
 
+  [[nodiscard]] constexpr auto isFull() const -> bool {
+    return U(this->sz) == capacity;
+  }
   template <class... Args>
   constexpr auto emplace_back(Args &&...args) -> decltype(auto) {
     static_assert(std::is_integral_v<S>, "emplace_back requires integral size");
@@ -554,19 +582,8 @@ struct ResizeableView : MutArray<T, S> {
     S oz = this->sz;
     this->sz = nz;
     if constexpr (std::integral<S>) {
-      if (nz <= this->capacity) return;
-      U newCapacity = U(nz);
-#if __cplusplus >= 202202L
-      std::allocation_result res = allocator.allocate_at_least(newCapacity);
-      T *newPtr = res.ptr;
-      newCapacity = U(res.count);
-#else
-      T *newPtr = this->allocator.allocate(newCapacity);
-#endif
-      if (oz) std::copy_n(this->data(), oz, newPtr);
-      maybeDeallocate(newPtr, newCapacity);
-      invariant(newCapacity > oz);
-      std::fill_n((T *)(newPtr + oz), newCapacity - oz, T{});
+      invariant(U(nz) <= capacity);
+      if (nz > oz) std::fill(this->data() + oz, this->data() + nz, T{});
     } else {
       static_assert(MatrixDimension<S>, "Can only resize 1 or 2d containers.");
       auto newX = unsigned{RowStride{nz}}, oldX = unsigned{RowStride{oz}},
@@ -606,7 +623,8 @@ struct ResizeableView : MutArray<T, S> {
           do {
             src -= oldX;
             dst -= newX;
-            if (colsToCopy) std::copy_backward(src, src + colsToCopy, dst);
+            if (colsToCopy)
+              std::copy_backward(src, src + colsToCopy, dst + colsToCopy);
             if (fillCount) std::fill_n(dst + colsToCopy, fillCount, T{});
           } while (--rowsToCopy);
         }
@@ -616,6 +634,7 @@ struct ResizeableView : MutArray<T, S> {
         std::fill_n(npt + m * newX, newN, T{});
     }
   }
+
   constexpr void resize(Row r) {
     if constexpr (std::integral<S>) {
       return resize(S(r));
@@ -633,8 +652,7 @@ struct ResizeableView : MutArray<T, S> {
     }
   }
   constexpr void resizeForOverwrite(S M) {
-    U L = U(M);
-    invariant(L <= U(this->sz));
+    invariant(U(M) <= U(this->sz));
     this->sz = M;
   }
   constexpr void resizeForOverwrite(Row r) {
@@ -700,7 +718,7 @@ struct ReallocView : ResizeableView<T, S, U> {
   constexpr ReallocView(T *p, S s, U c, A alloc) noexcept
     : BaseT(p, s, c), allocator(alloc) {}
 
-  constexpr U newCapacity() const {
+  [[nodiscard]] constexpr auto newCapacity() const -> U {
     return static_cast<const P *>(this)->newCapacity();
   }
   template <class... Args>
@@ -727,19 +745,21 @@ struct ReallocView : ResizeableView<T, S, U> {
     S oz = this->sz;
     this->sz = nz;
     if constexpr (std::integral<S>) {
-      if (nz <= this->capacity) return;
-      U newCapacity = U(nz);
+      if (nz <= oz) return;
+      if (nz > this->capacity) {
+        U newCapacity = U(nz);
 #if __cplusplus >= 202202L
-      std::allocation_result res = allocator.allocate_at_least(newCapacity);
-      T *newPtr = res.ptr;
-      newCapacity = U(res.count);
+        std::allocation_result res = allocator.allocate_at_least(newCapacity);
+        T *newPtr = res.ptr;
+        newCapacity = U(res.count);
 #else
-      T *newPtr = this->allocator.allocate(newCapacity);
+        T *newPtr = allocator.allocate(newCapacity);
 #endif
-      if (oz) std::copy_n(this->data(), oz, newPtr);
-      maybeDeallocate(newPtr, newCapacity);
-      invariant(newCapacity > oz);
-      std::fill_n((T *)(newPtr + oz), newCapacity - oz, T{});
+        if (oz) std::copy_n(this->data(), oz, newPtr);
+        maybeDeallocate(newPtr, newCapacity);
+        invariant(newCapacity > oz);
+      }
+      std::fill(this->data() + oz, this->data() + nz, T{});
     } else {
       static_assert(MatrixDimension<S>, "Can only resize 1 or 2d containers.");
       U len = U(nz);
@@ -757,7 +777,7 @@ struct ReallocView : ResizeableView<T, S, U> {
         len = U(res.count);
       }
 #else
-      T *npt = newAlloc ? this->allocator.allocate(len) : this->data();
+      T *npt = newAlloc ? allocator.allocate(len) : this->data();
 #endif
       // we can copy forward so long as the new stride is smaller
       // so that the start of the dst range is outside of the src range
@@ -793,7 +813,7 @@ struct ReallocView : ResizeableView<T, S, U> {
             src -= oldX;
             dst -= newX;
             if (colsToCopy && (rowsToCopy > inPlace))
-              std::copy_backward(src, src + colsToCopy, dst);
+              std::copy_backward(src, src + colsToCopy, dst + colsToCopy);
             if (fillCount) std::fill_n(dst + colsToCopy, fillCount, T{});
           } while (--rowsToCopy);
         }
@@ -910,14 +930,14 @@ struct ReallocView : ResizeableView<T, S, U> {
   constexpr void moveLast(Col j) {
     static_assert(MatrixDimension<S>);
     if (j == this->numCol()) return;
-    Col Nm1 = this->numCol() - 1;
+    Col Nd = this->numCol() - 1;
     for (size_t m = 0; m < this->numRow(); ++m) {
       auto x = (*this)(m, j);
-      for (Col n = j; n < Nm1;) {
+      for (Col n = j; n < Nd;) {
         Col o = n++;
         (*this)(m, o) = (*this)(m, n);
       }
-      (*this)(m, Nm1) = x;
+      (*this)(m, Nd) = x;
     }
   }
 
@@ -941,7 +961,7 @@ protected:
   [[nodiscard]] constexpr auto getmemptr() const -> const T * {
     return static_cast<const P *>(this)->getmemptr();
   }
-  constexpr bool wasAllocated() const {
+  [[nodiscard]] constexpr auto wasAllocated() const -> bool {
     return static_cast<const P *>(this)->wasAllocated();
   }
   // this method should only be called from the destructor
@@ -1229,12 +1249,12 @@ struct ManagedArray : ReallocView<T, S, ManagedArray<T, S, N, A, U>, A, U> {
     adaptOStream(*os, x);
   }
   [[nodiscard]] auto getmemptr() const -> const T * { return memory.data(); }
-  [[nodiscard]] constexpr U newCapacity() const {
+  [[nodiscard]] constexpr auto newCapacity() const -> U {
     if constexpr (N == 0)
       return this->capacity == 0 ? U{4} : 2 * this->capacity;
     else return 2 * this->capacity;
   }
-  [[nodiscard]] constexpr bool wasAllocated() const {
+  [[nodiscard]] constexpr auto wasAllocated() const -> bool {
     if constexpr (N == 0) return this->ptr != nullptr;
     else return !isSmall();
   }
@@ -1418,7 +1438,9 @@ inline auto operator<<(llvm::raw_ostream &os, PtrVector<T> const &A)
 }
 inline auto operator<<(llvm::raw_ostream &os, const AbstractVector auto &A)
   -> llvm::raw_ostream & {
-  return printVector(os, A.view());
+  Vector<eltype_t<decltype(A)>> B(A.size());
+  B << A;
+  return printVector(os, B);
 }
 template <std::integral T> struct MaxPow10 {
   static constexpr T value = (sizeof(T) == 1)   ? 3

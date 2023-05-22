@@ -15,7 +15,6 @@
 #include <cstdint>
 #include <limits>
 #include <llvm/ADT/ArrayRef.h>
-#include <llvm/ADT/SmallPtrSet.h>
 #include <llvm/ADT/SmallVector.h>
 #include <llvm/Analysis/AssumptionCache.h>
 #include <llvm/Analysis/Delinearization.h>
@@ -46,6 +45,7 @@
 #include <ranges>
 #include <utility>
 
+// NOLINTNEXTLINE(misc-no-recursion)
 inline auto countNumLoopsPlusLeaves(const llvm::Loop *L) -> size_t {
   const std::vector<llvm::Loop *> &subLoops = L->getSubLoops();
   if (subLoops.empty()) return 1;
@@ -98,23 +98,23 @@ public:
   void initializeLoopForest() {
     // NOTE: LoopInfo stores loops in reverse program order (opposite of
     // loops)
-    auto RLI = llvm::reverse(*LI);
-    auto RLIB = RLI.begin();
-    auto RLIE = RLI.end();
-    if (RLIB == RLIE) return;
+    auto revLI = llvm::reverse(*LI);
+    auto ib = revLI.begin();
+    auto ie = revLI.end();
+    if (ib == ie) return;
     // pushLoopTree wants a direct path from the last loop's exit block to
     // E; we drop loops until we find one for which this is trivial.
-    llvm::BasicBlock *E = (*--RLIE)->getExitBlock();
+    llvm::BasicBlock *E = (*--ie)->getExitBlock();
     while (!E) {
-      if (RLIE == RLIB) return;
-      E = (*--RLIE)->getExitingBlock();
+      if (ie == ib) return;
+      E = (*--ie)->getExitingBlock();
     }
     // pushLoopTree wants a direct path from H to the first loop's header;
     // we drop loops until we find one for which this is trivial.
-    llvm::BasicBlock *H = (*RLIB)->getLoopPreheader();
+    llvm::BasicBlock *H = (*ib)->getLoopPreheader();
     while (!H) {
-      if (RLIE == RLIB) return;
-      H = (*++RLIB)->getLoopPreheader();
+      if (ie == ib) return;
+      H = (*++ib)->getLoopPreheader();
     }
     // should normally be stack allocated; we want to avoid different
     // specializations for `llvm::reverse(*LoopInfo)` and
@@ -122,12 +122,11 @@ public:
     // But we could consider specializing on top level vs not.
     // Track position within the loop nest
     {
-      llvm::SmallVector<llvm::Loop *> revLI{RLIB, RLIE + 1};
+      llvm::SmallVector<llvm::Loop *> rLI{ib, ie + 1};
       NoWrapRewriter nwr(*SE);
-      pushLoopTree(loopForests, nullptr, revLI, H, E, nwr);
+      pushLoopTree(loopForests, nullptr, rLI, H, E, nwr);
     }
-    for (auto forest : loopForests)
-      forest->addZeroLowerBounds(allocator, loopMap);
+    for (auto forest : loopForests) forest->addZeroLowerBounds(loopMap);
   }
 
   auto initLoopTree(llvm::SmallVector<NotNull<LoopTree>> &pForest,
@@ -179,6 +178,7 @@ public:
   /// the first sub-loop's preheader
   /// 6. `llvm::BasicBlock *E`: Exit - we need a direct path from the last
   /// sub-loop's exit block to this.
+  // NOLINTNEXTLINE(misc-no-recursion)
   auto pushLoopTree(llvm::SmallVector<NotNull<LoopTree>> &pForest,
                     llvm::Loop *L, llvm::ArrayRef<llvm::Loop *> subLoops,
                     llvm::BasicBlock *H, llvm::BasicBlock *E,
@@ -232,7 +232,7 @@ public:
         // `depth == 0` indicates failure, therefore we need to
         // split loops
         anyFail = true;
-        if (branches.size()) split(branches, branchBlocks, H, L);
+        if (!branches.empty()) split(branches, branchBlocks, H, L);
         if (i + 1 < numSubLoops) H = subLoops[i + 1]->getLoopPreheader();
       }
     }
@@ -292,6 +292,7 @@ public:
       offsets.push_back(x);
     }
   }
+  // NOLINTNEXTLINE(misc-no-recursion)
   static auto blackListAllDependentLoops(const llvm::SCEV *S) -> uint64_t {
     uint64_t flag{0};
     if (const auto *x = llvm::dyn_cast<const llvm::SCEVNAryExpr>(S)) {
@@ -315,7 +316,7 @@ public:
     return blackListAllDependentLoops(S) >> (numPeeled + 1);
   }
   // translates scev S into loops and symbols
-  auto
+  auto // NOLINTNEXTLINE(misc-no-recursion)
   fillAffineIndices(MutPtrVector<int64_t> v, Vector<int64_t> &offsets,
                     llvm::SmallVector<const llvm::SCEV *, 3> &symbolicOffsets,
                     const llvm::SCEV *S, int64_t mlt, size_t numPeeled)
@@ -472,6 +473,12 @@ public:
       Rt(_, _(numExtraLoopsToPeel, end)),
       {std::move(sizes), std::move(symbolicOffsets)}, Bt, omegas));
     ++omegas.back();
+    if (ORE) [[unlikely]] {
+      llvm::SmallVector<char> x;
+      llvm::raw_svector_ostream os{x};
+      os << "Found ref: " << *LT.memAccesses.back()->getArrayRef();
+      remark("AffineRef", LT.loop, os.str());
+    }
     return false;
   }
   // LoopTree &getLoopTree(unsigned i) { return loopTrees[i]; }
@@ -502,13 +509,14 @@ public:
     for (llvm::Instruction &J : *BB) {
       if (LT.loop) assert(LT.loop->contains(&J));
       if (J.mayReadFromMemory()) {
-        if (auto *LInst = llvm::dyn_cast<llvm::LoadInst>(&J))
-          if (addRef(LT, LInst, omega)) return;
+        if (auto *load = llvm::dyn_cast<llvm::LoadInst>(&J))
+          if (addRef(LT, load, omega)) return;
       } else if (J.mayWriteToMemory())
-        if (auto *SInst = llvm::dyn_cast<llvm::StoreInst>(&J))
-          if (addRef(LT, SInst, omega)) return;
+        if (auto *store = llvm::dyn_cast<llvm::StoreInst>(&J))
+          if (addRef(LT, store, omega)) return;
     }
   }
+  // NOLINTNEXTLINE(misc-no-recursion)
   void visit(LoopTree &LT, Predicate::Map &map, Vector<unsigned> &omega,
              aset<llvm::BasicBlock *> &visited, llvm::BasicBlock *BB) {
     if ((!map.isInPath(BB)) || visited.contains(BB)) return;
@@ -527,6 +535,7 @@ public:
   // pL: 0
   //
   // [0, 0]
+  // NOLINTNEXTLINE(misc-no-recursion)
   void parseLoop(LoopTree &LT, Vector<unsigned> &omega) {
 #ifndef NDEBUG
     size_t numOmegaInitial = omega.size();
@@ -567,6 +576,7 @@ public:
     peelOuterLoops(*loopMap[L], numToPeel);
   }
   // peelOuterLoops is recursive inwards
+  // NOLINTNEXTLINE(misc-no-recursion)
   void peelOuterLoops(LoopTree &LT, size_t numToPeel) {
     for (auto SL : LT) peelOuterLoops(*SL, numToPeel);
     for (auto &MA : LT.memAccesses) MA->peelLoops(numToPeel);
@@ -600,7 +610,7 @@ public:
   // approach: remove LoopIndex, and all loops that follow, unless it is
   // first in which case, just remove LoopIndex
   void conditionOnLoop(llvm::Loop *L) { conditionOnLoop(loopMap[L]); }
-  void conditionOnLoop(LoopTree *LT) {
+  void conditionOnLoop(LoopTree *LT) { // NOLINT(misc-no-recursion)
     if (!LT->parentLoop) return;
     LoopTree &PT = *LT->parentLoop;
     size_t numLoops = LT->getNumLoops();
@@ -650,16 +660,16 @@ public:
     conditionOnLoop(&PT);
   }
   auto isLoopDependent(llvm::Value *v) const -> bool {
-    for (const auto &L : *LI)
-      if (!L->isLoopInvariant(v)) return true;
-    return false;
+    return !std::ranges::all_of(
+      *LI, [v](const auto &L) { return L->isLoopInvariant(v); });
   }
-  auto mayReadOrWriteMemory(llvm::Value *v) const -> bool {
+  // NOLINTNEXTLINE(misc-no-recursion)
+  static auto mayReadOrWriteMemory(llvm::Value *v) -> bool {
     if (auto *inst = llvm::dyn_cast<llvm::Instruction>(v))
       if (inst->mayReadOrWriteMemory()) return true;
     return false;
   }
-  void fillLoopBlock(LoopTree &root) {
+  void fillLoopBlock(LoopTree &root) { // NOLINT(misc-no-recursion)
     for (auto mem : root.memAccesses) loopBlock.addMemory(mem);
     for (auto sub : root.subLoops) fillLoopBlock(*sub);
   }

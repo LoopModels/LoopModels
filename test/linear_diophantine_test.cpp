@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <gtest/gtest.h>
 #include <iostream>
+#include <llvm/Support/raw_os_ostream.h>
 #include <random>
 
 // NOLINTNEXTLINE(modernize-use-trailing-return-type)

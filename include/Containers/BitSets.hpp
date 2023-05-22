@@ -27,14 +27,19 @@ struct EndSentinel {
 template <typename T>
 concept CanResize = requires(T t) { t.resize(0); };
 
-struct BitSetIterator {
-  using value_type = size_t;
-  using difference_type = ptrdiff_t;
+class BitSetIterator {
   [[no_unique_address]] const uint64_t *it;
   [[no_unique_address]] const uint64_t *end;
   [[no_unique_address]] uint64_t istate;
   [[no_unique_address]] size_t cstate0{std::numeric_limits<size_t>::max()};
   [[no_unique_address]] size_t cstate1{0};
+
+public:
+  constexpr BitSetIterator(const uint64_t *_it, const uint64_t *_end,
+                           uint64_t _istate)
+    : it{_it}, end{_end}, istate{_istate} {}
+  using value_type = size_t;
+  using difference_type = ptrdiff_t;
   constexpr auto operator*() const -> size_t { return cstate0 + cstate1; }
   constexpr auto operator++() -> BitSetIterator & {
     while (istate == 0) {
@@ -62,13 +67,15 @@ struct BitSetIterator {
   constexpr auto operator==(BitSetIterator j) const -> bool {
     return (it == j.it) && (istate == j.istate);
   }
+  friend constexpr auto operator==(EndSentinel, const BitSetIterator &bt)
+    -> bool {
+    return bt.it == bt.end && (bt.istate == 0);
+  }
+  friend constexpr auto operator!=(EndSentinel, const BitSetIterator &bt)
+    -> bool {
+    return bt.it != bt.end || (bt.istate != 0);
+  }
 };
-constexpr auto operator==(EndSentinel, const BitSetIterator &it) -> bool {
-  return it.it == it.end && (it.istate == 0);
-}
-constexpr auto operator!=(EndSentinel, const BitSetIterator &it) -> bool {
-  return it.it != it.end || (it.istate != 0);
-}
 
 /// A set of `size_t` elements.
 /// Initially constructed
@@ -78,10 +85,10 @@ template <typename T = Vector<uint64_t, 1>> struct BitSet {
   //     return data[i];
   // } // allow `getindex` but not `setindex`
   constexpr BitSet() = default;
-  static constexpr auto numElementsNeeded(size_t N) -> size_t {
-    return ((N + 63) >> 6);
+  static constexpr auto numElementsNeeded(size_t N) -> unsigned {
+    return unsigned(((N + 63) >> 6));
   }
-  constexpr BitSet(size_t N) : data(numElementsNeeded(N)) {}
+  constexpr BitSet(size_t N) : data{numElementsNeeded(N), 0} {}
   constexpr void resize64(size_t N) {
     if constexpr (CanResize<T>) data.resize(N);
     else assert(N <= data.size());

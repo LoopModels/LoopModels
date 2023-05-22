@@ -4,9 +4,11 @@
 #include <llvm/Support/Casting.h>
 
 // TODO: communicate not-null to the compiler somehow?
-template <typename T> struct NotNull {
+template <typename T> class NotNull {
+  [[no_unique_address]] T *value;
   // we shouldn't be calling the default ctor
   // constexpr NotNull() : value(nullptr) { assert(false); }
+public:
   NotNull() = delete;
   constexpr NotNull(T &v) : value(&v) {}
   constexpr NotNull(T *v) : value(v) { invariant(value != nullptr); }
@@ -141,9 +143,6 @@ template <typename T> struct NotNull {
     invariant(value != nullptr);
     return (reinterpret_cast<size_t>(value) % x) == 0;
   }
-
-private:
-  [[no_unique_address]] T *value;
 };
 template <typename T> NotNull(T &) -> NotNull<T>;
 template <typename T> NotNull(T *) -> NotNull<T *>;

@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "BitSets.hpp"
+#include "Containers/BitSets.hpp"
 #include "Math/Array.hpp"
 #include "Math/AxisTypes.hpp"
 #include "Math/Comparisons.hpp"

@@ -20,7 +20,7 @@ CPMAddPackage(
   GITHUB_REPOSITORY google/benchmark
   VERSION 1.7.1
   OPTIONS "BENCHMARK_ENABLE_TESTING Off" "BENCHMARK_ENABLE_LIBPFM On" "BENCHMARK_ENABLE_WERROR Off"
-          "BENCHMARK_ENABLE_EXCEPTIONS Off"
+          "BENCHMARK_ENABLE_EXCEPTIONS Off" SYSTEM TRUE
 )
 if(benchmark_ADDED)
   # enable c++11 to avoid compilation errors
@@ -30,7 +30,7 @@ endif()
 CPMAddPackage(
   NAME unordered_dense
   GITHUB_REPOSITORY chriselrod/unordered_dense
-  GIT_TAG fnoexceptions
+  GIT_TAG fnoexceptions SYSTEM TRUE
 )
 
 # file(GLOB_RECURSE headers CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/include/*.hpp)
@@ -46,9 +46,9 @@ message(STATUS "PROJECT_BINARY_DIR: ${PROJECT_BINARY_DIR}")
 message(STATUS "PROJECT_SOURCE_DIR: ${PROJECT_SOURCE_DIR}")
 message(STATUS "LLVM_INCLUDE_DIRS: ${LLVM_INCLUDE_DIRS}")
 
+target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${LLVM_INCLUDE_DIRS})
 target_include_directories(
   ${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/../include ${PROJECT_SOURCE_DIR}/include
-                          ${LLVM_INCLUDE_DIRS}
 )
 find_package(OpenMP)
 target_link_libraries(

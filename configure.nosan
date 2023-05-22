@@ -1,0 +1,4 @@
+#!/bin/sh
+
+CXXFLAGS="" CXX=g++ cmake -S test -B buildgcc/nosan -DCMAKE_BUILD_TYPE=Debug "$@"
+CXXFLAGS="" CXX=clang++ cmake -S test -B buildclang/nosan -DCMAKE_BUILD_TYPE=Debug "$@"
