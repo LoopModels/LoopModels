@@ -860,40 +860,32 @@ $(function() {
 <div class="line"><a name="l00807"></a><span class="lineno">  807</span>&#160;  <span class="keyword">auto</span> &amp;accesses{L-&gt;getInitAddr(alloc)};</div>
 <div class="line"><a name="l00808"></a><span class="lineno">  808</span>&#160;  <span class="keywordtype">unsigned</span> numMem = memory.size(), offset = accesses.size(),</div>
 <div class="line"><a name="l00809"></a><span class="lineno">  809</span>&#160;           sId = std::numeric_limits&lt;unsigned&gt;::max() &gt;&gt; 1, j = 0;</div>
-<div class="line"><a name="l00810"></a><span class="lineno">  810</span>&#160;  <a class="code" href="structAffineLoopNest.html">AffineLoopNest&lt;false&gt;</a> *loop = <span class="keyword">nullptr</span>;</div>
-<div class="line"><a name="l00811"></a><span class="lineno">  811</span>&#160;  <span class="comment">// FIXME: start from store, search up for loop of depth `d`.</span></div>
-<div class="line"><a name="l00812"></a><span class="lineno">  812</span>&#160;  <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i : memory) {</div>
-<div class="line"><a name="l00813"></a><span class="lineno">  813</span>&#160;    <a class="code" href="structMemoryAccess.html">MemoryAccess</a> *mem = memAccess[i];</div>
-<div class="line"><a name="l00814"></a><span class="lineno">  814</span>&#160;    <span class="keywordflow">if</span> (mem-&gt;getNumLoops() != Phi.numCol()) <span class="keywordflow">continue</span>;</div>
-<div class="line"><a name="l00815"></a><span class="lineno">  815</span>&#160;    loop = mem-&gt;getLoop()-&gt;rotate(alloc, Pinv, offsets);</div>
-<div class="line"><a name="l00816"></a><span class="lineno">  816</span>&#160;    <span class="keywordflow">break</span>;</div>
-<div class="line"><a name="l00817"></a><span class="lineno">  817</span>&#160;  }</div>
-<div class="line"><a name="l00818"></a><span class="lineno">  818</span>&#160;  invariant(loop != <span class="keyword">nullptr</span>);</div>
-<div class="line"><a name="l00819"></a><span class="lineno">  819</span>&#160;  <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i : memory) {</div>
-<div class="line"><a name="l00820"></a><span class="lineno">  820</span>&#160;    <a class="code" href="classNotNull.html">NotNull&lt;MemoryAccess&gt;</a> mem = memAccess[i];</div>
-<div class="line"><a name="l00821"></a><span class="lineno">  821</span>&#160;    <span class="keywordtype">bool</span> isStore = mem-&gt;isStore();</div>
-<div class="line"><a name="l00822"></a><span class="lineno">  822</span>&#160;    <span class="keywordflow">if</span> (isStore) sId = j;</div>
-<div class="line"><a name="l00823"></a><span class="lineno">  823</span>&#160;    ++j;</div>
-<div class="line"><a name="l00824"></a><span class="lineno">  824</span>&#160;    <span class="keywordtype">size_t</span> inputEdges = mem-&gt;inputEdges().size(),</div>
-<div class="line"><a name="l00825"></a><span class="lineno">  825</span>&#160;           outputEdges = mem-&gt;outputEdges().size();</div>
-<div class="line"><a name="l00826"></a><span class="lineno">  826</span>&#160;    <a class="code" href="classAddress.html">Address</a> *addr = Address::construct(</div>
-<div class="line"><a name="l00827"></a><span class="lineno">  827</span>&#160;      alloc, loop, mem, isStore, Pinv, denom, schedule.getOffsetOmega(), L,</div>
-<div class="line"><a name="l00828"></a><span class="lineno">  828</span>&#160;      inputEdges, isStore ? numMem - 1 : 1, outputEdges, offsets);</div>
-<div class="line"><a name="l00829"></a><span class="lineno">  829</span>&#160;    mem-&gt;setAddress(addr);</div>
-<div class="line"><a name="l00830"></a><span class="lineno">  830</span>&#160;    accesses.push_back(addr);</div>
-<div class="line"><a name="l00831"></a><span class="lineno">  831</span>&#160;  }</div>
-<div class="line"><a name="l00832"></a><span class="lineno">  832</span>&#160;  <a class="code" href="classAddress.html">Address</a> *store = accesses[offset + sId];</div>
-<div class="line"><a name="l00833"></a><span class="lineno">  833</span>&#160;  <span class="comment">// addrs all need direct connections</span></div>
-<div class="line"><a name="l00834"></a><span class="lineno">  834</span>&#160;  <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0, k = 0; i &lt; numMem; ++i)</div>
-<div class="line"><a name="l00835"></a><span class="lineno">  835</span>&#160;    <span class="keywordflow">if</span> (i != sId) accesses[offset + i]-&gt;addDirectConnection(store, k++);</div>
-<div class="line"><a name="l00836"></a><span class="lineno">  836</span>&#160;}</div>
-<div class="line"><a name="l00837"></a><span class="lineno">  837</span>&#160;[[nodiscard]] constexpr <span class="keyword">auto</span> Address::getCurrentDepth() const -&gt; <span class="keywordtype">unsigned</span> {</div>
-<div class="line"><a name="l00838"></a><span class="lineno">  838</span>&#160;  <span class="keywordflow">return</span> node-&gt;getDepth();</div>
-<div class="line"><a name="l00839"></a><span class="lineno">  839</span>&#160;}</div>
+<div class="line"><a name="l00810"></a><span class="lineno">  810</span>&#160;  <a class="code" href="classNotNull.html">NotNull&lt;AffineLoopNest&lt;false&gt;</a>&gt; loop = loopNest-&gt;rotate(alloc, Pinv, offsets);</div>
+<div class="line"><a name="l00811"></a><span class="lineno">  811</span>&#160;  <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i : memory) {</div>
+<div class="line"><a name="l00812"></a><span class="lineno">  812</span>&#160;    <a class="code" href="classNotNull.html">NotNull&lt;MemoryAccess&gt;</a> mem = memAccess[i];</div>
+<div class="line"><a name="l00813"></a><span class="lineno">  813</span>&#160;    <span class="keywordtype">bool</span> isStore = mem-&gt;isStore();</div>
+<div class="line"><a name="l00814"></a><span class="lineno">  814</span>&#160;    <span class="keywordflow">if</span> (isStore) sId = j;</div>
+<div class="line"><a name="l00815"></a><span class="lineno">  815</span>&#160;    ++j;</div>
+<div class="line"><a name="l00816"></a><span class="lineno">  816</span>&#160;    <span class="keywordtype">size_t</span> inputEdges = mem-&gt;inputEdges().size(),</div>
+<div class="line"><a name="l00817"></a><span class="lineno">  817</span>&#160;           outputEdges = mem-&gt;outputEdges().size();</div>
+<div class="line"><a name="l00818"></a><span class="lineno">  818</span>&#160;    <a class="code" href="classAddress.html">Address</a> *addr = Address::construct(</div>
+<div class="line"><a name="l00819"></a><span class="lineno">  819</span>&#160;      alloc, loop, mem, isStore, Pinv, denom, schedule.getOffsetOmega(), L,</div>
+<div class="line"><a name="l00820"></a><span class="lineno">  820</span>&#160;      inputEdges, isStore ? numMem - 1 : 1, outputEdges, offsets);</div>
+<div class="line"><a name="l00821"></a><span class="lineno">  821</span>&#160;    mem-&gt;setAddress(addr);</div>
+<div class="line"><a name="l00822"></a><span class="lineno">  822</span>&#160;    accesses.push_back(addr);</div>
+<div class="line"><a name="l00823"></a><span class="lineno">  823</span>&#160;  }</div>
+<div class="line"><a name="l00824"></a><span class="lineno">  824</span>&#160;  <a class="code" href="classAddress.html">Address</a> *store = accesses[offset + sId];</div>
+<div class="line"><a name="l00825"></a><span class="lineno">  825</span>&#160;  <span class="comment">// addrs all need direct connections</span></div>
+<div class="line"><a name="l00826"></a><span class="lineno">  826</span>&#160;  <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0, k = 0; i &lt; numMem; ++i)</div>
+<div class="line"><a name="l00827"></a><span class="lineno">  827</span>&#160;    <span class="keywordflow">if</span> (i != sId) accesses[offset + i]-&gt;addDirectConnection(store, k++);</div>
+<div class="line"><a name="l00828"></a><span class="lineno">  828</span>&#160;}</div>
+<div class="line"><a name="l00829"></a><span class="lineno">  829</span>&#160;[[nodiscard]] constexpr <span class="keyword">auto</span> Address::getCurrentDepth() const -&gt; <span class="keywordtype">unsigned</span> {</div>
+<div class="line"><a name="l00830"></a><span class="lineno">  830</span>&#160;  <span class="keywordflow">return</span> node-&gt;getDepth();</div>
+<div class="line"><a name="l00831"></a><span class="lineno">  831</span>&#160;}</div>
 <div class="ttc" id="aclassAddress_html"><div class="ttname"><a href="classAddress.html">Address</a></div><div class="ttdef"><b>Definition:</b> Address.hpp:60</div></div>
 <div class="ttc" id="aclassCostModeling_1_1LoopTreeSchedule_html"><div class="ttname"><a href="classCostModeling_1_1LoopTreeSchedule.html">CostModeling::LoopTreeSchedule</a></div><div class="ttdef"><b>Definition:</b> CostModeling.hpp:144</div></div>
-<div class="ttc" id="aclassLinearProgramLoopBlock_html"><div class="ttname"><a href="classLinearProgramLoopBlock.html">LinearProgramLoopBlock</a></div><div class="ttdef"><b>Definition:</b> LoopBlock.hpp:305</div></div>
-<div class="ttc" id="aclassNotNull_html"><div class="ttname"><a href="classNotNull.html">NotNull&lt; MemoryAccess &gt;</a></div></div>
+<div class="ttc" id="aclassLinearProgramLoopBlock_html"><div class="ttname"><a href="classLinearProgramLoopBlock.html">LinearProgramLoopBlock</a></div><div class="ttdef"><b>Definition:</b> LoopBlock.hpp:316</div></div>
+<div class="ttc" id="aclassNotNull_html"><div class="ttname"><a href="classNotNull.html">NotNull</a></div><div class="ttdef"><b>Definition:</b> Valid.hpp:7</div></div>
 <div class="ttc" id="astructAffineLoopNest_html"><div class="ttname"><a href="structAffineLoopNest.html">AffineLoopNest</a></div><div class="ttdef"><b>Definition:</b> Loops.hpp:327</div></div>
 <div class="ttc" id="astructAffineSchedule_html"><div class="ttname"><a href="structAffineSchedule.html">AffineSchedule</a></div><div class="ttdef"><b>Definition:</b> Schedule.hpp:34</div></div>
 <div class="ttc" id="astructBitSet_html"><div class="ttname"><a href="structBitSet.html">BitSet</a></div><div class="ttdef"><b>Definition:</b> BitSets.hpp:82</div></div>
@@ -901,8 +893,7 @@ $(function() {
 <div class="ttc" id="astructBumpAlloc_html_ae4e8781c9a410275faa2849e0af9c7a2"><div class="ttname"><a href="structBumpAlloc.html#ae4e8781c9a410275faa2849e0af9c7a2">BumpAlloc::reallocate</a></div><div class="ttdeci">constexpr auto reallocate(void *Ptr, size_t szOld, size_t szNew, size_t Align) -&gt; void *</div><div class="ttdef"><b>Definition:</b> Allocators.hpp:169</div></div>
 <div class="ttc" id="astructCostModeling_1_1CPURegisterFile_html"><div class="ttname"><a href="structCostModeling_1_1CPURegisterFile.html">CostModeling::CPURegisterFile</a></div><div class="ttdef"><b>Definition:</b> CostModeling.hpp:37</div></div>
 <div class="ttc" id="astructCostModeling_1_1LoopTreeSchedule_1_1AddressGraph_html"><div class="ttname"><a href="structCostModeling_1_1LoopTreeSchedule_1_1AddressGraph.html">CostModeling::LoopTreeSchedule::AddressGraph</a></div><div class="ttdef"><b>Definition:</b> CostModeling.hpp:149</div></div>
-<div class="ttc" id="astructLinAlg_1_1ResizeableView_html"><div class="ttname"><a href="structLinAlg_1_1ResizeableView.html">LinAlg::ResizeableView</a></div><div class="ttdef"><b>Definition:</b> Array.hpp:540</div></div>
-<div class="ttc" id="astructMemoryAccess_html"><div class="ttname"><a href="structMemoryAccess.html">MemoryAccess</a></div><div class="ttdoc">A particular memory access instance.</div><div class="ttdef"><b>Definition:</b> MemoryAccess.hpp:20</div></div>
+<div class="ttc" id="astructLinAlg_1_1ResizeableView_html"><div class="ttname"><a href="structLinAlg_1_1ResizeableView.html">LinAlg::ResizeableView</a></div><div class="ttdef"><b>Definition:</b> Array.hpp:542</div></div>
 <div class="ttc" id="astructOptional_html"><div class="ttname"><a href="structOptional.html">Optional</a></div><div class="ttdef"><b>Definition:</b> Optional.hpp:9</div></div>
 <div class="ttc" id="astructRange_html"><div class="ttname"><a href="structRange.html">Range</a></div><div class="ttdef"><b>Definition:</b> Iterators.hpp:4</div></div>
 </div><!-- fragment --></div><!-- contents -->

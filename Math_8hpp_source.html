@@ -746,6 +746,29 @@ $(function() {
 <div class="line"><a name="l00675"></a><span class="lineno">  675</span>&#160;  LinAlg::end, <a class="code" href="structLinAlg_1_1Array.html">LinAlg::SquarePtrMatrix</a>, <a class="code" href="structLinAlg_1_1AxisInt.html">LinAlg::Row</a>, <a class="code" href="structLinAlg_1_1AxisInt.html">LinAlg::RowStride</a>,</div>
 <div class="line"><a name="l00676"></a><span class="lineno">  676</span>&#160;  <a class="code" href="structLinAlg_1_1AxisInt.html">LinAlg::Col</a>, LinAlg::CarInd, LinAlg::last, <a class="code" href="structLinAlg_1_1MutArray.html">LinAlg::MutDensePtrMatrix</a>,</div>
 <div class="line"><a name="l00677"></a><span class="lineno">  677</span>&#160;  <a class="code" href="structLinAlg_1_1Array.html">LinAlg::DensePtrMatrix</a>, <a class="code" href="structLinAlg_1_1ManagedArray.html">LinAlg::DenseMatrix</a>;</div>
+<div class="line"><a name="l00678"></a><span class="lineno">  678</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt; <span class="keyword">auto</span> anyNEZero(PtrMatrix&lt;T&gt; x) -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l00679"></a><span class="lineno">  679</span>&#160;  <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> r = 0; r &lt; x.numRow(); ++r)</div>
+<div class="line"><a name="l00680"></a><span class="lineno">  680</span>&#160;    <span class="keywordflow">if</span> (anyNEZero(x(r, _))) <span class="keywordflow">return</span> <span class="keyword">true</span>;</div>
+<div class="line"><a name="l00681"></a><span class="lineno">  681</span>&#160;  <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
+<div class="line"><a name="l00682"></a><span class="lineno">  682</span>&#160;}</div>
+<div class="line"><a name="l00683"></a><span class="lineno">  683</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt; <span class="keyword">auto</span> allZero(PtrMatrix&lt;T&gt; x) -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l00684"></a><span class="lineno">  684</span>&#160;  <span class="keywordflow">return</span> !anyNEZero(x);</div>
+<div class="line"><a name="l00685"></a><span class="lineno">  685</span>&#160;}</div>
+<div class="line"><a name="l00686"></a><span class="lineno">  686</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt; <span class="keyword">auto</span> allLEZero(PtrMatrix&lt;T&gt; x) -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l00687"></a><span class="lineno">  687</span>&#160;  <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> r = 0; r &lt; x.numRow(); ++r)</div>
+<div class="line"><a name="l00688"></a><span class="lineno">  688</span>&#160;    <span class="keywordflow">if</span> (!allLEZero(x(r, _))) <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
+<div class="line"><a name="l00689"></a><span class="lineno">  689</span>&#160;  <span class="keywordflow">return</span> <span class="keyword">true</span>;</div>
+<div class="line"><a name="l00690"></a><span class="lineno">  690</span>&#160;}</div>
+<div class="line"><a name="l00691"></a><span class="lineno">  691</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt; <span class="keyword">auto</span> allGEZero(PtrMatrix&lt;T&gt; x) -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l00692"></a><span class="lineno">  692</span>&#160;  <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> r = 0; r &lt; x.numRow(); ++r)</div>
+<div class="line"><a name="l00693"></a><span class="lineno">  693</span>&#160;    <span class="keywordflow">if</span> (!allGEZero(x(r, _))) <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
+<div class="line"><a name="l00694"></a><span class="lineno">  694</span>&#160;  <span class="keywordflow">return</span> <span class="keyword">true</span>;</div>
+<div class="line"><a name="l00695"></a><span class="lineno">  695</span>&#160;}</div>
+<div class="line"><a name="l00696"></a><span class="lineno">  696</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt; <span class="keyword">auto</span> countNonZero(PtrMatrix&lt;T&gt; x) -&gt; <span class="keywordtype">size_t</span> {</div>
+<div class="line"><a name="l00697"></a><span class="lineno">  697</span>&#160;  <span class="keywordtype">size_t</span> count = 0;</div>
+<div class="line"><a name="l00698"></a><span class="lineno">  698</span>&#160;  <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> r = 0; r &lt; x.numRow(); ++r) count += countNonZero(x(r, _));</div>
+<div class="line"><a name="l00699"></a><span class="lineno">  699</span>&#160;  <span class="keywordflow">return</span> count;</div>
+<div class="line"><a name="l00700"></a><span class="lineno">  700</span>&#160;}</div>
 <div class="ttc" id="anamespaceLinAlg_html"><div class="ttname"><a href="namespaceLinAlg.html">LinAlg</a></div><div class="ttdef"><b>Definition:</b> Array.hpp:28</div></div>
 <div class="ttc" id="astructLinAlg_1_1Add_html"><div class="ttname"><a href="structLinAlg_1_1Add.html">LinAlg::Add</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:58</div></div>
 <div class="ttc" id="astructLinAlg_1_1Array_html"><div class="ttname"><a href="structLinAlg_1_1Array.html">LinAlg::Array</a></div><div class="ttdoc">Constant Array.</div><div class="ttdef"><b>Definition:</b> Array.hpp:56</div></div>
@@ -756,11 +779,11 @@ $(function() {
 <div class="ttc" id="astructLinAlg_1_1ElementwiseMatrixBinaryOp_html"><div class="ttname"><a href="structLinAlg_1_1ElementwiseMatrixBinaryOp.html">LinAlg::ElementwiseMatrixBinaryOp</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:153</div></div>
 <div class="ttc" id="astructLinAlg_1_1ElementwiseUnaryOp_html"><div class="ttname"><a href="structLinAlg_1_1ElementwiseUnaryOp.html">LinAlg::ElementwiseUnaryOp</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:72</div></div>
 <div class="ttc" id="astructLinAlg_1_1ElementwiseVectorBinaryOp_html"><div class="ttname"><a href="structLinAlg_1_1ElementwiseVectorBinaryOp.html">LinAlg::ElementwiseVectorBinaryOp</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:130</div></div>
-<div class="ttc" id="astructLinAlg_1_1ManagedArray_html"><div class="ttname"><a href="structLinAlg_1_1ManagedArray.html">LinAlg::ManagedArray</a></div><div class="ttdef"><b>Definition:</b> Array.hpp:1008</div></div>
+<div class="ttc" id="astructLinAlg_1_1ManagedArray_html"><div class="ttname"><a href="structLinAlg_1_1ManagedArray.html">LinAlg::ManagedArray</a></div><div class="ttdef"><b>Definition:</b> Array.hpp:1010</div></div>
 <div class="ttc" id="astructLinAlg_1_1MatMatMul_html"><div class="ttname"><a href="structLinAlg_1_1MatMatMul.html">LinAlg::MatMatMul</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:227</div></div>
 <div class="ttc" id="astructLinAlg_1_1MatVecMul_html"><div class="ttname"><a href="structLinAlg_1_1MatVecMul.html">LinAlg::MatVecMul</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:251</div></div>
 <div class="ttc" id="astructLinAlg_1_1Mul_html"><div class="ttname"><a href="structLinAlg_1_1Mul.html">LinAlg::Mul</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:65</div></div>
-<div class="ttc" id="astructLinAlg_1_1MutArray_html"><div class="ttname"><a href="structLinAlg_1_1MutArray.html">LinAlg::MutArray</a></div><div class="ttdef"><b>Definition:</b> Array.hpp:298</div></div>
+<div class="ttc" id="astructLinAlg_1_1MutArray_html"><div class="ttname"><a href="structLinAlg_1_1MutArray.html">LinAlg::MutArray</a></div><div class="ttdef"><b>Definition:</b> Array.hpp:300</div></div>
 <div class="ttc" id="astructLinAlg_1_1SliceView_1_1Iterator_html"><div class="ttname"><a href="structLinAlg_1_1SliceView_1_1Iterator.html">LinAlg::SliceView::Iterator</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:596</div></div>
 <div class="ttc" id="astructLinAlg_1_1SliceView_html"><div class="ttname"><a href="structLinAlg_1_1SliceView.html">LinAlg::SliceView</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:592</div></div>
 <div class="ttc" id="astructLinAlg_1_1SmallSparseMatrix_html"><div class="ttname"><a href="structLinAlg_1_1SmallSparseMatrix.html">LinAlg::SmallSparseMatrix</a></div><div class="ttdef"><b>Definition:</b> Matrix.hpp:72</div></div>
