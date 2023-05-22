@@ -126,8 +126,7 @@ public:
       NoWrapRewriter nwr(*SE);
       pushLoopTree(loopForests, nullptr, rLI, H, E, nwr);
     }
-    for (auto forest : loopForests)
-      forest->addZeroLowerBounds(allocator, loopMap);
+    for (auto forest : loopForests) forest->addZeroLowerBounds(loopMap);
   }
 
   auto initLoopTree(llvm::SmallVector<NotNull<LoopTree>> &pForest,

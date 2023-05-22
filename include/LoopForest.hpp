@@ -98,12 +98,11 @@ struct LoopTree {
   [[gnu::used]] void dump() const { llvm::errs() << *this; }
 #endif
   // NOLINTNEXTLINE(misc-no-recursion)
-  void addZeroLowerBounds(BumpAlloc<> &alloc,
-                          map<llvm::Loop *, LoopTree *> &loopMap) {
+  void addZeroLowerBounds(map<llvm::Loop *, LoopTree *> &loopMap) {
     // if (affineLoop) affineLoop->addZeroLowerBounds();
-    if (affineLoop) affineLoop->addZeroLowerBounds(alloc);
+    if (affineLoop) affineLoop->addZeroLowerBounds();
     for (auto tree : subLoops) {
-      tree->addZeroLowerBounds(alloc, loopMap);
+      tree->addZeroLowerBounds(loopMap);
       tree->parentLoop = this;
     }
     if (loop) loopMap.insert(std::make_pair(loop, this));

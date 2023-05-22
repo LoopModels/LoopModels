@@ -443,7 +443,7 @@ struct AffineLoopNest
         }
       }
     }
-    aln->pruneBounds(alloc);
+    // aln->pruneBounds(alloc);
     return aln;
   }
   /// like rotate(identity Matrix)
@@ -460,8 +460,7 @@ struct AffineLoopNest
     B(_(0, M), _) << A;
     B(_(M, end), _) << 0;
     B(_(M, end), _(numConst, end)).diag() << 1;
-    // ret->initializeComparator();
-    ret->pruneBounds(alloc);
+    // ret->pruneBounds(alloc);
     return ret;
   }
 
@@ -554,9 +553,9 @@ struct AffineLoopNest
     // initializeComparator();
   }
 
-  void addZeroLowerBounds(LinAlg::Alloc<int64_t> auto &alloc) {
+  void addZeroLowerBounds() {
     if (this->isEmpty()) return;
-    if constexpr (NonNegative) return this->pruneBounds(alloc);
+    if constexpr (NonNegative) return; // this->pruneBounds(alloc);
     // return initializeComparator();
     if (!numLoops) return;
     size_t M = numConstraints;
@@ -564,7 +563,7 @@ struct AffineLoopNest
     auto A{getA()};
     A(_(M, end), _) << 0;
     for (size_t i = 0; i < numLoops; ++i) A(M + i, end - numLoops + i) = 1;
-    this->pruneBounds(alloc);
+    // this->pruneBounds(alloc);
   }
 
   [[nodiscard]] constexpr auto getProgVars(size_t j) const
