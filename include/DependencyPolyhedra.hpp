@@ -639,11 +639,12 @@ public:
     } else std::copy_n(E.begin(), E.numRow() * E.numCol(), B.begin());
     if (xOff)
       for (size_t c = 0; c < numDep0Var; ++c)
-        if (int64_t mlt = xOff[c]) B(_, 0) -= mlt * B(_, numSym + c);
+        if (int64_t mlt = xOff[c])
+          B(_(0, numEqCon), 0) -= mlt * B(_(0, numEqCon), numSym + c);
     if (yOff)
       for (size_t c = 0; c < numDep1Var; ++c)
-        if (int64_t mlt = yOff[c]) B(_, 0) -= mlt * B(_, numSymX + c);
-    // for (Row r = 0; r < numEqCon; ++r) B(r, _) << E(r, _);
+        if (int64_t mlt = yOff[c])
+          B(_(0, numEqCon), 0) -= mlt * B(_(0, numEqCon), numSymX + c);
     for (size_t r = 0; r < numPhi; ++r) {
       B(r + numEqCon, _(0, numSym)) << 0;
       B(r + numEqCon, _(0, xNumLoops) + numSym) << xPhi(r, _(0, xNumLoops));
