@@ -336,6 +336,35 @@ public:
     return MutPtrVector<Address *>{getAddrMemory() + numInNeighbors(),
                                    numOutNeighbors()};
   }
+#else
+  [[nodiscard]] constexpr auto directEdges() -> MutPtrVector<Address *> {
+    Address **p = getAddrMemory() + numMemInputs;
+    return {p, numDirectEdges};
+  }
+  [[nodiscard]] constexpr auto directEdges() const -> PtrVector<Address *> {
+    Address **p = getAddrMemory() + numMemInputs;
+    return {p, numDirectEdges};
+  }
+  [[nodiscard]] constexpr auto inDepSat() const -> PtrVector<uint8_t> {
+    return {getDDepthMemory(), numInNeighbors()};
+  }
+  [[nodiscard]] constexpr auto outDepSat() const -> PtrVector<uint8_t> {
+    return {getDDepthMemory() + numInNeighbors(), numOutNeighbors()};
+  }
+  [[nodiscard]] constexpr auto inNeighbors() const -> PtrVector<Address *> {
+    return PtrVector<Address *>{getAddrMemory(), numInNeighbors()};
+  }
+  [[nodiscard]] constexpr auto outNeighbors() const -> PtrVector<Address *> {
+    return PtrVector<Address *>{getAddrMemory() + numInNeighbors(),
+                                numOutNeighbors()};
+  }
+  [[nodiscard]] constexpr auto inNeighbors() -> MutPtrVector<Address *> {
+    return MutPtrVector<Address *>{getAddrMemory(), numInNeighbors()};
+  }
+  [[nodiscard]] constexpr auto outNeighbors() -> MutPtrVector<Address *> {
+    return MutPtrVector<Address *>{getAddrMemory() + numInNeighbors(),
+                                   numOutNeighbors()};
+  }
 #endif
   constexpr void indirectInNeighbor(Address *other, size_t i, uint8_t d) {
     getAddrMemory()[i] = other;
