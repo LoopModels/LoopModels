@@ -600,37 +600,97 @@ public:
     // note that delta/constant coef is handled as last `s`
     return {fw, bw};
   }
+
   /// returns `true` if the array accesses are guaranteed independent
   /// conditioning on partial schedules xPhi and yPhi
-  [[nodiscard]] auto checkSat(BumpAlloc<> &alloc, DensePtrMatrix<int64_t> xPhi,
-                              DensePtrMatrix<int64_t> yPhi) -> bool {
+  [[nodiscard]] auto checkSat(BumpAlloc<> &alloc,
+                              NotNull<const AffineLoopNest<>> xLoop,
+                              const int64_t *xOff, DensePtrMatrix<int64_t> xPhi,
+                              NotNull<const AffineLoopNest<>> yLoop,
+                              const int64_t *yOff, DensePtrMatrix<int64_t> yPhi)
+    -> bool {
+    // we take in loops because we might be moving deeper inside the loopnest
+    // we take in offsets, because we might be offsetting the loops
     auto p = alloc.scope();
-    unsigned numSym = getNumSymbols();
     Row numPhi = xPhi.numRow();
     invariant(yPhi.numRow(), numPhi);
     DensePtrMatrix<int64_t> E{getE()};
+    unsigned xNumLoops = unsigned(xPhi.numCol()),
+             yNumLoops = unsigned(yPhi.numCol());
+    if ((numDep0Var == xNumLoops) || allZero(xPhi(_, _(numDep0Var, end))))
+      xNumLoops = numDep0Var;
+    else invariant(numDep0Var < xNumLoops);
+    if ((numDep1Var == yNumLoops) || allZero(yPhi(_, _(numDep1Var, end))))
+      yNumLoops = numDep1Var;
+    else invariant(numDep1Var < yNumLoops);
+    unsigned numSym = getNumSymbols(), numSymX = numSym + xNumLoops,
+             numSymD0 = numSym + numDep0Var, nCol = numSymX + yNumLoops;
     MutDensePtrMatrix<int64_t> B{
-      matrix<int64_t>(alloc, E.numRow() + numPhi, E.numCol())};
-    std::copy_n(E.begin(), E.numRow() * E.numCol(), B.begin());
+      matrix<int64_t>(alloc, numEqCon + numPhi, nCol)};
+    bool extend = (numDep0Var != xNumLoops) || (numDep1Var != yNumLoops);
+    // we truncate time dim
+    if (extend || timeDim) {
+      for (size_t r = 0; r < numEqCon; ++r) {
+        B(r, _(0, numSymD0)) << E(r, _(0, numSymD0));
+        B(r, _(numDep0Var, xNumLoops) + numSym) << 0;
+        B(r, _(0, numDep1Var) + numSymX) << E(r, _(0, numDep1Var) + numSymD0);
+        B(r, _(numDep1Var, yNumLoops) + numSymX) << 0;
+      }
+    } else std::copy_n(E.begin(), E.numRow() * E.numCol(), B.begin());
+    if (xOff)
+      for (size_t c = 0; c < numDep0Var; ++c)
+        if (int64_t mlt = xOff[c]) B(_, 0) -= mlt * B(_, numSym + c);
+    if (yOff)
+      for (size_t c = 0; c < numDep1Var; ++c)
+        if (int64_t mlt = yOff[c]) B(_, 0) -= mlt * B(_, numSymX + c);
     // for (Row r = 0; r < numEqCon; ++r) B(r, _) << E(r, _);
     for (size_t r = 0; r < numPhi; ++r) {
       B(r + numEqCon, _(0, numSym)) << 0;
-      B(r + numEqCon, _(0, numDep0Var) + numSym) << xPhi(r, _(0, numDep0Var));
-      B(r + numEqCon, _(0, numDep1Var) + numSym + numDep0Var)
-        << -yPhi(r, _(0, numDep1Var));
-      if (timeDim) B(r + numEqCon, _(end - timeDim, end)) << 0;
+      B(r + numEqCon, _(0, xNumLoops) + numSym) << xPhi(r, _(0, xNumLoops));
+      B(r + numEqCon, _(0, yNumLoops) + numSymX) << -yPhi(r, _(0, yNumLoops));
     }
-    Row rank = NormalForm::simplifySystemImpl(B);
+    unsigned rank = unsigned(NormalForm::simplifySystemImpl(B));
     if (rank <= numEqCon) return false;
+    unsigned numConstraints =
+      extend ? (xLoop->getNumCon() + xNumLoops + yLoop->getNumCon() + yNumLoops)
+             : numCon;
     size_t memNeeded =
-      sizeof(int64_t) *
-        ((conCapacity + eqConCapacity) * size_t(E.numCol()) + timeDim) +
+      sizeof(int64_t) * (size_t(numConstraints + rank) * nCol) +
       sizeof(const llvm::SCEV *) * numDynSym;
     auto *mem =
       (DepPoly *)alloc.allocate(sizeof(DepPoly) + memNeeded, alignof(DepPoly));
-    auto *dp = std::construct_at(mem, numDep0Var, numDep1Var, numDynSym,
-                                 timeDim, numCon, unsigned(rank));
-    dp->getA() << getA();
+    auto *dp = std::construct_at(mem, xNumLoops, yNumLoops, numDynSym, 0,
+                                 numConstraints, rank);
+    MutDensePtrMatrix<int64_t> A{dp->getA()};
+    if (extend) {
+      MutDensePtrMatrix<int64_t> Ax{xLoop->getA()}, Ay{yLoop->getA()};
+      auto xS{xLoop->getSyms()}, yS{yLoop->getSyms()};
+      Vector<unsigned> map;
+      unsigned xNumSym = xS.size() + 1, xCon = xLoop->getNumCon(),
+               yNumSym = yS.size() + 1, yCon = yLoop->getNumCon(),
+               nDS = mergeMap(map, xS, yS);
+      // numSyms should be the same; we aren't pruning symbols
+      invariant(numSym, 1 + nDS);
+      for (size_t r = 0; r < xCon; ++r) {
+        A(r, _(0, xNumSym)) << Ax(r, _(0, xNumSym));
+        A(r, _(xNumSym, numSym)) << 0;
+        A(r, _(0, xNumLoops) + numSym) << Ax(r, _(0, xNumLoops) + xNumSym);
+        A(r, _(0, yNumLoops) + numSymX) << 0;
+      }
+      for (size_t r = 0; r < yCon; ++r) {
+        A(r + xCon, _(0, numSym)) << 0;
+        for (size_t j = 0; j < map.size(); ++j)
+          A(r + xCon, 1 + map[j]) = Ay(r, 1 + j);
+        A(r, _(0, xNumLoops) + numSym) << 0;
+        A(r, _(0, yNumLoops) + numSymX) << Ay(r, _(0, yNumLoops) + yNumSym);
+      }
+    } else dp->getA() << getA()(_, _(0, nCol)); // truncate time
+    if (xOff)
+      for (size_t c = 0; c < xNumLoops; ++c)
+        if (int64_t mlt = xOff[c]) A(_, 0) -= mlt * A(_, numSym + c);
+    if (yOff)
+      for (size_t c = 0; c < yNumLoops; ++c)
+        if (int64_t mlt = yOff[c]) A(_, 0) -= mlt * A(_, numSymX + c);
     dp->getE() << B(_(0, rank), _);
     dp->pruneBounds(alloc);
     return dp->getNumCon() == 0;

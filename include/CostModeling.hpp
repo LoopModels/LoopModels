@@ -807,15 +807,7 @@ ScheduledNode::insertMem(BumpAlloc<> &alloc,
   auto &accesses{L->getInitAddr(alloc)};
   unsigned numMem = memory.size(), offset = accesses.size(),
            sId = std::numeric_limits<unsigned>::max() >> 1, j = 0;
-  AffineLoopNest<false> *loop = nullptr;
-  // FIXME: start from store, search up for loop of depth `d`.
-  for (size_t i : memory) {
-    MemoryAccess *mem = memAccess[i];
-    if (mem->getNumLoops() != Phi.numCol()) continue;
-    loop = mem->getLoop()->rotate(alloc, Pinv, offsets);
-    break;
-  }
-  invariant(loop != nullptr);
+  NotNull<AffineLoopNest<false>> loop = loopNest->rotate(alloc, Pinv, offsets);
   for (size_t i : memory) {
     NotNull<MemoryAccess> mem = memAccess[i];
     bool isStore = mem->isStore();

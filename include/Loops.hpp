@@ -401,8 +401,8 @@ struct AffineLoopNest
   /// offset the loops by `offsets`, e.g. if we have
   /// offsets[0] = 2, then the first loop is shifted by 2.
   /// this shifting is applied before rotation.
-  [[nodiscard]] auto rotate(BumpAlloc<> &alloc, PtrMatrix<int64_t> R,
-                            const int64_t *offsets) const
+  [[nodiscard]] constexpr auto rotate(BumpAlloc<> &alloc, PtrMatrix<int64_t> R,
+                                      const int64_t *offsets) const
     -> NotNull<AffineLoopNest<false>> {
     // if offsets is not null, we have the equivalent of
     // A * O * [I 0; 0 R]
@@ -922,10 +922,9 @@ struct AffineLoopNest
     aln->getA() << A;
     return aln;
   }
-  [[nodiscard]] static auto allocate(BumpAlloc<> &alloc, unsigned int numCon,
-                                     unsigned int numLoops,
-                                     llvm::ArrayRef<const llvm::SCEV *> syms)
-    -> NotNull<AffineLoopNest> {
+  [[nodiscard]] static constexpr auto
+  allocate(BumpAlloc<> &alloc, unsigned int numCon, unsigned int numLoops,
+           llvm::ArrayRef<const llvm::SCEV *> syms) -> NotNull<AffineLoopNest> {
     unsigned numDynSym = syms.size();
     unsigned N = numLoops + numDynSym + 1;
     // extra capacity for adding 0 lower bounds later, see
@@ -935,12 +934,17 @@ struct AffineLoopNest
     unsigned symCapacity = numDynSym + numLoops;
     size_t memNeeded = size_t(M) * N * sizeof(int64_t) +
                        symCapacity * sizeof(const llvm::SCEV *const *);
-    auto *mem = alloc.allocate(sizeof(AffineLoopNest) + memNeeded,
-                               alignof(AffineLoopNest));
-    auto *aln = new (mem) AffineLoopNest({numCon, numLoops, numDynSym, M});
+    auto *mem = (AffineLoopNest *)alloc.allocate(
+      sizeof(AffineLoopNest) + memNeeded, alignof(AffineLoopNest));
+    auto *aln = std::construct_at(mem, numCon, numLoops, numDynSym, M);
     std::copy_n(syms.begin(), numDynSym, aln->getSyms().begin());
     return NotNull<AffineLoopNest>{aln};
   }
+  constexpr AffineLoopNest(unsigned int _numConstraints, unsigned int _numLoops,
+                           unsigned int _numDynSymbols,
+                           unsigned int _rowCapacity)
+    : numConstraints(_numConstraints), numLoops(_numLoops),
+      numDynSymbols(_numDynSymbols), rowCapacity(_rowCapacity) {}
 
 private:
   // AffineLoopNest(llvm::Loop *L, const llvm::SCEV *BT, llvm::ScalarEvolution
@@ -949,11 +953,6 @@ private:
   //   // static_assert(false);
   // }
   // NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
-  constexpr AffineLoopNest(unsigned int _numConstraints, unsigned int _numLoops,
-                           unsigned int _numDynSymbols,
-                           unsigned int _rowCapacity)
-    : numConstraints(_numConstraints), numLoops(_numLoops),
-      numDynSymbols(_numDynSymbols), rowCapacity(_rowCapacity) {}
 
   [[nodiscard]] constexpr auto getRowCapacity() const -> size_t {
     return rowCapacity;

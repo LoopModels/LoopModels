@@ -63,6 +63,7 @@ private:
   [[no_unique_address]] BitSet inNeighbors{};
   [[no_unique_address]] BitSet outNeighbors{};
   [[no_unique_address]] AffineSchedule schedule{};
+  [[no_unique_address]] NotNull<AffineLoopNest<>> loopNest;
   [[no_unique_address]] int64_t *offsets{nullptr};
   [[no_unique_address]] uint32_t phiOffset{0};   // used in LoopBlock
   [[no_unique_address]] uint32_t omegaOffset{0}; // used in LoopBlock
@@ -73,7 +74,8 @@ private:
 
 public:
   constexpr ScheduledNode(uint8_t sId, MemoryAccess *store,
-                          unsigned int nodeIndex) {
+                          unsigned int nodeIndex)
+    : loopNest(store->getLoop()) {
     addMemory(sId, store, nodeIndex);
   }
   constexpr auto getLoopOffsets() -> MutPtrVector<int64_t> {
@@ -119,6 +121,13 @@ public:
   [[nodiscard]] constexpr auto getSchedule() const -> AffineSchedule {
     return schedule;
   }
+  [[nodiscard]] constexpr auto getLoopNest() const
+    -> NotNull<const AffineLoopNest<>> {
+    return loopNest;
+  }
+  [[nodiscard]] constexpr auto getOffset() const -> const int64_t * {
+    return offsets;
+  }
   constexpr void addOutNeighbor(unsigned int i) { outNeighbors.insert(i); }
   constexpr void addInNeighbor(unsigned int i) { inNeighbors.insert(i); }
   constexpr void init(BumpAlloc<> &alloc) {
@@ -129,7 +138,9 @@ public:
                            unsigned nodeIdx) {
     mem->addNodeIndex(nodeIdx);
     memory.insert(memId);
-    numLoops = std::max(numLoops, uint8_t(mem->getNumLoops()));
+    if (numLoops >= mem->getNumLoops()) return;
+    numLoops = uint8_t(mem->getNumLoops());
+    loopNest = mem->getLoop();
   }
   [[nodiscard]] constexpr auto wasVisited() const -> bool { return visited; }
   constexpr void visit() { visited = true; }
@@ -1203,10 +1214,16 @@ public:
         edge.setSatLevelLP(depth);
         carriedDeps[inIndex].setCarriedDependency(depth);
         carriedDeps[outIndex].setCarriedDependency(depth);
-      } else if (edge.checkEmptySat(
-                   allocator, nodes[inIndex].getPhi()(_(0, depth + 1), _),
-                   nodes[outIndex].getPhi()(_(0, depth + 1), _))) {
-        g.activeEdges.remove(e);
+      } else {
+        const ScheduledNode &inNode = nodes[inIndex],
+                            &outNode = nodes[outIndex];
+        DensePtrMatrix<int64_t> inPhi = inNode.getPhi()(_(0, depth + 1), _),
+                                outPhi = outNode.getPhi()(_(0, depth + 1), _);
+        if (edge.checkEmptySat(allocator, inNode.getLoopNest(),
+                               inNode.getOffset(), inPhi, outNode.getLoopNest(),
+                               outNode.getOffset(), outPhi)) {
+          g.activeEdges.remove(e);
+        }
       }
       u = size_t(uu);
     }

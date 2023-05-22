@@ -675,3 +675,26 @@ using LinAlg::SmallSparseMatrix, LinAlg::StridedVector,
   LinAlg::end, LinAlg::SquarePtrMatrix, LinAlg::Row, LinAlg::RowStride,
   LinAlg::Col, LinAlg::CarInd, LinAlg::last, LinAlg::MutDensePtrMatrix,
   LinAlg::DensePtrMatrix, LinAlg::DenseMatrix;
+template <typename T> auto anyNEZero(PtrMatrix<T> x) -> bool {
+  for (size_t r = 0; r < x.numRow(); ++r)
+    if (anyNEZero(x(r, _))) return true;
+  return false;
+}
+template <typename T> auto allZero(PtrMatrix<T> x) -> bool {
+  return !anyNEZero(x);
+}
+template <typename T> auto allLEZero(PtrMatrix<T> x) -> bool {
+  for (size_t r = 0; r < x.numRow(); ++r)
+    if (!allLEZero(x(r, _))) return false;
+  return true;
+}
+template <typename T> auto allGEZero(PtrMatrix<T> x) -> bool {
+  for (size_t r = 0; r < x.numRow(); ++r)
+    if (!allGEZero(x(r, _))) return false;
+  return true;
+}
+template <typename T> auto countNonZero(PtrMatrix<T> x) -> size_t {
+  size_t count = 0;
+  for (size_t r = 0; r < x.numRow(); ++r) count += countNonZero(x(r, _));
+  return count;
+}

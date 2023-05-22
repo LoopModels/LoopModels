@@ -242,9 +242,11 @@ template <class T, class S> struct Array {
     -> bool {
     return !(*this > other);
   }
+  // FIXME: strided should skip over elements
   [[nodiscard]] constexpr auto norm2() const noexcept -> value_type {
     return std::transform_reduce(begin(), end(), begin(), 0.0);
   }
+  // FIXME: strided should skips over elements
   [[nodiscard]] constexpr auto sum() const noexcept -> value_type {
     return std::reduce(begin(), end());
   }

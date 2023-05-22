@@ -2,6 +2,7 @@
 #include "Containers/TinyVector.hpp"
 #include "DependencyPolyhedra.hpp"
 #include "Schedule.hpp"
+#include <Loops.hpp>
 #include <MemoryAccess.hpp>
 #include <Utilities/Allocators.hpp>
 #include <Utilities/Invariant.hpp>
@@ -300,12 +301,20 @@ public:
   [[nodiscard]] auto getInIndMat() const -> PtrMatrix<int64_t> {
     return in->indexMatrix();
   }
-  [[nodiscard]] auto checkEmptySat(BumpAlloc<> &alloc,
-                                   DensePtrMatrix<int64_t> inPhi,
-                                   DensePtrMatrix<int64_t> outPhi) -> bool {
-    if (!isForward()) std::swap(inPhi, outPhi);
+  [[nodiscard]] auto
+  checkEmptySat(BumpAlloc<> &alloc, NotNull<const AffineLoopNest<>> inLoop,
+                const int64_t *inOff, DensePtrMatrix<int64_t> inPhi,
+                NotNull<const AffineLoopNest<>> outLoop, const int64_t *outOff,
+                DensePtrMatrix<int64_t> outPhi) -> bool {
+    if (!isForward()) {
+      std::swap(inLoop, outLoop);
+      std::swap(inOff, outOff);
+      std::swap(inPhi, outPhi);
+    }
     invariant(inPhi.numRow(), outPhi.numRow());
-    if (!depPoly->checkSat(alloc, inPhi, outPhi)) return false;
+    if (!depPoly->checkSat(alloc, inLoop, inOff, inPhi, outLoop, outOff,
+                           outPhi))
+      return false;
     satLvl.front() = uint8_t(inPhi.numRow() - 1);
     return true;
   }
