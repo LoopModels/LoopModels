@@ -660,74 +660,75 @@ $(function() {
 <div class="line"><a name="l00639"></a><span class="lineno">  639</span>&#160;    } <span class="keywordflow">else</span> std::copy_n(E.begin(), E.numRow() * E.numCol(), B.begin());</div>
 <div class="line"><a name="l00640"></a><span class="lineno">  640</span>&#160;    <span class="keywordflow">if</span> (xOff)</div>
 <div class="line"><a name="l00641"></a><span class="lineno">  641</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> c = 0; c &lt; numDep0Var; ++c)</div>
-<div class="line"><a name="l00642"></a><span class="lineno">  642</span>&#160;        <span class="keywordflow">if</span> (int64_t mlt = xOff[c]) B(_, 0) -= mlt * B(_, numSym + c);</div>
-<div class="line"><a name="l00643"></a><span class="lineno">  643</span>&#160;    <span class="keywordflow">if</span> (yOff)</div>
-<div class="line"><a name="l00644"></a><span class="lineno">  644</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> c = 0; c &lt; numDep1Var; ++c)</div>
-<div class="line"><a name="l00645"></a><span class="lineno">  645</span>&#160;        <span class="keywordflow">if</span> (int64_t mlt = yOff[c]) B(_, 0) -= mlt * B(_, numSymX + c);</div>
-<div class="line"><a name="l00646"></a><span class="lineno">  646</span>&#160;    <span class="comment">// for (Row r = 0; r &lt; numEqCon; ++r) B(r, _) &lt;&lt; E(r, _);</span></div>
-<div class="line"><a name="l00647"></a><span class="lineno">  647</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> r = 0; r &lt; numPhi; ++r) {</div>
-<div class="line"><a name="l00648"></a><span class="lineno">  648</span>&#160;      B(r + numEqCon, _(0, numSym)) &lt;&lt; 0;</div>
-<div class="line"><a name="l00649"></a><span class="lineno">  649</span>&#160;      B(r + numEqCon, _(0, xNumLoops) + numSym) &lt;&lt; xPhi(r, _(0, xNumLoops));</div>
-<div class="line"><a name="l00650"></a><span class="lineno">  650</span>&#160;      B(r + numEqCon, _(0, yNumLoops) + numSymX) &lt;&lt; -yPhi(r, _(0, yNumLoops));</div>
-<div class="line"><a name="l00651"></a><span class="lineno">  651</span>&#160;    }</div>
-<div class="line"><a name="l00652"></a><span class="lineno">  652</span>&#160;    <span class="keywordtype">unsigned</span> rank = unsigned(NormalForm::simplifySystemImpl(B));</div>
-<div class="line"><a name="l00653"></a><span class="lineno">  653</span>&#160;    <span class="keywordflow">if</span> (rank &lt;= numEqCon) <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
-<div class="line"><a name="l00654"></a><span class="lineno">  654</span>&#160;    <span class="keywordtype">unsigned</span> numConstraints =</div>
-<div class="line"><a name="l00655"></a><span class="lineno">  655</span>&#160;      extend ? (xLoop-&gt;getNumCon() + xNumLoops + yLoop-&gt;getNumCon() + yNumLoops)</div>
-<div class="line"><a name="l00656"></a><span class="lineno">  656</span>&#160;             : numCon;</div>
-<div class="line"><a name="l00657"></a><span class="lineno">  657</span>&#160;    <span class="keywordtype">size_t</span> memNeeded =</div>
-<div class="line"><a name="l00658"></a><span class="lineno">  658</span>&#160;      <span class="keyword">sizeof</span>(int64_t) * (<span class="keywordtype">size_t</span>(numConstraints + rank) * nCol) +</div>
-<div class="line"><a name="l00659"></a><span class="lineno">  659</span>&#160;      <span class="keyword">sizeof</span>(<span class="keyword">const</span> llvm::SCEV *) * numDynSym;</div>
-<div class="line"><a name="l00660"></a><span class="lineno">  660</span>&#160;    <span class="keyword">auto</span> *mem =</div>
-<div class="line"><a name="l00661"></a><span class="lineno">  661</span>&#160;      (<a class="code" href="classDepPoly.html">DepPoly</a> *)alloc.allocate(<span class="keyword">sizeof</span>(<a class="code" href="classDepPoly.html">DepPoly</a>) + memNeeded, <span class="keyword">alignof</span>(<a class="code" href="classDepPoly.html">DepPoly</a>));</div>
-<div class="line"><a name="l00662"></a><span class="lineno">  662</span>&#160;    <span class="keyword">auto</span> *dp = std::construct_at(mem, xNumLoops, yNumLoops, numDynSym, 0,</div>
-<div class="line"><a name="l00663"></a><span class="lineno">  663</span>&#160;                                 numConstraints, rank);</div>
-<div class="line"><a name="l00664"></a><span class="lineno">  664</span>&#160;    MutDensePtrMatrix&lt;int64_t&gt; A{dp-&gt;getA()};</div>
-<div class="line"><a name="l00665"></a><span class="lineno">  665</span>&#160;    <span class="keywordflow">if</span> (extend) {</div>
-<div class="line"><a name="l00666"></a><span class="lineno">  666</span>&#160;      MutDensePtrMatrix&lt;int64_t&gt; Ax{xLoop-&gt;getA()}, Ay{yLoop-&gt;getA()};</div>
-<div class="line"><a name="l00667"></a><span class="lineno">  667</span>&#160;      <span class="keyword">auto</span> xS{xLoop-&gt;getSyms()}, yS{yLoop-&gt;getSyms()};</div>
-<div class="line"><a name="l00668"></a><span class="lineno">  668</span>&#160;      Vector&lt;unsigned&gt; map;</div>
-<div class="line"><a name="l00669"></a><span class="lineno">  669</span>&#160;      <span class="keywordtype">unsigned</span> xNumSym = xS.size() + 1, xCon = xLoop-&gt;getNumCon(),</div>
-<div class="line"><a name="l00670"></a><span class="lineno">  670</span>&#160;               yNumSym = yS.size() + 1, yCon = yLoop-&gt;getNumCon(),</div>
-<div class="line"><a name="l00671"></a><span class="lineno">  671</span>&#160;               nDS = <a class="code" href="classDepPoly.html#a9a6693af1ab0702d06dc3cebaecd9be9">mergeMap</a>(map, xS, yS), nLoop = xNumLoops + yNumLoops;</div>
-<div class="line"><a name="l00672"></a><span class="lineno">  672</span>&#160;      <span class="comment">// numSyms should be the same; we aren&#39;t pruning symbols</span></div>
-<div class="line"><a name="l00673"></a><span class="lineno">  673</span>&#160;      invariant(numSym, 1 + nDS);</div>
-<div class="line"><a name="l00674"></a><span class="lineno">  674</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> r = 0; r &lt; xCon; ++r) {</div>
-<div class="line"><a name="l00675"></a><span class="lineno">  675</span>&#160;        A(r, _(0, xNumSym)) &lt;&lt; Ax(r, _(0, xNumSym));</div>
-<div class="line"><a name="l00676"></a><span class="lineno">  676</span>&#160;        A(r, _(xNumSym, numSym)) &lt;&lt; 0;</div>
-<div class="line"><a name="l00677"></a><span class="lineno">  677</span>&#160;        A(r, _(0, xNumLoops) + numSym) &lt;&lt; Ax(r, _(0, xNumLoops) + xNumSym);</div>
-<div class="line"><a name="l00678"></a><span class="lineno">  678</span>&#160;        A(r, _(0, yNumLoops) + numSymX) &lt;&lt; 0;</div>
-<div class="line"><a name="l00679"></a><span class="lineno">  679</span>&#160;      }</div>
-<div class="line"><a name="l00680"></a><span class="lineno">  680</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> r = 0; r &lt; yCon; ++r) {</div>
-<div class="line"><a name="l00681"></a><span class="lineno">  681</span>&#160;        A(r + xCon, _(0, numSym)) &lt;&lt; 0;</div>
-<div class="line"><a name="l00682"></a><span class="lineno">  682</span>&#160;        <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> j = 0; j &lt; map.size(); ++j)</div>
-<div class="line"><a name="l00683"></a><span class="lineno">  683</span>&#160;          A(r + xCon, 1 + map[j]) = Ay(r, 1 + j);</div>
-<div class="line"><a name="l00684"></a><span class="lineno">  684</span>&#160;        A(r + xCon, _(0, xNumLoops) + numSym) &lt;&lt; 0;</div>
-<div class="line"><a name="l00685"></a><span class="lineno">  685</span>&#160;        A(r + xCon, _(0, yNumLoops) + numSymX)</div>
-<div class="line"><a name="l00686"></a><span class="lineno">  686</span>&#160;          &lt;&lt; Ay(r, _(0, yNumLoops) + yNumSym);</div>
-<div class="line"><a name="l00687"></a><span class="lineno">  687</span>&#160;      }</div>
-<div class="line"><a name="l00688"></a><span class="lineno">  688</span>&#160;      std::fill(A.begin() + <span class="keywordtype">size_t</span>(xCon + yCon) * nCol, A.end(), 0);</div>
-<div class="line"><a name="l00689"></a><span class="lineno">  689</span>&#160;      A(_(0, nLoop) + (xCon + yCon), _(0, nLoop) + numSym).diag() &lt;&lt; 1;</div>
-<div class="line"><a name="l00690"></a><span class="lineno">  690</span>&#160;    } <span class="keywordflow">else</span> dp-&gt;getA() &lt;&lt; getA()(_, _(0, nCol)); <span class="comment">// truncate time</span></div>
-<div class="line"><a name="l00691"></a><span class="lineno">  691</span>&#160;    <span class="keywordflow">if</span> (xOff)</div>
-<div class="line"><a name="l00692"></a><span class="lineno">  692</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> c = 0; c &lt; xNumLoops; ++c)</div>
-<div class="line"><a name="l00693"></a><span class="lineno">  693</span>&#160;        <span class="keywordflow">if</span> (int64_t mlt = xOff[c]) A(_, 0) -= mlt * A(_, numSym + c);</div>
-<div class="line"><a name="l00694"></a><span class="lineno">  694</span>&#160;    <span class="keywordflow">if</span> (yOff)</div>
-<div class="line"><a name="l00695"></a><span class="lineno">  695</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> c = 0; c &lt; yNumLoops; ++c)</div>
-<div class="line"><a name="l00696"></a><span class="lineno">  696</span>&#160;        <span class="keywordflow">if</span> (int64_t mlt = yOff[c]) A(_, 0) -= mlt * A(_, numSymX + c);</div>
-<div class="line"><a name="l00697"></a><span class="lineno">  697</span>&#160;    dp-&gt;getE() &lt;&lt; B(_(0, rank), _);</div>
-<div class="line"><a name="l00698"></a><span class="lineno">  698</span>&#160;    dp-&gt;pruneBounds(alloc);</div>
-<div class="line"><a name="l00699"></a><span class="lineno">  699</span>&#160;    <span class="keywordflow">return</span> dp-&gt;getNumCon() == 0;</div>
-<div class="line"><a name="l00700"></a><span class="lineno">  700</span>&#160;  }</div>
-<div class="line"><a name="l00701"></a><span class="lineno">  701</span>&#160;  <span class="keyword">friend</span> <span class="keyword">inline</span> <span class="keyword">auto</span> operator&lt;&lt;(llvm::raw_ostream &amp;os, <span class="keyword">const</span> <a class="code" href="classDepPoly.html">DepPoly</a> &amp;p)</div>
-<div class="line"><a name="l00702"></a><span class="lineno">  702</span>&#160;    -&gt; llvm::raw_ostream &amp; {</div>
-<div class="line"><a name="l00703"></a><span class="lineno">  703</span>&#160;    <span class="keywordflow">return</span> printConstraints(</div>
-<div class="line"><a name="l00704"></a><span class="lineno">  704</span>&#160;      printPositive(printConstraints(os &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>, p.getA(), p.getSyms()),</div>
-<div class="line"><a name="l00705"></a><span class="lineno">  705</span>&#160;                    p.getNumDynamic()),</div>
-<div class="line"><a name="l00706"></a><span class="lineno">  706</span>&#160;      p.getE(), p.getSyms(), <span class="keyword">false</span>);</div>
-<div class="line"><a name="l00707"></a><span class="lineno">  707</span>&#160;  }</div>
-<div class="line"><a name="l00708"></a><span class="lineno">  708</span>&#160; </div>
-<div class="line"><a name="l00709"></a><span class="lineno">  709</span>&#160;}; <span class="comment">// class DepPoly</span></div>
+<div class="line"><a name="l00642"></a><span class="lineno">  642</span>&#160;        <span class="keywordflow">if</span> (int64_t mlt = xOff[c])</div>
+<div class="line"><a name="l00643"></a><span class="lineno">  643</span>&#160;          B(_(0, numEqCon), 0) -= mlt * B(_(0, numEqCon), numSym + c);</div>
+<div class="line"><a name="l00644"></a><span class="lineno">  644</span>&#160;    <span class="keywordflow">if</span> (yOff)</div>
+<div class="line"><a name="l00645"></a><span class="lineno">  645</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> c = 0; c &lt; numDep1Var; ++c)</div>
+<div class="line"><a name="l00646"></a><span class="lineno">  646</span>&#160;        <span class="keywordflow">if</span> (int64_t mlt = yOff[c])</div>
+<div class="line"><a name="l00647"></a><span class="lineno">  647</span>&#160;          B(_(0, numEqCon), 0) -= mlt * B(_(0, numEqCon), numSymX + c);</div>
+<div class="line"><a name="l00648"></a><span class="lineno">  648</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> r = 0; r &lt; numPhi; ++r) {</div>
+<div class="line"><a name="l00649"></a><span class="lineno">  649</span>&#160;      B(r + numEqCon, _(0, numSym)) &lt;&lt; 0;</div>
+<div class="line"><a name="l00650"></a><span class="lineno">  650</span>&#160;      B(r + numEqCon, _(0, xNumLoops) + numSym) &lt;&lt; xPhi(r, _(0, xNumLoops));</div>
+<div class="line"><a name="l00651"></a><span class="lineno">  651</span>&#160;      B(r + numEqCon, _(0, yNumLoops) + numSymX) &lt;&lt; -yPhi(r, _(0, yNumLoops));</div>
+<div class="line"><a name="l00652"></a><span class="lineno">  652</span>&#160;    }</div>
+<div class="line"><a name="l00653"></a><span class="lineno">  653</span>&#160;    <span class="keywordtype">unsigned</span> rank = unsigned(NormalForm::simplifySystemImpl(B));</div>
+<div class="line"><a name="l00654"></a><span class="lineno">  654</span>&#160;    <span class="keywordflow">if</span> (rank &lt;= numEqCon) <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
+<div class="line"><a name="l00655"></a><span class="lineno">  655</span>&#160;    <span class="keywordtype">unsigned</span> numConstraints =</div>
+<div class="line"><a name="l00656"></a><span class="lineno">  656</span>&#160;      extend ? (xLoop-&gt;getNumCon() + xNumLoops + yLoop-&gt;getNumCon() + yNumLoops)</div>
+<div class="line"><a name="l00657"></a><span class="lineno">  657</span>&#160;             : numCon;</div>
+<div class="line"><a name="l00658"></a><span class="lineno">  658</span>&#160;    <span class="keywordtype">size_t</span> memNeeded =</div>
+<div class="line"><a name="l00659"></a><span class="lineno">  659</span>&#160;      <span class="keyword">sizeof</span>(int64_t) * (<span class="keywordtype">size_t</span>(numConstraints + rank) * nCol) +</div>
+<div class="line"><a name="l00660"></a><span class="lineno">  660</span>&#160;      <span class="keyword">sizeof</span>(<span class="keyword">const</span> llvm::SCEV *) * numDynSym;</div>
+<div class="line"><a name="l00661"></a><span class="lineno">  661</span>&#160;    <span class="keyword">auto</span> *mem =</div>
+<div class="line"><a name="l00662"></a><span class="lineno">  662</span>&#160;      (<a class="code" href="classDepPoly.html">DepPoly</a> *)alloc.allocate(<span class="keyword">sizeof</span>(<a class="code" href="classDepPoly.html">DepPoly</a>) + memNeeded, <span class="keyword">alignof</span>(<a class="code" href="classDepPoly.html">DepPoly</a>));</div>
+<div class="line"><a name="l00663"></a><span class="lineno">  663</span>&#160;    <span class="keyword">auto</span> *dp = std::construct_at(mem, xNumLoops, yNumLoops, numDynSym, 0,</div>
+<div class="line"><a name="l00664"></a><span class="lineno">  664</span>&#160;                                 numConstraints, rank);</div>
+<div class="line"><a name="l00665"></a><span class="lineno">  665</span>&#160;    MutDensePtrMatrix&lt;int64_t&gt; A{dp-&gt;getA()};</div>
+<div class="line"><a name="l00666"></a><span class="lineno">  666</span>&#160;    <span class="keywordflow">if</span> (extend) {</div>
+<div class="line"><a name="l00667"></a><span class="lineno">  667</span>&#160;      MutDensePtrMatrix&lt;int64_t&gt; Ax{xLoop-&gt;getA()}, Ay{yLoop-&gt;getA()};</div>
+<div class="line"><a name="l00668"></a><span class="lineno">  668</span>&#160;      <span class="keyword">auto</span> xS{xLoop-&gt;getSyms()}, yS{yLoop-&gt;getSyms()};</div>
+<div class="line"><a name="l00669"></a><span class="lineno">  669</span>&#160;      Vector&lt;unsigned&gt; map;</div>
+<div class="line"><a name="l00670"></a><span class="lineno">  670</span>&#160;      <span class="keywordtype">unsigned</span> xNumSym = xS.size() + 1, xCon = xLoop-&gt;getNumCon(),</div>
+<div class="line"><a name="l00671"></a><span class="lineno">  671</span>&#160;               yNumSym = yS.size() + 1, yCon = yLoop-&gt;getNumCon(),</div>
+<div class="line"><a name="l00672"></a><span class="lineno">  672</span>&#160;               nDS = <a class="code" href="classDepPoly.html#a9a6693af1ab0702d06dc3cebaecd9be9">mergeMap</a>(map, xS, yS), nLoop = xNumLoops + yNumLoops;</div>
+<div class="line"><a name="l00673"></a><span class="lineno">  673</span>&#160;      <span class="comment">// numSyms should be the same; we aren&#39;t pruning symbols</span></div>
+<div class="line"><a name="l00674"></a><span class="lineno">  674</span>&#160;      invariant(numSym, 1 + nDS);</div>
+<div class="line"><a name="l00675"></a><span class="lineno">  675</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> r = 0; r &lt; xCon; ++r) {</div>
+<div class="line"><a name="l00676"></a><span class="lineno">  676</span>&#160;        A(r, _(0, xNumSym)) &lt;&lt; Ax(r, _(0, xNumSym));</div>
+<div class="line"><a name="l00677"></a><span class="lineno">  677</span>&#160;        A(r, _(xNumSym, numSym)) &lt;&lt; 0;</div>
+<div class="line"><a name="l00678"></a><span class="lineno">  678</span>&#160;        A(r, _(0, xNumLoops) + numSym) &lt;&lt; Ax(r, _(0, xNumLoops) + xNumSym);</div>
+<div class="line"><a name="l00679"></a><span class="lineno">  679</span>&#160;        A(r, _(0, yNumLoops) + numSymX) &lt;&lt; 0;</div>
+<div class="line"><a name="l00680"></a><span class="lineno">  680</span>&#160;      }</div>
+<div class="line"><a name="l00681"></a><span class="lineno">  681</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> r = 0; r &lt; yCon; ++r) {</div>
+<div class="line"><a name="l00682"></a><span class="lineno">  682</span>&#160;        A(r + xCon, _(0, numSym)) &lt;&lt; 0;</div>
+<div class="line"><a name="l00683"></a><span class="lineno">  683</span>&#160;        <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> j = 0; j &lt; map.size(); ++j)</div>
+<div class="line"><a name="l00684"></a><span class="lineno">  684</span>&#160;          A(r + xCon, 1 + map[j]) = Ay(r, 1 + j);</div>
+<div class="line"><a name="l00685"></a><span class="lineno">  685</span>&#160;        A(r + xCon, _(0, xNumLoops) + numSym) &lt;&lt; 0;</div>
+<div class="line"><a name="l00686"></a><span class="lineno">  686</span>&#160;        A(r + xCon, _(0, yNumLoops) + numSymX)</div>
+<div class="line"><a name="l00687"></a><span class="lineno">  687</span>&#160;          &lt;&lt; Ay(r, _(0, yNumLoops) + yNumSym);</div>
+<div class="line"><a name="l00688"></a><span class="lineno">  688</span>&#160;      }</div>
+<div class="line"><a name="l00689"></a><span class="lineno">  689</span>&#160;      std::fill(A.begin() + <span class="keywordtype">size_t</span>(xCon + yCon) * nCol, A.end(), 0);</div>
+<div class="line"><a name="l00690"></a><span class="lineno">  690</span>&#160;      A(_(0, nLoop) + (xCon + yCon), _(0, nLoop) + numSym).diag() &lt;&lt; 1;</div>
+<div class="line"><a name="l00691"></a><span class="lineno">  691</span>&#160;    } <span class="keywordflow">else</span> dp-&gt;getA() &lt;&lt; getA()(_, _(0, nCol)); <span class="comment">// truncate time</span></div>
+<div class="line"><a name="l00692"></a><span class="lineno">  692</span>&#160;    <span class="keywordflow">if</span> (xOff)</div>
+<div class="line"><a name="l00693"></a><span class="lineno">  693</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> c = 0; c &lt; xNumLoops; ++c)</div>
+<div class="line"><a name="l00694"></a><span class="lineno">  694</span>&#160;        <span class="keywordflow">if</span> (int64_t mlt = xOff[c]) A(_, 0) -= mlt * A(_, numSym + c);</div>
+<div class="line"><a name="l00695"></a><span class="lineno">  695</span>&#160;    <span class="keywordflow">if</span> (yOff)</div>
+<div class="line"><a name="l00696"></a><span class="lineno">  696</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> c = 0; c &lt; yNumLoops; ++c)</div>
+<div class="line"><a name="l00697"></a><span class="lineno">  697</span>&#160;        <span class="keywordflow">if</span> (int64_t mlt = yOff[c]) A(_, 0) -= mlt * A(_, numSymX + c);</div>
+<div class="line"><a name="l00698"></a><span class="lineno">  698</span>&#160;    dp-&gt;getE() &lt;&lt; B(_(0, rank), _);</div>
+<div class="line"><a name="l00699"></a><span class="lineno">  699</span>&#160;    dp-&gt;pruneBounds(alloc);</div>
+<div class="line"><a name="l00700"></a><span class="lineno">  700</span>&#160;    <span class="keywordflow">return</span> dp-&gt;getNumCon() == 0;</div>
+<div class="line"><a name="l00701"></a><span class="lineno">  701</span>&#160;  }</div>
+<div class="line"><a name="l00702"></a><span class="lineno">  702</span>&#160;  <span class="keyword">friend</span> <span class="keyword">inline</span> <span class="keyword">auto</span> operator&lt;&lt;(llvm::raw_ostream &amp;os, <span class="keyword">const</span> <a class="code" href="classDepPoly.html">DepPoly</a> &amp;p)</div>
+<div class="line"><a name="l00703"></a><span class="lineno">  703</span>&#160;    -&gt; llvm::raw_ostream &amp; {</div>
+<div class="line"><a name="l00704"></a><span class="lineno">  704</span>&#160;    <span class="keywordflow">return</span> printConstraints(</div>
+<div class="line"><a name="l00705"></a><span class="lineno">  705</span>&#160;      printPositive(printConstraints(os &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>, p.getA(), p.getSyms()),</div>
+<div class="line"><a name="l00706"></a><span class="lineno">  706</span>&#160;                    p.getNumDynamic()),</div>
+<div class="line"><a name="l00707"></a><span class="lineno">  707</span>&#160;      p.getE(), p.getSyms(), <span class="keyword">false</span>);</div>
+<div class="line"><a name="l00708"></a><span class="lineno">  708</span>&#160;  }</div>
+<div class="line"><a name="l00709"></a><span class="lineno">  709</span>&#160; </div>
+<div class="line"><a name="l00710"></a><span class="lineno">  710</span>&#160;}; <span class="comment">// class DepPoly</span></div>
 <div class="ttc" id="aclassDepPoly_html"><div class="ttname"><a href="classDepPoly.html">DepPoly</a></div><div class="ttdef"><b>Definition:</b> DependencyPolyhedra.hpp:74</div></div>
 <div class="ttc" id="aclassDepPoly_html_a9a6693af1ab0702d06dc3cebaecd9be9"><div class="ttname"><a href="classDepPoly.html#a9a6693af1ab0702d06dc3cebaecd9be9">DepPoly::mergeMap</a></div><div class="ttdeci">static auto mergeMap(Vector&lt; unsigned &gt; &amp;map, llvm::ArrayRef&lt; const llvm::SCEV * &gt; s0, llvm::ArrayRef&lt; const llvm::SCEV * &gt; s1) -&gt; unsigned</div><div class="ttdef"><b>Definition:</b> DependencyPolyhedra.hpp:285</div></div>
 <div class="ttc" id="aclassDepPoly_html_aaf4c241acbb8301a26743747234c3f14"><div class="ttname"><a href="classDepPoly.html#aaf4c241acbb8301a26743747234c3f14">DepPoly::checkSat</a></div><div class="ttdeci">auto checkSat(BumpAlloc&lt;&gt; &amp;alloc, NotNull&lt; const AffineLoopNest&lt;&gt;&gt; xLoop, const int64_t *xOff, DensePtrMatrix&lt; int64_t &gt; xPhi, NotNull&lt; const AffineLoopNest&lt;&gt;&gt; yLoop, const int64_t *yOff, DensePtrMatrix&lt; int64_t &gt; yPhi) -&gt; bool</div><div class="ttdef"><b>Definition:</b> DependencyPolyhedra.hpp:606</div></div>
