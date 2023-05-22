@@ -811,77 +811,79 @@ $(function() {
 <div class="line"><a name="l00758"></a><span class="lineno">  758</span>&#160;    <span class="keywordflow">if</span> (loop &amp;&amp; (getDepth() &gt; 0)) {</div>
 <div class="line"><a name="l00759"></a><span class="lineno">  759</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = loop-&gt;getNumLoops(), k = getDepth(); i &gt; k;)</div>
 <div class="line"><a name="l00760"></a><span class="lineno">  760</span>&#160;        loop = loop-&gt;removeLoop(alloc, --i);</div>
-<div class="line"><a name="l00761"></a><span class="lineno">  761</span>&#160;      loop-&gt;printBounds(out);</div>
-<div class="line"><a name="l00762"></a><span class="lineno">  762</span>&#160;    } <span class="keywordflow">else</span> out &lt;&lt; <span class="stringliteral">&quot;Top Level&quot;</span>;</div>
-<div class="line"><a name="l00763"></a><span class="lineno">  763</span>&#160;    out &lt;&lt; <span class="stringliteral">&quot;&lt;/td&gt;&lt;/tr&gt;\n&quot;</span>;</div>
-<div class="line"><a name="l00764"></a><span class="lineno">  764</span>&#160;    <span class="keywordtype">size_t</span> i = header.printDotNodes(out, 0, addrNames, addrIndOffset, name);</div>
-<div class="line"><a name="l00765"></a><span class="lineno">  765</span>&#160;    j = 0;</div>
-<div class="line"><a name="l00766"></a><span class="lineno">  766</span>&#160;    std::string loopEdges;</div>
-<div class="line"><a name="l00767"></a><span class="lineno">  767</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;subTree : subTrees) {</div>
-<div class="line"><a name="l00768"></a><span class="lineno">  768</span>&#160;      std::string label = <span class="stringliteral">&quot;f&quot;</span> + std::to_string(++i);</div>
-<div class="line"><a name="l00769"></a><span class="lineno">  769</span>&#160;      out &lt;&lt; <span class="stringliteral">&quot; &lt;tr&gt; &lt;td port=\&quot;&quot;</span> &lt;&lt; label &lt;&lt; <span class="stringliteral">&quot;\&quot;&gt; SubLoop#&quot;</span> &lt;&lt; j++</div>
-<div class="line"><a name="l00770"></a><span class="lineno">  770</span>&#160;          &lt;&lt; <span class="stringliteral">&quot;&lt;/td&gt;&lt;/tr&gt;\n&quot;</span>;</div>
-<div class="line"><a name="l00771"></a><span class="lineno">  771</span>&#160;      loopEdges += <span class="stringliteral">&quot;\&quot;&quot;</span> + name + <span class="stringliteral">&quot;\&quot;:f&quot;</span> + std::to_string(i) + <span class="stringliteral">&quot; -&gt; \&quot;&quot;</span> +</div>
-<div class="line"><a name="l00772"></a><span class="lineno">  772</span>&#160;                   names[subTree.subTree] + <span class="stringliteral">&quot;\&quot;:f0 [color=\&quot;#ff0000\&quot;];\n&quot;</span>;</div>
-<div class="line"><a name="l00773"></a><span class="lineno">  773</span>&#160;      i = subTree.exit.printDotNodes(out, i, addrNames, addrIndOffset, name);</div>
-<div class="line"><a name="l00774"></a><span class="lineno">  774</span>&#160;    }</div>
-<div class="line"><a name="l00775"></a><span class="lineno">  775</span>&#160;    out &lt;&lt; <span class="stringliteral">&quot;&lt;/table&gt;&gt;];\n&quot;</span> &lt;&lt; loopEdges;</div>
-<div class="line"><a name="l00776"></a><span class="lineno">  776</span>&#160;    <span class="keywordflow">if</span> (lret) <span class="keywordflow">return</span> lret;</div>
-<div class="line"><a name="l00777"></a><span class="lineno">  777</span>&#160;    <span class="keywordflow">if</span> ((loop == <span class="keyword">nullptr</span>) || (getDepth() &lt;= 1)) <span class="keywordflow">return</span> <span class="keyword">nullptr</span>;</div>
-<div class="line"><a name="l00778"></a><span class="lineno">  778</span>&#160;    <span class="keywordflow">return</span> loop-&gt;removeLoop(alloc, getDepth() - 1);</div>
-<div class="line"><a name="l00779"></a><span class="lineno">  779</span>&#160;  }</div>
-<div class="line"><a name="l00780"></a><span class="lineno">  780</span>&#160; </div>
-<div class="line"><a name="l00781"></a><span class="lineno">  781</span>&#160;  <span class="keywordtype">void</span> printDotFile(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, llvm::raw_ostream &amp;out) {</div>
-<div class="line"><a name="l00782"></a><span class="lineno">  782</span>&#160;    map&lt;LoopTreeSchedule *, std::string&gt; names;</div>
-<div class="line"><a name="l00783"></a><span class="lineno">  783</span>&#160;    llvm::SmallVector&lt;std::string&gt; addrNames(numAddr_);</div>
-<div class="line"><a name="l00784"></a><span class="lineno">  784</span>&#160;    names[<span class="keyword">this</span>] = <span class="stringliteral">&quot;toplevel&quot;</span>;</div>
-<div class="line"><a name="l00785"></a><span class="lineno">  785</span>&#160;    out &lt;&lt; <span class="stringliteral">&quot;digraph LoopNest {\n&quot;</span>;</div>
-<div class="line"><a name="l00786"></a><span class="lineno">  786</span>&#160;    printSubDotFile(alloc, out, names, addrNames, subTrees.size(), <span class="keyword">nullptr</span>);</div>
-<div class="line"><a name="l00787"></a><span class="lineno">  787</span>&#160;    printDotEdges(out, addrNames);</div>
-<div class="line"><a name="l00788"></a><span class="lineno">  788</span>&#160;    out &lt;&lt; <span class="stringliteral">&quot;}\n&quot;</span>;</div>
-<div class="line"><a name="l00789"></a><span class="lineno">  789</span>&#160;  }</div>
-<div class="line"><a name="l00790"></a><span class="lineno">  790</span>&#160;};</div>
-<div class="line"><a name="l00791"></a><span class="lineno">  791</span>&#160; </div>
-<div class="line"><a name="l00792"></a><span class="lineno">  792</span>&#160;static_assert(Graphs::AbstractIndexGraph&lt;LoopTreeSchedule::AddressGraph&gt;);</div>
-<div class="line"><a name="l00793"></a><span class="lineno">  793</span>&#160;<span class="comment">// class LoopForestSchedule : LoopTreeSchedule {</span></div>
-<div class="line"><a name="l00794"></a><span class="lineno">  794</span>&#160;<span class="comment">//   [[no_unique_address]] BumpAlloc&lt;&gt; &amp;allocator;</span></div>
-<div class="line"><a name="l00795"></a><span class="lineno">  795</span>&#160;<span class="comment">// };</span></div>
-<div class="line"><a name="l00796"></a><span class="lineno">  796</span>&#160;} <span class="comment">// namespace CostModeling</span></div>
-<div class="line"><a name="l00797"></a><span class="lineno">  797</span>&#160; </div>
-<div class="line"><a name="l00798"></a><span class="lineno">  798</span>&#160;constexpr <span class="keywordtype">void</span></div>
-<div class="line"><a name="l00799"></a><span class="lineno">  799</span>&#160;ScheduledNode::insertMem(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc,</div>
-<div class="line"><a name="l00800"></a><span class="lineno">  800</span>&#160;                         PtrVector&lt;MemoryAccess *&gt; memAccess,</div>
-<div class="line"><a name="l00801"></a><span class="lineno">  801</span>&#160;                         <a class="code" href="classCostModeling_1_1LoopTreeSchedule.html">CostModeling::LoopTreeSchedule</a> *L)<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l00802"></a><span class="lineno">  802</span>&#160;  <span class="comment">// First, we invert the schedule matrix.</span></div>
-<div class="line"><a name="l00803"></a><span class="lineno">  803</span>&#160;  SquarePtrMatrix&lt;int64_t&gt; Phi = schedule.getPhi();</div>
-<div class="line"><a name="l00804"></a><span class="lineno">  804</span>&#160;  <span class="keyword">auto</span> [Pinv, denom] = NormalForm::scaledInv(Phi);</div>
-<div class="line"><a name="l00805"></a><span class="lineno">  805</span>&#160;  <span class="comment">// TODO: if (s == 1) {}</span></div>
-<div class="line"><a name="l00806"></a><span class="lineno">  806</span>&#160;  <span class="comment">// TODO: make this function out of line</span></div>
-<div class="line"><a name="l00807"></a><span class="lineno">  807</span>&#160;  <span class="keyword">auto</span> &amp;accesses{L-&gt;getInitAddr(alloc)};</div>
-<div class="line"><a name="l00808"></a><span class="lineno">  808</span>&#160;  <span class="keywordtype">unsigned</span> numMem = memory.size(), offset = accesses.size(),</div>
-<div class="line"><a name="l00809"></a><span class="lineno">  809</span>&#160;           sId = std::numeric_limits&lt;unsigned&gt;::max() &gt;&gt; 1, j = 0;</div>
-<div class="line"><a name="l00810"></a><span class="lineno">  810</span>&#160;  <a class="code" href="classNotNull.html">NotNull&lt;AffineLoopNest&lt;false&gt;</a>&gt; loop = loopNest-&gt;rotate(alloc, Pinv, offsets);</div>
-<div class="line"><a name="l00811"></a><span class="lineno">  811</span>&#160;  <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i : memory) {</div>
-<div class="line"><a name="l00812"></a><span class="lineno">  812</span>&#160;    <a class="code" href="classNotNull.html">NotNull&lt;MemoryAccess&gt;</a> mem = memAccess[i];</div>
-<div class="line"><a name="l00813"></a><span class="lineno">  813</span>&#160;    <span class="keywordtype">bool</span> isStore = mem-&gt;isStore();</div>
-<div class="line"><a name="l00814"></a><span class="lineno">  814</span>&#160;    <span class="keywordflow">if</span> (isStore) sId = j;</div>
-<div class="line"><a name="l00815"></a><span class="lineno">  815</span>&#160;    ++j;</div>
-<div class="line"><a name="l00816"></a><span class="lineno">  816</span>&#160;    <span class="keywordtype">size_t</span> inputEdges = mem-&gt;inputEdges().size(),</div>
-<div class="line"><a name="l00817"></a><span class="lineno">  817</span>&#160;           outputEdges = mem-&gt;outputEdges().size();</div>
-<div class="line"><a name="l00818"></a><span class="lineno">  818</span>&#160;    <a class="code" href="classAddress.html">Address</a> *addr = Address::construct(</div>
-<div class="line"><a name="l00819"></a><span class="lineno">  819</span>&#160;      alloc, loop, mem, isStore, Pinv, denom, schedule.getOffsetOmega(), L,</div>
-<div class="line"><a name="l00820"></a><span class="lineno">  820</span>&#160;      inputEdges, isStore ? numMem - 1 : 1, outputEdges, offsets);</div>
-<div class="line"><a name="l00821"></a><span class="lineno">  821</span>&#160;    mem-&gt;setAddress(addr);</div>
-<div class="line"><a name="l00822"></a><span class="lineno">  822</span>&#160;    accesses.push_back(addr);</div>
-<div class="line"><a name="l00823"></a><span class="lineno">  823</span>&#160;  }</div>
-<div class="line"><a name="l00824"></a><span class="lineno">  824</span>&#160;  <a class="code" href="classAddress.html">Address</a> *store = accesses[offset + sId];</div>
-<div class="line"><a name="l00825"></a><span class="lineno">  825</span>&#160;  <span class="comment">// addrs all need direct connections</span></div>
-<div class="line"><a name="l00826"></a><span class="lineno">  826</span>&#160;  <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0, k = 0; i &lt; numMem; ++i)</div>
-<div class="line"><a name="l00827"></a><span class="lineno">  827</span>&#160;    <span class="keywordflow">if</span> (i != sId) accesses[offset + i]-&gt;addDirectConnection(store, k++);</div>
-<div class="line"><a name="l00828"></a><span class="lineno">  828</span>&#160;}</div>
-<div class="line"><a name="l00829"></a><span class="lineno">  829</span>&#160;[[nodiscard]] constexpr <span class="keyword">auto</span> Address::getCurrentDepth() const -&gt; <span class="keywordtype">unsigned</span> {</div>
-<div class="line"><a name="l00830"></a><span class="lineno">  830</span>&#160;  <span class="keywordflow">return</span> node-&gt;getDepth();</div>
-<div class="line"><a name="l00831"></a><span class="lineno">  831</span>&#160;}</div>
+<div class="line"><a name="l00761"></a><span class="lineno">  761</span>&#160;      loop-&gt;pruneBounds(alloc);</div>
+<div class="line"><a name="l00762"></a><span class="lineno">  762</span>&#160;      loop-&gt;printBounds(out);</div>
+<div class="line"><a name="l00763"></a><span class="lineno">  763</span>&#160;    } <span class="keywordflow">else</span> out &lt;&lt; <span class="stringliteral">&quot;Top Level&quot;</span>;</div>
+<div class="line"><a name="l00764"></a><span class="lineno">  764</span>&#160;    out &lt;&lt; <span class="stringliteral">&quot;&lt;/td&gt;&lt;/tr&gt;\n&quot;</span>;</div>
+<div class="line"><a name="l00765"></a><span class="lineno">  765</span>&#160;    <span class="keywordtype">size_t</span> i = header.printDotNodes(out, 0, addrNames, addrIndOffset, name);</div>
+<div class="line"><a name="l00766"></a><span class="lineno">  766</span>&#160;    j = 0;</div>
+<div class="line"><a name="l00767"></a><span class="lineno">  767</span>&#160;    std::string loopEdges;</div>
+<div class="line"><a name="l00768"></a><span class="lineno">  768</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;subTree : subTrees) {</div>
+<div class="line"><a name="l00769"></a><span class="lineno">  769</span>&#160;      std::string label = <span class="stringliteral">&quot;f&quot;</span> + std::to_string(++i);</div>
+<div class="line"><a name="l00770"></a><span class="lineno">  770</span>&#160;      out &lt;&lt; <span class="stringliteral">&quot; &lt;tr&gt; &lt;td port=\&quot;&quot;</span> &lt;&lt; label &lt;&lt; <span class="stringliteral">&quot;\&quot;&gt; SubLoop#&quot;</span> &lt;&lt; j++</div>
+<div class="line"><a name="l00771"></a><span class="lineno">  771</span>&#160;          &lt;&lt; <span class="stringliteral">&quot;&lt;/td&gt;&lt;/tr&gt;\n&quot;</span>;</div>
+<div class="line"><a name="l00772"></a><span class="lineno">  772</span>&#160;      loopEdges += <span class="stringliteral">&quot;\&quot;&quot;</span> + name + <span class="stringliteral">&quot;\&quot;:f&quot;</span> + std::to_string(i) + <span class="stringliteral">&quot; -&gt; \&quot;&quot;</span> +</div>
+<div class="line"><a name="l00773"></a><span class="lineno">  773</span>&#160;                   names[subTree.subTree] + <span class="stringliteral">&quot;\&quot;:f0 [color=\&quot;#ff0000\&quot;];\n&quot;</span>;</div>
+<div class="line"><a name="l00774"></a><span class="lineno">  774</span>&#160;      i = subTree.exit.printDotNodes(out, i, addrNames, addrIndOffset, name);</div>
+<div class="line"><a name="l00775"></a><span class="lineno">  775</span>&#160;    }</div>
+<div class="line"><a name="l00776"></a><span class="lineno">  776</span>&#160;    out &lt;&lt; <span class="stringliteral">&quot;&lt;/table&gt;&gt;];\n&quot;</span> &lt;&lt; loopEdges;</div>
+<div class="line"><a name="l00777"></a><span class="lineno">  777</span>&#160;    <span class="keywordflow">if</span> (lret) <span class="keywordflow">return</span> lret;</div>
+<div class="line"><a name="l00778"></a><span class="lineno">  778</span>&#160;    <span class="keywordflow">if</span> ((loop == <span class="keyword">nullptr</span>) || (getDepth() &lt;= 1)) <span class="keywordflow">return</span> <span class="keyword">nullptr</span>;</div>
+<div class="line"><a name="l00779"></a><span class="lineno">  779</span>&#160;    <span class="keywordflow">return</span> loop-&gt;removeLoop(alloc, getDepth() - 1);</div>
+<div class="line"><a name="l00780"></a><span class="lineno">  780</span>&#160;  }</div>
+<div class="line"><a name="l00781"></a><span class="lineno">  781</span>&#160; </div>
+<div class="line"><a name="l00782"></a><span class="lineno">  782</span>&#160;  <span class="keywordtype">void</span> printDotFile(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, llvm::raw_ostream &amp;out) {</div>
+<div class="line"><a name="l00783"></a><span class="lineno">  783</span>&#160;    map&lt;LoopTreeSchedule *, std::string&gt; names;</div>
+<div class="line"><a name="l00784"></a><span class="lineno">  784</span>&#160;    llvm::SmallVector&lt;std::string&gt; addrNames(numAddr_);</div>
+<div class="line"><a name="l00785"></a><span class="lineno">  785</span>&#160;    names[<span class="keyword">this</span>] = <span class="stringliteral">&quot;toplevel&quot;</span>;</div>
+<div class="line"><a name="l00786"></a><span class="lineno">  786</span>&#160;    out &lt;&lt; <span class="stringliteral">&quot;digraph LoopNest {\n&quot;</span>;</div>
+<div class="line"><a name="l00787"></a><span class="lineno">  787</span>&#160;    <span class="keyword">auto</span> p = alloc.scope();</div>
+<div class="line"><a name="l00788"></a><span class="lineno">  788</span>&#160;    printSubDotFile(alloc, out, names, addrNames, subTrees.size(), <span class="keyword">nullptr</span>);</div>
+<div class="line"><a name="l00789"></a><span class="lineno">  789</span>&#160;    printDotEdges(out, addrNames);</div>
+<div class="line"><a name="l00790"></a><span class="lineno">  790</span>&#160;    out &lt;&lt; <span class="stringliteral">&quot;}\n&quot;</span>;</div>
+<div class="line"><a name="l00791"></a><span class="lineno">  791</span>&#160;  }</div>
+<div class="line"><a name="l00792"></a><span class="lineno">  792</span>&#160;};</div>
+<div class="line"><a name="l00793"></a><span class="lineno">  793</span>&#160; </div>
+<div class="line"><a name="l00794"></a><span class="lineno">  794</span>&#160;static_assert(Graphs::AbstractIndexGraph&lt;LoopTreeSchedule::AddressGraph&gt;);</div>
+<div class="line"><a name="l00795"></a><span class="lineno">  795</span>&#160;<span class="comment">// class LoopForestSchedule : LoopTreeSchedule {</span></div>
+<div class="line"><a name="l00796"></a><span class="lineno">  796</span>&#160;<span class="comment">//   [[no_unique_address]] BumpAlloc&lt;&gt; &amp;allocator;</span></div>
+<div class="line"><a name="l00797"></a><span class="lineno">  797</span>&#160;<span class="comment">// };</span></div>
+<div class="line"><a name="l00798"></a><span class="lineno">  798</span>&#160;} <span class="comment">// namespace CostModeling</span></div>
+<div class="line"><a name="l00799"></a><span class="lineno">  799</span>&#160; </div>
+<div class="line"><a name="l00800"></a><span class="lineno">  800</span>&#160;constexpr <span class="keywordtype">void</span></div>
+<div class="line"><a name="l00801"></a><span class="lineno">  801</span>&#160;ScheduledNode::insertMem(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc,</div>
+<div class="line"><a name="l00802"></a><span class="lineno">  802</span>&#160;                         PtrVector&lt;MemoryAccess *&gt; memAccess,</div>
+<div class="line"><a name="l00803"></a><span class="lineno">  803</span>&#160;                         <a class="code" href="classCostModeling_1_1LoopTreeSchedule.html">CostModeling::LoopTreeSchedule</a> *L)<span class="keyword"> const </span>{</div>
+<div class="line"><a name="l00804"></a><span class="lineno">  804</span>&#160;  <span class="comment">// First, we invert the schedule matrix.</span></div>
+<div class="line"><a name="l00805"></a><span class="lineno">  805</span>&#160;  SquarePtrMatrix&lt;int64_t&gt; Phi = schedule.getPhi();</div>
+<div class="line"><a name="l00806"></a><span class="lineno">  806</span>&#160;  <span class="keyword">auto</span> [Pinv, denom] = NormalForm::scaledInv(Phi);</div>
+<div class="line"><a name="l00807"></a><span class="lineno">  807</span>&#160;  <span class="comment">// TODO: if (s == 1) {}</span></div>
+<div class="line"><a name="l00808"></a><span class="lineno">  808</span>&#160;  <span class="comment">// TODO: make this function out of line</span></div>
+<div class="line"><a name="l00809"></a><span class="lineno">  809</span>&#160;  <span class="keyword">auto</span> &amp;accesses{L-&gt;getInitAddr(alloc)};</div>
+<div class="line"><a name="l00810"></a><span class="lineno">  810</span>&#160;  <span class="keywordtype">unsigned</span> numMem = memory.size(), offset = accesses.size(),</div>
+<div class="line"><a name="l00811"></a><span class="lineno">  811</span>&#160;           sId = std::numeric_limits&lt;unsigned&gt;::max() &gt;&gt; 1, j = 0;</div>
+<div class="line"><a name="l00812"></a><span class="lineno">  812</span>&#160;  <a class="code" href="classNotNull.html">NotNull&lt;AffineLoopNest&lt;false&gt;</a>&gt; loop = loopNest-&gt;rotate(alloc, Pinv, offsets);</div>
+<div class="line"><a name="l00813"></a><span class="lineno">  813</span>&#160;  <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i : memory) {</div>
+<div class="line"><a name="l00814"></a><span class="lineno">  814</span>&#160;    <a class="code" href="classNotNull.html">NotNull&lt;MemoryAccess&gt;</a> mem = memAccess[i];</div>
+<div class="line"><a name="l00815"></a><span class="lineno">  815</span>&#160;    <span class="keywordtype">bool</span> isStore = mem-&gt;isStore();</div>
+<div class="line"><a name="l00816"></a><span class="lineno">  816</span>&#160;    <span class="keywordflow">if</span> (isStore) sId = j;</div>
+<div class="line"><a name="l00817"></a><span class="lineno">  817</span>&#160;    ++j;</div>
+<div class="line"><a name="l00818"></a><span class="lineno">  818</span>&#160;    <span class="keywordtype">size_t</span> inputEdges = mem-&gt;inputEdges().size(),</div>
+<div class="line"><a name="l00819"></a><span class="lineno">  819</span>&#160;           outputEdges = mem-&gt;outputEdges().size();</div>
+<div class="line"><a name="l00820"></a><span class="lineno">  820</span>&#160;    <a class="code" href="classAddress.html">Address</a> *addr = Address::construct(</div>
+<div class="line"><a name="l00821"></a><span class="lineno">  821</span>&#160;      alloc, loop, mem, isStore, Pinv, denom, schedule.getOffsetOmega(), L,</div>
+<div class="line"><a name="l00822"></a><span class="lineno">  822</span>&#160;      inputEdges, isStore ? numMem - 1 : 1, outputEdges, offsets);</div>
+<div class="line"><a name="l00823"></a><span class="lineno">  823</span>&#160;    mem-&gt;setAddress(addr);</div>
+<div class="line"><a name="l00824"></a><span class="lineno">  824</span>&#160;    accesses.push_back(addr);</div>
+<div class="line"><a name="l00825"></a><span class="lineno">  825</span>&#160;  }</div>
+<div class="line"><a name="l00826"></a><span class="lineno">  826</span>&#160;  <a class="code" href="classAddress.html">Address</a> *store = accesses[offset + sId];</div>
+<div class="line"><a name="l00827"></a><span class="lineno">  827</span>&#160;  <span class="comment">// addrs all need direct connections</span></div>
+<div class="line"><a name="l00828"></a><span class="lineno">  828</span>&#160;  <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0, k = 0; i &lt; numMem; ++i)</div>
+<div class="line"><a name="l00829"></a><span class="lineno">  829</span>&#160;    <span class="keywordflow">if</span> (i != sId) accesses[offset + i]-&gt;addDirectConnection(store, k++);</div>
+<div class="line"><a name="l00830"></a><span class="lineno">  830</span>&#160;}</div>
+<div class="line"><a name="l00831"></a><span class="lineno">  831</span>&#160;[[nodiscard]] constexpr <span class="keyword">auto</span> Address::getCurrentDepth() const -&gt; <span class="keywordtype">unsigned</span> {</div>
+<div class="line"><a name="l00832"></a><span class="lineno">  832</span>&#160;  <span class="keywordflow">return</span> node-&gt;getDepth();</div>
+<div class="line"><a name="l00833"></a><span class="lineno">  833</span>&#160;}</div>
 <div class="ttc" id="aclassAddress_html"><div class="ttname"><a href="classAddress.html">Address</a></div><div class="ttdef"><b>Definition:</b> Address.hpp:60</div></div>
 <div class="ttc" id="aclassCostModeling_1_1LoopTreeSchedule_html"><div class="ttname"><a href="classCostModeling_1_1LoopTreeSchedule.html">CostModeling::LoopTreeSchedule</a></div><div class="ttdef"><b>Definition:</b> CostModeling.hpp:144</div></div>
 <div class="ttc" id="aclassLinearProgramLoopBlock_html"><div class="ttname"><a href="classLinearProgramLoopBlock.html">LinearProgramLoopBlock</a></div><div class="ttdef"><b>Definition:</b> LoopBlock.hpp:316</div></div>
