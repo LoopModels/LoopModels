@@ -668,7 +668,7 @@ public:
       Vector<unsigned> map;
       unsigned xNumSym = xS.size() + 1, xCon = xLoop->getNumCon(),
                yNumSym = yS.size() + 1, yCon = yLoop->getNumCon(),
-               nDS = mergeMap(map, xS, yS);
+               nDS = mergeMap(map, xS, yS), nLoop = xNumLoops + yNumLoops;
       // numSyms should be the same; we aren't pruning symbols
       invariant(numSym, 1 + nDS);
       for (size_t r = 0; r < xCon; ++r) {
@@ -681,9 +681,12 @@ public:
         A(r + xCon, _(0, numSym)) << 0;
         for (size_t j = 0; j < map.size(); ++j)
           A(r + xCon, 1 + map[j]) = Ay(r, 1 + j);
-        A(r, _(0, xNumLoops) + numSym) << 0;
-        A(r, _(0, yNumLoops) + numSymX) << Ay(r, _(0, yNumLoops) + yNumSym);
+        A(r + xCon, _(0, xNumLoops) + numSym) << 0;
+        A(r + xCon, _(0, yNumLoops) + numSymX)
+          << Ay(r, _(0, yNumLoops) + yNumSym);
       }
+      std::fill(A.begin() + size_t(xCon + yCon) * nCol, A.end(), 0);
+      A(_(0, nLoop) + (xCon + yCon), _(0, nLoop) + numSym).diag() << 1;
     } else dp->getA() << getA()(_, _(0, nCol)); // truncate time
     if (xOff)
       for (size_t c = 0; c < xNumLoops; ++c)

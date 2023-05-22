@@ -1186,7 +1186,7 @@ public:
     -> std::optional<BitSet> {
     if (numLambda == 0) {
       setSchedulesIndependent(g, depth);
-      return BitSet{};
+      return checkEmptySatEdges(g, depth);
     }
     auto p = allocator.scope();
     auto omniSimplex = instantiateOmniSimplex(g, depth, satisfyDeps);
@@ -1198,16 +1198,33 @@ public:
     return deactivateSatisfiedEdges(g, depth,
                                     sol[_(numPhiCoefs + numOmegaCoefs, end)]);
   }
+  auto checkEmptySatEdges(Graph &g, size_t depth) -> BitSet {
+    for (size_t e = 0; e < edges.size(); ++e) {
+      Dependence &edge = edges[e];
+      if (g.isInactive(e, depth)) continue;
+      size_t inIndex = edge.nodeIn(), outIndex = edge.nodeOut();
+      const ScheduledNode &inNode = nodes[inIndex], &outNode = nodes[outIndex];
+      DensePtrMatrix<int64_t> inPhi = inNode.getPhi()(_(0, depth + 1), _),
+                              outPhi = outNode.getPhi()(_(0, depth + 1), _);
+      if (edge.checkEmptySat(allocator, inNode.getLoopNest(),
+                             inNode.getOffset(), inPhi, outNode.getLoopNest(),
+                             outNode.getOffset(), outPhi)) {
+        g.activeEdges.remove(e);
+      }
+    }
+    return BitSet{};
+  }
   [[nodiscard]] auto deactivateSatisfiedEdges(Graph &g, size_t depth,
                                               Simplex::Solution sol) -> BitSet {
-    if (allZero(sol[_(begin, numBounding + numActiveEdges)])) return {};
+    if (allZero(sol[_(begin, numBounding + numActiveEdges)]))
+      return checkEmptySatEdges(g, depth);
     size_t w = 0, u = numActiveEdges;
     BitSet deactivated{};
     for (size_t e = 0; e < edges.size(); ++e) {
-      if (g.isInactive(e, depth)) continue;
       Dependence &edge = edges[e];
-      Col uu = u + edge.getNumDynamicBoundingVar();
+      if (g.isInactive(e, depth)) continue;
       size_t inIndex = edge.nodeIn(), outIndex = edge.nodeOut();
+      Col uu = u + edge.getNumDynamicBoundingVar();
       if ((sol[w++] != 0) || (anyNEZero(sol[_(u, uu)]))) {
         g.activeEdges.remove(e);
         deactivated.insert(e);
@@ -1557,7 +1574,7 @@ public:
     std::swap(g.nodeIds, nodeIds);
     g.activeEdges = activeEdges; // undo such that g.getEdges(d) is correct
     for (auto &&e : g.getEdges(d)) e.popSatLevel();
-    g.activeEdges = oldEdges;    // restore backup
+    g.activeEdges = oldEdges; // restore backup
     auto *oldNodeIter = oldSchedules.begin();
     for (auto &&n : g) n.getSchedule() = *(oldNodeIter++);
     std::swap(carriedDeps, oldCarriedDeps);
