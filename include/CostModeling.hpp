@@ -758,6 +758,7 @@ public:
     if (loop && (getDepth() > 0)) {
       for (size_t i = loop->getNumLoops(), k = getDepth(); i > k;)
         loop = loop->removeLoop(alloc, --i);
+      loop->pruneBounds(alloc);
       loop->printBounds(out);
     } else out << "Top Level";
     out << "</td></tr>\n";
@@ -783,6 +784,7 @@ public:
     llvm::SmallVector<std::string> addrNames(numAddr_);
     names[this] = "toplevel";
     out << "digraph LoopNest {\n";
+    auto p = alloc.scope();
     printSubDotFile(alloc, out, names, addrNames, subTrees.size(), nullptr);
     printDotEdges(out, addrNames);
     out << "}\n";

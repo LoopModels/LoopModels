@@ -991,7 +991,7 @@ s.getOffsetOmega() = [ 0, 0, 0 ]
 
 remark: REPL[26]:8:0: digraph LoopNest {
 "LoopNest#0SubLoop#0SubLoop#0" [shape=plain
-label = <<table><tr><td port="f0">0 ≤ i_2 ≤ min(%23 - 1, -1 + i_0)</td></tr>
+label = <<table><tr><td port="f0">0 ≤ i_2 ≤ -1 + i_0</td></tr>
 <tr><td port="f1"> ... = %55[i_2, i_1]</td></tr>
 <tr><td port="f2"> ... = %58[i_0, i_2]</td></tr>
 </table>>];
