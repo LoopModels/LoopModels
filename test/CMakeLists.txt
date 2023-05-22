@@ -38,7 +38,7 @@ CPMAddPackage(
 if(TEST_INSTALLED_VERSION)
   find_package(LoopModels REQUIRED)
 else()
-  CPMAddPackage(NAME LoopModels SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR}/..)
+  add_subdirectory(.. LoopModels)
 endif()
 
 # ---- Create binary ----
@@ -76,7 +76,7 @@ add_executable(${PROJECT_NAME} ${tests})
 message(STATUS "PROJECT_BINARY_DIR: ${PROJECT_BINARY_DIR}")
 message(STATUS "PROJECT_SOURCE_DIR: ${PROJECT_SOURCE_DIR}")
 message(STATUS "LLVM_INCLUDE_DIRS: ${LLVM_INCLUDE_DIRS}")
-add_dependencies(${PROJECT_NAME} LoopModels)
+
 target_include_directories(
   ${PROJECT_NAME} SYSTEM PRIVATE ${PROJECT_SOURCE_DIR}/../include ${LLVM_INCLUDE_DIRS}
 )
