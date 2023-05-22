@@ -104,10 +104,17 @@ TurboLoopPass::run(llvm::Function &F, llvm::FunctionAnalysisManager &FAM)
     if (ORE) [[unlikely]] {
       if (optDeps) {
         llvm::SmallVector<char, 512> str;
-        llvm::raw_svector_ostream os(str);
-        os << "Solved linear program:" << loopBlock << "\n";
-        LTS->printDotFile(allocator, os);
-        remark("LinearProgramSuccess", forest->getOuterLoop(), os.str());
+        {
+          llvm::raw_svector_ostream os(str);
+          os << "Solved linear program:" << loopBlock << "\n";
+          remark("LinearProgramSuccess", forest->getOuterLoop(), os.str());
+        }
+        {
+          str.clear();
+          llvm::raw_svector_ostream os(str);
+          LTS->printDotFile(allocator, os);
+          remark("DotFile", forest->getOuterLoop(), os.str());
+        }
       } else {
         remark("LinearProgramFailure", forest->getOuterLoop(),
                "Failed to solve linear program");
