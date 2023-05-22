@@ -169,44 +169,43 @@ $(function() {
 <div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;  [[gnu::used]] <span class="keywordtype">void</span> dump()<span class="keyword"> const </span>{ llvm::errs() &lt;&lt; *<span class="keyword">this</span>; }</div>
 <div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;<span class="preprocessor">#endif</span></div>
 <div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;  <span class="comment">// NOLINTNEXTLINE(misc-no-recursion)</span></div>
-<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;  <span class="keywordtype">void</span> addZeroLowerBounds(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc,</div>
-<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;                          map&lt;llvm::Loop *, LoopTree *&gt; &amp;loopMap) {</div>
-<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;    <span class="comment">// if (affineLoop) affineLoop-&gt;addZeroLowerBounds();</span></div>
-<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;    <span class="keywordflow">if</span> (affineLoop) affineLoop-&gt;addZeroLowerBounds(alloc);</div>
-<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">auto</span> tree : subLoops) {</div>
-<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;      tree-&gt;addZeroLowerBounds(alloc, loopMap);</div>
-<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;      tree-&gt;parentLoop = <span class="keyword">this</span>;</div>
-<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;    }</div>
-<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;    <span class="keywordflow">if</span> (loop) loopMap.insert(std::make_pair(loop, <span class="keyword">this</span>));</div>
-<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;  }</div>
-<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> begin() { <span class="keywordflow">return</span> subLoops.begin(); }</div>
-<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> end() { <span class="keywordflow">return</span> subLoops.end(); }</div>
-<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> begin()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> subLoops.begin(); }</div>
-<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> end()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> subLoops.end(); }</div>
-<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> size() <span class="keyword">const</span> -&gt; <span class="keywordtype">size_t</span> { <span class="keywordflow">return</span> subLoops.size(); }</div>
-<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160; </div>
-<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;  <span class="keyword">static</span> <span class="keywordtype">void</span> split(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc,</div>
-<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;                    llvm::SmallVector&lt;<a class="code" href="classNotNull.html">NotNull&lt;LoopTree&gt;</a>&gt; &amp;trees,</div>
-<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;                    llvm::SmallVector&lt;Predicate::Map&gt; &amp;paths,</div>
-<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;                    llvm::SmallVector&lt;<a class="code" href="classNotNull.html">NotNull&lt;LoopTree&gt;</a>&gt; &amp;subTree) {</div>
-<div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;    <span class="keywordflow">if</span> (!subTree.empty()) {</div>
-<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;      assert(1 + subTree.size() == paths.size());</div>
-<div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;      <span class="keyword">auto</span> *newTree =</div>
-<div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;        <span class="keyword">new</span> (alloc) <a class="code" href="structLoopTree.html">LoopTree</a>{std::move(subTree), std::move(paths)};</div>
-<div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160;      trees.push_back(newTree);</div>
-<div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;      subTree.clear();</div>
-<div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;    }</div>
-<div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160;    paths.clear();</div>
-<div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160;  }</div>
-<div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160;  <span class="comment">// NOLINTNEXTLINE(misc-no-recursion)</span></div>
-<div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160;  <span class="keywordtype">void</span> dumpAllMemAccess()<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160;    llvm::errs() &lt;&lt; <span class="stringliteral">&quot;dumpAllMemAccess for &quot;</span>;</div>
-<div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;    <span class="keywordflow">if</span> (loop) llvm::errs() &lt;&lt; *loop &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
-<div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;    <span class="keywordflow">else</span> llvm::errs() &lt;&lt; <span class="stringliteral">&quot;toplevel\n&quot;</span>;</div>
-<div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">const</span> <span class="keyword">auto</span> &amp;mem : memAccesses) llvm::errs() &lt;&lt; <span class="stringliteral">&quot;mem = &quot;</span> &lt;&lt; mem &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
-<div class="line"><a name="l00136"></a><span class="lineno">  136</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">auto</span> sL : subLoops) sL-&gt;dumpAllMemAccess();</div>
-<div class="line"><a name="l00137"></a><span class="lineno">  137</span>&#160;  }</div>
-<div class="line"><a name="l00138"></a><span class="lineno">  138</span>&#160;};</div>
+<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;  <span class="keywordtype">void</span> addZeroLowerBounds(map&lt;llvm::Loop *, LoopTree *&gt; &amp;loopMap) {</div>
+<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;    <span class="comment">// if (affineLoop) affineLoop-&gt;addZeroLowerBounds();</span></div>
+<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;    <span class="keywordflow">if</span> (affineLoop) affineLoop-&gt;addZeroLowerBounds();</div>
+<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">auto</span> tree : subLoops) {</div>
+<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;      tree-&gt;addZeroLowerBounds(loopMap);</div>
+<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;      tree-&gt;parentLoop = <span class="keyword">this</span>;</div>
+<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;    }</div>
+<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;    <span class="keywordflow">if</span> (loop) loopMap.insert(std::make_pair(loop, <span class="keyword">this</span>));</div>
+<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;  }</div>
+<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> begin() { <span class="keywordflow">return</span> subLoops.begin(); }</div>
+<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> end() { <span class="keywordflow">return</span> subLoops.end(); }</div>
+<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> begin()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> subLoops.begin(); }</div>
+<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> end()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> subLoops.end(); }</div>
+<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> size() <span class="keyword">const</span> -&gt; <span class="keywordtype">size_t</span> { <span class="keywordflow">return</span> subLoops.size(); }</div>
+<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160; </div>
+<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;  <span class="keyword">static</span> <span class="keywordtype">void</span> split(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc,</div>
+<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;                    llvm::SmallVector&lt;<a class="code" href="classNotNull.html">NotNull&lt;LoopTree&gt;</a>&gt; &amp;trees,</div>
+<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;                    llvm::SmallVector&lt;Predicate::Map&gt; &amp;paths,</div>
+<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;                    llvm::SmallVector&lt;<a class="code" href="classNotNull.html">NotNull&lt;LoopTree&gt;</a>&gt; &amp;subTree) {</div>
+<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;    <span class="keywordflow">if</span> (!subTree.empty()) {</div>
+<div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;      assert(1 + subTree.size() == paths.size());</div>
+<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;      <span class="keyword">auto</span> *newTree =</div>
+<div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;        <span class="keyword">new</span> (alloc) <a class="code" href="structLoopTree.html">LoopTree</a>{std::move(subTree), std::move(paths)};</div>
+<div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;      trees.push_back(newTree);</div>
+<div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160;      subTree.clear();</div>
+<div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;    }</div>
+<div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;    paths.clear();</div>
+<div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160;  }</div>
+<div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160;  <span class="comment">// NOLINTNEXTLINE(misc-no-recursion)</span></div>
+<div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160;  <span class="keywordtype">void</span> dumpAllMemAccess()<span class="keyword"> const </span>{</div>
+<div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160;    llvm::errs() &lt;&lt; <span class="stringliteral">&quot;dumpAllMemAccess for &quot;</span>;</div>
+<div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160;    <span class="keywordflow">if</span> (loop) llvm::errs() &lt;&lt; *loop &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
+<div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;    <span class="keywordflow">else</span> llvm::errs() &lt;&lt; <span class="stringliteral">&quot;toplevel\n&quot;</span>;</div>
+<div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">const</span> <span class="keyword">auto</span> &amp;mem : memAccesses) llvm::errs() &lt;&lt; <span class="stringliteral">&quot;mem = &quot;</span> &lt;&lt; mem &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
+<div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">auto</span> sL : subLoops) sL-&gt;dumpAllMemAccess();</div>
+<div class="line"><a name="l00136"></a><span class="lineno">  136</span>&#160;  }</div>
+<div class="line"><a name="l00137"></a><span class="lineno">  137</span>&#160;};</div>
 <div class="ttc" id="aclassNotNull_html"><div class="ttname"><a href="classNotNull.html">NotNull</a></div><div class="ttdef"><b>Definition:</b> Valid.hpp:7</div></div>
 <div class="ttc" id="astructAffineLoopNest_html"><div class="ttname"><a href="structAffineLoopNest.html">AffineLoopNest&lt; true &gt;</a></div></div>
 <div class="ttc" id="astructBumpAlloc_html"><div class="ttname"><a href="structBumpAlloc.html">BumpAlloc</a></div><div class="ttdef"><b>Definition:</b> Allocators.hpp:42</div></div>
