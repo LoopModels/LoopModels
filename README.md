@@ -38,134 +38,6 @@ It is expected that in many cases, bounds checks will actually provide informati
 
 Some details and explanations will be provided at [spmd.org](https://spmd.org/).
 
-#### Getting Started
-
-This project requires C++20.
-On Ubuntu 22.04 LTS or later (if you're on an older Ubuntu, I suggest upgrading), you can install the dependencies via
-```
-# needed to build; g++ also works in place of clang
-sudo apt install meson clang llvm-dev libgtest-dev libbenchmark-dev ninja-build pkg-config cmake
-# quality of life
-sudo apt install clangd clang-format ccache lld
-```
-On Fedora 36:
-```
-sudo dnf install meson clang llvm-devel gtest-devel google-benchmark-devel ninja-build pkgconf cmake
-sudo dnf install clang-tools-extra ccache lld libasan
-```
-I did not start from a clean ubuntu or fedora, so some dependencies may be missing.
-
-
-
-
-Then to build and run the test suite, simply run
-```
-CC_LD=lld CXX_LD=lld CXXFLAGS="" meson setup builddir -Db_santize=address,undefined -Db_coverage=true
-cd builddir
-meson test
-cd .. && ninja coverage -C builddir
-```
-Recompiling and rerunning tests simply requires rerunning `meson test`.
-The address sanitizer works for me on Fedora, but not Ubuntu (it has linking errors on Ubuntu, not unsanitary addresses ;) ), so you can remove it if it gives you trouble. Or find out how to actually get it working on Ubuntu and let me know.
-
-If you chose a directory name other than `builddir`, you may want to update the symbolically linked file `compile_commands.json`, as `clangd` will in your editor will likely be looking for this (and use it for example to find your header files).
-
-Benchmarks can be run via `meson test benchmarks`, which isn't that useful as it benchmarks the benchmark scripts. `meson`'s benchmark support seems ideal for macro benchmarks, which this project doesn't currently have.
-This repository currently only has a few micro benchmarks making use of [google benchmark](https://github.com/google/benchmark), which I should probably change to no longer mark as benchmarks w/ respect to `meson`, but as separate targets.
-These can be run via (or optionally `meson compile` to build all targets).
-```
-meson compile polynomial_benchmark constraint_pruning_benchmark
-./polynomial_benchmark
-./constraint_pruning_benchmark
-```
-
-###### No Root
-If you don't have root, or are using an operating system with package managers less wieldy than manual package management...
-Make sure you've defined the environmental variables on Linux:
-```
-export PATH=$HOME/.local/bin:$PATH
-export LD_LIBRARY_PATH=$HOME/.local/lib/x86_64-unknown-linux-gnu/:$HOME/.local/lib:$LD_LIBRARY_PATH
-export PKG_CONFIG_PATH=$HOME/.local/lib/pkgconfig:$PKG_CONFIG_PATH
-export C_INCLUDE_PATH=$HOME/.local/include:$C_INCLUDE_PATH
-export CPLUS_INCLUDE_PATH=$HOME/.local/include:$CPLUS_INCLUDE_PATH
-```
-Or on MacOS:
-```
-export SDKROOT=$(xcrun --show-sdk-path)
-export PATH=$HOME/.local/bin:$PATH
-export LD_LIBRARY_PATH=$HOME/.local/lib/x86_64-unknown-linux-gnu/:$HOME/.local/lib:$LD_LIBRARY_PATH
-export PKG_CONFIG_PATH=$HOME/.local/lib/pkgconfig:$PKG_CONFIG_PATH
-export C_INCLUDE_PATH=$HOME/.local/include:$C_INCLUDE_PATH
-export CPLUS_INCLUDE_PATH=$HOME/.local/include/c++/v1:$HOME/.local/include:$CPLUS_INCLUDE_PATH
-```
-
-You should probably place these in a script you can easily source it whenever you're developing LoopModels. Alternatively, place this in your `~/.bashrc` or equivalent.
-These paths will let the compiler and linker find the new LLVM tool chain.
-
-```
-curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
-python3 get-pip.py
-python3 -m pip install meson --user
-rm get-pip.py
-mkdir -p $HOME/Documents/libraries
-cd $HOME/Documents/libraries
-git clone https://github.com/llvm/llvm-project.git
-cd llvm-project
-git checkout release/14.x
-mkdir build && cd build
-cmake -G Ninja -DCMAKE_BUILD_TYPE="Release" -DLLVM_USE_SPLIT_DWARF=ON -DLLVM_BUILD_LLVM_DYLIB=ON -DLLVM_ENABLE_PROJECTS="mlir;clang;lld;clang-tools-extra" -DLLVM_TARGETS_TO_BUILD="host" -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX="$HOME/.local" -DLLVM_PARALLEL_LINK_JOBS=1 -DLLVM_OPTIMIZED_TABLEGEN=ON -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DLLVM_ENABLE_RUNTIMES="libcxx;libcxxabi;libunwind;compiler-rt" ../llvm
-time ninja
-ninja install
-```
-You've now build a new enough toolchain that the project can use, both for linking with (LoopModels depends on LLVM >= 14) and for compiling the project (LoopModels uses C++20). 
-The project and all its dependencies will have to be built with and link to this toolchain, so it's important to set `CXXFLAGS="-stdlib=libc++"` below.
-
-When building LLVM, if you have a lot of RAM, you can remove the option `-DLLVM_PARALLEL_LINK_JOBS=1` to allow parallel linking. If your RAM is limited, the OOM Killer is likely to hit your build.
-
-If you're on MacOS, remove the `*_LD`s, as `lld` won't work. Or you could try replacing `lld` with `ld64.lld`. The default linker on Linux is slow, which is why I'm using the `lld` we build with llvm below.
-```
-cd $HOME/Documents/libraries
-git clone https://github.com/google/benchmark.git
-cd benchmark
-cmake -E make_directory "build"
-CC_LD=lld CXX_LD=lld CXXFLAGS="-stdlib=libc++" CC=clang CXX=clang++ cmake -E chdir "build" cmake -DBENCHMARK_DOWNLOAD_DEPENDENCIES=on -DCMAKE_INSTALL_PREFIX="$HOME/.local" -DCMAKE_BUILD_TYPE=Release ../
-CC_LD=lld CXX_LD=lld CXXFLAGS="-stdlib=libc++" CC=clang CXX=clang++ cmake --build "build" --config Release --target install
-
-cd $HOME/Documents/libraries
-git clone https://github.com/google/googletest.git
-cd googletest
-cmake -E make_directory "build"
-CC_LD=lld CXX_LD=lld CXXFLAGS="-stdlib=libc++" CC=clang CXX=clang++ cmake -E chdir "build" cmake -DCMAKE_INSTALL_PREFIX="$HOME/.local" -DCMAKE_BUILD_TYPE=Release ../
-CC_LD=lld CXX_LD=lld CXXFLAGS="-stdlib=libc++" CC=clang CXX=clang++ cmake --build "build" --config Release --target install
-```
-Now that all our dependencies are built, we can finally build `LoopModels` itself. It of course also requires `libc++`.
-```
-cd $HOME/Documents/libraries
-git clone https://github.com/JuliaSIMD/LoopModels.git
-cd LoopModels
-CC_LD=lld CXX_LD=lld CXXFLAGS="-stdlib=libc++" CC=clang CXX=clang++ meson setup builddir -Db_santize=address,undefined -Db_coverage=true
-cd builddir
-meson test
-cd .. && ninja coverage -C builddir
-```
-
-Now that this is all set up, you just need to make sure the environmental variables are defined, and can just reinvoke `meson test` and `meson compile` to build the test suite/project as needed.
-
-If you need to wipe the build dir, you'll have to set the temporary environment variables such as the linkers and CXX flags again.
-
-###### Custom LLVM
-
-By default, meson uses llvm-config to find LLVM.
-If you have several LLVM distributives installed, you can use meson [native file](https://mesonbuild.com/Native-environments.html) to specify which LLVM is used when compiling LoopModels. The `.ini` file should override where to find llvm-config. For example, the contents of the `custom-llvm.ini` file specify the path to llvm-config
-```
-llvm-config = '/usr/local/bin/llvm/llvm-config'
-```
-
-Then meson is configured with
-```
-CC_LD=lld CXX_LD=lld CXXFLAGS="" meson setup builddir -Db_santize=address,undefined --native-file custom-llvm.ini
-```
-
 #### Notes on Code
 
 Eventually, I'd like to make didactic developer docs so that it's a useful resource for anyone wanting to learn about loop optimization and jump into the code to try implementing or improving optimizations.
@@ -174,15 +46,10 @@ For now, a few notes on conventions:
 
 ####### Loop Order in internal data structures
 
-Loop orders are initially parsed such that their internal representation is inner <-> outer, i.e. the inner most loop would be indexed with `0`, and the outermost with `maxDepth - 1`. 
+Loops are always in the `outer <-> inner` order.
 
-This convention is more convenient for initially parsing loops as well as for the initial pass of ILP reordering.
-
-When parsing loops, we take the largest sets we can model at a time. Thus it's natural to start with the innermost loop, and then move outwards, appending additional data. When we encounter something we cannot model, such as non-affine loop bounds or array accesses, we can also easily drop all outer loops, keeping the inner loops that satisfy our requirements. Thus, inner <-> outer is more convenient for parsing. 
-
-For ILP optimization, we take the lexicographical minimum of the `[dependence distance; schedule]` vector where the schedule is linearly independent of all previously solved schedules. By ordering inner <-> outer, we favor preserving the original program order rather than arbitrarily permuting. However, when printing, loops are named outer<->inner, as we may be printing many loops of different depths, and this eases comparisons (i.e., we want $i_0$ to mean the same thing across fused loops!).
-
-In contrast, schedules represent loops in an outer <-> inner order, as that is the order we solve them. That is columns of `Phi` and elements from `omega` are in outer <-> inner order.
+For ILP optimization, we take the reverse-lexicographical minimum of the `[dependence distance; schedule]` vector where the schedule is linearly independent of all previously solved schedules. By ordering outer <-> inner, we favor preserving the original program order rather than arbitrarily permuting. 
+This is subject to change; I'm likely to have it favor placing loops that index with higher strides outside.
 
 #### Benchmarks
 
