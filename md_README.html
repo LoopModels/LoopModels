@@ -85,87 +85,13 @@ $(function() {
 <p><code>LoopModels</code> will provide a function pass.</p>
 <p>Some details and explanations will be provided at <a href="https://spmd.org/">spmd.org</a>.</p>
 <h3><a class="anchor" id="autotoc_md1"></a>
-Getting Started</h3>
-<p>This project requires C++20. On Ubuntu 22.04 LTS or later (if you're on an older Ubuntu, I suggest upgrading), you can install the dependencies via </p><div class="fragment"><div class="line"># needed to build; g++ also works in place of clang</div>
-<div class="line">sudo apt install meson clang llvm-dev libgtest-dev libbenchmark-dev ninja-build pkg-config cmake</div>
-<div class="line"># quality of life</div>
-<div class="line">sudo apt install clangd clang-format ccache lld</div>
-</div><!-- fragment --><p> On Fedora 36: </p><div class="fragment"><div class="line">sudo dnf install meson clang llvm-devel gtest-devel google-benchmark-devel ninja-build pkgconf cmake</div>
-<div class="line">sudo dnf install clang-tools-extra ccache lld libasan</div>
-</div><!-- fragment --><p> I did not start from a clean ubuntu or fedora, so some dependencies may be missing.</p>
-<p>Then to build and run the test suite, simply run </p><div class="fragment"><div class="line">CC_LD=lld CXX_LD=lld CXXFLAGS=&quot;&quot; meson setup builddir -Db_santize=address,undefined -Db_coverage=true</div>
-<div class="line">cd builddir</div>
-<div class="line">meson test</div>
-<div class="line">cd .. &amp;&amp; ninja coverage -C builddir</div>
-</div><!-- fragment --><p> Recompiling and rerunning tests simply requires rerunning <code>meson test</code>. The address sanitizer works for me on Fedora, but not Ubuntu (it has linking errors on Ubuntu, not unsanitary addresses ;) ), so you can remove it if it gives you trouble. Or find out how to actually get it working on Ubuntu and let me know.</p>
-<p>If you chose a directory name other than <code>builddir</code>, you may want to update the symbolically linked file <code>compile_commands.json</code>, as <code>clangd</code> will in your editor will likely be looking for this (and use it for example to find your header files).</p>
-<p>Benchmarks can be run via <code>meson test benchmarks</code>, which isn't that useful as it benchmarks the benchmark scripts. <code>meson</code>'s benchmark support seems ideal for macro benchmarks, which this project doesn't currently have. This repository currently only has a few micro benchmarks making use of <a href="https://github.com/google/benchmark">google benchmark</a>, which I should probably change to no longer mark as benchmarks w/ respect to <code>meson</code>, but as separate targets. These can be run via (or optionally <code>meson compile</code> to build all targets). </p><div class="fragment"><div class="line">meson compile polynomial_benchmark constraint_pruning_benchmark</div>
-<div class="line">./polynomial_benchmark</div>
-<div class="line">./constraint_pruning_benchmark</div>
-</div><!-- fragment --><h5>No Root</h5>
-<p>If you don't have root, or are using an operating system with package managers less wieldy than manual package management... Make sure you've defined the environmental variables on Linux: </p><div class="fragment"><div class="line">export PATH=$HOME/.local/bin:$PATH</div>
-<div class="line">export LD_LIBRARY_PATH=$HOME/.local/lib/x86_64-unknown-linux-gnu/:$HOME/.local/lib:$LD_LIBRARY_PATH</div>
-<div class="line">export PKG_CONFIG_PATH=$HOME/.local/lib/pkgconfig:$PKG_CONFIG_PATH</div>
-<div class="line">export C_INCLUDE_PATH=$HOME/.local/include:$C_INCLUDE_PATH</div>
-<div class="line">export CPLUS_INCLUDE_PATH=$HOME/.local/include:$CPLUS_INCLUDE_PATH</div>
-</div><!-- fragment --><p> Or on MacOS: </p><div class="fragment"><div class="line">export SDKROOT=$(xcrun --show-sdk-path)</div>
-<div class="line">export PATH=$HOME/.local/bin:$PATH</div>
-<div class="line">export LD_LIBRARY_PATH=$HOME/.local/lib/x86_64-unknown-linux-gnu/:$HOME/.local/lib:$LD_LIBRARY_PATH</div>
-<div class="line">export PKG_CONFIG_PATH=$HOME/.local/lib/pkgconfig:$PKG_CONFIG_PATH</div>
-<div class="line">export C_INCLUDE_PATH=$HOME/.local/include:$C_INCLUDE_PATH</div>
-<div class="line">export CPLUS_INCLUDE_PATH=$HOME/.local/include/c++/v1:$HOME/.local/include:$CPLUS_INCLUDE_PATH</div>
-</div><!-- fragment --><p>You should probably place these in a script you can easily source it whenever you're developing LoopModels. Alternatively, place this in your <code>~/.bashrc</code> or equivalent. These paths will let the compiler and linker find the new LLVM tool chain.</p>
-<div class="fragment"><div class="line">curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py</div>
-<div class="line">python3 get-pip.py</div>
-<div class="line">python3 -m pip install meson --user</div>
-<div class="line">rm get-pip.py</div>
-<div class="line">mkdir -p $HOME/Documents/libraries</div>
-<div class="line">cd $HOME/Documents/libraries</div>
-<div class="line">git clone https://github.com/llvm/llvm-project.git</div>
-<div class="line">cd llvm-project</div>
-<div class="line">git checkout release/14.x</div>
-<div class="line">mkdir build &amp;&amp; cd build</div>
-<div class="line">cmake -G Ninja -DCMAKE_BUILD_TYPE=&quot;Release&quot; -DLLVM_USE_SPLIT_DWARF=ON -DLLVM_BUILD_LLVM_DYLIB=ON -DLLVM_ENABLE_PROJECTS=&quot;mlir;clang;lld;clang-tools-extra&quot; -DLLVM_TARGETS_TO_BUILD=&quot;host&quot; -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=&quot;$HOME/.local&quot; -DLLVM_PARALLEL_LINK_JOBS=1 -DLLVM_OPTIMIZED_TABLEGEN=ON -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DLLVM_ENABLE_RUNTIMES=&quot;libcxx;libcxxabi;libunwind;compiler-rt&quot; ../llvm</div>
-<div class="line">time ninja</div>
-<div class="line">ninja install</div>
-</div><!-- fragment --><p> You've now build a new enough toolchain that the project can use, both for linking with (LoopModels depends on LLVM &gt;= 14) and for compiling the project (LoopModels uses C++20). The project and all its dependencies will have to be built with and link to this toolchain, so it's important to set <code>CXXFLAGS="-stdlib=libc++"</code> below.</p>
-<p>When building LLVM, if you have a lot of RAM, you can remove the option <code>-DLLVM_PARALLEL_LINK_JOBS=1</code> to allow parallel linking. If your RAM is limited, the OOM Killer is likely to hit your build.</p>
-<p>If you're on MacOS, remove the <code>*_LD</code>s, as <code>lld</code> won't work. Or you could try replacing <code>lld</code> with <code>ld64.lld</code>. The default linker on Linux is slow, which is why I'm using the <code>lld</code> we build with llvm below. </p><div class="fragment"><div class="line">cd $HOME/Documents/libraries</div>
-<div class="line">git clone https://github.com/google/benchmark.git</div>
-<div class="line">cd benchmark</div>
-<div class="line">cmake -E make_directory &quot;build&quot;</div>
-<div class="line">CC_LD=lld CXX_LD=lld CXXFLAGS=&quot;-stdlib=libc++&quot; CC=clang CXX=clang++ cmake -E chdir &quot;build&quot; cmake -DBENCHMARK_DOWNLOAD_DEPENDENCIES=on -DCMAKE_INSTALL_PREFIX=&quot;$HOME/.local&quot; -DCMAKE_BUILD_TYPE=Release ../</div>
-<div class="line">CC_LD=lld CXX_LD=lld CXXFLAGS=&quot;-stdlib=libc++&quot; CC=clang CXX=clang++ cmake --build &quot;build&quot; --config Release --target install</div>
-<div class="line"> </div>
-<div class="line">cd $HOME/Documents/libraries</div>
-<div class="line">git clone https://github.com/google/googletest.git</div>
-<div class="line">cd googletest</div>
-<div class="line">cmake -E make_directory &quot;build&quot;</div>
-<div class="line">CC_LD=lld CXX_LD=lld CXXFLAGS=&quot;-stdlib=libc++&quot; CC=clang CXX=clang++ cmake -E chdir &quot;build&quot; cmake -DCMAKE_INSTALL_PREFIX=&quot;$HOME/.local&quot; -DCMAKE_BUILD_TYPE=Release ../</div>
-<div class="line">CC_LD=lld CXX_LD=lld CXXFLAGS=&quot;-stdlib=libc++&quot; CC=clang CXX=clang++ cmake --build &quot;build&quot; --config Release --target install</div>
-</div><!-- fragment --><p> Now that all our dependencies are built, we can finally build <code>LoopModels</code> itself. It of course also requires <code>libc++</code>. </p><div class="fragment"><div class="line">cd $HOME/Documents/libraries</div>
-<div class="line">git clone https://github.com/JuliaSIMD/LoopModels.git</div>
-<div class="line">cd LoopModels</div>
-<div class="line">CC_LD=lld CXX_LD=lld CXXFLAGS=&quot;-stdlib=libc++&quot; CC=clang CXX=clang++ meson setup builddir -Db_santize=address,undefined -Db_coverage=true</div>
-<div class="line">cd builddir</div>
-<div class="line">meson test</div>
-<div class="line">cd .. &amp;&amp; ninja coverage -C builddir</div>
-</div><!-- fragment --><p>Now that this is all set up, you just need to make sure the environmental variables are defined, and can just reinvoke <code>meson test</code> and <code>meson compile</code> to build the test suite/project as needed.</p>
-<p>If you need to wipe the build dir, you'll have to set the temporary environment variables such as the linkers and CXX flags again.</p>
-<h5>Custom LLVM</h5>
-<p>By default, meson uses llvm-config to find LLVM. If you have several LLVM distributives installed, you can use meson <a href="https://mesonbuild.com/Native-environments.html">native file</a> to specify which LLVM is used when compiling LoopModels. The <code>.ini</code> file should override where to find llvm-config. For example, the contents of the <code>custom-llvm.ini</code> file specify the path to llvm-config </p><div class="fragment"><div class="line">llvm-config = &#39;/usr/local/bin/llvm/llvm-config&#39;</div>
-</div><!-- fragment --><p>Then meson is configured with </p><div class="fragment"><div class="line">CC_LD=lld CXX_LD=lld CXXFLAGS=&quot;&quot; meson setup builddir -Db_santize=address,undefined --native-file custom-llvm.ini</div>
-</div><!-- fragment --><h3><a class="anchor" id="autotoc_md2"></a>
 Notes on Code</h3>
 <p>Eventually, I'd like to make didactic developer docs so that it's a useful resource for anyone wanting to learn about loop optimization and jump into the code to try implementing or improving optimizations.</p>
 <p>For now, a few notes on conventions:</p>
 <h5># Loop Order in internal data structures</h5>
-<p>Loop orders are initially parsed such that their internal representation is inner &lt;-&gt; outer, i.e. the inner most loop would be indexed with <code>0</code>, and the outermost with <code>maxDepth - 1</code>.</p>
-<p>This convention is more convenient for initially parsing loops as well as for the initial pass of ILP reordering.</p>
-<p>When parsing loops, we take the largest sets we can model at a time. Thus it's natural to start with the innermost loop, and then move outwards, appending additional data. When we encounter something we cannot model, such as non-affine loop bounds or array accesses, we can also easily drop all outer loops, keeping the inner loops that satisfy our requirements. Thus, inner &lt;-&gt; outer is more convenient for parsing.</p>
-<p>For ILP optimization, we take the lexicographical minimum of the <code>[dependence distance; schedule]</code> vector where the schedule is linearly independent of all previously solved schedules. By ordering inner &lt;-&gt; outer, we favor preserving the original program order rather than arbitrarily permuting. However, when printing, loops are named outer&lt;-&gt;inner, as we may be printing many loops of different depths, and this eases comparisons (i.e., we want $i_0$ to mean the same thing across fused loops!).</p>
-<p>In contrast, schedules represent loops in an outer &lt;-&gt; inner order, as that is the order we solve them. That is columns of <code>Phi</code> and elements from <code>omega</code> are in outer &lt;-&gt; inner order.</p>
-<h3><a class="anchor" id="autotoc_md3"></a>
+<p>Loops are always in the <code>outer &lt;-&gt; inner</code> order.</p>
+<p>For ILP optimization, we take the reverse-lexicographical minimum of the <code>[dependence distance; schedule]</code> vector where the schedule is linearly independent of all previously solved schedules. By ordering outer &lt;-&gt; inner, we favor preserving the original program order rather than arbitrarily permuting. This is subject to change; I'm likely to have it favor placing loops that index with higher strides outside.</p>
+<h3><a class="anchor" id="autotoc_md2"></a>
 Benchmarks</h3>
 <p>You may first want to install <code>libpmf</code>, for example on Fedora </p><div class="fragment"><div class="line">sudo dnf install libpfm-devel libpfm-static</div>
 </div><!-- fragment --><p> or on Debian(-based) systems: </p><div class="fragment"><div class="line">sudo apt-get install libpfm4-dev</div>
