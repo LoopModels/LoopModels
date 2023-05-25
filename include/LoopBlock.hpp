@@ -1034,11 +1034,10 @@ public:
   /// w: bounding offsets, independent of symbolic variables
   /// u: bounding offsets, dependent on symbolic variables
   auto instantiateOmniSimplex(const Graph &g, size_t d, bool satisfyDeps)
-    -> Optional<Simplex *> {
-    auto omniSimplex =
-      Simplex::create(allocator, numConstraints + numSlack,
-                      numBounding + numActiveEdges + numPhiCoefs +
-                        numOmegaCoefs + numSlack + numLambda);
+    -> std::unique_ptr<Simplex> {
+    auto omniSimplex = Simplex::create(
+      numConstraints + numSlack, numBounding + numActiveEdges + numPhiCoefs +
+                                   numOmegaCoefs + numSlack + numLambda);
     auto C{omniSimplex->getConstraints()};
     C << 0;
     // layout of omniSimplex:
@@ -1160,8 +1159,8 @@ public:
     }
     invariant(size_t(l), size_t(1 + numLambda));
     invariant(size_t(c), size_t(numConstraints));
-    addIndependentSolutionConstraints(omniSimplex, g, d);
-    return omniSimplex->initiateFeasible() ? nullptr : (Simplex *)omniSimplex;
+    addIndependentSolutionConstraints(omniSimplex.get(), g, d);
+    return omniSimplex;
   }
   static void updateConstraints(MutPtrMatrix<int64_t> C,
                                 const ScheduledNode &node,
@@ -1188,9 +1187,8 @@ public:
       setSchedulesIndependent(g, depth);
       return checkEmptySatEdges(g, depth);
     }
-    auto p = allocator.scope();
     auto omniSimplex = instantiateOmniSimplex(g, depth, satisfyDeps);
-    if (!omniSimplex) return std::nullopt;
+    if (omniSimplex->initiateFeasible()) return std::nullopt;
     auto sol = omniSimplex->rLexMinStop(numLambda + numSlack);
     assert(sol.size() ==
            numBounding + numActiveEdges + numPhiCoefs + numOmegaCoefs);
@@ -1574,7 +1572,7 @@ public:
     std::swap(g.nodeIds, nodeIds);
     g.activeEdges = activeEdges; // undo such that g.getEdges(d) is correct
     for (auto &&e : g.getEdges(d)) e.popSatLevel();
-    g.activeEdges = oldEdges; // restore backup
+    g.activeEdges = oldEdges;    // restore backup
     auto *oldNodeIter = oldSchedules.begin();
     for (auto &&n : g) n.getSchedule() = *(oldNodeIter++);
     std::swap(carriedDeps, oldCarriedDeps);

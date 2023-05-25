@@ -16,6 +16,7 @@
 #include <llvm/ADT/ArrayRef.h>
 #include <llvm/ADT/SmallVector.h>
 #include <llvm/Support/raw_ostream.h>
+#include <new>
 #include <tuple>
 
 // #define VERBOSESIMPLEX
@@ -878,6 +879,32 @@ public:
     mem->constraintCapacity = conCap;
     mem->varCapacity = varCap;
     return mem;
+  }
+
+  static auto operator new(size_t count, unsigned conCap, unsigned varCap)
+    -> void * {
+    size_t memNeeded = tableauOffset(conCap, varCap) +
+                       sizeof(value_type) * reservedTableau(conCap, varCap);
+    // void *p = ::operator new(count + memNeeded);
+    return ::operator new(count + memNeeded,
+                          std::align_val_t(alignof(Simplex)));
+  }
+  static void operator delete(void *ptr, size_t) {
+    ::operator delete(ptr, std::align_val_t(alignof(Simplex)));
+  }
+
+  static auto create(unsigned numCon, unsigned numVar)
+    -> std::unique_ptr<Simplex> {
+    return create(numCon, numVar, numCon, numVar + numCon);
+  }
+  static auto create(unsigned numCon, unsigned numVar, unsigned conCap,
+                     unsigned varCap) -> std::unique_ptr<Simplex> {
+    auto *ret = new (conCap, varCap) Simplex;
+    ret->numConstraints = numCon;
+    ret->numVars = numVar;
+    ret->constraintCapacity = conCap;
+    ret->varCapacity = varCap;
+    return std::unique_ptr<Simplex>(ret);
   }
 
   static constexpr auto
