@@ -160,14 +160,13 @@ struct Instruction {
   };
   // using UniqueIdentifier = std::pair<Identifier, MutPtrVector<Instruction
   // *>>;
-
+  using InstrTypes =
+    std::variant<std::monostate, llvm::Instruction *, llvm::ConstantInt *,
+                 llvm::ConstantFP *, Address *>;
   [[no_unique_address]] Identifier idtf;
   // Intrinsic id;
   [[no_unique_address]] llvm::Type *type;
-  [[no_unique_address]] std::variant<std::monostate, llvm::Instruction *,
-                                     llvm::ConstantInt *, llvm::ConstantFP *,
-                                     Address *>
-    ptr;
+  [[no_unique_address]] InstrTypes ptr;
   [[no_unique_address]] Predicate::Set predicates;
   [[no_unique_address]] MutPtrVector<Instruction *> operands{nullptr,
                                                              unsigned(0)};

@@ -127,6 +127,27 @@ struct CPURegisterFile {
 //     }
 // }
 
+/// How should the IR look?
+/// We could have a flat IR, which may be useful for things like loop placement
+/// via SCC Alternatively, we could have a much more structured IR, where we
+/// have the loop blocks and loops. Then how do we do SCC? Add dummies? Or, can
+/// loops exist as IR components? What do we need to do with the IR?
+/// 1. Placement, e.g. the SCC
+/// 2. lifetime as a function of loops.
+/// Could we do something with the LoopAndExit, where both are represented?
+/// exit's parents are all loop members, loop's the prev loop?
+/// Seems like it could be straightforward.
+///
+/// Perhaps define:
+/// using vertex_t = std::variant<Address*,LoopStart,LoopEnd>
+///
+/// Perhaps, for now...focus on InstructionnBlock, where we do want an
+/// Instruction linked list.
+///
+///
+/// For register consumption -- we want to know last use676767
+/// Can the Instruction's children
+
 /// Given: llvm::SmallVector<LoopAndExit> subTrees;
 /// subTrees[i].second is the preheader for
 /// subTrees[i+1].first, which has exit block
