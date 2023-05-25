@@ -262,6 +262,18 @@ static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>crea
 <tr class="memitem:af7eb04528a78cb0f4ed31845f85c798e"><td class="memItemLeft" align="right" valign="top"><a id="af7eb04528a78cb0f4ed31845f85c798e"></a>
 static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>create</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, unsigned numCon, unsigned numVar, unsigned conCap, unsigned varCap) -&gt; <a class="el" href="classNotNull.html">NotNull</a>&lt; <a class="el" href="classSimplex.html">Simplex</a> &gt;</td></tr>
 <tr class="separator:af7eb04528a78cb0f4ed31845f85c798e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a41cf1ccf22c90dd240b881dbe093e0a7"><td class="memItemLeft" align="right" valign="top"><a id="a41cf1ccf22c90dd240b881dbe093e0a7"></a>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator new</b> (size_t count, unsigned conCap, unsigned varCap) -&gt; void *</td></tr>
+<tr class="separator:a41cf1ccf22c90dd240b881dbe093e0a7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9e5e38f58a5d84480d9dcaaca80bd3ca"><td class="memItemLeft" align="right" valign="top"><a id="a9e5e38f58a5d84480d9dcaaca80bd3ca"></a>
+static void&#160;</td><td class="memItemRight" valign="bottom"><b>operator delete</b> (void *ptr, size_t)</td></tr>
+<tr class="separator:a9e5e38f58a5d84480d9dcaaca80bd3ca"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6aa8c0ad389c7ffb2c506aca9df2e701"><td class="memItemLeft" align="right" valign="top"><a id="a6aa8c0ad389c7ffb2c506aca9df2e701"></a>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>create</b> (unsigned numCon, unsigned numVar) -&gt; std::unique_ptr&lt; <a class="el" href="classSimplex.html">Simplex</a> &gt;</td></tr>
+<tr class="separator:a6aa8c0ad389c7ffb2c506aca9df2e701"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abe9f755861700ff256b281bf4fd8014f"><td class="memItemLeft" align="right" valign="top"><a id="abe9f755861700ff256b281bf4fd8014f"></a>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>create</b> (unsigned numCon, unsigned numVar, unsigned conCap, unsigned varCap) -&gt; std::unique_ptr&lt; <a class="el" href="classSimplex.html">Simplex</a> &gt;</td></tr>
+<tr class="separator:abe9f755861700ff256b281bf4fd8014f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac25c005ec7ff915adce40790b0759318"><td class="memItemLeft" align="right" valign="top"><a id="ac25c005ec7ff915adce40790b0759318"></a>
 static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>create</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, unsigned numCon, unsigned numVar, unsigned numSlack) -&gt; <a class="el" href="classNotNull.html">NotNull</a>&lt; <a class="el" href="classSimplex.html">Simplex</a> &gt;</td></tr>
 <tr class="separator:ac25c005ec7ff915adce40790b0759318"><td class="memSeparator" colspan="2">&#160;</td></tr>

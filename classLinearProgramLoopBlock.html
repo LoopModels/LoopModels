@@ -191,8 +191,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>shiftOmega</b> (<a cl
 <tr class="memitem:a6f5b922d22be60cf9feb5604228d658f"><td class="memItemLeft" align="right" valign="top"><a id="a6f5b922d22be60cf9feb5604228d658f"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>shiftOmegas</b> ()</td></tr>
 <tr class="separator:a6f5b922d22be60cf9feb5604228d658f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3a142120e6fee8467975cfff916922e4"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classLinearProgramLoopBlock.html#a3a142120e6fee8467975cfff916922e4">instantiateOmniSimplex</a> (const <a class="el" href="structLinearProgramLoopBlock_1_1Graph.html">Graph</a> &amp;g, size_t d, bool satisfyDeps) -&gt; <a class="el" href="structOptional.html">Optional</a>&lt; <a class="el" href="classSimplex.html">Simplex</a> * &gt;</td></tr>
-<tr class="separator:a3a142120e6fee8467975cfff916922e4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a80af2396d1275da193ff58103a7b7ef5"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classLinearProgramLoopBlock.html#a80af2396d1275da193ff58103a7b7ef5">instantiateOmniSimplex</a> (const <a class="el" href="structLinearProgramLoopBlock_1_1Graph.html">Graph</a> &amp;g, size_t d, bool satisfyDeps) -&gt; std::unique_ptr&lt; <a class="el" href="classSimplex.html">Simplex</a> &gt;</td></tr>
+<tr class="separator:a80af2396d1275da193ff58103a7b7ef5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac86362bad7387df72ffaeda73820be4c"><td class="memItemLeft" align="right" valign="top"><a id="ac86362bad7387df72ffaeda73820be4c"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>solveGraph</b> (<a class="el" href="structLinearProgramLoopBlock_1_1Graph.html">Graph</a> &amp;g, size_t depth, bool satisfyDeps) -&gt; std::optional&lt; <a class="el" href="structBitSet.html">BitSet</a> &gt;</td></tr>
 <tr class="separator:ac86362bad7387df72ffaeda73820be4c"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -360,8 +360,8 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> 
 
 </div>
 </div>
-<a id="a3a142120e6fee8467975cfff916922e4"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a3a142120e6fee8467975cfff916922e4">&#9670;&nbsp;</a></span>instantiateOmniSimplex()</h2>
+<a id="a80af2396d1275da193ff58103a7b7ef5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a80af2396d1275da193ff58103a7b7ef5">&#9670;&nbsp;</a></span>instantiateOmniSimplex()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -390,7 +390,7 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> 
         <tr>
           <td></td>
           <td>)</td>
-          <td></td><td> -&gt; <a class="el" href="structOptional.html">Optional</a>&lt;<a class="el" href="classSimplex.html">Simplex</a> *&gt; </td>
+          <td></td><td> -&gt; std::unique_ptr&lt;<a class="el" href="classSimplex.html">Simplex</a>&gt; </td>
         </tr>
       </table>
   </td>
