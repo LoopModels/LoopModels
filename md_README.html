@@ -88,7 +88,7 @@ $(function() {
 Notes on Code</h3>
 <p>Eventually, I'd like to make didactic developer docs so that it's a useful resource for anyone wanting to learn about loop optimization and jump into the code to try implementing or improving optimizations.</p>
 <p>For now, a few notes on conventions:</p>
-<h5># Loop Order in internal data structures</h5>
+<h5># <a class="el" href="classLoop.html">Loop</a> Order in internal data structures</h5>
 <p>Loops are always in the <code>outer &lt;-&gt; inner</code> order.</p>
 <p>For ILP optimization, we take the reverse-lexicographical minimum of the <code>[dependence distance; schedule]</code> vector where the schedule is linearly independent of all previously solved schedules. By ordering outer &lt;-&gt; inner, we favor preserving the original program order rather than arbitrarily permuting. This is subject to change; I'm likely to have it favor placing loops that index with higher strides outside.</p>
 <h3><a class="anchor" id="autotoc_md2"></a>

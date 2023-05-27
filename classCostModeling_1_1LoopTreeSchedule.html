@@ -115,8 +115,8 @@ static auto&#160;</td><td class="memItemRight" valign="bottom"><b>init</b> (<a c
 <li>lifetime as a function of loops. Could we do something with the LoopAndExit, where both are represented? exit's parents are all loop members, loop's the prev loop? Seems like it could be straightforward.</li>
 </ol>
 <p>Perhaps define: using vertex_t = std::variant&lt;Address*,LoopStart,LoopEnd&gt;</p>
-<p>Perhaps, for now...focus on InstructionnBlock, where we do want an <a class="el" href="structInstruction.html">Instruction</a> linked list.</p>
-<p>For register consumption &ndash; we want to know last use676767 Can the <a class="el" href="structInstruction.html">Instruction</a>'s children Given: llvm::SmallVector&lt;LoopAndExit&gt; subTrees; subTrees[i].second is the preheader for subTrees[i+1].first, which has exit block subTrees[i+1].second Initialized from a LoopBlock First, all memory accesses are placed.</p><ul>
+<p>Perhaps, for now...focus on InstructionnBlock, where we do want an Instruction linked list.</p>
+<p>For register consumption &ndash; we want to know last use676767 Can the Instruction's children Given: llvm::SmallVector&lt;LoopAndExit&gt; subTrees; subTrees[i].second is the preheader for subTrees[i+1].first, which has exit block subTrees[i+1].second Initialized from a LoopBlock First, all memory accesses are placed.</p><ul>
 <li>Topologically sort at the same level</li>
 <li>Hoist out as far as posible Then, merge eligible loads.</li>
 <li>I.e., merge loads that are in the same block with same address and not aliasing stores in between Finally, place instructions, seeded by stores, hoisted as far out as possible. With this, we can begin cost modeling. </li>

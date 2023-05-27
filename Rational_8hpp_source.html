@@ -94,7 +94,7 @@ $(function() {
 <div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;  constexpr <a class="code" href="structRational.html">Rational</a>(<span class="keywordtype">int</span> coef) : numerator(coef){};</div>
 <div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;  constexpr <a class="code" href="structRational.html">Rational</a>(int64_t n, int64_t d)</div>
 <div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;    : numerator(d &gt; 0 ? n : -n), denominator(n ? (d &gt; 0 ? d : -d) : 1) {}</div>
-<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;  constexpr <span class="keyword">static</span> <span class="keyword">auto</span> create(int64_t n, int64_t d) -&gt; <a class="code" href="structRational.html">Rational</a> {</div>
+<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> create(int64_t n, int64_t d) -&gt; <a class="code" href="structRational.html">Rational</a> {</div>
 <div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;    <span class="keywordflow">if</span> (n) {</div>
 <div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;      int64_t sign = 2 * (d &gt; 0) - 1;</div>
 <div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;      int64_t g = gcd(n, d);</div>
@@ -108,7 +108,7 @@ $(function() {
 <div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;    }</div>
 <div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="structRational.html">Rational</a>{0, 1};</div>
 <div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;  }</div>
-<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;  constexpr <span class="keyword">static</span> <span class="keyword">auto</span> createPositiveDenominator(int64_t n, int64_t d)</div>
+<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> createPositiveDenominator(int64_t n, int64_t d)</div>
 <div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;    -&gt; <a class="code" href="structRational.html">Rational</a> {</div>
 <div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;    <span class="keywordflow">if</span> (n) {</div>
 <div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;      int64_t g = gcd(n, d);</div>

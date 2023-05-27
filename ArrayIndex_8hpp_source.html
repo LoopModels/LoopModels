@@ -84,7 +84,7 @@ $(function() {
 <div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="preprocessor">#include &lt;llvm/IR/InstrTypes.h&gt;</span></div>
 <div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;<span class="preprocessor">#include &lt;llvm/Support/raw_ostream.h&gt;</span></div>
 <div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160; </div>
-<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;<span class="keyword">class </span><a class="code" href="classAddress.html">Address</a>;</div>
+<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;<span class="keyword">class </span><a class="code" href="classAddr.html">Addr</a>;</div>
 <div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160; </div>
 <div class="line"><a name="l00018"></a><span class="lineno"><a class="line" href="classArrayIndex.html">   18</a></span>&#160;<span class="keyword">class </span><a class="code" href="classArrayIndex.html">ArrayIndex</a> {</div>
 <div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> memoryOmegaOffset(<span class="keywordtype">size_t</span> arrayDim, <span class="keywordtype">size_t</span> numLoops,</div>
@@ -268,7 +268,7 @@ $(function() {
 <div class="line"><a name="l00215"></a><span class="lineno">  215</span>&#160;    <span class="keywordflow">return</span> loadOrStore;</div>
 <div class="line"><a name="l00216"></a><span class="lineno">  216</span>&#160;  }</div>
 <div class="line"><a name="l00217"></a><span class="lineno">  217</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getInstruction() const</div>
-<div class="line"><a name="l00218"></a><span class="lineno">  218</span>&#160;    -&gt; <a class="code" href="classNotNull.html">NotNull</a>&lt;const llvm::<a class="code" href="structInstruction.html">Instruction</a>&gt; {</div>
+<div class="line"><a name="l00218"></a><span class="lineno">  218</span>&#160;    -&gt; <a class="code" href="classNotNull.html">NotNull</a>&lt;const llvm::Instruction&gt; {</div>
 <div class="line"><a name="l00219"></a><span class="lineno">  219</span>&#160;    <span class="keywordflow">return</span> loadOrStore;</div>
 <div class="line"><a name="l00220"></a><span class="lineno">  220</span>&#160;  }</div>
 <div class="line"><a name="l00221"></a><span class="lineno">  221</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getLoad() -&gt; llvm::LoadInst * {</div>
@@ -341,7 +341,7 @@ $(function() {
 <div class="line"><a name="l00289"></a><span class="lineno">  289</span>&#160;    <span class="keywordflow">return</span> std::equal(thisSizes.begin(), thisSizes.end(), xSizes.begin(),</div>
 <div class="line"><a name="l00290"></a><span class="lineno">  290</span>&#160;                      xSizes.end());</div>
 <div class="line"><a name="l00291"></a><span class="lineno">  291</span>&#160;  }</div>
-<div class="line"><a name="l00292"></a><span class="lineno">  292</span>&#160;  [[nodiscard]] constexpr <span class="keyword">static</span> <span class="keyword">auto</span> gcdKnownIndependent(<span class="keyword">const</span> <a class="code" href="classArrayIndex.html">ArrayIndex</a> &amp;)</div>
+<div class="line"><a name="l00292"></a><span class="lineno">  292</span>&#160;  [[nodiscard]] <span class="keyword">static</span> constexpr <span class="keyword">auto</span> gcdKnownIndependent(<span class="keyword">const</span> <a class="code" href="classArrayIndex.html">ArrayIndex</a> &amp;)</div>
 <div class="line"><a name="l00293"></a><span class="lineno">  293</span>&#160;    -&gt; <span class="keywordtype">bool</span> {</div>
 <div class="line"><a name="l00294"></a><span class="lineno">  294</span>&#160;    <span class="comment">// TODO: handle this!</span></div>
 <div class="line"><a name="l00295"></a><span class="lineno">  295</span>&#160;    <span class="comment">// consider `x[2i]` vs `x[2i + 1]`, the former</span></div>
@@ -357,7 +357,7 @@ $(function() {
 <div class="line"><a name="l00305"></a><span class="lineno">  305</span>&#160;           offsetMatrix() == other.offsetMatrix();</div>
 <div class="line"><a name="l00306"></a><span class="lineno">  306</span>&#160;  }</div>
 <div class="line"><a name="l00307"></a><span class="lineno">  307</span>&#160;};</div>
-<div class="ttc" id="aclassAddress_html"><div class="ttname"><a href="classAddress.html">Address</a></div><div class="ttdef"><b>Definition:</b> Address.hpp:60</div></div>
+<div class="ttc" id="aclassAddr_html"><div class="ttname"><a href="classAddr.html">Addr</a></div><div class="ttdef"><b>Definition:</b> Address.hpp:61</div></div>
 <div class="ttc" id="aclassArrayIndex_html"><div class="ttname"><a href="classArrayIndex.html">ArrayIndex</a></div><div class="ttdef"><b>Definition:</b> ArrayIndex.hpp:18</div></div>
 <div class="ttc" id="aclassArrayIndex_html_a0e86ce8a1a3a5cb7a08e684419afe8d8"><div class="ttname"><a href="classArrayIndex.html#a0e86ce8a1a3a5cb7a08e684419afe8d8">ArrayIndex::getFusionOmega</a></div><div class="ttdeci">constexpr auto getFusionOmega() const -&gt; PtrVector&lt; int64_t &gt;</div><div class="ttdoc">omegas order is [outer &lt;-&gt; inner]</div><div class="ttdef"><b>Definition:</b> ArrayIndex.hpp:143</div></div>
 <div class="ttc" id="aclassArrayIndex_html_a2607d77465585f6d60d9f71d998af759"><div class="ttname"><a href="classArrayIndex.html#a2607d77465585f6d60d9f71d998af759">ArrayIndex::indexMatrix</a></div><div class="ttdeci">constexpr auto indexMatrix() -&gt; MutDensePtrMatrix&lt; int64_t &gt;</div><div class="ttdef"><b>Definition:</b> ArrayIndex.hpp:194</div></div>
@@ -369,7 +369,6 @@ $(function() {
 <div class="ttc" id="aclassNotNull_html"><div class="ttname"><a href="classNotNull.html">NotNull&lt; const llvm::SCEVUnknown &gt;</a></div></div>
 <div class="ttc" id="astructAffineLoopNest_html"><div class="ttname"><a href="structAffineLoopNest.html">AffineLoopNest&lt; true &gt;</a></div></div>
 <div class="ttc" id="astructBumpAlloc_html"><div class="ttname"><a href="structBumpAlloc.html">BumpAlloc</a></div><div class="ttdef"><b>Definition:</b> Allocators.hpp:42</div></div>
-<div class="ttc" id="astructInstruction_html"><div class="ttname"><a href="structInstruction.html">Instruction</a></div><div class="ttdef"><b>Definition:</b> Instruction.hpp:93</div></div>
 <div class="ttc" id="astructLinAlg_1_1DenseDims_html"><div class="ttname"><a href="structLinAlg_1_1DenseDims.html">LinAlg::DenseDims</a></div><div class="ttdoc">Dimensions with a capacity.</div><div class="ttdef"><b>Definition:</b> MatrixDimensions.hpp:76</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->

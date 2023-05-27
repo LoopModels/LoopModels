@@ -64,6 +64,7 @@ $(function() {
   <div class="summary">
 <a href="#pub-types">Public Types</a> &#124;
 <a href="#pub-methods">Public Member Functions</a> &#124;
+<a href="#pro-methods">Protected Member Functions</a> &#124;
 <a href="classVal-members.html">List of all members</a>  </div>
   <div class="headertitle">
 <div class="title">Val&lt; N &gt; Struct Template Reference</div>  </div>
@@ -71,37 +72,63 @@ $(function() {
 <div class="contents">
 
 <p><code>#include &lt;<a class="el" href="Val_8hpp_source.html">Val.hpp</a>&gt;</code></p>
+<div class="dynheader">
+Inheritance diagram for Val&lt; N &gt;:</div>
+<div class="dyncontent">
+ <div class="center">
+  <img src="classVal.png" usemap="#Val_3C_20N_20_3E_map" alt=""/>
+  <map id="Val_3C_20N_20_3E_map" name="Val_3C_20N_20_3E_map">
+<area href="classAddr.html" alt="Addr" shape="rect" coords="0,56,64,80"/>
+<area href="classCVal.html" alt="CVal" shape="rect" coords="74,56,138,80"/>
+<area href="classExit.html" alt="Exit" shape="rect" coords="148,56,212,80"/>
+<area href="classInst.html" alt="Inst" shape="rect" coords="222,56,286,80"/>
+<area href="classLoop.html" alt="Loop" shape="rect" coords="296,56,360,80"/>
+<area href="classFunc.html" alt="Func" shape="rect" coords="185,112,249,136"/>
+<area href="classIntr.html" alt="Intr" shape="rect" coords="259,112,323,136"/>
+  </map>
+</div></div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
 Public Types</h2></td></tr>
 <tr class="memitem:ab7d39b96990af81186bf1a98e1f726fd"><td class="memItemLeft" align="right" valign="top"><a id="ab7d39b96990af81186bf1a98e1f726fd"></a>enum &#160;</td><td class="memItemRight" valign="bottom"><b>ValKind</b> { <br />
 &#160;&#160;<b>VK_Load</b>
-, <b>VK_Store</b>
-, <b>VK_Instr</b>
-, <b>VK_Block</b>
+, <b>VK_Stow</b>
+, <b>VK_Exit</b>
+, <b>VK_Loop</b>
 , <br />
-&#160;&#160;<b>VK_Loop</b>
+&#160;&#160;<b>VK_CVal</b>
+, <b>VK_Intr</b>
+, <b>VK_Func</b>
 <br />
  }</td></tr>
 <tr class="separator:ab7d39b96990af81186bf1a98e1f726fd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a3cb78a63426923581880ce6e890b6778"><td class="memItemLeft" align="right" valign="top"><a id="a3cb78a63426923581880ce6e890b6778"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>getKind</b> () const -&gt; ValKind</td></tr>
-<tr class="separator:a3cb78a63426923581880ce6e890b6778"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a586edba3631e3b4deeed0931497cec27"><td class="memItemLeft" align="right" valign="top"><a id="a586edba3631e3b4deeed0931497cec27"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>parents</b> () -&gt; MutPtrVector&lt; <a class="el" href="classVal.html">Val</a> * &gt;</td></tr>
-<tr class="separator:a586edba3631e3b4deeed0931497cec27"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7881b67c170ec33f97f4b5815f8a4002"><td class="memItemLeft" align="right" valign="top"><a id="a7881b67c170ec33f97f4b5815f8a4002"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>parents</b> () const -&gt; PtrVector&lt; <a class="el" href="classVal.html">Val</a> * &gt;</td></tr>
-<tr class="separator:a7881b67c170ec33f97f4b5815f8a4002"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9fb7f1dcbd44d791ce1c3445630a8cfe"><td class="memItemLeft" align="right" valign="top"><a id="a9fb7f1dcbd44d791ce1c3445630a8cfe"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>children</b> () -&gt; MutPtrVector&lt; <a class="el" href="classVal.html">Val</a> * &gt;</td></tr>
-<tr class="separator:a9fb7f1dcbd44d791ce1c3445630a8cfe"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a580b011bc4a5543222b862480be74bcb"><td class="memItemLeft" align="right" valign="top"><a id="a580b011bc4a5543222b862480be74bcb"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>children</b> () const -&gt; PtrVector&lt; <a class="el" href="classVal.html">Val</a> * &gt;</td></tr>
-<tr class="separator:a580b011bc4a5543222b862480be74bcb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab67ded8939a83be5b027171f719efcca"><td class="memItemLeft" align="right" valign="top"><a id="ab67ded8939a83be5b027171f719efcca"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getKind</b> () const -&gt; ValKind</td></tr>
+<tr class="separator:ab67ded8939a83be5b027171f719efcca"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a38714d4dd6ab381649abe7832cffccdf"><td class="memItemLeft" align="right" valign="top"><a id="a38714d4dd6ab381649abe7832cffccdf"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getDepth</b> () const -&gt; unsigned</td></tr>
+<tr class="separator:a38714d4dd6ab381649abe7832cffccdf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a18ccb3b9f26c2aad7b6dd5cec4888966"><td class="memItemLeft" align="right" valign="top"><a id="a18ccb3b9f26c2aad7b6dd5cec4888966"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getParent</b> () const -&gt; <a class="el" href="classVal.html">Val</a> *</td></tr>
+<tr class="separator:a18ccb3b9f26c2aad7b6dd5cec4888966"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7a8a3c46fb012d38406a7d82c3fa2233"><td class="memItemLeft" align="right" valign="top"><a id="a7a8a3c46fb012d38406a7d82c3fa2233"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getChild</b> () const -&gt; <a class="el" href="classVal.html">Val</a> *</td></tr>
+<tr class="separator:a7a8a3c46fb012d38406a7d82c3fa2233"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a733bd5eab7209cc8a2bfe0818a68c385"><td class="memItemLeft" align="right" valign="top"><a id="a733bd5eab7209cc8a2bfe0818a68c385"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getPrev</b> () const -&gt; <a class="el" href="classVal.html">Val</a> *</td></tr>
+<tr class="separator:a733bd5eab7209cc8a2bfe0818a68c385"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a56326c1c72be01beceae38d17b3908c1"><td class="memItemLeft" align="right" valign="top"><a id="a56326c1c72be01beceae38d17b3908c1"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNext</b> () const -&gt; <a class="el" href="classVal.html">Val</a> *</td></tr>
+<tr class="separator:a56326c1c72be01beceae38d17b3908c1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-methods"></a>
+Protected Member Functions</h2></td></tr>
+<tr class="memitem:ae6b2d58f6a910d22f435fa6c9d04724e"><td class="memItemLeft" align="right" valign="top"><a id="ae6b2d58f6a910d22f435fa6c9d04724e"></a>
+constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Val</b> (ValKind kind)</td></tr>
+<tr class="separator:ae6b2d58f6a910d22f435fa6c9d04724e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><h3>template&lt;size_t N&gt;<br />
@@ -119,7 +146,7 @@ struct Val&lt; N &gt;</h3>
 <li>z = b[j]</li>
 <li>e = foo(x, y, z)</li>
 <li>c[j,i] = e</li>
-<li>// VK_Block</li>
+<li>// VK_Exit</li>
 <li>y2 = y*y</li>
 </ol>
 <p>for j in J // VK_Loop</p><ol type="1">
@@ -128,21 +155,22 @@ struct Val&lt; N &gt;</h3>
 <li>f = a[i]</li>
 <li>g = baz(e, f)</li>
 <li>a[i] = g</li>
-<li>// VK_block</li>
+<li>// VK_Exit</li>
 <li>z = a[i]</li>
 <li>e = p[]</li>
 <li>f = z + e</li>
 <li>p[] = f</li>
-<li>// VK_block</li>
+<li>// VK_Exit</li>
 <li>z = p[]</li>
 <li>e = z*z</li>
 <li>p[] = z</li>
 </ol>
-<p>At a level, first loops: parents: [ parentLoop ] (depth differs) Second loop: parents [ prev end blck ]</p>
-<p>VK_Block's parents: [ LoopStart, all addr within the loop ]</p>
-<p>Addr's parents (function of level): [ parent loop, loads that come first] Instr's parents: [ addrs... ]</p>
-<p>Children are reverse: Loop's: [ first sub loop (if it has one), matching blck ] Blck's: [ nnext sub loop (if it has one), outer subloop ] Addr's: [ instrs... ] Inst's: [ instrs... ]</p>
-<p>To iterate over subloops, SubLoopIterator </p>
+<p>Hmm, we don't need parent/children to reach everything, e.g. individual addrs</p>
+<p>IR types: <a class="el" href="classLoop.html">Loop</a>, Block, <a class="el" href="classAddr.html">Addr</a>, Instr <a class="el" href="classLoop.html">Loop</a> starts a <a class="el" href="classLoop.html">Loop</a>, Block ends it. At a level, first loops: Parents: <a class="el" href="classLoop.html">Loop</a>[0]: [ parentLoop ] for (i : _(0,numSubLoop-1)) <a class="el" href="classLoop.html">Loop</a>[i+1]: [ <a class="el" href="classExit.html">Exit</a>[i] ] <a class="el" href="classExit.html">Exit</a>: [ loopStart, contained addrs...] // ptr, linked list <a class="el" href="classAddr.html">Addr</a>: [ <a class="el" href="classLoop.html">Loop</a> or <a class="el" href="classExit.html">Exit</a>, prevAddrs... ] // actual Instr: [ args... (loads or insts) ] // actual</p>
+<p>For SCC, we initialize parent ptr to nullptr thus, <a class="el" href="classLoop.html">Loop</a>[0] has no parents For each Blck</p>
+<p>Children don't need to be full reverse, as <code>*next</code> covers many: <a class="el" href="classLoop.html">Loop</a>'s: [ first sub loop (if it has one), matching <a class="el" href="classExit.html">Exit</a> ] for (i : _(0,numSubLoop-1)) <a class="el" href="classExit.html">Exit</a>[i]: [ <a class="el" href="classLoop.html">Loop</a>[i+1] ] <a class="el" href="classAddr.html">Addr</a>'s: [ nextAddrs... ] <a class="el" href="classInst.html">Inst</a>'s: [ uses... (stows or insts) ]</p>
+<p>To iterate over subloops, SubLoopIterator</p>
+<p>This simplified structure means we can use LLVM-style RTTI </p>
 </div><hr/>The documentation for this struct was generated from the following file:<ul>
 <li>include/IR/<a class="el" href="Val_8hpp_source.html">Val.hpp</a></li>
 </ul>

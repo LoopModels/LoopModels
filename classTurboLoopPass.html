@@ -197,9 +197,9 @@ llvm::OptimizationRemarkEmitter *&#160;</td><td class="memItemRight" valign="bot
 <tr class="memitem:ad5c712d634e08e72018f5a41648b7787"><td class="memItemLeft" align="right" valign="top"><a id="ad5c712d634e08e72018f5a41648b7787"></a>
 <a class="el" href="structBumpAlloc.html">BumpAlloc</a>&#160;</td><td class="memItemRight" valign="bottom"><b>allocator</b></td></tr>
 <tr class="separator:ad5c712d634e08e72018f5a41648b7787"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aaade521917a664df1ff4a0bb204936ec"><td class="memItemLeft" align="right" valign="top"><a id="aaade521917a664df1ff4a0bb204936ec"></a>
-<a class="el" href="structInstruction_1_1Cache.html">Instruction::Cache</a>&#160;</td><td class="memItemRight" valign="bottom"><b>instrCache</b></td></tr>
-<tr class="separator:aaade521917a664df1ff4a0bb204936ec"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a300756a3e5be3f3e5d711fb977fcace2"><td class="memItemLeft" align="right" valign="top"><a id="a300756a3e5be3f3e5d711fb977fcace2"></a>
+<a class="el" href="structIntr_1_1Cache.html">Intr::Cache</a>&#160;</td><td class="memItemRight" valign="bottom"><b>instrCache</b></td></tr>
+<tr class="separator:a300756a3e5be3f3e5d711fb977fcace2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab7483e9eb9f685ffe57cf09e3231f8b1"><td class="memItemLeft" align="right" valign="top"><a id="ab7483e9eb9f685ffe57cf09e3231f8b1"></a>
 unsigned&#160;</td><td class="memItemRight" valign="bottom"><b>registerCount</b></td></tr>
 <tr class="separator:ab7483e9eb9f685ffe57cf09e3231f8b1"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -305,7 +305,7 @@ unsigned&#160;</td><td class="memItemRight" valign="bottom"><b>registerCount</b>
 <li><code>llvm::SmallVector&lt;unsigned&gt; &amp;omega</code>: The current position of the parser, for recording in memory accesses.</li>
 <li><code>llvm::ArrayRef&lt;llvm::Loop *&gt; subLoops</code>: the sub-loops of <code>L</code>; we don't access it directly via <code>L-&gt;getSubLoops</code> because we use <code>L==nullptr</code> to repesent the top level nest, in which case we get the sub-loops from the <code>llvm::LoopInfo*</code> object.</li>
 <li><code>llvm::BasicBlock *H</code>: Header - we need a direct path from here to the first sub-loop's preheader</li>
-<li><code>llvm::BasicBlock *E</code>: Exit - we need a direct path from the last sub-loop's exit block to this. </li>
+<li><code>llvm::BasicBlock *E</code>: <a class="el" href="classExit.html">Exit</a> - we need a direct path from the last sub-loop's exit block to this. </li>
 </ol>
 
 </div>

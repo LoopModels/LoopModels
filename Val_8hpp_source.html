@@ -74,50 +74,68 @@ $(function() {
 <div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="preprocessor">#include &lt;Math/Array.hpp&gt;</span></div>
 <div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor">#include &lt;llvm/Support/Casting.h&gt;</span></div>
 <div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160; </div>
-<div class="line"><a name="l00063"></a><span class="lineno"><a class="line" href="classVal.html">   63</a></span>&#160;<span class="keyword">class </span><a class="code" href="classVal.html">Val</a> {</div>
-<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;<span class="keyword">public</span>:</div>
-<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;  <span class="keyword">enum</span> ValKind { VK_Load, VK_Store, VK_Instr, VK_Block, VK_Loop };</div>
-<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160; </div>
-<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;<span class="keyword">private</span>:</div>
-<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;  ValKind kind;</div>
-<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;  <span class="keywordtype">unsigned</span> numParents;</div>
-<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;  <span class="keywordtype">unsigned</span> numChildren;</div>
-<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;  <span class="keywordtype">unsigned</span> depth;</div>
-<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;  <a class="code" href="classVal.html">Val</a> *next;</div>
-<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160; </div>
-<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;<span class="preprocessor">#if !defined(__clang__) &amp;&amp; defined(__GNUC__)</span></div>
-<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;<span class="preprocessor">#pragma GCC diagnostic push</span></div>
-<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;<span class="preprocessor">#pragma GCC diagnostic ignored &quot;-Wpedantic&quot;</span></div>
-<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;<span class="preprocessor">#else</span></div>
-<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;<span class="preprocessor">#pragma clang diagnostic push</span></div>
-<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;<span class="preprocessor">#pragma clang diagnostic ignored &quot;-Wc99-extensions&quot;</span></div>
-<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;  <span class="keyword">alignas</span>(int64_t) <span class="keywordtype">char</span> mem[]; <span class="comment">// NOLINT(modernize-avoid-c-arrays)</span></div>
-<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;<span class="preprocessor">#if !defined(__clang__) &amp;&amp; defined(__GNUC__)</span></div>
-<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;<span class="preprocessor">#pragma GCC diagnostic pop</span></div>
-<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;<span class="preprocessor">#else</span></div>
-<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;<span class="preprocessor">#pragma clang diagnostic pop</span></div>
-<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;<span class="keyword">public</span>:</div>
-<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getKind() <span class="keyword">const</span> -&gt; ValKind { <span class="keywordflow">return</span> kind; }</div>
-<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> parents() -&gt; MutPtrVector&lt;Val *&gt; {</div>
-<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;    <span class="keywordtype">void</span> *p = mem;</div>
-<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;    <span class="keywordflow">return</span> {(<a class="code" href="classVal.html">Val</a> **)p, numParents};</div>
-<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;  }</div>
-<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> parents() <span class="keyword">const</span> -&gt; PtrVector&lt;Val *&gt; {</div>
-<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;    <span class="keyword">const</span> <span class="keywordtype">void</span> *p = mem;</div>
-<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;    <span class="keywordflow">return</span> {(<a class="code" href="classVal.html">Val</a> **)p, numParents};</div>
-<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;  }</div>
-<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> children() -&gt; MutPtrVector&lt;Val *&gt; {</div>
-<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;    <span class="keywordtype">void</span> *p = mem;</div>
-<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;    <span class="keywordflow">return</span> {((<a class="code" href="classVal.html">Val</a> **)p) + numParents, numChildren};</div>
-<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;  }</div>
-<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> children() <span class="keyword">const</span> -&gt; PtrVector&lt;Val *&gt; {</div>
-<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;    <span class="keyword">const</span> <span class="keywordtype">void</span> *p = mem;</div>
-<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;    <span class="keywordflow">return</span> {((<a class="code" href="classVal.html">Val</a> **)p) + numParents, numChildren};</div>
-<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;  }</div>
+<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160; </div>
+<div class="line"><a name="l00075"></a><span class="lineno"><a class="line" href="classVal.html">   75</a></span>&#160;<span class="keyword">class </span><a class="code" href="classVal.html">Val</a> {</div>
+<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;<span class="keyword">public</span>:</div>
+<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;  <span class="keyword">enum</span> ValKind {</div>
+<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;    VK_Load,</div>
+<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;    VK_Stow,</div>
+<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;    VK_Exit,</div>
+<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;    VK_Loop,</div>
+<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;    VK_CVal,</div>
+<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;    VK_Intr,</div>
+<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;    VK_Func</div>
+<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;  };</div>
+<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160; </div>
+<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;<span class="keyword">private</span>:</div>
+<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;  <a class="code" href="classVal.html">Val</a> *prev{<span class="keyword">nullptr</span>};</div>
+<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;  <a class="code" href="classVal.html">Val</a> *next{<span class="keyword">nullptr</span>};</div>
+<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;  <a class="code" href="classVal.html">Val</a> *parent{<span class="keyword">nullptr</span>};</div>
+<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;  <a class="code" href="classVal.html">Val</a> *child{<span class="keyword">nullptr</span>};</div>
+<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;  <span class="keywordtype">unsigned</span> depth{0};</div>
+<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;  <span class="keyword">const</span> ValKind kind;</div>
+<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160; </div>
+<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;<span class="keyword">protected</span>:</div>
+<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;  constexpr <a class="code" href="classVal.html">Val</a>(ValKind kind) : kind(kind) {}</div>
+<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160; </div>
+<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;<span class="keyword">public</span>:</div>
+<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getKind() <span class="keyword">const</span> -&gt; ValKind { <span class="keywordflow">return</span> kind; }</div>
+<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getDepth() <span class="keyword">const</span> -&gt; <span class="keywordtype">unsigned</span> { <span class="keywordflow">return</span> depth; }</div>
+<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getParent() <span class="keyword">const</span> -&gt; <a class="code" href="classVal.html">Val</a> * { <span class="keywordflow">return</span> parent; }</div>
+<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getChild() <span class="keyword">const</span> -&gt; <a class="code" href="classVal.html">Val</a> * { <span class="keywordflow">return</span> child; }</div>
+<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getPrev() <span class="keyword">const</span> -&gt; <a class="code" href="classVal.html">Val</a> * { <span class="keywordflow">return</span> prev; }</div>
+<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getNext() <span class="keyword">const</span> -&gt; <a class="code" href="classVal.html">Val</a> * { <span class="keywordflow">return</span> next; }</div>
 <div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;};</div>
-<div class="ttc" id="aclassVal_html"><div class="ttname"><a href="classVal.html">Val</a></div><div class="ttdef"><b>Definition:</b> Val.hpp:63</div></div>
+<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160; </div>
+<div class="line"><a name="l00107"></a><span class="lineno"><a class="line" href="classLoop.html">  107</a></span>&#160;<span class="keyword">class </span><a class="code" href="classLoop.html">Loop</a> : <span class="keyword">public</span> <a class="code" href="classVal.html">Val</a> {</div>
+<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;<span class="keyword">public</span>:</div>
+<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;  <a class="code" href="classLoop.html">Loop</a>() : <a class="code" href="classVal.html">Val</a>(VK_Loop) {}</div>
+<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> classof(<span class="keyword">const</span> <a class="code" href="classVal.html">Val</a> *v) -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;    <span class="keywordflow">return</span> v-&gt;getKind() == VK_Loop;</div>
+<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;  }</div>
+<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;};</div>
+<div class="line"><a name="l00114"></a><span class="lineno"><a class="line" href="classExit.html">  114</a></span>&#160;<span class="keyword">class </span><a class="code" href="classExit.html">Exit</a> : <span class="keyword">public</span> <a class="code" href="classVal.html">Val</a> {</div>
+<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;<span class="keyword">public</span>:</div>
+<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;  <a class="code" href="classExit.html">Exit</a>() : <a class="code" href="classVal.html">Val</a>(VK_Exit) {}</div>
+<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> classof(<span class="keyword">const</span> <a class="code" href="classVal.html">Val</a> *v) -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;    <span class="keywordflow">return</span> v-&gt;getKind() == VK_Exit;</div>
+<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;  }</div>
+<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;};</div>
+<div class="line"><a name="l00123"></a><span class="lineno"><a class="line" href="classCVal.html">  123</a></span>&#160;<span class="keyword">class </span><a class="code" href="classCVal.html">CVal</a> : <span class="keyword">public</span> <a class="code" href="classVal.html">Val</a> {</div>
+<div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;  llvm::Value *val;</div>
+<div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160; </div>
+<div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;<span class="keyword">public</span>:</div>
+<div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;  constexpr <a class="code" href="classCVal.html">CVal</a>(llvm::Value *v) : <a class="code" href="classVal.html">Val</a>(VK_CVal), val(v) {}</div>
+<div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> classof(<span class="keyword">const</span> <a class="code" href="classVal.html">Val</a> *v) -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160;    <span class="keywordflow">return</span> v-&gt;getKind() == VK_CVal;</div>
+<div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160;  }</div>
+<div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160; </div>
+<div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getVal() <span class="keyword">const</span> -&gt; llvm::Value * { <span class="keywordflow">return</span> val; }</div>
+<div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;};</div>
+<div class="ttc" id="aclassCVal_html"><div class="ttname"><a href="classCVal.html">CVal</a></div><div class="ttdef"><b>Definition:</b> Val.hpp:123</div></div>
+<div class="ttc" id="aclassExit_html"><div class="ttname"><a href="classExit.html">Exit</a></div><div class="ttdef"><b>Definition:</b> Val.hpp:114</div></div>
+<div class="ttc" id="aclassLoop_html"><div class="ttname"><a href="classLoop.html">Loop</a></div><div class="ttdef"><b>Definition:</b> Val.hpp:107</div></div>
+<div class="ttc" id="aclassVal_html"><div class="ttname"><a href="classVal.html">Val</a></div><div class="ttdef"><b>Definition:</b> Val.hpp:75</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

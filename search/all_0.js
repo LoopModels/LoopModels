@@ -1,8 +1,8 @@
 var searchData=
 [
-  ['activeedgeiterator_0',['ActiveEdgeIterator',['../classAddress_1_1ActiveEdgeIterator.html',1,'Address']]],
+  ['activeedgeiterator_0',['ActiveEdgeIterator',['../classAddr_1_1ActiveEdgeIterator.html',1,'Addr']]],
   ['add_1',['Add',['../structLinAlg_1_1Add.html',1,'LinAlg']]],
-  ['address_2',['Address',['../classAddress.html',1,'']]],
+  ['addr_2',['Addr',['../classAddr.html',1,'']]],
   ['addressgraph_3',['AddressGraph',['../structCostModeling_1_1LoopTreeSchedule_1_1AddressGraph.html',1,'CostModeling::LoopTreeSchedule']]],
   ['affineloopnest_4',['AffineLoopNest',['../structAffineLoopNest.html',1,'']]],
   ['affineloopnest_3c_20true_20_3e_5',['AffineLoopNest&lt; true &gt;',['../structAffineLoopNest.html',1,'']]],
@@ -20,7 +20,7 @@ var searchData=
   ['arrayops_3c_20t_2c_20s_2c_20staticarray_3c_20t_2c_20s_20_3e_20_3e_17',['ArrayOps&lt; T, S, StaticArray&lt; T, S &gt; &gt;',['../classLinAlg_1_1ArrayOps.html',1,'LinAlg']]],
   ['arrayreference_18',['ArrayReference',['../structArrayReference.html',1,'']]],
   ['aset_19',['aset',['../structaset.html',1,'']]],
-  ['aset_3c_20instruction_20_2a_20_3e_20',['aset&lt; Instruction * &gt;',['../structaset.html',1,'']]],
+  ['aset_3c_20intr_20_2a_20_3e_20',['aset&lt; Intr * &gt;',['../structaset.html',1,'']]],
   ['axisint_21',['AxisInt',['../structLinAlg_1_1AxisInt.html',1,'LinAlg']]],
   ['axisint_3c_20axistype_3a_3acolumn_20_3e_22',['AxisInt&lt; AxisType::Column &gt;',['../structLinAlg_1_1AxisInt.html',1,'LinAlg']]]
 ];

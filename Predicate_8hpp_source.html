@@ -87,7 +87,7 @@ $(function() {
 <div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;<span class="preprocessor">#include &lt;llvm/Support/Allocator.h&gt;</span></div>
 <div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;<span class="preprocessor">#include &lt;variant&gt;</span></div>
 <div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160; </div>
-<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;<span class="keyword">struct </span><a class="code" href="structInstruction.html">Instruction</a>;</div>
+<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;<span class="keyword">class </span><a class="code" href="classIntr.html">Intr</a>;</div>
 <div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160; </div>
 <div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;<span class="keyword">namespace </span>Predicate {</div>
 <div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;<span class="keyword">enum struct</span> Relation : uint8_t {</div>
@@ -209,7 +209,7 @@ $(function() {
 <div class="line"><a name="l00152"></a><span class="lineno">  152</span>&#160;    uint64_t mask = <a class="code" href="structPredicate_1_1Intersection.html#aa490ae09b4cd35d39a821182dbcc9348">emptyMask</a>(bitUnion);</div>
 <div class="line"><a name="l00153"></a><span class="lineno">  153</span>&#160;    <span class="keywordflow">if</span> (std::popcount(mask) == 1) { <span class="comment">// a single b &amp; !b case</span></div>
 <div class="line"><a name="l00154"></a><span class="lineno">  154</span>&#160;      uint64_t remUnionMask =</div>
-<div class="line"><a name="l00155"></a><span class="lineno">  155</span>&#160;        ~(mask | (mask &lt;&lt; 1)); <span class="comment">// 0s `b`, meaning b can be either.</span></div>
+<div class="line"><a name="l00155"></a><span class="lineno">  155</span>&#160;        ~(mask | (mask &lt;&lt; 1));      <span class="comment">// 0s `b`, meaning b can be either.</span></div>
 <div class="line"><a name="l00156"></a><span class="lineno">  156</span>&#160;      uint64_t w = remUnionMask &amp; x;</div>
 <div class="line"><a name="l00157"></a><span class="lineno">  157</span>&#160;      uint64_t z = remUnionMask &amp; y;</div>
 <div class="line"><a name="l00158"></a><span class="lineno">  158</span>&#160;      <span class="keywordflow">if</span> (w == z) <span class="keywordflow">return</span> <a class="code" href="structPredicate_1_1Intersection.html">Intersection</a>{w};</div>
@@ -389,8 +389,8 @@ $(function() {
 <div class="line"><a name="l00395"></a><span class="lineno">  395</span>&#160; </div>
 <div class="line"><a name="l00396"></a><span class="lineno">  396</span>&#160;<span class="keyword">struct </span>Map;</div>
 <div class="line"><a name="l00397"></a><span class="lineno">  397</span>&#160;}; <span class="comment">// namespace Predicate</span></div>
+<div class="ttc" id="aclassIntr_html"><div class="ttname"><a href="classIntr.html">Intr</a></div><div class="ttdef"><b>Definition:</b> Instruction.hpp:115</div></div>
 <div class="ttc" id="astructBumpAlloc_html"><div class="ttname"><a href="structBumpAlloc.html">BumpAlloc</a></div><div class="ttdef"><b>Definition:</b> Allocators.hpp:42</div></div>
-<div class="ttc" id="astructInstruction_html"><div class="ttname"><a href="structInstruction.html">Instruction</a></div><div class="ttdef"><b>Definition:</b> Instruction.hpp:93</div></div>
 <div class="ttc" id="astructLinAlg_1_1BumpPtrVector_html"><div class="ttname"><a href="structLinAlg_1_1BumpPtrVector.html">LinAlg::BumpPtrVector</a></div><div class="ttdef"><b>Definition:</b> BumpVector.hpp:11</div></div>
 <div class="ttc" id="astructPredicate_1_1Intersection_1_1Reference_html"><div class="ttname"><a href="structPredicate_1_1Intersection_1_1Reference.html">Predicate::Intersection::Reference</a></div><div class="ttdef"><b>Definition:</b> Predicate.hpp:65</div></div>
 <div class="ttc" id="astructPredicate_1_1Intersection_html"><div class="ttname"><a href="structPredicate_1_1Intersection.html">Predicate::Intersection</a></div><div class="ttdef"><b>Definition:</b> Predicate.hpp:43</div></div>
