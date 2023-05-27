@@ -78,7 +78,7 @@ public:
   [[no_unique_address]] llvm::OptimizationRemarkEmitter *ORE;
   [[no_unique_address]] LinearProgramLoopBlock loopBlock;
   [[no_unique_address]] BumpAlloc<> allocator;
-  [[no_unique_address]] Instruction::Cache instrCache;
+  [[no_unique_address]] Intr::Cache instrCache;
   [[no_unique_address]] unsigned registerCount;
 
   TurboLoopPass() = default;

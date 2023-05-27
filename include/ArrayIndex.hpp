@@ -13,7 +13,7 @@
 #include <llvm/IR/InstrTypes.h>
 #include <llvm/Support/raw_ostream.h>
 
-class Address;
+class Addr;
 
 class ArrayIndex {
   static constexpr auto memoryOmegaOffset(size_t arrayDim, size_t numLoops,
@@ -289,7 +289,7 @@ public:
     return std::equal(thisSizes.begin(), thisSizes.end(), xSizes.begin(),
                       xSizes.end());
   }
-  [[nodiscard]] constexpr static auto gcdKnownIndependent(const ArrayIndex &)
+  [[nodiscard]] static constexpr auto gcdKnownIndependent(const ArrayIndex &)
     -> bool {
     // TODO: handle this!
     // consider `x[2i]` vs `x[2i + 1]`, the former

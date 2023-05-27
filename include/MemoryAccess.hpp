@@ -32,7 +32,7 @@ private:
   // and I don't want to relocate pointers when resizing vector
   BitSet edgesIn{};
   BitSet edgesOut{};
-  Address *addrs{nullptr};
+  Addr *addrs{nullptr};
   unsigned nodeIndex{std::numeric_limits<unsigned>::max()};
   bool load_;
   // This is a flexible length array, declared as a length-1 array
@@ -77,7 +77,7 @@ public:
     -> NotNull<const ArrayIndex> {
     return arrayRef;
   }
-  void setAddress(Address *addr) { addrs = addr; }
+  void setAddress(Addr *addr) { addrs = addr; }
   // [[nodiscard]] constexpr auto repCount() const -> size_t {
   //   return addrReplications + 1;
   // }
@@ -135,11 +135,11 @@ public:
   [[nodiscard]] constexpr auto getArrayPointer() const -> const llvm::SCEV * {
     return arrayRef->getArrayPointer();
   }
-  constexpr auto getAddress() -> NotNull<Address> { return addrs; }
+  constexpr auto getAddress() -> NotNull<Addr> { return addrs; }
   [[nodiscard]] constexpr auto getNumLoops() const -> unsigned {
     return arrayRef->getNumLoops();
   }
-  [[nodiscard]] constexpr auto getAddress() const -> NotNull<const Address> {
+  [[nodiscard]] constexpr auto getAddress() const -> NotNull<const Addr> {
     return addrs;
   }
   [[nodiscard]] constexpr auto inputEdges() const -> const BitSet & {

@@ -168,8 +168,8 @@ class LoopTreeSchedule {
 
 public:
   struct AddressGraph {
-    using VertexType = Address;
-    [[no_unique_address]] MutPtrVector<Address *> addresses;
+    using VertexType = Addr;
+    [[no_unique_address]] MutPtrVector<Addr *> addresses;
     // we restrict the SCC order to preserve relative ordering of the sub loops
     // by adding loopNestAddrs. These contain arrays of [start, stop].
     // Each start has the preceding end as an input.
@@ -225,7 +225,7 @@ private:
   }
 
   class InstructionBlock {
-    Address **addresses{nullptr};
+    Addr **addresses{nullptr};
     unsigned numAddr{0};
     unsigned capacity{0};
 
@@ -233,14 +233,14 @@ private:
     [[nodiscard]] constexpr auto isInitialized() const -> bool {
       return addresses != nullptr;
     }
-    [[nodiscard]] constexpr auto getAddr() -> PtrVector<Address *> {
+    [[nodiscard]] constexpr auto getAddr() -> PtrVector<Addr *> {
       return {addresses, numAddr, capacity};
     }
     [[nodiscard]] constexpr auto size() const -> unsigned { return numAddr; }
     [[nodiscard]] constexpr auto getCapacity() const -> unsigned {
       return capacity;
     }
-    [[nodiscard]] constexpr auto operator[](unsigned i) const -> Address * {
+    [[nodiscard]] constexpr auto operator[](unsigned i) const -> Addr * {
       invariant(i < numAddr);
       invariant(i < capacity);
       return addresses[i];
@@ -251,33 +251,33 @@ private:
       addresses = alloc.reallocate<false>(addresses, oldCapacity, capacity);
     }
     constexpr void initialize(BumpAlloc<> &alloc) {
-      addresses = alloc.allocate<Address *>(capacity);
+      addresses = alloc.allocate<Addr *>(capacity);
     }
-    constexpr void push_back(Address *addr) {
+    constexpr void push_back(Addr *addr) {
       invariant(numAddr < capacity);
       addresses[numAddr++] = addr;
     }
-    constexpr void push_back(BumpAlloc<> &alloc, Address *addr) {
+    constexpr void push_back(BumpAlloc<> &alloc, Addr *addr) {
       if (numAddr >= capacity)
         reserveExtra(alloc, std::max<unsigned>(4, numAddr));
       addresses[numAddr++] = addr;
     }
-    constexpr void push_front(Address *addr) {
+    constexpr void push_front(Addr *addr) {
       invariant(numAddr < capacity);
       for (size_t i = 0; i < numAddr; ++i) {
-        Address *tmp = addresses[i];
+        Addr *tmp = addresses[i];
         addresses[i] = addr;
         addr = tmp;
       }
       addresses[numAddr++] = addr;
     }
-    constexpr void push_front(BumpAlloc<> &alloc, Address *addr) {
+    constexpr void push_front(BumpAlloc<> &alloc, Addr *addr) {
       if (numAddr >= capacity)
         reserveExtra(alloc, std::max<unsigned>(4, numAddr));
       push_front(addr);
     }
     constexpr void incNumAddr(unsigned x) { capacity += x; }
-    [[nodiscard]] constexpr auto try_delete(Address *adr) -> bool {
+    [[nodiscard]] constexpr auto try_delete(Addr *adr) -> bool {
       for (size_t i = 0; i < numAddr; ++i) {
         if (addresses[i] == adr) {
           addresses[i] = addresses[--numAddr];
@@ -349,7 +349,7 @@ private:
   */
   // i = 0 means self, i = 1 (default) returns parent, i = 2 parent's
   // parent...
-  constexpr auto try_delete(Address *adr) -> bool {
+  constexpr auto try_delete(Addr *adr) -> bool {
     return (adr->getLoopTreeSchedule() == this) &&
            getBlock(adr->getBlockIdx()).try_delete(adr);
   }
@@ -415,7 +415,7 @@ private:
   }
   static constexpr void
   calcLoopNestAddrs(Vector<std::array<BitSet, 2>> &loopRelatives,
-                    MutPtrVector<Address *> loopAddrs, unsigned numAddr,
+                    MutPtrVector<Addr *> loopAddrs, unsigned numAddr,
                     unsigned idx) {
     // TODO: only add dependencies for refs actually using the indvars
     BitSet headParents{}, exitParents{};
@@ -438,21 +438,21 @@ private:
     if (P == this) return L->getBlockIdx();
     return getLoopIdx(P);
   }
-  constexpr auto getIdx(Address *a) const -> unsigned {
+  constexpr auto getIdx(Addr *a) const -> unsigned {
     if (a->getLoopTreeSchedule() == this) return 2 * a->getBlockIdx();
     return 2 * getLoopIdx(a->getLoopTreeSchedule()) + 1;
   }
-  void push_back(BumpAlloc<> &alloc, Address *a, unsigned idx) {
+  void push_back(BumpAlloc<> &alloc, Addr *a, unsigned idx) {
     if (idx) subTrees[idx - 1].exit.push_back(alloc, a);
     else header.push_back(alloc, a);
   }
-  void push_front(BumpAlloc<> &alloc, Address *a, unsigned idx) {
+  void push_front(BumpAlloc<> &alloc, Addr *a, unsigned idx) {
     if (idx) subTrees[idx - 1].exit.push_front(alloc, a);
     else header.push_front(alloc, a);
   }
   // can we hoist forward out of this loop?
   // NOLINTNEXTLINE(misc-no-recursion)
-  auto hoist(BumpAlloc<> &alloc, Address *a, unsigned currentLoop)
+  auto hoist(BumpAlloc<> &alloc, Addr *a, unsigned currentLoop)
     -> Optional<unsigned> {
     if (a->wasVisited3()) {
       if (a->getLoopTreeSchedule() == this) return a->getBlockIdx();
@@ -533,7 +533,7 @@ private:
   // b) we create BitSets of ancestors
   // NOLINTNEXTLINE(misc-no-recursion)
   auto placeAddr(BumpAlloc<> &alloc, LinearProgramLoopBlock &LB,
-                 MutPtrVector<Address *> addr) -> unsigned {
+                 MutPtrVector<Addr *> addr) -> unsigned {
     // we sort via repeatedly calculating the strongly connected components
     // of the address graph. The SCCs are in topological order.
     // If a load or store are isolated within a SCC from a sub-loop, we hoist
@@ -598,7 +598,7 @@ private:
           // 3. !inLoop && !wasPlaced
           // 4. !inLoop && wasPlaced - scc hoisted
           if (inLoop) continue;
-          Address *a = addr[ind];
+          Addr *a = addr[ind];
           invariant(!a->wasPlaced());
           // if (a->wasPlaced()) {
           //   // scc's top sort decided we can hoist
@@ -631,7 +631,7 @@ private:
       if (sccsz == 1) {
         size_t indRaw = scc.front(), ind = indRaw - numSubTrees;
         if (ind < numAddr) {
-          Address *a = addr[ind];
+          Addr *a = addr[ind];
           // four possibilities:
           // 1. inLoop && wasPlaced
           // 2. inLoop && !wasPlaced
@@ -722,7 +722,7 @@ public:
       edge.input()->getAddress()->addOut(edge.output()->getAddress(),
                                          edge.satLevel());
     }
-    MutPtrVector<Address *> addr{alloc.allocate<Address *>(numAddr), numAddr};
+    MutPtrVector<Addr *> addr{alloc.allocate<Addr *>(numAddr), numAddr};
     root->placeAddr(alloc, LB, addr);
     return root;
   }
@@ -838,17 +838,17 @@ ScheduledNode::insertMem(BumpAlloc<> &alloc,
     ++j;
     size_t inputEdges = mem->inputEdges().size(),
            outputEdges = mem->outputEdges().size();
-    Address *addr = Address::construct(
+    Addr *addr = Addr::construct(
       alloc, loop, mem, isStore, Pinv, denom, schedule.getOffsetOmega(), L,
       inputEdges, isStore ? numMem - 1 : 1, outputEdges, offsets);
     mem->setAddress(addr);
     accesses.push_back(addr);
   }
-  Address *store = accesses[offset + sId];
+  Addr *store = accesses[offset + sId];
   // addrs all need direct connections
   for (size_t i = 0, k = 0; i < numMem; ++i)
     if (i != sId) accesses[offset + i]->addDirectConnection(store, k++);
 }
-[[nodiscard]] constexpr auto Address::getCurrentDepth() const -> unsigned {
+[[nodiscard]] constexpr auto Addr::getCurrentDepth() const -> unsigned {
   return node->getDepth();
 }

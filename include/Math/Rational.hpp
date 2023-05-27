@@ -23,7 +23,7 @@ struct Rational {
   constexpr Rational(int coef) : numerator(coef){};
   constexpr Rational(int64_t n, int64_t d)
     : numerator(d > 0 ? n : -n), denominator(n ? (d > 0 ? d : -d) : 1) {}
-  constexpr static auto create(int64_t n, int64_t d) -> Rational {
+  static constexpr auto create(int64_t n, int64_t d) -> Rational {
     if (n) {
       int64_t sign = 2 * (d > 0) - 1;
       int64_t g = gcd(n, d);
@@ -37,7 +37,7 @@ struct Rational {
     }
     return Rational{0, 1};
   }
-  constexpr static auto createPositiveDenominator(int64_t n, int64_t d)
+  static constexpr auto createPositiveDenominator(int64_t n, int64_t d)
     -> Rational {
     if (n) {
       int64_t g = gcd(n, d);

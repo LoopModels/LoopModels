@@ -1,5 +1,6 @@
 #pragma once
 
+#include "IR/Val.hpp"
 #include "Loops.hpp"
 #include "Math/Array.hpp"
 #include "Math/Comparisons.hpp"
@@ -57,7 +58,7 @@ class LoopTreeSchedule;
 /// Note that to get the new AffineLoopNest, we call
 /// `oldLoop->rotate(PhiInv)`
 // clang-format on
-class Address {
+class Addr : public Val {
   using BitSet = MemoryAccess::BitSet;
   /// Original (untransformed) memory access
   [[no_unique_address]] NotNull<MemoryAccess> oldMemAccess;
@@ -87,14 +88,16 @@ class Address {
 #else
 #pragma clang diagnostic pop
 #endif
-  constexpr Address(NotNull<AffineLoopNest<false>> explicitLoop,
-                    NotNull<MemoryAccess> ma, SquarePtrMatrix<int64_t> Pinv,
-                    int64_t denom, PtrVector<int64_t> omega, bool isStr,
-                    CostModeling::LoopTreeSchedule *L, uint8_t memInputs,
-                    uint8_t directEdges, uint8_t memOutputs, int64_t *offsets)
-    : oldMemAccess(ma), loop(explicitLoop), node(L), numMemInputs(memInputs),
-      numDirectEdges(directEdges), numMemOutputs(memOutputs),
-      depth(uint8_t(Pinv.numCol())), bitfield(uint8_t(isStr) << 3) {
+
+  constexpr Addr(NotNull<AffineLoopNest<false>> explicitLoop,
+                 NotNull<MemoryAccess> ma, SquarePtrMatrix<int64_t> Pinv,
+                 int64_t denom, PtrVector<int64_t> omega, bool isStr,
+                 CostModeling::LoopTreeSchedule *L, uint8_t memInputs,
+                 uint8_t directEdges, uint8_t memOutputs, int64_t *offsets)
+    : Val(isStr ? VK_Stow : VK_Load), oldMemAccess(ma), loop(explicitLoop),
+      node(L), numMemInputs(memInputs), numDirectEdges(directEdges),
+      numMemOutputs(memOutputs), depth(uint8_t(Pinv.numCol())),
+      bitfield(uint8_t(isStr) << 3) {
     PtrMatrix<int64_t> M{oldMemAccess->indexMatrix()}; // nLma x aD
     MutPtrMatrix<int64_t> mStar{indexMatrix()};        // aD x nLp
     // M is implicitly padded with zeros, nLp >= nLma
@@ -111,24 +114,27 @@ class Address {
     return (int64_t *)const_cast<void *>((const void *)mem);
     // return const_cast<int64_t *>(mem);
   }
-  [[nodiscard]] constexpr auto getAddrMemory() const -> Address ** {
+  [[nodiscard]] constexpr auto getAddrMemory() const -> Addr ** {
     const void *m =
       mem +
       (1 + getArrayDim() + (getArrayDim() * getNumLoops())) * sizeof(int64_t);
     // const void *m = addr_;
     void *p = const_cast<void *>(static_cast<const void *>(m));
-    return (Address **)p;
+    return (Addr **)p;
   }
   [[nodiscard]] constexpr auto getDDepthMemory() const -> uint8_t * {
     const void *m =
       mem +
       (1 + getArrayDim() + (getArrayDim() * getNumLoops())) * sizeof(int64_t) +
-      (numMemInputs + numDirectEdges + numMemOutputs) * sizeof(Address *);
+      (numMemInputs + numDirectEdges + numMemOutputs) * sizeof(Addr *);
     void *p = const_cast<void *>(static_cast<const void *>(m));
     return (uint8_t *)p;
   }
 
 public:
+  static constexpr auto classof(const Val *v) -> bool {
+    return v->getKind() <= VK_Stow;
+  }
   [[nodiscard]] constexpr auto getArrayPointer() const -> const llvm::SCEV * {
     return oldMemAccess->getArrayPointer();
   }
@@ -157,8 +163,7 @@ public:
     node = L;
     blckIdx = blockIdx;
   }
-  // bits: 0 = visited, 1 = on stack, 2 = placed
-  // 3 = isStore, 4 = visited2, 5 = activeSubset
+  // bits: 0 = visited, 1 = on stack, 2 = placed, 4 = visited2, 5 = activeSubset
   constexpr void visit() { bitfield |= 1; }
   constexpr void unVisit() { bitfield &= ~uint8_t(1); }
   [[nodiscard]] constexpr auto wasVisited() const -> bool {
@@ -231,8 +236,12 @@ public:
   }
   /// isStore() is true if the address is a store, false if it is a load
   /// If the memory access is a store, this can still be a reload
-  [[nodiscard]] constexpr auto isStore() const -> bool { return bitfield & 8; }
-  [[nodiscard]] constexpr auto isLoad() const -> bool { return !isStore(); }
+  [[nodiscard]] constexpr auto isStore() const -> bool {
+    return getKind() == VK_Stow;
+  }
+  [[nodiscard]] constexpr auto isLoad() const -> bool {
+    return getKind() == VK_Load;
+  }
   constexpr auto index() -> uint8_t & { return index_; }
   [[nodiscard]] constexpr auto index() const -> unsigned { return index_; }
   constexpr auto lowLink() -> uint8_t & { return lowLink_; }
@@ -240,14 +249,14 @@ public:
 
   struct EndSentinel {};
   class ActiveEdgeIterator {
-    Address **p;
-    Address **e;
+    Addr **p;
+    Addr **e;
     uint8_t *d;
     uint8_t filtdepth;
 
   public:
-    constexpr auto operator*() const -> Address * { return *p; }
-    constexpr auto operator->() const -> Address * { return *p; }
+    constexpr auto operator*() const -> Addr * { return *p; }
+    constexpr auto operator->() const -> Addr * { return *p; }
     /// true means skip, false means we evaluate
     /// so *d <= filtdepth means we skip, evaluating only *d > filtdepth
     [[nodiscard]] constexpr auto hasNext() const -> bool {
@@ -263,8 +272,7 @@ public:
     }
     constexpr auto operator==(EndSentinel) const -> bool { return p == e; }
     constexpr auto operator!=(EndSentinel) const -> bool { return p != e; }
-    constexpr ActiveEdgeIterator(Address **_p, Address **_e, uint8_t *_d,
-                                 uint8_t fd)
+    constexpr ActiveEdgeIterator(Addr **_p, Addr **_e, uint8_t *_d, uint8_t fd)
       : p(_p), e(_e), d(_d), filtdepth(fd) {
       while (hasNext()) {
         ++p;
@@ -291,23 +299,23 @@ public:
     return numMemInputs + numDirectEdges + numMemOutputs;
   }
   [[nodiscard]] auto inNeighbors(uint8_t filtd) -> ActiveEdgeIterator {
-    Address **p = getAddrMemory();
+    Addr **p = getAddrMemory();
     return {p, p + numInNeighbors(), getDDepthMemory(), filtd};
   }
   [[nodiscard]] auto outNeighbors(uint8_t filtd) -> ActiveEdgeIterator {
     unsigned n = numInNeighbors();
-    Address **p = getAddrMemory() + n;
+    Addr **p = getAddrMemory() + n;
     return {p, p + numOutNeighbors(), getDDepthMemory() + n, filtd};
   }
 #ifndef NDEBUG
   [[gnu::used, nodiscard]] constexpr auto directEdges()
-    -> MutPtrVector<Address *> {
-    Address **p = getAddrMemory() + numMemInputs;
+    -> MutPtrVector<Addr *> {
+    Addr **p = getAddrMemory() + numMemInputs;
     return {p, numDirectEdges};
   }
   [[gnu::used, nodiscard]] constexpr auto directEdges() const
-    -> PtrVector<Address *> {
-    Address **p = getAddrMemory() + numMemInputs;
+    -> PtrVector<Addr *> {
+    Addr **p = getAddrMemory() + numMemInputs;
     return {p, numDirectEdges};
   }
   [[gnu::used, nodiscard]] constexpr auto inDepSat() const
@@ -319,22 +327,22 @@ public:
     return {getDDepthMemory() + numInNeighbors(), numOutNeighbors()};
   }
   [[gnu::used, nodiscard]] constexpr auto inNeighbors() const
-    -> PtrVector<Address *> {
-    return PtrVector<Address *>{getAddrMemory(), numInNeighbors()};
+    -> PtrVector<Addr *> {
+    return PtrVector<Addr *>{getAddrMemory(), numInNeighbors()};
   }
   [[gnu::used, nodiscard]] constexpr auto outNeighbors() const
-    -> PtrVector<Address *> {
-    return PtrVector<Address *>{getAddrMemory() + numInNeighbors(),
-                                numOutNeighbors()};
+    -> PtrVector<Addr *> {
+    return PtrVector<Addr *>{getAddrMemory() + numInNeighbors(),
+                             numOutNeighbors()};
   }
   [[gnu::used, nodiscard]] constexpr auto inNeighbors()
-    -> MutPtrVector<Address *> {
-    return MutPtrVector<Address *>{getAddrMemory(), numInNeighbors()};
+    -> MutPtrVector<Addr *> {
+    return MutPtrVector<Addr *>{getAddrMemory(), numInNeighbors()};
   }
   [[gnu::used, nodiscard]] constexpr auto outNeighbors()
-    -> MutPtrVector<Address *> {
-    return MutPtrVector<Address *>{getAddrMemory() + numInNeighbors(),
-                                   numOutNeighbors()};
+    -> MutPtrVector<Addr *> {
+    return MutPtrVector<Addr *>{getAddrMemory() + numInNeighbors(),
+                                numOutNeighbors()};
   }
 #else
   [[nodiscard]] constexpr auto directEdges() -> MutPtrVector<Address *> {
@@ -366,11 +374,11 @@ public:
                                    numOutNeighbors()};
   }
 #endif
-  constexpr void indirectInNeighbor(Address *other, size_t i, uint8_t d) {
+  constexpr void indirectInNeighbor(Addr *other, size_t i, uint8_t d) {
     getAddrMemory()[i] = other;
     getDDepthMemory()[i] = d;
   }
-  constexpr void indirectOutNeighbor(Address *other, size_t i, uint8_t d) {
+  constexpr void indirectOutNeighbor(Addr *other, size_t i, uint8_t d) {
     getAddrMemory()[numMemInputs + numDirectEdges + i] = other;
     getDDepthMemory()[numMemInputs + numDirectEdges + i] = d;
   }
@@ -381,13 +389,13 @@ public:
             int64_t denom, PtrVector<int64_t> omega,
             CostModeling::LoopTreeSchedule *L, unsigned inputEdges,
             unsigned directEdges, unsigned outputEdges, int64_t *offsets)
-    -> NotNull<Address> {
+    -> NotNull<Addr> {
 
     size_t numLoops = size_t(Pinv.numCol()), arrayDim = ma->getArrayDim(),
            memSz = (1 + arrayDim + (arrayDim * numLoops)) * sizeof(int64_t) +
                    (inputEdges + directEdges + outputEdges) *
-                     (sizeof(Address *) + sizeof(uint8_t)) +
-                   sizeof(Address);
+                     (sizeof(Addr *) + sizeof(uint8_t)) +
+                   sizeof(Addr);
     // size_t memSz = ma->getNumLoops() * (1 + ma->getArrayDim());
     auto *pt = alloc.allocate(memSz, 8);
     // we could use the passkey idiom to make the constructor public yet
@@ -397,10 +405,10 @@ public:
     // constexpr is UB is not allowed, so we get more warnings).
     // return std::construct_at((Address *)pt, explicitLoop, ma, Pinv, denom,
     // omega, isStr);
-    return new (pt) Address(explicitLoop, ma, Pinv, denom, omega, isStr, L,
-                            inputEdges, directEdges, outputEdges, offsets);
+    return new (pt) Addr(explicitLoop, ma, Pinv, denom, omega, isStr, L,
+                         inputEdges, directEdges, outputEdges, offsets);
   }
-  constexpr void addDirectConnection(Address *store, size_t loadEdge) {
+  constexpr void addDirectConnection(Addr *store, size_t loadEdge) {
     assert(isLoad() && store->isStore());
     directEdges().front() = store;
     store->directEdges()[loadEdge] = this;
@@ -408,7 +416,7 @@ public:
     getDDepthMemory()[numMemInputs] = 255;
     store->getDDepthMemory()[numMemInputs + loadEdge] = 255;
   }
-  constexpr void addOut(Address *child, uint8_t d) {
+  constexpr void addOut(Addr *child, uint8_t d) {
     // we hijack index_ and lowLink_ before they're used for SCC
     size_t inInd = index_++, outInd = child->lowLink_++;
     indirectOutNeighbor(child, inInd, d);
