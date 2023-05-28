@@ -72,7 +72,7 @@
 /// This simplified structure means we can use LLVM-style RTTI
 ///
 
-class Val {
+class Node {
 public:
   enum ValKind {
     VK_Load,
@@ -85,47 +85,47 @@ public:
   };
 
 private:
-  Val *prev{nullptr};
-  Val *next{nullptr};
-  Val *parent{nullptr};
-  Val *child{nullptr};
+  Node *prev{nullptr};
+  Node *next{nullptr};
+  Node *parent{nullptr};
+  Node *child{nullptr};
   unsigned depth{0};
   const ValKind kind;
 
 protected:
-  constexpr Val(ValKind kind) : kind(kind) {}
+  constexpr Node(ValKind kind) : kind(kind) {}
 
 public:
   [[nodiscard]] constexpr auto getKind() const -> ValKind { return kind; }
   [[nodiscard]] constexpr auto getDepth() const -> unsigned { return depth; }
-  [[nodiscard]] constexpr auto getParent() const -> Val * { return parent; }
-  [[nodiscard]] constexpr auto getChild() const -> Val * { return child; }
-  [[nodiscard]] constexpr auto getPrev() const -> Val * { return prev; }
-  [[nodiscard]] constexpr auto getNext() const -> Val * { return next; }
+  [[nodiscard]] constexpr auto getParent() const -> Node * { return parent; }
+  [[nodiscard]] constexpr auto getChild() const -> Node * { return child; }
+  [[nodiscard]] constexpr auto getPrev() const -> Node * { return prev; }
+  [[nodiscard]] constexpr auto getNext() const -> Node * { return next; }
 };
 
-class Loop : public Val {
+class Loop : public Node {
 public:
-  Loop() : Val(VK_Loop) {}
-  static constexpr auto classof(const Val *v) -> bool {
+  Loop() : Node(VK_Loop) {}
+  static constexpr auto classof(const Node *v) -> bool {
     return v->getKind() == VK_Loop;
   }
 };
-class Exit : public Val {
+class Exit : public Node {
 public:
-  Exit() : Val(VK_Exit) {}
-  static constexpr auto classof(const Val *v) -> bool {
+  Exit() : Node(VK_Exit) {}
+  static constexpr auto classof(const Node *v) -> bool {
     return v->getKind() == VK_Exit;
   }
 };
 /// CVal
 /// A constant value w/ respect to the loopnest.
-class CVal : public Val {
+class CVal : public Node {
   llvm::Value *val;
 
 public:
-  constexpr CVal(llvm::Value *v) : Val(VK_CVal), val(v) {}
-  static constexpr auto classof(const Val *v) -> bool {
+  constexpr CVal(llvm::Value *v) : Node(VK_CVal), val(v) {}
+  static constexpr auto classof(const Node *v) -> bool {
     return v->getKind() == VK_CVal;
   }
 

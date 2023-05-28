@@ -31,13 +31,11 @@ class TestLoopFunction {
   llvm::DataLayout dl;
   llvm::TargetTransformInfo TTI;
   llvm::Triple targetTripple{};
-  // llvm::TargetLibraryInfoImpl TLII;
   llvm::TargetLibraryInfo TLI;
   llvm::AssumptionCache AC;
   llvm::ScalarEvolution SE;
   llvm::SmallVector<AffineLoopNest<true> *, 0> alns;
   llvm::SmallVector<std::string, 0> names;
-  // llvm::SmallVector<llvm::Value*> symbols;
   llvm::BasicBlock *BB;
   llvm::IRBuilder<> builder;
   llvm::Value *ptrToLoadFrom{};

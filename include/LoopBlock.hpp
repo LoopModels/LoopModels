@@ -240,26 +240,6 @@ public:
 };
 static_assert(std::is_trivially_destructible_v<ScheduledNode>);
 
-struct CarriedDependencyFlag {
-  [[no_unique_address]] uint32_t flag{0};
-  [[nodiscard]] constexpr auto carriesDependency(size_t d) const -> bool {
-    return (flag >> d) & 1;
-  }
-  constexpr void setCarriedDependency(size_t d) {
-    flag |= (uint32_t(1) << uint32_t(d));
-  }
-  [[nodiscard]] static constexpr auto resetMaskFlag(size_t d) -> uint32_t {
-    return ((uint32_t(1) << uint32_t(d)) - uint32_t(1));
-  }
-  // resets all but `d` deps
-  constexpr void resetDeepDeps(size_t d) { flag &= resetMaskFlag(d); }
-};
-constexpr void resetDeepDeps(MutPtrVector<CarriedDependencyFlag> v, size_t d) {
-  uint32_t mask = CarriedDependencyFlag::resetMaskFlag(d);
-  for (auto &&x : v) x.flag &= mask;
-}
-static_assert(!LinAlg::Printable<CarriedDependencyFlag>);
-
 /// A loop block is a block of the program that may include multiple loops.
 /// These loops are either all executed (note iteration count may be 0, or
 /// loops may be in rotated form and the guard prevents execution; this is okay
@@ -322,24 +302,16 @@ class LinearProgramLoopBlock {
   // E.g., the `dstOmega[numLoopsCommon-1] > srcOmega[numLoopsCommon-1]`,
   // and all other other shared schedule parameters are aliases (i.e.,
   // identical)?
-  // using VertexType = ScheduledNode;
-  [[no_unique_address]] Vector<MemoryAccess *> memory;
-  [[no_unique_address]] Vector<ScheduledNode> nodes;
-  // Vector<unsigned> memoryToNodeMap;
-  [[no_unique_address]] Vector<Dependence> edges;
-  /// Flag indicating which depths carries dependencies
-  /// One per node; held separately so we can copy/etc
-  [[no_unique_address]] Vector<CarriedDependencyFlag> carriedDeps;
+  [[no_unique_address]] Vector<MemoryAccess *> memory{};
+  [[no_unique_address]] Vector<ScheduledNode> nodes{};
+  [[no_unique_address]] Vector<Dependence> edges{};
   [[no_unique_address]] map<llvm::User *, unsigned> userToMem{};
   [[no_unique_address]] set<llvm::User *> visited{};
-  // Vector<bool> visited; // visited, for traversing graph
-  [[no_unique_address]] BumpAlloc<> allocator;
-  // Vector<llvm::Value *> symbols;
+  [[no_unique_address]] llvm::LoopInfo &LI;
+  [[no_unique_address]] BumpAlloc<> allocator{};
   // we may turn off edges because we've exceeded its loop depth
   // or because the dependence has already been satisfied at an
   // earlier level.
-  // Vector<bool, 256> doNotAddEdge;
-  // Vector<bool, 256> scheduled;
   [[no_unique_address]] unsigned numPhiCoefs{0};
   [[no_unique_address]] unsigned numOmegaCoefs{0};
   [[no_unique_address]] unsigned numSlack{0};
@@ -349,6 +321,7 @@ class LinearProgramLoopBlock {
   [[no_unique_address]] unsigned numActiveEdges{0};
 
 public:
+  LinearProgramLoopBlock(llvm::LoopInfo &LI) : LI(LI) {}
   using BitSet = ::MemoryAccess::BitSet;
   void clear() {
     // TODO: maybe we shouldn't have to manually call destructors?
@@ -358,7 +331,6 @@ public:
     memory.clear();
     nodes.clear();
     edges.clear();
-    carriedDeps.clear();
     userToMem.clear();
     visited.clear();
     allocator.reset();
@@ -392,7 +364,6 @@ public:
     LinearProgramLoopBlock &loopBlock;
     ScheduledNode &node;
   };
-  // TODO: `constexpr` once `llvm::SmallVector` supports it
   [[nodiscard]] auto outNeighbors(size_t idx) -> OutNeighbors {
     return OutNeighbors{*this, nodes[idx]};
   }
@@ -529,6 +500,10 @@ public:
   /// %z = call bar(y.reload)
   /// store %z, %c
   /// and we create a new edge from `store %y, %b` to `load %b`.
+  /// We're going to also build up the `Node` graph,
+  /// this is to avoid duplicating any logic or needing to traverse the object
+  /// graph an extra time as we go.
+  ///
   // NOLINTNEXTLINE(misc-no-recursion)
   void searchOperandsForLoads(ScheduledNode &node, llvm::User *u,
                               unsigned nodeIdx) {
@@ -547,9 +522,8 @@ public:
     nodes[outIndex].addInNeighbor(inIndex);
   }
   [[nodiscard]] auto calcNumStores() const -> size_t {
-    size_t numStores = 0;
-    for (const auto &m : memory) numStores += !(m->isLoad());
-    return numStores;
+    return std::ranges::count_if(memory,
+                                 [](const auto &m) { return m->isStore(); });
   }
   /// When connecting a graph, we draw direct connections between stores and
   /// loads loads may be duplicated across stores to allow for greater
@@ -707,10 +681,10 @@ public:
       return d;
     }
     class EdgeIterator {
-      Graph &g;
+      const Graph &g;
       size_t d;
       class Iterator {
-        Graph &g;
+        const Graph &g;
         size_t d;
         size_t e;
         constexpr auto findNext() -> void {
@@ -718,7 +692,7 @@ public:
         }
 
       public:
-        constexpr Iterator(Graph &_g, size_t _d, size_t _e)
+        constexpr Iterator(const Graph &_g, size_t _d, size_t _e)
           : g(_g), d(_d), e(_e) {
           findNext();
         }
@@ -739,15 +713,12 @@ public:
       };
 
     public:
-      constexpr EdgeIterator(Graph &_g, size_t _d) : g(_g), d(_d) {}
+      constexpr EdgeIterator(const Graph &_g, size_t _d) : g(_g), d(_d) {}
       constexpr auto begin() -> Iterator { return {g, d, 0}; }
       constexpr auto end() -> Iterator { return {g, d, g.edges.size()}; }
     };
-    [[nodiscard]] constexpr auto getEdges(size_t d) -> EdgeIterator {
-      return {*this, d};
-    }
     [[nodiscard]] constexpr auto getEdges(size_t d) const -> EdgeIterator {
-      return {*const_cast<Graph *>(this), d};
+      return {*this, d};
     }
   };
   // bool connects(const Dependence &e, Graph &g0, Graph &g1, size_t d) const
@@ -1227,8 +1198,6 @@ public:
         g.activeEdges.remove(e);
         deactivated.insert(e);
         edge.setSatLevelLP(depth);
-        carriedDeps[inIndex].setCarriedDependency(depth);
-        carriedDeps[outIndex].setCarriedDependency(depth);
       } else {
         const ScheduledNode &inNode = nodes[inIndex],
                             &outNode = nodes[outIndex];
@@ -1559,10 +1528,6 @@ public:
     // oldSchedules.reserve(g.nodeIds.size()); // is this worth it?
     size_t i = 0;
     for (auto &n : g) oldSchedules[i++] = n.getSchedule().copy(allocator);
-    // auto oldCarriedDeps = vector<CarriedDependencyFlag>(allocator,
-    // carriedDeps.size()); oldCarriedDeps<<carriedDeps;
-    Vector<CarriedDependencyFlag> oldCarriedDeps = carriedDeps;
-    resetDeepDeps(carriedDeps, d);
     countAuxAndStash(g, d);
     setScheduleMemoryOffsets(g, d);
     if (std::optional<BitSet> depSat = solveGraph(g, d, true))
@@ -1575,7 +1540,6 @@ public:
     g.activeEdges = oldEdges;    // restore backup
     auto *oldNodeIter = oldSchedules.begin();
     for (auto &&n : g) n.getSchedule() = *(oldNodeIter++);
-    std::swap(carriedDeps, oldCarriedDeps);
     allocator.rollback(chckpt);
     return depSatLevel;
   }
@@ -1608,7 +1572,6 @@ public:
     fillEdges();
     buildGraph();
     shiftOmegas();
-    carriedDeps.resize(nodes.size());
 #ifndef NDEBUG
     validateEdges();
 #endif

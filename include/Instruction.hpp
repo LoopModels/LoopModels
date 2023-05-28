@@ -91,13 +91,13 @@ struct RecipThroughputLatency {
   }
 };
 
-class Inst : public Val {
+class Inst : public Node {
 
 protected:
-  constexpr Inst(ValKind k) : Val(k) {}
+  constexpr Inst(ValKind k) : Node(k) {}
 
 public:
-  static constexpr auto classof(const Val *v) -> bool {
+  static constexpr auto classof(const Node *v) -> bool {
     return v->getKind() >= VK_Intr;
   }
 };
@@ -106,7 +106,7 @@ class Func : public Inst {
   llvm::Function *func;
 
 public:
-  static constexpr auto classof(const Val *v) -> bool {
+  static constexpr auto classof(const Node *v) -> bool {
     return v->getKind() == VK_Func;
   }
   constexpr Func(llvm::Function *f) : Inst(VK_Func), func(f) {}
@@ -183,7 +183,7 @@ public:
     }
   };
 
-  static constexpr auto classof(const Val *v) -> bool {
+  static constexpr auto classof(const Node *v) -> bool {
     return v->getKind() == VK_Intr;
   }
   using InstrTypes =

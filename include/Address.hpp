@@ -58,10 +58,10 @@ class LoopTreeSchedule;
 /// Note that to get the new AffineLoopNest, we call
 /// `oldLoop->rotate(PhiInv)`
 // clang-format on
-class Addr : public Val {
+class Addr : public Node {
   using BitSet = MemoryAccess::BitSet;
   /// Original (untransformed) memory access
-  [[no_unique_address]] NotNull<MemoryAccess> oldMemAccess;
+  [[no_unique_address]] NotNull<ArrayIndex> arrayRef;
   /// transformed loop
   [[no_unique_address]] NotNull<AffineLoopNest<false>> loop;
   [[no_unique_address]] CostModeling::LoopTreeSchedule *node{nullptr};
@@ -94,12 +94,12 @@ class Addr : public Val {
                  int64_t denom, PtrVector<int64_t> omega, bool isStr,
                  CostModeling::LoopTreeSchedule *L, uint8_t memInputs,
                  uint8_t directEdges, uint8_t memOutputs, int64_t *offsets)
-    : Val(isStr ? VK_Stow : VK_Load), oldMemAccess(ma), loop(explicitLoop),
-      node(L), numMemInputs(memInputs), numDirectEdges(directEdges),
-      numMemOutputs(memOutputs), depth(uint8_t(Pinv.numCol())),
-      bitfield(uint8_t(isStr) << 3) {
-    PtrMatrix<int64_t> M{oldMemAccess->indexMatrix()}; // nLma x aD
-    MutPtrMatrix<int64_t> mStar{indexMatrix()};        // aD x nLp
+    : Node(isStr ? VK_Stow : VK_Load), arrayRef(ma->getArrayRef()),
+      loop(explicitLoop), node(L), numMemInputs(memInputs),
+      numDirectEdges(directEdges), numMemOutputs(memOutputs),
+      depth(uint8_t(Pinv.numCol())), bitfield(uint8_t(isStr) << 3) {
+    PtrMatrix<int64_t> M{arrayRef->indexMatrix()}; // nLma x aD
+    MutPtrMatrix<int64_t> mStar{indexMatrix()};    // aD x nLp
     // M is implicitly padded with zeros, nLp >= nLma
     unsigned nLma = ma->getNumLoops();
     invariant(nLma <= depth);
@@ -132,11 +132,11 @@ class Addr : public Val {
   }
 
 public:
-  static constexpr auto classof(const Val *v) -> bool {
+  static constexpr auto classof(const Node *v) -> bool {
     return v->getKind() <= VK_Stow;
   }
   [[nodiscard]] constexpr auto getArrayPointer() const -> const llvm::SCEV * {
-    return oldMemAccess->getArrayPointer();
+    return arrayRef->getArrayPointer();
   }
   [[nodiscard]] constexpr auto dependsOnIndVars(size_t d) -> bool {
     for (size_t i = 0, D = getArrayDim(); i < D; ++i)
@@ -424,16 +424,16 @@ public:
   }
   [[nodiscard]] constexpr auto getNumLoops() const -> size_t { return depth; }
   [[nodiscard]] constexpr auto getArrayDim() const -> size_t {
-    return oldMemAccess->getArrayDim();
+    return arrayRef->getArrayDim();
   }
   [[nodiscard]] auto getInstruction() -> llvm::Instruction * {
-    return oldMemAccess->getInstruction();
+    return arrayRef->getInstruction();
   }
   [[nodiscard]] auto getInstruction() const -> const llvm::Instruction * {
-    return oldMemAccess->getInstruction();
+    return arrayRef->getInstruction();
   }
   [[nodiscard]] auto getAlign() const -> llvm::Align {
-    return oldMemAccess->getArrayRef()->getAlign();
+    return arrayRef->getAlign();
   }
   [[nodiscard]] constexpr auto getDenominator() -> int64_t & {
     return getIntMemory()[0];
@@ -463,9 +463,9 @@ public:
   [[nodiscard]] constexpr auto getCurrentDepth() const -> unsigned;
   void printDotName(llvm::raw_ostream &os) const {
     if (isLoad()) os << "... = ";
-    os << *oldMemAccess->getArrayRef()->getArrayPointer() << "[";
+    os << *arrayRef->getArrayPointer() << "[";
     DensePtrMatrix<int64_t> A{indexMatrix()};
-    DensePtrMatrix<int64_t> B{oldMemAccess->offsetMatrix()};
+    DensePtrMatrix<int64_t> B{arrayRef->offsetMatrix()};
     PtrVector<int64_t> b{getOffsetOmega()};
     size_t numLoops = size_t(A.numCol());
     for (size_t i = 0; i < A.numRow(); ++i) {
@@ -494,7 +494,7 @@ public:
           }
           if (j) {
             if (offij != 1) os << offij << '*';
-            os << *oldMemAccess->getLoop()->getSyms()[j - 1];
+            os << *arrayRef->getLoop()->getSyms()[j - 1];
           } else os << offij;
           printPlus = true;
         }
