@@ -72,9 +72,9 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a13f98dea990f995ce926f5d6b63c4b2d"><td class="memItemLeft" align="right" valign="top"><a id="a13f98dea990f995ce926f5d6b63c4b2d"></a>
-constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>ArrayIndex</b> (const llvm::SCEVUnknown *arrayPtr, <a class="el" href="structAffineLoopNest.html">AffineLoopNest</a>&lt; true &gt; &amp;loopRef, llvm::Instruction *user, std::array&lt; unsigned, 2 &gt; dimOff)</td></tr>
-<tr class="separator:a13f98dea990f995ce926f5d6b63c4b2d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a648aabf3639559415944d994e9fcbe89"><td class="memItemLeft" align="right" valign="top"><a id="a648aabf3639559415944d994e9fcbe89"></a>
+constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>ArrayIndex</b> (const llvm::SCEVUnknown *arrayPtr, <a class="el" href="structAffineLoopNest.html">AffineLoopNest</a>&lt; true &gt; &amp;loopRef, llvm::Instruction *user, int64_t *offsym, std::array&lt; unsigned, 2 &gt; dimOff)</td></tr>
+<tr class="separator:a648aabf3639559415944d994e9fcbe89"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5c8b3200b09385509af6f40fbb8b6f40"><td class="memItemLeft" align="right" valign="top"><a id="a5c8b3200b09385509af6f40fbb8b6f40"></a>
 constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>ArrayIndex</b> (const llvm::SCEVUnknown *arrayPtr, <a class="el" href="structAffineLoopNest.html">AffineLoopNest</a>&lt; true &gt; &amp;loopRef, llvm::Instruction *user)</td></tr>
 <tr class="separator:a5c8b3200b09385509af6f40fbb8b6f40"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -123,9 +123,12 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>getAlign</b> () const
 <tr class="separator:a2607d77465585f6d60d9f71d998af759"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abd53828a7c4da4199bb84242cfcdae30"><td class="memItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classArrayIndex.html#abd53828a7c4da4199bb84242cfcdae30">indexMatrix</a> () const -&gt; DensePtrMatrix&lt; int64_t &gt;</td></tr>
 <tr class="separator:abd53828a7c4da4199bb84242cfcdae30"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8cc583e045c6c3f2b93692a963a287d6"><td class="memItemLeft" align="right" valign="top"><a id="a8cc583e045c6c3f2b93692a963a287d6"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>offsetMatrix</b> () -&gt; MutDensePtrMatrix&lt; int64_t &gt;</td></tr>
-<tr class="separator:a8cc583e045c6c3f2b93692a963a287d6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:addee826bfc74f078e9be804e1b8c71f1"><td class="memItemLeft" align="right" valign="top"><a id="addee826bfc74f078e9be804e1b8c71f1"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>offsetVector</b> () -&gt; MutPtrVector&lt; int64_t &gt;</td></tr>
+<tr class="separator:addee826bfc74f078e9be804e1b8c71f1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4ff1265b908b8d4da8037335ac22fdc2"><td class="memItemLeft" align="right" valign="top"><a id="a4ff1265b908b8d4da8037335ac22fdc2"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>offsetVector</b> () const -&gt; PtrVector&lt; int64_t &gt;</td></tr>
+<tr class="separator:a4ff1265b908b8d4da8037335ac22fdc2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0993fb010932c60c8ce5d1ba6b8521dd"><td class="memItemLeft" align="right" valign="top"><a id="a0993fb010932c60c8ce5d1ba6b8521dd"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>offsetMatrix</b> () const -&gt; DensePtrMatrix&lt; int64_t &gt;</td></tr>
 <tr class="separator:a0993fb010932c60c8ce5d1ba6b8521dd"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -166,10 +169,10 @@ Static Public Member Functions</h2></td></tr>
 static auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classArrayIndex.html#a6da5127e873b5d3986f683faffe01dfe">construct</a> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, const llvm::SCEVUnknown *arrayPointer, <a class="el" href="structAffineLoopNest.html">AffineLoopNest</a>&lt; true &gt; &amp;loopRef, llvm::Instruction *user, PtrVector&lt; unsigned &gt; o) -&gt; <a class="el" href="classNotNull.html">NotNull</a>&lt; <a class="el" href="classArrayIndex.html">ArrayIndex</a> &gt;</td></tr>
 <tr class="memdesc:a6da5127e873b5d3986f683faffe01dfe"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor for 0 dimensional memory access. <br /></td></tr>
 <tr class="separator:a6da5127e873b5d3986f683faffe01dfe"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aaeda64083f9ce3bd9222769b87b94c9e"><td class="memItemLeft" align="right" valign="top"><a id="aaeda64083f9ce3bd9222769b87b94c9e"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classArrayIndex.html#aaeda64083f9ce3bd9222769b87b94c9e">construct</a> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, const llvm::SCEVUnknown *arrayPtr, <a class="el" href="structAffineLoopNest.html">AffineLoopNest</a>&lt; true &gt; &amp;loopRef, llvm::Instruction *user, PtrMatrix&lt; int64_t &gt; indMat, std::array&lt; llvm::SmallVector&lt; const llvm::SCEV *, 3 &gt;, 2 &gt; szOff, PtrMatrix&lt; int64_t &gt; offsets, PtrVector&lt; unsigned &gt; o) -&gt; <a class="el" href="classNotNull.html">NotNull</a>&lt; <a class="el" href="classArrayIndex.html">ArrayIndex</a> &gt;</td></tr>
-<tr class="memdesc:aaeda64083f9ce3bd9222769b87b94c9e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor for regular indexing. <br /></td></tr>
-<tr class="separator:aaeda64083f9ce3bd9222769b87b94c9e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab5f7c34e828d059dc1ede8250785fa9c"><td class="memItemLeft" align="right" valign="top"><a id="ab5f7c34e828d059dc1ede8250785fa9c"></a>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classArrayIndex.html#ab5f7c34e828d059dc1ede8250785fa9c">construct</a> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, const llvm::SCEVUnknown *arrayPtr, <a class="el" href="structAffineLoopNest.html">AffineLoopNest</a>&lt; true &gt; &amp;loopRef, llvm::Instruction *user, PtrMatrix&lt; int64_t &gt; indMat, std::array&lt; llvm::SmallVector&lt; const llvm::SCEV *, 3 &gt;, 2 &gt; szOff, PtrVector&lt; int64_t &gt; coffsets, int64_t *offsets, PtrVector&lt; unsigned &gt; o) -&gt; <a class="el" href="classNotNull.html">NotNull</a>&lt; <a class="el" href="classArrayIndex.html">ArrayIndex</a> &gt;</td></tr>
+<tr class="memdesc:ab5f7c34e828d059dc1ede8250785fa9c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor for regular indexing. <br /></td></tr>
+<tr class="separator:ab5f7c34e828d059dc1ede8250785fa9c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac22530e45b871b8c7e86b9ade78b25bd"><td class="memItemLeft" align="right" valign="top"><a id="ac22530e45b871b8c7e86b9ade78b25bd"></a>
 static auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classArrayIndex.html#ac22530e45b871b8c7e86b9ade78b25bd">typeAlignment</a> (const llvm::SCEV *S) -&gt; llvm::Align</td></tr>
 <tr class="memdesc:ac22530e45b871b8c7e86b9ade78b25bd"><td class="mdescLeft">&#160;</td><td class="mdescRight">initialize alignment from an elSize SCEV. <br /></td></tr>
@@ -201,7 +204,7 @@ static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>gcdK
   </tr>
 </table>
 </div><div class="memdoc">
-<p><a class="el" href="classArrayIndex.html#a2607d77465585f6d60d9f71d998af759">indexMatrix()</a> -&gt; arrayDim() x getNumLoops() loops are in [outermost &lt;-&gt; innermost] order Maps loop indVars to array indices Letting <code>i</code> be the indVars and <code>d</code> the indices: <a class="el" href="classArrayIndex.html#a2607d77465585f6d60d9f71d998af759">indexMatrix()</a>' * i == d e.g. <code>indVars = [i, j]</code> and indexMatrix = [ 1 1; 0 1] corresponds to A[i, i + j] Note that <code>[i, j]</code> refers to loops in innermost -&gt; outermost order, i.e. for (i : I) for (j : J) A[i, i + j] </p>
+<p><a class="el" href="classArrayIndex.html#a2607d77465585f6d60d9f71d998af759">indexMatrix()</a> -&gt; arrayDim() x getNumLoops() loops are in [outermost &lt;-&gt; innermost] order Maps loop indVars to array indices Letting <code>i</code> be the indVars and <code>d</code> the indices: <a class="el" href="classArrayIndex.html#a2607d77465585f6d60d9f71d998af759">indexMatrix()</a>' * i == d e.g. <code>indVars = [i, j]</code> and indexMatrix = [ 1 0; 1 1] corresponds to A[i, i + j] Note that <code>[i, j]</code> refers to loops in innermost -&gt; outermost order, i.e. for (i : I) for (j : J) A[i, i + j] </p>
 
 </div>
 </div>
