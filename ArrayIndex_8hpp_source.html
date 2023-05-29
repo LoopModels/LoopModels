@@ -146,18 +146,18 @@ $(function() {
 <div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160; </div>
 <div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;<span class="keyword">public</span>:</div>
 <div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;  <span class="keyword">explicit</span> constexpr <a class="code" href="classArrayIndex.html">ArrayIndex</a>(<span class="keyword">const</span> llvm::SCEVUnknown *arrayPtr,</div>
-<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;                                <a class="code" href="structAffineLoopNest.html">AffineLoopNest&lt;true&gt;</a> &amp;loopRef,</div>
+<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;                                <a class="code" href="classAffineLoopNest.html">AffineLoopNest&lt;true&gt;</a> &amp;loopRef,</div>
 <div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;                                llvm::Instruction *user, int64_t *offsym,</div>
 <div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;                                std::array&lt;unsigned, 2&gt; dimOff)</div>
 <div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;    : basePointer(arrayPtr), loop(loopRef), loadOrStore(user), offSym(offsym),</div>
 <div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;      numDim(dimOff[0]), numDynSym(dimOff[1]){};</div>
 <div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;  <span class="keyword">explicit</span> constexpr <a class="code" href="classArrayIndex.html">ArrayIndex</a>(<span class="keyword">const</span> llvm::SCEVUnknown *arrayPtr,</div>
-<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;                                <a class="code" href="structAffineLoopNest.html">AffineLoopNest&lt;true&gt;</a> &amp;loopRef,</div>
+<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;                                <a class="code" href="classAffineLoopNest.html">AffineLoopNest&lt;true&gt;</a> &amp;loopRef,</div>
 <div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;                                llvm::Instruction *user)</div>
 <div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;    : basePointer(arrayPtr), loop(loopRef), loadOrStore(user){};</div>
 <div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;  [[nodiscard]] <span class="keyword">static</span> <span class="keyword">auto</span></div>
 <div class="line"><a name="l00089"></a><span class="lineno"><a class="line" href="classArrayIndex.html#a6da5127e873b5d3986f683faffe01dfe">   89</a></span>&#160;  <a class="code" href="classArrayIndex.html#a6da5127e873b5d3986f683faffe01dfe">construct</a>(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, <span class="keyword">const</span> llvm::SCEVUnknown *arrayPointer,</div>
-<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;            <a class="code" href="structAffineLoopNest.html">AffineLoopNest&lt;true&gt;</a> &amp;loopRef, llvm::Instruction *user,</div>
+<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;            <a class="code" href="classAffineLoopNest.html">AffineLoopNest&lt;true&gt;</a> &amp;loopRef, llvm::Instruction *user,</div>
 <div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;            PtrVector&lt;unsigned&gt; o) -&gt; <a class="code" href="classNotNull.html">NotNull&lt;ArrayIndex&gt;</a> {</div>
 <div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;    <span class="keywordtype">unsigned</span> numLoops = loopRef.getNumLoops();</div>
 <div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;    invariant(o.size(), numLoops + 1);</div>
@@ -170,7 +170,7 @@ $(function() {
 <div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;  }</div>
 <div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;  [[nodiscard]] <span class="keyword">static</span> <span class="keyword">auto</span></div>
 <div class="line"><a name="l00103"></a><span class="lineno"><a class="line" href="classArrayIndex.html#ab5f7c34e828d059dc1ede8250785fa9c">  103</a></span>&#160;  <a class="code" href="classArrayIndex.html#ab5f7c34e828d059dc1ede8250785fa9c">construct</a>(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, <span class="keyword">const</span> llvm::SCEVUnknown *arrayPtr,</div>
-<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;            <a class="code" href="structAffineLoopNest.html">AffineLoopNest&lt;true&gt;</a> &amp;loopRef, llvm::Instruction *user,</div>
+<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;            <a class="code" href="classAffineLoopNest.html">AffineLoopNest&lt;true&gt;</a> &amp;loopRef, llvm::Instruction *user,</div>
 <div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;            PtrMatrix&lt;int64_t&gt; indMat,</div>
 <div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;            std::array&lt;llvm::SmallVector&lt;const llvm::SCEV *, 3&gt;, 2&gt; szOff,</div>
 <div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;            PtrVector&lt;int64_t&gt; coffsets, int64_t *offsets,</div>
@@ -199,7 +199,7 @@ $(function() {
 <div class="line"><a name="l00132"></a><span class="lineno"><a class="line" href="classArrayIndex.html#a0e86ce8a1a3a5cb7a08e684419afe8d8">  132</a></span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> <a class="code" href="classArrayIndex.html#a0e86ce8a1a3a5cb7a08e684419afe8d8">getFusionOmega</a>() const -&gt; PtrVector&lt;int64_t&gt; {</div>
 <div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;    <span class="keywordflow">return</span> {data() + omegaOffset(), unsigned(getNumLoops()) + 1};</div>
 <div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;  }</div>
-<div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getLoop() const -&gt; <a class="code" href="classNotNull.html">NotNull</a>&lt;<a class="code" href="structAffineLoopNest.html">AffineLoopNest</a>&lt;&gt;&gt; {</div>
+<div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getLoop() const -&gt; <a class="code" href="classNotNull.html">NotNull</a>&lt;<a class="code" href="classAffineLoopNest.html">AffineLoopNest</a>&lt;&gt;&gt; {</div>
 <div class="line"><a name="l00136"></a><span class="lineno">  136</span>&#160;    <span class="keywordflow">return</span> loop;</div>
 <div class="line"><a name="l00137"></a><span class="lineno">  137</span>&#160;  }</div>
 <div class="line"><a name="l00138"></a><span class="lineno">  138</span>&#160;  [[nodiscard]] <span class="keyword">inline</span> <span class="keyword">auto</span> getSizes()</div>
@@ -345,7 +345,8 @@ $(function() {
 <div class="line"><a name="l00293"></a><span class="lineno">  293</span>&#160;           offsetMatrix() == other.offsetMatrix();</div>
 <div class="line"><a name="l00294"></a><span class="lineno">  294</span>&#160;  }</div>
 <div class="line"><a name="l00295"></a><span class="lineno">  295</span>&#160;};</div>
-<div class="ttc" id="aclassAddr_html"><div class="ttname"><a href="classAddr.html">Addr</a></div><div class="ttdef"><b>Definition:</b> Address.hpp:61</div></div>
+<div class="ttc" id="aclassAddr_html"><div class="ttname"><a href="classAddr.html">Addr</a></div><div class="ttdef"><b>Definition:</b> Address.hpp:62</div></div>
+<div class="ttc" id="aclassAffineLoopNest_html"><div class="ttname"><a href="classAffineLoopNest.html">AffineLoopNest&lt; true &gt;</a></div></div>
 <div class="ttc" id="aclassArrayIndex_html"><div class="ttname"><a href="classArrayIndex.html">ArrayIndex</a></div><div class="ttdef"><b>Definition:</b> ArrayIndex.hpp:16</div></div>
 <div class="ttc" id="aclassArrayIndex_html_a0e86ce8a1a3a5cb7a08e684419afe8d8"><div class="ttname"><a href="classArrayIndex.html#a0e86ce8a1a3a5cb7a08e684419afe8d8">ArrayIndex::getFusionOmega</a></div><div class="ttdeci">constexpr auto getFusionOmega() const -&gt; PtrVector&lt; int64_t &gt;</div><div class="ttdoc">omegas order is [outer &lt;-&gt; inner]</div><div class="ttdef"><b>Definition:</b> ArrayIndex.hpp:132</div></div>
 <div class="ttc" id="aclassArrayIndex_html_a2607d77465585f6d60d9f71d998af759"><div class="ttname"><a href="classArrayIndex.html#a2607d77465585f6d60d9f71d998af759">ArrayIndex::indexMatrix</a></div><div class="ttdeci">constexpr auto indexMatrix() -&gt; MutDensePtrMatrix&lt; int64_t &gt;</div><div class="ttdef"><b>Definition:</b> ArrayIndex.hpp:183</div></div>
@@ -355,7 +356,6 @@ $(function() {
 <div class="ttc" id="aclassArrayIndex_html_ac22530e45b871b8c7e86b9ade78b25bd"><div class="ttname"><a href="classArrayIndex.html#ac22530e45b871b8c7e86b9ade78b25bd">ArrayIndex::typeAlignment</a></div><div class="ttdeci">static auto typeAlignment(const llvm::SCEV *S) -&gt; llvm::Align</div><div class="ttdoc">initialize alignment from an elSize SCEV.</div><div class="ttdef"><b>Definition:</b> ArrayIndex.hpp:216</div></div>
 <div class="ttc" id="aclassArrayIndex_html_ac50bf625a59c9a19bd0bcf14c6d0d980"><div class="ttname"><a href="classArrayIndex.html#ac50bf625a59c9a19bd0bcf14c6d0d980">ArrayIndex::getFusionOmega</a></div><div class="ttdeci">constexpr auto getFusionOmega() -&gt; MutPtrVector&lt; int64_t &gt;</div><div class="ttdoc">omegas order is [outer &lt;-&gt; inner]</div><div class="ttdef"><b>Definition:</b> ArrayIndex.hpp:128</div></div>
 <div class="ttc" id="aclassNotNull_html"><div class="ttname"><a href="classNotNull.html">NotNull&lt; const llvm::SCEVUnknown &gt;</a></div></div>
-<div class="ttc" id="astructAffineLoopNest_html"><div class="ttname"><a href="structAffineLoopNest.html">AffineLoopNest&lt; true &gt;</a></div></div>
 <div class="ttc" id="astructBumpAlloc_html"><div class="ttname"><a href="structBumpAlloc.html">BumpAlloc</a></div><div class="ttdef"><b>Definition:</b> Allocators.hpp:42</div></div>
 <div class="ttc" id="astructLinAlg_1_1DenseDims_html"><div class="ttname"><a href="structLinAlg_1_1DenseDims.html">LinAlg::DenseDims</a></div><div class="ttdoc">Dimensions with a capacity.</div><div class="ttdef"><b>Definition:</b> MatrixDimensions.hpp:76</div></div>
 </div><!-- fragment --></div><!-- contents -->

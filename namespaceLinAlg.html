@@ -670,9 +670,9 @@ template&lt;AbstractSlice B&gt; </td></tr>
 template&lt;AbstractSlice B&gt; </td></tr>
 <tr class="memitem:ab3b0a7d12add134c3d3aaa6451a5a51f"><td class="memTemplItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>calcNewDim</b> (<a class="el" href="structLinAlg_1_1SquareDims.html">SquareDims</a> d, <a class="el" href="structLinAlg_1_1CartesianIndex.html">CartesianIndex</a>&lt; B, Colon &gt; i)</td></tr>
 <tr class="separator:ab3b0a7d12add134c3d3aaa6451a5a51f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6679f58f069717a5bb0baaacf0e9e043"><td class="memItemLeft" align="right" valign="top"><a id="a6679f58f069717a5bb0baaacf0e9e043"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator==</b> (const AbstractMatrix auto &amp;A, const AbstractMatrix auto &amp;B) -&gt; bool</td></tr>
-<tr class="separator:a6679f58f069717a5bb0baaacf0e9e043"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5bc223e4d56da1bc626ae4d9adf62149"><td class="memItemLeft" align="right" valign="top"><a id="a5bc223e4d56da1bc626ae4d9adf62149"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator==</b> (const AbstractMatrix auto &amp;A, const AbstractMatrix auto &amp;B) -&gt; bool</td></tr>
+<tr class="separator:a5bc223e4d56da1bc626ae4d9adf62149"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af5853c9a47a844f94ab4b631df9b9d5b"><td class="memItemLeft" align="right" valign="top"><a id="af5853c9a47a844f94ab4b631df9b9d5b"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>get</b> (const auto &amp;A, size_t)</td></tr>
 <tr class="separator:af5853c9a47a844f94ab4b631df9b9d5b"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -823,6 +823,10 @@ template&lt;AbstractVector B&gt; </td></tr>
 template&lt;typename A &gt; </td></tr>
 <tr class="memitem:a86154c708ec13c79bc99691d64f329af"><td class="memTemplItemLeft" align="right" valign="top">&#160;</td><td class="memTemplItemRight" valign="bottom"><b>Transpose</b> (A) -&gt; <a class="el" href="structLinAlg_1_1Transpose.html">Transpose</a>&lt; A &gt;</td></tr>
 <tr class="separator:a86154c708ec13c79bc99691d64f329af"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5b4a3e57f261e2aa9cb216cd9f3a7064"><td class="memTemplParams" colspan="2"><a id="a5b4a3e57f261e2aa9cb216cd9f3a7064"></a>
+template&lt;class T &gt; </td></tr>
+<tr class="memitem:a5b4a3e57f261e2aa9cb216cd9f3a7064"><td class="memTemplItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>operator==</b> (const AbstractMatrix auto &amp;A, const <a class="el" href="structLinAlg_1_1UniformScaling.html">UniformScaling</a>&lt; T &gt; &amp;B) -&gt; bool</td></tr>
+<tr class="separator:a5b4a3e57f261e2aa9cb216cd9f3a7064"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afe6349a785d3c116922b66ca049d5db8"><td class="memTemplParams" colspan="2"><a id="afe6349a785d3c116922b66ca049d5db8"></a>
 template&lt;class T , class U &gt; </td></tr>
 <tr class="memitem:afe6349a785d3c116922b66ca049d5db8"><td class="memTemplItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>operator*</b> (const U &amp;x, <a class="el" href="structLinAlg_1_1UniformScaling.html">UniformScaling</a>&lt; T &gt; d)</td></tr>
@@ -971,10 +975,8 @@ template&lt;typename T &gt; </div>
       </table>
 </div><div class="memdoc">
 <b>Initial value:</b><div class="fragment"><div class="line">= AbstractMatrixCore&lt;T&gt; &amp;&amp; requires(T t, <span class="keywordtype">size_t</span> i) {</div>
-<div class="line">                                                    {</div>
-<div class="line">                                                      t.view()</div>
-<div class="line">                                                      } -&gt; AbstractMatrixCore;</div>
-<div class="line">                                                  }</div>
+<div class="line">  { t.view() } -&gt; AbstractMatrixCore;</div>
+<div class="line">}</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -991,18 +993,17 @@ template&lt;typename T &gt; </div>
         </tr>
       </table>
 </div><div class="memdoc">
-<b>Initial value:</b><div class="fragment"><div class="line">=</div>
-<div class="line">  HasEltype&lt;T&gt; &amp;&amp; requires(T t, <span class="keywordtype">size_t</span> i) {</div>
-<div class="line">                    { t(i, i) } -&gt; std::convertible_to&lt;eltype_t&lt;T&gt;&gt;;</div>
-<div class="line">                    { t.numRow() } -&gt; SameOrBroadcast&lt;Row&gt;;</div>
-<div class="line">                    { t.numCol() } -&gt; SameOrBroadcast&lt;Col&gt;;</div>
-<div class="line">                    { t.size() } -&gt; SameOrBroadcast&lt;CartesianIndex&lt;Row, Col&gt;&gt;;</div>
-<div class="line">                    { t.dim() } -&gt; std::convertible_to&lt;StridedDims&gt;;</div>
-<div class="line">                    </div>
-<div class="line">                    </div>
-<div class="line">                    </div>
-<div class="line">                    </div>
-<div class="line">                  }</div>
+<b>Initial value:</b><div class="fragment"><div class="line">= HasEltype&lt;T&gt; &amp;&amp; requires(T t, <span class="keywordtype">size_t</span> i) {</div>
+<div class="line">  { t(i, i) } -&gt; std::convertible_to&lt;eltype_t&lt;T&gt;&gt;;</div>
+<div class="line">  { t.numRow() } -&gt; SameOrBroadcast&lt;Row&gt;;</div>
+<div class="line">  { t.numCol() } -&gt; SameOrBroadcast&lt;Col&gt;;</div>
+<div class="line">  { t.size() } -&gt; SameOrBroadcast&lt;CartesianIndex&lt;Row, Col&gt;&gt;;</div>
+<div class="line">  { t.dim() } -&gt; std::convertible_to&lt;StridedDims&gt;;</div>
+<div class="line">  </div>
+<div class="line">  </div>
+<div class="line">  </div>
+<div class="line">  </div>
+<div class="line">}</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -1019,10 +1020,9 @@ template&lt;typename T &gt; </div>
         </tr>
       </table>
 </div><div class="memdoc">
-<b>Initial value:</b><div class="fragment"><div class="line">=</div>
-<div class="line">  AbstractMatrix&lt;T&gt; &amp;&amp; requires(T t) {</div>
-<div class="line">                         { t.rowStride() } -&gt; std::same_as&lt;RowStride&gt;;</div>
-<div class="line">                       }</div>
+<b>Initial value:</b><div class="fragment"><div class="line">= AbstractMatrix&lt;T&gt; &amp;&amp; requires(T t) {</div>
+<div class="line">  { t.rowStride() } -&gt; std::same_as&lt;RowStride&gt;;</div>
+<div class="line">}</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -1165,8 +1165,8 @@ template&lt;typename T &gt; </div>
       </table>
 </div><div class="memdoc">
 <b>Initial value:</b><div class="fragment"><div class="line">= requires(T t) {</div>
-<div class="line">                       { t.data() } -&gt; std::same_as&lt;eltype_t&lt;T&gt; *&gt;;</div>
-<div class="line">                     }</div>
+<div class="line">  { t.data() } -&gt; std::same_as&lt;eltype_t&lt;T&gt; *&gt;;</div>
+<div class="line">}</div>
 </div><!-- fragment -->
 </div>
 </div>

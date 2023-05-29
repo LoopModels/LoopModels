@@ -114,7 +114,7 @@ $(function() {
 <div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160; </div>
 <div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;<span class="keyword">public</span>:</div>
 <div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;  <span class="keyword">auto</span> getAlloc() -&gt; <a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp; { <span class="keywordflow">return</span> alloc; }</div>
-<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;  <span class="keyword">auto</span> getLoopNest(<span class="keywordtype">size_t</span> i) -&gt; <a class="code" href="structAffineLoopNest.html">AffineLoopNest&lt;true&gt;</a> * { <span class="keywordflow">return</span> alns[i]; }</div>
+<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;  <span class="keyword">auto</span> getLoopNest(<span class="keywordtype">size_t</span> i) -&gt; <a class="code" href="classAffineLoopNest.html">AffineLoopNest&lt;true&gt;</a> * { <span class="keywordflow">return</span> alns[i]; }</div>
 <div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;  <span class="keyword">auto</span> getNumLoopNests() -&gt; <span class="keywordtype">size_t</span> { <span class="keywordflow">return</span> alns.size(); }</div>
 <div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;  <span class="keywordtype">void</span> addLoop(PtrMatrix&lt;int64_t&gt; A, <span class="keywordtype">size_t</span> numLoops) {</div>
 <div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;    <span class="keywordtype">size_t</span> numSym = size_t(A.numCol()) - numLoops - 1;</div>
@@ -124,7 +124,7 @@ $(function() {
 <div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;      <span class="comment">// we&#39;re going to assume there&#39;s some chance of recycling old</span></div>
 <div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;      <span class="comment">// symbols, so we are only going to be creating new ones if we have</span></div>
 <div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;      <span class="comment">// to.</span></div>
-<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;      <a class="code" href="structAffineLoopNest.html">AffineLoopNest&lt;true&gt;</a> *symbolSource = <span class="keyword">nullptr</span>;</div>
+<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;      <a class="code" href="classAffineLoopNest.html">AffineLoopNest&lt;true&gt;</a> *symbolSource = <span class="keyword">nullptr</span>;</div>
 <div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;      <span class="keywordtype">size_t</span> numSymbolSource = 0;</div>
 <div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;      <span class="keywordflow">for</span> (<span class="keyword">auto</span> *aln : alns) {</div>
 <div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;        <span class="keywordflow">if</span> (numSymbolSource &lt; aln-&gt;getSyms().size()) {</div>
@@ -137,7 +137,7 @@ $(function() {
 <div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = numSymbolSource; i &lt; numSym; ++i)</div>
 <div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;        symbols.push_back(SE.getUnknown(createInt64()));</div>
 <div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;    }</div>
-<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;    alns.push_back(<a class="code" href="structAffineLoopNest.html">AffineLoopNest&lt;true&gt;::construct</a>(alloc, A, symbols));</div>
+<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;    alns.push_back(<a class="code" href="classAffineLoopNest.html">AffineLoopNest&lt;true&gt;::construct</a>(alloc, A, symbols));</div>
 <div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;  }</div>
 <div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;  <span class="comment">// for creating some black box value</span></div>
 <div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;  <span class="keyword">auto</span> loadValueFromPtr(llvm::Type *typ) -&gt; llvm::Value * {</div>
@@ -242,8 +242,8 @@ $(function() {
 <div class="line"><a name="l00171"></a><span class="lineno">  171</span>&#160;    <span class="keywordflow">return</span> sqrtCall;</div>
 <div class="line"><a name="l00172"></a><span class="lineno">  172</span>&#160;  }</div>
 <div class="line"><a name="l00173"></a><span class="lineno">  173</span>&#160;};</div>
+<div class="ttc" id="aclassAffineLoopNest_html"><div class="ttname"><a href="classAffineLoopNest.html">AffineLoopNest&lt; true &gt;</a></div></div>
 <div class="ttc" id="aclassTestLoopFunction_html"><div class="ttname"><a href="classTestLoopFunction.html">TestLoopFunction</a></div><div class="ttdef"><b>Definition:</b> TestUtilities.hpp:23</div></div>
-<div class="ttc" id="astructAffineLoopNest_html"><div class="ttname"><a href="structAffineLoopNest.html">AffineLoopNest&lt; true &gt;</a></div></div>
 <div class="ttc" id="astructBumpAlloc_html"><div class="ttname"><a href="structBumpAlloc.html">BumpAlloc</a></div><div class="ttdef"><b>Definition:</b> Allocators.hpp:42</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->

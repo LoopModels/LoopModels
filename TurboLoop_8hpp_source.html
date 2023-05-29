@@ -445,7 +445,7 @@ $(function() {
 <div class="line"><a name="l00412"></a><span class="lineno">  412</span>&#160;    llvm::delinearize(*SE, accessFn, subscripts, sizes, elSize);</div>
 <div class="line"><a name="l00413"></a><span class="lineno">  413</span>&#160;    <span class="keywordtype">size_t</span> numDims = subscripts.size();</div>
 <div class="line"><a name="l00414"></a><span class="lineno">  414</span>&#160;    invariant(numDims, sizes.size());</div>
-<div class="line"><a name="l00415"></a><span class="lineno">  415</span>&#160;    <a class="code" href="structAffineLoopNest.html">AffineLoopNest&lt;true&gt;</a> *aln = loopMap[L]-&gt;affineLoop;</div>
+<div class="line"><a name="l00415"></a><span class="lineno">  415</span>&#160;    <a class="code" href="classAffineLoopNest.html">AffineLoopNest&lt;true&gt;</a> *aln = loopMap[L]-&gt;affineLoop;</div>
 <div class="line"><a name="l00416"></a><span class="lineno">  416</span>&#160;    <span class="keywordflow">if</span> (numDims == 0) {</div>
 <div class="line"><a name="l00417"></a><span class="lineno">  417</span>&#160;      LT.memAccesses.push_back(<a class="code" href="classArrayIndex.html#a6da5127e873b5d3986f683faffe01dfe">ArrayIndex::construct</a>(</div>
 <div class="line"><a name="l00418"></a><span class="lineno">  418</span>&#160;        allocator, basePointer, *aln, loadOrStore, omegas));</div>
@@ -728,13 +728,13 @@ $(function() {
 <div class="line"><a name="l00695"></a><span class="lineno">  695</span>&#160;  <span class="comment">//     // predicates</span></div>
 <div class="line"><a name="l00696"></a><span class="lineno">  696</span>&#160;  <span class="comment">// }</span></div>
 <div class="line"><a name="l00697"></a><span class="lineno">  697</span>&#160;};</div>
+<div class="ttc" id="aclassAffineLoopNest_html"><div class="ttname"><a href="classAffineLoopNest.html">AffineLoopNest&lt; true &gt;</a></div></div>
 <div class="ttc" id="aclassArrayIndex_html_a6da5127e873b5d3986f683faffe01dfe"><div class="ttname"><a href="classArrayIndex.html#a6da5127e873b5d3986f683faffe01dfe">ArrayIndex::construct</a></div><div class="ttdeci">static auto construct(BumpAlloc&lt;&gt; &amp;alloc, const llvm::SCEVUnknown *arrayPointer, AffineLoopNest&lt; true &gt; &amp;loopRef, llvm::Instruction *user, PtrVector&lt; unsigned &gt; o) -&gt; NotNull&lt; ArrayIndex &gt;</div><div class="ttdoc">Constructor for 0 dimensional memory access.</div><div class="ttdef"><b>Definition:</b> ArrayIndex.hpp:89</div></div>
 <div class="ttc" id="aclassLinearProgramLoopBlock_html"><div class="ttname"><a href="classLinearProgramLoopBlock.html">LinearProgramLoopBlock</a></div><div class="ttdef"><b>Definition:</b> LoopBlock.hpp:322</div></div>
 <div class="ttc" id="aclassNotNull_html"><div class="ttname"><a href="classNotNull.html">NotNull</a></div><div class="ttdef"><b>Definition:</b> Valid.hpp:7</div></div>
 <div class="ttc" id="aclassTurboLoopPass_html"><div class="ttname"><a href="classTurboLoopPass.html">TurboLoopPass</a></div><div class="ttdef"><b>Definition:</b> TurboLoop.hpp:61</div></div>
 <div class="ttc" id="aclassTurboLoopPass_html_a61d15982d3d7c2d1918da31c454a2f10"><div class="ttname"><a href="classTurboLoopPass.html#a61d15982d3d7c2d1918da31c454a2f10">TurboLoopPass::initializeLoopForest</a></div><div class="ttdeci">void initializeLoopForest()</div><div class="ttdef"><b>Definition:</b> TurboLoop.hpp:103</div></div>
 <div class="ttc" id="aclassTurboLoopPass_html_af347cd84f4fe2f72b4a93d322f3a2d8c"><div class="ttname"><a href="classTurboLoopPass.html#af347cd84f4fe2f72b4a93d322f3a2d8c">TurboLoopPass::pushLoopTree</a></div><div class="ttdeci">auto pushLoopTree(llvm::SmallVector&lt; NotNull&lt; LoopTree &gt;&gt; &amp;pForest, llvm::Loop *L, llvm::ArrayRef&lt; llvm::Loop * &gt; subLoops, llvm::BasicBlock *H, llvm::BasicBlock *E, NoWrapRewriter &amp;nwr) -&gt; size_t</div><div class="ttdef"><b>Definition:</b> TurboLoop.hpp:187</div></div>
-<div class="ttc" id="astructAffineLoopNest_html"><div class="ttname"><a href="structAffineLoopNest.html">AffineLoopNest&lt; true &gt;</a></div></div>
 <div class="ttc" id="astructBumpAlloc_html"><div class="ttname"><a href="structBumpAlloc.html">BumpAlloc</a></div><div class="ttdef"><b>Definition:</b> Allocators.hpp:42</div></div>
 <div class="ttc" id="astructIntr_1_1Cache_html"><div class="ttname"><a href="structIntr_1_1Cache.html">Intr::Cache</a></div><div class="ttdef"><b>Definition:</b> Instruction.hpp:311</div></div>
 <div class="ttc" id="astructLinAlg_1_1DenseDims_html"><div class="ttname"><a href="structLinAlg_1_1DenseDims.html">LinAlg::DenseDims</a></div><div class="ttdoc">Dimensions with a capacity.</div><div class="ttdef"><b>Definition:</b> MatrixDimensions.hpp:76</div></div>

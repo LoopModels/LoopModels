@@ -790,9 +790,9 @@ $(function() {
 <div class="line"><a name="l00757"></a><span class="lineno">  757</span>&#160;  <span class="keyword">auto</span> printSubDotFile(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, llvm::raw_ostream &amp;out,</div>
 <div class="line"><a name="l00758"></a><span class="lineno">  758</span>&#160;                       map&lt;LoopTreeSchedule *, std::string&gt; &amp;names,</div>
 <div class="line"><a name="l00759"></a><span class="lineno">  759</span>&#160;                       llvm::SmallVectorImpl&lt;std::string&gt; &amp;addrNames,</div>
-<div class="line"><a name="l00760"></a><span class="lineno">  760</span>&#160;                       <span class="keywordtype">unsigned</span> addrIndOffset, <a class="code" href="structAffineLoopNest.html">AffineLoopNest&lt;false&gt;</a> *lret)</div>
-<div class="line"><a name="l00761"></a><span class="lineno">  761</span>&#160;    -&gt; <a class="code" href="structAffineLoopNest.html">AffineLoopNest&lt;false&gt;</a> * {</div>
-<div class="line"><a name="l00762"></a><span class="lineno">  762</span>&#160;    <a class="code" href="structAffineLoopNest.html">AffineLoopNest&lt;false&gt;</a> *loop{<span class="keyword">nullptr</span>};</div>
+<div class="line"><a name="l00760"></a><span class="lineno">  760</span>&#160;                       <span class="keywordtype">unsigned</span> addrIndOffset, <a class="code" href="classAffineLoopNest.html">AffineLoopNest&lt;false&gt;</a> *lret)</div>
+<div class="line"><a name="l00761"></a><span class="lineno">  761</span>&#160;    -&gt; <a class="code" href="classAffineLoopNest.html">AffineLoopNest&lt;false&gt;</a> * {</div>
+<div class="line"><a name="l00762"></a><span class="lineno">  762</span>&#160;    <a class="code" href="classAffineLoopNest.html">AffineLoopNest&lt;false&gt;</a> *loop{<span class="keyword">nullptr</span>};</div>
 <div class="line"><a name="l00763"></a><span class="lineno">  763</span>&#160;    <span class="keywordtype">size_t</span> j = 0;</div>
 <div class="line"><a name="l00764"></a><span class="lineno">  764</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">auto</span> *addr : header.getAddr()) loop = addr-&gt;getLoop();</div>
 <div class="line"><a name="l00765"></a><span class="lineno">  765</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;subTree : subTrees) {</div>
@@ -885,11 +885,11 @@ $(function() {
 <div class="line"><a name="l00852"></a><span class="lineno">  852</span>&#160;[[nodiscard]] constexpr <span class="keyword">auto</span> Addr::getCurrentDepth() const -&gt; <span class="keywordtype">unsigned</span> {</div>
 <div class="line"><a name="l00853"></a><span class="lineno">  853</span>&#160;  <span class="keywordflow">return</span> node-&gt;getDepth();</div>
 <div class="line"><a name="l00854"></a><span class="lineno">  854</span>&#160;}</div>
-<div class="ttc" id="aclassAddr_html"><div class="ttname"><a href="classAddr.html">Addr</a></div><div class="ttdef"><b>Definition:</b> Address.hpp:61</div></div>
+<div class="ttc" id="aclassAddr_html"><div class="ttname"><a href="classAddr.html">Addr</a></div><div class="ttdef"><b>Definition:</b> Address.hpp:62</div></div>
+<div class="ttc" id="aclassAffineLoopNest_html"><div class="ttname"><a href="classAffineLoopNest.html">AffineLoopNest</a></div><div class="ttdef"><b>Definition:</b> Loops.hpp:325</div></div>
 <div class="ttc" id="aclassCostModeling_1_1LoopTreeSchedule_html"><div class="ttname"><a href="classCostModeling_1_1LoopTreeSchedule.html">CostModeling::LoopTreeSchedule</a></div><div class="ttdef"><b>Definition:</b> CostModeling.hpp:165</div></div>
 <div class="ttc" id="aclassLinearProgramLoopBlock_html"><div class="ttname"><a href="classLinearProgramLoopBlock.html">LinearProgramLoopBlock</a></div><div class="ttdef"><b>Definition:</b> LoopBlock.hpp:322</div></div>
 <div class="ttc" id="aclassNotNull_html"><div class="ttname"><a href="classNotNull.html">NotNull</a></div><div class="ttdef"><b>Definition:</b> Valid.hpp:7</div></div>
-<div class="ttc" id="astructAffineLoopNest_html"><div class="ttname"><a href="structAffineLoopNest.html">AffineLoopNest</a></div><div class="ttdef"><b>Definition:</b> Loops.hpp:327</div></div>
 <div class="ttc" id="astructAffineSchedule_html"><div class="ttname"><a href="structAffineSchedule.html">AffineSchedule</a></div><div class="ttdef"><b>Definition:</b> Schedule.hpp:34</div></div>
 <div class="ttc" id="astructBitSet_html"><div class="ttname"><a href="structBitSet.html">BitSet</a></div><div class="ttdef"><b>Definition:</b> BitSets.hpp:82</div></div>
 <div class="ttc" id="astructBumpAlloc_html"><div class="ttname"><a href="structBumpAlloc.html">BumpAlloc</a></div><div class="ttdef"><b>Definition:</b> Allocators.hpp:42</div></div>

@@ -13,8 +13,7 @@ var searchData=
   ['endsentinel_78',['EndSentinel',['../structAddr_1_1EndSentinel.html',1,'Addr::EndSentinel'],['../structEndSentinel.html',1,'EndSentinel']]],
   ['equals_79',['Equals',['../structEquals.html',1,'']]],
   ['exit_80',['Exit',['../classExit.html',1,'']]],
-  ['explicitlowerbounds_81',['explicitLowerBounds',['../structAffineLoopNest.html#ae7e3801c19a2587916894acf27894629',1,'AffineLoopNest']]],
-  ['extractalignment_82',['ExtractAlignment',['../structIntr_1_1ExtractAlignment.html',1,'Intr']]],
-  ['extractbasicblock_83',['ExtractBasicBlock',['../structIntr_1_1ExtractBasicBlock.html',1,'Intr']]],
-  ['extractvalue_84',['ExtractValue',['../structIntr_1_1ExtractValue.html',1,'Intr']]]
+  ['extractalignment_81',['ExtractAlignment',['../structIntr_1_1ExtractAlignment.html',1,'Intr']]],
+  ['extractbasicblock_82',['ExtractBasicBlock',['../structIntr_1_1ExtractBasicBlock.html',1,'Intr']]],
+  ['extractvalue_83',['ExtractValue',['../structIntr_1_1ExtractValue.html',1,'Intr']]]
 ];
