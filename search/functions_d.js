@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['typealignment_485',['typeAlignment',['../classArrayIndex.html#ac22530e45b871b8c7e86b9ade78b25bd',1,'ArrayIndex']]]
+  ['unsatisfiablezerorem_478',['unSatisfiableZeroRem',['../classSimplex.html#a7c38aa8f3847a45543a0be7d3053f284',1,'Simplex']]]
 ];

@@ -192,7 +192,7 @@ static auto&#160;</td><td class="memItemRight" valign="bottom"><b>mayReadOrWrite
 </div><div class="memdoc">
 <p>the process of building the LoopForest has the following steps:</p><ol type="1">
 <li>build initial forest of trees</li>
-<li>instantiate <a class="el" href="classAffineLoopNest.html">AffineLoopNest&lt;true&gt;</a>s; any non-affine loops are pruned, and their inner loops added as new, separate forests.</li>
+<li>instantiate AffineLoopNests; any non-affine loops are pruned, and their inner loops added as new, separate forests.</li>
 <li>Existing forests are searched for indirect control flow between successive loops. In all such cases, the loops at that level are split into separate forests. </li>
 </ol>
 

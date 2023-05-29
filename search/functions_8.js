@@ -1,6 +1,5 @@
 var searchData=
 [
-  ['makezerobasic_470',['makeZeroBasic',['../classSimplex.html#a2c05da7f58f22e2f7ebee6bb7763f6ee',1,'Simplex']]],
-  ['mergemap_471',['mergeMap',['../classDepPoly.html#a9a6693af1ab0702d06dc3cebaecd9be9',1,'DepPoly']]],
-  ['missingnode_472',['missingNode',['../structLinearProgramLoopBlock_1_1Graph.html#ad3bba31dae5c18d4852f30b91d28cf10',1,'LinearProgramLoopBlock::Graph']]]
+  ['operator_7c_3d_465',['operator|=',['../structPredicate_1_1Set.html#a73579f1c8eaf6a998b6543bdf69f76fd',1,'Predicate::Set::operator|=(Intersection other) -&gt; Set &amp;'],['../structPredicate_1_1Set.html#a89d258109261725f37e377ece23858ed',1,'Predicate::Set::operator|=(const Set &amp;other) -&gt; Set &amp;']]],
+  ['optimize_466',['optimize',['../classLinearProgramLoopBlock.html#a184cd91f49d81ad3b0fd24a016f12509',1,'LinearProgramLoopBlock']]]
 ];

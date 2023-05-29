@@ -1,5 +1,8 @@
 var searchData=
 [
-  ['pushlooptree_475',['pushLoopTree',['../classTurboLoopPass.html#af347cd84f4fe2f72b4a93d322f3a2d8c',1,'TurboLoopPass']]],
-  ['pushtoedgevector_476',['pushToEdgeVector',['../classLinearProgramLoopBlock.html#a2fe756cea77b64c3cdf5e5ad0de4f0d1',1,'LinearProgramLoopBlock']]]
+  ['reallocate_469',['reallocate',['../structBumpAlloc.html#ae4e8781c9a410275faa2849e0af9c7a2',1,'BumpAlloc']]],
+  ['removeemptymask_470',['removeEmptyMask',['../structPredicate_1_1Intersection.html#aa96f5013d74c11be8d75b23afd2431be',1,'Predicate::Intersection']]],
+  ['replaceallotheruseswith_471',['replaceAllOtherUsesWith',['../classIntr.html#ae96e114fe5530105fe6d0de58ad6821a',1,'Intr']]],
+  ['replacealluseswith_472',['replaceAllUsesWith',['../classIntr.html#a5f2d036400975721afba41180d678f97',1,'Intr']]],
+  ['rotate_473',['rotate',['../classAffineLoopNest.html#a3a1b25f95cd5e8ddd2b91191638b6a54',1,'AffineLoopNest']]]
 ];

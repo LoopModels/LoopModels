@@ -62,7 +62,6 @@ $(function() {
 </div><!-- top -->
 <div class="header">
   <div class="summary">
-<a href="#nested-classes">Classes</a> &#124;
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-static-methods">Static Public Member Functions</a> &#124;
 <a href="classAddr-members.html">List of all members</a>  </div>
@@ -82,18 +81,29 @@ Inheritance diagram for Addr:</div>
   </map>
 </div></div>
 <table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
-Classes</h2></td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classAddr_1_1ActiveEdgeIterator.html">ActiveEdgeIterator</a></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAddr_1_1EndSentinel.html">EndSentinel</a></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a56b7ddee33048774c9d7444b2394eb51"><td class="memItemLeft" align="right" valign="top"><a id="a56b7ddee33048774c9d7444b2394eb51"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getArrayPointer</b> () const -&gt; const llvm::SCEV *</td></tr>
-<tr class="separator:a56b7ddee33048774c9d7444b2394eb51"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a210a0b262c7ccfb1fb2dc21681a4e832"><td class="memItemLeft" align="right" valign="top"><a id="a210a0b262c7ccfb1fb2dc21681a4e832"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNode</b> () -&gt; <a class="el" href="classScheduledNode.html">ScheduledNode</a> *</td></tr>
+<tr class="separator:a210a0b262c7ccfb1fb2dc21681a4e832"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a51860a49958ca62fc6f70fd754a8c3b7"><td class="memItemLeft" align="right" valign="top"><a id="a51860a49958ca62fc6f70fd754a8c3b7"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNode</b> () const -&gt; const <a class="el" href="classScheduledNode.html">ScheduledNode</a> *</td></tr>
+<tr class="separator:a51860a49958ca62fc6f70fd754a8c3b7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae5cad667ca719efd0fa47f4b162b9d80"><td class="memItemLeft" align="right" valign="top"><a id="ae5cad667ca719efd0fa47f4b162b9d80"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>forEachInput</b> (const auto &amp;f)</td></tr>
+<tr class="separator:ae5cad667ca719efd0fa47f4b162b9d80"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9fae3e524b5c90f618eb1c850ef87584"><td class="memItemLeft" align="right" valign="top"><a id="a9fae3e524b5c90f618eb1c850ef87584"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>reload</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc) -&gt; <a class="el" href="classNotNull.html">NotNull</a>&lt; <a class="el" href="classAddr.html">Addr</a> &gt;</td></tr>
+<tr class="separator:a9fae3e524b5c90f618eb1c850ef87584"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a414ab66475434976a76419671b1ef895"><td class="memItemLeft" align="right" valign="top"><a id="a414ab66475434976a76419671b1ef895"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getSizes</b> () const -&gt; PtrVector&lt; const llvm::SCEV * &gt;</td></tr>
+<tr class="separator:a414ab66475434976a76419671b1ef895"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3e8fccbcaf3b9cef02e6033e18bce678"><td class="memItemLeft" align="right" valign="top"><a id="a3e8fccbcaf3b9cef02e6033e18bce678"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getSymbolicOffsets</b> () const -&gt; PtrVector&lt; const llvm::SCEV * &gt;</td></tr>
+<tr class="separator:a3e8fccbcaf3b9cef02e6033e18bce678"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a50e7fbd8e1af1feabf983fac1ffb2d2f"><td class="memItemLeft" align="right" valign="top"><a id="a50e7fbd8e1af1feabf983fac1ffb2d2f"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getArrayPointer</b> () const -&gt; <a class="el" href="classNotNull.html">NotNull</a>&lt; const llvm::SCEVUnknown &gt;</td></tr>
+<tr class="separator:a50e7fbd8e1af1feabf983fac1ffb2d2f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a48dea72f766c2a3f91ca5a108ff33370"><td class="memItemLeft" align="right" valign="top"><a id="a48dea72f766c2a3f91ca5a108ff33370"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>dependsOnIndVars</b> (size_t d) -&gt; bool</td></tr>
 <tr class="separator:a48dea72f766c2a3f91ca5a108ff33370"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -106,15 +116,6 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getBlockIdx
 <tr class="memitem:afc28b0ae5b2c3fc7fd08ed5ca0a1d42f"><td class="memItemLeft" align="right" valign="top"><a id="afc28b0ae5b2c3fc7fd08ed5ca0a1d42f"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>setBlockIdx</b> (uint8_t idx)</td></tr>
 <tr class="separator:afc28b0ae5b2c3fc7fd08ed5ca0a1d42f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a54ec51cfb59c938a4852f2d475f3d6b5"><td class="memItemLeft" align="right" valign="top"><a id="a54ec51cfb59c938a4852f2d475f3d6b5"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getLoopTreeSchedule</b> () const -&gt; <a class="el" href="classCostModeling_1_1LoopTreeSchedule.html">CostModeling::LoopTreeSchedule</a> *</td></tr>
-<tr class="separator:a54ec51cfb59c938a4852f2d475f3d6b5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abae2aaeda389c7ed286c8543af3573c4"><td class="memItemLeft" align="right" valign="top"><a id="abae2aaeda389c7ed286c8543af3573c4"></a>
-constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>setLoopTreeSchedule</b> (<a class="el" href="classCostModeling_1_1LoopTreeSchedule.html">CostModeling::LoopTreeSchedule</a> *L)</td></tr>
-<tr class="separator:abae2aaeda389c7ed286c8543af3573c4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0042f28b3578081c1a04e4ef79c33ebd"><td class="memItemLeft" align="right" valign="top"><a id="a0042f28b3578081c1a04e4ef79c33ebd"></a>
-constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>setLoopTreeSchedule</b> (<a class="el" href="classCostModeling_1_1LoopTreeSchedule.html">CostModeling::LoopTreeSchedule</a> *L, unsigned blockIdx)</td></tr>
-<tr class="separator:a0042f28b3578081c1a04e4ef79c33ebd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8886ef46da115880beb9e3f787503572"><td class="memItemLeft" align="right" valign="top"><a id="a8886ef46da115880beb9e3f787503572"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> ()</td></tr>
 <tr class="separator:a8886ef46da115880beb9e3f787503572"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -160,21 +161,6 @@ constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>removeFromS
 <tr class="memitem:a51ec6c5f10bcda7fe83f82f93a61a6a0"><td class="memItemLeft" align="right" valign="top"><a id="a51ec6c5f10bcda7fe83f82f93a61a6a0"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>resetBitfield</b> ()</td></tr>
 <tr class="separator:a51ec6c5f10bcda7fe83f82f93a61a6a0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a892357bbcb1a64493d8b829a2b82e1e6"><td class="memItemLeft" align="right" valign="top"><a id="a892357bbcb1a64493d8b829a2b82e1e6"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getParents</b> () const -&gt; <a class="el" href="structBitSet.html">BitSet</a></td></tr>
-<tr class="separator:a892357bbcb1a64493d8b829a2b82e1e6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a214a6dda1d02c6d2aa260c2c0333df6b"><td class="memItemLeft" align="right" valign="top"><a id="a214a6dda1d02c6d2aa260c2c0333df6b"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getAncestors</b> () -&gt; <a class="el" href="structBitSet.html">BitSet</a> &amp;</td></tr>
-<tr class="separator:a214a6dda1d02c6d2aa260c2c0333df6b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7c590c5802d539a062ffaf8dda09f6a9"><td class="memItemLeft" align="right" valign="top"><a id="a7c590c5802d539a062ffaf8dda09f6a9"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getAncestors</b> () const -&gt; <a class="el" href="structBitSet.html">BitSet</a></td></tr>
-<tr class="separator:a7c590c5802d539a062ffaf8dda09f6a9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a563f0fec40a8a613e785b39dd677250f"><td class="memItemLeft" align="right" valign="top"><a id="a563f0fec40a8a613e785b39dd677250f"></a>
-constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>addParent</b> (size_t i)</td></tr>
-<tr class="separator:a563f0fec40a8a613e785b39dd677250f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a27906879f393128acdaead4bb0d2f0a9"><td class="memItemLeft" align="right" valign="top"><a id="a27906879f393128acdaead4bb0d2f0a9"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>calcAncestors</b> (uint8_t filtd) -&gt; <a class="el" href="structBitSet.html">BitSet</a></td></tr>
-<tr class="separator:a27906879f393128acdaead4bb0d2f0a9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7eaf2970edb5f54f18ba04ed487ef4ed"><td class="memItemLeft" align="right" valign="top"><a id="a7eaf2970edb5f54f18ba04ed487ef4ed"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>onStack</b> () const -&gt; bool</td></tr>
 <tr class="separator:a7eaf2970edb5f54f18ba04ed487ef4ed"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -201,63 +187,12 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>lowLink</b>
 <tr class="memitem:a6416017ba403c1b4eb3bad2a87dedb86"><td class="memItemLeft" align="right" valign="top"><a id="a6416017ba403c1b4eb3bad2a87dedb86"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>lowLink</b> () const -&gt; unsigned</td></tr>
 <tr class="separator:a6416017ba403c1b4eb3bad2a87dedb86"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af79e2351b8e3547ffe91af4ac1c3d2a1"><td class="memItemLeft" align="right" valign="top"><a id="af79e2351b8e3547ffe91af4ac1c3d2a1"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>numInNeighbors</b> () const -&gt; unsigned</td></tr>
-<tr class="separator:af79e2351b8e3547ffe91af4ac1c3d2a1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4a571eca69c4cc6aae9108f614d196dc"><td class="memItemLeft" align="right" valign="top"><a id="a4a571eca69c4cc6aae9108f614d196dc"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>numOutNeighbors</b> () const -&gt; unsigned</td></tr>
-<tr class="separator:a4a571eca69c4cc6aae9108f614d196dc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a17ed6b914d28acbd1c49213d99fb96de"><td class="memItemLeft" align="right" valign="top"><a id="a17ed6b914d28acbd1c49213d99fb96de"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>numNeighbors</b> () const -&gt; unsigned</td></tr>
-<tr class="separator:a17ed6b914d28acbd1c49213d99fb96de"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4d9ba58037df3c8a971e915669c77403"><td class="memItemLeft" align="right" valign="top"><a id="a4d9ba58037df3c8a971e915669c77403"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>inNeighbors</b> (uint8_t filtd) -&gt; <a class="el" href="classAddr_1_1ActiveEdgeIterator.html">ActiveEdgeIterator</a></td></tr>
-<tr class="separator:a4d9ba58037df3c8a971e915669c77403"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad2d805fe5a0675450604c408eb773734"><td class="memItemLeft" align="right" valign="top"><a id="ad2d805fe5a0675450604c408eb773734"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>outNeighbors</b> (uint8_t filtd) -&gt; <a class="el" href="classAddr_1_1ActiveEdgeIterator.html">ActiveEdgeIterator</a></td></tr>
-<tr class="separator:ad2d805fe5a0675450604c408eb773734"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0bfb896ef43603f62165441e83888966"><td class="memItemLeft" align="right" valign="top"><a id="a0bfb896ef43603f62165441e83888966"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>directEdges</b> () -&gt; MutPtrVector&lt; <a class="el" href="classAddr.html">Addr</a> * &gt;</td></tr>
-<tr class="separator:a0bfb896ef43603f62165441e83888966"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa135679ecce38140f0d7c811bc79a90c"><td class="memItemLeft" align="right" valign="top"><a id="aa135679ecce38140f0d7c811bc79a90c"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>directEdges</b> () const -&gt; PtrVector&lt; <a class="el" href="classAddr.html">Addr</a> * &gt;</td></tr>
-<tr class="separator:aa135679ecce38140f0d7c811bc79a90c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad7a0a7df8545e1ac248aa0ae6abbc2a1"><td class="memItemLeft" align="right" valign="top"><a id="ad7a0a7df8545e1ac248aa0ae6abbc2a1"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>inDepSat</b> () const -&gt; PtrVector&lt; uint8_t &gt;</td></tr>
-<tr class="separator:ad7a0a7df8545e1ac248aa0ae6abbc2a1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a413c33cdb390d366a7d37e967b36eabf"><td class="memItemLeft" align="right" valign="top"><a id="a413c33cdb390d366a7d37e967b36eabf"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>outDepSat</b> () const -&gt; PtrVector&lt; uint8_t &gt;</td></tr>
-<tr class="separator:a413c33cdb390d366a7d37e967b36eabf"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af2515bda0c1fb924536e4e0ac1334535"><td class="memItemLeft" align="right" valign="top"><a id="af2515bda0c1fb924536e4e0ac1334535"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>inNeighbors</b> () const -&gt; PtrVector&lt; <a class="el" href="classAddr.html">Addr</a> * &gt;</td></tr>
-<tr class="separator:af2515bda0c1fb924536e4e0ac1334535"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac0d10c027937594f440d2085d3f867ef"><td class="memItemLeft" align="right" valign="top"><a id="ac0d10c027937594f440d2085d3f867ef"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>outNeighbors</b> () const -&gt; PtrVector&lt; <a class="el" href="classAddr.html">Addr</a> * &gt;</td></tr>
-<tr class="separator:ac0d10c027937594f440d2085d3f867ef"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a24997e8a441a4bd2b274234767c22c90"><td class="memItemLeft" align="right" valign="top"><a id="a24997e8a441a4bd2b274234767c22c90"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>inNeighbors</b> () -&gt; MutPtrVector&lt; <a class="el" href="classAddr.html">Addr</a> * &gt;</td></tr>
-<tr class="separator:a24997e8a441a4bd2b274234767c22c90"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9475e46cf285749cbf3c5a0018e53738"><td class="memItemLeft" align="right" valign="top"><a id="a9475e46cf285749cbf3c5a0018e53738"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>outNeighbors</b> () -&gt; MutPtrVector&lt; <a class="el" href="classAddr.html">Addr</a> * &gt;</td></tr>
-<tr class="separator:a9475e46cf285749cbf3c5a0018e53738"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5ba7e8776cedc20c7b7fb566e584fe97"><td class="memItemLeft" align="right" valign="top"><a id="a5ba7e8776cedc20c7b7fb566e584fe97"></a>
-constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>indirectInNeighbor</b> (<a class="el" href="classAddr.html">Addr</a> *other, size_t i, uint8_t d)</td></tr>
-<tr class="separator:a5ba7e8776cedc20c7b7fb566e584fe97"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a71e63483f3623706b7f8f1f004c13bbd"><td class="memItemLeft" align="right" valign="top"><a id="a71e63483f3623706b7f8f1f004c13bbd"></a>
-constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>indirectOutNeighbor</b> (<a class="el" href="classAddr.html">Addr</a> *other, size_t i, uint8_t d)</td></tr>
-<tr class="separator:a71e63483f3623706b7f8f1f004c13bbd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a07c0d7d36e0546fa965a26104c8a3a8c"><td class="memItemLeft" align="right" valign="top"><a id="a07c0d7d36e0546fa965a26104c8a3a8c"></a>
-constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>addDirectConnection</b> (<a class="el" href="classAddr.html">Addr</a> *store, size_t loadEdge)</td></tr>
-<tr class="separator:a07c0d7d36e0546fa965a26104c8a3a8c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af84b6bfa2754cba1983f2286d40ab7d0"><td class="memItemLeft" align="right" valign="top"><a id="af84b6bfa2754cba1983f2286d40ab7d0"></a>
-constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>addOut</b> (<a class="el" href="classAddr.html">Addr</a> *child, uint8_t d)</td></tr>
-<tr class="separator:af84b6bfa2754cba1983f2286d40ab7d0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5e77b2dc5afa3cef75c7513cc427aaab"><td class="memItemLeft" align="right" valign="top"><a id="a5e77b2dc5afa3cef75c7513cc427aaab"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumLoops</b> () const -&gt; size_t</td></tr>
-<tr class="separator:a5e77b2dc5afa3cef75c7513cc427aaab"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aadd0798478b65e7a77c5021d4f864454"><td class="memItemLeft" align="right" valign="top"><a id="aadd0798478b65e7a77c5021d4f864454"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getArrayDim</b> () const -&gt; size_t</td></tr>
-<tr class="separator:aadd0798478b65e7a77c5021d4f864454"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aab50bcad1dca1c6fa8964f4d203bcc69"><td class="memItemLeft" align="right" valign="top"><a id="aab50bcad1dca1c6fa8964f4d203bcc69"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumLoops</b> () const -&gt; unsigned</td></tr>
+<tr class="separator:aab50bcad1dca1c6fa8964f4d203bcc69"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4bd76fc56ec69ce1f44e0e5023c92515"><td class="memItemLeft" align="right" valign="top"><a id="a4bd76fc56ec69ce1f44e0e5023c92515"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getArrayDim</b> () const -&gt; unsigned</td></tr>
+<tr class="separator:a4bd76fc56ec69ce1f44e0e5023c92515"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a19fce02a9c9edcb9f8299645c67ac284"><td class="memItemLeft" align="right" valign="top"><a id="a19fce02a9c9edcb9f8299645c67ac284"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>getInstruction</b> () -&gt; llvm::Instruction *</td></tr>
 <tr class="separator:a19fce02a9c9edcb9f8299645c67ac284"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -287,9 +222,21 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" 
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classAddr.html#a84303e6d0a644c2144481210c439f762">indexMatrix</a> () const -&gt; DensePtrMatrix&lt; int64_t &gt;</td></tr>
 <tr class="memdesc:a84303e6d0a644c2144481210c439f762"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classAddr.html#abd55a8d6e6aaa5f6704100ed71841cdf" title="indexMatrix() -&gt; arrayDim() x getNumLoops()">indexMatrix()</a> -&gt; arrayDim() x getNumLoops() <br /></td></tr>
 <tr class="separator:a84303e6d0a644c2144481210c439f762"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afbb06ae424cfb2e3b369869e4f80fc45"><td class="memItemLeft" align="right" valign="top"><a id="afbb06ae424cfb2e3b369869e4f80fc45"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getFusionOmega</b> () -&gt; MutPtrVector&lt; int64_t &gt;</td></tr>
+<tr class="separator:afbb06ae424cfb2e3b369869e4f80fc45"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7fdb0304ef3626ee74eaf0286bdcdf93"><td class="memItemLeft" align="right" valign="top"><a id="a7fdb0304ef3626ee74eaf0286bdcdf93"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getFusionOmega</b> () const -&gt; PtrVector&lt; int64_t &gt;</td></tr>
+<tr class="separator:a7fdb0304ef3626ee74eaf0286bdcdf93"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a69f813cc087e1ebcf9b899c0b935b20a"><td class="memItemLeft" align="right" valign="top"><a id="a69f813cc087e1ebcf9b899c0b935b20a"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>offsetMatrix</b> () const -&gt; DensePtrMatrix&lt; int64_t &gt;</td></tr>
+<tr class="separator:a69f813cc087e1ebcf9b899c0b935b20a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6b5db9b57a014aa3657ab1c0f30c1b22"><td class="memItemLeft" align="right" valign="top"><a id="a6b5db9b57a014aa3657ab1c0f30c1b22"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getLoop</b> () -&gt; <a class="el" href="classNotNull.html">NotNull</a>&lt; <a class="el" href="classAffineLoopNest.html">AffineLoopNest</a> &gt;</td></tr>
 <tr class="separator:a6b5db9b57a014aa3657ab1c0f30c1b22"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad4772b4c5d2a8a5a7f18a3bd3a1995f1"><td class="memItemLeft" align="right" valign="top"><a id="ad4772b4c5d2a8a5a7f18a3bd3a1995f1"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>sizesMatch</b> (<a class="el" href="classNotNull.html">NotNull</a>&lt; const <a class="el" href="classAddr.html">Addr</a> &gt; x) const -&gt; bool</td></tr>
+<tr class="separator:ad4772b4c5d2a8a5a7f18a3bd3a1995f1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8ba8c2d378d5c41ce36c230e3e0a24cd"><td class="memItemLeft" align="right" valign="top"><a id="a8ba8c2d378d5c41ce36c230e3e0a24cd"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getCurrentDepth</b> () const -&gt; unsigned</td></tr>
 <tr class="separator:a8ba8c2d378d5c41ce36c230e3e0a24cd"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -318,15 +265,22 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNext</b>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
+<tr class="memitem:a3270a3cad12c850d232e5af770c0e1d7"><td class="memItemLeft" align="right" valign="top"><a id="a3270a3cad12c850d232e5af770c0e1d7"></a>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>construct</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, const llvm::SCEVUnknown *arrayPointer, <a class="el" href="classNotNull.html">NotNull</a>&lt; <a class="el" href="classAffineLoopNest.html">AffineLoopNest</a> &gt; loopRef, llvm::Instruction *user, PtrVector&lt; unsigned &gt; o) -&gt; <a class="el" href="classNotNull.html">NotNull</a>&lt; <a class="el" href="classAddr.html">Addr</a> &gt;</td></tr>
+<tr class="separator:a3270a3cad12c850d232e5af770c0e1d7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa45f7087b52f3a60fc74625ca2a7f01c"><td class="memItemLeft" align="right" valign="top"><a id="aa45f7087b52f3a60fc74625ca2a7f01c"></a>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classAddr.html#aa45f7087b52f3a60fc74625ca2a7f01c">construct</a> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, const llvm::SCEVUnknown *arrayPtr, <a class="el" href="classNotNull.html">NotNull</a>&lt; <a class="el" href="classAffineLoopNest.html">AffineLoopNest</a> &gt; loopRef, llvm::Instruction *user, PtrMatrix&lt; int64_t &gt; indMat, std::array&lt; llvm::SmallVector&lt; const llvm::SCEV *, 3 &gt;, 2 &gt; szOff, PtrVector&lt; int64_t &gt; coffsets, int64_t *offsets, PtrVector&lt; unsigned &gt; o) -&gt; <a class="el" href="classNotNull.html">NotNull</a>&lt; <a class="el" href="classAddr.html">Addr</a> &gt;</td></tr>
+<tr class="memdesc:aa45f7087b52f3a60fc74625ca2a7f01c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor for regular indexing. <br /></td></tr>
+<tr class="separator:aa45f7087b52f3a60fc74625ca2a7f01c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aea616b0366d26ed3313aad46c4d1c16a"><td class="memItemLeft" align="right" valign="top"><a id="aea616b0366d26ed3313aad46c4d1c16a"></a>
 static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>classof</b> (const <a class="el" href="classNode.html">Node</a> *v) -&gt; bool</td></tr>
 <tr class="separator:aea616b0366d26ed3313aad46c4d1c16a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab8bd3dbec68dc9582d0c666e4d7c2da3"><td class="memItemLeft" align="right" valign="top"><a id="ab8bd3dbec68dc9582d0c666e4d7c2da3"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>allocate</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, <a class="el" href="classNotNull.html">NotNull</a>&lt; <a class="el" href="structMemoryAccess.html">MemoryAccess</a> &gt; ma, unsigned inputEdges, unsigned directEdges, unsigned outputEdges) -&gt; <a class="el" href="classNotNull.html">NotNull</a>&lt; <a class="el" href="classAddr.html">Addr</a> &gt;</td></tr>
-<tr class="separator:ab8bd3dbec68dc9582d0c666e4d7c2da3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a780f79b02f1420e588f44fb61c6aebc9"><td class="memItemLeft" align="right" valign="top"><a id="a780f79b02f1420e588f44fb61c6aebc9"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>construct</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, <a class="el" href="classNotNull.html">NotNull</a>&lt; <a class="el" href="classAffineLoopNest.html">AffineLoopNest</a> &gt; explicitLoop, <a class="el" href="classNotNull.html">NotNull</a>&lt; <a class="el" href="structMemoryAccess.html">MemoryAccess</a> &gt; ma, bool isStr, SquarePtrMatrix&lt; int64_t &gt; Pinv, int64_t denom, PtrVector&lt; int64_t &gt; omega, <a class="el" href="classCostModeling_1_1LoopTreeSchedule.html">CostModeling::LoopTreeSchedule</a> *L, unsigned inputEdges, unsigned directEdges, unsigned outputEdges, int64_t *offsets) -&gt; <a class="el" href="classNotNull.html">NotNull</a>&lt; <a class="el" href="classAddr.html">Addr</a> &gt;</td></tr>
-<tr class="separator:a780f79b02f1420e588f44fb61c6aebc9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abe0d28628c4fcc73e6f69c0558478a0c"><td class="memItemLeft" align="right" valign="top"><a id="abe0d28628c4fcc73e6f69c0558478a0c"></a>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>allocate</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, <a class="el" href="classNotNull.html">NotNull</a>&lt; <a class="el" href="classAddr.html">Addr</a> &gt; ma, unsigned inputEdges, unsigned directEdges, unsigned outputEdges) -&gt; <a class="el" href="classNotNull.html">NotNull</a>&lt; <a class="el" href="classAddr.html">Addr</a> &gt;</td></tr>
+<tr class="separator:abe0d28628c4fcc73e6f69c0558478a0c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adc4a9b0c775c0f87ed5a56445624fbb9"><td class="memItemLeft" align="right" valign="top"><a id="adc4a9b0c775c0f87ed5a56445624fbb9"></a>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>construct</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, <a class="el" href="classNotNull.html">NotNull</a>&lt; <a class="el" href="classAffineLoopNest.html">AffineLoopNest</a> &gt; explicitLoop, <a class="el" href="classNotNull.html">NotNull</a>&lt; <a class="el" href="classAddr.html">Addr</a> &gt; ma, bool isStr, SquarePtrMatrix&lt; int64_t &gt; Pinv, int64_t denom, PtrVector&lt; int64_t &gt; omega, unsigned inputEdges, unsigned directEdges, unsigned outputEdges, int64_t *offsets) -&gt; <a class="el" href="classNotNull.html">NotNull</a>&lt; <a class="el" href="classAddr.html">Addr</a> &gt;</td></tr>
+<tr class="separator:adc4a9b0c775c0f87ed5a56445624fbb9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="inherited"></a>
 Additional Inherited Members</h2></td></tr>
@@ -397,6 +351,7 @@ unsigned&#160;</td><td class="memItemRight" valign="bottom"><b>depth</b> {0}</td
 <hr/>The documentation for this class was generated from the following files:<ul>
 <li>include/IR/<a class="el" href="Address_8hpp_source.html">Address.hpp</a></li>
 <li>include/<a class="el" href="CostModeling_8hpp_source.html">CostModeling.hpp</a></li>
+<li>include/<a class="el" href="Dependence_8hpp_source.html">Dependence.hpp</a></li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->

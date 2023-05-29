@@ -535,10 +535,10 @@ $(function() {
 <div class="line"><a name="l00480"></a><span class="lineno">  480</span>&#160;    <span class="keywordflow">return</span> ((<span class="keyword">const</span> <a class="code" href="classAffineLoopNest.html">AffineLoopNest</a> *)<span class="keyword">this</span>)-&gt;rotate(alloc, R, offsets);</div>
 <div class="line"><a name="l00481"></a><span class="lineno">  481</span>&#160;  }</div>
 <div class="line"><a name="l00482"></a><span class="lineno">  482</span>&#160;  <span class="comment">// static auto construct(llvm::Loop *L, llvm::ScalarEvolution &amp;SE)</span></div>
-<div class="line"><a name="l00483"></a><span class="lineno">  483</span>&#160;  <span class="comment">//   -&gt; AffineLoopNest&lt;NonNegative&gt;* {</span></div>
+<div class="line"><a name="l00483"></a><span class="lineno">  483</span>&#160;  <span class="comment">//   -&gt; AffineLoopNest* {</span></div>
 <div class="line"><a name="l00484"></a><span class="lineno">  484</span>&#160;  <span class="comment">//   auto BT = getBackedgeTakenCount(SE, L);</span></div>
 <div class="line"><a name="l00485"></a><span class="lineno">  485</span>&#160;  <span class="comment">//   if (!BT || llvm::isa&lt;llvm::SCEVCouldNotCompute&gt;(BT)) return nullptr;</span></div>
-<div class="line"><a name="l00486"></a><span class="lineno">  486</span>&#160;  <span class="comment">//   return AffineLoopNest&lt;NonNegative&gt;(L, BT, SE);</span></div>
+<div class="line"><a name="l00486"></a><span class="lineno">  486</span>&#160;  <span class="comment">//   return AffineLoopNest(L, BT, SE);</span></div>
 <div class="line"><a name="l00487"></a><span class="lineno">  487</span>&#160;  <span class="comment">// }</span></div>
 <div class="line"><a name="l00488"></a><span class="lineno">  488</span>&#160; </div>
 <div class="line"><a name="l00489"></a><span class="lineno">  489</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> removeInnerMost(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc) <span class="keyword">const</span></div>
