@@ -1,9 +1,12 @@
 #pragma once
 
+#include "ArrayIndex.hpp"
 #include "Containers/BitSets.hpp"
 #include "Containers/BumpMapSet.hpp"
 #include "Dependence.hpp"
 #include "Graphs.hpp"
+#include "IR/Address.hpp"
+#include "IR/Node.hpp"
 #include "Loops.hpp"
 #include "Math/Array.hpp"
 #include "Math/Comparisons.hpp"
@@ -55,22 +58,38 @@ constexpr void insertSortedUnique(Vector<I> &v, const I &x) {
 /// E.g., `A[i] = B[i] + C[i]` is a single node
 /// because we load from `B[i]` and `C[i]` into registers, compute, and
 /// `A[i]`;
-struct ScheduledNode {
-  using BitSet = ::MemoryAccess::BitSet;
+class ScheduledNode {
 
-private:
-  [[no_unique_address]] BitSet memory{};
-  [[no_unique_address]] BitSet inNeighbors{};
-  [[no_unique_address]] BitSet outNeighbors{};
-  [[no_unique_address]] AffineSchedule schedule{};
-  [[no_unique_address]] NotNull<AffineLoopNest<>> loopNest;
+  [[no_unique_address]] Addr *store; // linked list to loads
+  [[no_unique_address]] NotNull<AffineLoopNest<>>
+    loopNest;                        // representative loop nest
+  [[no_unique_address]] ScheduledNode *next{nullptr};
+  [[no_unique_address]] ScheduledNode *component{nullptr};
+  [[no_unique_address]] Dependence *depActive{nullptr};
+  [[no_unique_address]] Dependence *depInactive{nullptr};
   [[no_unique_address]] int64_t *offsets{nullptr};
   [[no_unique_address]] uint32_t phiOffset{0};   // used in LoopBlock
   [[no_unique_address]] uint32_t omegaOffset{0}; // used in LoopBlock
   [[no_unique_address]] uint8_t numLoops{0};
   [[no_unique_address]] uint8_t rank{0};
   [[no_unique_address]] bool visited{false};
-  // [[no_unique_address]] bool visited2{false};
+#if !defined(__clang__) && defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
+#else
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wc99-extensions"
+#endif
+  int64_t mem[]; // NOLINT(modernize-avoid-c-arrays)
+#if !defined(__clang__) && defined(__GNUC__)
+#pragma GCC diagnostic pop
+#else
+#pragma clang diagnostic pop
+#endif
+
+  constexpr auto getNumLoopsSquared() const -> unsigned {
+    return unsigned(numLoops) * unsigned(numLoops);
+  }
 
 public:
   constexpr ScheduledNode(uint8_t sId, MemoryAccess *store,
@@ -102,25 +121,51 @@ public:
   //     if (i != storeId && (memAccess[i]->isStore()))
   //       memAccess[i]->replicateAddr();
   // }
-  [[nodiscard]] constexpr auto getNumMem() const -> size_t {
-    return memory.size();
+  // [[nodiscard]] constexpr auto getNumMem() const -> size_t {
+  //   return memory.size();
+  // }
+  constexpr auto getStore() -> Addr * { return store; }
+  constexpr auto getStore() const -> const Addr * { return store; }
+  constexpr void forEachAddr(const auto &f) {
+    Addr *m = store;
+    while (true) {
+      f(m);
+      Node *v = m->getNext();
+      if (!v) break;
+      m = llvm::cast<Addr>(v);
+    }
   }
-  constexpr auto getMemory() -> BitSet & { return memory; }
-  constexpr auto getInNeighbors() -> BitSet & { return inNeighbors; }
-  constexpr auto getOutNeighbors() -> BitSet & { return outNeighbors; }
-  constexpr auto getSchedule() -> AffineSchedule { return schedule; }
-  [[nodiscard]] constexpr auto getMemory() const -> const BitSet & {
-    return memory;
+  // for each input node, i.e. for each where this is the output
+  constexpr void forEachInput(const auto &f) {
+    Dependence *d = depActive;
+    while (d) {
+      f(d->input()->getNode());
+      d = d->getNext();
+    }
   }
-  [[nodiscard]] constexpr auto getInNeighbors() const -> const BitSet & {
-    return inNeighbors;
+  constexpr void forEachInput(const auto &f) const {
+    const Dependence *d = depActive;
+    while (d) {
+      f(d->input()->getNode());
+      d = d->getNext();
+    }
   }
-  [[nodiscard]] constexpr auto getOutNeighbors() const -> const BitSet & {
-    return outNeighbors;
-  }
-  [[nodiscard]] constexpr auto getSchedule() const -> AffineSchedule {
-    return schedule;
-  }
+  // constexpr auto getMemory() -> BitSet & { return memory; }
+  // constexpr auto getInNeighbors() -> BitSet & { return inNeighbors; }
+  // constexpr auto getOutNeighbors() -> BitSet & { return outNeighbors; }
+
+  // [[nodiscard]] constexpr auto getMemory() const -> const BitSet & {
+  //   return memory;
+  // }
+  // [[nodiscard]] constexpr auto getInNeighbors() const -> const BitSet & {
+  //   return inNeighbors;
+  // }
+  // [[nodiscard]] constexpr auto getOutNeighbors() const -> const BitSet & {
+  //   return outNeighbors;
+  // }
+  // [[nodiscard]] constexpr auto getSchedule() const -> AffineSchedule {
+  //   return schedule;
+  // }
   [[nodiscard]] constexpr auto getLoopNest() const
     -> NotNull<const AffineLoopNest<>> {
     return loopNest;
@@ -128,27 +173,27 @@ public:
   [[nodiscard]] constexpr auto getOffset() const -> const int64_t * {
     return offsets;
   }
-  constexpr void addOutNeighbor(unsigned int i) { outNeighbors.insert(i); }
-  constexpr void addInNeighbor(unsigned int i) { inNeighbors.insert(i); }
-  constexpr void init(BumpAlloc<> &alloc) {
-    schedule = AffineSchedule(alloc, getNumLoops());
-    schedule.getFusionOmega() << 0;
-  }
-  constexpr void addMemory(unsigned memId, MemoryAccess *mem,
-                           unsigned nodeIdx) {
-    mem->addNodeIndex(nodeIdx);
-    memory.insert(memId);
-    if (numLoops >= mem->getNumLoops()) return;
-    numLoops = uint8_t(mem->getNumLoops());
-    loopNest = mem->getLoop();
-  }
+  // constexpr void addOutNeighbor(unsigned int i) { outNeighbors.insert(i); }
+  // constexpr void addInNeighbor(unsigned int i) { inNeighbors.insert(i); }
+  // constexpr void init(BumpAlloc<> &alloc) {
+  //   schedule = AffineSchedule(alloc, getNumLoops());
+  //   schedule.getFusionOmega() << 0;
+  // }
+  // constexpr void addMemory(unsigned memId, MemoryAccess *mem,
+  //                          unsigned nodeIdx) {
+  //   mem->addNodeIndex(nodeIdx);
+  //   memory.insert(memId);
+  //   if (numLoops >= mem->getNumLoops()) return;
+  //   numLoops = uint8_t(mem->getNumLoops());
+  //   loopNest = mem->getLoop();
+  // }
   [[nodiscard]] constexpr auto wasVisited() const -> bool { return visited; }
   constexpr void visit() { visited = true; }
   constexpr void unVisit() { visited = false; }
   // [[nodiscard]] constexpr auto wasVisited2() const -> bool { return visited2;
   // } constexpr void visit2() { visited2 = true; } constexpr void unVisit2() {
   // visited2 = false; }
-  [[nodiscard]] constexpr auto getNumLoops() const -> size_t {
+  [[nodiscard]] constexpr auto getNumLoops() const -> unsigned {
     return numLoops;
   }
   // 'phiIsScheduled()` means that `phi`'s schedule has been
@@ -172,52 +217,62 @@ public:
     -> Range<size_t, size_t> {
     return _(phiOffset, phiOffset + numLoops);
   }
+  // NOLINTNEXTLINE(readability-make-member-function-const)
   [[nodiscard]] constexpr auto getPhi() -> MutSquarePtrMatrix<int64_t> {
-    return schedule.getPhi();
+    return {mem, SquareDims{unsigned(getNumLoops())}};
   }
   [[nodiscard]] constexpr auto getPhi() const -> SquarePtrMatrix<int64_t> {
-    return schedule.getPhi();
+    return {const_cast<int64_t *>(mem), SquareDims{getNumLoops()}};
   }
-  [[nodiscard]] constexpr auto getOffsetOmega(size_t i) -> int64_t & {
-    return schedule.getOffsetOmega()[i];
-  }
-  [[nodiscard]] constexpr auto getOffsetOmega(size_t i) const -> int64_t {
-    return schedule.getOffsetOmega()[i];
-  }
-  [[nodiscard]] constexpr auto getFusionOmega(size_t i) -> int64_t & {
-    return schedule.getFusionOmega()[i];
-  }
-  [[nodiscard]] constexpr auto getFusionOmega(size_t i) const -> int64_t {
-    return schedule.getFusionOmega()[i];
-  }
-  [[nodiscard]] constexpr auto getOffsetOmega() -> MutPtrVector<int64_t> {
-    return schedule.getOffsetOmega();
-  }
-  [[nodiscard]] constexpr auto getOffsetOmega() const -> PtrVector<int64_t> {
-    return schedule.getOffsetOmega();
-  }
-  [[nodiscard]] constexpr auto getFusionOmega() -> MutPtrVector<int64_t> {
-    return schedule.getFusionOmega();
-  }
-  [[nodiscard]] constexpr auto getFusionOmega() const -> PtrVector<int64_t> {
-    return schedule.getFusionOmega();
-  }
+  /// getSchedule, loops are always indexed from outer to inner
   [[nodiscard]] constexpr auto getSchedule(size_t d) const
     -> PtrVector<int64_t> {
-    return schedule.getSchedule(d);
+    return getPhi()(d, _);
   }
   [[nodiscard]] constexpr auto getSchedule(size_t d) -> MutPtrVector<int64_t> {
-    return schedule.getSchedule(d);
+    return getPhi()(d, _);
   }
-  constexpr void schedulePhi(PtrMatrix<int64_t> indMat, size_t r) {
+  [[nodiscard]] constexpr auto getFusionOmega(size_t i) const -> int64_t {
+    return mem[getNumLoopsSquared() + i];
+  }
+  [[nodiscard]] constexpr auto getOffsetOmega(size_t i) const -> int64_t {
+    return mem[getNumLoopsSquared() + getNumLoops() + 1 + i];
+  }
+  // NOLINTNEXTLINE(readability-make-member-function-const)
+  [[nodiscard]] constexpr auto getFusionOmega(size_t i) -> int64_t & {
+    return mem[getNumLoopsSquared() + i];
+  }
+  // NOLINTNEXTLINE(readability-make-member-function-const)
+  [[nodiscard]] constexpr auto getOffsetOmega(size_t i) -> int64_t & {
+    return mem[getNumLoopsSquared() + getNumLoops() + 1 + i];
+  }
+  [[nodiscard]] constexpr auto getFusionOmega() const -> PtrVector<int64_t> {
+    return {const_cast<int64_t *>(mem) + getNumLoopsSquared(),
+            getNumLoops() + 1};
+  }
+  [[nodiscard]] constexpr auto getOffsetOmega() const -> PtrVector<int64_t> {
+    return {const_cast<int64_t *>(mem) + getNumLoopsSquared() + getNumLoops() +
+              1,
+            getNumLoops()};
+  }
+  // NOLINTNEXTLINE(readability-make-member-function-const)
+  [[nodiscard]] constexpr auto getFusionOmega() -> MutPtrVector<int64_t> {
+    return {mem + getNumLoopsSquared(), getNumLoops() + 1};
+  }
+  // NOLINTNEXTLINE(readability-make-member-function-const)
+  [[nodiscard]] constexpr auto getOffsetOmega() -> MutPtrVector<int64_t> {
+    return {mem + getNumLoopsSquared() + getNumLoops() + 1, getNumLoops()};
+  }
+
+  constexpr void schedulePhi(DensePtrMatrix<int64_t> indMat, size_t r) {
     // indMat indvars are indexed from outer<->inner
     // phi indvars are indexed from outer<->inner
     // so, indMat is indvars[outer<->inner] x array dim
     // phi is loop[outer<->inner] x indvars[outer<->inner]
     MutSquarePtrMatrix<int64_t> phi = getPhi();
-    size_t indR = size_t(indMat.numRow());
+    size_t indR = size_t(indMat.numCol());
     for (size_t i = 0; i < r; ++i) {
-      phi(i, _(0, indR)) << indMat(_, i);
+      phi(i, _(0, indR)) << indMat(i, _);
       phi(i, _(indR, end)) << 0;
     }
     rank = r;
@@ -231,9 +286,7 @@ public:
                                 const ScheduledNode &node)
     -> llvm::raw_ostream & {
     os << "inNeighbors = ";
-    for (auto m : node.getInNeighbors()) os << "v_" << m << ", ";
-    os << "\noutNeighbors = ";
-    for (auto m : node.getOutNeighbors()) os << "v_" << m << ", ";
+    node.forEachInput([&](auto m) { os << "v_" << m << ", "; });
     return os << "\n";
     ;
   }
@@ -307,7 +360,7 @@ class LinearProgramLoopBlock {
   [[no_unique_address]] Vector<Dependence> edges{};
   [[no_unique_address]] map<llvm::User *, unsigned> userToMem{};
   [[no_unique_address]] set<llvm::User *> visited{};
-  [[no_unique_address]] llvm::LoopInfo &LI;
+  [[no_unique_address]] llvm::LoopInfo *LI;
   [[no_unique_address]] BumpAlloc<> allocator{};
   // we may turn off edges because we've exceeded its loop depth
   // or because the dependence has already been satisfied at an
@@ -321,7 +374,8 @@ class LinearProgramLoopBlock {
   [[no_unique_address]] unsigned numActiveEdges{0};
 
 public:
-  LinearProgramLoopBlock(llvm::LoopInfo &LI) : LI(LI) {}
+  LinearProgramLoopBlock() = default;
+  constexpr void setLI(llvm::LoopInfo *loopInfo) { LI = loopInfo; }
   using BitSet = ::MemoryAccess::BitSet;
   void clear() {
     // TODO: maybe we shouldn't have to manually call destructors?
@@ -752,12 +806,12 @@ public:
       if (!maybeIndex) continue;
       size_t index = *maybeIndex;
       ScheduledNode &node = nodes[index];
-      PtrMatrix<int64_t> indMat = edge.getInIndMat();
+      DensePtrMatrix<int64_t> indMat = edge.getInIndMat();
       if (node.phiIsScheduled(0) || (indMat != edge.getOutIndMat())) continue;
       size_t r = NormalForm::rank(indMat);
       if (r == edge.getInNumLoops()) continue;
       // TODO handle linearly dependent acceses, filtering them out
-      if (r != size_t(indMat.numCol())) continue;
+      if (r != size_t(indMat.numRow())) continue;
       node.schedulePhi(indMat, r);
       tryOrth = true;
     }
@@ -766,6 +820,9 @@ public:
       for (auto &&n : nodes) n.unschedulePhi();
     }
     return optimize(g, 0, maxDepth);
+  }
+  constexpr void addMemory(NotNull<ArrayIndex> m) {
+    addMemory(MemoryAccess::construct(allocator, m));
   }
   constexpr void addMemory(MemoryAccess *m) {
 #ifndef NDEBUG

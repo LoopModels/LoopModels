@@ -255,8 +255,8 @@ public:
     // indMats cols are [outerMostLoop,...,innerMostLoop]
     PtrMatrix<int64_t> indMatX = x->indexMatrix(), indMatY = y->indexMatrix();
     for (size_t i = 0; i < numLoopsCommon; ++i) {
-      A(i, _(begin, xDim)) << indMatX(i, _);
-      A(i, _(xDim, end)) << indMatY(i, _);
+      A(i, _(begin, xDim)) << indMatX(_, i);
+      A(i, _(xDim, end)) << indMatY(_, i);
     }
     // returns rank x num loops
     return orthogonalNullSpace(std::move(A));
@@ -266,7 +266,7 @@ public:
     DenseMatrix<int64_t> A(DenseDims{numLoopsCommon, dim});
     if (!numLoopsCommon) return A;
     // indMats cols are [outerMostLoop,...,innerMostLoop]
-    A << x->indexMatrix();
+    A << x->indexMatrix().transpose();
     // returns rank x num loops
     return orthogonalNullSpace(std::move(A));
   }
@@ -327,7 +327,7 @@ public:
     // numLoops x numDim
     PtrMatrix<int64_t> Cx{aix->indexMatrix()}, Cy{aiy->indexMatrix()},
       Ox{aix->offsetMatrix()}, Oy{aiy->offsetMatrix()};
-    invariant(Cx.numCol(), Cy.numCol());
+    invariant(Cx.numRow(), Cy.numRow());
 
     auto [nc0, nv0] = Ax.size();
     auto [nc1, nv1] = Ay.size();
@@ -343,7 +343,7 @@ public:
     unsigned timeDim = unsigned{NS.numRow()},
              numCols = numVar + timeDim + numDynSym + 1,
              conCapacity = unsigned(Ax.numRow() + Ay.numRow()) + numVar,
-             eqConCapacity = unsigned(Cx.numCol()) + timeDim;
+             eqConCapacity = unsigned(Cx.numRow()) + timeDim;
 
     size_t memNeeded =
       sizeof(int64_t) * ((conCapacity + eqConCapacity) * numCols + timeDim) +
@@ -389,11 +389,11 @@ public:
     // i_0 + j_0 - i_1 - j_1 = off_1 - off_0
     for (size_t i = 0; i < indexDim; ++i) {
       E(i, _(0, Ox.numCol())) << Ox(i, _);
-      E(i, _(numSym, numDep0Var + numSym)) << Cx(_(0, numDep0Var), i);
+      E(i, _(numSym, numDep0Var + numSym)) << Cx(i, _(0, numDep0Var));
       E(i, 0) -= Oy(i, 0);
       for (size_t j = 0; j < Oy.numCol() - 1; ++j)
         E(i, 1 + map[j]) -= Oy(i, 1 + j);
-      E(i, _(0, numDep1Var) + numSym + numDep0Var) << -Cy(_(0, numDep1Var), i);
+      E(i, _(0, numDep1Var) + numSym + numDep0Var) << -Cy(i, _(0, numDep1Var));
     }
     for (size_t i = 0; i < timeDim; ++i) {
       for (size_t j = 0; j < NS.numCol(); ++j) {

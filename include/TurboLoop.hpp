@@ -1,13 +1,13 @@
 #pragma once
 
-#include "./Instruction.hpp"
-#include "./LoopBlock.hpp"
-#include "./LoopForest.hpp"
-#include "./Loops.hpp"
-#include "./MemoryAccess.hpp"
-#include "./RemarkAnalysis.hpp"
+#include "IR/Instruction.hpp"
+#include "LoopBlock.hpp"
+#include "LoopForest.hpp"
+#include "Loops.hpp"
 #include "Math/Array.hpp"
 #include "Math/Math.hpp"
+#include "MemoryAccess.hpp"
+#include "RemarkAnalysis.hpp"
 #include <algorithm>
 #include <cassert>
 #include <cmath>
@@ -58,19 +58,9 @@ concept LoadOrStoreInst =
   std::same_as<llvm::LoadInst, std::remove_cvref_t<T>> ||
   std::same_as<llvm::StoreInst, std::remove_cvref_t<T>>;
 
-// requires `isRecursivelyLCSSAForm`
 class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
-public:
-  auto run(llvm::Function &F, llvm::FunctionAnalysisManager &AM)
-    -> llvm::PreservedAnalyses;
-  // llvm::SmallVector<AffineLoopNest<true>, 0> affineLoopNests;
-  // one reason to prefer SmallVector is because it bounds checks `ifndef
-  // NDEBUG`
-  // [[no_unique_address]] llvm::SmallVector<LoopTree, 0> loopTrees;
   [[no_unique_address]] llvm::SmallVector<NotNull<LoopTree>> loopForests;
   [[no_unique_address]] map<llvm::Loop *, LoopTree *> loopMap;
-  // [[no_unique_address]] BlockPredicates predicates;
-  // llvm::AssumptionCache *AC;
   [[no_unique_address]] const llvm::TargetLibraryInfo *TLI;
   [[no_unique_address]] const llvm::TargetTransformInfo *TTI;
   [[no_unique_address]] llvm::LoopInfo *LI;
@@ -81,6 +71,9 @@ public:
   [[no_unique_address]] Intr::Cache instrCache;
   [[no_unique_address]] unsigned registerCount;
 
+public:
+  auto run(llvm::Function &F, llvm::FunctionAnalysisManager &AM)
+    -> llvm::PreservedAnalyses;
   TurboLoopPass() = default;
   TurboLoopPass(const TurboLoopPass &) = delete;
   TurboLoopPass(TurboLoopPass &&) = default;
@@ -408,7 +401,7 @@ public:
     invariant(numDims, sizes.size());
     AffineLoopNest<true> *aln = loopMap[L]->affineLoop;
     if (numDims == 0) {
-      LT.memAccesses.push_back(MemoryAccess::construct(
+      LT.memAccesses.push_back(ArrayIndex::construct(
         allocator, basePointer, *aln, loadOrStore, omegas));
       ++omegas.back();
       return false;
@@ -468,7 +461,7 @@ public:
         }
       }
     }
-    LT.memAccesses.push_back(MemoryAccess::construct(
+    LT.memAccesses.push_back(ArrayIndex::construct(
       allocator, basePointer, *aln, loadOrStore,
       Rt(_, _(numExtraLoopsToPeel, end)),
       {std::move(sizes), std::move(symbolicOffsets)}, Bt, omegas));
@@ -476,7 +469,7 @@ public:
     if (ORE) [[unlikely]] {
       llvm::SmallVector<char> x;
       llvm::raw_svector_ostream os{x};
-      os << "Found ref: " << *LT.memAccesses.back()->getArrayRef();
+      os << "Found ref: " << *LT.memAccesses.back();
       remark("AffineRef", LT.loop, os.str());
     }
     return false;

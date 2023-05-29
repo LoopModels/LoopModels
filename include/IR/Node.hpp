@@ -1,6 +1,9 @@
 #pragma once
 
+#include "Utilities/Allocators.hpp"
 #include <Math/Array.hpp>
+#include <cstdint>
+#include <llvm/IR/Type.h>
 #include <llvm/Support/Casting.h>
 
 /// We take an approach similar to LLVM's RTTI
@@ -80,6 +83,8 @@ public:
     VK_Exit,
     VK_Loop,
     VK_CVal,
+    VK_Cint,
+    VK_Cflt,
     VK_Intr,
     VK_Func
   };
@@ -89,11 +94,13 @@ private:
   Node *next{nullptr};
   Node *parent{nullptr};
   Node *child{nullptr};
-  unsigned depth{0};
   const ValKind kind;
 
 protected:
+  unsigned depth{0};
+
   constexpr Node(ValKind kind) : kind(kind) {}
+  constexpr Node(ValKind kind, unsigned d) : kind(kind), depth(d) {}
 
 public:
   [[nodiscard]] constexpr auto getKind() const -> ValKind { return kind; }
@@ -130,4 +137,51 @@ public:
   }
 
   [[nodiscard]] constexpr auto getVal() const -> llvm::Value * { return val; }
+};
+/// Cnst
+class Cnst : public Node {
+
+  llvm::Type *ty;
+
+protected:
+  constexpr Cnst(ValKind kind, llvm::Type *t) : Node(kind), ty(t) {}
+
+public:
+  static constexpr auto classof(const Node *v) -> bool {
+    return v->getKind() == VK_Cint || v->getKind() == VK_Cflt;
+  }
+  [[nodiscard]] constexpr auto getTy() const -> llvm::Type * { return ty; }
+};
+/// A constant value w/ respect to the loopnest.
+class Cint : public Cnst {
+  int64_t val;
+
+public:
+  constexpr Cint(int64_t v, llvm::Type *t) : Cnst(VK_Cint, t), val(v) {}
+  static constexpr auto create(BumpAlloc<> &alloc, int64_t v, llvm::Type *t)
+    -> Cint * {
+    return alloc.create<Cint>(v, t);
+  }
+  static constexpr auto classof(const Node *v) -> bool {
+    return v->getKind() == VK_Cint;
+  }
+
+  [[nodiscard]] constexpr auto getVal() const -> int64_t { return val; }
+};
+/// Cnst
+/// A constant value w/ respect to the loopnest.
+class Cflt : public Cnst {
+  double val;
+
+public:
+  constexpr Cflt(double v, llvm::Type *t) : Cnst(VK_Cflt, t), val(v) {}
+  static constexpr auto create(BumpAlloc<> &alloc, double v, llvm::Type *t)
+    -> Cflt * {
+    return alloc.create<Cflt>(v, t);
+  }
+  static constexpr auto classof(const Node *v) -> bool {
+    return v->getKind() == VK_Cflt;
+  }
+
+  [[nodiscard]] constexpr auto getVal() const -> double { return val; }
 };

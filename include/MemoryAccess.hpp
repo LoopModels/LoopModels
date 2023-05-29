@@ -49,7 +49,16 @@ public:
   constexpr auto operator==(const MemoryAccess &ma) const -> bool {
     return *arrayRef == *ma.arrayRef && load_ == ma.load_;
   }
-
+  [[nodiscard]] static auto construct(BumpAlloc<> &alloc,
+                                      NotNull<ArrayIndex> arrayRef, bool load)
+    -> NotNull<MemoryAccess> {
+    return alloc.create<MemoryAccess>(arrayRef, load);
+  }
+  [[nodiscard]] static auto construct(BumpAlloc<> &alloc,
+                                      NotNull<ArrayIndex> arrayRef)
+    -> NotNull<MemoryAccess> {
+    return alloc.create<MemoryAccess>(arrayRef, arrayRef->isLoad());
+  }
   [[nodiscard]] static auto
   construct(BumpAlloc<> &alloc, const llvm::SCEVUnknown *arrayPtr,
             AffineLoopNest<true> &loopRef, llvm::Instruction *user,
@@ -67,6 +76,7 @@ public:
     return alloc.create<MemoryAccess>(
       ArrayIndex::construct(alloc, arrayPtr, loopRef, user, o));
   }
+
   void peelLoops(size_t n) { arrayRef->peelLoops(n); }
   [[nodiscard]] constexpr auto isLoad() const -> bool { return load_; }
   [[nodiscard]] constexpr auto isStore() const -> bool { return !load_; }
@@ -77,7 +87,7 @@ public:
     -> NotNull<const ArrayIndex> {
     return arrayRef;
   }
-  void setAddress(Addr *addr) { addrs = addr; }
+  constexpr void setAddress(Addr *addr) { addrs = addr; }
   // [[nodiscard]] constexpr auto repCount() const -> size_t {
   //   return addrReplications + 1;
   // }
@@ -113,10 +123,11 @@ public:
   [[nodiscard]] auto sizesMatch(const MemoryAccess &ma) const -> bool {
     return arrayRef->sizesMatch(ma.getArrayRef());
   }
-  /// indexMatrix() -> getNumLoops() x arrayDim()
+  /// indexMatrix() -> arrayDim() x getNumLoops()
   constexpr auto indexMatrix() -> MutDensePtrMatrix<int64_t> {
     return arrayRef->indexMatrix();
   }
+  /// indexMatrix() -> arrayDim() x getNumLoops()
   [[nodiscard]] constexpr auto indexMatrix() const -> DensePtrMatrix<int64_t> {
     return arrayRef->indexMatrix();
   }
@@ -177,17 +188,17 @@ inline auto operator<<(llvm::raw_ostream &os, const ArrayIndex &m)
   os << "Sizes: [";
   if (m.getArrayDim()) {
     os << " unknown";
-    for (ptrdiff_t i = 0; i < ptrdiff_t(A.numCol()) - 1; ++i)
+    for (ptrdiff_t i = 0; i < ptrdiff_t(A.numRow()) - 1; ++i)
       os << ", " << *m.getSizes()[i];
   }
   os << " ]\nSubscripts: [ ";
-  size_t numLoops = size_t(A.numRow());
+  size_t numLoops = size_t(A.numCol());
   PtrMatrix<int64_t> offs = m.offsetMatrix();
-  for (size_t i = 0; i < A.numCol(); ++i) {
+  for (size_t i = 0; i < A.numRow(); ++i) {
     if (i) os << ", ";
     bool printPlus = false;
     for (size_t j = 0; j < numLoops; ++j) {
-      if (int64_t Aji = A(j, i)) {
+      if (int64_t Aji = A(i, j)) {
         if (printPlus) {
           if (Aji <= 0) {
             Aji *= -1;

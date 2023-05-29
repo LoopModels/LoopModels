@@ -110,7 +110,7 @@ public:
   [[nodiscard]] static auto
   construct(BumpAlloc<> &alloc, const llvm::SCEVUnknown *arrayPtr,
             AffineLoopNest<true> &loopRef, llvm::Instruction *user,
-            PtrMatrix<int64_t> indMatT,
+            PtrMatrix<int64_t> indMat,
             std::array<llvm::SmallVector<const llvm::SCEV *, 3>, 2> szOff,
             PtrMatrix<int64_t> offsets, PtrVector<unsigned> o)
     -> NotNull<ArrayIndex> {
@@ -130,7 +130,7 @@ public:
                                  std::array<unsigned, 2>{arrayDim, nOff});
     std::copy_n(szOff[0].begin(), arrayDim, ma->getSizes().begin());
     std::copy_n(szOff[1].begin(), nOff, ma->getSymbolicOffsets().begin());
-    ma->indexMatrix() << indMatT.transpose();
+    ma->indexMatrix() << indMat;
     ma->offsetMatrix() << offsets;
     ma->getFusionOmega() << o;
     return ma;
@@ -179,7 +179,7 @@ public:
     if (auto *l = loadOrStore.dyn_cast<llvm::LoadInst>()) return l->getAlign();
     return loadOrStore.cast<llvm::StoreInst>()->getAlign();
   }
-  /// indexMatrix() -> getNumLoops() x arrayDim()
+  /// indexMatrix() -> arrayDim() x getNumLoops()
   /// loops are in [outermost <-> innermost] order
   /// Maps loop indVars to array indices
   /// Letting `i` be the indVars and `d` the indices:
@@ -192,14 +192,12 @@ public:
   ///   for (j : J)
   ///      A[i, i + j]
   [[nodiscard]] constexpr auto indexMatrix() -> MutDensePtrMatrix<int64_t> {
-    const size_t d = getArrayDim();
-    return {data(), DenseDims{getNumLoops(), d}};
+    return {data(), DenseDims{getArrayDim(), getNumLoops()}};
   }
-  /// indexMatrix() -> getNumLoops() x arrayDim()
+  /// indexMatrix() -> arrayDim() x getNumLoops()
   /// loops are in [innermost -> outermost] order
   [[nodiscard]] constexpr auto indexMatrix() const -> DensePtrMatrix<int64_t> {
-    const size_t d = getArrayDim();
-    return {data(), DenseDims{getNumLoops(), d}};
+    return {data(), DenseDims{getArrayDim(), getNumLoops()}};
   }
   [[nodiscard]] constexpr auto offsetMatrix() -> MutDensePtrMatrix<int64_t> {
     const size_t d = getArrayDim();

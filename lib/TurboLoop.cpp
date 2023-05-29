@@ -84,7 +84,7 @@ TurboLoopPass::run(llvm::Function &F, llvm::FunctionAnalysisManager &FAM)
   // fills array refs
   parseNest();
   bool changed = false;
-  // TODO: fill schedules
+  loopBlock.setLI(LI);
   for (auto forest : loopForests) {
     fillLoopBlock(*forest);
     if (ORE) [[unlikely]] {

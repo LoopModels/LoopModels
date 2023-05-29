@@ -111,16 +111,6 @@ struct AffineSchedule {
   [[nodiscard]] constexpr auto getOffsetOmega() -> MutPtrVector<int64_t> {
     return {data() + getNumLoopsSquared() + getNumLoops() + 1, getNumLoops()};
   }
-  [[nodiscard]] constexpr auto fusedThrough(const NotNull<AffineSchedule> y,
-                                            const size_t numLoopsCommon) const
-    -> bool {
-    const auto *o = getFusionOmega().begin();
-    return std::equal(o, o + numLoopsCommon, y->getFusionOmega().begin());
-  }
-  [[nodiscard]] constexpr auto
-  fusedThrough(const NotNull<AffineSchedule> y) const -> bool {
-    return fusedThrough(y, std::min(getNumLoops(), y->getNumLoops()));
-  }
 
 private:
   int64_t *mem;

@@ -1,14 +1,14 @@
 #pragma once
 
 // #include "./ControlFlowMerging.hpp"
-#include "./LoopBlock.hpp"
-#include "./MemoryAccess.hpp"
-#include "./Schedule.hpp"
-#include "Address.hpp"
 #include "Dependence.hpp"
 #include "Graphs.hpp"
+#include "IR/Address.hpp"
+#include "LoopBlock.hpp"
 #include "Math/Array.hpp"
 #include "Math/Math.hpp"
+#include "MemoryAccess.hpp"
+#include "Schedule.hpp"
 #include "Utilities/Allocators.hpp"
 #include <algorithm>
 #include <any>

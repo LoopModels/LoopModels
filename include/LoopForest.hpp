@@ -1,9 +1,9 @@
 #pragma once
 
-#include "./Instruction.hpp"
-#include "./Loops.hpp"
-#include "./MemoryAccess.hpp"
 #include "Containers/BitSets.hpp"
+#include "IR/Instruction.hpp"
+#include "Loops.hpp"
+#include "MemoryAccess.hpp"
 #include "Utilities/Valid.hpp"
 #include <cstddef>
 #include <iterator>
@@ -33,7 +33,7 @@ struct LoopTree {
   [[no_unique_address]] llvm::SmallVector<Predicate::Map> paths;
   [[no_unique_address]] AffineLoopNest<true> *affineLoop{nullptr};
   [[no_unique_address]] Optional<LoopTree *> parentLoop{nullptr};
-  [[no_unique_address]] llvm::SmallVector<NotNull<MemoryAccess>> memAccesses{};
+  [[no_unique_address]] llvm::SmallVector<NotNull<ArrayIndex>> memAccesses{};
 
   ~LoopTree() { // NOLINT(misc-no-recursion)
     for (auto subLoop : subLoops) subLoop->~LoopTree();

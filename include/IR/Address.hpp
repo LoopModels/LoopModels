@@ -1,6 +1,6 @@
 #pragma once
 
-#include "IR/Val.hpp"
+#include "IR/Node.hpp"
 #include "Loops.hpp"
 #include "Math/Array.hpp"
 #include "Math/Comparisons.hpp"
@@ -73,7 +73,6 @@ class Addr : public Node {
   [[no_unique_address]] uint8_t index_{0};
   [[no_unique_address]] uint8_t lowLink_{0};
   [[no_unique_address]] uint8_t blckIdx{0};
-  [[no_unique_address]] uint8_t depth;
   [[no_unique_address]] uint8_t bitfield;
 #if !defined(__clang__) && defined(__GNUC__)
 #pragma GCC diagnostic push
@@ -94,21 +93,20 @@ class Addr : public Node {
                  int64_t denom, PtrVector<int64_t> omega, bool isStr,
                  CostModeling::LoopTreeSchedule *L, uint8_t memInputs,
                  uint8_t directEdges, uint8_t memOutputs, int64_t *offsets)
-    : Node(isStr ? VK_Stow : VK_Load), arrayRef(ma->getArrayRef()),
-      loop(explicitLoop), node(L), numMemInputs(memInputs),
-      numDirectEdges(directEdges), numMemOutputs(memOutputs),
-      depth(uint8_t(Pinv.numCol())), bitfield(uint8_t(isStr) << 3) {
-    PtrMatrix<int64_t> M{arrayRef->indexMatrix()}; // nLma x aD
+    : Node(isStr ? VK_Stow : VK_Load, unsigned(Pinv.numCol())),
+      arrayRef(ma->getArrayRef()), loop(explicitLoop), node(L),
+      numMemInputs(memInputs), numDirectEdges(directEdges),
+      numMemOutputs(memOutputs), bitfield(uint8_t(isStr) << 3) {
+    PtrMatrix<int64_t> M{arrayRef->indexMatrix()}; // aD x nLma
     MutPtrMatrix<int64_t> mStar{indexMatrix()};    // aD x nLp
     // M is implicitly padded with zeros, nLp >= nLma
     unsigned nLma = ma->getNumLoops();
     invariant(nLma <= depth);
     invariant(size_t(nLma), size_t(M.numRow()));
-    mStar << M.transpose() * Pinv(_(0, nLma), _);
+    mStar << M * Pinv(_(0, nLma), _);
     getDenominator() = denom;
     getOffsetOmega() << ma->offsetMatrix()(_, 0) - mStar * omega;
-    if (offsets)
-      getOffsetOmega() -= M.transpose() * PtrVector<int64_t>{offsets, nLma};
+    if (offsets) getOffsetOmega() -= M * PtrVector<int64_t>{offsets, nLma};
   }
   [[nodiscard]] constexpr auto getIntMemory() const -> int64_t * {
     return (int64_t *)const_cast<void *>((const void *)mem);
@@ -382,7 +380,18 @@ public:
     getAddrMemory()[numMemInputs + numDirectEdges + i] = other;
     getDDepthMemory()[numMemInputs + numDirectEdges + i] = d;
   }
+  [[nodiscard]] static auto allocate(BumpAlloc<> &alloc,
+                                     NotNull<MemoryAccess> ma,
+                                     unsigned inputEdges, unsigned directEdges,
+                                     unsigned outputEdges) -> NotNull<Addr> {
 
+    size_t numLoops = ma->getNumLoops(), arrayDim = ma->getArrayDim(),
+           memSz = (1 + arrayDim + (arrayDim * numLoops)) * sizeof(int64_t) +
+                   (inputEdges + directEdges + outputEdges) *
+                     (sizeof(Addr *) + sizeof(uint8_t)) +
+                   sizeof(Addr);
+    return (Addr *)alloc.allocate(memSz, alignof(Addr));
+  }
   [[nodiscard]] static auto
   construct(BumpAlloc<> &alloc, NotNull<AffineLoopNest<false>> explicitLoop,
             NotNull<MemoryAccess> ma, bool isStr, SquarePtrMatrix<int64_t> Pinv,
@@ -397,12 +406,12 @@ public:
                      (sizeof(Addr *) + sizeof(uint8_t)) +
                    sizeof(Addr);
     // size_t memSz = ma->getNumLoops() * (1 + ma->getArrayDim());
-    auto *pt = alloc.allocate(memSz, 8);
+    auto *pt = alloc.allocate(memSz, alignof(Addr));
     // we could use the passkey idiom to make the constructor public yet
-    // un-callable so that we can use std::construct_at (which requires a public
-    // constructor) or, we can just use placement new and not mark this function
-    // which will never be constant evaluated anyway constexpr (main benefit of
-    // constexpr is UB is not allowed, so we get more warnings).
+    // un-callable so that we can use std::construct_at (which requires a
+    // public constructor) or, we can just use placement new and not mark this
+    // function which will never be constant evaluated anyway constexpr (main
+    // benefit of constexpr is UB is not allowed, so we get more warnings).
     // return std::construct_at((Address *)pt, explicitLoop, ma, Pinv, denom,
     // omega, isStr);
     return new (pt) Addr(explicitLoop, ma, Pinv, denom, omega, isStr, L,

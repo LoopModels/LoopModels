@@ -95,6 +95,7 @@ class Dependence {
   [[no_unique_address]] NotNull<Simplex> dependenceBounding;
   [[no_unique_address]] NotNull<MemoryAccess> in;
   [[no_unique_address]] NotNull<MemoryAccess> out;
+  [[no_unique_address]] Dependence *next;
   // the upper bit of satLvl indicates whether the satisfaction is because of
   // conditional independence (value = 0), or whether it was because of offsets
   // when solving the linear program (value = 1).
@@ -244,6 +245,10 @@ class Dependence {
   }
 
 public:
+  [[nodiscard]] constexpr auto getNext() -> Dependence * { return next; }
+  [[nodiscard]] constexpr auto getNext() const -> const Dependence * {
+    return next;
+  }
   [[nodiscard]] constexpr auto input() -> NotNull<MemoryAccess> { return in; }
   [[nodiscard]] constexpr auto output() -> NotNull<MemoryAccess> { return out; }
   [[nodiscard]] constexpr auto input() const -> NotNull<const MemoryAccess> {
@@ -298,7 +303,7 @@ public:
   [[nodiscard]] auto inputIsStore() const -> bool { return in->isStore(); }
   [[nodiscard]] auto outputIsStore() const -> bool { return out->isStore(); }
   /// getInIndMat() -> getInNumLoops() x arrayDim()
-  [[nodiscard]] auto getInIndMat() const -> PtrMatrix<int64_t> {
+  [[nodiscard]] auto getInIndMat() const -> DensePtrMatrix<int64_t> {
     return in->indexMatrix();
   }
   [[nodiscard]] auto

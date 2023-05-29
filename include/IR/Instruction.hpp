@@ -1,9 +1,9 @@
 #pragma once
 
-#include "Address.hpp"
 #include "Containers/BumpMapSet.hpp"
 #include "Containers/MapVector.hpp"
-#include "IR/Val.hpp"
+#include "IR/Address.hpp"
+#include "IR/Node.hpp"
 #include "Math/Array.hpp"
 #include "Math/BumpVector.hpp"
 #include "Predicate.hpp"
@@ -173,10 +173,8 @@ public:
       return opcode == other.opcode && intrin == other.intrin;
     }
   };
-  using Identifier =
-    std::variant<Intrinsic, Addr *, llvm::Function *, int64_t, double>;
   struct UniqueIdentifier {
-    Identifier idtf;
+    Intrinsic idtf;
     MutPtrVector<Intr *> operands;
     constexpr auto operator==(const UniqueIdentifier &other) const -> bool {
       return idtf == other.idtf && operands == other.operands;
@@ -189,7 +187,7 @@ public:
   using InstrTypes =
     std::variant<std::monostate, llvm::Instruction *, llvm::ConstantInt *,
                  llvm::ConstantFP *, Addr *>;
-  [[no_unique_address]] Identifier idtf;
+  [[no_unique_address]] Intrinsic idtf;
   // Intrinsic id;
   [[no_unique_address]] llvm::Type *type;
   [[no_unique_address]] InstrTypes ptr;
@@ -205,18 +203,19 @@ public:
     for (auto *op : ops) op->users.insert(this);
   }
 
-  static auto getIdentifier(llvm::Instruction *S) -> Identifier {
+  static auto getIdentifier(llvm::Instruction *S) -> Intrinsic {
     if (auto *CB = llvm::dyn_cast<llvm::CallBase>(S))
       if (auto *F = CB->getCalledFunction()) return F;
     return Intrinsic(S);
   }
-  static auto getIdentifier(llvm::ConstantInt *S) -> Identifier {
+  static auto getIdentifier(llvm::ConstantInt *S) -> Intrinsic {
     return S->getSExtValue();
   }
-  static auto getIdentifier(llvm::ConstantFP *S) -> Identifier {
+  static auto getIdentifier(llvm::ConstantFP *S) -> Intrinsic {
+    auto x = S->getValueAPF();
     return S->getValueAPF().convertToDouble();
   }
-  static auto getIdentifier(llvm::Value *v) -> std::optional<Identifier> {
+  static auto getIdentifier(llvm::Value *v) -> std::optional<Intrinsic> {
     if (auto *i = llvm::dyn_cast<llvm::Instruction>(v)) return getIdentifier(i);
     if (auto *ci = llvm::dyn_cast<llvm::ConstantInt>(v))
       return getIdentifier(ci);
@@ -233,15 +232,6 @@ public:
   }
   [[nodiscard]] auto isFunction() const -> bool {
     return std::holds_alternative<llvm::Function *>(idtf);
-  }
-  [[nodiscard]] auto isConstantInt() const -> bool {
-    return std::holds_alternative<int64_t>(idtf);
-  }
-  [[nodiscard]] auto isConstantFP() const -> bool {
-    return std::holds_alternative<double>(idtf);
-  }
-  [[nodiscard]] auto isConstant() const -> bool {
-    return isConstantInt() || isConstantFP();
   }
 
   /// Check if the ptr is a load or store, without an ArrayRef
@@ -310,16 +300,6 @@ public:
     return std::visit<llvm::BasicBlock *>(ExtractBasicBlock{}, ptr);
   }
 
-  struct Predicates {
-    [[no_unique_address]] Predicate::Set predicates;
-    [[no_unique_address]] MutPtrVector<Intr *> instr;
-  };
-  // llvm::TargetTransformInfo &TTI;
-
-  // Instruction(llvm::Intrinsic::ID id, llvm::Type *type) : id(id),
-  // type(type) {
-  //     // this->TTI = TTI;
-  // }
   Intr(BumpAlloc<> &alloc, Intrinsic idt, llvm::Type *typ)
     : Inst(VK_Intr), idtf(idt), type(typ), predicates(alloc), users(alloc),
       costs(alloc) {}
@@ -355,11 +335,11 @@ public:
       if (auto f = argMap.find(uid); f != argMap.end()) return f->second;
       return nullptr;
     }
-    auto argMapLoopup(Identifier idt) -> Intr * {
+    auto argMapLoopup(Intrinsic idt) -> Intr * {
       UniqueIdentifier uid{idt, {nullptr, unsigned(0)}};
       return (*this)[uid];
     }
-    auto argMapLoopup(Identifier idt, Intr *op) -> Intr * {
+    auto argMapLoopup(Intrinsic idt, Intr *op) -> Intr * {
       std::array<Intr *, 1> ops;
       ops[0] = op;
       MutPtrVector<Intr *> opsRef(ops);
@@ -367,15 +347,15 @@ public:
       return (*this)[uid];
     }
     template <size_t N>
-    auto argMapLoopup(Identifier idt, std::array<Intr *, N> ops) -> Intr * {
+    auto argMapLoopup(Intrinsic idt, std::array<Intr *, N> ops) -> Intr * {
       MutPtrVector<Intr *> opsRef(ops);
       UniqueIdentifier uid{idt, opsRef};
       return (*this)[uid];
     }
-    auto argMapLoopup(Identifier idt, Intr *op0, Intr *op1) -> Intr * {
+    auto argMapLoopup(Intrinsic idt, Intr *op0, Intr *op1) -> Intr * {
       return argMapLoopup<2>(idt, {op0, op1});
     }
-    auto argMapLoopup(Identifier idt, Intr *op0, Intr *op1, Intr *op2)
+    auto argMapLoopup(Intrinsic idt, Intr *op0, Intr *op1, Intr *op2)
       -> Intr * {
       return argMapLoopup<3>(idt, {op0, op1, op2});
     }
@@ -399,11 +379,11 @@ public:
       i->predicates = std::move(pred);
       return i;
     }
-    auto getInstruction(BumpAlloc<> &alloc, Identifier idt, llvm::Type *typ) {
+    auto getInstruction(BumpAlloc<> &alloc, Intrinsic idt, llvm::Type *typ) {
       UniqueIdentifier uid{idt, {nullptr, unsigned(0)}};
       return getInstruction(alloc, uid, typ);
     }
-    auto getInstruction(BumpAlloc<> &alloc, Identifier idt, Intr *op0,
+    auto getInstruction(BumpAlloc<> &alloc, Intrinsic idt, Intr *op0,
                         llvm::Type *typ) {
       // stack allocate for check
       if (auto *i = argMapLoopup(idt, op0)) return i;
@@ -414,7 +394,7 @@ public:
       return createInstruction(alloc, uid, typ);
     }
     template <size_t N>
-    auto getInstruction(BumpAlloc<> &alloc, Identifier idt,
+    auto getInstruction(BumpAlloc<> &alloc, Intrinsic idt,
                         std::array<Intr *, N> ops, llvm::Type *typ) {
       // stack allocate for check
       if (auto *i = argMapLoopup(idt, ops)) return i;
@@ -424,12 +404,12 @@ public:
       UniqueIdentifier uid{idt, mops};
       return createInstruction(alloc, uid, typ);
     }
-    auto getInstruction(BumpAlloc<> &alloc, Identifier idt, Intr *op0,
-                        Intr *op1, llvm::Type *typ) {
+    auto getInstruction(BumpAlloc<> &alloc, Intrinsic idt, Intr *op0, Intr *op1,
+                        llvm::Type *typ) {
       return getInstruction<2>(alloc, idt, {op0, op1}, typ);
     }
-    auto getInstruction(BumpAlloc<> &alloc, Identifier idt, Intr *op0,
-                        Intr *op1, Intr *op2, llvm::Type *typ) {
+    auto getInstruction(BumpAlloc<> &alloc, Intrinsic idt, Intr *op0, Intr *op1,
+                        Intr *op2, llvm::Type *typ) {
       return getInstruction<3>(alloc, idt, {op0, op1, op2}, typ);
     }
 
@@ -466,18 +446,19 @@ public:
       if (argMatch != argMap.end()) return argMatch->second;
       return new (alloc) Intr(alloc, uid, typ);
     }
-    auto getConstant(BumpAlloc<> &alloc, llvm::Type *typ, int64_t c) -> Intr * {
+    auto eslgetConstant(BumpAlloc<> &alloc, llvm::Type *typ, int64_t c)
+      -> Intr * {
       UniqueIdentifier uid{Identifier(c), {nullptr, unsigned(0)}};
       if (auto *i = (*this)[uid]) return i;
       return createConstant(alloc, typ, c);
     }
     auto createCondition(BumpAlloc<> &alloc, Predicate::Relation rel,
-                         Intr *instr, bool swap = false) -> Intr * {
+                         Intr *instr, bool swap = false) -> Node * {
       switch (rel) {
       case Predicate::Relation::Any:
-        return getConstant(alloc, instr->getType(), 1);
+        return Cint::create(alloc, 1, instr->getType());
       case Predicate::Relation::Empty:
-        return getConstant(alloc, instr->getType(), 0);
+        return Cint::create(alloc, 0, instr->getType());
       case Predicate::Relation::False:
         swap = !swap;
         [[fallthrough]];
@@ -488,6 +469,7 @@ public:
     auto createCondition(BumpAlloc<> &alloc, Predicate::Intersection pred,
                          bool swap) -> Intr * {
       size_t popCount = pred.popCount();
+
       if (popCount == 0) return getConstant(alloc, predicates[0]->getType(), 1);
       if (popCount == 1) {
         size_t ind = pred.getFirstIndex();

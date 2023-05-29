@@ -336,8 +336,8 @@ constexpr void simplifySystem(MutPtrMatrix<int64_t> &E, size_t colInit = 0) {
 // Perhaps we should define `MutPtrMatrix(const MutPtrMatrix &) = delete;`?
 //
 // NOLINTNEXTLINE(performance-unnecessary-value-param)
-constexpr auto rank(IntMatrix E) -> size_t {
-  return size_t(simplifySystemImpl(E, 0));
+constexpr auto rank(IntMatrix A) -> size_t {
+  return size_t(simplifySystemImpl(A, 0));
 }
 constexpr void reduceColumn(std::array<MutPtrMatrix<int64_t>, 2> AB, Col c,
                             Row r) {
