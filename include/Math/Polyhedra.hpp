@@ -60,7 +60,7 @@ inline auto printPositive(llvm::raw_ostream &os, size_t stop)
 /// We have `A.numRow()` inequality constraints and `E.numRow()` equality
 /// constraints.
 ///
-template <bool HasEqualities, bool HasSymbols, bool NonNegative, typename P>
+template <bool HasEqualities, bool HasSymbols, bool MaybeNonNeg, typename P>
 struct BasePolyhedra {
   // order of vars:
   // constants, loop vars, symbolic vars
@@ -101,17 +101,19 @@ struct BasePolyhedra {
   initializeComparator(std::allocator<int64_t> alloc =
                          {}) // NOLINT(performance-unnecessary-value-param)
     -> comparator::LinearSymbolicComparator {
-    if constexpr (NonNegative)
-      return comparator::linearNonNegative(alloc, getA(), getE(),
-                                           getNumDynamic());
-    else return comparator::linear(alloc, getA(), getE(), true);
+    if constexpr (MaybeNonNeg)
+      if (isNonNegative())
+        return comparator::linearNonNegative(alloc, getA(), getE(),
+                                             getNumDynamic());
+    return comparator::linear(alloc, getA(), getE(), true);
   }
   [[nodiscard]] constexpr auto initializeComparator(BumpAlloc<> &alloc)
     -> comparator::PtrSymbolicComparator {
-    if constexpr (NonNegative)
-      return comparator::linearNonNegative(alloc, getA(), getE(),
-                                           getNumDynamic());
-    else return comparator::linear(alloc, getA(), getE(), true);
+    if constexpr (MaybeNonNeg)
+      if (isNonNegative())
+        return comparator::linearNonNegative(alloc, getA(), getE(),
+                                             getNumDynamic());
+    return comparator::linear(alloc, getA(), getE(), true);
   }
   constexpr auto calcIsEmpty() -> bool {
     return initializeComparator().isEmpty();
@@ -130,6 +132,10 @@ struct BasePolyhedra {
   }
   constexpr void decrementNumConstraints() {
     static_cast<P *>(this)->decrementNumConstraints();
+  }
+  [[nodiscard]] constexpr auto isNonNegative() const -> bool {
+    if constexpr (!MaybeNonNeg) return false;
+    return static_cast<const P *>(this)->isNonNegative();
   }
   constexpr void pruneBounds(BumpAlloc<> &alloc) {
     if (getNumCon() == 0) return;
@@ -184,8 +190,8 @@ struct BasePolyhedra {
           break; // `j` is gone
         }
       }
-      if constexpr (NonNegative) {
-        if (!broke) {
+      if constexpr (MaybeNonNeg) {
+        if (isNonNegative() && !broke) {
           for (size_t i = 0; i < dyn; ++i) {
             diff << getA()(j, _);
             --diff[last - i];
@@ -237,7 +243,8 @@ struct BasePolyhedra {
     -> llvm::raw_ostream & {
     auto &&os2 = printConstraints(os << "\n", p.getA(),
                                   llvm::ArrayRef<const llvm::SCEV *>());
-    if constexpr (NonNegative) printPositive(os2, p.getNumDynamic());
+    if constexpr (MaybeNonNeg)
+      if (p.isNonNegative()) printPositive(os2, p.getNumDynamic());
     if constexpr (HasEqualities)
       return printConstraints(os2, p.getE(),
                               llvm::ArrayRef<const llvm::SCEV *>(), false);

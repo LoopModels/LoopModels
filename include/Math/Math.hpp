@@ -44,8 +44,9 @@
 struct Rational;
 namespace LinAlg {
 
-[[gnu::flatten]] auto operator==(const AbstractMatrix auto &A,
-                                 const AbstractMatrix auto &B) -> bool {
+[[gnu::flatten]] constexpr auto operator==(const AbstractMatrix auto &A,
+                                           const AbstractMatrix auto &B)
+  -> bool {
   const Row M = B.numRow();
   const Col N = B.numCol();
   if ((M != A.numRow()) || (N != A.numCol())) return false;

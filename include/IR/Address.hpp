@@ -12,6 +12,7 @@
 #include <llvm/IR/PatternMatch.h>
 #include <llvm/Support/Allocator.h>
 
+class Dependence;
 namespace CostModeling {
 class LoopTreeSchedule;
 } // namespace CostModeling
@@ -60,13 +61,12 @@ class LoopTreeSchedule;
 // clang-format on
 class Addr : public Node {
   using BitSet = MemoryAccess::BitSet;
-  /// Original (untransformed) memory access
-  [[no_unique_address]] NotNull<ArrayIndex> arrayRef;
-  /// transformed loop
-  [[no_unique_address]] NotNull<AffineLoopNest<false>> loop;
-  [[no_unique_address]] CostModeling::LoopTreeSchedule *node{nullptr};
-  [[no_unique_address]] BitSet parents;
-  [[no_unique_address]] BitSet ancestors;
+  [[no_unique_address]] NotNull<const llvm::SCEVUnknown> basePointer;
+  [[no_unique_address]] NotNull<AffineLoopNest> loop;
+  [[no_unique_address]] llvm::Instruction *instr;
+  [[no_unique_address]] Dependence *edgeIn;
+  [[no_unique_address]] int64_t *offSym{nullptr};
+  [[no_unique_address]] unsigned numDim{0}, numDynSym{0};
   [[no_unique_address]] uint8_t numMemInputs;
   [[no_unique_address]] uint8_t numDirectEdges;
   [[no_unique_address]] uint8_t numMemOutputs;
@@ -87,10 +87,58 @@ class Addr : public Node {
 #else
 #pragma clang diagnostic pop
 #endif
+  explicit constexpr Addr(const llvm::SCEVUnknown *arrayPtr,
+                          AffineLoopNest &loopRef, llvm::Instruction *user,
+                          int64_t *offsym, std::array<unsigned, 2> dimOff)
+    : basePointer(arrayPtr), loop(loopRef), instr(user), offSym(offsym),
+      numDim(dimOff[0]), numDynSym(dimOff[1]){};
+  explicit constexpr Addr(const llvm::SCEVUnknown *arrayPtr,
+                          AffineLoopNest &loopRef, llvm::Instruction *user)
+    : basePointer(arrayPtr), loop(loopRef), loadOrStore(user){};
+  /// Constructor for 0 dimensional memory access
+  [[nodiscard]] static auto
+  construct(BumpAlloc<> &alloc, const llvm::SCEVUnknown *arrayPointer,
+            AffineLoopNest &loopRef, llvm::Instruction *user,
+            PtrVector<unsigned> o) -> NotNull<ArrayIndex> {
+    unsigned numLoops = loopRef.getNumLoops();
+    invariant(o.size(), numLoops + 1);
+    size_t memNeeded = numLoops;
+    auto *mem = (ArrayIndex *)alloc.allocate(
+      sizeof(ArrayIndex) + memNeeded * sizeof(int64_t), 8);
+    auto *ma = std::construct_at(mem, arrayPointer, loopRef, user);
+    ma->getFusionOmega() << o;
+    return ma;
+  }
+  /// Constructor for regular indexing
+  [[nodiscard]] static auto
+  construct(BumpAlloc<> &alloc, const llvm::SCEVUnknown *arrayPtr,
+            AffineLoopNest &loopRef, llvm::Instruction *user,
+            PtrMatrix<int64_t> indMat,
+            std::array<llvm::SmallVector<const llvm::SCEV *, 3>, 2> szOff,
+            PtrVector<int64_t> coffsets, int64_t *offsets,
+            PtrVector<unsigned> o) -> NotNull<ArrayIndex> {
+    // we don't want to hold any other pointers that may need freeing
+    unsigned arrayDim = szOff[0].size(), nOff = szOff[1].size();
+    unsigned numLoops = loopRef.getNumLoops();
+    invariant(o.size(), numLoops + 1);
+    size_t memNeeded = memoryIntsRequired(arrayDim, numLoops);
+    auto *mem = (ArrayIndex *)alloc.allocate(
+      sizeof(ArrayIndex) + memNeeded * sizeof(int64_t) +
+        (arrayDim + nOff) * sizeof(const llvm::SCEV *const *),
+      alignof(ArrayIndex));
+    auto *ma = std::construct_at(mem, arrayPtr, loopRef, user, offsets,
+                                 std::array<unsigned, 2>{arrayDim, nOff});
+    std::copy_n(szOff[0].begin(), arrayDim, ma->getSizes().begin());
+    std::copy_n(szOff[1].begin(), nOff, ma->getSymbolicOffsets().begin());
+    ma->indexMatrix() << indMat;
+    ma->offsetVector() << coffsets;
+    ma->getFusionOmega() << o;
+    return ma;
+  }
 
-  constexpr Addr(NotNull<AffineLoopNest<false>> explicitLoop,
-                 NotNull<MemoryAccess> ma, SquarePtrMatrix<int64_t> Pinv,
-                 int64_t denom, PtrVector<int64_t> omega, bool isStr,
+  constexpr Addr(NotNull<AffineLoopNest> explicitLoop, NotNull<MemoryAccess> ma,
+                 SquarePtrMatrix<int64_t> Pinv, int64_t denom,
+                 PtrVector<int64_t> omega, bool isStr,
                  CostModeling::LoopTreeSchedule *L, uint8_t memInputs,
                  uint8_t directEdges, uint8_t memOutputs, int64_t *offsets)
     : Node(isStr ? VK_Stow : VK_Load, unsigned(Pinv.numCol())),
@@ -141,8 +189,7 @@ public:
       if (anyNEZero(indexMatrix()(i, _(d, end)))) return true;
     return false;
   }
-  [[nodiscard]] constexpr auto getLoop() const
-    -> NotNull<AffineLoopNest<false>> {
+  [[nodiscard]] constexpr auto getLoop() const -> NotNull<AffineLoopNest> {
     return loop;
   }
   [[nodiscard]] constexpr auto getBlockIdx() const -> uint8_t {
@@ -393,7 +440,7 @@ public:
     return (Addr *)alloc.allocate(memSz, alignof(Addr));
   }
   [[nodiscard]] static auto
-  construct(BumpAlloc<> &alloc, NotNull<AffineLoopNest<false>> explicitLoop,
+  construct(BumpAlloc<> &alloc, NotNull<AffineLoopNest> explicitLoop,
             NotNull<MemoryAccess> ma, bool isStr, SquarePtrMatrix<int64_t> Pinv,
             int64_t denom, PtrVector<int64_t> omega,
             CostModeling::LoopTreeSchedule *L, unsigned inputEdges,
@@ -466,7 +513,7 @@ public:
     return {getIntMemory() + 1 + getArrayDim(),
             DenseDims{getArrayDim(), getNumLoops()}};
   }
-  [[nodiscard]] constexpr auto getLoop() -> NotNull<AffineLoopNest<false>> {
+  [[nodiscard]] constexpr auto getLoop() -> NotNull<AffineLoopNest> {
     return loop;
   }
   [[nodiscard]] constexpr auto getCurrentDepth() const -> unsigned;
