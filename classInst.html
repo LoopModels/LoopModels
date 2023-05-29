@@ -75,65 +75,75 @@ Inheritance diagram for Inst:</div>
  <div class="center">
   <img src="classInst.png" usemap="#Inst_map" alt=""/>
   <map id="Inst_map" name="Inst_map">
-<area href="classVal.html" alt="Val&lt; N &gt;" shape="rect" coords="37,0,101,24"/>
-<area href="classFunc.html" alt="Func" shape="rect" coords="0,112,64,136"/>
-<area href="classIntr.html" alt="Intr" shape="rect" coords="74,112,138,136"/>
+<area href="classNode.html" alt="Node" shape="rect" coords="26,0,68,24"/>
+<area href="classFunc.html" alt="Func" shape="rect" coords="0,112,42,136"/>
+<area href="classIntr.html" alt="Intr" shape="rect" coords="52,112,94,136"/>
   </map>
 </div></div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
-<tr class="memitem:a46503af792dae2c0a1751637cc7639b8"><td class="memItemLeft" align="right" valign="top"><a id="a46503af792dae2c0a1751637cc7639b8"></a>
-static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>classof</b> (const <a class="el" href="classVal.html">Val</a> *v) -&gt; bool</td></tr>
-<tr class="separator:a46503af792dae2c0a1751637cc7639b8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ada1afaa150cac14029a21cb246ad2710"><td class="memItemLeft" align="right" valign="top"><a id="ada1afaa150cac14029a21cb246ad2710"></a>
+static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>classof</b> (const <a class="el" href="classNode.html">Node</a> *v) -&gt; bool</td></tr>
+<tr class="separator:ada1afaa150cac14029a21cb246ad2710"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-methods"></a>
 Protected Member Functions</h2></td></tr>
 <tr class="memitem:a4b486e4e2aef0641bd19bbe271b35c5e"><td class="memItemLeft" align="right" valign="top"><a id="a4b486e4e2aef0641bd19bbe271b35c5e"></a>
 constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Inst</b> (ValKind k)</td></tr>
 <tr class="separator:a4b486e4e2aef0641bd19bbe271b35c5e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="inherit_header pro_methods_classVal"><td colspan="2" onclick="javascript:toggleInherit('pro_methods_classVal')"><img src="closed.png" alt="-"/>&#160;Protected Member Functions inherited from <a class="el" href="classVal.html">Val&lt; N &gt;</a></td></tr>
-<tr class="memitem:ae6b2d58f6a910d22f435fa6c9d04724e inherit pro_methods_classVal"><td class="memItemLeft" align="right" valign="top"><a id="ae6b2d58f6a910d22f435fa6c9d04724e"></a>
-constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Val</b> (ValKind kind)</td></tr>
-<tr class="separator:ae6b2d58f6a910d22f435fa6c9d04724e inherit pro_methods_classVal"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="inherit_header pro_methods_classNode"><td colspan="2" onclick="javascript:toggleInherit('pro_methods_classNode')"><img src="closed.png" alt="-"/>&#160;Protected Member Functions inherited from <a class="el" href="classNode.html">Node</a></td></tr>
+<tr class="memitem:ae4a7cf9393ca4ae0bc167baaf92ab4fe inherit pro_methods_classNode"><td class="memItemLeft" align="right" valign="top"><a id="ae4a7cf9393ca4ae0bc167baaf92ab4fe"></a>
+constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Node</b> (ValKind kind)</td></tr>
+<tr class="separator:ae4a7cf9393ca4ae0bc167baaf92ab4fe inherit pro_methods_classNode"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a35cd3efbb46fa455d4ce7511d71dac6b inherit pro_methods_classNode"><td class="memItemLeft" align="right" valign="top"><a id="a35cd3efbb46fa455d4ce7511d71dac6b"></a>
+constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Node</b> (ValKind kind, unsigned d)</td></tr>
+<tr class="separator:a35cd3efbb46fa455d4ce7511d71dac6b inherit pro_methods_classNode"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="inherited"></a>
 Additional Inherited Members</h2></td></tr>
-<tr class="inherit_header pub_types_classVal"><td colspan="2" onclick="javascript:toggleInherit('pub_types_classVal')"><img src="closed.png" alt="-"/>&#160;Public Types inherited from <a class="el" href="classVal.html">Val&lt; N &gt;</a></td></tr>
-<tr class="memitem:ab7d39b96990af81186bf1a98e1f726fd inherit pub_types_classVal"><td class="memItemLeft" align="right" valign="top"><a id="ab7d39b96990af81186bf1a98e1f726fd"></a>enum &#160;</td><td class="memItemRight" valign="bottom"><b>ValKind</b> { <br />
+<tr class="inherit_header pub_types_classNode"><td colspan="2" onclick="javascript:toggleInherit('pub_types_classNode')"><img src="closed.png" alt="-"/>&#160;Public Types inherited from <a class="el" href="classNode.html">Node</a></td></tr>
+<tr class="memitem:a7764a4430cc6f4c9d175704f63c7cc54 inherit pub_types_classNode"><td class="memItemLeft" align="right" valign="top"><a id="a7764a4430cc6f4c9d175704f63c7cc54"></a>enum &#160;</td><td class="memItemRight" valign="bottom"><b>ValKind</b> { <br />
 &#160;&#160;<b>VK_Load</b>
 , <b>VK_Stow</b>
 , <b>VK_Exit</b>
 , <b>VK_Loop</b>
 , <br />
 &#160;&#160;<b>VK_CVal</b>
+, <b>VK_Cint</b>
+, <b>VK_Cflt</b>
 , <b>VK_Intr</b>
-, <b>VK_Func</b>
+, <br />
+&#160;&#160;<b>VK_Func</b>
 <br />
  }</td></tr>
-<tr class="separator:ab7d39b96990af81186bf1a98e1f726fd inherit pub_types_classVal"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="inherit_header pub_methods_classVal"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_classVal')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="classVal.html">Val&lt; N &gt;</a></td></tr>
-<tr class="memitem:ab67ded8939a83be5b027171f719efcca inherit pub_methods_classVal"><td class="memItemLeft" align="right" valign="top"><a id="ab67ded8939a83be5b027171f719efcca"></a>
+<tr class="separator:a7764a4430cc6f4c9d175704f63c7cc54 inherit pub_types_classNode"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="inherit_header pub_methods_classNode"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_classNode')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="classNode.html">Node</a></td></tr>
+<tr class="memitem:ac8c5f6e806f3a843b0336452f8e8e9d7 inherit pub_methods_classNode"><td class="memItemLeft" align="right" valign="top"><a id="ac8c5f6e806f3a843b0336452f8e8e9d7"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getKind</b> () const -&gt; ValKind</td></tr>
-<tr class="separator:ab67ded8939a83be5b027171f719efcca inherit pub_methods_classVal"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a38714d4dd6ab381649abe7832cffccdf inherit pub_methods_classVal"><td class="memItemLeft" align="right" valign="top"><a id="a38714d4dd6ab381649abe7832cffccdf"></a>
+<tr class="separator:ac8c5f6e806f3a843b0336452f8e8e9d7 inherit pub_methods_classNode"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5bf4a8a177428807126118ea82d39389 inherit pub_methods_classNode"><td class="memItemLeft" align="right" valign="top"><a id="a5bf4a8a177428807126118ea82d39389"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getDepth</b> () const -&gt; unsigned</td></tr>
-<tr class="separator:a38714d4dd6ab381649abe7832cffccdf inherit pub_methods_classVal"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a18ccb3b9f26c2aad7b6dd5cec4888966 inherit pub_methods_classVal"><td class="memItemLeft" align="right" valign="top"><a id="a18ccb3b9f26c2aad7b6dd5cec4888966"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getParent</b> () const -&gt; <a class="el" href="classVal.html">Val</a> *</td></tr>
-<tr class="separator:a18ccb3b9f26c2aad7b6dd5cec4888966 inherit pub_methods_classVal"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7a8a3c46fb012d38406a7d82c3fa2233 inherit pub_methods_classVal"><td class="memItemLeft" align="right" valign="top"><a id="a7a8a3c46fb012d38406a7d82c3fa2233"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getChild</b> () const -&gt; <a class="el" href="classVal.html">Val</a> *</td></tr>
-<tr class="separator:a7a8a3c46fb012d38406a7d82c3fa2233 inherit pub_methods_classVal"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a733bd5eab7209cc8a2bfe0818a68c385 inherit pub_methods_classVal"><td class="memItemLeft" align="right" valign="top"><a id="a733bd5eab7209cc8a2bfe0818a68c385"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getPrev</b> () const -&gt; <a class="el" href="classVal.html">Val</a> *</td></tr>
-<tr class="separator:a733bd5eab7209cc8a2bfe0818a68c385 inherit pub_methods_classVal"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a56326c1c72be01beceae38d17b3908c1 inherit pub_methods_classVal"><td class="memItemLeft" align="right" valign="top"><a id="a56326c1c72be01beceae38d17b3908c1"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNext</b> () const -&gt; <a class="el" href="classVal.html">Val</a> *</td></tr>
-<tr class="separator:a56326c1c72be01beceae38d17b3908c1 inherit pub_methods_classVal"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:a5bf4a8a177428807126118ea82d39389 inherit pub_methods_classNode"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5404f607bea4a405b3a881cbb3a4a7df inherit pub_methods_classNode"><td class="memItemLeft" align="right" valign="top"><a id="a5404f607bea4a405b3a881cbb3a4a7df"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getParent</b> () const -&gt; <a class="el" href="classNode.html">Node</a> *</td></tr>
+<tr class="separator:a5404f607bea4a405b3a881cbb3a4a7df inherit pub_methods_classNode"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7ed00218af6513216db597947c40c7fd inherit pub_methods_classNode"><td class="memItemLeft" align="right" valign="top"><a id="a7ed00218af6513216db597947c40c7fd"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getChild</b> () const -&gt; <a class="el" href="classNode.html">Node</a> *</td></tr>
+<tr class="separator:a7ed00218af6513216db597947c40c7fd inherit pub_methods_classNode"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aeb33a35f95430908f2a289b07e39d985 inherit pub_methods_classNode"><td class="memItemLeft" align="right" valign="top"><a id="aeb33a35f95430908f2a289b07e39d985"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getPrev</b> () const -&gt; <a class="el" href="classNode.html">Node</a> *</td></tr>
+<tr class="separator:aeb33a35f95430908f2a289b07e39d985 inherit pub_methods_classNode"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afdd1732ee2ba907b1aa63c2e03f8f401 inherit pub_methods_classNode"><td class="memItemLeft" align="right" valign="top"><a id="afdd1732ee2ba907b1aa63c2e03f8f401"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNext</b> () const -&gt; <a class="el" href="classNode.html">Node</a> *</td></tr>
+<tr class="separator:afdd1732ee2ba907b1aa63c2e03f8f401 inherit pub_methods_classNode"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="inherit_header pro_attribs_classNode"><td colspan="2" onclick="javascript:toggleInherit('pro_attribs_classNode')"><img src="closed.png" alt="-"/>&#160;Protected Attributes inherited from <a class="el" href="classNode.html">Node</a></td></tr>
+<tr class="memitem:adea87b03d8fe6f9165761058bc9ae926 inherit pro_attribs_classNode"><td class="memItemLeft" align="right" valign="top"><a id="adea87b03d8fe6f9165761058bc9ae926"></a>
+unsigned&#160;</td><td class="memItemRight" valign="bottom"><b>depth</b> {0}</td></tr>
+<tr class="separator:adea87b03d8fe6f9165761058bc9ae926 inherit pro_attribs_classNode"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <hr/>The documentation for this class was generated from the following file:<ul>
-<li>include/<a class="el" href="Instruction_8hpp_source.html">Instruction.hpp</a></li>
+<li>include/IR/<a class="el" href="Instruction_8hpp_source.html">Instruction.hpp</a></li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->

@@ -280,8 +280,8 @@ $(function() {
 <div class="line"><a name="l00255"></a><span class="lineno">  255</span>&#160;    <span class="comment">// indMats cols are [outerMostLoop,...,innerMostLoop]</span></div>
 <div class="line"><a name="l00256"></a><span class="lineno">  256</span>&#160;    PtrMatrix&lt;int64_t&gt; indMatX = x-&gt;indexMatrix(), indMatY = y-&gt;indexMatrix();</div>
 <div class="line"><a name="l00257"></a><span class="lineno">  257</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; numLoopsCommon; ++i) {</div>
-<div class="line"><a name="l00258"></a><span class="lineno">  258</span>&#160;      A(i, _(begin, xDim)) &lt;&lt; indMatX(i, _);</div>
-<div class="line"><a name="l00259"></a><span class="lineno">  259</span>&#160;      A(i, _(xDim, end)) &lt;&lt; indMatY(i, _);</div>
+<div class="line"><a name="l00258"></a><span class="lineno">  258</span>&#160;      A(i, _(begin, xDim)) &lt;&lt; indMatX(_, i);</div>
+<div class="line"><a name="l00259"></a><span class="lineno">  259</span>&#160;      A(i, _(xDim, end)) &lt;&lt; indMatY(_, i);</div>
 <div class="line"><a name="l00260"></a><span class="lineno">  260</span>&#160;    }</div>
 <div class="line"><a name="l00261"></a><span class="lineno">  261</span>&#160;    <span class="comment">// returns rank x num loops</span></div>
 <div class="line"><a name="l00262"></a><span class="lineno">  262</span>&#160;    <span class="keywordflow">return</span> orthogonalNullSpace(std::move(A));</div>
@@ -291,7 +291,7 @@ $(function() {
 <div class="line"><a name="l00266"></a><span class="lineno">  266</span>&#160;    DenseMatrix&lt;int64_t&gt; A(<a class="code" href="structLinAlg_1_1DenseDims.html">DenseDims</a>{numLoopsCommon, dim});</div>
 <div class="line"><a name="l00267"></a><span class="lineno">  267</span>&#160;    <span class="keywordflow">if</span> (!numLoopsCommon) <span class="keywordflow">return</span> A;</div>
 <div class="line"><a name="l00268"></a><span class="lineno">  268</span>&#160;    <span class="comment">// indMats cols are [outerMostLoop,...,innerMostLoop]</span></div>
-<div class="line"><a name="l00269"></a><span class="lineno">  269</span>&#160;    A &lt;&lt; x-&gt;indexMatrix();</div>
+<div class="line"><a name="l00269"></a><span class="lineno">  269</span>&#160;    A &lt;&lt; x-&gt;indexMatrix().transpose();</div>
 <div class="line"><a name="l00270"></a><span class="lineno">  270</span>&#160;    <span class="comment">// returns rank x num loops</span></div>
 <div class="line"><a name="l00271"></a><span class="lineno">  271</span>&#160;    <span class="keywordflow">return</span> orthogonalNullSpace(std::move(A));</div>
 <div class="line"><a name="l00272"></a><span class="lineno">  272</span>&#160;  }</div>
@@ -350,7 +350,7 @@ $(function() {
 <div class="line"><a name="l00327"></a><span class="lineno">  327</span>&#160;    <span class="comment">// numLoops x numDim</span></div>
 <div class="line"><a name="l00328"></a><span class="lineno">  328</span>&#160;    PtrMatrix&lt;int64_t&gt; Cx{aix-&gt;indexMatrix()}, Cy{aiy-&gt;indexMatrix()},</div>
 <div class="line"><a name="l00329"></a><span class="lineno">  329</span>&#160;      Ox{aix-&gt;offsetMatrix()}, Oy{aiy-&gt;offsetMatrix()};</div>
-<div class="line"><a name="l00330"></a><span class="lineno">  330</span>&#160;    invariant(Cx.numCol(), Cy.numCol());</div>
+<div class="line"><a name="l00330"></a><span class="lineno">  330</span>&#160;    invariant(Cx.numRow(), Cy.numRow());</div>
 <div class="line"><a name="l00331"></a><span class="lineno">  331</span>&#160; </div>
 <div class="line"><a name="l00332"></a><span class="lineno">  332</span>&#160;    <span class="keyword">auto</span> [nc0, nv0] = Ax.size();</div>
 <div class="line"><a name="l00333"></a><span class="lineno">  333</span>&#160;    <span class="keyword">auto</span> [nc1, nv1] = Ay.size();</div>
@@ -366,7 +366,7 @@ $(function() {
 <div class="line"><a name="l00343"></a><span class="lineno">  343</span>&#160;    <span class="keywordtype">unsigned</span> timeDim = <span class="keywordtype">unsigned</span>{NS.numRow()},</div>
 <div class="line"><a name="l00344"></a><span class="lineno">  344</span>&#160;             numCols = numVar + timeDim + numDynSym + 1,</div>
 <div class="line"><a name="l00345"></a><span class="lineno">  345</span>&#160;             conCapacity = unsigned(Ax.numRow() + Ay.numRow()) + numVar,</div>
-<div class="line"><a name="l00346"></a><span class="lineno">  346</span>&#160;             eqConCapacity = unsigned(Cx.numCol()) + timeDim;</div>
+<div class="line"><a name="l00346"></a><span class="lineno">  346</span>&#160;             eqConCapacity = unsigned(Cx.numRow()) + timeDim;</div>
 <div class="line"><a name="l00347"></a><span class="lineno">  347</span>&#160; </div>
 <div class="line"><a name="l00348"></a><span class="lineno">  348</span>&#160;    <span class="keywordtype">size_t</span> memNeeded =</div>
 <div class="line"><a name="l00349"></a><span class="lineno">  349</span>&#160;      <span class="keyword">sizeof</span>(int64_t) * ((conCapacity + eqConCapacity) * numCols + timeDim) +</div>
@@ -412,11 +412,11 @@ $(function() {
 <div class="line"><a name="l00389"></a><span class="lineno">  389</span>&#160;    <span class="comment">// i_0 + j_0 - i_1 - j_1 = off_1 - off_0</span></div>
 <div class="line"><a name="l00390"></a><span class="lineno">  390</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; indexDim; ++i) {</div>
 <div class="line"><a name="l00391"></a><span class="lineno">  391</span>&#160;      E(i, _(0, Ox.numCol())) &lt;&lt; Ox(i, _);</div>
-<div class="line"><a name="l00392"></a><span class="lineno">  392</span>&#160;      E(i, _(numSym, numDep0Var + numSym)) &lt;&lt; Cx(_(0, numDep0Var), i);</div>
+<div class="line"><a name="l00392"></a><span class="lineno">  392</span>&#160;      E(i, _(numSym, numDep0Var + numSym)) &lt;&lt; Cx(i, _(0, numDep0Var));</div>
 <div class="line"><a name="l00393"></a><span class="lineno">  393</span>&#160;      E(i, 0) -= Oy(i, 0);</div>
 <div class="line"><a name="l00394"></a><span class="lineno">  394</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> j = 0; j &lt; Oy.numCol() - 1; ++j)</div>
 <div class="line"><a name="l00395"></a><span class="lineno">  395</span>&#160;        E(i, 1 + map[j]) -= Oy(i, 1 + j);</div>
-<div class="line"><a name="l00396"></a><span class="lineno">  396</span>&#160;      E(i, _(0, numDep1Var) + numSym + numDep0Var) &lt;&lt; -Cy(_(0, numDep1Var), i);</div>
+<div class="line"><a name="l00396"></a><span class="lineno">  396</span>&#160;      E(i, _(0, numDep1Var) + numSym + numDep0Var) &lt;&lt; -Cy(i, _(0, numDep1Var));</div>
 <div class="line"><a name="l00397"></a><span class="lineno">  397</span>&#160;    }</div>
 <div class="line"><a name="l00398"></a><span class="lineno">  398</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; timeDim; ++i) {</div>
 <div class="line"><a name="l00399"></a><span class="lineno">  399</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> j = 0; j &lt; NS.numCol(); ++j) {</div>

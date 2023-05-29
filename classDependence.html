@@ -82,6 +82,12 @@ using&#160;</td><td class="memItemRight" valign="bottom"><b>BitSet</b> = MemoryA
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
+<tr class="memitem:a12dccd229cab5da9e974ca9e59888da9"><td class="memItemLeft" align="right" valign="top"><a id="a12dccd229cab5da9e974ca9e59888da9"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNext</b> () -&gt; <a class="el" href="classDependence.html">Dependence</a> *</td></tr>
+<tr class="separator:a12dccd229cab5da9e974ca9e59888da9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a23d298fa678ad4b1e387c0525462b910"><td class="memItemLeft" align="right" valign="top"><a id="a23d298fa678ad4b1e387c0525462b910"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNext</b> () const -&gt; const <a class="el" href="classDependence.html">Dependence</a> *</td></tr>
+<tr class="separator:a23d298fa678ad4b1e387c0525462b910"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1f3af83858a805d7be1b069a3a7682a7"><td class="memItemLeft" align="right" valign="top"><a id="a1f3af83858a805d7be1b069a3a7682a7"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>input</b> () -&gt; <a class="el" href="classNotNull.html">NotNull</a>&lt; <a class="el" href="structMemoryAccess.html">MemoryAccess</a> &gt;</td></tr>
 <tr class="separator:a1f3af83858a805d7be1b069a3a7682a7"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -141,10 +147,10 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>inputIsStore</b> () c
 <tr class="memitem:a036eb57c9781c59f365106db36f57770"><td class="memItemLeft" align="right" valign="top"><a id="a036eb57c9781c59f365106db36f57770"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>outputIsStore</b> () const -&gt; bool</td></tr>
 <tr class="separator:a036eb57c9781c59f365106db36f57770"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6cc677c17009dae397e882a80eb727a4"><td class="memItemLeft" align="right" valign="top"><a id="a6cc677c17009dae397e882a80eb727a4"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classDependence.html#a6cc677c17009dae397e882a80eb727a4">getInIndMat</a> () const -&gt; PtrMatrix&lt; int64_t &gt;</td></tr>
-<tr class="memdesc:a6cc677c17009dae397e882a80eb727a4"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classDependence.html#a6cc677c17009dae397e882a80eb727a4" title="getInIndMat() -&gt; getInNumLoops() x arrayDim()">getInIndMat()</a> -&gt; getInNumLoops() x arrayDim() <br /></td></tr>
-<tr class="separator:a6cc677c17009dae397e882a80eb727a4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a96f3977a6808d11b6d36618703b4d3b8"><td class="memItemLeft" align="right" valign="top"><a id="a96f3977a6808d11b6d36618703b4d3b8"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classDependence.html#a96f3977a6808d11b6d36618703b4d3b8">getInIndMat</a> () const -&gt; DensePtrMatrix&lt; int64_t &gt;</td></tr>
+<tr class="memdesc:a96f3977a6808d11b6d36618703b4d3b8"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classDependence.html#a96f3977a6808d11b6d36618703b4d3b8" title="getInIndMat() -&gt; getInNumLoops() x arrayDim()">getInIndMat()</a> -&gt; getInNumLoops() x arrayDim() <br /></td></tr>
+<tr class="separator:a96f3977a6808d11b6d36618703b4d3b8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a31cc09c5c007528b28d03ef9445b792d"><td class="memItemLeft" align="right" valign="top"><a id="a31cc09c5c007528b28d03ef9445b792d"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>checkEmptySat</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, <a class="el" href="classNotNull.html">NotNull</a>&lt; const <a class="el" href="structAffineLoopNest.html">AffineLoopNest</a>&lt;&gt;&gt; inLoop, const int64_t *inOff, DensePtrMatrix&lt; int64_t &gt; inPhi, <a class="el" href="classNotNull.html">NotNull</a>&lt; const <a class="el" href="structAffineLoopNest.html">AffineLoopNest</a>&lt;&gt;&gt; outLoop, const int64_t *outOff, DensePtrMatrix&lt; int64_t &gt; outPhi) -&gt; bool</td></tr>
 <tr class="separator:a31cc09c5c007528b28d03ef9445b792d"><td class="memSeparator" colspan="2">&#160;</td></tr>

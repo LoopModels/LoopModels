@@ -64,7 +64,6 @@ $(function() {
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-static-methods">Static Public Member Functions</a> &#124;
-<a href="#pub-attribs">Public Attributes</a> &#124;
 <a href="classTurboLoopPass-members.html">List of all members</a>  </div>
   <div class="headertitle">
 <div class="title">TurboLoopPass Class Reference</div>  </div>
@@ -167,42 +166,6 @@ static auto&#160;</td><td class="memItemRight" valign="bottom"><b>blackListAllDe
 <tr class="memitem:a7d40c1e27454c1e7e627f590cc4ae2a3"><td class="memItemLeft" align="right" valign="top"><a id="a7d40c1e27454c1e7e627f590cc4ae2a3"></a>
 static auto&#160;</td><td class="memItemRight" valign="bottom"><b>mayReadOrWriteMemory</b> (llvm::Value *v) -&gt; bool</td></tr>
 <tr class="separator:a7d40c1e27454c1e7e627f590cc4ae2a3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
-Public Attributes</h2></td></tr>
-<tr class="memitem:a27af78594f3825302e6c922473a50dbf"><td class="memItemLeft" align="right" valign="top"><a id="a27af78594f3825302e6c922473a50dbf"></a>
-llvm::SmallVector&lt; <a class="el" href="classNotNull.html">NotNull</a>&lt; <a class="el" href="structLoopTree.html">LoopTree</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>loopForests</b></td></tr>
-<tr class="separator:a27af78594f3825302e6c922473a50dbf"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aad09e6755d78bc4a0e826c406ce52ad1"><td class="memItemLeft" align="right" valign="top"><a id="aad09e6755d78bc4a0e826c406ce52ad1"></a>
-map&lt; llvm::Loop *, <a class="el" href="structLoopTree.html">LoopTree</a> * &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>loopMap</b></td></tr>
-<tr class="separator:aad09e6755d78bc4a0e826c406ce52ad1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5ea25cc60ec3e7d7c835b9c0229ddf42"><td class="memItemLeft" align="right" valign="top"><a id="a5ea25cc60ec3e7d7c835b9c0229ddf42"></a>
-const llvm::TargetLibraryInfo *&#160;</td><td class="memItemRight" valign="bottom"><b>TLI</b></td></tr>
-<tr class="separator:a5ea25cc60ec3e7d7c835b9c0229ddf42"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a806c2bd506231068a560ad23060bcdee"><td class="memItemLeft" align="right" valign="top"><a id="a806c2bd506231068a560ad23060bcdee"></a>
-const llvm::TargetTransformInfo *&#160;</td><td class="memItemRight" valign="bottom"><b>TTI</b></td></tr>
-<tr class="separator:a806c2bd506231068a560ad23060bcdee"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4816cca525be56db162faac311e665aa"><td class="memItemLeft" align="right" valign="top"><a id="a4816cca525be56db162faac311e665aa"></a>
-llvm::LoopInfo *&#160;</td><td class="memItemRight" valign="bottom"><b>LI</b></td></tr>
-<tr class="separator:a4816cca525be56db162faac311e665aa"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4d4b26301321d14a2266e02ff98139b9"><td class="memItemLeft" align="right" valign="top"><a id="a4d4b26301321d14a2266e02ff98139b9"></a>
-llvm::ScalarEvolution *&#160;</td><td class="memItemRight" valign="bottom"><b>SE</b></td></tr>
-<tr class="separator:a4d4b26301321d14a2266e02ff98139b9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5986d7b7e12e9ae8e1a20d18eb2d53f1"><td class="memItemLeft" align="right" valign="top"><a id="a5986d7b7e12e9ae8e1a20d18eb2d53f1"></a>
-llvm::OptimizationRemarkEmitter *&#160;</td><td class="memItemRight" valign="bottom"><b>ORE</b></td></tr>
-<tr class="separator:a5986d7b7e12e9ae8e1a20d18eb2d53f1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab8972884e606b5d9c01f9dcc48919ea6"><td class="memItemLeft" align="right" valign="top"><a id="ab8972884e606b5d9c01f9dcc48919ea6"></a>
-<a class="el" href="classLinearProgramLoopBlock.html">LinearProgramLoopBlock</a>&#160;</td><td class="memItemRight" valign="bottom"><b>loopBlock</b></td></tr>
-<tr class="separator:ab8972884e606b5d9c01f9dcc48919ea6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad5c712d634e08e72018f5a41648b7787"><td class="memItemLeft" align="right" valign="top"><a id="ad5c712d634e08e72018f5a41648b7787"></a>
-<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&#160;</td><td class="memItemRight" valign="bottom"><b>allocator</b></td></tr>
-<tr class="separator:ad5c712d634e08e72018f5a41648b7787"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a300756a3e5be3f3e5d711fb977fcace2"><td class="memItemLeft" align="right" valign="top"><a id="a300756a3e5be3f3e5d711fb977fcace2"></a>
-<a class="el" href="structIntr_1_1Cache.html">Intr::Cache</a>&#160;</td><td class="memItemRight" valign="bottom"><b>instrCache</b></td></tr>
-<tr class="separator:a300756a3e5be3f3e5d711fb977fcace2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab7483e9eb9f685ffe57cf09e3231f8b1"><td class="memItemLeft" align="right" valign="top"><a id="ab7483e9eb9f685ffe57cf09e3231f8b1"></a>
-unsigned&#160;</td><td class="memItemRight" valign="bottom"><b>registerCount</b></td></tr>
-<tr class="separator:ab7483e9eb9f685ffe57cf09e3231f8b1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Member Function Documentation</h2>
 <a id="a61d15982d3d7c2d1918da31c454a2f10"></a>

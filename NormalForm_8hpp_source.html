@@ -404,8 +404,8 @@ $(function() {
 <div class="line"><a name="l00336"></a><span class="lineno">  336</span>&#160;<span class="comment">// Perhaps we should define `MutPtrMatrix(const MutPtrMatrix &amp;) = delete;`?</span></div>
 <div class="line"><a name="l00337"></a><span class="lineno">  337</span>&#160;<span class="comment">//</span></div>
 <div class="line"><a name="l00338"></a><span class="lineno">  338</span>&#160;<span class="comment">// NOLINTNEXTLINE(performance-unnecessary-value-param)</span></div>
-<div class="line"><a name="l00339"></a><span class="lineno">  339</span>&#160;constexpr <span class="keyword">auto</span> rank(IntMatrix E) -&gt; <span class="keywordtype">size_t</span> {</div>
-<div class="line"><a name="l00340"></a><span class="lineno">  340</span>&#160;  <span class="keywordflow">return</span> size_t(simplifySystemImpl(E, 0));</div>
+<div class="line"><a name="l00339"></a><span class="lineno">  339</span>&#160;constexpr <span class="keyword">auto</span> rank(IntMatrix A) -&gt; <span class="keywordtype">size_t</span> {</div>
+<div class="line"><a name="l00340"></a><span class="lineno">  340</span>&#160;  <span class="keywordflow">return</span> size_t(simplifySystemImpl(A, 0));</div>
 <div class="line"><a name="l00341"></a><span class="lineno">  341</span>&#160;}</div>
 <div class="line"><a name="l00342"></a><span class="lineno">  342</span>&#160;constexpr <span class="keywordtype">void</span> reduceColumn(std::array&lt;MutPtrMatrix&lt;int64_t&gt;, 2&gt; AB, Col c,</div>
 <div class="line"><a name="l00343"></a><span class="lineno">  343</span>&#160;                            Row r) {</div>

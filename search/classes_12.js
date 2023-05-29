@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['val_427',['Val',['../classVal.html',1,'']]],
-  ['vectorprinter_428',['VectorPrinter',['../classprettyprinters_1_1VectorPrinter.html',1,'prettyprinters']]]
+  ['val_431',['Val',['../structVal.html',1,'']]],
+  ['vectorprinter_432',['VectorPrinter',['../classprettyprinters_1_1VectorPrinter.html',1,'prettyprinters']]]
 ];

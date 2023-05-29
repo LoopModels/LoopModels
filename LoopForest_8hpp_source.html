@@ -71,10 +71,10 @@ $(function() {
 <div class="contents">
 <div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="preprocessor">#pragma once</span></div>
 <div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160; </div>
-<div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="preprocessor">#include &quot;./Instruction.hpp&quot;</span></div>
-<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor">#include &quot;./Loops.hpp&quot;</span></div>
-<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="preprocessor">#include &quot;./MemoryAccess.hpp&quot;</span></div>
-<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="preprocessor">#include &quot;Containers/BitSets.hpp&quot;</span></div>
+<div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="preprocessor">#include &quot;Containers/BitSets.hpp&quot;</span></div>
+<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor">#include &quot;IR/Instruction.hpp&quot;</span></div>
+<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="preprocessor">#include &quot;Loops.hpp&quot;</span></div>
+<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="preprocessor">#include &quot;MemoryAccess.hpp&quot;</span></div>
 <div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="preprocessor">#include &quot;Utilities/Valid.hpp&quot;</span></div>
 <div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="preprocessor">#include &lt;cstddef&gt;</span></div>
 <div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="preprocessor">#include &lt;iterator&gt;</span></div>
@@ -104,7 +104,7 @@ $(function() {
 <div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;  [[no_unique_address]] llvm::SmallVector&lt;Predicate::Map&gt; paths;</div>
 <div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;  [[no_unique_address]] <a class="code" href="structAffineLoopNest.html">AffineLoopNest&lt;true&gt;</a> *affineLoop{<span class="keyword">nullptr</span>};</div>
 <div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;  [[no_unique_address]] <a class="code" href="structOptional.html">Optional&lt;LoopTree *&gt;</a> parentLoop{<span class="keyword">nullptr</span>};</div>
-<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;  [[no_unique_address]] llvm::SmallVector&lt;NotNull&lt;MemoryAccess&gt;&gt; memAccesses{};</div>
+<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;  [[no_unique_address]] llvm::SmallVector&lt;NotNull&lt;ArrayIndex&gt;&gt; memAccesses{};</div>
 <div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160; </div>
 <div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;  ~<a class="code" href="structLoopTree.html">LoopTree</a>() { <span class="comment">// NOLINT(misc-no-recursion)</span></div>
 <div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">auto</span> subLoop : subLoops) subLoop-&gt;~LoopTree();</div>
@@ -211,7 +211,7 @@ $(function() {
 <div class="ttc" id="astructBumpAlloc_html"><div class="ttname"><a href="structBumpAlloc.html">BumpAlloc</a></div><div class="ttdef"><b>Definition:</b> Allocators.hpp:42</div></div>
 <div class="ttc" id="astructLoopTree_html"><div class="ttname"><a href="structLoopTree.html">LoopTree</a></div><div class="ttdef"><b>Definition:</b> LoopForest.hpp:23</div></div>
 <div class="ttc" id="astructOptional_html"><div class="ttname"><a href="structOptional.html">Optional&lt; LoopTree * &gt;</a></div></div>
-<div class="ttc" id="astructPredicate_1_1Map_html"><div class="ttname"><a href="structPredicate_1_1Map.html">Predicate::Map</a></div><div class="ttdef"><b>Definition:</b> Instruction.hpp:1146</div></div>
+<div class="ttc" id="astructPredicate_1_1Map_html"><div class="ttname"><a href="structPredicate_1_1Map.html">Predicate::Map</a></div><div class="ttdef"><b>Definition:</b> Instruction.hpp:1128</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

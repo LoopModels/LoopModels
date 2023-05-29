@@ -119,173 +119,183 @@ $(function() {
 <div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;  constexpr <span class="keyword">auto</span> operator==(<span class="keyword">const</span> <a class="code" href="structMemoryAccess.html">MemoryAccess</a> &amp;ma) <span class="keyword">const</span> -&gt; <span class="keywordtype">bool</span> {</div>
 <div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;    <span class="keywordflow">return</span> *arrayRef == *ma.arrayRef &amp;&amp; load_ == ma.load_;</div>
 <div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;  }</div>
-<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160; </div>
-<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;  [[nodiscard]] <span class="keyword">static</span> <span class="keyword">auto</span></div>
-<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;  construct(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, <span class="keyword">const</span> llvm::SCEVUnknown *arrayPtr,</div>
-<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;            <a class="code" href="structAffineLoopNest.html">AffineLoopNest&lt;true&gt;</a> &amp;loopRef, llvm::Instruction *user,</div>
-<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;            PtrMatrix&lt;int64_t&gt; indMatT,</div>
-<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;            std::array&lt;llvm::SmallVector&lt;const llvm::SCEV *, 3&gt;, 2&gt; szOff,</div>
-<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;            PtrMatrix&lt;int64_t&gt; offsets, PtrVector&lt;unsigned&gt; o)</div>
+<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;  [[nodiscard]] <span class="keyword">static</span> <span class="keyword">auto</span> construct(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc,</div>
+<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;                                      <a class="code" href="classNotNull.html">NotNull&lt;ArrayIndex&gt;</a> arrayRef, <span class="keywordtype">bool</span> load)</div>
+<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;    -&gt; <a class="code" href="classNotNull.html">NotNull&lt;MemoryAccess&gt;</a> {</div>
+<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;    <span class="keywordflow">return</span> alloc.create&lt;<a class="code" href="structMemoryAccess.html">MemoryAccess</a>&gt;(arrayRef, load);</div>
+<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;  }</div>
+<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;  [[nodiscard]] <span class="keyword">static</span> <span class="keyword">auto</span> construct(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc,</div>
+<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;                                      <a class="code" href="classNotNull.html">NotNull&lt;ArrayIndex&gt;</a> arrayRef)</div>
 <div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;    -&gt; <a class="code" href="classNotNull.html">NotNull&lt;MemoryAccess&gt;</a> {</div>
-<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;    <span class="keywordflow">return</span> alloc.create&lt;<a class="code" href="structMemoryAccess.html">MemoryAccess</a>&gt;(<a class="code" href="classArrayIndex.html#a6da5127e873b5d3986f683faffe01dfe">ArrayIndex::construct</a>(</div>
-<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;      alloc, arrayPtr, loopRef, user, indMatT, std::move(szOff), offsets, o));</div>
-<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;  }</div>
-<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;  [[nodiscard]] <span class="keyword">static</span> <span class="keyword">auto</span></div>
-<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;  construct(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, <span class="keyword">const</span> llvm::SCEVUnknown *arrayPtr,</div>
-<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;            <a class="code" href="structAffineLoopNest.html">AffineLoopNest&lt;true&gt;</a> &amp;loopRef, llvm::Instruction *user,</div>
-<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;            PtrVector&lt;unsigned&gt; o) -&gt; <a class="code" href="classNotNull.html">NotNull&lt;MemoryAccess&gt;</a> {</div>
-<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;    <span class="keywordflow">return</span> alloc.create&lt;<a class="code" href="structMemoryAccess.html">MemoryAccess</a>&gt;(</div>
-<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;      <a class="code" href="classArrayIndex.html#a6da5127e873b5d3986f683faffe01dfe">ArrayIndex::construct</a>(alloc, arrayPtr, loopRef, user, o));</div>
-<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;  }</div>
-<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;  <span class="keywordtype">void</span> peelLoops(<span class="keywordtype">size_t</span> n) { arrayRef-&gt;peelLoops(n); }</div>
-<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> isLoad() <span class="keyword">const</span> -&gt; <span class="keywordtype">bool</span> { <span class="keywordflow">return</span> load_; }</div>
-<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> isStore() <span class="keyword">const</span> -&gt; <span class="keywordtype">bool</span> { <span class="keywordflow">return</span> !load_; }</div>
-<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getArrayRef() -&gt; <a class="code" href="classNotNull.html">NotNull&lt;ArrayIndex&gt;</a> {</div>
-<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;    <span class="keywordflow">return</span> arrayRef;</div>
-<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;  }</div>
-<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getArrayRef() <span class="keyword">const</span></div>
-<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;    -&gt; <a class="code" href="classNotNull.html">NotNull&lt;const ArrayIndex&gt;</a> {</div>
-<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;    <span class="keywordflow">return</span> arrayRef;</div>
-<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;  }</div>
-<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;  <span class="keywordtype">void</span> setAddress(<a class="code" href="classAddr.html">Addr</a> *addr) { addrs = addr; }</div>
-<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;  <span class="comment">// [[nodiscard]] constexpr auto repCount() const -&gt; size_t {</span></div>
-<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;  <span class="comment">//   return addrReplications + 1;</span></div>
-<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;  <span class="comment">// }</span></div>
-<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;  <span class="comment">// void replicateAddr() { ++addrReplications; }</span></div>
-<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;  <span class="comment">// void push_back(BumpAlloc&lt;&gt; &amp;alloc, Address *addr) {</span></div>
-<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;  <span class="comment">//   if (addrReplications) {</span></div>
-<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;  <span class="comment">//     if (numAddr == 0)</span></div>
-<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;  <span class="comment">//       addrss = alloc.allocate&lt;Address *&gt;(addrReplications + 1);</span></div>
-<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;  <span class="comment">//     invariant(numAddr &lt;= addrReplications);</span></div>
-<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;  <span class="comment">//     addrss[numAddr++] = addr;</span></div>
-<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;  <span class="comment">//   } else addrs = addr;</span></div>
-<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;  <span class="comment">// }</span></div>
-<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;  <span class="comment">// auto getAddresses() -&gt; MutPtrVector&lt;Address *&gt; {</span></div>
-<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;  <span class="comment">//   return {addrReplications ? addrss : &amp;addrs, addrReplications ? numAddr :</span></div>
-<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;  <span class="comment">//   1};</span></div>
-<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;  <span class="comment">// }</span></div>
-<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getInstruction() -&gt; llvm::Instruction * {</div>
-<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;    <span class="keywordflow">return</span> arrayRef-&gt;getInstruction();</div>
-<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;  }</div>
-<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getInstruction() <span class="keyword">const</span> -&gt; <span class="keyword">const</span> llvm::Instruction * {</div>
-<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;    <span class="keywordflow">return</span> arrayRef-&gt;getInstruction();</div>
-<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;  }</div>
-<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getLoop() <span class="keyword">const</span></div>
-<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;    -&gt; <a class="code" href="classNotNull.html">NotNull&lt;const AffineLoopNest&lt;&gt;</a>&gt; {</div>
-<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;    <span class="keywordflow">return</span> arrayRef-&gt;getLoop();</div>
-<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;  }</div>
-<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getLoop() -&gt; <a class="code" href="classNotNull.html">NotNull&lt;AffineLoopNest&lt;&gt;</a>&gt; {</div>
-<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;    <span class="keywordflow">return</span> arrayRef-&gt;getLoop();</div>
+<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;    <span class="keywordflow">return</span> alloc.create&lt;<a class="code" href="structMemoryAccess.html">MemoryAccess</a>&gt;(arrayRef, arrayRef-&gt;isLoad());</div>
+<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;  }</div>
+<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;  [[nodiscard]] <span class="keyword">static</span> <span class="keyword">auto</span></div>
+<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;  construct(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, <span class="keyword">const</span> llvm::SCEVUnknown *arrayPtr,</div>
+<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;            <a class="code" href="structAffineLoopNest.html">AffineLoopNest&lt;true&gt;</a> &amp;loopRef, llvm::Instruction *user,</div>
+<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;            PtrMatrix&lt;int64_t&gt; indMatT,</div>
+<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;            std::array&lt;llvm::SmallVector&lt;const llvm::SCEV *, 3&gt;, 2&gt; szOff,</div>
+<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;            PtrMatrix&lt;int64_t&gt; offsets, PtrVector&lt;unsigned&gt; o)</div>
+<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;    -&gt; <a class="code" href="classNotNull.html">NotNull&lt;MemoryAccess&gt;</a> {</div>
+<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;    <span class="keywordflow">return</span> alloc.create&lt;<a class="code" href="structMemoryAccess.html">MemoryAccess</a>&gt;(<a class="code" href="classArrayIndex.html#a6da5127e873b5d3986f683faffe01dfe">ArrayIndex::construct</a>(</div>
+<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;      alloc, arrayPtr, loopRef, user, indMatT, std::move(szOff), offsets, o));</div>
+<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;  }</div>
+<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;  [[nodiscard]] <span class="keyword">static</span> <span class="keyword">auto</span></div>
+<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;  construct(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, <span class="keyword">const</span> llvm::SCEVUnknown *arrayPtr,</div>
+<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;            <a class="code" href="structAffineLoopNest.html">AffineLoopNest&lt;true&gt;</a> &amp;loopRef, llvm::Instruction *user,</div>
+<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;            PtrVector&lt;unsigned&gt; o) -&gt; <a class="code" href="classNotNull.html">NotNull&lt;MemoryAccess&gt;</a> {</div>
+<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;    <span class="keywordflow">return</span> alloc.create&lt;<a class="code" href="structMemoryAccess.html">MemoryAccess</a>&gt;(</div>
+<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;      <a class="code" href="classArrayIndex.html#a6da5127e873b5d3986f683faffe01dfe">ArrayIndex::construct</a>(alloc, arrayPtr, loopRef, user, o));</div>
+<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;  }</div>
+<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160; </div>
+<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;  <span class="keywordtype">void</span> peelLoops(<span class="keywordtype">size_t</span> n) { arrayRef-&gt;peelLoops(n); }</div>
+<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> isLoad() <span class="keyword">const</span> -&gt; <span class="keywordtype">bool</span> { <span class="keywordflow">return</span> load_; }</div>
+<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> isStore() <span class="keyword">const</span> -&gt; <span class="keywordtype">bool</span> { <span class="keywordflow">return</span> !load_; }</div>
+<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getArrayRef() -&gt; <a class="code" href="classNotNull.html">NotNull&lt;ArrayIndex&gt;</a> {</div>
+<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;    <span class="keywordflow">return</span> arrayRef;</div>
+<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;  }</div>
+<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getArrayRef() <span class="keyword">const</span></div>
+<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;    -&gt; <a class="code" href="classNotNull.html">NotNull&lt;const ArrayIndex&gt;</a> {</div>
+<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;    <span class="keywordflow">return</span> arrayRef;</div>
+<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;  }</div>
+<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;  constexpr <span class="keywordtype">void</span> setAddress(<a class="code" href="classAddr.html">Addr</a> *addr) { addrs = addr; }</div>
+<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;  <span class="comment">// [[nodiscard]] constexpr auto repCount() const -&gt; size_t {</span></div>
+<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;  <span class="comment">//   return addrReplications + 1;</span></div>
+<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;  <span class="comment">// }</span></div>
+<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;  <span class="comment">// void replicateAddr() { ++addrReplications; }</span></div>
+<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;  <span class="comment">// void push_back(BumpAlloc&lt;&gt; &amp;alloc, Address *addr) {</span></div>
+<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;  <span class="comment">//   if (addrReplications) {</span></div>
+<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;  <span class="comment">//     if (numAddr == 0)</span></div>
+<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;  <span class="comment">//       addrss = alloc.allocate&lt;Address *&gt;(addrReplications + 1);</span></div>
+<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;  <span class="comment">//     invariant(numAddr &lt;= addrReplications);</span></div>
+<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;  <span class="comment">//     addrss[numAddr++] = addr;</span></div>
+<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;  <span class="comment">//   } else addrs = addr;</span></div>
+<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;  <span class="comment">// }</span></div>
+<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;  <span class="comment">// auto getAddresses() -&gt; MutPtrVector&lt;Address *&gt; {</span></div>
+<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;  <span class="comment">//   return {addrReplications ? addrss : &amp;addrs, addrReplications ? numAddr :</span></div>
+<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;  <span class="comment">//   1};</span></div>
+<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;  <span class="comment">// }</span></div>
+<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getInstruction() -&gt; llvm::Instruction * {</div>
+<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;    <span class="keywordflow">return</span> arrayRef-&gt;getInstruction();</div>
 <div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;  }</div>
-<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getArrayDim() <span class="keyword">const</span> -&gt; <span class="keywordtype">size_t</span> {</div>
-<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;    <span class="keywordflow">return</span> arrayRef-&gt;getArrayDim();</div>
+<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getInstruction() <span class="keyword">const</span> -&gt; <span class="keyword">const</span> llvm::Instruction * {</div>
+<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;    <span class="keywordflow">return</span> arrayRef-&gt;getInstruction();</div>
 <div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;  }</div>
-<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> sizesMatch(<span class="keyword">const</span> <a class="code" href="structMemoryAccess.html">MemoryAccess</a> &amp;ma) <span class="keyword">const</span> -&gt; <span class="keywordtype">bool</span> {</div>
-<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;    <span class="keywordflow">return</span> arrayRef-&gt;sizesMatch(ma.getArrayRef());</div>
-<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;  }</div>
-<div class="line"><a name="l00117"></a><span class="lineno"><a class="line" href="structMemoryAccess.html#ab1cc444538dde0ecc2bee9c77988cbbe">  117</a></span>&#160;  constexpr <span class="keyword">auto</span> <a class="code" href="structMemoryAccess.html#ab1cc444538dde0ecc2bee9c77988cbbe">indexMatrix</a>() -&gt; MutDensePtrMatrix&lt;int64_t&gt; {</div>
-<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;    <span class="keywordflow">return</span> arrayRef-&gt;indexMatrix();</div>
+<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getLoop() <span class="keyword">const</span></div>
+<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;    -&gt; <a class="code" href="classNotNull.html">NotNull&lt;const AffineLoopNest&lt;&gt;</a>&gt; {</div>
+<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;    <span class="keywordflow">return</span> arrayRef-&gt;getLoop();</div>
+<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;  }</div>
+<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getLoop() -&gt; <a class="code" href="classNotNull.html">NotNull&lt;AffineLoopNest&lt;&gt;</a>&gt; {</div>
+<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;    <span class="keywordflow">return</span> arrayRef-&gt;getLoop();</div>
 <div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;  }</div>
-<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> <a class="code" href="structMemoryAccess.html#ab1cc444538dde0ecc2bee9c77988cbbe">indexMatrix</a>() const -&gt; DensePtrMatrix&lt;int64_t&gt; {</div>
-<div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;    <span class="keywordflow">return</span> arrayRef-&gt;indexMatrix();</div>
+<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getArrayDim() <span class="keyword">const</span> -&gt; <span class="keywordtype">size_t</span> {</div>
+<div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;    <span class="keywordflow">return</span> arrayRef-&gt;getArrayDim();</div>
 <div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;  }</div>
-<div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;  constexpr <span class="keyword">auto</span> offsetMatrix() -&gt; MutDensePtrMatrix&lt;int64_t&gt; {</div>
-<div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;    <span class="keywordflow">return</span> arrayRef-&gt;offsetMatrix();</div>
+<div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> sizesMatch(<span class="keyword">const</span> <a class="code" href="structMemoryAccess.html">MemoryAccess</a> &amp;ma) <span class="keyword">const</span> -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;    <span class="keywordflow">return</span> arrayRef-&gt;sizesMatch(ma.getArrayRef());</div>
 <div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160;  }</div>
-<div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> offsetMatrix() const -&gt; DensePtrMatrix&lt;int64_t&gt; {</div>
-<div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;    <span class="keywordflow">return</span> arrayRef-&gt;offsetMatrix();</div>
-<div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160;  }</div>
-<div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160;  constexpr <span class="keyword">auto</span> getFusionOmega() -&gt; MutPtrVector&lt;int64_t&gt; {</div>
-<div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160;    <span class="keywordflow">return</span> arrayRef-&gt;getFusionOmega();</div>
-<div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160;  }</div>
-<div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getFusionOmega() const -&gt; PtrVector&lt;int64_t&gt; {</div>
-<div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;    <span class="keywordflow">return</span> arrayRef-&gt;getFusionOmega();</div>
-<div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;  }</div>
-<div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getArrayPointer() const -&gt; const llvm::SCEV * {</div>
-<div class="line"><a name="l00136"></a><span class="lineno">  136</span>&#160;    <span class="keywordflow">return</span> arrayRef-&gt;getArrayPointer();</div>
-<div class="line"><a name="l00137"></a><span class="lineno">  137</span>&#160;  }</div>
-<div class="line"><a name="l00138"></a><span class="lineno">  138</span>&#160;  constexpr <span class="keyword">auto</span> getAddress() -&gt; <a class="code" href="classNotNull.html">NotNull&lt;Addr&gt;</a> { <span class="keywordflow">return</span> addrs; }</div>
-<div class="line"><a name="l00139"></a><span class="lineno">  139</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getNumLoops() const -&gt; <span class="keywordtype">unsigned</span> {</div>
-<div class="line"><a name="l00140"></a><span class="lineno">  140</span>&#160;    <span class="keywordflow">return</span> arrayRef-&gt;getNumLoops();</div>
-<div class="line"><a name="l00141"></a><span class="lineno">  141</span>&#160;  }</div>
-<div class="line"><a name="l00142"></a><span class="lineno">  142</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getAddress() const -&gt; <a class="code" href="classNotNull.html">NotNull</a>&lt;const <a class="code" href="classAddr.html">Addr</a>&gt; {</div>
-<div class="line"><a name="l00143"></a><span class="lineno">  143</span>&#160;    <span class="keywordflow">return</span> addrs;</div>
-<div class="line"><a name="l00144"></a><span class="lineno">  144</span>&#160;  }</div>
-<div class="line"><a name="l00145"></a><span class="lineno">  145</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> inputEdges() const -&gt; const <a class="code" href="structBitSet.html">BitSet</a> &amp; {</div>
-<div class="line"><a name="l00146"></a><span class="lineno">  146</span>&#160;    <span class="keywordflow">return</span> edgesIn;</div>
-<div class="line"><a name="l00147"></a><span class="lineno">  147</span>&#160;  }</div>
-<div class="line"><a name="l00148"></a><span class="lineno">  148</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> outputEdges() const -&gt; const <a class="code" href="structBitSet.html">BitSet</a> &amp; {</div>
-<div class="line"><a name="l00149"></a><span class="lineno">  149</span>&#160;    <span class="keywordflow">return</span> edgesOut;</div>
-<div class="line"><a name="l00150"></a><span class="lineno">  150</span>&#160;  }</div>
-<div class="line"><a name="l00151"></a><span class="lineno">  151</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getNode() const -&gt; <span class="keywordtype">unsigned</span> { <span class="keywordflow">return</span> nodeIndex; }</div>
-<div class="line"><a name="l00152"></a><span class="lineno">  152</span>&#160;  constexpr <span class="keywordtype">void</span> addEdgeIn(<span class="keywordtype">size_t</span> i) { edgesIn.insert(i); }</div>
-<div class="line"><a name="l00153"></a><span class="lineno">  153</span>&#160;  constexpr <span class="keywordtype">void</span> addEdgeOut(<span class="keywordtype">size_t</span> i) { edgesOut.insert(i); }</div>
-<div class="line"><a name="l00155"></a><span class="lineno">  155</span>&#160; </div>
-<div class="line"><a name="l00156"></a><span class="lineno"><a class="line" href="structMemoryAccess.html#a4c213ffb008f3b021ab51c21dddd7c06">  156</a></span>&#160;  [[nodiscard]] <span class="keyword">auto</span> <a class="code" href="structMemoryAccess.html#a4c213ffb008f3b021ab51c21dddd7c06">getLoad</a>() -&gt; llvm::LoadInst * {</div>
-<div class="line"><a name="l00157"></a><span class="lineno">  157</span>&#160;    <span class="keywordflow">return</span> arrayRef-&gt;getLoad();</div>
+<div class="line"><a name="l00127"></a><span class="lineno"><a class="line" href="structMemoryAccess.html#ab1cc444538dde0ecc2bee9c77988cbbe">  127</a></span>&#160;  constexpr <span class="keyword">auto</span> <a class="code" href="structMemoryAccess.html#ab1cc444538dde0ecc2bee9c77988cbbe">indexMatrix</a>() -&gt; MutDensePtrMatrix&lt;int64_t&gt; {</div>
+<div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160;    <span class="keywordflow">return</span> arrayRef-&gt;indexMatrix();</div>
+<div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160;  }</div>
+<div class="line"><a name="l00131"></a><span class="lineno"><a class="line" href="structMemoryAccess.html#a24f0c9af64a2d853326cd5129f8bbf07">  131</a></span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> <a class="code" href="structMemoryAccess.html#a24f0c9af64a2d853326cd5129f8bbf07">indexMatrix</a>() const -&gt; DensePtrMatrix&lt;int64_t&gt; {</div>
+<div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160;    <span class="keywordflow">return</span> arrayRef-&gt;indexMatrix();</div>
+<div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;  }</div>
+<div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;  constexpr <span class="keyword">auto</span> offsetMatrix() -&gt; MutDensePtrMatrix&lt;int64_t&gt; {</div>
+<div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;    <span class="keywordflow">return</span> arrayRef-&gt;offsetMatrix();</div>
+<div class="line"><a name="l00136"></a><span class="lineno">  136</span>&#160;  }</div>
+<div class="line"><a name="l00137"></a><span class="lineno">  137</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> offsetMatrix() const -&gt; DensePtrMatrix&lt;int64_t&gt; {</div>
+<div class="line"><a name="l00138"></a><span class="lineno">  138</span>&#160;    <span class="keywordflow">return</span> arrayRef-&gt;offsetMatrix();</div>
+<div class="line"><a name="l00139"></a><span class="lineno">  139</span>&#160;  }</div>
+<div class="line"><a name="l00140"></a><span class="lineno">  140</span>&#160;  constexpr <span class="keyword">auto</span> getFusionOmega() -&gt; MutPtrVector&lt;int64_t&gt; {</div>
+<div class="line"><a name="l00141"></a><span class="lineno">  141</span>&#160;    <span class="keywordflow">return</span> arrayRef-&gt;getFusionOmega();</div>
+<div class="line"><a name="l00142"></a><span class="lineno">  142</span>&#160;  }</div>
+<div class="line"><a name="l00143"></a><span class="lineno">  143</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getFusionOmega() const -&gt; PtrVector&lt;int64_t&gt; {</div>
+<div class="line"><a name="l00144"></a><span class="lineno">  144</span>&#160;    <span class="keywordflow">return</span> arrayRef-&gt;getFusionOmega();</div>
+<div class="line"><a name="l00145"></a><span class="lineno">  145</span>&#160;  }</div>
+<div class="line"><a name="l00146"></a><span class="lineno">  146</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getArrayPointer() const -&gt; const llvm::SCEV * {</div>
+<div class="line"><a name="l00147"></a><span class="lineno">  147</span>&#160;    <span class="keywordflow">return</span> arrayRef-&gt;getArrayPointer();</div>
+<div class="line"><a name="l00148"></a><span class="lineno">  148</span>&#160;  }</div>
+<div class="line"><a name="l00149"></a><span class="lineno">  149</span>&#160;  constexpr <span class="keyword">auto</span> getAddress() -&gt; <a class="code" href="classNotNull.html">NotNull&lt;Addr&gt;</a> { <span class="keywordflow">return</span> addrs; }</div>
+<div class="line"><a name="l00150"></a><span class="lineno">  150</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getNumLoops() const -&gt; <span class="keywordtype">unsigned</span> {</div>
+<div class="line"><a name="l00151"></a><span class="lineno">  151</span>&#160;    <span class="keywordflow">return</span> arrayRef-&gt;getNumLoops();</div>
+<div class="line"><a name="l00152"></a><span class="lineno">  152</span>&#160;  }</div>
+<div class="line"><a name="l00153"></a><span class="lineno">  153</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getAddress() const -&gt; <a class="code" href="classNotNull.html">NotNull</a>&lt;const <a class="code" href="classAddr.html">Addr</a>&gt; {</div>
+<div class="line"><a name="l00154"></a><span class="lineno">  154</span>&#160;    <span class="keywordflow">return</span> addrs;</div>
+<div class="line"><a name="l00155"></a><span class="lineno">  155</span>&#160;  }</div>
+<div class="line"><a name="l00156"></a><span class="lineno">  156</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> inputEdges() const -&gt; const <a class="code" href="structBitSet.html">BitSet</a> &amp; {</div>
+<div class="line"><a name="l00157"></a><span class="lineno">  157</span>&#160;    <span class="keywordflow">return</span> edgesIn;</div>
 <div class="line"><a name="l00158"></a><span class="lineno">  158</span>&#160;  }</div>
-<div class="line"><a name="l00159"></a><span class="lineno">  159</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getStore() -&gt; llvm::StoreInst * {</div>
-<div class="line"><a name="l00160"></a><span class="lineno">  160</span>&#160;    <span class="keywordflow">return</span> arrayRef-&gt;getStore();</div>
+<div class="line"><a name="l00159"></a><span class="lineno">  159</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> outputEdges() const -&gt; const <a class="code" href="structBitSet.html">BitSet</a> &amp; {</div>
+<div class="line"><a name="l00160"></a><span class="lineno">  160</span>&#160;    <span class="keywordflow">return</span> edgesOut;</div>
 <div class="line"><a name="l00161"></a><span class="lineno">  161</span>&#160;  }</div>
-<div class="line"><a name="l00162"></a><span class="lineno">  162</span>&#160;  constexpr <span class="keywordtype">void</span> addNodeIndex(<span class="keywordtype">unsigned</span> i) { nodeIndex = i; }</div>
-<div class="line"><a name="l00163"></a><span class="lineno">  163</span>&#160;};</div>
-<div class="line"><a name="l00164"></a><span class="lineno">  164</span>&#160; </div>
-<div class="line"><a name="l00165"></a><span class="lineno">  165</span>&#160;static_assert(std::is_trivially_copyable_v&lt;MemoryAccess&gt;);</div>
+<div class="line"><a name="l00162"></a><span class="lineno">  162</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getNode() const -&gt; <span class="keywordtype">unsigned</span> { <span class="keywordflow">return</span> nodeIndex; }</div>
+<div class="line"><a name="l00163"></a><span class="lineno">  163</span>&#160;  constexpr <span class="keywordtype">void</span> addEdgeIn(<span class="keywordtype">size_t</span> i) { edgesIn.insert(i); }</div>
+<div class="line"><a name="l00164"></a><span class="lineno">  164</span>&#160;  constexpr <span class="keywordtype">void</span> addEdgeOut(<span class="keywordtype">size_t</span> i) { edgesOut.insert(i); }</div>
 <div class="line"><a name="l00166"></a><span class="lineno">  166</span>&#160; </div>
-<div class="line"><a name="l00167"></a><span class="lineno">  167</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> operator&lt;&lt;(llvm::raw_ostream &amp;os, <span class="keyword">const</span> <a class="code" href="classArrayIndex.html">ArrayIndex</a> &amp;m)</div>
-<div class="line"><a name="l00168"></a><span class="lineno">  168</span>&#160;  -&gt; llvm::raw_ostream &amp; {</div>
-<div class="line"><a name="l00169"></a><span class="lineno">  169</span>&#160;  <span class="keywordflow">if</span> (m.isLoad()) os &lt;&lt; <span class="stringliteral">&quot;Load: &quot;</span>;</div>
-<div class="line"><a name="l00170"></a><span class="lineno">  170</span>&#160;  <span class="keywordflow">else</span> os &lt;&lt; <span class="stringliteral">&quot;Store: &quot;</span>;</div>
-<div class="line"><a name="l00171"></a><span class="lineno">  171</span>&#160;  os &lt;&lt; *m.getInstruction();</div>
-<div class="line"><a name="l00172"></a><span class="lineno">  172</span>&#160;  os &lt;&lt; <span class="stringliteral">&quot;\nArrayIndex &quot;</span> &lt;&lt; *m.getArrayPointer() &lt;&lt; <span class="stringliteral">&quot; (dim = &quot;</span> &lt;&lt; m.getArrayDim()</div>
-<div class="line"><a name="l00173"></a><span class="lineno">  173</span>&#160;     &lt;&lt; <span class="stringliteral">&quot;, num loops: &quot;</span> &lt;&lt; m.getNumLoops();</div>
-<div class="line"><a name="l00174"></a><span class="lineno">  174</span>&#160;  <span class="keywordflow">if</span> (m.getArrayDim()) os &lt;&lt; <span class="stringliteral">&quot;, element size: &quot;</span> &lt;&lt; *m.getSizes().back();</div>
-<div class="line"><a name="l00175"></a><span class="lineno">  175</span>&#160;  os &lt;&lt; <span class="stringliteral">&quot;):\n&quot;</span>;</div>
-<div class="line"><a name="l00176"></a><span class="lineno">  176</span>&#160;  PtrMatrix&lt;int64_t&gt; A{m.indexMatrix()};</div>
-<div class="line"><a name="l00177"></a><span class="lineno">  177</span>&#160;  os &lt;&lt; <span class="stringliteral">&quot;Sizes: [&quot;</span>;</div>
-<div class="line"><a name="l00178"></a><span class="lineno">  178</span>&#160;  <span class="keywordflow">if</span> (m.getArrayDim()) {</div>
-<div class="line"><a name="l00179"></a><span class="lineno">  179</span>&#160;    os &lt;&lt; <span class="stringliteral">&quot; unknown&quot;</span>;</div>
-<div class="line"><a name="l00180"></a><span class="lineno">  180</span>&#160;    <span class="keywordflow">for</span> (ptrdiff_t i = 0; i &lt; ptrdiff_t(A.numCol()) - 1; ++i)</div>
-<div class="line"><a name="l00181"></a><span class="lineno">  181</span>&#160;      os &lt;&lt; <span class="stringliteral">&quot;, &quot;</span> &lt;&lt; *m.getSizes()[i];</div>
-<div class="line"><a name="l00182"></a><span class="lineno">  182</span>&#160;  }</div>
-<div class="line"><a name="l00183"></a><span class="lineno">  183</span>&#160;  os &lt;&lt; <span class="stringliteral">&quot; ]\nSubscripts: [ &quot;</span>;</div>
-<div class="line"><a name="l00184"></a><span class="lineno">  184</span>&#160;  <span class="keywordtype">size_t</span> numLoops = size_t(A.numRow());</div>
-<div class="line"><a name="l00185"></a><span class="lineno">  185</span>&#160;  PtrMatrix&lt;int64_t&gt; offs = m.offsetMatrix();</div>
-<div class="line"><a name="l00186"></a><span class="lineno">  186</span>&#160;  <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; A.numCol(); ++i) {</div>
-<div class="line"><a name="l00187"></a><span class="lineno">  187</span>&#160;    <span class="keywordflow">if</span> (i) os &lt;&lt; <span class="stringliteral">&quot;, &quot;</span>;</div>
-<div class="line"><a name="l00188"></a><span class="lineno">  188</span>&#160;    <span class="keywordtype">bool</span> printPlus = <span class="keyword">false</span>;</div>
-<div class="line"><a name="l00189"></a><span class="lineno">  189</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> j = 0; j &lt; numLoops; ++j) {</div>
-<div class="line"><a name="l00190"></a><span class="lineno">  190</span>&#160;      <span class="keywordflow">if</span> (int64_t Aji = A(j, i)) {</div>
-<div class="line"><a name="l00191"></a><span class="lineno">  191</span>&#160;        <span class="keywordflow">if</span> (printPlus) {</div>
-<div class="line"><a name="l00192"></a><span class="lineno">  192</span>&#160;          <span class="keywordflow">if</span> (Aji &lt;= 0) {</div>
-<div class="line"><a name="l00193"></a><span class="lineno">  193</span>&#160;            Aji *= -1;</div>
-<div class="line"><a name="l00194"></a><span class="lineno">  194</span>&#160;            os &lt;&lt; <span class="stringliteral">&quot; - &quot;</span>;</div>
-<div class="line"><a name="l00195"></a><span class="lineno">  195</span>&#160;          } <span class="keywordflow">else</span> os &lt;&lt; <span class="stringliteral">&quot; + &quot;</span>;</div>
-<div class="line"><a name="l00196"></a><span class="lineno">  196</span>&#160;        }</div>
-<div class="line"><a name="l00197"></a><span class="lineno">  197</span>&#160;        <span class="keywordflow">if</span> (Aji != 1) os &lt;&lt; Aji &lt;&lt; <span class="charliteral">&#39;*&#39;</span>;</div>
-<div class="line"><a name="l00198"></a><span class="lineno">  198</span>&#160;        os &lt;&lt; <span class="stringliteral">&quot;i_&quot;</span> &lt;&lt; j &lt;&lt; <span class="stringliteral">&quot; &quot;</span>;</div>
-<div class="line"><a name="l00199"></a><span class="lineno">  199</span>&#160;        printPlus = <span class="keyword">true</span>;</div>
-<div class="line"><a name="l00200"></a><span class="lineno">  200</span>&#160;      }</div>
-<div class="line"><a name="l00201"></a><span class="lineno">  201</span>&#160;    }</div>
-<div class="line"><a name="l00202"></a><span class="lineno">  202</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> j = 0; j &lt; offs.numCol(); ++j) {</div>
-<div class="line"><a name="l00203"></a><span class="lineno">  203</span>&#160;      <span class="keywordflow">if</span> (int64_t offij = offs(i, j)) {</div>
-<div class="line"><a name="l00204"></a><span class="lineno">  204</span>&#160;        <span class="keywordflow">if</span> (printPlus) {</div>
-<div class="line"><a name="l00205"></a><span class="lineno">  205</span>&#160;          <span class="keywordflow">if</span> (offij &lt;= 0) {</div>
-<div class="line"><a name="l00206"></a><span class="lineno">  206</span>&#160;            offij *= -1;</div>
-<div class="line"><a name="l00207"></a><span class="lineno">  207</span>&#160;            os &lt;&lt; <span class="stringliteral">&quot; - &quot;</span>;</div>
-<div class="line"><a name="l00208"></a><span class="lineno">  208</span>&#160;          } <span class="keywordflow">else</span> os &lt;&lt; <span class="stringliteral">&quot; + &quot;</span>;</div>
-<div class="line"><a name="l00209"></a><span class="lineno">  209</span>&#160;        }</div>
-<div class="line"><a name="l00210"></a><span class="lineno">  210</span>&#160;        <span class="keywordflow">if</span> (j) {</div>
-<div class="line"><a name="l00211"></a><span class="lineno">  211</span>&#160;          <span class="keywordflow">if</span> (offij != 1) os &lt;&lt; offij &lt;&lt; <span class="charliteral">&#39;*&#39;</span>;</div>
-<div class="line"><a name="l00212"></a><span class="lineno">  212</span>&#160;          os &lt;&lt; *m.getLoop()-&gt;getSyms()[j - 1];</div>
-<div class="line"><a name="l00213"></a><span class="lineno">  213</span>&#160;        } <span class="keywordflow">else</span> os &lt;&lt; offij;</div>
-<div class="line"><a name="l00214"></a><span class="lineno">  214</span>&#160;        printPlus = <span class="keyword">true</span>;</div>
-<div class="line"><a name="l00215"></a><span class="lineno">  215</span>&#160;      }</div>
-<div class="line"><a name="l00216"></a><span class="lineno">  216</span>&#160;    }</div>
-<div class="line"><a name="l00217"></a><span class="lineno">  217</span>&#160;  }</div>
-<div class="line"><a name="l00218"></a><span class="lineno">  218</span>&#160;  <span class="keywordflow">return</span> os &lt;&lt; <span class="stringliteral">&quot;]\nInitial Fusion Omega: &quot;</span> &lt;&lt; m.getFusionOmega()</div>
-<div class="line"><a name="l00219"></a><span class="lineno">  219</span>&#160;            &lt;&lt; <span class="stringliteral">&quot;\nAffineLoopNest:&quot;</span> &lt;&lt; *m.getLoop();</div>
-<div class="line"><a name="l00220"></a><span class="lineno">  220</span>&#160;}</div>
+<div class="line"><a name="l00167"></a><span class="lineno"><a class="line" href="structMemoryAccess.html#a4c213ffb008f3b021ab51c21dddd7c06">  167</a></span>&#160;  [[nodiscard]] <span class="keyword">auto</span> <a class="code" href="structMemoryAccess.html#a4c213ffb008f3b021ab51c21dddd7c06">getLoad</a>() -&gt; llvm::LoadInst * {</div>
+<div class="line"><a name="l00168"></a><span class="lineno">  168</span>&#160;    <span class="keywordflow">return</span> arrayRef-&gt;getLoad();</div>
+<div class="line"><a name="l00169"></a><span class="lineno">  169</span>&#160;  }</div>
+<div class="line"><a name="l00170"></a><span class="lineno">  170</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getStore() -&gt; llvm::StoreInst * {</div>
+<div class="line"><a name="l00171"></a><span class="lineno">  171</span>&#160;    <span class="keywordflow">return</span> arrayRef-&gt;getStore();</div>
+<div class="line"><a name="l00172"></a><span class="lineno">  172</span>&#160;  }</div>
+<div class="line"><a name="l00173"></a><span class="lineno">  173</span>&#160;  constexpr <span class="keywordtype">void</span> addNodeIndex(<span class="keywordtype">unsigned</span> i) { nodeIndex = i; }</div>
+<div class="line"><a name="l00174"></a><span class="lineno">  174</span>&#160;};</div>
+<div class="line"><a name="l00175"></a><span class="lineno">  175</span>&#160; </div>
+<div class="line"><a name="l00176"></a><span class="lineno">  176</span>&#160;static_assert(std::is_trivially_copyable_v&lt;MemoryAccess&gt;);</div>
+<div class="line"><a name="l00177"></a><span class="lineno">  177</span>&#160; </div>
+<div class="line"><a name="l00178"></a><span class="lineno">  178</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> operator&lt;&lt;(llvm::raw_ostream &amp;os, <span class="keyword">const</span> <a class="code" href="classArrayIndex.html">ArrayIndex</a> &amp;m)</div>
+<div class="line"><a name="l00179"></a><span class="lineno">  179</span>&#160;  -&gt; llvm::raw_ostream &amp; {</div>
+<div class="line"><a name="l00180"></a><span class="lineno">  180</span>&#160;  <span class="keywordflow">if</span> (m.isLoad()) os &lt;&lt; <span class="stringliteral">&quot;Load: &quot;</span>;</div>
+<div class="line"><a name="l00181"></a><span class="lineno">  181</span>&#160;  <span class="keywordflow">else</span> os &lt;&lt; <span class="stringliteral">&quot;Store: &quot;</span>;</div>
+<div class="line"><a name="l00182"></a><span class="lineno">  182</span>&#160;  os &lt;&lt; *m.getInstruction();</div>
+<div class="line"><a name="l00183"></a><span class="lineno">  183</span>&#160;  os &lt;&lt; <span class="stringliteral">&quot;\nArrayIndex &quot;</span> &lt;&lt; *m.getArrayPointer() &lt;&lt; <span class="stringliteral">&quot; (dim = &quot;</span> &lt;&lt; m.getArrayDim()</div>
+<div class="line"><a name="l00184"></a><span class="lineno">  184</span>&#160;     &lt;&lt; <span class="stringliteral">&quot;, num loops: &quot;</span> &lt;&lt; m.getNumLoops();</div>
+<div class="line"><a name="l00185"></a><span class="lineno">  185</span>&#160;  <span class="keywordflow">if</span> (m.getArrayDim()) os &lt;&lt; <span class="stringliteral">&quot;, element size: &quot;</span> &lt;&lt; *m.getSizes().back();</div>
+<div class="line"><a name="l00186"></a><span class="lineno">  186</span>&#160;  os &lt;&lt; <span class="stringliteral">&quot;):\n&quot;</span>;</div>
+<div class="line"><a name="l00187"></a><span class="lineno">  187</span>&#160;  PtrMatrix&lt;int64_t&gt; A{m.indexMatrix()};</div>
+<div class="line"><a name="l00188"></a><span class="lineno">  188</span>&#160;  os &lt;&lt; <span class="stringliteral">&quot;Sizes: [&quot;</span>;</div>
+<div class="line"><a name="l00189"></a><span class="lineno">  189</span>&#160;  <span class="keywordflow">if</span> (m.getArrayDim()) {</div>
+<div class="line"><a name="l00190"></a><span class="lineno">  190</span>&#160;    os &lt;&lt; <span class="stringliteral">&quot; unknown&quot;</span>;</div>
+<div class="line"><a name="l00191"></a><span class="lineno">  191</span>&#160;    <span class="keywordflow">for</span> (ptrdiff_t i = 0; i &lt; ptrdiff_t(A.numRow()) - 1; ++i)</div>
+<div class="line"><a name="l00192"></a><span class="lineno">  192</span>&#160;      os &lt;&lt; <span class="stringliteral">&quot;, &quot;</span> &lt;&lt; *m.getSizes()[i];</div>
+<div class="line"><a name="l00193"></a><span class="lineno">  193</span>&#160;  }</div>
+<div class="line"><a name="l00194"></a><span class="lineno">  194</span>&#160;  os &lt;&lt; <span class="stringliteral">&quot; ]\nSubscripts: [ &quot;</span>;</div>
+<div class="line"><a name="l00195"></a><span class="lineno">  195</span>&#160;  <span class="keywordtype">size_t</span> numLoops = size_t(A.numCol());</div>
+<div class="line"><a name="l00196"></a><span class="lineno">  196</span>&#160;  PtrMatrix&lt;int64_t&gt; offs = m.offsetMatrix();</div>
+<div class="line"><a name="l00197"></a><span class="lineno">  197</span>&#160;  <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; A.numRow(); ++i) {</div>
+<div class="line"><a name="l00198"></a><span class="lineno">  198</span>&#160;    <span class="keywordflow">if</span> (i) os &lt;&lt; <span class="stringliteral">&quot;, &quot;</span>;</div>
+<div class="line"><a name="l00199"></a><span class="lineno">  199</span>&#160;    <span class="keywordtype">bool</span> printPlus = <span class="keyword">false</span>;</div>
+<div class="line"><a name="l00200"></a><span class="lineno">  200</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> j = 0; j &lt; numLoops; ++j) {</div>
+<div class="line"><a name="l00201"></a><span class="lineno">  201</span>&#160;      <span class="keywordflow">if</span> (int64_t Aji = A(i, j)) {</div>
+<div class="line"><a name="l00202"></a><span class="lineno">  202</span>&#160;        <span class="keywordflow">if</span> (printPlus) {</div>
+<div class="line"><a name="l00203"></a><span class="lineno">  203</span>&#160;          <span class="keywordflow">if</span> (Aji &lt;= 0) {</div>
+<div class="line"><a name="l00204"></a><span class="lineno">  204</span>&#160;            Aji *= -1;</div>
+<div class="line"><a name="l00205"></a><span class="lineno">  205</span>&#160;            os &lt;&lt; <span class="stringliteral">&quot; - &quot;</span>;</div>
+<div class="line"><a name="l00206"></a><span class="lineno">  206</span>&#160;          } <span class="keywordflow">else</span> os &lt;&lt; <span class="stringliteral">&quot; + &quot;</span>;</div>
+<div class="line"><a name="l00207"></a><span class="lineno">  207</span>&#160;        }</div>
+<div class="line"><a name="l00208"></a><span class="lineno">  208</span>&#160;        <span class="keywordflow">if</span> (Aji != 1) os &lt;&lt; Aji &lt;&lt; <span class="charliteral">&#39;*&#39;</span>;</div>
+<div class="line"><a name="l00209"></a><span class="lineno">  209</span>&#160;        os &lt;&lt; <span class="stringliteral">&quot;i_&quot;</span> &lt;&lt; j &lt;&lt; <span class="stringliteral">&quot; &quot;</span>;</div>
+<div class="line"><a name="l00210"></a><span class="lineno">  210</span>&#160;        printPlus = <span class="keyword">true</span>;</div>
+<div class="line"><a name="l00211"></a><span class="lineno">  211</span>&#160;      }</div>
+<div class="line"><a name="l00212"></a><span class="lineno">  212</span>&#160;    }</div>
+<div class="line"><a name="l00213"></a><span class="lineno">  213</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> j = 0; j &lt; offs.numCol(); ++j) {</div>
+<div class="line"><a name="l00214"></a><span class="lineno">  214</span>&#160;      <span class="keywordflow">if</span> (int64_t offij = offs(i, j)) {</div>
+<div class="line"><a name="l00215"></a><span class="lineno">  215</span>&#160;        <span class="keywordflow">if</span> (printPlus) {</div>
+<div class="line"><a name="l00216"></a><span class="lineno">  216</span>&#160;          <span class="keywordflow">if</span> (offij &lt;= 0) {</div>
+<div class="line"><a name="l00217"></a><span class="lineno">  217</span>&#160;            offij *= -1;</div>
+<div class="line"><a name="l00218"></a><span class="lineno">  218</span>&#160;            os &lt;&lt; <span class="stringliteral">&quot; - &quot;</span>;</div>
+<div class="line"><a name="l00219"></a><span class="lineno">  219</span>&#160;          } <span class="keywordflow">else</span> os &lt;&lt; <span class="stringliteral">&quot; + &quot;</span>;</div>
+<div class="line"><a name="l00220"></a><span class="lineno">  220</span>&#160;        }</div>
+<div class="line"><a name="l00221"></a><span class="lineno">  221</span>&#160;        <span class="keywordflow">if</span> (j) {</div>
+<div class="line"><a name="l00222"></a><span class="lineno">  222</span>&#160;          <span class="keywordflow">if</span> (offij != 1) os &lt;&lt; offij &lt;&lt; <span class="charliteral">&#39;*&#39;</span>;</div>
+<div class="line"><a name="l00223"></a><span class="lineno">  223</span>&#160;          os &lt;&lt; *m.getLoop()-&gt;getSyms()[j - 1];</div>
+<div class="line"><a name="l00224"></a><span class="lineno">  224</span>&#160;        } <span class="keywordflow">else</span> os &lt;&lt; offij;</div>
+<div class="line"><a name="l00225"></a><span class="lineno">  225</span>&#160;        printPlus = <span class="keyword">true</span>;</div>
+<div class="line"><a name="l00226"></a><span class="lineno">  226</span>&#160;      }</div>
+<div class="line"><a name="l00227"></a><span class="lineno">  227</span>&#160;    }</div>
+<div class="line"><a name="l00228"></a><span class="lineno">  228</span>&#160;  }</div>
+<div class="line"><a name="l00229"></a><span class="lineno">  229</span>&#160;  <span class="keywordflow">return</span> os &lt;&lt; <span class="stringliteral">&quot;]\nInitial Fusion Omega: &quot;</span> &lt;&lt; m.getFusionOmega()</div>
+<div class="line"><a name="l00230"></a><span class="lineno">  230</span>&#160;            &lt;&lt; <span class="stringliteral">&quot;\nAffineLoopNest:&quot;</span> &lt;&lt; *m.getLoop();</div>
+<div class="line"><a name="l00231"></a><span class="lineno">  231</span>&#160;}</div>
 <div class="ttc" id="aclassAddr_html"><div class="ttname"><a href="classAddr.html">Addr</a></div><div class="ttdef"><b>Definition:</b> Address.hpp:61</div></div>
 <div class="ttc" id="aclassArrayIndex_html"><div class="ttname"><a href="classArrayIndex.html">ArrayIndex</a></div><div class="ttdef"><b>Definition:</b> ArrayIndex.hpp:18</div></div>
 <div class="ttc" id="aclassArrayIndex_html_a6da5127e873b5d3986f683faffe01dfe"><div class="ttname"><a href="classArrayIndex.html#a6da5127e873b5d3986f683faffe01dfe">ArrayIndex::construct</a></div><div class="ttdeci">static auto construct(BumpAlloc&lt;&gt; &amp;alloc, const llvm::SCEVUnknown *arrayPointer, AffineLoopNest&lt; true &gt; &amp;loopRef, llvm::Instruction *user, PtrVector&lt; unsigned &gt; o) -&gt; NotNull&lt; ArrayIndex &gt;</div><div class="ttdoc">Constructor for 0 dimensional memory access.</div><div class="ttdef"><b>Definition:</b> ArrayIndex.hpp:97</div></div>
@@ -294,8 +304,9 @@ $(function() {
 <div class="ttc" id="astructBitSet_html"><div class="ttname"><a href="structBitSet.html">BitSet</a></div><div class="ttdef"><b>Definition:</b> BitSets.hpp:82</div></div>
 <div class="ttc" id="astructBumpAlloc_html"><div class="ttname"><a href="structBumpAlloc.html">BumpAlloc</a></div><div class="ttdef"><b>Definition:</b> Allocators.hpp:42</div></div>
 <div class="ttc" id="astructMemoryAccess_html"><div class="ttname"><a href="structMemoryAccess.html">MemoryAccess</a></div><div class="ttdoc">A particular memory access instance.</div><div class="ttdef"><b>Definition:</b> MemoryAccess.hpp:20</div></div>
-<div class="ttc" id="astructMemoryAccess_html_a4c213ffb008f3b021ab51c21dddd7c06"><div class="ttname"><a href="structMemoryAccess.html#a4c213ffb008f3b021ab51c21dddd7c06">MemoryAccess::getLoad</a></div><div class="ttdeci">auto getLoad() -&gt; llvm::LoadInst *</div><div class="ttdoc">add a node index</div><div class="ttdef"><b>Definition:</b> MemoryAccess.hpp:156</div></div>
-<div class="ttc" id="astructMemoryAccess_html_ab1cc444538dde0ecc2bee9c77988cbbe"><div class="ttname"><a href="structMemoryAccess.html#ab1cc444538dde0ecc2bee9c77988cbbe">MemoryAccess::indexMatrix</a></div><div class="ttdeci">constexpr auto indexMatrix() -&gt; MutDensePtrMatrix&lt; int64_t &gt;</div><div class="ttdoc">indexMatrix() -&gt; getNumLoops() x arrayDim()</div><div class="ttdef"><b>Definition:</b> MemoryAccess.hpp:117</div></div>
+<div class="ttc" id="astructMemoryAccess_html_a24f0c9af64a2d853326cd5129f8bbf07"><div class="ttname"><a href="structMemoryAccess.html#a24f0c9af64a2d853326cd5129f8bbf07">MemoryAccess::indexMatrix</a></div><div class="ttdeci">constexpr auto indexMatrix() const -&gt; DensePtrMatrix&lt; int64_t &gt;</div><div class="ttdoc">indexMatrix() -&gt; arrayDim() x getNumLoops()</div><div class="ttdef"><b>Definition:</b> MemoryAccess.hpp:131</div></div>
+<div class="ttc" id="astructMemoryAccess_html_a4c213ffb008f3b021ab51c21dddd7c06"><div class="ttname"><a href="structMemoryAccess.html#a4c213ffb008f3b021ab51c21dddd7c06">MemoryAccess::getLoad</a></div><div class="ttdeci">auto getLoad() -&gt; llvm::LoadInst *</div><div class="ttdoc">add a node index</div><div class="ttdef"><b>Definition:</b> MemoryAccess.hpp:167</div></div>
+<div class="ttc" id="astructMemoryAccess_html_ab1cc444538dde0ecc2bee9c77988cbbe"><div class="ttname"><a href="structMemoryAccess.html#ab1cc444538dde0ecc2bee9c77988cbbe">MemoryAccess::indexMatrix</a></div><div class="ttdeci">constexpr auto indexMatrix() -&gt; MutDensePtrMatrix&lt; int64_t &gt;</div><div class="ttdoc">indexMatrix() -&gt; arrayDim() x getNumLoops()</div><div class="ttdef"><b>Definition:</b> MemoryAccess.hpp:127</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

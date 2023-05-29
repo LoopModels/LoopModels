@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.9.1"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>LoopModels: Val&lt; N &gt; Struct Template Reference</title>
+<title>LoopModels: Node Class Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -65,77 +65,90 @@ $(function() {
 <a href="#pub-types">Public Types</a> &#124;
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pro-methods">Protected Member Functions</a> &#124;
-<a href="classVal-members.html">List of all members</a>  </div>
+<a href="#pro-attribs">Protected Attributes</a> &#124;
+<a href="classNode-members.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">Val&lt; N &gt; Struct Template Reference</div>  </div>
+<div class="title">Node Class Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
 
-<p><code>#include &lt;<a class="el" href="Val_8hpp_source.html">Val.hpp</a>&gt;</code></p>
+<p><code>#include &lt;<a class="el" href="Node_8hpp_source.html">Node.hpp</a>&gt;</code></p>
 <div class="dynheader">
-Inheritance diagram for Val&lt; N &gt;:</div>
+Inheritance diagram for Node:</div>
 <div class="dyncontent">
  <div class="center">
-  <img src="classVal.png" usemap="#Val_3C_20N_20_3E_map" alt=""/>
-  <map id="Val_3C_20N_20_3E_map" name="Val_3C_20N_20_3E_map">
-<area href="classAddr.html" alt="Addr" shape="rect" coords="0,56,64,80"/>
-<area href="classCVal.html" alt="CVal" shape="rect" coords="74,56,138,80"/>
-<area href="classExit.html" alt="Exit" shape="rect" coords="148,56,212,80"/>
-<area href="classInst.html" alt="Inst" shape="rect" coords="222,56,286,80"/>
-<area href="classLoop.html" alt="Loop" shape="rect" coords="296,56,360,80"/>
-<area href="classFunc.html" alt="Func" shape="rect" coords="185,112,249,136"/>
-<area href="classIntr.html" alt="Intr" shape="rect" coords="259,112,323,136"/>
+  <img src="classNode.png" usemap="#Node_map" alt=""/>
+  <map id="Node_map" name="Node_map">
+<area href="classAddr.html" alt="Addr" shape="rect" coords="0,56,42,80"/>
+<area href="classCVal.html" alt="CVal" shape="rect" coords="52,56,94,80"/>
+<area href="classCnst.html" title="Cnst." alt="Cnst" shape="rect" coords="104,56,146,80"/>
+<area href="classExit.html" alt="Exit" shape="rect" coords="156,56,198,80"/>
+<area href="classInst.html" alt="Inst" shape="rect" coords="208,56,250,80"/>
+<area href="classLoop.html" alt="Loop" shape="rect" coords="260,56,302,80"/>
+<area href="classCflt.html" alt="Cflt" shape="rect" coords="78,112,120,136"/>
+<area href="classCint.html" title="A constant value w/ respect to the loopnest." alt="Cint" shape="rect" coords="130,112,172,136"/>
+<area href="classFunc.html" alt="Func" shape="rect" coords="182,112,224,136"/>
+<area href="classIntr.html" alt="Intr" shape="rect" coords="234,112,276,136"/>
   </map>
 </div></div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
 Public Types</h2></td></tr>
-<tr class="memitem:ab7d39b96990af81186bf1a98e1f726fd"><td class="memItemLeft" align="right" valign="top"><a id="ab7d39b96990af81186bf1a98e1f726fd"></a>enum &#160;</td><td class="memItemRight" valign="bottom"><b>ValKind</b> { <br />
+<tr class="memitem:a7764a4430cc6f4c9d175704f63c7cc54"><td class="memItemLeft" align="right" valign="top"><a id="a7764a4430cc6f4c9d175704f63c7cc54"></a>enum &#160;</td><td class="memItemRight" valign="bottom"><b>ValKind</b> { <br />
 &#160;&#160;<b>VK_Load</b>
 , <b>VK_Stow</b>
 , <b>VK_Exit</b>
 , <b>VK_Loop</b>
 , <br />
 &#160;&#160;<b>VK_CVal</b>
+, <b>VK_Cint</b>
+, <b>VK_Cflt</b>
 , <b>VK_Intr</b>
-, <b>VK_Func</b>
+, <br />
+&#160;&#160;<b>VK_Func</b>
 <br />
  }</td></tr>
-<tr class="separator:ab7d39b96990af81186bf1a98e1f726fd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:a7764a4430cc6f4c9d175704f63c7cc54"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:ab67ded8939a83be5b027171f719efcca"><td class="memItemLeft" align="right" valign="top"><a id="ab67ded8939a83be5b027171f719efcca"></a>
+<tr class="memitem:ac8c5f6e806f3a843b0336452f8e8e9d7"><td class="memItemLeft" align="right" valign="top"><a id="ac8c5f6e806f3a843b0336452f8e8e9d7"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getKind</b> () const -&gt; ValKind</td></tr>
-<tr class="separator:ab67ded8939a83be5b027171f719efcca"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a38714d4dd6ab381649abe7832cffccdf"><td class="memItemLeft" align="right" valign="top"><a id="a38714d4dd6ab381649abe7832cffccdf"></a>
+<tr class="separator:ac8c5f6e806f3a843b0336452f8e8e9d7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5bf4a8a177428807126118ea82d39389"><td class="memItemLeft" align="right" valign="top"><a id="a5bf4a8a177428807126118ea82d39389"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getDepth</b> () const -&gt; unsigned</td></tr>
-<tr class="separator:a38714d4dd6ab381649abe7832cffccdf"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a18ccb3b9f26c2aad7b6dd5cec4888966"><td class="memItemLeft" align="right" valign="top"><a id="a18ccb3b9f26c2aad7b6dd5cec4888966"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getParent</b> () const -&gt; <a class="el" href="classVal.html">Val</a> *</td></tr>
-<tr class="separator:a18ccb3b9f26c2aad7b6dd5cec4888966"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7a8a3c46fb012d38406a7d82c3fa2233"><td class="memItemLeft" align="right" valign="top"><a id="a7a8a3c46fb012d38406a7d82c3fa2233"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getChild</b> () const -&gt; <a class="el" href="classVal.html">Val</a> *</td></tr>
-<tr class="separator:a7a8a3c46fb012d38406a7d82c3fa2233"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a733bd5eab7209cc8a2bfe0818a68c385"><td class="memItemLeft" align="right" valign="top"><a id="a733bd5eab7209cc8a2bfe0818a68c385"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getPrev</b> () const -&gt; <a class="el" href="classVal.html">Val</a> *</td></tr>
-<tr class="separator:a733bd5eab7209cc8a2bfe0818a68c385"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a56326c1c72be01beceae38d17b3908c1"><td class="memItemLeft" align="right" valign="top"><a id="a56326c1c72be01beceae38d17b3908c1"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNext</b> () const -&gt; <a class="el" href="classVal.html">Val</a> *</td></tr>
-<tr class="separator:a56326c1c72be01beceae38d17b3908c1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:a5bf4a8a177428807126118ea82d39389"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5404f607bea4a405b3a881cbb3a4a7df"><td class="memItemLeft" align="right" valign="top"><a id="a5404f607bea4a405b3a881cbb3a4a7df"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getParent</b> () const -&gt; <a class="el" href="classNode.html">Node</a> *</td></tr>
+<tr class="separator:a5404f607bea4a405b3a881cbb3a4a7df"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7ed00218af6513216db597947c40c7fd"><td class="memItemLeft" align="right" valign="top"><a id="a7ed00218af6513216db597947c40c7fd"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getChild</b> () const -&gt; <a class="el" href="classNode.html">Node</a> *</td></tr>
+<tr class="separator:a7ed00218af6513216db597947c40c7fd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aeb33a35f95430908f2a289b07e39d985"><td class="memItemLeft" align="right" valign="top"><a id="aeb33a35f95430908f2a289b07e39d985"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getPrev</b> () const -&gt; <a class="el" href="classNode.html">Node</a> *</td></tr>
+<tr class="separator:aeb33a35f95430908f2a289b07e39d985"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afdd1732ee2ba907b1aa63c2e03f8f401"><td class="memItemLeft" align="right" valign="top"><a id="afdd1732ee2ba907b1aa63c2e03f8f401"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNext</b> () const -&gt; <a class="el" href="classNode.html">Node</a> *</td></tr>
+<tr class="separator:afdd1732ee2ba907b1aa63c2e03f8f401"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-methods"></a>
 Protected Member Functions</h2></td></tr>
-<tr class="memitem:ae6b2d58f6a910d22f435fa6c9d04724e"><td class="memItemLeft" align="right" valign="top"><a id="ae6b2d58f6a910d22f435fa6c9d04724e"></a>
-constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Val</b> (ValKind kind)</td></tr>
-<tr class="separator:ae6b2d58f6a910d22f435fa6c9d04724e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae4a7cf9393ca4ae0bc167baaf92ab4fe"><td class="memItemLeft" align="right" valign="top"><a id="ae4a7cf9393ca4ae0bc167baaf92ab4fe"></a>
+constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Node</b> (ValKind kind)</td></tr>
+<tr class="separator:ae4a7cf9393ca4ae0bc167baaf92ab4fe"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a35cd3efbb46fa455d4ce7511d71dac6b"><td class="memItemLeft" align="right" valign="top"><a id="a35cd3efbb46fa455d4ce7511d71dac6b"></a>
+constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Node</b> (ValKind kind, unsigned d)</td></tr>
+<tr class="separator:a35cd3efbb46fa455d4ce7511d71dac6b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-attribs"></a>
+Protected Attributes</h2></td></tr>
+<tr class="memitem:adea87b03d8fe6f9165761058bc9ae926"><td class="memItemLeft" align="right" valign="top"><a id="adea87b03d8fe6f9165761058bc9ae926"></a>
+unsigned&#160;</td><td class="memItemRight" valign="bottom"><b>depth</b> {0}</td></tr>
+<tr class="separator:adea87b03d8fe6f9165761058bc9ae926"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><h3>template&lt;size_t N&gt;<br />
-struct Val&lt; N &gt;</h3>
-
-<p>We take an approach similar to LLVM's RTTI however, we want to take advantage of FAMs while having a "hieararchy" we accomplish this via a base class, and then wrapper classes that simply hold the <code>Val*</code>.</p>
-<p><code><a class="el" href="classVal.html">Val</a></code> has a base memory layout which can be used for iterating over the IR</p>
+<div class="textblock"><p>We take an approach similar to LLVM's RTTI however, we want to take advantage of FAMs while having a "hieararchy" we accomplish this via a base class, and then wrapper classes that simply hold the <code>Val*</code>.</p>
+<p><code><a class="el" href="structVal.html">Val</a></code> has a base memory layout which can be used for iterating over the IR</p>
 <p>The IR forms a graph with many links. Linear links let us follow the flat structure that mirrors code we would generate. We additionally have links that let us view it as a tree structure.</p>
 <p>For example, we may have</p>
 <p>0. // VK_Loop // toplevel</p><ol type="1">
@@ -171,8 +184,8 @@ struct Val&lt; N &gt;</h3>
 <p>Children don't need to be full reverse, as <code>*next</code> covers many: <a class="el" href="classLoop.html">Loop</a>'s: [ first sub loop (if it has one), matching <a class="el" href="classExit.html">Exit</a> ] for (i : _(0,numSubLoop-1)) <a class="el" href="classExit.html">Exit</a>[i]: [ <a class="el" href="classLoop.html">Loop</a>[i+1] ] <a class="el" href="classAddr.html">Addr</a>'s: [ nextAddrs... ] <a class="el" href="classInst.html">Inst</a>'s: [ uses... (stows or insts) ]</p>
 <p>To iterate over subloops, SubLoopIterator</p>
 <p>This simplified structure means we can use LLVM-style RTTI </p>
-</div><hr/>The documentation for this struct was generated from the following file:<ul>
-<li>include/IR/<a class="el" href="Val_8hpp_source.html">Val.hpp</a></li>
+</div><hr/>The documentation for this class was generated from the following file:<ul>
+<li>include/IR/<a class="el" href="Node_8hpp_source.html">Node.hpp</a></li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->
