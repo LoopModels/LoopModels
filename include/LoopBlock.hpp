@@ -61,8 +61,7 @@ constexpr void insertSortedUnique(Vector<I> &v, const I &x) {
 class ScheduledNode {
 
   [[no_unique_address]] Addr *store; // linked list to loads
-  [[no_unique_address]] NotNull<AffineLoopNest<>>
-    loopNest;                        // representative loop nest
+  [[no_unique_address]] NotNull<AffineLoopNest<>> loopNest;
   [[no_unique_address]] ScheduledNode *next{nullptr};
   [[no_unique_address]] ScheduledNode *component{nullptr};
   [[no_unique_address]] Dependence *depActive{nullptr};
@@ -70,7 +69,6 @@ class ScheduledNode {
   [[no_unique_address]] int64_t *offsets{nullptr};
   [[no_unique_address]] uint32_t phiOffset{0};   // used in LoopBlock
   [[no_unique_address]] uint32_t omegaOffset{0}; // used in LoopBlock
-  [[no_unique_address]] uint8_t numLoops{0};
   [[no_unique_address]] uint8_t rank{0};
   [[no_unique_address]] bool visited{false};
 #if !defined(__clang__) && defined(__GNUC__)
@@ -87,8 +85,9 @@ class ScheduledNode {
 #pragma clang diagnostic pop
 #endif
 
-  constexpr auto getNumLoopsSquared() const -> unsigned {
-    return unsigned(numLoops) * unsigned(numLoops);
+  [[nodiscard]] constexpr auto getNumLoopsSquared() const -> unsigned {
+    auto L = getNumLoops();
+    return L * L;
   }
 
 public:
@@ -98,7 +97,7 @@ public:
     addMemory(sId, store, nodeIndex);
   }
   constexpr auto getLoopOffsets() -> MutPtrVector<int64_t> {
-    return {offsets, numLoops};
+    return {offsets, getNumLoops()};
   }
   constexpr void setOffsets(int64_t *o) { offsets = o; }
   // MemAccess addrCapacity field gives the replication count
@@ -125,7 +124,9 @@ public:
   //   return memory.size();
   // }
   constexpr auto getStore() -> Addr * { return store; }
-  constexpr auto getStore() const -> const Addr * { return store; }
+  [[nodiscard]] constexpr auto getStore() const -> const Addr * {
+    return store;
+  }
   constexpr void forEachAddr(const auto &f) {
     Addr *m = store;
     while (true) {
@@ -150,22 +151,7 @@ public:
       d = d->getNext();
     }
   }
-  // constexpr auto getMemory() -> BitSet & { return memory; }
-  // constexpr auto getInNeighbors() -> BitSet & { return inNeighbors; }
-  // constexpr auto getOutNeighbors() -> BitSet & { return outNeighbors; }
-
-  // [[nodiscard]] constexpr auto getMemory() const -> const BitSet & {
-  //   return memory;
-  // }
-  // [[nodiscard]] constexpr auto getInNeighbors() const -> const BitSet & {
-  //   return inNeighbors;
-  // }
-  // [[nodiscard]] constexpr auto getOutNeighbors() const -> const BitSet & {
-  //   return outNeighbors;
-  // }
-  // [[nodiscard]] constexpr auto getSchedule() const -> AffineSchedule {
-  //   return schedule;
-  // }
+  [[nodiscard]] constexpr auto getSchedule() -> AffineSchedule { return {mem}; }
   [[nodiscard]] constexpr auto getLoopNest() const
     -> NotNull<const AffineLoopNest<>> {
     return loopNest;
@@ -173,20 +159,7 @@ public:
   [[nodiscard]] constexpr auto getOffset() const -> const int64_t * {
     return offsets;
   }
-  // constexpr void addOutNeighbor(unsigned int i) { outNeighbors.insert(i); }
-  // constexpr void addInNeighbor(unsigned int i) { inNeighbors.insert(i); }
-  // constexpr void init(BumpAlloc<> &alloc) {
-  //   schedule = AffineSchedule(alloc, getNumLoops());
-  //   schedule.getFusionOmega() << 0;
-  // }
-  // constexpr void addMemory(unsigned memId, MemoryAccess *mem,
-  //                          unsigned nodeIdx) {
-  //   mem->addNodeIndex(nodeIdx);
-  //   memory.insert(memId);
-  //   if (numLoops >= mem->getNumLoops()) return;
-  //   numLoops = uint8_t(mem->getNumLoops());
-  //   loopNest = mem->getLoop();
-  // }
+
   [[nodiscard]] constexpr auto wasVisited() const -> bool { return visited; }
   constexpr void visit() { visited = true; }
   constexpr void unVisit() { visited = false; }
@@ -194,7 +167,7 @@ public:
   // } constexpr void visit2() { visited2 = true; } constexpr void unVisit2() {
   // visited2 = false; }
   [[nodiscard]] constexpr auto getNumLoops() const -> unsigned {
-    return numLoops;
+    return unsigned(mem[0]);
   }
   // 'phiIsScheduled()` means that `phi`'s schedule has been
   // set for the outer `rank` loops.
@@ -204,7 +177,7 @@ public:
 
   [[nodiscard]] constexpr auto updatePhiOffset(size_t p) -> size_t {
     phiOffset = p;
-    return p + numLoops;
+    return p + getNumLoops();
   }
   [[nodiscard]] constexpr auto updateOmegaOffset(size_t o) -> size_t {
     omegaOffset = o;
@@ -215,14 +188,14 @@ public:
   }
   [[nodiscard]] constexpr auto getPhiOffsetRange() const
     -> Range<size_t, size_t> {
-    return _(phiOffset, phiOffset + numLoops);
+    return _(phiOffset, phiOffset + getNumLoops());
   }
   // NOLINTNEXTLINE(readability-make-member-function-const)
   [[nodiscard]] constexpr auto getPhi() -> MutSquarePtrMatrix<int64_t> {
-    return {mem, SquareDims{unsigned(getNumLoops())}};
+    return {mem + 1, SquareDims{unsigned(getNumLoops())}};
   }
   [[nodiscard]] constexpr auto getPhi() const -> SquarePtrMatrix<int64_t> {
-    return {const_cast<int64_t *>(mem), SquareDims{getNumLoops()}};
+    return {const_cast<int64_t *>(mem) + 1, SquareDims{getNumLoops()}};
   }
   /// getSchedule, loops are always indexed from outer to inner
   [[nodiscard]] constexpr auto getSchedule(size_t d) const
@@ -233,35 +206,35 @@ public:
     return getPhi()(d, _);
   }
   [[nodiscard]] constexpr auto getFusionOmega(size_t i) const -> int64_t {
-    return mem[getNumLoopsSquared() + i];
+    return (mem + 1)[getNumLoopsSquared() + i];
   }
   [[nodiscard]] constexpr auto getOffsetOmega(size_t i) const -> int64_t {
-    return mem[getNumLoopsSquared() + getNumLoops() + 1 + i];
+    return (mem + 2)[getNumLoopsSquared() + getNumLoops() + i];
   }
   // NOLINTNEXTLINE(readability-make-member-function-const)
   [[nodiscard]] constexpr auto getFusionOmega(size_t i) -> int64_t & {
-    return mem[getNumLoopsSquared() + i];
+    return (mem + 1)[getNumLoopsSquared() + i];
   }
   // NOLINTNEXTLINE(readability-make-member-function-const)
   [[nodiscard]] constexpr auto getOffsetOmega(size_t i) -> int64_t & {
-    return mem[getNumLoopsSquared() + getNumLoops() + 1 + i];
+    return (mem + 2)[getNumLoopsSquared() + getNumLoops() + i];
   }
   [[nodiscard]] constexpr auto getFusionOmega() const -> PtrVector<int64_t> {
-    return {const_cast<int64_t *>(mem) + getNumLoopsSquared(),
+    return {const_cast<int64_t *>(mem + 1) + getNumLoopsSquared(),
             getNumLoops() + 1};
   }
   [[nodiscard]] constexpr auto getOffsetOmega() const -> PtrVector<int64_t> {
-    return {const_cast<int64_t *>(mem) + getNumLoopsSquared() + getNumLoops() +
-              1,
+    return {const_cast<int64_t *>(mem) + 2 + getNumLoopsSquared() +
+              getNumLoops(),
             getNumLoops()};
   }
   // NOLINTNEXTLINE(readability-make-member-function-const)
   [[nodiscard]] constexpr auto getFusionOmega() -> MutPtrVector<int64_t> {
-    return {mem + getNumLoopsSquared(), getNumLoops() + 1};
+    return {mem + 1 + getNumLoopsSquared(), getNumLoops() + 1};
   }
   // NOLINTNEXTLINE(readability-make-member-function-const)
   [[nodiscard]] constexpr auto getOffsetOmega() -> MutPtrVector<int64_t> {
-    return {mem + getNumLoopsSquared() + getNumLoops() + 1, getNumLoops()};
+    return {mem + 2 + getNumLoopsSquared() + getNumLoops(), getNumLoops()};
   }
 
   constexpr void schedulePhi(DensePtrMatrix<int64_t> indMat, size_t r) {

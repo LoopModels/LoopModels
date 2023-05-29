@@ -4,6 +4,7 @@
 #include <Math/Array.hpp>
 #include <cstdint>
 #include <llvm/IR/Type.h>
+#include <llvm/IR/Value.h>
 #include <llvm/Support/Casting.h>
 
 /// We take an approach similar to LLVM's RTTI

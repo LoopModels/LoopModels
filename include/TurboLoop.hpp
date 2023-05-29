@@ -71,6 +71,18 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
   [[no_unique_address]] Intr::Cache instrCache;
   [[no_unique_address]] unsigned registerCount;
 
+  /// extend number of Cols, copying A[_(0,R),_] into dest, filling new cols
+  /// with 0
+  void extendDensePtrMatCols(MutDensePtrMatrix<int64_t> &A, Row R, Col C,
+                             bool zExt) {
+    MutDensePtrMatrix<int64_t> B{matrix<int64_t>(allocator, A.numRow(), C)};
+    for (size_t j = 0; j < R; ++j) {
+      B(j, _(0, A.numCol())) << A(j, _);
+      if (zExt) B(j, _(A.numCol(), end)) << 0;
+    }
+    std::swap(A, B);
+  }
+
 public:
   auto run(llvm::Function &F, llvm::FunctionAnalysisManager &AM)
     -> llvm::PreservedAnalyses;
@@ -278,8 +290,8 @@ public:
   static void addSymbolic(Vector<int64_t> &offsets,
                           llvm::SmallVector<const llvm::SCEV *, 3> &symbols,
                           const llvm::SCEV *S, int64_t x = 1) {
-    if (size_t i = findSymbolicIndex(symbols, S)) {
-      offsets[i] += x;
+    if (auto *j = std::ranges::find(symbols, S); j != symbols.end()) {
+      offsets[std::distance(symbols.begin(), j)] += x;
     } else {
       symbols.push_back(S);
       offsets.push_back(x);
@@ -310,7 +322,8 @@ public:
   }
   // translates scev S into loops and symbols
   auto // NOLINTNEXTLINE(misc-no-recursion)
-  fillAffineIndices(MutPtrVector<int64_t> v, Vector<int64_t> &offsets,
+  fillAffineIndices(MutPtrVector<int64_t> v, int64_t *coffset,
+                    Vector<int64_t> &offsets,
                     llvm::SmallVector<const llvm::SCEV *, 3> &symbolicOffsets,
                     const llvm::SCEV *S, int64_t mlt, size_t numPeeled)
     -> uint64_t {
@@ -334,7 +347,7 @@ public:
           if (auto c = getConstantInt(x->getOperand(1))) {
             // we want the innermost loop to have index 0
             v[loopInd] += *c;
-            return fillAffineIndices(v, offsets, symbolicOffsets,
+            return fillAffineIndices(v, coffset, offsets, symbolicOffsets,
                                      x->getOperand(0), mlt, numPeeled);
           }
           blackList |= (uint64_t(1) << uint64_t(loopInd));
@@ -342,7 +355,7 @@ public:
         // we separate out the addition
         // the multiplication was either peeled or involved
         // non-const multiple
-        blackList |= fillAffineIndices(v, offsets, symbolicOffsets,
+        blackList |= fillAffineIndices(v, coffset, offsets, symbolicOffsets,
                                        x->getOperand(0), mlt, numPeeled);
         // and then add just the multiple here as a symbolic offset
         const llvm::SCEV *addRec = SE->getAddRecExpr(
@@ -353,25 +366,25 @@ public:
       }
       if (loopInd >= 0) blackList |= (uint64_t(1) << uint64_t(loopInd));
     } else if (std::optional<int64_t> c = getConstantInt(S)) {
-      offsets[0] += *c;
+      *coffset += *c;
       return 0;
     } else if (const auto *ar = llvm::dyn_cast<const llvm::SCEVAddExpr>(S)) {
-      return fillAffineIndices(v, offsets, symbolicOffsets, ar->getOperand(0),
-                               mlt, numPeeled) |
-             fillAffineIndices(v, offsets, symbolicOffsets, ar->getOperand(1),
-                               mlt, numPeeled);
+      return fillAffineIndices(v, coffset, offsets, symbolicOffsets,
+                               ar->getOperand(0), mlt, numPeeled) |
+             fillAffineIndices(v, coffset, offsets, symbolicOffsets,
+                               ar->getOperand(1), mlt, numPeeled);
     } else if (const auto *m = llvm::dyn_cast<const llvm::SCEVMulExpr>(S)) {
       if (auto op0 = getConstantInt(m->getOperand(0))) {
-        return fillAffineIndices(v, offsets, symbolicOffsets, m->getOperand(1),
-                                 mlt * (*op0), numPeeled);
+        return fillAffineIndices(v, coffset, offsets, symbolicOffsets,
+                                 m->getOperand(1), mlt * (*op0), numPeeled);
       }
       if (auto op1 = getConstantInt(m->getOperand(1))) {
-        return fillAffineIndices(v, offsets, symbolicOffsets, m->getOperand(0),
-                                 mlt * (*op1), numPeeled);
+        return fillAffineIndices(v, coffset, offsets, symbolicOffsets,
+                                 m->getOperand(0), mlt * (*op1), numPeeled);
       }
     } else if (const auto *ca = llvm::dyn_cast<llvm::SCEVCastExpr>(S))
-      return fillAffineIndices(v, offsets, symbolicOffsets, ca->getOperand(0),
-                               mlt, numPeeled);
+      return fillAffineIndices(v, coffset, offsets, symbolicOffsets,
+                               ca->getOperand(0), mlt, numPeeled);
     addSymbolic(offsets, symbolicOffsets, S, mlt);
     return blackList | blackListAllDependentLoops(S, numPeeled);
   }
@@ -412,18 +425,20 @@ public:
     size_t numPeeled = L->getLoopDepth() - numLoops;
     // numLoops x arrayDim
     IntMatrix Rt{StridedDims{numDims, numLoops}, 0};
-    IntMatrix Bt;
     llvm::SmallVector<const llvm::SCEV *, 3> symbolicOffsets;
     uint64_t blackList{0};
+    Vector<int64_t> coffsets{unsigned(numDims), 0};
+    MutDensePtrMatrix<int64_t> offsMat{nullptr, DenseDims{numDims, 0}};
     {
       Vector<int64_t> offsets;
       for (size_t i = 0; i < numDims; ++i) {
-        offsets.clear();
-        offsets.push_back(0);
-        blackList |= fillAffineIndices(Rt(i, _), offsets, symbolicOffsets,
-                                       subscripts[i], 1, numPeeled);
-        Bt.resize(numDims, offsets.size());
-        Bt(i, _) << offsets;
+        offsets << 0;
+        blackList |=
+          fillAffineIndices(Rt(i, _), &coffsets[i], offsets, symbolicOffsets,
+                            subscripts[i], 1, numPeeled);
+        if (offsets.size() > offsMat.numCol())
+          extendDensePtrMatCols(offsMat, Row{i}, Col{offsets.size()}, true);
+        offsMat(i, _) << offsets;
       }
     }
     uint64_t numExtraLoopsToPeel = 0;
@@ -451,20 +466,22 @@ public:
         auto *intType = P->getInductionVariable(*SE)->getType();
         const llvm::SCEV *S = SE->getAddRecExpr(
           SE->getZero(intType), SE->getOne(intType), P, llvm::SCEV::NoWrapMask);
-        if (size_t j = findSymbolicIndex(symbolicOffsets, S)) {
-          Bt(_, j) += Rt(_, i);
+        if (auto *j = std::ranges::find(symbolicOffsets, S);
+            j != symbolicOffsets.end()) {
+          offsMat(_, std::distance(symbolicOffsets.begin(), j)) += Rt(_, i);
         } else {
-          Col N = Bt.numCol();
-          Bt.resize(N + 1);
-          Bt(_, N) << Rt(_, i);
+          extendDensePtrMatCols(offsMat, offsMat.numRow(), offsMat.numCol() + 1,
+                                false);
+          offsMat(_, last) << Rt(_, i);
           symbolicOffsets.push_back(S);
         }
       }
     }
-    LT.memAccesses.push_back(ArrayIndex::construct(
-      allocator, basePointer, *aln, loadOrStore,
-      Rt(_, _(numExtraLoopsToPeel, end)),
-      {std::move(sizes), std::move(symbolicOffsets)}, Bt, omegas));
+    LT.memAccesses.push_back(
+      ArrayIndex::construct(allocator, basePointer, *aln, loadOrStore,
+                            Rt(_, _(numExtraLoopsToPeel, end)),
+                            {std::move(sizes), std::move(symbolicOffsets)},
+                            coffsets, offsMat.data(), omegas));
     ++omegas.back();
     if (ORE) [[unlikely]] {
       llvm::SmallVector<char> x;

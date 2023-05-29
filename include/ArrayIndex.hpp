@@ -1,5 +1,3 @@
-
-
 #pragma once
 #include "Loops.hpp"
 #include "Math/Array.hpp"
@@ -16,16 +14,15 @@
 class Addr;
 
 class ArrayIndex {
-  static constexpr auto memoryOmegaOffset(size_t arrayDim, size_t numLoops,
-                                          size_t numSymbols) -> size_t {
-    // arrayDim * numLoops from indexMatrix
-    // arrayDim * numSymbols from offsetMatrix
-    return arrayDim * (numLoops + numSymbols);
+  static constexpr auto memoryOmegaOffset(size_t arrayDim, size_t numLoops)
+    -> size_t {
+    // arrayDim * numLoops from indexMatrix + arrayDim from offsetVector
+    return arrayDim * (numLoops + 1);
   }
-  static constexpr auto memoryIntsRequired(size_t arrayDim, size_t numLoops,
-                                           size_t numSymbols) -> size_t {
+  static constexpr auto memoryIntsRequired(size_t arrayDim, size_t numLoops)
+    -> size_t {
     // numLoops + 1 from getFusionOmega
-    return memoryOmegaOffset(arrayDim, numLoops, numSymbols) + numLoops + 1;
+    return memoryOmegaOffset(arrayDim, numLoops) + numLoops + 1;
   }
 
   NotNull<const llvm::SCEVUnknown> basePointer;
@@ -39,7 +36,8 @@ class ArrayIndex {
   // value, meaning that is the stored instruction, and thus we still have
   // access to it when it is available.
   NotNull<llvm::Instruction> loadOrStore;
-  unsigned numDim{}, numDynSym{};
+  int64_t *offSym{nullptr};
+  unsigned numDim{0}, numDynSym{0};
 #if !defined(__clang__) && defined(__GNUC__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
@@ -72,21 +70,15 @@ class ArrayIndex {
     return static_cast<const llvm::SCEV *const *>(ptr);
   }
   [[nodiscard]] constexpr auto omegaOffset() const -> size_t {
-    return memoryOmegaOffset(getArrayDim(), getNumLoops(), getNumSymbols());
+    return memoryOmegaOffset(getArrayDim(), getNumLoops());
   }
 
 public:
-  // auto beginAddr() -> Address ** {
-  //   return (addrReplications) ? addrss : &addrs;
-  // }
-  // auto endAddr() -> Address ** {
-  //   return (addrReplications) ? addrss + numAddr : (&addrs) + 1;
-  // }
   explicit constexpr ArrayIndex(const llvm::SCEVUnknown *arrayPtr,
                                 AffineLoopNest<true> &loopRef,
-                                llvm::Instruction *user,
+                                llvm::Instruction *user, int64_t *offsym,
                                 std::array<unsigned, 2> dimOff)
-    : basePointer(arrayPtr), loop(loopRef), loadOrStore(user),
+    : basePointer(arrayPtr), loop(loopRef), loadOrStore(user), offSym(offsym),
       numDim(dimOff[0]), numDynSym(dimOff[1]){};
   explicit constexpr ArrayIndex(const llvm::SCEVUnknown *arrayPtr,
                                 AffineLoopNest<true> &loopRef,
@@ -112,26 +104,23 @@ public:
             AffineLoopNest<true> &loopRef, llvm::Instruction *user,
             PtrMatrix<int64_t> indMat,
             std::array<llvm::SmallVector<const llvm::SCEV *, 3>, 2> szOff,
-            PtrMatrix<int64_t> offsets, PtrVector<unsigned> o)
-    -> NotNull<ArrayIndex> {
+            PtrVector<int64_t> coffsets, int64_t *offsets,
+            PtrVector<unsigned> o) -> NotNull<ArrayIndex> {
     // we don't want to hold any other pointers that may need freeing
     unsigned arrayDim = szOff[0].size(), nOff = szOff[1].size();
-    // auto sz = copyRef(alloc, llvm::ArrayRef<const llvm::SCEV *>{szOff[0]});
-    // auto off = copyRef(alloc, llvm::ArrayRef<const llvm::SCEV *>{szOff[1]});
     unsigned numLoops = loopRef.getNumLoops();
     invariant(o.size(), numLoops + 1);
-    size_t numSymbols = size_t(offsets.numCol());
-    size_t memNeeded = memoryIntsRequired(arrayDim, numLoops, numSymbols);
+    size_t memNeeded = memoryIntsRequired(arrayDim, numLoops);
     auto *mem = (ArrayIndex *)alloc.allocate(
       sizeof(ArrayIndex) + memNeeded * sizeof(int64_t) +
         (arrayDim + nOff) * sizeof(const llvm::SCEV *const *),
       alignof(ArrayIndex));
-    auto *ma = std::construct_at(mem, arrayPtr, loopRef, user,
+    auto *ma = std::construct_at(mem, arrayPtr, loopRef, user, offsets,
                                  std::array<unsigned, 2>{arrayDim, nOff});
     std::copy_n(szOff[0].begin(), arrayDim, ma->getSizes().begin());
     std::copy_n(szOff[1].begin(), nOff, ma->getSymbolicOffsets().begin());
     ma->indexMatrix() << indMat;
-    ma->offsetMatrix() << offsets;
+    ma->offsetVector() << coffsets;
     ma->getFusionOmega() << o;
     return ma;
   }
@@ -184,7 +173,7 @@ public:
   /// Maps loop indVars to array indices
   /// Letting `i` be the indVars and `d` the indices:
   /// indexMatrix()' * i == d
-  /// e.g. `indVars = [i, j]` and indexMatrix = [ 1 1; 0 1]
+  /// e.g. `indVars = [i, j]` and indexMatrix = [ 1 0; 1 1]
   /// corresponds to A[i, i + j]
   /// Note that `[i, j]` refers to loops in
   /// innermost -> outermost order, i.e.
@@ -199,15 +188,16 @@ public:
   [[nodiscard]] constexpr auto indexMatrix() const -> DensePtrMatrix<int64_t> {
     return {data(), DenseDims{getArrayDim(), getNumLoops()}};
   }
-  [[nodiscard]] constexpr auto offsetMatrix() -> MutDensePtrMatrix<int64_t> {
-    const size_t d = getArrayDim();
-    const size_t numSymbols = getNumSymbols();
-    return {data() + getNumLoops() * d, DenseDims{d, numSymbols}};
+  [[nodiscard]] constexpr auto offsetVector() -> MutPtrVector<int64_t> {
+    const unsigned d = getArrayDim();
+    return {data() + getNumLoops() * size_t(d), d};
+  }
+  [[nodiscard]] constexpr auto offsetVector() const -> PtrVector<int64_t> {
+    const unsigned d = getArrayDim();
+    return {data() + getNumLoops() * size_t(d), d};
   }
   [[nodiscard]] constexpr auto offsetMatrix() const -> DensePtrMatrix<int64_t> {
-    const size_t d = getArrayDim();
-    const size_t numSymbols = getNumSymbols();
-    return {data() + getNumLoops() * d, DenseDims{d, numSymbols}};
+    return {offSym, DenseDims{getArrayDim(), numDynSym}};
   }
   [[nodiscard]] constexpr auto getInstruction() -> NotNull<llvm::Instruction> {
     return loadOrStore;
