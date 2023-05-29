@@ -434,9 +434,9 @@ public:
     // where O = I - [0 0; offsets 0],
     // where offsets is a vector of length getNumLoops() and O is square
     size_t numExtraVar = 0, numConst = this->getNumSymbols();
-    bool thisNonNeg = isNonNegative();
-    bool nonNeg = thisNonNeg && allGEZero(R);
-    if (thisNonNeg != nonNeg) numExtraVar = getNumLoops();
+    bool thisNonNeg = isNonNegative(), nonNeg = thisNonNeg && allGEZero(R),
+         addExtra = thisNonNeg != nonNeg;
+    if (addExtra) numExtraVar = getNumLoops();
     invariant(unsigned(R.numCol()), getNumLoops());
     invariant(unsigned(R.numRow()), getNumLoops());
     auto A{getA()};
@@ -449,7 +449,7 @@ public:
     invariant(B.numCol(), N);
     B(_(0, M), _(0, numConst)) << A(_, _(0, numConst));
     B(_(0, M), _(numConst, end)) << A(_, _(numConst, end)) * R;
-    if (nonNeg) {
+    if (addExtra) {
       B(_(M, end), _(0, numConst)) << 0;
       B(_(M, end), _(numConst, end)) << R;
     }
@@ -466,14 +466,19 @@ public:
       for (size_t l = 0, L = getNumLoops(); l < L; ++l) {
         if (int64_t mlt = offsets[l]) {
           B(_(0, M), 0) -= mlt * A(_, numConst + l);
-          if (nonNeg) B(M + l, 0) = -mlt;
+          if (addExtra) B(M + l, 0) = -mlt;
         }
       }
     }
     // aln->pruneBounds(alloc);
     return aln;
   }
-
+  [[nodiscard]] constexpr auto
+  rotate(BumpAlloc<> &alloc, DensePtrMatrix<int64_t> R, const int64_t *offsets)
+    -> NotNull<AffineLoopNest> {
+    if (R == I) return this;
+    return ((const AffineLoopNest *)this)->rotate(alloc, R, offsets);
+  }
   // static auto construct(llvm::Loop *L, llvm::ScalarEvolution &SE)
   //   -> AffineLoopNest<NonNegative>* {
   //   auto BT = getBackedgeTakenCount(SE, L);

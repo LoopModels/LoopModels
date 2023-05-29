@@ -11,38 +11,34 @@
 namespace LinAlg {
 
 template <typename T>
-concept AbstractMatrixCore =
-  HasEltype<T> && requires(T t, size_t i) {
-                    { t(i, i) } -> std::convertible_to<eltype_t<T>>;
-                    { t.numRow() } -> SameOrBroadcast<Row>;
-                    { t.numCol() } -> SameOrBroadcast<Col>;
-                    { t.size() } -> SameOrBroadcast<CartesianIndex<Row, Col>>;
-                    { t.dim() } -> std::convertible_to<StridedDims>;
-                    // {
-                    //     std::remove_reference_t<T>::canResize
-                    //     } -> std::same_as<const bool &>;
-                    // {t.extendOrAssertSize(i, i)};
-                  };
+concept AbstractMatrixCore = HasEltype<T> && requires(T t, size_t i) {
+  { t(i, i) } -> std::convertible_to<eltype_t<T>>;
+  { t.numRow() } -> SameOrBroadcast<Row>;
+  { t.numCol() } -> SameOrBroadcast<Col>;
+  { t.size() } -> SameOrBroadcast<CartesianIndex<Row, Col>>;
+  { t.dim() } -> std::convertible_to<StridedDims>;
+  // {
+  //     std::remove_reference_t<T>::canResize
+  //     } -> std::same_as<const bool &>;
+  // {t.extendOrAssertSize(i, i)};
+};
 template <typename T>
 concept AbstractMatrix = AbstractMatrixCore<T> && requires(T t, size_t i) {
-                                                    {
-                                                      t.view()
-                                                      } -> AbstractMatrixCore;
-                                                  };
+  { t.view() } -> AbstractMatrixCore;
+};
 template <typename T>
 concept HasDataPtr = requires(T t) {
-                       { t.data() } -> std::same_as<eltype_t<T> *>;
-                     };
+  { t.data() } -> std::same_as<eltype_t<T> *>;
+};
 template <typename T>
 concept DataMatrix = AbstractMatrix<T> && HasDataPtr<T>;
 template <typename T>
 concept TemplateMatrix = AbstractMatrix<T> && (!HasDataPtr<T>);
 
 template <typename T>
-concept AbstractRowMajorMatrix =
-  AbstractMatrix<T> && requires(T t) {
-                         { t.rowStride() } -> std::same_as<RowStride>;
-                       };
+concept AbstractRowMajorMatrix = AbstractMatrix<T> && requires(T t) {
+  { t.rowStride() } -> std::same_as<RowStride>;
+};
 
 template <typename A> struct Transpose {
   static_assert(AbstractMatrix<A>, "Argument to transpose is not a matrix.");
@@ -148,13 +144,26 @@ template <class T> struct UniformScaling {
   static constexpr auto numCol() -> Col { return 0; }
   static constexpr auto size() -> CartesianIndex<Row, Col> { return {0, 0}; }
   static constexpr auto dim() -> DenseDims { return {0, 0}; }
-  [[nodiscard]] constexpr auto view() const -> auto{ return *this; };
+  [[nodiscard]] constexpr auto view() const -> auto { return *this; };
   template <class U> constexpr auto operator*(const U &x) const {
     if constexpr (std::is_same_v<std::remove_cvref_t<T>, std::true_type>)
       return UniformScaling<U>{x};
     else return UniformScaling<U>{value * x};
   }
+  constexpr auto operator==(const AbstractMatrix auto &A) const -> bool {
+    auto R = size_t(A.numRow());
+    if (R != A.numCol()) return false;
+    for (size_t r = 0; r < R; ++r)
+      for (size_t c = 0; c < R; ++c)
+        if (A(r, c) != (r == c ? value : T{})) return false;
+    return true;
+  }
 };
+template <class T>
+constexpr auto operator==(const AbstractMatrix auto &A,
+                          const UniformScaling<T> &B) -> bool {
+  return B == A;
+}
 template <class T, class U>
 constexpr auto operator*(const U &x, UniformScaling<T> d) {
   if constexpr (std::is_same_v<std::remove_cvref_t<T>, std::true_type>)
