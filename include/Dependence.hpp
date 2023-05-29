@@ -3,7 +3,6 @@
 #include "DependencyPolyhedra.hpp"
 #include "Schedule.hpp"
 #include <Loops.hpp>
-#include <MemoryAccess.hpp>
 #include <Utilities/Allocators.hpp>
 #include <Utilities/Invariant.hpp>
 #include <cstdint>
@@ -93,8 +92,8 @@ class Dependence {
   [[no_unique_address]] NotNull<DepPoly> depPoly;
   [[no_unique_address]] NotNull<Simplex> dependenceSatisfaction;
   [[no_unique_address]] NotNull<Simplex> dependenceBounding;
-  [[no_unique_address]] NotNull<MemoryAccess> in;
-  [[no_unique_address]] NotNull<MemoryAccess> out;
+  [[no_unique_address]] NotNull<Addr> in;
+  [[no_unique_address]] NotNull<Addr> out;
   [[no_unique_address]] Dependence *next;
   // the upper bit of satLvl indicates whether the satisfaction is because of
   // conditional independence (value = 0), or whether it was because of offsets
@@ -103,8 +102,8 @@ class Dependence {
                                                       255, 255, 255};
   [[no_unique_address]] bool forward;
 
-  static auto timelessCheck(NotNull<DepPoly> dxy, NotNull<MemoryAccess> x,
-                            NotNull<MemoryAccess> y,
+  static auto timelessCheck(NotNull<DepPoly> dxy, NotNull<Addr> x,
+                            NotNull<Addr> y,
                             std::array<NotNull<Simplex>, 2> pair, bool isFwd)
     -> Dependence {
     const size_t numLambda = dxy->getNumLambda();
@@ -118,7 +117,7 @@ class Dependence {
     return Dependence{dxy, pair, {y, x}, false};
   }
   static auto timelessCheck(BumpAlloc<> &alloc, NotNull<DepPoly> dxy,
-                            NotNull<MemoryAccess> x, NotNull<MemoryAccess> y,
+                            NotNull<Addr> x, NotNull<Addr> y,
                             std::array<NotNull<Simplex>, 2> pair)
     -> Dependence {
     return timelessCheck(dxy, x, y, pair,
@@ -130,7 +129,7 @@ class Dependence {
   // emplaces dependencies with repeat accesses to the same memory across
   // time
   static auto timeCheck(BumpAlloc<> &alloc, NotNull<DepPoly> dxy,
-                        NotNull<MemoryAccess> x, NotNull<MemoryAccess> y,
+                        NotNull<Addr> x, NotNull<Addr> y,
                         std::array<NotNull<Simplex>, 2> pair)
     -> TinyVector<Dependence, 2> {
     // copy backup
@@ -146,7 +145,7 @@ class Dependence {
     invariant(numLambda, size_t(dxy->getNumLambda()));
     const bool isFwd = checkDirection(alloc, pair, x, y, numLambda,
                                       dxy->getA().numCol() - dxy->getTimeDim());
-    NotNull<MemoryAccess> in = x, out = y;
+    NotNull<Addr> in = x, out = y;
     if (isFwd) {
       std::swap(farkasBackups[0], farkasBackups[1]);
     } else {
@@ -249,21 +248,20 @@ public:
   [[nodiscard]] constexpr auto getNext() const -> const Dependence * {
     return next;
   }
-  [[nodiscard]] constexpr auto input() -> NotNull<MemoryAccess> { return in; }
-  [[nodiscard]] constexpr auto output() -> NotNull<MemoryAccess> { return out; }
-  [[nodiscard]] constexpr auto input() const -> NotNull<const MemoryAccess> {
+  [[nodiscard]] constexpr auto input() -> NotNull<Addr> { return in; }
+  [[nodiscard]] constexpr auto output() -> NotNull<Addr> { return out; }
+  [[nodiscard]] constexpr auto input() const -> NotNull<const Addr> {
     return in;
   }
-  [[nodiscard]] constexpr auto output() const -> NotNull<const MemoryAccess> {
+  [[nodiscard]] constexpr auto output() const -> NotNull<const Addr> {
     return out;
   }
   constexpr Dependence(NotNull<DepPoly> poly,
                        std::array<NotNull<Simplex>, 2> depSatBound,
-                       std::array<NotNull<MemoryAccess>, 2> inOut, bool fwd)
+                       std::array<NotNull<Addr>, 2> inOut, bool fwd)
     : depPoly(poly), dependenceSatisfaction(depSatBound[0]),
       dependenceBounding(depSatBound[1]), in(inOut[0]), out(inOut[1]),
       forward(fwd) {}
-  using BitSet = MemoryAccess::BitSet;
   constexpr auto stashSatLevel() -> Dependence & {
     assert(satLvl.back() == 255 || "satLevel overflow");
     std::copy_backward(satLvl.begin(), satLvl.end() - 1, satLvl.end());
@@ -289,12 +287,12 @@ public:
   }
   /// indicates whether forward is non-empty
   [[nodiscard]] constexpr auto isForward() const -> bool { return forward; }
-  [[nodiscard]] constexpr auto nodeIn() const -> unsigned {
+  [[nodiscard]] constexpr auto nodeIn() const -> const ScheduledNode * {
     return in->getNode();
   }
-  [[nodiscard]] constexpr auto nodeOut() const -> unsigned {
-    return out->getNode();
-  }
+  // [[nodiscard]] constexpr auto nodeOut() const -> unsigned {
+  //   return out->getNode();
+  // }
   [[nodiscard]] constexpr auto getDynSymDim() const -> size_t {
     return depPoly->getNumDynSym();
   }
@@ -307,9 +305,9 @@ public:
     return in->indexMatrix();
   }
   [[nodiscard]] auto
-  checkEmptySat(BumpAlloc<> &alloc, NotNull<const AffineLoopNest<>> inLoop,
+  checkEmptySat(BumpAlloc<> &alloc, NotNull<const AffineLoopNest> inLoop,
                 const int64_t *inOff, DensePtrMatrix<int64_t> inPhi,
-                NotNull<const AffineLoopNest<>> outLoop, const int64_t *outOff,
+                NotNull<const AffineLoopNest> outLoop, const int64_t *outOff,
                 DensePtrMatrix<int64_t> outPhi) -> bool {
     if (!isForward()) {
       std::swap(inLoop, outLoop);
@@ -323,11 +321,11 @@ public:
     satLvl.front() = uint8_t(inPhi.numRow() - 1);
     return true;
   }
-  constexpr auto addEdge(size_t i) -> Dependence & {
-    in->addEdgeOut(i);
-    out->addEdgeIn(i);
-    return *this;
-  }
+  // constexpr auto addEdge(size_t i) -> Dependence & {
+  //   in->addEdgeOut(i);
+  //   out->addEdgeIn(i);
+  //   return *this;
+  // }
   constexpr void copySimplices(BumpAlloc<> &alloc) {
     dependenceSatisfaction = dependenceSatisfaction->copy(alloc);
     dependenceBounding = dependenceBounding->copy(alloc);
@@ -336,13 +334,12 @@ public:
   [[nodiscard]] constexpr auto getOutIndMat() const -> PtrMatrix<int64_t> {
     return out->indexMatrix();
   }
-  [[nodiscard]] constexpr auto getInOutPair() const
-    -> std::array<MemoryAccess *, 2> {
+  [[nodiscard]] constexpr auto getInOutPair() const -> std::array<Addr *, 2> {
     return {in, out};
   }
   // returns the memory access pair, placing the store first in the pair
   [[nodiscard]] constexpr auto getStoreAndOther() const
-    -> std::array<MemoryAccess *, 2> {
+    -> std::array<Addr *, 2> {
     if (in->isStore()) return {in, out};
     return {out, in};
   }
@@ -601,8 +598,7 @@ public:
   }
   static auto checkDirection(BumpAlloc<> &alloc,
                              const std::array<NotNull<Simplex>, 2> &p,
-                             NotNull<const MemoryAccess> x,
-                             NotNull<const MemoryAccess> y,
+                             NotNull<const Addr> x, NotNull<const Addr> y,
                              NotNull<const AffineSchedule> xSchedule,
                              NotNull<const AffineSchedule> ySchedule,
                              size_t numLambda, Col nonTimeDim) -> bool {
@@ -655,9 +651,8 @@ public:
   // returns `true` if forward, x->y
   static auto checkDirection(BumpAlloc<> &alloc,
                              const std::array<NotNull<Simplex>, 2> &p,
-                             NotNull<const MemoryAccess> x,
-                             NotNull<const MemoryAccess> y, size_t numLambda,
-                             Col nonTimeDim) -> bool {
+                             NotNull<const Addr> x, NotNull<const Addr> y,
+                             size_t numLambda, Col nonTimeDim) -> bool {
     const auto &[fxy, fyx] = p;
     unsigned numLoopsX = x->getNumLoops(), nTD = unsigned(nonTimeDim);
 #ifndef NDEBUG
@@ -692,12 +687,11 @@ public:
     return false;
   }
 
-  static auto check(BumpAlloc<> &alloc, NotNull<MemoryAccess> x,
-                    NotNull<MemoryAccess> y) -> TinyVector<Dependence, 2> {
+  static auto check(BumpAlloc<> &alloc, NotNull<Addr> x, NotNull<Addr> y)
+    -> TinyVector<Dependence, 2> {
     // TODO: implement gcd test
     // if (x.gcdKnownIndependent(y)) return {};
-    DepPoly *dxy{
-      DepPoly::dependence(alloc, x->getArrayRef(), y->getArrayRef())};
+    DepPoly *dxy{DepPoly::dependence(alloc, x, y)};
     if (!dxy) return {};
     invariant(x->getNumLoops(), dxy->getDim0());
     invariant(y->getNumLoops(), dxy->getDim1());
@@ -710,24 +704,23 @@ public:
     return {timelessCheck(alloc, dxy, x, y, pair)};
   }
   // reload store `x`
-  static auto reload(BumpAlloc<> &alloc, NotNull<MemoryAccess> store)
-    -> std::pair<NotNull<MemoryAccess>, Dependence> {
-    NotNull<DepPoly> dxy{DepPoly::self(alloc, store->getArrayRef())};
+  static auto reload(BumpAlloc<> &alloc, NotNull<Addr> store)
+    -> std::pair<NotNull<Addr>, Dependence> {
+    NotNull<DepPoly> dxy{DepPoly::self(alloc, store)};
     std::array<NotNull<Simplex>, 2> pair(dxy->farkasPair(alloc));
-    NotNull<MemoryAccess> load =
-      alloc.create<MemoryAccess>(store->getArrayRef(), true);
+    NotNull<Addr> load = store->reload(alloc);
     // no need for a timeCheck, because if there is a time-dim, we have a
     // store -> store dependence.
     // when we add new load -> store edges for each store->store,
     // that will cover the time-dependence
     return {load, timelessCheck(dxy, store, load, pair, true)};
   }
-  constexpr auto replaceInput(NotNull<MemoryAccess> newIn) -> Dependence {
+  constexpr auto replaceInput(NotNull<Addr> newIn) -> Dependence {
     Dependence edge = *this;
     edge.in = newIn;
     return edge;
   }
-  constexpr auto replaceOutput(NotNull<MemoryAccess> newOut) -> Dependence {
+  constexpr auto replaceOutput(NotNull<Addr> newOut) -> Dependence {
     Dependence edge = *this;
     edge.out = newOut;
     return edge;
@@ -738,8 +731,8 @@ public:
     os << "Dependence Poly ";
     if (d.isForward()) os << "x -> y:";
     else os << "y -> x:";
-    os << "\n\tInput:\n" << *d.in->getArrayRef();
-    os << "\n\tOutput:\n" << *d.out->getArrayRef();
+    os << "\n\tInput:\n" << *d.in;
+    os << "\n\tOutput:\n" << *d.out;
     os << "\nA = " << d.depPoly->getA() << "\nE = " << d.depPoly->getE()
        << "\nSchedule Constraints:"
        << d.dependenceSatisfaction->getConstraints()
@@ -748,3 +741,11 @@ public:
               << ") = " << int(d.satLevel()) << "\n";
   }
 };
+
+constexpr void Addr::forEachInput(const auto &f) {
+  Dependence *d = edgeIn;
+  while (d) {
+    f(d->input());
+    d = d->getNext();
+  }
+}

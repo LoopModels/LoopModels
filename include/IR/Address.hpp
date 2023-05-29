@@ -5,7 +5,6 @@
 #include "Math/Array.hpp"
 #include "Math/Comparisons.hpp"
 #include "Math/Math.hpp"
-#include "MemoryAccess.hpp"
 #include "Utilities/Valid.hpp"
 #include <cstddef>
 #include <cstdint>
@@ -13,6 +12,7 @@
 #include <llvm/Support/Allocator.h>
 
 class Dependence;
+class ScheduledNode;
 namespace CostModeling {
 class LoopTreeSchedule;
 } // namespace CostModeling
@@ -60,20 +60,21 @@ class LoopTreeSchedule;
 /// `oldLoop->rotate(PhiInv)`
 // clang-format on
 class Addr : public Node {
-  using BitSet = MemoryAccess::BitSet;
+  [[no_unique_address]] Dependence *edgeIn{nullptr};
+  [[no_unique_address]] ScheduledNode *node{nullptr};
   [[no_unique_address]] NotNull<const llvm::SCEVUnknown> basePointer;
   [[no_unique_address]] NotNull<AffineLoopNest> loop;
   [[no_unique_address]] llvm::Instruction *instr;
-  [[no_unique_address]] Dependence *edgeIn;
   [[no_unique_address]] int64_t *offSym{nullptr};
+  [[no_unique_address]] const llvm::SCEV **syms;
   [[no_unique_address]] unsigned numDim{0}, numDynSym{0};
-  [[no_unique_address]] uint8_t numMemInputs;
-  [[no_unique_address]] uint8_t numDirectEdges;
-  [[no_unique_address]] uint8_t numMemOutputs;
+  // [[no_unique_address]] uint8_t numMemInputs;
+  // [[no_unique_address]] uint8_t numDirectEdges;
+  // [[no_unique_address]] uint8_t numMemOutputs;
   [[no_unique_address]] uint8_t index_{0};
   [[no_unique_address]] uint8_t lowLink_{0};
   [[no_unique_address]] uint8_t blckIdx{0};
-  [[no_unique_address]] uint8_t bitfield;
+  [[no_unique_address]] uint8_t bitfield{0};
 #if !defined(__clang__) && defined(__GNUC__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
@@ -87,102 +88,143 @@ class Addr : public Node {
 #else
 #pragma clang diagnostic pop
 #endif
-  explicit constexpr Addr(const llvm::SCEVUnknown *arrayPtr,
-                          AffineLoopNest &loopRef, llvm::Instruction *user,
-                          int64_t *offsym, std::array<unsigned, 2> dimOff)
-    : basePointer(arrayPtr), loop(loopRef), instr(user), offSym(offsym),
-      numDim(dimOff[0]), numDynSym(dimOff[1]){};
-  explicit constexpr Addr(const llvm::SCEVUnknown *arrayPtr,
-                          AffineLoopNest &loopRef, llvm::Instruction *user)
-    : basePointer(arrayPtr), loop(loopRef), loadOrStore(user){};
+  [[nodiscard]] static constexpr auto intMemNeeded(size_t numLoops, size_t dim)
+    -> size_t {
+    // 1 for denom
+    // dim for OffsetOmega
+    // dim*numLoops for indexMatrix
+    // numLoops for FusionOmega
+    // 1 + dim + dim*numLoops + numLoops == 1 + (dim + 1)*(numLoops + 1)
+    return 1 + (numLoops + 1) * (dim + 1);
+  }
+  // this is a reload
+  explicit Addr(Addr *other)
+    : Node(VK_Stow, other->depth), basePointer(other->basePointer),
+      loop(other->loop), instr(other->instr), offSym(other->offSym),
+      syms(other->syms), numDim(other->numDim), numDynSym(other->numDynSym) {
+    std::memcpy(mem, other->mem,
+                intMemNeeded(getNumLoops(), numDim) * sizeof(int64_t));
+  }
+  explicit Addr(const llvm::SCEVUnknown *arrayPtr,
+                NotNull<AffineLoopNest> loopRef, llvm::Instruction *user,
+                int64_t *offsym, const llvm::SCEV **s,
+                std::array<unsigned, 2> dimOff)
+    : Node(llvm::isa<llvm::StoreInst>(user) ? VK_Stow : VK_Load,
+           loopRef->getNumLoops()),
+      basePointer(arrayPtr), loop(loopRef), instr(user), offSym(offsym),
+      syms(s), numDim(dimOff[0]), numDynSym(dimOff[1]){};
+  explicit Addr(const llvm::SCEVUnknown *arrayPtr,
+                NotNull<AffineLoopNest> loopRef, llvm::Instruction *user)
+    : Node(llvm::isa<llvm::StoreInst>(user) ? VK_Stow : VK_Load,
+           loopRef->getNumLoops()),
+      basePointer(arrayPtr), loop(loopRef), instr(user){};
   /// Constructor for 0 dimensional memory access
-  [[nodiscard]] static auto
-  construct(BumpAlloc<> &alloc, const llvm::SCEVUnknown *arrayPointer,
-            AffineLoopNest &loopRef, llvm::Instruction *user,
-            PtrVector<unsigned> o) -> NotNull<ArrayIndex> {
-    unsigned numLoops = loopRef.getNumLoops();
-    invariant(o.size(), numLoops + 1);
-    size_t memNeeded = numLoops;
-    auto *mem = (ArrayIndex *)alloc.allocate(
-      sizeof(ArrayIndex) + memNeeded * sizeof(int64_t), 8);
-    auto *ma = std::construct_at(mem, arrayPointer, loopRef, user);
-    ma->getFusionOmega() << o;
-    return ma;
-  }
-  /// Constructor for regular indexing
-  [[nodiscard]] static auto
-  construct(BumpAlloc<> &alloc, const llvm::SCEVUnknown *arrayPtr,
-            AffineLoopNest &loopRef, llvm::Instruction *user,
-            PtrMatrix<int64_t> indMat,
-            std::array<llvm::SmallVector<const llvm::SCEV *, 3>, 2> szOff,
-            PtrVector<int64_t> coffsets, int64_t *offsets,
-            PtrVector<unsigned> o) -> NotNull<ArrayIndex> {
-    // we don't want to hold any other pointers that may need freeing
-    unsigned arrayDim = szOff[0].size(), nOff = szOff[1].size();
-    unsigned numLoops = loopRef.getNumLoops();
-    invariant(o.size(), numLoops + 1);
-    size_t memNeeded = memoryIntsRequired(arrayDim, numLoops);
-    auto *mem = (ArrayIndex *)alloc.allocate(
-      sizeof(ArrayIndex) + memNeeded * sizeof(int64_t) +
-        (arrayDim + nOff) * sizeof(const llvm::SCEV *const *),
-      alignof(ArrayIndex));
-    auto *ma = std::construct_at(mem, arrayPtr, loopRef, user, offsets,
-                                 std::array<unsigned, 2>{arrayDim, nOff});
-    std::copy_n(szOff[0].begin(), arrayDim, ma->getSizes().begin());
-    std::copy_n(szOff[1].begin(), nOff, ma->getSymbolicOffsets().begin());
-    ma->indexMatrix() << indMat;
-    ma->offsetVector() << coffsets;
-    ma->getFusionOmega() << o;
-    return ma;
-  }
 
-  constexpr Addr(NotNull<AffineLoopNest> explicitLoop, NotNull<MemoryAccess> ma,
+  constexpr Addr(NotNull<AffineLoopNest> explicitLoop, NotNull<Addr> ma,
                  SquarePtrMatrix<int64_t> Pinv, int64_t denom,
-                 PtrVector<int64_t> omega, bool isStr,
-                 CostModeling::LoopTreeSchedule *L, uint8_t memInputs,
-                 uint8_t directEdges, uint8_t memOutputs, int64_t *offsets)
+                 PtrVector<int64_t> omega, bool isStr, int64_t *offsets)
     : Node(isStr ? VK_Stow : VK_Load, unsigned(Pinv.numCol())),
-      arrayRef(ma->getArrayRef()), loop(explicitLoop), node(L),
-      numMemInputs(memInputs), numDirectEdges(directEdges),
-      numMemOutputs(memOutputs), bitfield(uint8_t(isStr) << 3) {
-    PtrMatrix<int64_t> M{arrayRef->indexMatrix()}; // aD x nLma
-    MutPtrMatrix<int64_t> mStar{indexMatrix()};    // aD x nLp
+      basePointer(ma->getArrayPointer()), loop(explicitLoop),
+      instr(ma->getInstruction()), offSym(ma->getOffSym()) {
+    PtrMatrix<int64_t> M{ma->indexMatrix()};    // aD x nLma
+    MutPtrMatrix<int64_t> mStar{indexMatrix()}; // aD x nLp
     // M is implicitly padded with zeros, nLp >= nLma
     unsigned nLma = ma->getNumLoops();
     invariant(nLma <= depth);
     invariant(size_t(nLma), size_t(M.numRow()));
     mStar << M * Pinv(_(0, nLma), _);
     getDenominator() = denom;
-    getOffsetOmega() << ma->offsetMatrix()(_, 0) - mStar * omega;
+    getOffsetOmega() << ma->getOffsetOmega() - mStar * omega;
     if (offsets) getOffsetOmega() -= M * PtrVector<int64_t>{offsets, nLma};
   }
   [[nodiscard]] constexpr auto getIntMemory() const -> int64_t * {
     return (int64_t *)const_cast<void *>((const void *)mem);
-    // return const_cast<int64_t *>(mem);
-  }
-  [[nodiscard]] constexpr auto getAddrMemory() const -> Addr ** {
-    const void *m =
-      mem +
-      (1 + getArrayDim() + (getArrayDim() * getNumLoops())) * sizeof(int64_t);
-    // const void *m = addr_;
-    void *p = const_cast<void *>(static_cast<const void *>(m));
-    return (Addr **)p;
-  }
-  [[nodiscard]] constexpr auto getDDepthMemory() const -> uint8_t * {
-    const void *m =
-      mem +
-      (1 + getArrayDim() + (getArrayDim() * getNumLoops())) * sizeof(int64_t) +
-      (numMemInputs + numDirectEdges + numMemOutputs) * sizeof(Addr *);
-    void *p = const_cast<void *>(static_cast<const void *>(m));
-    return (uint8_t *)p;
   }
 
+  // [[nodiscard]] constexpr auto getAddrMemory() const -> Addr ** {
+  //   const void *m =
+  //     mem +
+  //     (1 + getArrayDim() + (getArrayDim() * getNumLoops())) *
+  //     sizeof(int64_t);
+  //   // const void *m = addr_;
+  //   void *p = const_cast<void *>(static_cast<const void *>(m));
+  //   return (Addr **)p;
+  // }
+  // [[nodiscard]] constexpr auto getDDepthMemory() const -> uint8_t * {
+  //   const void *m =
+  //     mem +
+  //     (1 + getArrayDim() + (getArrayDim() * getNumLoops())) * sizeof(int64_t)
+  //     + (numMemInputs + numDirectEdges + numMemOutputs) * sizeof(Addr *);
+  //   void *p = const_cast<void *>(static_cast<const void *>(m));
+  //   return (uint8_t *)p;
+  // }
+  constexpr auto getOffSym() -> int64_t * { return offSym; }
+
 public:
+  [[nodiscard]] constexpr auto getNode() -> ScheduledNode * { return node; }
+  [[nodiscard]] constexpr auto getNode() const -> const ScheduledNode * {
+    return node;
+  }
+  constexpr void forEachInput(const auto &f);
+
+  [[nodiscard]] static auto construct(BumpAlloc<> &alloc,
+                                      const llvm::SCEVUnknown *arrayPointer,
+                                      NotNull<AffineLoopNest> loopRef,
+                                      llvm::Instruction *user,
+                                      PtrVector<unsigned> o) -> NotNull<Addr> {
+    unsigned numLoops = loopRef->getNumLoops();
+    invariant(o.size(), numLoops + 1);
+    size_t memNeeded = numLoops;
+    auto *mem = (Addr *)alloc.allocate(
+      sizeof(Addr) + memNeeded * sizeof(int64_t), alignof(Addr));
+    auto *ma = new (mem) Addr(arrayPointer, loopRef, user);
+    ma->getFusionOmega() << o;
+    return ma;
+  }
+  /// Constructor for regular indexing
+  [[nodiscard]] static auto
+  construct(BumpAlloc<> &alloc, const llvm::SCEVUnknown *arrayPtr,
+            NotNull<AffineLoopNest> loopRef, llvm::Instruction *user,
+            PtrMatrix<int64_t> indMat,
+            std::array<llvm::SmallVector<const llvm::SCEV *, 3>, 2> szOff,
+            PtrVector<int64_t> coffsets, int64_t *offsets,
+            PtrVector<unsigned> o) -> NotNull<Addr> {
+    // we don't want to hold any other pointers that may need freeing
+    unsigned arrayDim = szOff[0].size(), nOff = szOff[1].size();
+    unsigned numLoops = loopRef->getNumLoops();
+    invariant(o.size(), numLoops + 1);
+    size_t memNeeded = intMemNeeded(numLoops, arrayDim);
+    auto *mem = (Addr *)alloc.allocate(
+      sizeof(Addr) + memNeeded * sizeof(int64_t), alignof(Addr));
+    const auto **syms = alloc.allocate<const llvm::SCEV *>(arrayDim + nOff);
+    auto *ma = new (mem) Addr(arrayPtr, loopRef, user, offsets, syms,
+                              std::array<unsigned, 2>{arrayDim, nOff});
+    std::copy_n(szOff[0].begin(), arrayDim, syms);
+    std::copy_n(szOff[1].begin(), nOff, syms + arrayDim);
+    ma->indexMatrix() << indMat;
+    ma->getOffsetOmega() << coffsets;
+    ma->getFusionOmega() << o;
+    return ma;
+  }
+  [[nodiscard]] auto reload(BumpAlloc<> &alloc) -> NotNull<Addr> {
+    size_t memNeeded = intMemNeeded(getNumLoops(), numDim);
+    auto *p = (Addr *)alloc.allocate(sizeof(Addr) + memNeeded * sizeof(int64_t),
+                                     alignof(Addr));
+    return new (p) Addr(*this);
+  }
+  [[nodiscard]] auto getSizes() const -> PtrVector<const llvm::SCEV *> {
+    return {syms, numDim};
+  }
+  [[nodiscard]] auto getSymbolicOffsets() const
+    -> PtrVector<const llvm::SCEV *> {
+    return {syms + numDim, numDynSym};
+  }
   static constexpr auto classof(const Node *v) -> bool {
     return v->getKind() <= VK_Stow;
   }
-  [[nodiscard]] constexpr auto getArrayPointer() const -> const llvm::SCEV * {
-    return arrayRef->getArrayPointer();
+  [[nodiscard]] constexpr auto getArrayPointer() const
+    -> NotNull<const llvm::SCEVUnknown> {
+    return basePointer;
   }
   [[nodiscard]] constexpr auto dependsOnIndVars(size_t d) -> bool {
     for (size_t i = 0, D = getArrayDim(); i < D; ++i)
@@ -196,18 +238,11 @@ public:
     return blckIdx;
   }
   constexpr void setBlockIdx(uint8_t idx) { blckIdx = idx; }
-  [[nodiscard]] constexpr auto getLoopTreeSchedule() const
-    -> CostModeling::LoopTreeSchedule * {
-    return node;
-  }
-  constexpr void setLoopTreeSchedule(CostModeling::LoopTreeSchedule *L) {
-    node = L;
-  }
-  constexpr void setLoopTreeSchedule(CostModeling::LoopTreeSchedule *L,
-                                     unsigned blockIdx) {
-    node = L;
-    blckIdx = blockIdx;
-  }
+  // constexpr void setLoopTreeSchedule(CostModeling::LoopTreeSchedule *L,
+  //                                    unsigned blockIdx) {
+  //   node = L;
+  //   blckIdx = blockIdx;
+  // }
   // bits: 0 = visited, 1 = on stack, 2 = placed, 4 = visited2, 5 = activeSubset
   constexpr void visit() { bitfield |= 1; }
   constexpr void unVisit() { bitfield &= ~uint8_t(1); }
@@ -234,46 +269,6 @@ public:
   constexpr void removeFromStack() { bitfield &= ~uint8_t(2); }
   // doesn't reset isStore or wasPlaced
   constexpr void resetBitfield() { bitfield &= uint8_t(12); }
-  [[nodiscard]] constexpr auto getParents() const -> BitSet { return parents; }
-  // [[nodiscard]] constexpr auto getChildren() const -> BitSet {
-  //   return children;
-  // }
-  constexpr auto getAncestors() -> BitSet & { return ancestors; }
-  [[nodiscard]] constexpr auto getAncestors() const -> BitSet {
-    return ancestors;
-  }
-  // constexpr auto getDescendants() -> BitSet & { return descendants; }
-  // [[nodiscard]] constexpr auto getDescendants() const -> BitSet {
-  //   return descendants;
-  // }
-  constexpr void addParent(size_t i) { parents.insert(i); }
-  // constexpr void addChild(size_t i) { children.insert(i); }
-  // NOLINTNEXTLINE(misc-no-recursion)
-  constexpr auto calcAncestors(uint8_t filtd) -> BitSet {
-    if (wasVisited()) return ancestors;
-    visit();
-    ancestors = {};
-    parents = {};
-    for (auto *e : inNeighbors(filtd)) {
-      ancestors |= e->calcAncestors(filtd);
-      parents[e->index()] = true;
-      // invariant(!parents.insert(e->index()));
-    }
-    return ancestors |= parents;
-  }
-  // // NOLINTNEXTLINE(misc-no-recursion)
-  // constexpr auto calcDescendants(uint8_t filtd) -> BitSet {
-  //   if (wasVisited2()) return descendants;
-  //   visit2();
-  //   descendants = {};
-  //   children = {};
-  //   for (auto *e : outNeighbors(filtd)) {
-  //     descendants |= e->calcDescendants(filtd);
-  //     children[e->index()] = true;
-  //     // invariant(!children.insert(e->index()));
-  //   }
-  //   return descendants |= children;
-  // }
   [[nodiscard]] constexpr auto onStack() const -> bool { return bitfield & 2; }
   constexpr void place() { bitfield |= 4; }
   [[nodiscard]] constexpr auto wasPlaced() const -> bool {
@@ -292,143 +287,147 @@ public:
   constexpr auto lowLink() -> uint8_t & { return lowLink_; }
   [[nodiscard]] constexpr auto lowLink() const -> unsigned { return lowLink_; }
 
-  struct EndSentinel {};
-  class ActiveEdgeIterator {
-    Addr **p;
-    Addr **e;
-    uint8_t *d;
-    uint8_t filtdepth;
+  // struct EndSentinel {};
+  // class ActiveEdgeIterator {
+  //   Addr **p;
+  //   Addr **e;
+  //   uint8_t *d;
+  //   uint8_t filtdepth;
 
-  public:
-    constexpr auto operator*() const -> Addr * { return *p; }
-    constexpr auto operator->() const -> Addr * { return *p; }
-    /// true means skip, false means we evaluate
-    /// so *d <= filtdepth means we skip, evaluating only *d > filtdepth
-    [[nodiscard]] constexpr auto hasNext() const -> bool {
-      return ((p != e) && ((*d <= filtdepth) || (!((*p)->inActiveSubset()))));
-    }
-    constexpr auto operator++() -> ActiveEdgeIterator & {
-      // meaning of filtdepth 127?
-      do {
-        ++p;
-        ++d;
-      } while (hasNext());
-      return *this;
-    }
-    constexpr auto operator==(EndSentinel) const -> bool { return p == e; }
-    constexpr auto operator!=(EndSentinel) const -> bool { return p != e; }
-    constexpr ActiveEdgeIterator(Addr **_p, Addr **_e, uint8_t *_d, uint8_t fd)
-      : p(_p), e(_e), d(_d), filtdepth(fd) {
-      while (hasNext()) {
-        ++p;
-        ++d;
-      }
-    }
-    constexpr auto operator++(int) -> ActiveEdgeIterator {
-      ActiveEdgeIterator tmp = *this;
-      ++*this;
-      return tmp;
-    }
-    [[nodiscard]] constexpr auto begin() const -> ActiveEdgeIterator {
-      return *this;
-    }
-    [[nodiscard]] static constexpr auto end() -> EndSentinel { return {}; }
-  };
-  [[nodiscard]] constexpr auto numInNeighbors() const -> unsigned {
-    return isStore() ? numMemInputs + numDirectEdges : numMemInputs;
-  }
-  [[nodiscard]] constexpr auto numOutNeighbors() const -> unsigned {
-    return isStore() ? numMemOutputs : numDirectEdges + numMemOutputs;
-  }
-  [[nodiscard]] constexpr auto numNeighbors() const -> unsigned {
-    return numMemInputs + numDirectEdges + numMemOutputs;
-  }
-  [[nodiscard]] auto inNeighbors(uint8_t filtd) -> ActiveEdgeIterator {
-    Addr **p = getAddrMemory();
-    return {p, p + numInNeighbors(), getDDepthMemory(), filtd};
-  }
-  [[nodiscard]] auto outNeighbors(uint8_t filtd) -> ActiveEdgeIterator {
-    unsigned n = numInNeighbors();
-    Addr **p = getAddrMemory() + n;
-    return {p, p + numOutNeighbors(), getDDepthMemory() + n, filtd};
-  }
-#ifndef NDEBUG
-  [[gnu::used, nodiscard]] constexpr auto directEdges()
-    -> MutPtrVector<Addr *> {
-    Addr **p = getAddrMemory() + numMemInputs;
-    return {p, numDirectEdges};
-  }
-  [[gnu::used, nodiscard]] constexpr auto directEdges() const
-    -> PtrVector<Addr *> {
-    Addr **p = getAddrMemory() + numMemInputs;
-    return {p, numDirectEdges};
-  }
-  [[gnu::used, nodiscard]] constexpr auto inDepSat() const
-    -> PtrVector<uint8_t> {
-    return {getDDepthMemory(), numInNeighbors()};
-  }
-  [[gnu::used, nodiscard]] constexpr auto outDepSat() const
-    -> PtrVector<uint8_t> {
-    return {getDDepthMemory() + numInNeighbors(), numOutNeighbors()};
-  }
-  [[gnu::used, nodiscard]] constexpr auto inNeighbors() const
-    -> PtrVector<Addr *> {
-    return PtrVector<Addr *>{getAddrMemory(), numInNeighbors()};
-  }
-  [[gnu::used, nodiscard]] constexpr auto outNeighbors() const
-    -> PtrVector<Addr *> {
-    return PtrVector<Addr *>{getAddrMemory() + numInNeighbors(),
-                             numOutNeighbors()};
-  }
-  [[gnu::used, nodiscard]] constexpr auto inNeighbors()
-    -> MutPtrVector<Addr *> {
-    return MutPtrVector<Addr *>{getAddrMemory(), numInNeighbors()};
-  }
-  [[gnu::used, nodiscard]] constexpr auto outNeighbors()
-    -> MutPtrVector<Addr *> {
-    return MutPtrVector<Addr *>{getAddrMemory() + numInNeighbors(),
-                                numOutNeighbors()};
-  }
-#else
-  [[nodiscard]] constexpr auto directEdges() -> MutPtrVector<Address *> {
-    Address **p = getAddrMemory() + numMemInputs;
-    return {p, numDirectEdges};
-  }
-  [[nodiscard]] constexpr auto directEdges() const -> PtrVector<Address *> {
-    Address **p = getAddrMemory() + numMemInputs;
-    return {p, numDirectEdges};
-  }
-  [[nodiscard]] constexpr auto inDepSat() const -> PtrVector<uint8_t> {
-    return {getDDepthMemory(), numInNeighbors()};
-  }
-  [[nodiscard]] constexpr auto outDepSat() const -> PtrVector<uint8_t> {
-    return {getDDepthMemory() + numInNeighbors(), numOutNeighbors()};
-  }
-  [[nodiscard]] constexpr auto inNeighbors() const -> PtrVector<Address *> {
-    return PtrVector<Address *>{getAddrMemory(), numInNeighbors()};
-  }
-  [[nodiscard]] constexpr auto outNeighbors() const -> PtrVector<Address *> {
-    return PtrVector<Address *>{getAddrMemory() + numInNeighbors(),
-                                numOutNeighbors()};
-  }
-  [[nodiscard]] constexpr auto inNeighbors() -> MutPtrVector<Address *> {
-    return MutPtrVector<Address *>{getAddrMemory(), numInNeighbors()};
-  }
-  [[nodiscard]] constexpr auto outNeighbors() -> MutPtrVector<Address *> {
-    return MutPtrVector<Address *>{getAddrMemory() + numInNeighbors(),
-                                   numOutNeighbors()};
-  }
-#endif
-  constexpr void indirectInNeighbor(Addr *other, size_t i, uint8_t d) {
-    getAddrMemory()[i] = other;
-    getDDepthMemory()[i] = d;
-  }
-  constexpr void indirectOutNeighbor(Addr *other, size_t i, uint8_t d) {
-    getAddrMemory()[numMemInputs + numDirectEdges + i] = other;
-    getDDepthMemory()[numMemInputs + numDirectEdges + i] = d;
-  }
-  [[nodiscard]] static auto allocate(BumpAlloc<> &alloc,
-                                     NotNull<MemoryAccess> ma,
+  // public:
+  //   constexpr auto operator*() const -> Addr * { return *p; }
+  //   constexpr auto operator->() const -> Addr * { return *p; }
+  //   /// true means skip, false means we evaluate
+  //   /// so *d <= filtdepth means we skip, evaluating only *d > filtdepth
+  //   [[nodiscard]] constexpr auto hasNext() const -> bool {
+  //     return ((p != e) && ((*d <= filtdepth) ||
+  //     (!((*p)->inActiveSubset()))));
+  //   }
+  //   constexpr auto operator++() -> ActiveEdgeIterator & {
+  //     // meaning of filtdepth 127?
+  //     do {
+  //       ++p;
+  //       ++d;
+  //     } while (hasNext());
+  //     return *this;
+  //   }
+  //   constexpr auto operator==(EndSentinel) const -> bool { return p == e; }
+  //   constexpr auto operator!=(EndSentinel) const -> bool { return p != e; }
+  //   constexpr ActiveEdgeIterator(Addr **_p, Addr **_e, uint8_t *_d, uint8_t
+  //   fd)
+  //     : p(_p), e(_e), d(_d), filtdepth(fd) {
+  //     while (hasNext()) {
+  //       ++p;
+  //       ++d;
+  //     }
+  //   }
+  //   constexpr auto operator++(int) -> ActiveEdgeIterator {
+  //     ActiveEdgeIterator tmp = *this;
+  //     ++*this;
+  //     return tmp;
+  //   }
+  //   [[nodiscard]] constexpr auto begin() const -> ActiveEdgeIterator {
+  //     return *this;
+  //   }
+  //   [[nodiscard]] static constexpr auto end() -> EndSentinel { return {}; }
+  // };
+  // [[nodiscard]] constexpr auto numInNeighbors() const -> unsigned {
+  //   return isStore() ? numMemInputs + numDirectEdges : numMemInputs;
+  // }
+  // [[nodiscard]] constexpr auto numOutNeighbors() const -> unsigned {
+  //   return isStore() ? numMemOutputs : numDirectEdges + numMemOutputs;
+  // }
+  // [[nodiscard]] constexpr auto numNeighbors() const -> unsigned {
+  //   return numMemInputs + numDirectEdges + numMemOutputs;
+  // }
+  // [[nodiscard]] auto inNeighbors(uint8_t filtd) -> ActiveEdgeIterator {
+  //   Addr **p = getAddrMemory();
+  //   return {p, p + numInNeighbors(), getDDepthMemory(), filtd};
+  // }
+  // [[nodiscard]] auto outNeighbors(uint8_t filtd) -> ActiveEdgeIterator {
+  //   unsigned n = numInNeighbors();
+  //   Addr **p = getAddrMemory() + n;
+  //   return {p, p + numOutNeighbors(), getDDepthMemory() + n, filtd};
+  // }
+  // #ifndef NDEBUG
+  //   [[gnu::used, nodiscard]] constexpr auto directEdges()
+  //     -> MutPtrVector<Addr *> {
+  //     Addr **p = getAddrMemory() + numMemInputs;
+  //     return {p, numDirectEdges};
+  //   }
+  //   [[gnu::used, nodiscard]] constexpr auto directEdges() const
+  //     -> PtrVector<Addr *> {
+  //     Addr **p = getAddrMemory() + numMemInputs;
+  //     return {p, numDirectEdges};
+  //   }
+  //   [[gnu::used, nodiscard]] constexpr auto inDepSat() const
+  //     -> PtrVector<uint8_t> {
+  //     return {getDDepthMemory(), numInNeighbors()};
+  //   }
+  //   [[gnu::used, nodiscard]] constexpr auto outDepSat() const
+  //     -> PtrVector<uint8_t> {
+  //     return {getDDepthMemory() + numInNeighbors(), numOutNeighbors()};
+  //   }
+  //   [[gnu::used, nodiscard]] constexpr auto inNeighbors() const
+  //     -> PtrVector<Addr *> {
+  //     return PtrVector<Addr *>{getAddrMemory(), numInNeighbors()};
+  //   }
+  //   [[gnu::used, nodiscard]] constexpr auto outNeighbors() const
+  //     -> PtrVector<Addr *> {
+  //     return PtrVector<Addr *>{getAddrMemory() + numInNeighbors(),
+  //                              numOutNeighbors()};
+  //   }
+  //   [[gnu::used, nodiscard]] constexpr auto inNeighbors()
+  //     -> MutPtrVector<Addr *> {
+  //     return MutPtrVector<Addr *>{getAddrMemory(), numInNeighbors()};
+  //   }
+  //   [[gnu::used, nodiscard]] constexpr auto outNeighbors()
+  //     -> MutPtrVector<Addr *> {
+  //     return MutPtrVector<Addr *>{getAddrMemory() + numInNeighbors(),
+  //                                 numOutNeighbors()};
+  //   }
+  // #else
+  //   [[nodiscard]] constexpr auto directEdges() -> MutPtrVector<Address *> {
+  //     Address **p = getAddrMemory() + numMemInputs;
+  //     return {p, numDirectEdges};
+  //   }
+  //   [[nodiscard]] constexpr auto directEdges() const -> PtrVector<Address *>
+  //   {
+  //     Address **p = getAddrMemory() + numMemInputs;
+  //     return {p, numDirectEdges};
+  //   }
+  //   [[nodiscard]] constexpr auto inDepSat() const -> PtrVector<uint8_t> {
+  //     return {getDDepthMemory(), numInNeighbors()};
+  //   }
+  //   [[nodiscard]] constexpr auto outDepSat() const -> PtrVector<uint8_t> {
+  //     return {getDDepthMemory() + numInNeighbors(), numOutNeighbors()};
+  //   }
+  //   [[nodiscard]] constexpr auto inNeighbors() const -> PtrVector<Address *>
+  //   {
+  //     return PtrVector<Address *>{getAddrMemory(), numInNeighbors()};
+  //   }
+  //   [[nodiscard]] constexpr auto outNeighbors() const -> PtrVector<Address *>
+  //   {
+  //     return PtrVector<Address *>{getAddrMemory() + numInNeighbors(),
+  //                                 numOutNeighbors()};
+  //   }
+  //   [[nodiscard]] constexpr auto inNeighbors() -> MutPtrVector<Address *> {
+  //     return MutPtrVector<Address *>{getAddrMemory(), numInNeighbors()};
+  //   }
+  //   [[nodiscard]] constexpr auto outNeighbors() -> MutPtrVector<Address *> {
+  //     return MutPtrVector<Address *>{getAddrMemory() + numInNeighbors(),
+  //                                    numOutNeighbors()};
+  //   }
+  // #endif
+  // constexpr void indirectInNeighbor(Addr *other, size_t i, uint8_t d) {
+  //   getAddrMemory()[i] = other;
+  //   getDDepthMemory()[i] = d;
+  // }
+  // constexpr void indirectOutNeighbor(Addr *other, size_t i, uint8_t d) {
+  //   getAddrMemory()[numMemInputs + numDirectEdges + i] = other;
+  //   getDDepthMemory()[numMemInputs + numDirectEdges + i] = d;
+  // }
+  [[nodiscard]] static auto allocate(BumpAlloc<> &alloc, NotNull<Addr> ma,
                                      unsigned inputEdges, unsigned directEdges,
                                      unsigned outputEdges) -> NotNull<Addr> {
 
@@ -441,9 +440,8 @@ public:
   }
   [[nodiscard]] static auto
   construct(BumpAlloc<> &alloc, NotNull<AffineLoopNest> explicitLoop,
-            NotNull<MemoryAccess> ma, bool isStr, SquarePtrMatrix<int64_t> Pinv,
-            int64_t denom, PtrVector<int64_t> omega,
-            CostModeling::LoopTreeSchedule *L, unsigned inputEdges,
+            NotNull<Addr> ma, bool isStr, SquarePtrMatrix<int64_t> Pinv,
+            int64_t denom, PtrVector<int64_t> omega, unsigned inputEdges,
             unsigned directEdges, unsigned outputEdges, int64_t *offsets)
     -> NotNull<Addr> {
 
@@ -461,35 +459,33 @@ public:
     // benefit of constexpr is UB is not allowed, so we get more warnings).
     // return std::construct_at((Address *)pt, explicitLoop, ma, Pinv, denom,
     // omega, isStr);
-    return new (pt) Addr(explicitLoop, ma, Pinv, denom, omega, isStr, L,
-                         inputEdges, directEdges, outputEdges, offsets);
+    return new (pt) Addr(explicitLoop, ma, Pinv, denom, omega, isStr, offsets);
   }
-  constexpr void addDirectConnection(Addr *store, size_t loadEdge) {
-    assert(isLoad() && store->isStore());
-    directEdges().front() = store;
-    store->directEdges()[loadEdge] = this;
-    // never ignored
-    getDDepthMemory()[numMemInputs] = 255;
-    store->getDDepthMemory()[numMemInputs + loadEdge] = 255;
+  // constexpr void addDirectConnection(Addr *store, size_t loadEdge) {
+  //   assert(isLoad() && store->isStore());
+  //   directEdges().front() = store;
+  //   store->directEdges()[loadEdge] = this;
+  //   // never ignored
+  //   getDDepthMemory()[numMemInputs] = 255;
+  //   store->getDDepthMemory()[numMemInputs + loadEdge] = 255;
+  // }
+  // constexpr void addOut(Addr *child, uint8_t d) {
+  //   // we hijack index_ and lowLink_ before they're used for SCC
+  //   size_t inInd = index_++, outInd = child->lowLink_++;
+  //   indirectOutNeighbor(child, inInd, d);
+  //   child->indirectInNeighbor(this, outInd, d);
+  // }
+  [[nodiscard]] constexpr auto getNumLoops() const -> unsigned { return depth; }
+  [[nodiscard]] constexpr auto getArrayDim() const -> unsigned {
+    return numDim;
   }
-  constexpr void addOut(Addr *child, uint8_t d) {
-    // we hijack index_ and lowLink_ before they're used for SCC
-    size_t inInd = index_++, outInd = child->lowLink_++;
-    indirectOutNeighbor(child, inInd, d);
-    child->indirectInNeighbor(this, outInd, d);
-  }
-  [[nodiscard]] constexpr auto getNumLoops() const -> size_t { return depth; }
-  [[nodiscard]] constexpr auto getArrayDim() const -> size_t {
-    return arrayRef->getArrayDim();
-  }
-  [[nodiscard]] auto getInstruction() -> llvm::Instruction * {
-    return arrayRef->getInstruction();
-  }
+  [[nodiscard]] auto getInstruction() -> llvm::Instruction * { return instr; }
   [[nodiscard]] auto getInstruction() const -> const llvm::Instruction * {
-    return arrayRef->getInstruction();
+    return instr;
   }
   [[nodiscard]] auto getAlign() const -> llvm::Align {
-    return arrayRef->getAlign();
+    if (auto *l = llvm::dyn_cast<llvm::LoadInst>(instr)) return l->getAlign();
+    return llvm::cast<llvm::StoreInst>(instr)->getAlign();
   }
   [[nodiscard]] constexpr auto getDenominator() -> int64_t & {
     return getIntMemory()[0];
@@ -513,15 +509,34 @@ public:
     return {getIntMemory() + 1 + getArrayDim(),
             DenseDims{getArrayDim(), getNumLoops()}};
   }
+  [[nodiscard]] constexpr auto getFusionOmega() -> MutPtrVector<int64_t> {
+    unsigned L = getNumLoops() + 1;
+    size_t d = getArrayDim(), off = 1 + d * L;
+    return {getIntMemory() + off, L};
+  }
+  [[nodiscard]] constexpr auto getFusionOmega() const -> PtrVector<int64_t> {
+    unsigned L = getNumLoops() + 1;
+    size_t d = getArrayDim(), off = 1 + d * L;
+    return {getIntMemory() + off, L};
+  }
+  [[nodiscard]] constexpr auto offsetMatrix() const -> DensePtrMatrix<int64_t> {
+    invariant(offSym != nullptr || numDynSym == 0);
+    return {offSym, DenseDims{getArrayDim(), numDynSym}};
+  }
   [[nodiscard]] constexpr auto getLoop() -> NotNull<AffineLoopNest> {
     return loop;
+  }
+  [[nodiscard]] constexpr auto sizesMatch(NotNull<const Addr> x) const -> bool {
+    auto thisSizes = getSizes(), xSizes = x->getSizes();
+    return std::equal(thisSizes.begin(), thisSizes.end(), xSizes.begin(),
+                      xSizes.end());
   }
   [[nodiscard]] constexpr auto getCurrentDepth() const -> unsigned;
   void printDotName(llvm::raw_ostream &os) const {
     if (isLoad()) os << "... = ";
-    os << *arrayRef->getArrayPointer() << "[";
+    os << *getArrayPointer() << "[";
     DensePtrMatrix<int64_t> A{indexMatrix()};
-    DensePtrMatrix<int64_t> B{arrayRef->offsetMatrix()};
+    DensePtrMatrix<int64_t> B{offsetMatrix()};
     PtrVector<int64_t> b{getOffsetOmega()};
     size_t numLoops = size_t(A.numCol());
     for (size_t i = 0; i < A.numRow(); ++i) {
@@ -550,7 +565,7 @@ public:
           }
           if (j) {
             if (offij != 1) os << offij << '*';
-            os << *arrayRef->getLoop()->getSyms()[j - 1];
+            os << *getLoop()->getSyms()[j - 1];
           } else os << offij;
           printPlus = true;
         }
@@ -560,3 +575,57 @@ public:
     if (isStore()) os << " = ...";
   }
 };
+inline auto operator<<(llvm::raw_ostream &os, const Addr &m)
+  -> llvm::raw_ostream & {
+  if (m.isLoad()) os << "Load: ";
+  else os << "Store: ";
+  os << *m.getInstruction();
+  os << "\nArrayIndex " << *m.getArrayPointer() << " (dim = " << m.getArrayDim()
+     << ", num loops: " << m.getNumLoops();
+  if (m.getArrayDim()) os << ", element size: " << *m.getSizes().back();
+  os << "):\n";
+  PtrMatrix<int64_t> A{m.indexMatrix()};
+  os << "Sizes: [";
+  if (m.getArrayDim()) {
+    os << " unknown";
+    for (ptrdiff_t i = 0; i < ptrdiff_t(A.numRow()) - 1; ++i)
+      os << ", " << *m.getSizes()[i];
+  }
+  os << " ]\nSubscripts: [ ";
+  size_t numLoops = size_t(A.numCol());
+  PtrMatrix<int64_t> offs = m.offsetMatrix();
+  for (size_t i = 0; i < A.numRow(); ++i) {
+    if (i) os << ", ";
+    bool printPlus = false;
+    for (size_t j = 0; j < numLoops; ++j) {
+      if (int64_t Aji = A(i, j)) {
+        if (printPlus) {
+          if (Aji <= 0) {
+            Aji *= -1;
+            os << " - ";
+          } else os << " + ";
+        }
+        if (Aji != 1) os << Aji << '*';
+        os << "i_" << j << " ";
+        printPlus = true;
+      }
+    }
+    for (size_t j = 0; j < offs.numCol(); ++j) {
+      if (int64_t offij = offs(i, j)) {
+        if (printPlus) {
+          if (offij <= 0) {
+            offij *= -1;
+            os << " - ";
+          } else os << " + ";
+        }
+        if (j) {
+          if (offij != 1) os << offij << '*';
+          os << *m.getLoop()->getSyms()[j - 1];
+        } else os << offij;
+        printPlus = true;
+      }
+    }
+  }
+  return os << "]\nInitial Fusion Omega: " << m.getFusionOmega()
+            << "\nAffineLoopNest:" << *m.getLoop();
+}

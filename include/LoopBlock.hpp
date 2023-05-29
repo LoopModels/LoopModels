@@ -1,6 +1,5 @@
 #pragma once
 
-#include "ArrayIndex.hpp"
 #include "Containers/BitSets.hpp"
 #include "Containers/BumpMapSet.hpp"
 #include "Dependence.hpp"
@@ -15,7 +14,6 @@
 #include "Math/NormalForm.hpp"
 #include "Math/Simplex.hpp"
 #include "Math/StaticArrays.hpp"
-#include "MemoryAccess.hpp"
 #include "Schedule.hpp"
 #include "Utilities/Allocators.hpp"
 #include "Utilities/Invariant.hpp"
@@ -61,7 +59,7 @@ constexpr void insertSortedUnique(Vector<I> &v, const I &x) {
 class ScheduledNode {
 
   [[no_unique_address]] Addr *store; // linked list to loads
-  [[no_unique_address]] NotNull<AffineLoopNest<>> loopNest;
+  [[no_unique_address]] NotNull<AffineLoopNest> loopNest;
   [[no_unique_address]] ScheduledNode *next{nullptr};
   [[no_unique_address]] ScheduledNode *component{nullptr};
   [[no_unique_address]] Dependence *depActive{nullptr};
@@ -91,11 +89,11 @@ class ScheduledNode {
   }
 
 public:
-  constexpr ScheduledNode(uint8_t sId, MemoryAccess *store,
-                          unsigned int nodeIndex)
-    : loopNest(store->getLoop()) {
-    addMemory(sId, store, nodeIndex);
-  }
+  // constexpr ScheduledNode(uint8_t sId, MemoryAccess *store,
+  //                         unsigned int nodeIndex)
+  //   : loopNest(store->getLoop()) {
+  //   addMemory(sId, store, nodeIndex);
+  // }
   constexpr auto getLoopOffsets() -> MutPtrVector<int64_t> {
     return {offsets, getNumLoops()};
   }
@@ -111,8 +109,7 @@ public:
   // TODO:
   // 1. the above
   // 2. add the direct Addr connections corresponding to the node
-  constexpr void insertMem(BumpAlloc<> &alloc,
-                           PtrVector<MemoryAccess *> memAccess,
+  constexpr void insertMem(BumpAlloc<> &alloc, PtrVector<Addr *> memAccess,
                            CostModeling::LoopTreeSchedule *L) const;
   // constexpr void
   // incrementReplicationCounts(PtrVector<MemoryAccess *> memAccess) const {
@@ -127,11 +124,16 @@ public:
   [[nodiscard]] constexpr auto getStore() const -> const Addr * {
     return store;
   }
+  // at this point, getNext chains memory ops, letting us loop over them
+  // getPrev lets us iterate within a ScheduledNode
+  // we can iterate over
+  // a. nodes -> edges
+  // b. nodes -> addrs
   constexpr void forEachAddr(const auto &f) {
     Addr *m = store;
     while (true) {
       f(m);
-      Node *v = m->getNext();
+      Node *v = m->getPrev();
       if (!v) break;
       m = llvm::cast<Addr>(v);
     }
@@ -153,7 +155,7 @@ public:
   }
   [[nodiscard]] constexpr auto getSchedule() -> AffineSchedule { return {mem}; }
   [[nodiscard]] constexpr auto getLoopNest() const
-    -> NotNull<const AffineLoopNest<>> {
+    -> NotNull<const AffineLoopNest> {
     return loopNest;
   }
   [[nodiscard]] constexpr auto getOffset() const -> const int64_t * {
@@ -328,28 +330,30 @@ class LinearProgramLoopBlock {
   // E.g., the `dstOmega[numLoopsCommon-1] > srcOmega[numLoopsCommon-1]`,
   // and all other other shared schedule parameters are aliases (i.e.,
   // identical)?
-  [[no_unique_address]] Vector<MemoryAccess *> memory{};
+  [[no_unique_address]] Vector<Addr *> memory{};
   [[no_unique_address]] Vector<ScheduledNode> nodes{};
   [[no_unique_address]] Vector<Dependence> edges{};
-  [[no_unique_address]] map<llvm::User *, unsigned> userToMem{};
+  [[no_unique_address]] map<llvm::User *, Addr *> userToMem{};
   [[no_unique_address]] set<llvm::User *> visited{};
   [[no_unique_address]] llvm::LoopInfo *LI;
   [[no_unique_address]] BumpAlloc<> allocator{};
   // we may turn off edges because we've exceeded its loop depth
   // or because the dependence has already been satisfied at an
   // earlier level.
-  [[no_unique_address]] unsigned numPhiCoefs{0};
-  [[no_unique_address]] unsigned numOmegaCoefs{0};
-  [[no_unique_address]] unsigned numSlack{0};
-  [[no_unique_address]] unsigned numLambda{0};
-  [[no_unique_address]] unsigned numBounding{0};
-  [[no_unique_address]] unsigned numConstraints{0};
-  [[no_unique_address]] unsigned numActiveEdges{0};
+  struct CoefCounts {
+    [[no_unique_address]] unsigned numPhiCoefs{0};
+    [[no_unique_address]] unsigned numOmegaCoefs{0};
+    [[no_unique_address]] unsigned numSlack{0};
+    [[no_unique_address]] unsigned numLambda{0};
+    [[no_unique_address]] unsigned numBounding{0};
+    [[no_unique_address]] unsigned numConstraints{0};
+    [[no_unique_address]] unsigned numActiveEdges{0};
+  };
 
 public:
   LinearProgramLoopBlock() = default;
   constexpr void setLI(llvm::LoopInfo *loopInfo) { LI = loopInfo; }
-  using BitSet = ::MemoryAccess::BitSet;
+
   void clear() {
     // TODO: maybe we shouldn't have to manually call destructors?
     // That would require handling more memory allocations via
@@ -1567,7 +1571,7 @@ public:
     std::swap(g.nodeIds, nodeIds);
     g.activeEdges = activeEdges; // undo such that g.getEdges(d) is correct
     for (auto &&e : g.getEdges(d)) e.popSatLevel();
-    g.activeEdges = oldEdges;    // restore backup
+    g.activeEdges = oldEdges; // restore backup
     auto *oldNodeIter = oldSchedules.begin();
     for (auto &&n : g) n.getSchedule() = *(oldNodeIter++);
     allocator.rollback(chckpt);

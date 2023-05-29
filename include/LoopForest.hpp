@@ -31,7 +31,7 @@ struct LoopTree {
 
   // in addition to requiring simplify form, we require a single exit block
   [[no_unique_address]] llvm::SmallVector<Predicate::Map> paths;
-  [[no_unique_address]] AffineLoopNest<true> *affineLoop{nullptr};
+  [[no_unique_address]] AffineLoopNest *affineLoop{nullptr};
   [[no_unique_address]] Optional<LoopTree *> parentLoop{nullptr};
   [[no_unique_address]] llvm::SmallVector<NotNull<ArrayIndex>> memAccesses{};
 
@@ -68,11 +68,11 @@ struct LoopTree {
 
   LoopTree(BumpAlloc<> &alloc, llvm::Loop *L, const llvm::SCEV *BT,
            llvm::ScalarEvolution &SE, Predicate::Map pth)
-    : loop(L), affineLoop{AffineLoopNest<true>::construct(alloc, L, BT, SE)} {
+    : loop(L), affineLoop{AffineLoopNest::construct(alloc, L, BT, SE)} {
     paths.push_back(std::move(pth));
   }
 
-  LoopTree(BumpAlloc<> &alloc, llvm::Loop *L, NotNull<AffineLoopNest<true>> aln,
+  LoopTree(BumpAlloc<> &alloc, llvm::Loop *L, NotNull<AffineLoopNest> aln,
            llvm::SmallVector<NotNull<LoopTree>> sL,
            llvm::SmallVector<Predicate::Map> pth)
     : loop(L), subLoops(std::move(sL)), paths(std::move(pth)),

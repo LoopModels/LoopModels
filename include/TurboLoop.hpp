@@ -95,7 +95,7 @@ public:
 
   /// the process of building the LoopForest has the following steps:
   /// 1. build initial forest of trees
-  /// 2. instantiate AffineLoopNest<true>s; any non-affine loops
+  /// 2. instantiate AffineLoopNests; any non-affine loops
   ///    are pruned, and their inner loops added as new, separate forests.
   /// 3. Existing forests are searched for indirect control flow between
   ///    successive loops. In all such cases, the loops at that level are
@@ -412,7 +412,7 @@ public:
     llvm::delinearize(*SE, accessFn, subscripts, sizes, elSize);
     size_t numDims = subscripts.size();
     invariant(numDims, sizes.size());
-    AffineLoopNest<true> *aln = loopMap[L]->affineLoop;
+    AffineLoopNest *aln = loopMap[L]->affineLoop;
     if (numDims == 0) {
       LT.memAccesses.push_back(ArrayIndex::construct(
         allocator, basePointer, *aln, loadOrStore, omegas));

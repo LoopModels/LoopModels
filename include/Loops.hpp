@@ -480,10 +480,10 @@ public:
     return ((const AffineLoopNest *)this)->rotate(alloc, R, offsets);
   }
   // static auto construct(llvm::Loop *L, llvm::ScalarEvolution &SE)
-  //   -> AffineLoopNest<NonNegative>* {
+  //   -> AffineLoopNest* {
   //   auto BT = getBackedgeTakenCount(SE, L);
   //   if (!BT || llvm::isa<llvm::SCEVCouldNotCompute>(BT)) return nullptr;
-  //   return AffineLoopNest<NonNegative>(L, BT, SE);
+  //   return AffineLoopNest(L, BT, SE);
   // }
 
   [[nodiscard]] auto removeInnerMost(BumpAlloc<> &alloc) const

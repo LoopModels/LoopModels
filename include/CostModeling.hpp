@@ -757,9 +757,9 @@ public:
   auto printSubDotFile(BumpAlloc<> &alloc, llvm::raw_ostream &out,
                        map<LoopTreeSchedule *, std::string> &names,
                        llvm::SmallVectorImpl<std::string> &addrNames,
-                       unsigned addrIndOffset, AffineLoopNest<false> *lret)
-    -> AffineLoopNest<false> * {
-    AffineLoopNest<false> *loop{nullptr};
+                       unsigned addrIndOffset, AffineLoopNest *lret)
+    -> AffineLoopNest * {
+    AffineLoopNest *loop{nullptr};
     size_t j = 0;
     for (auto *addr : header.getAddr()) loop = addr->getLoop();
     for (auto &subTree : subTrees) {
@@ -830,7 +830,7 @@ ScheduledNode::insertMem(BumpAlloc<> &alloc,
   auto &accesses{L->getInitAddr(alloc)};
   unsigned numMem = memory.size(), offset = accesses.size(),
            sId = std::numeric_limits<unsigned>::max() >> 1, j = 0;
-  NotNull<AffineLoopNest<false>> loop = loopNest->rotate(alloc, Pinv, offsets);
+  NotNull<AffineLoopNest> loop = loopNest->rotate(alloc, Pinv, offsets);
   for (size_t i : memory) {
     NotNull<MemoryAccess> mem = memAccess[i];
     bool isStore = mem->isStore();

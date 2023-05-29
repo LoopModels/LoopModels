@@ -1,7 +1,7 @@
 #pragma once
 
-#include "./Loops.hpp"
-#include "./MemoryAccess.hpp"
+#include "IR/Address.hpp"
+#include "Loops.hpp"
 #include "Math/Array.hpp"
 #include "Math/Comparisons.hpp"
 #include "Math/Math.hpp"
@@ -245,8 +245,8 @@ public:
     return std::distance(
       x.begin(), std::mismatch(x.begin(), x.end(), y.begin(), y.end()).first);
   }
-  static auto nullSpace(NotNull<const ArrayIndex> x,
-                        NotNull<const ArrayIndex> y) -> DenseMatrix<int64_t> {
+  static auto nullSpace(NotNull<const Addr> x, NotNull<const Addr> y)
+    -> DenseMatrix<int64_t> {
     const size_t numLoopsCommon =
                    findFirstNonEqual(x->getFusionOmega(), y->getFusionOmega()),
                  xDim = x->getArrayDim(), yDim = y->getArrayDim();
@@ -261,7 +261,7 @@ public:
     // returns rank x num loops
     return orthogonalNullSpace(std::move(A));
   }
-  static auto nullSpace(NotNull<const ArrayIndex> x) -> DenseMatrix<int64_t> {
+  static auto nullSpace(NotNull<const Addr> x) -> DenseMatrix<int64_t> {
     const size_t numLoopsCommon = x->getNumLoops(), dim = x->getArrayDim();
     DenseMatrix<int64_t> A(DenseDims{numLoopsCommon, dim});
     if (!numLoopsCommon) return A;
@@ -313,15 +313,11 @@ public:
     std::memcpy(p, this, neededBytes());
     return NotNull<DepPoly>{p};
   }
-  static auto dependence(BumpAlloc<> &alloc, NotNull<const MemoryAccess> aix,
-                         NotNull<const MemoryAccess> aiy) {
-    return dependence(alloc, aix->getArrayRef(), aiy->getArrayRef());
-  }
-  static auto dependence(BumpAlloc<> &alloc, NotNull<const ArrayIndex> aix,
-                         NotNull<const ArrayIndex> aiy) -> DepPoly * {
+  static auto dependence(BumpAlloc<> &alloc, NotNull<const Addr> aix,
+                         NotNull<const Addr> aiy) -> DepPoly * {
     assert(aix->sizesMatch(aiy));
-    NotNull<const AffineLoopNest<>> loopx = aix->getLoop();
-    NotNull<const AffineLoopNest<>> loopy = aiy->getLoop();
+    NotNull<const AffineLoopNest> loopx = aix->getLoop();
+    NotNull<const AffineLoopNest> loopy = aiy->getLoop();
     DensePtrMatrix<int64_t> Ax{loopx->getA()}, Ay{loopy->getA()};
     auto Sx{loopx->getSyms()}, Sy{loopy->getSyms()};
     // numLoops x numDim
@@ -408,9 +404,9 @@ public:
     alloc.rollback(p);
     return nullptr;
   }
-  static auto self(BumpAlloc<> &alloc, NotNull<const ArrayIndex> ai)
+  static auto self(BumpAlloc<> &alloc, NotNull<const Addr> ai)
     -> NotNull<DepPoly> {
-    NotNull<const AffineLoopNest<>> loop = ai->getLoop();
+    NotNull<const AffineLoopNest> loop = ai->getLoop();
     DensePtrMatrix<int64_t> B{loop->getA()};
     auto S{loop->getSyms()};
     // numLoops x numDim
@@ -604,9 +600,9 @@ public:
   /// returns `true` if the array accesses are guaranteed independent
   /// conditioning on partial schedules xPhi and yPhi
   [[nodiscard]] auto checkSat(BumpAlloc<> &alloc,
-                              NotNull<const AffineLoopNest<>> xLoop,
+                              NotNull<const AffineLoopNest> xLoop,
                               const int64_t *xOff, DensePtrMatrix<int64_t> xPhi,
-                              NotNull<const AffineLoopNest<>> yLoop,
+                              NotNull<const AffineLoopNest> yLoop,
                               const int64_t *yOff, DensePtrMatrix<int64_t> yPhi)
     -> bool {
     // we take in loops because we might be moving deeper inside the loopnest

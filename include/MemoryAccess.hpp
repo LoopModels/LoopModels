@@ -61,7 +61,7 @@ public:
   }
   [[nodiscard]] static auto
   construct(BumpAlloc<> &alloc, const llvm::SCEVUnknown *arrayPtr,
-            AffineLoopNest<true> &loopRef, llvm::Instruction *user,
+            AffineLoopNest &loopRef, llvm::Instruction *user,
             PtrMatrix<int64_t> indMatT,
             std::array<llvm::SmallVector<const llvm::SCEV *, 3>, 2> szOff,
             PtrMatrix<int64_t> offsets, PtrVector<unsigned> o)
@@ -71,7 +71,7 @@ public:
   }
   [[nodiscard]] static auto
   construct(BumpAlloc<> &alloc, const llvm::SCEVUnknown *arrayPtr,
-            AffineLoopNest<true> &loopRef, llvm::Instruction *user,
+            AffineLoopNest &loopRef, llvm::Instruction *user,
             PtrVector<unsigned> o) -> NotNull<MemoryAccess> {
     return alloc.create<MemoryAccess>(
       ArrayIndex::construct(alloc, arrayPtr, loopRef, user, o));
@@ -111,10 +111,10 @@ public:
     return arrayRef->getInstruction();
   }
   [[nodiscard]] constexpr auto getLoop() const
-    -> NotNull<const AffineLoopNest<>> {
+    -> NotNull<const AffineLoopNest> {
     return arrayRef->getLoop();
   }
-  [[nodiscard]] constexpr auto getLoop() -> NotNull<AffineLoopNest<>> {
+  [[nodiscard]] constexpr auto getLoop() -> NotNull<AffineLoopNest> {
     return arrayRef->getLoop();
   }
   [[nodiscard]] constexpr auto getArrayDim() const -> size_t {
@@ -174,58 +174,3 @@ public:
 };
 
 static_assert(std::is_trivially_copyable_v<MemoryAccess>);
-
-inline auto operator<<(llvm::raw_ostream &os, const ArrayIndex &m)
-  -> llvm::raw_ostream & {
-  if (m.isLoad()) os << "Load: ";
-  else os << "Store: ";
-  os << *m.getInstruction();
-  os << "\nArrayIndex " << *m.getArrayPointer() << " (dim = " << m.getArrayDim()
-     << ", num loops: " << m.getNumLoops();
-  if (m.getArrayDim()) os << ", element size: " << *m.getSizes().back();
-  os << "):\n";
-  PtrMatrix<int64_t> A{m.indexMatrix()};
-  os << "Sizes: [";
-  if (m.getArrayDim()) {
-    os << " unknown";
-    for (ptrdiff_t i = 0; i < ptrdiff_t(A.numRow()) - 1; ++i)
-      os << ", " << *m.getSizes()[i];
-  }
-  os << " ]\nSubscripts: [ ";
-  size_t numLoops = size_t(A.numCol());
-  PtrMatrix<int64_t> offs = m.offsetMatrix();
-  for (size_t i = 0; i < A.numRow(); ++i) {
-    if (i) os << ", ";
-    bool printPlus = false;
-    for (size_t j = 0; j < numLoops; ++j) {
-      if (int64_t Aji = A(i, j)) {
-        if (printPlus) {
-          if (Aji <= 0) {
-            Aji *= -1;
-            os << " - ";
-          } else os << " + ";
-        }
-        if (Aji != 1) os << Aji << '*';
-        os << "i_" << j << " ";
-        printPlus = true;
-      }
-    }
-    for (size_t j = 0; j < offs.numCol(); ++j) {
-      if (int64_t offij = offs(i, j)) {
-        if (printPlus) {
-          if (offij <= 0) {
-            offij *= -1;
-            os << " - ";
-          } else os << " + ";
-        }
-        if (j) {
-          if (offij != 1) os << offij << '*';
-          os << *m.getLoop()->getSyms()[j - 1];
-        } else os << offij;
-        printPlus = true;
-      }
-    }
-  }
-  return os << "]\nInitial Fusion Omega: " << m.getFusionOmega()
-            << "\nAffineLoopNest:" << *m.getLoop();
-}
