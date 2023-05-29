@@ -330,9 +330,8 @@ class LinearProgramLoopBlock {
   // E.g., the `dstOmega[numLoopsCommon-1] > srcOmega[numLoopsCommon-1]`,
   // and all other other shared schedule parameters are aliases (i.e.,
   // identical)?
-  [[no_unique_address]] Vector<Addr *> memory{};
-  [[no_unique_address]] Vector<ScheduledNode> nodes{};
-  [[no_unique_address]] Vector<Dependence> edges{};
+  [[no_unique_address]] Addr *memory{nullptr};
+  [[no_unique_address]] ScheduledNode *node{nullptr};
   [[no_unique_address]] map<llvm::User *, Addr *> userToMem{};
   [[no_unique_address]] set<llvm::User *> visited{};
   [[no_unique_address]] llvm::LoopInfo *LI;
@@ -353,6 +352,11 @@ class LinearProgramLoopBlock {
 public:
   LinearProgramLoopBlock() = default;
   constexpr void setLI(llvm::LoopInfo *loopInfo) { LI = loopInfo; }
+  constexpr void addAddr(Addr *addr) {
+    if (memory != nullptr) addr->setNext(memory);
+    memory = addr;
+    userToMem[addr->getInstruction()] = addr;
+  }
 
   void clear() {
     // TODO: maybe we shouldn't have to manually call destructors?

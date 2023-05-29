@@ -110,6 +110,10 @@ public:
   [[nodiscard]] constexpr auto getChild() const -> Node * { return child; }
   [[nodiscard]] constexpr auto getPrev() const -> Node * { return prev; }
   [[nodiscard]] constexpr auto getNext() const -> Node * { return next; }
+  constexpr void setNext(Node *n) { next = n; }
+  constexpr void setPrev(Node *n) { prev = n; }
+  constexpr void setChild(Node *n) { child = n; }
+  constexpr void setParent(Node *n) { parent = n; }
 };
 
 class Loop : public Node {

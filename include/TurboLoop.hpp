@@ -414,8 +414,8 @@ public:
     invariant(numDims, sizes.size());
     AffineLoopNest *aln = loopMap[L]->affineLoop;
     if (numDims == 0) {
-      LT.memAccesses.push_back(ArrayIndex::construct(
-        allocator, basePointer, *aln, loadOrStore, omegas));
+      LT.memAccesses.push_back(
+        Addr::construct(allocator, basePointer, *aln, loadOrStore, omegas));
       ++omegas.back();
       return false;
     }
@@ -478,10 +478,10 @@ public:
       }
     }
     LT.memAccesses.push_back(
-      ArrayIndex::construct(allocator, basePointer, *aln, loadOrStore,
-                            Rt(_, _(numExtraLoopsToPeel, end)),
-                            {std::move(sizes), std::move(symbolicOffsets)},
-                            coffsets, offsMat.data(), omegas));
+      Addr::construct(allocator, basePointer, *aln, loadOrStore,
+                      Rt(_, _(numExtraLoopsToPeel, end)),
+                      {std::move(sizes), std::move(symbolicOffsets)}, coffsets,
+                      offsMat.data(), omegas));
     ++omegas.back();
     if (ORE) [[unlikely]] {
       llvm::SmallVector<char> x;
