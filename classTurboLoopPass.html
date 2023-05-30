@@ -89,9 +89,9 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>run</b> (llvm::Functi
 <tr class="separator:a68ea157f74ea8ad9e824a9d3bccb9255"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a61d15982d3d7c2d1918da31c454a2f10"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classTurboLoopPass.html#a61d15982d3d7c2d1918da31c454a2f10">initializeLoopForest</a> ()</td></tr>
 <tr class="separator:a61d15982d3d7c2d1918da31c454a2f10"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad08891354c99ee4ce70a7809bae00de3"><td class="memItemLeft" align="right" valign="top"><a id="ad08891354c99ee4ce70a7809bae00de3"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>initLoopTree</b> (llvm::SmallVector&lt; <a class="el" href="classNotNull.html">NotNull</a>&lt; <a class="el" href="structLoopTree.html">LoopTree</a> &gt;&gt; &amp;pForest, llvm::Loop *L, llvm::ArrayRef&lt; llvm::Loop * &gt; subLoops, llvm::BasicBlock *H, llvm::BasicBlock *E, <a class="el" href="structNoWrapRewriter.html">NoWrapRewriter</a> &amp;nwr) -&gt; size_t</td></tr>
-<tr class="separator:ad08891354c99ee4ce70a7809bae00de3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0b51739d22974bea4bd05c8f50213505"><td class="memItemLeft" align="right" valign="top"><a id="a0b51739d22974bea4bd05c8f50213505"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>initLoopTree</b> (llvm::SmallVector&lt; <a class="el" href="classNotNull.html">NotNull</a>&lt; <a class="el" href="structLoopTree.html">LoopTree</a> &gt;&gt; &amp;pForest, llvm::Loop *L, llvm::BasicBlock *H, llvm::BasicBlock *E, <a class="el" href="structNoWrapRewriter.html">NoWrapRewriter</a> &amp;nwr) -&gt; size_t</td></tr>
+<tr class="separator:a0b51739d22974bea4bd05c8f50213505"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af347cd84f4fe2f72b4a93d322f3a2d8c"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classTurboLoopPass.html#af347cd84f4fe2f72b4a93d322f3a2d8c">pushLoopTree</a> (llvm::SmallVector&lt; <a class="el" href="classNotNull.html">NotNull</a>&lt; <a class="el" href="structLoopTree.html">LoopTree</a> &gt;&gt; &amp;pForest, llvm::Loop *L, llvm::ArrayRef&lt; llvm::Loop * &gt; subLoops, llvm::BasicBlock *H, llvm::BasicBlock *E, <a class="el" href="structNoWrapRewriter.html">NoWrapRewriter</a> &amp;nwr) -&gt; size_t</td></tr>
 <tr class="separator:af347cd84f4fe2f72b4a93d322f3a2d8c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a584c251388b3bb0d01b707a4877d6524"><td class="memItemLeft" align="right" valign="top"><a id="a584c251388b3bb0d01b707a4877d6524"></a>
@@ -255,7 +255,7 @@ static auto&#160;</td><td class="memItemRight" valign="bottom"><b>mayReadOrWrite
   </tr>
 </table>
 </div><div class="memdoc">
-<p>pushLoopTree</p>
+<p>LLVM parsing: We try to produce our own internal IR from LLVM loops if/when/where we fail, we can split this off pushLoopTree</p>
 <p>pushLoopTree pushes <code>llvm::Loop* L</code> into a <code><a class="el" href="structLoopTree.html">LoopTree</a></code> object if <code>L == nullptr</code>, then this represents a top level loop. If we fail at some level of the recursion, we push the tree we have successfully built into loopForests as its own loop forest. If we succeed, we push the tree into the parent tree.</p>
 <p>To be successful, the following conditions need to be met:</p><ol type="1">
 <li>We can represent that and all inner levels as an affine loop nest.</li>

@@ -142,6 +142,9 @@ constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>setChild</b
 <tr class="memitem:a4a643742478747e45746ff322bf45ebb"><td class="memItemLeft" align="right" valign="top"><a id="a4a643742478747e45746ff322bf45ebb"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>setParent</b> (<a class="el" href="classNode.html">Node</a> *n)</td></tr>
 <tr class="separator:a4a643742478747e45746ff322bf45ebb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a008822e5e44819aceb50d396769908a0"><td class="memItemLeft" align="right" valign="top"><a id="a008822e5e44819aceb50d396769908a0"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>setDepth</b> (unsigned d)</td></tr>
+<tr class="separator:a008822e5e44819aceb50d396769908a0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-methods"></a>
 Protected Member Functions</h2></td></tr>
@@ -189,13 +192,15 @@ unsigned&#160;</td><td class="memItemRight" valign="bottom"><b>depth</b> {0}</td
 <li>z = p[]</li>
 <li>e = z*z</li>
 <li>p[] = z</li>
+<li>// VK_EXIT</li>
 </ol>
 <p>Hmm, we don't need parent/children to reach everything, e.g. individual addrs</p>
 <p>IR types: <a class="el" href="classLoop.html">Loop</a>, Block, <a class="el" href="classAddr.html">Addr</a>, Instr <a class="el" href="classLoop.html">Loop</a> starts a <a class="el" href="classLoop.html">Loop</a>, Block ends it. At a level, first loops: Parents: <a class="el" href="classLoop.html">Loop</a>[0]: [ parentLoop ] for (i : _(0,numSubLoop-1)) <a class="el" href="classLoop.html">Loop</a>[i+1]: [ <a class="el" href="classExit.html">Exit</a>[i] ] <a class="el" href="classExit.html">Exit</a>: [ loopStart, contained addrs...] // ptr, linked list <a class="el" href="classAddr.html">Addr</a>: [ <a class="el" href="classLoop.html">Loop</a> or <a class="el" href="classExit.html">Exit</a>, prevAddrs... ] // actual Instr: [ args... (loads or insts) ] // actual</p>
 <p>For SCC, we initialize parent ptr to nullptr thus, <a class="el" href="classLoop.html">Loop</a>[0] has no parents For each Blck</p>
 <p>Children don't need to be full reverse, as <code>*next</code> covers many: <a class="el" href="classLoop.html">Loop</a>'s: [ first sub loop (if it has one), matching <a class="el" href="classExit.html">Exit</a> ] for (i : _(0,numSubLoop-1)) <a class="el" href="classExit.html">Exit</a>[i]: [ <a class="el" href="classLoop.html">Loop</a>[i+1] ] <a class="el" href="classAddr.html">Addr</a>'s: [ nextAddrs... ] <a class="el" href="classInst.html">Inst</a>'s: [ uses... (stows or insts) ]</p>
 <p>To iterate over subloops, SubLoopIterator</p>
-<p>This simplified structure means we can use LLVM-style RTTI </p>
+<p>This simplified structure means we can use LLVM-style RTTI</p>
+<p>top level loops can be chained together... top level loop's next can point to another top level loop </p>
 </div><hr/>The documentation for this class was generated from the following file:<ul>
 <li>include/IR/<a class="el" href="Node_8hpp_source.html">Node.hpp</a></li>
 </ul>
