@@ -46,6 +46,7 @@
 /// 22. z = p[]
 /// 23. e = z*z
 /// 24. p[] = z
+/// 25. // VK_EXIT
 ///
 /// Hmm, we don't need parent/children to reach everything, e.g. individual
 /// addrs
@@ -75,7 +76,8 @@
 ///
 /// This simplified structure means we can use LLVM-style RTTI
 ///
-
+/// top level loops can be chained together...
+/// top level loop's next can point to another top level loop
 class Node {
 public:
   enum ValKind {
@@ -114,22 +116,116 @@ public:
   constexpr void setPrev(Node *n) { prev = n; }
   constexpr void setChild(Node *n) { child = n; }
   constexpr void setParent(Node *n) { parent = n; }
+  constexpr void setDepth(unsigned d) { depth = d; }
 };
 
-class Loop : public Node {
-public:
-  Loop() : Node(VK_Loop) {}
-  static constexpr auto classof(const Node *v) -> bool {
-    return v->getKind() == VK_Loop;
-  }
-};
+class Loop;
+/// Exit
+/// child is next loop at same level
+/// parent is the loop the exit closes
+/// subExit is the exit of the last subloop
 class Exit : public Node {
+  Exit *subExit{nullptr};
+
 public:
-  Exit() : Node(VK_Exit) {}
+  Exit(unsigned d) : Node(VK_Exit, d) {}
+  [[nodiscard]] constexpr auto getLoop() const -> Loop *;
+  [[nodiscard]] constexpr auto getNextLoop() const -> Loop *;
+  [[nodiscard]] constexpr auto getSubExit() const -> Exit * { return subExit; }
   static constexpr auto classof(const Node *v) -> bool {
     return v->getKind() == VK_Exit;
   }
+  constexpr void setSubExit(Exit *e) { subExit = e; }
+  constexpr void setNextLoop(Loop *);
 };
+/// Loop
+/// parent: outer loop
+/// child: inner (sub) loop
+/// exit is the associated exit block
+class Loop : public Node {
+  Exit *exit;
+
+public:
+  Loop(Exit *e, unsigned d) : Node(VK_Loop, d), exit(e) {
+    e->setParent(this);
+    // we also initialize prev/next, adding instrs will push them
+    e->setPrev(this);
+    setNext(e);
+  }
+  [[nodiscard]] constexpr auto getExit() const -> Exit * { return exit; }
+  static constexpr auto classof(const Node *v) -> bool {
+    return v->getKind() == VK_Loop;
+  }
+  [[nodiscard]] constexpr auto getSubLoop() const -> Loop * {
+    return static_cast<Loop *>(getChild());
+  }
+  [[nodiscard]] constexpr auto getOuterLoop() const -> Loop * {
+    return static_cast<Loop *>(getParent());
+  }
+  [[nodiscard]] constexpr auto getNextLoop() const -> Loop * {
+    return exit->getNextLoop();
+  }
+  [[nodiscard]] constexpr auto getNextOrChild() const -> Loop * {
+    Loop *L = getSubLoop();
+    return L ? L : getNextLoop();
+  }
+  constexpr void forEachSubLoop(const auto &f) {
+    for (auto *c = getSubLoop(); c; c = c->getNextLoop()) f(c);
+  }
+  /// call `f` for this loop train, and all subloops
+  ///
+  constexpr void forEachLoop(const auto &f) {
+    for (auto *c = this; c; c = c->getNextLoop()) {
+      f(c);
+      if (auto *s = c->getSubLoop()) s->forEachLoop(f);
+    }
+  }
+  constexpr void forEachLoopAndExit(const auto &f) {
+    for (auto *c = this; c; c = c->getNextLoop()) {
+      f(c);
+      if (auto *s = c->getSubLoop()) s->forEachLoopAndExit(f);
+      f(c->getExit());
+    }
+  }
+  static constexpr auto createTopLevel(BumpAlloc<> &alloc) -> Loop * {
+    auto *E = alloc.create<Exit>(0);
+    auto *L = alloc.create<Loop>(E, 0);
+    return L;
+  }
+  constexpr auto addSubLoop(BumpAlloc<> &alloc) -> Loop * {
+    auto d = getDepth() + 1;
+    auto *E = alloc.create<Exit>(d);
+    auto *L = alloc.create<Loop>(E, d);
+    L->setParent(this);
+    if (auto *eOld = exit->getSubExit()) {
+      invariant(getChild() != nullptr);
+      eOld->setNextLoop(L);
+    } else setChild(L);
+    exit->setSubExit(E);
+    return L;
+  }
+  constexpr auto addNextLoop(BumpAlloc<> &alloc) -> Loop * {
+    auto d = getDepth() + 1;
+    auto *E = alloc.create<Exit>(d);
+    auto *L = alloc.create<Loop>(E, d);
+    invariant(exit->getNextLoop() == nullptr);
+    exit->setNextLoop(L);
+    if (auto *p = getOuterLoop()) {
+      invariant(p->getChild() == this);
+      L->setParent(p);
+      p->getExit()->setSubExit(E);
+    }
+    return L;
+  }
+};
+constexpr void Exit::setNextLoop(Loop *L) { setChild(L); }
+constexpr auto Exit::getLoop() const -> Loop * {
+  return static_cast<Loop *>(getParent());
+}
+constexpr auto Exit::getNextLoop() const -> Loop * {
+  return static_cast<Loop *>(getChild());
+}
+
 /// CVal
 /// A constant value w/ respect to the loopnest.
 class CVal : public Node {

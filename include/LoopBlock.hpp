@@ -140,18 +140,12 @@ public:
   }
   // for each input node, i.e. for each where this is the output
   constexpr void forEachInput(const auto &f) {
-    Dependence *d = depActive;
-    while (d) {
+    for (Dependence *d = depActive; d; d = d->getNext())
       f(d->input()->getNode());
-      d = d->getNext();
-    }
   }
   constexpr void forEachInput(const auto &f) const {
-    const Dependence *d = depActive;
-    while (d) {
+    for (Dependence *d = depActive; d; d = d->getNext())
       f(d->input()->getNode());
-      d = d->getNext();
-    }
   }
   [[nodiscard]] constexpr auto getSchedule() -> AffineSchedule { return {mem}; }
   [[nodiscard]] constexpr auto getLoopNest() const
@@ -1575,7 +1569,7 @@ public:
     std::swap(g.nodeIds, nodeIds);
     g.activeEdges = activeEdges; // undo such that g.getEdges(d) is correct
     for (auto &&e : g.getEdges(d)) e.popSatLevel();
-    g.activeEdges = oldEdges; // restore backup
+    g.activeEdges = oldEdges;    // restore backup
     auto *oldNodeIter = oldSchedules.begin();
     for (auto &&n : g) n.getSchedule() = *(oldNodeIter++);
     allocator.rollback(chckpt);

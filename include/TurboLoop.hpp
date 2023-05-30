@@ -59,8 +59,9 @@ concept LoadOrStoreInst =
   std::same_as<llvm::StoreInst, std::remove_cvref_t<T>>;
 
 class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
-  [[no_unique_address]] llvm::SmallVector<NotNull<LoopTree>> loopForests;
-  [[no_unique_address]] map<llvm::Loop *, LoopTree *> loopMap;
+  // [[no_unique_address]] llvm::SmallVector<NotNull<LoopTree>> loopForests;
+  [[no_unique_address]] Loop *forest;
+  [[no_unique_address]] map<llvm::Loop *, Loop *> loopMap;
   [[no_unique_address]] const llvm::TargetLibraryInfo *TLI;
   [[no_unique_address]] const llvm::TargetTransformInfo *TTI;
   [[no_unique_address]] llvm::LoopInfo *LI;
@@ -89,9 +90,9 @@ public:
   TurboLoopPass() = default;
   TurboLoopPass(const TurboLoopPass &) = delete;
   TurboLoopPass(TurboLoopPass &&) = default;
-  ~TurboLoopPass() {
-    for (auto l : loopForests) l->~LoopTree();
-  }
+  // ~TurboLoopPass() {
+  //   for (auto l : loopForests) l->~LoopTree();
+  // }
 
   /// the process of building the LoopForest has the following steps:
   /// 1. build initial forest of trees
@@ -129,16 +130,15 @@ public:
     {
       llvm::SmallVector<llvm::Loop *> rLI{ib, ie + 1};
       NoWrapRewriter nwr(*SE);
-      pushLoopTree(loopForests, nullptr, rLI, H, E, nwr);
+      forest = Loop::createTopLevel(allocator);
+      pushLoopTree(forest, nullptr, rLI, H, E, nwr);
     }
-    for (auto forest : loopForests) forest->addZeroLowerBounds(loopMap);
+    // for (auto forest : loopForests) forest->addZeroLowerBounds(loopMap);
   }
 
   auto initLoopTree(llvm::SmallVector<NotNull<LoopTree>> &pForest,
-                    llvm::Loop *L, llvm::ArrayRef<llvm::Loop *> subLoops,
-                    llvm::BasicBlock *H, llvm::BasicBlock *E,
+                    llvm::Loop *L, llvm::BasicBlock *H, llvm::BasicBlock *E,
                     NoWrapRewriter &nwr) -> size_t {
-    invariant(subLoops.empty());
     if (const auto *BT = getBackedgeTakenCount(*SE, L);
         !llvm::isa<llvm::SCEVCouldNotCompute>(BT)) {
       // we're at the bottom of the recursion
@@ -153,6 +153,10 @@ public:
     // Finally, we need `H` to have a direct path to `E`.
     return 0;
   }
+
+  /// LLVM parsing:
+  /// We try to produce our own internal IR from LLVM loops
+  /// if/when/where we fail, we can split this off
 
   ///
   /// pushLoopTree
@@ -190,7 +194,7 @@ public:
                     NoWrapRewriter &nwr) -> size_t {
 
     size_t numSubLoops = subLoops.size();
-    if (!numSubLoops) return initLoopTree(pForest, L, subLoops, H, E, nwr);
+    if (!numSubLoops) return initLoopTree(pForest, L, H, E, nwr);
     // branches of this tree;
     llvm::SmallVector<NotNull<LoopTree>> branches;
     branches.reserve(numSubLoops);
