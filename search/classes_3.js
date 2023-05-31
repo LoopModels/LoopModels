@@ -1,11 +1,11 @@
 var searchData=
 [
-  ['default_5fcapacity_5ftype_291',['default_capacity_type',['../structLinAlg_1_1default__capacity__type.html',1,'LinAlg']]],
-  ['default_5fcapacity_5ftype_3c_20s_20_3e_292',['default_capacity_type&lt; S &gt;',['../structLinAlg_1_1default__capacity__type_3_01S_01_4.html',1,'LinAlg']]],
-  ['densedims_293',['DenseDims',['../structLinAlg_1_1DenseDims.html',1,'LinAlg']]],
-  ['densematrixprinter_294',['DenseMatrixPrinter',['../classprettyprinters_1_1DenseMatrixPrinter.html',1,'prettyprinters']]],
-  ['dependence_295',['Dependence',['../classDependence.html',1,'']]],
-  ['deppoly_296',['DepPoly',['../classDepPoly.html',1,'']]],
-  ['div_297',['Div',['../structLinAlg_1_1Div.html',1,'LinAlg']]],
-  ['dual_298',['Dual',['../classDual.html',1,'']]]
+  ['default_5fcapacity_5ftype_292',['default_capacity_type',['../structLinAlg_1_1default__capacity__type.html',1,'LinAlg']]],
+  ['default_5fcapacity_5ftype_3c_20s_20_3e_293',['default_capacity_type&lt; S &gt;',['../structLinAlg_1_1default__capacity__type_3_01S_01_4.html',1,'LinAlg']]],
+  ['densedims_294',['DenseDims',['../structLinAlg_1_1DenseDims.html',1,'LinAlg']]],
+  ['densematrixprinter_295',['DenseMatrixPrinter',['../classprettyprinters_1_1DenseMatrixPrinter.html',1,'prettyprinters']]],
+  ['dependence_296',['Dependence',['../classDependence.html',1,'']]],
+  ['deppoly_297',['DepPoly',['../classDepPoly.html',1,'']]],
+  ['div_298',['Div',['../structLinAlg_1_1Div.html',1,'LinAlg']]],
+  ['dual_299',['Dual',['../classDual.html',1,'']]]
 ];
