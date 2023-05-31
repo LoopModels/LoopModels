@@ -204,6 +204,15 @@ public:
     exit->setSubExit(E);
     return L;
   }
+  constexpr auto addOuterLoop(BumpAlloc<> &alloc) -> Loop * {
+    // NOTE: we need to correctly set depths later
+    auto *E = alloc.create<Exit>(0);
+    auto *L = alloc.create<Loop>(E, 0);
+    setParent(L);
+    invariant(getNextLoop() == nullptr);
+    E->setSubExit(exit);
+    return L;
+  }
   constexpr auto addNextLoop(BumpAlloc<> &alloc) -> Loop * {
     auto d = getDepth() + 1;
     auto *E = alloc.create<Exit>(d);

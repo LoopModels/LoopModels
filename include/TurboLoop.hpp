@@ -130,18 +130,17 @@ public:
     {
       llvm::SmallVector<llvm::Loop *> rLI{ib, ie + 1};
       NoWrapRewriter nwr(*SE);
-      forest = Loop::createTopLevel(allocator);
-      pushLoopTree(forest, nullptr, rLI, H, E, nwr);
+      pushLoopTree(nullptr, rLI, H, E, nwr);
     }
     // for (auto forest : loopForests) forest->addZeroLowerBounds(loopMap);
   }
 
-  auto initLoopTree(llvm::SmallVector<NotNull<LoopTree>> &pForest,
-                    llvm::Loop *L, llvm::BasicBlock *H, llvm::BasicBlock *E,
-                    NoWrapRewriter &nwr) -> size_t {
+  auto initLoopTree(Loop *pForest, llvm::Loop *L, llvm::BasicBlock *H,
+                    llvm::BasicBlock *E, NoWrapRewriter &nwr) -> Loop * {
     if (const auto *BT = getBackedgeTakenCount(*SE, L);
         !llvm::isa<llvm::SCEVCouldNotCompute>(BT)) {
       // we're at the bottom of the recursion
+      // Finally, we need `H` to have a direct path to `E`.
       if (auto predMapAbridged =
             Predicate::Map::descend(allocator, instrCache, H, E, L)) {
         auto *newTree = new (allocator) LoopTree{
@@ -150,15 +149,44 @@ public:
         return 1;
       }
     }
-    // Finally, we need `H` to have a direct path to `E`.
-    return 0;
+    return nullptr;
   }
 
+  /// runOnLoop
   /// LLVM parsing:
   /// We try to produce our own internal IR from LLVM loops
-  /// if/when/where we fail, we can split this off
-
+  /// we parse the loop forest depth-first
+  /// on each failure, we run the analysis on what we can.
+  /// E.g.
+  /// invalid -> [A] valid -> valid
+  ///        \-> [B] valid -> valid
+  ///                     \-> valid
+  /// Here, we would run on [A] and [B] separately.
+  /// valid -> [A] valid ->     valid
+  ///      \->     valid -> [B] valid
+  ///                   \->   invalid
+  /// Here, we would also run on [A] and [B] separately.
+  /// We evaluate all branches before evaluating a node itself.
   ///
+  /// `runOnLoop` returns `nullptr`
+  /// arguments:
+  /// 0. `llvm::Loop *L`: the loop we are currently processing, exterior to this
+  /// 1. `llvm::ArrayRef<llvm::Loop *> subLoops`: the sub-loops of `L`; we
+  /// don't access it directly via `L->getSubLoops` because we use
+  /// `L==nullptr` to repesent the top level nest, in which case we get the
+  /// sub-loops from the `llvm::LoopInfo*` object.
+  /// 2. `llvm::BasicBlock *H`: Header - we need a direct path from here to
+  /// the first sub-loop's preheader
+  /// 3. `llvm::BasicBlock *E`: Exit - we need a direct path from the last
+  /// sub-loop's exit block to this.
+  auto runOnLoop(llvm::Loop *L, llvm::ArrayRef<llvm::Loop *> subLoops,
+                 llvm::BasicBlock *H, llvm::BasicBlock *E, NoWrapRewriter &nwr)
+    -> Loop * {
+
+    size_t numSubLoops = subLoops.size();
+    return nullptr;
+  }
+
   /// pushLoopTree
   ///
   /// pushLoopTree pushes `llvm::Loop* L` into a `LoopTree` object
@@ -188,8 +216,7 @@ public:
   /// 6. `llvm::BasicBlock *E`: Exit - we need a direct path from the last
   /// sub-loop's exit block to this.
   // NOLINTNEXTLINE(misc-no-recursion)
-  auto pushLoopTree(llvm::SmallVector<NotNull<LoopTree>> &pForest,
-                    llvm::Loop *L, llvm::ArrayRef<llvm::Loop *> subLoops,
+  auto pushLoopTree(llvm::Loop *L, llvm::ArrayRef<llvm::Loop *> subLoops,
                     llvm::BasicBlock *H, llvm::BasicBlock *E,
                     NoWrapRewriter &nwr) -> size_t {
 
@@ -204,9 +231,9 @@ public:
     size_t interiorDepth = 0;
     for (size_t i = 0; i < numSubLoops; ++i) {
       llvm::Loop *subLoop = subLoops[i];
-      if (size_t depth = pushLoopTree(branches, subLoop, subLoop->getSubLoops(),
-                                      subLoop->getHeader(),
-                                      subLoop->getExitingBlock(), nwr)) {
+      if (Loop *lret =
+            pushLoopTree(subLoop, subLoop->getSubLoops(), subLoop->getHeader(),
+                         subLoop->getExitingBlock(), nwr)) {
         // pushLoopTree succeeded, and we have `depth` inner loops
         // within `subLoop` (inclusive, i.e. `depth == 1` would
         // indicate that `subLoop` doesn't have any subLoops itself,

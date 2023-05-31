@@ -11,7 +11,6 @@
 #include <benchmark/benchmark.h>
 #include <concepts>
 #include <cstdint>
-#include <llvm/ADT/TinyPtrVector.h>
 #include <random>
 
 template <class T, size_t N> class Dual {
