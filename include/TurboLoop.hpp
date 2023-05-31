@@ -179,11 +179,27 @@ public:
   /// the first sub-loop's preheader
   /// 3. `llvm::BasicBlock *E`: Exit - we need a direct path from the last
   /// sub-loop's exit block to this.
+  /// 4. `Vector<unsigned> &omegas`: the current position within the loopnest
   auto runOnLoop(llvm::Loop *L, llvm::ArrayRef<llvm::Loop *> subLoops,
-                 llvm::BasicBlock *H, llvm::BasicBlock *E, NoWrapRewriter &nwr)
-    -> Loop * {
-
+                 llvm::BasicBlock *H, llvm::BasicBlock *E,
+                 Vector<unsigned> &omegas, NoWrapRewriter &nwr) -> Loop * {
     size_t numSubLoops = subLoops.size();
+    Loop *chain = nullptr;
+    omegas.push_back(0);
+    for (size_t i = 0; i < numSubLoops; ++i) {
+      llvm::Loop *subLoop = subLoops[i];
+      // first, we descend
+      // TODO: we need to consider max depth of the AffineLoopNest in `lret`
+      if (Loop *lret =
+            runOnLoop(subLoop, subLoop->getSubLoops(), subLoop->getHeader(),
+                      subLoop->getExitingBlock(), omegas, nwr)) {
+        llvm::BasicBlock *subLoopPreheader = subLoop->getLoopPreheader();
+        // now, we need to see if we can can chart a path from H to
+        // subLoopPreheader we should build predicated IR in doing so.
+      }
+      ++omegas.back();
+    }
+    omegas.pop_back();
     return nullptr;
   }
 

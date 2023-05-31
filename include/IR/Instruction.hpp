@@ -94,6 +94,7 @@ struct RecipThroughputLatency {
 class Inst : public Node {
 
 protected:
+  Node *predicate{nullptr}; // nullptr means unpredicated
   constexpr Inst(ValKind k) : Node(k) {}
 
 public:

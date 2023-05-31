@@ -6,7 +6,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <cwchar>
-
 #include <llvm/ADT/SmallPtrSet.h>
 #include <llvm/ADT/SmallVector.h>
 #include <llvm/IR/BasicBlock.h>
@@ -27,12 +26,10 @@ enum struct Relation : uint8_t {
 };
 
 constexpr auto operator&(Relation a, Relation b) -> Relation {
-  return static_cast<Relation>(static_cast<uint8_t>(a) |
-                               static_cast<uint8_t>(b));
+  return Relation(uint8_t(a) | uint8_t(b));
 }
 constexpr auto operator|(Relation a, Relation b) -> Relation {
-  return static_cast<Relation>(static_cast<uint8_t>(a) &
-                               static_cast<uint8_t>(b));
+  return Relation(uint8_t(a) & uint8_t(b));
 }
 
 /// Predicate::Intersection
@@ -152,7 +149,7 @@ struct Intersection {
     uint64_t mask = emptyMask(bitUnion);
     if (std::popcount(mask) == 1) { // a single b & !b case
       uint64_t remUnionMask =
-        ~(mask | (mask << 1));      // 0s `b`, meaning b can be either.
+        ~(mask | (mask << 1)); // 0s `b`, meaning b can be either.
       uint64_t w = remUnionMask & x;
       uint64_t z = remUnionMask & y;
       if (w == z) return Intersection{w};
