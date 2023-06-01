@@ -3,26 +3,25 @@
 #include "Math/MatrixDimensions.hpp"
 #include "Utilities/Invariant.hpp"
 #include "Utilities/Iterators.hpp"
+#include <Show.hpp>
 #include <cstddef>
 
 namespace LinAlg {
 
 static inline constexpr struct Begin {
-  friend inline auto operator<<(llvm::raw_ostream &os, Begin)
-    -> llvm::raw_ostream & {
+  template <OStream O> friend inline auto operator<<(O &os, Begin) -> O & {
     return os << 0;
   }
 } begin;
 static inline constexpr struct End {
-  friend inline auto operator<<(llvm::raw_ostream &os, End)
-    -> llvm::raw_ostream & {
+  template <OStream O> friend inline auto operator<<(O &os, End) -> O & {
     return os << "end";
   }
 } end;
 struct OffsetBegin {
   [[no_unique_address]] size_t offset;
-  friend inline auto operator<<(llvm::raw_ostream &os, OffsetBegin r)
-    -> llvm::raw_ostream & {
+  template <OStream O>
+  friend inline auto operator<<(O &os, OffsetBegin r) -> O & {
     return os << r.offset;
   }
 };
@@ -49,8 +48,8 @@ constexpr auto operator+(OffsetBegin y, ScalarValueIndex auto x)
 }
 static constexpr inline struct OffsetEnd {
   [[no_unique_address]] size_t offset;
-  friend inline auto operator<<(llvm::raw_ostream &os, OffsetEnd r)
-    -> llvm::raw_ostream & {
+  template <OStream O>
+  friend inline auto operator<<(O &os, OffsetEnd r) -> O & {
     return os << "end - " << r.offset;
   }
 } last{1};
@@ -189,8 +188,8 @@ struct StridedRange {
   [[no_unique_address]] unsigned stride;
   explicit constexpr operator unsigned() const { return len; }
   explicit constexpr operator size_t() const { return len; }
-  friend inline auto operator<<(llvm::raw_ostream &os, StridedRange x)
-    -> llvm::raw_ostream & {
+  template <OStream OS>
+  friend inline auto operator<<(OS &os, StridedRange x) -> OS & {
     return os << "Length: " << x.len << " (stride: " << x.stride << ")";
   }
 };

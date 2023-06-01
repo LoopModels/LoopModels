@@ -25,6 +25,32 @@
 #include <tuple>
 #include <utility>
 
+/// prints in current permutation order.
+/// TODO: decide if we want to make AffineLoopNest a `SymbolicPolyhedra`
+/// in which case, we have to remove `currentToOriginalPerm`,
+/// which menas either change printing, or move prints `<<` into
+/// the derived classes.
+template <OStream OS>
+inline auto printConstraints(OS &os, DensePtrMatrix<int64_t> A,
+                             llvm::ArrayRef<const llvm::SCEV *> syms,
+                             bool inequality = true) -> OS & {
+  const Row numConstraints = A.numRow();
+  const unsigned numSyms = syms.size() + 1;
+  for (Row c = 0; c < numConstraints; ++c) {
+    printConstraint(os, A(c, _), numSyms, inequality);
+    for (size_t v = 1; v < numSyms; ++v) {
+      if (int64_t Acv = A(c, v)) {
+        os << (Acv > 0 ? " + " : " - ");
+        Acv = constexpr_abs(Acv);
+        if (Acv != 1) os << Acv << "*";
+        os << *syms[v - 1];
+      }
+    }
+    os << "\n";
+  }
+  return os;
+}
+
 /// DepPoly is a Polyhedra with equality constraints, representing the
 /// overlapping iterations between two array accesses Given memory accesses
 /// 0. C0*i0, over polyhedra A0 * i0 + b0 >= 0

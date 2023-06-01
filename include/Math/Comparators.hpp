@@ -14,9 +14,6 @@
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
-#include <llvm/ADT/ArrayRef.h>
-#include <llvm/ADT/SmallVector.h>
-#include <llvm/Support/AllocatorBase.h>
 #include <memory>
 
 namespace comparator {

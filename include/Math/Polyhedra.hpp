@@ -10,17 +10,11 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
+#include <iostream>
 #include <limits>
-#include <llvm/ADT/ArrayRef.h>
-#include <llvm/ADT/Optional.h>
-#include <llvm/ADT/SmallVector.h>
-#include <llvm/Analysis/ScalarEvolution.h>
 #include <memory>
-#include <sys/types.h>
-#include <type_traits>
 
-inline auto printPositive(llvm::raw_ostream &os, size_t stop)
-  -> llvm::raw_ostream & {
+template <OStream O> inline auto printPositive(O &os, size_t stop) -> O & {
   for (size_t i = 0; i < stop; ++i) os << "v_" << i << " >= 0\n";
   return os;
 }
@@ -74,22 +68,12 @@ struct BasePolyhedra {
     if constexpr (HasEqualities) return static_cast<P *>(this)->getE();
     else return EmptyMatrix<int64_t>();
   }
-  [[nodiscard]] constexpr auto getSyms()
-    -> llvm::MutableArrayRef<const llvm::SCEV *> {
-    static_assert(HasSymbols);
-    return static_cast<P *>(this)->getSyms();
-  }
   [[nodiscard]] constexpr auto getA() const -> DensePtrMatrix<int64_t> {
     return static_cast<const P *>(this)->getA();
   }
   [[nodiscard]] constexpr auto getE() const {
     if constexpr (HasEqualities) return static_cast<const P *>(this)->getE();
     else return EmptyMatrix<int64_t>();
-  }
-  [[nodiscard]] constexpr auto getSyms() const
-    -> llvm::ArrayRef<const llvm::SCEV *> {
-    static_assert(HasSymbols);
-    return static_cast<const P *>(this)->getSyms();
   }
   constexpr void truncNumInEqCon(Row r) {
     static_cast<P *>(this)->truncNumInEqCon(r);
@@ -218,9 +202,9 @@ struct BasePolyhedra {
     if constexpr (HasEqualities) truncNumEqCon(getE().numRow());
   }
 
-  [[nodiscard]] constexpr auto getNumSymbols() const -> size_t {
-    if constexpr (HasSymbols) return 1 + getSyms().size();
-    else return 1;
+  [[nodiscard]] constexpr auto getNumSymbols() const -> unsigned {
+    if constexpr (!HasSymbols) return 1;
+    else return static_cast<const P *>(this)->getNumSymbols();
   }
   [[nodiscard]] constexpr auto getNumDynamic() const -> size_t {
     return size_t(getA().numCol()) - getNumSymbols();
@@ -238,20 +222,18 @@ struct BasePolyhedra {
     dropEmptyConstraints(getA());
     if constexpr (HasEqualities) dropEmptyConstraints(getE());
   }
-
-  friend inline auto operator<<(llvm::raw_ostream &os, const BasePolyhedra &p)
-    -> llvm::raw_ostream & {
-    auto &&os2 = printConstraints(os << "\n", p.getA(),
-                                  llvm::ArrayRef<const llvm::SCEV *>());
+  template <OStream O>
+  friend inline auto operator<<(O &os, const BasePolyhedra &p) -> O & {
+    auto &&os2 = printConstraints(os << "\n", p.getA());
     if constexpr (MaybeNonNeg)
       if (p.isNonNegative()) printPositive(os2, p.getNumDynamic());
-    if constexpr (HasEqualities)
-      return printConstraints(os2, p.getE(),
-                              llvm::ArrayRef<const llvm::SCEV *>(), false);
+    if constexpr (HasEqualities) return printConstraints(os2, p.getE(), false);
     return os2;
   }
 #ifndef NDEBUG
-  [[gnu::used]] void dump() const { llvm::errs() << *this; }
+  [[gnu::used]] void dump() const {
+    std::cout << *static_cast<const P *>(this);
+  }
 #endif
   [[nodiscard]] auto isEmpty() const -> bool {
     return getNumCon() == 0;

@@ -12,62 +12,49 @@
 #include "Math/NormalForm.hpp"
 #include <cstddef>
 #include <cstdint>
-#include <llvm/Analysis/ScalarEvolution.h>
-#include <llvm/Support/raw_ostream.h>
-#include <sys/types.h>
 
+template <OStream OS>
+inline auto printConstraint(OS &os, PtrVector<int64_t> a, size_t numSyms,
+                            bool inequality) {
+  size_t numVar = a.size();
+  bool hasPrinted = false, allVarNonNegative = allGEZero(a[_(numSyms, numVar)]);
+  int64_t sign = allVarNonNegative ? 1 : -1;
+  for (size_t v = numSyms; v < numVar; ++v) {
+    if (int64_t Acv = sign * a[v]) {
+      if (hasPrinted) {
+        if (Acv > 0) {
+          os << " + ";
+        } else {
+          os << " - ";
+          Acv *= -1;
+        }
+      }
+      if (Acv != 1) {
+        if (Acv == -1) os << "-";
+        else os << Acv;
+      }
+      os << "v_" << v - numSyms;
+      hasPrinted = true;
+    }
+  }
+  if (!hasPrinted) os << '0';
+  if (inequality) os << (allVarNonNegative ? " >= " : " <= ");
+  else os << " == ";
+  os << a[0];
+}
 /// prints in current permutation order.
 /// TODO: decide if we want to make AffineLoopNest a `SymbolicPolyhedra`
 /// in which case, we have to remove `currentToOriginalPerm`,
 /// which menas either change printing, or move prints `<<` into
 /// the derived classes.
-inline auto printConstraints(llvm::raw_ostream &os, DensePtrMatrix<int64_t> A,
-                             llvm::ArrayRef<const llvm::SCEV *> syms,
-                             bool inequality = true) -> llvm::raw_ostream & {
+template <OStream OS>
+inline auto printConstraints(OS &os, DensePtrMatrix<int64_t> A,
+                             bool inequality = true) -> OS & {
   const Row numConstraints = A.numRow();
-  const Col numVar = A.numCol();
-  const unsigned numSyms = syms.size() + 1;
   for (Row c = 0; c < numConstraints; ++c) {
-    bool hasPrinted = false;
-    bool allVarNonNegative = allGEZero(A(c, _(numSyms, numVar)));
-    int64_t sign = allVarNonNegative ? 1 : -1;
-    for (size_t v = numSyms; v < numVar; ++v) {
-      if (int64_t Acv = sign * A(c, v)) {
-        if (hasPrinted) {
-          if (Acv > 0) {
-            os << " + ";
-          } else {
-            os << " - ";
-            Acv *= -1;
-          }
-        }
-        if (Acv != 1) {
-          if (Acv == -1) os << "-";
-          else os << Acv;
-        }
-        os << "v_" << v - numSyms;
-        hasPrinted = true;
-      }
-    }
-    if (!hasPrinted) os << '0';
-    if (inequality) os << (allVarNonNegative ? " >= " : " <= ");
-    else os << " == ";
-    os << A(c, 0);
-    for (size_t v = 1; v < numSyms; ++v) {
-      if (int64_t Acv = A(c, v)) {
-        os << (Acv > 0 ? " + " : " - ");
-        Acv = constexpr_abs(Acv);
-        if (Acv != 1) os << Acv << "*";
-        os << *syms[v - 1];
-      }
-    }
+    printConstraint(os, A(c, _), 1, inequality);
     os << "\n";
   }
-  return os;
-}
-inline auto printConstraints(llvm::raw_ostream &os, EmptyMatrix<int64_t>,
-                             llvm::ArrayRef<const llvm::SCEV *>, bool = false)
-  -> llvm::raw_ostream & {
   return os;
 }
 

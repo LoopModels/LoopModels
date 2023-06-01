@@ -2,8 +2,6 @@
 #include "TypePromotion.hpp"
 #include <concepts>
 #include <cstddef>
-#include <llvm/ADT/ArrayRef.h>
-#include <llvm/ADT/SmallVector.h>
 
 namespace LinAlg {
 template <typename T>
@@ -22,14 +20,14 @@ concept AbstractVector = HasEltype<T> && requires(T t, size_t i) {
 template <class T>
 concept SizeMultiple8 = (sizeof(T) % 8) == 0;
 
-template <class S> struct default_capacity_type {
+template <class S> struct DefaultCapacityType {
   using type = unsigned int;
 };
-template <SizeMultiple8 S> struct default_capacity_type<S> {
+template <SizeMultiple8 S> struct DefaultCapacityType<S> {
   using type = std::size_t;
 };
 template <class S>
-using default_capacity_type_t = typename default_capacity_type<S>::type;
+using default_capacity_type_t = typename DefaultCapacityType<S>::type;
 
 static_assert(!SizeMultiple8<uint32_t>);
 static_assert(SizeMultiple8<uint64_t>);
@@ -37,10 +35,10 @@ static_assert(std::is_same_v<default_capacity_type_t<uint32_t>, uint32_t>);
 static_assert(std::is_same_v<default_capacity_type_t<uint64_t>, uint64_t>);
 
 template <class T> consteval auto PreAllocStorage() -> size_t {
-  constexpr size_t TotalBytes = 128;
-  constexpr size_t RemainingBytes =
-    TotalBytes - sizeof(llvm::SmallVector<T, 0>);
-  constexpr size_t N = RemainingBytes / sizeof(T);
+  constexpr size_t totalBytes = 128;
+  constexpr size_t remainingBytes =
+    totalBytes - sizeof(T *) - 2 * sizeof(unsigned);
+  constexpr size_t N = remainingBytes / sizeof(T);
   return std::max<size_t>(1, N);
 }
 

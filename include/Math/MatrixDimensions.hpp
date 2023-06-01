@@ -2,6 +2,7 @@
 
 #include "Math/AxisTypes.hpp"
 #include "Utilities/Invariant.hpp"
+#include <Show.hpp>
 #include <concepts>
 #include <cstddef>
 #include <cstdint>
@@ -64,8 +65,8 @@ struct StridedDims {
   [[nodiscard]] constexpr auto similar(Col c) const -> StridedDims {
     return {M, unsigned(c), strideM};
   }
-  friend inline auto operator<<(llvm::raw_ostream &os, StridedDims x)
-    -> llvm::raw_ostream & {
+  template <OStream OS>
+  friend inline auto operator<<(OS &os, StridedDims x) -> OS & {
     return os << x.M << " x " << x.N << " (stride " << x.strideM << ")";
   }
 };
@@ -111,8 +112,8 @@ struct DenseDims {
   [[nodiscard]] constexpr auto similar(Col c) const -> DenseDims {
     return {M, unsigned(c)};
   }
-  friend inline auto operator<<(llvm::raw_ostream &os, DenseDims x)
-    -> llvm::raw_ostream & {
+  template <OStream OS>
+  friend inline auto operator<<(OS &os, DenseDims x) -> OS & {
     return os << x.M << " x " << x.N;
   }
 };
@@ -147,8 +148,8 @@ struct SquareDims {
   [[nodiscard]] constexpr auto similar(Col c) const -> DenseDims {
     return {M, unsigned(c)};
   }
-  friend inline auto operator<<(llvm::raw_ostream &os, SquareDims x)
-    -> llvm::raw_ostream & {
+  template <OStream OS>
+  friend inline auto operator<<(OS &os, SquareDims x) -> OS & {
     return os << x.M << " x " << x.M;
   }
 };

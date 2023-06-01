@@ -13,11 +13,9 @@
 #include <cstddef>
 #include <cstdint>
 #include <limits>
-#include <llvm/ADT/SmallVector.h>
 #include <map>
 #include <memory>
 #include <numeric>
-#include <sys/types.h>
 #include <utility>
 
 namespace NormalForm {

@@ -1,9 +1,9 @@
 #pragma once
-#include "./Rational.hpp"
 #include "Math/Array.hpp"
 #include "Math/Constructors.hpp"
 #include "Math/Math.hpp"
 #include "Math/MatrixDimensions.hpp"
+#include "Rational.hpp"
 #include "Utilities/Invariant.hpp"
 #include <concepts>
 
@@ -187,8 +187,7 @@ public:
     for (size_t m = 0; m < M; ++m) std::swap(perm[m], perm[ipiv[m]]);
     return perm;
   }
-  friend auto operator<<(llvm::raw_ostream &os, const Fact &lu)
-    -> llvm::raw_ostream & {
+  template <OStream O> friend auto operator<<(O &os, const Fact &lu) -> O & {
     return os << "LU fact:\n" << lu.F << "\nperm = \n" << lu.ipiv << '\n';
   }
 };
@@ -210,14 +209,14 @@ public:
     }
     if (kp != k)
       for (size_t j = 0; j < M; ++j) std::swap(A(kp, j), A(k, j));
-    Rational Akkinv = A(k, k).inv();
+    Rational invAkk = A(k, k).inv();
     for (size_t i = k + 1; i < M; ++i)
-      if (std::optional<Rational> Aik = A(i, k).safeMul(Akkinv)) A(i, k) = *Aik;
+      if (std::optional<Rational> Aik = A(i, k).safeMul(invAkk)) A(i, k) = *Aik;
       else return {};
     for (size_t i = k + 1; i < M; ++i) {
       for (size_t j = k + 1; j < M; ++j) {
-        if (std::optional<Rational> Aikj = A(i, k).safeMul(A(k, j))) {
-          if (std::optional<Rational> Aij = A(i, j).safeSub(*Aikj)) {
+        if (std::optional<Rational> kAij = A(i, k).safeMul(A(k, j))) {
+          if (std::optional<Rational> Aij = A(i, j).safeSub(*kAij)) {
             A(i, j) = *Aij;
             continue;
           }
@@ -243,8 +242,8 @@ template <class S>
     }
     if (kp != k)
       for (size_t j = 0; j < M; ++j) std::swap(A(kp, j), A(k, j));
-    S Akkinv = S{1} / A(k, k);
-    for (size_t i = k + 1; i < M; ++i) A(i, k) = A(i, k) * Akkinv;
+    S invAkk = S{1} / A(k, k);
+    for (size_t i = k + 1; i < M; ++i) A(i, k) = A(i, k) * invAkk;
     for (size_t i = k + 1; i < M; ++i)
       for (size_t j = k + 1; j < M; ++j) A(i, j) = A(i, j) - A(i, k) * A(k, j);
   }
