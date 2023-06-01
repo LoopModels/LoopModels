@@ -80,18 +80,12 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getA</b> ()
 <tr class="memitem:aa9b4cd014ab68e0dcb10f6fe9f5bfbd0"><td class="memItemLeft" align="right" valign="top"><a id="aa9b4cd014ab68e0dcb10f6fe9f5bfbd0"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getE</b> ()</td></tr>
 <tr class="separator:aa9b4cd014ab68e0dcb10f6fe9f5bfbd0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae9abae0a003a89294e4eead570610dc5"><td class="memItemLeft" align="right" valign="top"><a id="ae9abae0a003a89294e4eead570610dc5"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getSyms</b> () -&gt; llvm::MutableArrayRef&lt; const llvm::SCEV * &gt;</td></tr>
-<tr class="separator:ae9abae0a003a89294e4eead570610dc5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a547ef25312894b5686a5ddca40e4e625"><td class="memItemLeft" align="right" valign="top"><a id="a547ef25312894b5686a5ddca40e4e625"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getA</b> () const -&gt; DensePtrMatrix&lt; int64_t &gt;</td></tr>
 <tr class="separator:a547ef25312894b5686a5ddca40e4e625"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3930e8e43f19976acb593fedd7fcaf1a"><td class="memItemLeft" align="right" valign="top"><a id="a3930e8e43f19976acb593fedd7fcaf1a"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getE</b> () const</td></tr>
 <tr class="separator:a3930e8e43f19976acb593fedd7fcaf1a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7bbdddb0cbd85cd24ec543d573ec2b20"><td class="memItemLeft" align="right" valign="top"><a id="a7bbdddb0cbd85cd24ec543d573ec2b20"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getSyms</b> () const -&gt; llvm::ArrayRef&lt; const llvm::SCEV * &gt;</td></tr>
-<tr class="separator:a7bbdddb0cbd85cd24ec543d573ec2b20"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a88af921a8bcd046d7c898b5e67175cbb"><td class="memItemLeft" align="right" valign="top"><a id="a88af921a8bcd046d7c898b5e67175cbb"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>truncNumInEqCon</b> (Row r)</td></tr>
 <tr class="separator:a88af921a8bcd046d7c898b5e67175cbb"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -141,9 +135,9 @@ template&lt;bool CheckEmpty&gt; </td></tr>
 <tr class="memitem:a22d711b99c48acd1130c5d5244f867f8"><td class="memItemLeft" align="right" valign="top"><a id="a22d711b99c48acd1130c5d5244f867f8"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>pruneBoundsUnchecked</b> (LinAlg::Alloc&lt; int64_t &gt; auto &amp;alloc)</td></tr>
 <tr class="separator:a22d711b99c48acd1130c5d5244f867f8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9a298b1598869fabf7e614b98a6e4a90"><td class="memItemLeft" align="right" valign="top"><a id="a9a298b1598869fabf7e614b98a6e4a90"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumSymbols</b> () const -&gt; size_t</td></tr>
-<tr class="separator:a9a298b1598869fabf7e614b98a6e4a90"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab6ebee4e478da28eb6df4d93d9a6755a"><td class="memItemLeft" align="right" valign="top"><a id="ab6ebee4e478da28eb6df4d93d9a6755a"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumSymbols</b> () const -&gt; unsigned</td></tr>
+<tr class="separator:ab6ebee4e478da28eb6df4d93d9a6755a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a518bce0f04aa99f9d064df06247f8994"><td class="memItemLeft" align="right" valign="top"><a id="a518bce0f04aa99f9d064df06247f8994"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumDynamic</b> () const -&gt; size_t</td></tr>
 <tr class="separator:a518bce0f04aa99f9d064df06247f8994"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -171,9 +165,10 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>truncateVars</b> (siz
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="friends"></a>
 Friends</h2></td></tr>
-<tr class="memitem:a43566a49c76a850cc3c62477caaa23c7"><td class="memItemLeft" align="right" valign="top"><a id="a43566a49c76a850cc3c62477caaa23c7"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> (llvm::raw_ostream &amp;os, const <a class="el" href="structBasePolyhedra.html">BasePolyhedra</a> &amp;p) -&gt; llvm::raw_ostream &amp;</td></tr>
-<tr class="separator:a43566a49c76a850cc3c62477caaa23c7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa2b9a2bcbd5bd6a9fe17d44b40960130"><td class="memTemplParams" colspan="2"><a id="aa2b9a2bcbd5bd6a9fe17d44b40960130"></a>
+template&lt;OStream O&gt; </td></tr>
+<tr class="memitem:aa2b9a2bcbd5bd6a9fe17d44b40960130"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>operator&lt;&lt;</b> (O &amp;os, const <a class="el" href="structBasePolyhedra.html">BasePolyhedra</a> &amp;p) -&gt; O &amp;</td></tr>
+<tr class="separator:aa2b9a2bcbd5bd6a9fe17d44b40960130"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><h3>template&lt;bool HasEqualities, bool HasSymbols, bool MaybeNonNeg, typename P&gt;<br />
