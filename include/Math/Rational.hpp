@@ -1,10 +1,9 @@
 #pragma once
 
-#include "./GreatestCommonDivisor.hpp"
+#include "GreatestCommonDivisor.hpp"
+#include "Show.hpp"
 #include <cstddef>
 #include <cstdint>
-#include <llvm/ADT/SmallVector.h>
-#include <llvm/Support/raw_ostream.h>
 #include <optional>
 
 template <class T, int Bits>
@@ -205,8 +204,8 @@ struct Rational {
   constexpr void negate() { numerator = -numerator; }
   constexpr explicit operator bool() const { return numerator != 0; }
 
-  friend inline auto operator<<(llvm::raw_ostream &os, const Rational &x)
-    -> llvm::raw_ostream & {
+  template <OStream OS>
+  friend inline auto operator<<(OS &os, const Rational &x) -> OS & {
     os << x.numerator;
     if (x.denominator != 1) os << " // " << x.denominator;
     return os;

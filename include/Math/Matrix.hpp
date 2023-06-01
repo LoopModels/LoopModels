@@ -2,7 +2,6 @@
 #include "Math/AxisTypes.hpp"
 #include "Math/MatrixDimensions.hpp"
 #include "TypePromotion.hpp"
-#include "Utilities/Invariant.hpp"
 #include <concepts>
 #include <cstdint>
 #include <memory>

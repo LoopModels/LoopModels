@@ -4,7 +4,6 @@
 #include "./VectorGreatestCommonDivisor.hpp"
 #include "Math/Math.hpp"
 #include <cstdint>
-#include <llvm/ADT/SmallVector.h>
 
 [[nodiscard]] constexpr auto orthogonalize(DenseMatrix<int64_t> A)
   -> DenseMatrix<int64_t> {

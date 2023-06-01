@@ -3,7 +3,6 @@
 #include "Math/Indexing.hpp"
 #include "Utilities/Allocators.hpp"
 #include <cstdint>
-#include <llvm/Support/Alignment.h>
 
 namespace LinAlg {
 // BumpPtrVector
@@ -23,7 +22,6 @@ template <typename T, unsigned InitialCapacity = 8> struct BumpPtrVector {
   using const_pointer = const T *;
   using allocator_type = WBumpAlloc<T>;
 
-  // using eltype = std::remove_const_t<T>;
   [[no_unique_address]] T *mem;
   [[no_unique_address]] unsigned Size;
   [[no_unique_address]] unsigned Capacity;
@@ -139,17 +137,17 @@ template <typename T, unsigned InitialCapacity = 8> struct BumpPtrVector {
   }
   [[nodiscard]] constexpr auto size() const -> size_t { return Size; }
   constexpr operator PtrVector<T>() const { return PtrVector<T>{mem, Size}; }
-  constexpr operator llvm::ArrayRef<T>() const {
-    return llvm::ArrayRef<T>{mem, Size};
-  }
-  constexpr operator llvm::MutableArrayRef<T>() {
-    return llvm::MutableArrayRef<T>{mem, Size};
-  }
+  // constexpr operator llvm::ArrayRef<T>() const {
+  //   return llvm::ArrayRef<T>{mem, Size};
+  // }
+  // constexpr operator llvm::MutableArrayRef<T>() {
+  //   return llvm::MutableArrayRef<T>{mem, Size};
+  // }
+  // constexpr auto operator==(const llvm::ArrayRef<T> x) const -> bool {
+  //   return std::equal(begin(), end(), x.begin(), x.end());
+  // }
   constexpr auto operator==(PtrVector<T> x) const -> bool {
     return PtrVector<T>(*this) == x;
-  }
-  constexpr auto operator==(const llvm::ArrayRef<T> x) const -> bool {
-    return std::equal(begin(), end(), x.begin(), x.end());
   }
   [[nodiscard]] constexpr auto view() const -> PtrVector<T> { return *this; };
   [[gnu::flatten]] constexpr auto operator<<(PtrVector<T> x)
