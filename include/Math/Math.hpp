@@ -7,7 +7,7 @@
 #include "Math/Indexing.hpp"
 #include "Math/Matrix.hpp"
 #include "Math/MatrixDimensions.hpp"
-#include "Math/Rational.hpp"
+#include "Show.hpp"
 #include "TypePromotion.hpp"
 #include <algorithm>
 #include <cassert>
@@ -18,16 +18,8 @@
 #include <cstdint>
 #include <iterator>
 #include <limits>
-#include <llvm/ADT/ArrayRef.h>
-#include <llvm/ADT/Optional.h>
-#include <llvm/ADT/SmallVector.h>
-#include <llvm/IR/Instruction.h>
-#include <llvm/Support/raw_os_ostream.h>
-#include <llvm/Support/raw_ostream.h>
-#include <llvm/Transforms/Utils/LoopUtils.h>
 #include <numeric>
 #include <optional>
-#include <ostream>
 #include <ranges>
 #include <string>
 #include <string_view>
@@ -273,9 +265,6 @@ template <AbstractMatrix A, AbstractVector B> struct MatVecMul {
 template <class T, class S> constexpr auto view(const Array<T, S> &x) {
   return x;
 }
-template <typename T> constexpr auto view(llvm::ArrayRef<T> x) {
-  return PtrVector<T>{x.data(), x.size()};
-}
 static_assert(!AbstractMatrix<StridedVector<int64_t>>);
 
 // static_assert(std::is_trivially_copyable_v<MutStridedVector<int64_t>>);
@@ -303,14 +292,6 @@ constexpr void swap(MutPtrMatrix<int64_t> A, Col i, Col j) {
   Row M = A.numRow();
   invariant((i < A.numCol()) && (j < A.numCol()));
   for (Row m = 0; m < M; ++m) std::swap(A(m, i), A(m, j));
-}
-template <typename T>
-constexpr void swap(llvm::SmallVectorImpl<T> &A, Col i, Col j) {
-  std::swap(A[i], A[j]);
-}
-template <typename T>
-constexpr void swap(llvm::SmallVectorImpl<T> &A, Row i, Row j) {
-  std::swap(A[i], A[j]);
 }
 
 template <int Bits, class T>
@@ -397,9 +378,8 @@ inline constexpr auto view(const auto &x) { return x.view(); }
 
 constexpr auto bin2(std::integral auto x) { return (x * (x - 1)) >> 1; }
 
-template <typename T>
-inline auto operator<<(llvm::raw_ostream &os, SmallSparseMatrix<T> const &A)
-  -> llvm::raw_ostream & {
+template <OStream OS, typename T>
+inline auto operator<<(OS &os, SmallSparseMatrix<T> const &A) -> OS & {
   size_t k = 0;
   os << "[ ";
   for (size_t i = 0; i < A.numRow(); ++i) {
@@ -423,9 +403,8 @@ inline auto operator<<(llvm::raw_ostream &os, SmallSparseMatrix<T> const &A)
   assert(k == A.nonZeros.size());
   return os;
 }
-template <AbstractMatrix T>
-inline auto operator<<(llvm::raw_ostream &os, const T &A)
-  -> llvm::raw_ostream & {
+template <OStream OS, AbstractMatrix T>
+inline auto operator<<(OS &os, const T &A) -> OS & {
   Matrix<std::remove_const_t<typename T::value_type>> B{A};
   return printMatrix(os, PtrMatrix<typename T::value_type>(B));
 }
@@ -593,10 +572,10 @@ static_assert(std::copyable<ManagedArray<int64_t, SquareDims>>);
 template <typename T, typename I> struct SliceView {
   using value_type = T;
   [[no_unique_address]] MutPtrVector<T> a;
-  [[no_unique_address]] llvm::ArrayRef<I> i;
+  [[no_unique_address]] PtrVector<I> i;
   struct Iterator {
     [[no_unique_address]] MutPtrVector<T> a;
-    [[no_unique_address]] llvm::ArrayRef<I> i;
+    [[no_unique_address]] PtrVector<I> i;
     [[no_unique_address]] size_t j;
     auto operator==(const Iterator &k) const -> bool { return j == k.j; }
     auto operator++() -> Iterator & {

@@ -1,7 +1,6 @@
 #pragma once
 #include "Utilities/Invariant.hpp"
 #include <cstddef>
-#include <llvm/Support/Casting.h>
 
 // TODO: communicate not-null to the compiler somehow?
 template <typename T> class NotNull {

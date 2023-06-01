@@ -32,14 +32,6 @@ template <class T, class S, size_t N = PreAllocStorage<T>(),
           std::unsigned_integral U = default_capacity_type_t<S>>
 struct ManagedArray;
 
-// template <class T, class S> struct Array;
-// template <typename T>
-// inline auto printVector(llvm::raw_ostream &os, Array<T, unsigned> a)
-//   -> llvm::raw_ostream &;
-// template <typename T>
-// inline auto printMatrix(llvm::raw_ostream &, Array<T, StridedDims>)
-//   -> llvm::raw_ostream &;
-
 inline auto adaptOStream(std::ostream &os, const auto &x) -> std::ostream &;
 template <typename T>
 concept Printable = requires(llvm::raw_ostream &os, T x) {
@@ -1117,7 +1109,7 @@ struct ManagedArray : ReallocView<T, S, ManagedArray<T, S, N, A, U>, A, U> {
     : BaseT{memory.data(), b.dim(), U(N), b.get_allocator()} {
     if (b.isSmall()) { // copy
       std::copy_n(b.data(), size_t(b.dim()), this->data());
-    } else {           // steal
+    } else { // steal
       this->ptr = b.data();
       this->capacity = b.getCapacity();
     }
@@ -1128,7 +1120,7 @@ struct ManagedArray : ReallocView<T, S, ManagedArray<T, S, N, A, U>, A, U> {
     if constexpr (N > 0) {
       if (b.isSmall()) { // copy
         std::copy_n(b.data(), size_t(b.dim()), this->data());
-      } else {           // steal
+      } else { // steal
         this->ptr = b.data();
         this->capacity = b.getCapacity();
       }
@@ -1143,7 +1135,7 @@ struct ManagedArray : ReallocView<T, S, ManagedArray<T, S, N, A, U>, A, U> {
     : BaseT{memory.data(), s, U(N), b.get_allocator()} {
     if (b.isSmall()) { // copy
       std::copy_n(b.data(), size_t(b.dim()), this->data());
-    } else {           // steal
+    } else { // steal
       this->ptr = b.data();
       this->capacity = b.getCapacity();
     }

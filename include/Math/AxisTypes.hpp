@@ -1,6 +1,6 @@
 #pragma once
-#include <Utilities/Invariant.hpp>
-#include <llvm/Support/raw_ostream.h>
+#include "Show.hpp"
+#include "Utilities/Invariant.hpp"
 
 /// LinAlg
 ///
@@ -29,8 +29,7 @@ enum class AxisType {
   Column,
   RowStride,
 };
-inline auto operator<<(llvm::raw_ostream &os, AxisType x)
-  -> llvm::raw_ostream & {
+template <OStream OS> inline auto operator<<(OS &os, AxisType x) -> OS & {
   switch (x) {
   case AxisType::Row:
     os << "Row";
@@ -132,9 +131,8 @@ template <AxisType T> struct AxisInt {
     return *this;
   }
   constexpr auto operator*() const -> V { return value; }
-
-  friend inline auto operator<<(llvm::raw_ostream &os, AxisInt<T> x)
-    -> llvm::raw_ostream & {
+  template <OStream OS>
+  friend inline auto operator<<(OS &os, AxisInt<T> x) -> OS & {
     return os << T << "{" << *x << "}";
   }
 };

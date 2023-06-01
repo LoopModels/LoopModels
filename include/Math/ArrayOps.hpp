@@ -8,6 +8,7 @@
 
 namespace LinAlg {
 
+template <typename T> class SmallSparseMatrix;
 template <class T, class S, class P> class ArrayOps {
   [[gnu::returns_nonnull]] constexpr auto data_() -> T * {
     return static_cast<P *>(this)->data();
@@ -43,26 +44,7 @@ public:
     return *static_cast<P *>(this);
   }
   [[gnu::flatten]] constexpr auto operator<<(const SmallSparseMatrix<T> &B)
-    -> P & {
-    static_assert(MatrixDimension<S>);
-    size_t M = nr(), N = nc(), k = 0;
-    invariant(M, size_t(B.numRow()));
-    invariant(N, size_t(B.numCol()));
-    T *mem = data_();
-    for (size_t i = 0; i < M; ++i) {
-      uint32_t m = B.rows[i] & 0x00ffffff;
-      size_t j = 0, l = rs() * i;
-      while (m) {
-        uint32_t tz = std::countr_zero(m);
-        m >>= tz + 1;
-        for (; tz; --tz) mem[l + j++] = T{};
-        mem[l + j++] = B.nonZeros[k++];
-      }
-      for (; j < N; ++j) mem[l + j] = T{};
-    }
-    assert(k == B.nonZeros.size());
-    return *static_cast<P *>(this);
-  }
+    -> P &;
   [[gnu::flatten]] constexpr auto operator<<(const AbstractVector auto &B)
     -> P & {
     if constexpr (MatrixDimension<S>) {
