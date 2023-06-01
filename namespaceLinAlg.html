@@ -87,6 +87,8 @@ Classes</h2></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structLinAlg_1_1MaxPow10.html">MaxPow10</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classLinAlg_1_1SmallSparseMatrix.html">SmallSparseMatrix</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classLinAlg_1_1ArrayOps.html">ArrayOps</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structLinAlg_1_1AxisInt.html">AxisInt</a></td></tr>
@@ -134,8 +136,6 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structLinAlg_1_1SliceView.html">SliceView</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structLinAlg_1_1Transpose.html">Transpose</a></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structLinAlg_1_1SmallSparseMatrix.html">SmallSparseMatrix</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structLinAlg_1_1UniformScaling.html">UniformScaling</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -328,9 +328,10 @@ template&lt;typename T &gt; </td></tr>
 template&lt;typename T &gt; </td></tr>
 <tr class="memitem:ac7cc07426b216d3dd0707e7558d407d7"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>operator&lt;&lt;</b> (llvm::raw_ostream &amp;os, <a class="el" href="structLinAlg_1_1Array.html">Array</a>&lt; T, <a class="el" href="structLinAlg_1_1DenseDims.html">DenseDims</a> &gt; A) -&gt; llvm::raw_ostream &amp;</td></tr>
 <tr class="separator:ac7cc07426b216d3dd0707e7558d407d7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a68b63161dc08f761f2f4007a3275f487"><td class="memItemLeft" align="right" valign="top"><a id="a68b63161dc08f761f2f4007a3275f487"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> (llvm::raw_ostream &amp;os, AxisType x) -&gt; llvm::raw_ostream &amp;</td></tr>
-<tr class="separator:a68b63161dc08f761f2f4007a3275f487"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a995f77bac99e430090fb1473c4073317"><td class="memTemplParams" colspan="2"><a id="a995f77bac99e430090fb1473c4073317"></a>
+template&lt;OStream OS&gt; </td></tr>
+<tr class="memitem:a995f77bac99e430090fb1473c4073317"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>operator&lt;&lt;</b> (OS &amp;os, AxisType x) -&gt; OS &amp;</td></tr>
+<tr class="separator:a995f77bac99e430090fb1473c4073317"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a017befb15a6d8da892a24037dcae6bfc"><td class="memTemplParams" colspan="2"><a id="a017befb15a6d8da892a24037dcae6bfc"></a>
 template&lt;typename T , AxisType W&gt; </td></tr>
 <tr class="memitem:a017befb15a6d8da892a24037dcae6bfc"><td class="memTemplItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>operator+</b> (T *p, <a class="el" href="structLinAlg_1_1AxisInt.html">AxisInt</a>&lt; W &gt; y) -&gt; T *</td></tr>
@@ -698,20 +699,12 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>size</b> (c
 template&lt;class T , class S &gt; </td></tr>
 <tr class="memitem:a01c708c466eb4105b4d3a20cf2907b11"><td class="memTemplItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>view</b> (const <a class="el" href="structLinAlg_1_1Array.html">Array</a>&lt; T, S &gt; &amp;x)</td></tr>
 <tr class="separator:a01c708c466eb4105b4d3a20cf2907b11"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad32cf086f923a32737b23f667b748bf2"><td class="memTemplParams" colspan="2"><a id="ad32cf086f923a32737b23f667b748bf2"></a>
-template&lt;typename T &gt; </td></tr>
-<tr class="memitem:ad32cf086f923a32737b23f667b748bf2"><td class="memTemplItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>view</b> (llvm::ArrayRef&lt; T &gt; x)</td></tr>
-<tr class="separator:ad32cf086f923a32737b23f667b748bf2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa67e8008b7ebc575394a09786276abb4"><td class="memItemLeft" align="right" valign="top"><a id="aa67e8008b7ebc575394a09786276abb4"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>allMatch</b> (const AbstractVector auto &amp;x0, const AbstractVector auto &amp;x1) -&gt; bool</td></tr>
 <tr class="separator:aa67e8008b7ebc575394a09786276abb4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a55c296ee3c87d10fac7d09269ad1fe97"><td class="memItemLeft" align="right" valign="top"><a id="a55c296ee3c87d10fac7d09269ad1fe97"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>swap</b> (<a class="el" href="structLinAlg_1_1MutArray.html">MutPtrMatrix</a>&lt; int64_t &gt; A, <a class="el" href="structLinAlg_1_1AxisInt.html">Row</a> i, <a class="el" href="structLinAlg_1_1AxisInt.html">Row</a> j)</td></tr>
 <tr class="separator:a55c296ee3c87d10fac7d09269ad1fe97"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aeef9f80db671908b36269533c0188f57"><td class="memTemplParams" colspan="2"><a id="aeef9f80db671908b36269533c0188f57"></a>
-template&lt;typename T &gt; </td></tr>
-<tr class="memitem:aeef9f80db671908b36269533c0188f57"><td class="memTemplItemLeft" align="right" valign="top">constexpr void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>swap</b> (llvm::SmallVectorImpl&lt; T &gt; &amp;A, <a class="el" href="structLinAlg_1_1AxisInt.html">Col</a> i, <a class="el" href="structLinAlg_1_1AxisInt.html">Col</a> j)</td></tr>
-<tr class="separator:aeef9f80db671908b36269533c0188f57"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af66b3bc745f120c92dae425d530bb54f"><td class="memTemplParams" colspan="2"><a id="af66b3bc745f120c92dae425d530bb54f"></a>
 template&lt;class T &gt; </td></tr>
 <tr class="memitem:af66b3bc745f120c92dae425d530bb54f"><td class="memTemplItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>zeroUpper</b> (T x) -&gt; T requires is_uint_v&lt; 16, T &gt;</td></tr>
@@ -741,14 +734,14 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>view</b> (c
 <tr class="memitem:a28e943bc8b5fe5ca780cd4c79b636ff8"><td class="memItemLeft" align="right" valign="top"><a id="a28e943bc8b5fe5ca780cd4c79b636ff8"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>bin2</b> (std::integral auto x)</td></tr>
 <tr class="separator:a28e943bc8b5fe5ca780cd4c79b636ff8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a14534fa451139b5690f74762499dc54b"><td class="memTemplParams" colspan="2"><a id="a14534fa451139b5690f74762499dc54b"></a>
-template&lt;typename T &gt; </td></tr>
-<tr class="memitem:a14534fa451139b5690f74762499dc54b"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>operator&lt;&lt;</b> (llvm::raw_ostream &amp;os, <a class="el" href="structLinAlg_1_1SmallSparseMatrix.html">SmallSparseMatrix</a>&lt; T &gt; const &amp;A) -&gt; llvm::raw_ostream &amp;</td></tr>
-<tr class="separator:a14534fa451139b5690f74762499dc54b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa51171d8cd4e1a4ceae6c4a6e7f82263"><td class="memTemplParams" colspan="2"><a id="aa51171d8cd4e1a4ceae6c4a6e7f82263"></a>
-template&lt;AbstractMatrix T&gt; </td></tr>
-<tr class="memitem:aa51171d8cd4e1a4ceae6c4a6e7f82263"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>operator&lt;&lt;</b> (llvm::raw_ostream &amp;os, const T &amp;A) -&gt; llvm::raw_ostream &amp;</td></tr>
-<tr class="separator:aa51171d8cd4e1a4ceae6c4a6e7f82263"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7838408c7d33c5d12c6f4b58e092fd81"><td class="memTemplParams" colspan="2"><a id="a7838408c7d33c5d12c6f4b58e092fd81"></a>
+template&lt;OStream OS, typename T &gt; </td></tr>
+<tr class="memitem:a7838408c7d33c5d12c6f4b58e092fd81"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>operator&lt;&lt;</b> (OS &amp;os, <a class="el" href="classLinAlg_1_1SmallSparseMatrix.html">SmallSparseMatrix</a>&lt; T &gt; const &amp;A) -&gt; OS &amp;</td></tr>
+<tr class="separator:a7838408c7d33c5d12c6f4b58e092fd81"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afe92d148b9e48702a29e65a3f815ecac"><td class="memTemplParams" colspan="2"><a id="afe92d148b9e48702a29e65a3f815ecac"></a>
+template&lt;OStream OS, AbstractMatrix T&gt; </td></tr>
+<tr class="memitem:afe92d148b9e48702a29e65a3f815ecac"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>operator&lt;&lt;</b> (OS &amp;os, const T &amp;A) -&gt; OS &amp;</td></tr>
+<tr class="separator:afe92d148b9e48702a29e65a3f815ecac"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1ea55d106a81b14c9f7f635124c15151"><td class="memItemLeft" align="right" valign="top"><a id="a1ea55d106a81b14c9f7f635124c15151"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator-</b> (const AbstractVector auto &amp;a)</td></tr>
 <tr class="separator:a1ea55d106a81b14c9f7f635124c15151"><td class="memSeparator" colspan="2">&#160;</td></tr>
