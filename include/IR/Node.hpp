@@ -155,8 +155,8 @@ class Loop : public Node {
   AffineLoopNest *affineLoop{nullptr};
 
 public:
-  Loop(Exit *e, unsigned d, llvm::Loop *LL)
-    : Node(VK_Loop, d), exit(e), llvmLoop(LL) {
+  Loop(Exit *e, unsigned d, llvm::Loop *LL, AffineLoopNest *AL)
+    : Node(VK_Loop, d), exit(e), llvmLoop(LL), affineLoop(AL) {
     e->setParent(this);
     // we also initialize prev/next, adding instrs will push them
     e->setPrev(this);
@@ -197,16 +197,16 @@ public:
       f(c->getExit());
     }
   }
-  static constexpr auto createTopLevel(BumpAlloc<> &alloc, llvm::Loop *LL)
-    -> Loop * {
-    auto *E = alloc.create<Exit>(0);
-    auto *L = alloc.create<Loop>(E, 0, LL);
+  static constexpr auto create(BumpAlloc<> &alloc, llvm::Loop *LL,
+                               AffineLoopNest *AL, size_t depth) -> Loop * {
+    auto *E = alloc.create<Exit>(depth);
+    auto *L = alloc.create<Loop>(E, depth, LL, AL);
     return L;
   }
   constexpr auto addSubLoop(BumpAlloc<> &alloc, llvm::Loop *LL) -> Loop * {
     auto d = getDepth() + 1;
     auto *E = alloc.create<Exit>(d);
-    auto *L = alloc.create<Loop>(E, d, LL);
+    auto *L = alloc.create<Loop>(E, d, LL, nullptr);
     L->setParent(this);
     if (auto *eOld = exit->getSubExit()) {
       invariant(getChild() != nullptr);
@@ -218,16 +218,22 @@ public:
   constexpr auto addOuterLoop(BumpAlloc<> &alloc) -> Loop * {
     // NOTE: we need to correctly set depths later
     auto *E = alloc.create<Exit>(0);
-    auto *L = alloc.create<Loop>(E, 0, llvmLoop->getParentLoop());
+    auto *L =
+      alloc.create<Loop>(E, 0, llvmLoop->getParentLoop(), getAffineLoop());
     setParent(L);
     invariant(getNextLoop() == nullptr);
     E->setSubExit(exit);
     return L;
   }
+  constexpr void addNextLoop(Loop *L) {
+    invariant(exit->getNextLoop() == nullptr);
+    invariant(getOuterLoop() == nullptr);
+    exit->setNextLoop(L);
+  }
   constexpr auto addNextLoop(BumpAlloc<> &alloc, llvm::Loop *LL) -> Loop * {
     auto d = getDepth() + 1;
     auto *E = alloc.create<Exit>(d);
-    auto *L = alloc.create<Loop>(E, d, LL);
+    auto *L = alloc.create<Loop>(E, d, LL, nullptr);
     invariant(exit->getNextLoop() == nullptr);
     exit->setNextLoop(L);
     if (auto *p = getOuterLoop()) {
@@ -243,6 +249,9 @@ public:
   constexpr void truncate() {
     // TODO: we use the current loop depth, and set the AffineLoopNest
     // and all ArrayRefs accordingly.
+  }
+  [[nodiscard]] constexpr auto getAffineLoop() const -> AffineLoopNest * {
+    return affineLoop;
   }
 };
 constexpr void Exit::setNextLoop(Loop *L) { setChild(L); }

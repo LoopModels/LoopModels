@@ -142,31 +142,41 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
     }
     return nullptr;
   }
+  struct InteriorSummary {
+    Loop *loop{nullptr};
+    size_t numRejected;
+    constexpr InteriorSummary(Loop *loop, size_t numRejected)
+      : loop(loop), numRejected(numRejected) {}
+    constexpr InteriorSummary(size_t numRejected) : numRejected(numRejected) {}
+    constexpr auto reject(size_t depth) -> bool { return depth < numRejected; }
+  };
 
   /// factored out codepath
   auto initLoopTree(llvm::Loop *LL, llvm::BasicBlock *H, llvm::BasicBlock *E,
-                    Vector<unsigned> &omega, NoWrapRewriter &nwr) -> Loop * {
+                    Vector<unsigned> &omega, NoWrapRewriter &nwr, size_t depth)
+    -> InteriorSummary {
 
     const auto *BT = getBackedgeTakenCount(*SE, LL);
-    if (llvm::isa<llvm::SCEVCouldNotCompute>(BT)) return nullptr;
+    if (llvm::isa<llvm::SCEVCouldNotCompute>(BT)) return {depth};
     auto p = allocator.checkpoint();
     NotNull<AffineLoopNest> ALN =
       AffineLoopNest::construct(allocator, LL, nwr.visit(BT), *SE);
+
     // we're at the bottom of the recursion
     // Finally, we need `H` to have a direct path to `E`.
     if (auto predMapAbridged =
           Predicate::Map::descend(allocator, instrCache, H, E, LL)) {
-      Loop *L = Loop::createTopLevel(allocator, LL);
+      Loop *L = Loop::create(allocator, LL, depth);
       // Now we need to create Addrs
       for (auto &[BB, P] : *predMapAbridged) {
         for (llvm::Instruction &J : *BB) {
           if (LL) assert(LL->contains(&J));
           if (J.mayReadFromMemory()) {
             if (auto *load = llvm::dyn_cast<llvm::LoadInst>(&J))
-              if (addRef(LT, load, omega)) return;
+              if (addRef(L, L->getExit(), LL, load, omega)) return;
           } else if (J.mayWriteToMemory())
             if (auto *store = llvm::dyn_cast<llvm::StoreInst>(&J))
-              if (addRef(LT, store, omega)) return;
+              if (addRef(L, L->getExit(), LL, store, omega)) return;
         }
       }
       // if that succeeds, we create instrs
@@ -175,10 +185,10 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
                         loopBlock.getAlloc(), registers.getNumVectorBits());
       // and convert predication to instrs
       loopMap[LL] = L;
-      return L;
+      return {L, depth};
     }
     allocator.rollback(p);
-    return nullptr;
+    return {depth};
   }
   void optimizeLoop(Loop *L) { L->truncate(); }
   /// runOnLoop
@@ -197,6 +207,12 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
   /// Here, we would also run on [A] and [B] separately.
   /// We evaluate all branches before evaluating a node itself.
   ///
+  /// On each level, we get information on how far out we can go.
+  /// E.g., building an AffineLoopNest, we may find that only up to
+  /// the inner most three loops are affine.
+  /// So we pass this information outward.
+  ///
+  ///
   /// `runOnLoop` returns `nullptr`
   /// arguments:
   /// 0. `llvm::Loop *L`: the loop we are currently processing, exterior to this
@@ -211,7 +227,8 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
   /// 4. `Vector<unsigned> &omega`: the current position within the loopnest
   auto runOnLoop(llvm::Loop *L, llvm::ArrayRef<llvm::Loop *> subLoops,
                  llvm::BasicBlock *H, llvm::BasicBlock *E,
-                 Vector<unsigned> &omega, NoWrapRewriter &nwr) -> Loop * {
+                 Vector<unsigned> &omega, NoWrapRewriter &nwr)
+    -> std::pair<Loop *, size_t> {
     size_t numSubLoops = subLoops.size();
     if (!numSubLoops) return initLoopTree(L, H, E, omega, nwr);
     Loop *chain = nullptr;
@@ -572,22 +589,22 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
   }
   // LoopTree &getLoopTree(unsigned i) { return loopTrees[i]; }
   auto getLoopTree(llvm::Loop *L) -> Loop * { return loopMap[L]; }
-  auto addRef(LoopTree &LT, LoadOrStoreInst auto *J, Vector<unsigned> &omega)
-    -> bool {
+  auto addRef(Loop *L, Node *B, llvm::Loop *LL, LoadOrStoreInst auto *J,
+              Vector<unsigned> &omega) -> bool {
     llvm::Value *ptr = J->getPointerOperand();
     // llvm::Type *type = I->getPointerOperandType();
     const llvm::SCEV *elSize = SE->getElementSize(J);
     // TODO: support top level array refs
-    if (LT.loop) {
+    if (LL) {
       if (auto *iptr = llvm::dyn_cast<llvm::Instruction>(ptr)) {
-        if (!arrayRef(LT, iptr, elSize, J, omega)) return false;
+        if (!arrayRef(L, B, LL, iptr, elSize, J, omega)) return false;
         if (ORE) [[unlikely]] {
           llvm::SmallVector<char> x;
           llvm::raw_svector_ostream os{x};
           if (llvm::isa<llvm::LoadInst>(J))
             os << "No affine representation for load: " << *J << "\n";
           else os << "No affine representation for store: " << *J << "\n";
-          remark("AddAffineLoad", LT.loop, os.str(), J);
+          remark("AddAffineLoad", LL, os.str(), J);
         }
       }
       return true;
