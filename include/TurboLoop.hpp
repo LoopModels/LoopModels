@@ -1,5 +1,6 @@
 #pragma once
 
+#include "CostModeling.hpp"
 #include "IR/Instruction.hpp"
 #include "LoopBlock.hpp"
 #include "LoopForest.hpp"
@@ -70,7 +71,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
   [[no_unique_address]] LinearProgramLoopBlock loopBlock;
   [[no_unique_address]] BumpAlloc<> allocator;
   [[no_unique_address]] Intr::Cache instrCache;
-  [[no_unique_address]] unsigned registerCount;
+  [[no_unique_address]] CostModeling::CPURegisterFile registers;
 
   /// extend number of Cols, copying A[_(0,R),_] into dest, filling new cols
   /// with 0
@@ -83,16 +84,6 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
     }
     std::swap(A, B);
   }
-
-public:
-  auto run(llvm::Function &F, llvm::FunctionAnalysisManager &AM)
-    -> llvm::PreservedAnalyses;
-  TurboLoopPass() = default;
-  TurboLoopPass(const TurboLoopPass &) = delete;
-  TurboLoopPass(TurboLoopPass &&) = default;
-  // ~TurboLoopPass() {
-  //   for (auto l : loopForests) l->~LoopTree();
-  // }
 
   /// the process of building the LoopForest has the following steps:
   /// 1. build initial forest of trees
@@ -152,6 +143,44 @@ public:
     return nullptr;
   }
 
+  /// factored out codepath
+  auto initLoopTree(llvm::Loop *LL, llvm::BasicBlock *H, llvm::BasicBlock *E,
+                    Vector<unsigned> &omega, NoWrapRewriter &nwr) -> Loop * {
+
+    const auto *BT = getBackedgeTakenCount(*SE, LL);
+    if (llvm::isa<llvm::SCEVCouldNotCompute>(BT)) return nullptr;
+    auto p = allocator.checkpoint();
+    NotNull<AffineLoopNest> ALN =
+      AffineLoopNest::construct(allocator, LL, nwr.visit(BT), *SE);
+    // we're at the bottom of the recursion
+    // Finally, we need `H` to have a direct path to `E`.
+    if (auto predMapAbridged =
+          Predicate::Map::descend(allocator, instrCache, H, E, LL)) {
+      Loop *L = Loop::createTopLevel(allocator, LL);
+      // Now we need to create Addrs
+      for (auto &[BB, P] : *predMapAbridged) {
+        for (llvm::Instruction &J : *BB) {
+          if (LL) assert(LL->contains(&J));
+          if (J.mayReadFromMemory()) {
+            if (auto *load = llvm::dyn_cast<llvm::LoadInst>(&J))
+              if (addRef(LT, load, omega)) return;
+          } else if (J.mayWriteToMemory())
+            if (auto *store = llvm::dyn_cast<llvm::StoreInst>(&J))
+              if (addRef(LT, store, omega)) return;
+        }
+      }
+      // if that succeeds, we create instrs
+      // and merge CF
+      mergeInstructions(allocator, instrCache, *predMapAbridged, TTI,
+                        loopBlock.getAlloc(), registers.getNumVectorBits());
+      // and convert predication to instrs
+      loopMap[LL] = L;
+      return L;
+    }
+    allocator.rollback(p);
+    return nullptr;
+  }
+  void optimizeLoop(Loop *L) { L->truncate(); }
   /// runOnLoop
   /// LLVM parsing:
   /// We try to produce our own internal IR from LLVM loops
@@ -179,27 +208,30 @@ public:
   /// the first sub-loop's preheader
   /// 3. `llvm::BasicBlock *E`: Exit - we need a direct path from the last
   /// sub-loop's exit block to this.
-  /// 4. `Vector<unsigned> &omegas`: the current position within the loopnest
+  /// 4. `Vector<unsigned> &omega`: the current position within the loopnest
   auto runOnLoop(llvm::Loop *L, llvm::ArrayRef<llvm::Loop *> subLoops,
                  llvm::BasicBlock *H, llvm::BasicBlock *E,
-                 Vector<unsigned> &omegas, NoWrapRewriter &nwr) -> Loop * {
+                 Vector<unsigned> &omega, NoWrapRewriter &nwr) -> Loop * {
     size_t numSubLoops = subLoops.size();
+    if (!numSubLoops) return initLoopTree(L, H, E, omega, nwr);
     Loop *chain = nullptr;
-    omegas.push_back(0);
+    omega.push_back(0);
     for (size_t i = 0; i < numSubLoops; ++i) {
       llvm::Loop *subLoop = subLoops[i];
       // first, we descend
       // TODO: we need to consider max depth of the AffineLoopNest in `lret`
       if (Loop *lret =
             runOnLoop(subLoop, subLoop->getSubLoops(), subLoop->getHeader(),
-                      subLoop->getExitingBlock(), omegas, nwr)) {
+                      subLoop->getExitingBlock(), omega, nwr)) {
         llvm::BasicBlock *subLoopPreheader = subLoop->getLoopPreheader();
         // now, we need to see if we can can chart a path from H to
         // subLoopPreheader we should build predicated IR in doing so.
+
+      } else {
       }
-      ++omegas.back();
+      ++omega.back();
     }
-    omegas.pop_back();
+    omega.pop_back();
     return nullptr;
   }
 
@@ -435,41 +467,41 @@ public:
     addSymbolic(offsets, symbolicOffsets, S, mlt);
     return blackList | blackListAllDependentLoops(S, numPeeled);
   }
-  auto arrayRef(LoopTree &LT, llvm::Instruction *ptr, const llvm::SCEV *elSize,
-                llvm::Instruction *loadOrStore, MutPtrVector<unsigned> omegas)
-    -> bool {
-    llvm::Loop *L = LT.loop;
+  auto arrayRef(Loop *L, Node *B, llvm::Loop *LL, AffineLoopNest *aln,
+                llvm::Instruction *ptr, const llvm::SCEV *elSize,
+                llvm::Instruction *loadOrStore, MutPtrVector<unsigned> omega)
+    -> Addr * {
     // code modified from
     // https://llvm.org/doxygen/Delinearization_8cpp_source.html#l00582
-    const llvm::SCEV *accessFn = SE->getSCEVAtScope(ptr, L);
+    const llvm::SCEV *accessFn = SE->getSCEVAtScope(ptr, LL);
 
     const llvm::SCEV *pb = SE->getPointerBase(accessFn);
-    const auto *basePointer = llvm::dyn_cast<llvm::SCEVUnknown>(pb);
+    const auto *arrayPtr = llvm::dyn_cast<llvm::SCEVUnknown>(pb);
     // Do not delinearize if we cannot find the base pointer.
-    if (!basePointer) {
-      if (ORE && L) [[unlikely]] {
-        remark("ArrayRefDeliniarize", LT.loop,
+    if (!arrayPtr) {
+      if (ORE && LL) [[unlikely]] {
+        remark("ArrayRefDeliniarize", LL,
                "ArrayReference failed because !basePointer\n", ptr);
       }
+      // L is invalid, so we optimize the subloops and return `nullptr`
       conditionOnLoop(L);
-      return true;
+      return nullptr;
     }
-    accessFn = SE->getMinusSCEV(accessFn, basePointer);
+    accessFn = SE->getMinusSCEV(accessFn, arrayPtr);
     llvm::SmallVector<const llvm::SCEV *, 3> subscripts, sizes;
     llvm::delinearize(*SE, accessFn, subscripts, sizes, elSize);
     size_t numDims = subscripts.size();
     invariant(numDims, sizes.size());
-    AffineLoopNest *aln = loopMap[L]->affineLoop;
     if (numDims == 0) {
-      LT.memAccesses.push_back(
-        Addr::construct(allocator, basePointer, *aln, loadOrStore, omegas));
-      ++omegas.back();
-      return false;
+      Addr *op = Addr::construct(allocator, arrayPtr, *aln, loadOrStore, omega);
+      B->insertAhead(op);
+      ++omega.back();
+      return op;
     }
     size_t numLoops{aln->getNumLoops()};
     // numLoops x arrayDim
     // IntMatrix R(numLoops, numDims);
-    size_t numPeeled = L->getLoopDepth() - numLoops;
+    size_t numPeeled = LL->getLoopDepth() - numLoops;
     // numLoops x arrayDim
     IntMatrix Rt{StridedDims{numDims, numLoops}, 0};
     llvm::SmallVector<const llvm::SCEV *, 3> symbolicOffsets;
@@ -496,16 +528,16 @@ public:
       // need to condition on loop
       // remove the numExtraLoopsToPeel from Rt
       // that is, we want to move Rt(_,_(end-numExtraLoopsToPeel,end))
-      // to would this code below actually be expected to boost
+      // would this code below actually be expected to boost
       // performance? if
       // (Bt.numCol()+numExtraLoopsToPeel>Bt.rowStride())
       // 	Bt.resize(Bt.numRow(),Bt.numCol(),Bt.numCol()+numExtraLoopsToPeel);
-      // order of loops in Rt is innermost -> outermost
+      // order of loops in Rt is outermost->innermost
       size_t remainingLoops = numLoops - numExtraLoopsToPeel;
-      llvm::Loop *P = L;
+      llvm::Loop *P = LL;
       for (size_t i = 1; i < remainingLoops; ++i) P = P->getParentLoop();
       // remove
-      conditionOnLoop(P->getParentLoop());
+      conditionOnLoop(loopMap[P->getParentLoop()]);
       for (size_t i = 0; i < numExtraLoopsToPeel; ++i) {
         P = P->getParentLoop();
         if (allZero(Rt(_, i))) continue;
@@ -524,22 +556,22 @@ public:
         }
       }
     }
-    LT.memAccesses.push_back(
-      Addr::construct(allocator, basePointer, *aln, loadOrStore,
-                      Rt(_, _(numExtraLoopsToPeel, end)),
-                      {std::move(sizes), std::move(symbolicOffsets)}, coffsets,
-                      offsMat.data(), omegas));
-    ++omegas.back();
+    Addr *op = Addr::construct(allocator, arrayPtr, *aln, loadOrStore,
+                               Rt(_, _(numExtraLoopsToPeel, end)),
+                               {std::move(sizes), std::move(symbolicOffsets)},
+                               coffsets, offsMat.data(), omega);
+    B->insertAhead(op);
+    ++omega.back();
     if (ORE) [[unlikely]] {
       llvm::SmallVector<char> x;
       llvm::raw_svector_ostream os{x};
-      os << "Found ref: " << *LT.memAccesses.back();
-      remark("AffineRef", LT.loop, os.str());
+      os << "Found ref: " << *op;
+      remark("AffineRef", LL, os.str());
     }
-    return false;
+    return op;
   }
   // LoopTree &getLoopTree(unsigned i) { return loopTrees[i]; }
-  auto getLoopTree(llvm::Loop *L) -> LoopTree * { return loopMap[L]; }
+  auto getLoopTree(llvm::Loop *L) -> Loop * { return loopMap[L]; }
   auto addRef(LoopTree &LT, LoadOrStoreInst auto *J, Vector<unsigned> &omega)
     -> bool {
     llvm::Value *ptr = J->getPointerOperand();
@@ -586,7 +618,7 @@ public:
     aset<llvm::BasicBlock *> visited{allocator};
     for (auto &pair : map) visit(LT, map, omega, visited, pair.first);
   }
-  // we fill omegas, we have loop pos only, not shifts
+  // we fill omega, we have loop pos only, not shifts
   // pR: 0
   // pL: 0
   // pL: 0
@@ -666,55 +698,58 @@ public:
   //
   // approach: remove LoopIndex, and all loops that follow, unless it is
   // first in which case, just remove LoopIndex
-  void conditionOnLoop(llvm::Loop *L) { conditionOnLoop(loopMap[L]); }
-  void conditionOnLoop(LoopTree *LT) { // NOLINT(misc-no-recursion)
-    if (!LT->parentLoop) return;
-    LoopTree &PT = *LT->parentLoop;
-    size_t numLoops = LT->getNumLoops();
-    for (auto ST : *LT) peelOuterLoops(*ST, numLoops);
+  // void conditionOnLoop(llvm::Loop *L) { conditionOnLoop(loopMap[L]); }
+  // void conditionOnLoop(LoopTree *LT) { // NOLINT(misc-no-recursion)
+  //   if (!LT->parentLoop) return;
+  //   LoopTree &PT = *LT->parentLoop;
+  //   size_t numLoops = LT->getNumLoops();
+  //   for (auto ST : *LT) peelOuterLoops(*ST, numLoops);
 
-    LT->parentLoop = nullptr; // LT is now top of the tree
-    loopForests.push_back(LT);
-    llvm::SmallVector<NotNull<LoopTree>> &friendLoops = PT.subLoops;
-    if (friendLoops.front() != LT) {
-      // we're cutting off the front
-      size_t numFriendLoops = friendLoops.size();
-      assert(numFriendLoops);
-      size_t loopIndex = 0;
-      for (size_t i = 1; i < numFriendLoops; ++i) {
-        if (friendLoops[i] == LT) {
-          loopIndex = i;
-          break;
-        }
-      }
-      assert(loopIndex);
-      size_t j = loopIndex + 1;
-      if (j != numFriendLoops) {
-        // we have some remaining paths we split off
-        llvm::SmallVector<NotNull<LoopTree>> tmp;
-        tmp.reserve(numFriendLoops - j);
-        // for paths, we're dropping LT
-        // thus, our paths are paths(_(0,j)), paths(_(j,end))
-        llvm::SmallVector<Predicate::Map> paths;
-        paths.reserve(numFriendLoops - loopIndex);
-        for (size_t i = j; i < numFriendLoops; ++i) {
-          peelOuterLoops(*friendLoops[i], numLoops - 1);
-          tmp.push_back(friendLoops[i]);
-          paths.push_back(std::move(PT.paths[i]));
-        }
-        paths.push_back(std::move(PT.paths[numFriendLoops]));
-        auto *newTree =
-          new (allocator) LoopTree(std::move(tmp), std::move(paths));
-        loopForests.push_back(newTree);
-        // TODO: split paths
-      }
-      friendLoops.truncate(loopIndex);
-      PT.paths.truncate(j);
-    } else {
-      friendLoops.erase(friendLoops.begin());
-      PT.paths.erase(PT.paths.begin());
-    }
-    conditionOnLoop(&PT);
+  //   LT->parentLoop = nullptr; // LT is now top of the tree
+  //   loopForests.push_back(LT);
+  //   llvm::SmallVector<NotNull<LoopTree>> &friendLoops = PT.subLoops;
+  //   if (friendLoops.front() != LT) {
+  //     // we're cutting off the front
+  //     size_t numFriendLoops = friendLoops.size();
+  //     assert(numFriendLoops);
+  //     size_t loopIndex = 0;
+  //     for (size_t i = 1; i < numFriendLoops; ++i) {
+  //       if (friendLoops[i] == LT) {
+  //         loopIndex = i;
+  //         break;
+  //       }
+  //     }
+  //     assert(loopIndex);
+  //     size_t j = loopIndex + 1;
+  //     if (j != numFriendLoops) {
+  //       // we have some remaining paths we split off
+  //       llvm::SmallVector<NotNull<LoopTree>> tmp;
+  //       tmp.reserve(numFriendLoops - j);
+  //       // for paths, we're dropping LT
+  //       // thus, our paths are paths(_(0,j)), paths(_(j,end))
+  //       llvm::SmallVector<Predicate::Map> paths;
+  //       paths.reserve(numFriendLoops - loopIndex);
+  //       for (size_t i = j; i < numFriendLoops; ++i) {
+  //         peelOuterLoops(*friendLoops[i], numLoops - 1);
+  //         tmp.push_back(friendLoops[i]);
+  //         paths.push_back(std::move(PT.paths[i]));
+  //       }
+  //       paths.push_back(std::move(PT.paths[numFriendLoops]));
+  //       auto *newTree =
+  //         new (allocator) LoopTree(std::move(tmp), std::move(paths));
+  //       loopForests.push_back(newTree);
+  //       // TODO: split paths
+  //     }
+  //     friendLoops.truncate(loopIndex);
+  //     PT.paths.truncate(j);
+  //   } else {
+  //     friendLoops.erase(friendLoops.begin());
+  //     PT.paths.erase(PT.paths.begin());
+  //   }
+  //   conditionOnLoop(&PT);
+  // }
+  void conditionOnLoop(Loop *L) {
+    L->forEachSubLoop([this](Loop *L) { optimizeLoop(L); });
   }
   auto isLoopDependent(llvm::Value *v) const -> bool {
     return !std::ranges::all_of(
@@ -740,5 +775,14 @@ public:
   }
   // void buildInstructionGraph(LoopTree &root) {
   //     // predicates
+  // }
+public:
+  auto run(llvm::Function &F, llvm::FunctionAnalysisManager &AM)
+    -> llvm::PreservedAnalyses;
+  TurboLoopPass() = default;
+  TurboLoopPass(const TurboLoopPass &) = delete;
+  TurboLoopPass(TurboLoopPass &&) = default;
+  // ~TurboLoopPass() {
+  //   for (auto l : loopForests) l->~LoopTree();
   // }
 };

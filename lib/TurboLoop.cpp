@@ -61,6 +61,7 @@ TurboLoopPass::run(llvm::Function &F, llvm::FunctionAnalysisManager &FAM)
   LI = &FAM.getResult<llvm::LoopAnalysis>(F);
   SE = &FAM.getResult<llvm::ScalarEvolutionAnalysis>(F);
   ORE = &FAM.getResult<llvm::OptimizationRemarkEmitterAnalysis>(F);
+  registers = CostModeling::CPURegisterFile(F.getContext(), *TTI);
   if (!ORE->enabled()) ORE = nullptr; // cheaper check
   if (ORE) {
     // llvm::OptimizationRemarkAnalysis analysis{remarkAnalysis("RegisterCount",
@@ -71,7 +72,7 @@ TurboLoopPass::run(llvm::Function &F, llvm::FunctionAnalysisManager &FAM)
 
     remark("ScalarRegisterCount", *LI->begin(), str);
     str = llvm::formatv("there are {0} vector registers",
-                        TTI->getNumberOfRegisters(1));
+                        registers.getNumVectorBits());
     remark("VectorRegisterCount", *LI->begin(), str);
   }
   // Builds the loopForest, constructing predicate chains and loop nests

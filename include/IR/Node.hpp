@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Loops.hpp"
 #include "Utilities/Allocators.hpp"
 #include <Math/Array.hpp>
 #include <cstdint>
@@ -117,6 +118,12 @@ public:
   constexpr void setChild(Node *n) { child = n; }
   constexpr void setParent(Node *n) { parent = n; }
   constexpr void setDepth(unsigned d) { depth = d; }
+  constexpr void insertAhead(Node *d) {
+    d->setNext(this);
+    d->setPrev(prev);
+    if (prev) prev->setNext(d);
+    prev = d;
+  }
 };
 
 class Loop;
@@ -144,9 +151,12 @@ public:
 /// exit is the associated exit block
 class Loop : public Node {
   Exit *exit;
+  llvm::Loop *llvmLoop{nullptr};
+  AffineLoopNest *affineLoop{nullptr};
 
 public:
-  Loop(Exit *e, unsigned d) : Node(VK_Loop, d), exit(e) {
+  Loop(Exit *e, unsigned d, llvm::Loop *LL)
+    : Node(VK_Loop, d), exit(e), llvmLoop(LL) {
     e->setParent(this);
     // we also initialize prev/next, adding instrs will push them
     e->setPrev(this);
@@ -187,15 +197,16 @@ public:
       f(c->getExit());
     }
   }
-  static constexpr auto createTopLevel(BumpAlloc<> &alloc) -> Loop * {
+  static constexpr auto createTopLevel(BumpAlloc<> &alloc, llvm::Loop *LL)
+    -> Loop * {
     auto *E = alloc.create<Exit>(0);
-    auto *L = alloc.create<Loop>(E, 0);
+    auto *L = alloc.create<Loop>(E, 0, LL);
     return L;
   }
-  constexpr auto addSubLoop(BumpAlloc<> &alloc) -> Loop * {
+  constexpr auto addSubLoop(BumpAlloc<> &alloc, llvm::Loop *LL) -> Loop * {
     auto d = getDepth() + 1;
     auto *E = alloc.create<Exit>(d);
-    auto *L = alloc.create<Loop>(E, d);
+    auto *L = alloc.create<Loop>(E, d, LL);
     L->setParent(this);
     if (auto *eOld = exit->getSubExit()) {
       invariant(getChild() != nullptr);
@@ -207,16 +218,16 @@ public:
   constexpr auto addOuterLoop(BumpAlloc<> &alloc) -> Loop * {
     // NOTE: we need to correctly set depths later
     auto *E = alloc.create<Exit>(0);
-    auto *L = alloc.create<Loop>(E, 0);
+    auto *L = alloc.create<Loop>(E, 0, llvmLoop->getParentLoop());
     setParent(L);
     invariant(getNextLoop() == nullptr);
     E->setSubExit(exit);
     return L;
   }
-  constexpr auto addNextLoop(BumpAlloc<> &alloc) -> Loop * {
+  constexpr auto addNextLoop(BumpAlloc<> &alloc, llvm::Loop *LL) -> Loop * {
     auto d = getDepth() + 1;
     auto *E = alloc.create<Exit>(d);
-    auto *L = alloc.create<Loop>(E, d);
+    auto *L = alloc.create<Loop>(E, d, LL);
     invariant(exit->getNextLoop() == nullptr);
     exit->setNextLoop(L);
     if (auto *p = getOuterLoop()) {
@@ -225,6 +236,13 @@ public:
       p->getExit()->setSubExit(E);
     }
     return L;
+  }
+  [[nodiscard]] constexpr auto getLLVMLoop() const -> llvm::Loop * {
+    return llvmLoop;
+  }
+  constexpr void truncate() {
+    // TODO: we use the current loop depth, and set the AffineLoopNest
+    // and all ArrayRefs accordingly.
   }
 };
 constexpr void Exit::setNextLoop(Loop *L) { setChild(L); }

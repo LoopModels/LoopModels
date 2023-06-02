@@ -34,7 +34,7 @@
 
 namespace CostModeling {
 
-struct CPURegisterFile {
+class CPURegisterFile {
   [[no_unique_address]] uint8_t maximumVectorWidth;
   [[no_unique_address]] uint8_t numVectorRegisters;
   [[no_unique_address]] uint8_t numGeneralPurposeRegisters;
@@ -42,14 +42,13 @@ struct CPURegisterFile {
 
   // hacky check for has AVX512
   static inline auto hasAVX512(llvm::LLVMContext &C,
-                               llvm::TargetTransformInfo &TTI) -> bool {
+                               const llvm::TargetTransformInfo &TTI) -> bool {
     return TTI.isLegalMaskedExpandLoad(
       llvm::FixedVectorType::get(llvm::Type::getDoubleTy(C), 8));
   }
 
-  static auto estimateNumPredicateRegisters(llvm::LLVMContext &C,
-                                            llvm::TargetTransformInfo &TTI)
-    -> uint8_t {
+  static auto estimateNumPredicateRegisters(
+    llvm::LLVMContext &C, const llvm::TargetTransformInfo &TTI) -> uint8_t {
     if (TTI.supportsScalableVectors()) return 8;
     // hacky check for AVX512
     if (hasAVX512(C, TTI)) return 7; // 7, because k0 is reserved for unmasked
@@ -57,7 +56,7 @@ struct CPURegisterFile {
   }
   // returns vector width in bits
   static auto estimateMaximumVectorWidth(llvm::LLVMContext &C,
-                                         llvm::TargetTransformInfo &TTI)
+                                         const llvm::TargetTransformInfo &TTI)
     -> uint8_t {
     uint8_t twiceMaxVectorWidth = 2;
     auto *f32 = llvm::Type::getFloatTy(C);
@@ -73,11 +72,23 @@ struct CPURegisterFile {
     }
     return 16 * twiceMaxVectorWidth;
   }
-  CPURegisterFile(llvm::LLVMContext &C, llvm::TargetTransformInfo &TTI) {
+
+public:
+  CPURegisterFile(llvm::LLVMContext &C, const llvm::TargetTransformInfo &TTI) {
     maximumVectorWidth = estimateMaximumVectorWidth(C, TTI);
     numVectorRegisters = TTI.getNumberOfRegisters(true);
     numGeneralPurposeRegisters = TTI.getNumberOfRegisters(false);
     numPredicateRegisters = estimateNumPredicateRegisters(C, TTI);
+  }
+  constexpr auto getNumVectorBits() const -> uint8_t {
+    return maximumVectorWidth;
+  }
+  constexpr auto getNumVector() const -> uint8_t { return numVectorRegisters; }
+  constexpr auto getNumScalar() const -> uint8_t {
+    return numGeneralPurposeRegisters;
+  }
+  constexpr auto getNumPredicate() const -> uint8_t {
+    return numPredicateRegisters;
   }
 };
 // struct CPUExecutionModel {};

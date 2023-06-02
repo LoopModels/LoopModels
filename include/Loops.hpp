@@ -328,7 +328,7 @@ class AffineLoopNest : public BasePolyhedra<false, true, true, AffineLoopNest> {
   [[nodiscard]] constexpr auto getSymCapacity() const -> size_t {
     return numDynSymbols + numLoops;
   }
-
+  // llvm::Loop *L;
   unsigned int numConstraints;
   unsigned int numLoops;
   unsigned int numDynSymbols;

@@ -1,5 +1,4 @@
 #pragma once
-#include "Containers/TinyVector.hpp"
 #include "DependencyPolyhedra.hpp"
 #include "Schedule.hpp"
 #include <Loops.hpp>
@@ -94,7 +93,7 @@ class Dependence {
   [[no_unique_address]] NotNull<Simplex> dependenceBounding;
   [[no_unique_address]] NotNull<Addr> in;
   [[no_unique_address]] NotNull<Addr> out;
-  [[no_unique_address]] Dependence *next;
+  [[no_unique_address]] Dependence *next{nullptr};
   // the upper bit of satLvl indicates whether the satisfaction is because of
   // conditional independence (value = 0), or whether it was because of offsets
   // when solving the linear program (value = 1).
@@ -102,25 +101,25 @@ class Dependence {
                                                       255, 255, 255};
   [[no_unique_address]] bool forward;
 
-  static auto timelessCheck(NotNull<DepPoly> dxy, NotNull<Addr> x,
-                            NotNull<Addr> y,
+  static auto timelessCheck(BumpAlloc<> &alloc, NotNull<DepPoly> dxy,
+                            NotNull<Addr> x, NotNull<Addr> y,
                             std::array<NotNull<Simplex>, 2> pair, bool isFwd)
-    -> Dependence {
+    -> Dependence * {
     const size_t numLambda = dxy->getNumLambda();
     invariant(dxy->getTimeDim(), unsigned(0));
     if (isFwd) {
       pair[0]->truncateVars(1 + numLambda + dxy->getNumScheduleCoef());
-      return Dependence{dxy, pair, {x, y}, true};
+      return alloc.create<Dependence>(dxy, pair, x, y, true);
     }
     pair[1]->truncateVars(1 + numLambda + dxy->getNumScheduleCoef());
     std::swap(pair[0], pair[1]);
-    return Dependence{dxy, pair, {y, x}, false};
+    return alloc.create<Dependence>(dxy, pair, y, x, false);
   }
   static auto timelessCheck(BumpAlloc<> &alloc, NotNull<DepPoly> dxy,
                             NotNull<Addr> x, NotNull<Addr> y,
                             std::array<NotNull<Simplex>, 2> pair)
-    -> Dependence {
-    return timelessCheck(dxy, x, y, pair,
+    -> Dependence * {
+    return timelessCheck(alloc, dxy, x, y, pair,
                          checkDirection(alloc, pair, x, y, dxy->getNumLambda(),
                                         dxy->getNumVar() + 1));
     ;
@@ -130,8 +129,7 @@ class Dependence {
   // time
   static auto timeCheck(BumpAlloc<> &alloc, NotNull<DepPoly> dxy,
                         NotNull<Addr> x, NotNull<Addr> y,
-                        std::array<NotNull<Simplex>, 2> pair)
-    -> TinyVector<Dependence, 2> {
+                        std::array<NotNull<Simplex>, 2> pair) -> Dependence * {
     // copy backup
     std::array<NotNull<Simplex>, 2> farkasBackups{pair[0]->copy(alloc),
                                                   pair[1]->copy(alloc)};
@@ -153,9 +151,10 @@ class Dependence {
       std::swap(pair[0], pair[1]);
     }
     pair[0]->truncateVars(1 + numLambda + numScheduleCoefs);
-    auto dep0 = Dependence{dxy->copy(alloc), pair, {in, out}, isFwd};
+    auto *dep0 =
+      alloc.create<Dependence>(dxy->copy(alloc), pair, in, out, isFwd);
     invariant(out->getNumLoops() + in->getNumLoops(),
-              dep0.getNumPhiCoefficients());
+              dep0->getNumPhiCoefficients());
     // pair is invalid
     const size_t timeDim = dxy->getTimeDim(),
                  numVar = 1 + dxy->getNumVar() - timeDim;
@@ -166,7 +165,7 @@ class Dependence {
 
     // dep0.depPoly->setTimeDim(0);
     invariant(out->getNumLoops() + in->getNumLoops(),
-              dep0.getNumPhiCoefficients());
+              dep0->getNumPhiCoefficients());
     // now we need to check the time direction for all times
     // anything approaching 16 time dimensions would be absolutely
     // insane
@@ -237,10 +236,11 @@ class Dependence {
     // dxy->truncateVars(numVar);
     // dxy->setTimeDim(0);
     farkasBackups[0]->truncateVars(1 + numLambda + numScheduleCoefs);
-    auto dep1 = Dependence{dxy, farkasBackups, {out, in}, !isFwd};
+    auto *dep1 = alloc.create<Dependence>(dxy, farkasBackups, out, in, !isFwd);
     invariant(out->getNumLoops() + in->getNumLoops(),
-              dep0.getNumPhiCoefficients());
-    return {dep0, dep1};
+              dep0->getNumPhiCoefficients());
+    dep0->setNext(dep1);
+    return dep0;
   }
 
 public:
@@ -256,12 +256,12 @@ public:
   [[nodiscard]] constexpr auto output() const -> NotNull<const Addr> {
     return out;
   }
+  constexpr void setNext(Dependence *n) { next = n; }
   constexpr Dependence(NotNull<DepPoly> poly,
                        std::array<NotNull<Simplex>, 2> depSatBound,
-                       std::array<NotNull<Addr>, 2> inOut, bool fwd)
+                       NotNull<Addr> i, NotNull<Addr> o, bool fwd)
     : depPoly(poly), dependenceSatisfaction(depSatBound[0]),
-      dependenceBounding(depSatBound[1]), in(inOut[0]), out(inOut[1]),
-      forward(fwd) {}
+      dependenceBounding(depSatBound[1]), in(i), out(o), forward(fwd) {}
   constexpr auto stashSatLevel() -> Dependence & {
     assert(satLvl.back() == 255 || "satLevel overflow");
     std::copy_backward(satLvl.begin(), satLvl.end() - 1, satLvl.end());
@@ -277,6 +277,10 @@ public:
   constexpr void setSatLevelLP(uint8_t d) { satLvl.front() = uint8_t(128) | d; }
   [[nodiscard]] constexpr auto satLevel() const -> uint8_t {
     return satLvl.front() & uint8_t(127);
+  }
+  [[nodiscard]] constexpr auto isSat(unsigned d) const -> bool {
+    invariant(d <= 127);
+    return satLevel() <= d;
   }
   /// if true, then conditioned on the sat level,
   [[nodiscard]] constexpr auto isCondIndep() const -> bool {
@@ -688,7 +692,7 @@ public:
   }
 
   static auto check(BumpAlloc<> &alloc, NotNull<Addr> x, NotNull<Addr> y)
-    -> TinyVector<Dependence, 2> {
+    -> Dependence * {
     // TODO: implement gcd test
     // if (x.gcdKnownIndependent(y)) return {};
     DepPoly *dxy{DepPoly::dependence(alloc, x, y)};
@@ -701,11 +705,11 @@ public:
     // discard the program variables x then y
     std::array<NotNull<Simplex>, 2> pair(dxy->farkasPair(alloc));
     if (dxy->getTimeDim()) return timeCheck(alloc, dxy, x, y, pair);
-    return {timelessCheck(alloc, dxy, x, y, pair)};
+    return timelessCheck(alloc, dxy, x, y, pair);
   }
   // reload store `x`
   static auto reload(BumpAlloc<> &alloc, NotNull<Addr> store)
-    -> std::pair<NotNull<Addr>, Dependence> {
+    -> std::pair<NotNull<Addr>, Dependence *> {
     NotNull<DepPoly> dxy{DepPoly::self(alloc, store)};
     std::array<NotNull<Simplex>, 2> pair(dxy->farkasPair(alloc));
     NotNull<Addr> load = store->reload(alloc);
@@ -713,7 +717,7 @@ public:
     // store -> store dependence.
     // when we add new load -> store edges for each store->store,
     // that will cover the time-dependence
-    return {load, timelessCheck(dxy, store, load, pair, true)};
+    return {load, timelessCheck(alloc, dxy, store, load, pair, true)};
   }
   constexpr auto replaceInput(NotNull<Addr> newIn) -> Dependence {
     Dependence edge = *this;

@@ -61,9 +61,8 @@ class ScheduledNode {
   [[no_unique_address]] Addr *store; // linked list to loads
   [[no_unique_address]] NotNull<AffineLoopNest> loopNest;
   [[no_unique_address]] ScheduledNode *next{nullptr};
-  [[no_unique_address]] ScheduledNode *component{nullptr};
-  [[no_unique_address]] Dependence *depActive{nullptr};
-  [[no_unique_address]] Dependence *depInactive{nullptr};
+  [[no_unique_address]] ScheduledNode *component{nullptr}; // SCC cycle
+  [[no_unique_address]] Dependence *dep{nullptr};
   [[no_unique_address]] int64_t *offsets{nullptr};
   [[no_unique_address]] uint32_t phiOffset{0};   // used in LoopBlock
   [[no_unique_address]] uint32_t omegaOffset{0}; // used in LoopBlock
@@ -140,12 +139,18 @@ public:
   }
   // for each input node, i.e. for each where this is the output
   constexpr void forEachInput(const auto &f) {
-    for (Dependence *d = depActive; d; d = d->getNext())
-      f(d->input()->getNode());
+    for (Dependence *d = dep; d; d = d->getNext()) f(d->input()->getNode());
   }
   constexpr void forEachInput(const auto &f) const {
-    for (Dependence *d = depActive; d; d = d->getNext())
-      f(d->input()->getNode());
+    for (Dependence *d = dep; d; d = d->getNext()) f(d->input()->getNode());
+  }
+  constexpr void forEachInput(unsigned depth, const auto &f) {
+    for (Dependence *d = dep; d; d = d->getNext())
+      if (!d->isSat(depth)) f(d->input()->getNode());
+  }
+  constexpr void forEachInput(unsigned depth, const auto &f) const {
+    for (Dependence *d = dep; d; d = d->getNext())
+      if (!d->isSat(depth)) f(d->input()->getNode());
   }
   [[nodiscard]] constexpr auto getSchedule() -> AffineSchedule { return {mem}; }
   [[nodiscard]] constexpr auto getLoopNest() const
@@ -364,20 +369,22 @@ public:
     visited.clear();
     allocator.reset();
   }
+  [[nodiscard]] constexpr auto getAlloc() -> BumpAlloc<> & { return allocator; }
   [[nodiscard]] constexpr auto numVerticies() const -> size_t {
     return nodes.size();
   }
   [[nodiscard]] constexpr auto getVerticies() -> MutPtrVector<ScheduledNode> {
     return nodes;
   }
-  [[nodiscard]] auto getVerticies() const -> PtrVector<ScheduledNode> {
+  [[nodiscard]] constexpr auto getVerticies() const
+    -> PtrVector<ScheduledNode> {
     return nodes;
   }
-  [[nodiscard]] auto getMemoryAccesses() const -> PtrVector<MemoryAccess *> {
+  [[nodiscard]] constexpr auto getAddr() const -> const Addr * {
     return memory;
   }
-  auto getMem() -> MutPtrVector<MemoryAccess *> { return memory; }
-  auto getMemoryAccess(size_t i) -> MemoryAccess * { return memory[i]; }
+  constexpr auto getAddr() -> Addr * { return memory; }
+
   auto getNode(size_t i) -> ScheduledNode & { return nodes[i]; }
   [[nodiscard]] auto getNode(size_t i) const -> const ScheduledNode & {
     return nodes[i];
@@ -424,15 +431,11 @@ public:
   /// happens after the load C(m,n) [ i = x-1, j = y], and
   /// happens after the load C(m,n) [ i = x, j = y-1]
   ///
-  static constexpr void pushToEdgeVector(Vector<Dependence> &vec,
-                                         Dependence dep) {
-    vec.push_back(dep.addEdge(vec.size()));
-  }
-  void addEdge(MemoryAccess *mai, MemoryAccess *maj) {
+  void addEdge(NotNull<Addr> mai, NotNull<Addr> maj) {
     // note, axes should be fully delinearized, so should line up
     // as a result of preprocessing.
     auto d = Dependence::check(allocator, mai, maj);
-    for (auto &i : d) pushToEdgeVector(edges, i);
+    __builtin_trap();
   }
   /// fills all the edges between memory accesses, checking for
   /// dependencies.

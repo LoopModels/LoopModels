@@ -171,6 +171,7 @@ struct MergingCost {
   // make sure the cost modeling reflects the actual code we're generating.
   template <typename S>
   auto mergeOperands(Instruction *A, Instruction *B, S selects) {
+    // TODO: does this update the predicates?
     // now, we need to check everything connected to O and I in the mergeMap
     // to see if any of them need to be updated.
     // TODO: we want to estimate select cost
@@ -195,12 +196,12 @@ struct MergingCost {
     MutPtrVector<Instruction *> operandsB = B->getOperands();
     size_t numOperands = operandsA.size();
     assert(numOperands == operandsB.size());
+    /// associate ops means `f(a, b) == f(b, a)`
     uint8_t associativeOpsFlag = B->associativeOperandsFlag();
     // For example,
     // we keep track of which operands we've already merged,
     // f(a, b), f(b, b)
     // we can't merge b twice!
-    // size_t numSelects = numOperands;
     for (size_t i = 0; i < numOperands; ++i) {
       auto *opA = A->getOperand(i);
       auto *opB = B->getOperand(i);
@@ -378,22 +379,19 @@ inline void mergeInstructions(BumpAlloc<> &alloc, Instruction::Cache &cache,
                               llvm::TargetTransformInfo &TTI,
                               BumpAlloc<> &tAlloc, unsigned int vectorBits) {
   if (!predMap.isDivergent()) return;
+  auto p = tAlloc.scope();
   // there is a divergence in the control flow that we can ideally merge
   amap<std::pair<Instruction::Intrinsic, llvm::Type *>,
        BumpPtrVector<std::pair<Instruction *, Predicate::Set>>>
     opMap{tAlloc};
   llvm::SmallVector<MergingCost *> mergingCosts;
   mergingCosts.emplace_back(alloc);
-  for (auto &pred : predMap) {
-    for (llvm::Instruction &lI : *pred.first) {
-      if (Instruction *J = cache[&lI]) {
+  for (auto &pred : predMap)
+    for (llvm::Instruction &lI : *pred.first)
+      if (Instruction *J = cache[&lI])
         mergeInstructions(tAlloc, cache, predMap, TTI, vectorBits, opMap,
                           mergingCosts, J, pred.first, pred.second);
-      }
-    }
-  }
-  // TODO:
-  // pick the minimum cost mergingCost
+  // TODO: pick the minimum cost mergingCost
   MergingCost *minCostStrategy = *std::ranges::min_element(
     mergingCosts, [](auto *a, auto *b) { return *a < *b; });
   // and then apply it to the instructions.
@@ -409,8 +407,6 @@ inline void mergeInstructions(BumpAlloc<> &alloc, Instruction::Cache &cache,
     A->replaceAllUsesOf(B)->setOperands(operands);
     reMap.remapFromTo(B, A);
   }
-  // free memory
-  tAlloc.reset();
 }
 
 // NOLINTNEXTLINE(misc-no-recursion)

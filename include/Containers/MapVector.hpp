@@ -11,9 +11,9 @@ template <class K, class V> class MapVector {
 public:
   constexpr MapVector(BumpAlloc<> &alloc) : map(alloc), vector(alloc) {}
   MapVector(const MapVector &) = default;
-  MapVector(MapVector &&) = default;
-  constexpr MapVector &operator=(const MapVector &) = default;
-  constexpr MapVector &operator=(MapVector &&) = default;
+  MapVector(MapVector &&) noexcept = default;
+  constexpr auto operator=(const MapVector &) -> MapVector & = default;
+  constexpr auto operator=(MapVector &&) noexcept -> MapVector & = default;
   constexpr auto find(const K &key) const {
     auto f = map.find(key);
     if (f == map.end()) return vector.end();
@@ -32,7 +32,7 @@ public:
   constexpr auto rend() const { return vector.rend(); }
   constexpr auto rbegin() { return vector.rbegin(); }
   constexpr auto rend() { return vector.rend(); }
-  constexpr auto &operator[](const K &key) {
+  constexpr auto operator[](const K &key) -> V & {
     auto f = map.find(key);
     if (f == map.end()) {
       auto i = vector.size();
@@ -44,10 +44,10 @@ public:
   }
   constexpr auto size() const { return vector.size(); }
   constexpr auto empty() const { return vector.empty(); }
-  constexpr auto &back() { return vector.back(); }
-  constexpr auto &back() const { return vector.back(); }
-  constexpr auto &front() { return vector.front(); }
-  constexpr auto &front() const { return vector.front(); }
+  constexpr auto back() -> auto & { return vector.back(); }
+  constexpr auto back() const -> auto & { return vector.back(); }
+  constexpr auto front() -> auto & { return vector.front(); }
+  constexpr auto front() const -> auto & { return vector.front(); }
   constexpr void insert(const K &key, const V &value) {
     auto f = map.find(key);
     if (f == map.end()) {
@@ -72,5 +72,5 @@ public:
     map.clear();
     vector.clear();
   }
-  constexpr size_t count(const K &key) const { return map.count(key); }
+  constexpr auto count(const K &key) const -> size_t { return map.count(key); }
 };
