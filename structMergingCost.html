@@ -115,9 +115,8 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>findMerge</b> (Instru
 <tr class="memitem:a93bb6f4ce2a49227aaa3f947a901099e"><td class="memItemLeft" align="right" valign="top"><a id="a93bb6f4ce2a49227aaa3f947a901099e"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>cycleUpdateMerged</b> (<a class="el" href="structaset.html">aset</a>&lt; Instruction * &gt; *ancestors, Instruction *E, Instruction *H)</td></tr>
 <tr class="separator:a93bb6f4ce2a49227aaa3f947a901099e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a58eeaa3cc22b3501e5be0d3a7dd162e6"><td class="memTemplParams" colspan="2"><a id="a58eeaa3cc22b3501e5be0d3a7dd162e6"></a>
-template&lt;typename S &gt; </td></tr>
-<tr class="memitem:a58eeaa3cc22b3501e5be0d3a7dd162e6"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>mergeOperands</b> (Instruction *A, Instruction *B, S selects)</td></tr>
+<tr class="memitem:a58eeaa3cc22b3501e5be0d3a7dd162e6"><td class="memTemplParams" colspan="2">template&lt;typename S &gt; </td></tr>
+<tr class="memitem:a58eeaa3cc22b3501e5be0d3a7dd162e6"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="structMergingCost.html#a58eeaa3cc22b3501e5be0d3a7dd162e6">mergeOperands</a> (Instruction *A, Instruction *B, S selects)</td></tr>
 <tr class="separator:a58eeaa3cc22b3501e5be0d3a7dd162e6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afc5ab77745f3d50a37f21d1adc1cd45a"><td class="memItemLeft" align="right" valign="top"><a id="afc5ab77745f3d50a37f21d1adc1cd45a"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>merge</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, llvm::TargetTransformInfo &amp;TTI, unsigned int vectorBits, Instruction *A, Instruction *B)</td></tr>
@@ -256,6 +255,51 @@ llvm::InstructionCost&#160;</td><td class="memItemRight" valign="bottom"><b>cost
 </table>
 </div><div class="memdoc">
 <p><a class="el" href="structMergingCost.html#af05a38ba5258fe216ebb8c2f36320f8d">isMerged(Instruction *I, Instruction *J) const </a>-&gt; bool returns true if <code>I</code> and <code>J</code> are merged with each other </p>
+
+</div>
+</div>
+<a id="a58eeaa3cc22b3501e5be0d3a7dd162e6"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a58eeaa3cc22b3501e5be0d3a7dd162e6">&#9670;&nbsp;</a></span>mergeOperands()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename S &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">auto MergingCost::mergeOperands </td>
+          <td>(</td>
+          <td class="paramtype">Instruction *&#160;</td>
+          <td class="paramname"><em>A</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">Instruction *&#160;</td>
+          <td class="paramname"><em>B</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">S&#160;</td>
+          <td class="paramname"><em>selects</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>associate ops means <code>f(a, b) == f(b, a)</code></p>
 
 </div>
 </div>

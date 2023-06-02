@@ -93,9 +93,12 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>input</b> (
 <tr class="memitem:a3a20fc14d98de1c7afb1517a67f4aa74"><td class="memItemLeft" align="right" valign="top"><a id="a3a20fc14d98de1c7afb1517a67f4aa74"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>output</b> () const -&gt; <a class="el" href="classNotNull.html">NotNull</a>&lt; const <a class="el" href="classAddr.html">Addr</a> &gt;</td></tr>
 <tr class="separator:a3a20fc14d98de1c7afb1517a67f4aa74"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a389d2a185983430980aa0743847af97c"><td class="memItemLeft" align="right" valign="top"><a id="a389d2a185983430980aa0743847af97c"></a>
-constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Dependence</b> (<a class="el" href="classNotNull.html">NotNull</a>&lt; <a class="el" href="classDepPoly.html">DepPoly</a> &gt; poly, std::array&lt; <a class="el" href="classNotNull.html">NotNull</a>&lt; <a class="el" href="classSimplex.html">Simplex</a> &gt;, 2 &gt; depSatBound, std::array&lt; <a class="el" href="classNotNull.html">NotNull</a>&lt; <a class="el" href="classAddr.html">Addr</a> &gt;, 2 &gt; inOut, bool fwd)</td></tr>
-<tr class="separator:a389d2a185983430980aa0743847af97c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a011539b1e8a736bbb2835b5910fe7eea"><td class="memItemLeft" align="right" valign="top"><a id="a011539b1e8a736bbb2835b5910fe7eea"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>setNext</b> (<a class="el" href="classDependence.html">Dependence</a> *n)</td></tr>
+<tr class="separator:a011539b1e8a736bbb2835b5910fe7eea"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3416da81000ed5c18b0007513f72142c"><td class="memItemLeft" align="right" valign="top"><a id="a3416da81000ed5c18b0007513f72142c"></a>
+constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Dependence</b> (<a class="el" href="classNotNull.html">NotNull</a>&lt; <a class="el" href="classDepPoly.html">DepPoly</a> &gt; poly, std::array&lt; <a class="el" href="classNotNull.html">NotNull</a>&lt; <a class="el" href="classSimplex.html">Simplex</a> &gt;, 2 &gt; depSatBound, <a class="el" href="classNotNull.html">NotNull</a>&lt; <a class="el" href="classAddr.html">Addr</a> &gt; i, <a class="el" href="classNotNull.html">NotNull</a>&lt; <a class="el" href="classAddr.html">Addr</a> &gt; o, bool fwd)</td></tr>
+<tr class="separator:a3416da81000ed5c18b0007513f72142c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad948cb2464e0af8404236d20bc03d6bc"><td class="memItemLeft" align="right" valign="top"><a id="ad948cb2464e0af8404236d20bc03d6bc"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>stashSatLevel</b> () -&gt; <a class="el" href="classDependence.html">Dependence</a> &amp;</td></tr>
 <tr class="separator:ad948cb2464e0af8404236d20bc03d6bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -108,6 +111,9 @@ constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>setSatLevel
 <tr class="memitem:a99c074b14ca9fa01eda75253832736d5"><td class="memItemLeft" align="right" valign="top"><a id="a99c074b14ca9fa01eda75253832736d5"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>satLevel</b> () const -&gt; uint8_t</td></tr>
 <tr class="separator:a99c074b14ca9fa01eda75253832736d5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af8338ec01c5530adeec5c8b63a07862e"><td class="memItemLeft" align="right" valign="top"><a id="af8338ec01c5530adeec5c8b63a07862e"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>isSat</b> (unsigned d) const -&gt; bool</td></tr>
+<tr class="separator:af8338ec01c5530adeec5c8b63a07862e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9b770acc8ce812529d0d853f6ba6b39e"><td class="memItemLeft" align="right" valign="top"><a id="a9b770acc8ce812529d0d853f6ba6b39e"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classDependence.html#a9b770acc8ce812529d0d853f6ba6b39e">isCondIndep</a> () const -&gt; bool</td></tr>
 <tr class="memdesc:a9b770acc8ce812529d0d853f6ba6b39e"><td class="mdescLeft">&#160;</td><td class="mdescRight">if true, then conditioned on the sat level, <br /></td></tr>
@@ -280,12 +286,12 @@ static auto&#160;</td><td class="memItemRight" valign="bottom"><b>checkDirection
 <tr class="memitem:ae54cf9e50ee51b2718c2a57b454a81fb"><td class="memItemLeft" align="right" valign="top"><a id="ae54cf9e50ee51b2718c2a57b454a81fb"></a>
 static auto&#160;</td><td class="memItemRight" valign="bottom"><b>checkDirection</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, const std::array&lt; <a class="el" href="classNotNull.html">NotNull</a>&lt; <a class="el" href="classSimplex.html">Simplex</a> &gt;, 2 &gt; &amp;p, <a class="el" href="classNotNull.html">NotNull</a>&lt; const <a class="el" href="classAddr.html">Addr</a> &gt; x, <a class="el" href="classNotNull.html">NotNull</a>&lt; const <a class="el" href="classAddr.html">Addr</a> &gt; y, size_t numLambda, Col nonTimeDim) -&gt; bool</td></tr>
 <tr class="separator:ae54cf9e50ee51b2718c2a57b454a81fb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad88f0b796b7a04a48fb15969a02150b7"><td class="memItemLeft" align="right" valign="top"><a id="ad88f0b796b7a04a48fb15969a02150b7"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>check</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, <a class="el" href="classNotNull.html">NotNull</a>&lt; <a class="el" href="classAddr.html">Addr</a> &gt; x, <a class="el" href="classNotNull.html">NotNull</a>&lt; <a class="el" href="classAddr.html">Addr</a> &gt; y) -&gt; <a class="el" href="classTinyVector.html">TinyVector</a>&lt; <a class="el" href="classDependence.html">Dependence</a>, 2 &gt;</td></tr>
-<tr class="separator:ad88f0b796b7a04a48fb15969a02150b7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa65f38a162caef8b26ee3d14d7f5d13c"><td class="memItemLeft" align="right" valign="top"><a id="aa65f38a162caef8b26ee3d14d7f5d13c"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>reload</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, <a class="el" href="classNotNull.html">NotNull</a>&lt; <a class="el" href="classAddr.html">Addr</a> &gt; store) -&gt; std::pair&lt; <a class="el" href="classNotNull.html">NotNull</a>&lt; <a class="el" href="classAddr.html">Addr</a> &gt;, <a class="el" href="classDependence.html">Dependence</a> &gt;</td></tr>
-<tr class="separator:aa65f38a162caef8b26ee3d14d7f5d13c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa42a000fb0a96a484289a6ae36bce943"><td class="memItemLeft" align="right" valign="top"><a id="aa42a000fb0a96a484289a6ae36bce943"></a>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>check</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, <a class="el" href="classNotNull.html">NotNull</a>&lt; <a class="el" href="classAddr.html">Addr</a> &gt; x, <a class="el" href="classNotNull.html">NotNull</a>&lt; <a class="el" href="classAddr.html">Addr</a> &gt; y) -&gt; <a class="el" href="classDependence.html">Dependence</a> *</td></tr>
+<tr class="separator:aa42a000fb0a96a484289a6ae36bce943"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae09a9433a0ebf45240b242cc3c7c7372"><td class="memItemLeft" align="right" valign="top"><a id="ae09a9433a0ebf45240b242cc3c7c7372"></a>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>reload</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, <a class="el" href="classNotNull.html">NotNull</a>&lt; <a class="el" href="classAddr.html">Addr</a> &gt; store) -&gt; std::pair&lt; <a class="el" href="classNotNull.html">NotNull</a>&lt; <a class="el" href="classAddr.html">Addr</a> &gt;, <a class="el" href="classDependence.html">Dependence</a> * &gt;</td></tr>
+<tr class="separator:ae09a9433a0ebf45240b242cc3c7c7372"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="friends"></a>
 Friends</h2></td></tr>

@@ -1,18 +1,12 @@
 var searchData=
 [
-  ['indexmatrix_461',['indexMatrix',['../classArrayIndex.html#abd53828a7c4da4199bb84242cfcdae30',1,'ArrayIndex::indexMatrix()'],['../classAddr.html#abd55a8d6e6aaa5f6704100ed71841cdf',1,'Addr::indexMatrix() -&gt; MutDensePtrMatrix&lt; int64_t &gt;'],['../classAddr.html#a84303e6d0a644c2144481210c439f762',1,'Addr::indexMatrix() const -&gt; DensePtrMatrix&lt; int64_t &gt;'],['../structMemoryAccess.html#ab1cc444538dde0ecc2bee9c77988cbbe',1,'MemoryAccess::indexMatrix() -&gt; MutDensePtrMatrix&lt; int64_t &gt;'],['../structMemoryAccess.html#a24f0c9af64a2d853326cd5129f8bbf07',1,'MemoryAccess::indexMatrix() const -&gt; DensePtrMatrix&lt; int64_t &gt;'],['../classArrayIndex.html#a2607d77465585f6d60d9f71d998af759',1,'ArrayIndex::indexMatrix()']]],
-  ['initancestors_462',['initAncestors',['../structMergingCost.html#aac70d5c2dafaec5277cb6ed6aceaacbc',1,'MergingCost']]],
-  ['initializeloopforest_463',['initializeLoopForest',['../classTurboLoopPass.html#a61d15982d3d7c2d1918da31c454a2f10',1,'TurboLoopPass']]],
-  ['initiatefeasible_464',['initiateFeasible',['../classSimplex.html#ad38168a139d51cf9ad0b2123a15424f0',1,'Simplex']]],
-  ['initnonnegative_465',['initNonNegative',['../structcomparator_1_1BaseSymbolicComparator.html#a7fcb77ad09ce4957e1412515f7c974e4',1,'comparator::BaseSymbolicComparator']]],
-  ['instantiateomnisimplex_466',['instantiateOmniSimplex',['../classLinearProgramLoopBlock.html#a80af2396d1275da193ff58103a7b7ef5',1,'LinearProgramLoopBlock']]],
-  ['intersectionisempty_467',['intersectionIsEmpty',['../structPredicate_1_1Set.html#ad4a7c78b6c53cec5eb5ee53e291359e3',1,'Predicate::Set']]],
-  ['intrinsic_468',['Intrinsic',['../structIntr_1_1Intrinsic.html#a5ad04269aa50a86a3ac93dbc13274600',1,'Intr::Intrinsic']]],
-  ['iscondindep_469',['isCondIndep',['../classDependence.html#a9b770acc8ce812529d0d853f6ba6b39e',1,'Dependence']]],
-  ['isempty_470',['isEmpty',['../structPredicate_1_1Intersection.html#a955076f74163093f46e90c5f1877ad93',1,'Predicate::Intersection']]],
-  ['isforward_471',['isForward',['../classDependence.html#a8f03cfecfe1734c6c395bf3184269536',1,'Dependence']]],
-  ['ismerged_472',['isMerged',['../structMergingCost.html#af9b5ac0cc98e21087c9eefccb31bce58',1,'MergingCost::isMerged(Instruction *key) const -&gt; bool'],['../structMergingCost.html#af05a38ba5258fe216ebb8c2f36320f8d',1,'MergingCost::isMerged(Instruction *L, Instruction *J) const -&gt; bool']]],
-  ['isshuffle_473',['isShuffle',['../classIntr.html#ab20ce0d2cacfbb5bad22df565c3b5ba3',1,'Intr']]],
-  ['isstore_474',['isStore',['../classAddr.html#a2560146ce7ac4e6aeb9548044aa33a40',1,'Addr']]],
-  ['isvalueloadorstore_475',['isValueLoadOrStore',['../classIntr.html#aa5f54824c6feb5024303d3cf530d68c4',1,'Intr']]]
+  ['getconflict_451',['getConflict',['../structPredicate_1_1Set.html#af27ae955d06bb795f220e9f19c602669',1,'Predicate::Set']]],
+  ['getfusionomega_452',['getFusionOmega',['../classArrayIndex.html#ac50bf625a59c9a19bd0bcf14c6d0d980',1,'ArrayIndex::getFusionOmega() -&gt; MutPtrVector&lt; int64_t &gt;'],['../classArrayIndex.html#a0e86ce8a1a3a5cb7a08e684419afe8d8',1,'ArrayIndex::getFusionOmega() const -&gt; PtrVector&lt; int64_t &gt;']]],
+  ['getinindmat_453',['getInIndMat',['../classDependence.html#a96f3977a6808d11b6d36618703b4d3b8',1,'Dependence']]],
+  ['getinstruction_454',['getInstruction',['../structIntr_1_1Cache.html#a82c1f0c4c286bc885bccdd2e24c08818',1,'Intr::Cache']]],
+  ['getload_455',['getLoad',['../structMemoryAccess.html#a4c213ffb008f3b021ab51c21dddd7c06',1,'MemoryAccess']]],
+  ['getmaxdigits_456',['getMaxDigits',['../namespaceLinAlg.html#a159c56bc82c7e302c1228e5148038ada',1,'LinAlg::getMaxDigits(PtrMatrix&lt; Rational &gt; A) -&gt; Vector&lt; size_t &gt;'],['../namespaceLinAlg.html#a636fee1b1a5930a3c38e46eedbd57c67',1,'LinAlg::getMaxDigits(PtrMatrix&lt; T &gt; A) -&gt; Vector&lt; T &gt;']]],
+  ['getoutindmat_457',['getOutIndMat',['../classDependence.html#a89c5aef3716809617009a5f7d55c9499',1,'Dependence']]],
+  ['getschedule_458',['getSchedule',['../classScheduledNode.html#a839ee9c51653c4fa6b3f1a4034903801',1,'ScheduledNode::getSchedule()'],['../structAffineSchedule.html#a534a966b0d6ba721ec2fb83725fbdad8',1,'AffineSchedule::getSchedule()']]],
+  ['gettableau_459',['getTableau',['../classSimplex.html#a53d61a4338168f8fcfada149df9926d7',1,'Simplex']]]
 ];

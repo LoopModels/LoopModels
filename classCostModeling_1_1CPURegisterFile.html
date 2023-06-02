@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.9.1"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>LoopModels: TurboLoopPass Class Reference</title>
+<title>LoopModels: CostModeling::CPURegisterFile Class Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -59,36 +59,40 @@ $(function() {
 </iframe>
 </div>
 
+<div id="nav-path" class="navpath">
+  <ul>
+<li class="navelem"><b>CostModeling</b></li><li class="navelem"><a class="el" href="classCostModeling_1_1CPURegisterFile.html">CPURegisterFile</a></li>  </ul>
+</div>
 </div><!-- top -->
 <div class="header">
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
-<a href="classTurboLoopPass-members.html">List of all members</a>  </div>
+<a href="classCostModeling_1_1CPURegisterFile-members.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">TurboLoopPass Class Reference</div>  </div>
+<div class="title">CostModeling::CPURegisterFile Class Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="dynheader">
-Inheritance diagram for TurboLoopPass:</div>
-<div class="dyncontent">
- <div class="center">
-  <img src="classTurboLoopPass.png" alt=""/>
- </div></div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:af9807d01afcf6c6e021e6e72d5cae415"><td class="memItemLeft" align="right" valign="top"><a id="af9807d01afcf6c6e021e6e72d5cae415"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>run</b> (llvm::Function &amp;F, llvm::FunctionAnalysisManager &amp;AM) -&gt; llvm::PreservedAnalyses</td></tr>
-<tr class="separator:af9807d01afcf6c6e021e6e72d5cae415"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af53327dd0a31c2543787ddf46f169261"><td class="memItemLeft" align="right" valign="top"><a id="af53327dd0a31c2543787ddf46f169261"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>TurboLoopPass</b> (const <a class="el" href="classTurboLoopPass.html">TurboLoopPass</a> &amp;)=delete</td></tr>
-<tr class="separator:af53327dd0a31c2543787ddf46f169261"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a68ea157f74ea8ad9e824a9d3bccb9255"><td class="memItemLeft" align="right" valign="top"><a id="a68ea157f74ea8ad9e824a9d3bccb9255"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>TurboLoopPass</b> (<a class="el" href="classTurboLoopPass.html">TurboLoopPass</a> &amp;&amp;)=default</td></tr>
-<tr class="separator:a68ea157f74ea8ad9e824a9d3bccb9255"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7b63389bf4434053e308f11cc4f98e14"><td class="memItemLeft" align="right" valign="top"><a id="a7b63389bf4434053e308f11cc4f98e14"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>CPURegisterFile</b> (llvm::LLVMContext &amp;C, const llvm::TargetTransformInfo &amp;TTI)</td></tr>
+<tr class="separator:a7b63389bf4434053e308f11cc4f98e14"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a88a7089b7d4403687d1493601aaee5cf"><td class="memItemLeft" align="right" valign="top"><a id="a88a7089b7d4403687d1493601aaee5cf"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumVectorBits</b> () const -&gt; uint8_t</td></tr>
+<tr class="separator:a88a7089b7d4403687d1493601aaee5cf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a26988cd7d39ca3322a2bb9e1507d4d95"><td class="memItemLeft" align="right" valign="top"><a id="a26988cd7d39ca3322a2bb9e1507d4d95"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumVector</b> () const -&gt; uint8_t</td></tr>
+<tr class="separator:a26988cd7d39ca3322a2bb9e1507d4d95"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aff16caad7ad5b87b1a9551c0b5d5f923"><td class="memItemLeft" align="right" valign="top"><a id="aff16caad7ad5b87b1a9551c0b5d5f923"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumScalar</b> () const -&gt; uint8_t</td></tr>
+<tr class="separator:aff16caad7ad5b87b1a9551c0b5d5f923"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5fe8c7f7a5761b0cf8d937fdf0c2e614"><td class="memItemLeft" align="right" valign="top"><a id="a5fe8c7f7a5761b0cf8d937fdf0c2e614"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumPredicate</b> () const -&gt; uint8_t</td></tr>
+<tr class="separator:a5fe8c7f7a5761b0cf8d937fdf0c2e614"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <hr/>The documentation for this class was generated from the following file:<ul>
-<li>include/<a class="el" href="TurboLoop_8hpp_source.html">TurboLoop.hpp</a></li>
+<li>include/<a class="el" href="CostModeling_8hpp_source.html">CostModeling.hpp</a></li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->

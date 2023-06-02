@@ -83,9 +83,9 @@ Inheritance diagram for Loop:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a1f3a2dbb273de1f7807b9a0580935b10"><td class="memItemLeft" align="right" valign="top"><a id="a1f3a2dbb273de1f7807b9a0580935b10"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>Loop</b> (<a class="el" href="classExit.html">Exit</a> *e, unsigned d)</td></tr>
-<tr class="separator:a1f3a2dbb273de1f7807b9a0580935b10"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad1136af9167f27d727ec7a1f1ba5ce81"><td class="memItemLeft" align="right" valign="top"><a id="ad1136af9167f27d727ec7a1f1ba5ce81"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>Loop</b> (<a class="el" href="classExit.html">Exit</a> *e, unsigned d, llvm::Loop *LL)</td></tr>
+<tr class="separator:ad1136af9167f27d727ec7a1f1ba5ce81"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3d2b70d306be7ff88d0693c4a80c45fe"><td class="memItemLeft" align="right" valign="top"><a id="a3d2b70d306be7ff88d0693c4a80c45fe"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getExit</b> () const -&gt; <a class="el" href="classExit.html">Exit</a> *</td></tr>
 <tr class="separator:a3d2b70d306be7ff88d0693c4a80c45fe"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -109,15 +109,21 @@ constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>forEachSubL
 <tr class="memitem:aa37a637e1ad559f8021889d0a90226e7"><td class="memItemLeft" align="right" valign="top"><a id="aa37a637e1ad559f8021889d0a90226e7"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>forEachLoopAndExit</b> (const auto &amp;f)</td></tr>
 <tr class="separator:aa37a637e1ad559f8021889d0a90226e7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5386b7b4ce7654d13d1983a5e5d6fdb6"><td class="memItemLeft" align="right" valign="top"><a id="a5386b7b4ce7654d13d1983a5e5d6fdb6"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>addSubLoop</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc) -&gt; <a class="el" href="classLoop.html">Loop</a> *</td></tr>
-<tr class="separator:a5386b7b4ce7654d13d1983a5e5d6fdb6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a49d0136beeae0c0e74786843724f2037"><td class="memItemLeft" align="right" valign="top"><a id="a49d0136beeae0c0e74786843724f2037"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>addSubLoop</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, llvm::Loop *LL) -&gt; <a class="el" href="classLoop.html">Loop</a> *</td></tr>
+<tr class="separator:a49d0136beeae0c0e74786843724f2037"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3d3274dddc7972af53029dafba4f475e"><td class="memItemLeft" align="right" valign="top"><a id="a3d3274dddc7972af53029dafba4f475e"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>addOuterLoop</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc) -&gt; <a class="el" href="classLoop.html">Loop</a> *</td></tr>
 <tr class="separator:a3d3274dddc7972af53029dafba4f475e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a97d843f4418194a2e6845f8b4207db07"><td class="memItemLeft" align="right" valign="top"><a id="a97d843f4418194a2e6845f8b4207db07"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>addNextLoop</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc) -&gt; <a class="el" href="classLoop.html">Loop</a> *</td></tr>
-<tr class="separator:a97d843f4418194a2e6845f8b4207db07"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af7e6b9bcfcac510465ad64e0799ea208"><td class="memItemLeft" align="right" valign="top"><a id="af7e6b9bcfcac510465ad64e0799ea208"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>addNextLoop</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, llvm::Loop *LL) -&gt; <a class="el" href="classLoop.html">Loop</a> *</td></tr>
+<tr class="separator:af7e6b9bcfcac510465ad64e0799ea208"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a336d9ac2747700783d48b8d472720e02"><td class="memItemLeft" align="right" valign="top"><a id="a336d9ac2747700783d48b8d472720e02"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getLLVMLoop</b> () const -&gt; llvm::Loop *</td></tr>
+<tr class="separator:a336d9ac2747700783d48b8d472720e02"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6396b3463c182f463a2b1c0463e5760c"><td class="memItemLeft" align="right" valign="top"><a id="a6396b3463c182f463a2b1c0463e5760c"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>truncate</b> ()</td></tr>
+<tr class="separator:a6396b3463c182f463a2b1c0463e5760c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_methods_classNode"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_classNode')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="classNode.html">Node</a></td></tr>
 <tr class="memitem:ac8c5f6e806f3a843b0336452f8e8e9d7 inherit pub_methods_classNode"><td class="memItemLeft" align="right" valign="top"><a id="ac8c5f6e806f3a843b0336452f8e8e9d7"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getKind</b> () const -&gt; ValKind</td></tr>
@@ -152,15 +158,18 @@ constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>setParent</
 <tr class="memitem:a008822e5e44819aceb50d396769908a0 inherit pub_methods_classNode"><td class="memItemLeft" align="right" valign="top"><a id="a008822e5e44819aceb50d396769908a0"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>setDepth</b> (unsigned d)</td></tr>
 <tr class="separator:a008822e5e44819aceb50d396769908a0 inherit pub_methods_classNode"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2f508719ccdf943aeb9f600556843dbe inherit pub_methods_classNode"><td class="memItemLeft" align="right" valign="top"><a id="a2f508719ccdf943aeb9f600556843dbe"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>insertAhead</b> (<a class="el" href="classNode.html">Node</a> *d)</td></tr>
+<tr class="separator:a2f508719ccdf943aeb9f600556843dbe inherit pub_methods_classNode"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
 <tr class="memitem:acf46a8154b78fe8a9e05142f7d48e0de"><td class="memItemLeft" align="right" valign="top"><a id="acf46a8154b78fe8a9e05142f7d48e0de"></a>
 static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>classof</b> (const <a class="el" href="classNode.html">Node</a> *v) -&gt; bool</td></tr>
 <tr class="separator:acf46a8154b78fe8a9e05142f7d48e0de"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5458e2ac2c80b7848fb759cbbdcfed62"><td class="memItemLeft" align="right" valign="top"><a id="a5458e2ac2c80b7848fb759cbbdcfed62"></a>
-static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>createTopLevel</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc) -&gt; <a class="el" href="classLoop.html">Loop</a> *</td></tr>
-<tr class="separator:a5458e2ac2c80b7848fb759cbbdcfed62"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7d09a9c98bf57c3f5de2e2001ea525f0"><td class="memItemLeft" align="right" valign="top"><a id="a7d09a9c98bf57c3f5de2e2001ea525f0"></a>
+static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>createTopLevel</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, llvm::Loop *LL) -&gt; <a class="el" href="classLoop.html">Loop</a> *</td></tr>
+<tr class="separator:a7d09a9c98bf57c3f5de2e2001ea525f0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="inherited"></a>
 Additional Inherited Members</h2></td></tr>

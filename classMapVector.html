@@ -77,15 +77,15 @@ constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>MapVector</b> (<
 <tr class="memitem:ab1360d8b97c530d7dbc2f0fb7aae2535"><td class="memItemLeft" align="right" valign="top"><a id="ab1360d8b97c530d7dbc2f0fb7aae2535"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>MapVector</b> (const <a class="el" href="classMapVector.html">MapVector</a> &amp;)=default</td></tr>
 <tr class="separator:ab1360d8b97c530d7dbc2f0fb7aae2535"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac3958bfa00eae1a46b0bc948827a176a"><td class="memItemLeft" align="right" valign="top"><a id="ac3958bfa00eae1a46b0bc948827a176a"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>MapVector</b> (<a class="el" href="classMapVector.html">MapVector</a> &amp;&amp;)=default</td></tr>
-<tr class="separator:ac3958bfa00eae1a46b0bc948827a176a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3a916d1455a1a7eef8e622018b653a6e"><td class="memItemLeft" align="right" valign="top"><a id="a3a916d1455a1a7eef8e622018b653a6e"></a>
-constexpr <a class="el" href="classMapVector.html">MapVector</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>operator=</b> (const <a class="el" href="classMapVector.html">MapVector</a> &amp;)=default</td></tr>
-<tr class="separator:a3a916d1455a1a7eef8e622018b653a6e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa251a28239efe3c378059068fdd3921c"><td class="memItemLeft" align="right" valign="top"><a id="aa251a28239efe3c378059068fdd3921c"></a>
-constexpr <a class="el" href="classMapVector.html">MapVector</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>operator=</b> (<a class="el" href="classMapVector.html">MapVector</a> &amp;&amp;)=default</td></tr>
-<tr class="separator:aa251a28239efe3c378059068fdd3921c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7fdb4cb5fa026df67847072524ddeace"><td class="memItemLeft" align="right" valign="top"><a id="a7fdb4cb5fa026df67847072524ddeace"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>MapVector</b> (<a class="el" href="classMapVector.html">MapVector</a> &amp;&amp;) noexcept=default</td></tr>
+<tr class="separator:a7fdb4cb5fa026df67847072524ddeace"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4b6a5870e8eaf9b7c44499bf16f08f31"><td class="memItemLeft" align="right" valign="top"><a id="a4b6a5870e8eaf9b7c44499bf16f08f31"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator=</b> (const <a class="el" href="classMapVector.html">MapVector</a> &amp;) -&gt; <a class="el" href="classMapVector.html">MapVector</a> &amp;=default</td></tr>
+<tr class="separator:a4b6a5870e8eaf9b7c44499bf16f08f31"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac5d29d2432cef149216b9fd1bc6dc082"><td class="memItemLeft" align="right" valign="top"><a id="ac5d29d2432cef149216b9fd1bc6dc082"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator=</b> (<a class="el" href="classMapVector.html">MapVector</a> &amp;&amp;) noexcept -&gt; <a class="el" href="classMapVector.html">MapVector</a> &amp;=default</td></tr>
+<tr class="separator:ac5d29d2432cef149216b9fd1bc6dc082"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2cda4aef2f7eb3d0f58e291539f9a0f8"><td class="memItemLeft" align="right" valign="top"><a id="a2cda4aef2f7eb3d0f58e291539f9a0f8"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>find</b> (const K &amp;key) const</td></tr>
 <tr class="separator:a2cda4aef2f7eb3d0f58e291539f9a0f8"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -116,27 +116,27 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>rbegin</b> 
 <tr class="memitem:aea77dd91f2c8b14d27f9d05e97d49aab"><td class="memItemLeft" align="right" valign="top"><a id="aea77dd91f2c8b14d27f9d05e97d49aab"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>rend</b> ()</td></tr>
 <tr class="separator:aea77dd91f2c8b14d27f9d05e97d49aab"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a292179e06fa1279c1fffa4543a193bfc"><td class="memItemLeft" align="right" valign="top"><a id="a292179e06fa1279c1fffa4543a193bfc"></a>
-constexpr auto &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>operator[]</b> (const K &amp;key)</td></tr>
-<tr class="separator:a292179e06fa1279c1fffa4543a193bfc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6664cbcd2fb48c7cf9c7aa6fae60c24c"><td class="memItemLeft" align="right" valign="top"><a id="a6664cbcd2fb48c7cf9c7aa6fae60c24c"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator[]</b> (const K &amp;key) -&gt; V &amp;</td></tr>
+<tr class="separator:a6664cbcd2fb48c7cf9c7aa6fae60c24c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5850c3f9842247b29499d0318c7b9beb"><td class="memItemLeft" align="right" valign="top"><a id="a5850c3f9842247b29499d0318c7b9beb"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>size</b> () const</td></tr>
 <tr class="separator:a5850c3f9842247b29499d0318c7b9beb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3d62e5ed4b0b13dadcbf54728693d0c5"><td class="memItemLeft" align="right" valign="top"><a id="a3d62e5ed4b0b13dadcbf54728693d0c5"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>empty</b> () const</td></tr>
 <tr class="separator:a3d62e5ed4b0b13dadcbf54728693d0c5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aaa275291e0deb45a73d118133a28b2bf"><td class="memItemLeft" align="right" valign="top"><a id="aaa275291e0deb45a73d118133a28b2bf"></a>
-constexpr auto &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>back</b> ()</td></tr>
-<tr class="separator:aaa275291e0deb45a73d118133a28b2bf"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a617180a17cfe4f77e7654e3de8f1950d"><td class="memItemLeft" align="right" valign="top"><a id="a617180a17cfe4f77e7654e3de8f1950d"></a>
-constexpr auto &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>back</b> () const</td></tr>
-<tr class="separator:a617180a17cfe4f77e7654e3de8f1950d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1933a9777750707d0316c178aa156b97"><td class="memItemLeft" align="right" valign="top"><a id="a1933a9777750707d0316c178aa156b97"></a>
-constexpr auto &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>front</b> ()</td></tr>
-<tr class="separator:a1933a9777750707d0316c178aa156b97"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7d8c7a3ba20e262d803cc2a0a3f08fc0"><td class="memItemLeft" align="right" valign="top"><a id="a7d8c7a3ba20e262d803cc2a0a3f08fc0"></a>
-constexpr auto &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>front</b> () const</td></tr>
-<tr class="separator:a7d8c7a3ba20e262d803cc2a0a3f08fc0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab6834354828918c8ff3ee213d5bdf469"><td class="memItemLeft" align="right" valign="top"><a id="ab6834354828918c8ff3ee213d5bdf469"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>back</b> () -&gt; auto &amp;</td></tr>
+<tr class="separator:ab6834354828918c8ff3ee213d5bdf469"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a64bd258bf6e79b51dcba85dd06b3fe5d"><td class="memItemLeft" align="right" valign="top"><a id="a64bd258bf6e79b51dcba85dd06b3fe5d"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>back</b> () const -&gt; auto &amp;</td></tr>
+<tr class="separator:a64bd258bf6e79b51dcba85dd06b3fe5d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0231e58c64054aa18960ed6a4db4379d"><td class="memItemLeft" align="right" valign="top"><a id="a0231e58c64054aa18960ed6a4db4379d"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>front</b> () -&gt; auto &amp;</td></tr>
+<tr class="separator:a0231e58c64054aa18960ed6a4db4379d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acc582a7f9d56d7139737df9a6498da94"><td class="memItemLeft" align="right" valign="top"><a id="acc582a7f9d56d7139737df9a6498da94"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>front</b> () const -&gt; auto &amp;</td></tr>
+<tr class="separator:acc582a7f9d56d7139737df9a6498da94"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab0c8298aba5c5c78012640581a95eeeb"><td class="memItemLeft" align="right" valign="top"><a id="ab0c8298aba5c5c78012640581a95eeeb"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>insert</b> (const K &amp;key, const V &amp;value)</td></tr>
 <tr class="separator:ab0c8298aba5c5c78012640581a95eeeb"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -146,9 +146,9 @@ constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>insert</b> 
 <tr class="memitem:afe1ba8c8ba21252d2e3cfb49491befef"><td class="memItemLeft" align="right" valign="top"><a id="afe1ba8c8ba21252d2e3cfb49491befef"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>clear</b> ()</td></tr>
 <tr class="separator:afe1ba8c8ba21252d2e3cfb49491befef"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae208cd7243460c4d435479ee088e4e0b"><td class="memItemLeft" align="right" valign="top"><a id="ae208cd7243460c4d435479ee088e4e0b"></a>
-constexpr size_t&#160;</td><td class="memItemRight" valign="bottom"><b>count</b> (const K &amp;key) const</td></tr>
-<tr class="separator:ae208cd7243460c4d435479ee088e4e0b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a471101bbf198b9873f8dd991a82f039c"><td class="memItemLeft" align="right" valign="top"><a id="a471101bbf198b9873f8dd991a82f039c"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>count</b> (const K &amp;key) const -&gt; size_t</td></tr>
+<tr class="separator:a471101bbf198b9873f8dd991a82f039c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <hr/>The documentation for this class was generated from the following file:<ul>
 <li>include/Containers/<a class="el" href="MapVector_8hpp_source.html">MapVector.hpp</a></li>

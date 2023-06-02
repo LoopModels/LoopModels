@@ -82,9 +82,9 @@ $(function() {
 <div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="keyword">public</span>:</div>
 <div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;  constexpr <a class="code" href="classMapVector.html">MapVector</a>(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc) : map(alloc), vector(alloc) {}</div>
 <div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;  <a class="code" href="classMapVector.html">MapVector</a>(<span class="keyword">const</span> <a class="code" href="classMapVector.html">MapVector</a> &amp;) = <span class="keywordflow">default</span>;</div>
-<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;  <a class="code" href="classMapVector.html">MapVector</a>(<a class="code" href="classMapVector.html">MapVector</a> &amp;&amp;) = <span class="keywordflow">default</span>;</div>
-<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;  constexpr <a class="code" href="classMapVector.html">MapVector</a> &amp;operator=(<span class="keyword">const</span> <a class="code" href="classMapVector.html">MapVector</a> &amp;) = <span class="keywordflow">default</span>;</div>
-<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;  constexpr <a class="code" href="classMapVector.html">MapVector</a> &amp;operator=(<a class="code" href="classMapVector.html">MapVector</a> &amp;&amp;) = <span class="keywordflow">default</span>;</div>
+<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;  <a class="code" href="classMapVector.html">MapVector</a>(<a class="code" href="classMapVector.html">MapVector</a> &amp;&amp;) noexcept = <span class="keywordflow">default</span>;</div>
+<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;  constexpr <span class="keyword">auto</span> operator=(<span class="keyword">const</span> <a class="code" href="classMapVector.html">MapVector</a> &amp;) -&gt; <a class="code" href="classMapVector.html">MapVector</a> &amp; = <span class="keywordflow">default</span>;</div>
+<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;  constexpr <span class="keyword">auto</span> operator=(<a class="code" href="classMapVector.html">MapVector</a> &amp;&amp;) noexcept -&gt; <a class="code" href="classMapVector.html">MapVector</a> &amp; = <span class="keywordflow">default</span>;</div>
 <div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;  constexpr <span class="keyword">auto</span> find(<span class="keyword">const</span> K &amp;key)<span class="keyword"> const </span>{</div>
 <div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;    <span class="keyword">auto</span> f = map.find(key);</div>
 <div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;    <span class="keywordflow">if</span> (f == map.end()) <span class="keywordflow">return</span> vector.end();</div>
@@ -103,7 +103,7 @@ $(function() {
 <div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;  constexpr <span class="keyword">auto</span> rend()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> vector.rend(); }</div>
 <div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;  constexpr <span class="keyword">auto</span> rbegin() { <span class="keywordflow">return</span> vector.rbegin(); }</div>
 <div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;  constexpr <span class="keyword">auto</span> rend() { <span class="keywordflow">return</span> vector.rend(); }</div>
-<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;  constexpr <span class="keyword">auto</span> &amp;operator[](<span class="keyword">const</span> K &amp;key) {</div>
+<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;  constexpr <span class="keyword">auto</span> operator[](<span class="keyword">const</span> K &amp;key) -&gt; V &amp; {</div>
 <div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;    <span class="keyword">auto</span> f = map.find(key);</div>
 <div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;    <span class="keywordflow">if</span> (f == map.end()) {</div>
 <div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;      <span class="keyword">auto</span> i = vector.size();</div>
@@ -115,10 +115,10 @@ $(function() {
 <div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;  }</div>
 <div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;  constexpr <span class="keyword">auto</span> size()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> vector.size(); }</div>
 <div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;  constexpr <span class="keyword">auto</span> empty()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> vector.empty(); }</div>
-<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;  constexpr <span class="keyword">auto</span> &amp;back() { <span class="keywordflow">return</span> vector.back(); }</div>
-<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;  constexpr <span class="keyword">auto</span> &amp;back()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> vector.back(); }</div>
-<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;  constexpr <span class="keyword">auto</span> &amp;front() { <span class="keywordflow">return</span> vector.front(); }</div>
-<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;  constexpr <span class="keyword">auto</span> &amp;front()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> vector.front(); }</div>
+<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;  constexpr <span class="keyword">auto</span> back() -&gt; <span class="keyword">auto</span> &amp; { <span class="keywordflow">return</span> vector.back(); }</div>
+<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;  constexpr <span class="keyword">auto</span> back() <span class="keyword">const</span> -&gt; <span class="keyword">auto</span> &amp; { <span class="keywordflow">return</span> vector.back(); }</div>
+<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;  constexpr <span class="keyword">auto</span> front() -&gt; <span class="keyword">auto</span> &amp; { <span class="keywordflow">return</span> vector.front(); }</div>
+<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;  constexpr <span class="keyword">auto</span> front() <span class="keyword">const</span> -&gt; <span class="keyword">auto</span> &amp; { <span class="keywordflow">return</span> vector.front(); }</div>
 <div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;  constexpr <span class="keywordtype">void</span> insert(<span class="keyword">const</span> K &amp;key, <span class="keyword">const</span> V &amp;value) {</div>
 <div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;    <span class="keyword">auto</span> f = map.find(key);</div>
 <div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;    <span class="keywordflow">if</span> (f == map.end()) {</div>
@@ -143,7 +143,7 @@ $(function() {
 <div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;    map.clear();</div>
 <div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;    vector.clear();</div>
 <div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;  }</div>
-<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;  constexpr <span class="keywordtype">size_t</span> count(<span class="keyword">const</span> K &amp;key)<span class="keyword"> const </span>{ <span class="keywordflow">return</span> map.count(key); }</div>
+<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;  constexpr <span class="keyword">auto</span> count(<span class="keyword">const</span> K &amp;key) <span class="keyword">const</span> -&gt; <span class="keywordtype">size_t</span> { <span class="keywordflow">return</span> map.count(key); }</div>
 <div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;};</div>
 <div class="ttc" id="aclassMapVector_html"><div class="ttname"><a href="classMapVector.html">MapVector</a></div><div class="ttdef"><b>Definition:</b> MapVector.hpp:7</div></div>
 <div class="ttc" id="astructBumpAlloc_html"><div class="ttname"><a href="structBumpAlloc.html">BumpAlloc</a></div><div class="ttdef"><b>Definition:</b> Allocators.hpp:53</div></div>
