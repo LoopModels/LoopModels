@@ -332,7 +332,7 @@ class AffineLoopNest : public BasePolyhedra<false, true, true, AffineLoopNest> {
   unsigned int numConstraints;
   unsigned int numLoops;
   unsigned int numDynSymbols;
-  bool nonNegative;
+  unsigned int nonNegative; // initially stores orig nl
 #if !defined(__clang__) && defined(__GNUC__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
@@ -362,12 +362,13 @@ public:
     std::array<IntMatrix, 2> AB;
     auto &[A, B] = AB;
     // once we're done assembling these, we'll concatenate A and B
-    size_t maxDepth = L->getLoopDepth();
+    unsigned maxDepth = L->getLoopDepth();
+    invariant(maxDepth > 0);
     // size_t maxNumSymbols = BT->getExpressionSize();
     A.resizeForOverwrite(
       StridedDims{0, 1, unsigned(1) + BT->getExpressionSize()});
     B.resizeForOverwrite(StridedDims{0, maxDepth, maxDepth});
-    llvm::SmallVector<const llvm::SCEV *, 3> symbols;
+    llvm::SmallVector<const llvm::SCEV *> symbols;
     size_t minDepth =
       loopNestCtor::addBackedgeTakenCount(AB, symbols, L, BT, SE, 0, ORE);
     // We first check for loops in B that are shallower than minDepth
@@ -399,8 +400,8 @@ public:
     invariant(1 + symbols.size(), size_t(A.numCol()));
     size_t depth = maxDepth - minDepth;
     unsigned numConstraints = unsigned(A.numRow()), N = unsigned(A.numCol());
-    NotNull<AffineLoopNest> aln{
-      AffineLoopNest::allocate(alloc, numConstraints, depth, symbols, true)};
+    NotNull<AffineLoopNest> aln{AffineLoopNest::allocate(
+      alloc, numConstraints, depth, symbols, maxDepth)};
     aln->getA()(_, _(0, N)) << A;
     // copy the included loops from B
     // we use outer <-> inner order, so we skip unsupported outer loops.
@@ -515,57 +516,30 @@ public:
     numLoops = 0;
     numDynSymbols = 0;
   }
+  // L is the inner most loop getting removed
   void removeOuterMost(size_t numToRemove, llvm::Loop *L,
-                       llvm::ScalarEvolution &SE) {
+                       llvm::ScalarEvolution *SE) {
     // basically, we move the outermost loops to the symbols section,
     // and add the appropriate addressees
     // order is outer<->inner
     size_t oldNumLoops = getNumLoops();
+    numToRemove -= (nonNegative - oldNumLoops);
+    if (numToRemove == 0) return;
     if (numToRemove >= oldNumLoops) return clear();
-    size_t innermostLoopInd = getNumSymbols();
-    size_t numRemainingLoops = oldNumLoops - numToRemove;
-    auto A{getA()};
-    auto [M, N] = A.size();
-    if (numRemainingLoops != numToRemove) {
-      Vector<int64_t> tmp;
-      if (numRemainingLoops > numToRemove) {
-        tmp.resizeForOverwrite(numToRemove);
-        for (size_t m = 0; m < M; ++m) {
-          // fill tmp
-          tmp << A(m, _(innermostLoopInd + numRemainingLoops, N));
-          for (size_t i = innermostLoopInd;
-               i < numRemainingLoops + innermostLoopInd; ++i)
-            A(m, i + numToRemove) = A(m, i);
-          A(m, _(numToRemove + innermostLoopInd, N)) << tmp;
-        }
-      } else {
-        tmp.resizeForOverwrite(numRemainingLoops);
-        for (size_t m = 0; m < M; ++m) {
-          // fill tmp
-          tmp = A(m, _(innermostLoopInd, innermostLoopInd + numRemainingLoops));
-          for (size_t i = innermostLoopInd; i < numToRemove + innermostLoopInd;
-               ++i)
-            A(m, i) = A(m, i + numRemainingLoops);
-          A(m, _(numToRemove + innermostLoopInd, N)) << tmp;
-        }
-      }
-    } else
-      for (size_t m = 0; m < M; ++m)
-        for (size_t i = 0; i < numToRemove; ++i)
-          std::swap(A(m, innermostLoopInd + i),
-                    A(m, innermostLoopInd + i + numToRemove));
-
-    for (size_t i = 0; i < numRemainingLoops; ++i) L = L->getParentLoop();
-    // L is now inner most loop getting removed
-    size_t oldNumDynSymbols = numDynSymbols;
+    size_t newNumLoops = oldNumLoops - numToRemove,
+           oldNumDynSymbols = numDynSymbols;
     numDynSymbols += numToRemove;
     auto S{getSyms()};
-    for (size_t i = 0; i < numToRemove; ++i) {
-      llvm::Type *intTyp = L->getInductionVariable(SE)->getType();
-      S[i + oldNumDynSymbols] = SE.getAddRecExpr(
-        SE.getZero(intTyp), SE.getOne(intTyp), L, llvm::SCEV::NoWrapMask);
+    // Array `A` goes from outer->inner
+    // as we peel loops, we go from inner->outer
+    // so we iterate `i` backwards
+    for (size_t i = numToRemove; i;) {
+      llvm::Type *intTyp = L->getInductionVariable(*SE)->getType();
+      S[--i + oldNumDynSymbols] = SE->getAddRecExpr(
+        SE->getZero(intTyp), SE->getOne(intTyp), L, llvm::SCEV::NoWrapMask);
+      L = L->getParentLoop();
     }
-    numLoops = numRemainingLoops;
+    numLoops = newNumLoops;
     // initializeComparator();
   }
 
@@ -911,7 +885,7 @@ public:
     // `addZeroLowerBounds`.
     unsigned M = nonNegative ? numCon : numCon + numLoops;
     // extra capacity for moving loops into symbols, see `removeOuterMost`.
-    unsigned symCapacity = numDynSym + numLoops;
+    unsigned symCapacity = numDynSym + numLoops - 1;
     size_t memNeeded = size_t(M) * N * sizeof(int64_t) +
                        symCapacity * sizeof(const llvm::SCEV *const *);
     auto *mem = (AffineLoopNest *)alloc.allocate(

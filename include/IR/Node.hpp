@@ -98,6 +98,8 @@ private:
   Node *next{nullptr};
   Node *parent{nullptr};
   Node *child{nullptr};
+  Node *componentFwd{nullptr}; // SCC
+  Node *componentBwd{nullptr}; // SCC-cycle
   const ValKind kind;
 
 protected:
@@ -113,8 +115,14 @@ public:
   [[nodiscard]] constexpr auto getChild() const -> Node * { return child; }
   [[nodiscard]] constexpr auto getPrev() const -> Node * { return prev; }
   [[nodiscard]] constexpr auto getNext() const -> Node * { return next; }
-  constexpr void setNext(Node *n) { next = n; }
-  constexpr void setPrev(Node *n) { prev = n; }
+  constexpr void setNext(Node *n) {
+    next = n;
+    n->prev = this;
+  }
+  constexpr void setPrev(Node *n) {
+    prev = n;
+    n->next = this;
+  }
   constexpr void setChild(Node *n) { child = n; }
   constexpr void setParent(Node *n) { parent = n; }
   constexpr void setDepth(unsigned d) { depth = d; }

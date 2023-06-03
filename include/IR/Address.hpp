@@ -61,7 +61,10 @@ class LoopTreeSchedule;
 // clang-format on
 class Addr : public Node {
   [[no_unique_address]] Dependence *edgeIn{nullptr};
-  [[no_unique_address]] ScheduledNode *node{nullptr};
+  [[no_unique_address]] union {
+    ScheduledNode *node{nullptr};
+    size_t maxDepth;
+  } nodeOrDepth; // both are used at different times
   [[no_unique_address]] NotNull<const llvm::SCEVUnknown> basePointer;
   [[no_unique_address]] NotNull<AffineLoopNest> loop;
   [[no_unique_address]] llvm::Instruction *instr;
@@ -82,7 +85,7 @@ class Addr : public Node {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wc99-extensions"
 #endif
-  alignas(int64_t) char mem[]; // NOLINT(modernize-avoid-c-arrays)
+  int64_t mem[]; // NOLINT(modernize-avoid-c-arrays)
 #if !defined(__clang__) && defined(__GNUC__)
 #pragma GCC diagnostic pop
 #else
@@ -137,8 +140,9 @@ class Addr : public Node {
     getOffsetOmega() << ma->getOffsetOmega() - mStar * omega;
     if (offsets) getOffsetOmega() -= M * PtrVector<int64_t>{offsets, nLma};
   }
+  [[nodiscard]] constexpr auto getIntMemory() -> int64_t * { return mem; }
   [[nodiscard]] constexpr auto getIntMemory() const -> int64_t * {
-    return (int64_t *)const_cast<void *>((const void *)mem);
+    return const_cast<int64_t *>(mem);
   }
 
   // [[nodiscard]] constexpr auto getAddrMemory() const -> Addr ** {
@@ -159,16 +163,29 @@ class Addr : public Node {
   //   return (uint8_t *)p;
   // }
   constexpr auto getOffSym() -> int64_t * { return offSym; }
+  [[nodiscard]] constexpr auto indMatPtr() const -> int64_t * {
+    return getIntMemory() + 1 + getArrayDim();
+  }
+  [[nodiscard]] auto getSymbolicOffsets() -> MutPtrVector<const llvm::SCEV *> {
+    return {syms + numDim, numDynSym};
+  }
+  [[nodiscard]] constexpr auto offsetMatrix() -> MutDensePtrMatrix<int64_t> {
+    return {offSym, DenseDims{getArrayDim(), numDynSym}};
+  }
 
 public:
-  [[nodiscard]] constexpr auto getNode() -> ScheduledNode * { return node; }
-  [[nodiscard]] constexpr auto getNode() const -> const ScheduledNode * {
-    return node;
+  // NOLINTNEXTLINE(readability-make-member-function-const)
+  [[nodiscard]] constexpr auto getNode() -> ScheduledNode * {
+    return nodeOrDepth.node;
   }
+  [[nodiscard]] constexpr auto getNode() const -> const ScheduledNode * {
+    return nodeOrDepth.node;
+  }
+  constexpr void setNode(ScheduledNode *n) { nodeOrDepth.node = n; }
   constexpr void forEachInput(const auto &f);
 
   [[nodiscard]] static auto construct(BumpAlloc<> &alloc,
-                                      const llvm::SCEVUnknown *arrayPointer,
+                                      const llvm::SCEVUnknown *ptr,
                                       NotNull<AffineLoopNest> loopRef,
                                       llvm::Instruction *user,
                                       PtrVector<unsigned> o) -> NotNull<Addr> {
@@ -177,27 +194,28 @@ public:
     size_t memNeeded = numLoops;
     auto *mem = (Addr *)alloc.allocate(
       sizeof(Addr) + memNeeded * sizeof(int64_t), alignof(Addr));
-    auto *ma = new (mem) Addr(arrayPointer, loopRef, user);
+    auto *ma = new (mem) Addr(ptr, loopRef, user);
     ma->getFusionOmega() << o;
     return ma;
   }
   /// Constructor for regular indexing
   [[nodiscard]] static auto
   construct(BumpAlloc<> &alloc, const llvm::SCEVUnknown *arrayPtr,
-            NotNull<AffineLoopNest> loopRef, llvm::Instruction *user,
+            NotNull<AffineLoopNest> AL, llvm::Instruction *user,
             PtrMatrix<int64_t> indMat,
             std::array<llvm::SmallVector<const llvm::SCEV *, 3>, 2> szOff,
             PtrVector<int64_t> coffsets, int64_t *offsets,
             PtrVector<unsigned> o) -> NotNull<Addr> {
     // we don't want to hold any other pointers that may need freeing
     unsigned arrayDim = szOff[0].size(), nOff = szOff[1].size();
-    unsigned numLoops = loopRef->getNumLoops();
+    unsigned numLoops = AL->getNumLoops();
     invariant(o.size(), numLoops + 1);
     size_t memNeeded = intMemNeeded(numLoops, arrayDim);
     auto *mem = (Addr *)alloc.allocate(
       sizeof(Addr) + memNeeded * sizeof(int64_t), alignof(Addr));
-    const auto **syms = alloc.allocate<const llvm::SCEV *>(arrayDim + nOff);
-    auto *ma = new (mem) Addr(arrayPtr, loopRef, user, offsets, syms,
+    const auto **syms = // over alloc by numLoops - 1, in case we remove
+      alloc.allocate<const llvm::SCEV *>(arrayDim + nOff + numLoops - 1);
+    auto *ma = new (mem) Addr(arrayPtr, AL, user, offsets, syms,
                               std::array<unsigned, 2>{arrayDim, nOff});
     std::copy_n(szOff[0].begin(), arrayDim, syms);
     std::copy_n(szOff[1].begin(), nOff, syms + arrayDim);
@@ -286,6 +304,73 @@ public:
   [[nodiscard]] constexpr auto index() const -> unsigned { return index_; }
   constexpr auto lowLink() -> uint8_t & { return lowLink_; }
   [[nodiscard]] constexpr auto lowLink() const -> unsigned { return lowLink_; }
+  /// extend number of Cols, copying A[_(0,R),_] into dest, filling new cols
+  /// with 0
+
+  // L is the inner most loop being removed
+  void updateOffsMat(BumpAlloc<> &alloc, size_t numToPeel, llvm::Loop *L,
+                     llvm::ScalarEvolution *SE) {
+    invariant(numToPeel > 0);
+    // need to condition on loop
+    // remove the numExtraLoopsToPeel from Rt
+    // that is, we want to move Rt(_,_(end-numExtraLoopsToPeel,end))
+    // would this code below actually be expected to boost
+    // performance? if
+    // (Bt.numCol()+numExtraLoopsToPeel>Bt.rowStride())
+    // 	Bt.resize(Bt.numRow(),Bt.numCol(),Bt.numCol()+numExtraLoopsToPeel);
+    // order of loops in Rt is outermost->innermost
+    DensePtrMatrix<int64_t> oldOffsMat{offsetMatrix()}, Rt{indexMatrix()};
+    size_t dynSymInd = numDynSym;
+    numDynSym += numToPeel;
+    MutPtrVector<const llvm::SCEV *> sym{getSymbolicOffsets()};
+    offSym = alloc.allocate<int64_t>(size_t(numDynSym) * numDim);
+    MutDensePtrMatrix<int64_t> offsMat{offsetMatrix()};
+    if (dynSymInd) offsMat(_, _(0, dynSymInd)) << oldOffsMat;
+    for (size_t i = numToPeel; i;) {
+      L = L->getParentLoop();
+      if (allZero(Rt(_, --i))) continue;
+      // push the SCEV
+      auto *iTyp = L->getInductionVariable(*SE)->getType();
+      const llvm::SCEV *S = SE->getAddRecExpr(
+        SE->getZero(iTyp), SE->getOne(iTyp), L, llvm::SCEV::NoWrapMask);
+      if (const llvm::SCEV **j = std::ranges::find(sym, S); j != sym.end()) {
+        --numDynSym;
+        offsMat(_, std::distance(sym.begin(), j)) += Rt(_, i);
+      } else {
+        offsMat(_, dynSymInd) << Rt(_, i);
+        sym[dynSymInd++] = S;
+      }
+    }
+  }
+  void peelLoops(BumpAlloc<> &alloc, size_t numToPeel, llvm::Loop *L,
+                 llvm::ScalarEvolution *SE) {
+    invariant(numToPeel > 0);
+    size_t maxDepth = nodeOrDepth.maxDepth, numLoops = getNumLoops();
+    invariant(numToPeel <= maxDepth);
+    // we need to compare numToPeel with actual depth
+    // because we might have peeled some loops already
+    invariant(numLoops <= maxDepth);
+    numToPeel -= maxDepth - numLoops;
+    if (numToPeel == 0) return;
+    // we're dropping the outer-most `numToPeel` loops
+    // first, we update offsMat
+    updateOffsMat(alloc, numToPeel, L, SE);
+    // current memory layout (outer <-> inner):
+    // - denom (1)
+    // - offsetOmega (arrayDim)
+    // - indexMatrix (arrayDim x numLoops)
+    // - fusionOmegas (numLoops+1)
+    int64_t *dst = indMatPtr(), *src = dst + numToPeel;
+    depth = numLoops - numToPeel;
+    size_t dim = getArrayDim();
+    invariant(depth < numLoops);
+    // we want d < dim for indexMatrix, and then == dim for fusion omega
+    for (size_t d = 0; d <= dim; ++d) {
+      std::copy_n(src, depth + (d == dim), dst);
+      src += numLoops;
+      dst += depth;
+    }
+  }
 
   // struct EndSentinel {};
   // class ActiveEdgeIterator {
@@ -457,6 +542,7 @@ public:
     // public constructor) or, we can just use placement new and not mark this
     // function which will never be constant evaluated anyway constexpr (main
     // benefit of constexpr is UB is not allowed, so we get more warnings).
+
     // return std::construct_at((Address *)pt, explicitLoop, ma, Pinv, denom,
     // omega, isStr);
     return new (pt) Addr(explicitLoop, ma, Pinv, denom, omega, isStr, offsets);
@@ -501,16 +587,15 @@ public:
   }
   /// indexMatrix() -> arrayDim() x getNumLoops()
   [[nodiscard]] constexpr auto indexMatrix() -> MutDensePtrMatrix<int64_t> {
-    return {getIntMemory() + 1 + getArrayDim(),
-            DenseDims{getArrayDim(), getNumLoops()}};
+    return {indMatPtr(), DenseDims{getArrayDim(), getNumLoops()}};
   }
   /// indexMatrix() -> arrayDim() x getNumLoops()
   [[nodiscard]] constexpr auto indexMatrix() const -> DensePtrMatrix<int64_t> {
-    return {getIntMemory() + 1 + getArrayDim(),
-            DenseDims{getArrayDim(), getNumLoops()}};
+    return {indMatPtr(), DenseDims{getArrayDim(), getNumLoops()}};
   }
   [[nodiscard]] constexpr auto getFusionOmega() -> MutPtrVector<int64_t> {
     unsigned L = getNumLoops() + 1;
+    // L + 1 means we add the extra array dim for `offsetOmega`
     size_t d = getArrayDim(), off = 1 + d * L;
     return {getIntMemory() + off, L};
   }

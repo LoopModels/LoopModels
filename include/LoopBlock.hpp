@@ -356,7 +356,16 @@ public:
     memory = addr;
     userToMem[addr->getInstruction()] = addr;
   }
-
+  /// L is the inner-most loop getting dropped, i.e. it is the level at which
+  /// the TreeResult rejected
+  void truncate(size_t numToDrop, llvm::Loop *L, llvm::ScalarEvolution *SE) {
+    // numToDrop is w/ respect to LLVM's loop depth
+    // some number may already be dropped
+    addr->forEach([=, &allocator](auto a) {
+      a->peelLoops(allocator, numToDrop, L, SE);
+      s->getLoop()->removeOuterMost(numToDrop, L, SE);
+    });
+  }
   void clear() {
     // TODO: maybe we shouldn't have to manually call destructors?
     // That would require handling more memory allocations via

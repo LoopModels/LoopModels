@@ -73,18 +73,6 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
   [[no_unique_address]] Intr::Cache instrCache;
   [[no_unique_address]] CostModeling::CPURegisterFile registers;
 
-  /// extend number of Cols, copying A[_(0,R),_] into dest, filling new cols
-  /// with 0
-  void extendDensePtrMatCols(MutDensePtrMatrix<int64_t> &A, Row R, Col C,
-                             bool zExt) {
-    MutDensePtrMatrix<int64_t> B{matrix<int64_t>(allocator, A.numRow(), C)};
-    for (size_t j = 0; j < R; ++j) {
-      B(j, _(0, A.numCol())) << A(j, _);
-      if (zExt) B(j, _(A.numCol(), end)) << 0;
-    }
-    std::swap(A, B);
-  }
-
   /// the process of building the LoopForest has the following steps:
   /// 1. build initial forest of trees
   /// 2. instantiate AffineLoopNests; any non-affine loops
@@ -142,59 +130,103 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
     }
     return nullptr;
   }
-  struct InteriorSummary {
-    Loop *loop{nullptr};
-    size_t numRejected;
-    constexpr InteriorSummary(Loop *loop, size_t numRejected)
-      : loop(loop), numRejected(numRejected) {}
-    constexpr InteriorSummary(size_t numRejected) : numRejected(numRejected) {}
-    constexpr auto reject(size_t depth) -> bool { return depth < numRejected; }
+  /// The `TreeResult` gives the result of parsing a loop tree. Fields:
+  /// - `Addr* addr`: a linked list giving the addresses of the loop tree.
+  /// These contain ordering information, which is enough for the linear program
+  /// to deduce the orders of memory accesses, and perform an analysis. The
+  /// - `size_t rejectDepth` is how many outer loops were rejected, due to to
+  /// failure to produce an affine representation of the loop or memory
+  /// accesses. Either because an affine representation is not possible, or
+  /// because our analysis failed and needs improvement.
+  struct TreeResult {
+    Addr *addr{nullptr};
+    size_t rejectDepth{0};
+    constexpr auto reject(size_t depth) -> bool {
+      return (depth < rejectDepth) || (addr == nullptr);
+    }
+    constexpr auto accept(size_t depth) -> bool { return !reject(depth); }
+    // `addr` can be initialized by `nullptr`. If `other` returns `nullptr`, we
+    // lose and leak the old pointer (leaking is okay so long as it was bump
+    // allocated -- the bump allocator will free it). because `rejectDepth`
+    // accumulates, we technically don't need to worry about checking for
+    // `nullptr` every time, but may make sense to do so anyway.
+    constexpr auto operator*=(TreeResult other) -> TreeResult & {
+      rejectDepth = std::max(rejectDepth, other.rejectDepth);
+      return *this *= other.addr;
+    }
+    constexpr auto operator*(TreeResult other) -> TreeResult {
+      TreeResult result = *this;
+      return result *= other;
+    }
+    constexpr auto operator*=(Addr *other) -> TreeResult & {
+      if (addr && other) addr->setPrev(other);
+      addr = other;
+      return *this;
+    }
   };
-
-  /// factored out codepath
-  auto initLoopTree(llvm::Loop *LL, llvm::BasicBlock *H, llvm::BasicBlock *E,
-                    Vector<unsigned> &omega, NoWrapRewriter &nwr, size_t depth)
-    -> InteriorSummary {
-
-    const auto *BT = getBackedgeTakenCount(*SE, LL);
-    if (llvm::isa<llvm::SCEVCouldNotCompute>(BT)) return {depth};
-    auto p = allocator.checkpoint();
-    NotNull<AffineLoopNest> ALN =
-      AffineLoopNest::construct(allocator, LL, nwr.visit(BT), *SE);
-
-    // we're at the bottom of the recursion
-    // Finally, we need `H` to have a direct path to `E`.
+  auto parseBlocks(llvm::BasicBlock *H, llvm::BasicBlock *E, llvm::Loop *L,
+                   MutPtrVector<unsigned> omega, NotNull<AffineLoopNest> AL)
+    -> TreeResult {
+    // TODO: need to be able to connect instructions as we move out
     if (auto predMapAbridged =
-          Predicate::Map::descend(allocator, instrCache, H, E, LL)) {
-      Loop *L = Loop::create(allocator, LL, depth);
+          Predicate::Map::descend(allocator, instrCache, H, E, L)) {
       // Now we need to create Addrs
+      size_t depth = omega.size() - 1;
+      TreeResult tr{nullptr, depth - AL->getNumLoops()};
       for (auto &[BB, P] : *predMapAbridged) {
         for (llvm::Instruction &J : *BB) {
-          if (LL) assert(LL->contains(&J));
+          if (L) assert(L->contains(&J));
+          llvm::Value *ptr{nullptr};
           if (J.mayReadFromMemory()) {
             if (auto *load = llvm::dyn_cast<llvm::LoadInst>(&J))
-              if (addRef(L, L->getExit(), LL, load, omega)) return;
-          } else if (J.mayWriteToMemory())
+              ptr = load->getPointerOperand();
+            else return {};
+          } else if (J.mayWriteToMemory()) {
             if (auto *store = llvm::dyn_cast<llvm::StoreInst>(&J))
-              if (addRef(L, L->getExit(), LL, store, omega)) return;
+              ptr = store->getPointerOperand();
+            else return {};
+          }
+          if (ptr) {
+            tr = addRef(L, omega, AL, &J, ptr, tr);
+            if (tr.reject(depth)) return tr;
+          }
         }
       }
       // if that succeeds, we create instrs
       // and merge CF
       mergeInstructions(allocator, instrCache, *predMapAbridged, TTI,
                         loopBlock.getAlloc(), registers.getNumVectorBits());
-      // and convert predication to instrs
-      loopMap[LL] = L;
-      return {L, depth};
+      return tr;
     }
-    allocator.rollback(p);
-    return {depth};
+    return {};
+  }
+  /// factored out codepath, returns number of rejected loops
+  /// current depth is omega.size()-1
+  auto initLoopTree(llvm::BasicBlock *H, llvm::BasicBlock *E, llvm::Loop *L,
+                    Vector<unsigned> &omega, NoWrapRewriter &nwr)
+    -> TreeResult {
+
+    const auto *BT = getBackedgeTakenCount(*SE, L);
+    if (llvm::isa<llvm::SCEVCouldNotCompute>(BT))
+      return {nullptr, omega.size()};
+    auto p = allocator.checkpoint();
+    NotNull<AffineLoopNest> AL =
+      AffineLoopNest::construct(allocator, L, nwr.visit(BT), *SE);
+    auto tr = parseBlocks(H, E, L, omega, AL);
+    if (tr.reject(omega.size() - 1)) allocator.rollback(p);
+    return tr;
   }
   void optimizeLoop(Loop *L) { L->truncate(); }
-  /// runOnLoop
-  /// LLVM parsing:
-  /// We try to produce our own internal IR from LLVM loops
-  /// we parse the loop forest depth-first
+  /// runOnLoop, parses LLVM
+  /// We construct our linear programs first, which means creating
+  /// `AffineLoopNest`s and `Addr`s, and tracking original locations.
+  /// We also build the instruction graphs in order to perform control flow
+  /// merging, prior to analyzing the linear program. The linear program
+  /// produces its own loop forest, different in general from the original, so
+  /// it is here that we finish creating our own internal IR with `Loop`s.
+  ///
+  ///
+  /// We parse the loop forest depth-first
   /// on each failure, we run the analysis on what we can.
   /// E.g.
   /// invalid -> [A] valid -> valid
@@ -484,42 +516,50 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
     addSymbolic(offsets, symbolicOffsets, S, mlt);
     return blackList | blackListAllDependentLoops(S, numPeeled);
   }
-  auto arrayRef(Loop *L, Node *B, llvm::Loop *LL, AffineLoopNest *aln,
-                llvm::Instruction *ptr, const llvm::SCEV *elSize,
-                llvm::Instruction *loadOrStore, MutPtrVector<unsigned> omega)
-    -> Addr * {
+  auto zeroDimRef(MutPtrVector<unsigned> omega, NotNull<AffineLoopNest> aln,
+                  llvm::Instruction *loadOrStore,
+                  llvm::SCEVUnknown const *arrayPtr, TreeResult tr)
+    -> TreeResult {
+    Addr *op = Addr::construct(allocator, arrayPtr, *aln, loadOrStore, omega);
+    ++omega.back();
+    return tr *= op;
+  }
+  static void extendDensePtrMatCols(BumpAlloc<> &alloc,
+                                    MutDensePtrMatrix<int64_t> &A, Row R,
+                                    Col C) {
+    MutDensePtrMatrix<int64_t> B{matrix<int64_t>(alloc, A.numRow(), C)};
+    for (size_t j = 0; j < R; ++j) {
+      B(j, _(0, A.numCol())) << A(j, _);
+      B(j, _(A.numCol(), end)) << 0;
+    }
+    std::swap(A, B);
+  }
+  auto arrayRef(llvm::Loop *L, MutPtrVector<unsigned> omega,
+                NotNull<AffineLoopNest> aln, llvm::Instruction *loadOrStore,
+                llvm::Instruction *ptr, TreeResult tr, const llvm::SCEV *elSz)
+    -> TreeResult {
     // code modified from
     // https://llvm.org/doxygen/Delinearization_8cpp_source.html#l00582
-    const llvm::SCEV *accessFn = SE->getSCEVAtScope(ptr, LL);
+    const llvm::SCEV *accessFn = SE->getSCEVAtScope(ptr, L);
 
     const llvm::SCEV *pb = SE->getPointerBase(accessFn);
     const auto *arrayPtr = llvm::dyn_cast<llvm::SCEVUnknown>(pb);
     // Do not delinearize if we cannot find the base pointer.
     if (!arrayPtr) {
-      if (ORE && LL) [[unlikely]] {
-        remark("ArrayRefDeliniarize", LL,
+      if (ORE && L) [[unlikely]] {
+        remark("ArrayRefDeliniarize", L,
                "ArrayReference failed because !basePointer\n", ptr);
       }
       // L is invalid, so we optimize the subloops and return `nullptr`
-      conditionOnLoop(L);
-      return nullptr;
+      return {nullptr};
     }
     accessFn = SE->getMinusSCEV(accessFn, arrayPtr);
     llvm::SmallVector<const llvm::SCEV *, 3> subscripts, sizes;
-    llvm::delinearize(*SE, accessFn, subscripts, sizes, elSize);
+    llvm::delinearize(*SE, accessFn, subscripts, sizes, elSz);
     size_t numDims = subscripts.size();
     invariant(numDims, sizes.size());
-    if (numDims == 0) {
-      Addr *op = Addr::construct(allocator, arrayPtr, *aln, loadOrStore, omega);
-      B->insertAhead(op);
-      ++omega.back();
-      return op;
-    }
-    size_t numLoops{aln->getNumLoops()};
-    // numLoops x arrayDim
-    // IntMatrix R(numLoops, numDims);
-    size_t numPeeled = LL->getLoopDepth() - numLoops;
-    // numLoops x arrayDim
+    if (numDims == 0) return zeroDimRef(omega, aln, loadOrStore, arrayPtr, tr);
+    size_t numPeeled = tr.rejectDepth, numLoops = omega.size() - 1 - numPeeled;
     IntMatrix Rt{StridedDims{numDims, numLoops}, 0};
     llvm::SmallVector<const llvm::SCEV *, 3> symbolicOffsets;
     uint64_t blackList{0};
@@ -533,95 +573,64 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
           fillAffineIndices(Rt(i, _), &coffsets[i], offsets, symbolicOffsets,
                             subscripts[i], 1, numPeeled);
         if (offsets.size() > offsMat.numCol())
-          extendDensePtrMatCols(offsMat, Row{i}, Col{offsets.size()}, true);
+          extendDensePtrMatCols(allocator, offsMat, Row{i},
+                                Col{offsets.size()});
         offsMat(i, _) << offsets;
       }
     }
-    uint64_t numExtraLoopsToPeel = 0;
-    if (blackList) {
-      // blacklist: inner - outer
-      uint64_t leadingZeros = std::countl_zero(blackList);
-      numExtraLoopsToPeel = 64 - leadingZeros;
-      // need to condition on loop
-      // remove the numExtraLoopsToPeel from Rt
-      // that is, we want to move Rt(_,_(end-numExtraLoopsToPeel,end))
-      // would this code below actually be expected to boost
-      // performance? if
-      // (Bt.numCol()+numExtraLoopsToPeel>Bt.rowStride())
-      // 	Bt.resize(Bt.numRow(),Bt.numCol(),Bt.numCol()+numExtraLoopsToPeel);
-      // order of loops in Rt is outermost->innermost
-      size_t remainingLoops = numLoops - numExtraLoopsToPeel;
-      llvm::Loop *P = LL;
-      for (size_t i = 1; i < remainingLoops; ++i) P = P->getParentLoop();
-      // remove
-      conditionOnLoop(loopMap[P->getParentLoop()]);
-      for (size_t i = 0; i < numExtraLoopsToPeel; ++i) {
-        P = P->getParentLoop();
-        if (allZero(Rt(_, i))) continue;
-        // push the SCEV
-        auto *intType = P->getInductionVariable(*SE)->getType();
-        const llvm::SCEV *S = SE->getAddRecExpr(
-          SE->getZero(intType), SE->getOne(intType), P, llvm::SCEV::NoWrapMask);
-        if (auto *j = std::ranges::find(symbolicOffsets, S);
-            j != symbolicOffsets.end()) {
-          offsMat(_, std::distance(symbolicOffsets.begin(), j)) += Rt(_, i);
-        } else {
-          extendDensePtrMatCols(offsMat, offsMat.numRow(), offsMat.numCol() + 1,
-                                false);
-          offsMat(_, last) << Rt(_, i);
-          symbolicOffsets.push_back(S);
-        }
-      }
-    }
+    size_t numExtraLoopsToPeel = 64 - std::countl_zero(blackList);
     Addr *op = Addr::construct(allocator, arrayPtr, *aln, loadOrStore,
                                Rt(_, _(numExtraLoopsToPeel, end)),
                                {std::move(sizes), std::move(symbolicOffsets)},
                                coffsets, offsMat.data(), omega);
-    B->insertAhead(op);
     ++omega.back();
     if (ORE) [[unlikely]] {
       llvm::SmallVector<char> x;
       llvm::raw_svector_ostream os{x};
       os << "Found ref: " << *op;
-      remark("AffineRef", LL, os.str());
+      remark("AffineRef", L, os.str());
     }
-    return op;
+    return {op, numExtraLoopsToPeel + numPeeled};
   }
   // LoopTree &getLoopTree(unsigned i) { return loopTrees[i]; }
   auto getLoopTree(llvm::Loop *L) -> Loop * { return loopMap[L]; }
-  auto addRef(Loop *L, Node *B, llvm::Loop *LL, LoadOrStoreInst auto *J,
-              Vector<unsigned> &omega) -> bool {
-    llvm::Value *ptr = J->getPointerOperand();
+  auto addRef(llvm::Loop *L, MutPtrVector<unsigned> omega,
+              NotNull<AffineLoopNest> AL, llvm::Instruction *J,
+              llvm::Value *ptr, TreeResult tr) -> TreeResult {
     // llvm::Type *type = I->getPointerOperandType();
-    const llvm::SCEV *elSize = SE->getElementSize(J);
-    // TODO: support top level array refs
-    if (LL) {
+    const llvm::SCEV *elSz = SE->getElementSize(J);
+    if (L) { // TODO: support top level array refs
       if (auto *iptr = llvm::dyn_cast<llvm::Instruction>(ptr)) {
-        if (!arrayRef(L, B, LL, iptr, elSize, J, omega)) return false;
+        if (tr = arrayRef(L, omega, AL, J, iptr, tr, elSz);
+            tr.accept(omega.size() - 1))
+          return tr;
         if (ORE) [[unlikely]] {
           llvm::SmallVector<char> x;
           llvm::raw_svector_ostream os{x};
           if (llvm::isa<llvm::LoadInst>(J))
             os << "No affine representation for load: " << *J << "\n";
           else os << "No affine representation for store: " << *J << "\n";
-          remark("AddAffineLoad", LL, os.str(), J);
+          remark("AddAffineLoad", L, os.str(), J);
         }
       }
-      return true;
+      return {nullptr};
     }
-    return false;
+    // FIXME: this pointer may alias other array references!!!
+    auto *arrayPtr =
+      llvm::dyn_cast<llvm::SCEVUnknown>(SE->getPointerBase(SE->getSCEV(ptr)));
+    return zeroDimRef(omega, AL, J, arrayPtr, tr);
   }
-  void parseBB(LoopTree &LT, llvm::BasicBlock *BB, Vector<unsigned> &omega) {
-    for (llvm::Instruction &J : *BB) {
-      if (LT.loop) assert(LT.loop->contains(&J));
-      if (J.mayReadFromMemory()) {
-        if (auto *load = llvm::dyn_cast<llvm::LoadInst>(&J))
-          if (addRef(LT, load, omega)) return;
-      } else if (J.mayWriteToMemory())
-        if (auto *store = llvm::dyn_cast<llvm::StoreInst>(&J))
-          if (addRef(LT, store, omega)) return;
-    }
-  }
+  // void parseBB(LoopTree &LT, llvm::BasicBlock *BB, Vector<unsigned> &omega) {
+  //   for (llvm::Instruction &J : *BB) {
+  //     if (LT.loop) assert(LT.loop->contains(&J));
+  //     if (J.mayReadFromMemory()) {
+  //       if (auto *load = llvm::dyn_cast<llvm::LoadInst>(&J))
+  //         if (addRef(LT, load, omega)) return;
+  //     } else if (J.mayWriteToMemory())
+  //       if (auto *store = llvm::dyn_cast<llvm::StoreInst>(&J))
+  //         if (addRef(LT, store, omega)) return;
+  //   }
+  // }
   // NOLINTNEXTLINE(misc-no-recursion)
   void visit(LoopTree &LT, Predicate::Map &map, Vector<unsigned> &omega,
              aset<llvm::BasicBlock *> &visited, llvm::BasicBlock *BB) {
