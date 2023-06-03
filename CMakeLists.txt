@@ -117,8 +117,16 @@ endif()
 # MSVC
 target_compile_options(${PROJECT_NAME} PUBLIC "$<$<COMPILE_LANG_AND_ID:CXX,MSVC>:/permissive->")
 
+FetchContent_Declare(
+  Math
+  GIT_REPOSITORY git@github.com:LoopModels/Math.git
+  GIT_TAG origin/main
+)
+
+FetchContent_MakeAvailable(Math)
+
 # Link dependencies
-target_link_libraries(${PROJECT_NAME} PRIVATE LLVM unordered_dense::unordered_dense)
+target_link_libraries(${PROJECT_NAME} PRIVATE LLVM unordered_dense::unordered_dense Math)
 
 target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${LLVM_INCLUDE_DIRS})
 target_include_directories(
