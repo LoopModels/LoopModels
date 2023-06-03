@@ -5,7 +5,6 @@ project(LoopModelsTests LANGUAGES CXX)
 # ---- Options ----
 
 option(ENABLE_TEST_COVERAGE "Enable test coverage" OFF)
-option(ENABLE_TEST_EXCEPTIONS "Enable test exceptions" OFF)
 option(TEST_INSTALLED_VERSION "Test the version found by find_package" OFF)
 option(ENABLE_LLD "Use lld for linking" ON)
 
@@ -77,9 +76,8 @@ message(STATUS "PROJECT_BINARY_DIR: ${PROJECT_BINARY_DIR}")
 message(STATUS "PROJECT_SOURCE_DIR: ${PROJECT_SOURCE_DIR}")
 message(STATUS "LLVM_INCLUDE_DIRS: ${LLVM_INCLUDE_DIRS}")
 
-target_include_directories(
-  ${PROJECT_NAME} SYSTEM PRIVATE ${PROJECT_SOURCE_DIR}/../include ${LLVM_INCLUDE_DIRS}
-)
+target_include_directories(${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/../include)
+target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${LLVM_INCLUDE_DIRS})
 target_precompile_headers(
   ${PROJECT_NAME}
   PRIVATE
@@ -140,16 +138,12 @@ set_target_properties(
   ${PROJECT_NAME} PROPERTIES ENVIRONMENT WORKING_DIRECTORY=${PROJECT_BINARY_DIR}
 )
 
-if(ENABLE_TEST_EXCEPTIONS)
-  target_compile_options(${PROJECT_NAME} PRIVATE -fexceptions)
-else()
-  target_compile_options(${PROJECT_NAME} PRIVATE -fno-exceptions)
-endif()
+target_compile_options(${PROJECT_NAME} PRIVATE -fno-exceptions)
 
 if((USE_SANITIZER MATCHES "([Uu]ndefined)") OR (USE_SANITIZER MATCHES "([Aa]ddress);([Uu]ndefined)"
                                                )
 )
-  # we use rtti, which is incompatible with the vptr check:
+  # we use don't rtti, which is incompatible with the vptr check:
   # https://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html
   if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 13.0)
     target_compile_options(${PROJECT_NAME} PRIVATE -fno-omit-frame-pointer -fsanitize-trap=all)
@@ -158,8 +152,6 @@ if((USE_SANITIZER MATCHES "([Uu]ndefined)") OR (USE_SANITIZER MATCHES "([Aa]ddre
       ${PROJECT_NAME} PRIVATE -fno-omit-frame-pointer -fno-sanitize-recover=all
     )
   endif()
-  # target_compile_options(${PROJECT_NAME} PRIVATE -fno-omit-frame-pointer
-  # -fno-sanitize-recover=all)
 else()
   target_compile_options(${PROJECT_NAME} PRIVATE -fno-rtti)
 endif()
