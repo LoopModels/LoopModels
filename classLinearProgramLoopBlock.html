@@ -89,6 +89,8 @@ constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>setLI</b> (
 <tr class="memitem:aa4ca09b6507bd98699bdc6794bd224a6"><td class="memItemLeft" align="right" valign="top"><a id="aa4ca09b6507bd98699bdc6794bd224a6"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>addAddr</b> (<a class="el" href="classAddr.html">Addr</a> *addr)</td></tr>
 <tr class="separator:aa4ca09b6507bd98699bdc6794bd224a6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa7e6dcbc46c54737c2ad846703f48398"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classLinearProgramLoopBlock.html#aa7e6dcbc46c54737c2ad846703f48398">truncate</a> (size_t numToDrop, llvm::Loop *L, llvm::ScalarEvolution *SE)</td></tr>
+<tr class="separator:aa7e6dcbc46c54737c2ad846703f48398"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3db13fb21d86096bef9e01c8d570ec73"><td class="memItemLeft" align="right" valign="top"><a id="a3db13fb21d86096bef9e01c8d570ec73"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>clear</b> ()</td></tr>
 <tr class="separator:a3db13fb21d86096bef9e01c8d570ec73"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -571,6 +573,49 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> 
 </div><div class="memdoc">
 <p>used in searchOperandsForLoads if an operand is stored, we can reload it. This will insert a new store memory access.</p>
 <p>If an instruction was stored somewhere, we don't keep searching for place it was loaded, and instead add a reload. </p>
+
+</div>
+</div>
+<a id="aa7e6dcbc46c54737c2ad846703f48398"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa7e6dcbc46c54737c2ad846703f48398">&#9670;&nbsp;</a></span>truncate()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void LinearProgramLoopBlock::truncate </td>
+          <td>(</td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>numToDrop</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">llvm::Loop *&#160;</td>
+          <td class="paramname"><em>L</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">llvm::ScalarEvolution *&#160;</td>
+          <td class="paramname"><em>SE</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>L is the inner-most loop getting dropped, i.e. it is the level at which the TreeResult rejected </p>
 
 </div>
 </div>

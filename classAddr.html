@@ -89,6 +89,9 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNode</b>
 <tr class="memitem:a51860a49958ca62fc6f70fd754a8c3b7"><td class="memItemLeft" align="right" valign="top"><a id="a51860a49958ca62fc6f70fd754a8c3b7"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNode</b> () const -&gt; const <a class="el" href="classScheduledNode.html">ScheduledNode</a> *</td></tr>
 <tr class="separator:a51860a49958ca62fc6f70fd754a8c3b7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac09d94afe307b3bbb284a2fd9da2b26d"><td class="memItemLeft" align="right" valign="top"><a id="ac09d94afe307b3bbb284a2fd9da2b26d"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>setNode</b> (<a class="el" href="classScheduledNode.html">ScheduledNode</a> *n)</td></tr>
+<tr class="separator:ac09d94afe307b3bbb284a2fd9da2b26d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae5cad667ca719efd0fa47f4b162b9d80"><td class="memItemLeft" align="right" valign="top"><a id="ae5cad667ca719efd0fa47f4b162b9d80"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>forEachInput</b> (const auto &amp;f)</td></tr>
 <tr class="separator:ae5cad667ca719efd0fa47f4b162b9d80"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -187,6 +190,11 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>lowLink</b>
 <tr class="memitem:a6416017ba403c1b4eb3bad2a87dedb86"><td class="memItemLeft" align="right" valign="top"><a id="a6416017ba403c1b4eb3bad2a87dedb86"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>lowLink</b> () const -&gt; unsigned</td></tr>
 <tr class="separator:a6416017ba403c1b4eb3bad2a87dedb86"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a28bcc09d4daf63893e7215bd01ca6df1"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classAddr.html#a28bcc09d4daf63893e7215bd01ca6df1">updateOffsMat</a> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, size_t numToPeel, llvm::Loop *L, llvm::ScalarEvolution *SE)</td></tr>
+<tr class="separator:a28bcc09d4daf63893e7215bd01ca6df1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adc4e48bac18543b6e30d43fd5a10fc4c"><td class="memItemLeft" align="right" valign="top"><a id="adc4e48bac18543b6e30d43fd5a10fc4c"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>peelLoops</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, size_t numToPeel, llvm::Loop *L, llvm::ScalarEvolution *SE)</td></tr>
+<tr class="separator:adc4e48bac18543b6e30d43fd5a10fc4c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aab50bcad1dca1c6fa8964f4d203bcc69"><td class="memItemLeft" align="right" valign="top"><a id="aab50bcad1dca1c6fa8964f4d203bcc69"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumLoops</b> () const -&gt; unsigned</td></tr>
 <tr class="separator:aab50bcad1dca1c6fa8964f4d203bcc69"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -283,13 +291,13 @@ constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>insertAhead
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
-<tr class="memitem:a3270a3cad12c850d232e5af770c0e1d7"><td class="memItemLeft" align="right" valign="top"><a id="a3270a3cad12c850d232e5af770c0e1d7"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>construct</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, const llvm::SCEVUnknown *arrayPointer, <a class="el" href="classNotNull.html">NotNull</a>&lt; <a class="el" href="classAffineLoopNest.html">AffineLoopNest</a> &gt; loopRef, llvm::Instruction *user, PtrVector&lt; unsigned &gt; o) -&gt; <a class="el" href="classNotNull.html">NotNull</a>&lt; <a class="el" href="classAddr.html">Addr</a> &gt;</td></tr>
-<tr class="separator:a3270a3cad12c850d232e5af770c0e1d7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa45f7087b52f3a60fc74625ca2a7f01c"><td class="memItemLeft" align="right" valign="top"><a id="aa45f7087b52f3a60fc74625ca2a7f01c"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classAddr.html#aa45f7087b52f3a60fc74625ca2a7f01c">construct</a> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, const llvm::SCEVUnknown *arrayPtr, <a class="el" href="classNotNull.html">NotNull</a>&lt; <a class="el" href="classAffineLoopNest.html">AffineLoopNest</a> &gt; loopRef, llvm::Instruction *user, PtrMatrix&lt; int64_t &gt; indMat, std::array&lt; llvm::SmallVector&lt; const llvm::SCEV *, 3 &gt;, 2 &gt; szOff, PtrVector&lt; int64_t &gt; coffsets, int64_t *offsets, PtrVector&lt; unsigned &gt; o) -&gt; <a class="el" href="classNotNull.html">NotNull</a>&lt; <a class="el" href="classAddr.html">Addr</a> &gt;</td></tr>
-<tr class="memdesc:aa45f7087b52f3a60fc74625ca2a7f01c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor for regular indexing. <br /></td></tr>
-<tr class="separator:aa45f7087b52f3a60fc74625ca2a7f01c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac6457656ad8a7944c97f9e368d0fc240"><td class="memItemLeft" align="right" valign="top"><a id="ac6457656ad8a7944c97f9e368d0fc240"></a>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>construct</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, const llvm::SCEVUnknown *ptr, <a class="el" href="classNotNull.html">NotNull</a>&lt; <a class="el" href="classAffineLoopNest.html">AffineLoopNest</a> &gt; loopRef, llvm::Instruction *user, PtrVector&lt; unsigned &gt; o) -&gt; <a class="el" href="classNotNull.html">NotNull</a>&lt; <a class="el" href="classAddr.html">Addr</a> &gt;</td></tr>
+<tr class="separator:ac6457656ad8a7944c97f9e368d0fc240"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7786026cef10dbfa88c507f5c707d706"><td class="memItemLeft" align="right" valign="top"><a id="a7786026cef10dbfa88c507f5c707d706"></a>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classAddr.html#a7786026cef10dbfa88c507f5c707d706">construct</a> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, const llvm::SCEVUnknown *arrayPtr, <a class="el" href="classNotNull.html">NotNull</a>&lt; <a class="el" href="classAffineLoopNest.html">AffineLoopNest</a> &gt; AL, llvm::Instruction *user, PtrMatrix&lt; int64_t &gt; indMat, std::array&lt; llvm::SmallVector&lt; const llvm::SCEV *, 3 &gt;, 2 &gt; szOff, PtrVector&lt; int64_t &gt; coffsets, int64_t *offsets, PtrVector&lt; unsigned &gt; o) -&gt; <a class="el" href="classNotNull.html">NotNull</a>&lt; <a class="el" href="classAddr.html">Addr</a> &gt;</td></tr>
+<tr class="memdesc:a7786026cef10dbfa88c507f5c707d706"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor for regular indexing. <br /></td></tr>
+<tr class="separator:a7786026cef10dbfa88c507f5c707d706"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aea616b0366d26ed3313aad46c4d1c16a"><td class="memItemLeft" align="right" valign="top"><a id="aea616b0366d26ed3313aad46c4d1c16a"></a>
 static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>classof</b> (const <a class="el" href="classNode.html">Node</a> *v) -&gt; bool</td></tr>
 <tr class="separator:aea616b0366d26ed3313aad46c4d1c16a"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -363,6 +371,55 @@ unsigned&#160;</td><td class="memItemRight" valign="bottom"><b>depth</b> {0}</td
 </table>
 </div><div class="memdoc">
 <p><a class="el" href="classAddr.html#a2560146ce7ac4e6aeb9548044aa33a40">isStore()</a> is true if the address is a store, false if it is a load If the memory access is a store, this can still be a reload </p>
+
+</div>
+</div>
+<a id="a28bcc09d4daf63893e7215bd01ca6df1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a28bcc09d4daf63893e7215bd01ca6df1">&#9670;&nbsp;</a></span>updateOffsMat()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void Addr::updateOffsMat </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;&#160;</td>
+          <td class="paramname"><em>alloc</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>numToPeel</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">llvm::Loop *&#160;</td>
+          <td class="paramname"><em>L</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">llvm::ScalarEvolution *&#160;</td>
+          <td class="paramname"><em>SE</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>extend number of Cols, copying A[_(0,R),_] into dest, filling new cols with 0 </p>
 
 </div>
 </div>
