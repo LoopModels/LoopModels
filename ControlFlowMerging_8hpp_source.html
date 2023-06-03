@@ -71,14 +71,14 @@ $(function() {
 <div class="contents">
 <div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="preprocessor">#pragma once</span></div>
 <div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160; </div>
-<div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="preprocessor">#include &quot;./Instruction.hpp&quot;</span></div>
-<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor">#include &quot;./LoopBlock.hpp&quot;</span></div>
-<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="preprocessor">#include &quot;./LoopForest.hpp&quot;</span></div>
-<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="preprocessor">#include &quot;./Predicate.hpp&quot;</span></div>
-<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="preprocessor">#include &quot;Containers/BitSets.hpp&quot;</span></div>
-<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="preprocessor">#include &quot;Containers/BumpMapSet.hpp&quot;</span></div>
-<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="preprocessor">#include &quot;Utilities/Allocators.hpp&quot;</span></div>
-<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="preprocessor">#include &lt;Math/BumpVector.hpp&gt;</span></div>
+<div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="preprocessor">#include &quot;Containers/BitSets.hpp&quot;</span></div>
+<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor">#include &quot;Dicts/BumpMapSet.hpp&quot;</span></div>
+<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="preprocessor">#include &quot;Dicts/BumpVector.hpp&quot;</span></div>
+<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="preprocessor">#include &quot;IR/Instruction.hpp&quot;</span></div>
+<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="preprocessor">#include &quot;LoopBlock.hpp&quot;</span></div>
+<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="preprocessor">#include &quot;LoopForest.hpp&quot;</span></div>
+<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="preprocessor">#include &quot;Predicate.hpp&quot;</span></div>
+<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="preprocessor">#include &quot;Utilities/Allocators.hpp&quot;</span></div>
 <div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="preprocessor">#include &lt;cassert&gt;</span></div>
 <div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="preprocessor">#include &lt;cstddef&gt;</span></div>
 <div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="preprocessor">#include &lt;cstdint&gt;</span></div>
@@ -366,7 +366,7 @@ $(function() {
 <div class="line"><a name="l00303"></a><span class="lineno">  303</span>&#160;  BumpAlloc&lt;&gt; &amp;alloc, Instruction::Cache &amp;cache, <a class="code" href="structPredicate_1_1Map.html">Predicate::Map</a> &amp;predMap,</div>
 <div class="line"><a name="l00304"></a><span class="lineno">  304</span>&#160;  llvm::TargetTransformInfo &amp;TTI, <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> vectorBits,</div>
 <div class="line"><a name="l00305"></a><span class="lineno">  305</span>&#160;  <a class="code" href="structamap.html">amap</a>&lt;std::pair&lt;Instruction::Intrinsic, llvm::Type *&gt;,</div>
-<div class="line"><a name="l00306"></a><span class="lineno">  306</span>&#160;       BumpPtrVector&lt;std::pair&lt;Instruction *, Predicate::Set&gt;&gt;&gt; &amp;opMap,</div>
+<div class="line"><a name="l00306"></a><span class="lineno">  306</span>&#160;       <a class="code" href="structLinAlg_1_1BumpPtrVector.html">BumpPtrVector</a>&lt;std::pair&lt;Instruction *, Predicate::Set&gt;&gt;&gt; &amp;opMap,</div>
 <div class="line"><a name="l00307"></a><span class="lineno">  307</span>&#160;  llvm::SmallVectorImpl&lt;MergingCost *&gt; &amp;mergingCosts, Instruction *J,</div>
 <div class="line"><a name="l00308"></a><span class="lineno">  308</span>&#160;  llvm::BasicBlock *BB, <a class="code" href="structPredicate_1_1Set.html">Predicate::Set</a> &amp;preds) {</div>
 <div class="line"><a name="l00309"></a><span class="lineno">  309</span>&#160;  <span class="comment">// have we already visited?</span></div>
@@ -434,7 +434,7 @@ $(function() {
 <div class="line"><a name="l00382"></a><span class="lineno">  382</span>&#160;  <span class="keyword">auto</span> p = tAlloc.scope();</div>
 <div class="line"><a name="l00383"></a><span class="lineno">  383</span>&#160;  <span class="comment">// there is a divergence in the control flow that we can ideally merge</span></div>
 <div class="line"><a name="l00384"></a><span class="lineno">  384</span>&#160;  <a class="code" href="structamap.html">amap&lt;std::pair&lt;Instruction::Intrinsic, llvm::Type *&gt;</a>,</div>
-<div class="line"><a name="l00385"></a><span class="lineno">  385</span>&#160;       BumpPtrVector&lt;std::pair&lt;Instruction *, Predicate::Set&gt;&gt;&gt;</div>
+<div class="line"><a name="l00385"></a><span class="lineno">  385</span>&#160;       <a class="code" href="structLinAlg_1_1BumpPtrVector.html">BumpPtrVector&lt;std::pair&lt;Instruction *, Predicate::Set&gt;</a>&gt;&gt;</div>
 <div class="line"><a name="l00386"></a><span class="lineno">  386</span>&#160;    opMap{tAlloc};</div>
 <div class="line"><a name="l00387"></a><span class="lineno">  387</span>&#160;  llvm::SmallVector&lt;MergingCost *&gt; mergingCosts;</div>
 <div class="line"><a name="l00388"></a><span class="lineno">  388</span>&#160;  mergingCosts.emplace_back(alloc);</div>
@@ -471,6 +471,7 @@ $(function() {
 <div class="line"><a name="l00419"></a><span class="lineno">  419</span>&#160;  <span class="keywordflow">for</span> (<span class="keyword">auto</span> subLoop : loopForest-&gt;getSubLoops())</div>
 <div class="line"><a name="l00420"></a><span class="lineno">  420</span>&#160;    mergeInstructions(alloc, cache, subLoop, TTI, tAlloc, vectorBits);</div>
 <div class="line"><a name="l00421"></a><span class="lineno">  421</span>&#160;}</div>
+<div class="ttc" id="astructLinAlg_1_1BumpPtrVector_html"><div class="ttname"><a href="structLinAlg_1_1BumpPtrVector.html">LinAlg::BumpPtrVector</a></div><div class="ttdef"><b>Definition:</b> BumpVector.hpp:12</div></div>
 <div class="ttc" id="astructLoopTree_html"><div class="ttname"><a href="structLoopTree.html">LoopTree</a></div><div class="ttdef"><b>Definition:</b> LoopForest.hpp:23</div></div>
 <div class="ttc" id="astructMergingCost_1_1Allocate_html"><div class="ttname"><a href="structMergingCost_1_1Allocate.html">MergingCost::Allocate</a></div><div class="ttdef"><b>Definition:</b> ControlFlowMerging.hpp:125</div></div>
 <div class="ttc" id="astructMergingCost_1_1Count_html"><div class="ttname"><a href="structMergingCost_1_1Count.html">MergingCost::Count</a></div><div class="ttdef"><b>Definition:</b> ControlFlowMerging.hpp:130</div></div>

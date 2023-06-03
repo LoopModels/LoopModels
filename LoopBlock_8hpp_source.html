@@ -77,14 +77,14 @@ $(function() {
 <div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="preprocessor">#include &quot;Graphs.hpp&quot;</span></div>
 <div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="preprocessor">#include &quot;IR/Address.hpp&quot;</span></div>
 <div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="preprocessor">#include &quot;IR/Node.hpp&quot;</span></div>
-<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="preprocessor">#include &quot;Loops.hpp&quot;</span></div>
-<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="preprocessor">#include &quot;Math/Array.hpp&quot;</span></div>
-<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="preprocessor">#include &quot;Math/Comparisons.hpp&quot;</span></div>
-<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="preprocessor">#include &quot;Math/GreatestCommonDivisor.hpp&quot;</span></div>
-<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="preprocessor">#include &quot;Math/Math.hpp&quot;</span></div>
-<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;<span class="preprocessor">#include &quot;Math/NormalForm.hpp&quot;</span></div>
-<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;<span class="preprocessor">#include &quot;Math/Simplex.hpp&quot;</span></div>
-<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;<span class="preprocessor">#include &quot;Math/StaticArrays.hpp&quot;</span></div>
+<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="preprocessor">#include &quot;Math/Array.hpp&quot;</span></div>
+<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="preprocessor">#include &quot;Math/Comparisons.hpp&quot;</span></div>
+<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="preprocessor">#include &quot;Math/GreatestCommonDivisor.hpp&quot;</span></div>
+<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="preprocessor">#include &quot;Math/Math.hpp&quot;</span></div>
+<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="preprocessor">#include &quot;Math/NormalForm.hpp&quot;</span></div>
+<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;<span class="preprocessor">#include &quot;Math/Simplex.hpp&quot;</span></div>
+<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;<span class="preprocessor">#include &quot;Math/StaticArrays.hpp&quot;</span></div>
+<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;<span class="preprocessor">#include &quot;Polyhedra/Loops.hpp&quot;</span></div>
 <div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;<span class="preprocessor">#include &quot;Schedule.hpp&quot;</span></div>
 <div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;<span class="preprocessor">#include &quot;Utilities/Allocators.hpp&quot;</span></div>
 <div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;<span class="preprocessor">#include &quot;Utilities/Invariant.hpp&quot;</span></div>
@@ -1512,7 +1512,7 @@ $(function() {
 <div class="line"><a name="l01581"></a><span class="lineno"> 1581</span>&#160;    std::swap(g.nodeIds, nodeIds);</div>
 <div class="line"><a name="l01582"></a><span class="lineno"> 1582</span>&#160;    g.activeEdges = activeEdges; <span class="comment">// undo such that g.getEdges(d) is correct</span></div>
 <div class="line"><a name="l01583"></a><span class="lineno"> 1583</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;&amp;e : g.getEdges(d)) e.popSatLevel();</div>
-<div class="line"><a name="l01584"></a><span class="lineno"> 1584</span>&#160;    g.activeEdges = oldEdges;    <span class="comment">// restore backup</span></div>
+<div class="line"><a name="l01584"></a><span class="lineno"> 1584</span>&#160;    g.activeEdges = oldEdges; <span class="comment">// restore backup</span></div>
 <div class="line"><a name="l01585"></a><span class="lineno"> 1585</span>&#160;    <span class="keyword">auto</span> *oldNodeIter = oldSchedules.begin();</div>
 <div class="line"><a name="l01586"></a><span class="lineno"> 1586</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;&amp;n : g) n.getSchedule() = *(oldNodeIter++);</div>
 <div class="line"><a name="l01587"></a><span class="lineno"> 1587</span>&#160;    allocator.rollback(chckpt);</div>
