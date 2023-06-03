@@ -132,6 +132,9 @@ public:
     if (prev) prev->setNext(d);
     prev = d;
   }
+  constexpr void forEach(const auto &f) {
+    for (Node *n = this; n; n = n->getNext()) f(n);
+  }
 };
 
 class Loop;

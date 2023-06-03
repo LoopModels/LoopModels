@@ -540,6 +540,18 @@ public:
     /// need to finish adding its operands.
     auto completeInstruction(BumpAlloc<> &, Predicate::Map &,
                              llvm::Instruction *) -> Intr *;
+    void addParents(BumpAlloc<> &alloc, Addr *a, llvm::Loop *L) {
+      auto *J = a->getInstruction();
+      if (!L->contains(J->getParent())) return;
+      llvm::Use *U = J->getOperandList();
+      unsigned numOperands = J->getNumOperands();
+      for (unsigned i = 0; i < numOperands; ++i) {
+        llvm::Value *V = U[i].get();
+        if (!L->contains(V->getParent())) continue;
+        addValue(alloc, V, L);
+      }
+    }
+    void addValue(BumpAlloc<> &alloc, llvm::Value *V, llvm::Loop *L) {}
   };
   [[nodiscard]] static auto // NOLINTNEXTLINE(misc-no-recursion)
   getUniqueIdentifier(BumpAlloc<> &alloc, Cache &cache, llvm::Instruction *v)

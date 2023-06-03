@@ -164,6 +164,9 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
       return *this;
     }
   };
+  void addInstructions(Addr *addr, llvm::Loop *L) {
+    addr->forEach([&, L](Addr *a) { instrCache.addParents(a, L); });
+  }
   auto parseBlocks(llvm::BasicBlock *H, llvm::BasicBlock *E, llvm::Loop *L,
                    MutPtrVector<unsigned> omega, NotNull<AffineLoopNest> AL)
     -> TreeResult {
