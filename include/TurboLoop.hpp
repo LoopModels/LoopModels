@@ -4,10 +4,10 @@
 #include "IR/Instruction.hpp"
 #include "LoopBlock.hpp"
 #include "LoopForest.hpp"
-#include "Loops.hpp"
 #include "Math/Array.hpp"
 #include "Math/Math.hpp"
 #include "MemoryAccess.hpp"
+#include "Polyhedra/Loops.hpp"
 #include "RemarkAnalysis.hpp"
 #include <algorithm>
 #include <cassert>

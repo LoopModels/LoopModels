@@ -1,7 +1,7 @@
 #pragma once
-#include "DependencyPolyhedra.hpp"
+#include "Polyhedra/DependencyPolyhedra.hpp"
+#include "Polyhedra/Loops.hpp"
 #include "Schedule.hpp"
-#include <Loops.hpp>
 #include <Utilities/Allocators.hpp>
 #include <Utilities/Invariant.hpp>
 #include <cstdint>

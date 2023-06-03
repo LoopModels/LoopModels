@@ -1,5 +1,5 @@
 #pragma once
-#include "./Loops.hpp"
+#include "Polyhedra/Loops.hpp"
 #include "Utilities/Allocators.hpp"
 #include <cstdint>
 #include <llvm/ADT/SmallPtrSet.h>

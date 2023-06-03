@@ -6,7 +6,6 @@
 #include "Graphs.hpp"
 #include "IR/Address.hpp"
 #include "IR/Node.hpp"
-#include "Loops.hpp"
 #include "Math/Array.hpp"
 #include "Math/Comparisons.hpp"
 #include "Math/GreatestCommonDivisor.hpp"
@@ -14,6 +13,7 @@
 #include "Math/NormalForm.hpp"
 #include "Math/Simplex.hpp"
 #include "Math/StaticArrays.hpp"
+#include "Polyhedra/Loops.hpp"
 #include "Schedule.hpp"
 #include "Utilities/Allocators.hpp"
 #include "Utilities/Invariant.hpp"
@@ -1581,7 +1581,7 @@ public:
     std::swap(g.nodeIds, nodeIds);
     g.activeEdges = activeEdges; // undo such that g.getEdges(d) is correct
     for (auto &&e : g.getEdges(d)) e.popSatLevel();
-    g.activeEdges = oldEdges;    // restore backup
+    g.activeEdges = oldEdges; // restore backup
     auto *oldNodeIter = oldSchedules.begin();
     for (auto &&n : g) n.getSchedule() = *(oldNodeIter++);
     allocator.rollback(chckpt);

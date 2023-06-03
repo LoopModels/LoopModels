@@ -1,10 +1,10 @@
 #pragma once
 
 #include "IR/Node.hpp"
-#include "Loops.hpp"
 #include "Math/Array.hpp"
 #include "Math/Comparisons.hpp"
 #include "Math/Math.hpp"
+#include "Polyhedra/Loops.hpp"
 #include "Utilities/Valid.hpp"
 #include <cstddef>
 #include <cstdint>

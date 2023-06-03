@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Loops.hpp"
+#include "Polyhedra/Loops.hpp"
 #include "Utilities/Allocators.hpp"
 #include <Math/Array.hpp>
 #include <cstdint>

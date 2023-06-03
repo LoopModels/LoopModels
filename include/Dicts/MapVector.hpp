@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Containers/BumpMapSet.hpp"
-#include "Math/BumpVector.hpp"
+#include "Dicts/BumpMapSet.hpp"
+#include "Dicts/BumpVector.hpp"
 #include "Utilities/Allocators.hpp"
 
 template <class K, class V> class MapVector {

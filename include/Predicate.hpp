@@ -1,6 +1,6 @@
 #pragma once
 #include "Containers/BitSets.hpp"
-#include "Math/BumpVector.hpp"
+#include "Dicts/BumpVector.hpp"
 #include "Math/Math.hpp"
 #include "Utilities/Allocators.hpp"
 #include <cstddef>

@@ -1,11 +1,11 @@
 #pragma once
 
-#include "Containers/BumpMapSet.hpp"
-#include "Containers/MapVector.hpp"
+#include "Dicts/BumpMapSet.hpp"
+#include "Dicts/BumpVector.hpp"
+#include "Dicts/MapVector.hpp"
 #include "IR/Address.hpp"
 #include "IR/Node.hpp"
 #include "Math/Array.hpp"
-#include "Math/BumpVector.hpp"
 #include "Predicate.hpp"
 #include "Utilities/Allocators.hpp"
 #include <algorithm>
