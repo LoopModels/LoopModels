@@ -88,7 +88,7 @@ Public Types</h2></td></tr>
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
 <tr class="memitem:a1f0b1c413584d60f720f16ee2adc797c"><td class="memItemLeft" align="right" valign="top"><a id="a1f0b1c413584d60f720f16ee2adc797c"></a>
-constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Map</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc)</td></tr>
+constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Map</b> (BumpAlloc&lt;&gt; &amp;alloc)</td></tr>
 <tr class="separator:a1f0b1c413584d60f720f16ee2adc797c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab11076d20233afda844320275c7e5774"><td class="memItemLeft" align="right" valign="top"><a id="ab11076d20233afda844320275c7e5774"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>Map</b> (const <a class="el" href="structPredicate_1_1Map.html">Map</a> &amp;x)=default</td></tr>
@@ -154,10 +154,10 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>isInPath</b> (llvm::I
 void&#160;</td><td class="memItemRight" valign="bottom"><b>clear</b> ()</td></tr>
 <tr class="separator:ad44adcd02c515f0b71a2cc7b7f638769"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a30402165a419a1907ef38fa0f1aa81ad"><td class="memItemLeft" align="right" valign="top"><a id="a30402165a419a1907ef38fa0f1aa81ad"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>addPredicate</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, <a class="el" href="structIntr_1_1Cache.html">Intr::Cache</a> &amp;cache, llvm::Value *value) -&gt; size_t</td></tr>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>addPredicate</b> (BumpAlloc&lt;&gt; &amp;alloc, <a class="el" href="structIntr_1_1Cache.html">Intr::Cache</a> &amp;cache, llvm::Value *value) -&gt; size_t</td></tr>
 <tr class="separator:a30402165a419a1907ef38fa0f1aa81ad"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a731a094de3b437d23305ded68b42415e"><td class="memItemLeft" align="right" valign="top"><a id="a731a094de3b437d23305ded68b42415e"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>reach</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, llvm::BasicBlock *BB, <a class="el" href="structPredicate_1_1Intersection.html">Intersection</a> predicate)</td></tr>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>reach</b> (BumpAlloc&lt;&gt; &amp;alloc, llvm::BasicBlock *BB, <a class="el" href="structPredicate_1_1Intersection.html">Intersection</a> predicate)</td></tr>
 <tr class="separator:a731a094de3b437d23305ded68b42415e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8780c8b2e7980ac61f163ae918782d78"><td class="memItemLeft" align="right" valign="top"><a id="a8780c8b2e7980ac61f163ae918782d78"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>assume</b> (<a class="el" href="structPredicate_1_1Intersection.html">Intersection</a> predicate)</td></tr>
@@ -166,9 +166,9 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>assume</b> (<a class=
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
 <tr class="memitem:a5d7db40c28bf3010e99d8561ad062d1f"><td class="memItemLeft" align="right" valign="top"><a id="a5d7db40c28bf3010e99d8561ad062d1f"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>descendBlock</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, <a class="el" href="structIntr_1_1Cache.html">Intr::Cache</a> &amp;cache, <a class="el" href="structaset.html">aset</a>&lt; llvm::BasicBlock * &gt; &amp;visited, <a class="el" href="structPredicate_1_1Map.html">Predicate::Map</a> &amp;predMap, llvm::BasicBlock *BBsrc, llvm::BasicBlock *BBdst, <a class="el" href="structPredicate_1_1Intersection.html">Predicate::Intersection</a> predicate, llvm::BasicBlock *BBhead, llvm::Loop *L) -&gt; Destination</td></tr>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>descendBlock</b> (BumpAlloc&lt;&gt; &amp;alloc, <a class="el" href="structIntr_1_1Cache.html">Intr::Cache</a> &amp;cache, <a class="el" href="structaset.html">aset</a>&lt; llvm::BasicBlock * &gt; &amp;visited, <a class="el" href="structPredicate_1_1Map.html">Predicate::Map</a> &amp;predMap, llvm::BasicBlock *BBsrc, llvm::BasicBlock *BBdst, <a class="el" href="structPredicate_1_1Intersection.html">Predicate::Intersection</a> predicate, llvm::BasicBlock *BBhead, llvm::Loop *L) -&gt; Destination</td></tr>
 <tr class="separator:a5d7db40c28bf3010e99d8561ad062d1f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5ba1eced874bd7388dc563d3f17c7311"><td class="memItemLeft" align="right" valign="top">static auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPredicate_1_1Map.html#a5ba1eced874bd7388dc563d3f17c7311">descend</a> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, <a class="el" href="structIntr_1_1Cache.html">Intr::Cache</a> &amp;cache, llvm::BasicBlock *start, llvm::BasicBlock *stop, llvm::Loop *L) -&gt; std::optional&lt; <a class="el" href="structPredicate_1_1Map.html">Map</a> &gt;</td></tr>
+<tr class="memitem:a5ba1eced874bd7388dc563d3f17c7311"><td class="memItemLeft" align="right" valign="top">static auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPredicate_1_1Map.html#a5ba1eced874bd7388dc563d3f17c7311">descend</a> (BumpAlloc&lt;&gt; &amp;alloc, <a class="el" href="structIntr_1_1Cache.html">Intr::Cache</a> &amp;cache, llvm::BasicBlock *start, llvm::BasicBlock *stop, llvm::Loop *L) -&gt; std::optional&lt; <a class="el" href="structPredicate_1_1Map.html">Map</a> &gt;</td></tr>
 <tr class="separator:a5ba1eced874bd7388dc563d3f17c7311"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
@@ -190,7 +190,7 @@ Public Attributes</h2></td></tr>
         <tr>
           <td class="memname">static auto Predicate::Map::descend </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;&#160;</td>
+          <td class="paramtype">BumpAlloc&lt;&gt; &amp;&#160;</td>
           <td class="paramname"><em>alloc</em>, </td>
         </tr>
         <tr>

@@ -1,6 +1,5 @@
 var searchData=
 [
-  ['searchoperandsforloads_490',['searchOperandsForLoads',['../classLinearProgramLoopBlock.html#aba9f909e08e1c2088f72883b3dafdaae',1,'LinearProgramLoopBlock']]],
-  ['searchvalueforstores_491',['searchValueForStores',['../classLinearProgramLoopBlock.html#a06f63fe9b66d7b330be607bdba3f1d71',1,'LinearProgramLoopBlock']]],
-  ['selectcost_492',['selectCost',['../classIntr.html#afdbe42b85e8b7121bededaa2f312402d',1,'Intr']]]
+  ['truncate_270',['truncate',['../classLinearProgramLoopBlock.html#aa7e6dcbc46c54737c2ad846703f48398',1,'LinearProgramLoopBlock']]],
+  ['typealignment_271',['typeAlignment',['../classArrayIndex.html#ac22530e45b871b8c7e86b9ade78b25bd',1,'ArrayIndex']]]
 ];

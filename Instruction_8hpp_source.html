@@ -142,7 +142,7 @@ $(function() {
 <div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;  <span class="keywordflow">return</span> containsCycleCore(J, visited, S);</div>
 <div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;}</div>
 <div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160; </div>
-<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> containsCycle(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, llvm::Instruction <span class="keyword">const</span> *S)</div>
+<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> containsCycle(BumpAlloc&lt;&gt; &amp;alloc, llvm::Instruction <span class="keyword">const</span> *S)</div>
 <div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;  -&gt; <span class="keywordtype">bool</span> {</div>
 <div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;  <span class="comment">// don&#39;t get trapped in a different cycle</span></div>
 <div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;  <span class="keyword">auto</span> p = alloc.scope();</div>
@@ -366,12 +366,12 @@ $(function() {
 <div class="line"><a name="l00301"></a><span class="lineno">  301</span>&#160;    <span class="keywordflow">return</span> std::visit&lt;llvm::BasicBlock *&gt;(<a class="code" href="structIntr_1_1ExtractBasicBlock.html">ExtractBasicBlock</a>{}, ptr);</div>
 <div class="line"><a name="l00302"></a><span class="lineno">  302</span>&#160;  }</div>
 <div class="line"><a name="l00303"></a><span class="lineno">  303</span>&#160; </div>
-<div class="line"><a name="l00304"></a><span class="lineno">  304</span>&#160;  <a class="code" href="classIntr.html">Intr</a>(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, Intrinsic idt, llvm::Type *typ)</div>
+<div class="line"><a name="l00304"></a><span class="lineno">  304</span>&#160;  <a class="code" href="classIntr.html">Intr</a>(BumpAlloc&lt;&gt; &amp;alloc, Intrinsic idt, llvm::Type *typ)</div>
 <div class="line"><a name="l00305"></a><span class="lineno">  305</span>&#160;    : <a class="code" href="classInst.html">Inst</a>(VK_Intr), idtf(idt), type(typ), predicates(alloc), users(alloc),</div>
 <div class="line"><a name="l00306"></a><span class="lineno">  306</span>&#160;      <a class="code" href="classIntr.html#aa220041567275cc2f05c0d7edf8b2f82">costs</a>(alloc) {}</div>
 <div class="line"><a name="l00307"></a><span class="lineno">  307</span>&#160;  <span class="comment">// Instruction(UniqueIdentifier uid)</span></div>
 <div class="line"><a name="l00308"></a><span class="lineno">  308</span>&#160;  <span class="comment">// : id(std::get&lt;0&gt;(uid)), operands(std::get&lt;1&gt;(uid)) {}</span></div>
-<div class="line"><a name="l00309"></a><span class="lineno">  309</span>&#160;  <a class="code" href="classIntr.html">Intr</a>(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, UniqueIdentifier uid, llvm::Type *typ)</div>
+<div class="line"><a name="l00309"></a><span class="lineno">  309</span>&#160;  <a class="code" href="classIntr.html">Intr</a>(BumpAlloc&lt;&gt; &amp;alloc, UniqueIdentifier uid, llvm::Type *typ)</div>
 <div class="line"><a name="l00310"></a><span class="lineno">  310</span>&#160;    : <a class="code" href="classInst.html">Inst</a>(VK_Intr), idtf(uid.idtf), type(typ), predicates(alloc),</div>
 <div class="line"><a name="l00311"></a><span class="lineno">  311</span>&#160;      operands(uid.operands), users(alloc), <a class="code" href="classIntr.html#aa220041567275cc2f05c0d7edf8b2f82">costs</a>(alloc) {}</div>
 <div class="line"><a name="l00312"></a><span class="lineno"><a class="line" href="structIntr_1_1Cache.html">  312</a></span>&#160;  <span class="keyword">struct </span><a class="code" href="structIntr_1_1Cache.html">Cache</a> {</div>
@@ -425,7 +425,7 @@ $(function() {
 <div class="line"><a name="l00360"></a><span class="lineno">  360</span>&#160;      -&gt; <a class="code" href="classIntr.html">Intr</a> * {</div>
 <div class="line"><a name="l00361"></a><span class="lineno">  361</span>&#160;      <span class="keywordflow">return</span> argMapLoopup&lt;3&gt;(idt, {op0, op1, op2});</div>
 <div class="line"><a name="l00362"></a><span class="lineno">  362</span>&#160;    }</div>
-<div class="line"><a name="l00363"></a><span class="lineno">  363</span>&#160;    <span class="keyword">auto</span> createInstruction(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, <a class="code" href="structIntr_1_1UniqueIdentifier.html">UniqueIdentifier</a> uid,</div>
+<div class="line"><a name="l00363"></a><span class="lineno">  363</span>&#160;    <span class="keyword">auto</span> createInstruction(BumpAlloc&lt;&gt; &amp;alloc, <a class="code" href="structIntr_1_1UniqueIdentifier.html">UniqueIdentifier</a> uid,</div>
 <div class="line"><a name="l00364"></a><span class="lineno">  364</span>&#160;                           llvm::Type *typ) -&gt; <a class="code" href="classIntr.html">Intr</a> * {</div>
 <div class="line"><a name="l00365"></a><span class="lineno">  365</span>&#160;      <span class="keyword">auto</span> *i = <span class="keyword">new</span> (alloc) <a class="code" href="classIntr.html">Intr</a>(alloc, uid, typ);</div>
 <div class="line"><a name="l00366"></a><span class="lineno">  366</span>&#160;      <span class="keywordflow">if</span> (!i-&gt;operands.empty())</div>
@@ -433,23 +433,23 @@ $(function() {
 <div class="line"><a name="l00368"></a><span class="lineno">  368</span>&#160;      argMap.insert({uid, i});</div>
 <div class="line"><a name="l00369"></a><span class="lineno">  369</span>&#160;      <span class="keywordflow">return</span> i;</div>
 <div class="line"><a name="l00370"></a><span class="lineno">  370</span>&#160;    }</div>
-<div class="line"><a name="l00371"></a><span class="lineno">  371</span>&#160;    <span class="keyword">auto</span> getInstruction(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, <a class="code" href="structIntr_1_1UniqueIdentifier.html">UniqueIdentifier</a> uid,</div>
+<div class="line"><a name="l00371"></a><span class="lineno">  371</span>&#160;    <span class="keyword">auto</span> getInstruction(BumpAlloc&lt;&gt; &amp;alloc, <a class="code" href="structIntr_1_1UniqueIdentifier.html">UniqueIdentifier</a> uid,</div>
 <div class="line"><a name="l00372"></a><span class="lineno">  372</span>&#160;                        llvm::Type *typ) {</div>
 <div class="line"><a name="l00373"></a><span class="lineno">  373</span>&#160;      <span class="keywordflow">if</span> (<span class="keyword">auto</span> *i = (*<span class="keyword">this</span>)[uid]) <span class="keywordflow">return</span> i;</div>
 <div class="line"><a name="l00374"></a><span class="lineno">  374</span>&#160;      <span class="keywordflow">return</span> createInstruction(alloc, uid, typ);</div>
 <div class="line"><a name="l00375"></a><span class="lineno">  375</span>&#160;    }</div>
-<div class="line"><a name="l00376"></a><span class="lineno">  376</span>&#160;    <span class="keyword">auto</span> getInstruction(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, <a class="code" href="structIntr_1_1UniqueIdentifier.html">UniqueIdentifier</a> uid,</div>
+<div class="line"><a name="l00376"></a><span class="lineno">  376</span>&#160;    <span class="keyword">auto</span> getInstruction(BumpAlloc&lt;&gt; &amp;alloc, <a class="code" href="structIntr_1_1UniqueIdentifier.html">UniqueIdentifier</a> uid,</div>
 <div class="line"><a name="l00377"></a><span class="lineno">  377</span>&#160;                        llvm::Type *typ, <a class="code" href="structPredicate_1_1Set.html">Predicate::Set</a> pred) {</div>
 <div class="line"><a name="l00378"></a><span class="lineno">  378</span>&#160;      <span class="keywordflow">if</span> (<span class="keyword">auto</span> *i = (*<span class="keyword">this</span>)[uid]) <span class="keywordflow">return</span> i;</div>
 <div class="line"><a name="l00379"></a><span class="lineno">  379</span>&#160;      <span class="keyword">auto</span> *i = createInstruction(alloc, uid, typ);</div>
 <div class="line"><a name="l00380"></a><span class="lineno">  380</span>&#160;      i-&gt;predicates = std::move(pred);</div>
 <div class="line"><a name="l00381"></a><span class="lineno">  381</span>&#160;      <span class="keywordflow">return</span> i;</div>
 <div class="line"><a name="l00382"></a><span class="lineno">  382</span>&#160;    }</div>
-<div class="line"><a name="l00383"></a><span class="lineno">  383</span>&#160;    <span class="keyword">auto</span> getInstruction(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, <a class="code" href="structIntr_1_1Intrinsic.html">Intrinsic</a> idt, llvm::Type *typ) {</div>
+<div class="line"><a name="l00383"></a><span class="lineno">  383</span>&#160;    <span class="keyword">auto</span> getInstruction(BumpAlloc&lt;&gt; &amp;alloc, <a class="code" href="structIntr_1_1Intrinsic.html">Intrinsic</a> idt, llvm::Type *typ) {</div>
 <div class="line"><a name="l00384"></a><span class="lineno">  384</span>&#160;      <a class="code" href="structIntr_1_1UniqueIdentifier.html">UniqueIdentifier</a> uid{idt, {<span class="keyword">nullptr</span>, unsigned(0)}};</div>
 <div class="line"><a name="l00385"></a><span class="lineno">  385</span>&#160;      <span class="keywordflow">return</span> getInstruction(alloc, uid, typ);</div>
 <div class="line"><a name="l00386"></a><span class="lineno">  386</span>&#160;    }</div>
-<div class="line"><a name="l00387"></a><span class="lineno">  387</span>&#160;    <span class="keyword">auto</span> getInstruction(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, <a class="code" href="structIntr_1_1Intrinsic.html">Intrinsic</a> idt, <a class="code" href="classIntr.html">Intr</a> *op0,</div>
+<div class="line"><a name="l00387"></a><span class="lineno">  387</span>&#160;    <span class="keyword">auto</span> getInstruction(BumpAlloc&lt;&gt; &amp;alloc, <a class="code" href="structIntr_1_1Intrinsic.html">Intrinsic</a> idt, <a class="code" href="classIntr.html">Intr</a> *op0,</div>
 <div class="line"><a name="l00388"></a><span class="lineno">  388</span>&#160;                        llvm::Type *typ) {</div>
 <div class="line"><a name="l00389"></a><span class="lineno">  389</span>&#160;      <span class="comment">// stack allocate for check</span></div>
 <div class="line"><a name="l00390"></a><span class="lineno">  390</span>&#160;      <span class="keywordflow">if</span> (<span class="keyword">auto</span> *i = argMapLoopup(idt, op0)) <span class="keywordflow">return</span> i;</div>
@@ -460,7 +460,7 @@ $(function() {
 <div class="line"><a name="l00395"></a><span class="lineno">  395</span>&#160;      <span class="keywordflow">return</span> createInstruction(alloc, uid, typ);</div>
 <div class="line"><a name="l00396"></a><span class="lineno">  396</span>&#160;    }</div>
 <div class="line"><a name="l00397"></a><span class="lineno">  397</span>&#160;    <span class="keyword">template</span> &lt;<span class="keywordtype">size_t</span> N&gt;</div>
-<div class="line"><a name="l00398"></a><span class="lineno">  398</span>&#160;    <span class="keyword">auto</span> getInstruction(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, <a class="code" href="structIntr_1_1Intrinsic.html">Intrinsic</a> idt,</div>
+<div class="line"><a name="l00398"></a><span class="lineno">  398</span>&#160;    <span class="keyword">auto</span> getInstruction(BumpAlloc&lt;&gt; &amp;alloc, <a class="code" href="structIntr_1_1Intrinsic.html">Intrinsic</a> idt,</div>
 <div class="line"><a name="l00399"></a><span class="lineno">  399</span>&#160;                        std::array&lt;Intr *, N&gt; ops, llvm::Type *typ) {</div>
 <div class="line"><a name="l00400"></a><span class="lineno">  400</span>&#160;      <span class="comment">// stack allocate for check</span></div>
 <div class="line"><a name="l00401"></a><span class="lineno">  401</span>&#160;      <span class="keywordflow">if</span> (<span class="keyword">auto</span> *i = argMapLoopup(idt, ops)) <span class="keywordflow">return</span> i;</div>
@@ -470,16 +470,16 @@ $(function() {
 <div class="line"><a name="l00405"></a><span class="lineno">  405</span>&#160;      <a class="code" href="structIntr_1_1UniqueIdentifier.html">UniqueIdentifier</a> uid{idt, mops};</div>
 <div class="line"><a name="l00406"></a><span class="lineno">  406</span>&#160;      <span class="keywordflow">return</span> createInstruction(alloc, uid, typ);</div>
 <div class="line"><a name="l00407"></a><span class="lineno">  407</span>&#160;    }</div>
-<div class="line"><a name="l00408"></a><span class="lineno">  408</span>&#160;    <span class="keyword">auto</span> getInstruction(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, <a class="code" href="structIntr_1_1Intrinsic.html">Intrinsic</a> idt, <a class="code" href="classIntr.html">Intr</a> *op0, <a class="code" href="classIntr.html">Intr</a> *op1,</div>
+<div class="line"><a name="l00408"></a><span class="lineno">  408</span>&#160;    <span class="keyword">auto</span> getInstruction(BumpAlloc&lt;&gt; &amp;alloc, <a class="code" href="structIntr_1_1Intrinsic.html">Intrinsic</a> idt, <a class="code" href="classIntr.html">Intr</a> *op0, <a class="code" href="classIntr.html">Intr</a> *op1,</div>
 <div class="line"><a name="l00409"></a><span class="lineno">  409</span>&#160;                        llvm::Type *typ) {</div>
 <div class="line"><a name="l00410"></a><span class="lineno">  410</span>&#160;      <span class="keywordflow">return</span> getInstruction&lt;2&gt;(alloc, idt, {op0, op1}, typ);</div>
 <div class="line"><a name="l00411"></a><span class="lineno">  411</span>&#160;    }</div>
-<div class="line"><a name="l00412"></a><span class="lineno">  412</span>&#160;    <span class="keyword">auto</span> getInstruction(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, <a class="code" href="structIntr_1_1Intrinsic.html">Intrinsic</a> idt, <a class="code" href="classIntr.html">Intr</a> *op0, <a class="code" href="classIntr.html">Intr</a> *op1,</div>
+<div class="line"><a name="l00412"></a><span class="lineno">  412</span>&#160;    <span class="keyword">auto</span> getInstruction(BumpAlloc&lt;&gt; &amp;alloc, <a class="code" href="structIntr_1_1Intrinsic.html">Intrinsic</a> idt, <a class="code" href="classIntr.html">Intr</a> *op0, <a class="code" href="classIntr.html">Intr</a> *op1,</div>
 <div class="line"><a name="l00413"></a><span class="lineno">  413</span>&#160;                        <a class="code" href="classIntr.html">Intr</a> *op2, llvm::Type *typ) {</div>
 <div class="line"><a name="l00414"></a><span class="lineno">  414</span>&#160;      <span class="keywordflow">return</span> getInstruction&lt;3&gt;(alloc, idt, {op0, op1, op2}, typ);</div>
 <div class="line"><a name="l00415"></a><span class="lineno">  415</span>&#160;    }</div>
 <div class="line"><a name="l00416"></a><span class="lineno">  416</span>&#160; </div>
-<div class="line"><a name="l00418"></a><span class="lineno"><a class="line" href="structIntr_1_1Cache.html#a82c1f0c4c286bc885bccdd2e24c08818">  418</a></span>&#160;    <span class="keyword">auto</span> <a class="code" href="structIntr_1_1Cache.html#a82c1f0c4c286bc885bccdd2e24c08818">getInstruction</a>(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, llvm::Instruction *instr)</div>
+<div class="line"><a name="l00418"></a><span class="lineno"><a class="line" href="structIntr_1_1Cache.html#a82c1f0c4c286bc885bccdd2e24c08818">  418</a></span>&#160;    <span class="keyword">auto</span> <a class="code" href="structIntr_1_1Cache.html#a82c1f0c4c286bc885bccdd2e24c08818">getInstruction</a>(BumpAlloc&lt;&gt; &amp;alloc, llvm::Instruction *instr)</div>
 <div class="line"><a name="l00419"></a><span class="lineno">  419</span>&#160;      -&gt; <a class="code" href="classIntr.html">Intr</a> * {</div>
 <div class="line"><a name="l00420"></a><span class="lineno">  420</span>&#160;      <span class="keywordflow">if</span> (<a class="code" href="classIntr.html">Intr</a> *i = (*<span class="keyword">this</span>)[instr]) <span class="keywordflow">return</span> i;</div>
 <div class="line"><a name="l00421"></a><span class="lineno">  421</span>&#160;      <a class="code" href="structIntr_1_1UniqueIdentifier.html">UniqueIdentifier</a> uid{getUniqueIdentifier(alloc, *<span class="keyword">this</span>, instr)};</div>
@@ -487,10 +487,10 @@ $(function() {
 <div class="line"><a name="l00423"></a><span class="lineno">  423</span>&#160;      llvmToInternalMap[instr] = i;</div>
 <div class="line"><a name="l00424"></a><span class="lineno">  424</span>&#160;      <span class="keywordflow">return</span> i;</div>
 <div class="line"><a name="l00425"></a><span class="lineno">  425</span>&#160;    }</div>
-<div class="line"><a name="l00426"></a><span class="lineno">  426</span>&#160;    <span class="keyword">auto</span> getInstruction(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, <a class="code" href="structPredicate_1_1Map.html">Predicate::Map</a> &amp;predMap,</div>
+<div class="line"><a name="l00426"></a><span class="lineno">  426</span>&#160;    <span class="keyword">auto</span> getInstruction(BumpAlloc&lt;&gt; &amp;alloc, <a class="code" href="structPredicate_1_1Map.html">Predicate::Map</a> &amp;predMap,</div>
 <div class="line"><a name="l00427"></a><span class="lineno">  427</span>&#160;                        llvm::Instruction *instr) -&gt; <a class="code" href="classIntr.html">Intr</a> *;</div>
 <div class="line"><a name="l00428"></a><span class="lineno">  428</span>&#160;    <span class="comment">// NOLINTNEXTLINE(misc-no-recursion)</span></div>
-<div class="line"><a name="l00429"></a><span class="lineno">  429</span>&#160;    <span class="keyword">auto</span> getInstruction(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, llvm::Value *v) -&gt; <a class="code" href="classIntr.html">Intr</a> * {</div>
+<div class="line"><a name="l00429"></a><span class="lineno">  429</span>&#160;    <span class="keyword">auto</span> getInstruction(BumpAlloc&lt;&gt; &amp;alloc, llvm::Value *v) -&gt; <a class="code" href="classIntr.html">Intr</a> * {</div>
 <div class="line"><a name="l00430"></a><span class="lineno">  430</span>&#160;      <span class="keywordflow">if</span> (<a class="code" href="classIntr.html">Intr</a> *i = (*<span class="keyword">this</span>)[v]) <span class="keywordflow">return</span> i;</div>
 <div class="line"><a name="l00431"></a><span class="lineno">  431</span>&#160;      <a class="code" href="structIntr_1_1UniqueIdentifier.html">UniqueIdentifier</a> uid{getUniqueIdentifier(alloc, *<span class="keyword">this</span>, v)};</div>
 <div class="line"><a name="l00432"></a><span class="lineno">  432</span>&#160;      <span class="keyword">auto</span> *i = getInstruction(alloc, uid, v-&gt;getType());</div>
@@ -499,25 +499,25 @@ $(function() {
 <div class="line"><a name="l00435"></a><span class="lineno">  435</span>&#160;    }</div>
 <div class="line"><a name="l00436"></a><span class="lineno">  436</span>&#160;    <span class="comment">// if not in predMap, then operands don&#39;t get added, and</span></div>
 <div class="line"><a name="l00437"></a><span class="lineno">  437</span>&#160;    <span class="comment">// it won&#39;t be added to the argMap</span></div>
-<div class="line"><a name="l00438"></a><span class="lineno">  438</span>&#160;    <span class="keyword">auto</span> getInstruction(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, <a class="code" href="structPredicate_1_1Map.html">Predicate::Map</a> &amp;predMap,</div>
+<div class="line"><a name="l00438"></a><span class="lineno">  438</span>&#160;    <span class="keyword">auto</span> getInstruction(BumpAlloc&lt;&gt; &amp;alloc, <a class="code" href="structPredicate_1_1Map.html">Predicate::Map</a> &amp;predMap,</div>
 <div class="line"><a name="l00439"></a><span class="lineno">  439</span>&#160;                        llvm::Value *v) -&gt; <a class="code" href="classIntr.html">Intr</a> *;</div>
 <div class="line"><a name="l00440"></a><span class="lineno">  440</span>&#160;    [[nodiscard]] <span class="keyword">auto</span> contains(llvm::Value *v) <span class="keyword">const</span> -&gt; <span class="keywordtype">bool</span> {</div>
 <div class="line"><a name="l00441"></a><span class="lineno">  441</span>&#160;      <span class="keywordflow">return</span> llvmToInternalMap.count(v);</div>
 <div class="line"><a name="l00442"></a><span class="lineno">  442</span>&#160;    }</div>
-<div class="line"><a name="l00443"></a><span class="lineno">  443</span>&#160;    <span class="keyword">auto</span> createConstant(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, llvm::Type *typ, int64_t c)</div>
+<div class="line"><a name="l00443"></a><span class="lineno">  443</span>&#160;    <span class="keyword">auto</span> createConstant(BumpAlloc&lt;&gt; &amp;alloc, llvm::Type *typ, int64_t c)</div>
 <div class="line"><a name="l00444"></a><span class="lineno">  444</span>&#160;      -&gt; <a class="code" href="classIntr.html">Intr</a> * {</div>
 <div class="line"><a name="l00445"></a><span class="lineno">  445</span>&#160;      UniqueIdentifier uid{Identifier(c), {<span class="keyword">nullptr</span>, unsigned(0)}};</div>
 <div class="line"><a name="l00446"></a><span class="lineno">  446</span>&#160;      <span class="keyword">auto</span> argMatch = argMap.find(uid);</div>
 <div class="line"><a name="l00447"></a><span class="lineno">  447</span>&#160;      <span class="keywordflow">if</span> (argMatch != argMap.end()) <span class="keywordflow">return</span> argMatch-&gt;second;</div>
 <div class="line"><a name="l00448"></a><span class="lineno">  448</span>&#160;      <span class="keywordflow">return</span> <span class="keyword">new</span> (alloc) <a class="code" href="classIntr.html">Intr</a>(alloc, uid, typ);</div>
 <div class="line"><a name="l00449"></a><span class="lineno">  449</span>&#160;    }</div>
-<div class="line"><a name="l00450"></a><span class="lineno">  450</span>&#160;    <span class="keyword">auto</span> eslgetConstant(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, llvm::Type *typ, int64_t c)</div>
+<div class="line"><a name="l00450"></a><span class="lineno">  450</span>&#160;    <span class="keyword">auto</span> eslgetConstant(BumpAlloc&lt;&gt; &amp;alloc, llvm::Type *typ, int64_t c)</div>
 <div class="line"><a name="l00451"></a><span class="lineno">  451</span>&#160;      -&gt; <a class="code" href="classIntr.html">Intr</a> * {</div>
 <div class="line"><a name="l00452"></a><span class="lineno">  452</span>&#160;      UniqueIdentifier uid{Identifier(c), {<span class="keyword">nullptr</span>, unsigned(0)}};</div>
 <div class="line"><a name="l00453"></a><span class="lineno">  453</span>&#160;      <span class="keywordflow">if</span> (<span class="keyword">auto</span> *i = (*<span class="keyword">this</span>)[uid]) <span class="keywordflow">return</span> i;</div>
 <div class="line"><a name="l00454"></a><span class="lineno">  454</span>&#160;      <span class="keywordflow">return</span> createConstant(alloc, typ, c);</div>
 <div class="line"><a name="l00455"></a><span class="lineno">  455</span>&#160;    }</div>
-<div class="line"><a name="l00456"></a><span class="lineno">  456</span>&#160;    <span class="keyword">auto</span> createCondition(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, Predicate::Relation rel,</div>
+<div class="line"><a name="l00456"></a><span class="lineno">  456</span>&#160;    <span class="keyword">auto</span> createCondition(BumpAlloc&lt;&gt; &amp;alloc, Predicate::Relation rel,</div>
 <div class="line"><a name="l00457"></a><span class="lineno">  457</span>&#160;                         <a class="code" href="classIntr.html">Intr</a> *instr, <span class="keywordtype">bool</span> swap = <span class="keyword">false</span>) -&gt; <a class="code" href="classNode.html">Node</a> * {</div>
 <div class="line"><a name="l00458"></a><span class="lineno">  458</span>&#160;      <span class="keywordflow">switch</span> (rel) {</div>
 <div class="line"><a name="l00459"></a><span class="lineno">  459</span>&#160;      <span class="keywordflow">case</span> Predicate::Relation::Any:</div>
@@ -531,7 +531,7 @@ $(function() {
 <div class="line"><a name="l00467"></a><span class="lineno">  467</span>&#160;        <span class="keywordflow">return</span> swap ? instr-&gt;negate(alloc, *<span class="keyword">this</span>) : instr;</div>
 <div class="line"><a name="l00468"></a><span class="lineno">  468</span>&#160;      }</div>
 <div class="line"><a name="l00469"></a><span class="lineno">  469</span>&#160;    }</div>
-<div class="line"><a name="l00470"></a><span class="lineno">  470</span>&#160;    <span class="keyword">auto</span> createCondition(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, <a class="code" href="structPredicate_1_1Intersection.html">Predicate::Intersection</a> pred,</div>
+<div class="line"><a name="l00470"></a><span class="lineno">  470</span>&#160;    <span class="keyword">auto</span> createCondition(BumpAlloc&lt;&gt; &amp;alloc, <a class="code" href="structPredicate_1_1Intersection.html">Predicate::Intersection</a> pred,</div>
 <div class="line"><a name="l00471"></a><span class="lineno">  471</span>&#160;                         <span class="keywordtype">bool</span> swap) -&gt; <a class="code" href="classIntr.html">Intr</a> * {</div>
 <div class="line"><a name="l00472"></a><span class="lineno">  472</span>&#160;      <span class="keywordtype">size_t</span> popCount = pred.popCount();</div>
 <div class="line"><a name="l00473"></a><span class="lineno">  473</span>&#160; </div>
@@ -559,7 +559,7 @@ $(function() {
 <div class="line"><a name="l00495"></a><span class="lineno">  495</span>&#160;      } <span class="keywordflow">while</span> (ind &lt; 32);</div>
 <div class="line"><a name="l00496"></a><span class="lineno">  496</span>&#160;      <span class="keywordflow">return</span> J;</div>
 <div class="line"><a name="l00497"></a><span class="lineno">  497</span>&#160;    }</div>
-<div class="line"><a name="l00498"></a><span class="lineno"><a class="line" href="structIntr_1_1Cache.html#a0fce4d306b7b98002c18bf8460251f5e">  498</a></span>&#160;    <span class="keyword">auto</span> <a class="code" href="structIntr_1_1Cache.html#a0fce4d306b7b98002c18bf8460251f5e">createSelect</a>(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, <a class="code" href="classIntr.html">Intr</a> *A, <a class="code" href="classIntr.html">Intr</a> *B) -&gt; <a class="code" href="classIntr.html">Intr</a> * {</div>
+<div class="line"><a name="l00498"></a><span class="lineno"><a class="line" href="structIntr_1_1Cache.html#a0fce4d306b7b98002c18bf8460251f5e">  498</a></span>&#160;    <span class="keyword">auto</span> <a class="code" href="structIntr_1_1Cache.html#a0fce4d306b7b98002c18bf8460251f5e">createSelect</a>(BumpAlloc&lt;&gt; &amp;alloc, <a class="code" href="classIntr.html">Intr</a> *A, <a class="code" href="classIntr.html">Intr</a> *B) -&gt; <a class="code" href="classIntr.html">Intr</a> * {</div>
 <div class="line"><a name="l00499"></a><span class="lineno">  499</span>&#160;      <span class="keyword">auto</span> idt = <a class="code" href="structIntr_1_1Intrinsic.html">Intrinsic</a>(<a class="code" href="structIntr_1_1Intrinsic_1_1OpCode.html">Intrinsic::OpCode</a>{llvm::Instruction::Select});</div>
 <div class="line"><a name="l00500"></a><span class="lineno">  500</span>&#160;      <span class="comment">// TODO: make predicate&#39;s instruction vector shared among all in</span></div>
 <div class="line"><a name="l00501"></a><span class="lineno">  501</span>&#160;      <span class="comment">// LoopTree?</span></div>
@@ -580,9 +580,9 @@ $(function() {
 <div class="line"><a name="l00534"></a><span class="lineno">  534</span>&#160;      S-&gt;predicates |= B-&gt;predicates;</div>
 <div class="line"><a name="l00535"></a><span class="lineno">  535</span>&#160;      <span class="keywordflow">return</span> S;</div>
 <div class="line"><a name="l00536"></a><span class="lineno">  536</span>&#160;    }</div>
-<div class="line"><a name="l00541"></a><span class="lineno">  541</span>&#160;    <span class="keyword">auto</span> <a class="code" href="structIntr_1_1Cache.html#a85b3679bbeca4d8f855635211ce71975">completeInstruction</a>(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;, <a class="code" href="structPredicate_1_1Map.html">Predicate::Map</a> &amp;,</div>
+<div class="line"><a name="l00541"></a><span class="lineno">  541</span>&#160;    <span class="keyword">auto</span> <a class="code" href="structIntr_1_1Cache.html#a85b3679bbeca4d8f855635211ce71975">completeInstruction</a>(BumpAlloc&lt;&gt; &amp;, <a class="code" href="structPredicate_1_1Map.html">Predicate::Map</a> &amp;,</div>
 <div class="line"><a name="l00542"></a><span class="lineno">  542</span>&#160;                             llvm::Instruction *) -&gt; <a class="code" href="classIntr.html">Intr</a> *;</div>
-<div class="line"><a name="l00543"></a><span class="lineno">  543</span>&#160;    <span class="keywordtype">void</span> addParents(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, <a class="code" href="classAddr.html">Addr</a> *a, llvm::Loop *L) {</div>
+<div class="line"><a name="l00543"></a><span class="lineno">  543</span>&#160;    <span class="keywordtype">void</span> addParents(BumpAlloc&lt;&gt; &amp;alloc, <a class="code" href="classAddr.html">Addr</a> *a, llvm::Loop *L) {</div>
 <div class="line"><a name="l00544"></a><span class="lineno">  544</span>&#160;      <span class="keyword">auto</span> *J = a-&gt;getInstruction();</div>
 <div class="line"><a name="l00545"></a><span class="lineno">  545</span>&#160;      <span class="keywordflow">if</span> (!L-&gt;contains(J-&gt;getParent())) <span class="keywordflow">return</span>;</div>
 <div class="line"><a name="l00546"></a><span class="lineno">  546</span>&#160;      llvm::Use *U = J-&gt;getOperandList();</div>
@@ -593,20 +593,20 @@ $(function() {
 <div class="line"><a name="l00551"></a><span class="lineno">  551</span>&#160;        addValue(alloc, V, L);</div>
 <div class="line"><a name="l00552"></a><span class="lineno">  552</span>&#160;      }</div>
 <div class="line"><a name="l00553"></a><span class="lineno">  553</span>&#160;    }</div>
-<div class="line"><a name="l00554"></a><span class="lineno">  554</span>&#160;    <span class="keywordtype">void</span> addValue(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, llvm::Value *V, llvm::Loop *L) {}</div>
+<div class="line"><a name="l00554"></a><span class="lineno">  554</span>&#160;    <span class="keywordtype">void</span> addValue(BumpAlloc&lt;&gt; &amp;alloc, llvm::Value *V, llvm::Loop *L) {}</div>
 <div class="line"><a name="l00555"></a><span class="lineno">  555</span>&#160;  };</div>
 <div class="line"><a name="l00556"></a><span class="lineno">  556</span>&#160;  [[nodiscard]] <span class="keyword">static</span> <span class="keyword">auto</span> <span class="comment">// NOLINTNEXTLINE(misc-no-recursion)</span></div>
-<div class="line"><a name="l00557"></a><span class="lineno">  557</span>&#160;  getUniqueIdentifier(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, Cache &amp;cache, llvm::Instruction *v)</div>
+<div class="line"><a name="l00557"></a><span class="lineno">  557</span>&#160;  getUniqueIdentifier(BumpAlloc&lt;&gt; &amp;alloc, Cache &amp;cache, llvm::Instruction *v)</div>
 <div class="line"><a name="l00558"></a><span class="lineno">  558</span>&#160;    -&gt; UniqueIdentifier {</div>
 <div class="line"><a name="l00559"></a><span class="lineno">  559</span>&#160;    <span class="keywordflow">return</span> {Intrinsic(v), getOperands(alloc, cache, v)};</div>
 <div class="line"><a name="l00560"></a><span class="lineno">  560</span>&#160;  }</div>
-<div class="line"><a name="l00561"></a><span class="lineno">  561</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getUniqueIdentifier(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, Cache &amp;cache)</div>
+<div class="line"><a name="l00561"></a><span class="lineno">  561</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getUniqueIdentifier(BumpAlloc&lt;&gt; &amp;alloc, Cache &amp;cache)</div>
 <div class="line"><a name="l00562"></a><span class="lineno">  562</span>&#160;    -&gt; UniqueIdentifier {</div>
 <div class="line"><a name="l00563"></a><span class="lineno">  563</span>&#160;    llvm::Instruction *J = getInstruction();</div>
 <div class="line"><a name="l00564"></a><span class="lineno">  564</span>&#160;    <span class="keywordflow">return</span> {idtf, getOperands(alloc, cache, J)};</div>
 <div class="line"><a name="l00565"></a><span class="lineno">  565</span>&#160;  }</div>
 <div class="line"><a name="l00566"></a><span class="lineno">  566</span>&#160;  <span class="comment">// NOLINTNEXTLINE(misc-no-recursion)</span></div>
-<div class="line"><a name="l00567"></a><span class="lineno">  567</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> <span class="keyword">static</span> getUniqueIdentifier(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc,</div>
+<div class="line"><a name="l00567"></a><span class="lineno">  567</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> <span class="keyword">static</span> getUniqueIdentifier(BumpAlloc&lt;&gt; &amp;alloc,</div>
 <div class="line"><a name="l00568"></a><span class="lineno">  568</span>&#160;                                                Cache &amp;cache, llvm::Value *v)</div>
 <div class="line"><a name="l00569"></a><span class="lineno">  569</span>&#160;    -&gt; UniqueIdentifier {</div>
 <div class="line"><a name="l00570"></a><span class="lineno">  570</span>&#160;    <span class="keywordflow">if</span> (<span class="keyword">auto</span> *J = llvm::dyn_cast&lt;llvm::Instruction&gt;(v))</div>
@@ -614,18 +614,18 @@ $(function() {
 <div class="line"><a name="l00572"></a><span class="lineno">  572</span>&#160;    <span class="keywordflow">return</span> {Intrinsic(v), {<span class="keyword">nullptr</span>, unsigned(0)}};</div>
 <div class="line"><a name="l00573"></a><span class="lineno">  573</span>&#160;  }</div>
 <div class="line"><a name="l00574"></a><span class="lineno">  574</span>&#160;  [[nodiscard]] <span class="keyword">static</span> <span class="keyword">auto</span> <span class="comment">// NOLINTNEXTLINE(misc-no-recursion)</span></div>
-<div class="line"><a name="l00575"></a><span class="lineno">  575</span>&#160;  getUniqueIdentifier(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, <a class="code" href="structPredicate_1_1Map.html">Predicate::Map</a> &amp;predMap, Cache &amp;cache,</div>
+<div class="line"><a name="l00575"></a><span class="lineno">  575</span>&#160;  getUniqueIdentifier(BumpAlloc&lt;&gt; &amp;alloc, <a class="code" href="structPredicate_1_1Map.html">Predicate::Map</a> &amp;predMap, Cache &amp;cache,</div>
 <div class="line"><a name="l00576"></a><span class="lineno">  576</span>&#160;                      llvm::Instruction *J) -&gt; UniqueIdentifier {</div>
 <div class="line"><a name="l00577"></a><span class="lineno">  577</span>&#160;    <span class="keywordflow">return</span> {Intrinsic(J), getOperands(alloc, predMap, cache, J)};</div>
 <div class="line"><a name="l00578"></a><span class="lineno">  578</span>&#160;  }</div>
-<div class="line"><a name="l00579"></a><span class="lineno">  579</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getUniqueIdentifier(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc,</div>
+<div class="line"><a name="l00579"></a><span class="lineno">  579</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getUniqueIdentifier(BumpAlloc&lt;&gt; &amp;alloc,</div>
 <div class="line"><a name="l00580"></a><span class="lineno">  580</span>&#160;                                         <a class="code" href="structPredicate_1_1Map.html">Predicate::Map</a> &amp;predMap, Cache &amp;cache)</div>
 <div class="line"><a name="l00581"></a><span class="lineno">  581</span>&#160;    -&gt; UniqueIdentifier {</div>
 <div class="line"><a name="l00582"></a><span class="lineno">  582</span>&#160;    llvm::Instruction *J = getInstruction();</div>
 <div class="line"><a name="l00583"></a><span class="lineno">  583</span>&#160;    <span class="keywordflow">return</span> {idtf, getOperands(alloc, predMap, cache, J)};</div>
 <div class="line"><a name="l00584"></a><span class="lineno">  584</span>&#160;  }</div>
 <div class="line"><a name="l00585"></a><span class="lineno">  585</span>&#160;  <span class="comment">// NOLINTNEXTLINE(misc-no-recursion)</span></div>
-<div class="line"><a name="l00586"></a><span class="lineno">  586</span>&#160;  [[nodiscard]] <span class="keyword">static</span> <span class="keyword">auto</span> getOperands(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, Cache &amp;cache,</div>
+<div class="line"><a name="l00586"></a><span class="lineno">  586</span>&#160;  [[nodiscard]] <span class="keyword">static</span> <span class="keyword">auto</span> getOperands(BumpAlloc&lt;&gt; &amp;alloc, Cache &amp;cache,</div>
 <div class="line"><a name="l00587"></a><span class="lineno">  587</span>&#160;                                        llvm::Instruction *instr)</div>
 <div class="line"><a name="l00588"></a><span class="lineno">  588</span>&#160;    -&gt; MutPtrVector&lt;Intr *&gt; {</div>
 <div class="line"><a name="l00589"></a><span class="lineno">  589</span>&#160;    <span class="keywordflow">if</span> (llvm::isa&lt;llvm::LoadInst&gt;(instr)) <span class="keywordflow">return</span> {<span class="keyword">nullptr</span>, size_t(0)};</div>
@@ -641,7 +641,7 @@ $(function() {
 <div class="line"><a name="l00599"></a><span class="lineno">  599</span>&#160;    <span class="keywordflow">return</span> {operands, numOps};</div>
 <div class="line"><a name="l00600"></a><span class="lineno">  600</span>&#160;  }</div>
 <div class="line"><a name="l00601"></a><span class="lineno">  601</span>&#160;  <span class="comment">// NOLINTNEXTLINE(misc-no-recursion)</span></div>
-<div class="line"><a name="l00602"></a><span class="lineno">  602</span>&#160;  [[nodiscard]] <span class="keyword">static</span> <span class="keyword">auto</span> getOperands(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc,</div>
+<div class="line"><a name="l00602"></a><span class="lineno">  602</span>&#160;  [[nodiscard]] <span class="keyword">static</span> <span class="keyword">auto</span> getOperands(BumpAlloc&lt;&gt; &amp;alloc,</div>
 <div class="line"><a name="l00603"></a><span class="lineno">  603</span>&#160;                                        <a class="code" href="structPredicate_1_1Map.html">Predicate::Map</a> &amp;BBpreds, Cache &amp;cache,</div>
 <div class="line"><a name="l00604"></a><span class="lineno">  604</span>&#160;                                        llvm::Instruction *instr)</div>
 <div class="line"><a name="l00605"></a><span class="lineno">  605</span>&#160;    -&gt; MutPtrVector&lt;Intr *&gt; {</div>
@@ -657,14 +657,14 @@ $(function() {
 <div class="line"><a name="l00615"></a><span class="lineno">  615</span>&#160;    <span class="keywordflow">for</span> (; OI != OE; ++OI, ++p) *p = cache.getInstruction(alloc, BBpreds, *OI);</div>
 <div class="line"><a name="l00616"></a><span class="lineno">  616</span>&#160;    <span class="keywordflow">return</span> {operands, nOps};</div>
 <div class="line"><a name="l00617"></a><span class="lineno">  617</span>&#160;  }</div>
-<div class="line"><a name="l00618"></a><span class="lineno">  618</span>&#160;  <span class="keyword">static</span> <span class="keyword">auto</span> createIsolated(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, llvm::Instruction *instr)</div>
+<div class="line"><a name="l00618"></a><span class="lineno">  618</span>&#160;  <span class="keyword">static</span> <span class="keyword">auto</span> createIsolated(BumpAlloc&lt;&gt; &amp;alloc, llvm::Instruction *instr)</div>
 <div class="line"><a name="l00619"></a><span class="lineno">  619</span>&#160;    -&gt; <a class="code" href="classIntr.html">Intr</a> * {</div>
 <div class="line"><a name="l00620"></a><span class="lineno">  620</span>&#160;    Intrinsic <span class="keywordtype">id</span>{instr};</div>
 <div class="line"><a name="l00621"></a><span class="lineno">  621</span>&#160;    <span class="keyword">auto</span> *i = <span class="keyword">new</span> (alloc) <a class="code" href="classIntr.html">Intr</a>(alloc, <span class="keywordtype">id</span>, instr-&gt;getType());</div>
 <div class="line"><a name="l00622"></a><span class="lineno">  622</span>&#160;    <span class="keywordflow">return</span> i;</div>
 <div class="line"><a name="l00623"></a><span class="lineno">  623</span>&#160;  }</div>
 <div class="line"><a name="l00624"></a><span class="lineno">  624</span>&#160; </div>
-<div class="line"><a name="l00625"></a><span class="lineno">  625</span>&#160;  <span class="keyword">auto</span> negate(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, Cache &amp;cache) -&gt; <a class="code" href="classIntr.html">Intr</a> * {</div>
+<div class="line"><a name="l00625"></a><span class="lineno">  625</span>&#160;  <span class="keyword">auto</span> negate(BumpAlloc&lt;&gt; &amp;alloc, Cache &amp;cache) -&gt; <a class="code" href="classIntr.html">Intr</a> * {</div>
 <div class="line"><a name="l00626"></a><span class="lineno">  626</span>&#160;    <span class="comment">// first, check if its parent is a negation</span></div>
 <div class="line"><a name="l00627"></a><span class="lineno">  627</span>&#160;    <span class="keywordflow">if</span> (isInstruction(llvm::Instruction::Xor) &amp;&amp; (getNumOperands() == 2)) {</div>
 <div class="line"><a name="l00628"></a><span class="lineno">  628</span>&#160;      <span class="comment">// !x where `x isa bool` is represented as `x ^ true`</span></div>
@@ -789,7 +789,7 @@ $(function() {
 <div class="line"><a name="l00748"></a><span class="lineno">  748</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getNumScalarBytes() const -&gt; <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> {</div>
 <div class="line"><a name="l00749"></a><span class="lineno">  749</span>&#160;    <span class="keywordflow">return</span> getNumScalarBits() / 8;</div>
 <div class="line"><a name="l00750"></a><span class="lineno">  750</span>&#160;  }</div>
-<div class="line"><a name="l00751"></a><span class="lineno">  751</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getIntrinsic() const -&gt; <a class="code" href="structOptional.html">Optional</a>&lt;const Intrinsic *&gt; {</div>
+<div class="line"><a name="l00751"></a><span class="lineno">  751</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getIntrinsic() const -&gt; Optional&lt;const Intrinsic *&gt; {</div>
 <div class="line"><a name="l00752"></a><span class="lineno">  752</span>&#160;    <span class="keywordflow">if</span> (<span class="keyword">const</span> <span class="keyword">auto</span> *i = std::get_if&lt;Intrinsic&gt;(&amp;idtf)) <span class="keywordflow">return</span> i;</div>
 <div class="line"><a name="l00753"></a><span class="lineno">  753</span>&#160;    <span class="keywordflow">return</span> {};</div>
 <div class="line"><a name="l00754"></a><span class="lineno">  754</span>&#160;  }</div>
@@ -1031,7 +1031,7 @@ $(function() {
 <div class="line"><a name="l00992"></a><span class="lineno">  992</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> calculateCost(llvm::TargetTransformInfo &amp;TTI,</div>
 <div class="line"><a name="l00993"></a><span class="lineno">  993</span>&#160;                                   <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> vectorWidth)</div>
 <div class="line"><a name="l00994"></a><span class="lineno">  994</span>&#160;    -&gt; <a class="code" href="structRecipThroughputLatency.html">RecipThroughputLatency</a> {</div>
-<div class="line"><a name="l00995"></a><span class="lineno">  995</span>&#160;    <span class="keywordflow">if</span> (<a class="code" href="structOptional.html">Optional&lt;const Intrinsic *&gt;</a> idt = getIntrinsic())</div>
+<div class="line"><a name="l00995"></a><span class="lineno">  995</span>&#160;    <span class="keywordflow">if</span> (Optional&lt;const Intrinsic *&gt; idt = getIntrinsic())</div>
 <div class="line"><a name="l00996"></a><span class="lineno">  996</span>&#160;      <span class="keywordflow">return</span> calcCost(*idt, TTI, vectorWidth);</div>
 <div class="line"><a name="l00997"></a><span class="lineno">  997</span>&#160;    <span class="keywordflow">if</span> (<span class="keyword">auto</span> *F = getFunction()) <span class="keywordflow">return</span> calcCallCost(TTI, F, vectorWidth);</div>
 <div class="line"><a name="l00998"></a><span class="lineno">  998</span>&#160;    <span class="keywordflow">return</span> {};</div>
@@ -1099,7 +1099,7 @@ $(function() {
 <div class="line"><a name="l01060"></a><span class="lineno"> 1060</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
 <div class="line"><a name="l01061"></a><span class="lineno"> 1061</span>&#160;  }</div>
 <div class="line"><a name="l01062"></a><span class="lineno"> 1062</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> associativeOperandsFlag() const -&gt; uint8_t {</div>
-<div class="line"><a name="l01063"></a><span class="lineno"> 1063</span>&#160;    <a class="code" href="structOptional.html">Optional&lt;const Intrinsic *&gt;</a> idop = getIntrinsic();</div>
+<div class="line"><a name="l01063"></a><span class="lineno"> 1063</span>&#160;    Optional&lt;const Intrinsic *&gt; idop = getIntrinsic();</div>
 <div class="line"><a name="l01064"></a><span class="lineno"> 1064</span>&#160;    <span class="keywordflow">if</span> (!idop) <span class="keywordflow">return</span> 0;</div>
 <div class="line"><a name="l01065"></a><span class="lineno"> 1065</span>&#160;    <span class="keywordflow">switch</span> (idop-&gt;opcode.id) {</div>
 <div class="line"><a name="l01066"></a><span class="lineno"> 1066</span>&#160;    <span class="keywordflow">case</span> llvm::Instruction::Call:</div>
@@ -1174,7 +1174,7 @@ $(function() {
 <div class="line"><a name="l01140"></a><span class="lineno"> 1140</span>&#160;<span class="keyword">namespace </span>Predicate {</div>
 <div class="line"><a name="l01141"></a><span class="lineno"><a class="line" href="structPredicate_1_1Map.html"> 1141</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structPredicate_1_1Map.html">Map</a> {</div>
 <div class="line"><a name="l01142"></a><span class="lineno"> 1142</span>&#160;  <a class="code" href="classMapVector.html">MapVector&lt;llvm::BasicBlock *, Set&gt;</a> map;</div>
-<div class="line"><a name="l01143"></a><span class="lineno"> 1143</span>&#160;  constexpr <a class="code" href="structPredicate_1_1Map.html">Map</a>(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc) : map(alloc) {}</div>
+<div class="line"><a name="l01143"></a><span class="lineno"> 1143</span>&#160;  constexpr <a class="code" href="structPredicate_1_1Map.html">Map</a>(BumpAlloc&lt;&gt; &amp;alloc) : map(alloc) {}</div>
 <div class="line"><a name="l01144"></a><span class="lineno"> 1144</span>&#160;  <a class="code" href="structPredicate_1_1Map.html">Map</a>(<span class="keyword">const</span> <a class="code" href="structPredicate_1_1Map.html">Map</a> &amp;x) = <span class="keywordflow">default</span>;</div>
 <div class="line"><a name="l01145"></a><span class="lineno"> 1145</span>&#160;  <a class="code" href="structPredicate_1_1Map.html">Map</a>(<a class="code" href="structPredicate_1_1Map.html">Map</a> &amp;&amp;x) noexcept : map{std::move(x.map)} {}</div>
 <div class="line"><a name="l01146"></a><span class="lineno"> 1146</span>&#160;  <span class="keyword">auto</span> operator=(<span class="keyword">const</span> <a class="code" href="structPredicate_1_1Map.html">Map</a> &amp;) -&gt; <a class="code" href="structPredicate_1_1Map.html">Map</a> &amp; = <span class="keywordflow">default</span>;</div>
@@ -1233,7 +1233,7 @@ $(function() {
 <div class="line"><a name="l01199"></a><span class="lineno"> 1199</span>&#160;  <span class="comment">// void visit(llvm::BasicBlock *BB) { map.insert(std::make_pair(BB,</span></div>
 <div class="line"><a name="l01200"></a><span class="lineno"> 1200</span>&#160;  <span class="comment">// Set())); } void visit(llvm::Instruction *inst) {</span></div>
 <div class="line"><a name="l01201"></a><span class="lineno"> 1201</span>&#160;  <span class="comment">// visit(inst-&gt;getParent()); }</span></div>
-<div class="line"><a name="l01202"></a><span class="lineno"> 1202</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> addPredicate(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, <a class="code" href="structIntr_1_1Cache.html">Intr::Cache</a> &amp;cache,</div>
+<div class="line"><a name="l01202"></a><span class="lineno"> 1202</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> addPredicate(BumpAlloc&lt;&gt; &amp;alloc, <a class="code" href="structIntr_1_1Cache.html">Intr::Cache</a> &amp;cache,</div>
 <div class="line"><a name="l01203"></a><span class="lineno"> 1203</span>&#160;                                  llvm::Value *value) -&gt; <span class="keywordtype">size_t</span> {</div>
 <div class="line"><a name="l01204"></a><span class="lineno"> 1204</span>&#160;    <span class="keyword">auto</span> *I = cache.getInstruction(alloc, *<span class="keyword">this</span>, value);</div>
 <div class="line"><a name="l01205"></a><span class="lineno"> 1205</span>&#160;    assert(cache.predicates.size() &lt;= 32 &amp;&amp; <span class="stringliteral">&quot;too many predicates&quot;</span>);</div>
@@ -1244,7 +1244,7 @@ $(function() {
 <div class="line"><a name="l01210"></a><span class="lineno"> 1210</span>&#160;    cache.predicates.emplace_back(I);</div>
 <div class="line"><a name="l01211"></a><span class="lineno"> 1211</span>&#160;    <span class="keywordflow">return</span> i;</div>
 <div class="line"><a name="l01212"></a><span class="lineno"> 1212</span>&#160;  }</div>
-<div class="line"><a name="l01213"></a><span class="lineno"> 1213</span>&#160;  <span class="keywordtype">void</span> reach(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, llvm::BasicBlock *BB, <a class="code" href="structPredicate_1_1Intersection.html">Intersection</a> predicate) {</div>
+<div class="line"><a name="l01213"></a><span class="lineno"> 1213</span>&#160;  <span class="keywordtype">void</span> reach(BumpAlloc&lt;&gt; &amp;alloc, llvm::BasicBlock *BB, <a class="code" href="structPredicate_1_1Intersection.html">Intersection</a> predicate) {</div>
 <div class="line"><a name="l01214"></a><span class="lineno"> 1214</span>&#160;    <span class="comment">// because we may have inserted into predMap, we need to look up</span></div>
 <div class="line"><a name="l01215"></a><span class="lineno"> 1215</span>&#160;    <span class="comment">// again rather than being able to reuse anything from the</span></div>
 <div class="line"><a name="l01216"></a><span class="lineno"> 1216</span>&#160;    <span class="comment">// `visit`.</span></div>
@@ -1261,7 +1261,7 @@ $(function() {
 <div class="line"><a name="l01227"></a><span class="lineno"> 1227</span>&#160;  <span class="comment">// 2. We are ignoring cycles for now; we must ensure this is done</span></div>
 <div class="line"><a name="l01228"></a><span class="lineno"> 1228</span>&#160;  <span class="comment">// correctly</span></div>
 <div class="line"><a name="l01229"></a><span class="lineno"> 1229</span>&#160;  [[nodiscard]] <span class="keyword">static</span> <span class="keyword">auto</span> <span class="comment">// NOLINTNEXTLINE(misc-no-recursion)</span></div>
-<div class="line"><a name="l01230"></a><span class="lineno"> 1230</span>&#160;  descendBlock(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, <a class="code" href="structIntr_1_1Cache.html">Intr::Cache</a> &amp;cache,</div>
+<div class="line"><a name="l01230"></a><span class="lineno"> 1230</span>&#160;  descendBlock(BumpAlloc&lt;&gt; &amp;alloc, <a class="code" href="structIntr_1_1Cache.html">Intr::Cache</a> &amp;cache,</div>
 <div class="line"><a name="l01231"></a><span class="lineno"> 1231</span>&#160;               <a class="code" href="structaset.html">aset&lt;llvm::BasicBlock *&gt;</a> &amp;visited, <a class="code" href="structPredicate_1_1Map.html">Predicate::Map</a> &amp;predMap,</div>
 <div class="line"><a name="l01232"></a><span class="lineno"> 1232</span>&#160;               llvm::BasicBlock *BBsrc, llvm::BasicBlock *BBdst,</div>
 <div class="line"><a name="l01233"></a><span class="lineno"> 1233</span>&#160;               <a class="code" href="structPredicate_1_1Intersection.html">Predicate::Intersection</a> predicate, llvm::BasicBlock *BBhead,</div>
@@ -1338,7 +1338,7 @@ $(function() {
 <div class="line"><a name="l01304"></a><span class="lineno"> 1304</span>&#160;    <span class="keywordflow">if</span> (rc0 == Destination::Reached) predMap.reach(alloc, BBsrc, predicate);</div>
 <div class="line"><a name="l01305"></a><span class="lineno"> 1305</span>&#160;    <span class="keywordflow">return</span> rc0;</div>
 <div class="line"><a name="l01306"></a><span class="lineno"> 1306</span>&#160;  }</div>
-<div class="line"><a name="l01309"></a><span class="lineno"><a class="line" href="structPredicate_1_1Map.html#a5ba1eced874bd7388dc563d3f17c7311"> 1309</a></span>&#160;  [[nodiscard]] <span class="keyword">static</span> <span class="keyword">auto</span> <a class="code" href="structPredicate_1_1Map.html#a5ba1eced874bd7388dc563d3f17c7311">descend</a>(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, <a class="code" href="structIntr_1_1Cache.html">Intr::Cache</a> &amp;cache,</div>
+<div class="line"><a name="l01309"></a><span class="lineno"><a class="line" href="structPredicate_1_1Map.html#a5ba1eced874bd7388dc563d3f17c7311"> 1309</a></span>&#160;  [[nodiscard]] <span class="keyword">static</span> <span class="keyword">auto</span> <a class="code" href="structPredicate_1_1Map.html#a5ba1eced874bd7388dc563d3f17c7311">descend</a>(BumpAlloc&lt;&gt; &amp;alloc, <a class="code" href="structIntr_1_1Cache.html">Intr::Cache</a> &amp;cache,</div>
 <div class="line"><a name="l01310"></a><span class="lineno"> 1310</span>&#160;                                    llvm::BasicBlock *start,</div>
 <div class="line"><a name="l01311"></a><span class="lineno"> 1311</span>&#160;                                    llvm::BasicBlock *stop, llvm::Loop *L)</div>
 <div class="line"><a name="l01312"></a><span class="lineno"> 1312</span>&#160;    -&gt; std::optional&lt;Map&gt; {</div>
@@ -1357,7 +1357,7 @@ $(function() {
 <div class="line"><a name="l01325"></a><span class="lineno"> 1325</span>&#160;} <span class="comment">// namespace Predicate</span></div>
 <div class="line"><a name="l01326"></a><span class="lineno"> 1326</span>&#160; </div>
 <div class="line"><a name="l01327"></a><span class="lineno"> 1327</span>&#160;<span class="comment">// NOLINTNEXTLINE(misc-no-recursion)</span></div>
-<div class="line"><a name="l01328"></a><span class="lineno"> 1328</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> Intr::Cache::getInstruction(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc,</div>
+<div class="line"><a name="l01328"></a><span class="lineno"> 1328</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> Intr::Cache::getInstruction(BumpAlloc&lt;&gt; &amp;alloc,</div>
 <div class="line"><a name="l01329"></a><span class="lineno"> 1329</span>&#160;                                        <a class="code" href="structPredicate_1_1Map.html">Predicate::Map</a> &amp;predMap,</div>
 <div class="line"><a name="l01330"></a><span class="lineno"> 1330</span>&#160;                                        llvm::Instruction *instr) -&gt; <a class="code" href="classIntr.html">Intr</a> * {</div>
 <div class="line"><a name="l01331"></a><span class="lineno"> 1331</span>&#160;  <span class="keywordflow">if</span> (<a class="code" href="classIntr.html">Intr</a> *i = completeInstruction(alloc, predMap, instr)) <span class="keywordflow">return</span> i;</div>
@@ -1372,7 +1372,7 @@ $(function() {
 <div class="line"><a name="l01340"></a><span class="lineno"> 1340</span>&#160;  <span class="keywordflow">return</span> i;</div>
 <div class="line"><a name="l01341"></a><span class="lineno"> 1341</span>&#160;}</div>
 <div class="line"><a name="l01342"></a><span class="lineno"> 1342</span>&#160;<span class="comment">// NOLINTNEXTLINE(misc-no-recursion)</span></div>
-<div class="line"><a name="l01343"></a><span class="lineno"><a class="line" href="structIntr_1_1Cache.html#a85b3679bbeca4d8f855635211ce71975"> 1343</a></span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> <a class="code" href="structIntr_1_1Cache.html#a85b3679bbeca4d8f855635211ce71975">Intr::Cache::completeInstruction</a>(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc,</div>
+<div class="line"><a name="l01343"></a><span class="lineno"><a class="line" href="structIntr_1_1Cache.html#a85b3679bbeca4d8f855635211ce71975"> 1343</a></span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> <a class="code" href="structIntr_1_1Cache.html#a85b3679bbeca4d8f855635211ce71975">Intr::Cache::completeInstruction</a>(BumpAlloc&lt;&gt; &amp;alloc,</div>
 <div class="line"><a name="l01344"></a><span class="lineno"> 1344</span>&#160;                                             <a class="code" href="structPredicate_1_1Map.html">Predicate::Map</a> &amp;predMap,</div>
 <div class="line"><a name="l01345"></a><span class="lineno"> 1345</span>&#160;                                             llvm::Instruction *J) -&gt; <a class="code" href="classIntr.html">Intr</a> * {</div>
 <div class="line"><a name="l01346"></a><span class="lineno"> 1346</span>&#160;  <a class="code" href="classIntr.html">Intr</a> *i = (*this)[J];</div>
@@ -1393,7 +1393,7 @@ $(function() {
 <div class="line"><a name="l01361"></a><span class="lineno"> 1361</span>&#160;  <span class="keywordflow">return</span> i;</div>
 <div class="line"><a name="l01362"></a><span class="lineno"> 1362</span>&#160;}</div>
 <div class="line"><a name="l01363"></a><span class="lineno"> 1363</span>&#160;<span class="comment">// NOLINTNEXTLINE(misc-no-recursion)</span></div>
-<div class="line"><a name="l01364"></a><span class="lineno"> 1364</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> Intr::Cache::getInstruction(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc,</div>
+<div class="line"><a name="l01364"></a><span class="lineno"> 1364</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> Intr::Cache::getInstruction(BumpAlloc&lt;&gt; &amp;alloc,</div>
 <div class="line"><a name="l01365"></a><span class="lineno"> 1365</span>&#160;                                        <a class="code" href="structPredicate_1_1Map.html">Predicate::Map</a> &amp;predMap, llvm::Value *v)</div>
 <div class="line"><a name="l01366"></a><span class="lineno"> 1366</span>&#160;  -&gt; <a class="code" href="classIntr.html">Intr</a> * {</div>
 <div class="line"><a name="l01367"></a><span class="lineno"> 1367</span>&#160; </div>
@@ -1444,7 +1444,6 @@ $(function() {
 <div class="ttc" id="aclassIntr_html_afdbe42b85e8b7121bededaa2f312402d"><div class="ttname"><a href="classIntr.html#afdbe42b85e8b7121bededaa2f312402d">Intr::selectCost</a></div><div class="ttdeci">auto selectCost(llvm::TargetTransformInfo &amp;TTI, unsigned int vectorWidth) const -&gt; llvm::InstructionCost</div><div class="ttdef"><b>Definition:</b> Instruction.hpp:889</div></div>
 <div class="ttc" id="aclassMapVector_html"><div class="ttname"><a href="classMapVector.html">MapVector</a></div><div class="ttdef"><b>Definition:</b> MapVector.hpp:7</div></div>
 <div class="ttc" id="aclassNode_html"><div class="ttname"><a href="classNode.html">Node</a></div><div class="ttdef"><b>Definition:</b> Node.hpp:82</div></div>
-<div class="ttc" id="astructBumpAlloc_html"><div class="ttname"><a href="structBumpAlloc.html">BumpAlloc</a></div><div class="ttdef"><b>Definition:</b> Allocators.hpp:53</div></div>
 <div class="ttc" id="astructIntr_1_1Cache_html"><div class="ttname"><a href="structIntr_1_1Cache.html">Intr::Cache</a></div><div class="ttdef"><b>Definition:</b> Instruction.hpp:312</div></div>
 <div class="ttc" id="astructIntr_1_1Cache_html_a0fce4d306b7b98002c18bf8460251f5e"><div class="ttname"><a href="structIntr_1_1Cache.html#a0fce4d306b7b98002c18bf8460251f5e">Intr::Cache::createSelect</a></div><div class="ttdeci">auto createSelect(BumpAlloc&lt;&gt; &amp;alloc, Intr *A, Intr *B) -&gt; Intr *</div><div class="ttdef"><b>Definition:</b> Instruction.hpp:498</div></div>
 <div class="ttc" id="astructIntr_1_1Cache_html_a82c1f0c4c286bc885bccdd2e24c08818"><div class="ttname"><a href="structIntr_1_1Cache.html#a82c1f0c4c286bc885bccdd2e24c08818">Intr::Cache::getInstruction</a></div><div class="ttdeci">auto getInstruction(BumpAlloc&lt;&gt; &amp;alloc, llvm::Instruction *instr) -&gt; Intr *</div><div class="ttdoc">This is the API for creating new instructions.</div><div class="ttdef"><b>Definition:</b> Instruction.hpp:418</div></div>
@@ -1458,7 +1457,6 @@ $(function() {
 <div class="ttc" id="astructIntr_1_1Intrinsic_html_a5ad04269aa50a86a3ac93dbc13274600"><div class="ttname"><a href="structIntr_1_1Intrinsic.html#a5ad04269aa50a86a3ac93dbc13274600">Intr::Intrinsic::Intrinsic</a></div><div class="ttdeci">Intrinsic(llvm::Value *v)</div><div class="ttdoc">Data we may need.</div><div class="ttdef"><b>Definition:</b> Instruction.hpp:153</div></div>
 <div class="ttc" id="astructIntr_1_1UniqueIdentifier_html"><div class="ttname"><a href="structIntr_1_1UniqueIdentifier.html">Intr::UniqueIdentifier</a></div><div class="ttdef"><b>Definition:</b> Instruction.hpp:177</div></div>
 <div class="ttc" id="astructLinAlg_1_1BumpPtrVector_html"><div class="ttname"><a href="structLinAlg_1_1BumpPtrVector.html">LinAlg::BumpPtrVector&lt; RecipThroughputLatency &gt;</a></div></div>
-<div class="ttc" id="astructOptional_html"><div class="ttname"><a href="structOptional.html">Optional</a></div><div class="ttdef"><b>Definition:</b> Optional.hpp:8</div></div>
 <div class="ttc" id="astructPredicate_1_1Intersection_html"><div class="ttname"><a href="structPredicate_1_1Intersection.html">Predicate::Intersection</a></div><div class="ttdef"><b>Definition:</b> Predicate.hpp:40</div></div>
 <div class="ttc" id="astructPredicate_1_1Map_html"><div class="ttname"><a href="structPredicate_1_1Map.html">Predicate::Map</a></div><div class="ttdef"><b>Definition:</b> Instruction.hpp:1141</div></div>
 <div class="ttc" id="astructPredicate_1_1Map_html_a5ba1eced874bd7388dc563d3f17c7311"><div class="ttname"><a href="structPredicate_1_1Map.html#a5ba1eced874bd7388dc563d3f17c7311">Predicate::Map::descend</a></div><div class="ttdeci">static auto descend(BumpAlloc&lt;&gt; &amp;alloc, Intr::Cache &amp;cache, llvm::BasicBlock *start, llvm::BasicBlock *stop, llvm::Loop *L) -&gt; std::optional&lt; Map &gt;</div><div class="ttdef"><b>Definition:</b> Instruction.hpp:1309</div></div>

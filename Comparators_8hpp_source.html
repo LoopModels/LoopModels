@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.9.1"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>LoopModels: include/Math/Comparators.hpp Source File</title>
+<title>LoopModels: include/Polyhedra/Comparators.hpp Source File</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -61,7 +61,7 @@ $(function() {
 
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><a class="el" href="dir_d44c64559bbebec7f509842c48db8b23.html">include</a></li><li class="navelem"><a class="el" href="dir_6169d17290d9404be5262c21e04fa2c7.html">Math</a></li>  </ul>
+<li class="navelem"><a class="el" href="dir_d44c64559bbebec7f509842c48db8b23.html">include</a></li><li class="navelem"><a class="el" href="dir_4f42881ec616af22a951b115e120c2fb.html">Polyhedra</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="header">
@@ -360,7 +360,7 @@ $(function() {
 <div class="line"><a name="l00298"></a><span class="lineno">  298</span>&#160;  }</div>
 <div class="line"><a name="l00299"></a><span class="lineno">  299</span>&#160; </div>
 <div class="line"><a name="l00300"></a><span class="lineno">  300</span>&#160;  constexpr <span class="keywordtype">void</span> initNonNegative(LinAlg::Alloc&lt;int64_t&gt; <span class="keyword">auto</span> &amp;alloc,</div>
-<div class="line"><a name="l00301"></a><span class="lineno">  301</span>&#160;                                 PtrMatrix&lt;int64_t&gt; A, <a class="code" href="structLinAlg_1_1EmptyMatrix.html">EmptyMatrix&lt;int64_t&gt;</a>,</div>
+<div class="line"><a name="l00301"></a><span class="lineno">  301</span>&#160;                                 PtrMatrix&lt;int64_t&gt; A, EmptyMatrix&lt;int64_t&gt;,</div>
 <div class="line"><a name="l00302"></a><span class="lineno">  302</span>&#160;                                 <span class="keywordtype">size_t</span> numNonNegative) {</div>
 <div class="line"><a name="l00303"></a><span class="lineno">  303</span>&#160;    initNonNegative(alloc, A, numNonNegative);</div>
 <div class="line"><a name="l00304"></a><span class="lineno">  304</span>&#160;  }</div>
@@ -434,7 +434,7 @@ $(function() {
 <div class="line"><a name="l00375"></a><span class="lineno">  375</span>&#160;  }</div>
 <div class="line"><a name="l00376"></a><span class="lineno">  376</span>&#160; </div>
 <div class="line"><a name="l00377"></a><span class="lineno">  377</span>&#160;  [[nodiscard]] <span class="keyword">static</span> constexpr <span class="keyword">auto</span></div>
-<div class="line"><a name="l00378"></a><span class="lineno">  378</span>&#160;  memoryNeededNonNegative(PtrMatrix&lt;int64_t&gt; A, <a class="code" href="structLinAlg_1_1EmptyMatrix.html">EmptyMatrix&lt;int64_t&gt;</a>,</div>
+<div class="line"><a name="l00378"></a><span class="lineno">  378</span>&#160;  memoryNeededNonNegative(PtrMatrix&lt;int64_t&gt; A, EmptyMatrix&lt;int64_t&gt;,</div>
 <div class="line"><a name="l00379"></a><span class="lineno">  379</span>&#160;                          <span class="keywordtype">size_t</span> numNonNegative) -&gt; <span class="keywordtype">size_t</span> {</div>
 <div class="line"><a name="l00380"></a><span class="lineno">  380</span>&#160;    <span class="keywordflow">return</span> memoryNeededImpl(A.numRow(), A.numCol(), Row{0}, ++numNonNegative);</div>
 <div class="line"><a name="l00381"></a><span class="lineno">  381</span>&#160;  }</div>
@@ -458,7 +458,7 @@ $(function() {
 <div class="line"><a name="l00399"></a><span class="lineno">  399</span>&#160;                            ++numNonNegative);</div>
 <div class="line"><a name="l00400"></a><span class="lineno">  400</span>&#160;  }</div>
 <div class="line"><a name="l00401"></a><span class="lineno">  401</span>&#160;  [[nodiscard]] <span class="keyword">static</span> constexpr <span class="keyword">auto</span> memoryNeeded(PtrMatrix&lt;int64_t&gt; A,</div>
-<div class="line"><a name="l00402"></a><span class="lineno">  402</span>&#160;                                                   <a class="code" href="structLinAlg_1_1EmptyMatrix.html">EmptyMatrix&lt;int64_t&gt;</a>,</div>
+<div class="line"><a name="l00402"></a><span class="lineno">  402</span>&#160;                                                   EmptyMatrix&lt;int64_t&gt;,</div>
 <div class="line"><a name="l00403"></a><span class="lineno">  403</span>&#160;                                                   <span class="keywordtype">bool</span> pos0) -&gt; <span class="keywordtype">size_t</span> {</div>
 <div class="line"><a name="l00404"></a><span class="lineno">  404</span>&#160;    <span class="keywordflow">return</span> memoryNeededImpl(A.numRow(), A.numCol(), Row{0}, pos0);</div>
 <div class="line"><a name="l00405"></a><span class="lineno">  405</span>&#160;  }</div>
@@ -491,7 +491,7 @@ $(function() {
 <div class="line"><a name="l00432"></a><span class="lineno">  432</span>&#160;    initCore(alloc);</div>
 <div class="line"><a name="l00433"></a><span class="lineno">  433</span>&#160;  }</div>
 <div class="line"><a name="l00434"></a><span class="lineno">  434</span>&#160;  constexpr <span class="keywordtype">void</span> init(LinAlg::Alloc&lt;int64_t&gt; <span class="keyword">auto</span> &amp;alloc, PtrMatrix&lt;int64_t&gt; A,</div>
-<div class="line"><a name="l00435"></a><span class="lineno">  435</span>&#160;                      <a class="code" href="structLinAlg_1_1EmptyMatrix.html">EmptyMatrix&lt;int64_t&gt;</a>, <span class="keywordtype">bool</span> pos0) {</div>
+<div class="line"><a name="l00435"></a><span class="lineno">  435</span>&#160;                      EmptyMatrix&lt;int64_t&gt;, <span class="keywordtype">bool</span> pos0) {</div>
 <div class="line"><a name="l00436"></a><span class="lineno">  436</span>&#160;    init(alloc, A, pos0);</div>
 <div class="line"><a name="l00437"></a><span class="lineno">  437</span>&#160;  }</div>
 <div class="line"><a name="l00438"></a><span class="lineno">  438</span>&#160;  constexpr <span class="keywordtype">void</span> init(LinAlg::Alloc&lt;int64_t&gt; <span class="keyword">auto</span> &amp;alloc, PtrMatrix&lt;int64_t&gt; A,</div>
@@ -553,7 +553,7 @@ $(function() {
 <div class="line"><a name="l00494"></a><span class="lineno">  494</span>&#160; </div>
 <div class="line"><a name="l00495"></a><span class="lineno">  495</span>&#160;  <span class="comment">// Note that this is only valid when the comparator was constructed</span></div>
 <div class="line"><a name="l00496"></a><span class="lineno">  496</span>&#160;  <span class="comment">// with index `0` referring to &gt;= 0 constants (i.e., the default).</span></div>
-<div class="line"><a name="l00497"></a><span class="lineno">  497</span>&#160;  constexpr <span class="keyword">auto</span> isEmpty(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc) <span class="keyword">const</span> -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l00497"></a><span class="lineno">  497</span>&#160;  constexpr <span class="keyword">auto</span> isEmpty(BumpAlloc&lt;&gt; &amp;alloc) <span class="keyword">const</span> -&gt; <span class="keywordtype">bool</span> {</div>
 <div class="line"><a name="l00498"></a><span class="lineno">  498</span>&#160;    <span class="keyword">auto</span> p = alloc.scope();</div>
 <div class="line"><a name="l00499"></a><span class="lineno">  499</span>&#160;    <span class="keyword">auto</span> V = getV();</div>
 <div class="line"><a name="l00500"></a><span class="lineno">  500</span>&#160;    <span class="keyword">auto</span> U = getU();</div>
@@ -607,15 +607,15 @@ $(function() {
 <div class="line"><a name="l00548"></a><span class="lineno">  548</span>&#160;    <span class="keywordflow">return</span> Simplex::positiveVariables(alloc, expandW).hasValue();</div>
 <div class="line"><a name="l00549"></a><span class="lineno">  549</span>&#160;  }</div>
 <div class="line"><a name="l00550"></a><span class="lineno">  550</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> isEmpty() const -&gt; <span class="keywordtype">bool</span> {</div>
-<div class="line"><a name="l00551"></a><span class="lineno">  551</span>&#160;    <a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> alloc;</div>
+<div class="line"><a name="l00551"></a><span class="lineno">  551</span>&#160;    BumpAlloc&lt;&gt; alloc;</div>
 <div class="line"><a name="l00552"></a><span class="lineno">  552</span>&#160;    <span class="keywordflow">return</span> isEmpty(alloc);</div>
 <div class="line"><a name="l00553"></a><span class="lineno">  553</span>&#160;  }</div>
 <div class="line"><a name="l00554"></a><span class="lineno">  554</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> greaterEqual(PtrVector&lt;int64_t&gt; query) <span class="keyword">const</span></div>
 <div class="line"><a name="l00555"></a><span class="lineno">  555</span>&#160;    -&gt; <span class="keywordtype">bool</span> {</div>
-<div class="line"><a name="l00556"></a><span class="lineno">  556</span>&#160;    <a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> alloc;</div>
+<div class="line"><a name="l00556"></a><span class="lineno">  556</span>&#160;    BumpAlloc&lt;&gt; alloc;</div>
 <div class="line"><a name="l00557"></a><span class="lineno">  557</span>&#160;    <span class="keywordflow">return</span> greaterEqual(alloc, query);</div>
 <div class="line"><a name="l00558"></a><span class="lineno">  558</span>&#160;  }</div>
-<div class="line"><a name="l00559"></a><span class="lineno">  559</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> greaterEqualFullRank(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc,</div>
+<div class="line"><a name="l00559"></a><span class="lineno">  559</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> greaterEqualFullRank(BumpAlloc&lt;&gt; &amp;alloc,</div>
 <div class="line"><a name="l00560"></a><span class="lineno">  560</span>&#160;                                                    PtrVector&lt;int64_t&gt; b) <span class="keyword">const</span></div>
 <div class="line"><a name="l00561"></a><span class="lineno">  561</span>&#160;    -&gt; <span class="keywordtype">bool</span> {</div>
 <div class="line"><a name="l00562"></a><span class="lineno">  562</span>&#160;    <span class="keyword">auto</span> V = getV();</div>
@@ -633,7 +633,7 @@ $(function() {
 <div class="line"><a name="l00574"></a><span class="lineno">  574</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">true</span>;</div>
 <div class="line"><a name="l00575"></a><span class="lineno">  575</span>&#160;  }</div>
 <div class="line"><a name="l00576"></a><span class="lineno">  576</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span></div>
-<div class="line"><a name="l00577"></a><span class="lineno">  577</span>&#160;  greaterEqualRankDeficient(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, MutPtrVector&lt;int64_t&gt; b) <span class="keyword">const</span></div>
+<div class="line"><a name="l00577"></a><span class="lineno">  577</span>&#160;  greaterEqualRankDeficient(BumpAlloc&lt;&gt; &amp;alloc, MutPtrVector&lt;int64_t&gt; b) <span class="keyword">const</span></div>
 <div class="line"><a name="l00578"></a><span class="lineno">  578</span>&#160;    -&gt; <span class="keywordtype">bool</span> {</div>
 <div class="line"><a name="l00579"></a><span class="lineno">  579</span>&#160;    <span class="keyword">auto</span> V = getV();</div>
 <div class="line"><a name="l00580"></a><span class="lineno">  580</span>&#160;    <span class="keyword">auto</span> d = getD();</div>
@@ -665,10 +665,10 @@ $(function() {
 <div class="line"><a name="l00606"></a><span class="lineno">  606</span>&#160;        expandW(i, NSdim + j) = val;</div>
 <div class="line"><a name="l00607"></a><span class="lineno">  607</span>&#160;      }</div>
 <div class="line"><a name="l00608"></a><span class="lineno">  608</span>&#160;    }</div>
-<div class="line"><a name="l00609"></a><span class="lineno">  609</span>&#160;    <a class="code" href="structOptional.html">Optional&lt;Simplex *&gt;</a> optS{Simplex::positiveVariables(alloc, expandW)};</div>
+<div class="line"><a name="l00609"></a><span class="lineno">  609</span>&#160;    Optional&lt;Simplex *&gt; optS{Simplex::positiveVariables(alloc, expandW)};</div>
 <div class="line"><a name="l00610"></a><span class="lineno">  610</span>&#160;    <span class="keywordflow">return</span> optS.hasValue();</div>
 <div class="line"><a name="l00611"></a><span class="lineno">  611</span>&#160;  }</div>
-<div class="line"><a name="l00612"></a><span class="lineno">  612</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> greaterEqual(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc,</div>
+<div class="line"><a name="l00612"></a><span class="lineno">  612</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> greaterEqual(BumpAlloc&lt;&gt; &amp;alloc,</div>
 <div class="line"><a name="l00613"></a><span class="lineno">  613</span>&#160;                                            PtrVector&lt;int64_t&gt; query) <span class="keyword">const</span></div>
 <div class="line"><a name="l00614"></a><span class="lineno">  614</span>&#160;    -&gt; <span class="keywordtype">bool</span> {</div>
 <div class="line"><a name="l00615"></a><span class="lineno">  615</span>&#160;    <span class="keyword">auto</span> U = getU();</div>
@@ -683,9 +683,9 @@ $(function() {
 <div class="line"><a name="l00624"></a><span class="lineno">  624</span>&#160;  : <span class="keyword">public</span> <a class="code" href="structcomparator_1_1BaseSymbolicComparator.html">BaseSymbolicComparator</a>&lt;LinearSymbolicComparator&gt; {</div>
 <div class="line"><a name="l00625"></a><span class="lineno">  625</span>&#160;  <span class="keyword">using</span> <a class="code" href="structcomparator_1_1BaseSymbolicComparator.html">Base</a> = <a class="code" href="structcomparator_1_1BaseSymbolicComparator.html">BaseSymbolicComparator&lt;LinearSymbolicComparator&gt;</a>;</div>
 <div class="line"><a name="l00626"></a><span class="lineno">  626</span>&#160;  <span class="keyword">using</span> Base::init;</div>
-<div class="line"><a name="l00627"></a><span class="lineno">  627</span>&#160;  <span class="keyword">using</span> <a class="code" href="structLinAlg_1_1ManagedArray.html">Matrix</a> = <a class="code" href="structLinAlg_1_1ManagedArray.html">LinAlg::ManagedArray&lt;int64_t, DenseDims&gt;</a>;</div>
-<div class="line"><a name="l00628"></a><span class="lineno">  628</span>&#160;  [[no_unique_address]] <a class="code" href="structLinAlg_1_1ManagedArray.html">Matrix</a> U;</div>
-<div class="line"><a name="l00629"></a><span class="lineno">  629</span>&#160;  [[no_unique_address]] <a class="code" href="structLinAlg_1_1ManagedArray.html">Matrix</a> V;</div>
+<div class="line"><a name="l00627"></a><span class="lineno">  627</span>&#160;  <span class="keyword">using</span> Matrix = LinAlg::ManagedArray&lt;int64_t, DenseDims&gt;;</div>
+<div class="line"><a name="l00628"></a><span class="lineno">  628</span>&#160;  [[no_unique_address]] Matrix U;</div>
+<div class="line"><a name="l00629"></a><span class="lineno">  629</span>&#160;  [[no_unique_address]] Matrix V;</div>
 <div class="line"><a name="l00630"></a><span class="lineno">  630</span>&#160;  [[no_unique_address]] Vector&lt;int64_t&gt; d;</div>
 <div class="line"><a name="l00631"></a><span class="lineno">  631</span>&#160;  constexpr <span class="keyword">auto</span> getUImpl() -&gt; MutDensePtrMatrix&lt;int64_t&gt; { <span class="keywordflow">return</span> U; }</div>
 <div class="line"><a name="l00632"></a><span class="lineno">  632</span>&#160;  constexpr <span class="keyword">auto</span> getVImpl() -&gt; MutDensePtrMatrix&lt;int64_t&gt; { <span class="keywordflow">return</span> V; }</div>
@@ -727,7 +727,7 @@ $(function() {
 <div class="line"><a name="l00668"></a><span class="lineno">  668</span>&#160;    V.resizeForOverwrite(Row{<span class="keywordtype">size_t</span>{V.numCol()}});</div>
 <div class="line"><a name="l00669"></a><span class="lineno">  669</span>&#160;    <span class="keywordflow">return</span> d;</div>
 <div class="line"><a name="l00670"></a><span class="lineno">  670</span>&#160;  }</div>
-<div class="line"><a name="l00671"></a><span class="lineno">  671</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> construct(PtrMatrix&lt;int64_t&gt; Ap, <a class="code" href="structLinAlg_1_1EmptyMatrix.html">EmptyMatrix&lt;int64_t&gt;</a>,</div>
+<div class="line"><a name="l00671"></a><span class="lineno">  671</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> construct(PtrMatrix&lt;int64_t&gt; Ap, EmptyMatrix&lt;int64_t&gt;,</div>
 <div class="line"><a name="l00672"></a><span class="lineno">  672</span>&#160;                                  <span class="keywordtype">bool</span> pos0) -&gt; <a class="code" href="structcomparator_1_1LinearSymbolicComparator.html">LinearSymbolicComparator</a> {</div>
 <div class="line"><a name="l00673"></a><span class="lineno">  673</span>&#160;    <span class="keywordflow">return</span> construct(Ap, pos0);</div>
 <div class="line"><a name="l00674"></a><span class="lineno">  674</span>&#160;  };</div>
@@ -746,7 +746,7 @@ $(function() {
 <div class="line"><a name="l00687"></a><span class="lineno">  687</span>&#160;    <span class="keywordflow">return</span> cmp;</div>
 <div class="line"><a name="l00688"></a><span class="lineno">  688</span>&#160;  };</div>
 <div class="line"><a name="l00689"></a><span class="lineno">  689</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> constructNonNeg(PtrMatrix&lt;int64_t&gt; Ap,</div>
-<div class="line"><a name="l00690"></a><span class="lineno">  690</span>&#160;                                        <a class="code" href="structLinAlg_1_1EmptyMatrix.html">EmptyMatrix&lt;int64_t&gt;</a>, <span class="keywordtype">size_t</span> numNonNeg)</div>
+<div class="line"><a name="l00690"></a><span class="lineno">  690</span>&#160;                                        EmptyMatrix&lt;int64_t&gt;, <span class="keywordtype">size_t</span> numNonNeg)</div>
 <div class="line"><a name="l00691"></a><span class="lineno">  691</span>&#160;    -&gt; <a class="code" href="structcomparator_1_1LinearSymbolicComparator.html">LinearSymbolicComparator</a> {</div>
 <div class="line"><a name="l00692"></a><span class="lineno">  692</span>&#160;    <span class="keywordflow">return</span> constructNonNeg(Ap, numNonNeg);</div>
 <div class="line"><a name="l00693"></a><span class="lineno">  693</span>&#160;  };</div>
@@ -793,7 +793,7 @@ $(function() {
 <div class="line"><a name="l00734"></a><span class="lineno">  734</span>&#160;  <span class="comment">//   return 2 * numInEq + numEq;</span></div>
 <div class="line"><a name="l00735"></a><span class="lineno">  735</span>&#160;  <span class="comment">// }</span></div>
 <div class="line"><a name="l00736"></a><span class="lineno">  736</span>&#160;  constexpr <span class="keyword">auto</span> getUImpl() -&gt; MutDensePtrMatrix&lt;int64_t&gt; {</div>
-<div class="line"><a name="l00737"></a><span class="lineno">  737</span>&#160;    <span class="keywordflow">return</span> {mem, <a class="code" href="structLinAlg_1_1DenseDims.html">DenseDims</a>{rankU, colU}};</div>
+<div class="line"><a name="l00737"></a><span class="lineno">  737</span>&#160;    <span class="keywordflow">return</span> {mem, DenseDims{rankU, colU}};</div>
 <div class="line"><a name="l00738"></a><span class="lineno">  738</span>&#160;  }</div>
 <div class="line"><a name="l00739"></a><span class="lineno">  739</span>&#160;  <span class="comment">// A = V</span></div>
 <div class="line"><a name="l00740"></a><span class="lineno">  740</span>&#160;  <span class="comment">// H = A</span></div>
@@ -804,7 +804,7 @@ $(function() {
 <div class="line"><a name="l00745"></a><span class="lineno">  745</span>&#160;  }</div>
 <div class="line"><a name="l00746"></a><span class="lineno">  746</span>&#160;  <span class="comment">// offset by (numVar + numInEq)*(numVar + numInEq)</span></div>
 <div class="line"><a name="l00747"></a><span class="lineno">  747</span>&#160;  constexpr <span class="keyword">auto</span> getVImpl() -&gt; MutDensePtrMatrix&lt;int64_t&gt; {</div>
-<div class="line"><a name="l00748"></a><span class="lineno">  748</span>&#160;    <span class="keywordflow">return</span> {getUImpl().end(), <a class="code" href="structLinAlg_1_1DenseDims.html">DenseDims</a>{numVRows(), dimV}};</div>
+<div class="line"><a name="l00748"></a><span class="lineno">  748</span>&#160;    <span class="keywordflow">return</span> {getUImpl().end(), DenseDims{numVRows(), dimV}};</div>
 <div class="line"><a name="l00749"></a><span class="lineno">  749</span>&#160;  }</div>
 <div class="line"><a name="l00750"></a><span class="lineno">  750</span>&#160;  <span class="comment">// size D</span></div>
 <div class="line"><a name="l00751"></a><span class="lineno">  751</span>&#160;  constexpr <span class="keyword">auto</span> getDImpl() -&gt; MutPtrVector&lt;int64_t&gt; {</div>
@@ -812,10 +812,10 @@ $(function() {
 <div class="line"><a name="l00753"></a><span class="lineno">  753</span>&#160;    <span class="keywordflow">return</span> {getVImpl().end(), dimD};</div>
 <div class="line"><a name="l00754"></a><span class="lineno">  754</span>&#160;  }</div>
 <div class="line"><a name="l00755"></a><span class="lineno">  755</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getUImpl() <span class="keyword">const</span> -&gt; DensePtrMatrix&lt;int64_t&gt; {</div>
-<div class="line"><a name="l00756"></a><span class="lineno">  756</span>&#160;    <span class="keywordflow">return</span> {mem, <a class="code" href="structLinAlg_1_1DenseDims.html">DenseDims</a>{rankU, colU}};</div>
+<div class="line"><a name="l00756"></a><span class="lineno">  756</span>&#160;    <span class="keywordflow">return</span> {mem, DenseDims{rankU, colU}};</div>
 <div class="line"><a name="l00757"></a><span class="lineno">  757</span>&#160;  }</div>
 <div class="line"><a name="l00758"></a><span class="lineno">  758</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getVImpl() <span class="keyword">const</span> -&gt; DensePtrMatrix&lt;int64_t&gt; {</div>
-<div class="line"><a name="l00759"></a><span class="lineno">  759</span>&#160;    <span class="keywordflow">return</span> {mem + size_t(rankU) * colU, <a class="code" href="structLinAlg_1_1DenseDims.html">DenseDims</a>{numVRows(), dimV}};</div>
+<div class="line"><a name="l00759"></a><span class="lineno">  759</span>&#160;    <span class="keywordflow">return</span> {mem + size_t(rankU) * colU, DenseDims{numVRows(), dimV}};</div>
 <div class="line"><a name="l00760"></a><span class="lineno">  760</span>&#160;  }</div>
 <div class="line"><a name="l00761"></a><span class="lineno">  761</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getDImpl() <span class="keyword">const</span> -&gt; PtrVector&lt;int64_t&gt; {</div>
 <div class="line"><a name="l00762"></a><span class="lineno">  762</span>&#160;    <span class="keywordflow">return</span> {mem + size_t(rankU) * colU + size_t(numVRows()) * dimV, dimD};</div>
@@ -833,18 +833,18 @@ $(function() {
 <div class="line"><a name="l00774"></a><span class="lineno">  774</span>&#160;    invariant(dimD &gt; 0);</div>
 <div class="line"><a name="l00775"></a><span class="lineno">  775</span>&#160;    <span class="keywordflow">return</span> getDImpl();</div>
 <div class="line"><a name="l00776"></a><span class="lineno">  776</span>&#160;  }</div>
-<div class="line"><a name="l00777"></a><span class="lineno">  777</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> construct(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, PtrMatrix&lt;int64_t&gt; Ap,</div>
-<div class="line"><a name="l00778"></a><span class="lineno">  778</span>&#160;                                  <a class="code" href="structLinAlg_1_1EmptyMatrix.html">EmptyMatrix&lt;int64_t&gt;</a>, <span class="keywordtype">bool</span> pos0)</div>
+<div class="line"><a name="l00777"></a><span class="lineno">  777</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> construct(BumpAlloc&lt;&gt; &amp;alloc, PtrMatrix&lt;int64_t&gt; Ap,</div>
+<div class="line"><a name="l00778"></a><span class="lineno">  778</span>&#160;                                  EmptyMatrix&lt;int64_t&gt;, <span class="keywordtype">bool</span> pos0)</div>
 <div class="line"><a name="l00779"></a><span class="lineno">  779</span>&#160;    -&gt; <a class="code" href="structcomparator_1_1PtrSymbolicComparator.html">PtrSymbolicComparator</a> {</div>
 <div class="line"><a name="l00780"></a><span class="lineno">  780</span>&#160;    <span class="keywordflow">return</span> construct(alloc, Ap, pos0);</div>
 <div class="line"><a name="l00781"></a><span class="lineno">  781</span>&#160;  };</div>
-<div class="line"><a name="l00782"></a><span class="lineno">  782</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> construct(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, PtrMatrix&lt;int64_t&gt; Ap,</div>
+<div class="line"><a name="l00782"></a><span class="lineno">  782</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> construct(BumpAlloc&lt;&gt; &amp;alloc, PtrMatrix&lt;int64_t&gt; Ap,</div>
 <div class="line"><a name="l00783"></a><span class="lineno">  783</span>&#160;                                  <span class="keywordtype">bool</span> pos0) -&gt; <a class="code" href="structcomparator_1_1PtrSymbolicComparator.html">PtrSymbolicComparator</a> {</div>
 <div class="line"><a name="l00784"></a><span class="lineno">  784</span>&#160;    <a class="code" href="structcomparator_1_1PtrSymbolicComparator.html">PtrSymbolicComparator</a> cmp(alloc.allocate&lt;int64_t&gt;(memoryNeeded(Ap, pos0)));</div>
 <div class="line"><a name="l00785"></a><span class="lineno">  785</span>&#160;    cmp.init(alloc, Ap, pos0);</div>
 <div class="line"><a name="l00786"></a><span class="lineno">  786</span>&#160;    <span class="keywordflow">return</span> cmp;</div>
 <div class="line"><a name="l00787"></a><span class="lineno">  787</span>&#160;  };</div>
-<div class="line"><a name="l00788"></a><span class="lineno">  788</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> construct(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, PtrMatrix&lt;int64_t&gt; Ap,</div>
+<div class="line"><a name="l00788"></a><span class="lineno">  788</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> construct(BumpAlloc&lt;&gt; &amp;alloc, PtrMatrix&lt;int64_t&gt; Ap,</div>
 <div class="line"><a name="l00789"></a><span class="lineno">  789</span>&#160;                                  PtrMatrix&lt;int64_t&gt; Ep, <span class="keywordtype">bool</span> pos0)</div>
 <div class="line"><a name="l00790"></a><span class="lineno">  790</span>&#160;    -&gt; <a class="code" href="structcomparator_1_1PtrSymbolicComparator.html">PtrSymbolicComparator</a> {</div>
 <div class="line"><a name="l00791"></a><span class="lineno">  791</span>&#160;    <a class="code" href="structcomparator_1_1PtrSymbolicComparator.html">PtrSymbolicComparator</a> cmp(</div>
@@ -852,13 +852,13 @@ $(function() {
 <div class="line"><a name="l00793"></a><span class="lineno">  793</span>&#160;    cmp.init(alloc, Ap, Ep, pos0);</div>
 <div class="line"><a name="l00794"></a><span class="lineno">  794</span>&#160;    <span class="keywordflow">return</span> cmp;</div>
 <div class="line"><a name="l00795"></a><span class="lineno">  795</span>&#160;  };</div>
-<div class="line"><a name="l00796"></a><span class="lineno">  796</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> constructNonNeg(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc,</div>
+<div class="line"><a name="l00796"></a><span class="lineno">  796</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> constructNonNeg(BumpAlloc&lt;&gt; &amp;alloc,</div>
 <div class="line"><a name="l00797"></a><span class="lineno">  797</span>&#160;                                        PtrMatrix&lt;int64_t&gt; Ap,</div>
-<div class="line"><a name="l00798"></a><span class="lineno">  798</span>&#160;                                        <a class="code" href="structLinAlg_1_1EmptyMatrix.html">EmptyMatrix&lt;int64_t&gt;</a>, <span class="keywordtype">size_t</span> numNonNeg)</div>
+<div class="line"><a name="l00798"></a><span class="lineno">  798</span>&#160;                                        EmptyMatrix&lt;int64_t&gt;, <span class="keywordtype">size_t</span> numNonNeg)</div>
 <div class="line"><a name="l00799"></a><span class="lineno">  799</span>&#160;    -&gt; <a class="code" href="structcomparator_1_1PtrSymbolicComparator.html">PtrSymbolicComparator</a> {</div>
 <div class="line"><a name="l00800"></a><span class="lineno">  800</span>&#160;    <span class="keywordflow">return</span> constructNonNeg(alloc, Ap, numNonNeg);</div>
 <div class="line"><a name="l00801"></a><span class="lineno">  801</span>&#160;  };</div>
-<div class="line"><a name="l00802"></a><span class="lineno">  802</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> constructNonNeg(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc,</div>
+<div class="line"><a name="l00802"></a><span class="lineno">  802</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> constructNonNeg(BumpAlloc&lt;&gt; &amp;alloc,</div>
 <div class="line"><a name="l00803"></a><span class="lineno">  803</span>&#160;                                        PtrMatrix&lt;int64_t&gt; Ap, <span class="keywordtype">size_t</span> numNonNeg)</div>
 <div class="line"><a name="l00804"></a><span class="lineno">  804</span>&#160;    -&gt; <a class="code" href="structcomparator_1_1PtrSymbolicComparator.html">PtrSymbolicComparator</a> {</div>
 <div class="line"><a name="l00805"></a><span class="lineno">  805</span>&#160;    <a class="code" href="structcomparator_1_1PtrSymbolicComparator.html">PtrSymbolicComparator</a> cmp(</div>
@@ -866,7 +866,7 @@ $(function() {
 <div class="line"><a name="l00807"></a><span class="lineno">  807</span>&#160;    cmp.initNonNegative(alloc, Ap, numNonNeg);</div>
 <div class="line"><a name="l00808"></a><span class="lineno">  808</span>&#160;    <span class="keywordflow">return</span> cmp;</div>
 <div class="line"><a name="l00809"></a><span class="lineno">  809</span>&#160;  };</div>
-<div class="line"><a name="l00810"></a><span class="lineno">  810</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> constructNonNeg(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc,</div>
+<div class="line"><a name="l00810"></a><span class="lineno">  810</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> constructNonNeg(BumpAlloc&lt;&gt; &amp;alloc,</div>
 <div class="line"><a name="l00811"></a><span class="lineno">  811</span>&#160;                                        PtrMatrix&lt;int64_t&gt; Ap,</div>
 <div class="line"><a name="l00812"></a><span class="lineno">  812</span>&#160;                                        PtrMatrix&lt;int64_t&gt; Ep, <span class="keywordtype">size_t</span> numNonNeg)</div>
 <div class="line"><a name="l00813"></a><span class="lineno">  813</span>&#160;    -&gt; <a class="code" href="structcomparator_1_1PtrSymbolicComparator.html">PtrSymbolicComparator</a> {</div>
@@ -883,7 +883,7 @@ $(function() {
 <div class="line"><a name="l00824"></a><span class="lineno">  824</span>&#160;static_assert(Comparator&lt;PtrSymbolicComparator&gt;);</div>
 <div class="line"><a name="l00825"></a><span class="lineno">  825</span>&#160;static_assert(Comparator&lt;LinearSymbolicComparator&gt;);</div>
 <div class="line"><a name="l00826"></a><span class="lineno">  826</span>&#160; </div>
-<div class="line"><a name="l00827"></a><span class="lineno">  827</span>&#160;constexpr <span class="keywordtype">void</span> moveEqualities(DenseMatrix&lt;int64_t&gt; &amp;, <a class="code" href="structLinAlg_1_1EmptyMatrix.html">EmptyMatrix&lt;int64_t&gt;</a>,</div>
+<div class="line"><a name="l00827"></a><span class="lineno">  827</span>&#160;constexpr <span class="keywordtype">void</span> moveEqualities(DenseMatrix&lt;int64_t&gt; &amp;, EmptyMatrix&lt;int64_t&gt;,</div>
 <div class="line"><a name="l00828"></a><span class="lineno">  828</span>&#160;                              <span class="keyword">const</span> Comparator <span class="keyword">auto</span> &amp;) {}</div>
 <div class="line"><a name="l00829"></a><span class="lineno">  829</span>&#160;constexpr <span class="keywordtype">void</span> moveEqualities(DenseMatrix&lt;int64_t&gt; &amp;A, IntMatrix &amp;E,</div>
 <div class="line"><a name="l00830"></a><span class="lineno">  830</span>&#160;                              <span class="keyword">const</span> Comparator <span class="keyword">auto</span> &amp;C) {</div>
@@ -912,11 +912,11 @@ $(function() {
 <div class="line"><a name="l00853"></a><span class="lineno">  853</span>&#160; </div>
 <div class="line"><a name="l00854"></a><span class="lineno">  854</span>&#160;<span class="comment">// NOLINTNEXTLINE(performance-unnecessary-value-param)</span></div>
 <div class="line"><a name="l00855"></a><span class="lineno">  855</span>&#160;constexpr <span class="keyword">auto</span> linear(std::allocator&lt;int64_t&gt;, PtrMatrix&lt;int64_t&gt; A,</div>
-<div class="line"><a name="l00856"></a><span class="lineno">  856</span>&#160;                      <a class="code" href="structLinAlg_1_1EmptyMatrix.html">EmptyMatrix&lt;int64_t&gt;</a>, <span class="keywordtype">bool</span> pos0) {</div>
+<div class="line"><a name="l00856"></a><span class="lineno">  856</span>&#160;                      EmptyMatrix&lt;int64_t&gt;, <span class="keywordtype">bool</span> pos0) {</div>
 <div class="line"><a name="l00857"></a><span class="lineno">  857</span>&#160;  <span class="keywordflow">return</span> LinearSymbolicComparator::construct(A, pos0);</div>
 <div class="line"><a name="l00858"></a><span class="lineno">  858</span>&#160;}</div>
-<div class="line"><a name="l00859"></a><span class="lineno">  859</span>&#160;constexpr <span class="keyword">auto</span> linear(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, PtrMatrix&lt;int64_t&gt; A,</div>
-<div class="line"><a name="l00860"></a><span class="lineno">  860</span>&#160;                      <a class="code" href="structLinAlg_1_1EmptyMatrix.html">EmptyMatrix&lt;int64_t&gt;</a>, <span class="keywordtype">bool</span> pos0) {</div>
+<div class="line"><a name="l00859"></a><span class="lineno">  859</span>&#160;constexpr <span class="keyword">auto</span> linear(BumpAlloc&lt;&gt; &amp;alloc, PtrMatrix&lt;int64_t&gt; A,</div>
+<div class="line"><a name="l00860"></a><span class="lineno">  860</span>&#160;                      EmptyMatrix&lt;int64_t&gt;, <span class="keywordtype">bool</span> pos0) {</div>
 <div class="line"><a name="l00861"></a><span class="lineno">  861</span>&#160;  <span class="keywordflow">return</span> PtrSymbolicComparator::construct(alloc, A, pos0);</div>
 <div class="line"><a name="l00862"></a><span class="lineno">  862</span>&#160;}</div>
 <div class="line"><a name="l00863"></a><span class="lineno">  863</span>&#160;<span class="comment">// NOLINTNEXTLINE(performance-unnecessary-value-param)</span></div>
@@ -924,18 +924,18 @@ $(function() {
 <div class="line"><a name="l00865"></a><span class="lineno">  865</span>&#160;                      PtrMatrix&lt;int64_t&gt; E, <span class="keywordtype">bool</span> pos0) {</div>
 <div class="line"><a name="l00866"></a><span class="lineno">  866</span>&#160;  <span class="keywordflow">return</span> LinearSymbolicComparator::construct(A, E, pos0);</div>
 <div class="line"><a name="l00867"></a><span class="lineno">  867</span>&#160;}</div>
-<div class="line"><a name="l00868"></a><span class="lineno">  868</span>&#160;constexpr <span class="keyword">auto</span> linear(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, PtrMatrix&lt;int64_t&gt; A,</div>
+<div class="line"><a name="l00868"></a><span class="lineno">  868</span>&#160;constexpr <span class="keyword">auto</span> linear(BumpAlloc&lt;&gt; &amp;alloc, PtrMatrix&lt;int64_t&gt; A,</div>
 <div class="line"><a name="l00869"></a><span class="lineno">  869</span>&#160;                      PtrMatrix&lt;int64_t&gt; E, <span class="keywordtype">bool</span> pos0) {</div>
 <div class="line"><a name="l00870"></a><span class="lineno">  870</span>&#160;  <span class="keywordflow">return</span> PtrSymbolicComparator::construct(alloc, A, E, pos0);</div>
 <div class="line"><a name="l00871"></a><span class="lineno">  871</span>&#160;}</div>
 <div class="line"><a name="l00872"></a><span class="lineno">  872</span>&#160; </div>
 <div class="line"><a name="l00873"></a><span class="lineno">  873</span>&#160;<span class="comment">// NOLINTNEXTLINE(performance-unnecessary-value-param)</span></div>
 <div class="line"><a name="l00874"></a><span class="lineno">  874</span>&#160;constexpr <span class="keyword">auto</span> linearNonNegative(std::allocator&lt;int64_t&gt;, PtrMatrix&lt;int64_t&gt; A,</div>
-<div class="line"><a name="l00875"></a><span class="lineno">  875</span>&#160;                                 <a class="code" href="structLinAlg_1_1EmptyMatrix.html">EmptyMatrix&lt;int64_t&gt;</a>, <span class="keywordtype">size_t</span> numNonNeg) {</div>
+<div class="line"><a name="l00875"></a><span class="lineno">  875</span>&#160;                                 EmptyMatrix&lt;int64_t&gt;, <span class="keywordtype">size_t</span> numNonNeg) {</div>
 <div class="line"><a name="l00876"></a><span class="lineno">  876</span>&#160;  <span class="keywordflow">return</span> LinearSymbolicComparator::constructNonNeg(A, numNonNeg);</div>
 <div class="line"><a name="l00877"></a><span class="lineno">  877</span>&#160;}</div>
-<div class="line"><a name="l00878"></a><span class="lineno">  878</span>&#160;constexpr <span class="keyword">auto</span> linearNonNegative(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, PtrMatrix&lt;int64_t&gt; A,</div>
-<div class="line"><a name="l00879"></a><span class="lineno">  879</span>&#160;                                 <a class="code" href="structLinAlg_1_1EmptyMatrix.html">EmptyMatrix&lt;int64_t&gt;</a>, <span class="keywordtype">size_t</span> numNonNeg) {</div>
+<div class="line"><a name="l00878"></a><span class="lineno">  878</span>&#160;constexpr <span class="keyword">auto</span> linearNonNegative(BumpAlloc&lt;&gt; &amp;alloc, PtrMatrix&lt;int64_t&gt; A,</div>
+<div class="line"><a name="l00879"></a><span class="lineno">  879</span>&#160;                                 EmptyMatrix&lt;int64_t&gt;, <span class="keywordtype">size_t</span> numNonNeg) {</div>
 <div class="line"><a name="l00880"></a><span class="lineno">  880</span>&#160;  <span class="keywordflow">return</span> PtrSymbolicComparator::constructNonNeg(alloc, A, numNonNeg);</div>
 <div class="line"><a name="l00881"></a><span class="lineno">  881</span>&#160;}</div>
 <div class="line"><a name="l00882"></a><span class="lineno">  882</span>&#160;<span class="comment">// NOLINTNEXTLINE(performance-unnecessary-value-param)</span></div>
@@ -943,17 +943,12 @@ $(function() {
 <div class="line"><a name="l00884"></a><span class="lineno">  884</span>&#160;                                 PtrMatrix&lt;int64_t&gt; E, <span class="keywordtype">size_t</span> numNonNeg) {</div>
 <div class="line"><a name="l00885"></a><span class="lineno">  885</span>&#160;  <span class="keywordflow">return</span> LinearSymbolicComparator::constructNonNeg(A, E, numNonNeg);</div>
 <div class="line"><a name="l00886"></a><span class="lineno">  886</span>&#160;}</div>
-<div class="line"><a name="l00887"></a><span class="lineno">  887</span>&#160;constexpr <span class="keyword">auto</span> linearNonNegative(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, PtrMatrix&lt;int64_t&gt; A,</div>
+<div class="line"><a name="l00887"></a><span class="lineno">  887</span>&#160;constexpr <span class="keyword">auto</span> linearNonNegative(BumpAlloc&lt;&gt; &amp;alloc, PtrMatrix&lt;int64_t&gt; A,</div>
 <div class="line"><a name="l00888"></a><span class="lineno">  888</span>&#160;                                 PtrMatrix&lt;int64_t&gt; E, <span class="keywordtype">size_t</span> numNonNeg) {</div>
 <div class="line"><a name="l00889"></a><span class="lineno">  889</span>&#160;  <span class="keywordflow">return</span> PtrSymbolicComparator::constructNonNeg(alloc, A, E, numNonNeg);</div>
 <div class="line"><a name="l00890"></a><span class="lineno">  890</span>&#160;}</div>
 <div class="line"><a name="l00891"></a><span class="lineno">  891</span>&#160; </div>
 <div class="line"><a name="l00892"></a><span class="lineno">  892</span>&#160;} <span class="comment">// namespace comparator</span></div>
-<div class="ttc" id="astructBumpAlloc_html"><div class="ttname"><a href="structBumpAlloc.html">BumpAlloc</a></div><div class="ttdef"><b>Definition:</b> Allocators.hpp:53</div></div>
-<div class="ttc" id="astructLinAlg_1_1DenseDims_html"><div class="ttname"><a href="structLinAlg_1_1DenseDims.html">LinAlg::DenseDims</a></div><div class="ttdoc">Dimensions with a capacity.</div><div class="ttdef"><b>Definition:</b> MatrixDimensions.hpp:77</div></div>
-<div class="ttc" id="astructLinAlg_1_1EmptyMatrix_html"><div class="ttname"><a href="structLinAlg_1_1EmptyMatrix.html">LinAlg::EmptyMatrix</a></div><div class="ttdef"><b>Definition:</b> EmptyArrays.hpp:9</div></div>
-<div class="ttc" id="astructLinAlg_1_1ManagedArray_html"><div class="ttname"><a href="structLinAlg_1_1ManagedArray.html">LinAlg::ManagedArray&lt; int64_t, DenseDims &gt;</a></div></div>
-<div class="ttc" id="astructOptional_html"><div class="ttname"><a href="structOptional.html">Optional</a></div><div class="ttdef"><b>Definition:</b> Optional.hpp:8</div></div>
 <div class="ttc" id="astructcomparator_1_1BaseComparator_html"><div class="ttname"><a href="structcomparator_1_1BaseComparator.html">comparator::BaseComparator</a></div><div class="ttdef"><b>Definition:</b> Comparators.hpp:112</div></div>
 <div class="ttc" id="astructcomparator_1_1BaseSymbolicComparator_html"><div class="ttname"><a href="structcomparator_1_1BaseSymbolicComparator.html">comparator::BaseSymbolicComparator</a></div><div class="ttdef"><b>Definition:</b> Comparators.hpp:258</div></div>
 <div class="ttc" id="astructcomparator_1_1BaseSymbolicComparator_html_a7fcb77ad09ce4957e1412515f7c974e4"><div class="ttname"><a href="structcomparator_1_1BaseSymbolicComparator.html#a7fcb77ad09ce4957e1412515f7c974e4">comparator::BaseSymbolicComparator::initNonNegative</a></div><div class="ttdeci">constexpr void initNonNegative(LinAlg::Alloc&lt; int64_t &gt; auto &amp;alloc, PtrMatrix&lt; int64_t &gt; A, size_t numNonNegative)</div><div class="ttdef"><b>Definition:</b> Comparators.hpp:305</div></div>

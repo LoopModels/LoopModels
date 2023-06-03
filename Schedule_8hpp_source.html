@@ -103,11 +103,11 @@ $(function() {
 <div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160; </div>
 <div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;  constexpr <a class="code" href="structAffineSchedule.html">AffineSchedule</a>() : mem(<span class="keyword">nullptr</span>) {}</div>
 <div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;  constexpr <a class="code" href="structAffineSchedule.html">AffineSchedule</a>(int64_t *m) : mem(m) {}</div>
-<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;  constexpr <a class="code" href="structAffineSchedule.html">AffineSchedule</a>(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, <span class="keywordtype">unsigned</span> nL)</div>
+<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;  constexpr <a class="code" href="structAffineSchedule.html">AffineSchedule</a>(BumpAlloc&lt;&gt; &amp;alloc, <span class="keywordtype">unsigned</span> nL)</div>
 <div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;    : mem(alloc.allocate&lt;int64_t&gt;(requiredScheduleStorage(nL))) {</div>
 <div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;    mem[0] = nL;</div>
 <div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;  }</div>
-<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;  constexpr <span class="keyword">auto</span> copy(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc) <span class="keyword">const</span> -&gt; <a class="code" href="structAffineSchedule.html">AffineSchedule</a> {</div>
+<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;  constexpr <span class="keyword">auto</span> copy(BumpAlloc&lt;&gt; &amp;alloc) <span class="keyword">const</span> -&gt; <a class="code" href="structAffineSchedule.html">AffineSchedule</a> {</div>
 <div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;    <span class="keywordtype">size_t</span> reqMem = requiredScheduleStorage(getNumLoops());</div>
 <div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;    <a class="code" href="structAffineSchedule.html">AffineSchedule</a> res{alloc.allocate&lt;int64_t&gt;(reqMem)};</div>
 <div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;    std::copy_n(mem, reqMem, res.mem);</div>
@@ -130,10 +130,10 @@ $(function() {
 <div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;  }</div>
 <div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;  <span class="comment">// NOLINTNEXTLINE(readability-make-member-function-const)</span></div>
 <div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getPhi() -&gt; MutSquarePtrMatrix&lt;int64_t&gt; {</div>
-<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;    <span class="keywordflow">return</span> {data(), <a class="code" href="structLinAlg_1_1SquareDims.html">SquareDims</a>{unsigned(getNumLoops())}};</div>
+<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;    <span class="keywordflow">return</span> {data(), SquareDims{unsigned(getNumLoops())}};</div>
 <div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;  }</div>
 <div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getPhi() <span class="keyword">const</span> -&gt; SquarePtrMatrix&lt;int64_t&gt; {</div>
-<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;    <span class="keywordflow">return</span> {data(), <a class="code" href="structLinAlg_1_1SquareDims.html">SquareDims</a>{getNumLoops()}}; <span class="comment">//</span></div>
+<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;    <span class="keywordflow">return</span> {data(), SquareDims{getNumLoops()}}; <span class="comment">//</span></div>
 <div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;  }</div>
 <div class="line"><a name="l00079"></a><span class="lineno"><a class="line" href="structAffineSchedule.html#a534a966b0d6ba721ec2fb83725fbdad8">   79</a></span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> <a class="code" href="structAffineSchedule.html#a534a966b0d6ba721ec2fb83725fbdad8">getSchedule</a>(<span class="keywordtype">size_t</span> d) <span class="keyword">const</span></div>
 <div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;    -&gt; PtrVector&lt;int64_t&gt; {</div>
@@ -176,8 +176,6 @@ $(function() {
 <div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;};</div>
 <div class="ttc" id="astructAffineSchedule_html"><div class="ttname"><a href="structAffineSchedule.html">AffineSchedule</a></div><div class="ttdef"><b>Definition:</b> Schedule.hpp:34</div></div>
 <div class="ttc" id="astructAffineSchedule_html_a534a966b0d6ba721ec2fb83725fbdad8"><div class="ttname"><a href="structAffineSchedule.html#a534a966b0d6ba721ec2fb83725fbdad8">AffineSchedule::getSchedule</a></div><div class="ttdeci">constexpr auto getSchedule(size_t d) const -&gt; PtrVector&lt; int64_t &gt;</div><div class="ttdoc">getSchedule, loops are always indexed from outer to inner</div><div class="ttdef"><b>Definition:</b> Schedule.hpp:79</div></div>
-<div class="ttc" id="astructBumpAlloc_html"><div class="ttname"><a href="structBumpAlloc.html">BumpAlloc</a></div><div class="ttdef"><b>Definition:</b> Allocators.hpp:53</div></div>
-<div class="ttc" id="astructLinAlg_1_1SquareDims_html"><div class="ttname"><a href="structLinAlg_1_1SquareDims.html">LinAlg::SquareDims</a></div><div class="ttdef"><b>Definition:</b> MatrixDimensions.hpp:120</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

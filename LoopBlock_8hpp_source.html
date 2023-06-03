@@ -124,7 +124,7 @@ $(function() {
 <div class="line"><a name="l00059"></a><span class="lineno"><a class="line" href="classScheduledNode.html">   59</a></span>&#160;<span class="keyword">class </span><a class="code" href="classScheduledNode.html">ScheduledNode</a> {</div>
 <div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160; </div>
 <div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;  [[no_unique_address]] <a class="code" href="classAddr.html">Addr</a> *store; <span class="comment">// linked list to loads</span></div>
-<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;  [[no_unique_address]] <a class="code" href="classNotNull.html">NotNull&lt;AffineLoopNest&gt;</a> loopNest;</div>
+<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;  [[no_unique_address]] NotNull&lt;AffineLoopNest&gt; loopNest;</div>
 <div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;  [[no_unique_address]] <a class="code" href="classScheduledNode.html">ScheduledNode</a> *next{<span class="keyword">nullptr</span>};</div>
 <div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;  [[no_unique_address]] <a class="code" href="classScheduledNode.html">ScheduledNode</a> *component{<span class="keyword">nullptr</span>}; <span class="comment">// SCC cycle</span></div>
 <div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;  [[no_unique_address]] <a class="code" href="classDependence.html">Dependence</a> *dep{<span class="keyword">nullptr</span>};</div>
@@ -173,7 +173,7 @@ $(function() {
 <div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;  <span class="comment">// TODO:</span></div>
 <div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;  <span class="comment">// 1. the above</span></div>
 <div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;  <span class="comment">// 2. add the direct Addr connections corresponding to the node</span></div>
-<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;  constexpr <span class="keywordtype">void</span> insertMem(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, PtrVector&lt;Addr *&gt; memAccess,</div>
+<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;  constexpr <span class="keywordtype">void</span> insertMem(BumpAlloc&lt;&gt; &amp;alloc, PtrVector&lt;Addr *&gt; memAccess,</div>
 <div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;                           <a class="code" href="classCostModeling_1_1LoopTreeSchedule.html">CostModeling::LoopTreeSchedule</a> *L) <span class="keyword">const</span>;</div>
 <div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;  <span class="comment">// constexpr void</span></div>
 <div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;  <span class="comment">// incrementReplicationCounts(PtrVector&lt;MemoryAccess *&gt; memAccess) const {</span></div>
@@ -219,7 +219,7 @@ $(function() {
 <div class="line"><a name="l00154"></a><span class="lineno">  154</span>&#160;  }</div>
 <div class="line"><a name="l00155"></a><span class="lineno">  155</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getSchedule() -&gt; <a class="code" href="structAffineSchedule.html">AffineSchedule</a> { <span class="keywordflow">return</span> {mem}; }</div>
 <div class="line"><a name="l00156"></a><span class="lineno">  156</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getLoopNest() <span class="keyword">const</span></div>
-<div class="line"><a name="l00157"></a><span class="lineno">  157</span>&#160;    -&gt; <a class="code" href="classNotNull.html">NotNull&lt;const AffineLoopNest&gt;</a> {</div>
+<div class="line"><a name="l00157"></a><span class="lineno">  157</span>&#160;    -&gt; NotNull&lt;const AffineLoopNest&gt; {</div>
 <div class="line"><a name="l00158"></a><span class="lineno">  158</span>&#160;    <span class="keywordflow">return</span> loopNest;</div>
 <div class="line"><a name="l00159"></a><span class="lineno">  159</span>&#160;  }</div>
 <div class="line"><a name="l00160"></a><span class="lineno">  160</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getOffset() <span class="keyword">const</span> -&gt; <span class="keyword">const</span> int64_t * {</div>
@@ -253,15 +253,15 @@ $(function() {
 <div class="line"><a name="l00188"></a><span class="lineno">  188</span>&#160;    <span class="keywordflow">return</span> phiOffset;</div>
 <div class="line"><a name="l00189"></a><span class="lineno">  189</span>&#160;  }</div>
 <div class="line"><a name="l00190"></a><span class="lineno">  190</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getPhiOffsetRange() <span class="keyword">const</span></div>
-<div class="line"><a name="l00191"></a><span class="lineno">  191</span>&#160;    -&gt; <a class="code" href="structRange.html">Range&lt;size_t, size_t&gt;</a> {</div>
+<div class="line"><a name="l00191"></a><span class="lineno">  191</span>&#160;    -&gt; Range&lt;size_t, size_t&gt; {</div>
 <div class="line"><a name="l00192"></a><span class="lineno">  192</span>&#160;    <span class="keywordflow">return</span> _(phiOffset, phiOffset + getNumLoops());</div>
 <div class="line"><a name="l00193"></a><span class="lineno">  193</span>&#160;  }</div>
 <div class="line"><a name="l00194"></a><span class="lineno">  194</span>&#160;  <span class="comment">// NOLINTNEXTLINE(readability-make-member-function-const)</span></div>
 <div class="line"><a name="l00195"></a><span class="lineno">  195</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getPhi() -&gt; MutSquarePtrMatrix&lt;int64_t&gt; {</div>
-<div class="line"><a name="l00196"></a><span class="lineno">  196</span>&#160;    <span class="keywordflow">return</span> {mem + 1, <a class="code" href="structLinAlg_1_1SquareDims.html">SquareDims</a>{unsigned(getNumLoops())}};</div>
+<div class="line"><a name="l00196"></a><span class="lineno">  196</span>&#160;    <span class="keywordflow">return</span> {mem + 1, SquareDims{unsigned(getNumLoops())}};</div>
 <div class="line"><a name="l00197"></a><span class="lineno">  197</span>&#160;  }</div>
 <div class="line"><a name="l00198"></a><span class="lineno">  198</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getPhi() <span class="keyword">const</span> -&gt; SquarePtrMatrix&lt;int64_t&gt; {</div>
-<div class="line"><a name="l00199"></a><span class="lineno">  199</span>&#160;    <span class="keywordflow">return</span> {<span class="keyword">const_cast&lt;</span>int64_t *<span class="keyword">&gt;</span>(mem) + 1, <a class="code" href="structLinAlg_1_1SquareDims.html">SquareDims</a>{getNumLoops()}};</div>
+<div class="line"><a name="l00199"></a><span class="lineno">  199</span>&#160;    <span class="keywordflow">return</span> {<span class="keyword">const_cast&lt;</span>int64_t *<span class="keyword">&gt;</span>(mem) + 1, SquareDims{getNumLoops()}};</div>
 <div class="line"><a name="l00200"></a><span class="lineno">  200</span>&#160;  }</div>
 <div class="line"><a name="l00202"></a><span class="lineno"><a class="line" href="classScheduledNode.html#a839ee9c51653c4fa6b3f1a4034903801">  202</a></span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> <a class="code" href="classScheduledNode.html#a839ee9c51653c4fa6b3f1a4034903801">getSchedule</a>(<span class="keywordtype">size_t</span> d) <span class="keyword">const</span></div>
 <div class="line"><a name="l00203"></a><span class="lineno">  203</span>&#160;    -&gt; PtrVector&lt;int64_t&gt; {</div>
@@ -345,7 +345,7 @@ $(function() {
 <div class="line"><a name="l00334"></a><span class="lineno">  334</span>&#160;  [[no_unique_address]] map&lt;llvm::User *, Addr *&gt; userToMem{};</div>
 <div class="line"><a name="l00335"></a><span class="lineno">  335</span>&#160;  [[no_unique_address]] set&lt;llvm::User *&gt; visited{};</div>
 <div class="line"><a name="l00336"></a><span class="lineno">  336</span>&#160;  [[no_unique_address]] llvm::LoopInfo *LI;</div>
-<div class="line"><a name="l00337"></a><span class="lineno">  337</span>&#160;  [[no_unique_address]] <a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> allocator{};</div>
+<div class="line"><a name="l00337"></a><span class="lineno">  337</span>&#160;  [[no_unique_address]] BumpAlloc&lt;&gt; allocator{};</div>
 <div class="line"><a name="l00338"></a><span class="lineno">  338</span>&#160;  <span class="comment">// we may turn off edges because we&#39;ve exceeded its loop depth</span></div>
 <div class="line"><a name="l00339"></a><span class="lineno">  339</span>&#160;  <span class="comment">// or because the dependence has already been satisfied at an</span></div>
 <div class="line"><a name="l00340"></a><span class="lineno">  340</span>&#160;  <span class="comment">// earlier level.</span></div>
@@ -387,7 +387,7 @@ $(function() {
 <div class="line"><a name="l00378"></a><span class="lineno">  378</span>&#160;    visited.clear();</div>
 <div class="line"><a name="l00379"></a><span class="lineno">  379</span>&#160;    allocator.reset();</div>
 <div class="line"><a name="l00380"></a><span class="lineno">  380</span>&#160;  }</div>
-<div class="line"><a name="l00381"></a><span class="lineno">  381</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getAlloc() -&gt; <a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp; { <span class="keywordflow">return</span> allocator; }</div>
+<div class="line"><a name="l00381"></a><span class="lineno">  381</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getAlloc() -&gt; BumpAlloc&lt;&gt; &amp; { <span class="keywordflow">return</span> allocator; }</div>
 <div class="line"><a name="l00382"></a><span class="lineno">  382</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> numVerticies() const -&gt; <span class="keywordtype">size_t</span> {</div>
 <div class="line"><a name="l00383"></a><span class="lineno">  383</span>&#160;    <span class="keywordflow">return</span> nodes.size();</div>
 <div class="line"><a name="l00384"></a><span class="lineno">  384</span>&#160;  }</div>
@@ -427,7 +427,7 @@ $(function() {
 <div class="line"><a name="l00418"></a><span class="lineno">  418</span>&#160;    <span class="keywordflow">return</span> d;</div>
 <div class="line"><a name="l00419"></a><span class="lineno">  419</span>&#160;  }</div>
 <div class="line"><a name="l00420"></a><span class="lineno">  420</span>&#160; </div>
-<div class="line"><a name="l00443"></a><span class="lineno"><a class="line" href="classLinearProgramLoopBlock.html#aad48f2540e89a04f21f5c3695ed50e14">  443</a></span>&#160;  <span class="keywordtype">void</span> <a class="code" href="classLinearProgramLoopBlock.html#aad48f2540e89a04f21f5c3695ed50e14">addEdge</a>(<a class="code" href="classNotNull.html">NotNull&lt;Addr&gt;</a> mai, <a class="code" href="classNotNull.html">NotNull&lt;Addr&gt;</a> maj) {</div>
+<div class="line"><a name="l00443"></a><span class="lineno"><a class="line" href="classLinearProgramLoopBlock.html#aad48f2540e89a04f21f5c3695ed50e14">  443</a></span>&#160;  <span class="keywordtype">void</span> <a class="code" href="classLinearProgramLoopBlock.html#aad48f2540e89a04f21f5c3695ed50e14">addEdge</a>(NotNull&lt;Addr&gt; mai, NotNull&lt;Addr&gt; maj) {</div>
 <div class="line"><a name="l00444"></a><span class="lineno">  444</span>&#160;    <span class="comment">// note, axes should be fully delinearized, so should line up</span></div>
 <div class="line"><a name="l00445"></a><span class="lineno">  445</span>&#160;    <span class="comment">// as a result of preprocessing.</span></div>
 <div class="line"><a name="l00446"></a><span class="lineno">  446</span>&#160;    <span class="keyword">auto</span> d = Dependence::check(allocator, mai, maj);</div>
@@ -455,7 +455,7 @@ $(function() {
 <div class="line"><a name="l00476"></a><span class="lineno">  476</span>&#160;        <span class="keywordflow">if</span> (ma == userToMem.end()) <span class="keywordflow">continue</span>;</div>
 <div class="line"><a name="l00477"></a><span class="lineno">  477</span>&#160;        <span class="comment">// we want to reload a store</span></div>
 <div class="line"><a name="l00478"></a><span class="lineno">  478</span>&#160;        <span class="comment">// this store will be treated as a load</span></div>
-<div class="line"><a name="l00479"></a><span class="lineno">  479</span>&#160;        <a class="code" href="classNotNull.html">NotNull&lt;MemoryAccess&gt;</a> store = memory[ma-&gt;second];</div>
+<div class="line"><a name="l00479"></a><span class="lineno">  479</span>&#160;        NotNull&lt;MemoryAccess&gt; store = memory[ma-&gt;second];</div>
 <div class="line"><a name="l00480"></a><span class="lineno">  480</span>&#160;        <span class="keyword">auto</span> [load, d] = Dependence::reload(allocator, store);</div>
 <div class="line"><a name="l00481"></a><span class="lineno">  481</span>&#160;        <span class="comment">// for every store-&gt;store, we also want a load-&gt;store</span></div>
 <div class="line"><a name="l00482"></a><span class="lineno">  482</span>&#160;        <span class="keywordflow">for</span> (<span class="keyword">auto</span> o : store-&gt;outputEdges()) {</div>
@@ -472,9 +472,9 @@ $(function() {
 <div class="line"><a name="l00493"></a><span class="lineno">  493</span>&#160;    }</div>
 <div class="line"><a name="l00494"></a><span class="lineno">  494</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
 <div class="line"><a name="l00495"></a><span class="lineno">  495</span>&#160;  }</div>
-<div class="line"><a name="l00496"></a><span class="lineno">  496</span>&#160;  <span class="keyword">auto</span> duplicateLoad(<a class="code" href="classNotNull.html">NotNull&lt;MemoryAccess&gt;</a> load, <span class="keywordtype">unsigned</span> &amp;memId)</div>
-<div class="line"><a name="l00497"></a><span class="lineno">  497</span>&#160;    -&gt; <a class="code" href="classNotNull.html">NotNull&lt;MemoryAccess&gt;</a> {</div>
-<div class="line"><a name="l00498"></a><span class="lineno">  498</span>&#160;    <a class="code" href="classNotNull.html">NotNull&lt;MemoryAccess&gt;</a> newLoad =</div>
+<div class="line"><a name="l00496"></a><span class="lineno">  496</span>&#160;  <span class="keyword">auto</span> duplicateLoad(NotNull&lt;MemoryAccess&gt; load, <span class="keywordtype">unsigned</span> &amp;memId)</div>
+<div class="line"><a name="l00497"></a><span class="lineno">  497</span>&#160;    -&gt; NotNull&lt;MemoryAccess&gt; {</div>
+<div class="line"><a name="l00498"></a><span class="lineno">  498</span>&#160;    NotNull&lt;MemoryAccess&gt; newLoad =</div>
 <div class="line"><a name="l00499"></a><span class="lineno">  499</span>&#160;      allocator.create&lt;<a class="code" href="structMemoryAccess.html">MemoryAccess</a>&gt;(load-&gt;getArrayRef(), <span class="keyword">true</span>);</div>
 <div class="line"><a name="l00500"></a><span class="lineno">  500</span>&#160;    memId = memory.size();</div>
 <div class="line"><a name="l00501"></a><span class="lineno">  501</span>&#160;    memory.push_back(load);</div>
@@ -493,7 +493,7 @@ $(function() {
 <div class="line"><a name="l00514"></a><span class="lineno">  514</span>&#160;      <span class="keyword">auto</span> ma = userToMem.find(user);</div>
 <div class="line"><a name="l00515"></a><span class="lineno">  515</span>&#160;      <span class="keywordflow">if</span> (ma == userToMem.end()) <span class="keywordflow">return</span>;</div>
 <div class="line"><a name="l00516"></a><span class="lineno">  516</span>&#160;      <span class="keywordtype">unsigned</span> memId = ma-&gt;second;</div>
-<div class="line"><a name="l00517"></a><span class="lineno">  517</span>&#160;      <a class="code" href="classNotNull.html">NotNull&lt;MemoryAccess&gt;</a> load = memory[memId];</div>
+<div class="line"><a name="l00517"></a><span class="lineno">  517</span>&#160;      NotNull&lt;MemoryAccess&gt; load = memory[memId];</div>
 <div class="line"><a name="l00518"></a><span class="lineno">  518</span>&#160;      <span class="keywordflow">if</span> (load-&gt;getNode() != std::numeric_limits&lt;unsigned&gt;::max())</div>
 <div class="line"><a name="l00519"></a><span class="lineno">  519</span>&#160;        load = duplicateLoad(load, memId);</div>
 <div class="line"><a name="l00520"></a><span class="lineno">  520</span>&#160;      node.addMemory(memId, load, nodeIdx);</div>
@@ -546,8 +546,8 @@ $(function() {
 <div class="line"><a name="l00595"></a><span class="lineno">  595</span>&#160;  }</div>
 <div class="line"><a name="l00596"></a><span class="lineno"><a class="line" href="structLinearProgramLoopBlock_1_1Graph.html">  596</a></span>&#160;  <span class="keyword">struct </span><a class="code" href="structLinearProgramLoopBlock_1_1Graph.html">Graph</a> {</div>
 <div class="line"><a name="l00597"></a><span class="lineno">  597</span>&#160;    <span class="comment">// a subset of Nodes</span></div>
-<div class="line"><a name="l00598"></a><span class="lineno">  598</span>&#160;    <a class="code" href="structBitSet.html">BitSet</a> nodeIds{};</div>
-<div class="line"><a name="l00599"></a><span class="lineno">  599</span>&#160;    <a class="code" href="structBitSet.html">BitSet</a> activeEdges{};</div>
+<div class="line"><a name="l00598"></a><span class="lineno">  598</span>&#160;    BitSet nodeIds{};</div>
+<div class="line"><a name="l00599"></a><span class="lineno">  599</span>&#160;    BitSet activeEdges{};</div>
 <div class="line"><a name="l00600"></a><span class="lineno">  600</span>&#160;    MutPtrVector&lt;MemoryAccess *&gt; mem;</div>
 <div class="line"><a name="l00601"></a><span class="lineno">  601</span>&#160;    MutPtrVector&lt;ScheduledNode&gt; nodes;</div>
 <div class="line"><a name="l00602"></a><span class="lineno">  602</span>&#160;    PtrVector&lt;Dependence&gt; edges;</div>
@@ -571,23 +571,23 @@ $(function() {
 <div class="line"><a name="l00620"></a><span class="lineno">  620</span>&#160;      activeEdges |= g.activeEdges;</div>
 <div class="line"><a name="l00621"></a><span class="lineno">  621</span>&#160;      <span class="keywordflow">return</span> *<span class="keyword">this</span>;</div>
 <div class="line"><a name="l00622"></a><span class="lineno">  622</span>&#160;    }</div>
-<div class="line"><a name="l00623"></a><span class="lineno">  623</span>&#160;    [[nodiscard]] constexpr <span class="keyword">auto</span> inNeighbors(<span class="keywordtype">size_t</span> i) -&gt; <a class="code" href="structBitSet.html">BitSet</a> &amp; {</div>
+<div class="line"><a name="l00623"></a><span class="lineno">  623</span>&#160;    [[nodiscard]] constexpr <span class="keyword">auto</span> inNeighbors(<span class="keywordtype">size_t</span> i) -&gt; BitSet &amp; {</div>
 <div class="line"><a name="l00624"></a><span class="lineno">  624</span>&#160;      <span class="keywordflow">return</span> nodes[i].getInNeighbors();</div>
 <div class="line"><a name="l00625"></a><span class="lineno">  625</span>&#160;    }</div>
-<div class="line"><a name="l00626"></a><span class="lineno">  626</span>&#160;    [[nodiscard]] constexpr <span class="keyword">auto</span> outNeighbors(<span class="keywordtype">size_t</span> i) -&gt; <a class="code" href="structBitSet.html">BitSet</a> &amp; {</div>
+<div class="line"><a name="l00626"></a><span class="lineno">  626</span>&#160;    [[nodiscard]] constexpr <span class="keyword">auto</span> outNeighbors(<span class="keywordtype">size_t</span> i) -&gt; BitSet &amp; {</div>
 <div class="line"><a name="l00627"></a><span class="lineno">  627</span>&#160;      <span class="keywordflow">return</span> nodes[i].getOutNeighbors();</div>
 <div class="line"><a name="l00628"></a><span class="lineno">  628</span>&#160;    }</div>
-<div class="line"><a name="l00629"></a><span class="lineno">  629</span>&#160;    [[nodiscard]] constexpr <span class="keyword">auto</span> inNeighbors(<span class="keywordtype">size_t</span> i) <span class="keyword">const</span> -&gt; <span class="keyword">const</span> <a class="code" href="structBitSet.html">BitSet</a> &amp; {</div>
+<div class="line"><a name="l00629"></a><span class="lineno">  629</span>&#160;    [[nodiscard]] constexpr <span class="keyword">auto</span> inNeighbors(<span class="keywordtype">size_t</span> i) <span class="keyword">const</span> -&gt; <span class="keyword">const</span> BitSet &amp; {</div>
 <div class="line"><a name="l00630"></a><span class="lineno">  630</span>&#160;      <span class="keywordflow">return</span> nodes[i].getInNeighbors();</div>
 <div class="line"><a name="l00631"></a><span class="lineno">  631</span>&#160;    }</div>
 <div class="line"><a name="l00632"></a><span class="lineno">  632</span>&#160;    [[nodiscard]] constexpr <span class="keyword">auto</span> outNeighbors(<span class="keywordtype">size_t</span> i) <span class="keyword">const</span></div>
-<div class="line"><a name="l00633"></a><span class="lineno">  633</span>&#160;      -&gt; <span class="keyword">const</span> <a class="code" href="structBitSet.html">BitSet</a> &amp; {</div>
+<div class="line"><a name="l00633"></a><span class="lineno">  633</span>&#160;      -&gt; <span class="keyword">const</span> BitSet &amp; {</div>
 <div class="line"><a name="l00634"></a><span class="lineno">  634</span>&#160;      <span class="keywordflow">return</span> nodes[i].getOutNeighbors();</div>
 <div class="line"><a name="l00635"></a><span class="lineno">  635</span>&#160;    }</div>
 <div class="line"><a name="l00636"></a><span class="lineno">  636</span>&#160;    [[nodiscard]] constexpr <span class="keyword">auto</span> containsNode(<span class="keywordtype">size_t</span> i) <span class="keyword">const</span> -&gt; <span class="keywordtype">bool</span> {</div>
 <div class="line"><a name="l00637"></a><span class="lineno">  637</span>&#160;      <span class="keywordflow">return</span> nodeIds.contains(i);</div>
 <div class="line"><a name="l00638"></a><span class="lineno">  638</span>&#160;    }</div>
-<div class="line"><a name="l00639"></a><span class="lineno">  639</span>&#160;    [[nodiscard]] constexpr <span class="keyword">auto</span> containsNode(<a class="code" href="structBitSet.html">BitSet</a> &amp;b) <span class="keyword">const</span> -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l00639"></a><span class="lineno">  639</span>&#160;    [[nodiscard]] constexpr <span class="keyword">auto</span> containsNode(BitSet &amp;b) <span class="keyword">const</span> -&gt; <span class="keywordtype">bool</span> {</div>
 <div class="line"><a name="l00640"></a><span class="lineno">  640</span>&#160;      <span class="keywordflow">return</span> std::ranges::any_of(b, nodeIds.contains());</div>
 <div class="line"><a name="l00641"></a><span class="lineno">  641</span>&#160;    }</div>
 <div class="line"><a name="l00642"></a><span class="lineno">  642</span>&#160;    [[nodiscard]] constexpr <span class="keyword">auto</span> missingNode(<span class="keywordtype">size_t</span> i) <span class="keyword">const</span> -&gt; <span class="keywordtype">bool</span> {</div>
@@ -622,15 +622,15 @@ $(function() {
 <div class="line"><a name="l00676"></a><span class="lineno">  676</span>&#160;      <span class="keywordflow">return</span> (activeEdges[e]) &amp;&amp; (!isInactive(edges[e]));</div>
 <div class="line"><a name="l00677"></a><span class="lineno">  677</span>&#160;    }</div>
 <div class="line"><a name="l00678"></a><span class="lineno">  678</span>&#160;    [[nodiscard]] constexpr <span class="keyword">auto</span> begin()</div>
-<div class="line"><a name="l00679"></a><span class="lineno">  679</span>&#160;      -&gt; <a class="code" href="structBitSliceView_1_1Iterator.html">BitSliceView&lt;ScheduledNode, BitSet&gt;::Iterator</a> {</div>
-<div class="line"><a name="l00680"></a><span class="lineno">  680</span>&#160;      <span class="keywordflow">return</span> <a class="code" href="structBitSliceView.html">BitSliceView</a>{nodes, nodeIds}.begin();</div>
+<div class="line"><a name="l00679"></a><span class="lineno">  679</span>&#160;      -&gt; BitSliceView&lt;ScheduledNode, BitSet&gt;::Iterator {</div>
+<div class="line"><a name="l00680"></a><span class="lineno">  680</span>&#160;      <span class="keywordflow">return</span> BitSliceView{nodes, nodeIds}.begin();</div>
 <div class="line"><a name="l00681"></a><span class="lineno">  681</span>&#160;    }</div>
 <div class="line"><a name="l00682"></a><span class="lineno">  682</span>&#160;    [[nodiscard]] constexpr <span class="keyword">auto</span> begin() const</div>
-<div class="line"><a name="l00683"></a><span class="lineno">  683</span>&#160;      -&gt; <a class="code" href="structBitSliceView.html">BitSliceView</a>&lt;<a class="code" href="classScheduledNode.html">ScheduledNode</a>, <a class="code" href="structBitSet.html">BitSet</a>&gt;::ConstIterator {</div>
-<div class="line"><a name="l00684"></a><span class="lineno">  684</span>&#160;      <span class="keyword">const</span> <a class="code" href="structBitSliceView.html">BitSliceView</a> bsv{nodes, nodeIds};</div>
+<div class="line"><a name="l00683"></a><span class="lineno">  683</span>&#160;      -&gt; BitSliceView&lt;<a class="code" href="classScheduledNode.html">ScheduledNode</a>, BitSet&gt;::ConstIterator {</div>
+<div class="line"><a name="l00684"></a><span class="lineno">  684</span>&#160;      <span class="keyword">const</span> BitSliceView bsv{nodes, nodeIds};</div>
 <div class="line"><a name="l00685"></a><span class="lineno">  685</span>&#160;      <span class="keywordflow">return</span> bsv.begin();</div>
 <div class="line"><a name="l00686"></a><span class="lineno">  686</span>&#160;    }</div>
-<div class="line"><a name="l00687"></a><span class="lineno">  687</span>&#160;    [[nodiscard]] <span class="keyword">static</span> constexpr <span class="keyword">auto</span> end() -&gt; <a class="code" href="structEndSentinel.html">EndSentinel</a> { <span class="keywordflow">return</span> {}; }</div>
+<div class="line"><a name="l00687"></a><span class="lineno">  687</span>&#160;    [[nodiscard]] <span class="keyword">static</span> constexpr <span class="keyword">auto</span> end() -&gt; EndSentinel { <span class="keywordflow">return</span> {}; }</div>
 <div class="line"><a name="l00688"></a><span class="lineno">  688</span>&#160;    [[nodiscard]] constexpr <span class="keyword">auto</span> wasVisited(<span class="keywordtype">size_t</span> i) <span class="keyword">const</span> -&gt; <span class="keywordtype">bool</span> {</div>
 <div class="line"><a name="l00689"></a><span class="lineno">  689</span>&#160;      <span class="keywordflow">return</span> nodes[i].wasVisited();</div>
 <div class="line"><a name="l00690"></a><span class="lineno">  690</span>&#160;    }</div>
@@ -647,11 +647,11 @@ $(function() {
 <div class="line"><a name="l00701"></a><span class="lineno">  701</span>&#160;    [[nodiscard]] constexpr <span class="keyword">auto</span> maxVertexId() const -&gt; <span class="keywordtype">size_t</span> {</div>
 <div class="line"><a name="l00702"></a><span class="lineno">  702</span>&#160;      <span class="keywordflow">return</span> nodeIds.maxValue();</div>
 <div class="line"><a name="l00703"></a><span class="lineno">  703</span>&#160;    }</div>
-<div class="line"><a name="l00704"></a><span class="lineno">  704</span>&#160;    [[nodiscard]] constexpr <span class="keyword">auto</span> vertexIds() -&gt; <a class="code" href="structBitSet.html">BitSet</a> &amp; { <span class="keywordflow">return</span> nodeIds; }</div>
-<div class="line"><a name="l00705"></a><span class="lineno">  705</span>&#160;    [[nodiscard]] constexpr <span class="keyword">auto</span> vertexIds() const -&gt; const <a class="code" href="structBitSet.html">BitSet</a> &amp; {</div>
+<div class="line"><a name="l00704"></a><span class="lineno">  704</span>&#160;    [[nodiscard]] constexpr <span class="keyword">auto</span> vertexIds() -&gt; BitSet &amp; { <span class="keywordflow">return</span> nodeIds; }</div>
+<div class="line"><a name="l00705"></a><span class="lineno">  705</span>&#160;    [[nodiscard]] constexpr <span class="keyword">auto</span> vertexIds() const -&gt; const BitSet &amp; {</div>
 <div class="line"><a name="l00706"></a><span class="lineno">  706</span>&#160;      <span class="keywordflow">return</span> nodeIds;</div>
 <div class="line"><a name="l00707"></a><span class="lineno">  707</span>&#160;    }</div>
-<div class="line"><a name="l00708"></a><span class="lineno">  708</span>&#160;    [[nodiscard]] constexpr <span class="keyword">auto</span> subGraph(<span class="keyword">const</span> <a class="code" href="structBitSet.html">BitSet</a> &amp;components) -&gt; Graph {</div>
+<div class="line"><a name="l00708"></a><span class="lineno">  708</span>&#160;    [[nodiscard]] constexpr <span class="keyword">auto</span> subGraph(<span class="keyword">const</span> BitSet &amp;components) -&gt; Graph {</div>
 <div class="line"><a name="l00709"></a><span class="lineno">  709</span>&#160;      <span class="keywordflow">return</span> {components, activeEdges, mem, nodes, edges};</div>
 <div class="line"><a name="l00710"></a><span class="lineno">  710</span>&#160;    }</div>
 <div class="line"><a name="l00711"></a><span class="lineno">  711</span>&#160;    [[nodiscard]] <span class="keyword">auto</span> split(<span class="keyword">const</span> llvm::SmallVector&lt;BitSet&gt; &amp;components)</div>
@@ -723,7 +723,7 @@ $(function() {
 <div class="line"><a name="l00777"></a><span class="lineno">  777</span>&#160;            nodes, edges};</div>
 <div class="line"><a name="l00778"></a><span class="lineno">  778</span>&#160;  }</div>
 <div class="line"><a name="l00779"></a><span class="lineno">  779</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> getOverlapIndex(<span class="keyword">const</span> <a class="code" href="classDependence.html">Dependence</a> &amp;edge)</div>
-<div class="line"><a name="l00780"></a><span class="lineno">  780</span>&#160;    -&gt; <a class="code" href="structOptional.html">Optional&lt;size_t&gt;</a> {</div>
+<div class="line"><a name="l00780"></a><span class="lineno">  780</span>&#160;    -&gt; Optional&lt;size_t&gt; {</div>
 <div class="line"><a name="l00781"></a><span class="lineno">  781</span>&#160;    <span class="keyword">auto</span> [store, other] = edge.getStoreAndOther();</div>
 <div class="line"><a name="l00782"></a><span class="lineno">  782</span>&#160;    <span class="keywordtype">size_t</span> sindex = store-&gt;getNode(), lindex = other-&gt;getNode();</div>
 <div class="line"><a name="l00783"></a><span class="lineno">  783</span>&#160;    <span class="keywordflow">if</span> (sindex == lindex) <span class="keywordflow">return</span> sindex;</div>
@@ -735,7 +735,7 @@ $(function() {
 <div class="line"><a name="l00789"></a><span class="lineno">  789</span>&#160;    <span class="keywordtype">bool</span> tryOrth = <span class="keyword">false</span>;</div>
 <div class="line"><a name="l00790"></a><span class="lineno">  790</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;edge : edges) {</div>
 <div class="line"><a name="l00791"></a><span class="lineno">  791</span>&#160;      <span class="keywordflow">if</span> (edge.inputIsLoad() == edge.outputIsLoad()) <span class="keywordflow">continue</span>;</div>
-<div class="line"><a name="l00792"></a><span class="lineno">  792</span>&#160;      <a class="code" href="structOptional.html">Optional&lt;size_t&gt;</a> maybeIndex = getOverlapIndex(edge);</div>
+<div class="line"><a name="l00792"></a><span class="lineno">  792</span>&#160;      Optional&lt;size_t&gt; maybeIndex = getOverlapIndex(edge);</div>
 <div class="line"><a name="l00793"></a><span class="lineno">  793</span>&#160;      <span class="keywordflow">if</span> (!maybeIndex) <span class="keywordflow">continue</span>;</div>
 <div class="line"><a name="l00794"></a><span class="lineno">  794</span>&#160;      <span class="keywordtype">size_t</span> index = *maybeIndex;</div>
 <div class="line"><a name="l00795"></a><span class="lineno">  795</span>&#160;      <a class="code" href="classScheduledNode.html">ScheduledNode</a> &amp;node = nodes[index];</div>
@@ -754,7 +754,7 @@ $(function() {
 <div class="line"><a name="l00808"></a><span class="lineno">  808</span>&#160;    }</div>
 <div class="line"><a name="l00809"></a><span class="lineno">  809</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="classLinearProgramLoopBlock.html#a184cd91f49d81ad3b0fd24a016f12509">optimize</a>(g, 0, maxDepth);</div>
 <div class="line"><a name="l00810"></a><span class="lineno">  810</span>&#160;  }</div>
-<div class="line"><a name="l00811"></a><span class="lineno">  811</span>&#160;  constexpr <span class="keywordtype">void</span> addMemory(<a class="code" href="classNotNull.html">NotNull&lt;ArrayIndex&gt;</a> m) {</div>
+<div class="line"><a name="l00811"></a><span class="lineno">  811</span>&#160;  constexpr <span class="keywordtype">void</span> addMemory(NotNull&lt;ArrayIndex&gt; m) {</div>
 <div class="line"><a name="l00812"></a><span class="lineno">  812</span>&#160;    addMemory(MemoryAccess::construct(allocator, m));</div>
 <div class="line"><a name="l00813"></a><span class="lineno">  813</span>&#160;  }</div>
 <div class="line"><a name="l00814"></a><span class="lineno">  814</span>&#160;  constexpr <span class="keywordtype">void</span> addMemory(<a class="code" href="structMemoryAccess.html">MemoryAccess</a> *m) {</div>
@@ -763,12 +763,12 @@ $(function() {
 <div class="line"><a name="l00817"></a><span class="lineno">  817</span>&#160;<span class="preprocessor">#endif</span></div>
 <div class="line"><a name="l00818"></a><span class="lineno">  818</span>&#160;    memory.push_back(m);</div>
 <div class="line"><a name="l00819"></a><span class="lineno">  819</span>&#160;  }</div>
-<div class="line"><a name="l00820"></a><span class="lineno">  820</span>&#160;  [[nodiscard]] <span class="keyword">static</span> constexpr <span class="keyword">auto</span> anyActive(<span class="keyword">const</span> Graph &amp;g, <span class="keyword">const</span> <a class="code" href="structBitSet.html">BitSet</a> &amp;b)</div>
+<div class="line"><a name="l00820"></a><span class="lineno">  820</span>&#160;  [[nodiscard]] <span class="keyword">static</span> constexpr <span class="keyword">auto</span> anyActive(<span class="keyword">const</span> Graph &amp;g, <span class="keyword">const</span> BitSet &amp;b)</div>
 <div class="line"><a name="l00821"></a><span class="lineno">  821</span>&#160;    -&gt; <span class="keywordtype">bool</span> {</div>
 <div class="line"><a name="l00822"></a><span class="lineno">  822</span>&#160;    <span class="keywordflow">return</span> std::ranges::any_of(b, [&amp;](<span class="keywordtype">size_t</span> e) { <span class="keywordflow">return</span> !g.isInactive(e); });</div>
 <div class="line"><a name="l00823"></a><span class="lineno">  823</span>&#160;  }</div>
 <div class="line"><a name="l00824"></a><span class="lineno">  824</span>&#160;  [[nodiscard]] <span class="keyword">static</span> constexpr <span class="keyword">auto</span> anyActive(<span class="keyword">const</span> Graph &amp;g, <span class="keywordtype">size_t</span> d,</div>
-<div class="line"><a name="l00825"></a><span class="lineno">  825</span>&#160;                                                <span class="keyword">const</span> <a class="code" href="structBitSet.html">BitSet</a> &amp;b) -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l00825"></a><span class="lineno">  825</span>&#160;                                                <span class="keyword">const</span> BitSet &amp;b) -&gt; <span class="keywordtype">bool</span> {</div>
 <div class="line"><a name="l00826"></a><span class="lineno">  826</span>&#160;    <span class="keywordflow">return</span> std::ranges::any_of(b,</div>
 <div class="line"><a name="l00827"></a><span class="lineno">  827</span>&#160;                               [&amp;](<span class="keywordtype">size_t</span> e) { <span class="keywordflow">return</span> !g.isInactive(e, d); });</div>
 <div class="line"><a name="l00828"></a><span class="lineno">  828</span>&#160;  }</div>
@@ -1142,7 +1142,7 @@ $(function() {
 <div class="line"><a name="l01211"></a><span class="lineno"> 1211</span>&#160;    <span class="keywordflow">return</span> deactivateSatisfiedEdges(g, depth,</div>
 <div class="line"><a name="l01212"></a><span class="lineno"> 1212</span>&#160;                                    sol[_(numPhiCoefs + numOmegaCoefs, end)]);</div>
 <div class="line"><a name="l01213"></a><span class="lineno"> 1213</span>&#160;  }</div>
-<div class="line"><a name="l01214"></a><span class="lineno"> 1214</span>&#160;  <span class="keyword">auto</span> checkEmptySatEdges(Graph &amp;g, <span class="keywordtype">size_t</span> depth) -&gt; <a class="code" href="structBitSet.html">BitSet</a> {</div>
+<div class="line"><a name="l01214"></a><span class="lineno"> 1214</span>&#160;  <span class="keyword">auto</span> checkEmptySatEdges(Graph &amp;g, <span class="keywordtype">size_t</span> depth) -&gt; BitSet {</div>
 <div class="line"><a name="l01215"></a><span class="lineno"> 1215</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> e = 0; e &lt; edges.size(); ++e) {</div>
 <div class="line"><a name="l01216"></a><span class="lineno"> 1216</span>&#160;      <a class="code" href="classDependence.html">Dependence</a> &amp;edge = edges[e];</div>
 <div class="line"><a name="l01217"></a><span class="lineno"> 1217</span>&#160;      <span class="keywordflow">if</span> (g.isInactive(e, depth)) <span class="keywordflow">continue</span>;</div>
@@ -1156,14 +1156,14 @@ $(function() {
 <div class="line"><a name="l01225"></a><span class="lineno"> 1225</span>&#160;        g.activeEdges.remove(e);</div>
 <div class="line"><a name="l01226"></a><span class="lineno"> 1226</span>&#160;      }</div>
 <div class="line"><a name="l01227"></a><span class="lineno"> 1227</span>&#160;    }</div>
-<div class="line"><a name="l01228"></a><span class="lineno"> 1228</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="structBitSet.html">BitSet</a>{};</div>
+<div class="line"><a name="l01228"></a><span class="lineno"> 1228</span>&#160;    <span class="keywordflow">return</span> BitSet{};</div>
 <div class="line"><a name="l01229"></a><span class="lineno"> 1229</span>&#160;  }</div>
 <div class="line"><a name="l01230"></a><span class="lineno"> 1230</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> deactivateSatisfiedEdges(Graph &amp;g, <span class="keywordtype">size_t</span> depth,</div>
-<div class="line"><a name="l01231"></a><span class="lineno"> 1231</span>&#160;                                              <a class="code" href="structSimplex_1_1Solution.html">Simplex::Solution</a> sol) -&gt; <a class="code" href="structBitSet.html">BitSet</a> {</div>
+<div class="line"><a name="l01231"></a><span class="lineno"> 1231</span>&#160;                                              Simplex::Solution sol) -&gt; BitSet {</div>
 <div class="line"><a name="l01232"></a><span class="lineno"> 1232</span>&#160;    <span class="keywordflow">if</span> (allZero(sol[_(begin, numBounding + numActiveEdges)]))</div>
 <div class="line"><a name="l01233"></a><span class="lineno"> 1233</span>&#160;      <span class="keywordflow">return</span> checkEmptySatEdges(g, depth);</div>
 <div class="line"><a name="l01234"></a><span class="lineno"> 1234</span>&#160;    <span class="keywordtype">size_t</span> w = 0, u = numActiveEdges;</div>
-<div class="line"><a name="l01235"></a><span class="lineno"> 1235</span>&#160;    <a class="code" href="structBitSet.html">BitSet</a> deactivated{};</div>
+<div class="line"><a name="l01235"></a><span class="lineno"> 1235</span>&#160;    BitSet deactivated{};</div>
 <div class="line"><a name="l01236"></a><span class="lineno"> 1236</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> e = 0; e &lt; edges.size(); ++e) {</div>
 <div class="line"><a name="l01237"></a><span class="lineno"> 1237</span>&#160;      <a class="code" href="classDependence.html">Dependence</a> &amp;edge = edges[e];</div>
 <div class="line"><a name="l01238"></a><span class="lineno"> 1238</span>&#160;      <span class="keywordflow">if</span> (g.isInactive(e, depth)) <span class="keywordflow">continue</span>;</div>
@@ -1208,12 +1208,12 @@ $(function() {
 <div class="line"><a name="l01277"></a><span class="lineno"> 1277</span>&#160;    <span class="comment">// now, we search index matrices for schedules not in the null space of</span></div>
 <div class="line"><a name="l01278"></a><span class="lineno"> 1278</span>&#160;    <span class="comment">// existing phi.</span></div>
 <div class="line"><a name="l01279"></a><span class="lineno"> 1279</span>&#160;    <span class="comment">// Here, we collect candidates for the next schedule</span></div>
-<div class="line"><a name="l01280"></a><span class="lineno"> 1280</span>&#160;    DenseMatrix&lt;int64_t&gt; candidates{<a class="code" href="structLinAlg_1_1DenseDims.html">DenseDims</a>{0, node.getNumLoops() + 1}};</div>
+<div class="line"><a name="l01280"></a><span class="lineno"> 1280</span>&#160;    DenseMatrix&lt;int64_t&gt; candidates{DenseDims{0, node.getNumLoops() + 1}};</div>
 <div class="line"><a name="l01281"></a><span class="lineno"> 1281</span>&#160;    Vector&lt;int64_t&gt; indv;</div>
 <div class="line"><a name="l01282"></a><span class="lineno"> 1282</span>&#160;    indv.resizeForOverwrite(node.getNumLoops());</div>
 <div class="line"><a name="l01283"></a><span class="lineno"> 1283</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> ind : node.getMemory()) {</div>
 <div class="line"><a name="l01284"></a><span class="lineno"> 1284</span>&#160;      PtrMatrix&lt;int64_t&gt; indMat = mem[ind]-&gt;indexMatrix(); <span class="comment">// lsub x d</span></div>
-<div class="line"><a name="l01285"></a><span class="lineno"> 1285</span>&#160;      A.resizeForOverwrite(<a class="code" href="structLinAlg_1_1DenseDims.html">DenseDims</a>{nullSpace.numRow(), indMat.numCol()});</div>
+<div class="line"><a name="l01285"></a><span class="lineno"> 1285</span>&#160;      A.resizeForOverwrite(DenseDims{nullSpace.numRow(), indMat.numCol()});</div>
 <div class="line"><a name="l01286"></a><span class="lineno"> 1286</span>&#160;      A = nullSpace(_, _(0, indMat.numRow())) * indMat;</div>
 <div class="line"><a name="l01287"></a><span class="lineno"> 1287</span>&#160;      <span class="comment">// we search A for rows that aren&#39;t all zero</span></div>
 <div class="line"><a name="l01288"></a><span class="lineno"> 1288</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> d = 0; d &lt; A.numCol(); ++d) {</div>
@@ -1252,11 +1252,11 @@ $(function() {
 <div class="line"><a name="l01321"></a><span class="lineno"> 1321</span>&#160;    }</div>
 <div class="line"><a name="l01322"></a><span class="lineno"> 1322</span>&#160;    invariant(<span class="keyword">false</span>);</div>
 <div class="line"><a name="l01323"></a><span class="lineno"> 1323</span>&#160;  }</div>
-<div class="line"><a name="l01324"></a><span class="lineno"> 1324</span>&#160;  <span class="keywordtype">void</span> updateSchedules(<span class="keyword">const</span> Graph &amp;g, <span class="keywordtype">size_t</span> depth, <a class="code" href="structSimplex_1_1Solution.html">Simplex::Solution</a> sol) {</div>
+<div class="line"><a name="l01324"></a><span class="lineno"> 1324</span>&#160;  <span class="keywordtype">void</span> updateSchedules(<span class="keyword">const</span> Graph &amp;g, <span class="keywordtype">size_t</span> depth, Simplex::Solution sol) {</div>
 <div class="line"><a name="l01325"></a><span class="lineno"> 1325</span>&#160;<span class="preprocessor">#ifndef NDEBUG</span></div>
 <div class="line"><a name="l01326"></a><span class="lineno"> 1326</span>&#160;    <span class="keywordflow">if</span> (numPhiCoefs &gt; 0)</div>
 <div class="line"><a name="l01327"></a><span class="lineno"> 1327</span>&#160;      assert(</div>
-<div class="line"><a name="l01328"></a><span class="lineno"> 1328</span>&#160;        std::ranges::any_of(sol, [](<a class="code" href="structRational.html">Rational</a> s) -&gt; <span class="keywordtype">bool</span> { <span class="keywordflow">return</span> s != 0; }));</div>
+<div class="line"><a name="l01328"></a><span class="lineno"> 1328</span>&#160;        std::ranges::any_of(sol, [](Rational s) -&gt; <span class="keywordtype">bool</span> { <span class="keywordflow">return</span> s != 0; }));</div>
 <div class="line"><a name="l01329"></a><span class="lineno"> 1329</span>&#160;<span class="preprocessor">#endif</span></div>
 <div class="line"><a name="l01330"></a><span class="lineno"> 1330</span>&#160;    <span class="keywordtype">size_t</span> o = numOmegaCoefs;</div>
 <div class="line"><a name="l01331"></a><span class="lineno"> 1331</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;&amp;node : nodes) {</div>
@@ -1265,7 +1265,7 @@ $(function() {
 <div class="line"><a name="l01334"></a><span class="lineno"> 1334</span>&#160;        setDepFreeSchedule(memory, node, depth);</div>
 <div class="line"><a name="l01335"></a><span class="lineno"> 1335</span>&#160;        <span class="keywordflow">continue</span>;</div>
 <div class="line"><a name="l01336"></a><span class="lineno"> 1336</span>&#160;      }</div>
-<div class="line"><a name="l01337"></a><span class="lineno"> 1337</span>&#160;      <a class="code" href="structRational.html">Rational</a> sOmega = sol[node.getOmegaOffset()];</div>
+<div class="line"><a name="l01337"></a><span class="lineno"> 1337</span>&#160;      Rational sOmega = sol[node.getOmegaOffset()];</div>
 <div class="line"><a name="l01338"></a><span class="lineno"> 1338</span>&#160;      <span class="comment">// TODO: handle s.denominator != 1</span></div>
 <div class="line"><a name="l01339"></a><span class="lineno"> 1339</span>&#160;      <span class="keywordflow">if</span> (!node.phiIsScheduled(depth)) {</div>
 <div class="line"><a name="l01340"></a><span class="lineno"> 1340</span>&#160;        <span class="keyword">auto</span> phi = node.getSchedule(depth);</div>
@@ -1307,7 +1307,7 @@ $(function() {
 <div class="line"><a name="l01376"></a><span class="lineno"> 1376</span>&#160;    invariant(<span class="keyword">false</span>);</div>
 <div class="line"><a name="l01377"></a><span class="lineno"> 1377</span>&#160;    <span class="keywordflow">return</span> 0;</div>
 <div class="line"><a name="l01378"></a><span class="lineno"> 1378</span>&#160;  }</div>
-<div class="line"><a name="l01379"></a><span class="lineno"> 1379</span>&#160;  <span class="keywordtype">void</span> addIndependentSolutionConstraints(<a class="code" href="classNotNull.html">NotNull&lt;Simplex&gt;</a> omniSimplex,</div>
+<div class="line"><a name="l01379"></a><span class="lineno"> 1379</span>&#160;  <span class="keywordtype">void</span> addIndependentSolutionConstraints(NotNull&lt;Simplex&gt; omniSimplex,</div>
 <div class="line"><a name="l01380"></a><span class="lineno"> 1380</span>&#160;                                         <span class="keyword">const</span> Graph &amp;g, <span class="keywordtype">size_t</span> d) {</div>
 <div class="line"><a name="l01381"></a><span class="lineno"> 1381</span>&#160;    <span class="comment">// omniSimplex-&gt;setNumCons(omniSimplex-&gt;getNumCons() +</span></div>
 <div class="line"><a name="l01382"></a><span class="lineno"> 1382</span>&#160;    <span class="comment">//                                memory.size());</span></div>
@@ -1413,7 +1413,7 @@ $(function() {
 <div class="line"><a name="l01482"></a><span class="lineno"> 1482</span>&#160;    <span class="comment">// allow it.</span></div>
 <div class="line"><a name="l01483"></a><span class="lineno"> 1483</span>&#160;    <span class="keyword">auto</span> graphs = g.split(components);</div>
 <div class="line"><a name="l01484"></a><span class="lineno"> 1484</span>&#160;    assert(graphs.size() == components.size());</div>
-<div class="line"><a name="l01485"></a><span class="lineno"> 1485</span>&#160;    <a class="code" href="structBitSet.html">BitSet</a> satDeps{};</div>
+<div class="line"><a name="l01485"></a><span class="lineno"> 1485</span>&#160;    BitSet satDeps{};</div>
 <div class="line"><a name="l01486"></a><span class="lineno"> 1486</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;sg : graphs) {</div>
 <div class="line"><a name="l01487"></a><span class="lineno"> 1487</span>&#160;      <span class="keywordflow">if</span> (d &gt;= sg.calcMaxDepth()) <span class="keywordflow">continue</span>;</div>
 <div class="line"><a name="l01488"></a><span class="lineno"> 1488</span>&#160;      countAuxParamsAndConstraints(sg, d);</div>
@@ -1458,7 +1458,7 @@ $(function() {
 <div class="line"><a name="l01527"></a><span class="lineno"> 1527</span>&#160;    <span class="keywordflow">return</span> satDeps;</div>
 <div class="line"><a name="l01528"></a><span class="lineno"> 1528</span>&#160;  }</div>
 <div class="line"><a name="l01529"></a><span class="lineno"> 1529</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> numParams(<span class="keyword">const</span> <a class="code" href="classDependence.html">Dependence</a> &amp;edge)</div>
-<div class="line"><a name="l01530"></a><span class="lineno"> 1530</span>&#160;    -&gt; <a class="code" href="classLinAlg_1_1StaticArray.html">LinAlg::SVector&lt;size_t, 4&gt;</a> {</div>
+<div class="line"><a name="l01530"></a><span class="lineno"> 1530</span>&#160;    -&gt; LinAlg::SVector&lt;size_t, 4&gt; {</div>
 <div class="line"><a name="l01531"></a><span class="lineno"> 1531</span>&#160;    <span class="keywordflow">return</span> {edge.getNumLambda(), edge.getDynSymDim(), edge.getNumConstraints(),</div>
 <div class="line"><a name="l01532"></a><span class="lineno"> 1532</span>&#160;            1};</div>
 <div class="line"><a name="l01533"></a><span class="lineno"> 1533</span>&#160;  }</div>
@@ -1469,7 +1469,7 @@ $(function() {
 <div class="line"><a name="l01538"></a><span class="lineno"> 1538</span>&#160;    }</div>
 <div class="line"><a name="l01539"></a><span class="lineno"> 1539</span>&#160;  }</div>
 <div class="line"><a name="l01540"></a><span class="lineno"> 1540</span>&#160;  constexpr <span class="keywordtype">void</span> countAuxParamsAndConstraints(<span class="keyword">const</span> Graph &amp;g, <span class="keywordtype">size_t</span> d) {</div>
-<div class="line"><a name="l01541"></a><span class="lineno"> 1541</span>&#160;    <a class="code" href="classLinAlg_1_1StaticArray.html">LinAlg::SVector&lt;size_t, 4&gt;</a> params{};</div>
+<div class="line"><a name="l01541"></a><span class="lineno"> 1541</span>&#160;    LinAlg::SVector&lt;size_t, 4&gt; params{};</div>
 <div class="line"><a name="l01542"></a><span class="lineno"> 1542</span>&#160;    assert(allZero(params));</div>
 <div class="line"><a name="l01543"></a><span class="lineno"> 1543</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;&amp;e : g.getEdges(d)) params += numParams(e);</div>
 <div class="line"><a name="l01544"></a><span class="lineno"> 1544</span>&#160;    numLambda = params[0];</div>
@@ -1478,7 +1478,7 @@ $(function() {
 <div class="line"><a name="l01547"></a><span class="lineno"> 1547</span>&#160;    numActiveEdges = params[3];</div>
 <div class="line"><a name="l01548"></a><span class="lineno"> 1548</span>&#160;  }</div>
 <div class="line"><a name="l01549"></a><span class="lineno"> 1549</span>&#160;  constexpr <span class="keywordtype">void</span> countAuxAndStash(<span class="keyword">const</span> Graph &amp;g, <span class="keywordtype">size_t</span> d) {</div>
-<div class="line"><a name="l01550"></a><span class="lineno"> 1550</span>&#160;    <a class="code" href="classLinAlg_1_1StaticArray.html">LinAlg::SVector&lt;size_t, 4&gt;</a> params{};</div>
+<div class="line"><a name="l01550"></a><span class="lineno"> 1550</span>&#160;    LinAlg::SVector&lt;size_t, 4&gt; params{};</div>
 <div class="line"><a name="l01551"></a><span class="lineno"> 1551</span>&#160;    assert(allZero(params));</div>
 <div class="line"><a name="l01552"></a><span class="lineno"> 1552</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;&amp;e : g.getEdges(d)) params += numParams(e.stashSatLevel());</div>
 <div class="line"><a name="l01553"></a><span class="lineno"> 1553</span>&#160;    numLambda = params[0];</div>
@@ -1488,15 +1488,15 @@ $(function() {
 <div class="line"><a name="l01557"></a><span class="lineno"> 1557</span>&#160;  }</div>
 <div class="line"><a name="l01558"></a><span class="lineno"> 1558</span>&#160;  <span class="comment">// NOLINTNEXTLINE(misc-no-recursion)</span></div>
 <div class="line"><a name="l01559"></a><span class="lineno"> 1559</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> optimizeSatDep(Graph g, <span class="keywordtype">size_t</span> d, <span class="keywordtype">size_t</span> maxDepth,</div>
-<div class="line"><a name="l01560"></a><span class="lineno"> 1560</span>&#160;                                    <a class="code" href="structBitSet.html">BitSet</a> depSatLevel, <a class="code" href="structBitSet.html">BitSet</a> activeEdges)</div>
-<div class="line"><a name="l01561"></a><span class="lineno"> 1561</span>&#160;    -&gt; <a class="code" href="structBitSet.html">BitSet</a> {</div>
+<div class="line"><a name="l01560"></a><span class="lineno"> 1560</span>&#160;                                    BitSet depSatLevel, BitSet activeEdges)</div>
+<div class="line"><a name="l01561"></a><span class="lineno"> 1561</span>&#160;    -&gt; BitSet {</div>
 <div class="line"><a name="l01562"></a><span class="lineno"> 1562</span>&#160;    <span class="comment">// if we&#39;re here, there are satisfied deps in both</span></div>
 <div class="line"><a name="l01563"></a><span class="lineno"> 1563</span>&#160;    <span class="comment">// depSatLevel and depSatNest</span></div>
 <div class="line"><a name="l01564"></a><span class="lineno"> 1564</span>&#160;    <span class="comment">// what we want to know is, can we satisfy all the deps</span></div>
 <div class="line"><a name="l01565"></a><span class="lineno"> 1565</span>&#160;    <span class="comment">// in depSatNest?</span></div>
 <div class="line"><a name="l01566"></a><span class="lineno"> 1566</span>&#160;    <span class="comment">// backup in case we fail</span></div>
 <div class="line"><a name="l01567"></a><span class="lineno"> 1567</span>&#160;    <span class="comment">// activeEdges was the old original; swap it in</span></div>
-<div class="line"><a name="l01568"></a><span class="lineno"> 1568</span>&#160;    <a class="code" href="structBitSet.html">BitSet</a> oldEdges = g.activeEdges, nodeIds = g.nodeIds;</div>
+<div class="line"><a name="l01568"></a><span class="lineno"> 1568</span>&#160;    BitSet oldEdges = g.activeEdges, nodeIds = g.nodeIds;</div>
 <div class="line"><a name="l01569"></a><span class="lineno"> 1569</span>&#160;    g.activeEdges = activeEdges;</div>
 <div class="line"><a name="l01570"></a><span class="lineno"> 1570</span>&#160;    <span class="keyword">auto</span> chckpt = allocator.checkpoint();</div>
 <div class="line"><a name="l01571"></a><span class="lineno"> 1571</span>&#160;    <span class="keyword">auto</span> oldSchedules = vector&lt;AffineSchedule&gt;(allocator, g.nodeIds.size());</div>
@@ -1521,11 +1521,11 @@ $(function() {
 <div class="line"><a name="l01593"></a><span class="lineno"> 1593</span>&#160;  <span class="comment">// NOLINTNEXTLINE(misc-no-recursion)</span></div>
 <div class="line"><a name="l01594"></a><span class="lineno"><a class="line" href="classLinearProgramLoopBlock.html#a184cd91f49d81ad3b0fd24a016f12509"> 1594</a></span>&#160;  [[nodiscard]] <span class="keyword">auto</span> <a class="code" href="classLinearProgramLoopBlock.html#a184cd91f49d81ad3b0fd24a016f12509">optimize</a>(<a class="code" href="structLinearProgramLoopBlock_1_1Graph.html">Graph</a> g, <span class="keywordtype">size_t</span> d, <span class="keywordtype">size_t</span> maxDepth)</div>
 <div class="line"><a name="l01595"></a><span class="lineno"> 1595</span>&#160;    -&gt; std::optional&lt;BitSet&gt; {</div>
-<div class="line"><a name="l01596"></a><span class="lineno"> 1596</span>&#160;    <span class="keywordflow">if</span> (d &gt;= maxDepth) <span class="keywordflow">return</span> <a class="code" href="structBitSet.html">BitSet</a>{};</div>
+<div class="line"><a name="l01596"></a><span class="lineno"> 1596</span>&#160;    <span class="keywordflow">if</span> (d &gt;= maxDepth) <span class="keywordflow">return</span> BitSet{};</div>
 <div class="line"><a name="l01597"></a><span class="lineno"> 1597</span>&#160;    countAuxParamsAndConstraints(g, d);</div>
 <div class="line"><a name="l01598"></a><span class="lineno"> 1598</span>&#160;    setScheduleMemoryOffsets(g, d);</div>
 <div class="line"><a name="l01599"></a><span class="lineno"> 1599</span>&#160;    <span class="comment">// if we fail on this level, break the graph</span></div>
-<div class="line"><a name="l01600"></a><span class="lineno"> 1600</span>&#160;    <a class="code" href="structBitSet.html">BitSet</a> activeEdgesBackup = g.activeEdges;</div>
+<div class="line"><a name="l01600"></a><span class="lineno"> 1600</span>&#160;    BitSet activeEdgesBackup = g.activeEdges;</div>
 <div class="line"><a name="l01601"></a><span class="lineno"> 1601</span>&#160;    <span class="keywordflow">if</span> (std::optional&lt;BitSet&gt; depSat = solveGraph(g, d, <span class="keyword">false</span>)) {</div>
 <div class="line"><a name="l01602"></a><span class="lineno"> 1602</span>&#160;      <span class="keyword">const</span> <span class="keywordtype">size_t</span> dp1 = d + 1;</div>
 <div class="line"><a name="l01603"></a><span class="lineno"> 1603</span>&#160;      <span class="keywordflow">if</span> (dp1 == maxDepth) <span class="keywordflow">return</span> *depSat;</div>
@@ -1619,7 +1619,6 @@ $(function() {
 <div class="ttc" id="aclassDepPoly_html"><div class="ttname"><a href="classDepPoly.html">DepPoly</a></div><div class="ttdef"><b>Definition:</b> DependencyPolyhedra.hpp:100</div></div>
 <div class="ttc" id="aclassDependence_html"><div class="ttname"><a href="classDependence.html">Dependence</a></div><div class="ttdef"><b>Definition:</b> Dependence.hpp:12</div></div>
 <div class="ttc" id="aclassDependence_html_a8f03cfecfe1734c6c395bf3184269536"><div class="ttname"><a href="classDependence.html#a8f03cfecfe1734c6c395bf3184269536">Dependence::isForward</a></div><div class="ttdeci">constexpr auto isForward() const -&gt; bool</div><div class="ttdoc">indicates whether forward is non-empty</div><div class="ttdef"><b>Definition:</b> Dependence.hpp:293</div></div>
-<div class="ttc" id="aclassLinAlg_1_1StaticArray_html"><div class="ttname"><a href="classLinAlg_1_1StaticArray.html">LinAlg::StaticArray</a></div><div class="ttdef"><b>Definition:</b> StaticArrays.hpp:14</div></div>
 <div class="ttc" id="aclassLinearProgramLoopBlock_1_1Graph_1_1EdgeIterator_html"><div class="ttname"><a href="classLinearProgramLoopBlock_1_1Graph_1_1EdgeIterator.html">LinearProgramLoopBlock::Graph::EdgeIterator</a></div><div class="ttdef"><b>Definition:</b> LoopBlock.hpp:724</div></div>
 <div class="ttc" id="aclassLinearProgramLoopBlock_html"><div class="ttname"><a href="classLinearProgramLoopBlock.html">LinearProgramLoopBlock</a></div><div class="ttdef"><b>Definition:</b> LoopBlock.hpp:323</div></div>
 <div class="ttc" id="aclassLinearProgramLoopBlock_html_a06f63fe9b66d7b330be607bdba3f1d71"><div class="ttname"><a href="classLinearProgramLoopBlock.html#a06f63fe9b66d7b330be607bdba3f1d71">LinearProgramLoopBlock::searchValueForStores</a></div><div class="ttdeci">auto searchValueForStores(ScheduledNode &amp;node, llvm::User *user, unsigned nodeIdx) -&gt; bool</div><div class="ttdef"><b>Definition:</b> LoopBlock.hpp:470</div></div>
@@ -1631,26 +1630,14 @@ $(function() {
 <div class="ttc" id="aclassLinearProgramLoopBlock_html_aad48f2540e89a04f21f5c3695ed50e14"><div class="ttname"><a href="classLinearProgramLoopBlock.html#aad48f2540e89a04f21f5c3695ed50e14">LinearProgramLoopBlock::addEdge</a></div><div class="ttdeci">void addEdge(NotNull&lt; Addr &gt; mai, NotNull&lt; Addr &gt; maj)</div><div class="ttdef"><b>Definition:</b> LoopBlock.hpp:443</div></div>
 <div class="ttc" id="aclassLinearProgramLoopBlock_html_aba9f909e08e1c2088f72883b3dafdaae"><div class="ttname"><a href="classLinearProgramLoopBlock.html#aba9f909e08e1c2088f72883b3dafdaae">LinearProgramLoopBlock::searchOperandsForLoads</a></div><div class="ttdeci">void searchOperandsForLoads(ScheduledNode &amp;node, llvm::User *u, unsigned nodeIdx)</div><div class="ttdef"><b>Definition:</b> LoopBlock.hpp:549</div></div>
 <div class="ttc" id="aclassNode_html"><div class="ttname"><a href="classNode.html">Node</a></div><div class="ttdef"><b>Definition:</b> Node.hpp:82</div></div>
-<div class="ttc" id="aclassNotNull_html"><div class="ttname"><a href="classNotNull.html">NotNull&lt; AffineLoopNest &gt;</a></div></div>
 <div class="ttc" id="aclassScheduledNode_html"><div class="ttname"><a href="classScheduledNode.html">ScheduledNode</a></div><div class="ttdef"><b>Definition:</b> LoopBlock.hpp:59</div></div>
 <div class="ttc" id="aclassScheduledNode_html_a839ee9c51653c4fa6b3f1a4034903801"><div class="ttname"><a href="classScheduledNode.html#a839ee9c51653c4fa6b3f1a4034903801">ScheduledNode::getSchedule</a></div><div class="ttdeci">constexpr auto getSchedule(size_t d) const -&gt; PtrVector&lt; int64_t &gt;</div><div class="ttdoc">getSchedule, loops are always indexed from outer to inner</div><div class="ttdef"><b>Definition:</b> LoopBlock.hpp:202</div></div>
 <div class="ttc" id="astructAffineSchedule_html"><div class="ttname"><a href="structAffineSchedule.html">AffineSchedule</a></div><div class="ttdef"><b>Definition:</b> Schedule.hpp:34</div></div>
 <div class="ttc" id="astructAffineSchedule_html_a534a966b0d6ba721ec2fb83725fbdad8"><div class="ttname"><a href="structAffineSchedule.html#a534a966b0d6ba721ec2fb83725fbdad8">AffineSchedule::getSchedule</a></div><div class="ttdeci">constexpr auto getSchedule(size_t d) const -&gt; PtrVector&lt; int64_t &gt;</div><div class="ttdoc">getSchedule, loops are always indexed from outer to inner</div><div class="ttdef"><b>Definition:</b> Schedule.hpp:79</div></div>
-<div class="ttc" id="astructBitSet_html"><div class="ttname"><a href="structBitSet.html">BitSet</a></div><div class="ttdef"><b>Definition:</b> BitSets.hpp:82</div></div>
-<div class="ttc" id="astructBitSliceView_1_1Iterator_html"><div class="ttname"><a href="structBitSliceView_1_1Iterator.html">BitSliceView::Iterator</a></div><div class="ttdef"><b>Definition:</b> BitSets.hpp:306</div></div>
-<div class="ttc" id="astructBitSliceView_html"><div class="ttname"><a href="structBitSliceView.html">BitSliceView</a></div><div class="ttdef"><b>Definition:</b> BitSets.hpp:303</div></div>
-<div class="ttc" id="astructBumpAlloc_html"><div class="ttname"><a href="structBumpAlloc.html">BumpAlloc</a></div><div class="ttdef"><b>Definition:</b> Allocators.hpp:53</div></div>
-<div class="ttc" id="astructEndSentinel_html"><div class="ttname"><a href="structEndSentinel.html">EndSentinel</a></div><div class="ttdef"><b>Definition:</b> BitSets.hpp:16</div></div>
-<div class="ttc" id="astructLinAlg_1_1DenseDims_html"><div class="ttname"><a href="structLinAlg_1_1DenseDims.html">LinAlg::DenseDims</a></div><div class="ttdoc">Dimensions with a capacity.</div><div class="ttdef"><b>Definition:</b> MatrixDimensions.hpp:77</div></div>
-<div class="ttc" id="astructLinAlg_1_1SquareDims_html"><div class="ttname"><a href="structLinAlg_1_1SquareDims.html">LinAlg::SquareDims</a></div><div class="ttdef"><b>Definition:</b> MatrixDimensions.hpp:120</div></div>
 <div class="ttc" id="astructLinearProgramLoopBlock_1_1Graph_html"><div class="ttname"><a href="structLinearProgramLoopBlock_1_1Graph.html">LinearProgramLoopBlock::Graph</a></div><div class="ttdef"><b>Definition:</b> LoopBlock.hpp:596</div></div>
 <div class="ttc" id="astructLinearProgramLoopBlock_1_1Graph_html_ad3bba31dae5c18d4852f30b91d28cf10"><div class="ttname"><a href="structLinearProgramLoopBlock_1_1Graph.html#ad3bba31dae5c18d4852f30b91d28cf10">LinearProgramLoopBlock::Graph::missingNode</a></div><div class="ttdeci">constexpr auto missingNode(const Dependence &amp;e) const -&gt; bool</div><div class="ttdef"><b>Definition:</b> LoopBlock.hpp:653</div></div>
 <div class="ttc" id="astructLinearProgramLoopBlock_1_1OutNeighbors_html"><div class="ttname"><a href="structLinearProgramLoopBlock_1_1OutNeighbors.html">LinearProgramLoopBlock::OutNeighbors</a></div><div class="ttdef"><b>Definition:</b> LoopBlock.hpp:408</div></div>
 <div class="ttc" id="astructMemoryAccess_html"><div class="ttname"><a href="structMemoryAccess.html">MemoryAccess</a></div><div class="ttdoc">A particular memory access instance.</div><div class="ttdef"><b>Definition:</b> MemoryAccess.hpp:20</div></div>
-<div class="ttc" id="astructOptional_html"><div class="ttname"><a href="structOptional.html">Optional</a></div><div class="ttdef"><b>Definition:</b> Optional.hpp:8</div></div>
-<div class="ttc" id="astructRange_html"><div class="ttname"><a href="structRange.html">Range</a></div><div class="ttdef"><b>Definition:</b> Iterators.hpp:4</div></div>
-<div class="ttc" id="astructRational_html"><div class="ttname"><a href="structRational.html">Rational</a></div><div class="ttdef"><b>Definition:</b> Rational.hpp:16</div></div>
-<div class="ttc" id="astructSimplex_1_1Solution_html"><div class="ttname"><a href="structSimplex_1_1Solution.html">Simplex::Solution</a></div><div class="ttdef"><b>Definition:</b> Simplex.hpp:260</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

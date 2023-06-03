@@ -223,8 +223,8 @@ $(function() {
 <div class="line"><a name="l00166"></a><span class="lineno">  166</span>&#160; </div>
 <div class="line"><a name="l00194"></a><span class="lineno"><a class="line" href="structPredicate_1_1Set.html">  194</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structPredicate_1_1Set.html">Set</a> {</div>
 <div class="line"><a name="l00195"></a><span class="lineno">  195</span>&#160;  [[no_unique_address]] <a class="code" href="structLinAlg_1_1BumpPtrVector.html">LinAlg::BumpPtrVector&lt;Intersection&gt;</a> intersectUnion;</div>
-<div class="line"><a name="l00196"></a><span class="lineno">  196</span>&#160;  <a class="code" href="structPredicate_1_1Set.html">Set</a>(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc) : intersectUnion(alloc) {}</div>
-<div class="line"><a name="l00197"></a><span class="lineno">  197</span>&#160;  <a class="code" href="structPredicate_1_1Set.html">Set</a>(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, <a class="code" href="structPredicate_1_1Intersection.html">Intersection</a> pred) : intersectUnion(alloc) {</div>
+<div class="line"><a name="l00196"></a><span class="lineno">  196</span>&#160;  <a class="code" href="structPredicate_1_1Set.html">Set</a>(BumpAlloc&lt;&gt; &amp;alloc) : intersectUnion(alloc) {}</div>
+<div class="line"><a name="l00197"></a><span class="lineno">  197</span>&#160;  <a class="code" href="structPredicate_1_1Set.html">Set</a>(BumpAlloc&lt;&gt; &amp;alloc, <a class="code" href="structPredicate_1_1Intersection.html">Intersection</a> pred) : intersectUnion(alloc) {</div>
 <div class="line"><a name="l00198"></a><span class="lineno">  198</span>&#160;    intersectUnion.push_back(pred);</div>
 <div class="line"><a name="l00199"></a><span class="lineno">  199</span>&#160;  }</div>
 <div class="line"><a name="l00200"></a><span class="lineno">  200</span>&#160;  <a class="code" href="structPredicate_1_1Set.html">Set</a>(<span class="keyword">const</span> <a class="code" href="structPredicate_1_1Set.html">Set</a> &amp;) = <span class="keywordflow">default</span>;</div>
@@ -335,7 +335,7 @@ $(function() {
 <div class="line"><a name="l00328"></a><span class="lineno">  328</span>&#160;    <span class="keywordflow">return</span> *<span class="keyword">this</span>;</div>
 <div class="line"><a name="l00329"></a><span class="lineno">  329</span>&#160;  }</div>
 <div class="line"><a name="l00330"></a><span class="lineno">  330</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> isEmpty() const -&gt; <span class="keywordtype">bool</span> { <span class="keywordflow">return</span> intersectUnion.empty(); }</div>
-<div class="line"><a name="l00331"></a><span class="lineno">  331</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> intersect(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, <span class="keyword">const</span> Set &amp;other)<span class="keyword"> const </span>{</div>
+<div class="line"><a name="l00331"></a><span class="lineno">  331</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> intersect(BumpAlloc&lt;&gt; &amp;alloc, <span class="keyword">const</span> Set &amp;other)<span class="keyword"> const </span>{</div>
 <div class="line"><a name="l00332"></a><span class="lineno">  332</span>&#160;    Set ret{alloc};</div>
 <div class="line"><a name="l00333"></a><span class="lineno">  333</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;&amp;pred : intersectUnion)</div>
 <div class="line"><a name="l00334"></a><span class="lineno">  334</span>&#160;      <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;&amp;otherPred : other) ret |= pred &amp; otherPred;</div>
@@ -387,8 +387,7 @@ $(function() {
 <div class="line"><a name="l00393"></a><span class="lineno">  393</span>&#160;<span class="keyword">struct </span>Map;</div>
 <div class="line"><a name="l00394"></a><span class="lineno">  394</span>&#160;}; <span class="comment">// namespace Predicate</span></div>
 <div class="ttc" id="aclassIntr_html"><div class="ttname"><a href="classIntr.html">Intr</a></div><div class="ttdef"><b>Definition:</b> Instruction.hpp:116</div></div>
-<div class="ttc" id="astructBumpAlloc_html"><div class="ttname"><a href="structBumpAlloc.html">BumpAlloc</a></div><div class="ttdef"><b>Definition:</b> Allocators.hpp:53</div></div>
-<div class="ttc" id="astructLinAlg_1_1BumpPtrVector_html"><div class="ttname"><a href="structLinAlg_1_1BumpPtrVector.html">LinAlg::BumpPtrVector</a></div><div class="ttdef"><b>Definition:</b> BumpVector.hpp:10</div></div>
+<div class="ttc" id="astructLinAlg_1_1BumpPtrVector_html"><div class="ttname"><a href="structLinAlg_1_1BumpPtrVector.html">LinAlg::BumpPtrVector</a></div><div class="ttdef"><b>Definition:</b> BumpVector.hpp:12</div></div>
 <div class="ttc" id="astructPredicate_1_1Intersection_1_1Reference_html"><div class="ttname"><a href="structPredicate_1_1Intersection_1_1Reference.html">Predicate::Intersection::Reference</a></div><div class="ttdef"><b>Definition:</b> Predicate.hpp:62</div></div>
 <div class="ttc" id="astructPredicate_1_1Intersection_html"><div class="ttname"><a href="structPredicate_1_1Intersection.html">Predicate::Intersection</a></div><div class="ttdef"><b>Definition:</b> Predicate.hpp:40</div></div>
 <div class="ttc" id="astructPredicate_1_1Intersection_html_a36ff71dbb9a5ed959906ad99a979c598"><div class="ttname"><a href="structPredicate_1_1Intersection.html#a36ff71dbb9a5ed959906ad99a979c598">Predicate::Intersection::keepEmptyMask</a></div><div class="ttdeci">static constexpr auto keepEmptyMask(uint64_t x) -&gt; uint64_t</div><div class="ttdoc">returns 11 if non-empty, 00 if empty</div><div class="ttdef"><b>Definition:</b> Predicate.hpp:98</div></div>

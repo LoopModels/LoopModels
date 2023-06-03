@@ -212,8 +212,8 @@ $(function() {
 <div class="line"><a name="l00161"></a><span class="lineno">  161</span>&#160; </div>
 <div class="line"><a name="l00166"></a><span class="lineno">  166</span>&#160; </div>
 <div class="line"><a name="l00176"></a><span class="lineno"><a class="line" href="classCostModeling_1_1LoopTreeSchedule.html">  176</a></span>&#160;<span class="keyword">class </span><a class="code" href="classCostModeling_1_1LoopTreeSchedule.html">LoopTreeSchedule</a> {</div>
-<div class="line"><a name="l00177"></a><span class="lineno">  177</span>&#160;  <span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt; <span class="keyword">using</span> <a class="code" href="structLinAlg_1_1ResizeableView.html">Vec</a> = <a class="code" href="structLinAlg_1_1ResizeableView.html">LinAlg::ResizeableView&lt;T, unsigned&gt;</a>;</div>
-<div class="line"><a name="l00178"></a><span class="lineno">  178</span>&#160;  <span class="keyword">using</span> <a class="code" href="structBitSet.html">BitSet</a> = MemoryAccess::BitSet;</div>
+<div class="line"><a name="l00177"></a><span class="lineno">  177</span>&#160;  <span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt; <span class="keyword">using</span> Vec = LinAlg::ResizeableView&lt;T, unsigned&gt;;</div>
+<div class="line"><a name="l00178"></a><span class="lineno">  178</span>&#160;  <span class="keyword">using</span> BitSet = MemoryAccess::BitSet;</div>
 <div class="line"><a name="l00179"></a><span class="lineno">  179</span>&#160; </div>
 <div class="line"><a name="l00180"></a><span class="lineno">  180</span>&#160;<span class="keyword">public</span>:</div>
 <div class="line"><a name="l00181"></a><span class="lineno"><a class="line" href="structCostModeling_1_1LoopTreeSchedule_1_1AddressGraph.html">  181</a></span>&#160;  <span class="keyword">struct </span><a class="code" href="structCostModeling_1_1LoopTreeSchedule_1_1AddressGraph.html">AddressGraph</a> {</div>
@@ -230,7 +230,7 @@ $(function() {
 <div class="line"><a name="l00192"></a><span class="lineno">  192</span>&#160;    [[nodiscard]] constexpr <span class="keyword">auto</span> maxVertexId() <span class="keyword">const</span> -&gt; <span class="keywordtype">unsigned</span> {</div>
 <div class="line"><a name="l00193"></a><span class="lineno">  193</span>&#160;      <span class="keywordflow">return</span> addresses.size() + 2 * loopNestAddrs.size();</div>
 <div class="line"><a name="l00194"></a><span class="lineno">  194</span>&#160;    }</div>
-<div class="line"><a name="l00195"></a><span class="lineno">  195</span>&#160;    [[nodiscard]] constexpr <span class="keyword">auto</span> vertexIds() <span class="keyword">const</span> -&gt; <a class="code" href="structRange.html">Range&lt;size_t, size_t&gt;</a> {</div>
+<div class="line"><a name="l00195"></a><span class="lineno">  195</span>&#160;    [[nodiscard]] constexpr <span class="keyword">auto</span> vertexIds() <span class="keyword">const</span> -&gt; Range&lt;size_t, size_t&gt; {</div>
 <div class="line"><a name="l00196"></a><span class="lineno">  196</span>&#160;      <span class="keywordflow">return</span> _(0, maxVertexId());</div>
 <div class="line"><a name="l00197"></a><span class="lineno">  197</span>&#160;    }</div>
 <div class="line"><a name="l00198"></a><span class="lineno">  198</span>&#160;    [[nodiscard]] <span class="keyword">auto</span> getNumVertices() <span class="keyword">const</span> -&gt; <span class="keywordtype">size_t</span> {</div>
@@ -238,7 +238,7 @@ $(function() {
 <div class="line"><a name="l00200"></a><span class="lineno">  200</span>&#160;    }</div>
 <div class="line"><a name="l00201"></a><span class="lineno">  201</span>&#160;    <span class="comment">// Graph index ordering: LoopEnds, ArrayRefs, LoopStarts</span></div>
 <div class="line"><a name="l00202"></a><span class="lineno">  202</span>&#160;    <span class="comment">// so that we have ends as early as possible, and starts a late</span></div>
-<div class="line"><a name="l00203"></a><span class="lineno">  203</span>&#160;    [[nodiscard]] constexpr <span class="keyword">auto</span> inNeighbors(<span class="keywordtype">size_t</span> i) <span class="keyword">const</span> -&gt; <a class="code" href="structBitSet.html">BitSet</a> {</div>
+<div class="line"><a name="l00203"></a><span class="lineno">  203</span>&#160;    [[nodiscard]] constexpr <span class="keyword">auto</span> inNeighbors(<span class="keywordtype">size_t</span> i) <span class="keyword">const</span> -&gt; BitSet {</div>
 <div class="line"><a name="l00204"></a><span class="lineno">  204</span>&#160;      <span class="keywordflow">if</span> (i &lt; loopNestAddrs.size()) <span class="keywordflow">return</span> loopNestAddrs[i][1]; <span class="comment">// loop end</span></div>
 <div class="line"><a name="l00205"></a><span class="lineno">  205</span>&#160;      i -= loopNestAddrs.size();</div>
 <div class="line"><a name="l00206"></a><span class="lineno">  206</span>&#160;      <span class="keywordflow">if</span> (i &lt; addresses.size()) <span class="keywordflow">return</span> addresses[i]-&gt;getParents();</div>
@@ -256,13 +256,13 @@ $(function() {
 <div class="line"><a name="l00218"></a><span class="lineno">  218</span>&#160; </div>
 <div class="line"><a name="l00219"></a><span class="lineno">  219</span>&#160;<span class="keyword">private</span>:</div>
 <div class="line"><a name="l00220"></a><span class="lineno">  220</span>&#160;  <span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
-<div class="line"><a name="l00221"></a><span class="lineno">  221</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> realloc(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, <a class="code" href="structLinAlg_1_1ResizeableView.html">Vec&lt;T&gt;</a> vec, <span class="keywordtype">unsigned</span> nc)</div>
-<div class="line"><a name="l00222"></a><span class="lineno">  222</span>&#160;    -&gt; <a class="code" href="structLinAlg_1_1ResizeableView.html">Vec&lt;T&gt;</a> {</div>
-<div class="line"><a name="l00223"></a><span class="lineno">  223</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="structLinAlg_1_1ResizeableView.html">Vec&lt;T&gt;</a>(alloc.reallocate&lt;<span class="keyword">false</span>&gt;(vec.data(), vec.getCapacity(), nc),</div>
+<div class="line"><a name="l00221"></a><span class="lineno">  221</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> realloc(BumpAlloc&lt;&gt; &amp;alloc, Vec&lt;T&gt; vec, <span class="keywordtype">unsigned</span> nc)</div>
+<div class="line"><a name="l00222"></a><span class="lineno">  222</span>&#160;    -&gt; Vec&lt;T&gt; {</div>
+<div class="line"><a name="l00223"></a><span class="lineno">  223</span>&#160;    <span class="keywordflow">return</span> Vec&lt;T&gt;(alloc.reallocate&lt;<span class="keyword">false</span>&gt;(vec.data(), vec.getCapacity(), nc),</div>
 <div class="line"><a name="l00224"></a><span class="lineno">  224</span>&#160;                  vec.size(), nc);</div>
 <div class="line"><a name="l00225"></a><span class="lineno">  225</span>&#160;  }</div>
 <div class="line"><a name="l00226"></a><span class="lineno">  226</span>&#160;  <span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
-<div class="line"><a name="l00227"></a><span class="lineno">  227</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> grow(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, Vec&lt;T&gt; vec, <span class="keywordtype">unsigned</span> sz)</div>
+<div class="line"><a name="l00227"></a><span class="lineno">  227</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> grow(BumpAlloc&lt;&gt; &amp;alloc, Vec&lt;T&gt; vec, <span class="keywordtype">unsigned</span> sz)</div>
 <div class="line"><a name="l00228"></a><span class="lineno">  228</span>&#160;    -&gt; Vec&lt;T&gt; {</div>
 <div class="line"><a name="l00229"></a><span class="lineno">  229</span>&#160;    <span class="keywordflow">if</span> (<span class="keywordtype">unsigned</span> C = vec.getCapacity(); C &lt; sz) {</div>
 <div class="line"><a name="l00230"></a><span class="lineno">  230</span>&#160;      T *p = alloc.allocate&lt;T&gt;(sz + sz);</div>
@@ -294,18 +294,18 @@ $(function() {
 <div class="line"><a name="l00256"></a><span class="lineno">  256</span>&#160;      invariant(i &lt; capacity);</div>
 <div class="line"><a name="l00257"></a><span class="lineno">  257</span>&#160;      <span class="keywordflow">return</span> addresses[i];</div>
 <div class="line"><a name="l00258"></a><span class="lineno">  258</span>&#160;    }</div>
-<div class="line"><a name="l00260"></a><span class="lineno">  260</span>&#160;    constexpr <span class="keywordtype">void</span> reserveExtra(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, <span class="keywordtype">unsigned</span> i) {</div>
+<div class="line"><a name="l00260"></a><span class="lineno">  260</span>&#160;    constexpr <span class="keywordtype">void</span> reserveExtra(BumpAlloc&lt;&gt; &amp;alloc, <span class="keywordtype">unsigned</span> i) {</div>
 <div class="line"><a name="l00261"></a><span class="lineno">  261</span>&#160;      <span class="keywordtype">unsigned</span> oldCapacity = std::exchange(capacity, capacity + i);</div>
-<div class="line"><a name="l00262"></a><span class="lineno">  262</span>&#160;      addresses = alloc.<a class="code" href="structBumpAlloc.html#ae4e8781c9a410275faa2849e0af9c7a2">reallocate</a>&lt;<span class="keyword">false</span>&gt;(addresses, oldCapacity, capacity);</div>
+<div class="line"><a name="l00262"></a><span class="lineno">  262</span>&#160;      addresses = alloc.reallocate&lt;<span class="keyword">false</span>&gt;(addresses, oldCapacity, capacity);</div>
 <div class="line"><a name="l00263"></a><span class="lineno">  263</span>&#160;    }</div>
-<div class="line"><a name="l00264"></a><span class="lineno">  264</span>&#160;    constexpr <span class="keywordtype">void</span> initialize(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc) {</div>
+<div class="line"><a name="l00264"></a><span class="lineno">  264</span>&#160;    constexpr <span class="keywordtype">void</span> initialize(BumpAlloc&lt;&gt; &amp;alloc) {</div>
 <div class="line"><a name="l00265"></a><span class="lineno">  265</span>&#160;      addresses = alloc.allocate&lt;<a class="code" href="classAddr.html">Addr</a> *&gt;(capacity);</div>
 <div class="line"><a name="l00266"></a><span class="lineno">  266</span>&#160;    }</div>
 <div class="line"><a name="l00267"></a><span class="lineno">  267</span>&#160;    constexpr <span class="keywordtype">void</span> push_back(<a class="code" href="classAddr.html">Addr</a> *addr) {</div>
 <div class="line"><a name="l00268"></a><span class="lineno">  268</span>&#160;      invariant(numAddr &lt; capacity);</div>
 <div class="line"><a name="l00269"></a><span class="lineno">  269</span>&#160;      addresses[numAddr++] = addr;</div>
 <div class="line"><a name="l00270"></a><span class="lineno">  270</span>&#160;    }</div>
-<div class="line"><a name="l00271"></a><span class="lineno">  271</span>&#160;    constexpr <span class="keywordtype">void</span> push_back(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, <a class="code" href="classAddr.html">Addr</a> *addr) {</div>
+<div class="line"><a name="l00271"></a><span class="lineno">  271</span>&#160;    constexpr <span class="keywordtype">void</span> push_back(BumpAlloc&lt;&gt; &amp;alloc, <a class="code" href="classAddr.html">Addr</a> *addr) {</div>
 <div class="line"><a name="l00272"></a><span class="lineno">  272</span>&#160;      <span class="keywordflow">if</span> (numAddr &gt;= capacity)</div>
 <div class="line"><a name="l00273"></a><span class="lineno">  273</span>&#160;        reserveExtra(alloc, std::max&lt;unsigned&gt;(4, numAddr));</div>
 <div class="line"><a name="l00274"></a><span class="lineno">  274</span>&#160;      addresses[numAddr++] = addr;</div>
@@ -319,7 +319,7 @@ $(function() {
 <div class="line"><a name="l00282"></a><span class="lineno">  282</span>&#160;      }</div>
 <div class="line"><a name="l00283"></a><span class="lineno">  283</span>&#160;      addresses[numAddr++] = addr;</div>
 <div class="line"><a name="l00284"></a><span class="lineno">  284</span>&#160;    }</div>
-<div class="line"><a name="l00285"></a><span class="lineno">  285</span>&#160;    constexpr <span class="keywordtype">void</span> push_front(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, <a class="code" href="classAddr.html">Addr</a> *addr) {</div>
+<div class="line"><a name="l00285"></a><span class="lineno">  285</span>&#160;    constexpr <span class="keywordtype">void</span> push_front(BumpAlloc&lt;&gt; &amp;alloc, <a class="code" href="classAddr.html">Addr</a> *addr) {</div>
 <div class="line"><a name="l00286"></a><span class="lineno">  286</span>&#160;      <span class="keywordflow">if</span> (numAddr &gt;= capacity)</div>
 <div class="line"><a name="l00287"></a><span class="lineno">  287</span>&#160;        reserveExtra(alloc, std::max&lt;unsigned&gt;(4, numAddr));</div>
 <div class="line"><a name="l00288"></a><span class="lineno">  288</span>&#160;      push_front(addr);</div>
@@ -375,7 +375,7 @@ $(function() {
 <div class="line"><a name="l00338"></a><span class="lineno">  338</span>&#160;    [[no_unique_address]] LoopTreeSchedule *subTree;</div>
 <div class="line"><a name="l00339"></a><span class="lineno">  339</span>&#160;    [[no_unique_address]] InstructionBlock exit{};</div>
 <div class="line"><a name="l00340"></a><span class="lineno">  340</span>&#160;    constexpr LoopAndExit(LoopTreeSchedule *tree) : subTree(tree) {}</div>
-<div class="line"><a name="l00341"></a><span class="lineno">  341</span>&#160;    <span class="keyword">static</span> constexpr <span class="keyword">auto</span> construct(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, LoopTreeSchedule *L,</div>
+<div class="line"><a name="l00341"></a><span class="lineno">  341</span>&#160;    <span class="keyword">static</span> constexpr <span class="keyword">auto</span> construct(BumpAlloc&lt;&gt; &amp;alloc, LoopTreeSchedule *L,</div>
 <div class="line"><a name="l00342"></a><span class="lineno">  342</span>&#160;                                    uint8_t d, uint8_t blockIdx) {</div>
 <div class="line"><a name="l00343"></a><span class="lineno">  343</span>&#160;      <span class="keywordflow">return</span> LoopAndExit(alloc.create&lt;LoopTreeSchedule&gt;(L, d, blockIdx));</div>
 <div class="line"><a name="l00344"></a><span class="lineno">  344</span>&#160;    }</div>
@@ -416,7 +416,7 @@ $(function() {
 <div class="line"><a name="l00382"></a><span class="lineno">  382</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> numBlocks() const -&gt; <span class="keywordtype">unsigned</span> {</div>
 <div class="line"><a name="l00383"></a><span class="lineno">  383</span>&#160;    <span class="keywordflow">return</span> getNumSubTrees() + 1;</div>
 <div class="line"><a name="l00384"></a><span class="lineno">  384</span>&#160;  }</div>
-<div class="line"><a name="l00385"></a><span class="lineno">  385</span>&#160;  constexpr <span class="keyword">auto</span> getLoopAndExit(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, <span class="keywordtype">size_t</span> i, <span class="keywordtype">size_t</span> d)</div>
+<div class="line"><a name="l00385"></a><span class="lineno">  385</span>&#160;  constexpr <span class="keyword">auto</span> getLoopAndExit(BumpAlloc&lt;&gt; &amp;alloc, <span class="keywordtype">size_t</span> i, <span class="keywordtype">size_t</span> d)</div>
 <div class="line"><a name="l00386"></a><span class="lineno">  386</span>&#160;    -&gt; LoopAndExit &amp; {</div>
 <div class="line"><a name="l00387"></a><span class="lineno">  387</span>&#160;    <span class="keywordflow">if</span> (<span class="keywordtype">size_t</span> J = subTrees.size(); i &gt;= J) {</div>
 <div class="line"><a name="l00388"></a><span class="lineno">  388</span>&#160;      subTrees = grow(alloc, subTrees, i + 1);</div>
@@ -431,7 +431,7 @@ $(function() {
 <div class="line"><a name="l00397"></a><span class="lineno">  397</span>&#160;    <span class="keywordflow">if</span> (i) <span class="keywordflow">return</span> {subTrees[i - 1].exit, loopAndExit.subTree, loopAndExit.exit};</div>
 <div class="line"><a name="l00398"></a><span class="lineno">  398</span>&#160;    <span class="keywordflow">return</span> {header, loopAndExit.subTree, loopAndExit.exit};</div>
 <div class="line"><a name="l00399"></a><span class="lineno">  399</span>&#160;  }</div>
-<div class="line"><a name="l00400"></a><span class="lineno">  400</span>&#160;  <span class="keyword">auto</span> getLoop(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, <span class="keywordtype">size_t</span> i, uint8_t d) -&gt; LoopTreeSchedule * {</div>
+<div class="line"><a name="l00400"></a><span class="lineno">  400</span>&#160;  <span class="keyword">auto</span> getLoop(BumpAlloc&lt;&gt; &amp;alloc, <span class="keywordtype">size_t</span> i, uint8_t d) -&gt; LoopTreeSchedule * {</div>
 <div class="line"><a name="l00401"></a><span class="lineno">  401</span>&#160;    <span class="keywordflow">return</span> getLoopAndExit(alloc, i, d).subTree;</div>
 <div class="line"><a name="l00402"></a><span class="lineno">  402</span>&#160;  }</div>
 <div class="line"><a name="l00403"></a><span class="lineno">  403</span>&#160;  <span class="keyword">auto</span> getLoop(<span class="keywordtype">size_t</span> i) -&gt; LoopTreeSchedule * { <span class="keywordflow">return</span> subTrees[i].subTree; }</div>
@@ -449,7 +449,7 @@ $(function() {
 <div class="line"><a name="l00416"></a><span class="lineno">  416</span>&#160; </div>
 <div class="line"><a name="l00417"></a><span class="lineno">  417</span>&#160;  <span class="comment">// this method descends</span></div>
 <div class="line"><a name="l00418"></a><span class="lineno">  418</span>&#160;  <span class="comment">// NOLINTNEXTLINE(misc-no-recursion)</span></div>
-<div class="line"><a name="l00419"></a><span class="lineno">  419</span>&#160;  <span class="keyword">static</span> <span class="keyword">auto</span> allocLoopNodes(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, <a class="code" href="structAffineSchedule.html">AffineSchedule</a> sch,</div>
+<div class="line"><a name="l00419"></a><span class="lineno">  419</span>&#160;  <span class="keyword">static</span> <span class="keyword">auto</span> allocLoopNodes(BumpAlloc&lt;&gt; &amp;alloc, <a class="code" href="structAffineSchedule.html">AffineSchedule</a> sch,</div>
 <div class="line"><a name="l00420"></a><span class="lineno">  420</span>&#160;                             LoopTreeSchedule *L) -&gt; LoopTreeSchedule * {</div>
 <div class="line"><a name="l00421"></a><span class="lineno">  421</span>&#160;    <span class="keyword">auto</span> fO = sch.getFusionOmega();</div>
 <div class="line"><a name="l00422"></a><span class="lineno">  422</span>&#160;    <span class="keywordtype">unsigned</span> numLoops = sch.getNumLoops();</div>
@@ -462,7 +462,7 @@ $(function() {
 <div class="line"><a name="l00429"></a><span class="lineno">  429</span>&#160;                    MutPtrVector&lt;Addr *&gt; loopAddrs, <span class="keywordtype">unsigned</span> numAddr,</div>
 <div class="line"><a name="l00430"></a><span class="lineno">  430</span>&#160;                    <span class="keywordtype">unsigned</span> idx) {</div>
 <div class="line"><a name="l00431"></a><span class="lineno">  431</span>&#160;    <span class="comment">// TODO: only add dependencies for refs actually using the indvars</span></div>
-<div class="line"><a name="l00432"></a><span class="lineno">  432</span>&#160;    <a class="code" href="structBitSet.html">BitSet</a> headParents{}, exitParents{};</div>
+<div class="line"><a name="l00432"></a><span class="lineno">  432</span>&#160;    BitSet headParents{}, exitParents{};</div>
 <div class="line"><a name="l00433"></a><span class="lineno">  433</span>&#160;    <span class="keywordtype">unsigned</span> indEnd = idx, indStart = loopRelatives.size() + indEnd + numAddr;</div>
 <div class="line"><a name="l00434"></a><span class="lineno">  434</span>&#160;    <span class="comment">// not first loop, connect headParents</span></div>
 <div class="line"><a name="l00435"></a><span class="lineno">  435</span>&#160;    <span class="keywordflow">if</span> (idx) headParents.insert(indStart - 1);</div>
@@ -486,18 +486,18 @@ $(function() {
 <div class="line"><a name="l00453"></a><span class="lineno">  453</span>&#160;    <span class="keywordflow">if</span> (a-&gt;getLoopTreeSchedule() == <span class="keyword">this</span>) <span class="keywordflow">return</span> 2 * a-&gt;getBlockIdx();</div>
 <div class="line"><a name="l00454"></a><span class="lineno">  454</span>&#160;    <span class="keywordflow">return</span> 2 * getLoopIdx(a-&gt;getLoopTreeSchedule()) + 1;</div>
 <div class="line"><a name="l00455"></a><span class="lineno">  455</span>&#160;  }</div>
-<div class="line"><a name="l00456"></a><span class="lineno">  456</span>&#160;  <span class="keywordtype">void</span> push_back(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, <a class="code" href="classAddr.html">Addr</a> *a, <span class="keywordtype">unsigned</span> idx) {</div>
+<div class="line"><a name="l00456"></a><span class="lineno">  456</span>&#160;  <span class="keywordtype">void</span> push_back(BumpAlloc&lt;&gt; &amp;alloc, <a class="code" href="classAddr.html">Addr</a> *a, <span class="keywordtype">unsigned</span> idx) {</div>
 <div class="line"><a name="l00457"></a><span class="lineno">  457</span>&#160;    <span class="keywordflow">if</span> (idx) subTrees[idx - 1].exit.push_back(alloc, a);</div>
 <div class="line"><a name="l00458"></a><span class="lineno">  458</span>&#160;    <span class="keywordflow">else</span> header.push_back(alloc, a);</div>
 <div class="line"><a name="l00459"></a><span class="lineno">  459</span>&#160;  }</div>
-<div class="line"><a name="l00460"></a><span class="lineno">  460</span>&#160;  <span class="keywordtype">void</span> push_front(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, <a class="code" href="classAddr.html">Addr</a> *a, <span class="keywordtype">unsigned</span> idx) {</div>
+<div class="line"><a name="l00460"></a><span class="lineno">  460</span>&#160;  <span class="keywordtype">void</span> push_front(BumpAlloc&lt;&gt; &amp;alloc, <a class="code" href="classAddr.html">Addr</a> *a, <span class="keywordtype">unsigned</span> idx) {</div>
 <div class="line"><a name="l00461"></a><span class="lineno">  461</span>&#160;    <span class="keywordflow">if</span> (idx) subTrees[idx - 1].exit.push_front(alloc, a);</div>
 <div class="line"><a name="l00462"></a><span class="lineno">  462</span>&#160;    <span class="keywordflow">else</span> header.push_front(alloc, a);</div>
 <div class="line"><a name="l00463"></a><span class="lineno">  463</span>&#160;  }</div>
 <div class="line"><a name="l00464"></a><span class="lineno">  464</span>&#160;  <span class="comment">// can we hoist forward out of this loop?</span></div>
 <div class="line"><a name="l00465"></a><span class="lineno">  465</span>&#160;  <span class="comment">// NOLINTNEXTLINE(misc-no-recursion)</span></div>
-<div class="line"><a name="l00466"></a><span class="lineno">  466</span>&#160;  <span class="keyword">auto</span> hoist(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, <a class="code" href="classAddr.html">Addr</a> *a, <span class="keywordtype">unsigned</span> currentLoop)</div>
-<div class="line"><a name="l00467"></a><span class="lineno">  467</span>&#160;    -&gt; <a class="code" href="structOptional.html">Optional&lt;unsigned&gt;</a> {</div>
+<div class="line"><a name="l00466"></a><span class="lineno">  466</span>&#160;  <span class="keyword">auto</span> hoist(BumpAlloc&lt;&gt; &amp;alloc, <a class="code" href="classAddr.html">Addr</a> *a, <span class="keywordtype">unsigned</span> currentLoop)</div>
+<div class="line"><a name="l00467"></a><span class="lineno">  467</span>&#160;    -&gt; Optional&lt;unsigned&gt; {</div>
 <div class="line"><a name="l00468"></a><span class="lineno">  468</span>&#160;    <span class="keywordflow">if</span> (a-&gt;wasVisited3()) {</div>
 <div class="line"><a name="l00469"></a><span class="lineno">  469</span>&#160;      <span class="keywordflow">if</span> (a-&gt;getLoopTreeSchedule() == <span class="keyword">this</span>) <span class="keywordflow">return</span> a-&gt;getBlockIdx();</div>
 <div class="line"><a name="l00470"></a><span class="lineno">  470</span>&#160;      <span class="keywordflow">return</span> {};</div>
@@ -576,7 +576,7 @@ $(function() {
 <div class="line"><a name="l00543"></a><span class="lineno">  543</span>&#160;  <span class="comment">// a) every addr has an index field</span></div>
 <div class="line"><a name="l00544"></a><span class="lineno">  544</span>&#160;  <span class="comment">// b) we create BitSets of ancestors</span></div>
 <div class="line"><a name="l00545"></a><span class="lineno">  545</span>&#160;  <span class="comment">// NOLINTNEXTLINE(misc-no-recursion)</span></div>
-<div class="line"><a name="l00546"></a><span class="lineno">  546</span>&#160;  <span class="keyword">auto</span> placeAddr(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, <a class="code" href="classLinearProgramLoopBlock.html">LinearProgramLoopBlock</a> &amp;LB,</div>
+<div class="line"><a name="l00546"></a><span class="lineno">  546</span>&#160;  <span class="keyword">auto</span> placeAddr(BumpAlloc&lt;&gt; &amp;alloc, <a class="code" href="classLinearProgramLoopBlock.html">LinearProgramLoopBlock</a> &amp;LB,</div>
 <div class="line"><a name="l00547"></a><span class="lineno">  547</span>&#160;                 MutPtrVector&lt;Addr *&gt; addr) -&gt; <span class="keywordtype">unsigned</span> {</div>
 <div class="line"><a name="l00548"></a><span class="lineno">  548</span>&#160;    <span class="comment">// we sort via repeatedly calculating the strongly connected components</span></div>
 <div class="line"><a name="l00549"></a><span class="lineno">  549</span>&#160;    <span class="comment">// of the address graph. The SCCs are in topological order.</span></div>
@@ -631,7 +631,7 @@ $(function() {
 <div class="line"><a name="l00598"></a><span class="lineno">  598</span>&#160;    LoopTreeSchedule *L;</div>
 <div class="line"><a name="l00599"></a><span class="lineno">  599</span>&#160;    <span class="keywordtype">bool</span> inLoop = <span class="keyword">false</span>;</div>
 <div class="line"><a name="l00600"></a><span class="lineno">  600</span>&#160;    <span class="comment">// two passes, first to place the addrs that don&#39;t need hoisting</span></div>
-<div class="line"><a name="l00601"></a><span class="lineno">  601</span>&#160;    <span class="keywordflow">for</span> (<a class="code" href="structBitSet.html">BitSet</a> scc : components) {</div>
+<div class="line"><a name="l00601"></a><span class="lineno">  601</span>&#160;    <span class="keywordflow">for</span> (BitSet scc : components) {</div>
 <div class="line"><a name="l00602"></a><span class="lineno">  602</span>&#160;      <span class="keywordtype">size_t</span> sccsz = scc.size();</div>
 <div class="line"><a name="l00603"></a><span class="lineno">  603</span>&#160;      <span class="keywordflow">if</span> (sccsz == 1) {</div>
 <div class="line"><a name="l00604"></a><span class="lineno">  604</span>&#160;        <span class="keywordtype">size_t</span> indRaw = scc.front(), ind = indRaw - numSubTrees;</div>
@@ -670,7 +670,7 @@ $(function() {
 <div class="line"><a name="l00637"></a><span class="lineno">  637</span>&#160;    invariant(!inLoop);</div>
 <div class="line"><a name="l00638"></a><span class="lineno">  638</span>&#160;    currentLoop = 0;</div>
 <div class="line"><a name="l00639"></a><span class="lineno">  639</span>&#160;    B = &amp;header;</div>
-<div class="line"><a name="l00640"></a><span class="lineno">  640</span>&#160;    <span class="keywordflow">for</span> (<a class="code" href="structBitSet.html">BitSet</a> scc : components) {</div>
+<div class="line"><a name="l00640"></a><span class="lineno">  640</span>&#160;    <span class="keywordflow">for</span> (BitSet scc : components) {</div>
 <div class="line"><a name="l00641"></a><span class="lineno">  641</span>&#160;      <span class="keywordtype">size_t</span> sccsz = scc.size();</div>
 <div class="line"><a name="l00642"></a><span class="lineno">  642</span>&#160;      <span class="keywordflow">if</span> (sccsz == 1) {</div>
 <div class="line"><a name="l00643"></a><span class="lineno">  643</span>&#160;        <span class="keywordtype">size_t</span> indRaw = scc.front(), ind = indRaw - numSubTrees;</div>
@@ -729,7 +729,7 @@ $(function() {
 <div class="line"><a name="l00696"></a><span class="lineno">  696</span>&#160;  <span class="keywordtype">void</span> validateMemPlacements() {}</div>
 <div class="line"><a name="l00697"></a><span class="lineno">  697</span>&#160;<span class="preprocessor">#endif</span></div>
 <div class="line"><a name="l00698"></a><span class="lineno">  698</span>&#160;<span class="keyword">public</span>:</div>
-<div class="line"><a name="l00699"></a><span class="lineno">  699</span>&#160;  [[nodiscard]] <span class="keyword">static</span> <span class="keyword">auto</span> init(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, <a class="code" href="classLinearProgramLoopBlock.html">LinearProgramLoopBlock</a> &amp;LB)</div>
+<div class="line"><a name="l00699"></a><span class="lineno">  699</span>&#160;  [[nodiscard]] <span class="keyword">static</span> <span class="keyword">auto</span> init(BumpAlloc&lt;&gt; &amp;alloc, <a class="code" href="classLinearProgramLoopBlock.html">LinearProgramLoopBlock</a> &amp;LB)</div>
 <div class="line"><a name="l00700"></a><span class="lineno">  700</span>&#160;    -&gt; LoopTreeSchedule * {</div>
 <div class="line"><a name="l00701"></a><span class="lineno">  701</span>&#160;    <span class="comment">// TODO: can we shorten the life span of the instructions we</span></div>
 <div class="line"><a name="l00702"></a><span class="lineno">  702</span>&#160;    <span class="comment">// allocate here to `lalloc`? I.e., do we need them to live on after</span></div>
@@ -780,7 +780,7 @@ $(function() {
 <div class="line"><a name="l00747"></a><span class="lineno">  747</span>&#160;  <span class="comment">//   mergeInstructions(alloc, cache, loopForest, TTI, tAlloc, vectorBits);</span></div>
 <div class="line"><a name="l00748"></a><span class="lineno">  748</span>&#160;  <span class="comment">// }</span></div>
 <div class="line"><a name="l00749"></a><span class="lineno">  749</span>&#160; </div>
-<div class="line"><a name="l00750"></a><span class="lineno">  750</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getInitAddr(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc)</div>
+<div class="line"><a name="l00750"></a><span class="lineno">  750</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getInitAddr(BumpAlloc&lt;&gt; &amp;alloc)</div>
 <div class="line"><a name="l00751"></a><span class="lineno">  751</span>&#160;    -&gt; InstructionBlock &amp; {</div>
 <div class="line"><a name="l00752"></a><span class="lineno">  752</span>&#160;    <span class="keywordflow">if</span> (!header.isInitialized()) header.initialize(alloc);</div>
 <div class="line"><a name="l00753"></a><span class="lineno">  753</span>&#160;    <span class="keywordflow">return</span> header;</div>
@@ -798,7 +798,7 @@ $(function() {
 <div class="line"><a name="l00765"></a><span class="lineno">  765</span>&#160;    }</div>
 <div class="line"><a name="l00766"></a><span class="lineno">  766</span>&#160;  }</div>
 <div class="line"><a name="l00767"></a><span class="lineno">  767</span>&#160;  <span class="comment">// NOLINTNEXTLINE(misc-no-recursion)</span></div>
-<div class="line"><a name="l00768"></a><span class="lineno">  768</span>&#160;  <span class="keyword">auto</span> printSubDotFile(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, llvm::raw_ostream &amp;out,</div>
+<div class="line"><a name="l00768"></a><span class="lineno">  768</span>&#160;  <span class="keyword">auto</span> printSubDotFile(BumpAlloc&lt;&gt; &amp;alloc, llvm::raw_ostream &amp;out,</div>
 <div class="line"><a name="l00769"></a><span class="lineno">  769</span>&#160;                       map&lt;LoopTreeSchedule *, std::string&gt; &amp;names,</div>
 <div class="line"><a name="l00770"></a><span class="lineno">  770</span>&#160;                       llvm::SmallVectorImpl&lt;std::string&gt; &amp;addrNames,</div>
 <div class="line"><a name="l00771"></a><span class="lineno">  771</span>&#160;                       <span class="keywordtype">unsigned</span> addrIndOffset, <a class="code" href="classAffineLoopNest.html">AffineLoopNest</a> *lret)</div>
@@ -844,7 +844,7 @@ $(function() {
 <div class="line"><a name="l00811"></a><span class="lineno">  811</span>&#160;    <span class="keywordflow">return</span> loop-&gt;removeLoop(alloc, getDepth() - 1);</div>
 <div class="line"><a name="l00812"></a><span class="lineno">  812</span>&#160;  }</div>
 <div class="line"><a name="l00813"></a><span class="lineno">  813</span>&#160; </div>
-<div class="line"><a name="l00814"></a><span class="lineno">  814</span>&#160;  <span class="keywordtype">void</span> printDotFile(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, llvm::raw_ostream &amp;out) {</div>
+<div class="line"><a name="l00814"></a><span class="lineno">  814</span>&#160;  <span class="keywordtype">void</span> printDotFile(BumpAlloc&lt;&gt; &amp;alloc, llvm::raw_ostream &amp;out) {</div>
 <div class="line"><a name="l00815"></a><span class="lineno">  815</span>&#160;    map&lt;LoopTreeSchedule *, std::string&gt; names;</div>
 <div class="line"><a name="l00816"></a><span class="lineno">  816</span>&#160;    llvm::SmallVector&lt;std::string&gt; addrNames(numAddr_);</div>
 <div class="line"><a name="l00817"></a><span class="lineno">  817</span>&#160;    names[<span class="keyword">this</span>] = <span class="stringliteral">&quot;toplevel&quot;</span>;</div>
@@ -863,7 +863,7 @@ $(function() {
 <div class="line"><a name="l00830"></a><span class="lineno">  830</span>&#160;} <span class="comment">// namespace CostModeling</span></div>
 <div class="line"><a name="l00831"></a><span class="lineno">  831</span>&#160; </div>
 <div class="line"><a name="l00832"></a><span class="lineno">  832</span>&#160;constexpr <span class="keywordtype">void</span></div>
-<div class="line"><a name="l00833"></a><span class="lineno">  833</span>&#160;ScheduledNode::insertMem(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc,</div>
+<div class="line"><a name="l00833"></a><span class="lineno">  833</span>&#160;ScheduledNode::insertMem(BumpAlloc&lt;&gt; &amp;alloc,</div>
 <div class="line"><a name="l00834"></a><span class="lineno">  834</span>&#160;                         PtrVector&lt;MemoryAccess *&gt; memAccess,</div>
 <div class="line"><a name="l00835"></a><span class="lineno">  835</span>&#160;                         <a class="code" href="classCostModeling_1_1LoopTreeSchedule.html">CostModeling::LoopTreeSchedule</a> *L)<span class="keyword"> const </span>{</div>
 <div class="line"><a name="l00836"></a><span class="lineno">  836</span>&#160;  <span class="comment">// First, we invert the schedule matrix.</span></div>
@@ -874,9 +874,9 @@ $(function() {
 <div class="line"><a name="l00841"></a><span class="lineno">  841</span>&#160;  <span class="keyword">auto</span> &amp;accesses{L-&gt;getInitAddr(alloc)};</div>
 <div class="line"><a name="l00842"></a><span class="lineno">  842</span>&#160;  <span class="keywordtype">unsigned</span> numMem = memory.size(), offset = accesses.size(),</div>
 <div class="line"><a name="l00843"></a><span class="lineno">  843</span>&#160;           sId = std::numeric_limits&lt;unsigned&gt;::max() &gt;&gt; 1, j = 0;</div>
-<div class="line"><a name="l00844"></a><span class="lineno">  844</span>&#160;  <a class="code" href="classNotNull.html">NotNull&lt;AffineLoopNest&gt;</a> loop = loopNest-&gt;rotate(alloc, Pinv, offsets);</div>
+<div class="line"><a name="l00844"></a><span class="lineno">  844</span>&#160;  NotNull&lt;AffineLoopNest&gt; loop = loopNest-&gt;rotate(alloc, Pinv, offsets);</div>
 <div class="line"><a name="l00845"></a><span class="lineno">  845</span>&#160;  <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i : memory) {</div>
-<div class="line"><a name="l00846"></a><span class="lineno">  846</span>&#160;    <a class="code" href="classNotNull.html">NotNull&lt;MemoryAccess&gt;</a> mem = memAccess[i];</div>
+<div class="line"><a name="l00846"></a><span class="lineno">  846</span>&#160;    NotNull&lt;MemoryAccess&gt; mem = memAccess[i];</div>
 <div class="line"><a name="l00847"></a><span class="lineno">  847</span>&#160;    <span class="keywordtype">bool</span> isStore = mem-&gt;isStore();</div>
 <div class="line"><a name="l00848"></a><span class="lineno">  848</span>&#160;    <span class="keywordflow">if</span> (isStore) sId = j;</div>
 <div class="line"><a name="l00849"></a><span class="lineno">  849</span>&#160;    ++j;</div>
@@ -901,15 +901,8 @@ $(function() {
 <div class="ttc" id="aclassCostModeling_1_1CPURegisterFile_html"><div class="ttname"><a href="classCostModeling_1_1CPURegisterFile.html">CostModeling::CPURegisterFile</a></div><div class="ttdef"><b>Definition:</b> CostModeling.hpp:37</div></div>
 <div class="ttc" id="aclassCostModeling_1_1LoopTreeSchedule_html"><div class="ttname"><a href="classCostModeling_1_1LoopTreeSchedule.html">CostModeling::LoopTreeSchedule</a></div><div class="ttdef"><b>Definition:</b> CostModeling.hpp:176</div></div>
 <div class="ttc" id="aclassLinearProgramLoopBlock_html"><div class="ttname"><a href="classLinearProgramLoopBlock.html">LinearProgramLoopBlock</a></div><div class="ttdef"><b>Definition:</b> LoopBlock.hpp:323</div></div>
-<div class="ttc" id="aclassNotNull_html"><div class="ttname"><a href="classNotNull.html">NotNull&lt; AffineLoopNest &gt;</a></div></div>
 <div class="ttc" id="astructAffineSchedule_html"><div class="ttname"><a href="structAffineSchedule.html">AffineSchedule</a></div><div class="ttdef"><b>Definition:</b> Schedule.hpp:34</div></div>
-<div class="ttc" id="astructBitSet_html"><div class="ttname"><a href="structBitSet.html">BitSet</a></div><div class="ttdef"><b>Definition:</b> BitSets.hpp:82</div></div>
-<div class="ttc" id="astructBumpAlloc_html"><div class="ttname"><a href="structBumpAlloc.html">BumpAlloc</a></div><div class="ttdef"><b>Definition:</b> Allocators.hpp:53</div></div>
-<div class="ttc" id="astructBumpAlloc_html_ae4e8781c9a410275faa2849e0af9c7a2"><div class="ttname"><a href="structBumpAlloc.html#ae4e8781c9a410275faa2849e0af9c7a2">BumpAlloc::reallocate</a></div><div class="ttdeci">constexpr auto reallocate(void *Ptr, size_t szOld, size_t szNew, size_t Align) -&gt; void *</div><div class="ttdef"><b>Definition:</b> Allocators.hpp:157</div></div>
 <div class="ttc" id="astructCostModeling_1_1LoopTreeSchedule_1_1AddressGraph_html"><div class="ttname"><a href="structCostModeling_1_1LoopTreeSchedule_1_1AddressGraph.html">CostModeling::LoopTreeSchedule::AddressGraph</a></div><div class="ttdef"><b>Definition:</b> CostModeling.hpp:181</div></div>
-<div class="ttc" id="astructLinAlg_1_1ResizeableView_html"><div class="ttname"><a href="structLinAlg_1_1ResizeableView.html">LinAlg::ResizeableView</a></div><div class="ttdef"><b>Definition:</b> Array.hpp:534</div></div>
-<div class="ttc" id="astructOptional_html"><div class="ttname"><a href="structOptional.html">Optional</a></div><div class="ttdef"><b>Definition:</b> Optional.hpp:8</div></div>
-<div class="ttc" id="astructRange_html"><div class="ttname"><a href="structRange.html">Range</a></div><div class="ttdef"><b>Definition:</b> Iterators.hpp:4</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

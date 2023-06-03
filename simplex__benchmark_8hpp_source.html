@@ -75,7 +75,7 @@ $(function() {
 <div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor">#include &lt;benchmark/benchmark.h&gt;</span></div>
 <div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160; </div>
 <div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="keyword">static</span> <span class="keywordtype">void</span> BM_Simplex0(benchmark::State &amp;state) {</div>
-<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;  <a class="code" href="structLinAlg_1_1ManagedArray.html">LinAlg::DenseMatrix&lt;int64_t&gt;</a> tableau{</div>
+<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;  LinAlg::DenseMatrix&lt;int64_t&gt; tableau{</div>
 <div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;    <span class="stringliteral">&quot;[0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 &quot;</span></div>
 <div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;    <span class="stringliteral">&quot;0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 &quot;</span></div>
 <div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;    <span class="stringliteral">&quot;0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 &quot;</span></div>
@@ -943,13 +943,13 @@ $(function() {
 <div class="line"><a name="l00872"></a><span class="lineno">  872</span>&#160;    <span class="stringliteral">&quot;1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ]&quot;</span>_mat};</div>
 <div class="line"><a name="l00873"></a><span class="lineno">  873</span>&#160; </div>
 <div class="line"><a name="l00874"></a><span class="lineno">  874</span>&#160;  tableau(0, _) &lt;&lt; -5859553999884210514;</div>
-<div class="line"><a name="l00875"></a><span class="lineno">  875</span>&#160;  <a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> alloc;</div>
+<div class="line"><a name="l00875"></a><span class="lineno">  875</span>&#160;  BumpAlloc&lt;&gt; alloc;</div>
 <div class="line"><a name="l00876"></a><span class="lineno">  876</span>&#160;  <span class="keywordtype">unsigned</span> numCon = unsigned(tableau.numRow()) - 1;</div>
 <div class="line"><a name="l00877"></a><span class="lineno">  877</span>&#160;  <span class="keywordtype">unsigned</span> numVar = unsigned(tableau.numCol()) - 1;</div>
-<div class="line"><a name="l00878"></a><span class="lineno">  878</span>&#160;  <a class="code" href="classNotNull.html">NotNull&lt;Simplex&gt;</a> simpBackup{Simplex::create(alloc, numCon, numVar, 0)};</div>
+<div class="line"><a name="l00878"></a><span class="lineno">  878</span>&#160;  NotNull&lt;Simplex&gt; simpBackup{Simplex::create(alloc, numCon, numVar, 0)};</div>
 <div class="line"><a name="l00879"></a><span class="lineno">  879</span>&#160;  simpBackup-&gt;getTableau() &lt;&lt; tableau;</div>
 <div class="line"><a name="l00880"></a><span class="lineno">  880</span>&#160;  <span class="comment">// Simplex simpBackup{tableau};</span></div>
-<div class="line"><a name="l00881"></a><span class="lineno">  881</span>&#160;  <a class="code" href="classNotNull.html">NotNull&lt;Simplex&gt;</a> simp{Simplex::create(alloc, simpBackup-&gt;getNumCons(),</div>
+<div class="line"><a name="l00881"></a><span class="lineno">  881</span>&#160;  NotNull&lt;Simplex&gt; simp{Simplex::create(alloc, simpBackup-&gt;getNumCons(),</div>
 <div class="line"><a name="l00882"></a><span class="lineno">  882</span>&#160;                                        simpBackup-&gt;getNumVars(), 0)};</div>
 <div class="line"><a name="l00883"></a><span class="lineno">  883</span>&#160;  <span class="comment">// Vector&lt;Rational&gt; sol(37);</span></div>
 <div class="line"><a name="l00884"></a><span class="lineno">  884</span>&#160;  <span class="keywordflow">for</span> (<span class="keyword">auto</span> b : state) {</div>
@@ -1182,12 +1182,12 @@ $(function() {
 <div class="line"><a name="l01111"></a><span class="lineno"> 1111</span>&#160;    <span class="stringliteral">&quot;0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 1 1 1 0 &quot;</span></div>
 <div class="line"><a name="l01112"></a><span class="lineno"> 1112</span>&#160;    <span class="stringliteral">&quot;0 0 0 0 0 0 0 0 0 ]&quot;</span>_mat};</div>
 <div class="line"><a name="l01113"></a><span class="lineno"> 1113</span>&#160; </div>
-<div class="line"><a name="l01114"></a><span class="lineno"> 1114</span>&#160;  <a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> alloc;</div>
+<div class="line"><a name="l01114"></a><span class="lineno"> 1114</span>&#160;  BumpAlloc&lt;&gt; alloc;</div>
 <div class="line"><a name="l01115"></a><span class="lineno"> 1115</span>&#160;  <span class="keywordtype">unsigned</span> numCon = unsigned(tableau.numRow()) - 1;</div>
 <div class="line"><a name="l01116"></a><span class="lineno"> 1116</span>&#160;  <span class="keywordtype">unsigned</span> numVar = unsigned(tableau.numCol()) - 1;</div>
-<div class="line"><a name="l01117"></a><span class="lineno"> 1117</span>&#160;  <a class="code" href="classNotNull.html">NotNull&lt;Simplex&gt;</a> simpBackup{Simplex::create(alloc, numCon, numVar, 0)};</div>
+<div class="line"><a name="l01117"></a><span class="lineno"> 1117</span>&#160;  NotNull&lt;Simplex&gt; simpBackup{Simplex::create(alloc, numCon, numVar, 0)};</div>
 <div class="line"><a name="l01118"></a><span class="lineno"> 1118</span>&#160;  simpBackup-&gt;getTableau() &lt;&lt; tableau;</div>
-<div class="line"><a name="l01119"></a><span class="lineno"> 1119</span>&#160;  <a class="code" href="classNotNull.html">NotNull&lt;Simplex&gt;</a> simp{Simplex::create(alloc, simpBackup-&gt;getNumCons(),</div>
+<div class="line"><a name="l01119"></a><span class="lineno"> 1119</span>&#160;  NotNull&lt;Simplex&gt; simp{Simplex::create(alloc, simpBackup-&gt;getNumCons(),</div>
 <div class="line"><a name="l01120"></a><span class="lineno"> 1120</span>&#160;                                        simpBackup-&gt;getNumVars(), 0)};</div>
 <div class="line"><a name="l01121"></a><span class="lineno"> 1121</span>&#160;  <span class="keywordflow">for</span> (<span class="keyword">auto</span> b : state) {</div>
 <div class="line"><a name="l01122"></a><span class="lineno"> 1122</span>&#160;    *simp &lt;&lt; *simpBackup;</div>
@@ -1197,9 +1197,6 @@ $(function() {
 <div class="line"><a name="l01126"></a><span class="lineno"> 1126</span>&#160;  }</div>
 <div class="line"><a name="l01127"></a><span class="lineno"> 1127</span>&#160;}</div>
 <div class="line"><a name="l01128"></a><span class="lineno"> 1128</span>&#160;BENCHMARK(BM_Simplex1);</div>
-<div class="ttc" id="aclassNotNull_html"><div class="ttname"><a href="classNotNull.html">NotNull&lt; Simplex &gt;</a></div></div>
-<div class="ttc" id="astructBumpAlloc_html"><div class="ttname"><a href="structBumpAlloc.html">BumpAlloc</a></div><div class="ttdef"><b>Definition:</b> Allocators.hpp:53</div></div>
-<div class="ttc" id="astructLinAlg_1_1ManagedArray_html"><div class="ttname"><a href="structLinAlg_1_1ManagedArray.html">LinAlg::ManagedArray</a></div><div class="ttdef"><b>Definition:</b> Array.hpp:1002</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

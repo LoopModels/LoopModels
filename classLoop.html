@@ -110,16 +110,16 @@ constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>forEachSubL
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>forEachLoopAndExit</b> (const auto &amp;f)</td></tr>
 <tr class="separator:aa37a637e1ad559f8021889d0a90226e7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a49d0136beeae0c0e74786843724f2037"><td class="memItemLeft" align="right" valign="top"><a id="a49d0136beeae0c0e74786843724f2037"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>addSubLoop</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, llvm::Loop *LL) -&gt; <a class="el" href="classLoop.html">Loop</a> *</td></tr>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>addSubLoop</b> (BumpAlloc&lt;&gt; &amp;alloc, llvm::Loop *LL) -&gt; <a class="el" href="classLoop.html">Loop</a> *</td></tr>
 <tr class="separator:a49d0136beeae0c0e74786843724f2037"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3d3274dddc7972af53029dafba4f475e"><td class="memItemLeft" align="right" valign="top"><a id="a3d3274dddc7972af53029dafba4f475e"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>addOuterLoop</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc) -&gt; <a class="el" href="classLoop.html">Loop</a> *</td></tr>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>addOuterLoop</b> (BumpAlloc&lt;&gt; &amp;alloc) -&gt; <a class="el" href="classLoop.html">Loop</a> *</td></tr>
 <tr class="separator:a3d3274dddc7972af53029dafba4f475e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a72a432c93e2b898e05fa7b740a23ee78"><td class="memItemLeft" align="right" valign="top"><a id="a72a432c93e2b898e05fa7b740a23ee78"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>addNextLoop</b> (<a class="el" href="classLoop.html">Loop</a> *L)</td></tr>
 <tr class="separator:a72a432c93e2b898e05fa7b740a23ee78"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af7e6b9bcfcac510465ad64e0799ea208"><td class="memItemLeft" align="right" valign="top"><a id="af7e6b9bcfcac510465ad64e0799ea208"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>addNextLoop</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, llvm::Loop *LL) -&gt; <a class="el" href="classLoop.html">Loop</a> *</td></tr>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>addNextLoop</b> (BumpAlloc&lt;&gt; &amp;alloc, llvm::Loop *LL) -&gt; <a class="el" href="classLoop.html">Loop</a> *</td></tr>
 <tr class="separator:af7e6b9bcfcac510465ad64e0799ea208"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a336d9ac2747700783d48b8d472720e02"><td class="memItemLeft" align="right" valign="top"><a id="a336d9ac2747700783d48b8d472720e02"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getLLVMLoop</b> () const -&gt; llvm::Loop *</td></tr>
@@ -177,7 +177,7 @@ Static Public Member Functions</h2></td></tr>
 static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>classof</b> (const <a class="el" href="classNode.html">Node</a> *v) -&gt; bool</td></tr>
 <tr class="separator:acf46a8154b78fe8a9e05142f7d48e0de"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae79bbb0c41f665d30468e42bfccd9803"><td class="memItemLeft" align="right" valign="top"><a id="ae79bbb0c41f665d30468e42bfccd9803"></a>
-static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>create</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, llvm::Loop *LL, <a class="el" href="classAffineLoopNest.html">AffineLoopNest</a> *AL, size_t depth) -&gt; <a class="el" href="classLoop.html">Loop</a> *</td></tr>
+static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>create</b> (BumpAlloc&lt;&gt; &amp;alloc, llvm::Loop *LL, <a class="el" href="classAffineLoopNest.html">AffineLoopNest</a> *AL, size_t depth) -&gt; <a class="el" href="classLoop.html">Loop</a> *</td></tr>
 <tr class="separator:ae79bbb0c41f665d30468e42bfccd9803"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="inherited"></a>

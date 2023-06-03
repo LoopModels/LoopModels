@@ -103,7 +103,7 @@ $(function() {
 <div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;  <span class="comment">// in addition to requiring simplify form, we require a single exit block</span></div>
 <div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;  [[no_unique_address]] llvm::SmallVector&lt;Predicate::Map&gt; paths;</div>
 <div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;  [[no_unique_address]] <a class="code" href="classAffineLoopNest.html">AffineLoopNest</a> *affineLoop{<span class="keyword">nullptr</span>};</div>
-<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;  [[no_unique_address]] <a class="code" href="structOptional.html">Optional&lt;LoopTree *&gt;</a> parentLoop{<span class="keyword">nullptr</span>};</div>
+<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;  [[no_unique_address]] Optional&lt;LoopTree *&gt; parentLoop{<span class="keyword">nullptr</span>};</div>
 <div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;  [[no_unique_address]] llvm::SmallVector&lt;NotNull&lt;ArrayIndex&gt;&gt; memAccesses{};</div>
 <div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160; </div>
 <div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;  ~<a class="code" href="structLoopTree.html">LoopTree</a>() { <span class="comment">// NOLINT(misc-no-recursion)</span></div>
@@ -133,18 +133,18 @@ $(function() {
 <div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;  <span class="comment">// LoopTree(LoopTree &amp;&amp;) = default;</span></div>
 <div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;  <span class="keyword">auto</span> operator=(<span class="keyword">const</span> <a class="code" href="structLoopTree.html">LoopTree</a> &amp;) -&gt; <a class="code" href="structLoopTree.html">LoopTree</a> &amp; = <span class="keyword">delete</span>;</div>
 <div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;  <span class="keyword">auto</span> operator=(<a class="code" href="structLoopTree.html">LoopTree</a> &amp;&amp;) -&gt; <a class="code" href="structLoopTree.html">LoopTree</a> &amp; = <span class="keyword">delete</span>;</div>
-<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;  <a class="code" href="structLoopTree.html">LoopTree</a>(llvm::SmallVector&lt;<a class="code" href="classNotNull.html">NotNull&lt;LoopTree&gt;</a>&gt; sL,</div>
+<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;  <a class="code" href="structLoopTree.html">LoopTree</a>(llvm::SmallVector&lt;NotNull&lt;LoopTree&gt;&gt; sL,</div>
 <div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;           llvm::SmallVector&lt;Predicate::Map&gt; pth)</div>
 <div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;    : subLoops(std::move(sL)), paths(std::move(pth)) {}</div>
 <div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160; </div>
-<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;  <a class="code" href="structLoopTree.html">LoopTree</a>(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, llvm::Loop *L, <span class="keyword">const</span> llvm::SCEV *BT,</div>
+<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;  <a class="code" href="structLoopTree.html">LoopTree</a>(BumpAlloc&lt;&gt; &amp;alloc, llvm::Loop *L, <span class="keyword">const</span> llvm::SCEV *BT,</div>
 <div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;           llvm::ScalarEvolution &amp;SE, <a class="code" href="structPredicate_1_1Map.html">Predicate::Map</a> pth)</div>
 <div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;    : loop(L), affineLoop{AffineLoopNest::construct(alloc, L, BT, SE)} {</div>
 <div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;    paths.push_back(std::move(pth));</div>
 <div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;  }</div>
 <div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160; </div>
-<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;  <a class="code" href="structLoopTree.html">LoopTree</a>(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, llvm::Loop *L, <a class="code" href="classNotNull.html">NotNull&lt;AffineLoopNest&gt;</a> aln,</div>
-<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;           llvm::SmallVector&lt;<a class="code" href="classNotNull.html">NotNull&lt;LoopTree&gt;</a>&gt; sL,</div>
+<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;  <a class="code" href="structLoopTree.html">LoopTree</a>(BumpAlloc&lt;&gt; &amp;alloc, llvm::Loop *L, NotNull&lt;AffineLoopNest&gt; aln,</div>
+<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;           llvm::SmallVector&lt;NotNull&lt;LoopTree&gt;&gt; sL,</div>
 <div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;           llvm::SmallVector&lt;Predicate::Map&gt; pth)</div>
 <div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;    : loop(L), subLoops(std::move(sL)), paths(std::move(pth)),</div>
 <div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;      affineLoop(aln-&gt;copy(alloc)) {</div>
@@ -184,10 +184,10 @@ $(function() {
 <div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> end()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> subLoops.end(); }</div>
 <div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> size() <span class="keyword">const</span> -&gt; <span class="keywordtype">size_t</span> { <span class="keywordflow">return</span> subLoops.size(); }</div>
 <div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160; </div>
-<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;  <span class="keyword">static</span> <span class="keywordtype">void</span> split(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc,</div>
-<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;                    llvm::SmallVector&lt;<a class="code" href="classNotNull.html">NotNull&lt;LoopTree&gt;</a>&gt; &amp;trees,</div>
+<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;  <span class="keyword">static</span> <span class="keywordtype">void</span> split(BumpAlloc&lt;&gt; &amp;alloc,</div>
+<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;                    llvm::SmallVector&lt;NotNull&lt;LoopTree&gt;&gt; &amp;trees,</div>
 <div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;                    llvm::SmallVector&lt;Predicate::Map&gt; &amp;paths,</div>
-<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;                    llvm::SmallVector&lt;<a class="code" href="classNotNull.html">NotNull&lt;LoopTree&gt;</a>&gt; &amp;subTree) {</div>
+<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;                    llvm::SmallVector&lt;NotNull&lt;LoopTree&gt;&gt; &amp;subTree) {</div>
 <div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;    <span class="keywordflow">if</span> (!subTree.empty()) {</div>
 <div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;      assert(1 + subTree.size() == paths.size());</div>
 <div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;      <span class="keyword">auto</span> *newTree =</div>
@@ -207,10 +207,7 @@ $(function() {
 <div class="line"><a name="l00136"></a><span class="lineno">  136</span>&#160;  }</div>
 <div class="line"><a name="l00137"></a><span class="lineno">  137</span>&#160;};</div>
 <div class="ttc" id="aclassAffineLoopNest_html"><div class="ttname"><a href="classAffineLoopNest.html">AffineLoopNest</a></div><div class="ttdef"><b>Definition:</b> Loops.hpp:325</div></div>
-<div class="ttc" id="aclassNotNull_html"><div class="ttname"><a href="classNotNull.html">NotNull</a></div><div class="ttdef"><b>Definition:</b> Valid.hpp:6</div></div>
-<div class="ttc" id="astructBumpAlloc_html"><div class="ttname"><a href="structBumpAlloc.html">BumpAlloc</a></div><div class="ttdef"><b>Definition:</b> Allocators.hpp:53</div></div>
 <div class="ttc" id="astructLoopTree_html"><div class="ttname"><a href="structLoopTree.html">LoopTree</a></div><div class="ttdef"><b>Definition:</b> LoopForest.hpp:23</div></div>
-<div class="ttc" id="astructOptional_html"><div class="ttname"><a href="structOptional.html">Optional&lt; LoopTree * &gt;</a></div></div>
 <div class="ttc" id="astructPredicate_1_1Map_html"><div class="ttname"><a href="structPredicate_1_1Map.html">Predicate::Map</a></div><div class="ttdef"><b>Definition:</b> Instruction.hpp:1141</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->

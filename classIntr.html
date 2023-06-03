@@ -178,19 +178,19 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>getInstruction</b> ()
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>getBasicBlock</b> () -&gt; llvm::BasicBlock *</td></tr>
 <tr class="separator:a6fc41dcf493ed933fc3e40c4ed060ad5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1dece6b46780092e0f4c579783fbaeea"><td class="memItemLeft" align="right" valign="top"><a id="a1dece6b46780092e0f4c579783fbaeea"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>Intr</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, <a class="el" href="structIntr_1_1Intrinsic.html">Intrinsic</a> idt, llvm::Type *typ)</td></tr>
+&#160;</td><td class="memItemRight" valign="bottom"><b>Intr</b> (BumpAlloc&lt;&gt; &amp;alloc, <a class="el" href="structIntr_1_1Intrinsic.html">Intrinsic</a> idt, llvm::Type *typ)</td></tr>
 <tr class="separator:a1dece6b46780092e0f4c579783fbaeea"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aade8c5db5a200fef6d9e5e38f2681015"><td class="memItemLeft" align="right" valign="top"><a id="aade8c5db5a200fef6d9e5e38f2681015"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>Intr</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, <a class="el" href="structIntr_1_1UniqueIdentifier.html">UniqueIdentifier</a> uid, llvm::Type *typ)</td></tr>
+&#160;</td><td class="memItemRight" valign="bottom"><b>Intr</b> (BumpAlloc&lt;&gt; &amp;alloc, <a class="el" href="structIntr_1_1UniqueIdentifier.html">UniqueIdentifier</a> uid, llvm::Type *typ)</td></tr>
 <tr class="separator:aade8c5db5a200fef6d9e5e38f2681015"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8ee2a90be90cec5fa1a824cf05a212aa"><td class="memItemLeft" align="right" valign="top"><a id="a8ee2a90be90cec5fa1a824cf05a212aa"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>getUniqueIdentifier</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, <a class="el" href="structIntr_1_1Cache.html">Cache</a> &amp;cache) -&gt; <a class="el" href="structIntr_1_1UniqueIdentifier.html">UniqueIdentifier</a></td></tr>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getUniqueIdentifier</b> (BumpAlloc&lt;&gt; &amp;alloc, <a class="el" href="structIntr_1_1Cache.html">Cache</a> &amp;cache) -&gt; <a class="el" href="structIntr_1_1UniqueIdentifier.html">UniqueIdentifier</a></td></tr>
 <tr class="separator:a8ee2a90be90cec5fa1a824cf05a212aa"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab16a9de2cf0acdfecda339ea5019292f"><td class="memItemLeft" align="right" valign="top"><a id="ab16a9de2cf0acdfecda339ea5019292f"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>getUniqueIdentifier</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, <a class="el" href="structPredicate_1_1Map.html">Predicate::Map</a> &amp;predMap, <a class="el" href="structIntr_1_1Cache.html">Cache</a> &amp;cache) -&gt; <a class="el" href="structIntr_1_1UniqueIdentifier.html">UniqueIdentifier</a></td></tr>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getUniqueIdentifier</b> (BumpAlloc&lt;&gt; &amp;alloc, <a class="el" href="structPredicate_1_1Map.html">Predicate::Map</a> &amp;predMap, <a class="el" href="structIntr_1_1Cache.html">Cache</a> &amp;cache) -&gt; <a class="el" href="structIntr_1_1UniqueIdentifier.html">UniqueIdentifier</a></td></tr>
 <tr class="separator:ab16a9de2cf0acdfecda339ea5019292f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a846b75ff8e082521a0470ab7d53a488b"><td class="memItemLeft" align="right" valign="top"><a id="a846b75ff8e082521a0470ab7d53a488b"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>negate</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, <a class="el" href="structIntr_1_1Cache.html">Cache</a> &amp;cache) -&gt; <a class="el" href="classIntr.html">Intr</a> *</td></tr>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>negate</b> (BumpAlloc&lt;&gt; &amp;alloc, <a class="el" href="structIntr_1_1Cache.html">Cache</a> &amp;cache) -&gt; <a class="el" href="classIntr.html">Intr</a> *</td></tr>
 <tr class="separator:a846b75ff8e082521a0470ab7d53a488b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad9601db5851547af4360a5a63809ac49"><td class="memItemLeft" align="right" valign="top"><a id="ad9601db5851547af4360a5a63809ac49"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>isInstruction</b> (llvm::Intrinsic::ID op) const -&gt; bool</td></tr>
@@ -281,7 +281,7 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumScalarBits</b> 
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumScalarBytes</b> () const -&gt; unsigned int</td></tr>
 <tr class="separator:adada27dae16d3672708618ccaae8c889"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aca7a6759fdf98290b1ab3313cc1e10a5"><td class="memItemLeft" align="right" valign="top"><a id="aca7a6759fdf98290b1ab3313cc1e10a5"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>getIntrinsic</b> () const -&gt; <a class="el" href="structOptional.html">Optional</a>&lt; const <a class="el" href="structIntr_1_1Intrinsic.html">Intrinsic</a> * &gt;</td></tr>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getIntrinsic</b> () const -&gt; Optional&lt; const <a class="el" href="structIntr_1_1Intrinsic.html">Intrinsic</a> * &gt;</td></tr>
 <tr class="separator:aca7a6759fdf98290b1ab3313cc1e10a5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2583e822457a37fd758b9cd8f7dc20bc"><td class="memItemLeft" align="right" valign="top"><a id="a2583e822457a37fd758b9cd8f7dc20bc"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>getOperandInfo</b> (unsigned int i) const -&gt; std::pair&lt; llvm::TargetTransformInfo::OperandValueKind, llvm::TargetTransformInfo::OperandValueProperties &gt;</td></tr>
@@ -417,22 +417,22 @@ static auto&#160;</td><td class="memItemRight" valign="bottom"><b>getIdentifier<
 static auto&#160;</td><td class="memItemRight" valign="bottom"><b>getIdentifier</b> (llvm::Value *v) -&gt; std::optional&lt; <a class="el" href="structIntr_1_1Intrinsic.html">Intrinsic</a> &gt;</td></tr>
 <tr class="separator:ac0f2ef133429f2e01efe0214bb4f8cf0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac12911d516816bbfb2f81714ef02120a"><td class="memItemLeft" align="right" valign="top"><a id="ac12911d516816bbfb2f81714ef02120a"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>getUniqueIdentifier</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, <a class="el" href="structIntr_1_1Cache.html">Cache</a> &amp;cache, llvm::Instruction *v) -&gt; <a class="el" href="structIntr_1_1UniqueIdentifier.html">UniqueIdentifier</a></td></tr>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>getUniqueIdentifier</b> (BumpAlloc&lt;&gt; &amp;alloc, <a class="el" href="structIntr_1_1Cache.html">Cache</a> &amp;cache, llvm::Instruction *v) -&gt; <a class="el" href="structIntr_1_1UniqueIdentifier.html">UniqueIdentifier</a></td></tr>
 <tr class="separator:ac12911d516816bbfb2f81714ef02120a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af0a07d2e668b59b3f49883ebb30fb45a"><td class="memItemLeft" align="right" valign="top"><a id="af0a07d2e668b59b3f49883ebb30fb45a"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>getUniqueIdentifier</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, <a class="el" href="structIntr_1_1Cache.html">Cache</a> &amp;cache, llvm::Value *v) -&gt; <a class="el" href="structIntr_1_1UniqueIdentifier.html">UniqueIdentifier</a></td></tr>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>getUniqueIdentifier</b> (BumpAlloc&lt;&gt; &amp;alloc, <a class="el" href="structIntr_1_1Cache.html">Cache</a> &amp;cache, llvm::Value *v) -&gt; <a class="el" href="structIntr_1_1UniqueIdentifier.html">UniqueIdentifier</a></td></tr>
 <tr class="separator:af0a07d2e668b59b3f49883ebb30fb45a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a180156815fe2b2e4cba17e6bd258828a"><td class="memItemLeft" align="right" valign="top"><a id="a180156815fe2b2e4cba17e6bd258828a"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>getUniqueIdentifier</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, <a class="el" href="structPredicate_1_1Map.html">Predicate::Map</a> &amp;predMap, <a class="el" href="structIntr_1_1Cache.html">Cache</a> &amp;cache, llvm::Instruction *J) -&gt; <a class="el" href="structIntr_1_1UniqueIdentifier.html">UniqueIdentifier</a></td></tr>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>getUniqueIdentifier</b> (BumpAlloc&lt;&gt; &amp;alloc, <a class="el" href="structPredicate_1_1Map.html">Predicate::Map</a> &amp;predMap, <a class="el" href="structIntr_1_1Cache.html">Cache</a> &amp;cache, llvm::Instruction *J) -&gt; <a class="el" href="structIntr_1_1UniqueIdentifier.html">UniqueIdentifier</a></td></tr>
 <tr class="separator:a180156815fe2b2e4cba17e6bd258828a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1ec33d4a21ebf0be6b32f605c58e1dbc"><td class="memItemLeft" align="right" valign="top"><a id="a1ec33d4a21ebf0be6b32f605c58e1dbc"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>getOperands</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, <a class="el" href="structIntr_1_1Cache.html">Cache</a> &amp;cache, llvm::Instruction *instr) -&gt; MutPtrVector&lt; <a class="el" href="classIntr.html">Intr</a> * &gt;</td></tr>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>getOperands</b> (BumpAlloc&lt;&gt; &amp;alloc, <a class="el" href="structIntr_1_1Cache.html">Cache</a> &amp;cache, llvm::Instruction *instr) -&gt; MutPtrVector&lt; <a class="el" href="classIntr.html">Intr</a> * &gt;</td></tr>
 <tr class="separator:a1ec33d4a21ebf0be6b32f605c58e1dbc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4b1af493e604d1e6715e4784c42fb837"><td class="memItemLeft" align="right" valign="top"><a id="a4b1af493e604d1e6715e4784c42fb837"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>getOperands</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, <a class="el" href="structPredicate_1_1Map.html">Predicate::Map</a> &amp;BBpreds, <a class="el" href="structIntr_1_1Cache.html">Cache</a> &amp;cache, llvm::Instruction *instr) -&gt; MutPtrVector&lt; <a class="el" href="classIntr.html">Intr</a> * &gt;</td></tr>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>getOperands</b> (BumpAlloc&lt;&gt; &amp;alloc, <a class="el" href="structPredicate_1_1Map.html">Predicate::Map</a> &amp;BBpreds, <a class="el" href="structIntr_1_1Cache.html">Cache</a> &amp;cache, llvm::Instruction *instr) -&gt; MutPtrVector&lt; <a class="el" href="classIntr.html">Intr</a> * &gt;</td></tr>
 <tr class="separator:a4b1af493e604d1e6715e4784c42fb837"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7ac1c359bac270dbbaf8f2b3ecb49515"><td class="memItemLeft" align="right" valign="top"><a id="a7ac1c359bac270dbbaf8f2b3ecb49515"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>createIsolated</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, llvm::Instruction *instr) -&gt; <a class="el" href="classIntr.html">Intr</a> *</td></tr>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>createIsolated</b> (BumpAlloc&lt;&gt; &amp;alloc, llvm::Instruction *instr) -&gt; <a class="el" href="classIntr.html">Intr</a> *</td></tr>
 <tr class="separator:a7ac1c359bac270dbbaf8f2b3ecb49515"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4b38231b85b6bd443687c38e09c9ce17"><td class="memItemLeft" align="right" valign="top"><a id="a4b38231b85b6bd443687c38e09c9ce17"></a>
 static auto&#160;</td><td class="memItemRight" valign="bottom"><b>getType</b> (llvm::Type *T, unsigned int vectorWidth) -&gt; llvm::Type *</td></tr>

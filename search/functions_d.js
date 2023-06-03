@@ -1,5 +1,4 @@
 var searchData=
 [
-  ['truncate_493',['truncate',['../classLinearProgramLoopBlock.html#aa7e6dcbc46c54737c2ad846703f48398',1,'LinearProgramLoopBlock']]],
-  ['typealignment_494',['typeAlignment',['../classArrayIndex.html#ac22530e45b871b8c7e86b9ade78b25bd',1,'ArrayIndex']]]
+  ['updateoffsmat_272',['updateOffsMat',['../classAddr.html#a28bcc09d4daf63893e7215bd01ca6df1',1,'Addr']]]
 ];

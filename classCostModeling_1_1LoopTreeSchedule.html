@@ -85,7 +85,7 @@ Classes</h2></td></tr>
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
 <tr class="memitem:a1b2b1e261f55846e495ea1bec35655e5"><td class="memItemLeft" align="right" valign="top"><a id="a1b2b1e261f55846e495ea1bec35655e5"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getInitAddr</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc) -&gt; InstructionBlock &amp;</td></tr>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getInitAddr</b> (BumpAlloc&lt;&gt; &amp;alloc) -&gt; InstructionBlock &amp;</td></tr>
 <tr class="separator:a1b2b1e261f55846e495ea1bec35655e5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a70be9f3d42199239a97a49ee4d2fc86b"><td class="memItemLeft" align="right" valign="top"><a id="a70be9f3d42199239a97a49ee4d2fc86b"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getDepth</b> () const -&gt; unsigned</td></tr>
@@ -97,16 +97,16 @@ constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>LoopTreeSchedule
 void&#160;</td><td class="memItemRight" valign="bottom"><b>printDotEdges</b> (llvm::raw_ostream &amp;out, llvm::ArrayRef&lt; std::string &gt; addrNames)</td></tr>
 <tr class="separator:aaeede3f1684477948f7db642f7be8d5e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1a2688471eb13d9d74dc12b8f054a826"><td class="memItemLeft" align="right" valign="top"><a id="a1a2688471eb13d9d74dc12b8f054a826"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>printSubDotFile</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, llvm::raw_ostream &amp;out, map&lt; <a class="el" href="classCostModeling_1_1LoopTreeSchedule.html">LoopTreeSchedule</a> *, std::string &gt; &amp;names, llvm::SmallVectorImpl&lt; std::string &gt; &amp;addrNames, unsigned addrIndOffset, <a class="el" href="classAffineLoopNest.html">AffineLoopNest</a> *lret) -&gt; <a class="el" href="classAffineLoopNest.html">AffineLoopNest</a> *</td></tr>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>printSubDotFile</b> (BumpAlloc&lt;&gt; &amp;alloc, llvm::raw_ostream &amp;out, map&lt; <a class="el" href="classCostModeling_1_1LoopTreeSchedule.html">LoopTreeSchedule</a> *, std::string &gt; &amp;names, llvm::SmallVectorImpl&lt; std::string &gt; &amp;addrNames, unsigned addrIndOffset, <a class="el" href="classAffineLoopNest.html">AffineLoopNest</a> *lret) -&gt; <a class="el" href="classAffineLoopNest.html">AffineLoopNest</a> *</td></tr>
 <tr class="separator:a1a2688471eb13d9d74dc12b8f054a826"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a55dddcb5b2b6c04629e3e73b35df5d1a"><td class="memItemLeft" align="right" valign="top"><a id="a55dddcb5b2b6c04629e3e73b35df5d1a"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>printDotFile</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, llvm::raw_ostream &amp;out)</td></tr>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>printDotFile</b> (BumpAlloc&lt;&gt; &amp;alloc, llvm::raw_ostream &amp;out)</td></tr>
 <tr class="separator:a55dddcb5b2b6c04629e3e73b35df5d1a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
 <tr class="memitem:a3c03711665fb989a0ad5d78fc415eed3"><td class="memItemLeft" align="right" valign="top"><a id="a3c03711665fb989a0ad5d78fc415eed3"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>init</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt;&gt; &amp;alloc, <a class="el" href="classLinearProgramLoopBlock.html">LinearProgramLoopBlock</a> &amp;LB) -&gt; <a class="el" href="classCostModeling_1_1LoopTreeSchedule.html">LoopTreeSchedule</a> *</td></tr>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>init</b> (BumpAlloc&lt;&gt; &amp;alloc, <a class="el" href="classLinearProgramLoopBlock.html">LinearProgramLoopBlock</a> &amp;LB) -&gt; <a class="el" href="classCostModeling_1_1LoopTreeSchedule.html">LoopTreeSchedule</a> *</td></tr>
 <tr class="separator:a3c03711665fb989a0ad5d78fc415eed3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>

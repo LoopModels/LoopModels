@@ -169,7 +169,7 @@ unsigned&#160;</td><td class="memItemRight" valign="bottom"><b>depth</b> {0}</td
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>We take an approach similar to LLVM's RTTI however, we want to take advantage of FAMs while having a "hieararchy" we accomplish this via a base class, and then wrapper classes that simply hold the <code>Val*</code>.</p>
-<p><code><a class="el" href="structVal.html">Val</a></code> has a base memory layout which can be used for iterating over the IR</p>
+<p><code>Val</code> has a base memory layout which can be used for iterating over the IR</p>
 <p>The IR forms a graph with many links. Linear links let us follow the flat structure that mirrors code we would generate. We additionally have links that let us view it as a tree structure.</p>
 <p>For example, we may have</p>
 <p>0. // VK_Loop // toplevel</p><ol type="1">

@@ -96,8 +96,8 @@ $(function() {
 <div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;    <span class="keywordflow">return</span> memoryOmegaOffset(arrayDim, numLoops) + numLoops + 1;</div>
 <div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;  }</div>
 <div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160; </div>
-<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;  <a class="code" href="classNotNull.html">NotNull&lt;const llvm::SCEVUnknown&gt;</a> basePointer;</div>
-<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;  <a class="code" href="classNotNull.html">NotNull&lt;AffineLoopNest&gt;</a> loop;</div>
+<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;  NotNull&lt;const llvm::SCEVUnknown&gt; basePointer;</div>
+<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;  NotNull&lt;AffineLoopNest&gt; loop;</div>
 <div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;  <span class="comment">// This field will store either the loaded instruction, or the store</span></div>
 <div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;  <span class="comment">// instruction. This means that we can check if this MemoryAccess is a load</span></div>
 <div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;  <span class="comment">// via checking `!loadOrStore.isa&lt;llvm::StoreInst&gt;()`.</span></div>
@@ -106,7 +106,7 @@ $(function() {
 <div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;  <span class="comment">// actual load instruction, that instruction is equivalent to the loaded</span></div>
 <div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;  <span class="comment">// value, meaning that is the stored instruction, and thus we still have</span></div>
 <div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;  <span class="comment">// access to it when it is available.</span></div>
-<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;  <a class="code" href="classNotNull.html">NotNull&lt;llvm::Instruction&gt;</a> loadOrStore;</div>
+<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;  NotNull&lt;llvm::Instruction&gt; loadOrStore;</div>
 <div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;  int64_t *offSym{<span class="keyword">nullptr</span>};</div>
 <div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;  <span class="keywordtype">unsigned</span> numDim{0}, numDynSym{0};</div>
 <div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;<span class="preprocessor">#if !defined(__clang__) &amp;&amp; defined(__GNUC__)</span></div>
@@ -123,11 +123,11 @@ $(function() {
 <div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;<span class="preprocessor">#pragma clang diagnostic pop</span></div>
 <div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;<span class="preprocessor">#endif</span></div>
 <div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;  <span class="comment">// schedule indicated by `1` top bit, remainder indicates loop</span></div>
-<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> data() -&gt; <a class="code" href="classNotNull.html">NotNull&lt;int64_t&gt;</a> {</div>
+<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> data() -&gt; NotNull&lt;int64_t&gt; {</div>
 <div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;    <span class="keywordtype">void</span> *ptr = mem + <span class="keyword">sizeof</span>(<span class="keyword">const</span> llvm::SCEV *<span class="keyword">const</span> *) * (numDim + numDynSym);</div>
 <div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">static_cast&lt;</span>int64_t *<span class="keyword">&gt;</span>(ptr);</div>
 <div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;  }</div>
-<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> data() <span class="keyword">const</span> -&gt; <a class="code" href="classNotNull.html">NotNull&lt;int64_t&gt;</a> {</div>
+<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> data() <span class="keyword">const</span> -&gt; NotNull&lt;int64_t&gt; {</div>
 <div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;    <span class="keyword">const</span> <span class="keywordtype">void</span> *ptr =</div>
 <div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;      mem + <span class="keyword">sizeof</span>(<span class="keyword">const</span> llvm::SCEV *<span class="keyword">const</span> *) * (numDim + numDynSym);</div>
 <div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">static_cast&lt;</span>int64_t *<span class="keyword">&gt;</span>(<span class="keyword">const_cast&lt;</span><span class="keywordtype">void</span> *<span class="keyword">&gt;</span>(ptr));</div>
@@ -156,9 +156,9 @@ $(function() {
 <div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;                                llvm::Instruction *user)</div>
 <div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;    : basePointer(arrayPtr), loop(loopRef), loadOrStore(user){};</div>
 <div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;  [[nodiscard]] <span class="keyword">static</span> <span class="keyword">auto</span></div>
-<div class="line"><a name="l00089"></a><span class="lineno"><a class="line" href="classArrayIndex.html#a43728f7c87cd4691856be9bf4ad9eef4">   89</a></span>&#160;  <a class="code" href="classArrayIndex.html#a43728f7c87cd4691856be9bf4ad9eef4">construct</a>(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, <span class="keyword">const</span> llvm::SCEVUnknown *arrayPointer,</div>
+<div class="line"><a name="l00089"></a><span class="lineno"><a class="line" href="classArrayIndex.html#a43728f7c87cd4691856be9bf4ad9eef4">   89</a></span>&#160;  <a class="code" href="classArrayIndex.html#a43728f7c87cd4691856be9bf4ad9eef4">construct</a>(BumpAlloc&lt;&gt; &amp;alloc, <span class="keyword">const</span> llvm::SCEVUnknown *arrayPointer,</div>
 <div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;            <a class="code" href="classAffineLoopNest.html">AffineLoopNest</a> &amp;loopRef, llvm::Instruction *user,</div>
-<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;            PtrVector&lt;unsigned&gt; o) -&gt; <a class="code" href="classNotNull.html">NotNull&lt;ArrayIndex&gt;</a> {</div>
+<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;            PtrVector&lt;unsigned&gt; o) -&gt; NotNull&lt;ArrayIndex&gt; {</div>
 <div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;    <span class="keywordtype">unsigned</span> numLoops = loopRef.getNumLoops();</div>
 <div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;    invariant(o.size(), numLoops + 1);</div>
 <div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;    <span class="keywordtype">size_t</span> memNeeded = numLoops;</div>
@@ -169,12 +169,12 @@ $(function() {
 <div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;    <span class="keywordflow">return</span> ma;</div>
 <div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;  }</div>
 <div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;  [[nodiscard]] <span class="keyword">static</span> <span class="keyword">auto</span></div>
-<div class="line"><a name="l00103"></a><span class="lineno"><a class="line" href="classArrayIndex.html#a163e4db74cbade63be9e4483d4a70ed9">  103</a></span>&#160;  <a class="code" href="classArrayIndex.html#a163e4db74cbade63be9e4483d4a70ed9">construct</a>(<a class="code" href="structBumpAlloc.html">BumpAlloc&lt;&gt;</a> &amp;alloc, <span class="keyword">const</span> llvm::SCEVUnknown *arrayPtr,</div>
+<div class="line"><a name="l00103"></a><span class="lineno"><a class="line" href="classArrayIndex.html#a163e4db74cbade63be9e4483d4a70ed9">  103</a></span>&#160;  <a class="code" href="classArrayIndex.html#a163e4db74cbade63be9e4483d4a70ed9">construct</a>(BumpAlloc&lt;&gt; &amp;alloc, <span class="keyword">const</span> llvm::SCEVUnknown *arrayPtr,</div>
 <div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;            <a class="code" href="classAffineLoopNest.html">AffineLoopNest</a> &amp;loopRef, llvm::Instruction *user,</div>
 <div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;            PtrMatrix&lt;int64_t&gt; indMat,</div>
 <div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;            std::array&lt;llvm::SmallVector&lt;const llvm::SCEV *, 3&gt;, 2&gt; szOff,</div>
 <div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;            PtrVector&lt;int64_t&gt; coffsets, int64_t *offsets,</div>
-<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;            PtrVector&lt;unsigned&gt; o) -&gt; <a class="code" href="classNotNull.html">NotNull&lt;ArrayIndex&gt;</a> {</div>
+<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;            PtrVector&lt;unsigned&gt; o) -&gt; NotNull&lt;ArrayIndex&gt; {</div>
 <div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;    <span class="comment">// we don&#39;t want to hold any other pointers that may need freeing</span></div>
 <div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;    <span class="keywordtype">unsigned</span> arrayDim = szOff[0].size(), nOff = szOff[1].size();</div>
 <div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;    <span class="keywordtype">unsigned</span> numLoops = loopRef.getNumLoops();</div>
@@ -199,7 +199,7 @@ $(function() {
 <div class="line"><a name="l00132"></a><span class="lineno"><a class="line" href="classArrayIndex.html#a0e86ce8a1a3a5cb7a08e684419afe8d8">  132</a></span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> <a class="code" href="classArrayIndex.html#a0e86ce8a1a3a5cb7a08e684419afe8d8">getFusionOmega</a>() const -&gt; PtrVector&lt;int64_t&gt; {</div>
 <div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;    <span class="keywordflow">return</span> {data() + omegaOffset(), unsigned(getNumLoops()) + 1};</div>
 <div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;  }</div>
-<div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getLoop() const -&gt; <a class="code" href="classNotNull.html">NotNull</a>&lt;<a class="code" href="classAffineLoopNest.html">AffineLoopNest</a>&gt; {</div>
+<div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getLoop() const -&gt; NotNull&lt;<a class="code" href="classAffineLoopNest.html">AffineLoopNest</a>&gt; {</div>
 <div class="line"><a name="l00136"></a><span class="lineno">  136</span>&#160;    <span class="keywordflow">return</span> loop;</div>
 <div class="line"><a name="l00137"></a><span class="lineno">  137</span>&#160;  }</div>
 <div class="line"><a name="l00138"></a><span class="lineno">  138</span>&#160;  [[nodiscard]] <span class="keyword">inline</span> <span class="keyword">auto</span> getSizes()</div>
@@ -236,10 +236,10 @@ $(function() {
 <div class="line"><a name="l00169"></a><span class="lineno">  169</span>&#160;    <span class="keywordflow">return</span> loadOrStore.cast&lt;llvm::StoreInst&gt;()-&gt;getAlign();</div>
 <div class="line"><a name="l00170"></a><span class="lineno">  170</span>&#160;  }</div>
 <div class="line"><a name="l00183"></a><span class="lineno"><a class="line" href="classArrayIndex.html#a2607d77465585f6d60d9f71d998af759">  183</a></span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> <a class="code" href="classArrayIndex.html#a2607d77465585f6d60d9f71d998af759">indexMatrix</a>() -&gt; MutDensePtrMatrix&lt;int64_t&gt; {</div>
-<div class="line"><a name="l00184"></a><span class="lineno">  184</span>&#160;    <span class="keywordflow">return</span> {data(), <a class="code" href="structLinAlg_1_1DenseDims.html">DenseDims</a>{getArrayDim(), getNumLoops()}};</div>
+<div class="line"><a name="l00184"></a><span class="lineno">  184</span>&#160;    <span class="keywordflow">return</span> {data(), DenseDims{getArrayDim(), getNumLoops()}};</div>
 <div class="line"><a name="l00185"></a><span class="lineno">  185</span>&#160;  }</div>
 <div class="line"><a name="l00188"></a><span class="lineno"><a class="line" href="classArrayIndex.html#abd53828a7c4da4199bb84242cfcdae30">  188</a></span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> <a class="code" href="classArrayIndex.html#abd53828a7c4da4199bb84242cfcdae30">indexMatrix</a>() const -&gt; DensePtrMatrix&lt;int64_t&gt; {</div>
-<div class="line"><a name="l00189"></a><span class="lineno">  189</span>&#160;    <span class="keywordflow">return</span> {data(), <a class="code" href="structLinAlg_1_1DenseDims.html">DenseDims</a>{getArrayDim(), getNumLoops()}};</div>
+<div class="line"><a name="l00189"></a><span class="lineno">  189</span>&#160;    <span class="keywordflow">return</span> {data(), DenseDims{getArrayDim(), getNumLoops()}};</div>
 <div class="line"><a name="l00190"></a><span class="lineno">  190</span>&#160;  }</div>
 <div class="line"><a name="l00191"></a><span class="lineno">  191</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> offsetVector() -&gt; MutPtrVector&lt;int64_t&gt; {</div>
 <div class="line"><a name="l00192"></a><span class="lineno">  192</span>&#160;    <span class="keyword">const</span> <span class="keywordtype">unsigned</span> d = getArrayDim();</div>
@@ -250,13 +250,13 @@ $(function() {
 <div class="line"><a name="l00197"></a><span class="lineno">  197</span>&#160;    <span class="keywordflow">return</span> {data() + getNumLoops() * size_t(d), d};</div>
 <div class="line"><a name="l00198"></a><span class="lineno">  198</span>&#160;  }</div>
 <div class="line"><a name="l00199"></a><span class="lineno">  199</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> offsetMatrix() const -&gt; DensePtrMatrix&lt;int64_t&gt; {</div>
-<div class="line"><a name="l00200"></a><span class="lineno">  200</span>&#160;    <span class="keywordflow">return</span> {offSym, <a class="code" href="structLinAlg_1_1DenseDims.html">DenseDims</a>{getArrayDim(), numDynSym}};</div>
+<div class="line"><a name="l00200"></a><span class="lineno">  200</span>&#160;    <span class="keywordflow">return</span> {offSym, DenseDims{getArrayDim(), numDynSym}};</div>
 <div class="line"><a name="l00201"></a><span class="lineno">  201</span>&#160;  }</div>
-<div class="line"><a name="l00202"></a><span class="lineno">  202</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getInstruction() -&gt; <a class="code" href="classNotNull.html">NotNull&lt;llvm::Instruction&gt;</a> {</div>
+<div class="line"><a name="l00202"></a><span class="lineno">  202</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getInstruction() -&gt; NotNull&lt;llvm::Instruction&gt; {</div>
 <div class="line"><a name="l00203"></a><span class="lineno">  203</span>&#160;    <span class="keywordflow">return</span> loadOrStore;</div>
 <div class="line"><a name="l00204"></a><span class="lineno">  204</span>&#160;  }</div>
 <div class="line"><a name="l00205"></a><span class="lineno">  205</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getInstruction() const</div>
-<div class="line"><a name="l00206"></a><span class="lineno">  206</span>&#160;    -&gt; <a class="code" href="classNotNull.html">NotNull</a>&lt;const llvm::Instruction&gt; {</div>
+<div class="line"><a name="l00206"></a><span class="lineno">  206</span>&#160;    -&gt; NotNull&lt;const llvm::Instruction&gt; {</div>
 <div class="line"><a name="l00207"></a><span class="lineno">  207</span>&#160;    <span class="keywordflow">return</span> loadOrStore;</div>
 <div class="line"><a name="l00208"></a><span class="lineno">  208</span>&#160;  }</div>
 <div class="line"><a name="l00209"></a><span class="lineno">  209</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getLoad() -&gt; llvm::LoadInst * {</div>
@@ -324,7 +324,7 @@ $(function() {
 <div class="line"><a name="l00272"></a><span class="lineno">  272</span>&#160;    <span class="keywordflow">return</span> numDynSym == 0;</div>
 <div class="line"><a name="l00273"></a><span class="lineno">  273</span>&#160;  }</div>
 <div class="line"><a name="l00274"></a><span class="lineno">  274</span>&#160;  <span class="comment">// Assumes strides and offsets are sorted</span></div>
-<div class="line"><a name="l00275"></a><span class="lineno">  275</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> sizesMatch(<a class="code" href="classNotNull.html">NotNull&lt;const ArrayIndex&gt;</a> x) <span class="keyword">const</span> -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l00275"></a><span class="lineno">  275</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> sizesMatch(NotNull&lt;const ArrayIndex&gt; x) <span class="keyword">const</span> -&gt; <span class="keywordtype">bool</span> {</div>
 <div class="line"><a name="l00276"></a><span class="lineno">  276</span>&#160;    <span class="keyword">auto</span> thisSizes = getSizes(), xSizes = x-&gt;getSizes();</div>
 <div class="line"><a name="l00277"></a><span class="lineno">  277</span>&#160;    <span class="keywordflow">return</span> std::equal(thisSizes.begin(), thisSizes.end(), xSizes.begin(),</div>
 <div class="line"><a name="l00278"></a><span class="lineno">  278</span>&#160;                      xSizes.end());</div>
@@ -355,9 +355,6 @@ $(function() {
 <div class="ttc" id="aclassArrayIndex_html_abd53828a7c4da4199bb84242cfcdae30"><div class="ttname"><a href="classArrayIndex.html#abd53828a7c4da4199bb84242cfcdae30">ArrayIndex::indexMatrix</a></div><div class="ttdeci">constexpr auto indexMatrix() const -&gt; DensePtrMatrix&lt; int64_t &gt;</div><div class="ttdef"><b>Definition:</b> ArrayIndex.hpp:188</div></div>
 <div class="ttc" id="aclassArrayIndex_html_ac22530e45b871b8c7e86b9ade78b25bd"><div class="ttname"><a href="classArrayIndex.html#ac22530e45b871b8c7e86b9ade78b25bd">ArrayIndex::typeAlignment</a></div><div class="ttdeci">static auto typeAlignment(const llvm::SCEV *S) -&gt; llvm::Align</div><div class="ttdoc">initialize alignment from an elSize SCEV.</div><div class="ttdef"><b>Definition:</b> ArrayIndex.hpp:216</div></div>
 <div class="ttc" id="aclassArrayIndex_html_ac50bf625a59c9a19bd0bcf14c6d0d980"><div class="ttname"><a href="classArrayIndex.html#ac50bf625a59c9a19bd0bcf14c6d0d980">ArrayIndex::getFusionOmega</a></div><div class="ttdeci">constexpr auto getFusionOmega() -&gt; MutPtrVector&lt; int64_t &gt;</div><div class="ttdoc">omegas order is [outer &lt;-&gt; inner]</div><div class="ttdef"><b>Definition:</b> ArrayIndex.hpp:128</div></div>
-<div class="ttc" id="aclassNotNull_html"><div class="ttname"><a href="classNotNull.html">NotNull&lt; const llvm::SCEVUnknown &gt;</a></div></div>
-<div class="ttc" id="astructBumpAlloc_html"><div class="ttname"><a href="structBumpAlloc.html">BumpAlloc</a></div><div class="ttdef"><b>Definition:</b> Allocators.hpp:53</div></div>
-<div class="ttc" id="astructLinAlg_1_1DenseDims_html"><div class="ttname"><a href="structLinAlg_1_1DenseDims.html">LinAlg::DenseDims</a></div><div class="ttdoc">Dimensions with a capacity.</div><div class="ttdef"><b>Definition:</b> MatrixDimensions.hpp:77</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
