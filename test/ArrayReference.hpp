@@ -1,8 +1,8 @@
 
 #pragma once
-#include "../include/Loops.hpp"
-#include "../include/MemoryAccess.hpp"
+#include "IR/Address.hpp"
 #include "Math/Math.hpp"
+#include "Polyhedra/Loops.hpp"
 #include <cstdint>
 #include <llvm/Support/Allocator.h>
 

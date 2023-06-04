@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Containers/BumpMapSet.hpp"
-#include "Math/BumpVector.hpp"
+#include "Dicts/BumpVector.hpp"
 #include "Utilities/Allocators.hpp"
 #include <ankerl/unordered_dense.h>
 #include <benchmark/benchmark.h>

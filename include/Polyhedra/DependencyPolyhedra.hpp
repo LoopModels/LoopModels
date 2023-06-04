@@ -1,7 +1,6 @@
 #pragma once
 
 #include "IR/Address.hpp"
-#include "Loops.hpp"
 #include "Math/Array.hpp"
 #include "Math/Comparisons.hpp"
 #include "Math/Math.hpp"
@@ -9,6 +8,7 @@
 #include "Math/Orthogonalize.hpp"
 #include "Math/Polyhedra.hpp"
 #include "Math/Simplex.hpp"
+#include "Polyhedra/Loops.hpp"
 #include "Utilities/Allocators.hpp"
 #include "Utilities/Valid.hpp"
 #include <algorithm>

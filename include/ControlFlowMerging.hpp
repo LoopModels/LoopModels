@@ -1,13 +1,13 @@
 #pragma once
 
-#include "./Instruction.hpp"
-#include "./LoopBlock.hpp"
-#include "./LoopForest.hpp"
-#include "./Predicate.hpp"
 #include "Containers/BitSets.hpp"
-#include "Containers/BumpMapSet.hpp"
+#include "Dicts/BumpMapSet.hpp"
+#include "Dicts/BumpVector.hpp"
+#include "IR/Instruction.hpp"
+#include "LoopBlock.hpp"
+#include "LoopForest.hpp"
+#include "Predicate.hpp"
 #include "Utilities/Allocators.hpp"
-#include <Math/BumpVector.hpp>
 #include <cassert>
 #include <cstddef>
 #include <cstdint>

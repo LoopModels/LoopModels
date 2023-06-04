@@ -25,8 +25,8 @@ CPMAddPackage(
   NAME googletest
   GITHUB_REPOSITORY google/googletest
   GIT_TAG v1.13.0
-  VERSION 1.13.0
-  OPTIONS "INSTALL_GTEST OFF" "BUILD_GMOCK OFF" "gtest_hide_internal_symbols ON" SYSTEM TRUE
+  VERSION 1.13.0 SYSTEM TRUE
+  OPTIONS "INSTALL_GTEST OFF" "BUILD_GMOCK OFF" "gtest_hide_internal_symbols ON"
 )
 CPMAddPackage(
   NAME unordered_dense
@@ -114,7 +114,6 @@ target_precompile_headers(
   <limits>
   <ranges>
   <utility>
-  <cstddef>
   <concepts>
   <gtest/gtest.h>
   <iterator>

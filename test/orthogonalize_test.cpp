@@ -1,9 +1,9 @@
 #include "ArrayReference.hpp"
-#include "Loops.hpp"
 #include "Math/Comparisons.hpp"
 #include "Math/Math.hpp"
 #include "Math/Orthogonalize.hpp"
 #include "MatrixStringParse.hpp"
+#include "Polyhedra/Loops.hpp"
 #include "TestUtilities.hpp"
 #include <cstddef>
 #include <cstdint>
