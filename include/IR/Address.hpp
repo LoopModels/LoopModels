@@ -8,6 +8,7 @@
 #include "Utilities/Valid.hpp"
 #include <cstddef>
 #include <cstdint>
+#include <llvm/IR/Instructions.h>
 #include <llvm/IR/PatternMatch.h>
 #include <llvm/Support/Allocator.h>
 
@@ -714,3 +715,27 @@ inline auto operator<<(llvm::raw_ostream &os, const Addr &m)
   return os << "]\nInitial Fusion Omega: " << m.getFusionOmega()
             << "\nAffineLoopNest:" << *m.getLoop();
 }
+class Load : public Addr {
+public:
+  static constexpr auto classof(const Node *v) -> bool {
+    return v->getKind() == VK_Load;
+  }
+  [[nodiscard]] auto getInstruction() -> llvm::LoadInst * {
+    return llvm::cast<llvm::LoadInst>(instr);
+  }
+  [[nodiscard]] auto getInstruction() const -> const llvm::LoadInst * {
+    return llvm::cast<llvm::LoadInst>(instr);
+  }
+};
+class Stow : public Addr {
+public:
+  static constexpr auto classof(const Node *v) -> bool {
+    return v->getKind() == VK_Stow;
+  }
+  [[nodiscard]] auto getInstruction() -> llvm::StoreInst * {
+    return llvm::cast<llvm::StoreInst>(instr);
+  }
+  [[nodiscard]] auto getInstruction() const -> const llvm::StoreInst * {
+    return llvm::cast<llvm::StoreInst>(instr);
+  }
+};

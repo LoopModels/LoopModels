@@ -540,8 +540,15 @@ public:
     /// need to finish adding its operands.
     auto completeInstruction(BumpAlloc<> &, Predicate::Map &,
                              llvm::Instruction *) -> Intr *;
-    void addParents(BumpAlloc<> &alloc, Addr *a, llvm::Loop *L) {
-      auto *J = a->getInstruction();
+    void addParents(BumpAlloc<> &alloc, Stow *a, llvm::Loop *L) {
+      llvm::StoreInst *J = a->getInstruction();
+      if (!L->contains(J->getParent())) return;
+      auto ops{instr->operands()};
+      auto *OI = *ops.begin();
+      Instr *p = cache.getInstruction(alloc, *OI);
+    }
+    void addParents(BumpAlloc<> &alloc, Inst *a, llvm::Loop *L) {
+      llvm::StoreInst *J = a->getInstruction();
       if (!L->contains(J->getParent())) return;
       llvm::Use *U = J->getOperandList();
       unsigned numOperands = J->getNumOperands();
@@ -550,6 +557,10 @@ public:
         if (!L->contains(V->getParent())) continue;
         addValue(alloc, V, L);
       }
+    }
+    void addParents(BumpAlloc<> &alloc, Node *a, llvm::Loop *L) {
+      if (auto *S = llvm::dyn_cast<Stow>(a)) addParents(alloc, S, L);
+      else if (auto *I = llvm::dyn_cast<Inst>(a)) addParents(alloc, I, L);
     }
     void addValue(BumpAlloc<> &alloc, llvm::Value *V, llvm::Loop *L) {}
   };
