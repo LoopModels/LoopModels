@@ -9,6 +9,5 @@ var searchData=
   ['amap_6',['amap',['../structpoly_1_1dict_1_1amap.html',1,'poly::dict']]],
   ['arrayindex_7',['ArrayIndex',['../classArrayIndex.html',1,'']]],
   ['arrayreference_8',['ArrayReference',['../structArrayReference.html',1,'']]],
-  ['aset_9',['aset',['../structpoly_1_1dict_1_1aset.html',1,'poly::dict']]],
-  ['aset_3c_20poly_3a_3air_3a_3aintr_20_2a_20_3e_10',['aset&lt; poly::IR::Intr * &gt;',['../structpoly_1_1dict_1_1aset.html',1,'poly::dict']]]
+  ['aset_9',['aset',['../structpoly_1_1dict_1_1aset.html',1,'poly::dict']]]
 ];
