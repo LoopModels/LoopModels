@@ -136,6 +136,9 @@ class Oprn : public Inst {
       return OpCode{i->getOpcode()};
     return {};
   }
+  [[nodiscard]] constexpr auto isInstruction(OpCode opCode) const -> bool {
+    return opcode == opCode;
+  }
 
 public:
   static constexpr auto classof(const Node *v) -> bool {
@@ -148,51 +151,23 @@ public:
   static constexpr auto classof(const Node *v) -> bool {
     return v->getKind() == VK_Intr;
   }
-  struct Intrinsic {
-    struct Intrin {
-      llvm::Intrinsic::ID id; //{llvm::Intrinsic::not_intrinsic};
-      constexpr auto operator==(const Intrin &other) const -> bool {
-        return id == other.id;
-      }
-    };
-    Intrin intrin;
-    [[nodiscard]] auto getIntrinsicID() const -> Intrin { return intrin; }
-    static auto getIntrinsicID(llvm::Value *v) -> std::optional<Intrin> {
-      if (auto *i = llvm::dyn_cast<llvm::IntrinsicInst>(v))
-        return Intrin{i->getIntrinsicID()};
-      return {};
-    }
-
-    /// Instruction ID
-    /// if not Load or Store, then check val for whether it is a call
-    /// and ID corresponds to the instruction or to the intrinsic call
-
-    /// Data we may need
-
-    Intrinsic(llvm::Value *v)
-      : opcode(getOpCode(v)), intrin(getIntrinsicID(v)) {}
-    constexpr Intrinsic(OpCode op, Intrin intr) : opcode(op), intrin(intr) {}
-    constexpr Intrinsic(OpCode op) : opcode(op) {}
-    constexpr Intrinsic() = default;
-    [[nodiscard]] constexpr auto isInstruction(OpCode opCode) const -> bool {
-      return opcode == opCode;
-    }
-    [[nodiscard]] constexpr auto isInstruction(unsigned opCode) const -> bool {
-      return isInstruction(OpCode{opCode});
-    }
-    [[nodiscard]] constexpr auto isIntrinsicInstruction(Intrin opCode) const
-      -> bool {
-      return intrin == opCode;
-    }
-    [[nodiscard]] constexpr auto isIntrinsicInstruction(unsigned opCode) const
-      -> bool {
-      return isIntrinsicInstruction(Intrin{opCode});
-    }
-    [[nodiscard]] constexpr auto operator==(const Intrinsic &other) const
-      -> bool {
-      return opcode == other.opcode && intrin == other.intrin;
+  struct Intrin {
+    llvm::Intrinsic::ID id; //{llvm::Intrinsic::not_intrinsic};
+    constexpr auto operator==(const Intrin &other) const -> bool {
+      return id == other.id;
     }
   };
+  Intrin intrin;
+  [[nodiscard]] auto getIntrinsicID() const -> Intrin { return intrin; }
+  static auto getIntrinsicID(llvm::Value *v) -> std::optional<Intrin> {
+    if (auto *i = llvm::dyn_cast<llvm::IntrinsicInst>(v))
+      return Intrin{i->getIntrinsicID()};
+    return {};
+  }
+  [[nodiscard]] constexpr auto isIntrinsic(Intrin opCode) const -> bool {
+    return intrin == opCode;
+  }
+
   struct UniqueIdentifier {
     Intrinsic idtf;
     MutPtrVector<Intr *> operands;
@@ -910,7 +885,7 @@ template <> struct std::hash<Intr::UniqueIdentifier> {
   }
 };
 
-struct InstrCache {
+struct Cache {
   [[no_unique_address]] map<llvm::Value *, Intr *> llvmToInternalMap;
   [[no_unique_address]] map<UniqueIdentifier, Intr *> argMap;
   [[no_unique_address]] llvm::SmallVector<Intr *> predicates;
