@@ -622,7 +622,7 @@ $(function() {
 <div class="line"><a name="l00636"></a><span class="lineno">  636</span>&#160;  <span class="comment">// }</span></div>
 <div class="line"><a name="l00637"></a><span class="lineno">  637</span>&#160;  <span class="comment">// NOLINTNEXTLINE(misc-no-recursion)</span></div>
 <div class="line"><a name="l00638"></a><span class="lineno">  638</span>&#160;  <span class="keywordtype">void</span> visit(<a class="code" href="structLoopTree.html">LoopTree</a> &amp;LT, Predicate::Map &amp;map, Vector&lt;unsigned&gt; &amp;omega,</div>
-<div class="line"><a name="l00639"></a><span class="lineno">  639</span>&#160;             <a class="code" href="structaset.html">aset&lt;llvm::BasicBlock *&gt;</a> &amp;visited, llvm::BasicBlock *BB) {</div>
+<div class="line"><a name="l00639"></a><span class="lineno">  639</span>&#160;             aset&lt;llvm::BasicBlock *&gt; &amp;visited, llvm::BasicBlock *BB) {</div>
 <div class="line"><a name="l00640"></a><span class="lineno">  640</span>&#160;    <span class="keywordflow">if</span> ((!map.isInPath(BB)) || visited.contains(BB)) <span class="keywordflow">return</span>;</div>
 <div class="line"><a name="l00641"></a><span class="lineno">  641</span>&#160;    visited.insert(BB);</div>
 <div class="line"><a name="l00642"></a><span class="lineno">  642</span>&#160;    <span class="keywordflow">for</span> (llvm::BasicBlock *pred : llvm::predecessors(BB))</div>
@@ -630,7 +630,7 @@ $(function() {
 <div class="line"><a name="l00644"></a><span class="lineno">  644</span>&#160;    parseBB(LT, BB, omega);</div>
 <div class="line"><a name="l00645"></a><span class="lineno">  645</span>&#160;  }</div>
 <div class="line"><a name="l00646"></a><span class="lineno">  646</span>&#160;  <span class="keywordtype">void</span> parseBBMap(<a class="code" href="structLoopTree.html">LoopTree</a> &amp;LT, Predicate::Map &amp;map, Vector&lt;unsigned&gt; &amp;omega) {</div>
-<div class="line"><a name="l00647"></a><span class="lineno">  647</span>&#160;    <a class="code" href="structaset.html">aset&lt;llvm::BasicBlock *&gt;</a> visited{allocator};</div>
+<div class="line"><a name="l00647"></a><span class="lineno">  647</span>&#160;    aset&lt;llvm::BasicBlock *&gt; visited{allocator};</div>
 <div class="line"><a name="l00648"></a><span class="lineno">  648</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;pair : map) visit(LT, map, omega, visited, pair.first);</div>
 <div class="line"><a name="l00649"></a><span class="lineno">  649</span>&#160;  }</div>
 <div class="line"><a name="l00650"></a><span class="lineno">  650</span>&#160;  <span class="comment">// we fill omega, we have loop pos only, not shifts</span></div>
@@ -805,7 +805,6 @@ $(function() {
 <div class="ttc" id="aclassLinearProgramLoopBlock_html"><div class="ttname"><a href="classLinearProgramLoopBlock.html">LinearProgramLoopBlock</a></div><div class="ttdef"><b>Definition:</b> LoopBlock.hpp:323</div></div>
 <div class="ttc" id="aclassTurboLoopPass_html"><div class="ttname"><a href="classTurboLoopPass.html">TurboLoopPass</a></div><div class="ttdef"><b>Definition:</b> TurboLoop.hpp:62</div></div>
 <div class="ttc" id="astructLoopTree_html"><div class="ttname"><a href="structLoopTree.html">LoopTree</a></div><div class="ttdef"><b>Definition:</b> LoopForest.hpp:23</div></div>
-<div class="ttc" id="astructaset_html"><div class="ttname"><a href="structaset.html">aset</a></div><div class="ttdef"><b>Definition:</b> BumpMapSet.hpp:24</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

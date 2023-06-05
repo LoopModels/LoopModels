@@ -85,7 +85,7 @@ Classes</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:aac70d5c2dafaec5277cb6ed6aceaacbc"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structMergingCost.html#aac70d5c2dafaec5277cb6ed6aceaacbc">initAncestors</a> (BumpAlloc&lt;&gt; &amp;alloc, Instruction *key) -&gt; <a class="el" href="structaset.html">aset</a>&lt; Instruction * &gt; *</td></tr>
+<tr class="memitem:aac70d5c2dafaec5277cb6ed6aceaacbc"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structMergingCost.html#aac70d5c2dafaec5277cb6ed6aceaacbc">initAncestors</a> (BumpAlloc&lt;&gt; &amp;alloc, Instruction *key) -&gt; aset&lt; Instruction * &gt; *</td></tr>
 <tr class="separator:aac70d5c2dafaec5277cb6ed6aceaacbc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a788180485e29709e6328542bb5ac4969"><td class="memItemLeft" align="right" valign="top"><a id="a788180485e29709e6328542bb5ac4969"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>begin</b> () -&gt; decltype(mergeList.begin())</td></tr>
@@ -97,10 +97,10 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>end</b> () -&gt; decl
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>visited</b> (Instruction *key) const -&gt; bool</td></tr>
 <tr class="separator:afe071bb6a210b0d0f2f2ff2ead16d6c0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a67898de84bbeb5eaa581900d642152f7"><td class="memItemLeft" align="right" valign="top"><a id="a67898de84bbeb5eaa581900d642152f7"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>getAncestors</b> (BumpAlloc&lt;&gt; &amp;alloc, Instruction *key) -&gt; <a class="el" href="structaset.html">aset</a>&lt; Instruction * &gt; *</td></tr>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getAncestors</b> (BumpAlloc&lt;&gt; &amp;alloc, Instruction *key) -&gt; aset&lt; Instruction * &gt; *</td></tr>
 <tr class="separator:a67898de84bbeb5eaa581900d642152f7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6b3ed4481bf0ff8d42b108b9cae00d05"><td class="memItemLeft" align="right" valign="top"><a id="a6b3ed4481bf0ff8d42b108b9cae00d05"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>getAncestors</b> (Instruction *key) -&gt; <a class="el" href="structaset.html">aset</a>&lt; Instruction * &gt; *</td></tr>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getAncestors</b> (Instruction *key) -&gt; aset&lt; Instruction * &gt; *</td></tr>
 <tr class="separator:a6b3ed4481bf0ff8d42b108b9cae00d05"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae01767cd104275a29749c57786307b81"><td class="memItemLeft" align="right" valign="top"><a id="ae01767cd104275a29749c57786307b81"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>findMerge</b> (Instruction *key) -&gt; Instruction *</td></tr>
@@ -113,7 +113,7 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>findMerge</b> (Instru
 <tr class="memitem:af05a38ba5258fe216ebb8c2f36320f8d"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structMergingCost.html#af05a38ba5258fe216ebb8c2f36320f8d">isMerged</a> (Instruction *L, Instruction *J) const -&gt; bool</td></tr>
 <tr class="separator:af05a38ba5258fe216ebb8c2f36320f8d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a93bb6f4ce2a49227aaa3f947a901099e"><td class="memItemLeft" align="right" valign="top"><a id="a93bb6f4ce2a49227aaa3f947a901099e"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>cycleUpdateMerged</b> (<a class="el" href="structaset.html">aset</a>&lt; Instruction * &gt; *ancestors, Instruction *E, Instruction *H)</td></tr>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>cycleUpdateMerged</b> (aset&lt; Instruction * &gt; *ancestors, Instruction *E, Instruction *H)</td></tr>
 <tr class="separator:a93bb6f4ce2a49227aaa3f947a901099e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a58eeaa3cc22b3501e5be0d3a7dd162e6"><td class="memTemplParams" colspan="2">template&lt;typename S &gt; </td></tr>
 <tr class="memitem:a58eeaa3cc22b3501e5be0d3a7dd162e6"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="structMergingCost.html#a58eeaa3cc22b3501e5be0d3a7dd162e6">mergeOperands</a> (Instruction *A, Instruction *B, S selects)</td></tr>
@@ -143,13 +143,13 @@ static auto&#160;</td><td class="memItemRight" valign="bottom"><b>init</b> (<a c
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
 <tr class="memitem:a3be551a3bf8743fcfbbb908d9ce302b6"><td class="memItemLeft" align="right" valign="top"><a id="a3be551a3bf8743fcfbbb908d9ce302b6"></a>
-<a class="el" href="structamap.html">amap</a>&lt; Instruction *, Instruction * &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>mergeMap</b></td></tr>
+amap&lt; Instruction *, Instruction * &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>mergeMap</b></td></tr>
 <tr class="separator:a3be551a3bf8743fcfbbb908d9ce302b6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad7745fd32b9b926de2473256c7e11ca3"><td class="memItemLeft" align="right" valign="top"><a id="ad7745fd32b9b926de2473256c7e11ca3"></a>
 llvm::SmallVector&lt; std::pair&lt; Instruction *, Instruction * &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>mergeList</b></td></tr>
 <tr class="separator:ad7745fd32b9b926de2473256c7e11ca3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6c03c55301b5beb980423ef5d0bade18"><td class="memItemLeft" align="right" valign="top"><a id="a6c03c55301b5beb980423ef5d0bade18"></a>
-<a class="el" href="structamap.html">amap</a>&lt; Instruction *, <a class="el" href="structaset.html">aset</a>&lt; Instruction * &gt; * &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>ancestorMap</b></td></tr>
+amap&lt; Instruction *, aset&lt; Instruction * &gt; * &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>ancestorMap</b></td></tr>
 <tr class="separator:a6c03c55301b5beb980423ef5d0bade18"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad5d2ed8bf836a10f1540880966f0a29e"><td class="memItemLeft" align="right" valign="top"><a id="ad5d2ed8bf836a10f1540880966f0a29e"></a>
 llvm::InstructionCost&#160;</td><td class="memItemRight" valign="bottom"><b>cost</b></td></tr>
@@ -180,7 +180,7 @@ llvm::InstructionCost&#160;</td><td class="memItemRight" valign="bottom"><b>cost
         <tr>
           <td></td>
           <td>)</td>
-          <td></td><td> -&gt; <a class="el" href="structaset.html">aset</a>&lt;Instruction *&gt; * </td>
+          <td></td><td> -&gt; aset&lt;Instruction *&gt; * </td>
         </tr>
       </table>
   </td>

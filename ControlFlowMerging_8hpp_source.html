@@ -91,7 +91,7 @@ $(function() {
 <div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;<span class="preprocessor">#include &lt;llvm/Support/InstructionCost.h&gt;</span></div>
 <div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160; </div>
 <div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;<span class="comment">// merge all instructions from toMerge into merged</span></div>
-<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;<span class="keyword">inline</span> <span class="keywordtype">void</span> merge(<a class="code" href="structaset.html">aset&lt;Instruction *&gt;</a> &amp;merged, <a class="code" href="structaset.html">aset&lt;Instruction *&gt;</a> &amp;toMerge) {</div>
+<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;<span class="keyword">inline</span> <span class="keywordtype">void</span> merge(aset&lt;Instruction *&gt; &amp;merged, aset&lt;Instruction *&gt; &amp;toMerge) {</div>
 <div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;  merged.insert(toMerge.begin(), toMerge.end());</div>
 <div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;}</div>
 <div class="line"><a name="l00026"></a><span class="lineno"><a class="line" href="structReMapper.html">   26</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structReMapper.html">ReMapper</a> {</div>
@@ -118,14 +118,14 @@ $(function() {
 <div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;  <span class="comment">// yielding c -&gt; e -&gt; d -&gt; a -&gt; b -&gt; c</span></div>
 <div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;  <span class="comment">// that is, if we&#39;re fusing c and d, we can make each point toward</span></div>
 <div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;  <span class="comment">// what the other one was pointing to, in order to link the chains.</span></div>
-<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;  <a class="code" href="structamap.html">amap&lt;Instruction *, Instruction *&gt;</a> mergeMap;</div>
+<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;  amap&lt;Instruction *, Instruction *&gt; mergeMap;</div>
 <div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;  llvm::SmallVector&lt;std::pair&lt;Instruction *, Instruction *&gt;&gt; mergeList;</div>
-<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;  <a class="code" href="structamap.html">amap&lt;Instruction *, aset&lt;Instruction *&gt;</a> *&gt; ancestorMap;</div>
+<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;  amap&lt;Instruction *, aset&lt;Instruction *&gt; *&gt; ancestorMap;</div>
 <div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;  llvm::InstructionCost cost;</div>
 <div class="line"><a name="l00056"></a><span class="lineno"><a class="line" href="structMergingCost.html#aac70d5c2dafaec5277cb6ed6aceaacbc">   56</a></span>&#160;  <span class="keyword">auto</span> <a class="code" href="structMergingCost.html#aac70d5c2dafaec5277cb6ed6aceaacbc">initAncestors</a>(BumpAlloc&lt;&gt; &amp;alloc, Instruction *key)</div>
-<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;    -&gt; <a class="code" href="structaset.html">aset&lt;Instruction *&gt;</a> * {</div>
+<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;    -&gt; aset&lt;Instruction *&gt; * {</div>
 <div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160; </div>
-<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;    <span class="keyword">auto</span> *set = alloc.construct&lt;<a class="code" href="structaset.html">aset&lt;Instruction *&gt;</a>&gt;(alloc);</div>
+<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;    <span class="keyword">auto</span> *set = alloc.construct&lt;aset&lt;Instruction *&gt;&gt;(alloc);</div>
 <div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;    set-&gt;insert(key);</div>
 <div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">auto</span> *op : key-&gt;operands)</div>
 <div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;      <span class="keywordflow">if</span> (<span class="keyword">auto</span> *f = ancestorMap.find(op); f != ancestorMap.end())</div>
@@ -139,12 +139,12 @@ $(function() {
 <div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;    <span class="keywordflow">return</span> ancestorMap.count(key);</div>
 <div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;  }</div>
 <div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;  <span class="keyword">auto</span> getAncestors(BumpAlloc&lt;&gt; &amp;alloc, Instruction *key)</div>
-<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;    -&gt; <a class="code" href="structaset.html">aset&lt;Instruction *&gt;</a> * {</div>
+<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;    -&gt; aset&lt;Instruction *&gt; * {</div>
 <div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;    <span class="keywordflow">if</span> (<span class="keyword">auto</span> *it = ancestorMap.find(key); it != ancestorMap.end())</div>
 <div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;      <span class="keywordflow">return</span> it-&gt;second;</div>
 <div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="structMergingCost.html#aac70d5c2dafaec5277cb6ed6aceaacbc">initAncestors</a>(alloc, key);</div>
 <div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;  }</div>
-<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;  <span class="keyword">auto</span> getAncestors(Instruction *key) -&gt; <a class="code" href="structaset.html">aset&lt;Instruction *&gt;</a> * {</div>
+<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;  <span class="keyword">auto</span> getAncestors(Instruction *key) -&gt; aset&lt;Instruction *&gt; * {</div>
 <div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;    <span class="keywordflow">if</span> (<span class="keyword">auto</span> *it = ancestorMap.find(key); it != ancestorMap.end())</div>
 <div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;      <span class="keywordflow">return</span> it-&gt;second;</div>
 <div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">nullptr</span>;</div>
@@ -175,7 +175,7 @@ $(function() {
 <div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;  <span class="comment">// follows the cycle, traversing H -&gt; mergeMap[H] -&gt; mergeMap[mergeMap[H]]</span></div>
 <div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;  <span class="comment">// ... until it reaches E, updating the ancestorMap pointer at each level of</span></div>
 <div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;  <span class="comment">// the recursion.</span></div>
-<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;  <span class="keywordtype">void</span> cycleUpdateMerged(<a class="code" href="structaset.html">aset&lt;Instruction *&gt;</a> *ancestors, Instruction *E,</div>
+<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;  <span class="keywordtype">void</span> cycleUpdateMerged(aset&lt;Instruction *&gt; *ancestors, Instruction *E,</div>
 <div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;                         Instruction *H) {</div>
 <div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;    <span class="keywordflow">while</span> (H != E) {</div>
 <div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;      ancestorMap[H] = ancestors;</div>
@@ -323,7 +323,7 @@ $(function() {
 <div class="line"><a name="l00260"></a><span class="lineno">  260</span>&#160;    <span class="comment">// we leave their ancestor PtrMaps intact.</span></div>
 <div class="line"><a name="l00261"></a><span class="lineno">  261</span>&#160;    <span class="comment">// in the new MergingCost where they&#39;re the same instruction,</span></div>
 <div class="line"><a name="l00262"></a><span class="lineno">  262</span>&#160;    <span class="comment">// we assign them the same ancestor Claptrap.</span></div>
-<div class="line"><a name="l00263"></a><span class="lineno">  263</span>&#160;    <span class="keyword">auto</span> *merged = <span class="keyword">new</span> (alloc) <a class="code" href="structaset.html">aset&lt;Instruction *&gt;</a>(*aA-&gt;second);</div>
+<div class="line"><a name="l00263"></a><span class="lineno">  263</span>&#160;    <span class="keyword">auto</span> *merged = <span class="keyword">new</span> (alloc) aset&lt;Instruction *&gt;(*aA-&gt;second);</div>
 <div class="line"><a name="l00264"></a><span class="lineno">  264</span>&#160;    merged-&gt;insert(aB-&gt;second-&gt;begin(), aB-&gt;second-&gt;end());</div>
 <div class="line"><a name="l00265"></a><span class="lineno">  265</span>&#160;    aA-&gt;second = merged;</div>
 <div class="line"><a name="l00266"></a><span class="lineno">  266</span>&#160;    aB-&gt;second = merged;</div>
@@ -365,7 +365,7 @@ $(function() {
 <div class="line"><a name="l00302"></a><span class="lineno">  302</span>&#160;<span class="keyword">inline</span> <span class="keywordtype">void</span> mergeInstructions(</div>
 <div class="line"><a name="l00303"></a><span class="lineno">  303</span>&#160;  BumpAlloc&lt;&gt; &amp;alloc, Instruction::Cache &amp;cache, Predicate::Map &amp;predMap,</div>
 <div class="line"><a name="l00304"></a><span class="lineno">  304</span>&#160;  llvm::TargetTransformInfo &amp;TTI, <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> vectorBits,</div>
-<div class="line"><a name="l00305"></a><span class="lineno">  305</span>&#160;  <a class="code" href="structamap.html">amap</a>&lt;std::pair&lt;Instruction::Intrinsic, llvm::Type *&gt;,</div>
+<div class="line"><a name="l00305"></a><span class="lineno">  305</span>&#160;  amap&lt;std::pair&lt;Instruction::Intrinsic, llvm::Type *&gt;,</div>
 <div class="line"><a name="l00306"></a><span class="lineno">  306</span>&#160;       BumpPtrVector&lt;std::pair&lt;Instruction *, Predicate::Set&gt;&gt;&gt; &amp;opMap,</div>
 <div class="line"><a name="l00307"></a><span class="lineno">  307</span>&#160;  llvm::SmallVectorImpl&lt;MergingCost *&gt; &amp;mergingCosts, Instruction *J,</div>
 <div class="line"><a name="l00308"></a><span class="lineno">  308</span>&#160;  llvm::BasicBlock *BB, <a class="code" href="structPredicate_1_1Set.html">Predicate::Set</a> &amp;preds) {</div>
@@ -433,7 +433,7 @@ $(function() {
 <div class="line"><a name="l00381"></a><span class="lineno">  381</span>&#160;  <span class="keywordflow">if</span> (!predMap.isDivergent()) <span class="keywordflow">return</span>;</div>
 <div class="line"><a name="l00382"></a><span class="lineno">  382</span>&#160;  <span class="keyword">auto</span> p = tAlloc.scope();</div>
 <div class="line"><a name="l00383"></a><span class="lineno">  383</span>&#160;  <span class="comment">// there is a divergence in the control flow that we can ideally merge</span></div>
-<div class="line"><a name="l00384"></a><span class="lineno">  384</span>&#160;  <a class="code" href="structamap.html">amap&lt;std::pair&lt;Instruction::Intrinsic, llvm::Type *&gt;</a>,</div>
+<div class="line"><a name="l00384"></a><span class="lineno">  384</span>&#160;  amap&lt;std::pair&lt;Instruction::Intrinsic, llvm::Type *&gt;,</div>
 <div class="line"><a name="l00385"></a><span class="lineno">  385</span>&#160;       BumpPtrVector&lt;std::pair&lt;Instruction *, Predicate::Set&gt;&gt;&gt;</div>
 <div class="line"><a name="l00386"></a><span class="lineno">  386</span>&#160;    opMap{tAlloc};</div>
 <div class="line"><a name="l00387"></a><span class="lineno">  387</span>&#160;  llvm::SmallVector&lt;MergingCost *&gt; mergingCosts;</div>
@@ -484,8 +484,6 @@ $(function() {
 <div class="ttc" id="astructPredicate_1_1Set_html"><div class="ttname"><a href="structPredicate_1_1Set.html">Predicate::Set</a></div><div class="ttdef"><b>Definition:</b> Predicate.hpp:194</div></div>
 <div class="ttc" id="astructPredicate_1_1Set_html_ad4a7c78b6c53cec5eb5ee53e291359e3"><div class="ttname"><a href="structPredicate_1_1Set.html#ad4a7c78b6c53cec5eb5ee53e291359e3">Predicate::Set::intersectionIsEmpty</a></div><div class="ttdeci">auto intersectionIsEmpty(const Set &amp;other) const -&gt; bool</div><div class="ttdef"><b>Definition:</b> Predicate.hpp:361</div></div>
 <div class="ttc" id="astructReMapper_html"><div class="ttname"><a href="structReMapper.html">ReMapper</a></div><div class="ttdef"><b>Definition:</b> ControlFlowMerging.hpp:26</div></div>
-<div class="ttc" id="astructamap_html"><div class="ttname"><a href="structamap.html">amap&lt; Instruction *, Instruction * &gt;</a></div></div>
-<div class="ttc" id="astructaset_html"><div class="ttname"><a href="structaset.html">aset</a></div><div class="ttdef"><b>Definition:</b> BumpMapSet.hpp:24</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
