@@ -8,6 +8,7 @@
 #include <llvm/IR/Value.h>
 #include <llvm/Support/Casting.h>
 
+namespace poly::IR {
 /// We take an approach similar to LLVM's RTTI
 /// however, we want to take advantage of FAMs while having a "hieararchy"
 /// we accomplish this via a base class, and then wrapper classes that simply
@@ -89,8 +90,9 @@ public:
     VK_CVal,
     VK_Cint,
     VK_Cflt,
+    VK_Func,
     VK_Intr,
-    VK_Func
+    VK_Oprn,
   };
 
 private:
@@ -333,3 +335,4 @@ public:
 
   [[nodiscard]] constexpr auto getVal() const -> double { return val; }
 };
+} // namespace poly::IR

@@ -1,6 +1,6 @@
 #pragma once
-#include "Dicts/BumpVector.hpp"
-#include "Utilities/Allocators.hpp"
+#include <Dicts/BumpVector.hpp>
+#include <Utilities/Allocators.hpp>
 #include <ankerl/unordered_dense.h>
 
 template <typename K> using set = ankerl::unordered_dense::set<K>;

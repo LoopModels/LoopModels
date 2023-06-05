@@ -1,9 +1,9 @@
 #pragma once
 #include "ArrayIndex.hpp"
 #include "Containers/BitSets.hpp"
-#include "Loops.hpp"
 #include "Math/Array.hpp"
 #include "Math/Math.hpp"
+#include "Polyhedra/Loops.hpp"
 #include "Utilities/Valid.hpp"
 #include <algorithm>
 #include <cassert>

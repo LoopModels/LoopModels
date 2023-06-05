@@ -1,16 +1,16 @@
 #pragma once
 
 #include "IR/Address.hpp"
-#include "Math/Array.hpp"
-#include "Math/Comparisons.hpp"
-#include "Math/Math.hpp"
-#include "Math/NormalForm.hpp"
-#include "Math/Orthogonalize.hpp"
-#include "Math/Polyhedra.hpp"
-#include "Math/Simplex.hpp"
 #include "Polyhedra/Loops.hpp"
-#include "Utilities/Allocators.hpp"
-#include "Utilities/Valid.hpp"
+#include <Math/Array.hpp>
+#include <Math/Comparisons.hpp>
+#include <Math/Math.hpp>
+#include <Math/NormalForm.hpp>
+#include <Math/Orthogonalize.hpp>
+#include <Math/Polyhedra.hpp>
+#include <Math/Simplex.hpp>
+#include <Utilities/Allocators.hpp>
+#include <Utilities/Valid.hpp>
 #include <algorithm>
 #include <array>
 #include <cstddef>
@@ -25,6 +25,8 @@
 #include <tuple>
 #include <utility>
 
+namespace poly::poly {
+using utils::OStream;
 /// prints in current permutation order.
 /// TODO: decide if we want to make AffineLoopNest a `SymbolicPolyhedra`
 /// in which case, we have to remove `currentToOriginalPerm`,
@@ -730,3 +732,4 @@ public:
   }
 
 }; // class DepPoly
+} // namespace poly::poly

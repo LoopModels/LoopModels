@@ -1,17 +1,17 @@
 #pragma once
 
-#include "./RemarkAnalysis.hpp"
-#include "Math/Array.hpp"
-#include "Math/Comparators.hpp"
-#include "Math/Comparisons.hpp"
-#include "Math/Constraints.hpp"
-#include "Math/Indexing.hpp"
-#include "Math/Math.hpp"
-#include "Math/MatrixDimensions.hpp"
-#include "Math/Polyhedra.hpp"
-#include "Utilities/Allocators.hpp"
-#include "Utilities/Optional.hpp"
-#include "Utilities/Valid.hpp"
+#include "Polyhedra/Comparators.hpp"
+#include "Polyhedra/Polyhedra.hpp"
+#include "RemarkAnalysis.hpp"
+#include <Math/Array.hpp>
+#include <Math/Comparisons.hpp>
+#include <Math/Constraints.hpp>
+#include <Math/Indexing.hpp>
+#include <Math/Math.hpp>
+#include <Math/MatrixDimensions.hpp>
+#include <Utilities/Allocators.hpp>
+#include <Utilities/Optional.hpp>
+#include <Utilities/Valid.hpp>
 #include <cstddef>
 #include <cstdint>
 #include <limits>
@@ -33,6 +33,8 @@
 #include <llvm/Support/raw_ostream.h>
 #include <string>
 #include <utility>
+
+namespace poly::poly {
 
 inline auto isKnownOne(llvm::ScalarEvolution &SE, llvm::Value *v) -> bool {
   return v && SE.getSCEV(v)->isOne();
@@ -901,3 +903,4 @@ public:
     : numConstraints(_numConstraints), numLoops(_numLoops),
       numDynSymbols(_numDynSymbols), nonNegative(_nonNegative) {}
 };
+} // namespace poly::poly

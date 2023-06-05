@@ -1,12 +1,14 @@
-#include "Math/Array.hpp"
-#include "Math/Comparators.hpp"
-#include "Math/Math.hpp"
-#include "MatrixStringParse.hpp"
+#include <Math/Array.hpp>
+#include "Polyhedra/Comparators.hpp"
+#include <Math/Math.hpp>
+#include <Utilities/MatrixStringParse.hpp>
 #include <cstdint>
 #include <gtest/gtest.h>
 #include <iostream>
 #include <llvm/ADT/SmallVector.h>
 #include <memory>
+using namespace poly::math;
+using poly::utils::operator""_mat;
 
 // NOLINTNEXTLINE(modernize-use-trailing-return-type)
 TEST(BasicCompare, BasicAssertions) {

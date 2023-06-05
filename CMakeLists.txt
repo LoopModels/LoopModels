@@ -118,7 +118,6 @@ FetchContent_Declare(
   GIT_REPOSITORY git@github.com:LoopModels/Math.git
   GIT_TAG origin/main
 )
-
 FetchContent_MakeAvailable(Math)
 
 # Link dependencies

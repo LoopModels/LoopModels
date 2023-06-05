@@ -1,12 +1,12 @@
 #pragma once
-#include "Math/Array.hpp"
-#include "Math/Indexing.hpp"
-#include "Utilities/Allocators.hpp"
+#include <Math/Array.hpp>
+#include <Math/Indexing.hpp>
+#include <Utilities/Allocators.hpp>
 #include <cstdint>
 
 // In include/Dicts, as it primarily serves to support amap/aset
 
-namespace LinAlg {
+namespace poly::math {
 // BumpPtrVector
 // Has reference semantics.
 template <typename T, unsigned InitialCapacity = 8> struct BumpPtrVector {
@@ -271,5 +271,4 @@ template <typename T, unsigned InitialCapacity = 8> struct BumpPtrVector {
 };
 static_assert(std::is_trivially_destructible_v<MutPtrVector<int64_t>>);
 static_assert(std::is_trivially_destructible_v<BumpPtrVector<int64_t>>);
-} // namespace LinAlg
-using LinAlg::BumpPtrVector;
+} // namespace poly::math

@@ -1,8 +1,8 @@
-#include "Math/Math.hpp"
-#include "MatrixStringParse.hpp"
-#include "Polyhedra/Constraints.hpp"
 #include "Polyhedra/Loops.hpp"
 #include "TestUtilities.hpp"
+#include <Math/Constraints.hpp>
+#include <Math/Math.hpp>
+#include <Utilities/MatrixStringParse.hpp>
 #include <cstdint>
 #include <cstdio>
 #include <gtest/gtest.h>

@@ -1,7 +1,7 @@
 #pragma once
-#include "Loops.hpp"
 #include "Math/Array.hpp"
 #include "Math/Math.hpp"
+#include "Polyhedra/Loops.hpp"
 #include "Utilities/Valid.hpp"
 #include <algorithm>
 #include <cstddef>

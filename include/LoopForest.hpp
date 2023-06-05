@@ -2,8 +2,8 @@
 
 #include "Containers/BitSets.hpp"
 #include "IR/Instruction.hpp"
-#include "Loops.hpp"
 #include "MemoryAccess.hpp"
+#include "Polyhedra/Loops.hpp"
 #include "Utilities/Valid.hpp"
 #include <cstddef>
 #include <iterator>

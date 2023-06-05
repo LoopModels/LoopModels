@@ -1,22 +1,22 @@
 #pragma once
 
-#include "Math/Array.hpp"
-#include "Math/Constraints.hpp"
-#include "Math/EmptyArrays.hpp"
-#include "Math/Math.hpp"
-#include "Math/MatrixDimensions.hpp"
-#include "Math/NormalForm.hpp"
-#include "Math/Simplex.hpp"
-#include "Math/VectorGreatestCommonDivisor.hpp"
-#include "Utilities/Allocators.hpp"
-#include "Utilities/Invariant.hpp"
+#include <Math/Array.hpp>
+#include <Math/Constraints.hpp>
+#include <Math/EmptyArrays.hpp>
+#include <Math/Math.hpp>
+#include <Math/MatrixDimensions.hpp>
+#include <Math/NormalForm.hpp>
+#include <Math/Simplex.hpp>
+#include <Math/VectorGreatestCommonDivisor.hpp>
+#include <Utilities/Allocators.hpp>
+#include <Utilities/Invariant.hpp>
 #include <algorithm>
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
 #include <memory>
 
-namespace comparator {
+namespace poly::comparator {
 // For `== 0` constraints
 struct EmptyComparator {
   static constexpr auto getNumConstTerms() -> size_t { return 0; }
@@ -889,4 +889,4 @@ constexpr auto linearNonNegative(BumpAlloc<> &alloc, PtrMatrix<int64_t> A,
   return PtrSymbolicComparator::constructNonNeg(alloc, A, E, numNonNeg);
 }
 
-} // namespace comparator
+} // namespace poly::comparator

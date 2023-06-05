@@ -1,23 +1,25 @@
 #pragma once
 
 #include "IR/Node.hpp"
-#include "Math/Array.hpp"
-#include "Math/Comparisons.hpp"
-#include "Math/Math.hpp"
 #include "Polyhedra/Loops.hpp"
-#include "Utilities/Valid.hpp"
+#include <Math/Array.hpp>
+#include <Math/Comparisons.hpp>
+#include <Math/Math.hpp>
+#include <Utilities/Valid.hpp>
 #include <cstddef>
 #include <cstdint>
 #include <llvm/IR/Instructions.h>
 #include <llvm/IR/PatternMatch.h>
 #include <llvm/Support/Allocator.h>
 
+namespace poly {
 class Dependence;
 class ScheduledNode;
 namespace CostModeling {
 class LoopTreeSchedule;
 } // namespace CostModeling
-
+namespace IR {
+using utils::NotNull, utils::invariant;
 /// Represents a memory access that has been rotated according to some affine
 /// transform.
 // clang-format off
@@ -739,3 +741,5 @@ public:
     return llvm::cast<llvm::StoreInst>(instr);
   }
 };
+} // namespace IR
+} // namespace poly

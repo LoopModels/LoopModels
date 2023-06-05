@@ -33,6 +33,12 @@ CPMAddPackage(
   GITHUB_REPOSITORY chriselrod/unordered_dense
   GIT_TAG fnoexceptions
 )
+FetchContent_Declare(
+  Math
+  GIT_REPOSITORY git@github.com:LoopModels/Math.git
+  GIT_TAG origin/main
+)
+FetchContent_MakeAvailable(Math)
 
 if(TEST_INSTALLED_VERSION)
   find_package(LoopModels REQUIRED)
@@ -129,7 +135,7 @@ target_precompile_headers(
 )
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(
-  ${PROJECT_NAME} PRIVATE GTest::gtest_main LLVM unordered_dense::unordered_dense
+  ${PROJECT_NAME} PRIVATE GTest::gtest_main LLVM unordered_dense::unordered_dense Math
 )
 set(CXX_STANDARD_REQUIRED ON)
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 20)

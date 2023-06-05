@@ -2,13 +2,13 @@
 #include "./CostModeling.hpp"
 #include "./TestUtilities.hpp"
 #include "LoopBlock.hpp"
-#include "Math/Array.hpp"
-#include "Math/Math.hpp"
-#include "MatrixStringParse.hpp"
 #include "MemoryAccess.hpp"
 #include "Polyheda/DependencyPolyhedra.hpp"
 #include "Polyheda/Loops.hpp"
+#include <Math/Array.hpp>
 #include <Math/Comparisons.hpp>
+#include <Math/Math.hpp>
+#include <Utilities/MatrixStringParse.hpp>
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
@@ -1097,25 +1097,25 @@ TEST(MeanStDevTest0, BasicAssertions) {
   iOuterMem.emplace_back(createMemAccess(alloc, xInd1, storeX0, sch0t0)); // 0
 
   iOuterMem.emplace_back(
-    createMemAccess(alloc, indAiOuter, loadAm, sch0t1t0)); // 1
+    createMemAccess(alloc, indAiOuter, loadAm, sch0t1t0));  // 1
   iOuterMem.emplace_back(
     createMemAccess(alloc, xInd2IOuter, loadX0, sch0t1t1)); // 2
 
   iOuterMem.emplace_back(
-    createMemAccess(alloc, xInd2IOuter, storeX1, sch0t1t2)); // 3
+    createMemAccess(alloc, xInd2IOuter, storeX1, sch0t1t2));              // 3
 
   iOuterMem.emplace_back(createMemAccess(alloc, xInd1, loadX1, sch0t2));  // 4
   iOuterMem.emplace_back(createMemAccess(alloc, xInd1, storeX2, sch0t3)); // 5
 
   iOuterMem.emplace_back(createMemAccess(alloc, sInd1, storeS0, sch0t4)); // 6
   iOuterMem.emplace_back(
-    createMemAccess(alloc, indAiOuter, loadAs, sch0t5t0)); // 7
+    createMemAccess(alloc, indAiOuter, loadAs, sch0t5t0));                // 7
   iOuterMem.emplace_back(
-    createMemAccess(alloc, xInd2IOuter, loadX2, sch0t5t1)); // 8
+    createMemAccess(alloc, xInd2IOuter, loadX2, sch0t5t1));               // 8
   iOuterMem.emplace_back(
-    createMemAccess(alloc, sInd2IOuter, loadS0, sch0t5t2)); // 9
+    createMemAccess(alloc, sInd2IOuter, loadS0, sch0t5t2));               // 9
   iOuterMem.emplace_back(
-    createMemAccess(alloc, sInd2IOuter, storeS1, sch0t5t3)); // 10
+    createMemAccess(alloc, sInd2IOuter, storeS1, sch0t5t3));              // 10
 
   iOuterMem.emplace_back(createMemAccess(alloc, sInd1, loadS1, sch0t6));  // 11
   iOuterMem.emplace_back(createMemAccess(alloc, sInd1, storeS2, sch0t7)); // 12
@@ -1184,9 +1184,9 @@ TEST(MeanStDevTest0, BasicAssertions) {
   sch1t0t2[0] = 1;
   sch1t0t2[2] = 2;
   jOuterMem.emplace_back(
-    createMemAccess(alloc, indAjOuter, loadAm, sch1t0t0)); // 1
+    createMemAccess(alloc, indAjOuter, loadAm, sch1t0t0));   // 1
   jOuterMem.emplace_back(
-    createMemAccess(alloc, xInd2JOuter, loadX0, sch1t0t1)); // 2
+    createMemAccess(alloc, xInd2JOuter, loadX0, sch1t0t1));  // 2
   jOuterMem.emplace_back(
     createMemAccess(alloc, xInd2JOuter, storeX1, sch1t0t2)); // 3
 
@@ -1211,11 +1211,11 @@ TEST(MeanStDevTest0, BasicAssertions) {
   sch3t0t3[2] = 3;
 
   jOuterMem.emplace_back(
-    createMemAccess(alloc, indAjOuter, loadAs, sch3t0t0)); // 7
+    createMemAccess(alloc, indAjOuter, loadAs, sch3t0t0));   // 7
   jOuterMem.emplace_back(
-    createMemAccess(alloc, xInd2JOuter, loadX2, sch3t0t1)); // 8
+    createMemAccess(alloc, xInd2JOuter, loadX2, sch3t0t1));  // 8
   jOuterMem.emplace_back(
-    createMemAccess(alloc, sInd2JOuter, loadS0, sch3t0t2)); // 9
+    createMemAccess(alloc, sInd2JOuter, loadS0, sch3t0t2));  // 9
   jOuterMem.emplace_back(
     createMemAccess(alloc, sInd2JOuter, storeS1, sch3t0t3)); // 10
 

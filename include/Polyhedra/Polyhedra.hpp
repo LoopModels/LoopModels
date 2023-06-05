@@ -1,12 +1,12 @@
 #pragma once
 
-#include "Math/Array.hpp"
-#include "Math/Comparators.hpp"
-#include "Math/Constraints.hpp"
-#include "Math/EmptyArrays.hpp"
-#include "Math/Math.hpp"
-#include "Math/VectorGreatestCommonDivisor.hpp"
-#include "Utilities/Allocators.hpp"
+#include "Polyhedra/Comparators.hpp"
+#include <Math/Array.hpp>
+#include <Math/Constraints.hpp>
+#include <Math/EmptyArrays.hpp>
+#include <Math/Math.hpp>
+#include <Math/VectorGreatestCommonDivisor.hpp>
+#include <Utilities/Allocators.hpp>
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
@@ -14,6 +14,8 @@
 #include <limits>
 #include <memory>
 
+namespace poly::poly {
+using utils::OStream;
 template <OStream O> inline auto printPositive(O &os, size_t stop) -> O & {
   for (size_t i = 0; i < stop; ++i) os << "v_" << i << " >= 0\n";
   return os;
@@ -249,3 +251,4 @@ struct BasePolyhedra {
     getA().truncate(Col{numVar});
   }
 };
+} // namespace poly::poly
