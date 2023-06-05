@@ -59,7 +59,7 @@ constexpr void insertSortedUnique(Vector<I> &v, const I &x) {
 class ScheduledNode {
 
   [[no_unique_address]] Addr *store; // linked list to loads
-  [[no_unique_address]] NotNull<AffineLoopNest> loopNest;
+  [[no_unique_address]] NotNull<poly::Loop> loopNest;
   [[no_unique_address]] ScheduledNode *next{nullptr};
   [[no_unique_address]] ScheduledNode *component{nullptr}; // SCC cycle
   [[no_unique_address]] Dependence *dep{nullptr};
@@ -154,7 +154,7 @@ public:
   }
   [[nodiscard]] constexpr auto getSchedule() -> AffineSchedule { return {mem}; }
   [[nodiscard]] constexpr auto getLoopNest() const
-    -> NotNull<const AffineLoopNest> {
+    -> NotNull<const poly::Loop> {
     return loopNest;
   }
   [[nodiscard]] constexpr auto getOffset() const -> const int64_t * {
@@ -1527,7 +1527,7 @@ public:
     return satDeps;
   }
   static constexpr auto numParams(const Dependence &edge)
-    -> LinAlg::SVector<size_t, 4> {
+    -> math::SVector<size_t, 4> {
     return {edge.getNumLambda(), edge.getDynSymDim(), edge.getNumConstraints(),
             1};
   }
@@ -1538,7 +1538,7 @@ public:
     }
   }
   constexpr void countAuxParamsAndConstraints(const Graph &g, size_t d) {
-    LinAlg::SVector<size_t, 4> params{};
+    math::SVector<size_t, 4> params{};
     assert(allZero(params));
     for (auto &&e : g.getEdges(d)) params += numParams(e);
     numLambda = params[0];
@@ -1547,7 +1547,7 @@ public:
     numActiveEdges = params[3];
   }
   constexpr void countAuxAndStash(const Graph &g, size_t d) {
-    LinAlg::SVector<size_t, 4> params{};
+    math::SVector<size_t, 4> params{};
     assert(allZero(params));
     for (auto &&e : g.getEdges(d)) params += numParams(e.stashSatLevel());
     numLambda = params[0];
@@ -1581,7 +1581,7 @@ public:
     std::swap(g.nodeIds, nodeIds);
     g.activeEdges = activeEdges; // undo such that g.getEdges(d) is correct
     for (auto &&e : g.getEdges(d)) e.popSatLevel();
-    g.activeEdges = oldEdges;    // restore backup
+    g.activeEdges = oldEdges; // restore backup
     auto *oldNodeIter = oldSchedules.begin();
     for (auto &&n : g) n.getSchedule() = *(oldNodeIter++);
     allocator.rollback(chckpt);

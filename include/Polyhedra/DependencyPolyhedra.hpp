@@ -28,7 +28,7 @@
 namespace poly::poly {
 using utils::OStream;
 /// prints in current permutation order.
-/// TODO: decide if we want to make AffineLoopNest a `SymbolicPolyhedra`
+/// TODO: decide if we want to make poly::Loop a `SymbolicPolyhedra`
 /// in which case, we have to remove `currentToOriginalPerm`,
 /// which menas either change printing, or move prints `<<` into
 /// the derived classes.
@@ -344,8 +344,8 @@ public:
   static auto dependence(BumpAlloc<> &alloc, NotNull<const Addr> aix,
                          NotNull<const Addr> aiy) -> DepPoly * {
     assert(aix->sizesMatch(aiy));
-    NotNull<const AffineLoopNest> loopx = aix->getLoop();
-    NotNull<const AffineLoopNest> loopy = aiy->getLoop();
+    NotNull<const poly::Loop> loopx = aix->getLoop();
+    NotNull<const poly::Loop> loopy = aiy->getLoop();
     DensePtrMatrix<int64_t> Ax{loopx->getA()}, Ay{loopy->getA()};
     auto Sx{loopx->getSyms()}, Sy{loopy->getSyms()};
     // numLoops x numDim
@@ -434,7 +434,7 @@ public:
   }
   static auto self(BumpAlloc<> &alloc, NotNull<const Addr> ai)
     -> NotNull<DepPoly> {
-    NotNull<const AffineLoopNest> loop = ai->getLoop();
+    NotNull<const poly::Loop> loop = ai->getLoop();
     DensePtrMatrix<int64_t> B{loop->getA()};
     auto S{loop->getSyms()};
     // numLoops x numDim
@@ -628,9 +628,9 @@ public:
   /// returns `true` if the array accesses are guaranteed independent
   /// conditioning on partial schedules xPhi and yPhi
   [[nodiscard]] auto checkSat(BumpAlloc<> &alloc,
-                              NotNull<const AffineLoopNest> xLoop,
+                              NotNull<const poly::Loop> xLoop,
                               const int64_t *xOff, DensePtrMatrix<int64_t> xPhi,
-                              NotNull<const AffineLoopNest> yLoop,
+                              NotNull<const poly::Loop> yLoop,
                               const int64_t *yOff, DensePtrMatrix<int64_t> yPhi)
     -> bool {
     // we take in loops because we might be moving deeper inside the loopnest

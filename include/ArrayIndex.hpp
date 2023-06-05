@@ -26,7 +26,7 @@ class ArrayIndex {
   }
 
   NotNull<const llvm::SCEVUnknown> basePointer;
-  NotNull<AffineLoopNest> loop;
+  NotNull<poly::Loop> loop;
   // This field will store either the loaded instruction, or the store
   // instruction. This means that we can check if this MemoryAccess is a load
   // via checking `!loadOrStore.isa<llvm::StoreInst>()`.
@@ -75,19 +75,19 @@ class ArrayIndex {
 
 public:
   explicit constexpr ArrayIndex(const llvm::SCEVUnknown *arrayPtr,
-                                AffineLoopNest &loopRef,
+                                poly::Loop &loopRef,
                                 llvm::Instruction *user, int64_t *offsym,
                                 std::array<unsigned, 2> dimOff)
     : basePointer(arrayPtr), loop(loopRef), loadOrStore(user), offSym(offsym),
       numDim(dimOff[0]), numDynSym(dimOff[1]){};
   explicit constexpr ArrayIndex(const llvm::SCEVUnknown *arrayPtr,
-                                AffineLoopNest &loopRef,
+                                poly::Loop &loopRef,
                                 llvm::Instruction *user)
     : basePointer(arrayPtr), loop(loopRef), loadOrStore(user){};
   /// Constructor for 0 dimensional memory access
   [[nodiscard]] static auto
   construct(BumpAlloc<> &alloc, const llvm::SCEVUnknown *arrayPointer,
-            AffineLoopNest &loopRef, llvm::Instruction *user,
+            poly::Loop &loopRef, llvm::Instruction *user,
             PtrVector<unsigned> o) -> NotNull<ArrayIndex> {
     unsigned numLoops = loopRef.getNumLoops();
     invariant(o.size(), numLoops + 1);
@@ -101,7 +101,7 @@ public:
   /// Constructor for regular indexing
   [[nodiscard]] static auto
   construct(BumpAlloc<> &alloc, const llvm::SCEVUnknown *arrayPtr,
-            AffineLoopNest &loopRef, llvm::Instruction *user,
+            poly::Loop &loopRef, llvm::Instruction *user,
             PtrMatrix<int64_t> indMat,
             std::array<llvm::SmallVector<const llvm::SCEV *, 3>, 2> szOff,
             PtrVector<int64_t> coffsets, int64_t *offsets,
@@ -132,7 +132,7 @@ public:
   [[nodiscard]] constexpr auto getFusionOmega() const -> PtrVector<int64_t> {
     return {data() + omegaOffset(), unsigned(getNumLoops()) + 1};
   }
-  [[nodiscard]] constexpr auto getLoop() const -> NotNull<AffineLoopNest> {
+  [[nodiscard]] constexpr auto getLoop() const -> NotNull<poly::Loop> {
     return loop;
   }
   [[nodiscard]] inline auto getSizes()
@@ -229,7 +229,7 @@ public:
 
   // size_t getNumLoops() const { return ref->getNumLoops(); }
   // size_t getNumAxes() const { return ref->axes.size(); }
-  // std::shared_ptr<AffineLoopNest> loop() { return ref->loop; }
+  // std::shared_ptr<poly::Loop> loop() { return ref->loop; }
   auto fusedThrough(ArrayIndex &other) -> bool {
     size_t numLoopsCommon = std::min(getNumLoops(), other.getNumLoops());
     auto thisOmega = getFusionOmega();

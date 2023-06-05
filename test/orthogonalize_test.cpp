@@ -26,7 +26,7 @@ namespace {
 auto orthogonalize(BumpAlloc<> &alloc,
                    llvm::SmallVectorImpl<ArrayReference *> const &ai)
   -> std::optional<
-    std::pair<AffineLoopNest *, llvm::SmallVector<ArrayReference, 0>>> {
+    std::pair<poly::Loop *, llvm::SmallVector<ArrayReference, 0>>> {
 
   // need to construct matrix `A` of relationship
   // B*L = I
@@ -37,7 +37,7 @@ auto orthogonalize(BumpAlloc<> &alloc,
   // A*L = A*(B\^-1 * I) <= r
   // assuming that `B` is an invertible integer matrix (i.e. is unimodular),
   // BumpAlloc<> alloc;
-  const AffineLoopNest &alnp = *(ai[0]->loop);
+  const poly::Loop &alnp = *(ai[0]->loop);
   const size_t numLoops = alnp.getNumLoops();
   const size_t numSymbols = alnp.getNumSymbols();
   size_t numRow = 0;
@@ -63,10 +63,10 @@ auto orthogonalize(BumpAlloc<> &alloc,
     << alnp.getA()(_, _(numSymbols, end)) * K.transpose();
 
   auto *alnNew =
-    AffineLoopNest::construct(alloc, std::move(AK), alnp.getSyms());
+    poly::Loop::construct(alloc, std::move(AK), alnp.getSyms());
   alnNew->pruneBounds();
   IntMatrix KS{K * S};
-  std::pair<AffineLoopNest *, llvm::SmallVector<ArrayReference, 0>> ret{
+  std::pair<poly::Loop *, llvm::SmallVector<ArrayReference, 0>> ret{
     std::make_pair(alnNew, llvm::SmallVector<ArrayReference, 0>())};
   llvm::SmallVector<ArrayReference, 0> &newArrayRefs = ret.second;
   newArrayRefs.reserve(numRow);
@@ -98,7 +98,7 @@ TEST(OrthogonalizeTest, BasicAssertions) {
 
   TestLoopFunction tlf;
   tlf.addLoop(std::move(A), 4);
-  AffineLoopNest *aln = tlf.getLoopNest(0);
+  poly::Loop *aln = tlf.getLoopNest(0);
   EXPECT_FALSE(aln->isEmpty());
   llvm::ScalarEvolution &SE{tlf.getSE()};
   auto *i64 = tlf.getInt64Ty();
@@ -153,12 +153,12 @@ TEST(OrthogonalizeTest, BasicAssertions) {
     allArrayRefs.data(), allArrayRefs.data() + 1, allArrayRefs.data() + 2};
 
   std::optional<
-    std::pair<AffineLoopNest *, llvm::SmallVector<ArrayReference, 0>>>
+    std::pair<poly::Loop *, llvm::SmallVector<ArrayReference, 0>>>
     orth(orthogonalize(tlf.getAlloc(), ai));
 
   EXPECT_TRUE(orth.has_value());
   assert(orth.has_value());
-  AffineLoopNest *newAln = orth->first;
+  poly::Loop *newAln = orth->first;
   llvm::SmallVector<ArrayReference, 0> &newArrayRefs = orth->second;
   for (auto &&ar : newArrayRefs) ar.loop = newAln;
   // for (size_t i = 0; i < newArrayRefs.size(); ++i)
@@ -206,7 +206,7 @@ TEST(BadMul, BasicAssertions) {
 
   TestLoopFunction tlf;
   tlf.addLoop(std::move(A), 3);
-  AffineLoopNest *aln = tlf.getLoopNest(0);
+  poly::Loop *aln = tlf.getLoopNest(0);
   EXPECT_FALSE(aln->isEmpty());
   llvm::ScalarEvolution &SE{tlf.getSE()};
   llvm::IntegerType *i64 = tlf.getInt64Ty();
@@ -276,12 +276,12 @@ TEST(BadMul, BasicAssertions) {
     allArrayRefs.data(), allArrayRefs.data() + 1, allArrayRefs.data() + 2};
 
   std::optional<
-    std::pair<AffineLoopNest *, llvm::SmallVector<ArrayReference, 0>>>
+    std::pair<poly::Loop *, llvm::SmallVector<ArrayReference, 0>>>
     orth{orthogonalize(tlf.getAlloc(), ai)};
 
   EXPECT_TRUE(orth.has_value());
   assert(orth.has_value());
-  AffineLoopNest *newAln = orth->first;
+  poly::Loop *newAln = orth->first;
   llvm::SmallVector<ArrayReference, 0> &newArrayRefs = orth->second;
 
   for (auto &ar : newArrayRefs) ar.loop = newAln;

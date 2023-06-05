@@ -309,9 +309,9 @@ public:
     return in->indexMatrix();
   }
   [[nodiscard]] auto
-  checkEmptySat(BumpAlloc<> &alloc, NotNull<const AffineLoopNest> inLoop,
+  checkEmptySat(BumpAlloc<> &alloc, NotNull<const poly::Loop> inLoop,
                 const int64_t *inOff, DensePtrMatrix<int64_t> inPhi,
-                NotNull<const AffineLoopNest> outLoop, const int64_t *outOff,
+                NotNull<const poly::Loop> outLoop, const int64_t *outOff,
                 DensePtrMatrix<int64_t> outPhi) -> bool {
     if (!isForward()) {
       std::swap(inLoop, outLoop);

@@ -34,7 +34,7 @@ class TestLoopFunction {
   llvm::TargetLibraryInfo TLI;
   llvm::AssumptionCache AC;
   llvm::ScalarEvolution SE;
-  llvm::SmallVector<AffineLoopNest *, 0> alns;
+  llvm::SmallVector<poly::Loop *, 0> alns;
   llvm::SmallVector<std::string, 0> names;
   llvm::BasicBlock *BB;
   llvm::IRBuilder<> builder;
@@ -43,7 +43,7 @@ class TestLoopFunction {
 
 public:
   auto getAlloc() -> BumpAlloc<> & { return alloc; }
-  auto getLoopNest(size_t i) -> AffineLoopNest * { return alns[i]; }
+  auto getLoopNest(size_t i) -> poly::Loop * { return alns[i]; }
   auto getNumLoopNests() -> size_t { return alns.size(); }
   void addLoop(PtrMatrix<int64_t> A, size_t numLoops) {
     size_t numSym = size_t(A.numCol()) - numLoops - 1;
@@ -53,7 +53,7 @@ public:
       // we're going to assume there's some chance of recycling old
       // symbols, so we are only going to be creating new ones if we have
       // to.
-      AffineLoopNest *symbolSource = nullptr;
+      poly::Loop *symbolSource = nullptr;
       size_t numSymbolSource = 0;
       for (auto *aln : alns) {
         if (numSymbolSource < aln->getSyms().size()) {
@@ -66,7 +66,7 @@ public:
       for (size_t i = numSymbolSource; i < numSym; ++i)
         symbols.push_back(SE.getUnknown(createInt64()));
     }
-    alns.push_back(AffineLoopNest::construct(alloc, A, symbols));
+    alns.push_back(poly::Loop::construct(alloc, A, symbols));
   }
   // for creating some black box value
   auto loadValueFromPtr(llvm::Type *typ) -> llvm::Value * {

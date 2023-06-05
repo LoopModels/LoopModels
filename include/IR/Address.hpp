@@ -59,7 +59,7 @@ using utils::NotNull, utils::invariant;
 /// to the new variables $j$, we must simply compute the updated
 /// \f$\textbf{c}_*\f$ and \f$\textbf{M}'_*\f$.
 /// We can also test for the case where \f$\boldsymbol{\Phi} = \textbf{E}\f$, or equivalently that $\textbf{E}\boldsymbol{\Phi} = \boldsymbol{\Phi} = \textbf{I}$.
-/// Note that to get the new AffineLoopNest, we call
+/// Note that to get the new poly::Loop, we call
 /// `oldLoop->rotate(PhiInv)`
 // clang-format on
 class Addr : public Node {
@@ -69,7 +69,7 @@ class Addr : public Node {
     size_t maxDepth;
   } nodeOrDepth; // both are used at different times
   [[no_unique_address]] NotNull<const llvm::SCEVUnknown> basePointer;
-  [[no_unique_address]] NotNull<AffineLoopNest> loop;
+  [[no_unique_address]] NotNull<poly::Loop> loop;
   [[no_unique_address]] llvm::Instruction *instr;
   [[no_unique_address]] int64_t *offSym{nullptr};
   [[no_unique_address]] const llvm::SCEV **syms;
@@ -112,7 +112,7 @@ class Addr : public Node {
                 intMemNeeded(getNumLoops(), numDim) * sizeof(int64_t));
   }
   explicit Addr(const llvm::SCEVUnknown *arrayPtr,
-                NotNull<AffineLoopNest> loopRef, llvm::Instruction *user,
+                NotNull<poly::Loop> loopRef, llvm::Instruction *user,
                 int64_t *offsym, const llvm::SCEV **s,
                 std::array<unsigned, 2> dimOff)
     : Node(llvm::isa<llvm::StoreInst>(user) ? VK_Stow : VK_Load,
@@ -120,13 +120,13 @@ class Addr : public Node {
       basePointer(arrayPtr), loop(loopRef), instr(user), offSym(offsym),
       syms(s), numDim(dimOff[0]), numDynSym(dimOff[1]){};
   explicit Addr(const llvm::SCEVUnknown *arrayPtr,
-                NotNull<AffineLoopNest> loopRef, llvm::Instruction *user)
+                NotNull<poly::Loop> loopRef, llvm::Instruction *user)
     : Node(llvm::isa<llvm::StoreInst>(user) ? VK_Stow : VK_Load,
            loopRef->getNumLoops()),
       basePointer(arrayPtr), loop(loopRef), instr(user){};
   /// Constructor for 0 dimensional memory access
 
-  constexpr Addr(NotNull<AffineLoopNest> explicitLoop, NotNull<Addr> ma,
+  constexpr Addr(NotNull<poly::Loop> explicitLoop, NotNull<Addr> ma,
                  SquarePtrMatrix<int64_t> Pinv, int64_t denom,
                  PtrVector<int64_t> omega, bool isStr, int64_t *offsets)
     : Node(isStr ? VK_Stow : VK_Load, unsigned(Pinv.numCol())),
@@ -189,7 +189,7 @@ public:
 
   [[nodiscard]] static auto construct(BumpAlloc<> &alloc,
                                       const llvm::SCEVUnknown *ptr,
-                                      NotNull<AffineLoopNest> loopRef,
+                                      NotNull<poly::Loop> loopRef,
                                       llvm::Instruction *user,
                                       PtrVector<unsigned> o) -> NotNull<Addr> {
     unsigned numLoops = loopRef->getNumLoops();
@@ -204,7 +204,7 @@ public:
   /// Constructor for regular indexing
   [[nodiscard]] static auto
   construct(BumpAlloc<> &alloc, const llvm::SCEVUnknown *arrayPtr,
-            NotNull<AffineLoopNest> AL, llvm::Instruction *user,
+            NotNull<poly::Loop> AL, llvm::Instruction *user,
             PtrMatrix<int64_t> indMat,
             std::array<llvm::SmallVector<const llvm::SCEV *, 3>, 2> szOff,
             PtrVector<int64_t> coffsets, int64_t *offsets,
@@ -252,7 +252,7 @@ public:
       if (anyNEZero(indexMatrix()(i, _(d, end)))) return true;
     return false;
   }
-  [[nodiscard]] constexpr auto getLoop() const -> NotNull<AffineLoopNest> {
+  [[nodiscard]] constexpr auto getLoop() const -> NotNull<poly::Loop> {
     return loop;
   }
   [[nodiscard]] constexpr auto getBlockIdx() const -> uint8_t {
@@ -527,7 +527,7 @@ public:
     return (Addr *)alloc.allocate(memSz, alignof(Addr));
   }
   [[nodiscard]] static auto
-  construct(BumpAlloc<> &alloc, NotNull<AffineLoopNest> explicitLoop,
+  construct(BumpAlloc<> &alloc, NotNull<poly::Loop> explicitLoop,
             NotNull<Addr> ma, bool isStr, SquarePtrMatrix<int64_t> Pinv,
             int64_t denom, PtrVector<int64_t> omega, unsigned inputEdges,
             unsigned directEdges, unsigned outputEdges, int64_t *offsets)
@@ -611,7 +611,7 @@ public:
     invariant(offSym != nullptr || numDynSym == 0);
     return {offSym, DenseDims{getArrayDim(), numDynSym}};
   }
-  [[nodiscard]] constexpr auto getLoop() -> NotNull<AffineLoopNest> {
+  [[nodiscard]] constexpr auto getLoop() -> NotNull<poly::Loop> {
     return loop;
   }
   [[nodiscard]] constexpr auto sizesMatch(NotNull<const Addr> x) const -> bool {
@@ -715,7 +715,7 @@ inline auto operator<<(llvm::raw_ostream &os, const Addr &m)
     }
   }
   return os << "]\nInitial Fusion Omega: " << m.getFusionOmega()
-            << "\nAffineLoopNest:" << *m.getLoop();
+            << "\npoly::Loop:" << *m.getLoop();
 }
 class Load : public Addr {
 public:

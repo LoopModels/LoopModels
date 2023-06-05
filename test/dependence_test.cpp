@@ -440,9 +440,9 @@ TEST(TriangularExampleTest, BasicAssertions) {
   TestLoopFunction tlf;
   tlf.addLoop(std::move(matAmn), 2);
   tlf.addLoop(std::move(matAmnk), 3);
-  AffineLoopNest *loopMN = tlf.getLoopNest(0);
+  poly::Loop *loopMN = tlf.getLoopNest(0);
   EXPECT_FALSE(loopMN->isEmpty());
-  AffineLoopNest *loopMNK = tlf.getLoopNest(1);
+  poly::Loop *loopMNK = tlf.getLoopNest(1);
   EXPECT_FALSE(loopMNK->isEmpty());
   EXPECT_EQ(loopMN->getSyms().size(), loopMNK->getSyms().size());
   for (size_t i = 0; i < loopMN->getSyms().size(); ++i)
@@ -939,9 +939,9 @@ TEST(MeanStDevTest0, BasicAssertions) {
                           "-1 1 0 0 -1; "
                           "0 0 0 0 1]"_mat};
   tlf.addLoop(std::move(twoLoopsMatJI), 2);
-  AffineLoopNest *loopIJ = tlf.getLoopNest(0);
-  AffineLoopNest *loopI = tlf.getLoopNest(1);
-  AffineLoopNest *loopJI = tlf.getLoopNest(2);
+  poly::Loop *loopIJ = tlf.getLoopNest(0);
+  poly::Loop *loopI = tlf.getLoopNest(1);
+  poly::Loop *loopJI = tlf.getLoopNest(2);
   std::swap(loopJI->getSyms()[0], loopJI->getSyms()[1]);
   llvm::IRBuilder<> &builder = tlf.getBuilder();
 
@@ -1260,7 +1260,7 @@ TEST(DoubleDependenceTest, BasicAssertions) {
                   "-2 0 1 0 -1; "
                   "0 0 0 0 1]"_mat};
   tlf.addLoop(std::move(loopA), 2);
-  AffineLoopNest *loop = tlf.getLoopNest(0);
+  poly::Loop *loop = tlf.getLoopNest(0);
 
   // create arrays
   llvm::Type *f64 = builder.getDoubleTy();
@@ -1450,7 +1450,7 @@ TEST(ConvReversePass, BasicAssertions) {
                   "-1 0 0 1 0 0 0 -1 0; "
                   "0 0 0 0 0 0 0 1 0]"_mat};
   tlf.addLoop(std::move(loopA), 4);
-  AffineLoopNest *loop = tlf.getLoopNest(0);
+  poly::Loop *loop = tlf.getLoopNest(0);
 
   // create arrays
   llvm::Type *f64 = builder.getDoubleTy();

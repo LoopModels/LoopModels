@@ -8,17 +8,17 @@
 
 struct ArrayReference {
   const llvm::SCEVUnknown *basePointer;
-  AffineLoopNest *loop;
+  poly::Loop *loop;
   DenseMatrix<int64_t> indMat;
   DenseMatrix<int64_t> offMat;
   llvm::SmallVector<const llvm::SCEV *, 3> sizes;
-  ArrayReference(const llvm::SCEVUnknown *p, AffineLoopNest *l, size_t dim)
+  ArrayReference(const llvm::SCEVUnknown *p, poly::Loop *l, size_t dim)
     : basePointer(p), loop(l), indMat(DenseDims{loop->getNumLoops(), dim}),
       offMat(DenseDims{dim, 1}), sizes(dim) {
     indexMatrix() << 0;
     offsetMatrix() << 0;
   }
-  ArrayReference(const ArrayReference &other, AffineLoopNest *al,
+  ArrayReference(const ArrayReference &other, poly::Loop *al,
                  PtrMatrix<int64_t> iM)
     : basePointer(other.basePointer), loop(al), indMat(iM),
       offMat(other.offMat), sizes(other.sizes) {}

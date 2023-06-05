@@ -174,7 +174,7 @@ public:
 /// Finally, place instructions, seeded by stores, hoisted as far out as
 /// possible. With this, we can begin cost modeling.
 class LoopTreeSchedule {
-  template <typename T> using Vec = LinAlg::ResizeableView<T, unsigned>;
+  template <typename T> using Vec = math::ResizeableView<T, unsigned>;
   using BitSet = MemoryAccess::BitSet;
 
 public:
@@ -768,9 +768,9 @@ public:
   auto printSubDotFile(BumpAlloc<> &alloc, llvm::raw_ostream &out,
                        map<LoopTreeSchedule *, std::string> &names,
                        llvm::SmallVectorImpl<std::string> &addrNames,
-                       unsigned addrIndOffset, AffineLoopNest *lret)
-    -> AffineLoopNest * {
-    AffineLoopNest *loop{nullptr};
+                       unsigned addrIndOffset, poly::Loop *lret)
+    -> poly::Loop * {
+    poly::Loop *loop{nullptr};
     size_t j = 0;
     for (auto *addr : header.getAddr()) loop = addr->getLoop();
     for (auto &subTree : subTrees) {
@@ -841,7 +841,7 @@ ScheduledNode::insertMem(BumpAlloc<> &alloc,
   auto &accesses{L->getInitAddr(alloc)};
   unsigned numMem = memory.size(), offset = accesses.size(),
            sId = std::numeric_limits<unsigned>::max() >> 1, j = 0;
-  NotNull<AffineLoopNest> loop = loopNest->rotate(alloc, Pinv, offsets);
+  NotNull<poly::Loop> loop = loopNest->rotate(alloc, Pinv, offsets);
   for (size_t i : memory) {
     NotNull<MemoryAccess> mem = memAccess[i];
     bool isStore = mem->isStore();

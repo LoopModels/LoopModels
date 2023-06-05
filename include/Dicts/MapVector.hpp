@@ -4,9 +4,11 @@
 #include "Dicts/BumpVector.hpp"
 #include "Utilities/Allocators.hpp"
 
+namespace poly::dict {
+
 template <class K, class V> class MapVector {
   amap<K, size_t> map;
-  LinAlg::BumpPtrVector<std::pair<K, V>> vector;
+  math::BumpPtrVector<std::pair<K, V>> vector;
 
 public:
   constexpr MapVector(BumpAlloc<> &alloc) : map(alloc), vector(alloc) {}
@@ -74,3 +76,4 @@ public:
   }
   constexpr auto count(const K &key) const -> size_t { return map.count(key); }
 };
+} // namespace poly::dict

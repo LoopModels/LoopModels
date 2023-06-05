@@ -75,7 +75,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
 
   /// the process of building the LoopForest has the following steps:
   /// 1. build initial forest of trees
-  /// 2. instantiate AffineLoopNests; any non-affine loops
+  /// 2. instantiate poly::Loops; any non-affine loops
   ///    are pruned, and their inner loops added as new, separate forests.
   /// 3. Existing forests are searched for indirect control flow between
   ///    successive loops. In all such cases, the loops at that level are
@@ -168,7 +168,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
     addr->forEach([&, L](Addr *a) { instrCache.addParents(a, L); });
   }
   auto parseBlocks(llvm::BasicBlock *H, llvm::BasicBlock *E, llvm::Loop *L,
-                   MutPtrVector<unsigned> omega, NotNull<AffineLoopNest> AL)
+                   MutPtrVector<unsigned> omega, NotNull<poly::Loop> AL)
     -> TreeResult {
     // TODO: need to be able to connect instructions as we move out
     if (auto predMapAbridged =
@@ -213,8 +213,8 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
     if (llvm::isa<llvm::SCEVCouldNotCompute>(BT))
       return {nullptr, omega.size()};
     auto p = allocator.checkpoint();
-    NotNull<AffineLoopNest> AL =
-      AffineLoopNest::construct(allocator, L, nwr.visit(BT), *SE);
+    NotNull<poly::Loop> AL =
+      poly::Loop::construct(allocator, L, nwr.visit(BT), *SE);
     auto tr = parseBlocks(H, E, L, omega, AL);
     if (tr.reject(omega.size() - 1)) allocator.rollback(p);
     return tr;
@@ -222,7 +222,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
   void optimizeLoop(Loop *L) { L->truncate(); }
   /// runOnLoop, parses LLVM
   /// We construct our linear programs first, which means creating
-  /// `AffineLoopNest`s and `Addr`s, and tracking original locations.
+  /// `poly::Loop`s and `Addr`s, and tracking original locations.
   /// We also build the instruction graphs in order to perform control flow
   /// merging, prior to analyzing the linear program. The linear program
   /// produces its own loop forest, different in general from the original, so
@@ -243,7 +243,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
   /// We evaluate all branches before evaluating a node itself.
   ///
   /// On each level, we get information on how far out we can go.
-  /// E.g., building an AffineLoopNest, we may find that only up to
+  /// E.g., building an poly::Loop, we may find that only up to
   /// the inner most three loops are affine.
   /// So we pass this information outward.
   ///
@@ -271,7 +271,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
     for (size_t i = 0; i < numSubLoops; ++i) {
       llvm::Loop *subLoop = subLoops[i];
       // first, we descend
-      // TODO: we need to consider max depth of the AffineLoopNest in `lret`
+      // TODO: we need to consider max depth of the poly::Loop in `lret`
       if (Loop *lret =
             runOnLoop(subLoop, subLoop->getSubLoops(), subLoop->getHeader(),
                       subLoop->getExitingBlock(), omega, nwr)) {
@@ -519,7 +519,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
     addSymbolic(offsets, symbolicOffsets, S, mlt);
     return blackList | blackListAllDependentLoops(S, numPeeled);
   }
-  auto zeroDimRef(MutPtrVector<unsigned> omega, NotNull<AffineLoopNest> aln,
+  auto zeroDimRef(MutPtrVector<unsigned> omega, NotNull<poly::Loop> aln,
                   llvm::Instruction *loadOrStore,
                   llvm::SCEVUnknown const *arrayPtr, TreeResult tr)
     -> TreeResult {
@@ -538,7 +538,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
     std::swap(A, B);
   }
   auto arrayRef(llvm::Loop *L, MutPtrVector<unsigned> omega,
-                NotNull<AffineLoopNest> aln, llvm::Instruction *loadOrStore,
+                NotNull<poly::Loop> aln, llvm::Instruction *loadOrStore,
                 llvm::Instruction *ptr, TreeResult tr, const llvm::SCEV *elSz)
     -> TreeResult {
     // code modified from
@@ -598,7 +598,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
   // LoopTree &getLoopTree(unsigned i) { return loopTrees[i]; }
   auto getLoopTree(llvm::Loop *L) -> Loop * { return loopMap[L]; }
   auto addRef(llvm::Loop *L, MutPtrVector<unsigned> omega,
-              NotNull<AffineLoopNest> AL, llvm::Instruction *J,
+              NotNull<poly::Loop> AL, llvm::Instruction *J,
               llvm::Value *ptr, TreeResult tr) -> TreeResult {
     // llvm::Type *type = I->getPointerOperandType();
     const llvm::SCEV *elSz = SE->getElementSize(J);

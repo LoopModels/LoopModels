@@ -100,21 +100,21 @@ class StridedMatrixPrinter(BaseMatrixPrinter):
 
 
 pp = gdb.printing.RegexpCollectionPrettyPrinter("LoopModels")
-pp.add_printer("LinAlg::Array", "^LinAlg::Array<.*, unsigned int>$", VectorPrinter)
-pp.add_printer("LinAlg::ManagedArray", "^LinAlg::ManagedArray<.*, unsigned int, .*, std::allocator<.*>, .*>$", VectorPrinter)
+pp.add_printer("poly::math::Array", "^poly::math::Array<.*, unsigned int>$", VectorPrinter)
+pp.add_printer("poly::math::::ManagedArray", "^poly::math::ManagedArray<.*, unsigned int, .*, std::allocator<.*>, .*>$", VectorPrinter)
 pp.add_printer(
-    "LinAlg::Array",
-    "^LinAlg::Array<.*, LinAlg::SquareDims>$",
+    "poly::math::::Array",
+    "^poly::math::::Array<.*, poly::math::::SquareDims>$",
     SquareMatrixPrinter,
 )
 pp.add_printer(
-    "LinAlg::Array",
-    "^LinAlg::Array<.*, LinAlg::DenseDims>$",
+    "poly::math::::Array",
+    "^poly::math::::Array<.*, poly::math::::DenseDims>$",
     DenseMatrixPrinter,
 )
 pp.add_printer(
-    "LinAlg::Array",
-    "^LinAlg::Array<.*, LinAlg::StridedDims>$",
+    "poly::math::::Array",
+    "^poly::math::::Array<.*, poly::math::::StridedDims>$",
     StridedMatrixPrinter,
 )
 gdb.printing.register_pretty_printer(gdb.current_objfile(), pp)

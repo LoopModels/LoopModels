@@ -10,12 +10,16 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
-#include <iostream>
 #include <limits>
 #include <memory>
-
+#ifndef NDEBUG
+#include <ostream>
+#endif
 namespace poly::poly {
-using utils::OStream;
+using math::DensePtrMatrix, math::MutDensePtrMatrix, math::EmptyMatrix,
+  math::Row, math::Col, math::vector, math::matrix, math::_, math::end,
+  math::last;
+using utils::OStream, utils::BumpAlloc;
 template <OStream O> inline auto printPositive(O &os, size_t stop) -> O & {
   for (size_t i = 0; i < stop; ++i) os << "v_" << i << " >= 0\n";
   return os;
@@ -104,7 +108,7 @@ struct BasePolyhedra {
   constexpr auto calcIsEmpty() -> bool {
     return initializeComparator().isEmpty();
   }
-  constexpr auto calcIsEmpty(LinAlg::Alloc<int64_t> auto &alloc) -> bool {
+  constexpr auto calcIsEmpty(math::Alloc<int64_t> auto &alloc) -> bool {
     return initializeComparator(alloc).isEmpty(alloc);
   }
   [[nodiscard]] constexpr auto getNumCon() const -> unsigned {
@@ -194,7 +198,7 @@ struct BasePolyhedra {
   }
   // TODO: upper bound allocation size for comparator
   // then, reuse memory instead of reallocating
-  constexpr void pruneBoundsUnchecked(LinAlg::Alloc<int64_t> auto &alloc) {
+  constexpr void pruneBoundsUnchecked(math::Alloc<int64_t> auto &alloc) {
     auto p = checkpoint(alloc);
     pruneBoundsCore<false>(alloc);
     rollback(alloc, p);

@@ -1,7 +1,5 @@
 #pragma once
-#include "Containers/BitSets.hpp"
 #include "Dicts/BumpVector.hpp"
-#include "Math/Math.hpp"
 #include "Utilities/Allocators.hpp"
 #include <cstddef>
 #include <cstdint>
@@ -15,6 +13,7 @@
 #include <llvm/Support/Allocator.h>
 #include <variant>
 
+namespace poly::IR {
 class Intr;
 
 namespace Predicate {
@@ -192,7 +191,7 @@ struct Intersection {
 /// (a & b) | (c & d) == ((a & b) | c) & ((a & b) | d)
 /// == (a | c) & (b | c) & (a | d) & (b | d)
 struct Set {
-  [[no_unique_address]] LinAlg::BumpPtrVector<Intersection> intersectUnion;
+  [[no_unique_address]] math::BumpPtrVector<Intersection> intersectUnion;
   Set(BumpAlloc<> &alloc) : intersectUnion(alloc) {}
   Set(BumpAlloc<> &alloc, Intersection pred) : intersectUnion(alloc) {
     intersectUnion.push_back(pred);
@@ -392,3 +391,4 @@ struct Set {
 
 struct Map;
 }; // namespace Predicate
+}; // namespace poly::IR

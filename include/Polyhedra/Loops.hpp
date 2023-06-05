@@ -35,7 +35,8 @@
 #include <utility>
 
 namespace poly::poly {
-
+using math::IntMatrix, math::PtrVector, math::PtrMatrix;
+using utils::Optional, utils::NotNull, utils::invariant;
 inline auto isKnownOne(llvm::ScalarEvolution &SE, llvm::Value *v) -> bool {
   return v && SE.getSCEV(v)->isOne();
 }
@@ -169,7 +170,7 @@ namespace loopNestCtor {
 /// offsets
 inline void addSymbol(IntMatrix &A,
                       llvm::SmallVectorImpl<const llvm::SCEV *> &symbols,
-                      const llvm::SCEV *v, Range<size_t, size_t> lu,
+                      const llvm::SCEV *v, math::Range<size_t, size_t> lu,
                       int64_t mlt) {
   assert(lu.size());
   symbols.push_back(v);
@@ -185,7 +186,8 @@ inline auto addRecMatchesLoop(const llvm::SCEV *S, llvm::Loop *L) -> bool {
 addSymbol(std::array<IntMatrix, 2> &AB, // NOLINT(misc-no-recursion)
           llvm::SmallVectorImpl<const llvm::SCEV *> &symbols, llvm::Loop *L,
           const llvm::SCEV *v, llvm::ScalarEvolution &SE,
-          Range<size_t, size_t> lu, int64_t mlt, size_t minDepth) -> size_t {
+          math::Range<size_t, size_t> lu, int64_t mlt, size_t minDepth)
+  -> size_t {
   auto &[A, B] = AB;
   // first, we check if `v` in `Symbols`
   if (size_t i = findSymbolicIndex(symbols, v)) {
@@ -324,8 +326,8 @@ addBackedgeTakenCount(std::array<IntMatrix, 2> &AB,
 // A * x >= 0
 // if constexpr(NonNegative)
 //   x >= 0
-class AffineLoopNest : public BasePolyhedra<false, true, true, AffineLoopNest> {
-  using BaseT = BasePolyhedra<false, true, true, AffineLoopNest>;
+class poly::Loop : public BasePolyhedra<false, true, true, poly::Loop> {
+  using BaseT = BasePolyhedra<false, true, true, poly::Loop>;
 
   [[nodiscard]] constexpr auto getSymCapacity() const -> size_t {
     return numDynSymbols + numLoops;
@@ -357,7 +359,7 @@ public:
   static inline auto construct(BumpAlloc<> &alloc, llvm::Loop *L,
                                const llvm::SCEV *BT, llvm::ScalarEvolution &SE,
                                llvm::OptimizationRemarkEmitter *ORE = nullptr)
-    -> NotNull<AffineLoopNest> {
+    -> NotNull<poly::Loop> {
     // A holds symbols
     // B holds loop bounds
     // they're separate so we can grow them independently
@@ -368,8 +370,8 @@ public:
     invariant(maxDepth > 0);
     // size_t maxNumSymbols = BT->getExpressionSize();
     A.resizeForOverwrite(
-      StridedDims{0, 1, unsigned(1) + BT->getExpressionSize()});
-    B.resizeForOverwrite(StridedDims{0, maxDepth, maxDepth});
+      math::StridedDims{0, 1, unsigned(1) + BT->getExpressionSize()});
+    B.resizeForOverwrite(math::StridedDims{0, maxDepth, maxDepth});
     llvm::SmallVector<const llvm::SCEV *> symbols;
     size_t minDepth =
       loopNestCtor::addBackedgeTakenCount(AB, symbols, L, BT, SE, 0, ORE);
@@ -402,8 +404,8 @@ public:
     invariant(1 + symbols.size(), size_t(A.numCol()));
     size_t depth = maxDepth - minDepth;
     unsigned numConstraints = unsigned(A.numRow()), N = unsigned(A.numCol());
-    NotNull<AffineLoopNest> aln{AffineLoopNest::allocate(
-      alloc, numConstraints, depth, symbols, maxDepth)};
+    NotNull<poly::Loop> aln{
+      poly::Loop::allocate(alloc, numConstraints, depth, symbols, maxDepth)};
     aln->getA()(_, _(0, N)) << A;
     // copy the included loops from B
     // we use outer <-> inner order, so we skip unsupported outer loops.
@@ -431,7 +433,7 @@ public:
   [[nodiscard]] constexpr auto rotate(BumpAlloc<> &alloc,
                                       DensePtrMatrix<int64_t> R,
                                       const int64_t *offsets) const
-    -> NotNull<AffineLoopNest> {
+    -> NotNull<poly::Loop> {
     // if offsets is not null, we have the equivalent of
     // A * O * [I 0; 0 R]
     // where O = I - [0 0; offsets 0],
@@ -445,8 +447,8 @@ public:
     auto A{getA()};
     const auto [M, N] = A.size();
     auto syms{getSyms()};
-    NotNull<AffineLoopNest> aln{AffineLoopNest::allocate(
-      alloc, size_t(M) + numExtraVar, numLoops, syms, nonNeg)};
+    NotNull<poly::Loop> aln{poly::Loop::allocate(alloc, size_t(M) + numExtraVar,
+                                                 numLoops, syms, nonNeg)};
     auto B{aln->getA()};
     invariant(B.numRow(), M + numExtraVar);
     invariant(B.numCol(), N);
@@ -478,25 +480,25 @@ public:
   }
   [[nodiscard]] constexpr auto
   rotate(BumpAlloc<> &alloc, DensePtrMatrix<int64_t> R, const int64_t *offsets)
-    -> NotNull<AffineLoopNest> {
-    if (R == I) return this;
-    return ((const AffineLoopNest *)this)->rotate(alloc, R, offsets);
+    -> NotNull<poly::Loop> {
+    if (R == math::I) return this;
+    return ((const poly::Loop *)this)->rotate(alloc, R, offsets);
   }
   // static auto construct(llvm::Loop *L, llvm::ScalarEvolution &SE)
-  //   -> AffineLoopNest* {
+  //   -> poly::Loop* {
   //   auto BT = getBackedgeTakenCount(SE, L);
   //   if (!BT || llvm::isa<llvm::SCEVCouldNotCompute>(BT)) return nullptr;
-  //   return AffineLoopNest(L, BT, SE);
+  //   return poly::Loop(L, BT, SE);
   // }
 
   [[nodiscard]] auto removeInnerMost(BumpAlloc<> &alloc) const
-    -> NotNull<AffineLoopNest> {
+    -> NotNull<poly::Loop> {
     // order is outer<->inner
     auto A{getA()};
     auto ret =
-      AffineLoopNest::allocate(alloc, unsigned(A.numRow()), getNumLoops() - 1,
-                               getSyms(), isNonNegative());
-    MutPtrMatrix<int64_t> B{ret->getA()};
+      poly::Loop::allocate(alloc, unsigned(A.numRow()), getNumLoops() - 1,
+                           getSyms(), isNonNegative());
+    math::MutPtrMatrix<int64_t> B{ret->getA()};
     B << A(_, _(0, last));
     // no loop may be conditioned on the innermost loop, so we should be able to
     // safely remove all constraints that reference it
@@ -563,14 +565,14 @@ public:
     return getA()(j, _(0, getNumSymbols()));
   }
   [[nodiscard]] constexpr auto copy(BumpAlloc<> &alloc) const
-    -> NotNull<AffineLoopNest> {
-    auto ret = AffineLoopNest::allocate(alloc, numConstraints, numLoops,
-                                        getSyms(), isNonNegative());
+    -> NotNull<poly::Loop> {
+    auto ret = poly::Loop::allocate(alloc, numConstraints, numLoops, getSyms(),
+                                    isNonNegative());
     ret->getA() << getA();
     return ret;
   }
   [[nodiscard]] constexpr auto removeLoop(BumpAlloc<> &alloc, size_t v) const
-    -> AffineLoopNest * {
+    -> poly::Loop * {
     auto A{getA()};
     v += getNumSymbols();
     auto zeroNegPos = indsZeroNegPos(A(_, v));
@@ -579,8 +581,8 @@ public:
       unsigned(A.numRow()) - pos.size() + neg.size() * pos.size();
     if (!isNonNegative()) numCon -= neg.size();
     auto p = checkpoint(alloc);
-    auto ret = AffineLoopNest::allocate(alloc, numCon, numLoops - 1, getSyms(),
-                                        isNonNegative());
+    auto ret = poly::Loop::allocate(alloc, numCon, numLoops - 1, getSyms(),
+                                    isNonNegative());
     ret->numConstraints = unsigned(
       isNonNegative()
         ? fourierMotzkinCore<true>(ret->getA(), getA(), v, zeroNegPos)
@@ -599,10 +601,10 @@ public:
     --numConstraints;
   }
   [[nodiscard]] auto
-  zeroExtraItersUponExtending(LinAlg::Alloc<int64_t> auto &alloc, size_t _i,
+  zeroExtraItersUponExtending(math::Alloc<int64_t> auto &alloc, size_t _i,
                               bool extendLower) const -> bool {
     auto p = alloc.scope();
-    AffineLoopNest *tmp = copy(alloc);
+    poly::Loop *tmp = copy(alloc);
     // question is, does the inner most loop have 0 extra iterations?
     const size_t numPrevLoops = getNumLoops() - 1;
     // we changed the behavior of removeLoop to actually drop loops that are
@@ -619,7 +621,7 @@ public:
     for (size_t n = 0; n < A.numRow(); ++n)
       if ((A(n, numConst) != 0) && (A(n, 1 + numConst) != 0)) indep = false;
     if (indep) return false;
-    AffineLoopNest *margi = tmp->removeLoop(alloc, 1), *tmp2;
+    poly::Loop *margi = tmp->removeLoop(alloc, 1), *tmp2;
     invariant(margi->getNumLoops(), unsigned(1));
     invariant(tmp->getNumLoops(), unsigned(2));
     invariant(margi->getA().numCol() + 1, tmp->getA().numCol());
@@ -689,12 +691,13 @@ public:
       if (int64_t xi = x[i] * mul) {
         if (printed) os << (xi > 0 ? " + " : " - ");
         printed = true;
-        int64_t absxi = constexpr_abs(xi);
+        int64_t absxi = math::constexpr_abs(xi);
         if (absxi != 1) os << absxi << " * ";
         os << *getSyms()[i - 1];
       }
     if (int64_t x0 = x[0]) {
-      if (printed) os << (mul * x0 > 0 ? " + " : " - ") << constexpr_abs(x0);
+      if (printed)
+        os << (mul * x0 > 0 ? " + " : " - ") << math::constexpr_abs(x0);
       else os << mul * x0;
       printed = true;
     }
@@ -713,7 +716,7 @@ public:
       if (int64_t lakj = A(j, k + numConst)) {
         if (lakj * sign > 0) os << " - ";
         else if (printed) os << " + ";
-        lakj = constexpr_abs(lakj);
+        lakj = math::constexpr_abs(lakj);
         if (lakj != 1) os << lakj << "*";
         os << "i_" << k;
         printed = true;
@@ -812,7 +815,7 @@ public:
     }
   }
   void dump(llvm::raw_ostream &os, BumpAlloc<> &alloc) const {
-    const AffineLoopNest *tmp = this;
+    const poly::Loop *tmp = this;
     for (size_t i = getNumLoops(); tmp;) {
       assert((i == tmp->getNumLoops()) && "loop count mismatch");
       tmp->printBounds(os << "\nLoop " << --i << ": ");
@@ -824,8 +827,7 @@ public:
   // prints loops from inner most to outer most.
   // outer most loop is `i_0`, subscript increments for each level inside
   // We pop off the outer most loop on every iteration.
-  friend inline auto operator<<(llvm::raw_ostream &os,
-                                const AffineLoopNest &aln)
+  friend inline auto operator<<(llvm::raw_ostream &os, const poly::Loop &aln)
     -> llvm::raw_ostream & {
     BumpAlloc<> alloc;
     aln.dump(os, alloc);
@@ -841,13 +843,13 @@ public:
     const void *ptr =
       memory + sizeof(const llvm::SCEV *const *) * numDynSymbols;
     auto *p = (int64_t *)const_cast<void *>(ptr);
-    return {p, DenseDims{numConstraints, numLoops + numDynSymbols + 1}};
+    return {p, math::DenseDims{numConstraints, numLoops + numDynSymbols + 1}};
   };
   [[nodiscard]] constexpr auto getA() const -> DensePtrMatrix<int64_t> {
     const void *ptr =
       memory + sizeof(const llvm::SCEV *const *) * numDynSymbols;
     auto *p = (int64_t *)const_cast<void *>(ptr);
-    return {p, DenseDims{numConstraints, numLoops + numDynSymbols + 1}};
+    return {p, math::DenseDims{numConstraints, numLoops + numDynSymbols + 1}};
   };
   [[nodiscard]] auto getSyms() -> llvm::MutableArrayRef<const llvm::SCEV *> {
     void *ptr = memory;
@@ -870,17 +872,17 @@ public:
 
   [[nodiscard]] static auto construct(BumpAlloc<> &alloc, PtrMatrix<int64_t> A,
                                       llvm::ArrayRef<const llvm::SCEV *> syms,
-                                      bool nonNeg) -> AffineLoopNest * {
+                                      bool nonNeg) -> poly::Loop * {
     unsigned numLoops = unsigned(A.numCol()) - 1 - syms.size();
-    AffineLoopNest *aln =
+    poly::Loop *aln =
       allocate(alloc, unsigned(A.numRow()), numLoops, syms, nonNeg);
     aln->getA() << A;
     return aln;
   }
-  [[nodiscard]] static auto
-  allocate(BumpAlloc<> &alloc, unsigned int numCon, unsigned int numLoops,
-           llvm::ArrayRef<const llvm::SCEV *> syms, bool nonNegative)
-    -> NotNull<AffineLoopNest> {
+  [[nodiscard]] static auto allocate(BumpAlloc<> &alloc, unsigned int numCon,
+                                     unsigned int numLoops,
+                                     llvm::ArrayRef<const llvm::SCEV *> syms,
+                                     bool nonNegative) -> NotNull<poly::Loop> {
     unsigned numDynSym = syms.size();
     unsigned N = numLoops + numDynSym + 1;
     // extra capacity for adding 0 lower bounds later, see
@@ -890,16 +892,15 @@ public:
     unsigned symCapacity = numDynSym + numLoops - 1;
     size_t memNeeded = size_t(M) * N * sizeof(int64_t) +
                        symCapacity * sizeof(const llvm::SCEV *const *);
-    auto *mem = (AffineLoopNest *)alloc.allocate(
-      sizeof(AffineLoopNest) + memNeeded, alignof(AffineLoopNest));
+    auto *mem = (poly::Loop *)alloc.allocate(sizeof(poly::Loop) + memNeeded,
+                                             alignof(poly::Loop));
     auto *aln = std::construct_at(mem, numCon, numLoops, numDynSym, M);
     std::copy_n(syms.begin(), numDynSym, aln->getSyms().begin());
-    return NotNull<AffineLoopNest>{aln};
+    return NotNull<poly::Loop>{aln};
   }
-  explicit constexpr AffineLoopNest(unsigned int _numConstraints,
-                                    unsigned int _numLoops,
-                                    unsigned int _numDynSymbols,
-                                    bool _nonNegative)
+  explicit constexpr poly::Loop(unsigned int _numConstraints,
+                                unsigned int _numLoops,
+                                unsigned int _numDynSymbols, bool _nonNegative)
     : numConstraints(_numConstraints), numLoops(_numLoops),
       numDynSymbols(_numDynSymbols), nonNegative(_nonNegative) {}
 };

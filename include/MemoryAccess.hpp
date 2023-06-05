@@ -61,7 +61,7 @@ public:
   }
   [[nodiscard]] static auto
   construct(BumpAlloc<> &alloc, const llvm::SCEVUnknown *arrayPtr,
-            AffineLoopNest &loopRef, llvm::Instruction *user,
+            poly::Loop &loopRef, llvm::Instruction *user,
             PtrMatrix<int64_t> indMatT,
             std::array<llvm::SmallVector<const llvm::SCEV *, 3>, 2> szOff,
             PtrMatrix<int64_t> offsets, PtrVector<unsigned> o)
@@ -71,7 +71,7 @@ public:
   }
   [[nodiscard]] static auto
   construct(BumpAlloc<> &alloc, const llvm::SCEVUnknown *arrayPtr,
-            AffineLoopNest &loopRef, llvm::Instruction *user,
+            poly::Loop &loopRef, llvm::Instruction *user,
             PtrVector<unsigned> o) -> NotNull<MemoryAccess> {
     return alloc.create<MemoryAccess>(
       ArrayIndex::construct(alloc, arrayPtr, loopRef, user, o));
@@ -111,10 +111,10 @@ public:
     return arrayRef->getInstruction();
   }
   [[nodiscard]] constexpr auto getLoop() const
-    -> NotNull<const AffineLoopNest> {
+    -> NotNull<const poly::Loop> {
     return arrayRef->getLoop();
   }
-  [[nodiscard]] constexpr auto getLoop() -> NotNull<AffineLoopNest> {
+  [[nodiscard]] constexpr auto getLoop() -> NotNull<poly::Loop> {
     return arrayRef->getLoop();
   }
   [[nodiscard]] constexpr auto getArrayDim() const -> size_t {

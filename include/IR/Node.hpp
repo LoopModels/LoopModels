@@ -165,10 +165,10 @@ public:
 class Loop : public Node {
   Exit *exit;
   llvm::Loop *llvmLoop{nullptr};
-  AffineLoopNest *affineLoop{nullptr};
+  poly::Loop *affineLoop{nullptr};
 
 public:
-  Loop(Exit *e, unsigned d, llvm::Loop *LL, AffineLoopNest *AL)
+  Loop(Exit *e, unsigned d, llvm::Loop *LL, poly::Loop *AL)
     : Node(VK_Loop, d), exit(e), llvmLoop(LL), affineLoop(AL) {
     e->setParent(this);
     // we also initialize prev/next, adding instrs will push them
@@ -211,7 +211,7 @@ public:
     }
   }
   static constexpr auto create(BumpAlloc<> &alloc, llvm::Loop *LL,
-                               AffineLoopNest *AL, size_t depth) -> Loop * {
+                               poly::Loop *AL, size_t depth) -> Loop * {
     auto *E = alloc.create<Exit>(depth);
     auto *L = alloc.create<Loop>(E, depth, LL, AL);
     return L;
@@ -260,10 +260,10 @@ public:
     return llvmLoop;
   }
   constexpr void truncate() {
-    // TODO: we use the current loop depth, and set the AffineLoopNest
+    // TODO: we use the current loop depth, and set the poly::Loop
     // and all ArrayRefs accordingly.
   }
-  [[nodiscard]] constexpr auto getAffineLoop() const -> AffineLoopNest * {
+  [[nodiscard]] constexpr auto getAffineLoop() const -> poly::Loop * {
     return affineLoop;
   }
 };
