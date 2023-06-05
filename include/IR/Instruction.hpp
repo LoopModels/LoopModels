@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Containers/UnrolledList.hpp"
 #include "Dicts/BumpMapSet.hpp"
 #include "Dicts/BumpVector.hpp"
 #include "Dicts/MapVector.hpp"
@@ -22,6 +23,7 @@
 #include <llvm/IR/BasicBlock.h>
 #include <llvm/IR/Constant.h>
 #include <llvm/IR/Constants.h>
+#include <llvm/IR/FMF.h>
 #include <llvm/IR/InstrTypes.h>
 #include <llvm/IR/Instruction.h>
 #include <llvm/IR/Instructions.h>
@@ -57,7 +59,7 @@ using math::PtrVector, math::MutPtrVector, utils::BumpAlloc, utils::invariant,
 
 namespace poly::IR {
 
-using dict::aset, dict::amap;
+using dict::aset, dict::amap, containers::UList;
 
 auto containsCycle(const llvm::Instruction *, aset<llvm::Instruction const *> &,
                    const llvm::Value *) -> bool;
@@ -104,12 +106,28 @@ struct RecipThroughputLatency {
 class Inst : public Node {
 
 protected:
-  Node *predicate{nullptr}; // nullptr means unpredicated
+  UList<Node *> *operands;
+  UList<Node *> *predicates{nullptr};
+  llvm::FastMathFlags fastMathFlags;
+
   constexpr Inst(ValKind k) : Node(k) {}
+  constexpr Inst(ValKind k, UList<Node *> *op, UList<Node *> *pred)
+    : Node(k), operands(op), predicates(pred) {}
 
 public:
   static constexpr auto classof(const Node *v) -> bool {
     return v->getKind() >= VK_Intr;
+  }
+  constexpr auto getPredicate() -> UList<Node *> * { return predicates; }
+  constexpr auto getPredicate() const -> UList<Node *> const * {
+    return predicates;
+  }
+  auto getOperands() -> UList<Node *> * { return operands; }
+  constexpr auto getOperands() const -> UList<Node *> const * {
+    return operands;
+  }
+  [[nodiscard]] auto allowsContract() const -> bool {
+    return fastMathFlags.allowContract();
   }
 };
 
@@ -122,22 +140,65 @@ public:
   }
   constexpr Func(llvm::Function *f) : Inst(VK_Func), func(f) {}
 };
-class Oprn : public Inst {
-  struct OpCode {
-    llvm::Intrinsic::ID id; //{llvm::Intrinsic::not_intrinsic};
-    constexpr auto operator==(const OpCode &other) const -> bool {
-      return id == other.id;
-    }
+class Op : public Inst {
+  llvm::Intrinsic::ID opcode;
+  struct Identifier {
+    llvm::Intrinsic::ID op;
+    UList<Node *> *operands;
+    UList<Node *> *predicates;
   };
-  OpCode opcode;
-  [[nodiscard]] auto getOpCode() const -> OpCode { return opcode; }
-  static auto getOpCode(llvm::Value *v) -> std::optional<OpCode> {
-    if (auto *i = llvm::dyn_cast<llvm::Instruction>(v))
-      return OpCode{i->getOpcode()};
+  [[nodiscard]] auto getOpCode() const -> llvm::Intrinsic::ID { return opcode; }
+  static auto getOpCode(llvm::Value *v) -> std::optional<llvm::Intrinsic::ID> {
+    if (auto *i = llvm::dyn_cast<llvm::Instruction>(v)) return i->getOpcode();
     return {};
   }
-  [[nodiscard]] constexpr auto isInstruction(OpCode opCode) const -> bool {
+  [[nodiscard]] constexpr auto isInstruction(llvm::Intrinsic::ID opCode) const
+    -> bool {
     return opcode == opCode;
+  }
+  static auto isFMul(Node *n) -> bool {
+    if (auto *op = llvm::dyn_cast<Op>(n)) return op->isFMul();
+    return false;
+  }
+  [[nodiscard]] auto isFMul() const -> bool {
+    return isInstruction(llvm::Instruction::FMul);
+  }
+  [[nodiscard]] auto isFNeg() const -> bool {
+    return isInstruction(llvm::Instruction::FNeg);
+  }
+  [[nodiscard]] auto isFMulOrFNegOfFMul() const -> bool {
+    return isFMul() || (isFNeg() && isFMul(getOperands()->only()));
+  }
+  [[nodiscard]] auto isFAdd() const -> bool {
+    return isInstruction(llvm::Instruction::FAdd);
+  }
+  [[nodiscard]] auto isFSub() const -> bool {
+    return isInstruction(llvm::Instruction::FSub);
+  }
+  [[nodiscard]] auto isShuffle() const -> bool {
+    return isInstruction(llvm::Instruction::ShuffleVector);
+  }
+  [[nodiscard]] auto isFcmp() const -> bool {
+    return isInstruction(llvm::Instruction::FCmp);
+  }
+  [[nodiscard]] auto isIcmp() const -> bool {
+    return isInstruction(llvm::Instruction::ICmp);
+  }
+  [[nodiscard]] auto isCmp() const -> bool { return isFcmp() || isIcmp(); }
+  [[nodiscard]] auto isSelect() const -> bool {
+    return isInstruction(llvm::Instruction::Select);
+  }
+  [[nodiscard]] auto isExtract() const -> bool {
+    return isInstruction(llvm::Instruction::ExtractElement);
+  }
+  [[nodiscard]] auto isInsert() const -> bool {
+    return isInstruction(llvm::Instruction::InsertElement);
+  }
+  [[nodiscard]] auto isExtractValue() const -> bool {
+    return isInstruction(llvm::Instruction::ExtractValue);
+  }
+  [[nodiscard]] auto isInsertValue() const -> bool {
+    return isInstruction(llvm::Instruction::InsertValue);
   }
 
 public:
@@ -151,93 +212,39 @@ public:
   static constexpr auto classof(const Node *v) -> bool {
     return v->getKind() == VK_Intr;
   }
-  struct Intrin {
-    llvm::Intrinsic::ID id; //{llvm::Intrinsic::not_intrinsic};
-    constexpr auto operator==(const Intrin &other) const -> bool {
-      return id == other.id;
-    }
-  };
-  Intrin intrin;
-  [[nodiscard]] auto getIntrinsicID() const -> Intrin { return intrin; }
-  static auto getIntrinsicID(llvm::Value *v) -> std::optional<Intrin> {
+  [[nodiscard]] auto getIntrinsicID() const -> llvm::Intrinsic::ID {
+    return intrin;
+  }
+  static auto getIntrinsicID(llvm::Value *v)
+    -> std::optional<llvm::Intrinsic::ID> {
     if (auto *i = llvm::dyn_cast<llvm::IntrinsicInst>(v))
       return Intrin{i->getIntrinsicID()};
     return {};
   }
-  [[nodiscard]] constexpr auto isIntrinsic(Intrin opCode) const -> bool {
+  [[nodiscard]] constexpr auto isIntrinsic(llvm::Intrinsic::ID opCode) const
+    -> bool {
     return intrin == opCode;
   }
-
-  struct UniqueIdentifier {
-    Intrinsic idtf;
-    MutPtrVector<Intr *> operands;
-    constexpr auto operator==(const UniqueIdentifier &other) const -> bool {
-      return idtf == other.idtf && operands == other.operands;
-    }
+  struct Identifier {
+    llvm::Intrinsic::ID id;
+    UList<Node *> *operands;
+    UList<Node *> *predicates;
   };
 
-  using InstrTypes =
-    std::variant<std::monostate, llvm::Instruction *, llvm::ConstantInt *,
-                 llvm::ConstantFP *, Addr *>;
-  [[no_unique_address]] Intrinsic idtf;
-  // Intrinsic id;
-  [[no_unique_address]] llvm::Type *type;
-  [[no_unique_address]] InstrTypes ptr;
-  [[no_unique_address]] Predicate::Set predicates;
-  [[no_unique_address]] MutPtrVector<Intr *> operands{nullptr, unsigned(0)};
-  // [[no_unique_address]] llvm::SmallVector<Instruction *> users;
-  [[no_unique_address]] aset<Intr *> users;
-  /// costs[i] == cost for vector-width 2^i
-  [[no_unique_address]] math::BumpPtrVector<RecipThroughputLatency> costs;
+  llvm::Intrinsic::ID intrin;
+  llvm::Type *type;
+  // aset<Intr *> users;
+  RecipThroughputLatency costs[2];
+  // math::BumpPtrVector<RecipThroughputLatency> costs;
 
   void setOperands(MutPtrVector<Intr *> ops) {
     operands << ops;
     for (auto *op : ops) op->users.insert(this);
   }
-
-  static auto getIdentifier(llvm::Instruction *S) -> Intrinsic {
-    if (auto *CB = llvm::dyn_cast<llvm::CallBase>(S))
-      if (auto *F = CB->getCalledFunction()) return F;
-    return Intrinsic(S);
+  [[nodiscard]] auto isMulAdd() const -> bool {
+    return isIntrinsic(llvm::Intrinsic::fmuladd) ||
+           isIntrinsic(llvm::Intrinsic::fma);
   }
-  static auto getIdentifier(llvm::ConstantInt *S) -> Intrinsic {
-    return S->getSExtValue();
-  }
-  static auto getIdentifier(llvm::ConstantFP *S) -> Intrinsic {
-    auto x = S->getValueAPF();
-    return S->getValueAPF().convertToDouble();
-  }
-  static auto getIdentifier(llvm::Value *v) -> std::optional<Intrinsic> {
-    if (auto *i = llvm::dyn_cast<llvm::Instruction>(v)) return getIdentifier(i);
-    if (auto *ci = llvm::dyn_cast<llvm::ConstantInt>(v))
-      return getIdentifier(ci);
-    if (auto *cfp = llvm::dyn_cast<llvm::ConstantFP>(v))
-      return getIdentifier(cfp);
-    return std::nullopt;
-  }
-  [[nodiscard]] auto getOpType() const -> std::pair<Intrinsic, llvm::Type *> {
-    if (auto i = getIntrinsic()) return std::make_pair(*i, type);
-    return std::make_pair(Intrinsic(), type);
-  }
-  [[nodiscard]] auto isIntrinsic() const -> bool {
-    return std::holds_alternative<Intrinsic>(idtf);
-  }
-  [[nodiscard]] auto isFunction() const -> bool {
-    return std::holds_alternative<llvm::Function *>(idtf);
-  }
-
-  /// Check if the ptr is a load or store, without an ArrayRef
-  [[nodiscard]] auto isValueLoadOrStore() const -> bool {
-    if (llvm::Instruction *const *J = std::get_if<llvm::Instruction *>(&ptr))
-      return llvm::isa<llvm::LoadInst>(*J) || llvm::isa<llvm::StoreInst>(*J);
-    return false;
-  }
-  [[nodiscard]] auto getFunction() const -> llvm::Function * {
-    if (llvm::Function *const *F = std::get_if<llvm::Function *>(&idtf))
-      return *F;
-    return nullptr;
-  }
-
   [[nodiscard]] auto getType() const -> llvm::Type * { return type; }
   [[nodiscard]] auto getOperands() -> MutPtrVector<Intr *> { return operands; }
   [[nodiscard]] auto getOperands() const -> PtrVector<Intr *> {
@@ -249,57 +256,14 @@ public:
   }
   [[nodiscard]] auto getUsers() -> aset<Intr *> & { return users; }
   [[nodiscard]] auto getNumOperands() const -> size_t {
-    return operands.size();
+    return operands->size();
   }
-  // [[nodiscard]] auto getOpTripple() const
-  //     -> std::tuple<llvm::Intrinsic::ID, llvm::Intrinsic::ID, llvm::Type *>
-  //     { return std::make_tuple(id.op, id.intrin, getType());
-  // }
-  struct ExtractValue {
-    auto operator()(auto) const -> llvm::Value * { return nullptr; }
-    // auto operator()(llvm::Value *v) -> llvm::Value * { return v; }
-    // auto operator()(Address *v) -> llvm::Value * { return
-    // v->getInstruction(); }
-    auto operator()(llvm::Value *v) const -> llvm::Value * { return v; }
-    auto operator()(Addr *v) const -> llvm::Value * {
-      return v->getInstruction();
-    }
-  };
-  [[nodiscard]] auto getValue() -> llvm::Value * {
-    return std::visit<llvm::Value *>(ExtractValue{}, ptr);
-  }
-  [[nodiscard]] auto getInstruction() -> llvm::Instruction * {
-    return llvm::dyn_cast_or_null<llvm::Instruction>(getValue());
-  }
-  [[nodiscard]] auto getValue() const -> llvm::Value * {
-    return std::visit<llvm::Value *>(ExtractValue{}, ptr);
-  }
-  [[nodiscard]] auto getInstruction() const -> llvm::Instruction * {
-    return llvm::dyn_cast_or_null<llvm::Instruction>(getValue());
-  }
-
-  struct ExtractBasicBlock {
-    auto operator()(auto) const -> llvm::BasicBlock * { return nullptr; }
-    auto operator()(llvm::Value *v) const -> llvm::BasicBlock * {
-      if (auto *J = llvm::dyn_cast<llvm::Instruction>(v)) return J->getParent();
-      return nullptr;
-    }
-    auto operator()(Addr *v) const -> llvm::BasicBlock * {
-      return v->getInstruction()->getParent();
-    }
-  };
-  [[nodiscard]] auto getBasicBlock() -> llvm::BasicBlock * {
-    return std::visit<llvm::BasicBlock *>(ExtractBasicBlock{}, ptr);
-  }
-
-  Intr(BumpAlloc<> &alloc, Intrinsic idt, llvm::Type *typ)
-    : Inst(VK_Intr), idtf(idt), type(typ), predicates(alloc), users(alloc),
-      costs(alloc) {}
+  explicit Intr(BumpAlloc<> &alloc, Intrin idt, llvm::Type *typ)
+    : Inst(VK_Intr), idtf(idt), type(typ) {}
   // Instruction(UniqueIdentifier uid)
   // : id(std::get<0>(uid)), operands(std::get<1>(uid)) {}
-  Intr(BumpAlloc<> &alloc, UniqueIdentifier uid, llvm::Type *typ)
-    : Inst(VK_Intr), idtf(uid.idtf), type(typ), predicates(alloc),
-      operands(uid.operands), users(alloc), costs(alloc) {}
+  explicit Intr(BumpAlloc<> &alloc, Identifier uid, llvm::Type *typ)
+    : Inst(VK_Intr, uid.operands, uid.predicates), idtf(uid.id), type(typ) {}
 
   [[nodiscard]] static auto // NOLINTNEXTLINE(misc-no-recursion)
   getUniqueIdentifier(BumpAlloc<> &alloc, Cache &cache, llvm::Instruction *v)
@@ -339,6 +303,7 @@ public:
     auto *OI = ops.begin();
     // NOTE: operand 0 is the value operand of a store
     bool isStore = llvm::isa<llvm::StoreInst>(instr);
+    // getFastMathFlags()
     auto *OE = isStore ? (OI + 1) : ops.end();
     size_t numOps = isStore ? 1 : instr->getNumOperands();
     auto **operands = alloc.allocate<Intr *>(numOps);
@@ -399,66 +364,8 @@ public:
     return intrin->isIntrinsicInstruction(op);
   }
 
-  [[nodiscard]] auto isLoad() const -> bool {
-    return isInstruction(llvm::Instruction::Load);
-  }
-  [[nodiscard]] auto isStore() const -> bool {
-    return isInstruction(llvm::Instruction::Store);
-  }
-  [[nodiscard]] auto isLoadOrStore() const -> bool {
-    return isLoad() || isStore();
-  }
   /// fall back in case we need value operand
   // [[nodiscard]] auto isValue() const -> bool { return id.isValue(); }
-  [[nodiscard]] auto isShuffle() const -> bool {
-    return isInstruction(llvm::Instruction::ShuffleVector);
-  }
-  [[nodiscard]] auto isFcmp() const -> bool {
-    return isInstruction(llvm::Instruction::FCmp);
-  }
-  [[nodiscard]] auto isIcmp() const -> bool {
-    return isInstruction(llvm::Instruction::ICmp);
-  }
-  [[nodiscard]] auto isCmp() const -> bool { return isFcmp() || isIcmp(); }
-  [[nodiscard]] auto isSelect() const -> bool {
-    return isInstruction(llvm::Instruction::Select);
-  }
-  [[nodiscard]] auto isExtract() const -> bool {
-    return isInstruction(llvm::Instruction::ExtractElement);
-  }
-  [[nodiscard]] auto isInsert() const -> bool {
-    return isInstruction(llvm::Instruction::InsertElement);
-  }
-  [[nodiscard]] auto isExtractValue() const -> bool {
-    return isInstruction(llvm::Instruction::ExtractValue);
-  }
-  [[nodiscard]] auto isInsertValue() const -> bool {
-    return isInstruction(llvm::Instruction::InsertValue);
-  }
-  [[nodiscard]] auto isFMul() const -> bool {
-    return isInstruction(llvm::Instruction::FMul);
-  }
-  [[nodiscard]] auto isFNeg() const -> bool {
-    return isInstruction(llvm::Instruction::FNeg);
-  }
-  [[nodiscard]] auto isFMulOrFNegOfFMul() const -> bool {
-    return isFMul() || (isFNeg() && operands.front()->isFMul());
-  }
-  [[nodiscard]] auto isFAdd() const -> bool {
-    return isInstruction(llvm::Instruction::FAdd);
-  }
-  [[nodiscard]] auto isFSub() const -> bool {
-    return isInstruction(llvm::Instruction::FSub);
-  }
-  [[nodiscard]] auto allowsContract() const -> bool {
-    if (auto *m = getInstruction())
-      return m->getFastMathFlags().allowContract();
-    return false;
-  }
-  [[nodiscard]] auto isMulAdd() const -> bool {
-    return isIntrinsic(llvm::Intrinsic::fmuladd) ||
-           isIntrinsic(llvm::Intrinsic::fma);
-  }
   auto getCost(llvm::TargetTransformInfo &TTI, unsigned W, unsigned l2W)
     -> RecipThroughputLatency {
     if (l2W >= costs.size()) {
@@ -870,6 +777,26 @@ public:
   }
 };
 
+inline auto getIdentifier(llvm::Instruction *S) -> Intrinsic {
+  if (auto *CB = llvm::dyn_cast<llvm::CallBase>(S))
+    if (auto *F = CB->getCalledFunction()) return F;
+  return Intrinsic(S);
+}
+inline auto getIdentifier(llvm::ConstantInt *S) -> Intrinsic {
+  return S->getSExtValue();
+}
+inline auto getIdentifier(llvm::ConstantFP *S) -> Intrinsic {
+  auto x = S->getValueAPF();
+  return S->getValueAPF().convertToDouble();
+}
+inline auto getIdentifier(llvm::Value *v) -> std::optional<Intrinsic> {
+  if (auto *i = llvm::dyn_cast<llvm::Instruction>(v)) return getIdentifier(i);
+  if (auto *ci = llvm::dyn_cast<llvm::ConstantInt>(v)) return getIdentifier(ci);
+  if (auto *cfp = llvm::dyn_cast<llvm::ConstantFP>(v))
+    return getIdentifier(cfp);
+  return std::nullopt;
+}
+
 template <> struct std::hash<Intr::Intrinsic> {
   auto operator()(const Intr::Intrinsic &s) const noexcept -> size_t {
     return llvm::detail::combineHashValue(std::hash<unsigned>{}(s.opcode.id),
@@ -886,11 +813,11 @@ template <> struct std::hash<Intr::UniqueIdentifier> {
 };
 
 struct Cache {
-  [[no_unique_address]] map<llvm::Value *, Intr *> llvmToInternalMap;
-  [[no_unique_address]] map<UniqueIdentifier, Intr *> argMap;
-  [[no_unique_address]] llvm::SmallVector<Intr *> predicates;
+  map<llvm::Value *, Intr *> llvmToInternalMap;
+  map<UniqueIdentifier, Intr *> argMap;
+  llvm::SmallVector<Intr *> predicates;
   // tmp is used in case we don't need an allocation
-  // [[no_unique_address]] Instruction *tmp{nullptr};
+  // Instruction *tmp{nullptr};
   // auto allocate(BumpAlloc<> &alloc, Intrinsic id,
   //               llvm::Type *type) -> Instruction * {
   //     if (tmp) {
