@@ -72,9 +72,9 @@ $(function() {
 <div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="preprocessor">#pragma once</span></div>
 <div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="preprocessor">#include &quot;ArrayIndex.hpp&quot;</span></div>
 <div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="preprocessor">#include &quot;Containers/BitSets.hpp&quot;</span></div>
-<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor">#include &quot;Loops.hpp&quot;</span></div>
-<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="preprocessor">#include &quot;Math/Array.hpp&quot;</span></div>
-<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="preprocessor">#include &quot;Math/Math.hpp&quot;</span></div>
+<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor">#include &quot;Math/Array.hpp&quot;</span></div>
+<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="preprocessor">#include &quot;Math/Math.hpp&quot;</span></div>
+<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="preprocessor">#include &quot;Polyhedra/Loops.hpp&quot;</span></div>
 <div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="preprocessor">#include &quot;Utilities/Valid.hpp&quot;</span></div>
 <div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="preprocessor">#include &lt;algorithm&gt;</span></div>
 <div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="preprocessor">#include &lt;cassert&gt;</span></div>
@@ -102,7 +102,7 @@ $(function() {
 <div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;  <span class="comment">// and I don&#39;t want to relocate pointers when resizing vector</span></div>
 <div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;  BitSet edgesIn{};</div>
 <div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;  BitSet edgesOut{};</div>
-<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;  <a class="code" href="classAddr.html">Addr</a> *addrs{<span class="keyword">nullptr</span>};</div>
+<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;  Addr *addrs{<span class="keyword">nullptr</span>};</div>
 <div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;  <span class="keywordtype">unsigned</span> nodeIndex{std::numeric_limits&lt;unsigned&gt;::max()};</div>
 <div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;  <span class="keywordtype">bool</span> load_;</div>
 <div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;  <span class="comment">// This is a flexible length array, declared as a length-1 array</span></div>
@@ -131,7 +131,7 @@ $(function() {
 <div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;  }</div>
 <div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;  [[nodiscard]] <span class="keyword">static</span> <span class="keyword">auto</span></div>
 <div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;  construct(BumpAlloc&lt;&gt; &amp;alloc, <span class="keyword">const</span> llvm::SCEVUnknown *arrayPtr,</div>
-<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;            <a class="code" href="classAffineLoopNest.html">AffineLoopNest</a> &amp;loopRef, llvm::Instruction *user,</div>
+<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;            AffineLoopNest &amp;loopRef, llvm::Instruction *user,</div>
 <div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;            PtrMatrix&lt;int64_t&gt; indMatT,</div>
 <div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;            std::array&lt;llvm::SmallVector&lt;const llvm::SCEV *, 3&gt;, 2&gt; szOff,</div>
 <div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;            PtrMatrix&lt;int64_t&gt; offsets, PtrVector&lt;unsigned&gt; o)</div>
@@ -141,7 +141,7 @@ $(function() {
 <div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;  }</div>
 <div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;  [[nodiscard]] <span class="keyword">static</span> <span class="keyword">auto</span></div>
 <div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;  construct(BumpAlloc&lt;&gt; &amp;alloc, <span class="keyword">const</span> llvm::SCEVUnknown *arrayPtr,</div>
-<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;            <a class="code" href="classAffineLoopNest.html">AffineLoopNest</a> &amp;loopRef, llvm::Instruction *user,</div>
+<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;            AffineLoopNest &amp;loopRef, llvm::Instruction *user,</div>
 <div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;            PtrVector&lt;unsigned&gt; o) -&gt; NotNull&lt;MemoryAccess&gt; {</div>
 <div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;    <span class="keywordflow">return</span> alloc.create&lt;<a class="code" href="structMemoryAccess.html">MemoryAccess</a>&gt;(</div>
 <div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;      <a class="code" href="classArrayIndex.html#a43728f7c87cd4691856be9bf4ad9eef4">ArrayIndex::construct</a>(alloc, arrayPtr, loopRef, user, o));</div>
@@ -157,7 +157,7 @@ $(function() {
 <div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;    -&gt; NotNull&lt;const ArrayIndex&gt; {</div>
 <div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;    <span class="keywordflow">return</span> arrayRef;</div>
 <div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;  }</div>
-<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;  constexpr <span class="keywordtype">void</span> setAddress(<a class="code" href="classAddr.html">Addr</a> *addr) { addrs = addr; }</div>
+<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;  constexpr <span class="keywordtype">void</span> setAddress(Addr *addr) { addrs = addr; }</div>
 <div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;  <span class="comment">// [[nodiscard]] constexpr auto repCount() const -&gt; size_t {</span></div>
 <div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;  <span class="comment">//   return addrReplications + 1;</span></div>
 <div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;  <span class="comment">// }</span></div>
@@ -218,7 +218,7 @@ $(function() {
 <div class="line"><a name="l00150"></a><span class="lineno">  150</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getNumLoops() const -&gt; <span class="keywordtype">unsigned</span> {</div>
 <div class="line"><a name="l00151"></a><span class="lineno">  151</span>&#160;    <span class="keywordflow">return</span> arrayRef-&gt;getNumLoops();</div>
 <div class="line"><a name="l00152"></a><span class="lineno">  152</span>&#160;  }</div>
-<div class="line"><a name="l00153"></a><span class="lineno">  153</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getAddress() const -&gt; NotNull&lt;const <a class="code" href="classAddr.html">Addr</a>&gt; {</div>
+<div class="line"><a name="l00153"></a><span class="lineno">  153</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getAddress() const -&gt; NotNull&lt;const Addr&gt; {</div>
 <div class="line"><a name="l00154"></a><span class="lineno">  154</span>&#160;    <span class="keywordflow">return</span> addrs;</div>
 <div class="line"><a name="l00155"></a><span class="lineno">  155</span>&#160;  }</div>
 <div class="line"><a name="l00156"></a><span class="lineno">  156</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> inputEdges() const -&gt; const BitSet &amp; {</div>
@@ -241,8 +241,6 @@ $(function() {
 <div class="line"><a name="l00174"></a><span class="lineno">  174</span>&#160;};</div>
 <div class="line"><a name="l00175"></a><span class="lineno">  175</span>&#160; </div>
 <div class="line"><a name="l00176"></a><span class="lineno">  176</span>&#160;static_assert(std::is_trivially_copyable_v&lt;MemoryAccess&gt;);</div>
-<div class="ttc" id="aclassAddr_html"><div class="ttname"><a href="classAddr.html">Addr</a></div><div class="ttdef"><b>Definition:</b> Address.hpp:63</div></div>
-<div class="ttc" id="aclassAffineLoopNest_html"><div class="ttname"><a href="classAffineLoopNest.html">AffineLoopNest</a></div><div class="ttdef"><b>Definition:</b> Loops.hpp:325</div></div>
 <div class="ttc" id="aclassArrayIndex_html_a43728f7c87cd4691856be9bf4ad9eef4"><div class="ttname"><a href="classArrayIndex.html#a43728f7c87cd4691856be9bf4ad9eef4">ArrayIndex::construct</a></div><div class="ttdeci">static auto construct(BumpAlloc&lt;&gt; &amp;alloc, const llvm::SCEVUnknown *arrayPointer, AffineLoopNest &amp;loopRef, llvm::Instruction *user, PtrVector&lt; unsigned &gt; o) -&gt; NotNull&lt; ArrayIndex &gt;</div><div class="ttdoc">Constructor for 0 dimensional memory access.</div><div class="ttdef"><b>Definition:</b> ArrayIndex.hpp:89</div></div>
 <div class="ttc" id="astructMemoryAccess_html"><div class="ttname"><a href="structMemoryAccess.html">MemoryAccess</a></div><div class="ttdoc">A particular memory access instance.</div><div class="ttdef"><b>Definition:</b> MemoryAccess.hpp:20</div></div>
 <div class="ttc" id="astructMemoryAccess_html_a24f0c9af64a2d853326cd5129f8bbf07"><div class="ttname"><a href="structMemoryAccess.html#a24f0c9af64a2d853326cd5129f8bbf07">MemoryAccess::indexMatrix</a></div><div class="ttdeci">constexpr auto indexMatrix() const -&gt; DensePtrMatrix&lt; int64_t &gt;</div><div class="ttdoc">indexMatrix() -&gt; arrayDim() x getNumLoops()</div><div class="ttdef"><b>Definition:</b> MemoryAccess.hpp:131</div></div>

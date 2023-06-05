@@ -87,7 +87,7 @@ Public Member Functions</h2></td></tr>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>setLI</b> (llvm::LoopInfo *loopInfo)</td></tr>
 <tr class="separator:a0b1f9cc70128d65bc1e4cbb678ec165e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa4ca09b6507bd98699bdc6794bd224a6"><td class="memItemLeft" align="right" valign="top"><a id="aa4ca09b6507bd98699bdc6794bd224a6"></a>
-constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>addAddr</b> (<a class="el" href="classAddr.html">Addr</a> *addr)</td></tr>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>addAddr</b> (Addr *addr)</td></tr>
 <tr class="separator:aa4ca09b6507bd98699bdc6794bd224a6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa7e6dcbc46c54737c2ad846703f48398"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classLinearProgramLoopBlock.html#aa7e6dcbc46c54737c2ad846703f48398">truncate</a> (size_t numToDrop, llvm::Loop *L, llvm::ScalarEvolution *SE)</td></tr>
 <tr class="separator:aa7e6dcbc46c54737c2ad846703f48398"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -107,10 +107,10 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getVerticie
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getVerticies</b> () const -&gt; PtrVector&lt; <a class="el" href="classScheduledNode.html">ScheduledNode</a> &gt;</td></tr>
 <tr class="separator:a8cea21dc05e84a987c76462c1947b875"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a762a7601524999d1b8f5daadac8fcb9c"><td class="memItemLeft" align="right" valign="top"><a id="a762a7601524999d1b8f5daadac8fcb9c"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getAddr</b> () const -&gt; const <a class="el" href="classAddr.html">Addr</a> *</td></tr>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getAddr</b> () const -&gt; const Addr *</td></tr>
 <tr class="separator:a762a7601524999d1b8f5daadac8fcb9c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a09723c95872dbb400fddc2109c728851"><td class="memItemLeft" align="right" valign="top"><a id="a09723c95872dbb400fddc2109c728851"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getAddr</b> () -&gt; <a class="el" href="classAddr.html">Addr</a> *</td></tr>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getAddr</b> () -&gt; Addr *</td></tr>
 <tr class="separator:a09723c95872dbb400fddc2109c728851"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7c96533c9ad334601cf7770457bc3dd3"><td class="memItemLeft" align="right" valign="top"><a id="a7c96533c9ad334601cf7770457bc3dd3"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNode</b> (size_t i) -&gt; <a class="el" href="classScheduledNode.html">ScheduledNode</a> &amp;</td></tr>
@@ -139,7 +139,7 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>outNeighbors</b> (siz
 <tr class="memitem:aa271dbd6a12df5de96419bf371f59721"><td class="memItemLeft" align="right" valign="top"><a id="aa271dbd6a12df5de96419bf371f59721"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>calcMaxDepth</b> () const -&gt; size_t</td></tr>
 <tr class="separator:aa271dbd6a12df5de96419bf371f59721"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aad48f2540e89a04f21f5c3695ed50e14"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classLinearProgramLoopBlock.html#aad48f2540e89a04f21f5c3695ed50e14">addEdge</a> (NotNull&lt; <a class="el" href="classAddr.html">Addr</a> &gt; mai, NotNull&lt; <a class="el" href="classAddr.html">Addr</a> &gt; maj)</td></tr>
+<tr class="memitem:aad48f2540e89a04f21f5c3695ed50e14"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classLinearProgramLoopBlock.html#aad48f2540e89a04f21f5c3695ed50e14">addEdge</a> (NotNull&lt; Addr &gt; mai, NotNull&lt; Addr &gt; maj)</td></tr>
 <tr class="separator:aad48f2540e89a04f21f5c3695ed50e14"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1d76b0e8c6b7a221850327644f09dbb2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classLinearProgramLoopBlock.html#a1d76b0e8c6b7a221850327644f09dbb2">fillEdges</a> ()</td></tr>
 <tr class="separator:a1d76b0e8c6b7a221850327644f09dbb2"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -321,13 +321,13 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> 
         <tr>
           <td class="memname">void LinearProgramLoopBlock::addEdge </td>
           <td>(</td>
-          <td class="paramtype">NotNull&lt; <a class="el" href="classAddr.html">Addr</a> &gt;&#160;</td>
+          <td class="paramtype">NotNull&lt; Addr &gt;&#160;</td>
           <td class="paramname"><em>mai</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">NotNull&lt; <a class="el" href="classAddr.html">Addr</a> &gt;&#160;</td>
+          <td class="paramtype">NotNull&lt; Addr &gt;&#160;</td>
           <td class="paramname"><em>maj</em>&#160;</td>
         </tr>
         <tr>
@@ -528,7 +528,7 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> 
   </tr>
 </table>
 </div><div class="memdoc">
-<p>We search uses of user <code>u</code> for any stores so that we can assign the use and the store the same schedule. This is done because it is assumed the data is held in registers (or, if things go wrong, spilled to the stack) in between a load and a store. A complication is that LLVM IR can be messy, e.g. we may have x = load a y = call foo(x) store y, b z = call bar(y) store z, c here, we might lock all three operations together. However, this limits reordering opportunities; we thus want to insert a new load instruction so that we have: x = load a y = call foo(x) store y, b y.reload = load b z = call bar(y.reload) store z, c and we create a new edge from <code>store y, b</code> to <code>load b</code>. We're going to also build up the <code><a class="el" href="classNode.html">Node</a></code> graph, this is to avoid duplicating any logic or needing to traverse the object graph an extra time as we go. </p>
+<p>We search uses of user <code>u</code> for any stores so that we can assign the use and the store the same schedule. This is done because it is assumed the data is held in registers (or, if things go wrong, spilled to the stack) in between a load and a store. A complication is that LLVM IR can be messy, e.g. we may have x = load a y = call foo(x) store y, b z = call bar(y) store z, c here, we might lock all three operations together. However, this limits reordering opportunities; we thus want to insert a new load instruction so that we have: x = load a y = call foo(x) store y, b y.reload = load b z = call bar(y.reload) store z, c and we create a new edge from <code>store y, b</code> to <code>load b</code>. We're going to also build up the <code>Node</code> graph, this is to avoid duplicating any logic or needing to traverse the object graph an extra time as we go. </p>
 
 </div>
 </div>

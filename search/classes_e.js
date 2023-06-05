@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['recipthroughputlatency_212',['RecipThroughputLatency',['../structRecipThroughputLatency.html',1,'']]],
-  ['reference_213',['Reference',['../structPredicate_1_1Intersection_1_1Reference.html',1,'Predicate::Intersection']]],
-  ['remapper_214',['ReMapper',['../structReMapper.html',1,'']]]
+  ['recipthroughputlatency_206',['RecipThroughputLatency',['../structpoly_1_1IR_1_1RecipThroughputLatency.html',1,'poly::IR']]],
+  ['reference_207',['Reference',['../structPredicate_1_1Intersection_1_1Reference.html',1,'Predicate::Intersection']]],
+  ['remapper_208',['ReMapper',['../structReMapper.html',1,'']]]
 ];

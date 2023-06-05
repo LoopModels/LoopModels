@@ -88,7 +88,7 @@ $(function() {
 Notes on Code</h3>
 <p>Eventually, I'd like to make didactic developer docs so that it's a useful resource for anyone wanting to learn about loop optimization and jump into the code to try implementing or improving optimizations.</p>
 <p>For now, a few notes on conventions:</p>
-<h5># <a class="el" href="classLoop.html">Loop</a> Order in internal data structures</h5>
+<h5># Loop Order in internal data structures</h5>
 <p>Loops are always in the <code>outer &lt;-&gt; inner</code> order.</p>
 <p>For ILP optimization, we take the reverse-lexicographical minimum of the <code>[dependence distance; schedule]</code> vector where the schedule is linearly independent of all previously solved schedules. By ordering outer &lt;-&gt; inner, we favor preserving the original program order rather than arbitrarily permuting. This is subject to change; I'm likely to have it favor placing loops that index with higher strides outside.</p>
 <h3><a class="anchor" id="autotoc_md2"></a>
@@ -103,8 +103,9 @@ Benchmarks</h3>
 <div class="line">cmake --build buildgcc/benchmark</div>
 <div class="line">buildgcc/benchmark/LoopModelsBenchmarks --benchmark_perf_counters=CYCLES,INSTRUCTIONS,CACHE-MISSES</div>
 </div><!-- fragment --><p> Only up to 3 arguments may be passed to <code>--benchmark_perf_counter</code> at a time. Additional options include <code>BRANCHES</code>, and architecture-specific event names like you'd use with <code>perf</code>. Some options you can try include: <code>cpu-cycles</code>,<code>task-clock</code>,<code>instructions</code>,<code>branch-instructions</code>,<code>branch-misses</code>, <code>L1-dcache-load-misses</code>, <code>L1-dcache-loads</code>, <code>cache-misses</code>, <code>cache-references</code>.</p>
-<p>Google benchmark calls <a href="https://man7.org/linux/man-pages/man3/pfm_get_os_event_encoding.3.html">pfm_get_os_event_encoding</a>. </p>
-</div></div><!-- contents -->
+<p>Google benchmark calls <a href="https://man7.org/linux/man-pages/man3/pfm_get_os_event_encoding.3.html">pfm_get_os_event_encoding</a>.</p>
+<p><code>compile_commands.json</code> generated with <a href="https://github.com/Sarcasm/compdb">compdb</a>: </p><div class="fragment"><div class="line">compdb -p buildclang/nosan/ list &gt; compile_commands.json</div>
+</div><!-- fragment --> </div></div><!-- contents -->
 </div><!-- PageDoc -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

@@ -86,7 +86,7 @@ $(function() {
 <div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;<span class="preprocessor">#include &lt;llvm/Support/Allocator.h&gt;</span></div>
 <div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;<span class="preprocessor">#include &lt;variant&gt;</span></div>
 <div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160; </div>
-<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;<span class="keyword">class </span><a class="code" href="classIntr.html">Intr</a>;</div>
+<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;<span class="keyword">class </span>Intr;</div>
 <div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160; </div>
 <div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;<span class="keyword">namespace </span>Predicate {</div>
 <div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;<span class="keyword">enum struct</span> Relation : uint8_t {</div>
@@ -222,7 +222,7 @@ $(function() {
 <div class="line"><a name="l00165"></a><span class="lineno">  165</span>&#160;}; <span class="comment">// struct Predicate::Intersection</span></div>
 <div class="line"><a name="l00166"></a><span class="lineno">  166</span>&#160; </div>
 <div class="line"><a name="l00194"></a><span class="lineno"><a class="line" href="structPredicate_1_1Set.html">  194</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structPredicate_1_1Set.html">Set</a> {</div>
-<div class="line"><a name="l00195"></a><span class="lineno">  195</span>&#160;  [[no_unique_address]] <a class="code" href="structLinAlg_1_1BumpPtrVector.html">LinAlg::BumpPtrVector&lt;Intersection&gt;</a> intersectUnion;</div>
+<div class="line"><a name="l00195"></a><span class="lineno">  195</span>&#160;  [[no_unique_address]] LinAlg::BumpPtrVector&lt;Intersection&gt; intersectUnion;</div>
 <div class="line"><a name="l00196"></a><span class="lineno">  196</span>&#160;  <a class="code" href="structPredicate_1_1Set.html">Set</a>(BumpAlloc&lt;&gt; &amp;alloc) : intersectUnion(alloc) {}</div>
 <div class="line"><a name="l00197"></a><span class="lineno">  197</span>&#160;  <a class="code" href="structPredicate_1_1Set.html">Set</a>(BumpAlloc&lt;&gt; &amp;alloc, <a class="code" href="structPredicate_1_1Intersection.html">Intersection</a> pred) : intersectUnion(alloc) {</div>
 <div class="line"><a name="l00198"></a><span class="lineno">  198</span>&#160;    intersectUnion.push_back(pred);</div>
@@ -386,8 +386,6 @@ $(function() {
 <div class="line"><a name="l00392"></a><span class="lineno">  392</span>&#160; </div>
 <div class="line"><a name="l00393"></a><span class="lineno">  393</span>&#160;<span class="keyword">struct </span>Map;</div>
 <div class="line"><a name="l00394"></a><span class="lineno">  394</span>&#160;}; <span class="comment">// namespace Predicate</span></div>
-<div class="ttc" id="aclassIntr_html"><div class="ttname"><a href="classIntr.html">Intr</a></div><div class="ttdef"><b>Definition:</b> Instruction.hpp:116</div></div>
-<div class="ttc" id="astructLinAlg_1_1BumpPtrVector_html"><div class="ttname"><a href="structLinAlg_1_1BumpPtrVector.html">LinAlg::BumpPtrVector</a></div><div class="ttdef"><b>Definition:</b> BumpVector.hpp:12</div></div>
 <div class="ttc" id="astructPredicate_1_1Intersection_1_1Reference_html"><div class="ttname"><a href="structPredicate_1_1Intersection_1_1Reference.html">Predicate::Intersection::Reference</a></div><div class="ttdef"><b>Definition:</b> Predicate.hpp:62</div></div>
 <div class="ttc" id="astructPredicate_1_1Intersection_html"><div class="ttname"><a href="structPredicate_1_1Intersection.html">Predicate::Intersection</a></div><div class="ttdef"><b>Definition:</b> Predicate.hpp:40</div></div>
 <div class="ttc" id="astructPredicate_1_1Intersection_html_a36ff71dbb9a5ed959906ad99a979c598"><div class="ttname"><a href="structPredicate_1_1Intersection.html#a36ff71dbb9a5ed959906ad99a979c598">Predicate::Intersection::keepEmptyMask</a></div><div class="ttdeci">static constexpr auto keepEmptyMask(uint64_t x) -&gt; uint64_t</div><div class="ttdoc">returns 11 if non-empty, 00 if empty</div><div class="ttdef"><b>Definition:</b> Predicate.hpp:98</div></div>

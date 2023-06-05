@@ -79,17 +79,17 @@ $(function() {
 <div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160; </div>
 <div class="line"><a name="l00009"></a><span class="lineno"><a class="line" href="structArrayReference.html">    9</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structArrayReference.html">ArrayReference</a> {</div>
 <div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;  <span class="keyword">const</span> llvm::SCEVUnknown *basePointer;</div>
-<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;  <a class="code" href="classAffineLoopNest.html">AffineLoopNest</a> *loop;</div>
+<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;  AffineLoopNest *loop;</div>
 <div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;  DenseMatrix&lt;int64_t&gt; indMat;</div>
 <div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;  DenseMatrix&lt;int64_t&gt; offMat;</div>
 <div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;  llvm::SmallVector&lt;const llvm::SCEV *, 3&gt; sizes;</div>
-<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;  <a class="code" href="structArrayReference.html">ArrayReference</a>(<span class="keyword">const</span> llvm::SCEVUnknown *p, <a class="code" href="classAffineLoopNest.html">AffineLoopNest</a> *l, <span class="keywordtype">size_t</span> dim)</div>
+<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;  <a class="code" href="structArrayReference.html">ArrayReference</a>(<span class="keyword">const</span> llvm::SCEVUnknown *p, AffineLoopNest *l, <span class="keywordtype">size_t</span> dim)</div>
 <div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;    : basePointer(p), loop(l), indMat(DenseDims{loop-&gt;getNumLoops(), dim}),</div>
 <div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;      offMat(DenseDims{dim, 1}), sizes(dim) {</div>
 <div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;    indexMatrix() &lt;&lt; 0;</div>
 <div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;    offsetMatrix() &lt;&lt; 0;</div>
 <div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;  }</div>
-<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;  <a class="code" href="structArrayReference.html">ArrayReference</a>(<span class="keyword">const</span> <a class="code" href="structArrayReference.html">ArrayReference</a> &amp;other, <a class="code" href="classAffineLoopNest.html">AffineLoopNest</a> *al,</div>
+<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;  <a class="code" href="structArrayReference.html">ArrayReference</a>(<span class="keyword">const</span> <a class="code" href="structArrayReference.html">ArrayReference</a> &amp;other, AffineLoopNest *al,</div>
 <div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;                 PtrMatrix&lt;int64_t&gt; iM)</div>
 <div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;    : basePointer(other.basePointer), loop(al), indMat(iM),</div>
 <div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;      offMat(other.offMat), sizes(other.sizes) {}</div>
@@ -107,7 +107,6 @@ $(function() {
 <div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;  <span class="keywordflow">return</span> MemoryAccess::construct(alloc, ar.basePointer, *ar.loop, IC, indMatT,</div>
 <div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;                                 {ar.sizes, {}}, ar.offsetMatrix(), omegas);</div>
 <div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;}</div>
-<div class="ttc" id="aclassAffineLoopNest_html"><div class="ttname"><a href="classAffineLoopNest.html">AffineLoopNest</a></div><div class="ttdef"><b>Definition:</b> Loops.hpp:325</div></div>
 <div class="ttc" id="astructArrayReference_html"><div class="ttname"><a href="structArrayReference.html">ArrayReference</a></div><div class="ttdef"><b>Definition:</b> ArrayReference.hpp:9</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->

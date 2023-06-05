@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['ptrsymboliccomparator_111',['PtrSymbolicComparator',['../structcomparator_1_1PtrSymbolicComparator.html',1,'comparator']]]
+  ['ptrsymboliccomparator_108',['PtrSymbolicComparator',['../structpoly_1_1comparator_1_1PtrSymbolicComparator.html',1,'poly::comparator']]]
 ];

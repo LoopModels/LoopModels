@@ -363,10 +363,10 @@ $(function() {
 <div class="line"><a name="l00300"></a><span class="lineno">  300</span>&#160; </div>
 <div class="line"><a name="l00301"></a><span class="lineno">  301</span>&#160;<span class="comment">// NOLINTNEXTLINE(misc-no-recursion)</span></div>
 <div class="line"><a name="l00302"></a><span class="lineno">  302</span>&#160;<span class="keyword">inline</span> <span class="keywordtype">void</span> mergeInstructions(</div>
-<div class="line"><a name="l00303"></a><span class="lineno">  303</span>&#160;  BumpAlloc&lt;&gt; &amp;alloc, Instruction::Cache &amp;cache, <a class="code" href="structPredicate_1_1Map.html">Predicate::Map</a> &amp;predMap,</div>
+<div class="line"><a name="l00303"></a><span class="lineno">  303</span>&#160;  BumpAlloc&lt;&gt; &amp;alloc, Instruction::Cache &amp;cache, Predicate::Map &amp;predMap,</div>
 <div class="line"><a name="l00304"></a><span class="lineno">  304</span>&#160;  llvm::TargetTransformInfo &amp;TTI, <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> vectorBits,</div>
 <div class="line"><a name="l00305"></a><span class="lineno">  305</span>&#160;  <a class="code" href="structamap.html">amap</a>&lt;std::pair&lt;Instruction::Intrinsic, llvm::Type *&gt;,</div>
-<div class="line"><a name="l00306"></a><span class="lineno">  306</span>&#160;       <a class="code" href="structLinAlg_1_1BumpPtrVector.html">BumpPtrVector</a>&lt;std::pair&lt;Instruction *, Predicate::Set&gt;&gt;&gt; &amp;opMap,</div>
+<div class="line"><a name="l00306"></a><span class="lineno">  306</span>&#160;       BumpPtrVector&lt;std::pair&lt;Instruction *, Predicate::Set&gt;&gt;&gt; &amp;opMap,</div>
 <div class="line"><a name="l00307"></a><span class="lineno">  307</span>&#160;  llvm::SmallVectorImpl&lt;MergingCost *&gt; &amp;mergingCosts, Instruction *J,</div>
 <div class="line"><a name="l00308"></a><span class="lineno">  308</span>&#160;  llvm::BasicBlock *BB, <a class="code" href="structPredicate_1_1Set.html">Predicate::Set</a> &amp;preds) {</div>
 <div class="line"><a name="l00309"></a><span class="lineno">  309</span>&#160;  <span class="comment">// have we already visited?</span></div>
@@ -427,14 +427,14 @@ $(function() {
 <div class="line"><a name="l00364"></a><span class="lineno">  364</span>&#160;}</div>
 <div class="line"><a name="l00365"></a><span class="lineno">  365</span>&#160; </div>
 <div class="line"><a name="l00377"></a><span class="lineno">  377</span>&#160;<span class="keyword">inline</span> <span class="keywordtype">void</span> mergeInstructions(BumpAlloc&lt;&gt; &amp;alloc, Instruction::Cache &amp;cache,</div>
-<div class="line"><a name="l00378"></a><span class="lineno">  378</span>&#160;                              <a class="code" href="structPredicate_1_1Map.html">Predicate::Map</a> &amp;predMap,</div>
+<div class="line"><a name="l00378"></a><span class="lineno">  378</span>&#160;                              Predicate::Map &amp;predMap,</div>
 <div class="line"><a name="l00379"></a><span class="lineno">  379</span>&#160;                              llvm::TargetTransformInfo &amp;TTI,</div>
 <div class="line"><a name="l00380"></a><span class="lineno">  380</span>&#160;                              BumpAlloc&lt;&gt; &amp;tAlloc, <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> vectorBits) {</div>
 <div class="line"><a name="l00381"></a><span class="lineno">  381</span>&#160;  <span class="keywordflow">if</span> (!predMap.isDivergent()) <span class="keywordflow">return</span>;</div>
 <div class="line"><a name="l00382"></a><span class="lineno">  382</span>&#160;  <span class="keyword">auto</span> p = tAlloc.scope();</div>
 <div class="line"><a name="l00383"></a><span class="lineno">  383</span>&#160;  <span class="comment">// there is a divergence in the control flow that we can ideally merge</span></div>
 <div class="line"><a name="l00384"></a><span class="lineno">  384</span>&#160;  <a class="code" href="structamap.html">amap&lt;std::pair&lt;Instruction::Intrinsic, llvm::Type *&gt;</a>,</div>
-<div class="line"><a name="l00385"></a><span class="lineno">  385</span>&#160;       <a class="code" href="structLinAlg_1_1BumpPtrVector.html">BumpPtrVector&lt;std::pair&lt;Instruction *, Predicate::Set&gt;</a>&gt;&gt;</div>
+<div class="line"><a name="l00385"></a><span class="lineno">  385</span>&#160;       BumpPtrVector&lt;std::pair&lt;Instruction *, Predicate::Set&gt;&gt;&gt;</div>
 <div class="line"><a name="l00386"></a><span class="lineno">  386</span>&#160;    opMap{tAlloc};</div>
 <div class="line"><a name="l00387"></a><span class="lineno">  387</span>&#160;  llvm::SmallVector&lt;MergingCost *&gt; mergingCosts;</div>
 <div class="line"><a name="l00388"></a><span class="lineno">  388</span>&#160;  mergingCosts.emplace_back(alloc);</div>
@@ -471,7 +471,6 @@ $(function() {
 <div class="line"><a name="l00419"></a><span class="lineno">  419</span>&#160;  <span class="keywordflow">for</span> (<span class="keyword">auto</span> subLoop : loopForest-&gt;getSubLoops())</div>
 <div class="line"><a name="l00420"></a><span class="lineno">  420</span>&#160;    mergeInstructions(alloc, cache, subLoop, TTI, tAlloc, vectorBits);</div>
 <div class="line"><a name="l00421"></a><span class="lineno">  421</span>&#160;}</div>
-<div class="ttc" id="astructLinAlg_1_1BumpPtrVector_html"><div class="ttname"><a href="structLinAlg_1_1BumpPtrVector.html">LinAlg::BumpPtrVector</a></div><div class="ttdef"><b>Definition:</b> BumpVector.hpp:12</div></div>
 <div class="ttc" id="astructLoopTree_html"><div class="ttname"><a href="structLoopTree.html">LoopTree</a></div><div class="ttdef"><b>Definition:</b> LoopForest.hpp:23</div></div>
 <div class="ttc" id="astructMergingCost_1_1Allocate_html"><div class="ttname"><a href="structMergingCost_1_1Allocate.html">MergingCost::Allocate</a></div><div class="ttdef"><b>Definition:</b> ControlFlowMerging.hpp:125</div></div>
 <div class="ttc" id="astructMergingCost_1_1Count_html"><div class="ttname"><a href="structMergingCost_1_1Count.html">MergingCost::Count</a></div><div class="ttdef"><b>Definition:</b> ControlFlowMerging.hpp:130</div></div>
@@ -482,7 +481,6 @@ $(function() {
 <div class="ttc" id="astructMergingCost_html_aac70d5c2dafaec5277cb6ed6aceaacbc"><div class="ttname"><a href="structMergingCost.html#aac70d5c2dafaec5277cb6ed6aceaacbc">MergingCost::initAncestors</a></div><div class="ttdeci">auto initAncestors(BumpAlloc&lt;&gt; &amp;alloc, Instruction *key) -&gt; aset&lt; Instruction * &gt; *</div><div class="ttdef"><b>Definition:</b> ControlFlowMerging.hpp:56</div></div>
 <div class="ttc" id="astructMergingCost_html_af05a38ba5258fe216ebb8c2f36320f8d"><div class="ttname"><a href="structMergingCost.html#af05a38ba5258fe216ebb8c2f36320f8d">MergingCost::isMerged</a></div><div class="ttdeci">auto isMerged(Instruction *L, Instruction *J) const -&gt; bool</div><div class="ttdef"><b>Definition:</b> ControlFlowMerging.hpp:103</div></div>
 <div class="ttc" id="astructMergingCost_html_af9b5ac0cc98e21087c9eefccb31bce58"><div class="ttname"><a href="structMergingCost.html#af9b5ac0cc98e21087c9eefccb31bce58">MergingCost::isMerged</a></div><div class="ttdeci">auto isMerged(Instruction *key) const -&gt; bool</div><div class="ttdef"><b>Definition:</b> ControlFlowMerging.hpp:95</div></div>
-<div class="ttc" id="astructPredicate_1_1Map_html"><div class="ttname"><a href="structPredicate_1_1Map.html">Predicate::Map</a></div><div class="ttdef"><b>Definition:</b> Instruction.hpp:1152</div></div>
 <div class="ttc" id="astructPredicate_1_1Set_html"><div class="ttname"><a href="structPredicate_1_1Set.html">Predicate::Set</a></div><div class="ttdef"><b>Definition:</b> Predicate.hpp:194</div></div>
 <div class="ttc" id="astructPredicate_1_1Set_html_ad4a7c78b6c53cec5eb5ee53e291359e3"><div class="ttname"><a href="structPredicate_1_1Set.html#ad4a7c78b6c53cec5eb5ee53e291359e3">Predicate::Set::intersectionIsEmpty</a></div><div class="ttdeci">auto intersectionIsEmpty(const Set &amp;other) const -&gt; bool</div><div class="ttdef"><b>Definition:</b> Predicate.hpp:361</div></div>
 <div class="ttc" id="astructReMapper_html"><div class="ttname"><a href="structReMapper.html">ReMapper</a></div><div class="ttdef"><b>Definition:</b> ControlFlowMerging.hpp:26</div></div>

@@ -71,25 +71,25 @@ $(function() {
 <div class="contents">
 <div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="preprocessor">#pragma once</span></div>
 <div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160; </div>
-<div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="preprocessor">#include &quot;Containers/BitSets.hpp&quot;</span></div>
-<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor">#include &quot;Containers/BumpMapSet.hpp&quot;</span></div>
-<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="preprocessor">#include &quot;Dependence.hpp&quot;</span></div>
-<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="preprocessor">#include &quot;Graphs.hpp&quot;</span></div>
-<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="preprocessor">#include &quot;IR/Address.hpp&quot;</span></div>
-<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="preprocessor">#include &quot;IR/Node.hpp&quot;</span></div>
-<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="preprocessor">#include &quot;Math/Array.hpp&quot;</span></div>
-<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="preprocessor">#include &quot;Math/Comparisons.hpp&quot;</span></div>
-<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="preprocessor">#include &quot;Math/GreatestCommonDivisor.hpp&quot;</span></div>
-<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="preprocessor">#include &quot;Math/Math.hpp&quot;</span></div>
-<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="preprocessor">#include &quot;Math/NormalForm.hpp&quot;</span></div>
-<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;<span class="preprocessor">#include &quot;Math/Simplex.hpp&quot;</span></div>
-<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;<span class="preprocessor">#include &quot;Math/StaticArrays.hpp&quot;</span></div>
-<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;<span class="preprocessor">#include &quot;Polyhedra/Loops.hpp&quot;</span></div>
-<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;<span class="preprocessor">#include &quot;Schedule.hpp&quot;</span></div>
-<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;<span class="preprocessor">#include &quot;Utilities/Allocators.hpp&quot;</span></div>
-<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;<span class="preprocessor">#include &quot;Utilities/Invariant.hpp&quot;</span></div>
-<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;<span class="preprocessor">#include &quot;Utilities/Optional.hpp&quot;</span></div>
-<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;<span class="preprocessor">#include &quot;Utilities/Valid.hpp&quot;</span></div>
+<div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="preprocessor">#include &quot;Dependence.hpp&quot;</span></div>
+<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor">#include &quot;Graphs.hpp&quot;</span></div>
+<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="preprocessor">#include &quot;IR/Address.hpp&quot;</span></div>
+<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="preprocessor">#include &quot;IR/Node.hpp&quot;</span></div>
+<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="preprocessor">#include &quot;Polyhedra/Loops.hpp&quot;</span></div>
+<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="preprocessor">#include &quot;Schedule.hpp&quot;</span></div>
+<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="preprocessor">#include &lt;Containers/BitSets.hpp&gt;</span></div>
+<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="preprocessor">#include &lt;Containers/BumpMapSet.hpp&gt;</span></div>
+<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="preprocessor">#include &lt;Math/Array.hpp&gt;</span></div>
+<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="preprocessor">#include &lt;Math/Comparisons.hpp&gt;</span></div>
+<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="preprocessor">#include &lt;Math/GreatestCommonDivisor.hpp&gt;</span></div>
+<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;<span class="preprocessor">#include &lt;Math/Math.hpp&gt;</span></div>
+<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;<span class="preprocessor">#include &lt;Math/NormalForm.hpp&gt;</span></div>
+<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;<span class="preprocessor">#include &lt;Math/Simplex.hpp&gt;</span></div>
+<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;<span class="preprocessor">#include &lt;Math/StaticArrays.hpp&gt;</span></div>
+<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;<span class="preprocessor">#include &lt;Utilities/Allocators.hpp&gt;</span></div>
+<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;<span class="preprocessor">#include &lt;Utilities/Invariant.hpp&gt;</span></div>
+<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;<span class="preprocessor">#include &lt;Utilities/Optional.hpp&gt;</span></div>
+<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;<span class="preprocessor">#include &lt;Utilities/Valid.hpp&gt;</span></div>
 <div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;<span class="preprocessor">#include &lt;algorithm&gt;</span></div>
 <div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;<span class="preprocessor">#include &lt;bits/ranges_algo.h&gt;</span></div>
 <div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;<span class="preprocessor">#include &lt;cstddef&gt;</span></div>
@@ -123,7 +123,7 @@ $(function() {
 <div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160; </div>
 <div class="line"><a name="l00059"></a><span class="lineno"><a class="line" href="classScheduledNode.html">   59</a></span>&#160;<span class="keyword">class </span><a class="code" href="classScheduledNode.html">ScheduledNode</a> {</div>
 <div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160; </div>
-<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;  [[no_unique_address]] <a class="code" href="classAddr.html">Addr</a> *store; <span class="comment">// linked list to loads</span></div>
+<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;  [[no_unique_address]] Addr *store; <span class="comment">// linked list to loads</span></div>
 <div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;  [[no_unique_address]] NotNull&lt;AffineLoopNest&gt; loopNest;</div>
 <div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;  [[no_unique_address]] <a class="code" href="classScheduledNode.html">ScheduledNode</a> *next{<span class="keyword">nullptr</span>};</div>
 <div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;  [[no_unique_address]] <a class="code" href="classScheduledNode.html">ScheduledNode</a> *component{<span class="keyword">nullptr</span>}; <span class="comment">// SCC cycle</span></div>
@@ -184,8 +184,8 @@ $(function() {
 <div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;  <span class="comment">// [[nodiscard]] constexpr auto getNumMem() const -&gt; size_t {</span></div>
 <div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;  <span class="comment">//   return memory.size();</span></div>
 <div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;  <span class="comment">// }</span></div>
-<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;  constexpr <span class="keyword">auto</span> getStore() -&gt; <a class="code" href="classAddr.html">Addr</a> * { <span class="keywordflow">return</span> store; }</div>
-<div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getStore() <span class="keyword">const</span> -&gt; <span class="keyword">const</span> <a class="code" href="classAddr.html">Addr</a> * {</div>
+<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;  constexpr <span class="keyword">auto</span> getStore() -&gt; Addr * { <span class="keywordflow">return</span> store; }</div>
+<div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getStore() <span class="keyword">const</span> -&gt; <span class="keyword">const</span> Addr * {</div>
 <div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;    <span class="keywordflow">return</span> store;</div>
 <div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160;  }</div>
 <div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;  <span class="comment">// at this point, getNext chains memory ops, letting us loop over them</span></div>
@@ -194,10 +194,10 @@ $(function() {
 <div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160;  <span class="comment">// a. nodes -&gt; edges</span></div>
 <div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160;  <span class="comment">// b. nodes -&gt; addrs</span></div>
 <div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160;  constexpr <span class="keywordtype">void</span> forEachAddr(<span class="keyword">const</span> <span class="keyword">auto</span> &amp;f) {</div>
-<div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160;    <a class="code" href="classAddr.html">Addr</a> *m = store;</div>
+<div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160;    Addr *m = store;</div>
 <div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;    <span class="keywordflow">while</span> (<span class="keyword">true</span>) {</div>
 <div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;      f(m);</div>
-<div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;      <a class="code" href="classNode.html">Node</a> *v = m-&gt;getPrev();</div>
+<div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;      Node *v = m-&gt;getPrev();</div>
 <div class="line"><a name="l00136"></a><span class="lineno">  136</span>&#160;      <span class="keywordflow">if</span> (!v) <span class="keywordflow">break</span>;</div>
 <div class="line"><a name="l00137"></a><span class="lineno">  137</span>&#160;      m = llvm::cast&lt;Addr&gt;(v);</div>
 <div class="line"><a name="l00138"></a><span class="lineno">  138</span>&#160;    }</div>
@@ -340,7 +340,7 @@ $(function() {
 <div class="line"><a name="l00329"></a><span class="lineno">  329</span>&#160;  <span class="comment">// E.g., the `dstOmega[numLoopsCommon-1] &gt; srcOmega[numLoopsCommon-1]`,</span></div>
 <div class="line"><a name="l00330"></a><span class="lineno">  330</span>&#160;  <span class="comment">// and all other other shared schedule parameters are aliases (i.e.,</span></div>
 <div class="line"><a name="l00331"></a><span class="lineno">  331</span>&#160;  <span class="comment">// identical)?</span></div>
-<div class="line"><a name="l00332"></a><span class="lineno">  332</span>&#160;  [[no_unique_address]] <a class="code" href="classAddr.html">Addr</a> *memory{<span class="keyword">nullptr</span>};</div>
+<div class="line"><a name="l00332"></a><span class="lineno">  332</span>&#160;  [[no_unique_address]] Addr *memory{<span class="keyword">nullptr</span>};</div>
 <div class="line"><a name="l00333"></a><span class="lineno">  333</span>&#160;  [[no_unique_address]] <a class="code" href="classScheduledNode.html">ScheduledNode</a> *node{<span class="keyword">nullptr</span>};</div>
 <div class="line"><a name="l00334"></a><span class="lineno">  334</span>&#160;  [[no_unique_address]] map&lt;llvm::User *, Addr *&gt; userToMem{};</div>
 <div class="line"><a name="l00335"></a><span class="lineno">  335</span>&#160;  [[no_unique_address]] set&lt;llvm::User *&gt; visited{};</div>
@@ -362,7 +362,7 @@ $(function() {
 <div class="line"><a name="l00351"></a><span class="lineno">  351</span>&#160;<span class="keyword">public</span>:</div>
 <div class="line"><a name="l00352"></a><span class="lineno">  352</span>&#160;  <a class="code" href="classLinearProgramLoopBlock.html">LinearProgramLoopBlock</a>() = <span class="keywordflow">default</span>;</div>
 <div class="line"><a name="l00353"></a><span class="lineno">  353</span>&#160;  constexpr <span class="keywordtype">void</span> setLI(llvm::LoopInfo *loopInfo) { LI = loopInfo; }</div>
-<div class="line"><a name="l00354"></a><span class="lineno">  354</span>&#160;  constexpr <span class="keywordtype">void</span> addAddr(<a class="code" href="classAddr.html">Addr</a> *addr) {</div>
+<div class="line"><a name="l00354"></a><span class="lineno">  354</span>&#160;  constexpr <span class="keywordtype">void</span> addAddr(Addr *addr) {</div>
 <div class="line"><a name="l00355"></a><span class="lineno">  355</span>&#160;    <span class="keywordflow">if</span> (memory != <span class="keyword">nullptr</span>) addr-&gt;setNext(memory);</div>
 <div class="line"><a name="l00356"></a><span class="lineno">  356</span>&#160;    memory = addr;</div>
 <div class="line"><a name="l00357"></a><span class="lineno">  357</span>&#160;    userToMem[addr-&gt;getInstruction()] = addr;</div>
@@ -398,10 +398,10 @@ $(function() {
 <div class="line"><a name="l00389"></a><span class="lineno">  389</span>&#160;    -&gt; PtrVector&lt;<a class="code" href="classScheduledNode.html">ScheduledNode</a>&gt; {</div>
 <div class="line"><a name="l00390"></a><span class="lineno">  390</span>&#160;    <span class="keywordflow">return</span> nodes;</div>
 <div class="line"><a name="l00391"></a><span class="lineno">  391</span>&#160;  }</div>
-<div class="line"><a name="l00392"></a><span class="lineno">  392</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getAddr() const -&gt; const <a class="code" href="classAddr.html">Addr</a> * {</div>
+<div class="line"><a name="l00392"></a><span class="lineno">  392</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getAddr() const -&gt; const Addr * {</div>
 <div class="line"><a name="l00393"></a><span class="lineno">  393</span>&#160;    <span class="keywordflow">return</span> memory;</div>
 <div class="line"><a name="l00394"></a><span class="lineno">  394</span>&#160;  }</div>
-<div class="line"><a name="l00395"></a><span class="lineno">  395</span>&#160;  constexpr <span class="keyword">auto</span> getAddr() -&gt; <a class="code" href="classAddr.html">Addr</a> * { <span class="keywordflow">return</span> memory; }</div>
+<div class="line"><a name="l00395"></a><span class="lineno">  395</span>&#160;  constexpr <span class="keyword">auto</span> getAddr() -&gt; Addr * { <span class="keywordflow">return</span> memory; }</div>
 <div class="line"><a name="l00396"></a><span class="lineno">  396</span>&#160; </div>
 <div class="line"><a name="l00397"></a><span class="lineno">  397</span>&#160;  <span class="keyword">auto</span> getNode(<span class="keywordtype">size_t</span> i) -&gt; <a class="code" href="classScheduledNode.html">ScheduledNode</a> &amp; { <span class="keywordflow">return</span> nodes[i]; }</div>
 <div class="line"><a name="l00398"></a><span class="lineno">  398</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getNode(<span class="keywordtype">size_t</span> i) <span class="keyword">const</span> -&gt; <span class="keyword">const</span> <a class="code" href="classScheduledNode.html">ScheduledNode</a> &amp; {</div>
@@ -846,7 +846,7 @@ $(function() {
 <div class="line"><a name="l00900"></a><span class="lineno">  900</span>&#160;      <span class="keywordtype">unsigned</span> nIdx = mem-&gt;getNode();</div>
 <div class="line"><a name="l00901"></a><span class="lineno">  901</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> e : mem-&gt;inputEdges()) {</div>
 <div class="line"><a name="l00902"></a><span class="lineno">  902</span>&#160;        <span class="keyword">const</span> <a class="code" href="classDependence.html">Dependence</a> &amp;dep = edges[e]; <span class="comment">// other -&gt; mem</span></div>
-<div class="line"><a name="l00903"></a><span class="lineno">  903</span>&#160;        <span class="keyword">const</span> <a class="code" href="classDepPoly.html">DepPoly</a> *depPoly = dep.getDepPoly();</div>
+<div class="line"><a name="l00903"></a><span class="lineno">  903</span>&#160;        <span class="keyword">const</span> DepPoly *depPoly = dep.getDepPoly();</div>
 <div class="line"><a name="l00904"></a><span class="lineno">  904</span>&#160;        <span class="keywordtype">unsigned</span> numSyms = depPoly-&gt;getNumSymbols(), dep0 = depPoly-&gt;getDim0(),</div>
 <div class="line"><a name="l00905"></a><span class="lineno">  905</span>&#160;                 dep1 = depPoly-&gt;getDim1();</div>
 <div class="line"><a name="l00906"></a><span class="lineno">  906</span>&#160;        PtrMatrix&lt;int64_t&gt; E = depPoly-&gt;getE();</div>
@@ -888,7 +888,7 @@ $(function() {
 <div class="line"><a name="l00942"></a><span class="lineno">  942</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> e : mem-&gt;outputEdges()) {</div>
 <div class="line"><a name="l00943"></a><span class="lineno">  943</span>&#160;        <span class="keyword">const</span> <a class="code" href="classDependence.html">Dependence</a> &amp;dep = edges[e];              <span class="comment">// mem -&gt; other</span></div>
 <div class="line"><a name="l00944"></a><span class="lineno">  944</span>&#160;        <span class="keywordflow">if</span> (dep.output()-&gt;getNode() == nIdx) <span class="keywordflow">continue</span>; <span class="comment">// handled above</span></div>
-<div class="line"><a name="l00945"></a><span class="lineno">  945</span>&#160;        <span class="keyword">const</span> <a class="code" href="classDepPoly.html">DepPoly</a> *depPoly = dep.getDepPoly();</div>
+<div class="line"><a name="l00945"></a><span class="lineno">  945</span>&#160;        <span class="keyword">const</span> DepPoly *depPoly = dep.getDepPoly();</div>
 <div class="line"><a name="l00946"></a><span class="lineno">  946</span>&#160;        <span class="keywordtype">unsigned</span> numSyms = depPoly-&gt;getNumSymbols(), dep0 = depPoly-&gt;getDim0(),</div>
 <div class="line"><a name="l00947"></a><span class="lineno">  947</span>&#160;                 dep1 = depPoly-&gt;getDim1();</div>
 <div class="line"><a name="l00948"></a><span class="lineno">  948</span>&#160;        PtrMatrix&lt;int64_t&gt; E = depPoly-&gt;getE();</div>
@@ -936,7 +936,7 @@ $(function() {
 <div class="line"><a name="l00990"></a><span class="lineno">  990</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> e : mem-&gt;inputEdges()) {</div>
 <div class="line"><a name="l00991"></a><span class="lineno">  991</span>&#160;        <a class="code" href="classDependence.html">Dependence</a> &amp;dep = edges[e]; <span class="comment">// other -&gt; mem</span></div>
 <div class="line"><a name="l00992"></a><span class="lineno">  992</span>&#160;        dep.copySimplices(allocator);</div>
-<div class="line"><a name="l00993"></a><span class="lineno">  993</span>&#160;        <a class="code" href="classDepPoly.html">DepPoly</a> *depPoly = dep.getDepPoly();</div>
+<div class="line"><a name="l00993"></a><span class="lineno">  993</span>&#160;        DepPoly *depPoly = dep.getDepPoly();</div>
 <div class="line"><a name="l00994"></a><span class="lineno">  994</span>&#160;        <span class="keywordtype">unsigned</span> numSyms = depPoly-&gt;getNumSymbols(), dep0 = depPoly-&gt;getDim0(),</div>
 <div class="line"><a name="l00995"></a><span class="lineno">  995</span>&#160;                 dep1 = depPoly-&gt;getDim1();</div>
 <div class="line"><a name="l00996"></a><span class="lineno">  996</span>&#160;        MutPtrMatrix&lt;int64_t&gt; satL = dep.getSatLambda();</div>
@@ -960,7 +960,7 @@ $(function() {
 <div class="line"><a name="l01014"></a><span class="lineno"> 1014</span>&#160;        <a class="code" href="classDependence.html">Dependence</a> &amp;dep = edges[e];                    <span class="comment">// mem -&gt; other</span></div>
 <div class="line"><a name="l01015"></a><span class="lineno"> 1015</span>&#160;        <span class="keywordflow">if</span> (dep.output()-&gt;getNode() == nIdx) <span class="keywordflow">continue</span>; <span class="comment">// handled above</span></div>
 <div class="line"><a name="l01016"></a><span class="lineno"> 1016</span>&#160;        dep.copySimplices(allocator); <span class="comment">// we don&#39;t want to copy twice</span></div>
-<div class="line"><a name="l01017"></a><span class="lineno"> 1017</span>&#160;        <a class="code" href="classDepPoly.html">DepPoly</a> *depPoly = dep.getDepPoly();</div>
+<div class="line"><a name="l01017"></a><span class="lineno"> 1017</span>&#160;        DepPoly *depPoly = dep.getDepPoly();</div>
 <div class="line"><a name="l01018"></a><span class="lineno"> 1018</span>&#160;        <span class="keywordtype">unsigned</span> numSyms = depPoly-&gt;getNumSymbols(), dep0 = depPoly-&gt;getDim0(),</div>
 <div class="line"><a name="l01019"></a><span class="lineno"> 1019</span>&#160;                 dep1 = depPoly-&gt;getDim1();</div>
 <div class="line"><a name="l01020"></a><span class="lineno"> 1020</span>&#160;        MutPtrMatrix&lt;int64_t&gt; satL = dep.getSatLambda();</div>
@@ -1512,7 +1512,7 @@ $(function() {
 <div class="line"><a name="l01581"></a><span class="lineno"> 1581</span>&#160;    std::swap(g.nodeIds, nodeIds);</div>
 <div class="line"><a name="l01582"></a><span class="lineno"> 1582</span>&#160;    g.activeEdges = activeEdges; <span class="comment">// undo such that g.getEdges(d) is correct</span></div>
 <div class="line"><a name="l01583"></a><span class="lineno"> 1583</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;&amp;e : g.getEdges(d)) e.popSatLevel();</div>
-<div class="line"><a name="l01584"></a><span class="lineno"> 1584</span>&#160;    g.activeEdges = oldEdges; <span class="comment">// restore backup</span></div>
+<div class="line"><a name="l01584"></a><span class="lineno"> 1584</span>&#160;    g.activeEdges = oldEdges;    <span class="comment">// restore backup</span></div>
 <div class="line"><a name="l01585"></a><span class="lineno"> 1585</span>&#160;    <span class="keyword">auto</span> *oldNodeIter = oldSchedules.begin();</div>
 <div class="line"><a name="l01586"></a><span class="lineno"> 1586</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;&amp;n : g) n.getSchedule() = *(oldNodeIter++);</div>
 <div class="line"><a name="l01587"></a><span class="lineno"> 1587</span>&#160;    allocator.rollback(chckpt);</div>
@@ -1614,9 +1614,7 @@ $(function() {
 <div class="line"><a name="l01686"></a><span class="lineno"> 1686</span>&#160;<span class="comment">// static_assert(std::ranges::range&lt;LinearProgramLoopBlock::Graph&gt;);</span></div>
 <div class="line"><a name="l01687"></a><span class="lineno"> 1687</span>&#160;static_assert(Graphs::AbstractIndexGraph&lt;LinearProgramLoopBlock::Graph&gt;);</div>
 <div class="line"><a name="l01688"></a><span class="lineno"> 1688</span>&#160;static_assert(std::is_trivially_destructible_v&lt;LinearProgramLoopBlock::Graph&gt;);</div>
-<div class="ttc" id="aclassAddr_html"><div class="ttname"><a href="classAddr.html">Addr</a></div><div class="ttdef"><b>Definition:</b> Address.hpp:63</div></div>
 <div class="ttc" id="aclassCostModeling_1_1LoopTreeSchedule_html"><div class="ttname"><a href="classCostModeling_1_1LoopTreeSchedule.html">CostModeling::LoopTreeSchedule</a></div><div class="ttdef"><b>Definition:</b> CostModeling.hpp:176</div></div>
-<div class="ttc" id="aclassDepPoly_html"><div class="ttname"><a href="classDepPoly.html">DepPoly</a></div><div class="ttdef"><b>Definition:</b> DependencyPolyhedra.hpp:100</div></div>
 <div class="ttc" id="aclassDependence_html"><div class="ttname"><a href="classDependence.html">Dependence</a></div><div class="ttdef"><b>Definition:</b> Dependence.hpp:12</div></div>
 <div class="ttc" id="aclassDependence_html_a8f03cfecfe1734c6c395bf3184269536"><div class="ttname"><a href="classDependence.html#a8f03cfecfe1734c6c395bf3184269536">Dependence::isForward</a></div><div class="ttdeci">constexpr auto isForward() const -&gt; bool</div><div class="ttdoc">indicates whether forward is non-empty</div><div class="ttdef"><b>Definition:</b> Dependence.hpp:293</div></div>
 <div class="ttc" id="aclassLinearProgramLoopBlock_1_1Graph_1_1EdgeIterator_html"><div class="ttname"><a href="classLinearProgramLoopBlock_1_1Graph_1_1EdgeIterator.html">LinearProgramLoopBlock::Graph::EdgeIterator</a></div><div class="ttdef"><b>Definition:</b> LoopBlock.hpp:724</div></div>
@@ -1629,7 +1627,6 @@ $(function() {
 <div class="ttc" id="aclassLinearProgramLoopBlock_html_aa7e6dcbc46c54737c2ad846703f48398"><div class="ttname"><a href="classLinearProgramLoopBlock.html#aa7e6dcbc46c54737c2ad846703f48398">LinearProgramLoopBlock::truncate</a></div><div class="ttdeci">void truncate(size_t numToDrop, llvm::Loop *L, llvm::ScalarEvolution *SE)</div><div class="ttdef"><b>Definition:</b> LoopBlock.hpp:361</div></div>
 <div class="ttc" id="aclassLinearProgramLoopBlock_html_aad48f2540e89a04f21f5c3695ed50e14"><div class="ttname"><a href="classLinearProgramLoopBlock.html#aad48f2540e89a04f21f5c3695ed50e14">LinearProgramLoopBlock::addEdge</a></div><div class="ttdeci">void addEdge(NotNull&lt; Addr &gt; mai, NotNull&lt; Addr &gt; maj)</div><div class="ttdef"><b>Definition:</b> LoopBlock.hpp:443</div></div>
 <div class="ttc" id="aclassLinearProgramLoopBlock_html_aba9f909e08e1c2088f72883b3dafdaae"><div class="ttname"><a href="classLinearProgramLoopBlock.html#aba9f909e08e1c2088f72883b3dafdaae">LinearProgramLoopBlock::searchOperandsForLoads</a></div><div class="ttdeci">void searchOperandsForLoads(ScheduledNode &amp;node, llvm::User *u, unsigned nodeIdx)</div><div class="ttdef"><b>Definition:</b> LoopBlock.hpp:549</div></div>
-<div class="ttc" id="aclassNode_html"><div class="ttname"><a href="classNode.html">Node</a></div><div class="ttdef"><b>Definition:</b> Node.hpp:82</div></div>
 <div class="ttc" id="aclassScheduledNode_html"><div class="ttname"><a href="classScheduledNode.html">ScheduledNode</a></div><div class="ttdef"><b>Definition:</b> LoopBlock.hpp:59</div></div>
 <div class="ttc" id="aclassScheduledNode_html_a839ee9c51653c4fa6b3f1a4034903801"><div class="ttname"><a href="classScheduledNode.html#a839ee9c51653c4fa6b3f1a4034903801">ScheduledNode::getSchedule</a></div><div class="ttdeci">constexpr auto getSchedule(size_t d) const -&gt; PtrVector&lt; int64_t &gt;</div><div class="ttdoc">getSchedule, loops are always indexed from outer to inner</div><div class="ttdef"><b>Definition:</b> LoopBlock.hpp:202</div></div>
 <div class="ttc" id="astructAffineSchedule_html"><div class="ttname"><a href="structAffineSchedule.html">AffineSchedule</a></div><div class="ttdef"><b>Definition:</b> Schedule.hpp:34</div></div>

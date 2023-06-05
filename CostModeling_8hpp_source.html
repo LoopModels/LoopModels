@@ -217,7 +217,7 @@ $(function() {
 <div class="line"><a name="l00179"></a><span class="lineno">  179</span>&#160; </div>
 <div class="line"><a name="l00180"></a><span class="lineno">  180</span>&#160;<span class="keyword">public</span>:</div>
 <div class="line"><a name="l00181"></a><span class="lineno"><a class="line" href="structCostModeling_1_1LoopTreeSchedule_1_1AddressGraph.html">  181</a></span>&#160;  <span class="keyword">struct </span><a class="code" href="structCostModeling_1_1LoopTreeSchedule_1_1AddressGraph.html">AddressGraph</a> {</div>
-<div class="line"><a name="l00182"></a><span class="lineno">  182</span>&#160;    <span class="keyword">using</span> <a class="code" href="classAddr.html">VertexType</a> = <a class="code" href="classAddr.html">Addr</a>;</div>
+<div class="line"><a name="l00182"></a><span class="lineno">  182</span>&#160;    <span class="keyword">using</span> VertexType = Addr;</div>
 <div class="line"><a name="l00183"></a><span class="lineno">  183</span>&#160;    [[no_unique_address]] MutPtrVector&lt;Addr *&gt; addresses;</div>
 <div class="line"><a name="l00184"></a><span class="lineno">  184</span>&#160;    <span class="comment">// we restrict the SCC order to preserve relative ordering of the sub loops</span></div>
 <div class="line"><a name="l00185"></a><span class="lineno">  185</span>&#160;    <span class="comment">// by adding loopNestAddrs. These contain arrays of [start, stop].</span></div>
@@ -274,7 +274,7 @@ $(function() {
 <div class="line"><a name="l00236"></a><span class="lineno">  236</span>&#160;  }</div>
 <div class="line"><a name="l00237"></a><span class="lineno">  237</span>&#160; </div>
 <div class="line"><a name="l00238"></a><span class="lineno">  238</span>&#160;  <span class="keyword">class </span>InstructionBlock {</div>
-<div class="line"><a name="l00239"></a><span class="lineno">  239</span>&#160;    <a class="code" href="classAddr.html">Addr</a> **addresses{<span class="keyword">nullptr</span>};</div>
+<div class="line"><a name="l00239"></a><span class="lineno">  239</span>&#160;    Addr **addresses{<span class="keyword">nullptr</span>};</div>
 <div class="line"><a name="l00240"></a><span class="lineno">  240</span>&#160;    <span class="keywordtype">unsigned</span> numAddr{0};</div>
 <div class="line"><a name="l00241"></a><span class="lineno">  241</span>&#160;    <span class="keywordtype">unsigned</span> capacity{0};</div>
 <div class="line"><a name="l00242"></a><span class="lineno">  242</span>&#160; </div>
@@ -289,7 +289,7 @@ $(function() {
 <div class="line"><a name="l00251"></a><span class="lineno">  251</span>&#160;    [[nodiscard]] constexpr <span class="keyword">auto</span> getCapacity() const -&gt; <span class="keywordtype">unsigned</span> {</div>
 <div class="line"><a name="l00252"></a><span class="lineno">  252</span>&#160;      <span class="keywordflow">return</span> capacity;</div>
 <div class="line"><a name="l00253"></a><span class="lineno">  253</span>&#160;    }</div>
-<div class="line"><a name="l00254"></a><span class="lineno">  254</span>&#160;    [[nodiscard]] constexpr <span class="keyword">auto</span> operator[](<span class="keywordtype">unsigned</span> i) <span class="keyword">const</span> -&gt; <a class="code" href="classAddr.html">Addr</a> * {</div>
+<div class="line"><a name="l00254"></a><span class="lineno">  254</span>&#160;    [[nodiscard]] constexpr <span class="keyword">auto</span> operator[](<span class="keywordtype">unsigned</span> i) <span class="keyword">const</span> -&gt; Addr * {</div>
 <div class="line"><a name="l00255"></a><span class="lineno">  255</span>&#160;      invariant(i &lt; numAddr);</div>
 <div class="line"><a name="l00256"></a><span class="lineno">  256</span>&#160;      invariant(i &lt; capacity);</div>
 <div class="line"><a name="l00257"></a><span class="lineno">  257</span>&#160;      <span class="keywordflow">return</span> addresses[i];</div>
@@ -299,33 +299,33 @@ $(function() {
 <div class="line"><a name="l00262"></a><span class="lineno">  262</span>&#160;      addresses = alloc.reallocate&lt;<span class="keyword">false</span>&gt;(addresses, oldCapacity, capacity);</div>
 <div class="line"><a name="l00263"></a><span class="lineno">  263</span>&#160;    }</div>
 <div class="line"><a name="l00264"></a><span class="lineno">  264</span>&#160;    constexpr <span class="keywordtype">void</span> initialize(BumpAlloc&lt;&gt; &amp;alloc) {</div>
-<div class="line"><a name="l00265"></a><span class="lineno">  265</span>&#160;      addresses = alloc.allocate&lt;<a class="code" href="classAddr.html">Addr</a> *&gt;(capacity);</div>
+<div class="line"><a name="l00265"></a><span class="lineno">  265</span>&#160;      addresses = alloc.allocate&lt;Addr *&gt;(capacity);</div>
 <div class="line"><a name="l00266"></a><span class="lineno">  266</span>&#160;    }</div>
-<div class="line"><a name="l00267"></a><span class="lineno">  267</span>&#160;    constexpr <span class="keywordtype">void</span> push_back(<a class="code" href="classAddr.html">Addr</a> *addr) {</div>
+<div class="line"><a name="l00267"></a><span class="lineno">  267</span>&#160;    constexpr <span class="keywordtype">void</span> push_back(Addr *addr) {</div>
 <div class="line"><a name="l00268"></a><span class="lineno">  268</span>&#160;      invariant(numAddr &lt; capacity);</div>
 <div class="line"><a name="l00269"></a><span class="lineno">  269</span>&#160;      addresses[numAddr++] = addr;</div>
 <div class="line"><a name="l00270"></a><span class="lineno">  270</span>&#160;    }</div>
-<div class="line"><a name="l00271"></a><span class="lineno">  271</span>&#160;    constexpr <span class="keywordtype">void</span> push_back(BumpAlloc&lt;&gt; &amp;alloc, <a class="code" href="classAddr.html">Addr</a> *addr) {</div>
+<div class="line"><a name="l00271"></a><span class="lineno">  271</span>&#160;    constexpr <span class="keywordtype">void</span> push_back(BumpAlloc&lt;&gt; &amp;alloc, Addr *addr) {</div>
 <div class="line"><a name="l00272"></a><span class="lineno">  272</span>&#160;      <span class="keywordflow">if</span> (numAddr &gt;= capacity)</div>
 <div class="line"><a name="l00273"></a><span class="lineno">  273</span>&#160;        reserveExtra(alloc, std::max&lt;unsigned&gt;(4, numAddr));</div>
 <div class="line"><a name="l00274"></a><span class="lineno">  274</span>&#160;      addresses[numAddr++] = addr;</div>
 <div class="line"><a name="l00275"></a><span class="lineno">  275</span>&#160;    }</div>
-<div class="line"><a name="l00276"></a><span class="lineno">  276</span>&#160;    constexpr <span class="keywordtype">void</span> push_front(<a class="code" href="classAddr.html">Addr</a> *addr) {</div>
+<div class="line"><a name="l00276"></a><span class="lineno">  276</span>&#160;    constexpr <span class="keywordtype">void</span> push_front(Addr *addr) {</div>
 <div class="line"><a name="l00277"></a><span class="lineno">  277</span>&#160;      invariant(numAddr &lt; capacity);</div>
 <div class="line"><a name="l00278"></a><span class="lineno">  278</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; numAddr; ++i) {</div>
-<div class="line"><a name="l00279"></a><span class="lineno">  279</span>&#160;        <a class="code" href="classAddr.html">Addr</a> *tmp = addresses[i];</div>
+<div class="line"><a name="l00279"></a><span class="lineno">  279</span>&#160;        Addr *tmp = addresses[i];</div>
 <div class="line"><a name="l00280"></a><span class="lineno">  280</span>&#160;        addresses[i] = addr;</div>
 <div class="line"><a name="l00281"></a><span class="lineno">  281</span>&#160;        addr = tmp;</div>
 <div class="line"><a name="l00282"></a><span class="lineno">  282</span>&#160;      }</div>
 <div class="line"><a name="l00283"></a><span class="lineno">  283</span>&#160;      addresses[numAddr++] = addr;</div>
 <div class="line"><a name="l00284"></a><span class="lineno">  284</span>&#160;    }</div>
-<div class="line"><a name="l00285"></a><span class="lineno">  285</span>&#160;    constexpr <span class="keywordtype">void</span> push_front(BumpAlloc&lt;&gt; &amp;alloc, <a class="code" href="classAddr.html">Addr</a> *addr) {</div>
+<div class="line"><a name="l00285"></a><span class="lineno">  285</span>&#160;    constexpr <span class="keywordtype">void</span> push_front(BumpAlloc&lt;&gt; &amp;alloc, Addr *addr) {</div>
 <div class="line"><a name="l00286"></a><span class="lineno">  286</span>&#160;      <span class="keywordflow">if</span> (numAddr &gt;= capacity)</div>
 <div class="line"><a name="l00287"></a><span class="lineno">  287</span>&#160;        reserveExtra(alloc, std::max&lt;unsigned&gt;(4, numAddr));</div>
 <div class="line"><a name="l00288"></a><span class="lineno">  288</span>&#160;      push_front(addr);</div>
 <div class="line"><a name="l00289"></a><span class="lineno">  289</span>&#160;    }</div>
 <div class="line"><a name="l00290"></a><span class="lineno">  290</span>&#160;    constexpr <span class="keywordtype">void</span> incNumAddr(<span class="keywordtype">unsigned</span> x) { capacity += x; }</div>
-<div class="line"><a name="l00291"></a><span class="lineno">  291</span>&#160;    [[nodiscard]] constexpr <span class="keyword">auto</span> try_delete(<a class="code" href="classAddr.html">Addr</a> *adr) -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l00291"></a><span class="lineno">  291</span>&#160;    [[nodiscard]] constexpr <span class="keyword">auto</span> try_delete(Addr *adr) -&gt; <span class="keywordtype">bool</span> {</div>
 <div class="line"><a name="l00292"></a><span class="lineno">  292</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; numAddr; ++i) {</div>
 <div class="line"><a name="l00293"></a><span class="lineno">  293</span>&#160;        <span class="keywordflow">if</span> (addresses[i] == adr) {</div>
 <div class="line"><a name="l00294"></a><span class="lineno">  294</span>&#160;          addresses[i] = addresses[--numAddr];</div>
@@ -394,7 +394,7 @@ $(function() {
 <div class="line"><a name="l00360"></a><span class="lineno">  360</span>&#160;<span class="comment">  */</span></div>
 <div class="line"><a name="l00361"></a><span class="lineno">  361</span>&#160;  <span class="comment">// i = 0 means self, i = 1 (default) returns parent, i = 2 parent&#39;s</span></div>
 <div class="line"><a name="l00362"></a><span class="lineno">  362</span>&#160;  <span class="comment">// parent...</span></div>
-<div class="line"><a name="l00363"></a><span class="lineno">  363</span>&#160;  constexpr <span class="keyword">auto</span> try_delete(<a class="code" href="classAddr.html">Addr</a> *adr) -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l00363"></a><span class="lineno">  363</span>&#160;  constexpr <span class="keyword">auto</span> try_delete(Addr *adr) -&gt; <span class="keywordtype">bool</span> {</div>
 <div class="line"><a name="l00364"></a><span class="lineno">  364</span>&#160;    <span class="keywordflow">return</span> (adr-&gt;getLoopTreeSchedule() == <span class="keyword">this</span>) &amp;&amp;</div>
 <div class="line"><a name="l00365"></a><span class="lineno">  365</span>&#160;           getBlock(adr-&gt;getBlockIdx()).try_delete(adr);</div>
 <div class="line"><a name="l00366"></a><span class="lineno">  366</span>&#160;  }</div>
@@ -482,21 +482,21 @@ $(function() {
 <div class="line"><a name="l00449"></a><span class="lineno">  449</span>&#160;    <span class="keywordflow">if</span> (P == <span class="keyword">this</span>) <span class="keywordflow">return</span> L-&gt;getBlockIdx();</div>
 <div class="line"><a name="l00450"></a><span class="lineno">  450</span>&#160;    <span class="keywordflow">return</span> getLoopIdx(P);</div>
 <div class="line"><a name="l00451"></a><span class="lineno">  451</span>&#160;  }</div>
-<div class="line"><a name="l00452"></a><span class="lineno">  452</span>&#160;  constexpr <span class="keyword">auto</span> getIdx(<a class="code" href="classAddr.html">Addr</a> *a) <span class="keyword">const</span> -&gt; <span class="keywordtype">unsigned</span> {</div>
+<div class="line"><a name="l00452"></a><span class="lineno">  452</span>&#160;  constexpr <span class="keyword">auto</span> getIdx(Addr *a) <span class="keyword">const</span> -&gt; <span class="keywordtype">unsigned</span> {</div>
 <div class="line"><a name="l00453"></a><span class="lineno">  453</span>&#160;    <span class="keywordflow">if</span> (a-&gt;getLoopTreeSchedule() == <span class="keyword">this</span>) <span class="keywordflow">return</span> 2 * a-&gt;getBlockIdx();</div>
 <div class="line"><a name="l00454"></a><span class="lineno">  454</span>&#160;    <span class="keywordflow">return</span> 2 * getLoopIdx(a-&gt;getLoopTreeSchedule()) + 1;</div>
 <div class="line"><a name="l00455"></a><span class="lineno">  455</span>&#160;  }</div>
-<div class="line"><a name="l00456"></a><span class="lineno">  456</span>&#160;  <span class="keywordtype">void</span> push_back(BumpAlloc&lt;&gt; &amp;alloc, <a class="code" href="classAddr.html">Addr</a> *a, <span class="keywordtype">unsigned</span> idx) {</div>
+<div class="line"><a name="l00456"></a><span class="lineno">  456</span>&#160;  <span class="keywordtype">void</span> push_back(BumpAlloc&lt;&gt; &amp;alloc, Addr *a, <span class="keywordtype">unsigned</span> idx) {</div>
 <div class="line"><a name="l00457"></a><span class="lineno">  457</span>&#160;    <span class="keywordflow">if</span> (idx) subTrees[idx - 1].exit.push_back(alloc, a);</div>
 <div class="line"><a name="l00458"></a><span class="lineno">  458</span>&#160;    <span class="keywordflow">else</span> header.push_back(alloc, a);</div>
 <div class="line"><a name="l00459"></a><span class="lineno">  459</span>&#160;  }</div>
-<div class="line"><a name="l00460"></a><span class="lineno">  460</span>&#160;  <span class="keywordtype">void</span> push_front(BumpAlloc&lt;&gt; &amp;alloc, <a class="code" href="classAddr.html">Addr</a> *a, <span class="keywordtype">unsigned</span> idx) {</div>
+<div class="line"><a name="l00460"></a><span class="lineno">  460</span>&#160;  <span class="keywordtype">void</span> push_front(BumpAlloc&lt;&gt; &amp;alloc, Addr *a, <span class="keywordtype">unsigned</span> idx) {</div>
 <div class="line"><a name="l00461"></a><span class="lineno">  461</span>&#160;    <span class="keywordflow">if</span> (idx) subTrees[idx - 1].exit.push_front(alloc, a);</div>
 <div class="line"><a name="l00462"></a><span class="lineno">  462</span>&#160;    <span class="keywordflow">else</span> header.push_front(alloc, a);</div>
 <div class="line"><a name="l00463"></a><span class="lineno">  463</span>&#160;  }</div>
 <div class="line"><a name="l00464"></a><span class="lineno">  464</span>&#160;  <span class="comment">// can we hoist forward out of this loop?</span></div>
 <div class="line"><a name="l00465"></a><span class="lineno">  465</span>&#160;  <span class="comment">// NOLINTNEXTLINE(misc-no-recursion)</span></div>
-<div class="line"><a name="l00466"></a><span class="lineno">  466</span>&#160;  <span class="keyword">auto</span> hoist(BumpAlloc&lt;&gt; &amp;alloc, <a class="code" href="classAddr.html">Addr</a> *a, <span class="keywordtype">unsigned</span> currentLoop)</div>
+<div class="line"><a name="l00466"></a><span class="lineno">  466</span>&#160;  <span class="keyword">auto</span> hoist(BumpAlloc&lt;&gt; &amp;alloc, Addr *a, <span class="keywordtype">unsigned</span> currentLoop)</div>
 <div class="line"><a name="l00467"></a><span class="lineno">  467</span>&#160;    -&gt; Optional&lt;unsigned&gt; {</div>
 <div class="line"><a name="l00468"></a><span class="lineno">  468</span>&#160;    <span class="keywordflow">if</span> (a-&gt;wasVisited3()) {</div>
 <div class="line"><a name="l00469"></a><span class="lineno">  469</span>&#160;      <span class="keywordflow">if</span> (a-&gt;getLoopTreeSchedule() == <span class="keyword">this</span>) <span class="keywordflow">return</span> a-&gt;getBlockIdx();</div>
@@ -642,7 +642,7 @@ $(function() {
 <div class="line"><a name="l00609"></a><span class="lineno">  609</span>&#160;          <span class="comment">// 3. !inLoop &amp;&amp; !wasPlaced</span></div>
 <div class="line"><a name="l00610"></a><span class="lineno">  610</span>&#160;          <span class="comment">// 4. !inLoop &amp;&amp; wasPlaced - scc hoisted</span></div>
 <div class="line"><a name="l00611"></a><span class="lineno">  611</span>&#160;          <span class="keywordflow">if</span> (inLoop) <span class="keywordflow">continue</span>;</div>
-<div class="line"><a name="l00612"></a><span class="lineno">  612</span>&#160;          <a class="code" href="classAddr.html">Addr</a> *a = addr[ind];</div>
+<div class="line"><a name="l00612"></a><span class="lineno">  612</span>&#160;          Addr *a = addr[ind];</div>
 <div class="line"><a name="l00613"></a><span class="lineno">  613</span>&#160;          invariant(!a-&gt;wasPlaced());</div>
 <div class="line"><a name="l00614"></a><span class="lineno">  614</span>&#160;          <span class="comment">// if (a-&gt;wasPlaced()) {</span></div>
 <div class="line"><a name="l00615"></a><span class="lineno">  615</span>&#160;          <span class="comment">//   // scc&#39;s top sort decided we can hoist</span></div>
@@ -675,7 +675,7 @@ $(function() {
 <div class="line"><a name="l00642"></a><span class="lineno">  642</span>&#160;      <span class="keywordflow">if</span> (sccsz == 1) {</div>
 <div class="line"><a name="l00643"></a><span class="lineno">  643</span>&#160;        <span class="keywordtype">size_t</span> indRaw = scc.front(), ind = indRaw - numSubTrees;</div>
 <div class="line"><a name="l00644"></a><span class="lineno">  644</span>&#160;        <span class="keywordflow">if</span> (ind &lt; numAddr) {</div>
-<div class="line"><a name="l00645"></a><span class="lineno">  645</span>&#160;          <a class="code" href="classAddr.html">Addr</a> *a = addr[ind];</div>
+<div class="line"><a name="l00645"></a><span class="lineno">  645</span>&#160;          Addr *a = addr[ind];</div>
 <div class="line"><a name="l00646"></a><span class="lineno">  646</span>&#160;          <span class="comment">// four possibilities:</span></div>
 <div class="line"><a name="l00647"></a><span class="lineno">  647</span>&#160;          <span class="comment">// 1. inLoop &amp;&amp; wasPlaced</span></div>
 <div class="line"><a name="l00648"></a><span class="lineno">  648</span>&#160;          <span class="comment">// 2. inLoop &amp;&amp; !wasPlaced</span></div>
@@ -766,7 +766,7 @@ $(function() {
 <div class="line"><a name="l00733"></a><span class="lineno">  733</span>&#160;      edge.input()-&gt;getAddress()-&gt;addOut(edge.output()-&gt;getAddress(),</div>
 <div class="line"><a name="l00734"></a><span class="lineno">  734</span>&#160;                                         edge.satLevel());</div>
 <div class="line"><a name="l00735"></a><span class="lineno">  735</span>&#160;    }</div>
-<div class="line"><a name="l00736"></a><span class="lineno">  736</span>&#160;    MutPtrVector&lt;Addr *&gt; addr{alloc.allocate&lt;<a class="code" href="classAddr.html">Addr</a> *&gt;(numAddr), numAddr};</div>
+<div class="line"><a name="l00736"></a><span class="lineno">  736</span>&#160;    MutPtrVector&lt;Addr *&gt; addr{alloc.allocate&lt;Addr *&gt;(numAddr), numAddr};</div>
 <div class="line"><a name="l00737"></a><span class="lineno">  737</span>&#160;    root-&gt;placeAddr(alloc, LB, addr);</div>
 <div class="line"><a name="l00738"></a><span class="lineno">  738</span>&#160;    <span class="keywordflow">return</span> root;</div>
 <div class="line"><a name="l00739"></a><span class="lineno">  739</span>&#160;  }</div>
@@ -801,9 +801,9 @@ $(function() {
 <div class="line"><a name="l00768"></a><span class="lineno">  768</span>&#160;  <span class="keyword">auto</span> printSubDotFile(BumpAlloc&lt;&gt; &amp;alloc, llvm::raw_ostream &amp;out,</div>
 <div class="line"><a name="l00769"></a><span class="lineno">  769</span>&#160;                       map&lt;LoopTreeSchedule *, std::string&gt; &amp;names,</div>
 <div class="line"><a name="l00770"></a><span class="lineno">  770</span>&#160;                       llvm::SmallVectorImpl&lt;std::string&gt; &amp;addrNames,</div>
-<div class="line"><a name="l00771"></a><span class="lineno">  771</span>&#160;                       <span class="keywordtype">unsigned</span> addrIndOffset, <a class="code" href="classAffineLoopNest.html">AffineLoopNest</a> *lret)</div>
-<div class="line"><a name="l00772"></a><span class="lineno">  772</span>&#160;    -&gt; <a class="code" href="classAffineLoopNest.html">AffineLoopNest</a> * {</div>
-<div class="line"><a name="l00773"></a><span class="lineno">  773</span>&#160;    <a class="code" href="classAffineLoopNest.html">AffineLoopNest</a> *loop{<span class="keyword">nullptr</span>};</div>
+<div class="line"><a name="l00771"></a><span class="lineno">  771</span>&#160;                       <span class="keywordtype">unsigned</span> addrIndOffset, AffineLoopNest *lret)</div>
+<div class="line"><a name="l00772"></a><span class="lineno">  772</span>&#160;    -&gt; AffineLoopNest * {</div>
+<div class="line"><a name="l00773"></a><span class="lineno">  773</span>&#160;    AffineLoopNest *loop{<span class="keyword">nullptr</span>};</div>
 <div class="line"><a name="l00774"></a><span class="lineno">  774</span>&#160;    <span class="keywordtype">size_t</span> j = 0;</div>
 <div class="line"><a name="l00775"></a><span class="lineno">  775</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">auto</span> *addr : header.getAddr()) loop = addr-&gt;getLoop();</div>
 <div class="line"><a name="l00776"></a><span class="lineno">  776</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;subTree : subTrees) {</div>
@@ -882,13 +882,13 @@ $(function() {
 <div class="line"><a name="l00849"></a><span class="lineno">  849</span>&#160;    ++j;</div>
 <div class="line"><a name="l00850"></a><span class="lineno">  850</span>&#160;    <span class="keywordtype">size_t</span> inputEdges = mem-&gt;inputEdges().size(),</div>
 <div class="line"><a name="l00851"></a><span class="lineno">  851</span>&#160;           outputEdges = mem-&gt;outputEdges().size();</div>
-<div class="line"><a name="l00852"></a><span class="lineno">  852</span>&#160;    <a class="code" href="classAddr.html">Addr</a> *addr = Addr::construct(</div>
+<div class="line"><a name="l00852"></a><span class="lineno">  852</span>&#160;    Addr *addr = Addr::construct(</div>
 <div class="line"><a name="l00853"></a><span class="lineno">  853</span>&#160;      alloc, loop, mem, isStore, Pinv, denom, schedule.getOffsetOmega(), L,</div>
 <div class="line"><a name="l00854"></a><span class="lineno">  854</span>&#160;      inputEdges, isStore ? numMem - 1 : 1, outputEdges, offsets);</div>
 <div class="line"><a name="l00855"></a><span class="lineno">  855</span>&#160;    mem-&gt;setAddress(addr);</div>
 <div class="line"><a name="l00856"></a><span class="lineno">  856</span>&#160;    accesses.push_back(addr);</div>
 <div class="line"><a name="l00857"></a><span class="lineno">  857</span>&#160;  }</div>
-<div class="line"><a name="l00858"></a><span class="lineno">  858</span>&#160;  <a class="code" href="classAddr.html">Addr</a> *store = accesses[offset + sId];</div>
+<div class="line"><a name="l00858"></a><span class="lineno">  858</span>&#160;  Addr *store = accesses[offset + sId];</div>
 <div class="line"><a name="l00859"></a><span class="lineno">  859</span>&#160;  <span class="comment">// addrs all need direct connections</span></div>
 <div class="line"><a name="l00860"></a><span class="lineno">  860</span>&#160;  <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0, k = 0; i &lt; numMem; ++i)</div>
 <div class="line"><a name="l00861"></a><span class="lineno">  861</span>&#160;    <span class="keywordflow">if</span> (i != sId) accesses[offset + i]-&gt;addDirectConnection(store, k++);</div>
@@ -896,8 +896,6 @@ $(function() {
 <div class="line"><a name="l00863"></a><span class="lineno">  863</span>&#160;[[nodiscard]] constexpr <span class="keyword">auto</span> Addr::getCurrentDepth() const -&gt; <span class="keywordtype">unsigned</span> {</div>
 <div class="line"><a name="l00864"></a><span class="lineno">  864</span>&#160;  <span class="keywordflow">return</span> node-&gt;getDepth();</div>
 <div class="line"><a name="l00865"></a><span class="lineno">  865</span>&#160;}</div>
-<div class="ttc" id="aclassAddr_html"><div class="ttname"><a href="classAddr.html">Addr</a></div><div class="ttdef"><b>Definition:</b> Address.hpp:63</div></div>
-<div class="ttc" id="aclassAffineLoopNest_html"><div class="ttname"><a href="classAffineLoopNest.html">AffineLoopNest</a></div><div class="ttdef"><b>Definition:</b> Loops.hpp:325</div></div>
 <div class="ttc" id="aclassCostModeling_1_1CPURegisterFile_html"><div class="ttname"><a href="classCostModeling_1_1CPURegisterFile.html">CostModeling::CPURegisterFile</a></div><div class="ttdef"><b>Definition:</b> CostModeling.hpp:37</div></div>
 <div class="ttc" id="aclassCostModeling_1_1LoopTreeSchedule_html"><div class="ttname"><a href="classCostModeling_1_1LoopTreeSchedule.html">CostModeling::LoopTreeSchedule</a></div><div class="ttdef"><b>Definition:</b> CostModeling.hpp:176</div></div>
 <div class="ttc" id="aclassLinearProgramLoopBlock_html"><div class="ttname"><a href="classLinearProgramLoopBlock.html">LinearProgramLoopBlock</a></div><div class="ttdef"><b>Definition:</b> LoopBlock.hpp:323</div></div>
