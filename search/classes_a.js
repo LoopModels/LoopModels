@@ -1,10 +1,9 @@
 var searchData=
 [
-  ['map_177',['Map',['../structpoly_1_1IR_1_1Predicate_1_1Map.html',1,'poly::IR::Predicate']]],
-  ['mapvector_178',['MapVector',['../classMapVector.html',1,'']]],
-  ['mapvector_3c_20llvm_3a_3abasicblock_20_2a_2c_20set_20_3e_179',['MapVector&lt; llvm::BasicBlock *, Set &gt;',['../classMapVector.html',1,'']]],
-  ['memoryaccess_180',['MemoryAccess',['../structMemoryAccess.html',1,'']]],
-  ['mergingcost_181',['MergingCost',['../structMergingCost.html',1,'']]],
-  ['mockgraph_182',['MockGraph',['../structMockGraph.html',1,'']]],
-  ['mockvertex_183',['MockVertex',['../structMockVertex.html',1,'']]]
+  ['map_179',['Map',['../structpoly_1_1IR_1_1Predicate_1_1Map.html',1,'poly::IR::Predicate']]],
+  ['mapvector_180',['MapVector',['../classpoly_1_1dict_1_1MapVector.html',1,'poly::dict']]],
+  ['memoryaccess_181',['MemoryAccess',['../structMemoryAccess.html',1,'']]],
+  ['mergingcost_182',['MergingCost',['../structMergingCost.html',1,'']]],
+  ['mockgraph_183',['MockGraph',['../structMockGraph.html',1,'']]],
+  ['mockvertex_184',['MockVertex',['../structMockVertex.html',1,'']]]
 ];

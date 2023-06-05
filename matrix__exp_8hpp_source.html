@@ -386,9 +386,9 @@ $(function() {
 <div class="line"><a name="l00315"></a><span class="lineno">  315</span>&#160;<span class="keyword">using</span> <a class="code" href="classDual.html">D4D2</a> = <a class="code" href="classDual.html">Dual&lt;Dual&lt;double, 4&gt;</a>, 2&gt;;</div>
 <div class="line"><a name="l00316"></a><span class="lineno">  316</span>&#160;<span class="keyword">using</span> SMDD = SquareMatrix&lt;D4D2&gt;;</div>
 <div class="line"><a name="l00317"></a><span class="lineno">  317</span>&#160;<span class="preprocessor">#ifdef __INTEL_LLVM_COMPILER</span></div>
-<div class="line"><a name="l00318"></a><span class="lineno">  318</span>&#160;<span class="keyword">using</span> SMDD0 = LinAlg::ManagedArray&lt;D4D2, SquareDims, 0&gt;;</div>
+<div class="line"><a name="l00318"></a><span class="lineno">  318</span>&#160;<span class="keyword">using</span> SMDD0 = math::ManagedArray&lt;D4D2, SquareDims, 0&gt;;</div>
 <div class="line"><a name="l00319"></a><span class="lineno">  319</span>&#160;<span class="preprocessor">#else</span></div>
-<div class="line"><a name="l00320"></a><span class="lineno">  320</span>&#160;<span class="keyword">using</span> SMDD0 = LinAlg::ManagedArray&lt;D4D2, SquareDims&gt;;</div>
+<div class="line"><a name="l00320"></a><span class="lineno">  320</span>&#160;<span class="keyword">using</span> SMDD0 = math::ManagedArray&lt;D4D2, SquareDims&gt;;</div>
 <div class="line"><a name="l00321"></a><span class="lineno">  321</span>&#160;<span class="preprocessor">#endif</span></div>
 <div class="line"><a name="l00322"></a><span class="lineno">  322</span>&#160;<span class="preprocessor">#pragma omp declare reduction(+ : SMDD0 : omp_out += omp_in)                   \</span></div>
 <div class="line"><a name="l00323"></a><span class="lineno">  323</span>&#160;<span class="preprocessor">  initializer(omp_priv = SMDD0{omp_orig.dim(), D4D2{}})</span></div>

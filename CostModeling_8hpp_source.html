@@ -212,7 +212,7 @@ $(function() {
 <div class="line"><a name="l00161"></a><span class="lineno">  161</span>&#160; </div>
 <div class="line"><a name="l00166"></a><span class="lineno">  166</span>&#160; </div>
 <div class="line"><a name="l00176"></a><span class="lineno"><a class="line" href="classCostModeling_1_1LoopTreeSchedule.html">  176</a></span>&#160;<span class="keyword">class </span><a class="code" href="classCostModeling_1_1LoopTreeSchedule.html">LoopTreeSchedule</a> {</div>
-<div class="line"><a name="l00177"></a><span class="lineno">  177</span>&#160;  <span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt; <span class="keyword">using</span> Vec = LinAlg::ResizeableView&lt;T, unsigned&gt;;</div>
+<div class="line"><a name="l00177"></a><span class="lineno">  177</span>&#160;  <span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt; <span class="keyword">using</span> Vec = math::ResizeableView&lt;T, unsigned&gt;;</div>
 <div class="line"><a name="l00178"></a><span class="lineno">  178</span>&#160;  <span class="keyword">using</span> BitSet = MemoryAccess::BitSet;</div>
 <div class="line"><a name="l00179"></a><span class="lineno">  179</span>&#160; </div>
 <div class="line"><a name="l00180"></a><span class="lineno">  180</span>&#160;<span class="keyword">public</span>:</div>
@@ -801,9 +801,9 @@ $(function() {
 <div class="line"><a name="l00768"></a><span class="lineno">  768</span>&#160;  <span class="keyword">auto</span> printSubDotFile(BumpAlloc&lt;&gt; &amp;alloc, llvm::raw_ostream &amp;out,</div>
 <div class="line"><a name="l00769"></a><span class="lineno">  769</span>&#160;                       map&lt;LoopTreeSchedule *, std::string&gt; &amp;names,</div>
 <div class="line"><a name="l00770"></a><span class="lineno">  770</span>&#160;                       llvm::SmallVectorImpl&lt;std::string&gt; &amp;addrNames,</div>
-<div class="line"><a name="l00771"></a><span class="lineno">  771</span>&#160;                       <span class="keywordtype">unsigned</span> addrIndOffset, AffineLoopNest *lret)</div>
-<div class="line"><a name="l00772"></a><span class="lineno">  772</span>&#160;    -&gt; AffineLoopNest * {</div>
-<div class="line"><a name="l00773"></a><span class="lineno">  773</span>&#160;    AffineLoopNest *loop{<span class="keyword">nullptr</span>};</div>
+<div class="line"><a name="l00771"></a><span class="lineno">  771</span>&#160;                       <span class="keywordtype">unsigned</span> addrIndOffset, poly::Loop *lret)</div>
+<div class="line"><a name="l00772"></a><span class="lineno">  772</span>&#160;    -&gt; poly::Loop * {</div>
+<div class="line"><a name="l00773"></a><span class="lineno">  773</span>&#160;    poly::Loop *loop{<span class="keyword">nullptr</span>};</div>
 <div class="line"><a name="l00774"></a><span class="lineno">  774</span>&#160;    <span class="keywordtype">size_t</span> j = 0;</div>
 <div class="line"><a name="l00775"></a><span class="lineno">  775</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">auto</span> *addr : header.getAddr()) loop = addr-&gt;getLoop();</div>
 <div class="line"><a name="l00776"></a><span class="lineno">  776</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;subTree : subTrees) {</div>
@@ -874,7 +874,7 @@ $(function() {
 <div class="line"><a name="l00841"></a><span class="lineno">  841</span>&#160;  <span class="keyword">auto</span> &amp;accesses{L-&gt;getInitAddr(alloc)};</div>
 <div class="line"><a name="l00842"></a><span class="lineno">  842</span>&#160;  <span class="keywordtype">unsigned</span> numMem = memory.size(), offset = accesses.size(),</div>
 <div class="line"><a name="l00843"></a><span class="lineno">  843</span>&#160;           sId = std::numeric_limits&lt;unsigned&gt;::max() &gt;&gt; 1, j = 0;</div>
-<div class="line"><a name="l00844"></a><span class="lineno">  844</span>&#160;  NotNull&lt;AffineLoopNest&gt; loop = loopNest-&gt;rotate(alloc, Pinv, offsets);</div>
+<div class="line"><a name="l00844"></a><span class="lineno">  844</span>&#160;  NotNull&lt;poly::Loop&gt; loop = loopNest-&gt;rotate(alloc, Pinv, offsets);</div>
 <div class="line"><a name="l00845"></a><span class="lineno">  845</span>&#160;  <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i : memory) {</div>
 <div class="line"><a name="l00846"></a><span class="lineno">  846</span>&#160;    NotNull&lt;MemoryAccess&gt; mem = memAccess[i];</div>
 <div class="line"><a name="l00847"></a><span class="lineno">  847</span>&#160;    <span class="keywordtype">bool</span> isStore = mem-&gt;isStore();</div>

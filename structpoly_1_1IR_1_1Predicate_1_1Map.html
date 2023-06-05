@@ -133,13 +133,13 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>rbegin</b> ()</td></t
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>rend</b> ()</td></tr>
 <tr class="separator:a5a0550c0ed90e30808ce66f27901ad7b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa532147721e36267b30354e048d870d1"><td class="memItemLeft" align="right" valign="top"><a id="aa532147721e36267b30354e048d870d1"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator[]</b> (llvm::BasicBlock *bb) -&gt; std::optional&lt; Set &gt;</td></tr>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator[]</b> (llvm::BasicBlock *bb) -&gt; std::optional&lt; <a class="el" href="structpoly_1_1IR_1_1Predicate_1_1Set.html">Set</a> &gt;</td></tr>
 <tr class="separator:aa532147721e36267b30354e048d870d1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af593e57af2dfd4d5ad79a0c7a0501028"><td class="memItemLeft" align="right" valign="top"><a id="af593e57af2dfd4d5ad79a0c7a0501028"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator[]</b> (llvm::Instruction *inst) -&gt; std::optional&lt; Set &gt;</td></tr>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator[]</b> (llvm::Instruction *inst) -&gt; std::optional&lt; <a class="el" href="structpoly_1_1IR_1_1Predicate_1_1Set.html">Set</a> &gt;</td></tr>
 <tr class="separator:af593e57af2dfd4d5ad79a0c7a0501028"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aedecda3e72d56033dbb184064e01aaaa"><td class="memItemLeft" align="right" valign="top"><a id="aedecda3e72d56033dbb184064e01aaaa"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>insert</b> (std::pair&lt; llvm::BasicBlock *, Set &gt; &amp;&amp;pair)</td></tr>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>insert</b> (std::pair&lt; llvm::BasicBlock *, <a class="el" href="structpoly_1_1IR_1_1Predicate_1_1Set.html">Set</a> &gt; &amp;&amp;pair)</td></tr>
 <tr class="separator:aedecda3e72d56033dbb184064e01aaaa"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a626331f096e6371145c98353c6650677"><td class="memItemLeft" align="right" valign="top"><a id="a626331f096e6371145c98353c6650677"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>contains</b> (llvm::BasicBlock *BB) const -&gt; bool</td></tr>
@@ -153,20 +153,20 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>isInPath</b> (llvm::I
 <tr class="memitem:aecfb6dfbb4f037feb40b60161969dad1"><td class="memItemLeft" align="right" valign="top"><a id="aecfb6dfbb4f037feb40b60161969dad1"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>clear</b> ()</td></tr>
 <tr class="separator:aecfb6dfbb4f037feb40b60161969dad1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5163b451949dd35afead71aef6df98b9"><td class="memItemLeft" align="right" valign="top"><a id="a5163b451949dd35afead71aef6df98b9"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>addPredicate</b> (BumpAlloc&lt;&gt; &amp;alloc, Intr::Cache &amp;cache, llvm::Value *value) -&gt; size_t</td></tr>
-<tr class="separator:a5163b451949dd35afead71aef6df98b9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa77d2517ed309c92a2911d88975d4262"><td class="memItemLeft" align="right" valign="top"><a id="aa77d2517ed309c92a2911d88975d4262"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>addPredicate</b> (BumpAlloc&lt;&gt; &amp;alloc, <a class="el" href="classpoly_1_1IR_1_1Cache.html">IR::Cache</a> &amp;cache, llvm::Value *value) -&gt; size_t</td></tr>
+<tr class="separator:aa77d2517ed309c92a2911d88975d4262"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aacf04a4433a6dbbddb53130881841f70"><td class="memItemLeft" align="right" valign="top"><a id="aacf04a4433a6dbbddb53130881841f70"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>reach</b> (BumpAlloc&lt;&gt; &amp;alloc, llvm::BasicBlock *BB, Intersection predicate)</td></tr>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>reach</b> (BumpAlloc&lt;&gt; &amp;alloc, llvm::BasicBlock *BB, <a class="el" href="structpoly_1_1IR_1_1Predicate_1_1Intersection.html">Intersection</a> predicate)</td></tr>
 <tr class="separator:aacf04a4433a6dbbddb53130881841f70"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aaea6efe591addbed1a0ce71476de5b59"><td class="memItemLeft" align="right" valign="top"><a id="aaea6efe591addbed1a0ce71476de5b59"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>assume</b> (Intersection predicate)</td></tr>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>assume</b> (<a class="el" href="structpoly_1_1IR_1_1Predicate_1_1Intersection.html">Intersection</a> predicate)</td></tr>
 <tr class="separator:aaea6efe591addbed1a0ce71476de5b59"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
 <tr class="memitem:a8659c3f4701fbb4bf44b269555f95e8e"><td class="memItemLeft" align="right" valign="top"><a id="a8659c3f4701fbb4bf44b269555f95e8e"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>descendBlock</b> (BumpAlloc&lt;&gt; &amp;alloc, Intr::Cache &amp;cache, <a class="el" href="structpoly_1_1dict_1_1aset.html">aset</a>&lt; llvm::BasicBlock * &gt; &amp;visited, <a class="el" href="structpoly_1_1IR_1_1Predicate_1_1Map.html">Predicate::Map</a> &amp;predMap, llvm::BasicBlock *BBsrc, llvm::BasicBlock *BBdst, <a class="el" href="structPredicate_1_1Intersection.html">Predicate::Intersection</a> predicate, llvm::BasicBlock *BBhead, llvm::Loop *L) -&gt; Destination</td></tr>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>descendBlock</b> (BumpAlloc&lt;&gt; &amp;alloc, Intr::Cache &amp;cache, <a class="el" href="structpoly_1_1dict_1_1aset.html">aset</a>&lt; llvm::BasicBlock * &gt; &amp;visited, <a class="el" href="structpoly_1_1IR_1_1Predicate_1_1Map.html">Predicate::Map</a> &amp;predMap, llvm::BasicBlock *BBsrc, llvm::BasicBlock *BBdst, <a class="el" href="structpoly_1_1IR_1_1Predicate_1_1Intersection.html">Predicate::Intersection</a> predicate, llvm::BasicBlock *BBhead, llvm::Loop *L) -&gt; Destination</td></tr>
 <tr class="separator:a8659c3f4701fbb4bf44b269555f95e8e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a947782baeb7c646163b9e1815aa6158e"><td class="memItemLeft" align="right" valign="top">static auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpoly_1_1IR_1_1Predicate_1_1Map.html#a947782baeb7c646163b9e1815aa6158e">descend</a> (BumpAlloc&lt;&gt; &amp;alloc, Intr::Cache &amp;cache, llvm::BasicBlock *start, llvm::BasicBlock *stop, llvm::Loop *L) -&gt; std::optional&lt; <a class="el" href="structpoly_1_1IR_1_1Predicate_1_1Map.html">Map</a> &gt;</td></tr>
 <tr class="separator:a947782baeb7c646163b9e1815aa6158e"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -174,7 +174,7 @@ static auto&#160;</td><td class="memItemRight" valign="bottom"><b>descendBlock</
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
 <tr class="memitem:a968fe88cb5ff87dbb46d7edbeb611dd6"><td class="memItemLeft" align="right" valign="top"><a id="a968fe88cb5ff87dbb46d7edbeb611dd6"></a>
-<a class="el" href="classMapVector.html">MapVector</a>&lt; llvm::BasicBlock *, Set &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>map</b></td></tr>
+MapVector&lt; llvm::BasicBlock *, <a class="el" href="structpoly_1_1IR_1_1Predicate_1_1Set.html">Set</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>map</b></td></tr>
 <tr class="separator:a968fe88cb5ff87dbb46d7edbeb611dd6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Member Function Documentation</h2>
@@ -234,7 +234,7 @@ Public Attributes</h2></td></tr>
 </div>
 </div>
 <hr/>The documentation for this struct was generated from the following file:<ul>
-<li>include/IR/<a class="el" href="Instruction_8hpp_source.html">Instruction.hpp</a></li>
+<li>include/IR/<a class="el" href="BBPredPath_8hpp_source.html">BBPredPath.hpp</a></li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->

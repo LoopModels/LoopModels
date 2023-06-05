@@ -131,20 +131,20 @@ $(function() {
 <div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;  }</div>
 <div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;  [[nodiscard]] <span class="keyword">static</span> <span class="keyword">auto</span></div>
 <div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;  construct(BumpAlloc&lt;&gt; &amp;alloc, <span class="keyword">const</span> llvm::SCEVUnknown *arrayPtr,</div>
-<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;            AffineLoopNest &amp;loopRef, llvm::Instruction *user,</div>
+<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;            poly::Loop &amp;loopRef, llvm::Instruction *user,</div>
 <div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;            PtrMatrix&lt;int64_t&gt; indMatT,</div>
 <div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;            std::array&lt;llvm::SmallVector&lt;const llvm::SCEV *, 3&gt;, 2&gt; szOff,</div>
 <div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;            PtrMatrix&lt;int64_t&gt; offsets, PtrVector&lt;unsigned&gt; o)</div>
 <div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;    -&gt; NotNull&lt;MemoryAccess&gt; {</div>
-<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;    <span class="keywordflow">return</span> alloc.create&lt;<a class="code" href="structMemoryAccess.html">MemoryAccess</a>&gt;(<a class="code" href="classArrayIndex.html#a43728f7c87cd4691856be9bf4ad9eef4">ArrayIndex::construct</a>(</div>
+<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;    <span class="keywordflow">return</span> alloc.create&lt;<a class="code" href="structMemoryAccess.html">MemoryAccess</a>&gt;(<a class="code" href="classArrayIndex.html#ae9319d705cd31d0eba7e664b9d585452">ArrayIndex::construct</a>(</div>
 <div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;      alloc, arrayPtr, loopRef, user, indMatT, std::move(szOff), offsets, o));</div>
 <div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;  }</div>
 <div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;  [[nodiscard]] <span class="keyword">static</span> <span class="keyword">auto</span></div>
 <div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;  construct(BumpAlloc&lt;&gt; &amp;alloc, <span class="keyword">const</span> llvm::SCEVUnknown *arrayPtr,</div>
-<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;            AffineLoopNest &amp;loopRef, llvm::Instruction *user,</div>
+<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;            poly::Loop &amp;loopRef, llvm::Instruction *user,</div>
 <div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;            PtrVector&lt;unsigned&gt; o) -&gt; NotNull&lt;MemoryAccess&gt; {</div>
 <div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;    <span class="keywordflow">return</span> alloc.create&lt;<a class="code" href="structMemoryAccess.html">MemoryAccess</a>&gt;(</div>
-<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;      <a class="code" href="classArrayIndex.html#a43728f7c87cd4691856be9bf4ad9eef4">ArrayIndex::construct</a>(alloc, arrayPtr, loopRef, user, o));</div>
+<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;      <a class="code" href="classArrayIndex.html#ae9319d705cd31d0eba7e664b9d585452">ArrayIndex::construct</a>(alloc, arrayPtr, loopRef, user, o));</div>
 <div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;  }</div>
 <div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160; </div>
 <div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;  <span class="keywordtype">void</span> peelLoops(<span class="keywordtype">size_t</span> n) { arrayRef-&gt;peelLoops(n); }</div>
@@ -181,10 +181,10 @@ $(function() {
 <div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;    <span class="keywordflow">return</span> arrayRef-&gt;getInstruction();</div>
 <div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;  }</div>
 <div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getLoop() <span class="keyword">const</span></div>
-<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;    -&gt; NotNull&lt;const AffineLoopNest&gt; {</div>
+<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;    -&gt; NotNull&lt;const poly::Loop&gt; {</div>
 <div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;    <span class="keywordflow">return</span> arrayRef-&gt;getLoop();</div>
 <div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;  }</div>
-<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getLoop() -&gt; NotNull&lt;AffineLoopNest&gt; {</div>
+<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getLoop() -&gt; NotNull&lt;poly::Loop&gt; {</div>
 <div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;    <span class="keywordflow">return</span> arrayRef-&gt;getLoop();</div>
 <div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;  }</div>
 <div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getArrayDim() <span class="keyword">const</span> -&gt; <span class="keywordtype">size_t</span> {</div>
@@ -241,7 +241,7 @@ $(function() {
 <div class="line"><a name="l00174"></a><span class="lineno">  174</span>&#160;};</div>
 <div class="line"><a name="l00175"></a><span class="lineno">  175</span>&#160; </div>
 <div class="line"><a name="l00176"></a><span class="lineno">  176</span>&#160;static_assert(std::is_trivially_copyable_v&lt;MemoryAccess&gt;);</div>
-<div class="ttc" id="aclassArrayIndex_html_a43728f7c87cd4691856be9bf4ad9eef4"><div class="ttname"><a href="classArrayIndex.html#a43728f7c87cd4691856be9bf4ad9eef4">ArrayIndex::construct</a></div><div class="ttdeci">static auto construct(BumpAlloc&lt;&gt; &amp;alloc, const llvm::SCEVUnknown *arrayPointer, AffineLoopNest &amp;loopRef, llvm::Instruction *user, PtrVector&lt; unsigned &gt; o) -&gt; NotNull&lt; ArrayIndex &gt;</div><div class="ttdoc">Constructor for 0 dimensional memory access.</div><div class="ttdef"><b>Definition:</b> ArrayIndex.hpp:89</div></div>
+<div class="ttc" id="aclassArrayIndex_html_ae9319d705cd31d0eba7e664b9d585452"><div class="ttname"><a href="classArrayIndex.html#ae9319d705cd31d0eba7e664b9d585452">ArrayIndex::construct</a></div><div class="ttdeci">static auto construct(BumpAlloc&lt;&gt; &amp;alloc, const llvm::SCEVUnknown *arrayPointer, poly::Loop &amp;loopRef, llvm::Instruction *user, PtrVector&lt; unsigned &gt; o) -&gt; NotNull&lt; ArrayIndex &gt;</div><div class="ttdoc">Constructor for 0 dimensional memory access.</div><div class="ttdef"><b>Definition:</b> ArrayIndex.hpp:89</div></div>
 <div class="ttc" id="astructMemoryAccess_html"><div class="ttname"><a href="structMemoryAccess.html">MemoryAccess</a></div><div class="ttdoc">A particular memory access instance.</div><div class="ttdef"><b>Definition:</b> MemoryAccess.hpp:20</div></div>
 <div class="ttc" id="astructMemoryAccess_html_a24f0c9af64a2d853326cd5129f8bbf07"><div class="ttname"><a href="structMemoryAccess.html#a24f0c9af64a2d853326cd5129f8bbf07">MemoryAccess::indexMatrix</a></div><div class="ttdeci">constexpr auto indexMatrix() const -&gt; DensePtrMatrix&lt; int64_t &gt;</div><div class="ttdoc">indexMatrix() -&gt; arrayDim() x getNumLoops()</div><div class="ttdef"><b>Definition:</b> MemoryAccess.hpp:131</div></div>
 <div class="ttc" id="astructMemoryAccess_html_a4c213ffb008f3b021ab51c21dddd7c06"><div class="ttname"><a href="structMemoryAccess.html#a4c213ffb008f3b021ab51c21dddd7c06">MemoryAccess::getLoad</a></div><div class="ttdeci">auto getLoad() -&gt; llvm::LoadInst *</div><div class="ttdoc">add a node index</div><div class="ttdef"><b>Definition:</b> MemoryAccess.hpp:167</div></div>

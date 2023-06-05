@@ -100,7 +100,7 @@ $(function() {
 <div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;    <span class="keywordtype">size_t</span> maxDepth;</div>
 <div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;  } nodeOrDepth; <span class="comment">// both are used at different times</span></div>
 <div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;  [[no_unique_address]] NotNull&lt;const llvm::SCEVUnknown&gt; basePointer;</div>
-<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;  [[no_unique_address]] NotNull&lt;AffineLoopNest&gt; loop;</div>
+<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;  [[no_unique_address]] NotNull&lt;poly::Loop&gt; loop;</div>
 <div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;  [[no_unique_address]] llvm::Instruction *instr;</div>
 <div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;  [[no_unique_address]] int64_t *offSym{<span class="keyword">nullptr</span>};</div>
 <div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;  [[no_unique_address]] <span class="keyword">const</span> llvm::SCEV **syms;</div>
@@ -143,7 +143,7 @@ $(function() {
 <div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;                intMemNeeded(getNumLoops(), numDim) * <span class="keyword">sizeof</span>(int64_t));</div>
 <div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;  }</div>
 <div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;  <span class="keyword">explicit</span> <a class="code" href="classpoly_1_1IR_1_1Addr.html">Addr</a>(<span class="keyword">const</span> llvm::SCEVUnknown *arrayPtr,</div>
-<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;                NotNull&lt;AffineLoopNest&gt; loopRef, llvm::Instruction *user,</div>
+<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;                NotNull&lt;poly::Loop&gt; loopRef, llvm::Instruction *user,</div>
 <div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;                int64_t *offsym, <span class="keyword">const</span> llvm::SCEV **s,</div>
 <div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;                std::array&lt;unsigned, 2&gt; dimOff)</div>
 <div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;    : <a class="code" href="classpoly_1_1IR_1_1Node.html">Node</a>(llvm::isa&lt;llvm::StoreInst&gt;(user) ? VK_Stow : VK_Load,</div>
@@ -151,12 +151,12 @@ $(function() {
 <div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;      basePointer(arrayPtr), loop(loopRef), instr(user), offSym(offsym),</div>
 <div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;      syms(s), numDim(dimOff[0]), numDynSym(dimOff[1]){};</div>
 <div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;  <span class="keyword">explicit</span> <a class="code" href="classpoly_1_1IR_1_1Addr.html">Addr</a>(<span class="keyword">const</span> llvm::SCEVUnknown *arrayPtr,</div>
-<div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;                NotNull&lt;AffineLoopNest&gt; loopRef, llvm::Instruction *user)</div>
+<div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;                NotNull&lt;poly::Loop&gt; loopRef, llvm::Instruction *user)</div>
 <div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;    : <a class="code" href="classpoly_1_1IR_1_1Node.html">Node</a>(llvm::isa&lt;llvm::StoreInst&gt;(user) ? VK_Stow : VK_Load,</div>
 <div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160;           loopRef-&gt;getNumLoops()),</div>
 <div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;      basePointer(arrayPtr), loop(loopRef), instr(user){};</div>
 <div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160; </div>
-<div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160;  constexpr <a class="code" href="classpoly_1_1IR_1_1Addr.html">Addr</a>(NotNull&lt;AffineLoopNest&gt; explicitLoop, NotNull&lt;Addr&gt; ma,</div>
+<div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160;  constexpr <a class="code" href="classpoly_1_1IR_1_1Addr.html">Addr</a>(NotNull&lt;poly::Loop&gt; explicitLoop, NotNull&lt;Addr&gt; ma,</div>
 <div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160;                 SquarePtrMatrix&lt;int64_t&gt; Pinv, int64_t denom,</div>
 <div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160;                 PtrVector&lt;int64_t&gt; omega, <span class="keywordtype">bool</span> isStr, int64_t *offsets)</div>
 <div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160;    : <a class="code" href="classpoly_1_1IR_1_1Node.html">Node</a>(isStr ? VK_Stow : VK_Load, <span class="keywordtype">unsigned</span>(Pinv.numCol())),</div>
@@ -219,7 +219,7 @@ $(function() {
 <div class="line"><a name="l00189"></a><span class="lineno">  189</span>&#160; </div>
 <div class="line"><a name="l00190"></a><span class="lineno">  190</span>&#160;  [[nodiscard]] <span class="keyword">static</span> <span class="keyword">auto</span> construct(BumpAlloc&lt;&gt; &amp;alloc,</div>
 <div class="line"><a name="l00191"></a><span class="lineno">  191</span>&#160;                                      <span class="keyword">const</span> llvm::SCEVUnknown *ptr,</div>
-<div class="line"><a name="l00192"></a><span class="lineno">  192</span>&#160;                                      NotNull&lt;AffineLoopNest&gt; loopRef,</div>
+<div class="line"><a name="l00192"></a><span class="lineno">  192</span>&#160;                                      NotNull&lt;poly::Loop&gt; loopRef,</div>
 <div class="line"><a name="l00193"></a><span class="lineno">  193</span>&#160;                                      llvm::Instruction *user,</div>
 <div class="line"><a name="l00194"></a><span class="lineno">  194</span>&#160;                                      PtrVector&lt;unsigned&gt; o) -&gt; NotNull&lt;Addr&gt; {</div>
 <div class="line"><a name="l00195"></a><span class="lineno">  195</span>&#160;    <span class="keywordtype">unsigned</span> numLoops = loopRef-&gt;getNumLoops();</div>
@@ -232,8 +232,8 @@ $(function() {
 <div class="line"><a name="l00202"></a><span class="lineno">  202</span>&#160;    <span class="keywordflow">return</span> ma;</div>
 <div class="line"><a name="l00203"></a><span class="lineno">  203</span>&#160;  }</div>
 <div class="line"><a name="l00205"></a><span class="lineno">  205</span>&#160;  [[nodiscard]] <span class="keyword">static</span> <span class="keyword">auto</span></div>
-<div class="line"><a name="l00206"></a><span class="lineno"><a class="line" href="classpoly_1_1IR_1_1Addr.html#a74f1615a7cc0b84d17228d372423b440">  206</a></span>&#160;  <a class="code" href="classpoly_1_1IR_1_1Addr.html#a74f1615a7cc0b84d17228d372423b440">construct</a>(BumpAlloc&lt;&gt; &amp;alloc, <span class="keyword">const</span> llvm::SCEVUnknown *arrayPtr,</div>
-<div class="line"><a name="l00207"></a><span class="lineno">  207</span>&#160;            NotNull&lt;AffineLoopNest&gt; AL, llvm::Instruction *user,</div>
+<div class="line"><a name="l00206"></a><span class="lineno"><a class="line" href="classpoly_1_1IR_1_1Addr.html#a3bef205d26e7e3a864f6d5fe1228e814">  206</a></span>&#160;  <a class="code" href="classpoly_1_1IR_1_1Addr.html#a3bef205d26e7e3a864f6d5fe1228e814">construct</a>(BumpAlloc&lt;&gt; &amp;alloc, <span class="keyword">const</span> llvm::SCEVUnknown *arrayPtr,</div>
+<div class="line"><a name="l00207"></a><span class="lineno">  207</span>&#160;            NotNull&lt;poly::Loop&gt; AL, llvm::Instruction *user,</div>
 <div class="line"><a name="l00208"></a><span class="lineno">  208</span>&#160;            PtrMatrix&lt;int64_t&gt; indMat,</div>
 <div class="line"><a name="l00209"></a><span class="lineno">  209</span>&#160;            std::array&lt;llvm::SmallVector&lt;const llvm::SCEV *, 3&gt;, 2&gt; szOff,</div>
 <div class="line"><a name="l00210"></a><span class="lineno">  210</span>&#160;            PtrVector&lt;int64_t&gt; coffsets, int64_t *offsets,</div>
@@ -281,7 +281,7 @@ $(function() {
 <div class="line"><a name="l00252"></a><span class="lineno">  252</span>&#160;      <span class="keywordflow">if</span> (anyNEZero(<a class="code" href="classpoly_1_1IR_1_1Addr.html#af4838372d11fd32b964c9a7cb6d4b1b8">indexMatrix</a>()(i, _(d, end)))) <span class="keywordflow">return</span> <span class="keyword">true</span>;</div>
 <div class="line"><a name="l00253"></a><span class="lineno">  253</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
 <div class="line"><a name="l00254"></a><span class="lineno">  254</span>&#160;  }</div>
-<div class="line"><a name="l00255"></a><span class="lineno">  255</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getLoop() const -&gt; NotNull&lt;AffineLoopNest&gt; {</div>
+<div class="line"><a name="l00255"></a><span class="lineno">  255</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getLoop() const -&gt; NotNull&lt;poly::Loop&gt; {</div>
 <div class="line"><a name="l00256"></a><span class="lineno">  256</span>&#160;    <span class="keywordflow">return</span> loop;</div>
 <div class="line"><a name="l00257"></a><span class="lineno">  257</span>&#160;  }</div>
 <div class="line"><a name="l00258"></a><span class="lineno">  258</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getBlockIdx() const -&gt; uint8_t {</div>
@@ -552,7 +552,7 @@ $(function() {
 <div class="line"><a name="l00527"></a><span class="lineno">  527</span>&#160;    <span class="keywordflow">return</span> (Addr *)alloc.allocate(memSz, <span class="keyword">alignof</span>(Addr));</div>
 <div class="line"><a name="l00528"></a><span class="lineno">  528</span>&#160;  }</div>
 <div class="line"><a name="l00529"></a><span class="lineno">  529</span>&#160;  [[nodiscard]] <span class="keyword">static</span> <span class="keyword">auto</span></div>
-<div class="line"><a name="l00530"></a><span class="lineno">  530</span>&#160;  construct(BumpAlloc&lt;&gt; &amp;alloc, NotNull&lt;AffineLoopNest&gt; explicitLoop,</div>
+<div class="line"><a name="l00530"></a><span class="lineno">  530</span>&#160;  construct(BumpAlloc&lt;&gt; &amp;alloc, NotNull&lt;poly::Loop&gt; explicitLoop,</div>
 <div class="line"><a name="l00531"></a><span class="lineno">  531</span>&#160;            NotNull&lt;Addr&gt; ma, <span class="keywordtype">bool</span> isStr, SquarePtrMatrix&lt;int64_t&gt; Pinv,</div>
 <div class="line"><a name="l00532"></a><span class="lineno">  532</span>&#160;            int64_t denom, PtrVector&lt;int64_t&gt; omega, <span class="keywordtype">unsigned</span> inputEdges,</div>
 <div class="line"><a name="l00533"></a><span class="lineno">  533</span>&#160;            <span class="keywordtype">unsigned</span> directEdges, <span class="keywordtype">unsigned</span> outputEdges, int64_t *offsets)</div>
@@ -634,7 +634,7 @@ $(function() {
 <div class="line"><a name="l00611"></a><span class="lineno">  611</span>&#160;    invariant(offSym != <span class="keyword">nullptr</span> || numDynSym == 0);</div>
 <div class="line"><a name="l00612"></a><span class="lineno">  612</span>&#160;    <span class="keywordflow">return</span> {offSym, DenseDims{getArrayDim(), numDynSym}};</div>
 <div class="line"><a name="l00613"></a><span class="lineno">  613</span>&#160;  }</div>
-<div class="line"><a name="l00614"></a><span class="lineno">  614</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getLoop() -&gt; NotNull&lt;AffineLoopNest&gt; {</div>
+<div class="line"><a name="l00614"></a><span class="lineno">  614</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getLoop() -&gt; NotNull&lt;poly::Loop&gt; {</div>
 <div class="line"><a name="l00615"></a><span class="lineno">  615</span>&#160;    <span class="keywordflow">return</span> loop;</div>
 <div class="line"><a name="l00616"></a><span class="lineno">  616</span>&#160;  }</div>
 <div class="line"><a name="l00617"></a><span class="lineno">  617</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> sizesMatch(NotNull&lt;const Addr&gt; x) <span class="keyword">const</span> -&gt; <span class="keywordtype">bool</span> {</div>
@@ -738,7 +738,7 @@ $(function() {
 <div class="line"><a name="l00715"></a><span class="lineno">  715</span>&#160;    }</div>
 <div class="line"><a name="l00716"></a><span class="lineno">  716</span>&#160;  }</div>
 <div class="line"><a name="l00717"></a><span class="lineno">  717</span>&#160;  <span class="keywordflow">return</span> os &lt;&lt; <span class="stringliteral">&quot;]\nInitial Fusion Omega: &quot;</span> &lt;&lt; m.getFusionOmega()</div>
-<div class="line"><a name="l00718"></a><span class="lineno">  718</span>&#160;            &lt;&lt; <span class="stringliteral">&quot;\nAffineLoopNest:&quot;</span> &lt;&lt; *m.getLoop();</div>
+<div class="line"><a name="l00718"></a><span class="lineno">  718</span>&#160;            &lt;&lt; <span class="stringliteral">&quot;\npoly::Loop:&quot;</span> &lt;&lt; *m.getLoop();</div>
 <div class="line"><a name="l00719"></a><span class="lineno">  719</span>&#160;}</div>
 <div class="line"><a name="l00720"></a><span class="lineno"><a class="line" href="classpoly_1_1IR_1_1Load.html">  720</a></span>&#160;<span class="keyword">class </span><a class="code" href="classpoly_1_1IR_1_1Load.html">Load</a> : <span class="keyword">public</span> <a class="code" href="classpoly_1_1IR_1_1Addr.html">Addr</a> {</div>
 <div class="line"><a name="l00721"></a><span class="lineno">  721</span>&#160;<span class="keyword">public</span>:</div>
@@ -769,7 +769,7 @@ $(function() {
 <div class="ttc" id="aclassDependence_html"><div class="ttname"><a href="classDependence.html">Dependence</a></div><div class="ttdef"><b>Definition:</b> Dependence.hpp:12</div></div>
 <div class="ttc" id="aclassScheduledNode_html"><div class="ttname"><a href="classScheduledNode.html">ScheduledNode</a></div><div class="ttdef"><b>Definition:</b> LoopBlock.hpp:59</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Addr_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Addr.html">poly::IR::Addr</a></div><div class="ttdef"><b>Definition:</b> Address.hpp:65</div></div>
-<div class="ttc" id="aclasspoly_1_1IR_1_1Addr_html_a74f1615a7cc0b84d17228d372423b440"><div class="ttname"><a href="classpoly_1_1IR_1_1Addr.html#a74f1615a7cc0b84d17228d372423b440">poly::IR::Addr::construct</a></div><div class="ttdeci">static auto construct(BumpAlloc&lt;&gt; &amp;alloc, const llvm::SCEVUnknown *arrayPtr, NotNull&lt; AffineLoopNest &gt; AL, llvm::Instruction *user, PtrMatrix&lt; int64_t &gt; indMat, std::array&lt; llvm::SmallVector&lt; const llvm::SCEV *, 3 &gt;, 2 &gt; szOff, PtrVector&lt; int64_t &gt; coffsets, int64_t *offsets, PtrVector&lt; unsigned &gt; o) -&gt; NotNull&lt; Addr &gt;</div><div class="ttdoc">Constructor for regular indexing.</div><div class="ttdef"><b>Definition:</b> Address.hpp:206</div></div>
+<div class="ttc" id="aclasspoly_1_1IR_1_1Addr_html_a3bef205d26e7e3a864f6d5fe1228e814"><div class="ttname"><a href="classpoly_1_1IR_1_1Addr.html#a3bef205d26e7e3a864f6d5fe1228e814">poly::IR::Addr::construct</a></div><div class="ttdeci">static auto construct(BumpAlloc&lt;&gt; &amp;alloc, const llvm::SCEVUnknown *arrayPtr, NotNull&lt; poly::Loop &gt; AL, llvm::Instruction *user, PtrMatrix&lt; int64_t &gt; indMat, std::array&lt; llvm::SmallVector&lt; const llvm::SCEV *, 3 &gt;, 2 &gt; szOff, PtrVector&lt; int64_t &gt; coffsets, int64_t *offsets, PtrVector&lt; unsigned &gt; o) -&gt; NotNull&lt; Addr &gt;</div><div class="ttdoc">Constructor for regular indexing.</div><div class="ttdef"><b>Definition:</b> Address.hpp:206</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Addr_html_aa5face1561e559740fbda46c70c1d514"><div class="ttname"><a href="classpoly_1_1IR_1_1Addr.html#aa5face1561e559740fbda46c70c1d514">poly::IR::Addr::updateOffsMat</a></div><div class="ttdeci">void updateOffsMat(BumpAlloc&lt;&gt; &amp;alloc, size_t numToPeel, llvm::Loop *L, llvm::ScalarEvolution *SE)</div><div class="ttdef"><b>Definition:</b> Address.hpp:314</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Addr_html_adcaf184f1ec32c3519fc8f2acbeac38b"><div class="ttname"><a href="classpoly_1_1IR_1_1Addr.html#adcaf184f1ec32c3519fc8f2acbeac38b">poly::IR::Addr::isStore</a></div><div class="ttdeci">constexpr auto isStore() const -&gt; bool</div><div class="ttdef"><b>Definition:</b> Address.hpp:300</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Addr_html_af4838372d11fd32b964c9a7cb6d4b1b8"><div class="ttname"><a href="classpoly_1_1IR_1_1Addr.html#af4838372d11fd32b964c9a7cb6d4b1b8">poly::IR::Addr::indexMatrix</a></div><div class="ttdeci">constexpr auto indexMatrix() -&gt; MutDensePtrMatrix&lt; int64_t &gt;</div><div class="ttdoc">indexMatrix() -&gt; arrayDim() x getNumLoops()</div><div class="ttdef"><b>Definition:</b> Address.hpp:592</div></div>

@@ -368,9 +368,9 @@ $(function() {
 <div class="line"><a name="l00309"></a><span class="lineno">  309</span>&#160;    <span class="keywordflow">return</span> in-&gt;indexMatrix();</div>
 <div class="line"><a name="l00310"></a><span class="lineno">  310</span>&#160;  }</div>
 <div class="line"><a name="l00311"></a><span class="lineno">  311</span>&#160;  [[nodiscard]] <span class="keyword">auto</span></div>
-<div class="line"><a name="l00312"></a><span class="lineno">  312</span>&#160;  checkEmptySat(BumpAlloc&lt;&gt; &amp;alloc, NotNull&lt;const AffineLoopNest&gt; inLoop,</div>
+<div class="line"><a name="l00312"></a><span class="lineno">  312</span>&#160;  checkEmptySat(BumpAlloc&lt;&gt; &amp;alloc, NotNull&lt;const poly::Loop&gt; inLoop,</div>
 <div class="line"><a name="l00313"></a><span class="lineno">  313</span>&#160;                <span class="keyword">const</span> int64_t *inOff, DensePtrMatrix&lt;int64_t&gt; inPhi,</div>
-<div class="line"><a name="l00314"></a><span class="lineno">  314</span>&#160;                NotNull&lt;const AffineLoopNest&gt; outLoop, <span class="keyword">const</span> int64_t *outOff,</div>
+<div class="line"><a name="l00314"></a><span class="lineno">  314</span>&#160;                NotNull&lt;const poly::Loop&gt; outLoop, <span class="keyword">const</span> int64_t *outOff,</div>
 <div class="line"><a name="l00315"></a><span class="lineno">  315</span>&#160;                DensePtrMatrix&lt;int64_t&gt; outPhi) -&gt; <span class="keywordtype">bool</span> {</div>
 <div class="line"><a name="l00316"></a><span class="lineno">  316</span>&#160;    <span class="keywordflow">if</span> (!<a class="code" href="classDependence.html#a8f03cfecfe1734c6c395bf3184269536">isForward</a>()) {</div>
 <div class="line"><a name="l00317"></a><span class="lineno">  317</span>&#160;      std::swap(inLoop, outLoop);</div>

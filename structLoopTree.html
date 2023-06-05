@@ -104,9 +104,9 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator=</b> (<a cla
 <tr class="memitem:a3fe91d54e1efb1713c3ada0c80eacba6"><td class="memItemLeft" align="right" valign="top"><a id="a3fe91d54e1efb1713c3ada0c80eacba6"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>LoopTree</b> (BumpAlloc&lt;&gt; &amp;alloc, llvm::Loop *L, const llvm::SCEV *BT, llvm::ScalarEvolution &amp;SE, Predicate::Map pth)</td></tr>
 <tr class="separator:a3fe91d54e1efb1713c3ada0c80eacba6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af717e8bbc2433036b89534ed02f02530"><td class="memItemLeft" align="right" valign="top"><a id="af717e8bbc2433036b89534ed02f02530"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>LoopTree</b> (BumpAlloc&lt;&gt; &amp;alloc, llvm::Loop *L, NotNull&lt; AffineLoopNest &gt; aln, llvm::SmallVector&lt; NotNull&lt; <a class="el" href="structLoopTree.html">LoopTree</a> &gt;&gt; sL, llvm::SmallVector&lt; Predicate::Map &gt; pth)</td></tr>
-<tr class="separator:af717e8bbc2433036b89534ed02f02530"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5dc20223aace7029026f0b5ddb249028"><td class="memItemLeft" align="right" valign="top"><a id="a5dc20223aace7029026f0b5ddb249028"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>LoopTree</b> (BumpAlloc&lt;&gt; &amp;alloc, llvm::Loop *L, NotNull&lt; poly::Loop &gt; aln, llvm::SmallVector&lt; NotNull&lt; <a class="el" href="structLoopTree.html">LoopTree</a> &gt;&gt; sL, llvm::SmallVector&lt; Predicate::Map &gt; pth)</td></tr>
+<tr class="separator:a5dc20223aace7029026f0b5ddb249028"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab9cb2aac21f4ca6e045d387d70833c7c"><td class="memItemLeft" align="right" valign="top"><a id="ab9cb2aac21f4ca6e045d387d70833c7c"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumLoops</b> () const -&gt; size_t</td></tr>
 <tr class="separator:ab9cb2aac21f4ca6e045d387d70833c7c"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -152,9 +152,9 @@ llvm::SmallVector&lt; NotNull&lt; <a class="el" href="structLoopTree.html">LoopT
 <tr class="memitem:af0e01210bccf8cd59a75112f08b833f7"><td class="memItemLeft" align="right" valign="top"><a id="af0e01210bccf8cd59a75112f08b833f7"></a>
 llvm::SmallVector&lt; Predicate::Map &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>paths</b></td></tr>
 <tr class="separator:af0e01210bccf8cd59a75112f08b833f7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ade78b2896166aa0fc57e3bcdd47c6b78"><td class="memItemLeft" align="right" valign="top"><a id="ade78b2896166aa0fc57e3bcdd47c6b78"></a>
-AffineLoopNest *&#160;</td><td class="memItemRight" valign="bottom"><b>affineLoop</b> {nullptr}</td></tr>
-<tr class="separator:ade78b2896166aa0fc57e3bcdd47c6b78"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae8a52a49b6cb0197260c7e026b4f209f"><td class="memItemLeft" align="right" valign="top"><a id="ae8a52a49b6cb0197260c7e026b4f209f"></a>
+poly::Loop *&#160;</td><td class="memItemRight" valign="bottom"><b>affineLoop</b> {nullptr}</td></tr>
+<tr class="separator:ae8a52a49b6cb0197260c7e026b4f209f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a51b6985ec3880b4c066aecb16af232dd"><td class="memItemLeft" align="right" valign="top"><a id="a51b6985ec3880b4c066aecb16af232dd"></a>
 Optional&lt; <a class="el" href="structLoopTree.html">LoopTree</a> * &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>parentLoop</b> {nullptr}</td></tr>
 <tr class="separator:a51b6985ec3880b4c066aecb16af232dd"><td class="memSeparator" colspan="2">&#160;</td></tr>

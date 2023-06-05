@@ -362,8 +362,8 @@ $(function() {
 <div class="line"><a name="l00344"></a><span class="lineno">  344</span>&#160;  <span class="keyword">static</span> <span class="keyword">auto</span> dependence(BumpAlloc&lt;&gt; &amp;alloc, NotNull&lt;const Addr&gt; aix,</div>
 <div class="line"><a name="l00345"></a><span class="lineno">  345</span>&#160;                         NotNull&lt;const Addr&gt; aiy) -&gt; DepPoly * {</div>
 <div class="line"><a name="l00346"></a><span class="lineno">  346</span>&#160;    assert(aix-&gt;sizesMatch(aiy));</div>
-<div class="line"><a name="l00347"></a><span class="lineno">  347</span>&#160;    NotNull&lt;const AffineLoopNest&gt; loopx = aix-&gt;getLoop();</div>
-<div class="line"><a name="l00348"></a><span class="lineno">  348</span>&#160;    NotNull&lt;const AffineLoopNest&gt; loopy = aiy-&gt;getLoop();</div>
+<div class="line"><a name="l00347"></a><span class="lineno">  347</span>&#160;    NotNull&lt;const poly::Loop&gt; loopx = aix-&gt;getLoop();</div>
+<div class="line"><a name="l00348"></a><span class="lineno">  348</span>&#160;    NotNull&lt;const poly::Loop&gt; loopy = aiy-&gt;getLoop();</div>
 <div class="line"><a name="l00349"></a><span class="lineno">  349</span>&#160;    DensePtrMatrix&lt;int64_t&gt; Ax{loopx-&gt;getA()}, Ay{loopy-&gt;getA()};</div>
 <div class="line"><a name="l00350"></a><span class="lineno">  350</span>&#160;    <span class="keyword">auto</span> Sx{loopx-&gt;getSyms()}, Sy{loopy-&gt;getSyms()};</div>
 <div class="line"><a name="l00351"></a><span class="lineno">  351</span>&#160;    <span class="comment">// numLoops x numDim</span></div>
@@ -452,7 +452,7 @@ $(function() {
 <div class="line"><a name="l00434"></a><span class="lineno">  434</span>&#160;  }</div>
 <div class="line"><a name="l00435"></a><span class="lineno">  435</span>&#160;  <span class="keyword">static</span> <span class="keyword">auto</span> <span class="keyword">self</span>(BumpAlloc&lt;&gt; &amp;alloc, NotNull&lt;const Addr&gt; ai)</div>
 <div class="line"><a name="l00436"></a><span class="lineno">  436</span>&#160;    -&gt; NotNull&lt;DepPoly&gt; {</div>
-<div class="line"><a name="l00437"></a><span class="lineno">  437</span>&#160;    NotNull&lt;const AffineLoopNest&gt; loop = ai-&gt;getLoop();</div>
+<div class="line"><a name="l00437"></a><span class="lineno">  437</span>&#160;    NotNull&lt;const poly::Loop&gt; loop = ai-&gt;getLoop();</div>
 <div class="line"><a name="l00438"></a><span class="lineno">  438</span>&#160;    DensePtrMatrix&lt;int64_t&gt; B{loop-&gt;getA()};</div>
 <div class="line"><a name="l00439"></a><span class="lineno">  439</span>&#160;    <span class="keyword">auto</span> S{loop-&gt;getSyms()};</div>
 <div class="line"><a name="l00440"></a><span class="lineno">  440</span>&#160;    <span class="comment">// numLoops x numDim</span></div>
@@ -643,10 +643,10 @@ $(function() {
 <div class="line"><a name="l00625"></a><span class="lineno">  625</span>&#160;    <span class="keywordflow">return</span> {fw, bw};</div>
 <div class="line"><a name="l00626"></a><span class="lineno">  626</span>&#160;  }</div>
 <div class="line"><a name="l00627"></a><span class="lineno">  627</span>&#160; </div>
-<div class="line"><a name="l00630"></a><span class="lineno"><a class="line" href="classpoly_1_1poly_1_1DepPoly.html#ae937a5f069653c0b1187f48feb5e410f">  630</a></span>&#160;  [[nodiscard]] <span class="keyword">auto</span> <a class="code" href="classpoly_1_1poly_1_1DepPoly.html#ae937a5f069653c0b1187f48feb5e410f">checkSat</a>(BumpAlloc&lt;&gt; &amp;alloc,</div>
-<div class="line"><a name="l00631"></a><span class="lineno">  631</span>&#160;                              NotNull&lt;const AffineLoopNest&gt; xLoop,</div>
+<div class="line"><a name="l00630"></a><span class="lineno"><a class="line" href="classpoly_1_1poly_1_1DepPoly.html#aaf43d7900f8a8e2665d3a908838619a9">  630</a></span>&#160;  [[nodiscard]] <span class="keyword">auto</span> <a class="code" href="classpoly_1_1poly_1_1DepPoly.html#aaf43d7900f8a8e2665d3a908838619a9">checkSat</a>(BumpAlloc&lt;&gt; &amp;alloc,</div>
+<div class="line"><a name="l00631"></a><span class="lineno">  631</span>&#160;                              NotNull&lt;const poly::Loop&gt; xLoop,</div>
 <div class="line"><a name="l00632"></a><span class="lineno">  632</span>&#160;                              <span class="keyword">const</span> int64_t *xOff, DensePtrMatrix&lt;int64_t&gt; xPhi,</div>
-<div class="line"><a name="l00633"></a><span class="lineno">  633</span>&#160;                              NotNull&lt;const AffineLoopNest&gt; yLoop,</div>
+<div class="line"><a name="l00633"></a><span class="lineno">  633</span>&#160;                              NotNull&lt;const poly::Loop&gt; yLoop,</div>
 <div class="line"><a name="l00634"></a><span class="lineno">  634</span>&#160;                              <span class="keyword">const</span> int64_t *yOff, DensePtrMatrix&lt;int64_t&gt; yPhi)</div>
 <div class="line"><a name="l00635"></a><span class="lineno">  635</span>&#160;    -&gt; <span class="keywordtype">bool</span> {</div>
 <div class="line"><a name="l00636"></a><span class="lineno">  636</span>&#160;    <span class="comment">// we take in loops because we might be moving deeper inside the loopnest</span></div>
@@ -751,8 +751,8 @@ $(function() {
 <div class="line"><a name="l00735"></a><span class="lineno">  735</span>&#160;} <span class="comment">// namespace poly::poly</span></div>
 <div class="ttc" id="aclasspoly_1_1poly_1_1DepPoly_html"><div class="ttname"><a href="classpoly_1_1poly_1_1DepPoly.html">poly::poly::DepPoly</a></div><div class="ttdef"><b>Definition:</b> DependencyPolyhedra.hpp:102</div></div>
 <div class="ttc" id="aclasspoly_1_1poly_1_1DepPoly_html_a6c906a50b76218be2bee9b38e8515ceb"><div class="ttname"><a href="classpoly_1_1poly_1_1DepPoly.html#a6c906a50b76218be2bee9b38e8515ceb">poly::poly::DepPoly::mergeMap</a></div><div class="ttdeci">static auto mergeMap(Vector&lt; unsigned &gt; &amp;map, llvm::ArrayRef&lt; const llvm::SCEV * &gt; s0, llvm::ArrayRef&lt; const llvm::SCEV * &gt; s1) -&gt; unsigned</div><div class="ttdef"><b>Definition:</b> DependencyPolyhedra.hpp:313</div></div>
-<div class="ttc" id="aclasspoly_1_1poly_1_1DepPoly_html_ae937a5f069653c0b1187f48feb5e410f"><div class="ttname"><a href="classpoly_1_1poly_1_1DepPoly.html#ae937a5f069653c0b1187f48feb5e410f">poly::poly::DepPoly::checkSat</a></div><div class="ttdeci">auto checkSat(BumpAlloc&lt;&gt; &amp;alloc, NotNull&lt; const AffineLoopNest &gt; xLoop, const int64_t *xOff, DensePtrMatrix&lt; int64_t &gt; xPhi, NotNull&lt; const AffineLoopNest &gt; yLoop, const int64_t *yOff, DensePtrMatrix&lt; int64_t &gt; yPhi) -&gt; bool</div><div class="ttdef"><b>Definition:</b> DependencyPolyhedra.hpp:630</div></div>
-<div class="ttc" id="astructpoly_1_1poly_1_1BasePolyhedra_html"><div class="ttname"><a href="structpoly_1_1poly_1_1BasePolyhedra.html">poly::poly::BasePolyhedra</a></div><div class="ttdef"><b>Definition:</b> Polyhedra.hpp:60</div></div>
+<div class="ttc" id="aclasspoly_1_1poly_1_1DepPoly_html_aaf43d7900f8a8e2665d3a908838619a9"><div class="ttname"><a href="classpoly_1_1poly_1_1DepPoly.html#aaf43d7900f8a8e2665d3a908838619a9">poly::poly::DepPoly::checkSat</a></div><div class="ttdeci">auto checkSat(BumpAlloc&lt;&gt; &amp;alloc, NotNull&lt; const poly::Loop &gt; xLoop, const int64_t *xOff, DensePtrMatrix&lt; int64_t &gt; xPhi, NotNull&lt; const poly::Loop &gt; yLoop, const int64_t *yOff, DensePtrMatrix&lt; int64_t &gt; yPhi) -&gt; bool</div><div class="ttdef"><b>Definition:</b> DependencyPolyhedra.hpp:630</div></div>
+<div class="ttc" id="astructpoly_1_1poly_1_1BasePolyhedra_html"><div class="ttname"><a href="structpoly_1_1poly_1_1BasePolyhedra.html">poly::poly::BasePolyhedra</a></div><div class="ttdef"><b>Definition:</b> Polyhedra.hpp:64</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
