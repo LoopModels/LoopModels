@@ -6,6 +6,10 @@
 
 // In include/Dicts, as it primarily serves to support amap/aset
 
+namespace poly {
+using utils::WBumpAlloc, utils::BumpAlloc;
+} // namespace poly
+
 namespace poly::math {
 // BumpPtrVector
 // Has reference semantics.

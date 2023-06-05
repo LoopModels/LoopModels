@@ -49,7 +49,15 @@ template <typename T> struct std::hash<poly::math::MutPtrVector<T>> {
   }
 };
 
+namespace poly {
+using math::PtrVector, math::MutPtrVector, utils::BumpAlloc, utils::invariant,
+  utils::NotNull;
+
+};
+
 namespace poly::IR {
+
+using dict::aset, dict::amap;
 
 auto containsCycle(const llvm::Instruction *, aset<llvm::Instruction const *> &,
                    const llvm::Value *) -> bool;
@@ -121,6 +129,13 @@ class Oprn : public Inst {
       return id == other.id;
     }
   };
+  OpCode opcode;
+  [[nodiscard]] auto getOpCode() const -> OpCode { return opcode; }
+  static auto getOpCode(llvm::Value *v) -> std::optional<OpCode> {
+    if (auto *i = llvm::dyn_cast<llvm::Instruction>(v))
+      return OpCode{i->getOpcode()};
+    return {};
+  }
 
 public:
   static constexpr auto classof(const Node *v) -> bool {
@@ -140,19 +155,12 @@ public:
         return id == other.id;
       }
     };
-    OpCode opcode;
     Intrin intrin;
-    [[nodiscard]] auto getOpCode() const -> OpCode { return opcode; }
     [[nodiscard]] auto getIntrinsicID() const -> Intrin { return intrin; }
-    static auto getOpCode(llvm::Value *v) -> OpCode {
-      if (auto *i = llvm::dyn_cast<llvm::Instruction>(v))
-        return OpCode{i->getOpcode()};
-      return OpCode{llvm::Intrinsic::not_intrinsic};
-    }
-    static auto getIntrinsicID(llvm::Value *v) -> Intrin {
+    static auto getIntrinsicID(llvm::Value *v) -> std::optional<Intrin> {
       if (auto *i = llvm::dyn_cast<llvm::IntrinsicInst>(v))
         return Intrin{i->getIntrinsicID()};
-      return Intrin{llvm::Intrinsic::not_intrinsic};
+      return {};
     }
 
     /// Instruction ID
@@ -205,7 +213,7 @@ public:
   // [[no_unique_address]] llvm::SmallVector<Instruction *> users;
   [[no_unique_address]] aset<Intr *> users;
   /// costs[i] == cost for vector-width 2^i
-  [[no_unique_address]] LinAlg::BumpPtrVector<RecipThroughputLatency> costs;
+  [[no_unique_address]] math::BumpPtrVector<RecipThroughputLatency> costs;
 
   void setOperands(MutPtrVector<Intr *> ops) {
     operands << ops;
