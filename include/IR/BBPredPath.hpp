@@ -1,7 +1,9 @@
 #pragma once
 #include "Dicts/MapVector.hpp"
+#include "IR/Cache.hpp"
 #include "IR/Predicate.hpp"
 namespace poly::IR::Predicate {
+using dict::MapVector;
 struct Map {
   MapVector<llvm::BasicBlock *, Set> map;
   constexpr Map(BumpAlloc<> &alloc) : map(alloc) {}

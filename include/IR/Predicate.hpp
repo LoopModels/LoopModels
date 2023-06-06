@@ -1,6 +1,8 @@
 #pragma once
+#include "Containers/TinyVector.hpp"
 #include "Dicts/BumpVector.hpp"
 #include "Utilities/Allocators.hpp"
+#include "Utilities/Invariant.hpp"
 #include <cstddef>
 #include <cstdint>
 #include <cwchar>
@@ -14,6 +16,8 @@
 #include <variant>
 
 namespace poly::IR {
+
+using utils::invariant;
 class Intr;
 
 namespace Predicate {
@@ -123,18 +127,17 @@ struct Intersection {
 
   /// if the union between `this` and `other` can be expressed as an
   /// intersection of their constituents, return that intersection. Return an
-  /// empty optional otherwise. The cases we handle are:
+  /// empty vector otherwise. The cases we handle are:
   /// (a & b) | a = a
   /// (a & b) | (a & !b) = a
   [[nodiscard]] constexpr auto compactUnion(Intersection other) const
-    -> std::variant<std::monostate, Intersection,
-                    std::pair<Intersection, Intersection>> {
-    if (isEmpty()) return other;
-    if (other.isEmpty()) return *this;
+    -> containers::TinyVector<Intersection, 2> {
+    if (isEmpty()) return {other};
+    if (other.isEmpty()) return {*this};
     uint64_t x = predicates, y = other.predicates;
     // 010000 = 010100 & 010000
     uint64_t intersect = x & y;
-    if (x == intersect || y == intersect) return Intersection{intersect};
+    if (x == intersect || y == intersect) return {Intersection{intersect}};
     // 011100 = 010100 | 011000
     // 010000 = 010100 & 011000
     // we can't handle (a & b) | (a & !b & c) because
@@ -151,13 +154,13 @@ struct Intersection {
         ~(mask | (mask << 1)); // 0s `b`, meaning b can be either.
       uint64_t w = remUnionMask & x;
       uint64_t z = remUnionMask & y;
-      if (w == z) return Intersection{w};
+      if (w == z) return {Intersection{w}};
       // if we now have
       //  a     |  a & c
       // 010000 | 010001
       uint64_t wz = w & z;
-      if (wz == w) return std::make_pair(*this, Intersection{z});
-      if (wz == z) return std::make_pair(Intersection{w}, other);
+      if (wz == w) return {*this, Intersection{z}};
+      if (wz == z) return {Intersection{w}, other};
     }
     return {};
   }
@@ -191,12 +194,19 @@ struct Intersection {
 /// (a & b) | (c & d) == ((a & b) | c) & ((a & b) | d)
 /// == (a | c) & (b | c) & (a | d) & (b | d)
 struct Set {
-  [[no_unique_address]] math::BumpPtrVector<Intersection> intersectUnion;
-  Set(BumpAlloc<> &alloc) : intersectUnion(alloc) {}
-  Set(BumpAlloc<> &alloc, Intersection pred) : intersectUnion(alloc) {
-    intersectUnion.push_back(pred);
-  }
-  Set(const Set &) = default;
+  union {
+    Intersection intersect;
+    containers::UList<Intersection> *intersects;
+  } intersectUnion;
+  ptrdiff_t count; // negative if we have a single intersection
+  // >=1 may still be empty, but it means we've allocated
+  // and need to check `intersects`.
+  //
+  // containers::UList<Intersection> *intersectUnion{nullptr};
+  // [[no_unique_address]] math::BumpPtrVector<Intersection> intersectUnion;
+  Set() = default;
+  Set(Intersection pred) : intersectUnion(pred), count(-1){};
+  Set(const Set &) = delete;
   Set(Set &&) = default;
   auto operator=(Set &&other) noexcept -> Set & {
     intersectUnion = std::move(other.intersectUnion);
@@ -204,16 +214,29 @@ struct Set {
   };
   auto operator=(const Set &other) -> Set & = default;
   // TODO: constexpr these when llvm::SmallVector supports it
-  [[nodiscard]] auto operator[](size_t index) -> Intersection {
-    return intersectUnion[index];
+  [[nodiscard]] auto operator[](size_t index) -> Intersection & {
+    if (count > 0) return (*intersectUnion.intersects)[index];
+    invariant(index == 0);
+    return intersectUnion.intersect;
   }
   [[nodiscard]] auto operator[](size_t index) const -> Intersection {
-    return intersectUnion[index];
+    if (count > 0) return (*intersectUnion.intersects)[index];
+    invariant(index == 0);
+    return intersectUnion.intersect;
   }
   [[nodiscard]] auto operator()(size_t i, size_t j) const -> Relation {
-    return intersectUnion[i][j];
+    return (*this)[i][j];
   }
-  [[nodiscard]] auto size() const -> size_t { return intersectUnion.size(); }
+  [[nodiscard]] constexpr auto size() const -> size_t {
+    return size_t(std::max(ptrdiff_t(0), count));
+  }
+  [[nodiscard]] constexpr auto empty() const -> size_t {
+    return (count == 0) || ((count > 1) && intersectUnion.intersects->empty());
+  }
+  containers::UList<Intersection> getIntersects() {
+    if (count > 0) return *intersectUnion.intersects;
+    return {intersectUnion.intersect};
+  }
   /// Cases we simplify:
   /// a | {} = a
   /// Impl: if either empty, set to other
@@ -232,55 +255,71 @@ struct Set {
   /// to:
   /// (a & b) | (a & c) | (a & !c) = (a & b) | a = a
   /// TODO: handle more cases? Smarter algorithm that applies rewrite rules?
-  auto operator|=(Intersection other) -> Set & {
+  auto Union(BumpAlloc<> &alloc, Intersection other) -> Set & {
     if (other.isEmpty()) return *this;
-    if (intersectUnion.empty()) {
-      intersectUnion.push_back(other);
+    if (empty()) {
+      count = -1;
+      intersectUnion.intersect = other;
       return *this;
     }
-    // we first try to avoid pushing so that we don't have to realloc
-    bool simplifyPreds = false;
-    for (auto &&pred : intersectUnion) {
-      auto u = pred.compactUnion(other);
-      if (auto *compact = std::get_if<Intersection>(&u)) {
-        pred = *compact;
-        return *this;
+    if (count < 0) { // fast path
+      Intersection intersect = intersectUnion.intersect;
+      auto u = intersect.compactUnion(other);
+      if (u.size() == 1) {
+        intersectUnion.intersect = u[0];
+      } else {
+        count = 2;
+        intersectUnion.intersects =
+          alloc.create<containers::UList<Intersection>>();
+        if (u.size() == 2) {
+          intersectUnion.intersects->pushHasCapacity(u[0]);
+          intersectUnion.intersects->pushHasCapacity(u[1]);
+        } else {
+          intersectUnion.intersects->pushHasCapacity(intersect);
+          intersectUnion.intersects->pushHasCapacity(other);
+        }
       }
-      if (auto *simplify =
-            std::get_if<std::pair<Intersection, Intersection>>(&u)) {
-        pred = simplify->first;
-        other = simplify->second;
+      return *this;
+    }
+    bool simplifyPreds = false;
+    containers::UList<Intersection> *intersects = intersectUnion.intersects;
+    for (auto *l = intersects; l; l = l->getNext()) {
+      for (auto it = l->begin(), e = l->localEnd(); it != e; ++it) {
+        auto u = it->compactUnion(other);
+        if (u.empty()) continue;
+        *it = u[0];
+        if (u.size() == 1) return *this;
+        invariant(u.size() == 2);
         simplifyPreds = true;
+        other = u[1];
       }
     }
-    intersectUnion.push_back(other);
+    intersects = intersects->push(alloc, other);
     while (simplifyPreds) {
       simplifyPreds = false;
-      for (size_t i = 0; i < intersectUnion.size(); ++i) {
-        for (size_t j = i + 1; j < intersectUnion.size();) {
-          auto u = intersectUnion[i].compactUnion(intersectUnion[j]);
-          if (auto *compact = std::get_if<Intersection>(&u)) {
-            // delete `j`, update `i`
-            intersectUnion[i] = *compact;
-            intersectUnion.erase(intersectUnion.begin() + j);
-            simplifyPreds = true;
-          } else {
-            if (auto *simplify =
-                  std::get_if<std::pair<Intersection, Intersection>>(&u)) {
-              // assert forward progress
-              assert((std::popcount(simplify->first.predicates) +
-                      std::popcount(simplify->second.predicates)) <=
-                     (std::popcount(intersectUnion[i].predicates) +
-                      std::popcount(intersectUnion[j].predicates)));
-              intersectUnion[i] = simplify->first;
-              intersectUnion[j] = simplify->second;
+      for (auto *l = intersects; l; l = l->getNext()) {
+        for (auto it = l->begin(), e = l->localEnd(); it != e; ++it) {
+          for (auto *j = l; j->getNext()) {
+            for (auto jt = j == l ? it + 1 : j->begin(), je = j->localEnd();
+                 jt != je; ++jt) {
+
+              auto u = it->compactUnion(*jt);
+              if (u.empty()) continue;
+              *it = u[0];
               simplifyPreds = true;
+              if (u.size() == 2) {
+                ASSERT((std::popcount(u[0].predicates) +
+                        std::popcount(u[1].predicates)) <=
+                       (std::popcount(it->predicates) +
+                        std::popcount(jt->predicates)));
+                *jt = u[1];
+              } else j->eraseUnordered(jt--);
             }
-            ++j;
           }
         }
       }
     }
+    intersectUnion.intersects = intersects;
     return *this;
   }
   /// if *this = [(a & b) | (c & d)]

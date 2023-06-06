@@ -7,8 +7,8 @@
 namespace poly::IR {
 using dict::map;
 class Cache {
-  map<llvm::Value *, Intr *> llvmToInternalMap;
-  map<UniqueIdentifier, Intr *> argMap;
+  map<llvm::Value *, Node *> llvmToInternalMap;
+  map<UniqueIdentifier, Node *> argMap;
   llvm::SmallVector<Intr *> predicates;
   // tmp is used in case we don't need an allocation
   // Instruction *tmp{nullptr};

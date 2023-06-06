@@ -326,8 +326,8 @@ addBackedgeTakenCount(std::array<IntMatrix, 2> &AB,
 // A * x >= 0
 // if constexpr(NonNegative)
 //   x >= 0
-class poly::Loop : public BasePolyhedra<false, true, true, poly::Loop> {
-  using BaseT = BasePolyhedra<false, true, true, poly::Loop>;
+class Loop : public BasePolyhedra<false, true, true, Loop> {
+  using BaseT = BasePolyhedra<false, true, true, Loop>;
 
   [[nodiscard]] constexpr auto getSymCapacity() const -> size_t {
     return numDynSymbols + numLoops;
@@ -359,7 +359,7 @@ public:
   static inline auto construct(BumpAlloc<> &alloc, llvm::Loop *L,
                                const llvm::SCEV *BT, llvm::ScalarEvolution &SE,
                                llvm::OptimizationRemarkEmitter *ORE = nullptr)
-    -> NotNull<poly::Loop> {
+    -> NotNull<Loop> {
     // A holds symbols
     // B holds loop bounds
     // they're separate so we can grow them independently
@@ -404,8 +404,8 @@ public:
     invariant(1 + symbols.size(), size_t(A.numCol()));
     size_t depth = maxDepth - minDepth;
     unsigned numConstraints = unsigned(A.numRow()), N = unsigned(A.numCol());
-    NotNull<poly::Loop> aln{
-      poly::Loop::allocate(alloc, numConstraints, depth, symbols, maxDepth)};
+    NotNull<Loop> aln{
+      Loop::allocate(alloc, numConstraints, depth, symbols, maxDepth)};
     aln->getA()(_, _(0, N)) << A;
     // copy the included loops from B
     // we use outer <-> inner order, so we skip unsupported outer loops.
@@ -433,7 +433,7 @@ public:
   [[nodiscard]] constexpr auto rotate(BumpAlloc<> &alloc,
                                       DensePtrMatrix<int64_t> R,
                                       const int64_t *offsets) const
-    -> NotNull<poly::Loop> {
+    -> NotNull<Loop> {
     // if offsets is not null, we have the equivalent of
     // A * O * [I 0; 0 R]
     // where O = I - [0 0; offsets 0],
@@ -447,8 +447,8 @@ public:
     auto A{getA()};
     const auto [M, N] = A.size();
     auto syms{getSyms()};
-    NotNull<poly::Loop> aln{poly::Loop::allocate(alloc, size_t(M) + numExtraVar,
-                                                 numLoops, syms, nonNeg)};
+    NotNull<Loop> aln{
+      Loop::allocate(alloc, size_t(M) + numExtraVar, numLoops, syms, nonNeg)};
     auto B{aln->getA()};
     invariant(B.numRow(), M + numExtraVar);
     invariant(B.numCol(), N);
@@ -478,26 +478,25 @@ public:
     // aln->pruneBounds(alloc);
     return aln;
   }
-  [[nodiscard]] constexpr auto
-  rotate(BumpAlloc<> &alloc, DensePtrMatrix<int64_t> R, const int64_t *offsets)
-    -> NotNull<poly::Loop> {
+  [[nodiscard]] constexpr auto rotate(BumpAlloc<> &alloc,
+                                      DensePtrMatrix<int64_t> R,
+                                      const int64_t *offsets) -> NotNull<Loop> {
     if (R == math::I) return this;
-    return ((const poly::Loop *)this)->rotate(alloc, R, offsets);
+    return ((const Loop *)this)->rotate(alloc, R, offsets);
   }
   // static auto construct(llvm::Loop *L, llvm::ScalarEvolution &SE)
-  //   -> poly::Loop* {
+  //   -> Loop* {
   //   auto BT = getBackedgeTakenCount(SE, L);
   //   if (!BT || llvm::isa<llvm::SCEVCouldNotCompute>(BT)) return nullptr;
-  //   return poly::Loop(L, BT, SE);
+  //   return Loop(L, BT, SE);
   // }
 
   [[nodiscard]] auto removeInnerMost(BumpAlloc<> &alloc) const
-    -> NotNull<poly::Loop> {
+    -> NotNull<Loop> {
     // order is outer<->inner
     auto A{getA()};
-    auto ret =
-      poly::Loop::allocate(alloc, unsigned(A.numRow()), getNumLoops() - 1,
-                           getSyms(), isNonNegative());
+    auto ret = Loop::allocate(alloc, unsigned(A.numRow()), getNumLoops() - 1,
+                              getSyms(), isNonNegative());
     math::MutPtrMatrix<int64_t> B{ret->getA()};
     B << A(_, _(0, last));
     // no loop may be conditioned on the innermost loop, so we should be able to
@@ -564,15 +563,14 @@ public:
     -> PtrVector<int64_t> {
     return getA()(j, _(0, getNumSymbols()));
   }
-  [[nodiscard]] constexpr auto copy(BumpAlloc<> &alloc) const
-    -> NotNull<poly::Loop> {
-    auto ret = poly::Loop::allocate(alloc, numConstraints, numLoops, getSyms(),
-                                    isNonNegative());
+  [[nodiscard]] constexpr auto copy(BumpAlloc<> &alloc) const -> NotNull<Loop> {
+    auto ret = Loop::allocate(alloc, numConstraints, numLoops, getSyms(),
+                              isNonNegative());
     ret->getA() << getA();
     return ret;
   }
   [[nodiscard]] constexpr auto removeLoop(BumpAlloc<> &alloc, size_t v) const
-    -> poly::Loop * {
+    -> Loop * {
     auto A{getA()};
     v += getNumSymbols();
     auto zeroNegPos = indsZeroNegPos(A(_, v));
@@ -581,8 +579,8 @@ public:
       unsigned(A.numRow()) - pos.size() + neg.size() * pos.size();
     if (!isNonNegative()) numCon -= neg.size();
     auto p = checkpoint(alloc);
-    auto ret = poly::Loop::allocate(alloc, numCon, numLoops - 1, getSyms(),
-                                    isNonNegative());
+    auto ret =
+      Loop::allocate(alloc, numCon, numLoops - 1, getSyms(), isNonNegative());
     ret->numConstraints = unsigned(
       isNonNegative()
         ? fourierMotzkinCore<true>(ret->getA(), getA(), v, zeroNegPos)
@@ -604,7 +602,7 @@ public:
   zeroExtraItersUponExtending(math::Alloc<int64_t> auto &alloc, size_t _i,
                               bool extendLower) const -> bool {
     auto p = alloc.scope();
-    poly::Loop *tmp = copy(alloc);
+    Loop *tmp = copy(alloc);
     // question is, does the inner most loop have 0 extra iterations?
     const size_t numPrevLoops = getNumLoops() - 1;
     // we changed the behavior of removeLoop to actually drop loops that are
@@ -621,7 +619,7 @@ public:
     for (size_t n = 0; n < A.numRow(); ++n)
       if ((A(n, numConst) != 0) && (A(n, 1 + numConst) != 0)) indep = false;
     if (indep) return false;
-    poly::Loop *margi = tmp->removeLoop(alloc, 1), *tmp2;
+    Loop *margi = tmp->removeLoop(alloc, 1), *tmp2;
     invariant(margi->getNumLoops(), unsigned(1));
     invariant(tmp->getNumLoops(), unsigned(2));
     invariant(margi->getA().numCol() + 1, tmp->getA().numCol());
@@ -815,7 +813,7 @@ public:
     }
   }
   void dump(llvm::raw_ostream &os, BumpAlloc<> &alloc) const {
-    const poly::Loop *tmp = this;
+    const Loop *tmp = this;
     for (size_t i = getNumLoops(); tmp;) {
       assert((i == tmp->getNumLoops()) && "loop count mismatch");
       tmp->printBounds(os << "\nLoop " << --i << ": ");
@@ -827,7 +825,7 @@ public:
   // prints loops from inner most to outer most.
   // outer most loop is `i_0`, subscript increments for each level inside
   // We pop off the outer most loop on every iteration.
-  friend inline auto operator<<(llvm::raw_ostream &os, const poly::Loop &aln)
+  friend inline auto operator<<(llvm::raw_ostream &os, const Loop &aln)
     -> llvm::raw_ostream & {
     BumpAlloc<> alloc;
     aln.dump(os, alloc);
@@ -872,17 +870,16 @@ public:
 
   [[nodiscard]] static auto construct(BumpAlloc<> &alloc, PtrMatrix<int64_t> A,
                                       llvm::ArrayRef<const llvm::SCEV *> syms,
-                                      bool nonNeg) -> poly::Loop * {
+                                      bool nonNeg) -> Loop * {
     unsigned numLoops = unsigned(A.numCol()) - 1 - syms.size();
-    poly::Loop *aln =
-      allocate(alloc, unsigned(A.numRow()), numLoops, syms, nonNeg);
+    Loop *aln = allocate(alloc, unsigned(A.numRow()), numLoops, syms, nonNeg);
     aln->getA() << A;
     return aln;
   }
   [[nodiscard]] static auto allocate(BumpAlloc<> &alloc, unsigned int numCon,
                                      unsigned int numLoops,
                                      llvm::ArrayRef<const llvm::SCEV *> syms,
-                                     bool nonNegative) -> NotNull<poly::Loop> {
+                                     bool nonNegative) -> NotNull<Loop> {
     unsigned numDynSym = syms.size();
     unsigned N = numLoops + numDynSym + 1;
     // extra capacity for adding 0 lower bounds later, see
@@ -892,15 +889,13 @@ public:
     unsigned symCapacity = numDynSym + numLoops - 1;
     size_t memNeeded = size_t(M) * N * sizeof(int64_t) +
                        symCapacity * sizeof(const llvm::SCEV *const *);
-    auto *mem = (poly::Loop *)alloc.allocate(sizeof(poly::Loop) + memNeeded,
-                                             alignof(poly::Loop));
+    auto *mem = (Loop *)alloc.allocate(sizeof(Loop) + memNeeded, alignof(Loop));
     auto *aln = std::construct_at(mem, numCon, numLoops, numDynSym, M);
     std::copy_n(syms.begin(), numDynSym, aln->getSyms().begin());
-    return NotNull<poly::Loop>{aln};
+    return NotNull<Loop>{aln};
   }
-  explicit constexpr poly::Loop(unsigned int _numConstraints,
-                                unsigned int _numLoops,
-                                unsigned int _numDynSymbols, bool _nonNegative)
+  explicit constexpr Loop(unsigned int _numConstraints, unsigned int _numLoops,
+                          unsigned int _numDynSymbols, bool _nonNegative)
     : numConstraints(_numConstraints), numLoops(_numLoops),
       numDynSymbols(_numDynSymbols), nonNegative(_nonNegative) {}
 };

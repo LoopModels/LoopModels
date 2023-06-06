@@ -41,13 +41,13 @@
 #include <variant>
 
 // NOLINTNEXTLINE(cert-dcl58-cpp)
-template <typename T> struct std::hash<poly::containers::UList<T>> {
-  auto operator()(const poly::containers::UList<T> &s) const noexcept
-    -> size_t {
+template <> struct std::hash<poly::IR::Operands> {
+  auto operator()(const poly::IR::Operands &s) const noexcept -> size_t {
     if (s.empty()) return 0;
-    std::size_t h = std::hash<T>{}(*s.begin());
-    return s.reduce(h, [](std::size_t h, const T &t) {
-      return llvm::detail::combineHashValue(h, std::hash<T>{}(t));
+    std::size_t h = 0;
+    return s.reduce(h, [](std::size_t h, const poly::IR::Node *t) {
+      return llvm::detail::combineHashValue(
+        h, std::hash<const poly::IR::Node *>{}(t));
     });
   }
 };
@@ -67,7 +67,7 @@ struct UniqueIdentifier {
   Operands preds;
   Node::ValKind kind;
   llvm::Intrinsic::ID op{llvm::Intrinsic::not_intrinsic};
-  llvm::FastMathFlags fastMathFlags;
+  llvm::FastMathFlags fastMathFlags{};
 };
 
 auto containsCycle(const llvm::Instruction *, aset<llvm::Instruction const *> &,
