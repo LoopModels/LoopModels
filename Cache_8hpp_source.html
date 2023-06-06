@@ -78,8 +78,8 @@ $(function() {
 <div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="keyword">namespace </span>poly::IR {</div>
 <div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="keyword">using</span> dict::map;</div>
 <div class="line"><a name="l00009"></a><span class="lineno"><a class="line" href="classpoly_1_1IR_1_1Cache.html">    9</a></span>&#160;<span class="keyword">class </span><a class="code" href="classpoly_1_1IR_1_1Cache.html">Cache</a> {</div>
-<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;  map&lt;llvm::Value *, Intr *&gt; llvmToInternalMap;</div>
-<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;  map&lt;UniqueIdentifier, Intr *&gt; argMap;</div>
+<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;  map&lt;llvm::Value *, Node *&gt; llvmToInternalMap;</div>
+<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;  map&lt;UniqueIdentifier, Node *&gt; argMap;</div>
 <div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;  llvm::SmallVector&lt;Intr *&gt; predicates;</div>
 <div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;  <span class="comment">// tmp is used in case we don&#39;t need an allocation</span></div>
 <div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;  <span class="comment">// Instruction *tmp{nullptr};</span></div>
@@ -318,9 +318,9 @@ $(function() {
 <div class="ttc" id="aclasspoly_1_1IR_1_1Intr_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Intr.html">poly::IR::Intr</a></div><div class="ttdef"><b>Definition:</b> Instruction.hpp:218</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Node_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Node.html">poly::IR::Node</a></div><div class="ttdef"><b>Definition:</b> Node.hpp:83</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Stow_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Stow.html">poly::IR::Stow</a></div><div class="ttdef"><b>Definition:</b> Address.hpp:732</div></div>
-<div class="ttc" id="astructpoly_1_1IR_1_1Predicate_1_1Intersection_html"><div class="ttname"><a href="structpoly_1_1IR_1_1Predicate_1_1Intersection.html">poly::IR::Predicate::Intersection</a></div><div class="ttdef"><b>Definition:</b> Predicate.hpp:39</div></div>
-<div class="ttc" id="astructpoly_1_1IR_1_1Predicate_1_1Map_html"><div class="ttname"><a href="structpoly_1_1IR_1_1Predicate_1_1Map.html">poly::IR::Predicate::Map</a></div><div class="ttdef"><b>Definition:</b> BBPredPath.hpp:5</div></div>
-<div class="ttc" id="astructpoly_1_1IR_1_1Predicate_1_1Set_html"><div class="ttname"><a href="structpoly_1_1IR_1_1Predicate_1_1Set.html">poly::IR::Predicate::Set</a></div><div class="ttdef"><b>Definition:</b> Predicate.hpp:193</div></div>
+<div class="ttc" id="astructpoly_1_1IR_1_1Predicate_1_1Intersection_html"><div class="ttname"><a href="structpoly_1_1IR_1_1Predicate_1_1Intersection.html">poly::IR::Predicate::Intersection</a></div><div class="ttdef"><b>Definition:</b> Predicate.hpp:43</div></div>
+<div class="ttc" id="astructpoly_1_1IR_1_1Predicate_1_1Map_html"><div class="ttname"><a href="structpoly_1_1IR_1_1Predicate_1_1Map.html">poly::IR::Predicate::Map</a></div><div class="ttdef"><b>Definition:</b> BBPredPath.hpp:7</div></div>
+<div class="ttc" id="astructpoly_1_1IR_1_1Predicate_1_1Set_html"><div class="ttname"><a href="structpoly_1_1IR_1_1Predicate_1_1Set.html">poly::IR::Predicate::Set</a></div><div class="ttdef"><b>Definition:</b> Predicate.hpp:196</div></div>
 <div class="ttc" id="astructpoly_1_1IR_1_1UniqueIdentifier_html"><div class="ttname"><a href="structpoly_1_1IR_1_1UniqueIdentifier.html">poly::IR::UniqueIdentifier</a></div><div class="ttdef"><b>Definition:</b> Instruction.hpp:65</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->

@@ -131,8 +131,8 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>countTrue</
 <tr class="memitem:a9e342e2e4aa33a75b8409ac040ca758b"><td class="memItemLeft" align="right" valign="top"><a id="a9e342e2e4aa33a75b8409ac040ca758b"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>countFalse</b> () const</td></tr>
 <tr class="separator:a9e342e2e4aa33a75b8409ac040ca758b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac6daa90a839b56657feb649f7da1f1e4"><td class="memItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpoly_1_1IR_1_1Predicate_1_1Intersection.html#ac6daa90a839b56657feb649f7da1f1e4">compactUnion</a> (<a class="el" href="structpoly_1_1IR_1_1Predicate_1_1Intersection.html">Intersection</a> other) const -&gt; std::variant&lt; std::monostate, <a class="el" href="structpoly_1_1IR_1_1Predicate_1_1Intersection.html">Intersection</a>, std::pair&lt; <a class="el" href="structpoly_1_1IR_1_1Predicate_1_1Intersection.html">Intersection</a>, <a class="el" href="structpoly_1_1IR_1_1Predicate_1_1Intersection.html">Intersection</a> &gt;&gt;</td></tr>
-<tr class="separator:ac6daa90a839b56657feb649f7da1f1e4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a61a44178c94724c643b1e13e295af03d"><td class="memItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpoly_1_1IR_1_1Predicate_1_1Intersection.html#a61a44178c94724c643b1e13e295af03d">compactUnion</a> (<a class="el" href="structpoly_1_1IR_1_1Predicate_1_1Intersection.html">Intersection</a> other) const -&gt; containers::TinyVector&lt; <a class="el" href="structpoly_1_1IR_1_1Predicate_1_1Intersection.html">Intersection</a>, 2 &gt;</td></tr>
+<tr class="separator:a61a44178c94724c643b1e13e295af03d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
@@ -161,8 +161,8 @@ uint64_t&#160;</td><td class="memItemRight" valign="bottom"><b>predicates</b></t
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p><a class="el" href="structpoly_1_1IR_1_1Predicate_1_1Intersection.html">Predicate::Intersection</a> Represents the intersection of up to 32 predicates. These are represented by a 64-bit unsigned integer, which is interpreted as a vector of 32 <code>Predicate::Relation</code>s. The specific instructions these correspond to are stored in an ordered container. </p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
-<a id="ac6daa90a839b56657feb649f7da1f1e4"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac6daa90a839b56657feb649f7da1f1e4">&#9670;&nbsp;</a></span>compactUnion()</h2>
+<a id="a61a44178c94724c643b1e13e295af03d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a61a44178c94724c643b1e13e295af03d">&#9670;&nbsp;</a></span>compactUnion()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -175,8 +175,7 @@ uint64_t&#160;</td><td class="memItemRight" valign="bottom"><b>predicates</b></t
           <td>(</td>
           <td class="paramtype"><a class="el" href="structpoly_1_1IR_1_1Predicate_1_1Intersection.html">Intersection</a>&#160;</td>
           <td class="paramname"><em>other</em></td><td>)</td>
-          <td> const -&gt; std::variant&lt;std::monostate, <a class="el" href="structpoly_1_1IR_1_1Predicate_1_1Intersection.html">Intersection</a>,
-                    std::pair&lt;<a class="el" href="structpoly_1_1IR_1_1Predicate_1_1Intersection.html">Intersection</a>, <a class="el" href="structpoly_1_1IR_1_1Predicate_1_1Intersection.html">Intersection</a>&gt;&gt; </td>
+          <td> const -&gt; containers::TinyVector&lt;<a class="el" href="structpoly_1_1IR_1_1Predicate_1_1Intersection.html">Intersection</a>, 2&gt; </td>
         </tr>
       </table>
   </td>
@@ -185,7 +184,7 @@ uint64_t&#160;</td><td class="memItemRight" valign="bottom"><b>predicates</b></t
   </tr>
 </table>
 </div><div class="memdoc">
-<p>if the union between <code>this</code> and <code>other</code> can be expressed as an intersection of their constituents, return that intersection. Return an empty optional otherwise. The cases we handle are: (a &amp; b) | a = a (a &amp; b) | (a &amp; !b) = a </p>
+<p>if the union between <code>this</code> and <code>other</code> can be expressed as an intersection of their constituents, return that intersection. Return an empty vector otherwise. The cases we handle are: (a &amp; b) | a = a (a &amp; b) | (a &amp; !b) = a </p>
 
 </div>
 </div>

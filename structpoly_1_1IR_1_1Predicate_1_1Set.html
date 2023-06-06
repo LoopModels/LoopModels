@@ -78,15 +78,12 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:adbd46439c148ffa1451cb2b86d99f9d7"><td class="memItemLeft" align="right" valign="top"><a id="adbd46439c148ffa1451cb2b86d99f9d7"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>Set</b> (BumpAlloc&lt;&gt; &amp;alloc)</td></tr>
-<tr class="separator:adbd46439c148ffa1451cb2b86d99f9d7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab87accc528f78ead0732aaed0b57bcc7"><td class="memItemLeft" align="right" valign="top"><a id="ab87accc528f78ead0732aaed0b57bcc7"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>Set</b> (BumpAlloc&lt;&gt; &amp;alloc, <a class="el" href="structpoly_1_1IR_1_1Predicate_1_1Intersection.html">Intersection</a> pred)</td></tr>
-<tr class="separator:ab87accc528f78ead0732aaed0b57bcc7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a10efb42b9b1cd484ac1d464a5a95f6e8"><td class="memItemLeft" align="right" valign="top"><a id="a10efb42b9b1cd484ac1d464a5a95f6e8"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>Set</b> (const <a class="el" href="structpoly_1_1IR_1_1Predicate_1_1Set.html">Set</a> &amp;)=default</td></tr>
-<tr class="separator:a10efb42b9b1cd484ac1d464a5a95f6e8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2c42c42f4b822efd335b5620e0810536"><td class="memItemLeft" align="right" valign="top"><a id="a2c42c42f4b822efd335b5620e0810536"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>Set</b> (<a class="el" href="structpoly_1_1IR_1_1Predicate_1_1Intersection.html">Intersection</a> pred)</td></tr>
+<tr class="separator:a2c42c42f4b822efd335b5620e0810536"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6ff516a5fa4a667dcb2164ce7b2e58a9"><td class="memItemLeft" align="right" valign="top"><a id="a6ff516a5fa4a667dcb2164ce7b2e58a9"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>Set</b> (const <a class="el" href="structpoly_1_1IR_1_1Predicate_1_1Set.html">Set</a> &amp;)=delete</td></tr>
+<tr class="separator:a6ff516a5fa4a667dcb2164ce7b2e58a9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6eb817c92b031e0fa388fdff67209523"><td class="memItemLeft" align="right" valign="top"><a id="a6eb817c92b031e0fa388fdff67209523"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>Set</b> (<a class="el" href="structpoly_1_1IR_1_1Predicate_1_1Set.html">Set</a> &amp;&amp;)=default</td></tr>
 <tr class="separator:a6eb817c92b031e0fa388fdff67209523"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -96,20 +93,26 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator=</b> (<a cla
 <tr class="memitem:abbce3750a0d2ce0a4070a7e02cd65e60"><td class="memItemLeft" align="right" valign="top"><a id="abbce3750a0d2ce0a4070a7e02cd65e60"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator=</b> (const <a class="el" href="structpoly_1_1IR_1_1Predicate_1_1Set.html">Set</a> &amp;other) -&gt; <a class="el" href="structpoly_1_1IR_1_1Predicate_1_1Set.html">Set</a> &amp;=default</td></tr>
 <tr class="separator:abbce3750a0d2ce0a4070a7e02cd65e60"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa3207d34a285f50d351b83f1323ed364"><td class="memItemLeft" align="right" valign="top"><a id="aa3207d34a285f50d351b83f1323ed364"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator[]</b> (size_t index) -&gt; <a class="el" href="structpoly_1_1IR_1_1Predicate_1_1Intersection.html">Intersection</a></td></tr>
-<tr class="separator:aa3207d34a285f50d351b83f1323ed364"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a41c62c88495ac3ecdebfba42d9fc0e3c"><td class="memItemLeft" align="right" valign="top"><a id="a41c62c88495ac3ecdebfba42d9fc0e3c"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator[]</b> (size_t index) -&gt; <a class="el" href="structpoly_1_1IR_1_1Predicate_1_1Intersection.html">Intersection</a> &amp;</td></tr>
+<tr class="separator:a41c62c88495ac3ecdebfba42d9fc0e3c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a52c348743d4b1994b820f36baeeac98a"><td class="memItemLeft" align="right" valign="top"><a id="a52c348743d4b1994b820f36baeeac98a"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator[]</b> (size_t index) const -&gt; <a class="el" href="structpoly_1_1IR_1_1Predicate_1_1Intersection.html">Intersection</a></td></tr>
 <tr class="separator:a52c348743d4b1994b820f36baeeac98a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a57049a234bb2ba77159e317dd4f6a4cd"><td class="memItemLeft" align="right" valign="top"><a id="a57049a234bb2ba77159e317dd4f6a4cd"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (size_t i, size_t j) const -&gt; Relation</td></tr>
 <tr class="separator:a57049a234bb2ba77159e317dd4f6a4cd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a712160747b454632a7820c75881f3afe"><td class="memItemLeft" align="right" valign="top"><a id="a712160747b454632a7820c75881f3afe"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>size</b> () const -&gt; size_t</td></tr>
-<tr class="separator:a712160747b454632a7820c75881f3afe"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a755bc5fe7b590d9c9a35658c46e5b0ea"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpoly_1_1IR_1_1Predicate_1_1Set.html#a755bc5fe7b590d9c9a35658c46e5b0ea">operator|=</a> (<a class="el" href="structpoly_1_1IR_1_1Predicate_1_1Intersection.html">Intersection</a> other) -&gt; <a class="el" href="structpoly_1_1IR_1_1Predicate_1_1Set.html">Set</a> &amp;</td></tr>
-<tr class="separator:a755bc5fe7b590d9c9a35658c46e5b0ea"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a88a2b1d49a239145d7956e79898a51ac"><td class="memItemLeft" align="right" valign="top"><a id="a88a2b1d49a239145d7956e79898a51ac"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>size</b> () const -&gt; size_t</td></tr>
+<tr class="separator:a88a2b1d49a239145d7956e79898a51ac"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9ce1516a84bdd823f6d564d5769461c0"><td class="memItemLeft" align="right" valign="top"><a id="a9ce1516a84bdd823f6d564d5769461c0"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>empty</b> () const -&gt; size_t</td></tr>
+<tr class="separator:a9ce1516a84bdd823f6d564d5769461c0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a69f659ac6ca9b721a39b774641ea931c"><td class="memItemLeft" align="right" valign="top"><a id="a69f659ac6ca9b721a39b774641ea931c"></a>
+containers::UList&lt; <a class="el" href="structpoly_1_1IR_1_1Predicate_1_1Intersection.html">Intersection</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>getIntersects</b> ()</td></tr>
+<tr class="separator:a69f659ac6ca9b721a39b774641ea931c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac9bf694bc9d657031b4181877c0996ec"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpoly_1_1IR_1_1Predicate_1_1Set.html#ac9bf694bc9d657031b4181877c0996ec">Union</a> (BumpAlloc&lt;&gt; &amp;alloc, <a class="el" href="structpoly_1_1IR_1_1Predicate_1_1Intersection.html">Intersection</a> other) -&gt; <a class="el" href="structpoly_1_1IR_1_1Predicate_1_1Set.html">Set</a> &amp;</td></tr>
+<tr class="separator:ac9bf694bc9d657031b4181877c0996ec"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af9845271aabab44c25c9f33ee888147b"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpoly_1_1IR_1_1Predicate_1_1Set.html#af9845271aabab44c25c9f33ee888147b">operator|=</a> (const <a class="el" href="structpoly_1_1IR_1_1Predicate_1_1Set.html">Set</a> &amp;other) -&gt; <a class="el" href="structpoly_1_1IR_1_1Predicate_1_1Set.html">Set</a> &amp;</td></tr>
 <tr class="separator:af9845271aabab44c25c9f33ee888147b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aeed1af0aafe0c71052cce8031f1237f6"><td class="memItemLeft" align="right" valign="top"><a id="aeed1af0aafe0c71052cce8031f1237f6"></a>
@@ -157,9 +160,19 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="stru
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
-<tr class="memitem:a92162af98f24492f7c4de2815388f1be"><td class="memItemLeft" align="right" valign="top"><a id="a92162af98f24492f7c4de2815388f1be"></a>
-<a class="el" href="structpoly_1_1math_1_1BumpPtrVector.html">math::BumpPtrVector</a>&lt; <a class="el" href="structpoly_1_1IR_1_1Predicate_1_1Intersection.html">Intersection</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>intersectUnion</b></td></tr>
-<tr class="separator:a92162af98f24492f7c4de2815388f1be"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a768a23dde3eea835bea971146431fcfc"><td class="memItemLeft" ><a id="a768a23dde3eea835bea971146431fcfc"></a>
+union {</td></tr>
+<tr class="memitem:a270e1106014d6cc0894a1eb51c54ec71"><td class="memItemLeft" >
+&#160;&#160;&#160;<a class="el" href="structpoly_1_1IR_1_1Predicate_1_1Intersection.html">Intersection</a>&#160;&#160;&#160;<b>intersect</b></td></tr>
+<tr class="separator:a270e1106014d6cc0894a1eb51c54ec71"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8035b775c3689d6512c4599a6a8157a0"><td class="memItemLeft" >
+&#160;&#160;&#160;containers::UList&lt; <a class="el" href="structpoly_1_1IR_1_1Predicate_1_1Intersection.html">Intersection</a> &gt; *&#160;&#160;&#160;<b>intersects</b></td></tr>
+<tr class="separator:a8035b775c3689d6512c4599a6a8157a0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a768a23dde3eea835bea971146431fcfc"><td class="memItemLeft" valign="top">}&#160;</td><td class="memItemRight" valign="bottom"><b>intersectUnion</b></td></tr>
+<tr class="separator:a768a23dde3eea835bea971146431fcfc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a59accdb77dcbdded6da8baf079f1d9e7"><td class="memItemLeft" align="right" valign="top"><a id="a59accdb77dcbdded6da8baf079f1d9e7"></a>
+ptrdiff_t&#160;</td><td class="memItemRight" valign="bottom"><b>count</b></td></tr>
+<tr class="separator:a59accdb77dcbdded6da8baf079f1d9e7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p><a class="el" href="structpoly_1_1IR_1_1Predicate_1_1Set.html">Predicate::Set</a> A type for performing set algebra on predicates, representing sets Note: Commutative: a | b == b | a a &amp; b == b &amp; a Distributive: a | (b &amp; c) == (a | b) &amp; (a | c) a &amp; (b | c) == (a &amp; b) | (a &amp; c) Associative: a | (b | c) == (a | b) | c a &amp; (b &amp; c) == (a &amp; b) &amp; c Idempotent: a | a == a a &amp; a == a The internal representation can be interpreted as the intersection of a vector of predicates. This makes intersection operations efficient, but means we may need to allocate new instructions to represent unions. Unions are needed for merging divergent control flow branches. For union calculation, we'd simplify: (a &amp; b) | (a &amp; c) == a &amp; (b | c) If c == !b, then (a &amp; b) | (a &amp; !b) == a &amp; (b | !b) == a &amp; True == a Generically: (a &amp; b) | (c &amp; d) == ((a &amp; b) | c) &amp; ((a &amp; b) | d) == (a | c) &amp; (b | c) &amp; (a | d) &amp; (b | d) </p>
@@ -192,7 +205,7 @@ Public Attributes</h2></td></tr>
 </div>
 </div>
 <a id="af9845271aabab44c25c9f33ee888147b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af9845271aabab44c25c9f33ee888147b">&#9670;&nbsp;</a></span>operator|=() <span class="overload">[1/2]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#af9845271aabab44c25c9f33ee888147b">&#9670;&nbsp;</a></span>operator|=()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -218,8 +231,8 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="a755bc5fe7b590d9c9a35658c46e5b0ea"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a755bc5fe7b590d9c9a35658c46e5b0ea">&#9670;&nbsp;</a></span>operator|=() <span class="overload">[2/2]</span></h2>
+<a id="ac9bf694bc9d657031b4181877c0996ec"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac9bf694bc9d657031b4181877c0996ec">&#9670;&nbsp;</a></span>Union()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -228,11 +241,21 @@ Public Attributes</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">auto poly::IR::Predicate::Set::operator|= </td>
+          <td class="memname">auto poly::IR::Predicate::Set::Union </td>
           <td>(</td>
+          <td class="paramtype">BumpAlloc&lt;&gt; &amp;&#160;</td>
+          <td class="paramname"><em>alloc</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
           <td class="paramtype"><a class="el" href="structpoly_1_1IR_1_1Predicate_1_1Intersection.html">Intersection</a>&#160;</td>
-          <td class="paramname"><em>other</em></td><td>)</td>
-          <td> -&gt; <a class="el" href="structpoly_1_1IR_1_1Predicate_1_1Set.html">Set</a> &amp; </td>
+          <td class="paramname"><em>other</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> -&gt; <a class="el" href="structpoly_1_1IR_1_1Predicate_1_1Set.html">Set</a> &amp; </td>
         </tr>
       </table>
   </td>
