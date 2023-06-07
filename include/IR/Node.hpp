@@ -9,6 +9,7 @@
 #include <llvm/Support/Casting.h>
 
 namespace poly::IR {
+using utils::NotNull, utils::invariant, utils::BumpAlloc;
 /// We take an approach similar to LLVM's RTTI
 /// however, we want to take advantage of FAMs while having a "hieararchy"
 /// we accomplish this via a base class, and then wrapper classes that simply

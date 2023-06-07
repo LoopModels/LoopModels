@@ -13,6 +13,7 @@
 #include <llvm/IR/Value.h>
 #include <llvm/Pass.h>
 #include <llvm/Support/Allocator.h>
+#include <utility>
 #include <variant>
 
 namespace poly::IR {
@@ -151,7 +152,7 @@ struct Intersection {
     uint64_t mask = emptyMask(bitUnion);
     if (std::popcount(mask) == 1) { // a single b & !b case
       uint64_t remUnionMask =
-        ~(mask | (mask << 1)); // 0s `b`, meaning b can be either.
+        ~(mask | (mask << 1));      // 0s `b`, meaning b can be either.
       uint64_t w = remUnionMask & x;
       uint64_t z = remUnionMask & y;
       if (w == z) return {Intersection{w}};
@@ -166,7 +167,7 @@ struct Intersection {
   }
 }; // struct Predicate::Intersection
 
-/// Predicate::Set
+   /// Predicate::Set
 /// A type for performing set algebra on predicates, representing sets
 /// Note:
 /// Commutative:
@@ -194,49 +195,56 @@ struct Intersection {
 /// (a & b) | (c & d) == ((a & b) | c) & ((a & b) | d)
 /// == (a | c) & (b | c) & (a | d) & (b | d)
 struct Set {
+  // std::variant<std::monostate, Intersection, containers::UList<Intersection>
+  // *> intersectUnion;
   union {
     Intersection intersect;
     containers::UList<Intersection> *intersects;
   } intersectUnion;
-  ptrdiff_t count; // negative if we have a single intersection
+  bool allocated{false};
+  // ptrdiff_t count;
+  // 0: empty
+  // -1 if we have a single intersection
   // >=1 may still be empty, but it means we've allocated
   // and need to check `intersects`.
   //
   // containers::UList<Intersection> *intersectUnion{nullptr};
   // [[no_unique_address]] math::BumpPtrVector<Intersection> intersectUnion;
   Set() = default;
-  Set(Intersection pred) : intersectUnion(pred), count(-1){};
+  Set(Intersection pred) : intersectUnion(pred){};
   Set(const Set &) = delete;
   Set(Set &&) = default;
   auto operator=(Set &&other) noexcept -> Set & {
-    intersectUnion = std::move(other.intersectUnion);
+    intersectUnion = other.intersectUnion;
+    allocated = std::exchange(other.allocated, false);
     return *this;
   };
   auto operator=(const Set &other) -> Set & = default;
   // TODO: constexpr these when llvm::SmallVector supports it
   [[nodiscard]] auto operator[](size_t index) -> Intersection & {
-    if (count > 0) return (*intersectUnion.intersects)[index];
+    if (allocated) return (*intersectUnion.intersects)[index];
     invariant(index == 0);
     return intersectUnion.intersect;
   }
   [[nodiscard]] auto operator[](size_t index) const -> Intersection {
-    if (count > 0) return (*intersectUnion.intersects)[index];
+    if (allocated) return (*intersectUnion.intersects)[index];
     invariant(index == 0);
     return intersectUnion.intersect;
   }
   [[nodiscard]] auto operator()(size_t i, size_t j) const -> Relation {
     return (*this)[i][j];
   }
-  [[nodiscard]] constexpr auto size() const -> size_t {
-    return size_t(std::max(ptrdiff_t(0), count));
-  }
+  // [[nodiscard]] constexpr auto size() const -> size_t {
+  //   return size_t(std::max(ptrdiff_t(0), count));
+  // }
   [[nodiscard]] constexpr auto empty() const -> size_t {
-    return (count == 0) || ((count > 1) && intersectUnion.intersects->empty());
+    return allocated ? intersectUnion.intersects->empty()
+                     : intersectUnion.intersect.isEmpty();
   }
-  containers::UList<Intersection> getIntersects() {
-    if (count > 0) return *intersectUnion.intersects;
-    return {intersectUnion.intersect};
-  }
+  // auto getIntersects() -> containers::UList<Intersection> {
+  //   if (count > 0) return *intersectUnion.intersects;
+  //   return {intersectUnion.intersect};
+  // }
   /// Cases we simplify:
   /// a | {} = a
   /// Impl: if either empty, set to other
@@ -258,17 +266,17 @@ struct Set {
   auto Union(BumpAlloc<> &alloc, Intersection other) -> Set & {
     if (other.isEmpty()) return *this;
     if (empty()) {
-      count = -1;
-      intersectUnion.intersect = other;
+      if (allocated) intersectUnion.intersects->pushHasCapacity(other);
+      else intersectUnion.intersect = other;
       return *this;
     }
-    if (count < 0) { // fast path
+    if (!allocated) { // fast path
       Intersection intersect = intersectUnion.intersect;
       auto u = intersect.compactUnion(other);
       if (u.size() == 1) {
         intersectUnion.intersect = u[0];
       } else {
-        count = 2;
+        allocated = true;
         intersectUnion.intersects =
           alloc.create<containers::UList<Intersection>>();
         if (u.size() == 2) {
@@ -281,10 +289,11 @@ struct Set {
       }
       return *this;
     }
+    // allocated == true
     bool simplifyPreds = false;
     containers::UList<Intersection> *intersects = intersectUnion.intersects;
     for (auto *l = intersects; l; l = l->getNext()) {
-      for (auto it = l->begin(), e = l->localEnd(); it != e; ++it) {
+      for (auto it = l->dbegin(), e = l->dend(); it != e; ++it) {
         auto u = it->compactUnion(other);
         if (u.empty()) continue;
         *it = u[0];
@@ -294,13 +303,28 @@ struct Set {
         other = u[1];
       }
     }
-    intersects = intersects->push(alloc, other);
+    intersectUnion.intersects = intersects->push(alloc, other);
+    if (simplifyPreds) simplify();
+    return *this;
+  }
+  [[nodiscard]] constexpr auto begin() const {
+    invariant(allocated);
+    // poly::containers::UList<poly::IR::Predicate::Intersection>::Iterator it(
+    //   intersectUnion.intersects->begin());
+    // return it;
+    return intersectUnion.intersects->begin();
+  }
+  [[nodiscard]] static constexpr auto end() {
+    return poly::containers::UList<poly::IR::Predicate::Intersection>::end();
+  }
+  void simplify() const {
+    bool simplifyPreds = allocated;
     while (simplifyPreds) {
       simplifyPreds = false;
-      for (auto *l = intersects; l; l = l->getNext()) {
-        for (auto it = l->begin(), e = l->localEnd(); it != e; ++it) {
-          for (auto *j = l; j->getNext()) {
-            for (auto jt = j == l ? it + 1 : j->begin(), je = j->localEnd();
+      for (auto *l = intersectUnion.intersects; l; l = l->getNext()) {
+        for (auto it = l->dbegin(), e = l->dend(); it != e; ++it) {
+          for (auto *j = l; j; j = j->getNext()) {
+            for (auto jt = j == l ? it + 1 : j->dbegin(), je = j->dend();
                  jt != je; ++jt) {
 
               auto u = it->compactUnion(*jt);
@@ -319,71 +343,64 @@ struct Set {
         }
       }
     }
-    intersectUnion.intersects = intersects;
-    return *this;
   }
   /// if *this = [(a & b) | (c & d)]
   /// and other = [(e & f) | (g & h)]
   /// then
   /// [(a & b) | (c & d)] | [(e & f) | (g & h)] =
   ///   [(a & b) | (c & d) | (e & f) | (g & h)]
-  auto operator|=(const Set &other) -> Set & {
-    if (intersectUnion.empty()) intersectUnion = other.intersectUnion;
-    else
-      for (auto &&pred : other.intersectUnion) *this |= pred;
+  auto Union(BumpAlloc<> &alloc, const Set &other) -> Set & {
+    if (!other.allocated) return Union(alloc, other.intersectUnion.intersect);
+    other.intersectUnion.intersects->forEach(
+      [&](Intersection pred) { Union(alloc, pred); });
     return *this;
-  }
-  [[nodiscard]] auto operator|(Intersection other) const & -> Set {
-    auto ret = *this;
-    ret |= other;
-    return ret;
-  }
-  [[nodiscard]] auto operator|(Intersection other) && -> Set {
-    return std::move(*this |= other);
-  }
-  [[nodiscard]] auto operator|(Set other) const & -> Set {
-    return other |= *this;
-  }
-  [[nodiscard]] auto operator|(const Set &other) && -> Set {
-    return std::move(*this |= other);
   }
   auto operator&=(Intersection pred) -> Set & {
-    for (size_t i = 0; i < intersectUnion.size();) {
-      intersectUnion[i] &= pred;
-      if (intersectUnion[i].isEmpty())
-        intersectUnion.erase(intersectUnion.begin() + i);
-      else ++i;
+    if (!allocated) {
+      intersectUnion.intersect &= pred;
+      return *this;
     }
-    return *this;
-  }
-  // TODO: `constexpr` once `llvm::SmallVector` supports it
-  [[nodiscard]] auto begin() { return intersectUnion.begin(); }
-  [[nodiscard]] auto end() { return intersectUnion.end(); }
-  [[nodiscard]] auto begin() const { return intersectUnion.begin(); }
-  [[nodiscard]] auto end() const { return intersectUnion.end(); }
-  [[nodiscard]] auto operator&=(Set &pred) -> Set & {
-    for (auto p : pred) (*this) &= p;
-    return *this;
-  }
-  [[nodiscard]] auto isEmpty() const -> bool { return intersectUnion.empty(); }
-  [[nodiscard]] auto intersect(BumpAlloc<> &alloc, const Set &other) const {
-    Set ret{alloc};
-    for (auto &&pred : intersectUnion)
-      for (auto &&otherPred : other) ret |= pred & otherPred;
-    return ret;
-  }
-  /// returns a pair intersections
-  [[nodiscard]] auto getConflict(const Set &other) -> Intersection {
-    assert(intersectionIsEmpty(other));
-    Intersection ret;
-    for (auto pred : intersectUnion) {
-      for (auto otherPred : other) {
-        assert((pred & otherPred).isEmpty());
-        ret &= pred.getConflict(otherPred);
+    // for (auto *l = intersectUnion.intersects; l; l = l->getNext())
+    //   for (auto it = l->begin(), e = l->localEnd(); it != e; ++it)
+    //     if ((*it &= pred).isEmpty()) l->eraseUnordered(it--);
+    for (auto *l = intersectUnion.intersects; l; l = l->getNext())
+      for (auto it = l->dbegin(), e = l->dend(); it != e; ++it) {
+        *it &= pred;
+        if (it->isEmpty()) l->eraseUnordered(it--);
       }
-    }
+    simplify();
+    return *this;
+  }
+  [[nodiscard]] auto operator&=(Set &pred) -> Set & {
+    if (!pred.allocated) return *this &= pred.intersectUnion.intersect;
+    pred.intersectUnion.intersects->forEach(
+      [&](Intersection pred) { *this &= pred; });
+    return *this;
+  }
+  auto copy(BumpAlloc<> &alloc) -> Set {
+    if (!allocated) return Set{intersectUnion.intersect};
+    Set ret{};
+    ret.intersectUnion.intersects = intersectUnion.intersects->copy(alloc);
+    ret.allocated = true;
     return ret;
   }
+  // [[nodiscard]] auto intersect(BumpAlloc<> &alloc, const Set &other) const {
+  //   // old implementation had |= (a & b); // why?
+  //   if (!allocated) return copy(alloc) &= other;
+  //   return other->copy(alloc) &= *this;
+  // }
+  // /// returns a pair intersections
+  // [[nodiscard]] auto getConflict(const Set &other) -> Intersection {
+  //   assert(intersectionIsEmpty(other));
+  //   Intersection ret;
+  //   for (auto pred : intersectUnion) {
+  //     for (auto otherPred : other) {
+  //       assert((pred & otherPred).isEmpty());
+  //       ret &= pred.getConflict(otherPred);
+  //     }
+  //   }
+  //   return ret;
+  // }
   /// intersectionIsEmpty(const Set &other) -> bool
   /// returns `true` if the intersection of `*this` and `other` is empty
   /// if *this = [(a & b) | (c & d)]
@@ -397,7 +414,7 @@ struct Set {
   /// So iterating over the union elements, if any of them are not empty, then
   /// the intersection is not empty.
   [[nodiscard]] auto intersectionIsEmpty(const Set &other) const -> bool {
-    for (auto pred : intersectUnion)
+    for (auto pred : *this)
       for (auto otherPred : other)
         if (!((pred & otherPred).isEmpty())) return false;
     return true;

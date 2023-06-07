@@ -1,13 +1,13 @@
 #pragma once
 
 #include "Dependence.hpp"
+#include "Dicts/BumpMapSet.hpp"
 #include "Graphs.hpp"
 #include "IR/Address.hpp"
 #include "IR/Node.hpp"
 #include "Polyhedra/Loops.hpp"
 #include "Schedule.hpp"
 #include <Containers/BitSets.hpp>
-#include <Containers/BumpMapSet.hpp>
 #include <Math/Array.hpp>
 #include <Math/Comparisons.hpp>
 #include <Math/GreatestCommonDivisor.hpp>
@@ -1581,7 +1581,7 @@ public:
     std::swap(g.nodeIds, nodeIds);
     g.activeEdges = activeEdges; // undo such that g.getEdges(d) is correct
     for (auto &&e : g.getEdges(d)) e.popSatLevel();
-    g.activeEdges = oldEdges; // restore backup
+    g.activeEdges = oldEdges;    // restore backup
     auto *oldNodeIter = oldSchedules.begin();
     for (auto &&n : g) n.getSchedule() = *(oldNodeIter++);
     allocator.rollback(chckpt);

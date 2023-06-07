@@ -2,6 +2,8 @@
 
 #include "IR/Node.hpp"
 #include "Polyhedra/Loops.hpp"
+#include "Support/OStream.hpp"
+#include "Utilities/Allocators.hpp"
 #include <Math/Array.hpp>
 #include <Math/Comparisons.hpp>
 #include <Math/Math.hpp>
@@ -10,7 +12,6 @@
 #include <cstdint>
 #include <llvm/IR/Instructions.h>
 #include <llvm/IR/PatternMatch.h>
-#include <llvm/Support/Allocator.h>
 
 namespace poly {
 class Dependence;
@@ -19,7 +20,10 @@ namespace CostModeling {
 class LoopTreeSchedule;
 } // namespace CostModeling
 namespace IR {
-using utils::NotNull, utils::invariant;
+using math::PtrVector, math::MutPtrVector, math::DensePtrMatrix,
+  math::MutDensePtrMatrix, math::SquarePtrMatrix, math::_, math::DenseDims,
+  math::PtrMatrix, math::end;
+
 /// Represents a memory access that has been rotated according to some affine
 /// transform.
 // clang-format off
@@ -111,16 +115,15 @@ class Addr : public Node {
     std::memcpy(mem, other->mem,
                 intMemNeeded(getNumLoops(), numDim) * sizeof(int64_t));
   }
-  explicit Addr(const llvm::SCEVUnknown *arrayPtr,
-                NotNull<poly::Loop> loopRef, llvm::Instruction *user,
-                int64_t *offsym, const llvm::SCEV **s,
+  explicit Addr(const llvm::SCEVUnknown *arrayPtr, NotNull<poly::Loop> loopRef,
+                llvm::Instruction *user, int64_t *offsym, const llvm::SCEV **s,
                 std::array<unsigned, 2> dimOff)
     : Node(llvm::isa<llvm::StoreInst>(user) ? VK_Stow : VK_Load,
            loopRef->getNumLoops()),
       basePointer(arrayPtr), loop(loopRef), instr(user), offSym(offsym),
       syms(s), numDim(dimOff[0]), numDynSym(dimOff[1]){};
-  explicit Addr(const llvm::SCEVUnknown *arrayPtr,
-                NotNull<poly::Loop> loopRef, llvm::Instruction *user)
+  explicit Addr(const llvm::SCEVUnknown *arrayPtr, NotNull<poly::Loop> loopRef,
+                llvm::Instruction *user)
     : Node(llvm::isa<llvm::StoreInst>(user) ? VK_Stow : VK_Load,
            loopRef->getNumLoops()),
       basePointer(arrayPtr), loop(loopRef), instr(user){};
@@ -132,8 +135,8 @@ class Addr : public Node {
     : Node(isStr ? VK_Stow : VK_Load, unsigned(Pinv.numCol())),
       basePointer(ma->getArrayPointer()), loop(explicitLoop),
       instr(ma->getInstruction()), offSym(ma->getOffSym()) {
-    PtrMatrix<int64_t> M{ma->indexMatrix()};    // aD x nLma
-    MutPtrMatrix<int64_t> mStar{indexMatrix()}; // aD x nLp
+    DensePtrMatrix<int64_t> M{ma->indexMatrix()};    // aD x nLma
+    MutDensePtrMatrix<int64_t> mStar{indexMatrix()}; // aD x nLp
     // M is implicitly padded with zeros, nLp >= nLma
     unsigned nLma = ma->getNumLoops();
     invariant(nLma <= depth);
@@ -611,9 +614,7 @@ public:
     invariant(offSym != nullptr || numDynSym == 0);
     return {offSym, DenseDims{getArrayDim(), numDynSym}};
   }
-  [[nodiscard]] constexpr auto getLoop() -> NotNull<poly::Loop> {
-    return loop;
-  }
+  [[nodiscard]] constexpr auto getLoop() -> NotNull<poly::Loop> { return loop; }
   [[nodiscard]] constexpr auto sizesMatch(NotNull<const Addr> x) const -> bool {
     auto thisSizes = getSizes(), xSizes = x->getSizes();
     return std::equal(thisSizes.begin(), thisSizes.end(), xSizes.begin(),

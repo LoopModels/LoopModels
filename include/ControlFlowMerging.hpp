@@ -259,7 +259,7 @@ struct MergingCost {
     // in the old MergingCost where they're separate instructions,
     // we leave their ancestor PtrMaps intact.
     // in the new MergingCost where they're the same instruction,
-    // we assign them the same ancestor Claptrap.
+    // we assign them the same ancestors.
     auto *merged = new (alloc) aset<Instruction *>(*aA->second);
     merged->insert(aB->second->begin(), aB->second->end());
     aA->second = merged;
@@ -273,21 +273,22 @@ struct MergingCost {
     auto *mB = findMerge(B);
     if (mB) cycleUpdateMerged(merged, B, mB);
     // fuse the merge map cycles
+    auto &mMA = mergeMap[A], &mMB = mergeMap[B];
     if (auto *mA = findMerge(A)) {
       cycleUpdateMerged(merged, A, mA);
       if (mB) {
-        mergeMap[B] = mA;
-        mergeMap[A] = mB;
+        mMB = mA;
+        mMA = mB;
       } else {
-        mergeMap[B] = mA;
-        mergeMap[A] = B;
+        mMB = mA;
+        mMA = B;
       }
     } else if (mB) {
-      mergeMap[A] = mB;
-      mergeMap[B] = A;
+      mMA = mB;
+      mMB = A;
     } else {
-      mergeMap[B] = A;
-      mergeMap[A] = B;
+      mMB = A;
+      mMA = B;
     }
   }
   auto operator<(const MergingCost &other) const -> bool {
@@ -359,7 +360,7 @@ inline void mergeInstructions(
     }
   }
   // descendants aren't legal merge candidates, so push after merging
-  vec.push_back({J, preds});
+  vec.emplace_back(J, preds);
   // TODO: prune bad candidates from mergingCosts
 }
 
