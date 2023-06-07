@@ -322,7 +322,7 @@ $(function() {
 <div class="line"><a name="l00259"></a><span class="lineno">  259</span>&#160;    <span class="comment">// in the old MergingCost where they&#39;re separate instructions,</span></div>
 <div class="line"><a name="l00260"></a><span class="lineno">  260</span>&#160;    <span class="comment">// we leave their ancestor PtrMaps intact.</span></div>
 <div class="line"><a name="l00261"></a><span class="lineno">  261</span>&#160;    <span class="comment">// in the new MergingCost where they&#39;re the same instruction,</span></div>
-<div class="line"><a name="l00262"></a><span class="lineno">  262</span>&#160;    <span class="comment">// we assign them the same ancestor Claptrap.</span></div>
+<div class="line"><a name="l00262"></a><span class="lineno">  262</span>&#160;    <span class="comment">// we assign them the same ancestors.</span></div>
 <div class="line"><a name="l00263"></a><span class="lineno">  263</span>&#160;    <span class="keyword">auto</span> *merged = <span class="keyword">new</span> (alloc) aset&lt;Instruction *&gt;(*aA-&gt;second);</div>
 <div class="line"><a name="l00264"></a><span class="lineno">  264</span>&#160;    merged-&gt;insert(aB-&gt;second-&gt;begin(), aB-&gt;second-&gt;end());</div>
 <div class="line"><a name="l00265"></a><span class="lineno">  265</span>&#160;    aA-&gt;second = merged;</div>
@@ -336,141 +336,142 @@ $(function() {
 <div class="line"><a name="l00273"></a><span class="lineno">  273</span>&#160;    <span class="keyword">auto</span> *mB = findMerge(B);</div>
 <div class="line"><a name="l00274"></a><span class="lineno">  274</span>&#160;    <span class="keywordflow">if</span> (mB) cycleUpdateMerged(merged, B, mB);</div>
 <div class="line"><a name="l00275"></a><span class="lineno">  275</span>&#160;    <span class="comment">// fuse the merge map cycles</span></div>
-<div class="line"><a name="l00276"></a><span class="lineno">  276</span>&#160;    <span class="keywordflow">if</span> (<span class="keyword">auto</span> *mA = findMerge(A)) {</div>
-<div class="line"><a name="l00277"></a><span class="lineno">  277</span>&#160;      cycleUpdateMerged(merged, A, mA);</div>
-<div class="line"><a name="l00278"></a><span class="lineno">  278</span>&#160;      <span class="keywordflow">if</span> (mB) {</div>
-<div class="line"><a name="l00279"></a><span class="lineno">  279</span>&#160;        mergeMap[B] = mA;</div>
-<div class="line"><a name="l00280"></a><span class="lineno">  280</span>&#160;        mergeMap[A] = mB;</div>
-<div class="line"><a name="l00281"></a><span class="lineno">  281</span>&#160;      } <span class="keywordflow">else</span> {</div>
-<div class="line"><a name="l00282"></a><span class="lineno">  282</span>&#160;        mergeMap[B] = mA;</div>
-<div class="line"><a name="l00283"></a><span class="lineno">  283</span>&#160;        mergeMap[A] = B;</div>
-<div class="line"><a name="l00284"></a><span class="lineno">  284</span>&#160;      }</div>
-<div class="line"><a name="l00285"></a><span class="lineno">  285</span>&#160;    } <span class="keywordflow">else</span> <span class="keywordflow">if</span> (mB) {</div>
-<div class="line"><a name="l00286"></a><span class="lineno">  286</span>&#160;      mergeMap[A] = mB;</div>
-<div class="line"><a name="l00287"></a><span class="lineno">  287</span>&#160;      mergeMap[B] = A;</div>
-<div class="line"><a name="l00288"></a><span class="lineno">  288</span>&#160;    } <span class="keywordflow">else</span> {</div>
-<div class="line"><a name="l00289"></a><span class="lineno">  289</span>&#160;      mergeMap[B] = A;</div>
-<div class="line"><a name="l00290"></a><span class="lineno">  290</span>&#160;      mergeMap[A] = B;</div>
-<div class="line"><a name="l00291"></a><span class="lineno">  291</span>&#160;    }</div>
-<div class="line"><a name="l00292"></a><span class="lineno">  292</span>&#160;  }</div>
-<div class="line"><a name="l00293"></a><span class="lineno">  293</span>&#160;  <span class="keyword">auto</span> operator&lt;(<span class="keyword">const</span> <a class="code" href="structMergingCost.html">MergingCost</a> &amp;other) <span class="keyword">const</span> -&gt; <span class="keywordtype">bool</span> {</div>
-<div class="line"><a name="l00294"></a><span class="lineno">  294</span>&#160;    <span class="keywordflow">return</span> cost &lt; other.cost;</div>
-<div class="line"><a name="l00295"></a><span class="lineno">  295</span>&#160;  }</div>
-<div class="line"><a name="l00296"></a><span class="lineno">  296</span>&#160;  <span class="keyword">auto</span> operator&gt;(<span class="keyword">const</span> <a class="code" href="structMergingCost.html">MergingCost</a> &amp;other) <span class="keyword">const</span> -&gt; <span class="keywordtype">bool</span> {</div>
-<div class="line"><a name="l00297"></a><span class="lineno">  297</span>&#160;    <span class="keywordflow">return</span> cost &gt; other.cost;</div>
-<div class="line"><a name="l00298"></a><span class="lineno">  298</span>&#160;  }</div>
-<div class="line"><a name="l00299"></a><span class="lineno">  299</span>&#160;};</div>
-<div class="line"><a name="l00300"></a><span class="lineno">  300</span>&#160; </div>
-<div class="line"><a name="l00301"></a><span class="lineno">  301</span>&#160;<span class="comment">// NOLINTNEXTLINE(misc-no-recursion)</span></div>
-<div class="line"><a name="l00302"></a><span class="lineno">  302</span>&#160;<span class="keyword">inline</span> <span class="keywordtype">void</span> mergeInstructions(</div>
-<div class="line"><a name="l00303"></a><span class="lineno">  303</span>&#160;  BumpAlloc&lt;&gt; &amp;alloc, Instruction::Cache &amp;cache, Predicate::Map &amp;predMap,</div>
-<div class="line"><a name="l00304"></a><span class="lineno">  304</span>&#160;  llvm::TargetTransformInfo &amp;TTI, <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> vectorBits,</div>
-<div class="line"><a name="l00305"></a><span class="lineno">  305</span>&#160;  amap&lt;std::pair&lt;Instruction::Intrinsic, llvm::Type *&gt;,</div>
-<div class="line"><a name="l00306"></a><span class="lineno">  306</span>&#160;       BumpPtrVector&lt;std::pair&lt;Instruction *, Predicate::Set&gt;&gt;&gt; &amp;opMap,</div>
-<div class="line"><a name="l00307"></a><span class="lineno">  307</span>&#160;  llvm::SmallVectorImpl&lt;MergingCost *&gt; &amp;mergingCosts, Instruction *J,</div>
-<div class="line"><a name="l00308"></a><span class="lineno">  308</span>&#160;  llvm::BasicBlock *BB, Predicate::Set &amp;preds) {</div>
-<div class="line"><a name="l00309"></a><span class="lineno">  309</span>&#160;  <span class="comment">// have we already visited?</span></div>
-<div class="line"><a name="l00310"></a><span class="lineno">  310</span>&#160;  <span class="keywordflow">if</span> (mergingCosts.front()-&gt;visited(J)) <span class="keywordflow">return</span>;</div>
-<div class="line"><a name="l00311"></a><span class="lineno">  311</span>&#160;  <span class="keywordflow">for</span> (<span class="keyword">auto</span> *C : mergingCosts) {</div>
-<div class="line"><a name="l00312"></a><span class="lineno">  312</span>&#160;    <span class="keywordflow">if</span> (C-&gt;visited(J)) <span class="keywordflow">return</span>;</div>
-<div class="line"><a name="l00313"></a><span class="lineno">  313</span>&#160;    C-&gt;initAncestors(alloc, J);</div>
-<div class="line"><a name="l00314"></a><span class="lineno">  314</span>&#160;  }</div>
-<div class="line"><a name="l00315"></a><span class="lineno">  315</span>&#160;  <span class="keyword">auto</span> op = J-&gt;getOpType();</div>
-<div class="line"><a name="l00316"></a><span class="lineno">  316</span>&#160;  <span class="comment">// TODO: confirm that `vec` doesn&#39;t get moved if `opMap` is resized</span></div>
-<div class="line"><a name="l00317"></a><span class="lineno">  317</span>&#160;  <span class="keyword">auto</span> &amp;vec = opMap[op];</div>
-<div class="line"><a name="l00318"></a><span class="lineno">  318</span>&#160;  <span class="comment">// consider merging with every instruction sharing an opcode</span></div>
-<div class="line"><a name="l00319"></a><span class="lineno">  319</span>&#160;  <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;pair : vec) {</div>
-<div class="line"><a name="l00320"></a><span class="lineno">  320</span>&#160;    Instruction *other = pair.first;</div>
-<div class="line"><a name="l00321"></a><span class="lineno">  321</span>&#160;    <span class="comment">// check legality</span></div>
-<div class="line"><a name="l00322"></a><span class="lineno">  322</span>&#160;    <span class="comment">// illegal if:</span></div>
-<div class="line"><a name="l00323"></a><span class="lineno">  323</span>&#160;    <span class="comment">// 1. pred intersection not empty</span></div>
-<div class="line"><a name="l00324"></a><span class="lineno">  324</span>&#160;    <span class="keywordflow">if</span> (!preds.intersectionIsEmpty(pair.second)) <span class="keywordflow">continue</span>;</div>
-<div class="line"><a name="l00325"></a><span class="lineno">  325</span>&#160;    <span class="comment">// 2. one op descends from another</span></div>
-<div class="line"><a name="l00326"></a><span class="lineno">  326</span>&#160;    <span class="comment">// because of our traversal pattern, this should not happen</span></div>
-<div class="line"><a name="l00327"></a><span class="lineno">  327</span>&#160;    <span class="comment">// unless a fusion took place</span></div>
-<div class="line"><a name="l00328"></a><span class="lineno">  328</span>&#160;    <span class="comment">// A -&gt; B -&gt; C</span></div>
-<div class="line"><a name="l00329"></a><span class="lineno">  329</span>&#160;    <span class="comment">//   -&gt; D -&gt; E</span></div>
-<div class="line"><a name="l00330"></a><span class="lineno">  330</span>&#160;    <span class="comment">// if we merge B and E, it would be illegal to merge C and D</span></div>
-<div class="line"><a name="l00331"></a><span class="lineno">  331</span>&#160;    <span class="comment">// because C is an ancestor of B-E, and D is a predecessor of B-E</span></div>
-<div class="line"><a name="l00332"></a><span class="lineno">  332</span>&#160;    <span class="keywordtype">size_t</span> numMerges = mergingCosts.size();</div>
-<div class="line"><a name="l00333"></a><span class="lineno">  333</span>&#160;    <span class="comment">// we may push into mergingCosts, so to avoid problems of iterator</span></div>
-<div class="line"><a name="l00334"></a><span class="lineno">  334</span>&#160;    <span class="comment">// invalidation, we use an indexed loop</span></div>
-<div class="line"><a name="l00335"></a><span class="lineno">  335</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; numMerges; ++i) {</div>
-<div class="line"><a name="l00336"></a><span class="lineno">  336</span>&#160;      <a class="code" href="structMergingCost.html">MergingCost</a> *C = mergingCosts[i];</div>
-<div class="line"><a name="l00337"></a><span class="lineno">  337</span>&#160;      <span class="keywordflow">if</span> (C-&gt;getAncestors(J)-&gt;contains(other)) <span class="keywordflow">continue</span>;</div>
-<div class="line"><a name="l00338"></a><span class="lineno">  338</span>&#160;      <span class="comment">// we shouldn&#39;t have to check the opposite condition</span></div>
-<div class="line"><a name="l00339"></a><span class="lineno">  339</span>&#160;      <span class="comment">// if (C-&gt;getAncestors(other)-&gt;contains(I))</span></div>
-<div class="line"><a name="l00340"></a><span class="lineno">  340</span>&#160;      <span class="comment">// because we are traversing in topological order</span></div>
-<div class="line"><a name="l00341"></a><span class="lineno">  341</span>&#160;      <span class="comment">// that is, we haven&#39;t visited any descendants of `I`</span></div>
-<div class="line"><a name="l00342"></a><span class="lineno">  342</span>&#160;      <span class="comment">// so only an ancestor had a chance</span></div>
-<div class="line"><a name="l00343"></a><span class="lineno">  343</span>&#160;      <span class="keyword">auto</span> *MC = alloc.construct&lt;<a class="code" href="structMergingCost.html">MergingCost</a>&gt;(*C);</div>
-<div class="line"><a name="l00344"></a><span class="lineno">  344</span>&#160;      <span class="comment">// MC is a copy of C, except we&#39;re now merging</span></div>
-<div class="line"><a name="l00345"></a><span class="lineno">  345</span>&#160;      MC-&gt;merge(alloc, TTI, vectorBits, other, J);</div>
-<div class="line"><a name="l00346"></a><span class="lineno">  346</span>&#160;    }</div>
-<div class="line"><a name="l00347"></a><span class="lineno">  347</span>&#160;  }</div>
-<div class="line"><a name="l00348"></a><span class="lineno">  348</span>&#160;  <span class="comment">// descendants aren&#39;t legal merge candidates, so check before merging</span></div>
-<div class="line"><a name="l00349"></a><span class="lineno">  349</span>&#160;  <span class="keywordflow">for</span> (Instruction *U : J-&gt;getUsers()) {</div>
-<div class="line"><a name="l00350"></a><span class="lineno">  350</span>&#160;    <span class="keywordflow">if</span> (llvm::BasicBlock *BBU = U-&gt;getBasicBlock()) {</div>
-<div class="line"><a name="l00351"></a><span class="lineno">  351</span>&#160;      <span class="keywordflow">if</span> (BBU == BB) {</div>
-<div class="line"><a name="l00352"></a><span class="lineno">  352</span>&#160;        <span class="comment">// fast path, skip lookup</span></div>
-<div class="line"><a name="l00353"></a><span class="lineno">  353</span>&#160;        mergeInstructions(alloc, cache, predMap, TTI, vectorBits, opMap,</div>
-<div class="line"><a name="l00354"></a><span class="lineno">  354</span>&#160;                          mergingCosts, U, BB, preds);</div>
-<div class="line"><a name="l00355"></a><span class="lineno">  355</span>&#160;      } <span class="keywordflow">else</span> <span class="keywordflow">if</span> (<span class="keyword">auto</span> *f = predMap.find(BBU); f != predMap.rend()) {</div>
-<div class="line"><a name="l00356"></a><span class="lineno">  356</span>&#160;        mergeInstructions(alloc, cache, predMap, TTI, vectorBits, opMap,</div>
-<div class="line"><a name="l00357"></a><span class="lineno">  357</span>&#160;                          mergingCosts, U, BBU, f-&gt;second);</div>
-<div class="line"><a name="l00358"></a><span class="lineno">  358</span>&#160;      }</div>
-<div class="line"><a name="l00359"></a><span class="lineno">  359</span>&#160;    }</div>
-<div class="line"><a name="l00360"></a><span class="lineno">  360</span>&#160;  }</div>
-<div class="line"><a name="l00361"></a><span class="lineno">  361</span>&#160;  <span class="comment">// descendants aren&#39;t legal merge candidates, so push after merging</span></div>
-<div class="line"><a name="l00362"></a><span class="lineno">  362</span>&#160;  vec.push_back({J, preds});</div>
-<div class="line"><a name="l00363"></a><span class="lineno">  363</span>&#160;  <span class="comment">// TODO: prune bad candidates from mergingCosts</span></div>
-<div class="line"><a name="l00364"></a><span class="lineno">  364</span>&#160;}</div>
-<div class="line"><a name="l00365"></a><span class="lineno">  365</span>&#160; </div>
-<div class="line"><a name="l00377"></a><span class="lineno">  377</span>&#160;<span class="keyword">inline</span> <span class="keywordtype">void</span> mergeInstructions(BumpAlloc&lt;&gt; &amp;alloc, Instruction::Cache &amp;cache,</div>
-<div class="line"><a name="l00378"></a><span class="lineno">  378</span>&#160;                              Predicate::Map &amp;predMap,</div>
-<div class="line"><a name="l00379"></a><span class="lineno">  379</span>&#160;                              llvm::TargetTransformInfo &amp;TTI,</div>
-<div class="line"><a name="l00380"></a><span class="lineno">  380</span>&#160;                              BumpAlloc&lt;&gt; &amp;tAlloc, <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> vectorBits) {</div>
-<div class="line"><a name="l00381"></a><span class="lineno">  381</span>&#160;  <span class="keywordflow">if</span> (!predMap.isDivergent()) <span class="keywordflow">return</span>;</div>
-<div class="line"><a name="l00382"></a><span class="lineno">  382</span>&#160;  <span class="keyword">auto</span> p = tAlloc.scope();</div>
-<div class="line"><a name="l00383"></a><span class="lineno">  383</span>&#160;  <span class="comment">// there is a divergence in the control flow that we can ideally merge</span></div>
-<div class="line"><a name="l00384"></a><span class="lineno">  384</span>&#160;  amap&lt;std::pair&lt;Instruction::Intrinsic, llvm::Type *&gt;,</div>
-<div class="line"><a name="l00385"></a><span class="lineno">  385</span>&#160;       BumpPtrVector&lt;std::pair&lt;Instruction *, Predicate::Set&gt;&gt;&gt;</div>
-<div class="line"><a name="l00386"></a><span class="lineno">  386</span>&#160;    opMap{tAlloc};</div>
-<div class="line"><a name="l00387"></a><span class="lineno">  387</span>&#160;  llvm::SmallVector&lt;MergingCost *&gt; mergingCosts;</div>
-<div class="line"><a name="l00388"></a><span class="lineno">  388</span>&#160;  mergingCosts.emplace_back(alloc);</div>
-<div class="line"><a name="l00389"></a><span class="lineno">  389</span>&#160;  <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;pred : predMap)</div>
-<div class="line"><a name="l00390"></a><span class="lineno">  390</span>&#160;    <span class="keywordflow">for</span> (llvm::Instruction &amp;lI : *pred.first)</div>
-<div class="line"><a name="l00391"></a><span class="lineno">  391</span>&#160;      <span class="keywordflow">if</span> (Instruction *J = cache[&amp;lI])</div>
-<div class="line"><a name="l00392"></a><span class="lineno">  392</span>&#160;        mergeInstructions(tAlloc, cache, predMap, TTI, vectorBits, opMap,</div>
-<div class="line"><a name="l00393"></a><span class="lineno">  393</span>&#160;                          mergingCosts, J, pred.first, pred.second);</div>
-<div class="line"><a name="l00394"></a><span class="lineno">  394</span>&#160;  <span class="comment">// TODO: pick the minimum cost mergingCost</span></div>
-<div class="line"><a name="l00395"></a><span class="lineno">  395</span>&#160;  <a class="code" href="structMergingCost.html">MergingCost</a> *minCostStrategy = *std::ranges::min_element(</div>
-<div class="line"><a name="l00396"></a><span class="lineno">  396</span>&#160;    mergingCosts, [](<span class="keyword">auto</span> *a, <span class="keyword">auto</span> *b) { <span class="keywordflow">return</span> *a &lt; *b; });</div>
-<div class="line"><a name="l00397"></a><span class="lineno">  397</span>&#160;  <span class="comment">// and then apply it to the instructions.</span></div>
-<div class="line"><a name="l00398"></a><span class="lineno">  398</span>&#160;  <a class="code" href="structReMapper.html">ReMapper</a> reMap;</div>
-<div class="line"><a name="l00399"></a><span class="lineno">  399</span>&#160;  <span class="comment">// we use `alloc` for objects intended to live on</span></div>
-<div class="line"><a name="l00400"></a><span class="lineno">  400</span>&#160;  <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;pair : *minCostStrategy) {</div>
-<div class="line"><a name="l00401"></a><span class="lineno">  401</span>&#160;    <span class="comment">// merge pair through `select`ing the arguments that differ</span></div>
-<div class="line"><a name="l00402"></a><span class="lineno">  402</span>&#160;    <span class="keyword">auto</span> [A, B] = pair;</div>
-<div class="line"><a name="l00403"></a><span class="lineno">  403</span>&#160;    A = reMap[A];</div>
-<div class="line"><a name="l00404"></a><span class="lineno">  404</span>&#160;    B = reMap[B];</div>
-<div class="line"><a name="l00405"></a><span class="lineno">  405</span>&#160;    <span class="keyword">auto</span> operands = minCostStrategy-&gt;mergeOperands(</div>
-<div class="line"><a name="l00406"></a><span class="lineno">  406</span>&#160;      A, B, <a class="code" href="structMergingCost_1_1Allocate.html">MergingCost::Allocate</a>{alloc, cache, reMap});</div>
-<div class="line"><a name="l00407"></a><span class="lineno">  407</span>&#160;    A-&gt;replaceAllUsesOf(B)-&gt;setOperands(operands);</div>
-<div class="line"><a name="l00408"></a><span class="lineno">  408</span>&#160;    reMap.remapFromTo(B, A);</div>
-<div class="line"><a name="l00409"></a><span class="lineno">  409</span>&#160;  }</div>
-<div class="line"><a name="l00410"></a><span class="lineno">  410</span>&#160;}</div>
-<div class="line"><a name="l00411"></a><span class="lineno">  411</span>&#160; </div>
-<div class="line"><a name="l00412"></a><span class="lineno">  412</span>&#160;<span class="comment">// NOLINTNEXTLINE(misc-no-recursion)</span></div>
-<div class="line"><a name="l00413"></a><span class="lineno">  413</span>&#160;<span class="keyword">inline</span> <span class="keywordtype">void</span> mergeInstructions(BumpAlloc&lt;&gt; &amp;alloc, Instruction::Cache &amp;cache,</div>
-<div class="line"><a name="l00414"></a><span class="lineno">  414</span>&#160;                              <a class="code" href="structLoopTree.html">LoopTree</a> *loopForest,</div>
-<div class="line"><a name="l00415"></a><span class="lineno">  415</span>&#160;                              llvm::TargetTransformInfo &amp;TTI,</div>
-<div class="line"><a name="l00416"></a><span class="lineno">  416</span>&#160;                              BumpAlloc&lt;&gt; &amp;tAlloc, <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> vectorBits) {</div>
-<div class="line"><a name="l00417"></a><span class="lineno">  417</span>&#160;  <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;predMap : loopForest-&gt;getPaths())</div>
-<div class="line"><a name="l00418"></a><span class="lineno">  418</span>&#160;    mergeInstructions(alloc, cache, predMap, TTI, tAlloc, vectorBits);</div>
-<div class="line"><a name="l00419"></a><span class="lineno">  419</span>&#160;  <span class="keywordflow">for</span> (<span class="keyword">auto</span> subLoop : loopForest-&gt;getSubLoops())</div>
-<div class="line"><a name="l00420"></a><span class="lineno">  420</span>&#160;    mergeInstructions(alloc, cache, subLoop, TTI, tAlloc, vectorBits);</div>
-<div class="line"><a name="l00421"></a><span class="lineno">  421</span>&#160;}</div>
+<div class="line"><a name="l00276"></a><span class="lineno">  276</span>&#160;    <span class="keyword">auto</span> &amp;mMA = mergeMap[A], &amp;mMB = mergeMap[B];</div>
+<div class="line"><a name="l00277"></a><span class="lineno">  277</span>&#160;    <span class="keywordflow">if</span> (<span class="keyword">auto</span> *mA = findMerge(A)) {</div>
+<div class="line"><a name="l00278"></a><span class="lineno">  278</span>&#160;      cycleUpdateMerged(merged, A, mA);</div>
+<div class="line"><a name="l00279"></a><span class="lineno">  279</span>&#160;      <span class="keywordflow">if</span> (mB) {</div>
+<div class="line"><a name="l00280"></a><span class="lineno">  280</span>&#160;        mMB = mA;</div>
+<div class="line"><a name="l00281"></a><span class="lineno">  281</span>&#160;        mMA = mB;</div>
+<div class="line"><a name="l00282"></a><span class="lineno">  282</span>&#160;      } <span class="keywordflow">else</span> {</div>
+<div class="line"><a name="l00283"></a><span class="lineno">  283</span>&#160;        mMB = mA;</div>
+<div class="line"><a name="l00284"></a><span class="lineno">  284</span>&#160;        mMA = B;</div>
+<div class="line"><a name="l00285"></a><span class="lineno">  285</span>&#160;      }</div>
+<div class="line"><a name="l00286"></a><span class="lineno">  286</span>&#160;    } <span class="keywordflow">else</span> <span class="keywordflow">if</span> (mB) {</div>
+<div class="line"><a name="l00287"></a><span class="lineno">  287</span>&#160;      mMA = mB;</div>
+<div class="line"><a name="l00288"></a><span class="lineno">  288</span>&#160;      mMB = A;</div>
+<div class="line"><a name="l00289"></a><span class="lineno">  289</span>&#160;    } <span class="keywordflow">else</span> {</div>
+<div class="line"><a name="l00290"></a><span class="lineno">  290</span>&#160;      mMB = A;</div>
+<div class="line"><a name="l00291"></a><span class="lineno">  291</span>&#160;      mMA = B;</div>
+<div class="line"><a name="l00292"></a><span class="lineno">  292</span>&#160;    }</div>
+<div class="line"><a name="l00293"></a><span class="lineno">  293</span>&#160;  }</div>
+<div class="line"><a name="l00294"></a><span class="lineno">  294</span>&#160;  <span class="keyword">auto</span> operator&lt;(<span class="keyword">const</span> <a class="code" href="structMergingCost.html">MergingCost</a> &amp;other) <span class="keyword">const</span> -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l00295"></a><span class="lineno">  295</span>&#160;    <span class="keywordflow">return</span> cost &lt; other.cost;</div>
+<div class="line"><a name="l00296"></a><span class="lineno">  296</span>&#160;  }</div>
+<div class="line"><a name="l00297"></a><span class="lineno">  297</span>&#160;  <span class="keyword">auto</span> operator&gt;(<span class="keyword">const</span> <a class="code" href="structMergingCost.html">MergingCost</a> &amp;other) <span class="keyword">const</span> -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l00298"></a><span class="lineno">  298</span>&#160;    <span class="keywordflow">return</span> cost &gt; other.cost;</div>
+<div class="line"><a name="l00299"></a><span class="lineno">  299</span>&#160;  }</div>
+<div class="line"><a name="l00300"></a><span class="lineno">  300</span>&#160;};</div>
+<div class="line"><a name="l00301"></a><span class="lineno">  301</span>&#160; </div>
+<div class="line"><a name="l00302"></a><span class="lineno">  302</span>&#160;<span class="comment">// NOLINTNEXTLINE(misc-no-recursion)</span></div>
+<div class="line"><a name="l00303"></a><span class="lineno">  303</span>&#160;<span class="keyword">inline</span> <span class="keywordtype">void</span> mergeInstructions(</div>
+<div class="line"><a name="l00304"></a><span class="lineno">  304</span>&#160;  BumpAlloc&lt;&gt; &amp;alloc, Instruction::Cache &amp;cache, Predicate::Map &amp;predMap,</div>
+<div class="line"><a name="l00305"></a><span class="lineno">  305</span>&#160;  llvm::TargetTransformInfo &amp;TTI, <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> vectorBits,</div>
+<div class="line"><a name="l00306"></a><span class="lineno">  306</span>&#160;  amap&lt;std::pair&lt;Instruction::Intrinsic, llvm::Type *&gt;,</div>
+<div class="line"><a name="l00307"></a><span class="lineno">  307</span>&#160;       BumpPtrVector&lt;std::pair&lt;Instruction *, Predicate::Set&gt;&gt;&gt; &amp;opMap,</div>
+<div class="line"><a name="l00308"></a><span class="lineno">  308</span>&#160;  llvm::SmallVectorImpl&lt;MergingCost *&gt; &amp;mergingCosts, Instruction *J,</div>
+<div class="line"><a name="l00309"></a><span class="lineno">  309</span>&#160;  llvm::BasicBlock *BB, Predicate::Set &amp;preds) {</div>
+<div class="line"><a name="l00310"></a><span class="lineno">  310</span>&#160;  <span class="comment">// have we already visited?</span></div>
+<div class="line"><a name="l00311"></a><span class="lineno">  311</span>&#160;  <span class="keywordflow">if</span> (mergingCosts.front()-&gt;visited(J)) <span class="keywordflow">return</span>;</div>
+<div class="line"><a name="l00312"></a><span class="lineno">  312</span>&#160;  <span class="keywordflow">for</span> (<span class="keyword">auto</span> *C : mergingCosts) {</div>
+<div class="line"><a name="l00313"></a><span class="lineno">  313</span>&#160;    <span class="keywordflow">if</span> (C-&gt;visited(J)) <span class="keywordflow">return</span>;</div>
+<div class="line"><a name="l00314"></a><span class="lineno">  314</span>&#160;    C-&gt;initAncestors(alloc, J);</div>
+<div class="line"><a name="l00315"></a><span class="lineno">  315</span>&#160;  }</div>
+<div class="line"><a name="l00316"></a><span class="lineno">  316</span>&#160;  <span class="keyword">auto</span> op = J-&gt;getOpType();</div>
+<div class="line"><a name="l00317"></a><span class="lineno">  317</span>&#160;  <span class="comment">// TODO: confirm that `vec` doesn&#39;t get moved if `opMap` is resized</span></div>
+<div class="line"><a name="l00318"></a><span class="lineno">  318</span>&#160;  <span class="keyword">auto</span> &amp;vec = opMap[op];</div>
+<div class="line"><a name="l00319"></a><span class="lineno">  319</span>&#160;  <span class="comment">// consider merging with every instruction sharing an opcode</span></div>
+<div class="line"><a name="l00320"></a><span class="lineno">  320</span>&#160;  <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;pair : vec) {</div>
+<div class="line"><a name="l00321"></a><span class="lineno">  321</span>&#160;    Instruction *other = pair.first;</div>
+<div class="line"><a name="l00322"></a><span class="lineno">  322</span>&#160;    <span class="comment">// check legality</span></div>
+<div class="line"><a name="l00323"></a><span class="lineno">  323</span>&#160;    <span class="comment">// illegal if:</span></div>
+<div class="line"><a name="l00324"></a><span class="lineno">  324</span>&#160;    <span class="comment">// 1. pred intersection not empty</span></div>
+<div class="line"><a name="l00325"></a><span class="lineno">  325</span>&#160;    <span class="keywordflow">if</span> (!preds.intersectionIsEmpty(pair.second)) <span class="keywordflow">continue</span>;</div>
+<div class="line"><a name="l00326"></a><span class="lineno">  326</span>&#160;    <span class="comment">// 2. one op descends from another</span></div>
+<div class="line"><a name="l00327"></a><span class="lineno">  327</span>&#160;    <span class="comment">// because of our traversal pattern, this should not happen</span></div>
+<div class="line"><a name="l00328"></a><span class="lineno">  328</span>&#160;    <span class="comment">// unless a fusion took place</span></div>
+<div class="line"><a name="l00329"></a><span class="lineno">  329</span>&#160;    <span class="comment">// A -&gt; B -&gt; C</span></div>
+<div class="line"><a name="l00330"></a><span class="lineno">  330</span>&#160;    <span class="comment">//   -&gt; D -&gt; E</span></div>
+<div class="line"><a name="l00331"></a><span class="lineno">  331</span>&#160;    <span class="comment">// if we merge B and E, it would be illegal to merge C and D</span></div>
+<div class="line"><a name="l00332"></a><span class="lineno">  332</span>&#160;    <span class="comment">// because C is an ancestor of B-E, and D is a predecessor of B-E</span></div>
+<div class="line"><a name="l00333"></a><span class="lineno">  333</span>&#160;    <span class="keywordtype">size_t</span> numMerges = mergingCosts.size();</div>
+<div class="line"><a name="l00334"></a><span class="lineno">  334</span>&#160;    <span class="comment">// we may push into mergingCosts, so to avoid problems of iterator</span></div>
+<div class="line"><a name="l00335"></a><span class="lineno">  335</span>&#160;    <span class="comment">// invalidation, we use an indexed loop</span></div>
+<div class="line"><a name="l00336"></a><span class="lineno">  336</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; numMerges; ++i) {</div>
+<div class="line"><a name="l00337"></a><span class="lineno">  337</span>&#160;      <a class="code" href="structMergingCost.html">MergingCost</a> *C = mergingCosts[i];</div>
+<div class="line"><a name="l00338"></a><span class="lineno">  338</span>&#160;      <span class="keywordflow">if</span> (C-&gt;getAncestors(J)-&gt;contains(other)) <span class="keywordflow">continue</span>;</div>
+<div class="line"><a name="l00339"></a><span class="lineno">  339</span>&#160;      <span class="comment">// we shouldn&#39;t have to check the opposite condition</span></div>
+<div class="line"><a name="l00340"></a><span class="lineno">  340</span>&#160;      <span class="comment">// if (C-&gt;getAncestors(other)-&gt;contains(I))</span></div>
+<div class="line"><a name="l00341"></a><span class="lineno">  341</span>&#160;      <span class="comment">// because we are traversing in topological order</span></div>
+<div class="line"><a name="l00342"></a><span class="lineno">  342</span>&#160;      <span class="comment">// that is, we haven&#39;t visited any descendants of `I`</span></div>
+<div class="line"><a name="l00343"></a><span class="lineno">  343</span>&#160;      <span class="comment">// so only an ancestor had a chance</span></div>
+<div class="line"><a name="l00344"></a><span class="lineno">  344</span>&#160;      <span class="keyword">auto</span> *MC = alloc.construct&lt;<a class="code" href="structMergingCost.html">MergingCost</a>&gt;(*C);</div>
+<div class="line"><a name="l00345"></a><span class="lineno">  345</span>&#160;      <span class="comment">// MC is a copy of C, except we&#39;re now merging</span></div>
+<div class="line"><a name="l00346"></a><span class="lineno">  346</span>&#160;      MC-&gt;merge(alloc, TTI, vectorBits, other, J);</div>
+<div class="line"><a name="l00347"></a><span class="lineno">  347</span>&#160;    }</div>
+<div class="line"><a name="l00348"></a><span class="lineno">  348</span>&#160;  }</div>
+<div class="line"><a name="l00349"></a><span class="lineno">  349</span>&#160;  <span class="comment">// descendants aren&#39;t legal merge candidates, so check before merging</span></div>
+<div class="line"><a name="l00350"></a><span class="lineno">  350</span>&#160;  <span class="keywordflow">for</span> (Instruction *U : J-&gt;getUsers()) {</div>
+<div class="line"><a name="l00351"></a><span class="lineno">  351</span>&#160;    <span class="keywordflow">if</span> (llvm::BasicBlock *BBU = U-&gt;getBasicBlock()) {</div>
+<div class="line"><a name="l00352"></a><span class="lineno">  352</span>&#160;      <span class="keywordflow">if</span> (BBU == BB) {</div>
+<div class="line"><a name="l00353"></a><span class="lineno">  353</span>&#160;        <span class="comment">// fast path, skip lookup</span></div>
+<div class="line"><a name="l00354"></a><span class="lineno">  354</span>&#160;        mergeInstructions(alloc, cache, predMap, TTI, vectorBits, opMap,</div>
+<div class="line"><a name="l00355"></a><span class="lineno">  355</span>&#160;                          mergingCosts, U, BB, preds);</div>
+<div class="line"><a name="l00356"></a><span class="lineno">  356</span>&#160;      } <span class="keywordflow">else</span> <span class="keywordflow">if</span> (<span class="keyword">auto</span> *f = predMap.find(BBU); f != predMap.rend()) {</div>
+<div class="line"><a name="l00357"></a><span class="lineno">  357</span>&#160;        mergeInstructions(alloc, cache, predMap, TTI, vectorBits, opMap,</div>
+<div class="line"><a name="l00358"></a><span class="lineno">  358</span>&#160;                          mergingCosts, U, BBU, f-&gt;second);</div>
+<div class="line"><a name="l00359"></a><span class="lineno">  359</span>&#160;      }</div>
+<div class="line"><a name="l00360"></a><span class="lineno">  360</span>&#160;    }</div>
+<div class="line"><a name="l00361"></a><span class="lineno">  361</span>&#160;  }</div>
+<div class="line"><a name="l00362"></a><span class="lineno">  362</span>&#160;  <span class="comment">// descendants aren&#39;t legal merge candidates, so push after merging</span></div>
+<div class="line"><a name="l00363"></a><span class="lineno">  363</span>&#160;  vec.emplace_back(J, preds);</div>
+<div class="line"><a name="l00364"></a><span class="lineno">  364</span>&#160;  <span class="comment">// TODO: prune bad candidates from mergingCosts</span></div>
+<div class="line"><a name="l00365"></a><span class="lineno">  365</span>&#160;}</div>
+<div class="line"><a name="l00366"></a><span class="lineno">  366</span>&#160; </div>
+<div class="line"><a name="l00378"></a><span class="lineno">  378</span>&#160;<span class="keyword">inline</span> <span class="keywordtype">void</span> mergeInstructions(BumpAlloc&lt;&gt; &amp;alloc, Instruction::Cache &amp;cache,</div>
+<div class="line"><a name="l00379"></a><span class="lineno">  379</span>&#160;                              Predicate::Map &amp;predMap,</div>
+<div class="line"><a name="l00380"></a><span class="lineno">  380</span>&#160;                              llvm::TargetTransformInfo &amp;TTI,</div>
+<div class="line"><a name="l00381"></a><span class="lineno">  381</span>&#160;                              BumpAlloc&lt;&gt; &amp;tAlloc, <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> vectorBits) {</div>
+<div class="line"><a name="l00382"></a><span class="lineno">  382</span>&#160;  <span class="keywordflow">if</span> (!predMap.isDivergent()) <span class="keywordflow">return</span>;</div>
+<div class="line"><a name="l00383"></a><span class="lineno">  383</span>&#160;  <span class="keyword">auto</span> p = tAlloc.scope();</div>
+<div class="line"><a name="l00384"></a><span class="lineno">  384</span>&#160;  <span class="comment">// there is a divergence in the control flow that we can ideally merge</span></div>
+<div class="line"><a name="l00385"></a><span class="lineno">  385</span>&#160;  amap&lt;std::pair&lt;Instruction::Intrinsic, llvm::Type *&gt;,</div>
+<div class="line"><a name="l00386"></a><span class="lineno">  386</span>&#160;       BumpPtrVector&lt;std::pair&lt;Instruction *, Predicate::Set&gt;&gt;&gt;</div>
+<div class="line"><a name="l00387"></a><span class="lineno">  387</span>&#160;    opMap{tAlloc};</div>
+<div class="line"><a name="l00388"></a><span class="lineno">  388</span>&#160;  llvm::SmallVector&lt;MergingCost *&gt; mergingCosts;</div>
+<div class="line"><a name="l00389"></a><span class="lineno">  389</span>&#160;  mergingCosts.emplace_back(alloc);</div>
+<div class="line"><a name="l00390"></a><span class="lineno">  390</span>&#160;  <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;pred : predMap)</div>
+<div class="line"><a name="l00391"></a><span class="lineno">  391</span>&#160;    <span class="keywordflow">for</span> (llvm::Instruction &amp;lI : *pred.first)</div>
+<div class="line"><a name="l00392"></a><span class="lineno">  392</span>&#160;      <span class="keywordflow">if</span> (Instruction *J = cache[&amp;lI])</div>
+<div class="line"><a name="l00393"></a><span class="lineno">  393</span>&#160;        mergeInstructions(tAlloc, cache, predMap, TTI, vectorBits, opMap,</div>
+<div class="line"><a name="l00394"></a><span class="lineno">  394</span>&#160;                          mergingCosts, J, pred.first, pred.second);</div>
+<div class="line"><a name="l00395"></a><span class="lineno">  395</span>&#160;  <span class="comment">// TODO: pick the minimum cost mergingCost</span></div>
+<div class="line"><a name="l00396"></a><span class="lineno">  396</span>&#160;  <a class="code" href="structMergingCost.html">MergingCost</a> *minCostStrategy = *std::ranges::min_element(</div>
+<div class="line"><a name="l00397"></a><span class="lineno">  397</span>&#160;    mergingCosts, [](<span class="keyword">auto</span> *a, <span class="keyword">auto</span> *b) { <span class="keywordflow">return</span> *a &lt; *b; });</div>
+<div class="line"><a name="l00398"></a><span class="lineno">  398</span>&#160;  <span class="comment">// and then apply it to the instructions.</span></div>
+<div class="line"><a name="l00399"></a><span class="lineno">  399</span>&#160;  <a class="code" href="structReMapper.html">ReMapper</a> reMap;</div>
+<div class="line"><a name="l00400"></a><span class="lineno">  400</span>&#160;  <span class="comment">// we use `alloc` for objects intended to live on</span></div>
+<div class="line"><a name="l00401"></a><span class="lineno">  401</span>&#160;  <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;pair : *minCostStrategy) {</div>
+<div class="line"><a name="l00402"></a><span class="lineno">  402</span>&#160;    <span class="comment">// merge pair through `select`ing the arguments that differ</span></div>
+<div class="line"><a name="l00403"></a><span class="lineno">  403</span>&#160;    <span class="keyword">auto</span> [A, B] = pair;</div>
+<div class="line"><a name="l00404"></a><span class="lineno">  404</span>&#160;    A = reMap[A];</div>
+<div class="line"><a name="l00405"></a><span class="lineno">  405</span>&#160;    B = reMap[B];</div>
+<div class="line"><a name="l00406"></a><span class="lineno">  406</span>&#160;    <span class="keyword">auto</span> operands = minCostStrategy-&gt;mergeOperands(</div>
+<div class="line"><a name="l00407"></a><span class="lineno">  407</span>&#160;      A, B, <a class="code" href="structMergingCost_1_1Allocate.html">MergingCost::Allocate</a>{alloc, cache, reMap});</div>
+<div class="line"><a name="l00408"></a><span class="lineno">  408</span>&#160;    A-&gt;replaceAllUsesOf(B)-&gt;setOperands(operands);</div>
+<div class="line"><a name="l00409"></a><span class="lineno">  409</span>&#160;    reMap.remapFromTo(B, A);</div>
+<div class="line"><a name="l00410"></a><span class="lineno">  410</span>&#160;  }</div>
+<div class="line"><a name="l00411"></a><span class="lineno">  411</span>&#160;}</div>
+<div class="line"><a name="l00412"></a><span class="lineno">  412</span>&#160; </div>
+<div class="line"><a name="l00413"></a><span class="lineno">  413</span>&#160;<span class="comment">// NOLINTNEXTLINE(misc-no-recursion)</span></div>
+<div class="line"><a name="l00414"></a><span class="lineno">  414</span>&#160;<span class="keyword">inline</span> <span class="keywordtype">void</span> mergeInstructions(BumpAlloc&lt;&gt; &amp;alloc, Instruction::Cache &amp;cache,</div>
+<div class="line"><a name="l00415"></a><span class="lineno">  415</span>&#160;                              <a class="code" href="structLoopTree.html">LoopTree</a> *loopForest,</div>
+<div class="line"><a name="l00416"></a><span class="lineno">  416</span>&#160;                              llvm::TargetTransformInfo &amp;TTI,</div>
+<div class="line"><a name="l00417"></a><span class="lineno">  417</span>&#160;                              BumpAlloc&lt;&gt; &amp;tAlloc, <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> vectorBits) {</div>
+<div class="line"><a name="l00418"></a><span class="lineno">  418</span>&#160;  <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;predMap : loopForest-&gt;getPaths())</div>
+<div class="line"><a name="l00419"></a><span class="lineno">  419</span>&#160;    mergeInstructions(alloc, cache, predMap, TTI, tAlloc, vectorBits);</div>
+<div class="line"><a name="l00420"></a><span class="lineno">  420</span>&#160;  <span class="keywordflow">for</span> (<span class="keyword">auto</span> subLoop : loopForest-&gt;getSubLoops())</div>
+<div class="line"><a name="l00421"></a><span class="lineno">  421</span>&#160;    mergeInstructions(alloc, cache, subLoop, TTI, tAlloc, vectorBits);</div>
+<div class="line"><a name="l00422"></a><span class="lineno">  422</span>&#160;}</div>
 <div class="ttc" id="astructLoopTree_html"><div class="ttname"><a href="structLoopTree.html">LoopTree</a></div><div class="ttdef"><b>Definition:</b> LoopForest.hpp:23</div></div>
 <div class="ttc" id="astructMergingCost_1_1Allocate_html"><div class="ttname"><a href="structMergingCost_1_1Allocate.html">MergingCost::Allocate</a></div><div class="ttdef"><b>Definition:</b> ControlFlowMerging.hpp:125</div></div>
 <div class="ttc" id="astructMergingCost_1_1Count_html"><div class="ttname"><a href="structMergingCost_1_1Count.html">MergingCost::Count</a></div><div class="ttdef"><b>Definition:</b> ControlFlowMerging.hpp:130</div></div>

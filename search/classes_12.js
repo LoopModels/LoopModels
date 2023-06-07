@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['vectorprinter_208',['VectorPrinter',['../classprettyprinters_1_1VectorPrinter.html',1,'prettyprinters']]]
+  ['vectorprinter_206',['VectorPrinter',['../classprettyprinters_1_1VectorPrinter.html',1,'prettyprinters']]]
 ];
