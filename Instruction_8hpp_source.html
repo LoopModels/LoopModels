@@ -71,16 +71,16 @@ $(function() {
 <div class="contents">
 <div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="preprocessor">#pragma once</span></div>
 <div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160; </div>
-<div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="preprocessor">#include &quot;Containers/UnrolledList.hpp&quot;</span></div>
-<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor">#include &quot;Dicts/BumpMapSet.hpp&quot;</span></div>
-<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="preprocessor">#include &quot;Dicts/BumpVector.hpp&quot;</span></div>
-<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="preprocessor">#include &quot;Dicts/MapVector.hpp&quot;</span></div>
-<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="preprocessor">#include &quot;IR/Address.hpp&quot;</span></div>
-<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="preprocessor">#include &quot;IR/Node.hpp&quot;</span></div>
-<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="preprocessor">#include &quot;IR/Predicate.hpp&quot;</span></div>
-<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="preprocessor">#include &quot;Math/Array.hpp&quot;</span></div>
-<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="preprocessor">#include &quot;Utilities/Allocators.hpp&quot;</span></div>
-<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="preprocessor">#include &lt;IR/Operands.hpp&gt;</span></div>
+<div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="preprocessor">#include &quot;Dicts/BumpMapSet.hpp&quot;</span></div>
+<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor">#include &quot;Dicts/BumpVector.hpp&quot;</span></div>
+<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="preprocessor">#include &quot;Dicts/MapVector.hpp&quot;</span></div>
+<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="preprocessor">#include &quot;IR/Address.hpp&quot;</span></div>
+<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="preprocessor">#include &quot;IR/Node.hpp&quot;</span></div>
+<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="preprocessor">#include &quot;IR/Predicate.hpp&quot;</span></div>
+<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="preprocessor">#include &lt;Containers/UnrolledList.hpp&gt;</span></div>
+<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="preprocessor">#include &lt;IR/Operands.hpp&gt;</span></div>
+<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="preprocessor">#include &lt;Math/Array.hpp&gt;</span></div>
+<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="preprocessor">#include &lt;Utilities/Allocators.hpp&gt;</span></div>
 <div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="preprocessor">#include &lt;algorithm&gt;</span></div>
 <div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;<span class="preprocessor">#include &lt;concepts&gt;</span></div>
 <div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;<span class="preprocessor">#include &lt;cstddef&gt;</span></div>
@@ -338,7 +338,7 @@ $(function() {
 <div class="line"><a name="l00267"></a><span class="lineno">  267</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getNumOperands() const -&gt; <span class="keywordtype">size_t</span> {</div>
 <div class="line"><a name="l00268"></a><span class="lineno">  268</span>&#160;    <span class="keywordflow">return</span> operands-&gt;size();</div>
 <div class="line"><a name="l00269"></a><span class="lineno">  269</span>&#160;  }</div>
-<div class="line"><a name="l00270"></a><span class="lineno">  270</span>&#160;  <span class="keyword">explicit</span> Intr(BumpAlloc&lt;&gt; &amp;alloc, Intrin idt, llvm::Type *typ)</div>
+<div class="line"><a name="l00270"></a><span class="lineno">  270</span>&#160;  <span class="keyword">explicit</span> Intr(BumpAlloc&lt;&gt; &amp;alloc, llvm::Intrinsic::ID idt, llvm::Type *typ)</div>
 <div class="line"><a name="l00271"></a><span class="lineno">  271</span>&#160;    : Inst(VK_Intr), idtf(idt), type(typ) {}</div>
 <div class="line"><a name="l00272"></a><span class="lineno">  272</span>&#160;  <span class="comment">// Instruction(UniqueIdentifier uid)</span></div>
 <div class="line"><a name="l00273"></a><span class="lineno">  273</span>&#160;  <span class="comment">// : id(std::get&lt;0&gt;(uid)), operands(std::get&lt;1&gt;(uid)) {}</span></div>
@@ -781,179 +781,175 @@ $(function() {
 <div class="line"><a name="l00713"></a><span class="lineno">  713</span>&#160;    <span class="keywordflow">case</span> llvm::Instruction::Load:</div>
 <div class="line"><a name="l00714"></a><span class="lineno">  714</span>&#160;    <span class="keywordflow">case</span> llvm::Instruction::Store:</div>
 <div class="line"><a name="l00715"></a><span class="lineno">  715</span>&#160;      <span class="keywordflow">return</span> calculateCostContiguousLoadStore(TTI, idt.opcode, vectorWidth);</div>
-<div class="line"><a name="l00716"></a><span class="lineno">  716</span>&#160;    <span class="keywordflow">default</span>:</div>
-<div class="line"><a name="l00717"></a><span class="lineno">  717</span>&#160;      <span class="keywordflow">return</span> RecipThroughputLatency::getInvalid();</div>
-<div class="line"><a name="l00718"></a><span class="lineno">  718</span>&#160;    }</div>
-<div class="line"><a name="l00719"></a><span class="lineno">  719</span>&#160;  }</div>
-<div class="line"><a name="l00720"></a><span class="lineno">  720</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> isCommutativeCall() const -&gt; <span class="keywordtype">bool</span> {</div>
-<div class="line"><a name="l00721"></a><span class="lineno">  721</span>&#160;    <span class="keywordflow">if</span> (<span class="keyword">auto</span> *intrin =</div>
-<div class="line"><a name="l00722"></a><span class="lineno">  722</span>&#160;          llvm::dyn_cast_or_null&lt;llvm::IntrinsicInst&gt;(getInstruction()))</div>
-<div class="line"><a name="l00723"></a><span class="lineno">  723</span>&#160;      <span class="keywordflow">return</span> intrin-&gt;isCommutative();</div>
-<div class="line"><a name="l00724"></a><span class="lineno">  724</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
-<div class="line"><a name="l00725"></a><span class="lineno">  725</span>&#160;  }</div>
-<div class="line"><a name="l00726"></a><span class="lineno">  726</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> associativeOperandsFlag() const -&gt; uint8_t {</div>
-<div class="line"><a name="l00727"></a><span class="lineno">  727</span>&#160;    Optional&lt;const Intrinsic *&gt; idop = getIntrinsic();</div>
-<div class="line"><a name="l00728"></a><span class="lineno">  728</span>&#160;    <span class="keywordflow">if</span> (!idop) <span class="keywordflow">return</span> 0;</div>
-<div class="line"><a name="l00729"></a><span class="lineno">  729</span>&#160;    <span class="keywordflow">switch</span> (idop-&gt;opcode.id) {</div>
-<div class="line"><a name="l00730"></a><span class="lineno">  730</span>&#160;    <span class="keywordflow">case</span> llvm::Instruction::Call:</div>
-<div class="line"><a name="l00731"></a><span class="lineno">  731</span>&#160;      <span class="keywordflow">if</span> (!(isMulAdd() || isCommutativeCall())) <span class="keywordflow">return</span> 0;</div>
-<div class="line"><a name="l00732"></a><span class="lineno">  732</span>&#160;      <span class="comment">// fall through</span></div>
-<div class="line"><a name="l00733"></a><span class="lineno">  733</span>&#160;    <span class="keywordflow">case</span> llvm::Instruction::FAdd:</div>
-<div class="line"><a name="l00734"></a><span class="lineno">  734</span>&#160;    <span class="keywordflow">case</span> llvm::Instruction::Add:</div>
-<div class="line"><a name="l00735"></a><span class="lineno">  735</span>&#160;    <span class="keywordflow">case</span> llvm::Instruction::FMul:</div>
-<div class="line"><a name="l00736"></a><span class="lineno">  736</span>&#160;    <span class="keywordflow">case</span> llvm::Instruction::Mul:</div>
-<div class="line"><a name="l00737"></a><span class="lineno">  737</span>&#160;    <span class="keywordflow">case</span> llvm::Instruction::And:</div>
-<div class="line"><a name="l00738"></a><span class="lineno">  738</span>&#160;    <span class="keywordflow">case</span> llvm::Instruction::Or:</div>
-<div class="line"><a name="l00739"></a><span class="lineno">  739</span>&#160;    <span class="keywordflow">case</span> llvm::Instruction::Xor:</div>
-<div class="line"><a name="l00740"></a><span class="lineno">  740</span>&#160;      <span class="keywordflow">return</span> 0x3;</div>
-<div class="line"><a name="l00741"></a><span class="lineno">  741</span>&#160;    <span class="keywordflow">default</span>:</div>
-<div class="line"><a name="l00742"></a><span class="lineno">  742</span>&#160;      <span class="keywordflow">return</span> 0;</div>
-<div class="line"><a name="l00743"></a><span class="lineno">  743</span>&#160;    }</div>
-<div class="line"><a name="l00744"></a><span class="lineno">  744</span>&#160;  }</div>
-<div class="line"><a name="l00745"></a><span class="lineno">  745</span>&#160;  <span class="comment">// NOLINTNEXTLINE(bugprone-easily-swappable-parameters)</span></div>
-<div class="line"><a name="l00746"></a><span class="lineno">  746</span>&#160;  <span class="keywordtype">void</span> replaceOperand(Intr *old, Intr *new_) {</div>
-<div class="line"><a name="l00747"></a><span class="lineno">  747</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;&amp;op : operands)</div>
-<div class="line"><a name="l00748"></a><span class="lineno">  748</span>&#160;      <span class="keywordflow">if</span> (op == old) op = new_;</div>
-<div class="line"><a name="l00749"></a><span class="lineno">  749</span>&#160;  }</div>
-<div class="line"><a name="l00752"></a><span class="lineno"><a class="line" href="classpoly_1_1IR_1_1Intr.html#abc102ec85b38a5a68ba983726815a0b8">  752</a></span>&#160;  <span class="keywordtype">void</span> <a class="code" href="classpoly_1_1IR_1_1Intr.html#abc102ec85b38a5a68ba983726815a0b8">replaceAllUsesWith</a>(<a class="code" href="classpoly_1_1IR_1_1Intr.html">Intr</a> *J) {</div>
-<div class="line"><a name="l00753"></a><span class="lineno">  753</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">auto</span> *u : users) {</div>
-<div class="line"><a name="l00754"></a><span class="lineno">  754</span>&#160;      assert(u != J);</div>
-<div class="line"><a name="l00755"></a><span class="lineno">  755</span>&#160;      u-&gt;replaceOperand(<span class="keyword">this</span>, J);</div>
-<div class="line"><a name="l00756"></a><span class="lineno">  756</span>&#160;      J-&gt;users.insert(u);</div>
-<div class="line"><a name="l00757"></a><span class="lineno">  757</span>&#160;    }</div>
-<div class="line"><a name="l00758"></a><span class="lineno">  758</span>&#160;  }</div>
-<div class="line"><a name="l00762"></a><span class="lineno"><a class="line" href="classpoly_1_1IR_1_1Intr.html#a1885218b511f5d227739c9a1da3ed7e8">  762</a></span>&#160;  <span class="keywordtype">void</span> <a class="code" href="classpoly_1_1IR_1_1Intr.html#a1885218b511f5d227739c9a1da3ed7e8">replaceAllOtherUsesWith</a>(<a class="code" href="classpoly_1_1IR_1_1Intr.html">Intr</a> *J) {</div>
-<div class="line"><a name="l00763"></a><span class="lineno">  763</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">auto</span> *u : users) {</div>
-<div class="line"><a name="l00764"></a><span class="lineno">  764</span>&#160;      <span class="keywordflow">if</span> (u != J) {</div>
-<div class="line"><a name="l00765"></a><span class="lineno">  765</span>&#160;        u-&gt;replaceOperand(<span class="keyword">this</span>, J);</div>
-<div class="line"><a name="l00766"></a><span class="lineno">  766</span>&#160;        J-&gt;users.insert(u);</div>
-<div class="line"><a name="l00767"></a><span class="lineno">  767</span>&#160;      }</div>
-<div class="line"><a name="l00768"></a><span class="lineno">  768</span>&#160;    }</div>
-<div class="line"><a name="l00769"></a><span class="lineno">  769</span>&#160;  }</div>
-<div class="line"><a name="l00770"></a><span class="lineno">  770</span>&#160;  <span class="keyword">auto</span> replaceAllUsesOf(<a class="code" href="classpoly_1_1IR_1_1Intr.html">Intr</a> *J) -&gt; <a class="code" href="classpoly_1_1IR_1_1Intr.html">Intr</a> * {</div>
-<div class="line"><a name="l00771"></a><span class="lineno">  771</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">auto</span> *u : J-&gt;users) {</div>
-<div class="line"><a name="l00772"></a><span class="lineno">  772</span>&#160;      assert(u != <span class="keyword">this</span>);</div>
-<div class="line"><a name="l00773"></a><span class="lineno">  773</span>&#160;      u-&gt;replaceOperand(J, <span class="keyword">this</span>);</div>
-<div class="line"><a name="l00774"></a><span class="lineno">  774</span>&#160;      users.insert(u);</div>
-<div class="line"><a name="l00775"></a><span class="lineno">  775</span>&#160;    }</div>
-<div class="line"><a name="l00776"></a><span class="lineno">  776</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">this</span>;</div>
-<div class="line"><a name="l00777"></a><span class="lineno">  777</span>&#160;  }</div>
-<div class="line"><a name="l00778"></a><span class="lineno">  778</span>&#160;  <span class="keyword">auto</span> replaceAllOtherUsesOf(Intr *J) -&gt; Intr * {</div>
-<div class="line"><a name="l00779"></a><span class="lineno">  779</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">auto</span> *u : J-&gt;users) {</div>
-<div class="line"><a name="l00780"></a><span class="lineno">  780</span>&#160;      <span class="keywordflow">if</span> (u != <span class="keyword">this</span>) {</div>
-<div class="line"><a name="l00781"></a><span class="lineno">  781</span>&#160;        u-&gt;replaceOperand(J, <span class="keyword">this</span>);</div>
-<div class="line"><a name="l00782"></a><span class="lineno">  782</span>&#160;        users.insert(u);</div>
-<div class="line"><a name="l00783"></a><span class="lineno">  783</span>&#160;      }</div>
-<div class="line"><a name="l00784"></a><span class="lineno">  784</span>&#160;    }</div>
-<div class="line"><a name="l00785"></a><span class="lineno">  785</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">this</span>;</div>
-<div class="line"><a name="l00786"></a><span class="lineno">  786</span>&#160;  }</div>
-<div class="line"><a name="l00787"></a><span class="lineno">  787</span>&#160;};</div>
-<div class="line"><a name="l00788"></a><span class="lineno">  788</span>&#160; </div>
-<div class="line"><a name="l00789"></a><span class="lineno">  789</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> getIdentifier(llvm::Instruction *S) -&gt; Intrinsic {</div>
-<div class="line"><a name="l00790"></a><span class="lineno">  790</span>&#160;  <span class="keywordflow">if</span> (<span class="keyword">auto</span> *CB = llvm::dyn_cast&lt;llvm::CallBase&gt;(S))</div>
-<div class="line"><a name="l00791"></a><span class="lineno">  791</span>&#160;    <span class="keywordflow">if</span> (<span class="keyword">auto</span> *F = CB-&gt;getCalledFunction()) <span class="keywordflow">return</span> F;</div>
-<div class="line"><a name="l00792"></a><span class="lineno">  792</span>&#160;  <span class="keywordflow">return</span> Intrinsic(S);</div>
+<div class="line"><a name="l00716"></a><span class="lineno">  716</span>&#160;    <span class="keywordflow">default</span>: <span class="keywordflow">return</span> RecipThroughputLatency::getInvalid();</div>
+<div class="line"><a name="l00717"></a><span class="lineno">  717</span>&#160;    }</div>
+<div class="line"><a name="l00718"></a><span class="lineno">  718</span>&#160;  }</div>
+<div class="line"><a name="l00719"></a><span class="lineno">  719</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> isCommutativeCall() const -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l00720"></a><span class="lineno">  720</span>&#160;    <span class="keywordflow">if</span> (<span class="keyword">auto</span> *intrin =</div>
+<div class="line"><a name="l00721"></a><span class="lineno">  721</span>&#160;          llvm::dyn_cast_or_null&lt;llvm::IntrinsicInst&gt;(getInstruction()))</div>
+<div class="line"><a name="l00722"></a><span class="lineno">  722</span>&#160;      <span class="keywordflow">return</span> intrin-&gt;isCommutative();</div>
+<div class="line"><a name="l00723"></a><span class="lineno">  723</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
+<div class="line"><a name="l00724"></a><span class="lineno">  724</span>&#160;  }</div>
+<div class="line"><a name="l00725"></a><span class="lineno">  725</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> associativeOperandsFlag() const -&gt; uint8_t {</div>
+<div class="line"><a name="l00726"></a><span class="lineno">  726</span>&#160;    Optional&lt;const Intrinsic *&gt; idop = getIntrinsic();</div>
+<div class="line"><a name="l00727"></a><span class="lineno">  727</span>&#160;    <span class="keywordflow">if</span> (!idop) <span class="keywordflow">return</span> 0;</div>
+<div class="line"><a name="l00728"></a><span class="lineno">  728</span>&#160;    <span class="keywordflow">switch</span> (idop-&gt;opcode.id) {</div>
+<div class="line"><a name="l00729"></a><span class="lineno">  729</span>&#160;    <span class="keywordflow">case</span> llvm::Instruction::Call:</div>
+<div class="line"><a name="l00730"></a><span class="lineno">  730</span>&#160;      <span class="keywordflow">if</span> (!(isMulAdd() || isCommutativeCall())) <span class="keywordflow">return</span> 0;</div>
+<div class="line"><a name="l00731"></a><span class="lineno">  731</span>&#160;      <span class="comment">// fall through</span></div>
+<div class="line"><a name="l00732"></a><span class="lineno">  732</span>&#160;    <span class="keywordflow">case</span> llvm::Instruction::FAdd:</div>
+<div class="line"><a name="l00733"></a><span class="lineno">  733</span>&#160;    <span class="keywordflow">case</span> llvm::Instruction::Add:</div>
+<div class="line"><a name="l00734"></a><span class="lineno">  734</span>&#160;    <span class="keywordflow">case</span> llvm::Instruction::FMul:</div>
+<div class="line"><a name="l00735"></a><span class="lineno">  735</span>&#160;    <span class="keywordflow">case</span> llvm::Instruction::Mul:</div>
+<div class="line"><a name="l00736"></a><span class="lineno">  736</span>&#160;    <span class="keywordflow">case</span> llvm::Instruction::And:</div>
+<div class="line"><a name="l00737"></a><span class="lineno">  737</span>&#160;    <span class="keywordflow">case</span> llvm::Instruction::Or:</div>
+<div class="line"><a name="l00738"></a><span class="lineno">  738</span>&#160;    <span class="keywordflow">case</span> llvm::Instruction::Xor: <span class="keywordflow">return</span> 0x3;</div>
+<div class="line"><a name="l00739"></a><span class="lineno">  739</span>&#160;    <span class="keywordflow">default</span>: <span class="keywordflow">return</span> 0;</div>
+<div class="line"><a name="l00740"></a><span class="lineno">  740</span>&#160;    }</div>
+<div class="line"><a name="l00741"></a><span class="lineno">  741</span>&#160;  }</div>
+<div class="line"><a name="l00742"></a><span class="lineno">  742</span>&#160;  <span class="comment">// NOLINTNEXTLINE(bugprone-easily-swappable-parameters)</span></div>
+<div class="line"><a name="l00743"></a><span class="lineno">  743</span>&#160;  <span class="keywordtype">void</span> replaceOperand(Intr *old, Intr *new_) {</div>
+<div class="line"><a name="l00744"></a><span class="lineno">  744</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;&amp;op : operands)</div>
+<div class="line"><a name="l00745"></a><span class="lineno">  745</span>&#160;      <span class="keywordflow">if</span> (op == old) op = new_;</div>
+<div class="line"><a name="l00746"></a><span class="lineno">  746</span>&#160;  }</div>
+<div class="line"><a name="l00749"></a><span class="lineno"><a class="line" href="classpoly_1_1IR_1_1Intr.html#abc102ec85b38a5a68ba983726815a0b8">  749</a></span>&#160;  <span class="keywordtype">void</span> <a class="code" href="classpoly_1_1IR_1_1Intr.html#abc102ec85b38a5a68ba983726815a0b8">replaceAllUsesWith</a>(<a class="code" href="classpoly_1_1IR_1_1Intr.html">Intr</a> *J) {</div>
+<div class="line"><a name="l00750"></a><span class="lineno">  750</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">auto</span> *u : users) {</div>
+<div class="line"><a name="l00751"></a><span class="lineno">  751</span>&#160;      assert(u != J);</div>
+<div class="line"><a name="l00752"></a><span class="lineno">  752</span>&#160;      u-&gt;replaceOperand(<span class="keyword">this</span>, J);</div>
+<div class="line"><a name="l00753"></a><span class="lineno">  753</span>&#160;      J-&gt;users.insert(u);</div>
+<div class="line"><a name="l00754"></a><span class="lineno">  754</span>&#160;    }</div>
+<div class="line"><a name="l00755"></a><span class="lineno">  755</span>&#160;  }</div>
+<div class="line"><a name="l00759"></a><span class="lineno"><a class="line" href="classpoly_1_1IR_1_1Intr.html#a1885218b511f5d227739c9a1da3ed7e8">  759</a></span>&#160;  <span class="keywordtype">void</span> <a class="code" href="classpoly_1_1IR_1_1Intr.html#a1885218b511f5d227739c9a1da3ed7e8">replaceAllOtherUsesWith</a>(<a class="code" href="classpoly_1_1IR_1_1Intr.html">Intr</a> *J) {</div>
+<div class="line"><a name="l00760"></a><span class="lineno">  760</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">auto</span> *u : users) {</div>
+<div class="line"><a name="l00761"></a><span class="lineno">  761</span>&#160;      <span class="keywordflow">if</span> (u != J) {</div>
+<div class="line"><a name="l00762"></a><span class="lineno">  762</span>&#160;        u-&gt;replaceOperand(<span class="keyword">this</span>, J);</div>
+<div class="line"><a name="l00763"></a><span class="lineno">  763</span>&#160;        J-&gt;users.insert(u);</div>
+<div class="line"><a name="l00764"></a><span class="lineno">  764</span>&#160;      }</div>
+<div class="line"><a name="l00765"></a><span class="lineno">  765</span>&#160;    }</div>
+<div class="line"><a name="l00766"></a><span class="lineno">  766</span>&#160;  }</div>
+<div class="line"><a name="l00767"></a><span class="lineno">  767</span>&#160;  <span class="keyword">auto</span> replaceAllUsesOf(<a class="code" href="classpoly_1_1IR_1_1Intr.html">Intr</a> *J) -&gt; <a class="code" href="classpoly_1_1IR_1_1Intr.html">Intr</a> * {</div>
+<div class="line"><a name="l00768"></a><span class="lineno">  768</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">auto</span> *u : J-&gt;users) {</div>
+<div class="line"><a name="l00769"></a><span class="lineno">  769</span>&#160;      assert(u != <span class="keyword">this</span>);</div>
+<div class="line"><a name="l00770"></a><span class="lineno">  770</span>&#160;      u-&gt;replaceOperand(J, <span class="keyword">this</span>);</div>
+<div class="line"><a name="l00771"></a><span class="lineno">  771</span>&#160;      users.insert(u);</div>
+<div class="line"><a name="l00772"></a><span class="lineno">  772</span>&#160;    }</div>
+<div class="line"><a name="l00773"></a><span class="lineno">  773</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">this</span>;</div>
+<div class="line"><a name="l00774"></a><span class="lineno">  774</span>&#160;  }</div>
+<div class="line"><a name="l00775"></a><span class="lineno">  775</span>&#160;  <span class="keyword">auto</span> replaceAllOtherUsesOf(Intr *J) -&gt; Intr * {</div>
+<div class="line"><a name="l00776"></a><span class="lineno">  776</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">auto</span> *u : J-&gt;users) {</div>
+<div class="line"><a name="l00777"></a><span class="lineno">  777</span>&#160;      <span class="keywordflow">if</span> (u != <span class="keyword">this</span>) {</div>
+<div class="line"><a name="l00778"></a><span class="lineno">  778</span>&#160;        u-&gt;replaceOperand(J, <span class="keyword">this</span>);</div>
+<div class="line"><a name="l00779"></a><span class="lineno">  779</span>&#160;        users.insert(u);</div>
+<div class="line"><a name="l00780"></a><span class="lineno">  780</span>&#160;      }</div>
+<div class="line"><a name="l00781"></a><span class="lineno">  781</span>&#160;    }</div>
+<div class="line"><a name="l00782"></a><span class="lineno">  782</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">this</span>;</div>
+<div class="line"><a name="l00783"></a><span class="lineno">  783</span>&#160;  }</div>
+<div class="line"><a name="l00784"></a><span class="lineno">  784</span>&#160;};</div>
+<div class="line"><a name="l00785"></a><span class="lineno">  785</span>&#160; </div>
+<div class="line"><a name="l00786"></a><span class="lineno">  786</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> getIdentifier(llvm::Instruction *S) -&gt; Intrinsic {</div>
+<div class="line"><a name="l00787"></a><span class="lineno">  787</span>&#160;  <span class="keywordflow">if</span> (<span class="keyword">auto</span> *CB = llvm::dyn_cast&lt;llvm::CallBase&gt;(S))</div>
+<div class="line"><a name="l00788"></a><span class="lineno">  788</span>&#160;    <span class="keywordflow">if</span> (<span class="keyword">auto</span> *F = CB-&gt;getCalledFunction()) <span class="keywordflow">return</span> F;</div>
+<div class="line"><a name="l00789"></a><span class="lineno">  789</span>&#160;  <span class="keywordflow">return</span> Intrinsic(S);</div>
+<div class="line"><a name="l00790"></a><span class="lineno">  790</span>&#160;}</div>
+<div class="line"><a name="l00791"></a><span class="lineno">  791</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> getIdentifier(llvm::ConstantInt *S) -&gt; Intrinsic {</div>
+<div class="line"><a name="l00792"></a><span class="lineno">  792</span>&#160;  <span class="keywordflow">return</span> S-&gt;getSExtValue();</div>
 <div class="line"><a name="l00793"></a><span class="lineno">  793</span>&#160;}</div>
-<div class="line"><a name="l00794"></a><span class="lineno">  794</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> getIdentifier(llvm::ConstantInt *S) -&gt; Intrinsic {</div>
-<div class="line"><a name="l00795"></a><span class="lineno">  795</span>&#160;  <span class="keywordflow">return</span> S-&gt;getSExtValue();</div>
-<div class="line"><a name="l00796"></a><span class="lineno">  796</span>&#160;}</div>
-<div class="line"><a name="l00797"></a><span class="lineno">  797</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> getIdentifier(llvm::ConstantFP *S) -&gt; Intrinsic {</div>
-<div class="line"><a name="l00798"></a><span class="lineno">  798</span>&#160;  <span class="keyword">auto</span> x = S-&gt;getValueAPF();</div>
-<div class="line"><a name="l00799"></a><span class="lineno">  799</span>&#160;  <span class="keywordflow">return</span> S-&gt;getValueAPF().convertToDouble();</div>
-<div class="line"><a name="l00800"></a><span class="lineno">  800</span>&#160;}</div>
-<div class="line"><a name="l00801"></a><span class="lineno">  801</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> getIdentifier(llvm::Value *v) -&gt; std::optional&lt;Intrinsic&gt; {</div>
-<div class="line"><a name="l00802"></a><span class="lineno">  802</span>&#160;  <span class="keywordflow">if</span> (<span class="keyword">auto</span> *i = llvm::dyn_cast&lt;llvm::Instruction&gt;(v)) <span class="keywordflow">return</span> getIdentifier(i);</div>
-<div class="line"><a name="l00803"></a><span class="lineno">  803</span>&#160;  <span class="keywordflow">if</span> (<span class="keyword">auto</span> *ci = llvm::dyn_cast&lt;llvm::ConstantInt&gt;(v)) <span class="keywordflow">return</span> getIdentifier(ci);</div>
-<div class="line"><a name="l00804"></a><span class="lineno">  804</span>&#160;  <span class="keywordflow">if</span> (<span class="keyword">auto</span> *cfp = llvm::dyn_cast&lt;llvm::ConstantFP&gt;(v))</div>
-<div class="line"><a name="l00805"></a><span class="lineno">  805</span>&#160;    <span class="keywordflow">return</span> getIdentifier(cfp);</div>
-<div class="line"><a name="l00806"></a><span class="lineno">  806</span>&#160;  <span class="keywordflow">return</span> std::nullopt;</div>
-<div class="line"><a name="l00807"></a><span class="lineno">  807</span>&#160;}</div>
-<div class="line"><a name="l00808"></a><span class="lineno">  808</span>&#160; </div>
-<div class="line"><a name="l00809"></a><span class="lineno"><a class="line" href="structpoly_1_1IR_1_1std_1_1hash_3_01Intr_1_1Intrinsic_01_4.html">  809</a></span>&#160;<span class="keyword">template</span> &lt;&gt; <span class="keyword">struct </span>std::hash&lt;<a class="code" href="classpoly_1_1IR_1_1Intr.html">Intr</a>::Intrinsic&gt; {</div>
-<div class="line"><a name="l00810"></a><span class="lineno">  810</span>&#160;  <span class="keyword">auto</span> operator()(<span class="keyword">const</span> Intr::Intrinsic &amp;s) <span class="keyword">const</span> noexcept -&gt; <span class="keywordtype">size_t</span> {</div>
-<div class="line"><a name="l00811"></a><span class="lineno">  811</span>&#160;    <span class="keywordflow">return</span> llvm::detail::combineHashValue(std::hash&lt;unsigned&gt;{}(s.opcode.id),</div>
-<div class="line"><a name="l00812"></a><span class="lineno">  812</span>&#160;                                          std::hash&lt;unsigned&gt;{}(s.intrin.id));</div>
-<div class="line"><a name="l00813"></a><span class="lineno">  813</span>&#160;  }</div>
-<div class="line"><a name="l00814"></a><span class="lineno">  814</span>&#160;};</div>
-<div class="line"><a name="l00815"></a><span class="lineno">  815</span>&#160; </div>
-<div class="line"><a name="l00816"></a><span class="lineno"><a class="line" href="structpoly_1_1IR_1_1std_1_1hash_3_01Intr_1_1UniqueIdentifier_01_4.html">  816</a></span>&#160;<span class="keyword">template</span> &lt;&gt; <span class="keyword">struct </span>std::hash&lt;<a class="code" href="classpoly_1_1IR_1_1Intr.html">Intr</a>::<a class="code" href="structpoly_1_1IR_1_1UniqueIdentifier.html">UniqueIdentifier</a>&gt; {</div>
-<div class="line"><a name="l00817"></a><span class="lineno">  817</span>&#160;  <span class="keyword">auto</span> operator()(<span class="keyword">const</span> Intr::UniqueIdentifier &amp;s) <span class="keyword">const</span> noexcept -&gt; <span class="keywordtype">size_t</span> {</div>
-<div class="line"><a name="l00818"></a><span class="lineno">  818</span>&#160;    <span class="keywordflow">return</span> llvm::detail::combineHashValue(</div>
-<div class="line"><a name="l00819"></a><span class="lineno">  819</span>&#160;      std::hash&lt;Intr::Identifier&gt;{}(s.idtf),</div>
-<div class="line"><a name="l00820"></a><span class="lineno">  820</span>&#160;      std::hash&lt;MutPtrVector&lt;Intr *&gt;&gt;{}(s.operands));</div>
-<div class="line"><a name="l00821"></a><span class="lineno">  821</span>&#160;  }</div>
-<div class="line"><a name="l00822"></a><span class="lineno">  822</span>&#160;};</div>
-<div class="line"><a name="l00823"></a><span class="lineno">  823</span>&#160; </div>
-<div class="line"><a name="l00824"></a><span class="lineno">  824</span>&#160;<span class="comment">// NOLINTNEXTLINE(misc-no-recursion)</span></div>
-<div class="line"><a name="l00825"></a><span class="lineno">  825</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> Intr::Cache::getInstruction(BumpAlloc&lt;&gt; &amp;alloc,</div>
-<div class="line"><a name="l00826"></a><span class="lineno">  826</span>&#160;                                        <a class="code" href="structpoly_1_1IR_1_1Predicate_1_1Map.html">Predicate::Map</a> &amp;predMap,</div>
-<div class="line"><a name="l00827"></a><span class="lineno">  827</span>&#160;                                        llvm::Instruction *instr) -&gt; <a class="code" href="classpoly_1_1IR_1_1Intr.html">Intr</a> * {</div>
-<div class="line"><a name="l00828"></a><span class="lineno">  828</span>&#160;  <span class="keywordflow">if</span> (<a class="code" href="classpoly_1_1IR_1_1Intr.html">Intr</a> *i = completeInstruction(alloc, predMap, instr)) <span class="keywordflow">return</span> i;</div>
-<div class="line"><a name="l00829"></a><span class="lineno">  829</span>&#160;  <span class="keywordflow">if</span> (containsCycle(alloc, instr)) {</div>
-<div class="line"><a name="l00830"></a><span class="lineno">  830</span>&#160;    <span class="keyword">auto</span> *i = <span class="keyword">new</span> (alloc) <a class="code" href="classpoly_1_1IR_1_1Intr.html">Intr</a>(alloc, Intr::Intrinsic(instr), instr-&gt;getType());</div>
-<div class="line"><a name="l00831"></a><span class="lineno">  831</span>&#160;    llvmToInternalMap[instr] = i;</div>
-<div class="line"><a name="l00832"></a><span class="lineno">  832</span>&#160;    <span class="keywordflow">return</span> i;</div>
-<div class="line"><a name="l00833"></a><span class="lineno">  833</span>&#160;  }</div>
-<div class="line"><a name="l00834"></a><span class="lineno">  834</span>&#160;  <a class="code" href="structpoly_1_1IR_1_1UniqueIdentifier.html">UniqueIdentifier</a> uid{getUniqueIdentifier(alloc, predMap, *<span class="keyword">this</span>, instr)};</div>
-<div class="line"><a name="l00835"></a><span class="lineno">  835</span>&#160;  <span class="keyword">auto</span> *i = getInstruction(alloc, uid, instr-&gt;getType());</div>
-<div class="line"><a name="l00836"></a><span class="lineno">  836</span>&#160;  llvmToInternalMap[instr] = i;</div>
-<div class="line"><a name="l00837"></a><span class="lineno">  837</span>&#160;  <span class="keywordflow">return</span> i;</div>
-<div class="line"><a name="l00838"></a><span class="lineno">  838</span>&#160;}</div>
-<div class="line"><a name="l00839"></a><span class="lineno">  839</span>&#160;<span class="comment">// NOLINTNEXTLINE(misc-no-recursion)</span></div>
-<div class="line"><a name="l00840"></a><span class="lineno">  840</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> Intr::Cache::completeInstruction(BumpAlloc&lt;&gt; &amp;alloc,</div>
-<div class="line"><a name="l00841"></a><span class="lineno">  841</span>&#160;                                             Predicate::Map &amp;predMap,</div>
-<div class="line"><a name="l00842"></a><span class="lineno">  842</span>&#160;                                             llvm::Instruction *J) -&gt; Intr * {</div>
-<div class="line"><a name="l00843"></a><span class="lineno">  843</span>&#160;  Intr *i = (*this)[J];</div>
-<div class="line"><a name="l00844"></a><span class="lineno">  844</span>&#160;  <span class="keywordflow">if</span> (!i) <span class="keywordflow">return</span> <span class="keyword">nullptr</span>;</div>
-<div class="line"><a name="l00845"></a><span class="lineno">  845</span>&#160;  <span class="comment">// if `i` has operands, or if it isn&#39;t supposed to, it&#39;s been completed</span></div>
-<div class="line"><a name="l00846"></a><span class="lineno">  846</span>&#160;  <span class="keywordflow">if</span> ((!i-&gt;operands.empty()) || (J-&gt;getNumOperands() == 0)) <span class="keywordflow">return</span> i;</div>
-<div class="line"><a name="l00847"></a><span class="lineno">  847</span>&#160;  <span class="comment">// instr is non-null and has operands</span></div>
-<div class="line"><a name="l00848"></a><span class="lineno">  848</span>&#160;  <span class="comment">// maybe instr isn&#39;t in BBpreds?</span></div>
-<div class="line"><a name="l00849"></a><span class="lineno">  849</span>&#160;  <span class="keywordflow">if</span> (std::optional&lt;Predicate::Set&gt; pred = predMap[J]) {</div>
-<div class="line"><a name="l00850"></a><span class="lineno">  850</span>&#160;    <span class="comment">// instr is in BBpreds, therefore, we now complete `i`.</span></div>
-<div class="line"><a name="l00851"></a><span class="lineno">  851</span>&#160;    i-&gt;predicates = std::move(*pred);</div>
-<div class="line"><a name="l00852"></a><span class="lineno">  852</span>&#160;    <span class="comment">// we use dummy operands to avoid infinite recursion</span></div>
-<div class="line"><a name="l00853"></a><span class="lineno">  853</span>&#160;    <span class="comment">// the i-&gt;operands.size() &gt; 0 check above will block this</span></div>
-<div class="line"><a name="l00854"></a><span class="lineno">  854</span>&#160;    i-&gt;operands = MutPtrVector&lt;Intr *&gt;{<span class="keyword">nullptr</span>, 1};</div>
-<div class="line"><a name="l00855"></a><span class="lineno">  855</span>&#160;    i-&gt;operands = getOperands(alloc, predMap, *<span class="keyword">this</span>, J);</div>
-<div class="line"><a name="l00856"></a><span class="lineno">  856</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">auto</span> *op : i-&gt;operands) op-&gt;users.insert(i);</div>
-<div class="line"><a name="l00857"></a><span class="lineno">  857</span>&#160;  }</div>
-<div class="line"><a name="l00858"></a><span class="lineno">  858</span>&#160;  <span class="keywordflow">return</span> i;</div>
-<div class="line"><a name="l00859"></a><span class="lineno">  859</span>&#160;}</div>
-<div class="line"><a name="l00860"></a><span class="lineno">  860</span>&#160;<span class="comment">// NOLINTNEXTLINE(misc-no-recursion)</span></div>
-<div class="line"><a name="l00861"></a><span class="lineno">  861</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> Intr::Cache::getInstruction(BumpAlloc&lt;&gt; &amp;alloc,</div>
-<div class="line"><a name="l00862"></a><span class="lineno">  862</span>&#160;                                        Predicate::Map &amp;predMap, llvm::Value *v)</div>
-<div class="line"><a name="l00863"></a><span class="lineno">  863</span>&#160;  -&gt; Intr * {</div>
-<div class="line"><a name="l00864"></a><span class="lineno">  864</span>&#160; </div>
-<div class="line"><a name="l00865"></a><span class="lineno">  865</span>&#160;  <span class="keywordflow">if</span> (<span class="keyword">auto</span> *instr = llvm::dyn_cast&lt;llvm::Instruction&gt;(v)) {</div>
-<div class="line"><a name="l00866"></a><span class="lineno">  866</span>&#160;    <span class="keywordflow">if</span> (containsCycle(alloc, instr)) {</div>
-<div class="line"><a name="l00867"></a><span class="lineno">  867</span>&#160;    }</div>
-<div class="line"><a name="l00868"></a><span class="lineno">  868</span>&#160;    <span class="keywordflow">return</span> getInstruction(alloc, predMap, instr);</div>
-<div class="line"><a name="l00869"></a><span class="lineno">  869</span>&#160;  }</div>
-<div class="line"><a name="l00870"></a><span class="lineno">  870</span>&#160;  <span class="keywordflow">return</span> getInstruction(alloc, v);</div>
-<div class="line"><a name="l00871"></a><span class="lineno">  871</span>&#160;}</div>
-<div class="line"><a name="l00872"></a><span class="lineno">  872</span>&#160;static_assert(std::is_trivially_destructible_v&lt;</div>
-<div class="line"><a name="l00873"></a><span class="lineno">  873</span>&#160;              std::variant&lt;std::monostate, llvm::Instruction *,</div>
-<div class="line"><a name="l00874"></a><span class="lineno">  874</span>&#160;                           llvm::ConstantInt *, llvm::ConstantFP *, Addr *&gt;&gt;);</div>
-<div class="line"><a name="l00875"></a><span class="lineno">  875</span>&#160;static_assert(std::is_trivially_destructible_v&lt;Predicate::Set&gt;);</div>
-<div class="line"><a name="l00876"></a><span class="lineno">  876</span>&#160;static_assert(std::is_trivially_destructible_v&lt;math::BumpPtrVector&lt;Intr *&gt;&gt;);</div>
-<div class="line"><a name="l00877"></a><span class="lineno">  877</span>&#160; </div>
-<div class="line"><a name="l00878"></a><span class="lineno">  878</span>&#160;<span class="comment">// unsigned x = llvm::Instruction::FAdd;</span></div>
-<div class="line"><a name="l00879"></a><span class="lineno">  879</span>&#160;<span class="comment">// unsigned y = llvm::Instruction::LShr;</span></div>
-<div class="line"><a name="l00880"></a><span class="lineno">  880</span>&#160;<span class="comment">// unsigned z = llvm::Instruction::Call;</span></div>
-<div class="line"><a name="l00881"></a><span class="lineno">  881</span>&#160;<span class="comment">// unsigned w = llvm::Instruction::Load;</span></div>
-<div class="line"><a name="l00882"></a><span class="lineno">  882</span>&#160;<span class="comment">// unsigned v = llvm::Instruction::Store;</span></div>
-<div class="line"><a name="l00883"></a><span class="lineno">  883</span>&#160;<span class="comment">// // getIntrinsicID()</span></div>
-<div class="line"><a name="l00884"></a><span class="lineno">  884</span>&#160;<span class="comment">// llvm::Intrinsic::IndependentIntrinsics x = llvm::Intrinsic::sqrt;</span></div>
-<div class="line"><a name="l00885"></a><span class="lineno">  885</span>&#160;<span class="comment">// llvm::Intrinsic::IndependentIntrinsics y = llvm::Intrinsic::sin;</span></div>
-<div class="line"><a name="l00886"></a><span class="lineno">  886</span>&#160;} <span class="comment">// namespace poly::IR</span></div>
+<div class="line"><a name="l00794"></a><span class="lineno">  794</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> getIdentifier(llvm::ConstantFP *S) -&gt; Intrinsic {</div>
+<div class="line"><a name="l00795"></a><span class="lineno">  795</span>&#160;  <span class="keyword">auto</span> x = S-&gt;getValueAPF();</div>
+<div class="line"><a name="l00796"></a><span class="lineno">  796</span>&#160;  <span class="keywordflow">return</span> S-&gt;getValueAPF().convertToDouble();</div>
+<div class="line"><a name="l00797"></a><span class="lineno">  797</span>&#160;}</div>
+<div class="line"><a name="l00798"></a><span class="lineno">  798</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> getIdentifier(llvm::Value *v) -&gt; std::optional&lt;Intrinsic&gt; {</div>
+<div class="line"><a name="l00799"></a><span class="lineno">  799</span>&#160;  <span class="keywordflow">if</span> (<span class="keyword">auto</span> *i = llvm::dyn_cast&lt;llvm::Instruction&gt;(v)) <span class="keywordflow">return</span> getIdentifier(i);</div>
+<div class="line"><a name="l00800"></a><span class="lineno">  800</span>&#160;  <span class="keywordflow">if</span> (<span class="keyword">auto</span> *ci = llvm::dyn_cast&lt;llvm::ConstantInt&gt;(v)) <span class="keywordflow">return</span> getIdentifier(ci);</div>
+<div class="line"><a name="l00801"></a><span class="lineno">  801</span>&#160;  <span class="keywordflow">if</span> (<span class="keyword">auto</span> *cfp = llvm::dyn_cast&lt;llvm::ConstantFP&gt;(v))</div>
+<div class="line"><a name="l00802"></a><span class="lineno">  802</span>&#160;    <span class="keywordflow">return</span> getIdentifier(cfp);</div>
+<div class="line"><a name="l00803"></a><span class="lineno">  803</span>&#160;  <span class="keywordflow">return</span> std::nullopt;</div>
+<div class="line"><a name="l00804"></a><span class="lineno">  804</span>&#160;}</div>
+<div class="line"><a name="l00805"></a><span class="lineno">  805</span>&#160; </div>
+<div class="line"><a name="l00806"></a><span class="lineno"><a class="line" href="structpoly_1_1IR_1_1std_1_1hash_3_01Intr_1_1Intrinsic_01_4.html">  806</a></span>&#160;<span class="keyword">template</span> &lt;&gt; <span class="keyword">struct </span>std::hash&lt;<a class="code" href="classpoly_1_1IR_1_1Intr.html">Intr</a>::Intrinsic&gt; {</div>
+<div class="line"><a name="l00807"></a><span class="lineno">  807</span>&#160;  <span class="keyword">auto</span> operator()(<span class="keyword">const</span> Intr::Intrinsic &amp;s) <span class="keyword">const</span> noexcept -&gt; <span class="keywordtype">size_t</span> {</div>
+<div class="line"><a name="l00808"></a><span class="lineno">  808</span>&#160;    <span class="keywordflow">return</span> llvm::detail::combineHashValue(std::hash&lt;unsigned&gt;{}(s.opcode.id),</div>
+<div class="line"><a name="l00809"></a><span class="lineno">  809</span>&#160;                                          std::hash&lt;unsigned&gt;{}(s.intrin.id));</div>
+<div class="line"><a name="l00810"></a><span class="lineno">  810</span>&#160;  }</div>
+<div class="line"><a name="l00811"></a><span class="lineno">  811</span>&#160;};</div>
+<div class="line"><a name="l00812"></a><span class="lineno">  812</span>&#160; </div>
+<div class="line"><a name="l00813"></a><span class="lineno"><a class="line" href="structpoly_1_1IR_1_1std_1_1hash_3_01Intr_1_1UniqueIdentifier_01_4.html">  813</a></span>&#160;<span class="keyword">template</span> &lt;&gt; <span class="keyword">struct </span>std::hash&lt;<a class="code" href="classpoly_1_1IR_1_1Intr.html">Intr</a>::<a class="code" href="structpoly_1_1IR_1_1UniqueIdentifier.html">UniqueIdentifier</a>&gt; {</div>
+<div class="line"><a name="l00814"></a><span class="lineno">  814</span>&#160;  <span class="keyword">auto</span> operator()(<span class="keyword">const</span> Intr::UniqueIdentifier &amp;s) <span class="keyword">const</span> noexcept -&gt; <span class="keywordtype">size_t</span> {</div>
+<div class="line"><a name="l00815"></a><span class="lineno">  815</span>&#160;    <span class="keywordflow">return</span> llvm::detail::combineHashValue(</div>
+<div class="line"><a name="l00816"></a><span class="lineno">  816</span>&#160;      std::hash&lt;Intr::Identifier&gt;{}(s.idtf),</div>
+<div class="line"><a name="l00817"></a><span class="lineno">  817</span>&#160;      std::hash&lt;MutPtrVector&lt;Intr *&gt;&gt;{}(s.operands));</div>
+<div class="line"><a name="l00818"></a><span class="lineno">  818</span>&#160;  }</div>
+<div class="line"><a name="l00819"></a><span class="lineno">  819</span>&#160;};</div>
+<div class="line"><a name="l00820"></a><span class="lineno">  820</span>&#160; </div>
+<div class="line"><a name="l00821"></a><span class="lineno">  821</span>&#160;<span class="comment">// NOLINTNEXTLINE(misc-no-recursion)</span></div>
+<div class="line"><a name="l00822"></a><span class="lineno">  822</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> Intr::Cache::getInstruction(BumpAlloc&lt;&gt; &amp;alloc,</div>
+<div class="line"><a name="l00823"></a><span class="lineno">  823</span>&#160;                                        <a class="code" href="structpoly_1_1IR_1_1Predicate_1_1Map.html">Predicate::Map</a> &amp;predMap,</div>
+<div class="line"><a name="l00824"></a><span class="lineno">  824</span>&#160;                                        llvm::Instruction *instr) -&gt; <a class="code" href="classpoly_1_1IR_1_1Intr.html">Intr</a> * {</div>
+<div class="line"><a name="l00825"></a><span class="lineno">  825</span>&#160;  <span class="keywordflow">if</span> (<a class="code" href="classpoly_1_1IR_1_1Intr.html">Intr</a> *i = completeInstruction(alloc, predMap, instr)) <span class="keywordflow">return</span> i;</div>
+<div class="line"><a name="l00826"></a><span class="lineno">  826</span>&#160;  <span class="keywordflow">if</span> (containsCycle(alloc, instr)) {</div>
+<div class="line"><a name="l00827"></a><span class="lineno">  827</span>&#160;    <span class="keyword">auto</span> *i = <span class="keyword">new</span> (alloc) <a class="code" href="classpoly_1_1IR_1_1Intr.html">Intr</a>(alloc, Intr::Intrinsic(instr), instr-&gt;getType());</div>
+<div class="line"><a name="l00828"></a><span class="lineno">  828</span>&#160;    llvmToInternalMap[instr] = i;</div>
+<div class="line"><a name="l00829"></a><span class="lineno">  829</span>&#160;    <span class="keywordflow">return</span> i;</div>
+<div class="line"><a name="l00830"></a><span class="lineno">  830</span>&#160;  }</div>
+<div class="line"><a name="l00831"></a><span class="lineno">  831</span>&#160;  <a class="code" href="structpoly_1_1IR_1_1UniqueIdentifier.html">UniqueIdentifier</a> uid{getUniqueIdentifier(alloc, predMap, *<span class="keyword">this</span>, instr)};</div>
+<div class="line"><a name="l00832"></a><span class="lineno">  832</span>&#160;  <span class="keyword">auto</span> *i = getInstruction(alloc, uid, instr-&gt;getType());</div>
+<div class="line"><a name="l00833"></a><span class="lineno">  833</span>&#160;  llvmToInternalMap[instr] = i;</div>
+<div class="line"><a name="l00834"></a><span class="lineno">  834</span>&#160;  <span class="keywordflow">return</span> i;</div>
+<div class="line"><a name="l00835"></a><span class="lineno">  835</span>&#160;}</div>
+<div class="line"><a name="l00836"></a><span class="lineno">  836</span>&#160;<span class="comment">// NOLINTNEXTLINE(misc-no-recursion)</span></div>
+<div class="line"><a name="l00837"></a><span class="lineno">  837</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> Intr::Cache::completeInstruction(BumpAlloc&lt;&gt; &amp;alloc,</div>
+<div class="line"><a name="l00838"></a><span class="lineno">  838</span>&#160;                                             Predicate::Map &amp;predMap,</div>
+<div class="line"><a name="l00839"></a><span class="lineno">  839</span>&#160;                                             llvm::Instruction *J) -&gt; Intr * {</div>
+<div class="line"><a name="l00840"></a><span class="lineno">  840</span>&#160;  Intr *i = (*this)[J];</div>
+<div class="line"><a name="l00841"></a><span class="lineno">  841</span>&#160;  <span class="keywordflow">if</span> (!i) <span class="keywordflow">return</span> <span class="keyword">nullptr</span>;</div>
+<div class="line"><a name="l00842"></a><span class="lineno">  842</span>&#160;  <span class="comment">// if `i` has operands, or if it isn&#39;t supposed to, it&#39;s been completed</span></div>
+<div class="line"><a name="l00843"></a><span class="lineno">  843</span>&#160;  <span class="keywordflow">if</span> ((!i-&gt;operands.empty()) || (J-&gt;getNumOperands() == 0)) <span class="keywordflow">return</span> i;</div>
+<div class="line"><a name="l00844"></a><span class="lineno">  844</span>&#160;  <span class="comment">// instr is non-null and has operands</span></div>
+<div class="line"><a name="l00845"></a><span class="lineno">  845</span>&#160;  <span class="comment">// maybe instr isn&#39;t in BBpreds?</span></div>
+<div class="line"><a name="l00846"></a><span class="lineno">  846</span>&#160;  <span class="keywordflow">if</span> (std::optional&lt;Predicate::Set&gt; pred = predMap[J]) {</div>
+<div class="line"><a name="l00847"></a><span class="lineno">  847</span>&#160;    <span class="comment">// instr is in BBpreds, therefore, we now complete `i`.</span></div>
+<div class="line"><a name="l00848"></a><span class="lineno">  848</span>&#160;    i-&gt;predicates = std::move(*pred);</div>
+<div class="line"><a name="l00849"></a><span class="lineno">  849</span>&#160;    <span class="comment">// we use dummy operands to avoid infinite recursion</span></div>
+<div class="line"><a name="l00850"></a><span class="lineno">  850</span>&#160;    <span class="comment">// the i-&gt;operands.size() &gt; 0 check above will block this</span></div>
+<div class="line"><a name="l00851"></a><span class="lineno">  851</span>&#160;    i-&gt;operands = MutPtrVector&lt;Intr *&gt;{<span class="keyword">nullptr</span>, 1};</div>
+<div class="line"><a name="l00852"></a><span class="lineno">  852</span>&#160;    i-&gt;operands = getOperands(alloc, predMap, *<span class="keyword">this</span>, J);</div>
+<div class="line"><a name="l00853"></a><span class="lineno">  853</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">auto</span> *op : i-&gt;operands) op-&gt;users.insert(i);</div>
+<div class="line"><a name="l00854"></a><span class="lineno">  854</span>&#160;  }</div>
+<div class="line"><a name="l00855"></a><span class="lineno">  855</span>&#160;  <span class="keywordflow">return</span> i;</div>
+<div class="line"><a name="l00856"></a><span class="lineno">  856</span>&#160;}</div>
+<div class="line"><a name="l00857"></a><span class="lineno">  857</span>&#160;<span class="comment">// NOLINTNEXTLINE(misc-no-recursion)</span></div>
+<div class="line"><a name="l00858"></a><span class="lineno">  858</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> Intr::Cache::getInstruction(BumpAlloc&lt;&gt; &amp;alloc,</div>
+<div class="line"><a name="l00859"></a><span class="lineno">  859</span>&#160;                                        Predicate::Map &amp;predMap, llvm::Value *v)</div>
+<div class="line"><a name="l00860"></a><span class="lineno">  860</span>&#160;  -&gt; Intr * {</div>
+<div class="line"><a name="l00861"></a><span class="lineno">  861</span>&#160; </div>
+<div class="line"><a name="l00862"></a><span class="lineno">  862</span>&#160;  <span class="keywordflow">if</span> (<span class="keyword">auto</span> *instr = llvm::dyn_cast&lt;llvm::Instruction&gt;(v)) {</div>
+<div class="line"><a name="l00863"></a><span class="lineno">  863</span>&#160;    <span class="keywordflow">if</span> (containsCycle(alloc, instr)) {}</div>
+<div class="line"><a name="l00864"></a><span class="lineno">  864</span>&#160;    <span class="keywordflow">return</span> getInstruction(alloc, predMap, instr);</div>
+<div class="line"><a name="l00865"></a><span class="lineno">  865</span>&#160;  }</div>
+<div class="line"><a name="l00866"></a><span class="lineno">  866</span>&#160;  <span class="keywordflow">return</span> getInstruction(alloc, v);</div>
+<div class="line"><a name="l00867"></a><span class="lineno">  867</span>&#160;}</div>
+<div class="line"><a name="l00868"></a><span class="lineno">  868</span>&#160;static_assert(std::is_trivially_destructible_v&lt;</div>
+<div class="line"><a name="l00869"></a><span class="lineno">  869</span>&#160;              std::variant&lt;std::monostate, llvm::Instruction *,</div>
+<div class="line"><a name="l00870"></a><span class="lineno">  870</span>&#160;                           llvm::ConstantInt *, llvm::ConstantFP *, Addr *&gt;&gt;);</div>
+<div class="line"><a name="l00871"></a><span class="lineno">  871</span>&#160;static_assert(std::is_trivially_destructible_v&lt;Predicate::Set&gt;);</div>
+<div class="line"><a name="l00872"></a><span class="lineno">  872</span>&#160;static_assert(std::is_trivially_destructible_v&lt;math::BumpPtrVector&lt;Intr *&gt;&gt;);</div>
+<div class="line"><a name="l00873"></a><span class="lineno">  873</span>&#160; </div>
+<div class="line"><a name="l00874"></a><span class="lineno">  874</span>&#160;<span class="comment">// unsigned x = llvm::Instruction::FAdd;</span></div>
+<div class="line"><a name="l00875"></a><span class="lineno">  875</span>&#160;<span class="comment">// unsigned y = llvm::Instruction::LShr;</span></div>
+<div class="line"><a name="l00876"></a><span class="lineno">  876</span>&#160;<span class="comment">// unsigned z = llvm::Instruction::Call;</span></div>
+<div class="line"><a name="l00877"></a><span class="lineno">  877</span>&#160;<span class="comment">// unsigned w = llvm::Instruction::Load;</span></div>
+<div class="line"><a name="l00878"></a><span class="lineno">  878</span>&#160;<span class="comment">// unsigned v = llvm::Instruction::Store;</span></div>
+<div class="line"><a name="l00879"></a><span class="lineno">  879</span>&#160;<span class="comment">// // getIntrinsicID()</span></div>
+<div class="line"><a name="l00880"></a><span class="lineno">  880</span>&#160;<span class="comment">// llvm::Intrinsic::IndependentIntrinsics x = llvm::Intrinsic::sqrt;</span></div>
+<div class="line"><a name="l00881"></a><span class="lineno">  881</span>&#160;<span class="comment">// llvm::Intrinsic::IndependentIntrinsics y = llvm::Intrinsic::sin;</span></div>
+<div class="line"><a name="l00882"></a><span class="lineno">  882</span>&#160;} <span class="comment">// namespace poly::IR</span></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Addr_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Addr.html">poly::IR::Addr</a></div><div class="ttdef"><b>Definition:</b> Address.hpp:69</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Func_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Func.html">poly::IR::Func</a></div><div class="ttdef"><b>Definition:</b> Instruction.hpp:143</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Inst_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Inst.html">poly::IR::Inst</a></div><div class="ttdef"><b>Definition:</b> Instruction.hpp:115</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Intr_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Intr.html">poly::IR::Intr</a></div><div class="ttdef"><b>Definition:</b> Instruction.hpp:218</div></div>
-<div class="ttc" id="aclasspoly_1_1IR_1_1Intr_html_a1885218b511f5d227739c9a1da3ed7e8"><div class="ttname"><a href="classpoly_1_1IR_1_1Intr.html#a1885218b511f5d227739c9a1da3ed7e8">poly::IR::Intr::replaceAllOtherUsesWith</a></div><div class="ttdeci">void replaceAllOtherUsesWith(Intr *J)</div><div class="ttdef"><b>Definition:</b> Instruction.hpp:762</div></div>
+<div class="ttc" id="aclasspoly_1_1IR_1_1Intr_html_a1885218b511f5d227739c9a1da3ed7e8"><div class="ttname"><a href="classpoly_1_1IR_1_1Intr.html#a1885218b511f5d227739c9a1da3ed7e8">poly::IR::Intr::replaceAllOtherUsesWith</a></div><div class="ttdeci">void replaceAllOtherUsesWith(Intr *J)</div><div class="ttdef"><b>Definition:</b> Instruction.hpp:759</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Intr_html_a86e335770f659e71bdbecb5f13a73264"><div class="ttname"><a href="classpoly_1_1IR_1_1Intr.html#a86e335770f659e71bdbecb5f13a73264">poly::IR::Intr::getCost</a></div><div class="ttdeci">auto getCost(llvm::TargetTransformInfo &amp;TTI, unsigned W, unsigned l2W) -&gt; RecipThroughputLatency</div><div class="ttdoc">fall back in case we need value operand</div><div class="ttdef"><b>Definition:</b> Instruction.hpp:378</div></div>
-<div class="ttc" id="aclasspoly_1_1IR_1_1Intr_html_abc102ec85b38a5a68ba983726815a0b8"><div class="ttname"><a href="classpoly_1_1IR_1_1Intr.html#abc102ec85b38a5a68ba983726815a0b8">poly::IR::Intr::replaceAllUsesWith</a></div><div class="ttdeci">void replaceAllUsesWith(Intr *J)</div><div class="ttdef"><b>Definition:</b> Instruction.hpp:752</div></div>
+<div class="ttc" id="aclasspoly_1_1IR_1_1Intr_html_abc102ec85b38a5a68ba983726815a0b8"><div class="ttname"><a href="classpoly_1_1IR_1_1Intr.html#abc102ec85b38a5a68ba983726815a0b8">poly::IR::Intr::replaceAllUsesWith</a></div><div class="ttdeci">void replaceAllUsesWith(Intr *J)</div><div class="ttdef"><b>Definition:</b> Instruction.hpp:749</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Intr_html_aeefc2eb5adccc47d671f3eca6fc79338"><div class="ttname"><a href="classpoly_1_1IR_1_1Intr.html#aeefc2eb5adccc47d671f3eca6fc79338">poly::IR::Intr::selectCost</a></div><div class="ttdeci">auto selectCost(llvm::TargetTransformInfo &amp;TTI, unsigned int vectorWidth) const -&gt; llvm::InstructionCost</div><div class="ttdef"><b>Definition:</b> Instruction.hpp:553</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Node_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Node.html">poly::IR::Node</a></div><div class="ttdef"><b>Definition:</b> Node.hpp:84</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Op_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Op.html">poly::IR::Op</a></div><div class="ttdef"><b>Definition:</b> Instruction.hpp:152</div></div>

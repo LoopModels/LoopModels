@@ -283,7 +283,7 @@ $(function() {
 <div class="line"><a name="l00231"></a><span class="lineno">  231</span>&#160;  }</div>
 <div class="line"><a name="l00236"></a><span class="lineno">  236</span>&#160;  <span class="keyword">auto</span> completeInstruction(BumpAlloc&lt;&gt; &amp;, <a class="code" href="structpoly_1_1IR_1_1Predicate_1_1Map.html">Predicate::Map</a> &amp;, llvm::Instruction *)</div>
 <div class="line"><a name="l00237"></a><span class="lineno">  237</span>&#160;    -&gt; <a class="code" href="classpoly_1_1IR_1_1Intr.html">Intr</a> *;</div>
-<div class="line"><a name="l00238"></a><span class="lineno">  238</span>&#160;  <a class="code" href="classpoly_1_1IR_1_1Node.html">Node</a> *addParents(BumpAlloc&lt;&gt; &amp;alloc, <a class="code" href="classpoly_1_1IR_1_1Stow.html">Stow</a> *a, llvm::Loop *L) {</div>
+<div class="line"><a name="l00238"></a><span class="lineno">  238</span>&#160;  <a class="code" href="classpoly_1_1IR_1_1Node.html">Node</a> *addParents(BumpAlloc&lt;&gt; &amp;alloc, Stow *a, llvm::Loop *L) {</div>
 <div class="line"><a name="l00239"></a><span class="lineno">  239</span>&#160;    llvm::StoreInst *J = a-&gt;getInstruction();</div>
 <div class="line"><a name="l00240"></a><span class="lineno">  240</span>&#160;    <span class="keywordflow">if</span> (!L-&gt;contains(J-&gt;getParent())) <span class="keywordflow">return</span>;</div>
 <div class="line"><a name="l00241"></a><span class="lineno">  241</span>&#160;    <span class="keyword">auto</span> ops{instr-&gt;operands()};</div>
@@ -317,10 +317,9 @@ $(function() {
 <div class="ttc" id="aclasspoly_1_1IR_1_1Inst_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Inst.html">poly::IR::Inst</a></div><div class="ttdef"><b>Definition:</b> Instruction.hpp:115</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Intr_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Intr.html">poly::IR::Intr</a></div><div class="ttdef"><b>Definition:</b> Instruction.hpp:218</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Node_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Node.html">poly::IR::Node</a></div><div class="ttdef"><b>Definition:</b> Node.hpp:84</div></div>
-<div class="ttc" id="aclasspoly_1_1IR_1_1Stow_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Stow.html">poly::IR::Stow</a></div><div class="ttdef"><b>Definition:</b> Address.hpp:733</div></div>
-<div class="ttc" id="astructpoly_1_1IR_1_1Predicate_1_1Intersection_html"><div class="ttname"><a href="structpoly_1_1IR_1_1Predicate_1_1Intersection.html">poly::IR::Predicate::Intersection</a></div><div class="ttdef"><b>Definition:</b> Predicate.hpp:44</div></div>
+<div class="ttc" id="astructpoly_1_1IR_1_1Predicate_1_1Intersection_html"><div class="ttname"><a href="structpoly_1_1IR_1_1Predicate_1_1Intersection.html">poly::IR::Predicate::Intersection</a></div><div class="ttdef"><b>Definition:</b> Predicate.hpp:45</div></div>
 <div class="ttc" id="astructpoly_1_1IR_1_1Predicate_1_1Map_html"><div class="ttname"><a href="structpoly_1_1IR_1_1Predicate_1_1Map.html">poly::IR::Predicate::Map</a></div><div class="ttdef"><b>Definition:</b> BBPredPath.hpp:7</div></div>
-<div class="ttc" id="astructpoly_1_1IR_1_1Predicate_1_1Set_html"><div class="ttname"><a href="structpoly_1_1IR_1_1Predicate_1_1Set.html">poly::IR::Predicate::Set</a></div><div class="ttdef"><b>Definition:</b> Predicate.hpp:197</div></div>
+<div class="ttc" id="astructpoly_1_1IR_1_1Predicate_1_1Set_html"><div class="ttname"><a href="structpoly_1_1IR_1_1Predicate_1_1Set.html">poly::IR::Predicate::Set</a></div><div class="ttdef"><b>Definition:</b> Predicate.hpp:198</div></div>
 <div class="ttc" id="astructpoly_1_1IR_1_1UniqueIdentifier_html"><div class="ttname"><a href="structpoly_1_1IR_1_1UniqueIdentifier.html">poly::IR::UniqueIdentifier</a></div><div class="ttdef"><b>Definition:</b> Instruction.hpp:65</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
