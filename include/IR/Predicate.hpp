@@ -1,8 +1,9 @@
 #pragma once
-#include "Containers/TinyVector.hpp"
+
 #include "Dicts/BumpVector.hpp"
-#include "Utilities/Allocators.hpp"
-#include "Utilities/Invariant.hpp"
+#include <Containers/TinyVector.hpp>
+#include <Utilities/Allocators.hpp>
+#include <Utilities/Invariant.hpp>
 #include <cstddef>
 #include <cstdint>
 #include <cwchar>
@@ -377,7 +378,7 @@ struct Set {
       [&](Intersection pred) { *this &= pred; });
     return *this;
   }
-  auto copy(BumpAlloc<> &alloc) -> Set {
+  auto copy(BumpAlloc<> &alloc) const -> Set {
     if (!allocated) return Set{intersectUnion.intersect};
     Set ret{};
     ret.intersectUnion.intersects = intersectUnion.intersects->copy(alloc);

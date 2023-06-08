@@ -1,15 +1,15 @@
 #pragma once
 
-#include "Containers/UnrolledList.hpp"
 #include "Dicts/BumpMapSet.hpp"
 #include "Dicts/BumpVector.hpp"
 #include "Dicts/MapVector.hpp"
 #include "IR/Address.hpp"
 #include "IR/Node.hpp"
 #include "IR/Predicate.hpp"
-#include "Math/Array.hpp"
-#include "Utilities/Allocators.hpp"
+#include <Containers/UnrolledList.hpp>
 #include <IR/Operands.hpp>
+#include <Math/Array.hpp>
+#include <Utilities/Allocators.hpp>
 #include <algorithm>
 #include <concepts>
 #include <cstddef>
@@ -267,7 +267,7 @@ public:
   [[nodiscard]] auto getNumOperands() const -> size_t {
     return operands->size();
   }
-  explicit Intr(BumpAlloc<> &alloc, Intrin idt, llvm::Type *typ)
+  explicit Intr(BumpAlloc<> &alloc, llvm::Intrinsic::ID idt, llvm::Type *typ)
     : Inst(VK_Intr), idtf(idt), type(typ) {}
   // Instruction(UniqueIdentifier uid)
   // : id(std::get<0>(uid)), operands(std::get<1>(uid)) {}
@@ -713,8 +713,7 @@ public:
     case llvm::Instruction::Load:
     case llvm::Instruction::Store:
       return calculateCostContiguousLoadStore(TTI, idt.opcode, vectorWidth);
-    default:
-      return RecipThroughputLatency::getInvalid();
+    default: return RecipThroughputLatency::getInvalid();
     }
   }
   [[nodiscard]] auto isCommutativeCall() const -> bool {
@@ -736,10 +735,8 @@ public:
     case llvm::Instruction::Mul:
     case llvm::Instruction::And:
     case llvm::Instruction::Or:
-    case llvm::Instruction::Xor:
-      return 0x3;
-    default:
-      return 0;
+    case llvm::Instruction::Xor: return 0x3;
+    default: return 0;
     }
   }
   // NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
@@ -863,8 +860,7 @@ inline auto Intr::Cache::getInstruction(BumpAlloc<> &alloc,
   -> Intr * {
 
   if (auto *instr = llvm::dyn_cast<llvm::Instruction>(v)) {
-    if (containsCycle(alloc, instr)) {
-    }
+    if (containsCycle(alloc, instr)) {}
     return getInstruction(alloc, predMap, instr);
   }
   return getInstruction(alloc, v);
