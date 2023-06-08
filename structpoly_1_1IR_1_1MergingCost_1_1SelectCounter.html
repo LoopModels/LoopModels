@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.9.1"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>LoopModels: MergingCost::SelectAllocator Struct Reference</title>
+<title>LoopModels: poly::IR::MergingCost::SelectCounter Struct Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -61,45 +61,36 @@ $(function() {
 
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><a class="el" href="structMergingCost.html">MergingCost</a></li><li class="navelem"><a class="el" href="structMergingCost_1_1SelectAllocator.html">SelectAllocator</a></li>  </ul>
+<li class="navelem"><b>poly</b></li><li class="navelem"><b>IR</b></li><li class="navelem"><a class="el" href="structpoly_1_1IR_1_1MergingCost.html">MergingCost</a></li><li class="navelem"><a class="el" href="structpoly_1_1IR_1_1MergingCost_1_1SelectCounter.html">SelectCounter</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="header">
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-attribs">Public Attributes</a> &#124;
-<a href="structMergingCost_1_1SelectAllocator-members.html">List of all members</a>  </div>
+<a href="structpoly_1_1IR_1_1MergingCost_1_1SelectCounter-members.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">MergingCost::SelectAllocator Struct Reference</div>  </div>
+<div class="title">poly::IR::MergingCost::SelectCounter Struct Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a4991171f3dcba6367a67fb51ff0d690b"><td class="memItemLeft" align="right" valign="top"><a id="a4991171f3dcba6367a67fb51ff0d690b"></a>
-constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>operator MutPtrVector&lt; Instruction * &gt;</b> () const</td></tr>
-<tr class="separator:a4991171f3dcba6367a67fb51ff0d690b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ada21d6f997254214d4c888e15c5fd2ad"><td class="memItemLeft" align="right" valign="top"><a id="ada21d6f997254214d4c888e15c5fd2ad"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>merge</b> (size_t i, Instruction *A, Instruction *B)</td></tr>
-<tr class="separator:ada21d6f997254214d4c888e15c5fd2ad"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af8a9470c82552759dac62850fc3020e0"><td class="memItemLeft" align="right" valign="top"><a id="af8a9470c82552759dac62850fc3020e0"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>select</b> (size_t i, Instruction *A, Instruction *B)</td></tr>
-<tr class="separator:af8a9470c82552759dac62850fc3020e0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9d85de8a62aeedf4b9b8042b6eddd012"><td class="memItemLeft" align="right" valign="top"><a id="a9d85de8a62aeedf4b9b8042b6eddd012"></a>
+constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>operator unsigned</b> () const</td></tr>
+<tr class="separator:a9d85de8a62aeedf4b9b8042b6eddd012"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5134beea0fc231d86f9ece2bf43054b1"><td class="memItemLeft" align="right" valign="top"><a id="a5134beea0fc231d86f9ece2bf43054b1"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>merge</b> (size_t, <a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a> *, <a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a> *)</td></tr>
+<tr class="separator:a5134beea0fc231d86f9ece2bf43054b1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a922869843f58c0425a2aede55c692410"><td class="memItemLeft" align="right" valign="top"><a id="a922869843f58c0425a2aede55c692410"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>select</b> (size_t, <a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a> *, <a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a> *)</td></tr>
+<tr class="separator:a922869843f58c0425a2aede55c692410"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
-<tr class="memitem:af3356967b029c7ac87fc068232a68059"><td class="memItemLeft" align="right" valign="top"><a id="af3356967b029c7ac87fc068232a68059"></a>
-BumpAlloc &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>alloc</b></td></tr>
-<tr class="separator:af3356967b029c7ac87fc068232a68059"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae571711f088b8a9c7181e104288015ee"><td class="memItemLeft" align="right" valign="top"><a id="ae571711f088b8a9c7181e104288015ee"></a>
-Instruction::Cache &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>cache</b></td></tr>
-<tr class="separator:ae571711f088b8a9c7181e104288015ee"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a71806af1062113c1f37bb1d299c108f9"><td class="memItemLeft" align="right" valign="top"><a id="a71806af1062113c1f37bb1d299c108f9"></a>
-<a class="el" href="structReMapper.html">ReMapper</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>reMap</b></td></tr>
-<tr class="separator:a71806af1062113c1f37bb1d299c108f9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a364f88e9511aa730bdd85f6e2f06a369"><td class="memItemLeft" align="right" valign="top"><a id="a364f88e9511aa730bdd85f6e2f06a369"></a>
-MutPtrVector&lt; Instruction * &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>operands</b></td></tr>
-<tr class="separator:a364f88e9511aa730bdd85f6e2f06a369"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3af15126bef8463bb5723dbfc41c3f48"><td class="memItemLeft" align="right" valign="top"><a id="a3af15126bef8463bb5723dbfc41c3f48"></a>
+unsigned&#160;</td><td class="memItemRight" valign="bottom"><b>numSelects</b> {0}</td></tr>
+<tr class="separator:a3af15126bef8463bb5723dbfc41c3f48"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <hr/>The documentation for this struct was generated from the following file:<ul>
 <li>include/IR/<a class="el" href="ControlFlowMerging_8hpp_source.html">ControlFlowMerging.hpp</a></li>
