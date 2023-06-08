@@ -1,14 +1,15 @@
 #pragma once
 
 #include "CostModeling.hpp"
+#include "IR/Address.hpp"
+#include "IR/Cache.hpp"
 #include "IR/Instruction.hpp"
+#include "IR/Node.hpp"
 #include "LoopBlock.hpp"
-#include "LoopForest.hpp"
-#include "Math/Array.hpp"
-#include "Math/Math.hpp"
-#include "MemoryAccess.hpp"
 #include "Polyhedra/Loops.hpp"
 #include "RemarkAnalysis.hpp"
+#include <Math/Array.hpp>
+#include <Math/Math.hpp>
 #include <algorithm>
 #include <cassert>
 #include <cmath>
@@ -60,9 +61,8 @@ concept LoadOrStoreInst =
   std::same_as<llvm::StoreInst, std::remove_cvref_t<T>>;
 
 class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
-  // [[no_unique_address]] llvm::SmallVector<NotNull<LoopTree>> loopForests;
-  [[no_unique_address]] Loop *forest;
-  [[no_unique_address]] map<llvm::Loop *, Loop *> loopMap;
+  [[no_unique_address]] poly::IR::Loop *forest;
+  [[no_unique_address]] map<llvm::Loop *, poly::IR::Loop *> loopMap;
   [[no_unique_address]] const llvm::TargetLibraryInfo *TLI;
   [[no_unique_address]] const llvm::TargetTransformInfo *TTI;
   [[no_unique_address]] llvm::LoopInfo *LI;
@@ -70,7 +70,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
   [[no_unique_address]] llvm::OptimizationRemarkEmitter *ORE;
   [[no_unique_address]] LinearProgramLoopBlock loopBlock;
   [[no_unique_address]] BumpAlloc<> allocator;
-  [[no_unique_address]] Intr::Cache instrCache;
+  [[no_unique_address]] poly::IR::Cache instrCache;
   [[no_unique_address]] CostModeling::CPURegisterFile registers;
 
   /// the process of building the LoopForest has the following steps:
@@ -133,13 +133,17 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
   /// The `TreeResult` gives the result of parsing a loop tree. Fields:
   /// - `Addr* addr`: a linked list giving the addresses of the loop tree.
   /// These contain ordering information, which is enough for the linear program
-  /// to deduce the orders of memory accesses, and perform an analysis. The
+  /// to deduce the orders of memory accesses, and perform an analysis.
+  /// - 'Node* node': a linked list giving the nodes that we stopped exploring
+  /// due to not being inside the loop nest, and thus may need to have their
+  /// parents filled out.
   /// - `size_t rejectDepth` is how many outer loops were rejected, due to to
   /// failure to produce an affine representation of the loop or memory
   /// accesses. Either because an affine representation is not possible, or
   /// because our analysis failed and needs improvement.
   struct TreeResult {
     Addr *addr{nullptr};
+    Node *node{nullptr};
     size_t rejectDepth{0};
     constexpr auto reject(size_t depth) -> bool {
       return (depth < rejectDepth) || (addr == nullptr);
@@ -168,14 +172,14 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
     addr->forEach([&, L](Addr *a) { instrCache.addParents(a, L); });
   }
   auto parseBlocks(llvm::BasicBlock *H, llvm::BasicBlock *E, llvm::Loop *L,
-                   MutPtrVector<unsigned> omega, NotNull<poly::Loop> AL)
-    -> TreeResult {
+                   MutPtrVector<unsigned> omega, NotNull<poly::Loop> AL,
+                   Node *out) -> TreeResult {
     // TODO: need to be able to connect instructions as we move out
     if (auto predMapAbridged =
           Predicate::Map::descend(allocator, instrCache, H, E, L)) {
       // Now we need to create Addrs
       size_t depth = omega.size() - 1;
-      TreeResult tr{nullptr, depth - AL->getNumLoops()};
+      TreeResult tr{nullptr, nullptr, depth - AL->getNumLoops()};
       for (auto &[BB, P] : *predMapAbridged) {
         for (llvm::Instruction &J : *BB) {
           if (L) assert(L->contains(&J));
@@ -195,10 +199,10 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
           }
         }
       }
-      // if that succeeds, we create instrs
-      // and merge CF
-      mergeInstructions(allocator, instrCache, *predMapAbridged, TTI,
-                        loopBlock.getAlloc(), registers.getNumVectorBits());
+      // if that succeeds, we create instr and merge CF
+      tr.node = mergeInstructions(allocator, instrCache, *predMapAbridged, TTI,
+                                  loopBlock.getAlloc(),
+                                  registers.getNumVectorBits(), out);
       return tr;
     }
     return {};
@@ -598,8 +602,8 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
   // LoopTree &getLoopTree(unsigned i) { return loopTrees[i]; }
   auto getLoopTree(llvm::Loop *L) -> Loop * { return loopMap[L]; }
   auto addRef(llvm::Loop *L, MutPtrVector<unsigned> omega,
-              NotNull<poly::Loop> AL, llvm::Instruction *J,
-              llvm::Value *ptr, TreeResult tr) -> TreeResult {
+              NotNull<poly::Loop> AL, llvm::Instruction *J, llvm::Value *ptr,
+              TreeResult tr) -> TreeResult {
     // llvm::Type *type = I->getPointerOperandType();
     const llvm::SCEV *elSz = SE->getElementSize(J);
     if (L) { // TODO: support top level array refs

@@ -1,4 +1,5 @@
 #pragma once
+
 #include "Dicts/BumpMapSet.hpp"
 #include "IR/Address.hpp"
 #include "IR/Instruction.hpp"
@@ -155,9 +156,7 @@ class Cache {
       return Cint::create(alloc, 1, instr->getType());
     case Predicate::Relation::Empty:
       return Cint::create(alloc, 0, instr->getType());
-    case Predicate::Relation::False:
-      swap = !swap;
-      [[fallthrough]];
+    case Predicate::Relation::False: swap = !swap; [[fallthrough]];
     case Predicate::Relation::True:
       return swap ? instr->negate(alloc, *this) : instr;
     }
