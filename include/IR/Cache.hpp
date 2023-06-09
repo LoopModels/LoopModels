@@ -9,9 +9,10 @@ namespace poly::IR {
 using dict::map;
 class Cache {
   map<llvm::Value *, Node *> llvmToInternalMap;
-  // map<UniqueIdentifier, Node *> argMap;
+  map<InstByValue, Inst *> instCSEMap;
   BumpAlloc<> alloc;
   Inst *loopInvariants{nullptr};
+  Inst *freeList{nullptr};
   // tmp is used in case we don't need an allocation
   // Instruction *tmp{nullptr};
   // auto allocate(BumpAlloc<> &alloc, Intrinsic id,
@@ -27,6 +28,18 @@ class Cache {
   //     }
   // }
   //
+  auto allocateInst(unsigned numOps) -> Inst * {
+    // because we allocate children before parents
+    //
+    for (Inst *I = freeList; I; I = I->getNext()) {
+      if (I->getNumOperands() == numOps) {
+        I->removeFromList();
+        return I;
+      }
+    }
+    //
+  }
+  auto getCSE(Inst *I) -> Inst *& { return instCSEMap[InstByValue{I}]; }
   auto getValue(llvm::Value *v, llvm::Loop *L) -> Node * {
     auto &n = llvmToInternalMap[v];
     if (n) return n;
@@ -44,10 +57,9 @@ class Cache {
   }
   void fillOperands(Inst *n, llvm::Loop *L) {
     llvm::Instruction *i = n->getLLVMInstruction();
-    if (i->getNumOperands() == 0) return;
-    invariant(n->getOperands() == nullptr);
-    Node **ops = alloc.allocate<Node **>(i->getNumOperands());
-    // = alloc.create<Inst>(i, L);
+    auto numOps = i->getNumOperands();
+    if (numOps == 0) return;
+
     for (auto &op : i->operands()) {
       auto *v = getValue(op, L);
       n->operands.push_back(v);

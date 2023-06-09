@@ -135,6 +135,12 @@ public:
     if (prev) prev->setNext(d);
     prev = d;
   }
+  constexpr void removeFromList() {
+    if (prev) prev->setNext(next);
+    if (next) next->setPrev(prev);
+    prev = nullptr;
+    next = nullptr;
+  }
   constexpr void forEach(const auto &f) {
     for (Node *n = this; n; n = n->getNext()) f(n);
   }

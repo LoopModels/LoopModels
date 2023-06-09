@@ -58,10 +58,9 @@ struct MergingCost {
     auto *set = alloc.construct<aset<Node *>>(alloc);
     /// instructions are considered their own ancestor for our purposes
     set->insert(key);
-    key->getOperands()->forEach([&](Node *op) {
+    for (Node *op : key->getOperands())
       if (auto *f = ancestorMap.find(op); f != ancestorMap.end())
         set->insert(f->second->begin(), f->second->end());
-    });
     ancestorMap[key] = set;
     return set;
   }

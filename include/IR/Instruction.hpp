@@ -115,8 +115,9 @@ class Inst : public Node {
 protected:
   llvm::Instruction *inst{nullptr};
   llvm::Type *type;
-  RecipThroughputLatency costs[2]; // scalar and vec; may want to add more
-  llvm::Intrinsic::ID op;          // unsigned
+  UList<Node *> *users{nullptr};     // stores and Insts
+  RecipThroughputLatency costs[2];   // scalar and vec; may want to add more
+  llvm::Intrinsic::ID op;            // unsigned
   unsigned numOperands{std::numeric_limits<unsigned>::max()};
   llvm::FastMathFlags fastMathFlags; // holds unsigned
   unsigned padding;                  // currently unused
@@ -239,25 +240,23 @@ struct InstByValue {
 
 // some opaque function
 class OpaqueFunc {
-  Inst *ins;
+  Inst *const ins;
 
 public:
-  operator Inst *() const { return ins; }
-  OpaqueFunc(llvm::Instruction *i)
-    : Inst(VK_Func, i, llvm::Intrinsic::not_intrinsic) {}
-
-  static constexpr auto classof(const Node *v) -> bool {
-    return v->getKind() == VK_Func;
+  constexpr operator Inst *() const { return ins; }
+  constexpr OpaqueFunc(Inst *I) : ins(I) {
+    invariant(ins->getKind(), Node::VK_Func);
   }
-  // constexpr Func(llvm::Function *f) : Inst(VK_Func), func(f) {}
 };
 // a non-call
 class Operation {
-  Inst *ins;
+  Inst *const ins;
 
 public:
-  operator Inst *() const { return ins; }
-  Operation(llvm::Instruction *i) : Inst(VK_Oprn, i, i->getOpcode()) {}
+  constexpr operator Inst *() const { return ins; }
+  constexpr Operation(Inst *I) : ins(I) {
+    invariant(ins->getKind(), Node::VK_Oprn);
+  }
   [[nodiscard]] auto getOpCode() const -> llvm::Intrinsic::ID { return op; }
   static auto getOpCode(llvm::Value *v) -> std::optional<llvm::Intrinsic::ID> {
     if (auto *i = llvm::dyn_cast<llvm::Instruction>(v)) return i->getOpcode();
@@ -321,7 +320,9 @@ class Call {
   Inst *ins;
 
 public:
-  operator Inst *() const { return ins; }
+  constexpr operator Inst *() const { return ins; }
+  constexpr Call(Inst *I) : ins(I) { invariant(ins->getKind(), Node::VK_Call); }
+
   static constexpr auto classof(const Node *v) -> bool {
     return v->getKind() == VK_Call;
   }
