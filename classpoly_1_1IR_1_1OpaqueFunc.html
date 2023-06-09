@@ -92,6 +92,13 @@ static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>clas
 <tr class="memitem:a6530659011c9b4d4ffe2517403d884af inherit pub_static_methods_classpoly_1_1IR_1_1Inst"><td class="memItemLeft" align="right" valign="top"><a id="a6530659011c9b4d4ffe2517403d884af"></a>
 static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>classof</b> (const <a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a> *v) -&gt; bool</td></tr>
 <tr class="separator:a6530659011c9b4d4ffe2517403d884af inherit pub_static_methods_classpoly_1_1IR_1_1Inst"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="inherit_header pub_static_methods_classpoly_1_1IR_1_1Node"><td colspan="2" onclick="javascript:toggleInherit('pub_static_methods_classpoly_1_1IR_1_1Node')"><img src="closed.png" alt="-"/>&#160;Static Public Member Functions inherited from <a class="el" href="classpoly_1_1IR_1_1Node.html">poly::IR::Node</a></td></tr>
+<tr class="memitem:a7b41e697ca0ebebbb939fe32c5c559e7 inherit pub_static_methods_classpoly_1_1IR_1_1Node"><td class="memItemLeft" align="right" valign="top"><a id="a7b41e697ca0ebebbb939fe32c5c559e7"></a>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>getInstKind</b> (llvm::Instruction *v) -&gt; ValKind</td></tr>
+<tr class="separator:a7b41e697ca0ebebbb939fe32c5c559e7 inherit pub_static_methods_classpoly_1_1IR_1_1Node"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4d38e73207e6b16c143429bfe6b282cb inherit pub_static_methods_classpoly_1_1IR_1_1Node"><td class="memItemLeft" align="right" valign="top"><a id="a4d38e73207e6b16c143429bfe6b282cb"></a>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>getKind</b> (llvm::Value *v) -&gt; ValKind</td></tr>
+<tr class="separator:a4d38e73207e6b16c143429bfe6b282cb inherit pub_static_methods_classpoly_1_1IR_1_1Node"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="inherited"></a>
 Additional Inherited Members</h2></td></tr>
@@ -107,7 +114,7 @@ Additional Inherited Members</h2></td></tr>
 , <b>VK_Cflt</b>
 , <b>VK_Func</b>
 , <br />
-&#160;&#160;<b>VK_Intr</b>
+&#160;&#160;<b>VK_Call</b>
 , <b>VK_Oprn</b>
 , <b>L</b>
 <br />
@@ -194,9 +201,9 @@ constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>forEach</b>
 <tr class="memitem:a0f2affc6e8913100481850eabb6b366c inherit pro_methods_classpoly_1_1IR_1_1Inst"><td class="memItemLeft" align="right" valign="top"><a id="a0f2affc6e8913100481850eabb6b366c"></a>
 constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Inst</b> (ValKind k)</td></tr>
 <tr class="separator:a0f2affc6e8913100481850eabb6b366c inherit pro_methods_classpoly_1_1IR_1_1Inst"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0da14f5ed74a11092e6bf879588625bc inherit pro_methods_classpoly_1_1IR_1_1Inst"><td class="memItemLeft" align="right" valign="top"><a id="a0da14f5ed74a11092e6bf879588625bc"></a>
-constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Inst</b> (ValKind k, UList&lt; <a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a> * &gt; *op)</td></tr>
-<tr class="separator:a0da14f5ed74a11092e6bf879588625bc inherit pro_methods_classpoly_1_1IR_1_1Inst"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae076bfafa8706158ad34f8e496074f1e inherit pro_methods_classpoly_1_1IR_1_1Inst"><td class="memItemLeft" align="right" valign="top"><a id="ae076bfafa8706158ad34f8e496074f1e"></a>
+constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Inst</b> (ValKind k, llvm::Instruction *i, llvm::Intrinsic::ID id)</td></tr>
+<tr class="separator:ae076bfafa8706158ad34f8e496074f1e inherit pro_methods_classpoly_1_1IR_1_1Inst"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pro_methods_classpoly_1_1IR_1_1Node"><td colspan="2" onclick="javascript:toggleInherit('pro_methods_classpoly_1_1IR_1_1Node')"><img src="closed.png" alt="-"/>&#160;Protected Member Functions inherited from <a class="el" href="classpoly_1_1IR_1_1Node.html">poly::IR::Node</a></td></tr>
 <tr class="memitem:a2a3192030ebb23d5f9c96b24f499e31d inherit pro_methods_classpoly_1_1IR_1_1Node"><td class="memItemLeft" align="right" valign="top"><a id="a2a3192030ebb23d5f9c96b24f499e31d"></a>
 constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Node</b> (ValKind kind)</td></tr>
@@ -206,7 +213,7 @@ constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Node</b> (ValKin
 <tr class="separator:a4888993b30e1f64edc60d3162595803e inherit pro_methods_classpoly_1_1IR_1_1Node"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pro_attribs_classpoly_1_1IR_1_1Inst"><td colspan="2" onclick="javascript:toggleInherit('pro_attribs_classpoly_1_1IR_1_1Inst')"><img src="closed.png" alt="-"/>&#160;Protected Attributes inherited from <a class="el" href="classpoly_1_1IR_1_1Inst.html">poly::IR::Inst</a></td></tr>
 <tr class="memitem:ab78105a4d7727901d8fbbf5fef0626f0 inherit pro_attribs_classpoly_1_1IR_1_1Inst"><td class="memItemLeft" align="right" valign="top"><a id="ab78105a4d7727901d8fbbf5fef0626f0"></a>
-UList&lt; <a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a> * &gt; *&#160;</td><td class="memItemRight" valign="bottom"><b>operands</b></td></tr>
+UList&lt; <a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a> * &gt; *&#160;</td><td class="memItemRight" valign="bottom"><b>operands</b> {nullptr}</td></tr>
 <tr class="separator:ab78105a4d7727901d8fbbf5fef0626f0 inherit pro_attribs_classpoly_1_1IR_1_1Inst"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae8bff86fa00693c478235c2c30884346 inherit pro_attribs_classpoly_1_1IR_1_1Inst"><td class="memItemLeft" align="right" valign="top"><a id="ae8bff86fa00693c478235c2c30884346"></a>
 llvm::Instruction *&#160;</td><td class="memItemRight" valign="bottom"><b>inst</b> {nullptr}</td></tr>

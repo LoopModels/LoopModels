@@ -68,6 +68,7 @@ $(function() {
   <div class="summary">
 <a href="#pub-types">Public Types</a> &#124;
 <a href="#pub-methods">Public Member Functions</a> &#124;
+<a href="#pub-static-methods">Static Public Member Functions</a> &#124;
 <a href="#pro-methods">Protected Member Functions</a> &#124;
 <a href="#pro-attribs">Protected Attributes</a> &#124;
 <a href="classpoly_1_1IR_1_1Node-members.html">List of all members</a>  </div>
@@ -110,7 +111,7 @@ Public Types</h2></td></tr>
 , <b>VK_Cflt</b>
 , <b>VK_Func</b>
 , <br />
-&#160;&#160;<b>VK_Intr</b>
+&#160;&#160;<b>VK_Call</b>
 , <b>VK_Oprn</b>
 , <b>L</b>
 <br />
@@ -158,6 +159,15 @@ constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>insertAhead
 <tr class="memitem:a858fbe0affa5628284f68b1475b7c157"><td class="memItemLeft" align="right" valign="top"><a id="a858fbe0affa5628284f68b1475b7c157"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>forEach</b> (const auto &amp;f)</td></tr>
 <tr class="separator:a858fbe0affa5628284f68b1475b7c157"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
+Static Public Member Functions</h2></td></tr>
+<tr class="memitem:a7b41e697ca0ebebbb939fe32c5c559e7"><td class="memItemLeft" align="right" valign="top"><a id="a7b41e697ca0ebebbb939fe32c5c559e7"></a>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>getInstKind</b> (llvm::Instruction *v) -&gt; ValKind</td></tr>
+<tr class="separator:a7b41e697ca0ebebbb939fe32c5c559e7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4d38e73207e6b16c143429bfe6b282cb"><td class="memItemLeft" align="right" valign="top"><a id="a4d38e73207e6b16c143429bfe6b282cb"></a>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>getKind</b> (llvm::Value *v) -&gt; ValKind</td></tr>
+<tr class="separator:a4d38e73207e6b16c143429bfe6b282cb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-methods"></a>
 Protected Member Functions</h2></td></tr>
