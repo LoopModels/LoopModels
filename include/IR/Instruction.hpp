@@ -115,8 +115,8 @@ class Inst : public Node {
 protected:
   llvm::Instruction *inst{nullptr};
   llvm::Type *type;
-  RecipThroughputLatency costs[2];   // scalar and vec; may want to add more
-  llvm::Intrinsic::ID op;            // unsigned
+  RecipThroughputLatency costs[2]; // scalar and vec; may want to add more
+  llvm::Intrinsic::ID op;          // unsigned
   unsigned numOperands{std::numeric_limits<unsigned>::max()};
   llvm::FastMathFlags fastMathFlags; // holds unsigned
   unsigned padding;                  // currently unused
@@ -158,6 +158,7 @@ public:
   // constexpr auto getPredicate() const -> UList<Node *> const * {
   //   return predicates;
   // }
+  constexpr auto getNumOperands() const -> unsigned { return numOperands; }
   constexpr auto getType() const -> llvm::Type * { return type; }
   constexpr auto getOpId() const -> llvm::Intrinsic::ID { return op; }
   constexpr auto getOperands() -> MutPtrVector<Node *> {
@@ -209,26 +210,23 @@ public:
       return false;
     if (isIncomplete())
       return getLLVMInstruction() == other.getLLVMInstruction();
-    if ((operands == other.operands) || (*operands == *other.operands))
-      return true;
+    if (getNumOperands() != other.getNumOperands()) return false;
+    size_t offset = 0;
+    auto opst = getOperands();
+    auto opso = other.getOperands();
     if (uint8_t flag = associativeOperandsFlag()) {
       invariant(flag, uint8_t(3));
-      auto otherOps = other.getOperands();
-      if (operands->getHeadCount() != otherOps->getHeadCount()) return false;
-      if ((operands->getNext() != nullptr) || (otherOps->getNext() != nullptr))
+      auto *ot0 = opst[0];
+      auto *oo0 = opso[0];
+      auto *ot1 = opst[1];
+      auto *oo1 = opso[1];
+      if (((ot0 != oo0) || (ot1 != oo1)) && ((ot0 != oo1) || (ot1 != oo0)))
         return false;
-      auto *op0 = (*operands)[0];
-      auto *ot0 = (*otherOps)[0];
-      auto *op1 = (*operands)[1];
-      auto *ot1 = (*otherOps)[1];
-      if ((op0 == ot0) && (op1 == ot1)) return false;
-      if ((op0 != ot1) || (op1 != ot0)) return false;
-      // so they do commute. Now we need to check remainder...
-      for (size_t i = 2; i < operands->getHeadCount(); ++i)
-        if ((*operands)[i] != (*otherOps)[i]) return false;
-      return true;
+      offset = 2;
     }
-    return false;
+    for (size_t i = offset, N = getNumOperands(); i < N; ++i)
+      if (opst[i] != opso[i]) return false;
+    return true;
   }
 };
 
@@ -240,9 +238,11 @@ struct InstByValue {
 };
 
 // some opaque function
-class OpaqueFunc : public Inst {
+class OpaqueFunc {
+  Inst *ins;
 
 public:
+  operator Inst *() const { return ins; }
   OpaqueFunc(llvm::Instruction *i)
     : Inst(VK_Func, i, llvm::Intrinsic::not_intrinsic) {}
 
@@ -252,8 +252,11 @@ public:
   // constexpr Func(llvm::Function *f) : Inst(VK_Func), func(f) {}
 };
 // a non-call
-class Operation : public Inst {
+class Operation {
+  Inst *ins;
+
 public:
+  operator Inst *() const { return ins; }
   Operation(llvm::Instruction *i) : Inst(VK_Oprn, i, i->getOpcode()) {}
   [[nodiscard]] auto getOpCode() const -> llvm::Intrinsic::ID { return op; }
   static auto getOpCode(llvm::Value *v) -> std::optional<llvm::Intrinsic::ID> {
@@ -314,9 +317,11 @@ public:
   }
 };
 // a call, e.g. fmuladd, sqrt, sin
-class Call : public Inst {
+class Call {
+  Inst *ins;
 
 public:
+  operator Inst *() const { return ins; }
   static constexpr auto classof(const Node *v) -> bool {
     return v->getKind() == VK_Call;
   }
