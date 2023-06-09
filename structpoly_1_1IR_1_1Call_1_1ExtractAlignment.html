@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.9.1"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>LoopModels: poly::IR::std::hash&lt; Intr::Intrinsic &gt; Struct Reference</title>
+<title>LoopModels: poly::IR::Call::ExtractAlignment Struct Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -61,23 +61,29 @@ $(function() {
 
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><b>poly</b></li><li class="navelem"><b>IR</b></li><li class="navelem"><b>std</b></li><li class="navelem"><a class="el" href="structpoly_1_1IR_1_1std_1_1hash_3_01Intr_1_1Intrinsic_01_4.html">hash&lt; Intr::Intrinsic &gt;</a></li>  </ul>
+<li class="navelem"><b>poly</b></li><li class="navelem"><b>IR</b></li><li class="navelem"><a class="el" href="classpoly_1_1IR_1_1Call.html">Call</a></li><li class="navelem"><a class="el" href="structpoly_1_1IR_1_1Call_1_1ExtractAlignment.html">ExtractAlignment</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="header">
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
-<a href="structpoly_1_1IR_1_1std_1_1hash_3_01Intr_1_1Intrinsic_01_4-members.html">List of all members</a>  </div>
+<a href="structpoly_1_1IR_1_1Call_1_1ExtractAlignment-members.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">poly::IR::std::hash&lt; Intr::Intrinsic &gt; Struct Reference</div>  </div>
+<div class="title">poly::IR::Call::ExtractAlignment Struct Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:af7d4346bd6fef03a78f5afa4a9833d21"><td class="memItemLeft" align="right" valign="top"><a id="af7d4346bd6fef03a78f5afa4a9833d21"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (const Intr::Intrinsic &amp;s) const noexcept -&gt; size_t</td></tr>
-<tr class="separator:af7d4346bd6fef03a78f5afa4a9833d21"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a38b53875d3ce20937b0ef250b3255b7a"><td class="memItemLeft" align="right" valign="top"><a id="a38b53875d3ce20937b0ef250b3255b7a"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (std::monostate) -&gt; llvm::Align</td></tr>
+<tr class="separator:a38b53875d3ce20937b0ef250b3255b7a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aec1d61ba34aea848c0f511e05175bb70"><td class="memItemLeft" align="right" valign="top"><a id="aec1d61ba34aea848c0f511e05175bb70"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (llvm::Value *v) -&gt; llvm::Align</td></tr>
+<tr class="separator:aec1d61ba34aea848c0f511e05175bb70"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa4b0c8dbcd896b4870196e78e9967f97"><td class="memItemLeft" align="right" valign="top"><a id="aa4b0c8dbcd896b4870196e78e9967f97"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (<a class="el" href="classpoly_1_1IR_1_1Addr.html">Addr</a> *ref) const -&gt; llvm::Align</td></tr>
+<tr class="separator:aa4b0c8dbcd896b4870196e78e9967f97"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <hr/>The documentation for this struct was generated from the following file:<ul>
 <li>include/IR/<a class="el" href="Instruction_8hpp_source.html">Instruction.hpp</a></li>

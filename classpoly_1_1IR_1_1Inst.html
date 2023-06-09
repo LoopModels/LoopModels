@@ -81,21 +81,24 @@ Inheritance diagram for poly::IR::Inst:</div>
  <div class="center">
   <img src="classpoly_1_1IR_1_1Inst.png" usemap="#poly::IR::Inst_map" alt=""/>
   <map id="poly::IR::Inst_map" name="poly::IR::Inst_map">
-<area href="classpoly_1_1IR_1_1Node.html" alt="poly::IR::Node" shape="rect" coords="99,0,188,24"/>
-<area href="classpoly_1_1IR_1_1Func.html" alt="poly::IR::Func" shape="rect" coords="0,112,89,136"/>
-<area href="classpoly_1_1IR_1_1Intr.html" alt="poly::IR::Intr" shape="rect" coords="99,112,188,136"/>
-<area href="classpoly_1_1IR_1_1Op.html" alt="poly::IR::Op" shape="rect" coords="198,112,287,136"/>
+<area href="classpoly_1_1IR_1_1Node.html" alt="poly::IR::Node" shape="rect" coords="142,0,274,24"/>
+<area href="classpoly_1_1IR_1_1Call.html" alt="poly::IR::Call" shape="rect" coords="0,112,132,136"/>
+<area href="classpoly_1_1IR_1_1OpaqueFunc.html" alt="poly::IR::OpaqueFunc" shape="rect" coords="142,112,274,136"/>
+<area href="classpoly_1_1IR_1_1Operation.html" alt="poly::IR::Operation" shape="rect" coords="284,112,416,136"/>
   </map>
 </div></div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:ad15d3b0b691c0205d58b118ee82759f9"><td class="memItemLeft" align="right" valign="top"><a id="ad15d3b0b691c0205d58b118ee82759f9"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getPredicate</b> () -&gt; UList&lt; <a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a> * &gt; *</td></tr>
-<tr class="separator:ad15d3b0b691c0205d58b118ee82759f9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0f77d3564f46307876f497b8d1108e42"><td class="memItemLeft" align="right" valign="top"><a id="a0f77d3564f46307876f497b8d1108e42"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getPredicate</b> () const -&gt; UList&lt; <a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a> * &gt; const *</td></tr>
-<tr class="separator:a0f77d3564f46307876f497b8d1108e42"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6b66ae41599ebc3f317e4d162ff00391"><td class="memItemLeft" align="right" valign="top"><a id="a6b66ae41599ebc3f317e4d162ff00391"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getLLVMInstruction</b> () const -&gt; llvm::Instruction *</td></tr>
+<tr class="separator:a6b66ae41599ebc3f317e4d162ff00391"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a755715fbf934a87652541da4b7df7dcc"><td class="memItemLeft" align="right" valign="top"><a id="a755715fbf934a87652541da4b7df7dcc"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getType</b> () const -&gt; llvm::Type *</td></tr>
+<tr class="separator:a755715fbf934a87652541da4b7df7dcc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad309d7bfc3bef4d0680882e330626c98"><td class="memItemLeft" align="right" valign="top"><a id="ad309d7bfc3bef4d0680882e330626c98"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getOpId</b> () const -&gt; llvm::Intrinsic::ID</td></tr>
+<tr class="separator:ad309d7bfc3bef4d0680882e330626c98"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac146a9b7a572f6a8a9d7a5bf034d233f"><td class="memItemLeft" align="right" valign="top"><a id="ac146a9b7a572f6a8a9d7a5bf034d233f"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>getOperands</b> () -&gt; UList&lt; <a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a> * &gt; *</td></tr>
 <tr class="separator:ac146a9b7a572f6a8a9d7a5bf034d233f"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -105,6 +108,24 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getOperands
 <tr class="memitem:a6fbd4181ad0d9d4598b61ae081bf722f"><td class="memItemLeft" align="right" valign="top"><a id="a6fbd4181ad0d9d4598b61ae081bf722f"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>allowsContract</b> () const -&gt; bool</td></tr>
 <tr class="separator:a6fbd4181ad0d9d4598b61ae081bf722f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6d09b5e0f4fdeb801b05a90540da16e9"><td class="memItemLeft" align="right" valign="top"><a id="a6d09b5e0f4fdeb801b05a90540da16e9"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>isComplete</b> () const -&gt; bool</td></tr>
+<tr class="separator:a6d09b5e0f4fdeb801b05a90540da16e9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a993e6efa3d4c8196286d12bdf045c971"><td class="memItemLeft" align="right" valign="top"><a id="a993e6efa3d4c8196286d12bdf045c971"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>isIncomplete</b> () const -&gt; bool</td></tr>
+<tr class="separator:a993e6efa3d4c8196286d12bdf045c971"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aea028a6a01b8f62e01194ff9925bd510"><td class="memItemLeft" align="right" valign="top"><a id="aea028a6a01b8f62e01194ff9925bd510"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>isCommutativeCall</b> () const -&gt; bool</td></tr>
+<tr class="separator:aea028a6a01b8f62e01194ff9925bd510"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a74a4622a12aa70dec88d9f8995dc0c4d"><td class="memItemLeft" align="right" valign="top"><a id="a74a4622a12aa70dec88d9f8995dc0c4d"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>isMulAdd</b> () const -&gt; bool</td></tr>
+<tr class="separator:a74a4622a12aa70dec88d9f8995dc0c4d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a44f7dd43ee0da972dc2a980296b49bf4"><td class="memItemLeft" align="right" valign="top"><a id="a44f7dd43ee0da972dc2a980296b49bf4"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>associativeOperandsFlag</b> () const -&gt; uint8_t</td></tr>
+<tr class="separator:a44f7dd43ee0da972dc2a980296b49bf4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a60376f2a291a0ae614f3c946903fdcd1"><td class="memItemLeft" align="right" valign="top"><a id="a60376f2a291a0ae614f3c946903fdcd1"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator==</b> (<a class="el" href="classpoly_1_1IR_1_1Inst.html">Inst</a> const &amp;other) const -&gt; bool</td></tr>
+<tr class="separator:a60376f2a291a0ae614f3c946903fdcd1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_methods_classpoly_1_1IR_1_1Node"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_classpoly_1_1IR_1_1Node')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="classpoly_1_1IR_1_1Node.html">poly::IR::Node</a></td></tr>
 <tr class="memitem:a2db9f684321389aa69abcf4f0d26979f inherit pub_methods_classpoly_1_1IR_1_1Node"><td class="memItemLeft" align="right" valign="top"><a id="a2db9f684321389aa69abcf4f0d26979f"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getKind</b> () const -&gt; ValKind</td></tr>
@@ -157,9 +178,9 @@ Protected Member Functions</h2></td></tr>
 <tr class="memitem:a0f2affc6e8913100481850eabb6b366c"><td class="memItemLeft" align="right" valign="top"><a id="a0f2affc6e8913100481850eabb6b366c"></a>
 constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Inst</b> (ValKind k)</td></tr>
 <tr class="separator:a0f2affc6e8913100481850eabb6b366c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a23a87fabf25154c74c065183da12d280"><td class="memItemLeft" align="right" valign="top"><a id="a23a87fabf25154c74c065183da12d280"></a>
-constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Inst</b> (ValKind k, UList&lt; <a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a> * &gt; *op, UList&lt; <a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a> * &gt; *pred)</td></tr>
-<tr class="separator:a23a87fabf25154c74c065183da12d280"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0da14f5ed74a11092e6bf879588625bc"><td class="memItemLeft" align="right" valign="top"><a id="a0da14f5ed74a11092e6bf879588625bc"></a>
+constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Inst</b> (ValKind k, UList&lt; <a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a> * &gt; *op)</td></tr>
+<tr class="separator:a0da14f5ed74a11092e6bf879588625bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pro_methods_classpoly_1_1IR_1_1Node"><td colspan="2" onclick="javascript:toggleInherit('pro_methods_classpoly_1_1IR_1_1Node')"><img src="closed.png" alt="-"/>&#160;Protected Member Functions inherited from <a class="el" href="classpoly_1_1IR_1_1Node.html">poly::IR::Node</a></td></tr>
 <tr class="memitem:a2a3192030ebb23d5f9c96b24f499e31d inherit pro_methods_classpoly_1_1IR_1_1Node"><td class="memItemLeft" align="right" valign="top"><a id="a2a3192030ebb23d5f9c96b24f499e31d"></a>
 constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Node</b> (ValKind kind)</td></tr>
@@ -173,9 +194,18 @@ Protected Attributes</h2></td></tr>
 <tr class="memitem:ab78105a4d7727901d8fbbf5fef0626f0"><td class="memItemLeft" align="right" valign="top"><a id="ab78105a4d7727901d8fbbf5fef0626f0"></a>
 UList&lt; <a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a> * &gt; *&#160;</td><td class="memItemRight" valign="bottom"><b>operands</b></td></tr>
 <tr class="separator:ab78105a4d7727901d8fbbf5fef0626f0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6a24811f7753fca240d27baf5dc2406c"><td class="memItemLeft" align="right" valign="top"><a id="a6a24811f7753fca240d27baf5dc2406c"></a>
-UList&lt; <a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a> * &gt; *&#160;</td><td class="memItemRight" valign="bottom"><b>predicates</b> {nullptr}</td></tr>
-<tr class="separator:a6a24811f7753fca240d27baf5dc2406c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae8bff86fa00693c478235c2c30884346"><td class="memItemLeft" align="right" valign="top"><a id="ae8bff86fa00693c478235c2c30884346"></a>
+llvm::Instruction *&#160;</td><td class="memItemRight" valign="bottom"><b>inst</b> {nullptr}</td></tr>
+<tr class="separator:ae8bff86fa00693c478235c2c30884346"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a16b2a37dc81fd2deefdd4f44b27273dc"><td class="memItemLeft" align="right" valign="top"><a id="a16b2a37dc81fd2deefdd4f44b27273dc"></a>
+llvm::Type *&#160;</td><td class="memItemRight" valign="bottom"><b>type</b></td></tr>
+<tr class="separator:a16b2a37dc81fd2deefdd4f44b27273dc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5c6ddb84aa1f6f2409923590f0c4d62f"><td class="memItemLeft" align="right" valign="top"><a id="a5c6ddb84aa1f6f2409923590f0c4d62f"></a>
+<a class="el" href="structpoly_1_1IR_1_1RecipThroughputLatency.html">RecipThroughputLatency</a>&#160;</td><td class="memItemRight" valign="bottom"><b>costs</b> [2]</td></tr>
+<tr class="separator:a5c6ddb84aa1f6f2409923590f0c4d62f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa2f2f51f54c8b9e159cd0ff072fc8a8b"><td class="memItemLeft" align="right" valign="top"><a id="aa2f2f51f54c8b9e159cd0ff072fc8a8b"></a>
+llvm::Intrinsic::ID&#160;</td><td class="memItemRight" valign="bottom"><b>op</b></td></tr>
+<tr class="separator:aa2f2f51f54c8b9e159cd0ff072fc8a8b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab0786bdf361d18db962ff4ebbb2f9da0"><td class="memItemLeft" align="right" valign="top"><a id="ab0786bdf361d18db962ff4ebbb2f9da0"></a>
 llvm::FastMathFlags&#160;</td><td class="memItemRight" valign="bottom"><b>fastMathFlags</b></td></tr>
 <tr class="separator:ab0786bdf361d18db962ff4ebbb2f9da0"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -200,6 +230,7 @@ Additional Inherited Members</h2></td></tr>
 , <br />
 &#160;&#160;<b>VK_Intr</b>
 , <b>VK_Oprn</b>
+, <b>L</b>
 <br />
  }</td></tr>
 <tr class="separator:a261286179dec41f453e599a0c8133602 inherit pub_types_classpoly_1_1IR_1_1Node"><td class="memSeparator" colspan="2">&#160;</td></tr>

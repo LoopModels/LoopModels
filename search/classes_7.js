@@ -1,6 +1,7 @@
 var searchData=
 [
-  ['hash_3c_20intr_3a_3aintrinsic_20_3e_164',['hash&lt; Intr::Intrinsic &gt;',['../structpoly_1_1IR_1_1std_1_1hash_3_01Intr_1_1Intrinsic_01_4.html',1,'poly::IR::std']]],
-  ['hash_3c_20intr_3a_3auniqueidentifier_20_3e_165',['hash&lt; Intr::UniqueIdentifier &gt;',['../structpoly_1_1IR_1_1std_1_1hash_3_01Intr_1_1UniqueIdentifier_01_4.html',1,'poly::IR::std']]],
-  ['hash_3c_20poly_3a_3air_3a_3aoperands_20_3e_166',['hash&lt; poly::IR::Operands &gt;',['../structstd_1_1hash_3_01poly_1_1IR_1_1Operands_01_4.html',1,'std']]]
+  ['inst_169',['Inst',['../classpoly_1_1IR_1_1Inst.html',1,'poly::IR']]],
+  ['instbyvalue_170',['InstByValue',['../structpoly_1_1IR_1_1InstByValue.html',1,'poly::IR']]],
+  ['intersection_171',['Intersection',['../structpoly_1_1IR_1_1Predicate_1_1Intersection.html',1,'poly::IR::Predicate']]],
+  ['iterator_5ftraits_3c_20linearprogramloopblock_3a_3agraph_20_3e_172',['iterator_traits&lt; LinearProgramLoopBlock::Graph &gt;',['../structstd_1_1iterator__traits_3_01LinearProgramLoopBlock_1_1Graph_01_4.html',1,'std']]]
 ];

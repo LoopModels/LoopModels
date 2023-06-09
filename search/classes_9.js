@@ -1,9 +1,10 @@
 var searchData=
 [
-  ['linearprogramloopblock_172',['LinearProgramLoopBlock',['../classLinearProgramLoopBlock.html',1,'']]],
-  ['linearsymboliccomparator_173',['LinearSymbolicComparator',['../structpoly_1_1comparator_1_1LinearSymbolicComparator.html',1,'poly::comparator']]],
-  ['literalcomparator_174',['LiteralComparator',['../structpoly_1_1comparator_1_1LiteralComparator.html',1,'poly::comparator']]],
-  ['loop_175',['Loop',['../classpoly_1_1IR_1_1Loop.html',1,'poly::IR::Loop'],['../classpoly_1_1poly_1_1Loop.html',1,'poly::poly::Loop']]],
-  ['looptree_176',['LoopTree',['../structLoopTree.html',1,'']]],
-  ['looptreeschedule_177',['LoopTreeSchedule',['../classCostModeling_1_1LoopTreeSchedule.html',1,'CostModeling']]]
+  ['map_179',['Map',['../structpoly_1_1IR_1_1Predicate_1_1Map.html',1,'poly::IR::Predicate']]],
+  ['mapvector_180',['MapVector',['../classpoly_1_1dict_1_1MapVector.html',1,'poly::dict']]],
+  ['mapvector_3c_20llvm_3a_3abasicblock_20_2a_2c_20poly_3a_3air_3a_3apredicate_3a_3aset_20_3e_181',['MapVector&lt; llvm::BasicBlock *, poly::IR::Predicate::Set &gt;',['../classpoly_1_1dict_1_1MapVector.html',1,'poly::dict']]],
+  ['memoryaccess_182',['MemoryAccess',['../structMemoryAccess.html',1,'']]],
+  ['mergingcost_183',['MergingCost',['../structpoly_1_1IR_1_1MergingCost.html',1,'poly::IR']]],
+  ['mockgraph_184',['MockGraph',['../structMockGraph.html',1,'']]],
+  ['mockvertex_185',['MockVertex',['../structMockVertex.html',1,'']]]
 ];
