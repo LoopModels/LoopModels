@@ -110,13 +110,10 @@ struct RecipThroughputLatency {
   }
 };
 
-// The descendants of `Inst` have no fields, so that
-// we can allocate incomplete `Inst` and later cast
-// to the appropriate object type upon completion.
 class Inst : public Node {
 
 protected:
-  UList<Node *> *operands;
+  UList<Node *> *operands{nullptr};
   llvm::Instruction *inst{nullptr};
   llvm::Type *type;
   RecipThroughputLatency costs[2];
@@ -125,11 +122,13 @@ protected:
   llvm::FastMathFlags fastMathFlags;
 
   constexpr Inst(ValKind k) : Node(k) {}
-  constexpr Inst(ValKind k, UList<Node *> *op) : Node(k), operands(op) {}
+  constexpr Inst(ValKind k, llvm::Instruction *i, llvm::Intrinsic::ID id)
+    : Node(k), inst(i), type(i->getType()), op(id),
+      fastMathFlags(i->getFastMathFlags()) {}
 
 public:
   static constexpr auto classof(const Node *v) -> bool {
-    return v->getKind() >= VK_Intr;
+    return v->getKind() >= VK_Func;
   }
   constexpr auto getLLVMInstruction() const -> llvm::Instruction * {
     return inst;
@@ -158,12 +157,12 @@ public:
     return false;
   }
   [[nodiscard]] auto isMulAdd() const -> bool {
-    return (getKind() == VK_Intr) &&
+    return (getKind() == VK_Call) &&
            ((op == llvm::Intrinsic::fmuladd) || (op == llvm::Intrinsic::fma));
   }
   [[nodiscard]] auto associativeOperandsFlag() const -> uint8_t {
     switch (getKind()) {
-    case VK_Intr: return (isMulAdd() || isCommutativeCall()) ? 0x3 : 0;
+    case VK_Call: return (isMulAdd() || isCommutativeCall()) ? 0x3 : 0;
     case VK_Oprn:
       switch (op) {
       case llvm::Instruction::FAdd:
@@ -226,6 +225,8 @@ public:
 };
 // a non-call
 class Operation : public Inst {
+public:
+  Operation(llvm::Instruction *i) : Inst(VK_Oprn, i, i->getOpcode()) {}
   [[nodiscard]] auto getOpCode() const -> llvm::Intrinsic::ID { return op; }
   static auto getOpCode(llvm::Value *v) -> std::optional<llvm::Intrinsic::ID> {
     if (auto *i = llvm::dyn_cast<llvm::Instruction>(v)) return i->getOpcode();
@@ -280,7 +281,6 @@ class Operation : public Inst {
     return isInstruction(llvm::Instruction::InsertValue);
   }
 
-public:
   static constexpr auto classof(const Node *v) -> bool {
     return v->getKind() == VK_Oprn;
   }
@@ -290,7 +290,7 @@ class Call : public Inst {
 
 public:
   static constexpr auto classof(const Node *v) -> bool {
-    return v->getKind() == VK_Intr;
+    return v->getKind() == VK_Call;
   }
   [[nodiscard]] auto getIntrinsicID() const -> llvm::Intrinsic::ID {
     return intrin;

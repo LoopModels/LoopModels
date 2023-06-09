@@ -9,7 +9,7 @@ namespace poly::IR {
 using dict::map;
 class Cache {
   map<llvm::Value *, Node *> llvmToInternalMap;
-  map<UniqueIdentifier, Node *> argMap;
+  // map<UniqueIdentifier, Node *> argMap;
   BumpAlloc<> alloc;
   // tmp is used in case we don't need an allocation
   // Instruction *tmp{nullptr};
@@ -25,6 +25,40 @@ class Cache {
   //         return new (alloc) Instruction(id, type);
   //     }
   // }
+  //
+  auto getValue(llvm::Value *v, llvm::Loop *L) -> Node * {
+    auto &n = llvmToInternalMap[v];
+    if (n) return n;
+    n = createValue(v, L);
+    return n;
+  }
+  auto createValue(llvm::Value *v, llvm::Loop *L) -> Node * {
+    if (auto *i = llvm::dyn_cast<llvm::Instruction>(v))
+      return createInstruction(i, L);
+    else if (auto *c = llvm::dyn_cast<llvm::ConstantInt>(v))
+      return createConstantInt(c);
+    else if (auto *c = llvm::dyn_cast<llvm::ConstantFP>(v))
+      return createConstantFP(c);
+    else return createConstantVal(v);
+  }
+  auto createInstruction(llvm::Instruction *i, llvm::Loop *L) -> Node * {
+    Inst *n;
+    Node::ValKind kind = Node::getInstKind(i);
+    if (kind == Inst::VK_Oprn) n = alloc.create<Operation>(i, L);
+    else if (kind == Inst::VK_Call) n = alloc.create<Call>(i, L);
+    else {
+      invariant(kind == Inst::VK_Func);
+      n = alloc.create<OpaqueFunc>(i, L);
+    }
+
+    // = alloc.create<Inst>(i, L);
+    for (auto &op : i->operands()) {
+      auto *v = getValue(op, L);
+      n->operands.push_back(v);
+      v->users.push_back(n);
+    }
+    return n;
+  }
   auto operator[](llvm::Value *v) -> Intr * {
     auto f = llvmToInternalMap.find(v);
     if (f != llvmToInternalMap.end()) return f->second;

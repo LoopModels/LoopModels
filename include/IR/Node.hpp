@@ -4,6 +4,8 @@
 #include "Utilities/Allocators.hpp"
 #include <Math/Array.hpp>
 #include <cstdint>
+#include <llvm/IR/Constants.h>
+#include <llvm/IR/Intrinsics.h>
 #include <llvm/IR/Type.h>
 #include <llvm/IR/Value.h>
 #include <llvm/Support/Casting.h>
@@ -92,7 +94,7 @@ public:
     VK_Cint,
     VK_Cflt,
     VK_Func,
-    VK_Intr,
+    VK_Call,
     VK_Oprn,
     L
   };
@@ -138,6 +140,20 @@ public:
   }
   constexpr void forEach(const auto &f) {
     for (Node *n = this; n; n = n->getNext()) f(n);
+  }
+  static auto getInstKind(llvm::Instruction *v) -> ValKind {
+    if (auto *c = llvm::dyn_cast<llvm::CallInst>(v))
+      return c->getIntrinsicID() == llvm::Intrinsic::not_intrinsic ? VK_Func
+                                                                   : VK_Call;
+    return VK_Oprn;
+  }
+  static auto getKind(llvm::Value *v) -> ValKind {
+    if (llvm::isa<llvm::LoadInst>(v)) return VK_Load;
+    if (llvm::isa<llvm::StoreInst>(v)) return VK_Stow;
+    if (auto *I = llvm::dyn_cast<llvm::Instruction>(v)) return getInstKind(I);
+    if (llvm::isa<llvm::ConstantInt>(v)) return VK_Cint;
+    if (llvm::isa<llvm::ConstantFP>(v)) return VK_Cflt;
+    return VK_CVal;
   }
 };
 
