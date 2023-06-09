@@ -3,6 +3,7 @@
 #include "IR/Address.hpp"
 #include "Polyhedra/Loops.hpp"
 #include "Polyhedra/Polyhedra.hpp"
+#include "Support/OStream.hpp"
 #include <Math/Array.hpp>
 #include <Math/Comparisons.hpp>
 #include <Math/Math.hpp>
@@ -26,16 +27,14 @@
 #include <utility>
 
 namespace poly::poly {
-using utils::OStream;
 /// prints in current permutation order.
 /// TODO: decide if we want to make poly::Loop a `SymbolicPolyhedra`
 /// in which case, we have to remove `currentToOriginalPerm`,
 /// which menas either change printing, or move prints `<<` into
 /// the derived classes.
-template <OStream OS>
-inline auto printConstraints(OS &os, DensePtrMatrix<int64_t> A,
+inline auto printConstraints(std::ostream &os, DensePtrMatrix<int64_t> A,
                              llvm::ArrayRef<const llvm::SCEV *> syms,
-                             bool inequality = true) -> OS & {
+                             bool inequality = true) -> std::ostream & {
   const Row numConstraints = A.numRow();
   const unsigned numSyms = syms.size() + 1;
   for (Row c = 0; c < numConstraints; ++c) {
@@ -43,9 +42,9 @@ inline auto printConstraints(OS &os, DensePtrMatrix<int64_t> A,
     for (size_t v = 1; v < numSyms; ++v) {
       if (int64_t Acv = A(c, v)) {
         os << (Acv > 0 ? " + " : " - ");
-        Acv = constexpr_abs(Acv);
+        Acv = math::constexpr_abs(Acv);
         if (Acv != 1) os << Acv << "*";
-        os << *syms[v - 1];
+        utils::llvmOStreamPrint(os, *syms[v - 1]);
       }
     }
     os << "\n";

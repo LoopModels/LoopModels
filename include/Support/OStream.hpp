@@ -4,7 +4,8 @@
 #include <llvm/Support/raw_ostream.h>
 #include <sstream>
 
-namespace poly::math {
+namespace poly {
+namespace math {
 
 // we go through ostringstream to adapt `std::ostream` print methods to
 // `llvm::raw_ostream`
@@ -36,5 +37,14 @@ inline auto operator<<(llvm::raw_ostream &os, Array<T, DenseDims> A)
   -> std::ostream & {
   return printMatrix(os, PtrMatrix<T>{A});
 }
+} // namespace math
+namespace utils {
+inline void llvmOStreamPrint(std::ostream &os, const auto &x) {
+  llvm::SmallVector<char> buff;
+  llvm::raw_svector_ostream llos{buff};
+  llos << x;
+  os << std::string_view(llos.str());
+}
 
-} // namespace poly::math
+} // namespace utils
+} // namespace poly

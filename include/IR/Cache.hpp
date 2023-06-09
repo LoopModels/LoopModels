@@ -10,7 +10,7 @@ using dict::map;
 class Cache {
   map<llvm::Value *, Node *> llvmToInternalMap;
   map<UniqueIdentifier, Node *> argMap;
-  llvm::SmallVector<Intr *> predicates;
+  BumpAlloc<> alloc;
   // tmp is used in case we don't need an allocation
   // Instruction *tmp{nullptr};
   // auto allocate(BumpAlloc<> &alloc, Intrinsic id,

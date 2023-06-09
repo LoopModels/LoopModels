@@ -316,7 +316,7 @@ struct Set {
     return intersectUnion.intersects->begin();
   }
   [[nodiscard]] static constexpr auto end() {
-    return poly::containers::UList<poly::IR::Predicate::Intersection>::end();
+    return containers::UList<IR::Predicate::Intersection>::end();
   }
   void simplify() const {
     bool simplifyPreds = allocated;

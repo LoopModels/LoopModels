@@ -11,6 +11,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <limits>
+#include <llvm/Support/raw_ostream.h>
 #include <memory>
 #ifndef NDEBUG
 #include <ostream>
@@ -19,8 +20,9 @@ namespace poly::poly {
 using math::DensePtrMatrix, math::MutDensePtrMatrix, math::EmptyMatrix,
   math::Row, math::Col, math::vector, math::matrix, math::_, math::end,
   math::last;
-using utils::OStream, utils::BumpAlloc;
-template <OStream O> inline auto printPositive(O &os, size_t stop) -> O & {
+using utils::BumpAlloc;
+inline auto printPositive(llvm::raw_ostream &os, size_t stop)
+  -> llvm::raw_ostream & {
   for (size_t i = 0; i < stop; ++i) os << "v_" << i << " >= 0\n";
   return os;
 }
@@ -228,8 +230,8 @@ struct BasePolyhedra {
     dropEmptyConstraints(getA());
     if constexpr (HasEqualities) dropEmptyConstraints(getE());
   }
-  template <OStream O>
-  friend inline auto operator<<(O &os, const BasePolyhedra &p) -> O & {
+  friend inline auto operator<<(llvm::raw_ostream &os, const BasePolyhedra &p)
+    -> llvm::raw_ostream & {
     auto &&os2 = printConstraints(os << "\n", p.getA());
     if constexpr (MaybeNonNeg)
       if (p.isNonNegative()) printPositive(os2, p.getNumDynamic());

@@ -1,13 +1,11 @@
 #pragma once
 
 #include "Dicts/BumpMapSet.hpp"
-#include "Dicts/BumpVector.hpp"
-#include "Dicts/MapVector.hpp"
 #include "IR/Address.hpp"
 #include "IR/Node.hpp"
+#include "IR/Operands.hpp"
 #include "IR/Predicate.hpp"
 #include <Containers/UnrolledList.hpp>
-#include <IR/Operands.hpp>
 #include <Math/Array.hpp>
 #include <Utilities/Allocators.hpp>
 #include <algorithm>
@@ -112,25 +110,36 @@ struct RecipThroughputLatency {
   }
 };
 
+// The descendants of `Inst` have no fields, so that
+// we can allocate incomplete `Inst` and later cast
+// to the appropriate object type upon completion.
 class Inst : public Node {
 
 protected:
   UList<Node *> *operands;
-  UList<Node *> *predicates{nullptr};
+  llvm::Instruction *inst{nullptr};
+  llvm::Type *type;
+  RecipThroughputLatency costs[2];
+  llvm::Intrinsic::ID op;
+  // UList<Node *> *predicates{nullptr};
   llvm::FastMathFlags fastMathFlags;
 
   constexpr Inst(ValKind k) : Node(k) {}
-  constexpr Inst(ValKind k, UList<Node *> *op, UList<Node *> *pred)
-    : Node(k), operands(op), predicates(pred) {}
+  constexpr Inst(ValKind k, UList<Node *> *op) : Node(k), operands(op) {}
 
 public:
   static constexpr auto classof(const Node *v) -> bool {
     return v->getKind() >= VK_Intr;
   }
-  constexpr auto getPredicate() -> UList<Node *> * { return predicates; }
-  constexpr auto getPredicate() const -> UList<Node *> const * {
-    return predicates;
+  constexpr auto getLLVMInstruction() const -> llvm::Instruction * {
+    return inst;
   }
+  // constexpr auto getPredicate() -> UList<Node *> * { return predicates; }
+  // constexpr auto getPredicate() const -> UList<Node *> const * {
+  //   return predicates;
+  // }
+  constexpr auto getType() const -> llvm::Type * { return type; }
+  constexpr auto getOpId() const -> llvm::Intrinsic::ID { return op; }
   auto getOperands() -> UList<Node *> * { return operands; }
   constexpr auto getOperands() const -> UList<Node *> const * {
     return operands;
@@ -138,35 +147,96 @@ public:
   [[nodiscard]] auto allowsContract() const -> bool {
     return fastMathFlags.allowContract();
   }
+  auto isComplete() const -> bool {
+    return (operands != nullptr) || (inst == nullptr) ||
+           (inst->getNumOperands() == 0);
+  }
+  auto isIncomplete() const -> bool { return !isComplete(); }
+  [[nodiscard]] auto isCommutativeCall() const -> bool {
+    if (auto *intrin = llvm::dyn_cast_or_null<llvm::IntrinsicInst>(inst))
+      return intrin->isCommutative();
+    return false;
+  }
+  [[nodiscard]] auto isMulAdd() const -> bool {
+    return (getKind() == VK_Intr) &&
+           ((op == llvm::Intrinsic::fmuladd) || (op == llvm::Intrinsic::fma));
+  }
+  [[nodiscard]] auto associativeOperandsFlag() const -> uint8_t {
+    switch (getKind()) {
+    case VK_Intr: return (isMulAdd() || isCommutativeCall()) ? 0x3 : 0;
+    case VK_Oprn:
+      switch (op) {
+      case llvm::Instruction::FAdd:
+      case llvm::Instruction::Add:
+      case llvm::Instruction::FMul:
+      case llvm::Instruction::Mul:
+      case llvm::Instruction::And:
+      case llvm::Instruction::Or:
+      case llvm::Instruction::Xor: return 0x3;
+      default: break;
+      }
+    default: break;
+    }
+    return 0;
+  }
+  auto operator==(Inst const &other) const -> bool {
+    if ((getKind() != other.getKind()) || (op != other.op) ||
+        (getType() != other.getType()) || (isComplete() != other.isComplete()))
+      return false;
+    if (isIncomplete())
+      return getLLVMInstruction() == other.getLLVMInstruction();
+    if ((operands == other.operands) || (*operands == *other.operands))
+      return true;
+    if (uint8_t flag = associativeOperandsFlag()) {
+      invariant(flag, uint8_t(3));
+      auto otherOps = other.getOperands();
+      if (operands->getHeadCount() != otherOps->getHeadCount()) return false;
+      if ((operands->getNext() != nullptr) || (otherOps->getNext() != nullptr))
+        return false;
+      auto *op0 = (*operands)[0];
+      auto *ot0 = (*otherOps)[0];
+      auto *op1 = (*operands)[1];
+      auto *ot1 = (*otherOps)[1];
+      if ((op0 == ot0) && (op1 == ot1)) return false;
+      if ((op0 != ot1) || (op1 != ot0)) return false;
+      // so they do commute. Now we need to check remainder...
+      for (size_t i = 2; i < operands->getHeadCount(); ++i)
+        if ((*operands)[i] != (*otherOps)[i]) return false;
+      return true;
+    }
+    return false;
+  }
 };
 
-class Func : public Inst {
-  llvm::Function *func;
+struct InstByValue {
+  Inst *inst;
+  auto operator==(InstByValue const &other) const -> bool {
+    return *inst == *other.inst;
+  }
+};
+
+// some opaque function
+class OpaqueFunc : public Inst {
 
 public:
   static constexpr auto classof(const Node *v) -> bool {
     return v->getKind() == VK_Func;
   }
-  constexpr Func(llvm::Function *f) : Inst(VK_Func), func(f) {}
+  // constexpr Func(llvm::Function *f) : Inst(VK_Func), func(f) {}
 };
-class Op : public Inst {
-  llvm::Intrinsic::ID opcode;
-  struct Identifier {
-    llvm::Intrinsic::ID op;
-    UList<Node *> *operands;
-    UList<Node *> *predicates;
-  };
-  [[nodiscard]] auto getOpCode() const -> llvm::Intrinsic::ID { return opcode; }
+// a non-call
+class Operation : public Inst {
+  [[nodiscard]] auto getOpCode() const -> llvm::Intrinsic::ID { return op; }
   static auto getOpCode(llvm::Value *v) -> std::optional<llvm::Intrinsic::ID> {
     if (auto *i = llvm::dyn_cast<llvm::Instruction>(v)) return i->getOpcode();
     return {};
   }
   [[nodiscard]] constexpr auto isInstruction(llvm::Intrinsic::ID opCode) const
     -> bool {
-    return opcode == opCode;
+    return op == opCode;
   }
   static auto isFMul(Node *n) -> bool {
-    if (auto *op = llvm::dyn_cast<Op>(n)) return op->isFMul();
+    if (auto *op = llvm::dyn_cast<Operation>(n)) return op->isFMul();
     return false;
   }
   [[nodiscard]] auto isFMul() const -> bool {
@@ -215,7 +285,8 @@ public:
     return v->getKind() == VK_Oprn;
   }
 };
-class Intr : public Inst {
+// a call, e.g. fmuladd, sqrt, sin
+class Call : public Inst {
 
 public:
   static constexpr auto classof(const Node *v) -> bool {
@@ -234,17 +305,6 @@ public:
     -> bool {
     return intrin == opCode;
   }
-  struct Identifier {
-    llvm::Intrinsic::ID id;
-    UList<Node *> *operands;
-    UList<Node *> *predicates;
-  };
-
-  llvm::Intrinsic::ID intrin;
-  llvm::Type *type;
-  // aset<Intr *> users;
-  RecipThroughputLatency costs[2];
-  // math::BumpPtrVector<RecipThroughputLatency> costs;
 
   void setOperands(MutPtrVector<Intr *> ops) {
     operands << ops;
@@ -267,12 +327,12 @@ public:
   [[nodiscard]] auto getNumOperands() const -> size_t {
     return operands->size();
   }
-  explicit Intr(BumpAlloc<> &alloc, llvm::Intrinsic::ID idt, llvm::Type *typ)
-    : Inst(VK_Intr), idtf(idt), type(typ) {}
-  // Instruction(UniqueIdentifier uid)
-  // : id(std::get<0>(uid)), operands(std::get<1>(uid)) {}
-  explicit Intr(BumpAlloc<> &alloc, Identifier uid, llvm::Type *typ)
-    : Inst(VK_Intr, uid.operands, uid.predicates), idtf(uid.id), type(typ) {}
+  // explicit Intr(BumpAlloc<> &alloc, llvm::Intrinsic::ID idt, llvm::Type *typ)
+  //   : Inst(VK_Intr), idtf(idt), type(typ) {}
+  // // Instruction(UniqueIdentifier uid)
+  // // : id(std::get<0>(uid)), operands(std::get<1>(uid)) {}
+  // explicit Intr(BumpAlloc<> &alloc, Identifier uid, llvm::Type *typ)
+  //   : Inst(VK_Intr, uid.operands, uid.predicates), idtf(uid.id), type(typ) {}
 
   [[nodiscard]] static auto // NOLINTNEXTLINE(misc-no-recursion)
   getUniqueIdentifier(BumpAlloc<> &alloc, Cache &cache, llvm::Instruction *v)
@@ -716,29 +776,6 @@ public:
     default: return RecipThroughputLatency::getInvalid();
     }
   }
-  [[nodiscard]] auto isCommutativeCall() const -> bool {
-    if (auto *intrin =
-          llvm::dyn_cast_or_null<llvm::IntrinsicInst>(getInstruction()))
-      return intrin->isCommutative();
-    return false;
-  }
-  [[nodiscard]] auto associativeOperandsFlag() const -> uint8_t {
-    Optional<const Intrinsic *> idop = getIntrinsic();
-    if (!idop) return 0;
-    switch (idop->opcode.id) {
-    case llvm::Instruction::Call:
-      if (!(isMulAdd() || isCommutativeCall())) return 0;
-      // fall through
-    case llvm::Instruction::FAdd:
-    case llvm::Instruction::Add:
-    case llvm::Instruction::FMul:
-    case llvm::Instruction::Mul:
-    case llvm::Instruction::And:
-    case llvm::Instruction::Or:
-    case llvm::Instruction::Xor: return 0x3;
-    default: return 0;
-    }
-  }
   // NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
   void replaceOperand(Intr *old, Intr *new_) {
     for (auto &&op : operands)
@@ -803,21 +840,6 @@ inline auto getIdentifier(llvm::Value *v) -> std::optional<Intrinsic> {
   return std::nullopt;
 }
 
-template <> struct std::hash<Intr::Intrinsic> {
-  auto operator()(const Intr::Intrinsic &s) const noexcept -> size_t {
-    return llvm::detail::combineHashValue(std::hash<unsigned>{}(s.opcode.id),
-                                          std::hash<unsigned>{}(s.intrin.id));
-  }
-};
-
-template <> struct std::hash<Intr::UniqueIdentifier> {
-  auto operator()(const Intr::UniqueIdentifier &s) const noexcept -> size_t {
-    return llvm::detail::combineHashValue(
-      std::hash<Intr::Identifier>{}(s.idtf),
-      std::hash<MutPtrVector<Intr *>>{}(s.operands));
-  }
-};
-
 // NOLINTNEXTLINE(misc-no-recursion)
 inline auto Intr::Cache::getInstruction(BumpAlloc<> &alloc,
                                         Predicate::Map &predMap,
@@ -880,3 +902,55 @@ static_assert(std::is_trivially_destructible_v<math::BumpPtrVector<Intr *>>);
 // llvm::Intrinsic::IndependentIntrinsics x = llvm::Intrinsic::sqrt;
 // llvm::Intrinsic::IndependentIntrinsics y = llvm::Intrinsic::sin;
 } // namespace poly::IR
+
+// update x with the hash `y`
+constexpr auto combineHash(uint64_t x, uint64_t y) -> uint64_t {
+  // trunc(UInt64,Int128(2)^64/big(Base.MathConstants.golden))
+  constexpr uint64_t magic = 0x9e3779b97f4a7c15ULL;
+  return x ^ (y + magic + (x << 6) + (x >> 2));
+};
+template <> struct std::hash<Intr::Intrinsic> {
+  auto operator()(const Intr::Intrinsic &s) const noexcept -> size_t {
+    return llvm::detail::combineHashValue(std::hash<unsigned>{}(s.opcode.id),
+                                          std::hash<unsigned>{}(s.intrin.id));
+  }
+};
+
+template <> struct std::hash<Intr::UniqueIdentifier> {
+  auto operator()(const Intr::UniqueIdentifier &s) const noexcept -> size_t {
+    return llvm::detail::combineHashValue(
+      std::hash<Intr::Identifier>{}(s.idtf),
+      std::hash<MutPtrVector<Intr *>>{}(s.operands));
+  }
+};
+
+/// here, we define an avalanching hash function for `InstByValue`
+///
+template <> struct ankerl::unordered_dense::hash<poly::IR::InstByValue> {
+  using is_avalanching = void;
+  [[nodiscard]] auto operator()(poly::IR::InstByValue const &x) const noexcept
+    -> uint64_t {
+    using detail::wyhash::hash, poly::containers::UList, poly::IR::Node;
+    uint64_t seed = hash(x.inst->getKind());
+    seed = combineHash(seed, hash(x.inst->getType()));
+    seed = combineHash(seed, hash(x.inst->getOpId()));
+    if (x.inst->isIncomplete())
+      return combineHash(seed, hash(x.inst->getLLVMInstruction()));
+    uint8_t assocFlag = x.inst->associativeOperandsFlag();
+    // combine all operands
+    size_t offset = 0;
+    UList<Node *> *operands = x.inst->getOperands();
+    if (assocFlag) {
+      invariant(assocFlag, uint8_t(3));
+      // we combine hashes in a commutative way
+      seed = combineHash(seed, hash((*operands)[0]) + hash((*operands)[1]));
+      offset = 2;
+    }
+    for (UList<Node *> *L = operands; L; L = L->getNext()) {
+      for (Node **B = L->dbegin() + offset, E = L->dend(); B != E; ++B)
+        seed = combineHash(seed, hash(*B));
+      offset = 0;
+    }
+    return seed;
+  }
+};

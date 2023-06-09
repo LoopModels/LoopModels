@@ -94,6 +94,7 @@ public:
     VK_Func,
     VK_Intr,
     VK_Oprn,
+    L
   };
 
 private:

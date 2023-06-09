@@ -47,6 +47,8 @@
 #include <ranges>
 #include <utility>
 
+namespace poly {
+
 // NOLINTNEXTLINE(misc-no-recursion)
 inline auto countNumLoopsPlusLeaves(const llvm::Loop *L) -> size_t {
   const std::vector<llvm::Loop *> &subLoops = L->getSubLoops();
@@ -61,8 +63,8 @@ concept LoadOrStoreInst =
   std::same_as<llvm::StoreInst, std::remove_cvref_t<T>>;
 
 class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
-  [[no_unique_address]] poly::IR::Loop *forest;
-  [[no_unique_address]] map<llvm::Loop *, poly::IR::Loop *> loopMap;
+  [[no_unique_address]] IR::Loop *forest;
+  [[no_unique_address]] map<llvm::Loop *, IR::Loop *> loopMap;
   [[no_unique_address]] const llvm::TargetLibraryInfo *TLI;
   [[no_unique_address]] const llvm::TargetTransformInfo *TTI;
   [[no_unique_address]] llvm::LoopInfo *LI;
@@ -70,7 +72,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
   [[no_unique_address]] llvm::OptimizationRemarkEmitter *ORE;
   [[no_unique_address]] LinearProgramLoopBlock loopBlock;
   [[no_unique_address]] BumpAlloc<> allocator;
-  [[no_unique_address]] poly::IR::Cache instrCache;
+  [[no_unique_address]] IR::Cache instrCache;
   [[no_unique_address]] CostModeling::CPURegisterFile registers;
 
   /// the process of building the LoopForest has the following steps:
@@ -142,8 +144,8 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
   /// accesses. Either because an affine representation is not possible, or
   /// because our analysis failed and needs improvement.
   struct TreeResult {
-    Addr *addr{nullptr};
-    Node *node{nullptr};
+    IR::Addr *addr{nullptr};
+    IR::Node *node{nullptr};
     size_t rejectDepth{0};
     constexpr auto reject(size_t depth) -> bool {
       return (depth < rejectDepth) || (addr == nullptr);
@@ -168,12 +170,12 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
       return *this;
     }
   };
-  void addInstructions(Addr *addr, llvm::Loop *L) {
+  void addInstructions(IR::Addr *addr, llvm::Loop *L) {
     addr->forEach([&, L](Addr *a) { instrCache.addParents(a, L); });
   }
   auto parseBlocks(llvm::BasicBlock *H, llvm::BasicBlock *E, llvm::Loop *L,
                    MutPtrVector<unsigned> omega, NotNull<poly::Loop> AL,
-                   Node *out) -> TreeResult {
+                   IR::Node *out) -> TreeResult {
     // TODO: need to be able to connect instructions as we move out
     if (auto predMapAbridged =
           Predicate::Map::descend(allocator, instrCache, H, E, L)) {
@@ -819,3 +821,4 @@ public:
   //   for (auto l : loopForests) l->~LoopTree();
   // }
 };
+} // namespace poly

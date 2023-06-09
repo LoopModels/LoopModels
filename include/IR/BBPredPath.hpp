@@ -6,6 +6,7 @@ namespace poly::IR::Predicate {
 using dict::MapVector;
 struct Map {
   MapVector<llvm::BasicBlock *, Set> map;
+  UList<Node *> *predicates;
   constexpr Map(BumpAlloc<> &alloc) : map(alloc) {}
   Map(const Map &x) = default;
   Map(Map &&x) noexcept : map{std::move(x.map)} {}
@@ -68,7 +69,7 @@ struct Map {
   [[nodiscard]] auto addPredicate(BumpAlloc<> &alloc, IR::Cache &cache,
                                   llvm::Value *value) -> size_t {
     auto *I = cache.getInstruction(alloc, *this, value);
-    assert(cache.predicates.size() <= 32 && "too many predicates");
+    assert(predicates->count <= 32 && "too many predicates");
     for (size_t i = 0; i < cache.predicates.size(); ++i)
       if (cache.predicates[i] == I) return i;
     size_t i = cache.predicates.size();

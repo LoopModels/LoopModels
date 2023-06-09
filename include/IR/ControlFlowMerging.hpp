@@ -53,14 +53,15 @@ struct MergingCost {
   llvm::InstructionCost cost;
   /// returns `true` if `key` was already in ancestors
   /// returns `false` if it had to initialize
-  auto initAncestors(BumpAlloc<> &alloc, Node *key) -> aset<Node *> * {
+  auto initAncestors(BumpAlloc<> &alloc, Inst *key) -> aset<Node *> * {
 
     auto *set = alloc.construct<aset<Node *>>(alloc);
     /// instructions are considered their own ancestor for our purposes
     set->insert(key);
-    for (auto *op : key->operands)
+    key->getOperands()->forEach([&](Node *op) {
       if (auto *f = ancestorMap.find(op); f != ancestorMap.end())
         set->insert(f->second->begin(), f->second->end());
+    });
     ancestorMap[key] = set;
     return set;
   }
@@ -358,8 +359,8 @@ mergeInstructions(BumpAlloc<> &alloc, IR::Cache &cache, Predicate::Map &predMap,
 
 /// mergeInstructions(
 ///    BumpAlloc<> &alloc,
-///    BumpAlloc<> &tmpAlloc,
 ///    IR::Cache &cache,
+///    BumpAlloc<> &tmpAlloc,
 ///    Predicate::Map &predMap
 /// )
 /// merges instructions from predMap what have disparate control flow.
@@ -384,7 +385,6 @@ inline void mergeInstructions(BumpAlloc<> &alloc, IR::Cache &cache,
       if (Node *J = cache[&lI])
         mergeInstructions(tAlloc, cache, predMap, TTI, vectorBits, opMap,
                           mergingCosts, J, pred.first, pred.second);
-  // TODO: pick the minimum cost mergingCost
   MergingCost *minCostStrategy = *std::ranges::min_element(
     mergingCosts, [](auto *a, auto *b) { return *a < *b; });
   // and then apply it to the instructions.
