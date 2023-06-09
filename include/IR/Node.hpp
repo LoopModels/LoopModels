@@ -125,10 +125,7 @@ public:
     next = n;
     n->prev = this;
   }
-  constexpr void setPrev(Node *n) {
-    prev = n;
-    n->next = this;
-  }
+  constexpr void setPrev(Node *n) { n->setNext(this); }
   constexpr void setChild(Node *n) { child = n; }
   constexpr void setParent(Node *n) { parent = n; }
   constexpr void setDepth(unsigned d) { depth = d; }

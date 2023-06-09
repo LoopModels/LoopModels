@@ -99,34 +99,55 @@ inline auto containsCycle(BumpAlloc<> &alloc, llvm::Instruction const *S)
 }
 
 struct RecipThroughputLatency {
-  llvm::InstructionCost recipThroughput;
-  llvm::InstructionCost latency;
-  [[nodiscard]] auto isValid() const -> bool {
-    return recipThroughput.isValid() && latency.isValid();
-  }
-  static auto getInvalid() -> RecipThroughputLatency {
-    return {llvm::InstructionCost::getInvalid(),
-            llvm::InstructionCost::getInvalid()};
-  }
+  llvm::InstructionCost::CostType recipThroughput;
+  llvm::InstructionCost::CostType latency;
+  // llvm::InstructionCost::CostState state;
+  // [[nodiscard]] auto isValid() const -> bool {
+  //   return state == llvm::InstructionCost::Valid;
+  // }
+  // static auto getInvalid() -> RecipThroughputLatency {
+  //   return {0, 0, llvm::InstructionCost::Invalid};
+  // }
 };
 
 class Inst : public Node {
 
 protected:
-  UList<Node *> *operands{nullptr};
   llvm::Instruction *inst{nullptr};
   llvm::Type *type;
-  RecipThroughputLatency costs[2];
-  llvm::Intrinsic::ID op;
-  // UList<Node *> *predicates{nullptr};
-  llvm::FastMathFlags fastMathFlags;
+  RecipThroughputLatency costs[2];   // scalar and vec; may want to add more
+  llvm::Intrinsic::ID op;            // unsigned
+  unsigned numOperands{std::numeric_limits<unsigned>::max()};
+  llvm::FastMathFlags fastMathFlags; // holds unsigned
+  unsigned padding;                  // currently unused
+#if !defined(__clang__) && defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
+#else
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wc99-extensions"
+#endif
+  Node *operands[]; // NOLINT(modernize-avoid-c-arrays)
+#if !defined(__clang__) && defined(__GNUC__)
+#pragma GCC diagnostic pop
+#else
+#pragma clang diagnostic pop
+#endif
 
-  constexpr Inst(ValKind k) : Node(k) {}
+public:
   constexpr Inst(ValKind k, llvm::Instruction *i, llvm::Intrinsic::ID id)
     : Node(k), inst(i), type(i->getType()), op(id),
       fastMathFlags(i->getFastMathFlags()) {}
 
-public:
+  static constexpr auto construct(BumpAlloc<> &alloc, ValKind k,
+                                  llvm::Instruction *i, llvm::Intrinsic::ID id)
+    -> Inst * {
+    unsigned nOps = i->getNumOperands();
+    auto *p = static_cast<Inst *>(
+      alloc.allocate(sizeof(Inst) + sizeof(Node *) * nOps, alignof(Inst)));
+    return std::construct_at(p, k, i, id);
+  }
+
   static constexpr auto classof(const Node *v) -> bool {
     return v->getKind() >= VK_Func;
   }
@@ -139,16 +160,20 @@ public:
   // }
   constexpr auto getType() const -> llvm::Type * { return type; }
   constexpr auto getOpId() const -> llvm::Intrinsic::ID { return op; }
-  auto getOperands() -> UList<Node *> * { return operands; }
-  constexpr auto getOperands() const -> UList<Node *> const * {
-    return operands;
+  constexpr auto getOperands() -> MutPtrVector<Node *> {
+    return {operands, numOperands};
+  }
+  constexpr auto getOperands() const -> PtrVector<Node *> {
+    return {const_cast<Node **>(operands), numOperands};
+  }
+  constexpr auto getFastMathFlags() const -> llvm::FastMathFlags {
+    return fastMathFlags;
   }
   [[nodiscard]] auto allowsContract() const -> bool {
     return fastMathFlags.allowContract();
   }
   auto isComplete() const -> bool {
-    return (operands != nullptr) || (inst == nullptr) ||
-           (inst->getNumOperands() == 0);
+    return (numOperands != std::numeric_limits<unsigned>::max());
   }
   auto isIncomplete() const -> bool { return !isComplete(); }
   [[nodiscard]] auto isCommutativeCall() const -> bool {
@@ -218,6 +243,9 @@ struct InstByValue {
 class OpaqueFunc : public Inst {
 
 public:
+  OpaqueFunc(llvm::Instruction *i)
+    : Inst(VK_Func, i, llvm::Intrinsic::not_intrinsic) {}
+
   static constexpr auto classof(const Node *v) -> bool {
     return v->getKind() == VK_Func;
   }
@@ -292,6 +320,7 @@ public:
   static constexpr auto classof(const Node *v) -> bool {
     return v->getKind() == VK_Call;
   }
+  Call(llvm::Instruction *i) : Inst(VK_Call, i, i->getIntrinsicID()) {}
   [[nodiscard]] auto getIntrinsicID() const -> llvm::Intrinsic::ID {
     return intrin;
   }

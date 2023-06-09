@@ -11,6 +11,7 @@ class Cache {
   map<llvm::Value *, Node *> llvmToInternalMap;
   // map<UniqueIdentifier, Node *> argMap;
   BumpAlloc<> alloc;
+  Inst *loopInvariants{nullptr};
   // tmp is used in case we don't need an allocation
   // Instruction *tmp{nullptr};
   // auto allocate(BumpAlloc<> &alloc, Intrinsic id,
@@ -41,6 +42,18 @@ class Cache {
       return createConstantFP(c);
     else return createConstantVal(v);
   }
+  void fillOperands(Inst *n, llvm::Loop *L) {
+    llvm::Instruction *i = n->getLLVMInstruction();
+    if (i->getNumOperands() == 0) return;
+    invariant(n->getOperands() == nullptr);
+    Node **ops = alloc.allocate<Node **>(i->getNumOperands());
+    // = alloc.create<Inst>(i, L);
+    for (auto &op : i->operands()) {
+      auto *v = getValue(op, L);
+      n->operands.push_back(v);
+      v->users.push_back(n);
+    }
+  }
   auto createInstruction(llvm::Instruction *i, llvm::Loop *L) -> Node * {
     Inst *n;
     Node::ValKind kind = Node::getInstKind(i);
@@ -50,13 +63,10 @@ class Cache {
       invariant(kind == Inst::VK_Func);
       n = alloc.create<OpaqueFunc>(i, L);
     }
-
-    // = alloc.create<Inst>(i, L);
-    for (auto &op : i->operands()) {
-      auto *v = getValue(op, L);
-      n->operands.push_back(v);
-      v->users.push_back(n);
-    }
+    if (L->isLoopInvariant(i)) {
+      n->setNext(loopInvariants);
+      loopInvariants = n;
+    } else fillOperands(n, L);
     return n;
   }
   auto operator[](llvm::Value *v) -> Intr * {
