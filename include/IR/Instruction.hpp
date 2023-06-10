@@ -118,7 +118,7 @@ protected:
   UList<Node *> *users{nullptr};     // stores and Insts
   RecipThroughputLatency costs[2];   // scalar and vec; may want to add more
   llvm::Intrinsic::ID op;            // unsigned
-  unsigned numOperands{std::numeric_limits<unsigned>::max()};
+  int numOperands;                   // negative means incomplete
   llvm::FastMathFlags fastMathFlags; // holds unsigned
   unsigned padding;                  // currently unused
 #if !defined(__clang__) && defined(__GNUC__)
@@ -136,18 +136,20 @@ protected:
 #endif
 
 public:
-  constexpr Inst(ValKind k, llvm::Instruction *i, llvm::Intrinsic::ID id)
-    : Node(k), inst(i), type(i->getType()), op(id),
+  constexpr Inst(ValKind k, llvm::Instruction *i, llvm::Intrinsic::ID id,
+                 int numOps)
+    : Node(k), inst(i), type(i->getType()), op(id), numOperands(numOps),
       fastMathFlags(i->getFastMathFlags()) {}
 
-  static constexpr auto construct(BumpAlloc<> &alloc, ValKind k,
-                                  llvm::Instruction *i, llvm::Intrinsic::ID id)
-    -> Inst * {
-    unsigned nOps = i->getNumOperands();
-    auto *p = static_cast<Inst *>(
-      alloc.allocate(sizeof(Inst) + sizeof(Node *) * nOps, alignof(Inst)));
-    return std::construct_at(p, k, i, id);
-  }
+  // static constexpr auto construct(BumpAlloc<> &alloc, ValKind k,
+  //                                 llvm::Instruction *i, llvm::Intrinsic::ID
+  //                                 id)
+  //   -> Inst * {
+  //   unsigned nOps = i->getNumOperands();
+  //   auto *p = static_cast<Inst *>(
+  //     alloc.allocate(sizeof(Inst) + sizeof(Node *) * nOps, alignof(Inst)));
+  //   return std::construct_at(p, k, i, id);
+  // }
 
   static constexpr auto classof(const Node *v) -> bool {
     return v->getKind() >= VK_Func;
@@ -155,18 +157,56 @@ public:
   constexpr auto getLLVMInstruction() const -> llvm::Instruction * {
     return inst;
   }
+  static auto getIDKind(llvm::Instruction *I)
+    -> std::pair<llvm::Intrinsic::ID, ValKind> {
+    if (auto *c = llvm::dyn_cast<llvm::CallInst>(I)) {
+      llvm::Intrinsic::ID intrin = c->getIntrinsicID();
+      ValKind kind =
+        intrin == llvm::Intrinsic::not_intrinsic ? VK_Func : VK_Call;
+      return {intrin, kind};
+    }
+    return {I->getOpcode(), VK_Oprn};
+  }
+  constexpr void replaceAllUsesWith(Node *newNode) {
+    users->forEach([=](Node *use) {
+      if (Inst *ins = llvm::dyn_cast<Inst>(use)) {
+        for (Node *&o : ins->getOperands())
+          if (o == this) o = newNode;
+      } else {
+        Addr *addr = llvm::cast<Addr>(use);
+        // could be load or store; either are predicated
+        if (addr->getPredicate() == this) addr->setPredicate(newNode);
+        if (addr->isStore() && addr->getStoredVal() == this)
+          addr->setVal(newNode);
+      }
+    });
+    if (auto *addr = llvm::dyn_cast<Addr>(newNode))
+      addr->getUsers()->append(users);
+    else llvm::cast<Inst>(newNode)->getUsers()->append(users);
+    users = nullptr;
+  }
+  constexpr auto getUsers() -> UList<Node *> * { return users; }
+  constexpr void setNumOps(unsigned n) { numOperands = n; }
+  // called when incomplete; flips sign
+  constexpr auto numCompleteOps() -> unsigned {
+    invariant(numOperands <= 0); // we'll allow 0 for now
+    return numOperands = unsigned(-numOperands);
+  }
+  constexpr void makeIncomplete() { numOperands = -numOperands; }
   // constexpr auto getPredicate() -> UList<Node *> * { return predicates; }
   // constexpr auto getPredicate() const -> UList<Node *> const * {
   //   return predicates;
   // }
-  constexpr auto getNumOperands() const -> unsigned { return numOperands; }
+  constexpr auto getNumOperands() const -> unsigned {
+    return unsigned(numOperands);
+  }
   constexpr auto getType() const -> llvm::Type * { return type; }
   constexpr auto getOpId() const -> llvm::Intrinsic::ID { return op; }
   constexpr auto getOperands() -> MutPtrVector<Node *> {
     return {operands, numOperands};
   }
   constexpr auto getOperands() const -> PtrVector<Node *> {
-    return {const_cast<Node **>(operands), numOperands};
+    return {const_cast<Node **>(operands), unsigned(numOperands)};
   }
   constexpr auto getFastMathFlags() const -> llvm::FastMathFlags {
     return fastMathFlags;
@@ -174,10 +214,15 @@ public:
   [[nodiscard]] auto allowsContract() const -> bool {
     return fastMathFlags.allowContract();
   }
-  auto isComplete() const -> bool {
-    return (numOperands != std::numeric_limits<unsigned>::max());
+  constexpr void addUser(BumpAlloc<> &alloc, Node *n) {
+    if (!users) users = alloc.create<UList<Node *>>(n);
+    else users = users->push(alloc, n);
   }
-  auto isIncomplete() const -> bool { return !isComplete(); }
+  // Incomplete stores the correct number of ops it was allocated with as a
+  // negative number. The primary reason for being able to check
+  // completeness is for `==` checks and hashing.
+  auto isComplete() const -> bool { return numOperands >= 0; }
+  auto isIncomplete() const -> bool { return numOperands < 0; }
   [[nodiscard]] auto isCommutativeCall() const -> bool {
     if (auto *intrin = llvm::dyn_cast_or_null<llvm::IntrinsicInst>(inst))
       return intrin->isCommutative();
@@ -206,6 +251,7 @@ public:
     return 0;
   }
   auto operator==(Inst const &other) const -> bool {
+    if (this == &other) return true;
     if ((getKind() != other.getKind()) || (op != other.op) ||
         (getType() != other.getType()) || (isComplete() != other.isComplete()))
       return false;
@@ -362,12 +408,14 @@ public:
   [[nodiscard]] auto getNumOperands() const -> size_t {
     return operands->size();
   }
-  // explicit Intr(BumpAlloc<> &alloc, llvm::Intrinsic::ID idt, llvm::Type *typ)
+  // explicit Intr(BumpAlloc<> &alloc, llvm::Intrinsic::ID idt, llvm::Type
+  // *typ)
   //   : Inst(VK_Intr), idtf(idt), type(typ) {}
   // // Instruction(UniqueIdentifier uid)
   // // : id(std::get<0>(uid)), operands(std::get<1>(uid)) {}
   // explicit Intr(BumpAlloc<> &alloc, Identifier uid, llvm::Type *typ)
-  //   : Inst(VK_Intr, uid.operands, uid.predicates), idtf(uid.id), type(typ) {}
+  //   : Inst(VK_Intr, uid.operands, uid.predicates), idtf(uid.id), type(typ)
+  //   {}
 
   [[nodiscard]] static auto // NOLINTNEXTLINE(misc-no-recursion)
   getUniqueIdentifier(BumpAlloc<> &alloc, Cache &cache, llvm::Instruction *v)

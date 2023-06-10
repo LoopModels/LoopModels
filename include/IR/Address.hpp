@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Containers/UnrolledList.hpp"
 #include "IR/Node.hpp"
 #include "Polyhedra/Loops.hpp"
 #include "Support/OStream.hpp"
@@ -78,6 +79,10 @@ class Addr : public Node {
   [[no_unique_address]] int64_t *offSym{nullptr};
   [[no_unique_address]] const llvm::SCEV **syms;
   [[no_unique_address]] Node *predicate{nullptr};
+  [[no_unique_address]] union {
+    containers::UList<Node *> *users{nullptr}; // for load
+    Node *storedVal;                           // for store
+  } edge;
   [[no_unique_address]] unsigned numDim{0}, numDynSym{0};
   // [[no_unique_address]] uint8_t numMemInputs;
   // [[no_unique_address]] uint8_t numDirectEdges;
@@ -151,7 +156,6 @@ class Addr : public Node {
   [[nodiscard]] constexpr auto getIntMemory() const -> int64_t * {
     return const_cast<int64_t *>(mem);
   }
-
   // [[nodiscard]] constexpr auto getAddrMemory() const -> Addr ** {
   //   const void *m =
   //     mem +
@@ -311,6 +315,22 @@ public:
   [[nodiscard]] constexpr auto index() const -> unsigned { return index_; }
   constexpr auto lowLink() -> uint8_t & { return lowLink_; }
   [[nodiscard]] constexpr auto lowLink() const -> unsigned { return lowLink_; }
+  [[nodiscard]] constexpr auto getStoredVal() const -> Node * {
+    invariant(isStore());
+    return edge.storedVal;
+  }
+  constexpr void setVal(Node *n) {
+    invariant(isStore());
+    edge.storedVal = n;
+  }
+  [[nodiscard]] constexpr auto getPredicate() const -> Node * {
+    return predicate;
+  }
+  constexpr void setPredicate(Node *n) { predicate = n; }
+  [[nodiscard]] constexpr auto getUsers() const -> containers::UList<Node *> * {
+    invariant(isLoad());
+    return edge.users;
+  }
   /// extend number of Cols, copying A[_(0,R),_] into dest, filling new cols
   /// with 0
 

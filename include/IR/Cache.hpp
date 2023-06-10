@@ -11,40 +11,50 @@ class Cache {
   map<llvm::Value *, Node *> llvmToInternalMap;
   map<InstByValue, Inst *> instCSEMap;
   BumpAlloc<> alloc;
-  Inst *loopInvariants{nullptr};
-  Inst *freeList{nullptr};
-  // tmp is used in case we don't need an allocation
-  // Instruction *tmp{nullptr};
-  // auto allocate(BumpAlloc<> &alloc, Intrinsic id,
-  //               llvm::Type *type) -> Instruction * {
-  //     if (tmp) {
-  //         tmp->id = id;
-  //         tmp->type = type;
-  //         Instruction *I = tmp;
-  //         tmp = nullptr;
-  //         return I;
-  //     } else {
-  //         return new (alloc) Instruction(id, type);
-  //     }
-  // }
-  //
+  Inst *loopInvariants{nullptr}; // negative numOps/incomplete
+  Inst *freeList{nullptr};       // positive numOps/complete, but empty
   auto allocateInst(unsigned numOps) -> Inst * {
     // because we allocate children before parents
-    //
     for (Inst *I = freeList; I; I = I->getNext()) {
-      if (I->getNumOperands() == numOps) {
-        I->removeFromList();
-        return I;
-      }
+      if (I->getNumOperands() != numOps) continue;
+      I->removeFromList();
+      return I;
     }
-    //
+    // not found, allocate
+    return static_cast<Inst *>(
+      alloc.allocate(sizeof(Inst) + sizeof(Node *) * numOps, alignof(Inst)));
+  }
+  void addLoopInstr(llvm::Loop *L) {
+    for (Inst *I = loopInvariants; I; I = I->getNext()) {
+      if (!L->isLoopInvariant(I->getLLVMInstruction())) continue;
+      I->removeFromList();
+      complete(I);
+    }
+  }
+  /// complete the operands
+  void complete(Inst *I, llvm::Loop *L) {
+    auto *i = I->getLLVMInstruction();
+    unsigned nOps = I->numCompleteOps();
+    auto ops = I->getOperands();
+    for (unsigned j = 0; j < nOps; ++j) {
+      auto *op = i->getOperand(j);
+      auto *v = getValue(op, L);
+      ops[j] = v;
+      v->addUser(alloc, I);
+    }
+    Inst *&cse = getCSE(i);
+    if (cse && cse != I) {
+      I->replaceAllUsesWith(cse);
+      I->removeFromList();
+      I->setNext(freeList);
+      freeList = I;
+    } else cse = I;
   }
   auto getCSE(Inst *I) -> Inst *& { return instCSEMap[InstByValue{I}]; }
   auto getValue(llvm::Value *v, llvm::Loop *L) -> Node * {
     auto &n = llvmToInternalMap[v];
     if (n) return n;
-    n = createValue(v, L);
-    return n;
+    return createValue(v, L);
   }
   auto createValue(llvm::Value *v, llvm::Loop *L) -> Node * {
     if (auto *i = llvm::dyn_cast<llvm::Instruction>(v))
@@ -55,30 +65,15 @@ class Cache {
       return createConstantFP(c);
     else return createConstantVal(v);
   }
-  void fillOperands(Inst *n, llvm::Loop *L) {
-    llvm::Instruction *i = n->getLLVMInstruction();
-    auto numOps = i->getNumOperands();
-    if (numOps == 0) return;
-
-    for (auto &op : i->operands()) {
-      auto *v = getValue(op, L);
-      n->operands.push_back(v);
-      v->users.push_back(n);
-    }
-  }
   auto createInstruction(llvm::Instruction *i, llvm::Loop *L) -> Node * {
-    Inst *n;
-    Node::ValKind kind = Node::getInstKind(i);
-    if (kind == Inst::VK_Oprn) n = alloc.create<Operation>(i, L);
-    else if (kind == Inst::VK_Call) n = alloc.create<Call>(i, L);
-    else {
-      invariant(kind == Inst::VK_Func);
-      n = alloc.create<OpaqueFunc>(i, L);
-    }
+    auto [id, kind] = Inst::getIDKind(i);
+    int numOps = i->getNumOperands();
+    Inst *n = std::construct_at(allocInst(numOps), kind, i, id, -numOps);
+    llvmToInternalMap[i] = n;
     if (L->isLoopInvariant(i)) {
       n->setNext(loopInvariants);
       loopInvariants = n;
-    } else fillOperands(n, L);
+    } else complete(n, L);
     return n;
   }
   auto operator[](llvm::Value *v) -> Intr * {
