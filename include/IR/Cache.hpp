@@ -12,10 +12,11 @@ class Cache {
   map<InstByValue, Inst *> instCSEMap;
   BumpAlloc<> alloc;
   Inst *loopInvariants{nullptr}; // negative numOps/incomplete
-  Inst *freeList{nullptr};       // positive numOps/complete, but empty
+  Inst *freeInstList{nullptr};   // positive numOps/complete, but empty
+  UList<Node *> *freeListList{nullptr};
   auto allocateInst(unsigned numOps) -> Inst * {
     // because we allocate children before parents
-    for (Inst *I = freeList; I; I = I->getNext()) {
+    for (Inst *I = freeInstList; I; I = I->getNext()) {
       if (I->getNumOperands() != numOps) continue;
       I->removeFromList();
       return I;
@@ -32,7 +33,7 @@ class Cache {
     }
   }
   /// complete the operands
-  void complete(Inst *I, llvm::Loop *L) {
+  auto complete(Inst *I, llvm::Loop *L) -> Inst * {
     auto *i = I->getLLVMInstruction();
     unsigned nOps = I->numCompleteOps();
     auto ops = I->getOperands();
@@ -42,15 +43,19 @@ class Cache {
       ops[j] = v;
       v->addUser(alloc, I);
     }
-    Inst *&cse = getCSE(i);
-    if (cse && cse != I) {
-      I->replaceAllUsesWith(cse);
-      I->removeFromList();
-      I->setNext(freeList);
-      freeList = I;
-    } else cse = I;
+    return cse(I);
   }
   auto getCSE(Inst *I) -> Inst *& { return instCSEMap[InstByValue{I}]; }
+  // try to remove `I` as a duplicate
+  auto cse(Inst *I) -> Inst * {
+    Inst *&cse = getCSE(I);
+    if (cse == nullptr || (cse == I)) return cse = I; // update ref
+    I->replaceAllUsesWith(cse);
+    I->removeFromList();
+    I->setNext(freeInstList);
+    freeInstList = I;
+    return cse;
+  }
   auto getValue(llvm::Value *v, llvm::Loop *L) -> Node * {
     auto &n = llvmToInternalMap[v];
     if (n) return n;
@@ -65,6 +70,26 @@ class Cache {
       return createConstantFP(c);
     else return createConstantVal(v);
   }
+  constexpr void replaceAllUsesWith(Node *oldNode, Node *newNode) {
+    oldNode->getUsers()->forEach([=, this](Node *user) {
+      if (Inst *ins = llvm::dyn_cast<Inst>(user)) {
+        for (Node *&o : ins->getOperands())
+          if (o == oldNode) o = newNode;
+      } else {
+        Addr *addr = llvm::cast<Addr>(user);
+        // could be load or store; either are predicated
+        if (addr->getPredicate() == oldNode) addr->setPredicate(newNode);
+        if (addr->isStore() && addr->getStoredVal() == oldNode)
+          addr->setVal(newNode);
+      }
+    });
+    // TODO: every user we have updated are now themselves CSE candidates
+    // TODO: we may now have duplicate users; only merge unique!
+    if (auto *addr = llvm::dyn_cast<Addr>(newNode))
+      addr->getUsers()->append(users);
+    else llvm::cast<Inst>(newNode)->getUsers()->append(users);
+    users = nullptr;
+  }
   auto createInstruction(llvm::Instruction *i, llvm::Loop *L) -> Node * {
     auto [id, kind] = Inst::getIDKind(i);
     int numOps = i->getNumOperands();
@@ -73,16 +98,12 @@ class Cache {
     if (L->isLoopInvariant(i)) {
       n->setNext(loopInvariants);
       loopInvariants = n;
-    } else complete(n, L);
+    } else n = complete(n, L);
     return n;
   }
   auto operator[](llvm::Value *v) -> Intr * {
     auto f = llvmToInternalMap.find(v);
     if (f != llvmToInternalMap.end()) return f->second;
-    return nullptr;
-  }
-  auto operator[](UniqueIdentifier uid) -> Intr * {
-    if (auto f = argMap.find(uid); f != argMap.end()) return f->second;
     return nullptr;
   }
   auto argMapLoopup(Intrinsic idt) -> Intr * {

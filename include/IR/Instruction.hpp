@@ -167,24 +167,6 @@ public:
     }
     return {I->getOpcode(), VK_Oprn};
   }
-  constexpr void replaceAllUsesWith(Node *newNode) {
-    users->forEach([=](Node *use) {
-      if (Inst *ins = llvm::dyn_cast<Inst>(use)) {
-        for (Node *&o : ins->getOperands())
-          if (o == this) o = newNode;
-      } else {
-        Addr *addr = llvm::cast<Addr>(use);
-        // could be load or store; either are predicated
-        if (addr->getPredicate() == this) addr->setPredicate(newNode);
-        if (addr->isStore() && addr->getStoredVal() == this)
-          addr->setVal(newNode);
-      }
-    });
-    if (auto *addr = llvm::dyn_cast<Addr>(newNode))
-      addr->getUsers()->append(users);
-    else llvm::cast<Inst>(newNode)->getUsers()->append(users);
-    users = nullptr;
-  }
   constexpr auto getUsers() -> UList<Node *> * { return users; }
   constexpr void setNumOps(unsigned n) { numOperands = n; }
   // called when incomplete; flips sign
