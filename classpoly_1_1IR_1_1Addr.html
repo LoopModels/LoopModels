@@ -111,6 +111,9 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>getSymbolicOffsets</b
 <tr class="memitem:a8f5f7d33b9f749c7a9f910e701c82dc5"><td class="memItemLeft" align="right" valign="top"><a id="a8f5f7d33b9f749c7a9f910e701c82dc5"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getArrayPointer</b> () const -&gt; NotNull&lt; const llvm::SCEVUnknown &gt;</td></tr>
 <tr class="separator:a8f5f7d33b9f749c7a9f910e701c82dc5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aee6d5ece1c97d08d59e5c35f7a8f8770"><td class="memItemLeft" align="right" valign="top"><a id="aee6d5ece1c97d08d59e5c35f7a8f8770"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getType</b> () const -&gt; llvm::Type *</td></tr>
+<tr class="separator:aee6d5ece1c97d08d59e5c35f7a8f8770"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a57ef4afc16289d645369b42135cced04"><td class="memItemLeft" align="right" valign="top"><a id="a57ef4afc16289d645369b42135cced04"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>dependsOnIndVars</b> (size_t d) -&gt; bool</td></tr>
 <tr class="separator:a57ef4afc16289d645369b42135cced04"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -264,6 +267,12 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getLoop</b>
 <tr class="memitem:a1bd85fd91e0e9d16b2417d9f9479fe1e"><td class="memItemLeft" align="right" valign="top"><a id="a1bd85fd91e0e9d16b2417d9f9479fe1e"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>sizesMatch</b> (NotNull&lt; const <a class="el" href="classpoly_1_1IR_1_1Addr.html">Addr</a> &gt; x) const -&gt; bool</td></tr>
 <tr class="separator:a1bd85fd91e0e9d16b2417d9f9479fe1e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a45d8f70537abd0ca165df1bc2aab2a6b"><td class="memItemLeft" align="right" valign="top"><a id="a45d8f70537abd0ca165df1bc2aab2a6b"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>calculateCostContiguousLoadStore</b> (llvm::TargetTransformInfo &amp;TTI, unsigned int vectorWidth) -&gt; <a class="el" href="structpoly_1_1IR_1_1cost_1_1RecipThroughputLatency.html">cost::RecipThroughputLatency</a></td></tr>
+<tr class="separator:a45d8f70537abd0ca165df1bc2aab2a6b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a72d6753e5af46f85dd4560105eb4ccca"><td class="memItemLeft" align="right" valign="top"><a id="a72d6753e5af46f85dd4560105eb4ccca"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>calcCost</b> ()</td></tr>
+<tr class="separator:a72d6753e5af46f85dd4560105eb4ccca"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8ba8c2d378d5c41ce36c230e3e0a24cd"><td class="memItemLeft" align="right" valign="top"><a id="a8ba8c2d378d5c41ce36c230e3e0a24cd"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getCurrentDepth</b> () const -&gt; unsigned</td></tr>
 <tr class="separator:a8ba8c2d378d5c41ce36c230e3e0a24cd"><td class="memSeparator" colspan="2">&#160;</td></tr>
