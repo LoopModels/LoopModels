@@ -63,11 +63,6 @@ class Cache {
     freeInstList = I;
     return cse;
   }
-  auto getValue(llvm::Value *v, llvm::Loop *L) -> Node * {
-    Node *&n = llvmToInternalMap[v];
-    if (n) return n;
-    return createValue(v, L, n);
-  }
   auto createValue(llvm::Value *v, llvm::Loop *L, Node *&n) -> Node * {
     if (auto *i = llvm::dyn_cast<llvm::Instruction>(v))
       return createInstruction(i, L, n);
@@ -76,7 +71,9 @@ class Cache {
     if (auto *c = llvm::dyn_cast<llvm::ConstantFP>(v)) return createConstant(c);
     return createConstantVal(v, n);
   }
-  constexpr void replaceAllUsesWith(Inst *oldNode, Node *newNode) {
+  constexpr void replaceUsesByUsers(Node *oldNode, Node *newNode) {
+    invariant(oldNode->getKind() == Node::VK_Load ||
+              oldNode->getKind() >= Node::VK_Func);
     oldNode->getUsers()->forEach([=, this](Node *user) {
       if (Inst *I = llvm::dyn_cast<Inst>(user)) {
         for (Node *&o : I->getOperands())
@@ -95,13 +92,45 @@ class Cache {
       UList<Node *> *tnode = newNode->getUsers();
       newNode->setUsers(tnode->pushUnique(alloc, user));
     });
-    // every operand of oldNode needs their users updated
-    for (Node *n : oldNode->getOperands()) n->removeFromUsers(oldNode);
     if (freeListList) freeListList->append(oldNode->getUsers());
     else freeListList = oldNode->getUsers();
     oldNode->setUsers(nullptr);
+  }
+
+public:
+  auto getValue(llvm::Value *v, llvm::Loop *L) -> Node * {
+    Node *&n = llvmToInternalMap[v];
+    if (n) return n;
+    return createValue(v, L, n);
+  }
+  constexpr void replaceAllUsesWith(Addr *oldNode, Node *newNode) {
+    invariant(oldNode->isLoad());
+    replaceUsesByUsers(oldNode, newNode);
+    // every operand of oldNode needs their users updated
+    if (Node *p = oldNode->getPredicate()) p->removeFromUsers(oldNode);
+  }
+  constexpr void replaceAllUsesWith(Inst *oldNode, Node *newNode) {
+    invariant(oldNode->getKind() >= Node::VK_Func);
+    replaceUsesByUsers(oldNode, newNode);
+    // every operand of oldNode needs their users updated
+    for (Node *n : oldNode->getOperands()) n->removeFromUsers(oldNode);
     oldNode->setNext(freeInstList);
     freeInstList = oldNode;
+  }
+  constexpr void replaceAllUsesWith(Node *oldNode, Node *newNode) {
+    invariant(oldNode->getKind() == Node::VK_Load ||
+              oldNode->getKind() >= Node::VK_Func);
+    replaceUsesByUsers(oldNode, newNode);
+    // every operand of oldNode needs their users updated
+    if (Inst *I = llvm::dyn_cast<Inst>(oldNode)) {
+      for (Node *&n : I->getOperands()) n->removeFromUsers(oldNode);
+      I->setNext(freeInstList);
+      freeInstList = I;
+    } else {
+      invariant(oldNode->getKind() == Node::VK_Load);
+      if (Node *p = static_cast<Addr *>(oldNode)->getPredicate())
+        p->removeFromUsers(oldNode);
+    }
   }
   auto createInstruction(llvm::Instruction *i, llvm::Loop *L, Node *&t)
     -> Node * {
@@ -189,7 +218,8 @@ class Cache {
   }
   auto createCondition(Predicate::Intersection pred, bool swap) -> Intr * {
     size_t popCount = pred.popCount();
-
+    // 0: Any; no restriction
+    // 1: True; requires single predicate is true
     if (popCount == 0) return getConstant(alloc, predicates[0]->getType(), 1);
     if (popCount == 1) {
       size_t ind = pred.getFirstIndex();

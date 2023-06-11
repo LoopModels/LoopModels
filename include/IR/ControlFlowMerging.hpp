@@ -133,18 +133,19 @@ struct MergingCost {
     constexpr void select(size_t, Node *, Node *) { ++numSelects; }
   };
   struct SelectAllocator {
-    BumpAlloc<> &alloc;
     IR::Cache &cache;
     ReMapper &reMap;
     MutPtrVector<Node *> operands;
     constexpr operator MutPtrVector<Node *>() const { return operands; }
     void merge(size_t i, Node *A, Node *B) {
-      operands[i] = reMap[A]->replaceAllUsesOf(reMap[B]);
+      auto opA = reMap[A];
+      cache.replaceAllUsesWith(reMap[B], opA);
+      operands[i] = opA;
     }
     void select(size_t i, Node *A, Node *B) {
       A = reMap[A];
       B = reMap[B];
-      operands[i] = cache.createSelect(alloc, A, B)
+      operands[i] = cache.createSelect(A, B)
                       ->replaceAllOtherUsesOf(A)
                       ->replaceAllOtherUsesOf(B);
     }
