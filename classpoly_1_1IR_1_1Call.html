@@ -124,21 +124,6 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>getUsers</b> () -&gt;
 <tr class="memitem:a47d07c5162078f1250c25e3adc578473"><td class="memItemLeft" align="right" valign="top"><a id="a47d07c5162078f1250c25e3adc578473"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumOperands</b> () const -&gt; size_t</td></tr>
 <tr class="separator:a47d07c5162078f1250c25e3adc578473"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0d8dbf97dbd0b515fa430eb4ac60bcac"><td class="memItemLeft" align="right" valign="top"><a id="a0d8dbf97dbd0b515fa430eb4ac60bcac"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>getUniqueIdentifier</b> (BumpAlloc&lt;&gt; &amp;alloc, <a class="el" href="classpoly_1_1IR_1_1Cache.html">Cache</a> &amp;cache) -&gt; <a class="el" href="structpoly_1_1IR_1_1UniqueIdentifier.html">UniqueIdentifier</a></td></tr>
-<tr class="separator:a0d8dbf97dbd0b515fa430eb4ac60bcac"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae9b8f4ff7392c185fc6800aa1b3d52ff"><td class="memItemLeft" align="right" valign="top"><a id="ae9b8f4ff7392c185fc6800aa1b3d52ff"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>getUniqueIdentifier</b> (BumpAlloc&lt;&gt; &amp;alloc, <a class="el" href="structpoly_1_1IR_1_1Predicate_1_1Map.html">Predicate::Map</a> &amp;predMap, <a class="el" href="classpoly_1_1IR_1_1Cache.html">Cache</a> &amp;cache) -&gt; <a class="el" href="structpoly_1_1IR_1_1UniqueIdentifier.html">UniqueIdentifier</a></td></tr>
-<tr class="separator:ae9b8f4ff7392c185fc6800aa1b3d52ff"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5abfabcf3b71fbf48bd9d8be4e004627"><td class="memItemLeft" align="right" valign="top"><a id="a5abfabcf3b71fbf48bd9d8be4e004627"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>isInstruction</b> (llvm::Intrinsic::ID op) const -&gt; bool</td></tr>
-<tr class="separator:a5abfabcf3b71fbf48bd9d8be4e004627"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3e4745c92698d78a3fa70915d3ca0a50"><td class="memItemLeft" align="right" valign="top"><a id="a3e4745c92698d78a3fa70915d3ca0a50"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>isIntrinsic</b> (Intrinsic op) const -&gt; bool</td></tr>
-<tr class="separator:a3e4745c92698d78a3fa70915d3ca0a50"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afb987447e8ff649bb5d98a0b00811d23"><td class="memItemLeft" align="right" valign="top"><a id="afb987447e8ff649bb5d98a0b00811d23"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>isIntrinsic</b> (llvm::Intrinsic::ID op) const -&gt; bool</td></tr>
-<tr class="separator:afb987447e8ff649bb5d98a0b00811d23"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9a9c8efee54889090d6c17084ab03313"><td class="memItemLeft" align="right" valign="top"><a id="a9a9c8efee54889090d6c17084ab03313"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1IR_1_1Call.html#a9a9c8efee54889090d6c17084ab03313">getCost</a> (llvm::TargetTransformInfo &amp;TTI, unsigned W, unsigned l2W) -&gt; <a class="el" href="structpoly_1_1IR_1_1RecipThroughputLatency.html">RecipThroughputLatency</a></td></tr>
 <tr class="memdesc:a9a9c8efee54889090d6c17084ab03313"><td class="mdescLeft">&#160;</td><td class="mdescRight">fall back in case we need value operand <br /></td></tr>
@@ -239,24 +224,6 @@ static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>clas
 <tr class="memitem:ad745c1a6e282dfd483cbbb5f2b9c9793"><td class="memItemLeft" align="right" valign="top"><a id="ad745c1a6e282dfd483cbbb5f2b9c9793"></a>
 static auto&#160;</td><td class="memItemRight" valign="bottom"><b>getIntrinsicID</b> (llvm::Value *v) -&gt; std::optional&lt; llvm::Intrinsic::ID &gt;</td></tr>
 <tr class="separator:ad745c1a6e282dfd483cbbb5f2b9c9793"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4fb399579558e11bb2340b846c0d07f3"><td class="memItemLeft" align="right" valign="top"><a id="a4fb399579558e11bb2340b846c0d07f3"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>getUniqueIdentifier</b> (BumpAlloc&lt;&gt; &amp;alloc, <a class="el" href="classpoly_1_1IR_1_1Cache.html">Cache</a> &amp;cache, llvm::Instruction *v) -&gt; <a class="el" href="structpoly_1_1IR_1_1UniqueIdentifier.html">UniqueIdentifier</a></td></tr>
-<tr class="separator:a4fb399579558e11bb2340b846c0d07f3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af813445980a325f9044e241a2cb5db45"><td class="memItemLeft" align="right" valign="top"><a id="af813445980a325f9044e241a2cb5db45"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>getUniqueIdentifier</b> (BumpAlloc&lt;&gt; &amp;alloc, <a class="el" href="classpoly_1_1IR_1_1Cache.html">Cache</a> &amp;cache, llvm::Value *v) -&gt; <a class="el" href="structpoly_1_1IR_1_1UniqueIdentifier.html">UniqueIdentifier</a></td></tr>
-<tr class="separator:af813445980a325f9044e241a2cb5db45"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4017a1e6abbb6ee1bdb3028a336a269d"><td class="memItemLeft" align="right" valign="top"><a id="a4017a1e6abbb6ee1bdb3028a336a269d"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>getUniqueIdentifier</b> (BumpAlloc&lt;&gt; &amp;alloc, <a class="el" href="structpoly_1_1IR_1_1Predicate_1_1Map.html">Predicate::Map</a> &amp;predMap, <a class="el" href="classpoly_1_1IR_1_1Cache.html">Cache</a> &amp;cache, llvm::Instruction *J) -&gt; <a class="el" href="structpoly_1_1IR_1_1UniqueIdentifier.html">UniqueIdentifier</a></td></tr>
-<tr class="separator:a4017a1e6abbb6ee1bdb3028a336a269d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5af11c9a5d765a94d6d3f9d6f2a903b9"><td class="memItemLeft" align="right" valign="top"><a id="a5af11c9a5d765a94d6d3f9d6f2a903b9"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>getOperands</b> (BumpAlloc&lt;&gt; &amp;alloc, <a class="el" href="classpoly_1_1IR_1_1Cache.html">Cache</a> &amp;cache, llvm::Instruction *instr) -&gt; MutPtrVector&lt; Intr * &gt;</td></tr>
-<tr class="separator:a5af11c9a5d765a94d6d3f9d6f2a903b9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a03db1696cfaa32bfc2b12bf6770a603d"><td class="memItemLeft" align="right" valign="top"><a id="a03db1696cfaa32bfc2b12bf6770a603d"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>getOperands</b> (BumpAlloc&lt;&gt; &amp;alloc, <a class="el" href="structpoly_1_1IR_1_1Predicate_1_1Map.html">Predicate::Map</a> &amp;BBpreds, <a class="el" href="classpoly_1_1IR_1_1Cache.html">Cache</a> &amp;cache, llvm::Instruction *instr) -&gt; MutPtrVector&lt; Intr * &gt;</td></tr>
-<tr class="separator:a03db1696cfaa32bfc2b12bf6770a603d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a10db3a35d8f03b1b9fd9c21379e3119c"><td class="memItemLeft" align="right" valign="top"><a id="a10db3a35d8f03b1b9fd9c21379e3119c"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>createIsolated</b> (BumpAlloc&lt;&gt; &amp;alloc, llvm::Instruction *instr) -&gt; Intr *</td></tr>
-<tr class="separator:a10db3a35d8f03b1b9fd9c21379e3119c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a88dc1ce4fb997161e1289d61f6fa32cd"><td class="memItemLeft" align="right" valign="top"><a id="a88dc1ce4fb997161e1289d61f6fa32cd"></a>
 static auto&#160;</td><td class="memItemRight" valign="bottom"><b>getType</b> (llvm::Type *T, unsigned int vectorWidth) -&gt; llvm::Type *</td></tr>
 <tr class="separator:a88dc1ce4fb997161e1289d61f6fa32cd"><td class="memSeparator" colspan="2">&#160;</td></tr>
