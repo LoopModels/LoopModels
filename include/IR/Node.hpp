@@ -367,6 +367,38 @@ public:
   [[nodiscard]] constexpr auto getTy() const -> llvm::Type * {
     return unionPtr.typ;
   }
+  struct Identifier {
+    ValKind kind;
+    llvm::Type *typ;
+    union {
+      int64_t i;
+      double f;
+      const llvm::APInt *ci;
+      const llvm::APFloat *cf;
+    } payload;
+    constexpr auto operator==(const Identifier &o) const -> bool {
+      if (kind != o.kind || typ != o.typ) return false;
+      switch (kind) {
+      case VK_Cint: return payload.i == o.payload.i;
+      case VK_Cflt: return payload.f == o.payload.f;
+      case VK_Bint: return *payload.ci == *o.payload.ci;
+      default: invariant(kind == VK_Bflt); return *payload.cf == *o.payload.cf;
+      }
+    }
+    constexpr Identifier(llvm::Type *t, int64_t i)
+      : kind(VK_Cint), typ(t), payload(i){};
+    constexpr Identifier(llvm::Type *t, double f) : kind(VK_Cflt), typ(t) {
+      payload.f = f;
+    };
+    constexpr Identifier(llvm::Type *t, const llvm::APInt &i)
+      : kind(VK_Bint), typ(t) {
+      payload.ci = &i;
+    };
+    constexpr Identifier(llvm::Type *t, const llvm::APFloat &f)
+      : kind(VK_Bflt), typ(t) {
+      payload.cf = &f;
+    }
+  };
 };
 /// A constant value w/ respect to the loopnest.
 class Cint : public Cnst {
@@ -403,11 +435,11 @@ public:
 };
 /// A constant value w/ respect to the loopnest.
 class Bint : public Cnst {
-  llvm::ConstantInt *val;
+  const llvm::APInt &val;
 
 public:
   constexpr Bint(llvm::ConstantInt *v, llvm::Type *t)
-    : Cnst(VK_Bint, t), val(v) {}
+    : Cnst(VK_Bint, t), val(v->getValue()) {}
   static constexpr auto create(BumpAlloc<> &alloc, llvm::ConstantInt *v,
                                llvm::Type *t) -> Bint * {
     return alloc.create<Bint>(v, t);
@@ -416,18 +448,18 @@ public:
     return v->getKind() == VK_Bint;
   }
 
-  [[nodiscard]] constexpr auto getVal() const -> llvm::ConstantInt * {
+  [[nodiscard]] constexpr auto getVal() const -> const llvm::APInt & {
     return val;
   }
 };
 /// Cnst
 /// A constant value w/ respect to the loopnest.
 class Bflt : public Cnst {
-  llvm::ConstantFP *val;
+  const llvm::APFloat &val;
 
 public:
   constexpr Bflt(llvm::ConstantFP *v, llvm::Type *t)
-    : Cnst(VK_Bflt, t), val(v) {}
+    : Cnst(VK_Bflt, t), val(v->getValue()) {}
   static constexpr auto create(BumpAlloc<> &alloc, llvm::ConstantFP *v,
                                llvm::Type *t) -> Bflt * {
     return alloc.create<Bflt>(v, t);
@@ -436,14 +468,14 @@ public:
     return v->getKind() == VK_Bflt;
   }
 
-  [[nodiscard]] constexpr auto getVal() const -> llvm::ConstantFP * {
+  [[nodiscard]] constexpr auto getVal() const -> const llvm::APFloat & {
     return val;
   }
 };
 
 [[nodiscard]] inline auto isConstantOneInt(Node *n) -> bool {
   if (Cint *c = llvm::dyn_cast<Cint>(n)) return c->getVal() == 1;
-  if (Bint *c = llvm::dyn_cast<Bint>(n)) return c->getVal()->isOne();
+  if (Bint *c = llvm::dyn_cast<Bint>(n)) return c->getVal().isOne();
   return false;
 }
 

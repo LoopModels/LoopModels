@@ -58,7 +58,7 @@ using math::PtrVector, math::MutPtrVector, utils::BumpAlloc, utils::invariant,
 
 namespace poly::IR {
 
-using dict::aset, dict::amap, containers::UList;
+using dict::aset, dict::amap, containers::UList, utils::Optional;
 
 struct UniqueIdentifier {
   Operands ops;
@@ -367,7 +367,7 @@ public:
   constexpr Call(Inst *I) : ins(I) { invariant(ins->getKind(), Node::VK_Call); }
 
   static constexpr auto classof(const Node *v) -> bool {
-    return v->getKind() == VK_Call;
+    return v->getKind() == Node::VK_Call;
   }
   Call(llvm::Instruction *i) : Inst(VK_Call, i, i->getIntrinsicID()) {}
   [[nodiscard]] auto getIntrinsicID() const -> llvm::Intrinsic::ID {
@@ -404,100 +404,6 @@ public:
   [[nodiscard]] auto getUsers() -> aset<Intr *> & { return users; }
   [[nodiscard]] auto getNumOperands() const -> size_t {
     return operands->size();
-  }
-  // explicit Intr(BumpAlloc<> &alloc, llvm::Intrinsic::ID idt, llvm::Type
-  // *typ)
-  //   : Inst(VK_Intr), idtf(idt), type(typ) {}
-  // // Instruction(UniqueIdentifier uid)
-  // // : id(std::get<0>(uid)), operands(std::get<1>(uid)) {}
-  // explicit Intr(BumpAlloc<> &alloc, Identifier uid, llvm::Type *typ)
-  //   : Inst(VK_Intr, uid.operands, uid.predicates), idtf(uid.id), type(typ)
-  //   {}
-
-  [[nodiscard]] static auto // NOLINTNEXTLINE(misc-no-recursion)
-  getUniqueIdentifier(BumpAlloc<> &alloc, Cache &cache, llvm::Instruction *v)
-    -> UniqueIdentifier {
-    return {Intrinsic(v), getOperands(alloc, cache, v)};
-  }
-  [[nodiscard]] auto getUniqueIdentifier(BumpAlloc<> &alloc, Cache &cache)
-    -> UniqueIdentifier {
-    llvm::Instruction *J = getInstruction();
-    return {idtf, getOperands(alloc, cache, J)};
-  }
-  // NOLINTNEXTLINE(misc-no-recursion)
-  [[nodiscard]] auto static getUniqueIdentifier(BumpAlloc<> &alloc,
-                                                Cache &cache, llvm::Value *v)
-    -> UniqueIdentifier {
-    if (auto *J = llvm::dyn_cast<llvm::Instruction>(v))
-      return getUniqueIdentifier(alloc, cache, J);
-    return {Intrinsic(v), {nullptr, unsigned(0)}};
-  }
-  [[nodiscard]] static auto // NOLINTNEXTLINE(misc-no-recursion)
-  getUniqueIdentifier(BumpAlloc<> &alloc, Predicate::Map &predMap, Cache &cache,
-                      llvm::Instruction *J) -> UniqueIdentifier {
-    return {Intrinsic(J), getOperands(alloc, predMap, cache, J)};
-  }
-  [[nodiscard]] auto getUniqueIdentifier(BumpAlloc<> &alloc,
-                                         Predicate::Map &predMap, Cache &cache)
-    -> UniqueIdentifier {
-    llvm::Instruction *J = getInstruction();
-    return {idtf, getOperands(alloc, predMap, cache, J)};
-  }
-  // NOLINTNEXTLINE(misc-no-recursion)
-  [[nodiscard]] static auto getOperands(BumpAlloc<> &alloc, Cache &cache,
-                                        llvm::Instruction *instr)
-    -> MutPtrVector<Intr *> {
-    if (llvm::isa<llvm::LoadInst>(instr)) return {nullptr, size_t(0)};
-    auto ops{instr->operands()};
-    auto *OI = ops.begin();
-    // NOTE: operand 0 is the value operand of a store
-    bool isStore = llvm::isa<llvm::StoreInst>(instr);
-    // getFastMathFlags()
-    auto *OE = isStore ? (OI + 1) : ops.end();
-    size_t numOps = isStore ? 1 : instr->getNumOperands();
-    auto **operands = alloc.allocate<Intr *>(numOps);
-    Intr **p = operands;
-    for (; OI != OE; ++OI, ++p) *p = cache.getInstruction(alloc, *OI);
-    return {operands, numOps};
-  }
-  // NOLINTNEXTLINE(misc-no-recursion)
-  [[nodiscard]] static auto getOperands(BumpAlloc<> &alloc,
-                                        Predicate::Map &BBpreds, Cache &cache,
-                                        llvm::Instruction *instr)
-    -> MutPtrVector<Intr *> {
-    if (llvm::isa<llvm::LoadInst>(instr)) return {nullptr, size_t(0)};
-    auto ops{instr->operands()};
-    auto *OI = ops.begin();
-    // NOTE: operand 0 is the value operand of a store
-    bool isStore = llvm::isa<llvm::StoreInst>(instr);
-    auto *OE = isStore ? (OI + 1) : ops.end();
-    size_t nOps = isStore ? 1 : instr->getNumOperands();
-    auto **operands = alloc.allocate<Intr *>(nOps);
-    Intr **p = operands;
-    for (; OI != OE; ++OI, ++p) *p = cache.getInstruction(alloc, BBpreds, *OI);
-    return {operands, nOps};
-  }
-  static auto createIsolated(BumpAlloc<> &alloc, llvm::Instruction *instr)
-    -> Intr * {
-    Intrinsic id{instr};
-    auto *i = new (alloc) Intr(alloc, id, instr->getType());
-    return i;
-  }
-
-  [[nodiscard]] auto isInstruction(llvm::Intrinsic::ID op) const -> bool {
-    const Intrinsic *intrin = std::get_if<Intrinsic>(&idtf);
-    if (!intrin) return false;
-    return intrin->isInstruction(op);
-  }
-  [[nodiscard]] auto isIntrinsic(Intrinsic op) const -> bool {
-    const Intrinsic *intrin = std::get_if<Intrinsic>(&idtf);
-    if (!intrin) return false;
-    return *intrin == op;
-  }
-  [[nodiscard]] auto isIntrinsic(llvm::Intrinsic::ID op) const -> bool {
-    const Intrinsic *intrin = std::get_if<Intrinsic>(&idtf);
-    if (!intrin) return false;
-    return intrin->isIntrinsicInstruction(op);
   }
 
   /// fall back in case we need value operand
@@ -965,55 +871,3 @@ static_assert(std::is_trivially_destructible_v<math::BumpPtrVector<Intr *>>);
 // llvm::Intrinsic::IndependentIntrinsics x = llvm::Intrinsic::sqrt;
 // llvm::Intrinsic::IndependentIntrinsics y = llvm::Intrinsic::sin;
 } // namespace poly::IR
-
-// update x with the hash `y`
-constexpr auto combineHash(uint64_t x, uint64_t y) -> uint64_t {
-  // trunc(UInt64,Int128(2)^64/big(Base.MathConstants.golden))
-  constexpr uint64_t magic = 0x9e3779b97f4a7c15ULL;
-  return x ^ (y + magic + (x << 6) + (x >> 2));
-};
-template <> struct std::hash<Intr::Intrinsic> {
-  auto operator()(const Intr::Intrinsic &s) const noexcept -> size_t {
-    return llvm::detail::combineHashValue(std::hash<unsigned>{}(s.opcode.id),
-                                          std::hash<unsigned>{}(s.intrin.id));
-  }
-};
-
-template <> struct std::hash<Intr::UniqueIdentifier> {
-  auto operator()(const Intr::UniqueIdentifier &s) const noexcept -> size_t {
-    return llvm::detail::combineHashValue(
-      std::hash<Intr::Identifier>{}(s.idtf),
-      std::hash<MutPtrVector<Intr *>>{}(s.operands));
-  }
-};
-
-/// here, we define an avalanching hash function for `InstByValue`
-///
-template <> struct ankerl::unordered_dense::hash<poly::IR::InstByValue> {
-  using is_avalanching = void;
-  [[nodiscard]] auto operator()(poly::IR::InstByValue const &x) const noexcept
-    -> uint64_t {
-    using detail::wyhash::hash, poly::containers::UList, poly::IR::Node;
-    uint64_t seed = hash(x.inst->getKind());
-    seed = combineHash(seed, hash(x.inst->getType()));
-    seed = combineHash(seed, hash(x.inst->getOpId()));
-    if (x.inst->isIncomplete())
-      return combineHash(seed, hash(x.inst->getLLVMInstruction()));
-    uint8_t assocFlag = x.inst->associativeOperandsFlag();
-    // combine all operands
-    size_t offset = 0;
-    UList<Node *> *operands = x.inst->getOperands();
-    if (assocFlag) {
-      invariant(assocFlag, uint8_t(3));
-      // we combine hashes in a commutative way
-      seed = combineHash(seed, hash((*operands)[0]) + hash((*operands)[1]));
-      offset = 2;
-    }
-    for (UList<Node *> *L = operands; L; L = L->getNext()) {
-      for (Node **B = L->dbegin() + offset, E = L->dend(); B != E; ++B)
-        seed = combineHash(seed, hash(*B));
-      offset = 0;
-    }
-    return seed;
-  }
-};

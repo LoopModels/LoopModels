@@ -12,7 +12,7 @@ using dict::map;
 class Cache {
   map<llvm::Value *, Node *> llvmToInternalMap;
   map<InstByValue, Inst *> instCSEMap;
-  map<std::pair<llvm::Type *, int64_t>, Cint *> cintMap;
+  map<Cnst::Identifier, Cnst *> constMap;
   BumpAlloc<> alloc;
   Inst *loopInvariants{nullptr};        // negative numOps/incomplete
   Inst *freeInstList{nullptr};          // positive numOps/complete, but empty
@@ -173,8 +173,13 @@ public:
   }
   auto createConstant(llvm::Type *typ, int64_t v) -> Cint * {
     Cint *c = alloc.create<Cint>(v, typ);
-    cintMap[{typ, v}] = c;
-    return c;
+    constMap[Cnst::Identifier(typ, v)] = c;
+    return static_cast<Cint *>(c);
+  }
+  auto getConstant(llvm::Type *typ, int64_t v) -> Cint * {
+    Cnst *&c = constMap[Cnst::Identifier(typ, v)];
+    if (!c) c = createConstant(typ, v);
+    return static_cast<Cint *>(c);
   }
   auto createConstant(llvm::Type *typ, double v) -> Cflt * {
     return alloc.create<Cflt>(v, typ);
@@ -183,11 +188,6 @@ public:
     CVal *v = alloc.create<CVal>(val);
     n = v;
     return v;
-  }
-  auto getConstant(llvm::Type *typ, int64_t v) -> Cint * {
-    Cint *&c = cintMap[{typ, v}];
-    if (!c) c = createConstant(typ, v);
-    return c;
   }
   auto createCondition(Predicate::Relation rel, Inst *instr, bool swap = false)
     -> Node * {
@@ -244,7 +244,7 @@ public:
     } while (ind < 32);
     return J;
   }
-  auto createSelect(BumpAlloc<> &alloc, Intr *A, Intr *B) -> Intr * {
+  auto createSelect(Intr *A, Intr *B) -> Intr * {
     auto idt = Intrinsic(Intrinsic::OpCode{llvm::Instruction::Select});
     // TODO: make predicate's instruction vector shared among all in
     // LoopTree?
