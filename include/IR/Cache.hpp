@@ -4,19 +4,22 @@
 #include "IR/Address.hpp"
 #include "IR/Instruction.hpp"
 #include "IR/Node.hpp"
+#include <cstddef>
+#include <llvm/IR/FMF.h>
 
 namespace poly::IR {
 using dict::map;
 class Cache {
   map<llvm::Value *, Node *> llvmToInternalMap;
   map<InstByValue, Inst *> instCSEMap;
+  map<std::pair<llvm::Type *, int64_t>, Cint *> cintMap;
   BumpAlloc<> alloc;
   Inst *loopInvariants{nullptr};        // negative numOps/incomplete
   Inst *freeInstList{nullptr};          // positive numOps/complete, but empty
   UList<Node *> *freeListList{nullptr}; // TODO: make use of these
   auto allocateInst(unsigned numOps) -> Inst * {
     // because we allocate children before parents
-    for (Inst *I = freeInstList; I; I = I->getNext()) {
+    for (Inst *I = freeInstList; I; I = static_cast<Inst *>(I->getNext())) {
       if (I->getNumOperands() != numOps) continue;
       I->removeFromList();
       return I;
@@ -26,10 +29,10 @@ class Cache {
       alloc.allocate(sizeof(Inst) + sizeof(Node *) * numOps, alignof(Inst)));
   }
   void addLoopInstr(llvm::Loop *L) {
-    for (Inst *I = loopInvariants; I; I = I->getNext()) {
+    for (Inst *I = loopInvariants; I; I = static_cast<Inst *>(I->getNext())) {
       if (!L->isLoopInvariant(I->getLLVMInstruction())) continue;
       I->removeFromList();
-      complete(I);
+      complete(I, L);
     }
   }
   /// complete the operands
@@ -54,7 +57,7 @@ class Cache {
   auto cse(Inst *I) -> Inst * {
     Inst *&cse = getCSE(I);
     if (cse == nullptr || (cse == I)) return cse = I; // update ref
-    I->replaceAllUsesWith(cse);
+    replaceAllUsesWith(I, cse);
     I->removeFromList();
     I->setNext(freeInstList);
     freeInstList = I;
@@ -77,7 +80,7 @@ class Cache {
   constexpr void replaceAllUsesWith(Inst *oldNode, Node *newNode) {
     oldNode->getUsers()->forEach([=, this](Node *user) {
       if (Inst *I = llvm::dyn_cast<Inst>(user)) {
-        for (Node *&o : ins->getOperands())
+        for (Node *&o : I->getOperands())
           if (o == oldNode) o = newNode;
         user = cse(I); // operands changed, try to CSE
       } else {
@@ -90,11 +93,13 @@ class Cache {
         if (isPred) addr->setPredicate(newNode);
         if (isStored) addr->setVal(newNode);
       }
-      newNode->getUsers()->pushUnique(user);
+      UList<Node *> *tnode = newNode->getUsers();
+      newNode->setUsers(tnode->pushUnique(alloc, user));
     });
     // every operand of oldNode needs their users updated
     for (Node *n : oldNode->getOperands()) n->removeFromUsers(oldNode);
-    freeListList = oldNode->getUsers()->append(freeListList);
+    if (freeListList) freeListList->append(oldNode->getUsers());
+    else freeListList = oldNode->getUsers();
     oldNode->setUsers(nullptr);
     oldNode->setNext(freeInstList);
     freeInstList = oldNode;
@@ -102,7 +107,7 @@ class Cache {
   auto createInstruction(llvm::Instruction *i, llvm::Loop *L) -> Node * {
     auto [id, kind] = Inst::getIDKind(i);
     int numOps = i->getNumOperands();
-    Inst *n = std::construct_at(allocInst(numOps), kind, i, id, -numOps);
+    Inst *n = std::construct_at(allocateInst(numOps), kind, i, id, -numOps);
     llvmToInternalMap[i] = n;
     if (L->isLoopInvariant(i)) {
       n->setNext(loopInvariants);
@@ -110,35 +115,60 @@ class Cache {
     } else n = complete(n, L);
     return n;
   }
-  auto operator[](llvm::Value *v) -> Intr * {
+  template <size_t N>
+  auto createOperation(llvm::Intrinsic::ID opId, std::array<Node *, N> ops,
+                       llvm::Type *typ, llvm::FastMathFlags fmf) -> Node * {
+    Inst *op =
+      std::construct_at(allocateInst(ops), Node::VK_Oprn, opId, ops, typ, fmf);
+    std::copy_n(ops.begin(), N, op->getOperands().begin());
+    return op;
+  }
+  auto operator[](llvm::Value *v) -> Node * {
     auto f = llvmToInternalMap.find(v);
     if (f != llvmToInternalMap.end()) return f->second;
     return nullptr;
   }
-  auto createConstant(BumpAlloc<> &alloc, llvm::Type *typ, int64_t c)
-    -> Intr * {
-    UniqueIdentifier uid{Identifier(c), {nullptr, unsigned(0)}};
-    auto argMatch = argMap.find(uid);
-    if (argMatch != argMap.end()) return argMatch->second;
-    return new (alloc) Intr(alloc, uid, typ);
+  auto createConstant(llvm::ConstantInt *c) -> Cnst * {
+    if (c->getBitWidth() <= 64)
+      return createConstant(c->getType(), c->getSExtValue());
+    return alloc.create<Bint>(c, c->getType());
   }
-  auto eslgetConstant(BumpAlloc<> &alloc, llvm::Type *typ, int64_t c)
-    -> Intr * {
-    UniqueIdentifier uid{Identifier(c), {nullptr, unsigned(0)}};
-    if (auto *i = (*this)[uid]) return i;
-    return createConstant(alloc, typ, c);
+  auto createConstant(llvm::Type *typ, int64_t v) -> Cint * {
+    Cint *c = alloc.create<Cint>(v, typ);
+    cintMap[{typ, v}] = c;
+    return c;
   }
-  auto createCondition(BumpAlloc<> &alloc, Predicate::Relation rel, Intr *instr,
-                       bool swap = false) -> Node * {
+  auto getConstant(llvm::Type *typ, int64_t v) -> Cint * {
+    Cint *&c = cintMap[{typ, v}];
+    if (!c) c = createConstant(typ, v);
+    return c;
+  }
+  auto createCondition(Predicate::Relation rel, Inst *instr, bool swap = false)
+    -> Node * {
     switch (rel) {
     case Predicate::Relation::Any:
       return Cint::create(alloc, 1, instr->getType());
     case Predicate::Relation::Empty:
       return Cint::create(alloc, 0, instr->getType());
     case Predicate::Relation::False: swap = !swap; [[fallthrough]];
-    case Predicate::Relation::True:
-      return swap ? instr->negate(alloc, *this) : instr;
+    case Predicate::Relation::True: return swap ? negate(instr) : instr;
     }
+  }
+  auto negate(Inst *I) -> Node * {
+    // first, check if its parent is a negation
+    if (Operation op = Operation(I); op &&
+                                     op.isInstruction(llvm::Instruction::Xor) &&
+                                     (op.getNumOperands() == 2)) {
+      // !x where `x isa bool` is represented as `x ^ true`
+      auto *op0 = I->getOperand(0);
+      auto *op1 = I->getOperand(1);
+      if (isConstantOneInt(op1)) return op0;
+      if (isConstantOneInt(op0)) return op1;
+    }
+    Cint *one = getConstant(I->getType(), 1);
+    return createOperation(llvm::Instruction::Xor,
+                           std::array<Node *, 2>{I, one}, I->getType(),
+                           I->getFastMathFlags());
   }
   auto createCondition(BumpAlloc<> &alloc, Predicate::Intersection pred,
                        bool swap) -> Intr * {

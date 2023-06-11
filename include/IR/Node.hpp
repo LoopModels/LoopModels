@@ -94,7 +94,9 @@ public:
     VK_Loop,
     VK_CVal,
     VK_Cint,
+    VK_Bint,
     VK_Cflt,
+    VK_Bflt,
     VK_Func, // used for ordered comparisons; all `Inst` types >= Func
     VK_Call,
     VK_Oprn,
@@ -122,7 +124,7 @@ protected:
   union {
     UList<Node *> *users{nullptr}; // Func, Call, Oprn, Load
     Node *node;                    // Stow, Loop, Exit
-    llvm::Type *typ;               // Cint, Cflt
+    llvm::Type *typ;               // Cint, Cflt, Bint, Bflt
     llvm::Value *val;              // CVal
   } unionPtr;
   const ValKind kind;
@@ -136,6 +138,10 @@ public:
   [[nodiscard]] constexpr auto getUsers() const -> UList<Node *> * {
     invariant(kind == VK_Load || kind >= VK_Func);
     return unionPtr.users;
+  }
+  constexpr void setUsers(UList<Node *> *users) {
+    invariant(kind == VK_Load || kind >= VK_Func);
+    unionPtr.users = users;
   }
   constexpr void addUser(BumpAlloc<> &alloc, Node *n) {
     invariant(kind == VK_Load || kind >= VK_Func);
@@ -395,4 +401,50 @@ public:
 
   [[nodiscard]] constexpr auto getVal() const -> double { return val; }
 };
+/// A constant value w/ respect to the loopnest.
+class Bint : public Cnst {
+  llvm::ConstantInt *val;
+
+public:
+  constexpr Bint(llvm::ConstantInt *v, llvm::Type *t)
+    : Cnst(VK_Bint, t), val(v) {}
+  static constexpr auto create(BumpAlloc<> &alloc, llvm::ConstantInt *v,
+                               llvm::Type *t) -> Bint * {
+    return alloc.create<Bint>(v, t);
+  }
+  static constexpr auto classof(const Node *v) -> bool {
+    return v->getKind() == VK_Bint;
+  }
+
+  [[nodiscard]] constexpr auto getVal() const -> llvm::ConstantInt * {
+    return val;
+  }
+};
+/// Cnst
+/// A constant value w/ respect to the loopnest.
+class Bflt : public Cnst {
+  llvm::ConstantFP *val;
+
+public:
+  constexpr Bflt(llvm::ConstantFP *v, llvm::Type *t)
+    : Cnst(VK_Bflt, t), val(v) {}
+  static constexpr auto create(BumpAlloc<> &alloc, llvm::ConstantFP *v,
+                               llvm::Type *t) -> Bflt * {
+    return alloc.create<Bflt>(v, t);
+  }
+  static constexpr auto classof(const Node *v) -> bool {
+    return v->getKind() == VK_Bflt;
+  }
+
+  [[nodiscard]] constexpr auto getVal() const -> llvm::ConstantFP * {
+    return val;
+  }
+};
+
+[[nodiscard]] inline auto isConstantOneInt(Node *n) -> bool {
+  if (Cint *c = llvm::dyn_cast<Cint>(n)) return c->getVal() == 1;
+  if (Bint *c = llvm::dyn_cast<Bint>(n)) return c->getVal()->isOne();
+  return false;
+}
+
 } // namespace poly::IR

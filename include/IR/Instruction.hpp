@@ -139,6 +139,10 @@ public:
                  int numOps)
     : Node(k), inst(i), type(i->getType()), op(id), numOperands(numOps),
       fastMathFlags(i->getFastMathFlags()) {}
+  constexpr Inst(ValKind k, llvm::Intrinsic::ID id, int numOps, llvm::Type *t,
+                 llvm::FastMathFlags fmf)
+    : Node(k), inst(nullptr), type(t), op(id), numOperands(numOps),
+      fastMathFlags(fmf) {}
 
   // static constexpr auto construct(BumpAlloc<> &alloc, ValKind k,
   //                                 llvm::Instruction *i, llvm::Intrinsic::ID
@@ -196,6 +200,8 @@ public:
   constexpr auto getOperands() const -> PtrVector<Node *> {
     return {const_cast<Node **>(operands), unsigned(numOperands)};
   }
+  constexpr auto getOperand(size_t i) const -> Node * { return operands[i]; }
+
   constexpr auto getFastMathFlags() const -> llvm::FastMathFlags {
     return fastMathFlags;
   }
@@ -284,17 +290,28 @@ class Operation {
 
 public:
   constexpr operator Inst *() const { return ins; }
-  constexpr Operation(Inst *I) : ins(I) {
-    invariant(ins->getKind(), Node::VK_Oprn);
+  constexpr Operation(Inst *I)
+    : ins(I->getKind() == Node::VK_Oprn ? I : nullptr) {}
+  constexpr explicit operator bool() const { return ins; }
+  [[nodiscard]] auto getOpCode() const -> llvm::Intrinsic::ID {
+    return ins->getOpId();
   }
-  [[nodiscard]] auto getOpCode() const -> llvm::Intrinsic::ID { return op; }
   static auto getOpCode(llvm::Value *v) -> std::optional<llvm::Intrinsic::ID> {
     if (auto *i = llvm::dyn_cast<llvm::Instruction>(v)) return i->getOpcode();
     return {};
   }
+  constexpr auto getOperands() const -> PtrVector<Node *> {
+    return ins->getOperands();
+  }
+  constexpr auto getOperand(size_t i) const -> Node * {
+    return ins->getOperand(i);
+  }
+  constexpr auto getNumOperands() const -> unsigned {
+    return ins->getNumOperands();
+  }
   [[nodiscard]] constexpr auto isInstruction(llvm::Intrinsic::ID opCode) const
     -> bool {
-    return op == opCode;
+    return getOpCode() == opCode;
   }
   static auto isFMul(Node *n) -> bool {
     if (auto *op = llvm::dyn_cast<Operation>(n)) return op->isFMul();
@@ -307,7 +324,7 @@ public:
     return isInstruction(llvm::Instruction::FNeg);
   }
   [[nodiscard]] auto isFMulOrFNegOfFMul() const -> bool {
-    return isFMul() || (isFNeg() && isFMul(getOperands()->only()));
+    return isFMul() || (isFNeg() && isFMul(getOperands()[0]));
   }
   [[nodiscard]] auto isFAdd() const -> bool {
     return isInstruction(llvm::Instruction::FAdd);
@@ -339,10 +356,6 @@ public:
   }
   [[nodiscard]] auto isInsertValue() const -> bool {
     return isInstruction(llvm::Instruction::InsertValue);
-  }
-
-  static constexpr auto classof(const Node *v) -> bool {
-    return v->getKind() == VK_Oprn;
   }
 };
 // a call, e.g. fmuladd, sqrt, sin
@@ -471,19 +484,6 @@ public:
     return i;
   }
 
-  auto negate(BumpAlloc<> &alloc, Cache &cache) -> Intr * {
-    // first, check if its parent is a negation
-    if (isInstruction(llvm::Instruction::Xor) && (getNumOperands() == 2)) {
-      // !x where `x isa bool` is represented as `x ^ true`
-      auto *op0 = getOperand(0);
-      auto *op1 = getOperand(1);
-      if (op1->isConstantOneInt()) return op0;
-      if (op0->isConstantOneInt()) return op1;
-    }
-    Intr *one = cache.getConstant(alloc, getType(), 1);
-    Identifier Xor = Intrinsic(Intrinsic::OpCode{llvm::Instruction::Xor});
-    return cache.getInstruction(alloc, Xor, this, one, getType());
-  }
   [[nodiscard]] auto isInstruction(llvm::Intrinsic::ID op) const -> bool {
     const Intrinsic *intrin = std::get_if<Intrinsic>(&idtf);
     if (!intrin) return false;
@@ -775,10 +775,6 @@ public:
 
     if (operands.front()->isFMul() && allUsersAdditiveContract()) return {};
     return calcUnaryArithmeticCost(TTI, idt, vectorWidth);
-  }
-  [[nodiscard]] auto isConstantOneInt() const -> bool {
-    if (const int64_t *c = std::get_if<int64_t>(&idtf)) return *c == 1;
-    return false;
   }
   [[nodiscard]] auto calculateCost(llvm::TargetTransformInfo &TTI,
                                    unsigned int vectorWidth)
