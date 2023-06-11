@@ -82,9 +82,21 @@ constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>operator Inst *<
 <tr class="memitem:aca5d660717bab757415eecfc0ce257ee"><td class="memItemLeft" align="right" valign="top"><a id="aca5d660717bab757415eecfc0ce257ee"></a>
 constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Operation</b> (<a class="el" href="classpoly_1_1IR_1_1Inst.html">Inst</a> *I)</td></tr>
 <tr class="separator:aca5d660717bab757415eecfc0ce257ee"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0745ca67123294d09e18c85ab7c69f55"><td class="memItemLeft" align="right" valign="top"><a id="a0745ca67123294d09e18c85ab7c69f55"></a>
+constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>operator bool</b> () const</td></tr>
+<tr class="separator:a0745ca67123294d09e18c85ab7c69f55"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa66bf186982320d67a71e3cdedad13a4"><td class="memItemLeft" align="right" valign="top"><a id="aa66bf186982320d67a71e3cdedad13a4"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>getOpCode</b> () const -&gt; llvm::Intrinsic::ID</td></tr>
 <tr class="separator:aa66bf186982320d67a71e3cdedad13a4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a584a12b500755a579f8c8880c525e9a4"><td class="memItemLeft" align="right" valign="top"><a id="a584a12b500755a579f8c8880c525e9a4"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getOperands</b> () const -&gt; PtrVector&lt; <a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a> * &gt;</td></tr>
+<tr class="separator:a584a12b500755a579f8c8880c525e9a4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab56bb79b640243660a013c26f3731a61"><td class="memItemLeft" align="right" valign="top"><a id="ab56bb79b640243660a013c26f3731a61"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getOperand</b> (size_t i) const -&gt; <a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a> *</td></tr>
+<tr class="separator:ab56bb79b640243660a013c26f3731a61"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a29ae5e2078aed6a93aa93376e1dc0ed4"><td class="memItemLeft" align="right" valign="top"><a id="a29ae5e2078aed6a93aa93376e1dc0ed4"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumOperands</b> () const -&gt; unsigned</td></tr>
+<tr class="separator:a29ae5e2078aed6a93aa93376e1dc0ed4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac106ef63fe53a2ce6647d103eef55db6"><td class="memItemLeft" align="right" valign="top"><a id="ac106ef63fe53a2ce6647d103eef55db6"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>isInstruction</b> (llvm::Intrinsic::ID opCode) const -&gt; bool</td></tr>
 <tr class="separator:ac106ef63fe53a2ce6647d103eef55db6"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -139,9 +151,6 @@ static auto&#160;</td><td class="memItemRight" valign="bottom"><b>getOpCode</b> 
 <tr class="memitem:a42291afda31b17106e7fca67fa3ebbe7"><td class="memItemLeft" align="right" valign="top"><a id="a42291afda31b17106e7fca67fa3ebbe7"></a>
 static auto&#160;</td><td class="memItemRight" valign="bottom"><b>isFMul</b> (<a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a> *n) -&gt; bool</td></tr>
 <tr class="separator:a42291afda31b17106e7fca67fa3ebbe7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aae5ae4fcc080124169d41b411bb9daa5"><td class="memItemLeft" align="right" valign="top"><a id="aae5ae4fcc080124169d41b411bb9daa5"></a>
-static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>classof</b> (const <a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a> *v) -&gt; bool</td></tr>
-<tr class="separator:aae5ae4fcc080124169d41b411bb9daa5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <hr/>The documentation for this class was generated from the following file:<ul>
 <li>include/IR/<a class="el" href="Instruction_8hpp_source.html">Instruction.hpp</a></li>

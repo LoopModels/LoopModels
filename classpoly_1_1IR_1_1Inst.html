@@ -89,6 +89,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:ac26f0f15e62eb4f8d31935ecdedd4719"><td class="memItemLeft" align="right" valign="top"><a id="ac26f0f15e62eb4f8d31935ecdedd4719"></a>
 constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Inst</b> (ValKind k, llvm::Instruction *i, llvm::Intrinsic::ID id, int numOps)</td></tr>
 <tr class="separator:ac26f0f15e62eb4f8d31935ecdedd4719"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af7fd4559eb4104ba585294723ee68f18"><td class="memItemLeft" align="right" valign="top"><a id="af7fd4559eb4104ba585294723ee68f18"></a>
+constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Inst</b> (ValKind k, llvm::Intrinsic::ID id, int numOps, llvm::Type *t, llvm::FastMathFlags fmf)</td></tr>
+<tr class="separator:af7fd4559eb4104ba585294723ee68f18"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6b66ae41599ebc3f317e4d162ff00391"><td class="memItemLeft" align="right" valign="top"><a id="a6b66ae41599ebc3f317e4d162ff00391"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getLLVMInstruction</b> () const -&gt; llvm::Instruction *</td></tr>
 <tr class="separator:a6b66ae41599ebc3f317e4d162ff00391"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -122,6 +125,9 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getOperands
 <tr class="memitem:ab3d6adcafef541065c45b7936f638e79"><td class="memItemLeft" align="right" valign="top"><a id="ab3d6adcafef541065c45b7936f638e79"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getOperands</b> () const -&gt; PtrVector&lt; <a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a> * &gt;</td></tr>
 <tr class="separator:ab3d6adcafef541065c45b7936f638e79"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae5d61e2c92b55d8c1995a54b75a3bf01"><td class="memItemLeft" align="right" valign="top"><a id="ae5d61e2c92b55d8c1995a54b75a3bf01"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getOperand</b> (size_t i) const -&gt; <a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a> *</td></tr>
+<tr class="separator:ae5d61e2c92b55d8c1995a54b75a3bf01"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5784e1cb81e11bc0fc9372ac864878d0"><td class="memItemLeft" align="right" valign="top"><a id="a5784e1cb81e11bc0fc9372ac864878d0"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getFastMathFlags</b> () const -&gt; llvm::FastMathFlags</td></tr>
 <tr class="separator:a5784e1cb81e11bc0fc9372ac864878d0"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -150,6 +156,9 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator==</b> (<a cl
 <tr class="memitem:abd45596f4f3430fae5c58202f66e08ed inherit pub_methods_classpoly_1_1IR_1_1Node"><td class="memItemLeft" align="right" valign="top"><a id="abd45596f4f3430fae5c58202f66e08ed"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getUsers</b> () const -&gt; UList&lt; <a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a> * &gt; *</td></tr>
 <tr class="separator:abd45596f4f3430fae5c58202f66e08ed inherit pub_methods_classpoly_1_1IR_1_1Node"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ace7c1cc2611146ac260ba8410525d16f inherit pub_methods_classpoly_1_1IR_1_1Node"><td class="memItemLeft" align="right" valign="top"><a id="ace7c1cc2611146ac260ba8410525d16f"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>setUsers</b> (UList&lt; <a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a> * &gt; *users)</td></tr>
+<tr class="separator:ace7c1cc2611146ac260ba8410525d16f inherit pub_methods_classpoly_1_1IR_1_1Node"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2cb901a782e1e964850af0766ed18007 inherit pub_methods_classpoly_1_1IR_1_1Node"><td class="memItemLeft" align="right" valign="top"><a id="a2cb901a782e1e964850af0766ed18007"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>addUser</b> (BumpAlloc&lt;&gt; &amp;alloc, <a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a> *n)</td></tr>
 <tr class="separator:a2cb901a782e1e964850af0766ed18007 inherit pub_methods_classpoly_1_1IR_1_1Node"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -276,10 +285,12 @@ Additional Inherited Members</h2></td></tr>
 , <br />
 &#160;&#160;<b>VK_CVal</b>
 , <b>VK_Cint</b>
+, <b>VK_Bint</b>
 , <b>VK_Cflt</b>
-, <b>VK_Func</b>
 , <br />
-&#160;&#160;<b>VK_Call</b>
+&#160;&#160;<b>VK_Bflt</b>
+, <b>VK_Func</b>
+, <b>VK_Call</b>
 , <b>VK_Oprn</b>
 <br />
  }</td></tr>

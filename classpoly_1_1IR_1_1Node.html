@@ -90,8 +90,10 @@ Inheritance diagram for poly::IR::Node:</div>
 <area href="classpoly_1_1IR_1_1Exit.html" alt="poly::IR::Exit" shape="rect" coords="297,56,386,80"/>
 <area href="classpoly_1_1IR_1_1Inst.html" alt="poly::IR::Inst" shape="rect" coords="396,56,485,80"/>
 <area href="classpoly_1_1IR_1_1Loop.html" alt="poly::IR::Loop" shape="rect" coords="495,56,584,80"/>
-<area href="classpoly_1_1IR_1_1Cflt.html" alt="poly::IR::Cflt" shape="rect" coords="148,112,237,136"/>
-<area href="classpoly_1_1IR_1_1Cint.html" title="A constant value w/ respect to the loopnest." alt="poly::IR::Cint" shape="rect" coords="247,112,336,136"/>
+<area href="classpoly_1_1IR_1_1Bflt.html" alt="poly::IR::Bflt" shape="rect" coords="49,112,138,136"/>
+<area href="classpoly_1_1IR_1_1Bint.html" title="A constant value w/ respect to the loopnest." alt="poly::IR::Bint" shape="rect" coords="148,112,237,136"/>
+<area href="classpoly_1_1IR_1_1Cflt.html" alt="poly::IR::Cflt" shape="rect" coords="247,112,336,136"/>
+<area href="classpoly_1_1IR_1_1Cint.html" title="A constant value w/ respect to the loopnest." alt="poly::IR::Cint" shape="rect" coords="346,112,435,136"/>
   </map>
 </div></div>
 <table class="memberdecls">
@@ -105,10 +107,12 @@ Public Types</h2></td></tr>
 , <br />
 &#160;&#160;<b>VK_CVal</b>
 , <b>VK_Cint</b>
+, <b>VK_Bint</b>
 , <b>VK_Cflt</b>
-, <b>VK_Func</b>
 , <br />
-&#160;&#160;<b>VK_Call</b>
+&#160;&#160;<b>VK_Bflt</b>
+, <b>VK_Func</b>
+, <b>VK_Call</b>
 , <b>VK_Oprn</b>
 <br />
  }</td></tr>
@@ -119,6 +123,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:abd45596f4f3430fae5c58202f66e08ed"><td class="memItemLeft" align="right" valign="top"><a id="abd45596f4f3430fae5c58202f66e08ed"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getUsers</b> () const -&gt; UList&lt; <a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a> * &gt; *</td></tr>
 <tr class="separator:abd45596f4f3430fae5c58202f66e08ed"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ace7c1cc2611146ac260ba8410525d16f"><td class="memItemLeft" align="right" valign="top"><a id="ace7c1cc2611146ac260ba8410525d16f"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>setUsers</b> (UList&lt; <a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a> * &gt; *users)</td></tr>
+<tr class="separator:ace7c1cc2611146ac260ba8410525d16f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2cb901a782e1e964850af0766ed18007"><td class="memItemLeft" align="right" valign="top"><a id="a2cb901a782e1e964850af0766ed18007"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>addUser</b> (BumpAlloc&lt;&gt; &amp;alloc, <a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a> *n)</td></tr>
 <tr class="separator:a2cb901a782e1e964850af0766ed18007"><td class="memSeparator" colspan="2">&#160;</td></tr>

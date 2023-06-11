@@ -9,6 +9,8 @@ var searchData=
   ['basesymboliccomparator_18',['BaseSymbolicComparator',['../structpoly_1_1comparator_1_1BaseSymbolicComparator.html',1,'poly::comparator']]],
   ['basesymboliccomparator_3c_20linearsymboliccomparator_20_3e_19',['BaseSymbolicComparator&lt; LinearSymbolicComparator &gt;',['../structpoly_1_1comparator_1_1BaseSymbolicComparator.html',1,'poly::comparator']]],
   ['basesymboliccomparator_3c_20ptrsymboliccomparator_20_3e_20',['BaseSymbolicComparator&lt; PtrSymbolicComparator &gt;',['../structpoly_1_1comparator_1_1BaseSymbolicComparator.html',1,'poly::comparator']]],
-  ['bumpptrvector_21',['BumpPtrVector',['../structpoly_1_1math_1_1BumpPtrVector.html',1,'poly::math']]],
-  ['bumpptrvector_3c_20std_3a_3apair_3c_20k_2c_20v_20_3e_20_3e_22',['BumpPtrVector&lt; std::pair&lt; K, V &gt; &gt;',['../structpoly_1_1math_1_1BumpPtrVector.html',1,'poly::math']]]
+  ['bflt_21',['Bflt',['../classpoly_1_1IR_1_1Bflt.html',1,'poly::IR']]],
+  ['bint_22',['Bint',['../classpoly_1_1IR_1_1Bint.html',1,'poly::IR']]],
+  ['bumpptrvector_23',['BumpPtrVector',['../structpoly_1_1math_1_1BumpPtrVector.html',1,'poly::math']]],
+  ['bumpptrvector_3c_20std_3a_3apair_3c_20k_2c_20v_20_3e_20_3e_24',['BumpPtrVector&lt; std::pair&lt; K, V &gt; &gt;',['../structpoly_1_1math_1_1BumpPtrVector.html',1,'poly::math']]]
 ];
