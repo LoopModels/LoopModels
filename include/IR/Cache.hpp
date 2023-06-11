@@ -64,18 +64,17 @@ class Cache {
     return cse;
   }
   auto getValue(llvm::Value *v, llvm::Loop *L) -> Node * {
-    auto &n = llvmToInternalMap[v];
+    Node *&n = llvmToInternalMap[v];
     if (n) return n;
-    return createValue(v, L);
+    return createValue(v, L, n);
   }
-  auto createValue(llvm::Value *v, llvm::Loop *L) -> Node * {
+  auto createValue(llvm::Value *v, llvm::Loop *L, Node *&n) -> Node * {
     if (auto *i = llvm::dyn_cast<llvm::Instruction>(v))
-      return createInstruction(i, L);
-    else if (auto *c = llvm::dyn_cast<llvm::ConstantInt>(v))
-      return createConstantInt(c);
-    else if (auto *c = llvm::dyn_cast<llvm::ConstantFP>(v))
-      return createConstantFP(c);
-    else return createConstantVal(v);
+      return createInstruction(i, L, n);
+    if (auto *c = llvm::dyn_cast<llvm::ConstantInt>(v))
+      return createConstant(c, n);
+    if (auto *c = llvm::dyn_cast<llvm::ConstantFP>(v)) return createConstant(c);
+    return createConstantVal(v, n);
   }
   constexpr void replaceAllUsesWith(Inst *oldNode, Node *newNode) {
     oldNode->getUsers()->forEach([=, this](Node *user) {
@@ -104,11 +103,12 @@ class Cache {
     oldNode->setNext(freeInstList);
     freeInstList = oldNode;
   }
-  auto createInstruction(llvm::Instruction *i, llvm::Loop *L) -> Node * {
+  auto createInstruction(llvm::Instruction *i, llvm::Loop *L, Node *&t)
+    -> Node * {
     auto [id, kind] = Inst::getIDKind(i);
     int numOps = i->getNumOperands();
     Inst *n = std::construct_at(allocateInst(numOps), kind, i, id, -numOps);
-    llvmToInternalMap[i] = n;
+    t = n;
     if (L->isLoopInvariant(i)) {
       n->setNext(loopInvariants);
       loopInvariants = n;
@@ -128,15 +128,32 @@ class Cache {
     if (f != llvmToInternalMap.end()) return f->second;
     return nullptr;
   }
-  auto createConstant(llvm::ConstantInt *c) -> Cnst * {
-    if (c->getBitWidth() <= 64)
-      return createConstant(c->getType(), c->getSExtValue());
-    return alloc.create<Bint>(c, c->getType());
+  auto createConstant(llvm::ConstantInt *c, Node *&n) -> Cnst * {
+    Cnst *cnst = (c->getBitWidth() <= 64)
+                   ? (Cnst *)createConstant(c->getType(), c->getSExtValue())
+                   : (Cnst *)alloc.create<Bint>(c, c->getType());
+    n = cnst;
+    return cnst;
+  }
+  auto createConstant(llvm::ConstantFP *f) -> Bflt * {
+    Node *&n = llvmToInternalMap[f];
+    if (n) return static_cast<Bflt *>(n);
+    Bflt *cnst = alloc.create<Bflt>(f, f->getType());
+    n = cnst;
+    return cnst;
   }
   auto createConstant(llvm::Type *typ, int64_t v) -> Cint * {
     Cint *c = alloc.create<Cint>(v, typ);
     cintMap[{typ, v}] = c;
     return c;
+  }
+  auto createConstant(llvm::Type *typ, double v) -> Cflt * {
+    return alloc.create<Cflt>(v, typ);
+  }
+  auto createConstantVal(llvm::Value *val, Node *&n) -> CVal * {
+    CVal *v = alloc.create<CVal>(val);
+    n = v;
+    return v;
   }
   auto getConstant(llvm::Type *typ, int64_t v) -> Cint * {
     Cint *&c = cintMap[{typ, v}];
@@ -170,8 +187,7 @@ class Cache {
                            std::array<Node *, 2>{I, one}, I->getType(),
                            I->getFastMathFlags());
   }
-  auto createCondition(BumpAlloc<> &alloc, Predicate::Intersection pred,
-                       bool swap) -> Intr * {
+  auto createCondition(Predicate::Intersection pred, bool swap) -> Intr * {
     size_t popCount = pred.popCount();
 
     if (popCount == 0) return getConstant(alloc, predicates[0]->getType(), 1);
