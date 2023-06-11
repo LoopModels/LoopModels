@@ -11,9 +11,9 @@ class Cache {
   map<llvm::Value *, Node *> llvmToInternalMap;
   map<InstByValue, Inst *> instCSEMap;
   BumpAlloc<> alloc;
-  Inst *loopInvariants{nullptr}; // negative numOps/incomplete
-  Inst *freeInstList{nullptr};   // positive numOps/complete, but empty
-  UList<Node *> *freeListList{nullptr};
+  Inst *loopInvariants{nullptr};        // negative numOps/incomplete
+  Inst *freeInstList{nullptr};          // positive numOps/complete, but empty
+  UList<Node *> *freeListList{nullptr}; // TODO: make use of these
   auto allocateInst(unsigned numOps) -> Inst * {
     // because we allocate children before parents
     for (Inst *I = freeInstList; I; I = I->getNext()) {
@@ -47,6 +47,10 @@ class Cache {
   }
   auto getCSE(Inst *I) -> Inst *& { return instCSEMap[InstByValue{I}]; }
   // try to remove `I` as a duplicate
+  // this travels downstream;
+  // if `I` is eliminated, all users of `I`
+  // get updated, making them CSE-candiates.
+  // In this manner, we travel downstream through users.
   auto cse(Inst *I) -> Inst * {
     Inst *&cse = getCSE(I);
     if (cse == nullptr || (cse == I)) return cse = I; // update ref
@@ -70,25 +74,30 @@ class Cache {
       return createConstantFP(c);
     else return createConstantVal(v);
   }
-  constexpr void replaceAllUsesWith(Node *oldNode, Node *newNode) {
+  constexpr void replaceAllUsesWith(Inst *oldNode, Node *newNode) {
     oldNode->getUsers()->forEach([=, this](Node *user) {
-      if (Inst *ins = llvm::dyn_cast<Inst>(user)) {
+      if (Inst *I = llvm::dyn_cast<Inst>(user)) {
         for (Node *&o : ins->getOperands())
           if (o == oldNode) o = newNode;
+        user = cse(I); // operands changed, try to CSE
       } else {
         Addr *addr = llvm::cast<Addr>(user);
         // could be load or store; either are predicated
-        if (addr->getPredicate() == oldNode) addr->setPredicate(newNode);
-        if (addr->isStore() && addr->getStoredVal() == oldNode)
-          addr->setVal(newNode);
+        // we might have `if (b) store(b)`, hence need both checks?
+        bool isPred = addr->getPredicate() == oldNode,
+             isStored = addr->isStore() && addr->getStoredVal() == oldNode;
+        invariant(isPred || isStored); // at least one must be true!
+        if (isPred) addr->setPredicate(newNode);
+        if (isStored) addr->setVal(newNode);
       }
+      newNode->getUsers()->pushUnique(user);
     });
-    // TODO: every user we have updated are now themselves CSE candidates
-    // TODO: we may now have duplicate users; only merge unique!
-    if (auto *addr = llvm::dyn_cast<Addr>(newNode))
-      addr->getUsers()->append(users);
-    else llvm::cast<Inst>(newNode)->getUsers()->append(users);
-    users = nullptr;
+    // every operand of oldNode needs their users updated
+    for (Node *n : oldNode->getOperands()) n->removeFromUsers(oldNode);
+    freeListList = oldNode->getUsers()->append(freeListList);
+    oldNode->setUsers(nullptr);
+    oldNode->setNext(freeInstList);
+    freeInstList = oldNode;
   }
   auto createInstruction(llvm::Instruction *i, llvm::Loop *L) -> Node * {
     auto [id, kind] = Inst::getIDKind(i);
@@ -105,108 +114,6 @@ class Cache {
     auto f = llvmToInternalMap.find(v);
     if (f != llvmToInternalMap.end()) return f->second;
     return nullptr;
-  }
-  auto argMapLoopup(Intrinsic idt) -> Intr * {
-    UniqueIdentifier uid{idt, {nullptr, unsigned(0)}};
-    return (*this)[uid];
-  }
-  auto argMapLoopup(Intrinsic idt, Intr *op) -> Intr * {
-    std::array<Intr *, 1> ops;
-    ops[0] = op;
-    MutPtrVector<Intr *> opsRef(ops);
-    UniqueIdentifier uid{idt, opsRef};
-    return (*this)[uid];
-  }
-  template <size_t N>
-  auto argMapLoopup(Intrinsic idt, std::array<Intr *, N> ops) -> Intr * {
-    MutPtrVector<Intr *> opsRef(ops);
-    UniqueIdentifier uid{idt, opsRef};
-    return (*this)[uid];
-  }
-  auto argMapLoopup(Intrinsic idt, Intr *op0, Intr *op1) -> Intr * {
-    return argMapLoopup<2>(idt, {op0, op1});
-  }
-  auto argMapLoopup(Intrinsic idt, Intr *op0, Intr *op1, Intr *op2) -> Intr * {
-    return argMapLoopup<3>(idt, {op0, op1, op2});
-  }
-  auto createInstruction(BumpAlloc<> &alloc, UniqueIdentifier uid,
-                         llvm::Type *typ) -> Intr * {
-    auto *i = new (alloc) Intr(alloc, uid, typ);
-    if (!i->operands.empty())
-      for (auto *op : i->operands) op->users.insert(i);
-    argMap.insert({uid, i});
-    return i;
-  }
-  auto getInstruction(BumpAlloc<> &alloc, UniqueIdentifier uid,
-                      llvm::Type *typ) {
-    if (auto *i = (*this)[uid]) return i;
-    return createInstruction(alloc, uid, typ);
-  }
-  auto getInstruction(BumpAlloc<> &alloc, UniqueIdentifier uid, llvm::Type *typ,
-                      Predicate::Set pred) {
-    if (auto *i = (*this)[uid]) return i;
-    auto *i = createInstruction(alloc, uid, typ);
-    i->predicates = std::move(pred);
-    return i;
-  }
-  auto getInstruction(BumpAlloc<> &alloc, Intrinsic idt, llvm::Type *typ) {
-    UniqueIdentifier uid{idt, {nullptr, unsigned(0)}};
-    return getInstruction(alloc, uid, typ);
-  }
-  auto getInstruction(BumpAlloc<> &alloc, Intrinsic idt, Intr *op0,
-                      llvm::Type *typ) {
-    // stack allocate for check
-    if (auto *i = argMapLoopup(idt, op0)) return i;
-    auto **opptr = alloc.allocate<Intr *>(1);
-    opptr[0] = op0;
-    MutPtrVector<Intr *> ops(opptr, 1);
-    UniqueIdentifier uid{idt, ops};
-    return createInstruction(alloc, uid, typ);
-  }
-  template <size_t N>
-  auto getInstruction(BumpAlloc<> &alloc, Intrinsic idt,
-                      std::array<Intr *, N> ops, llvm::Type *typ) {
-    // stack allocate for check
-    if (auto *i = argMapLoopup(idt, ops)) return i;
-    auto **opptr = alloc.allocate<Intr *>(2);
-    for (size_t n = 0; n < N; n++) opptr[n] = ops[n];
-    MutPtrVector<Intr *> mops(opptr, N);
-    UniqueIdentifier uid{idt, mops};
-    return createInstruction(alloc, uid, typ);
-  }
-  auto getInstruction(BumpAlloc<> &alloc, Intrinsic idt, Intr *op0, Intr *op1,
-                      llvm::Type *typ) {
-    return getInstruction<2>(alloc, idt, {op0, op1}, typ);
-  }
-  auto getInstruction(BumpAlloc<> &alloc, Intrinsic idt, Intr *op0, Intr *op1,
-                      Intr *op2, llvm::Type *typ) {
-    return getInstruction<3>(alloc, idt, {op0, op1, op2}, typ);
-  }
-
-  /// This is the API for creating new instructions
-  auto getInstruction(BumpAlloc<> &alloc, llvm::Instruction *instr) -> Intr * {
-    if (Intr *i = (*this)[instr]) return i;
-    UniqueIdentifier uid{getUniqueIdentifier(alloc, *this, instr)};
-    auto *i = getInstruction(alloc, uid, instr->getType());
-    llvmToInternalMap[instr] = i;
-    return i;
-  }
-  auto getInstruction(BumpAlloc<> &alloc, Predicate::Map &predMap,
-                      llvm::Instruction *instr) -> Intr *;
-  // NOLINTNEXTLINE(misc-no-recursion)
-  auto getInstruction(BumpAlloc<> &alloc, llvm::Value *v) -> Intr * {
-    if (Intr *i = (*this)[v]) return i;
-    UniqueIdentifier uid{getUniqueIdentifier(alloc, *this, v)};
-    auto *i = getInstruction(alloc, uid, v->getType());
-    llvmToInternalMap[v] = i;
-    return i;
-  }
-  // if not in predMap, then operands don't get added, and
-  // it won't be added to the argMap
-  auto getInstruction(BumpAlloc<> &alloc, Predicate::Map &predMap,
-                      llvm::Value *v) -> Intr *;
-  [[nodiscard]] auto contains(llvm::Value *v) const -> bool {
-    return llvmToInternalMap.count(v);
   }
   auto createConstant(BumpAlloc<> &alloc, llvm::Type *typ, int64_t c)
     -> Intr * {

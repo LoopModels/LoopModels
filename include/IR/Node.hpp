@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Containers/UnrolledList.hpp"
 #include "Polyhedra/Loops.hpp"
 #include "Utilities/Allocators.hpp"
 #include <Math/Array.hpp>
@@ -11,7 +12,7 @@
 #include <llvm/Support/Casting.h>
 
 namespace poly::IR {
-using utils::NotNull, utils::invariant, utils::BumpAlloc;
+using utils::NotNull, utils::invariant, utils::BumpAlloc, containers::UList;
 /// We take an approach similar to LLVM's RTTI
 /// however, we want to take advantage of FAMs while having a "hieararchy"
 /// we accomplish this via a base class, and then wrapper classes that simply
@@ -84,19 +85,19 @@ using utils::NotNull, utils::invariant, utils::BumpAlloc;
 /// top level loops can be chained together...
 /// top level loop's next can point to another top level loop
 class Node {
+
 public:
   enum ValKind {
     VK_Load,
-    VK_Stow,
+    VK_Stow, // used for ordered comparisons; all `Addr` types <= Stow
     VK_Exit,
     VK_Loop,
     VK_CVal,
     VK_Cint,
     VK_Cflt,
-    VK_Func,
+    VK_Func, // used for ordered comparisons; all `Inst` types >= Func
     VK_Call,
     VK_Oprn,
-    L
   };
 
 private:
@@ -106,15 +107,46 @@ private:
   Node *child{nullptr};
   Node *componentFwd{nullptr}; // SCC
   Node *componentBwd{nullptr}; // SCC-cycle
-  const ValKind kind;
-
+  // we have a private pointer so different types can share
+  // in manner not exacctly congruent with type hiearchy
+  // in particular, `Inst` and `Load` want `User` lists
+  // while `Stow`s do not.
+  // `Addr` is the common load/store subtype
+  // So in some sense, we want both `Load` and `Store` to inherit from `Addr`,
+  // but only load to inherit 'hasUsers' and only store to inherit the operand.
+  // `Inst` would also inherit 'hasUsers', but would want a different operands
+  // type.
+  // Addr has a FAM, so multiple inheritence isn't an option for `Load`/`Stow`,
+  // and we want a common base that we can query to avoid monomorphization.
 protected:
+  union {
+    UList<Node *> *users{nullptr}; // Func, Call, Oprn, Load
+    Node *node;                    // Stow, Loop, Exit
+    llvm::Type *typ;               // Cint, Cflt
+    llvm::Value *val;              // CVal
+  } unionPtr;
+  const ValKind kind;
   unsigned depth{0};
 
   constexpr Node(ValKind kind) : kind(kind) {}
   constexpr Node(ValKind kind, unsigned d) : kind(kind), depth(d) {}
 
 public:
+  // unionPtr methods
+  [[nodiscard]] constexpr auto getUsers() const -> UList<Node *> * {
+    invariant(kind == VK_Load || kind >= VK_Func);
+    return unionPtr.users;
+  }
+  constexpr void addUser(BumpAlloc<> &alloc, Node *n) {
+    invariant(kind == VK_Load || kind >= VK_Func);
+    if (!unionPtr.users) unionPtr.users = alloc.create<UList<Node *>>(n);
+    else unionPtr.users = unionPtr.users->push(alloc, n);
+  }
+  constexpr void removeFromUsers(Node *n) {
+    invariant(kind == VK_Load || kind >= VK_Func);
+    unionPtr.users->eraseUnordered(n);
+  }
+
   [[nodiscard]] constexpr auto getKind() const -> ValKind { return kind; }
   [[nodiscard]] constexpr auto getDepth() const -> unsigned { return depth; }
   [[nodiscard]] constexpr auto getParent() const -> Node * { return parent; }
@@ -166,17 +198,19 @@ class Loop;
 /// parent is the loop the exit closes
 /// subExit is the exit of the last subloop
 class Exit : public Node {
-  Exit *subExit{nullptr};
 
 public:
   Exit(unsigned d) : Node(VK_Exit, d) {}
   [[nodiscard]] constexpr auto getLoop() const -> Loop *;
   [[nodiscard]] constexpr auto getNextLoop() const -> Loop *;
-  [[nodiscard]] constexpr auto getSubExit() const -> Exit * { return subExit; }
+  [[nodiscard]] constexpr auto getSubExit() const -> Exit * {
+    invariant(unionPtr.node == nullptr || unionPtr.node->getKind() == VK_Exit);
+    return static_cast<Exit *>(unionPtr.node);
+  }
   static constexpr auto classof(const Node *v) -> bool {
     return v->getKind() == VK_Exit;
   }
-  constexpr void setSubExit(Exit *e) { subExit = e; }
+  constexpr void setSubExit(Exit *e) { unionPtr.node = e; }
   constexpr void setNextLoop(Loop *);
 };
 /// Loop
@@ -184,19 +218,22 @@ public:
 /// child: inner (sub) loop
 /// exit is the associated exit block
 class Loop : public Node {
-  Exit *exit;
   llvm::Loop *llvmLoop{nullptr};
   poly::Loop *affineLoop{nullptr};
 
 public:
   Loop(Exit *e, unsigned d, llvm::Loop *LL, poly::Loop *AL)
-    : Node(VK_Loop, d), exit(e), llvmLoop(LL), affineLoop(AL) {
+    : Node(VK_Loop, d), llvmLoop(LL), affineLoop(AL) {
+    unionPtr.node = e;
     e->setParent(this);
     // we also initialize prev/next, adding instrs will push them
     e->setPrev(this);
     setNext(e);
   }
-  [[nodiscard]] constexpr auto getExit() const -> Exit * { return exit; }
+  [[nodiscard]] constexpr auto getExit() const -> Exit * {
+    invariant(unionPtr.node == nullptr || unionPtr.node->getKind() == VK_Exit);
+    return static_cast<Exit *>(unionPtr.node);
+  }
   static constexpr auto classof(const Node *v) -> bool {
     return v->getKind() == VK_Loop;
   }
@@ -207,7 +244,7 @@ public:
     return static_cast<Loop *>(getParent());
   }
   [[nodiscard]] constexpr auto getNextLoop() const -> Loop * {
-    return exit->getNextLoop();
+    return getExit()->getNextLoop();
   }
   [[nodiscard]] constexpr auto getNextOrChild() const -> Loop * {
     Loop *L = getSubLoop();
@@ -242,11 +279,11 @@ public:
     auto *E = alloc.create<Exit>(d);
     auto *L = alloc.create<Loop>(E, d, LL, nullptr);
     L->setParent(this);
-    if (auto *eOld = exit->getSubExit()) {
+    if (auto *eOld = getExit()->getSubExit()) {
       invariant(getChild() != nullptr);
       eOld->setNextLoop(L);
     } else setChild(L);
-    exit->setSubExit(E);
+    getExit()->setSubExit(E);
     return L;
   }
   constexpr auto addOuterLoop(BumpAlloc<> &alloc) -> Loop * {
@@ -256,20 +293,21 @@ public:
       alloc.create<Loop>(E, 0, llvmLoop->getParentLoop(), getAffineLoop());
     setParent(L);
     invariant(getNextLoop() == nullptr);
-    E->setSubExit(exit);
+    E->setSubExit(getExit());
     return L;
   }
+  // NOLINTNEXTLINE(readability-make-member-function-const)
   constexpr void addNextLoop(Loop *L) {
-    invariant(exit->getNextLoop() == nullptr);
+    invariant(getExit()->getNextLoop() == nullptr);
     invariant(getOuterLoop() == nullptr);
-    exit->setNextLoop(L);
+    getExit()->setNextLoop(L);
   }
   constexpr auto addNextLoop(BumpAlloc<> &alloc, llvm::Loop *LL) -> Loop * {
     auto d = getDepth() + 1;
     auto *E = alloc.create<Exit>(d);
     auto *L = alloc.create<Loop>(E, d, LL, nullptr);
-    invariant(exit->getNextLoop() == nullptr);
-    exit->setNextLoop(L);
+    invariant(getExit()->getNextLoop() == nullptr);
+    getExit()->setNextLoop(L);
     if (auto *p = getOuterLoop()) {
       invariant(p->getChild() == this);
       L->setParent(p);
@@ -299,29 +337,30 @@ constexpr auto Exit::getNextLoop() const -> Loop * {
 /// CVal
 /// A constant value w/ respect to the loopnest.
 class CVal : public Node {
-  llvm::Value *val;
 
 public:
-  constexpr CVal(llvm::Value *v) : Node(VK_CVal), val(v) {}
+  constexpr CVal(llvm::Value *v) : Node(VK_CVal) { unionPtr.val = v; }
   static constexpr auto classof(const Node *v) -> bool {
     return v->getKind() == VK_CVal;
   }
 
-  [[nodiscard]] constexpr auto getVal() const -> llvm::Value * { return val; }
+  [[nodiscard]] constexpr auto getVal() const -> llvm::Value * {
+    return unionPtr.val;
+  }
 };
 /// Cnst
 class Cnst : public Node {
 
-  llvm::Type *ty;
-
 protected:
-  constexpr Cnst(ValKind kind, llvm::Type *t) : Node(kind), ty(t) {}
+  constexpr Cnst(ValKind kind, llvm::Type *t) : Node(kind) { unionPtr.typ = t; }
 
 public:
   static constexpr auto classof(const Node *v) -> bool {
     return v->getKind() == VK_Cint || v->getKind() == VK_Cflt;
   }
-  [[nodiscard]] constexpr auto getTy() const -> llvm::Type * { return ty; }
+  [[nodiscard]] constexpr auto getTy() const -> llvm::Type * {
+    return unionPtr.typ;
+  }
 };
 /// A constant value w/ respect to the loopnest.
 class Cint : public Cnst {

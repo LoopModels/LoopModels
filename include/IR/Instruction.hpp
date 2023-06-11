@@ -115,7 +115,6 @@ class Inst : public Node {
 protected:
   llvm::Instruction *inst{nullptr};
   llvm::Type *type;
-  UList<Node *> *users{nullptr};     // stores and Insts
   RecipThroughputLatency costs[2];   // scalar and vec; may want to add more
   llvm::Intrinsic::ID op;            // unsigned
   int numOperands;                   // negative means incomplete
@@ -167,7 +166,14 @@ public:
     }
     return {I->getOpcode(), VK_Oprn};
   }
-  constexpr auto getUsers() -> UList<Node *> * { return users; }
+  constexpr auto getUsers() -> UList<Node *> * {
+    invariant(kind >= VK_Func);
+    return unionPtr.users;
+  }
+  constexpr void setUsers(UList<Node *> *newUsers) {
+    invariant(kind >= VK_Func);
+    unionPtr.users = newUsers;
+  }
   constexpr void setNumOps(unsigned n) { numOperands = n; }
   // called when incomplete; flips sign
   constexpr auto numCompleteOps() -> unsigned {
@@ -195,10 +201,6 @@ public:
   }
   [[nodiscard]] auto allowsContract() const -> bool {
     return fastMathFlags.allowContract();
-  }
-  constexpr void addUser(BumpAlloc<> &alloc, Node *n) {
-    if (!users) users = alloc.create<UList<Node *>>(n);
-    else users = users->push(alloc, n);
   }
   // Incomplete stores the correct number of ops it was allocated with as a
   // negative number. The primary reason for being able to check

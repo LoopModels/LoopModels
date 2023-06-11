@@ -79,10 +79,6 @@ class Addr : public Node {
   [[no_unique_address]] int64_t *offSym{nullptr};
   [[no_unique_address]] const llvm::SCEV **syms;
   [[no_unique_address]] Node *predicate{nullptr};
-  [[no_unique_address]] union {
-    containers::UList<Node *> *users{nullptr}; // for load
-    Node *storedVal;                           // for store
-  } edge;
   [[no_unique_address]] unsigned numDim{0}, numDynSym{0};
   // [[no_unique_address]] uint8_t numMemInputs;
   // [[no_unique_address]] uint8_t numDirectEdges;
@@ -317,11 +313,11 @@ public:
   [[nodiscard]] constexpr auto lowLink() const -> unsigned { return lowLink_; }
   [[nodiscard]] constexpr auto getStoredVal() const -> Node * {
     invariant(isStore());
-    return edge.storedVal;
+    return unionPtr.node;
   }
   constexpr void setVal(Node *n) {
     invariant(isStore());
-    edge.storedVal = n;
+    unionPtr.node = n;
   }
   [[nodiscard]] constexpr auto getPredicate() const -> Node * {
     return predicate;
@@ -329,7 +325,7 @@ public:
   constexpr void setPredicate(Node *n) { predicate = n; }
   [[nodiscard]] constexpr auto getUsers() const -> containers::UList<Node *> * {
     invariant(isLoad());
-    return edge.users;
+    return unionPtr.users;
   }
   /// extend number of Cols, copying A[_(0,R),_] into dest, filling new cols
   /// with 0
@@ -739,5 +735,20 @@ inline auto operator<<(llvm::raw_ostream &os, const Addr &m)
   return os << "]\nInitial Fusion Omega: " << m.getFusionOmega()
             << "\npoly::Loop:" << *m.getLoop();
 }
+class Load {
+  Addr *addr;
+
+public:
+  Load(Addr *a) : addr(a->getKind() == Node::VK_Load ? a : nullptr) {}
+  constexpr explicit operator bool() { return addr != nullptr; }
+};
+class Stow {
+  Addr *addr;
+
+public:
+  Stow(Addr *a) : addr(a->getKind() == Node::VK_Stow ? a : nullptr) {}
+  constexpr explicit operator bool() { return addr != nullptr; }
+};
+
 } // namespace IR
 } // namespace poly
