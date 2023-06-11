@@ -1,7 +1,9 @@
+
 #pragma once
 
 #include "Dicts/BumpMapSet.hpp"
 #include "IR/Address.hpp"
+#include "IR/InstructionCost.hpp"
 #include "IR/Node.hpp"
 #include "IR/Operands.hpp"
 #include "IR/Predicate.hpp"
@@ -32,11 +34,9 @@
 #include <llvm/Support/Alignment.h>
 #include <llvm/Support/Allocator.h>
 #include <llvm/Support/Casting.h>
-#include <llvm/Support/InstructionCost.h>
 #include <llvm/Support/MathExtras.h>
 #include <tuple>
 #include <utility>
-#include <variant>
 
 // NOLINTNEXTLINE(cert-dcl58-cpp)
 template <> struct std::hash<poly::IR::Operands> {
@@ -58,7 +58,8 @@ using math::PtrVector, math::MutPtrVector, utils::BumpAlloc, utils::invariant,
 
 namespace poly::IR {
 
-using dict::aset, dict::amap, containers::UList, utils::Optional;
+using dict::aset, dict::amap, containers::UList, utils::Optional,
+  cost::RecipThroughputLatency, cost::VectorWidth, cost::VectorizationCosts;
 
 struct UniqueIdentifier {
   Operands ops;
@@ -98,28 +99,15 @@ inline auto containsCycle(BumpAlloc<> &alloc, llvm::Instruction const *S)
   return containsCycleCore(S, visited, S);
 }
 
-struct RecipThroughputLatency {
-  llvm::InstructionCost::CostType recipThroughput;
-  llvm::InstructionCost::CostType latency;
-  // llvm::InstructionCost::CostState state;
-  // [[nodiscard]] auto isValid() const -> bool {
-  //   return state == llvm::InstructionCost::Valid;
-  // }
-  // static auto getInvalid() -> RecipThroughputLatency {
-  //   return {0, 0, llvm::InstructionCost::Invalid};
-  // }
-};
-
 class Inst : public Node {
 
 protected:
   llvm::Instruction *inst{nullptr};
   llvm::Type *type;
-  RecipThroughputLatency costs[2];   // scalar and vec; may want to add more
   llvm::Intrinsic::ID op;            // unsigned
   int numOperands;                   // negative means incomplete
   llvm::FastMathFlags fastMathFlags; // holds unsigned
-  unsigned padding;                  // currently unused
+  VectorizationCosts costs;
 #if !defined(__clang__) && defined(__GNUC__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
@@ -163,10 +151,9 @@ public:
   static auto getIDKind(llvm::Instruction *I)
     -> std::pair<llvm::Intrinsic::ID, ValKind> {
     if (auto *c = llvm::dyn_cast<llvm::CallInst>(I)) {
-      llvm::Intrinsic::ID intrin = c->getIntrinsicID();
-      ValKind kind =
-        intrin == llvm::Intrinsic::not_intrinsic ? VK_Func : VK_Call;
-      return {intrin, kind};
+      if (auto *J = llvm::dyn_cast<llvm::IntrinsicInst>(c))
+        return {J->getIntrinsicID(), VK_Call};
+      return {llvm::Intrinsic::not_intrinsic, VK_Func};
     }
     return {I->getOpcode(), VK_Oprn};
   }
@@ -201,6 +188,10 @@ public:
     return {const_cast<Node **>(operands), unsigned(numOperands)};
   }
   constexpr auto getOperand(size_t i) const -> Node * { return operands[i]; }
+  constexpr void setOperands(BumpAlloc<> &alloc, MutPtrVector<Node *> ops) {
+    getOperands() << ops;
+    for (auto *op : ops) op->addUser(alloc, this);
+  }
 
   constexpr auto getFastMathFlags() const -> llvm::FastMathFlags {
     return fastMathFlags;
@@ -265,189 +256,23 @@ public:
       if (opst[i] != opso[i]) return false;
     return true;
   }
-};
-
-struct InstByValue {
-  Inst *inst;
-  auto operator==(InstByValue const &other) const -> bool {
-    return *inst == *other.inst;
-  }
-};
-
-// some opaque function
-class OpaqueFunc {
-  Inst *const ins;
-
-public:
-  constexpr operator Inst *() const { return ins; }
-  constexpr OpaqueFunc(Inst *I) : ins(I) {
-    invariant(ins->getKind(), Node::VK_Func);
-  }
-};
-// a non-call
-class Operation {
-  Inst *const ins;
-
-public:
-  constexpr operator Inst *() const { return ins; }
-  constexpr Operation(Inst *I)
-    : ins(I->getKind() == Node::VK_Oprn ? I : nullptr) {}
-  constexpr explicit operator bool() const { return ins; }
-  [[nodiscard]] auto getOpCode() const -> llvm::Intrinsic::ID {
-    return ins->getOpId();
-  }
-  static auto getOpCode(llvm::Value *v) -> std::optional<llvm::Intrinsic::ID> {
-    if (auto *i = llvm::dyn_cast<llvm::Instruction>(v)) return i->getOpcode();
-    return {};
-  }
-  constexpr auto getOperands() const -> PtrVector<Node *> {
-    return ins->getOperands();
-  }
-  constexpr auto getOperand(size_t i) const -> Node * {
-    return ins->getOperand(i);
-  }
-  constexpr auto getNumOperands() const -> unsigned {
-    return ins->getNumOperands();
-  }
-  [[nodiscard]] constexpr auto isInstruction(llvm::Intrinsic::ID opCode) const
-    -> bool {
-    return getOpCode() == opCode;
-  }
-  static auto isFMul(Node *n) -> bool {
-    if (auto *op = llvm::dyn_cast<Operation>(n)) return op->isFMul();
-    return false;
-  }
-  [[nodiscard]] auto isFMul() const -> bool {
-    return isInstruction(llvm::Instruction::FMul);
-  }
-  [[nodiscard]] auto isFNeg() const -> bool {
-    return isInstruction(llvm::Instruction::FNeg);
-  }
-  [[nodiscard]] auto isFMulOrFNegOfFMul() const -> bool {
-    return isFMul() || (isFNeg() && isFMul(getOperands()[0]));
-  }
-  [[nodiscard]] auto isFAdd() const -> bool {
-    return isInstruction(llvm::Instruction::FAdd);
-  }
-  [[nodiscard]] auto isFSub() const -> bool {
-    return isInstruction(llvm::Instruction::FSub);
-  }
-  [[nodiscard]] auto isShuffle() const -> bool {
-    return isInstruction(llvm::Instruction::ShuffleVector);
-  }
-  [[nodiscard]] auto isFcmp() const -> bool {
-    return isInstruction(llvm::Instruction::FCmp);
-  }
-  [[nodiscard]] auto isIcmp() const -> bool {
-    return isInstruction(llvm::Instruction::ICmp);
-  }
-  [[nodiscard]] auto isCmp() const -> bool { return isFcmp() || isIcmp(); }
-  [[nodiscard]] auto isSelect() const -> bool {
-    return isInstruction(llvm::Instruction::Select);
-  }
-  [[nodiscard]] auto isExtract() const -> bool {
-    return isInstruction(llvm::Instruction::ExtractElement);
-  }
-  [[nodiscard]] auto isInsert() const -> bool {
-    return isInstruction(llvm::Instruction::InsertElement);
-  }
-  [[nodiscard]] auto isExtractValue() const -> bool {
-    return isInstruction(llvm::Instruction::ExtractValue);
-  }
-  [[nodiscard]] auto isInsertValue() const -> bool {
-    return isInstruction(llvm::Instruction::InsertValue);
-  }
-};
-// a call, e.g. fmuladd, sqrt, sin
-class Call {
-  Inst *ins;
-
-public:
-  constexpr operator Inst *() const { return ins; }
-  constexpr Call(Inst *I) : ins(I) { invariant(ins->getKind(), Node::VK_Call); }
-
-  static constexpr auto classof(const Node *v) -> bool {
-    return v->getKind() == Node::VK_Call;
-  }
-  Call(llvm::Instruction *i) : Inst(VK_Call, i, i->getIntrinsicID()) {}
-  [[nodiscard]] auto getIntrinsicID() const -> llvm::Intrinsic::ID {
-    return intrin;
-  }
-  static auto getIntrinsicID(llvm::Value *v)
-    -> std::optional<llvm::Intrinsic::ID> {
-    if (auto *i = llvm::dyn_cast<llvm::IntrinsicInst>(v))
-      return Intrin{i->getIntrinsicID()};
-    return {};
-  }
-  [[nodiscard]] constexpr auto isIntrinsic(llvm::Intrinsic::ID opCode) const
-    -> bool {
-    return intrin == opCode;
-  }
-
-  void setOperands(MutPtrVector<Intr *> ops) {
-    operands << ops;
-    for (auto *op : ops) op->users.insert(this);
-  }
-  [[nodiscard]] auto isMulAdd() const -> bool {
-    return isIntrinsic(llvm::Intrinsic::fmuladd) ||
-           isIntrinsic(llvm::Intrinsic::fma);
-  }
-  [[nodiscard]] auto getType() const -> llvm::Type * { return type; }
-  [[nodiscard]] auto getOperands() -> MutPtrVector<Intr *> { return operands; }
-  [[nodiscard]] auto getOperands() const -> PtrVector<Intr *> {
-    return operands;
-  }
-  [[nodiscard]] auto getOperand(size_t i) -> Intr * { return operands[i]; }
-  [[nodiscard]] auto getOperand(size_t i) const -> Intr * {
-    return operands[i];
-  }
-  [[nodiscard]] auto getUsers() -> aset<Intr *> & { return users; }
-  [[nodiscard]] auto getNumOperands() const -> size_t {
-    return operands->size();
-  }
 
   /// fall back in case we need value operand
   // [[nodiscard]] auto isValue() const -> bool { return id.isValue(); }
-  auto getCost(llvm::TargetTransformInfo &TTI, unsigned W, unsigned l2W)
+  auto getCost(llvm::TargetTransformInfo &TTI, VectorWidth W)
     -> RecipThroughputLatency {
-    if (l2W >= costs.size()) {
-      costs.resize(l2W + 1, RecipThroughputLatency::getInvalid());
-      return costs[l2W] = calculateCost(TTI, W);
-    }
-    RecipThroughputLatency c = costs[l2W];
-    // TODO: differentiate between uninitialized and invalid
-    if (!c.isValid()) costs[l2W] = c = calculateCost(TTI, W);
+    RecipThroughputLatency c = costs[W];
+    if (c.notYetComputed()) costs[W] = c = calculateCost(TTI, W);
     return c;
   }
-  auto getCost(llvm::TargetTransformInfo &TTI, uint32_t vectorWidth)
-    -> RecipThroughputLatency {
-    return getCost(TTI, vectorWidth, llvm::Log2_32(vectorWidth));
-  }
-  auto getCost(llvm::TargetTransformInfo &TTI, uint64_t vectorWidth)
-    -> RecipThroughputLatency {
-    return getCost(TTI, vectorWidth, llvm::Log2_64(vectorWidth));
-  }
-  auto getCostLog2VectorWidth(llvm::TargetTransformInfo &TTI,
-                              unsigned int log2VectorWidth)
-    -> RecipThroughputLatency {
-    return getCost(TTI, 1 << log2VectorWidth, log2VectorWidth);
-  }
-  static auto getType(llvm::Type *T, unsigned int vectorWidth) -> llvm::Type * {
-    if (vectorWidth == 1) return T;
-    return llvm::FixedVectorType::get(T, vectorWidth);
-  }
   [[nodiscard]] auto getType(unsigned int vectorWidth) const -> llvm::Type * {
-    return getType(type, vectorWidth);
+    return cost::getType(type, vectorWidth);
   }
   [[nodiscard]] auto getNumScalarBits() const -> unsigned int {
     return type->getScalarSizeInBits();
   }
   [[nodiscard]] auto getNumScalarBytes() const -> unsigned int {
     return getNumScalarBits() / 8;
-  }
-  [[nodiscard]] auto getIntrinsic() const -> Optional<const Intrinsic *> {
-    if (const auto *i = std::get_if<Intrinsic>(&idtf)) return i;
-    return {};
   }
 #if LLVM_VERSION_MAJOR >= 16
   auto getOperandInfo(llvm::TargetTransformInfo & /*TTI*/, unsigned int i) const
@@ -641,26 +466,6 @@ public:
     }
     auto operator()(Addr *ref) const -> llvm::Align { return ref->getAlign(); }
   };
-  auto calculateCostContiguousLoadStore(llvm::TargetTransformInfo &TTI,
-                                        Intrinsic::OpCode idt,
-                                        unsigned int vectorWidth)
-    -> RecipThroughputLatency {
-    constexpr unsigned int addrSpace = 0;
-    llvm::Type *T = getType(vectorWidth);
-    llvm::Align alignment = std::visit(ExtractAlignment{}, ptr);
-    if (predicates.size() == 0) {
-      return {
-        TTI.getMemoryOpCost(idt.id, T, alignment, addrSpace,
-                            llvm::TargetTransformInfo::TCK_RecipThroughput),
-        TTI.getMemoryOpCost(idt.id, T, alignment, addrSpace,
-                            llvm::TargetTransformInfo::TCK_Latency)};
-    }
-    return {
-      TTI.getMaskedMemoryOpCost(idt.id, T, alignment, addrSpace,
-                                llvm::TargetTransformInfo::TCK_RecipThroughput),
-      TTI.getMaskedMemoryOpCost(idt.id, T, alignment, addrSpace,
-                                llvm::TargetTransformInfo::TCK_Latency)};
-  }
   auto calculateCostFAddFSub(llvm::TargetTransformInfo &TTI,
                              Intrinsic::OpCode idt, unsigned int vectorWidth)
     -> RecipThroughputLatency {
@@ -690,10 +495,11 @@ public:
     if (auto *F = getFunction()) return calcCallCost(TTI, F, vectorWidth);
     return {};
   }
-  [[nodiscard]] auto calcCost(Intrinsic idt, llvm::TargetTransformInfo &TTI,
-                              unsigned int vectorWidth)
+  [[nodiscard]] static auto calcOperationCost(llvm::Intrinsic::ID id,
+                                              llvm::TargetTransformInfo &TTI,
+                                              unsigned int vectorWidth)
     -> RecipThroughputLatency {
-    switch (idt.opcode.id) {
+    switch (id) {
     case llvm::Instruction::FAdd:
     case llvm::Instruction::FSub:
       return calculateCostFAddFSub(TTI, idt.opcode, vectorWidth);
@@ -714,10 +520,10 @@ public:
     case llvm::Instruction::FRem: // TODO: check if frem is supported?
     case llvm::Instruction::URem:
       // two arg arithmetic cost
-      return calcBinaryArithmeticCost(TTI, idt.opcode, vectorWidth);
+      return calcBinaryArithmeticCost(TTI, id, vectorWidth);
     case llvm::Instruction::FNeg:
       // one arg arithmetic cost
-      return calculateFNegCost(TTI, idt.opcode, vectorWidth);
+      return calculateFNegCost(TTI, id, vectorWidth);
     case llvm::Instruction::Trunc:
     case llvm::Instruction::ZExt:
     case llvm::Instruction::SExt:
@@ -732,60 +538,166 @@ public:
     case llvm::Instruction::BitCast:
     case llvm::Instruction::AddrSpaceCast:
       // one arg cast cost
-      return calcCastCost(TTI, idt.opcode, vectorWidth);
+      return calcCastCost(TTI, id, vectorWidth);
     case llvm::Instruction::ICmp:
     case llvm::Instruction::FCmp:
     case llvm::Instruction::Select:
-      return calcCmpSelectCost(TTI, idt.opcode, vectorWidth);
-    case llvm::Instruction::Call:
-      return calcCallCost(TTI, idt.intrin, vectorWidth);
+      return calcCmpSelectCost(TTI, id, vectorWidth);
     case llvm::Instruction::Load:
     case llvm::Instruction::Store:
       return calculateCostContiguousLoadStore(TTI, idt.opcode, vectorWidth);
     default: return RecipThroughputLatency::getInvalid();
     }
   }
-  // NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
-  void replaceOperand(Intr *old, Intr *new_) {
-    for (auto &&op : operands)
-      if (op == old) op = new_;
+  // [[nodiscard]] auto calcCallCost(llvm::Intrinsic::ID id,
+  //                                 llvm::TargetTransformInfo &TTI,
+  //                                 unsigned int vectorWidth)
+  //   -> RecipThroughputLatency {
+  //   return calcCallCost(TTI, id, vectorWidth);
+  // }
+  [[nodiscard]] auto calcCost(llvm::TargetTransformInfo &TTI,
+                              unsigned vectorWidth) -> RecipThroughputLatency {
+    if (getKind() == Node::VK_Oprn)
+      return calcOperationCost(getOpId(), TTI, vectorWidth);
+    return calcCallCost(TTI, getOpId(), vectorWidth);
   }
-  /// replace all uses of `*this` with `*I`.
-  /// Assumes that `*I` does not depend on `*this`.
-  void replaceAllUsesWith(Intr *J) {
-    for (auto *u : users) {
-      assert(u != J);
-      u->replaceOperand(this, J);
-      J->users.insert(u);
-    }
+
+}; // class Inst
+
+struct InstByValue {
+  Inst *inst;
+  auto operator==(InstByValue const &other) const -> bool {
+    return *inst == *other.inst;
   }
-  /// replace all uses of `*this` with `*I`, except for `*I` itself.
-  /// This is useful when replacing `*this` with `*I = f(*this)`
-  /// E.g., when merging control flow branches, where `f` may be a select
-  void replaceAllOtherUsesWith(Intr *J) {
-    for (auto *u : users) {
-      if (u != J) {
-        u->replaceOperand(this, J);
-        J->users.insert(u);
-      }
-    }
+};
+
+// some opaque function
+class OpaqueFunc {
+  Inst *const ins;
+
+public:
+  constexpr operator Inst *() const { return ins; }
+  constexpr OpaqueFunc(Inst *I) : ins(I) {
+    invariant(ins->getKind(), Node::VK_Func);
   }
-  auto replaceAllUsesOf(Intr *J) -> Intr * {
-    for (auto *u : J->users) {
-      assert(u != this);
-      u->replaceOperand(J, this);
-      users.insert(u);
-    }
-    return this;
+};
+// a non-call
+class Operation {
+  Inst *const ins;
+
+public:
+  constexpr operator Inst *() const { return ins; }
+  constexpr Operation(Inst *I)
+    : ins(I->getKind() == Node::VK_Oprn ? I : nullptr) {}
+  constexpr explicit operator bool() const { return ins; }
+  [[nodiscard]] auto getOpCode() const -> llvm::Intrinsic::ID {
+    return ins->getOpId();
   }
-  auto replaceAllOtherUsesOf(Intr *J) -> Intr * {
-    for (auto *u : J->users) {
-      if (u != this) {
-        u->replaceOperand(J, this);
-        users.insert(u);
-      }
-    }
-    return this;
+  static auto getOpCode(llvm::Value *v) -> std::optional<llvm::Intrinsic::ID> {
+    if (auto *i = llvm::dyn_cast<llvm::Instruction>(v)) return i->getOpcode();
+    return {};
+  }
+  constexpr auto getOperands() const -> PtrVector<Node *> {
+    return ins->getOperands();
+  }
+  constexpr auto getOperand(size_t i) const -> Node * {
+    return ins->getOperand(i);
+  }
+  constexpr auto getNumOperands() const -> unsigned {
+    return ins->getNumOperands();
+  }
+  [[nodiscard]] constexpr auto isInstruction(llvm::Intrinsic::ID opCode) const
+    -> bool {
+    return getOpCode() == opCode;
+  }
+  static auto isFMul(Node *n) -> bool {
+    if (auto *op = llvm::dyn_cast<Operation>(n)) return op->isFMul();
+    return false;
+  }
+  [[nodiscard]] auto isFMul() const -> bool {
+    return isInstruction(llvm::Instruction::FMul);
+  }
+  [[nodiscard]] auto isFNeg() const -> bool {
+    return isInstruction(llvm::Instruction::FNeg);
+  }
+  [[nodiscard]] auto isFMulOrFNegOfFMul() const -> bool {
+    return isFMul() || (isFNeg() && isFMul(getOperands()[0]));
+  }
+  [[nodiscard]] auto isFAdd() const -> bool {
+    return isInstruction(llvm::Instruction::FAdd);
+  }
+  [[nodiscard]] auto isFSub() const -> bool {
+    return isInstruction(llvm::Instruction::FSub);
+  }
+  [[nodiscard]] auto isShuffle() const -> bool {
+    return isInstruction(llvm::Instruction::ShuffleVector);
+  }
+  [[nodiscard]] auto isFcmp() const -> bool {
+    return isInstruction(llvm::Instruction::FCmp);
+  }
+  [[nodiscard]] auto isIcmp() const -> bool {
+    return isInstruction(llvm::Instruction::ICmp);
+  }
+  [[nodiscard]] auto isCmp() const -> bool { return isFcmp() || isIcmp(); }
+  [[nodiscard]] auto isSelect() const -> bool {
+    return isInstruction(llvm::Instruction::Select);
+  }
+  [[nodiscard]] auto isExtract() const -> bool {
+    return isInstruction(llvm::Instruction::ExtractElement);
+  }
+  [[nodiscard]] auto isInsert() const -> bool {
+    return isInstruction(llvm::Instruction::InsertElement);
+  }
+  [[nodiscard]] auto isExtractValue() const -> bool {
+    return isInstruction(llvm::Instruction::ExtractValue);
+  }
+  [[nodiscard]] auto isInsertValue() const -> bool {
+    return isInstruction(llvm::Instruction::InsertValue);
+  }
+};
+// a call, e.g. fmuladd, sqrt, sin
+class Call {
+  Inst *ins;
+
+public:
+  constexpr operator Inst *() const { return ins; }
+  constexpr Call(Inst *I) : ins(I) { invariant(ins->getKind(), Node::VK_Call); }
+
+  static constexpr auto classof(const Node *v) -> bool {
+    return v->getKind() == Node::VK_Call;
+  }
+  [[nodiscard]] auto getIntrinsicID() const -> llvm::Intrinsic::ID {
+    return ins->getOpId();
+  }
+  static auto getIntrinsicID(llvm::Value *v) -> llvm::Intrinsic::ID {
+    if (auto *i = llvm::dyn_cast<llvm::IntrinsicInst>(v))
+      return i->getIntrinsicID();
+    return llvm::Intrinsic::not_intrinsic;
+  }
+  [[nodiscard]] constexpr auto isIntrinsic(llvm::Intrinsic::ID opCode) const
+    -> bool {
+    return ins->getOpId() == opCode;
+  }
+
+  [[nodiscard]] auto isMulAdd() const -> bool {
+    return isIntrinsic(llvm::Intrinsic::fmuladd) ||
+           isIntrinsic(llvm::Intrinsic::fma);
+  }
+
+  [[nodiscard]] auto getOperands() -> MutPtrVector<Node *> {
+    return ins->getOperands();
+  }
+  [[nodiscard]] auto getOperands() const -> PtrVector<Node *> {
+    return ins->getOperands();
+  }
+  [[nodiscard]] auto getOperand(size_t i) -> Node * {
+    return ins->getOperand(i);
+  }
+  [[nodiscard]] auto getOperand(size_t i) const -> Node * {
+    return ins->getOperand(i);
+  }
+  [[nodiscard]] auto getNumOperands() const -> size_t {
+    return ins->getNumOperands();
   }
 };
 

@@ -1,13 +1,14 @@
 #pragma once
 
-#include "Containers/UnrolledList.hpp"
+#include "IR/InstructionCost.hpp"
 #include "IR/Node.hpp"
 #include "Polyhedra/Loops.hpp"
 #include "Support/OStream.hpp"
-#include "Utilities/Allocators.hpp"
+#include <Containers/UnrolledList.hpp>
 #include <Math/Array.hpp>
 #include <Math/Comparisons.hpp>
 #include <Math/Math.hpp>
+#include <Utilities/Allocators.hpp>
 #include <Utilities/Valid.hpp>
 #include <cstddef>
 #include <cstdint>
@@ -251,6 +252,9 @@ public:
     -> NotNull<const llvm::SCEVUnknown> {
     return basePointer;
   }
+  [[nodiscard]] auto getType() const -> llvm::Type * {
+    return basePointer->getType();
+  }
   [[nodiscard]] constexpr auto dependsOnIndVars(size_t d) -> bool {
     for (size_t i = 0, D = getArrayDim(); i < D; ++i)
       if (anyNEZero(indexMatrix()(i, _(d, end)))) return true;
@@ -329,7 +333,6 @@ public:
   }
   /// extend number of Cols, copying A[_(0,R),_] into dest, filling new cols
   /// with 0
-
   // L is the inner most loop being removed
   void updateOffsMat(BumpAlloc<> &alloc, size_t numToPeel, llvm::Loop *L,
                      llvm::ScalarEvolution *SE) {
@@ -637,7 +640,34 @@ public:
     return std::equal(thisSizes.begin(), thisSizes.end(), xSizes.begin(),
                       xSizes.end());
   }
+  auto calculateCostContiguousLoadStore(llvm::TargetTransformInfo &TTI,
+                                        unsigned int vectorWidth)
+    -> cost::RecipThroughputLatency {
+    constexpr unsigned int addrSpace = 0;
+    llvm::Type *T = cost::getType(getType(), vectorWidth);
+    llvm::Align alignment = getAlign();
+    if (!predicate) {
+      llvm::Intrinsic::ID id =
+        isLoad() ? llvm::Instruction::Load : llvm::Instruction::Store;
+      return {
+        TTI.getMemoryOpCost(id, T, alignment, addrSpace,
+                            llvm::TargetTransformInfo::TCK_RecipThroughput),
+        TTI.getMemoryOpCost(id, T, alignment, addrSpace,
+                            llvm::TargetTransformInfo::TCK_Latency)};
+    }
+    llvm::Intrinsic::ID id =
+      isLoad() ? llvm::Intrinsic::masked_load : llvm::Intrinsic::masked_store;
+    return {
+      TTI.getMaskedMemoryOpCost(id, T, alignment, addrSpace,
+                                llvm::TargetTransformInfo::TCK_RecipThroughput),
+      TTI.getMaskedMemoryOpCost(id, T, alignment, addrSpace,
+                                llvm::TargetTransformInfo::TCK_Latency)};
+  }
+
+  auto calcCost() {}
+
   [[nodiscard]] constexpr auto getCurrentDepth() const -> unsigned;
+
   void printDotName(llvm::raw_ostream &os) const {
     if (isLoad()) os << "... = ";
     os << *getArrayPointer() << "[";
