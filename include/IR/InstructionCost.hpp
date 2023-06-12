@@ -42,17 +42,25 @@ inline auto getType(llvm::Type *T, unsigned int vectorWidth) -> llvm::Type * {
   return llvm::FixedVectorType::get(T, vectorWidth);
 }
 
-struct VectorWidth {
+class VectorWidth {
   unsigned width;
   unsigned log2Width;
-  constexpr VectorWidth(unsigned w) : width(w), log2Width(std::countr_zero(w)) {
+  constexpr explicit VectorWidth(unsigned w)
+    : width(w), log2Width(std::countr_zero(w)) {
     utils::invariant(std::popcount(w) == 1);
     utils::invariant(w <= MaxVectorWidth);
   }
-  constexpr VectorWidth(unsigned w, unsigned l2w) : width(w), log2Width(l2w) {
+  constexpr explicit VectorWidth(unsigned w, unsigned l2w)
+    : width(w), log2Width(l2w) {
     utils::invariant(std::popcount(w) == 1);
     utils::invariant(int(l2w) == std::countr_zero(w));
     utils::invariant(w <= MaxVectorWidth);
+  }
+
+public:
+  [[nodiscard]] constexpr auto getWidth() const -> unsigned { return width; }
+  [[nodiscard]] constexpr auto getLog2Width() const -> unsigned {
+    return log2Width;
   }
 };
 // supports vector widths up to 128
@@ -87,10 +95,10 @@ public:
     return get(l2w);
   }
   constexpr auto operator[](VectorWidth vw) -> ProxyReference {
-    return {*this, vw.log2Width};
+    return {*this, vw.getLog2Width()};
   }
   constexpr auto operator[](VectorWidth vw) const -> RecipThroughputLatency {
-    return get(vw.log2Width);
+    return get(vw.getLog2Width());
   }
 };
 

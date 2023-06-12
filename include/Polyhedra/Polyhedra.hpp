@@ -21,9 +21,9 @@ using math::DensePtrMatrix, math::MutDensePtrMatrix, math::EmptyMatrix,
   math::Row, math::Col, math::vector, math::matrix, math::_, math::end,
   math::last;
 using utils::BumpAlloc;
-inline auto printPositive(llvm::raw_ostream &os, size_t stop)
+inline auto printPositive(llvm::raw_ostream &os, ptrdiff_t stop)
   -> llvm::raw_ostream & {
-  for (size_t i = 0; i < stop; ++i) os << "v_" << i << " >= 0\n";
+  for (ptrdiff_t i = 0; i < stop; ++i) os << "v_" << i << " >= 0\n";
   return os;
 }
 
@@ -138,7 +138,7 @@ struct BasePolyhedra {
     BumpAlloc<> alloc;
     pruneBounds(alloc);
   }
-  constexpr void eraseConstraint(size_t constraint) {
+  constexpr void eraseConstraint(ptrdiff_t constraint) {
     eraseConstraintImpl(getA(), constraint);
     decrementNumConstraints();
   }
@@ -146,12 +146,12 @@ struct BasePolyhedra {
   constexpr void pruneBoundsCore(BumpAlloc<> &alloc) {
     auto diff = vector<int64_t>(alloc, unsigned(getA().numCol()));
     auto p = checkpoint(alloc);
-    const size_t dyn = getNumDynamic();
+    const ptrdiff_t dyn = getNumDynamic();
     if constexpr (HasEqualities) {
       auto [ar, er] = removeRedundantRows(getA(), getE());
       setNumConstraints(unsigned(ar));
       setNumEqConstraints(unsigned(er));
-      for (size_t i = 0; i < getNumEqualityConstraints(); ++i) {
+      for (ptrdiff_t i = 0; i < getNumEqualityConstraints(); ++i) {
         auto l = gcd(getE()(i, _));
         if (l != 1) getE()(i, _) /= l;
       }
@@ -184,7 +184,7 @@ struct BasePolyhedra {
       }
       if constexpr (MaybeNonNeg) {
         if (isNonNegative() && !broke) {
-          for (size_t i = 0; i < dyn; ++i) {
+          for (ptrdiff_t i = 0; i < dyn; ++i) {
             diff << getA()(j, _);
             --diff[last - i];
             if (C.greaterEqual(alloc, diff)) {
@@ -205,7 +205,8 @@ struct BasePolyhedra {
     pruneBoundsCore<false>(alloc);
     rollback(alloc, p);
     if constexpr (HasEqualities)
-      for (size_t i = 0; i < getE().numRow(); ++i) normalizeByGCD(getE()(i, _));
+      for (ptrdiff_t i = 0; i < getE().numRow(); ++i)
+        normalizeByGCD(getE()(i, _));
     truncNumInEqCon(getNumCon());
     if constexpr (HasEqualities) truncNumEqCon(getE().numRow());
   }
@@ -214,17 +215,18 @@ struct BasePolyhedra {
     if constexpr (!HasSymbols) return 1;
     else return static_cast<const P *>(this)->getNumSymbols();
   }
-  [[nodiscard]] constexpr auto getNumDynamic() const -> size_t {
-    return size_t(getA().numCol()) - getNumSymbols();
+  [[nodiscard]] constexpr auto getNumDynamic() const -> ptrdiff_t {
+    return ptrdiff_t(getA().numCol()) - getNumSymbols();
   }
-  [[nodiscard]] constexpr auto getNumVar() const -> size_t {
-    return size_t(getA().numCol()) - 1;
+  [[nodiscard]] constexpr auto getNumVar() const -> ptrdiff_t {
+    return ptrdiff_t(getA().numCol()) - 1;
   }
-  [[nodiscard]] constexpr auto getNumInequalityConstraints() const -> size_t {
-    return size_t(getNumCon());
+  [[nodiscard]] constexpr auto getNumInequalityConstraints() const
+    -> ptrdiff_t {
+    return ptrdiff_t(getNumCon());
   }
-  [[nodiscard]] constexpr auto getNumEqualityConstraints() const -> size_t {
-    return size_t(getE().numRow());
+  [[nodiscard]] constexpr auto getNumEqualityConstraints() const -> ptrdiff_t {
+    return ptrdiff_t(getE().numRow());
   }
   constexpr void dropEmptyConstraints() {
     dropEmptyConstraints(getA());
@@ -247,12 +249,12 @@ struct BasePolyhedra {
     return getNumCon() == 0;
     // if (A.numRow() == 0)
     //     return true;
-    // for (size_t r = 0; r < A.numRow(); ++r)
+    // for (ptrdiff_t r = 0; r < A.numRow(); ++r)
     //     if (C.less(A(r, _)))
     //         return true;
     // return false;
   }
-  void truncateVars(size_t numVar) {
+  void truncateVars(ptrdiff_t numVar) {
     if constexpr (HasEqualities) getE().truncate(Col{numVar});
     getA().truncate(Col{numVar});
   }

@@ -303,14 +303,6 @@ public:
   [[nodiscard]] constexpr auto wasPlaced() const -> bool {
     return bitfield & 4;
   }
-  /// isStore() is true if the address is a store, false if it is a load
-  /// If the memory access is a store, this can still be a reload
-  [[nodiscard]] constexpr auto isStore() const -> bool {
-    return getKind() == VK_Stow;
-  }
-  [[nodiscard]] constexpr auto isLoad() const -> bool {
-    return getKind() == VK_Load;
-  }
   constexpr auto index() -> uint8_t & { return index_; }
   [[nodiscard]] constexpr auto index() const -> unsigned { return index_; }
   constexpr auto lowLink() -> uint8_t & { return lowLink_; }
@@ -664,7 +656,11 @@ public:
                                 llvm::TargetTransformInfo::TCK_Latency)};
   }
 
-  auto calcCost() {}
+  auto getCost(llvm::TargetTransformInfo &TTI, cost::VectorWidth W)
+    -> cost::RecipThroughputLatency {
+    // TODO: cache?
+    return calculateCostContiguousLoadStore(TTI, W.getWidth());
+  }
 
   [[nodiscard]] constexpr auto getCurrentDepth() const -> unsigned;
 

@@ -1,10 +1,12 @@
 #pragma once
 
 #include "Containers/UnrolledList.hpp"
+#include "IR/InstructionCost.hpp"
 #include "Polyhedra/Loops.hpp"
 #include "Utilities/Allocators.hpp"
 #include <Math/Array.hpp>
 #include <cstdint>
+#include <llvm/Analysis/TargetTransformInfo.h>
 #include <llvm/IR/Constants.h>
 #include <llvm/IR/Intrinsics.h>
 #include <llvm/IR/Type.h>
@@ -135,7 +137,11 @@ protected:
 
 public:
   // unionPtr methods
-  [[nodiscard]] constexpr auto getUsers() const -> UList<Node *> * {
+  [[nodiscard]] constexpr auto getUsers() const -> const UList<Node *> * {
+    invariant(kind == VK_Load || kind >= VK_Func);
+    return unionPtr.users;
+  }
+  [[nodiscard]] constexpr auto getUsers() -> UList<Node *> * {
     invariant(kind == VK_Load || kind >= VK_Func);
     return unionPtr.users;
   }
@@ -196,6 +202,22 @@ public:
     if (llvm::isa<llvm::ConstantFP>(v)) return VK_Cflt;
     return VK_CVal;
   }
+  /// isStore() is true if the address is a store, false if it is a load
+  /// If the memory access is a store, this can still be a reload
+  [[nodiscard]] constexpr auto isStore() const -> bool {
+    return getKind() == VK_Stow;
+  }
+  [[nodiscard]] constexpr auto isLoad() const -> bool {
+    return getKind() == VK_Load;
+  }
+
+  /// these methods are overloaded for specific subtypes
+  auto getCost(llvm::TargetTransformInfo &TTI, cost::VectorWidth W)
+    -> cost::RecipThroughputLatency;
+  auto getValue() -> llvm::Value *;
+  auto getInstruction() -> llvm::Instruction *;
+  auto getType() -> llvm::Type *;
+  auto getType(unsigned) -> llvm::Type *;
 };
 
 class Loop;
@@ -350,8 +372,11 @@ public:
     return v->getKind() == VK_CVal;
   }
 
-  [[nodiscard]] constexpr auto getVal() const -> llvm::Value * {
+  [[nodiscard]] constexpr auto getValue() const -> llvm::Value * {
     return unionPtr.val;
+  }
+  [[nodiscard]] auto getType() const -> llvm::Type * {
+    return getValue()->getType();
   }
 };
 /// Cnst
@@ -364,7 +389,7 @@ public:
   static constexpr auto classof(const Node *v) -> bool {
     return v->getKind() == VK_Cint || v->getKind() == VK_Cflt;
   }
-  [[nodiscard]] constexpr auto getTy() const -> llvm::Type * {
+  [[nodiscard]] constexpr auto getType() const -> llvm::Type * {
     return unionPtr.typ;
   }
   struct Identifier {

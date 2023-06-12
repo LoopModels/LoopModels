@@ -95,8 +95,8 @@ inline auto getConstantInt(const llvm::SCEV *v) -> std::optional<int64_t> {
 }
 
 template <typename T>
-inline auto findFirst(llvm::ArrayRef<T> v, const T &x) -> Optional<size_t> {
-  for (size_t i = 0; i < v.size(); ++i)
+inline auto findFirst(llvm::ArrayRef<T> v, const T &x) -> Optional<ptrdiff_t> {
+  for (ptrdiff_t i = 0; i < v.size(); ++i)
     if (v[i] == x) return i;
   return {};
 }
@@ -105,8 +105,8 @@ inline auto findFirst(llvm::ArrayRef<T> v, const T &x) -> Optional<size_t> {
 /// constant offset this function returns 0 if S not found in `symbols`.
 [[nodiscard]] inline auto
 findSymbolicIndex(llvm::ArrayRef<const llvm::SCEV *> symbols,
-                  const llvm::SCEV *S) -> size_t {
-  for (size_t i = 0; i < symbols.size();)
+                  const llvm::SCEV *S) -> ptrdiff_t {
+  for (ptrdiff_t i = 0; i < std::ssize(symbols);)
     if (symbols[i++] == S) return i;
   return 0;
 }
@@ -170,7 +170,7 @@ namespace loopNestCtor {
 /// offsets
 inline void addSymbol(IntMatrix &A,
                       llvm::SmallVectorImpl<const llvm::SCEV *> &symbols,
-                      const llvm::SCEV *v, math::Range<size_t, size_t> lu,
+                      const llvm::SCEV *v, math::Range<ptrdiff_t, ptrdiff_t> lu,
                       int64_t mlt) {
   assert(lu.size());
   symbols.push_back(v);
@@ -186,11 +186,11 @@ inline auto addRecMatchesLoop(const llvm::SCEV *S, llvm::Loop *L) -> bool {
 addSymbol(std::array<IntMatrix, 2> &AB, // NOLINT(misc-no-recursion)
           llvm::SmallVectorImpl<const llvm::SCEV *> &symbols, llvm::Loop *L,
           const llvm::SCEV *v, llvm::ScalarEvolution &SE,
-          math::Range<size_t, size_t> lu, int64_t mlt, size_t minDepth)
-  -> size_t {
+          math::Range<ptrdiff_t, ptrdiff_t> lu, int64_t mlt, ptrdiff_t minDepth)
+  -> ptrdiff_t {
   auto &[A, B] = AB;
   // first, we check if `v` in `Symbols`
-  if (size_t i = findSymbolicIndex(symbols, v)) {
+  if (ptrdiff_t i = findSymbolicIndex(symbols, v)) {
     A(lu, i) += mlt;
     return minDepth;
   }
@@ -216,7 +216,7 @@ addSymbol(std::array<IntMatrix, 2> &AB, // NOLINT(misc-no-recursion)
       return addSymbol(AB, symbols, L, m->getOperand(0), SE, lu, mlt * (*op1),
                        minDepth);
   } else if (const auto *x = llvm::dyn_cast<const llvm::SCEVAddRecExpr>(v)) {
-    size_t recDepth = x->getLoop()->getLoopDepth();
+    ptrdiff_t recDepth = x->getLoop()->getLoopDepth();
     if (x->isAffine()) {
       minDepth =
         addSymbol(AB, symbols, L, x->getOperand(0), SE, lu, mlt, minDepth);
@@ -242,7 +242,7 @@ addSymbol(std::array<IntMatrix, 2> &AB, // NOLINT(misc-no-recursion)
     const llvm::SCEV *op1 = mm->getOperand(1);
     if (isMin ^ (mlt < 0)) { // we can represent this as additional constraints
       Row M = A.numRow();
-      Row Mp = M + lu.size();
+      Row Mp = M + std::ssize(lu);
       A.resize(Mp);
       B.resize(Mp);
       A(_(M, Mp), _) = A(lu, _);
@@ -263,7 +263,7 @@ inline auto
 areSymbolsLoopInvariant(IntMatrix &A,
                         llvm::SmallVectorImpl<const llvm::SCEV *> &symbols,
                         llvm::Loop *L, llvm::ScalarEvolution &SE) -> bool {
-  for (size_t i = 0; i < symbols.size(); ++i)
+  for (ptrdiff_t i = 0; i < std::ssize(symbols); ++i)
     if ((!allZero(A(_, i + 1))) && (!SE.isLoopInvariant(symbols[i], L)))
       return false;
   return true;
@@ -272,8 +272,8 @@ inline auto // NOLINTNEXTLINE(misc-no-recursion)
 addBackedgeTakenCount(std::array<IntMatrix, 2> &AB,
                       llvm::SmallVectorImpl<const llvm::SCEV *> &symbols,
                       llvm::Loop *L, const llvm::SCEV *BT,
-                      llvm::ScalarEvolution &SE, size_t minDepth,
-                      llvm::OptimizationRemarkEmitter *ORE) -> size_t {
+                      llvm::ScalarEvolution &SE, ptrdiff_t minDepth,
+                      llvm::OptimizationRemarkEmitter *ORE) -> ptrdiff_t {
   // A contains syms
   auto &[A, B] = AB;
   Row M = A.numRow();
@@ -281,8 +281,8 @@ addBackedgeTakenCount(std::array<IntMatrix, 2> &AB,
   B.resize(M + 1);
   minDepth = addSymbol(AB, symbols, L, BT, SE, _(M, M + 1), 1, minDepth);
   assert(A.numRow() == B.numRow());
-  size_t depth = L->getLoopDepth() - 1;
-  for (auto m = size_t(M); m < A.numRow(); ++m) B(m, depth) = -1; // indvar
+  ptrdiff_t depth = L->getLoopDepth() - 1;
+  for (auto m = ptrdiff_t(M); m < A.numRow(); ++m) B(m, depth) = -1; // indvar
   // recurse, if possible to add an outer layer
   if (llvm::Loop *P = L->getParentLoop()) {
     if (areSymbolsLoopInvariant(A, symbols, P, SE)) {
@@ -329,7 +329,7 @@ addBackedgeTakenCount(std::array<IntMatrix, 2> &AB,
 class Loop : public BasePolyhedra<false, true, true, Loop> {
   using BaseT = BasePolyhedra<false, true, true, Loop>;
 
-  [[nodiscard]] constexpr auto getSymCapacity() const -> size_t {
+  [[nodiscard]] constexpr auto getSymCapacity() const -> ptrdiff_t {
     return numDynSymbols + numLoops;
   }
   // llvm::Loop *L;
@@ -368,28 +368,28 @@ public:
     // once we're done assembling these, we'll concatenate A and B
     unsigned maxDepth = L->getLoopDepth();
     invariant(maxDepth > 0);
-    // size_t maxNumSymbols = BT->getExpressionSize();
+    // ptrdiff_t maxNumSymbols = BT->getExpressionSize();
     A.resizeForOverwrite(
       math::StridedDims{0, 1, unsigned(1) + BT->getExpressionSize()});
     B.resizeForOverwrite(math::StridedDims{0, maxDepth, maxDepth});
     llvm::SmallVector<const llvm::SCEV *> symbols;
-    size_t minDepth =
+    ptrdiff_t minDepth =
       loopNestCtor::addBackedgeTakenCount(AB, symbols, L, BT, SE, 0, ORE);
     // We first check for loops in B that are shallower than minDepth
     // we include all loops such that L->getLoopDepth() > minDepth
     // note that the outer-most loop has a depth of 1.
     // We turn these loops into `getAddRecExprs`s, so that we can
     // add them as variables to `A`.
-    for (size_t d = 0; d < minDepth; ++d) {
+    for (ptrdiff_t d = 0; d < ptrdiff_t(minDepth); ++d) {
       // loop at depth d+1
       llvm::Loop *P = nullptr;
       // search B(_,d) for references
-      for (size_t i = 0; i < B.numRow(); ++i) {
+      for (ptrdiff_t i = 0; i < B.numRow(); ++i) {
         // TODO; confirm `last` vs `end`
         if (int64_t Bid = B(i, d)) {
           if (!P) { // find P
             P = L;
-            for (size_t r = d + 1; r < maxDepth; ++r) P = P->getParentLoop();
+            for (ptrdiff_t r = d + 1; r < maxDepth; ++r) P = P->getParentLoop();
           }
           // TODO: find a more efficient way to get IntTyp
           llvm::Type *intTyp = P->getInductionVariable(SE)->getType();
@@ -401,8 +401,8 @@ public:
         }
       }
     }
-    invariant(1 + symbols.size(), size_t(A.numCol()));
-    size_t depth = maxDepth - minDepth;
+    invariant(1 + std::ssize(symbols), ptrdiff_t(A.numCol()));
+    ptrdiff_t depth = maxDepth - minDepth;
     unsigned numConstraints = unsigned(A.numRow()), N = unsigned(A.numCol());
     NotNull<Loop> aln{
       Loop::allocate(alloc, numConstraints, depth, symbols, maxDepth)};
@@ -417,7 +417,7 @@ public:
     // pruneBounds();
   }
 
-  auto findIndex(const llvm::SCEV *v) const -> size_t {
+  auto findIndex(const llvm::SCEV *v) const -> ptrdiff_t {
     return findSymbolicIndex(getSyms(), v);
   }
   /// A.rotate( R )
@@ -438,7 +438,7 @@ public:
     // A * O * [I 0; 0 R]
     // where O = I - [0 0; offsets 0],
     // where offsets is a vector of length getNumLoops() and O is square
-    size_t numExtraVar = 0, numConst = this->getNumSymbols();
+    ptrdiff_t numExtraVar = 0, numConst = this->getNumSymbols();
     bool thisNonNeg = isNonNegative(), nonNeg = thisNonNeg && allGEZero(R),
          addExtra = thisNonNeg != nonNeg;
     if (addExtra) numExtraVar = getNumLoops();
@@ -447,8 +447,8 @@ public:
     auto A{getA()};
     const auto [M, N] = A.size();
     auto syms{getSyms()};
-    NotNull<Loop> aln{
-      Loop::allocate(alloc, size_t(M) + numExtraVar, numLoops, syms, nonNeg)};
+    NotNull<Loop> aln{Loop::allocate(alloc, ptrdiff_t(M) + numExtraVar,
+                                     numLoops, syms, nonNeg)};
     auto B{aln->getA()};
     invariant(B.numRow(), M + numExtraVar);
     invariant(B.numCol(), N);
@@ -468,7 +468,7 @@ public:
     // l   offs  0  0  ]      0  0 R ]          offs 0  0 ]
     // thus, we can ignore R here, and simply update the result using A.
     if (offsets) {
-      for (size_t l = 0, L = getNumLoops(); l < L; ++l) {
+      for (ptrdiff_t l = 0, L = getNumLoops(); l < L; ++l) {
         if (int64_t mlt = offsets[l]) {
           B(_(0, M), 0) -= mlt * A(_, numConst + l);
           if (addExtra) B(M + l, 0) = -mlt;
@@ -520,23 +520,23 @@ public:
     numDynSymbols = 0;
   }
   // L is the inner most loop getting removed
-  void removeOuterMost(size_t numToRemove, llvm::Loop *L,
+  void removeOuterMost(ptrdiff_t numToRemove, llvm::Loop *L,
                        llvm::ScalarEvolution *SE) {
     // basically, we move the outermost loops to the symbols section,
     // and add the appropriate addressees
     // order is outer<->inner
-    size_t oldNumLoops = getNumLoops();
+    ptrdiff_t oldNumLoops = getNumLoops();
     numToRemove -= (nonNegative - oldNumLoops);
     if (numToRemove == 0) return;
     if (numToRemove >= oldNumLoops) return clear();
-    size_t newNumLoops = oldNumLoops - numToRemove,
-           oldNumDynSymbols = numDynSymbols;
+    ptrdiff_t newNumLoops = oldNumLoops - numToRemove,
+              oldNumDynSymbols = numDynSymbols;
     numDynSymbols += numToRemove;
     auto S{getSyms()};
     // Array `A` goes from outer->inner
     // as we peel loops, we go from inner->outer
     // so we iterate `i` backwards
-    for (size_t i = numToRemove; i;) {
+    for (ptrdiff_t i = numToRemove; i;) {
       llvm::Type *intTyp = L->getInductionVariable(*SE)->getType();
       S[--i + oldNumDynSymbols] = SE->getAddRecExpr(
         SE->getZero(intTyp), SE->getOne(intTyp), L, llvm::SCEV::NoWrapMask);
@@ -551,15 +551,15 @@ public:
     if (isNonNegative()) return; // this->pruneBounds(alloc);
     // return initializeComparator();
     if (!numLoops) return;
-    size_t M = numConstraints;
+    ptrdiff_t M = numConstraints;
     numConstraints += numLoops;
     auto A{getA()};
     A(_(M, end), _) << 0;
-    for (size_t i = 0; i < numLoops; ++i) A(M + i, end - numLoops + i) = 1;
+    for (ptrdiff_t i = 0; i < numLoops; ++i) A(M + i, end - numLoops + i) = 1;
     // this->pruneBounds(alloc);
   }
 
-  [[nodiscard]] constexpr auto getProgVars(size_t j) const
+  [[nodiscard]] constexpr auto getProgVars(ptrdiff_t j) const
     -> PtrVector<int64_t> {
     return getA()(j, _(0, getNumSymbols()));
   }
@@ -569,7 +569,7 @@ public:
     ret->getA() << getA();
     return ret;
   }
-  [[nodiscard]] constexpr auto removeLoop(BumpAlloc<> &alloc, size_t v) const
+  [[nodiscard]] constexpr auto removeLoop(BumpAlloc<> &alloc, ptrdiff_t v) const
     -> Loop * {
     auto A{getA()};
     v += getNumSymbols();
@@ -594,29 +594,29 @@ public:
     assert((ret->getNumLoops() == getNumLoops() - 1) && "didn't remove loop");
     return ret;
   }
-  constexpr void eraseConstraint(size_t c) {
+  constexpr void eraseConstraint(ptrdiff_t c) {
     eraseConstraintImpl(getA(), c);
     --numConstraints;
   }
   [[nodiscard]] auto
-  zeroExtraItersUponExtending(math::Alloc<int64_t> auto &alloc, size_t _i,
+  zeroExtraItersUponExtending(math::Alloc<int64_t> auto &alloc, ptrdiff_t _i,
                               bool extendLower) const -> bool {
     auto p = alloc.scope();
     Loop *tmp = copy(alloc);
     // question is, does the inner most loop have 0 extra iterations?
-    const size_t numPrevLoops = getNumLoops() - 1;
+    const ptrdiff_t numPrevLoops = getNumLoops() - 1;
     // we changed the behavior of removeLoop to actually drop loops that are
     // no longer present.
-    for (size_t i = 0; i < numPrevLoops - 1; ++i)
+    for (ptrdiff_t i = 0; i < numPrevLoops - 1; ++i)
       tmp = tmp->removeLoop(alloc, i >= _i);
-    // for (size_t i = 0; i < numPrevLoops; ++i)
+    // for (ptrdiff_t i = 0; i < numPrevLoops; ++i)
     //   if (i != _i) tmp = tmp->removeLoop(alloc, i);
     // loop _i is now loop 0
     // innermost loop is now loop 1
     bool indep = true;
-    const size_t numConst = getNumSymbols();
+    const ptrdiff_t numConst = getNumSymbols();
     auto A{tmp->getA()};
-    for (size_t n = 0; n < A.numRow(); ++n)
+    for (ptrdiff_t n = 0; n < A.numRow(); ++n)
       if ((A(n, numConst) != 0) && (A(n, 1 + numConst) != 0)) indep = false;
     if (indep) return false;
     Loop *margi = tmp->removeLoop(alloc, 1), *tmp2;
@@ -628,7 +628,7 @@ public:
     // in `tmp`
     auto p2 = alloc.checkpoint();
     int64_t sign = 2 * extendLower - 1; // extendLower ? 1 : -1
-    for (size_t c = 0; c < margi->getNumInequalityConstraints(); ++c) {
+    for (ptrdiff_t c = 0; c < margi->getNumInequalityConstraints(); ++c) {
       int64_t b = sign * margi->getA()(c, numConst);
       if (b <= 0) continue;
       alloc.rollback(p2);
@@ -645,13 +645,13 @@ public:
       // our approach here is to set `_i` equal to the extended bound
       // and then check if the resulting polyhedra is empty.
       // if not, then we may have >0 iterations.
-      for (size_t cc = 0; cc < tmp2->getNumCon(); ++cc) {
+      for (ptrdiff_t cc = 0; cc < tmp2->getNumCon(); ++cc) {
         if (int64_t d = tmp2->getA()(cc, numConst)) {
           tmp2->getA()(cc, _(0, last)) << b * tmp2->getA()(cc, _(0, last)) -
                                             (d * sign) * margi->getA()(c, _);
         }
       }
-      for (auto cc = size_t(tmp2->getNumCon()); cc;)
+      for (auto cc = ptrdiff_t(tmp2->getNumCon()); cc;)
         if (tmp2->getA()(--cc, 1 + numConst) == 0) tmp2->eraseConstraint(cc);
       if (!(tmp2->calcIsEmpty(alloc))) return false;
     }
@@ -665,7 +665,7 @@ public:
         // increment `b` our approach here is to set `_i` equal to the
         // extended bound and then check if the resulting polyhedra is
         // empty. if not, then we may have >0 iterations.
-        for (size_t cc = 0; cc < tmp->getNumCon(); ++cc) {
+        for (ptrdiff_t cc = 0; cc < tmp->getNumCon(); ++cc) {
           if (int64_t d = tmp->getA()(cc, numConst)) {
             // lower bound is i >= 0
             // so setting equal to the extended lower bound now
@@ -674,7 +674,7 @@ public:
             tmp->getA()(cc, numConst) = 0;
           }
         }
-        for (auto cc = size_t(tmp->getNumCon()); cc;)
+        for (auto cc = ptrdiff_t(tmp->getNumCon()); cc;)
           if (tmp->getA()(--cc, 1 + numConst) == 0) tmp->eraseConstraint(cc);
         if (!(tmp->calcIsEmpty(alloc))) return false;
       }
@@ -685,7 +685,7 @@ public:
   auto printSymbol(llvm::raw_ostream &os, PtrVector<int64_t> x,
                    int64_t mul) const -> bool {
     bool printed = false;
-    for (size_t i = 1; i < x.size(); ++i)
+    for (ptrdiff_t i = 1; i < x.size(); ++i)
       if (int64_t xi = x[i] * mul) {
         if (printed) os << (xi > 0 ? " + " : " - ");
         printed = true;
@@ -701,16 +701,18 @@ public:
     }
     return printed;
   }
-  constexpr void setNumConstraints(size_t numCon) { numConstraints = numCon; }
-  static constexpr void setNumEqConstraints(size_t) {}
+  constexpr void setNumConstraints(ptrdiff_t numCon) {
+    numConstraints = numCon;
+  }
+  static constexpr void setNumEqConstraints(ptrdiff_t) {}
   constexpr void decrementNumConstraints() { --numConstraints; }
 
-  void printBound(llvm::raw_ostream &os, int64_t sign, size_t numVarMinus1,
-                  size_t numConst, size_t j) const {
+  void printBound(llvm::raw_ostream &os, int64_t sign, ptrdiff_t numVarMinus1,
+                  ptrdiff_t numConst, ptrdiff_t j) const {
     PtrVector<int64_t> b = getProgVars(j);
     DensePtrMatrix<int64_t> A{getA()};
     bool printed = printSymbol(os, b, -sign);
-    for (size_t k = 0; k < numVarMinus1; ++k) {
+    for (ptrdiff_t k = 0; k < numVarMinus1; ++k) {
       if (int64_t lakj = A(j, k + numConst)) {
         if (lakj * sign > 0) os << " - ";
         else if (printed) os << " + ";
@@ -722,8 +724,9 @@ public:
     }
     if (!printed) os << 0;
   }
-  void printBoundShort(llvm::raw_ostream &os, int64_t sign, size_t numVarMinus1,
-                       size_t numConst, int64_t allAj, size_t numRow,
+  void printBoundShort(llvm::raw_ostream &os, int64_t sign,
+                       ptrdiff_t numVarMinus1, ptrdiff_t numConst,
+                       int64_t allAj, ptrdiff_t numRow,
                        bool separateLines) const {
     bool isUpper = sign < 0;
     if (separateLines || isUpper) {
@@ -733,7 +736,7 @@ public:
     }
     if (numRow > 1) os << (isUpper ? "min(" : "max(");
     DensePtrMatrix<int64_t> A{getA()};
-    for (size_t j = 0, k = 0; j < A.numRow(); ++j) {
+    for (ptrdiff_t j = 0, k = 0; j < A.numRow(); ++j) {
       if (A(j, last) * sign <= 0) continue;
       if (k++) os << ", ";
       printBound(os, sign, numVarMinus1, numConst, j);
@@ -749,14 +752,14 @@ public:
   // `removeLoop` to print all bounds.
 
   void printBound(llvm::raw_ostream &os, int64_t sign) const {
-    const size_t numVar = getNumLoops();
+    const ptrdiff_t numVar = getNumLoops();
     if (numVar == 0) return;
-    const size_t numVarM1 = numVar - 1, numConst = getNumSymbols();
+    const ptrdiff_t numVarM1 = numVar - 1, numConst = getNumSymbols();
     bool hasPrintedLine = isNonNegative() && (sign == 1), isUpper = sign < 0;
     DensePtrMatrix<int64_t> A{getA()};
-    size_t numRow = 0;
+    ptrdiff_t numRow = 0;
     int64_t allAj = 0;
-    for (size_t j = 0; j < A.numRow(); ++j) {
+    for (ptrdiff_t j = 0; j < A.numRow(); ++j) {
       int64_t Ajr = A(j, last), Aj = Ajr * sign;
       if (Aj <= 0) continue;
       if (allAj) allAj = allAj == Aj ? allAj : -1;
@@ -772,11 +775,11 @@ public:
       if (!isUpper) ++numRow;
     if (allAj > 0)
       return printBoundShort(os, sign, numVarM1, numConst, allAj, numRow, true);
-    for (size_t j = 0; j < A.numRow(); ++j) {
+    for (ptrdiff_t j = 0; j < A.numRow(); ++j) {
       int64_t Ajr = A(j, end - 1), Aj = Ajr * sign;
       if (Aj <= 0) continue;
       if (hasPrintedLine)
-        for (size_t k = 0; k < 21; ++k) os << ' ';
+        for (ptrdiff_t k = 0; k < 21; ++k) os << ' ';
       hasPrintedLine = true;
       if (Ajr != sign)
         os << Aj << "*i_" << numVarM1 << (isUpper ? " ≤ " : " ≥ ");
@@ -788,12 +791,12 @@ public:
       if (!isUpper) os << "i_" << numVarM1 << " ≥ 0\n";
   }
   void printBounds(llvm::raw_ostream &os) const {
-    const size_t numVar = getNumLoops();
+    const ptrdiff_t numVar = getNumLoops();
     if (numVar == 0) return;
     DensePtrMatrix<int64_t> A{getA()};
     int64_t allAj = 0;
-    size_t numPos = 0, numNeg = 0;
-    for (size_t j = 0; j < A.numRow(); ++j) {
+    ptrdiff_t numPos = 0, numNeg = 0;
+    for (ptrdiff_t j = 0; j < A.numRow(); ++j) {
       int64_t Ajr = A(j, last);
       if (Ajr == 0) continue;
       numPos += Ajr > 0;
@@ -803,7 +806,7 @@ public:
       else allAj = x;
     }
     if (allAj > 0) {
-      size_t numVarMinus1 = numVar - 1, numConst = getNumSymbols();
+      ptrdiff_t numVarMinus1 = numVar - 1, numConst = getNumSymbols();
       if (isNonNegative()) ++numPos;
       printBoundShort(os, 1, numVarMinus1, numConst, allAj, numPos, false);
       printBoundShort(os, -1, numVarMinus1, numConst, allAj, numNeg, false);
@@ -814,7 +817,7 @@ public:
   }
   void dump(llvm::raw_ostream &os, BumpAlloc<> &alloc) const {
     const Loop *tmp = this;
-    for (size_t i = getNumLoops(); tmp;) {
+    for (ptrdiff_t i = getNumLoops(); tmp;) {
       assert((i == tmp->getNumLoops()) && "loop count mismatch");
       tmp->printBounds(os << "\nLoop " << --i << ": ");
       if (!i) break;
@@ -876,8 +879,8 @@ public:
     aln->getA() << A;
     return aln;
   }
-  [[nodiscard]] static auto allocate(BumpAlloc<> &alloc, unsigned int numCon,
-                                     unsigned int numLoops,
+  [[nodiscard]] static auto allocate(BumpAlloc<> &alloc, unsigned numCon,
+                                     unsigned numLoops,
                                      llvm::ArrayRef<const llvm::SCEV *> syms,
                                      bool nonNegative) -> NotNull<Loop> {
     unsigned numDynSym = syms.size();
@@ -894,8 +897,8 @@ public:
     std::copy_n(syms.begin(), numDynSym, aln->getSyms().begin());
     return NotNull<Loop>{aln};
   }
-  explicit constexpr Loop(unsigned int _numConstraints, unsigned int _numLoops,
-                          unsigned int _numDynSymbols, bool _nonNegative)
+  explicit constexpr Loop(unsigned _numConstraints, unsigned _numLoops,
+                          unsigned _numDynSymbols, bool _nonNegative)
     : numConstraints(_numConstraints), numLoops(_numLoops),
       numDynSymbols(_numDynSymbols), nonNegative(_nonNegative) {}
 };
