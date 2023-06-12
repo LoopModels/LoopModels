@@ -129,9 +129,9 @@ constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>pruneBounds
 <tr class="memitem:adf88aab6c90c50fe13b50b524705fb02"><td class="memItemLeft" align="right" valign="top"><a id="adf88aab6c90c50fe13b50b524705fb02"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>pruneBounds</b> ()</td></tr>
 <tr class="separator:adf88aab6c90c50fe13b50b524705fb02"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2a2c858f22fc40e166a062c1880f78e0"><td class="memItemLeft" align="right" valign="top"><a id="a2a2c858f22fc40e166a062c1880f78e0"></a>
-constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>eraseConstraint</b> (size_t constraint)</td></tr>
-<tr class="separator:a2a2c858f22fc40e166a062c1880f78e0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6d0daf774d43bc2c641d8cabed6dcef9"><td class="memItemLeft" align="right" valign="top"><a id="a6d0daf774d43bc2c641d8cabed6dcef9"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>eraseConstraint</b> (ptrdiff_t constraint)</td></tr>
+<tr class="separator:a6d0daf774d43bc2c641d8cabed6dcef9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aff44b8917b6510270de3b97383d74677"><td class="memTemplParams" colspan="2"><a id="aff44b8917b6510270de3b97383d74677"></a>
 template&lt;bool CheckEmpty&gt; </td></tr>
 <tr class="memitem:aff44b8917b6510270de3b97383d74677"><td class="memTemplItemLeft" align="right" valign="top">constexpr void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>pruneBoundsCore</b> (BumpAlloc&lt;&gt; &amp;alloc)</td></tr>
@@ -142,18 +142,18 @@ constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>pruneBounds
 <tr class="memitem:a463f9f3b28f0a868b815d06bdeaaa16a"><td class="memItemLeft" align="right" valign="top"><a id="a463f9f3b28f0a868b815d06bdeaaa16a"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumSymbols</b> () const -&gt; unsigned</td></tr>
 <tr class="separator:a463f9f3b28f0a868b815d06bdeaaa16a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1c38e11c0a2bfa2d14fbaad8e2ab93ab"><td class="memItemLeft" align="right" valign="top"><a id="a1c38e11c0a2bfa2d14fbaad8e2ab93ab"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumDynamic</b> () const -&gt; size_t</td></tr>
-<tr class="separator:a1c38e11c0a2bfa2d14fbaad8e2ab93ab"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a485cfa45466840f8d42b8841180371e1"><td class="memItemLeft" align="right" valign="top"><a id="a485cfa45466840f8d42b8841180371e1"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumVar</b> () const -&gt; size_t</td></tr>
-<tr class="separator:a485cfa45466840f8d42b8841180371e1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3e665ece5f65207692f1f458dd6e612d"><td class="memItemLeft" align="right" valign="top"><a id="a3e665ece5f65207692f1f458dd6e612d"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumInequalityConstraints</b> () const -&gt; size_t</td></tr>
-<tr class="separator:a3e665ece5f65207692f1f458dd6e612d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a845ada2d0db67e8a2ea238380a8dd617"><td class="memItemLeft" align="right" valign="top"><a id="a845ada2d0db67e8a2ea238380a8dd617"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumEqualityConstraints</b> () const -&gt; size_t</td></tr>
-<tr class="separator:a845ada2d0db67e8a2ea238380a8dd617"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a90ff3275590ad21624f52dfa0cde0f04"><td class="memItemLeft" align="right" valign="top"><a id="a90ff3275590ad21624f52dfa0cde0f04"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumDynamic</b> () const -&gt; ptrdiff_t</td></tr>
+<tr class="separator:a90ff3275590ad21624f52dfa0cde0f04"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a25e8b1b343163404f1de333eaa7e2768"><td class="memItemLeft" align="right" valign="top"><a id="a25e8b1b343163404f1de333eaa7e2768"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumVar</b> () const -&gt; ptrdiff_t</td></tr>
+<tr class="separator:a25e8b1b343163404f1de333eaa7e2768"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abe46138380cde37d291e8b49034abc80"><td class="memItemLeft" align="right" valign="top"><a id="abe46138380cde37d291e8b49034abc80"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumInequalityConstraints</b> () const -&gt; ptrdiff_t</td></tr>
+<tr class="separator:abe46138380cde37d291e8b49034abc80"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3e6c9e654753083f1c3e0ac8605baf68"><td class="memItemLeft" align="right" valign="top"><a id="a3e6c9e654753083f1c3e0ac8605baf68"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumEqualityConstraints</b> () const -&gt; ptrdiff_t</td></tr>
+<tr class="separator:a3e6c9e654753083f1c3e0ac8605baf68"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad2bca7b0cd2f776c8b2f2f65d254c4cc"><td class="memItemLeft" align="right" valign="top"><a id="ad2bca7b0cd2f776c8b2f2f65d254c4cc"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>dropEmptyConstraints</b> ()</td></tr>
 <tr class="separator:ad2bca7b0cd2f776c8b2f2f65d254c4cc"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -163,9 +163,9 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>dump</b> () const</td
 <tr class="memitem:a83f896aecd007ab58809cc5fbdcf93c8"><td class="memItemLeft" align="right" valign="top"><a id="a83f896aecd007ab58809cc5fbdcf93c8"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>isEmpty</b> () const -&gt; bool</td></tr>
 <tr class="separator:a83f896aecd007ab58809cc5fbdcf93c8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0a2951b9bb52080d7aed7d4f618d3059"><td class="memItemLeft" align="right" valign="top"><a id="a0a2951b9bb52080d7aed7d4f618d3059"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>truncateVars</b> (size_t numVar)</td></tr>
-<tr class="separator:a0a2951b9bb52080d7aed7d4f618d3059"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abd18c5b0161eb3542efe4b46856b2e3f"><td class="memItemLeft" align="right" valign="top"><a id="abd18c5b0161eb3542efe4b46856b2e3f"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>truncateVars</b> (ptrdiff_t numVar)</td></tr>
+<tr class="separator:abd18c5b0161eb3542efe4b46856b2e3f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="friends"></a>
 Friends</h2></td></tr>

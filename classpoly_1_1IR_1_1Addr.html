@@ -180,11 +180,6 @@ constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>place</b> (
 <tr class="memitem:ad13b82415946bfaf19bc3bf70ea3fa92"><td class="memItemLeft" align="right" valign="top"><a id="ad13b82415946bfaf19bc3bf70ea3fa92"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>wasPlaced</b> () const -&gt; bool</td></tr>
 <tr class="separator:ad13b82415946bfaf19bc3bf70ea3fa92"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:adcaf184f1ec32c3519fc8f2acbeac38b"><td class="memItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1IR_1_1Addr.html#adcaf184f1ec32c3519fc8f2acbeac38b">isStore</a> () const -&gt; bool</td></tr>
-<tr class="separator:adcaf184f1ec32c3519fc8f2acbeac38b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a934cf65cfdbcb1f65b17cb90e80d5bfd"><td class="memItemLeft" align="right" valign="top"><a id="a934cf65cfdbcb1f65b17cb90e80d5bfd"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>isLoad</b> () const -&gt; bool</td></tr>
-<tr class="separator:a934cf65cfdbcb1f65b17cb90e80d5bfd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a35b332dedb419ee1cffad008cb2a8a47"><td class="memItemLeft" align="right" valign="top"><a id="a35b332dedb419ee1cffad008cb2a8a47"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>index</b> () -&gt; uint8_t &amp;</td></tr>
 <tr class="separator:a35b332dedb419ee1cffad008cb2a8a47"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -270,9 +265,9 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>sizesMatch<
 <tr class="memitem:a45d8f70537abd0ca165df1bc2aab2a6b"><td class="memItemLeft" align="right" valign="top"><a id="a45d8f70537abd0ca165df1bc2aab2a6b"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>calculateCostContiguousLoadStore</b> (llvm::TargetTransformInfo &amp;TTI, unsigned int vectorWidth) -&gt; <a class="el" href="structpoly_1_1IR_1_1cost_1_1RecipThroughputLatency.html">cost::RecipThroughputLatency</a></td></tr>
 <tr class="separator:a45d8f70537abd0ca165df1bc2aab2a6b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a72d6753e5af46f85dd4560105eb4ccca"><td class="memItemLeft" align="right" valign="top"><a id="a72d6753e5af46f85dd4560105eb4ccca"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>calcCost</b> ()</td></tr>
-<tr class="separator:a72d6753e5af46f85dd4560105eb4ccca"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1acf4e77e6ada3fd6a1676e812fb06f8"><td class="memItemLeft" align="right" valign="top"><a id="a1acf4e77e6ada3fd6a1676e812fb06f8"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getCost</b> (llvm::TargetTransformInfo &amp;TTI, <a class="el" href="classpoly_1_1IR_1_1cost_1_1VectorWidth.html">cost::VectorWidth</a> W) -&gt; <a class="el" href="structpoly_1_1IR_1_1cost_1_1RecipThroughputLatency.html">cost::RecipThroughputLatency</a></td></tr>
+<tr class="separator:a1acf4e77e6ada3fd6a1676e812fb06f8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8ba8c2d378d5c41ce36c230e3e0a24cd"><td class="memItemLeft" align="right" valign="top"><a id="a8ba8c2d378d5c41ce36c230e3e0a24cd"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getCurrentDepth</b> () const -&gt; unsigned</td></tr>
 <tr class="separator:a8ba8c2d378d5c41ce36c230e3e0a24cd"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -280,9 +275,12 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getCurrentD
 void&#160;</td><td class="memItemRight" valign="bottom"><b>printDotName</b> (llvm::raw_ostream &amp;os) const</td></tr>
 <tr class="separator:a797bae936e0c26a7c501d52affa7c213"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_methods_classpoly_1_1IR_1_1Node"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_classpoly_1_1IR_1_1Node')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="classpoly_1_1IR_1_1Node.html">poly::IR::Node</a></td></tr>
-<tr class="memitem:abd45596f4f3430fae5c58202f66e08ed inherit pub_methods_classpoly_1_1IR_1_1Node"><td class="memItemLeft" align="right" valign="top"><a id="abd45596f4f3430fae5c58202f66e08ed"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getUsers</b> () const -&gt; UList&lt; <a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a> * &gt; *</td></tr>
-<tr class="separator:abd45596f4f3430fae5c58202f66e08ed inherit pub_methods_classpoly_1_1IR_1_1Node"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7691bc06b3305d352ba28f36cc2061e0 inherit pub_methods_classpoly_1_1IR_1_1Node"><td class="memItemLeft" align="right" valign="top"><a id="a7691bc06b3305d352ba28f36cc2061e0"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getUsers</b> () const -&gt; const UList&lt; <a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a> * &gt; *</td></tr>
+<tr class="separator:a7691bc06b3305d352ba28f36cc2061e0 inherit pub_methods_classpoly_1_1IR_1_1Node"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a97442e3b38d1e67a610e909ed7abdfaa inherit pub_methods_classpoly_1_1IR_1_1Node"><td class="memItemLeft" align="right" valign="top"><a id="a97442e3b38d1e67a610e909ed7abdfaa"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getUsers</b> () -&gt; UList&lt; <a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a> * &gt; *</td></tr>
+<tr class="separator:a97442e3b38d1e67a610e909ed7abdfaa inherit pub_methods_classpoly_1_1IR_1_1Node"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ace7c1cc2611146ac260ba8410525d16f inherit pub_methods_classpoly_1_1IR_1_1Node"><td class="memItemLeft" align="right" valign="top"><a id="ace7c1cc2611146ac260ba8410525d16f"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>setUsers</b> (UList&lt; <a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a> * &gt; *users)</td></tr>
 <tr class="separator:ace7c1cc2611146ac260ba8410525d16f inherit pub_methods_classpoly_1_1IR_1_1Node"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -334,6 +332,27 @@ constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>removeFromL
 <tr class="memitem:a858fbe0affa5628284f68b1475b7c157 inherit pub_methods_classpoly_1_1IR_1_1Node"><td class="memItemLeft" align="right" valign="top"><a id="a858fbe0affa5628284f68b1475b7c157"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>forEach</b> (const auto &amp;f)</td></tr>
 <tr class="separator:a858fbe0affa5628284f68b1475b7c157 inherit pub_methods_classpoly_1_1IR_1_1Node"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2547d4e8aeb12fd9890e66cb3728c44d inherit pub_methods_classpoly_1_1IR_1_1Node"><td class="memItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1IR_1_1Node.html#a2547d4e8aeb12fd9890e66cb3728c44d">isStore</a> () const -&gt; bool</td></tr>
+<tr class="separator:a2547d4e8aeb12fd9890e66cb3728c44d inherit pub_methods_classpoly_1_1IR_1_1Node"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5d4b8aa68262360764e43e1df6aaf1af inherit pub_methods_classpoly_1_1IR_1_1Node"><td class="memItemLeft" align="right" valign="top"><a id="a5d4b8aa68262360764e43e1df6aaf1af"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>isLoad</b> () const -&gt; bool</td></tr>
+<tr class="separator:a5d4b8aa68262360764e43e1df6aaf1af inherit pub_methods_classpoly_1_1IR_1_1Node"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4ac802d9a8b71f1ee11beb3b3084ff3c inherit pub_methods_classpoly_1_1IR_1_1Node"><td class="memItemLeft" align="right" valign="top"><a id="a4ac802d9a8b71f1ee11beb3b3084ff3c"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1IR_1_1Node.html#a4ac802d9a8b71f1ee11beb3b3084ff3c">getCost</a> (llvm::TargetTransformInfo &amp;TTI, <a class="el" href="classpoly_1_1IR_1_1cost_1_1VectorWidth.html">cost::VectorWidth</a> W) -&gt; <a class="el" href="structpoly_1_1IR_1_1cost_1_1RecipThroughputLatency.html">cost::RecipThroughputLatency</a></td></tr>
+<tr class="memdesc:a4ac802d9a8b71f1ee11beb3b3084ff3c inherit pub_methods_classpoly_1_1IR_1_1Node"><td class="mdescLeft">&#160;</td><td class="mdescRight">these methods are overloaded for specific subtypes <br /></td></tr>
+<tr class="separator:a4ac802d9a8b71f1ee11beb3b3084ff3c inherit pub_methods_classpoly_1_1IR_1_1Node"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8920ffa0ad4b47bd6089134923139178 inherit pub_methods_classpoly_1_1IR_1_1Node"><td class="memItemLeft" align="right" valign="top"><a id="a8920ffa0ad4b47bd6089134923139178"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getValue</b> () -&gt; llvm::Value *</td></tr>
+<tr class="separator:a8920ffa0ad4b47bd6089134923139178 inherit pub_methods_classpoly_1_1IR_1_1Node"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a16df74ef278ee3aa18f06a6720471a0f inherit pub_methods_classpoly_1_1IR_1_1Node"><td class="memItemLeft" align="right" valign="top"><a id="a16df74ef278ee3aa18f06a6720471a0f"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getInstruction</b> () -&gt; llvm::Instruction *</td></tr>
+<tr class="separator:a16df74ef278ee3aa18f06a6720471a0f inherit pub_methods_classpoly_1_1IR_1_1Node"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a245ffdb67be9fe00b9f1c33a08353bc2 inherit pub_methods_classpoly_1_1IR_1_1Node"><td class="memItemLeft" align="right" valign="top"><a id="a245ffdb67be9fe00b9f1c33a08353bc2"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getType</b> () -&gt; llvm::Type *</td></tr>
+<tr class="separator:a245ffdb67be9fe00b9f1c33a08353bc2 inherit pub_methods_classpoly_1_1IR_1_1Node"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab75f067ad5af88b1aef57231058764c2 inherit pub_methods_classpoly_1_1IR_1_1Node"><td class="memItemLeft" align="right" valign="top"><a id="ab75f067ad5af88b1aef57231058764c2"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getType</b> (unsigned) -&gt; llvm::Type *</td></tr>
+<tr class="separator:ab75f067ad5af88b1aef57231058764c2 inherit pub_methods_classpoly_1_1IR_1_1Node"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
@@ -423,32 +442,6 @@ unsigned&#160;</td><td class="memItemRight" valign="bottom"><b>depth</b> {0}</td
 </p>
 <p> Therefore, to update the memory accesses from the old induction variables $i$ to the new variables $j$, we must simply compute the updated <img class="formulaInl" alt="$\textbf{c}_*$" src="form_3.png"/> and <img class="formulaInl" alt="$\textbf{M}'_*$" src="form_4.png"/>. We can also test for the case where <img class="formulaInl" alt="$\boldsymbol{\Phi} = \textbf{E}$" src="form_5.png"/>, or equivalently that $\textbf{E}\boldsymbol{\Phi} = \boldsymbol{\Phi} = \textbf{I}$. Note that to get the new <a class="el" href="classpoly_1_1poly_1_1Loop.html">poly::Loop</a>, we call <code>oldLoop-&gt;rotate(PhiInv)</code> </p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
-<a id="adcaf184f1ec32c3519fc8f2acbeac38b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#adcaf184f1ec32c3519fc8f2acbeac38b">&#9670;&nbsp;</a></span>isStore()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">constexpr auto poly::IR::Addr::isStore </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td> const -&gt; bool </td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">constexpr</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-<p><a class="el" href="classpoly_1_1IR_1_1Addr.html#adcaf184f1ec32c3519fc8f2acbeac38b">isStore()</a> is true if the address is a store, false if it is a load If the memory access is a store, this can still be a reload </p>
-
-</div>
-</div>
 <a id="aa5face1561e559740fbda46c70c1d514"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#aa5face1561e559740fbda46c70c1d514">&#9670;&nbsp;</a></span>updateOffsMat()</h2>
 

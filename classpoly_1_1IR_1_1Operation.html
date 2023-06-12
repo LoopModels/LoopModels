@@ -82,6 +82,9 @@ constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>operator Inst *<
 <tr class="memitem:aca5d660717bab757415eecfc0ce257ee"><td class="memItemLeft" align="right" valign="top"><a id="aca5d660717bab757415eecfc0ce257ee"></a>
 constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Operation</b> (<a class="el" href="classpoly_1_1IR_1_1Inst.html">Inst</a> *I)</td></tr>
 <tr class="separator:aca5d660717bab757415eecfc0ce257ee"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a83ca35cdceee2596ff2ff3871e3c4369"><td class="memItemLeft" align="right" valign="top"><a id="a83ca35cdceee2596ff2ff3871e3c4369"></a>
+constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Operation</b> (<a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a> *n)</td></tr>
+<tr class="separator:a83ca35cdceee2596ff2ff3871e3c4369"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0745ca67123294d09e18c85ab7c69f55"><td class="memItemLeft" align="right" valign="top"><a id="a0745ca67123294d09e18c85ab7c69f55"></a>
 constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>operator bool</b> () const</td></tr>
 <tr class="separator:a0745ca67123294d09e18c85ab7c69f55"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -142,6 +145,44 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>isExtractValue</b> ()
 <tr class="memitem:ae858f6c0cdc29581b3a665972875f354"><td class="memItemLeft" align="right" valign="top"><a id="ae858f6c0cdc29581b3a665972875f354"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>isInsertValue</b> () const -&gt; bool</td></tr>
 <tr class="separator:ae858f6c0cdc29581b3a665972875f354"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac098b0fde62eb7b094cfef4a4fa26b20"><td class="memItemLeft" align="right" valign="top"><a id="ac098b0fde62eb7b094cfef4a4fa26b20"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getType</b> () const -&gt; llvm::Type *</td></tr>
+<tr class="separator:ac098b0fde62eb7b094cfef4a4fa26b20"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9cc8b51b399b6bf337b150f7f39bd0b9"><td class="memItemLeft" align="right" valign="top"><a id="a9cc8b51b399b6bf337b150f7f39bd0b9"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getType</b> (unsigned w) const -&gt; llvm::Type *</td></tr>
+<tr class="separator:a9cc8b51b399b6bf337b150f7f39bd0b9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a72127428b3c489bbbce4e846cf7cfeb6"><td class="memItemLeft" align="right" valign="top"><a id="a72127428b3c489bbbce4e846cf7cfeb6"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>calcUnaryArithmeticCost</b> (llvm::TargetTransformInfo &amp;TTI, unsigned int vectorWidth) const -&gt; <a class="el" href="structpoly_1_1IR_1_1cost_1_1RecipThroughputLatency.html">RecipThroughputLatency</a></td></tr>
+<tr class="separator:a72127428b3c489bbbce4e846cf7cfeb6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9be280ba411983bbb56f7e8b9df3f434"><td class="memItemLeft" align="right" valign="top"><a id="a9be280ba411983bbb56f7e8b9df3f434"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getInstruction</b> () const -&gt; llvm::Instruction *</td></tr>
+<tr class="separator:a9be280ba411983bbb56f7e8b9df3f434"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa441b0e3e44c817afd03f429b0a0d9ff"><td class="memItemLeft" align="right" valign="top"><a id="aa441b0e3e44c817afd03f429b0a0d9ff"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>calcBinaryArithmeticCost</b> (llvm::TargetTransformInfo &amp;TTI, unsigned int vectorWidth) const -&gt; <a class="el" href="structpoly_1_1IR_1_1cost_1_1RecipThroughputLatency.html">RecipThroughputLatency</a></td></tr>
+<tr class="separator:aa441b0e3e44c817afd03f429b0a0d9ff"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6d75da26979820e14af5e8efcbc973e2"><td class="memItemLeft" align="right" valign="top"><a id="a6d75da26979820e14af5e8efcbc973e2"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getPredicate</b> () const -&gt; llvm::CmpInst::Predicate</td></tr>
+<tr class="separator:a6d75da26979820e14af5e8efcbc973e2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a08a71132d0d8827bde07b39ecbbf7a60"><td class="memItemLeft" align="right" valign="top"><a id="a08a71132d0d8827bde07b39ecbbf7a60"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>calcCmpSelectCost</b> (llvm::TargetTransformInfo &amp;TTI, unsigned int vectorWidth) const -&gt; <a class="el" href="structpoly_1_1IR_1_1cost_1_1RecipThroughputLatency.html">RecipThroughputLatency</a></td></tr>
+<tr class="separator:a08a71132d0d8827bde07b39ecbbf7a60"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3c026a3b9192dea51a7dc6b57e6833b9"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1IR_1_1Operation.html#a3c026a3b9192dea51a7dc6b57e6833b9">selectCost</a> (llvm::TargetTransformInfo &amp;TTI, unsigned int vectorWidth) const -&gt; llvm::InstructionCost</td></tr>
+<tr class="separator:a3c026a3b9192dea51a7dc6b57e6833b9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:addac34e19bc028b5b8230b30ca9f0e86"><td class="memItemLeft" align="right" valign="top"><a id="addac34e19bc028b5b8230b30ca9f0e86"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getCastContext</b> (llvm::TargetTransformInfo &amp;) const -&gt; llvm::TargetTransformInfo::CastContextHint</td></tr>
+<tr class="separator:addac34e19bc028b5b8230b30ca9f0e86"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af9125034767e358a1a0014783e9be94c"><td class="memItemLeft" align="right" valign="top"><a id="af9125034767e358a1a0014783e9be94c"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>calcCastCost</b> (llvm::TargetTransformInfo &amp;TTI, unsigned int vectorWidth) const -&gt; <a class="el" href="structpoly_1_1IR_1_1cost_1_1RecipThroughputLatency.html">RecipThroughputLatency</a></td></tr>
+<tr class="separator:af9125034767e358a1a0014783e9be94c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6c5edde9a72803dd208cdfdb26ae46c4"><td class="memItemLeft" align="right" valign="top"><a id="a6c5edde9a72803dd208cdfdb26ae46c4"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>calculateCostFAddFSub</b> (llvm::TargetTransformInfo &amp;TTI, unsigned int vectorWidth) const -&gt; <a class="el" href="structpoly_1_1IR_1_1cost_1_1RecipThroughputLatency.html">RecipThroughputLatency</a></td></tr>
+<tr class="separator:a6c5edde9a72803dd208cdfdb26ae46c4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a37e317c13d3a0fb835e1c34ff5ba71dd"><td class="memItemLeft" align="right" valign="top"><a id="a37e317c13d3a0fb835e1c34ff5ba71dd"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>calculateFNegCost</b> (llvm::TargetTransformInfo &amp;TTI, unsigned int vectorWidth) const -&gt; <a class="el" href="structpoly_1_1IR_1_1cost_1_1RecipThroughputLatency.html">RecipThroughputLatency</a></td></tr>
+<tr class="separator:a37e317c13d3a0fb835e1c34ff5ba71dd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a343d1716f8938129e087f99d9e11be44"><td class="memItemLeft" align="right" valign="top"><a id="a343d1716f8938129e087f99d9e11be44"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>calcCost</b> (llvm::TargetTransformInfo &amp;TTI, unsigned int vectorWidth) const -&gt; <a class="el" href="structpoly_1_1IR_1_1cost_1_1RecipThroughputLatency.html">RecipThroughputLatency</a></td></tr>
+<tr class="separator:a343d1716f8938129e087f99d9e11be44"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
@@ -151,7 +192,84 @@ static auto&#160;</td><td class="memItemRight" valign="bottom"><b>getOpCode</b> 
 <tr class="memitem:a42291afda31b17106e7fca67fa3ebbe7"><td class="memItemLeft" align="right" valign="top"><a id="a42291afda31b17106e7fca67fa3ebbe7"></a>
 static auto&#160;</td><td class="memItemRight" valign="bottom"><b>isFMul</b> (<a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a> *n) -&gt; bool</td></tr>
 <tr class="separator:a42291afda31b17106e7fca67fa3ebbe7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a678eae7ddeed820d46c9ff3908154a9c"><td class="memItemLeft" align="right" valign="top"><a id="a678eae7ddeed820d46c9ff3908154a9c"></a>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>isFNeg</b> (<a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a> *n) -&gt; bool</td></tr>
+<tr class="separator:a678eae7ddeed820d46c9ff3908154a9c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2c9791d960f480cacaf33970be755db2"><td class="memItemLeft" align="right" valign="top"><a id="a2c9791d960f480cacaf33970be755db2"></a>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>isFMulOrFNegOfFMul</b> (<a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a> *n) -&gt; bool</td></tr>
+<tr class="separator:a2c9791d960f480cacaf33970be755db2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac68c469f310620e80627866c20feb7d4"><td class="memItemLeft" align="right" valign="top"><a id="ac68c469f310620e80627866c20feb7d4"></a>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>isFAdd</b> (<a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a> *n) -&gt; bool</td></tr>
+<tr class="separator:ac68c469f310620e80627866c20feb7d4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a97b1a3a975d7be5658950f018c22de25"><td class="memItemLeft" align="right" valign="top"><a id="a97b1a3a975d7be5658950f018c22de25"></a>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>isFSub</b> (<a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a> *n) -&gt; bool</td></tr>
+<tr class="separator:a97b1a3a975d7be5658950f018c22de25"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a477286dfd7f5a98e169d8d1c46cbb119"><td class="memItemLeft" align="right" valign="top"><a id="a477286dfd7f5a98e169d8d1c46cbb119"></a>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>isShuffle</b> (<a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a> *n) -&gt; bool</td></tr>
+<tr class="separator:a477286dfd7f5a98e169d8d1c46cbb119"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a38e1ae9ed2c3782af562cab34183860c"><td class="memItemLeft" align="right" valign="top"><a id="a38e1ae9ed2c3782af562cab34183860c"></a>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>isFcmp</b> (<a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a> *n) -&gt; bool</td></tr>
+<tr class="separator:a38e1ae9ed2c3782af562cab34183860c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8cd5feb83068de1a51baee82a6d8a9a5"><td class="memItemLeft" align="right" valign="top"><a id="a8cd5feb83068de1a51baee82a6d8a9a5"></a>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>isIcmp</b> (<a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a> *n) -&gt; bool</td></tr>
+<tr class="separator:a8cd5feb83068de1a51baee82a6d8a9a5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a03e4c5cf65858501afd6636d42e8d564"><td class="memItemLeft" align="right" valign="top"><a id="a03e4c5cf65858501afd6636d42e8d564"></a>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>isCmp</b> (<a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a> *n) -&gt; bool</td></tr>
+<tr class="separator:a03e4c5cf65858501afd6636d42e8d564"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab7c4869e0a7ae2d5aaf507a02eea9e48"><td class="memItemLeft" align="right" valign="top"><a id="ab7c4869e0a7ae2d5aaf507a02eea9e48"></a>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>isSelect</b> (<a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a> *n) -&gt; bool</td></tr>
+<tr class="separator:ab7c4869e0a7ae2d5aaf507a02eea9e48"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abda3afc55fb802f82e561c5d553f906b"><td class="memItemLeft" align="right" valign="top"><a id="abda3afc55fb802f82e561c5d553f906b"></a>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>isExtract</b> (<a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a> *n) -&gt; bool</td></tr>
+<tr class="separator:abda3afc55fb802f82e561c5d553f906b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acdf144b4c763f34b8b471709f7323ecb"><td class="memItemLeft" align="right" valign="top"><a id="acdf144b4c763f34b8b471709f7323ecb"></a>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>isInsert</b> (<a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a> *n) -&gt; bool</td></tr>
+<tr class="separator:acdf144b4c763f34b8b471709f7323ecb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2aa5d6009c90c63b3226933870c6098d"><td class="memItemLeft" align="right" valign="top"><a id="a2aa5d6009c90c63b3226933870c6098d"></a>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>isExtractValue</b> (<a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a> *n) -&gt; bool</td></tr>
+<tr class="separator:a2aa5d6009c90c63b3226933870c6098d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a47dba46b777982d54be42c7e79e71092"><td class="memItemLeft" align="right" valign="top"><a id="a47dba46b777982d54be42c7e79e71092"></a>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>isInsertValue</b> (<a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a> *n) -&gt; bool</td></tr>
+<tr class="separator:a47dba46b777982d54be42c7e79e71092"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
+<h2 class="groupheader">Member Function Documentation</h2>
+<a id="a3c026a3b9192dea51a7dc6b57e6833b9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3c026a3b9192dea51a7dc6b57e6833b9">&#9670;&nbsp;</a></span>selectCost()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">auto poly::IR::Operation::selectCost </td>
+          <td>(</td>
+          <td class="paramtype">llvm::TargetTransformInfo &amp;&#160;</td>
+          <td class="paramname"><em>TTI</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">unsigned int&#160;</td>
+          <td class="paramname"><em>vectorWidth</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> const -&gt; llvm::InstructionCost </td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>for calculating the cost of a select when merging this instruction with another one. </p>
+
+</div>
+</div>
 <hr/>The documentation for this class was generated from the following file:<ul>
 <li>include/IR/<a class="el" href="Instruction_8hpp_source.html">Instruction.hpp</a></li>
 </ul>

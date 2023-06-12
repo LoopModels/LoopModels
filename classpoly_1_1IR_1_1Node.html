@@ -120,9 +120,12 @@ Public Types</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:abd45596f4f3430fae5c58202f66e08ed"><td class="memItemLeft" align="right" valign="top"><a id="abd45596f4f3430fae5c58202f66e08ed"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getUsers</b> () const -&gt; UList&lt; <a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a> * &gt; *</td></tr>
-<tr class="separator:abd45596f4f3430fae5c58202f66e08ed"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7691bc06b3305d352ba28f36cc2061e0"><td class="memItemLeft" align="right" valign="top"><a id="a7691bc06b3305d352ba28f36cc2061e0"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getUsers</b> () const -&gt; const UList&lt; <a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a> * &gt; *</td></tr>
+<tr class="separator:a7691bc06b3305d352ba28f36cc2061e0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a97442e3b38d1e67a610e909ed7abdfaa"><td class="memItemLeft" align="right" valign="top"><a id="a97442e3b38d1e67a610e909ed7abdfaa"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getUsers</b> () -&gt; UList&lt; <a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a> * &gt; *</td></tr>
+<tr class="separator:a97442e3b38d1e67a610e909ed7abdfaa"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ace7c1cc2611146ac260ba8410525d16f"><td class="memItemLeft" align="right" valign="top"><a id="ace7c1cc2611146ac260ba8410525d16f"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>setUsers</b> (UList&lt; <a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a> * &gt; *users)</td></tr>
 <tr class="separator:ace7c1cc2611146ac260ba8410525d16f"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -174,6 +177,27 @@ constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>removeFromL
 <tr class="memitem:a858fbe0affa5628284f68b1475b7c157"><td class="memItemLeft" align="right" valign="top"><a id="a858fbe0affa5628284f68b1475b7c157"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>forEach</b> (const auto &amp;f)</td></tr>
 <tr class="separator:a858fbe0affa5628284f68b1475b7c157"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2547d4e8aeb12fd9890e66cb3728c44d"><td class="memItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1IR_1_1Node.html#a2547d4e8aeb12fd9890e66cb3728c44d">isStore</a> () const -&gt; bool</td></tr>
+<tr class="separator:a2547d4e8aeb12fd9890e66cb3728c44d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5d4b8aa68262360764e43e1df6aaf1af"><td class="memItemLeft" align="right" valign="top"><a id="a5d4b8aa68262360764e43e1df6aaf1af"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>isLoad</b> () const -&gt; bool</td></tr>
+<tr class="separator:a5d4b8aa68262360764e43e1df6aaf1af"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4ac802d9a8b71f1ee11beb3b3084ff3c"><td class="memItemLeft" align="right" valign="top"><a id="a4ac802d9a8b71f1ee11beb3b3084ff3c"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1IR_1_1Node.html#a4ac802d9a8b71f1ee11beb3b3084ff3c">getCost</a> (llvm::TargetTransformInfo &amp;TTI, <a class="el" href="classpoly_1_1IR_1_1cost_1_1VectorWidth.html">cost::VectorWidth</a> W) -&gt; <a class="el" href="structpoly_1_1IR_1_1cost_1_1RecipThroughputLatency.html">cost::RecipThroughputLatency</a></td></tr>
+<tr class="memdesc:a4ac802d9a8b71f1ee11beb3b3084ff3c"><td class="mdescLeft">&#160;</td><td class="mdescRight">these methods are overloaded for specific subtypes <br /></td></tr>
+<tr class="separator:a4ac802d9a8b71f1ee11beb3b3084ff3c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8920ffa0ad4b47bd6089134923139178"><td class="memItemLeft" align="right" valign="top"><a id="a8920ffa0ad4b47bd6089134923139178"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getValue</b> () -&gt; llvm::Value *</td></tr>
+<tr class="separator:a8920ffa0ad4b47bd6089134923139178"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a16df74ef278ee3aa18f06a6720471a0f"><td class="memItemLeft" align="right" valign="top"><a id="a16df74ef278ee3aa18f06a6720471a0f"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getInstruction</b> () -&gt; llvm::Instruction *</td></tr>
+<tr class="separator:a16df74ef278ee3aa18f06a6720471a0f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a245ffdb67be9fe00b9f1c33a08353bc2"><td class="memItemLeft" align="right" valign="top"><a id="a245ffdb67be9fe00b9f1c33a08353bc2"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getType</b> () -&gt; llvm::Type *</td></tr>
+<tr class="separator:a245ffdb67be9fe00b9f1c33a08353bc2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab75f067ad5af88b1aef57231058764c2"><td class="memItemLeft" align="right" valign="top"><a id="ab75f067ad5af88b1aef57231058764c2"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getType</b> (unsigned) -&gt; llvm::Type *</td></tr>
+<tr class="separator:ab75f067ad5af88b1aef57231058764c2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
@@ -258,8 +282,36 @@ unsigned&#160;</td><td class="memItemRight" valign="bottom"><b>depth</b> {0}</td
 <p>To iterate over subloops, SubLoopIterator</p>
 <p>This simplified structure means we can use LLVM-style RTTI</p>
 <p>top level loops can be chained together... top level loop's next can point to another top level loop </p>
-</div><hr/>The documentation for this class was generated from the following file:<ul>
+</div><h2 class="groupheader">Member Function Documentation</h2>
+<a id="a2547d4e8aeb12fd9890e66cb3728c44d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2547d4e8aeb12fd9890e66cb3728c44d">&#9670;&nbsp;</a></span>isStore()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">constexpr auto poly::IR::Node::isStore </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const -&gt; bool </td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">constexpr</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p><a class="el" href="classpoly_1_1IR_1_1Node.html#a2547d4e8aeb12fd9890e66cb3728c44d">isStore()</a> is true if the address is a store, false if it is a load If the memory access is a store, this can still be a reload </p>
+
+</div>
+</div>
+<hr/>The documentation for this class was generated from the following files:<ul>
 <li>include/IR/<a class="el" href="Node_8hpp_source.html">Node.hpp</a></li>
+<li>include/IR/<a class="el" href="Instruction_8hpp_source.html">Instruction.hpp</a></li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->
