@@ -109,19 +109,19 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&am
 <tr class="memitem:a35b8b7fe1d03af8c5f2bfa1b76082cbc"><td class="memItemLeft" align="right" valign="top"><a id="a35b8b7fe1d03af8c5f2bfa1b76082cbc"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&amp;=</b> (<a class="el" href="structpoly_1_1IR_1_1Predicate_1_1Intersection.html">Intersection</a> other) -&gt; <a class="el" href="structpoly_1_1IR_1_1Predicate_1_1Intersection.html">Intersection</a> &amp;</td></tr>
 <tr class="separator:a35b8b7fe1d03af8c5f2bfa1b76082cbc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abb9850881f57ad158749c02730a8d04b"><td class="memItemLeft" align="right" valign="top"><a id="abb9850881f57ad158749c02730a8d04b"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>popCount</b> () const -&gt; size_t</td></tr>
-<tr class="separator:abb9850881f57ad158749c02730a8d04b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a313ece3276df3a606c0bc795f1f01edc"><td class="memItemLeft" align="right" valign="top"><a id="a313ece3276df3a606c0bc795f1f01edc"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getFirstIndex</b> () const -&gt; size_t</td></tr>
-<tr class="separator:a313ece3276df3a606c0bc795f1f01edc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6ea20d81315ca82aadfc898d3079069e"><td class="memItemLeft" align="right" valign="top"><a id="a6ea20d81315ca82aadfc898d3079069e"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNextIndex</b> (size_t i) const -&gt; size_t</td></tr>
-<tr class="separator:a6ea20d81315ca82aadfc898d3079069e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4b5c27bdcee2014d79af41f1aacd21b5"><td class="memItemLeft" align="right" valign="top"><a id="a4b5c27bdcee2014d79af41f1aacd21b5"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpoly_1_1IR_1_1Predicate_1_1Intersection.html#a4b5c27bdcee2014d79af41f1aacd21b5">isEmpty</a> () const -&gt; bool</td></tr>
-<tr class="memdesc:a4b5c27bdcee2014d79af41f1aacd21b5"><td class="mdescLeft">&#160;</td><td class="mdescRight">returns <code>true</code> if the PredicateIntersection is empty, <code>false</code> otherwise <br /></td></tr>
-<tr class="separator:a4b5c27bdcee2014d79af41f1aacd21b5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7e0a14812bd89eaa326154b2e5a33ca4"><td class="memItemLeft" align="right" valign="top"><a id="a7e0a14812bd89eaa326154b2e5a33ca4"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>popCount</b> () const -&gt; int</td></tr>
+<tr class="separator:a7e0a14812bd89eaa326154b2e5a33ca4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a16807ffd9e7d27dd14224967f2513609"><td class="memItemLeft" align="right" valign="top"><a id="a16807ffd9e7d27dd14224967f2513609"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getFirstIndex</b> () const -&gt; int</td></tr>
+<tr class="separator:a16807ffd9e7d27dd14224967f2513609"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab08c7effdb3df4231cf151de82aadb0b"><td class="memItemLeft" align="right" valign="top"><a id="ab08c7effdb3df4231cf151de82aadb0b"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNextIndex</b> (ptrdiff_t i) const -&gt; ptrdiff_t</td></tr>
+<tr class="separator:ab08c7effdb3df4231cf151de82aadb0b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a57e1b8d11bcf9cfb6a5d15947493069f"><td class="memItemLeft" align="right" valign="top"><a id="a57e1b8d11bcf9cfb6a5d15947493069f"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpoly_1_1IR_1_1Predicate_1_1Intersection.html#a57e1b8d11bcf9cfb6a5d15947493069f">empty</a> () const -&gt; bool</td></tr>
+<tr class="memdesc:a57e1b8d11bcf9cfb6a5d15947493069f"><td class="mdescLeft">&#160;</td><td class="mdescRight">returns <code>true</code> if the PredicateIntersection is empty, <code>false</code> otherwise <br /></td></tr>
+<tr class="separator:a57e1b8d11bcf9cfb6a5d15947493069f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0d83e08b975e91e4a6cc691518cd57e7"><td class="memItemLeft" align="right" valign="top"><a id="a0d83e08b975e91e4a6cc691518cd57e7"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getConflict</b> (<a class="el" href="structpoly_1_1IR_1_1Predicate_1_1Intersection.html">Intersection</a> other) const -&gt; <a class="el" href="structpoly_1_1IR_1_1Predicate_1_1Intersection.html">Intersection</a></td></tr>
 <tr class="separator:a0d83e08b975e91e4a6cc691518cd57e7"><td class="memSeparator" colspan="2">&#160;</td></tr>

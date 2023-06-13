@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.9.1"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>LoopModels: poly::IR::UniqueIdentifier Struct Reference</title>
+<title>LoopModels: poly::IR::ReMapper Class Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -61,38 +61,29 @@ $(function() {
 
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><b>poly</b></li><li class="navelem"><b>IR</b></li><li class="navelem"><a class="el" href="structpoly_1_1IR_1_1UniqueIdentifier.html">UniqueIdentifier</a></li>  </ul>
+<li class="navelem"><b>poly</b></li><li class="navelem"><b>IR</b></li><li class="navelem"><a class="el" href="classpoly_1_1IR_1_1ReMapper.html">ReMapper</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="header">
   <div class="summary">
-<a href="#pub-attribs">Public Attributes</a> &#124;
-<a href="structpoly_1_1IR_1_1UniqueIdentifier-members.html">List of all members</a>  </div>
+<a href="#pub-methods">Public Member Functions</a> &#124;
+<a href="classpoly_1_1IR_1_1ReMapper-members.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">poly::IR::UniqueIdentifier Struct Reference</div>  </div>
+<div class="title">poly::IR::ReMapper Class Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
 <table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
-Public Attributes</h2></td></tr>
-<tr class="memitem:a09e806f6e4aad442a2e5f9e40d9a0152"><td class="memItemLeft" align="right" valign="top"><a id="a09e806f6e4aad442a2e5f9e40d9a0152"></a>
-<a class="el" href="classpoly_1_1IR_1_1Operands.html">Operands</a>&#160;</td><td class="memItemRight" valign="bottom"><b>ops</b></td></tr>
-<tr class="separator:a09e806f6e4aad442a2e5f9e40d9a0152"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7761744c2308be0dfdd380ef390f78db"><td class="memItemLeft" align="right" valign="top"><a id="a7761744c2308be0dfdd380ef390f78db"></a>
-<a class="el" href="classpoly_1_1IR_1_1Operands.html">Operands</a>&#160;</td><td class="memItemRight" valign="bottom"><b>preds</b></td></tr>
-<tr class="separator:a7761744c2308be0dfdd380ef390f78db"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7bea9ca14c53ece642084fced0af0e73"><td class="memItemLeft" align="right" valign="top"><a id="a7bea9ca14c53ece642084fced0af0e73"></a>
-Node::ValKind&#160;</td><td class="memItemRight" valign="bottom"><b>kind</b></td></tr>
-<tr class="separator:a7bea9ca14c53ece642084fced0af0e73"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa8fb4f5b64a7c8bdf3113aad58367abd"><td class="memItemLeft" align="right" valign="top"><a id="aa8fb4f5b64a7c8bdf3113aad58367abd"></a>
-llvm::Intrinsic::ID&#160;</td><td class="memItemRight" valign="bottom"><b>op</b> {llvm::Intrinsic::not_intrinsic}</td></tr>
-<tr class="separator:aa8fb4f5b64a7c8bdf3113aad58367abd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9e8d142a964002ea31c79346ca3eabd9"><td class="memItemLeft" align="right" valign="top"><a id="a9e8d142a964002ea31c79346ca3eabd9"></a>
-llvm::FastMathFlags&#160;</td><td class="memItemRight" valign="bottom"><b>fastMathFlags</b> {}</td></tr>
-<tr class="separator:a9e8d142a964002ea31c79346ca3eabd9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
+Public Member Functions</h2></td></tr>
+<tr class="memitem:ad66d7e9e6cdb69d74d3a45a48d0da5a3"><td class="memItemLeft" align="right" valign="top"><a id="ad66d7e9e6cdb69d74d3a45a48d0da5a3"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator[]</b> (<a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> *J) -&gt; <a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> *</td></tr>
+<tr class="separator:ad66d7e9e6cdb69d74d3a45a48d0da5a3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2a6cd84cc935ee239ea9f7800dbde6b2"><td class="memItemLeft" align="right" valign="top"><a id="a2a6cd84cc935ee239ea9f7800dbde6b2"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>remapFromTo</b> (<a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> *K, <a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> *J)</td></tr>
+<tr class="separator:a2a6cd84cc935ee239ea9f7800dbde6b2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<hr/>The documentation for this struct was generated from the following file:<ul>
-<li>include/IR/<a class="el" href="Instruction_8hpp_source.html">Instruction.hpp</a></li>
+<hr/>The documentation for this class was generated from the following file:<ul>
+<li>include/IR/<a class="el" href="ControlFlowMerging_8hpp_source.html">ControlFlowMerging.hpp</a></li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->
