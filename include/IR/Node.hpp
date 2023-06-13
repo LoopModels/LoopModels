@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <llvm/Analysis/TargetTransformInfo.h>
 #include <llvm/IR/Constants.h>
+#include <llvm/IR/FMF.h>
 #include <llvm/IR/Intrinsics.h>
 #include <llvm/IR/Type.h>
 #include <llvm/IR/Value.h>
@@ -123,12 +124,6 @@ private:
   // Addr has a FAM, so multiple inheritence isn't an option for `Load`/`Stow`,
   // and we want a common base that we can query to avoid monomorphization.
 protected:
-  union {
-    UList<Node *> *users{nullptr}; // Func, Call, Oprn, Load
-    Node *node;                    // Stow, Loop, Exit
-    llvm::Type *typ;               // Cint, Cflt, Bint, Bflt
-    llvm::Value *val;              // CVal
-  } unionPtr;
   const ValKind kind;
   unsigned depth{0};
 
@@ -136,29 +131,6 @@ protected:
   constexpr Node(ValKind kind, unsigned d) : kind(kind), depth(d) {}
 
 public:
-  // unionPtr methods
-  [[nodiscard]] constexpr auto getUsers() const -> const UList<Node *> * {
-    invariant(kind == VK_Load || kind >= VK_Func);
-    return unionPtr.users;
-  }
-  [[nodiscard]] constexpr auto getUsers() -> UList<Node *> * {
-    invariant(kind == VK_Load || kind >= VK_Func);
-    return unionPtr.users;
-  }
-  constexpr void setUsers(UList<Node *> *users) {
-    invariant(kind == VK_Load || kind >= VK_Func);
-    unionPtr.users = users;
-  }
-  constexpr void addUser(BumpAlloc<> &alloc, Node *n) {
-    invariant(kind == VK_Load || kind >= VK_Func);
-    if (!unionPtr.users) unionPtr.users = alloc.create<UList<Node *>>(n);
-    else unionPtr.users = unionPtr.users->push(alloc, n);
-  }
-  constexpr void removeFromUsers(Node *n) {
-    invariant(kind == VK_Load || kind >= VK_Func);
-    unionPtr.users->eraseUnordered(n);
-  }
-
   [[nodiscard]] constexpr auto getKind() const -> ValKind { return kind; }
   [[nodiscard]] constexpr auto getDepth() const -> unsigned { return depth; }
   [[nodiscard]] constexpr auto getParent() const -> Node * { return parent; }
@@ -202,22 +174,6 @@ public:
     if (llvm::isa<llvm::ConstantFP>(v)) return VK_Cflt;
     return VK_CVal;
   }
-  /// isStore() is true if the address is a store, false if it is a load
-  /// If the memory access is a store, this can still be a reload
-  [[nodiscard]] constexpr auto isStore() const -> bool {
-    return getKind() == VK_Stow;
-  }
-  [[nodiscard]] constexpr auto isLoad() const -> bool {
-    return getKind() == VK_Load;
-  }
-
-  /// these methods are overloaded for specific subtypes
-  auto getCost(llvm::TargetTransformInfo &TTI, cost::VectorWidth W)
-    -> cost::RecipThroughputLatency;
-  auto getValue() -> llvm::Value *;
-  auto getInstruction() -> llvm::Instruction *;
-  auto getType() -> llvm::Type *;
-  auto getType(unsigned) -> llvm::Type *;
 };
 
 class Loop;
@@ -226,19 +182,17 @@ class Loop;
 /// parent is the loop the exit closes
 /// subExit is the exit of the last subloop
 class Exit : public Node {
+  Exit *subExit;
 
 public:
   Exit(unsigned d) : Node(VK_Exit, d) {}
   [[nodiscard]] constexpr auto getLoop() const -> Loop *;
   [[nodiscard]] constexpr auto getNextLoop() const -> Loop *;
-  [[nodiscard]] constexpr auto getSubExit() const -> Exit * {
-    invariant(unionPtr.node == nullptr || unionPtr.node->getKind() == VK_Exit);
-    return static_cast<Exit *>(unionPtr.node);
-  }
+  [[nodiscard]] constexpr auto getSubExit() const -> Exit * { return subExit; }
   static constexpr auto classof(const Node *v) -> bool {
     return v->getKind() == VK_Exit;
   }
-  constexpr void setSubExit(Exit *e) { unionPtr.node = e; }
+  constexpr void setSubExit(Exit *e) { subExit = e; }
   constexpr void setNextLoop(Loop *);
 };
 /// Loop
@@ -246,22 +200,20 @@ public:
 /// child: inner (sub) loop
 /// exit is the associated exit block
 class Loop : public Node {
+  Exit *exit;
   llvm::Loop *llvmLoop{nullptr};
   poly::Loop *affineLoop{nullptr};
 
 public:
   Loop(Exit *e, unsigned d, llvm::Loop *LL, poly::Loop *AL)
     : Node(VK_Loop, d), llvmLoop(LL), affineLoop(AL) {
-    unionPtr.node = e;
+    exit = e;
     e->setParent(this);
     // we also initialize prev/next, adding instrs will push them
     e->setPrev(this);
     setNext(e);
   }
-  [[nodiscard]] constexpr auto getExit() const -> Exit * {
-    invariant(unionPtr.node == nullptr || unionPtr.node->getKind() == VK_Exit);
-    return static_cast<Exit *>(unionPtr.node);
-  }
+  [[nodiscard]] constexpr auto getExit() const -> Exit * { return exit; }
   static constexpr auto classof(const Node *v) -> bool {
     return v->getKind() == VK_Loop;
   }
@@ -362,12 +314,72 @@ constexpr auto Exit::getNextLoop() const -> Loop * {
   return static_cast<Loop *>(getChild());
 }
 
-/// CVal
-/// A constant value w/ respect to the loopnest.
-class CVal : public Node {
+class Value : public Node {
+protected:
+  union {
+    UList<Value *> *users{nullptr}; // Func, Call, Oprn, Load
+    Value *node;                    // Stow
+    llvm::Type *typ;                // Cint, Cflt, Bint, Bflt
+    llvm::Value *val;               // CVal
+  } unionPtr;
 
 public:
-  constexpr CVal(llvm::Value *v) : Node(VK_CVal) { unionPtr.val = v; }
+  static constexpr auto classof(const Node *v) -> bool {
+    return v->getKind() >= VK_CVal || v->getKind() <= VK_Stow;
+  }
+
+  constexpr Value(ValKind kind) : Node(kind) {}
+  constexpr Value(ValKind kind, unsigned depth) : Node(kind, depth) {}
+
+  // unionPtr methods
+  [[nodiscard]] constexpr auto getUsers() const -> const UList<Value *> * {
+    invariant(kind == VK_Load || kind >= VK_Func);
+    return unionPtr.users;
+  }
+  [[nodiscard]] constexpr auto getUsers() -> UList<Value *> * {
+    invariant(kind == VK_Load || kind >= VK_Func);
+    return unionPtr.users;
+  }
+  constexpr void setUsers(UList<Value *> *users) {
+    invariant(kind == VK_Load || kind >= VK_Func);
+    unionPtr.users = users;
+  }
+  constexpr void addUser(BumpAlloc<> &alloc, Value *n) {
+    invariant(kind == VK_Load || kind >= VK_Func);
+    if (!unionPtr.users) unionPtr.users = alloc.create<UList<Value *>>(n);
+    else unionPtr.users = unionPtr.users->push(alloc, n);
+  }
+  constexpr void removeFromUsers(Value *n) {
+    invariant(kind == VK_Load || kind >= VK_Func);
+    unionPtr.users->eraseUnordered(n);
+  }
+
+  /// isStore() is true if the address is a store, false if it is a load
+  /// If the memory access is a store, this can still be a reload
+  [[nodiscard]] constexpr auto isStore() const -> bool {
+    return getKind() == VK_Stow;
+  }
+  [[nodiscard]] constexpr auto isLoad() const -> bool {
+    return getKind() == VK_Load;
+  }
+  [[nodiscard]] inline auto getFastMathFlags() const -> llvm::FastMathFlags;
+  /// these methods are overloaded for specific subtypes
+  inline auto getCost(llvm::TargetTransformInfo &TTI, cost::VectorWidth W)
+    -> cost::RecipThroughputLatency;
+  [[nodiscard]] inline auto getValue() -> llvm::Value *;
+  [[nodiscard]] inline auto getInstruction() -> llvm::Instruction *;
+
+  [[nodiscard]] inline auto getType() const -> llvm::Type *;
+  [[nodiscard]] inline auto getType(unsigned) const -> llvm::Type *;
+  [[nodiscard]] inline auto getOperands() -> math::PtrVector<Value *>;
+};
+
+/// CVal
+/// A constant value w/ respect to the loopnest.
+class CVal : public Value {
+
+public:
+  constexpr CVal(llvm::Value *v) : Value(VK_CVal) { unionPtr.val = v; }
   static constexpr auto classof(const Node *v) -> bool {
     return v->getKind() == VK_CVal;
   }
@@ -380,10 +392,12 @@ public:
   }
 };
 /// Cnst
-class Cnst : public Node {
+class Cnst : public Value {
 
 protected:
-  constexpr Cnst(ValKind kind, llvm::Type *t) : Node(kind) { unionPtr.typ = t; }
+  constexpr Cnst(ValKind kind, llvm::Type *t) : Value(kind) {
+    unionPtr.typ = t;
+  }
 
 public:
   static constexpr auto classof(const Node *v) -> bool {

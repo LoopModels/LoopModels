@@ -4,20 +4,22 @@
 #include "IR/Predicate.hpp"
 namespace poly::IR::Predicate {
 using dict::MapVector;
-struct Map {
+class Map {
   MapVector<llvm::BasicBlock *, Set> map;
-  UList<Node *> *predicates;
+  UList<Value *> *predicates;
+
+public:
   constexpr Map(BumpAlloc<> &alloc) : map(alloc) {}
   Map(const Map &x) = default;
   Map(Map &&x) noexcept : map{std::move(x.map)} {}
   auto operator=(const Map &) -> Map & = default;
   auto operator=(Map &&) -> Map & = default;
   [[nodiscard]] auto size() const -> size_t { return map.size(); }
-  [[nodiscard]] auto isEmpty() const -> bool { return map.empty(); }
+  [[nodiscard]] auto empty() const -> bool { return map.empty(); }
   [[nodiscard]] auto isDivergent() const -> bool {
     if (size() < 2) return false;
     for (auto I = map.begin(), E = map.end(); I != E; ++I) {
-      if (I->second.isEmpty()) continue;
+      if (I->second.empty()) continue;
       for (const auto *J = std::next(I); J != E; ++J) {
         // NOTE: we don't need to check`isEmpty()`
         // because `emptyIntersection()` returns `false`
@@ -40,9 +42,9 @@ struct Map {
   [[nodiscard]] auto end() { return std::reverse_iterator(map.begin()); }
   [[nodiscard]] auto rbegin() { return map.begin(); }
   [[nodiscard]] auto rend() { return map.end(); }
-  [[nodiscard]] auto operator[](llvm::BasicBlock *bb) -> std::optional<Set> {
+  [[nodiscard]] auto operator[](llvm::BasicBlock *bb) -> Set {
     auto *it = map.find(bb);
-    if (it == map.end()) return std::nullopt;
+    if (it == map.end()) return {};
     return it->second;
   }
   [[nodiscard]] auto operator[](llvm::Instruction *inst) -> std::optional<Set> {
@@ -57,7 +59,7 @@ struct Map {
   [[nodiscard]] auto isInPath(llvm::BasicBlock *BB) -> bool {
     auto *f = find(BB);
     if (f == rend()) return false;
-    return !f->second.isEmpty();
+    return !f->second.empty();
   }
   [[nodiscard]] auto isInPath(llvm::Instruction *I) -> bool {
     return isInPath(I->getParent());
@@ -68,7 +70,7 @@ struct Map {
   // visit(inst->getParent()); }
   [[nodiscard]] auto addPredicate(BumpAlloc<> &alloc, IR::Cache &cache,
                                   llvm::Value *value) -> size_t {
-    auto *I = cache.getInstruction(alloc, *this, value);
+    auto *I = cache.getInstruction(*this, value);
     assert(predicates->count <= 32 && "too many predicates");
     for (size_t i = 0; i < cache.predicates.size(); ++i)
       if (cache.predicates[i] == I) return i;

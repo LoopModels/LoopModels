@@ -1,11 +1,9 @@
-
 #pragma once
 
 #include "Dicts/BumpMapSet.hpp"
 #include "IR/Address.hpp"
 #include "IR/InstructionCost.hpp"
 #include "IR/Node.hpp"
-#include "IR/Operands.hpp"
 #include "IR/Predicate.hpp"
 #include <Containers/UnrolledList.hpp>
 #include <Math/Array.hpp>
@@ -34,18 +32,6 @@
 #include <tuple>
 #include <utility>
 
-// NOLINTNEXTLINE(cert-dcl58-cpp)
-template <> struct std::hash<poly::IR::Operands> {
-  auto operator()(const poly::IR::Operands &s) const noexcept -> size_t {
-    if (s.empty()) return 0;
-    std::size_t h = 0;
-    return s.reduce(h, [](std::size_t h, const poly::IR::Node *t) {
-      return llvm::detail::combineHashValue(
-        h, std::hash<const poly::IR::Node *>{}(t));
-    });
-  }
-};
-
 namespace poly {
 using math::PtrVector, math::MutPtrVector, utils::BumpAlloc, utils::invariant,
   utils::NotNull;
@@ -55,14 +41,6 @@ namespace poly::IR {
 
 using dict::aset, dict::amap, containers::UList, utils::Optional,
   cost::RecipThroughputLatency, cost::VectorWidth, cost::VectorizationCosts;
-
-struct UniqueIdentifier {
-  Operands ops;
-  Operands preds;
-  Node::ValKind kind;
-  llvm::Intrinsic::ID op{llvm::Intrinsic::not_intrinsic};
-  llvm::FastMathFlags fastMathFlags{};
-};
 
 auto containsCycle(const llvm::Instruction *, aset<llvm::Instruction const *> &,
                    const llvm::Value *) -> bool;
@@ -94,7 +72,7 @@ inline auto containsCycle(BumpAlloc<> &alloc, llvm::Instruction const *S)
   return containsCycleCore(S, visited, S);
 }
 
-class Inst : public Node {
+class Inst : public Value {
 
 protected:
   llvm::Instruction *inst{nullptr};
@@ -110,7 +88,7 @@ protected:
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wc99-extensions"
 #endif
-  Node *operands[]; // NOLINT(modernize-avoid-c-arrays)
+  Value *operands[]; // NOLINT(modernize-avoid-c-arrays)
 #if !defined(__clang__) && defined(__GNUC__)
 #pragma GCC diagnostic pop
 #else
@@ -120,11 +98,11 @@ protected:
 public:
   constexpr Inst(ValKind k, llvm::Instruction *i, llvm::Intrinsic::ID id,
                  int numOps)
-    : Node(k), inst(i), type(i->getType()), opId(id), numOperands(numOps),
+    : Value(k), inst(i), type(i->getType()), opId(id), numOperands(numOps),
       fastMathFlags(i->getFastMathFlags()) {}
   constexpr Inst(ValKind k, llvm::Intrinsic::ID id, int numOps, llvm::Type *t,
                  llvm::FastMathFlags fmf)
-    : Node(k), type(t), opId(id), numOperands(numOps), fastMathFlags(fmf) {}
+    : Value(k), type(t), opId(id), numOperands(numOps), fastMathFlags(fmf) {}
 
   // static constexpr auto construct(BumpAlloc<> &alloc, ValKind k,
   //                                 llvm::Instruction *i, llvm::Intrinsic::ID
@@ -152,15 +130,15 @@ public:
     }
     return {I->getOpcode(), VK_Oprn};
   }
-  constexpr auto getUsers() -> UList<Node *> * {
+  constexpr auto getUsers() -> UList<Value *> * {
     invariant(kind >= VK_Func);
     return unionPtr.users;
   }
-  [[nodiscard]] constexpr auto getUsers() const -> const UList<Node *> * {
+  [[nodiscard]] constexpr auto getUsers() const -> const UList<Value *> * {
     invariant(kind >= VK_Func);
     return unionPtr.users;
   }
-  constexpr void setUsers(UList<Node *> *newUsers) {
+  constexpr void setUsers(UList<Value *> *newUsers) {
     invariant(kind >= VK_Func);
     unionPtr.users = newUsers;
   }
@@ -182,16 +160,16 @@ public:
   [[nodiscard]] constexpr auto getOpId() const -> llvm::Intrinsic::ID {
     return opId;
   }
-  constexpr auto getOperands() -> MutPtrVector<Node *> {
+  constexpr auto getOperands() -> MutPtrVector<Value *> {
     return {operands, numOperands};
   }
-  [[nodiscard]] constexpr auto getOperands() const -> PtrVector<Node *> {
-    return {const_cast<Node **>(operands), unsigned(numOperands)};
+  [[nodiscard]] constexpr auto getOperands() const -> PtrVector<Value *> {
+    return {const_cast<Value **>(operands), unsigned(numOperands)};
   }
-  [[nodiscard]] constexpr auto getOperand(size_t i) const -> Node * {
+  [[nodiscard]] constexpr auto getOperand(size_t i) const -> Value * {
     return operands[i];
   }
-  constexpr void setOperands(BumpAlloc<> &alloc, MutPtrVector<Node *> ops) {
+  constexpr void setOperands(BumpAlloc<> &alloc, MutPtrVector<Value *> ops) {
     getOperands() << ops;
     for (auto *op : ops) op->addUser(alloc, this);
   }
@@ -268,8 +246,9 @@ public:
     if (c.notYetComputed()) costs[W] = c = calcCost(TTI, W.getWidth());
     return c;
   }
-  [[nodiscard]] auto calcCost(llvm::TargetTransformInfo &TTI,
-                              unsigned vectorWidth) -> RecipThroughputLatency;
+  [[nodiscard]] inline auto calcCost(llvm::TargetTransformInfo &TTI,
+                                     unsigned vectorWidth)
+    -> RecipThroughputLatency;
   [[nodiscard]] auto getType(unsigned int vectorWidth) const -> llvm::Type * {
     return cost::getType(type, vectorWidth);
   }
@@ -300,7 +279,7 @@ public:
   }
   // used to check if fmul can be folded with a `-`, in
   // which case it is free
-  [[nodiscard]] auto allUsersAdditiveContract() const -> bool;
+  [[nodiscard]] inline auto allUsersAdditiveContract() const -> bool;
 
 }; // class Inst
 
@@ -320,7 +299,7 @@ public:
   constexpr OpaqueFunc(Inst *I) : ins(I) {
     invariant(ins->getKind(), Node::VK_Func);
   }
-  [[nodiscard]] constexpr auto getOperands() const -> PtrVector<Node *> {
+  [[nodiscard]] constexpr auto getOperands() const -> PtrVector<Value *> {
     return ins->getOperands();
   }
   auto getFunction() -> llvm::Function * {
@@ -367,10 +346,10 @@ public:
     if (auto *i = llvm::dyn_cast<llvm::Instruction>(v)) return i->getOpcode();
     return {};
   }
-  [[nodiscard]] constexpr auto getOperands() const -> PtrVector<Node *> {
+  [[nodiscard]] constexpr auto getOperands() const -> PtrVector<Value *> {
     return ins->getOperands();
   }
-  [[nodiscard]] constexpr auto getOperand(size_t i) const -> Node * {
+  [[nodiscard]] constexpr auto getOperand(size_t i) const -> Value * {
     return ins->getOperand(i);
   }
   [[nodiscard]] constexpr auto getNumOperands() const -> unsigned {
@@ -667,16 +646,16 @@ public:
            isIntrinsic(llvm::Intrinsic::fma);
   }
 
-  [[nodiscard]] auto getOperands() -> MutPtrVector<Node *> {
+  [[nodiscard]] auto getOperands() -> MutPtrVector<Value *> {
     return ins->getOperands();
   }
-  [[nodiscard]] auto getOperands() const -> PtrVector<Node *> {
+  [[nodiscard]] auto getOperands() const -> PtrVector<Value *> {
     return ins->getOperands();
   }
-  [[nodiscard]] auto getOperand(size_t i) -> Node * {
+  [[nodiscard]] auto getOperand(size_t i) -> Value * {
     return ins->getOperand(i);
   }
-  [[nodiscard]] auto getOperand(size_t i) const -> Node * {
+  [[nodiscard]] auto getOperand(size_t i) const -> Value * {
     return ins->getOperand(i);
   }
   [[nodiscard]] auto getNumOperands() const -> size_t {
@@ -698,31 +677,31 @@ public:
   }
 };
 
-inline auto Node::getCost(llvm::TargetTransformInfo &TTI, cost::VectorWidth W)
+inline auto Value::getCost(llvm::TargetTransformInfo &TTI, cost::VectorWidth W)
   -> cost::RecipThroughputLatency {
   if (auto *a = llvm::dyn_cast<Addr>(this)) return a->getCost(TTI, W);
   invariant(getKind() >= VK_Func);
   return static_cast<Inst *>(this)->getCost(TTI, W);
 }
-inline auto Node::getValue() -> llvm::Value * {
+inline auto Value::getValue() -> llvm::Value * {
   if (auto *a = llvm::dyn_cast<Addr>(this)) return a->getInstruction();
   if (auto *I = llvm::dyn_cast<Inst>(this)) return I->getLLVMInstruction();
   invariant(getKind() == VK_CVal);
   return static_cast<CVal *>(this)->getValue();
 }
-inline auto Node::getInstruction() -> llvm::Instruction * {
+inline auto Value::getInstruction() -> llvm::Instruction * {
   if (auto *a = llvm::dyn_cast<Addr>(this)) return a->getInstruction();
   invariant(getKind() >= VK_Func);
   return static_cast<Inst *>(this)->getLLVMInstruction();
 }
-inline auto Node::getType() -> llvm::Type * {
-  if (auto *a = llvm::dyn_cast<Addr>(this)) return a->getType();
-  if (auto *I = llvm::dyn_cast<Inst>(this)) return I->getType();
-  if (auto *C = llvm::dyn_cast<Cnst>(this)) return C->getType();
+inline auto Value::getType() const -> llvm::Type * {
+  if (const auto *a = llvm::dyn_cast<Addr>(this)) return a->getType();
+  if (const auto *I = llvm::dyn_cast<Inst>(this)) return I->getType();
+  if (const auto *C = llvm::dyn_cast<Cnst>(this)) return C->getType();
   invariant(getKind() == VK_CVal);
-  return static_cast<CVal *>(this)->getValue()->getType();
+  return static_cast<const CVal *>(this)->getValue()->getType();
 }
-inline auto Node::getType(unsigned w) -> llvm::Type * {
+inline auto Value::getType(unsigned w) const -> llvm::Type * {
   return cost::getType(getType(), w);
 }
 [[nodiscard]] inline auto Inst::calcCost(llvm::TargetTransformInfo &TTI,
@@ -746,7 +725,16 @@ inline auto Node::getType(unsigned w) -> llvm::Type * {
   }
   return true;
 }
-
+[[nodiscard]] inline auto Value::getFastMathFlags() const
+  -> llvm::FastMathFlags {
+  if (const auto *I = llvm::dyn_cast<Inst>(this)) return I->getFastMathFlags();
+  return {};
+}
+[[nodiscard]] inline auto Value::getOperands() -> math::PtrVector<Value *> {
+  if (const auto *I = llvm::dyn_cast<Inst>(this)) return I->getOperands();
+  if (getKind() != VK_Stow) return {};
+  return {&unionPtr.node, unsigned(1)};
+}
 // unsigned x = llvm::Instruction::FAdd;
 // unsigned y = llvm::Instruction::LShr;
 // unsigned z = llvm::Instruction::Call;

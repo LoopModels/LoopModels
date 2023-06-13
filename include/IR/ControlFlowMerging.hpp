@@ -20,16 +20,18 @@
 
 namespace poly::IR {
 // merge all instructions from toMerge into merged
-inline void merge(aset<Node *> &merged, aset<Node *> &toMerge) {
+inline void merge(aset<Value *> &merged, aset<Value *> &toMerge) {
   merged.insert(toMerge.begin(), toMerge.end());
 }
-struct ReMapper {
-  dict::map<Node *, Node *> reMap;
-  auto operator[](Node *J) -> Node * {
+class ReMapper {
+  dict::map<Value *, Value *> reMap;
+
+public:
+  auto operator[](Value *J) -> Value * {
     if (auto f = reMap.find(J); f != reMap.end()) return f->second;
     return J;
   }
-  void remapFromTo(Node *K, Node *J) { reMap[K] = J; }
+  void remapFromTo(Value *K, Value *J) { reMap[K] = J; }
 };
 
 // represents the cost of merging key=>values; cost is hopefully negative.
@@ -47,59 +49,60 @@ struct MergingCost {
   // yielding c -> e -> d -> a -> b -> c
   // that is, if we're fusing c and d, we can make each point toward
   // what the other one was pointing to, in order to link the chains.
-  amap<Node *, Node *> mergeMap;
-  llvm::SmallVector<std::pair<Node *, Node *>> mergeList;
-  amap<Node *, aset<Node *> *> ancestorMap;
+  amap<Value *, Value *> mergeMap;
+  llvm::SmallVector<std::pair<Value *, Value *>> mergeList;
+  amap<Value *, aset<Value *> *> ancestorMap;
   llvm::InstructionCost cost;
   /// returns `true` if `key` was already in ancestors
   /// returns `false` if it had to initialize
-  auto initAncestors(BumpAlloc<> &alloc, Inst *key) -> aset<Node *> * {
+  auto initAncestors(BumpAlloc<> &alloc, Value *key) -> aset<Value *> * {
 
-    auto *set = alloc.construct<aset<Node *>>(alloc);
+    auto *set = alloc.construct<aset<Value *>>(alloc);
     /// instructions are considered their own ancestor for our purposes
     set->insert(key);
-    for (Node *op : key->getOperands())
+    for (Value *op : key->getOperands())
       if (auto *f = ancestorMap.find(op); f != ancestorMap.end())
         set->insert(f->second->begin(), f->second->end());
+
     ancestorMap[key] = set;
     return set;
   }
   auto begin() -> decltype(mergeList.begin()) { return mergeList.begin(); }
   auto end() -> decltype(mergeList.end()) { return mergeList.end(); }
-  [[nodiscard]] auto visited(Node *key) const -> bool {
+  [[nodiscard]] auto visited(Value *key) const -> bool {
     return ancestorMap.count(key);
   }
-  auto getAncestors(BumpAlloc<> &alloc, Node *key) -> aset<Node *> * {
+  auto getAncestors(BumpAlloc<> &alloc, Value *key) -> aset<Value *> * {
     if (auto *it = ancestorMap.find(key); it != ancestorMap.end())
       return it->second;
     return initAncestors(alloc, key);
   }
-  auto getAncestors(Node *key) -> aset<Node *> * {
+  auto getAncestors(Value *key) -> aset<Value *> * {
     if (auto *it = ancestorMap.find(key); it != ancestorMap.end())
       return it->second;
     return nullptr;
   }
-  auto findMerge(Node *key) -> Node * {
+  auto findMerge(Value *key) -> Value * {
     if (auto *it = mergeMap.find(key); it != mergeMap.end()) return it->second;
     return nullptr;
   }
-  auto findMerge(Node *key) const -> Node * {
+  auto findMerge(Value *key) const -> Value * {
     if (const auto *it = mergeMap.find(key); it != mergeMap.end())
       return it->second;
     return nullptr;
   }
-  /// isMerged(Node *key) const -> bool
+  /// isMerged(Value *key) const -> bool
   /// returns true if `key` is merged with any other Instruction
-  auto isMerged(Node *key) const -> bool { return mergeMap.count(key); }
-  /// isMerged(Node *I, Node *J) const -> bool
+  auto isMerged(Value *key) const -> bool { return mergeMap.count(key); }
+  /// isMerged(Value *I, Value *J) const -> bool
   /// returns true if `I` and `J` are merged with each other
   // note: this is not the same as `isMerged(I) && isMerged(J)`,
   // as `I` and `J` may be merged with different Instructions
   // however, isMerged(I, J) == isMerged(J, I)
   // so we ignore easily swappable parameters
   // NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
-  auto isMerged(Node *L, Node *J) const -> bool {
-    Node *K = J;
+  auto isMerged(Value *L, Value *J) const -> bool {
+    Value *K = J;
     do {
       if (L == K) return true;
       K = findMerge(K);
@@ -109,7 +112,7 @@ struct MergingCost {
   // follows the cycle, traversing H -> mergeMap[H] -> mergeMap[mergeMap[H]]
   // ... until it reaches E, updating the ancestorMap pointer at each level of
   // the recursion.
-  void cycleUpdateMerged(aset<Node *> *ancestors, Node *E, Node *H) {
+  void cycleUpdateMerged(aset<Value *> *ancestors, Value *E, Value *H) {
     while (H != E) {
       ancestorMap[H] = ancestors;
       H = mergeMap[H];
@@ -129,41 +132,42 @@ struct MergingCost {
   struct SelectCounter {
     unsigned numSelects{0};
     constexpr operator unsigned() const { return numSelects; }
-    constexpr void merge(size_t, Node *, Node *) {}
-    constexpr void select(size_t, Node *, Node *) { ++numSelects; }
+    constexpr void merge(size_t, Value *, Value *) {}
+    constexpr void select(size_t, Value *, Value *) { ++numSelects; }
   };
   struct SelectAllocator {
     IR::Cache &cache;
     ReMapper &reMap;
-    MutPtrVector<Node *> operands;
-    constexpr operator MutPtrVector<Node *>() const { return operands; }
-    void merge(size_t i, Node *A, Node *B) {
+    MutPtrVector<Value *> operands;
+    constexpr operator MutPtrVector<Value *>() const { return operands; }
+    void merge(size_t i, Value *A, Value *B) {
       auto opA = reMap[A];
       cache.replaceAllUsesWith(reMap[B], opA);
       operands[i] = opA;
     }
-    void select(size_t i, Node *A, Node *B) {
+    void select(size_t i, Value *A, Value *B) {
       A = reMap[A];
       B = reMap[B];
-      operands[i] = cache.createSelect(A, B)
-                      ->replaceAllOtherUsesOf(A)
-                      ->replaceAllOtherUsesOf(B);
+      Inst *C = cache.createSelect(A, B);
+      cache.replaceAllUsesWith(A, C);
+      cache.replaceAllUsesWith(B, C);
+      operands[i] = C;
     }
   };
-  static auto init(Allocate a, Node *A) -> SelectAllocator {
+  static auto init(Allocate a, Value *A) -> SelectAllocator {
     size_t numOps = A->getNumOperands();
-    auto **operandsPtr = a.alloc.allocate<Node *>(numOps);
-    MutPtrVector<Node *> operands{operandsPtr, numOps};
+    auto **operandsPtr = a.alloc.allocate<Value *>(numOps);
+    MutPtrVector<Value *> operands{operandsPtr, numOps};
     return SelectAllocator{a.alloc, a.cache, a.reMap, operands};
   }
-  static auto init(Count, Node *) -> SelectCounter { return SelectCounter{0}; }
+  static auto init(Count, Value *) -> SelectCounter { return SelectCounter{0}; }
   // An abstraction that runs an algorithm to look for merging opportunities,
   // either counting the number of selects needed, or allocating selects
   // and returning the new operand vector.
   // We generally aim to have analysis/cost modeling and code generation
   // take the same code paths, to both avoid code duplication and to
   // make sure the cost modeling reflects the actual code we're generating.
-  template <typename S> auto mergeOperands(Node *A, Node *B, S selects) {
+  template <typename S> auto mergeOperands(Value *A, Value *B, S selects) {
     // TODO: does this update the predicates?
     // now, we need to check everything connected to O and I in the mergeMap
     // to see if any of them need to be updated.
@@ -185,8 +189,8 @@ struct MergingCost {
     // so we need to check if any operand pairs are merged with each other.
     // note `isMerged(a,a) == true`, so that's the one query we need to use.
     auto selector = init(selects, A);
-    MutPtrVector<Node *> operandsA = A->getOperands();
-    MutPtrVector<Node *> operandsB = B->getOperands();
+    MutPtrVector<Value *> operandsA = A->getOperands();
+    MutPtrVector<Value *> operandsB = B->getOperands();
     size_t numOperands = operandsA.size();
     assert(numOperands == operandsB.size());
     /// associate ops means `f(a, b) == f(b, a)`
@@ -243,7 +247,7 @@ struct MergingCost {
   }
 
   void merge(BumpAlloc<> &alloc, llvm::TargetTransformInfo &TTI,
-             unsigned int vectorBits, Node *A, Node *B) {
+             unsigned int vectorBits, Value *A, Value *B) {
     mergeList.emplace_back(A, B);
     auto *aA = ancestorMap.find(B);
     auto *aB = ancestorMap.find(A);
@@ -253,7 +257,7 @@ struct MergingCost {
     // we leave their ancestor PtrMaps intact.
     // in the new MergingCost where they're the same instruction,
     // we assign them the same ancestors.
-    auto *merged = new (alloc) aset<Node *>(*aA->second);
+    auto *merged = new (alloc) aset<Value *>(*aA->second);
     merged->insert(aB->second->begin(), aB->second->end());
     aA->second = merged;
     aB->second = merged;
@@ -293,13 +297,13 @@ struct MergingCost {
 };
 
 // NOLINTNEXTLINE(misc-no-recursion)
-inline void
-mergeInstructions(BumpAlloc<> &alloc, IR::Cache &cache, Predicate::Map &predMap,
-                  llvm::TargetTransformInfo &TTI, unsigned int vectorBits,
-                  amap<std::pair<Instruction::Intrinsic, llvm::Type *>,
-                       BumpPtrVector<std::pair<Node *, Predicate::Set>>> &opMap,
-                  llvm::SmallVectorImpl<MergingCost *> &mergingCosts, Node *J,
-                  llvm::BasicBlock *BB, Predicate::Set &preds) {
+inline void mergeInstructions(
+  BumpAlloc<> &alloc, IR::Cache &cache, Predicate::Map &predMap,
+  llvm::TargetTransformInfo &TTI, unsigned int vectorBits,
+  amap<std::pair<Instruction::Intrinsic, llvm::Type *>,
+       BumpPtrVector<std::pair<Value *, Predicate::Set>>> &opMap,
+  llvm::SmallVectorImpl<MergingCost *> &mergingCosts, Value *J,
+  llvm::BasicBlock *BB, Predicate::Set &preds) {
   // have we already visited?
   if (mergingCosts.front()->visited(J)) return;
   for (auto *C : mergingCosts) {
@@ -311,7 +315,7 @@ mergeInstructions(BumpAlloc<> &alloc, IR::Cache &cache, Predicate::Map &predMap,
   auto &vec = opMap[op];
   // consider merging with every instruction sharing an opcode
   for (auto &pair : vec) {
-    Node *other = pair.first;
+    Value *other = pair.first;
     // check legality
     // illegal if:
     // 1. pred intersection not empty
@@ -340,7 +344,7 @@ mergeInstructions(BumpAlloc<> &alloc, IR::Cache &cache, Predicate::Map &predMap,
     }
   }
   // descendants aren't legal merge candidates, so check before merging
-  for (Node *U : J->getUsers()) {
+  for (Value *U : J->getUsers()) {
     if (llvm::BasicBlock *BBU = U->getBasicBlock()) {
       if (BBU == BB) {
         // fast path, skip lookup
@@ -376,13 +380,13 @@ inline void mergeInstructions(BumpAlloc<> &alloc, IR::Cache &cache,
   auto p = tAlloc.scope();
   // there is a divergence in the control flow that we can ideally merge
   amap<std::pair<Instruction::Intrinsic, llvm::Type *>,
-       BumpPtrVector<std::pair<Node *, Predicate::Set>>>
+       BumpPtrVector<std::pair<Value *, Predicate::Set>>>
     opMap{tAlloc};
   llvm::SmallVector<MergingCost *> mergingCosts;
   mergingCosts.emplace_back(alloc);
   for (auto &pred : predMap)
     for (llvm::Instruction &lI : *pred.first)
-      if (Node *J = cache[&lI])
+      if (Value *J = cache[&lI])
         mergeInstructions(tAlloc, cache, predMap, TTI, vectorBits, opMap,
                           mergingCosts, J, pred.first, pred.second);
   MergingCost *minCostStrategy = *std::ranges::min_element(

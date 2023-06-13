@@ -85,15 +85,15 @@ struct Intersection {
     predicates |= other.predicates;
     return *this;
   }
-  [[nodiscard]] constexpr auto popCount() const -> size_t {
+  [[nodiscard]] constexpr auto popCount() const -> int {
     return std::popcount(predicates);
   }
-  [[nodiscard]] constexpr auto getFirstIndex() const -> size_t {
+  [[nodiscard]] constexpr auto getFirstIndex() const -> int {
     return std::countr_zero(predicates) / 2;
   }
-  [[nodiscard]] constexpr auto getNextIndex(size_t i) const -> size_t {
+  [[nodiscard]] constexpr auto getNextIndex(ptrdiff_t i) const -> ptrdiff_t {
     ++i;
-    return std::countr_zero(predicates >> (2 * i)) / 2 + i;
+    return std::countr_zero(predicates >> (2 * size_t(i))) / 2 + i;
   }
   /// returns 00 if non-empty, 01 if empty
   [[nodiscard]] static constexpr auto emptyMask(uint64_t x) -> uint64_t {
@@ -112,7 +112,7 @@ struct Intersection {
     return emptyMask(x) != 0;
   }
   /// returns `true` if the PredicateIntersection is empty, `false` otherwise
-  [[nodiscard]] constexpr auto isEmpty() const -> bool {
+  [[nodiscard]] constexpr auto empty() const -> bool {
     return isEmpty(predicates);
   }
   [[nodiscard]] constexpr auto getConflict(Intersection other) const
@@ -134,8 +134,8 @@ struct Intersection {
   /// (a & b) | (a & !b) = a
   [[nodiscard]] constexpr auto compactUnion(Intersection other) const
     -> containers::TinyVector<Intersection, 2> {
-    if (isEmpty()) return {other};
-    if (other.isEmpty()) return {*this};
+    if (empty()) return {other};
+    if (other.empty()) return {*this};
     uint64_t x = predicates, y = other.predicates;
     // 010000 = 010100 & 010000
     uint64_t intersect = x & y;
@@ -153,7 +153,7 @@ struct Intersection {
     uint64_t mask = emptyMask(bitUnion);
     if (std::popcount(mask) == 1) { // a single b & !b case
       uint64_t remUnionMask =
-        ~(mask | (mask << 1));      // 0s `b`, meaning b can be either.
+        ~(mask | (mask << 1)); // 0s `b`, meaning b can be either.
       uint64_t w = remUnionMask & x;
       uint64_t z = remUnionMask & y;
       if (w == z) return {Intersection{w}};
@@ -168,7 +168,7 @@ struct Intersection {
   }
 }; // struct Predicate::Intersection
 
-   /// Predicate::Set
+/// Predicate::Set
 /// A type for performing set algebra on predicates, representing sets
 /// Note:
 /// Commutative:
@@ -213,7 +213,7 @@ struct Set {
   // [[no_unique_address]] math::BumpPtrVector<Intersection> intersectUnion;
   Set() = default;
   Set(Intersection pred) : intersectUnion(pred){};
-  Set(const Set &) = delete;
+  Set(const Set &) = default;
   Set(Set &&) = default;
   auto operator=(Set &&other) noexcept -> Set & {
     intersectUnion = other.intersectUnion;
@@ -222,25 +222,25 @@ struct Set {
   };
   auto operator=(const Set &other) -> Set & = default;
   // TODO: constexpr these when llvm::SmallVector supports it
-  [[nodiscard]] auto operator[](size_t index) -> Intersection & {
+  [[nodiscard]] auto operator[](ptrdiff_t index) -> Intersection & {
     if (allocated) return (*intersectUnion.intersects)[index];
     invariant(index == 0);
     return intersectUnion.intersect;
   }
-  [[nodiscard]] auto operator[](size_t index) const -> Intersection {
+  [[nodiscard]] auto operator[](ptrdiff_t index) const -> Intersection {
     if (allocated) return (*intersectUnion.intersects)[index];
     invariant(index == 0);
     return intersectUnion.intersect;
   }
-  [[nodiscard]] auto operator()(size_t i, size_t j) const -> Relation {
+  [[nodiscard]] auto operator()(ptrdiff_t i, ptrdiff_t j) const -> Relation {
     return (*this)[i][j];
   }
-  // [[nodiscard]] constexpr auto size() const -> size_t {
-  //   return size_t(std::max(ptrdiff_t(0), count));
+  // [[nodiscard]] constexpr auto size() const -> ptrdiff_t {
+  //   return ptrdiff_t(std::max(ptrdiff_t(0), count));
   // }
-  [[nodiscard]] constexpr auto empty() const -> size_t {
+  [[nodiscard]] constexpr auto empty() const -> bool {
     return allocated ? intersectUnion.intersects->empty()
-                     : intersectUnion.intersect.isEmpty();
+                     : intersectUnion.intersect.empty();
   }
   // auto getIntersects() -> containers::UList<Intersection> {
   //   if (count > 0) return *intersectUnion.intersects;
@@ -265,7 +265,7 @@ struct Set {
   /// (a & b) | (a & c) | (a & !c) = (a & b) | a = a
   /// TODO: handle more cases? Smarter algorithm that applies rewrite rules?
   auto Union(BumpAlloc<> &alloc, Intersection other) -> Set & {
-    if (other.isEmpty()) return *this;
+    if (other.empty()) return *this;
     if (empty()) {
       if (allocated) intersectUnion.intersects->pushHasCapacity(other);
       else intersectUnion.intersect = other;
@@ -367,7 +367,7 @@ struct Set {
     for (auto *l = intersectUnion.intersects; l; l = l->getNext())
       for (auto it = l->dbegin(), e = l->dend(); it != e; ++it) {
         *it &= pred;
-        if (it->isEmpty()) l->eraseUnordered(it--);
+        if (it->empty()) l->eraseUnordered(it--);
       }
     simplify();
     return *this;
@@ -417,7 +417,7 @@ struct Set {
   [[nodiscard]] auto intersectionIsEmpty(const Set &other) const -> bool {
     for (auto pred : *this)
       for (auto otherPred : other)
-        if (!((pred & otherPred).isEmpty())) return false;
+        if (!((pred & otherPred).empty())) return false;
     return true;
   }
 
@@ -446,6 +446,6 @@ struct Set {
   // }
 }; // struct Predicate::Set
 
-struct Map;
+class Map;
 }; // namespace Predicate
 }; // namespace poly::IR

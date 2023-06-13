@@ -14,6 +14,7 @@
 #include <cstdint>
 #include <llvm/IR/Instructions.h>
 #include <llvm/IR/PatternMatch.h>
+#include <llvm/Support/Casting.h>
 
 namespace poly {
 class Dependence;
@@ -68,7 +69,7 @@ using math::PtrVector, math::MutPtrVector, math::DensePtrMatrix,
 /// Note that to get the new poly::Loop, we call
 /// `oldLoop->rotate(PhiInv)`
 // clang-format on
-class Addr : public Node {
+class Addr : public Value {
   [[no_unique_address]] Dependence *edgeIn{nullptr};
   [[no_unique_address]] union {
     ScheduledNode *node{nullptr};
@@ -79,7 +80,7 @@ class Addr : public Node {
   [[no_unique_address]] llvm::Instruction *instr;
   [[no_unique_address]] int64_t *offSym{nullptr};
   [[no_unique_address]] const llvm::SCEV **syms;
-  [[no_unique_address]] Node *predicate{nullptr};
+  [[no_unique_address]] Value *predicate{nullptr};
   [[no_unique_address]] unsigned numDim{0}, numDynSym{0};
   // [[no_unique_address]] uint8_t numMemInputs;
   // [[no_unique_address]] uint8_t numDirectEdges;
@@ -112,7 +113,7 @@ class Addr : public Node {
   }
   // this is a reload
   explicit Addr(Addr *other)
-    : Node(VK_Stow, other->depth), basePointer(other->basePointer),
+    : Value(VK_Stow, other->depth), basePointer(other->basePointer),
       loop(other->loop), instr(other->instr), offSym(other->offSym),
       syms(other->syms), numDim(other->numDim), numDynSym(other->numDynSym) {
     std::memcpy(mem, other->mem,
@@ -121,21 +122,21 @@ class Addr : public Node {
   explicit Addr(const llvm::SCEVUnknown *arrayPtr, NotNull<poly::Loop> loopRef,
                 llvm::Instruction *user, int64_t *offsym, const llvm::SCEV **s,
                 std::array<unsigned, 2> dimOff)
-    : Node(llvm::isa<llvm::StoreInst>(user) ? VK_Stow : VK_Load,
-           loopRef->getNumLoops()),
+    : Value(llvm::isa<llvm::StoreInst>(user) ? VK_Stow : VK_Load,
+            loopRef->getNumLoops()),
       basePointer(arrayPtr), loop(loopRef), instr(user), offSym(offsym),
       syms(s), numDim(dimOff[0]), numDynSym(dimOff[1]){};
   explicit Addr(const llvm::SCEVUnknown *arrayPtr, NotNull<poly::Loop> loopRef,
                 llvm::Instruction *user)
-    : Node(llvm::isa<llvm::StoreInst>(user) ? VK_Stow : VK_Load,
-           loopRef->getNumLoops()),
+    : Value(llvm::isa<llvm::StoreInst>(user) ? VK_Stow : VK_Load,
+            loopRef->getNumLoops()),
       basePointer(arrayPtr), loop(loopRef), instr(user){};
   /// Constructor for 0 dimensional memory access
 
   constexpr Addr(NotNull<poly::Loop> explicitLoop, NotNull<Addr> ma,
                  SquarePtrMatrix<int64_t> Pinv, int64_t denom,
                  PtrVector<int64_t> omega, bool isStr, int64_t *offsets)
-    : Node(isStr ? VK_Stow : VK_Load, unsigned(Pinv.numCol())),
+    : Value(isStr ? VK_Stow : VK_Load, unsigned(Pinv.numCol())),
       basePointer(ma->getArrayPointer()), loop(explicitLoop),
       instr(ma->getInstruction()), offSym(ma->getOffSym()) {
     DensePtrMatrix<int64_t> M{ma->indexMatrix()};    // aD x nLma
@@ -307,19 +308,24 @@ public:
   [[nodiscard]] constexpr auto index() const -> unsigned { return index_; }
   constexpr auto lowLink() -> uint8_t & { return lowLink_; }
   [[nodiscard]] constexpr auto lowLink() const -> unsigned { return lowLink_; }
-  [[nodiscard]] constexpr auto getStoredVal() const -> Node * {
+  [[nodiscard]] constexpr auto getStoredVal() const -> Value * {
     invariant(isStore());
     return unionPtr.node;
   }
-  constexpr void setVal(Node *n) {
+  constexpr void setVal(Value *n) {
     invariant(isStore());
+    invariant(Value::classof(n));
     unionPtr.node = n;
   }
-  [[nodiscard]] constexpr auto getPredicate() const -> Node * {
+  [[nodiscard]] constexpr auto getPredicate() const -> Value * {
     return predicate;
   }
-  constexpr void setPredicate(Node *n) { predicate = n; }
-  [[nodiscard]] constexpr auto getUsers() const -> containers::UList<Node *> * {
+  constexpr void setPredicate(Node *n) {
+    invariant(Value::classof(n));
+    predicate = static_cast<Value *>(n);
+  }
+  [[nodiscard]] constexpr auto getUsers() const
+    -> containers::UList<Value *> * {
     invariant(isLoad());
     return unionPtr.users;
   }
@@ -670,11 +676,11 @@ public:
     DensePtrMatrix<int64_t> A{indexMatrix()};
     DensePtrMatrix<int64_t> B{offsetMatrix()};
     PtrVector<int64_t> b{getOffsetOmega()};
-    size_t numLoops = size_t(A.numCol());
-    for (size_t i = 0; i < A.numRow(); ++i) {
+    ptrdiff_t numLoops = ptrdiff_t(A.numCol());
+    for (ptrdiff_t i = 0; i < A.numRow(); ++i) {
       if (i) os << ", ";
       bool printPlus = false;
-      for (size_t j = 0; j < numLoops; ++j) {
+      for (ptrdiff_t j = 0; j < numLoops; ++j) {
         if (int64_t Aji = A(i, j)) {
           if (printPlus) {
             if (Aji <= 0) {
@@ -687,7 +693,7 @@ public:
           printPlus = true;
         }
       }
-      for (size_t j = 0; j < B.numCol(); ++j) {
+      for (ptrdiff_t j = 0; j < B.numCol(); ++j) {
         if (int64_t offij = j ? B(i, j) : b[i]) {
           if (printPlus) {
             if (offij <= 0) {
@@ -724,12 +730,12 @@ inline auto operator<<(llvm::raw_ostream &os, const Addr &m)
       os << ", " << *m.getSizes()[i];
   }
   os << " ]\nSubscripts: [ ";
-  size_t numLoops = size_t(A.numCol());
+  ptrdiff_t numLoops = ptrdiff_t(A.numCol());
   PtrMatrix<int64_t> offs = m.offsetMatrix();
-  for (size_t i = 0; i < A.numRow(); ++i) {
+  for (ptrdiff_t i = 0; i < A.numRow(); ++i) {
     if (i) os << ", ";
     bool printPlus = false;
-    for (size_t j = 0; j < numLoops; ++j) {
+    for (ptrdiff_t j = 0; j < numLoops; ++j) {
       if (int64_t Aji = A(i, j)) {
         if (printPlus) {
           if (Aji <= 0) {
@@ -742,7 +748,7 @@ inline auto operator<<(llvm::raw_ostream &os, const Addr &m)
         printPlus = true;
       }
     }
-    for (size_t j = 0; j < offs.numCol(); ++j) {
+    for (ptrdiff_t j = 0; j < offs.numCol(); ++j) {
       if (int64_t offij = offs(i, j)) {
         if (printPlus) {
           if (offij <= 0) {
@@ -766,14 +772,30 @@ class Load {
 
 public:
   Load(Addr *a) : addr(a->getKind() == Node::VK_Load ? a : nullptr) {}
+  Load(Node *a)
+    : addr(a->getKind() == Node::VK_Load ? static_cast<Addr *>(a) : nullptr) {}
   constexpr explicit operator bool() { return addr != nullptr; }
+  [[nodiscard]] constexpr auto getInstruction() const -> llvm::Instruction * {
+    // return llvm::cast<llvm::LoadInst>(addr->getInstruction());
+    // load or store (could be reload)
+    return addr->getInstruction();
+  }
 };
 class Stow {
   Addr *addr;
 
 public:
   Stow(Addr *a) : addr(a->getKind() == Node::VK_Stow ? a : nullptr) {}
+  Stow(Node *a)
+    : addr(a->getKind() == Node::VK_Stow ? static_cast<Addr *>(a) : nullptr) {}
   constexpr explicit operator bool() { return addr != nullptr; }
+  [[nodiscard]] constexpr auto getInstruction() const -> llvm::StoreInst * {
+    return llvm::cast<llvm::StoreInst>(addr->getInstruction());
+  }
+  [[nodiscard]] constexpr auto getStoredVal() const -> Value * {
+    return addr->getStoredVal();
+  }
+  constexpr void setVal(Value *n) { return addr->setVal(n); }
 };
 
 } // namespace IR

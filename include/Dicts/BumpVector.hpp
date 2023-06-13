@@ -249,7 +249,7 @@ template <typename T, unsigned InitialCapacity = 8> struct BumpPtrVector {
     if (N != Size) resizeForOverwrite(N);
   }
   [[nodiscard]] constexpr auto get_allocator() const -> WBumpAlloc<T> {
-    return Alloc;
+    return WBumpAlloc<T>{Alloc};
   }
   constexpr auto push_back(T x) -> T & {
     size_t offset = Size++;
