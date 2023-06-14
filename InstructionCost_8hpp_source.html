@@ -116,68 +116,69 @@ $(function() {
 <div class="line"><a name="l00045"></a><span class="lineno"><a class="line" href="classpoly_1_1IR_1_1cost_1_1VectorWidth.html">   45</a></span>&#160;<span class="keyword">class </span><a class="code" href="classpoly_1_1IR_1_1cost_1_1VectorWidth.html">VectorWidth</a> {</div>
 <div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;  <span class="keywordtype">unsigned</span> width;</div>
 <div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;  <span class="keywordtype">unsigned</span> log2Width;</div>
-<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;  constexpr <span class="keyword">explicit</span> <a class="code" href="classpoly_1_1IR_1_1cost_1_1VectorWidth.html">VectorWidth</a>(<span class="keywordtype">unsigned</span> w)</div>
-<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;    : width(w), log2Width(std::countr_zero(w)) {</div>
-<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;    utils::invariant(std::popcount(w) == 1);</div>
-<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;    utils::invariant(w &lt;= MaxVectorWidth);</div>
-<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;  }</div>
-<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;  constexpr <span class="keyword">explicit</span> <a class="code" href="classpoly_1_1IR_1_1cost_1_1VectorWidth.html">VectorWidth</a>(<span class="keywordtype">unsigned</span> w, <span class="keywordtype">unsigned</span> l2w)</div>
-<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;    : width(w), log2Width(l2w) {</div>
-<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;    utils::invariant(std::popcount(w) == 1);</div>
-<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;    utils::invariant(<span class="keywordtype">int</span>(l2w) == std::countr_zero(w));</div>
-<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;    utils::invariant(w &lt;= MaxVectorWidth);</div>
-<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;  }</div>
-<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160; </div>
-<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;<span class="keyword">public</span>:</div>
-<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getWidth() <span class="keyword">const</span> -&gt; <span class="keywordtype">unsigned</span> { <span class="keywordflow">return</span> width; }</div>
-<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getLog2Width() <span class="keyword">const</span> -&gt; <span class="keywordtype">unsigned</span> {</div>
-<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;    <span class="keywordflow">return</span> log2Width;</div>
-<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;  }</div>
-<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;};</div>
-<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;<span class="comment">// supports vector widths up to 128</span></div>
-<div class="line"><a name="l00067"></a><span class="lineno"><a class="line" href="classpoly_1_1IR_1_1cost_1_1VectorizationCosts.html">   67</a></span>&#160;<span class="keyword">class </span><a class="code" href="classpoly_1_1IR_1_1cost_1_1VectorizationCosts.html">VectorizationCosts</a> {</div>
-<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;  llvm::InstructionCost::CostType costs[8][2];</div>
-<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;  RecipThroughputLatency::State valid[8];</div>
-<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160; </div>
-<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;<span class="keyword">public</span>:</div>
-<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> get(<span class="keywordtype">unsigned</span> l2w) <span class="keyword">const</span></div>
-<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;    -&gt; <a class="code" href="structpoly_1_1IR_1_1cost_1_1RecipThroughputLatency.html">RecipThroughputLatency</a> {</div>
-<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;    utils::invariant(l2w &lt;= log2MaxVectorWidth);</div>
-<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;    <span class="keywordflow">if</span> (valid[l2w] == RecipThroughputLatency::Valid)</div>
-<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;      <span class="keywordflow">return</span> {costs[l2w][0], costs[l2w][1], valid[l2w]};</div>
-<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;    <span class="keywordflow">return</span> RecipThroughputLatency::getInvalid();</div>
-<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;  }</div>
-<div class="line"><a name="l00079"></a><span class="lineno"><a class="line" href="structpoly_1_1IR_1_1cost_1_1VectorizationCosts_1_1ProxyReference.html">   79</a></span>&#160;  <span class="keyword">struct </span><a class="code" href="structpoly_1_1IR_1_1cost_1_1VectorizationCosts_1_1ProxyReference.html">ProxyReference</a> {</div>
-<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;    <a class="code" href="classpoly_1_1IR_1_1cost_1_1VectorizationCosts.html">VectorizationCosts</a> &amp;vc;</div>
-<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;    <span class="keywordtype">unsigned</span> l2w;</div>
-<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;    constexpr <span class="keyword">operator</span> <a class="code" href="structpoly_1_1IR_1_1cost_1_1RecipThroughputLatency.html">RecipThroughputLatency</a>()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> vc.get(l2w); }</div>
-<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;    constexpr <span class="keyword">auto</span> operator=(<a class="code" href="structpoly_1_1IR_1_1cost_1_1RecipThroughputLatency.html">RecipThroughputLatency</a> rtl) -&gt; <a class="code" href="structpoly_1_1IR_1_1cost_1_1VectorizationCosts_1_1ProxyReference.html">ProxyReference</a> &amp; {</div>
-<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;      vc.costs[l2w][0] = rtl.recipThroughput;</div>
-<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;      vc.costs[l2w][1] = rtl.latency;</div>
-<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;      vc.valid[l2w] = rtl.state;</div>
-<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;      <span class="keywordflow">return</span> *<span class="keyword">this</span>;</div>
-<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;    }</div>
-<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;  };</div>
-<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;  constexpr <span class="keyword">auto</span> operator[](<span class="keywordtype">unsigned</span> l2w) -&gt; <a class="code" href="structpoly_1_1IR_1_1cost_1_1VectorizationCosts_1_1ProxyReference.html">ProxyReference</a> {</div>
-<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;    utils::invariant(l2w &lt;= log2MaxVectorWidth);</div>
-<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;    <span class="keywordflow">return</span> {*<span class="keyword">this</span>, l2w};</div>
-<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;  }</div>
-<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;  constexpr <span class="keyword">auto</span> operator[](<span class="keywordtype">unsigned</span> l2w) <span class="keyword">const</span> -&gt; <a class="code" href="structpoly_1_1IR_1_1cost_1_1RecipThroughputLatency.html">RecipThroughputLatency</a> {</div>
-<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;    <span class="keywordflow">return</span> get(l2w);</div>
-<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;  }</div>
-<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;  constexpr <span class="keyword">auto</span> operator[](VectorWidth vw) -&gt; ProxyReference {</div>
-<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;    <span class="keywordflow">return</span> {*<span class="keyword">this</span>, vw.getLog2Width()};</div>
-<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;  }</div>
-<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;  constexpr <span class="keyword">auto</span> operator[](VectorWidth vw) <span class="keyword">const</span> -&gt; RecipThroughputLatency {</div>
-<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;    <span class="keywordflow">return</span> get(vw.getLog2Width());</div>
-<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;  }</div>
-<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;};</div>
-<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160; </div>
-<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;} <span class="comment">// namespace poly::IR::cost</span></div>
+<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160; </div>
+<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;<span class="keyword">public</span>:</div>
+<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;  constexpr <span class="keyword">explicit</span> <a class="code" href="classpoly_1_1IR_1_1cost_1_1VectorWidth.html">VectorWidth</a>(<span class="keywordtype">unsigned</span> w)</div>
+<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;    : width(w), log2Width(std::countr_zero(w)) {</div>
+<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;    utils::invariant(std::popcount(w) == 1);</div>
+<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;    utils::invariant(w &lt;= MaxVectorWidth);</div>
+<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;  }</div>
+<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;  constexpr <span class="keyword">explicit</span> <a class="code" href="classpoly_1_1IR_1_1cost_1_1VectorWidth.html">VectorWidth</a>(<span class="keywordtype">unsigned</span> w, <span class="keywordtype">unsigned</span> l2w)</div>
+<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;    : width(w), log2Width(l2w) {</div>
+<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;    utils::invariant(std::popcount(w) == 1);</div>
+<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;    utils::invariant(<span class="keywordtype">int</span>(l2w) == std::countr_zero(w));</div>
+<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;    utils::invariant(w &lt;= MaxVectorWidth);</div>
+<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;  }</div>
+<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160; </div>
+<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getWidth() <span class="keyword">const</span> -&gt; <span class="keywordtype">unsigned</span> { <span class="keywordflow">return</span> width; }</div>
+<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getLog2Width() <span class="keyword">const</span> -&gt; <span class="keywordtype">unsigned</span> {</div>
+<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;    <span class="keywordflow">return</span> log2Width;</div>
+<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;  }</div>
+<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;};</div>
+<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;<span class="comment">// supports vector widths up to 128</span></div>
+<div class="line"><a name="l00068"></a><span class="lineno"><a class="line" href="classpoly_1_1IR_1_1cost_1_1VectorizationCosts.html">   68</a></span>&#160;<span class="keyword">class </span><a class="code" href="classpoly_1_1IR_1_1cost_1_1VectorizationCosts.html">VectorizationCosts</a> {</div>
+<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;  llvm::InstructionCost::CostType costs[8][2];</div>
+<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;  RecipThroughputLatency::State valid[8];</div>
+<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160; </div>
+<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;<span class="keyword">public</span>:</div>
+<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> get(<span class="keywordtype">unsigned</span> l2w) <span class="keyword">const</span></div>
+<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;    -&gt; <a class="code" href="structpoly_1_1IR_1_1cost_1_1RecipThroughputLatency.html">RecipThroughputLatency</a> {</div>
+<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;    utils::invariant(l2w &lt;= log2MaxVectorWidth);</div>
+<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;    <span class="keywordflow">if</span> (valid[l2w] == RecipThroughputLatency::Valid)</div>
+<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;      <span class="keywordflow">return</span> {costs[l2w][0], costs[l2w][1], valid[l2w]};</div>
+<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;    <span class="keywordflow">return</span> RecipThroughputLatency::getInvalid();</div>
+<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;  }</div>
+<div class="line"><a name="l00080"></a><span class="lineno"><a class="line" href="structpoly_1_1IR_1_1cost_1_1VectorizationCosts_1_1ProxyReference.html">   80</a></span>&#160;  <span class="keyword">struct </span><a class="code" href="structpoly_1_1IR_1_1cost_1_1VectorizationCosts_1_1ProxyReference.html">ProxyReference</a> {</div>
+<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;    <a class="code" href="classpoly_1_1IR_1_1cost_1_1VectorizationCosts.html">VectorizationCosts</a> &amp;vc;</div>
+<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;    <span class="keywordtype">unsigned</span> l2w;</div>
+<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;    constexpr <span class="keyword">operator</span> <a class="code" href="structpoly_1_1IR_1_1cost_1_1RecipThroughputLatency.html">RecipThroughputLatency</a>()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> vc.get(l2w); }</div>
+<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;    constexpr <span class="keyword">auto</span> operator=(<a class="code" href="structpoly_1_1IR_1_1cost_1_1RecipThroughputLatency.html">RecipThroughputLatency</a> rtl) -&gt; <a class="code" href="structpoly_1_1IR_1_1cost_1_1VectorizationCosts_1_1ProxyReference.html">ProxyReference</a> &amp; {</div>
+<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;      vc.costs[l2w][0] = rtl.recipThroughput;</div>
+<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;      vc.costs[l2w][1] = rtl.latency;</div>
+<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;      vc.valid[l2w] = rtl.state;</div>
+<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;      <span class="keywordflow">return</span> *<span class="keyword">this</span>;</div>
+<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;    }</div>
+<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;  };</div>
+<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;  constexpr <span class="keyword">auto</span> operator[](<span class="keywordtype">unsigned</span> l2w) -&gt; <a class="code" href="structpoly_1_1IR_1_1cost_1_1VectorizationCosts_1_1ProxyReference.html">ProxyReference</a> {</div>
+<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;    utils::invariant(l2w &lt;= log2MaxVectorWidth);</div>
+<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;    <span class="keywordflow">return</span> {*<span class="keyword">this</span>, l2w};</div>
+<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;  }</div>
+<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;  constexpr <span class="keyword">auto</span> operator[](<span class="keywordtype">unsigned</span> l2w) <span class="keyword">const</span> -&gt; <a class="code" href="structpoly_1_1IR_1_1cost_1_1RecipThroughputLatency.html">RecipThroughputLatency</a> {</div>
+<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;    <span class="keywordflow">return</span> get(l2w);</div>
+<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;  }</div>
+<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;  constexpr <span class="keyword">auto</span> operator[](VectorWidth vw) -&gt; ProxyReference {</div>
+<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;    <span class="keywordflow">return</span> {*<span class="keyword">this</span>, vw.getLog2Width()};</div>
+<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;  }</div>
+<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;  constexpr <span class="keyword">auto</span> operator[](VectorWidth vw) <span class="keyword">const</span> -&gt; RecipThroughputLatency {</div>
+<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;    <span class="keywordflow">return</span> get(vw.getLog2Width());</div>
+<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;  }</div>
+<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;};</div>
+<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160; </div>
+<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;} <span class="comment">// namespace poly::IR::cost</span></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1cost_1_1VectorWidth_html"><div class="ttname"><a href="classpoly_1_1IR_1_1cost_1_1VectorWidth.html">poly::IR::cost::VectorWidth</a></div><div class="ttdef"><b>Definition:</b> InstructionCost.hpp:45</div></div>
-<div class="ttc" id="aclasspoly_1_1IR_1_1cost_1_1VectorizationCosts_html"><div class="ttname"><a href="classpoly_1_1IR_1_1cost_1_1VectorizationCosts.html">poly::IR::cost::VectorizationCosts</a></div><div class="ttdef"><b>Definition:</b> InstructionCost.hpp:67</div></div>
+<div class="ttc" id="aclasspoly_1_1IR_1_1cost_1_1VectorizationCosts_html"><div class="ttname"><a href="classpoly_1_1IR_1_1cost_1_1VectorizationCosts.html">poly::IR::cost::VectorizationCosts</a></div><div class="ttdef"><b>Definition:</b> InstructionCost.hpp:68</div></div>
 <div class="ttc" id="astructpoly_1_1IR_1_1cost_1_1RecipThroughputLatency_html"><div class="ttname"><a href="structpoly_1_1IR_1_1cost_1_1RecipThroughputLatency.html">poly::IR::cost::RecipThroughputLatency</a></div><div class="ttdef"><b>Definition:</b> InstructionCost.hpp:13</div></div>
-<div class="ttc" id="astructpoly_1_1IR_1_1cost_1_1VectorizationCosts_1_1ProxyReference_html"><div class="ttname"><a href="structpoly_1_1IR_1_1cost_1_1VectorizationCosts_1_1ProxyReference.html">poly::IR::cost::VectorizationCosts::ProxyReference</a></div><div class="ttdef"><b>Definition:</b> InstructionCost.hpp:79</div></div>
+<div class="ttc" id="astructpoly_1_1IR_1_1cost_1_1VectorizationCosts_1_1ProxyReference_html"><div class="ttname"><a href="structpoly_1_1IR_1_1cost_1_1VectorizationCosts_1_1ProxyReference.html">poly::IR::cost::VectorizationCosts::ProxyReference</a></div><div class="ttdef"><b>Definition:</b> InstructionCost.hpp:80</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

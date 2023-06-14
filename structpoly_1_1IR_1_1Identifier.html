@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.9.1"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>LoopModels: poly::IR::MergingCost::Allocate Struct Reference</title>
+<title>LoopModels: poly::IR::Identifier Struct Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -61,35 +61,36 @@ $(function() {
 
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><b>poly</b></li><li class="navelem"><b>IR</b></li><li class="navelem"><a class="el" href="structpoly_1_1IR_1_1MergingCost.html">MergingCost</a></li><li class="navelem"><a class="el" href="structpoly_1_1IR_1_1MergingCost_1_1Allocate.html">Allocate</a></li>  </ul>
+<li class="navelem"><b>poly</b></li><li class="navelem"><b>IR</b></li><li class="navelem"><a class="el" href="structpoly_1_1IR_1_1Identifier.html">Identifier</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="header">
   <div class="summary">
 <a href="#pub-attribs">Public Attributes</a> &#124;
-<a href="structpoly_1_1IR_1_1MergingCost_1_1Allocate-members.html">List of all members</a>  </div>
+<a href="structpoly_1_1IR_1_1Identifier-members.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">poly::IR::MergingCost::Allocate Struct Reference</div>  </div>
+<div class="title">poly::IR::Identifier Struct Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
+
+<p><code>#include &lt;<a class="el" href="Instruction_8hpp_source.html">Instruction.hpp</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
-<tr class="memitem:a8b7fb8b72365538a6bfdad10fcce5899"><td class="memItemLeft" align="right" valign="top"><a id="a8b7fb8b72365538a6bfdad10fcce5899"></a>
-<a class="el" href="classpoly_1_1IR_1_1Cache.html">IR::Cache</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>cache</b></td></tr>
-<tr class="separator:a8b7fb8b72365538a6bfdad10fcce5899"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a89faa7dbafe8029935e450b5b04752a0"><td class="memItemLeft" align="right" valign="top"><a id="a89faa7dbafe8029935e450b5b04752a0"></a>
-<a class="el" href="classpoly_1_1IR_1_1ReMapper.html">ReMapper</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>reMap</b></td></tr>
-<tr class="separator:a89faa7dbafe8029935e450b5b04752a0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:adfa0d4ea10af6a888c4350415df8bd1f"><td class="memItemLeft" align="right" valign="top"><a id="adfa0d4ea10af6a888c4350415df8bd1f"></a>
-<a class="el" href="structpoly_1_1dict_1_1amap.html">amap</a>&lt; <a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> *, <a class="el" href="structpoly_1_1IR_1_1Predicate_1_1Set.html">Predicate::Set</a> &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>valToPred</b></td></tr>
-<tr class="separator:adfa0d4ea10af6a888c4350415df8bd1f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6bf660987f5434886a93e11116450ac6"><td class="memItemLeft" align="right" valign="top"><a id="a6bf660987f5434886a93e11116450ac6"></a>
-UList&lt; <a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> * &gt; *&#160;</td><td class="memItemRight" valign="bottom"><b>predicates</b></td></tr>
-<tr class="separator:a6bf660987f5434886a93e11116450ac6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:accabfef3893eec45f98ddd6c06d41669"><td class="memItemLeft" align="right" valign="top"><a id="accabfef3893eec45f98ddd6c06d41669"></a>
+llvm::Intrinsic::ID&#160;</td><td class="memItemRight" valign="bottom"><b>ID</b></td></tr>
+<tr class="separator:accabfef3893eec45f98ddd6c06d41669"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aff6c69c93bc2dd9ed536ca7cca0472cc"><td class="memItemLeft" align="right" valign="top"><a id="aff6c69c93bc2dd9ed536ca7cca0472cc"></a>
+Node::ValKind&#160;</td><td class="memItemRight" valign="bottom"><b>kind</b></td></tr>
+<tr class="separator:aff6c69c93bc2dd9ed536ca7cca0472cc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0a4b1b413712a1471e6a0abc2e12696e"><td class="memItemLeft" align="right" valign="top"><a id="a0a4b1b413712a1471e6a0abc2e12696e"></a>
+llvm::Type *&#160;</td><td class="memItemRight" valign="bottom"><b>type</b></td></tr>
+<tr class="separator:a0a4b1b413712a1471e6a0abc2e12696e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<hr/>The documentation for this struct was generated from the following file:<ul>
-<li>include/IR/<a class="el" href="ControlFlowMerging_8hpp_source.html">ControlFlowMerging.hpp</a></li>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<div class="textblock"><p>For use with control flow merging same operation on same type with disparate branches can be merged </p>
+</div><hr/>The documentation for this struct was generated from the following file:<ul>
+<li>include/IR/<a class="el" href="Instruction_8hpp_source.html">Instruction.hpp</a></li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->

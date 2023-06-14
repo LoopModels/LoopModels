@@ -225,225 +225,233 @@ $(function() {
 <div class="line"><a name="l00168"></a><span class="lineno">  168</span>&#160;  }</div>
 <div class="line"><a name="l00169"></a><span class="lineno">  169</span>&#160;}; <span class="comment">// struct Predicate::Intersection</span></div>
 <div class="line"><a name="l00170"></a><span class="lineno">  170</span>&#160; </div>
-<div class="line"><a name="l00198"></a><span class="lineno"><a class="line" href="structpoly_1_1IR_1_1Predicate_1_1Set.html">  198</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structpoly_1_1IR_1_1Predicate_1_1Set.html">Set</a> {</div>
-<div class="line"><a name="l00199"></a><span class="lineno">  199</span>&#160;  <span class="comment">// std::variant&lt;std::monostate, Intersection, containers::UList&lt;Intersection&gt;</span></div>
-<div class="line"><a name="l00200"></a><span class="lineno">  200</span>&#160;  <span class="comment">// *&gt; intersectUnion;</span></div>
-<div class="line"><a name="l00201"></a><span class="lineno">  201</span>&#160;  <span class="keyword">union </span>{</div>
-<div class="line"><a name="l00202"></a><span class="lineno">  202</span>&#160;    <a class="code" href="structpoly_1_1IR_1_1Predicate_1_1Intersection.html">Intersection</a> intersect;</div>
-<div class="line"><a name="l00203"></a><span class="lineno">  203</span>&#160;    containers::UList&lt;Intersection&gt; *intersects;</div>
-<div class="line"><a name="l00204"></a><span class="lineno">  204</span>&#160;  } intersectUnion;</div>
-<div class="line"><a name="l00205"></a><span class="lineno">  205</span>&#160;  <span class="keywordtype">bool</span> allocated{<span class="keyword">false</span>};</div>
-<div class="line"><a name="l00206"></a><span class="lineno">  206</span>&#160;  <span class="comment">// ptrdiff_t count;</span></div>
-<div class="line"><a name="l00207"></a><span class="lineno">  207</span>&#160;  <span class="comment">// 0: empty</span></div>
-<div class="line"><a name="l00208"></a><span class="lineno">  208</span>&#160;  <span class="comment">// -1 if we have a single intersection</span></div>
-<div class="line"><a name="l00209"></a><span class="lineno">  209</span>&#160;  <span class="comment">// &gt;=1 may still be empty, but it means we&#39;ve allocated</span></div>
-<div class="line"><a name="l00210"></a><span class="lineno">  210</span>&#160;  <span class="comment">// and need to check `intersects`.</span></div>
-<div class="line"><a name="l00211"></a><span class="lineno">  211</span>&#160;  <span class="comment">//</span></div>
-<div class="line"><a name="l00212"></a><span class="lineno">  212</span>&#160;  <span class="comment">// containers::UList&lt;Intersection&gt; *intersectUnion{nullptr};</span></div>
-<div class="line"><a name="l00213"></a><span class="lineno">  213</span>&#160;  <span class="comment">// [[no_unique_address]] math::BumpPtrVector&lt;Intersection&gt; intersectUnion;</span></div>
-<div class="line"><a name="l00214"></a><span class="lineno">  214</span>&#160;  <a class="code" href="structpoly_1_1IR_1_1Predicate_1_1Set.html">Set</a>() = <span class="keywordflow">default</span>;</div>
-<div class="line"><a name="l00215"></a><span class="lineno">  215</span>&#160;  <a class="code" href="structpoly_1_1IR_1_1Predicate_1_1Set.html">Set</a>(<a class="code" href="structpoly_1_1IR_1_1Predicate_1_1Intersection.html">Intersection</a> pred) : intersectUnion(pred){};</div>
-<div class="line"><a name="l00216"></a><span class="lineno">  216</span>&#160;  <a class="code" href="structpoly_1_1IR_1_1Predicate_1_1Set.html">Set</a>(<span class="keyword">const</span> <a class="code" href="structpoly_1_1IR_1_1Predicate_1_1Set.html">Set</a> &amp;) = <span class="keywordflow">default</span>;</div>
-<div class="line"><a name="l00217"></a><span class="lineno">  217</span>&#160;  <a class="code" href="structpoly_1_1IR_1_1Predicate_1_1Set.html">Set</a>(<a class="code" href="structpoly_1_1IR_1_1Predicate_1_1Set.html">Set</a> &amp;&amp;) = <span class="keywordflow">default</span>;</div>
-<div class="line"><a name="l00218"></a><span class="lineno">  218</span>&#160;  <span class="keyword">auto</span> operator=(<a class="code" href="structpoly_1_1IR_1_1Predicate_1_1Set.html">Set</a> &amp;&amp;other) noexcept -&gt; <a class="code" href="structpoly_1_1IR_1_1Predicate_1_1Set.html">Set</a> &amp; {</div>
-<div class="line"><a name="l00219"></a><span class="lineno">  219</span>&#160;    intersectUnion = other.intersectUnion;</div>
-<div class="line"><a name="l00220"></a><span class="lineno">  220</span>&#160;    allocated = std::exchange(other.allocated, <span class="keyword">false</span>);</div>
-<div class="line"><a name="l00221"></a><span class="lineno">  221</span>&#160;    <span class="keywordflow">return</span> *<span class="keyword">this</span>;</div>
-<div class="line"><a name="l00222"></a><span class="lineno">  222</span>&#160;  };</div>
-<div class="line"><a name="l00223"></a><span class="lineno">  223</span>&#160;  <span class="keyword">auto</span> operator=(<span class="keyword">const</span> <a class="code" href="structpoly_1_1IR_1_1Predicate_1_1Set.html">Set</a> &amp;other) -&gt; <a class="code" href="structpoly_1_1IR_1_1Predicate_1_1Set.html">Set</a> &amp; = <span class="keywordflow">default</span>;</div>
-<div class="line"><a name="l00224"></a><span class="lineno">  224</span>&#160;  <span class="comment">// TODO: constexpr these when llvm::SmallVector supports it</span></div>
-<div class="line"><a name="l00225"></a><span class="lineno">  225</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> operator[](ptrdiff_t index) -&gt; <a class="code" href="structpoly_1_1IR_1_1Predicate_1_1Intersection.html">Intersection</a> &amp; {</div>
-<div class="line"><a name="l00226"></a><span class="lineno">  226</span>&#160;    <span class="keywordflow">if</span> (allocated) <span class="keywordflow">return</span> (*intersectUnion.intersects)[index];</div>
-<div class="line"><a name="l00227"></a><span class="lineno">  227</span>&#160;    invariant(index == 0);</div>
-<div class="line"><a name="l00228"></a><span class="lineno">  228</span>&#160;    <span class="keywordflow">return</span> intersectUnion.intersect;</div>
-<div class="line"><a name="l00229"></a><span class="lineno">  229</span>&#160;  }</div>
-<div class="line"><a name="l00230"></a><span class="lineno">  230</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> operator[](ptrdiff_t index) <span class="keyword">const</span> -&gt; <a class="code" href="structpoly_1_1IR_1_1Predicate_1_1Intersection.html">Intersection</a> {</div>
-<div class="line"><a name="l00231"></a><span class="lineno">  231</span>&#160;    <span class="keywordflow">if</span> (allocated) <span class="keywordflow">return</span> (*intersectUnion.intersects)[index];</div>
-<div class="line"><a name="l00232"></a><span class="lineno">  232</span>&#160;    invariant(index == 0);</div>
-<div class="line"><a name="l00233"></a><span class="lineno">  233</span>&#160;    <span class="keywordflow">return</span> intersectUnion.intersect;</div>
-<div class="line"><a name="l00234"></a><span class="lineno">  234</span>&#160;  }</div>
-<div class="line"><a name="l00235"></a><span class="lineno">  235</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> operator()(ptrdiff_t i, ptrdiff_t j) <span class="keyword">const</span> -&gt; Relation {</div>
-<div class="line"><a name="l00236"></a><span class="lineno">  236</span>&#160;    <span class="keywordflow">return</span> (*<span class="keyword">this</span>)[i][j];</div>
-<div class="line"><a name="l00237"></a><span class="lineno">  237</span>&#160;  }</div>
-<div class="line"><a name="l00238"></a><span class="lineno">  238</span>&#160;  <span class="comment">// [[nodiscard]] constexpr auto size() const -&gt; ptrdiff_t {</span></div>
-<div class="line"><a name="l00239"></a><span class="lineno">  239</span>&#160;  <span class="comment">//   return ptrdiff_t(std::max(ptrdiff_t(0), count));</span></div>
-<div class="line"><a name="l00240"></a><span class="lineno">  240</span>&#160;  <span class="comment">// }</span></div>
-<div class="line"><a name="l00241"></a><span class="lineno">  241</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> empty() <span class="keyword">const</span> -&gt; <span class="keywordtype">bool</span> {</div>
-<div class="line"><a name="l00242"></a><span class="lineno">  242</span>&#160;    <span class="keywordflow">return</span> allocated ? intersectUnion.intersects-&gt;empty()</div>
-<div class="line"><a name="l00243"></a><span class="lineno">  243</span>&#160;                     : intersectUnion.intersect.empty();</div>
-<div class="line"><a name="l00244"></a><span class="lineno">  244</span>&#160;  }</div>
-<div class="line"><a name="l00245"></a><span class="lineno">  245</span>&#160;  <span class="comment">// auto getIntersects() -&gt; containers::UList&lt;Intersection&gt; {</span></div>
-<div class="line"><a name="l00246"></a><span class="lineno">  246</span>&#160;  <span class="comment">//   if (count &gt; 0) return *intersectUnion.intersects;</span></div>
-<div class="line"><a name="l00247"></a><span class="lineno">  247</span>&#160;  <span class="comment">//   return {intersectUnion.intersect};</span></div>
-<div class="line"><a name="l00248"></a><span class="lineno">  248</span>&#160;  <span class="comment">// }</span></div>
-<div class="line"><a name="l00267"></a><span class="lineno"><a class="line" href="structpoly_1_1IR_1_1Predicate_1_1Set.html#ac9bf694bc9d657031b4181877c0996ec">  267</a></span>&#160;<span class="comment"></span>  <span class="keyword">auto</span> <a class="code" href="structpoly_1_1IR_1_1Predicate_1_1Set.html#ac9bf694bc9d657031b4181877c0996ec">Union</a>(BumpAlloc&lt;&gt; &amp;alloc, <a class="code" href="structpoly_1_1IR_1_1Predicate_1_1Intersection.html">Intersection</a> other) -&gt; <a class="code" href="structpoly_1_1IR_1_1Predicate_1_1Set.html">Set</a> &amp; {</div>
-<div class="line"><a name="l00268"></a><span class="lineno">  268</span>&#160;    <span class="keywordflow">if</span> (other.empty()) <span class="keywordflow">return</span> *<span class="keyword">this</span>;</div>
-<div class="line"><a name="l00269"></a><span class="lineno">  269</span>&#160;    <span class="keywordflow">if</span> (empty()) {</div>
-<div class="line"><a name="l00270"></a><span class="lineno">  270</span>&#160;      <span class="keywordflow">if</span> (allocated) intersectUnion.intersects-&gt;pushHasCapacity(other);</div>
-<div class="line"><a name="l00271"></a><span class="lineno">  271</span>&#160;      <span class="keywordflow">else</span> intersectUnion.intersect = other;</div>
-<div class="line"><a name="l00272"></a><span class="lineno">  272</span>&#160;      <span class="keywordflow">return</span> *<span class="keyword">this</span>;</div>
-<div class="line"><a name="l00273"></a><span class="lineno">  273</span>&#160;    }</div>
-<div class="line"><a name="l00274"></a><span class="lineno">  274</span>&#160;    <span class="keywordflow">if</span> (!allocated) { <span class="comment">// fast path</span></div>
-<div class="line"><a name="l00275"></a><span class="lineno">  275</span>&#160;      <a class="code" href="structpoly_1_1IR_1_1Predicate_1_1Intersection.html">Intersection</a> intersect = intersectUnion.intersect;</div>
-<div class="line"><a name="l00276"></a><span class="lineno">  276</span>&#160;      <span class="keyword">auto</span> u = intersect.<a class="code" href="structpoly_1_1IR_1_1Predicate_1_1Intersection.html#a61a44178c94724c643b1e13e295af03d">compactUnion</a>(other);</div>
-<div class="line"><a name="l00277"></a><span class="lineno">  277</span>&#160;      <span class="keywordflow">if</span> (u.size() == 1) {</div>
-<div class="line"><a name="l00278"></a><span class="lineno">  278</span>&#160;        intersectUnion.intersect = u[0];</div>
-<div class="line"><a name="l00279"></a><span class="lineno">  279</span>&#160;      } <span class="keywordflow">else</span> {</div>
-<div class="line"><a name="l00280"></a><span class="lineno">  280</span>&#160;        allocated = <span class="keyword">true</span>;</div>
-<div class="line"><a name="l00281"></a><span class="lineno">  281</span>&#160;        intersectUnion.intersects =</div>
-<div class="line"><a name="l00282"></a><span class="lineno">  282</span>&#160;          alloc.create&lt;containers::UList&lt;Intersection&gt;&gt;();</div>
-<div class="line"><a name="l00283"></a><span class="lineno">  283</span>&#160;        <span class="keywordflow">if</span> (u.size() == 2) {</div>
-<div class="line"><a name="l00284"></a><span class="lineno">  284</span>&#160;          intersectUnion.intersects-&gt;pushHasCapacity(u[0]);</div>
-<div class="line"><a name="l00285"></a><span class="lineno">  285</span>&#160;          intersectUnion.intersects-&gt;pushHasCapacity(u[1]);</div>
-<div class="line"><a name="l00286"></a><span class="lineno">  286</span>&#160;        } <span class="keywordflow">else</span> {</div>
-<div class="line"><a name="l00287"></a><span class="lineno">  287</span>&#160;          intersectUnion.intersects-&gt;pushHasCapacity(intersect);</div>
-<div class="line"><a name="l00288"></a><span class="lineno">  288</span>&#160;          intersectUnion.intersects-&gt;pushHasCapacity(other);</div>
-<div class="line"><a name="l00289"></a><span class="lineno">  289</span>&#160;        }</div>
-<div class="line"><a name="l00290"></a><span class="lineno">  290</span>&#160;      }</div>
-<div class="line"><a name="l00291"></a><span class="lineno">  291</span>&#160;      <span class="keywordflow">return</span> *<span class="keyword">this</span>;</div>
-<div class="line"><a name="l00292"></a><span class="lineno">  292</span>&#160;    }</div>
-<div class="line"><a name="l00293"></a><span class="lineno">  293</span>&#160;    <span class="comment">// allocated == true</span></div>
-<div class="line"><a name="l00294"></a><span class="lineno">  294</span>&#160;    <span class="keywordtype">bool</span> simplifyPreds = <span class="keyword">false</span>;</div>
-<div class="line"><a name="l00295"></a><span class="lineno">  295</span>&#160;    containers::UList&lt;Intersection&gt; *intersects = intersectUnion.intersects;</div>
-<div class="line"><a name="l00296"></a><span class="lineno">  296</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">auto</span> *l = intersects; l; l = l-&gt;getNext()) {</div>
-<div class="line"><a name="l00297"></a><span class="lineno">  297</span>&#160;      <span class="keywordflow">for</span> (<span class="keyword">auto</span> it = l-&gt;dbegin(), e = l-&gt;dend(); it != e; ++it) {</div>
-<div class="line"><a name="l00298"></a><span class="lineno">  298</span>&#160;        <span class="keyword">auto</span> u = it-&gt;compactUnion(other);</div>
-<div class="line"><a name="l00299"></a><span class="lineno">  299</span>&#160;        <span class="keywordflow">if</span> (u.empty()) <span class="keywordflow">continue</span>;</div>
-<div class="line"><a name="l00300"></a><span class="lineno">  300</span>&#160;        *it = u[0];</div>
-<div class="line"><a name="l00301"></a><span class="lineno">  301</span>&#160;        <span class="keywordflow">if</span> (u.size() == 1) <span class="keywordflow">return</span> *<span class="keyword">this</span>;</div>
-<div class="line"><a name="l00302"></a><span class="lineno">  302</span>&#160;        invariant(u.size() == 2);</div>
-<div class="line"><a name="l00303"></a><span class="lineno">  303</span>&#160;        simplifyPreds = <span class="keyword">true</span>;</div>
-<div class="line"><a name="l00304"></a><span class="lineno">  304</span>&#160;        other = u[1];</div>
-<div class="line"><a name="l00305"></a><span class="lineno">  305</span>&#160;      }</div>
-<div class="line"><a name="l00306"></a><span class="lineno">  306</span>&#160;    }</div>
-<div class="line"><a name="l00307"></a><span class="lineno">  307</span>&#160;    intersectUnion.intersects = intersects-&gt;push(alloc, other);</div>
-<div class="line"><a name="l00308"></a><span class="lineno">  308</span>&#160;    <span class="keywordflow">if</span> (simplifyPreds) simplify();</div>
-<div class="line"><a name="l00309"></a><span class="lineno">  309</span>&#160;    <span class="keywordflow">return</span> *<span class="keyword">this</span>;</div>
-<div class="line"><a name="l00310"></a><span class="lineno">  310</span>&#160;  }</div>
-<div class="line"><a name="l00311"></a><span class="lineno">  311</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> begin()<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l00312"></a><span class="lineno">  312</span>&#160;    invariant(allocated);</div>
-<div class="line"><a name="l00313"></a><span class="lineno">  313</span>&#160;    <span class="comment">// poly::containers::UList&lt;poly::IR::Predicate::Intersection&gt;::Iterator it(</span></div>
-<div class="line"><a name="l00314"></a><span class="lineno">  314</span>&#160;    <span class="comment">//   intersectUnion.intersects-&gt;begin());</span></div>
-<div class="line"><a name="l00315"></a><span class="lineno">  315</span>&#160;    <span class="comment">// return it;</span></div>
-<div class="line"><a name="l00316"></a><span class="lineno">  316</span>&#160;    <span class="keywordflow">return</span> intersectUnion.intersects-&gt;begin();</div>
-<div class="line"><a name="l00317"></a><span class="lineno">  317</span>&#160;  }</div>
-<div class="line"><a name="l00318"></a><span class="lineno">  318</span>&#160;  [[nodiscard]] <span class="keyword">static</span> constexpr <span class="keyword">auto</span> end() {</div>
-<div class="line"><a name="l00319"></a><span class="lineno">  319</span>&#160;    <span class="keywordflow">return</span> containers::UList&lt;IR::Predicate::Intersection&gt;::end();</div>
-<div class="line"><a name="l00320"></a><span class="lineno">  320</span>&#160;  }</div>
-<div class="line"><a name="l00321"></a><span class="lineno">  321</span>&#160;  <span class="keywordtype">void</span> simplify()<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l00322"></a><span class="lineno">  322</span>&#160;    <span class="keywordtype">bool</span> simplifyPreds = allocated;</div>
-<div class="line"><a name="l00323"></a><span class="lineno">  323</span>&#160;    <span class="keywordflow">while</span> (simplifyPreds) {</div>
-<div class="line"><a name="l00324"></a><span class="lineno">  324</span>&#160;      simplifyPreds = <span class="keyword">false</span>;</div>
-<div class="line"><a name="l00325"></a><span class="lineno">  325</span>&#160;      <span class="keywordflow">for</span> (<span class="keyword">auto</span> *l = intersectUnion.intersects; l; l = l-&gt;getNext()) {</div>
-<div class="line"><a name="l00326"></a><span class="lineno">  326</span>&#160;        <span class="keywordflow">for</span> (<span class="keyword">auto</span> it = l-&gt;dbegin(), e = l-&gt;dend(); it != e; ++it) {</div>
-<div class="line"><a name="l00327"></a><span class="lineno">  327</span>&#160;          <span class="keywordflow">for</span> (<span class="keyword">auto</span> *j = l; j; j = j-&gt;getNext()) {</div>
-<div class="line"><a name="l00328"></a><span class="lineno">  328</span>&#160;            <span class="keywordflow">for</span> (<span class="keyword">auto</span> jt = j == l ? it + 1 : j-&gt;dbegin(), je = j-&gt;dend();</div>
-<div class="line"><a name="l00329"></a><span class="lineno">  329</span>&#160;                 jt != je; ++jt) {</div>
-<div class="line"><a name="l00330"></a><span class="lineno">  330</span>&#160; </div>
-<div class="line"><a name="l00331"></a><span class="lineno">  331</span>&#160;              <span class="keyword">auto</span> u = it-&gt;compactUnion(*jt);</div>
-<div class="line"><a name="l00332"></a><span class="lineno">  332</span>&#160;              <span class="keywordflow">if</span> (u.empty()) <span class="keywordflow">continue</span>;</div>
-<div class="line"><a name="l00333"></a><span class="lineno">  333</span>&#160;              *it = u[0];</div>
-<div class="line"><a name="l00334"></a><span class="lineno">  334</span>&#160;              simplifyPreds = <span class="keyword">true</span>;</div>
-<div class="line"><a name="l00335"></a><span class="lineno">  335</span>&#160;              <span class="keywordflow">if</span> (u.size() == 2) {</div>
-<div class="line"><a name="l00336"></a><span class="lineno">  336</span>&#160;                ASSERT((std::popcount(u[0].predicates) +</div>
-<div class="line"><a name="l00337"></a><span class="lineno">  337</span>&#160;                        std::popcount(u[1].predicates)) &lt;=</div>
-<div class="line"><a name="l00338"></a><span class="lineno">  338</span>&#160;                       (std::popcount(it-&gt;predicates) +</div>
-<div class="line"><a name="l00339"></a><span class="lineno">  339</span>&#160;                        std::popcount(jt-&gt;predicates)));</div>
-<div class="line"><a name="l00340"></a><span class="lineno">  340</span>&#160;                *jt = u[1];</div>
-<div class="line"><a name="l00341"></a><span class="lineno">  341</span>&#160;              } <span class="keywordflow">else</span> j-&gt;eraseUnordered(jt--);</div>
-<div class="line"><a name="l00342"></a><span class="lineno">  342</span>&#160;            }</div>
-<div class="line"><a name="l00343"></a><span class="lineno">  343</span>&#160;          }</div>
-<div class="line"><a name="l00344"></a><span class="lineno">  344</span>&#160;        }</div>
-<div class="line"><a name="l00345"></a><span class="lineno">  345</span>&#160;      }</div>
-<div class="line"><a name="l00346"></a><span class="lineno">  346</span>&#160;    }</div>
-<div class="line"><a name="l00347"></a><span class="lineno">  347</span>&#160;  }</div>
-<div class="line"><a name="l00353"></a><span class="lineno"><a class="line" href="structpoly_1_1IR_1_1Predicate_1_1Set.html#ae7f2a4a9b16b6dbc2775e894f408dd7f">  353</a></span>&#160;  <span class="keyword">auto</span> <a class="code" href="structpoly_1_1IR_1_1Predicate_1_1Set.html#ae7f2a4a9b16b6dbc2775e894f408dd7f">Union</a>(BumpAlloc&lt;&gt; &amp;alloc, <span class="keyword">const</span> <a class="code" href="structpoly_1_1IR_1_1Predicate_1_1Set.html">Set</a> &amp;other) -&gt; <a class="code" href="structpoly_1_1IR_1_1Predicate_1_1Set.html">Set</a> &amp; {</div>
-<div class="line"><a name="l00354"></a><span class="lineno">  354</span>&#160;    <span class="keywordflow">if</span> (!other.allocated) <span class="keywordflow">return</span> <a class="code" href="structpoly_1_1IR_1_1Predicate_1_1Set.html#ac9bf694bc9d657031b4181877c0996ec">Union</a>(alloc, other.intersectUnion.intersect);</div>
-<div class="line"><a name="l00355"></a><span class="lineno">  355</span>&#160;    other.intersectUnion.intersects-&gt;forEach(</div>
-<div class="line"><a name="l00356"></a><span class="lineno">  356</span>&#160;      [&amp;](<a class="code" href="structpoly_1_1IR_1_1Predicate_1_1Intersection.html">Intersection</a> pred) { <a class="code" href="structpoly_1_1IR_1_1Predicate_1_1Set.html#ac9bf694bc9d657031b4181877c0996ec">Union</a>(alloc, pred); });</div>
-<div class="line"><a name="l00357"></a><span class="lineno">  357</span>&#160;    <span class="keywordflow">return</span> *<span class="keyword">this</span>;</div>
-<div class="line"><a name="l00358"></a><span class="lineno">  358</span>&#160;  }</div>
-<div class="line"><a name="l00359"></a><span class="lineno">  359</span>&#160;  <span class="keyword">auto</span> operator&amp;=(<a class="code" href="structpoly_1_1IR_1_1Predicate_1_1Intersection.html">Intersection</a> pred) -&gt; <a class="code" href="structpoly_1_1IR_1_1Predicate_1_1Set.html">Set</a> &amp; {</div>
-<div class="line"><a name="l00360"></a><span class="lineno">  360</span>&#160;    <span class="keywordflow">if</span> (!allocated) {</div>
-<div class="line"><a name="l00361"></a><span class="lineno">  361</span>&#160;      intersectUnion.intersect &amp;= pred;</div>
-<div class="line"><a name="l00362"></a><span class="lineno">  362</span>&#160;      <span class="keywordflow">return</span> *<span class="keyword">this</span>;</div>
-<div class="line"><a name="l00363"></a><span class="lineno">  363</span>&#160;    }</div>
-<div class="line"><a name="l00364"></a><span class="lineno">  364</span>&#160;    <span class="comment">// for (auto *l = intersectUnion.intersects; l; l = l-&gt;getNext())</span></div>
-<div class="line"><a name="l00365"></a><span class="lineno">  365</span>&#160;    <span class="comment">//   for (auto it = l-&gt;begin(), e = l-&gt;localEnd(); it != e; ++it)</span></div>
-<div class="line"><a name="l00366"></a><span class="lineno">  366</span>&#160;    <span class="comment">//     if ((*it &amp;= pred).isEmpty()) l-&gt;eraseUnordered(it--);</span></div>
-<div class="line"><a name="l00367"></a><span class="lineno">  367</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">auto</span> *l = intersectUnion.intersects; l; l = l-&gt;getNext())</div>
-<div class="line"><a name="l00368"></a><span class="lineno">  368</span>&#160;      <span class="keywordflow">for</span> (<span class="keyword">auto</span> it = l-&gt;dbegin(), e = l-&gt;dend(); it != e; ++it) {</div>
-<div class="line"><a name="l00369"></a><span class="lineno">  369</span>&#160;        *it &amp;= pred;</div>
-<div class="line"><a name="l00370"></a><span class="lineno">  370</span>&#160;        <span class="keywordflow">if</span> (it-&gt;empty()) l-&gt;eraseUnordered(it--);</div>
-<div class="line"><a name="l00371"></a><span class="lineno">  371</span>&#160;      }</div>
-<div class="line"><a name="l00372"></a><span class="lineno">  372</span>&#160;    simplify();</div>
-<div class="line"><a name="l00373"></a><span class="lineno">  373</span>&#160;    <span class="keywordflow">return</span> *<span class="keyword">this</span>;</div>
-<div class="line"><a name="l00374"></a><span class="lineno">  374</span>&#160;  }</div>
-<div class="line"><a name="l00375"></a><span class="lineno">  375</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> operator&amp;=(Set &amp;pred) -&gt; Set &amp; {</div>
-<div class="line"><a name="l00376"></a><span class="lineno">  376</span>&#160;    <span class="keywordflow">if</span> (!pred.allocated) <span class="keywordflow">return</span> *<span class="keyword">this</span> &amp;= pred.intersectUnion.intersect;</div>
-<div class="line"><a name="l00377"></a><span class="lineno">  377</span>&#160;    pred.intersectUnion.intersects-&gt;forEach(</div>
-<div class="line"><a name="l00378"></a><span class="lineno">  378</span>&#160;      [&amp;](Intersection pred) { *<span class="keyword">this</span> &amp;= pred; });</div>
-<div class="line"><a name="l00379"></a><span class="lineno">  379</span>&#160;    <span class="keywordflow">return</span> *<span class="keyword">this</span>;</div>
-<div class="line"><a name="l00380"></a><span class="lineno">  380</span>&#160;  }</div>
-<div class="line"><a name="l00381"></a><span class="lineno">  381</span>&#160;  <span class="keyword">auto</span> copy(BumpAlloc&lt;&gt; &amp;alloc) <span class="keyword">const</span> -&gt; Set {</div>
-<div class="line"><a name="l00382"></a><span class="lineno">  382</span>&#160;    <span class="keywordflow">if</span> (!allocated) <span class="keywordflow">return</span> Set{intersectUnion.intersect};</div>
-<div class="line"><a name="l00383"></a><span class="lineno">  383</span>&#160;    Set ret{};</div>
-<div class="line"><a name="l00384"></a><span class="lineno">  384</span>&#160;    ret.intersectUnion.intersects = intersectUnion.intersects-&gt;copy(alloc);</div>
-<div class="line"><a name="l00385"></a><span class="lineno">  385</span>&#160;    ret.allocated = <span class="keyword">true</span>;</div>
-<div class="line"><a name="l00386"></a><span class="lineno">  386</span>&#160;    <span class="keywordflow">return</span> ret;</div>
-<div class="line"><a name="l00387"></a><span class="lineno">  387</span>&#160;  }</div>
-<div class="line"><a name="l00388"></a><span class="lineno">  388</span>&#160;  <span class="comment">// [[nodiscard]] auto intersect(BumpAlloc&lt;&gt; &amp;alloc, const Set &amp;other) const {</span></div>
-<div class="line"><a name="l00389"></a><span class="lineno">  389</span>&#160;  <span class="comment">//   // old implementation had |= (a &amp; b); // why?</span></div>
-<div class="line"><a name="l00390"></a><span class="lineno">  390</span>&#160;  <span class="comment">//   if (!allocated) return copy(alloc) &amp;= other;</span></div>
-<div class="line"><a name="l00391"></a><span class="lineno">  391</span>&#160;  <span class="comment">//   return other-&gt;copy(alloc) &amp;= *this;</span></div>
-<div class="line"><a name="l00392"></a><span class="lineno">  392</span>&#160;  <span class="comment">// }</span></div>
-<div class="line"><a name="l00393"></a><span class="lineno">  393</span>&#160;  <span class="comment">// /// returns a pair intersections</span></div>
-<div class="line"><a name="l00394"></a><span class="lineno">  394</span>&#160;  <span class="comment">// [[nodiscard]] auto getConflict(const Set &amp;other) -&gt; Intersection {</span></div>
-<div class="line"><a name="l00395"></a><span class="lineno">  395</span>&#160;  <span class="comment">//   assert(intersectionIsEmpty(other));</span></div>
-<div class="line"><a name="l00396"></a><span class="lineno">  396</span>&#160;  <span class="comment">//   Intersection ret;</span></div>
-<div class="line"><a name="l00397"></a><span class="lineno">  397</span>&#160;  <span class="comment">//   for (auto pred : intersectUnion) {</span></div>
-<div class="line"><a name="l00398"></a><span class="lineno">  398</span>&#160;  <span class="comment">//     for (auto otherPred : other) {</span></div>
-<div class="line"><a name="l00399"></a><span class="lineno">  399</span>&#160;  <span class="comment">//       assert((pred &amp; otherPred).isEmpty());</span></div>
-<div class="line"><a name="l00400"></a><span class="lineno">  400</span>&#160;  <span class="comment">//       ret &amp;= pred.getConflict(otherPred);</span></div>
-<div class="line"><a name="l00401"></a><span class="lineno">  401</span>&#160;  <span class="comment">//     }</span></div>
-<div class="line"><a name="l00402"></a><span class="lineno">  402</span>&#160;  <span class="comment">//   }</span></div>
-<div class="line"><a name="l00403"></a><span class="lineno">  403</span>&#160;  <span class="comment">//   return ret;</span></div>
-<div class="line"><a name="l00404"></a><span class="lineno">  404</span>&#160;  <span class="comment">// }</span></div>
-<div class="line"><a name="l00417"></a><span class="lineno"><a class="line" href="structpoly_1_1IR_1_1Predicate_1_1Set.html#a1895952ec0bcc73daba680faef2d1610">  417</a></span>&#160;<span class="comment"></span>  [[nodiscard]] <span class="keyword">auto</span> <a class="code" href="structpoly_1_1IR_1_1Predicate_1_1Set.html#a1895952ec0bcc73daba680faef2d1610">intersectionIsEmpty</a>(<span class="keyword">const</span> <a class="code" href="structpoly_1_1IR_1_1Predicate_1_1Set.html">Set</a> &amp;other) <span class="keyword">const</span> -&gt; <span class="keywordtype">bool</span> {</div>
-<div class="line"><a name="l00418"></a><span class="lineno">  418</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">auto</span> pred : *<span class="keyword">this</span>)</div>
-<div class="line"><a name="l00419"></a><span class="lineno">  419</span>&#160;      <span class="keywordflow">for</span> (<span class="keyword">auto</span> otherPred : other)</div>
-<div class="line"><a name="l00420"></a><span class="lineno">  420</span>&#160;        <span class="keywordflow">if</span> (!((pred &amp; otherPred).empty())) <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
-<div class="line"><a name="l00421"></a><span class="lineno">  421</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">true</span>;</div>
-<div class="line"><a name="l00422"></a><span class="lineno">  422</span>&#160;  }</div>
-<div class="line"><a name="l00423"></a><span class="lineno">  423</span>&#160; </div>
-<div class="line"><a name="l00424"></a><span class="lineno">  424</span>&#160;  <span class="comment">// static auto getIndex(llvm::SmallVectorImpl&lt;Instruction *&gt; &amp;instructions,</span></div>
-<div class="line"><a name="l00425"></a><span class="lineno">  425</span>&#160;  <span class="comment">//                      Instruction *instruction) -&gt; size_t {</span></div>
-<div class="line"><a name="l00426"></a><span class="lineno">  426</span>&#160;  <span class="comment">//     size_t I = instructions.size();</span></div>
-<div class="line"><a name="l00427"></a><span class="lineno">  427</span>&#160;  <span class="comment">//     for (size_t i = 0; i &lt; I; i++)</span></div>
-<div class="line"><a name="l00428"></a><span class="lineno">  428</span>&#160;  <span class="comment">//         if (instructions[i] == instruction)</span></div>
-<div class="line"><a name="l00429"></a><span class="lineno">  429</span>&#160;  <span class="comment">//             return i;</span></div>
-<div class="line"><a name="l00430"></a><span class="lineno">  430</span>&#160;  <span class="comment">//     instructions.push_back(instruction);</span></div>
-<div class="line"><a name="l00431"></a><span class="lineno">  431</span>&#160;  <span class="comment">//     return I;</span></div>
-<div class="line"><a name="l00432"></a><span class="lineno">  432</span>&#160;  <span class="comment">// }</span></div>
-<div class="line"><a name="l00433"></a><span class="lineno">  433</span>&#160;  <span class="comment">// PredicateSet() = default;</span></div>
-<div class="line"><a name="l00434"></a><span class="lineno">  434</span>&#160;  <span class="comment">// PredicateSet(BumpAlloc&lt;&gt; &amp;alloc, Instruction::Cache</span></div>
-<div class="line"><a name="l00435"></a><span class="lineno">  435</span>&#160;  <span class="comment">// &amp;ic,</span></div>
-<div class="line"><a name="l00436"></a><span class="lineno">  436</span>&#160;  <span class="comment">//                    llvm::SmallVector&lt;Instruction *&gt; &amp;predicates,</span></div>
-<div class="line"><a name="l00437"></a><span class="lineno">  437</span>&#160;  <span class="comment">//                    Predicates &amp;pred) {</span></div>
-<div class="line"><a name="l00438"></a><span class="lineno">  438</span>&#160;  <span class="comment">//     for (Predicate &amp;p : pred) {</span></div>
-<div class="line"><a name="l00439"></a><span class="lineno">  439</span>&#160;  <span class="comment">//         Instruction *i = ic.get(alloc, p.condition);</span></div>
-<div class="line"><a name="l00440"></a><span class="lineno">  440</span>&#160;  <span class="comment">//         size_t index = getIndex(predicates, i);</span></div>
-<div class="line"><a name="l00441"></a><span class="lineno">  441</span>&#160;  <span class="comment">//         PredicateRelation val =</span></div>
-<div class="line"><a name="l00442"></a><span class="lineno">  442</span>&#160;  <span class="comment">//             p.flip ? PredicateRelation::False :</span></div>
-<div class="line"><a name="l00443"></a><span class="lineno">  443</span>&#160;  <span class="comment">//             PredicateRelation::True;</span></div>
-<div class="line"><a name="l00444"></a><span class="lineno">  444</span>&#160;  <span class="comment">//         set(index, val);</span></div>
-<div class="line"><a name="l00445"></a><span class="lineno">  445</span>&#160;  <span class="comment">//     }</span></div>
-<div class="line"><a name="l00446"></a><span class="lineno">  446</span>&#160;  <span class="comment">// }</span></div>
-<div class="line"><a name="l00447"></a><span class="lineno">  447</span>&#160;}; <span class="comment">// struct Predicate::Set</span></div>
-<div class="line"><a name="l00448"></a><span class="lineno">  448</span>&#160; </div>
-<div class="line"><a name="l00449"></a><span class="lineno">  449</span>&#160;<span class="keyword">class </span>Map;</div>
-<div class="line"><a name="l00450"></a><span class="lineno">  450</span>&#160;}; <span class="comment">// namespace Predicate</span></div>
-<div class="line"><a name="l00451"></a><span class="lineno">  451</span>&#160;}; <span class="comment">// namespace poly::IR</span></div>
+<div class="line"><a name="l00199"></a><span class="lineno"><a class="line" href="structpoly_1_1IR_1_1Predicate_1_1Set.html">  199</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structpoly_1_1IR_1_1Predicate_1_1Set.html">Set</a> {</div>
+<div class="line"><a name="l00200"></a><span class="lineno">  200</span>&#160;  <span class="keyword">union </span>{</div>
+<div class="line"><a name="l00201"></a><span class="lineno">  201</span>&#160;    <a class="code" href="structpoly_1_1IR_1_1Predicate_1_1Intersection.html">Intersection</a> intersect;</div>
+<div class="line"><a name="l00202"></a><span class="lineno">  202</span>&#160;    containers::UList&lt;Intersection&gt; *intersects;</div>
+<div class="line"><a name="l00203"></a><span class="lineno">  203</span>&#160;  } intersectUnion;</div>
+<div class="line"><a name="l00204"></a><span class="lineno">  204</span>&#160;  <span class="keywordtype">bool</span> allocated{<span class="keyword">false</span>};</div>
+<div class="line"><a name="l00205"></a><span class="lineno">  205</span>&#160;  <span class="comment">// ptrdiff_t count;</span></div>
+<div class="line"><a name="l00206"></a><span class="lineno">  206</span>&#160;  <span class="comment">// 0: empty</span></div>
+<div class="line"><a name="l00207"></a><span class="lineno">  207</span>&#160;  <span class="comment">// -1 if we have a single intersection</span></div>
+<div class="line"><a name="l00208"></a><span class="lineno">  208</span>&#160;  <span class="comment">// &gt;=1 may still be empty, but it means we&#39;ve allocated</span></div>
+<div class="line"><a name="l00209"></a><span class="lineno">  209</span>&#160;  <span class="comment">// and need to check `intersects`.</span></div>
+<div class="line"><a name="l00210"></a><span class="lineno">  210</span>&#160;  <span class="comment">//</span></div>
+<div class="line"><a name="l00211"></a><span class="lineno">  211</span>&#160;  <span class="comment">// containers::UList&lt;Intersection&gt; *intersectUnion{nullptr};</span></div>
+<div class="line"><a name="l00212"></a><span class="lineno">  212</span>&#160;  <span class="comment">// [[no_unique_address]] math::BumpPtrVector&lt;Intersection&gt; intersectUnion;</span></div>
+<div class="line"><a name="l00213"></a><span class="lineno">  213</span>&#160;  <a class="code" href="structpoly_1_1IR_1_1Predicate_1_1Set.html">Set</a>() = <span class="keywordflow">default</span>;</div>
+<div class="line"><a name="l00214"></a><span class="lineno">  214</span>&#160;  <span class="keyword">explicit</span> <a class="code" href="structpoly_1_1IR_1_1Predicate_1_1Set.html">Set</a>(<a class="code" href="structpoly_1_1IR_1_1Predicate_1_1Intersection.html">Intersection</a> pred) : intersectUnion(pred){};</div>
+<div class="line"><a name="l00215"></a><span class="lineno">  215</span>&#160;  <a class="code" href="structpoly_1_1IR_1_1Predicate_1_1Set.html">Set</a>(<span class="keyword">const</span> <a class="code" href="structpoly_1_1IR_1_1Predicate_1_1Set.html">Set</a> &amp;) = <span class="keywordflow">default</span>;</div>
+<div class="line"><a name="l00216"></a><span class="lineno">  216</span>&#160;  <a class="code" href="structpoly_1_1IR_1_1Predicate_1_1Set.html">Set</a>(<a class="code" href="structpoly_1_1IR_1_1Predicate_1_1Set.html">Set</a> &amp;&amp;) = <span class="keywordflow">default</span>;</div>
+<div class="line"><a name="l00217"></a><span class="lineno">  217</span>&#160;  <span class="keyword">auto</span> operator=(<a class="code" href="structpoly_1_1IR_1_1Predicate_1_1Set.html">Set</a> &amp;&amp;other) noexcept -&gt; <a class="code" href="structpoly_1_1IR_1_1Predicate_1_1Set.html">Set</a> &amp; {</div>
+<div class="line"><a name="l00218"></a><span class="lineno">  218</span>&#160;    intersectUnion = other.intersectUnion;</div>
+<div class="line"><a name="l00219"></a><span class="lineno">  219</span>&#160;    allocated = std::exchange(other.allocated, <span class="keyword">false</span>);</div>
+<div class="line"><a name="l00220"></a><span class="lineno">  220</span>&#160;    <span class="keywordflow">return</span> *<span class="keyword">this</span>;</div>
+<div class="line"><a name="l00221"></a><span class="lineno">  221</span>&#160;  };</div>
+<div class="line"><a name="l00222"></a><span class="lineno">  222</span>&#160;  <span class="keyword">auto</span> operator=(<span class="keyword">const</span> <a class="code" href="structpoly_1_1IR_1_1Predicate_1_1Set.html">Set</a> &amp;other) -&gt; <a class="code" href="structpoly_1_1IR_1_1Predicate_1_1Set.html">Set</a> &amp; = <span class="keywordflow">default</span>;</div>
+<div class="line"><a name="l00223"></a><span class="lineno">  223</span>&#160;  <span class="comment">// TODO: constexpr these when llvm::SmallVector supports it</span></div>
+<div class="line"><a name="l00224"></a><span class="lineno">  224</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> operator[](ptrdiff_t index) -&gt; <a class="code" href="structpoly_1_1IR_1_1Predicate_1_1Intersection.html">Intersection</a> &amp; {</div>
+<div class="line"><a name="l00225"></a><span class="lineno">  225</span>&#160;    <span class="keywordflow">if</span> (allocated) <span class="keywordflow">return</span> (*intersectUnion.intersects)[index];</div>
+<div class="line"><a name="l00226"></a><span class="lineno">  226</span>&#160;    invariant(index == 0);</div>
+<div class="line"><a name="l00227"></a><span class="lineno">  227</span>&#160;    <span class="keywordflow">return</span> intersectUnion.intersect;</div>
+<div class="line"><a name="l00228"></a><span class="lineno">  228</span>&#160;  }</div>
+<div class="line"><a name="l00229"></a><span class="lineno">  229</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> operator[](ptrdiff_t index) <span class="keyword">const</span> -&gt; <a class="code" href="structpoly_1_1IR_1_1Predicate_1_1Intersection.html">Intersection</a> {</div>
+<div class="line"><a name="l00230"></a><span class="lineno">  230</span>&#160;    <span class="keywordflow">if</span> (allocated) <span class="keywordflow">return</span> (*intersectUnion.intersects)[index];</div>
+<div class="line"><a name="l00231"></a><span class="lineno">  231</span>&#160;    invariant(index == 0);</div>
+<div class="line"><a name="l00232"></a><span class="lineno">  232</span>&#160;    <span class="keywordflow">return</span> intersectUnion.intersect;</div>
+<div class="line"><a name="l00233"></a><span class="lineno">  233</span>&#160;  }</div>
+<div class="line"><a name="l00234"></a><span class="lineno">  234</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> operator()(ptrdiff_t i, ptrdiff_t j) <span class="keyword">const</span> -&gt; Relation {</div>
+<div class="line"><a name="l00235"></a><span class="lineno">  235</span>&#160;    <span class="keywordflow">return</span> (*<span class="keyword">this</span>)[i][j];</div>
+<div class="line"><a name="l00236"></a><span class="lineno">  236</span>&#160;  }</div>
+<div class="line"><a name="l00237"></a><span class="lineno">  237</span>&#160;  <span class="comment">// [[nodiscard]] constexpr auto size() const -&gt; ptrdiff_t {</span></div>
+<div class="line"><a name="l00238"></a><span class="lineno">  238</span>&#160;  <span class="comment">//   return ptrdiff_t(std::max(ptrdiff_t(0), count));</span></div>
+<div class="line"><a name="l00239"></a><span class="lineno">  239</span>&#160;  <span class="comment">// }</span></div>
+<div class="line"><a name="l00240"></a><span class="lineno">  240</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> empty() <span class="keyword">const</span> -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l00241"></a><span class="lineno">  241</span>&#160;    <span class="keywordflow">return</span> allocated ? intersectUnion.intersects-&gt;empty()</div>
+<div class="line"><a name="l00242"></a><span class="lineno">  242</span>&#160;                     : intersectUnion.intersect.empty();</div>
+<div class="line"><a name="l00243"></a><span class="lineno">  243</span>&#160;  }</div>
+<div class="line"><a name="l00244"></a><span class="lineno">  244</span>&#160;  <span class="comment">// auto getIntersects() -&gt; containers::UList&lt;Intersection&gt; {</span></div>
+<div class="line"><a name="l00245"></a><span class="lineno">  245</span>&#160;  <span class="comment">//   if (count &gt; 0) return *intersectUnion.intersects;</span></div>
+<div class="line"><a name="l00246"></a><span class="lineno">  246</span>&#160;  <span class="comment">//   return {intersectUnion.intersect};</span></div>
+<div class="line"><a name="l00247"></a><span class="lineno">  247</span>&#160;  <span class="comment">// }</span></div>
+<div class="line"><a name="l00266"></a><span class="lineno"><a class="line" href="structpoly_1_1IR_1_1Predicate_1_1Set.html#ac9bf694bc9d657031b4181877c0996ec">  266</a></span>&#160;<span class="comment"></span>  <span class="keyword">auto</span> <a class="code" href="structpoly_1_1IR_1_1Predicate_1_1Set.html#ac9bf694bc9d657031b4181877c0996ec">Union</a>(BumpAlloc&lt;&gt; &amp;alloc, <a class="code" href="structpoly_1_1IR_1_1Predicate_1_1Intersection.html">Intersection</a> other) -&gt; <a class="code" href="structpoly_1_1IR_1_1Predicate_1_1Set.html">Set</a> &amp; {</div>
+<div class="line"><a name="l00267"></a><span class="lineno">  267</span>&#160;    <span class="keywordflow">if</span> (other.empty()) <span class="keywordflow">return</span> *<span class="keyword">this</span>;</div>
+<div class="line"><a name="l00268"></a><span class="lineno">  268</span>&#160;    <span class="keywordflow">if</span> (empty()) {</div>
+<div class="line"><a name="l00269"></a><span class="lineno">  269</span>&#160;      <span class="keywordflow">if</span> (allocated) intersectUnion.intersects-&gt;pushHasCapacity(other);</div>
+<div class="line"><a name="l00270"></a><span class="lineno">  270</span>&#160;      <span class="keywordflow">else</span> intersectUnion.intersect = other;</div>
+<div class="line"><a name="l00271"></a><span class="lineno">  271</span>&#160;      <span class="keywordflow">return</span> *<span class="keyword">this</span>;</div>
+<div class="line"><a name="l00272"></a><span class="lineno">  272</span>&#160;    }</div>
+<div class="line"><a name="l00273"></a><span class="lineno">  273</span>&#160;    <span class="keywordflow">if</span> (!allocated) { <span class="comment">// fast path</span></div>
+<div class="line"><a name="l00274"></a><span class="lineno">  274</span>&#160;      <a class="code" href="structpoly_1_1IR_1_1Predicate_1_1Intersection.html">Intersection</a> intersect = intersectUnion.intersect;</div>
+<div class="line"><a name="l00275"></a><span class="lineno">  275</span>&#160;      <span class="keyword">auto</span> u = intersect.<a class="code" href="structpoly_1_1IR_1_1Predicate_1_1Intersection.html#a61a44178c94724c643b1e13e295af03d">compactUnion</a>(other);</div>
+<div class="line"><a name="l00276"></a><span class="lineno">  276</span>&#160;      <span class="keywordflow">if</span> (u.size() == 1) {</div>
+<div class="line"><a name="l00277"></a><span class="lineno">  277</span>&#160;        intersectUnion.intersect = u[0];</div>
+<div class="line"><a name="l00278"></a><span class="lineno">  278</span>&#160;      } <span class="keywordflow">else</span> {</div>
+<div class="line"><a name="l00279"></a><span class="lineno">  279</span>&#160;        allocated = <span class="keyword">true</span>;</div>
+<div class="line"><a name="l00280"></a><span class="lineno">  280</span>&#160;        intersectUnion.intersects =</div>
+<div class="line"><a name="l00281"></a><span class="lineno">  281</span>&#160;          alloc.create&lt;containers::UList&lt;Intersection&gt;&gt;();</div>
+<div class="line"><a name="l00282"></a><span class="lineno">  282</span>&#160;        <span class="keywordflow">if</span> (u.size() == 2) {</div>
+<div class="line"><a name="l00283"></a><span class="lineno">  283</span>&#160;          intersectUnion.intersects-&gt;pushHasCapacity(u[0]);</div>
+<div class="line"><a name="l00284"></a><span class="lineno">  284</span>&#160;          intersectUnion.intersects-&gt;pushHasCapacity(u[1]);</div>
+<div class="line"><a name="l00285"></a><span class="lineno">  285</span>&#160;        } <span class="keywordflow">else</span> {</div>
+<div class="line"><a name="l00286"></a><span class="lineno">  286</span>&#160;          intersectUnion.intersects-&gt;pushHasCapacity(intersect);</div>
+<div class="line"><a name="l00287"></a><span class="lineno">  287</span>&#160;          intersectUnion.intersects-&gt;pushHasCapacity(other);</div>
+<div class="line"><a name="l00288"></a><span class="lineno">  288</span>&#160;        }</div>
+<div class="line"><a name="l00289"></a><span class="lineno">  289</span>&#160;      }</div>
+<div class="line"><a name="l00290"></a><span class="lineno">  290</span>&#160;      <span class="keywordflow">return</span> *<span class="keyword">this</span>;</div>
+<div class="line"><a name="l00291"></a><span class="lineno">  291</span>&#160;    }</div>
+<div class="line"><a name="l00292"></a><span class="lineno">  292</span>&#160;    <span class="comment">// allocated == true</span></div>
+<div class="line"><a name="l00293"></a><span class="lineno">  293</span>&#160;    <span class="keywordtype">bool</span> simplifyPreds = <span class="keyword">false</span>;</div>
+<div class="line"><a name="l00294"></a><span class="lineno">  294</span>&#160;    containers::UList&lt;Intersection&gt; *intersects = intersectUnion.intersects;</div>
+<div class="line"><a name="l00295"></a><span class="lineno">  295</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">auto</span> *l = intersects; l; l = l-&gt;getNext()) {</div>
+<div class="line"><a name="l00296"></a><span class="lineno">  296</span>&#160;      <span class="keywordflow">for</span> (<span class="keyword">auto</span> it = l-&gt;dbegin(), e = l-&gt;dend(); it != e; ++it) {</div>
+<div class="line"><a name="l00297"></a><span class="lineno">  297</span>&#160;        <span class="keyword">auto</span> u = it-&gt;compactUnion(other);</div>
+<div class="line"><a name="l00298"></a><span class="lineno">  298</span>&#160;        <span class="keywordflow">if</span> (u.empty()) <span class="keywordflow">continue</span>;</div>
+<div class="line"><a name="l00299"></a><span class="lineno">  299</span>&#160;        *it = u[0];</div>
+<div class="line"><a name="l00300"></a><span class="lineno">  300</span>&#160;        <span class="keywordflow">if</span> (u.size() == 1) <span class="keywordflow">return</span> *<span class="keyword">this</span>;</div>
+<div class="line"><a name="l00301"></a><span class="lineno">  301</span>&#160;        invariant(u.size() == 2);</div>
+<div class="line"><a name="l00302"></a><span class="lineno">  302</span>&#160;        simplifyPreds = <span class="keyword">true</span>;</div>
+<div class="line"><a name="l00303"></a><span class="lineno">  303</span>&#160;        other = u[1];</div>
+<div class="line"><a name="l00304"></a><span class="lineno">  304</span>&#160;      }</div>
+<div class="line"><a name="l00305"></a><span class="lineno">  305</span>&#160;    }</div>
+<div class="line"><a name="l00306"></a><span class="lineno">  306</span>&#160;    intersectUnion.intersects = intersects-&gt;push(alloc, other);</div>
+<div class="line"><a name="l00307"></a><span class="lineno">  307</span>&#160;    <span class="keywordflow">if</span> (simplifyPreds) simplify();</div>
+<div class="line"><a name="l00308"></a><span class="lineno">  308</span>&#160;    <span class="keywordflow">return</span> *<span class="keyword">this</span>;</div>
+<div class="line"><a name="l00309"></a><span class="lineno">  309</span>&#160;  }</div>
+<div class="line"><a name="l00310"></a><span class="lineno">  310</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> begin()<span class="keyword"> const </span>{</div>
+<div class="line"><a name="l00311"></a><span class="lineno">  311</span>&#160;    invariant(allocated);</div>
+<div class="line"><a name="l00312"></a><span class="lineno">  312</span>&#160;    <span class="comment">// poly::containers::UList&lt;poly::IR::Predicate::Intersection&gt;::Iterator it(</span></div>
+<div class="line"><a name="l00313"></a><span class="lineno">  313</span>&#160;    <span class="comment">//   intersectUnion.intersects-&gt;begin());</span></div>
+<div class="line"><a name="l00314"></a><span class="lineno">  314</span>&#160;    <span class="comment">// return it;</span></div>
+<div class="line"><a name="l00315"></a><span class="lineno">  315</span>&#160;    <span class="keywordflow">return</span> intersectUnion.intersects-&gt;begin();</div>
+<div class="line"><a name="l00316"></a><span class="lineno">  316</span>&#160;  }</div>
+<div class="line"><a name="l00317"></a><span class="lineno">  317</span>&#160;  [[nodiscard]] <span class="keyword">static</span> constexpr <span class="keyword">auto</span> end() {</div>
+<div class="line"><a name="l00318"></a><span class="lineno">  318</span>&#160;    <span class="keywordflow">return</span> containers::UList&lt;IR::Predicate::Intersection&gt;::end();</div>
+<div class="line"><a name="l00319"></a><span class="lineno">  319</span>&#160;  }</div>
+<div class="line"><a name="l00320"></a><span class="lineno">  320</span>&#160;  <span class="keywordtype">void</span> simplify()<span class="keyword"> const </span>{</div>
+<div class="line"><a name="l00321"></a><span class="lineno">  321</span>&#160;    <span class="keywordtype">bool</span> simplifyPreds = allocated;</div>
+<div class="line"><a name="l00322"></a><span class="lineno">  322</span>&#160;    <span class="keywordflow">while</span> (simplifyPreds) {</div>
+<div class="line"><a name="l00323"></a><span class="lineno">  323</span>&#160;      simplifyPreds = <span class="keyword">false</span>;</div>
+<div class="line"><a name="l00324"></a><span class="lineno">  324</span>&#160;      <span class="keywordflow">for</span> (<span class="keyword">auto</span> *l = intersectUnion.intersects; l; l = l-&gt;getNext()) {</div>
+<div class="line"><a name="l00325"></a><span class="lineno">  325</span>&#160;        <span class="keywordflow">for</span> (<span class="keyword">auto</span> it = l-&gt;dbegin(), e = l-&gt;dend(); it != e; ++it) {</div>
+<div class="line"><a name="l00326"></a><span class="lineno">  326</span>&#160;          <span class="keywordflow">for</span> (<span class="keyword">auto</span> *j = l; j; j = j-&gt;getNext()) {</div>
+<div class="line"><a name="l00327"></a><span class="lineno">  327</span>&#160;            <span class="keywordflow">for</span> (<span class="keyword">auto</span> jt = j == l ? it + 1 : j-&gt;dbegin(), je = j-&gt;dend();</div>
+<div class="line"><a name="l00328"></a><span class="lineno">  328</span>&#160;                 jt != je; ++jt) {</div>
+<div class="line"><a name="l00329"></a><span class="lineno">  329</span>&#160; </div>
+<div class="line"><a name="l00330"></a><span class="lineno">  330</span>&#160;              <span class="keyword">auto</span> u = it-&gt;compactUnion(*jt);</div>
+<div class="line"><a name="l00331"></a><span class="lineno">  331</span>&#160;              <span class="keywordflow">if</span> (u.empty()) <span class="keywordflow">continue</span>;</div>
+<div class="line"><a name="l00332"></a><span class="lineno">  332</span>&#160;              *it = u[0];</div>
+<div class="line"><a name="l00333"></a><span class="lineno">  333</span>&#160;              simplifyPreds = <span class="keyword">true</span>;</div>
+<div class="line"><a name="l00334"></a><span class="lineno">  334</span>&#160;              <span class="keywordflow">if</span> (u.size() == 2) {</div>
+<div class="line"><a name="l00335"></a><span class="lineno">  335</span>&#160;                ASSERT((std::popcount(u[0].predicates) +</div>
+<div class="line"><a name="l00336"></a><span class="lineno">  336</span>&#160;                        std::popcount(u[1].predicates)) &lt;=</div>
+<div class="line"><a name="l00337"></a><span class="lineno">  337</span>&#160;                       (std::popcount(it-&gt;predicates) +</div>
+<div class="line"><a name="l00338"></a><span class="lineno">  338</span>&#160;                        std::popcount(jt-&gt;predicates)));</div>
+<div class="line"><a name="l00339"></a><span class="lineno">  339</span>&#160;                *jt = u[1];</div>
+<div class="line"><a name="l00340"></a><span class="lineno">  340</span>&#160;              } <span class="keywordflow">else</span> j-&gt;eraseUnordered(jt--);</div>
+<div class="line"><a name="l00341"></a><span class="lineno">  341</span>&#160;            }</div>
+<div class="line"><a name="l00342"></a><span class="lineno">  342</span>&#160;          }</div>
+<div class="line"><a name="l00343"></a><span class="lineno">  343</span>&#160;        }</div>
+<div class="line"><a name="l00344"></a><span class="lineno">  344</span>&#160;      }</div>
+<div class="line"><a name="l00345"></a><span class="lineno">  345</span>&#160;    }</div>
+<div class="line"><a name="l00346"></a><span class="lineno">  346</span>&#160;  }</div>
+<div class="line"><a name="l00352"></a><span class="lineno"><a class="line" href="structpoly_1_1IR_1_1Predicate_1_1Set.html#ae7f2a4a9b16b6dbc2775e894f408dd7f">  352</a></span>&#160;  <span class="keyword">auto</span> <a class="code" href="structpoly_1_1IR_1_1Predicate_1_1Set.html#ae7f2a4a9b16b6dbc2775e894f408dd7f">Union</a>(BumpAlloc&lt;&gt; &amp;alloc, <span class="keyword">const</span> <a class="code" href="structpoly_1_1IR_1_1Predicate_1_1Set.html">Set</a> &amp;other) -&gt; <a class="code" href="structpoly_1_1IR_1_1Predicate_1_1Set.html">Set</a> &amp; {</div>
+<div class="line"><a name="l00353"></a><span class="lineno">  353</span>&#160;    <span class="keywordflow">if</span> (!other.allocated) <span class="keywordflow">return</span> <a class="code" href="structpoly_1_1IR_1_1Predicate_1_1Set.html#ac9bf694bc9d657031b4181877c0996ec">Union</a>(alloc, other.intersectUnion.intersect);</div>
+<div class="line"><a name="l00354"></a><span class="lineno">  354</span>&#160;    other.intersectUnion.intersects-&gt;forEach(</div>
+<div class="line"><a name="l00355"></a><span class="lineno">  355</span>&#160;      [&amp;](<a class="code" href="structpoly_1_1IR_1_1Predicate_1_1Intersection.html">Intersection</a> pred) { <a class="code" href="structpoly_1_1IR_1_1Predicate_1_1Set.html#ac9bf694bc9d657031b4181877c0996ec">Union</a>(alloc, pred); });</div>
+<div class="line"><a name="l00356"></a><span class="lineno">  356</span>&#160;    <span class="keywordflow">return</span> *<span class="keyword">this</span>;</div>
+<div class="line"><a name="l00357"></a><span class="lineno">  357</span>&#160;  }</div>
+<div class="line"><a name="l00358"></a><span class="lineno">  358</span>&#160;  <span class="keyword">auto</span> operator&amp;=(<a class="code" href="structpoly_1_1IR_1_1Predicate_1_1Intersection.html">Intersection</a> pred) -&gt; <a class="code" href="structpoly_1_1IR_1_1Predicate_1_1Set.html">Set</a> &amp; {</div>
+<div class="line"><a name="l00359"></a><span class="lineno">  359</span>&#160;    <span class="keywordflow">if</span> (!allocated) {</div>
+<div class="line"><a name="l00360"></a><span class="lineno">  360</span>&#160;      intersectUnion.intersect &amp;= pred;</div>
+<div class="line"><a name="l00361"></a><span class="lineno">  361</span>&#160;      <span class="keywordflow">return</span> *<span class="keyword">this</span>;</div>
+<div class="line"><a name="l00362"></a><span class="lineno">  362</span>&#160;    }</div>
+<div class="line"><a name="l00363"></a><span class="lineno">  363</span>&#160;    <span class="comment">// for (auto *l = intersectUnion.intersects; l; l = l-&gt;getNext())</span></div>
+<div class="line"><a name="l00364"></a><span class="lineno">  364</span>&#160;    <span class="comment">//   for (auto it = l-&gt;begin(), e = l-&gt;localEnd(); it != e; ++it)</span></div>
+<div class="line"><a name="l00365"></a><span class="lineno">  365</span>&#160;    <span class="comment">//     if ((*it &amp;= pred).isEmpty()) l-&gt;eraseUnordered(it--);</span></div>
+<div class="line"><a name="l00366"></a><span class="lineno">  366</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">auto</span> *l = intersectUnion.intersects; l; l = l-&gt;getNext())</div>
+<div class="line"><a name="l00367"></a><span class="lineno">  367</span>&#160;      <span class="keywordflow">for</span> (<span class="keyword">auto</span> it = l-&gt;dbegin(), e = l-&gt;dend(); it != e; ++it) {</div>
+<div class="line"><a name="l00368"></a><span class="lineno">  368</span>&#160;        *it &amp;= pred;</div>
+<div class="line"><a name="l00369"></a><span class="lineno">  369</span>&#160;        <span class="keywordflow">if</span> (it-&gt;empty()) l-&gt;eraseUnordered(it--);</div>
+<div class="line"><a name="l00370"></a><span class="lineno">  370</span>&#160;      }</div>
+<div class="line"><a name="l00371"></a><span class="lineno">  371</span>&#160;    simplify();</div>
+<div class="line"><a name="l00372"></a><span class="lineno">  372</span>&#160;    <span class="keywordflow">return</span> *<span class="keyword">this</span>;</div>
+<div class="line"><a name="l00373"></a><span class="lineno">  373</span>&#160;  }</div>
+<div class="line"><a name="l00374"></a><span class="lineno">  374</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> operator&amp;=(Set &amp;pred) -&gt; Set &amp; {</div>
+<div class="line"><a name="l00375"></a><span class="lineno">  375</span>&#160;    <span class="keywordflow">if</span> (!pred.allocated) <span class="keywordflow">return</span> *<span class="keyword">this</span> &amp;= pred.intersectUnion.intersect;</div>
+<div class="line"><a name="l00376"></a><span class="lineno">  376</span>&#160;    pred.intersectUnion.intersects-&gt;forEach(</div>
+<div class="line"><a name="l00377"></a><span class="lineno">  377</span>&#160;      [&amp;](Intersection pred) { *<span class="keyword">this</span> &amp;= pred; });</div>
+<div class="line"><a name="l00378"></a><span class="lineno">  378</span>&#160;    <span class="keywordflow">return</span> *<span class="keyword">this</span>;</div>
+<div class="line"><a name="l00379"></a><span class="lineno">  379</span>&#160;  }</div>
+<div class="line"><a name="l00380"></a><span class="lineno">  380</span>&#160;  <span class="keyword">auto</span> copy(BumpAlloc&lt;&gt; &amp;alloc) <span class="keyword">const</span> -&gt; Set {</div>
+<div class="line"><a name="l00381"></a><span class="lineno">  381</span>&#160;    <span class="keywordflow">if</span> (!allocated) <span class="keywordflow">return</span> Set{intersectUnion.intersect};</div>
+<div class="line"><a name="l00382"></a><span class="lineno">  382</span>&#160;    Set ret{};</div>
+<div class="line"><a name="l00383"></a><span class="lineno">  383</span>&#160;    ret.intersectUnion.intersects = intersectUnion.intersects-&gt;copy(alloc);</div>
+<div class="line"><a name="l00384"></a><span class="lineno">  384</span>&#160;    ret.allocated = <span class="keyword">true</span>;</div>
+<div class="line"><a name="l00385"></a><span class="lineno">  385</span>&#160;    <span class="keywordflow">return</span> ret;</div>
+<div class="line"><a name="l00386"></a><span class="lineno">  386</span>&#160;  }</div>
+<div class="line"><a name="l00387"></a><span class="lineno">  387</span>&#160;  <span class="comment">// [[nodiscard]] auto intersect(BumpAlloc&lt;&gt; &amp;alloc, const Set &amp;other) const {</span></div>
+<div class="line"><a name="l00388"></a><span class="lineno">  388</span>&#160;  <span class="comment">//   // old implementation had |= (a &amp; b); // why?</span></div>
+<div class="line"><a name="l00389"></a><span class="lineno">  389</span>&#160;  <span class="comment">//   if (!allocated) return copy(alloc) &amp;= other;</span></div>
+<div class="line"><a name="l00390"></a><span class="lineno">  390</span>&#160;  <span class="comment">//   return other-&gt;copy(alloc) &amp;= *this;</span></div>
+<div class="line"><a name="l00391"></a><span class="lineno">  391</span>&#160;  <span class="comment">// }</span></div>
+<div class="line"><a name="l00392"></a><span class="lineno">  392</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getConflict(Intersection other) <span class="keyword">const</span> -&gt; Intersection {</div>
+<div class="line"><a name="l00393"></a><span class="lineno">  393</span>&#160;    assert(<a class="code" href="structpoly_1_1IR_1_1Predicate_1_1Set.html#a1895952ec0bcc73daba680faef2d1610">intersectionIsEmpty</a>(other));</div>
+<div class="line"><a name="l00394"></a><span class="lineno">  394</span>&#160;    <span class="keywordflow">if</span> (!allocated) <span class="keywordflow">return</span> intersectUnion.intersect.getConflict(other);</div>
+<div class="line"><a name="l00395"></a><span class="lineno">  395</span>&#160;    <span class="keywordflow">return</span> intersectUnion.intersects-&gt;reduce(</div>
+<div class="line"><a name="l00396"></a><span class="lineno">  396</span>&#160;      Intersection{}, [&amp;](Intersection a, Intersection b) {</div>
+<div class="line"><a name="l00397"></a><span class="lineno">  397</span>&#160;        <span class="keywordflow">return</span> a &amp;= b.getConflict(other);</div>
+<div class="line"><a name="l00398"></a><span class="lineno">  398</span>&#160;      });</div>
+<div class="line"><a name="l00399"></a><span class="lineno">  399</span>&#160;  }</div>
+<div class="line"><a name="l00400"></a><span class="lineno">  400</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getConflict(<span class="keyword">const</span> Set &amp;other) <span class="keyword">const</span> -&gt; Intersection {</div>
+<div class="line"><a name="l00401"></a><span class="lineno">  401</span>&#160;    assert(<a class="code" href="structpoly_1_1IR_1_1Predicate_1_1Set.html#a1895952ec0bcc73daba680faef2d1610">intersectionIsEmpty</a>(other));</div>
+<div class="line"><a name="l00402"></a><span class="lineno">  402</span>&#160;    <span class="keywordflow">if</span> (!allocated) <span class="keywordflow">return</span> other.getConflict(intersectUnion.intersect);</div>
+<div class="line"><a name="l00403"></a><span class="lineno">  403</span>&#160;    <span class="keywordflow">if</span> (!other.allocated) <span class="keywordflow">return</span> getConflict(other.intersectUnion.intersect);</div>
+<div class="line"><a name="l00404"></a><span class="lineno">  404</span>&#160;    <span class="keywordflow">return</span> intersectUnion.intersects-&gt;reduce(</div>
+<div class="line"><a name="l00405"></a><span class="lineno">  405</span>&#160;      Intersection{}, [&amp;](Intersection a, Intersection b) {</div>
+<div class="line"><a name="l00406"></a><span class="lineno">  406</span>&#160;        <span class="keywordflow">return</span> a &amp;= other.getConflict(b);</div>
+<div class="line"><a name="l00407"></a><span class="lineno">  407</span>&#160;      });</div>
+<div class="line"><a name="l00408"></a><span class="lineno">  408</span>&#160;  }</div>
+<div class="line"><a name="l00421"></a><span class="lineno"><a class="line" href="structpoly_1_1IR_1_1Predicate_1_1Set.html#a1895952ec0bcc73daba680faef2d1610">  421</a></span>&#160;  [[nodiscard]] <span class="keyword">auto</span> <a class="code" href="structpoly_1_1IR_1_1Predicate_1_1Set.html#a1895952ec0bcc73daba680faef2d1610">intersectionIsEmpty</a>(<span class="keyword">const</span> <a class="code" href="structpoly_1_1IR_1_1Predicate_1_1Set.html">Set</a> &amp;other) <span class="keyword">const</span> -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l00422"></a><span class="lineno">  422</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">auto</span> pred : *<span class="keyword">this</span>)</div>
+<div class="line"><a name="l00423"></a><span class="lineno">  423</span>&#160;      <span class="keywordflow">for</span> (<span class="keyword">auto</span> otherPred : other)</div>
+<div class="line"><a name="l00424"></a><span class="lineno">  424</span>&#160;        <span class="keywordflow">if</span> (!((pred &amp; otherPred).empty())) <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
+<div class="line"><a name="l00425"></a><span class="lineno">  425</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">true</span>;</div>
+<div class="line"><a name="l00426"></a><span class="lineno">  426</span>&#160;  }</div>
+<div class="line"><a name="l00427"></a><span class="lineno">  427</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> <a class="code" href="structpoly_1_1IR_1_1Predicate_1_1Set.html#a1895952ec0bcc73daba680faef2d1610">intersectionIsEmpty</a>(<a class="code" href="structpoly_1_1IR_1_1Predicate_1_1Intersection.html">Intersection</a> otherPred) <span class="keyword">const</span> -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l00428"></a><span class="lineno">  428</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">auto</span> pred : *<span class="keyword">this</span>) <span class="comment">// NOLINT(readability-use-anyofallof)</span></div>
+<div class="line"><a name="l00429"></a><span class="lineno">  429</span>&#160;      <span class="keywordflow">if</span> (!((pred &amp; otherPred).empty())) <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
+<div class="line"><a name="l00430"></a><span class="lineno">  430</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">true</span>;</div>
+<div class="line"><a name="l00431"></a><span class="lineno">  431</span>&#160;  }</div>
+<div class="line"><a name="l00432"></a><span class="lineno">  432</span>&#160; </div>
+<div class="line"><a name="l00433"></a><span class="lineno">  433</span>&#160;  <span class="comment">// static auto getIndex(llvm::SmallVectorImpl&lt;Instruction *&gt; &amp;instructions,</span></div>
+<div class="line"><a name="l00434"></a><span class="lineno">  434</span>&#160;  <span class="comment">//                      Instruction *instruction) -&gt; size_t {</span></div>
+<div class="line"><a name="l00435"></a><span class="lineno">  435</span>&#160;  <span class="comment">//     size_t I = instructions.size();</span></div>
+<div class="line"><a name="l00436"></a><span class="lineno">  436</span>&#160;  <span class="comment">//     for (size_t i = 0; i &lt; I; i++)</span></div>
+<div class="line"><a name="l00437"></a><span class="lineno">  437</span>&#160;  <span class="comment">//         if (instructions[i] == instruction)</span></div>
+<div class="line"><a name="l00438"></a><span class="lineno">  438</span>&#160;  <span class="comment">//             return i;</span></div>
+<div class="line"><a name="l00439"></a><span class="lineno">  439</span>&#160;  <span class="comment">//     instructions.push_back(instruction);</span></div>
+<div class="line"><a name="l00440"></a><span class="lineno">  440</span>&#160;  <span class="comment">//     return I;</span></div>
+<div class="line"><a name="l00441"></a><span class="lineno">  441</span>&#160;  <span class="comment">// }</span></div>
+<div class="line"><a name="l00442"></a><span class="lineno">  442</span>&#160;  <span class="comment">// PredicateSet() = default;</span></div>
+<div class="line"><a name="l00443"></a><span class="lineno">  443</span>&#160;  <span class="comment">// PredicateSet(BumpAlloc&lt;&gt; &amp;alloc, Instruction::Cache</span></div>
+<div class="line"><a name="l00444"></a><span class="lineno">  444</span>&#160;  <span class="comment">// &amp;ic,</span></div>
+<div class="line"><a name="l00445"></a><span class="lineno">  445</span>&#160;  <span class="comment">//                    llvm::SmallVector&lt;Instruction *&gt; &amp;predicates,</span></div>
+<div class="line"><a name="l00446"></a><span class="lineno">  446</span>&#160;  <span class="comment">//                    Predicates &amp;pred) {</span></div>
+<div class="line"><a name="l00447"></a><span class="lineno">  447</span>&#160;  <span class="comment">//     for (Predicate &amp;p : pred) {</span></div>
+<div class="line"><a name="l00448"></a><span class="lineno">  448</span>&#160;  <span class="comment">//         Instruction *i = ic.get(alloc, p.condition);</span></div>
+<div class="line"><a name="l00449"></a><span class="lineno">  449</span>&#160;  <span class="comment">//         size_t index = getIndex(predicates, i);</span></div>
+<div class="line"><a name="l00450"></a><span class="lineno">  450</span>&#160;  <span class="comment">//         PredicateRelation val =</span></div>
+<div class="line"><a name="l00451"></a><span class="lineno">  451</span>&#160;  <span class="comment">//             p.flip ? PredicateRelation::False :</span></div>
+<div class="line"><a name="l00452"></a><span class="lineno">  452</span>&#160;  <span class="comment">//             PredicateRelation::True;</span></div>
+<div class="line"><a name="l00453"></a><span class="lineno">  453</span>&#160;  <span class="comment">//         set(index, val);</span></div>
+<div class="line"><a name="l00454"></a><span class="lineno">  454</span>&#160;  <span class="comment">//     }</span></div>
+<div class="line"><a name="l00455"></a><span class="lineno">  455</span>&#160;  <span class="comment">// }</span></div>
+<div class="line"><a name="l00456"></a><span class="lineno">  456</span>&#160;}; <span class="comment">// struct Predicate::Set</span></div>
+<div class="line"><a name="l00457"></a><span class="lineno">  457</span>&#160; </div>
+<div class="line"><a name="l00458"></a><span class="lineno">  458</span>&#160;<span class="keyword">class </span>Map;</div>
+<div class="line"><a name="l00459"></a><span class="lineno">  459</span>&#160;}; <span class="comment">// namespace Predicate</span></div>
+<div class="line"><a name="l00460"></a><span class="lineno">  460</span>&#160;}; <span class="comment">// namespace poly::IR</span></div>
 <div class="ttc" id="astructpoly_1_1IR_1_1Predicate_1_1Intersection_1_1Reference_html"><div class="ttname"><a href="structpoly_1_1IR_1_1Predicate_1_1Intersection_1_1Reference.html">poly::IR::Predicate::Intersection::Reference</a></div><div class="ttdef"><b>Definition:</b> Predicate.hpp:67</div></div>
 <div class="ttc" id="astructpoly_1_1IR_1_1Predicate_1_1Intersection_html"><div class="ttname"><a href="structpoly_1_1IR_1_1Predicate_1_1Intersection.html">poly::IR::Predicate::Intersection</a></div><div class="ttdef"><b>Definition:</b> Predicate.hpp:45</div></div>
 <div class="ttc" id="astructpoly_1_1IR_1_1Predicate_1_1Intersection_html_a03f0fec36c260a442aa37efaae474cdd"><div class="ttname"><a href="structpoly_1_1IR_1_1Predicate_1_1Intersection.html#a03f0fec36c260a442aa37efaae474cdd">poly::IR::Predicate::Intersection::removeEmptyMask</a></div><div class="ttdeci">static constexpr auto removeEmptyMask(uint64_t x) -&gt; uint64_t</div><div class="ttdoc">returns 11 if non-empty, 00 if empty</div><div class="ttdef"><b>Definition:</b> Predicate.hpp:108</div></div>
@@ -451,10 +459,10 @@ $(function() {
 <div class="ttc" id="astructpoly_1_1IR_1_1Predicate_1_1Intersection_html_a61a44178c94724c643b1e13e295af03d"><div class="ttname"><a href="structpoly_1_1IR_1_1Predicate_1_1Intersection.html#a61a44178c94724c643b1e13e295af03d">poly::IR::Predicate::Intersection::compactUnion</a></div><div class="ttdeci">constexpr auto compactUnion(Intersection other) const -&gt; containers::TinyVector&lt; Intersection, 2 &gt;</div><div class="ttdef"><b>Definition:</b> Predicate.hpp:135</div></div>
 <div class="ttc" id="astructpoly_1_1IR_1_1Predicate_1_1Intersection_html_ac8d2d38ea137149fc6f187756ff58431"><div class="ttname"><a href="structpoly_1_1IR_1_1Predicate_1_1Intersection.html#ac8d2d38ea137149fc6f187756ff58431">poly::IR::Predicate::Intersection::keepEmptyMask</a></div><div class="ttdeci">static constexpr auto keepEmptyMask(uint64_t x) -&gt; uint64_t</div><div class="ttdoc">returns 11 if non-empty, 00 if empty</div><div class="ttdef"><b>Definition:</b> Predicate.hpp:103</div></div>
 <div class="ttc" id="astructpoly_1_1IR_1_1Predicate_1_1Intersection_html_ad73ef02a27d777fd06f6d46f15fe49ab"><div class="ttname"><a href="structpoly_1_1IR_1_1Predicate_1_1Intersection.html#ad73ef02a27d777fd06f6d46f15fe49ab">poly::IR::Predicate::Intersection::emptyMask</a></div><div class="ttdeci">static constexpr auto emptyMask(uint64_t x) -&gt; uint64_t</div><div class="ttdoc">returns 00 if non-empty, 01 if empty</div><div class="ttdef"><b>Definition:</b> Predicate.hpp:99</div></div>
-<div class="ttc" id="astructpoly_1_1IR_1_1Predicate_1_1Set_html"><div class="ttname"><a href="structpoly_1_1IR_1_1Predicate_1_1Set.html">poly::IR::Predicate::Set</a></div><div class="ttdef"><b>Definition:</b> Predicate.hpp:198</div></div>
-<div class="ttc" id="astructpoly_1_1IR_1_1Predicate_1_1Set_html_a1895952ec0bcc73daba680faef2d1610"><div class="ttname"><a href="structpoly_1_1IR_1_1Predicate_1_1Set.html#a1895952ec0bcc73daba680faef2d1610">poly::IR::Predicate::Set::intersectionIsEmpty</a></div><div class="ttdeci">auto intersectionIsEmpty(const Set &amp;other) const -&gt; bool</div><div class="ttdef"><b>Definition:</b> Predicate.hpp:417</div></div>
-<div class="ttc" id="astructpoly_1_1IR_1_1Predicate_1_1Set_html_ac9bf694bc9d657031b4181877c0996ec"><div class="ttname"><a href="structpoly_1_1IR_1_1Predicate_1_1Set.html#ac9bf694bc9d657031b4181877c0996ec">poly::IR::Predicate::Set::Union</a></div><div class="ttdeci">auto Union(BumpAlloc&lt;&gt; &amp;alloc, Intersection other) -&gt; Set &amp;</div><div class="ttdef"><b>Definition:</b> Predicate.hpp:267</div></div>
-<div class="ttc" id="astructpoly_1_1IR_1_1Predicate_1_1Set_html_ae7f2a4a9b16b6dbc2775e894f408dd7f"><div class="ttname"><a href="structpoly_1_1IR_1_1Predicate_1_1Set.html#ae7f2a4a9b16b6dbc2775e894f408dd7f">poly::IR::Predicate::Set::Union</a></div><div class="ttdeci">auto Union(BumpAlloc&lt;&gt; &amp;alloc, const Set &amp;other) -&gt; Set &amp;</div><div class="ttdef"><b>Definition:</b> Predicate.hpp:353</div></div>
+<div class="ttc" id="astructpoly_1_1IR_1_1Predicate_1_1Set_html"><div class="ttname"><a href="structpoly_1_1IR_1_1Predicate_1_1Set.html">poly::IR::Predicate::Set</a></div><div class="ttdef"><b>Definition:</b> Predicate.hpp:199</div></div>
+<div class="ttc" id="astructpoly_1_1IR_1_1Predicate_1_1Set_html_a1895952ec0bcc73daba680faef2d1610"><div class="ttname"><a href="structpoly_1_1IR_1_1Predicate_1_1Set.html#a1895952ec0bcc73daba680faef2d1610">poly::IR::Predicate::Set::intersectionIsEmpty</a></div><div class="ttdeci">auto intersectionIsEmpty(const Set &amp;other) const -&gt; bool</div><div class="ttdef"><b>Definition:</b> Predicate.hpp:421</div></div>
+<div class="ttc" id="astructpoly_1_1IR_1_1Predicate_1_1Set_html_ac9bf694bc9d657031b4181877c0996ec"><div class="ttname"><a href="structpoly_1_1IR_1_1Predicate_1_1Set.html#ac9bf694bc9d657031b4181877c0996ec">poly::IR::Predicate::Set::Union</a></div><div class="ttdeci">auto Union(BumpAlloc&lt;&gt; &amp;alloc, Intersection other) -&gt; Set &amp;</div><div class="ttdef"><b>Definition:</b> Predicate.hpp:266</div></div>
+<div class="ttc" id="astructpoly_1_1IR_1_1Predicate_1_1Set_html_ae7f2a4a9b16b6dbc2775e894f408dd7f"><div class="ttname"><a href="structpoly_1_1IR_1_1Predicate_1_1Set.html#ae7f2a4a9b16b6dbc2775e894f408dd7f">poly::IR::Predicate::Set::Union</a></div><div class="ttdeci">auto Union(BumpAlloc&lt;&gt; &amp;alloc, const Set &amp;other) -&gt; Set &amp;</div><div class="ttdef"><b>Definition:</b> Predicate.hpp:352</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
