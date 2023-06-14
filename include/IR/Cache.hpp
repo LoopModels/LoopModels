@@ -4,6 +4,7 @@
 #include "IR/Address.hpp"
 #include "IR/Instruction.hpp"
 #include "IR/Node.hpp"
+#include "IR/Predicate.hpp"
 #include <cstddef>
 #include <llvm/IR/FMF.h>
 
@@ -102,6 +103,7 @@ class Cache {
   }
 
 public:
+  constexpr auto getAllocator() -> BumpAlloc<> & { return alloc; }
   // NOLINTNEXTLINE(misc-no-recursion)
   auto getValue(llvm::Value *v, llvm::Loop *L) -> Value * {
     Value *&n = llvmToInternalMap[v];
@@ -161,7 +163,7 @@ public:
   }
   template <size_t N>
   auto getOperation(llvm::Intrinsic::ID opId, std::array<Value *, N> ops,
-                    llvm::Type *typ, llvm::FastMathFlags fmf) -> Value * {
+                    llvm::Type *typ, llvm::FastMathFlags fmf) -> Inst * {
     Inst *op = createOperation(opId, ops, typ, fmf);
     Inst *&cse = getCSE(op);
     if (cse == nullptr || (cse == op)) return cse = op; // update ref
@@ -264,7 +266,9 @@ public:
     } while (ind < 32);
     return J;
   }
-  auto createSelect(Value *A, Value *B, UList<Value *> *pred) -> Inst * {
+  auto createSelect(Value *A, Value *B,
+                    amap<Value *, Predicate::Set> &valToPred,
+                    UList<Value *> *pred) -> Inst * {
     // What I need here is to take the union of the predicates to form
     // the predicates of the new select instruction. Then, for the
     // select's `cond` instruction, I need something to indicate when to
@@ -289,7 +293,9 @@ public:
     /// each side.
     /// Then use the simpler of these two to determine the direction of
     /// the select.
-    Predicate::Intersection P = A->predicates.getConflict(B->predicates);
+    Predicate::Set pA = valToPred[A];
+    Predicate::Set pB = valToPred[B];
+    Predicate::Intersection P = pA.getConflict(pB);
     assert(!P.empty() && "No conflict between predicates");
     bool swap = P.countFalse() <= P.countTrue();
     Value *cond = createCondition(P, pred, swap);
@@ -303,8 +309,10 @@ public:
     }
     Inst *S = getOperation(llvm::Instruction::Select,
                            std::array<Value *, 3>{cond, op1, op2}, typ, fmf);
-    S->predicates |= A->predicates;
-    S->predicates |= B->predicates;
+    Predicate::Set pS;
+    pS.Union(alloc, pA);
+    pS.Union(alloc, pB);
+    valToPred[S] = pS;
     return S;
   }
 };

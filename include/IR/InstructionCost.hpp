@@ -45,6 +45,8 @@ inline auto getType(llvm::Type *T, unsigned int vectorWidth) -> llvm::Type * {
 class VectorWidth {
   unsigned width;
   unsigned log2Width;
+
+public:
   constexpr explicit VectorWidth(unsigned w)
     : width(w), log2Width(std::countr_zero(w)) {
     utils::invariant(std::popcount(w) == 1);
@@ -57,7 +59,6 @@ class VectorWidth {
     utils::invariant(w <= MaxVectorWidth);
   }
 
-public:
   [[nodiscard]] constexpr auto getWidth() const -> unsigned { return width; }
   [[nodiscard]] constexpr auto getLog2Width() const -> unsigned {
     return log2Width;

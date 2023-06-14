@@ -37,6 +37,17 @@ template <> struct ankerl::unordered_dense::hash<poly::IR::Cnst::Identifier> {
   }
 };
 
+template <> struct ankerl::unordered_dense::hash<poly::IR::Identifier> {
+  using is_avalanching = void;
+  [[nodiscard]] auto operator()(poly::IR::Identifier const &x) const noexcept
+    -> uint64_t {
+    using poly::Hash::combineHash, poly::Hash::getHash;
+    uint64_t seed = getHash(x.kind);
+    seed = combineHash(seed, getHash(x.type));
+    return combineHash(seed, getHash(x.ID));
+  }
+};
+
 /// here, we define an avalanching hash function for `InstByValue`
 ///
 template <> struct ankerl::unordered_dense::hash<poly::IR::InstByValue> {
@@ -44,7 +55,7 @@ template <> struct ankerl::unordered_dense::hash<poly::IR::InstByValue> {
   [[nodiscard]] auto operator()(poly::IR::InstByValue const &x) const noexcept
     -> uint64_t {
     using poly::Hash::combineHash, poly::Hash::getHash, poly::containers::UList,
-      poly::IR::Node;
+      poly::IR::Value;
     uint64_t seed = getHash(x.inst->getKind());
     seed = combineHash(seed, getHash(x.inst->getType()));
     seed = combineHash(seed, getHash(x.inst->getOpId()));
@@ -53,7 +64,7 @@ template <> struct ankerl::unordered_dense::hash<poly::IR::InstByValue> {
     uint8_t assocFlag = x.inst->associativeOperandsFlag();
     // combine all operands
     size_t offset = 0;
-    poly::PtrVector<Node *> operands = x.inst->getOperands();
+    poly::PtrVector<Value *> operands = x.inst->getOperands();
     if (assocFlag) {
       poly::invariant(assocFlag, uint8_t(3));
       // we combine hashes in a commutative way

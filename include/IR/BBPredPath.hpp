@@ -29,6 +29,7 @@ public:
     }
     return false;
   }
+  auto getPredicates() { return predicates; }
   [[nodiscard]] auto getEntry() const -> llvm::BasicBlock * {
     return map.back().first;
   }
@@ -68,8 +69,8 @@ public:
   // void visit(llvm::BasicBlock *BB) { map.insert(std::make_pair(BB,
   // Set())); } void visit(llvm::Instruction *inst) {
   // visit(inst->getParent()); }
-  [[nodiscard]] auto addPredicate(BumpAlloc<> &alloc, IR::Cache &cache,
-                                  llvm::Value *value) -> size_t {
+  [[nodiscard]] auto addPredicate(IR::Cache &cache, llvm::Value *value)
+    -> size_t {
     auto *I = cache.getInstruction(*this, value);
     assert(predicates->count <= 32 && "too many predicates");
     for (size_t i = 0; i < cache.predicates.size(); ++i)
@@ -96,11 +97,10 @@ public:
   // 2. We are ignoring cycles for now; we must ensure this is done
   // correctly
   [[nodiscard]] static auto // NOLINTNEXTLINE(misc-no-recursion)
-  descendBlock(BumpAlloc<> &alloc, Intr::Cache &cache,
-               aset<llvm::BasicBlock *> &visited, Predicate::Map &predMap,
-               llvm::BasicBlock *BBsrc, llvm::BasicBlock *BBdst,
-               Predicate::Intersection predicate, llvm::BasicBlock *BBhead,
-               llvm::Loop *L) -> Destination {
+  descendBlock(IR::Cache &cache, aset<llvm::BasicBlock *> &visited,
+               Predicate::Map &predMap, llvm::BasicBlock *BBsrc,
+               llvm::BasicBlock *BBdst, Predicate::Intersection predicate,
+               llvm::BasicBlock *BBhead, llvm::Loop *L) -> Destination {
     if (BBsrc == BBdst) {
       assert(!predMap.contains(BBsrc));
       predMap.insert({BBsrc, Set{alloc, predicate}});
@@ -175,8 +175,7 @@ public:
   }
   /// We bail if there are more than 32 conditions; control flow that
   /// branchy is probably not worth trying to vectorize.
-  [[nodiscard]] static auto descend(BumpAlloc<> &alloc, Intr::Cache &cache,
-                                    llvm::BasicBlock *start,
+  [[nodiscard]] static auto descend(IR::Cache &cache, llvm::BasicBlock *start,
                                     llvm::BasicBlock *stop, llvm::Loop *L)
     -> std::optional<Map> {
     auto p = alloc.checkpoint();

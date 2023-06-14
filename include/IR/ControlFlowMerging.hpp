@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Dicts/BumpMapSet.hpp"
-#include "Dicts/BumpVector.hpp"
+#include "IR/BBPredPath.hpp"
 #include "IR/Cache.hpp"
 #include "IR/Instruction.hpp"
 #include "IR/Predicate.hpp"
@@ -15,6 +15,7 @@
 #include <llvm/ADT/SmallVector.h>
 #include <llvm/IR/BasicBlock.h>
 #include <llvm/IR/Instruction.h>
+#include <llvm/IR/Type.h>
 #include <llvm/Support/Allocator.h>
 #include <llvm/Support/InstructionCost.h>
 
@@ -123,9 +124,10 @@ struct MergingCost {
   }
 
   struct Allocate {
-    BumpAlloc<> &alloc;
     IR::Cache &cache;
     ReMapper &reMap;
+    amap<Value *, Predicate::Set> &valToPred;
+    UList<Value *> *predicates;
   };
   struct Count {};
 
@@ -139,6 +141,8 @@ struct MergingCost {
     IR::Cache &cache;
     ReMapper &reMap;
     MutPtrVector<Value *> operands;
+    amap<Value *, Predicate::Set> &valToPred;
+    UList<Value *> *predicates;
     constexpr operator MutPtrVector<Value *>() const { return operands; }
     void merge(size_t i, Value *A, Value *B) {
       auto opA = reMap[A];
@@ -148,7 +152,7 @@ struct MergingCost {
     void select(size_t i, Value *A, Value *B) {
       A = reMap[A];
       B = reMap[B];
-      Inst *C = cache.createSelect(A, B);
+      Inst *C = cache.createSelect(A, B, valToPred, predicates);
       cache.replaceAllUsesWith(A, C);
       cache.replaceAllUsesWith(B, C);
       operands[i] = C;
@@ -156,9 +160,10 @@ struct MergingCost {
   };
   static auto init(Allocate a, Value *A) -> SelectAllocator {
     size_t numOps = A->getNumOperands();
-    auto **operandsPtr = a.alloc.allocate<Value *>(numOps);
+    auto **operandsPtr = a.cache.getAllocator().allocate<Value *>(numOps);
     MutPtrVector<Value *> operands{operandsPtr, numOps};
-    return SelectAllocator{a.alloc, a.cache, a.reMap, operands};
+    return SelectAllocator{a.cache, a.reMap, operands, a.valToPred,
+                           a.predicates};
   }
   static auto init(Count, Value *) -> SelectCounter { return SelectCounter{0}; }
   // An abstraction that runs an algorithm to look for merging opportunities,
@@ -265,8 +270,9 @@ struct MergingCost {
     // TODO:
     // increase cost by numSelects, decrease cost by `I`'s cost
     unsigned int W = vectorBits / B->getNumScalarBits();
-    if (numSelects) cost += numSelects * B->selectCost(TTI, W);
-    cost -= B->getCost(TTI, W).recipThroughput;
+    if (numSelects)
+      cost += numSelects * Operation::selectCost(TTI, B->getType(W));
+    cost -= B->getCost(TTI, VectorWidth(W)).recipThroughput;
     auto *mB = findMerge(B);
     if (mB) cycleUpdateMerged(merged, B, mB);
     // fuse the merge map cycles
@@ -300,8 +306,8 @@ struct MergingCost {
 inline void mergeInstructions(
   BumpAlloc<> &alloc, IR::Cache &cache, Predicate::Map &predMap,
   llvm::TargetTransformInfo &TTI, unsigned int vectorBits,
-  amap<std::pair<Instruction::Intrinsic, llvm::Type *>,
-       BumpPtrVector<std::pair<Value *, Predicate::Set>>> &opMap,
+  amap<Identifier, math::ResizeableView<Value *, unsigned>> opMap,
+  amap<Value *, Predicate::Set> &valToPred,
   llvm::SmallVectorImpl<MergingCost *> &mergingCosts, Value *J,
   llvm::BasicBlock *BB, Predicate::Set &preds) {
   // have we already visited?
@@ -314,12 +320,11 @@ inline void mergeInstructions(
   // TODO: confirm that `vec` doesn't get moved if `opMap` is resized
   auto &vec = opMap[op];
   // consider merging with every instruction sharing an opcode
-  for (auto &pair : vec) {
-    Value *other = pair.first;
+  for (Value *other : vec) {
     // check legality
     // illegal if:
     // 1. pred intersection not empty
-    if (!preds.intersectionIsEmpty(pair.second)) continue;
+    if (!preds.intersectionIsEmpty(valToPred[other])) continue;
     // 2. one op descends from another
     // because of our traversal pattern, this should not happen
     // unless a fusion took place
@@ -346,18 +351,19 @@ inline void mergeInstructions(
   // descendants aren't legal merge candidates, so check before merging
   for (Value *U : J->getUsers()) {
     if (llvm::BasicBlock *BBU = U->getBasicBlock()) {
-      if (BBU == BB) {
-        // fast path, skip lookup
+      if (BBU == BB) // fast path, skip lookup
         mergeInstructions(alloc, cache, predMap, TTI, vectorBits, opMap,
                           mergingCosts, U, BB, preds);
-      } else if (auto *f = predMap.find(BBU); f != predMap.rend()) {
+      else if (auto *f = predMap.find(BBU); f != predMap.rend())
         mergeInstructions(alloc, cache, predMap, TTI, vectorBits, opMap,
                           mergingCosts, U, BBU, f->second);
-      }
     }
   }
   // descendants aren't legal merge candidates, so push after merging
-  vec.emplace_back(J, preds);
+  if (vec.getCapacity() <= vec.size())
+    vec.reserve(alloc, std::max(unsigned(8), 2 * vec.size()));
+  vec.push_back(J);
+  valToPred[J] = preds;
   // TODO: prune bad candidates from mergingCosts
 }
 
@@ -375,32 +381,34 @@ inline void mergeInstructions(
 inline void mergeInstructions(BumpAlloc<> &alloc, IR::Cache &cache,
                               Predicate::Map &predMap,
                               llvm::TargetTransformInfo &TTI,
-                              BumpAlloc<> &tAlloc, unsigned int vectorBits) {
+                              BumpAlloc<> &tAlloc, unsigned vectorBits) {
   if (!predMap.isDivergent()) return;
   auto p = tAlloc.scope();
   // there is a divergence in the control flow that we can ideally merge
-  amap<std::pair<Instruction::Intrinsic, llvm::Type *>,
-       BumpPtrVector<std::pair<Value *, Predicate::Set>>>
-    opMap{tAlloc};
+  amap<Identifier, math::ResizeableView<Value *, unsigned>> opMap{tAlloc};
+  amap<Value *, Predicate::Set> valToPred{tAlloc};
   llvm::SmallVector<MergingCost *> mergingCosts;
   mergingCosts.emplace_back(alloc);
   for (auto &pred : predMap)
     for (llvm::Instruction &lI : *pred.first)
       if (Value *J = cache[&lI])
         mergeInstructions(tAlloc, cache, predMap, TTI, vectorBits, opMap,
-                          mergingCosts, J, pred.first, pred.second);
+                          valToPred, mergingCosts, J, pred.first, pred.second);
   MergingCost *minCostStrategy = *std::ranges::min_element(
     mergingCosts, [](auto *a, auto *b) { return *a < *b; });
   // and then apply it to the instructions.
   ReMapper reMap;
   // we use `alloc` for objects intended to live on
+
   for (auto &pair : *minCostStrategy) {
     // merge pair through `select`ing the arguments that differ
     auto [A, B] = pair;
     A = reMap[A];
     B = reMap[B];
     auto operands = minCostStrategy->mergeOperands(
-      A, B, MergingCost::Allocate{alloc, cache, reMap});
+      A, B,
+      MergingCost::Allocate{alloc, cache, reMap, valToPred,
+                            predMap.getPredicates()});
     A->replaceAllUsesOf(B)->setOperands(operands);
     reMap.remapFromTo(B, A);
   }

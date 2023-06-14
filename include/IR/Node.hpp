@@ -372,6 +372,12 @@ public:
   [[nodiscard]] inline auto getType() const -> llvm::Type *;
   [[nodiscard]] inline auto getType(unsigned) const -> llvm::Type *;
   [[nodiscard]] inline auto getOperands() -> math::PtrVector<Value *>;
+  [[nodiscard]] inline auto getNumOperands() const -> unsigned;
+  [[nodiscard]] inline auto getOperand(unsigned) -> Value *;
+  [[nodiscard]] inline auto getOperand(unsigned) const -> const Value *;
+  [[nodiscard]] inline auto associativeOperandsFlag() const -> uint8_t;
+  [[nodiscard]] inline auto getNumScalarBits() const -> unsigned;
+  [[nodiscard]] inline auto getNumScalarBytes() const -> unsigned;
 };
 
 /// CVal

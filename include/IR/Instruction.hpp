@@ -39,6 +39,14 @@ using math::PtrVector, math::MutPtrVector, utils::BumpAlloc, utils::invariant,
 
 namespace poly::IR {
 
+/// For use with control flow merging
+/// same operation on same type with disparate branches can be merged
+struct Identifier {
+  llvm::Intrinsic::ID ID;
+  Node::ValKind kind;
+  llvm::Type *type;
+};
+
 using dict::aset, dict::amap, containers::UList, utils::Optional,
   cost::RecipThroughputLatency, cost::VectorWidth, cost::VectorizationCosts;
 
@@ -251,12 +259,6 @@ public:
     -> RecipThroughputLatency;
   [[nodiscard]] auto getType(unsigned int vectorWidth) const -> llvm::Type * {
     return cost::getType(type, vectorWidth);
-  }
-  [[nodiscard]] auto getNumScalarBits() const -> unsigned int {
-    return type->getScalarSizeInBits();
-  }
-  [[nodiscard]] auto getNumScalarBytes() const -> unsigned int {
-    return getNumScalarBits() / 8;
   }
   [[nodiscard]] auto getOperandInfo(unsigned i) const
     -> llvm::TargetTransformInfo::OperandValueInfo {
@@ -514,7 +516,10 @@ public:
   /// another one.
   auto selectCost(llvm::TargetTransformInfo &TTI,
                   unsigned int vectorWidth) const -> llvm::InstructionCost {
-    llvm::Type *T = getType(vectorWidth);
+    return selectCost(TTI, getType(vectorWidth));
+  }
+  static auto selectCost(llvm::TargetTransformInfo &TTI, llvm::Type *T)
+    -> llvm::InstructionCost {
     llvm::Type *cmpT = llvm::CmpInst::makeCmpResultType(T);
     // llvm::CmpInst::Predicate pred =
     // TODO: extract from difference in predicates
@@ -735,6 +740,34 @@ inline auto Value::getType(unsigned w) const -> llvm::Type * {
   if (getKind() != VK_Stow) return {};
   return {&unionPtr.node, unsigned(1)};
 }
+[[nodiscard]] inline auto Value::getOperand(unsigned i) -> Value * {
+  if (const auto *I = llvm::dyn_cast<Inst>(this)) return I->getOperand(i);
+  invariant(getKind() == VK_Stow);
+  invariant(i == 0);
+  return unionPtr.node;
+}
+[[nodiscard]] inline auto Value::getOperand(unsigned i) const -> const Value * {
+  if (const auto *I = llvm::dyn_cast<Inst>(this)) return I->getOperand(i);
+  invariant(getKind() == VK_Stow);
+  invariant(i == 0);
+  return unionPtr.node;
+}
+[[nodiscard]] inline auto Value::getNumOperands() const -> unsigned {
+  if (const auto *I = llvm::dyn_cast<Inst>(this)) return I->getNumOperands();
+  return getKind() == VK_Stow;
+}
+[[nodiscard]] inline auto Value::associativeOperandsFlag() const -> uint8_t {
+  if (const auto *I = llvm::dyn_cast<Inst>(this))
+    return I->associativeOperandsFlag();
+  return 0;
+}
+[[nodiscard]] inline auto Value::getNumScalarBits() const -> unsigned int {
+  return getType()->getScalarSizeInBits();
+}
+[[nodiscard]] inline auto Value::getNumScalarBytes() const -> unsigned int {
+  return getNumScalarBits() / 8;
+}
+
 // unsigned x = llvm::Instruction::FAdd;
 // unsigned y = llvm::Instruction::LShr;
 // unsigned z = llvm::Instruction::Call;

@@ -169,6 +169,7 @@ struct Intersection {
 }; // struct Predicate::Intersection
 
 /// Predicate::Set
+/// This type is not owning!
 /// A type for performing set algebra on predicates, representing sets
 /// Note:
 /// Commutative:
@@ -196,8 +197,6 @@ struct Intersection {
 /// (a & b) | (c & d) == ((a & b) | c) & ((a & b) | d)
 /// == (a | c) & (b | c) & (a | d) & (b | d)
 struct Set {
-  // std::variant<std::monostate, Intersection, containers::UList<Intersection>
-  // *> intersectUnion;
   union {
     Intersection intersect;
     containers::UList<Intersection> *intersects;
@@ -212,7 +211,7 @@ struct Set {
   // containers::UList<Intersection> *intersectUnion{nullptr};
   // [[no_unique_address]] math::BumpPtrVector<Intersection> intersectUnion;
   Set() = default;
-  Set(Intersection pred) : intersectUnion(pred){};
+  explicit Set(Intersection pred) : intersectUnion(pred){};
   Set(const Set &) = default;
   Set(Set &&) = default;
   auto operator=(Set &&other) noexcept -> Set & {
@@ -390,18 +389,23 @@ struct Set {
   //   if (!allocated) return copy(alloc) &= other;
   //   return other->copy(alloc) &= *this;
   // }
-  // /// returns a pair intersections
-  // [[nodiscard]] auto getConflict(const Set &other) -> Intersection {
-  //   assert(intersectionIsEmpty(other));
-  //   Intersection ret;
-  //   for (auto pred : intersectUnion) {
-  //     for (auto otherPred : other) {
-  //       assert((pred & otherPred).isEmpty());
-  //       ret &= pred.getConflict(otherPred);
-  //     }
-  //   }
-  //   return ret;
-  // }
+  [[nodiscard]] auto getConflict(Intersection other) const -> Intersection {
+    assert(intersectionIsEmpty(other));
+    if (!allocated) return intersectUnion.intersect.getConflict(other);
+    return intersectUnion.intersects->reduce(
+      Intersection{}, [&](Intersection a, Intersection b) {
+        return a &= b.getConflict(other);
+      });
+  }
+  [[nodiscard]] auto getConflict(const Set &other) const -> Intersection {
+    assert(intersectionIsEmpty(other));
+    if (!allocated) return other.getConflict(intersectUnion.intersect);
+    if (!other.allocated) return getConflict(other.intersectUnion.intersect);
+    return intersectUnion.intersects->reduce(
+      Intersection{}, [&](Intersection a, Intersection b) {
+        return a &= other.getConflict(b);
+      });
+  }
   /// intersectionIsEmpty(const Set &other) -> bool
   /// returns `true` if the intersection of `*this` and `other` is empty
   /// if *this = [(a & b) | (c & d)]
@@ -418,6 +422,11 @@ struct Set {
     for (auto pred : *this)
       for (auto otherPred : other)
         if (!((pred & otherPred).empty())) return false;
+    return true;
+  }
+  [[nodiscard]] auto intersectionIsEmpty(Intersection otherPred) const -> bool {
+    for (auto pred : *this) // NOLINT(readability-use-anyofallof)
+      if (!((pred & otherPred).empty())) return false;
     return true;
   }
 
