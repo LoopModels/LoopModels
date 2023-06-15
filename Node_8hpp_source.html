@@ -306,20 +306,20 @@ $(function() {
 <div class="line"><a name="l00316"></a><span class="lineno">  316</span>&#160; </div>
 <div class="line"><a name="l00317"></a><span class="lineno"><a class="line" href="classpoly_1_1IR_1_1Value.html">  317</a></span>&#160;<span class="keyword">class </span><a class="code" href="classpoly_1_1IR_1_1Value.html">Value</a> : <span class="keyword">public</span> <a class="code" href="classpoly_1_1IR_1_1Node.html">Node</a> {</div>
 <div class="line"><a name="l00318"></a><span class="lineno">  318</span>&#160;<span class="keyword">protected</span>:</div>
-<div class="line"><a name="l00319"></a><span class="lineno">  319</span>&#160;  <span class="keyword">union </span>{</div>
-<div class="line"><a name="l00320"></a><span class="lineno">  320</span>&#160;    UList&lt;Value *&gt; *users{<span class="keyword">nullptr</span>}; <span class="comment">// Func, Call, Oprn, Load</span></div>
-<div class="line"><a name="l00321"></a><span class="lineno">  321</span>&#160;    <a class="code" href="classpoly_1_1IR_1_1Value.html">Value</a> *node;                    <span class="comment">// Stow</span></div>
-<div class="line"><a name="l00322"></a><span class="lineno">  322</span>&#160;    llvm::Type *typ;                <span class="comment">// Cint, Cflt, Bint, Bflt</span></div>
-<div class="line"><a name="l00323"></a><span class="lineno">  323</span>&#160;    llvm::Value *val;               <span class="comment">// CVal</span></div>
-<div class="line"><a name="l00324"></a><span class="lineno">  324</span>&#160;  } unionPtr;</div>
-<div class="line"><a name="l00325"></a><span class="lineno">  325</span>&#160; </div>
-<div class="line"><a name="l00326"></a><span class="lineno">  326</span>&#160;<span class="keyword">public</span>:</div>
-<div class="line"><a name="l00327"></a><span class="lineno">  327</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> classof(<span class="keyword">const</span> <a class="code" href="classpoly_1_1IR_1_1Node.html">Node</a> *v) -&gt; <span class="keywordtype">bool</span> {</div>
-<div class="line"><a name="l00328"></a><span class="lineno">  328</span>&#160;    <span class="keywordflow">return</span> v-&gt;getKind() &gt;= VK_CVal || v-&gt;getKind() &lt;= VK_Stow;</div>
-<div class="line"><a name="l00329"></a><span class="lineno">  329</span>&#160;  }</div>
-<div class="line"><a name="l00330"></a><span class="lineno">  330</span>&#160; </div>
-<div class="line"><a name="l00331"></a><span class="lineno">  331</span>&#160;  constexpr <a class="code" href="classpoly_1_1IR_1_1Value.html">Value</a>(ValKind kind) : <a class="code" href="classpoly_1_1IR_1_1Node.html">Node</a>(kind) {}</div>
-<div class="line"><a name="l00332"></a><span class="lineno">  332</span>&#160;  constexpr <a class="code" href="classpoly_1_1IR_1_1Value.html">Value</a>(ValKind kind, <span class="keywordtype">unsigned</span> depth) : <a class="code" href="classpoly_1_1IR_1_1Node.html">Node</a>(kind, depth) {}</div>
+<div class="line"><a name="l00319"></a><span class="lineno">  319</span>&#160;  constexpr <a class="code" href="classpoly_1_1IR_1_1Value.html">Value</a>(ValKind kind) : <a class="code" href="classpoly_1_1IR_1_1Node.html">Node</a>(kind) {}</div>
+<div class="line"><a name="l00320"></a><span class="lineno">  320</span>&#160;  constexpr <a class="code" href="classpoly_1_1IR_1_1Value.html">Value</a>(ValKind kind, <span class="keywordtype">unsigned</span> depth) : <a class="code" href="classpoly_1_1IR_1_1Node.html">Node</a>(kind, depth) {}</div>
+<div class="line"><a name="l00321"></a><span class="lineno">  321</span>&#160; </div>
+<div class="line"><a name="l00322"></a><span class="lineno">  322</span>&#160;  <span class="keyword">union </span>{</div>
+<div class="line"><a name="l00323"></a><span class="lineno">  323</span>&#160;    UList&lt;Value *&gt; *users{<span class="keyword">nullptr</span>}; <span class="comment">// Func, Call, Oprn, Load</span></div>
+<div class="line"><a name="l00324"></a><span class="lineno">  324</span>&#160;    <a class="code" href="classpoly_1_1IR_1_1Value.html">Value</a> *node;                    <span class="comment">// Stow</span></div>
+<div class="line"><a name="l00325"></a><span class="lineno">  325</span>&#160;    llvm::Type *typ;                <span class="comment">// Cint, Cflt, Bint, Bflt</span></div>
+<div class="line"><a name="l00326"></a><span class="lineno">  326</span>&#160;    llvm::Value *val;               <span class="comment">// CVal</span></div>
+<div class="line"><a name="l00327"></a><span class="lineno">  327</span>&#160;  } unionPtr;</div>
+<div class="line"><a name="l00328"></a><span class="lineno">  328</span>&#160; </div>
+<div class="line"><a name="l00329"></a><span class="lineno">  329</span>&#160;<span class="keyword">public</span>:</div>
+<div class="line"><a name="l00330"></a><span class="lineno">  330</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> classof(<span class="keyword">const</span> <a class="code" href="classpoly_1_1IR_1_1Node.html">Node</a> *v) -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l00331"></a><span class="lineno">  331</span>&#160;    <span class="keywordflow">return</span> v-&gt;getKind() &gt;= VK_CVal || v-&gt;getKind() &lt;= VK_Stow;</div>
+<div class="line"><a name="l00332"></a><span class="lineno">  332</span>&#160;  }</div>
 <div class="line"><a name="l00333"></a><span class="lineno">  333</span>&#160; </div>
 <div class="line"><a name="l00334"></a><span class="lineno">  334</span>&#160;  <span class="comment">// unionPtr methods</span></div>
 <div class="line"><a name="l00335"></a><span class="lineno">  335</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getUsers() <span class="keyword">const</span> -&gt; <span class="keyword">const</span> UList&lt;Value *&gt; * {</div>
@@ -350,174 +350,201 @@ $(function() {
 <div class="line"><a name="l00362"></a><span class="lineno">  362</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> isLoad() const -&gt; <span class="keywordtype">bool</span> {</div>
 <div class="line"><a name="l00363"></a><span class="lineno">  363</span>&#160;    <span class="keywordflow">return</span> getKind() == VK_Load;</div>
 <div class="line"><a name="l00364"></a><span class="lineno">  364</span>&#160;  }</div>
-<div class="line"><a name="l00365"></a><span class="lineno">  365</span>&#160;  [[nodiscard]] <span class="keyword">inline</span> <span class="keyword">auto</span> getFastMathFlags() const -&gt; llvm::FastMathFlags;</div>
-<div class="line"><a name="l00367"></a><span class="lineno">  367</span>&#160;  inline auto <a class="code" href="classpoly_1_1IR_1_1Value.html#adb093c83013329c7391357aa9f19144d">getCost</a>(llvm::TargetTransformInfo &amp;TTI, cost::VectorWidth W)</div>
-<div class="line"><a name="l00368"></a><span class="lineno">  368</span>&#160;    -&gt; cost::RecipThroughputLatency;</div>
-<div class="line"><a name="l00369"></a><span class="lineno">  369</span>&#160;  [[nodiscard]] inline auto getValue() -&gt; llvm::Value *;</div>
-<div class="line"><a name="l00370"></a><span class="lineno">  370</span>&#160;  [[nodiscard]] inline auto getInstruction() -&gt; llvm::Instruction *;</div>
-<div class="line"><a name="l00371"></a><span class="lineno">  371</span>&#160; </div>
-<div class="line"><a name="l00372"></a><span class="lineno">  372</span>&#160;  [[nodiscard]] inline auto getType() const -&gt; llvm::Type *;</div>
-<div class="line"><a name="l00373"></a><span class="lineno">  373</span>&#160;  [[nodiscard]] inline auto getType(<span class="keywordtype">unsigned</span>) const -&gt; llvm::Type *;</div>
-<div class="line"><a name="l00374"></a><span class="lineno">  374</span>&#160;  [[nodiscard]] inline auto getOperands() -&gt; math::PtrVector&lt;Value *&gt;;</div>
-<div class="line"><a name="l00375"></a><span class="lineno">  375</span>&#160;  [[nodiscard]] inline auto getNumOperands() const -&gt; <span class="keywordtype">unsigned</span>;</div>
-<div class="line"><a name="l00376"></a><span class="lineno">  376</span>&#160;  [[nodiscard]] inline auto getOperand(<span class="keywordtype">unsigned</span>) -&gt; Value *;</div>
-<div class="line"><a name="l00377"></a><span class="lineno">  377</span>&#160;  [[nodiscard]] inline auto getOperand(<span class="keywordtype">unsigned</span>) const -&gt; const Value *;</div>
-<div class="line"><a name="l00378"></a><span class="lineno">  378</span>&#160;  [[nodiscard]] inline auto associativeOperandsFlag() const -&gt; uint8_t;</div>
-<div class="line"><a name="l00379"></a><span class="lineno">  379</span>&#160;  [[nodiscard]] inline auto getNumScalarBits() const -&gt; <span class="keywordtype">unsigned</span>;</div>
-<div class="line"><a name="l00380"></a><span class="lineno">  380</span>&#160;  [[nodiscard]] inline auto getNumScalarBytes() const -&gt; <span class="keywordtype">unsigned</span>;</div>
-<div class="line"><a name="l00381"></a><span class="lineno">  381</span>&#160;};</div>
-<div class="line"><a name="l00382"></a><span class="lineno">  382</span>&#160; </div>
-<div class="line"><a name="l00385"></a><span class="lineno"><a class="line" href="classpoly_1_1IR_1_1CVal.html">  385</a></span>&#160;class <a class="code" href="classpoly_1_1IR_1_1CVal.html">CVal</a> : public <a class="code" href="classpoly_1_1IR_1_1Value.html">Value</a> {</div>
-<div class="line"><a name="l00386"></a><span class="lineno">  386</span>&#160; </div>
-<div class="line"><a name="l00387"></a><span class="lineno">  387</span>&#160;<span class="keyword">public</span>:</div>
-<div class="line"><a name="l00388"></a><span class="lineno">  388</span>&#160;  constexpr <a class="code" href="classpoly_1_1IR_1_1CVal.html">CVal</a>(llvm::Value *v) : <a class="code" href="classpoly_1_1IR_1_1Value.html">Value</a>(VK_CVal) { unionPtr.val = v; }</div>
-<div class="line"><a name="l00389"></a><span class="lineno">  389</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> classof(<span class="keyword">const</span> <a class="code" href="classpoly_1_1IR_1_1Node.html">Node</a> *v) -&gt; <span class="keywordtype">bool</span> {</div>
-<div class="line"><a name="l00390"></a><span class="lineno">  390</span>&#160;    <span class="keywordflow">return</span> v-&gt;getKind() == VK_CVal;</div>
-<div class="line"><a name="l00391"></a><span class="lineno">  391</span>&#160;  }</div>
-<div class="line"><a name="l00392"></a><span class="lineno">  392</span>&#160; </div>
-<div class="line"><a name="l00393"></a><span class="lineno">  393</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getValue() <span class="keyword">const</span> -&gt; llvm::Value * {</div>
-<div class="line"><a name="l00394"></a><span class="lineno">  394</span>&#160;    <span class="keywordflow">return</span> unionPtr.val;</div>
-<div class="line"><a name="l00395"></a><span class="lineno">  395</span>&#160;  }</div>
-<div class="line"><a name="l00396"></a><span class="lineno">  396</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getType() <span class="keyword">const</span> -&gt; llvm::Type * {</div>
-<div class="line"><a name="l00397"></a><span class="lineno">  397</span>&#160;    <span class="keywordflow">return</span> getValue()-&gt;getType();</div>
-<div class="line"><a name="l00398"></a><span class="lineno">  398</span>&#160;  }</div>
-<div class="line"><a name="l00399"></a><span class="lineno">  399</span>&#160;};</div>
-<div class="line"><a name="l00401"></a><span class="lineno"><a class="line" href="classpoly_1_1IR_1_1Cnst.html">  401</a></span>&#160;<span class="keyword">class </span><a class="code" href="classpoly_1_1IR_1_1Cnst.html">Cnst</a> : <span class="keyword">public</span> <a class="code" href="classpoly_1_1IR_1_1Value.html">Value</a> {</div>
-<div class="line"><a name="l00402"></a><span class="lineno">  402</span>&#160; </div>
-<div class="line"><a name="l00403"></a><span class="lineno">  403</span>&#160;<span class="keyword">protected</span>:</div>
-<div class="line"><a name="l00404"></a><span class="lineno">  404</span>&#160;  constexpr <a class="code" href="classpoly_1_1IR_1_1Cnst.html">Cnst</a>(ValKind kind, llvm::Type *t) : <a class="code" href="classpoly_1_1IR_1_1Value.html">Value</a>(kind) {</div>
-<div class="line"><a name="l00405"></a><span class="lineno">  405</span>&#160;    unionPtr.typ = t;</div>
-<div class="line"><a name="l00406"></a><span class="lineno">  406</span>&#160;  }</div>
-<div class="line"><a name="l00407"></a><span class="lineno">  407</span>&#160; </div>
-<div class="line"><a name="l00408"></a><span class="lineno">  408</span>&#160;<span class="keyword">public</span>:</div>
-<div class="line"><a name="l00409"></a><span class="lineno">  409</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> classof(<span class="keyword">const</span> <a class="code" href="classpoly_1_1IR_1_1Node.html">Node</a> *v) -&gt; <span class="keywordtype">bool</span> {</div>
-<div class="line"><a name="l00410"></a><span class="lineno">  410</span>&#160;    <span class="keywordflow">return</span> v-&gt;getKind() == VK_Cint || v-&gt;getKind() == VK_Cflt;</div>
-<div class="line"><a name="l00411"></a><span class="lineno">  411</span>&#160;  }</div>
-<div class="line"><a name="l00412"></a><span class="lineno">  412</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getType() <span class="keyword">const</span> -&gt; llvm::Type * {</div>
-<div class="line"><a name="l00413"></a><span class="lineno">  413</span>&#160;    <span class="keywordflow">return</span> unionPtr.typ;</div>
-<div class="line"><a name="l00414"></a><span class="lineno">  414</span>&#160;  }</div>
-<div class="line"><a name="l00415"></a><span class="lineno"><a class="line" href="structpoly_1_1IR_1_1Cnst_1_1Identifier.html">  415</a></span>&#160;  <span class="keyword">struct </span><a class="code" href="structpoly_1_1IR_1_1Cnst_1_1Identifier.html">Identifier</a> {</div>
-<div class="line"><a name="l00416"></a><span class="lineno">  416</span>&#160;    ValKind kind;</div>
-<div class="line"><a name="l00417"></a><span class="lineno">  417</span>&#160;    llvm::Type *typ;</div>
-<div class="line"><a name="l00418"></a><span class="lineno">  418</span>&#160;    <span class="keyword">union </span>{</div>
-<div class="line"><a name="l00419"></a><span class="lineno">  419</span>&#160;      int64_t i;</div>
-<div class="line"><a name="l00420"></a><span class="lineno">  420</span>&#160;      <span class="keywordtype">double</span> f;</div>
-<div class="line"><a name="l00421"></a><span class="lineno">  421</span>&#160;      <span class="keyword">const</span> llvm::APInt *ci;</div>
-<div class="line"><a name="l00422"></a><span class="lineno">  422</span>&#160;      <span class="keyword">const</span> llvm::APFloat *cf;</div>
-<div class="line"><a name="l00423"></a><span class="lineno">  423</span>&#160;    } payload;</div>
-<div class="line"><a name="l00424"></a><span class="lineno">  424</span>&#160;    constexpr <span class="keyword">auto</span> operator==(<span class="keyword">const</span> <a class="code" href="structpoly_1_1IR_1_1Cnst_1_1Identifier.html">Identifier</a> &amp;o) <span class="keyword">const</span> -&gt; <span class="keywordtype">bool</span> {</div>
-<div class="line"><a name="l00425"></a><span class="lineno">  425</span>&#160;      <span class="keywordflow">if</span> (kind != o.kind || typ != o.typ) <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
-<div class="line"><a name="l00426"></a><span class="lineno">  426</span>&#160;      <span class="keywordflow">switch</span> (kind) {</div>
-<div class="line"><a name="l00427"></a><span class="lineno">  427</span>&#160;      <span class="keywordflow">case</span> VK_Cint: <span class="keywordflow">return</span> payload.i == o.payload.i;</div>
-<div class="line"><a name="l00428"></a><span class="lineno">  428</span>&#160;      <span class="keywordflow">case</span> VK_Cflt: <span class="keywordflow">return</span> payload.f == o.payload.f;</div>
-<div class="line"><a name="l00429"></a><span class="lineno">  429</span>&#160;      <span class="keywordflow">case</span> VK_Bint: <span class="keywordflow">return</span> *payload.ci == *o.payload.ci;</div>
-<div class="line"><a name="l00430"></a><span class="lineno">  430</span>&#160;      <span class="keywordflow">default</span>: invariant(kind == VK_Bflt); <span class="keywordflow">return</span> *payload.cf == *o.payload.cf;</div>
-<div class="line"><a name="l00431"></a><span class="lineno">  431</span>&#160;      }</div>
-<div class="line"><a name="l00432"></a><span class="lineno">  432</span>&#160;    }</div>
-<div class="line"><a name="l00433"></a><span class="lineno">  433</span>&#160;    constexpr <a class="code" href="structpoly_1_1IR_1_1Cnst_1_1Identifier.html">Identifier</a>(llvm::Type *t, int64_t i)</div>
-<div class="line"><a name="l00434"></a><span class="lineno">  434</span>&#160;      : kind(VK_Cint), typ(t), payload(i){};</div>
-<div class="line"><a name="l00435"></a><span class="lineno">  435</span>&#160;    constexpr <a class="code" href="structpoly_1_1IR_1_1Cnst_1_1Identifier.html">Identifier</a>(llvm::Type *t, <span class="keywordtype">double</span> f) : kind(VK_Cflt), typ(t) {</div>
-<div class="line"><a name="l00436"></a><span class="lineno">  436</span>&#160;      payload.f = f;</div>
-<div class="line"><a name="l00437"></a><span class="lineno">  437</span>&#160;    };</div>
-<div class="line"><a name="l00438"></a><span class="lineno">  438</span>&#160;    constexpr <a class="code" href="structpoly_1_1IR_1_1Cnst_1_1Identifier.html">Identifier</a>(llvm::Type *t, <span class="keyword">const</span> llvm::APInt &amp;i)</div>
-<div class="line"><a name="l00439"></a><span class="lineno">  439</span>&#160;      : kind(VK_Bint), typ(t) {</div>
-<div class="line"><a name="l00440"></a><span class="lineno">  440</span>&#160;      payload.ci = &amp;i;</div>
-<div class="line"><a name="l00441"></a><span class="lineno">  441</span>&#160;    };</div>
-<div class="line"><a name="l00442"></a><span class="lineno">  442</span>&#160;    constexpr <a class="code" href="structpoly_1_1IR_1_1Cnst_1_1Identifier.html">Identifier</a>(llvm::Type *t, <span class="keyword">const</span> llvm::APFloat &amp;f)</div>
-<div class="line"><a name="l00443"></a><span class="lineno">  443</span>&#160;      : kind(VK_Bflt), typ(t) {</div>
-<div class="line"><a name="l00444"></a><span class="lineno">  444</span>&#160;      payload.cf = &amp;f;</div>
-<div class="line"><a name="l00445"></a><span class="lineno">  445</span>&#160;    }</div>
-<div class="line"><a name="l00446"></a><span class="lineno">  446</span>&#160;  };</div>
-<div class="line"><a name="l00447"></a><span class="lineno">  447</span>&#160;};</div>
-<div class="line"><a name="l00449"></a><span class="lineno"><a class="line" href="classpoly_1_1IR_1_1Cint.html">  449</a></span>&#160;<span class="keyword">class </span><a class="code" href="classpoly_1_1IR_1_1Cint.html">Cint</a> : <span class="keyword">public</span> <a class="code" href="classpoly_1_1IR_1_1Cnst.html">Cnst</a> {</div>
-<div class="line"><a name="l00450"></a><span class="lineno">  450</span>&#160;  int64_t val;</div>
-<div class="line"><a name="l00451"></a><span class="lineno">  451</span>&#160; </div>
-<div class="line"><a name="l00452"></a><span class="lineno">  452</span>&#160;<span class="keyword">public</span>:</div>
-<div class="line"><a name="l00453"></a><span class="lineno">  453</span>&#160;  constexpr <a class="code" href="classpoly_1_1IR_1_1Cint.html">Cint</a>(int64_t v, llvm::Type *t) : <a class="code" href="classpoly_1_1IR_1_1Cnst.html">Cnst</a>(VK_Cint, t), val(v) {}</div>
-<div class="line"><a name="l00454"></a><span class="lineno">  454</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> create(BumpAlloc&lt;&gt; &amp;alloc, int64_t v, llvm::Type *t)</div>
-<div class="line"><a name="l00455"></a><span class="lineno">  455</span>&#160;    -&gt; <a class="code" href="classpoly_1_1IR_1_1Cint.html">Cint</a> * {</div>
-<div class="line"><a name="l00456"></a><span class="lineno">  456</span>&#160;    <span class="keywordflow">return</span> alloc.create&lt;<a class="code" href="classpoly_1_1IR_1_1Cint.html">Cint</a>&gt;(v, t);</div>
-<div class="line"><a name="l00457"></a><span class="lineno">  457</span>&#160;  }</div>
-<div class="line"><a name="l00458"></a><span class="lineno">  458</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> classof(<span class="keyword">const</span> <a class="code" href="classpoly_1_1IR_1_1Node.html">Node</a> *v) -&gt; <span class="keywordtype">bool</span> {</div>
-<div class="line"><a name="l00459"></a><span class="lineno">  459</span>&#160;    <span class="keywordflow">return</span> v-&gt;getKind() == VK_Cint;</div>
-<div class="line"><a name="l00460"></a><span class="lineno">  460</span>&#160;  }</div>
-<div class="line"><a name="l00461"></a><span class="lineno">  461</span>&#160; </div>
-<div class="line"><a name="l00462"></a><span class="lineno">  462</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getVal() <span class="keyword">const</span> -&gt; int64_t { <span class="keywordflow">return</span> val; }</div>
-<div class="line"><a name="l00463"></a><span class="lineno">  463</span>&#160;};</div>
-<div class="line"><a name="l00466"></a><span class="lineno"><a class="line" href="classpoly_1_1IR_1_1Cflt.html">  466</a></span>&#160;<span class="keyword">class </span><a class="code" href="classpoly_1_1IR_1_1Cflt.html">Cflt</a> : <span class="keyword">public</span> <a class="code" href="classpoly_1_1IR_1_1Cnst.html">Cnst</a> {</div>
-<div class="line"><a name="l00467"></a><span class="lineno">  467</span>&#160;  <span class="keywordtype">double</span> val;</div>
-<div class="line"><a name="l00468"></a><span class="lineno">  468</span>&#160; </div>
-<div class="line"><a name="l00469"></a><span class="lineno">  469</span>&#160;<span class="keyword">public</span>:</div>
-<div class="line"><a name="l00470"></a><span class="lineno">  470</span>&#160;  constexpr <a class="code" href="classpoly_1_1IR_1_1Cflt.html">Cflt</a>(<span class="keywordtype">double</span> v, llvm::Type *t) : <a class="code" href="classpoly_1_1IR_1_1Cnst.html">Cnst</a>(VK_Cflt, t), val(v) {}</div>
-<div class="line"><a name="l00471"></a><span class="lineno">  471</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> create(BumpAlloc&lt;&gt; &amp;alloc, <span class="keywordtype">double</span> v, llvm::Type *t)</div>
-<div class="line"><a name="l00472"></a><span class="lineno">  472</span>&#160;    -&gt; <a class="code" href="classpoly_1_1IR_1_1Cflt.html">Cflt</a> * {</div>
-<div class="line"><a name="l00473"></a><span class="lineno">  473</span>&#160;    <span class="keywordflow">return</span> alloc.create&lt;<a class="code" href="classpoly_1_1IR_1_1Cflt.html">Cflt</a>&gt;(v, t);</div>
-<div class="line"><a name="l00474"></a><span class="lineno">  474</span>&#160;  }</div>
-<div class="line"><a name="l00475"></a><span class="lineno">  475</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> classof(<span class="keyword">const</span> <a class="code" href="classpoly_1_1IR_1_1Node.html">Node</a> *v) -&gt; <span class="keywordtype">bool</span> {</div>
-<div class="line"><a name="l00476"></a><span class="lineno">  476</span>&#160;    <span class="keywordflow">return</span> v-&gt;getKind() == VK_Cflt;</div>
-<div class="line"><a name="l00477"></a><span class="lineno">  477</span>&#160;  }</div>
+<div class="line"><a name="l00365"></a><span class="lineno">  365</span>&#160; </div>
+<div class="line"><a name="l00366"></a><span class="lineno">  366</span>&#160;  [[nodiscard]] <span class="keyword">inline</span> <span class="keyword">auto</span> getFastMathFlags() const -&gt; llvm::FastMathFlags;</div>
+<div class="line"><a name="l00368"></a><span class="lineno">  368</span>&#160;  inline auto <a class="code" href="classpoly_1_1IR_1_1Value.html#adb093c83013329c7391357aa9f19144d">getCost</a>(llvm::TargetTransformInfo &amp;TTI, cost::VectorWidth W)</div>
+<div class="line"><a name="l00369"></a><span class="lineno">  369</span>&#160;    -&gt; cost::RecipThroughputLatency;</div>
+<div class="line"><a name="l00370"></a><span class="lineno">  370</span>&#160;  [[nodiscard]] inline auto getValue() -&gt; llvm::Value *;</div>
+<div class="line"><a name="l00371"></a><span class="lineno">  371</span>&#160;  [[nodiscard]] inline auto getValue() const -&gt; const llvm::Value *;</div>
+<div class="line"><a name="l00372"></a><span class="lineno">  372</span>&#160;  [[nodiscard]] inline auto getInstruction() -&gt; llvm::Instruction *;</div>
+<div class="line"><a name="l00373"></a><span class="lineno">  373</span>&#160;  [[nodiscard]] inline auto getInstruction() const -&gt; const llvm::Instruction *;</div>
+<div class="line"><a name="l00374"></a><span class="lineno">  374</span>&#160; </div>
+<div class="line"><a name="l00375"></a><span class="lineno">  375</span>&#160;  [[nodiscard]] inline auto getType() const -&gt; llvm::Type *;</div>
+<div class="line"><a name="l00376"></a><span class="lineno">  376</span>&#160;  [[nodiscard]] inline auto getType(<span class="keywordtype">unsigned</span>) const -&gt; llvm::Type *;</div>
+<div class="line"><a name="l00377"></a><span class="lineno">  377</span>&#160;  [[nodiscard]] inline auto getOperands() -&gt; math::PtrVector&lt;Value *&gt;;</div>
+<div class="line"><a name="l00378"></a><span class="lineno">  378</span>&#160;  [[nodiscard]] inline auto getNumOperands() const -&gt; <span class="keywordtype">unsigned</span>;</div>
+<div class="line"><a name="l00379"></a><span class="lineno">  379</span>&#160;  [[nodiscard]] inline auto getOperand(<span class="keywordtype">unsigned</span>) -&gt; Value *;</div>
+<div class="line"><a name="l00380"></a><span class="lineno">  380</span>&#160;  [[nodiscard]] inline auto getOperand(<span class="keywordtype">unsigned</span>) const -&gt; const Value *;</div>
+<div class="line"><a name="l00381"></a><span class="lineno">  381</span>&#160;  [[nodiscard]] inline auto associativeOperandsFlag() const -&gt; uint8_t;</div>
+<div class="line"><a name="l00382"></a><span class="lineno">  382</span>&#160;  [[nodiscard]] inline auto getNumScalarBits() const -&gt; <span class="keywordtype">unsigned</span>;</div>
+<div class="line"><a name="l00383"></a><span class="lineno">  383</span>&#160;  [[nodiscard]] inline auto getNumScalarBytes() const -&gt; <span class="keywordtype">unsigned</span>;</div>
+<div class="line"><a name="l00384"></a><span class="lineno">  384</span>&#160;  [[nodiscard]] inline auto getBasicBlock() -&gt; llvm::BasicBlock *;</div>
+<div class="line"><a name="l00385"></a><span class="lineno">  385</span>&#160;  [[nodiscard]] inline auto getBasicBlock() const -&gt; const llvm::BasicBlock *;</div>
+<div class="line"><a name="l00386"></a><span class="lineno">  386</span>&#160;};</div>
+<div class="line"><a name="l00387"></a><span class="lineno">  387</span>&#160; </div>
+<div class="line"><a name="l00388"></a><span class="lineno"><a class="line" href="classpoly_1_1IR_1_1Instruction.html">  388</a></span>&#160;class <a class="code" href="classpoly_1_1IR_1_1Instruction.html">Instruction</a> : public <a class="code" href="classpoly_1_1IR_1_1Value.html">Value</a> {</div>
+<div class="line"><a name="l00392"></a><span class="lineno">  392</span>&#160;<span class="keyword">protected</span>:</div>
+<div class="line"><a name="l00393"></a><span class="lineno"><a class="line" href="classpoly_1_1IR_1_1Instruction.html#a03ac07d26dc92b783043755108fac3e4">  393</a></span>&#160;  constexpr <a class="code" href="classpoly_1_1IR_1_1Instruction.html#a03ac07d26dc92b783043755108fac3e4">Instruction</a>(ValKind kind) : <a class="code" href="classpoly_1_1IR_1_1Value.html">Value</a>(kind) {}</div>
+<div class="line"><a name="l00394"></a><span class="lineno">  394</span>&#160;  constexpr <a class="code" href="classpoly_1_1IR_1_1Instruction.html">Instruction</a>(ValKind kind, <span class="keywordtype">unsigned</span> depth) : <a class="code" href="classpoly_1_1IR_1_1Value.html">Value</a>(kind, depth) {}</div>
+<div class="line"><a name="l00395"></a><span class="lineno">  395</span>&#160; </div>
+<div class="line"><a name="l00396"></a><span class="lineno">  396</span>&#160;<span class="keyword">public</span>:</div>
+<div class="line"><a name="l00397"></a><span class="lineno">  397</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> classof(<span class="keyword">const</span> Node *v) -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l00398"></a><span class="lineno">  398</span>&#160;    <span class="keywordflow">return</span> v-&gt;getKind() &gt;= VK_Func || v-&gt;getKind() &lt;= VK_Stow;</div>
+<div class="line"><a name="l00399"></a><span class="lineno">  399</span>&#160;  }</div>
+<div class="line"><a name="l00400"></a><span class="lineno"><a class="line" href="structpoly_1_1IR_1_1Instruction_1_1Identifier.html">  400</a></span>&#160;  <span class="keyword">struct </span><a class="code" href="structpoly_1_1IR_1_1Instruction_1_1Identifier.html">Identifier</a> {</div>
+<div class="line"><a name="l00401"></a><span class="lineno">  401</span>&#160;    llvm::Intrinsic::ID ID;</div>
+<div class="line"><a name="l00402"></a><span class="lineno">  402</span>&#160;    Node::ValKind kind;</div>
+<div class="line"><a name="l00403"></a><span class="lineno">  403</span>&#160;    llvm::Type *type;</div>
+<div class="line"><a name="l00404"></a><span class="lineno">  404</span>&#160;  };</div>
+<div class="line"><a name="l00405"></a><span class="lineno">  405</span>&#160;  <span class="comment">// declarations</span></div>
+<div class="line"><a name="l00406"></a><span class="lineno">  406</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getIdentifier() const -&gt; <a class="code" href="structpoly_1_1IR_1_1Instruction_1_1Identifier.html">Identifier</a>;</div>
+<div class="line"><a name="l00407"></a><span class="lineno">  407</span>&#160;};</div>
+<div class="line"><a name="l00408"></a><span class="lineno">  408</span>&#160; </div>
+<div class="line"><a name="l00411"></a><span class="lineno"><a class="line" href="classpoly_1_1IR_1_1CVal.html">  411</a></span>&#160;class <a class="code" href="classpoly_1_1IR_1_1CVal.html">CVal</a> : public <a class="code" href="classpoly_1_1IR_1_1Value.html">Value</a> {</div>
+<div class="line"><a name="l00412"></a><span class="lineno">  412</span>&#160; </div>
+<div class="line"><a name="l00413"></a><span class="lineno">  413</span>&#160;<span class="keyword">public</span>:</div>
+<div class="line"><a name="l00414"></a><span class="lineno">  414</span>&#160;  constexpr <a class="code" href="classpoly_1_1IR_1_1CVal.html">CVal</a>(llvm::Value *v) : <a class="code" href="classpoly_1_1IR_1_1Value.html">Value</a>(VK_CVal) { unionPtr.val = v; }</div>
+<div class="line"><a name="l00415"></a><span class="lineno">  415</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> classof(<span class="keyword">const</span> <a class="code" href="classpoly_1_1IR_1_1Node.html">Node</a> *v) -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l00416"></a><span class="lineno">  416</span>&#160;    <span class="keywordflow">return</span> v-&gt;getKind() == VK_CVal;</div>
+<div class="line"><a name="l00417"></a><span class="lineno">  417</span>&#160;  }</div>
+<div class="line"><a name="l00418"></a><span class="lineno">  418</span>&#160; </div>
+<div class="line"><a name="l00419"></a><span class="lineno">  419</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getValue() <span class="keyword">const</span> -&gt; llvm::Value * {</div>
+<div class="line"><a name="l00420"></a><span class="lineno">  420</span>&#160;    <span class="keywordflow">return</span> unionPtr.val;</div>
+<div class="line"><a name="l00421"></a><span class="lineno">  421</span>&#160;  }</div>
+<div class="line"><a name="l00422"></a><span class="lineno">  422</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getType() <span class="keyword">const</span> -&gt; llvm::Type * {</div>
+<div class="line"><a name="l00423"></a><span class="lineno">  423</span>&#160;    <span class="keywordflow">return</span> getValue()-&gt;getType();</div>
+<div class="line"><a name="l00424"></a><span class="lineno">  424</span>&#160;  }</div>
+<div class="line"><a name="l00425"></a><span class="lineno">  425</span>&#160;};</div>
+<div class="line"><a name="l00427"></a><span class="lineno"><a class="line" href="classpoly_1_1IR_1_1Cnst.html">  427</a></span>&#160;<span class="keyword">class </span><a class="code" href="classpoly_1_1IR_1_1Cnst.html">Cnst</a> : <span class="keyword">public</span> <a class="code" href="classpoly_1_1IR_1_1Value.html">Value</a> {</div>
+<div class="line"><a name="l00428"></a><span class="lineno">  428</span>&#160; </div>
+<div class="line"><a name="l00429"></a><span class="lineno">  429</span>&#160;<span class="keyword">protected</span>:</div>
+<div class="line"><a name="l00430"></a><span class="lineno">  430</span>&#160;  constexpr <a class="code" href="classpoly_1_1IR_1_1Cnst.html">Cnst</a>(ValKind kind, llvm::Type *t) : <a class="code" href="classpoly_1_1IR_1_1Value.html">Value</a>(kind) {</div>
+<div class="line"><a name="l00431"></a><span class="lineno">  431</span>&#160;    unionPtr.typ = t;</div>
+<div class="line"><a name="l00432"></a><span class="lineno">  432</span>&#160;  }</div>
+<div class="line"><a name="l00433"></a><span class="lineno">  433</span>&#160; </div>
+<div class="line"><a name="l00434"></a><span class="lineno">  434</span>&#160;<span class="keyword">public</span>:</div>
+<div class="line"><a name="l00435"></a><span class="lineno">  435</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> classof(<span class="keyword">const</span> <a class="code" href="classpoly_1_1IR_1_1Node.html">Node</a> *v) -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l00436"></a><span class="lineno">  436</span>&#160;    <span class="keywordflow">return</span> v-&gt;getKind() == VK_Cint || v-&gt;getKind() == VK_Cflt;</div>
+<div class="line"><a name="l00437"></a><span class="lineno">  437</span>&#160;  }</div>
+<div class="line"><a name="l00438"></a><span class="lineno">  438</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getType() <span class="keyword">const</span> -&gt; llvm::Type * {</div>
+<div class="line"><a name="l00439"></a><span class="lineno">  439</span>&#160;    <span class="keywordflow">return</span> unionPtr.typ;</div>
+<div class="line"><a name="l00440"></a><span class="lineno">  440</span>&#160;  }</div>
+<div class="line"><a name="l00441"></a><span class="lineno"><a class="line" href="structpoly_1_1IR_1_1Cnst_1_1Identifier.html">  441</a></span>&#160;  <span class="keyword">struct </span><a class="code" href="structpoly_1_1IR_1_1Cnst_1_1Identifier.html">Identifier</a> {</div>
+<div class="line"><a name="l00442"></a><span class="lineno">  442</span>&#160;    ValKind kind;</div>
+<div class="line"><a name="l00443"></a><span class="lineno">  443</span>&#160;    llvm::Type *typ;</div>
+<div class="line"><a name="l00444"></a><span class="lineno">  444</span>&#160;    <span class="keyword">union </span>{</div>
+<div class="line"><a name="l00445"></a><span class="lineno">  445</span>&#160;      int64_t i;</div>
+<div class="line"><a name="l00446"></a><span class="lineno">  446</span>&#160;      <span class="keywordtype">double</span> f;</div>
+<div class="line"><a name="l00447"></a><span class="lineno">  447</span>&#160;      <span class="keyword">const</span> llvm::APInt *ci;</div>
+<div class="line"><a name="l00448"></a><span class="lineno">  448</span>&#160;      <span class="keyword">const</span> llvm::APFloat *cf;</div>
+<div class="line"><a name="l00449"></a><span class="lineno">  449</span>&#160;    } payload;</div>
+<div class="line"><a name="l00450"></a><span class="lineno">  450</span>&#160;    constexpr <span class="keyword">auto</span> operator==(<span class="keyword">const</span> <a class="code" href="structpoly_1_1IR_1_1Cnst_1_1Identifier.html">Identifier</a> &amp;o) <span class="keyword">const</span> -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l00451"></a><span class="lineno">  451</span>&#160;      <span class="keywordflow">if</span> (kind != o.kind || typ != o.typ) <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
+<div class="line"><a name="l00452"></a><span class="lineno">  452</span>&#160;      <span class="keywordflow">switch</span> (kind) {</div>
+<div class="line"><a name="l00453"></a><span class="lineno">  453</span>&#160;      <span class="keywordflow">case</span> VK_Cint: <span class="keywordflow">return</span> payload.i == o.payload.i;</div>
+<div class="line"><a name="l00454"></a><span class="lineno">  454</span>&#160;      <span class="keywordflow">case</span> VK_Cflt: <span class="keywordflow">return</span> payload.f == o.payload.f;</div>
+<div class="line"><a name="l00455"></a><span class="lineno">  455</span>&#160;      <span class="keywordflow">case</span> VK_Bint: <span class="keywordflow">return</span> *payload.ci == *o.payload.ci;</div>
+<div class="line"><a name="l00456"></a><span class="lineno">  456</span>&#160;      <span class="keywordflow">default</span>: invariant(kind == VK_Bflt); <span class="keywordflow">return</span> *payload.cf == *o.payload.cf;</div>
+<div class="line"><a name="l00457"></a><span class="lineno">  457</span>&#160;      }</div>
+<div class="line"><a name="l00458"></a><span class="lineno">  458</span>&#160;    }</div>
+<div class="line"><a name="l00459"></a><span class="lineno">  459</span>&#160;    constexpr <a class="code" href="structpoly_1_1IR_1_1Cnst_1_1Identifier.html">Identifier</a>(llvm::Type *t, int64_t i)</div>
+<div class="line"><a name="l00460"></a><span class="lineno">  460</span>&#160;      : kind(VK_Cint), typ(t), payload(i){};</div>
+<div class="line"><a name="l00461"></a><span class="lineno">  461</span>&#160;    constexpr <a class="code" href="structpoly_1_1IR_1_1Cnst_1_1Identifier.html">Identifier</a>(llvm::Type *t, <span class="keywordtype">double</span> f) : kind(VK_Cflt), typ(t) {</div>
+<div class="line"><a name="l00462"></a><span class="lineno">  462</span>&#160;      payload.f = f;</div>
+<div class="line"><a name="l00463"></a><span class="lineno">  463</span>&#160;    };</div>
+<div class="line"><a name="l00464"></a><span class="lineno">  464</span>&#160;    constexpr <a class="code" href="structpoly_1_1IR_1_1Cnst_1_1Identifier.html">Identifier</a>(llvm::Type *t, <span class="keyword">const</span> llvm::APInt &amp;i)</div>
+<div class="line"><a name="l00465"></a><span class="lineno">  465</span>&#160;      : kind(VK_Bint), typ(t) {</div>
+<div class="line"><a name="l00466"></a><span class="lineno">  466</span>&#160;      payload.ci = &amp;i;</div>
+<div class="line"><a name="l00467"></a><span class="lineno">  467</span>&#160;    };</div>
+<div class="line"><a name="l00468"></a><span class="lineno">  468</span>&#160;    constexpr <a class="code" href="structpoly_1_1IR_1_1Cnst_1_1Identifier.html">Identifier</a>(llvm::Type *t, <span class="keyword">const</span> llvm::APFloat &amp;f)</div>
+<div class="line"><a name="l00469"></a><span class="lineno">  469</span>&#160;      : kind(VK_Bflt), typ(t) {</div>
+<div class="line"><a name="l00470"></a><span class="lineno">  470</span>&#160;      payload.cf = &amp;f;</div>
+<div class="line"><a name="l00471"></a><span class="lineno">  471</span>&#160;    }</div>
+<div class="line"><a name="l00472"></a><span class="lineno">  472</span>&#160;  };</div>
+<div class="line"><a name="l00473"></a><span class="lineno">  473</span>&#160;  <span class="keyword">inline</span> <span class="keywordtype">void</span> setOperands(BumpAlloc&lt;&gt; &amp;alloc, math::PtrVector&lt;Value *&gt;);</div>
+<div class="line"><a name="l00474"></a><span class="lineno">  474</span>&#160;};</div>
+<div class="line"><a name="l00476"></a><span class="lineno"><a class="line" href="classpoly_1_1IR_1_1Cint.html">  476</a></span>&#160;<span class="keyword">class </span><a class="code" href="classpoly_1_1IR_1_1Cint.html">Cint</a> : <span class="keyword">public</span> <a class="code" href="classpoly_1_1IR_1_1Cnst.html">Cnst</a> {</div>
+<div class="line"><a name="l00477"></a><span class="lineno">  477</span>&#160;  int64_t val;</div>
 <div class="line"><a name="l00478"></a><span class="lineno">  478</span>&#160; </div>
-<div class="line"><a name="l00479"></a><span class="lineno">  479</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getVal() <span class="keyword">const</span> -&gt; <span class="keywordtype">double</span> { <span class="keywordflow">return</span> val; }</div>
-<div class="line"><a name="l00480"></a><span class="lineno">  480</span>&#160;};</div>
-<div class="line"><a name="l00482"></a><span class="lineno"><a class="line" href="classpoly_1_1IR_1_1Bint.html">  482</a></span>&#160;<span class="keyword">class </span><a class="code" href="classpoly_1_1IR_1_1Bint.html">Bint</a> : <span class="keyword">public</span> <a class="code" href="classpoly_1_1IR_1_1Cnst.html">Cnst</a> {</div>
-<div class="line"><a name="l00483"></a><span class="lineno">  483</span>&#160;  <span class="keyword">const</span> llvm::APInt &amp;val;</div>
-<div class="line"><a name="l00484"></a><span class="lineno">  484</span>&#160; </div>
-<div class="line"><a name="l00485"></a><span class="lineno">  485</span>&#160;<span class="keyword">public</span>:</div>
-<div class="line"><a name="l00486"></a><span class="lineno">  486</span>&#160;  constexpr <a class="code" href="classpoly_1_1IR_1_1Bint.html">Bint</a>(llvm::ConstantInt *v, llvm::Type *t)</div>
-<div class="line"><a name="l00487"></a><span class="lineno">  487</span>&#160;    : <a class="code" href="classpoly_1_1IR_1_1Cnst.html">Cnst</a>(VK_Bint, t), val(v-&gt;getValue()) {}</div>
-<div class="line"><a name="l00488"></a><span class="lineno">  488</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> create(BumpAlloc&lt;&gt; &amp;alloc, llvm::ConstantInt *v,</div>
-<div class="line"><a name="l00489"></a><span class="lineno">  489</span>&#160;                               llvm::Type *t) -&gt; <a class="code" href="classpoly_1_1IR_1_1Bint.html">Bint</a> * {</div>
-<div class="line"><a name="l00490"></a><span class="lineno">  490</span>&#160;    <span class="keywordflow">return</span> alloc.create&lt;<a class="code" href="classpoly_1_1IR_1_1Bint.html">Bint</a>&gt;(v, t);</div>
-<div class="line"><a name="l00491"></a><span class="lineno">  491</span>&#160;  }</div>
-<div class="line"><a name="l00492"></a><span class="lineno">  492</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> classof(<span class="keyword">const</span> <a class="code" href="classpoly_1_1IR_1_1Node.html">Node</a> *v) -&gt; <span class="keywordtype">bool</span> {</div>
-<div class="line"><a name="l00493"></a><span class="lineno">  493</span>&#160;    <span class="keywordflow">return</span> v-&gt;getKind() == VK_Bint;</div>
-<div class="line"><a name="l00494"></a><span class="lineno">  494</span>&#160;  }</div>
+<div class="line"><a name="l00479"></a><span class="lineno">  479</span>&#160;<span class="keyword">public</span>:</div>
+<div class="line"><a name="l00480"></a><span class="lineno">  480</span>&#160;  constexpr <a class="code" href="classpoly_1_1IR_1_1Cint.html">Cint</a>(int64_t v, llvm::Type *t) : <a class="code" href="classpoly_1_1IR_1_1Cnst.html">Cnst</a>(VK_Cint, t), val(v) {}</div>
+<div class="line"><a name="l00481"></a><span class="lineno">  481</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> create(BumpAlloc&lt;&gt; &amp;alloc, int64_t v, llvm::Type *t)</div>
+<div class="line"><a name="l00482"></a><span class="lineno">  482</span>&#160;    -&gt; <a class="code" href="classpoly_1_1IR_1_1Cint.html">Cint</a> * {</div>
+<div class="line"><a name="l00483"></a><span class="lineno">  483</span>&#160;    <span class="keywordflow">return</span> alloc.create&lt;<a class="code" href="classpoly_1_1IR_1_1Cint.html">Cint</a>&gt;(v, t);</div>
+<div class="line"><a name="l00484"></a><span class="lineno">  484</span>&#160;  }</div>
+<div class="line"><a name="l00485"></a><span class="lineno">  485</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> classof(<span class="keyword">const</span> <a class="code" href="classpoly_1_1IR_1_1Node.html">Node</a> *v) -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l00486"></a><span class="lineno">  486</span>&#160;    <span class="keywordflow">return</span> v-&gt;getKind() == VK_Cint;</div>
+<div class="line"><a name="l00487"></a><span class="lineno">  487</span>&#160;  }</div>
+<div class="line"><a name="l00488"></a><span class="lineno">  488</span>&#160; </div>
+<div class="line"><a name="l00489"></a><span class="lineno">  489</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getVal() <span class="keyword">const</span> -&gt; int64_t { <span class="keywordflow">return</span> val; }</div>
+<div class="line"><a name="l00490"></a><span class="lineno">  490</span>&#160;};</div>
+<div class="line"><a name="l00493"></a><span class="lineno"><a class="line" href="classpoly_1_1IR_1_1Cflt.html">  493</a></span>&#160;<span class="keyword">class </span><a class="code" href="classpoly_1_1IR_1_1Cflt.html">Cflt</a> : <span class="keyword">public</span> <a class="code" href="classpoly_1_1IR_1_1Cnst.html">Cnst</a> {</div>
+<div class="line"><a name="l00494"></a><span class="lineno">  494</span>&#160;  <span class="keywordtype">double</span> val;</div>
 <div class="line"><a name="l00495"></a><span class="lineno">  495</span>&#160; </div>
-<div class="line"><a name="l00496"></a><span class="lineno">  496</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getVal() <span class="keyword">const</span> -&gt; <span class="keyword">const</span> llvm::APInt &amp; {</div>
-<div class="line"><a name="l00497"></a><span class="lineno">  497</span>&#160;    <span class="keywordflow">return</span> val;</div>
-<div class="line"><a name="l00498"></a><span class="lineno">  498</span>&#160;  }</div>
-<div class="line"><a name="l00499"></a><span class="lineno">  499</span>&#160;};</div>
-<div class="line"><a name="l00502"></a><span class="lineno"><a class="line" href="classpoly_1_1IR_1_1Bflt.html">  502</a></span>&#160;<span class="keyword">class </span><a class="code" href="classpoly_1_1IR_1_1Bflt.html">Bflt</a> : <span class="keyword">public</span> <a class="code" href="classpoly_1_1IR_1_1Cnst.html">Cnst</a> {</div>
-<div class="line"><a name="l00503"></a><span class="lineno">  503</span>&#160;  <span class="keyword">const</span> llvm::APFloat &amp;val;</div>
-<div class="line"><a name="l00504"></a><span class="lineno">  504</span>&#160; </div>
-<div class="line"><a name="l00505"></a><span class="lineno">  505</span>&#160;<span class="keyword">public</span>:</div>
-<div class="line"><a name="l00506"></a><span class="lineno">  506</span>&#160;  constexpr <a class="code" href="classpoly_1_1IR_1_1Bflt.html">Bflt</a>(llvm::ConstantFP *v, llvm::Type *t)</div>
-<div class="line"><a name="l00507"></a><span class="lineno">  507</span>&#160;    : <a class="code" href="classpoly_1_1IR_1_1Cnst.html">Cnst</a>(VK_Bflt, t), val(v-&gt;getValue()) {}</div>
-<div class="line"><a name="l00508"></a><span class="lineno">  508</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> create(BumpAlloc&lt;&gt; &amp;alloc, llvm::ConstantFP *v,</div>
-<div class="line"><a name="l00509"></a><span class="lineno">  509</span>&#160;                               llvm::Type *t) -&gt; <a class="code" href="classpoly_1_1IR_1_1Bflt.html">Bflt</a> * {</div>
-<div class="line"><a name="l00510"></a><span class="lineno">  510</span>&#160;    <span class="keywordflow">return</span> alloc.create&lt;<a class="code" href="classpoly_1_1IR_1_1Bflt.html">Bflt</a>&gt;(v, t);</div>
-<div class="line"><a name="l00511"></a><span class="lineno">  511</span>&#160;  }</div>
-<div class="line"><a name="l00512"></a><span class="lineno">  512</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> classof(<span class="keyword">const</span> <a class="code" href="classpoly_1_1IR_1_1Node.html">Node</a> *v) -&gt; <span class="keywordtype">bool</span> {</div>
-<div class="line"><a name="l00513"></a><span class="lineno">  513</span>&#160;    <span class="keywordflow">return</span> v-&gt;getKind() == VK_Bflt;</div>
-<div class="line"><a name="l00514"></a><span class="lineno">  514</span>&#160;  }</div>
-<div class="line"><a name="l00515"></a><span class="lineno">  515</span>&#160; </div>
-<div class="line"><a name="l00516"></a><span class="lineno">  516</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getVal() <span class="keyword">const</span> -&gt; <span class="keyword">const</span> llvm::APFloat &amp; {</div>
-<div class="line"><a name="l00517"></a><span class="lineno">  517</span>&#160;    <span class="keywordflow">return</span> val;</div>
+<div class="line"><a name="l00496"></a><span class="lineno">  496</span>&#160;<span class="keyword">public</span>:</div>
+<div class="line"><a name="l00497"></a><span class="lineno">  497</span>&#160;  constexpr <a class="code" href="classpoly_1_1IR_1_1Cflt.html">Cflt</a>(<span class="keywordtype">double</span> v, llvm::Type *t) : <a class="code" href="classpoly_1_1IR_1_1Cnst.html">Cnst</a>(VK_Cflt, t), val(v) {}</div>
+<div class="line"><a name="l00498"></a><span class="lineno">  498</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> create(BumpAlloc&lt;&gt; &amp;alloc, <span class="keywordtype">double</span> v, llvm::Type *t)</div>
+<div class="line"><a name="l00499"></a><span class="lineno">  499</span>&#160;    -&gt; <a class="code" href="classpoly_1_1IR_1_1Cflt.html">Cflt</a> * {</div>
+<div class="line"><a name="l00500"></a><span class="lineno">  500</span>&#160;    <span class="keywordflow">return</span> alloc.create&lt;<a class="code" href="classpoly_1_1IR_1_1Cflt.html">Cflt</a>&gt;(v, t);</div>
+<div class="line"><a name="l00501"></a><span class="lineno">  501</span>&#160;  }</div>
+<div class="line"><a name="l00502"></a><span class="lineno">  502</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> classof(<span class="keyword">const</span> <a class="code" href="classpoly_1_1IR_1_1Node.html">Node</a> *v) -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l00503"></a><span class="lineno">  503</span>&#160;    <span class="keywordflow">return</span> v-&gt;getKind() == VK_Cflt;</div>
+<div class="line"><a name="l00504"></a><span class="lineno">  504</span>&#160;  }</div>
+<div class="line"><a name="l00505"></a><span class="lineno">  505</span>&#160; </div>
+<div class="line"><a name="l00506"></a><span class="lineno">  506</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getVal() <span class="keyword">const</span> -&gt; <span class="keywordtype">double</span> { <span class="keywordflow">return</span> val; }</div>
+<div class="line"><a name="l00507"></a><span class="lineno">  507</span>&#160;};</div>
+<div class="line"><a name="l00509"></a><span class="lineno"><a class="line" href="classpoly_1_1IR_1_1Bint.html">  509</a></span>&#160;<span class="keyword">class </span><a class="code" href="classpoly_1_1IR_1_1Bint.html">Bint</a> : <span class="keyword">public</span> <a class="code" href="classpoly_1_1IR_1_1Cnst.html">Cnst</a> {</div>
+<div class="line"><a name="l00510"></a><span class="lineno">  510</span>&#160;  <span class="keyword">const</span> llvm::APInt &amp;val;</div>
+<div class="line"><a name="l00511"></a><span class="lineno">  511</span>&#160; </div>
+<div class="line"><a name="l00512"></a><span class="lineno">  512</span>&#160;<span class="keyword">public</span>:</div>
+<div class="line"><a name="l00513"></a><span class="lineno">  513</span>&#160;  constexpr <a class="code" href="classpoly_1_1IR_1_1Bint.html">Bint</a>(llvm::ConstantInt *v, llvm::Type *t)</div>
+<div class="line"><a name="l00514"></a><span class="lineno">  514</span>&#160;    : <a class="code" href="classpoly_1_1IR_1_1Cnst.html">Cnst</a>(VK_Bint, t), val(v-&gt;getValue()) {}</div>
+<div class="line"><a name="l00515"></a><span class="lineno">  515</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> create(BumpAlloc&lt;&gt; &amp;alloc, llvm::ConstantInt *v,</div>
+<div class="line"><a name="l00516"></a><span class="lineno">  516</span>&#160;                               llvm::Type *t) -&gt; <a class="code" href="classpoly_1_1IR_1_1Bint.html">Bint</a> * {</div>
+<div class="line"><a name="l00517"></a><span class="lineno">  517</span>&#160;    <span class="keywordflow">return</span> alloc.create&lt;<a class="code" href="classpoly_1_1IR_1_1Bint.html">Bint</a>&gt;(v, t);</div>
 <div class="line"><a name="l00518"></a><span class="lineno">  518</span>&#160;  }</div>
-<div class="line"><a name="l00519"></a><span class="lineno">  519</span>&#160;};</div>
-<div class="line"><a name="l00520"></a><span class="lineno">  520</span>&#160; </div>
-<div class="line"><a name="l00521"></a><span class="lineno">  521</span>&#160;[[nodiscard]] <span class="keyword">inline</span> <span class="keyword">auto</span> isConstantOneInt(<a class="code" href="classpoly_1_1IR_1_1Node.html">Node</a> *n) -&gt; <span class="keywordtype">bool</span> {</div>
-<div class="line"><a name="l00522"></a><span class="lineno">  522</span>&#160;  <span class="keywordflow">if</span> (<a class="code" href="classpoly_1_1IR_1_1Cint.html">Cint</a> *c = llvm::dyn_cast&lt;Cint&gt;(n)) <span class="keywordflow">return</span> c-&gt;getVal() == 1;</div>
-<div class="line"><a name="l00523"></a><span class="lineno">  523</span>&#160;  <span class="keywordflow">if</span> (<a class="code" href="classpoly_1_1IR_1_1Bint.html">Bint</a> *c = llvm::dyn_cast&lt;Bint&gt;(n)) <span class="keywordflow">return</span> c-&gt;getVal().isOne();</div>
-<div class="line"><a name="l00524"></a><span class="lineno">  524</span>&#160;  <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
-<div class="line"><a name="l00525"></a><span class="lineno">  525</span>&#160;}</div>
-<div class="line"><a name="l00526"></a><span class="lineno">  526</span>&#160; </div>
-<div class="line"><a name="l00527"></a><span class="lineno">  527</span>&#160;} <span class="comment">// namespace poly::IR</span></div>
-<div class="ttc" id="aclasspoly_1_1IR_1_1Bflt_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Bflt.html">poly::IR::Bflt</a></div><div class="ttdef"><b>Definition:</b> Node.hpp:502</div></div>
-<div class="ttc" id="aclasspoly_1_1IR_1_1Bint_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Bint.html">poly::IR::Bint</a></div><div class="ttdoc">A constant value w/ respect to the loopnest.</div><div class="ttdef"><b>Definition:</b> Node.hpp:482</div></div>
-<div class="ttc" id="aclasspoly_1_1IR_1_1CVal_html"><div class="ttname"><a href="classpoly_1_1IR_1_1CVal.html">poly::IR::CVal</a></div><div class="ttdef"><b>Definition:</b> Node.hpp:385</div></div>
-<div class="ttc" id="aclasspoly_1_1IR_1_1Cflt_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Cflt.html">poly::IR::Cflt</a></div><div class="ttdef"><b>Definition:</b> Node.hpp:466</div></div>
-<div class="ttc" id="aclasspoly_1_1IR_1_1Cint_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Cint.html">poly::IR::Cint</a></div><div class="ttdoc">A constant value w/ respect to the loopnest.</div><div class="ttdef"><b>Definition:</b> Node.hpp:449</div></div>
-<div class="ttc" id="aclasspoly_1_1IR_1_1Cnst_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Cnst.html">poly::IR::Cnst</a></div><div class="ttdoc">Cnst.</div><div class="ttdef"><b>Definition:</b> Node.hpp:401</div></div>
+<div class="line"><a name="l00519"></a><span class="lineno">  519</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> classof(<span class="keyword">const</span> <a class="code" href="classpoly_1_1IR_1_1Node.html">Node</a> *v) -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l00520"></a><span class="lineno">  520</span>&#160;    <span class="keywordflow">return</span> v-&gt;getKind() == VK_Bint;</div>
+<div class="line"><a name="l00521"></a><span class="lineno">  521</span>&#160;  }</div>
+<div class="line"><a name="l00522"></a><span class="lineno">  522</span>&#160; </div>
+<div class="line"><a name="l00523"></a><span class="lineno">  523</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getVal() <span class="keyword">const</span> -&gt; <span class="keyword">const</span> llvm::APInt &amp; {</div>
+<div class="line"><a name="l00524"></a><span class="lineno">  524</span>&#160;    <span class="keywordflow">return</span> val;</div>
+<div class="line"><a name="l00525"></a><span class="lineno">  525</span>&#160;  }</div>
+<div class="line"><a name="l00526"></a><span class="lineno">  526</span>&#160;};</div>
+<div class="line"><a name="l00529"></a><span class="lineno"><a class="line" href="classpoly_1_1IR_1_1Bflt.html">  529</a></span>&#160;<span class="keyword">class </span><a class="code" href="classpoly_1_1IR_1_1Bflt.html">Bflt</a> : <span class="keyword">public</span> <a class="code" href="classpoly_1_1IR_1_1Cnst.html">Cnst</a> {</div>
+<div class="line"><a name="l00530"></a><span class="lineno">  530</span>&#160;  <span class="keyword">const</span> llvm::APFloat &amp;val;</div>
+<div class="line"><a name="l00531"></a><span class="lineno">  531</span>&#160; </div>
+<div class="line"><a name="l00532"></a><span class="lineno">  532</span>&#160;<span class="keyword">public</span>:</div>
+<div class="line"><a name="l00533"></a><span class="lineno">  533</span>&#160;  constexpr <a class="code" href="classpoly_1_1IR_1_1Bflt.html">Bflt</a>(llvm::ConstantFP *v, llvm::Type *t)</div>
+<div class="line"><a name="l00534"></a><span class="lineno">  534</span>&#160;    : <a class="code" href="classpoly_1_1IR_1_1Cnst.html">Cnst</a>(VK_Bflt, t), val(v-&gt;getValue()) {}</div>
+<div class="line"><a name="l00535"></a><span class="lineno">  535</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> create(BumpAlloc&lt;&gt; &amp;alloc, llvm::ConstantFP *v,</div>
+<div class="line"><a name="l00536"></a><span class="lineno">  536</span>&#160;                               llvm::Type *t) -&gt; <a class="code" href="classpoly_1_1IR_1_1Bflt.html">Bflt</a> * {</div>
+<div class="line"><a name="l00537"></a><span class="lineno">  537</span>&#160;    <span class="keywordflow">return</span> alloc.create&lt;<a class="code" href="classpoly_1_1IR_1_1Bflt.html">Bflt</a>&gt;(v, t);</div>
+<div class="line"><a name="l00538"></a><span class="lineno">  538</span>&#160;  }</div>
+<div class="line"><a name="l00539"></a><span class="lineno">  539</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> classof(<span class="keyword">const</span> <a class="code" href="classpoly_1_1IR_1_1Node.html">Node</a> *v) -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l00540"></a><span class="lineno">  540</span>&#160;    <span class="keywordflow">return</span> v-&gt;getKind() == VK_Bflt;</div>
+<div class="line"><a name="l00541"></a><span class="lineno">  541</span>&#160;  }</div>
+<div class="line"><a name="l00542"></a><span class="lineno">  542</span>&#160; </div>
+<div class="line"><a name="l00543"></a><span class="lineno">  543</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getVal() <span class="keyword">const</span> -&gt; <span class="keyword">const</span> llvm::APFloat &amp; {</div>
+<div class="line"><a name="l00544"></a><span class="lineno">  544</span>&#160;    <span class="keywordflow">return</span> val;</div>
+<div class="line"><a name="l00545"></a><span class="lineno">  545</span>&#160;  }</div>
+<div class="line"><a name="l00546"></a><span class="lineno">  546</span>&#160;};</div>
+<div class="line"><a name="l00547"></a><span class="lineno">  547</span>&#160; </div>
+<div class="line"><a name="l00548"></a><span class="lineno">  548</span>&#160;[[nodiscard]] <span class="keyword">inline</span> <span class="keyword">auto</span> isConstantOneInt(<a class="code" href="classpoly_1_1IR_1_1Node.html">Node</a> *n) -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l00549"></a><span class="lineno">  549</span>&#160;  <span class="keywordflow">if</span> (<a class="code" href="classpoly_1_1IR_1_1Cint.html">Cint</a> *c = llvm::dyn_cast&lt;Cint&gt;(n)) <span class="keywordflow">return</span> c-&gt;getVal() == 1;</div>
+<div class="line"><a name="l00550"></a><span class="lineno">  550</span>&#160;  <span class="keywordflow">if</span> (<a class="code" href="classpoly_1_1IR_1_1Bint.html">Bint</a> *c = llvm::dyn_cast&lt;Bint&gt;(n)) <span class="keywordflow">return</span> c-&gt;getVal().isOne();</div>
+<div class="line"><a name="l00551"></a><span class="lineno">  551</span>&#160;  <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
+<div class="line"><a name="l00552"></a><span class="lineno">  552</span>&#160;}</div>
+<div class="line"><a name="l00553"></a><span class="lineno">  553</span>&#160; </div>
+<div class="line"><a name="l00554"></a><span class="lineno">  554</span>&#160;} <span class="comment">// namespace poly::IR</span></div>
+<div class="ttc" id="aclasspoly_1_1IR_1_1Bflt_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Bflt.html">poly::IR::Bflt</a></div><div class="ttdef"><b>Definition:</b> Node.hpp:529</div></div>
+<div class="ttc" id="aclasspoly_1_1IR_1_1Bint_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Bint.html">poly::IR::Bint</a></div><div class="ttdoc">A constant value w/ respect to the loopnest.</div><div class="ttdef"><b>Definition:</b> Node.hpp:509</div></div>
+<div class="ttc" id="aclasspoly_1_1IR_1_1CVal_html"><div class="ttname"><a href="classpoly_1_1IR_1_1CVal.html">poly::IR::CVal</a></div><div class="ttdef"><b>Definition:</b> Node.hpp:411</div></div>
+<div class="ttc" id="aclasspoly_1_1IR_1_1Cflt_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Cflt.html">poly::IR::Cflt</a></div><div class="ttdef"><b>Definition:</b> Node.hpp:493</div></div>
+<div class="ttc" id="aclasspoly_1_1IR_1_1Cint_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Cint.html">poly::IR::Cint</a></div><div class="ttdoc">A constant value w/ respect to the loopnest.</div><div class="ttdef"><b>Definition:</b> Node.hpp:476</div></div>
+<div class="ttc" id="aclasspoly_1_1IR_1_1Cnst_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Cnst.html">poly::IR::Cnst</a></div><div class="ttdoc">Cnst.</div><div class="ttdef"><b>Definition:</b> Node.hpp:427</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Exit_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Exit.html">poly::IR::Exit</a></div><div class="ttdef"><b>Definition:</b> Node.hpp:184</div></div>
+<div class="ttc" id="aclasspoly_1_1IR_1_1Instruction_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Instruction.html">poly::IR::Instruction</a></div><div class="ttdef"><b>Definition:</b> Node.hpp:388</div></div>
+<div class="ttc" id="aclasspoly_1_1IR_1_1Instruction_html_a03ac07d26dc92b783043755108fac3e4"><div class="ttname"><a href="classpoly_1_1IR_1_1Instruction.html#a03ac07d26dc92b783043755108fac3e4">poly::IR::Instruction::Instruction</a></div><div class="ttdeci">constexpr Instruction(ValKind kind)</div><div class="ttdef"><b>Definition:</b> Node.hpp:393</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Loop_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Loop.html">poly::IR::Loop</a></div><div class="ttdef"><b>Definition:</b> Node.hpp:202</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Loop_html_a5747e808656d00fef2538ee782265876"><div class="ttname"><a href="classpoly_1_1IR_1_1Loop.html#a5747e808656d00fef2538ee782265876">poly::IR::Loop::forEachLoop</a></div><div class="ttdeci">constexpr void forEachLoop(const auto &amp;f)</div><div class="ttdef"><b>Definition:</b> Node.hpp:238</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Node_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Node.html">poly::IR::Node</a></div><div class="ttdef"><b>Definition:</b> Node.hpp:90</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Value_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Value.html">poly::IR::Value</a></div><div class="ttdef"><b>Definition:</b> Node.hpp:317</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Value_html_a6b2b299b85ea7f73459b85597df1b2d3"><div class="ttname"><a href="classpoly_1_1IR_1_1Value.html#a6b2b299b85ea7f73459b85597df1b2d3">poly::IR::Value::isStore</a></div><div class="ttdeci">constexpr auto isStore() const -&gt; bool</div><div class="ttdef"><b>Definition:</b> Node.hpp:359</div></div>
-<div class="ttc" id="aclasspoly_1_1IR_1_1Value_html_adb093c83013329c7391357aa9f19144d"><div class="ttname"><a href="classpoly_1_1IR_1_1Value.html#adb093c83013329c7391357aa9f19144d">poly::IR::Value::getCost</a></div><div class="ttdeci">auto getCost(llvm::TargetTransformInfo &amp;TTI, cost::VectorWidth W) -&gt; cost::RecipThroughputLatency</div><div class="ttdoc">these methods are overloaded for specific subtypes</div><div class="ttdef"><b>Definition:</b> Instruction.hpp:685</div></div>
+<div class="ttc" id="aclasspoly_1_1IR_1_1Value_html_adb093c83013329c7391357aa9f19144d"><div class="ttname"><a href="classpoly_1_1IR_1_1Value.html#adb093c83013329c7391357aa9f19144d">poly::IR::Value::getCost</a></div><div class="ttdeci">auto getCost(llvm::TargetTransformInfo &amp;TTI, cost::VectorWidth W) -&gt; cost::RecipThroughputLatency</div><div class="ttdoc">these methods are overloaded for specific subtypes</div><div class="ttdef"><b>Definition:</b> Instruction.hpp:686</div></div>
 <div class="ttc" id="aclasspoly_1_1poly_1_1Loop_html"><div class="ttname"><a href="classpoly_1_1poly_1_1Loop.html">poly::poly::Loop</a></div><div class="ttdef"><b>Definition:</b> Loops.hpp:329</div></div>
-<div class="ttc" id="astructpoly_1_1IR_1_1Cnst_1_1Identifier_html"><div class="ttname"><a href="structpoly_1_1IR_1_1Cnst_1_1Identifier.html">poly::IR::Cnst::Identifier</a></div><div class="ttdef"><b>Definition:</b> Node.hpp:415</div></div>
+<div class="ttc" id="astructpoly_1_1IR_1_1Cnst_1_1Identifier_html"><div class="ttname"><a href="structpoly_1_1IR_1_1Cnst_1_1Identifier.html">poly::IR::Cnst::Identifier</a></div><div class="ttdef"><b>Definition:</b> Node.hpp:441</div></div>
+<div class="ttc" id="astructpoly_1_1IR_1_1Instruction_1_1Identifier_html"><div class="ttname"><a href="structpoly_1_1IR_1_1Instruction_1_1Identifier.html">poly::IR::Instruction::Identifier</a></div><div class="ttdef"><b>Definition:</b> Node.hpp:400</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

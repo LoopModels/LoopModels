@@ -102,13 +102,10 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getVal</b> 
 <tr class="memitem:a66c6a5596435e4c4e7471f84b3fdd21e inherit pub_methods_classpoly_1_1IR_1_1Cnst"><td class="memItemLeft" align="right" valign="top"><a id="a66c6a5596435e4c4e7471f84b3fdd21e"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getType</b> () const -&gt; llvm::Type *</td></tr>
 <tr class="separator:a66c6a5596435e4c4e7471f84b3fdd21e inherit pub_methods_classpoly_1_1IR_1_1Cnst"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a693de1f0430b3b42db1c80b54307d3fd inherit pub_methods_classpoly_1_1IR_1_1Cnst"><td class="memItemLeft" align="right" valign="top"><a id="a693de1f0430b3b42db1c80b54307d3fd"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>setOperands</b> (BumpAlloc&lt;&gt; &amp;alloc, math::PtrVector&lt; <a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> * &gt;)</td></tr>
+<tr class="separator:a693de1f0430b3b42db1c80b54307d3fd inherit pub_methods_classpoly_1_1IR_1_1Cnst"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_methods_classpoly_1_1IR_1_1Value"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_classpoly_1_1IR_1_1Value')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="classpoly_1_1IR_1_1Value.html">poly::IR::Value</a></td></tr>
-<tr class="memitem:a490abdaa92cf5d624d102fc740ab922b inherit pub_methods_classpoly_1_1IR_1_1Value"><td class="memItemLeft" align="right" valign="top"><a id="a490abdaa92cf5d624d102fc740ab922b"></a>
-constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Value</b> (ValKind kind)</td></tr>
-<tr class="separator:a490abdaa92cf5d624d102fc740ab922b inherit pub_methods_classpoly_1_1IR_1_1Value"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad3691418586468d894fa1c04134e48ec inherit pub_methods_classpoly_1_1IR_1_1Value"><td class="memItemLeft" align="right" valign="top"><a id="ad3691418586468d894fa1c04134e48ec"></a>
-constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Value</b> (ValKind kind, unsigned depth)</td></tr>
-<tr class="separator:ad3691418586468d894fa1c04134e48ec inherit pub_methods_classpoly_1_1IR_1_1Value"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab423fb103cc1c2e4080036684e9376f1 inherit pub_methods_classpoly_1_1IR_1_1Value"><td class="memItemLeft" align="right" valign="top"><a id="ab423fb103cc1c2e4080036684e9376f1"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getUsers</b> () const -&gt; const UList&lt; <a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> * &gt; *</td></tr>
 <tr class="separator:ab423fb103cc1c2e4080036684e9376f1 inherit pub_methods_classpoly_1_1IR_1_1Value"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -139,9 +136,15 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 <tr class="memitem:a2569ba828037d7258a52aada246d67d5 inherit pub_methods_classpoly_1_1IR_1_1Value"><td class="memItemLeft" align="right" valign="top"><a id="a2569ba828037d7258a52aada246d67d5"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>getValue</b> () -&gt; llvm::Value *</td></tr>
 <tr class="separator:a2569ba828037d7258a52aada246d67d5 inherit pub_methods_classpoly_1_1IR_1_1Value"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1b4557ccf68e3d97ba6569959d34a3f4 inherit pub_methods_classpoly_1_1IR_1_1Value"><td class="memItemLeft" align="right" valign="top"><a id="a1b4557ccf68e3d97ba6569959d34a3f4"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getValue</b> () const -&gt; const llvm::Value *</td></tr>
+<tr class="separator:a1b4557ccf68e3d97ba6569959d34a3f4 inherit pub_methods_classpoly_1_1IR_1_1Value"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6b2a34a5a64674db6ff13ee3775c06db inherit pub_methods_classpoly_1_1IR_1_1Value"><td class="memItemLeft" align="right" valign="top"><a id="a6b2a34a5a64674db6ff13ee3775c06db"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>getInstruction</b> () -&gt; llvm::Instruction *</td></tr>
 <tr class="separator:a6b2a34a5a64674db6ff13ee3775c06db inherit pub_methods_classpoly_1_1IR_1_1Value"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afbeb1e796ac112f4dd9324a86820d62e inherit pub_methods_classpoly_1_1IR_1_1Value"><td class="memItemLeft" align="right" valign="top"><a id="afbeb1e796ac112f4dd9324a86820d62e"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getInstruction</b> () const -&gt; const llvm::Instruction *</td></tr>
+<tr class="separator:afbeb1e796ac112f4dd9324a86820d62e inherit pub_methods_classpoly_1_1IR_1_1Value"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae05d0d8a1779a697882c4aff768e6ca5 inherit pub_methods_classpoly_1_1IR_1_1Value"><td class="memItemLeft" align="right" valign="top"><a id="ae05d0d8a1779a697882c4aff768e6ca5"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>getType</b> () const -&gt; llvm::Type *</td></tr>
 <tr class="separator:ae05d0d8a1779a697882c4aff768e6ca5 inherit pub_methods_classpoly_1_1IR_1_1Value"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -169,6 +172,12 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumScalarBits</b> 
 <tr class="memitem:a2cd33c2740780109bda45117d117effb inherit pub_methods_classpoly_1_1IR_1_1Value"><td class="memItemLeft" align="right" valign="top"><a id="a2cd33c2740780109bda45117d117effb"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumScalarBytes</b> () const -&gt; unsigned</td></tr>
 <tr class="separator:a2cd33c2740780109bda45117d117effb inherit pub_methods_classpoly_1_1IR_1_1Value"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3f5924275dbef982561fa60baa8a1e81 inherit pub_methods_classpoly_1_1IR_1_1Value"><td class="memItemLeft" align="right" valign="top"><a id="a3f5924275dbef982561fa60baa8a1e81"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getBasicBlock</b> () -&gt; llvm::BasicBlock *</td></tr>
+<tr class="separator:a3f5924275dbef982561fa60baa8a1e81 inherit pub_methods_classpoly_1_1IR_1_1Value"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0fc92f2cdf29182423c499ce28e97f03 inherit pub_methods_classpoly_1_1IR_1_1Value"><td class="memItemLeft" align="right" valign="top"><a id="a0fc92f2cdf29182423c499ce28e97f03"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getBasicBlock</b> () const -&gt; const llvm::BasicBlock *</td></tr>
+<tr class="separator:a0fc92f2cdf29182423c499ce28e97f03 inherit pub_methods_classpoly_1_1IR_1_1Value"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_methods_classpoly_1_1IR_1_1Node"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_classpoly_1_1IR_1_1Node')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="classpoly_1_1IR_1_1Node.html">poly::IR::Node</a></td></tr>
 <tr class="memitem:a2db9f684321389aa69abcf4f0d26979f inherit pub_methods_classpoly_1_1IR_1_1Node"><td class="memItemLeft" align="right" valign="top"><a id="a2db9f684321389aa69abcf4f0d26979f"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getKind</b> () const -&gt; ValKind</td></tr>
@@ -262,6 +271,13 @@ Additional Inherited Members</h2></td></tr>
 <tr class="memitem:af0b3570ad3f17dc7b82e1a7110b5f954 inherit pro_methods_classpoly_1_1IR_1_1Cnst"><td class="memItemLeft" align="right" valign="top"><a id="af0b3570ad3f17dc7b82e1a7110b5f954"></a>
 constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Cnst</b> (ValKind kind, llvm::Type *t)</td></tr>
 <tr class="separator:af0b3570ad3f17dc7b82e1a7110b5f954 inherit pro_methods_classpoly_1_1IR_1_1Cnst"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="inherit_header pro_methods_classpoly_1_1IR_1_1Value"><td colspan="2" onclick="javascript:toggleInherit('pro_methods_classpoly_1_1IR_1_1Value')"><img src="closed.png" alt="-"/>&#160;Protected Member Functions inherited from <a class="el" href="classpoly_1_1IR_1_1Value.html">poly::IR::Value</a></td></tr>
+<tr class="memitem:a490abdaa92cf5d624d102fc740ab922b inherit pro_methods_classpoly_1_1IR_1_1Value"><td class="memItemLeft" align="right" valign="top"><a id="a490abdaa92cf5d624d102fc740ab922b"></a>
+constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Value</b> (ValKind kind)</td></tr>
+<tr class="separator:a490abdaa92cf5d624d102fc740ab922b inherit pro_methods_classpoly_1_1IR_1_1Value"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad3691418586468d894fa1c04134e48ec inherit pro_methods_classpoly_1_1IR_1_1Value"><td class="memItemLeft" align="right" valign="top"><a id="ad3691418586468d894fa1c04134e48ec"></a>
+constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Value</b> (ValKind kind, unsigned depth)</td></tr>
+<tr class="separator:ad3691418586468d894fa1c04134e48ec inherit pro_methods_classpoly_1_1IR_1_1Value"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pro_methods_classpoly_1_1IR_1_1Node"><td colspan="2" onclick="javascript:toggleInherit('pro_methods_classpoly_1_1IR_1_1Node')"><img src="closed.png" alt="-"/>&#160;Protected Member Functions inherited from <a class="el" href="classpoly_1_1IR_1_1Node.html">poly::IR::Node</a></td></tr>
 <tr class="memitem:a2a3192030ebb23d5f9c96b24f499e31d inherit pro_methods_classpoly_1_1IR_1_1Node"><td class="memItemLeft" align="right" valign="top"><a id="a2a3192030ebb23d5f9c96b24f499e31d"></a>
 constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Node</b> (ValKind kind)</td></tr>

@@ -216,7 +216,7 @@ $(function() {
 <div class="line"><a name="l00152"></a><span class="lineno">  152</span>&#160;    <span class="keywordtype">void</span> select(<span class="keywordtype">size_t</span> i, <a class="code" href="classpoly_1_1IR_1_1Value.html">Value</a> *A, <a class="code" href="classpoly_1_1IR_1_1Value.html">Value</a> *B) {</div>
 <div class="line"><a name="l00153"></a><span class="lineno">  153</span>&#160;      A = reMap[A];</div>
 <div class="line"><a name="l00154"></a><span class="lineno">  154</span>&#160;      B = reMap[B];</div>
-<div class="line"><a name="l00155"></a><span class="lineno">  155</span>&#160;      <a class="code" href="classpoly_1_1IR_1_1Inst.html">Inst</a> *C = cache.<a class="code" href="classpoly_1_1IR_1_1Cache.html#abade02938c08b7d6f488cf4bc342f7cf">createSelect</a>(A, B, valToPred, predicates);</div>
+<div class="line"><a name="l00155"></a><span class="lineno">  155</span>&#160;      <a class="code" href="classpoly_1_1IR_1_1Compute.html">Compute</a> *C = cache.<a class="code" href="classpoly_1_1IR_1_1Cache.html#a4e138b402ecd915b552cf83273cb4f2f">createSelect</a>(A, B, valToPred, predicates);</div>
 <div class="line"><a name="l00156"></a><span class="lineno">  156</span>&#160;      cache.replaceAllUsesWith(A, C);</div>
 <div class="line"><a name="l00157"></a><span class="lineno">  157</span>&#160;      cache.replaceAllUsesWith(B, C);</div>
 <div class="line"><a name="l00158"></a><span class="lineno">  158</span>&#160;      operands[i] = C;</div>
@@ -369,9 +369,9 @@ $(function() {
 <div class="line"><a name="l00306"></a><span class="lineno">  306</span>&#160;<span class="keyword">inline</span> <span class="keywordtype">void</span> mergeInstructions(</div>
 <div class="line"><a name="l00307"></a><span class="lineno">  307</span>&#160;  BumpAlloc&lt;&gt; &amp;alloc, IR::Cache &amp;cache, Predicate::Map &amp;predMap,</div>
 <div class="line"><a name="l00308"></a><span class="lineno">  308</span>&#160;  llvm::TargetTransformInfo &amp;TTI, <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> vectorBits,</div>
-<div class="line"><a name="l00309"></a><span class="lineno">  309</span>&#160;  amap&lt;Identifier, math::ResizeableView&lt;Value *, unsigned&gt;&gt; opMap,</div>
+<div class="line"><a name="l00309"></a><span class="lineno">  309</span>&#160;  amap&lt;Instruction::Identifier, math::ResizeableView&lt;Value *, unsigned&gt;&gt; opMap,</div>
 <div class="line"><a name="l00310"></a><span class="lineno">  310</span>&#160;  amap&lt;Value *, Predicate::Set&gt; &amp;valToPred,</div>
-<div class="line"><a name="l00311"></a><span class="lineno">  311</span>&#160;  llvm::SmallVectorImpl&lt;MergingCost *&gt; &amp;mergingCosts, Value *J,</div>
+<div class="line"><a name="l00311"></a><span class="lineno">  311</span>&#160;  llvm::SmallVectorImpl&lt;MergingCost *&gt; &amp;mergingCosts, Instruction *J,</div>
 <div class="line"><a name="l00312"></a><span class="lineno">  312</span>&#160;  llvm::BasicBlock *BB, Predicate::Set &amp;preds) {</div>
 <div class="line"><a name="l00313"></a><span class="lineno">  313</span>&#160;  <span class="comment">// have we already visited?</span></div>
 <div class="line"><a name="l00314"></a><span class="lineno">  314</span>&#160;  <span class="keywordflow">if</span> (mergingCosts.front()-&gt;visited(J)) <span class="keywordflow">return</span>;</div>
@@ -379,7 +379,7 @@ $(function() {
 <div class="line"><a name="l00316"></a><span class="lineno">  316</span>&#160;    <span class="keywordflow">if</span> (C-&gt;visited(J)) <span class="keywordflow">return</span>;</div>
 <div class="line"><a name="l00317"></a><span class="lineno">  317</span>&#160;    C-&gt;initAncestors(alloc, J);</div>
 <div class="line"><a name="l00318"></a><span class="lineno">  318</span>&#160;  }</div>
-<div class="line"><a name="l00319"></a><span class="lineno">  319</span>&#160;  <span class="keyword">auto</span> op = J-&gt;getOpType();</div>
+<div class="line"><a name="l00319"></a><span class="lineno">  319</span>&#160;  <span class="keyword">auto</span> op = J-&gt;getIdentifier();</div>
 <div class="line"><a name="l00320"></a><span class="lineno">  320</span>&#160;  <span class="comment">// TODO: confirm that `vec` doesn&#39;t get moved if `opMap` is resized</span></div>
 <div class="line"><a name="l00321"></a><span class="lineno">  321</span>&#160;  <span class="keyword">auto</span> &amp;vec = opMap[op];</div>
 <div class="line"><a name="l00322"></a><span class="lineno">  322</span>&#160;  <span class="comment">// consider merging with every instruction sharing an opcode</span></div>
@@ -412,68 +412,72 @@ $(function() {
 <div class="line"><a name="l00349"></a><span class="lineno">  349</span>&#160;    }</div>
 <div class="line"><a name="l00350"></a><span class="lineno">  350</span>&#160;  }</div>
 <div class="line"><a name="l00351"></a><span class="lineno">  351</span>&#160;  <span class="comment">// descendants aren&#39;t legal merge candidates, so check before merging</span></div>
-<div class="line"><a name="l00352"></a><span class="lineno">  352</span>&#160;  <span class="keywordflow">for</span> (Value *U : J-&gt;getUsers()) {</div>
+<div class="line"><a name="l00352"></a><span class="lineno">  352</span>&#160;  <span class="keywordflow">for</span> (Value *U : *J-&gt;getUsers()) {</div>
 <div class="line"><a name="l00353"></a><span class="lineno">  353</span>&#160;    <span class="keywordflow">if</span> (llvm::BasicBlock *BBU = U-&gt;getBasicBlock()) {</div>
 <div class="line"><a name="l00354"></a><span class="lineno">  354</span>&#160;      <span class="keywordflow">if</span> (BBU == BB) <span class="comment">// fast path, skip lookup</span></div>
 <div class="line"><a name="l00355"></a><span class="lineno">  355</span>&#160;        mergeInstructions(alloc, cache, predMap, TTI, vectorBits, opMap,</div>
-<div class="line"><a name="l00356"></a><span class="lineno">  356</span>&#160;                          mergingCosts, U, BB, preds);</div>
-<div class="line"><a name="l00357"></a><span class="lineno">  357</span>&#160;      <span class="keywordflow">else</span> <span class="keywordflow">if</span> (<span class="keyword">auto</span> *f = predMap.find(BBU); f != predMap.rend())</div>
-<div class="line"><a name="l00358"></a><span class="lineno">  358</span>&#160;        mergeInstructions(alloc, cache, predMap, TTI, vectorBits, opMap,</div>
-<div class="line"><a name="l00359"></a><span class="lineno">  359</span>&#160;                          mergingCosts, U, BBU, f-&gt;second);</div>
-<div class="line"><a name="l00360"></a><span class="lineno">  360</span>&#160;    }</div>
-<div class="line"><a name="l00361"></a><span class="lineno">  361</span>&#160;  }</div>
-<div class="line"><a name="l00362"></a><span class="lineno">  362</span>&#160;  <span class="comment">// descendants aren&#39;t legal merge candidates, so push after merging</span></div>
-<div class="line"><a name="l00363"></a><span class="lineno">  363</span>&#160;  <span class="keywordflow">if</span> (vec.getCapacity() &lt;= vec.size())</div>
-<div class="line"><a name="l00364"></a><span class="lineno">  364</span>&#160;    vec.reserve(alloc, std::max(<span class="keywordtype">unsigned</span>(8), 2 * vec.size()));</div>
-<div class="line"><a name="l00365"></a><span class="lineno">  365</span>&#160;  vec.push_back(J);</div>
-<div class="line"><a name="l00366"></a><span class="lineno">  366</span>&#160;  valToPred[J] = preds;</div>
-<div class="line"><a name="l00367"></a><span class="lineno">  367</span>&#160;  <span class="comment">// TODO: prune bad candidates from mergingCosts</span></div>
-<div class="line"><a name="l00368"></a><span class="lineno">  368</span>&#160;}</div>
-<div class="line"><a name="l00369"></a><span class="lineno">  369</span>&#160; </div>
-<div class="line"><a name="l00381"></a><span class="lineno">  381</span>&#160;<span class="keyword">inline</span> <span class="keywordtype">void</span> mergeInstructions(BumpAlloc&lt;&gt; &amp;alloc, IR::Cache &amp;cache,</div>
-<div class="line"><a name="l00382"></a><span class="lineno">  382</span>&#160;                              Predicate::Map &amp;predMap,</div>
-<div class="line"><a name="l00383"></a><span class="lineno">  383</span>&#160;                              llvm::TargetTransformInfo &amp;TTI,</div>
-<div class="line"><a name="l00384"></a><span class="lineno">  384</span>&#160;                              BumpAlloc&lt;&gt; &amp;tAlloc, <span class="keywordtype">unsigned</span> vectorBits) {</div>
-<div class="line"><a name="l00385"></a><span class="lineno">  385</span>&#160;  <span class="keywordflow">if</span> (!predMap.isDivergent()) <span class="keywordflow">return</span>;</div>
-<div class="line"><a name="l00386"></a><span class="lineno">  386</span>&#160;  <span class="keyword">auto</span> p = tAlloc.scope();</div>
-<div class="line"><a name="l00387"></a><span class="lineno">  387</span>&#160;  <span class="comment">// there is a divergence in the control flow that we can ideally merge</span></div>
-<div class="line"><a name="l00388"></a><span class="lineno">  388</span>&#160;  amap&lt;Identifier, math::ResizeableView&lt;Value *, unsigned&gt;&gt; opMap{tAlloc};</div>
-<div class="line"><a name="l00389"></a><span class="lineno">  389</span>&#160;  amap&lt;Value *, Predicate::Set&gt; valToPred{tAlloc};</div>
-<div class="line"><a name="l00390"></a><span class="lineno">  390</span>&#160;  llvm::SmallVector&lt;MergingCost *&gt; mergingCosts;</div>
-<div class="line"><a name="l00391"></a><span class="lineno">  391</span>&#160;  mergingCosts.emplace_back(alloc);</div>
-<div class="line"><a name="l00392"></a><span class="lineno">  392</span>&#160;  <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;pred : predMap)</div>
-<div class="line"><a name="l00393"></a><span class="lineno">  393</span>&#160;    <span class="keywordflow">for</span> (llvm::Instruction &amp;lI : *pred.first)</div>
-<div class="line"><a name="l00394"></a><span class="lineno">  394</span>&#160;      <span class="keywordflow">if</span> (Value *J = cache[&amp;lI])</div>
-<div class="line"><a name="l00395"></a><span class="lineno">  395</span>&#160;        mergeInstructions(tAlloc, cache, predMap, TTI, vectorBits, opMap,</div>
-<div class="line"><a name="l00396"></a><span class="lineno">  396</span>&#160;                          valToPred, mergingCosts, J, pred.first, pred.second);</div>
-<div class="line"><a name="l00397"></a><span class="lineno">  397</span>&#160;  MergingCost *minCostStrategy = *std::ranges::min_element(</div>
-<div class="line"><a name="l00398"></a><span class="lineno">  398</span>&#160;    mergingCosts, [](<span class="keyword">auto</span> *a, <span class="keyword">auto</span> *b) { <span class="keywordflow">return</span> *a &lt; *b; });</div>
-<div class="line"><a name="l00399"></a><span class="lineno">  399</span>&#160;  <span class="comment">// and then apply it to the instructions.</span></div>
-<div class="line"><a name="l00400"></a><span class="lineno">  400</span>&#160;  ReMapper reMap;</div>
-<div class="line"><a name="l00401"></a><span class="lineno">  401</span>&#160;  <span class="comment">// we use `alloc` for objects intended to live on</span></div>
-<div class="line"><a name="l00402"></a><span class="lineno">  402</span>&#160; </div>
-<div class="line"><a name="l00403"></a><span class="lineno">  403</span>&#160;  <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;pair : *minCostStrategy) {</div>
-<div class="line"><a name="l00404"></a><span class="lineno">  404</span>&#160;    <span class="comment">// merge pair through `select`ing the arguments that differ</span></div>
-<div class="line"><a name="l00405"></a><span class="lineno">  405</span>&#160;    <span class="keyword">auto</span> [A, B] = pair;</div>
-<div class="line"><a name="l00406"></a><span class="lineno">  406</span>&#160;    A = reMap[A];</div>
-<div class="line"><a name="l00407"></a><span class="lineno">  407</span>&#160;    B = reMap[B];</div>
-<div class="line"><a name="l00408"></a><span class="lineno">  408</span>&#160;    <span class="keyword">auto</span> operands = minCostStrategy-&gt;mergeOperands(</div>
-<div class="line"><a name="l00409"></a><span class="lineno">  409</span>&#160;      A, B,</div>
-<div class="line"><a name="l00410"></a><span class="lineno">  410</span>&#160;      MergingCost::Allocate{alloc, cache, reMap, valToPred,</div>
-<div class="line"><a name="l00411"></a><span class="lineno">  411</span>&#160;                            predMap.getPredicates()});</div>
-<div class="line"><a name="l00412"></a><span class="lineno">  412</span>&#160;    A-&gt;replaceAllUsesOf(B)-&gt;setOperands(operands);</div>
-<div class="line"><a name="l00413"></a><span class="lineno">  413</span>&#160;    reMap.remapFromTo(B, A);</div>
-<div class="line"><a name="l00414"></a><span class="lineno">  414</span>&#160;  }</div>
-<div class="line"><a name="l00415"></a><span class="lineno">  415</span>&#160;}</div>
-<div class="line"><a name="l00416"></a><span class="lineno">  416</span>&#160; </div>
-<div class="line"><a name="l00417"></a><span class="lineno">  417</span>&#160;} <span class="comment">// namespace poly::IR</span></div>
+<div class="line"><a name="l00356"></a><span class="lineno">  356</span>&#160;                          valToPred, mergingCosts, llvm::cast&lt;Instruction&gt;(U),</div>
+<div class="line"><a name="l00357"></a><span class="lineno">  357</span>&#160;                          BB, preds);</div>
+<div class="line"><a name="l00358"></a><span class="lineno">  358</span>&#160;      <span class="keywordflow">else</span> <span class="keywordflow">if</span> (<span class="keyword">auto</span> *f = predMap.find(BBU); f != predMap.rend())</div>
+<div class="line"><a name="l00359"></a><span class="lineno">  359</span>&#160;        mergeInstructions(alloc, cache, predMap, TTI, vectorBits, opMap,</div>
+<div class="line"><a name="l00360"></a><span class="lineno">  360</span>&#160;                          valToPred, mergingCosts, llvm::cast&lt;Instruction&gt;(U),</div>
+<div class="line"><a name="l00361"></a><span class="lineno">  361</span>&#160;                          BBU, f-&gt;second);</div>
+<div class="line"><a name="l00362"></a><span class="lineno">  362</span>&#160;    }</div>
+<div class="line"><a name="l00363"></a><span class="lineno">  363</span>&#160;  }</div>
+<div class="line"><a name="l00364"></a><span class="lineno">  364</span>&#160;  <span class="comment">// descendants aren&#39;t legal merge candidates, so push after merging</span></div>
+<div class="line"><a name="l00365"></a><span class="lineno">  365</span>&#160;  <span class="keywordflow">if</span> (vec.getCapacity() &lt;= vec.size())</div>
+<div class="line"><a name="l00366"></a><span class="lineno">  366</span>&#160;    vec.reserve(alloc, std::max(<span class="keywordtype">unsigned</span>(8), 2 * vec.size()));</div>
+<div class="line"><a name="l00367"></a><span class="lineno">  367</span>&#160;  vec.push_back(J);</div>
+<div class="line"><a name="l00368"></a><span class="lineno">  368</span>&#160;  valToPred[J] = preds;</div>
+<div class="line"><a name="l00369"></a><span class="lineno">  369</span>&#160;  <span class="comment">// TODO: prune bad candidates from mergingCosts</span></div>
+<div class="line"><a name="l00370"></a><span class="lineno">  370</span>&#160;}</div>
+<div class="line"><a name="l00371"></a><span class="lineno">  371</span>&#160; </div>
+<div class="line"><a name="l00383"></a><span class="lineno">  383</span>&#160;<span class="keyword">inline</span> <span class="keywordtype">void</span> mergeInstructions(BumpAlloc&lt;&gt; &amp;alloc, IR::Cache &amp;cache,</div>
+<div class="line"><a name="l00384"></a><span class="lineno">  384</span>&#160;                              Predicate::Map &amp;predMap,</div>
+<div class="line"><a name="l00385"></a><span class="lineno">  385</span>&#160;                              llvm::TargetTransformInfo &amp;TTI,</div>
+<div class="line"><a name="l00386"></a><span class="lineno">  386</span>&#160;                              BumpAlloc&lt;&gt; &amp;tAlloc, <span class="keywordtype">unsigned</span> vectorBits) {</div>
+<div class="line"><a name="l00387"></a><span class="lineno">  387</span>&#160;  <span class="keywordflow">if</span> (!predMap.isDivergent()) <span class="keywordflow">return</span>;</div>
+<div class="line"><a name="l00388"></a><span class="lineno">  388</span>&#160;  <span class="keyword">auto</span> p = tAlloc.scope();</div>
+<div class="line"><a name="l00389"></a><span class="lineno">  389</span>&#160;  <span class="comment">// there is a divergence in the control flow that we can ideally merge</span></div>
+<div class="line"><a name="l00390"></a><span class="lineno">  390</span>&#160;  amap&lt;Instruction::Identifier, math::ResizeableView&lt;Value *, unsigned&gt;&gt; opMap{</div>
+<div class="line"><a name="l00391"></a><span class="lineno">  391</span>&#160;    tAlloc};</div>
+<div class="line"><a name="l00392"></a><span class="lineno">  392</span>&#160;  amap&lt;Value *, Predicate::Set&gt; valToPred{tAlloc};</div>
+<div class="line"><a name="l00393"></a><span class="lineno">  393</span>&#160;  llvm::SmallVector&lt;MergingCost *&gt; mergingCosts;</div>
+<div class="line"><a name="l00394"></a><span class="lineno">  394</span>&#160;  mergingCosts.emplace_back(alloc);</div>
+<div class="line"><a name="l00395"></a><span class="lineno">  395</span>&#160;  <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;pred : predMap)</div>
+<div class="line"><a name="l00396"></a><span class="lineno">  396</span>&#160;    <span class="keywordflow">for</span> (llvm::Instruction &amp;lI : *pred.first)</div>
+<div class="line"><a name="l00397"></a><span class="lineno">  397</span>&#160;      <span class="keywordflow">if</span> (Value *J = cache[&amp;lI])</div>
+<div class="line"><a name="l00398"></a><span class="lineno">  398</span>&#160;        mergeInstructions(tAlloc, cache, predMap, TTI, vectorBits, opMap,</div>
+<div class="line"><a name="l00399"></a><span class="lineno">  399</span>&#160;                          valToPred, mergingCosts, llvm::cast&lt;Instruction&gt;(J),</div>
+<div class="line"><a name="l00400"></a><span class="lineno">  400</span>&#160;                          pred.first, pred.second);</div>
+<div class="line"><a name="l00401"></a><span class="lineno">  401</span>&#160;  MergingCost *minCostStrategy = *std::ranges::min_element(</div>
+<div class="line"><a name="l00402"></a><span class="lineno">  402</span>&#160;    mergingCosts, [](<span class="keyword">auto</span> *a, <span class="keyword">auto</span> *b) { <span class="keywordflow">return</span> *a &lt; *b; });</div>
+<div class="line"><a name="l00403"></a><span class="lineno">  403</span>&#160;  <span class="comment">// and then apply it to the instructions.</span></div>
+<div class="line"><a name="l00404"></a><span class="lineno">  404</span>&#160;  ReMapper reMap;</div>
+<div class="line"><a name="l00405"></a><span class="lineno">  405</span>&#160;  <span class="comment">// we use `alloc` for objects intended to live on</span></div>
+<div class="line"><a name="l00406"></a><span class="lineno">  406</span>&#160; </div>
+<div class="line"><a name="l00407"></a><span class="lineno">  407</span>&#160;  <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;pair : *minCostStrategy) {</div>
+<div class="line"><a name="l00408"></a><span class="lineno">  408</span>&#160;    <span class="comment">// merge pair through `select`ing the arguments that differ</span></div>
+<div class="line"><a name="l00409"></a><span class="lineno">  409</span>&#160;    <span class="keyword">auto</span> [A, B] = pair;</div>
+<div class="line"><a name="l00410"></a><span class="lineno">  410</span>&#160;    A = reMap[A];</div>
+<div class="line"><a name="l00411"></a><span class="lineno">  411</span>&#160;    B = reMap[B];</div>
+<div class="line"><a name="l00412"></a><span class="lineno">  412</span>&#160;    <span class="keyword">auto</span> operands = minCostStrategy-&gt;mergeOperands(</div>
+<div class="line"><a name="l00413"></a><span class="lineno">  413</span>&#160;      A, B,</div>
+<div class="line"><a name="l00414"></a><span class="lineno">  414</span>&#160;      MergingCost::Allocate{cache, reMap, valToPred, predMap.getPredicates()});</div>
+<div class="line"><a name="l00415"></a><span class="lineno">  415</span>&#160;    cache.replaceAllUsesWith(B, A);</div>
+<div class="line"><a name="l00416"></a><span class="lineno">  416</span>&#160;    A-&gt;setOperands(cache.getAllocator(), operands);</div>
+<div class="line"><a name="l00417"></a><span class="lineno">  417</span>&#160;    reMap.remapFromTo(B, A);</div>
+<div class="line"><a name="l00418"></a><span class="lineno">  418</span>&#160;  }</div>
+<div class="line"><a name="l00419"></a><span class="lineno">  419</span>&#160;}</div>
+<div class="line"><a name="l00420"></a><span class="lineno">  420</span>&#160; </div>
+<div class="line"><a name="l00421"></a><span class="lineno">  421</span>&#160;} <span class="comment">// namespace poly::IR</span></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Cache_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Cache.html">poly::IR::Cache</a></div><div class="ttdef"><b>Definition:</b> Cache.hpp:13</div></div>
-<div class="ttc" id="aclasspoly_1_1IR_1_1Cache_html_abade02938c08b7d6f488cf4bc342f7cf"><div class="ttname"><a href="classpoly_1_1IR_1_1Cache.html#abade02938c08b7d6f488cf4bc342f7cf">poly::IR::Cache::createSelect</a></div><div class="ttdeci">auto createSelect(Value *A, Value *B, amap&lt; Value *, Predicate::Set &gt; &amp;valToPred, UList&lt; Value * &gt; *pred) -&gt; Inst *</div><div class="ttdef"><b>Definition:</b> Cache.hpp:269</div></div>
-<div class="ttc" id="aclasspoly_1_1IR_1_1Inst_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Inst.html">poly::IR::Inst</a></div><div class="ttdef"><b>Definition:</b> Instruction.hpp:83</div></div>
-<div class="ttc" id="aclasspoly_1_1IR_1_1Operation_html_a3c026a3b9192dea51a7dc6b57e6833b9"><div class="ttname"><a href="classpoly_1_1IR_1_1Operation.html#a3c026a3b9192dea51a7dc6b57e6833b9">poly::IR::Operation::selectCost</a></div><div class="ttdeci">auto selectCost(llvm::TargetTransformInfo &amp;TTI, unsigned int vectorWidth) const -&gt; llvm::InstructionCost</div><div class="ttdef"><b>Definition:</b> Instruction.hpp:517</div></div>
+<div class="ttc" id="aclasspoly_1_1IR_1_1Cache_html_a4e138b402ecd915b552cf83273cb4f2f"><div class="ttname"><a href="classpoly_1_1IR_1_1Cache.html#a4e138b402ecd915b552cf83273cb4f2f">poly::IR::Cache::createSelect</a></div><div class="ttdeci">auto createSelect(Value *A, Value *B, amap&lt; Value *, Predicate::Set &gt; &amp;valToPred, UList&lt; Value * &gt; *pred) -&gt; Compute *</div><div class="ttdef"><b>Definition:</b> Cache.hpp:270</div></div>
+<div class="ttc" id="aclasspoly_1_1IR_1_1Compute_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Compute.html">poly::IR::Compute</a></div><div class="ttdef"><b>Definition:</b> Instruction.hpp:75</div></div>
+<div class="ttc" id="aclasspoly_1_1IR_1_1Operation_html_a3c026a3b9192dea51a7dc6b57e6833b9"><div class="ttname"><a href="classpoly_1_1IR_1_1Operation.html#a3c026a3b9192dea51a7dc6b57e6833b9">poly::IR::Operation::selectCost</a></div><div class="ttdeci">auto selectCost(llvm::TargetTransformInfo &amp;TTI, unsigned int vectorWidth) const -&gt; llvm::InstructionCost</div><div class="ttdef"><b>Definition:</b> Instruction.hpp:516</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1ReMapper_html"><div class="ttname"><a href="classpoly_1_1IR_1_1ReMapper.html">poly::IR::ReMapper</a></div><div class="ttdef"><b>Definition:</b> ControlFlowMerging.hpp:27</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Value_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Value.html">poly::IR::Value</a></div><div class="ttdef"><b>Definition:</b> Node.hpp:317</div></div>
-<div class="ttc" id="aclasspoly_1_1IR_1_1Value_html_adb093c83013329c7391357aa9f19144d"><div class="ttname"><a href="classpoly_1_1IR_1_1Value.html#adb093c83013329c7391357aa9f19144d">poly::IR::Value::getCost</a></div><div class="ttdeci">auto getCost(llvm::TargetTransformInfo &amp;TTI, cost::VectorWidth W) -&gt; cost::RecipThroughputLatency</div><div class="ttdoc">these methods are overloaded for specific subtypes</div><div class="ttdef"><b>Definition:</b> Instruction.hpp:685</div></div>
+<div class="ttc" id="aclasspoly_1_1IR_1_1Value_html_adb093c83013329c7391357aa9f19144d"><div class="ttname"><a href="classpoly_1_1IR_1_1Value.html#adb093c83013329c7391357aa9f19144d">poly::IR::Value::getCost</a></div><div class="ttdeci">auto getCost(llvm::TargetTransformInfo &amp;TTI, cost::VectorWidth W) -&gt; cost::RecipThroughputLatency</div><div class="ttdoc">these methods are overloaded for specific subtypes</div><div class="ttdef"><b>Definition:</b> Instruction.hpp:686</div></div>
 <div class="ttc" id="astructpoly_1_1IR_1_1MergingCost_1_1Allocate_html"><div class="ttname"><a href="structpoly_1_1IR_1_1MergingCost_1_1Allocate.html">poly::IR::MergingCost::Allocate</a></div><div class="ttdef"><b>Definition:</b> ControlFlowMerging.hpp:126</div></div>
 <div class="ttc" id="astructpoly_1_1IR_1_1MergingCost_1_1Count_html"><div class="ttname"><a href="structpoly_1_1IR_1_1MergingCost_1_1Count.html">poly::IR::MergingCost::Count</a></div><div class="ttdef"><b>Definition:</b> ControlFlowMerging.hpp:132</div></div>
 <div class="ttc" id="astructpoly_1_1IR_1_1MergingCost_1_1SelectAllocator_html"><div class="ttname"><a href="structpoly_1_1IR_1_1MergingCost_1_1SelectAllocator.html">poly::IR::MergingCost::SelectAllocator</a></div><div class="ttdef"><b>Definition:</b> ControlFlowMerging.hpp:140</div></div>
