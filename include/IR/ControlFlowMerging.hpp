@@ -152,7 +152,7 @@ struct MergingCost {
     void select(size_t i, Value *A, Value *B) {
       A = reMap[A];
       B = reMap[B];
-      Inst *C = cache.createSelect(A, B, valToPred, predicates);
+      Compute *C = cache.createSelect(A, B, valToPred, predicates);
       cache.replaceAllUsesWith(A, C);
       cache.replaceAllUsesWith(B, C);
       operands[i] = C;
@@ -306,9 +306,9 @@ struct MergingCost {
 inline void mergeInstructions(
   BumpAlloc<> &alloc, IR::Cache &cache, Predicate::Map &predMap,
   llvm::TargetTransformInfo &TTI, unsigned int vectorBits,
-  amap<Identifier, math::ResizeableView<Value *, unsigned>> opMap,
+  amap<Instruction::Identifier, math::ResizeableView<Value *, unsigned>> opMap,
   amap<Value *, Predicate::Set> &valToPred,
-  llvm::SmallVectorImpl<MergingCost *> &mergingCosts, Value *J,
+  llvm::SmallVectorImpl<MergingCost *> &mergingCosts, Instruction *J,
   llvm::BasicBlock *BB, Predicate::Set &preds) {
   // have we already visited?
   if (mergingCosts.front()->visited(J)) return;
@@ -316,7 +316,7 @@ inline void mergeInstructions(
     if (C->visited(J)) return;
     C->initAncestors(alloc, J);
   }
-  auto op = J->getOpType();
+  auto op = J->getIdentifier();
   // TODO: confirm that `vec` doesn't get moved if `opMap` is resized
   auto &vec = opMap[op];
   // consider merging with every instruction sharing an opcode
@@ -349,14 +349,16 @@ inline void mergeInstructions(
     }
   }
   // descendants aren't legal merge candidates, so check before merging
-  for (Value *U : J->getUsers()) {
+  for (Value *U : *J->getUsers()) {
     if (llvm::BasicBlock *BBU = U->getBasicBlock()) {
       if (BBU == BB) // fast path, skip lookup
         mergeInstructions(alloc, cache, predMap, TTI, vectorBits, opMap,
-                          mergingCosts, U, BB, preds);
+                          valToPred, mergingCosts, llvm::cast<Instruction>(U),
+                          BB, preds);
       else if (auto *f = predMap.find(BBU); f != predMap.rend())
         mergeInstructions(alloc, cache, predMap, TTI, vectorBits, opMap,
-                          mergingCosts, U, BBU, f->second);
+                          valToPred, mergingCosts, llvm::cast<Instruction>(U),
+                          BBU, f->second);
     }
   }
   // descendants aren't legal merge candidates, so push after merging
@@ -385,7 +387,8 @@ inline void mergeInstructions(BumpAlloc<> &alloc, IR::Cache &cache,
   if (!predMap.isDivergent()) return;
   auto p = tAlloc.scope();
   // there is a divergence in the control flow that we can ideally merge
-  amap<Identifier, math::ResizeableView<Value *, unsigned>> opMap{tAlloc};
+  amap<Instruction::Identifier, math::ResizeableView<Value *, unsigned>> opMap{
+    tAlloc};
   amap<Value *, Predicate::Set> valToPred{tAlloc};
   llvm::SmallVector<MergingCost *> mergingCosts;
   mergingCosts.emplace_back(alloc);
@@ -393,7 +396,8 @@ inline void mergeInstructions(BumpAlloc<> &alloc, IR::Cache &cache,
     for (llvm::Instruction &lI : *pred.first)
       if (Value *J = cache[&lI])
         mergeInstructions(tAlloc, cache, predMap, TTI, vectorBits, opMap,
-                          valToPred, mergingCosts, J, pred.first, pred.second);
+                          valToPred, mergingCosts, llvm::cast<Instruction>(J),
+                          pred.first, pred.second);
   MergingCost *minCostStrategy = *std::ranges::min_element(
     mergingCosts, [](auto *a, auto *b) { return *a < *b; });
   // and then apply it to the instructions.
@@ -407,9 +411,9 @@ inline void mergeInstructions(BumpAlloc<> &alloc, IR::Cache &cache,
     B = reMap[B];
     auto operands = minCostStrategy->mergeOperands(
       A, B,
-      MergingCost::Allocate{alloc, cache, reMap, valToPred,
-                            predMap.getPredicates()});
-    A->replaceAllUsesOf(B)->setOperands(operands);
+      MergingCost::Allocate{cache, reMap, valToPred, predMap.getPredicates()});
+    cache.replaceAllUsesWith(B, A);
+    A->setOperands(cache.getAllocator(), operands);
     reMap.remapFromTo(B, A);
   }
 }

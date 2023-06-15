@@ -69,7 +69,7 @@ using math::PtrVector, math::MutPtrVector, math::DensePtrMatrix,
 /// Note that to get the new poly::Loop, we call
 /// `oldLoop->rotate(PhiInv)`
 // clang-format on
-class Addr : public Value {
+class Addr : public Instruction {
   [[no_unique_address]] Dependence *edgeIn{nullptr};
   [[no_unique_address]] union {
     ScheduledNode *node{nullptr};
@@ -113,7 +113,7 @@ class Addr : public Value {
   }
   // this is a reload
   explicit Addr(Addr *other)
-    : Value(VK_Stow, other->depth), basePointer(other->basePointer),
+    : Instruction(VK_Stow, other->depth), basePointer(other->basePointer),
       loop(other->loop), instr(other->instr), offSym(other->offSym),
       syms(other->syms), numDim(other->numDim), numDynSym(other->numDynSym) {
     std::memcpy(mem, other->mem,
@@ -122,21 +122,21 @@ class Addr : public Value {
   explicit Addr(const llvm::SCEVUnknown *arrayPtr, NotNull<poly::Loop> loopRef,
                 llvm::Instruction *user, int64_t *offsym, const llvm::SCEV **s,
                 std::array<unsigned, 2> dimOff)
-    : Value(llvm::isa<llvm::StoreInst>(user) ? VK_Stow : VK_Load,
-            loopRef->getNumLoops()),
+    : Instruction(llvm::isa<llvm::StoreInst>(user) ? VK_Stow : VK_Load,
+                  loopRef->getNumLoops()),
       basePointer(arrayPtr), loop(loopRef), instr(user), offSym(offsym),
       syms(s), numDim(dimOff[0]), numDynSym(dimOff[1]){};
   explicit Addr(const llvm::SCEVUnknown *arrayPtr, NotNull<poly::Loop> loopRef,
                 llvm::Instruction *user)
-    : Value(llvm::isa<llvm::StoreInst>(user) ? VK_Stow : VK_Load,
-            loopRef->getNumLoops()),
+    : Instruction(llvm::isa<llvm::StoreInst>(user) ? VK_Stow : VK_Load,
+                  loopRef->getNumLoops()),
       basePointer(arrayPtr), loop(loopRef), instr(user){};
   /// Constructor for 0 dimensional memory access
 
   constexpr Addr(NotNull<poly::Loop> explicitLoop, NotNull<Addr> ma,
                  SquarePtrMatrix<int64_t> Pinv, int64_t denom,
                  PtrVector<int64_t> omega, bool isStr, int64_t *offsets)
-    : Value(isStr ? VK_Stow : VK_Load, unsigned(Pinv.numCol())),
+    : Instruction(isStr ? VK_Stow : VK_Load, unsigned(Pinv.numCol())),
       basePointer(ma->getArrayPointer()), loop(explicitLoop),
       instr(ma->getInstruction()), offSym(ma->getOffSym()) {
     DensePtrMatrix<int64_t> M{ma->indexMatrix()};    // aD x nLma
@@ -312,6 +312,7 @@ public:
     invariant(isStore());
     return unionPtr.node;
   }
+  // doesn't add users
   constexpr void setVal(Value *n) {
     invariant(isStore());
     invariant(Value::classof(n));

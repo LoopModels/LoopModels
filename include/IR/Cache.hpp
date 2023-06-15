@@ -12,25 +12,27 @@ namespace poly::IR {
 using dict::map;
 class Cache {
   map<llvm::Value *, Value *> llvmToInternalMap;
-  map<InstByValue, Inst *> instCSEMap;
+  map<InstByValue, Compute *> instCSEMap;
   map<Cnst::Identifier, Cnst *> constMap;
   BumpAlloc<> alloc;
-  Inst *loopInvariants{nullptr};         // negative numOps/incomplete
-  Inst *freeInstList{nullptr};           // positive numOps/complete, but empty
+  Compute *loopInvariants{nullptr};      // negative numOps/incomplete
+  Compute *freeInstList{nullptr};        // positive numOps/complete, but empty
   UList<Value *> *freeListList{nullptr}; // TODO: make use of these
-  auto allocateInst(unsigned numOps) -> Inst * {
+  auto allocateInst(unsigned numOps) -> Compute * {
     // because we allocate children before parents
-    for (Inst *I = freeInstList; I; I = static_cast<Inst *>(I->getNext())) {
+    for (Compute *I = freeInstList; I;
+         I = static_cast<Compute *>(I->getNext())) {
       if (I->getNumOperands() != numOps) continue;
       I->removeFromList();
       return I;
     }
     // not found, allocate
-    return static_cast<Inst *>(
-      alloc.allocate(sizeof(Inst) + sizeof(Value *) * numOps, alignof(Inst)));
+    return static_cast<Compute *>(alloc.allocate(
+      sizeof(Compute) + sizeof(Value *) * numOps, alignof(Compute)));
   }
   void addLoopInstr(llvm::Loop *L) {
-    for (Inst *I = loopInvariants; I; I = static_cast<Inst *>(I->getNext())) {
+    for (Compute *I = loopInvariants; I;
+         I = static_cast<Compute *>(I->getNext())) {
       if (!L->isLoopInvariant(I->getLLVMInstruction())) continue;
       I->removeFromList();
       complete(I, L);
@@ -38,7 +40,7 @@ class Cache {
   }
   /// complete the operands
   // NOLINTNEXTLINE(misc-no-recursion)
-  auto complete(Inst *I, llvm::Loop *L) -> Inst * {
+  auto complete(Compute *I, llvm::Loop *L) -> Compute * {
     auto *i = I->getLLVMInstruction();
     unsigned nOps = I->numCompleteOps();
     auto ops = I->getOperands();
@@ -50,14 +52,14 @@ class Cache {
     }
     return cse(I);
   }
-  auto getCSE(Inst *I) -> Inst *& { return instCSEMap[InstByValue{I}]; }
+  auto getCSE(Compute *I) -> Compute *& { return instCSEMap[InstByValue{I}]; }
   // try to remove `I` as a duplicate
   // this travels downstream;
   // if `I` is eliminated, all users of `I`
   // get updated, making them CSE-candiates.
   // In this manner, we travel downstream through users.
-  auto cse(Inst *I) -> Inst * {
-    Inst *&cse = getCSE(I);
+  auto cse(Compute *I) -> Compute * {
+    Compute *&cse = getCSE(I);
     if (cse == nullptr || (cse == I)) return cse = I; // update ref
     replaceAllUsesWith(I, cse);
     I->removeFromList();
@@ -80,7 +82,7 @@ class Cache {
     oldNode->getUsers()->forEach([=, this](Value *user) {
       // newNode may depend on old (e.g. when merging)
       if (user == newNode) return;
-      if (Inst *I = llvm::dyn_cast<Inst>(user)) {
+      if (auto *I = llvm::dyn_cast<Compute>(user)) {
         for (Value *&o : I->getOperands())
           if (o == oldNode) o = newNode;
         user = cse(I); // operands changed, try to CSE
@@ -94,8 +96,7 @@ class Cache {
         if (isPred) addr->setPredicate(newNode);
         if (isStored) addr->setVal(newNode);
       }
-      UList<Value *> *tnode = newNode->getUsers();
-      newNode->setUsers(tnode->pushUnique(alloc, user));
+      newNode->setUsers(newNode->getUsers()->pushUnique(alloc, user));
     });
     if (freeListList) freeListList->append(oldNode->getUsers());
     else freeListList = oldNode->getUsers();
@@ -116,7 +117,7 @@ public:
     // every operand of oldNode needs their users updated
     if (Value *p = oldNode->getPredicate()) p->removeFromUsers(oldNode);
   }
-  constexpr void replaceAllUsesWith(Inst *oldNode, Value *newNode) {
+  constexpr void replaceAllUsesWith(Compute *oldNode, Value *newNode) {
     invariant(oldNode->getKind() >= Node::VK_Func);
     replaceUsesByUsers(oldNode, newNode);
     // every operand of oldNode needs their users updated
@@ -129,7 +130,7 @@ public:
               oldNode->getKind() >= Node::VK_Func);
     replaceUsesByUsers(oldNode, newNode);
     // every operand of oldNode needs their users updated
-    if (Inst *I = llvm::dyn_cast<Inst>(oldNode)) {
+    if (auto *I = llvm::dyn_cast<Compute>(oldNode)) {
       for (Value *&n : I->getOperands()) n->removeFromUsers(oldNode);
       I->setNext(freeInstList);
       freeInstList = I;
@@ -142,10 +143,10 @@ public:
 
   // NOLINTNEXTLINE(misc-no-recursion)
   auto createInstruction(llvm::Instruction *i, llvm::Loop *L, Value *&t)
-    -> Inst * {
-    auto [id, kind] = Inst::getIDKind(i);
+    -> Compute * {
+    auto [id, kind] = Compute::getIDKind(i);
     int numOps = int(i->getNumOperands());
-    Inst *n = std::construct_at(allocateInst(numOps), kind, i, id, -numOps);
+    Compute *n = std::construct_at(allocateInst(numOps), kind, i, id, -numOps);
     t = n;
     if (L->isLoopInvariant(i)) {
       n->setNext(loopInvariants);
@@ -155,17 +156,17 @@ public:
   }
   template <size_t N>
   auto createOperation(llvm::Intrinsic::ID opId, std::array<Value *, N> ops,
-                       llvm::Type *typ, llvm::FastMathFlags fmf) -> Inst * {
-    Inst *op =
+                       llvm::Type *typ, llvm::FastMathFlags fmf) -> Compute * {
+    Compute *op =
       std::construct_at(allocateInst(N), Node::VK_Oprn, opId, N, typ, fmf);
     std::copy_n(ops.begin(), N, op->getOperands().begin());
     return op;
   }
   template <size_t N>
   auto getOperation(llvm::Intrinsic::ID opId, std::array<Value *, N> ops,
-                    llvm::Type *typ, llvm::FastMathFlags fmf) -> Inst * {
-    Inst *op = createOperation(opId, ops, typ, fmf);
-    Inst *&cse = getCSE(op);
+                    llvm::Type *typ, llvm::FastMathFlags fmf) -> Compute * {
+    Compute *op = createOperation(opId, ops, typ, fmf);
+    Compute *&cse = getCSE(op);
     if (cse == nullptr || (cse == op)) return cse = op; // update ref
     op->setNext(freeInstList);
     freeInstList = op;
@@ -209,8 +210,8 @@ public:
     n = v;
     return v;
   }
-  auto createCondition(Predicate::Relation rel, Inst *instr, bool swap = false)
-    -> Value * {
+  auto createCondition(Predicate::Relation rel, Compute *instr,
+                       bool swap = false) -> Value * {
     switch (rel) {
     case Predicate::Relation::Any:
       return Cint::create(alloc, 1, instr->getType());
@@ -268,7 +269,7 @@ public:
   }
   auto createSelect(Value *A, Value *B,
                     amap<Value *, Predicate::Set> &valToPred,
-                    UList<Value *> *pred) -> Inst * {
+                    UList<Value *> *pred) -> Compute * {
     // What I need here is to take the union of the predicates to form
     // the predicates of the new select instruction. Then, for the
     // select's `cond` instruction, I need something to indicate when to
@@ -307,8 +308,8 @@ public:
       fmf |= A->getFastMathFlags();
       fmf |= B->getFastMathFlags();
     }
-    Inst *S = getOperation(llvm::Instruction::Select,
-                           std::array<Value *, 3>{cond, op1, op2}, typ, fmf);
+    Compute *S = getOperation(llvm::Instruction::Select,
+                              std::array<Value *, 3>{cond, op1, op2}, typ, fmf);
     Predicate::Set pS;
     pS.Union(alloc, pA);
     pS.Union(alloc, pB);

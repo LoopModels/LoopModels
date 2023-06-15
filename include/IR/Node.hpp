@@ -316,6 +316,9 @@ constexpr auto Exit::getNextLoop() const -> Loop * {
 
 class Value : public Node {
 protected:
+  constexpr Value(ValKind kind) : Node(kind) {}
+  constexpr Value(ValKind kind, unsigned depth) : Node(kind, depth) {}
+
   union {
     UList<Value *> *users{nullptr}; // Func, Call, Oprn, Load
     Value *node;                    // Stow
@@ -327,9 +330,6 @@ public:
   static constexpr auto classof(const Node *v) -> bool {
     return v->getKind() >= VK_CVal || v->getKind() <= VK_Stow;
   }
-
-  constexpr Value(ValKind kind) : Node(kind) {}
-  constexpr Value(ValKind kind, unsigned depth) : Node(kind, depth) {}
 
   // unionPtr methods
   [[nodiscard]] constexpr auto getUsers() const -> const UList<Value *> * {
@@ -362,12 +362,15 @@ public:
   [[nodiscard]] constexpr auto isLoad() const -> bool {
     return getKind() == VK_Load;
   }
+
   [[nodiscard]] inline auto getFastMathFlags() const -> llvm::FastMathFlags;
   /// these methods are overloaded for specific subtypes
   inline auto getCost(llvm::TargetTransformInfo &TTI, cost::VectorWidth W)
     -> cost::RecipThroughputLatency;
   [[nodiscard]] inline auto getValue() -> llvm::Value *;
+  [[nodiscard]] inline auto getValue() const -> const llvm::Value *;
   [[nodiscard]] inline auto getInstruction() -> llvm::Instruction *;
+  [[nodiscard]] inline auto getInstruction() const -> const llvm::Instruction *;
 
   [[nodiscard]] inline auto getType() const -> llvm::Type *;
   [[nodiscard]] inline auto getType(unsigned) const -> llvm::Type *;
@@ -378,6 +381,29 @@ public:
   [[nodiscard]] inline auto associativeOperandsFlag() const -> uint8_t;
   [[nodiscard]] inline auto getNumScalarBits() const -> unsigned;
   [[nodiscard]] inline auto getNumScalarBytes() const -> unsigned;
+  [[nodiscard]] inline auto getBasicBlock() -> llvm::BasicBlock *;
+  [[nodiscard]] inline auto getBasicBlock() const -> const llvm::BasicBlock *;
+};
+
+class Instruction : public Value {
+  /// For use with control flow merging
+  /// same operation on same type with disparate branches can be merged
+  /// This only identifies instructions
+protected:
+  constexpr Instruction(ValKind kind) : Value(kind) {}
+  constexpr Instruction(ValKind kind, unsigned depth) : Value(kind, depth) {}
+
+public:
+  static constexpr auto classof(const Node *v) -> bool {
+    return v->getKind() >= VK_Func || v->getKind() <= VK_Stow;
+  }
+  struct Identifier {
+    llvm::Intrinsic::ID ID;
+    Node::ValKind kind;
+    llvm::Type *type;
+  };
+  // declarations
+  [[nodiscard]] constexpr auto getIdentifier() const -> Identifier;
 };
 
 /// CVal
@@ -444,6 +470,7 @@ public:
       payload.cf = &f;
     }
   };
+  inline void setOperands(BumpAlloc<> &alloc, math::PtrVector<Value *>);
 };
 /// A constant value w/ respect to the loopnest.
 class Cint : public Cnst {
