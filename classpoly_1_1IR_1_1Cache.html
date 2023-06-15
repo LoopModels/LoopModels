@@ -75,6 +75,9 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
+<tr class="memitem:a4f693e5bc775271888cb0343dc12e750"><td class="memItemLeft" align="right" valign="top"><a id="a4f693e5bc775271888cb0343dc12e750"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>cse</b> (<a class="el" href="classpoly_1_1IR_1_1Compute.html">Compute</a> *I) -&gt; <a class="el" href="classpoly_1_1IR_1_1Compute.html">Compute</a> *</td></tr>
+<tr class="separator:a4f693e5bc775271888cb0343dc12e750"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae839d7034103f2fd0d9ebd3d802fa83d"><td class="memItemLeft" align="right" valign="top"><a id="ae839d7034103f2fd0d9ebd3d802fa83d"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getAllocator</b> () -&gt; BumpAlloc&lt;&gt; &amp;</td></tr>
 <tr class="separator:ae839d7034103f2fd0d9ebd3d802fa83d"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -100,6 +103,15 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>createInstruction</b>
 template&lt;size_t N&gt; </td></tr>
 <tr class="memitem:a7f111fcd6afe4dc19f8fe1eb8d9e9a60"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>createOperation</b> (llvm::Intrinsic::ID opId, std::array&lt; <a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> *, N &gt; ops, llvm::Type *typ, llvm::FastMathFlags fmf) -&gt; <a class="el" href="classpoly_1_1IR_1_1Compute.html">Compute</a> *</td></tr>
 <tr class="separator:a7f111fcd6afe4dc19f8fe1eb8d9e9a60"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aca3c18d799319efadb016b2c0cb80aee"><td class="memItemLeft" align="right" valign="top"><a id="aca3c18d799319efadb016b2c0cb80aee"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>createOperation</b> (llvm::Intrinsic::ID opId, PtrVector&lt; <a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> * &gt; ops, llvm::Type *typ, llvm::FastMathFlags fmf) -&gt; <a class="el" href="classpoly_1_1IR_1_1Compute.html">Compute</a> *</td></tr>
+<tr class="separator:aca3c18d799319efadb016b2c0cb80aee"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a702738fcc27c44277ad2eac46da1c091"><td class="memItemLeft" align="right" valign="top"><a id="a702738fcc27c44277ad2eac46da1c091"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>setOperands</b> (<a class="el" href="classpoly_1_1IR_1_1Compute.html">Compute</a> *op, PtrVector&lt; <a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> * &gt; ops)</td></tr>
+<tr class="separator:a702738fcc27c44277ad2eac46da1c091"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5f6d6d4a337fae4ab476b4a2835a1f80"><td class="memItemLeft" align="right" valign="top"><a id="a5f6d6d4a337fae4ab476b4a2835a1f80"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>copyOperation</b> (<a class="el" href="classpoly_1_1IR_1_1Compute.html">Compute</a> *A)</td></tr>
+<tr class="separator:a5f6d6d4a337fae4ab476b4a2835a1f80"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4b64684090963e5baa7617a70e21e1f0"><td class="memTemplParams" colspan="2"><a id="a4b64684090963e5baa7617a70e21e1f0"></a>
 template&lt;size_t N&gt; </td></tr>
 <tr class="memitem:a4b64684090963e5baa7617a70e21e1f0"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>getOperation</b> (llvm::Intrinsic::ID opId, std::array&lt; <a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> *, N &gt; ops, llvm::Type *typ, llvm::FastMathFlags fmf) -&gt; <a class="el" href="classpoly_1_1IR_1_1Compute.html">Compute</a> *</td></tr>
