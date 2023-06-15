@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['mergemap_251',['mergeMap',['../classpoly_1_1poly_1_1DepPoly.html#a6c906a50b76218be2bee9b38e8515ceb',1,'poly::poly::DepPoly']]],
-  ['mergeoperands_252',['mergeOperands',['../structpoly_1_1IR_1_1MergingCost.html#a671d952ed1358878289b387f009df672',1,'poly::IR::MergingCost']]],
-  ['missingnode_253',['missingNode',['../structLinearProgramLoopBlock_1_1Graph.html#ad3bba31dae5c18d4852f30b91d28cf10',1,'LinearProgramLoopBlock::Graph']]]
+  ['mergemap_253',['mergeMap',['../classpoly_1_1poly_1_1DepPoly.html#a6c906a50b76218be2bee9b38e8515ceb',1,'poly::poly::DepPoly']]],
+  ['mergeoperands_254',['mergeOperands',['../structpoly_1_1IR_1_1MergingCost.html#af52ae253e1281d3e0dfc121afc381561',1,'poly::IR::MergingCost']]],
+  ['missingnode_255',['missingNode',['../structLinearProgramLoopBlock_1_1Graph.html#ad3bba31dae5c18d4852f30b91d28cf10',1,'LinearProgramLoopBlock::Graph']]]
 ];

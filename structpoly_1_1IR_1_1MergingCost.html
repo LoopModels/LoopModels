@@ -89,79 +89,91 @@ Classes</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:ad0c83f83c16f438c13bac613a9185dc5"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpoly_1_1IR_1_1MergingCost.html#ad0c83f83c16f438c13bac613a9185dc5">initAncestors</a> (BumpAlloc&lt;&gt; &amp;alloc, <a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> *key) -&gt; <a class="el" href="structpoly_1_1dict_1_1aset.html">aset</a>&lt; <a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> * &gt; *</td></tr>
-<tr class="separator:ad0c83f83c16f438c13bac613a9185dc5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:add40d536a0e2f9d9c083bcb8ff043952"><td class="memItemLeft" align="right" valign="top"><a id="add40d536a0e2f9d9c083bcb8ff043952"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getAncestors</b> (<a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> *op) -&gt; <a class="el" href="structpoly_1_1dict_1_1aset.html">aset</a>&lt; <a class="el" href="classpoly_1_1IR_1_1Instruction.html">Instruction</a> * &gt; *</td></tr>
+<tr class="separator:add40d536a0e2f9d9c083bcb8ff043952"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8da95b32a4d150a0097afb28b8098ab0"><td class="memItemLeft" align="right" valign="top"><a id="a8da95b32a4d150a0097afb28b8098ab0"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>setAncestors</b> (<a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> *op, <a class="el" href="structpoly_1_1dict_1_1aset.html">aset</a>&lt; <a class="el" href="classpoly_1_1IR_1_1Instruction.html">Instruction</a> * &gt; *ancestors)</td></tr>
+<tr class="separator:a8da95b32a4d150a0097afb28b8098ab0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aaccf055e391536e4be364ff3379d12ca"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpoly_1_1IR_1_1MergingCost.html#aaccf055e391536e4be364ff3379d12ca">initAncestors</a> (BumpAlloc&lt;&gt; &amp;alloc, <a class="el" href="classpoly_1_1IR_1_1Instruction.html">Instruction</a> *key) -&gt; <a class="el" href="structpoly_1_1dict_1_1aset.html">aset</a>&lt; <a class="el" href="classpoly_1_1IR_1_1Instruction.html">Instruction</a> * &gt; *</td></tr>
+<tr class="separator:aaccf055e391536e4be364ff3379d12ca"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a27eae24766302138737dc6983edaf200"><td class="memItemLeft" align="right" valign="top"><a id="a27eae24766302138737dc6983edaf200"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>begin</b> () -&gt; decltype(mergeList.begin())</td></tr>
 <tr class="separator:a27eae24766302138737dc6983edaf200"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad28b2e3c2b51c4bbf5f3195584bc2749"><td class="memItemLeft" align="right" valign="top"><a id="ad28b2e3c2b51c4bbf5f3195584bc2749"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>end</b> () -&gt; decltype(mergeList.end())</td></tr>
 <tr class="separator:ad28b2e3c2b51c4bbf5f3195584bc2749"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a046f7aea9cd961db7d78f2f2e29e2600"><td class="memItemLeft" align="right" valign="top"><a id="a046f7aea9cd961db7d78f2f2e29e2600"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>visited</b> (<a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> *key) const -&gt; bool</td></tr>
-<tr class="separator:a046f7aea9cd961db7d78f2f2e29e2600"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a11fd9ae11c03a58a63173b9b08c9d71d"><td class="memItemLeft" align="right" valign="top"><a id="a11fd9ae11c03a58a63173b9b08c9d71d"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>getAncestors</b> (BumpAlloc&lt;&gt; &amp;alloc, <a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> *key) -&gt; <a class="el" href="structpoly_1_1dict_1_1aset.html">aset</a>&lt; <a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> * &gt; *</td></tr>
-<tr class="separator:a11fd9ae11c03a58a63173b9b08c9d71d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6ab4da12cb8e7b0ee86634bf260c3685"><td class="memItemLeft" align="right" valign="top"><a id="a6ab4da12cb8e7b0ee86634bf260c3685"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>getAncestors</b> (<a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> *key) -&gt; <a class="el" href="structpoly_1_1dict_1_1aset.html">aset</a>&lt; <a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> * &gt; *</td></tr>
-<tr class="separator:a6ab4da12cb8e7b0ee86634bf260c3685"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:add6e3f1a03592dbd2d503e7875bda4ac"><td class="memItemLeft" align="right" valign="top"><a id="add6e3f1a03592dbd2d503e7875bda4ac"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>findMerge</b> (<a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> *key) -&gt; <a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> *</td></tr>
-<tr class="separator:add6e3f1a03592dbd2d503e7875bda4ac"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4f70c2eba2924ece9a192c783be44bfe"><td class="memItemLeft" align="right" valign="top"><a id="a4f70c2eba2924ece9a192c783be44bfe"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>findMerge</b> (<a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> *key) const -&gt; <a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> *</td></tr>
-<tr class="separator:a4f70c2eba2924ece9a192c783be44bfe"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afc42cd6b20f54eb5fbfacdc632bfd50d"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpoly_1_1IR_1_1MergingCost.html#afc42cd6b20f54eb5fbfacdc632bfd50d">isMerged</a> (<a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> *key) const -&gt; bool</td></tr>
-<tr class="separator:afc42cd6b20f54eb5fbfacdc632bfd50d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aea0250c1775cc4ed953f3692445c56e2"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpoly_1_1IR_1_1MergingCost.html#aea0250c1775cc4ed953f3692445c56e2">isMerged</a> (<a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> *L, <a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> *J) const -&gt; bool</td></tr>
+<tr class="memitem:a1325d47cd5a0ce815f5403739b1d828a"><td class="memItemLeft" align="right" valign="top"><a id="a1325d47cd5a0ce815f5403739b1d828a"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>visited</b> (<a class="el" href="classpoly_1_1IR_1_1Instruction.html">Instruction</a> *key) const -&gt; bool</td></tr>
+<tr class="separator:a1325d47cd5a0ce815f5403739b1d828a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a10f68d30067949eebce8427962e563e6"><td class="memItemLeft" align="right" valign="top"><a id="a10f68d30067949eebce8427962e563e6"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getAncestors</b> (BumpAlloc&lt;&gt; &amp;alloc, <a class="el" href="classpoly_1_1IR_1_1Instruction.html">Instruction</a> *key) -&gt; <a class="el" href="structpoly_1_1dict_1_1aset.html">aset</a>&lt; <a class="el" href="classpoly_1_1IR_1_1Instruction.html">Instruction</a> * &gt; *</td></tr>
+<tr class="separator:a10f68d30067949eebce8427962e563e6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a47e21bcd1168f750c75c3bfc632d8dc2"><td class="memItemLeft" align="right" valign="top"><a id="a47e21bcd1168f750c75c3bfc632d8dc2"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getAncestors</b> (<a class="el" href="classpoly_1_1IR_1_1Instruction.html">Instruction</a> *key) -&gt; <a class="el" href="structpoly_1_1dict_1_1aset.html">aset</a>&lt; <a class="el" href="classpoly_1_1IR_1_1Instruction.html">Instruction</a> * &gt; *</td></tr>
+<tr class="separator:a47e21bcd1168f750c75c3bfc632d8dc2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac3627704bc46c0ec77bf3d9545c1ef46"><td class="memItemLeft" align="right" valign="top"><a id="ac3627704bc46c0ec77bf3d9545c1ef46"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>findMerge</b> (<a class="el" href="classpoly_1_1IR_1_1Instruction.html">Instruction</a> *key) -&gt; <a class="el" href="classpoly_1_1IR_1_1Instruction.html">Instruction</a> *</td></tr>
+<tr class="separator:ac3627704bc46c0ec77bf3d9545c1ef46"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a78f9aadb55f251bcb21e989177608fc2"><td class="memItemLeft" align="right" valign="top"><a id="a78f9aadb55f251bcb21e989177608fc2"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>findMerge</b> (<a class="el" href="classpoly_1_1IR_1_1Instruction.html">Instruction</a> *key) const -&gt; <a class="el" href="classpoly_1_1IR_1_1Instruction.html">Instruction</a> *</td></tr>
+<tr class="separator:a78f9aadb55f251bcb21e989177608fc2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0f5c22824734316304ca40f3a5e613f6"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpoly_1_1IR_1_1MergingCost.html#a0f5c22824734316304ca40f3a5e613f6">isMerged</a> (<a class="el" href="classpoly_1_1IR_1_1Instruction.html">Instruction</a> *key) const -&gt; bool</td></tr>
+<tr class="separator:a0f5c22824734316304ca40f3a5e613f6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1422508a6cccaee192ddbe9f6da038a9"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpoly_1_1IR_1_1MergingCost.html#a1422508a6cccaee192ddbe9f6da038a9">isMerged</a> (<a class="el" href="classpoly_1_1IR_1_1Instruction.html">Instruction</a> *L, <a class="el" href="classpoly_1_1IR_1_1Instruction.html">Instruction</a> *J) const -&gt; bool</td></tr>
+<tr class="separator:a1422508a6cccaee192ddbe9f6da038a9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aea0250c1775cc4ed953f3692445c56e2"><td class="memItemLeft" align="right" valign="top"><a id="aea0250c1775cc4ed953f3692445c56e2"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>isMerged</b> (<a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> *L, <a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> *J) const -&gt; bool</td></tr>
 <tr class="separator:aea0250c1775cc4ed953f3692445c56e2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:add2cfe5392b60b4db93d70e9bc9764d3"><td class="memItemLeft" align="right" valign="top"><a id="add2cfe5392b60b4db93d70e9bc9764d3"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>cycleUpdateMerged</b> (<a class="el" href="structpoly_1_1dict_1_1aset.html">aset</a>&lt; <a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> * &gt; *ancestors, <a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> *E, <a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> *H)</td></tr>
-<tr class="separator:add2cfe5392b60b4db93d70e9bc9764d3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a671d952ed1358878289b387f009df672"><td class="memTemplParams" colspan="2">template&lt;typename S &gt; </td></tr>
-<tr class="memitem:a671d952ed1358878289b387f009df672"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="structpoly_1_1IR_1_1MergingCost.html#a671d952ed1358878289b387f009df672">mergeOperands</a> (<a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> *A, <a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> *B, S selects)</td></tr>
-<tr class="separator:a671d952ed1358878289b387f009df672"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a04abb1eea4706b3bec5dc654a49f0bfe"><td class="memItemLeft" align="right" valign="top"><a id="a04abb1eea4706b3bec5dc654a49f0bfe"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>merge</b> (BumpAlloc&lt;&gt; &amp;alloc, llvm::TargetTransformInfo &amp;TTI, unsigned int vectorBits, <a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> *A, <a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> *B)</td></tr>
-<tr class="separator:a04abb1eea4706b3bec5dc654a49f0bfe"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a08ffd758e45616998b7cb30ad8cefe12"><td class="memItemLeft" align="right" valign="top"><a id="a08ffd758e45616998b7cb30ad8cefe12"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>cycleUpdateMerged</b> (<a class="el" href="structpoly_1_1dict_1_1aset.html">aset</a>&lt; <a class="el" href="classpoly_1_1IR_1_1Instruction.html">Instruction</a> * &gt; *ancestors, <a class="el" href="classpoly_1_1IR_1_1Instruction.html">Instruction</a> *E, <a class="el" href="classpoly_1_1IR_1_1Instruction.html">Instruction</a> *H)</td></tr>
+<tr class="separator:a08ffd758e45616998b7cb30ad8cefe12"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af52ae253e1281d3e0dfc121afc381561"><td class="memTemplParams" colspan="2">template&lt;typename S &gt; </td></tr>
+<tr class="memitem:af52ae253e1281d3e0dfc121afc381561"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="structpoly_1_1IR_1_1MergingCost.html#af52ae253e1281d3e0dfc121afc381561">mergeOperands</a> (<a class="el" href="classpoly_1_1IR_1_1Instruction.html">Instruction</a> *A, <a class="el" href="classpoly_1_1IR_1_1Instruction.html">Instruction</a> *B, S selects)</td></tr>
+<tr class="separator:af52ae253e1281d3e0dfc121afc381561"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0f67e4f8f11a5ddba3349a70d52fe171"><td class="memItemLeft" align="right" valign="top"><a id="a0f67e4f8f11a5ddba3349a70d52fe171"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>merge</b> (BumpAlloc&lt;&gt; &amp;alloc, llvm::TargetTransformInfo &amp;TTI, unsigned int vectorBits, <a class="el" href="classpoly_1_1IR_1_1Instruction.html">Instruction</a> *A, <a class="el" href="classpoly_1_1IR_1_1Instruction.html">Instruction</a> *B)</td></tr>
+<tr class="separator:a0f67e4f8f11a5ddba3349a70d52fe171"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad1103dc23188bd98340ea498ca2fa641"><td class="memItemLeft" align="right" valign="top"><a id="ad1103dc23188bd98340ea498ca2fa641"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;</b> (const <a class="el" href="structpoly_1_1IR_1_1MergingCost.html">MergingCost</a> &amp;other) const -&gt; bool</td></tr>
 <tr class="separator:ad1103dc23188bd98340ea498ca2fa641"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1fdc176befbf3e705188571416d9ec48"><td class="memItemLeft" align="right" valign="top"><a id="a1fdc176befbf3e705188571416d9ec48"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&gt;</b> (const <a class="el" href="structpoly_1_1IR_1_1MergingCost.html">MergingCost</a> &amp;other) const -&gt; bool</td></tr>
 <tr class="separator:a1fdc176befbf3e705188571416d9ec48"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a89b5b8f359aca82390e0eddc0dcf271c"><td class="memItemLeft" align="right" valign="top"><a id="a89b5b8f359aca82390e0eddc0dcf271c"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>mergeInstructions</b> (<a class="el" href="classpoly_1_1IR_1_1Cache.html">IR::Cache</a> &amp;cache, BumpAlloc&lt;&gt; &amp;tAlloc, <a class="el" href="classpoly_1_1IR_1_1Instruction.html">Instruction</a> *A, <a class="el" href="classpoly_1_1IR_1_1Instruction.html">Instruction</a> *B, <a class="el" href="structpoly_1_1dict_1_1amap.html">amap</a>&lt; <a class="el" href="classpoly_1_1IR_1_1Instruction.html">Instruction</a> *, <a class="el" href="structpoly_1_1IR_1_1Predicate_1_1Set.html">Predicate::Set</a> &gt; &amp;valToPred, <a class="el" href="classpoly_1_1IR_1_1ReMapper.html">ReMapper</a> &amp;reMap, UList&lt; <a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> * &gt; *pred)</td></tr>
+<tr class="separator:a89b5b8f359aca82390e0eddc0dcf271c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
 <tr class="memitem:ac5c1479914d26cee9ce3f498f3a79fd6"><td class="memItemLeft" align="right" valign="top"><a id="ac5c1479914d26cee9ce3f498f3a79fd6"></a>
 static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>popBit</b> (uint8_t x) -&gt; std::pair&lt; bool, uint8_t &gt;</td></tr>
 <tr class="separator:ac5c1479914d26cee9ce3f498f3a79fd6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acfe8268d58149c7eff87cfbe7df88696"><td class="memItemLeft" align="right" valign="top"><a id="acfe8268d58149c7eff87cfbe7df88696"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>init</b> (<a class="el" href="structpoly_1_1IR_1_1MergingCost_1_1Allocate.html">Allocate</a> a, <a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> *A) -&gt; <a class="el" href="structpoly_1_1IR_1_1MergingCost_1_1SelectAllocator.html">SelectAllocator</a></td></tr>
-<tr class="separator:acfe8268d58149c7eff87cfbe7df88696"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af71be9fdbcbbdf5828c09ade0b358cd3"><td class="memItemLeft" align="right" valign="top"><a id="af71be9fdbcbbdf5828c09ade0b358cd3"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>init</b> (<a class="el" href="structpoly_1_1IR_1_1MergingCost_1_1Count.html">Count</a>, <a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> *) -&gt; <a class="el" href="structpoly_1_1IR_1_1MergingCost_1_1SelectCounter.html">SelectCounter</a></td></tr>
-<tr class="separator:af71be9fdbcbbdf5828c09ade0b358cd3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acf0d9bb68704d1d9d4dfd49b8d165e91"><td class="memItemLeft" align="right" valign="top"><a id="acf0d9bb68704d1d9d4dfd49b8d165e91"></a>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>init</b> (<a class="el" href="structpoly_1_1IR_1_1MergingCost_1_1Allocate.html">Allocate</a> a, <a class="el" href="classpoly_1_1IR_1_1Instruction.html">Instruction</a> *A, <a class="el" href="classpoly_1_1IR_1_1Instruction.html">Instruction</a> *B) -&gt; <a class="el" href="structpoly_1_1IR_1_1MergingCost_1_1SelectAllocator.html">SelectAllocator</a></td></tr>
+<tr class="separator:acf0d9bb68704d1d9d4dfd49b8d165e91"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aea00b8f312fed713f18c874b993c2b94"><td class="memItemLeft" align="right" valign="top"><a id="aea00b8f312fed713f18c874b993c2b94"></a>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>init</b> (<a class="el" href="structpoly_1_1IR_1_1MergingCost_1_1Count.html">Count</a>, <a class="el" href="classpoly_1_1IR_1_1Instruction.html">Instruction</a> *, <a class="el" href="classpoly_1_1IR_1_1Instruction.html">Instruction</a> *) -&gt; <a class="el" href="structpoly_1_1IR_1_1MergingCost_1_1SelectCounter.html">SelectCounter</a></td></tr>
+<tr class="separator:aea00b8f312fed713f18c874b993c2b94"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
-<tr class="memitem:ab64e90f549aa053cbf89e3a6b39301a1"><td class="memItemLeft" align="right" valign="top"><a id="ab64e90f549aa053cbf89e3a6b39301a1"></a>
-<a class="el" href="structpoly_1_1dict_1_1amap.html">amap</a>&lt; <a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> *, <a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> * &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>mergeMap</b></td></tr>
-<tr class="separator:ab64e90f549aa053cbf89e3a6b39301a1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7f52da1d7f0581d6c6e3bae06a5c9cb1"><td class="memItemLeft" align="right" valign="top"><a id="a7f52da1d7f0581d6c6e3bae06a5c9cb1"></a>
-llvm::SmallVector&lt; std::pair&lt; <a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> *, <a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> * &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>mergeList</b></td></tr>
-<tr class="separator:a7f52da1d7f0581d6c6e3bae06a5c9cb1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac3d4b067b8c8c815de89388982cce774"><td class="memItemLeft" align="right" valign="top"><a id="ac3d4b067b8c8c815de89388982cce774"></a>
-<a class="el" href="structpoly_1_1dict_1_1amap.html">amap</a>&lt; <a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> *, <a class="el" href="structpoly_1_1dict_1_1aset.html">aset</a>&lt; <a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> * &gt; * &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>ancestorMap</b></td></tr>
-<tr class="separator:ac3d4b067b8c8c815de89388982cce774"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5e930ab029657d4d4a3f2e77ffbc9d6a"><td class="memItemLeft" align="right" valign="top"><a id="a5e930ab029657d4d4a3f2e77ffbc9d6a"></a>
+<a class="el" href="structpoly_1_1dict_1_1amap.html">amap</a>&lt; <a class="el" href="classpoly_1_1IR_1_1Instruction.html">Instruction</a> *, <a class="el" href="classpoly_1_1IR_1_1Instruction.html">Instruction</a> * &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>mergeMap</b></td></tr>
+<tr class="separator:a5e930ab029657d4d4a3f2e77ffbc9d6a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a57634124945d2934683c40d5678ad76f"><td class="memItemLeft" align="right" valign="top"><a id="a57634124945d2934683c40d5678ad76f"></a>
+<a class="el" href="structpoly_1_1math_1_1BumpPtrVector.html">math::BumpPtrVector</a>&lt; std::pair&lt; <a class="el" href="classpoly_1_1IR_1_1Instruction.html">Instruction</a> *, <a class="el" href="classpoly_1_1IR_1_1Instruction.html">Instruction</a> * &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>mergeList</b></td></tr>
+<tr class="separator:a57634124945d2934683c40d5678ad76f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad72171ce72c36c6a431bb5efb00a91a3"><td class="memItemLeft" align="right" valign="top"><a id="ad72171ce72c36c6a431bb5efb00a91a3"></a>
+<a class="el" href="structpoly_1_1dict_1_1amap.html">amap</a>&lt; <a class="el" href="classpoly_1_1IR_1_1Instruction.html">Instruction</a> *, <a class="el" href="structpoly_1_1dict_1_1aset.html">aset</a>&lt; <a class="el" href="classpoly_1_1IR_1_1Instruction.html">Instruction</a> * &gt; * &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>ancestorMap</b></td></tr>
+<tr class="separator:ad72171ce72c36c6a431bb5efb00a91a3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a293acc40e17e3ac00ac721986315357e"><td class="memItemLeft" align="right" valign="top"><a id="a293acc40e17e3ac00ac721986315357e"></a>
 llvm::InstructionCost&#160;</td><td class="memItemRight" valign="bottom"><b>cost</b></td></tr>
 <tr class="separator:a293acc40e17e3ac00ac721986315357e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Member Function Documentation</h2>
-<a id="ad0c83f83c16f438c13bac613a9185dc5"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ad0c83f83c16f438c13bac613a9185dc5">&#9670;&nbsp;</a></span>initAncestors()</h2>
+<a id="aaccf055e391536e4be364ff3379d12ca"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aaccf055e391536e4be364ff3379d12ca">&#9670;&nbsp;</a></span>initAncestors()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -178,13 +190,13 @@ llvm::InstructionCost&#160;</td><td class="memItemRight" valign="bottom"><b>cost
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="classpoly_1_1IR_1_1Instruction.html">Instruction</a> *&#160;</td>
           <td class="paramname"><em>key</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
           <td>)</td>
-          <td></td><td> -&gt; <a class="el" href="structpoly_1_1dict_1_1aset.html">aset</a>&lt;<a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> *&gt; * </td>
+          <td></td><td> -&gt; <a class="el" href="structpoly_1_1dict_1_1aset.html">aset</a>&lt;<a class="el" href="classpoly_1_1IR_1_1Instruction.html">Instruction</a> *&gt; * </td>
         </tr>
       </table>
   </td>
@@ -198,8 +210,8 @@ llvm::InstructionCost&#160;</td><td class="memItemRight" valign="bottom"><b>cost
 
 </div>
 </div>
-<a id="afc42cd6b20f54eb5fbfacdc632bfd50d"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#afc42cd6b20f54eb5fbfacdc632bfd50d">&#9670;&nbsp;</a></span>isMerged() <span class="overload">[1/2]</span></h2>
+<a id="a0f5c22824734316304ca40f3a5e613f6"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0f5c22824734316304ca40f3a5e613f6">&#9670;&nbsp;</a></span>isMerged() <span class="overload">[1/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -210,7 +222,7 @@ llvm::InstructionCost&#160;</td><td class="memItemRight" valign="bottom"><b>cost
         <tr>
           <td class="memname">auto poly::IR::MergingCost::isMerged </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="classpoly_1_1IR_1_1Instruction.html">Instruction</a> *&#160;</td>
           <td class="paramname"><em>key</em></td><td>)</td>
           <td> const -&gt; bool </td>
         </tr>
@@ -221,12 +233,12 @@ llvm::InstructionCost&#160;</td><td class="memItemRight" valign="bottom"><b>cost
   </tr>
 </table>
 </div><div class="memdoc">
-<p><a class="el" href="structpoly_1_1IR_1_1MergingCost.html#afc42cd6b20f54eb5fbfacdc632bfd50d">isMerged(Value *key) const </a>-&gt; bool returns true if <code>key</code> is merged with any other <a class="el" href="classpoly_1_1IR_1_1Instruction.html">Instruction</a> </p>
+<p><a class="el" href="structpoly_1_1IR_1_1MergingCost.html#a0f5c22824734316304ca40f3a5e613f6">isMerged(Instruction *key) const </a>-&gt; bool returns true if <code>key</code> is merged with any other <a class="el" href="classpoly_1_1IR_1_1Instruction.html">Instruction</a> </p>
 
 </div>
 </div>
-<a id="aea0250c1775cc4ed953f3692445c56e2"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aea0250c1775cc4ed953f3692445c56e2">&#9670;&nbsp;</a></span>isMerged() <span class="overload">[2/2]</span></h2>
+<a id="a1422508a6cccaee192ddbe9f6da038a9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1422508a6cccaee192ddbe9f6da038a9">&#9670;&nbsp;</a></span>isMerged() <span class="overload">[2/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -237,13 +249,13 @@ llvm::InstructionCost&#160;</td><td class="memItemRight" valign="bottom"><b>cost
         <tr>
           <td class="memname">auto poly::IR::MergingCost::isMerged </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="classpoly_1_1IR_1_1Instruction.html">Instruction</a> *&#160;</td>
           <td class="paramname"><em>L</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="classpoly_1_1IR_1_1Instruction.html">Instruction</a> *&#160;</td>
           <td class="paramname"><em>J</em>&#160;</td>
         </tr>
         <tr>
@@ -258,12 +270,12 @@ llvm::InstructionCost&#160;</td><td class="memItemRight" valign="bottom"><b>cost
   </tr>
 </table>
 </div><div class="memdoc">
-<p><a class="el" href="structpoly_1_1IR_1_1MergingCost.html#aea0250c1775cc4ed953f3692445c56e2">isMerged(Value *I, Value *J) const </a>-&gt; bool returns true if <code>I</code> and <code>J</code> are merged with each other </p>
+<p><a class="el" href="structpoly_1_1IR_1_1MergingCost.html#a1422508a6cccaee192ddbe9f6da038a9">isMerged(Instruction *I, Instruction *J) const </a>-&gt; bool returns true if <code>I</code> and <code>J</code> are merged with each other </p>
 
 </div>
 </div>
-<a id="a671d952ed1358878289b387f009df672"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a671d952ed1358878289b387f009df672">&#9670;&nbsp;</a></span>mergeOperands()</h2>
+<a id="af52ae253e1281d3e0dfc121afc381561"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af52ae253e1281d3e0dfc121afc381561">&#9670;&nbsp;</a></span>mergeOperands()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -276,13 +288,13 @@ template&lt;typename S &gt; </div>
         <tr>
           <td class="memname">auto poly::IR::MergingCost::mergeOperands </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="classpoly_1_1IR_1_1Instruction.html">Instruction</a> *&#160;</td>
           <td class="paramname"><em>A</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="classpoly_1_1IR_1_1Instruction.html">Instruction</a> *&#160;</td>
           <td class="paramname"><em>B</em>, </td>
         </tr>
         <tr>
