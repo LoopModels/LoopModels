@@ -492,11 +492,11 @@ $(function() {
 <div class="line"><a name="l00429"></a><span class="lineno">  429</span>&#160;  <span class="comment">// TODO: prune bad candidates from mergingCosts</span></div>
 <div class="line"><a name="l00430"></a><span class="lineno">  430</span>&#160;}</div>
 <div class="line"><a name="l00431"></a><span class="lineno">  431</span>&#160; </div>
-<div class="line"><a name="l00443"></a><span class="lineno">  443</span>&#160;<span class="keyword">inline</span> <span class="keywordtype">void</span> mergeInstructions(IR::Cache &amp;cache, Predicate::Map &amp;predMap,</div>
+<div class="line"><a name="l00443"></a><span class="lineno">  443</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> mergeInstructions(IR::Cache &amp;cache, Predicate::Map &amp;predMap,</div>
 <div class="line"><a name="l00444"></a><span class="lineno">  444</span>&#160;                              llvm::TargetTransformInfo &amp;TTI,</div>
 <div class="line"><a name="l00445"></a><span class="lineno">  445</span>&#160;                              BumpAlloc&lt;&gt; &amp;tAlloc, <span class="keywordtype">unsigned</span> vectorBits,</div>
-<div class="line"><a name="l00446"></a><span class="lineno">  446</span>&#160;                              llvm::Loop *L) {</div>
-<div class="line"><a name="l00447"></a><span class="lineno">  447</span>&#160;  <span class="keywordflow">if</span> (!predMap.isDivergent()) <span class="keywordflow">return</span>;</div>
+<div class="line"><a name="l00446"></a><span class="lineno">  446</span>&#160;                              llvm::Loop *L, Value *outOfLoop) -&gt; IR::Value * {</div>
+<div class="line"><a name="l00447"></a><span class="lineno">  447</span>&#160;  <span class="keywordflow">if</span> (!predMap.isDivergent()) <span class="keywordflow">return</span> outOfLoop;</div>
 <div class="line"><a name="l00448"></a><span class="lineno">  448</span>&#160;  <span class="keyword">auto</span> p = tAlloc.scope();</div>
 <div class="line"><a name="l00449"></a><span class="lineno">  449</span>&#160;  <span class="comment">// there is a divergence in the control flow that we can ideally merge</span></div>
 <div class="line"><a name="l00450"></a><span class="lineno">  450</span>&#160;  amap&lt;Instruction::Identifier, math::ResizeableView&lt;Instruction *, unsigned&gt;&gt;</div>
@@ -520,9 +520,10 @@ $(function() {
 <div class="line"><a name="l00468"></a><span class="lineno">  468</span>&#160;  <span class="keywordflow">for</span> (<span class="keyword">auto</span> [A, B] : *minCostStrategy)</div>
 <div class="line"><a name="l00469"></a><span class="lineno">  469</span>&#160;    minCostStrategy-&gt;mergeInstructions(cache, tAlloc, A, B, valToPred, reMap,</div>
 <div class="line"><a name="l00470"></a><span class="lineno">  470</span>&#160;                                       predMap.getPredicates());</div>
-<div class="line"><a name="l00471"></a><span class="lineno">  471</span>&#160;}</div>
-<div class="line"><a name="l00472"></a><span class="lineno">  472</span>&#160; </div>
-<div class="line"><a name="l00473"></a><span class="lineno">  473</span>&#160;} <span class="comment">// namespace poly::IR</span></div>
+<div class="line"><a name="l00471"></a><span class="lineno">  471</span>&#160;  <span class="keywordflow">return</span> outOfLoop;</div>
+<div class="line"><a name="l00472"></a><span class="lineno">  472</span>&#160;}</div>
+<div class="line"><a name="l00473"></a><span class="lineno">  473</span>&#160; </div>
+<div class="line"><a name="l00474"></a><span class="lineno">  474</span>&#160;} <span class="comment">// namespace poly::IR</span></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Cache_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Cache.html">poly::IR::Cache</a></div><div class="ttdef"><b>Definition:</b> Cache.hpp:13</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Cache_html_a6faece9ac31b45aae0353250ff03084d"><div class="ttname"><a href="classpoly_1_1IR_1_1Cache.html#a6faece9ac31b45aae0353250ff03084d">poly::IR::Cache::createSelect</a></div><div class="ttdeci">auto createSelect(Predicate::Intersection P, Value *A, Value *B, UList&lt; Value * &gt; *pred) -&gt; Compute *</div><div class="ttdef"><b>Definition:</b> Cache.hpp:296</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Compute_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Compute.html">poly::IR::Compute</a></div><div class="ttdef"><b>Definition:</b> Instruction.hpp:75</div></div>
