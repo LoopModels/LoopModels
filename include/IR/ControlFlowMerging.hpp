@@ -34,6 +34,10 @@ public:
     if (auto f = reMap.find(J); f != reMap.end()) return f->second;
     return J;
   }
+  auto operator[](Value *J) -> Value * {
+    if (auto *I = llvm::dyn_cast<Instruction>(J)) return (*this)[I];
+    return J;
+  }
   void remapFromTo(Instruction *K, Instruction *J) { reMap[K] = J; }
 };
 
@@ -147,13 +151,13 @@ struct MergingCost {
     ReMapper &reMap;
     amap<Instruction *, Predicate::Set> &valToPred;
     UList<Value *> *predicates;
+    MutPtrVector<Value *> operands;
   };
   struct Count {};
 
   struct SelectCounter {
     unsigned numSelects{0};
-    constexpr operator unsigned() const { return numSelects; }
-    constexpr void merge(size_t, Instruction *, Instruction *) {}
+    constexpr explicit operator unsigned() const { return numSelects; }
     constexpr void select(size_t, Value *, Value *) { ++numSelects; }
   };
   struct SelectAllocator {
@@ -165,12 +169,7 @@ struct MergingCost {
     Predicate::Intersection pred;
     UList<Value *> *predicates;
 
-    constexpr operator MutPtrVector<Value *>() const { return operands; }
-    void merge(size_t i, Instruction *A, Instruction *B) {
-      auto *opA = reMap[A];
-      cache.replaceAllUsesWith(reMap[B], opA);
-      operands[i] = opA;
-    }
+    constexpr explicit operator unsigned() const { return 0; }
     void select(size_t i, Value *A, Value *B) {
       A = reMap[A];
       B = reMap[B];
@@ -182,18 +181,13 @@ struct MergingCost {
         pS.Union(alloc, valToPred[I]);
       valToPred[C] = pS;
       operands[i] = C;
-      // cache.replaceAllUsesWith(A, C);
-      // cache.replaceAllUsesWith(B, C);
     }
   };
 
   static auto init(Allocate a, Instruction *A, Instruction *B)
     -> SelectAllocator {
-    size_t numOps = A->getNumOperands();
-    auto **operandsPtr = a.cache.getAllocator().allocate<Value *>(numOps);
-    MutPtrVector<Value *> operands{operandsPtr, numOps};
     Predicate::Intersection P = a.valToPred[A].getConflict(a.valToPred[B]);
-    return SelectAllocator{a.alloc,     a.cache, a.reMap,     operands,
+    return SelectAllocator{a.alloc,     a.cache, a.reMap,     a.operands,
                            a.valToPred, P,       a.predicates};
   }
   static auto init(Count, Instruction *, Instruction *) -> SelectCounter {
@@ -249,8 +243,6 @@ struct MergingCost {
       if (isMerged(opB, opA)) {
         // we cast, because isMerged confirms they're Instructions, given
         // that opA != opB, which we checked above
-        selector.merge(i, static_cast<Instruction *>(opA),
-                       static_cast<Instruction *>(opB));
         continue;
       }
       if (!((assoc) && (assocFlag))) {
@@ -272,17 +264,11 @@ struct MergingCost {
         // we'll use them now to drop a select.
         if (isMerged(opB, opjA)) {
           std::swap(operandsA[i], operandsA[j]);
-          selector.merge(i, static_cast<Instruction *>(opA),
-                         static_cast<Instruction *>(opB));
-
           merged = true;
           break;
         }
         if (isMerged(opjB, opA)) {
           std::swap(operandsB[i], operandsB[j]);
-          selector.merge(i, static_cast<Instruction *>(opA),
-                         static_cast<Instruction *>(opjB));
-
           merged = true;
           break;
         }
@@ -290,7 +276,7 @@ struct MergingCost {
       // we couldn't find any candidates
       if (!merged) selector.select(i, opA, opB);
     }
-    return selector;
+    return unsigned(selector);
   }
 
   void merge(BumpAlloc<> &alloc, llvm::TargetTransformInfo &TTI,
@@ -350,12 +336,25 @@ struct MergingCost {
     A = reMap[A];
     B = reMap[B];
     if (A == B) return; // is this possible?
+    invariant(A->getNumOperands(), B->getNumOperands());
     if (auto *I = llvm::dyn_cast<Instruction>(A)) {
       auto *J = llvm::cast<Instruction>(B);
-      MergingCost::Allocate allocInst{tAlloc, cache, reMap, valToPred, pred};
-      auto operands = mergeOperands(I, J, allocInst);
-
-      A->setOperands(cache.getAllocator(), operands); // TODO: set users
+      // could be stores
+      if (auto *C = llvm::dyn_cast<Compute>(I)) {
+        Compute *D = cache.copyOperation(C);
+        MergingCost::Allocate allocInst{tAlloc,    cache, reMap,
+                                        valToPred, pred,  D->getOperands()};
+        mergeOperands(I, J, allocInst);
+        D = cache.cse(D);
+        cache.replaceAllUsesWith(A, D);
+        reMap.remapFromTo(A, D);
+        A = D; // D replaces `A` as new op
+      } else {
+        invariant(Node::VK_Stow == I->getKind());
+        MergingCost::Allocate allocInst{tAlloc,    cache, reMap,
+                                        valToPred, pred,  I->getOperands()};
+        mergeOperands(I, J, allocInst);
+      }
     }
     cache.replaceAllUsesWith(B, A);
     reMap.remapFromTo(B, A);

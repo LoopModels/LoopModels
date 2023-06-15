@@ -53,20 +53,6 @@ class Cache {
     return cse(I);
   }
   auto getCSE(Compute *I) -> Compute *& { return instCSEMap[InstByValue{I}]; }
-  // try to remove `I` as a duplicate
-  // this travels downstream;
-  // if `I` is eliminated, all users of `I`
-  // get updated, making them CSE-candiates.
-  // In this manner, we travel downstream through users.
-  auto cse(Compute *I) -> Compute * {
-    Compute *&cse = getCSE(I);
-    if (cse == nullptr || (cse == I)) return cse = I; // update ref
-    replaceAllUsesWith(I, cse);
-    I->removeFromList();
-    I->setNext(freeInstList);
-    freeInstList = I;
-    return cse;
-  }
   // NOLINTNEXTLINE(misc-no-recursion)
   auto createValue(llvm::Value *v, llvm::Loop *L, Value *&n) -> Value * {
     if (auto *i = llvm::dyn_cast<llvm::Instruction>(v))
@@ -104,6 +90,20 @@ class Cache {
   }
 
 public:
+  // try to remove `I` as a duplicate
+  // this travels downstream;
+  // if `I` is eliminated, all users of `I`
+  // get updated, making them CSE-candiates.
+  // In this manner, we travel downstream through users.
+  auto cse(Compute *I) -> Compute * {
+    Compute *&cse = getCSE(I);
+    if (cse == nullptr || (cse == I)) return cse = I; // update ref
+    replaceAllUsesWith(I, cse);
+    I->removeFromList();
+    I->setNext(freeInstList);
+    freeInstList = I;
+    return cse;
+  }
   constexpr auto getAllocator() -> BumpAlloc<> & { return alloc; }
   // NOLINTNEXTLINE(misc-no-recursion)
   auto getValue(llvm::Value *v, llvm::Loop *L) -> Value * {
@@ -162,8 +162,31 @@ public:
                        llvm::Type *typ, llvm::FastMathFlags fmf) -> Compute * {
     Compute *op =
       std::construct_at(allocateInst(N), Node::VK_Oprn, opId, N, typ, fmf);
-    std::copy_n(ops.begin(), N, op->getOperands().begin());
+    setOperands(op, ops);
     return op;
+  }
+  auto createOperation(llvm::Intrinsic::ID opId, PtrVector<Value *> ops,
+                       llvm::Type *typ, llvm::FastMathFlags fmf) -> Compute * {
+    size_t N = ops.size();
+    Compute *op =
+      std::construct_at(allocateInst(N), Node::VK_Oprn, opId, N, typ, fmf);
+    setOperands(op, ops);
+    return op;
+  }
+  void setOperands(Compute *op, PtrVector<Value *> ops) {
+    size_t N = ops.size();
+    MutPtrVector<Value *> operands{op->getOperands()};
+    for (size_t n = 0; n < N; ++n) {
+      Value *operand = operands[n] = ops[n];
+      operand->addUser(alloc, op);
+    }
+  }
+  // this should be modified, and then `cse`-called on int
+  auto copyOperation(Compute *A) {
+    Compute *B = createOperation(A->getOpId(), A->getOperands(), A->getType(),
+                                 A->getFastMathFlags());
+    setOperands(B, A->getOperands());
+    return B;
   }
   template <size_t N>
   auto getOperation(llvm::Intrinsic::ID opId, std::array<Value *, N> ops,
