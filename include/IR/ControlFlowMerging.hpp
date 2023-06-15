@@ -440,11 +440,11 @@ inline void mergeInstructions(
 /// merging as it allocates a lot of memory that it can free when it is done.
 /// TODO: this algorithm is exponential in time and memory.
 /// Odds are that there's way smarter things we can do.
-inline void mergeInstructions(IR::Cache &cache, Predicate::Map &predMap,
+inline auto mergeInstructions(IR::Cache &cache, Predicate::Map &predMap,
                               llvm::TargetTransformInfo &TTI,
                               BumpAlloc<> &tAlloc, unsigned vectorBits,
-                              llvm::Loop *L) {
-  if (!predMap.isDivergent()) return;
+                              llvm::Loop *L, Value *outOfLoop) -> IR::Value * {
+  if (!predMap.isDivergent()) return outOfLoop;
   auto p = tAlloc.scope();
   // there is a divergence in the control flow that we can ideally merge
   amap<Instruction::Identifier, math::ResizeableView<Instruction *, unsigned>>
@@ -468,6 +468,7 @@ inline void mergeInstructions(IR::Cache &cache, Predicate::Map &predMap,
   for (auto [A, B] : *minCostStrategy)
     minCostStrategy->mergeInstructions(cache, tAlloc, A, B, valToPred, reMap,
                                        predMap.getPredicates());
+  return outOfLoop;
 }
 
 } // namespace poly::IR

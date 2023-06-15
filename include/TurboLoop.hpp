@@ -145,7 +145,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
   /// because our analysis failed and needs improvement.
   struct TreeResult {
     IR::Addr *addr{nullptr};
-    IR::Node *node{nullptr};
+    IR::Value *node{nullptr};
     size_t rejectDepth{0};
     constexpr auto reject(size_t depth) -> bool {
       return (depth < rejectDepth) || (addr == nullptr);
@@ -164,7 +164,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
       TreeResult result = *this;
       return result *= other;
     }
-    constexpr auto operator*=(Addr *other) -> TreeResult & {
+    constexpr auto operator*=(IR::Addr *other) -> TreeResult & {
       if (addr && other) addr->setPrev(other);
       addr = other;
       return *this;
@@ -173,9 +173,10 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
   void addInstructions(IR::Addr *addr, llvm::Loop *L) {
     addr->forEach([&, L](Addr *a) { instrCache.addParents(a, L); });
   }
+  // out are those outside the loop
   auto parseBlocks(llvm::BasicBlock *H, llvm::BasicBlock *E, llvm::Loop *L,
                    MutPtrVector<unsigned> omega, NotNull<poly::Loop> AL,
-                   IR::Node *out) -> TreeResult {
+                   IR::Value *out) -> TreeResult {
     // TODO: need to be able to connect instructions as we move out
     if (auto predMapAbridged =
           Predicate::Map::descend(allocator, instrCache, H, E, L)) {
@@ -204,7 +205,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
       // if that succeeds, we create instr and merge CF
       tr.node = mergeInstructions(allocator, instrCache, *predMapAbridged, TTI,
                                   loopBlock.getAlloc(),
-                                  registers.getNumVectorBits(), out);
+                                  registers.getNumVectorBits(), L, out);
       return tr;
     }
     return {};
