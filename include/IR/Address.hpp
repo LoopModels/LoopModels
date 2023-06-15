@@ -326,7 +326,7 @@ public:
     predicate = static_cast<Value *>(n);
   }
   [[nodiscard]] constexpr auto getUsers() const
-    -> containers::UList<Value *> * {
+    -> containers::UList<Instruction *> * {
     invariant(isLoad());
     return unionPtr.users;
   }

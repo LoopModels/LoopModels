@@ -15,9 +15,9 @@ class Cache {
   map<InstByValue, Compute *> instCSEMap;
   map<Cnst::Identifier, Cnst *> constMap;
   BumpAlloc<> alloc;
-  Compute *loopInvariants{nullptr};      // negative numOps/incomplete
-  Compute *freeInstList{nullptr};        // positive numOps/complete, but empty
-  UList<Value *> *freeListList{nullptr}; // TODO: make use of these
+  Compute *loopInvariants{nullptr}; // negative numOps/incomplete
+  Compute *freeInstList{nullptr};   // positive numOps/complete, but empty
+  UList<Instruction *> *freeListList{nullptr}; // TODO: make use of these
   auto allocateInst(unsigned numOps) -> Compute * {
     // because we allocate children before parents
     for (Compute *I = freeInstList; I;
@@ -79,7 +79,7 @@ class Cache {
   constexpr void replaceUsesByUsers(Value *oldNode, Value *newNode) {
     invariant(oldNode->getKind() == Node::VK_Load ||
               oldNode->getKind() >= Node::VK_Func);
-    oldNode->getUsers()->forEach([=, this](Value *user) {
+    oldNode->getUsers()->forEach([=, this](Instruction *user) {
       // newNode may depend on old (e.g. when merging)
       if (user == newNode) return;
       if (auto *I = llvm::dyn_cast<Compute>(user)) {
@@ -96,7 +96,7 @@ class Cache {
         if (isPred) addr->setPredicate(newNode);
         if (isStored) addr->setVal(newNode);
       }
-      newNode->setUsers(newNode->getUsers()->pushUnique(alloc, user));
+      if (newNode->getKind() != Node::VK_Stow) newNode->addUser(alloc, user);
     });
     if (freeListList) freeListList->append(oldNode->getUsers());
     else freeListList = oldNode->getUsers();
@@ -110,6 +110,9 @@ public:
     Value *&n = llvmToInternalMap[v];
     if (n) return n;
     return createValue(v, L, n);
+  }
+  auto getValue(llvm::Instruction *I, llvm::Loop *L) -> Instruction * {
+    return llvm::cast<Instruction>(getValue(static_cast<llvm::Value *>(I), L));
   }
   constexpr void replaceAllUsesWith(Addr *oldNode, Value *newNode) {
     invariant(oldNode->isLoad());
@@ -267,8 +270,7 @@ public:
     } while (ind < 32);
     return J;
   }
-  auto createSelect(Value *A, Value *B,
-                    amap<Value *, Predicate::Set> &valToPred,
+  auto createSelect(Predicate::Intersection P, Value *A, Value *B,
                     UList<Value *> *pred) -> Compute * {
     // What I need here is to take the union of the predicates to form
     // the predicates of the new select instruction. Then, for the
@@ -294,9 +296,6 @@ public:
     /// each side.
     /// Then use the simpler of these two to determine the direction of
     /// the select.
-    Predicate::Set pA = valToPred[A];
-    Predicate::Set pB = valToPred[B];
-    Predicate::Intersection P = pA.getConflict(pB);
     assert(!P.empty() && "No conflict between predicates");
     bool swap = P.countFalse() <= P.countTrue();
     Value *cond = createCondition(P, pred, swap);
@@ -308,13 +307,8 @@ public:
       fmf |= A->getFastMathFlags();
       fmf |= B->getFastMathFlags();
     }
-    Compute *S = getOperation(llvm::Instruction::Select,
-                              std::array<Value *, 3>{cond, op1, op2}, typ, fmf);
-    Predicate::Set pS;
-    pS.Union(alloc, pA);
-    pS.Union(alloc, pB);
-    valToPred[S] = pS;
-    return S;
+    return getOperation(llvm::Instruction::Select,
+                        std::array<Value *, 3>{cond, op1, op2}, typ, fmf);
   }
 };
 

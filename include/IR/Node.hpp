@@ -170,8 +170,9 @@ public:
     if (llvm::isa<llvm::LoadInst>(v)) return VK_Load;
     if (llvm::isa<llvm::StoreInst>(v)) return VK_Stow;
     if (auto *I = llvm::dyn_cast<llvm::Instruction>(v)) return getInstKind(I);
-    if (llvm::isa<llvm::ConstantInt>(v)) return VK_Cint;
-    if (llvm::isa<llvm::ConstantFP>(v)) return VK_Cflt;
+    if (auto *C = llvm::dyn_cast<llvm::ConstantInt>(v))
+      return (C->getBitWidth() > 64) ? VK_Bint : VK_Cint;
+    if (llvm::isa<llvm::ConstantFP>(v)) return VK_Bflt;
     return VK_CVal;
   }
 };
@@ -313,17 +314,17 @@ constexpr auto Exit::getLoop() const -> Loop * {
 constexpr auto Exit::getNextLoop() const -> Loop * {
   return static_cast<Loop *>(getChild());
 }
-
+class Instruction;
 class Value : public Node {
 protected:
   constexpr Value(ValKind kind) : Node(kind) {}
   constexpr Value(ValKind kind, unsigned depth) : Node(kind, depth) {}
 
   union {
-    UList<Value *> *users{nullptr}; // Func, Call, Oprn, Load
-    Value *node;                    // Stow
-    llvm::Type *typ;                // Cint, Cflt, Bint, Bflt
-    llvm::Value *val;               // CVal
+    UList<Instruction *> *users{nullptr}; // Func, Call, Oprn, Load
+    Value *node;                          // Stow
+    llvm::Type *typ;                      // Cint, Cflt, Bint, Bflt
+    llvm::Value *val;                     // CVal
   } unionPtr;
 
 public:
@@ -332,24 +333,26 @@ public:
   }
 
   // unionPtr methods
-  [[nodiscard]] constexpr auto getUsers() const -> const UList<Value *> * {
+  [[nodiscard]] constexpr auto getUsers() const
+    -> const UList<Instruction *> * {
     invariant(kind == VK_Load || kind >= VK_Func);
     return unionPtr.users;
   }
-  [[nodiscard]] constexpr auto getUsers() -> UList<Value *> * {
+  [[nodiscard]] constexpr auto getUsers() -> UList<Instruction *> * {
     invariant(kind == VK_Load || kind >= VK_Func);
     return unionPtr.users;
   }
-  constexpr void setUsers(UList<Value *> *users) {
+  constexpr void setUsers(UList<Instruction *> *users) {
     invariant(kind == VK_Load || kind >= VK_Func);
     unionPtr.users = users;
   }
-  constexpr void addUser(BumpAlloc<> &alloc, Value *n) {
+  constexpr void addUser(BumpAlloc<> &alloc, Instruction *n) {
     invariant(kind == VK_Load || kind >= VK_Func);
-    if (!unionPtr.users) unionPtr.users = alloc.create<UList<Value *>>(n);
-    else unionPtr.users = unionPtr.users->push(alloc, n);
+    if (!unionPtr.users) unionPtr.users = alloc.create<UList<Instruction *>>(n);
+    else unionPtr.users = unionPtr.users->pushUnique(alloc, n);
   }
-  constexpr void removeFromUsers(Value *n) {
+  constexpr void removeFromUsers(Value *n);
+  constexpr void removeFromUsers(Instruction *n) {
     invariant(kind == VK_Load || kind >= VK_Func);
     unionPtr.users->eraseUnordered(n);
   }
@@ -404,6 +407,7 @@ public:
   };
   // declarations
   [[nodiscard]] constexpr auto getIdentifier() const -> Identifier;
+  inline void setOperands(BumpAlloc<> &alloc, math::PtrVector<Value *>);
 };
 
 /// CVal
@@ -423,6 +427,10 @@ public:
     return getValue()->getType();
   }
 };
+constexpr void Value::removeFromUsers(Value *n) {
+  if (auto *I = llvm::dyn_cast<Instruction>(n)) removeFromUsers(I);
+}
+
 /// Cnst
 class Cnst : public Value {
 
@@ -470,7 +478,6 @@ public:
       payload.cf = &f;
     }
   };
-  inline void setOperands(BumpAlloc<> &alloc, math::PtrVector<Value *>);
 };
 /// A constant value w/ respect to the loopnest.
 class Cint : public Cnst {

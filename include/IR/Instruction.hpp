@@ -131,15 +131,16 @@ public:
     }
     return {I->getOpcode(), VK_Oprn};
   }
-  constexpr auto getUsers() -> UList<Value *> * {
+  constexpr auto getUsers() -> UList<Instruction *> * {
     invariant(kind >= VK_Func);
     return unionPtr.users;
   }
-  [[nodiscard]] constexpr auto getUsers() const -> const UList<Value *> * {
+  [[nodiscard]] constexpr auto getUsers() const
+    -> const UList<Instruction *> * {
     invariant(kind >= VK_Func);
     return unionPtr.users;
   }
-  constexpr void setUsers(UList<Value *> *newUsers) {
+  constexpr void setUsers(UList<Instruction *> *newUsers) {
     invariant(kind >= VK_Func);
     unionPtr.users = newUsers;
   }
@@ -170,7 +171,7 @@ public:
   [[nodiscard]] constexpr auto getOperand(size_t i) const -> Value * {
     return operands[i];
   }
-  constexpr void setOperands(BumpAlloc<> &alloc, MutPtrVector<Value *> ops) {
+  constexpr void setOperands(BumpAlloc<> &alloc, PtrVector<Value *> ops) {
     getOperands() << ops;
     for (auto *op : ops) op->addUser(alloc, this);
   }
@@ -271,10 +272,6 @@ public:
     for (auto *u : *getUsers())
       if (u->isStore()) return true;
     return false;
-  }
-  constexpr void setOperands(BumpAlloc<> &alloc, PtrVector<Value *> ops) {
-    getOperands() << ops;
-    for (auto *op : ops) op->addUser(alloc, this);
   }
   // used to check if fmul can be folded with a `-`, in
   // which case it is free
