@@ -8,11 +8,12 @@ struct TreeResult;
 namespace Predicate {
 using dict::MapVector;
 class Map {
-  MapVector<llvm::BasicBlock *, Set> map; // TODO: is the order needed?
+  dict::amap<llvm::BasicBlock *, Set> map;
+  // MapVector<llvm::BasicBlock *, Set> map; // TODO: is the order needed?
   UList<Value *> *predicates;
 
 public:
-  constexpr Map(BumpAlloc<> &alloc) : map(alloc) {}
+  Map(BumpAlloc<> &alloc) : map(alloc) {}
   Map(const Map &x) = default;
   Map(Map &&x) noexcept : map{std::move(x.map)} {}
   auto operator=(const Map &) -> Map & = default;
@@ -33,19 +34,19 @@ public:
     return false;
   }
   auto getPredicates() { return predicates; }
-  [[nodiscard]] auto getEntry() const -> llvm::BasicBlock * {
-    return map.back().first;
-  }
+  // [[nodiscard]] auto getEntry() const -> llvm::BasicBlock * {
+  //   return map.back().first;
+  // }
   // [[nodiscard]] auto get(llvm::BasicBlock *bb) -> Set & { return map[bb]; }
   [[nodiscard]] auto find(llvm::BasicBlock *bb) { return map.find(bb); }
   [[nodiscard]] auto find(llvm::Instruction *inst) {
     return map.find(inst->getParent());
   }
   // we insert into map in reverse order, so our iterators reverse
-  [[nodiscard]] auto begin() { return std::reverse_iterator(map.end()); }
-  [[nodiscard]] auto end() { return std::reverse_iterator(map.begin()); }
-  [[nodiscard]] auto rbegin() { return map.begin(); }
-  [[nodiscard]] auto rend() { return map.end(); }
+  [[nodiscard]] auto begin() { return map.begin(); }
+  [[nodiscard]] auto end() { return map.end(); }
+  [[nodiscard]] auto rbegin() { return std::reverse_iterator(map.end()); }
+  [[nodiscard]] auto rend() { return std::reverse_iterator(map.begin()); }
   [[nodiscard]] auto operator[](llvm::BasicBlock *bb) -> Set {
     auto *it = map.find(bb);
     if (it == map.end()) return {};
@@ -65,7 +66,7 @@ public:
   }
   [[nodiscard]] auto isInPath(llvm::BasicBlock *BB) -> bool {
     auto *f = find(BB);
-    if (f == rend()) return false;
+    if (f == end()) return false;
     return !f->second.empty();
   }
   [[nodiscard]] auto isInPath(llvm::Instruction *I) -> bool {
@@ -82,7 +83,7 @@ public:
     // because we may have inserted into predMap, we need to look up
     // again rather than being able to reuse anything from the
     // `visit`.
-    if (auto *f = find(BB); f != rend()) f->second.Union(alloc, predicate);
+    if (auto *f = find(BB); f != end()) f->second.Union(alloc, predicate);
     else map.insert({BB, Set{predicate}});
   }
   void assume(Intersection predicate) {

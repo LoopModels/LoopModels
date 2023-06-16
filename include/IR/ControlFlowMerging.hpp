@@ -415,7 +415,7 @@ inline void mergeInstructions(
         mergeInstructions(alloc, cache, predMap, TTI, vectorBits, opMap,
                           valToPred, mergingCosts, llvm::cast<Instruction>(U),
                           BB, preds);
-      else if (auto *f = predMap.find(BBU); f != predMap.rend())
+      else if (auto *f = predMap.find(BBU); f != predMap.end())
         mergeInstructions(alloc, cache, predMap, TTI, vectorBits, opMap,
                           valToPred, mergingCosts, llvm::cast<Instruction>(U),
                           BBU, f->second);
@@ -443,49 +443,24 @@ inline void mergeInstructions(
 inline auto mergeInstructions(IR::Cache &cache, Predicate::Map &predMap,
                               llvm::TargetTransformInfo &TTI,
                               BumpAlloc<> &tAlloc, unsigned vectorBits,
-                              llvm::Loop *L, TreeResult tr) -> TreeResult {
-  bool divergent = predMap.isDivergent();
-  // if (!predMap.isDivergent()) return tr;
+                              TreeResult tr) -> TreeResult {
+  if (!predMap.isDivergent()) return cache.completeInstructions(&predMap, tr);
   auto p = tAlloc.scope();
   // there is a divergence in the control flow that we can ideally merge
   amap<Instruction::Identifier, math::ResizeableView<Instruction *, unsigned>>
     opMap{tAlloc};
   amap<Instruction *, Predicate::Set> valToPred{tAlloc};
-  aset<Instruction *> visited{tAlloc};
   llvm::SmallVector<MergingCost *> mergingCosts;
   mergingCosts.emplace_back(tAlloc);
   // We search through incomplete instructions inside the predMap
-  // this should yield all merge candidates.
-  // This is because:
-  // 1. Loops are in LCSSA form, and we pre-searched the phi nodes
-  //    in the exit block for instructions inside the loop that
-  //    are used outside of it.
-  // 2. We scanned over the addresses in the basic block, leaving store's
-  //    stored values incomplete.
-  // 3. We go over subloops and surrounding blocks backwards, so by
-  //    the time we've reached this `predMap`, all following code
-  //    that may use it has been scanned, and all instructions here
-  //    would have been left incomplete.
-  for (auto &P : L->getExitBlock()->phis()) {
-    for (unsigned i = 0, N = P.getNumIncomingValues(); i < N; ++i) {
-      auto *J = llvm::dyn_cast<llvm::Instruction>(P.getIncomingValue(i));
-      if (!J || !L->contains(J)) continue;
-      auto *I = cache.getValue(J, &predMap, tr).first;
-      if (!visited.insert(I).second) continue;
-      // now we search ancestors for members of predMap blocks
-      mergeInstructions(tAlloc, cache, predMap, TTI, vectorBits, opMap,
-                        valToPred, mergingCosts, I, P.getIncomingBlock(i),
-                        predMap[P.getIncomingBlock(i)]);
-    }
-  }
-  for (auto &pred : predMap) {
-    for (llvm::Instruction &lI : *pred.first) {
-      auto v = cache.getValue(&lI, L, tr);
-      tr = v.second;
-      if (auto *J = llvm::dyn_cast<Instruction>(v.first))
-        mergeInstructions(tAlloc, cache, predMap, TTI, vectorBits, opMap,
-                          valToPred, mergingCosts, J, pred.first, pred.second);
-    }
+  // this should yield all merge candidates.L
+  for (auto *C = tr.incomplete; C; C = static_cast<Compute *>(C->getNext())) {
+    auto *f = predMap.find(C->getLLVMInstruction());
+    if (f == predMap.end()) continue;
+    auto cmp = cache.complete(C, &predMap, tr);
+    tr = cmp.second;
+    mergeInstructions(tAlloc, cache, predMap, TTI, vectorBits, opMap, valToPred,
+                      mergingCosts, cmp.first, f->first, f->second);
   }
   MergingCost *minCostStrategy = *std::ranges::min_element(
     mergingCosts, [](MergingCost *a, MergingCost *b) { return *a < *b; });

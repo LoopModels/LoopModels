@@ -46,10 +46,10 @@ struct TreeResult {
   Compute *incomplete{nullptr};
   size_t rejectDepth{0};
   [[nodiscard]] constexpr auto reject(size_t depth) const -> bool {
-    return (depth < rejectDepth) || (addr == nullptr);
+    return (depth < rejectDepth) || (stow == nullptr);
   }
   [[nodiscard]] constexpr auto accept(size_t depth) const -> bool {
-    // depth >= rejectDepth && addr != nullptr
+    // depth >= rejectDepth && stow != nullptr
     return !reject(depth);
   }
   constexpr void addIncomplete(Compute *I) {
@@ -57,8 +57,8 @@ struct TreeResult {
     incomplete = I;
   }
   constexpr void addAddr(Addr *A) {
-    if (A->isLoad()) load = A->setNext(load);
-    else stow = A->setNext(stow);
+    if (A->isLoad()) load = static_cast<Addr *>(A->setNext(load));
+    else stow = static_cast<Addr *>(A->setNext(stow));
   }
 };
 
@@ -83,36 +83,7 @@ class Cache {
     return static_cast<Compute *>(alloc.allocate(
       sizeof(Compute) + sizeof(Value *) * numOps, alignof(Compute)));
   }
-  // update list of incomplets
-  inline void addLoopInstr(Compute *I, Predicate::Map *M, TreeResult tr) {
-    for (; I; I = static_cast<Compute *>(I->getNext())) {
-      if (!M->contains(I->getInstruction())) continue;
-      I->removeFromList();
-      tr = complete(I, M, tr).second;
-    }
-  }
-  // auto complete(Instruction *I, llvm::Loop *L) -> Instruction * {
-  //   if (auto *C = llvm::dyn_cast<Compute>(I)) return complete(C, L);
-  //   invariant(I->getKind() == Node::VK_Load);
-  //   return I;
-  // }
 
-  /// complete the operands
-  // NOLINTNEXTLINE(misc-no-recursion)
-  auto complete(Compute *I, Predicate::Map *M, TreeResult tr)
-    -> std::pair<Compute *, TreeResult> {
-    auto *i = I->getLLVMInstruction();
-    unsigned nOps = I->numCompleteOps();
-    auto ops = I->getOperands();
-    for (unsigned j = 0; j < nOps; ++j) {
-      auto *op = i->getOperand(j);
-      auto [v, tret] = getValue(op, M, tr);
-      tr = tret;
-      ops[j] = v;
-      v->addUser(alloc, I);
-    }
-    return {cse(I), tr};
-  }
   auto getCSE(Compute *I) -> Compute *& { return instCSEMap[InstByValue{I}]; }
   // NOLINTNEXTLINE(misc-no-recursion)
   auto createValue(llvm::Value *v, Predicate::Map *M, TreeResult tr, Value *&n)
@@ -265,6 +236,33 @@ class Cache {
   }
 
 public:
+  /// complete the operands
+  // NOLINTNEXTLINE(misc-no-recursion)
+  auto complete(Compute *I, Predicate::Map *M, TreeResult tr)
+    -> std::pair<Compute *, TreeResult> {
+    auto *i = I->getLLVMInstruction();
+    unsigned nOps = I->numCompleteOps();
+    auto ops = I->getOperands();
+    for (unsigned j = 0; j < nOps; ++j) {
+      auto *op = i->getOperand(j);
+      auto [v, tret] = getValue(op, M, tr);
+      tr = tret;
+      ops[j] = v;
+      v->addUser(alloc, I);
+    }
+    return {cse(I), tr};
+  }
+  // update list of incomplets
+  inline auto completeInstructions(Predicate::Map *M, TreeResult tr)
+    -> TreeResult {
+    for (Compute *I = tr.incomplete; I;
+         I = static_cast<Compute *>(I->getNext())) {
+      if (!M->contains(I->getInstruction())) continue;
+      I->removeFromList();
+      tr = complete(I, M, tr).second;
+    }
+    return tr;
+  }
   /// Get the cache's allocator.
   /// This is a long-lived bump allocator, mass-freeing after each
   /// sub-tree optimization.
@@ -649,7 +647,7 @@ descendBlock(BumpAlloc<> &alloc, IR::Cache &cache,
     // non-fatal dead-end. Otherwise, we check if it seems to have
     // led to a live, non-empty path.
     // TODO: should we union the predicates in case of returned?
-    if ((BBsrc != BBhead) && predMap.find(BBsrc) != predMap.rend())
+    if ((BBsrc != BBhead) && predMap.find(BBsrc) != predMap.end())
       return Map::Destination::Reached;
     return Map::Destination::Returned;
   }
