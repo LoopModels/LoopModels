@@ -1,17 +1,17 @@
 var searchData=
 [
-  ['basecomparator_153',['BaseComparator',['../structpoly_1_1comparator_1_1BaseComparator.html',1,'poly::comparator']]],
-  ['basecomparator_3c_20basesymboliccomparator_3c_20t_20_3e_20_3e_154',['BaseComparator&lt; BaseSymbolicComparator&lt; T &gt; &gt;',['../structpoly_1_1comparator_1_1BaseComparator.html',1,'poly::comparator']]],
-  ['basematrixprinter_155',['BaseMatrixPrinter',['../classprettyprinters_1_1BaseMatrixPrinter.html',1,'prettyprinters']]],
-  ['basepolyhedra_156',['BasePolyhedra',['../structpoly_1_1poly_1_1BasePolyhedra.html',1,'poly::poly']]],
-  ['basepolyhedra_3c_20false_2c_20true_2c_20true_2c_20loop_20_3e_157',['BasePolyhedra&lt; false, true, true, Loop &gt;',['../structpoly_1_1poly_1_1BasePolyhedra.html',1,'poly::poly']]],
-  ['basepolyhedra_3c_20true_2c_20true_2c_20false_2c_20deppoly_20_3e_158',['BasePolyhedra&lt; true, true, false, DepPoly &gt;',['../structpoly_1_1poly_1_1BasePolyhedra.html',1,'poly::poly']]],
-  ['basesymboliccomparator_159',['BaseSymbolicComparator',['../structpoly_1_1comparator_1_1BaseSymbolicComparator.html',1,'poly::comparator']]],
-  ['basesymboliccomparator_3c_20linearsymboliccomparator_20_3e_160',['BaseSymbolicComparator&lt; LinearSymbolicComparator &gt;',['../structpoly_1_1comparator_1_1BaseSymbolicComparator.html',1,'poly::comparator']]],
-  ['basesymboliccomparator_3c_20ptrsymboliccomparator_20_3e_161',['BaseSymbolicComparator&lt; PtrSymbolicComparator &gt;',['../structpoly_1_1comparator_1_1BaseSymbolicComparator.html',1,'poly::comparator']]],
-  ['bflt_162',['Bflt',['../classpoly_1_1IR_1_1Bflt.html',1,'poly::IR']]],
-  ['bint_163',['Bint',['../classpoly_1_1IR_1_1Bint.html',1,'poly::IR']]],
-  ['bumpptrvector_164',['BumpPtrVector',['../structpoly_1_1math_1_1BumpPtrVector.html',1,'poly::math']]],
-  ['bumpptrvector_3c_20std_3a_3apair_3c_20k_2c_20v_20_3e_20_3e_165',['BumpPtrVector&lt; std::pair&lt; K, V &gt; &gt;',['../structpoly_1_1math_1_1BumpPtrVector.html',1,'poly::math']]],
-  ['bumpptrvector_3c_20std_3a_3apair_3c_20poly_3a_3air_3a_3ainstruction_20_2a_2c_20poly_3a_3air_3a_3ainstruction_20_2a_20_3e_20_3e_166',['BumpPtrVector&lt; std::pair&lt; poly::IR::Instruction *, poly::IR::Instruction * &gt; &gt;',['../structpoly_1_1math_1_1BumpPtrVector.html',1,'poly::math']]]
+  ['basecomparator_155',['BaseComparator',['../structpoly_1_1comparator_1_1BaseComparator.html',1,'poly::comparator']]],
+  ['basecomparator_3c_20basesymboliccomparator_3c_20t_20_3e_20_3e_156',['BaseComparator&lt; BaseSymbolicComparator&lt; T &gt; &gt;',['../structpoly_1_1comparator_1_1BaseComparator.html',1,'poly::comparator']]],
+  ['basematrixprinter_157',['BaseMatrixPrinter',['../classprettyprinters_1_1BaseMatrixPrinter.html',1,'prettyprinters']]],
+  ['basepolyhedra_158',['BasePolyhedra',['../structpoly_1_1poly_1_1BasePolyhedra.html',1,'poly::poly']]],
+  ['basepolyhedra_3c_20false_2c_20true_2c_20true_2c_20loop_20_3e_159',['BasePolyhedra&lt; false, true, true, Loop &gt;',['../structpoly_1_1poly_1_1BasePolyhedra.html',1,'poly::poly']]],
+  ['basepolyhedra_3c_20true_2c_20true_2c_20false_2c_20deppoly_20_3e_160',['BasePolyhedra&lt; true, true, false, DepPoly &gt;',['../structpoly_1_1poly_1_1BasePolyhedra.html',1,'poly::poly']]],
+  ['basesymboliccomparator_161',['BaseSymbolicComparator',['../structpoly_1_1comparator_1_1BaseSymbolicComparator.html',1,'poly::comparator']]],
+  ['basesymboliccomparator_3c_20linearsymboliccomparator_20_3e_162',['BaseSymbolicComparator&lt; LinearSymbolicComparator &gt;',['../structpoly_1_1comparator_1_1BaseSymbolicComparator.html',1,'poly::comparator']]],
+  ['basesymboliccomparator_3c_20ptrsymboliccomparator_20_3e_163',['BaseSymbolicComparator&lt; PtrSymbolicComparator &gt;',['../structpoly_1_1comparator_1_1BaseSymbolicComparator.html',1,'poly::comparator']]],
+  ['bflt_164',['Bflt',['../classpoly_1_1IR_1_1Bflt.html',1,'poly::IR']]],
+  ['bint_165',['Bint',['../classpoly_1_1IR_1_1Bint.html',1,'poly::IR']]],
+  ['bumpptrvector_166',['BumpPtrVector',['../structpoly_1_1math_1_1BumpPtrVector.html',1,'poly::math']]],
+  ['bumpptrvector_3c_20std_3a_3apair_3c_20k_2c_20v_20_3e_20_3e_167',['BumpPtrVector&lt; std::pair&lt; K, V &gt; &gt;',['../structpoly_1_1math_1_1BumpPtrVector.html',1,'poly::math']]],
+  ['bumpptrvector_3c_20std_3a_3apair_3c_20poly_3a_3air_3a_3ainstruction_20_2a_2c_20poly_3a_3air_3a_3ainstruction_20_2a_20_3e_20_3e_168',['BumpPtrVector&lt; std::pair&lt; poly::IR::Instruction *, poly::IR::Instruction * &gt; &gt;',['../structpoly_1_1math_1_1BumpPtrVector.html',1,'poly::math']]]
 ];
