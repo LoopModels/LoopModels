@@ -1,8 +1,11 @@
 #pragma once
 #include "Dicts/MapVector.hpp"
-#include "IR/Cache.hpp"
+#include "IR/Node.hpp"
 #include "IR/Predicate.hpp"
-namespace poly::IR::Predicate {
+namespace poly::IR {
+class Cache;
+struct TreeResult;
+namespace Predicate {
 using dict::MapVector;
 class Map {
   MapVector<llvm::BasicBlock *, Set> map; // TODO: is the order needed?
@@ -55,7 +58,10 @@ public:
     map.insert(std::move(pair));
   }
   [[nodiscard]] auto contains(llvm::BasicBlock *BB) const -> bool {
-    return map.count(BB);
+    return map.contains(BB);
+  }
+  [[nodiscard]] auto contains(llvm::Instruction *I) const -> bool {
+    return map.contains(I->getParent());
   }
   [[nodiscard]] auto isInPath(llvm::BasicBlock *BB) -> bool {
     auto *f = find(BB);
@@ -69,19 +75,9 @@ public:
   // void visit(llvm::BasicBlock *BB) { map.insert(std::make_pair(BB,
   // Set())); } void visit(llvm::Instruction *inst) {
   // visit(inst->getParent()); }
-  [[nodiscard]] auto addPredicate(BumpAlloc<> &alloc, IR::Cache &cache,
-                                  llvm::Value *value, llvm::Loop *L,
-                                  IR::Cache::TreeResult &tr) -> size_t {
-    auto [I, tret] = cache.getValue(value, L, tr);
-    tr = tret;
-    // assert(predicates->count <= 32 && "too many predicates");
-    size_t i = 0;
-    for (auto *U = predicates; U != nullptr; U = U->getNext())
-      for (ptrdiff_t j = 0, N = U->getHeadCount(); j < N; ++i, ++j)
-        if ((*U)[j] == I) return i;
-    predicates->push_ordered(alloc, I);
-    return i;
-  }
+  [[nodiscard]] inline auto addPredicate(BumpAlloc<> &alloc, IR::Cache &cache,
+                                         llvm::Value *value, TreeResult &tr)
+    -> size_t;
   void reach(BumpAlloc<> &alloc, llvm::BasicBlock *BB, Intersection predicate) {
     // because we may have inserted into predMap, we need to look up
     // again rather than being able to reuse anything from the
@@ -98,100 +94,13 @@ public:
   // in it directly, and not nested another loop deeper?
   // 2. We are ignoring cycles for now; we must ensure this is done
   // correctly
-  [[nodiscard]] static auto // NOLINTNEXTLINE(misc-no-recursion)
-  descendBlock(BumpAlloc<> &alloc, IR::Cache &cache,
-               aset<llvm::BasicBlock *> &visited, Predicate::Map &predMap,
-               llvm::BasicBlock *BBsrc, llvm::BasicBlock *BBdst,
-               Predicate::Intersection predicate, llvm::BasicBlock *BBhead,
-               llvm::Loop *L) -> Destination {
-    if (BBsrc == BBdst) {
-      assert(!predMap.contains(BBsrc));
-      predMap.insert({BBsrc, Set{predicate}});
-      return Destination::Reached;
-    }
-    if (L && (!(L->contains(BBsrc)))) {
-      // oops, we seem to have skipped the preheader and escaped the
-      // loop.
-      return Destination::Returned;
-    }
-    if (visited.contains(BBsrc)) {
-      // FIXME: This is terribly hacky.
-      // if `BBsrc == BBhead`, then we assume we hit a path that
-      // bypasses the following loop, e.g. there was a loop guard.
-      //
-      // Thus, we return `Returned`, indicating that it was a
-      // non-fatal dead-end. Otherwise, we check if it seems to have
-      // led to a live, non-empty path.
-      // TODO: should we union the predicates in case of returned?
-      if ((BBsrc != BBhead) && predMap.find(BBsrc) != predMap.rend())
-        return Destination::Reached;
-      return Destination::Returned;
-    }
-    // Inserts a tombstone to indicate that we have visited BBsrc, but
-    // not actually reached a destination.
-    visited.insert(BBsrc);
-    const llvm::Instruction *I = BBsrc->getTerminator();
-    if (!I) return Destination::Unknown;
-    if (llvm::isa<llvm::ReturnInst>(I)) return Destination::Returned;
-    if (llvm::isa<llvm::UnreachableInst>(I)) return Destination::Unreachable;
-    const auto *BI = llvm::dyn_cast<llvm::BranchInst>(I);
-    if (!BI) return Destination::Unknown;
-    if (BI->isUnconditional()) {
-      auto rc = descendBlock(alloc, cache, visited, predMap,
-                             BI->getSuccessor(0), BBdst, predicate, BBhead, L);
-      if (rc == Destination::Reached) predMap.reach(alloc, BBsrc, predicate);
-      return rc;
-    }
-    // We have a conditional branch.
-    llvm::Value *cond = BI->getCondition();
-    // We need to check both sides of the branch and add a predicate.
-    size_t predInd = predMap.addPredicate(alloc, cache, cond);
-    auto rc0 = descendBlock(
-      alloc, cache, visited, predMap, BI->getSuccessor(0), BBdst,
-      predicate.intersect(predInd, Predicate::Relation::True), BBhead, L);
-    if (rc0 == Destination::Unknown) // bail
-      return Destination::Unknown;
-    auto rc1 = descendBlock(
-      alloc, cache, visited, predMap, BI->getSuccessor(1), BBdst,
-      predicate.intersect(predInd, Predicate::Relation::False), BBhead, L);
-    if ((rc0 == Destination::Returned) || (rc0 == Destination::Unreachable)) {
-      if (rc1 == Destination::Reached) {
-        //  we're now assuming that !cond
-        predMap.assume(
-          Predicate::Intersection(predInd, Predicate::Relation::False));
-        predMap.reach(alloc, BBsrc, predicate);
-      }
-      return rc1;
-    }
-    if ((rc1 == Destination::Returned) || (rc1 == Destination::Unreachable)) {
-      if (rc0 == Destination::Reached) {
-        //  we're now assuming that cond
-        predMap.assume(
-          Predicate::Intersection(predInd, Predicate::Relation::True));
-        predMap.reach(alloc, BBsrc, predicate);
-      }
-      return rc0;
-    }
-    if (rc0 != rc1) return Destination::Unknown;
-    if (rc0 == Destination::Reached) predMap.reach(alloc, BBsrc, predicate);
-    return rc0;
-  }
   /// We bail if there are more than 32 conditions; control flow that
   /// branchy is probably not worth trying to vectorize.
-  [[nodiscard]] static auto
-  descend(BumpAlloc<> &alloc, IR::Cache &cache, llvm::BasicBlock *start,
-          llvm::BasicBlock *stop, llvm::Loop *L, IR::Cache::TreeResult &tr)
-    -> std::optional<Map> {
-    auto p = alloc.checkpoint();
-    Map pm{alloc};
-    aset<llvm::BasicBlock *> visited{alloc};
-    if (descendBlock(alloc, cache, visited, pm, start, stop, {}, start, L) ==
-        Destination::Reached)
-      return pm;
-    alloc.rollback(p);
-    return std::nullopt;
-  }
-
+  [[nodiscard]] inline static auto descend(BumpAlloc<> &, IR::Cache &,
+                                           llvm::BasicBlock *,
+                                           llvm::BasicBlock *, llvm::Loop *,
+                                           TreeResult &) -> std::optional<Map>;
 }; // struct Map
 
-} // namespace poly::IR::Predicate
+} // namespace Predicate
+} // namespace poly::IR

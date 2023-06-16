@@ -185,6 +185,27 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
     return tr;
   }
   void optimizeLoop(Loop *L) { L->truncate(); }
+  /// parseExitBlocks(llvm::Loop *L) -> IR::TreeResult
+  /// We require loops be in LCSSA form
+  /// parseExitBlock
+  /// FIXME: some of these phis are likely to either be stored,
+  /// or otherwise be values accumulated in the loop, and we
+  /// currently have no way of representing things as simple as a sum.
+  /// If we ultimately fail to expand outwards (i.e. if we can't represent the
+  /// outer loop in an affine way, or if it is not a loop at all, but is
+  /// toplevel) then we should represent these phis internally as storing to a
+  /// zero-dimensional address.
+  auto parseExitBlocks(llvm::Loop *L) -> IR::TreeResult {
+    IR::TreeResult tr;
+    for (auto &P : L->getExitBlock()->phis()) {
+      for (unsigned i = 0, N = P.getNumIncomingValues(); i < N; ++i) {
+        auto *J = llvm::dyn_cast<llvm::Instruction>(P.getIncomingValue(i));
+        if (!J || !L->contains(J)) continue;
+        tr = cache.getValue(J, nullptr, tr).second;
+      }
+    }
+    return tr;
+  }
   /// runOnLoop, parses LLVM
   /// We construct our linear programs first, which means creating
   /// `poly::Loop`s and `Addr`s, and tracking original locations.

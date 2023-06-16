@@ -137,22 +137,32 @@ public:
   [[nodiscard]] constexpr auto getChild() const -> Node * { return child; }
   [[nodiscard]] constexpr auto getPrev() const -> Node * { return prev; }
   [[nodiscard]] constexpr auto getNext() const -> Node * { return next; }
-  constexpr void setNext(Node *n) {
+  constexpr auto setNext(Node *n) -> Node * {
     next = n;
     if (n) n->prev = this;
+    return this;
   }
-  constexpr void setPrev(Node *n) {
+  constexpr auto setPrev(Node *n) -> Node * {
     prev = n;
     if (n) n->next = this;
+    return this;
   }
   constexpr void setChild(Node *n) { child = n; }
   constexpr void setParent(Node *n) { parent = n; }
   constexpr void setDepth(unsigned d) { depth = d; }
+  /// insert `d` ahead of `this`
   constexpr void insertAhead(Node *d) {
     d->setNext(this);
     d->setPrev(prev);
     if (prev) prev->setNext(d);
     prev = d;
+  }
+  /// insert `d` after `this`
+  constexpr void insertAfter(Node *d) {
+    d->setPrev(this);
+    d->setNext(next);
+    if (next) next->setPrev(d);
+    next = d;
   }
   constexpr void removeFromList() {
     if (prev) prev->setNext(next);
@@ -178,6 +188,14 @@ public:
     if (llvm::isa<llvm::ConstantFP>(v)) return VK_Bflt;
     return VK_CVal;
   }
+  [[nodiscard]] constexpr auto getAuxFwd() const -> Node * {
+    return componentFwd;
+  }
+  constexpr void setAuxFwd(Node *n) { componentFwd = n; }
+  [[nodiscard]] constexpr auto getAuxBwd() const -> Node * {
+    return componentBwd;
+  }
+  constexpr void setAuxBwd(Node *n) { componentBwd = n; }
 };
 
 class Loop;

@@ -443,8 +443,7 @@ inline void mergeInstructions(
 inline auto mergeInstructions(IR::Cache &cache, Predicate::Map &predMap,
                               llvm::TargetTransformInfo &TTI,
                               BumpAlloc<> &tAlloc, unsigned vectorBits,
-                              llvm::Loop *L, IR::Cache::TreeResult tr)
-  -> IR::Cache::TreeResult {
+                              llvm::Loop *L, TreeResult tr) -> TreeResult {
   bool divergent = predMap.isDivergent();
   // if (!predMap.isDivergent()) return tr;
   auto p = tAlloc.scope();
@@ -455,16 +454,23 @@ inline auto mergeInstructions(IR::Cache &cache, Predicate::Map &predMap,
   aset<Instruction *> visited{tAlloc};
   llvm::SmallVector<MergingCost *> mergingCosts;
   mergingCosts.emplace_back(tAlloc);
-  // TODO: how to iterate over list of instructions?
-  // we require LCSSA form; thus we search the exit phis,
-  // and all stores within these and later blocks w/in the loop
-  // nest, searching their parents recursively for instructions
-  // inside the predMap
+  // We search through incomplete instructions inside the predMap
+  // this should yield all merge candidates.
+  // This is because:
+  // 1. Loops are in LCSSA form, and we pre-searched the phi nodes
+  //    in the exit block for instructions inside the loop that
+  //    are used outside of it.
+  // 2. We scanned over the addresses in the basic block, leaving store's
+  //    stored values incomplete.
+  // 3. We go over subloops and surrounding blocks backwards, so by
+  //    the time we've reached this `predMap`, all following code
+  //    that may use it has been scanned, and all instructions here
+  //    would have been left incomplete.
   for (auto &P : L->getExitBlock()->phis()) {
     for (unsigned i = 0, N = P.getNumIncomingValues(); i < N; ++i) {
       auto *J = llvm::dyn_cast<llvm::Instruction>(P.getIncomingValue(i));
       if (!J || !L->contains(J)) continue;
-      auto *I = cache.getValue(J, L, tr).first;
+      auto *I = cache.getValue(J, &predMap, tr).first;
       if (!visited.insert(I).second) continue;
       // now we search ancestors for members of predMap blocks
       mergeInstructions(tAlloc, cache, predMap, TTI, vectorBits, opMap,

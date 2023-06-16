@@ -2,16 +2,66 @@
 
 #include "Dicts/BumpMapSet.hpp"
 #include "IR/Address.hpp"
+#include "IR/BBPredPath.hpp"
 #include "IR/Instruction.hpp"
 #include "IR/Node.hpp"
 #include "IR/Predicate.hpp"
 #include <cstddef>
+#include <llvm/Analysis/Delinearization.h>
 #include <llvm/Analysis/LoopInfo.h>
 #include <llvm/IR/FMF.h>
 #include <llvm/IR/Instructions.h>
+#include <llvm/Support/Casting.h>
 
 namespace poly::IR {
 using dict::map;
+/// The `TreeResult` gives the result of parsing a loop tree.
+/// The purpose of the `TreeResult` is to accumulate results while
+/// building the loop tree, in particular, the `Addr`s so far,
+/// the incomplete instructions we must complete as we move out,
+/// and how many outer loop layers we are forced to reject.
+///
+/// We parse `Addr`s specifically inside the `TurboLoop` parse block function,
+/// and add the appropriate `omega` value then.
+///
+/// Fields:
+/// - `Addr* load`: a linked list giving the loads of the loop tree.
+/// These contain ordering information, which is enough for the linear program
+/// to deduce the orders of memory accesses, and perform an analysis.
+/// Note that adding loads and stores always pushes to the front.
+/// Thus, old `TreeResult`s are not invalidated; they just start at the middle
+/// of the grown list.
+/// - `Addr* stow`: same as load, but for stores.
+/// - 'Instruction* incomplete': a linked list giving the nodes that we
+/// stopped exploring due to not being inside the loop nest, and thus may need
+/// to have their parents filled out.
+/// - `size_t rejectDepth` is how many outer loops were rejected, due to to
+/// failure to produce an affine representation of the loop or memory
+/// accesses. Either because an affine representation is not possible, or
+/// because our analysis failed and needs improvement.
+///
+struct TreeResult {
+  Addr *load{nullptr};
+  Addr *stow{nullptr};
+  Compute *incomplete{nullptr};
+  size_t rejectDepth{0};
+  [[nodiscard]] constexpr auto reject(size_t depth) const -> bool {
+    return (depth < rejectDepth) || (addr == nullptr);
+  }
+  [[nodiscard]] constexpr auto accept(size_t depth) const -> bool {
+    // depth >= rejectDepth && addr != nullptr
+    return !reject(depth);
+  }
+  constexpr void addIncomplete(Compute *I) {
+    I->setNext(incomplete);
+    incomplete = I;
+  }
+  constexpr void addAddr(Addr *A) {
+    if (A->isLoad()) load = A->setNext(load);
+    else stow = A->setNext(stow);
+  }
+};
+
 class Cache {
   map<llvm::Value *, Value *> llvmToInternalMap;
   map<InstByValue, Compute *> instCSEMap;
@@ -21,68 +71,6 @@ class Cache {
   llvm::ScalarEvolution *SE;
   Compute *freeInstList{nullptr}; // positive numOps/complete, but empty
   UList<Instruction *> *freeListList{nullptr}; // TODO: make use of these
-public:
-  /// The `TreeResult` gives the result of parsing a loop tree.
-  /// The purpose of the `TreeResult` is to accumulate results while
-  /// building the loop tree, in particular, the `Addr`s so far,
-  /// the incomplete instructions we must complete as we move out,
-  /// and how many outer loop layers we are forced to reject.
-  ///
-  /// We parse `Addr`s specifically inside the `TurboLoop` parse block function,
-  /// and add the appropriate `omega` value then.
-  ///
-  /// Fields:
-  /// - `Addr* addr`: a linked list giving the addresses of the loop tree.
-  /// These contain ordering information, which is enough for the linear program
-  /// to deduce the orders of memory accesses, and perform an analysis.
-  /// - 'Instruction* incomplete': a linked list giving the nodes that we
-  /// stopped exploring due to not being inside the loop nest, and thus may need
-  /// to have their parents filled out.
-  /// - `size_t rejectDepth` is how many outer loops were rejected, due to to
-  /// failure to produce an affine representation of the loop or memory
-  /// accesses. Either because an affine representation is not possible, or
-  /// because our analysis failed and needs improvement.
-  ///
-  struct TreeResult {
-    Addr *addr{nullptr};
-    Compute *incomplete{nullptr};
-    size_t rejectDepth{0};
-    [[nodiscard]] constexpr auto reject(size_t depth) const -> bool {
-      return (depth < rejectDepth) || (addr == nullptr);
-    }
-    [[nodiscard]] constexpr auto accept(size_t depth) const -> bool {
-      // depth >= rejectDepth && addr != nullptr
-      return !reject(depth);
-    }
-    // `addr` can be initialized by `nullptr`. If `other` returns `nullptr`, we
-    // lose and leak the old pointer (leaking is okay so long as it was bump
-    // allocated -- the bump allocator will free it). because `rejectDepth`
-    // accumulates, we technically don't need to worry about checking for
-    // `nullptr` every time, but may make sense to do so anyway.
-    constexpr auto operator*=(TreeResult other) -> TreeResult & {
-      rejectDepth = std::max(rejectDepth, other.rejectDepth);
-      return *this *= other.addr;
-    }
-    constexpr auto operator*(TreeResult other) -> TreeResult {
-      TreeResult result = *this;
-      return result *= other;
-    }
-    constexpr auto operator*=(IR::Addr *other) -> TreeResult & {
-      if (addr && other) addr->setPrev(other);
-      addr = other;
-      return *this;
-    }
-    constexpr void addIncomplete(Compute *I) {
-      I->setNext(incomplete);
-      incomplete = I;
-    }
-    constexpr void addAddr(Addr *A) {
-      A->setNext(addr);
-      addr = A;
-    }
-  };
-
-private:
   auto allocateInst(unsigned numOps) -> Compute * {
     // because we allocate children before parents
     for (Compute *I = freeInstList; I;
@@ -95,12 +83,12 @@ private:
     return static_cast<Compute *>(alloc.allocate(
       sizeof(Compute) + sizeof(Value *) * numOps, alignof(Compute)));
   }
-  // update list of loop invariants `I`.
-  void addLoopInstr(Compute *I, llvm::Loop *L, TreeResult tr) {
+  // update list of incomplets
+  inline void addLoopInstr(Compute *I, Predicate::Map *M, TreeResult tr) {
     for (; I; I = static_cast<Compute *>(I->getNext())) {
-      if (!L->isLoopInvariant(I->getInstruction())) continue;
+      if (!M->contains(I->getInstruction())) continue;
       I->removeFromList();
-      tr = complete(I, L, tr).second;
+      tr = complete(I, M, tr).second;
     }
   }
   // auto complete(Instruction *I, llvm::Loop *L) -> Instruction * {
@@ -111,14 +99,14 @@ private:
 
   /// complete the operands
   // NOLINTNEXTLINE(misc-no-recursion)
-  auto complete(Compute *I, llvm::Loop *L, TreeResult tr)
+  auto complete(Compute *I, Predicate::Map *M, TreeResult tr)
     -> std::pair<Compute *, TreeResult> {
     auto *i = I->getLLVMInstruction();
     unsigned nOps = I->numCompleteOps();
     auto ops = I->getOperands();
     for (unsigned j = 0; j < nOps; ++j) {
       auto *op = i->getOperand(j);
-      auto [v, tret] = getValue(op, L, tr);
+      auto [v, tret] = getValue(op, M, tr);
       tr = tret;
       ops[j] = v;
       v->addUser(alloc, I);
@@ -127,10 +115,10 @@ private:
   }
   auto getCSE(Compute *I) -> Compute *& { return instCSEMap[InstByValue{I}]; }
   // NOLINTNEXTLINE(misc-no-recursion)
-  auto createValue(llvm::Value *v, llvm::Loop *L, TreeResult tr, Value *&n)
+  auto createValue(llvm::Value *v, Predicate::Map *M, TreeResult tr, Value *&n)
     -> std::pair<Value *, TreeResult> {
     if (auto *i = llvm::dyn_cast<llvm::Instruction>(v))
-      return createInstruction(i, L, tr, n);
+      return createInstruction(i, M, tr, n);
     if (auto *c = llvm::dyn_cast<llvm::ConstantInt>(v))
       return {createConstant(c, n), tr};
     if (auto *c = llvm::dyn_cast<llvm::ConstantFP>(v))
@@ -315,51 +303,56 @@ public:
     }
   }
 
-  // Here, we have a set of methods that take a `llvm::Loop*` and a
-  // `TreeResult` argument, returning a `Value*` of some kind and a `TreeResult`
+  /// Here, we have a set of methods that take a `Predicate::Map* M` and a
+  /// `TreeResult` argument, returning a `Value*` of some kind and a
+  /// `TreeResult` Any operands that are not in `M` will be left incomplete, and
+  /// added to the incomplete list of the `TreeResult` argument. If `M` is
+  /// `nullptr`, then all operands will be left incomplete.
   // NOLINTNEXTLINE(misc-no-recursion)
-  auto getValue(llvm::Value *v, llvm::Loop *L, TreeResult tr)
+  auto getValue(llvm::Value *v, Predicate::Map *M, TreeResult tr)
     -> std::pair<Value *, TreeResult> {
     Value *&n = llvmToInternalMap[v];
     if (n) return {n, tr};
     // by reference, so we can update in creation
-    return createValue(v, L, tr, n);
+    return createValue(v, M, tr, n);
   }
-  auto getValue(llvm::Instruction *I, llvm::Loop *L, TreeResult tr)
+  auto getValue(llvm::Instruction *I, Predicate::Map *M, TreeResult tr)
     -> std::pair<Instruction *, TreeResult> {
-    auto [v, tret] = getValue(static_cast<llvm::Value *>(I), L, tr);
+    auto [v, tret] = getValue(static_cast<llvm::Value *>(I), M, tr);
     return {llvm::cast<Instruction>(v), tret};
   }
 
   // NOLINTNEXTLINE(misc-no-recursion)
-  auto createInstruction(llvm::Instruction *I, llvm::Loop *L, TreeResult tr,
+  auto createInstruction(llvm::Instruction *I, Predicate::Map *M, TreeResult tr,
                          Value *&t) -> std::pair<Value *, TreeResult> {
     auto *load = llvm::dyn_cast<llvm::LoadInst>(I);
     auto *store = llvm::dyn_cast<llvm::StoreInst>(I);
-    if (!load && !store) return createCompute(I, L, tr, t);
+    if (!load && !store) return createCompute(I, M, tr, t);
     auto *ptr = load ? load->getPointerOperand() : store->getPointerOperand();
-    // The loop `L` passed in is for stopping outward evaluation of deps
-    // but createArrayRef wants the loop to which the addr belongs
-    // we evaluate here, because we want to evaluate loop depth in
-    // case of failure
-    L = LI->getLoopFor(I->getParent());
-    auto ret = createArrayRef(I, L, ptr, tr);
-    t = ret.first;
-    return ret;
+    llvm::Loop *L = LI->getLoopFor(I->getParent());
+    auto [v, tret] = createArrayRef(I, L, ptr, tr);
+    t = v;
+    if (Addr *A = llvm::dyn_cast<Addr>(v); store && A) {
+      // only Computes may be incomplete, so we unconditionally get the store
+      // value
+      auto [v2, tret2] = getValue(store->getValueOperand(), M, tret);
+      A->setVal(v2);
+      tret = tret2;
+    }
+    return {v, tret};
   }
   // NOLINTNEXTLINE(misc-no-recursion)
-  auto createCompute(llvm::Instruction *I, llvm::Loop *L, TreeResult tr,
+  auto createCompute(llvm::Instruction *I, Predicate::Map *M, TreeResult tr,
                      Value *&t) -> std::pair<Compute *, TreeResult> {
     auto [id, kind] = Compute::getIDKind(I);
     int numOps = int(I->getNumOperands());
     Compute *n = std::construct_at(allocateInst(numOps), kind, I, id, -numOps);
     t = n;
-    if (L->isLoopInvariant(I)) tr.addIncomplete(n);
-    else {
-      auto [v, tret] = complete(n, L, tr);
+    if (M && M->contains(I)) {
+      auto [v, tret] = complete(n, M, tr);
       n = v;
       tr = tret;
-    }
+    } else tr.addIncomplete(n);
     return {n, tr};
   }
 
@@ -615,4 +608,113 @@ public:
   }
 };
 
+namespace Predicate {
+[[nodiscard]] inline auto Map::addPredicate(BumpAlloc<> &alloc,
+                                            IR::Cache &cache,
+                                            llvm::Value *value,
+                                            IR::TreeResult &tr) -> size_t {
+  auto [I, tret] = cache.getValue(value, nullptr, tr);
+  tr = tret;
+  // assert(predicates->count <= 32 && "too many predicates");
+  size_t i = 0;
+  for (auto *U = predicates; U != nullptr; U = U->getNext())
+    for (ptrdiff_t j = 0, N = U->getHeadCount(); j < N; ++i, ++j)
+      if ((*U)[j] == I) return i;
+  predicates->push_ordered(alloc, I);
+  return i;
+}
+
+[[nodiscard]] inline auto // NOLINTNEXTLINE(misc-no-recursion)
+descendBlock(BumpAlloc<> &alloc, IR::Cache &cache,
+             dict::aset<llvm::BasicBlock *> &visited, Map &predMap,
+             llvm::BasicBlock *BBsrc, llvm::BasicBlock *BBdst,
+             Intersection predicate, llvm::BasicBlock *BBhead, llvm::Loop *L,
+             TreeResult &tr) -> Map::Destination {
+  if (BBsrc == BBdst) {
+    assert(!predMap.contains(BBsrc));
+    predMap.insert({BBsrc, Set{predicate}});
+    return Map::Destination::Reached;
+  }
+  if (L && (!(L->contains(BBsrc)))) {
+    // oops, we seem to have skipped the preheader and escaped the
+    // loop.
+    return Map::Destination::Returned;
+  }
+  if (visited.contains(BBsrc)) {
+    // FIXME: This is terribly hacky.
+    // if `BBsrc == BBhead`, then we assume we hit a path that
+    // bypasses the following loop, e.g. there was a loop guard.
+    //
+    // Thus, we return `Returned`, indicating that it was a
+    // non-fatal dead-end. Otherwise, we check if it seems to have
+    // led to a live, non-empty path.
+    // TODO: should we union the predicates in case of returned?
+    if ((BBsrc != BBhead) && predMap.find(BBsrc) != predMap.rend())
+      return Map::Destination::Reached;
+    return Map::Destination::Returned;
+  }
+  // Inserts a tombstone to indicate that we have visited BBsrc, but
+  // not actually reached a destination.
+  visited.insert(BBsrc);
+  const llvm::Instruction *I = BBsrc->getTerminator();
+  if (!I) return Map::Destination::Unknown;
+  if (llvm::isa<llvm::ReturnInst>(I)) return Map::Destination::Returned;
+  if (llvm::isa<llvm::UnreachableInst>(I)) return Map::Destination::Unreachable;
+  const auto *BI = llvm::dyn_cast<llvm::BranchInst>(I);
+  if (!BI) return Map::Destination::Unknown;
+  if (BI->isUnconditional()) {
+    auto rc = descendBlock(alloc, cache, visited, predMap, BI->getSuccessor(0),
+                           BBdst, predicate, BBhead, L, tr);
+    if (rc == Map::Destination::Reached) predMap.reach(alloc, BBsrc, predicate);
+    return rc;
+  }
+  // We have a conditional branch.
+  llvm::Value *cond = BI->getCondition();
+  // We need to check both sides of the branch and add a predicate.
+  size_t predInd = predMap.addPredicate(alloc, cache, cond, tr);
+  auto rc0 =
+    descendBlock(alloc, cache, visited, predMap, BI->getSuccessor(0), BBdst,
+                 predicate.intersect(predInd, Relation::True), BBhead, L, tr);
+  if (rc0 == Map::Destination::Unknown) // bail
+    return Map::Destination::Unknown;
+  auto rc1 =
+    descendBlock(alloc, cache, visited, predMap, BI->getSuccessor(1), BBdst,
+                 predicate.intersect(predInd, Relation::False), BBhead, L, tr);
+  if ((rc0 == Map::Destination::Returned) ||
+      (rc0 == Map::Destination::Unreachable)) {
+    if (rc1 == Map::Destination::Reached) {
+      //  we're now assuming that !cond
+      predMap.assume(Intersection(predInd, Relation::False));
+      predMap.reach(alloc, BBsrc, predicate);
+    }
+    return rc1;
+  }
+  if ((rc1 == Map::Destination::Returned) ||
+      (rc1 == Map::Destination::Unreachable)) {
+    if (rc0 == Map::Destination::Reached) {
+      //  we're now assuming that cond
+      predMap.assume(Intersection(predInd, Relation::True));
+      predMap.reach(alloc, BBsrc, predicate);
+    }
+    return rc0;
+  }
+  if (rc0 != rc1) return Map::Destination::Unknown;
+  if (rc0 == Map::Destination::Reached) predMap.reach(alloc, BBsrc, predicate);
+  return rc0;
+}
+[[nodiscard]] inline auto Map::descend(BumpAlloc<> &alloc, IR::Cache &cache,
+                                       llvm::BasicBlock *BBsrc,
+                                       llvm::BasicBlock *BBdst, llvm::Loop *L,
+                                       TreeResult &tr) -> std::optional<Map> {
+  auto p = alloc.checkpoint();
+  Map predMap{alloc};
+  dict::aset<llvm::BasicBlock *> visited{alloc};
+  if (descendBlock(alloc, cache, visited, predMap, BBsrc, BBdst, {}, BBsrc, L,
+                   tr) == Destination::Reached)
+    return predMap;
+  alloc.rollback(p);
+  return std::nullopt;
+}
+
+} // namespace Predicate
 } // namespace poly::IR
