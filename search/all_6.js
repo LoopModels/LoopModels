@@ -7,6 +7,7 @@ var searchData=
   ['getload_58',['getLoad',['../structMemoryAccess.html#a4c213ffb008f3b021ab51c21dddd7c06',1,'MemoryAccess']]],
   ['getoutindmat_59',['getOutIndMat',['../classDependence.html#a89c5aef3716809617009a5f7d55c9499',1,'Dependence']]],
   ['getschedule_60',['getSchedule',['../classScheduledNode.html#a839ee9c51653c4fa6b3f1a4034903801',1,'ScheduledNode::getSchedule()'],['../structAffineSchedule.html#a534a966b0d6ba721ec2fb83725fbdad8',1,'AffineSchedule::getSchedule()']]],
-  ['graph_61',['Graph',['../structLinearProgramLoopBlock_1_1Graph.html',1,'LinearProgramLoopBlock']]],
-  ['graphs_62',['Graphs',['../namespaceGraphs.html',1,'']]]
+  ['getvalue_61',['getValue',['../classpoly_1_1IR_1_1Cache.html#a8752442da530803e458fedf4e8d97600',1,'poly::IR::Cache']]],
+  ['graph_62',['Graph',['../structLinearProgramLoopBlock_1_1Graph.html',1,'LinearProgramLoopBlock']]],
+  ['graphs_63',['Graphs',['../namespaceGraphs.html',1,'']]]
 ];
