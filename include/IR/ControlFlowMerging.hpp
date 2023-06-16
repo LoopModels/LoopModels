@@ -445,12 +445,14 @@ inline auto mergeInstructions(IR::Cache &cache, Predicate::Map &predMap,
                               BumpAlloc<> &tAlloc, unsigned vectorBits,
                               llvm::Loop *L, IR::Cache::TreeResult tr)
   -> IR::Cache::TreeResult {
-  if (!predMap.isDivergent()) return tr;
+  bool divergent = predMap.isDivergent();
+  // if (!predMap.isDivergent()) return tr;
   auto p = tAlloc.scope();
   // there is a divergence in the control flow that we can ideally merge
   amap<Instruction::Identifier, math::ResizeableView<Instruction *, unsigned>>
     opMap{tAlloc};
   amap<Instruction *, Predicate::Set> valToPred{tAlloc};
+  aset<Instruction *> visited{tAlloc};
   llvm::SmallVector<MergingCost *> mergingCosts;
   mergingCosts.emplace_back(tAlloc);
   // TODO: how to iterate over list of instructions?
@@ -458,6 +460,18 @@ inline auto mergeInstructions(IR::Cache &cache, Predicate::Map &predMap,
   // and all stores within these and later blocks w/in the loop
   // nest, searching their parents recursively for instructions
   // inside the predMap
+  for (auto &P : L->getExitBlock()->phis()) {
+    for (unsigned i = 0, N = P.getNumIncomingValues(); i < N; ++i) {
+      auto *J = llvm::dyn_cast<llvm::Instruction>(P.getIncomingValue(i));
+      if (!J || !L->contains(J)) continue;
+      auto *I = cache.getValue(J, L, tr).first;
+      if (!visited.insert(I).second) continue;
+      // now we search ancestors for members of predMap blocks
+      mergeInstructions(tAlloc, cache, predMap, TTI, vectorBits, opMap,
+                        valToPred, mergingCosts, I, P.getIncomingBlock(i),
+                        predMap[P.getIncomingBlock(i)]);
+    }
+  }
   for (auto &pred : predMap) {
     for (llvm::Instruction &lI : *pred.first) {
       auto v = cache.getValue(&lI, L, tr);

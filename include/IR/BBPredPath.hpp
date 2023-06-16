@@ -5,7 +5,7 @@
 namespace poly::IR::Predicate {
 using dict::MapVector;
 class Map {
-  MapVector<llvm::BasicBlock *, Set> map;
+  MapVector<llvm::BasicBlock *, Set> map; // TODO: is the order needed?
   UList<Value *> *predicates;
 
 public:
@@ -69,23 +69,25 @@ public:
   // void visit(llvm::BasicBlock *BB) { map.insert(std::make_pair(BB,
   // Set())); } void visit(llvm::Instruction *inst) {
   // visit(inst->getParent()); }
-  [[nodiscard]] auto addPredicate(IR::Cache &cache, llvm::Value *value)
-    -> size_t {
-    auto *I = cache.getInstruction(*this, value);
-    assert(predicates->count <= 32 && "too many predicates");
-    for (size_t i = 0; i < cache.predicates.size(); ++i)
-      if (cache.predicates[i] == I) return i;
-    size_t i = cache.predicates.size();
-    assert(cache.predicates.size() != 32 && "too many predicates");
-    cache.predicates.emplace_back(I);
+  [[nodiscard]] auto addPredicate(BumpAlloc<> &alloc, IR::Cache &cache,
+                                  llvm::Value *value, llvm::Loop *L,
+                                  IR::Cache::TreeResult &tr) -> size_t {
+    auto [I, tret] = cache.getValue(value, L, tr);
+    tr = tret;
+    // assert(predicates->count <= 32 && "too many predicates");
+    size_t i = 0;
+    for (auto *U = predicates; U != nullptr; U = U->getNext())
+      for (ptrdiff_t j = 0, N = U->getHeadCount(); j < N; ++i, ++j)
+        if ((*U)[j] == I) return i;
+    predicates->push_ordered(alloc, I);
     return i;
   }
   void reach(BumpAlloc<> &alloc, llvm::BasicBlock *BB, Intersection predicate) {
     // because we may have inserted into predMap, we need to look up
     // again rather than being able to reuse anything from the
     // `visit`.
-    if (auto *f = find(BB); f != rend()) f->second |= predicate;
-    else map.insert({BB, Set{alloc, predicate}});
+    if (auto *f = find(BB); f != rend()) f->second.Union(alloc, predicate);
+    else map.insert({BB, Set{predicate}});
   }
   void assume(Intersection predicate) {
     for (auto &&pair : map) pair.second &= predicate;
@@ -97,13 +99,14 @@ public:
   // 2. We are ignoring cycles for now; we must ensure this is done
   // correctly
   [[nodiscard]] static auto // NOLINTNEXTLINE(misc-no-recursion)
-  descendBlock(IR::Cache &cache, aset<llvm::BasicBlock *> &visited,
-               Predicate::Map &predMap, llvm::BasicBlock *BBsrc,
-               llvm::BasicBlock *BBdst, Predicate::Intersection predicate,
-               llvm::BasicBlock *BBhead, llvm::Loop *L) -> Destination {
+  descendBlock(BumpAlloc<> &alloc, IR::Cache &cache,
+               aset<llvm::BasicBlock *> &visited, Predicate::Map &predMap,
+               llvm::BasicBlock *BBsrc, llvm::BasicBlock *BBdst,
+               Predicate::Intersection predicate, llvm::BasicBlock *BBhead,
+               llvm::Loop *L) -> Destination {
     if (BBsrc == BBdst) {
       assert(!predMap.contains(BBsrc));
-      predMap.insert({BBsrc, Set{alloc, predicate}});
+      predMap.insert({BBsrc, Set{predicate}});
       return Destination::Reached;
     }
     if (L && (!(L->contains(BBsrc)))) {
@@ -175,8 +178,9 @@ public:
   }
   /// We bail if there are more than 32 conditions; control flow that
   /// branchy is probably not worth trying to vectorize.
-  [[nodiscard]] static auto descend(IR::Cache &cache, llvm::BasicBlock *start,
-                                    llvm::BasicBlock *stop, llvm::Loop *L)
+  [[nodiscard]] static auto
+  descend(BumpAlloc<> &alloc, IR::Cache &cache, llvm::BasicBlock *start,
+          llvm::BasicBlock *stop, llvm::Loop *L, IR::Cache::TreeResult &tr)
     -> std::optional<Map> {
     auto p = alloc.checkpoint();
     Map pm{alloc};
