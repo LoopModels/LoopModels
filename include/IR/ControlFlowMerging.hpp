@@ -468,7 +468,7 @@ inline auto mergeInstructions(IR::Cache &cache, Predicate::Map &predMap,
     }
   }
   MergingCost *minCostStrategy = *std::ranges::min_element(
-    mergingCosts, [](auto *a, auto *b) { return *a < *b; });
+    mergingCosts, [](MergingCost *a, MergingCost *b) { return *a < *b; });
   // and then apply it to the instructions.
   ReMapper reMap;
   // we use `alloc` for objects intended to live on

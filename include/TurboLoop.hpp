@@ -83,8 +83,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
   ///    successive loops. In all such cases, the loops at that level are
   ///    split into separate forests.
   void initializeLoopForest() {
-    // NOTE: LoopInfo stores loops in reverse program order (opposite of
-    // loops)
+    // NOTE: LoopInfo stores loops in reverse program order
     auto revLI = llvm::reverse(*LI);
     auto ib = revLI.begin();
     auto ie = revLI.end();
@@ -103,16 +102,13 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
       if (ie == ib) return;
       H = (*++ib)->getLoopPreheader();
     }
-    // should normally be stack allocated; we want to avoid different
-    // specializations for `llvm::reverse(*LoopInfo)` and
+    // should normally be stack allocated; we don't want to monomorphize
+    // excessively, so we produce an `ArrayRef<llvm::Loop *>` here
     // `llvm::Loop->getSubLoops()`.
     // But we could consider specializing on top level vs not.
-    // Track position within the loop nest
-    {
-      llvm::SmallVector<llvm::Loop *> rLI{ib, ie + 1};
-      NoWrapRewriter nwr(*SE);
-      pushLoopTree(nullptr, rLI, H, E, nwr);
-    }
+    llvm::SmallVector<llvm::Loop *> rLI{ib, ie + 1};
+    NoWrapRewriter nwr(*SE);
+    pushLoopTree(nullptr, rLI, H, E, nwr);
     // for (auto forest : loopForests) forest->addZeroLowerBounds(loopMap);
   }
 
@@ -140,43 +136,42 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
                    MutPtrVector<unsigned> omega, NotNull<poly::Loop> AL,
                    IR::Value *out) -> IR::Cache::TreeResult {
     // TODO: need to be able to connect instructions as we move out
-    if (auto predMapAbridged =
-          Predicate::Map::descend(allocator, instrCache, H, E, L)) {
-      // Now we need to create Addrs
-      size_t depth = omega.size() - 1;
-      TreeResult tr{nullptr, nullptr, depth - AL->getNumLoops()};
-      for (auto &[BB, P] : *predMapAbridged) {
-        for (llvm::Instruction &J : *BB) {
-          if (L) assert(L->contains(&J));
-          llvm::Value *ptr{nullptr};
-          if (J.mayReadFromMemory()) {
-            if (auto *load = llvm::dyn_cast<llvm::LoadInst>(&J))
-              ptr = load->getPointerOperand();
-            else return {};
-          } else if (J.mayWriteToMemory()) {
-            if (auto *store = llvm::dyn_cast<llvm::StoreInst>(&J))
-              ptr = store->getPointerOperand();
-            else return {};
-          }
-          if (ptr) {
-            tr = addRef(L, omega, AL, &J, ptr, tr);
-            if (tr.reject(depth)) return tr;
-          }
+    auto predMapAbridged =
+      Predicate::Map::descend(allocator, instrCache, H, E, L);
+    if (!predMapAbridged) return {};
+    // Now we need to create Addrs
+    size_t depth = omega.size() - 1;
+    TreeResult tr{nullptr, nullptr, depth - AL->getNumLoops()};
+    for (auto &[BB, P] : *predMapAbridged) {
+      for (llvm::Instruction &J : *BB) {
+        if (L) assert(L->contains(&J));
+        llvm::Value *ptr{nullptr};
+        if (J.mayReadFromMemory()) {
+          if (auto *load = llvm::dyn_cast<llvm::LoadInst>(&J))
+            ptr = load->getPointerOperand();
+          else return {};
+        } else if (J.mayWriteToMemory()) {
+          if (auto *store = llvm::dyn_cast<llvm::StoreInst>(&J))
+            ptr = store->getPointerOperand();
+          else return {};
+        }
+        if (ptr) {
+          tr = addRef(L, omega, AL, &J, ptr, tr);
+          if (tr.reject(depth)) return tr;
         }
       }
-      cache.setLoopInvariants(out);
-      // if that succeeds, we create instr and merge CF
-      mergeInstructions(allocator, instrCache, *predMapAbridged, TTI,
-                        loopBlock.getAlloc(), registers.getNumVectorBits(), L);
-      tr.node = cache.popLoopInvariants();
-      return tr;
     }
-    return {};
+    cache.setLoopInvariants(out);
+    // if that succeeds, we create instr and merge CF
+    mergeInstructions(allocator, instrCache, *predMapAbridged, TTI,
+                      loopBlock.getAlloc(), registers.getNumVectorBits(), L);
+    tr.node = cache.popLoopInvariants();
+    return tr;
   }
   /// factored out codepath, returns number of rejected loops
   /// current depth is omega.size()-1
   auto initLoopTree(llvm::BasicBlock *H, llvm::BasicBlock *E, llvm::Loop *L,
-                    math::Vector<unsigned> &omega, NoWrapRewriter &nwr)
+                    math::Vector<int, 8> &omega, NoWrapRewriter &nwr)
     -> TreeResult {
 
     const auto *BT = getBackedgeTakenCount(*SE, L);
@@ -212,13 +207,24 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
   /// Here, we would also run on [A] and [B] separately.
   /// We evaluate all branches before evaluating a node itself.
   ///
-  /// On each level, we get information on how far out we can go.
-  /// E.g., building an poly::Loop, we may find that only up to
-  /// the inner most three loops are affine.
-  /// So we pass this information outward.
+  /// On each level, we get information on how far out we can go,
+  /// building up a IR::Cache::TreeResult, which accumulates
+  /// the memory accesses, as well as instructions in need
+  /// of completion, and the number of outer loops we need to reject.
+  ///
+  /// At each level of `runOnLoop`, we iterate over the subloops in reverse
+  /// order, checking if the subtrees are valid, and if we have a direct flow of
+  /// instructions allowing us to represent all of them as a single affine nest.
+  /// If so, then return up the tree, continuing the process of building up a
+  /// large nest.
+  ///
+  /// If any of the subloops fail, or we fail to draw the connection, then we
+  /// can optimize the continuous succesful block we've produced, and return a
+  /// failure up the tree.
   ///
   ///
-  /// `runOnLoop` returns `nullptr`
+  ///
+  ///
   /// arguments:
   /// 0. `llvm::Loop *L`: the loop we are currently processing, exterior to this
   /// 1. `llvm::ArrayRef<llvm::Loop *> subLoops`: the sub-loops of `L`; we
@@ -229,29 +235,30 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
   /// the first sub-loop's preheader
   /// 3. `llvm::BasicBlock *E`: Exit - we need a direct path from the last
   /// sub-loop's exit block to this.
-  /// 4. `Vector<unsigned> &omega`: the current position within the loopnest
+  /// 4. `Vector<int,8> &omega`: the current position within the loopnest
   auto runOnLoop(llvm::Loop *L, llvm::ArrayRef<llvm::Loop *> subLoops,
                  llvm::BasicBlock *H, llvm::BasicBlock *E,
-                 Vector<unsigned> &omega, NoWrapRewriter &nwr)
-    -> std::pair<Loop *, size_t> {
+                 Vector<int, 8> &omega, NoWrapRewriter &nwr)
+    -> IR::Cache::TreeResult {
     size_t numSubLoops = subLoops.size();
     if (!numSubLoops) return initLoopTree(L, H, E, omega, nwr);
     Loop *chain = nullptr;
-    omega.push_back(0);
-    for (size_t i = 0; i < numSubLoops; ++i) {
+    omega.push_back(0); // we start with 0 at the end, walking backwards
+    IR::Cache::TreeResult ret;
+    for (size_t i = numSubLoops; i--;) {
       llvm::Loop *subLoop = subLoops[i];
-      // first, we descend
-      // TODO: we need to consider max depth of the poly::Loop in `lret`
-      if (Loop *lret =
-            runOnLoop(subLoop, subLoop->getSubLoops(), subLoop->getHeader(),
-                      subLoop->getExitingBlock(), omega, nwr)) {
+      IR::Cache::TreeResult tr =
+        runOnLoop(subLoop, subLoop->getSubLoops(), subLoop->getHeader(),
+                  subLoop->getExitingBlock(), omega, nwr);
+      if (tr.accept(omega.size() - 1)) {
         llvm::BasicBlock *subLoopPreheader = subLoop->getLoopPreheader();
         // now, we need to see if we can can chart a path from H to
         // subLoopPreheader we should build predicated IR in doing so.
 
       } else {
+        // we reject
       }
-      ++omega.back();
+      --omega.back();
     }
     omega.pop_back();
     return nullptr;

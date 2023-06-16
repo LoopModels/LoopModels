@@ -51,6 +51,7 @@ public:
       return (depth < rejectDepth) || (addr == nullptr);
     }
     [[nodiscard]] constexpr auto accept(size_t depth) const -> bool {
+      // depth >= rejectDepth && addr != nullptr
       return !reject(depth);
     }
     // `addr` can be initialized by `nullptr`. If `other` returns `nullptr`, we
