@@ -443,8 +443,9 @@ inline void mergeInstructions(
 inline auto mergeInstructions(IR::Cache &cache, Predicate::Map &predMap,
                               llvm::TargetTransformInfo &TTI,
                               BumpAlloc<> &tAlloc, unsigned vectorBits,
-                              llvm::Loop *L, Value *outOfLoop) -> IR::Value * {
-  if (!predMap.isDivergent()) return outOfLoop;
+                              llvm::Loop *L, IR::Cache::TreeResult tr)
+  -> IR::Cache::TreeResult {
+  if (!predMap.isDivergent()) return tr;
   auto p = tAlloc.scope();
   // there is a divergence in the control flow that we can ideally merge
   amap<Instruction::Identifier, math::ResizeableView<Instruction *, unsigned>>
@@ -452,12 +453,20 @@ inline auto mergeInstructions(IR::Cache &cache, Predicate::Map &predMap,
   amap<Instruction *, Predicate::Set> valToPred{tAlloc};
   llvm::SmallVector<MergingCost *> mergingCosts;
   mergingCosts.emplace_back(tAlloc);
-  for (auto &pred : predMap)
-    for (llvm::Instruction &lI : *pred.first)
-      if (Instruction *J = cache.getValue(&lI, L))
+  // TODO: how to iterate over list of instructions?
+  // we require LCSSA form; thus we search the exit phis,
+  // and all stores within these and later blocks w/in the loop
+  // nest, searching their parents recursively for instructions
+  // inside the predMap
+  for (auto &pred : predMap) {
+    for (llvm::Instruction &lI : *pred.first) {
+      auto v = cache.getValue(&lI, L, tr);
+      tr = v.second;
+      if (auto *J = llvm::dyn_cast<Instruction>(v.first))
         mergeInstructions(tAlloc, cache, predMap, TTI, vectorBits, opMap,
-                          valToPred, mergingCosts, llvm::cast<Instruction>(J),
-                          pred.first, pred.second);
+                          valToPred, mergingCosts, J, pred.first, pred.second);
+    }
+  }
   MergingCost *minCostStrategy = *std::ranges::min_element(
     mergingCosts, [](auto *a, auto *b) { return *a < *b; });
   // and then apply it to the instructions.
@@ -468,7 +477,7 @@ inline auto mergeInstructions(IR::Cache &cache, Predicate::Map &predMap,
   for (auto [A, B] : *minCostStrategy)
     minCostStrategy->mergeInstructions(cache, tAlloc, A, B, valToPred, reMap,
                                        predMap.getPredicates());
-  return outOfLoop;
+  return tr;
 }
 
 } // namespace poly::IR

@@ -139,9 +139,12 @@ public:
   [[nodiscard]] constexpr auto getNext() const -> Node * { return next; }
   constexpr void setNext(Node *n) {
     next = n;
-    n->prev = this;
+    if (n) n->prev = this;
   }
-  constexpr void setPrev(Node *n) { n->setNext(this); }
+  constexpr void setPrev(Node *n) {
+    prev = n;
+    if (n) n->next = this;
+  }
   constexpr void setChild(Node *n) { child = n; }
   constexpr void setParent(Node *n) { parent = n; }
   constexpr void setDepth(unsigned d) { depth = d; }

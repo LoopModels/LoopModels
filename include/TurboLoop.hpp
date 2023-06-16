@@ -132,51 +132,13 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
     }
     return nullptr;
   }
-  /// The `TreeResult` gives the result of parsing a loop tree. Fields:
-  /// - `Addr* addr`: a linked list giving the addresses of the loop tree.
-  /// These contain ordering information, which is enough for the linear program
-  /// to deduce the orders of memory accesses, and perform an analysis.
-  /// - 'Node* node': a linked list giving the nodes that we stopped exploring
-  /// due to not being inside the loop nest, and thus may need to have their
-  /// parents filled out.
-  /// - `size_t rejectDepth` is how many outer loops were rejected, due to to
-  /// failure to produce an affine representation of the loop or memory
-  /// accesses. Either because an affine representation is not possible, or
-  /// because our analysis failed and needs improvement.
-  struct TreeResult {
-    IR::Addr *addr{nullptr};
-    IR::Value *node{nullptr};
-    size_t rejectDepth{0};
-    constexpr auto reject(size_t depth) -> bool {
-      return (depth < rejectDepth) || (addr == nullptr);
-    }
-    constexpr auto accept(size_t depth) -> bool { return !reject(depth); }
-    // `addr` can be initialized by `nullptr`. If `other` returns `nullptr`, we
-    // lose and leak the old pointer (leaking is okay so long as it was bump
-    // allocated -- the bump allocator will free it). because `rejectDepth`
-    // accumulates, we technically don't need to worry about checking for
-    // `nullptr` every time, but may make sense to do so anyway.
-    constexpr auto operator*=(TreeResult other) -> TreeResult & {
-      rejectDepth = std::max(rejectDepth, other.rejectDepth);
-      return *this *= other.addr;
-    }
-    constexpr auto operator*(TreeResult other) -> TreeResult {
-      TreeResult result = *this;
-      return result *= other;
-    }
-    constexpr auto operator*=(IR::Addr *other) -> TreeResult & {
-      if (addr && other) addr->setPrev(other);
-      addr = other;
-      return *this;
-    }
-  };
   void addInstructions(IR::Addr *addr, llvm::Loop *L) {
     addr->forEach([&, L](Addr *a) { instrCache.addParents(a, L); });
   }
   // out are those outside the loop
   auto parseBlocks(llvm::BasicBlock *H, llvm::BasicBlock *E, llvm::Loop *L,
                    MutPtrVector<unsigned> omega, NotNull<poly::Loop> AL,
-                   IR::Value *out) -> TreeResult {
+                   IR::Value *out) -> IR::Cache::TreeResult {
     // TODO: need to be able to connect instructions as we move out
     if (auto predMapAbridged =
           Predicate::Map::descend(allocator, instrCache, H, E, L)) {
@@ -202,10 +164,11 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
           }
         }
       }
+      cache.setLoopInvariants(out);
       // if that succeeds, we create instr and merge CF
-      tr.node = mergeInstructions(allocator, instrCache, *predMapAbridged, TTI,
-                                  loopBlock.getAlloc(),
-                                  registers.getNumVectorBits(), L, out);
+      mergeInstructions(allocator, instrCache, *predMapAbridged, TTI,
+                        loopBlock.getAlloc(), registers.getNumVectorBits(), L);
+      tr.node = cache.popLoopInvariants();
       return tr;
     }
     return {};
@@ -213,7 +176,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
   /// factored out codepath, returns number of rejected loops
   /// current depth is omega.size()-1
   auto initLoopTree(llvm::BasicBlock *H, llvm::BasicBlock *E, llvm::Loop *L,
-                    Vector<unsigned> &omega, NoWrapRewriter &nwr)
+                    math::Vector<unsigned> &omega, NoWrapRewriter &nwr)
     -> TreeResult {
 
     const auto *BT = getBackedgeTakenCount(*SE, L);
@@ -425,107 +388,6 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
       return false;
     });
   }
-  static void addSymbolic(Vector<int64_t> &offsets,
-                          llvm::SmallVector<const llvm::SCEV *, 3> &symbols,
-                          const llvm::SCEV *S, int64_t x = 1) {
-    if (auto *j = std::ranges::find(symbols, S); j != symbols.end()) {
-      offsets[std::distance(symbols.begin(), j)] += x;
-    } else {
-      symbols.push_back(S);
-      offsets.push_back(x);
-    }
-  }
-  // NOLINTNEXTLINE(misc-no-recursion)
-  static auto blackListAllDependentLoops(const llvm::SCEV *S) -> uint64_t {
-    uint64_t flag{0};
-    if (const auto *x = llvm::dyn_cast<const llvm::SCEVNAryExpr>(S)) {
-      if (const auto *y = llvm::dyn_cast<const llvm::SCEVAddRecExpr>(x))
-        flag |= uint64_t(1) << y->getLoop()->getLoopDepth();
-      for (size_t i = 0; i < x->getNumOperands(); ++i)
-        flag |= blackListAllDependentLoops(x->getOperand(i));
-    } else if (const auto *c = llvm::dyn_cast<const llvm::SCEVCastExpr>(S)) {
-      for (size_t i = 0; i < c->getNumOperands(); ++i)
-        flag |= blackListAllDependentLoops(c->getOperand(i));
-      return flag;
-    } else if (const auto *d = llvm::dyn_cast<const llvm::SCEVUDivExpr>(S)) {
-      for (size_t i = 0; i < d->getNumOperands(); ++i)
-        flag |= blackListAllDependentLoops(d->getOperand(i));
-      return flag;
-    }
-    return flag;
-  }
-  static auto blackListAllDependentLoops(const llvm::SCEV *S, size_t numPeeled)
-    -> uint64_t {
-    return blackListAllDependentLoops(S) >> (numPeeled + 1);
-  }
-  // translates scev S into loops and symbols
-  auto // NOLINTNEXTLINE(misc-no-recursion)
-  fillAffineIndices(MutPtrVector<int64_t> v, int64_t *coffset,
-                    Vector<int64_t> &offsets,
-                    llvm::SmallVector<const llvm::SCEV *, 3> &symbolicOffsets,
-                    const llvm::SCEV *S, int64_t mlt, size_t numPeeled)
-    -> uint64_t {
-    uint64_t blackList{0};
-    if (const auto *x = llvm::dyn_cast<const llvm::SCEVAddRecExpr>(S)) {
-      const llvm::Loop *L = x->getLoop();
-      size_t depth = L->getLoopDepth();
-      if (depth <= numPeeled) {
-        // we effectively have an offset
-        // we'll add an
-        addSymbolic(offsets, symbolicOffsets, S, 1);
-        for (size_t i = 1; i < x->getNumOperands(); ++i)
-          blackList |= blackListAllDependentLoops(x->getOperand(i));
-
-        return blackList;
-      }
-      // outermost loop has loopInd 0
-      ptrdiff_t loopInd = ptrdiff_t(depth) - ptrdiff_t(numPeeled + 1);
-      if (x->isAffine()) {
-        if (loopInd >= 0) {
-          if (auto c = getConstantInt(x->getOperand(1))) {
-            // we want the innermost loop to have index 0
-            v[loopInd] += *c;
-            return fillAffineIndices(v, coffset, offsets, symbolicOffsets,
-                                     x->getOperand(0), mlt, numPeeled);
-          }
-          blackList |= (uint64_t(1) << uint64_t(loopInd));
-        }
-        // we separate out the addition
-        // the multiplication was either peeled or involved
-        // non-const multiple
-        blackList |= fillAffineIndices(v, coffset, offsets, symbolicOffsets,
-                                       x->getOperand(0), mlt, numPeeled);
-        // and then add just the multiple here as a symbolic offset
-        const llvm::SCEV *addRec = SE->getAddRecExpr(
-          SE->getZero(x->getOperand(0)->getType()), x->getOperand(1),
-          x->getLoop(), x->getNoWrapFlags());
-        addSymbolic(offsets, symbolicOffsets, addRec, mlt);
-        return blackList;
-      }
-      if (loopInd >= 0) blackList |= (uint64_t(1) << uint64_t(loopInd));
-    } else if (std::optional<int64_t> c = getConstantInt(S)) {
-      *coffset += *c;
-      return 0;
-    } else if (const auto *ar = llvm::dyn_cast<const llvm::SCEVAddExpr>(S)) {
-      return fillAffineIndices(v, coffset, offsets, symbolicOffsets,
-                               ar->getOperand(0), mlt, numPeeled) |
-             fillAffineIndices(v, coffset, offsets, symbolicOffsets,
-                               ar->getOperand(1), mlt, numPeeled);
-    } else if (const auto *m = llvm::dyn_cast<const llvm::SCEVMulExpr>(S)) {
-      if (auto op0 = getConstantInt(m->getOperand(0))) {
-        return fillAffineIndices(v, coffset, offsets, symbolicOffsets,
-                                 m->getOperand(1), mlt * (*op0), numPeeled);
-      }
-      if (auto op1 = getConstantInt(m->getOperand(1))) {
-        return fillAffineIndices(v, coffset, offsets, symbolicOffsets,
-                                 m->getOperand(0), mlt * (*op1), numPeeled);
-      }
-    } else if (const auto *ca = llvm::dyn_cast<llvm::SCEVCastExpr>(S))
-      return fillAffineIndices(v, coffset, offsets, symbolicOffsets,
-                               ca->getOperand(0), mlt, numPeeled);
-    addSymbolic(offsets, symbolicOffsets, S, mlt);
-    return blackList | blackListAllDependentLoops(S, numPeeled);
-  }
   auto zeroDimRef(MutPtrVector<unsigned> omega, NotNull<poly::Loop> aln,
                   llvm::Instruction *loadOrStore,
                   llvm::SCEVUnknown const *arrayPtr, TreeResult tr)
@@ -533,16 +395,6 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
     Addr *op = Addr::construct(allocator, arrayPtr, *aln, loadOrStore, omega);
     ++omega.back();
     return tr *= op;
-  }
-  static void extendDensePtrMatCols(BumpAlloc<> &alloc,
-                                    MutDensePtrMatrix<int64_t> &A, Row R,
-                                    Col C) {
-    MutDensePtrMatrix<int64_t> B{matrix<int64_t>(alloc, A.numRow(), C)};
-    for (size_t j = 0; j < R; ++j) {
-      B(j, _(0, A.numCol())) << A(j, _);
-      B(j, _(A.numCol(), end)) << 0;
-    }
-    std::swap(A, B);
   }
   auto arrayRef(llvm::Loop *L, MutPtrVector<unsigned> omega,
                 NotNull<poly::Loop> aln, llvm::Instruction *loadOrStore,
@@ -607,7 +459,6 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
   auto addRef(llvm::Loop *L, MutPtrVector<unsigned> omega,
               NotNull<poly::Loop> AL, llvm::Instruction *J, llvm::Value *ptr,
               TreeResult tr) -> TreeResult {
-    // llvm::Type *type = I->getPointerOperandType();
     const llvm::SCEV *elSz = SE->getElementSize(J);
     if (L) { // TODO: support top level array refs
       if (auto *iptr = llvm::dyn_cast<llvm::Instruction>(ptr)) {

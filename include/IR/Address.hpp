@@ -76,19 +76,12 @@ class Addr : public Instruction {
     size_t maxDepth;
   } nodeOrDepth; // both are used at different times
   [[no_unique_address]] NotNull<const llvm::SCEVUnknown> basePointer;
-  [[no_unique_address]] NotNull<poly::Loop> loop;
+  [[no_unique_address]] poly::Loop *loop{nullptr};
   [[no_unique_address]] llvm::Instruction *instr;
   [[no_unique_address]] int64_t *offSym{nullptr};
   [[no_unique_address]] const llvm::SCEV **syms;
   [[no_unique_address]] Value *predicate{nullptr};
   [[no_unique_address]] unsigned numDim{0}, numDynSym{0};
-  // [[no_unique_address]] uint8_t numMemInputs;
-  // [[no_unique_address]] uint8_t numDirectEdges;
-  // [[no_unique_address]] uint8_t numMemOutputs;
-  [[no_unique_address]] uint8_t index_{0};
-  [[no_unique_address]] uint8_t lowLink_{0};
-  [[no_unique_address]] uint8_t blckIdx{0};
-  [[no_unique_address]] uint8_t bitfield{0};
 #if !defined(__clang__) && defined(__GNUC__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
@@ -119,18 +112,18 @@ class Addr : public Instruction {
     std::memcpy(mem, other->mem,
                 intMemNeeded(getNumLoops(), numDim) * sizeof(int64_t));
   }
-  explicit Addr(const llvm::SCEVUnknown *arrayPtr, NotNull<poly::Loop> loopRef,
-                llvm::Instruction *user, int64_t *offsym, const llvm::SCEV **s,
-                std::array<unsigned, 2> dimOff)
+  explicit Addr(const llvm::SCEVUnknown *arrayPtr, llvm::Instruction *user,
+                int64_t *offsym, const llvm::SCEV **s,
+                std::array<unsigned, 2> dimOff, unsigned numLoops)
     : Instruction(llvm::isa<llvm::StoreInst>(user) ? VK_Stow : VK_Load,
-                  loopRef->getNumLoops()),
-      basePointer(arrayPtr), loop(loopRef), instr(user), offSym(offsym),
-      syms(s), numDim(dimOff[0]), numDynSym(dimOff[1]){};
-  explicit Addr(const llvm::SCEVUnknown *arrayPtr, NotNull<poly::Loop> loopRef,
-                llvm::Instruction *user)
+                  numLoops),
+      basePointer(arrayPtr), instr(user), offSym(offsym), syms(s),
+      numDim(dimOff[0]), numDynSym(dimOff[1]){};
+  explicit Addr(const llvm::SCEVUnknown *arrayPtr, llvm::Instruction *user,
+                unsigned numLoops)
     : Instruction(llvm::isa<llvm::StoreInst>(user) ? VK_Stow : VK_Load,
-                  loopRef->getNumLoops()),
-      basePointer(arrayPtr), loop(loopRef), instr(user){};
+                  numLoops),
+      basePointer(arrayPtr), instr(user){};
   /// Constructor for 0 dimensional memory access
 
   constexpr Addr(NotNull<poly::Loop> explicitLoop, NotNull<Addr> ma,
@@ -195,43 +188,41 @@ public:
 
   [[nodiscard]] static auto construct(BumpAlloc<> &alloc,
                                       const llvm::SCEVUnknown *ptr,
-                                      NotNull<poly::Loop> loopRef,
                                       llvm::Instruction *user,
-                                      PtrVector<unsigned> o) -> NotNull<Addr> {
-    unsigned numLoops = loopRef->getNumLoops();
-    invariant(o.size(), numLoops + 1);
-    size_t memNeeded = numLoops;
+                                      unsigned numLoops) -> NotNull<Addr> {
     auto *mem = (Addr *)alloc.allocate(
-      sizeof(Addr) + memNeeded * sizeof(int64_t), alignof(Addr));
-    auto *ma = new (mem) Addr(ptr, loopRef, user);
-    ma->getFusionOmega() << o;
+      sizeof(Addr) + numLoops * sizeof(int64_t), alignof(Addr));
+    auto *ma = new (mem) Addr(ptr, user, numLoops);
     return ma;
   }
   /// Constructor for regular indexing
   [[nodiscard]] static auto
   construct(BumpAlloc<> &alloc, const llvm::SCEVUnknown *arrayPtr,
-            NotNull<poly::Loop> AL, llvm::Instruction *user,
-            PtrMatrix<int64_t> indMat,
+            llvm::Instruction *user, PtrMatrix<int64_t> indMat,
             std::array<llvm::SmallVector<const llvm::SCEV *, 3>, 2> szOff,
-            PtrVector<int64_t> coffsets, int64_t *offsets,
-            PtrVector<unsigned> o) -> NotNull<Addr> {
+            PtrVector<int64_t> coffsets, int64_t *offsets, unsigned numLoops)
+    -> NotNull<Addr> {
     // we don't want to hold any other pointers that may need freeing
     unsigned arrayDim = szOff[0].size(), nOff = szOff[1].size();
-    unsigned numLoops = AL->getNumLoops();
-    invariant(o.size(), numLoops + 1);
     size_t memNeeded = intMemNeeded(numLoops, arrayDim);
     auto *mem = (Addr *)alloc.allocate(
       sizeof(Addr) + memNeeded * sizeof(int64_t), alignof(Addr));
     const auto **syms = // over alloc by numLoops - 1, in case we remove
       alloc.allocate<const llvm::SCEV *>(arrayDim + nOff + numLoops - 1);
-    auto *ma = new (mem) Addr(arrayPtr, AL, user, offsets, syms,
-                              std::array<unsigned, 2>{arrayDim, nOff});
+    auto *ma =
+      new (mem) Addr(arrayPtr, user, offsets, syms,
+                     std::array<unsigned, 2>{arrayDim, nOff}, numLoops);
     std::copy_n(szOff[0].begin(), arrayDim, syms);
     std::copy_n(szOff[1].begin(), nOff, syms + arrayDim);
     ma->indexMatrix() << indMat;
     ma->getOffsetOmega() << coffsets;
-    ma->getFusionOmega() << o;
     return ma;
+  }
+  /// copies `o` and increments the last element
+  constexpr void setFusionOmega(MutPtrVector<unsigned> o) {
+    invariant(o.size(), getNumLoops() + 1);
+    std::copy_n(o.begin(), getNumLoops(), getFusionOmega().begin());
+    getFusionOmega().back() = o.back()++;
   }
   [[nodiscard]] auto reload(BumpAlloc<> &alloc) -> NotNull<Addr> {
     size_t memNeeded = intMemNeeded(getNumLoops(), numDim);
@@ -264,6 +255,7 @@ public:
   [[nodiscard]] constexpr auto getLoop() const -> NotNull<poly::Loop> {
     return loop;
   }
+  /*
   [[nodiscard]] constexpr auto getBlockIdx() const -> uint8_t {
     return blckIdx;
   }
@@ -308,6 +300,7 @@ public:
   [[nodiscard]] constexpr auto index() const -> unsigned { return index_; }
   constexpr auto lowLink() -> uint8_t & { return lowLink_; }
   [[nodiscard]] constexpr auto lowLink() const -> unsigned { return lowLink_; }
+  */
   [[nodiscard]] constexpr auto getStoredVal() const -> Value * {
     invariant(isStore());
     return unionPtr.node;
