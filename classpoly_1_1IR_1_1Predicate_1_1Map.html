@@ -155,9 +155,9 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>isInPath</b> (llvm::I
 <tr class="memitem:aecfb6dfbb4f037feb40b60161969dad1"><td class="memItemLeft" align="right" valign="top"><a id="aecfb6dfbb4f037feb40b60161969dad1"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>clear</b> ()</td></tr>
 <tr class="separator:aecfb6dfbb4f037feb40b60161969dad1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad678d16ab4cd19d3888aee9479d7fab7"><td class="memItemLeft" align="right" valign="top"><a id="ad678d16ab4cd19d3888aee9479d7fab7"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>addPredicate</b> (<a class="el" href="classpoly_1_1IR_1_1Cache.html">IR::Cache</a> &amp;cache, llvm::Value *value) -&gt; size_t</td></tr>
-<tr class="separator:ad678d16ab4cd19d3888aee9479d7fab7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a05fb925dd89efc1a2291b25fb64b9d36"><td class="memItemLeft" align="right" valign="top"><a id="a05fb925dd89efc1a2291b25fb64b9d36"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>addPredicate</b> (BumpAlloc&lt;&gt; &amp;alloc, <a class="el" href="classpoly_1_1IR_1_1Cache.html">IR::Cache</a> &amp;cache, llvm::Value *value, llvm::Loop *L, <a class="el" href="structpoly_1_1IR_1_1Cache_1_1TreeResult.html">IR::Cache::TreeResult</a> &amp;tr) -&gt; size_t</td></tr>
+<tr class="separator:a05fb925dd89efc1a2291b25fb64b9d36"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aacf04a4433a6dbbddb53130881841f70"><td class="memItemLeft" align="right" valign="top"><a id="aacf04a4433a6dbbddb53130881841f70"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>reach</b> (BumpAlloc&lt;&gt; &amp;alloc, llvm::BasicBlock *BB, <a class="el" href="structpoly_1_1IR_1_1Predicate_1_1Intersection.html">Intersection</a> predicate)</td></tr>
 <tr class="separator:aacf04a4433a6dbbddb53130881841f70"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -167,15 +167,15 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>assume</b> (<a class=
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
-<tr class="memitem:a1b7ea45ddcb481cbb88e6c2964b7f2e1"><td class="memItemLeft" align="right" valign="top"><a id="a1b7ea45ddcb481cbb88e6c2964b7f2e1"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>descendBlock</b> (<a class="el" href="classpoly_1_1IR_1_1Cache.html">IR::Cache</a> &amp;cache, <a class="el" href="structpoly_1_1dict_1_1aset.html">aset</a>&lt; llvm::BasicBlock * &gt; &amp;visited, <a class="el" href="classpoly_1_1IR_1_1Predicate_1_1Map.html">Predicate::Map</a> &amp;predMap, llvm::BasicBlock *BBsrc, llvm::BasicBlock *BBdst, <a class="el" href="structpoly_1_1IR_1_1Predicate_1_1Intersection.html">Predicate::Intersection</a> predicate, llvm::BasicBlock *BBhead, llvm::Loop *L) -&gt; Destination</td></tr>
-<tr class="separator:a1b7ea45ddcb481cbb88e6c2964b7f2e1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5009192a79f27d10499350a119eb9c64"><td class="memItemLeft" align="right" valign="top">static auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1IR_1_1Predicate_1_1Map.html#a5009192a79f27d10499350a119eb9c64">descend</a> (<a class="el" href="classpoly_1_1IR_1_1Cache.html">IR::Cache</a> &amp;cache, llvm::BasicBlock *start, llvm::BasicBlock *stop, llvm::Loop *L) -&gt; std::optional&lt; <a class="el" href="classpoly_1_1IR_1_1Predicate_1_1Map.html">Map</a> &gt;</td></tr>
-<tr class="separator:a5009192a79f27d10499350a119eb9c64"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a20538dc4c10babd2097f82668b01c003"><td class="memItemLeft" align="right" valign="top"><a id="a20538dc4c10babd2097f82668b01c003"></a>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>descendBlock</b> (BumpAlloc&lt;&gt; &amp;alloc, <a class="el" href="classpoly_1_1IR_1_1Cache.html">IR::Cache</a> &amp;cache, <a class="el" href="structpoly_1_1dict_1_1aset.html">aset</a>&lt; llvm::BasicBlock * &gt; &amp;visited, <a class="el" href="classpoly_1_1IR_1_1Predicate_1_1Map.html">Predicate::Map</a> &amp;predMap, llvm::BasicBlock *BBsrc, llvm::BasicBlock *BBdst, <a class="el" href="structpoly_1_1IR_1_1Predicate_1_1Intersection.html">Predicate::Intersection</a> predicate, llvm::BasicBlock *BBhead, llvm::Loop *L) -&gt; Destination</td></tr>
+<tr class="separator:a20538dc4c10babd2097f82668b01c003"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad522023e9870f11f6cf8aeba1fc4e5a6"><td class="memItemLeft" align="right" valign="top">static auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1IR_1_1Predicate_1_1Map.html#ad522023e9870f11f6cf8aeba1fc4e5a6">descend</a> (BumpAlloc&lt;&gt; &amp;alloc, <a class="el" href="classpoly_1_1IR_1_1Cache.html">IR::Cache</a> &amp;cache, llvm::BasicBlock *start, llvm::BasicBlock *stop, llvm::Loop *L, <a class="el" href="structpoly_1_1IR_1_1Cache_1_1TreeResult.html">IR::Cache::TreeResult</a> &amp;tr) -&gt; std::optional&lt; <a class="el" href="classpoly_1_1IR_1_1Predicate_1_1Map.html">Map</a> &gt;</td></tr>
+<tr class="separator:ad522023e9870f11f6cf8aeba1fc4e5a6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Member Function Documentation</h2>
-<a id="a5009192a79f27d10499350a119eb9c64"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a5009192a79f27d10499350a119eb9c64">&#9670;&nbsp;</a></span>descend()</h2>
+<a id="ad522023e9870f11f6cf8aeba1fc4e5a6"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad522023e9870f11f6cf8aeba1fc4e5a6">&#9670;&nbsp;</a></span>descend()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -186,6 +186,12 @@ static auto&#160;</td><td class="memItemRight" valign="bottom"><b>descendBlock</
         <tr>
           <td class="memname">static auto poly::IR::Predicate::Map::descend </td>
           <td>(</td>
+          <td class="paramtype">BumpAlloc&lt;&gt; &amp;&#160;</td>
+          <td class="paramname"><em>alloc</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
           <td class="paramtype"><a class="el" href="classpoly_1_1IR_1_1Cache.html">IR::Cache</a> &amp;&#160;</td>
           <td class="paramname"><em>cache</em>, </td>
         </tr>
@@ -205,7 +211,13 @@ static auto&#160;</td><td class="memItemRight" valign="bottom"><b>descendBlock</
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">llvm::Loop *&#160;</td>
-          <td class="paramname"><em>L</em>&#160;</td>
+          <td class="paramname"><em>L</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="structpoly_1_1IR_1_1Cache_1_1TreeResult.html">IR::Cache::TreeResult</a> &amp;&#160;</td>
+          <td class="paramname"><em>tr</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
