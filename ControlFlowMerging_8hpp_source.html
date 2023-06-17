@@ -492,10 +492,10 @@ $(function() {
 <div class="line"><a name="l00429"></a><span class="lineno">  429</span>&#160;  <span class="comment">// TODO: prune bad candidates from mergingCosts</span></div>
 <div class="line"><a name="l00430"></a><span class="lineno">  430</span>&#160;}</div>
 <div class="line"><a name="l00431"></a><span class="lineno">  431</span>&#160; </div>
-<div class="line"><a name="l00443"></a><span class="lineno">  443</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> mergeInstructions(IR::Cache &amp;cache, Predicate::Map &amp;predMap,</div>
-<div class="line"><a name="l00444"></a><span class="lineno">  444</span>&#160;                              llvm::TargetTransformInfo &amp;TTI,</div>
-<div class="line"><a name="l00445"></a><span class="lineno">  445</span>&#160;                              BumpAlloc&lt;&gt; &amp;tAlloc, <span class="keywordtype">unsigned</span> vectorBits,</div>
-<div class="line"><a name="l00446"></a><span class="lineno">  446</span>&#160;                              TreeResult tr) -&gt; TreeResult {</div>
+<div class="line"><a name="l00443"></a><span class="lineno">  443</span>&#160;[[nodiscard]] <span class="keyword">inline</span> <span class="keyword">auto</span></div>
+<div class="line"><a name="l00444"></a><span class="lineno">  444</span>&#160;mergeInstructions(IR::Cache &amp;cache, Predicate::Map &amp;predMap,</div>
+<div class="line"><a name="l00445"></a><span class="lineno">  445</span>&#160;                  llvm::TargetTransformInfo &amp;TTI, BumpAlloc&lt;&gt; &amp;tAlloc,</div>
+<div class="line"><a name="l00446"></a><span class="lineno">  446</span>&#160;                  <span class="keywordtype">unsigned</span> vectorBits, TreeResult tr) -&gt; TreeResult {</div>
 <div class="line"><a name="l00447"></a><span class="lineno">  447</span>&#160;  <span class="keywordflow">if</span> (!predMap.isDivergent()) <span class="keywordflow">return</span> cache.completeInstructions(&amp;predMap, tr);</div>
 <div class="line"><a name="l00448"></a><span class="lineno">  448</span>&#160;  <span class="keyword">auto</span> p = tAlloc.scope();</div>
 <div class="line"><a name="l00449"></a><span class="lineno">  449</span>&#160;  <span class="comment">// there is a divergence in the control flow that we can ideally merge</span></div>
@@ -529,7 +529,7 @@ $(function() {
 <div class="line"><a name="l00477"></a><span class="lineno">  477</span>&#160; </div>
 <div class="line"><a name="l00478"></a><span class="lineno">  478</span>&#160;} <span class="comment">// namespace poly::IR</span></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Cache_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Cache.html">poly::IR::Cache</a></div><div class="ttdef"><b>Definition:</b> Cache.hpp:65</div></div>
-<div class="ttc" id="aclasspoly_1_1IR_1_1Cache_html_a6faece9ac31b45aae0353250ff03084d"><div class="ttname"><a href="classpoly_1_1IR_1_1Cache.html#a6faece9ac31b45aae0353250ff03084d">poly::IR::Cache::createSelect</a></div><div class="ttdeci">auto createSelect(Predicate::Intersection P, Value *A, Value *B, UList&lt; Value * &gt; *pred) -&gt; Compute *</div><div class="ttdef"><b>Definition:</b> Cache.hpp:567</div></div>
+<div class="ttc" id="aclasspoly_1_1IR_1_1Cache_html_a6faece9ac31b45aae0353250ff03084d"><div class="ttname"><a href="classpoly_1_1IR_1_1Cache.html#a6faece9ac31b45aae0353250ff03084d">poly::IR::Cache::createSelect</a></div><div class="ttdeci">auto createSelect(Predicate::Intersection P, Value *A, Value *B, UList&lt; Value * &gt; *pred) -&gt; Compute *</div><div class="ttdef"><b>Definition:</b> Cache.hpp:582</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Compute_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Compute.html">poly::IR::Compute</a></div><div class="ttdef"><b>Definition:</b> Instruction.hpp:75</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Instruction_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Instruction.html">poly::IR::Instruction</a></div><div class="ttdef"><b>Definition:</b> Node.hpp:412</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Operation_html_a3c026a3b9192dea51a7dc6b57e6833b9"><div class="ttname"><a href="classpoly_1_1IR_1_1Operation.html#a3c026a3b9192dea51a7dc6b57e6833b9">poly::IR::Operation::selectCost</a></div><div class="ttdeci">auto selectCost(llvm::TargetTransformInfo &amp;TTI, unsigned int vectorWidth) const -&gt; llvm::InstructionCost</div><div class="ttdef"><b>Definition:</b> Instruction.hpp:513</div></div>
