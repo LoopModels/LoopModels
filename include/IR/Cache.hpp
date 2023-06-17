@@ -339,6 +339,7 @@ public:
     }
     return {v, tret};
   }
+
   // NOLINTNEXTLINE(misc-no-recursion)
   auto createCompute(llvm::Instruction *I, Predicate::Map *M, TreeResult tr,
                      Value *&t) -> std::pair<Compute *, TreeResult> {
@@ -360,6 +361,16 @@ public:
     return Addr::construct(alloc, arrayPtr, loadOrStore, numLoops);
   }
   // create Addr
+  auto getArrayRef(llvm::Instruction *loadOrStore, llvm::Loop *L,
+                   llvm::Value *ptr, TreeResult tr)
+    -> std::pair<Value *, TreeResult> {
+    Value *&n = llvmToInternalMap[loadOrStore];
+    if (n) return {n, tr};
+    auto ret = createArrayRef(loadOrStore, L, ptr, tr);
+    n = ret.first;
+    return ret;
+  }
+  // create Addr
   auto createArrayRef(llvm::Instruction *loadOrStore, llvm::Value *ptr,
                       TreeResult tr) -> std::pair<Value *, TreeResult> {
     llvm::Loop *L = LI->getLoopFor(loadOrStore->getParent());
@@ -372,6 +383,10 @@ public:
     const auto *elSz = SE->getElementSize(loadOrStore);
     const llvm::SCEV *accessFn = SE->getSCEVAtScope(ptr, L);
     unsigned numLoops = L->getLoopDepth();
+    if (!ptr) {
+      tr.rejectDepth = std::max(tr.rejectDepth, size_t(numLoops));
+      return {alloc.create<CVal>(loadOrStore), tr};
+    }
     return createArrayRef(loadOrStore, accessFn, numLoops, elSz, tr);
   }
   auto createArrayRef(llvm::Instruction *loadOrStore,

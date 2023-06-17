@@ -440,10 +440,10 @@ inline void mergeInstructions(
 /// merging as it allocates a lot of memory that it can free when it is done.
 /// TODO: this algorithm is exponential in time and memory.
 /// Odds are that there's way smarter things we can do.
-inline auto mergeInstructions(IR::Cache &cache, Predicate::Map &predMap,
-                              llvm::TargetTransformInfo &TTI,
-                              BumpAlloc<> &tAlloc, unsigned vectorBits,
-                              TreeResult tr) -> TreeResult {
+[[nodiscard]] inline auto
+mergeInstructions(IR::Cache &cache, Predicate::Map &predMap,
+                  llvm::TargetTransformInfo &TTI, BumpAlloc<> &tAlloc,
+                  unsigned vectorBits, TreeResult tr) -> TreeResult {
   if (!predMap.isDivergent()) return cache.completeInstructions(&predMap, tr);
   auto p = tAlloc.scope();
   // there is a divergence in the control flow that we can ideally merge

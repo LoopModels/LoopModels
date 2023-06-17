@@ -6,17 +6,18 @@ namespace poly::IR {
 class Cache;
 struct TreeResult;
 namespace Predicate {
-using dict::MapVector;
+using dict::OrderedMap;
 class Map {
-  dict::amap<llvm::BasicBlock *, Set> map;
-  // MapVector<llvm::BasicBlock *, Set> map; // TODO: is the order needed?
+  // chain is in reverse order, which is actually what we want
+  // as we parse backwards.
+  OrderedMap<llvm::BasicBlock *, Set> map;
   UList<Value *> *predicates;
 
 public:
   Map(BumpAlloc<> &alloc) : map(alloc) {}
   Map(const Map &x) = default;
   Map(Map &&x) noexcept : map{std::move(x.map)} {}
-  auto operator=(const Map &) -> Map & = default;
+  // auto operator=(const Map &) -> Map & = default;
   auto operator=(Map &&) -> Map & = default;
   [[nodiscard]] auto size() const -> size_t { return map.size(); }
   [[nodiscard]] auto empty() const -> bool { return map.empty(); }
@@ -24,12 +25,11 @@ public:
     if (size() < 2) return false;
     for (auto I = map.begin(), E = map.end(); I != E; ++I) {
       if (I->second.empty()) continue;
-      for (const auto *J = std::next(I); J != E; ++J) {
-        // NOTE: we don't need to check`isEmpty()`
-        // because `emptyIntersection()` returns `false`
-        // when isEmpty() is true.
+      for (const auto *J = std::next(I); J != E; ++J)
         if (I->second.intersectionIsEmpty(J->second)) return true;
-      }
+      // NOTE: we don't need to check`isEmpty()`
+      // because `emptyIntersection()` returns `false`
+      // when isEmpty() is true.
     }
     return false;
   }

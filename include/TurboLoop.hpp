@@ -84,7 +84,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
   ///    split into separate forests.
   void initializeLoopForest() {
     // NOTE: LoopInfo stores loops in reverse program order
-    auto revLI = llvm::reverse(*LI);
+    auto revLI = std::ranges::reverse(*LI);
     auto ib = revLI.begin();
     auto ie = revLI.end();
     if (ib == ie) return;
@@ -132,9 +132,10 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
     addr->forEach([&, L](Addr *a) { instrCache.addParents(a, L); });
   }
   // out are those outside the loop
-  auto parseBlocks(llvm::BasicBlock *H, llvm::BasicBlock *E, llvm::Loop *L,
-                   MutPtrVector<unsigned> omega, NotNull<poly::Loop> AL,
-                   IR::Value *out) -> IR::Cache::TreeResult {
+  [[nodiscard]] auto parseBlocks(llvm::BasicBlock *H, llvm::BasicBlock *E,
+                                 llvm::Loop *L, MutPtrVector<unsigned> omega,
+                                 NotNull<poly::Loop> AL, IR::TreeResult tr)
+    -> IR::TreeResult {
     // TODO: need to be able to connect instructions as we move out
     auto predMapAbridged =
       Predicate::Map::descend(allocator, instrCache, H, E, L);
@@ -142,8 +143,8 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
     // Now we need to create Addrs
     size_t depth = omega.size() - 1;
     TreeResult tr{nullptr, nullptr, depth - AL->getNumLoops()};
-    for (auto &[BB, P] : *predMapAbridged) {
-      for (llvm::Instruction &J : *BB) {
+    for (auto &[BB, P] : *predMapAbridged) { // rev order
+      for (llvm::Instruction &J : std::ranges::reverse(*BB)) {
         if (L) assert(L->contains(&J));
         llvm::Value *ptr{nullptr};
         if (J.mayReadFromMemory()) {
@@ -156,16 +157,17 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
           else return {};
         }
         if (ptr) {
-          tr = addRef(L, omega, AL, &J, ptr, tr);
+          auto [A, tr] = cache.getArrayRef(&J, L, ptr, tr);
           if (tr.reject(depth)) return tr;
+          // if we didn't reject, it must have been an `Addr`
+          llvm::cast<Addr>(A)->setFusionOmega(omega);
         }
       }
     }
-    cache.setLoopInvariants(out);
     // if that succeeds, we create instr and merge CF
-    mergeInstructions(allocator, instrCache, *predMapAbridged, TTI,
-                      loopBlock.getAlloc(), registers.getNumVectorBits(), L);
-    tr.node = cache.popLoopInvariants();
+    tr =
+      mergeInstructions(instrCache, *predMapAbridged, TTI, loopBlock.getAlloc(),
+                        registers.getNumVectorBits(), tr);
     return tr;
   }
   /// factored out codepath, returns number of rejected loops

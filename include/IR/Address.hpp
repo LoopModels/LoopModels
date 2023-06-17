@@ -218,11 +218,12 @@ public:
     ma->getOffsetOmega() << coffsets;
     return ma;
   }
-  /// copies `o` and increments the last element
+  /// copies `o` and decrements the last element
+  /// it decrements, as we iterate in reverse order
   constexpr void setFusionOmega(MutPtrVector<unsigned> o) {
     invariant(o.size(), getNumLoops() + 1);
     std::copy_n(o.begin(), getNumLoops(), getFusionOmega().begin());
-    getFusionOmega().back() = o.back()++;
+    getFusionOmega().back() = o.back()--;
   }
   [[nodiscard]] auto reload(BumpAlloc<> &alloc) -> NotNull<Addr> {
     size_t memNeeded = intMemNeeded(getNumLoops(), numDim);

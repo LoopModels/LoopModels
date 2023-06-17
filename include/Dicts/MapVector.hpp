@@ -1,21 +1,21 @@
 #pragma once
 
 #include "Dicts/BumpMapSet.hpp"
-#include "Dicts/BumpVector.hpp"
-#include "Utilities/Allocators.hpp"
+#include <Math/Array.hpp>
 
 namespace poly::dict {
 
-template <class K, class V> class MapVector {
+template <class K, class V> class OrderedMap {
   amap<K, size_t> map;
-  math::BumpPtrVector<std::pair<K, V>> vector;
+  // math::BumpPtrVector<std::pair<K, V>> vector;
+  math::ResizeableView<std::pair<K, V>, unsigned> vector;
 
 public:
-  constexpr MapVector(BumpAlloc<> &alloc) : map(alloc), vector(alloc) {}
-  MapVector(const MapVector &) = default;
-  MapVector(MapVector &&) noexcept = default;
-  constexpr auto operator=(const MapVector &) -> MapVector & = default;
-  constexpr auto operator=(MapVector &&) noexcept -> MapVector & = default;
+  constexpr OrderedMap(BumpAlloc<> &alloc) : map(alloc), vector() {}
+  OrderedMap(const OrderedMap &) = default;
+  OrderedMap(OrderedMap &&) noexcept = default;
+  constexpr auto operator=(const OrderedMap &) -> OrderedMap & = default;
+  constexpr auto operator=(OrderedMap &&) noexcept -> OrderedMap & = default;
   constexpr auto find(const K &key) const {
     auto f = map.find(key);
     if (f == map.end()) return vector.end();
@@ -39,6 +39,7 @@ public:
     if (f == map.end()) {
       auto i = vector.size();
       map[key] = i;
+      grow(i);
       vector.emplace_back(key, V());
       return vector[i].second;
     }
@@ -55,20 +56,19 @@ public:
     if (f == map.end()) {
       auto i = vector.size();
       map[key] = i;
+      grow(i);
       vector.emplace_back(key, value);
     } else {
       vector[f->second].second = value;
     }
   }
+  constexpr void grow(unsigned i) {
+    if (i == vector.getCapacity())
+      vector.reserve(*(map.get_allocator().get_allocator()),
+                     std::max<unsigned>(8, 2 * i));
+  }
   constexpr void insert(std::pair<K, V> &&value) {
-    auto f = map.find(value.first);
-    if (f == map.end()) {
-      auto i = vector.size();
-      map[value.first] = i;
-      vector.emplace_back(std::move(value));
-    } else {
-      vector[f->second].second = std::move(value.second);
-    }
+    insert(std::move(value.first), std::move(value.second));
   }
   constexpr void clear() {
     map.clear();
