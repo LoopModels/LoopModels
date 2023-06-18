@@ -378,7 +378,9 @@ public:
     visited.clear();
     allocator.reset();
   }
-  [[nodiscard]] constexpr auto getAlloc() -> BumpAlloc<> & { return allocator; }
+  [[nodiscard]] constexpr auto getAllocator() -> BumpAlloc<> & {
+    return allocator;
+  }
   [[nodiscard]] constexpr auto numVerticies() const -> size_t {
     return nodes.size();
   }

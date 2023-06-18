@@ -254,14 +254,17 @@ public:
   }
   // update list of incomplets
   inline auto completeInstructions(Predicate::Map *M, TreeResult tr)
-    -> TreeResult {
+    -> std::pair<Compute *, TreeResult> {
+    Compute *completed = nullptr;
     for (Compute *I = tr.incomplete; I;
          I = static_cast<Compute *>(I->getNext())) {
-      if (!M->contains(I->getInstruction())) continue;
+      if (!M->contains(I->getLLVMInstruction())) continue;
       I->removeFromList();
-      tr = complete(I, M, tr).second;
+      auto [ct, trt] = complete(I, M, tr);
+      completed = static_cast<Compute *>(ct->setNext(completed));
+      tr = trt;
     }
-    return tr;
+    return {completed, tr};
   }
   /// Get the cache's allocator.
   /// This is a long-lived bump allocator, mass-freeing after each
@@ -649,8 +652,7 @@ descendBlock(BumpAlloc<> &alloc, IR::Cache &cache,
     return Map::Destination::Reached;
   }
   if (L && (!(L->contains(BBsrc)))) {
-    // oops, we seem to have skipped the preheader and escaped the
-    // loop.
+    // oops, we have skipped the preheader and escaped the loop.
     return Map::Destination::Returned;
   }
   if (visited.contains(BBsrc)) {

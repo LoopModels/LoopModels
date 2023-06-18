@@ -1,8 +1,9 @@
 #pragma once
 
-#include "CostModeling.hpp"
+#include "Dicts/BumpMapSet.hpp"
 #include "IR/Address.hpp"
 #include "IR/Cache.hpp"
+#include "IR/CostModeling.hpp"
 #include "IR/Instruction.hpp"
 #include "IR/Node.hpp"
 #include "LoopBlock.hpp"
@@ -64,16 +65,30 @@ concept LoadOrStoreInst =
 
 class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
   [[no_unique_address]] IR::Loop *forest;
-  [[no_unique_address]] map<llvm::Loop *, IR::Loop *> loopMap;
+  [[no_unique_address]] dict::map<llvm::Loop *, IR::Loop *> loopMap;
   [[no_unique_address]] const llvm::TargetLibraryInfo *TLI;
   [[no_unique_address]] const llvm::TargetTransformInfo *TTI;
   [[no_unique_address]] llvm::LoopInfo *LI;
   [[no_unique_address]] llvm::ScalarEvolution *SE;
   [[no_unique_address]] llvm::OptimizationRemarkEmitter *ORE;
   [[no_unique_address]] LinearProgramLoopBlock loopBlock;
-  [[no_unique_address]] BumpAlloc<> allocator;
   [[no_unique_address]] IR::Cache instrCache;
   [[no_unique_address]] CostModeling::CPURegisterFile registers;
+
+  // this is an allocator that it is safe to reset completely when
+  // a subtree fails, so it is not allowed to allocate anything
+  // that we want to live longer than that.
+  constexpr auto shortAllocator() -> BumpAlloc<> & {
+    return loopBlock.getAllocator();
+  }
+  // It is of course safe to checkpoint & rollback or scope
+  // this allocator, but best to avoid excessive allocations
+  // that result in extra slabs being allocated that
+  // then are not going to get freed until we are done with the
+  // `TurboLoopPass`
+  constexpr auto longAllocator() -> BumpAlloc<> & {
+    return instrCache.getAllocator();
+  }
 
   /// the process of building the LoopForest has the following steps:
   /// 1. build initial forest of trees
@@ -112,81 +127,80 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
     // for (auto forest : loopForests) forest->addZeroLowerBounds(loopMap);
   }
 
-  auto initLoopTree(Loop *pForest, llvm::Loop *L, llvm::BasicBlock *H,
-                    llvm::BasicBlock *E, NoWrapRewriter &nwr) -> Loop * {
-    if (const auto *BT = getBackedgeTakenCount(*SE, L);
-        !llvm::isa<llvm::SCEVCouldNotCompute>(BT)) {
-      // we're at the bottom of the recursion
-      // Finally, we need `H` to have a direct path to `E`.
-      if (auto predMapAbridged =
-            Predicate::Map::descend(allocator, instrCache, H, E, L)) {
-        auto *newTree = new (allocator) LoopTree{
-          allocator, L, nwr.visit(BT), *SE, {std::move(*predMapAbridged)}};
-        pForest.push_back(newTree);
-        return 1;
-      }
-    }
-    return nullptr;
-  }
-  void addInstructions(IR::Addr *addr, llvm::Loop *L) {
-    addr->forEach([&, L](Addr *a) { instrCache.addParents(a, L); });
-  }
-  // out are those outside the loop
+  // void addInstructions(IR::Addr *addr, llvm::Loop *L) {
+  //   addr->forEach([&, L](Addr *a) { instrCache.addParents(a, L); });
+  // }
+
+  /// parse a from `H` to `E`, nested within loop `L`
+  /// we try to form a chain of blocks from `H` to `E`, representing
+  /// contiguous control flow. If we have
+  /// H-->A-->E
+  ///  \->B-/
+  /// Then we would try to merge blocks A and B, predicating the associated
+  /// instructions, and attempting to merge when possible.
+  /// We parse in reverse order, decrementing `omega.back()` for
+  /// each address.
+  /// The initial store construction leaves the stored value incomplete;
+  /// as we also parse the different H->E sets in reverse order,
+  /// we build up all incomplete instructions we care about in the current H->E
+  /// block within the `TreeResult tr` we receive as an argument.
+  /// This is needed by the mergeInstructions function, which parses
+  /// these, and continues searching parents until it leaves our block chain,
+  /// building the relevant part of the instruction graph.
   [[nodiscard]] auto parseBlocks(llvm::BasicBlock *H, llvm::BasicBlock *E,
-                                 llvm::Loop *L, MutPtrVector<unsigned> omega,
+                                 llvm::Loop *L, MutPtrVector<int> omega,
                                  NotNull<poly::Loop> AL, IR::TreeResult tr)
     -> IR::TreeResult {
     // TODO: need to be able to connect instructions as we move out
     auto predMapAbridged =
-      Predicate::Map::descend(allocator, instrCache, H, E, L);
+      Predicate::Map::descend(shortAllocator(), instrCache, H, E, L);
     if (!predMapAbridged) return {};
     // Now we need to create Addrs
     size_t depth = omega.size() - 1;
-    TreeResult tr{nullptr, nullptr, depth - AL->getNumLoops()};
     for (auto &[BB, P] : *predMapAbridged) { // rev order
       for (llvm::Instruction &J : std::ranges::reverse(*BB)) {
         if (L) assert(L->contains(&J));
         llvm::Value *ptr{nullptr};
-        if (J.mayReadFromMemory()) {
+        if (J.mayReadFromMemory())
           if (auto *load = llvm::dyn_cast<llvm::LoadInst>(&J))
             ptr = load->getPointerOperand();
           else return {};
-        } else if (J.mayWriteToMemory()) {
+        else if (J.mayWriteToMemory())
           if (auto *store = llvm::dyn_cast<llvm::StoreInst>(&J))
             ptr = store->getPointerOperand();
           else return {};
-        }
-        if (ptr) {
-          auto [A, tr] = cache.getArrayRef(&J, L, ptr, tr);
-          if (tr.reject(depth)) return tr;
-          // if we didn't reject, it must have been an `Addr`
-          llvm::cast<Addr>(A)->setFusionOmega(omega);
-        }
+        else continue;
+        if (ptr == nullptr) return {};
+        auto [A, trret] = cache.getArrayRef(&J, L, ptr, tr);
+        tr = tret;
+        if (tr.reject(depth)) return tr;
+        // if we didn't reject, it must have been an `Addr`
+        llvm::cast<Addr>(A)->setFusionOmega(omega);
+        tr = cache.addPredicate(A, P, &*predMapAbridged, tr);
       }
     }
-    // if that succeeds, we create instr and merge CF
-    tr =
-      mergeInstructions(instrCache, *predMapAbridged, TTI, loopBlock.getAlloc(),
-                        registers.getNumVectorBits(), tr);
-    return tr;
+    return mergeInstructions(instrCache, *predMapAbridged, TTI,
+                             shortAllocator(), registers.getNumVectorBits(),
+                             tr);
   }
   /// factored out codepath, returns number of rejected loops
   /// current depth is omega.size()-1
   auto initLoopTree(llvm::BasicBlock *H, llvm::BasicBlock *E, llvm::Loop *L,
-                    math::Vector<int, 8> &omega, NoWrapRewriter &nwr)
-    -> TreeResult {
+                    math::Vector<int, 8> &omega, poly::NoWrapRewriter &nwr)
+    -> IR::TreeResult {
 
     const auto *BT = getBackedgeTakenCount(*SE, L);
     if (llvm::isa<llvm::SCEVCouldNotCompute>(BT))
       return {nullptr, omega.size()};
-    auto p = allocator.checkpoint();
+    BumpAlloc<> &alloc{shortAllocator()};
+    auto p = alloc.checkpoint();
     NotNull<poly::Loop> AL =
-      poly::Loop::construct(allocator, L, nwr.visit(BT), *SE);
-    auto tr = parseBlocks(H, E, L, omega, AL);
-    if (tr.reject(omega.size() - 1)) allocator.rollback(p);
+      poly::Loop::construct(alloc, L, nwr.visit(BT), *SE);
+    IR::TreeResult tr = parseExitBlocks(L);
+    tr = parseBlocks(H, E, L, omega, AL, tr);
+    if (tr.reject(omega.size() - 1)) alloc.reset();
     return tr;
   }
-  void optimizeLoop(Loop *L) { L->truncate(); }
   /// parseExitBlocks(llvm::Loop *L) -> IR::TreeResult
   /// We require loops be in LCSSA form
   /// parseExitBlock

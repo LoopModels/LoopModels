@@ -72,15 +72,20 @@ struct MergingCost {
   }
   /// returns `true` if `key` was already in ancestors
   /// returns `false` if it had to initialize
+  // NOLINTNEXTLINE(misc-no-recursion)
   auto initAncestors(BumpAlloc<> &alloc, Instruction *key)
     -> aset<Instruction *> * {
 
     auto *set = alloc.construct<aset<Instruction *>>(alloc);
     /// instructions are considered their own ancestor for our purposes
     set->insert(key);
-    for (Value *op : key->getOperands())
-      if (auto *f = getAncestors(op)) set->insert(f->begin(), f->end());
     ancestorMap[key] = set;
+    for (Value *op : key->getOperands()) {
+      if (auto *I = llvm::dyn_cast<Compute>(op); I && I->isComplete()) {
+        auto *A = getAncestors(alloc, I);
+        set->insert(A->begin(), A->end());
+      }
+    }
     return set;
   }
   auto begin() -> decltype(mergeList.begin()) { return mergeList.begin(); }
@@ -88,11 +93,12 @@ struct MergingCost {
   [[nodiscard]] auto visited(Instruction *key) const -> bool {
     return ancestorMap.count(key);
   }
-  auto getAncestors(BumpAlloc<> &alloc, Instruction *key)
+  // NOLINTNEXTLINE(misc-no-recursion)
+  auto getAncestors(BumpAlloc<> &alloc, Instruction *I)
     -> aset<Instruction *> * {
-    if (auto *it = ancestorMap.find(key); it != ancestorMap.end())
-      return it->second;
-    return initAncestors(alloc, key);
+    auto *&f = ancestorMap[I];
+    if (!f) f = initAncestors(alloc, I);
+    return f;
   }
   auto getAncestors(Instruction *key) -> aset<Instruction *> * {
     if (auto *it = ancestorMap.find(key); it != ancestorMap.end())
@@ -444,7 +450,9 @@ inline void mergeInstructions(
 mergeInstructions(IR::Cache &cache, Predicate::Map &predMap,
                   llvm::TargetTransformInfo &TTI, BumpAlloc<> &tAlloc,
                   unsigned vectorBits, TreeResult tr) -> TreeResult {
-  if (!predMap.isDivergent()) return cache.completeInstructions(&predMap, tr);
+  auto [completed, trret] = cache.completeInstructions(&predMap, tr);
+  tr = trret;
+  if (!predMap.isDivergent()) return tr;
   auto p = tAlloc.scope();
   // there is a divergence in the control flow that we can ideally merge
   amap<Instruction::Identifier, math::ResizeableView<Instruction *, unsigned>>
@@ -454,13 +462,11 @@ mergeInstructions(IR::Cache &cache, Predicate::Map &predMap,
   mergingCosts.emplace_back(tAlloc);
   // We search through incomplete instructions inside the predMap
   // this should yield all merge candidates.L
-  for (auto *C = tr.incomplete; C; C = static_cast<Compute *>(C->getNext())) {
+  for (auto *C = completed; C; C = static_cast<Compute *>(C->getNext())) {
     auto *f = predMap.find(C->getLLVMInstruction());
-    if (f == predMap.end()) continue;
-    auto cmp = cache.complete(C, &predMap, tr);
-    tr = cmp.second;
+    invariant(f != predMap.end());
     mergeInstructions(tAlloc, cache, predMap, TTI, vectorBits, opMap, valToPred,
-                      mergingCosts, cmp.first, f->first, f->second);
+                      mergingCosts, C, f->first, f->second);
   }
   MergingCost *minCostStrategy = *std::ranges::min_element(
     mergingCosts, [](MergingCost *a, MergingCost *b) { return *a < *b; });
