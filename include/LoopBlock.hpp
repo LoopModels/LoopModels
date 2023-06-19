@@ -58,7 +58,7 @@ constexpr void insertSortedUnique(Vector<I> &v, const I &x) {
 /// `A[i]`;
 class ScheduledNode {
 
-  [[no_unique_address]] Addr *store; // linked list to loads
+  [[no_unique_address]] IR::Addr *store; // linked list to loads
   [[no_unique_address]] NotNull<poly::Loop> loopNest;
   [[no_unique_address]] ScheduledNode *next{nullptr};
   [[no_unique_address]] ScheduledNode *component{nullptr}; // SCC cycle

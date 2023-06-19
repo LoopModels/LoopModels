@@ -447,7 +447,7 @@ public:
     Compute *op =
       std::construct_at(allocateInst(N), Node::VK_Oprn, opId, N, typ, fmf);
     setOperands(op, ops);
-    return op;
+    return cse(op);
   }
   auto createOperation(llvm::Intrinsic::ID opId, PtrVector<Value *> ops,
                        llvm::Type *typ, llvm::FastMathFlags fmf) -> Compute * {
@@ -455,7 +455,7 @@ public:
     Compute *op =
       std::construct_at(allocateInst(N), Node::VK_Oprn, opId, N, typ, fmf);
     setOperands(op, ops);
-    return op;
+    return cse(op);
   }
   void setOperands(Compute *op, PtrVector<Value *> ops) {
     size_t N = ops.size();
@@ -560,8 +560,8 @@ public:
     if (popCount == 0) return getConstant((*predicates)[0]->getType(), 1);
     if (popCount == 1) {
       ptrdiff_t ind = pred.getFirstIndex();
-      Value *J = (*predicates)[ind];
-      return swap ? negate(J) : J;
+      Value *I = (*predicates)[ind];
+      return swap ? negate(I) : I;
     }
     // we have more than one instruction
     ptrdiff_t ind = pred.getFirstIndex();
@@ -621,6 +621,23 @@ public:
     }
     return getOperation(llvm::Instruction::Select,
                         std::array<Value *, 3>{cond, op1, op2}, typ, fmf);
+  }
+  // adds predicate P to address A
+  void addPredicate(IR::Addr *A, Predicate::Set P, Predicate::Map *M) {
+    if (P.empty()) return;
+    auto *predicates = M->getPredicates();
+    // the set is a union of intersections
+    // so we materialize it in the most naive way; TODO: less naive?
+    Value *pred =
+      P.transform_reduce(nullptr, [&](Value *acc, Predicate::Intersection I) {
+        Value *v = createCondition(I, predicates, false);
+        if (acc)
+          v = createOperation(llvm::Instruction::Or,
+                              std::array<Value *, 2>{acc, v}, acc->getType(),
+                              acc->getFastMathFlags());
+        return v;
+      });
+    A->setPredicate(pred);
   }
 };
 

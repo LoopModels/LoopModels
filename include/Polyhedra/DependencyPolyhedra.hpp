@@ -39,7 +39,7 @@ inline auto printConstraints(std::ostream &os, DensePtrMatrix<int64_t> A,
   const unsigned numSyms = syms.size() + 1;
   for (Row c = 0; c < numConstraints; ++c) {
     printConstraint(os, A(c, _), numSyms, inequality);
-    for (size_t v = 1; v < numSyms; ++v) {
+    for (ptrdiff_t v = 1; v < numSyms; ++v) {
       if (int64_t Acv = A(c, v)) {
         os << (Acv > 0 ? " + " : " - ");
         Acv = math::constexpr_abs(Acv);
@@ -181,14 +181,14 @@ public:
   constexpr void decrementNumConstraints() { invariant(numCon-- > 0); }
   constexpr auto getA() -> MutDensePtrMatrix<int64_t> {
     void *p = memory;
-    return {(int64_t *)p, DenseDims{numCon, getNumVar() + 1}};
+    return {(int64_t *)p, math::DenseDims{numCon, getNumVar() + 1}};
   }
   constexpr auto getE() -> MutDensePtrMatrix<int64_t> {
     void *p = memory;
     return {(int64_t *)p + size_t(conCapacity) * (getNumVar() + 1),
-            DenseDims{numEqCon, getNumVar() + 1}};
+            math::DenseDims{numEqCon, getNumVar() + 1}};
   }
-  constexpr auto getNullStep() -> MutPtrVector<int64_t> {
+  constexpr auto getNullStep() -> math::MutPtrVector<int64_t> {
     void *p = memory;
     return {((int64_t *)p) +
               (size_t(conCapacity) + eqConCapacity) * (getNumVar() + 1),
@@ -211,7 +211,7 @@ public:
   [[nodiscard]] auto getA() const -> DensePtrMatrix<int64_t> {
     const char *p = memory;
     return {const_cast<int64_t *>(reinterpret_cast<const int64_t *>(p)),
-            DenseDims{numCon, getNumVar() + 1}};
+            math::DenseDims{numCon, getNumVar() + 1}};
   }
   [[nodiscard]] auto getA(Row r, Col c) -> int64_t & {
     auto *p = reinterpret_cast<int64_t *>(memory);
@@ -224,7 +224,7 @@ public:
   [[nodiscard]] auto getE() const -> DensePtrMatrix<int64_t> {
     const auto *p = reinterpret_cast<const int64_t *>(memory);
     return {const_cast<int64_t *>(p + size_t(conCapacity) * (getNumVar() + 1)),
-            DenseDims{numEqCon, getNumVar() + 1}};
+            math::DenseDims{numEqCon, getNumVar() + 1}};
   }
   [[nodiscard]] auto getE(Row r, Col c) -> int64_t & {
     auto *p = reinterpret_cast<int64_t *>(memory);
@@ -248,49 +248,50 @@ public:
               ((conCapacity + eqConCapacity) * (getNumVar() + 1) + timeDim)),
       numDynSym};
   }
-  auto getSymbols(size_t i) -> MutPtrVector<int64_t> {
-    return getA()(i, _(begin, getNumSymbols()));
+  auto getSymbols(ptrdiff_t i) -> math::MutPtrVector<int64_t> {
+    return getA()(i, _(math::begin, getNumSymbols()));
   }
-  [[nodiscard]] auto getInEqSymbols(size_t i) const -> PtrVector<int64_t> {
-    return getA()(i, _(begin, getNumSymbols()));
+  [[nodiscard]] auto getInEqSymbols(ptrdiff_t i) const -> PtrVector<int64_t> {
+    return getA()(i, _(math::begin, getNumSymbols()));
   }
-  [[nodiscard]] auto getEqSymbols(size_t i) const -> PtrVector<int64_t> {
-    return getE()(i, _(begin, getNumSymbols()));
+  [[nodiscard]] auto getEqSymbols(ptrdiff_t i) const -> PtrVector<int64_t> {
+    return getE()(i, _(math::begin, getNumSymbols()));
   }
-  [[nodiscard]] auto getCompTimeInEqOffset(size_t i) const
+  [[nodiscard]] auto getCompTimeInEqOffset(ptrdiff_t i) const
     -> std::optional<int64_t> {
     if (!allZero(getA()(i, _(1, getNumSymbols())))) return {};
     return getA()(i, 0);
   }
-  [[nodiscard]] auto getCompTimeEqOffset(size_t i) const
+  [[nodiscard]] auto getCompTimeEqOffset(ptrdiff_t i) const
     -> std::optional<int64_t> {
     if (!allZero(getE()(i, _(1, getNumSymbols())))) return {};
     return getE()(i, 0);
   }
   static constexpr auto findFirstNonEqual(PtrVector<int64_t> x,
-                                          PtrVector<int64_t> y) -> size_t {
+                                          PtrVector<int64_t> y) -> ptrdiff_t {
     return std::distance(
       x.begin(), std::mismatch(x.begin(), x.end(), y.begin(), y.end()).first);
   }
-  static auto nullSpace(NotNull<const Addr> x, NotNull<const Addr> y)
-    -> DenseMatrix<int64_t> {
-    const size_t numLoopsCommon =
-                   findFirstNonEqual(x->getFusionOmega(), y->getFusionOmega()),
-                 xDim = x->getArrayDim(), yDim = y->getArrayDim();
-    DenseMatrix<int64_t> A(DenseDims{numLoopsCommon, xDim + yDim});
+  static auto nullSpace(NotNull<const IR::Addr> x, NotNull<const IR::Addr> y)
+    -> math::DenseMatrix<int64_t> {
+    unsigned numLoopsCommon =
+               findFirstNonEqual(x->getFusionOmega(), y->getFusionOmega()),
+             xDim = x->getArrayDim(), yDim = y->getArrayDim();
+    math::DenseMatrix<int64_t> A(math::DenseDims{numLoopsCommon, xDim + yDim});
     if (!numLoopsCommon) return A;
     // indMats cols are [outerMostLoop,...,innerMostLoop]
     PtrMatrix<int64_t> indMatX = x->indexMatrix(), indMatY = y->indexMatrix();
-    for (size_t i = 0; i < numLoopsCommon; ++i) {
-      A(i, _(begin, xDim)) << indMatX(_, i);
+    for (ptrdiff_t i = 0; i < numLoopsCommon; ++i) {
+      A(i, _(math::begin, xDim)) << indMatX(_, i);
       A(i, _(xDim, end)) << indMatY(_, i);
     }
     // returns rank x num loops
     return orthogonalNullSpace(std::move(A));
   }
-  static auto nullSpace(NotNull<const Addr> x) -> DenseMatrix<int64_t> {
-    const size_t numLoopsCommon = x->getNumLoops(), dim = x->getArrayDim();
-    DenseMatrix<int64_t> A(DenseDims{numLoopsCommon, dim});
+  static auto nullSpace(NotNull<const IR::Addr> x)
+    -> math::DenseMatrix<int64_t> {
+    unsigned numLoopsCommon = x->getNumLoops(), dim = x->getArrayDim();
+    math::DenseMatrix<int64_t> A(math::DenseDims{numLoopsCommon, dim});
     if (!numLoopsCommon) return A;
     // indMats cols are [outerMostLoop,...,innerMostLoop]
     A << x->indexMatrix().transpose();
@@ -309,11 +310,11 @@ public:
   }
   /// Returns a map of s1's content's to s0's
   /// Values >= s0.size() are new symbols
-  static auto mergeMap(Vector<unsigned> &map,
+  static auto mergeMap(math::Vector<unsigned> &map,
                        llvm::ArrayRef<const llvm::SCEV *> s0,
                        llvm::ArrayRef<const llvm::SCEV *> s1) -> unsigned {
     map.resizeForOverwrite(s1.size());
-    size_t n = s0.size();
+    unsigned n = s0.size();
     for (size_t i = 0; i < s1.size(); ++i) {
       Optional<unsigned> j = symbolIndex(s0, s1[i]);
       map[i] = j ? *j : n++;
@@ -322,7 +323,7 @@ public:
   }
   static void fillSyms(llvm::MutableArrayRef<const llvm::SCEV *> s,
                        std::array<llvm::ArrayRef<const llvm::SCEV *>, 2> sa,
-                       Vector<unsigned> &map) {
+                       math::Vector<unsigned> &map) {
     auto [sa0, sa1] = sa;
     size_t n = sa0.size();
     std::copy_n(sa0.begin(), n, s.begin());
@@ -340,8 +341,8 @@ public:
     std::memcpy(p, this, neededBytes());
     return NotNull<DepPoly>{p};
   }
-  static auto dependence(BumpAlloc<> &alloc, NotNull<const Addr> aix,
-                         NotNull<const Addr> aiy) -> DepPoly * {
+  static auto dependence(BumpAlloc<> &alloc, NotNull<const IR::Addr> aix,
+                         NotNull<const IR::Addr> aiy) -> DepPoly * {
     assert(aix->sizesMatch(aiy));
     NotNull<const poly::Loop> loopx = aix->getLoop();
     NotNull<const poly::Loop> loopy = aiy->getLoop();
@@ -358,11 +359,11 @@ public:
              numDep1Var = loopy->getNumLoops(),
              numVar = numDep0Var + numDep1Var;
 
-    Vector<unsigned> map;
+    math::Vector<unsigned> map;
     unsigned numDynSym = mergeMap(map, Sx, Sy);
-    invariant(size_t(map.size()), size_t(Sy.size()));
+    invariant(ptrdiff_t(map.size()), ptrdiff_t(Sy.size()));
     unsigned numSym = numDynSym + 1;
-    DenseMatrix<int64_t> NS{nullSpace(aix, aiy)};
+    math::DenseMatrix<int64_t> NS{nullSpace(aix, aiy)};
     unsigned timeDim = unsigned{NS.numRow()},
              numCols = numVar + timeDim + numDynSym + 1,
              conCapacity = unsigned(Ax.numRow() + Ay.numRow()) + numVar,
@@ -379,10 +380,10 @@ public:
                                  timeDim, conCapacity, eqConCapacity);
 
     // numDep1Var = nv1;
-    const Row nc = nc0 + nc1;
-    const size_t indexDim{aix->getArrayDim()};
+    Row nc = nc0 + nc1;
+    unsigned indexDim{aix->getArrayDim()};
     auto nullStep{dp->getNullStep()};
-    for (size_t i = 0; i < timeDim; ++i) nullStep[i] = selfDot(NS(i, _));
+    for (ptrdiff_t i = 0; i < timeDim; ++i) nullStep[i] = selfDot(NS(i, _));
     //           column meansing in in order
     // const size_t numSymbols = getNumSymbols();
     auto A{dp->getA()};
@@ -392,16 +393,16 @@ public:
     // A.resize(nc + numVar, numSymbols + numVar + nullDim);
     // E.resize(indexDim + nullDim, A.numCol());
     // ma0 loop
-    for (size_t i = 0; i < nc0; ++i) {
+    for (ptrdiff_t i = 0; i < nc0; ++i) {
       A(i, _(0, 1 + Sx.size())) << Ax(i, _(0, 1 + Sx.size()));
       A(i, _(numSym, numSym + numDep0Var))
         << Ax(i, _(1 + Sx.size(), 1 + Sx.size() + numDep0Var));
     }
-    for (size_t i = 0; i < nc1; ++i) {
+    for (ptrdiff_t i = 0; i < nc1; ++i) {
       A(nc0 + i, 0) = Ay(i, 0);
-      for (size_t j = 0; j < map.size(); ++j)
+      for (ptrdiff_t j = 0; j < map.size(); ++j)
         A(nc0 + i, 1 + map[j]) = Ay(i, 1 + j);
-      for (size_t j = 0; j < numDep1Var; ++j)
+      for (ptrdiff_t j = 0; j < numDep1Var; ++j)
         A(nc0 + i, j + numSym + numDep0Var) = Ay(i, j + 1 + Sy.size());
     }
     A(_(nc, end), _(numSym, numSym + numVar)).diag() << 1;
@@ -410,16 +411,16 @@ public:
     // E(i,:)* indVars = q[i]
     // e.g. i_0 + j_0 + off_0 = i_1 + j_1 + off_1
     // i_0 + j_0 - i_1 - j_1 = off_1 - off_0
-    for (size_t i = 0; i < indexDim; ++i) {
+    for (ptrdiff_t i = 0; i < indexDim; ++i) {
       E(i, _(0, Ox.numCol())) << Ox(i, _);
       E(i, _(numSym, numDep0Var + numSym)) << Cx(i, _(0, numDep0Var));
       E(i, 0) -= Oy(i, 0);
-      for (size_t j = 0; j < Oy.numCol() - 1; ++j)
+      for (ptrdiff_t j = 0; j < Oy.numCol() - 1; ++j)
         E(i, 1 + map[j]) -= Oy(i, 1 + j);
       E(i, _(0, numDep1Var) + numSym + numDep0Var) << -Cy(i, _(0, numDep1Var));
     }
-    for (size_t i = 0; i < timeDim; ++i) {
-      for (size_t j = 0; j < NS.numCol(); ++j) {
+    for (ptrdiff_t i = 0; i < timeDim; ++i) {
+      for (ptrdiff_t j = 0; j < NS.numCol(); ++j) {
         int64_t nsij = NS(i, j);
         E(indexDim + i, j + numSym) = nsij;
         E(indexDim + i, j + numSym + numDep0Var) = -nsij;
@@ -431,7 +432,7 @@ public:
     alloc.rollback(p);
     return nullptr;
   }
-  static auto self(BumpAlloc<> &alloc, NotNull<const Addr> ai)
+  static auto self(BumpAlloc<> &alloc, NotNull<const IR::Addr> ai)
     -> NotNull<DepPoly> {
     NotNull<const poly::Loop> loop = ai->getLoop();
     DensePtrMatrix<int64_t> B{loop->getA()};
@@ -442,7 +443,7 @@ public:
     auto [nco, nv] = B.size();
     unsigned numDepVar = loop->getNumLoops(), numVar = numDepVar + numDepVar,
              numDynSym = S.size(), numSym = numDynSym + 1;
-    DenseMatrix<int64_t> NS{nullSpace(ai)};
+    math::DenseMatrix<int64_t> NS{nullSpace(ai)};
     unsigned timeDim = unsigned{NS.numRow()},
              numCols = numVar + timeDim + numDynSym + 1,
              conCapacity = unsigned(2 * B.numRow()) + numVar,
@@ -458,10 +459,10 @@ public:
                                  conCapacity, eqConCapacity);
 
     // numDep1Var = nv1;
-    const Row nc = nco + nco;
-    const size_t indexDim{ai->getArrayDim()};
+    Row nc = nco + nco;
+    unsigned indexDim{ai->getArrayDim()};
     auto nullStep{dp->getNullStep()};
-    for (size_t i = 0; i < timeDim; ++i) nullStep[i] = selfDot(NS(i, _));
+    for (ptrdiff_t i = 0; i < timeDim; ++i) nullStep[i] = selfDot(NS(i, _));
     //           column meansing in in order
     // const size_t numSymbols = getNumSymbols();
     auto A{dp->getA()};
@@ -471,9 +472,9 @@ public:
     // A.resize(nc + numVar, numSymbols + numVar + nullDim);
     // E.resize(indexDim + nullDim, A.numCol());
     // ma0 loop
-    for (size_t i = 0; i < nco; ++i) {
-      for (size_t j = 0; j < numSym; ++j) A(i + nco, j) = A(i, j) = B(i, j);
-      for (size_t j = 0; j < numDepVar; ++j)
+    for (ptrdiff_t i = 0; i < nco; ++i) {
+      for (ptrdiff_t j = 0; j < numSym; ++j) A(i + nco, j) = A(i, j) = B(i, j);
+      for (ptrdiff_t j = 0; j < numDepVar; ++j)
         A(i + nco, j + numSym + numDepVar) = A(i, j + numSym) =
           B(i, j + numSym);
     }
@@ -484,15 +485,15 @@ public:
     // E(i,:)* indVars = q[i]
     // e.g. i_0 + j_0 + off_0 = i_1 + j_1 + off_1
     // i_0 + j_0 - i_1 - j_1 = off_1 - off_0
-    for (size_t i = 0; i < indexDim; ++i) {
-      for (size_t j = 0; j < numDepVar; ++j) {
+    for (ptrdiff_t i = 0; i < indexDim; ++i) {
+      for (ptrdiff_t j = 0; j < numDepVar; ++j) {
         int64_t Cji = C(j, i);
         E(i, j + numSym) = Cji;
         E(i, j + numSym + numDepVar) = -Cji;
       }
     }
-    for (size_t i = 0; i < timeDim; ++i) {
-      for (size_t j = 0; j < NS.numCol(); ++j) {
+    for (ptrdiff_t i = 0; i < timeDim; ++i) {
+      for (ptrdiff_t j = 0; j < NS.numCol(); ++j) {
         int64_t nsij = NS(i, j);
         E(indexDim + i, j + numSym) = nsij;
         E(indexDim + i, j + numSym + numDepVar) = -nsij;
@@ -518,18 +519,18 @@ public:
   //
   // Time parameters are carried over into farkas polys
   [[nodiscard]] auto farkasPair(BumpAlloc<> &alloc) const
-    -> std::array<NotNull<Simplex>, 2> {
+    -> std::array<NotNull<math::Simplex>, 2> {
 
     auto A{getA()}, E{getE()};
-    const size_t numEqualityConstraintsOld = size_t(E.numRow());
-    const size_t numInequalityConstraintsOld = size_t(A.numRow());
+    const ptrdiff_t numEqualityConstraintsOld = ptrdiff_t(E.numRow());
+    const ptrdiff_t numInequalityConstraintsOld = ptrdiff_t(A.numRow());
 
-    const size_t numPhiCoefs = getNumPhiCoef();
-    const size_t numScheduleCoefs = numPhiCoefs + getNumOmegaCoef();
-    const size_t numBoundingCoefs = getNumSymbols();
+    const ptrdiff_t numPhiCoefs = getNumPhiCoef();
+    const ptrdiff_t numScheduleCoefs = numPhiCoefs + getNumOmegaCoef();
+    const ptrdiff_t numBoundingCoefs = getNumSymbols();
 
-    const size_t numConstraintsNew = size_t(A.numCol()) - getTimeDim();
-    const size_t numVarInterest = numScheduleCoefs + numBoundingCoefs;
+    const ptrdiff_t numConstraintsNew = ptrdiff_t(A.numCol()) - getTimeDim();
+    const ptrdiff_t numVarInterest = numScheduleCoefs + numBoundingCoefs;
 
     // lambda_0 + lambda'*A*i == psi'i
     // we represent equal constraint as
@@ -540,30 +541,30 @@ public:
     // backward (1 -> 0, i.e. 0 >= 1):
     // psi'i = Phi_0'i_0 - Phi_1'i_1
     // first, lambda_0:
-    const size_t ineqEnd = 1 + numInequalityConstraintsOld;
-    const size_t posEqEnd = ineqEnd + numEqualityConstraintsOld;
-    const size_t numLambda = posEqEnd + numEqualityConstraintsOld;
-    const size_t numVarNew = numVarInterest + numLambda;
-    invariant(size_t(getNumLambda()), numLambda);
+    const ptrdiff_t ineqEnd = 1 + numInequalityConstraintsOld;
+    const ptrdiff_t posEqEnd = ineqEnd + numEqualityConstraintsOld;
+    const ptrdiff_t numLambda = posEqEnd + numEqualityConstraintsOld;
+    const ptrdiff_t numVarNew = numVarInterest + numLambda;
+    invariant(ptrdiff_t(getNumLambda()), numLambda);
     // std::array<NotNull<Simplex>, 2> pair;
-    NotNull<Simplex> fw =
-      Simplex::create(alloc, numConstraintsNew, numVarNew, 0);
+    NotNull<math::Simplex> fw =
+      math::Simplex::create(alloc, numConstraintsNew, numVarNew, 0);
     // Simplex &fw(pair[0]);
     // fw.resize(numConstraintsNew, numVarNew + 1);
     auto fCF{fw->getConstraints()};
     fCF << 0;
-    MutPtrMatrix<int64_t> fC{fCF(_, _(1, end))};
+    math::MutPtrMatrix<int64_t> fC{fCF(_, _(1, end))};
     // fC(_, 0) << 0;
     fC(0, 0) = 1; // lambda_0
     fC(_, _(1, 1 + numInequalityConstraintsOld))
-      << A(_, _(begin, numConstraintsNew)).transpose();
+      << A(_, _(math::begin, numConstraintsNew)).transpose();
     // fC(_, _(ineqEnd, posEqEnd)) = E.transpose();
     // fC(_, _(posEqEnd, numVarNew)) = -E.transpose();
     // loading from `E` is expensive
     // NOTE: if optimizing expression templates, should also
     // go through and optimize loops like this
-    for (size_t j = 0; j < numConstraintsNew; ++j) {
-      for (size_t i = 0; i < numEqualityConstraintsOld; ++i) {
+    for (ptrdiff_t j = 0; j < numConstraintsNew; ++j) {
+      for (ptrdiff_t i = 0; i < numEqualityConstraintsOld; ++i) {
         int64_t Eji = E(i, j);
         fC(j, i + ineqEnd) = Eji;
         fC(j, i + posEqEnd) = -Eji;
@@ -588,17 +589,17 @@ public:
     // boundAbove means we have
     // ... == w + u'*N + psi
     // -1 as we flip sign
-    for (size_t i = 0; i < numBoundingCoefs; ++i)
+    for (ptrdiff_t i = 0; i < numBoundingCoefs; ++i)
       fC(i, i + numScheduleCoefs + numLambda) = -1;
 
     // so far, both have been identical
 
-    NotNull<Simplex> bw =
-      Simplex::create(alloc, numConstraintsNew, numVarNew, 0);
+    NotNull<math::Simplex> bw =
+      math::Simplex::create(alloc, numConstraintsNew, numVarNew, 0);
     auto bCF{bw->getConstraints()};
     bCF << fCF;
     // bCF(_, _(0, numVarNew + 1)) << fCF(_, _(0, numVarNew + 1));
-    MutPtrMatrix<int64_t> bC{bCF(_, _(1, end))};
+    math::MutPtrMatrix<int64_t> bC{bCF(_, _(1, end))};
 
     // equality constraints get expanded into two inequalities
     // a == 0 ->
@@ -615,7 +616,7 @@ public:
     fC(0, 1 + numLambda) = -1;
     bC(0, numLambda) = -1;
     bC(0, 1 + numLambda) = 1;
-    for (size_t i = 0; i < numPhiCoefs; ++i) {
+    for (ptrdiff_t i = 0; i < numPhiCoefs; ++i) {
       int64_t s = (2 * (i < numDep0Var) - 1);
       fC(i + numBoundingCoefs, i + numLambda + 2) = s;
       bC(i + numBoundingCoefs, i + numLambda + 2) = -s;
@@ -653,7 +654,7 @@ public:
     bool extend = (numDep0Var != xNumLoops) || (numDep1Var != yNumLoops);
     // we truncate time dim
     if (extend || timeDim) {
-      for (size_t r = 0; r < numEqCon; ++r) {
+      for (ptrdiff_t r = 0; r < numEqCon; ++r) {
         B(r, _(0, numSymD0)) << E(r, _(0, numSymD0));
         B(r, _(numDep0Var, xNumLoops) + numSym) << 0;
         B(r, _(0, numDep1Var) + numSymX) << E(r, _(0, numDep1Var) + numSymD0);
@@ -661,19 +662,19 @@ public:
       }
     } else std::copy_n(E.begin(), E.numRow() * E.numCol(), B.begin());
     if (xOff)
-      for (size_t c = 0; c < numDep0Var; ++c)
+      for (ptrdiff_t c = 0; c < numDep0Var; ++c)
         if (int64_t mlt = xOff[c])
           B(_(0, numEqCon), 0) -= mlt * B(_(0, numEqCon), numSym + c);
     if (yOff)
-      for (size_t c = 0; c < numDep1Var; ++c)
+      for (ptrdiff_t c = 0; c < numDep1Var; ++c)
         if (int64_t mlt = yOff[c])
           B(_(0, numEqCon), 0) -= mlt * B(_(0, numEqCon), numSymX + c);
-    for (size_t r = 0; r < numPhi; ++r) {
+    for (ptrdiff_t r = 0; r < numPhi; ++r) {
       B(r + numEqCon, _(0, numSym)) << 0;
       B(r + numEqCon, _(0, xNumLoops) + numSym) << xPhi(r, _(0, xNumLoops));
       B(r + numEqCon, _(0, yNumLoops) + numSymX) << -yPhi(r, _(0, yNumLoops));
     }
-    unsigned rank = unsigned(NormalForm::simplifySystemImpl(B));
+    unsigned rank = unsigned(math::NormalForm::simplifySystemImpl(B));
     if (rank <= numEqCon) return false;
     unsigned numConstraints =
       extend ? (xLoop->getNumCon() + xNumLoops + yLoop->getNumCon() + yNumLoops)
@@ -689,21 +690,21 @@ public:
     if (extend) {
       MutDensePtrMatrix<int64_t> Ax{xLoop->getA()}, Ay{yLoop->getA()};
       auto xS{xLoop->getSyms()}, yS{yLoop->getSyms()};
-      Vector<unsigned> map;
+      math::Vector<unsigned> map;
       unsigned xNumSym = xS.size() + 1, xCon = xLoop->getNumCon(),
                yNumSym = yS.size() + 1, yCon = yLoop->getNumCon(),
                nDS = mergeMap(map, xS, yS), nLoop = xNumLoops + yNumLoops;
       // numSyms should be the same; we aren't pruning symbols
       invariant(numSym, 1 + nDS);
-      for (size_t r = 0; r < xCon; ++r) {
+      for (ptrdiff_t r = 0; r < xCon; ++r) {
         A(r, _(0, xNumSym)) << Ax(r, _(0, xNumSym));
         A(r, _(xNumSym, numSym)) << 0;
         A(r, _(0, xNumLoops) + numSym) << Ax(r, _(0, xNumLoops) + xNumSym);
         A(r, _(0, yNumLoops) + numSymX) << 0;
       }
-      for (size_t r = 0; r < yCon; ++r) {
+      for (ptrdiff_t r = 0; r < yCon; ++r) {
         A(r + xCon, _(0, numSym)) << 0;
-        for (size_t j = 0; j < map.size(); ++j)
+        for (ptrdiff_t j = 0; j < map.size(); ++j)
           A(r + xCon, 1 + map[j]) = Ay(r, 1 + j);
         A(r + xCon, _(0, xNumLoops) + numSym) << 0;
         A(r + xCon, _(0, yNumLoops) + numSymX)
@@ -713,17 +714,17 @@ public:
       A(_(0, nLoop) + (xCon + yCon), _(0, nLoop) + numSym).diag() << 1;
     } else dp->getA() << getA()(_, _(0, nCol)); // truncate time
     if (xOff)
-      for (size_t c = 0; c < xNumLoops; ++c)
+      for (ptrdiff_t c = 0; c < xNumLoops; ++c)
         if (int64_t mlt = xOff[c]) A(_, 0) -= mlt * A(_, numSym + c);
     if (yOff)
-      for (size_t c = 0; c < yNumLoops; ++c)
+      for (ptrdiff_t c = 0; c < yNumLoops; ++c)
         if (int64_t mlt = yOff[c]) A(_, 0) -= mlt * A(_, numSymX + c);
     dp->getE() << B(_(0, rank), _);
     dp->pruneBounds(alloc);
     return dp->getNumCon() == 0;
   }
-  friend inline auto operator<<(llvm::raw_ostream &os, const DepPoly &p)
-    -> llvm::raw_ostream & {
+  friend inline auto operator<<(std::ostream &os, const DepPoly &p)
+    -> std::ostream & {
     return printConstraints(
       printPositive(printConstraints(os << "\n", p.getA(), p.getSyms()),
                     p.getNumDynamic()),

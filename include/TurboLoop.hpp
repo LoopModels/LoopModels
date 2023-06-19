@@ -72,7 +72,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
   [[no_unique_address]] llvm::ScalarEvolution *SE;
   [[no_unique_address]] llvm::OptimizationRemarkEmitter *ORE;
   [[no_unique_address]] LinearProgramLoopBlock loopBlock;
-  [[no_unique_address]] IR::Cache instrCache;
+  [[no_unique_address]] IR::Cache instructions;
   [[no_unique_address]] CostModeling::CPURegisterFile registers;
 
   // this is an allocator that it is safe to reset completely when
@@ -87,7 +87,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
   // then are not going to get freed until we are done with the
   // `TurboLoopPass`
   constexpr auto longAllocator() -> BumpAlloc<> & {
-    return instrCache.getAllocator();
+    return instructions.getAllocator();
   }
 
   /// the process of building the LoopForest has the following steps:
@@ -99,7 +99,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
   ///    split into separate forests.
   void initializeLoopForest() {
     // NOTE: LoopInfo stores loops in reverse program order
-    auto revLI = std::ranges::reverse(*LI);
+    auto revLI = llvm::reverse(*LI);
     auto ib = revLI.begin();
     auto ie = revLI.end();
     if (ib == ie) return;
@@ -122,13 +122,13 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
     // `llvm::Loop->getSubLoops()`.
     // But we could consider specializing on top level vs not.
     llvm::SmallVector<llvm::Loop *> rLI{ib, ie + 1};
-    NoWrapRewriter nwr(*SE);
+    poly::NoWrapRewriter nwr(*SE);
     pushLoopTree(nullptr, rLI, H, E, nwr);
     // for (auto forest : loopForests) forest->addZeroLowerBounds(loopMap);
   }
 
   // void addInstructions(IR::Addr *addr, llvm::Loop *L) {
-  //   addr->forEach([&, L](Addr *a) { instrCache.addParents(a, L); });
+  //   addr->forEach([&, L](Addr *a) { instructions.addParents(a, L); });
   // }
 
   /// parse a from `H` to `E`, nested within loop `L`
@@ -153,12 +153,12 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
     -> IR::TreeResult {
     // TODO: need to be able to connect instructions as we move out
     auto predMapAbridged =
-      Predicate::Map::descend(shortAllocator(), instrCache, H, E, L);
+      IR::Predicate::Map::descend(shortAllocator(), instructions, H, E, L);
     if (!predMapAbridged) return {};
     // Now we need to create Addrs
     size_t depth = omega.size() - 1;
     for (auto &[BB, P] : *predMapAbridged) { // rev order
-      for (llvm::Instruction &J : std::ranges::reverse(*BB)) {
+      for (llvm::Instruction &J : llvm::reverse(*BB)) {
         if (L) assert(L->contains(&J));
         llvm::Value *ptr{nullptr};
         if (J.mayReadFromMemory())
@@ -171,15 +171,17 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
           else return {};
         else continue;
         if (ptr == nullptr) return {};
-        auto [A, trret] = cache.getArrayRef(&J, L, ptr, tr);
-        tr = tret;
+        auto [N, trret] = instructions.getArrayRef(&J, L, ptr, tr);
+        tr = trret;
         if (tr.reject(depth)) return tr;
+        IR::Addr *A = llvm::cast<IR::Addr>(A);
+        A->setLoopNest(AL);
         // if we didn't reject, it must have been an `Addr`
-        llvm::cast<Addr>(A)->setFusionOmega(omega);
-        tr = cache.addPredicate(A, P, &*predMapAbridged, tr);
+        A->setFusionOmega(omega);
+        instructions.addPredicate(A, P, &*predMapAbridged);
       }
     }
-    return mergeInstructions(instrCache, *predMapAbridged, TTI,
+    return mergeInstructions(instructions, *predMapAbridged, TTI,
                              shortAllocator(), registers.getNumVectorBits(),
                              tr);
   }
@@ -217,7 +219,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
       for (unsigned i = 0, N = P.getNumIncomingValues(); i < N; ++i) {
         auto *J = llvm::dyn_cast<llvm::Instruction>(P.getIncomingValue(i));
         if (!J || !L->contains(J)) continue;
-        tr = cache.getValue(J, nullptr, tr).second;
+        tr = instructions.getValue(J, nullptr, tr).second;
       }
     }
     return tr;
@@ -357,7 +359,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
         // Now we check if we can create a direct path from `H` to
         // `subLoop->getLoopPreheader();`
         llvm::BasicBlock *subLoopPreheader = subLoop->getLoopPreheader();
-        if (auto predMap = Predicate::Map::descend(allocator, instrCache, H,
+        if (auto predMap = Predicate::Map::descend(allocator, instructions, H,
                                                    subLoopPreheader, L)) {
           interiorDepth = std::max(interiorDepth, depth);
           branchBlocks.push_back(std::move(*predMap));
@@ -393,7 +395,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
       // (pushLoopTree pushes into first arg, pForest, whenever ret > 0)
       invariant(!branches.empty());
       if (auto predMapAbridged =
-            Predicate::Map::descend(allocator, instrCache, H, E, L)) {
+            Predicate::Map::descend(allocator, instructions, H, E, L)) {
         branchBlocks.push_back(std::move(*predMapAbridged));
 
         auto *newTree = new (allocator)
@@ -406,16 +408,6 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
     }
     if (!branches.empty()) split(branches, branchBlocks, H, L);
     return 0;
-  }
-  void split(llvm::SmallVector<NotNull<LoopTree>> &branches,
-             llvm::SmallVector<Predicate::Map> &branchBlocks,
-             llvm::BasicBlock *BB, llvm::Loop *L) {
-
-    auto predMapAbridged =
-      Predicate::Map::descend(allocator, instrCache, BB, BB, L);
-    assert(predMapAbridged);
-    branchBlocks.push_back(std::move(*predMapAbridged));
-    LoopTree::split(allocator, loopForests, branchBlocks, branches);
   }
 
   auto isLoopPreHeader(const llvm::BasicBlock *BB) const -> bool {
@@ -431,176 +423,6 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
         if (r->getLoop()->getLoopDepth() <= numPeeled) return true;
       return false;
     });
-  }
-  auto zeroDimRef(MutPtrVector<unsigned> omega, NotNull<poly::Loop> aln,
-                  llvm::Instruction *loadOrStore,
-                  llvm::SCEVUnknown const *arrayPtr, TreeResult tr)
-    -> TreeResult {
-    Addr *op = Addr::construct(allocator, arrayPtr, *aln, loadOrStore, omega);
-    ++omega.back();
-    return tr *= op;
-  }
-  auto arrayRef(llvm::Loop *L, MutPtrVector<unsigned> omega,
-                NotNull<poly::Loop> aln, llvm::Instruction *loadOrStore,
-                llvm::Instruction *ptr, TreeResult tr, const llvm::SCEV *elSz)
-    -> TreeResult {
-    // code modified from
-    // https://llvm.org/doxygen/Delinearization_8cpp_source.html#l00582
-    const llvm::SCEV *accessFn = SE->getSCEVAtScope(ptr, L);
-
-    const llvm::SCEV *pb = SE->getPointerBase(accessFn);
-    const auto *arrayPtr = llvm::dyn_cast<llvm::SCEVUnknown>(pb);
-    // Do not delinearize if we cannot find the base pointer.
-    if (!arrayPtr) {
-      if (ORE && L) [[unlikely]] {
-        remark("ArrayRefDeliniarize", L,
-               "ArrayReference failed because !basePointer\n", ptr);
-      }
-      // L is invalid, so we optimize the subloops and return `nullptr`
-      return {nullptr};
-    }
-    accessFn = SE->getMinusSCEV(accessFn, arrayPtr);
-    llvm::SmallVector<const llvm::SCEV *, 3> subscripts, sizes;
-    llvm::delinearize(*SE, accessFn, subscripts, sizes, elSz);
-    size_t numDims = subscripts.size();
-    invariant(numDims, sizes.size());
-    if (numDims == 0) return zeroDimRef(omega, aln, loadOrStore, arrayPtr, tr);
-    size_t numPeeled = tr.rejectDepth, numLoops = omega.size() - 1 - numPeeled;
-    IntMatrix Rt{StridedDims{numDims, numLoops}, 0};
-    llvm::SmallVector<const llvm::SCEV *, 3> symbolicOffsets;
-    uint64_t blackList{0};
-    Vector<int64_t> coffsets{unsigned(numDims), 0};
-    MutDensePtrMatrix<int64_t> offsMat{nullptr, DenseDims{numDims, 0}};
-    {
-      Vector<int64_t> offsets;
-      for (size_t i = 0; i < numDims; ++i) {
-        offsets << 0;
-        blackList |=
-          fillAffineIndices(Rt(i, _), &coffsets[i], offsets, symbolicOffsets,
-                            subscripts[i], 1, numPeeled);
-        if (offsets.size() > offsMat.numCol())
-          extendDensePtrMatCols(allocator, offsMat, Row{i},
-                                Col{offsets.size()});
-        offsMat(i, _) << offsets;
-      }
-    }
-    size_t numExtraLoopsToPeel = 64 - std::countl_zero(blackList);
-    Addr *op = Addr::construct(allocator, arrayPtr, *aln, loadOrStore,
-                               Rt(_, _(numExtraLoopsToPeel, end)),
-                               {std::move(sizes), std::move(symbolicOffsets)},
-                               coffsets, offsMat.data(), omega);
-    ++omega.back();
-    if (ORE) [[unlikely]] {
-      llvm::SmallVector<char> x;
-      llvm::raw_svector_ostream os{x};
-      os << "Found ref: " << *op;
-      remark("AffineRef", L, os.str());
-    }
-    return {op, numExtraLoopsToPeel + numPeeled};
-  }
-  // LoopTree &getLoopTree(unsigned i) { return loopTrees[i]; }
-  auto getLoopTree(llvm::Loop *L) -> Loop * { return loopMap[L]; }
-  auto addRef(llvm::Loop *L, MutPtrVector<unsigned> omega,
-              NotNull<poly::Loop> AL, llvm::Instruction *J, llvm::Value *ptr,
-              TreeResult tr) -> TreeResult {
-    const llvm::SCEV *elSz = SE->getElementSize(J);
-    if (L) { // TODO: support top level array refs
-      if (auto *iptr = llvm::dyn_cast<llvm::Instruction>(ptr)) {
-        if (tr = arrayRef(L, omega, AL, J, iptr, tr, elSz);
-            tr.accept(omega.size() - 1))
-          return tr;
-        if (ORE) [[unlikely]] {
-          llvm::SmallVector<char> x;
-          llvm::raw_svector_ostream os{x};
-          if (llvm::isa<llvm::LoadInst>(J))
-            os << "No affine representation for load: " << *J << "\n";
-          else os << "No affine representation for store: " << *J << "\n";
-          remark("AddAffineLoad", L, os.str(), J);
-        }
-      }
-      return {nullptr};
-    }
-    // FIXME: this pointer may alias other array references!!!
-    auto *arrayPtr =
-      llvm::dyn_cast<llvm::SCEVUnknown>(SE->getPointerBase(SE->getSCEV(ptr)));
-    return zeroDimRef(omega, AL, J, arrayPtr, tr);
-  }
-  // void parseBB(LoopTree &LT, llvm::BasicBlock *BB, Vector<unsigned> &omega) {
-  //   for (llvm::Instruction &J : *BB) {
-  //     if (LT.loop) assert(LT.loop->contains(&J));
-  //     if (J.mayReadFromMemory()) {
-  //       if (auto *load = llvm::dyn_cast<llvm::LoadInst>(&J))
-  //         if (addRef(LT, load, omega)) return;
-  //     } else if (J.mayWriteToMemory())
-  //       if (auto *store = llvm::dyn_cast<llvm::StoreInst>(&J))
-  //         if (addRef(LT, store, omega)) return;
-  //   }
-  // }
-  // NOLINTNEXTLINE(misc-no-recursion)
-  void visit(LoopTree &LT, Predicate::Map &map, Vector<unsigned> &omega,
-             aset<llvm::BasicBlock *> &visited, llvm::BasicBlock *BB) {
-    if ((!map.isInPath(BB)) || visited.contains(BB)) return;
-    visited.insert(BB);
-    for (llvm::BasicBlock *pred : llvm::predecessors(BB))
-      visit(LT, map, omega, visited, pred);
-    parseBB(LT, BB, omega);
-  }
-  void parseBBMap(LoopTree &LT, Predicate::Map &map, Vector<unsigned> &omega) {
-    aset<llvm::BasicBlock *> visited{allocator};
-    for (auto &pair : map) visit(LT, map, omega, visited, pair.first);
-  }
-  // we fill omega, we have loop pos only, not shifts
-  // pR: 0
-  // pL: 0
-  // pL: 0
-  //
-  // [0, 0]
-  // NOLINTNEXTLINE(misc-no-recursion)
-  void parseLoop(LoopTree &LT, Vector<unsigned> &omega) {
-#ifndef NDEBUG
-    size_t numOmegaInitial = omega.size();
-    // FIXME:
-    // two issues, currently:
-    // 1. multiple parses produce the same omega
-    // 2. we have the same BB showing up multiple times
-    // for (auto &&path : LT.paths)
-    //     for (auto PBB : path) {
-    //         assert(!paths.contains(PBB.basicBlock));
-    //         paths.insert(PBB.basicBlock);
-    //     }
-    assert(LT.subLoops.size() + 1 == LT.paths.size());
-#endif
-    omega.push_back(0);
-    // now we walk blocks
-    // auto &subLoops = L->getSubLoops();
-    for (size_t i = 0; i < LT.subLoops.size(); ++i) {
-      parseBBMap(LT, LT.paths[i], omega);
-      parseLoop(*LT.subLoops[i], omega);
-      ++omega.back();
-    }
-    parseBBMap(LT, LT.paths.back(), omega);
-    omega.pop_back();
-#ifndef NDEBUG
-    assert(omega.size() == numOmegaInitial);
-#endif
-  }
-  void parseNest() {
-    Vector<unsigned> omega;
-    for (auto forest : loopForests) {
-      omega.clear();
-      parseLoop(*forest, omega);
-    }
-  }
-
-  void peelOuterLoops(llvm::Loop *L, size_t numToPeel) {
-    peelOuterLoops(*loopMap[L], numToPeel);
-  }
-  // peelOuterLoops is recursive inwards
-  // NOLINTNEXTLINE(misc-no-recursion)
-  void peelOuterLoops(LoopTree &LT, size_t numToPeel) {
-    for (auto SL : LT) peelOuterLoops(*SL, numToPeel);
-    for (auto &MA : LT.memAccesses) MA->peelLoops(numToPeel);
-    LT.affineLoop->removeOuterMost(numToPeel, LT.loop, *SE);
   }
   // conditionOnLoop(llvm::Loop *L)
   // means to remove the loop L, and all those exterior to it.
@@ -679,23 +501,20 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
   //   }
   //   conditionOnLoop(&PT);
   // }
-  void conditionOnLoop(Loop *L) {
-    L->forEachSubLoop([this](Loop *L) { optimizeLoop(L); });
-  }
-  auto isLoopDependent(llvm::Value *v) const -> bool {
-    return !std::ranges::all_of(
-      *LI, [v](const auto &L) { return L->isLoopInvariant(v); });
-  }
+  // auto isLoopDependent(llvm::Value *v) const -> bool {
+  //   return !std::ranges::all_of(
+  //     *LI, [v](const auto &L) { return L->isLoopInvariant(v); });
+  // }
   // NOLINTNEXTLINE(misc-no-recursion)
-  static auto mayReadOrWriteMemory(llvm::Value *v) -> bool {
-    if (auto *inst = llvm::dyn_cast<llvm::Instruction>(v))
-      if (inst->mayReadOrWriteMemory()) return true;
-    return false;
-  }
-  void fillLoopBlock(LoopTree &root) { // NOLINT(misc-no-recursion)
-    for (auto mem : root.memAccesses) loopBlock.addMemory(mem);
-    for (auto sub : root.subLoops) fillLoopBlock(*sub);
-  }
+  // static auto mayReadOrWriteMemory(llvm::Value *v) -> bool {
+  //   if (auto *inst = llvm::dyn_cast<llvm::Instruction>(v))
+  //     if (inst->mayReadOrWriteMemory()) return true;
+  //   return false;
+  // }
+  // void fillLoopBlock(LoopTree &root) { // NOLINT(misc-no-recursion)
+  //   for (auto mem : root.memAccesses) loopBlock.addMemory(mem);
+  //   for (auto sub : root.subLoops) fillLoopBlock(*sub);
+  // }
   // https://llvm.org/doxygen/LoopVectorize_8cpp_source.html#l00932
   void remark(const llvm::StringRef remarkName, llvm::Loop *L,
               const llvm::StringRef remarkMessage,

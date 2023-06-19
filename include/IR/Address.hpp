@@ -17,7 +17,9 @@
 #include <llvm/Support/Casting.h>
 
 namespace poly {
+namespace poly {
 class Dependence;
+} // namespace poly
 class ScheduledNode;
 namespace CostModeling {
 class LoopTreeSchedule;
@@ -70,7 +72,7 @@ using math::PtrVector, math::MutPtrVector, math::DensePtrMatrix,
 /// `oldLoop->rotate(PhiInv)`
 // clang-format on
 class Addr : public Instruction {
-  [[no_unique_address]] Dependence *edgeIn{nullptr};
+  [[no_unique_address]] poly::Dependence *edgeIn{nullptr};
   [[no_unique_address]] union {
     ScheduledNode *node{nullptr};
     size_t maxDepth;
@@ -176,6 +178,7 @@ class Addr : public Instruction {
   }
 
 public:
+  constexpr void setLoopNest(poly::Loop *L) { loop = L; }
   // NOLINTNEXTLINE(readability-make-member-function-const)
   [[nodiscard]] constexpr auto getNode() -> ScheduledNode * {
     return nodeOrDepth.node;
@@ -220,7 +223,7 @@ public:
   }
   /// copies `o` and decrements the last element
   /// it decrements, as we iterate in reverse order
-  constexpr void setFusionOmega(MutPtrVector<unsigned> o) {
+  constexpr void setFusionOmega(MutPtrVector<int> o) {
     invariant(o.size(), getNumLoops() + 1);
     std::copy_n(o.begin(), getNumLoops(), getFusionOmega().begin());
     getFusionOmega().back() = o.back()--;

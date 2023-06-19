@@ -1,10 +1,14 @@
 #pragma once
+#include "IR/Address.hpp"
 #include "Polyhedra/DependencyPolyhedra.hpp"
 #include "Polyhedra/Loops.hpp"
 #include "Schedule.hpp"
 #include <Utilities/Allocators.hpp>
 #include <Utilities/Invariant.hpp>
 #include <cstdint>
+
+namespace poly {
+namespace poly {
 /// Dependence
 /// Represents a dependence relationship between two memory accesses.
 /// It contains simplices representing constraints that affine schedules
@@ -89,10 +93,10 @@ class Dependence {
   //
 
   [[no_unique_address]] NotNull<DepPoly> depPoly;
-  [[no_unique_address]] NotNull<Simplex> dependenceSatisfaction;
-  [[no_unique_address]] NotNull<Simplex> dependenceBounding;
-  [[no_unique_address]] NotNull<Addr> in;
-  [[no_unique_address]] NotNull<Addr> out;
+  [[no_unique_address]] NotNull<math::Simplex> dependenceSatisfaction;
+  [[no_unique_address]] NotNull<math::Simplex> dependenceBounding;
+  [[no_unique_address]] NotNull<IR::Addr> in;
+  [[no_unique_address]] NotNull<IR::Addr> out;
   [[no_unique_address]] Dependence *next{nullptr};
   // the upper bit of satLvl indicates whether the satisfaction is because of
   // conditional independence (value = 0), or whether it was because of offsets
@@ -102,9 +106,9 @@ class Dependence {
   [[no_unique_address]] bool forward;
 
   static auto timelessCheck(BumpAlloc<> &alloc, NotNull<DepPoly> dxy,
-                            NotNull<Addr> x, NotNull<Addr> y,
-                            std::array<NotNull<Simplex>, 2> pair, bool isFwd)
-    -> Dependence * {
+                            NotNull<IR::Addr> x, NotNull<IR::Addr> y,
+                            std::array<NotNull<math::Simplex>, 2> pair,
+                            bool isFwd) -> Dependence * {
     const size_t numLambda = dxy->getNumLambda();
     invariant(dxy->getTimeDim(), unsigned(0));
     if (isFwd) {
@@ -116,8 +120,8 @@ class Dependence {
     return alloc.create<Dependence>(dxy, pair, y, x, false);
   }
   static auto timelessCheck(BumpAlloc<> &alloc, NotNull<DepPoly> dxy,
-                            NotNull<Addr> x, NotNull<Addr> y,
-                            std::array<NotNull<Simplex>, 2> pair)
+                            NotNull<IR::Addr> x, NotNull<IR::Addr> y,
+                            std::array<NotNull<math::Simplex>, 2> pair)
     -> Dependence * {
     return timelessCheck(alloc, dxy, x, y, pair,
                          checkDirection(alloc, pair, x, y, dxy->getNumLambda(),
@@ -128,22 +132,23 @@ class Dependence {
   // emplaces dependencies with repeat accesses to the same memory across
   // time
   static auto timeCheck(BumpAlloc<> &alloc, NotNull<DepPoly> dxy,
-                        NotNull<Addr> x, NotNull<Addr> y,
-                        std::array<NotNull<Simplex>, 2> pair) -> Dependence * {
+                        NotNull<IR::Addr> x, NotNull<IR::Addr> y,
+                        std::array<NotNull<math::Simplex>, 2> pair)
+    -> Dependence * {
     // copy backup
-    std::array<NotNull<Simplex>, 2> farkasBackups{pair[0]->copy(alloc),
-                                                  pair[1]->copy(alloc)};
-    const size_t numInequalityConstraintsOld =
-                   dxy->getNumInequalityConstraints(),
-                 numEqualityConstraintsOld = dxy->getNumEqualityConstraints(),
-                 ineqEnd = 1 + numInequalityConstraintsOld,
-                 posEqEnd = ineqEnd + numEqualityConstraintsOld,
-                 numLambda = posEqEnd + numEqualityConstraintsOld,
-                 numScheduleCoefs = dxy->getNumScheduleCoef();
-    invariant(numLambda, size_t(dxy->getNumLambda()));
+    std::array<NotNull<math::Simplex>, 2> farkasBackups{pair[0]->copy(alloc),
+                                                        pair[1]->copy(alloc)};
+    const unsigned numInequalityConstraintsOld =
+                     dxy->getNumInequalityConstraints(),
+                   numEqualityConstraintsOld = dxy->getNumEqualityConstraints(),
+                   ineqEnd = 1 + numInequalityConstraintsOld,
+                   posEqEnd = ineqEnd + numEqualityConstraintsOld,
+                   numLambda = posEqEnd + numEqualityConstraintsOld,
+                   numScheduleCoefs = dxy->getNumScheduleCoef();
+    invariant(numLambda, dxy->getNumLambda());
     const bool isFwd = checkDirection(alloc, pair, x, y, numLambda,
                                       dxy->getA().numCol() - dxy->getTimeDim());
-    NotNull<Addr> in = x, out = y;
+    NotNull<IR::Addr> in = x, out = y;
     if (isFwd) {
       std::swap(farkasBackups[0], farkasBackups[1]);
     } else {
@@ -156,8 +161,8 @@ class Dependence {
     invariant(out->getNumLoops() + in->getNumLoops(),
               dep0->getNumPhiCoefficients());
     // pair is invalid
-    const size_t timeDim = dxy->getTimeDim(),
-                 numVar = 1 + dxy->getNumVar() - timeDim;
+    const ptrdiff_t timeDim = dxy->getTimeDim(),
+                    numVar = 1 + dxy->getNumVar() - timeDim;
     invariant(timeDim > 0);
     // 1 + because we're indexing into A and E, ignoring the constants
     // remove the time dims from the deps
@@ -169,8 +174,8 @@ class Dependence {
     // now we need to check the time direction for all times
     // anything approaching 16 time dimensions would be absolutely
     // insane
-    Vector<bool, 16> timeDirection(timeDim);
-    size_t t = 0;
+    math::Vector<bool, 16> timeDirection(timeDim);
+    ptrdiff_t t = 0;
     auto fE{farkasBackups[0]->getConstraints()(_, _(1, end))};
     auto sE{farkasBackups[1]->getConstraints()(_, _(1, end))};
     do {
@@ -180,16 +185,16 @@ class Dependence {
       // we update the constant `c` via `c -= t*step`.
       // we have the problem that.
       int64_t step = dxy->getNullStep(t);
-      size_t v = numVar + t, i = 0;
+      ptrdiff_t v = numVar + t, i = 0;
       while (true) {
-        for (size_t c = 0; c < numInequalityConstraintsOld; ++c) {
+        for (ptrdiff_t c = 0; c < numInequalityConstraintsOld; ++c) {
           int64_t Acv = dxy->getA(c, v);
           if (!Acv) continue;
           Acv *= step;
           fE(0, c + 1) -= Acv; // *1
           sE(0, c + 1) -= Acv; // *1
         }
-        for (size_t c = 0; c < numEqualityConstraintsOld; ++c) {
+        for (ptrdiff_t c = 0; c < numEqualityConstraintsOld; ++c) {
           // each of these actually represents 2 inds
           int64_t Ecv = dxy->getE(c, v);
           if (!Ecv) continue;
@@ -212,8 +217,8 @@ class Dependence {
       // correct time direction would make it return true
       // thus sign = timeDirection[t] ? 1 : -1
       int64_t step = (2 * timeDirection[t] - 1) * dxy->getNullStep(t);
-      size_t v = numVar + t;
-      for (size_t c = 0; c < numInequalityConstraintsOld; ++c) {
+      ptrdiff_t v = numVar + t;
+      for (ptrdiff_t c = 0; c < numInequalityConstraintsOld; ++c) {
         int64_t Acv = dxy->getA(c, v);
         if (!Acv) continue;
         Acv *= step;
@@ -221,7 +226,7 @@ class Dependence {
         fE(0, c + 1) -= Acv; // *1
         sE(0, c + 1) -= Acv; // *-1
       }
-      for (size_t c = 0; c < numEqualityConstraintsOld; ++c) {
+      for (ptrdiff_t c = 0; c < numEqualityConstraintsOld; ++c) {
         // each of these actually represents 2 inds
         int64_t Ecv = dxy->getE(c, v);
         if (!Ecv) continue;
@@ -248,18 +253,18 @@ public:
   [[nodiscard]] constexpr auto getNext() const -> const Dependence * {
     return next;
   }
-  [[nodiscard]] constexpr auto input() -> NotNull<Addr> { return in; }
-  [[nodiscard]] constexpr auto output() -> NotNull<Addr> { return out; }
-  [[nodiscard]] constexpr auto input() const -> NotNull<const Addr> {
+  [[nodiscard]] constexpr auto input() -> NotNull<IR::Addr> { return in; }
+  [[nodiscard]] constexpr auto output() -> NotNull<IR::Addr> { return out; }
+  [[nodiscard]] constexpr auto input() const -> NotNull<const IR::Addr> {
     return in;
   }
-  [[nodiscard]] constexpr auto output() const -> NotNull<const Addr> {
+  [[nodiscard]] constexpr auto output() const -> NotNull<const IR::Addr> {
     return out;
   }
   constexpr void setNext(Dependence *n) { next = n; }
   constexpr Dependence(NotNull<DepPoly> poly,
-                       std::array<NotNull<Simplex>, 2> depSatBound,
-                       NotNull<Addr> i, NotNull<Addr> o, bool fwd)
+                       std::array<NotNull<math::Simplex>, 2> depSatBound,
+                       NotNull<IR::Addr> i, NotNull<IR::Addr> o, bool fwd)
     : depPoly(poly), dependenceSatisfaction(depSatBound[0]),
       dependenceBounding(depSatBound[1]), in(i), out(o), forward(fwd) {}
   constexpr auto stashSatLevel() -> Dependence & {
@@ -338,12 +343,13 @@ public:
   [[nodiscard]] constexpr auto getOutIndMat() const -> PtrMatrix<int64_t> {
     return out->indexMatrix();
   }
-  [[nodiscard]] constexpr auto getInOutPair() const -> std::array<Addr *, 2> {
+  [[nodiscard]] constexpr auto getInOutPair() const
+    -> std::array<IR::Addr *, 2> {
     return {in, out};
   }
   // returns the memory access pair, placing the store first in the pair
   [[nodiscard]] constexpr auto getStoreAndOther() const
-    -> std::array<Addr *, 2> {
+    -> std::array<IR::Addr *, 2> {
     if (in->isStore()) return {in, out};
     return {out, in};
   }
@@ -395,10 +401,10 @@ public:
     return dependenceBounding->getNumCons() +
            dependenceSatisfaction->getNumCons();
   }
-  [[nodiscard]] auto getSatConstants() const -> StridedVector<int64_t> {
+  [[nodiscard]] auto getSatConstants() const -> math::StridedVector<int64_t> {
     return dependenceSatisfaction->getConstants();
   }
-  [[nodiscard]] auto getBndConstants() const -> StridedVector<int64_t> {
+  [[nodiscard]] auto getBndConstants() const -> math::StridedVector<int64_t> {
     return dependenceBounding->getConstants();
   }
   [[nodiscard]] auto getSatConstraints() const -> PtrMatrix<int64_t> {
@@ -445,7 +451,7 @@ public:
     auto l = 1 + depPoly->getNumLambda();
     return getBndConstraints()(_, _(l, l + getNumOmegaCoefficients()));
   }
-  [[nodiscard]] auto getSatW() const -> StridedVector<int64_t> {
+  [[nodiscard]] auto getSatW() const -> math::StridedVector<int64_t> {
     return getSatConstraints()(_, 1 + depPoly->getNumLambda() +
                                     getNumPhiCoefficients() +
                                     getNumOmegaCoefficients());
@@ -456,9 +462,9 @@ public:
     return getBndConstraints()(_, _(lb, end));
   }
   [[nodiscard]] auto splitSatisfaction() const
-    -> std::tuple<StridedVector<int64_t>, PtrMatrix<int64_t>,
+    -> std::tuple<math::StridedVector<int64_t>, PtrMatrix<int64_t>,
                   PtrMatrix<int64_t>, PtrMatrix<int64_t>, PtrMatrix<int64_t>,
-                  StridedVector<int64_t>> {
+                  math::StridedVector<int64_t>> {
     PtrMatrix<int64_t> phiCoefsIn = getSatPhi1Coefs(),
                        phiCoefsOut = getSatPhi0Coefs();
     if (isForward()) std::swap(phiCoefsIn, phiCoefsOut);
@@ -466,7 +472,7 @@ public:
             phiCoefsOut,       getSatOmegaCoefs(), getSatW()};
   }
   [[nodiscard]] auto splitBounding() const
-    -> std::tuple<StridedVector<int64_t>, PtrMatrix<int64_t>,
+    -> std::tuple<math::StridedVector<int64_t>, PtrMatrix<int64_t>,
                   PtrMatrix<int64_t>, PtrMatrix<int64_t>, PtrMatrix<int64_t>,
                   PtrMatrix<int64_t>> {
     PtrMatrix<int64_t> phiCoefsIn = getBndPhi1Coefs(),
@@ -479,12 +485,11 @@ public:
                                  NotNull<const AffineSchedule> schIn,
                                  NotNull<const AffineSchedule> schOut) const
     -> bool {
-    size_t numLoopsIn = in->getNumLoops();
-    size_t numLoopsOut = out->getNumLoops();
-    size_t numLoopsCommon = std::min(numLoopsIn, numLoopsOut);
-    size_t numLoopsTotal = numLoopsIn + numLoopsOut;
-    size_t numVar = numLoopsIn + numLoopsOut + 2;
-    invariant(size_t(dependenceSatisfaction->getNumVars()), numVar);
+    unsigned numLoopsIn = in->getNumLoops(), numLoopsOut = out->getNumLoops(),
+             numLoopsCommon = std::min(numLoopsIn, numLoopsOut),
+             numLoopsTotal = numLoopsIn + numLoopsOut,
+             numVar = numLoopsIn + numLoopsOut + 2;
+    invariant(dependenceSatisfaction->getNumVars(), numVar);
     auto p = alloc.scope();
     auto schv = vector(alloc, numVar, int64_t(0));
     const SquarePtrMatrix<int64_t> inPhi = schIn->getPhi();
@@ -493,10 +498,10 @@ public:
     auto outFusOmega = schOut->getFusionOmega();
     auto inOffOmega = schIn->getOffsetOmega();
     auto outOffOmega = schOut->getOffsetOmega();
-    const size_t numLambda = getNumLambda();
+    const unsigned numLambda = getNumLambda();
     // when i == numLoopsCommon, we've passed the last loop
-    for (size_t i = 0; i <= numLoopsCommon; ++i) {
-      if (int64_t o2idiff = outFusOmega[i] - inFusOmega[i])
+    for (ptrdiff_t i = 0; i <= numLoopsCommon; ++i) {
+      if (ptrdiff_t o2idiff = outFusOmega[i] - inFusOmega[i])
         return (o2idiff > 0);
       // we should not be able to reach `numLoopsCommon`
       // because at the very latest, this last schedule value
@@ -531,15 +536,14 @@ public:
                                  PtrVector<unsigned> inFusOmega,
                                  PtrVector<unsigned> outFusOmega) const
     -> bool {
-    size_t numLoopsIn = in->getNumLoops();
-    size_t numLoopsOut = out->getNumLoops();
-    size_t numLoopsCommon = std::min(numLoopsIn, numLoopsOut);
-    size_t numVar = numLoopsIn + numLoopsOut + 2;
-    invariant(dependenceSatisfaction->getNumVars() == numVar);
+    unsigned numLoopsIn = in->getNumLoops(), numLoopsOut = out->getNumLoops(),
+             numLoopsCommon = std::min(numLoopsIn, numLoopsOut),
+             numVar = numLoopsIn + numLoopsOut + 2;
+    invariant(dependenceSatisfaction->getNumVars(), numVar);
     auto p = alloc.scope();
     auto schv = vector(alloc, numVar, int64_t(0));
     // Vector<int64_t> schv(dependenceSatisfaction->getNumVars(),int64_t(0));
-    const size_t numLambda = getNumLambda();
+    const unsigned numLambda = getNumLambda();
     // when i == numLoopsCommon, we've passed the last loop
     for (size_t i = 0; i <= numLoopsCommon; ++i) {
       if (int64_t o2idiff = outFusOmega[i] - inFusOmega[i])
@@ -577,11 +581,9 @@ public:
                                  NotNull<const AffineSchedule> sx,
                                  NotNull<const AffineSchedule> sy,
                                  size_t d) const -> bool {
-    const size_t numLambda = depPoly->getNumLambda();
-    const size_t nLoopX = depPoly->getDim0();
-    const size_t nLoopY = depPoly->getDim1();
-    const size_t numLoopsTotal = nLoopX + nLoopY;
-    Vector<int64_t> sch;
+    unsigned numLambda = depPoly->getNumLambda(), nLoopX = depPoly->getDim0(),
+             nLoopY = depPoly->getDim1(), numLoopsTotal = nLoopX + nLoopY;
+    math::Vector<int64_t> sch;
     sch.resizeForOverwrite(numLoopsTotal + 2);
     sch[0] = sx->getOffsetOmega()[d];
     sch[1] = sy->getOffsetOmega()[d];
@@ -591,38 +593,38 @@ public:
     return dependenceSatisfaction->satisfiable(alloc, sch, numLambda);
   }
   [[nodiscard]] auto isSatisfied(BumpAlloc<> &alloc, size_t d) const -> bool {
-    const size_t numLambda = depPoly->getNumLambda();
-    const size_t numLoopsX = depPoly->getDim0();
-    const size_t numLoopsTotal = numLoopsX + depPoly->getDim1();
-    Vector<int64_t> sch(numLoopsTotal + 2, int64_t(0));
-    invariant(size_t(sch.size()), numLoopsTotal + 2);
+    unsigned numLambda = depPoly->getNumLambda(),
+             numLoopsX = depPoly->getDim0(),
+             numLoopsTotal = numLoopsX + depPoly->getDim1();
+    math::Vector<int64_t> sch(numLoopsTotal + 2, int64_t(0));
+    invariant(sch.size(), numLoopsTotal + 2);
     sch[2 + d] = 1;
     sch[2 + d + numLoopsX] = 1;
     return dependenceSatisfaction->satisfiable(alloc, sch, numLambda);
   }
   static auto checkDirection(BumpAlloc<> &alloc,
-                             const std::array<NotNull<Simplex>, 2> &p,
-                             NotNull<const Addr> x, NotNull<const Addr> y,
+                             const std::array<NotNull<math::Simplex>, 2> &p,
+                             NotNull<const IR::Addr> x,
+                             NotNull<const IR::Addr> y,
                              NotNull<const AffineSchedule> xSchedule,
                              NotNull<const AffineSchedule> ySchedule,
-                             size_t numLambda, Col nonTimeDim) -> bool {
+                             unsigned numLambda, Col nonTimeDim) -> bool {
     const auto &[fxy, fyx] = p;
-    const size_t numLoopsX = x->getNumLoops();
-    const size_t numLoopsY = y->getNumLoops();
+    unsigned numLoopsX = x->getNumLoops(), numLoopsY = y->getNumLoops(),
+             numLoopsTotal = numLoopsX + numLoopsY;
 #ifndef NDEBUG
-    const size_t numLoopsCommon = std::min(numLoopsX, numLoopsY);
+    unsigned numLoopsCommon = std::min(numLoopsX, numLoopsY);
 #endif
-    const size_t numLoopsTotal = numLoopsX + numLoopsY;
     SquarePtrMatrix<int64_t> xPhi = xSchedule->getPhi();
     SquarePtrMatrix<int64_t> yPhi = ySchedule->getPhi();
     PtrVector<int64_t> xOffOmega = xSchedule->getOffsetOmega();
     PtrVector<int64_t> yOffOmega = ySchedule->getOffsetOmega();
     PtrVector<int64_t> xFusOmega = xSchedule->getFusionOmega();
     PtrVector<int64_t> yFusOmega = ySchedule->getFusionOmega();
-    Vector<int64_t> sch;
+    math::Vector<int64_t> sch;
     sch.resizeForOverwrite(numLoopsTotal + 2);
     // i iterates from outer-most to inner most common loop
-    for (size_t i = 0; /*i <= numLoopsCommon*/; ++i) {
+    for (ptrdiff_t i = 0; /*i <= numLoopsCommon*/; ++i) {
       if (yFusOmega[i] != xFusOmega[i]) return yFusOmega[i] > xFusOmega[i];
       // we should not be able to reach `numLoopsCommon`
       // because at the very latest, this last schedule value
@@ -641,12 +643,13 @@ public:
       sch[_(2, 2 + numLoopsX)] << xPhi(last - i, _);
       sch[_(2 + numLoopsX, 2 + numLoopsTotal)] << yPhi(last - i, _);
       if (fxy->unSatisfiableZeroRem(alloc, sch, numLambda,
-                                    size_t(nonTimeDim))) {
+                                    unsigned(nonTimeDim))) {
         assert(!fyx->unSatisfiableZeroRem(alloc, sch, numLambda,
-                                          size_t(nonTimeDim)));
+                                          unsigned(nonTimeDim)));
         return false;
       }
-      if (fyx->unSatisfiableZeroRem(alloc, sch, numLambda, size_t(nonTimeDim)))
+      if (fyx->unSatisfiableZeroRem(alloc, sch, numLambda,
+                                    unsigned(nonTimeDim)))
         return true;
     }
     // assert(false);
@@ -654,9 +657,10 @@ public:
   }
   // returns `true` if forward, x->y
   static auto checkDirection(BumpAlloc<> &alloc,
-                             const std::array<NotNull<Simplex>, 2> &p,
-                             NotNull<const Addr> x, NotNull<const Addr> y,
-                             size_t numLambda, Col nonTimeDim) -> bool {
+                             const std::array<NotNull<math::Simplex>, 2> &p,
+                             NotNull<const IR::Addr> x,
+                             NotNull<const IR::Addr> y, unsigned numLambda,
+                             Col nonTimeDim) -> bool {
     const auto &[fxy, fyx] = p;
     unsigned numLoopsX = x->getNumLoops(), nTD = unsigned(nonTimeDim);
 #ifndef NDEBUG
@@ -666,7 +670,7 @@ public:
     PtrVector<int64_t> yFusOmega = y->getFusionOmega();
     auto chkp = alloc.scope();
     // i iterates from outer-most to inner most common loop
-    for (size_t i = 0; /*i <= numLoopsCommon*/; ++i) {
+    for (ptrdiff_t i = 0; /*i <= numLoopsCommon*/; ++i) {
       if (yFusOmega[i] != xFusOmega[i]) return yFusOmega[i] > xFusOmega[i];
       // we should not be able to reach `numLoopsCommon`
       // because at the very latest, this last schedule value
@@ -680,7 +684,7 @@ public:
       //   present at that level
       // }
       assert(i < numLoopsCommon);
-      std::array<size_t, 2> inds{2 + i, 2 + i + numLoopsX};
+      std::array<ptrdiff_t, 2> inds{2 + i, 2 + i + numLoopsX};
       if (fxy->unSatisfiableZeroRem(alloc, numLambda, inds, nTD)) {
         assert(!fyx->unSatisfiableZeroRem(alloc, numLambda, inds, nTD));
         return false;
@@ -691,8 +695,8 @@ public:
     return false;
   }
 
-  static auto check(BumpAlloc<> &alloc, NotNull<Addr> x, NotNull<Addr> y)
-    -> Dependence * {
+  static auto check(BumpAlloc<> &alloc, NotNull<IR::Addr> x,
+                    NotNull<IR::Addr> y) -> Dependence * {
     // TODO: implement gcd test
     // if (x.gcdKnownIndependent(y)) return {};
     DepPoly *dxy{DepPoly::dependence(alloc, x, y)};
@@ -703,28 +707,28 @@ public:
     // note that we set boundAbove=true, so we reverse the
     // dependence direction for the dependency we week, we'll
     // discard the program variables x then y
-    std::array<NotNull<Simplex>, 2> pair(dxy->farkasPair(alloc));
+    std::array<NotNull<math::Simplex>, 2> pair(dxy->farkasPair(alloc));
     if (dxy->getTimeDim()) return timeCheck(alloc, dxy, x, y, pair);
     return timelessCheck(alloc, dxy, x, y, pair);
   }
   // reload store `x`
-  static auto reload(BumpAlloc<> &alloc, NotNull<Addr> store)
-    -> std::pair<NotNull<Addr>, Dependence *> {
+  static auto reload(BumpAlloc<> &alloc, NotNull<IR::Addr> store)
+    -> std::pair<NotNull<IR::Addr>, Dependence *> {
     NotNull<DepPoly> dxy{DepPoly::self(alloc, store)};
-    std::array<NotNull<Simplex>, 2> pair(dxy->farkasPair(alloc));
-    NotNull<Addr> load = store->reload(alloc);
+    std::array<NotNull<math::Simplex>, 2> pair(dxy->farkasPair(alloc));
+    NotNull<IR::Addr> load = store->reload(alloc);
     // no need for a timeCheck, because if there is a time-dim, we have a
     // store -> store dependence.
     // when we add new load -> store edges for each store->store,
     // that will cover the time-dependence
     return {load, timelessCheck(alloc, dxy, store, load, pair, true)};
   }
-  constexpr auto replaceInput(NotNull<Addr> newIn) -> Dependence {
+  constexpr auto replaceInput(NotNull<IR::Addr> newIn) -> Dependence {
     Dependence edge = *this;
     edge.in = newIn;
     return edge;
   }
-  constexpr auto replaceOutput(NotNull<Addr> newOut) -> Dependence {
+  constexpr auto replaceOutput(NotNull<IR::Addr> newOut) -> Dependence {
     Dependence edge = *this;
     edge.out = newOut;
     return edge;
@@ -746,10 +750,14 @@ public:
   }
 };
 
-constexpr void Addr::forEachInput(const auto &f) {
-  Dependence *d = edgeIn;
+} // namespace poly
+namespace IR {
+constexpr void IR::Addr::forEachInput(const auto &f) {
+  poly::Dependence *d = edgeIn;
   while (d) {
     f(d->input());
     d = d->getNext();
   }
 }
+} // namespace IR
+} // namespace poly

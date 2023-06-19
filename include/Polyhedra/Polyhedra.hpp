@@ -21,8 +21,7 @@ using math::DensePtrMatrix, math::MutDensePtrMatrix, math::EmptyMatrix,
   math::Row, math::Col, math::vector, math::matrix, math::_, math::end,
   math::last;
 using utils::BumpAlloc;
-inline auto printPositive(llvm::raw_ostream &os, ptrdiff_t stop)
-  -> llvm::raw_ostream & {
+inline auto printPositive(std::ostream &os, ptrdiff_t stop) -> std::ostream & {
   for (ptrdiff_t i = 0; i < stop; ++i) os << "v_" << i << " >= 0\n";
   return os;
 }

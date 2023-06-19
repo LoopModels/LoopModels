@@ -153,7 +153,7 @@ struct Intersection {
     uint64_t mask = emptyMask(bitUnion);
     if (std::popcount(mask) == 1) { // a single b & !b case
       uint64_t remUnionMask =
-        ~(mask | (mask << 1)); // 0s `b`, meaning b can be either.
+        ~(mask | (mask << 1));      // 0s `b`, meaning b can be either.
       uint64_t w = remUnionMask & x;
       uint64_t z = remUnionMask & y;
       if (w == z) return {Intersection{w}};
@@ -220,7 +220,6 @@ struct Set {
     return *this;
   };
   auto operator=(const Set &other) -> Set & = default;
-  // TODO: constexpr these when llvm::SmallVector supports it
   [[nodiscard]] auto operator[](ptrdiff_t index) -> Intersection & {
     if (allocated) return (*intersectUnion.intersects)[index];
     invariant(index == 0);
@@ -240,6 +239,10 @@ struct Set {
   [[nodiscard]] constexpr auto empty() const -> bool {
     return allocated ? intersectUnion.intersects->empty()
                      : intersectUnion.intersect.empty();
+  }
+  [[nodiscard]] constexpr auto transform_reduce(auto init, const auto &f) {
+    if (allocated) return intersectUnion.intersects->transform_reduce(init, f);
+    return f(init, intersectUnion.intersect);
   }
   // auto getIntersects() -> containers::UList<Intersection> {
   //   if (count > 0) return *intersectUnion.intersects;

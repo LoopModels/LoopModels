@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Math/Math.hpp"
+#include "Math/Array.hpp"
 #include "Utilities/Allocators.hpp"
 #include <algorithm>
 #include <cstddef>
@@ -12,6 +12,9 @@
 #include <llvm/Support/raw_ostream.h>
 #include <utility>
 
+namespace poly::poly {
+using math::_, math::PtrVector, math::MutPtrVector, math::SquarePtrMatrix,
+  math::MutSquarePtrMatrix;
 /// We represent a schedule as
 /// Phi_s'*i + omega_s <_{lex} Phi_t'*s + Omega_t
 /// means that schedule `s` executes before schedule `t`.
@@ -43,11 +46,11 @@ struct AffineSchedule {
 
   constexpr AffineSchedule() : mem(nullptr) {}
   constexpr AffineSchedule(int64_t *m) : mem(m) {}
-  constexpr AffineSchedule(BumpAlloc<> &alloc, unsigned nL)
+  constexpr AffineSchedule(utils::BumpAlloc<> &alloc, unsigned nL)
     : mem(alloc.allocate<int64_t>(requiredScheduleStorage(nL))) {
     mem[0] = nL;
   }
-  constexpr auto copy(BumpAlloc<> &alloc) const -> AffineSchedule {
+  constexpr auto copy(utils::BumpAlloc<> &alloc) const -> AffineSchedule {
     size_t reqMem = requiredScheduleStorage(getNumLoops());
     AffineSchedule res{alloc.allocate<int64_t>(reqMem)};
     std::copy_n(mem, reqMem, res.mem);
@@ -70,14 +73,14 @@ struct AffineSchedule {
   }
   // NOLINTNEXTLINE(readability-make-member-function-const)
   [[nodiscard]] constexpr auto getPhi() -> MutSquarePtrMatrix<int64_t> {
-    return {data(), SquareDims{unsigned(getNumLoops())}};
+    return {data(), math::SquareDims{unsigned(getNumLoops())}};
   }
   [[nodiscard]] constexpr auto getPhi() const -> SquarePtrMatrix<int64_t> {
-    return {data(), SquareDims{getNumLoops()}}; //
+    return {data(), math::SquareDims{getNumLoops()}}; //
   }
   /// getSchedule, loops are always indexed from outer to inner
   [[nodiscard]] constexpr auto getSchedule(size_t d) const
-    -> PtrVector<int64_t> {
+    -> math::PtrVector<int64_t> {
     return getPhi()(d, _);
   }
   [[nodiscard]] constexpr auto getSchedule(size_t d) -> MutPtrVector<int64_t> {
@@ -115,3 +118,4 @@ struct AffineSchedule {
 private:
   int64_t *mem;
 };
+} // namespace poly::poly
