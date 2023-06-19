@@ -149,8 +149,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
   /// building the relevant part of the instruction graph.
   [[nodiscard]] auto parseBlocks(llvm::BasicBlock *H, llvm::BasicBlock *E,
                                  llvm::Loop *L, MutPtrVector<int> omega,
-                                 NotNull<poly::Loop> AL, IR::TreeResult tr)
-    -> IR::TreeResult {
+                                 IR::TreeResult tr) -> IR::TreeResult {
     // TODO: need to be able to connect instructions as we move out
     auto predMapAbridged =
       IR::Predicate::Map::descend(shortAllocator(), instructions, H, E, L);
@@ -175,7 +174,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
         tr = trret;
         if (tr.reject(depth)) return tr;
         IR::Addr *A = llvm::cast<IR::Addr>(A);
-        A->setLoopNest(AL);
+        // A->setLoopNest(AL);
         // if we didn't reject, it must have been an `Addr`
         A->setFusionOmega(omega);
         instructions.addPredicate(A, P, &*predMapAbridged);
@@ -191,15 +190,17 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
                     math::Vector<int, 8> &omega, poly::NoWrapRewriter &nwr)
     -> IR::TreeResult {
 
-    const auto *BT = getBackedgeTakenCount(*SE, L);
-    if (llvm::isa<llvm::SCEVCouldNotCompute>(BT))
-      return {nullptr, omega.size()};
+    const auto *BT = poly::getBackedgeTakenCount(*SE, L);
+    if (llvm::isa<llvm::SCEVCouldNotCompute>(BT)) return {};
     BumpAlloc<> &alloc{shortAllocator()};
     auto p = alloc.checkpoint();
     NotNull<poly::Loop> AL =
       poly::Loop::construct(alloc, L, nwr.visit(BT), *SE);
+    omega.push_back(0); // we start with 0 at the end, walking backwards
     IR::TreeResult tr = parseExitBlocks(L);
-    tr = parseBlocks(H, E, L, omega, AL, tr);
+    tr = parseBlocks(H, E, L, omega, tr);
+    tr.setLoopNest(AL);
+    omega.pop_back();
     if (tr.reject(omega.size() - 1)) alloc.reset();
     return tr;
   }
@@ -277,30 +278,45 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
   /// 4. `Vector<int,8> &omega`: the current position within the loopnest
   auto runOnLoop(llvm::Loop *L, llvm::ArrayRef<llvm::Loop *> subLoops,
                  llvm::BasicBlock *H, llvm::BasicBlock *E,
-                 Vector<int, 8> &omega, NoWrapRewriter &nwr)
-    -> IR::Cache::TreeResult {
-    size_t numSubLoops = subLoops.size();
-    if (!numSubLoops) return initLoopTree(L, H, E, omega, nwr);
-    Loop *chain = nullptr;
+                 math::Vector<int, 8> &omega, poly::NoWrapRewriter &nwr)
+    -> IR::TreeResult {
+    unsigned numSubLoops = subLoops.size();
+    // This is a special case, as it is when we build poly::Loop
+    if (!numSubLoops) return initLoopTree(H, E, L, omega, nwr);
+    unsigned depth = omega.size();
     omega.push_back(0); // we start with 0 at the end, walking backwards
-    IR::Cache::TreeResult ret;
+    bool failed = false;
+    IR::TreeResult tr = parseExitBlocks(L);
+    poly::Loop *AL = nullptr;
     for (size_t i = numSubLoops; i--;) {
       llvm::Loop *subLoop = subLoops[i];
-      IR::Cache::TreeResult tr =
+      // we need to parse backwards, so we first evaluate
+      // TODO: support having multiple exit blocks?
+      IR::TreeResult trec =
         runOnLoop(subLoop, subLoop->getSubLoops(), subLoop->getHeader(),
                   subLoop->getExitingBlock(), omega, nwr);
-      if (tr.accept(omega.size() - 1)) {
-        llvm::BasicBlock *subLoopPreheader = subLoop->getLoopPreheader();
-        // now, we need to see if we can can chart a path from H to
-        // subLoopPreheader we should build predicated IR in doing so.
 
+      if (trec.accept(depth)) {
+        // recursion succeeded; see if we can connect the path
+        llvm::BasicBlock *subLoopExit = subLoop->getExitBlock();
+        // for fusion, we need to build a path from subLoopExit to E
+        IR::TreeResult trblock = parseBlocks(subLoopExit, E, L, omega, tr);
+        if (trblock.accept(depth)) {
+          tr = trblock;
+          tr *= trec;
+          E = subLoop->getLoopPreheader();
+        } else {
+          failed = true;
+          // we cannot connect trec to E
+        }
       } else {
         // we reject
+        failed = true;
       }
       --omega.back();
     }
     omega.pop_back();
-    return nullptr;
+    return tr;
   }
 
   /// pushLoopTree

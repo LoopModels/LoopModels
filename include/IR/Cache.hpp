@@ -40,6 +40,9 @@ using dict::map;
 /// accesses. Either because an affine representation is not possible, or
 /// because our analysis failed and needs improvement.
 ///
+/// We use setAuxFwd for setting the last load/stow/incomplete
+/// only the very first is guaranteed to be correct, as we
+/// do not update the old when concatenating
 struct TreeResult {
   Addr *load{nullptr};
   Addr *stow{nullptr};
@@ -53,12 +56,42 @@ struct TreeResult {
     return !reject(depth);
   }
   constexpr void addIncomplete(Compute *I) {
-    I->setNext(incomplete);
-    incomplete = I;
+    Node *last = incomplete ? incomplete->getAuxFwd() : I;
+    incomplete = static_cast<Compute *>(I->setNext(incomplete));
+    I->setAuxFwd(last);
   }
   constexpr void addAddr(Addr *A) {
-    if (A->isLoad()) load = static_cast<Addr *>(A->setNext(load));
-    else stow = static_cast<Addr *>(A->setNext(stow));
+    if (A->isLoad()) {
+      Node *last = load ? load->getAuxFwd() : A;
+      load = static_cast<Addr *>(A->setNext(load));
+      load->setAuxFwd(last);
+    } else {
+      Node *last = stow ? stow->getAuxFwd() : A;
+      stow = static_cast<Addr *>(A->setNext(stow));
+      stow->setAuxFwd(last);
+    }
+  }
+  // NOTE: this sets the loop nest of all members,
+  void setLoopNest(NotNull<poly::Loop> L) const {
+    for (Addr *A = load; A; A = static_cast<Addr *>(A->getNext()))
+      A->setLoopNest(L);
+    for (Addr *A = stow; A; A = static_cast<Addr *>(A->getNext()))
+      A->setLoopNest(L);
+  }
+  static constexpr auto concateNodes(Node *A, Node *B) -> Node * {
+    if (!A) return B;
+    if (!B) return A;
+    A->getAuxFwd()->setNext(B);
+    A->setAuxFwd(B->getAuxFwd());
+    return A;
+  }
+  constexpr auto operator*=(TreeResult tr) -> TreeResult & {
+    load = static_cast<Addr *>(concateNodes(load, tr.load));
+    stow = static_cast<Addr *>(concateNodes(stow, tr.stow));
+    incomplete =
+      static_cast<Compute *>(concateNodes(incomplete, tr.incomplete));
+    rejectDepth = std::max(rejectDepth, tr.rejectDepth);
+    return *this;
   }
 };
 
