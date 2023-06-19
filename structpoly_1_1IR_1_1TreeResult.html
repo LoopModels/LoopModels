@@ -67,6 +67,7 @@ $(function() {
 <div class="header">
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
+<a href="#pub-static-methods">Static Public Member Functions</a> &#124;
 <a href="#pub-attribs">Public Attributes</a> &#124;
 <a href="structpoly_1_1IR_1_1TreeResult-members.html">List of all members</a>  </div>
   <div class="headertitle">
@@ -90,6 +91,18 @@ constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>addIncomple
 <tr class="memitem:ad5681e8d18f018f19e83b4921e0823fb"><td class="memItemLeft" align="right" valign="top"><a id="ad5681e8d18f018f19e83b4921e0823fb"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>addAddr</b> (<a class="el" href="classpoly_1_1IR_1_1Addr.html">Addr</a> *A)</td></tr>
 <tr class="separator:ad5681e8d18f018f19e83b4921e0823fb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a19ba456ac6e45deaf659f6b51bd99b09"><td class="memItemLeft" align="right" valign="top"><a id="a19ba456ac6e45deaf659f6b51bd99b09"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>setLoopNest</b> (NotNull&lt; <a class="el" href="classpoly_1_1poly_1_1Loop.html">poly::Loop</a> &gt; L) const</td></tr>
+<tr class="separator:a19ba456ac6e45deaf659f6b51bd99b09"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2736f5f353c38bc6c1dcb629cd51d182"><td class="memItemLeft" align="right" valign="top"><a id="a2736f5f353c38bc6c1dcb629cd51d182"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator*=</b> (<a class="el" href="structpoly_1_1IR_1_1TreeResult.html">TreeResult</a> tr) -&gt; <a class="el" href="structpoly_1_1IR_1_1TreeResult.html">TreeResult</a> &amp;</td></tr>
+<tr class="separator:a2736f5f353c38bc6c1dcb629cd51d182"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
+Static Public Member Functions</h2></td></tr>
+<tr class="memitem:a3f50ca96d8e1fc4687e8c950e24e29f7"><td class="memItemLeft" align="right" valign="top"><a id="a3f50ca96d8e1fc4687e8c950e24e29f7"></a>
+static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>concateNodes</b> (<a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a> *A, <a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a> *B) -&gt; <a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a> *</td></tr>
+<tr class="separator:a3f50ca96d8e1fc4687e8c950e24e29f7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
@@ -113,8 +126,9 @@ size_t&#160;</td><td class="memItemRight" valign="bottom"><b>rejectDepth</b> {0}
 <li><code>Addr* load</code>: a linked list giving the loads of the loop tree. These contain ordering information, which is enough for the linear program to deduce the orders of memory accesses, and perform an analysis. Note that adding loads and stores always pushes to the front. Thus, old <code><a class="el" href="structpoly_1_1IR_1_1TreeResult.html">TreeResult</a></code>s are not invalidated; they just start at the middle of the grown list.</li>
 <li><code>Addr* stow</code>: same as load, but for stores.</li>
 <li>'Instruction* incomplete': a linked list giving the nodes that we stopped exploring due to not being inside the loop nest, and thus may need to have their parents filled out.</li>
-<li><code>size_t rejectDepth</code> is how many outer loops were rejected, due to to failure to produce an affine representation of the loop or memory accesses. Either because an affine representation is not possible, or because our analysis failed and needs improvement. </li>
+<li><code>size_t rejectDepth</code> is how many outer loops were rejected, due to to failure to produce an affine representation of the loop or memory accesses. Either because an affine representation is not possible, or because our analysis failed and needs improvement.</li>
 </ul>
+<p>We use setAuxFwd for setting the last load/stow/incomplete only the very first is guaranteed to be correct, as we do not update the old when concatenating </p>
 </div><hr/>The documentation for this struct was generated from the following file:<ul>
 <li>include/IR/<a class="el" href="Cache_8hpp_source.html">Cache.hpp</a></li>
 </ul>
