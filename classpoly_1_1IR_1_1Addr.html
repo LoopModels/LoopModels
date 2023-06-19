@@ -89,6 +89,9 @@ Inheritance diagram for poly::IR::Addr:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
+<tr class="memitem:a7212957e6766bc2fb41470bf006264ed"><td class="memItemLeft" align="right" valign="top"><a id="a7212957e6766bc2fb41470bf006264ed"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>setLoopNest</b> (<a class="el" href="classpoly_1_1poly_1_1Loop.html">poly::Loop</a> *L)</td></tr>
+<tr class="separator:a7212957e6766bc2fb41470bf006264ed"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a707bd29a4e74560eb51ca1cc7d3f235a"><td class="memItemLeft" align="right" valign="top"><a id="a707bd29a4e74560eb51ca1cc7d3f235a"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNode</b> () -&gt; <a class="el" href="classScheduledNode.html">ScheduledNode</a> *</td></tr>
 <tr class="separator:a707bd29a4e74560eb51ca1cc7d3f235a"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -98,11 +101,11 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNode</b>
 <tr class="memitem:a5f1267f271f0b8ec3dfd1cfcd8b5d34c"><td class="memItemLeft" align="right" valign="top"><a id="a5f1267f271f0b8ec3dfd1cfcd8b5d34c"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>setNode</b> (<a class="el" href="classScheduledNode.html">ScheduledNode</a> *n)</td></tr>
 <tr class="separator:a5f1267f271f0b8ec3dfd1cfcd8b5d34c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae5cad667ca719efd0fa47f4b162b9d80"><td class="memItemLeft" align="right" valign="top"><a id="ae5cad667ca719efd0fa47f4b162b9d80"></a>
+<tr class="memitem:a2c1d5a86bff9e47ba4fb4781d0be827e"><td class="memItemLeft" align="right" valign="top"><a id="a2c1d5a86bff9e47ba4fb4781d0be827e"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>forEachInput</b> (const auto &amp;f)</td></tr>
-<tr class="separator:ae5cad667ca719efd0fa47f4b162b9d80"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6cf9f8cc99fd231f920a7dd96fbe9e5f"><td class="memItemLeft" align="right" valign="top">constexpr void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1IR_1_1Addr.html#a6cf9f8cc99fd231f920a7dd96fbe9e5f">setFusionOmega</a> (MutPtrVector&lt; unsigned &gt; o)</td></tr>
-<tr class="separator:a6cf9f8cc99fd231f920a7dd96fbe9e5f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:a2c1d5a86bff9e47ba4fb4781d0be827e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a26d3b32498e5ea5373a423a9bb463477"><td class="memItemLeft" align="right" valign="top">constexpr void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1IR_1_1Addr.html#a26d3b32498e5ea5373a423a9bb463477">setFusionOmega</a> (MutPtrVector&lt; int &gt; o)</td></tr>
+<tr class="separator:a26d3b32498e5ea5373a423a9bb463477"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9c0a8f44593535911e10651a60320a7f"><td class="memItemLeft" align="right" valign="top"><a id="a9c0a8f44593535911e10651a60320a7f"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>reload</b> (BumpAlloc&lt;&gt; &amp;alloc) -&gt; NotNull&lt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">Addr</a> &gt;</td></tr>
 <tr class="separator:a9c0a8f44593535911e10651a60320a7f"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -460,8 +463,8 @@ unsigned&#160;</td><td class="memItemRight" valign="bottom"><b>depth</b> {0}</td
 </p>
 <p> Therefore, to update the memory accesses from the old induction variables $i$ to the new variables $j$, we must simply compute the updated <img class="formulaInl" alt="$\textbf{c}_*$" src="form_3.png"/> and <img class="formulaInl" alt="$\textbf{M}'_*$" src="form_4.png"/>. We can also test for the case where <img class="formulaInl" alt="$\boldsymbol{\Phi} = \textbf{E}$" src="form_5.png"/>, or equivalently that $\textbf{E}\boldsymbol{\Phi} = \boldsymbol{\Phi} = \textbf{I}$. Note that to get the new <a class="el" href="classpoly_1_1poly_1_1Loop.html">poly::Loop</a>, we call <code>oldLoop-&gt;rotate(PhiInv)</code> </p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
-<a id="a6cf9f8cc99fd231f920a7dd96fbe9e5f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a6cf9f8cc99fd231f920a7dd96fbe9e5f">&#9670;&nbsp;</a></span>setFusionOmega()</h2>
+<a id="a26d3b32498e5ea5373a423a9bb463477"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a26d3b32498e5ea5373a423a9bb463477">&#9670;&nbsp;</a></span>setFusionOmega()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -472,7 +475,7 @@ unsigned&#160;</td><td class="memItemRight" valign="bottom"><b>depth</b> {0}</td
         <tr>
           <td class="memname">constexpr void poly::IR::Addr::setFusionOmega </td>
           <td>(</td>
-          <td class="paramtype">MutPtrVector&lt; unsigned &gt;&#160;</td>
+          <td class="paramtype">MutPtrVector&lt; int &gt;&#160;</td>
           <td class="paramname"><em>o</em></td><td>)</td>
           <td></td>
         </tr>

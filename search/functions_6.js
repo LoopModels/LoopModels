@@ -8,8 +8,8 @@ var searchData=
   ['instantiateomnisimplex_259',['instantiateOmniSimplex',['../classLinearProgramLoopBlock.html#a80af2396d1275da193ff58103a7b7ef5',1,'LinearProgramLoopBlock']]],
   ['instruction_260',['Instruction',['../classpoly_1_1IR_1_1Instruction.html#a03ac07d26dc92b783043755108fac3e4',1,'poly::IR::Instruction']]],
   ['intersectionisempty_261',['intersectionIsEmpty',['../structpoly_1_1IR_1_1Predicate_1_1Set.html#a1895952ec0bcc73daba680faef2d1610',1,'poly::IR::Predicate::Set']]],
-  ['iscondindep_262',['isCondIndep',['../classDependence.html#a9b770acc8ce812529d0d853f6ba6b39e',1,'Dependence']]],
-  ['isforward_263',['isForward',['../classDependence.html#a8f03cfecfe1734c6c395bf3184269536',1,'Dependence']]],
+  ['iscondindep_262',['isCondIndep',['../classpoly_1_1poly_1_1Dependence.html#a3e863ed72e68c568e3b0426c6f7f76e1',1,'poly::poly::Dependence']]],
+  ['isforward_263',['isForward',['../classpoly_1_1poly_1_1Dependence.html#af0d8b4e19c0fd884c1b46874a5cffd65',1,'poly::poly::Dependence']]],
   ['ismerged_264',['isMerged',['../structpoly_1_1IR_1_1MergingCost.html#a0f5c22824734316304ca40f3a5e613f6',1,'poly::IR::MergingCost::isMerged(Instruction *key) const -&gt; bool'],['../structpoly_1_1IR_1_1MergingCost.html#a1422508a6cccaee192ddbe9f6da038a9',1,'poly::IR::MergingCost::isMerged(Instruction *L, Instruction *J) const -&gt; bool']]],
   ['isstore_265',['isStore',['../classpoly_1_1IR_1_1Value.html#a6b2b299b85ea7f73459b85597df1b2d3',1,'poly::IR::Value']]]
 ];

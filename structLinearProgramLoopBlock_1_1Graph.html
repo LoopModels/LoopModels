@@ -119,13 +119,13 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>missingNode
 <tr class="memitem:a3b2e4eee1054ea1419fdcdfa6efb1865"><td class="memItemLeft" align="right" valign="top"><a id="a3b2e4eee1054ea1419fdcdfa6efb1865"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>missingNode</b> (size_t i, size_t j) const -&gt; bool</td></tr>
 <tr class="separator:a3b2e4eee1054ea1419fdcdfa6efb1865"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad3bba31dae5c18d4852f30b91d28cf10"><td class="memItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structLinearProgramLoopBlock_1_1Graph.html#ad3bba31dae5c18d4852f30b91d28cf10">missingNode</a> (const <a class="el" href="classDependence.html">Dependence</a> &amp;e) const -&gt; bool</td></tr>
+<tr class="memitem:ad3bba31dae5c18d4852f30b91d28cf10"><td class="memItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structLinearProgramLoopBlock_1_1Graph.html#ad3bba31dae5c18d4852f30b91d28cf10">missingNode</a> (const Dependence &amp;e) const -&gt; bool</td></tr>
 <tr class="separator:ad3bba31dae5c18d4852f30b91d28cf10"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a07e9fcfe2480f12a95f0fd7ee0b8e292"><td class="memItemLeft" align="right" valign="top"><a id="a07e9fcfe2480f12a95f0fd7ee0b8e292"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>isInactive</b> (const <a class="el" href="classDependence.html">Dependence</a> &amp;edge, size_t d) const -&gt; bool</td></tr>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>isInactive</b> (const Dependence &amp;edge, size_t d) const -&gt; bool</td></tr>
 <tr class="separator:a07e9fcfe2480f12a95f0fd7ee0b8e292"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2815b9cdb6cdb5846ea7de4027bedc0e"><td class="memItemLeft" align="right" valign="top"><a id="a2815b9cdb6cdb5846ea7de4027bedc0e"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>isInactive</b> (const <a class="el" href="classDependence.html">Dependence</a> &amp;edge) const -&gt; bool</td></tr>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>isInactive</b> (const Dependence &amp;edge) const -&gt; bool</td></tr>
 <tr class="separator:a2815b9cdb6cdb5846ea7de4027bedc0e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a78487fc7322345fab507ef14984e12c4"><td class="memItemLeft" align="right" valign="top"><a id="a78487fc7322345fab507ef14984e12c4"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>isInactive</b> (size_t e, size_t d) const -&gt; bool</td></tr>
@@ -200,7 +200,7 @@ MutPtrVector&lt; <a class="el" href="structMemoryAccess.html">MemoryAccess</a> *
 MutPtrVector&lt; <a class="el" href="classScheduledNode.html">ScheduledNode</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>nodes</b></td></tr>
 <tr class="separator:af764a0c908696c379e2c36f5e34a0602"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a07e5b4a8efd8ff0de203b7a3a343e595"><td class="memItemLeft" align="right" valign="top"><a id="a07e5b4a8efd8ff0de203b7a3a343e595"></a>
-PtrVector&lt; <a class="el" href="classDependence.html">Dependence</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>edges</b></td></tr>
+PtrVector&lt; Dependence &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>edges</b></td></tr>
 <tr class="separator:a07e5b4a8efd8ff0de203b7a3a343e595"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Member Function Documentation</h2>
@@ -216,7 +216,7 @@ PtrVector&lt; <a class="el" href="classDependence.html">Dependence</a> &gt;&#160
         <tr>
           <td class="memname">constexpr auto LinearProgramLoopBlock::Graph::missingNode </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="classDependence.html">Dependence</a> &amp;&#160;</td>
+          <td class="paramtype">const Dependence &amp;&#160;</td>
           <td class="paramname"><em>e</em></td><td>)</td>
           <td> const -&gt; bool </td>
         </tr>

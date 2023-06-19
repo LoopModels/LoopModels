@@ -122,7 +122,7 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNode</b> (size_t i
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNodes</b> () -&gt; MutPtrVector&lt; <a class="el" href="classScheduledNode.html">ScheduledNode</a> &gt;</td></tr>
 <tr class="separator:a26398ac98e014e0ef39e25c0b8da3d88"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9e9700e99d07e2a345bc3b007c5b61ad"><td class="memItemLeft" align="right" valign="top"><a id="a9e9700e99d07e2a345bc3b007c5b61ad"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>getEdges</b> () -&gt; MutPtrVector&lt; <a class="el" href="classDependence.html">Dependence</a> &gt;</td></tr>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getEdges</b> () -&gt; MutPtrVector&lt; Dependence &gt;</td></tr>
 <tr class="separator:a9e9700e99d07e2a345bc3b007c5b61ad"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa79288a1b82169777a183f85237f8599"><td class="memItemLeft" align="right" valign="top"><a id="aa79288a1b82169777a183f85237f8599"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>numNodes</b> () const -&gt; size_t</td></tr>
@@ -218,7 +218,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>setSchedulesIndepende
 void&#160;</td><td class="memItemRight" valign="bottom"><b>resetPhiOffsets</b> ()</td></tr>
 <tr class="separator:a71d1cc12b31f844d6e43d3940949bf83"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0c17c37c04e16c21cd106c9c1ce62789"><td class="memItemLeft" align="right" valign="top"><a id="a0c17c37c04e16c21cd106c9c1ce62789"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>isSatisfied</b> (<a class="el" href="classDependence.html">Dependence</a> &amp;e, size_t d) -&gt; bool</td></tr>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>isSatisfied</b> (Dependence &amp;e, size_t d) -&gt; bool</td></tr>
 <tr class="separator:a0c17c37c04e16c21cd106c9c1ce62789"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6f5bd197b87aa4e24069a61d120276c4"><td class="memItemLeft" align="right" valign="top"><a id="a6f5bd197b87aa4e24069a61d120276c4"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>canFuse</b> (<a class="el" href="structLinearProgramLoopBlock_1_1Graph.html">Graph</a> &amp;g0, <a class="el" href="structLinearProgramLoopBlock_1_1Graph.html">Graph</a> &amp;g1, size_t d) -&gt; bool</td></tr>
@@ -251,10 +251,10 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>summarizeMemoryAccess
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
 <tr class="memitem:a07783ad0d4f003076db2913e8d2e3aad"><td class="memItemLeft" align="right" valign="top"><a id="a07783ad0d4f003076db2913e8d2e3aad"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>connects</b> (const <a class="el" href="classDependence.html">Dependence</a> &amp;e, <a class="el" href="structLinearProgramLoopBlock_1_1Graph.html">Graph</a> &amp;g0, <a class="el" href="structLinearProgramLoopBlock_1_1Graph.html">Graph</a> &amp;g1) -&gt; bool</td></tr>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>connects</b> (const Dependence &amp;e, <a class="el" href="structLinearProgramLoopBlock_1_1Graph.html">Graph</a> &amp;g0, <a class="el" href="structLinearProgramLoopBlock_1_1Graph.html">Graph</a> &amp;g1) -&gt; bool</td></tr>
 <tr class="separator:a07783ad0d4f003076db2913e8d2e3aad"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a447fb317d80648fb2a14a265db46ca9b"><td class="memItemLeft" align="right" valign="top"><a id="a447fb317d80648fb2a14a265db46ca9b"></a>
-static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getOverlapIndex</b> (const <a class="el" href="classDependence.html">Dependence</a> &amp;edge) -&gt; Optional&lt; size_t &gt;</td></tr>
+static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getOverlapIndex</b> (const Dependence &amp;edge) -&gt; Optional&lt; size_t &gt;</td></tr>
 <tr class="separator:a447fb317d80648fb2a14a265db46ca9b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adafe36fb19d211917adf6c0c21184a89"><td class="memItemLeft" align="right" valign="top"><a id="adafe36fb19d211917adf6c0c21184a89"></a>
 static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>anyActive</b> (const <a class="el" href="structLinearProgramLoopBlock_1_1Graph.html">Graph</a> &amp;g, const BitSet &amp;b) -&gt; bool</td></tr>
@@ -290,7 +290,7 @@ static auto&#160;</td><td class="memItemRight" valign="bottom"><b>nonZeroMasks</
 static auto&#160;</td><td class="memItemRight" valign="bottom"><b>nonZeroMask</b> (const AbstractMatrix auto A) -&gt; uint64_t</td></tr>
 <tr class="separator:a18b91c94c3f0fa2966f7ff2bb4fdc7f0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af75f0d13d300adf06bc61acfa591ea04"><td class="memItemLeft" align="right" valign="top"><a id="af75f0d13d300adf06bc61acfa591ea04"></a>
-static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>numParams</b> (const <a class="el" href="classDependence.html">Dependence</a> &amp;edge) -&gt; math::SVector&lt; size_t, 4 &gt;</td></tr>
+static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>numParams</b> (const Dependence &amp;edge) -&gt; math::SVector&lt; size_t, 4 &gt;</td></tr>
 <tr class="separator:af75f0d13d300adf06bc61acfa591ea04"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="friends"></a>
