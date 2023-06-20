@@ -2,7 +2,7 @@
 
 #include "Dependence.hpp"
 #include "Dicts/BumpMapSet.hpp"
-#include "Graphs.hpp"
+#include "Graphs/Graphs.hpp"
 #include "IR/Address.hpp"
 #include "IR/Node.hpp"
 #include "Polyhedra/Loops.hpp"

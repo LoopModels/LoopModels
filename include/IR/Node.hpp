@@ -38,7 +38,6 @@ using utils::NotNull, utils::invariant, utils::BumpAlloc, containers::UList;
 ///  5.     z = b[j]
 ///  6.     e = foo(x, y, z)
 ///  7.     c[j,i] = e
-///  8.   // VK_Exit
 ///  9.   y2 = y*y
 /// 10.   for j in J // VK_Loop
 /// 11.     z = c[j,i]
@@ -46,16 +45,13 @@ using utils::NotNull, utils::invariant, utils::BumpAlloc, containers::UList;
 /// 13.     f = a[i]
 /// 14.     g = baz(e, f)
 /// 15.     a[i] = g
-/// 16.   // VK_Exit
 /// 17.   z = a[i]
 /// 18.   e = p[]
 /// 19.   f = z + e
 /// 20.   p[] = f
-/// 21. // VK_Exit
 /// 22. z = p[]
 /// 23. e = z*z
 /// 24. p[] = z
-/// 25. // VK_EXIT
 ///
 /// Hmm, we don't need parent/children to reach everything, e.g. individual
 /// addrs

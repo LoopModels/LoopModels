@@ -100,32 +100,16 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
   ///    split into separate forests.
   void initializeLoopForest() {
     // NOTE: LoopInfo stores loops in reverse program order
+    if (LI->empty()) return;
     auto revLI = llvm::reverse(*LI);
-    auto ib = revLI.begin();
-    auto ie = revLI.end();
-    if (ib == ie) return;
-    // pushLoopTree wants a direct path from the last loop's exit block to
-    // E; we drop loops until we find one for which this is trivial.
-    llvm::BasicBlock *E = (*--ie)->getExitBlock();
-    while (!E) {
-      if (ie == ib) return;
-      E = (*--ie)->getExitingBlock();
-    }
-    // pushLoopTree wants a direct path from H to the first loop's header;
-    // we drop loops until we find one for which this is trivial.
-    llvm::BasicBlock *H = (*ib)->getLoopPreheader();
-    while (!H) {
-      if (ie == ib) return;
-      H = (*++ib)->getLoopPreheader();
-    }
     // should normally be stack allocated; we don't want to monomorphize
     // excessively, so we produce an `ArrayRef<llvm::Loop *>` here
     // `llvm::Loop->getSubLoops()`.
     // But we could consider specializing on top level vs not.
-    llvm::SmallVector<llvm::Loop *> rLI{ib, ie + 1};
+    llvm::SmallVector<llvm::Loop *> rLI{revLI};
     poly::NoWrapRewriter nwr(*SE);
-    math::Vector<int, 8> omega;
-    IR::TreeResult tr = runOnLoop(nullptr, rLI, H, E, omega, nwr);
+    math::Vector<int, 8> omega{0};
+    IR::TreeResult tr = runOnLoop(nullptr, rLI, omega, nwr);
     if (tr.accept(0)) optimize(tr);
   }
 
@@ -189,24 +173,28 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
   }
   /// factored out codepath, returns number of rejected loops
   /// current depth is omega.size()-1
-  auto initLoopTree(llvm::BasicBlock *H, llvm::BasicBlock *E, llvm::Loop *L,
-                    math::Vector<int, 8> &omega, poly::NoWrapRewriter &nwr)
-    -> IR::TreeResult {
+  auto initLoopTree(llvm::Loop *L, math::Vector<int, 8> &omega,
+                    poly::NoWrapRewriter &nwr) -> IR::TreeResult {
 
     const auto *BT = poly::getBackedgeTakenCount(*SE, L);
     if (llvm::isa<llvm::SCEVCouldNotCompute>(BT)) return {};
     BumpAlloc<> &salloc{shortAllocator()};
     BumpAlloc<> &lalloc{longAllocator()};
-    auto p = lalloc.checkpoint();
+    // TODO: check pointing seems dangerous, as
+    // we'd have to make sure none of the allocated instructions
+    // can be referenced again (e.g., through the free list)
+    // auto p = lalloc.checkpoint();
     NotNull<poly::Loop> AL =
       poly::Loop::construct(lalloc, L, nwr.visit(BT), *SE);
-    omega.push_back(0); // we start with 0 at the end, walking backwards
     IR::TreeResult tr = parseExitBlocks(L);
-    tr = parseBlocks(H, E, L, omega, AL, tr);
+    tr.rejectDepth =
+      std::max(tr.rejectDepth, size_t(omega.size() - AL->getNumLoops()));
+    omega.push_back(0); // we start with 0 at the end, walking backwards
+    tr = parseBlocks(L->getHeader(), L->getLoopLatch(), L, omega, AL, tr);
     omega.pop_back();
     if (tr.accept(omega.size() - 1)) return tr;
     salloc.reset();
-    lalloc.rollback(p);
+    // lalloc.rollback(p);
     return {};
   }
   /// parseExitBlocks(llvm::Loop *L) -> IR::TreeResult
@@ -283,24 +271,23 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
   /// 4. `Vector<int,8> &omega`: the current position within the loopnest
   // NOLINTNEXTLINE(misc-no-recursion)
   auto runOnLoop(llvm::Loop *L, llvm::ArrayRef<llvm::Loop *> subLoops,
-                 llvm::BasicBlock *H, llvm::BasicBlock *E,
                  math::Vector<int, 8> &omega, poly::NoWrapRewriter &nwr)
     -> IR::TreeResult {
     unsigned numSubLoops = subLoops.size();
     // This is a special case, as it is when we build poly::Loop
-    if (!numSubLoops) return initLoopTree(H, E, L, omega, nwr);
+    if (!numSubLoops) return initLoopTree(L, omega, nwr);
     unsigned depth = omega.size();
-    omega.push_back(0); // we start with 0 at the end, walking backwards
     bool failed = false;
     IR::TreeResult tr = parseExitBlocks(L);
+    omega.push_back(0); // we start with 0 at the end, walking backwards
     poly::Loop *AL = nullptr;
+    llvm::BasicBlock *E = L->getLoopLatch();
     for (size_t i = numSubLoops; i--; --omega.back()) {
       llvm::Loop *subLoop = subLoops[i];
       // we need to parse backwards, so we first evaluate
       // TODO: support having multiple exit blocks?
       IR::TreeResult trec =
-        runOnLoop(subLoop, subLoop->getSubLoops(), subLoop->getHeader(),
-                  subLoop->getExitingBlock(), omega, nwr);
+        runOnLoop(subLoop, subLoop->getSubLoops(), omega, nwr);
 
       if (trec.accept(depth)) {
         if (!AL) AL = trec.getLoop();
@@ -337,7 +324,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
       return {};
     }
     // now we try to go from E to H
-    IR::TreeResult trblock = parseBlocks(H, E, L, omega, AL, tr);
+    IR::TreeResult trblock = parseBlocks(L->getHeader(), E, L, omega, AL, tr);
     if (trblock.reject(depth)) {
       optimize(tr); // optimize old tr
       tr = {};
