@@ -8,7 +8,7 @@
 #include <type_traits>
 
 /// TODO: when we have better std::ranges support in compilers, use it?
-namespace Graphs {
+namespace poly::graphs {
 template <typename R>
 concept AbstractRange = requires(R r) {
   { r.begin() };
@@ -55,17 +55,6 @@ concept AbstractIndexGraph =
     // std::convertible_to<unsigned>;
     { *g.inNeighbors(i).begin() } -> std::convertible_to<unsigned>;
     { g.maxVertexId() } -> std::convertible_to<size_t>;
-  };
-template <typename G>
-concept AbstractPtrGraph =
-  AbstractGraphCore<G> && requires(G g, const G cg, size_t i) {
-    { *g.outNeighbors(i).begin() } -> std::same_as<typename G::VertexType *>;
-    { *g.inNeighbors(i).begin() } -> std::same_as<typename G::VertexType *>;
-    { g.inNeighbors(i).begin()->index() } -> std::assignable_from<unsigned>;
-    { g.inNeighbors(i).begin()->lowLink() } -> std::assignable_from<unsigned>;
-    { g.inNeighbors(i).begin()->onStack() } -> std::same_as<bool>;
-    { g.inNeighbors(i).begin()->addToStack() };
-    { g.inNeighbors(i).begin()->removeFromStack() };
   };
 
 template <typename G>
@@ -118,7 +107,7 @@ inline auto strongConnect(AbstractIndexGraph auto &g,
       if (iLLOS[w].onStack)
         iLLOS[v].lowLink = std::min(iLLOS[v].lowLink, iLLOS[w].index);
     } else { // not visited
-      strongConnect<B>(g, components, stack, iLLOS, index, w);
+      index = strongConnect<B>(g, components, stack, iLLOS, index, w);
       iLLOS[v].lowLink = std::min(iLLOS[v].lowLink, iLLOS[w].lowLink);
     }
   }
@@ -151,55 +140,8 @@ inline void stronglyConnectedComponents(llvm::SmallVectorImpl<B> &cmpts,
       index = strongConnect(g, cmpts, stack, indexLowLinkOnStack, index, v);
 }
 inline auto stronglyConnectedComponents(AbstractIndexGraph auto &g)
-  -> llvm::SmallVector<BitSet<>> {
-  llvm::SmallVector<BitSet<>> components;
-  stronglyConnectedComponents(components, g);
-  return components;
-}
-
-// TODO: address code duplication by abstracting between AbstractIndexGraph and
-// AbstractPtrGraph
-template <typename B>
-inline auto
-strongConnect(const AbstractPtrGraph auto &g,
-              llvm::SmallVectorImpl<llvm::SmallVector<B *, 1>> &components,
-              llvm::SmallVector<B *> &stack, unsigned index, B *v) -> unsigned {
-  v->index() = v->lowLink() = index++;
-  v->setOnStack();
-  v->visit();
-  stack.push_back(v);
-  for (auto w : g.inNeighbors(v))
-    if (!w->wasVisited()) {
-      strongConnect<B>(g, components, stack, index, w);
-      v->lowLink() = std::min(v->lowLink(), w->lowLink());
-    } else if (w->onStack()) v->lowLink() = std::min(v->lowLink(), w->index());
-  if (v->index() == v->lowLink()) {
-    llvm::SmallVector<B *, 1> &component = components.emplace_back();
-    B *w;
-    do {
-      w = stack.pop_back_val();
-      w->removeFromStack();
-      component.insert(w);
-    } while (w != v);
-  }
-  return index;
-}
-
-template <typename B>
-inline void stronglyConnectedComponents(
-  llvm::SmallVectorImpl<llvm::SmallVector<B *, 1>> &cmpts,
-  const AbstractPtrGraph auto &g) {
-  cmpts.reserve(g.getNumVertices());
-  llvm::SmallVector<B *> stack;
-  clearVisited(g);
-  unsigned index = 0;
-  for (auto v : g.vertexIds())
-    if (!g.wasVisited(v)) index = strongConnect(g, cmpts, stack, index, v);
-}
-template <AbstractPtrGraph G>
-inline auto stronglyConnectedComponents(const G &g)
-  -> llvm::SmallVector<llvm::SmallVector<typename G::VertexType *, 1>> {
-  llvm::SmallVector<llvm::SmallVector<typename G::VertexType *, 1>> components;
+  -> llvm::SmallVector<containers::BitSet<>> {
+  llvm::SmallVector<containers::BitSet<>> components;
   stronglyConnectedComponents(components, g);
   return components;
 }
@@ -214,7 +156,7 @@ inline auto print(const AbstractIndexGraph auto &g,
   return os;
 }
 
-} // namespace Graphs
+} // namespace poly::graphs
 
 // template <typename G>
 // concept Graph = requires(G g) {

@@ -112,6 +112,7 @@ private:
   Node *child{nullptr};
   Node *componentFwd{nullptr}; // SCC
   Node *componentBwd{nullptr}; // SCC-cycle
+
   // we have a private pointer so different types can share
   // in manner not exacctly congruent with type hiearchy
   // in particular, `Inst` and `Load` want `User` lists
@@ -125,12 +126,31 @@ private:
   // and we want a common base that we can query to avoid monomorphization.
 protected:
   const ValKind kind;
-  unsigned depth{0};
+  uint16_t depth{0};
+  uint16_t index_;
+  uint16_t lowLink_;
+  uint16_t bitfield;
 
   constexpr Node(ValKind kind) : kind(kind) {}
   constexpr Node(ValKind kind, unsigned d) : kind(kind), depth(d) {}
 
 public:
+  [[nodiscard]] constexpr auto wasVisited() const -> bool {
+    return bitfield & 0x1;
+  }
+  constexpr void setVisited() { bitfield |= 0x1; }
+  constexpr void clearVisited() { bitfield &= ~0x1; }
+  [[nodiscard]] constexpr auto isOnStack() const -> bool {
+    return bitfield & 0x2;
+  }
+  constexpr void setOnStack() { bitfield |= 0x2; }
+  constexpr void removeFromStack() { bitfield &= ~0x2; }
+  [[nodiscard]] constexpr auto lowLink() -> uint16_t & { return lowLink_; }
+  [[nodiscard]] constexpr auto lowLink() const -> unsigned { return lowLink_; }
+  constexpr void setLowLink(unsigned l) { lowLink_ = l; }
+  [[nodiscard]] constexpr auto index() -> uint16_t & { return index_; }
+  [[nodiscard]] constexpr auto getIndex() const -> unsigned { return index_; }
+  constexpr void setIndex(unsigned i) { index_ = i; }
   [[nodiscard]] constexpr auto getKind() const -> ValKind { return kind; }
   [[nodiscard]] constexpr auto getDepth() const -> unsigned { return depth; }
   [[nodiscard]] constexpr auto getParent() const -> Node * { return parent; }

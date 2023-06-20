@@ -36,19 +36,12 @@
 #include <llvm/Support/raw_ostream.h>
 #include <type_traits>
 
-namespace CostModeling {
-class LoopTreeSchedule;
-} // namespace CostModeling
+namespace poly::lp {
 
-template <std::integral I>
-constexpr void insertSortedUnique(Vector<I> &v, const I &x) {
-  for (auto it = v.begin(), ite = v.end(); it != ite; ++it) {
-    if (*it < x) continue;
-    if (*it > x) v.insert(it, x);
-    return;
-  }
-  v.push_back(x);
-}
+using math::PtrVector, math::MutPtrVector, math::DensePtrMatrix,
+  math::MutDensePtrMatrix, math::SquarePtrMatrix, math::MutSquarePtrMatrix,
+  math::end, math::_, utils::NotNull, utils::invariant, poly::Dependence,
+  IR::Addr;
 
 /// ScheduledNode
 /// Represents a set of memory accesses that are optimized together in the LP.
@@ -58,7 +51,7 @@ constexpr void insertSortedUnique(Vector<I> &v, const I &x) {
 /// `A[i]`;
 class ScheduledNode {
 
-  [[no_unique_address]] IR::Addr *store; // linked list to loads
+  [[no_unique_address]] Addr *store; // linked list to loads
   [[no_unique_address]] NotNull<poly::Loop> loopNest;
   [[no_unique_address]] ScheduledNode *next{nullptr};
   [[no_unique_address]] ScheduledNode *component{nullptr}; // SCC cycle
@@ -132,7 +125,7 @@ public:
     Addr *m = store;
     while (true) {
       f(m);
-      Node *v = m->getPrev();
+      IR::Node *v = m->getPrev();
       if (!v) break;
       m = llvm::cast<Addr>(v);
     }
@@ -152,7 +145,9 @@ public:
     for (Dependence *d = dep; d; d = d->getNext())
       if (!d->isSat(depth)) f(d->input()->getNode());
   }
-  [[nodiscard]] constexpr auto getSchedule() -> AffineSchedule { return {mem}; }
+  [[nodiscard]] constexpr auto getSchedule() -> poly::AffineSchedule {
+    return {mem};
+  }
   [[nodiscard]] constexpr auto getLoopNest() const
     -> NotNull<const poly::Loop> {
     return loopNest;
@@ -188,15 +183,15 @@ public:
     return phiOffset;
   }
   [[nodiscard]] constexpr auto getPhiOffsetRange() const
-    -> Range<size_t, size_t> {
+    -> math::Range<size_t, size_t> {
     return _(phiOffset, phiOffset + getNumLoops());
   }
   // NOLINTNEXTLINE(readability-make-member-function-const)
   [[nodiscard]] constexpr auto getPhi() -> MutSquarePtrMatrix<int64_t> {
-    return {mem + 1, SquareDims{unsigned(getNumLoops())}};
+    return {mem + 1, math::SquareDims{unsigned(getNumLoops())}};
   }
   [[nodiscard]] constexpr auto getPhi() const -> SquarePtrMatrix<int64_t> {
-    return {const_cast<int64_t *>(mem) + 1, SquareDims{getNumLoops()}};
+    return {const_cast<int64_t *>(mem) + 1, math::SquareDims{getNumLoops()}};
   }
   /// getSchedule, loops are always indexed from outer to inner
   [[nodiscard]] constexpr auto getSchedule(size_t d) const
@@ -331,8 +326,8 @@ class LinearProgramLoopBlock {
   // identical)?
   [[no_unique_address]] Addr *memory{nullptr};
   [[no_unique_address]] ScheduledNode *node{nullptr};
-  [[no_unique_address]] map<llvm::User *, Addr *> userToMem{};
-  [[no_unique_address]] set<llvm::User *> visited{};
+  [[no_unique_address]] dict::map<llvm::User *, Addr *> userToMem{};
+  [[no_unique_address]] dict::set<llvm::User *> visited{};
   [[no_unique_address]] llvm::LoopInfo *LI;
   [[no_unique_address]] BumpAlloc<> allocator{};
   // we may turn off edges because we've exceeded its loop depth
@@ -495,10 +490,8 @@ public:
     }
     return false;
   }
-  auto duplicateLoad(NotNull<MemoryAccess> load, unsigned &memId)
-    -> NotNull<MemoryAccess> {
-    NotNull<MemoryAccess> newLoad =
-      allocator.create<MemoryAccess>(load->getArrayRef(), true);
+  auto duplicateLoad(NotNull<Addr> load, unsigned &memId) -> NotNull<Addr> {
+    NotNull<Addr> newLoad = allocator.create<Addr>(load->getArrayRef(), true);
     memId = memory.size();
     memory.push_back(load);
     for (auto l : load->inputEdges())
@@ -1583,7 +1576,7 @@ public:
     std::swap(g.nodeIds, nodeIds);
     g.activeEdges = activeEdges; // undo such that g.getEdges(d) is correct
     for (auto &&e : g.getEdges(d)) e.popSatLevel();
-    g.activeEdges = oldEdges;    // restore backup
+    g.activeEdges = oldEdges; // restore backup
     auto *oldNodeIter = oldSchedules.begin();
     for (auto &&n : g) n.getSchedule() = *(oldNodeIter++);
     allocator.rollback(chckpt);
@@ -1688,3 +1681,4 @@ template <> struct std::iterator_traits<LinearProgramLoopBlock::Graph> {
 // static_assert(std::ranges::range<LinearProgramLoopBlock::Graph>);
 static_assert(Graphs::AbstractIndexGraph<LinearProgramLoopBlock::Graph>);
 static_assert(std::is_trivially_destructible_v<LinearProgramLoopBlock::Graph>);
+} // namespace poly::lp

@@ -93,6 +93,11 @@ struct TreeResult {
     rejectDepth = std::max(rejectDepth, tr.rejectDepth);
     return *this;
   }
+  [[nodiscard]] constexpr auto getLoop() const -> poly::Loop * {
+    if (stow) return stow->getLoop();
+    if (load) return load->getLoop();
+    return nullptr;
+  }
 };
 
 class Cache {
