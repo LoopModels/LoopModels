@@ -267,7 +267,6 @@ uint16_t&#160;</td><td class="memItemRight" valign="bottom"><b>bitfield</b></td>
 <li>z = b[j]</li>
 <li>e = foo(x, y, z)</li>
 <li>c[j,i] = e</li>
-<li>// VK_Exit</li>
 <li>y2 = y*y</li>
 </ol>
 <p>for j in J // VK_Loop</p><ol type="1">
@@ -276,16 +275,13 @@ uint16_t&#160;</td><td class="memItemRight" valign="bottom"><b>bitfield</b></td>
 <li>f = a[i]</li>
 <li>g = baz(e, f)</li>
 <li>a[i] = g</li>
-<li>// VK_Exit</li>
 <li>z = a[i]</li>
 <li>e = p[]</li>
 <li>f = z + e</li>
 <li>p[] = f</li>
-<li>// VK_Exit</li>
 <li>z = p[]</li>
 <li>e = z*z</li>
 <li>p[] = z</li>
-<li>// VK_EXIT</li>
 </ol>
 <p>Hmm, we don't need parent/children to reach everything, e.g. individual addrs</p>
 <p>IR types: <a class="el" href="classpoly_1_1IR_1_1Loop.html">Loop</a>, Block, <a class="el" href="classpoly_1_1IR_1_1Addr.html">Addr</a>, Instr <a class="el" href="classpoly_1_1IR_1_1Loop.html">Loop</a> starts a <a class="el" href="classpoly_1_1IR_1_1Loop.html">Loop</a>, Block ends it. At a level, first loops: Parents: <a class="el" href="classpoly_1_1IR_1_1Loop.html">Loop</a>[0]: [ parentLoop ] for (i : _(0,numSubLoop-1)) <a class="el" href="classpoly_1_1IR_1_1Loop.html">Loop</a>[i+1]: [ <a class="el" href="classpoly_1_1IR_1_1Exit.html">Exit</a>[i] ] <a class="el" href="classpoly_1_1IR_1_1Exit.html">Exit</a>: [ loopStart, contained addrs...] // ptr, linked list <a class="el" href="classpoly_1_1IR_1_1Addr.html">Addr</a>: [ <a class="el" href="classpoly_1_1IR_1_1Loop.html">Loop</a> or <a class="el" href="classpoly_1_1IR_1_1Exit.html">Exit</a>, prevAddrs... ] // actual Instr: [ args... (loads or insts) ] // actual</p>
