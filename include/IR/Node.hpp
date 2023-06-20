@@ -38,58 +38,49 @@ using utils::NotNull, utils::invariant, utils::BumpAlloc, containers::UList;
 ///  5.     z = b[j]
 ///  6.     e = foo(x, y, z)
 ///  7.     c[j,i] = e
+///  8.   q = 3y - c[i,i]
 ///  9.   y2 = y*y
-/// 10.   for j in J // VK_Loop
-/// 11.     z = c[j,i]
-/// 12.     e = bar(z, y2)
-/// 13.     f = a[i]
-/// 14.     g = baz(e, f)
-/// 15.     a[i] = g
+/// 10.   w = y2 - q
+/// 11.   for j in J // VK_Loop
+/// 12.     z = c[j,i]
+/// 13.     e = bar(z, y2)
+/// 14.     f = a[i]
+/// 15.     g = baz(e, f, w)
+/// 16.     a[i] = g
 /// 17.   z = a[i]
 /// 18.   e = p[]
 /// 19.   f = z + e
 /// 20.   p[] = f
-/// 22. z = p[]
-/// 23. e = z*z
-/// 24. p[] = z
+/// 21. z = p[]
+/// 22. e = z*z
+/// 23. p[] = z
 ///
-/// Hmm, we don't need parent/children to reach everything, e.g. individual
-/// addrs
+/// Same level -> means getNext()
+/// Sub-level \-> means getChild()
+/// We have
+/// 0. -> 1. -> 2. -> 21. -> 22 -> 23
+///             \-> 3 -> 4 -> 8-> 9 -> 10 -> 11 -> 17 -> 18 -> 19 -> 20
+///                       \-> 5 -> 6 -> 7     \-> 12 -> 13 -> 14 -> 15 -> 16
+/// For a `Loop`, `getChild()` returns the first contained instruction, and
+/// `getParent()` returns the enclosing (outer) loop.
+/// For `Instruction`s, `getChild()` returns the first sub-loop.
+/// This, for example, we can iterate over all sub-loops of `L` via
+/// ```c++
+/// Node* C = getChild();
+/// C = llvm::isa<Loop>(C) ? C : C->getChild();
+/// while (C){
+///   // do stuff with `C`
+///   C = C->getNext()
+///   C = (C || llvm::isa<Loop>(C)) ? C : C->getChild();
+/// }
 ///
-///
-/// IR types: Loop, Block, Addr, Instr
-/// Loop starts a Loop, Block ends it.
-/// At a level, first loops:
-/// Parents:
-/// Loop[0]: [ parentLoop ]
-/// for (i : _(0,numSubLoop-1)) Loop[i+1]: [ Exit[i] ]
-/// Exit: [ loopStart, contained addrs...] // ptr, linked list
-/// Addr: [ Loop or Exit, prevAddrs... ] // actual
-/// Instr: [ args... (loads or insts) ] // actual
-///
-/// For SCC, we initialize parent ptr to nullptr
-/// thus, Loop[0] has no parents
-/// For each Blck
-///
-/// Children don't need to be full reverse, as `*next` covers many:
-/// Loop's: [ first sub loop (if it has one), matching Exit ]
-/// for (i : _(0,numSubLoop-1)) Exit[i]: [ Loop[i+1] ]
-/// Addr's: [ nextAddrs... ]
-/// Inst's: [ uses... (stows or insts) ]
-///
-/// To iterate over subloops, SubLoopIterator
-///
-/// This simplified structure means we can use LLVM-style RTTI
-///
-/// top level loops can be chained together...
-/// top level loop's next can point to another top level loop
+/// IR types: Loop, Block, Addr, Instr, Consts
 class Node {
 
 public:
-  enum ValKind {
+  enum ValKind : uint8_t {
     VK_Load,
     VK_Stow, // used for ordered comparisons; all `Addr` types <= Stow
-    VK_Exit,
     VK_Loop,
     VK_CVal,
     VK_Cint,
@@ -106,8 +97,6 @@ private:
   Node *next{nullptr};
   Node *parent{nullptr};
   Node *child{nullptr};
-  Node *componentFwd{nullptr}; // SCC
-  Node *componentBwd{nullptr}; // SCC-cycle
 
   // we have a private pointer so different types can share
   // in manner not exacctly congruent with type hiearchy
@@ -122,7 +111,7 @@ private:
   // and we want a common base that we can query to avoid monomorphization.
 protected:
   const ValKind kind;
-  uint16_t depth{0};
+  uint8_t depth{0};
   uint16_t index_;
   uint16_t lowLink_;
   uint16_t bitfield;
@@ -204,54 +193,20 @@ public:
     if (llvm::isa<llvm::ConstantFP>(v)) return VK_Bflt;
     return VK_CVal;
   }
-  [[nodiscard]] constexpr auto getAuxFwd() const -> Node * {
-    return componentFwd;
-  }
-  constexpr void setAuxFwd(Node *n) { componentFwd = n; }
-  [[nodiscard]] constexpr auto getAuxBwd() const -> Node * {
-    return componentBwd;
-  }
-  constexpr void setAuxBwd(Node *n) { componentBwd = n; }
 };
+static_assert(sizeof(Node) == 4 * sizeof(Node *) + 8);
 
-class Loop;
-/// Exit
-/// child is next loop at same level
-/// parent is the loop the exit closes
-/// subExit is the exit of the last subloop
-class Exit : public Node {
-  Exit *subExit;
-
-public:
-  Exit(unsigned d) : Node(VK_Exit, d) {}
-  [[nodiscard]] constexpr auto getLoop() const -> Loop *;
-  [[nodiscard]] constexpr auto getNextLoop() const -> Loop *;
-  [[nodiscard]] constexpr auto getSubExit() const -> Exit * { return subExit; }
-  static constexpr auto classof(const Node *v) -> bool {
-    return v->getKind() == VK_Exit;
-  }
-  constexpr void setSubExit(Exit *e) { subExit = e; }
-  constexpr void setNextLoop(Loop *);
-};
 /// Loop
 /// parent: outer loop
 /// child: inner (sub) loop
 /// exit is the associated exit block
 class Loop : public Node {
-  Exit *exit;
   llvm::Loop *llvmLoop{nullptr};
   poly::Loop *affineLoop{nullptr};
 
 public:
-  Loop(Exit *e, unsigned d, llvm::Loop *LL, poly::Loop *AL)
-    : Node(VK_Loop, d), llvmLoop(LL), affineLoop(AL) {
-    exit = e;
-    e->setParent(this);
-    // we also initialize prev/next, adding instrs will push them
-    e->setPrev(this);
-    setNext(e);
-  }
-  [[nodiscard]] constexpr auto getExit() const -> Exit * { return exit; }
+  Loop(unsigned d, llvm::Loop *LL, poly::Loop *AL)
+    : Node(VK_Loop, d), llvmLoop(LL), affineLoop(AL) {}
   static constexpr auto classof(const Node *v) -> bool {
     return v->getKind() == VK_Loop;
   }
@@ -262,11 +217,9 @@ public:
     return static_cast<Loop *>(getParent());
   }
   [[nodiscard]] constexpr auto getNextLoop() const -> Loop * {
-    return getExit()->getNextLoop();
-  }
-  [[nodiscard]] constexpr auto getNextOrChild() const -> Loop * {
-    Loop *L = getSubLoop();
-    return L ? L : getNextLoop();
+    Node *C = getChild();
+    C = (C || llvm::isa<Loop>(C)) ? C : C->getChild();
+    return static_cast<Loop *>(C);
   }
   constexpr void forEachSubLoop(const auto &f) {
     for (auto *c = getSubLoop(); c; c = c->getNextLoop()) f(c);
@@ -279,78 +232,18 @@ public:
       if (auto *s = c->getSubLoop()) s->forEachLoop(f);
     }
   }
-  constexpr void forEachLoopAndExit(const auto &f) {
-    for (auto *c = this; c; c = c->getNextLoop()) {
-      f(c);
-      if (auto *s = c->getSubLoop()) s->forEachLoopAndExit(f);
-      f(c->getExit());
-    }
-  }
   static constexpr auto create(BumpAlloc<> &alloc, llvm::Loop *LL,
                                poly::Loop *AL, size_t depth) -> Loop * {
-    auto *E = alloc.create<Exit>(depth);
-    auto *L = alloc.create<Loop>(E, depth, LL, AL);
-    return L;
-  }
-  constexpr auto addSubLoop(BumpAlloc<> &alloc, llvm::Loop *LL) -> Loop * {
-    auto d = getDepth() + 1;
-    auto *E = alloc.create<Exit>(d);
-    auto *L = alloc.create<Loop>(E, d, LL, nullptr);
-    L->setParent(this);
-    if (auto *eOld = getExit()->getSubExit()) {
-      invariant(getChild() != nullptr);
-      eOld->setNextLoop(L);
-    } else setChild(L);
-    getExit()->setSubExit(E);
-    return L;
-  }
-  constexpr auto addOuterLoop(BumpAlloc<> &alloc) -> Loop * {
-    // NOTE: we need to correctly set depths later
-    auto *E = alloc.create<Exit>(0);
-    auto *L =
-      alloc.create<Loop>(E, 0, llvmLoop->getParentLoop(), getAffineLoop());
-    setParent(L);
-    invariant(getNextLoop() == nullptr);
-    E->setSubExit(getExit());
-    return L;
-  }
-  // NOLINTNEXTLINE(readability-make-member-function-const)
-  constexpr void addNextLoop(Loop *L) {
-    invariant(getExit()->getNextLoop() == nullptr);
-    invariant(getOuterLoop() == nullptr);
-    getExit()->setNextLoop(L);
-  }
-  constexpr auto addNextLoop(BumpAlloc<> &alloc, llvm::Loop *LL) -> Loop * {
-    auto d = getDepth() + 1;
-    auto *E = alloc.create<Exit>(d);
-    auto *L = alloc.create<Loop>(E, d, LL, nullptr);
-    invariant(getExit()->getNextLoop() == nullptr);
-    getExit()->setNextLoop(L);
-    if (auto *p = getOuterLoop()) {
-      invariant(p->getChild() == this);
-      L->setParent(p);
-      p->getExit()->setSubExit(E);
-    }
-    return L;
+    return alloc.create<Loop>(depth, LL, AL);
   }
   [[nodiscard]] constexpr auto getLLVMLoop() const -> llvm::Loop * {
     return llvmLoop;
-  }
-  constexpr void truncate() {
-    // TODO: we use the current loop depth, and set the poly::Loop
-    // and all ArrayRefs accordingly.
   }
   [[nodiscard]] constexpr auto getAffineLoop() const -> poly::Loop * {
     return affineLoop;
   }
 };
-constexpr void Exit::setNextLoop(Loop *L) { setChild(L); }
-constexpr auto Exit::getLoop() const -> Loop * {
-  return static_cast<Loop *>(getParent());
-}
-constexpr auto Exit::getNextLoop() const -> Loop * {
-  return static_cast<Loop *>(getChild());
-}
+
 class Instruction;
 class Value : public Node {
 protected:

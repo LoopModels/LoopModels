@@ -40,7 +40,7 @@ using dict::map;
 /// accesses. Either because an affine representation is not possible, or
 /// because our analysis failed and needs improvement.
 ///
-/// We use setAuxFwd for setting the last load/stow/incomplete
+/// We use setChild for setting the last load/stow/incomplete
 /// only the very first is guaranteed to be correct, as we
 /// do not update the old when concatenating
 struct TreeResult {
@@ -56,19 +56,19 @@ struct TreeResult {
     return !reject(depth);
   }
   constexpr void addIncomplete(Compute *I) {
-    Node *last = incomplete ? incomplete->getAuxFwd() : I;
+    Node *last = incomplete ? incomplete->getChild() : I;
     incomplete = static_cast<Compute *>(I->setNext(incomplete));
-    I->setAuxFwd(last);
+    I->setChild(last);
   }
   constexpr void addAddr(Addr *A) {
     if (A->isLoad()) {
-      Node *last = load ? load->getAuxFwd() : A;
+      Node *last = load ? load->getChild() : A;
       load = static_cast<Addr *>(A->setNext(load));
-      load->setAuxFwd(last);
+      load->setChild(last);
     } else {
-      Node *last = stow ? stow->getAuxFwd() : A;
+      Node *last = stow ? stow->getChild() : A;
       stow = static_cast<Addr *>(A->setNext(stow));
-      stow->setAuxFwd(last);
+      stow->setChild(last);
     }
   }
   // NOTE: this sets the loop nest of all members,
@@ -81,8 +81,8 @@ struct TreeResult {
   static constexpr auto concateNodes(Node *A, Node *B) -> Node * {
     if (!A) return B;
     if (!B) return A;
-    A->getAuxFwd()->setNext(B);
-    A->setAuxFwd(B->getAuxFwd());
+    A->getChild()->setNext(B);
+    A->setChild(B->getChild());
     return A;
   }
   constexpr auto operator*=(TreeResult tr) -> TreeResult & {
