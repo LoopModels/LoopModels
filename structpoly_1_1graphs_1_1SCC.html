@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.9.1"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>LoopModels: LinearProgramLoopBlock::OutNeighbors Struct Reference</title>
+<title>LoopModels: poly::graphs::SCC Struct Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -61,29 +61,35 @@ $(function() {
 
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><a class="el" href="classLinearProgramLoopBlock.html">LinearProgramLoopBlock</a></li><li class="navelem"><a class="el" href="structLinearProgramLoopBlock_1_1OutNeighbors.html">OutNeighbors</a></li>  </ul>
+<li class="navelem"><b>poly</b></li><li class="navelem"><a class="el" href="namespacepoly_1_1graphs.html">graphs</a></li><li class="navelem"><a class="el" href="structpoly_1_1graphs_1_1SCC.html">SCC</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="header">
   <div class="summary">
 <a href="#pub-attribs">Public Attributes</a> &#124;
-<a href="structLinearProgramLoopBlock_1_1OutNeighbors-members.html">List of all members</a>  </div>
+<a href="structpoly_1_1graphs_1_1SCC-members.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">LinearProgramLoopBlock::OutNeighbors Struct Reference</div>  </div>
+<div class="title">poly::graphs::SCC Struct Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
-<tr class="memitem:aa7911ec4c418f231bbeee51760c7d5ae"><td class="memItemLeft" align="right" valign="top"><a id="aa7911ec4c418f231bbeee51760c7d5ae"></a>
-<a class="el" href="classLinearProgramLoopBlock.html">LinearProgramLoopBlock</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>loopBlock</b></td></tr>
-<tr class="separator:aa7911ec4c418f231bbeee51760c7d5ae"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acda36efaa48a167a1d646075a3985374"><td class="memItemLeft" align="right" valign="top"><a id="acda36efaa48a167a1d646075a3985374"></a>
-<a class="el" href="classScheduledNode.html">ScheduledNode</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>node</b></td></tr>
-<tr class="separator:acda36efaa48a167a1d646075a3985374"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8a2a7719ca86b9b136c0dfcf52aec532"><td class="memItemLeft" align="right" valign="top"><a id="a8a2a7719ca86b9b136c0dfcf52aec532"></a>
+unsigned&#160;</td><td class="memItemRight" valign="bottom"><b>index</b></td></tr>
+<tr class="separator:a8a2a7719ca86b9b136c0dfcf52aec532"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af24685422ca912e0486540671d13c378"><td class="memItemLeft" align="right" valign="top"><a id="af24685422ca912e0486540671d13c378"></a>
+unsigned&#160;</td><td class="memItemRight" valign="bottom"><b>lowLink</b></td></tr>
+<tr class="separator:af24685422ca912e0486540671d13c378"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2ae3fc7211c954f08b94b89cccb9d152"><td class="memItemLeft" align="right" valign="top"><a id="a2ae3fc7211c954f08b94b89cccb9d152"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>onStack</b></td></tr>
+<tr class="separator:a2ae3fc7211c954f08b94b89cccb9d152"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac192b6cacff3d9e66b3948ed46f21ee0"><td class="memItemLeft" align="right" valign="top"><a id="ac192b6cacff3d9e66b3948ed46f21ee0"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>visited</b> {false}</td></tr>
+<tr class="separator:ac192b6cacff3d9e66b3948ed46f21ee0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <hr/>The documentation for this struct was generated from the following file:<ul>
-<li>include/<a class="el" href="LoopBlock_8hpp_source.html">LoopBlock.hpp</a></li>
+<li>include/Graphs/<a class="el" href="IndexGraphs_8hpp_source.html">IndexGraphs.hpp</a></li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->

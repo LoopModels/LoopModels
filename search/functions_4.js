@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['filledges_244',['fillEdges',['../classLinearProgramLoopBlock.html#a1d76b0e8c6b7a221850327644f09dbb2',1,'LinearProgramLoopBlock']]],
-  ['foreachloop_245',['forEachLoop',['../classpoly_1_1IR_1_1Loop.html#a5747e808656d00fef2538ee782265876',1,'poly::IR::Loop']]]
+  ['filledges_246',['fillEdges',['../classpoly_1_1lp_1_1LinearProgramLoopBlock.html#a163bf4e024072759f9ab071250e6c2f6',1,'poly::lp::LinearProgramLoopBlock']]],
+  ['foreachloop_247',['forEachLoop',['../classpoly_1_1IR_1_1Loop.html#a5747e808656d00fef2538ee782265876',1,'poly::IR::Loop']]]
 ];

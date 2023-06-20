@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['graph_182',['Graph',['../structLinearProgramLoopBlock_1_1Graph.html',1,'LinearProgramLoopBlock']]]
+  ['graph_183',['Graph',['../structpoly_1_1lp_1_1LinearProgramLoopBlock_1_1Graph.html',1,'poly::lp::LinearProgramLoopBlock']]]
 ];

@@ -6,8 +6,7 @@ var searchData=
   ['getinindmat_57',['getInIndMat',['../classpoly_1_1poly_1_1Dependence.html#a0abb755d8e7a698e081db7292e11e44b',1,'poly::poly::Dependence']]],
   ['getload_58',['getLoad',['../structMemoryAccess.html#a4c213ffb008f3b021ab51c21dddd7c06',1,'MemoryAccess']]],
   ['getoutindmat_59',['getOutIndMat',['../classpoly_1_1poly_1_1Dependence.html#ab2caff477ed0560c811298fe432010ec',1,'poly::poly::Dependence']]],
-  ['getschedule_60',['getSchedule',['../classScheduledNode.html#a839ee9c51653c4fa6b3f1a4034903801',1,'ScheduledNode::getSchedule()'],['../structpoly_1_1poly_1_1AffineSchedule.html#a59920bb4ddd40e454a495277d538d79c',1,'poly::poly::AffineSchedule::getSchedule()']]],
+  ['getschedule_60',['getSchedule',['../classpoly_1_1lp_1_1ScheduledNode.html#aab0d96d0f1eb92a09855c5a9c2a71de4',1,'poly::lp::ScheduledNode::getSchedule()'],['../structpoly_1_1poly_1_1AffineSchedule.html#a59920bb4ddd40e454a495277d538d79c',1,'poly::poly::AffineSchedule::getSchedule()']]],
   ['getvalue_61',['getValue',['../classpoly_1_1IR_1_1Cache.html#a8752442da530803e458fedf4e8d97600',1,'poly::IR::Cache']]],
-  ['graph_62',['Graph',['../structLinearProgramLoopBlock_1_1Graph.html',1,'LinearProgramLoopBlock']]],
-  ['graphs_63',['Graphs',['../namespaceGraphs.html',1,'']]]
+  ['graph_62',['Graph',['../structpoly_1_1lp_1_1LinearProgramLoopBlock_1_1Graph.html',1,'poly::lp::LinearProgramLoopBlock']]]
 ];

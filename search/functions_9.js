@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['optimize_270',['optimize',['../classLinearProgramLoopBlock.html#a184cd91f49d81ad3b0fd24a016f12509',1,'LinearProgramLoopBlock']]]
+  ['optimize_272',['optimize',['../classpoly_1_1lp_1_1LinearProgramLoopBlock.html#a1ab93bd6f5f56f93c6c693d69317ee6c',1,'poly::lp::LinearProgramLoopBlock']]]
 ];

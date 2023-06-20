@@ -356,7 +356,7 @@ $(function() {
 <div class="line"><a name="l00295"></a><span class="lineno">  295</span>&#160;    <span class="keywordflow">return</span> in-&gt;getArrayPointer();</div>
 <div class="line"><a name="l00296"></a><span class="lineno">  296</span>&#160;  }</div>
 <div class="line"><a name="l00298"></a><span class="lineno"><a class="line" href="classpoly_1_1poly_1_1Dependence.html#af0d8b4e19c0fd884c1b46874a5cffd65">  298</a></span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> <a class="code" href="classpoly_1_1poly_1_1Dependence.html#af0d8b4e19c0fd884c1b46874a5cffd65">isForward</a>() const -&gt; <span class="keywordtype">bool</span> { <span class="keywordflow">return</span> forward; }</div>
-<div class="line"><a name="l00299"></a><span class="lineno">  299</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> nodeIn() const -&gt; const <a class="code" href="classScheduledNode.html">ScheduledNode</a> * {</div>
+<div class="line"><a name="l00299"></a><span class="lineno">  299</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> nodeIn() const -&gt; const ScheduledNode * {</div>
 <div class="line"><a name="l00300"></a><span class="lineno">  300</span>&#160;    <span class="keywordflow">return</span> in-&gt;getNode();</div>
 <div class="line"><a name="l00301"></a><span class="lineno">  301</span>&#160;  }</div>
 <div class="line"><a name="l00302"></a><span class="lineno">  302</span>&#160;  <span class="comment">// [[nodiscard]] constexpr auto nodeOut() const -&gt; unsigned {</span></div>
@@ -819,7 +819,6 @@ $(function() {
 <div class="line"><a name="l00761"></a><span class="lineno">  761</span>&#160;}</div>
 <div class="line"><a name="l00762"></a><span class="lineno">  762</span>&#160;} <span class="comment">// namespace IR</span></div>
 <div class="line"><a name="l00763"></a><span class="lineno">  763</span>&#160;} <span class="comment">// namespace poly</span></div>
-<div class="ttc" id="aclassScheduledNode_html"><div class="ttname"><a href="classScheduledNode.html">ScheduledNode</a></div><div class="ttdef"><b>Definition:</b> LoopBlock.hpp:59</div></div>
 <div class="ttc" id="aclasspoly_1_1poly_1_1Dependence_html"><div class="ttname"><a href="classpoly_1_1poly_1_1Dependence.html">poly::poly::Dependence</a></div><div class="ttdef"><b>Definition:</b> Dependence.hpp:16</div></div>
 <div class="ttc" id="aclasspoly_1_1poly_1_1Dependence_html_a0abb755d8e7a698e081db7292e11e44b"><div class="ttname"><a href="classpoly_1_1poly_1_1Dependence.html#a0abb755d8e7a698e081db7292e11e44b">poly::poly::Dependence::getInIndMat</a></div><div class="ttdeci">auto getInIndMat() const -&gt; DensePtrMatrix&lt; int64_t &gt;</div><div class="ttdoc">getInIndMat() -&gt; getInNumLoops() x arrayDim()</div><div class="ttdef"><b>Definition:</b> Dependence.hpp:313</div></div>
 <div class="ttc" id="aclasspoly_1_1poly_1_1Dependence_html_a3e863ed72e68c568e3b0426c6f7f76e1"><div class="ttname"><a href="classpoly_1_1poly_1_1Dependence.html#a3e863ed72e68c568e3b0426c6f7f76e1">poly::poly::Dependence::isCondIndep</a></div><div class="ttdeci">constexpr auto isCondIndep() const -&gt; bool</div><div class="ttdoc">if true, then conditioned on the sat level,</div><div class="ttdef"><b>Definition:</b> Dependence.hpp:291</div></div>
