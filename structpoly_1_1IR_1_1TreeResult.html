@@ -104,7 +104,7 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getLoop</b>
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
 <tr class="memitem:a3f50ca96d8e1fc4687e8c950e24e29f7"><td class="memItemLeft" align="right" valign="top"><a id="a3f50ca96d8e1fc4687e8c950e24e29f7"></a>
-static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>concateNodes</b> (<a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a> *A, <a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a> *B) -&gt; <a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a> *</td></tr>
+static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>concateNodes</b> (Node *A, Node *B) -&gt; Node *</td></tr>
 <tr class="separator:a3f50ca96d8e1fc4687e8c950e24e29f7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
@@ -131,7 +131,7 @@ size_t&#160;</td><td class="memItemRight" valign="bottom"><b>rejectDepth</b> {0}
 <li>'Instruction* incomplete': a linked list giving the nodes that we stopped exploring due to not being inside the loop nest, and thus may need to have their parents filled out.</li>
 <li><code>size_t rejectDepth</code> is how many outer loops were rejected, due to to failure to produce an affine representation of the loop or memory accesses. Either because an affine representation is not possible, or because our analysis failed and needs improvement.</li>
 </ul>
-<p>We use setAuxFwd for setting the last load/stow/incomplete only the very first is guaranteed to be correct, as we do not update the old when concatenating </p>
+<p>We use setChild for setting the last load/stow/incomplete only the very first is guaranteed to be correct, as we do not update the old when concatenating </p>
 </div><hr/>The documentation for this struct was generated from the following file:<ul>
 <li>include/IR/<a class="el" href="Cache_8hpp_source.html">Cache.hpp</a></li>
 </ul>

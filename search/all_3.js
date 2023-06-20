@@ -1,8 +1,8 @@
 var searchData=
 [
-  ['densematrixprinter_42',['DenseMatrixPrinter',['../classprettyprinters_1_1DenseMatrixPrinter.html',1,'prettyprinters']]],
-  ['dependence_43',['Dependence',['../classpoly_1_1poly_1_1Dependence.html',1,'poly::poly']]],
-  ['deppoly_44',['DepPoly',['../classpoly_1_1poly_1_1DepPoly.html',1,'poly::poly']]],
-  ['descend_45',['descend',['../classpoly_1_1IR_1_1Predicate_1_1Map.html#a2dfad892f78dab8f9049234041feb9e4',1,'poly::IR::Predicate::Map']]],
-  ['dual_46',['Dual',['../classDual.html',1,'']]]
+  ['densematrixprinter_36',['DenseMatrixPrinter',['../classprettyprinters_1_1DenseMatrixPrinter.html',1,'prettyprinters']]],
+  ['dependence_37',['Dependence',['../classpoly_1_1poly_1_1Dependence.html',1,'poly::poly']]],
+  ['deppoly_38',['DepPoly',['../classpoly_1_1poly_1_1DepPoly.html',1,'poly::poly']]],
+  ['descend_39',['descend',['../classpoly_1_1IR_1_1Predicate_1_1Map.html#a2dfad892f78dab8f9049234041feb9e4',1,'poly::IR::Predicate::Map']]],
+  ['dual_40',['Dual',['../classDual.html',1,'']]]
 ];

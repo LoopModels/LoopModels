@@ -86,85 +86,85 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>completeInstructions<
 <tr class="separator:ae839d7034103f2fd0d9ebd3d802fa83d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4f693e5bc775271888cb0343dc12e750"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1IR_1_1Cache.html#a4f693e5bc775271888cb0343dc12e750">cse</a> (<a class="el" href="classpoly_1_1IR_1_1Compute.html">Compute</a> *I) -&gt; <a class="el" href="classpoly_1_1IR_1_1Compute.html">Compute</a> *</td></tr>
 <tr class="separator:a4f693e5bc775271888cb0343dc12e750"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a56195133a3bc424f28e12e1c7c60d1f8"><td class="memItemLeft" align="right" valign="top">constexpr void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1IR_1_1Cache.html#a56195133a3bc424f28e12e1c7c60d1f8">replaceAllUsesWith</a> (<a class="el" href="classpoly_1_1IR_1_1Instruction.html">Instruction</a> *oldNode, <a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> *newNode)</td></tr>
+<tr class="memitem:a56195133a3bc424f28e12e1c7c60d1f8"><td class="memItemLeft" align="right" valign="top">constexpr void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1IR_1_1Cache.html#a56195133a3bc424f28e12e1c7c60d1f8">replaceAllUsesWith</a> (Instruction *oldNode, Value *newNode)</td></tr>
 <tr class="separator:a56195133a3bc424f28e12e1c7c60d1f8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8752442da530803e458fedf4e8d97600"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1IR_1_1Cache.html#a8752442da530803e458fedf4e8d97600">getValue</a> (llvm::Value *v, <a class="el" href="classpoly_1_1IR_1_1Predicate_1_1Map.html">Predicate::Map</a> *M, <a class="el" href="structpoly_1_1IR_1_1TreeResult.html">TreeResult</a> tr) -&gt; std::pair&lt; <a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> *, <a class="el" href="structpoly_1_1IR_1_1TreeResult.html">TreeResult</a> &gt;</td></tr>
+<tr class="memitem:a8752442da530803e458fedf4e8d97600"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1IR_1_1Cache.html#a8752442da530803e458fedf4e8d97600">getValue</a> (llvm::Value *v, <a class="el" href="classpoly_1_1IR_1_1Predicate_1_1Map.html">Predicate::Map</a> *M, <a class="el" href="structpoly_1_1IR_1_1TreeResult.html">TreeResult</a> tr) -&gt; std::pair&lt; Value *, <a class="el" href="structpoly_1_1IR_1_1TreeResult.html">TreeResult</a> &gt;</td></tr>
 <tr class="separator:a8752442da530803e458fedf4e8d97600"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad926c93a7d29899d4da0eff46a21b7de"><td class="memItemLeft" align="right" valign="top"><a id="ad926c93a7d29899d4da0eff46a21b7de"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>getValue</b> (llvm::Instruction *I, <a class="el" href="classpoly_1_1IR_1_1Predicate_1_1Map.html">Predicate::Map</a> *M, <a class="el" href="structpoly_1_1IR_1_1TreeResult.html">TreeResult</a> tr) -&gt; std::pair&lt; <a class="el" href="classpoly_1_1IR_1_1Instruction.html">Instruction</a> *, <a class="el" href="structpoly_1_1IR_1_1TreeResult.html">TreeResult</a> &gt;</td></tr>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getValue</b> (llvm::Instruction *I, <a class="el" href="classpoly_1_1IR_1_1Predicate_1_1Map.html">Predicate::Map</a> *M, <a class="el" href="structpoly_1_1IR_1_1TreeResult.html">TreeResult</a> tr) -&gt; std::pair&lt; Instruction *, <a class="el" href="structpoly_1_1IR_1_1TreeResult.html">TreeResult</a> &gt;</td></tr>
 <tr class="separator:ad926c93a7d29899d4da0eff46a21b7de"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acb3bf0569e436066951dcd6a80d1d119"><td class="memItemLeft" align="right" valign="top"><a id="acb3bf0569e436066951dcd6a80d1d119"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>createInstruction</b> (llvm::Instruction *I, <a class="el" href="classpoly_1_1IR_1_1Predicate_1_1Map.html">Predicate::Map</a> *M, <a class="el" href="structpoly_1_1IR_1_1TreeResult.html">TreeResult</a> tr, <a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> *&amp;t) -&gt; std::pair&lt; <a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> *, <a class="el" href="structpoly_1_1IR_1_1TreeResult.html">TreeResult</a> &gt;</td></tr>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>createInstruction</b> (llvm::Instruction *I, <a class="el" href="classpoly_1_1IR_1_1Predicate_1_1Map.html">Predicate::Map</a> *M, <a class="el" href="structpoly_1_1IR_1_1TreeResult.html">TreeResult</a> tr, Value *&amp;t) -&gt; std::pair&lt; Value *, <a class="el" href="structpoly_1_1IR_1_1TreeResult.html">TreeResult</a> &gt;</td></tr>
 <tr class="separator:acb3bf0569e436066951dcd6a80d1d119"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab7db8eeedce40294e37accc41687aa7c"><td class="memItemLeft" align="right" valign="top"><a id="ab7db8eeedce40294e37accc41687aa7c"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>createCompute</b> (llvm::Instruction *I, <a class="el" href="classpoly_1_1IR_1_1Predicate_1_1Map.html">Predicate::Map</a> *M, <a class="el" href="structpoly_1_1IR_1_1TreeResult.html">TreeResult</a> tr, <a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> *&amp;t) -&gt; std::pair&lt; <a class="el" href="classpoly_1_1IR_1_1Compute.html">Compute</a> *, <a class="el" href="structpoly_1_1IR_1_1TreeResult.html">TreeResult</a> &gt;</td></tr>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>createCompute</b> (llvm::Instruction *I, <a class="el" href="classpoly_1_1IR_1_1Predicate_1_1Map.html">Predicate::Map</a> *M, <a class="el" href="structpoly_1_1IR_1_1TreeResult.html">TreeResult</a> tr, Value *&amp;t) -&gt; std::pair&lt; <a class="el" href="classpoly_1_1IR_1_1Compute.html">Compute</a> *, <a class="el" href="structpoly_1_1IR_1_1TreeResult.html">TreeResult</a> &gt;</td></tr>
 <tr class="separator:ab7db8eeedce40294e37accc41687aa7c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a58824d944c42b5553709cf8f068619a4"><td class="memItemLeft" align="right" valign="top"><a id="a58824d944c42b5553709cf8f068619a4"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>zeroDimRef</b> (llvm::Instruction *loadOrStore, llvm::SCEVUnknown const *arrayPtr, unsigned numLoops) -&gt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">Addr</a> *</td></tr>
 <tr class="separator:a58824d944c42b5553709cf8f068619a4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af89f17b36eb625b86c4838ab9a8adbb0"><td class="memItemLeft" align="right" valign="top"><a id="af89f17b36eb625b86c4838ab9a8adbb0"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>getArrayRef</b> (llvm::Instruction *loadOrStore, llvm::Loop *L, llvm::Value *ptr, <a class="el" href="structpoly_1_1IR_1_1TreeResult.html">TreeResult</a> tr) -&gt; std::pair&lt; <a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> *, <a class="el" href="structpoly_1_1IR_1_1TreeResult.html">TreeResult</a> &gt;</td></tr>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getArrayRef</b> (llvm::Instruction *loadOrStore, llvm::Loop *L, llvm::Value *ptr, <a class="el" href="structpoly_1_1IR_1_1TreeResult.html">TreeResult</a> tr) -&gt; std::pair&lt; Value *, <a class="el" href="structpoly_1_1IR_1_1TreeResult.html">TreeResult</a> &gt;</td></tr>
 <tr class="separator:af89f17b36eb625b86c4838ab9a8adbb0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aefdbfc8586c6ee4d770dea807cd597dd"><td class="memItemLeft" align="right" valign="top"><a id="aefdbfc8586c6ee4d770dea807cd597dd"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>createArrayRef</b> (llvm::Instruction *loadOrStore, llvm::Value *ptr, <a class="el" href="structpoly_1_1IR_1_1TreeResult.html">TreeResult</a> tr) -&gt; std::pair&lt; <a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> *, <a class="el" href="structpoly_1_1IR_1_1TreeResult.html">TreeResult</a> &gt;</td></tr>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>createArrayRef</b> (llvm::Instruction *loadOrStore, llvm::Value *ptr, <a class="el" href="structpoly_1_1IR_1_1TreeResult.html">TreeResult</a> tr) -&gt; std::pair&lt; Value *, <a class="el" href="structpoly_1_1IR_1_1TreeResult.html">TreeResult</a> &gt;</td></tr>
 <tr class="separator:aefdbfc8586c6ee4d770dea807cd597dd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aed52faa9a186bdda4ba59c313d56e2fb"><td class="memItemLeft" align="right" valign="top"><a id="aed52faa9a186bdda4ba59c313d56e2fb"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>createArrayRef</b> (llvm::Instruction *loadOrStore, llvm::Loop *L, llvm::Value *ptr, <a class="el" href="structpoly_1_1IR_1_1TreeResult.html">TreeResult</a> tr) -&gt; std::pair&lt; <a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> *, <a class="el" href="structpoly_1_1IR_1_1TreeResult.html">TreeResult</a> &gt;</td></tr>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>createArrayRef</b> (llvm::Instruction *loadOrStore, llvm::Loop *L, llvm::Value *ptr, <a class="el" href="structpoly_1_1IR_1_1TreeResult.html">TreeResult</a> tr) -&gt; std::pair&lt; Value *, <a class="el" href="structpoly_1_1IR_1_1TreeResult.html">TreeResult</a> &gt;</td></tr>
 <tr class="separator:aed52faa9a186bdda4ba59c313d56e2fb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a563529afa64bb23d1179bb6596dcab0e"><td class="memItemLeft" align="right" valign="top"><a id="a563529afa64bb23d1179bb6596dcab0e"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>createArrayRef</b> (llvm::Instruction *loadOrStore, const llvm::SCEV *accessFn, unsigned numLoops, const llvm::SCEV *elSz, <a class="el" href="structpoly_1_1IR_1_1TreeResult.html">TreeResult</a> tr) -&gt; std::pair&lt; <a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> *, <a class="el" href="structpoly_1_1IR_1_1TreeResult.html">TreeResult</a> &gt;</td></tr>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>createArrayRef</b> (llvm::Instruction *loadOrStore, const llvm::SCEV *accessFn, unsigned numLoops, const llvm::SCEV *elSz, <a class="el" href="structpoly_1_1IR_1_1TreeResult.html">TreeResult</a> tr) -&gt; std::pair&lt; Value *, <a class="el" href="structpoly_1_1IR_1_1TreeResult.html">TreeResult</a> &gt;</td></tr>
 <tr class="separator:a563529afa64bb23d1179bb6596dcab0e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7f111fcd6afe4dc19f8fe1eb8d9e9a60"><td class="memTemplParams" colspan="2"><a id="a7f111fcd6afe4dc19f8fe1eb8d9e9a60"></a>
 template&lt;size_t N&gt; </td></tr>
-<tr class="memitem:a7f111fcd6afe4dc19f8fe1eb8d9e9a60"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>createOperation</b> (llvm::Intrinsic::ID opId, std::array&lt; <a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> *, N &gt; ops, llvm::Type *typ, llvm::FastMathFlags fmf) -&gt; <a class="el" href="classpoly_1_1IR_1_1Compute.html">Compute</a> *</td></tr>
+<tr class="memitem:a7f111fcd6afe4dc19f8fe1eb8d9e9a60"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>createOperation</b> (llvm::Intrinsic::ID opId, std::array&lt; Value *, N &gt; ops, llvm::Type *typ, llvm::FastMathFlags fmf) -&gt; <a class="el" href="classpoly_1_1IR_1_1Compute.html">Compute</a> *</td></tr>
 <tr class="separator:a7f111fcd6afe4dc19f8fe1eb8d9e9a60"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aca3c18d799319efadb016b2c0cb80aee"><td class="memItemLeft" align="right" valign="top"><a id="aca3c18d799319efadb016b2c0cb80aee"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>createOperation</b> (llvm::Intrinsic::ID opId, PtrVector&lt; <a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> * &gt; ops, llvm::Type *typ, llvm::FastMathFlags fmf) -&gt; <a class="el" href="classpoly_1_1IR_1_1Compute.html">Compute</a> *</td></tr>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>createOperation</b> (llvm::Intrinsic::ID opId, PtrVector&lt; Value * &gt; ops, llvm::Type *typ, llvm::FastMathFlags fmf) -&gt; <a class="el" href="classpoly_1_1IR_1_1Compute.html">Compute</a> *</td></tr>
 <tr class="separator:aca3c18d799319efadb016b2c0cb80aee"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a702738fcc27c44277ad2eac46da1c091"><td class="memItemLeft" align="right" valign="top"><a id="a702738fcc27c44277ad2eac46da1c091"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>setOperands</b> (<a class="el" href="classpoly_1_1IR_1_1Compute.html">Compute</a> *op, PtrVector&lt; <a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> * &gt; ops)</td></tr>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>setOperands</b> (<a class="el" href="classpoly_1_1IR_1_1Compute.html">Compute</a> *op, PtrVector&lt; Value * &gt; ops)</td></tr>
 <tr class="separator:a702738fcc27c44277ad2eac46da1c091"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5f6d6d4a337fae4ab476b4a2835a1f80"><td class="memItemLeft" align="right" valign="top"><a id="a5f6d6d4a337fae4ab476b4a2835a1f80"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>copyOperation</b> (<a class="el" href="classpoly_1_1IR_1_1Compute.html">Compute</a> *A)</td></tr>
 <tr class="separator:a5f6d6d4a337fae4ab476b4a2835a1f80"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4b64684090963e5baa7617a70e21e1f0"><td class="memTemplParams" colspan="2"><a id="a4b64684090963e5baa7617a70e21e1f0"></a>
 template&lt;size_t N&gt; </td></tr>
-<tr class="memitem:a4b64684090963e5baa7617a70e21e1f0"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>getOperation</b> (llvm::Intrinsic::ID opId, std::array&lt; <a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> *, N &gt; ops, llvm::Type *typ, llvm::FastMathFlags fmf) -&gt; <a class="el" href="classpoly_1_1IR_1_1Compute.html">Compute</a> *</td></tr>
+<tr class="memitem:a4b64684090963e5baa7617a70e21e1f0"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>getOperation</b> (llvm::Intrinsic::ID opId, std::array&lt; Value *, N &gt; ops, llvm::Type *typ, llvm::FastMathFlags fmf) -&gt; <a class="el" href="classpoly_1_1IR_1_1Compute.html">Compute</a> *</td></tr>
 <tr class="separator:a4b64684090963e5baa7617a70e21e1f0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0d53365fa1fc61eeac1af989a4872507"><td class="memItemLeft" align="right" valign="top"><a id="a0d53365fa1fc61eeac1af989a4872507"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator[]</b> (llvm::Value *v) -&gt; <a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> *</td></tr>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator[]</b> (llvm::Value *v) -&gt; Value *</td></tr>
 <tr class="separator:a0d53365fa1fc61eeac1af989a4872507"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1998db5c83467feb7275c1b4376410f6"><td class="memItemLeft" align="right" valign="top"><a id="a1998db5c83467feb7275c1b4376410f6"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>createConstant</b> (llvm::ConstantInt *c, <a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> *&amp;n) -&gt; <a class="el" href="classpoly_1_1IR_1_1Cnst.html">Cnst</a> *</td></tr>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>createConstant</b> (llvm::ConstantInt *c, Value *&amp;n) -&gt; Cnst *</td></tr>
 <tr class="separator:a1998db5c83467feb7275c1b4376410f6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1869dc33ce25fc1e0b445da71fb9aa59"><td class="memItemLeft" align="right" valign="top"><a id="a1869dc33ce25fc1e0b445da71fb9aa59"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>createConstant</b> (llvm::ConstantFP *f, <a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> *&amp;n) -&gt; <a class="el" href="classpoly_1_1IR_1_1Cnst.html">Cnst</a> *</td></tr>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>createConstant</b> (llvm::ConstantFP *f, Value *&amp;n) -&gt; Cnst *</td></tr>
 <tr class="separator:a1869dc33ce25fc1e0b445da71fb9aa59"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9d928b36b3e962c9d0764ad994ddc321"><td class="memItemLeft" align="right" valign="top"><a id="a9d928b36b3e962c9d0764ad994ddc321"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>createConstant</b> (llvm::ConstantFP *f) -&gt; <a class="el" href="classpoly_1_1IR_1_1Bflt.html">Bflt</a> *</td></tr>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>createConstant</b> (llvm::ConstantFP *f) -&gt; Bflt *</td></tr>
 <tr class="separator:a9d928b36b3e962c9d0764ad994ddc321"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab72653790a6b670de4acba4480d6e870"><td class="memItemLeft" align="right" valign="top"><a id="ab72653790a6b670de4acba4480d6e870"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>createConstant</b> (llvm::Type *typ, int64_t v) -&gt; <a class="el" href="classpoly_1_1IR_1_1Cint.html">Cint</a> *</td></tr>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>createConstant</b> (llvm::Type *typ, int64_t v) -&gt; Cint *</td></tr>
 <tr class="separator:ab72653790a6b670de4acba4480d6e870"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afcdf99b871ac95762962ce12ed0aa8ff"><td class="memItemLeft" align="right" valign="top"><a id="afcdf99b871ac95762962ce12ed0aa8ff"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>getConstant</b> (llvm::Type *typ, int64_t v) -&gt; <a class="el" href="classpoly_1_1IR_1_1Cint.html">Cint</a> *</td></tr>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getConstant</b> (llvm::Type *typ, int64_t v) -&gt; Cint *</td></tr>
 <tr class="separator:afcdf99b871ac95762962ce12ed0aa8ff"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aeb8bb7803d17a4748edd5a9e43b777da"><td class="memItemLeft" align="right" valign="top"><a id="aeb8bb7803d17a4748edd5a9e43b777da"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>createConstant</b> (llvm::Type *typ, double v) -&gt; <a class="el" href="classpoly_1_1IR_1_1Cflt.html">Cflt</a> *</td></tr>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>createConstant</b> (llvm::Type *typ, double v) -&gt; Cflt *</td></tr>
 <tr class="separator:aeb8bb7803d17a4748edd5a9e43b777da"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8166c65ff011cc2cdde94f2ad32f5f95"><td class="memItemLeft" align="right" valign="top"><a id="a8166c65ff011cc2cdde94f2ad32f5f95"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>createConstantVal</b> (llvm::Value *val, <a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> *&amp;n) -&gt; <a class="el" href="classpoly_1_1IR_1_1CVal.html">CVal</a> *</td></tr>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>createConstantVal</b> (llvm::Value *val, Value *&amp;n) -&gt; CVal *</td></tr>
 <tr class="separator:a8166c65ff011cc2cdde94f2ad32f5f95"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a147554a9e6170bf61c8a1369b24fae60"><td class="memItemLeft" align="right" valign="top"><a id="a147554a9e6170bf61c8a1369b24fae60"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>createCondition</b> (Predicate::Relation rel, <a class="el" href="classpoly_1_1IR_1_1Compute.html">Compute</a> *instr, bool swap=false) -&gt; <a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> *</td></tr>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>createCondition</b> (Predicate::Relation rel, <a class="el" href="classpoly_1_1IR_1_1Compute.html">Compute</a> *instr, bool swap=false) -&gt; Value *</td></tr>
 <tr class="separator:a147554a9e6170bf61c8a1369b24fae60"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0fb8cf023855c7f6a7e9bf8f2c7ebfa7"><td class="memItemLeft" align="right" valign="top"><a id="a0fb8cf023855c7f6a7e9bf8f2c7ebfa7"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>negate</b> (<a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> *I) -&gt; <a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> *</td></tr>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>negate</b> (Value *I) -&gt; Value *</td></tr>
 <tr class="separator:a0fb8cf023855c7f6a7e9bf8f2c7ebfa7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aaf1edf8e5352b0975e04efadf98553a2"><td class="memItemLeft" align="right" valign="top"><a id="aaf1edf8e5352b0975e04efadf98553a2"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>createCondition</b> (<a class="el" href="structpoly_1_1IR_1_1Predicate_1_1Intersection.html">Predicate::Intersection</a> pred, UList&lt; <a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> * &gt; *predicates, bool swap) -&gt; <a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> *</td></tr>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>createCondition</b> (<a class="el" href="structpoly_1_1IR_1_1Predicate_1_1Intersection.html">Predicate::Intersection</a> pred, UList&lt; Value * &gt; *predicates, bool swap) -&gt; Value *</td></tr>
 <tr class="separator:aaf1edf8e5352b0975e04efadf98553a2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6faece9ac31b45aae0353250ff03084d"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1IR_1_1Cache.html#a6faece9ac31b45aae0353250ff03084d">createSelect</a> (<a class="el" href="structpoly_1_1IR_1_1Predicate_1_1Intersection.html">Predicate::Intersection</a> P, <a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> *A, <a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> *B, UList&lt; <a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> * &gt; *pred) -&gt; <a class="el" href="classpoly_1_1IR_1_1Compute.html">Compute</a> *</td></tr>
+<tr class="memitem:a6faece9ac31b45aae0353250ff03084d"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1IR_1_1Cache.html#a6faece9ac31b45aae0353250ff03084d">createSelect</a> (<a class="el" href="structpoly_1_1IR_1_1Predicate_1_1Intersection.html">Predicate::Intersection</a> P, Value *A, Value *B, UList&lt; Value * &gt; *pred) -&gt; <a class="el" href="classpoly_1_1IR_1_1Compute.html">Compute</a> *</td></tr>
 <tr class="separator:a6faece9ac31b45aae0353250ff03084d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac979e6d1c9938d1295a04fc670b046e3"><td class="memItemLeft" align="right" valign="top"><a id="ac979e6d1c9938d1295a04fc670b046e3"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>addPredicate</b> (<a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> *A, <a class="el" href="structpoly_1_1IR_1_1Predicate_1_1Set.html">Predicate::Set</a> P, <a class="el" href="classpoly_1_1IR_1_1Predicate_1_1Map.html">Predicate::Map</a> *M)</td></tr>
@@ -189,19 +189,19 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>addPredicate</b> (<a 
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> *&#160;</td>
+          <td class="paramtype">Value *&#160;</td>
           <td class="paramname"><em>A</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> *&#160;</td>
+          <td class="paramtype">Value *&#160;</td>
           <td class="paramname"><em>B</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">UList&lt; <a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> * &gt; *&#160;</td>
+          <td class="paramtype">UList&lt; Value * &gt; *&#160;</td>
           <td class="paramname"><em>pred</em>&#160;</td>
         </tr>
         <tr>
@@ -303,7 +303,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>addPredicate</b> (<a 
         <tr>
           <td></td>
           <td>)</td>
-          <td></td><td> -&gt; std::pair&lt;<a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> *, <a class="el" href="structpoly_1_1IR_1_1TreeResult.html">TreeResult</a>&gt; </td>
+          <td></td><td> -&gt; std::pair&lt;Value *, <a class="el" href="structpoly_1_1IR_1_1TreeResult.html">TreeResult</a>&gt; </td>
         </tr>
       </table>
   </td>
@@ -328,13 +328,13 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>addPredicate</b> (<a 
         <tr>
           <td class="memname">constexpr void poly::IR::Cache::replaceAllUsesWith </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="classpoly_1_1IR_1_1Instruction.html">Instruction</a> *&#160;</td>
+          <td class="paramtype">Instruction *&#160;</td>
           <td class="paramname"><em>oldNode</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> *&#160;</td>
+          <td class="paramtype">Value *&#160;</td>
           <td class="paramname"><em>newNode</em>&#160;</td>
         </tr>
         <tr>

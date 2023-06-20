@@ -190,7 +190,7 @@ $(function() {
 <div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160;    <a class="code" href="classpoly_1_1IR_1_1Addr.html">Addr</a> *m = store;</div>
 <div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;    <span class="keywordflow">while</span> (<span class="keyword">true</span>) {</div>
 <div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;      f(m);</div>
-<div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160;      <a class="code" href="classpoly_1_1IR_1_1Node.html">IR::Node</a> *v = m-&gt;getPrev();</div>
+<div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160;      IR::Node *v = m-&gt;getPrev();</div>
 <div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160;      <span class="keywordflow">if</span> (!v) <span class="keywordflow">break</span>;</div>
 <div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160;      m = llvm::cast&lt;Addr&gt;(v);</div>
 <div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160;    }</div>
@@ -1612,7 +1612,6 @@ $(function() {
 <div class="line"><a name="l01684"></a><span class="lineno"> 1684</span>&#160;} <span class="comment">// namespace poly::lp</span></div>
 <div class="ttc" id="aclassCostModeling_1_1LoopTreeSchedule_html"><div class="ttname"><a href="classCostModeling_1_1LoopTreeSchedule.html">CostModeling::LoopTreeSchedule</a></div><div class="ttdef"><b>Definition:</b> CostModeling.hpp:176</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Addr_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Addr.html">poly::IR::Addr</a></div><div class="ttdef"><b>Definition:</b> Address.hpp:74</div></div>
-<div class="ttc" id="aclasspoly_1_1IR_1_1Node_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Node.html">poly::IR::Node</a></div><div class="ttdef"><b>Definition:</b> Node.hpp:86</div></div>
 <div class="ttc" id="aclasspoly_1_1lp_1_1LinearProgramLoopBlock_1_1Graph_1_1EdgeIterator_html"><div class="ttname"><a href="classpoly_1_1lp_1_1LinearProgramLoopBlock_1_1Graph_1_1EdgeIterator.html">poly::lp::LinearProgramLoopBlock::Graph::EdgeIterator</a></div><div class="ttdef"><b>Definition:</b> LoopBlock.hpp:719</div></div>
 <div class="ttc" id="aclasspoly_1_1lp_1_1LinearProgramLoopBlock_html"><div class="ttname"><a href="classpoly_1_1lp_1_1LinearProgramLoopBlock.html">poly::lp::LinearProgramLoopBlock</a></div><div class="ttdef"><b>Definition:</b> LoopBlock.hpp:318</div></div>
 <div class="ttc" id="aclasspoly_1_1lp_1_1LinearProgramLoopBlock_html_a163bf4e024072759f9ab071250e6c2f6"><div class="ttname"><a href="classpoly_1_1lp_1_1LinearProgramLoopBlock.html#a163bf4e024072759f9ab071250e6c2f6">poly::lp::LinearProgramLoopBlock::fillEdges</a></div><div class="ttdeci">void fillEdges()</div><div class="ttdef"><b>Definition:</b> LoopBlock.hpp:448</div></div>

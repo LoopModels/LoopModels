@@ -102,7 +102,7 @@ $(function() {
 <div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160; </div>
 <div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;<span class="comment">// clang-format off</span></div>
 <div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;<span class="comment"></span><span class="comment">// clang-format on</span></div>
-<div class="line"><a name="l00074"></a><span class="lineno"><a class="line" href="classpoly_1_1IR_1_1Addr.html">   74</a></span>&#160;<span class="keyword">class </span><a class="code" href="classpoly_1_1IR_1_1Addr.html">Addr</a> : <span class="keyword">public</span> <a class="code" href="classpoly_1_1IR_1_1Instruction.html">Instruction</a> {</div>
+<div class="line"><a name="l00074"></a><span class="lineno"><a class="line" href="classpoly_1_1IR_1_1Addr.html">   74</a></span>&#160;<span class="keyword">class </span><a class="code" href="classpoly_1_1IR_1_1Addr.html">Addr</a> : <span class="keyword">public</span> Instruction {</div>
 <div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;  [[no_unique_address]] <a class="code" href="classpoly_1_1poly_1_1Dependence.html">poly::Dependence</a> *edgeIn{<span class="keyword">nullptr</span>};</div>
 <div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;  [[no_unique_address]] <span class="keyword">union </span>{</div>
 <div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;    ScheduledNode *node{<span class="keyword">nullptr</span>};</div>
@@ -113,7 +113,7 @@ $(function() {
 <div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;  [[no_unique_address]] llvm::Instruction *instr;</div>
 <div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;  [[no_unique_address]] int64_t *offSym{<span class="keyword">nullptr</span>};</div>
 <div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;  [[no_unique_address]] <span class="keyword">const</span> llvm::SCEV **syms;</div>
-<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;  [[no_unique_address]] <a class="code" href="classpoly_1_1IR_1_1Value.html">Value</a> *predicate{<span class="keyword">nullptr</span>};</div>
+<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;  [[no_unique_address]] Value *predicate{<span class="keyword">nullptr</span>};</div>
 <div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;  [[no_unique_address]] <span class="keywordtype">unsigned</span> numDim{0}, numDynSym{0};</div>
 <div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;<span class="preprocessor">#if !defined(__clang__) &amp;&amp; defined(__GNUC__)</span></div>
 <div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;<span class="preprocessor">#pragma GCC diagnostic push</span></div>
@@ -139,7 +139,7 @@ $(function() {
 <div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;  }</div>
 <div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;  <span class="comment">// this is a reload</span></div>
 <div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;  <span class="keyword">explicit</span> <a class="code" href="classpoly_1_1IR_1_1Addr.html">Addr</a>(<a class="code" href="classpoly_1_1IR_1_1Addr.html">Addr</a> *other)</div>
-<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;    : <a class="code" href="classpoly_1_1IR_1_1Instruction.html#a03ac07d26dc92b783043755108fac3e4">Instruction</a>(VK_Stow, other-&gt;depth), basePointer(other-&gt;basePointer),</div>
+<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;    : Instruction(VK_Stow, other-&gt;depth), basePointer(other-&gt;basePointer),</div>
 <div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;      loop(other-&gt;loop), instr(other-&gt;instr), offSym(other-&gt;offSym),</div>
 <div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;      syms(other-&gt;syms), numDim(other-&gt;numDim), numDynSym(other-&gt;numDynSym) {</div>
 <div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;    std::memcpy(mem, other-&gt;mem,</div>
@@ -148,20 +148,20 @@ $(function() {
 <div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;  <span class="keyword">explicit</span> <a class="code" href="classpoly_1_1IR_1_1Addr.html">Addr</a>(<span class="keyword">const</span> llvm::SCEVUnknown *arrayPtr, llvm::Instruction *user,</div>
 <div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;                int64_t *offsym, <span class="keyword">const</span> llvm::SCEV **s,</div>
 <div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;                std::array&lt;unsigned, 2&gt; dimOff, <span class="keywordtype">unsigned</span> numLoops)</div>
-<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;    : <a class="code" href="classpoly_1_1IR_1_1Instruction.html#a03ac07d26dc92b783043755108fac3e4">Instruction</a>(llvm::isa&lt;llvm::StoreInst&gt;(user) ? VK_Stow : VK_Load,</div>
+<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;    : Instruction(llvm::isa&lt;llvm::StoreInst&gt;(user) ? VK_Stow : VK_Load,</div>
 <div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;                  numLoops),</div>
 <div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;      basePointer(arrayPtr), instr(user), offSym(offsym), syms(s),</div>
 <div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;      numDim(dimOff[0]), numDynSym(dimOff[1]){};</div>
 <div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;  <span class="keyword">explicit</span> <a class="code" href="classpoly_1_1IR_1_1Addr.html">Addr</a>(<span class="keyword">const</span> llvm::SCEVUnknown *arrayPtr, llvm::Instruction *user,</div>
 <div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160;                <span class="keywordtype">unsigned</span> numLoops)</div>
-<div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;    : <a class="code" href="classpoly_1_1IR_1_1Instruction.html#a03ac07d26dc92b783043755108fac3e4">Instruction</a>(llvm::isa&lt;llvm::StoreInst&gt;(user) ? VK_Stow : VK_Load,</div>
+<div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;    : Instruction(llvm::isa&lt;llvm::StoreInst&gt;(user) ? VK_Stow : VK_Load,</div>
 <div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;                  numLoops),</div>
 <div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160;      basePointer(arrayPtr), instr(user){};</div>
 <div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160; </div>
 <div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160;  constexpr <a class="code" href="classpoly_1_1IR_1_1Addr.html">Addr</a>(NotNull&lt;poly::Loop&gt; explicitLoop, NotNull&lt;Addr&gt; ma,</div>
 <div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160;                 SquarePtrMatrix&lt;int64_t&gt; Pinv, int64_t denom,</div>
 <div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;                 PtrVector&lt;int64_t&gt; omega, <span class="keywordtype">bool</span> isStr, int64_t *offsets)</div>
-<div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;    : <a class="code" href="classpoly_1_1IR_1_1Instruction.html#a03ac07d26dc92b783043755108fac3e4">Instruction</a>(isStr ? VK_Stow : VK_Load, <span class="keywordtype">unsigned</span>(Pinv.numCol())),</div>
+<div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;    : Instruction(isStr ? VK_Stow : VK_Load, <span class="keywordtype">unsigned</span>(Pinv.numCol())),</div>
 <div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;      basePointer(ma-&gt;getArrayPointer()), loop(explicitLoop),</div>
 <div class="line"><a name="l00136"></a><span class="lineno">  136</span>&#160;      instr(ma-&gt;getInstruction()), offSym(ma-&gt;getOffSym()) {</div>
 <div class="line"><a name="l00137"></a><span class="lineno">  137</span>&#160;    DensePtrMatrix&lt;int64_t&gt; M{ma-&gt;indexMatrix()};    <span class="comment">// aD x nLma</span></div>
@@ -333,12 +333,12 @@ $(function() {
 <div class="line"><a name="l00306"></a><span class="lineno">  306</span>&#160;<span class="comment">  [[nodiscard]] constexpr auto lowLink() const -&gt; unsigned { return lowLink_; }</span></div>
 <div class="line"><a name="l00307"></a><span class="lineno">  307</span>&#160;<span class="comment">  */</span></div>
 <div class="line"><a name="l00308"></a><span class="lineno">  308</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getStoredVal() const -&gt; Value * {</div>
-<div class="line"><a name="l00309"></a><span class="lineno">  309</span>&#160;    invariant(<a class="code" href="classpoly_1_1IR_1_1Value.html#a6b2b299b85ea7f73459b85597df1b2d3">isStore</a>());</div>
+<div class="line"><a name="l00309"></a><span class="lineno">  309</span>&#160;    invariant(isStore());</div>
 <div class="line"><a name="l00310"></a><span class="lineno">  310</span>&#160;    <span class="keywordflow">return</span> unionPtr.node;</div>
 <div class="line"><a name="l00311"></a><span class="lineno">  311</span>&#160;  }</div>
 <div class="line"><a name="l00312"></a><span class="lineno">  312</span>&#160;  <span class="comment">// doesn&#39;t add users</span></div>
 <div class="line"><a name="l00313"></a><span class="lineno">  313</span>&#160;  constexpr <span class="keywordtype">void</span> setVal(Value *n) {</div>
-<div class="line"><a name="l00314"></a><span class="lineno">  314</span>&#160;    invariant(<a class="code" href="classpoly_1_1IR_1_1Value.html#a6b2b299b85ea7f73459b85597df1b2d3">isStore</a>());</div>
+<div class="line"><a name="l00314"></a><span class="lineno">  314</span>&#160;    invariant(isStore());</div>
 <div class="line"><a name="l00315"></a><span class="lineno">  315</span>&#160;    invariant(Value::classof(n));</div>
 <div class="line"><a name="l00316"></a><span class="lineno">  316</span>&#160;    unionPtr.node = n;</div>
 <div class="line"><a name="l00317"></a><span class="lineno">  317</span>&#160;  }</div>
@@ -350,7 +350,7 @@ $(function() {
 <div class="line"><a name="l00323"></a><span class="lineno">  323</span>&#160;    predicate = <span class="keyword">static_cast&lt;</span>Value *<span class="keyword">&gt;</span>(n);</div>
 <div class="line"><a name="l00324"></a><span class="lineno">  324</span>&#160;  }</div>
 <div class="line"><a name="l00325"></a><span class="lineno">  325</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getUsers() const</div>
-<div class="line"><a name="l00326"></a><span class="lineno">  326</span>&#160;    -&gt; containers::UList&lt;<a class="code" href="classpoly_1_1IR_1_1Instruction.html#a03ac07d26dc92b783043755108fac3e4">Instruction</a> *&gt; * {</div>
+<div class="line"><a name="l00326"></a><span class="lineno">  326</span>&#160;    -&gt; containers::UList&lt;Instruction *&gt; * {</div>
 <div class="line"><a name="l00327"></a><span class="lineno">  327</span>&#160;    invariant(isLoad());</div>
 <div class="line"><a name="l00328"></a><span class="lineno">  328</span>&#160;    <span class="keywordflow">return</span> unionPtr.users;</div>
 <div class="line"><a name="l00329"></a><span class="lineno">  329</span>&#160;  }</div>
@@ -613,7 +613,7 @@ $(function() {
 <div class="line"><a name="l00588"></a><span class="lineno">  588</span>&#160;    <span class="keywordflow">return</span> numDim;</div>
 <div class="line"><a name="l00589"></a><span class="lineno">  589</span>&#160;  }</div>
 <div class="line"><a name="l00590"></a><span class="lineno">  590</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getInstruction() -&gt; llvm::Instruction * { <span class="keywordflow">return</span> instr; }</div>
-<div class="line"><a name="l00591"></a><span class="lineno">  591</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getInstruction() const -&gt; const llvm::<a class="code" href="classpoly_1_1IR_1_1Instruction.html#a03ac07d26dc92b783043755108fac3e4">Instruction</a> * {</div>
+<div class="line"><a name="l00591"></a><span class="lineno">  591</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getInstruction() const -&gt; const llvm::Instruction * {</div>
 <div class="line"><a name="l00592"></a><span class="lineno">  592</span>&#160;    <span class="keywordflow">return</span> instr;</div>
 <div class="line"><a name="l00593"></a><span class="lineno">  593</span>&#160;  }</div>
 <div class="line"><a name="l00594"></a><span class="lineno">  594</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getAlign() const -&gt; llvm::Align {</div>
@@ -731,7 +731,7 @@ $(function() {
 <div class="line"><a name="l00708"></a><span class="lineno">  708</span>&#160;      }</div>
 <div class="line"><a name="l00709"></a><span class="lineno">  709</span>&#160;    }</div>
 <div class="line"><a name="l00710"></a><span class="lineno">  710</span>&#160;    os &lt;&lt; <span class="stringliteral">&quot;]&quot;</span>;</div>
-<div class="line"><a name="l00711"></a><span class="lineno">  711</span>&#160;    <span class="keywordflow">if</span> (<a class="code" href="classpoly_1_1IR_1_1Value.html#a6b2b299b85ea7f73459b85597df1b2d3">isStore</a>()) os &lt;&lt; <span class="stringliteral">&quot; = ...&quot;</span>;</div>
+<div class="line"><a name="l00711"></a><span class="lineno">  711</span>&#160;    <span class="keywordflow">if</span> (isStore()) os &lt;&lt; <span class="stringliteral">&quot; = ...&quot;</span>;</div>
 <div class="line"><a name="l00712"></a><span class="lineno">  712</span>&#160;  }</div>
 <div class="line"><a name="l00713"></a><span class="lineno">  713</span>&#160;};</div>
 <div class="line"><a name="l00714"></a><span class="lineno">  714</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> operator&lt;&lt;(llvm::raw_ostream &amp;os, <span class="keyword">const</span> Addr &amp;m)</div>
@@ -793,7 +793,7 @@ $(function() {
 <div class="line"><a name="l00770"></a><span class="lineno">  770</span>&#160; </div>
 <div class="line"><a name="l00771"></a><span class="lineno">  771</span>&#160;<span class="keyword">public</span>:</div>
 <div class="line"><a name="l00772"></a><span class="lineno">  772</span>&#160;  <a class="code" href="classpoly_1_1IR_1_1Load.html">Load</a>(<a class="code" href="classpoly_1_1IR_1_1Addr.html">Addr</a> *a) : addr(a-&gt;getKind() == Node::VK_Load ? a : <span class="keyword">nullptr</span>) {}</div>
-<div class="line"><a name="l00773"></a><span class="lineno">  773</span>&#160;  <a class="code" href="classpoly_1_1IR_1_1Load.html">Load</a>(<a class="code" href="classpoly_1_1IR_1_1Node.html">Node</a> *a)</div>
+<div class="line"><a name="l00773"></a><span class="lineno">  773</span>&#160;  <a class="code" href="classpoly_1_1IR_1_1Load.html">Load</a>(Node *a)</div>
 <div class="line"><a name="l00774"></a><span class="lineno">  774</span>&#160;    : addr(a-&gt;getKind() == Node::VK_Load ? <span class="keyword">static_cast&lt;</span><a class="code" href="classpoly_1_1IR_1_1Addr.html">Addr</a> *<span class="keyword">&gt;</span>(a) : <span class="keyword">nullptr</span>) {}</div>
 <div class="line"><a name="l00775"></a><span class="lineno">  775</span>&#160;  constexpr <span class="keyword">explicit</span> <span class="keyword">operator</span> bool() { <span class="keywordflow">return</span> addr != <span class="keyword">nullptr</span>; }</div>
 <div class="line"><a name="l00776"></a><span class="lineno">  776</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getInstruction() <span class="keyword">const</span> -&gt; llvm::Instruction * {</div>
@@ -807,16 +807,16 @@ $(function() {
 <div class="line"><a name="l00784"></a><span class="lineno">  784</span>&#160; </div>
 <div class="line"><a name="l00785"></a><span class="lineno">  785</span>&#160;<span class="keyword">public</span>:</div>
 <div class="line"><a name="l00786"></a><span class="lineno">  786</span>&#160;  <a class="code" href="classpoly_1_1IR_1_1Stow.html">Stow</a>(<a class="code" href="classpoly_1_1IR_1_1Addr.html">Addr</a> *a) : addr(a-&gt;getKind() == Node::VK_Stow ? a : <span class="keyword">nullptr</span>) {}</div>
-<div class="line"><a name="l00787"></a><span class="lineno">  787</span>&#160;  <a class="code" href="classpoly_1_1IR_1_1Stow.html">Stow</a>(<a class="code" href="classpoly_1_1IR_1_1Node.html">Node</a> *a)</div>
+<div class="line"><a name="l00787"></a><span class="lineno">  787</span>&#160;  <a class="code" href="classpoly_1_1IR_1_1Stow.html">Stow</a>(Node *a)</div>
 <div class="line"><a name="l00788"></a><span class="lineno">  788</span>&#160;    : addr(a-&gt;getKind() == Node::VK_Stow ? <span class="keyword">static_cast&lt;</span><a class="code" href="classpoly_1_1IR_1_1Addr.html">Addr</a> *<span class="keyword">&gt;</span>(a) : <span class="keyword">nullptr</span>) {}</div>
 <div class="line"><a name="l00789"></a><span class="lineno">  789</span>&#160;  constexpr <span class="keyword">explicit</span> <span class="keyword">operator</span> bool() { <span class="keywordflow">return</span> addr != <span class="keyword">nullptr</span>; }</div>
 <div class="line"><a name="l00790"></a><span class="lineno">  790</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getInstruction() <span class="keyword">const</span> -&gt; llvm::StoreInst * {</div>
 <div class="line"><a name="l00791"></a><span class="lineno">  791</span>&#160;    <span class="keywordflow">return</span> llvm::cast&lt;llvm::StoreInst&gt;(addr-&gt;getInstruction());</div>
 <div class="line"><a name="l00792"></a><span class="lineno">  792</span>&#160;  }</div>
-<div class="line"><a name="l00793"></a><span class="lineno">  793</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getStoredVal() <span class="keyword">const</span> -&gt; <a class="code" href="classpoly_1_1IR_1_1Value.html">Value</a> * {</div>
+<div class="line"><a name="l00793"></a><span class="lineno">  793</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getStoredVal() <span class="keyword">const</span> -&gt; Value * {</div>
 <div class="line"><a name="l00794"></a><span class="lineno">  794</span>&#160;    <span class="keywordflow">return</span> addr-&gt;getStoredVal();</div>
 <div class="line"><a name="l00795"></a><span class="lineno">  795</span>&#160;  }</div>
-<div class="line"><a name="l00796"></a><span class="lineno">  796</span>&#160;  constexpr <span class="keywordtype">void</span> setVal(<a class="code" href="classpoly_1_1IR_1_1Value.html">Value</a> *n) { <span class="keywordflow">return</span> addr-&gt;setVal(n); }</div>
+<div class="line"><a name="l00796"></a><span class="lineno">  796</span>&#160;  constexpr <span class="keywordtype">void</span> setVal(Value *n) { <span class="keywordflow">return</span> addr-&gt;setVal(n); }</div>
 <div class="line"><a name="l00797"></a><span class="lineno">  797</span>&#160;};</div>
 <div class="line"><a name="l00798"></a><span class="lineno">  798</span>&#160; </div>
 <div class="line"><a name="l00799"></a><span class="lineno">  799</span>&#160;} <span class="comment">// namespace IR</span></div>
@@ -827,13 +827,8 @@ $(function() {
 <div class="ttc" id="aclasspoly_1_1IR_1_1Addr_html_aa5face1561e559740fbda46c70c1d514"><div class="ttname"><a href="classpoly_1_1IR_1_1Addr.html#aa5face1561e559740fbda46c70c1d514">poly::IR::Addr::updateOffsMat</a></div><div class="ttdeci">void updateOffsMat(BumpAlloc&lt;&gt; &amp;alloc, size_t numToPeel, llvm::Loop *L, llvm::ScalarEvolution *SE)</div><div class="ttdef"><b>Definition:</b> Address.hpp:333</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Addr_html_af4838372d11fd32b964c9a7cb6d4b1b8"><div class="ttname"><a href="classpoly_1_1IR_1_1Addr.html#af4838372d11fd32b964c9a7cb6d4b1b8">poly::IR::Addr::indexMatrix</a></div><div class="ttdeci">constexpr auto indexMatrix() -&gt; MutDensePtrMatrix&lt; int64_t &gt;</div><div class="ttdoc">indexMatrix() -&gt; arrayDim() x getNumLoops()</div><div class="ttdef"><b>Definition:</b> Address.hpp:611</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Addr_html_af5ceceb3d01057d14b1027cc9c8325f6"><div class="ttname"><a href="classpoly_1_1IR_1_1Addr.html#af5ceceb3d01057d14b1027cc9c8325f6">poly::IR::Addr::indexMatrix</a></div><div class="ttdeci">constexpr auto indexMatrix() const -&gt; DensePtrMatrix&lt; int64_t &gt;</div><div class="ttdoc">indexMatrix() -&gt; arrayDim() x getNumLoops()</div><div class="ttdef"><b>Definition:</b> Address.hpp:615</div></div>
-<div class="ttc" id="aclasspoly_1_1IR_1_1Instruction_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Instruction.html">poly::IR::Instruction</a></div><div class="ttdef"><b>Definition:</b> Node.hpp:428</div></div>
-<div class="ttc" id="aclasspoly_1_1IR_1_1Instruction_html_a03ac07d26dc92b783043755108fac3e4"><div class="ttname"><a href="classpoly_1_1IR_1_1Instruction.html#a03ac07d26dc92b783043755108fac3e4">poly::IR::Instruction::Instruction</a></div><div class="ttdeci">constexpr Instruction(ValKind kind)</div><div class="ttdef"><b>Definition:</b> Node.hpp:433</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Load_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Load.html">poly::IR::Load</a></div><div class="ttdef"><b>Definition:</b> Address.hpp:768</div></div>
-<div class="ttc" id="aclasspoly_1_1IR_1_1Node_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Node.html">poly::IR::Node</a></div><div class="ttdef"><b>Definition:</b> Node.hpp:86</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Stow_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Stow.html">poly::IR::Stow</a></div><div class="ttdef"><b>Definition:</b> Address.hpp:782</div></div>
-<div class="ttc" id="aclasspoly_1_1IR_1_1Value_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Value.html">poly::IR::Value</a></div><div class="ttdef"><b>Definition:</b> Node.hpp:355</div></div>
-<div class="ttc" id="aclasspoly_1_1IR_1_1Value_html_a6b2b299b85ea7f73459b85597df1b2d3"><div class="ttname"><a href="classpoly_1_1IR_1_1Value.html#a6b2b299b85ea7f73459b85597df1b2d3">poly::IR::Value::isStore</a></div><div class="ttdeci">constexpr auto isStore() const -&gt; bool</div><div class="ttdef"><b>Definition:</b> Node.hpp:399</div></div>
 <div class="ttc" id="aclasspoly_1_1poly_1_1Dependence_html"><div class="ttname"><a href="classpoly_1_1poly_1_1Dependence.html">poly::poly::Dependence</a></div><div class="ttdef"><b>Definition:</b> Dependence.hpp:16</div></div>
 <div class="ttc" id="aclasspoly_1_1poly_1_1Loop_html"><div class="ttname"><a href="classpoly_1_1poly_1_1Loop.html">poly::poly::Loop</a></div><div class="ttdef"><b>Definition:</b> Loops.hpp:329</div></div>
 </div><!-- fragment --></div><!-- contents -->
