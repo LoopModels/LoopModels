@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['addedge_209',['addEdge',['../classpoly_1_1lp_1_1LinearProgramLoopBlock.html#a891243bf6176d4d63d16190b05467cb3',1,'poly::lp::LinearProgramLoopBlock']]]
+  ['addedge_204',['addEdge',['../classpoly_1_1lp_1_1LoopBlock.html#a48f46d8b5b762d062bf628156df23f8e',1,'poly::lp::LoopBlock']]]
 ];

@@ -105,9 +105,9 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>printDotFile</b> (Bum
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
-<tr class="memitem:a3c03711665fb989a0ad5d78fc415eed3"><td class="memItemLeft" align="right" valign="top"><a id="a3c03711665fb989a0ad5d78fc415eed3"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>init</b> (BumpAlloc&lt;&gt; &amp;alloc, LinearProgramLoopBlock &amp;LB) -&gt; <a class="el" href="classCostModeling_1_1LoopTreeSchedule.html">LoopTreeSchedule</a> *</td></tr>
-<tr class="separator:a3c03711665fb989a0ad5d78fc415eed3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac059c1858e45fea726a85c11be3f5626"><td class="memItemLeft" align="right" valign="top"><a id="ac059c1858e45fea726a85c11be3f5626"></a>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>init</b> (BumpAlloc&lt;&gt; &amp;alloc, lp::LoopBlock &amp;LB) -&gt; <a class="el" href="classCostModeling_1_1LoopTreeSchedule.html">LoopTreeSchedule</a> *</td></tr>
+<tr class="separator:ac059c1858e45fea726a85c11be3f5626"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>How should the IR look? We could have a flat IR, which may be useful for things like loop placement via SCC Alternatively, we could have a much more structured IR, where we have the loop blocks and loops. Then how do we do SCC? Add dummies? Or, can loops exist as IR components? What do we need to do with the IR?</p><ol type="1">

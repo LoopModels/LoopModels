@@ -576,7 +576,7 @@ $(function() {
 <div class="line"><a name="l00543"></a><span class="lineno">  543</span>&#160;  <span class="comment">// a) every addr has an index field</span></div>
 <div class="line"><a name="l00544"></a><span class="lineno">  544</span>&#160;  <span class="comment">// b) we create BitSets of ancestors</span></div>
 <div class="line"><a name="l00545"></a><span class="lineno">  545</span>&#160;  <span class="comment">// NOLINTNEXTLINE(misc-no-recursion)</span></div>
-<div class="line"><a name="l00546"></a><span class="lineno">  546</span>&#160;  <span class="keyword">auto</span> placeAddr(BumpAlloc&lt;&gt; &amp;alloc, LinearProgramLoopBlock &amp;LB,</div>
+<div class="line"><a name="l00546"></a><span class="lineno">  546</span>&#160;  <span class="keyword">auto</span> placeAddr(BumpAlloc&lt;&gt; &amp;alloc, lp::LoopBlock &amp;LB,</div>
 <div class="line"><a name="l00547"></a><span class="lineno">  547</span>&#160;                 MutPtrVector&lt;Addr *&gt; addr) -&gt; <span class="keywordtype">unsigned</span> {</div>
 <div class="line"><a name="l00548"></a><span class="lineno">  548</span>&#160;    <span class="comment">// we sort via repeatedly calculating the strongly connected components</span></div>
 <div class="line"><a name="l00549"></a><span class="lineno">  549</span>&#160;    <span class="comment">// of the address graph. The SCCs are in topological order.</span></div>
@@ -729,7 +729,7 @@ $(function() {
 <div class="line"><a name="l00696"></a><span class="lineno">  696</span>&#160;  <span class="keywordtype">void</span> validateMemPlacements() {}</div>
 <div class="line"><a name="l00697"></a><span class="lineno">  697</span>&#160;<span class="preprocessor">#endif</span></div>
 <div class="line"><a name="l00698"></a><span class="lineno">  698</span>&#160;<span class="keyword">public</span>:</div>
-<div class="line"><a name="l00699"></a><span class="lineno">  699</span>&#160;  [[nodiscard]] <span class="keyword">static</span> <span class="keyword">auto</span> init(BumpAlloc&lt;&gt; &amp;alloc, LinearProgramLoopBlock &amp;LB)</div>
+<div class="line"><a name="l00699"></a><span class="lineno">  699</span>&#160;  [[nodiscard]] <span class="keyword">static</span> <span class="keyword">auto</span> init(BumpAlloc&lt;&gt; &amp;alloc, lp::LoopBlock &amp;LB)</div>
 <div class="line"><a name="l00700"></a><span class="lineno">  700</span>&#160;    -&gt; LoopTreeSchedule * {</div>
 <div class="line"><a name="l00701"></a><span class="lineno">  701</span>&#160;    <span class="comment">// TODO: can we shorten the life span of the instructions we</span></div>
 <div class="line"><a name="l00702"></a><span class="lineno">  702</span>&#160;    <span class="comment">// allocate here to `lalloc`? I.e., do we need them to live on after</span></div>
@@ -772,7 +772,7 @@ $(function() {
 <div class="line"><a name="l00739"></a><span class="lineno">  739</span>&#160;  }</div>
 <div class="line"><a name="l00740"></a><span class="lineno">  740</span>&#160;  <span class="comment">// void initializeInstrGraph(BumpAlloc&lt;&gt; &amp;alloc, Instruction::Cache &amp;cache,</span></div>
 <div class="line"><a name="l00741"></a><span class="lineno">  741</span>&#160;  <span class="comment">//                           BumpAlloc&lt;&gt; &amp;tAlloc, LoopTree *loopForest,</span></div>
-<div class="line"><a name="l00742"></a><span class="lineno">  742</span>&#160;  <span class="comment">//                           LinearProgramLoopBlock &amp;LB,</span></div>
+<div class="line"><a name="l00742"></a><span class="lineno">  742</span>&#160;  <span class="comment">//                           lp::LoopBlock &amp;LB,</span></div>
 <div class="line"><a name="l00743"></a><span class="lineno">  743</span>&#160;  <span class="comment">//                           llvm::TargetTransformInfo &amp;TTI,</span></div>
 <div class="line"><a name="l00744"></a><span class="lineno">  744</span>&#160;  <span class="comment">//                           unsigned int vectorBits) {</span></div>
 <div class="line"><a name="l00745"></a><span class="lineno">  745</span>&#160; </div>
