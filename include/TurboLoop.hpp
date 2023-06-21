@@ -72,7 +72,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
   [[no_unique_address]] llvm::LoopInfo *LI;
   [[no_unique_address]] llvm::ScalarEvolution *SE;
   [[no_unique_address]] llvm::OptimizationRemarkEmitter *ORE;
-  [[no_unique_address]] LinearProgramLoopBlock loopBlock;
+  [[no_unique_address]] lp::LoopBlock loopBlock;
   [[no_unique_address]] IR::Cache instructions;
   [[no_unique_address]] CostModeling::CPURegisterFile registers;
 

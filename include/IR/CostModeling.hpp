@@ -543,7 +543,7 @@ private:
   // a) every addr has an index field
   // b) we create BitSets of ancestors
   // NOLINTNEXTLINE(misc-no-recursion)
-  auto placeAddr(BumpAlloc<> &alloc, LinearProgramLoopBlock &LB,
+  auto placeAddr(BumpAlloc<> &alloc, lp::LoopBlock &LB,
                  MutPtrVector<Addr *> addr) -> unsigned {
     // we sort via repeatedly calculating the strongly connected components
     // of the address graph. The SCCs are in topological order.
@@ -696,7 +696,7 @@ private:
   void validateMemPlacements() {}
 #endif
 public:
-  [[nodiscard]] static auto init(BumpAlloc<> &alloc, LinearProgramLoopBlock &LB)
+  [[nodiscard]] static auto init(BumpAlloc<> &alloc, lp::LoopBlock &LB)
     -> LoopTreeSchedule * {
     // TODO: can we shorten the life span of the instructions we
     // allocate here to `lalloc`? I.e., do we need them to live on after
@@ -739,7 +739,7 @@ public:
   }
   // void initializeInstrGraph(BumpAlloc<> &alloc, Instruction::Cache &cache,
   //                           BumpAlloc<> &tAlloc, LoopTree *loopForest,
-  //                           LinearProgramLoopBlock &LB,
+  //                           lp::LoopBlock &LB,
   //                           llvm::TargetTransformInfo &TTI,
   //                           unsigned int vectorBits) {
 

@@ -542,7 +542,7 @@ TEST(TriangularExampleTest, BasicAssertions) {
   constexpr size_t m = 0, n = 1, k = 2;
   // construct indices
   // ind mat, loops currently indexed from outside-in
-  LinearProgramLoopBlock lblock;
+  lp::LoopBlock lblock;
   // B[n, m]
   ArrayReference indBmn{scevB, loopMN, 2};
   {
@@ -1090,32 +1090,32 @@ TEST(MeanStDevTest0, BasicAssertions) {
   sch0t6[1] = 6;
   Vector<unsigned, 4> sch0t7(1 + 1, 0);
   sch0t7[1] = 7;
-  LinearProgramLoopBlock iOuterLoopNest;
+  lp::LoopBlock iOuterLoopNest;
   llvm::SmallVector<MemoryAccess *> iOuterMem;
 
   BumpAlloc<> alloc;
   iOuterMem.emplace_back(createMemAccess(alloc, xInd1, storeX0, sch0t0)); // 0
 
   iOuterMem.emplace_back(
-    createMemAccess(alloc, indAiOuter, loadAm, sch0t1t0));  // 1
+    createMemAccess(alloc, indAiOuter, loadAm, sch0t1t0)); // 1
   iOuterMem.emplace_back(
     createMemAccess(alloc, xInd2IOuter, loadX0, sch0t1t1)); // 2
 
   iOuterMem.emplace_back(
-    createMemAccess(alloc, xInd2IOuter, storeX1, sch0t1t2));              // 3
+    createMemAccess(alloc, xInd2IOuter, storeX1, sch0t1t2)); // 3
 
   iOuterMem.emplace_back(createMemAccess(alloc, xInd1, loadX1, sch0t2));  // 4
   iOuterMem.emplace_back(createMemAccess(alloc, xInd1, storeX2, sch0t3)); // 5
 
   iOuterMem.emplace_back(createMemAccess(alloc, sInd1, storeS0, sch0t4)); // 6
   iOuterMem.emplace_back(
-    createMemAccess(alloc, indAiOuter, loadAs, sch0t5t0));                // 7
+    createMemAccess(alloc, indAiOuter, loadAs, sch0t5t0)); // 7
   iOuterMem.emplace_back(
-    createMemAccess(alloc, xInd2IOuter, loadX2, sch0t5t1));               // 8
+    createMemAccess(alloc, xInd2IOuter, loadX2, sch0t5t1)); // 8
   iOuterMem.emplace_back(
-    createMemAccess(alloc, sInd2IOuter, loadS0, sch0t5t2));               // 9
+    createMemAccess(alloc, sInd2IOuter, loadS0, sch0t5t2)); // 9
   iOuterMem.emplace_back(
-    createMemAccess(alloc, sInd2IOuter, storeS1, sch0t5t3));              // 10
+    createMemAccess(alloc, sInd2IOuter, storeS1, sch0t5t3)); // 10
 
   iOuterMem.emplace_back(createMemAccess(alloc, sInd1, loadS1, sch0t6));  // 11
   iOuterMem.emplace_back(createMemAccess(alloc, sInd1, storeS2, sch0t7)); // 12
@@ -1169,7 +1169,7 @@ TEST(MeanStDevTest0, BasicAssertions) {
     llvm::errs() << "s.getOffsetOmega() =" << s.getOffsetOmega() << "\n";
   }
 
-  LinearProgramLoopBlock jOuterLoopNest;
+  lp::LoopBlock jOuterLoopNest;
   llvm::SmallVector<MemoryAccess *> jOuterMem;
   jOuterMem.emplace_back(createMemAccess(alloc, xInd1, storeX0, sch0t0)); // 0
   Vector<unsigned, 4> sch0t1(1 + 1, 0);
@@ -1184,9 +1184,9 @@ TEST(MeanStDevTest0, BasicAssertions) {
   sch1t0t2[0] = 1;
   sch1t0t2[2] = 2;
   jOuterMem.emplace_back(
-    createMemAccess(alloc, indAjOuter, loadAm, sch1t0t0));   // 1
+    createMemAccess(alloc, indAjOuter, loadAm, sch1t0t0)); // 1
   jOuterMem.emplace_back(
-    createMemAccess(alloc, xInd2JOuter, loadX0, sch1t0t1));  // 2
+    createMemAccess(alloc, xInd2JOuter, loadX0, sch1t0t1)); // 2
   jOuterMem.emplace_back(
     createMemAccess(alloc, xInd2JOuter, storeX1, sch1t0t2)); // 3
 
@@ -1211,11 +1211,11 @@ TEST(MeanStDevTest0, BasicAssertions) {
   sch3t0t3[2] = 3;
 
   jOuterMem.emplace_back(
-    createMemAccess(alloc, indAjOuter, loadAs, sch3t0t0));   // 7
+    createMemAccess(alloc, indAjOuter, loadAs, sch3t0t0)); // 7
   jOuterMem.emplace_back(
-    createMemAccess(alloc, xInd2JOuter, loadX2, sch3t0t1));  // 8
+    createMemAccess(alloc, xInd2JOuter, loadX2, sch3t0t1)); // 8
   jOuterMem.emplace_back(
-    createMemAccess(alloc, sInd2JOuter, loadS0, sch3t0t2));  // 9
+    createMemAccess(alloc, sInd2JOuter, loadS0, sch3t0t2)); // 9
   jOuterMem.emplace_back(
     createMemAccess(alloc, sInd2JOuter, storeS1, sch3t0t3)); // 10
 
@@ -1388,7 +1388,7 @@ TEST(DoubleDependenceTest, BasicAssertions) {
   assert(d[0].isForward());
   assert(!allZero(d[0].getSatConstraints()(last, _)));
 
-  LinearProgramLoopBlock loopBlock;
+  lp::LoopBlock loopBlock;
   MemoryAccess *mSchLoad0(createMemAccess(alloc, tgtA0, loadAip1j, schLoad0));
   loopBlock.addMemory(mSchLoad0);
   MemoryAccess *mSchLoad1(createMemAccess(alloc, tgtA1, loadijp1, schLoad1));
@@ -1552,7 +1552,7 @@ TEST(ConvReversePass, BasicAssertions) {
   //     }
   //   }
   // }
-  LinearProgramLoopBlock loopBlock;
+  lp::LoopBlock loopBlock;
   Vector<unsigned, 8> scht0(4 + 1, 0);
   Vector<unsigned, 8> scht1{scht0};
   BumpAlloc<> &alloc = tlf.getAlloc();

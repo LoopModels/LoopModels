@@ -51,16 +51,16 @@ using math::PtrVector, math::MutPtrVector, math::DensePtrMatrix,
 /// `A[i]`;
 class ScheduledNode {
 
-  [[no_unique_address]] Addr *store; // linked list to loads
-  [[no_unique_address]] NotNull<poly::Loop> loopNest;
-  [[no_unique_address]] ScheduledNode *next{nullptr};
-  [[no_unique_address]] ScheduledNode *component{nullptr}; // SCC cycle
-  [[no_unique_address]] Dependence *dep{nullptr};
-  [[no_unique_address]] int64_t *offsets{nullptr};
-  [[no_unique_address]] uint32_t phiOffset{0};   // used in LoopBlock
-  [[no_unique_address]] uint32_t omegaOffset{0}; // used in LoopBlock
-  [[no_unique_address]] uint8_t rank{0};
-  [[no_unique_address]] bool visited{false};
+  NotNull<Addr> store; // linked list to loads
+  NotNull<poly::Loop> loopNest;
+  ScheduledNode *next{nullptr};
+  ScheduledNode *component{nullptr}; // SCC cycle
+  Dependence *dep{nullptr};
+  int64_t *offsets{nullptr};
+  uint32_t phiOffset{0};   // used in LoopBlock
+  uint32_t omegaOffset{0}; // used in LoopBlock
+  uint8_t rank{0};
+  bool visited{false};
 #if !defined(__clang__) && defined(__GNUC__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
@@ -315,7 +315,7 @@ static_assert(std::is_trivially_destructible_v<ScheduledNode>);
 /// for (i = eachindex(y)){
 ///   f(m, ...); // Omega = [2, _, 0]
 /// }
-class LinearProgramLoopBlock {
+class LoopBlock {
   // TODO: figure out how to handle the graph's dependencies based on
   // operation/instruction chains.
   // Perhaps implicitly via the graph when using internal orthogonalization
@@ -324,27 +324,27 @@ class LinearProgramLoopBlock {
   // E.g., the `dstOmega[numLoopsCommon-1] > srcOmega[numLoopsCommon-1]`,
   // and all other other shared schedule parameters are aliases (i.e.,
   // identical)?
-  [[no_unique_address]] Addr *memory{nullptr};
-  [[no_unique_address]] ScheduledNode *node{nullptr};
-  [[no_unique_address]] dict::map<llvm::User *, Addr *> userToMem{};
-  [[no_unique_address]] dict::set<llvm::User *> visited{};
-  [[no_unique_address]] llvm::LoopInfo *LI;
-  [[no_unique_address]] BumpAlloc<> allocator{};
+  Addr *memory{nullptr};
+  ScheduledNode *node{nullptr};
+  dict::map<llvm::User *, Addr *> userToMem{};
+  dict::set<llvm::User *> visited{};
+  llvm::LoopInfo *LI;
+  BumpAlloc<> allocator{};
   // we may turn off edges because we've exceeded its loop depth
   // or because the dependence has already been satisfied at an
   // earlier level.
   struct CoefCounts {
-    [[no_unique_address]] unsigned numPhiCoefs{0};
-    [[no_unique_address]] unsigned numOmegaCoefs{0};
-    [[no_unique_address]] unsigned numSlack{0};
-    [[no_unique_address]] unsigned numLambda{0};
-    [[no_unique_address]] unsigned numBounding{0};
-    [[no_unique_address]] unsigned numConstraints{0};
-    [[no_unique_address]] unsigned numActiveEdges{0};
+    unsigned numPhiCoefs{0};
+    unsigned numOmegaCoefs{0};
+    unsigned numSlack{0};
+    unsigned numLambda{0};
+    unsigned numBounding{0};
+    unsigned numConstraints{0};
+    unsigned numActiveEdges{0};
   };
 
 public:
-  LinearProgramLoopBlock() = default;
+  LoopBlock() = default;
   constexpr void setLI(llvm::LoopInfo *loopInfo) { LI = loopInfo; }
   constexpr void addAddr(Addr *addr) {
     if (memory != nullptr) addr->setNext(memory);
@@ -403,7 +403,7 @@ public:
     return memory.size();
   }
   struct OutNeighbors {
-    LinearProgramLoopBlock &loopBlock;
+    LoopBlock &loopBlock;
     ScheduledNode &node;
   };
   [[nodiscard]] auto outNeighbors(size_t idx) -> OutNeighbors {
@@ -1626,8 +1626,7 @@ public:
     }
     return os;
   }
-  friend inline auto operator<<(llvm::raw_ostream &os,
-                                const LinearProgramLoopBlock &lblock)
+  friend inline auto operator<<(llvm::raw_ostream &os, const LoopBlock &lblock)
     -> llvm::raw_ostream & {
     os << "\nLoopBlock graph (#nodes = " << lblock.nodes.size() << "):\n";
     for (size_t i = 0; i < lblock.nodes.size(); ++i) {
@@ -1671,14 +1670,14 @@ public:
   }
 };
 
-template <> struct std::iterator_traits<LinearProgramLoopBlock::Graph> {
+template <> struct std::iterator_traits<LoopBlock::Graph> {
   using difference_type = ptrdiff_t;
   using iterator_category = std::forward_iterator_tag;
   using value_type = ScheduledNode;
   using reference_type = ScheduledNode &;
   using pointer_type = ScheduledNode *;
 };
-// static_assert(std::ranges::range<LinearProgramLoopBlock::Graph>);
-static_assert(Graphs::AbstractIndexGraph<LinearProgramLoopBlock::Graph>);
-static_assert(std::is_trivially_destructible_v<LinearProgramLoopBlock::Graph>);
+// static_assert(std::ranges::range<LoopBlock::Graph>);
+static_assert(Graphs::AbstractIndexGraph<LoopBlock::Graph>);
+static_assert(std::is_trivially_destructible_v<LoopBlock::Graph>);
 } // namespace poly::lp
