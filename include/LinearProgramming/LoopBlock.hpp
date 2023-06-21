@@ -49,13 +49,16 @@ using math::PtrVector, math::MutPtrVector, math::DensePtrMatrix,
 /// E.g., `A[i] = B[i] + C[i]` is a single node
 /// because we load from `B[i]` and `C[i]` into registers, compute, and
 /// `A[i]`;
+/// When splitting LoopBlock graphs, these graphs will have edges between
+/// them that we drop. This is only a problem if we merge graphs later.
+///
 class ScheduledNode {
 
   NotNull<Addr> store; // linked list to loads
   NotNull<poly::Loop> loopNest;
   ScheduledNode *next{nullptr};
-  ScheduledNode *component{nullptr}; // SCC cycle
-  Dependence *dep{nullptr};
+  ScheduledNode *component{nullptr}; // SCC cycle, or last node in a chain
+  Dependence *dep{nullptr};          // input edges (points to parents)
   int64_t *offsets{nullptr};
   uint32_t phiOffset{0};   // used in LoopBlock
   uint32_t omegaOffset{0}; // used in LoopBlock
@@ -81,11 +84,8 @@ class ScheduledNode {
   }
 
 public:
-  // constexpr ScheduledNode(uint8_t sId, MemoryAccess *store,
-  //                         unsigned int nodeIndex)
-  //   : loopNest(store->getLoop()) {
-  //   addMemory(sId, store, nodeIndex);
-  // }
+  constexpr auto getNext() -> ScheduledNode * { return next; }
+  constexpr auto setNext(ScheduledNode *n) -> void { next = n; }
   constexpr auto getLoopOffsets() -> MutPtrVector<int64_t> {
     return {offsets, getNumLoops()};
   }
@@ -135,16 +135,72 @@ public:
     for (Dependence *d = dep; d; d = d->getNext()) f(d->input()->getNode());
   }
   constexpr void forEachInput(const auto &f) const {
-    for (Dependence *d = dep; d; d = d->getNext()) f(d->input()->getNode());
+    for (const Dependence *d = dep; d; d = d->getNext())
+      f(d->input()->getNode());
   }
   constexpr void forEachInput(unsigned depth, const auto &f) {
     for (Dependence *d = dep; d; d = d->getNext())
       if (!d->isSat(depth)) f(d->input()->getNode());
   }
   constexpr void forEachInput(unsigned depth, const auto &f) const {
-    for (Dependence *d = dep; d; d = d->getNext())
+    for (const Dependence *d = dep; d; d = d->getNext())
       if (!d->isSat(depth)) f(d->input()->getNode());
   }
+  constexpr auto reduceEachInput(auto x, const auto &f) {
+    for (Dependence *d = dep; d; d = d->getNext())
+      x = f(x, d->input()->getNode());
+    return x;
+  }
+  constexpr void reduceEachInput(auto x, const auto &f) const {
+    for (const Dependence *d = dep; d; d = d->getNext())
+      x = f(x, d->input()->getNode());
+    return x;
+  }
+  constexpr void reduceEachInput(auto x, unsigned depth, const auto &f) {
+    for (Dependence *d = dep; d; d = d->getNext())
+      if (!d->isSat(depth)) x = f(x, d->input()->getNode());
+    return x;
+  }
+  constexpr void reduceEachInput(auto x, unsigned depth, const auto &f) const {
+    for (const Dependence *d = dep; d; d = d->getNext())
+      if (!d->isSat(depth)) x = f(x, d->input()->getNode());
+    return x;
+  }
+
+  constexpr void forEachInputEdge(const auto &f) {
+    for (Dependence *d = dep; d; d = d->getNext()) f(d);
+  }
+  constexpr void forEachInputEdge(const auto &f) const {
+    for (const Dependence *d = dep; d; d = d->getNext()) f(d);
+  }
+  constexpr void forEachInputEdge(unsigned depth, const auto &f) {
+    for (Dependence *d = dep; d; d = d->getNext())
+      if (!d->isSat(depth)) f(d);
+  }
+  constexpr void forEachInputEdge(unsigned depth, const auto &f) const {
+    for (const Dependence *d = dep; d; d = d->getNext())
+      if (!d->isSat(depth)) f(d);
+  }
+  constexpr auto reduceEachInputEdge(auto x, const auto &f) {
+    for (Dependence *d = dep; d; d = d->getNext()) x = f(x, d);
+    return x;
+  }
+  constexpr void reduceEachInputEdge(auto x, const auto &f) const {
+    for (const Dependence *d = dep; d; d = d->getNext()) x = f(x, d);
+    return x;
+  }
+  constexpr void reduceEachInputEdge(auto x, unsigned depth, const auto &f) {
+    for (Dependence *d = dep; d; d = d->getNext())
+      if (!d->isSat(depth)) x = f(x, d);
+    return x;
+  }
+  constexpr void reduceEachInputEdge(auto x, unsigned depth,
+                                     const auto &f) const {
+    for (const Dependence *d = dep; d; d = d->getNext())
+      if (!d->isSat(depth)) x = f(x, d);
+    return x;
+  }
+
   [[nodiscard]] constexpr auto getSchedule() -> poly::AffineSchedule {
     return {mem};
   }
@@ -589,126 +645,48 @@ public:
     for (auto &&node : nodes) node.init(allocator);
   }
   struct Graph {
-    // a subset of Nodes
-    BitSet nodeIds{};
-    BitSet activeEdges{};
-    MutPtrVector<MemoryAccess *> mem;
-    MutPtrVector<ScheduledNode> nodes;
-    PtrVector<Dependence> edges;
-    // llvm::SmallVector<bool> visited;
-    // BitSet visited;
-    constexpr auto operator&(const Graph &g) -> Graph {
-      return Graph{nodeIds & g.nodeIds, activeEdges & g.activeEdges, mem, nodes,
-                   edges};
+    ScheduledNode *nodes;
+    class Iterator {
+      ScheduledNode *node;
+      constexpr auto operator*() const -> ScheduledNode & { return *node; }
+      constexpr auto operator->() const -> ScheduledNode * { return node; }
+      constexpr auto operator++() -> Iterator & {
+        node = node->getNext();
+        return *this;
+      }
+      constexpr auto operator==(const Iterator &other) const -> bool {
+        return node == other.node;
+      }
+      constexpr auto operator!=(const Iterator &other) const -> bool {
+        return node != other.node;
+      }
+    };
+    class ConstIterator {
+      const ScheduledNode *node;
+      constexpr auto operator*() const -> const ScheduledNode & {
+        return *node;
+      }
+      constexpr auto operator->() const -> const ScheduledNode * {
+        return node;
+      }
+      constexpr auto operator++() -> ConstIterator & {
+        node = node->getNext();
+        return *this;
+      }
+      constexpr auto operator==(const ConstIterator &other) const -> bool {
+        return node == other.node;
+      }
+      constexpr auto operator!=(const ConstIterator &other) const -> bool {
+        return node != other.node;
+      }
+    };
+    [[nodiscard]] constexpr auto begin() -> Iterator { return {node}; }
+    [[nodiscard]] constexpr auto begin() const -> ConstIterator {
+      return {node};
     }
-    constexpr auto operator|(const Graph &g) -> Graph {
-      return Graph{nodeIds | g.nodeIds, activeEdges | g.activeEdges, mem, nodes,
-                   edges};
-    }
-    constexpr auto operator&=(const Graph &g) -> Graph & {
-      nodeIds &= g.nodeIds;
-      activeEdges &= g.activeEdges;
-      return *this;
-    }
-    constexpr auto operator|=(const Graph &g) -> Graph & {
-      nodeIds |= g.nodeIds;
-      activeEdges |= g.activeEdges;
-      return *this;
-    }
-    [[nodiscard]] constexpr auto inNeighbors(size_t i) -> BitSet & {
-      return nodes[i].getInNeighbors();
-    }
-    [[nodiscard]] constexpr auto outNeighbors(size_t i) -> BitSet & {
-      return nodes[i].getOutNeighbors();
-    }
-    [[nodiscard]] constexpr auto inNeighbors(size_t i) const -> const BitSet & {
-      return nodes[i].getInNeighbors();
-    }
-    [[nodiscard]] constexpr auto outNeighbors(size_t i) const
-      -> const BitSet & {
-      return nodes[i].getOutNeighbors();
-    }
-    [[nodiscard]] constexpr auto containsNode(size_t i) const -> bool {
-      return nodeIds.contains(i);
-    }
-    [[nodiscard]] constexpr auto containsNode(BitSet &b) const -> bool {
-      return std::ranges::any_of(b, nodeIds.contains());
-    }
-    [[nodiscard]] constexpr auto missingNode(size_t i) const -> bool {
-      return !containsNode(i);
-    }
-    [[nodiscard]] constexpr auto missingNode(size_t i, size_t j) const -> bool {
-      return !(containsNode(i) && containsNode(j));
-    }
-    /// returns false iff e.in and e.out are both in graph
-    /// that is, to be missing, both `e.in` and `e.out` must be missing
-    /// in case of multiple instances of the edge, we check all of them
-    /// if any are not missing, returns false
-    /// only returns true if every one of them is missing.
-    [[nodiscard]] constexpr auto missingNode(const Dependence &e) const
-      -> bool {
-      return missingNode(e.nodeIn(), e.nodeOut());
-    }
-
-    [[nodiscard]] constexpr auto isInactive(const Dependence &edge,
-                                            size_t d) const -> bool {
-      return edge.isInactive(d) || missingNode(edge);
-    }
-    [[nodiscard]] constexpr auto isInactive(const Dependence &edge) const
-      -> bool {
-      return missingNode(edge);
-    }
-    [[nodiscard]] constexpr auto isInactive(size_t e, size_t d) const -> bool {
-      return !(activeEdges[e]) || isInactive(edges[e], d);
-    }
-    [[nodiscard]] constexpr auto isInactive(size_t e) const -> bool {
-      return !(activeEdges[e]) || isInactive(edges[e]);
-    }
-    [[nodiscard]] constexpr auto isActive(size_t e, size_t d) const -> bool {
-      return (activeEdges[e]) && (!isInactive(edges[e], d));
-    }
-    [[nodiscard]] constexpr auto isActive(size_t e) const -> bool {
-      return (activeEdges[e]) && (!isInactive(edges[e]));
-    }
-    [[nodiscard]] constexpr auto begin()
-      -> BitSliceView<ScheduledNode, BitSet>::Iterator {
-      return BitSliceView{nodes, nodeIds}.begin();
-    }
-    [[nodiscard]] constexpr auto begin() const
-      -> BitSliceView<ScheduledNode, BitSet>::ConstIterator {
-      const BitSliceView bsv{nodes, nodeIds};
-      return bsv.begin();
-    }
-    [[nodiscard]] static constexpr auto end() -> EndSentinel { return {}; }
-    [[nodiscard]] constexpr auto wasVisited(size_t i) const -> bool {
-      return nodes[i].wasVisited();
-    }
-    constexpr void visit(size_t i) { nodes[i].visit(); }
-    constexpr void unVisit(size_t i) { nodes[i].unVisit(); }
-    // [[nodiscard]] constexpr auto wasVisited2(size_t i) const -> bool {
-    //   return nodes[i].wasVisited2();
-    // }
-    // constexpr void visit2(size_t i) { nodes[i].visit2(); }
-    // constexpr void unVisit2(size_t i) { nodes[i].unVisit2(); }
-    [[nodiscard]] constexpr auto getNumVertices() const -> size_t {
-      return nodeIds.size();
-    }
-    [[nodiscard]] constexpr auto maxVertexId() const -> size_t {
-      return nodeIds.maxValue();
-    }
-    [[nodiscard]] constexpr auto vertexIds() -> BitSet & { return nodeIds; }
-    [[nodiscard]] constexpr auto vertexIds() const -> const BitSet & {
-      return nodeIds;
-    }
-    [[nodiscard]] constexpr auto subGraph(const BitSet &components) -> Graph {
-      return {components, activeEdges, mem, nodes, edges};
-    }
-    [[nodiscard]] auto split(const llvm::SmallVector<BitSet> &components)
-      -> Vector<Graph, 0> {
-      Vector<Graph, 0> graphs;
-      graphs.reserve(components.size());
-      for (const auto &c : components) graphs.push_back(subGraph(c));
-      return graphs;
+    [[nodiscard]] constexpr auto end() -> Iterator { return {nullptr}; }
+    [[nodiscard]] constexpr auto end() const -> ConstIterator {
+      return {nullptr};
     }
     [[nodiscard]] constexpr auto calcMaxDepth() const -> size_t {
       if (nodeIds.data.empty()) return 0;
@@ -716,45 +694,34 @@ public:
       for (auto n : nodeIds) d = std::max(d, nodes[n].getNumLoops());
       return d;
     }
-    class EdgeIterator {
-      const Graph &g;
-      size_t d;
-      class Iterator {
-        const Graph &g;
-        size_t d;
-        size_t e;
-        constexpr auto findNext() -> void {
-          while (e < g.edges.size() && g.isInactive(e, d)) ++e;
-        }
 
-      public:
-        constexpr Iterator(const Graph &_g, size_t _d, size_t _e)
-          : g(_g), d(_d), e(_e) {
-          findNext();
-        }
-        auto operator++() -> Iterator & {
-          ++e;
-          findNext();
-          return *this;
-        }
-        constexpr auto operator*() const -> Dependence & { return g.edges[e]; }
-        // constexpr auto operator*() const -> const Dependence & {
-        //   return g.edges[e];
-        // }
-        constexpr auto operator==(const Iterator &o) const -> bool {
-          invariant(&g == &o.g);
-          invariant(d == o.d);
-          return e == o.e;
-        }
-      };
-
-    public:
-      constexpr EdgeIterator(const Graph &_g, size_t _d) : g(_g), d(_d) {}
-      constexpr auto begin() -> Iterator { return {g, d, 0}; }
-      constexpr auto end() -> Iterator { return {g, d, g.edges.size()}; }
-    };
-    [[nodiscard]] constexpr auto getEdges(size_t d) const -> EdgeIterator {
-      return {*this, d};
+    constexpr void forEachEdge(const auto &f) {
+      for (Iterator i : (*this)) i->forEachInputEdge(f);
+    }
+    constexpr void forEachEdge(const auto &f) const {
+      for (ConstIterator i : (*this)) i->forEachInputEdge(f);
+    }
+    constexpr void forEachEdge(unsigned depth, const auto &f) {
+      for (Iterator i : (*this)) i->forEachEdge(depth, f);
+    }
+    constexpr void forEachEdge(unsigned depth, const auto &f) const {
+      for (ConstIterator i : (*this)) i->forEachInputEdge(depth, f);
+    }
+    constexpr auto reduceEachEdge(auto x, const auto &f) {
+      for (Iterator i : (*this)) x = i->reduceEachInputEdge(x, f);
+      return x;
+    }
+    constexpr void reduceEachEdge(auto x, const auto &f) const {
+      for (ConstIterator i : (*this)) x = i->reduceEachInputEdge(x, f);
+      return x;
+    }
+    constexpr void reduceEachEdge(auto x, unsigned depth, const auto &f) {
+      for (Iterator i : (*this)) x = i->reduceEachInputEdge(x, depth, f);
+      return x;
+    }
+    constexpr void reduceEachEdge(auto x, unsigned depth, const auto &f) const {
+      for (ConstIterator i : (*this)) x = i->reduceEachInputEdge(x, depth, f);
+      return x;
     }
   };
   // bool connects(const Dependence &e, Graph &g0, Graph &g1, size_t d) const
