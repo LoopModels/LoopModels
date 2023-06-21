@@ -68,7 +68,6 @@ $(function() {
   <div class="summary">
 <a href="#nested-classes">Classes</a> &#124;
 <a href="#pub-methods">Public Member Functions</a> &#124;
-<a href="#pub-static-methods">Static Public Member Functions</a> &#124;
 <a href="#pub-attribs">Public Attributes</a> &#124;
 <a href="structpoly_1_1lp_1_1LoopBlock_1_1Graph-members.html">List of all members</a>  </div>
   <div class="headertitle">
@@ -78,159 +77,59 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
 Classes</h2></td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1lp_1_1LoopBlock_1_1Graph_1_1EdgeIterator.html">EdgeIterator</a></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1lp_1_1LoopBlock_1_1Graph_1_1ConstIterator.html">ConstIterator</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1lp_1_1LoopBlock_1_1Graph_1_1Iterator.html">Iterator</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:aa5a194b614a76060338a25adb277c7c0"><td class="memItemLeft" align="right" valign="top"><a id="aa5a194b614a76060338a25adb277c7c0"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&amp;</b> (const <a class="el" href="structpoly_1_1lp_1_1LoopBlock_1_1Graph.html">Graph</a> &amp;g) -&gt; <a class="el" href="structpoly_1_1lp_1_1LoopBlock_1_1Graph.html">Graph</a></td></tr>
-<tr class="separator:aa5a194b614a76060338a25adb277c7c0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a73f52f207c62987707ea48bce5392f83"><td class="memItemLeft" align="right" valign="top"><a id="a73f52f207c62987707ea48bce5392f83"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator|</b> (const <a class="el" href="structpoly_1_1lp_1_1LoopBlock_1_1Graph.html">Graph</a> &amp;g) -&gt; <a class="el" href="structpoly_1_1lp_1_1LoopBlock_1_1Graph.html">Graph</a></td></tr>
-<tr class="separator:a73f52f207c62987707ea48bce5392f83"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af0c2abe09861244344d3e963eece0162"><td class="memItemLeft" align="right" valign="top"><a id="af0c2abe09861244344d3e963eece0162"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&amp;=</b> (const <a class="el" href="structpoly_1_1lp_1_1LoopBlock_1_1Graph.html">Graph</a> &amp;g) -&gt; <a class="el" href="structpoly_1_1lp_1_1LoopBlock_1_1Graph.html">Graph</a> &amp;</td></tr>
-<tr class="separator:af0c2abe09861244344d3e963eece0162"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a053970cc326a54dafd83d0aa34927626"><td class="memItemLeft" align="right" valign="top"><a id="a053970cc326a54dafd83d0aa34927626"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator|=</b> (const <a class="el" href="structpoly_1_1lp_1_1LoopBlock_1_1Graph.html">Graph</a> &amp;g) -&gt; <a class="el" href="structpoly_1_1lp_1_1LoopBlock_1_1Graph.html">Graph</a> &amp;</td></tr>
-<tr class="separator:a053970cc326a54dafd83d0aa34927626"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2d9106fbcca7b20375138bf237b7a2c0"><td class="memItemLeft" align="right" valign="top"><a id="a2d9106fbcca7b20375138bf237b7a2c0"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>inNeighbors</b> (size_t i) -&gt; BitSet &amp;</td></tr>
-<tr class="separator:a2d9106fbcca7b20375138bf237b7a2c0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2d86fa3a8b708c54fb1705bcf988164d"><td class="memItemLeft" align="right" valign="top"><a id="a2d86fa3a8b708c54fb1705bcf988164d"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>outNeighbors</b> (size_t i) -&gt; BitSet &amp;</td></tr>
-<tr class="separator:a2d86fa3a8b708c54fb1705bcf988164d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a91d5706591482fc8f705a6ff65c60316"><td class="memItemLeft" align="right" valign="top"><a id="a91d5706591482fc8f705a6ff65c60316"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>inNeighbors</b> (size_t i) const -&gt; const BitSet &amp;</td></tr>
-<tr class="separator:a91d5706591482fc8f705a6ff65c60316"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2dddf0693036cb07197f1474361ae528"><td class="memItemLeft" align="right" valign="top"><a id="a2dddf0693036cb07197f1474361ae528"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>outNeighbors</b> (size_t i) const -&gt; const BitSet &amp;</td></tr>
-<tr class="separator:a2dddf0693036cb07197f1474361ae528"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad8d7a8e0aa0c3c42e442d4aa82ef0ddd"><td class="memItemLeft" align="right" valign="top"><a id="ad8d7a8e0aa0c3c42e442d4aa82ef0ddd"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>containsNode</b> (size_t i) const -&gt; bool</td></tr>
-<tr class="separator:ad8d7a8e0aa0c3c42e442d4aa82ef0ddd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad85ab379971013ec0d9fb2fc9f20c5b3"><td class="memItemLeft" align="right" valign="top"><a id="ad85ab379971013ec0d9fb2fc9f20c5b3"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>containsNode</b> (BitSet &amp;b) const -&gt; bool</td></tr>
-<tr class="separator:ad85ab379971013ec0d9fb2fc9f20c5b3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad360e0326df8570d4b1c2b8884205f7d"><td class="memItemLeft" align="right" valign="top"><a id="ad360e0326df8570d4b1c2b8884205f7d"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>missingNode</b> (size_t i) const -&gt; bool</td></tr>
-<tr class="separator:ad360e0326df8570d4b1c2b8884205f7d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa4080f8f7a9c64eb8b07e30e0ccd6a82"><td class="memItemLeft" align="right" valign="top"><a id="aa4080f8f7a9c64eb8b07e30e0ccd6a82"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>missingNode</b> (size_t i, size_t j) const -&gt; bool</td></tr>
-<tr class="separator:aa4080f8f7a9c64eb8b07e30e0ccd6a82"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad4f377f9dcf360ae7f5a9dd2eb1f1eaa"><td class="memItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpoly_1_1lp_1_1LoopBlock_1_1Graph.html#ad4f377f9dcf360ae7f5a9dd2eb1f1eaa">missingNode</a> (const <a class="el" href="classpoly_1_1poly_1_1Dependence.html">Dependence</a> &amp;e) const -&gt; bool</td></tr>
-<tr class="separator:ad4f377f9dcf360ae7f5a9dd2eb1f1eaa"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a67a5929c37a1d558e8d7e6a1b80e8dbe"><td class="memItemLeft" align="right" valign="top"><a id="a67a5929c37a1d558e8d7e6a1b80e8dbe"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>isInactive</b> (const <a class="el" href="classpoly_1_1poly_1_1Dependence.html">Dependence</a> &amp;edge, size_t d) const -&gt; bool</td></tr>
-<tr class="separator:a67a5929c37a1d558e8d7e6a1b80e8dbe"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae477e16c116dfdfb2a1e28ab7c0474fe"><td class="memItemLeft" align="right" valign="top"><a id="ae477e16c116dfdfb2a1e28ab7c0474fe"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>isInactive</b> (const <a class="el" href="classpoly_1_1poly_1_1Dependence.html">Dependence</a> &amp;edge) const -&gt; bool</td></tr>
-<tr class="separator:ae477e16c116dfdfb2a1e28ab7c0474fe"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a280150c8600675c798feeefb6a927b2e"><td class="memItemLeft" align="right" valign="top"><a id="a280150c8600675c798feeefb6a927b2e"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>isInactive</b> (size_t e, size_t d) const -&gt; bool</td></tr>
-<tr class="separator:a280150c8600675c798feeefb6a927b2e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8b7f4372b73bf6c7b2f8c970e5fe15bc"><td class="memItemLeft" align="right" valign="top"><a id="a8b7f4372b73bf6c7b2f8c970e5fe15bc"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>isInactive</b> (size_t e) const -&gt; bool</td></tr>
-<tr class="separator:a8b7f4372b73bf6c7b2f8c970e5fe15bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9e994894c5d0ce7b63b0a392f2162f00"><td class="memItemLeft" align="right" valign="top"><a id="a9e994894c5d0ce7b63b0a392f2162f00"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>isActive</b> (size_t e, size_t d) const -&gt; bool</td></tr>
-<tr class="separator:a9e994894c5d0ce7b63b0a392f2162f00"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5456b55443c3943ec940309c27f6a953"><td class="memItemLeft" align="right" valign="top"><a id="a5456b55443c3943ec940309c27f6a953"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>isActive</b> (size_t e) const -&gt; bool</td></tr>
-<tr class="separator:a5456b55443c3943ec940309c27f6a953"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0b966a5ae23c8ae29a5bf3198ebb6f65"><td class="memItemLeft" align="right" valign="top"><a id="a0b966a5ae23c8ae29a5bf3198ebb6f65"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>begin</b> () -&gt; BitSliceView&lt; <a class="el" href="classpoly_1_1lp_1_1ScheduledNode.html">ScheduledNode</a>, BitSet &gt;::Iterator</td></tr>
-<tr class="separator:a0b966a5ae23c8ae29a5bf3198ebb6f65"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a44dc8f329936718768756ec82759a04f"><td class="memItemLeft" align="right" valign="top"><a id="a44dc8f329936718768756ec82759a04f"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>begin</b> () const -&gt; BitSliceView&lt; <a class="el" href="classpoly_1_1lp_1_1ScheduledNode.html">ScheduledNode</a>, BitSet &gt;::ConstIterator</td></tr>
-<tr class="separator:a44dc8f329936718768756ec82759a04f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3083deda6d7167fa2540b258382c4fb3"><td class="memItemLeft" align="right" valign="top"><a id="a3083deda6d7167fa2540b258382c4fb3"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>wasVisited</b> (size_t i) const -&gt; bool</td></tr>
-<tr class="separator:a3083deda6d7167fa2540b258382c4fb3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac55b9a8613f145eedb851b839f279120"><td class="memItemLeft" align="right" valign="top"><a id="ac55b9a8613f145eedb851b839f279120"></a>
-constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (size_t i)</td></tr>
-<tr class="separator:ac55b9a8613f145eedb851b839f279120"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a92b1136e8d2f63217fc2ac4bb86f31e1"><td class="memItemLeft" align="right" valign="top"><a id="a92b1136e8d2f63217fc2ac4bb86f31e1"></a>
-constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>unVisit</b> (size_t i)</td></tr>
-<tr class="separator:a92b1136e8d2f63217fc2ac4bb86f31e1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a37c959d15691094d91774c0ecbb0370c"><td class="memItemLeft" align="right" valign="top"><a id="a37c959d15691094d91774c0ecbb0370c"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumVertices</b> () const -&gt; size_t</td></tr>
-<tr class="separator:a37c959d15691094d91774c0ecbb0370c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4e423f675d9a9485bf908aea5a9fb2c9"><td class="memItemLeft" align="right" valign="top"><a id="a4e423f675d9a9485bf908aea5a9fb2c9"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>maxVertexId</b> () const -&gt; size_t</td></tr>
-<tr class="separator:a4e423f675d9a9485bf908aea5a9fb2c9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac569c7172fea1e7c0df6ca37c621a9da"><td class="memItemLeft" align="right" valign="top"><a id="ac569c7172fea1e7c0df6ca37c621a9da"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>vertexIds</b> () -&gt; BitSet &amp;</td></tr>
-<tr class="separator:ac569c7172fea1e7c0df6ca37c621a9da"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af4bbdb251f0d104791060de3343f8ac4"><td class="memItemLeft" align="right" valign="top"><a id="af4bbdb251f0d104791060de3343f8ac4"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>vertexIds</b> () const -&gt; const BitSet &amp;</td></tr>
-<tr class="separator:af4bbdb251f0d104791060de3343f8ac4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae57cb2058d3b44c0691f96b0f632d5e4"><td class="memItemLeft" align="right" valign="top"><a id="ae57cb2058d3b44c0691f96b0f632d5e4"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>subGraph</b> (const BitSet &amp;components) -&gt; <a class="el" href="structpoly_1_1lp_1_1LoopBlock_1_1Graph.html">Graph</a></td></tr>
-<tr class="separator:ae57cb2058d3b44c0691f96b0f632d5e4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3fdaf40185982d7d8af5633b4bbea604"><td class="memItemLeft" align="right" valign="top"><a id="a3fdaf40185982d7d8af5633b4bbea604"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>split</b> (const llvm::SmallVector&lt; BitSet &gt; &amp;components) -&gt; Vector&lt; <a class="el" href="structpoly_1_1lp_1_1LoopBlock_1_1Graph.html">Graph</a>, 0 &gt;</td></tr>
-<tr class="separator:a3fdaf40185982d7d8af5633b4bbea604"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7cb2e08273a9cd437699337ce3965d68"><td class="memItemLeft" align="right" valign="top"><a id="a7cb2e08273a9cd437699337ce3965d68"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>begin</b> () -&gt; <a class="el" href="classpoly_1_1lp_1_1LoopBlock_1_1Graph_1_1Iterator.html">Iterator</a></td></tr>
+<tr class="separator:a7cb2e08273a9cd437699337ce3965d68"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a47ffcf8ac46584a25474746ad208ae85"><td class="memItemLeft" align="right" valign="top"><a id="a47ffcf8ac46584a25474746ad208ae85"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>begin</b> () const -&gt; <a class="el" href="classpoly_1_1lp_1_1LoopBlock_1_1Graph_1_1ConstIterator.html">ConstIterator</a></td></tr>
+<tr class="separator:a47ffcf8ac46584a25474746ad208ae85"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a156b2e5e3bb37828caacb821fceedecf"><td class="memItemLeft" align="right" valign="top"><a id="a156b2e5e3bb37828caacb821fceedecf"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>end</b> () -&gt; <a class="el" href="classpoly_1_1lp_1_1LoopBlock_1_1Graph_1_1Iterator.html">Iterator</a></td></tr>
+<tr class="separator:a156b2e5e3bb37828caacb821fceedecf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a00ba838f8871f94d82f7da8c19bfd157"><td class="memItemLeft" align="right" valign="top"><a id="a00ba838f8871f94d82f7da8c19bfd157"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>end</b> () const -&gt; <a class="el" href="classpoly_1_1lp_1_1LoopBlock_1_1Graph_1_1ConstIterator.html">ConstIterator</a></td></tr>
+<tr class="separator:a00ba838f8871f94d82f7da8c19bfd157"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad7d1a4ef09a01471410d8afa96aeee48"><td class="memItemLeft" align="right" valign="top"><a id="ad7d1a4ef09a01471410d8afa96aeee48"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>calcMaxDepth</b> () const -&gt; size_t</td></tr>
 <tr class="separator:ad7d1a4ef09a01471410d8afa96aeee48"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aaacc69f40214f0379e37589f702091b5"><td class="memItemLeft" align="right" valign="top"><a id="aaacc69f40214f0379e37589f702091b5"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getEdges</b> (size_t d) const -&gt; <a class="el" href="classpoly_1_1lp_1_1LoopBlock_1_1Graph_1_1EdgeIterator.html">EdgeIterator</a></td></tr>
-<tr class="separator:aaacc69f40214f0379e37589f702091b5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
-Static Public Member Functions</h2></td></tr>
-<tr class="memitem:ac926944b1d3a039f8421acb22a2b03b4"><td class="memItemLeft" align="right" valign="top"><a id="ac926944b1d3a039f8421acb22a2b03b4"></a>
-static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>end</b> () -&gt; EndSentinel</td></tr>
-<tr class="separator:ac926944b1d3a039f8421acb22a2b03b4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae177d927b5258197e76054d0bff44091"><td class="memItemLeft" align="right" valign="top"><a id="ae177d927b5258197e76054d0bff44091"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>forEachEdge</b> (const auto &amp;f)</td></tr>
+<tr class="separator:ae177d927b5258197e76054d0bff44091"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2f6c709da5ebf24ea143420d37921d36"><td class="memItemLeft" align="right" valign="top"><a id="a2f6c709da5ebf24ea143420d37921d36"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>forEachEdge</b> (const auto &amp;f) const</td></tr>
+<tr class="separator:a2f6c709da5ebf24ea143420d37921d36"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afa1216322c438830cf3e887338a5bc0a"><td class="memItemLeft" align="right" valign="top"><a id="afa1216322c438830cf3e887338a5bc0a"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>forEachEdge</b> (unsigned depth, const auto &amp;f)</td></tr>
+<tr class="separator:afa1216322c438830cf3e887338a5bc0a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab1c1a3a9b015e5b4ed54bf6b78bc994f"><td class="memItemLeft" align="right" valign="top"><a id="ab1c1a3a9b015e5b4ed54bf6b78bc994f"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>forEachEdge</b> (unsigned depth, const auto &amp;f) const</td></tr>
+<tr class="separator:ab1c1a3a9b015e5b4ed54bf6b78bc994f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aeefac06cee091d1ae00b93156e99319c"><td class="memItemLeft" align="right" valign="top"><a id="aeefac06cee091d1ae00b93156e99319c"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>reduceEachEdge</b> (auto x, const auto &amp;f)</td></tr>
+<tr class="separator:aeefac06cee091d1ae00b93156e99319c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5c14d7aabb805a63acd093a58dcc96af"><td class="memItemLeft" align="right" valign="top"><a id="a5c14d7aabb805a63acd093a58dcc96af"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>reduceEachEdge</b> (auto x, const auto &amp;f) const</td></tr>
+<tr class="separator:a5c14d7aabb805a63acd093a58dcc96af"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad2bd4400d57c4108ab9dd496a0adaa0d"><td class="memItemLeft" align="right" valign="top"><a id="ad2bd4400d57c4108ab9dd496a0adaa0d"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>reduceEachEdge</b> (auto x, unsigned depth, const auto &amp;f)</td></tr>
+<tr class="separator:ad2bd4400d57c4108ab9dd496a0adaa0d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9f49e9f862f00840d8e155104f7c2a28"><td class="memItemLeft" align="right" valign="top"><a id="a9f49e9f862f00840d8e155104f7c2a28"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>reduceEachEdge</b> (auto x, unsigned depth, const auto &amp;f) const</td></tr>
+<tr class="separator:a9f49e9f862f00840d8e155104f7c2a28"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
-<tr class="memitem:ab9f7a4b2e7ec36a619139e7b2d04ba04"><td class="memItemLeft" align="right" valign="top"><a id="ab9f7a4b2e7ec36a619139e7b2d04ba04"></a>
-BitSet&#160;</td><td class="memItemRight" valign="bottom"><b>nodeIds</b> {}</td></tr>
-<tr class="separator:ab9f7a4b2e7ec36a619139e7b2d04ba04"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4b8acdbf5baa85b9142da4c3eaa60a49"><td class="memItemLeft" align="right" valign="top"><a id="a4b8acdbf5baa85b9142da4c3eaa60a49"></a>
-BitSet&#160;</td><td class="memItemRight" valign="bottom"><b>activeEdges</b> {}</td></tr>
-<tr class="separator:a4b8acdbf5baa85b9142da4c3eaa60a49"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9f02a22d9af6d0cbc3971986b14ba60d"><td class="memItemLeft" align="right" valign="top"><a id="a9f02a22d9af6d0cbc3971986b14ba60d"></a>
-MutPtrVector&lt; MemoryAccess * &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>mem</b></td></tr>
-<tr class="separator:a9f02a22d9af6d0cbc3971986b14ba60d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afef06c3be1d64e912ec6b6cbb71df653"><td class="memItemLeft" align="right" valign="top"><a id="afef06c3be1d64e912ec6b6cbb71df653"></a>
-MutPtrVector&lt; <a class="el" href="classpoly_1_1lp_1_1ScheduledNode.html">ScheduledNode</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>nodes</b></td></tr>
-<tr class="separator:afef06c3be1d64e912ec6b6cbb71df653"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a15cc0a7e0c8f04f1cb4538dcf26ff9fe"><td class="memItemLeft" align="right" valign="top"><a id="a15cc0a7e0c8f04f1cb4538dcf26ff9fe"></a>
-PtrVector&lt; <a class="el" href="classpoly_1_1poly_1_1Dependence.html">Dependence</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>edges</b></td></tr>
-<tr class="separator:a15cc0a7e0c8f04f1cb4538dcf26ff9fe"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aad3645ca707663a77c0108629a907d12"><td class="memItemLeft" align="right" valign="top"><a id="aad3645ca707663a77c0108629a907d12"></a>
+<a class="el" href="classpoly_1_1lp_1_1ScheduledNode.html">ScheduledNode</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>nodes</b></td></tr>
+<tr class="separator:aad3645ca707663a77c0108629a907d12"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<h2 class="groupheader">Member Function Documentation</h2>
-<a id="ad4f377f9dcf360ae7f5a9dd2eb1f1eaa"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ad4f377f9dcf360ae7f5a9dd2eb1f1eaa">&#9670;&nbsp;</a></span>missingNode()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">constexpr auto poly::lp::LoopBlock::Graph::missingNode </td>
-          <td>(</td>
-          <td class="paramtype">const <a class="el" href="classpoly_1_1poly_1_1Dependence.html">Dependence</a> &amp;&#160;</td>
-          <td class="paramname"><em>e</em></td><td>)</td>
-          <td> const -&gt; bool </td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">constexpr</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-<p>returns false iff e.in and e.out are both in graph that is, to be missing, both <code>e.in</code> and <code>e.out</code> must be missing in case of multiple instances of the edge, we check all of them if any are not missing, returns false only returns true if every one of them is missing. </p>
-
-</div>
-</div>
 <hr/>The documentation for this struct was generated from the following file:<ul>
 <li>include/LinearProgramming/<a class="el" href="LoopBlock_8hpp_source.html">LoopBlock.hpp</a></li>
 </ul>
