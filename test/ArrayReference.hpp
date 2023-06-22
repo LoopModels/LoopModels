@@ -28,7 +28,7 @@ struct ArrayReference {
     return size_t(offMat.numRow());
   }
 };
-inline auto createMemAccess(BumpAlloc<> &alloc, ArrayReference &ar,
+inline auto createMemAccess(Arena<> *alloc, ArrayReference &ar,
                             llvm::Instruction *IC, PtrVector<unsigned> omegas)
   -> NotNull<MemoryAccess> {
 

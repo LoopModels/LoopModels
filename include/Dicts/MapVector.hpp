@@ -11,7 +11,7 @@ template <class K, class V> class OrderedMap {
   math::ResizeableView<std::pair<K, V>, unsigned> vector;
 
 public:
-  constexpr OrderedMap(BumpAlloc<> &alloc) : map(alloc), vector() {}
+  constexpr OrderedMap(Arena<> *alloc) : map(alloc), vector() {}
   OrderedMap(const OrderedMap &) = default;
   OrderedMap(OrderedMap &&) noexcept = default;
   constexpr auto operator=(const OrderedMap &) -> OrderedMap & = default;

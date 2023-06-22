@@ -7,7 +7,7 @@
 // In include/Dicts, as it primarily serves to support amap/aset
 
 namespace poly {
-using utils::WBumpAlloc, utils::BumpAlloc;
+using utils::WArena, utils::Arena;
 } // namespace poly
 
 namespace poly::math {
@@ -26,25 +26,25 @@ template <typename T, unsigned InitialCapacity = 8> struct BumpPtrVector {
   using const_iterator = const T *;
   using pointer = T *;
   using const_pointer = const T *;
-  using allocator_type = WBumpAlloc<T>;
+  using allocator_type = WArena<T>;
 
   [[no_unique_address]] T *mem;
   [[no_unique_address]] unsigned Size;
   [[no_unique_address]] unsigned Capacity;
-  [[no_unique_address]] NotNull<BumpAlloc<>> Alloc;
+  [[no_unique_address]] NotNull<Arena<>> Alloc;
 
-  constexpr BumpPtrVector(WBumpAlloc<T> a)
+  constexpr BumpPtrVector(WArena<T> a)
     : mem(a.allocate(InitialCapacity)), Size(0), Capacity(InitialCapacity),
       Alloc(a.get_allocator()) {}
-  constexpr BumpPtrVector(BumpAlloc<> &a) : BumpPtrVector(WBumpAlloc<T>(a)) {}
-  constexpr BumpPtrVector(const BumpPtrVector<T> &x, WBumpAlloc<T> alloc)
+  constexpr BumpPtrVector(Arena<> *a) : BumpPtrVector(WArena<T>(a)) {}
+  constexpr BumpPtrVector(const BumpPtrVector<T> &x, WArena<T> alloc)
     : mem(alloc.allocate(x.size())), Size(x.size()), Capacity(x.size()),
       Alloc(alloc.get_allocator()) {
     *this << x;
   }
   constexpr BumpPtrVector(const BumpPtrVector<T> &x)
     : BumpPtrVector(x, x.get_allocator()) {}
-  constexpr BumpPtrVector(BumpPtrVector &&x, WBumpAlloc<T> alloc)
+  constexpr BumpPtrVector(BumpPtrVector &&x, WArena<T> alloc)
     : Alloc{alloc.get_allocator()} {
     mem = x.mem;
     Size = x.Size;
@@ -248,8 +248,8 @@ template <typename T, unsigned InitialCapacity = 8> struct BumpPtrVector {
   constexpr void extendOrAssertSize(size_t N) {
     if (N != Size) resizeForOverwrite(N);
   }
-  [[nodiscard]] constexpr auto get_allocator() const -> WBumpAlloc<T> {
-    return WBumpAlloc<T>{Alloc};
+  [[nodiscard]] constexpr auto get_allocator() const -> WArena<T> {
+    return WArena<T>{Alloc};
   }
   constexpr auto push_back(T x) -> T & {
     size_t offset = Size++;

@@ -356,7 +356,7 @@ public:
   [[nodiscard]] constexpr auto isNonNegative() const -> bool {
     return nonNegative;
   }
-  static inline auto construct(BumpAlloc<> &alloc, llvm::Loop *L,
+  static inline auto construct(Arena<> *alloc, llvm::Loop *L,
                                const llvm::SCEV *BT, llvm::ScalarEvolution &SE,
                                llvm::OptimizationRemarkEmitter *ORE = nullptr)
     -> NotNull<Loop> {
@@ -430,8 +430,7 @@ public:
   /// offset the loops by `offsets`, e.g. if we have
   /// offsets[0] = 2, then the first loop is shifted by 2.
   /// this shifting is applied before rotation.
-  [[nodiscard]] constexpr auto rotate(BumpAlloc<> &alloc,
-                                      DensePtrMatrix<int64_t> R,
+  [[nodiscard]] constexpr auto rotate(Arena<> *alloc, DensePtrMatrix<int64_t> R,
                                       const int64_t *offsets) const
     -> NotNull<Loop> {
     // if offsets is not null, we have the equivalent of
@@ -478,8 +477,7 @@ public:
     // aln->pruneBounds(alloc);
     return aln;
   }
-  [[nodiscard]] constexpr auto rotate(BumpAlloc<> &alloc,
-                                      DensePtrMatrix<int64_t> R,
+  [[nodiscard]] constexpr auto rotate(Arena<> *alloc, DensePtrMatrix<int64_t> R,
                                       const int64_t *offsets) -> NotNull<Loop> {
     if (R == math::I) return this;
     return ((const Loop *)this)->rotate(alloc, R, offsets);
@@ -491,8 +489,7 @@ public:
   //   return Loop(L, BT, SE);
   // }
 
-  [[nodiscard]] auto removeInnerMost(BumpAlloc<> &alloc) const
-    -> NotNull<Loop> {
+  [[nodiscard]] auto removeInnerMost(Arena<> *alloc) const -> NotNull<Loop> {
     // order is outer<->inner
     auto A{getA()};
     auto ret = Loop::allocate(alloc, unsigned(A.numRow()), getNumLoops() - 1,
@@ -563,13 +560,13 @@ public:
     -> PtrVector<int64_t> {
     return getA()(j, _(0, getNumSymbols()));
   }
-  [[nodiscard]] constexpr auto copy(BumpAlloc<> &alloc) const -> NotNull<Loop> {
+  [[nodiscard]] constexpr auto copy(Arena<> *alloc) const -> NotNull<Loop> {
     auto ret = Loop::allocate(alloc, numConstraints, numLoops, getSyms(),
                               isNonNegative());
     ret->getA() << getA();
     return ret;
   }
-  [[nodiscard]] constexpr auto removeLoop(BumpAlloc<> &alloc, ptrdiff_t v) const
+  [[nodiscard]] constexpr auto removeLoop(Arena<> *alloc, ptrdiff_t v) const
     -> Loop * {
     auto A{getA()};
     v += getNumSymbols();
@@ -585,7 +582,7 @@ public:
       isNonNegative()
         ? fourierMotzkinCore<true>(ret->getA(), getA(), v, zeroNegPos)
         : fourierMotzkinCore<false>(ret->getA(), getA(), v, zeroNegPos));
-    ret->pruneBounds(alloc);
+    ret->pruneBounds(*alloc);
     if (ret->getNumLoops() == 0) {
       rollback(alloc, p);
       return nullptr;
@@ -815,7 +812,7 @@ public:
       printBound(os << " && ", -1);
     }
   }
-  void dump(llvm::raw_ostream &os, BumpAlloc<> &alloc) const {
+  void dump(llvm::raw_ostream &os, Arena<> *alloc) const {
     const Loop *tmp = this;
     for (ptrdiff_t i = getNumLoops(); tmp;) {
       assert((i == tmp->getNumLoops()) && "loop count mismatch");
@@ -830,8 +827,8 @@ public:
   // We pop off the outer most loop on every iteration.
   friend inline auto operator<<(llvm::raw_ostream &os, const Loop &aln)
     -> llvm::raw_ostream & {
-    BumpAlloc<> alloc;
-    aln.dump(os, alloc);
+    utils::OwningArena<> alloc;
+    aln.dump(os, &alloc);
     return os;
   }
 #ifndef NDEBUG
@@ -871,7 +868,7 @@ public:
     numConstraints = unsigned(r);
   }
 
-  [[nodiscard]] static auto construct(BumpAlloc<> &alloc, PtrMatrix<int64_t> A,
+  [[nodiscard]] static auto construct(Arena<> *alloc, PtrMatrix<int64_t> A,
                                       llvm::ArrayRef<const llvm::SCEV *> syms,
                                       bool nonNeg) -> Loop * {
     unsigned numLoops = unsigned(A.numCol()) - 1 - syms.size();
@@ -879,7 +876,7 @@ public:
     aln->getA() << A;
     return aln;
   }
-  [[nodiscard]] static auto allocate(BumpAlloc<> &alloc, unsigned numCon,
+  [[nodiscard]] static auto allocate(Arena<> *alloc, unsigned numCon,
                                      unsigned numLoops,
                                      llvm::ArrayRef<const llvm::SCEV *> syms,
                                      bool nonNegative) -> NotNull<Loop> {
@@ -892,7 +889,7 @@ public:
     unsigned symCapacity = numDynSym + numLoops - 1;
     size_t memNeeded = size_t(M) * N * sizeof(int64_t) +
                        symCapacity * sizeof(const llvm::SCEV *const *);
-    auto *mem = (Loop *)alloc.allocate(sizeof(Loop) + memNeeded, alignof(Loop));
+    auto *mem = (Loop *)alloc->allocate(sizeof(Loop) + memNeeded);
     auto *aln = std::construct_at(mem, numCon, numLoops, numDynSym, M);
     std::copy_n(syms.begin(), numDynSym, aln->getSyms().begin());
     return NotNull<Loop>{aln};

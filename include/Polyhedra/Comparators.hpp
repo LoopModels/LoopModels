@@ -24,7 +24,7 @@ using math::PtrVector, math::MutPtrVector, math::Vector, math::_, math::Row,
   math::NormalForm::simplifySystemsImpl, math::NormalForm::solveSystem,
   math::StridedVector, math::vector, math::matrix, math::identity,
   math::Simplex, math::DenseDims, math::DenseMatrix;
-using utils::invariant, utils::BumpAlloc, utils::Optional;
+using utils::invariant, utils::Arena, utils::Optional;
 // For `== 0` constraints
 struct EmptyComparator {
   static constexpr auto getNumConstTerms() -> ptrdiff_t { return 0; }
@@ -305,12 +305,12 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
     return static_cast<const T *>(this)->getURankImpl();
   }
 
-  constexpr void initNonNegative(math::Alloc<int64_t> auto &alloc,
+  constexpr void initNonNegative(math::Alloc<int64_t> auto alloc,
                                  PtrMatrix<int64_t> A, EmptyMatrix<int64_t>,
                                  ptrdiff_t numNonNegative) {
     initNonNegative(alloc, A, numNonNegative);
   }
-  constexpr void initNonNegative(math::Alloc<int64_t> auto &alloc,
+  constexpr void initNonNegative(math::Alloc<int64_t> auto alloc,
                                  PtrMatrix<int64_t> A,
                                  ptrdiff_t numNonNegative) {
     // we have an additional numNonNegative x numNonNegative identity matrix
@@ -345,7 +345,7 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
     numEquations = numConTotal;
     initCore(alloc);
   }
-  constexpr void initNonNegative(math::Alloc<int64_t> auto &alloc,
+  constexpr void initNonNegative(math::Alloc<int64_t> auto alloc,
                                  PtrMatrix<int64_t> A, PtrMatrix<int64_t> E,
                                  ptrdiff_t numNonNegative) {
     // we have an additional numNonNegative x numNonNegative identity matrix
@@ -421,7 +421,7 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
                                                    bool pos0) -> ptrdiff_t {
     return memoryNeededImpl(A.numRow(), A.numCol(), E.numRow(), pos0);
   }
-  constexpr void init(math::Alloc<int64_t> auto &alloc, PtrMatrix<int64_t> A,
+  constexpr void init(math::Alloc<int64_t> auto alloc, PtrMatrix<int64_t> A,
                       bool pos0) {
     const ptrdiff_t numCon = ptrdiff_t(A.numRow()) + pos0;
     numVar = ptrdiff_t(A.numCol());
@@ -440,11 +440,11 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
     numEquations = numCon;
     initCore(alloc);
   }
-  constexpr void init(math::Alloc<int64_t> auto &alloc, PtrMatrix<int64_t> A,
+  constexpr void init(math::Alloc<int64_t> auto alloc, PtrMatrix<int64_t> A,
                       EmptyMatrix<int64_t>, bool pos0) {
     init(alloc, A, pos0);
   }
-  constexpr void init(math::Alloc<int64_t> auto &alloc, PtrMatrix<int64_t> A,
+  constexpr void init(math::Alloc<int64_t> auto alloc, PtrMatrix<int64_t> A,
                       PtrMatrix<int64_t> E, bool pos0) {
     const ptrdiff_t numInEqCon = ptrdiff_t(A.numRow()) + pos0;
     numVar = ptrdiff_t(A.numCol());
@@ -469,7 +469,7 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
   }
   // sets U, V, and d.
   // needs to also set their size, which is only determined here.
-  constexpr void initCore(math::Alloc<int64_t> auto &alloc) {
+  constexpr void initCore(math::Alloc<int64_t> auto alloc) {
     // numVar + numInEq x 2*numInEq + numEq
     MutPtrMatrix<int64_t> B = getV();
     Row R = B.numRow();
@@ -503,8 +503,7 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
 
   // Note that this is only valid when the comparator was constructed
   // with index `0` referring to >= 0 constants (i.e., the default).
-  constexpr auto isEmpty(BumpAlloc<> &alloc) const -> bool {
-    auto p = alloc.scope();
+  [[nodiscard]] constexpr auto isEmpty(Arena<> alloc) const -> bool {
     auto V = getV();
     auto U = getU();
     auto d = getD();
@@ -512,7 +511,7 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
     if (d.empty()) {
       if (!allZero(b[_(V.numRow(), end)])) return false;
       Col oldn = V.numCol();
-      auto H{matrix<int64_t>(alloc, V.numRow(), oldn + 1)};
+      auto H{matrix<int64_t>(&alloc, V.numRow(), oldn + 1)};
       // IntMatrix H{V.numRow(), oldn + 1};
       H(_, _(0, oldn)) << V;
       H(_, oldn) << -b;
@@ -532,11 +531,11 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
     // We represent D martix as a vector, and multiply the lcm to the
     // linear equation to avoid store D^(-1) as rational type
     int64_t lcmD = lcm(d);
-    auto b2{vector<int64_t>(alloc, d.size())};
+    auto b2{vector<int64_t>(&alloc, d.size())};
     b2 << -b * lcmD / d;
     // Vector<int64_t> b2 = -b * Dlcm / d;
     ptrdiff_t numRowTrunc = ptrdiff_t(U.numRow());
-    auto c{vector<int64_t>(alloc, ptrdiff_t(V.numRow() - numEquations))};
+    auto c{vector<int64_t>(&alloc, ptrdiff_t(V.numRow() - numEquations))};
     c << V(_(numEquations, end), _(begin, numRowTrunc)) * b2;
     // Vector<int64_t> c = V(_(numEquations, end), _(begin, numRowTrunc)) *
     // b2;
@@ -544,7 +543,7 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
     // expand W stores [c -JV2 JV2]
     //  we use simplex to solve [-JV2 JV2][y2+ y2-]' <= JV1D^(-1)Uq
     // where y2 = y2+ - y2-
-    auto expandW{matrix<int64_t>(alloc, Row{numSlack}, Col{dimNS * 2 + 1})};
+    auto expandW{matrix<int64_t>(&alloc, Row{numSlack}, Col{dimNS * 2 + 1})};
     for (ptrdiff_t i = 0; i < numSlack; ++i) {
       expandW(i, 0) = c[i];
       // expandW(i, 0) *= Dlcm;
@@ -554,18 +553,18 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
         expandW(i, dimNS + 1 + j) = val;
       }
     }
-    return Simplex::positiveVariables(alloc, expandW).hasValue();
+    return Simplex::positiveVariables(&alloc, expandW).hasValue();
   }
   [[nodiscard]] constexpr auto isEmpty() const -> bool {
-    BumpAlloc<> alloc;
+    utils::OwningArena<> alloc;
     return isEmpty(alloc);
   }
   [[nodiscard]] constexpr auto greaterEqual(PtrVector<int64_t> query) const
     -> bool {
-    BumpAlloc<> alloc;
+    utils::OwningArena<> alloc;
     return greaterEqual(alloc, query);
   }
-  [[nodiscard]] constexpr auto greaterEqualFullRank(BumpAlloc<> &alloc,
+  [[nodiscard]] constexpr auto greaterEqualFullRank(Arena<> *alloc,
                                                     PtrVector<int64_t> b) const
     -> bool {
     auto V = getV();
@@ -583,7 +582,7 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
     return true;
   }
   [[nodiscard]] constexpr auto
-  greaterEqualRankDeficient(BumpAlloc<> &alloc, MutPtrVector<int64_t> b) const
+  greaterEqualRankDeficient(Arena<> *alloc, MutPtrVector<int64_t> b) const
     -> bool {
     auto V = getV();
     auto d = getD();
@@ -618,15 +617,14 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
     Optional<Simplex *> optS{Simplex::positiveVariables(alloc, expandW)};
     return optS.hasValue();
   }
-  [[nodiscard]] constexpr auto greaterEqual(BumpAlloc<> &alloc,
+  [[nodiscard]] constexpr auto greaterEqual(Arena<> alloc,
                                             PtrVector<int64_t> query) const
     -> bool {
     auto U = getU();
-    auto p = alloc.scope();
-    auto b = vector<int64_t>(alloc, unsigned(U.numRow()));
+    auto b = vector<int64_t>(&alloc, unsigned(U.numRow()));
     b << U(_, _(begin, query.size())) * query;
-    return getD().size() ? greaterEqualRankDeficient(alloc, b)
-                         : greaterEqualFullRank(alloc, b);
+    return getD().size() ? greaterEqualRankDeficient(&alloc, b)
+                         : greaterEqualFullRank(&alloc, b);
   }
 };
 struct LinearSymbolicComparator
@@ -789,46 +787,45 @@ struct PtrSymbolicComparator
     invariant(dimD > 0);
     return getDImpl();
   }
-  static constexpr auto construct(BumpAlloc<> &alloc, PtrMatrix<int64_t> Ap,
+  static constexpr auto construct(Arena<> *alloc, PtrMatrix<int64_t> Ap,
                                   EmptyMatrix<int64_t>, bool pos0)
     -> PtrSymbolicComparator {
     return construct(alloc, Ap, pos0);
   };
-  static constexpr auto construct(BumpAlloc<> &alloc, PtrMatrix<int64_t> Ap,
+  static constexpr auto construct(Arena<> *alloc, PtrMatrix<int64_t> Ap,
                                   bool pos0) -> PtrSymbolicComparator {
-    PtrSymbolicComparator cmp(alloc.allocate<int64_t>(memoryNeeded(Ap, pos0)));
+    PtrSymbolicComparator cmp(alloc->allocate<int64_t>(memoryNeeded(Ap, pos0)));
     cmp.init(alloc, Ap, pos0);
     return cmp;
   };
-  static constexpr auto construct(BumpAlloc<> &alloc, PtrMatrix<int64_t> Ap,
+  static constexpr auto construct(Arena<> *alloc, PtrMatrix<int64_t> Ap,
                                   PtrMatrix<int64_t> Ep, bool pos0)
     -> PtrSymbolicComparator {
     PtrSymbolicComparator cmp(
-      alloc.allocate<int64_t>(memoryNeeded(Ap, Ep, pos0)));
+      alloc->allocate<int64_t>(memoryNeeded(Ap, Ep, pos0)));
     cmp.init(alloc, Ap, Ep, pos0);
     return cmp;
   };
-  static constexpr auto
-  constructNonNeg(BumpAlloc<> &alloc, PtrMatrix<int64_t> Ap,
-                  EmptyMatrix<int64_t>, ptrdiff_t numNonNeg)
+  static constexpr auto constructNonNeg(Arena<> *alloc, PtrMatrix<int64_t> Ap,
+                                        EmptyMatrix<int64_t>,
+                                        ptrdiff_t numNonNeg)
     -> PtrSymbolicComparator {
     return constructNonNeg(alloc, Ap, numNonNeg);
   };
-  static constexpr auto constructNonNeg(BumpAlloc<> &alloc,
-                                        PtrMatrix<int64_t> Ap,
+  static constexpr auto constructNonNeg(Arena<> *alloc, PtrMatrix<int64_t> Ap,
                                         ptrdiff_t numNonNeg)
     -> PtrSymbolicComparator {
     PtrSymbolicComparator cmp(
-      alloc.allocate<int64_t>(memoryNeededNonNegative(Ap, numNonNeg)));
+      alloc->allocate<int64_t>(memoryNeededNonNegative(Ap, numNonNeg)));
     cmp.initNonNegative(alloc, Ap, numNonNeg);
     return cmp;
   };
-  static constexpr auto
-  constructNonNeg(BumpAlloc<> &alloc, PtrMatrix<int64_t> Ap,
-                  PtrMatrix<int64_t> Ep, ptrdiff_t numNonNeg)
+  static constexpr auto constructNonNeg(Arena<> *alloc, PtrMatrix<int64_t> Ap,
+                                        PtrMatrix<int64_t> Ep,
+                                        ptrdiff_t numNonNeg)
     -> PtrSymbolicComparator {
     PtrSymbolicComparator cmp(
-      alloc.allocate<int64_t>(memoryNeededNonNegative(Ap, Ep, numNonNeg)));
+      alloc->allocate<int64_t>(memoryNeededNonNegative(Ap, Ep, numNonNeg)));
     cmp.initNonNegative(alloc, Ap, Ep, numNonNeg);
     return cmp;
   };
@@ -872,7 +869,7 @@ constexpr auto linear(std::allocator<int64_t>, PtrMatrix<int64_t> A,
                       EmptyMatrix<int64_t>, bool pos0) {
   return LinearSymbolicComparator::construct(A, pos0);
 }
-constexpr auto linear(BumpAlloc<> &alloc, PtrMatrix<int64_t> A,
+constexpr auto linear(Arena<> *alloc, PtrMatrix<int64_t> A,
                       EmptyMatrix<int64_t>, bool pos0) {
   return PtrSymbolicComparator::construct(alloc, A, pos0);
 }
@@ -881,7 +878,7 @@ constexpr auto linear(std::allocator<int64_t>, PtrMatrix<int64_t> A,
                       PtrMatrix<int64_t> E, bool pos0) {
   return LinearSymbolicComparator::construct(A, E, pos0);
 }
-constexpr auto linear(BumpAlloc<> &alloc, PtrMatrix<int64_t> A,
+constexpr auto linear(Arena<> *alloc, PtrMatrix<int64_t> A,
                       PtrMatrix<int64_t> E, bool pos0) {
   return PtrSymbolicComparator::construct(alloc, A, E, pos0);
 }
@@ -891,7 +888,7 @@ constexpr auto linearNonNegative(std::allocator<int64_t>, PtrMatrix<int64_t> A,
                                  EmptyMatrix<int64_t>, ptrdiff_t numNonNeg) {
   return LinearSymbolicComparator::constructNonNeg(A, numNonNeg);
 }
-constexpr auto linearNonNegative(BumpAlloc<> &alloc, PtrMatrix<int64_t> A,
+constexpr auto linearNonNegative(Arena<> *alloc, PtrMatrix<int64_t> A,
                                  EmptyMatrix<int64_t>, ptrdiff_t numNonNeg) {
   return PtrSymbolicComparator::constructNonNeg(alloc, A, numNonNeg);
 }
@@ -900,7 +897,7 @@ constexpr auto linearNonNegative(std::allocator<int64_t>, PtrMatrix<int64_t> A,
                                  PtrMatrix<int64_t> E, ptrdiff_t numNonNeg) {
   return LinearSymbolicComparator::constructNonNeg(A, E, numNonNeg);
 }
-constexpr auto linearNonNegative(BumpAlloc<> &alloc, PtrMatrix<int64_t> A,
+constexpr auto linearNonNegative(Arena<> *alloc, PtrMatrix<int64_t> A,
                                  PtrMatrix<int64_t> E, ptrdiff_t numNonNeg) {
   return PtrSymbolicComparator::constructNonNeg(alloc, A, E, numNonNeg);
 }

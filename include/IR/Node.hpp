@@ -15,7 +15,7 @@
 #include <llvm/Support/Casting.h>
 
 namespace poly::IR {
-using utils::NotNull, utils::invariant, utils::BumpAlloc, containers::UList;
+using utils::NotNull, utils::invariant, utils::Arena, containers::UList;
 /// We take an approach similar to LLVM's RTTI
 /// however, we want to take advantage of FAMs while having a "hieararchy"
 /// we accomplish this via a base class, and then wrapper classes that simply
@@ -232,9 +232,9 @@ public:
       if (auto *s = c->getSubLoop()) s->forEachLoop(f);
     }
   }
-  static constexpr auto create(BumpAlloc<> &alloc, llvm::Loop *LL,
-                               poly::Loop *AL, size_t depth) -> Loop * {
-    return alloc.create<Loop>(depth, LL, AL);
+  static constexpr auto create(Arena<> *alloc, llvm::Loop *LL, poly::Loop *AL,
+                               size_t depth) -> Loop * {
+    return alloc->create<Loop>(depth, LL, AL);
   }
   [[nodiscard]] constexpr auto getLLVMLoop() const -> llvm::Loop * {
     return llvmLoop;
@@ -276,9 +276,10 @@ public:
     invariant(kind == VK_Load || kind >= VK_Func);
     unionPtr.users = users;
   }
-  constexpr void addUser(BumpAlloc<> &alloc, Instruction *n) {
+  constexpr void addUser(Arena<> *alloc, Instruction *n) {
     invariant(kind == VK_Load || kind >= VK_Func);
-    if (!unionPtr.users) unionPtr.users = alloc.create<UList<Instruction *>>(n);
+    if (!unionPtr.users)
+      unionPtr.users = alloc->create<UList<Instruction *>>(n);
     else unionPtr.users = unionPtr.users->pushUnique(alloc, n);
   }
   constexpr void removeFromUsers(Value *n);
@@ -337,7 +338,7 @@ public:
   };
   // declarations
   [[nodiscard]] constexpr auto getIdentifier() const -> Identifier;
-  inline void setOperands(BumpAlloc<> &alloc, math::PtrVector<Value *>);
+  inline void setOperands(Arena<> *alloc, math::PtrVector<Value *>);
 };
 
 /// CVal
@@ -415,9 +416,9 @@ class Cint : public Cnst {
 
 public:
   constexpr Cint(int64_t v, llvm::Type *t) : Cnst(VK_Cint, t), val(v) {}
-  static constexpr auto create(BumpAlloc<> &alloc, int64_t v, llvm::Type *t)
+  static constexpr auto create(Arena<> *alloc, int64_t v, llvm::Type *t)
     -> Cint * {
-    return alloc.create<Cint>(v, t);
+    return alloc->create<Cint>(v, t);
   }
   static constexpr auto classof(const Node *v) -> bool {
     return v->getKind() == VK_Cint;
@@ -432,9 +433,9 @@ class Cflt : public Cnst {
 
 public:
   constexpr Cflt(double v, llvm::Type *t) : Cnst(VK_Cflt, t), val(v) {}
-  static constexpr auto create(BumpAlloc<> &alloc, double v, llvm::Type *t)
+  static constexpr auto create(Arena<> *alloc, double v, llvm::Type *t)
     -> Cflt * {
-    return alloc.create<Cflt>(v, t);
+    return alloc->create<Cflt>(v, t);
   }
   static constexpr auto classof(const Node *v) -> bool {
     return v->getKind() == VK_Cflt;
@@ -449,9 +450,9 @@ class Bint : public Cnst {
 public:
   constexpr Bint(llvm::ConstantInt *v, llvm::Type *t)
     : Cnst(VK_Bint, t), val(v->getValue()) {}
-  static constexpr auto create(BumpAlloc<> &alloc, llvm::ConstantInt *v,
+  static constexpr auto create(Arena<> *alloc, llvm::ConstantInt *v,
                                llvm::Type *t) -> Bint * {
-    return alloc.create<Bint>(v, t);
+    return alloc->create<Bint>(v, t);
   }
   static constexpr auto classof(const Node *v) -> bool {
     return v->getKind() == VK_Bint;
@@ -469,9 +470,9 @@ class Bflt : public Cnst {
 public:
   constexpr Bflt(llvm::ConstantFP *v, llvm::Type *t)
     : Cnst(VK_Bflt, t), val(v->getValue()) {}
-  static constexpr auto create(BumpAlloc<> &alloc, llvm::ConstantFP *v,
+  static constexpr auto create(Arena<> *alloc, llvm::ConstantFP *v,
                                llvm::Type *t) -> Bflt * {
-    return alloc.create<Bflt>(v, t);
+    return alloc->create<Bflt>(v, t);
   }
   static constexpr auto classof(const Node *v) -> bool {
     return v->getKind() == VK_Bflt;

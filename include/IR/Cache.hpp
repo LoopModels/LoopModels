@@ -104,7 +104,7 @@ class Cache {
   map<llvm::Value *, Value *> llvmToInternalMap;
   map<InstByValue, Compute *> instCSEMap;
   map<Cnst::Identifier, Cnst *> constMap;
-  BumpAlloc<> alloc;
+  utils::OwningArena<> alloc;
   llvm::LoopInfo *LI;
   llvm::ScalarEvolution *SE;
   Compute *freeInstList{nullptr}; // positive numOps/complete, but empty
@@ -118,8 +118,8 @@ class Cache {
       return I;
     }
     // not found, allocate
-    return static_cast<Compute *>(alloc.allocate(
-      sizeof(Compute) + sizeof(Value *) * numOps, alignof(Compute)));
+    return static_cast<Compute *>(
+      alloc.allocate(sizeof(Compute) + sizeof(Value *) * numOps));
   }
 
   auto getCSE(Compute *I) -> Compute *& { return instCSEMap[InstByValue{I}]; }
@@ -154,7 +154,7 @@ class Cache {
         if (isPred) addr->setPredicate(newNode);
         if (isStored) addr->setVal(newNode);
       }
-      if (newNode->getKind() != Node::VK_Stow) newNode->addUser(alloc, user);
+      if (newNode->getKind() != Node::VK_Stow) newNode->addUser(&alloc, user);
     });
     if (freeListList) freeListList->append(oldNode->getUsers());
     else freeListList = oldNode->getUsers();
@@ -262,7 +262,7 @@ class Cache {
     addSymbolic(offsets, symbolicOffsets, S, mlt);
     return blackList | blackListAllDependentLoops(S, numPeeled);
   }
-  static void extendDensePtrMatCols(BumpAlloc<> &alloc,
+  static void extendDensePtrMatCols(Arena<> *alloc,
                                     MutDensePtrMatrix<int64_t> &A, math::Row R,
                                     math::Col C) {
     MutDensePtrMatrix<int64_t> B{matrix<int64_t>(alloc, A.numRow(), C)};
@@ -286,7 +286,7 @@ public:
       auto [v, tret] = getValue(op, M, tr);
       tr = tret;
       ops[j] = v;
-      v->addUser(alloc, I);
+      v->addUser(&alloc, I);
     }
     return {cse(I), tr};
   }
@@ -307,7 +307,7 @@ public:
   /// Get the cache's allocator.
   /// This is a long-lived bump allocator, mass-freeing after each
   /// sub-tree optimization.
-  constexpr auto getAllocator() -> BumpAlloc<> & { return alloc; }
+  constexpr auto getAllocator() -> Arena<> * { return &alloc; }
   /// try to remove `I` as a duplicate
   /// this travels downstream;
   /// if `I` is eliminated, all users of `I`
@@ -399,7 +399,7 @@ public:
   auto zeroDimRef(llvm::Instruction *loadOrStore,
                   llvm::SCEVUnknown const *arrayPtr, unsigned numLoops)
     -> Addr * {
-    return Addr::construct(alloc, arrayPtr, loadOrStore, numLoops);
+    return Addr::construct(&alloc, arrayPtr, loadOrStore, numLoops);
   }
   // create Addr
   auto getArrayRef(llvm::Instruction *loadOrStore, llvm::Loop *L,
@@ -464,13 +464,13 @@ public:
           fillAffineIndices(Rt(i, _), &coffsets[i], offsets, symbolicOffsets,
                             subscripts[i], 1, numPeeled);
         if (offsets.size() > offsMat.numCol())
-          extendDensePtrMatCols(alloc, offsMat, math::Row{i},
+          extendDensePtrMatCols(&alloc, offsMat, math::Row{i},
                                 math::Col{offsets.size()});
         offsMat(i, _) << offsets;
       }
     }
     size_t numExtraLoopsToPeel = 64 - std::countl_zero(blackList);
-    Addr *op = Addr::construct(alloc, arrayPtr, loadOrStore,
+    Addr *op = Addr::construct(&alloc, arrayPtr, loadOrStore,
                                Rt(_, _(numExtraLoopsToPeel, end)),
                                {std::move(sizes), std::move(symbolicOffsets)},
                                coffsets, offsMat.data(), numLoops);
@@ -500,7 +500,7 @@ public:
     MutPtrVector<Value *> operands{op->getOperands()};
     for (size_t n = 0; n < N; ++n) {
       Value *operand = operands[n] = ops[n];
-      operand->addUser(alloc, op);
+      operand->addUser(&alloc, op);
     }
   }
   // this should be modified, and then `cse`-called on int
@@ -567,9 +567,9 @@ public:
                        bool swap = false) -> Value * {
     switch (rel) {
     case Predicate::Relation::Any:
-      return Cint::create(alloc, 1, instr->getType());
+      return Cint::create(&alloc, 1, instr->getType());
     case Predicate::Relation::Empty:
-      return Cint::create(alloc, 0, instr->getType());
+      return Cint::create(&alloc, 0, instr->getType());
     case Predicate::Relation::False: swap = !swap; [[fallthrough]];
     case Predicate::Relation::True: return swap ? negate(instr) : instr;
     }
@@ -680,8 +680,7 @@ public:
 };
 
 namespace Predicate {
-[[nodiscard]] inline auto Map::addPredicate(BumpAlloc<> &alloc,
-                                            IR::Cache &cache,
+[[nodiscard]] inline auto Map::addPredicate(Arena<> *alloc, IR::Cache &cache,
                                             llvm::Value *value,
                                             IR::TreeResult &tr) -> size_t {
   auto [I, tret] = cache.getValue(value, nullptr, tr);
@@ -696,7 +695,7 @@ namespace Predicate {
 }
 
 [[nodiscard]] inline auto // NOLINTNEXTLINE(misc-no-recursion)
-descendBlock(BumpAlloc<> &alloc, IR::Cache &cache,
+descendBlock(Arena<> *alloc, IR::Cache &cache,
              dict::aset<llvm::BasicBlock *> &visited, Map &predMap,
              llvm::BasicBlock *BBsrc, llvm::BasicBlock *BBdst,
              Intersection predicate, llvm::BasicBlock *BBhead, llvm::Loop *L,
@@ -772,17 +771,17 @@ descendBlock(BumpAlloc<> &alloc, IR::Cache &cache,
   if (rc0 == Map::Destination::Reached) predMap.reach(alloc, BBsrc, predicate);
   return rc0;
 }
-[[nodiscard]] inline auto Map::descend(BumpAlloc<> &alloc, IR::Cache &cache,
+[[nodiscard]] inline auto Map::descend(Arena<> *alloc, IR::Cache &cache,
                                        llvm::BasicBlock *BBsrc,
                                        llvm::BasicBlock *BBdst, llvm::Loop *L,
                                        TreeResult &tr) -> std::optional<Map> {
-  auto p = alloc.checkpoint();
+  auto p = alloc->checkpoint();
   Map predMap{alloc};
   dict::aset<llvm::BasicBlock *> visited{alloc};
   if (descendBlock(alloc, cache, visited, predMap, BBsrc, BBdst, {}, BBsrc, L,
                    tr) == Destination::Reached)
     return predMap;
-  alloc.rollback(p);
+  alloc->rollback(p);
   return std::nullopt;
 }
 

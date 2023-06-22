@@ -73,10 +73,10 @@ struct MergingCost {
   /// returns `true` if `key` was already in ancestors
   /// returns `false` if it had to initialize
   // NOLINTNEXTLINE(misc-no-recursion)
-  auto initAncestors(BumpAlloc<> &alloc, Instruction *key)
+  auto initAncestors(Arena<> *alloc, Instruction *key)
     -> aset<Instruction *> * {
 
-    auto *set = alloc.construct<aset<Instruction *>>(alloc);
+    auto *set = alloc->construct<aset<Instruction *>>(alloc);
     /// instructions are considered their own ancestor for our purposes
     set->insert(key);
     ancestorMap[key] = set;
@@ -94,8 +94,7 @@ struct MergingCost {
     return ancestorMap.count(key);
   }
   // NOLINTNEXTLINE(misc-no-recursion)
-  auto getAncestors(BumpAlloc<> &alloc, Instruction *I)
-    -> aset<Instruction *> * {
+  auto getAncestors(Arena<> *alloc, Instruction *I) -> aset<Instruction *> * {
     auto *&f = ancestorMap[I];
     if (!f) f = initAncestors(alloc, I);
     return f;
@@ -152,7 +151,7 @@ struct MergingCost {
   }
 
   struct Allocate {
-    BumpAlloc<> &alloc; // short term allocator
+    Arena<> *alloc; // short term allocator
     IR::Cache &cache;
     ReMapper &reMap;
     amap<Instruction *, Predicate::Set> &valToPred;
@@ -167,7 +166,7 @@ struct MergingCost {
     constexpr void select(size_t, Value *, Value *) { ++numSelects; }
   };
   struct SelectAllocator {
-    BumpAlloc<> &alloc; // short term allocator
+    Arena<> *alloc; // short term allocator
     IR::Cache &cache;
     ReMapper &reMap;
     MutPtrVector<Value *> operands;
@@ -285,7 +284,7 @@ struct MergingCost {
     return unsigned(selector);
   }
 
-  void merge(BumpAlloc<> &alloc, llvm::TargetTransformInfo &TTI,
+  void merge(Arena<> *alloc, llvm::TargetTransformInfo &TTI,
              unsigned int vectorBits, Instruction *A, Instruction *B) {
     mergeList.emplace_back(A, B);
     auto *aA = ancestorMap.find(B);
@@ -335,7 +334,7 @@ struct MergingCost {
     return cost > other.cost;
   }
 
-  inline void mergeInstructions(IR::Cache &cache, BumpAlloc<> &tAlloc,
+  inline void mergeInstructions(IR::Cache &cache, Arena<> *tAlloc,
                                 Instruction *A, Instruction *B,
                                 amap<Instruction *, Predicate::Set> &valToPred,
                                 ReMapper &reMap, UList<Value *> *pred) {
@@ -369,7 +368,7 @@ struct MergingCost {
 
 // NOLINTNEXTLINE(misc-no-recursion)
 inline void mergeInstructions(
-  BumpAlloc<> &alloc, IR::Cache &cache, Predicate::Map &predMap,
+  Arena<> *alloc, IR::Cache &cache, Predicate::Map &predMap,
   llvm::TargetTransformInfo &TTI, unsigned int vectorBits,
   amap<Instruction::Identifier, math::ResizeableView<Instruction *, unsigned>>
     opMap,
@@ -409,7 +408,7 @@ inline void mergeInstructions(
       // because we are traversing in topological order
       // that is, we haven't visited any descendants of `I`
       // so only an ancestor had a chance
-      auto *MC = alloc.construct<MergingCost>(*C);
+      auto *MC = alloc->construct<MergingCost>(*C);
       // MC is a copy of C, except we're now merging
       MC->merge(alloc, TTI, vectorBits, other, J);
     }
@@ -436,9 +435,9 @@ inline void mergeInstructions(
 }
 
 /// mergeInstructions(
-///    BumpAlloc<> &alloc,
+///    Arena<> *alloc,
 ///    IR::Cache &cache,
-///    BumpAlloc<> &tmpAlloc,
+///    Arena<> *tmpAlloc,
 ///    Predicate::Map &predMap
 /// )
 /// merges instructions from predMap what have disparate control flow.
@@ -446,18 +445,18 @@ inline void mergeInstructions(
 /// merging as it allocates a lot of memory that it can free when it is done.
 /// TODO: this algorithm is exponential in time and memory.
 /// Odds are that there's way smarter things we can do.
-[[nodiscard]] inline auto
-mergeInstructions(IR::Cache &cache, Predicate::Map &predMap,
-                  llvm::TargetTransformInfo &TTI, BumpAlloc<> &tAlloc,
-                  unsigned vectorBits, TreeResult tr) -> TreeResult {
+[[nodiscard]] inline auto mergeInstructions(IR::Cache &cache,
+                                            Predicate::Map &predMap,
+                                            llvm::TargetTransformInfo &TTI,
+                                            Arena<> tAlloc, unsigned vectorBits,
+                                            TreeResult tr) -> TreeResult {
   auto [completed, trret] = cache.completeInstructions(&predMap, tr);
   tr = trret;
   if (!predMap.isDivergent()) return tr;
-  auto p = tAlloc.scope();
   // there is a divergence in the control flow that we can ideally merge
   amap<Instruction::Identifier, math::ResizeableView<Instruction *, unsigned>>
-    opMap{tAlloc};
-  amap<Instruction *, Predicate::Set> valToPred{tAlloc};
+    opMap{&tAlloc};
+  amap<Instruction *, Predicate::Set> valToPred{&tAlloc};
   llvm::SmallVector<MergingCost *> mergingCosts;
   mergingCosts.emplace_back(tAlloc);
   // We search through incomplete instructions inside the predMap
@@ -465,8 +464,8 @@ mergeInstructions(IR::Cache &cache, Predicate::Map &predMap,
   for (auto *C = completed; C; C = static_cast<Compute *>(C->getNext())) {
     auto *f = predMap.find(C->getLLVMInstruction());
     invariant(f != predMap.end());
-    mergeInstructions(tAlloc, cache, predMap, TTI, vectorBits, opMap, valToPred,
-                      mergingCosts, C, f->first, f->second);
+    mergeInstructions(&tAlloc, cache, predMap, TTI, vectorBits, opMap,
+                      valToPred, mergingCosts, C, f->first, f->second);
   }
   MergingCost *minCostStrategy = *std::ranges::min_element(
     mergingCosts, [](MergingCost *a, MergingCost *b) { return *a < *b; });
@@ -476,7 +475,7 @@ mergeInstructions(IR::Cache &cache, Predicate::Map &predMap,
 
   // merge pair through `select`ing the arguments that differ
   for (auto [A, B] : *minCostStrategy)
-    minCostStrategy->mergeInstructions(cache, tAlloc, A, B, valToPred, reMap,
+    minCostStrategy->mergeInstructions(cache, &tAlloc, A, B, valToPred, reMap,
                                        predMap.getPredicates());
   return tr;
 }

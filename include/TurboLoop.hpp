@@ -79,7 +79,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
   // this is an allocator that it is safe to reset completely when
   // a subtree fails, so it is not allowed to allocate anything
   // that we want to live longer than that.
-  constexpr auto shortAllocator() -> BumpAlloc<> & {
+  constexpr auto shortAllocator() -> Arena<> * {
     return loopBlock.getAllocator();
   }
   // It is of course safe to checkpoint & rollback or scope
@@ -87,7 +87,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
   // that result in extra slabs being allocated that
   // then are not going to get freed until we are done with the
   // `TurboLoopPass`
-  constexpr auto longAllocator() -> BumpAlloc<> & {
+  constexpr auto longAllocator() -> Arena<> * {
     return instructions.getAllocator();
   }
 
@@ -178,8 +178,8 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
 
     const auto *BT = poly::getBackedgeTakenCount(*SE, L);
     if (llvm::isa<llvm::SCEVCouldNotCompute>(BT)) return {};
-    BumpAlloc<> &salloc{shortAllocator()};
-    BumpAlloc<> &lalloc{longAllocator()};
+    Arena<> *salloc{shortAllocator()};
+    Arena<> *lalloc{longAllocator()};
     // TODO: check pointing seems dangerous, as
     // we'd have to make sure none of the allocated instructions
     // can be referenced again (e.g., through the free list)
@@ -193,7 +193,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
     tr = parseBlocks(L->getHeader(), L->getLoopLatch(), L, omega, AL, tr);
     omega.pop_back();
     if (tr.accept(omega.size() - 1)) return tr;
-    salloc.reset();
+    salloc->reset();
     // lalloc.rollback(p);
     return {};
   }

@@ -189,18 +189,18 @@ public:
   constexpr void setNode(ScheduledNode *n) { nodeOrDepth.node = n; }
   constexpr void forEachInput(const auto &f);
 
-  [[nodiscard]] static auto construct(BumpAlloc<> &alloc,
+  [[nodiscard]] static auto construct(Arena<> *alloc,
                                       const llvm::SCEVUnknown *ptr,
                                       llvm::Instruction *user,
                                       unsigned numLoops) -> NotNull<Addr> {
-    auto *mem = (Addr *)alloc.allocate(
-      sizeof(Addr) + numLoops * sizeof(int64_t), alignof(Addr));
+    auto *mem =
+      (Addr *)alloc->allocate(sizeof(Addr) + numLoops * sizeof(int64_t));
     auto *ma = new (mem) Addr(ptr, user, numLoops);
     return ma;
   }
   /// Constructor for regular indexing
   [[nodiscard]] static auto
-  construct(BumpAlloc<> &alloc, const llvm::SCEVUnknown *arrayPtr,
+  construct(Arena<> *alloc, const llvm::SCEVUnknown *arrayPtr,
             llvm::Instruction *user, PtrMatrix<int64_t> indMat,
             std::array<llvm::SmallVector<const llvm::SCEV *, 3>, 2> szOff,
             PtrVector<int64_t> coffsets, int64_t *offsets, unsigned numLoops)
@@ -208,10 +208,10 @@ public:
     // we don't want to hold any other pointers that may need freeing
     unsigned arrayDim = szOff[0].size(), nOff = szOff[1].size();
     size_t memNeeded = intMemNeeded(numLoops, arrayDim);
-    auto *mem = (Addr *)alloc.allocate(
-      sizeof(Addr) + memNeeded * sizeof(int64_t), alignof(Addr));
+    auto *mem =
+      (Addr *)alloc->allocate(sizeof(Addr) + memNeeded * sizeof(int64_t));
     const auto **syms = // over alloc by numLoops - 1, in case we remove
-      alloc.allocate<const llvm::SCEV *>(arrayDim + nOff + numLoops - 1);
+      alloc->allocate<const llvm::SCEV *>(arrayDim + nOff + numLoops - 1);
     auto *ma =
       new (mem) Addr(arrayPtr, user, offsets, syms,
                      std::array<unsigned, 2>{arrayDim, nOff}, numLoops);
@@ -228,10 +228,10 @@ public:
     std::copy_n(o.begin(), getNumLoops(), getFusionOmega().begin());
     getFusionOmega().back() = o.back()--;
   }
-  [[nodiscard]] auto reload(BumpAlloc<> &alloc) -> NotNull<Addr> {
+  [[nodiscard]] auto reload(Arena<> *alloc) -> NotNull<Addr> {
     size_t memNeeded = intMemNeeded(getNumLoops(), numDim);
-    auto *p = (Addr *)alloc.allocate(sizeof(Addr) + memNeeded * sizeof(int64_t),
-                                     alignof(Addr));
+    auto *p =
+      (Addr *)alloc->allocate(sizeof(Addr) + memNeeded * sizeof(int64_t));
     return new (p) Addr(*this);
   }
   [[nodiscard]] auto getSizes() const -> PtrVector<const llvm::SCEV *> {
@@ -330,7 +330,7 @@ public:
   /// extend number of Cols, copying A[_(0,R),_] into dest, filling new cols
   /// with 0
   // L is the inner most loop being removed
-  void updateOffsMat(BumpAlloc<> &alloc, size_t numToPeel, llvm::Loop *L,
+  void updateOffsMat(Arena<> *alloc, size_t numToPeel, llvm::Loop *L,
                      llvm::ScalarEvolution *SE) {
     invariant(numToPeel > 0);
     // need to condition on loop
@@ -345,7 +345,7 @@ public:
     size_t dynSymInd = numDynSym;
     numDynSym += numToPeel;
     MutPtrVector<const llvm::SCEV *> sym{getSymbolicOffsets()};
-    offSym = alloc.allocate<int64_t>(size_t(numDynSym) * numDim);
+    offSym = alloc->allocate<int64_t>(size_t(numDynSym) * numDim);
     MutDensePtrMatrix<int64_t> offsMat{offsetMatrix()};
     if (dynSymInd) offsMat(_, _(0, dynSymInd)) << oldOffsMat;
     for (size_t i = numToPeel; i;) {
@@ -364,7 +364,7 @@ public:
       }
     }
   }
-  void peelLoops(BumpAlloc<> &alloc, size_t numToPeel, llvm::Loop *L,
+  void peelLoops(Arena<> *alloc, size_t numToPeel, llvm::Loop *L,
                  llvm::ScalarEvolution *SE) {
     invariant(numToPeel > 0);
     size_t maxDepth = nodeOrDepth.maxDepth, numLoops = getNumLoops();
@@ -534,7 +534,7 @@ public:
   //   getAddrMemory()[numMemInputs + numDirectEdges + i] = other;
   //   getDDepthMemory()[numMemInputs + numDirectEdges + i] = d;
   // }
-  [[nodiscard]] static auto allocate(BumpAlloc<> &alloc, NotNull<Addr> ma,
+  [[nodiscard]] static auto allocate(Arena<> *alloc, NotNull<Addr> ma,
                                      unsigned inputEdges, unsigned directEdges,
                                      unsigned outputEdges) -> NotNull<Addr> {
 
@@ -543,14 +543,13 @@ public:
                    (inputEdges + directEdges + outputEdges) *
                      (sizeof(Addr *) + sizeof(uint8_t)) +
                    sizeof(Addr);
-    return (Addr *)alloc.allocate(memSz, alignof(Addr));
+    return (Addr *)alloc->allocate(memSz);
   }
   [[nodiscard]] static auto
-  construct(BumpAlloc<> &alloc, NotNull<poly::Loop> explicitLoop,
-            NotNull<Addr> ma, bool isStr, SquarePtrMatrix<int64_t> Pinv,
-            int64_t denom, PtrVector<int64_t> omega, unsigned inputEdges,
-            unsigned directEdges, unsigned outputEdges, int64_t *offsets)
-    -> NotNull<Addr> {
+  construct(Arena<> *alloc, NotNull<poly::Loop> explicitLoop, NotNull<Addr> ma,
+            bool isStr, SquarePtrMatrix<int64_t> Pinv, int64_t denom,
+            PtrVector<int64_t> omega, unsigned inputEdges, unsigned directEdges,
+            unsigned outputEdges, int64_t *offsets) -> NotNull<Addr> {
 
     size_t numLoops = size_t(Pinv.numCol()), arrayDim = ma->getArrayDim(),
            memSz = (1 + arrayDim + (arrayDim * numLoops)) * sizeof(int64_t) +
@@ -558,7 +557,7 @@ public:
                      (sizeof(Addr *) + sizeof(uint8_t)) +
                    sizeof(Addr);
     // size_t memSz = ma->getNumLoops() * (1 + ma->getArrayDim());
-    auto *pt = alloc.allocate(memSz, alignof(Addr));
+    auto *pt = alloc->allocate(memSz);
     // we could use the passkey idiom to make the constructor public yet
     // un-callable so that we can use std::construct_at (which requires a
     // public constructor) or, we can just use placement new and not mark this

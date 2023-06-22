@@ -86,7 +86,7 @@ public:
     : basePointer(arrayPtr), loop(loopRef), loadOrStore(user){};
   /// Constructor for 0 dimensional memory access
   [[nodiscard]] static auto
-  construct(BumpAlloc<> &alloc, const llvm::SCEVUnknown *arrayPointer,
+  construct(Arena<> *alloc, const llvm::SCEVUnknown *arrayPointer,
             poly::Loop &loopRef, llvm::Instruction *user,
             PtrVector<unsigned> o) -> NotNull<ArrayIndex> {
     unsigned numLoops = loopRef.getNumLoops();
@@ -100,7 +100,7 @@ public:
   }
   /// Constructor for regular indexing
   [[nodiscard]] static auto
-  construct(BumpAlloc<> &alloc, const llvm::SCEVUnknown *arrayPtr,
+  construct(Arena<> *alloc, const llvm::SCEVUnknown *arrayPtr,
             poly::Loop &loopRef, llvm::Instruction *user,
             PtrMatrix<int64_t> indMat,
             std::array<llvm::SmallVector<const llvm::SCEV *, 3>, 2> szOff,

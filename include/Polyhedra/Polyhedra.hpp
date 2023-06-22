@@ -20,7 +20,7 @@ namespace poly::poly {
 using math::DensePtrMatrix, math::MutDensePtrMatrix, math::EmptyMatrix,
   math::Row, math::Col, math::vector, math::matrix, math::_, math::end,
   math::last;
-using utils::BumpAlloc;
+using utils::Arena;
 inline auto printPositive(std::ostream &os, ptrdiff_t stop) -> std::ostream & {
   for (ptrdiff_t i = 0; i < stop; ++i) os << "v_" << i << " >= 0\n";
   return os;
@@ -98,7 +98,7 @@ struct BasePolyhedra {
                                              getNumDynamic());
     return comparator::linear(alloc, getA(), getE(), true);
   }
-  [[nodiscard]] constexpr auto initializeComparator(BumpAlloc<> &alloc)
+  [[nodiscard]] constexpr auto initializeComparator(Arena<> *alloc)
     -> comparator::PtrSymbolicComparator {
     if constexpr (MaybeNonNeg)
       if (isNonNegative())
@@ -128,21 +128,19 @@ struct BasePolyhedra {
     if constexpr (!MaybeNonNeg) return false;
     return static_cast<const P *>(this)->isNonNegative();
   }
-  constexpr void pruneBounds(BumpAlloc<> &alloc) {
+  constexpr void pruneBounds(Arena<> alloc) {
     if (getNumCon() == 0) return;
-    auto p = alloc.scope();
-    pruneBoundsCore<true>(alloc);
+    pruneBoundsCore<true>(&alloc);
   }
   constexpr void pruneBounds() {
-    BumpAlloc<> alloc;
+    utils::OwningArena<> alloc;
     pruneBounds(alloc);
   }
   constexpr void eraseConstraint(ptrdiff_t constraint) {
     eraseConstraintImpl(getA(), constraint);
     decrementNumConstraints();
   }
-  template <bool CheckEmpty>
-  constexpr void pruneBoundsCore(BumpAlloc<> &alloc) {
+  template <bool CheckEmpty> constexpr void pruneBoundsCore(Arena<> *alloc) {
     auto diff = vector<int64_t>(alloc, unsigned(getA().numCol()));
     auto p = checkpoint(alloc);
     const ptrdiff_t dyn = getNumDynamic();
@@ -157,7 +155,7 @@ struct BasePolyhedra {
     }
     auto C = initializeComparator(alloc);
     if constexpr (CheckEmpty) {
-      if (C.isEmpty(alloc)) {
+      if (C.isEmpty(*alloc)) {
         setNumConstraints(0);
         if constexpr (HasEqualities) setNumEqConstraints(0);
         return;
@@ -168,12 +166,12 @@ struct BasePolyhedra {
       for (auto i = --j; i;) {
         if (getNumCon() <= 1) return;
         diff << getA()(--i, _) - getA()(j, _);
-        if (C.greaterEqual(alloc, diff)) {
+        if (C.greaterEqual(*alloc, diff)) {
           eraseConstraint(i);
           rollback(alloc, p);
           C = initializeComparator(alloc);
           --j; // `i < j`, and `i` has been removed
-        } else if (diff *= -1; C.greaterEqual(alloc, diff)) {
+        } else if (diff *= -1; C.greaterEqual(*alloc, diff)) {
           eraseConstraint(j);
           rollback(alloc, p);
           C = initializeComparator(alloc);
@@ -186,7 +184,7 @@ struct BasePolyhedra {
           for (ptrdiff_t i = 0; i < dyn; ++i) {
             diff << getA()(j, _);
             --diff[last - i];
-            if (C.greaterEqual(alloc, diff)) {
+            if (C.greaterEqual(*alloc, diff)) {
               eraseConstraint(j);
               rollback(alloc, p);
               C = initializeComparator(alloc);

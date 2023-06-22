@@ -3,6 +3,7 @@
 #include "Polyhedra/DependencyPolyhedra.hpp"
 #include "Polyhedra/Loops.hpp"
 #include "Schedule.hpp"
+#include <Math/Constructors.hpp>
 #include <Utilities/Allocators.hpp>
 #include <Utilities/Invariant.hpp>
 #include <cstdint>
@@ -105,7 +106,7 @@ class Dependence {
                                                       255, 255, 255};
   [[no_unique_address]] bool forward;
 
-  static auto timelessCheck(BumpAlloc<> &alloc, NotNull<DepPoly> dxy,
+  static auto timelessCheck(Arena<> *alloc, NotNull<DepPoly> dxy,
                             NotNull<IR::Addr> x, NotNull<IR::Addr> y,
                             std::array<NotNull<math::Simplex>, 2> pair,
                             bool isFwd) -> Dependence * {
@@ -113,25 +114,25 @@ class Dependence {
     invariant(dxy->getTimeDim(), unsigned(0));
     if (isFwd) {
       pair[0]->truncateVars(1 + numLambda + dxy->getNumScheduleCoef());
-      return alloc.create<Dependence>(dxy, pair, x, y, true);
+      return alloc->create<Dependence>(dxy, pair, x, y, true);
     }
     pair[1]->truncateVars(1 + numLambda + dxy->getNumScheduleCoef());
     std::swap(pair[0], pair[1]);
-    return alloc.create<Dependence>(dxy, pair, y, x, false);
+    return alloc->create<Dependence>(dxy, pair, y, x, false);
   }
-  static auto timelessCheck(BumpAlloc<> &alloc, NotNull<DepPoly> dxy,
+  static auto timelessCheck(Arena<> *alloc, NotNull<DepPoly> dxy,
                             NotNull<IR::Addr> x, NotNull<IR::Addr> y,
                             std::array<NotNull<math::Simplex>, 2> pair)
     -> Dependence * {
     return timelessCheck(alloc, dxy, x, y, pair,
-                         checkDirection(alloc, pair, x, y, dxy->getNumLambda(),
+                         checkDirection(*alloc, pair, x, y, dxy->getNumLambda(),
                                         dxy->getNumVar() + 1));
     ;
   }
 
   // emplaces dependencies with repeat accesses to the same memory across
   // time
-  static auto timeCheck(BumpAlloc<> &alloc, NotNull<DepPoly> dxy,
+  static auto timeCheck(Arena<> *alloc, NotNull<DepPoly> dxy,
                         NotNull<IR::Addr> x, NotNull<IR::Addr> y,
                         std::array<NotNull<math::Simplex>, 2> pair)
     -> Dependence * {
@@ -146,7 +147,7 @@ class Dependence {
                    numLambda = posEqEnd + numEqualityConstraintsOld,
                    numScheduleCoefs = dxy->getNumScheduleCoef();
     invariant(numLambda, dxy->getNumLambda());
-    const bool isFwd = checkDirection(alloc, pair, x, y, numLambda,
+    const bool isFwd = checkDirection(*alloc, pair, x, y, numLambda,
                                       dxy->getA().numCol() - dxy->getTimeDim());
     NotNull<IR::Addr> in = x, out = y;
     if (isFwd) {
@@ -157,7 +158,7 @@ class Dependence {
     }
     pair[0]->truncateVars(1 + numLambda + numScheduleCoefs);
     auto *dep0 =
-      alloc.create<Dependence>(dxy->copy(alloc), pair, in, out, isFwd);
+      alloc->create<Dependence>(dxy->copy(alloc), pair, in, out, isFwd);
     invariant(out->getNumLoops() + in->getNumLoops(),
               dep0->getNumPhiCoefficients());
     // pair is invalid
@@ -206,7 +207,7 @@ class Dependence {
         }
         if (i++ != 0) break; // break after undoing
         timeDirection[t] =
-          checkDirection(alloc, farkasBackups, *out, *in, numLambda,
+          checkDirection(*alloc, farkasBackups, *out, *in, numLambda,
                          dxy->getA().numCol() - dxy->getTimeDim());
         step *= -1; // flip to undo, then break
       }
@@ -241,7 +242,7 @@ class Dependence {
     // dxy->truncateVars(numVar);
     // dxy->setTimeDim(0);
     farkasBackups[0]->truncateVars(1 + numLambda + numScheduleCoefs);
-    auto *dep1 = alloc.create<Dependence>(dxy, farkasBackups, out, in, !isFwd);
+    auto *dep1 = alloc->create<Dependence>(dxy, farkasBackups, out, in, !isFwd);
     invariant(out->getNumLoops() + in->getNumLoops(),
               dep0->getNumPhiCoefficients());
     dep0->setNext(dep1);
@@ -314,7 +315,7 @@ public:
     return in->indexMatrix();
   }
   [[nodiscard]] auto
-  checkEmptySat(BumpAlloc<> &alloc, NotNull<const poly::Loop> inLoop,
+  checkEmptySat(Arena<> *alloc, NotNull<const poly::Loop> inLoop,
                 const int64_t *inOff, DensePtrMatrix<int64_t> inPhi,
                 NotNull<const poly::Loop> outLoop, const int64_t *outOff,
                 DensePtrMatrix<int64_t> outPhi) -> bool {
@@ -324,7 +325,7 @@ public:
       std::swap(inPhi, outPhi);
     }
     invariant(inPhi.numRow(), outPhi.numRow());
-    if (!depPoly->checkSat(alloc, inLoop, inOff, inPhi, outLoop, outOff,
+    if (!depPoly->checkSat(*alloc, inLoop, inOff, inPhi, outLoop, outOff,
                            outPhi))
       return false;
     satLvl.front() = uint8_t(inPhi.numRow() - 1);
@@ -335,7 +336,7 @@ public:
   //   out->addEdgeIn(i);
   //   return *this;
   // }
-  constexpr void copySimplices(BumpAlloc<> &alloc) {
+  constexpr void copySimplices(Arena<> *alloc) {
     dependenceSatisfaction = dependenceSatisfaction->copy(alloc);
     dependenceBounding = dependenceBounding->copy(alloc);
   }
@@ -481,7 +482,7 @@ public:
     return {getBndConstants(), getBndLambda(),     phiCoefsIn,
             phiCoefsOut,       getBndOmegaCoefs(), getBndCoefs()};
   }
-  [[nodiscard]] auto isSatisfied(BumpAlloc<> &alloc,
+  [[nodiscard]] auto isSatisfied(Arena<> alloc,
                                  NotNull<const AffineSchedule> schIn,
                                  NotNull<const AffineSchedule> schOut) const
     -> bool {
@@ -490,8 +491,7 @@ public:
              numLoopsTotal = numLoopsIn + numLoopsOut,
              numVar = numLoopsIn + numLoopsOut + 2;
     invariant(dependenceSatisfaction->getNumVars(), numVar);
-    auto p = alloc.scope();
-    auto schv = vector(alloc, numVar, int64_t(0));
+    auto schv = vector(&alloc, numVar, int64_t(0));
     const SquarePtrMatrix<int64_t> inPhi = schIn->getPhi();
     const SquarePtrMatrix<int64_t> outPhi = schOut->getPhi();
     auto inFusOmega = schIn->getFusionOmega();
@@ -532,16 +532,14 @@ public:
     }
     return true;
   }
-  [[nodiscard]] auto isSatisfied(BumpAlloc<> &alloc,
-                                 PtrVector<unsigned> inFusOmega,
+  [[nodiscard]] auto isSatisfied(Arena<> alloc, PtrVector<unsigned> inFusOmega,
                                  PtrVector<unsigned> outFusOmega) const
     -> bool {
     unsigned numLoopsIn = in->getNumLoops(), numLoopsOut = out->getNumLoops(),
              numLoopsCommon = std::min(numLoopsIn, numLoopsOut),
              numVar = numLoopsIn + numLoopsOut + 2;
     invariant(dependenceSatisfaction->getNumVars(), numVar);
-    auto p = alloc.scope();
-    auto schv = vector(alloc, numVar, int64_t(0));
+    auto schv = vector(&alloc, numVar, int64_t(0));
     // Vector<int64_t> schv(dependenceSatisfaction->getNumVars(),int64_t(0));
     const unsigned numLambda = getNumLambda();
     // when i == numLoopsCommon, we've passed the last loop
@@ -577,14 +575,13 @@ public:
     }
     return true;
   }
-  [[nodiscard]] auto isSatisfied(BumpAlloc<> &alloc,
+  [[nodiscard]] auto isSatisfied(Arena<> alloc,
                                  NotNull<const AffineSchedule> sx,
                                  NotNull<const AffineSchedule> sy,
                                  size_t d) const -> bool {
     unsigned numLambda = depPoly->getNumLambda(), nLoopX = depPoly->getDim0(),
              nLoopY = depPoly->getDim1(), numLoopsTotal = nLoopX + nLoopY;
-    math::Vector<int64_t> sch;
-    sch.resizeForOverwrite(numLoopsTotal + 2);
+    MutPtrVector<int64_t> sch{math::vector<int64_t>(&alloc, numLoopsTotal + 2)};
     sch[0] = sx->getOffsetOmega()[d];
     sch[1] = sy->getOffsetOmega()[d];
     sch[_(2, nLoopX + 2)] << sx->getSchedule(d)[_(end - nLoopX, end)];
@@ -592,17 +589,18 @@ public:
       << sy->getSchedule(d)[_(end - nLoopY, end)];
     return dependenceSatisfaction->satisfiable(alloc, sch, numLambda);
   }
-  [[nodiscard]] auto isSatisfied(BumpAlloc<> &alloc, size_t d) const -> bool {
+  [[nodiscard]] auto isSatisfied(Arena<> alloc, size_t d) const -> bool {
     unsigned numLambda = depPoly->getNumLambda(),
              numLoopsX = depPoly->getDim0(),
              numLoopsTotal = numLoopsX + depPoly->getDim1();
-    math::Vector<int64_t> sch(numLoopsTotal + 2, int64_t(0));
+    MutPtrVector<int64_t> sch{math::vector<int64_t>(&alloc, numLoopsTotal + 2)};
+    sch << 0;
     invariant(sch.size(), numLoopsTotal + 2);
     sch[2 + d] = 1;
     sch[2 + d + numLoopsX] = 1;
     return dependenceSatisfaction->satisfiable(alloc, sch, numLambda);
   }
-  static auto checkDirection(BumpAlloc<> &alloc,
+  static auto checkDirection(Arena<> alloc,
                              const std::array<NotNull<math::Simplex>, 2> &p,
                              NotNull<const IR::Addr> x,
                              NotNull<const IR::Addr> y,
@@ -621,8 +619,7 @@ public:
     PtrVector<int64_t> yOffOmega = ySchedule->getOffsetOmega();
     PtrVector<int64_t> xFusOmega = xSchedule->getFusionOmega();
     PtrVector<int64_t> yFusOmega = ySchedule->getFusionOmega();
-    math::Vector<int64_t> sch;
-    sch.resizeForOverwrite(numLoopsTotal + 2);
+    MutPtrVector<int64_t> sch{math::vector<int64_t>(&alloc, numLoopsTotal + 2)};
     // i iterates from outer-most to inner most common loop
     for (ptrdiff_t i = 0; /*i <= numLoopsCommon*/; ++i) {
       if (yFusOmega[i] != xFusOmega[i]) return yFusOmega[i] > xFusOmega[i];
@@ -656,7 +653,7 @@ public:
     // return false;
   }
   // returns `true` if forward, x->y
-  static auto checkDirection(BumpAlloc<> &alloc,
+  static auto checkDirection(Arena<> alloc,
                              const std::array<NotNull<math::Simplex>, 2> &p,
                              NotNull<const IR::Addr> x,
                              NotNull<const IR::Addr> y, unsigned numLambda,
@@ -668,7 +665,6 @@ public:
 #endif
     PtrVector<int64_t> xFusOmega = x->getFusionOmega();
     PtrVector<int64_t> yFusOmega = y->getFusionOmega();
-    auto chkp = alloc.scope();
     // i iterates from outer-most to inner most common loop
     for (ptrdiff_t i = 0; /*i <= numLoopsCommon*/; ++i) {
       if (yFusOmega[i] != xFusOmega[i]) return yFusOmega[i] > xFusOmega[i];
@@ -695,8 +691,8 @@ public:
     return false;
   }
 
-  static auto check(BumpAlloc<> &alloc, NotNull<IR::Addr> x,
-                    NotNull<IR::Addr> y) -> Dependence * {
+  static auto check(Arena<> *alloc, NotNull<IR::Addr> x, NotNull<IR::Addr> y)
+    -> Dependence * {
     // TODO: implement gcd test
     // if (x.gcdKnownIndependent(y)) return {};
     DepPoly *dxy{DepPoly::dependence(alloc, x, y)};
@@ -712,7 +708,7 @@ public:
     return timelessCheck(alloc, dxy, x, y, pair);
   }
   // reload store `x`
-  static auto reload(BumpAlloc<> &alloc, NotNull<IR::Addr> store)
+  static auto reload(Arena<> *alloc, NotNull<IR::Addr> store)
     -> std::pair<NotNull<IR::Addr>, Dependence *> {
     NotNull<DepPoly> dxy{DepPoly::self(alloc, store)};
     std::array<NotNull<math::Simplex>, 2> pair(dxy->farkasPair(alloc));

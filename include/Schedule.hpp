@@ -46,13 +46,13 @@ struct AffineSchedule {
 
   constexpr AffineSchedule() : mem(nullptr) {}
   constexpr AffineSchedule(int64_t *m) : mem(m) {}
-  constexpr AffineSchedule(utils::BumpAlloc<> &alloc, unsigned nL)
-    : mem(alloc.allocate<int64_t>(requiredScheduleStorage(nL))) {
+  constexpr AffineSchedule(utils::Arena<> *alloc, unsigned nL)
+    : mem(alloc->allocate<int64_t>(requiredScheduleStorage(nL))) {
     mem[0] = nL;
   }
-  constexpr auto copy(utils::BumpAlloc<> &alloc) const -> AffineSchedule {
+  constexpr auto copy(utils::Arena<> *alloc) const -> AffineSchedule {
     size_t reqMem = requiredScheduleStorage(getNumLoops());
-    AffineSchedule res{alloc.allocate<int64_t>(reqMem)};
+    AffineSchedule res{alloc->allocate<int64_t>(reqMem)};
     std::copy_n(mem, reqMem, res.mem);
     return res;
   }

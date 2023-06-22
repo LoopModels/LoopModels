@@ -55,7 +55,7 @@ static void BM_llvmSmallDenseMapInsertErase(benchmark::State &state) {
 }
 BENCHMARK(BM_llvmSmallDenseMapInsertErase)->DenseRange(2, 8, 1);
 static void BM_BumpMapInsertErase(benchmark::State &state) {
-  BumpAlloc<> alloc;
+  OwningArena<> alloc;
   uint64_t mask = ((1ull << state.range(0)) - 1) << 3ull;
   std::mt19937_64 mt;
   for (auto b : state) {
@@ -103,7 +103,7 @@ static void BM_llvmSmallDenseMapInsertLookup(benchmark::State &state) {
 }
 BENCHMARK(BM_llvmSmallDenseMapInsertLookup)->DenseRange(2, 8, 1);
 static void BM_BumpMapInsertLookup(benchmark::State &state) {
-  BumpAlloc<> alloc;
+  OwningArena<> alloc;
   uint64_t mask = ((1ull << state.range(0)) - 1) << 3ull;
   std::mt19937_64 mt;
   for (auto b : state) {
@@ -151,7 +151,7 @@ static void BM_llvmSmallDenseMapInsertLookup3(benchmark::State &state) {
 }
 BENCHMARK(BM_llvmSmallDenseMapInsertLookup3)->DenseRange(2, 8, 1);
 static void BM_BumpMapInsertLookup3(benchmark::State &state) {
-  BumpAlloc<> alloc;
+  OwningArena<> alloc;
   uint64_t mask = ((1ull << state.range(0)) - 1) << 3ull;
   std::mt19937_64 mt;
   for (auto b : state) {
@@ -205,7 +205,7 @@ static void BM_llvmSmallDenseMapSeq(benchmark::State &state) {
 BENCHMARK(BM_llvmSmallDenseMapSeq)->RangeMultiplier(2)->Range(1 << 2, 1 << 10);
 
 static void BM_BumpMapSeq(benchmark::State &state) {
-  BumpAlloc<> alloc;
+  OwningArena<> alloc;
   for (auto b : state) {
     amap<void *, uint64_t> map{alloc};
     for (uint64_t i = 1; i <= uint64_t(state.range(0)); ++i)

@@ -101,7 +101,7 @@ public:
   // TODO:
   // 1. the above
   // 2. add the direct Addr connections corresponding to the node
-  constexpr void insertMem(BumpAlloc<> &alloc, PtrVector<Addr *> memAccess,
+  constexpr void insertMem(Arena<> *alloc, PtrVector<Addr *> memAccess,
                            CostModeling::LoopTreeSchedule *L) const;
   // constexpr void
   // incrementReplicationCounts(PtrVector<MemoryAccess *> memAccess) const {
@@ -385,7 +385,7 @@ class LoopBlock {
   dict::map<llvm::User *, Addr *> userToMem{};
   dict::set<llvm::User *> visited{};
   llvm::LoopInfo *LI;
-  BumpAlloc<> allocator{};
+  utils::OwningArena<> allocator{};
   // we may turn off edges because we've exceeded its loop depth
   // or because the dependence has already been satisfied at an
   // earlier level.
@@ -429,9 +429,7 @@ public:
     visited.clear();
     allocator.reset();
   }
-  [[nodiscard]] constexpr auto getAllocator() -> BumpAlloc<> & {
-    return allocator;
-  }
+  [[nodiscard]] constexpr auto getAllocator() -> Arena<> * { return allocator; }
   [[nodiscard]] constexpr auto numVerticies() const -> size_t {
     return nodes.size();
   }

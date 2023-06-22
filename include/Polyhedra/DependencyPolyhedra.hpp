@@ -127,7 +127,7 @@ class DepPoly : public BasePolyhedra<true, true, false, DepPoly> {
 #pragma clang diagnostic pop
 #endif
 
-  // [[nodiscard]] static auto allocate(BumpAlloc<> &alloc, unsigned
+  // [[nodiscard]] static auto allocate(Arena<> *alloc, unsigned
   // numDep0Var, unsigned numDep1Var, unsigned numCon, unsigned
   // numEqCon, unsigned numDynSym, unsigned timeDim, unsigned
   // conCapacity,
@@ -336,12 +336,12 @@ public:
              ((conCapacity + eqConCapacity) * (getNumVar() + 1) + timeDim) +
            sizeof(const llvm::SCEV *) * numDynSym;
   }
-  auto copy(BumpAlloc<> &alloc) const -> NotNull<DepPoly> {
-    auto *p = alloc.template allocate<DepPoly>(neededBytes());
+  auto copy(Arena<> *alloc) const -> NotNull<DepPoly> {
+    auto *p = alloc->template allocate<DepPoly>(neededBytes());
     std::memcpy(p, this, neededBytes());
     return NotNull<DepPoly>{p};
   }
-  static auto dependence(BumpAlloc<> &alloc, NotNull<const IR::Addr> aix,
+  static auto dependence(Arena<> *alloc, NotNull<const IR::Addr> aix,
                          NotNull<const IR::Addr> aiy) -> DepPoly * {
     assert(aix->sizesMatch(aiy));
     NotNull<const poly::Loop> loopx = aix->getLoop();
@@ -373,9 +373,8 @@ public:
       sizeof(int64_t) * ((conCapacity + eqConCapacity) * numCols + timeDim) +
       sizeof(const llvm::SCEV *) * numDynSym;
 
-    auto p = alloc.checkpoint();
-    auto *mem =
-      (DepPoly *)alloc.allocate(sizeof(DepPoly) + memNeeded, alignof(DepPoly));
+    auto p = alloc->checkpoint();
+    auto *mem = (DepPoly *)alloc->allocate(sizeof(DepPoly) + memNeeded);
     auto *dp = std::construct_at(mem, numDep0Var, numDep1Var, numDynSym,
                                  timeDim, conCapacity, eqConCapacity);
 
@@ -427,12 +426,12 @@ public:
       }
       E(indexDim + i, numSym + numVar + i) = 1;
     }
-    dp->pruneBounds(alloc);
+    dp->pruneBounds(*alloc);
     if (dp->getNumCon()) return dp;
-    alloc.rollback(p);
+    alloc->rollback(p);
     return nullptr;
   }
-  static auto self(BumpAlloc<> &alloc, NotNull<const IR::Addr> ai)
+  static auto self(Arena<> *alloc, NotNull<const IR::Addr> ai)
     -> NotNull<DepPoly> {
     NotNull<const poly::Loop> loop = ai->getLoop();
     DensePtrMatrix<int64_t> B{loop->getA()};
@@ -453,8 +452,7 @@ public:
       sizeof(int64_t) * ((conCapacity + eqConCapacity) * numCols + timeDim) +
       sizeof(const llvm::SCEV *) * numDynSym;
 
-    auto *mem =
-      (DepPoly *)alloc.allocate(sizeof(DepPoly) + memNeeded, alignof(DepPoly));
+    auto *mem = (DepPoly *)alloc->allocate(sizeof(DepPoly) + memNeeded);
     auto *dp = std::construct_at(mem, numDepVar, numDepVar, numDynSym, timeDim,
                                  conCapacity, eqConCapacity);
 
@@ -500,7 +498,7 @@ public:
       }
       E(indexDim + i, numSym + numVar + i) = 1;
     }
-    dp->pruneBounds(alloc);
+    dp->pruneBounds(*alloc);
     invariant(dp->getNumCon() > 0);
     return dp;
   }
@@ -518,7 +516,7 @@ public:
   // constraint order corresponds to old variables, will be in same order
   //
   // Time parameters are carried over into farkas polys
-  [[nodiscard]] auto farkasPair(BumpAlloc<> &alloc) const
+  [[nodiscard]] auto farkasPair(Arena<> *alloc) const
     -> std::array<NotNull<math::Simplex>, 2> {
 
     auto A{getA()}, E{getE()};
@@ -627,15 +625,13 @@ public:
 
   /// returns `true` if the array accesses are guaranteed independent
   /// conditioning on partial schedules xPhi and yPhi
-  [[nodiscard]] auto checkSat(BumpAlloc<> &alloc,
-                              NotNull<const poly::Loop> xLoop,
+  [[nodiscard]] auto checkSat(Arena<> alloc, NotNull<const poly::Loop> xLoop,
                               const int64_t *xOff, DensePtrMatrix<int64_t> xPhi,
                               NotNull<const poly::Loop> yLoop,
                               const int64_t *yOff, DensePtrMatrix<int64_t> yPhi)
     -> bool {
     // we take in loops because we might be moving deeper inside the loopnest
     // we take in offsets, because we might be offsetting the loops
-    auto p = alloc.scope();
     Row numPhi = xPhi.numRow();
     invariant(yPhi.numRow(), numPhi);
     DensePtrMatrix<int64_t> E{getE()};
@@ -650,7 +646,7 @@ public:
     unsigned numSym = getNumSymbols(), numSymX = numSym + xNumLoops,
              numSymD0 = numSym + numDep0Var, nCol = numSymX + yNumLoops;
     MutDensePtrMatrix<int64_t> B{
-      matrix<int64_t>(alloc, numEqCon + numPhi, nCol)};
+      matrix<int64_t>(&alloc, numEqCon + numPhi, nCol)};
     bool extend = (numDep0Var != xNumLoops) || (numDep1Var != yNumLoops);
     // we truncate time dim
     if (extend || timeDim) {
@@ -682,8 +678,7 @@ public:
     size_t memNeeded =
       sizeof(int64_t) * (size_t(numConstraints + rank) * nCol) +
       sizeof(const llvm::SCEV *) * numDynSym;
-    auto *mem =
-      (DepPoly *)alloc.allocate(sizeof(DepPoly) + memNeeded, alignof(DepPoly));
+    auto *mem = (DepPoly *)alloc.allocate(sizeof(DepPoly) + memNeeded);
     auto *dp = std::construct_at(mem, xNumLoops, yNumLoops, numDynSym, 0,
                                  numConstraints, rank);
     MutDensePtrMatrix<int64_t> A{dp->getA()};

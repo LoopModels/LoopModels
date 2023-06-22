@@ -22,7 +22,7 @@
 #include <string>
 
 class TestLoopFunction {
-  BumpAlloc<> alloc;
+  OwningArena<> alloc;
   llvm::LLVMContext ctx;
   llvm::Module *mod;
   llvm::LoopInfo LI{};
@@ -43,7 +43,7 @@ class TestLoopFunction {
   size_t ptrIntOffset{0};
 
 public:
-  auto getAlloc() -> BumpAlloc<> & { return alloc; }
+  auto getAlloc() -> Arena<>*  { return &alloc; }
   auto getLoopNest(size_t i) -> poly::Loop * { return alns[i]; }
   auto getNumLoopNests() -> size_t { return alns.size(); }
   void addLoop(PtrMatrix<int64_t> A, size_t numLoops) {

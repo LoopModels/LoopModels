@@ -23,7 +23,7 @@
 #include <random>
 
 namespace {
-auto orthogonalize(BumpAlloc<> &alloc,
+auto orthogonalize(Arena<> *alloc,
                    llvm::SmallVectorImpl<ArrayReference *> const &ai)
   -> std::optional<
     std::pair<poly::Loop *, llvm::SmallVector<ArrayReference, 0>>> {
@@ -36,7 +36,7 @@ auto orthogonalize(BumpAlloc<> &alloc,
   // additionally, the loop is defined by the bounds
   // A*L = A*(B\^-1 * I) <= r
   // assuming that `B` is an invertible integer matrix (i.e. is unimodular),
-  // BumpAlloc<> alloc;
+  // OwningArena<> alloc;
   const poly::Loop &alnp = *(ai[0]->loop);
   const size_t numLoops = alnp.getNumLoops();
   const size_t numSymbols = alnp.getNumSymbols();

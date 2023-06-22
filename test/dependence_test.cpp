@@ -125,7 +125,7 @@ TEST(DependenceTest, BasicAssertions) {
   Vector<unsigned, 4> schLoad0(3, 0);
   Vector<unsigned, 4> schStore(3, 0);
   schStore[2] = 2;
-  BumpAlloc<> alloc;
+  OwningArena<> alloc;
   MemoryAccess *msrc{createMemAccess(alloc, srcA, storeA11, schStore)};
   MemoryAccess *mtgt01{createMemAccess(alloc, tgtA01, loadA01, schLoad0)};
   DepPoly *dep0{DepPoly::dependence(alloc, *msrc, *mtgt01)};
@@ -238,7 +238,7 @@ TEST(SymmetricIndependentTest, BasicAssertions) {
   Vector<unsigned, 4> schLoad(3, 0);
   Vector<unsigned, 4> schStore(3, 0);
   schStore[2] = 1;
-  BumpAlloc<> alloc;
+  OwningArena<> alloc;
   MemoryAccess *msrc{createMemAccess(alloc, srcA, storeAij, schStore)};
   MemoryAccess *mtgt{createMemAccess(alloc, tgtA, loadAji, schLoad)};
   DepPoly *dep{DepPoly::dependence(alloc, *msrc, *mtgt)};
@@ -320,7 +320,7 @@ TEST(RankDeficientLoad, BasicAssertions) {
   Vector<unsigned, 4> schLoad(2 + 1, 0);
   Vector<unsigned, 4> schStore(2 + 1, 0);
   schStore[2] = 1;
-  BumpAlloc<> alloc;
+  OwningArena<> alloc;
   MemoryAccess *msrc{createMemAccess(alloc, srcA, storeAij, schStore)};
   MemoryAccess *mtgt{createMemAccess(alloc, tgtA, loadAii, schLoad)};
 
@@ -413,7 +413,7 @@ TEST(TimeHidingInRankDeficiency, BasicAssertions) {
   Vector<unsigned, 4> schLoad(3 + 1, 0);
   Vector<unsigned, 4> schStore(3 + 1, 0);
   schStore[3] = 1;
-  BumpAlloc<> alloc;
+  OwningArena<> alloc;
   MemoryAccess *msrc{createMemAccess(alloc, refA, storeA, schStore)};
   MemoryAccess *mtgt{createMemAccess(alloc, refA, loadA, schLoad)};
 
@@ -622,7 +622,7 @@ TEST(TriangularExampleTest, BasicAssertions) {
   // NOTE: shared ptrs get set to NULL when `lblock.memory` reallocs...
   Vector<unsigned, 4> sch2t0t0(2 + 1, 0);
   Vector<unsigned, 4> sch2t0t1{sch2t0t0};
-  BumpAlloc<> alloc;
+  OwningArena<> alloc;
   // A(n,m) = -> B(n,m) <-
   MemoryAccess *mSch2t0t0(createMemAccess(alloc, indBmn, loadB, sch2t0t0));
   lblock.addMemory(mSch2t0t0);
@@ -1093,7 +1093,7 @@ TEST(MeanStDevTest0, BasicAssertions) {
   lp::LoopBlock iOuterLoopNest;
   llvm::SmallVector<MemoryAccess *> iOuterMem;
 
-  BumpAlloc<> alloc;
+  OwningArena<> alloc;
   iOuterMem.emplace_back(createMemAccess(alloc, xInd1, storeX0, sch0t0)); // 0
 
   iOuterMem.emplace_back(
@@ -1357,7 +1357,7 @@ TEST(DoubleDependenceTest, BasicAssertions) {
   Vector<unsigned, 4> schLoad0(2 + 1, 0);
   Vector<unsigned, 4> schStore(2 + 1, 0);
   schStore[2] = 2;
-  BumpAlloc<> alloc;
+  OwningArena<> alloc;
   MemoryAccess *msrc{createMemAccess(alloc, srcA, storeA, schStore)};
   MemoryAccess *mtgt0{createMemAccess(alloc, tgtA0, loadAip1j, schLoad0)};
   DepPoly *dep0{DepPoly::dependence(alloc, *msrc, *mtgt0)};
@@ -1555,7 +1555,7 @@ TEST(ConvReversePass, BasicAssertions) {
   lp::LoopBlock loopBlock;
   Vector<unsigned, 8> scht0(4 + 1, 0);
   Vector<unsigned, 8> scht1{scht0};
-  BumpAlloc<> &alloc = tlf.getAlloc();
+  Arena<> *alloc = tlf.getAlloc();
   //         C[m+i,j+n] = C[m+i,j+n] + A[m,n] * -> B[i,j] <-;
   MemoryAccess *mscht0(createMemAccess(alloc, indBmn, loadB, scht0));
   loopBlock.addMemory(mscht0);

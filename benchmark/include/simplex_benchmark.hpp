@@ -872,7 +872,7 @@ static void BM_Simplex0(benchmark::State &state) {
     "1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ]"_mat};
 
   tableau(0, _) << -5859553999884210514;
-  BumpAlloc<> alloc;
+  OwningArena<> alloc;
   unsigned numCon = unsigned(tableau.numRow()) - 1;
   unsigned numVar = unsigned(tableau.numCol()) - 1;
   NotNull<Simplex> simpBackup{Simplex::create(alloc, numCon, numVar, 0)};
@@ -1111,7 +1111,7 @@ static void BM_Simplex1(benchmark::State &state) {
     "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 1 1 1 0 "
     "0 0 0 0 0 0 0 0 0 ]"_mat};
 
-  BumpAlloc<> alloc;
+  OwningArena<> alloc;
   unsigned numCon = unsigned(tableau.numRow()) - 1;
   unsigned numVar = unsigned(tableau.numCol()) - 1;
   NotNull<Simplex> simpBackup{Simplex::create(alloc, numCon, numVar, 0)};

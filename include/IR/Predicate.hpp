@@ -266,7 +266,7 @@ struct Set {
   /// to:
   /// (a & b) | (a & c) | (a & !c) = (a & b) | a = a
   /// TODO: handle more cases? Smarter algorithm that applies rewrite rules?
-  auto Union(BumpAlloc<> &alloc, Intersection other) -> Set & {
+  auto Union(Arena<> *alloc, Intersection other) -> Set & {
     if (other.empty()) return *this;
     if (empty()) {
       if (allocated) intersectUnion.intersects->pushHasCapacity(other);
@@ -352,7 +352,7 @@ struct Set {
   /// then
   /// [(a & b) | (c & d)] | [(e & f) | (g & h)] =
   ///   [(a & b) | (c & d) | (e & f) | (g & h)]
-  auto Union(BumpAlloc<> &alloc, const Set &other) -> Set & {
+  auto Union(Arena<> *alloc, const Set &other) -> Set & {
     if (!other.allocated) return Union(alloc, other.intersectUnion.intersect);
     other.intersectUnion.intersects->forEach(
       [&](Intersection pred) { Union(alloc, pred); });
@@ -380,14 +380,14 @@ struct Set {
       [&](Intersection pred) { *this &= pred; });
     return *this;
   }
-  auto copy(BumpAlloc<> &alloc) const -> Set {
+  auto copy(Arena<> *alloc) const -> Set {
     if (!allocated) return Set{intersectUnion.intersect};
     Set ret{};
     ret.intersectUnion.intersects = intersectUnion.intersects->copy(alloc);
     ret.allocated = true;
     return ret;
   }
-  // [[nodiscard]] auto intersect(BumpAlloc<> &alloc, const Set &other) const {
+  // [[nodiscard]] auto intersect(Arena<> *alloc, const Set &other) const {
   //   // old implementation had |= (a & b); // why?
   //   if (!allocated) return copy(alloc) &= other;
   //   return other->copy(alloc) &= *this;
@@ -443,7 +443,7 @@ struct Set {
   //     return I;
   // }
   // PredicateSet() = default;
-  // PredicateSet(BumpAlloc<> &alloc, Instruction::Cache
+  // PredicateSet(Arena<> *alloc, Instruction::Cache
   // &ic,
   //                    llvm::SmallVector<Instruction *> &predicates,
   //                    Predicates &pred) {

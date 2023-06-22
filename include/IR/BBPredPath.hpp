@@ -14,7 +14,7 @@ class Map {
   UList<Value *> *predicates;
 
 public:
-  Map(BumpAlloc<> &alloc) : map(alloc) {}
+  Map(Arena<> *alloc) : map(alloc) {}
   Map(const Map &x) = default;
   Map(Map &&x) noexcept : map{std::move(x.map)} {}
   // auto operator=(const Map &) -> Map & = default;
@@ -76,10 +76,10 @@ public:
   // void visit(llvm::BasicBlock *BB) { map.insert(std::make_pair(BB,
   // Set())); } void visit(llvm::Instruction *inst) {
   // visit(inst->getParent()); }
-  [[nodiscard]] inline auto addPredicate(BumpAlloc<> &alloc, IR::Cache &cache,
+  [[nodiscard]] inline auto addPredicate(Arena<> *alloc, IR::Cache &cache,
                                          llvm::Value *value, TreeResult &tr)
     -> size_t;
-  void reach(BumpAlloc<> &alloc, llvm::BasicBlock *BB, Intersection predicate) {
+  void reach(Arena<> *alloc, llvm::BasicBlock *BB, Intersection predicate) {
     // because we may have inserted into predMap, we need to look up
     // again rather than being able to reuse anything from the
     // `visit`.
@@ -97,7 +97,7 @@ public:
   // correctly
   /// We bail if there are more than 32 conditions; control flow that
   /// branchy is probably not worth trying to vectorize.
-  [[nodiscard]] inline static auto descend(BumpAlloc<> &, IR::Cache &,
+  [[nodiscard]] inline static auto descend(Arena<> *, IR::Cache &,
                                            llvm::BasicBlock *,
                                            llvm::BasicBlock *, llvm::Loop *,
                                            TreeResult &) -> std::optional<Map>;

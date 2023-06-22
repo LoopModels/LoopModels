@@ -33,7 +33,7 @@
 #include <utility>
 
 namespace poly {
-using math::PtrVector, math::MutPtrVector, utils::BumpAlloc, utils::invariant,
+using math::PtrVector, math::MutPtrVector, utils::Arena, utils::invariant,
   utils::NotNull;
 }; // namespace poly
 
@@ -64,11 +64,9 @@ inline auto containsCycle(const llvm::Instruction *J,
   return containsCycleCore(J, visited, S);
 }
 
-inline auto containsCycle(BumpAlloc<> &alloc, llvm::Instruction const *S)
-  -> bool {
+inline auto containsCycle(Arena<> alloc, llvm::Instruction const *S) -> bool {
   // don't get trapped in a different cycle
-  auto p = alloc.scope();
-  aset<llvm::Instruction const *> visited{alloc};
+  aset<llvm::Instruction const *> visited{&alloc};
   return containsCycleCore(S, visited, S);
 }
 
@@ -105,7 +103,7 @@ public:
     : Instruction(k), type(t), opId(id), numOperands(numOps),
       fastMathFlags(fmf) {}
 
-  // static constexpr auto construct(BumpAlloc<> &alloc, ValKind k,
+  // static constexpr auto construct(Arena<> *alloc, ValKind k,
   //                                 llvm::Instruction *i, llvm::Intrinsic::ID
   //                                 id)
   //   -> Inst * {
@@ -171,7 +169,7 @@ public:
   [[nodiscard]] constexpr auto getOperand(size_t i) const -> Value * {
     return operands[i];
   }
-  constexpr void setOperands(BumpAlloc<> &alloc, PtrVector<Value *> ops) {
+  constexpr void setOperands(Arena<> *alloc, PtrVector<Value *> ops) {
     getOperands() << ops;
     for (auto *op : ops) op->addUser(alloc, this);
   }
@@ -805,7 +803,7 @@ inline auto Value::getType(unsigned w) const -> llvm::Type * {
   return {id, getKind(), getType()};
 }
 
-inline void Instruction::setOperands(BumpAlloc<> &alloc,
+inline void Instruction::setOperands(Arena<> *alloc,
                                      math::PtrVector<Value *> x) {
   if (auto *I = llvm::dyn_cast<Compute>(this)) return I->setOperands(alloc, x);
   invariant(getKind() == VK_Stow);

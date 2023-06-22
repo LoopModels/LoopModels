@@ -18,7 +18,7 @@ struct amap
     ankerl::unordered_dense::map<K, V, ankerl::unordered_dense::hash<K>,
                                  std::equal_to<K>,
                                  math::BumpPtrVector<std::pair<K, V>>>;
-  amap(BumpAlloc<> &alloc) : Base{WBumpAlloc<std::pair<K, V>>(alloc)} {}
+  amap(Arena<> *alloc) : Base{WArena<std::pair<K, V>>(alloc)} {}
 };
 template <typename K>
 struct aset
@@ -27,6 +27,6 @@ struct aset
   using Base =
     ankerl::unordered_dense::set<K, ankerl::unordered_dense::hash<K>,
                                  std::equal_to<K>, math::BumpPtrVector<K>>;
-  aset(BumpAlloc<> &alloc) : Base{WBumpAlloc<K>(alloc)} {}
+  aset(Arena<> *alloc) : Base{WArena<K>(alloc)} {}
 };
 } // namespace poly::dict

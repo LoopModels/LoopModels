@@ -218,13 +218,13 @@ public:
 
 private:
   template <typename T>
-  static constexpr auto realloc(BumpAlloc<> &alloc, Vec<T> vec, unsigned nc)
+  static constexpr auto realloc(Arena<> *alloc, Vec<T> vec, unsigned nc)
     -> Vec<T> {
     return Vec<T>(alloc.reallocate<false>(vec.data(), vec.getCapacity(), nc),
                   vec.size(), nc);
   }
   template <typename T>
-  static constexpr auto grow(BumpAlloc<> &alloc, Vec<T> vec, unsigned sz)
+  static constexpr auto grow(Arena<> *alloc, Vec<T> vec, unsigned sz)
     -> Vec<T> {
     if (unsigned C = vec.getCapacity(); C < sz) {
       T *p = alloc.allocate<T>(sz + sz);
@@ -257,18 +257,18 @@ private:
       return addresses[i];
     }
     /// add space for `i` extra slots
-    constexpr void reserveExtra(BumpAlloc<> &alloc, unsigned i) {
+    constexpr void reserveExtra(Arena<> *alloc, unsigned i) {
       unsigned oldCapacity = std::exchange(capacity, capacity + i);
       addresses = alloc.reallocate<false>(addresses, oldCapacity, capacity);
     }
-    constexpr void initialize(BumpAlloc<> &alloc) {
+    constexpr void initialize(Arena<> *alloc) {
       addresses = alloc.allocate<Addr *>(capacity);
     }
     constexpr void push_back(Addr *addr) {
       invariant(numAddr < capacity);
       addresses[numAddr++] = addr;
     }
-    constexpr void push_back(BumpAlloc<> &alloc, Addr *addr) {
+    constexpr void push_back(Arena<> *alloc, Addr *addr) {
       if (numAddr >= capacity)
         reserveExtra(alloc, std::max<unsigned>(4, numAddr));
       addresses[numAddr++] = addr;
@@ -282,7 +282,7 @@ private:
       }
       addresses[numAddr++] = addr;
     }
-    constexpr void push_front(BumpAlloc<> &alloc, Addr *addr) {
+    constexpr void push_front(Arena<> *alloc, Addr *addr) {
       if (numAddr >= capacity)
         reserveExtra(alloc, std::max<unsigned>(4, numAddr));
       push_front(addr);
@@ -338,7 +338,7 @@ private:
     [[no_unique_address]] LoopTreeSchedule *subTree;
     [[no_unique_address]] InstructionBlock exit{};
     constexpr LoopAndExit(LoopTreeSchedule *tree) : subTree(tree) {}
-    static constexpr auto construct(BumpAlloc<> &alloc, LoopTreeSchedule *L,
+    static constexpr auto construct(Arena<> *alloc, LoopTreeSchedule *L,
                                     uint8_t d, uint8_t blockIdx) {
       return LoopAndExit(alloc.create<LoopTreeSchedule>(L, d, blockIdx));
     }
@@ -382,7 +382,7 @@ private:
   [[nodiscard]] constexpr auto numBlocks() const -> unsigned {
     return getNumSubTrees() + 1;
   }
-  constexpr auto getLoopAndExit(BumpAlloc<> &alloc, size_t i, size_t d)
+  constexpr auto getLoopAndExit(Arena<> *alloc, size_t i, size_t d)
     -> LoopAndExit & {
     if (size_t J = subTrees.size(); i >= J) {
       subTrees = grow(alloc, subTrees, i + 1);
@@ -397,7 +397,7 @@ private:
     if (i) return {subTrees[i - 1].exit, loopAndExit.subTree, loopAndExit.exit};
     return {header, loopAndExit.subTree, loopAndExit.exit};
   }
-  auto getLoop(BumpAlloc<> &alloc, size_t i, uint8_t d) -> LoopTreeSchedule * {
+  auto getLoop(Arena<> *alloc, size_t i, uint8_t d) -> LoopTreeSchedule * {
     return getLoopAndExit(alloc, i, d).subTree;
   }
   auto getLoop(size_t i) -> LoopTreeSchedule * { return subTrees[i].subTree; }
@@ -416,7 +416,7 @@ private:
 
   // this method descends
   // NOLINTNEXTLINE(misc-no-recursion)
-  static auto allocLoopNodes(BumpAlloc<> &alloc, AffineSchedule sch,
+  static auto allocLoopNodes(Arena<> *alloc, AffineSchedule sch,
                              LoopTreeSchedule *L) -> LoopTreeSchedule * {
     auto fO = sch.getFusionOmega();
     unsigned numLoops = sch.getNumLoops();
@@ -453,17 +453,17 @@ private:
     if (a->getLoopTreeSchedule() == this) return 2 * a->getBlockIdx();
     return 2 * getLoopIdx(a->getLoopTreeSchedule()) + 1;
   }
-  void push_back(BumpAlloc<> &alloc, Addr *a, unsigned idx) {
+  void push_back(Arena<> *alloc, Addr *a, unsigned idx) {
     if (idx) subTrees[idx - 1].exit.push_back(alloc, a);
     else header.push_back(alloc, a);
   }
-  void push_front(BumpAlloc<> &alloc, Addr *a, unsigned idx) {
+  void push_front(Arena<> *alloc, Addr *a, unsigned idx) {
     if (idx) subTrees[idx - 1].exit.push_front(alloc, a);
     else header.push_front(alloc, a);
   }
   // can we hoist forward out of this loop?
   // NOLINTNEXTLINE(misc-no-recursion)
-  auto hoist(BumpAlloc<> &alloc, Addr *a, unsigned currentLoop)
+  auto hoist(Arena<> *alloc, Addr *a, unsigned currentLoop)
     -> Optional<unsigned> {
     if (a->wasVisited3()) {
       if (a->getLoopTreeSchedule() == this) return a->getBlockIdx();
@@ -543,7 +543,7 @@ private:
   // a) every addr has an index field
   // b) we create BitSets of ancestors
   // NOLINTNEXTLINE(misc-no-recursion)
-  auto placeAddr(BumpAlloc<> &alloc, lp::LoopBlock &LB,
+  auto placeAddr(Arena<> *alloc, lp::LoopBlock &LB,
                  MutPtrVector<Addr *> addr) -> unsigned {
     // we sort via repeatedly calculating the strongly connected components
     // of the address graph. The SCCs are in topological order.
@@ -696,7 +696,7 @@ private:
   void validateMemPlacements() {}
 #endif
 public:
-  [[nodiscard]] static auto init(BumpAlloc<> &alloc, lp::LoopBlock &LB)
+  [[nodiscard]] static auto init(Arena<> *alloc, lp::LoopBlock &LB)
     -> LoopTreeSchedule * {
     // TODO: can we shorten the life span of the instructions we
     // allocate here to `lalloc`? I.e., do we need them to live on after
@@ -737,8 +737,8 @@ public:
     root->placeAddr(alloc, LB, addr);
     return root;
   }
-  // void initializeInstrGraph(BumpAlloc<> &alloc, Instruction::Cache &cache,
-  //                           BumpAlloc<> &tAlloc, LoopTree *loopForest,
+  // void initializeInstrGraph(Arena<> *alloc, Instruction::Cache &cache,
+  //                           Arena<> *tAlloc, LoopTree *loopForest,
   //                           lp::LoopBlock &LB,
   //                           llvm::TargetTransformInfo &TTI,
   //                           unsigned int vectorBits) {
@@ -747,7 +747,7 @@ public:
   //   mergeInstructions(alloc, cache, loopForest, TTI, tAlloc, vectorBits);
   // }
 
-  [[nodiscard]] constexpr auto getInitAddr(BumpAlloc<> &alloc)
+  [[nodiscard]] constexpr auto getInitAddr(Arena<> *alloc)
     -> InstructionBlock & {
     if (!header.isInitialized()) header.initialize(alloc);
     return header;
@@ -765,7 +765,7 @@ public:
     }
   }
   // NOLINTNEXTLINE(misc-no-recursion)
-  auto printSubDotFile(BumpAlloc<> &alloc, llvm::raw_ostream &out,
+  auto printSubDotFile(Arena<> *alloc, llvm::raw_ostream &out,
                        map<LoopTreeSchedule *, std::string> &names,
                        llvm::SmallVectorImpl<std::string> &addrNames,
                        unsigned addrIndOffset, poly::Loop *lret)
@@ -811,7 +811,7 @@ public:
     return loop->removeLoop(alloc, getDepth() - 1);
   }
 
-  void printDotFile(BumpAlloc<> &alloc, llvm::raw_ostream &out) {
+  void printDotFile(Arena<> *alloc, llvm::raw_ostream &out) {
     map<LoopTreeSchedule *, std::string> names;
     llvm::SmallVector<std::string> addrNames(numAddr_);
     names[this] = "toplevel";
@@ -825,12 +825,12 @@ public:
 
 static_assert(Graphs::AbstractIndexGraph<LoopTreeSchedule::AddressGraph>);
 // class LoopForestSchedule : LoopTreeSchedule {
-//   [[no_unique_address]] BumpAlloc<> &allocator;
+//   [[no_unique_address]] Arena<> *allocator;
 // };
 } // namespace CostModeling
 
 constexpr void
-ScheduledNode::insertMem(BumpAlloc<> &alloc,
+ScheduledNode::insertMem(Arena<> *alloc,
                          PtrVector<MemoryAccess *> memAccess,
                          CostModeling::LoopTreeSchedule *L) const {
   // First, we invert the schedule matrix.
