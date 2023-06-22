@@ -147,7 +147,7 @@ $(function() {
 <div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;  map&lt;llvm::Value *, Value *&gt; llvmToInternalMap;</div>
 <div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;  map&lt;InstByValue, Compute *&gt; instCSEMap;</div>
 <div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;  map&lt;Cnst::Identifier, Cnst *&gt; constMap;</div>
-<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;  BumpAlloc&lt;&gt; alloc;</div>
+<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;  utils::OwningArena&lt;&gt; alloc;</div>
 <div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;  llvm::LoopInfo *LI;</div>
 <div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;  llvm::ScalarEvolution *SE;</div>
 <div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;  <a class="code" href="classpoly_1_1IR_1_1Compute.html">Compute</a> *freeInstList{<span class="keyword">nullptr</span>}; <span class="comment">// positive numOps/complete, but empty</span></div>
@@ -161,8 +161,8 @@ $(function() {
 <div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;      <span class="keywordflow">return</span> I;</div>
 <div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;    }</div>
 <div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;    <span class="comment">// not found, allocate</span></div>
-<div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">static_cast&lt;</span><a class="code" href="classpoly_1_1IR_1_1Compute.html">Compute</a> *<span class="keyword">&gt;</span>(alloc.allocate(</div>
-<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;      <span class="keyword">sizeof</span>(<a class="code" href="classpoly_1_1IR_1_1Compute.html">Compute</a>) + <span class="keyword">sizeof</span>(Value *) * numOps, <span class="keyword">alignof</span>(<a class="code" href="classpoly_1_1IR_1_1Compute.html">Compute</a>)));</div>
+<div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">static_cast&lt;</span><a class="code" href="classpoly_1_1IR_1_1Compute.html">Compute</a> *<span class="keyword">&gt;</span>(</div>
+<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;      alloc.allocate(<span class="keyword">sizeof</span>(<a class="code" href="classpoly_1_1IR_1_1Compute.html">Compute</a>) + <span class="keyword">sizeof</span>(Value *) * numOps));</div>
 <div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;  }</div>
 <div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160; </div>
 <div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160;  <span class="keyword">auto</span> getCSE(<a class="code" href="classpoly_1_1IR_1_1Compute.html">Compute</a> *I) -&gt; <a class="code" href="classpoly_1_1IR_1_1Compute.html">Compute</a> *&amp; { <span class="keywordflow">return</span> instCSEMap[<a class="code" href="structpoly_1_1IR_1_1InstByValue.html">InstByValue</a>{I}]; }</div>
@@ -197,7 +197,7 @@ $(function() {
 <div class="line"><a name="l00154"></a><span class="lineno">  154</span>&#160;        <span class="keywordflow">if</span> (isPred) addr-&gt;setPredicate(newNode);</div>
 <div class="line"><a name="l00155"></a><span class="lineno">  155</span>&#160;        <span class="keywordflow">if</span> (isStored) addr-&gt;setVal(newNode);</div>
 <div class="line"><a name="l00156"></a><span class="lineno">  156</span>&#160;      }</div>
-<div class="line"><a name="l00157"></a><span class="lineno">  157</span>&#160;      <span class="keywordflow">if</span> (newNode-&gt;getKind() != Node::VK_Stow) newNode-&gt;addUser(alloc, user);</div>
+<div class="line"><a name="l00157"></a><span class="lineno">  157</span>&#160;      <span class="keywordflow">if</span> (newNode-&gt;getKind() != Node::VK_Stow) newNode-&gt;addUser(&amp;alloc, user);</div>
 <div class="line"><a name="l00158"></a><span class="lineno">  158</span>&#160;    });</div>
 <div class="line"><a name="l00159"></a><span class="lineno">  159</span>&#160;    <span class="keywordflow">if</span> (freeListList) freeListList-&gt;append(oldNode-&gt;getUsers());</div>
 <div class="line"><a name="l00160"></a><span class="lineno">  160</span>&#160;    <span class="keywordflow">else</span> freeListList = oldNode-&gt;getUsers();</div>
@@ -305,7 +305,7 @@ $(function() {
 <div class="line"><a name="l00262"></a><span class="lineno">  262</span>&#160;    addSymbolic(offsets, symbolicOffsets, S, mlt);</div>
 <div class="line"><a name="l00263"></a><span class="lineno">  263</span>&#160;    <span class="keywordflow">return</span> blackList | blackListAllDependentLoops(S, numPeeled);</div>
 <div class="line"><a name="l00264"></a><span class="lineno">  264</span>&#160;  }</div>
-<div class="line"><a name="l00265"></a><span class="lineno">  265</span>&#160;  <span class="keyword">static</span> <span class="keywordtype">void</span> extendDensePtrMatCols(BumpAlloc&lt;&gt; &amp;alloc,</div>
+<div class="line"><a name="l00265"></a><span class="lineno">  265</span>&#160;  <span class="keyword">static</span> <span class="keywordtype">void</span> extendDensePtrMatCols(Arena&lt;&gt; *alloc,</div>
 <div class="line"><a name="l00266"></a><span class="lineno">  266</span>&#160;                                    MutDensePtrMatrix&lt;int64_t&gt; &amp;A, math::Row R,</div>
 <div class="line"><a name="l00267"></a><span class="lineno">  267</span>&#160;                                    math::Col C) {</div>
 <div class="line"><a name="l00268"></a><span class="lineno">  268</span>&#160;    MutDensePtrMatrix&lt;int64_t&gt; B{matrix&lt;int64_t&gt;(alloc, A.numRow(), C)};</div>
@@ -328,7 +328,7 @@ $(function() {
 <div class="line"><a name="l00286"></a><span class="lineno">  286</span>&#160;      <span class="keyword">auto</span> [v, tret] = <a class="code" href="classpoly_1_1IR_1_1Cache.html#a8752442da530803e458fedf4e8d97600">getValue</a>(op, M, tr);</div>
 <div class="line"><a name="l00287"></a><span class="lineno">  287</span>&#160;      tr = tret;</div>
 <div class="line"><a name="l00288"></a><span class="lineno">  288</span>&#160;      ops[j] = v;</div>
-<div class="line"><a name="l00289"></a><span class="lineno">  289</span>&#160;      v-&gt;addUser(alloc, I);</div>
+<div class="line"><a name="l00289"></a><span class="lineno">  289</span>&#160;      v-&gt;addUser(&amp;alloc, I);</div>
 <div class="line"><a name="l00290"></a><span class="lineno">  290</span>&#160;    }</div>
 <div class="line"><a name="l00291"></a><span class="lineno">  291</span>&#160;    <span class="keywordflow">return</span> {<a class="code" href="classpoly_1_1IR_1_1Cache.html#a4f693e5bc775271888cb0343dc12e750">cse</a>(I), tr};</div>
 <div class="line"><a name="l00292"></a><span class="lineno">  292</span>&#160;  }</div>
@@ -346,7 +346,7 @@ $(function() {
 <div class="line"><a name="l00304"></a><span class="lineno">  304</span>&#160;    }</div>
 <div class="line"><a name="l00305"></a><span class="lineno">  305</span>&#160;    <span class="keywordflow">return</span> {completed, tr};</div>
 <div class="line"><a name="l00306"></a><span class="lineno">  306</span>&#160;  }</div>
-<div class="line"><a name="l00310"></a><span class="lineno"><a class="line" href="classpoly_1_1IR_1_1Cache.html#ae839d7034103f2fd0d9ebd3d802fa83d">  310</a></span>&#160;  constexpr <span class="keyword">auto</span> <a class="code" href="classpoly_1_1IR_1_1Cache.html#ae839d7034103f2fd0d9ebd3d802fa83d">getAllocator</a>() -&gt; BumpAlloc&lt;&gt; &amp; { <span class="keywordflow">return</span> alloc; }</div>
+<div class="line"><a name="l00310"></a><span class="lineno"><a class="line" href="classpoly_1_1IR_1_1Cache.html#a6fc976093ca556ac42bc46e2c8e372f0">  310</a></span>&#160;  constexpr <span class="keyword">auto</span> <a class="code" href="classpoly_1_1IR_1_1Cache.html#a6fc976093ca556ac42bc46e2c8e372f0">getAllocator</a>() -&gt; Arena&lt;&gt; * { <span class="keywordflow">return</span> &amp;alloc; }</div>
 <div class="line"><a name="l00316"></a><span class="lineno"><a class="line" href="classpoly_1_1IR_1_1Cache.html#a4f693e5bc775271888cb0343dc12e750">  316</a></span>&#160;  <span class="keyword">auto</span> <a class="code" href="classpoly_1_1IR_1_1Cache.html#a4f693e5bc775271888cb0343dc12e750">cse</a>(<a class="code" href="classpoly_1_1IR_1_1Compute.html">Compute</a> *I) -&gt; <a class="code" href="classpoly_1_1IR_1_1Compute.html">Compute</a> * {</div>
 <div class="line"><a name="l00317"></a><span class="lineno">  317</span>&#160;    <a class="code" href="classpoly_1_1IR_1_1Compute.html">Compute</a> *&amp;<a class="code" href="classpoly_1_1IR_1_1Cache.html#a4f693e5bc775271888cb0343dc12e750">cse</a> = getCSE(I);</div>
 <div class="line"><a name="l00318"></a><span class="lineno">  318</span>&#160;    <span class="keywordflow">if</span> (<a class="code" href="classpoly_1_1IR_1_1Cache.html#a4f693e5bc775271888cb0343dc12e750">cse</a> == <span class="keyword">nullptr</span> || (<a class="code" href="classpoly_1_1IR_1_1Cache.html#a4f693e5bc775271888cb0343dc12e750">cse</a> == I)) <span class="keywordflow">return</span> <a class="code" href="classpoly_1_1IR_1_1Cache.html#a4f693e5bc775271888cb0343dc12e750">cse</a> = I; <span class="comment">// update ref</span></div>
@@ -424,7 +424,7 @@ $(function() {
 <div class="line"><a name="l00399"></a><span class="lineno">  399</span>&#160;  <span class="keyword">auto</span> zeroDimRef(llvm::Instruction *loadOrStore,</div>
 <div class="line"><a name="l00400"></a><span class="lineno">  400</span>&#160;                  llvm::SCEVUnknown <span class="keyword">const</span> *arrayPtr, <span class="keywordtype">unsigned</span> numLoops)</div>
 <div class="line"><a name="l00401"></a><span class="lineno">  401</span>&#160;    -&gt; Addr * {</div>
-<div class="line"><a name="l00402"></a><span class="lineno">  402</span>&#160;    <span class="keywordflow">return</span> Addr::construct(alloc, arrayPtr, loadOrStore, numLoops);</div>
+<div class="line"><a name="l00402"></a><span class="lineno">  402</span>&#160;    <span class="keywordflow">return</span> Addr::construct(&amp;alloc, arrayPtr, loadOrStore, numLoops);</div>
 <div class="line"><a name="l00403"></a><span class="lineno">  403</span>&#160;  }</div>
 <div class="line"><a name="l00404"></a><span class="lineno">  404</span>&#160;  <span class="comment">// create Addr</span></div>
 <div class="line"><a name="l00405"></a><span class="lineno">  405</span>&#160;  <span class="keyword">auto</span> getArrayRef(llvm::Instruction *loadOrStore, llvm::Loop *L,</div>
@@ -489,13 +489,13 @@ $(function() {
 <div class="line"><a name="l00464"></a><span class="lineno">  464</span>&#160;          fillAffineIndices(Rt(i, _), &amp;coffsets[i], offsets, symbolicOffsets,</div>
 <div class="line"><a name="l00465"></a><span class="lineno">  465</span>&#160;                            subscripts[i], 1, numPeeled);</div>
 <div class="line"><a name="l00466"></a><span class="lineno">  466</span>&#160;        <span class="keywordflow">if</span> (offsets.size() &gt; offsMat.numCol())</div>
-<div class="line"><a name="l00467"></a><span class="lineno">  467</span>&#160;          extendDensePtrMatCols(alloc, offsMat, math::Row{i},</div>
+<div class="line"><a name="l00467"></a><span class="lineno">  467</span>&#160;          extendDensePtrMatCols(&amp;alloc, offsMat, math::Row{i},</div>
 <div class="line"><a name="l00468"></a><span class="lineno">  468</span>&#160;                                math::Col{offsets.size()});</div>
 <div class="line"><a name="l00469"></a><span class="lineno">  469</span>&#160;        offsMat(i, _) &lt;&lt; offsets;</div>
 <div class="line"><a name="l00470"></a><span class="lineno">  470</span>&#160;      }</div>
 <div class="line"><a name="l00471"></a><span class="lineno">  471</span>&#160;    }</div>
 <div class="line"><a name="l00472"></a><span class="lineno">  472</span>&#160;    <span class="keywordtype">size_t</span> numExtraLoopsToPeel = 64 - std::countl_zero(blackList);</div>
-<div class="line"><a name="l00473"></a><span class="lineno">  473</span>&#160;    Addr *op = Addr::construct(alloc, arrayPtr, loadOrStore,</div>
+<div class="line"><a name="l00473"></a><span class="lineno">  473</span>&#160;    Addr *op = Addr::construct(&amp;alloc, arrayPtr, loadOrStore,</div>
 <div class="line"><a name="l00474"></a><span class="lineno">  474</span>&#160;                               Rt(_, _(numExtraLoopsToPeel, end)),</div>
 <div class="line"><a name="l00475"></a><span class="lineno">  475</span>&#160;                               {std::move(sizes), std::move(symbolicOffsets)},</div>
 <div class="line"><a name="l00476"></a><span class="lineno">  476</span>&#160;                               coffsets, offsMat.data(), numLoops);</div>
@@ -525,7 +525,7 @@ $(function() {
 <div class="line"><a name="l00500"></a><span class="lineno">  500</span>&#160;    MutPtrVector&lt;Value *&gt; operands{op-&gt;getOperands()};</div>
 <div class="line"><a name="l00501"></a><span class="lineno">  501</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> n = 0; n &lt; N; ++n) {</div>
 <div class="line"><a name="l00502"></a><span class="lineno">  502</span>&#160;      Value *operand = operands[n] = ops[n];</div>
-<div class="line"><a name="l00503"></a><span class="lineno">  503</span>&#160;      operand-&gt;addUser(alloc, op);</div>
+<div class="line"><a name="l00503"></a><span class="lineno">  503</span>&#160;      operand-&gt;addUser(&amp;alloc, op);</div>
 <div class="line"><a name="l00504"></a><span class="lineno">  504</span>&#160;    }</div>
 <div class="line"><a name="l00505"></a><span class="lineno">  505</span>&#160;  }</div>
 <div class="line"><a name="l00506"></a><span class="lineno">  506</span>&#160;  <span class="comment">// this should be modified, and then `cse`-called on int</span></div>
@@ -592,9 +592,9 @@ $(function() {
 <div class="line"><a name="l00567"></a><span class="lineno">  567</span>&#160;                       <span class="keywordtype">bool</span> swap = <span class="keyword">false</span>) -&gt; Value * {</div>
 <div class="line"><a name="l00568"></a><span class="lineno">  568</span>&#160;    <span class="keywordflow">switch</span> (rel) {</div>
 <div class="line"><a name="l00569"></a><span class="lineno">  569</span>&#160;    <span class="keywordflow">case</span> Predicate::Relation::Any:</div>
-<div class="line"><a name="l00570"></a><span class="lineno">  570</span>&#160;      <span class="keywordflow">return</span> Cint::create(alloc, 1, instr-&gt;getType());</div>
+<div class="line"><a name="l00570"></a><span class="lineno">  570</span>&#160;      <span class="keywordflow">return</span> Cint::create(&amp;alloc, 1, instr-&gt;getType());</div>
 <div class="line"><a name="l00571"></a><span class="lineno">  571</span>&#160;    <span class="keywordflow">case</span> Predicate::Relation::Empty:</div>
-<div class="line"><a name="l00572"></a><span class="lineno">  572</span>&#160;      <span class="keywordflow">return</span> Cint::create(alloc, 0, instr-&gt;getType());</div>
+<div class="line"><a name="l00572"></a><span class="lineno">  572</span>&#160;      <span class="keywordflow">return</span> Cint::create(&amp;alloc, 0, instr-&gt;getType());</div>
 <div class="line"><a name="l00573"></a><span class="lineno">  573</span>&#160;    <span class="keywordflow">case</span> Predicate::Relation::False: swap = !swap; [[fallthrough]];</div>
 <div class="line"><a name="l00574"></a><span class="lineno">  574</span>&#160;    <span class="keywordflow">case</span> Predicate::Relation::True: <span class="keywordflow">return</span> swap ? negate(instr) : instr;</div>
 <div class="line"><a name="l00575"></a><span class="lineno">  575</span>&#160;    }</div>
@@ -687,127 +687,126 @@ $(function() {
 <div class="line"><a name="l00680"></a><span class="lineno">  680</span>&#160;};</div>
 <div class="line"><a name="l00681"></a><span class="lineno">  681</span>&#160; </div>
 <div class="line"><a name="l00682"></a><span class="lineno">  682</span>&#160;<span class="keyword">namespace </span>Predicate {</div>
-<div class="line"><a name="l00683"></a><span class="lineno">  683</span>&#160;[[nodiscard]] <span class="keyword">inline</span> <span class="keyword">auto</span> Map::addPredicate(BumpAlloc&lt;&gt; &amp;alloc,</div>
-<div class="line"><a name="l00684"></a><span class="lineno">  684</span>&#160;                                            IR::Cache &amp;cache,</div>
-<div class="line"><a name="l00685"></a><span class="lineno">  685</span>&#160;                                            llvm::Value *value,</div>
-<div class="line"><a name="l00686"></a><span class="lineno">  686</span>&#160;                                            IR::TreeResult &amp;tr) -&gt; <span class="keywordtype">size_t</span> {</div>
-<div class="line"><a name="l00687"></a><span class="lineno">  687</span>&#160;  <span class="keyword">auto</span> [I, tret] = cache.getValue(value, <span class="keyword">nullptr</span>, tr);</div>
-<div class="line"><a name="l00688"></a><span class="lineno">  688</span>&#160;  tr = tret;</div>
-<div class="line"><a name="l00689"></a><span class="lineno">  689</span>&#160;  <span class="comment">// assert(predicates-&gt;count &lt;= 32 &amp;&amp; &quot;too many predicates&quot;);</span></div>
-<div class="line"><a name="l00690"></a><span class="lineno">  690</span>&#160;  <span class="keywordtype">size_t</span> i = 0;</div>
-<div class="line"><a name="l00691"></a><span class="lineno">  691</span>&#160;  <span class="keywordflow">for</span> (<span class="keyword">auto</span> *U = predicates; U != <span class="keyword">nullptr</span>; U = U-&gt;getNext())</div>
-<div class="line"><a name="l00692"></a><span class="lineno">  692</span>&#160;    <span class="keywordflow">for</span> (ptrdiff_t j = 0, N = U-&gt;getHeadCount(); j &lt; N; ++i, ++j)</div>
-<div class="line"><a name="l00693"></a><span class="lineno">  693</span>&#160;      <span class="keywordflow">if</span> ((*U)[j] == I) <span class="keywordflow">return</span> i;</div>
-<div class="line"><a name="l00694"></a><span class="lineno">  694</span>&#160;  predicates-&gt;push_ordered(alloc, I);</div>
-<div class="line"><a name="l00695"></a><span class="lineno">  695</span>&#160;  <span class="keywordflow">return</span> i;</div>
-<div class="line"><a name="l00696"></a><span class="lineno">  696</span>&#160;}</div>
-<div class="line"><a name="l00697"></a><span class="lineno">  697</span>&#160; </div>
-<div class="line"><a name="l00698"></a><span class="lineno">  698</span>&#160;[[nodiscard]] <span class="keyword">inline</span> <span class="keyword">auto</span> <span class="comment">// NOLINTNEXTLINE(misc-no-recursion)</span></div>
-<div class="line"><a name="l00699"></a><span class="lineno">  699</span>&#160;descendBlock(BumpAlloc&lt;&gt; &amp;alloc, IR::Cache &amp;cache,</div>
-<div class="line"><a name="l00700"></a><span class="lineno">  700</span>&#160;             dict::aset&lt;llvm::BasicBlock *&gt; &amp;visited, Map &amp;predMap,</div>
-<div class="line"><a name="l00701"></a><span class="lineno">  701</span>&#160;             llvm::BasicBlock *BBsrc, llvm::BasicBlock *BBdst,</div>
-<div class="line"><a name="l00702"></a><span class="lineno">  702</span>&#160;             Intersection predicate, llvm::BasicBlock *BBhead, llvm::Loop *L,</div>
-<div class="line"><a name="l00703"></a><span class="lineno">  703</span>&#160;             TreeResult &amp;tr) -&gt; Map::Destination {</div>
-<div class="line"><a name="l00704"></a><span class="lineno">  704</span>&#160;  <span class="keywordflow">if</span> (BBsrc == BBdst) {</div>
-<div class="line"><a name="l00705"></a><span class="lineno">  705</span>&#160;    assert(!predMap.contains(BBsrc));</div>
-<div class="line"><a name="l00706"></a><span class="lineno">  706</span>&#160;    predMap.insert({BBsrc, Set{predicate}});</div>
-<div class="line"><a name="l00707"></a><span class="lineno">  707</span>&#160;    <span class="keywordflow">return</span> Map::Destination::Reached;</div>
-<div class="line"><a name="l00708"></a><span class="lineno">  708</span>&#160;  }</div>
-<div class="line"><a name="l00709"></a><span class="lineno">  709</span>&#160;  <span class="keywordflow">if</span> (L &amp;&amp; (!(L-&gt;contains(BBsrc)))) {</div>
-<div class="line"><a name="l00710"></a><span class="lineno">  710</span>&#160;    <span class="comment">// oops, we have skipped the preheader and escaped the loop.</span></div>
-<div class="line"><a name="l00711"></a><span class="lineno">  711</span>&#160;    <span class="keywordflow">return</span> Map::Destination::Returned;</div>
-<div class="line"><a name="l00712"></a><span class="lineno">  712</span>&#160;  }</div>
-<div class="line"><a name="l00713"></a><span class="lineno">  713</span>&#160;  <span class="keywordflow">if</span> (visited.contains(BBsrc)) {</div>
-<div class="line"><a name="l00714"></a><span class="lineno">  714</span>&#160;    <span class="comment">// FIXME: This is terribly hacky.</span></div>
-<div class="line"><a name="l00715"></a><span class="lineno">  715</span>&#160;    <span class="comment">// if `BBsrc == BBhead`, then we assume we hit a path that</span></div>
-<div class="line"><a name="l00716"></a><span class="lineno">  716</span>&#160;    <span class="comment">// bypasses the following loop, e.g. there was a loop guard.</span></div>
-<div class="line"><a name="l00717"></a><span class="lineno">  717</span>&#160;    <span class="comment">//</span></div>
-<div class="line"><a name="l00718"></a><span class="lineno">  718</span>&#160;    <span class="comment">// Thus, we return `Returned`, indicating that it was a</span></div>
-<div class="line"><a name="l00719"></a><span class="lineno">  719</span>&#160;    <span class="comment">// non-fatal dead-end. Otherwise, we check if it seems to have</span></div>
-<div class="line"><a name="l00720"></a><span class="lineno">  720</span>&#160;    <span class="comment">// led to a live, non-empty path.</span></div>
-<div class="line"><a name="l00721"></a><span class="lineno">  721</span>&#160;    <span class="comment">// TODO: should we union the predicates in case of returned?</span></div>
-<div class="line"><a name="l00722"></a><span class="lineno">  722</span>&#160;    <span class="keywordflow">if</span> ((BBsrc != BBhead) &amp;&amp; predMap.find(BBsrc) != predMap.end())</div>
-<div class="line"><a name="l00723"></a><span class="lineno">  723</span>&#160;      <span class="keywordflow">return</span> Map::Destination::Reached;</div>
-<div class="line"><a name="l00724"></a><span class="lineno">  724</span>&#160;    <span class="keywordflow">return</span> Map::Destination::Returned;</div>
-<div class="line"><a name="l00725"></a><span class="lineno">  725</span>&#160;  }</div>
-<div class="line"><a name="l00726"></a><span class="lineno">  726</span>&#160;  <span class="comment">// Inserts a tombstone to indicate that we have visited BBsrc, but</span></div>
-<div class="line"><a name="l00727"></a><span class="lineno">  727</span>&#160;  <span class="comment">// not actually reached a destination.</span></div>
-<div class="line"><a name="l00728"></a><span class="lineno">  728</span>&#160;  visited.insert(BBsrc);</div>
-<div class="line"><a name="l00729"></a><span class="lineno">  729</span>&#160;  <span class="keyword">const</span> llvm::Instruction *I = BBsrc-&gt;getTerminator();</div>
-<div class="line"><a name="l00730"></a><span class="lineno">  730</span>&#160;  <span class="keywordflow">if</span> (!I) <span class="keywordflow">return</span> Map::Destination::Unknown;</div>
-<div class="line"><a name="l00731"></a><span class="lineno">  731</span>&#160;  <span class="keywordflow">if</span> (llvm::isa&lt;llvm::ReturnInst&gt;(I)) <span class="keywordflow">return</span> Map::Destination::Returned;</div>
-<div class="line"><a name="l00732"></a><span class="lineno">  732</span>&#160;  <span class="keywordflow">if</span> (llvm::isa&lt;llvm::UnreachableInst&gt;(I)) <span class="keywordflow">return</span> Map::Destination::Unreachable;</div>
-<div class="line"><a name="l00733"></a><span class="lineno">  733</span>&#160;  <span class="keyword">const</span> <span class="keyword">auto</span> *BI = llvm::dyn_cast&lt;llvm::BranchInst&gt;(I);</div>
-<div class="line"><a name="l00734"></a><span class="lineno">  734</span>&#160;  <span class="keywordflow">if</span> (!BI) <span class="keywordflow">return</span> Map::Destination::Unknown;</div>
-<div class="line"><a name="l00735"></a><span class="lineno">  735</span>&#160;  <span class="keywordflow">if</span> (BI-&gt;isUnconditional()) {</div>
-<div class="line"><a name="l00736"></a><span class="lineno">  736</span>&#160;    <span class="keyword">auto</span> rc = descendBlock(alloc, cache, visited, predMap, BI-&gt;getSuccessor(0),</div>
-<div class="line"><a name="l00737"></a><span class="lineno">  737</span>&#160;                           BBdst, predicate, BBhead, L, tr);</div>
-<div class="line"><a name="l00738"></a><span class="lineno">  738</span>&#160;    <span class="keywordflow">if</span> (rc == Map::Destination::Reached) predMap.reach(alloc, BBsrc, predicate);</div>
-<div class="line"><a name="l00739"></a><span class="lineno">  739</span>&#160;    <span class="keywordflow">return</span> rc;</div>
-<div class="line"><a name="l00740"></a><span class="lineno">  740</span>&#160;  }</div>
-<div class="line"><a name="l00741"></a><span class="lineno">  741</span>&#160;  <span class="comment">// We have a conditional branch.</span></div>
-<div class="line"><a name="l00742"></a><span class="lineno">  742</span>&#160;  llvm::Value *cond = BI-&gt;getCondition();</div>
-<div class="line"><a name="l00743"></a><span class="lineno">  743</span>&#160;  <span class="comment">// We need to check both sides of the branch and add a predicate.</span></div>
-<div class="line"><a name="l00744"></a><span class="lineno">  744</span>&#160;  <span class="keywordtype">size_t</span> predInd = predMap.addPredicate(alloc, cache, cond, tr);</div>
-<div class="line"><a name="l00745"></a><span class="lineno">  745</span>&#160;  <span class="keyword">auto</span> rc0 =</div>
-<div class="line"><a name="l00746"></a><span class="lineno">  746</span>&#160;    descendBlock(alloc, cache, visited, predMap, BI-&gt;getSuccessor(0), BBdst,</div>
-<div class="line"><a name="l00747"></a><span class="lineno">  747</span>&#160;                 predicate.intersect(predInd, Relation::True), BBhead, L, tr);</div>
-<div class="line"><a name="l00748"></a><span class="lineno">  748</span>&#160;  <span class="keywordflow">if</span> (rc0 == Map::Destination::Unknown) <span class="comment">// bail</span></div>
-<div class="line"><a name="l00749"></a><span class="lineno">  749</span>&#160;    <span class="keywordflow">return</span> Map::Destination::Unknown;</div>
-<div class="line"><a name="l00750"></a><span class="lineno">  750</span>&#160;  <span class="keyword">auto</span> rc1 =</div>
-<div class="line"><a name="l00751"></a><span class="lineno">  751</span>&#160;    descendBlock(alloc, cache, visited, predMap, BI-&gt;getSuccessor(1), BBdst,</div>
-<div class="line"><a name="l00752"></a><span class="lineno">  752</span>&#160;                 predicate.intersect(predInd, Relation::False), BBhead, L, tr);</div>
-<div class="line"><a name="l00753"></a><span class="lineno">  753</span>&#160;  <span class="keywordflow">if</span> ((rc0 == Map::Destination::Returned) ||</div>
-<div class="line"><a name="l00754"></a><span class="lineno">  754</span>&#160;      (rc0 == Map::Destination::Unreachable)) {</div>
-<div class="line"><a name="l00755"></a><span class="lineno">  755</span>&#160;    <span class="keywordflow">if</span> (rc1 == Map::Destination::Reached) {</div>
-<div class="line"><a name="l00756"></a><span class="lineno">  756</span>&#160;      <span class="comment">//  we&#39;re now assuming that !cond</span></div>
-<div class="line"><a name="l00757"></a><span class="lineno">  757</span>&#160;      predMap.assume(Intersection(predInd, Relation::False));</div>
-<div class="line"><a name="l00758"></a><span class="lineno">  758</span>&#160;      predMap.reach(alloc, BBsrc, predicate);</div>
-<div class="line"><a name="l00759"></a><span class="lineno">  759</span>&#160;    }</div>
-<div class="line"><a name="l00760"></a><span class="lineno">  760</span>&#160;    <span class="keywordflow">return</span> rc1;</div>
-<div class="line"><a name="l00761"></a><span class="lineno">  761</span>&#160;  }</div>
-<div class="line"><a name="l00762"></a><span class="lineno">  762</span>&#160;  <span class="keywordflow">if</span> ((rc1 == Map::Destination::Returned) ||</div>
-<div class="line"><a name="l00763"></a><span class="lineno">  763</span>&#160;      (rc1 == Map::Destination::Unreachable)) {</div>
-<div class="line"><a name="l00764"></a><span class="lineno">  764</span>&#160;    <span class="keywordflow">if</span> (rc0 == Map::Destination::Reached) {</div>
-<div class="line"><a name="l00765"></a><span class="lineno">  765</span>&#160;      <span class="comment">//  we&#39;re now assuming that cond</span></div>
-<div class="line"><a name="l00766"></a><span class="lineno">  766</span>&#160;      predMap.assume(Intersection(predInd, Relation::True));</div>
-<div class="line"><a name="l00767"></a><span class="lineno">  767</span>&#160;      predMap.reach(alloc, BBsrc, predicate);</div>
-<div class="line"><a name="l00768"></a><span class="lineno">  768</span>&#160;    }</div>
-<div class="line"><a name="l00769"></a><span class="lineno">  769</span>&#160;    <span class="keywordflow">return</span> rc0;</div>
-<div class="line"><a name="l00770"></a><span class="lineno">  770</span>&#160;  }</div>
-<div class="line"><a name="l00771"></a><span class="lineno">  771</span>&#160;  <span class="keywordflow">if</span> (rc0 != rc1) <span class="keywordflow">return</span> Map::Destination::Unknown;</div>
-<div class="line"><a name="l00772"></a><span class="lineno">  772</span>&#160;  <span class="keywordflow">if</span> (rc0 == Map::Destination::Reached) predMap.reach(alloc, BBsrc, predicate);</div>
-<div class="line"><a name="l00773"></a><span class="lineno">  773</span>&#160;  <span class="keywordflow">return</span> rc0;</div>
-<div class="line"><a name="l00774"></a><span class="lineno">  774</span>&#160;}</div>
-<div class="line"><a name="l00775"></a><span class="lineno"><a class="line" href="classpoly_1_1IR_1_1Predicate_1_1Map.html#a2dfad892f78dab8f9049234041feb9e4">  775</a></span>&#160;[[nodiscard]] <span class="keyword">inline</span> <span class="keyword">auto</span> <a class="code" href="classpoly_1_1IR_1_1Predicate_1_1Map.html#a2dfad892f78dab8f9049234041feb9e4">Map::descend</a>(BumpAlloc&lt;&gt; &amp;alloc, <a class="code" href="classpoly_1_1IR_1_1Cache.html">IR::Cache</a> &amp;cache,</div>
-<div class="line"><a name="l00776"></a><span class="lineno">  776</span>&#160;                                       llvm::BasicBlock *BBsrc,</div>
-<div class="line"><a name="l00777"></a><span class="lineno">  777</span>&#160;                                       llvm::BasicBlock *BBdst, llvm::Loop *L,</div>
-<div class="line"><a name="l00778"></a><span class="lineno">  778</span>&#160;                                       <a class="code" href="structpoly_1_1IR_1_1TreeResult.html">TreeResult</a> &amp;tr) -&gt; std::optional&lt;Map&gt; {</div>
-<div class="line"><a name="l00779"></a><span class="lineno">  779</span>&#160;  <span class="keyword">auto</span> p = alloc.checkpoint();</div>
-<div class="line"><a name="l00780"></a><span class="lineno">  780</span>&#160;  <a class="code" href="classpoly_1_1IR_1_1Predicate_1_1Map.html">Map</a> predMap{alloc};</div>
-<div class="line"><a name="l00781"></a><span class="lineno">  781</span>&#160;  <a class="code" href="structpoly_1_1dict_1_1aset.html">dict::aset&lt;llvm::BasicBlock *&gt;</a> visited{alloc};</div>
-<div class="line"><a name="l00782"></a><span class="lineno">  782</span>&#160;  <span class="keywordflow">if</span> (descendBlock(alloc, cache, visited, predMap, BBsrc, BBdst, {}, BBsrc, L,</div>
-<div class="line"><a name="l00783"></a><span class="lineno">  783</span>&#160;                   tr) == Destination::Reached)</div>
-<div class="line"><a name="l00784"></a><span class="lineno">  784</span>&#160;    <span class="keywordflow">return</span> predMap;</div>
-<div class="line"><a name="l00785"></a><span class="lineno">  785</span>&#160;  alloc.rollback(p);</div>
-<div class="line"><a name="l00786"></a><span class="lineno">  786</span>&#160;  <span class="keywordflow">return</span> std::nullopt;</div>
-<div class="line"><a name="l00787"></a><span class="lineno">  787</span>&#160;}</div>
-<div class="line"><a name="l00788"></a><span class="lineno">  788</span>&#160; </div>
-<div class="line"><a name="l00789"></a><span class="lineno">  789</span>&#160;} <span class="comment">// namespace Predicate</span></div>
-<div class="line"><a name="l00790"></a><span class="lineno">  790</span>&#160;} <span class="comment">// namespace poly::IR</span></div>
+<div class="line"><a name="l00683"></a><span class="lineno">  683</span>&#160;[[nodiscard]] <span class="keyword">inline</span> <span class="keyword">auto</span> Map::addPredicate(Arena&lt;&gt; *alloc, IR::Cache &amp;cache,</div>
+<div class="line"><a name="l00684"></a><span class="lineno">  684</span>&#160;                                            llvm::Value *value,</div>
+<div class="line"><a name="l00685"></a><span class="lineno">  685</span>&#160;                                            IR::TreeResult &amp;tr) -&gt; <span class="keywordtype">size_t</span> {</div>
+<div class="line"><a name="l00686"></a><span class="lineno">  686</span>&#160;  <span class="keyword">auto</span> [I, tret] = cache.getValue(value, <span class="keyword">nullptr</span>, tr);</div>
+<div class="line"><a name="l00687"></a><span class="lineno">  687</span>&#160;  tr = tret;</div>
+<div class="line"><a name="l00688"></a><span class="lineno">  688</span>&#160;  <span class="comment">// assert(predicates-&gt;count &lt;= 32 &amp;&amp; &quot;too many predicates&quot;);</span></div>
+<div class="line"><a name="l00689"></a><span class="lineno">  689</span>&#160;  <span class="keywordtype">size_t</span> i = 0;</div>
+<div class="line"><a name="l00690"></a><span class="lineno">  690</span>&#160;  <span class="keywordflow">for</span> (<span class="keyword">auto</span> *U = predicates; U != <span class="keyword">nullptr</span>; U = U-&gt;getNext())</div>
+<div class="line"><a name="l00691"></a><span class="lineno">  691</span>&#160;    <span class="keywordflow">for</span> (ptrdiff_t j = 0, N = U-&gt;getHeadCount(); j &lt; N; ++i, ++j)</div>
+<div class="line"><a name="l00692"></a><span class="lineno">  692</span>&#160;      <span class="keywordflow">if</span> ((*U)[j] == I) <span class="keywordflow">return</span> i;</div>
+<div class="line"><a name="l00693"></a><span class="lineno">  693</span>&#160;  predicates-&gt;push_ordered(alloc, I);</div>
+<div class="line"><a name="l00694"></a><span class="lineno">  694</span>&#160;  <span class="keywordflow">return</span> i;</div>
+<div class="line"><a name="l00695"></a><span class="lineno">  695</span>&#160;}</div>
+<div class="line"><a name="l00696"></a><span class="lineno">  696</span>&#160; </div>
+<div class="line"><a name="l00697"></a><span class="lineno">  697</span>&#160;[[nodiscard]] <span class="keyword">inline</span> <span class="keyword">auto</span> <span class="comment">// NOLINTNEXTLINE(misc-no-recursion)</span></div>
+<div class="line"><a name="l00698"></a><span class="lineno">  698</span>&#160;descendBlock(Arena&lt;&gt; *alloc, IR::Cache &amp;cache,</div>
+<div class="line"><a name="l00699"></a><span class="lineno">  699</span>&#160;             dict::aset&lt;llvm::BasicBlock *&gt; &amp;visited, Map &amp;predMap,</div>
+<div class="line"><a name="l00700"></a><span class="lineno">  700</span>&#160;             llvm::BasicBlock *BBsrc, llvm::BasicBlock *BBdst,</div>
+<div class="line"><a name="l00701"></a><span class="lineno">  701</span>&#160;             Intersection predicate, llvm::BasicBlock *BBhead, llvm::Loop *L,</div>
+<div class="line"><a name="l00702"></a><span class="lineno">  702</span>&#160;             TreeResult &amp;tr) -&gt; Map::Destination {</div>
+<div class="line"><a name="l00703"></a><span class="lineno">  703</span>&#160;  <span class="keywordflow">if</span> (BBsrc == BBdst) {</div>
+<div class="line"><a name="l00704"></a><span class="lineno">  704</span>&#160;    assert(!predMap.contains(BBsrc));</div>
+<div class="line"><a name="l00705"></a><span class="lineno">  705</span>&#160;    predMap.insert({BBsrc, Set{predicate}});</div>
+<div class="line"><a name="l00706"></a><span class="lineno">  706</span>&#160;    <span class="keywordflow">return</span> Map::Destination::Reached;</div>
+<div class="line"><a name="l00707"></a><span class="lineno">  707</span>&#160;  }</div>
+<div class="line"><a name="l00708"></a><span class="lineno">  708</span>&#160;  <span class="keywordflow">if</span> (L &amp;&amp; (!(L-&gt;contains(BBsrc)))) {</div>
+<div class="line"><a name="l00709"></a><span class="lineno">  709</span>&#160;    <span class="comment">// oops, we have skipped the preheader and escaped the loop.</span></div>
+<div class="line"><a name="l00710"></a><span class="lineno">  710</span>&#160;    <span class="keywordflow">return</span> Map::Destination::Returned;</div>
+<div class="line"><a name="l00711"></a><span class="lineno">  711</span>&#160;  }</div>
+<div class="line"><a name="l00712"></a><span class="lineno">  712</span>&#160;  <span class="keywordflow">if</span> (visited.contains(BBsrc)) {</div>
+<div class="line"><a name="l00713"></a><span class="lineno">  713</span>&#160;    <span class="comment">// FIXME: This is terribly hacky.</span></div>
+<div class="line"><a name="l00714"></a><span class="lineno">  714</span>&#160;    <span class="comment">// if `BBsrc == BBhead`, then we assume we hit a path that</span></div>
+<div class="line"><a name="l00715"></a><span class="lineno">  715</span>&#160;    <span class="comment">// bypasses the following loop, e.g. there was a loop guard.</span></div>
+<div class="line"><a name="l00716"></a><span class="lineno">  716</span>&#160;    <span class="comment">//</span></div>
+<div class="line"><a name="l00717"></a><span class="lineno">  717</span>&#160;    <span class="comment">// Thus, we return `Returned`, indicating that it was a</span></div>
+<div class="line"><a name="l00718"></a><span class="lineno">  718</span>&#160;    <span class="comment">// non-fatal dead-end. Otherwise, we check if it seems to have</span></div>
+<div class="line"><a name="l00719"></a><span class="lineno">  719</span>&#160;    <span class="comment">// led to a live, non-empty path.</span></div>
+<div class="line"><a name="l00720"></a><span class="lineno">  720</span>&#160;    <span class="comment">// TODO: should we union the predicates in case of returned?</span></div>
+<div class="line"><a name="l00721"></a><span class="lineno">  721</span>&#160;    <span class="keywordflow">if</span> ((BBsrc != BBhead) &amp;&amp; predMap.find(BBsrc) != predMap.end())</div>
+<div class="line"><a name="l00722"></a><span class="lineno">  722</span>&#160;      <span class="keywordflow">return</span> Map::Destination::Reached;</div>
+<div class="line"><a name="l00723"></a><span class="lineno">  723</span>&#160;    <span class="keywordflow">return</span> Map::Destination::Returned;</div>
+<div class="line"><a name="l00724"></a><span class="lineno">  724</span>&#160;  }</div>
+<div class="line"><a name="l00725"></a><span class="lineno">  725</span>&#160;  <span class="comment">// Inserts a tombstone to indicate that we have visited BBsrc, but</span></div>
+<div class="line"><a name="l00726"></a><span class="lineno">  726</span>&#160;  <span class="comment">// not actually reached a destination.</span></div>
+<div class="line"><a name="l00727"></a><span class="lineno">  727</span>&#160;  visited.insert(BBsrc);</div>
+<div class="line"><a name="l00728"></a><span class="lineno">  728</span>&#160;  <span class="keyword">const</span> llvm::Instruction *I = BBsrc-&gt;getTerminator();</div>
+<div class="line"><a name="l00729"></a><span class="lineno">  729</span>&#160;  <span class="keywordflow">if</span> (!I) <span class="keywordflow">return</span> Map::Destination::Unknown;</div>
+<div class="line"><a name="l00730"></a><span class="lineno">  730</span>&#160;  <span class="keywordflow">if</span> (llvm::isa&lt;llvm::ReturnInst&gt;(I)) <span class="keywordflow">return</span> Map::Destination::Returned;</div>
+<div class="line"><a name="l00731"></a><span class="lineno">  731</span>&#160;  <span class="keywordflow">if</span> (llvm::isa&lt;llvm::UnreachableInst&gt;(I)) <span class="keywordflow">return</span> Map::Destination::Unreachable;</div>
+<div class="line"><a name="l00732"></a><span class="lineno">  732</span>&#160;  <span class="keyword">const</span> <span class="keyword">auto</span> *BI = llvm::dyn_cast&lt;llvm::BranchInst&gt;(I);</div>
+<div class="line"><a name="l00733"></a><span class="lineno">  733</span>&#160;  <span class="keywordflow">if</span> (!BI) <span class="keywordflow">return</span> Map::Destination::Unknown;</div>
+<div class="line"><a name="l00734"></a><span class="lineno">  734</span>&#160;  <span class="keywordflow">if</span> (BI-&gt;isUnconditional()) {</div>
+<div class="line"><a name="l00735"></a><span class="lineno">  735</span>&#160;    <span class="keyword">auto</span> rc = descendBlock(alloc, cache, visited, predMap, BI-&gt;getSuccessor(0),</div>
+<div class="line"><a name="l00736"></a><span class="lineno">  736</span>&#160;                           BBdst, predicate, BBhead, L, tr);</div>
+<div class="line"><a name="l00737"></a><span class="lineno">  737</span>&#160;    <span class="keywordflow">if</span> (rc == Map::Destination::Reached) predMap.reach(alloc, BBsrc, predicate);</div>
+<div class="line"><a name="l00738"></a><span class="lineno">  738</span>&#160;    <span class="keywordflow">return</span> rc;</div>
+<div class="line"><a name="l00739"></a><span class="lineno">  739</span>&#160;  }</div>
+<div class="line"><a name="l00740"></a><span class="lineno">  740</span>&#160;  <span class="comment">// We have a conditional branch.</span></div>
+<div class="line"><a name="l00741"></a><span class="lineno">  741</span>&#160;  llvm::Value *cond = BI-&gt;getCondition();</div>
+<div class="line"><a name="l00742"></a><span class="lineno">  742</span>&#160;  <span class="comment">// We need to check both sides of the branch and add a predicate.</span></div>
+<div class="line"><a name="l00743"></a><span class="lineno">  743</span>&#160;  <span class="keywordtype">size_t</span> predInd = predMap.addPredicate(alloc, cache, cond, tr);</div>
+<div class="line"><a name="l00744"></a><span class="lineno">  744</span>&#160;  <span class="keyword">auto</span> rc0 =</div>
+<div class="line"><a name="l00745"></a><span class="lineno">  745</span>&#160;    descendBlock(alloc, cache, visited, predMap, BI-&gt;getSuccessor(0), BBdst,</div>
+<div class="line"><a name="l00746"></a><span class="lineno">  746</span>&#160;                 predicate.intersect(predInd, Relation::True), BBhead, L, tr);</div>
+<div class="line"><a name="l00747"></a><span class="lineno">  747</span>&#160;  <span class="keywordflow">if</span> (rc0 == Map::Destination::Unknown) <span class="comment">// bail</span></div>
+<div class="line"><a name="l00748"></a><span class="lineno">  748</span>&#160;    <span class="keywordflow">return</span> Map::Destination::Unknown;</div>
+<div class="line"><a name="l00749"></a><span class="lineno">  749</span>&#160;  <span class="keyword">auto</span> rc1 =</div>
+<div class="line"><a name="l00750"></a><span class="lineno">  750</span>&#160;    descendBlock(alloc, cache, visited, predMap, BI-&gt;getSuccessor(1), BBdst,</div>
+<div class="line"><a name="l00751"></a><span class="lineno">  751</span>&#160;                 predicate.intersect(predInd, Relation::False), BBhead, L, tr);</div>
+<div class="line"><a name="l00752"></a><span class="lineno">  752</span>&#160;  <span class="keywordflow">if</span> ((rc0 == Map::Destination::Returned) ||</div>
+<div class="line"><a name="l00753"></a><span class="lineno">  753</span>&#160;      (rc0 == Map::Destination::Unreachable)) {</div>
+<div class="line"><a name="l00754"></a><span class="lineno">  754</span>&#160;    <span class="keywordflow">if</span> (rc1 == Map::Destination::Reached) {</div>
+<div class="line"><a name="l00755"></a><span class="lineno">  755</span>&#160;      <span class="comment">//  we&#39;re now assuming that !cond</span></div>
+<div class="line"><a name="l00756"></a><span class="lineno">  756</span>&#160;      predMap.assume(Intersection(predInd, Relation::False));</div>
+<div class="line"><a name="l00757"></a><span class="lineno">  757</span>&#160;      predMap.reach(alloc, BBsrc, predicate);</div>
+<div class="line"><a name="l00758"></a><span class="lineno">  758</span>&#160;    }</div>
+<div class="line"><a name="l00759"></a><span class="lineno">  759</span>&#160;    <span class="keywordflow">return</span> rc1;</div>
+<div class="line"><a name="l00760"></a><span class="lineno">  760</span>&#160;  }</div>
+<div class="line"><a name="l00761"></a><span class="lineno">  761</span>&#160;  <span class="keywordflow">if</span> ((rc1 == Map::Destination::Returned) ||</div>
+<div class="line"><a name="l00762"></a><span class="lineno">  762</span>&#160;      (rc1 == Map::Destination::Unreachable)) {</div>
+<div class="line"><a name="l00763"></a><span class="lineno">  763</span>&#160;    <span class="keywordflow">if</span> (rc0 == Map::Destination::Reached) {</div>
+<div class="line"><a name="l00764"></a><span class="lineno">  764</span>&#160;      <span class="comment">//  we&#39;re now assuming that cond</span></div>
+<div class="line"><a name="l00765"></a><span class="lineno">  765</span>&#160;      predMap.assume(Intersection(predInd, Relation::True));</div>
+<div class="line"><a name="l00766"></a><span class="lineno">  766</span>&#160;      predMap.reach(alloc, BBsrc, predicate);</div>
+<div class="line"><a name="l00767"></a><span class="lineno">  767</span>&#160;    }</div>
+<div class="line"><a name="l00768"></a><span class="lineno">  768</span>&#160;    <span class="keywordflow">return</span> rc0;</div>
+<div class="line"><a name="l00769"></a><span class="lineno">  769</span>&#160;  }</div>
+<div class="line"><a name="l00770"></a><span class="lineno">  770</span>&#160;  <span class="keywordflow">if</span> (rc0 != rc1) <span class="keywordflow">return</span> Map::Destination::Unknown;</div>
+<div class="line"><a name="l00771"></a><span class="lineno">  771</span>&#160;  <span class="keywordflow">if</span> (rc0 == Map::Destination::Reached) predMap.reach(alloc, BBsrc, predicate);</div>
+<div class="line"><a name="l00772"></a><span class="lineno">  772</span>&#160;  <span class="keywordflow">return</span> rc0;</div>
+<div class="line"><a name="l00773"></a><span class="lineno">  773</span>&#160;}</div>
+<div class="line"><a name="l00774"></a><span class="lineno"><a class="line" href="classpoly_1_1IR_1_1Predicate_1_1Map.html#a8fccd8417b7ce435fe3f8f94cbd7bef3">  774</a></span>&#160;[[nodiscard]] <span class="keyword">inline</span> <span class="keyword">auto</span> <a class="code" href="classpoly_1_1IR_1_1Predicate_1_1Map.html#a8fccd8417b7ce435fe3f8f94cbd7bef3">Map::descend</a>(Arena&lt;&gt; *alloc, <a class="code" href="classpoly_1_1IR_1_1Cache.html">IR::Cache</a> &amp;cache,</div>
+<div class="line"><a name="l00775"></a><span class="lineno">  775</span>&#160;                                       llvm::BasicBlock *BBsrc,</div>
+<div class="line"><a name="l00776"></a><span class="lineno">  776</span>&#160;                                       llvm::BasicBlock *BBdst, llvm::Loop *L,</div>
+<div class="line"><a name="l00777"></a><span class="lineno">  777</span>&#160;                                       <a class="code" href="structpoly_1_1IR_1_1TreeResult.html">TreeResult</a> &amp;tr) -&gt; std::optional&lt;Map&gt; {</div>
+<div class="line"><a name="l00778"></a><span class="lineno">  778</span>&#160;  <span class="keyword">auto</span> p = alloc-&gt;checkpoint();</div>
+<div class="line"><a name="l00779"></a><span class="lineno">  779</span>&#160;  <a class="code" href="classpoly_1_1IR_1_1Predicate_1_1Map.html">Map</a> predMap{alloc};</div>
+<div class="line"><a name="l00780"></a><span class="lineno">  780</span>&#160;  <a class="code" href="structpoly_1_1dict_1_1aset.html">dict::aset&lt;llvm::BasicBlock *&gt;</a> visited{alloc};</div>
+<div class="line"><a name="l00781"></a><span class="lineno">  781</span>&#160;  <span class="keywordflow">if</span> (descendBlock(alloc, cache, visited, predMap, BBsrc, BBdst, {}, BBsrc, L,</div>
+<div class="line"><a name="l00782"></a><span class="lineno">  782</span>&#160;                   tr) == Destination::Reached)</div>
+<div class="line"><a name="l00783"></a><span class="lineno">  783</span>&#160;    <span class="keywordflow">return</span> predMap;</div>
+<div class="line"><a name="l00784"></a><span class="lineno">  784</span>&#160;  alloc-&gt;rollback(p);</div>
+<div class="line"><a name="l00785"></a><span class="lineno">  785</span>&#160;  <span class="keywordflow">return</span> std::nullopt;</div>
+<div class="line"><a name="l00786"></a><span class="lineno">  786</span>&#160;}</div>
+<div class="line"><a name="l00787"></a><span class="lineno">  787</span>&#160; </div>
+<div class="line"><a name="l00788"></a><span class="lineno">  788</span>&#160;} <span class="comment">// namespace Predicate</span></div>
+<div class="line"><a name="l00789"></a><span class="lineno">  789</span>&#160;} <span class="comment">// namespace poly::IR</span></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Addr_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Addr.html">poly::IR::Addr</a></div><div class="ttdef"><b>Definition:</b> Address.hpp:74</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Cache_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Cache.html">poly::IR::Cache</a></div><div class="ttdef"><b>Definition:</b> Cache.hpp:103</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Cache_html_a4f693e5bc775271888cb0343dc12e750"><div class="ttname"><a href="classpoly_1_1IR_1_1Cache.html#a4f693e5bc775271888cb0343dc12e750">poly::IR::Cache::cse</a></div><div class="ttdeci">auto cse(Compute *I) -&gt; Compute *</div><div class="ttdef"><b>Definition:</b> Cache.hpp:316</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Cache_html_a56195133a3bc424f28e12e1c7c60d1f8"><div class="ttname"><a href="classpoly_1_1IR_1_1Cache.html#a56195133a3bc424f28e12e1c7c60d1f8">poly::IR::Cache::replaceAllUsesWith</a></div><div class="ttdeci">constexpr void replaceAllUsesWith(Instruction *oldNode, Value *newNode)</div><div class="ttdef"><b>Definition:</b> Cache.hpp:329</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Cache_html_a676ae808fe76addfbec6eda207c9bda2"><div class="ttname"><a href="classpoly_1_1IR_1_1Cache.html#a676ae808fe76addfbec6eda207c9bda2">poly::IR::Cache::complete</a></div><div class="ttdeci">auto complete(Compute *I, Predicate::Map *M, TreeResult tr) -&gt; std::pair&lt; Compute *, TreeResult &gt;</div><div class="ttdoc">complete the operands</div><div class="ttdef"><b>Definition:</b> Cache.hpp:279</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Cache_html_a6faece9ac31b45aae0353250ff03084d"><div class="ttname"><a href="classpoly_1_1IR_1_1Cache.html#a6faece9ac31b45aae0353250ff03084d">poly::IR::Cache::createSelect</a></div><div class="ttdeci">auto createSelect(Predicate::Intersection P, Value *A, Value *B, UList&lt; Value * &gt; *pred) -&gt; Compute *</div><div class="ttdef"><b>Definition:</b> Cache.hpp:623</div></div>
+<div class="ttc" id="aclasspoly_1_1IR_1_1Cache_html_a6fc976093ca556ac42bc46e2c8e372f0"><div class="ttname"><a href="classpoly_1_1IR_1_1Cache.html#a6fc976093ca556ac42bc46e2c8e372f0">poly::IR::Cache::getAllocator</a></div><div class="ttdeci">constexpr auto getAllocator() -&gt; Arena&lt;&gt; *</div><div class="ttdef"><b>Definition:</b> Cache.hpp:310</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Cache_html_a8752442da530803e458fedf4e8d97600"><div class="ttname"><a href="classpoly_1_1IR_1_1Cache.html#a8752442da530803e458fedf4e8d97600">poly::IR::Cache::getValue</a></div><div class="ttdeci">auto getValue(llvm::Value *v, Predicate::Map *M, TreeResult tr) -&gt; std::pair&lt; Value *, TreeResult &gt;</div><div class="ttdef"><b>Definition:</b> Cache.hpp:351</div></div>
-<div class="ttc" id="aclasspoly_1_1IR_1_1Cache_html_ae839d7034103f2fd0d9ebd3d802fa83d"><div class="ttname"><a href="classpoly_1_1IR_1_1Cache.html#ae839d7034103f2fd0d9ebd3d802fa83d">poly::IR::Cache::getAllocator</a></div><div class="ttdeci">constexpr auto getAllocator() -&gt; BumpAlloc&lt;&gt; &amp;</div><div class="ttdef"><b>Definition:</b> Cache.hpp:310</div></div>
-<div class="ttc" id="aclasspoly_1_1IR_1_1Compute_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Compute.html">poly::IR::Compute</a></div><div class="ttdef"><b>Definition:</b> Instruction.hpp:75</div></div>
+<div class="ttc" id="aclasspoly_1_1IR_1_1Compute_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Compute.html">poly::IR::Compute</a></div><div class="ttdef"><b>Definition:</b> Instruction.hpp:73</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Predicate_1_1Map_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Predicate_1_1Map.html">poly::IR::Predicate::Map</a></div><div class="ttdef"><b>Definition:</b> BBPredPath.hpp:10</div></div>
-<div class="ttc" id="aclasspoly_1_1IR_1_1Predicate_1_1Map_html_a2dfad892f78dab8f9049234041feb9e4"><div class="ttname"><a href="classpoly_1_1IR_1_1Predicate_1_1Map.html#a2dfad892f78dab8f9049234041feb9e4">poly::IR::Predicate::Map::descend</a></div><div class="ttdeci">static auto descend(BumpAlloc&lt;&gt; &amp;, IR::Cache &amp;, llvm::BasicBlock *, llvm::BasicBlock *, llvm::Loop *, TreeResult &amp;) -&gt; std::optional&lt; Map &gt;</div><div class="ttdef"><b>Definition:</b> Cache.hpp:775</div></div>
+<div class="ttc" id="aclasspoly_1_1IR_1_1Predicate_1_1Map_html_a8fccd8417b7ce435fe3f8f94cbd7bef3"><div class="ttname"><a href="classpoly_1_1IR_1_1Predicate_1_1Map.html#a8fccd8417b7ce435fe3f8f94cbd7bef3">poly::IR::Predicate::Map::descend</a></div><div class="ttdeci">static auto descend(Arena&lt;&gt; *, IR::Cache &amp;, llvm::BasicBlock *, llvm::BasicBlock *, llvm::Loop *, TreeResult &amp;) -&gt; std::optional&lt; Map &gt;</div><div class="ttdef"><b>Definition:</b> Cache.hpp:774</div></div>
 <div class="ttc" id="aclasspoly_1_1poly_1_1Loop_html"><div class="ttname"><a href="classpoly_1_1poly_1_1Loop.html">poly::poly::Loop</a></div><div class="ttdef"><b>Definition:</b> Loops.hpp:329</div></div>
-<div class="ttc" id="astructpoly_1_1IR_1_1InstByValue_html"><div class="ttname"><a href="structpoly_1_1IR_1_1InstByValue.html">poly::IR::InstByValue</a></div><div class="ttdef"><b>Definition:</b> Instruction.hpp:282</div></div>
+<div class="ttc" id="astructpoly_1_1IR_1_1InstByValue_html"><div class="ttname"><a href="structpoly_1_1IR_1_1InstByValue.html">poly::IR::InstByValue</a></div><div class="ttdef"><b>Definition:</b> Instruction.hpp:280</div></div>
 <div class="ttc" id="astructpoly_1_1IR_1_1Predicate_1_1Intersection_html"><div class="ttname"><a href="structpoly_1_1IR_1_1Predicate_1_1Intersection.html">poly::IR::Predicate::Intersection</a></div><div class="ttdef"><b>Definition:</b> Predicate.hpp:45</div></div>
 <div class="ttc" id="astructpoly_1_1IR_1_1Predicate_1_1Set_html"><div class="ttname"><a href="structpoly_1_1IR_1_1Predicate_1_1Set.html">poly::IR::Predicate::Set</a></div><div class="ttdef"><b>Definition:</b> Predicate.hpp:199</div></div>
 <div class="ttc" id="astructpoly_1_1IR_1_1TreeResult_html"><div class="ttname"><a href="structpoly_1_1IR_1_1TreeResult.html">poly::IR::TreeResult</a></div><div class="ttdef"><b>Definition:</b> Cache.hpp:46</div></div>

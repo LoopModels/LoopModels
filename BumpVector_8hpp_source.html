@@ -78,7 +78,7 @@ $(function() {
 <div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="comment">// In include/Dicts, as it primarily serves to support amap/aset</span></div>
 <div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160; </div>
 <div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="keyword">namespace </span>poly {</div>
-<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="keyword">using</span> utils::WBumpAlloc, utils::BumpAlloc;</div>
+<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="keyword">using</span> utils::WArena, utils::Arena;</div>
 <div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;} <span class="comment">// namespace poly</span></div>
 <div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160; </div>
 <div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="keyword">namespace </span>poly::math {</div>
@@ -97,25 +97,25 @@ $(function() {
 <div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;  <span class="keyword">using</span> const_iterator = <span class="keyword">const</span> T *;</div>
 <div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;  <span class="keyword">using</span> pointer = T *;</div>
 <div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;  <span class="keyword">using</span> const_pointer = <span class="keyword">const</span> T *;</div>
-<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;  <span class="keyword">using</span> allocator_type = WBumpAlloc&lt;T&gt;;</div>
+<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;  <span class="keyword">using</span> allocator_type = WArena&lt;T&gt;;</div>
 <div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160; </div>
 <div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;  [[no_unique_address]] T *mem;</div>
 <div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;  [[no_unique_address]] <span class="keywordtype">unsigned</span> Size;</div>
 <div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;  [[no_unique_address]] <span class="keywordtype">unsigned</span> Capacity;</div>
-<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;  [[no_unique_address]] NotNull&lt;BumpAlloc&lt;&gt;&gt; Alloc;</div>
+<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;  [[no_unique_address]] NotNull&lt;Arena&lt;&gt;&gt; Alloc;</div>
 <div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160; </div>
-<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;  constexpr <a class="code" href="structpoly_1_1math_1_1BumpPtrVector.html">BumpPtrVector</a>(WBumpAlloc&lt;T&gt; a)</div>
+<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;  constexpr <a class="code" href="structpoly_1_1math_1_1BumpPtrVector.html">BumpPtrVector</a>(WArena&lt;T&gt; a)</div>
 <div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;    : mem(a.allocate(InitialCapacity)), Size(0), Capacity(InitialCapacity),</div>
 <div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;      Alloc(a.get_allocator()) {}</div>
-<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;  constexpr <a class="code" href="structpoly_1_1math_1_1BumpPtrVector.html">BumpPtrVector</a>(BumpAlloc&lt;&gt; &amp;a) : <a class="code" href="structpoly_1_1math_1_1BumpPtrVector.html">BumpPtrVector</a>(WBumpAlloc&lt;T&gt;(a)) {}</div>
-<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;  constexpr <a class="code" href="structpoly_1_1math_1_1BumpPtrVector.html">BumpPtrVector</a>(<span class="keyword">const</span> <a class="code" href="structpoly_1_1math_1_1BumpPtrVector.html">BumpPtrVector&lt;T&gt;</a> &amp;x, WBumpAlloc&lt;T&gt; alloc)</div>
+<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;  constexpr <a class="code" href="structpoly_1_1math_1_1BumpPtrVector.html">BumpPtrVector</a>(Arena&lt;&gt; *a) : <a class="code" href="structpoly_1_1math_1_1BumpPtrVector.html">BumpPtrVector</a>(WArena&lt;T&gt;(a)) {}</div>
+<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;  constexpr <a class="code" href="structpoly_1_1math_1_1BumpPtrVector.html">BumpPtrVector</a>(<span class="keyword">const</span> <a class="code" href="structpoly_1_1math_1_1BumpPtrVector.html">BumpPtrVector&lt;T&gt;</a> &amp;x, WArena&lt;T&gt; alloc)</div>
 <div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;    : mem(alloc.allocate(x.size())), Size(x.size()), Capacity(x.size()),</div>
 <div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;      Alloc(alloc.get_allocator()) {</div>
 <div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;    *<span class="keyword">this</span> &lt;&lt; x;</div>
 <div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;  }</div>
 <div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;  constexpr <a class="code" href="structpoly_1_1math_1_1BumpPtrVector.html">BumpPtrVector</a>(<span class="keyword">const</span> <a class="code" href="structpoly_1_1math_1_1BumpPtrVector.html">BumpPtrVector&lt;T&gt;</a> &amp;x)</div>
 <div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;    : <a class="code" href="structpoly_1_1math_1_1BumpPtrVector.html">BumpPtrVector</a>(x, x.get_allocator()) {}</div>
-<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;  constexpr <a class="code" href="structpoly_1_1math_1_1BumpPtrVector.html">BumpPtrVector</a>(<a class="code" href="structpoly_1_1math_1_1BumpPtrVector.html">BumpPtrVector</a> &amp;&amp;x, WBumpAlloc&lt;T&gt; alloc)</div>
+<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;  constexpr <a class="code" href="structpoly_1_1math_1_1BumpPtrVector.html">BumpPtrVector</a>(<a class="code" href="structpoly_1_1math_1_1BumpPtrVector.html">BumpPtrVector</a> &amp;&amp;x, WArena&lt;T&gt; alloc)</div>
 <div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;    : Alloc{alloc.get_allocator()} {</div>
 <div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;    mem = x.mem;</div>
 <div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;    Size = x.Size;</div>
@@ -319,8 +319,8 @@ $(function() {
 <div class="line"><a name="l00248"></a><span class="lineno">  248</span>&#160;  constexpr <span class="keywordtype">void</span> extendOrAssertSize(<span class="keywordtype">size_t</span> N) {</div>
 <div class="line"><a name="l00249"></a><span class="lineno">  249</span>&#160;    <span class="keywordflow">if</span> (N != Size) resizeForOverwrite(N);</div>
 <div class="line"><a name="l00250"></a><span class="lineno">  250</span>&#160;  }</div>
-<div class="line"><a name="l00251"></a><span class="lineno">  251</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> get_allocator() <span class="keyword">const</span> -&gt; WBumpAlloc&lt;T&gt; {</div>
-<div class="line"><a name="l00252"></a><span class="lineno">  252</span>&#160;    <span class="keywordflow">return</span> WBumpAlloc&lt;T&gt;{Alloc};</div>
+<div class="line"><a name="l00251"></a><span class="lineno">  251</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> get_allocator() <span class="keyword">const</span> -&gt; WArena&lt;T&gt; {</div>
+<div class="line"><a name="l00252"></a><span class="lineno">  252</span>&#160;    <span class="keywordflow">return</span> WArena&lt;T&gt;{Alloc};</div>
 <div class="line"><a name="l00253"></a><span class="lineno">  253</span>&#160;  }</div>
 <div class="line"><a name="l00254"></a><span class="lineno">  254</span>&#160;  constexpr <span class="keyword">auto</span> push_back(T x) -&gt; T &amp; {</div>
 <div class="line"><a name="l00255"></a><span class="lineno">  255</span>&#160;    <span class="keywordtype">size_t</span> offset = Size++;</div>

@@ -84,9 +84,9 @@ Classes</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a1b2b1e261f55846e495ea1bec35655e5"><td class="memItemLeft" align="right" valign="top"><a id="a1b2b1e261f55846e495ea1bec35655e5"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getInitAddr</b> (BumpAlloc&lt;&gt; &amp;alloc) -&gt; InstructionBlock &amp;</td></tr>
-<tr class="separator:a1b2b1e261f55846e495ea1bec35655e5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a42c291241e54b1c2c9700fc455342e8b"><td class="memItemLeft" align="right" valign="top"><a id="a42c291241e54b1c2c9700fc455342e8b"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getInitAddr</b> (Arena&lt;&gt; *alloc) -&gt; InstructionBlock &amp;</td></tr>
+<tr class="separator:a42c291241e54b1c2c9700fc455342e8b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a70be9f3d42199239a97a49ee4d2fc86b"><td class="memItemLeft" align="right" valign="top"><a id="a70be9f3d42199239a97a49ee4d2fc86b"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getDepth</b> () const -&gt; unsigned</td></tr>
 <tr class="separator:a70be9f3d42199239a97a49ee4d2fc86b"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -96,18 +96,18 @@ constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>LoopTreeSchedule
 <tr class="memitem:aaeede3f1684477948f7db642f7be8d5e"><td class="memItemLeft" align="right" valign="top"><a id="aaeede3f1684477948f7db642f7be8d5e"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>printDotEdges</b> (llvm::raw_ostream &amp;out, llvm::ArrayRef&lt; std::string &gt; addrNames)</td></tr>
 <tr class="separator:aaeede3f1684477948f7db642f7be8d5e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a56aa3bf3103b8bdb475d7ea7cd871f63"><td class="memItemLeft" align="right" valign="top"><a id="a56aa3bf3103b8bdb475d7ea7cd871f63"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>printSubDotFile</b> (BumpAlloc&lt;&gt; &amp;alloc, llvm::raw_ostream &amp;out, map&lt; <a class="el" href="classCostModeling_1_1LoopTreeSchedule.html">LoopTreeSchedule</a> *, std::string &gt; &amp;names, llvm::SmallVectorImpl&lt; std::string &gt; &amp;addrNames, unsigned addrIndOffset, poly::Loop *lret) -&gt; poly::Loop *</td></tr>
-<tr class="separator:a56aa3bf3103b8bdb475d7ea7cd871f63"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a55dddcb5b2b6c04629e3e73b35df5d1a"><td class="memItemLeft" align="right" valign="top"><a id="a55dddcb5b2b6c04629e3e73b35df5d1a"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>printDotFile</b> (BumpAlloc&lt;&gt; &amp;alloc, llvm::raw_ostream &amp;out)</td></tr>
-<tr class="separator:a55dddcb5b2b6c04629e3e73b35df5d1a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae13b71abed80f526386c7975a67bf473"><td class="memItemLeft" align="right" valign="top"><a id="ae13b71abed80f526386c7975a67bf473"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>printSubDotFile</b> (Arena&lt;&gt; *alloc, llvm::raw_ostream &amp;out, map&lt; <a class="el" href="classCostModeling_1_1LoopTreeSchedule.html">LoopTreeSchedule</a> *, std::string &gt; &amp;names, llvm::SmallVectorImpl&lt; std::string &gt; &amp;addrNames, unsigned addrIndOffset, poly::Loop *lret) -&gt; poly::Loop *</td></tr>
+<tr class="separator:ae13b71abed80f526386c7975a67bf473"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad9f4994c496a6d3c058bf52254cb328a"><td class="memItemLeft" align="right" valign="top"><a id="ad9f4994c496a6d3c058bf52254cb328a"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>printDotFile</b> (Arena&lt;&gt; *alloc, llvm::raw_ostream &amp;out)</td></tr>
+<tr class="separator:ad9f4994c496a6d3c058bf52254cb328a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
-<tr class="memitem:ac059c1858e45fea726a85c11be3f5626"><td class="memItemLeft" align="right" valign="top"><a id="ac059c1858e45fea726a85c11be3f5626"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>init</b> (BumpAlloc&lt;&gt; &amp;alloc, lp::LoopBlock &amp;LB) -&gt; <a class="el" href="classCostModeling_1_1LoopTreeSchedule.html">LoopTreeSchedule</a> *</td></tr>
-<tr class="separator:ac059c1858e45fea726a85c11be3f5626"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abce0fa3247c83ba4e5b13bd21480e2f7"><td class="memItemLeft" align="right" valign="top"><a id="abce0fa3247c83ba4e5b13bd21480e2f7"></a>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>init</b> (Arena&lt;&gt; *alloc, lp::LoopBlock &amp;LB) -&gt; <a class="el" href="classCostModeling_1_1LoopTreeSchedule.html">LoopTreeSchedule</a> *</td></tr>
+<tr class="separator:abce0fa3247c83ba4e5b13bd21480e2f7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>How should the IR look? We could have a flat IR, which may be useful for things like loop placement via SCC Alternatively, we could have a much more structured IR, where we have the loop blocks and loops. Then how do we do SCC? Add dummies? Or, can loops exist as IR components? What do we need to do with the IR?</p><ol type="1">

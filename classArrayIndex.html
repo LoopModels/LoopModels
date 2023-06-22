@@ -165,14 +165,14 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator==<
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
-<tr class="memitem:ae9319d705cd31d0eba7e664b9d585452"><td class="memItemLeft" align="right" valign="top"><a id="ae9319d705cd31d0eba7e664b9d585452"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classArrayIndex.html#ae9319d705cd31d0eba7e664b9d585452">construct</a> (BumpAlloc&lt;&gt; &amp;alloc, const llvm::SCEVUnknown *arrayPointer, poly::Loop &amp;loopRef, llvm::Instruction *user, PtrVector&lt; unsigned &gt; o) -&gt; NotNull&lt; <a class="el" href="classArrayIndex.html">ArrayIndex</a> &gt;</td></tr>
-<tr class="memdesc:ae9319d705cd31d0eba7e664b9d585452"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor for 0 dimensional memory access. <br /></td></tr>
-<tr class="separator:ae9319d705cd31d0eba7e664b9d585452"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1bafa56f0d3676cf414dc10aa0ba279a"><td class="memItemLeft" align="right" valign="top"><a id="a1bafa56f0d3676cf414dc10aa0ba279a"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classArrayIndex.html#a1bafa56f0d3676cf414dc10aa0ba279a">construct</a> (BumpAlloc&lt;&gt; &amp;alloc, const llvm::SCEVUnknown *arrayPtr, poly::Loop &amp;loopRef, llvm::Instruction *user, PtrMatrix&lt; int64_t &gt; indMat, std::array&lt; llvm::SmallVector&lt; const llvm::SCEV *, 3 &gt;, 2 &gt; szOff, PtrVector&lt; int64_t &gt; coffsets, int64_t *offsets, PtrVector&lt; unsigned &gt; o) -&gt; NotNull&lt; <a class="el" href="classArrayIndex.html">ArrayIndex</a> &gt;</td></tr>
-<tr class="memdesc:a1bafa56f0d3676cf414dc10aa0ba279a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor for regular indexing. <br /></td></tr>
-<tr class="separator:a1bafa56f0d3676cf414dc10aa0ba279a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3a3af1c4ef620e9fc91712776c027645"><td class="memItemLeft" align="right" valign="top"><a id="a3a3af1c4ef620e9fc91712776c027645"></a>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classArrayIndex.html#a3a3af1c4ef620e9fc91712776c027645">construct</a> (Arena&lt;&gt; *alloc, const llvm::SCEVUnknown *arrayPointer, poly::Loop &amp;loopRef, llvm::Instruction *user, PtrVector&lt; unsigned &gt; o) -&gt; NotNull&lt; <a class="el" href="classArrayIndex.html">ArrayIndex</a> &gt;</td></tr>
+<tr class="memdesc:a3a3af1c4ef620e9fc91712776c027645"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor for 0 dimensional memory access. <br /></td></tr>
+<tr class="separator:a3a3af1c4ef620e9fc91712776c027645"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a67710722122a07286c2c7f7b36fb3803"><td class="memItemLeft" align="right" valign="top"><a id="a67710722122a07286c2c7f7b36fb3803"></a>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classArrayIndex.html#a67710722122a07286c2c7f7b36fb3803">construct</a> (Arena&lt;&gt; *alloc, const llvm::SCEVUnknown *arrayPtr, poly::Loop &amp;loopRef, llvm::Instruction *user, PtrMatrix&lt; int64_t &gt; indMat, std::array&lt; llvm::SmallVector&lt; const llvm::SCEV *, 3 &gt;, 2 &gt; szOff, PtrVector&lt; int64_t &gt; coffsets, int64_t *offsets, PtrVector&lt; unsigned &gt; o) -&gt; NotNull&lt; <a class="el" href="classArrayIndex.html">ArrayIndex</a> &gt;</td></tr>
+<tr class="memdesc:a67710722122a07286c2c7f7b36fb3803"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor for regular indexing. <br /></td></tr>
+<tr class="separator:a67710722122a07286c2c7f7b36fb3803"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac22530e45b871b8c7e86b9ade78b25bd"><td class="memItemLeft" align="right" valign="top"><a id="ac22530e45b871b8c7e86b9ade78b25bd"></a>
 static auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classArrayIndex.html#ac22530e45b871b8c7e86b9ade78b25bd">typeAlignment</a> (const llvm::SCEV *S) -&gt; llvm::Align</td></tr>
 <tr class="memdesc:ac22530e45b871b8c7e86b9ade78b25bd"><td class="mdescLeft">&#160;</td><td class="mdescRight">initialize alignment from an elSize SCEV. <br /></td></tr>

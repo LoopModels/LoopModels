@@ -1,7 +1,7 @@
 var searchData=
 [
-  ['union_117',['Union',['../structpoly_1_1IR_1_1Predicate_1_1Set.html#ac9bf694bc9d657031b4181877c0996ec',1,'poly::IR::Predicate::Set::Union(BumpAlloc&lt;&gt; &amp;alloc, Intersection other) -&gt; Set &amp;'],['../structpoly_1_1IR_1_1Predicate_1_1Set.html#ae7f2a4a9b16b6dbc2775e894f408dd7f',1,'poly::IR::Predicate::Set::Union(BumpAlloc&lt;&gt; &amp;alloc, const Set &amp;other) -&gt; Set &amp;']]],
-  ['updateoffsmat_118',['updateOffsMat',['../classpoly_1_1IR_1_1Addr.html#aa5face1561e559740fbda46c70c1d514',1,'poly::IR::Addr']]],
+  ['union_117',['Union',['../structpoly_1_1IR_1_1Predicate_1_1Set.html#a9dbe51049dcc1443411c76c62075c249',1,'poly::IR::Predicate::Set::Union(Arena&lt;&gt; *alloc, Intersection other) -&gt; Set &amp;'],['../structpoly_1_1IR_1_1Predicate_1_1Set.html#a784ee9fcde87f530ce83c333c59c8869',1,'poly::IR::Predicate::Set::Union(Arena&lt;&gt; *alloc, const Set &amp;other) -&gt; Set &amp;']]],
+  ['updateoffsmat_118',['updateOffsMat',['../classpoly_1_1IR_1_1Addr.html#ab2b8c81fb46be4bbc76a530f27549f4a',1,'poly::IR::Addr']]],
   ['urand_119',['URand',['../structURand.html',1,'']]],
   ['urand_3c_20double_20_3e_120',['URand&lt; double &gt;',['../structURand_3_01double_01_4.html',1,'']]]
 ];

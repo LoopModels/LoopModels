@@ -99,9 +99,9 @@ constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>truncNumEqC
 <tr class="memitem:adfe7df22a22065af085c4c296318fa26"><td class="memItemLeft" align="right" valign="top"><a id="adfe7df22a22065af085c4c296318fa26"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>initializeComparator</b> (std::allocator&lt; int64_t &gt; alloc={}) -&gt; <a class="el" href="structpoly_1_1comparator_1_1LinearSymbolicComparator.html">comparator::LinearSymbolicComparator</a></td></tr>
 <tr class="separator:adfe7df22a22065af085c4c296318fa26"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a97fc02ec08266bdba818f6bc508734d0"><td class="memItemLeft" align="right" valign="top"><a id="a97fc02ec08266bdba818f6bc508734d0"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>initializeComparator</b> (BumpAlloc&lt;&gt; &amp;alloc) -&gt; <a class="el" href="structpoly_1_1comparator_1_1PtrSymbolicComparator.html">comparator::PtrSymbolicComparator</a></td></tr>
-<tr class="separator:a97fc02ec08266bdba818f6bc508734d0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac40588bf35ee25df85d0259b15bdf278"><td class="memItemLeft" align="right" valign="top"><a id="ac40588bf35ee25df85d0259b15bdf278"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>initializeComparator</b> (Arena&lt;&gt; *alloc) -&gt; <a class="el" href="structpoly_1_1comparator_1_1PtrSymbolicComparator.html">comparator::PtrSymbolicComparator</a></td></tr>
+<tr class="separator:ac40588bf35ee25df85d0259b15bdf278"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1fc507e9ece84362c1433a733cce5db5"><td class="memItemLeft" align="right" valign="top"><a id="a1fc507e9ece84362c1433a733cce5db5"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>calcIsEmpty</b> () -&gt; bool</td></tr>
 <tr class="separator:a1fc507e9ece84362c1433a733cce5db5"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -123,19 +123,19 @@ constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>decrementNu
 <tr class="memitem:a68d4ef6d30b59c0edd374985cb07ba96"><td class="memItemLeft" align="right" valign="top"><a id="a68d4ef6d30b59c0edd374985cb07ba96"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>isNonNegative</b> () const -&gt; bool</td></tr>
 <tr class="separator:a68d4ef6d30b59c0edd374985cb07ba96"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6412dac1c9b1002060a7a378aa02f213"><td class="memItemLeft" align="right" valign="top"><a id="a6412dac1c9b1002060a7a378aa02f213"></a>
-constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>pruneBounds</b> (BumpAlloc&lt;&gt; &amp;alloc)</td></tr>
-<tr class="separator:a6412dac1c9b1002060a7a378aa02f213"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aca1cac0d7b7c66c063bcfef4ced61143"><td class="memItemLeft" align="right" valign="top"><a id="aca1cac0d7b7c66c063bcfef4ced61143"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>pruneBounds</b> (Arena&lt;&gt; alloc)</td></tr>
+<tr class="separator:aca1cac0d7b7c66c063bcfef4ced61143"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adf88aab6c90c50fe13b50b524705fb02"><td class="memItemLeft" align="right" valign="top"><a id="adf88aab6c90c50fe13b50b524705fb02"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>pruneBounds</b> ()</td></tr>
 <tr class="separator:adf88aab6c90c50fe13b50b524705fb02"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6d0daf774d43bc2c641d8cabed6dcef9"><td class="memItemLeft" align="right" valign="top"><a id="a6d0daf774d43bc2c641d8cabed6dcef9"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>eraseConstraint</b> (ptrdiff_t constraint)</td></tr>
 <tr class="separator:a6d0daf774d43bc2c641d8cabed6dcef9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aff44b8917b6510270de3b97383d74677"><td class="memTemplParams" colspan="2"><a id="aff44b8917b6510270de3b97383d74677"></a>
+<tr class="memitem:a60a979aaf0284515c92f501dd4990ac7"><td class="memTemplParams" colspan="2"><a id="a60a979aaf0284515c92f501dd4990ac7"></a>
 template&lt;bool CheckEmpty&gt; </td></tr>
-<tr class="memitem:aff44b8917b6510270de3b97383d74677"><td class="memTemplItemLeft" align="right" valign="top">constexpr void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>pruneBoundsCore</b> (BumpAlloc&lt;&gt; &amp;alloc)</td></tr>
-<tr class="separator:aff44b8917b6510270de3b97383d74677"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a60a979aaf0284515c92f501dd4990ac7"><td class="memTemplItemLeft" align="right" valign="top">constexpr void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>pruneBoundsCore</b> (Arena&lt;&gt; *alloc)</td></tr>
+<tr class="separator:a60a979aaf0284515c92f501dd4990ac7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1d0561dd5512a54c6e1c2efc0b8a0e71"><td class="memItemLeft" align="right" valign="top"><a id="a1d0561dd5512a54c6e1c2efc0b8a0e71"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>pruneBoundsUnchecked</b> (math::Alloc&lt; int64_t &gt; auto &amp;alloc)</td></tr>
 <tr class="separator:a1d0561dd5512a54c6e1c2efc0b8a0e71"><td class="memSeparator" colspan="2">&#160;</td></tr>

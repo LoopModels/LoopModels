@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['getallocator_217',['getAllocator',['../classpoly_1_1IR_1_1Cache.html#ae839d7034103f2fd0d9ebd3d802fa83d',1,'poly::IR::Cache']]],
+  ['getallocator_217',['getAllocator',['../classpoly_1_1IR_1_1Cache.html#a6fc976093ca556ac42bc46e2c8e372f0',1,'poly::IR::Cache']]],
   ['getcost_218',['getCost',['../classpoly_1_1IR_1_1Compute.html#a3ffde0af9933fbd4793d549830a0e8a2',1,'poly::IR::Compute']]],
   ['getfusionomega_219',['getFusionOmega',['../classArrayIndex.html#ac50bf625a59c9a19bd0bcf14c6d0d980',1,'ArrayIndex::getFusionOmega() -&gt; MutPtrVector&lt; int64_t &gt;'],['../classArrayIndex.html#a0e86ce8a1a3a5cb7a08e684419afe8d8',1,'ArrayIndex::getFusionOmega() const -&gt; PtrVector&lt; int64_t &gt;']]],
   ['getinindmat_220',['getInIndMat',['../classpoly_1_1poly_1_1Dependence.html#a0abb755d8e7a698e081db7292e11e44b',1,'poly::poly::Dependence']]],

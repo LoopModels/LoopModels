@@ -151,12 +151,12 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>outputIsStore</b> () 
 auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1poly_1_1Dependence.html#a0abb755d8e7a698e081db7292e11e44b">getInIndMat</a> () const -&gt; DensePtrMatrix&lt; int64_t &gt;</td></tr>
 <tr class="memdesc:a0abb755d8e7a698e081db7292e11e44b"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classpoly_1_1poly_1_1Dependence.html#a0abb755d8e7a698e081db7292e11e44b" title="getInIndMat() -&gt; getInNumLoops() x arrayDim()">getInIndMat()</a> -&gt; getInNumLoops() x arrayDim() <br /></td></tr>
 <tr class="separator:a0abb755d8e7a698e081db7292e11e44b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2bdc5dd6705a21a7ad97ec784c6d9840"><td class="memItemLeft" align="right" valign="top"><a id="a2bdc5dd6705a21a7ad97ec784c6d9840"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>checkEmptySat</b> (BumpAlloc&lt;&gt; &amp;alloc, NotNull&lt; const <a class="el" href="classpoly_1_1poly_1_1Loop.html">poly::Loop</a> &gt; inLoop, const int64_t *inOff, DensePtrMatrix&lt; int64_t &gt; inPhi, NotNull&lt; const <a class="el" href="classpoly_1_1poly_1_1Loop.html">poly::Loop</a> &gt; outLoop, const int64_t *outOff, DensePtrMatrix&lt; int64_t &gt; outPhi) -&gt; bool</td></tr>
-<tr class="separator:a2bdc5dd6705a21a7ad97ec784c6d9840"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a03e9e814fcf798a0ebb09045075df75f"><td class="memItemLeft" align="right" valign="top"><a id="a03e9e814fcf798a0ebb09045075df75f"></a>
-constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>copySimplices</b> (BumpAlloc&lt;&gt; &amp;alloc)</td></tr>
-<tr class="separator:a03e9e814fcf798a0ebb09045075df75f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a60c6dc7854059f1b64bd3dbbc236ebd7"><td class="memItemLeft" align="right" valign="top"><a id="a60c6dc7854059f1b64bd3dbbc236ebd7"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>checkEmptySat</b> (Arena&lt;&gt; *alloc, NotNull&lt; const <a class="el" href="classpoly_1_1poly_1_1Loop.html">poly::Loop</a> &gt; inLoop, const int64_t *inOff, DensePtrMatrix&lt; int64_t &gt; inPhi, NotNull&lt; const <a class="el" href="classpoly_1_1poly_1_1Loop.html">poly::Loop</a> &gt; outLoop, const int64_t *outOff, DensePtrMatrix&lt; int64_t &gt; outPhi) -&gt; bool</td></tr>
+<tr class="separator:a60c6dc7854059f1b64bd3dbbc236ebd7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad2440d820b7aa36409710cd707e9a4e9"><td class="memItemLeft" align="right" valign="top"><a id="ad2440d820b7aa36409710cd707e9a4e9"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>copySimplices</b> (Arena&lt;&gt; *alloc)</td></tr>
+<tr class="separator:ad2440d820b7aa36409710cd707e9a4e9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab2caff477ed0560c811298fe432010ec"><td class="memItemLeft" align="right" valign="top"><a id="ab2caff477ed0560c811298fe432010ec"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1poly_1_1Dependence.html#ab2caff477ed0560c811298fe432010ec">getOutIndMat</a> () const -&gt; PtrMatrix&lt; int64_t &gt;</td></tr>
 <tr class="memdesc:ab2caff477ed0560c811298fe432010ec"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classpoly_1_1poly_1_1Dependence.html#ab2caff477ed0560c811298fe432010ec" title="getOutIndMat() -&gt; getOutNumLoops() x arrayDim()">getOutIndMat()</a> -&gt; getOutNumLoops() x arrayDim() <br /></td></tr>
@@ -260,18 +260,18 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>splitSatisfaction</b>
 <tr class="memitem:a7f71ca3cf426eb9aed02db7a8f2f2844"><td class="memItemLeft" align="right" valign="top"><a id="a7f71ca3cf426eb9aed02db7a8f2f2844"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>splitBounding</b> () const -&gt; std::tuple&lt; math::StridedVector&lt; int64_t &gt;, PtrMatrix&lt; int64_t &gt;, PtrMatrix&lt; int64_t &gt;, PtrMatrix&lt; int64_t &gt;, PtrMatrix&lt; int64_t &gt;, PtrMatrix&lt; int64_t &gt;&gt;</td></tr>
 <tr class="separator:a7f71ca3cf426eb9aed02db7a8f2f2844"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a90ed5c2e4df9f8d493f6a41dc0b9d371"><td class="memItemLeft" align="right" valign="top"><a id="a90ed5c2e4df9f8d493f6a41dc0b9d371"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>isSatisfied</b> (BumpAlloc&lt;&gt; &amp;alloc, NotNull&lt; const <a class="el" href="structpoly_1_1poly_1_1AffineSchedule.html">AffineSchedule</a> &gt; schIn, NotNull&lt; const <a class="el" href="structpoly_1_1poly_1_1AffineSchedule.html">AffineSchedule</a> &gt; schOut) const -&gt; bool</td></tr>
-<tr class="separator:a90ed5c2e4df9f8d493f6a41dc0b9d371"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4b1373df810fe3511853cb07b88d0f10"><td class="memItemLeft" align="right" valign="top"><a id="a4b1373df810fe3511853cb07b88d0f10"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>isSatisfied</b> (BumpAlloc&lt;&gt; &amp;alloc, PtrVector&lt; unsigned &gt; inFusOmega, PtrVector&lt; unsigned &gt; outFusOmega) const -&gt; bool</td></tr>
-<tr class="separator:a4b1373df810fe3511853cb07b88d0f10"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aae3a39a96ecc2fd76d86b5c939ad6619"><td class="memItemLeft" align="right" valign="top"><a id="aae3a39a96ecc2fd76d86b5c939ad6619"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>isSatisfied</b> (BumpAlloc&lt;&gt; &amp;alloc, NotNull&lt; const <a class="el" href="structpoly_1_1poly_1_1AffineSchedule.html">AffineSchedule</a> &gt; sx, NotNull&lt; const <a class="el" href="structpoly_1_1poly_1_1AffineSchedule.html">AffineSchedule</a> &gt; sy, size_t d) const -&gt; bool</td></tr>
-<tr class="separator:aae3a39a96ecc2fd76d86b5c939ad6619"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac19678e5ccfdd9200b8a38f1ce8be2ef"><td class="memItemLeft" align="right" valign="top"><a id="ac19678e5ccfdd9200b8a38f1ce8be2ef"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>isSatisfied</b> (BumpAlloc&lt;&gt; &amp;alloc, size_t d) const -&gt; bool</td></tr>
-<tr class="separator:ac19678e5ccfdd9200b8a38f1ce8be2ef"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad6ba3b950f9bcb16adea39d7c66415c8"><td class="memItemLeft" align="right" valign="top"><a id="ad6ba3b950f9bcb16adea39d7c66415c8"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>isSatisfied</b> (Arena&lt;&gt; alloc, NotNull&lt; const <a class="el" href="structpoly_1_1poly_1_1AffineSchedule.html">AffineSchedule</a> &gt; schIn, NotNull&lt; const <a class="el" href="structpoly_1_1poly_1_1AffineSchedule.html">AffineSchedule</a> &gt; schOut) const -&gt; bool</td></tr>
+<tr class="separator:ad6ba3b950f9bcb16adea39d7c66415c8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abd79a340cf05fb0985a7dc6e92130d3c"><td class="memItemLeft" align="right" valign="top"><a id="abd79a340cf05fb0985a7dc6e92130d3c"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>isSatisfied</b> (Arena&lt;&gt; alloc, PtrVector&lt; unsigned &gt; inFusOmega, PtrVector&lt; unsigned &gt; outFusOmega) const -&gt; bool</td></tr>
+<tr class="separator:abd79a340cf05fb0985a7dc6e92130d3c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a69b3abf2df9c8d50cc27e39e36037696"><td class="memItemLeft" align="right" valign="top"><a id="a69b3abf2df9c8d50cc27e39e36037696"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>isSatisfied</b> (Arena&lt;&gt; alloc, NotNull&lt; const <a class="el" href="structpoly_1_1poly_1_1AffineSchedule.html">AffineSchedule</a> &gt; sx, NotNull&lt; const <a class="el" href="structpoly_1_1poly_1_1AffineSchedule.html">AffineSchedule</a> &gt; sy, size_t d) const -&gt; bool</td></tr>
+<tr class="separator:a69b3abf2df9c8d50cc27e39e36037696"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af2b5ccda5d7bab2bdb61a01b75360379"><td class="memItemLeft" align="right" valign="top"><a id="af2b5ccda5d7bab2bdb61a01b75360379"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>isSatisfied</b> (Arena&lt;&gt; alloc, size_t d) const -&gt; bool</td></tr>
+<tr class="separator:af2b5ccda5d7bab2bdb61a01b75360379"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0ab4a4cffc347cc61048cab40760093f"><td class="memItemLeft" align="right" valign="top"><a id="a0ab4a4cffc347cc61048cab40760093f"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>replaceInput</b> (NotNull&lt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> &gt; newIn) -&gt; <a class="el" href="classpoly_1_1poly_1_1Dependence.html">Dependence</a></td></tr>
 <tr class="separator:a0ab4a4cffc347cc61048cab40760093f"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -284,18 +284,18 @@ Static Public Member Functions</h2></td></tr>
 <tr class="memitem:a1adfbae6f0d0721f4b957031cdf79db0"><td class="memItemLeft" align="right" valign="top"><a id="a1adfbae6f0d0721f4b957031cdf79db0"></a>
 static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumOmegaCoefficients</b> () -&gt; unsigned</td></tr>
 <tr class="separator:a1adfbae6f0d0721f4b957031cdf79db0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a881021c65f662a7ed63fbaed0320056d"><td class="memItemLeft" align="right" valign="top"><a id="a881021c65f662a7ed63fbaed0320056d"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>checkDirection</b> (BumpAlloc&lt;&gt; &amp;alloc, const std::array&lt; NotNull&lt; math::Simplex &gt;, 2 &gt; &amp;p, NotNull&lt; const <a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> &gt; x, NotNull&lt; const <a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> &gt; y, NotNull&lt; const <a class="el" href="structpoly_1_1poly_1_1AffineSchedule.html">AffineSchedule</a> &gt; xSchedule, NotNull&lt; const <a class="el" href="structpoly_1_1poly_1_1AffineSchedule.html">AffineSchedule</a> &gt; ySchedule, unsigned numLambda, Col nonTimeDim) -&gt; bool</td></tr>
-<tr class="separator:a881021c65f662a7ed63fbaed0320056d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a149d944e8c3213d0e4cb38a1984bac74"><td class="memItemLeft" align="right" valign="top"><a id="a149d944e8c3213d0e4cb38a1984bac74"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>checkDirection</b> (BumpAlloc&lt;&gt; &amp;alloc, const std::array&lt; NotNull&lt; math::Simplex &gt;, 2 &gt; &amp;p, NotNull&lt; const <a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> &gt; x, NotNull&lt; const <a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> &gt; y, unsigned numLambda, Col nonTimeDim) -&gt; bool</td></tr>
-<tr class="separator:a149d944e8c3213d0e4cb38a1984bac74"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a51417b25217148f917086dfd5858dfe3"><td class="memItemLeft" align="right" valign="top"><a id="a51417b25217148f917086dfd5858dfe3"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>check</b> (BumpAlloc&lt;&gt; &amp;alloc, NotNull&lt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> &gt; x, NotNull&lt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> &gt; y) -&gt; <a class="el" href="classpoly_1_1poly_1_1Dependence.html">Dependence</a> *</td></tr>
-<tr class="separator:a51417b25217148f917086dfd5858dfe3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac0f6f39eee87abdaf9b725da058f57bf"><td class="memItemLeft" align="right" valign="top"><a id="ac0f6f39eee87abdaf9b725da058f57bf"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>reload</b> (BumpAlloc&lt;&gt; &amp;alloc, NotNull&lt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> &gt; store) -&gt; std::pair&lt; NotNull&lt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> &gt;, <a class="el" href="classpoly_1_1poly_1_1Dependence.html">Dependence</a> * &gt;</td></tr>
-<tr class="separator:ac0f6f39eee87abdaf9b725da058f57bf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aae69ebac6044d13733534ba41e0fe242"><td class="memItemLeft" align="right" valign="top"><a id="aae69ebac6044d13733534ba41e0fe242"></a>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>checkDirection</b> (Arena&lt;&gt; alloc, const std::array&lt; NotNull&lt; math::Simplex &gt;, 2 &gt; &amp;p, NotNull&lt; const <a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> &gt; x, NotNull&lt; const <a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> &gt; y, NotNull&lt; const <a class="el" href="structpoly_1_1poly_1_1AffineSchedule.html">AffineSchedule</a> &gt; xSchedule, NotNull&lt; const <a class="el" href="structpoly_1_1poly_1_1AffineSchedule.html">AffineSchedule</a> &gt; ySchedule, unsigned numLambda, Col nonTimeDim) -&gt; bool</td></tr>
+<tr class="separator:aae69ebac6044d13733534ba41e0fe242"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac70c3a595a871148b89be47b93a07c97"><td class="memItemLeft" align="right" valign="top"><a id="ac70c3a595a871148b89be47b93a07c97"></a>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>checkDirection</b> (Arena&lt;&gt; alloc, const std::array&lt; NotNull&lt; math::Simplex &gt;, 2 &gt; &amp;p, NotNull&lt; const <a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> &gt; x, NotNull&lt; const <a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> &gt; y, unsigned numLambda, Col nonTimeDim) -&gt; bool</td></tr>
+<tr class="separator:ac70c3a595a871148b89be47b93a07c97"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a363ac3b35516937f00e1a7e5d989b023"><td class="memItemLeft" align="right" valign="top"><a id="a363ac3b35516937f00e1a7e5d989b023"></a>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>check</b> (Arena&lt;&gt; *alloc, NotNull&lt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> &gt; x, NotNull&lt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> &gt; y) -&gt; <a class="el" href="classpoly_1_1poly_1_1Dependence.html">Dependence</a> *</td></tr>
+<tr class="separator:a363ac3b35516937f00e1a7e5d989b023"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a27e556722bae54b301fa4b08218a774b"><td class="memItemLeft" align="right" valign="top"><a id="a27e556722bae54b301fa4b08218a774b"></a>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>reload</b> (Arena&lt;&gt; *alloc, NotNull&lt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> &gt; store) -&gt; std::pair&lt; NotNull&lt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> &gt;, <a class="el" href="classpoly_1_1poly_1_1Dependence.html">Dependence</a> * &gt;</td></tr>
+<tr class="separator:a27e556722bae54b301fa4b08218a774b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="friends"></a>
 Friends</h2></td></tr>

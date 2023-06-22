@@ -101,9 +101,9 @@ constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>forEachInpu
 <tr class="separator:a2c1d5a86bff9e47ba4fb4781d0be827e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a26d3b32498e5ea5373a423a9bb463477"><td class="memItemLeft" align="right" valign="top">constexpr void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1IR_1_1Addr.html#a26d3b32498e5ea5373a423a9bb463477">setFusionOmega</a> (MutPtrVector&lt; int &gt; o)</td></tr>
 <tr class="separator:a26d3b32498e5ea5373a423a9bb463477"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9c0a8f44593535911e10651a60320a7f"><td class="memItemLeft" align="right" valign="top"><a id="a9c0a8f44593535911e10651a60320a7f"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>reload</b> (BumpAlloc&lt;&gt; &amp;alloc) -&gt; NotNull&lt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">Addr</a> &gt;</td></tr>
-<tr class="separator:a9c0a8f44593535911e10651a60320a7f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae56b4e9ab910596a595056d37de7b6d1"><td class="memItemLeft" align="right" valign="top"><a id="ae56b4e9ab910596a595056d37de7b6d1"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>reload</b> (Arena&lt;&gt; *alloc) -&gt; NotNull&lt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">Addr</a> &gt;</td></tr>
+<tr class="separator:ae56b4e9ab910596a595056d37de7b6d1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afc79bec0cf00f86c26ed0608f64c2f48"><td class="memItemLeft" align="right" valign="top"><a id="afc79bec0cf00f86c26ed0608f64c2f48"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>getSizes</b> () const -&gt; PtrVector&lt; const llvm::SCEV * &gt;</td></tr>
 <tr class="separator:afc79bec0cf00f86c26ed0608f64c2f48"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -137,11 +137,11 @@ constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>setPredicat
 <tr class="memitem:a48bf84ef0bf8b62fef936715820493ee"><td class="memItemLeft" align="right" valign="top"><a id="a48bf84ef0bf8b62fef936715820493ee"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getUsers</b> () const -&gt; containers::UList&lt; Instruction * &gt; *</td></tr>
 <tr class="separator:a48bf84ef0bf8b62fef936715820493ee"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa5face1561e559740fbda46c70c1d514"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1IR_1_1Addr.html#aa5face1561e559740fbda46c70c1d514">updateOffsMat</a> (BumpAlloc&lt;&gt; &amp;alloc, size_t numToPeel, llvm::Loop *L, llvm::ScalarEvolution *SE)</td></tr>
-<tr class="separator:aa5face1561e559740fbda46c70c1d514"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acfca1b4717adb47e83b3d1237d2517cd"><td class="memItemLeft" align="right" valign="top"><a id="acfca1b4717adb47e83b3d1237d2517cd"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>peelLoops</b> (BumpAlloc&lt;&gt; &amp;alloc, size_t numToPeel, llvm::Loop *L, llvm::ScalarEvolution *SE)</td></tr>
-<tr class="separator:acfca1b4717adb47e83b3d1237d2517cd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab2b8c81fb46be4bbc76a530f27549f4a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1IR_1_1Addr.html#ab2b8c81fb46be4bbc76a530f27549f4a">updateOffsMat</a> (Arena&lt;&gt; *alloc, size_t numToPeel, llvm::Loop *L, llvm::ScalarEvolution *SE)</td></tr>
+<tr class="separator:ab2b8c81fb46be4bbc76a530f27549f4a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a92c2d1e922f1c38699ed5471773d4d61"><td class="memItemLeft" align="right" valign="top"><a id="a92c2d1e922f1c38699ed5471773d4d61"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>peelLoops</b> (Arena&lt;&gt; *alloc, size_t numToPeel, llvm::Loop *L, llvm::ScalarEvolution *SE)</td></tr>
+<tr class="separator:a92c2d1e922f1c38699ed5471773d4d61"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa33bdde8fb39d91ff6acb66f99100192"><td class="memItemLeft" align="right" valign="top"><a id="aa33bdde8fb39d91ff6acb66f99100192"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumLoops</b> () const -&gt; unsigned</td></tr>
 <tr class="separator:aa33bdde8fb39d91ff6acb66f99100192"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -207,22 +207,22 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>printDotName</b> (llv
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
-<tr class="memitem:ae9c317af675f7c119987c96535f3d511"><td class="memItemLeft" align="right" valign="top"><a id="ae9c317af675f7c119987c96535f3d511"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>construct</b> (BumpAlloc&lt;&gt; &amp;alloc, const llvm::SCEVUnknown *ptr, llvm::Instruction *user, unsigned numLoops) -&gt; NotNull&lt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">Addr</a> &gt;</td></tr>
-<tr class="separator:ae9c317af675f7c119987c96535f3d511"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3a9c901d26ef64a5fc9e081ac1cbc120"><td class="memItemLeft" align="right" valign="top"><a id="a3a9c901d26ef64a5fc9e081ac1cbc120"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1IR_1_1Addr.html#a3a9c901d26ef64a5fc9e081ac1cbc120">construct</a> (BumpAlloc&lt;&gt; &amp;alloc, const llvm::SCEVUnknown *arrayPtr, llvm::Instruction *user, PtrMatrix&lt; int64_t &gt; indMat, std::array&lt; llvm::SmallVector&lt; const llvm::SCEV *, 3 &gt;, 2 &gt; szOff, PtrVector&lt; int64_t &gt; coffsets, int64_t *offsets, unsigned numLoops) -&gt; NotNull&lt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">Addr</a> &gt;</td></tr>
-<tr class="memdesc:a3a9c901d26ef64a5fc9e081ac1cbc120"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor for regular indexing. <br /></td></tr>
-<tr class="separator:a3a9c901d26ef64a5fc9e081ac1cbc120"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6f0aacac4190843b23f652b4f9ad06fd"><td class="memItemLeft" align="right" valign="top"><a id="a6f0aacac4190843b23f652b4f9ad06fd"></a>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>construct</b> (Arena&lt;&gt; *alloc, const llvm::SCEVUnknown *ptr, llvm::Instruction *user, unsigned numLoops) -&gt; NotNull&lt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">Addr</a> &gt;</td></tr>
+<tr class="separator:a6f0aacac4190843b23f652b4f9ad06fd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aff573bf52e178f2b94045f153e20cd05"><td class="memItemLeft" align="right" valign="top"><a id="aff573bf52e178f2b94045f153e20cd05"></a>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1IR_1_1Addr.html#aff573bf52e178f2b94045f153e20cd05">construct</a> (Arena&lt;&gt; *alloc, const llvm::SCEVUnknown *arrayPtr, llvm::Instruction *user, PtrMatrix&lt; int64_t &gt; indMat, std::array&lt; llvm::SmallVector&lt; const llvm::SCEV *, 3 &gt;, 2 &gt; szOff, PtrVector&lt; int64_t &gt; coffsets, int64_t *offsets, unsigned numLoops) -&gt; NotNull&lt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">Addr</a> &gt;</td></tr>
+<tr class="memdesc:aff573bf52e178f2b94045f153e20cd05"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor for regular indexing. <br /></td></tr>
+<tr class="separator:aff573bf52e178f2b94045f153e20cd05"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a35ba12a92e78e9cef78eb36c1f0c4862"><td class="memItemLeft" align="right" valign="top"><a id="a35ba12a92e78e9cef78eb36c1f0c4862"></a>
 static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>classof</b> (const Node *v) -&gt; bool</td></tr>
 <tr class="separator:a35ba12a92e78e9cef78eb36c1f0c4862"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad3ebef82a8c34a3d9771a733cf353d92"><td class="memItemLeft" align="right" valign="top"><a id="ad3ebef82a8c34a3d9771a733cf353d92"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>allocate</b> (BumpAlloc&lt;&gt; &amp;alloc, NotNull&lt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">Addr</a> &gt; ma, unsigned inputEdges, unsigned directEdges, unsigned outputEdges) -&gt; NotNull&lt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">Addr</a> &gt;</td></tr>
-<tr class="separator:ad3ebef82a8c34a3d9771a733cf353d92"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad875811048d4129940613167c0b40e34"><td class="memItemLeft" align="right" valign="top"><a id="ad875811048d4129940613167c0b40e34"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>construct</b> (BumpAlloc&lt;&gt; &amp;alloc, NotNull&lt; <a class="el" href="classpoly_1_1poly_1_1Loop.html">poly::Loop</a> &gt; explicitLoop, NotNull&lt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">Addr</a> &gt; ma, bool isStr, SquarePtrMatrix&lt; int64_t &gt; Pinv, int64_t denom, PtrVector&lt; int64_t &gt; omega, unsigned inputEdges, unsigned directEdges, unsigned outputEdges, int64_t *offsets) -&gt; NotNull&lt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">Addr</a> &gt;</td></tr>
-<tr class="separator:ad875811048d4129940613167c0b40e34"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad245f122ec9defe10d1bceb4a5be08c8"><td class="memItemLeft" align="right" valign="top"><a id="ad245f122ec9defe10d1bceb4a5be08c8"></a>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>allocate</b> (Arena&lt;&gt; *alloc, NotNull&lt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">Addr</a> &gt; ma, unsigned inputEdges, unsigned directEdges, unsigned outputEdges) -&gt; NotNull&lt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">Addr</a> &gt;</td></tr>
+<tr class="separator:ad245f122ec9defe10d1bceb4a5be08c8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a772b61af88af58ff8fe3da9a28605821"><td class="memItemLeft" align="right" valign="top"><a id="a772b61af88af58ff8fe3da9a28605821"></a>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>construct</b> (Arena&lt;&gt; *alloc, NotNull&lt; <a class="el" href="classpoly_1_1poly_1_1Loop.html">poly::Loop</a> &gt; explicitLoop, NotNull&lt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">Addr</a> &gt; ma, bool isStr, SquarePtrMatrix&lt; int64_t &gt; Pinv, int64_t denom, PtrVector&lt; int64_t &gt; omega, unsigned inputEdges, unsigned directEdges, unsigned outputEdges, int64_t *offsets) -&gt; NotNull&lt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">Addr</a> &gt;</td></tr>
+<tr class="separator:a772b61af88af58ff8fe3da9a28605821"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Represents a memory access that has been rotated according to some affine transform. Return the memory accesses after applying the Schedule. Let</p>
@@ -261,8 +261,8 @@ static auto&#160;</td><td class="memItemRight" valign="bottom"><b>construct</b> 
 
 </div>
 </div>
-<a id="aa5face1561e559740fbda46c70c1d514"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa5face1561e559740fbda46c70c1d514">&#9670;&nbsp;</a></span>updateOffsMat()</h2>
+<a id="ab2b8c81fb46be4bbc76a530f27549f4a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab2b8c81fb46be4bbc76a530f27549f4a">&#9670;&nbsp;</a></span>updateOffsMat()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -273,7 +273,7 @@ static auto&#160;</td><td class="memItemRight" valign="bottom"><b>construct</b> 
         <tr>
           <td class="memname">void poly::IR::Addr::updateOffsMat </td>
           <td>(</td>
-          <td class="paramtype">BumpAlloc&lt;&gt; &amp;&#160;</td>
+          <td class="paramtype">Arena&lt;&gt; *&#160;</td>
           <td class="paramname"><em>alloc</em>, </td>
         </tr>
         <tr>

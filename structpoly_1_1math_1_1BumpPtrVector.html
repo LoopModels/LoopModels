@@ -107,27 +107,27 @@ using&#160;</td><td class="memItemRight" valign="bottom"><b>pointer</b> = T *</t
 <tr class="memitem:ace36621a6ac35e32d61f1aa564d27edb"><td class="memItemLeft" align="right" valign="top"><a id="ace36621a6ac35e32d61f1aa564d27edb"></a>
 using&#160;</td><td class="memItemRight" valign="bottom"><b>const_pointer</b> = const T *</td></tr>
 <tr class="separator:ace36621a6ac35e32d61f1aa564d27edb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8bcb2e31ae1f1ddac41e1473da30413e"><td class="memItemLeft" align="right" valign="top"><a id="a8bcb2e31ae1f1ddac41e1473da30413e"></a>
-using&#160;</td><td class="memItemRight" valign="bottom"><b>allocator_type</b> = WBumpAlloc&lt; T &gt;</td></tr>
-<tr class="separator:a8bcb2e31ae1f1ddac41e1473da30413e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af8fafa16bdd584ad5c5b3e7fdb37441c"><td class="memItemLeft" align="right" valign="top"><a id="af8fafa16bdd584ad5c5b3e7fdb37441c"></a>
+using&#160;</td><td class="memItemRight" valign="bottom"><b>allocator_type</b> = WArena&lt; T &gt;</td></tr>
+<tr class="separator:af8fafa16bdd584ad5c5b3e7fdb37441c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a38db83498287bfa2744b5f65bf32a7aa"><td class="memItemLeft" align="right" valign="top"><a id="a38db83498287bfa2744b5f65bf32a7aa"></a>
-constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>BumpPtrVector</b> (WBumpAlloc&lt; T &gt; a)</td></tr>
-<tr class="separator:a38db83498287bfa2744b5f65bf32a7aa"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa2762c11297e52b0f322c7e3d8ba6f88"><td class="memItemLeft" align="right" valign="top"><a id="aa2762c11297e52b0f322c7e3d8ba6f88"></a>
-constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>BumpPtrVector</b> (BumpAlloc&lt;&gt; &amp;a)</td></tr>
-<tr class="separator:aa2762c11297e52b0f322c7e3d8ba6f88"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a17c2f75ca6bd467f31dc798186461719"><td class="memItemLeft" align="right" valign="top"><a id="a17c2f75ca6bd467f31dc798186461719"></a>
-constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>BumpPtrVector</b> (const <a class="el" href="structpoly_1_1math_1_1BumpPtrVector.html">BumpPtrVector</a>&lt; T &gt; &amp;x, WBumpAlloc&lt; T &gt; alloc)</td></tr>
-<tr class="separator:a17c2f75ca6bd467f31dc798186461719"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a95e3fb5acc30389aeb7a5d059049c0fb"><td class="memItemLeft" align="right" valign="top"><a id="a95e3fb5acc30389aeb7a5d059049c0fb"></a>
+constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>BumpPtrVector</b> (WArena&lt; T &gt; a)</td></tr>
+<tr class="separator:a95e3fb5acc30389aeb7a5d059049c0fb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a91c2fda6d5540167a97a788cf97183f3"><td class="memItemLeft" align="right" valign="top"><a id="a91c2fda6d5540167a97a788cf97183f3"></a>
+constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>BumpPtrVector</b> (Arena&lt;&gt; *a)</td></tr>
+<tr class="separator:a91c2fda6d5540167a97a788cf97183f3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afd4658e2c99ef5a96fb845013c4192d7"><td class="memItemLeft" align="right" valign="top"><a id="afd4658e2c99ef5a96fb845013c4192d7"></a>
+constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>BumpPtrVector</b> (const <a class="el" href="structpoly_1_1math_1_1BumpPtrVector.html">BumpPtrVector</a>&lt; T &gt; &amp;x, WArena&lt; T &gt; alloc)</td></tr>
+<tr class="separator:afd4658e2c99ef5a96fb845013c4192d7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae13d1f9e24f0cf5d656b3e20c51bc72d"><td class="memItemLeft" align="right" valign="top"><a id="ae13d1f9e24f0cf5d656b3e20c51bc72d"></a>
 constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>BumpPtrVector</b> (const <a class="el" href="structpoly_1_1math_1_1BumpPtrVector.html">BumpPtrVector</a>&lt; T &gt; &amp;x)</td></tr>
 <tr class="separator:ae13d1f9e24f0cf5d656b3e20c51bc72d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8f75d7fd03245b8464e91f91b8e33f0f"><td class="memItemLeft" align="right" valign="top"><a id="a8f75d7fd03245b8464e91f91b8e33f0f"></a>
-constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>BumpPtrVector</b> (<a class="el" href="structpoly_1_1math_1_1BumpPtrVector.html">BumpPtrVector</a> &amp;&amp;x, WBumpAlloc&lt; T &gt; alloc)</td></tr>
-<tr class="separator:a8f75d7fd03245b8464e91f91b8e33f0f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a45b4c9dc0641520496f29251e89e259c"><td class="memItemLeft" align="right" valign="top"><a id="a45b4c9dc0641520496f29251e89e259c"></a>
+constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>BumpPtrVector</b> (<a class="el" href="structpoly_1_1math_1_1BumpPtrVector.html">BumpPtrVector</a> &amp;&amp;x, WArena&lt; T &gt; alloc)</td></tr>
+<tr class="separator:a45b4c9dc0641520496f29251e89e259c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4f7a7a523afc2980298108d12185e577"><td class="memItemLeft" align="right" valign="top"><a id="a4f7a7a523afc2980298108d12185e577"></a>
 constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>BumpPtrVector</b> (<a class="el" href="structpoly_1_1math_1_1BumpPtrVector.html">BumpPtrVector</a> &amp;&amp;x) noexcept</td></tr>
 <tr class="separator:a4f7a7a523afc2980298108d12185e577"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -256,9 +256,9 @@ constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>resizeForOv
 <tr class="memitem:a061368e9e8106d58d1b22c5f0307b699"><td class="memItemLeft" align="right" valign="top"><a id="a061368e9e8106d58d1b22c5f0307b699"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>extendOrAssertSize</b> (size_t N)</td></tr>
 <tr class="separator:a061368e9e8106d58d1b22c5f0307b699"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac627ec39e9b9c088929fc9c2f5f2d6a4"><td class="memItemLeft" align="right" valign="top"><a id="ac627ec39e9b9c088929fc9c2f5f2d6a4"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>get_allocator</b> () const -&gt; WBumpAlloc&lt; T &gt;</td></tr>
-<tr class="separator:ac627ec39e9b9c088929fc9c2f5f2d6a4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9845893770a0ee7cde2777a0914ef5b7"><td class="memItemLeft" align="right" valign="top"><a id="a9845893770a0ee7cde2777a0914ef5b7"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>get_allocator</b> () const -&gt; WArena&lt; T &gt;</td></tr>
+<tr class="separator:a9845893770a0ee7cde2777a0914ef5b7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3ebd709264e6f9ce273ab27a929c487f"><td class="memItemLeft" align="right" valign="top"><a id="a3ebd709264e6f9ce273ab27a929c487f"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>push_back</b> (T x) -&gt; T &amp;</td></tr>
 <tr class="separator:a3ebd709264e6f9ce273ab27a929c487f"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -287,9 +287,9 @@ unsigned&#160;</td><td class="memItemRight" valign="bottom"><b>Size</b></td></tr
 <tr class="memitem:ae47b9bf27391d7b0e9b404f709c5a4d3"><td class="memItemLeft" align="right" valign="top"><a id="ae47b9bf27391d7b0e9b404f709c5a4d3"></a>
 unsigned&#160;</td><td class="memItemRight" valign="bottom"><b>Capacity</b></td></tr>
 <tr class="separator:ae47b9bf27391d7b0e9b404f709c5a4d3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae2a44704698a2a08239e53e20dbcbca1"><td class="memItemLeft" align="right" valign="top"><a id="ae2a44704698a2a08239e53e20dbcbca1"></a>
-NotNull&lt; BumpAlloc&lt;&gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>Alloc</b></td></tr>
-<tr class="separator:ae2a44704698a2a08239e53e20dbcbca1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afb6610df25aea8ccb0ba242603f300ac"><td class="memItemLeft" align="right" valign="top"><a id="afb6610df25aea8ccb0ba242603f300ac"></a>
+NotNull&lt; Arena&lt;&gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>Alloc</b></td></tr>
+<tr class="separator:afb6610df25aea8ccb0ba242603f300ac"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <hr/>The documentation for this struct was generated from the following file:<ul>
 <li>include/Dicts/<a class="el" href="BumpVector_8hpp_source.html">BumpVector.hpp</a></li>
