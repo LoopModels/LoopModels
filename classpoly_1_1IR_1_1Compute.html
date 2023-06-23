@@ -83,6 +83,9 @@ Inheritance diagram for poly::IR::Compute:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
+<tr class="memitem:afd6f8f39213d325a1bb54ee75df6586f"><td class="memItemLeft" align="right" valign="top"><a id="afd6f8f39213d325a1bb54ee75df6586f"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>Compute</b> (const <a class="el" href="classpoly_1_1IR_1_1Compute.html">Compute</a> &amp;)=delete</td></tr>
+<tr class="separator:afd6f8f39213d325a1bb54ee75df6586f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae74f7eba5d82270a9417e0293a32d2f7"><td class="memItemLeft" align="right" valign="top"><a id="ae74f7eba5d82270a9417e0293a32d2f7"></a>
 constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Compute</b> (ValKind k, llvm::Instruction *i, llvm::Intrinsic::ID id, int numOps)</td></tr>
 <tr class="separator:ae74f7eba5d82270a9417e0293a32d2f7"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -92,15 +95,6 @@ constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Compute</b> (Val
 <tr class="memitem:a96aeebd16644b916f29ec91d2b415e98"><td class="memItemLeft" align="right" valign="top"><a id="a96aeebd16644b916f29ec91d2b415e98"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getLLVMInstruction</b> () const -&gt; llvm::Instruction *</td></tr>
 <tr class="separator:a96aeebd16644b916f29ec91d2b415e98"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac5a812747d0f9cff63c3ce71de3c6555"><td class="memItemLeft" align="right" valign="top"><a id="ac5a812747d0f9cff63c3ce71de3c6555"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getUsers</b> () -&gt; UList&lt; Instruction * &gt; *</td></tr>
-<tr class="separator:ac5a812747d0f9cff63c3ce71de3c6555"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a801dea8e95acf3c70cae0e160f716f23"><td class="memItemLeft" align="right" valign="top"><a id="a801dea8e95acf3c70cae0e160f716f23"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getUsers</b> () const -&gt; const UList&lt; Instruction * &gt; *</td></tr>
-<tr class="separator:a801dea8e95acf3c70cae0e160f716f23"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab532c134b376b23208efe71d9b6ce0c9"><td class="memItemLeft" align="right" valign="top"><a id="ab532c134b376b23208efe71d9b6ce0c9"></a>
-constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>setUsers</b> (UList&lt; Instruction * &gt; *newUsers)</td></tr>
-<tr class="separator:ab532c134b376b23208efe71d9b6ce0c9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afbff76ba6331bf24a1525c42b516f8e1"><td class="memItemLeft" align="right" valign="top"><a id="afbff76ba6331bf24a1525c42b516f8e1"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>setNumOps</b> (int n)</td></tr>
 <tr class="separator:afbff76ba6331bf24a1525c42b516f8e1"><td class="memSeparator" colspan="2">&#160;</td></tr>

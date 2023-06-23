@@ -84,6 +84,9 @@ Inheritance diagram for poly::IR::Addr:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
+<tr class="memitem:a97324c64f8a2205e4bcd4e1c5d8d1be4"><td class="memItemLeft" align="right" valign="top"><a id="a97324c64f8a2205e4bcd4e1c5d8d1be4"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>Addr</b> (const <a class="el" href="classpoly_1_1IR_1_1Addr.html">Addr</a> &amp;)=delete</td></tr>
+<tr class="separator:a97324c64f8a2205e4bcd4e1c5d8d1be4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:add00e84ef69cb8ed0493bb4b0589535b"><td class="memItemLeft" align="right" valign="top"><a id="add00e84ef69cb8ed0493bb4b0589535b"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>addEdgeIn</b> (<a class="el" href="classpoly_1_1poly_1_1Dependence.html">Dependence</a> *)</td></tr>
 <tr class="separator:add00e84ef69cb8ed0493bb4b0589535b"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -143,6 +146,9 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getLoop</b>
 <tr class="memitem:aec2e890888eb44690b0ff3d6ab5fa04d"><td class="memItemLeft" align="right" valign="top"><a id="aec2e890888eb44690b0ff3d6ab5fa04d"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getStoredVal</b> () const -&gt; Value *</td></tr>
 <tr class="separator:aec2e890888eb44690b0ff3d6ab5fa04d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9ee2b06702099170430da20f4c5ee4d6"><td class="memItemLeft" align="right" valign="top"><a id="a9ee2b06702099170430da20f4c5ee4d6"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getStoredValPtr</b> () -&gt; Value **</td></tr>
+<tr class="separator:a9ee2b06702099170430da20f4c5ee4d6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a50c987130e10cd837354bcf8b5736ba4"><td class="memItemLeft" align="right" valign="top"><a id="a50c987130e10cd837354bcf8b5736ba4"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>setVal</b> (Value *n)</td></tr>
 <tr class="separator:a50c987130e10cd837354bcf8b5736ba4"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -152,9 +158,9 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getPredicat
 <tr class="memitem:a06ddc5fdaaafe3ce9503c88c32acfc09"><td class="memItemLeft" align="right" valign="top"><a id="a06ddc5fdaaafe3ce9503c88c32acfc09"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>setPredicate</b> (Node *n)</td></tr>
 <tr class="separator:a06ddc5fdaaafe3ce9503c88c32acfc09"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a48bf84ef0bf8b62fef936715820493ee"><td class="memItemLeft" align="right" valign="top"><a id="a48bf84ef0bf8b62fef936715820493ee"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getUsers</b> () const -&gt; containers::UList&lt; Instruction * &gt; *</td></tr>
-<tr class="separator:a48bf84ef0bf8b62fef936715820493ee"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a66e194eeceb899e0e0343153d7579ff7"><td class="memItemLeft" align="right" valign="top"><a id="a66e194eeceb899e0e0343153d7579ff7"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getUsers</b> () -&gt; <a class="el" href="classpoly_1_1IR_1_1Users.html">Users</a> &amp;</td></tr>
+<tr class="separator:a66e194eeceb899e0e0343153d7579ff7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab2b8c81fb46be4bbc76a530f27549f4a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1IR_1_1Addr.html#ab2b8c81fb46be4bbc76a530f27549f4a">updateOffsMat</a> (Arena&lt;&gt; *alloc, size_t numToPeel, llvm::Loop *L, llvm::ScalarEvolution *SE)</td></tr>
 <tr class="separator:ab2b8c81fb46be4bbc76a530f27549f4a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a92c2d1e922f1c38699ed5471773d4d61"><td class="memItemLeft" align="right" valign="top"><a id="a92c2d1e922f1c38699ed5471773d4d61"></a>
