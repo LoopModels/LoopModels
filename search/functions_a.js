@@ -1,6 +1,5 @@
 var searchData=
 [
-  ['removeemptymask_236',['removeEmptyMask',['../structpoly_1_1IR_1_1Predicate_1_1Intersection.html#a03f0fec36c260a442aa37efaae474cdd',1,'poly::IR::Predicate::Intersection']]],
-  ['replacealluseswith_237',['replaceAllUsesWith',['../classpoly_1_1IR_1_1Cache.html#a56195133a3bc424f28e12e1c7c60d1f8',1,'poly::IR::Cache']]],
-  ['rotate_238',['rotate',['../classpoly_1_1poly_1_1Loop.html#a8c131cfad158a7b87c6ce6c987645be7',1,'poly::poly::Loop']]]
+  ['union_225',['Union',['../structpoly_1_1IR_1_1Predicate_1_1Set.html#a9dbe51049dcc1443411c76c62075c249',1,'poly::IR::Predicate::Set::Union(Arena&lt;&gt; *alloc, Intersection other) -&gt; Set &amp;'],['../structpoly_1_1IR_1_1Predicate_1_1Set.html#a784ee9fcde87f530ce83c333c59c8869',1,'poly::IR::Predicate::Set::Union(Arena&lt;&gt; *alloc, const Set &amp;other) -&gt; Set &amp;']]],
+  ['updateoffsmat_226',['updateOffsMat',['../classpoly_1_1IR_1_1Addr.html#ab2b8c81fb46be4bbc76a530f27549f4a',1,'poly::IR::Addr']]]
 ];

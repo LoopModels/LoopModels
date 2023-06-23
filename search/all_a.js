@@ -1,10 +1,9 @@
 var searchData=
 [
-  ['linearsymboliccomparator_70',['LinearSymbolicComparator',['../structpoly_1_1comparator_1_1LinearSymbolicComparator.html',1,'poly::comparator']]],
-  ['literalcomparator_71',['LiteralComparator',['../structpoly_1_1comparator_1_1LiteralComparator.html',1,'poly::comparator']]],
-  ['load_72',['Load',['../classpoly_1_1IR_1_1Load.html',1,'poly::IR']]],
-  ['loop_73',['Loop',['../classpoly_1_1poly_1_1Loop.html',1,'poly::poly']]],
-  ['loopblock_74',['LoopBlock',['../classpoly_1_1lp_1_1LoopBlock.html',1,'poly::lp']]],
-  ['loopmodels_75',['LoopModels',['../md_README.html',1,'']]],
-  ['looptreeschedule_76',['LoopTreeSchedule',['../classCostModeling_1_1LoopTreeSchedule.html',1,'CostModeling']]]
+  ['map_72',['Map',['../classpoly_1_1IR_1_1Predicate_1_1Map.html',1,'poly::IR::Predicate']]],
+  ['mergemap_73',['mergeMap',['../classpoly_1_1poly_1_1DepPoly.html#afc4fa536b4d8eddca8b17a10e04b466c',1,'poly::poly::DepPoly']]],
+  ['mergeoperands_74',['mergeOperands',['../structpoly_1_1IR_1_1MergingCost.html#af52ae253e1281d3e0dfc121afc381561',1,'poly::IR::MergingCost']]],
+  ['mergingcost_75',['MergingCost',['../structpoly_1_1IR_1_1MergingCost.html',1,'poly::IR']]],
+  ['mockgraph_76',['MockGraph',['../structMockGraph.html',1,'']]],
+  ['mockvertex_77',['MockVertex',['../structMockVertex.html',1,'']]]
 ];

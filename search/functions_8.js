@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['mergemap_233',['mergeMap',['../classpoly_1_1poly_1_1DepPoly.html#afc4fa536b4d8eddca8b17a10e04b466c',1,'poly::poly::DepPoly']]],
-  ['mergeoperands_234',['mergeOperands',['../structpoly_1_1IR_1_1MergingCost.html#af52ae253e1281d3e0dfc121afc381561',1,'poly::IR::MergingCost']]]
+  ['selectcost_222',['selectCost',['../classpoly_1_1IR_1_1Operation.html#a3c026a3b9192dea51a7dc6b57e6833b9',1,'poly::IR::Operation']]],
+  ['setfusionomega_223',['setFusionOmega',['../classpoly_1_1IR_1_1Addr.html#a26d3b32498e5ea5373a423a9bb463477',1,'poly::IR::Addr']]]
 ];

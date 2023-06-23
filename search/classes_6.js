@@ -1,6 +1,7 @@
 var searchData=
 [
-  ['hash_3c_20poly_3a_3air_3a_3acnst_3a_3aidentifier_20_3e_159',['hash&lt; poly::IR::Cnst::Identifier &gt;',['../structankerl_1_1unordered__dense_1_1hash_3_01poly_1_1IR_1_1Cnst_1_1Identifier_01_4.html',1,'ankerl::unordered_dense']]],
-  ['hash_3c_20poly_3a_3air_3a_3aidentifier_20_3e_160',['hash&lt; poly::IR::Identifier &gt;',['../structankerl_1_1unordered__dense_1_1hash_3_01poly_1_1IR_1_1Identifier_01_4.html',1,'ankerl::unordered_dense']]],
-  ['hash_3c_20poly_3a_3air_3a_3ainstbyvalue_20_3e_161',['hash&lt; poly::IR::InstByValue &gt;',['../structankerl_1_1unordered__dense_1_1hash_3_01poly_1_1IR_1_1InstByValue_01_4.html',1,'ankerl::unordered_dense']]]
+  ['instbyvalue_151',['InstByValue',['../structpoly_1_1IR_1_1InstByValue.html',1,'poly::IR']]],
+  ['intersection_152',['Intersection',['../structpoly_1_1IR_1_1Predicate_1_1Intersection.html',1,'poly::IR::Predicate']]],
+  ['iterator_153',['Iterator',['../classpoly_1_1lp_1_1LoopBlock_1_1Graph_1_1Iterator.html',1,'poly::lp::LoopBlock::Graph']]],
+  ['iterator_5ftraits_3c_20loopblock_3a_3agraph_20_3e_154',['iterator_traits&lt; LoopBlock::Graph &gt;',['../structpoly_1_1lp_1_1std_1_1iterator__traits_3_01LoopBlock_1_1Graph_01_4.html',1,'poly::lp::std']]]
 ];
