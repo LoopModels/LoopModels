@@ -94,6 +94,7 @@ protected:
 #endif
 
 public:
+  Compute(const Compute &) = delete;
   constexpr Compute(ValKind k, llvm::Instruction *i, llvm::Intrinsic::ID id,
                     int numOps)
     : Instruction(k), inst(i), type(i->getType()), opId(id),
@@ -128,19 +129,6 @@ public:
       return {llvm::Intrinsic::not_intrinsic, VK_Func};
     }
     return {I->getOpcode(), VK_Oprn};
-  }
-  constexpr auto getUsers() -> UList<Instruction *> * {
-    invariant(kind >= VK_Func);
-    return unionPtr.users;
-  }
-  [[nodiscard]] constexpr auto getUsers() const
-    -> const UList<Instruction *> * {
-    invariant(kind >= VK_Func);
-    return unionPtr.users;
-  }
-  constexpr void setUsers(UList<Instruction *> *newUsers) {
-    invariant(kind >= VK_Func);
-    unionPtr.users = newUsers;
   }
   constexpr void setNumOps(int n) { numOperands = n; }
   // called when incomplete; flips sign
@@ -266,10 +254,8 @@ public:
     return getOperand(i)->isLoad();
   }
   [[nodiscard]] auto userIsStore() const -> bool {
-    // NOLINTNEXTLINE(readability-use-anyofallof)
-    for (auto *u : *getUsers())
-      if (u->isStore()) return true;
-    return false;
+    return std::ranges::any_of(getUsers(),
+                               [](auto *u) { return u->isStore(); });
   }
   // used to check if fmul can be folded with a `-`, in
   // which case it is free
@@ -728,7 +714,7 @@ inline auto Value::getType(unsigned w) const -> llvm::Type * {
 }
 [[nodiscard]] inline auto Compute::allUsersAdditiveContract() const -> bool {
   // NOLINTNEXTLINE(readability-use-anyofallof)
-  for (auto *u : *getUsers()) {
+  for (auto *u : getUsers()) {
     auto *I = llvm::dyn_cast<Compute>(u);
     if (!I) return false;
     if (!I->allowsContract()) return false;
@@ -746,20 +732,20 @@ inline auto Value::getType(unsigned w) const -> llvm::Type * {
 }
 [[nodiscard]] inline auto Value::getOperands() -> math::PtrVector<Value *> {
   if (const auto *I = llvm::dyn_cast<Compute>(this)) return I->getOperands();
-  if (getKind() != VK_Stow) return {};
-  return {&unionPtr.node, unsigned(1)};
+  if (Stow stow{this}) return {stow.getStoredValPtr(), unsigned(1)};
+  return {};
 }
 [[nodiscard]] inline auto Value::getOperand(unsigned i) -> Value * {
   if (const auto *I = llvm::dyn_cast<Compute>(this)) return I->getOperand(i);
   invariant(getKind() == VK_Stow);
   invariant(i == 0);
-  return unionPtr.node;
+  return static_cast<Addr *>(this)->getStoredVal();
 }
 [[nodiscard]] inline auto Value::getOperand(unsigned i) const -> const Value * {
   if (const auto *I = llvm::dyn_cast<Compute>(this)) return I->getOperand(i);
   invariant(getKind() == VK_Stow);
   invariant(i == 0);
-  return unionPtr.node;
+  return static_cast<const Addr *>(this)->getStoredVal();
 }
 [[nodiscard]] inline auto Value::getNumOperands() const -> unsigned {
   if (const auto *I = llvm::dyn_cast<Compute>(this)) return I->getNumOperands();
@@ -807,8 +793,9 @@ inline void Instruction::setOperands(Arena<> *alloc,
                                      math::PtrVector<Value *> x) {
   if (auto *I = llvm::dyn_cast<Compute>(this)) return I->setOperands(alloc, x);
   invariant(getKind() == VK_Stow);
-  unionPtr.node = x[0];
+  static_cast<Addr *>(this)->setVal(x[0]);
 }
+
 // unsigned x = llvm::Instruction::FAdd;
 // unsigned y = llvm::Instruction::LShr;
 // unsigned z = llvm::Instruction::Call;

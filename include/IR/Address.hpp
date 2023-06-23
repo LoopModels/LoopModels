@@ -2,6 +2,7 @@
 
 #include "IR/InstructionCost.hpp"
 #include "IR/Node.hpp"
+#include "IR/Users.hpp"
 #include "Polyhedra/Loops.hpp"
 #include "Support/OStream.hpp"
 #include <Containers/UnrolledList.hpp>
@@ -182,6 +183,7 @@ class Addr : public Instruction {
   inline constexpr void setEdgeOut(Dependence *);
 
 public:
+  Addr(const Addr &) = delete;
   inline constexpr void addEdgeIn(Dependence *);
   inline constexpr void addEdgeOut(Dependence *);
   [[nodiscard]] constexpr auto getEdgeIn() -> Dependence * { return edgeIn; }
@@ -246,7 +248,7 @@ public:
     size_t memNeeded = intMemNeeded(getNumLoops(), numDim);
     auto *p =
       (Addr *)alloc->allocate(sizeof(Addr) + memNeeded * sizeof(int64_t));
-    return new (p) Addr(*this);
+    return new (p) Addr(this);
   }
   [[nodiscard]] auto getSizes() const -> PtrVector<const llvm::SCEV *> {
     return {syms, numDim};
@@ -321,13 +323,17 @@ public:
   */
   [[nodiscard]] constexpr auto getStoredVal() const -> Value * {
     invariant(isStore());
-    return unionPtr.node;
+    return users.getVal();
+  }
+  [[nodiscard]] constexpr auto getStoredValPtr() -> Value ** {
+    invariant(isStore());
+    return users.getValPtr();
   }
   // doesn't add users
   constexpr void setVal(Value *n) {
     invariant(isStore());
     invariant(Value::classof(n));
-    unionPtr.node = n;
+    users.setVal(n);
   }
   [[nodiscard]] constexpr auto getPredicate() const -> Value * {
     return predicate;
@@ -336,10 +342,9 @@ public:
     invariant(Value::classof(n));
     predicate = static_cast<Value *>(n);
   }
-  [[nodiscard]] constexpr auto getUsers() const
-    -> containers::UList<Instruction *> * {
+  [[nodiscard]] constexpr auto getUsers() -> Users & {
     invariant(isLoad());
-    return unionPtr.users;
+    return users;
   }
   /// extend number of Cols, copying A[_(0,R),_] into dest, filling new cols
   /// with 0
@@ -791,6 +796,9 @@ public:
     // load or store (could be reload)
     return addr->getInstruction();
   }
+  constexpr auto operator==(const Load &other) const -> bool {
+    return addr == other.addr;
+  }
 };
 class Stow {
   Addr *addr;
@@ -806,7 +814,13 @@ public:
   [[nodiscard]] constexpr auto getStoredVal() const -> Value * {
     return addr->getStoredVal();
   }
+  [[nodiscard]] constexpr auto getStoredValPtr() -> Value ** {
+    return addr->getStoredValPtr();
+  }
   constexpr void setVal(Value *n) { return addr->setVal(n); }
+  constexpr auto operator==(const Stow &other) const -> bool {
+    return addr == other.addr;
+  }
 };
 
 } // namespace IR

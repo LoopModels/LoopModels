@@ -2,6 +2,7 @@
 
 #include "Containers/UnrolledList.hpp"
 #include "IR/InstructionCost.hpp"
+#include "IR/Users.hpp"
 #include "Polyhedra/Loops.hpp"
 #include "Utilities/Allocators.hpp"
 #include <Math/Array.hpp>
@@ -245,48 +246,65 @@ public:
 };
 
 class Instruction;
+
 class Value : public Node {
 protected:
   constexpr Value(ValKind kind) : Node(kind) {}
   constexpr Value(ValKind kind, unsigned depth) : Node(kind, depth) {}
+  Users users;
 
-  union {
-    UList<Instruction *> *users{nullptr}; // Func, Call, Oprn, Load
-    Value *node;                          // Stow
-    llvm::Type *typ;                      // Cint, Cflt, Bint, Bflt
-    llvm::Value *val;                     // CVal
-  } unionPtr;
+  // union {
+  //   // UList<Instruction *> *users{nullptr}; // Func, Call, Oprn, Load
+  //   // undefined behavior to access wrong one, but we sometimes want to
+  //   // reference the user and users together without being particular
+  //   // about which, so we use a nested union to do so without undef behavior
+  //   union {
+  //     Instruction *user;
+  //     Instruction **users;
+  //   } userPtr;
+  //   Value *node;      // Stow
+  //   llvm::Type *typ;  // Cint, Cflt, Bint, Bflt
+  //   llvm::Value *val; // CVal
+  // } unionPtr;
 
 public:
   static constexpr auto classof(const Node *v) -> bool {
     return v->getKind() >= VK_CVal || v->getKind() <= VK_Stow;
   }
-
+  // user methods
+  [[nodiscard]] constexpr auto getUsers() noexcept -> Users & { return users; }
+  [[nodiscard]] constexpr auto getUsers() const noexcept -> const Users & {
+    return users;
+  }
+  constexpr void setUsers(const Users &other) noexcept { users = other; }
+  constexpr void addUser(Arena<> *alloc, Instruction *I) noexcept {
+    users.push_back(alloc, I);
+  }
+  constexpr void removeFromUsers(Instruction *I) { users.remove(I); }
   // unionPtr methods
-  [[nodiscard]] constexpr auto getUsers() const
-    -> const UList<Instruction *> * {
-    invariant(kind == VK_Load || kind >= VK_Func);
-    return unionPtr.users;
-  }
-  [[nodiscard]] constexpr auto getUsers() -> UList<Instruction *> * {
-    invariant(kind == VK_Load || kind >= VK_Func);
-    return unionPtr.users;
-  }
-  constexpr void setUsers(UList<Instruction *> *users) {
-    invariant(kind == VK_Load || kind >= VK_Func);
-    unionPtr.users = users;
-  }
-  constexpr void addUser(Arena<> *alloc, Instruction *n) {
-    invariant(kind == VK_Load || kind >= VK_Func);
-    if (!unionPtr.users)
-      unionPtr.users = alloc->create<UList<Instruction *>>(n);
-    else unionPtr.users = unionPtr.users->pushUnique(alloc, n);
-  }
-  constexpr void removeFromUsers(Value *n);
-  constexpr void removeFromUsers(Instruction *n) {
-    invariant(kind == VK_Load || kind >= VK_Func);
-    unionPtr.users->eraseUnordered(n);
-  }
+  // [[nodiscard]] constexpr auto getUsers() const
+  //   -> const UList<Instruction *> * {
+  //   invariant(kind == VK_Load || kind >= VK_Func);
+  //   return unionPtr.users;
+  // }
+  // [[nodiscard]] constexpr auto getUsers() -> UList<Instruction *> * {
+  //   invariant(kind == VK_Load || kind >= VK_Func);
+  //   return unionPtr.users;
+  // }
+  // constexpr void setUsers(UList<Instruction *> *users) {
+  //   invariant(kind == VK_Load || kind >= VK_Func);
+  //   unionPtr.users = users;
+  // }
+  // constexpr void addUser(Arena<> *alloc, Instruction *n) {
+  //   invariant(kind == VK_Load || kind >= VK_Func);
+  //   if (!unionPtr.users)
+  //     unionPtr.users = alloc->create<UList<Instruction *>>(n);
+  //   else unionPtr.users = unionPtr.users->pushUnique(alloc, n);
+  // }
+  // constexpr void removeFromUsers(Instruction *n) {
+  //   invariant(kind == VK_Load || kind >= VK_Func);
+  //   unionPtr.users->eraseUnordered(n);
+  // }
 
   /// isStore() is true if the address is a store, false if it is a load
   /// If the memory access is a store, this can still be a reload
@@ -344,39 +362,33 @@ public:
 /// CVal
 /// A constant value w/ respect to the loopnest.
 class CVal : public Value {
+  llvm::Value *val;
 
 public:
-  constexpr CVal(llvm::Value *v) : Value(VK_CVal) { unionPtr.val = v; }
+  constexpr CVal(llvm::Value *v) : Value(VK_CVal) { val = v; }
   static constexpr auto classof(const Node *v) -> bool {
     return v->getKind() == VK_CVal;
   }
 
-  [[nodiscard]] constexpr auto getValue() const -> llvm::Value * {
-    return unionPtr.val;
-  }
-  [[nodiscard]] auto getType() const -> llvm::Type * {
-    return getValue()->getType();
-  }
+  [[nodiscard]] constexpr auto getValue() const -> llvm::Value * { return val; }
+  [[nodiscard]] auto getType() const -> llvm::Type * { return val->getType(); }
 };
-constexpr void Value::removeFromUsers(Value *n) {
-  if (auto *I = llvm::dyn_cast<Instruction>(n)) removeFromUsers(I);
-}
+// constexpr void Value::removeFromUsers(Value *n) {
+//   if (auto *I = llvm::dyn_cast<Instruction>(n)) removeFromUsers(I);
+// }
 
 /// Cnst
 class Cnst : public Value {
+  llvm::Type *typ;
 
 protected:
-  constexpr Cnst(ValKind kind, llvm::Type *t) : Value(kind) {
-    unionPtr.typ = t;
-  }
+  constexpr Cnst(ValKind kind, llvm::Type *t) : Value(kind) { typ = t; }
 
 public:
   static constexpr auto classof(const Node *v) -> bool {
     return v->getKind() == VK_Cint || v->getKind() == VK_Cflt;
   }
-  [[nodiscard]] constexpr auto getType() const -> llvm::Type * {
-    return unionPtr.typ;
-  }
+  [[nodiscard]] constexpr auto getType() const -> llvm::Type * { return typ; }
   struct Identifier {
     ValKind kind;
     llvm::Type *typ;

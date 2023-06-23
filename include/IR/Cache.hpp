@@ -108,7 +108,6 @@ class Cache {
   llvm::LoopInfo *LI;
   llvm::ScalarEvolution *SE;
   Compute *freeInstList{nullptr}; // positive numOps/complete, but empty
-  UList<Instruction *> *freeListList{nullptr}; // TODO: make use of these
   auto allocateInst(unsigned numOps) -> Compute * {
     // because we allocate children before parents
     for (Compute *I = freeInstList; I;
@@ -134,12 +133,13 @@ class Cache {
       return {createConstant(c, n), tr};
     return {createConstantVal(v, n), tr};
   }
+  // NOLINTNEXTLINE(misc-no-recursion)
   constexpr void replaceUsesByUsers(Value *oldNode, Value *newNode) {
     invariant(oldNode->getKind() == Node::VK_Load ||
               oldNode->getKind() >= Node::VK_Func);
-    oldNode->getUsers()->forEach([=, this](Instruction *user) {
+    for (Instruction *user : oldNode->getUsers()) {
       // newNode may depend on old (e.g. when merging)
-      if (user == newNode) return;
+      if (user == newNode) continue;
       if (auto *I = llvm::dyn_cast<Compute>(user)) {
         for (Value *&o : I->getOperands())
           if (o == oldNode) o = newNode;
@@ -155,10 +155,8 @@ class Cache {
         if (isStored) addr->setVal(newNode);
       }
       if (newNode->getKind() != Node::VK_Stow) newNode->addUser(&alloc, user);
-    });
-    if (freeListList) freeListList->append(oldNode->getUsers());
-    else freeListList = oldNode->getUsers();
-    oldNode->setUsers(nullptr);
+    }
+    oldNode->getUsers().clear();
   }
   static void addSymbolic(math::Vector<int64_t> &offsets,
                           llvm::SmallVector<const llvm::SCEV *, 3> &symbols,
@@ -313,6 +311,7 @@ public:
   /// if `I` is eliminated, all users of `I`
   /// get updated, making them CSE-candiates.
   /// In this manner, we travel downstream through users.
+  // NOLINTNEXTLINE(misc-no-recursion)
   auto cse(Compute *I) -> Compute * {
     Compute *&cse = getCSE(I);
     if (cse == nullptr || (cse == I)) return cse = I; // update ref
@@ -326,6 +325,7 @@ public:
   /// replaces all uses of `oldNode` with `newNode`
   /// updating the operands of all users of `oldNode`
   /// and the `users` of all operands of `oldNode`
+  // NOLINTNEXTLINE(misc-no-recursion)
   constexpr void replaceAllUsesWith(Instruction *oldNode, Value *newNode) {
     invariant(oldNode->getKind() == Node::VK_Load ||
               oldNode->getKind() >= Node::VK_Func);

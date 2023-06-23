@@ -61,8 +61,8 @@ class ScheduledNode {
   ScheduledNode *component{nullptr}; // SCC cycle, or last node in a chain
   Dependence *dep{nullptr};          // input edges (points to parents)
   int64_t *offsets{nullptr};
-  uint32_t phiOffset{0};   // used in LoopBlock
-  uint32_t omegaOffset{0}; // used in LoopBlock
+  uint32_t phiOffset{0};             // used in LoopBlock
+  uint32_t omegaOffset{0};           // used in LoopBlock
   uint8_t rank{0};
   bool visited{false};
 #if !defined(__clang__) && defined(__GNUC__)
@@ -402,7 +402,7 @@ class LoopBlock {
 
 public:
   LoopBlock() = default;
-  void optimize(IR::TreeResult tr) {
+  void optimize(IR::Cache &cache, IR::TreeResult tr) {
     // fillEdges();
     for (Addr *stow = tr.stow; stow;) {
       Addr *next = stow->getNext();
@@ -414,7 +414,7 @@ public:
     }
     for (Addr *stow = tr.stow; stow;) {
       Addr *next = stow->getNext(); // addScheduledNode breaks chain
-      addScheduledNode(stow);
+      addScheduledNode(cache, stow);
       stow = next;
     }
     // buildGraph();
@@ -424,7 +424,7 @@ public:
   void clear() { allocator.reset(); }
 
 private:
-  constexpr auto addScheduledNode(Addr *stow) {
+  constexpr auto addScheduledNode(IR::Cache &cache, IR::Stow stow) {
     // we search the instruction graph for all directly connected loads that
     // must be scheduled together with the stow.
     stow->removeFromList();
@@ -449,6 +449,25 @@ private:
     // If one has already been visited, duplicate and
     // mark the new one.
     searchOperandsForLoads(stow, stow->getStoredVal());
+  }
+  void searchOperandsForLoads(IR::Cache &cache, IR::Stow stow, Value *val) {
+    Instruction *inst = dyn_cast<Instruction>(val);
+    if (!inst) return;
+    if (Load load = IR::Load(inst)) {
+
+      // now, check if it is a load
+      return;
+    }
+    for (Value *use : inst->getUsers()) {
+      if (IR::Stow other = IR::Stow(use)) {
+        if (other == stow) break; // not other
+        // we reload this use, so we need to duplicate the instructions
+        if (useInst->getParent() == stow->getParent())
+          searchOperandsForLoads(stow, useInst);
+      }
+    }
+    // if not, check if it is stored
+    // if not, check its operands
   }
   constexpr void setLI(llvm::LoopInfo *loopInfo) { LI = loopInfo; }
   constexpr void addStow(Addr *stow) {}
@@ -1564,7 +1583,7 @@ private:
     std::swap(g.nodeIds, nodeIds);
     g.activeEdges = activeEdges; // undo such that g.getEdges(d) is correct
     for (auto &&e : g.getEdges(d)) e.popSatLevel();
-    g.activeEdges = oldEdges; // restore backup
+    g.activeEdges = oldEdges;    // restore backup
     auto *oldNodeIter = oldSchedules.begin();
     for (auto &&n : g) n.getSchedule() = *(oldNodeIter++);
     allocator.rollback(chckpt);
