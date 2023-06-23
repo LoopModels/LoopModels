@@ -61,8 +61,8 @@ class ScheduledNode {
   ScheduledNode *component{nullptr}; // SCC cycle, or last node in a chain
   Dependence *dep{nullptr};          // input edges (points to parents)
   int64_t *offsets{nullptr};
-  uint32_t phiOffset{0};             // used in LoopBlock
-  uint32_t omegaOffset{0};           // used in LoopBlock
+  uint32_t phiOffset{0};   // used in LoopBlock
+  uint32_t omegaOffset{0}; // used in LoopBlock
   uint8_t rank{0};
   bool visited{false};
 #if !defined(__clang__) && defined(__GNUC__)
@@ -410,9 +410,12 @@ public:
         check(&allocator, stow, other);
       for (Addr *other = tr.load; other; other = other->getNext())
         check(&allocator, stow, other);
-      // TODO: search parents for loads to build direct connections
-
       stow = next
+    }
+    for (Addr *stow = tr.stow; stow;) {
+      Addr *next = stow->getNext(); // addScheduledNode breaks chain
+      addScheduledNode(stow);
+      stow = next;
     }
     // buildGraph();
     // shiftOmegas();
@@ -421,6 +424,32 @@ public:
   void clear() { allocator.reset(); }
 
 private:
+  constexpr auto addScheduledNode(Addr *stow) {
+    // we search the instruction graph for all directly connected loads that
+    // must be scheduled together with the stow.
+    stow->removeFromList();
+    // how are we going to handle load duplication?
+    // we also need to duplicate the instruction graph leading to the node
+    // implying we need to track that tree.
+    // w = a[i]
+    // x = log(w)
+    // y = 2*x
+    // z = 3*x
+    // p = z / 5
+    // q = 5 / z
+    // s = p - q
+    // b[i] = y
+    // c[i] = s
+    // if adding c[i] after b[i], we must duplicate `w` and `x`
+    // but duplicating `z, `p`, `q`, or `s` is unnecessary.
+    // We don't need to duplicate those instructions where
+    // all uses only lead to `c[i]`.
+    // The trick we use is to mark each instruction with
+    // the store that visited it.
+    // If one has already been visited, duplicate and
+    // mark the new one.
+    searchOperandsForLoads(stow, stow->getStoredVal());
+  }
   constexpr void setLI(llvm::LoopInfo *loopInfo) { LI = loopInfo; }
   constexpr void addStow(Addr *stow) {}
   constexpr void addAddr(Addr *addr) {
@@ -1535,7 +1564,7 @@ private:
     std::swap(g.nodeIds, nodeIds);
     g.activeEdges = activeEdges; // undo such that g.getEdges(d) is correct
     for (auto &&e : g.getEdges(d)) e.popSatLevel();
-    g.activeEdges = oldEdges;    // restore backup
+    g.activeEdges = oldEdges; // restore backup
     auto *oldNodeIter = oldSchedules.begin();
     for (auto &&n : g) n.getSchedule() = *(oldNodeIter++);
     allocator.rollback(chckpt);
