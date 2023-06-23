@@ -27,7 +27,7 @@ class LoopTreeSchedule;
 namespace IR {
 using math::PtrVector, math::MutPtrVector, math::DensePtrMatrix,
   math::MutDensePtrMatrix, math::SquarePtrMatrix, math::_, math::DenseDims,
-  math::PtrMatrix, math::end;
+  math::PtrMatrix, math::end, poly::Dependence;
 
 /// Represents a memory access that has been rotated according to some affine
 /// transform.
@@ -72,11 +72,12 @@ using math::PtrVector, math::MutPtrVector, math::DensePtrMatrix,
 /// `oldLoop->rotate(PhiInv)`
 // clang-format on
 class Addr : public Instruction {
-  [[no_unique_address]] poly::Dependence *edgeIn{nullptr};
+  [[no_unique_address]] Dependence *edgeIn{nullptr};
+  [[no_unique_address]] Dependence *edgeOut{nullptr};
   [[no_unique_address]] union {
-    ScheduledNode *node{nullptr};
-    size_t maxDepth;
-  } nodeOrDepth; // both are used at different times
+    ScheduledNode *node{nullptr}; // used in linear program
+    size_t maxDepth;              // used???
+  } nodeOrDepth;                  // both are used at different times
   [[no_unique_address]] NotNull<const llvm::SCEVUnknown> basePointer;
   [[no_unique_address]] poly::Loop *loop{nullptr};
   [[no_unique_address]] llvm::Instruction *instr;
@@ -108,9 +109,10 @@ class Addr : public Instruction {
   }
   // this is a reload
   explicit Addr(Addr *other)
-    : Instruction(VK_Stow, other->depth), basePointer(other->basePointer),
+    : Instruction(VK_Load, other->depth), basePointer(other->basePointer),
       loop(other->loop), instr(other->instr), offSym(other->offSym),
-      syms(other->syms), numDim(other->numDim), numDynSym(other->numDynSym) {
+      syms(other->syms), predicate(other->predicate), numDim(other->numDim),
+      numDynSym(other->numDynSym) {
     std::memcpy(mem, other->mem,
                 intMemNeeded(getNumLoops(), numDim) * sizeof(int64_t));
   }
@@ -176,8 +178,20 @@ class Addr : public Instruction {
   [[nodiscard]] constexpr auto offsetMatrix() -> MutDensePtrMatrix<int64_t> {
     return {offSym, DenseDims{getArrayDim(), numDynSym}};
   }
+  inline constexpr void setEdgeIn(Dependence *);
+  inline constexpr void setEdgeOut(Dependence *);
 
 public:
+  inline constexpr void addEdgeIn(Dependence *);
+  inline constexpr void addEdgeOut(Dependence *);
+  [[nodiscard]] constexpr auto getEdgeIn() -> Dependence * { return edgeIn; }
+  [[nodiscard]] constexpr auto getEdgeIn() const -> const Dependence * {
+    return edgeIn;
+  }
+  [[nodiscard]] constexpr auto getEdgeOut() -> Dependence * { return edgeOut; }
+  [[nodiscard]] constexpr auto getEdgeOut() const -> const Dependence * {
+    return edgeOut;
+  }
   constexpr void setLoopNest(poly::Loop *L) { loop = L; }
   // NOLINTNEXTLINE(readability-make-member-function-const)
   [[nodiscard]] constexpr auto getNode() -> ScheduledNode * {

@@ -92,13 +92,13 @@ class Dependence {
   //
   //
   //
-
   [[no_unique_address]] NotNull<DepPoly> depPoly;
   [[no_unique_address]] NotNull<math::Simplex> dependenceSatisfaction;
   [[no_unique_address]] NotNull<math::Simplex> dependenceBounding;
   [[no_unique_address]] NotNull<IR::Addr> in;
   [[no_unique_address]] NotNull<IR::Addr> out;
-  [[no_unique_address]] Dependence *next{nullptr};
+  [[no_unique_address]] Dependence *nextInput{nullptr};  // all share same `in`
+  [[no_unique_address]] Dependence *nextOutput{nullptr}; // all share same `out`
   // the upper bit of satLvl indicates whether the satisfaction is because of
   // conditional independence (value = 0), or whether it was because of offsets
   // when solving the linear program (value = 1).
@@ -106,24 +106,22 @@ class Dependence {
                                                       255, 255, 255};
   [[no_unique_address]] bool forward;
 
-  static auto timelessCheck(Arena<> *alloc, NotNull<DepPoly> dxy,
+  static void timelessCheck(Arena<> *alloc, NotNull<DepPoly> dxy,
                             NotNull<IR::Addr> x, NotNull<IR::Addr> y,
                             std::array<NotNull<math::Simplex>, 2> pair,
-                            bool isFwd) -> Dependence * {
+                            bool isFwd) {
     const size_t numLambda = dxy->getNumLambda();
     invariant(dxy->getTimeDim(), unsigned(0));
-    if (isFwd) {
-      pair[0]->truncateVars(1 + numLambda + dxy->getNumScheduleCoef());
-      return alloc->create<Dependence>(dxy, pair, x, y, true);
+    if (!isFwd) {
+      std::swap(pair[0], pair[1]);
+      std::swap(x, y);
     }
-    pair[1]->truncateVars(1 + numLambda + dxy->getNumScheduleCoef());
-    std::swap(pair[0], pair[1]);
-    return alloc->create<Dependence>(dxy, pair, y, x, false);
+    pair[0]->truncateVars(1 + numLambda + dxy->getNumScheduleCoef());
+    y->addEdgeIn(alloc->create<Dependence>(dxy, pair, x, y, isFwd));
   }
-  static auto timelessCheck(Arena<> *alloc, NotNull<DepPoly> dxy,
+  static void timelessCheck(Arena<> *alloc, NotNull<DepPoly> dxy,
                             NotNull<IR::Addr> x, NotNull<IR::Addr> y,
-                            std::array<NotNull<math::Simplex>, 2> pair)
-    -> Dependence * {
+                            std::array<NotNull<math::Simplex>, 2> pair) {
     return timelessCheck(alloc, dxy, x, y, pair,
                          checkDirection(*alloc, pair, x, y, dxy->getNumLambda(),
                                         dxy->getNumVar() + 1));
@@ -132,13 +130,17 @@ class Dependence {
 
   // emplaces dependencies with repeat accesses to the same memory across
   // time
-  static auto timeCheck(Arena<> *alloc, NotNull<DepPoly> dxy,
+  static void timeCheck(Arena<> *alloc, NotNull<DepPoly> dxy,
                         NotNull<IR::Addr> x, NotNull<IR::Addr> y,
-                        std::array<NotNull<math::Simplex>, 2> pair)
-    -> Dependence * {
-    // copy backup
-    std::array<NotNull<math::Simplex>, 2> farkasBackups{pair[0]->copy(alloc),
-                                                        pair[1]->copy(alloc)};
+                        std::array<NotNull<math::Simplex>, 2> pair) {
+    bool isFwd = checkDirection(*alloc, pair, x, y, dxy->getNumLambda(),
+                                dxy->getA().numCol() - dxy->getTimeDim());
+    timeCheck(alloc, dxy, x, y, pair, isFwd);
+  }
+  static void timeCheck(Arena<> *alloc, NotNull<DepPoly> dxy,
+                        NotNull<IR::Addr> x, NotNull<IR::Addr> y,
+                        std::array<NotNull<math::Simplex>, 2> pair,
+                        bool isFwd) {
     const unsigned numInequalityConstraintsOld =
                      dxy->getNumInequalityConstraints(),
                    numEqualityConstraintsOld = dxy->getNumEqualityConstraints(),
@@ -147,8 +149,9 @@ class Dependence {
                    numLambda = posEqEnd + numEqualityConstraintsOld,
                    numScheduleCoefs = dxy->getNumScheduleCoef();
     invariant(numLambda, dxy->getNumLambda());
-    const bool isFwd = checkDirection(*alloc, pair, x, y, numLambda,
-                                      dxy->getA().numCol() - dxy->getTimeDim());
+    // copy backup
+    std::array<NotNull<math::Simplex>, 2> farkasBackups{pair[0]->copy(alloc),
+                                                        pair[1]->copy(alloc)};
     NotNull<IR::Addr> in = x, out = y;
     if (isFwd) {
       std::swap(farkasBackups[0], farkasBackups[1]);
@@ -161,6 +164,7 @@ class Dependence {
       alloc->create<Dependence>(dxy->copy(alloc), pair, in, out, isFwd);
     invariant(out->getNumLoops() + in->getNumLoops(),
               dep0->getNumPhiCoefficients());
+    out->addEdgeIn(dep0);
     // pair is invalid
     const ptrdiff_t timeDim = dxy->getTimeDim(),
                     numVar = 1 + dxy->getNumVar() - timeDim;
@@ -245,14 +249,24 @@ class Dependence {
     auto *dep1 = alloc->create<Dependence>(dxy, farkasBackups, out, in, !isFwd);
     invariant(out->getNumLoops() + in->getNumLoops(),
               dep0->getNumPhiCoefficients());
-    dep0->setNext(dep1);
-    return dep0;
+    in->addEdgeIn(dep1);
+  }
+  constexpr auto getSimplexPair() -> std::array<NotNull<math::Simplex>, 2> {
+    return {dependenceSatisfaction, dependenceBounding};
   }
 
 public:
-  [[nodiscard]] constexpr auto getNext() -> Dependence * { return next; }
-  [[nodiscard]] constexpr auto getNext() const -> const Dependence * {
-    return next;
+  [[nodiscard]] constexpr auto getNextInput() -> Dependence * {
+    return nextInput;
+  }
+  [[nodiscard]] constexpr auto getNextInput() const -> const Dependence * {
+    return nextInput;
+  }
+  [[nodiscard]] constexpr auto getNextOutput() -> Dependence * {
+    return nextInput;
+  }
+  [[nodiscard]] constexpr auto getNextOutput() const -> const Dependence * {
+    return nextInput;
   }
   [[nodiscard]] constexpr auto input() -> NotNull<IR::Addr> { return in; }
   [[nodiscard]] constexpr auto output() -> NotNull<IR::Addr> { return out; }
@@ -262,7 +276,12 @@ public:
   [[nodiscard]] constexpr auto output() const -> NotNull<const IR::Addr> {
     return out;
   }
-  constexpr void setNext(Dependence *n) { next = n; }
+  constexpr auto setNextInput(Dependence *n) -> Dependence * {
+    return nextInput = n;
+  }
+  constexpr auto setNextOutput(Dependence *n) -> Dependence * {
+    return nextOutput = n;
+  }
   constexpr Dependence(NotNull<DepPoly> poly,
                        std::array<NotNull<math::Simplex>, 2> depSatBound,
                        NotNull<IR::Addr> i, NotNull<IR::Addr> o, bool fwd)
@@ -514,7 +533,7 @@ public:
       //   loop must appear either above or below the instructions
       //   present at that level
       // }
-      assert(i != numLoopsCommon);
+      invariant(i != numLoopsCommon);
       // forward means offset is 2nd - 1st
       schv[0] = outOffOmega[i];
       schv[1] = inOffOmega[i];
@@ -557,7 +576,7 @@ public:
       //   loop must appear either above or below the instructions
       //   present at that level
       // }
-      assert(i != numLoopsCommon);
+      invariant(i != numLoopsCommon);
       schv[2 + i] = 1;
       schv[2 + numLoopsIn + i] = 1;
       // forward means offset is 2nd - 1st
@@ -691,12 +710,11 @@ public:
     return false;
   }
 
-  static auto check(Arena<> *alloc, NotNull<IR::Addr> x, NotNull<IR::Addr> y)
-    -> Dependence * {
+  static void check(Arena<> *alloc, NotNull<IR::Addr> x, NotNull<IR::Addr> y) {
     // TODO: implement gcd test
     // if (x.gcdKnownIndependent(y)) return {};
     DepPoly *dxy{DepPoly::dependence(alloc, x, y)};
-    if (!dxy) return {};
+    if (!dxy) return;
     invariant(x->getNumLoops(), dxy->getDim0());
     invariant(y->getNumLoops(), dxy->getDim1());
     invariant(x->getNumLoops() + y->getNumLoops(), dxy->getNumPhiCoef());
@@ -704,20 +722,33 @@ public:
     // dependence direction for the dependency we week, we'll
     // discard the program variables x then y
     std::array<NotNull<math::Simplex>, 2> pair(dxy->farkasPair(alloc));
-    if (dxy->getTimeDim()) return timeCheck(alloc, dxy, x, y, pair);
-    return timelessCheck(alloc, dxy, x, y, pair);
+    if (dxy->getTimeDim()) timeCheck(alloc, dxy, x, y, pair);
+    else timelessCheck(alloc, dxy, x, y, pair);
   }
   // reload store `x`
   static auto reload(Arena<> *alloc, NotNull<IR::Addr> store)
-    -> std::pair<NotNull<IR::Addr>, Dependence *> {
+    -> NotNull<IR::Addr> {
     NotNull<DepPoly> dxy{DepPoly::self(alloc, store)};
     std::array<NotNull<math::Simplex>, 2> pair(dxy->farkasPair(alloc));
     NotNull<IR::Addr> load = store->reload(alloc);
-    // no need for a timeCheck, because if there is a time-dim, we have a
-    // store -> store dependence.
-    // when we add new load -> store edges for each store->store,
-    // that will cover the time-dependence
-    return {load, timelessCheck(alloc, dxy, store, load, pair, true)};
+    for (Dependence *d = store->getEdgeIn(); d; d = d->getNextInput()) {
+      IR::Addr *input = d->in;
+      if (input->isLoad()) continue;
+      auto *in = alloc->create<Dependence>(d->getDepPoly(), d->getSimplexPair(),
+                                           input, load, d->isForward());
+      load->addEdgeIn(in);
+    }
+    for (Dependence *d = store->getEdgeOut(); d; d = d->getNextOutput()) {
+      IR::Addr *output = d->out;
+      if (output->isLoad()) continue;
+      auto *out = alloc->create<Dependence>(
+        d->getDepPoly(), d->getSimplexPair(), load, output, d->isForward());
+      load->addEdgeOut(out);
+    }
+
+    if (dxy->getTimeDim()) timeCheck(alloc, dxy, store, load, pair, true);
+    else timelessCheck(alloc, dxy, store, load, pair, true);
+    return load;
   }
   constexpr auto replaceInput(NotNull<IR::Addr> newIn) -> Dependence {
     Dependence edge = *this;
@@ -752,8 +783,23 @@ constexpr void IR::Addr::forEachInput(const auto &f) {
   poly::Dependence *d = edgeIn;
   while (d) {
     f(d->input());
-    d = d->getNext();
+    d = d->getNextInput();
   }
 }
+inline constexpr void Addr::setEdgeIn(Dependence *dep) {
+  edgeIn = dep->setNextInput(edgeIn);
+}
+inline constexpr void Addr::setEdgeOut(Dependence *dep) {
+  edgeOut = dep->setNextOutput(edgeOut);
+}
+inline constexpr void Addr::addEdgeIn(Dependence *dep) {
+  setEdgeIn(dep);
+  dep->input()->setEdgeOut(dep);
+}
+inline constexpr void Addr::addEdgeOut(Dependence *dep) {
+  setEdgeOut(dep);
+  dep->output()->setEdgeIn(dep);
+}
+
 } // namespace IR
 } // namespace poly
