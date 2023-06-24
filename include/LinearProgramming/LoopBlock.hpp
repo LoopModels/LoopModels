@@ -641,8 +641,8 @@ private:
     if (!foundNonZeroOffset) return allocator.rollback(p0);
     bool nonZero = false;
     // matrix A is reasonably diagonalized, should indicate
-    size_t c = 0;
-    for (size_t r = 0; r < rank; ++r) {
+    ptrdiff_t c = 0;
+    for (ptrdiff_t r = 0; r < rank; ++r) {
       int64_t off = A(r, last);
       if (off == 0) continue;
       for (; c < nLoops; ++c) {
@@ -676,7 +676,7 @@ private:
           while (true) {
             unsigned offset = pick ? numSyms + dep0 : numSyms,
                      numDep = pick ? dep1 : dep0;
-            for (size_t l = 0; l < numDep; ++l) {
+            for (ptrdiff_t l = 0; l < numDep; ++l) {
               int64_t mlt = offs[l];
               if (mlt == 0) continue;
               satL(0, _) -= mlt * satL(offset + l, _);
