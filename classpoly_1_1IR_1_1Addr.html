@@ -161,11 +161,11 @@ constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>setPredicat
 <tr class="memitem:a66e194eeceb899e0e0343153d7579ff7"><td class="memItemLeft" align="right" valign="top"><a id="a66e194eeceb899e0e0343153d7579ff7"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getUsers</b> () -&gt; <a class="el" href="classpoly_1_1IR_1_1Users.html">Users</a> &amp;</td></tr>
 <tr class="separator:a66e194eeceb899e0e0343153d7579ff7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab2b8c81fb46be4bbc76a530f27549f4a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1IR_1_1Addr.html#ab2b8c81fb46be4bbc76a530f27549f4a">updateOffsMat</a> (Arena&lt;&gt; *alloc, size_t numToPeel, llvm::Loop *L, llvm::ScalarEvolution *SE)</td></tr>
-<tr class="separator:ab2b8c81fb46be4bbc76a530f27549f4a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a92c2d1e922f1c38699ed5471773d4d61"><td class="memItemLeft" align="right" valign="top"><a id="a92c2d1e922f1c38699ed5471773d4d61"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>peelLoops</b> (Arena&lt;&gt; *alloc, size_t numToPeel, llvm::Loop *L, llvm::ScalarEvolution *SE)</td></tr>
-<tr class="separator:a92c2d1e922f1c38699ed5471773d4d61"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a218eb171572ded2bb68130151bc8f0bd"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1IR_1_1Addr.html#a218eb171572ded2bb68130151bc8f0bd">updateOffsMat</a> (Arena&lt;&gt; *alloc, size_t numToPeel, llvm::ScalarEvolution *SE)</td></tr>
+<tr class="separator:a218eb171572ded2bb68130151bc8f0bd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a91cc0c7465c6aea2e969001e5ec73399"><td class="memItemLeft" align="right" valign="top"><a id="a91cc0c7465c6aea2e969001e5ec73399"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>peelLoops</b> (Arena&lt;&gt; *alloc, ptrdiff_t numToPeel, llvm::ScalarEvolution *SE)</td></tr>
+<tr class="separator:a91cc0c7465c6aea2e969001e5ec73399"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa33bdde8fb39d91ff6acb66f99100192"><td class="memItemLeft" align="right" valign="top"><a id="aa33bdde8fb39d91ff6acb66f99100192"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumLoops</b> () const -&gt; unsigned</td></tr>
 <tr class="separator:aa33bdde8fb39d91ff6acb66f99100192"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -285,8 +285,8 @@ static auto&#160;</td><td class="memItemRight" valign="bottom"><b>construct</b> 
 
 </div>
 </div>
-<a id="ab2b8c81fb46be4bbc76a530f27549f4a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab2b8c81fb46be4bbc76a530f27549f4a">&#9670;&nbsp;</a></span>updateOffsMat()</h2>
+<a id="a218eb171572ded2bb68130151bc8f0bd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a218eb171572ded2bb68130151bc8f0bd">&#9670;&nbsp;</a></span>updateOffsMat()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -305,12 +305,6 @@ static auto&#160;</td><td class="memItemRight" valign="bottom"><b>construct</b> 
           <td></td>
           <td class="paramtype">size_t&#160;</td>
           <td class="paramname"><em>numToPeel</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">llvm::Loop *&#160;</td>
-          <td class="paramname"><em>L</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>

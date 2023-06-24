@@ -103,9 +103,9 @@ $(function() {
 <div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;<span class="preprocessor">#include &lt;string_view&gt;</span></div>
 <div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;<span class="preprocessor">#include &lt;utility&gt;</span></div>
 <div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160; </div>
-<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;<span class="keyword">namespace </span>CostModeling {</div>
+<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;<span class="keyword">namespace </span>poly::CostModeling {</div>
 <div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160; </div>
-<div class="line"><a name="l00037"></a><span class="lineno"><a class="line" href="classCostModeling_1_1CPURegisterFile.html">   37</a></span>&#160;<span class="keyword">class </span><a class="code" href="classCostModeling_1_1CPURegisterFile.html">CPURegisterFile</a> {</div>
+<div class="line"><a name="l00037"></a><span class="lineno"><a class="line" href="classpoly_1_1CostModeling_1_1CPURegisterFile.html">   37</a></span>&#160;<span class="keyword">class </span><a class="code" href="classpoly_1_1CostModeling_1_1CPURegisterFile.html">CPURegisterFile</a> {</div>
 <div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;  [[no_unique_address]] uint8_t maximumVectorWidth;</div>
 <div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;  [[no_unique_address]] uint8_t numVectorRegisters;</div>
 <div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;  [[no_unique_address]] uint8_t numGeneralPurposeRegisters;</div>
@@ -145,7 +145,7 @@ $(function() {
 <div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;  }</div>
 <div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160; </div>
 <div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;<span class="keyword">public</span>:</div>
-<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;  <a class="code" href="classCostModeling_1_1CPURegisterFile.html">CPURegisterFile</a>(llvm::LLVMContext &amp;C, <span class="keyword">const</span> llvm::TargetTransformInfo &amp;TTI) {</div>
+<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;  <a class="code" href="classpoly_1_1CostModeling_1_1CPURegisterFile.html">CPURegisterFile</a>(llvm::LLVMContext &amp;C, <span class="keyword">const</span> llvm::TargetTransformInfo &amp;TTI) {</div>
 <div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;    maximumVectorWidth = estimateMaximumVectorWidth(C, TTI);</div>
 <div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;    numVectorRegisters = TTI.getNumberOfRegisters(<span class="keyword">true</span>);</div>
 <div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;    numGeneralPurposeRegisters = TTI.getNumberOfRegisters(<span class="keyword">false</span>);</div>
@@ -211,12 +211,12 @@ $(function() {
 <div class="line"><a name="l00140"></a><span class="lineno">  140</span>&#160; </div>
 <div class="line"><a name="l00161"></a><span class="lineno">  161</span>&#160; </div>
 <div class="line"><a name="l00166"></a><span class="lineno">  166</span>&#160; </div>
-<div class="line"><a name="l00176"></a><span class="lineno"><a class="line" href="classCostModeling_1_1LoopTreeSchedule.html">  176</a></span>&#160;<span class="keyword">class </span><a class="code" href="classCostModeling_1_1LoopTreeSchedule.html">LoopTreeSchedule</a> {</div>
+<div class="line"><a name="l00176"></a><span class="lineno"><a class="line" href="classpoly_1_1CostModeling_1_1LoopTreeSchedule.html">  176</a></span>&#160;<span class="keyword">class </span><a class="code" href="classpoly_1_1CostModeling_1_1LoopTreeSchedule.html">LoopTreeSchedule</a> {</div>
 <div class="line"><a name="l00177"></a><span class="lineno">  177</span>&#160;  <span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt; <span class="keyword">using</span> Vec = math::ResizeableView&lt;T, unsigned&gt;;</div>
 <div class="line"><a name="l00178"></a><span class="lineno">  178</span>&#160;  <span class="keyword">using</span> BitSet = MemoryAccess::BitSet;</div>
 <div class="line"><a name="l00179"></a><span class="lineno">  179</span>&#160; </div>
 <div class="line"><a name="l00180"></a><span class="lineno">  180</span>&#160;<span class="keyword">public</span>:</div>
-<div class="line"><a name="l00181"></a><span class="lineno"><a class="line" href="structCostModeling_1_1LoopTreeSchedule_1_1AddressGraph.html">  181</a></span>&#160;  <span class="keyword">struct </span><a class="code" href="structCostModeling_1_1LoopTreeSchedule_1_1AddressGraph.html">AddressGraph</a> {</div>
+<div class="line"><a name="l00181"></a><span class="lineno"><a class="line" href="structpoly_1_1CostModeling_1_1LoopTreeSchedule_1_1AddressGraph.html">  181</a></span>&#160;  <span class="keyword">struct </span><a class="code" href="structpoly_1_1CostModeling_1_1LoopTreeSchedule_1_1AddressGraph.html">AddressGraph</a> {</div>
 <div class="line"><a name="l00182"></a><span class="lineno">  182</span>&#160;    <span class="keyword">using</span> VertexType = Addr;</div>
 <div class="line"><a name="l00183"></a><span class="lineno">  183</span>&#160;    [[no_unique_address]] MutPtrVector&lt;Addr *&gt; addresses;</div>
 <div class="line"><a name="l00184"></a><span class="lineno">  184</span>&#160;    <span class="comment">// we restrict the SCC order to preserve relative ordering of the sub loops</span></div>
@@ -576,8 +576,8 @@ $(function() {
 <div class="line"><a name="l00543"></a><span class="lineno">  543</span>&#160;  <span class="comment">// a) every addr has an index field</span></div>
 <div class="line"><a name="l00544"></a><span class="lineno">  544</span>&#160;  <span class="comment">// b) we create BitSets of ancestors</span></div>
 <div class="line"><a name="l00545"></a><span class="lineno">  545</span>&#160;  <span class="comment">// NOLINTNEXTLINE(misc-no-recursion)</span></div>
-<div class="line"><a name="l00546"></a><span class="lineno">  546</span>&#160;  <span class="keyword">auto</span> placeAddr(Arena&lt;&gt; *alloc, lp::LoopBlock &amp;LB,</div>
-<div class="line"><a name="l00547"></a><span class="lineno">  547</span>&#160;                 MutPtrVector&lt;Addr *&gt; addr) -&gt; <span class="keywordtype">unsigned</span> {</div>
+<div class="line"><a name="l00546"></a><span class="lineno">  546</span>&#160;  <span class="keyword">auto</span> placeAddr(Arena&lt;&gt; *alloc, lp::LoopBlock &amp;LB, MutPtrVector&lt;Addr *&gt; addr)</div>
+<div class="line"><a name="l00547"></a><span class="lineno">  547</span>&#160;    -&gt; <span class="keywordtype">unsigned</span> {</div>
 <div class="line"><a name="l00548"></a><span class="lineno">  548</span>&#160;    <span class="comment">// we sort via repeatedly calculating the strongly connected components</span></div>
 <div class="line"><a name="l00549"></a><span class="lineno">  549</span>&#160;    <span class="comment">// of the address graph. The SCCs are in topological order.</span></div>
 <div class="line"><a name="l00550"></a><span class="lineno">  550</span>&#160;    <span class="comment">// If a load or store are isolated within a SCC from a sub-loop, we hoist</span></div>
@@ -860,45 +860,44 @@ $(function() {
 <div class="line"><a name="l00827"></a><span class="lineno">  827</span>&#160;<span class="comment">// class LoopForestSchedule : LoopTreeSchedule {</span></div>
 <div class="line"><a name="l00828"></a><span class="lineno">  828</span>&#160;<span class="comment">//   [[no_unique_address]] Arena&lt;&gt; *allocator;</span></div>
 <div class="line"><a name="l00829"></a><span class="lineno">  829</span>&#160;<span class="comment">// };</span></div>
-<div class="line"><a name="l00830"></a><span class="lineno">  830</span>&#160;} <span class="comment">// namespace CostModeling</span></div>
+<div class="line"><a name="l00830"></a><span class="lineno">  830</span>&#160;} <span class="comment">// namespace poly::CostModeling</span></div>
 <div class="line"><a name="l00831"></a><span class="lineno">  831</span>&#160; </div>
 <div class="line"><a name="l00832"></a><span class="lineno">  832</span>&#160;constexpr <span class="keywordtype">void</span></div>
-<div class="line"><a name="l00833"></a><span class="lineno">  833</span>&#160;ScheduledNode::insertMem(Arena&lt;&gt; *alloc,</div>
-<div class="line"><a name="l00834"></a><span class="lineno">  834</span>&#160;                         PtrVector&lt;MemoryAccess *&gt; memAccess,</div>
-<div class="line"><a name="l00835"></a><span class="lineno">  835</span>&#160;                         <a class="code" href="classCostModeling_1_1LoopTreeSchedule.html">CostModeling::LoopTreeSchedule</a> *L)<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l00836"></a><span class="lineno">  836</span>&#160;  <span class="comment">// First, we invert the schedule matrix.</span></div>
-<div class="line"><a name="l00837"></a><span class="lineno">  837</span>&#160;  SquarePtrMatrix&lt;int64_t&gt; Phi = schedule.getPhi();</div>
-<div class="line"><a name="l00838"></a><span class="lineno">  838</span>&#160;  <span class="keyword">auto</span> [Pinv, denom] = NormalForm::scaledInv(Phi);</div>
-<div class="line"><a name="l00839"></a><span class="lineno">  839</span>&#160;  <span class="comment">// TODO: if (s == 1) {}</span></div>
-<div class="line"><a name="l00840"></a><span class="lineno">  840</span>&#160;  <span class="comment">// TODO: make this function out of line</span></div>
-<div class="line"><a name="l00841"></a><span class="lineno">  841</span>&#160;  <span class="keyword">auto</span> &amp;accesses{L-&gt;getInitAddr(alloc)};</div>
-<div class="line"><a name="l00842"></a><span class="lineno">  842</span>&#160;  <span class="keywordtype">unsigned</span> numMem = memory.size(), offset = accesses.size(),</div>
-<div class="line"><a name="l00843"></a><span class="lineno">  843</span>&#160;           sId = std::numeric_limits&lt;unsigned&gt;::max() &gt;&gt; 1, j = 0;</div>
-<div class="line"><a name="l00844"></a><span class="lineno">  844</span>&#160;  NotNull&lt;poly::Loop&gt; loop = loopNest-&gt;rotate(alloc, Pinv, offsets);</div>
-<div class="line"><a name="l00845"></a><span class="lineno">  845</span>&#160;  <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i : memory) {</div>
-<div class="line"><a name="l00846"></a><span class="lineno">  846</span>&#160;    NotNull&lt;MemoryAccess&gt; mem = memAccess[i];</div>
-<div class="line"><a name="l00847"></a><span class="lineno">  847</span>&#160;    <span class="keywordtype">bool</span> isStore = mem-&gt;isStore();</div>
-<div class="line"><a name="l00848"></a><span class="lineno">  848</span>&#160;    <span class="keywordflow">if</span> (isStore) sId = j;</div>
-<div class="line"><a name="l00849"></a><span class="lineno">  849</span>&#160;    ++j;</div>
-<div class="line"><a name="l00850"></a><span class="lineno">  850</span>&#160;    <span class="keywordtype">size_t</span> inputEdges = mem-&gt;inputEdges().size(),</div>
-<div class="line"><a name="l00851"></a><span class="lineno">  851</span>&#160;           outputEdges = mem-&gt;outputEdges().size();</div>
-<div class="line"><a name="l00852"></a><span class="lineno">  852</span>&#160;    Addr *addr = Addr::construct(</div>
-<div class="line"><a name="l00853"></a><span class="lineno">  853</span>&#160;      alloc, loop, mem, isStore, Pinv, denom, schedule.getOffsetOmega(), L,</div>
-<div class="line"><a name="l00854"></a><span class="lineno">  854</span>&#160;      inputEdges, isStore ? numMem - 1 : 1, outputEdges, offsets);</div>
-<div class="line"><a name="l00855"></a><span class="lineno">  855</span>&#160;    mem-&gt;setAddress(addr);</div>
-<div class="line"><a name="l00856"></a><span class="lineno">  856</span>&#160;    accesses.push_back(addr);</div>
-<div class="line"><a name="l00857"></a><span class="lineno">  857</span>&#160;  }</div>
-<div class="line"><a name="l00858"></a><span class="lineno">  858</span>&#160;  Addr *store = accesses[offset + sId];</div>
-<div class="line"><a name="l00859"></a><span class="lineno">  859</span>&#160;  <span class="comment">// addrs all need direct connections</span></div>
-<div class="line"><a name="l00860"></a><span class="lineno">  860</span>&#160;  <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0, k = 0; i &lt; numMem; ++i)</div>
-<div class="line"><a name="l00861"></a><span class="lineno">  861</span>&#160;    <span class="keywordflow">if</span> (i != sId) accesses[offset + i]-&gt;addDirectConnection(store, k++);</div>
-<div class="line"><a name="l00862"></a><span class="lineno">  862</span>&#160;}</div>
-<div class="line"><a name="l00863"></a><span class="lineno">  863</span>&#160;[[nodiscard]] constexpr <span class="keyword">auto</span> Addr::getCurrentDepth() const -&gt; <span class="keywordtype">unsigned</span> {</div>
-<div class="line"><a name="l00864"></a><span class="lineno">  864</span>&#160;  <span class="keywordflow">return</span> node-&gt;getDepth();</div>
-<div class="line"><a name="l00865"></a><span class="lineno">  865</span>&#160;}</div>
-<div class="ttc" id="aclassCostModeling_1_1CPURegisterFile_html"><div class="ttname"><a href="classCostModeling_1_1CPURegisterFile.html">CostModeling::CPURegisterFile</a></div><div class="ttdef"><b>Definition:</b> CostModeling.hpp:37</div></div>
-<div class="ttc" id="aclassCostModeling_1_1LoopTreeSchedule_html"><div class="ttname"><a href="classCostModeling_1_1LoopTreeSchedule.html">CostModeling::LoopTreeSchedule</a></div><div class="ttdef"><b>Definition:</b> CostModeling.hpp:176</div></div>
-<div class="ttc" id="astructCostModeling_1_1LoopTreeSchedule_1_1AddressGraph_html"><div class="ttname"><a href="structCostModeling_1_1LoopTreeSchedule_1_1AddressGraph.html">CostModeling::LoopTreeSchedule::AddressGraph</a></div><div class="ttdef"><b>Definition:</b> CostModeling.hpp:181</div></div>
+<div class="line"><a name="l00833"></a><span class="lineno">  833</span>&#160;ScheduledNode::insertMem(Arena&lt;&gt; *alloc, PtrVector&lt;MemoryAccess *&gt; memAccess,</div>
+<div class="line"><a name="l00834"></a><span class="lineno">  834</span>&#160;                         CostModeling::LoopTreeSchedule *L)<span class="keyword"> const </span>{</div>
+<div class="line"><a name="l00835"></a><span class="lineno">  835</span>&#160;  <span class="comment">// First, we invert the schedule matrix.</span></div>
+<div class="line"><a name="l00836"></a><span class="lineno">  836</span>&#160;  SquarePtrMatrix&lt;int64_t&gt; Phi = schedule.getPhi();</div>
+<div class="line"><a name="l00837"></a><span class="lineno">  837</span>&#160;  <span class="keyword">auto</span> [Pinv, denom] = NormalForm::scaledInv(Phi);</div>
+<div class="line"><a name="l00838"></a><span class="lineno">  838</span>&#160;  <span class="comment">// TODO: if (s == 1) {}</span></div>
+<div class="line"><a name="l00839"></a><span class="lineno">  839</span>&#160;  <span class="comment">// TODO: make this function out of line</span></div>
+<div class="line"><a name="l00840"></a><span class="lineno">  840</span>&#160;  <span class="keyword">auto</span> &amp;accesses{L-&gt;getInitAddr(alloc)};</div>
+<div class="line"><a name="l00841"></a><span class="lineno">  841</span>&#160;  <span class="keywordtype">unsigned</span> numMem = memory.size(), offset = accesses.size(),</div>
+<div class="line"><a name="l00842"></a><span class="lineno">  842</span>&#160;           sId = std::numeric_limits&lt;unsigned&gt;::max() &gt;&gt; 1, j = 0;</div>
+<div class="line"><a name="l00843"></a><span class="lineno">  843</span>&#160;  NotNull&lt;poly::Loop&gt; loop = loopNest-&gt;rotate(alloc, Pinv, offsets);</div>
+<div class="line"><a name="l00844"></a><span class="lineno">  844</span>&#160;  <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i : memory) {</div>
+<div class="line"><a name="l00845"></a><span class="lineno">  845</span>&#160;    NotNull&lt;MemoryAccess&gt; mem = memAccess[i];</div>
+<div class="line"><a name="l00846"></a><span class="lineno">  846</span>&#160;    <span class="keywordtype">bool</span> isStore = mem-&gt;isStore();</div>
+<div class="line"><a name="l00847"></a><span class="lineno">  847</span>&#160;    <span class="keywordflow">if</span> (isStore) sId = j;</div>
+<div class="line"><a name="l00848"></a><span class="lineno">  848</span>&#160;    ++j;</div>
+<div class="line"><a name="l00849"></a><span class="lineno">  849</span>&#160;    <span class="keywordtype">size_t</span> inputEdges = mem-&gt;inputEdges().size(),</div>
+<div class="line"><a name="l00850"></a><span class="lineno">  850</span>&#160;           outputEdges = mem-&gt;outputEdges().size();</div>
+<div class="line"><a name="l00851"></a><span class="lineno">  851</span>&#160;    Addr *addr = Addr::construct(</div>
+<div class="line"><a name="l00852"></a><span class="lineno">  852</span>&#160;      alloc, loop, mem, isStore, Pinv, denom, schedule.getOffsetOmega(), L,</div>
+<div class="line"><a name="l00853"></a><span class="lineno">  853</span>&#160;      inputEdges, isStore ? numMem - 1 : 1, outputEdges, offsets);</div>
+<div class="line"><a name="l00854"></a><span class="lineno">  854</span>&#160;    mem-&gt;setAddress(addr);</div>
+<div class="line"><a name="l00855"></a><span class="lineno">  855</span>&#160;    accesses.push_back(addr);</div>
+<div class="line"><a name="l00856"></a><span class="lineno">  856</span>&#160;  }</div>
+<div class="line"><a name="l00857"></a><span class="lineno">  857</span>&#160;  Addr *store = accesses[offset + sId];</div>
+<div class="line"><a name="l00858"></a><span class="lineno">  858</span>&#160;  <span class="comment">// addrs all need direct connections</span></div>
+<div class="line"><a name="l00859"></a><span class="lineno">  859</span>&#160;  <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0, k = 0; i &lt; numMem; ++i)</div>
+<div class="line"><a name="l00860"></a><span class="lineno">  860</span>&#160;    <span class="keywordflow">if</span> (i != sId) accesses[offset + i]-&gt;addDirectConnection(store, k++);</div>
+<div class="line"><a name="l00861"></a><span class="lineno">  861</span>&#160;}</div>
+<div class="line"><a name="l00862"></a><span class="lineno">  862</span>&#160;[[nodiscard]] constexpr <span class="keyword">auto</span> Addr::getCurrentDepth() const -&gt; <span class="keywordtype">unsigned</span> {</div>
+<div class="line"><a name="l00863"></a><span class="lineno">  863</span>&#160;  <span class="keywordflow">return</span> node-&gt;getDepth();</div>
+<div class="line"><a name="l00864"></a><span class="lineno">  864</span>&#160;}</div>
+<div class="ttc" id="aclasspoly_1_1CostModeling_1_1CPURegisterFile_html"><div class="ttname"><a href="classpoly_1_1CostModeling_1_1CPURegisterFile.html">poly::CostModeling::CPURegisterFile</a></div><div class="ttdef"><b>Definition:</b> CostModeling.hpp:37</div></div>
+<div class="ttc" id="aclasspoly_1_1CostModeling_1_1LoopTreeSchedule_html"><div class="ttname"><a href="classpoly_1_1CostModeling_1_1LoopTreeSchedule.html">poly::CostModeling::LoopTreeSchedule</a></div><div class="ttdef"><b>Definition:</b> CostModeling.hpp:176</div></div>
+<div class="ttc" id="astructpoly_1_1CostModeling_1_1LoopTreeSchedule_1_1AddressGraph_html"><div class="ttname"><a href="structpoly_1_1CostModeling_1_1LoopTreeSchedule_1_1AddressGraph.html">poly::CostModeling::LoopTreeSchedule::AddressGraph</a></div><div class="ttdef"><b>Definition:</b> CostModeling.hpp:181</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

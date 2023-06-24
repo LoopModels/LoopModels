@@ -86,6 +86,9 @@ Inheritance diagram for poly::poly::Loop:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
+<tr class="memitem:afc21524e97e5b02aa987a6a657c685bb"><td class="memItemLeft" align="right" valign="top"><a id="afc21524e97e5b02aa987a6a657c685bb"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>Loop</b> (const <a class="el" href="classpoly_1_1poly_1_1Loop.html">Loop</a> &amp;)=delete</td></tr>
+<tr class="separator:afc21524e97e5b02aa987a6a657c685bb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adfbe9b2bae5998949f5bb9f07ac43152"><td class="memItemLeft" align="right" valign="top"><a id="adfbe9b2bae5998949f5bb9f07ac43152"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>isNonNegative</b> () const -&gt; bool</td></tr>
 <tr class="separator:adfbe9b2bae5998949f5bb9f07ac43152"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -106,9 +109,12 @@ constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>truncateCon
 <tr class="memitem:af172856d21b4f3bd6a7f4fc341a55c03"><td class="memItemLeft" align="right" valign="top"><a id="af172856d21b4f3bd6a7f4fc341a55c03"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>clear</b> ()</td></tr>
 <tr class="separator:af172856d21b4f3bd6a7f4fc341a55c03"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac25e0f8b26d0fb0bc1605e72a74a4322"><td class="memItemLeft" align="right" valign="top"><a id="ac25e0f8b26d0fb0bc1605e72a74a4322"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>removeOuterMost</b> (ptrdiff_t numToRemove, llvm::Loop *L, llvm::ScalarEvolution *SE)</td></tr>
-<tr class="separator:ac25e0f8b26d0fb0bc1605e72a74a4322"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5fd0fc9ea48052d02887d087ab75b6c8"><td class="memItemLeft" align="right" valign="top"><a id="a5fd0fc9ea48052d02887d087ab75b6c8"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getLLVMLoop</b> () const -&gt; llvm::Loop *</td></tr>
+<tr class="separator:a5fd0fc9ea48052d02887d087ab75b6c8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a303a88e180fcbd5f9c04856f135949e2"><td class="memItemLeft" align="right" valign="top"><a id="a303a88e180fcbd5f9c04856f135949e2"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>removeOuterMost</b> (ptrdiff_t numToRemove, llvm::ScalarEvolution *SE)</td></tr>
+<tr class="separator:a303a88e180fcbd5f9c04856f135949e2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abbf6ada904716f4178c5fc9a8385a1cc"><td class="memItemLeft" align="right" valign="top"><a id="abbf6ada904716f4178c5fc9a8385a1cc"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>addZeroLowerBounds</b> ()</td></tr>
 <tr class="separator:abbf6ada904716f4178c5fc9a8385a1cc"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -178,9 +184,9 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumSymbo
 <tr class="memitem:a10ddb2ce54c948306607e04543d43560"><td class="memItemLeft" align="right" valign="top"><a id="a10ddb2ce54c948306607e04543d43560"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>truncNumInEqCon</b> (Row r)</td></tr>
 <tr class="separator:a10ddb2ce54c948306607e04543d43560"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3cef17ba5d19dfd9738540402ceeb30f"><td class="memItemLeft" align="right" valign="top"><a id="a3cef17ba5d19dfd9738540402ceeb30f"></a>
-constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Loop</b> (unsigned _numConstraints, unsigned _numLoops, unsigned _numDynSymbols, bool _nonNegative)</td></tr>
-<tr class="separator:a3cef17ba5d19dfd9738540402ceeb30f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7c78eeb78fb15dcddc91059fdd62bfd6"><td class="memItemLeft" align="right" valign="top"><a id="a7c78eeb78fb15dcddc91059fdd62bfd6"></a>
+constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Loop</b> (llvm::Loop *loop, unsigned _numConstraints, unsigned _numLoops, unsigned _numDynSymbols, bool _nonNegative)</td></tr>
+<tr class="separator:a7c78eeb78fb15dcddc91059fdd62bfd6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_methods_structpoly_1_1poly_1_1BasePolyhedra"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_structpoly_1_1poly_1_1BasePolyhedra')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="structpoly_1_1poly_1_1BasePolyhedra.html">poly::poly::BasePolyhedra&lt; false, true, true, Loop &gt;</a></td></tr>
 <tr class="memitem:a13c5b886e0809d05196aded033745a32 inherit pub_methods_structpoly_1_1poly_1_1BasePolyhedra"><td class="memItemLeft" align="right" valign="top"><a id="a13c5b886e0809d05196aded033745a32"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getA</b> () -&gt; MutDensePtrMatrix&lt; int64_t &gt;</td></tr>
@@ -278,12 +284,12 @@ static auto&#160;</td><td class="memItemRight" valign="bottom"><b>construct</b> 
 <tr class="memitem:ad216d64edfdd6a7d50b2e5962cda22a8"><td class="memItemLeft" align="right" valign="top"><a id="ad216d64edfdd6a7d50b2e5962cda22a8"></a>
 static constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>setNumEqConstraints</b> (ptrdiff_t)</td></tr>
 <tr class="separator:ad216d64edfdd6a7d50b2e5962cda22a8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a165b223c9996631e05676411836d5179"><td class="memItemLeft" align="right" valign="top"><a id="a165b223c9996631e05676411836d5179"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>construct</b> (Arena&lt;&gt; *alloc, PtrMatrix&lt; int64_t &gt; A, llvm::ArrayRef&lt; const llvm::SCEV * &gt; syms, bool nonNeg) -&gt; <a class="el" href="classpoly_1_1poly_1_1Loop.html">Loop</a> *</td></tr>
-<tr class="separator:a165b223c9996631e05676411836d5179"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7d5ca382ff27e3091cf6975ca3f2fcea"><td class="memItemLeft" align="right" valign="top"><a id="a7d5ca382ff27e3091cf6975ca3f2fcea"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>allocate</b> (Arena&lt;&gt; *alloc, unsigned numCon, unsigned numLoops, llvm::ArrayRef&lt; const llvm::SCEV * &gt; syms, bool nonNegative) -&gt; NotNull&lt; <a class="el" href="classpoly_1_1poly_1_1Loop.html">Loop</a> &gt;</td></tr>
-<tr class="separator:a7d5ca382ff27e3091cf6975ca3f2fcea"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa303b67726f15e1f7dd57f8e872b60ca"><td class="memItemLeft" align="right" valign="top"><a id="aa303b67726f15e1f7dd57f8e872b60ca"></a>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>construct</b> (Arena&lt;&gt; *alloc, llvm::Loop *L, PtrMatrix&lt; int64_t &gt; A, llvm::ArrayRef&lt; const llvm::SCEV * &gt; syms, bool nonNeg) -&gt; <a class="el" href="classpoly_1_1poly_1_1Loop.html">Loop</a> *</td></tr>
+<tr class="separator:aa303b67726f15e1f7dd57f8e872b60ca"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af847e5cc2c9792bc25f2ffe0bf4b8f9c"><td class="memItemLeft" align="right" valign="top"><a id="af847e5cc2c9792bc25f2ffe0bf4b8f9c"></a>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>allocate</b> (Arena&lt;&gt; *alloc, llvm::Loop *L, unsigned numCon, unsigned numLoops, llvm::ArrayRef&lt; const llvm::SCEV * &gt; syms, bool nonNegative) -&gt; NotNull&lt; <a class="el" href="classpoly_1_1poly_1_1Loop.html">Loop</a> &gt;</td></tr>
+<tr class="separator:af847e5cc2c9792bc25f2ffe0bf4b8f9c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="friends"></a>
 Friends</h2></td></tr>
