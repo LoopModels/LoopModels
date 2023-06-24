@@ -5,6 +5,7 @@
 #include "IR/Address.hpp"
 #include "IR/Cache.hpp"
 #include "IR/Node.hpp"
+#include "Polyhedra/DependencyPolyhedra.hpp"
 #include "Polyhedra/Loops.hpp"
 #include "Schedule.hpp"
 #include <Containers/BitSets.hpp>
@@ -39,11 +40,12 @@
 
 namespace poly::lp {
 
+using IR::Addr, IR::Value, IR::Instruction, IR::Load, IR::Stow;
 using math::PtrVector, math::MutPtrVector, math::DensePtrMatrix,
   math::MutDensePtrMatrix, math::SquarePtrMatrix, math::MutSquarePtrMatrix,
-  math::end, math::_, math::Simplex, utils::NotNull, utils::invariant,
-  poly::Dependence, IR::Addr, IR::Value, IR::Instruction, IR::Load, IR::Stow,
-  utils::Optional, utils::invariant, utils::NotNull;
+  math::end, math::_, math::Simplex;
+using poly::Dependence, poly::DepPoly;
+using utils::NotNull, utils::invariant, utils::Optional;
 
 /// ScheduledNode
 /// Represents a set of memory accesses that are optimized together in the LP.
@@ -88,6 +90,11 @@ class ScheduledNode {
     : store(store), loopNest(L) {}
 
 public:
+  constexpr auto addNext(ScheduledNode *n) -> ScheduledNode * {
+    next = n;
+    return this;
+  }
+
   static auto construct(Arena<> *alloc, Addr *store, poly::Loop *L)
     -> ScheduledNode * {
     size_t memNeeded = poly::requiredScheduleStorage(L->getNumLoops());
@@ -133,108 +140,99 @@ public:
   // a. nodes -> edges
   // b. nodes -> addrs
   constexpr void forEachAddr(const auto &f) {
-    Addr *m = store;
-    while (true) {
-      f(m);
-      IR::Node *v = m->getPrev();
-      if (!v) break;
-      m = llvm::cast<Addr>(v);
-    }
+    for (Addr *m = store; m; m = llvm::cast_or_null<Addr>(m->getChild())) f(m);
+  }
+  constexpr void forEachAddrNode(const auto &f) {
+    for (ScheduledNode *n = this; n; n = n->getNext())
+      for (Addr *m = n->getStore(); m;
+           m = llvm::cast_or_null<Addr>(m->getChild()))
+        f(m);
   }
   // for each input node, i.e. for each where this is the output
   constexpr void forEachInput(const auto &f) {
-    for (Addr *addr = store; addr; addr = llvm::cast<Addr>(addr->getChild()))
-      for (Dependence *d = addr->getEdgeIn(); d; d = d->getNextInput())
+    for (Addr *a = store; a; a = llvm::cast_or_null<Addr>(a->getChild()))
+      for (Dependence *d = a->getEdgeIn(); d; d = d->getNextInput())
         f(d->input()->getNode());
   }
   constexpr void forEachInput(const auto &f) const {
-    for (const Addr *addr = store; addr;
-         addr = llvm::cast<Addr>(addr->getChild()))
-      for (const Dependence *d = addr->getEdgeIn(); d; d = d->getNextInput())
+    for (const Addr *a = store; a; a = llvm::cast_or_null<Addr>(a->getChild()))
+      for (const Dependence *d = a->getEdgeIn(); d; d = d->getNextInput())
         f(d->input()->getNode());
   }
   constexpr void forEachInput(unsigned depth, const auto &f) {
-    for (Addr *addr = store; addr; addr = llvm::cast<Addr>(addr->getChild()))
-      for (Dependence *d = addr->getEdgeIn(); d; d = d->getNextInput())
+    for (Addr *a = store; a; a = llvm::cast_or_null<Addr>(a->getChild()))
+      for (Dependence *d = a->getEdgeIn(); d; d = d->getNextInput())
         if (!d->isSat(depth)) f(d->input()->getNode());
   }
   constexpr void forEachInput(unsigned depth, const auto &f) const {
-    for (const Addr *addr = store; addr;
-         addr = llvm::cast<Addr>(addr->getChild()))
-      for (const Dependence *d = addr->getEdgeIn(); d; d = d->getNextInput())
+    for (const Addr *a = store; a; a = llvm::cast_or_null<Addr>(a->getChild()))
+      for (const Dependence *d = a->getEdgeIn(); d; d = d->getNextInput())
         if (!d->isSat(depth)) f(d->input()->getNode());
   }
   constexpr auto reduceEachInput(auto x, const auto &f) {
-    for (Addr *addr = store; addr; addr = llvm::cast<Addr>(addr->getChild()))
-      for (Dependence *d = addr->getEdgeIn(); d; d = d->getNextInput())
+    for (Addr *a = store; a; a = llvm::cast_or_null<Addr>(a->getChild()))
+      for (Dependence *d = a->getEdgeIn(); d; d = d->getNextInput())
         x = f(x, d->input()->getNode());
     return x;
   }
   constexpr void reduceEachInput(auto x, const auto &f) const {
-    for (const Addr *addr = store; addr;
-         addr = llvm::cast<Addr>(addr->getChild()))
-      for (const Dependence *d = addr->getEdgeIn(); d; d = d->getNextInput())
+    for (const Addr *a = store; a; a = llvm::cast_or_null<Addr>(a->getChild()))
+      for (const Dependence *d = a->getEdgeIn(); d; d = d->getNextInput())
         x = f(x, d->input()->getNode());
     return x;
   }
   constexpr void reduceEachInput(auto x, unsigned depth, const auto &f) {
-    for (Addr *addr = store; addr; addr = llvm::cast<Addr>(addr->getChild()))
-      for (Dependence *d = addr->getEdgeIn(); d; d = d->getNextInput())
+    for (Addr *a = store; a; a = llvm::cast_or_null<Addr>(a->getChild()))
+      for (Dependence *d = a->getEdgeIn(); d; d = d->getNextInput())
         if (!d->isSat(depth)) x = f(x, d->input()->getNode());
     return x;
   }
   constexpr void reduceEachInput(auto x, unsigned depth, const auto &f) const {
-    for (const Addr *addr = store; addr;
-         addr = llvm::cast<Addr>(addr->getChild()))
-      for (const Dependence *d = addr->getEdgeIn(); d; d = d->getNextInput())
+    for (const Addr *a = store; a; a = llvm::cast_or_null<Addr>(a->getChild()))
+      for (const Dependence *d = a->getEdgeIn(); d; d = d->getNextInput())
         if (!d->isSat(depth)) x = f(x, d->input()->getNode());
     return x;
   }
   constexpr void forEachInputEdge(const auto &f) {
-    for (Addr *addr = store; addr; addr = llvm::cast<Addr>(addr->getChild()))
-      for (Dependence *d = addr->getEdgeIn(); d; d = d->getNextInput()) f(d);
+    for (Addr *a = store; a; a = llvm::cast_or_null<Addr>(a->getChild()))
+      for (Dependence *d = a->getEdgeIn(); d; d = d->getNextInput()) f(d);
   }
   constexpr void forEachInputEdge(const auto &f) const {
-    for (const Addr *addr = store; addr;
-         addr = llvm::cast<Addr>(addr->getChild()))
-      for (const Dependence *d = addr->getEdgeIn(); d; d = d->getNextInput())
-        f(d);
+    for (const Addr *a = store; a; a = llvm::cast_or_null<Addr>(a->getChild()))
+      for (const Dependence *d = a->getEdgeIn(); d; d = d->getNextInput()) f(d);
   }
   constexpr void forEachInputEdge(unsigned depth, const auto &f) {
-    for (Addr *addr = store; addr; addr = llvm::cast<Addr>(addr->getChild()))
-      for (Dependence *d = addr->getEdgeIn(); d; d = d->getNextInput())
+    for (Addr *a = store; a; a = llvm::cast_or_null<Addr>(a->getChild()))
+      for (Dependence *d = a->getEdgeIn(); d; d = d->getNextInput())
         if (!d->isSat(depth)) f(d);
   }
   constexpr void forEachInputEdge(unsigned depth, const auto &f) const {
-    for (const Addr *addr = store; addr;
-         addr = llvm::cast<Addr>(addr->getChild()))
-      for (const Dependence *d = addr->getEdgeIn(); d; d = d->getNextInput())
+    for (const Addr *a = store; a; a = llvm::cast_or_null<Addr>(a->getChild()))
+      for (const Dependence *d = a->getEdgeIn(); d; d = d->getNextInput())
         if (!d->isSat(depth)) f(d);
   }
   constexpr auto reduceEachInputEdge(auto x, const auto &f) {
-    for (Addr *addr = store; addr; addr = llvm::cast<Addr>(addr->getChild()))
-      for (Dependence *d = addr->getEdgeIn(); d; d = d->getNextInput())
+    for (Addr *a = store; a; a = llvm::cast_or_null<Addr>(a->getChild()))
+      for (Dependence *d = a->getEdgeIn(); d; d = d->getNextInput())
         x = f(x, d);
     return x;
   }
   constexpr void reduceEachInputEdge(auto x, const auto &f) const {
-    for (const Addr *addr = store; addr;
-         addr = llvm::cast<Addr>(addr->getChild()))
-      for (const Dependence *d = addr->getEdgeIn(); d; d = d->getNextInput())
+    for (const Addr *a = store; a; a = llvm::cast_or_null<Addr>(a->getChild()))
+      for (const Dependence *d = a->getEdgeIn(); d; d = d->getNextInput())
         x = f(x, d);
     return x;
   }
   constexpr void reduceEachInputEdge(auto x, unsigned depth, const auto &f) {
-    for (Addr *addr = store; addr; addr = llvm::cast<Addr>(addr->getChild()))
-      for (Dependence *d = addr->getEdgeIn(); d; d = d->getNextInput())
+    for (Addr *a = store; a; a = llvm::cast_or_null<Addr>(a->getChild()))
+      for (Dependence *d = a->getEdgeIn(); d; d = d->getNextInput())
         if (!d->isSat(depth)) x = f(x, d);
     return x;
   }
   constexpr void reduceEachInputEdge(auto x, unsigned depth,
                                      const auto &f) const {
-    for (const Addr *addr = store; addr;
-         addr = llvm::cast<Addr>(addr->getChild()))
-      for (const Dependence *d = addr->getEdgeIn(); d; d = d->getNextInput())
+    for (const Addr *a = store; a; a = llvm::cast_or_null<Addr>(a->getChild()))
+      for (const Dependence *d = a->getEdgeIn(); d; d = d->getNextInput())
         if (!d->isSat(depth)) x = f(x, d);
     return x;
   }
@@ -418,7 +416,6 @@ class LoopBlock {
   // and all other other shared schedule parameters are aliases (i.e.,
   // identical)?
   // Addr *memory{nullptr};
-  ScheduledNode *node{nullptr};
   // dict::map<llvm::User *, Addr *> userToMem{};
   // dict::set<llvm::User *> visited{};
   // llvm::LoopInfo *LI;
@@ -442,30 +439,32 @@ public:
     // first, we peel loops
     if (unsigned numReject = tr.rejectDepth) {
       auto *SE = cache.getScalarEvolution();
-      for (Addr *stow = tr.stow; stow; stow = llvm::cast<Addr>(stow->getNext()))
+      for (Addr *stow = tr.stow; stow;
+           stow = llvm::cast_or_null<Addr>(stow->getNext()))
         stow->peelLoops(cache.getAllocator(), numReject, SE);
-      for (Addr *load = tr.load; load; load = llvm::cast<Addr>(load->getNext()))
+      for (Addr *load = tr.load; load;
+           load = llvm::cast_or_null<Addr>(load->getNext()))
         load->peelLoops(cache.getAllocator(), numReject, SE);
     }
     // fill the dependence edges between memory accesses
     for (Addr *stow = tr.stow; stow;) {
       // TODO: check we don't have mutually exclusive predicates
-      Addr *next = llvm::cast<Addr>(stow->getNext());
+      Addr *next = llvm::cast_or_null<Addr>(stow->getNext());
       for (Addr *other = next; other;
-           other = llvm::cast<Addr>(other->getNext()))
+           other = llvm::cast_or_null<Addr>(other->getNext()))
         check(&allocator, stow, other);
       for (Addr *other = tr.load; other;
-           other = llvm::cast<Addr>(other->getNext()))
+           other = llvm::cast_or_null<Addr>(other->getNext()))
         check(&allocator, stow, other);
       stow = next
     }
     // link stores with loads connected through registers
-    for (Addr *stow = tr.stow; stow;) {
-      Addr *next = stow->getNext(); // addScheduledNode breaks chain
-      addScheduledNode(cache, stow);
-      stow = next;
-    }
-    for (auto &&node : nodes) shiftOmega(node);
+    ScheduledNode *nodes{nullptr};
+    for (Addr *stow = tr.stow; stow;
+         stow = llvm::cast_or_null<Addr>(stow->getNext()))
+      nodes = addScheduledNode(cache, stow)->addNext(nodes);
+    for (ScheduledNode *node = nodes; node; node = node->getNext())
+      shiftOmega(node);
     // return optOrth(fullGraph());
   }
   void clear() { allocator.reset(); }
@@ -554,6 +553,161 @@ private:
     if (opsChanged) val = cache.similarCompute(C, newOperands);
     return {val, maxLoop};
   }
+
+  void shiftOmega(ScheduledNode *node) {
+    unsigned nLoops = node->getNumLoops();
+    if (nLoops == 0) return;
+    auto p0 = allocator.checkpoint();
+    MutPtrVector<int64_t> offs = vector<int64_t>(allocator, nLoops);
+    auto p1 = allocator.checkpoint();
+    MutSquarePtrMatrix<int64_t> A = matrix<int64_t>(allocator, nLoops + 1);
+    // MutPtrVector<BumpPtrVector<int64_t>> offsets{
+    //   vector<BumpPtrVector<int64_t>>(allocator, nLoops)};
+    // for (size_t i = 0; i < nLoops; ++i)
+    //   offsets[i] = BumpPtrVector<int64_t>(allocator);
+    // BumpPtrVector<std::pair<BitSet64, int64_t>> omegaOffsets{allocator};
+    // // we check all memory accesses in the node, to see if applying the same
+    // omega offsets can zero dependence offsets. If so, we apply the shift.
+    // we look for offsets, then try and validate that the shift
+    // if not valid, we drop it from the potential candidates.
+    bool foundNonZeroOffset = false;
+    unsigned rank = 0, L = nLoops - 1;
+    for (ScheduledNode *n = node; n; n = n->getNext()) {
+      for (Addr *m = n->getStore(); m;
+           m = llvm::cast_or_null<Addr>(m->getChild())) {
+        for (Dependence *d = addr->getEdgeIn(); d; d = d->getNextInput()) {
+          const DepPoly *depPoly = d->getDepPoly();
+          unsigned numSyms = depPoly->getNumSymbols(),
+                   dep0 = depPoly->getDim0(), dep1 = depPoly->getDim1();
+          PtrMatrix<int64_t> E = depPoly->getE();
+          if (dep.input()->getNode() == n) {
+            // dep within node
+            unsigned depCommon = std::min(dep0, dep1),
+                     depMax = std::max(dep0, dep1);
+            invariant(nLoops >= depMax);
+            // input and output, no relative shift of shared loops possible
+            // but indices may of course differ.
+            for (ptrdiff_t d = 0; d < E.numRow(); ++d) {
+              MutPtrVector<int64_t> x = A(rank, _);
+              x[last] = E(d, 0);
+              foundNonZeroOffset |= x[last] != 0;
+              ptrdiff_t j = 0;
+              for (; j < depCommon; ++j)
+                x[L - j] = E(d, j + numSyms) + E(d, j + numSyms + dep0);
+              if (dep0 != dep1) {
+                ptrdiff_t offset = dep0 > dep1 ? numSyms : numSyms + dep0;
+                for (; j < depMax; ++j) x[L - j] = E(d, j + offset);
+              }
+              for (; j < nLoops; ++j) x[L - j] = 0;
+              rank = NormalForm::updateForNewRow(A(_(0, rank + 1), _));
+            }
+          } else {
+            // dep between nodes
+            // is forward means other -> mem, else mem <- other
+            unsigned offset = dep.isForward() ? numSyms + dep0 : numSyms,
+                     numDep = dep.isForward() ? dep1 : dep0;
+            for (ptrdiff_t d = 0; d < E.numRow(); ++d) {
+              MutPtrVector<int64_t> x = A(rank, _);
+              x[last] = E(d, 0);
+              foundNonZeroOffset |= x[last] != 0;
+              ptrdiff_t j = 0;
+              for (; j < numDep; ++j) x[L - j] = E(d, j + offset);
+              for (; j < nLoops; ++j) x[L - j] = 0;
+              rank = NormalForm::updateForNewRow(A(_(0, rank + 1), _));
+            }
+          }
+        }
+        for (Dependence *d = addr->getEdgeOut(); d; d = d->getNextOutput()) {
+          if (d->output()->getNode() == n) continue;
+          const DepPoly *depPoly = d->getDepPoly();
+          unsigned numSyms = depPoly->getNumSymbols(),
+                   dep0 = depPoly->getDim0(), dep1 = depPoly->getDim1();
+          PtrMatrix<int64_t> E = depPoly->getE();
+          // is forward means mem -> other, else other <- mem
+          unsigned offset = dep.isForward() ? numSyms : numSyms + dep0,
+                   numDep = dep.isForward() ? dep0 : dep1;
+          for (ptrdiff_t d = 0; d < E.numRow(); ++d) {
+            MutPtrVector<int64_t> x = A(rank, _);
+            x[last] = E(d, 0);
+            foundNonZeroOffset |= x[last] != 0;
+            ptrdiff_t j = 0;
+            for (; j < numDep; ++j) x[L - j] = E(d, j + offset);
+            for (; j < nLoops; ++j) x[L - j] = 0;
+            rank = NormalForm::updateForNewRow(A(_(0, rank + 1), _));
+          }
+        }
+      }
+    }
+    if (!foundNonZeroOffset) return allocator.rollback(p0);
+    bool nonZero = false;
+    // matrix A is reasonably diagonalized, should indicate
+    size_t c = 0;
+    for (size_t r = 0; r < rank; ++r) {
+      int64_t off = A(r, last);
+      if (off == 0) continue;
+      for (; c < nLoops; ++c) {
+        if (A(r, c) != 0) break;
+        offs[L - c] = 0;
+      }
+      if (c == nLoops) return;
+      int64_t Arc = A(r, c), x = off / Arc;
+      if (x * Arc != off) continue;
+      offs[L - c++] = x; // decrement loop `L-c` by `x`
+      nonZero = true;
+    }
+    if (!nonZero) return allocator.rollback(p0);
+    allocator.rollback(p1);
+    for (; c < nLoops; ++c) offs[L - c] = 0;
+    node.setOffsets(offs.data());
+    // now we iterate over the edges again
+    // perhaps this should be abstracted into higher order functions that
+    // iterate over the edges?
+    for (ScheduledNode *n = node; n; n = n->getNext()) {
+      for (Addr *m = n->getStore(); m;
+           m = llvm::cast_or_null<Addr>(m->getChild())) {
+        for (Dependence *d = addr->getEdgeIn(); d; d = d->getNextInput()) {
+          d->copySimplices(allocator); // in case it is aliased
+          DepPoly *depPoly = d->getDepPoly();
+          unsigned numSyms = depPoly->getNumSymbols(),
+                   dep0 = depPoly->getDim0(), dep1 = depPoly->getDim1();
+          MutPtrMatrix<int64_t> satL = d->getSatLambda();
+          MutPtrMatrix<int64_t> bndL = d->getBndLambda();
+          bool pick = d->isForward(), repeat = d->input()->getNode() == nIdx;
+          while (true) {
+            unsigned offset = pick ? numSyms + dep0 : numSyms,
+                     numDep = pick ? dep1 : dep0;
+            for (size_t l = 0; l < numDep; ++l) {
+              int64_t mlt = offs[l];
+              if (mlt == 0) continue;
+              satL(0, _) -= mlt * satL(offset + l, _);
+              bndL(0, _) -= mlt * bndL(offset + l, _);
+            }
+            if (!repeat) break;
+            repeat = false;
+            pick = !pick;
+          }
+        }
+      }
+      for (Dependence *d = addr->getEdgeOut(); d; d = d->getNextOutput()) {
+        if (d->output()->getNode() == n) continue; // handled above
+        d->copySimplices(allocator); // we don't want to copy twice
+        DepPoly *depPoly = d->getDepPoly();
+        unsigned numSyms = depPoly->getNumSymbols(), dep0 = depPoly->getDim0(),
+                 dep1 = depPoly->getDim1();
+        MutPtrMatrix<int64_t> satL = d->getSatLambda();
+        MutPtrMatrix<int64_t> bndL = d->getBndLambda();
+        unsigned offset = d->isForward() ? numSyms : numSyms + dep0,
+                 numDep = d->isForward() ? dep0 : dep1;
+        for (size_t l = 0; l < numDep; ++l) {
+          int64_t mlt = offs[l];
+          if (mlt == 0) continue;
+          satL(0, _) -= mlt * satL(offset + l, _);
+          bndL(0, _) -= mlt * bndL(offset + l, _);
+        }
+      }
+    }
+  }
+
   constexpr void setLI(llvm::LoopInfo *loopInfo) { LI = loopInfo; }
   constexpr void addStow(Addr *stow) {}
   constexpr void addAddr(Addr *addr) {
@@ -964,159 +1118,6 @@ private:
     for (auto edge : edges) edge.validate();
   }
 #endif
-  void shiftOmega(ScheduledNode &node) {
-    unsigned nLoops = node.getNumLoops();
-    if (nLoops == 0) return;
-    auto p0 = allocator.checkpoint();
-    MutPtrVector<int64_t> offs = vector<int64_t>(allocator, nLoops);
-    auto p1 = allocator.checkpoint();
-    MutSquarePtrMatrix<int64_t> A = matrix<int64_t>(allocator, nLoops + 1);
-    // MutPtrVector<BumpPtrVector<int64_t>> offsets{
-    //   vector<BumpPtrVector<int64_t>>(allocator, nLoops)};
-    // for (size_t i = 0; i < nLoops; ++i)
-    //   offsets[i] = BumpPtrVector<int64_t>(allocator);
-    // BumpPtrVector<std::pair<BitSet64, int64_t>> omegaOffsets{allocator};
-    // // we check all memory accesses in the node, to see if applying the same
-    // omega offsets can zero dependence offsets. If so, we apply the shift.
-    // we look for offsets, then try and validate that the shift
-    // if not valid, we drop it from the potential candidates.
-    bool foundNonZeroOffset = false;
-    unsigned rank = 0, L = nLoops - 1;
-    for (size_t i : node.getMemory()) {
-      MemoryAccess *mem = memory[i];
-      unsigned nIdx = mem->getNode();
-      for (size_t e : mem->inputEdges()) {
-        const Dependence &dep = edges[e]; // other -> mem
-        const DepPoly *depPoly = dep.getDepPoly();
-        unsigned numSyms = depPoly->getNumSymbols(), dep0 = depPoly->getDim0(),
-                 dep1 = depPoly->getDim1();
-        PtrMatrix<int64_t> E = depPoly->getE();
-        if (dep.input()->getNode() == nIdx) {
-          unsigned depCommon = std::min(dep0, dep1),
-                   depMax = std::max(dep0, dep1);
-          invariant(nLoops >= depMax);
-          // input and output, no relative shift of shared loops possible
-          // but indices may of course differ.
-          for (size_t d = 0; d < E.numRow(); ++d) {
-            MutPtrVector<int64_t> x = A(rank, _);
-            x[last] = E(d, 0);
-            foundNonZeroOffset |= x[last] != 0;
-            size_t j = 0;
-            for (; j < depCommon; ++j)
-              x[L - j] = E(d, j + numSyms) + E(d, j + numSyms + dep0);
-            if (dep0 != dep1) {
-              size_t offset = dep0 > dep1 ? numSyms : numSyms + dep0;
-              for (; j < depMax; ++j) x[L - j] = E(d, j + offset);
-            }
-            for (; j < nLoops; ++j) x[L - j] = 0;
-            rank = NormalForm::updateForNewRow(A(_(0, rank + 1), _));
-          }
-        } else {
-          // is forward means other -> mem, else mem <- other
-          unsigned offset = dep.isForward() ? numSyms + dep0 : numSyms,
-                   numDep = dep.isForward() ? dep1 : dep0;
-          for (size_t d = 0; d < E.numRow(); ++d) {
-            MutPtrVector<int64_t> x = A(rank, _);
-            x[last] = E(d, 0);
-            foundNonZeroOffset |= x[last] != 0;
-            size_t j = 0;
-            for (; j < numDep; ++j) x[L - j] = E(d, j + offset);
-            for (; j < nLoops; ++j) x[L - j] = 0;
-            rank = NormalForm::updateForNewRow(A(_(0, rank + 1), _));
-          }
-        }
-      }
-      for (size_t e : mem->outputEdges()) {
-        const Dependence &dep = edges[e];              // mem -> other
-        if (dep.output()->getNode() == nIdx) continue; // handled above
-        const DepPoly *depPoly = dep.getDepPoly();
-        unsigned numSyms = depPoly->getNumSymbols(), dep0 = depPoly->getDim0(),
-                 dep1 = depPoly->getDim1();
-        PtrMatrix<int64_t> E = depPoly->getE();
-        // is forward means mem -> other, else other <- mem
-        unsigned offset = dep.isForward() ? numSyms : numSyms + dep0,
-                 numDep = dep.isForward() ? dep0 : dep1;
-        for (size_t d = 0; d < E.numRow(); ++d) {
-          MutPtrVector<int64_t> x = A(rank, _);
-          x[last] = E(d, 0);
-          foundNonZeroOffset |= x[last] != 0;
-          size_t j = 0;
-          for (; j < numDep; ++j) x[L - j] = E(d, j + offset);
-          for (; j < nLoops; ++j) x[L - j] = 0;
-          rank = NormalForm::updateForNewRow(A(_(0, rank + 1), _));
-        }
-      }
-    }
-    if (!foundNonZeroOffset) return allocator.rollback(p0);
-    bool nonZero = false;
-    // matrix A is reasonably diagonalized, should indicate
-    size_t c = 0;
-    for (size_t r = 0; r < rank; ++r) {
-      int64_t off = A(r, last);
-      if (off == 0) continue;
-      for (; c < nLoops; ++c) {
-        if (A(r, c) != 0) break;
-        offs[L - c] = 0;
-      }
-      if (c == nLoops) return;
-      int64_t Arc = A(r, c), x = off / Arc;
-      if (x * Arc != off) continue;
-      offs[L - c++] = x; // decrement loop `L-c` by `x`
-      nonZero = true;
-    }
-    if (!nonZero) return allocator.rollback(p0);
-    allocator.rollback(p1);
-    for (; c < nLoops; ++c) offs[L - c] = 0;
-    node.setOffsets(offs.data());
-    // now we iterate over the edges again
-    // perhaps this should be abstracted into higher order functions that
-    // iterate over the edges?
-    for (size_t i : node.getMemory()) {
-      MemoryAccess *mem = memory[i];
-      unsigned nIdx = mem->getNode();
-      for (size_t e : mem->inputEdges()) {
-        Dependence &dep = edges[e]; // other -> mem
-        dep.copySimplices(allocator);
-        DepPoly *depPoly = dep.getDepPoly();
-        unsigned numSyms = depPoly->getNumSymbols(), dep0 = depPoly->getDim0(),
-                 dep1 = depPoly->getDim1();
-        MutPtrMatrix<int64_t> satL = dep.getSatLambda();
-        MutPtrMatrix<int64_t> bndL = dep.getBndLambda();
-        bool pick = dep.isForward(), repeat = dep.input()->getNode() == nIdx;
-        while (true) {
-          unsigned offset = pick ? numSyms + dep0 : numSyms,
-                   numDep = pick ? dep1 : dep0;
-          for (size_t l = 0; l < numDep; ++l) {
-            int64_t mlt = offs[l];
-            if (mlt == 0) continue;
-            satL(0, _) -= mlt * satL(offset + l, _);
-            bndL(0, _) -= mlt * bndL(offset + l, _);
-          }
-          if (!repeat) break;
-          repeat = false;
-          pick = !pick;
-        }
-      }
-      for (size_t e : mem->outputEdges()) {
-        Dependence &dep = edges[e];                    // mem -> other
-        if (dep.output()->getNode() == nIdx) continue; // handled above
-        dep.copySimplices(allocator); // we don't want to copy twice
-        DepPoly *depPoly = dep.getDepPoly();
-        unsigned numSyms = depPoly->getNumSymbols(), dep0 = depPoly->getDim0(),
-                 dep1 = depPoly->getDim1();
-        MutPtrMatrix<int64_t> satL = dep.getSatLambda();
-        MutPtrMatrix<int64_t> bndL = dep.getBndLambda();
-        unsigned offset = dep.isForward() ? numSyms : numSyms + dep0,
-                 numDep = dep.isForward() ? dep0 : dep1;
-        for (size_t l = 0; l < numDep; ++l) {
-          int64_t mlt = offs[l];
-          if (mlt == 0) continue;
-          satL(0, _) -= mlt * satL(offset + l, _);
-          bndL(0, _) -= mlt * bndL(offset + l, _);
-        }
-      }
-    }
-  }
   void shiftOmegas() {
     for (auto &&node : nodes) shiftOmega(node);
   }
