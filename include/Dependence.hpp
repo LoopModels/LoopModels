@@ -725,27 +725,29 @@ public:
     if (dxy->getTimeDim()) timeCheck(alloc, dxy, x, y, pair);
     else timelessCheck(alloc, dxy, x, y, pair);
   }
+  static void copyDependencies(Arena<> *alloc, IR::Addr *src, IR::Addr *dst) {
+    for (Dependence *d = src->getEdgeIn(); d; d = d->getNextInput()) {
+      IR::Addr *input = d->in;
+      if (input->isLoad()) continue;
+      auto *in = alloc->create<Dependence>(d->getDepPoly(), d->getSimplexPair(),
+                                           input, dst, d->isForward());
+      dst->addEdgeIn(in);
+    }
+    for (Dependence *d = src->getEdgeOut(); d; d = d->getNextOutput()) {
+      IR::Addr *output = d->out;
+      if (output->isLoad()) continue;
+      auto *out = alloc->create<Dependence>(
+        d->getDepPoly(), d->getSimplexPair(), dst, output, d->isForward());
+      dst->addEdgeOut(out);
+    }
+  }
   // reload store `x`
   static auto reload(Arena<> *alloc, NotNull<IR::Addr> store)
     -> NotNull<IR::Addr> {
     NotNull<DepPoly> dxy{DepPoly::self(alloc, store)};
     std::array<NotNull<math::Simplex>, 2> pair(dxy->farkasPair(alloc));
     NotNull<IR::Addr> load = store->reload(alloc);
-    for (Dependence *d = store->getEdgeIn(); d; d = d->getNextInput()) {
-      IR::Addr *input = d->in;
-      if (input->isLoad()) continue;
-      auto *in = alloc->create<Dependence>(d->getDepPoly(), d->getSimplexPair(),
-                                           input, load, d->isForward());
-      load->addEdgeIn(in);
-    }
-    for (Dependence *d = store->getEdgeOut(); d; d = d->getNextOutput()) {
-      IR::Addr *output = d->out;
-      if (output->isLoad()) continue;
-      auto *out = alloc->create<Dependence>(
-        d->getDepPoly(), d->getSimplexPair(), load, output, d->isForward());
-      load->addEdgeOut(out);
-    }
-
+    copyDependencies(alloc, store, load);
     if (dxy->getTimeDim()) timeCheck(alloc, dxy, store, load, pair, true);
     else timelessCheck(alloc, dxy, store, load, pair, true);
     return load;

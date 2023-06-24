@@ -153,8 +153,16 @@ public:
     if (n) n->next = this;
     return this;
   }
-  constexpr void setChild(Node *n) { child = n; }
-  constexpr void setParent(Node *n) { parent = n; }
+  constexpr auto setChild(Node *n) -> Node * {
+    child = n;
+    if (n) n->parent = this;
+    return this;
+  }
+  constexpr auto setParent(Node *n) -> Node * {
+    parent = n;
+    if (n) n->child = this;
+    return this;
+  }
   constexpr void setDepth(unsigned d) { depth = d; }
   /// insert `d` ahead of `this`
   constexpr void insertAhead(Node *d) {
@@ -175,6 +183,18 @@ public:
     if (next) next->setPrev(prev);
     prev = nullptr;
     next = nullptr;
+  }
+  constexpr void insertChild(Node *d) {
+    d->setParent(this);
+    d->setChild(child);
+    if (child) child->setParent(d);
+    child = d;
+  }
+  constexpr void insertParent(Node *d) {
+    d->setChild(this);
+    d->setParent(parent);
+    if (parent) parent->setChild(d);
+    parent = d;
   }
   constexpr void forEach(const auto &f) {
     for (Node *n = this; n; n = n->getNext()) f(n);
@@ -202,12 +222,10 @@ static_assert(sizeof(Node) == 4 * sizeof(Node *) + 8);
 /// child: inner (sub) loop
 /// exit is the associated exit block
 class Loop : public Node {
-  llvm::Loop *llvmLoop{nullptr};
   poly::Loop *affineLoop{nullptr};
 
 public:
-  Loop(unsigned d, llvm::Loop *LL, poly::Loop *AL)
-    : Node(VK_Loop, d), llvmLoop(LL), affineLoop(AL) {}
+  Loop(unsigned d, poly::Loop *AL) : Node(VK_Loop, d), affineLoop(AL) {}
   static constexpr auto classof(const Node *v) -> bool {
     return v->getKind() == VK_Loop;
   }
@@ -233,12 +251,12 @@ public:
       if (auto *s = c->getSubLoop()) s->forEachLoop(f);
     }
   }
-  static constexpr auto create(Arena<> *alloc, llvm::Loop *LL, poly::Loop *AL,
-                               size_t depth) -> Loop * {
-    return alloc->create<Loop>(depth, LL, AL);
+  static constexpr auto create(Arena<> *alloc, poly::Loop *AL, size_t depth)
+    -> Loop * {
+    return alloc->create<Loop>(depth, AL);
   }
   [[nodiscard]] constexpr auto getLLVMLoop() const -> llvm::Loop * {
-    return llvmLoop;
+    return affineLoop->getLLVMLoop();
   }
   [[nodiscard]] constexpr auto getAffineLoop() const -> poly::Loop * {
     return affineLoop;

@@ -346,7 +346,7 @@ struct MergingCost {
       auto *J = llvm::cast<Instruction>(B);
       // could be stores
       if (auto *C = llvm::dyn_cast<Compute>(I)) {
-        Compute *D = cache.copyOperation(C);
+        Compute *D = cache.copyCompute(C);
         MergingCost::Allocate allocInst{tAlloc,    cache, reMap,
                                         valToPred, pred,  D->getOperands()};
         mergeOperands(I, J, allocInst);

@@ -32,7 +32,7 @@
 #include <string_view>
 #include <utility>
 
-namespace CostModeling {
+namespace poly::CostModeling {
 
 class CPURegisterFile {
   [[no_unique_address]] uint8_t maximumVectorWidth;
@@ -543,8 +543,8 @@ private:
   // a) every addr has an index field
   // b) we create BitSets of ancestors
   // NOLINTNEXTLINE(misc-no-recursion)
-  auto placeAddr(Arena<> *alloc, lp::LoopBlock &LB,
-                 MutPtrVector<Addr *> addr) -> unsigned {
+  auto placeAddr(Arena<> *alloc, lp::LoopBlock &LB, MutPtrVector<Addr *> addr)
+    -> unsigned {
     // we sort via repeatedly calculating the strongly connected components
     // of the address graph. The SCCs are in topological order.
     // If a load or store are isolated within a SCC from a sub-loop, we hoist
@@ -827,11 +827,10 @@ static_assert(Graphs::AbstractIndexGraph<LoopTreeSchedule::AddressGraph>);
 // class LoopForestSchedule : LoopTreeSchedule {
 //   [[no_unique_address]] Arena<> *allocator;
 // };
-} // namespace CostModeling
+} // namespace poly::CostModeling
 
 constexpr void
-ScheduledNode::insertMem(Arena<> *alloc,
-                         PtrVector<MemoryAccess *> memAccess,
+ScheduledNode::insertMem(Arena<> *alloc, PtrVector<MemoryAccess *> memAccess,
                          CostModeling::LoopTreeSchedule *L) const {
   // First, we invert the schedule matrix.
   SquarePtrMatrix<int64_t> Phi = schedule.getPhi();

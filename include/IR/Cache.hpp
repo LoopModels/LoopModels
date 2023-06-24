@@ -270,8 +270,20 @@ class Cache {
     }
     std::swap(A, B);
   }
+  void setOperands(Compute *op, PtrVector<Value *> ops) {
+    size_t N = ops.size();
+    MutPtrVector<Value *> operands{op->getOperands()};
+    for (size_t n = 0; n < N; ++n) {
+      Value *operand = operands[n] = ops[n];
+      operand->addUser(&alloc, op);
+    }
+  }
 
 public:
+  [[nodiscard]] constexpr auto getScalarEvolution() const
+    -> const llvm::ScalarEvolution * {
+    return SE;
+  }
   /// complete the operands
   // NOLINTNEXTLINE(misc-no-recursion)
   auto complete(Compute *I, Predicate::Map *M, TreeResult tr)
@@ -480,12 +492,25 @@ public:
   }
 
   template <size_t N>
-  auto createOperation(llvm::Intrinsic::ID opId, std::array<Value *, N> ops,
-                       llvm::Type *typ, llvm::FastMathFlags fmf) -> Compute * {
-    Compute *op =
-      std::construct_at(allocateInst(N), Node::VK_Oprn, opId, N, typ, fmf);
+  auto createCompute(llvm::Intrinsic::ID opId, Node::ValKind opk,
+                     std::array<Value *, N> ops, llvm::Type *typ,
+                     llvm::FastMathFlags fmf) -> Compute * {
+    Compute *op = std::construct_at(allocateInst(N), opk, opId, N, typ, fmf);
     setOperands(op, ops);
     return cse(op);
+  }
+  auto createCompute(llvm::Intrinsic::ID opId, Node::ValKind opk,
+                     PtrVector<Value *> ops, llvm::Type *typ,
+                     llvm::FastMathFlags fmf) -> Compute * {
+    unsigned N = ops.size();
+    Compute *op = std::construct_at(allocateInst(N), opk, opId, N, typ, fmf);
+    setOperands(op, ops);
+    return cse(op);
+  }
+  template <size_t N>
+  auto createOperation(llvm::Intrinsic::ID opId, std::array<Value *, N> ops,
+                       llvm::Type *typ, llvm::FastMathFlags fmf) -> Compute * {
+    return createCompute(opId, Node::VK_Oprn, ops, typ, fmf);
   }
   auto createOperation(llvm::Intrinsic::ID opId, PtrVector<Value *> ops,
                        llvm::Type *typ, llvm::FastMathFlags fmf) -> Compute * {
@@ -495,20 +520,18 @@ public:
     setOperands(op, ops);
     return cse(op);
   }
-  void setOperands(Compute *op, PtrVector<Value *> ops) {
-    size_t N = ops.size();
-    MutPtrVector<Value *> operands{op->getOperands()};
-    for (size_t n = 0; n < N; ++n) {
-      Value *operand = operands[n] = ops[n];
-      operand->addUser(&alloc, op);
-    }
-  }
-  // this should be modified, and then `cse`-called on int
-  auto copyOperation(Compute *A) {
-    Compute *B = createOperation(A->getOpId(), A->getOperands(), A->getType(),
-                                 A->getFastMathFlags());
+  // The intended use is to modify the copied operation, and then call `cse`
+  // after the modifications to try and simplify.
+  auto copyCompute(Compute *A) -> Compute * {
+    Compute *B = createCompute(A->getOpId(), A->getKind(), A->getOperands(),
+                               A->getType(), A->getFastMathFlags());
     setOperands(B, A->getOperands());
     return B;
+  }
+  auto similarCompute(Compute *A, PtrVector<Value *> ops) -> Compute * {
+    invariant(A->getNumOperands(), ops.size());
+    return createCompute(A->getOpId(), A->getKind(), ops, A->getType(),
+                         A->getFastMathFlags());
   }
   template <size_t N>
   auto getOperation(llvm::Intrinsic::ID opId, std::array<Value *, N> ops,

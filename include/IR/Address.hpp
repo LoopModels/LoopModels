@@ -75,10 +75,13 @@ using math::PtrVector, math::MutPtrVector, math::DensePtrMatrix,
 class Addr : public Instruction {
   [[no_unique_address]] Dependence *edgeIn{nullptr};
   [[no_unique_address]] Dependence *edgeOut{nullptr};
+  // ScheduledNode is used in solving a LinearProgram
+  // Before this, on constructing the Addr, we use maxDepth
+  // numDim = maxDepth - TreeResult.rejectDepth; we may need to reduce dim
   [[no_unique_address]] union {
-    ScheduledNode *node{nullptr}; // used in linear program
-    size_t maxDepth;              // used???
-  } nodeOrDepth;                  // both are used at different times
+    ScheduledNode *node;
+    ptrdiff_t maxDepth;
+  } nodeOrDepth;
   [[no_unique_address]] NotNull<const llvm::SCEVUnknown> basePointer;
   [[no_unique_address]] poly::Loop *loop{nullptr};
   [[no_unique_address]] llvm::Instruction *instr;
@@ -114,8 +117,7 @@ class Addr : public Instruction {
       loop(other->loop), instr(other->instr), offSym(other->offSym),
       syms(other->syms), predicate(other->predicate), numDim(other->numDim),
       numDynSym(other->numDynSym) {
-    std::memcpy(mem, other->mem,
-                intMemNeeded(getNumLoops(), numDim) * sizeof(int64_t));
+    std::memcpy(mem, other->mem, intMemNeeded(depth, numDim) * sizeof(int64_t));
   }
   explicit Addr(const llvm::SCEVUnknown *arrayPtr, llvm::Instruction *user,
                 int64_t *offsym, const llvm::SCEV **s,
@@ -204,7 +206,6 @@ public:
   }
   constexpr void setNode(ScheduledNode *n) { nodeOrDepth.node = n; }
   constexpr void forEachInput(const auto &f);
-
   [[nodiscard]] static auto construct(Arena<> *alloc,
                                       const llvm::SCEVUnknown *ptr,
                                       llvm::Instruction *user,
@@ -349,7 +350,7 @@ public:
   /// extend number of Cols, copying A[_(0,R),_] into dest, filling new cols
   /// with 0
   // L is the inner most loop being removed
-  void updateOffsMat(Arena<> *alloc, size_t numToPeel, llvm::Loop *L,
+  void updateOffsMat(Arena<> *alloc, size_t numToPeel,
                      llvm::ScalarEvolution *SE) {
     invariant(numToPeel > 0);
     // need to condition on loop
@@ -367,6 +368,8 @@ public:
     offSym = alloc->allocate<int64_t>(size_t(numDynSym) * numDim);
     MutDensePtrMatrix<int64_t> offsMat{offsetMatrix()};
     if (dynSymInd) offsMat(_, _(0, dynSymInd)) << oldOffsMat;
+    llvm::Loop *L = loop->getLLVMLoop();
+    for (unsigned d = getNumLoops() - numToPeel; d--;) L = L->getParentLoop();
     for (size_t i = numToPeel; i;) {
       L = L->getParentLoop();
       if (allZero(Rt(_, --i))) continue;
@@ -383,10 +386,11 @@ public:
       }
     }
   }
-  void peelLoops(Arena<> *alloc, size_t numToPeel, llvm::Loop *L,
+  void peelLoops(Arena<> *alloc, ptrdiff_t numToPeel,
                  llvm::ScalarEvolution *SE) {
     invariant(numToPeel > 0);
-    size_t maxDepth = nodeOrDepth.maxDepth, numLoops = getNumLoops();
+    loop->removeOuterMost(numToPeel, SE);
+    ptrdiff_t maxDepth = nodeOrDepth.maxDepth, numLoops = getNumLoops();
     invariant(numToPeel <= maxDepth);
     // we need to compare numToPeel with actual depth
     // because we might have peeled some loops already
@@ -395,7 +399,7 @@ public:
     if (numToPeel == 0) return;
     // we're dropping the outer-most `numToPeel` loops
     // first, we update offsMat
-    updateOffsMat(alloc, numToPeel, L, SE);
+    updateOffsMat(alloc, numToPeel, SE);
     // current memory layout (outer <-> inner):
     // - denom (1)
     // - offsetOmega (arrayDim)
@@ -783,44 +787,66 @@ inline auto operator<<(llvm::raw_ostream &os, const Addr &m)
   return os << "]\nInitial Fusion Omega: " << m.getFusionOmega()
             << "\npoly::Loop:" << *m.getLoop();
 }
-class Load {
+class AddrWrapper {
+
+protected:
   Addr *addr;
+  constexpr AddrWrapper(Addr *a) : addr(a) {}
 
 public:
-  Load(Addr *a) : addr(a->getKind() == Node::VK_Load ? a : nullptr) {}
-  Load(Node *a)
-    : addr(a->getKind() == Node::VK_Load ? static_cast<Addr *>(a) : nullptr) {}
   constexpr explicit operator bool() { return addr != nullptr; }
-  [[nodiscard]] constexpr auto getInstruction() const -> llvm::Instruction * {
-    // return llvm::cast<llvm::LoadInst>(addr->getInstruction());
-    // load or store (could be reload)
-    return addr->getInstruction();
+  [[nodiscard]] constexpr auto getChild() const -> Node * {
+    return addr->getChild();
   }
-  constexpr auto operator==(const Load &other) const -> bool {
+  [[nodiscard]] constexpr auto getParent() const -> Node * {
+    return addr->getParent();
+  }
+  constexpr void setChild(Node *n) { addr->setChild(n); }
+  constexpr void setParent(Node *n) { addr->setParent(n); }
+  constexpr void insertChild(Node *n) { addr->insertChild(n); }
+  constexpr void insertParent(Node *n) { addr->insertParent(n); }
+  [[nodiscard]] constexpr auto getNumLoops() const -> unsigned {
+    return addr->getNumLoops();
+  }
+  constexpr auto operator==(const AddrWrapper &other) const -> bool {
     return addr == other.addr;
+  }
+  [[nodiscard]] constexpr auto getLoop() const -> poly::Loop * {
+    return addr->getLoop();
   }
 };
-class Stow {
-  Addr *addr;
+
+class Load : public AddrWrapper {
 
 public:
-  Stow(Addr *a) : addr(a->getKind() == Node::VK_Stow ? a : nullptr) {}
-  Stow(Node *a)
-    : addr(a->getKind() == Node::VK_Stow ? static_cast<Addr *>(a) : nullptr) {}
-  constexpr explicit operator bool() { return addr != nullptr; }
-  [[nodiscard]] constexpr auto getInstruction() const -> llvm::StoreInst * {
-    return llvm::cast<llvm::StoreInst>(addr->getInstruction());
+  Load(Addr *a) : AddrWrapper(a->getKind() == Node::VK_Load ? a : nullptr) {}
+  Load(Node *a)
+    : AddrWrapper(a->getKind() == Node::VK_Load ? static_cast<Addr *>(a)
+                                                : nullptr) {}
+  [[nodiscard]] constexpr auto getInstruction() const -> llvm::Instruction * {
+    // could be load or store
+    return llvm::cast<llvm::Instruction>(this->addr->getInstruction());
   }
+};
+class Stow : public AddrWrapper {
+
+public:
+  Stow(Addr *a) : AddrWrapper(a->getKind() == Node::VK_Stow ? a : nullptr) {}
+  Stow(Node *a)
+    : AddrWrapper(a->getKind() == Node::VK_Stow ? static_cast<Addr *>(a)
+                                                : nullptr) {}
+  [[nodiscard]] constexpr auto getInstruction() const -> llvm::StoreInst * {
+    // must be store
+    return llvm::cast<llvm::StoreInst>(this->addr->getInstruction());
+  }
+
   [[nodiscard]] constexpr auto getStoredVal() const -> Value * {
-    return addr->getStoredVal();
+    return this->addr->getStoredVal();
   }
   [[nodiscard]] constexpr auto getStoredValPtr() -> Value ** {
-    return addr->getStoredValPtr();
+    return this->addr->getStoredValPtr();
   }
   constexpr void setVal(Value *n) { return addr->setVal(n); }
-  constexpr auto operator==(const Stow &other) const -> bool {
-    return addr == other.addr;
-  }
 };
 
 } // namespace IR

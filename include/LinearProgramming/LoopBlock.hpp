@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Dependence.hpp"
-#include "Dicts/BumpMapSet.hpp"
 #include "Graphs/Graphs.hpp"
 #include "IR/Address.hpp"
 #include "IR/Cache.hpp"
@@ -35,14 +34,16 @@
 #include <llvm/Support/Allocator.h>
 #include <llvm/Support/Casting.h>
 #include <llvm/Support/raw_ostream.h>
+#include <ranges>
 #include <type_traits>
 
 namespace poly::lp {
 
 using math::PtrVector, math::MutPtrVector, math::DensePtrMatrix,
   math::MutDensePtrMatrix, math::SquarePtrMatrix, math::MutSquarePtrMatrix,
-  math::end, math::_, utils::NotNull, utils::invariant, poly::Dependence,
-  IR::Addr;
+  math::end, math::_, math::Simplex, utils::NotNull, utils::invariant,
+  poly::Dependence, IR::Addr, IR::Value, IR::Instruction, IR::Load, IR::Stow,
+  utils::Optional, utils::invariant, utils::NotNull;
 
 /// ScheduledNode
 /// Represents a set of memory accesses that are optimized together in the LP.
@@ -55,14 +56,14 @@ using math::PtrVector, math::MutPtrVector, math::DensePtrMatrix,
 ///
 class ScheduledNode {
 
-  NotNull<Addr> store; // linked list to loads
+  NotNull<Addr> store; // linked list to loads, iterate over getChild
   NotNull<poly::Loop> loopNest;
   ScheduledNode *next{nullptr};
   ScheduledNode *component{nullptr}; // SCC cycle, or last node in a chain
-  Dependence *dep{nullptr};          // input edges (points to parents)
+  // Dependence *dep{nullptr};          // input edges (points to parents)
   int64_t *offsets{nullptr};
-  uint32_t phiOffset{0};             // used in LoopBlock
-  uint32_t omegaOffset{0};           // used in LoopBlock
+  uint32_t phiOffset{0};   // used in LoopBlock
+  uint32_t omegaOffset{0}; // used in LoopBlock
   uint8_t rank{0};
   bool visited{false};
 #if !defined(__clang__) && defined(__GNUC__)
@@ -83,8 +84,17 @@ class ScheduledNode {
     auto L = getNumLoops();
     return L * L;
   }
+  constexpr ScheduledNode(Addr *store, poly::Loop *L)
+    : store(store), loopNest(L) {}
 
 public:
+  static auto construct(Arena<> *alloc, Addr *store, poly::Loop *L)
+    -> ScheduledNode * {
+    size_t memNeeded = poly::requiredScheduleStorage(L->getNumLoops());
+    void *p =
+      alloc->allocate(sizeof(ScheduledNode) + memNeeded * sizeof(int64_t));
+    return new (p) ScheduledNode(store, L);
+  }
   constexpr auto getNext() -> ScheduledNode * { return next; }
   constexpr auto setNext(ScheduledNode *n) -> void { next = n; }
   constexpr auto getLoopOffsets() -> MutPtrVector<int64_t> {
@@ -133,72 +143,99 @@ public:
   }
   // for each input node, i.e. for each where this is the output
   constexpr void forEachInput(const auto &f) {
-    for (Dependence *d = dep; d; d = d->getNext()) f(d->input()->getNode());
+    for (Addr *addr = store; addr; addr = llvm::cast<Addr>(addr->getChild()))
+      for (Dependence *d = addr->getEdgeIn(); d; d = d->getNextInput())
+        f(d->input()->getNode());
   }
   constexpr void forEachInput(const auto &f) const {
-    for (const Dependence *d = dep; d; d = d->getNext())
-      f(d->input()->getNode());
+    for (const Addr *addr = store; addr;
+         addr = llvm::cast<Addr>(addr->getChild()))
+      for (const Dependence *d = addr->getEdgeIn(); d; d = d->getNextInput())
+        f(d->input()->getNode());
   }
   constexpr void forEachInput(unsigned depth, const auto &f) {
-    for (Dependence *d = dep; d; d = d->getNext())
-      if (!d->isSat(depth)) f(d->input()->getNode());
+    for (Addr *addr = store; addr; addr = llvm::cast<Addr>(addr->getChild()))
+      for (Dependence *d = addr->getEdgeIn(); d; d = d->getNextInput())
+        if (!d->isSat(depth)) f(d->input()->getNode());
   }
   constexpr void forEachInput(unsigned depth, const auto &f) const {
-    for (const Dependence *d = dep; d; d = d->getNext())
-      if (!d->isSat(depth)) f(d->input()->getNode());
+    for (const Addr *addr = store; addr;
+         addr = llvm::cast<Addr>(addr->getChild()))
+      for (const Dependence *d = addr->getEdgeIn(); d; d = d->getNextInput())
+        if (!d->isSat(depth)) f(d->input()->getNode());
   }
   constexpr auto reduceEachInput(auto x, const auto &f) {
-    for (Dependence *d = dep; d; d = d->getNext())
-      x = f(x, d->input()->getNode());
+    for (Addr *addr = store; addr; addr = llvm::cast<Addr>(addr->getChild()))
+      for (Dependence *d = addr->getEdgeIn(); d; d = d->getNextInput())
+        x = f(x, d->input()->getNode());
     return x;
   }
   constexpr void reduceEachInput(auto x, const auto &f) const {
-    for (const Dependence *d = dep; d; d = d->getNext())
-      x = f(x, d->input()->getNode());
+    for (const Addr *addr = store; addr;
+         addr = llvm::cast<Addr>(addr->getChild()))
+      for (const Dependence *d = addr->getEdgeIn(); d; d = d->getNextInput())
+        x = f(x, d->input()->getNode());
     return x;
   }
   constexpr void reduceEachInput(auto x, unsigned depth, const auto &f) {
-    for (Dependence *d = dep; d; d = d->getNext())
-      if (!d->isSat(depth)) x = f(x, d->input()->getNode());
+    for (Addr *addr = store; addr; addr = llvm::cast<Addr>(addr->getChild()))
+      for (Dependence *d = addr->getEdgeIn(); d; d = d->getNextInput())
+        if (!d->isSat(depth)) x = f(x, d->input()->getNode());
     return x;
   }
   constexpr void reduceEachInput(auto x, unsigned depth, const auto &f) const {
-    for (const Dependence *d = dep; d; d = d->getNext())
-      if (!d->isSat(depth)) x = f(x, d->input()->getNode());
+    for (const Addr *addr = store; addr;
+         addr = llvm::cast<Addr>(addr->getChild()))
+      for (const Dependence *d = addr->getEdgeIn(); d; d = d->getNextInput())
+        if (!d->isSat(depth)) x = f(x, d->input()->getNode());
     return x;
   }
-
   constexpr void forEachInputEdge(const auto &f) {
-    for (Dependence *d = dep; d; d = d->getNext()) f(d);
+    for (Addr *addr = store; addr; addr = llvm::cast<Addr>(addr->getChild()))
+      for (Dependence *d = addr->getEdgeIn(); d; d = d->getNextInput()) f(d);
   }
   constexpr void forEachInputEdge(const auto &f) const {
-    for (const Dependence *d = dep; d; d = d->getNext()) f(d);
+    for (const Addr *addr = store; addr;
+         addr = llvm::cast<Addr>(addr->getChild()))
+      for (const Dependence *d = addr->getEdgeIn(); d; d = d->getNextInput())
+        f(d);
   }
   constexpr void forEachInputEdge(unsigned depth, const auto &f) {
-    for (Dependence *d = dep; d; d = d->getNext())
-      if (!d->isSat(depth)) f(d);
+    for (Addr *addr = store; addr; addr = llvm::cast<Addr>(addr->getChild()))
+      for (Dependence *d = addr->getEdgeIn(); d; d = d->getNextInput())
+        if (!d->isSat(depth)) f(d);
   }
   constexpr void forEachInputEdge(unsigned depth, const auto &f) const {
-    for (const Dependence *d = dep; d; d = d->getNext())
-      if (!d->isSat(depth)) f(d);
+    for (const Addr *addr = store; addr;
+         addr = llvm::cast<Addr>(addr->getChild()))
+      for (const Dependence *d = addr->getEdgeIn(); d; d = d->getNextInput())
+        if (!d->isSat(depth)) f(d);
   }
   constexpr auto reduceEachInputEdge(auto x, const auto &f) {
-    for (Dependence *d = dep; d; d = d->getNext()) x = f(x, d);
+    for (Addr *addr = store; addr; addr = llvm::cast<Addr>(addr->getChild()))
+      for (Dependence *d = addr->getEdgeIn(); d; d = d->getNextInput())
+        x = f(x, d);
     return x;
   }
   constexpr void reduceEachInputEdge(auto x, const auto &f) const {
-    for (const Dependence *d = dep; d; d = d->getNext()) x = f(x, d);
+    for (const Addr *addr = store; addr;
+         addr = llvm::cast<Addr>(addr->getChild()))
+      for (const Dependence *d = addr->getEdgeIn(); d; d = d->getNextInput())
+        x = f(x, d);
     return x;
   }
   constexpr void reduceEachInputEdge(auto x, unsigned depth, const auto &f) {
-    for (Dependence *d = dep; d; d = d->getNext())
-      if (!d->isSat(depth)) x = f(x, d);
+    for (Addr *addr = store; addr; addr = llvm::cast<Addr>(addr->getChild()))
+      for (Dependence *d = addr->getEdgeIn(); d; d = d->getNextInput())
+        if (!d->isSat(depth)) x = f(x, d);
     return x;
   }
   constexpr void reduceEachInputEdge(auto x, unsigned depth,
                                      const auto &f) const {
-    for (const Dependence *d = dep; d; d = d->getNext())
-      if (!d->isSat(depth)) x = f(x, d);
+    for (const Addr *addr = store; addr;
+         addr = llvm::cast<Addr>(addr->getChild()))
+      for (const Dependence *d = addr->getEdgeIn(); d; d = d->getNextInput())
+        if (!d->isSat(depth)) x = f(x, d);
     return x;
   }
 
@@ -314,7 +351,6 @@ public:
     os << "inNeighbors = ";
     node.forEachInput([&](auto m) { os << "v_" << m << ", "; });
     return os << "\n";
-    ;
   }
 };
 static_assert(std::is_trivially_destructible_v<ScheduledNode>);
@@ -403,31 +439,39 @@ class LoopBlock {
 public:
   LoopBlock() = default;
   void optimize(IR::Cache &cache, IR::TreeResult tr) {
-    // fillEdges();
+    // first, we peel loops
+    if (unsigned numReject = tr.rejectDepth) {
+      auto *SE = cache.getScalarEvolution();
+      for (Addr *stow = tr.stow; stow; stow = llvm::cast<Addr>(stow->getNext()))
+        stow->peelLoops(cache.getAllocator(), numReject, SE);
+      for (Addr *load = tr.load; load; load = llvm::cast<Addr>(load->getNext()))
+        load->peelLoops(cache.getAllocator(), numReject, SE);
+    }
+    // fill the dependence edges between memory accesses
     for (Addr *stow = tr.stow; stow;) {
-      Addr *next = stow->getNext();
-      for (Addr *other = next; other; other = other->getNext())
+      // TODO: check we don't have mutually exclusive predicates
+      Addr *next = llvm::cast<Addr>(stow->getNext());
+      for (Addr *other = next; other;
+           other = llvm::cast<Addr>(other->getNext()))
         check(&allocator, stow, other);
-      for (Addr *other = tr.load; other; other = other->getNext())
+      for (Addr *other = tr.load; other;
+           other = llvm::cast<Addr>(other->getNext()))
         check(&allocator, stow, other);
       stow = next
     }
+    // link stores with loads connected through registers
     for (Addr *stow = tr.stow; stow;) {
       Addr *next = stow->getNext(); // addScheduledNode breaks chain
       addScheduledNode(cache, stow);
       stow = next;
     }
-    // buildGraph();
-    // shiftOmegas();
+    for (auto &&node : nodes) shiftOmega(node);
     // return optOrth(fullGraph());
   }
   void clear() { allocator.reset(); }
 
 private:
-  constexpr auto addScheduledNode(IR::Cache &cache, IR::Stow stow) {
-    // we search the instruction graph for all directly connected loads that
-    // must be scheduled together with the stow.
-    stow->removeFromList();
+  auto addScheduledNode(IR::Cache &cache, IR::Stow stow) -> ScheduledNode * {
     // how are we going to handle load duplication?
     // we also need to duplicate the instruction graph leading to the node
     // implying we need to track that tree.
@@ -448,26 +492,67 @@ private:
     // the store that visited it.
     // If one has already been visited, duplicate and
     // mark the new one.
-    searchOperandsForLoads(stow, stow->getStoredVal());
+    auto [storedVal, maxLoop] =
+      searchOperandsForLoads(stow, stow.getStoredVal());
+    maxLoop = deeperLoop(maxLoop, stow.getLoop());
+    stow.setVal(storedVal); // in case it changed
+    return addScheduledNode(cache.getAllocator(), stow, maxLoop);
   }
-  void searchOperandsForLoads(IR::Cache &cache, IR::Stow stow, Value *val) {
+  static constexpr auto deeperLoop(poly::Loop *a, poly::Loop *b)
+    -> poly::Loop * {
+    if (!a) return b;
+    if (!b) return a;
+    return (a->getNumLoops() > b->getNumLoops()) ? a : b;
+  }
+  // NOLINTNEXTLINE(misc-no-recursion)
+  auto searchOperandsForLoads(IR::Cache &cache, IR::Stow stow, Value *val)
+    -> std::pair<Value *, poly::Loop *> {
     Instruction *inst = dyn_cast<Instruction>(val);
-    if (!inst) return;
+    if (!inst) return {val, nullptr};
+    // we use parent/child relationships here instead of next/prev
     if (Load load = IR::Load(inst)) {
-
-      // now, check if it is a load
-      return;
+      // TODO: check we don't have mutually exclusive predicates
+      // we found a load; first we check if it has already been added
+      if (load.getParent() != nullptr) {
+        Arena<> *allocator = cache.getAllocator();
+        IR::Addr *reload = ((Addr *)load)->reload(allocator);
+        Dependence::copyDependencies(allocator, load, reload);
+        invariant(reload->isLoad());
+        load = reload;
+      }
+      stow.insertChild(load);
+      return {load, load.getLoop()};
+      // it has been, therefore we need to copy the load
     }
+    // if not a load, check if it is stored, so we reload
+    Addr *store{nullptr};
     for (Value *use : inst->getUsers()) {
       if (IR::Stow other = IR::Stow(use)) {
-        if (other == stow) break; // not other
-        // we reload this use, so we need to duplicate the instructions
-        if (useInst->getParent() == stow->getParent())
-          searchOperandsForLoads(stow, useInst);
+        store = other;
+        if (other == stow) break; // scan all users
       }
     }
-    // if not, check if it is stored
-    // if not, check its operands
+    if (store && (store != stow)) {
+      Addr *load = Dependence::reload(allocator, store);
+      stow.insertChild(load); // insert load after stow
+      return {load, load.getLoop()};
+    }
+    Compute *C = llvm::cast<Compute>(inst);
+    // could not find a load, so now we recurse, searching operands
+    poly::Loop *maxLoop = nullptr;
+    auto s = allocator.scope(); // create temporary
+    unsigned numOps = C->getNumOperands();
+    MutPtrVector<Value *> newOperands{allocator, numOps};
+    bool opsChanged = false;
+    for (ptrdiff_t i = 0; i < numOps; ++i) {
+      Value *op = C->getOperand(i);
+      auto [updatedOp, loop] = searchOperandsForLoads(cache, stow, op);
+      maxLoop = deeperLoop(maxLoop, loop);
+      if (op != updatedOp) opsChanged = true;
+      newOperands[i] = updatedOp;
+    }
+    if (opsChanged) val = cache.similarCompute(C, newOperands);
+    return {val, maxLoop};
   }
   constexpr void setLI(llvm::LoopInfo *loopInfo) { LI = loopInfo; }
   constexpr void addStow(Addr *stow) {}

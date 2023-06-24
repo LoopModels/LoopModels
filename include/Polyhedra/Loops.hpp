@@ -332,11 +332,11 @@ class Loop : public BasePolyhedra<false, true, true, Loop> {
   [[nodiscard]] constexpr auto getSymCapacity() const -> ptrdiff_t {
     return numDynSymbols + numLoops;
   }
-  // llvm::Loop *L;
+  llvm::Loop *L;
   unsigned int numConstraints;
   unsigned int numLoops;
   unsigned int numDynSymbols;
-  unsigned int nonNegative; // initially stores orig nl
+  unsigned int nonNegative; // initially stores orig numloops
 #if !defined(__clang__) && defined(__GNUC__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
@@ -353,6 +353,7 @@ class Loop : public BasePolyhedra<false, true, true, Loop> {
 #endif
 
 public:
+  Loop(const Loop &) = delete;
   [[nodiscard]] constexpr auto isNonNegative() const -> bool {
     return nonNegative;
   }
@@ -405,7 +406,7 @@ public:
     ptrdiff_t depth = maxDepth - minDepth;
     unsigned numConstraints = unsigned(A.numRow()), N = unsigned(A.numCol());
     NotNull<Loop> aln{
-      Loop::allocate(alloc, numConstraints, depth, symbols, maxDepth)};
+      Loop::allocate(alloc, L, numConstraints, depth, symbols, maxDepth)};
     aln->getA()(_, _(0, N)) << A;
     // copy the included loops from B
     // we use outer <-> inner order, so we skip unsupported outer loops.
@@ -446,7 +447,7 @@ public:
     auto A{getA()};
     const auto [M, N] = A.size();
     auto syms{getSyms()};
-    NotNull<Loop> aln{Loop::allocate(alloc, ptrdiff_t(M) + numExtraVar,
+    NotNull<Loop> aln{Loop::allocate(alloc, L, ptrdiff_t(M) + numExtraVar,
                                      numLoops, syms, nonNeg)};
     auto B{aln->getA()};
     invariant(B.numRow(), M + numExtraVar);
@@ -467,7 +468,7 @@ public:
     // l   offs  0  0  ]      0  0 R ]          offs 0  0 ]
     // thus, we can ignore R here, and simply update the result using A.
     if (offsets) {
-      for (ptrdiff_t l = 0, L = getNumLoops(); l < L; ++l) {
+      for (ptrdiff_t l = 0, D = getNumLoops(); l < D; ++l) {
         if (int64_t mlt = offsets[l]) {
           B(_(0, M), 0) -= mlt * A(_, numConst + l);
           if (addExtra) B(M + l, 0) = -mlt;
@@ -482,18 +483,12 @@ public:
     if (R == math::I) return this;
     return ((const Loop *)this)->rotate(alloc, R, offsets);
   }
-  // static auto construct(llvm::Loop *L, llvm::ScalarEvolution &SE)
-  //   -> Loop* {
-  //   auto BT = getBackedgeTakenCount(SE, L);
-  //   if (!BT || llvm::isa<llvm::SCEVCouldNotCompute>(BT)) return nullptr;
-  //   return Loop(L, BT, SE);
-  // }
 
   [[nodiscard]] auto removeInnerMost(Arena<> *alloc) const -> NotNull<Loop> {
     // order is outer<->inner
     auto A{getA()};
-    auto ret = Loop::allocate(alloc, unsigned(A.numRow()), getNumLoops() - 1,
-                              getSyms(), isNonNegative());
+    auto ret = Loop::allocate(alloc, L->getParentLoop(), unsigned(A.numRow()),
+                              getNumLoops() - 1, getSyms(), isNonNegative());
     math::MutPtrMatrix<int64_t> B{ret->getA()};
     B << A(_, _(0, last));
     // no loop may be conditioned on the innermost loop, so we should be able to
@@ -516,9 +511,9 @@ public:
     numLoops = 0;
     numDynSymbols = 0;
   }
+  [[nodiscard]] constexpr auto getLLVMLoop() const -> llvm::Loop * { return L; }
   // L is the inner most loop getting removed
-  void removeOuterMost(ptrdiff_t numToRemove, llvm::Loop *L,
-                       llvm::ScalarEvolution *SE) {
+  void removeOuterMost(ptrdiff_t numToRemove, llvm::ScalarEvolution *SE) {
     // basically, we move the outermost loops to the symbols section,
     // and add the appropriate addressees
     // order is outer<->inner
@@ -530,14 +525,17 @@ public:
               oldNumDynSymbols = numDynSymbols;
     numDynSymbols += numToRemove;
     auto S{getSyms()};
+    // LL is exterior to the outermost loop
+    llvm::Loop *LL = L;
+    for (ptrdiff_t d = newNumLoops; d--;) LL = LL->getParentLoop();
     // Array `A` goes from outer->inner
     // as we peel loops, we go from inner->outer
     // so we iterate `i` backwards
     for (ptrdiff_t i = numToRemove; i;) {
-      llvm::Type *intTyp = L->getInductionVariable(*SE)->getType();
+      llvm::Type *intTyp = LL->getInductionVariable(*SE)->getType();
       S[--i + oldNumDynSymbols] = SE->getAddRecExpr(
-        SE->getZero(intTyp), SE->getOne(intTyp), L, llvm::SCEV::NoWrapMask);
-      L = L->getParentLoop();
+        SE->getZero(intTyp), SE->getOne(intTyp), LL, llvm::SCEV::NoWrapMask);
+      LL = LL->getParentLoop();
     }
     numLoops = newNumLoops;
     // initializeComparator();
@@ -561,7 +559,7 @@ public:
     return getA()(j, _(0, getNumSymbols()));
   }
   [[nodiscard]] constexpr auto copy(Arena<> *alloc) const -> NotNull<Loop> {
-    auto ret = Loop::allocate(alloc, numConstraints, numLoops, getSyms(),
+    auto ret = Loop::allocate(alloc, L, numConstraints, numLoops, getSyms(),
                               isNonNegative());
     ret->getA() << getA();
     return ret;
@@ -576,8 +574,8 @@ public:
       unsigned(A.numRow()) - pos.size() + neg.size() * pos.size();
     if (!isNonNegative()) numCon -= neg.size();
     auto p = checkpoint(alloc);
-    auto ret =
-      Loop::allocate(alloc, numCon, numLoops - 1, getSyms(), isNonNegative());
+    auto ret = Loop::allocate(alloc, nullptr, numCon, numLoops - 1, getSyms(),
+                              isNonNegative());
     ret->numConstraints = unsigned(
       isNonNegative()
         ? fourierMotzkinCore<true>(ret->getA(), getA(), v, zeroNegPos)
@@ -868,16 +866,18 @@ public:
     numConstraints = unsigned(r);
   }
 
-  [[nodiscard]] static auto construct(Arena<> *alloc, PtrMatrix<int64_t> A,
+  [[nodiscard]] static auto construct(Arena<> *alloc, llvm::Loop *L,
+                                      PtrMatrix<int64_t> A,
                                       llvm::ArrayRef<const llvm::SCEV *> syms,
                                       bool nonNeg) -> Loop * {
     unsigned numLoops = unsigned(A.numCol()) - 1 - syms.size();
-    Loop *aln = allocate(alloc, unsigned(A.numRow()), numLoops, syms, nonNeg);
+    Loop *aln =
+      allocate(alloc, L, unsigned(A.numRow()), numLoops, syms, nonNeg);
     aln->getA() << A;
     return aln;
   }
-  [[nodiscard]] static auto allocate(Arena<> *alloc, unsigned numCon,
-                                     unsigned numLoops,
+  [[nodiscard]] static auto allocate(Arena<> *alloc, llvm::Loop *L,
+                                     unsigned numCon, unsigned numLoops,
                                      llvm::ArrayRef<const llvm::SCEV *> syms,
                                      bool nonNegative) -> NotNull<Loop> {
     unsigned numDynSym = syms.size();
@@ -890,13 +890,14 @@ public:
     size_t memNeeded = size_t(M) * N * sizeof(int64_t) +
                        symCapacity * sizeof(const llvm::SCEV *const *);
     auto *mem = (Loop *)alloc->allocate(sizeof(Loop) + memNeeded);
-    auto *aln = std::construct_at(mem, numCon, numLoops, numDynSym, M);
+    auto *aln = std::construct_at(mem, L, numCon, numLoops, numDynSym, M);
     std::copy_n(syms.begin(), numDynSym, aln->getSyms().begin());
     return NotNull<Loop>{aln};
   }
-  explicit constexpr Loop(unsigned _numConstraints, unsigned _numLoops,
-                          unsigned _numDynSymbols, bool _nonNegative)
-    : numConstraints(_numConstraints), numLoops(_numLoops),
+  explicit constexpr Loop(llvm::Loop *loop, unsigned _numConstraints,
+                          unsigned _numLoops, unsigned _numDynSymbols,
+                          bool _nonNegative)
+    : L(loop), numConstraints(_numConstraints), numLoops(_numLoops),
       numDynSymbols(_numDynSymbols), nonNegative(_nonNegative) {}
 };
 } // namespace poly::poly
