@@ -5,6 +5,7 @@
 #include "IR/Address.hpp"
 #include "IR/Cache.hpp"
 #include "IR/Node.hpp"
+#include "LinearProgramming/ScheduledNode.hpp"
 #include "Polyhedra/DependencyPolyhedra.hpp"
 #include "Polyhedra/Loops.hpp"
 #include "Schedule.hpp"
@@ -39,319 +40,6 @@
 #include <type_traits>
 
 namespace poly::lp {
-
-using IR::Addr, IR::Value, IR::Instruction, IR::Load, IR::Stow;
-using math::PtrVector, math::MutPtrVector, math::DensePtrMatrix,
-  math::MutDensePtrMatrix, math::SquarePtrMatrix, math::MutSquarePtrMatrix,
-  math::end, math::_, math::Simplex;
-using poly::Dependence, poly::DepPoly;
-using utils::NotNull, utils::invariant, utils::Optional;
-
-/// ScheduledNode
-/// Represents a set of memory accesses that are optimized together in the LP.
-/// These instructions are all connected directly by through registers.
-/// E.g., `A[i] = B[i] + C[i]` is a single node
-/// because we load from `B[i]` and `C[i]` into registers, compute, and
-/// `A[i]`;
-/// When splitting LoopBlock graphs, these graphs will have edges between
-/// them that we drop. This is only a problem if we merge graphs later.
-///
-class ScheduledNode {
-
-  NotNull<Addr> store; // linked list to loads, iterate over getChild
-  NotNull<poly::Loop> loopNest;
-  ScheduledNode *next{nullptr};
-  ScheduledNode *component{nullptr}; // SCC cycle, or last node in a chain
-  // Dependence *dep{nullptr};          // input edges (points to parents)
-  int64_t *offsets{nullptr};
-  uint32_t phiOffset{0};   // used in LoopBlock
-  uint32_t omegaOffset{0}; // used in LoopBlock
-  uint8_t rank{0};
-  bool visited{false};
-#if !defined(__clang__) && defined(__GNUC__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wpedantic"
-#else
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wc99-extensions"
-#endif
-  int64_t mem[]; // NOLINT(modernize-avoid-c-arrays)
-#if !defined(__clang__) && defined(__GNUC__)
-#pragma GCC diagnostic pop
-#else
-#pragma clang diagnostic pop
-#endif
-
-  [[nodiscard]] constexpr auto getNumLoopsSquared() const -> unsigned {
-    auto L = getNumLoops();
-    return L * L;
-  }
-  constexpr ScheduledNode(Addr *store, poly::Loop *L)
-    : store(store), loopNest(L) {}
-
-public:
-  constexpr auto addNext(ScheduledNode *n) -> ScheduledNode * {
-    next = n;
-    return this;
-  }
-
-  static auto construct(Arena<> *alloc, Addr *store, poly::Loop *L)
-    -> ScheduledNode * {
-    size_t memNeeded = poly::requiredScheduleStorage(L->getNumLoops());
-    void *p =
-      alloc->allocate(sizeof(ScheduledNode) + memNeeded * sizeof(int64_t));
-    return new (p) ScheduledNode(store, L);
-  }
-  constexpr auto getNext() -> ScheduledNode * { return next; }
-  constexpr auto setNext(ScheduledNode *n) -> void { next = n; }
-  constexpr auto getLoopOffsets() -> MutPtrVector<int64_t> {
-    return {offsets, getNumLoops()};
-  }
-  constexpr void setOffsets(int64_t *o) { offsets = o; }
-  // MemAccess addrCapacity field gives the replication count
-  // so for each memory access, we can count the number of edges in
-  // and the number of edges out through iterating edges in and summing
-  // repCounts
-  //
-  // we use these to
-  // 1. alloc enough memory for each Addresses*
-  // 2. add each created address to the MemoryAddress's remap
-  // TODO:
-  // 1. the above
-  // 2. add the direct Addr connections corresponding to the node
-  constexpr void insertMem(Arena<> *alloc, PtrVector<Addr *> memAccess,
-                           CostModeling::LoopTreeSchedule *L) const;
-  // constexpr void
-  // incrementReplicationCounts(PtrVector<MemoryAccess *> memAccess) const {
-  //   for (auto i : memory)
-  //     if (i != storeId && (memAccess[i]->isStore()))
-  //       memAccess[i]->replicateAddr();
-  // }
-  // [[nodiscard]] constexpr auto getNumMem() const -> size_t {
-  //   return memory.size();
-  // }
-  constexpr auto getStore() -> Addr * { return store; }
-  [[nodiscard]] constexpr auto getStore() const -> const Addr * {
-    return store;
-  }
-  // at this point, getNext chains memory ops, letting us loop over them
-  // getPrev lets us iterate within a ScheduledNode
-  // we can iterate over
-  // a. nodes -> edges
-  // b. nodes -> addrs
-  constexpr void forEachAddr(const auto &f) {
-    for (Addr *m = store; m; m = llvm::cast_or_null<Addr>(m->getChild())) f(m);
-  }
-  constexpr void forEachAddrNode(const auto &f) {
-    for (ScheduledNode *n = this; n; n = n->getNext())
-      for (Addr *m = n->getStore(); m;
-           m = llvm::cast_or_null<Addr>(m->getChild()))
-        f(m);
-  }
-  // for each input node, i.e. for each where this is the output
-  constexpr void forEachInput(const auto &f) {
-    for (Addr *a = store; a; a = llvm::cast_or_null<Addr>(a->getChild()))
-      for (Dependence *d = a->getEdgeIn(); d; d = d->getNextInput())
-        f(d->input()->getNode());
-  }
-  constexpr void forEachInput(const auto &f) const {
-    for (const Addr *a = store; a; a = llvm::cast_or_null<Addr>(a->getChild()))
-      for (const Dependence *d = a->getEdgeIn(); d; d = d->getNextInput())
-        f(d->input()->getNode());
-  }
-  constexpr void forEachInput(unsigned depth, const auto &f) {
-    for (Addr *a = store; a; a = llvm::cast_or_null<Addr>(a->getChild()))
-      for (Dependence *d = a->getEdgeIn(); d; d = d->getNextInput())
-        if (!d->isSat(depth)) f(d->input()->getNode());
-  }
-  constexpr void forEachInput(unsigned depth, const auto &f) const {
-    for (const Addr *a = store; a; a = llvm::cast_or_null<Addr>(a->getChild()))
-      for (const Dependence *d = a->getEdgeIn(); d; d = d->getNextInput())
-        if (!d->isSat(depth)) f(d->input()->getNode());
-  }
-  constexpr auto reduceEachInput(auto x, const auto &f) {
-    for (Addr *a = store; a; a = llvm::cast_or_null<Addr>(a->getChild()))
-      for (Dependence *d = a->getEdgeIn(); d; d = d->getNextInput())
-        x = f(x, d->input()->getNode());
-    return x;
-  }
-  constexpr void reduceEachInput(auto x, const auto &f) const {
-    for (const Addr *a = store; a; a = llvm::cast_or_null<Addr>(a->getChild()))
-      for (const Dependence *d = a->getEdgeIn(); d; d = d->getNextInput())
-        x = f(x, d->input()->getNode());
-    return x;
-  }
-  constexpr void reduceEachInput(auto x, unsigned depth, const auto &f) {
-    for (Addr *a = store; a; a = llvm::cast_or_null<Addr>(a->getChild()))
-      for (Dependence *d = a->getEdgeIn(); d; d = d->getNextInput())
-        if (!d->isSat(depth)) x = f(x, d->input()->getNode());
-    return x;
-  }
-  constexpr void reduceEachInput(auto x, unsigned depth, const auto &f) const {
-    for (const Addr *a = store; a; a = llvm::cast_or_null<Addr>(a->getChild()))
-      for (const Dependence *d = a->getEdgeIn(); d; d = d->getNextInput())
-        if (!d->isSat(depth)) x = f(x, d->input()->getNode());
-    return x;
-  }
-  constexpr void forEachInputEdge(const auto &f) {
-    for (Addr *a = store; a; a = llvm::cast_or_null<Addr>(a->getChild()))
-      for (Dependence *d = a->getEdgeIn(); d; d = d->getNextInput()) f(d);
-  }
-  constexpr void forEachInputEdge(const auto &f) const {
-    for (const Addr *a = store; a; a = llvm::cast_or_null<Addr>(a->getChild()))
-      for (const Dependence *d = a->getEdgeIn(); d; d = d->getNextInput()) f(d);
-  }
-  constexpr void forEachInputEdge(unsigned depth, const auto &f) {
-    for (Addr *a = store; a; a = llvm::cast_or_null<Addr>(a->getChild()))
-      for (Dependence *d = a->getEdgeIn(); d; d = d->getNextInput())
-        if (!d->isSat(depth)) f(d);
-  }
-  constexpr void forEachInputEdge(unsigned depth, const auto &f) const {
-    for (const Addr *a = store; a; a = llvm::cast_or_null<Addr>(a->getChild()))
-      for (const Dependence *d = a->getEdgeIn(); d; d = d->getNextInput())
-        if (!d->isSat(depth)) f(d);
-  }
-  constexpr auto reduceEachInputEdge(auto x, const auto &f) {
-    for (Addr *a = store; a; a = llvm::cast_or_null<Addr>(a->getChild()))
-      for (Dependence *d = a->getEdgeIn(); d; d = d->getNextInput())
-        x = f(x, d);
-    return x;
-  }
-  constexpr void reduceEachInputEdge(auto x, const auto &f) const {
-    for (const Addr *a = store; a; a = llvm::cast_or_null<Addr>(a->getChild()))
-      for (const Dependence *d = a->getEdgeIn(); d; d = d->getNextInput())
-        x = f(x, d);
-    return x;
-  }
-  constexpr void reduceEachInputEdge(auto x, unsigned depth, const auto &f) {
-    for (Addr *a = store; a; a = llvm::cast_or_null<Addr>(a->getChild()))
-      for (Dependence *d = a->getEdgeIn(); d; d = d->getNextInput())
-        if (!d->isSat(depth)) x = f(x, d);
-    return x;
-  }
-  constexpr void reduceEachInputEdge(auto x, unsigned depth,
-                                     const auto &f) const {
-    for (const Addr *a = store; a; a = llvm::cast_or_null<Addr>(a->getChild()))
-      for (const Dependence *d = a->getEdgeIn(); d; d = d->getNextInput())
-        if (!d->isSat(depth)) x = f(x, d);
-    return x;
-  }
-
-  [[nodiscard]] constexpr auto getSchedule() -> poly::AffineSchedule {
-    return {mem};
-  }
-  [[nodiscard]] constexpr auto getLoopNest() const
-    -> NotNull<const poly::Loop> {
-    return loopNest;
-  }
-  [[nodiscard]] constexpr auto getOffset() const -> const int64_t * {
-    return offsets;
-  }
-
-  [[nodiscard]] constexpr auto wasVisited() const -> bool { return visited; }
-  constexpr void visit() { visited = true; }
-  constexpr void unVisit() { visited = false; }
-  // [[nodiscard]] constexpr auto wasVisited2() const -> bool { return visited2;
-  // } constexpr void visit2() { visited2 = true; } constexpr void unVisit2() {
-  // visited2 = false; }
-  [[nodiscard]] constexpr auto getNumLoops() const -> unsigned {
-    return unsigned(mem[0]);
-  }
-  // 'phiIsScheduled()` means that `phi`'s schedule has been
-  // set for the outer `rank` loops.
-  [[nodiscard]] constexpr auto phiIsScheduled(size_t d) const -> bool {
-    return d < rank;
-  }
-
-  [[nodiscard]] constexpr auto updatePhiOffset(size_t p) -> size_t {
-    phiOffset = p;
-    return p + getNumLoops();
-  }
-  [[nodiscard]] constexpr auto updateOmegaOffset(size_t o) -> size_t {
-    omegaOffset = o;
-    return ++o;
-  }
-  [[nodiscard]] constexpr auto getPhiOffset() const -> size_t {
-    return phiOffset;
-  }
-  [[nodiscard]] constexpr auto getPhiOffsetRange() const
-    -> math::Range<size_t, size_t> {
-    return _(phiOffset, phiOffset + getNumLoops());
-  }
-  // NOLINTNEXTLINE(readability-make-member-function-const)
-  [[nodiscard]] constexpr auto getPhi() -> MutSquarePtrMatrix<int64_t> {
-    return {mem + 1, math::SquareDims{unsigned(getNumLoops())}};
-  }
-  [[nodiscard]] constexpr auto getPhi() const -> SquarePtrMatrix<int64_t> {
-    return {const_cast<int64_t *>(mem) + 1, math::SquareDims{getNumLoops()}};
-  }
-  /// getSchedule, loops are always indexed from outer to inner
-  [[nodiscard]] constexpr auto getSchedule(size_t d) const
-    -> PtrVector<int64_t> {
-    return getPhi()(d, _);
-  }
-  [[nodiscard]] constexpr auto getSchedule(size_t d) -> MutPtrVector<int64_t> {
-    return getPhi()(d, _);
-  }
-  [[nodiscard]] constexpr auto getFusionOmega(size_t i) const -> int64_t {
-    return (mem + 1)[getNumLoopsSquared() + i];
-  }
-  [[nodiscard]] constexpr auto getOffsetOmega(size_t i) const -> int64_t {
-    return (mem + 2)[getNumLoopsSquared() + getNumLoops() + i];
-  }
-  // NOLINTNEXTLINE(readability-make-member-function-const)
-  [[nodiscard]] constexpr auto getFusionOmega(size_t i) -> int64_t & {
-    return (mem + 1)[getNumLoopsSquared() + i];
-  }
-  // NOLINTNEXTLINE(readability-make-member-function-const)
-  [[nodiscard]] constexpr auto getOffsetOmega(size_t i) -> int64_t & {
-    return (mem + 2)[getNumLoopsSquared() + getNumLoops() + i];
-  }
-  [[nodiscard]] constexpr auto getFusionOmega() const -> PtrVector<int64_t> {
-    return {const_cast<int64_t *>(mem + 1) + getNumLoopsSquared(),
-            getNumLoops() + 1};
-  }
-  [[nodiscard]] constexpr auto getOffsetOmega() const -> PtrVector<int64_t> {
-    return {const_cast<int64_t *>(mem) + 2 + getNumLoopsSquared() +
-              getNumLoops(),
-            getNumLoops()};
-  }
-  // NOLINTNEXTLINE(readability-make-member-function-const)
-  [[nodiscard]] constexpr auto getFusionOmega() -> MutPtrVector<int64_t> {
-    return {mem + 1 + getNumLoopsSquared(), getNumLoops() + 1};
-  }
-  // NOLINTNEXTLINE(readability-make-member-function-const)
-  [[nodiscard]] constexpr auto getOffsetOmega() -> MutPtrVector<int64_t> {
-    return {mem + 2 + getNumLoopsSquared() + getNumLoops(), getNumLoops()};
-  }
-
-  constexpr void schedulePhi(DensePtrMatrix<int64_t> indMat, size_t r) {
-    // indMat indvars are indexed from outer<->inner
-    // phi indvars are indexed from outer<->inner
-    // so, indMat is indvars[outer<->inner] x array dim
-    // phi is loop[outer<->inner] x indvars[outer<->inner]
-    MutSquarePtrMatrix<int64_t> phi = getPhi();
-    size_t indR = size_t(indMat.numCol());
-    for (size_t i = 0; i < r; ++i) {
-      phi(i, _(0, indR)) << indMat(i, _);
-      phi(i, _(indR, end)) << 0;
-    }
-    rank = r;
-  }
-  constexpr void unschedulePhi() { rank = 0; }
-  [[nodiscard]] constexpr auto getOmegaOffset() const -> size_t {
-    return omegaOffset;
-  }
-  void resetPhiOffset() { phiOffset = std::numeric_limits<unsigned>::max(); }
-  friend inline auto operator<<(llvm::raw_ostream &os,
-                                const ScheduledNode &node)
-    -> llvm::raw_ostream & {
-    os << "inNeighbors = ";
-    node.forEachInput([&](auto m) { os << "v_" << m << ", "; });
-    return os << "\n";
-  }
-};
-static_assert(std::is_trivially_destructible_v<ScheduledNode>);
 
 /// A loop block is a block of the program that may include multiple loops.
 /// These loops are either all executed (note iteration count may be 0, or
@@ -465,7 +153,7 @@ public:
       nodes = addScheduledNode(cache, stow)->addNext(nodes);
     for (ScheduledNode *node = nodes; node; node = node->getNext())
       shiftOmega(node);
-    // return optOrth(fullGraph());
+    return optOrth(nodes);
   }
   void clear() { allocator.reset(); }
 
@@ -706,6 +394,30 @@ private:
         }
       }
     }
+  }
+  auto optOrth(ScheduledNode *nodes) -> bool {
+    // check for orthogonalization opportunities
+    bool tryOrth = false;
+    for (auto &edge : edges) {
+      if (edge.inputIsLoad() == edge.outputIsLoad()) continue;
+      Optional<size_t> maybeIndex = getOverlapIndex(edge);
+      if (!maybeIndex) continue;
+      size_t index = *maybeIndex;
+      ScheduledNode &node = nodes[index];
+      DensePtrMatrix<int64_t> indMat = edge.getInIndMat();
+      if (node.phiIsScheduled(0) || (indMat != edge.getOutIndMat())) continue;
+      size_t r = NormalForm::rank(indMat);
+      if (r == edge.getInNumLoops()) continue;
+      // TODO handle linearly dependent acceses, filtering them out
+      if (r != size_t(indMat.numRow())) continue;
+      node.schedulePhi(indMat, r);
+      tryOrth = true;
+    }
+    if (tryOrth) {
+      if (std::optional<BitSet> opt = optimize(g, 0, maxDepth)) return opt;
+      for (auto &&n : nodes) n.unschedulePhi();
+    }
+    return optimize(g, 0, maxDepth);
   }
 
   constexpr void setLI(llvm::LoopInfo *loopInfo) { LI = loopInfo; }
