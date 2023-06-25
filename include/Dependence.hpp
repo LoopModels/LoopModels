@@ -316,7 +316,7 @@ public:
   }
   /// indicates whether forward is non-empty
   [[nodiscard]] constexpr auto isForward() const -> bool { return forward; }
-  [[nodiscard]] constexpr auto nodeIn() const -> const ScheduledNode * {
+  [[nodiscard]] constexpr auto nodeIn() const -> const lp::ScheduledNode * {
     return in->getNode();
   }
   // [[nodiscard]] constexpr auto nodeOut() const -> unsigned {

@@ -19,6 +19,7 @@
 #include <Math/StaticArrays.hpp>
 #include <Utilities/Allocators.hpp>
 #include <Utilities/Invariant.hpp>
+#include <Utilities/ListRanges.hpp>
 #include <Utilities/Optional.hpp>
 #include <Utilities/Valid.hpp>
 #include <algorithm>
@@ -124,7 +125,7 @@ class LoopBlock {
 public:
   LoopBlock() = default;
   void optimize(IR::Cache &cache, IR::TreeResult tr) {
-    // first, we peel loops
+    // first, we peel loops for which affine repr failed
     if (unsigned numReject = tr.rejectDepth) {
       auto *SE = cache.getScalarEvolution();
       for (Addr *stow = tr.stow; stow;
@@ -151,9 +152,12 @@ public:
     for (Addr *stow = tr.stow; stow;
          stow = llvm::cast_or_null<Addr>(stow->getNext()))
       nodes = addScheduledNode(cache, stow)->addNext(nodes);
-    for (ScheduledNode *node = nodes; node; node = node->getNext())
+    unsigned maxDepth = 0;
+    for (ScheduledNode *node : nodes->nodesRange()) {
+      maxDepth = std::max(maxDepth, node->getDepth());
       shiftOmega(node);
-    return optOrth(nodes);
+    }
+    return optOrth(nodes, maxDepth);
   }
   void clear() { allocator.reset(); }
 
@@ -395,29 +399,86 @@ private:
       }
     }
   }
-  auto optOrth(ScheduledNode *nodes) -> bool {
+  // returns `true` if successful
+  auto optOrth(ScheduledNode *nodes, unsigned maxDepth) -> bool {
     // check for orthogonalization opportunities
     bool tryOrth = false;
-    for (auto &edge : edges) {
-      if (edge.inputIsLoad() == edge.outputIsLoad()) continue;
-      Optional<size_t> maybeIndex = getOverlapIndex(edge);
-      if (!maybeIndex) continue;
-      size_t index = *maybeIndex;
-      ScheduledNode &node = nodes[index];
-      DensePtrMatrix<int64_t> indMat = edge.getInIndMat();
-      if (node.phiIsScheduled(0) || (indMat != edge.getOutIndMat())) continue;
-      size_t r = NormalForm::rank(indMat);
-      if (r == edge.getInNumLoops()) continue;
-      // TODO handle linearly dependent acceses, filtering them out
-      if (r != size_t(indMat.numRow())) continue;
-      node.schedulePhi(indMat, r);
-      tryOrth = true;
+    for (ScheduledNode *node : nodes->nodesRange()) {
+      for (Dependence *edge : node->inputEdges()) {
+        // this edge's output is `node`
+        // we want edges whose input is also `node`,
+        // i.e. edges that are within the node
+        if (edge->input()->getNode() != node) continue;
+        DensePtrMatrix<int64_t> indMat = edge->getInIndMat();
+        // check that we haven't already scheduled on an earlier
+        // iteration of this loop, and that the indmats are the same
+        if (node->phiIsScheduled(0) || (indMat != edge->getOutIndMat()))
+          continue;
+        size_t r = NormalForm::rank(indMat);
+        if (r == edge->getInNumLoops()) continue;
+        // TODO handle linearly dependent acceses, filtering them out
+        if (r != size_t(indMat.numRow())) continue;
+        node->schedulePhi(indMat, r);
+        tryOrth = true;
+      }
     }
     if (tryOrth) {
-      if (std::optional<BitSet> opt = optimize(g, 0, maxDepth)) return opt;
-      for (auto &&n : nodes) n.unschedulePhi();
+      if (optimize(g, 0, maxDepth)) return true;
+      for (ScheduledNode *n : nodes->nodesRange()) n->unschedulePhi();
     }
     return optimize(g, 0, maxDepth);
+  }
+  // NOLINTNEXTLINE(misc-no-recursion)
+  [[nodiscard]] auto optimize(ScheduledNode *nodes, unsigned d,
+                              unsigned maxDepth) -> bool {
+    if (d >= maxDepth) return true;
+    countAuxParamsAndConstraints(g, d);
+    setScheduleMemoryOffsets(g, d);
+    // if we fail on this level, break the graph
+    BitSet activeEdgesBackup = g.activeEdges;
+    if (std::optional<BitSet> depSat = solveGraph(g, d, false)) {
+      const size_t dp1 = d + 1;
+      if (dp1 == maxDepth) return *depSat;
+      if (std::optional<BitSet> depSatNest = optimize(g, dp1, maxDepth)) {
+        bool depSatEmpty = depSat->empty();
+        *depSat |= *depSatNest;
+        if (!(depSatEmpty || depSatNest->empty())) // try and sat all this level
+          return optimizeSatDep(g, d, maxDepth, *depSat, activeEdgesBackup);
+        return *depSat;
+      }
+    }
+    return breakGraph(g, d);
+  }
+  static constexpr auto numParams(const Dependence *edge)
+    -> math::SVector<size_t, 4> {
+    return {edge->getNumLambda(), edge->getDynSymDim(),
+            edge->getNumConstraints(), 1};
+  }
+  constexpr void countAuxParamsAndConstraints(ScheduledNode *nodes,
+                                              unsigned d) {
+    math::SVector<size_t, 4> params{};
+    assert(allZero(params));
+    for (ScheduledNode *node : nodes->nodesRange())
+      for (Dependence *d : node->inputEdges()) params += numParams(d);
+    numLambda = params[0];
+    numBounding = params[1];
+    numConstraints = params[2];
+    numActiveEdges = params[3];
+  }
+
+  constexpr void setScheduleMemoryOffsets(ScheduledNode *nodes, unsigned d) {
+    // C, lambdas, omegas, Phis
+    numOmegaCoefs = 0;
+    numPhiCoefs = 0;
+    numSlack = 0;
+    for (ScheduledNode *node : nodes->nodesRange()) {
+      // note, we had d > node.getNumLoops() for omegas earlier; why?
+      if ((d >= node->getNumLoops()) || (!hasActiveEdges(g, node, d))) continue;
+      numOmegaCoefs = node.updateOmegaOffset(numOmegaCoefs);
+      if (node.phiIsScheduled(d)) continue;
+      numPhiCoefs = node.updatePhiOffset(numPhiCoefs);
+      ++numSlack;
+    }
   }
 
   constexpr void setLI(llvm::LoopInfo *loopInfo) { LI = loopInfo; }
@@ -728,47 +789,6 @@ private:
   constexpr auto fullGraph() -> Graph {
     return {BitSet::dense(nodes.size()), BitSet::dense(edges.size()), memory,
             nodes, edges};
-  }
-  static constexpr auto getOverlapIndex(const Dependence &edge)
-    -> Optional<size_t> {
-    auto [store, other] = edge.getStoreAndOther();
-    size_t sindex = store->getNode(), lindex = other->getNode();
-    if (sindex == lindex) return sindex;
-    return {};
-  }
-  auto optOrth(Graph g) -> std::optional<BitSet> {
-    const size_t maxDepth = calcMaxDepth();
-    // check for orthogonalization opportunities
-    bool tryOrth = false;
-    for (auto &edge : edges) {
-      if (edge.inputIsLoad() == edge.outputIsLoad()) continue;
-      Optional<size_t> maybeIndex = getOverlapIndex(edge);
-      if (!maybeIndex) continue;
-      size_t index = *maybeIndex;
-      ScheduledNode &node = nodes[index];
-      DensePtrMatrix<int64_t> indMat = edge.getInIndMat();
-      if (node.phiIsScheduled(0) || (indMat != edge.getOutIndMat())) continue;
-      size_t r = NormalForm::rank(indMat);
-      if (r == edge.getInNumLoops()) continue;
-      // TODO handle linearly dependent acceses, filtering them out
-      if (r != size_t(indMat.numRow())) continue;
-      node.schedulePhi(indMat, r);
-      tryOrth = true;
-    }
-    if (tryOrth) {
-      if (std::optional<BitSet> opt = optimize(g, 0, maxDepth)) return opt;
-      for (auto &&n : nodes) n.unschedulePhi();
-    }
-    return optimize(g, 0, maxDepth);
-  }
-  constexpr void addMemory(NotNull<ArrayIndex> m) {
-    addMemory(MemoryAccess::construct(allocator, m));
-  }
-  constexpr void addMemory(MemoryAccess *m) {
-#ifndef NDEBUG
-    for (auto *o : memory) assert(o->getInstruction() != m->getInstruction());
-#endif
-    memory.push_back(m);
   }
   [[nodiscard]] static constexpr auto anyActive(const Graph &g, const BitSet &b)
     -> bool {

@@ -18,13 +18,12 @@
 #include <llvm/Support/Casting.h>
 
 namespace poly {
+namespace lp {
+class ScheduledNode;
+} // namespace lp
 namespace poly {
 class Dependence;
 } // namespace poly
-class ScheduledNode;
-namespace CostModeling {
-class LoopTreeSchedule;
-} // namespace CostModeling
 namespace IR {
 using math::PtrVector, math::MutPtrVector, math::DensePtrMatrix,
   math::MutDensePtrMatrix, math::SquarePtrMatrix, math::_, math::DenseDims,
@@ -79,7 +78,7 @@ class Addr : public Instruction {
   // Before this, on constructing the Addr, we use maxDepth
   // numDim = maxDepth - TreeResult.rejectDepth; we may need to reduce dim
   [[no_unique_address]] union {
-    ScheduledNode *node;
+    lp::ScheduledNode *node;
     ptrdiff_t maxDepth;
   } nodeOrDepth;
   [[no_unique_address]] NotNull<const llvm::SCEVUnknown> basePointer;
@@ -198,13 +197,13 @@ public:
   }
   constexpr void setLoopNest(poly::Loop *L) { loop = L; }
   // NOLINTNEXTLINE(readability-make-member-function-const)
-  [[nodiscard]] constexpr auto getNode() -> ScheduledNode * {
+  [[nodiscard]] constexpr auto getNode() -> lp::ScheduledNode * {
     return nodeOrDepth.node;
   }
-  [[nodiscard]] constexpr auto getNode() const -> const ScheduledNode * {
+  [[nodiscard]] constexpr auto getNode() const -> const lp::ScheduledNode * {
     return nodeOrDepth.node;
   }
-  constexpr void setNode(ScheduledNode *n) { nodeOrDepth.node = n; }
+  constexpr void setNode(lp::ScheduledNode *n) { nodeOrDepth.node = n; }
   constexpr void forEachInput(const auto &f);
   [[nodiscard]] static auto construct(Arena<> *alloc,
                                       const llvm::SCEVUnknown *ptr,

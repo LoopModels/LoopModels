@@ -3,6 +3,7 @@
 #include "IR/Address.hpp"
 #include "Polyhedra/DependencyPolyhedra.hpp"
 #include "Polyhedra/Loops.hpp"
+#include "Utilities/ListRanges.hpp"
 #include <Utilities/Invariant.hpp>
 #include <Utilities/Valid.hpp>
 #include <ranges>
@@ -90,8 +91,8 @@ public:
   // TODO:
   // 1. the above
   // 2. add the direct Addr connections corresponding to the node
-  constexpr void insertMem(Arena<> *alloc, PtrVector<Addr *> memAccess,
-                           CostModeling::LoopTreeSchedule *L) const;
+  // constexpr void insertMem(Arena<> *alloc, PtrVector<Addr *> memAccess,
+  //                          CostModeling::LoopTreeSchedule *L) const;
   // constexpr void
   // incrementReplicationCounts(PtrVector<MemoryAccess *> memAccess) const {
   //   for (auto i : memory)
@@ -105,20 +106,68 @@ public:
   [[nodiscard]] constexpr auto getStore() const -> const Addr * {
     return store;
   }
-  // at this point, getNext chains memory ops, letting us loop over them
-  // getPrev lets us iterate within a ScheduledNode
-  // we can iterate over
-  // a. nodes -> edges
-  // b. nodes -> addrs
-  constexpr void forEachAddr(const auto &f) {
-    for (Addr *m = store; m; m = llvm::cast_or_null<Addr>(m->getChild())) f(m);
+  constexpr auto nodesRange()
+    -> utils::ListRange<ScheduledNode, utils::GetNext, utils::Identity> {
+    return utils::ListRange{this, utils::GetNext{}};
   }
-  constexpr void forEachAddrNode(const auto &f) {
-    for (ScheduledNode *n = this; n; n = n->getNext())
-      for (Addr *m = n->getStore(); m;
-           m = llvm::cast_or_null<Addr>(m->getChild()))
-        f(m);
+
+  // convention: `local` means only for this node
+  // `each` for all connected nodes
+  // range of `Addr` for this node
+  constexpr auto localAddr() {
+    return utils::ListRange{(Addr *)store, [](Addr *a) -> Addr * {
+                              return llvm::cast_or_null<Addr>(a->getChild());
+                            }};
   }
+  // range of all `Addr` for the list starting with this node
+  constexpr auto eachAddr() {
+    return utils::NestedListRange{
+      this, utils::GetNext{},
+      [](Addr *a) -> Addr * { return llvm::cast_or_null<Addr>(a->getChild()); },
+      [](ScheduledNode *n) -> Addr * { return n->getStore(); }};
+  }
+  // all nodes that are memory inputs to this one; i.e. all parents
+  // NOTE: we may reach each node multiple times
+  constexpr auto inputNodes() {
+    return utils::NestedListRange{
+      store,
+      [](Addr *a) -> Addr * { return llvm::cast_or_null<Addr>(a->getChild()); },
+      [](Dependence *d) -> Dependence * { return d->getNextInput(); },
+      [](Addr *a) -> Dependence * { return a->getEdgeIn(); },
+      [](Dependence *d) -> ScheduledNode * { return d->input()->getNode(); }};
+  }
+  // all nodes that are memory outputs of this one; i.e. all children
+  // NOTE: we may reach each node multiple times
+  constexpr auto outputNodes() {
+    return utils::NestedListRange{
+      store,
+      [](Addr *a) -> Addr * { return llvm::cast_or_null<Addr>(a->getChild()); },
+      [](Dependence *d) -> Dependence * { return d->getNextOutput(); },
+      [](Addr *a) -> Dependence * { return a->getEdgeOut(); },
+      [](Dependence *d) -> ScheduledNode * { return d->output()->getNode(); }};
+  }
+  constexpr auto inputEdges() {
+    return utils::NestedListRange{
+      store,
+      [](Addr *a) -> Addr * { return llvm::cast_or_null<Addr>(a->getChild()); },
+      [](Dependence *d) -> Dependence * { return d->getNextInput(); },
+      [](Addr *a) -> Dependence * { return a->getEdgeIn(); }};
+  }
+  constexpr auto outputEdges() {
+    return utils::NestedListRange{
+      store,
+      [](Addr *a) -> Addr * { return llvm::cast_or_null<Addr>(a->getChild()); },
+      [](Dependence *d) -> Dependence * { return d->getNextOutput(); },
+      [](Addr *a) -> Dependence * { return a->getEdgeOut(); }};
+  }
+
+  // constexpr auto eachInputNodes() {
+  //   return utils::NestedListRange{
+  //     this, utils::GetNext{},
+  //     [](ScheduledNode *n) -> ScheduledNode * { return n->getNext(); },
+  //     [](ScheduledNode *n) -> ScheduledNode * { return n->getNext(); }};
+  // }
+
   // for each input node, i.e. for each where this is the output
   constexpr void forEachInput(const auto &f) {
     for (Addr *a = store; a; a = llvm::cast_or_null<Addr>(a->getChild()))
