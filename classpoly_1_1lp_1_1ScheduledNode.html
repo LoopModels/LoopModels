@@ -95,21 +95,33 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getLoopOffs
 <tr class="memitem:a15a160efa6d28f9ca858dc13420ea934"><td class="memItemLeft" align="right" valign="top"><a id="a15a160efa6d28f9ca858dc13420ea934"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>setOffsets</b> (int64_t *o)</td></tr>
 <tr class="separator:a15a160efa6d28f9ca858dc13420ea934"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acd6ec4913f34a22e3599fc8ebeec8814"><td class="memItemLeft" align="right" valign="top"><a id="acd6ec4913f34a22e3599fc8ebeec8814"></a>
-constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>insertMem</b> (Arena&lt;&gt; *alloc, PtrVector&lt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">Addr</a> * &gt; memAccess, <a class="el" href="classpoly_1_1CostModeling_1_1LoopTreeSchedule.html">CostModeling::LoopTreeSchedule</a> *L) const</td></tr>
-<tr class="separator:acd6ec4913f34a22e3599fc8ebeec8814"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6fdb17627ee6d83d7b03d334f09dfcfd"><td class="memItemLeft" align="right" valign="top"><a id="a6fdb17627ee6d83d7b03d334f09dfcfd"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getStore</b> () -&gt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">Addr</a> *</td></tr>
 <tr class="separator:a6fdb17627ee6d83d7b03d334f09dfcfd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a23144d570f99cc802ee4df2e5f2bd807"><td class="memItemLeft" align="right" valign="top"><a id="a23144d570f99cc802ee4df2e5f2bd807"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getStore</b> () const -&gt; const <a class="el" href="classpoly_1_1IR_1_1Addr.html">Addr</a> *</td></tr>
 <tr class="separator:a23144d570f99cc802ee4df2e5f2bd807"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2510b307dd46f01cdeb6fbb29a2a1d4e"><td class="memItemLeft" align="right" valign="top"><a id="a2510b307dd46f01cdeb6fbb29a2a1d4e"></a>
-constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>forEachAddr</b> (const auto &amp;f)</td></tr>
-<tr class="separator:a2510b307dd46f01cdeb6fbb29a2a1d4e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aff7c11caf910c022fb63423e9008f1c2"><td class="memItemLeft" align="right" valign="top"><a id="aff7c11caf910c022fb63423e9008f1c2"></a>
-constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>forEachAddrNode</b> (const auto &amp;f)</td></tr>
-<tr class="separator:aff7c11caf910c022fb63423e9008f1c2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aff4c9e3a8634be288ba4e0f84cf38156"><td class="memItemLeft" align="right" valign="top"><a id="aff4c9e3a8634be288ba4e0f84cf38156"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>nodesRange</b> () -&gt; utils::ListRange&lt; <a class="el" href="classpoly_1_1lp_1_1ScheduledNode.html">ScheduledNode</a>, utils::GetNext, utils::Identity &gt;</td></tr>
+<tr class="separator:aff4c9e3a8634be288ba4e0f84cf38156"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a952dfc664035829601cd05c2fd9a2394"><td class="memItemLeft" align="right" valign="top"><a id="a952dfc664035829601cd05c2fd9a2394"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>localAddr</b> ()</td></tr>
+<tr class="separator:a952dfc664035829601cd05c2fd9a2394"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2d042663b0f7dc2318059de271bfa54b"><td class="memItemLeft" align="right" valign="top"><a id="a2d042663b0f7dc2318059de271bfa54b"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>eachAddr</b> ()</td></tr>
+<tr class="separator:a2d042663b0f7dc2318059de271bfa54b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a534b21d93d010da83af7e2b91a53734d"><td class="memItemLeft" align="right" valign="top"><a id="a534b21d93d010da83af7e2b91a53734d"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>inputNodes</b> ()</td></tr>
+<tr class="separator:a534b21d93d010da83af7e2b91a53734d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1488e6b5796bb3922d1fc01088cbb4af"><td class="memItemLeft" align="right" valign="top"><a id="a1488e6b5796bb3922d1fc01088cbb4af"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>outputNodes</b> ()</td></tr>
+<tr class="separator:a1488e6b5796bb3922d1fc01088cbb4af"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6243afdbee60017e781afca845029f7e"><td class="memItemLeft" align="right" valign="top"><a id="a6243afdbee60017e781afca845029f7e"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>inputEdges</b> ()</td></tr>
+<tr class="separator:a6243afdbee60017e781afca845029f7e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9aa3ef41e3a2d1737c752a23e7b4ddb4"><td class="memItemLeft" align="right" valign="top"><a id="a9aa3ef41e3a2d1737c752a23e7b4ddb4"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>outputEdges</b> ()</td></tr>
+<tr class="separator:a9aa3ef41e3a2d1737c752a23e7b4ddb4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a62d8007b5c805aaff0abe03aa6497f99"><td class="memItemLeft" align="right" valign="top"><a id="a62d8007b5c805aaff0abe03aa6497f99"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>forEachInput</b> (const auto &amp;f)</td></tr>
 <tr class="separator:a62d8007b5c805aaff0abe03aa6497f99"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -258,9 +270,8 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> 
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p><a class="el" href="classpoly_1_1lp_1_1ScheduledNode.html">ScheduledNode</a> Represents a set of memory accesses that are optimized together in the LP. These instructions are all connected directly by through registers. E.g., <code>A[i] = B[i] + C[i]</code> is a single node because we load from <code>B[i]</code> and <code>C[i]</code> into registers, compute, and <code>A[i]</code>; When splitting <a class="el" href="classpoly_1_1lp_1_1LoopBlock.html">LoopBlock</a> graphs, these graphs will have edges between them that we drop. This is only a problem if we merge graphs later. </p>
-</div><hr/>The documentation for this class was generated from the following files:<ul>
+</div><hr/>The documentation for this class was generated from the following file:<ul>
 <li>include/LinearProgramming/<a class="el" href="ScheduledNode_8hpp_source.html">ScheduledNode.hpp</a></li>
-<li>include/IR/<a class="el" href="CostModeling_8hpp_source.html">CostModeling.hpp</a></li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->
