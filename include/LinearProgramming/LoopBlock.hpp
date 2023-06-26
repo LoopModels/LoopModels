@@ -41,7 +41,7 @@
 #include <type_traits>
 
 namespace poly::lp {
-
+using math::MutPtrMatrix;
 /// A loop block is a block of the program that may include multiple loops.
 /// These loops are either all executed (note iteration count may be 0, or
 /// loops may be in rotated form and the guard prevents execution; this is okay
@@ -494,9 +494,9 @@ private:
       unsigned descend = d + 1;
       if (descend == maxDepth) return depSat;
       if (Optional<size_t> depSatNest = optimize(nodes, descend, maxDepth)) {
-        bool depSatEmpty = (*depSat) == 0;
+        bool hadDep = (*depSat) != 0;
         *depSat |= *depSatNest;
-        if (!(depSatEmpty || (*depSatNest == 0))) // try and sat all this level
+        if (hadDep && (*depSatNest != 0)) // try and sat all this level
           return optimizeSatDep(nodes, d, maxDepth, *depSat);
         return *depSat;
       }
@@ -658,29 +658,40 @@ private:
     if (allZero(sol[_(begin, numBounding + numActiveEdges)]))
       return checkEmptySatEdges(node, depth);
     ptrdiff_t w = 0, u = numActiveEdges;
+    // TODO: update the deactivated edge handling
+    // must consider it w/ respect to `optimize`, `breakGraph`, and
+    // `optimizeSatDep`
+    // We want an indicator of which edges to try and eagerly satisfy
+    // `optimizeSatDep`; this ought to just be the `edge->satLevel()`
+    // so the flags we return here only need to be an indicator
+    // of whether we had to deactivate an edge on level `depth`.
+    //
+    // We don't set `deactivated=1 for `checkEmptySat` as we still have `w == 0`
+    // and `u == 0`, meaning it is still a parallizable loop -- so we haven't
+    // lost anything! The idea of trying to consolidate dependencies into one
+    // loop is, if we must already execute this loop in order, we should try and
+    // cover as many dependencies at that time as possible.
     size_t deactivated = 0;
-    for (size_t e = 0; e < edges.size(); ++e) {
-      Dependence &edge = edges[e];
-      if (g.isInactive(e, depth)) continue;
-      size_t inIndex = edge.nodeIn(), outIndex = edge.nodeOut();
-      Col uu = u + edge.getNumDynamicBoundingVar();
-      if ((sol[w++] != 0) || (anyNEZero(sol[_(u, uu)]))) {
-        deactivated |= 1 << e;
-        edge.setSatLevelLP(depth);
-      } else {
-        const ScheduledNode &inNode = nodes[inIndex],
-                            &outNode = nodes[outIndex];
-        DensePtrMatrix<int64_t> inPhi = inNode.getPhi()(_(0, depth + 1), _),
-                                outPhi = outNode.getPhi()(_(0, depth + 1), _);
-        if (edge.checkEmptySat(allocator, inNode.getLoopNest(),
-                               inNode.getOffset(), inPhi, outNode.getLoopNest(),
-                               outNode.getOffset(), outPhi)) {
-          g.activeEdges.remove(e);
+    for (ScheduledNode *outNode : nodes->nodesRange()) {
+      for (Dependence *edge : outNode->inputEdges()) {
+        if (edge->isInactive(depth)) continue;
+        Col uu = u + edge->getNumDynamicBoundingVar();
+        if ((sol[w++] != 0) || (anyNEZero(sol[_(u, uu)]))) {
+          edge->setSatLevelLP(depth);
+          deactivated = 1;
+        } else {
+          ScheduledNode *inNode = edge->input();
+          DensePtrMatrix<int64_t> inPhi = inNode->getPhi()(_(0, depth + 1), _),
+                                  outPhi =
+                                    outNode->getPhi()(_(0, depth + 1), _);
+          edge->checkEmptySat(
+            allocator, inNode->getLoopNest(), inNode->getOffset(), inPhi,
+            outNode->getLoopNest(), outNode->getOffset(), outPhi);
         }
+        u = ptrdiff_t(uu);
       }
-      u = ptrdiff_t(uu);
     }
-    return deactivated;
+    return deactivated << depth;
   }
   auto checkEmptySatEdges(ScheduledNode *nodes, unsigned depth) -> size_t {
     for (ScheduledNode *outNode : nodes->nodesRange()) {
@@ -801,8 +812,11 @@ private:
   /// Phis: scheduling rotations
   /// w: bounding offsets, independent of symbolic variables
   /// u: bounding offsets, dependent on symbolic variables
-  auto instantiateOmniSimplex(const Graph &g, size_t d, bool satisfyDeps)
+  auto instantiateOmniSimplex(ScheduledNode *nodes, unsigned d,
+                              bool satisfyDeps, CoefCounts counts)
     -> std::unique_ptr<Simplex> {
+    auto [numOmegaCoefs, numPhiCoefs, numSlack, numLambda, numBounding,
+          numConstraints, numActiveEdges] = counts;
     auto omniSimplex = Simplex::create(
       numConstraints + numSlack, numBounding + numActiveEdges + numPhiCoefs +
                                    numOmegaCoefs + numSlack + numLambda);
@@ -817,13 +831,15 @@ private:
     Row c = 0;
     Col l = 1, o = 1 + numLambda + numSlack, p = o + numOmegaCoefs,
         w = p + numPhiCoefs, u = w + numActiveEdges;
+    // TODO: we're going to invert the order of edge and node iteration?
     for (size_t e = 0; e < edges.size(); ++e) {
       Dependence &edge = edges[e];
       if (g.isInactive(e, d)) continue;
-      size_t outNodeIndex = edge.nodeOut(), inNodeIndex = edge.nodeIn();
+      size_t outNodeIndex = edge->nodeOut(), inNodeIndex = edge->nodeIn();
       const auto [satC, satL, satPp, satPc, satO, satW] =
-        edge.splitSatisfaction();
-      const auto [bndC, bndL, bndPp, bndPc, bndO, bndWU] = edge.splitBounding();
+        edge->splitSatisfaction();
+      const auto [bndC, bndL, bndPp, bndPc, bndO, bndWU] =
+        edge->splitBounding();
       const size_t numSatConstraints = satC.size(),
                    numBndConstraints = bndC.size();
       const Col nPc = satPc.numCol(), nPp = satPp.numCol();
@@ -898,29 +914,29 @@ private:
             << bndO(_, 0) + bndO(_, 1);
         }
       } else {
-        if (d < edge.getOutNumLoops())
+        if (d < edge->getOutNumLoops())
           updateConstraints(C, outNode, satPc, bndPc, d, c, cc, ccc, p);
-        if (d < edge.getInNumLoops()) {
-          if (d < edge.getOutNumLoops() && !inNode.phiIsScheduled(d) &&
+        if (d < edge->getInNumLoops()) {
+          if (d < edge->getOutNumLoops() && !inNode.phiIsScheduled(d) &&
               !outNode.phiIsScheduled(d)) {
             invariant(inNode.getPhiOffset() != outNode.getPhiOffset());
           }
           updateConstraints(C, inNode, satPp, bndPp, d, c, cc, ccc, p);
         }
         // Omegas are included regardless of rotation
-        if (d < edge.getOutNumLoops()) {
-          if (d < edge.getInNumLoops())
+        if (d < edge->getOutNumLoops()) {
+          if (d < edge->getInNumLoops())
             invariant(inNode.getOmegaOffset() != outNode.getOmegaOffset());
           C(_(c, cc), outNode.getOmegaOffset() + o)
-            << satO(_, edge.isForward());
+            << satO(_, edge->isForward());
           C(_(cc, ccc), outNode.getOmegaOffset() + o)
-            << bndO(_, edge.isForward());
+            << bndO(_, edge->isForward());
         }
-        if (d < edge.getInNumLoops()) {
+        if (d < edge->getInNumLoops()) {
           C(_(c, cc), inNode.getOmegaOffset() + o)
-            << satO(_, !edge.isForward());
+            << satO(_, !edge->isForward());
           C(_(cc, ccc), inNode.getOmegaOffset() + o)
-            << bndO(_, !edge.isForward());
+            << bndO(_, !edge->isForward());
         }
       }
       c = ccc;
