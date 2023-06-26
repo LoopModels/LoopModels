@@ -75,7 +75,10 @@ public:
     return new (p) ScheduledNode(store, L);
   }
   constexpr auto getNext() -> ScheduledNode * { return next; }
-  constexpr auto setNext(ScheduledNode *n) -> void { next = n; }
+  constexpr auto setNext(ScheduledNode *n) -> ScheduledNode * {
+    next = n;
+    return this;
+  }
   constexpr auto getLoopOffsets() -> MutPtrVector<int64_t> {
     return {offsets, getNumLoops()};
   }

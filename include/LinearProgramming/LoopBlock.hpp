@@ -743,9 +743,9 @@ private:
     return depSatLevel;
   }
   // NOLINTNEXTLINE(misc-no-recursion)
-  [[nodiscard]] auto breakGraph(Graph g, size_t d) -> std::optional<BitSet> {
+  [[nodiscard]] auto breakGraph(ScheduledNode *node, unsigned d) -> size_t {
     llvm::SmallVector<BitSet> components;
-    Graphs::stronglyConnectedComponents(components, g);
+    graphs::stronglyConnectedComponents(components, g);
     if (components.size() <= 1) return {};
     // components are sorted in topological order.
     // We split all of them, solve independently,
