@@ -123,8 +123,8 @@ $(function() {
 <div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;<span class="comment">// TODO: address code duplication by abstracting between AbstractIndexGraph and</span></div>
 <div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;<span class="comment">// AbstractPtrGraph</span></div>
 <div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> N&gt;</div>
-<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> strongConnect(<span class="keyword">const</span> AbstractPtrGraph <span class="keyword">auto</span> &amp;g, <a class="code" href="structpoly_1_1graph_1_1State.html">State&lt;N *&gt;</a> state,</div>
-<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;                          N *v) -&gt; std::tuple&lt;N *, N *, unsigned&gt; {</div>
+<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> strongConnect(<span class="keyword">const</span> AbstractPtrGraph <span class="keyword">auto</span> &amp;g, <a class="code" href="structpoly_1_1graph_1_1State.html">State&lt;N&gt;</a> state, N *v)</div>
+<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;  -&gt; std::tuple&lt;N *, N *, unsigned&gt; {</div>
 <div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;  v-&gt;index() = v-&gt;lowLink() = state.index++;</div>
 <div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;  v-&gt;setOnStack();</div>
 <div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;  v-&gt;visit();</div>
@@ -137,42 +137,41 @@ $(function() {
 <div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;  <span class="keywordflow">if</span> (v-&gt;index() == v-&gt;lowLink()) {</div>
 <div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;    N *component{<span class="keyword">nullptr</span>}, *s;</div>
 <div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;    <span class="keywordflow">do</span> {</div>
-<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;      s = state.stack;</div>
-<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;      state.stack = state.stack-&gt;getNext();</div>
-<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;      s-&gt;removeFromStack();</div>
-<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;      component = s-&gt;setNext(component);</div>
-<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;    } <span class="keywordflow">while</span> (s != v);</div>
-<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;    state.components = v-&gt;setNext(component);</div>
-<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;  }</div>
-<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;  <span class="keywordflow">return</span> state;</div>
-<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;}</div>
-<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160; </div>
-<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;<span class="keyword">template</span> &lt;AbstractPtrGraph G&gt;</div>
-<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> stronglyConnectedComponents(<span class="keyword">const</span> G &amp;g) -&gt; <span class="keyword">typename</span> G::node_type * {</div>
-<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;  <span class="keyword">using</span> N = <span class="keyword">typename</span> G::node_type;</div>
-<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;  State&lt;N *&gt; state{};</div>
-<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;  <span class="keywordflow">for</span> (<span class="keyword">auto</span> *v : g.vertexIds())</div>
-<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;    <span class="keywordflow">if</span> (!v-&gt;wasVisited()) state = strongConnect(g, state, v);</div>
-<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;  <span class="keywordflow">return</span> state.components;</div>
-<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;}</div>
-<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;<span class="keyword">template</span> &lt;AbstractPtrGraph G, <span class="keyword">class</span> N&gt;</div>
-<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> topVisit(<span class="keyword">const</span> G &amp;g, N *list, N *v) -&gt; N * {</div>
-<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;  v-&gt;visit();</div>
-<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;  <span class="keywordflow">for</span> (<span class="keyword">auto</span> *w : g.outNeighbors(v))</div>
-<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;    <span class="keywordflow">if</span> (!w-&gt;wasVisited()) list = topVisit(g, list, w);</div>
-<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;  <span class="keywordflow">return</span> v-&gt;setNext(list);</div>
-<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;}</div>
-<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160; </div>
-<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;<span class="keyword">template</span> &lt;AbstractPtrGraph G&gt;</div>
-<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> topSort(<span class="keyword">const</span> G &amp;g) -&gt; <span class="keyword">typename</span> G::node_type * {</div>
-<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;  <span class="keyword">using</span> N = <span class="keyword">typename</span> G::node_type;</div>
-<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;  N *list{<span class="keyword">nullptr</span>};</div>
-<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;  <span class="keywordflow">for</span> (<span class="keyword">auto</span> *v : g.vertexIds())</div>
-<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;    <span class="keywordflow">if</span> (!v-&gt;wasVisited()) list = topVisit(g, list, v);</div>
-<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;  <span class="keywordflow">return</span> list;</div>
-<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;}</div>
-<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160; </div>
-<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;} <span class="comment">// namespace poly::graph</span></div>
+<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;      s = std::exchange(state.stack, state.stack-&gt;getNext());</div>
+<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;      s-&gt;removeFromStack();</div>
+<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;      component = s-&gt;setNext(component);</div>
+<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;    } <span class="keywordflow">while</span> (s != v);</div>
+<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;    state.components = v-&gt;setNext(component);</div>
+<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;  }</div>
+<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;  <span class="keywordflow">return</span> state;</div>
+<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;}</div>
+<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160; </div>
+<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;<span class="keyword">template</span> &lt;AbstractPtrGraph G&gt;</div>
+<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> stronglyConnectedComponents(<span class="keyword">const</span> G &amp;g) -&gt; <span class="keyword">typename</span> G::node_type * {</div>
+<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;  <span class="keyword">using</span> N = <span class="keyword">typename</span> G::node_type;</div>
+<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;  State&lt;N *&gt; state{};</div>
+<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;  <span class="keywordflow">for</span> (<span class="keyword">auto</span> *v : g.vertexIds())</div>
+<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;    <span class="keywordflow">if</span> (!v-&gt;wasVisited()) state = strongConnect(g, state, v);</div>
+<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;  <span class="keywordflow">return</span> state.components;</div>
+<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;}</div>
+<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;<span class="keyword">template</span> &lt;AbstractPtrGraph G, <span class="keyword">class</span> N&gt;</div>
+<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> topVisit(<span class="keyword">const</span> G &amp;g, N *list, N *v) -&gt; N * {</div>
+<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;  v-&gt;visit();</div>
+<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;  <span class="keywordflow">for</span> (<span class="keyword">auto</span> *w : g.outNeighbors(v))</div>
+<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;    <span class="keywordflow">if</span> (!w-&gt;wasVisited()) list = topVisit(g, list, w);</div>
+<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;  <span class="keywordflow">return</span> v-&gt;setNext(list);</div>
+<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;}</div>
+<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160; </div>
+<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;<span class="keyword">template</span> &lt;AbstractPtrGraph G&gt;</div>
+<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> topSort(<span class="keyword">const</span> G &amp;g) -&gt; <span class="keyword">typename</span> G::node_type * {</div>
+<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;  <span class="keyword">using</span> N = <span class="keyword">typename</span> G::node_type;</div>
+<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;  N *list{<span class="keyword">nullptr</span>};</div>
+<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;  <span class="keywordflow">for</span> (<span class="keyword">auto</span> *v : g.vertexIds())</div>
+<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;    <span class="keywordflow">if</span> (!v-&gt;wasVisited()) list = topVisit(g, list, v);</div>
+<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;  <span class="keywordflow">return</span> list;</div>
+<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;}</div>
+<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160; </div>
+<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;} <span class="comment">// namespace poly::graph</span></div>
 <div class="ttc" id="astructpoly_1_1graph_1_1State_html"><div class="ttname"><a href="structpoly_1_1graph_1_1State.html">poly::graph::State</a></div><div class="ttdef"><b>Definition:</b> Graphs.hpp:46</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
