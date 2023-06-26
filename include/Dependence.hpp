@@ -287,6 +287,14 @@ public:
                        NotNull<IR::Addr> i, NotNull<IR::Addr> o, bool fwd)
     : depPoly(poly), dependenceSatisfaction(depSatBound[0]),
       dependenceBounding(depSatBound[1]), in(i), out(o), forward(fwd) {}
+
+  /// stashSatLevel() -> Dependence &
+  /// This is used to track sat levels in the LP recursion.
+  /// Recursion works from outer -> inner most loop.
+  /// On each level of the recursion, we
+  /// 1. evaluate the level.
+  /// 2. if we succeed w/out deps, update sat levels and go a level deeper.
+  /// 3.
   constexpr auto stashSatLevel() -> Dependence & {
     assert(satLvl.back() == 255 || "satLevel overflow");
     std::copy_backward(satLvl.begin(), satLvl.end() - 1, satLvl.end());
@@ -307,6 +315,11 @@ public:
     invariant(d <= 127);
     return satLevel() <= d;
   }
+  [[nodiscard]] constexpr auto isActive(unsigned depth) const -> bool {
+    invariant(depth <= 127);
+    return satLevel() > depth;
+  }
+
   /// if true, then conditioned on the sat level,
   [[nodiscard]] constexpr auto isCondIndep() const -> bool {
     return (satLvl.front() & uint8_t(128)) == uint8_t(0);
@@ -333,22 +346,20 @@ public:
   [[nodiscard]] auto getInIndMat() const -> DensePtrMatrix<int64_t> {
     return in->indexMatrix();
   }
-  [[nodiscard]] auto
-  checkEmptySat(Arena<> *alloc, NotNull<const poly::Loop> inLoop,
-                const int64_t *inOff, DensePtrMatrix<int64_t> inPhi,
-                NotNull<const poly::Loop> outLoop, const int64_t *outOff,
-                DensePtrMatrix<int64_t> outPhi) -> bool {
+  // satisfies dep if it is empty when conditioning on inPhi and outPhi
+  void checkEmptySat(Arena<> *alloc, NotNull<const poly::Loop> inLoop,
+                     const int64_t *inOff, DensePtrMatrix<int64_t> inPhi,
+                     NotNull<const poly::Loop> outLoop, const int64_t *outOff,
+                     DensePtrMatrix<int64_t> outPhi) {
     if (!isForward()) {
       std::swap(inLoop, outLoop);
       std::swap(inOff, outOff);
       std::swap(inPhi, outPhi);
     }
     invariant(inPhi.numRow(), outPhi.numRow());
-    if (!depPoly->checkSat(*alloc, inLoop, inOff, inPhi, outLoop, outOff,
-                           outPhi))
-      return false;
-    satLvl.front() = uint8_t(inPhi.numRow() - 1);
-    return true;
+    if (depPoly->checkSat(*alloc, inLoop, inOff, inPhi, outLoop, outOff,
+                          outPhi))
+      satLvl.front() = uint8_t(inPhi.numRow() - 1);
   }
   // constexpr auto addEdge(size_t i) -> Dependence & {
   //   in->addEdgeOut(i);

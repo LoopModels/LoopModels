@@ -113,8 +113,8 @@ class LoopBlock {
   // or because the dependence has already been satisfied at an
   // earlier level.
   struct CoefCounts {
-    unsigned numPhiCoefs{0};
     unsigned numOmegaCoefs{0};
+    unsigned numPhiCoefs{0};
     unsigned numSlack{0};
     unsigned numLambda{0};
     unsigned numBounding{0};
@@ -160,6 +160,7 @@ public:
     return optOrth(nodes, maxDepth);
   }
   void clear() { allocator.reset(); }
+  [[nodiscard]] constexpr auto getAllocator() -> Arena<> * { return allocator; }
 
 private:
   auto addScheduledNode(IR::Cache &cache, IR::Stow stow) -> ScheduledNode * {
@@ -350,7 +351,7 @@ private:
     if (!nonZero) return allocator.rollback(p0);
     allocator.rollback(p1);
     for (; c < nLoops; ++c) offs[L - c] = 0;
-    node.setOffsets(offs.data());
+    node->setOffsets(offs.data());
     // now we iterate over the edges again
     // perhaps this should be abstracted into higher order functions that
     // iterate over the edges?
@@ -399,8 +400,9 @@ private:
       }
     }
   }
-  // returns `true` if successful
-  auto optOrth(ScheduledNode *nodes, unsigned maxDepth) -> bool {
+  // returns a `1` for each level containing a dependency
+  auto optOrth(ScheduledNode *nodes, unsigned maxDepth) -> Optional<size_t> {
+    static_assert(sizeof(size_t) == sizeof(Optional<size_t>));
     // check for orthogonalization opportunities
     bool tryOrth = false;
     for (ScheduledNode *node : nodes->nodesRange()) {
@@ -429,60 +431,570 @@ private:
     return optimize(g, 0, maxDepth);
   }
   // NOLINTNEXTLINE(misc-no-recursion)
-  [[nodiscard]] auto optimize(ScheduledNode *nodes, unsigned d,
-                              unsigned maxDepth) -> bool {
-    if (d >= maxDepth) return true;
-    countAuxParamsAndConstraints(g, d);
-    setScheduleMemoryOffsets(g, d);
-    // if we fail on this level, break the graph
-    BitSet activeEdgesBackup = g.activeEdges;
-    if (std::optional<BitSet> depSat = solveGraph(g, d, false)) {
-      const size_t dp1 = d + 1;
-      if (dp1 == maxDepth) return *depSat;
-      if (std::optional<BitSet> depSatNest = optimize(g, dp1, maxDepth)) {
-        bool depSatEmpty = depSat->empty();
-        *depSat |= *depSatNest;
-        if (!(depSatEmpty || depSatNest->empty())) // try and sat all this level
-          return optimizeSatDep(g, d, maxDepth, *depSat, activeEdgesBackup);
-        return *depSat;
-      }
-    }
-    return breakGraph(g, d);
-  }
   static constexpr auto numParams(const Dependence *edge)
-    -> math::SVector<size_t, 4> {
+    -> math::SVector<unsigned, 4> {
     return {edge->getNumLambda(), edge->getDynSymDim(),
             edge->getNumConstraints(), 1};
   }
-  constexpr void countAuxParamsAndConstraints(ScheduledNode *nodes,
-                                              unsigned d) {
-    math::SVector<size_t, 4> params{};
+  constexpr auto countAuxParamsAndConstraints(ScheduledNode *nodes, unsigned d)
+    -> math::SVector<unsigned, 4> {
+    math::SVector<unsigned, 4> params{};
     assert(allZero(params));
     for (ScheduledNode *node : nodes->nodesRange())
       for (Dependence *d : node->inputEdges()) params += numParams(d);
-    numLambda = params[0];
-    numBounding = params[1];
-    numConstraints = params[2];
-    numActiveEdges = params[3];
+    return params;
+  }
+  constexpr auto countAuxAndStash(ScheduledNode *nodes, unsigned d)
+    -> math::SVector<unsigned, 4> {
+    math::SVector<unsigned, 4> params{};
+    assert(allZero(params));
+    for (ScheduledNode *node : nodes->nodesRange())
+      for (Dependence *d : node->inputEdges())
+        params += numParams(d->stashSatLevel());
+    return params;
   }
 
-  constexpr void setScheduleMemoryOffsets(ScheduledNode *nodes, unsigned d) {
+  constexpr auto setScheduleMemoryOffsets(ScheduledNode *nodes, unsigned d)
+    -> std::array<unsigned, 3> {
     // C, lambdas, omegas, Phis
-    numOmegaCoefs = 0;
-    numPhiCoefs = 0;
-    numSlack = 0;
+    unsigned numOmegaCoefs = 0, numPhiCoefs = 0, numSlack = 0;
     for (ScheduledNode *node : nodes->nodesRange()) {
-      // note, we had d > node.getNumLoops() for omegas earlier; why?
-      if ((d >= node->getNumLoops()) || (!hasActiveEdges(g, node, d))) continue;
-      numOmegaCoefs = node.updateOmegaOffset(numOmegaCoefs);
-      if (node.phiIsScheduled(d)) continue;
-      numPhiCoefs = node.updatePhiOffset(numPhiCoefs);
+      // note, we had d > node->getNumLoops() for omegas earlier; why?
+      // TODO: audit edge-sat and skip checks; e.g. are edges being deactivated
+      // when depth exceeds the number of loops?
+      if ((d >= node->getNumLoops()) || (!node->hasActiveEdges(d))) continue;
+      numOmegaCoefs = node->updateOmegaOffset(numOmegaCoefs);
+      if (node->phiIsScheduled(d)) continue;
+      numPhiCoefs = node->updatePhiOffset(numPhiCoefs);
       ++numSlack;
     }
+    return {numOmegaCoefs, numPhiCoefs, numSlack};
+  }
+  constexpr auto calcCoefs(ScheduledNode *nodes, unsigned d) -> CoefCounts {
+    auto [numOmegaCoefs, numPhiCoefs, numSlack] =
+      setScheduleMemoryOffsets(nodes, d);
+    auto [numLambda, numBounding, numConstraints, numActiveEdges] =
+      countAuxParamsAndConstraints(nodes, d);
+    return {numOmegaCoefs, numPhiCoefs,    numSlack,      numLambda,
+            numBounding,   numConstraints, numActiveEdges};
+  }
+  constexpr auto calcCoefsStash(ScheduledNode *nodes, unsigned d)
+    -> CoefCounts {
+    auto [numOmegaCoefs, numPhiCoefs, numSlack] =
+      setScheduleMemoryOffsets(nodes, d);
+    auto [numLambda, numBounding, numConstraints, numActiveEdges] =
+      countAuxAndStash(nodes, d);
+    return {numOmegaCoefs, numPhiCoefs,    numSlack,      numLambda,
+            numBounding,   numConstraints, numActiveEdges};
+  }
+  [[nodiscard]] auto optimize(ScheduledNode *nodes, unsigned d,
+                              unsigned maxDepth) -> Optional<size_t> {
+    if (d >= maxDepth) return true;
+    if (Optional<size_t> depSat = solveGraph(nodes, maxDepth, false)) {
+      unsigned descend = d + 1;
+      if (descend == maxDepth) return depSat;
+      if (Optional<size_t> depSatNest = optimize(nodes, descend, maxDepth)) {
+        bool depSatEmpty = (*depSat) == 0;
+        *depSat |= *depSatNest;
+        if (!(depSatEmpty || (*depSatNest == 0))) // try and sat all this level
+          return optimizeSatDep(nodes, d, maxDepth, *depSat);
+        return *depSat;
+      }
+    }
+    return breakGraph(nodes, d, maxDepth); // TODO
+  }
+  /// solveGraph(ScheduledNode *nodes, unsigned depth, bool satisfyDeps)
+  /// solve the `nodes` graph at depth `d`
+  /// if `satisfyDeps` is true, then we are trying to satisfy dependencies at
+  /// this level
+  ///
+  [[nodiscard]] auto solveGraph(ScheduledNode *nodes, unsigned depth,
+                                bool satisfyDeps) -> Optional<size_t> {
+    CoefCounts counts{calcCoefs(nodes, d)};
+    return solveGraph(nodes, depth, satisfyDeps, counts);
+  }
+  [[nodiscard]] auto solveGraph(ScheduledNode *nodes, unsigned depth,
+                                bool satisfyDeps, CoefCounts counts)
+    -> Optional<size_t> {
+    if (counts.numLambda == 0) {
+      setSchedulesIndependent(nodes, depth);
+      return checkEmptySatEdges(nodes, depth);
+    }
+    auto omniSimplex =
+      instantiateOmniSimplex(g, depth, counts, satisfyDeps); // TODO
+    if (omniSimplex->initiateFeasible()) return {};
+    auto sol = omniSimplex->rLexMinStop(counts.numLambda + counts.numSlack);
+    assert(sol.size() == counts.numBounding + counts.numActiveEdges +
+                           counts.numPhiCoefs + counts.numOmegaCoefs);
+    updateSchedules(nodes, depth, sol);
+    return deactivateSatisfiedEdges(
+      nodes, depth, sol[_(counts.numPhiCoefs + counts.numOmegaCoefs, end)]);
+  }
+  void setSchedulesIndependent(ScheduledNode *nodes, unsigned depth) {
+    // IntMatrix A, N;
+    for (ScheduledNode *node : nodes->nodesRange()) {
+      if ((depth >= node->getNumLoops()) || node->phiIsScheduled(depth))
+        continue;
+      assert(!node->hasActiveEdges(depth)); //  numLambda==0
+      setDepFreeSchedule(node, depth);
+    }
+  }
+  static void setDepFreeSchedule(ScheduledNode *node, unsigned depth) {
+    node->getOffsetOmega(depth) = 0;
+    if (node->phiIsScheduled(depth)) return;
+    // we'll check the null space of the phi's so far
+    // and then search for array indices
+    if (depth == 0) {
+      // for now, if depth == 0, we just set last active
+      MutPtrVector<int64_t> phiv{node->getSchedule(0)};
+      phiv[_(0, last)] << 0;
+      phiv[last] = 1;
+      return;
+    }
+    // auto s = allocator->scope(); // TODO: use bumpalloc
+    DenseMatrix<int64_t> nullSpace; // d x lfull
+    DenseMatrix<int64_t> A{node->getPhi()(_(0, depth), _).transpose()};
+    NormalForm::nullSpace11(nullSpace, A);
+    invariant(nullSpace.numRow(), node->getNumLoops() - depth);
+    // Now, we search index matrices for schedules not in the null space of
+    // existing phi. This is because we're looking to orthogonalize a
+    // memory access if possible, rather than setting a schedule
+    // arbitrarily.
+    // Here, we collect candidates for the next schedule
+    DenseMatrix<int64_t> candidates{DenseDims{0, node->getNumLoops() + 1}};
+    Vector<int64_t> indv;
+    indv.resizeForOverwrite(node->getNumLoops());
+    for (Addr *mem : node->localAddr()) {
+      PtrMatrix<int64_t> indMat = mem->indexMatrix(); // lsub x d
+      A.resizeForOverwrite(DenseDims{nullSpace.numRow(), indMat.numCol()});
+      A = nullSpace(_, _(0, indMat.numRow())) * indMat;
+      // we search A for rows that aren't all zero
+      for (ptrdiff_t d = 0; d < A.numCol(); ++d) {
+        if (allZero(A(_, d))) continue;
+        indv << indMat(_, d);
+        bool found = false;
+        for (ptrdiff_t j = 0; j < candidates.numRow(); ++j) {
+          if (candidates(j, _(0, last)) != indv) continue;
+          found = true;
+          ++candidates(j, 0);
+          break;
+        }
+        if (!found) {
+          candidates.resize(candidates.numRow() + 1);
+          assert(candidates(last, 0) == 0);
+          candidates(last, _(1, end)) << indv;
+        }
+      }
+    }
+    if (Row R = candidates.numRow()) {
+      // >= 1 candidates, pick the one with with greatest lex, favoring
+      // number of repetitions (which were placed in first index)
+      ptrdiff_t i = 0;
+      for (ptrdiff_t j = 1; j < candidates.numRow(); ++j)
+        if (candidates(j, _) > candidates(i, _)) i = j;
+      node->getSchedule(depth) << candidates(i, _(1, end));
+      return;
+    }
+    // do we want to pick the outermost original loop,
+    // or do we want to pick the outermost lex null space?
+    node->getSchedule(depth) << 0;
+    for (ptrdiff_t c = 0; c < nullSpace.numCol(); ++c) {
+      if (allZero(nullSpace(_, c))) continue;
+      node->getSchedule(depth)[c] = 1;
+      return;
+    }
+    invariant(false);
+  }
+  void updateSchedules(ScheduledNode *node, unsigned depth,
+                       Simplex::Solution sol) {
+#ifndef NDEBUG
+    if (numPhiCoefs > 0)
+      assert(
+        std::ranges::any_of(sol, [](Rational s) -> bool { return s != 0; }));
+#endif
+    unsigned o = numOmegaCoefs;
+    for (ScheduledNode *node : nodes->nodeRange()) {
+      if (depth >= node->getNumLoops()) continue;
+      if (!hasActiveEdges(g, node)) {
+        setDepFreeSchedule(memory, node, depth);
+        continue;
+      }
+      Rational sOmega = sol[node->getOmegaOffset()];
+      // TODO: handle s.denominator != 1
+      if (!node->phiIsScheduled(depth)) {
+        auto phi = node->getSchedule(depth);
+        auto s = sol[node->getPhiOffsetRange() + o];
+        int64_t baseDenom = sOmega.denominator;
+        int64_t l = lcm(s.denomLCM(), baseDenom);
+#ifndef NDEBUG
+        for (ptrdiff_t i = 0; i < phi.size(); ++i)
+          assert(((s[i].numerator * l) / (s[i].denominator)) >= 0);
+#endif
+        if (l == 1) {
+          node->getOffsetOmega(depth) = sOmega.numerator;
+          for (ptrdiff_t i = 0; i < phi.size(); ++i) phi[i] = s[i].numerator;
+        } else {
+          node->getOffsetOmega(depth) = (sOmega.numerator * l) / baseDenom;
+          for (ptrdiff_t i = 0; i < phi.size(); ++i)
+            phi[i] = (s[i].numerator * l) / (s[i].denominator);
+        }
+        assert(!(allZero(phi)));
+      } else {
+        node->getOffsetOmega(depth) = sOmega.numerator;
+      }
+#ifndef NDEBUG
+      if (!node->phiIsScheduled(depth)) {
+        int64_t l = sol[node->getPhiOffsetRange() + o].denomLCM();
+        for (ptrdiff_t i = 0; i < node->getPhi().numCol(); ++i)
+          assert(node->getPhi()(depth, i) ==
+                 sol[node->getPhiOffsetRange() + o][i] * l);
+      }
+#endif
+    }
+  }
+  [[nodiscard]] auto deactivateSatisfiedEdges(ScheduledNode *node,
+                                              unsigned depth,
+                                              Simplex::Solution sol) -> size_t {
+    if (allZero(sol[_(begin, numBounding + numActiveEdges)]))
+      return checkEmptySatEdges(node, depth);
+    ptrdiff_t w = 0, u = numActiveEdges;
+    size_t deactivated = 0;
+    for (size_t e = 0; e < edges.size(); ++e) {
+      Dependence &edge = edges[e];
+      if (g.isInactive(e, depth)) continue;
+      size_t inIndex = edge.nodeIn(), outIndex = edge.nodeOut();
+      Col uu = u + edge.getNumDynamicBoundingVar();
+      if ((sol[w++] != 0) || (anyNEZero(sol[_(u, uu)]))) {
+        deactivated |= 1 << e;
+        edge.setSatLevelLP(depth);
+      } else {
+        const ScheduledNode &inNode = nodes[inIndex],
+                            &outNode = nodes[outIndex];
+        DensePtrMatrix<int64_t> inPhi = inNode.getPhi()(_(0, depth + 1), _),
+                                outPhi = outNode.getPhi()(_(0, depth + 1), _);
+        if (edge.checkEmptySat(allocator, inNode.getLoopNest(),
+                               inNode.getOffset(), inPhi, outNode.getLoopNest(),
+                               outNode.getOffset(), outPhi)) {
+          g.activeEdges.remove(e);
+        }
+      }
+      u = ptrdiff_t(uu);
+    }
+    return deactivated;
+  }
+  auto checkEmptySatEdges(ScheduledNode *nodes, unsigned depth) -> size_t {
+    for (ScheduledNode *outNode : nodes->nodesRange()) {
+      for (Dependence *edge : outNode->inputEdges()) {
+        if (edge->isSat(depth)) continue;
+        ScheduledNode *inNode = edge->input();
+        invariant(edge->output(), outNode());
+        DensePtrMatrix<int64_t> inPhi = inNode.getPhi()(_(0, depth + 1), _),
+                                outPhi = outNode.getPhi()(_(0, depth + 1), _);
+        edge->checkEmptySat(allocator, inNode->getLoopNest(),
+                            inNode->getOffset(), inPhi, outNode->LoopNest(),
+                            outNode->getOffset(), outPhi);
+      }
+    }
+    return 0;
+  }
+  // NOLINTNEXTLINE(misc-no-recursion)
+  [[nodiscard]] auto optimizeSatDep(ScheduledNode *nodes, unsigned d,
+                                    unsigned maxDepth, size_t depSatLevel)
+    -> size_t {
+    // if we're here, there are satisfied deps in both
+    // depSatLevel and depSatNest
+    // what we want to know is, can we satisfy all the deps
+    // in depSatNest?
+    // backup in case we fail
+    // activeEdges was the old original; swap it in
+    auto scope = allocator.scope();
+    ptrdiff_t numNodes = 0;
+    for (ScheduledNode *node : nodes->nodesRange()) ++numNodes;
+    auto oldSchedules = vector<AffineSchedule>(allocator, numNodes);
+    auto oldNodes = vector<ScheduledNode *>(allocator, numNodes);
+    ptrdiff_t i = 0;
+    for (ScheduledNode *node : nodes->nodesRange()) {
+      oldSchedules[i] = node->getSchedule().copy(allocator);
+      oldNodes[i++] = node;
+    }
+    CoefCounts counts = calcCoefsStash(nodes, d);
+    if (Optional<size_t> depSat = solveGraph(g, d, true, counts))
+      if (Optional<size_t> depSatN = optimize(g, d + 1, maxDepth))
+        return *depSat |= *depSatN;
+    for (ScheduledNode *node : nodes->nodesRange())
+      for (Dependence *d : node->inputEdges()) d->popSatLevel();
+    // reconnect nodes, in case they became disconnected in breakGraph
+    ScheduledNode *n = nullptr;
+    for (; i--;) {
+      n = oldNodes[i]->addNext(n);
+      n->getSchedule() = oldSchedules[i];
+    }
+    return depSatLevel;
+  }
+  // NOLINTNEXTLINE(misc-no-recursion)
+  [[nodiscard]] auto breakGraph(Graph g, size_t d) -> std::optional<BitSet> {
+    llvm::SmallVector<BitSet> components;
+    Graphs::stronglyConnectedComponents(components, g);
+    if (components.size() <= 1) return {};
+    // components are sorted in topological order.
+    // We split all of them, solve independently,
+    // and then try to fuse again after if/where optimal schedules
+    // allow it.
+    auto graphs = g.split(components);
+    assert(graphs.size() == components.size());
+    BitSet satDeps{};
+    for (auto &sg : graphs) {
+      if (d >= sg.calcMaxDepth()) continue;
+      countAuxParamsAndConstraints(sg, d);
+      setScheduleMemoryOffsets(sg, d);
+      if (std::optional<BitSet> sat = solveGraph(sg, d, false)) satDeps |= *sat;
+      else return {}; // give up
+    }
+    int64_t unfusedOffset = 0;
+    // For now, just greedily try and fuse from top down
+    // we do this by setting the Omegas in a loop.
+    // If fusion is legal, we don't increment the Omega offset.
+    // else, we do.
+    Graph *gp = graphs.data();
+    Vector<unsigned> baseGraphs;
+    baseGraphs.push_back(0);
+    for (size_t i = 1; i < components.size(); ++i) {
+      Graph &gi = graphs[i];
+      if (!canFuse(*gp, gi, d)) {
+        // do not fuse
+        for (auto &&v : *gp) v.getFusionOmega(d) = unfusedOffset;
+        ++unfusedOffset;
+        // gi is the new base graph
+        gp = &gi;
+        baseGraphs.push_back(i);
+      } else // fuse
+        (*gp) |= gi;
+    }
+    // set omegas for gp
+    for (auto &&v : *gp) v.getFusionOmega(d) = unfusedOffset;
+    ++d;
+    // size_t numSat = satDeps.size();
+    for (auto i : baseGraphs)
+      if (std::optional<BitSet> sat =
+            optimize(graphs[i], d, graphs[i].calcMaxDepth())) {
+        // TODO: try and satisfy extra dependences
+        // if ((numSat > 0) && (sat->size()>0)){}
+        satDeps |= *sat;
+      } else {
+        return {};
+      }
+    // remove
+    return satDeps;
+  }
+  /// For now, we instantiate a dense simplex specifying the full problem.
+  ///
+  /// Eventually, the plan is to generally avoid instantiating the
+  /// omni-simplex first, we solve individual problems
+  ///
+  /// The order of variables in the simplex is:
+  /// C, lambdas, slack, omegas, Phis, w, u
+  /// where
+  /// C: constraints, rest of matrix * variables == C
+  /// lambdas: farkas multipliers
+  /// slack: slack variables from independent phi solution constraints
+  /// omegas: scheduling offsets
+  /// Phis: scheduling rotations
+  /// w: bounding offsets, independent of symbolic variables
+  /// u: bounding offsets, dependent on symbolic variables
+  auto instantiateOmniSimplex(const Graph &g, size_t d, bool satisfyDeps)
+    -> std::unique_ptr<Simplex> {
+    auto omniSimplex = Simplex::create(
+      numConstraints + numSlack, numBounding + numActiveEdges + numPhiCoefs +
+                                   numOmegaCoefs + numSlack + numLambda);
+    auto C{omniSimplex->getConstraints()};
+    C << 0;
+    // layout of omniSimplex:
+    // Order: C, then rev-priority to minimize
+    // C, lambdas, slack, omegas, Phis, w, u
+    // rows give constraints; each edge gets its own
+    // numBounding = num u
+    // numActiveEdges = num w
+    Row c = 0;
+    Col l = 1, o = 1 + numLambda + numSlack, p = o + numOmegaCoefs,
+        w = p + numPhiCoefs, u = w + numActiveEdges;
+    for (size_t e = 0; e < edges.size(); ++e) {
+      Dependence &edge = edges[e];
+      if (g.isInactive(e, d)) continue;
+      size_t outNodeIndex = edge.nodeOut(), inNodeIndex = edge.nodeIn();
+      const auto [satC, satL, satPp, satPc, satO, satW] =
+        edge.splitSatisfaction();
+      const auto [bndC, bndL, bndPp, bndPc, bndO, bndWU] = edge.splitBounding();
+      const size_t numSatConstraints = satC.size(),
+                   numBndConstraints = bndC.size();
+      const Col nPc = satPc.numCol(), nPp = satPp.numCol();
+      invariant(nPc, bndPc.numCol());
+      invariant(nPp, bndPp.numCol());
+      const ScheduledNode &outNode = nodes[outNodeIndex];
+      const ScheduledNode &inNode = nodes[inNodeIndex];
+
+      Row cc = c + numSatConstraints;
+      Row ccc = cc + numBndConstraints;
+
+      Col ll = l + satL.numCol();
+      Col lll = ll + bndL.numCol();
+      C(_(c, cc), _(l, ll)) << satL;
+      C(_(cc, ccc), _(ll, lll)) << bndL;
+      l = lll;
+      // bounding
+      C(_(cc, ccc), w++) << bndWU(_, 0);
+      Col uu = u + bndWU.numCol() - 1;
+      C(_(cc, ccc), _(u, uu)) << bndWU(_, _(1, end));
+      u = uu;
+      if (satisfyDeps) C(_(c, cc), 0) << satC + satW;
+      else C(_(c, cc), 0) << satC;
+      C(_(cc, ccc), 0) << bndC;
+      // now, handle Phi and Omega
+      // phis are not constrained to be 0
+      if (outNodeIndex == inNodeIndex) {
+        if (d < outNode.getNumLoops()) {
+          if (nPc == nPp) {
+            if (outNode.phiIsScheduled(d)) {
+              // add it constants
+              auto sch = outNode.getSchedule(d);
+              C(_(c, cc), 0) -= satPc * sch[_(0, nPc)] + satPp * sch[_(0, nPp)];
+              C(_(cc, ccc), 0) -=
+                bndPc * sch[_(0, nPc)] + bndPp * sch[_(0, nPp)];
+            } else {
+              // FIXME: phiChild = [14:18), 4 cols
+              // while Dependence seems to indicate 2
+              // loops why the disagreement?
+              auto po = outNode.getPhiOffset() + p;
+              C(_(c, cc), _(po, po + nPc)) << satPc + satPp;
+              C(_(cc, ccc), _(po, po + nPc)) << bndPc + bndPp;
+            }
+          } else if (outNode.phiIsScheduled(d)) {
+            // add it constants
+            // note that loop order in schedule goes
+            // inner -> outer
+            // so we need to drop inner most if one has less
+            auto sch = outNode.getSchedule(d);
+            auto schP = sch[_(0, nPp)];
+            auto schC = sch[_(0, nPc)];
+            C(_(c, cc), 0) -= satPc * schC + satPp * schP;
+            C(_(cc, ccc), 0) -= bndPc * schC + bndPp * schP;
+          } else if (nPc < nPp) {
+            // Pp has more cols, so outer/leftmost overlap
+            auto po = outNode.getPhiOffset() + p, poc = po + nPc,
+                 pop = po + nPp;
+            C(_(c, cc), _(po, poc)) << satPc + satPp(_, _(0, nPc));
+            C(_(cc, ccc), _(po, poc)) << bndPc + bndPp(_, _(0, nPc));
+            C(_(c, cc), _(poc, pop)) << satPp(_, _(nPc, end));
+            C(_(cc, ccc), _(poc, pop)) << bndPp(_, _(nPc, end));
+          } else /* if (nPc > nPp) */ {
+            auto po = outNode.getPhiOffset() + p, poc = po + nPc,
+                 pop = po + nPp;
+            C(_(c, cc), _(po, pop)) << satPc(_, _(0, nPp)) + satPp;
+            C(_(cc, ccc), _(po, pop)) << bndPc(_, _(0, nPp)) + bndPp;
+            C(_(c, cc), _(pop, poc)) << satPc(_, _(nPp, end));
+            C(_(cc, ccc), _(pop, poc)) << bndPc(_, _(nPp, end));
+          }
+          C(_(c, cc), outNode.getOmegaOffset() + o) << satO(_, 0) + satO(_, 1);
+          C(_(cc, ccc), outNode.getOmegaOffset() + o)
+            << bndO(_, 0) + bndO(_, 1);
+        }
+      } else {
+        if (d < edge.getOutNumLoops())
+          updateConstraints(C, outNode, satPc, bndPc, d, c, cc, ccc, p);
+        if (d < edge.getInNumLoops()) {
+          if (d < edge.getOutNumLoops() && !inNode.phiIsScheduled(d) &&
+              !outNode.phiIsScheduled(d)) {
+            invariant(inNode.getPhiOffset() != outNode.getPhiOffset());
+          }
+          updateConstraints(C, inNode, satPp, bndPp, d, c, cc, ccc, p);
+        }
+        // Omegas are included regardless of rotation
+        if (d < edge.getOutNumLoops()) {
+          if (d < edge.getInNumLoops())
+            invariant(inNode.getOmegaOffset() != outNode.getOmegaOffset());
+          C(_(c, cc), outNode.getOmegaOffset() + o)
+            << satO(_, edge.isForward());
+          C(_(cc, ccc), outNode.getOmegaOffset() + o)
+            << bndO(_, edge.isForward());
+        }
+        if (d < edge.getInNumLoops()) {
+          C(_(c, cc), inNode.getOmegaOffset() + o)
+            << satO(_, !edge.isForward());
+          C(_(cc, ccc), inNode.getOmegaOffset() + o)
+            << bndO(_, !edge.isForward());
+        }
+      }
+      c = ccc;
+    }
+    invariant(size_t(l), size_t(1 + numLambda));
+    invariant(size_t(c), size_t(numConstraints));
+    addIndependentSolutionConstraints(omniSimplex.get(), g, d);
+    return omniSimplex;
+  }
+  static void updateConstraints(MutPtrMatrix<int64_t> C,
+                                const ScheduledNode &node,
+                                PtrMatrix<int64_t> sat, PtrMatrix<int64_t> bnd,
+                                size_t d, Row c, Row cc, Row ccc, Col p) {
+    invariant(sat.numCol(), bnd.numCol());
+    if (node.phiIsScheduled(d)) {
+      // add it constants
+      auto sch = node.getSchedule(d)[_(0, sat.numCol())];
+      // order is inner <-> outer
+      // so we need the end of schedule if it is larger
+      C(_(c, cc), 0) -= sat * sch;
+      C(_(cc, ccc), 0) -= bnd * sch;
+    } else {
+      // add it to C
+      auto po = node.getPhiOffset() + p;
+      C(_(c, cc), _(po, po + sat.numCol())) << sat;
+      C(_(cc, ccc), _(po, po + bnd.numCol())) << bnd;
+    }
+  }
+  void addIndependentSolutionConstraints(NotNull<Simplex> omniSimplex,
+                                         const Graph &g, size_t d) {
+    // omniSimplex->setNumCons(omniSimplex->getNumCons() +
+    //                                memory.size());
+    // omniSimplex->reserveExtraRows(memory.size());
+    auto C{omniSimplex->getConstraints()};
+    size_t i = size_t{C.numRow()} - numSlack, s = numLambda,
+           o = 1 + numSlack + numLambda + numOmegaCoefs;
+    if (d == 0) {
+      // add ones >= 0
+      for (auto &&node : nodes) {
+        if (node.phiIsScheduled(d) || (!hasActiveEdges(g, node, d))) continue;
+        C(i, 0) = 1;
+        C(i, node.getPhiOffsetRange() + o) << 1;
+        C(i++, ++s) = -1; // for >=
+      }
+    } else {
+      DenseMatrix<int64_t> A, N;
+      for (auto &&node : nodes) {
+        if (node.phiIsScheduled(d) || (d >= node.getNumLoops()) ||
+            (!hasActiveEdges(g, node, d)))
+          continue;
+        A.resizeForOverwrite(Row{size_t(node.getPhi().numCol())}, Col{d});
+        A << node.getPhi()(_(0, d), _).transpose();
+        NormalForm::nullSpace11(N, A);
+        // we add sum(NullSpace,dims=1) >= 1
+        // via 1 = sum(NullSpace,dims=1) - s, s >= 0
+        C(i, 0) = 1;
+        MutPtrVector<int64_t> cc{C(i, node.getPhiOffsetRange() + o)};
+        // sum(N,dims=1) >= 1 after flipping row signs to be lex > 0
+        for (size_t m = 0; m < N.numRow(); ++m)
+          cc += N(m, _) * lexSign(N(m, _));
+        C(i++, ++s) = -1; // for >=
+      }
+    }
+    invariant(size_t(omniSimplex->getNumCons()), i);
+    assert(!allZero(omniSimplex->getConstraints()(last, _)));
   }
 
+  //
+  //
+  //
+  //
+  //
+  // Old junk:
   constexpr void setLI(llvm::LoopInfo *loopInfo) { LI = loopInfo; }
-  constexpr void addStow(Addr *stow) {}
   constexpr void addAddr(Addr *addr) {
     if (memory != nullptr) addr->setNext(memory);
     memory = addr;
@@ -490,7 +1002,6 @@ private:
   }
   /// L is the inner-most loop getting dropped, i.e. it is the level at which
   /// the TreeResult rejected
-  [[nodiscard]] constexpr auto getAllocator() -> Arena<> * { return allocator; }
   [[nodiscard]] constexpr auto numVerticies() const -> size_t {
     return nodes.size();
   }
@@ -799,38 +1310,6 @@ private:
     return std::ranges::any_of(b,
                                [&](size_t e) { return !g.isInactive(e, d); });
   }
-  // assemble omni-simplex
-  // we want to order variables to be
-  // us, ws, Phi^-, Phi^+, omega, lambdas
-  // this gives priority for minimization
-
-  // bounding, scheduled coefs, lambda
-  // matches lexicographical ordering of minimization
-  // bounding, however, is to be favoring minimizing `u` over `w`
-  [[nodiscard]] static constexpr auto hasActiveEdges(const Graph &g,
-                                                     const MemoryAccess *mem)
-    -> bool {
-    return anyActive(g, mem->inputEdges()) || anyActive(g, mem->outputEdges());
-  }
-  [[nodiscard]] static constexpr auto
-  hasActiveEdges(const Graph &g, const MemoryAccess *mem, size_t d) -> bool {
-    return anyActive(g, d, mem->inputEdges()) ||
-           anyActive(g, d, mem->outputEdges());
-  }
-  [[nodiscard]] constexpr auto hasActiveEdges(const Graph &g,
-                                              const ScheduledNode &node,
-                                              size_t d) const -> bool {
-    return std::ranges::any_of(node.getMemory(), [&](auto memId) {
-      return hasActiveEdges(g, memory[memId], d);
-    });
-  }
-  [[nodiscard]] constexpr auto hasActiveEdges(const Graph &g,
-                                              const ScheduledNode &node) const
-    -> bool {
-    return std::ranges::any_of(node.getMemory(), [&](auto memId) {
-      return hasActiveEdges(g, memory[memId]);
-    });
-  }
   constexpr void setScheduleMemoryOffsets(const Graph &g, size_t d) {
     // C, lambdas, omegas, Phis
     numOmegaCoefs = 0;
@@ -850,343 +1329,6 @@ private:
     for (auto edge : edges) edge.validate();
   }
 #endif
-  void shiftOmegas() {
-    for (auto &&node : nodes) shiftOmega(node);
-  }
-  /// For now, we instantiate a dense simplex specifying the full problem.
-  ///
-  /// Eventually, the plan is to generally avoid instantiating the
-  /// omni-simplex first, we solve individual problems
-  ///
-  /// The order of variables in the simplex is:
-  /// C, lambdas, slack, omegas, Phis, w, u
-  /// where
-  /// C: constraints, rest of matrix * variables == C
-  /// lambdas: farkas multipliers
-  /// slack: slack variables from independent phi solution constraints
-  /// omegas: scheduling offsets
-  /// Phis: scheduling rotations
-  /// w: bounding offsets, independent of symbolic variables
-  /// u: bounding offsets, dependent on symbolic variables
-  auto instantiateOmniSimplex(const Graph &g, size_t d, bool satisfyDeps)
-    -> std::unique_ptr<Simplex> {
-    auto omniSimplex = Simplex::create(
-      numConstraints + numSlack, numBounding + numActiveEdges + numPhiCoefs +
-                                   numOmegaCoefs + numSlack + numLambda);
-    auto C{omniSimplex->getConstraints()};
-    C << 0;
-    // layout of omniSimplex:
-    // Order: C, then rev-priority to minimize
-    // C, lambdas, slack, omegas, Phis, w, u
-    // rows give constraints; each edge gets its own
-    // numBounding = num u
-    // numActiveEdges = num w
-    Row c = 0;
-    Col l = 1, o = 1 + numLambda + numSlack, p = o + numOmegaCoefs,
-        w = p + numPhiCoefs, u = w + numActiveEdges;
-    for (size_t e = 0; e < edges.size(); ++e) {
-      Dependence &edge = edges[e];
-      if (g.isInactive(e, d)) continue;
-      size_t outNodeIndex = edge.nodeOut(), inNodeIndex = edge.nodeIn();
-      const auto [satC, satL, satPp, satPc, satO, satW] =
-        edge.splitSatisfaction();
-      const auto [bndC, bndL, bndPp, bndPc, bndO, bndWU] = edge.splitBounding();
-      const size_t numSatConstraints = satC.size(),
-                   numBndConstraints = bndC.size();
-      const Col nPc = satPc.numCol(), nPp = satPp.numCol();
-      invariant(nPc, bndPc.numCol());
-      invariant(nPp, bndPp.numCol());
-      const ScheduledNode &outNode = nodes[outNodeIndex];
-      const ScheduledNode &inNode = nodes[inNodeIndex];
-
-      Row cc = c + numSatConstraints;
-      Row ccc = cc + numBndConstraints;
-
-      Col ll = l + satL.numCol();
-      Col lll = ll + bndL.numCol();
-      C(_(c, cc), _(l, ll)) << satL;
-      C(_(cc, ccc), _(ll, lll)) << bndL;
-      l = lll;
-      // bounding
-      C(_(cc, ccc), w++) << bndWU(_, 0);
-      Col uu = u + bndWU.numCol() - 1;
-      C(_(cc, ccc), _(u, uu)) << bndWU(_, _(1, end));
-      u = uu;
-      if (satisfyDeps) C(_(c, cc), 0) << satC + satW;
-      else C(_(c, cc), 0) << satC;
-      C(_(cc, ccc), 0) << bndC;
-      // now, handle Phi and Omega
-      // phis are not constrained to be 0
-      if (outNodeIndex == inNodeIndex) {
-        if (d < outNode.getNumLoops()) {
-          if (nPc == nPp) {
-            if (outNode.phiIsScheduled(d)) {
-              // add it constants
-              auto sch = outNode.getSchedule(d);
-              C(_(c, cc), 0) -= satPc * sch[_(0, nPc)] + satPp * sch[_(0, nPp)];
-              C(_(cc, ccc), 0) -=
-                bndPc * sch[_(0, nPc)] + bndPp * sch[_(0, nPp)];
-            } else {
-              // FIXME: phiChild = [14:18), 4 cols
-              // while Dependence seems to indicate 2
-              // loops why the disagreement?
-              auto po = outNode.getPhiOffset() + p;
-              C(_(c, cc), _(po, po + nPc)) << satPc + satPp;
-              C(_(cc, ccc), _(po, po + nPc)) << bndPc + bndPp;
-            }
-          } else if (outNode.phiIsScheduled(d)) {
-            // add it constants
-            // note that loop order in schedule goes
-            // inner -> outer
-            // so we need to drop inner most if one has less
-            auto sch = outNode.getSchedule(d);
-            auto schP = sch[_(0, nPp)];
-            auto schC = sch[_(0, nPc)];
-            C(_(c, cc), 0) -= satPc * schC + satPp * schP;
-            C(_(cc, ccc), 0) -= bndPc * schC + bndPp * schP;
-          } else if (nPc < nPp) {
-            // Pp has more cols, so outer/leftmost overlap
-            auto po = outNode.getPhiOffset() + p, poc = po + nPc,
-                 pop = po + nPp;
-            C(_(c, cc), _(po, poc)) << satPc + satPp(_, _(0, nPc));
-            C(_(cc, ccc), _(po, poc)) << bndPc + bndPp(_, _(0, nPc));
-            C(_(c, cc), _(poc, pop)) << satPp(_, _(nPc, end));
-            C(_(cc, ccc), _(poc, pop)) << bndPp(_, _(nPc, end));
-          } else /* if (nPc > nPp) */ {
-            auto po = outNode.getPhiOffset() + p, poc = po + nPc,
-                 pop = po + nPp;
-            C(_(c, cc), _(po, pop)) << satPc(_, _(0, nPp)) + satPp;
-            C(_(cc, ccc), _(po, pop)) << bndPc(_, _(0, nPp)) + bndPp;
-            C(_(c, cc), _(pop, poc)) << satPc(_, _(nPp, end));
-            C(_(cc, ccc), _(pop, poc)) << bndPc(_, _(nPp, end));
-          }
-          C(_(c, cc), outNode.getOmegaOffset() + o) << satO(_, 0) + satO(_, 1);
-          C(_(cc, ccc), outNode.getOmegaOffset() + o)
-            << bndO(_, 0) + bndO(_, 1);
-        }
-      } else {
-        if (d < edge.getOutNumLoops())
-          updateConstraints(C, outNode, satPc, bndPc, d, c, cc, ccc, p);
-        if (d < edge.getInNumLoops()) {
-          if (d < edge.getOutNumLoops() && !inNode.phiIsScheduled(d) &&
-              !outNode.phiIsScheduled(d)) {
-            invariant(inNode.getPhiOffset() != outNode.getPhiOffset());
-          }
-          updateConstraints(C, inNode, satPp, bndPp, d, c, cc, ccc, p);
-        }
-        // Omegas are included regardless of rotation
-        if (d < edge.getOutNumLoops()) {
-          if (d < edge.getInNumLoops())
-            invariant(inNode.getOmegaOffset() != outNode.getOmegaOffset());
-          C(_(c, cc), outNode.getOmegaOffset() + o)
-            << satO(_, edge.isForward());
-          C(_(cc, ccc), outNode.getOmegaOffset() + o)
-            << bndO(_, edge.isForward());
-        }
-        if (d < edge.getInNumLoops()) {
-          C(_(c, cc), inNode.getOmegaOffset() + o)
-            << satO(_, !edge.isForward());
-          C(_(cc, ccc), inNode.getOmegaOffset() + o)
-            << bndO(_, !edge.isForward());
-        }
-      }
-      c = ccc;
-    }
-    invariant(size_t(l), size_t(1 + numLambda));
-    invariant(size_t(c), size_t(numConstraints));
-    addIndependentSolutionConstraints(omniSimplex.get(), g, d);
-    return omniSimplex;
-  }
-  static void updateConstraints(MutPtrMatrix<int64_t> C,
-                                const ScheduledNode &node,
-                                PtrMatrix<int64_t> sat, PtrMatrix<int64_t> bnd,
-                                size_t d, Row c, Row cc, Row ccc, Col p) {
-    invariant(sat.numCol(), bnd.numCol());
-    if (node.phiIsScheduled(d)) {
-      // add it constants
-      auto sch = node.getSchedule(d)[_(0, sat.numCol())];
-      // order is inner <-> outer
-      // so we need the end of schedule if it is larger
-      C(_(c, cc), 0) -= sat * sch;
-      C(_(cc, ccc), 0) -= bnd * sch;
-    } else {
-      // add it to C
-      auto po = node.getPhiOffset() + p;
-      C(_(c, cc), _(po, po + sat.numCol())) << sat;
-      C(_(cc, ccc), _(po, po + bnd.numCol())) << bnd;
-    }
-  }
-  [[nodiscard]] auto solveGraph(Graph &g, size_t depth, bool satisfyDeps)
-    -> std::optional<BitSet> {
-    if (numLambda == 0) {
-      setSchedulesIndependent(g, depth);
-      return checkEmptySatEdges(g, depth);
-    }
-    auto omniSimplex = instantiateOmniSimplex(g, depth, satisfyDeps);
-    if (omniSimplex->initiateFeasible()) return std::nullopt;
-    auto sol = omniSimplex->rLexMinStop(numLambda + numSlack);
-    assert(sol.size() ==
-           numBounding + numActiveEdges + numPhiCoefs + numOmegaCoefs);
-    updateSchedules(g, depth, sol);
-    return deactivateSatisfiedEdges(g, depth,
-                                    sol[_(numPhiCoefs + numOmegaCoefs, end)]);
-  }
-  auto checkEmptySatEdges(Graph &g, size_t depth) -> BitSet {
-    for (size_t e = 0; e < edges.size(); ++e) {
-      Dependence &edge = edges[e];
-      if (g.isInactive(e, depth)) continue;
-      size_t inIndex = edge.nodeIn(), outIndex = edge.nodeOut();
-      const ScheduledNode &inNode = nodes[inIndex], &outNode = nodes[outIndex];
-      DensePtrMatrix<int64_t> inPhi = inNode.getPhi()(_(0, depth + 1), _),
-                              outPhi = outNode.getPhi()(_(0, depth + 1), _);
-      if (edge.checkEmptySat(allocator, inNode.getLoopNest(),
-                             inNode.getOffset(), inPhi, outNode.getLoopNest(),
-                             outNode.getOffset(), outPhi)) {
-        g.activeEdges.remove(e);
-      }
-    }
-    return BitSet{};
-  }
-  [[nodiscard]] auto deactivateSatisfiedEdges(Graph &g, size_t depth,
-                                              Simplex::Solution sol) -> BitSet {
-    if (allZero(sol[_(begin, numBounding + numActiveEdges)]))
-      return checkEmptySatEdges(g, depth);
-    size_t w = 0, u = numActiveEdges;
-    BitSet deactivated{};
-    for (size_t e = 0; e < edges.size(); ++e) {
-      Dependence &edge = edges[e];
-      if (g.isInactive(e, depth)) continue;
-      size_t inIndex = edge.nodeIn(), outIndex = edge.nodeOut();
-      Col uu = u + edge.getNumDynamicBoundingVar();
-      if ((sol[w++] != 0) || (anyNEZero(sol[_(u, uu)]))) {
-        g.activeEdges.remove(e);
-        deactivated.insert(e);
-        edge.setSatLevelLP(depth);
-      } else {
-        const ScheduledNode &inNode = nodes[inIndex],
-                            &outNode = nodes[outIndex];
-        DensePtrMatrix<int64_t> inPhi = inNode.getPhi()(_(0, depth + 1), _),
-                                outPhi = outNode.getPhi()(_(0, depth + 1), _);
-        if (edge.checkEmptySat(allocator, inNode.getLoopNest(),
-                               inNode.getOffset(), inPhi, outNode.getLoopNest(),
-                               outNode.getOffset(), outPhi)) {
-          g.activeEdges.remove(e);
-        }
-      }
-      u = size_t(uu);
-    }
-    return deactivated;
-  }
-  static void setDepFreeSchedule(PtrVector<MemoryAccess *> mem,
-                                 ScheduledNode &node, size_t depth) {
-    node.getOffsetOmega(depth) = 0;
-    if (node.phiIsScheduled(depth)) return;
-    // we'll check the null space of the phi's so far
-    // and then search for array indices
-    if (depth == 0) {
-      // for now, if depth == 0, we just set last active
-      MutPtrVector<int64_t> phiv{node.getSchedule(0)};
-      phiv[_(0, last)] << 0;
-      phiv[last] = 1;
-      return;
-    }
-    DenseMatrix<int64_t> nullSpace; // d x lfull
-    DenseMatrix<int64_t> A{node.getPhi()(_(0, depth), _).transpose()};
-    NormalForm::nullSpace11(nullSpace, A);
-    invariant(size_t(nullSpace.numRow()), node.getNumLoops() - depth);
-    // now, we search index matrices for schedules not in the null space of
-    // existing phi.
-    // Here, we collect candidates for the next schedule
-    DenseMatrix<int64_t> candidates{DenseDims{0, node.getNumLoops() + 1}};
-    Vector<int64_t> indv;
-    indv.resizeForOverwrite(node.getNumLoops());
-    for (size_t ind : node.getMemory()) {
-      PtrMatrix<int64_t> indMat = mem[ind]->indexMatrix(); // lsub x d
-      A.resizeForOverwrite(DenseDims{nullSpace.numRow(), indMat.numCol()});
-      A = nullSpace(_, _(0, indMat.numRow())) * indMat;
-      // we search A for rows that aren't all zero
-      for (size_t d = 0; d < A.numCol(); ++d) {
-        if (allZero(A(_, d))) continue;
-        indv << indMat(_, d);
-        bool found = false;
-        for (size_t j = 0; j < candidates.numRow(); ++j) {
-          if (candidates(j, _(0, last)) != indv) continue;
-          found = true;
-          ++candidates(j, 0);
-          break;
-        }
-        if (!found) {
-          candidates.resize(candidates.numRow() + 1);
-          assert(candidates(last, 0) == 0);
-          candidates(last, _(1, end)) << indv;
-        }
-      }
-    }
-    if (Row R = candidates.numRow()) {
-      // >= 1 candidates, pick the one with with greatest lex, favoring
-      // number of repetitions (which were placed in first index)
-      size_t i = 0;
-      for (size_t j = 1; j < candidates.numRow(); ++j)
-        if (candidates(j, _) > candidates(i, _)) i = j;
-      node.getSchedule(depth) << candidates(i, _(1, end));
-      return;
-    }
-    // do we want to pick the outermost original loop,
-    // or do we want to pick the outermost lex null space?
-    node.getSchedule(depth) << 0;
-    for (size_t c = 0; c < nullSpace.numCol(); ++c) {
-      if (allZero(nullSpace(_, c))) continue;
-      node.getSchedule(depth)[c] = 1;
-      return;
-    }
-    invariant(false);
-  }
-  void updateSchedules(const Graph &g, size_t depth, Simplex::Solution sol) {
-#ifndef NDEBUG
-    if (numPhiCoefs > 0)
-      assert(
-        std::ranges::any_of(sol, [](Rational s) -> bool { return s != 0; }));
-#endif
-    size_t o = numOmegaCoefs;
-    for (auto &&node : nodes) {
-      if (depth >= node.getNumLoops()) continue;
-      if (!hasActiveEdges(g, node)) {
-        setDepFreeSchedule(memory, node, depth);
-        continue;
-      }
-      Rational sOmega = sol[node.getOmegaOffset()];
-      // TODO: handle s.denominator != 1
-      if (!node.phiIsScheduled(depth)) {
-        auto phi = node.getSchedule(depth);
-        auto s = sol[node.getPhiOffsetRange() + o];
-        int64_t baseDenom = sOmega.denominator;
-        int64_t l = lcm(s.denomLCM(), baseDenom);
-#ifndef NDEBUG
-        for (size_t i = 0; i < phi.size(); ++i)
-          assert(((s[i].numerator * l) / (s[i].denominator)) >= 0);
-#endif
-        if (l == 1) {
-          node.getOffsetOmega(depth) = sOmega.numerator;
-          for (size_t i = 0; i < phi.size(); ++i) phi[i] = s[i].numerator;
-        } else {
-          node.getOffsetOmega(depth) = (sOmega.numerator * l) / baseDenom;
-          for (size_t i = 0; i < phi.size(); ++i)
-            phi[i] = (s[i].numerator * l) / (s[i].denominator);
-        }
-        assert(!(allZero(phi)));
-      } else {
-        node.getOffsetOmega(depth) = sOmega.numerator;
-      }
-#ifndef NDEBUG
-      if (!node.phiIsScheduled(depth)) {
-        int64_t l = sol[node.getPhiOffsetRange() + o].denomLCM();
-        for (size_t i = 0; i < node.getPhi().numCol(); ++i)
-          assert(node.getPhi()(depth, i) ==
-                 sol[node.getPhiOffsetRange() + o][i] * l);
-      }
-#endif
-    }
-  }
   // Note this is based on the assumption that original loops are in
   // outer<->inner order. With that assumption, using lexSign on the null
   // space will tend to preserve the original traversal order.
@@ -1196,84 +1338,7 @@ private:
     invariant(false);
     return 0;
   }
-  void addIndependentSolutionConstraints(NotNull<Simplex> omniSimplex,
-                                         const Graph &g, size_t d) {
-    // omniSimplex->setNumCons(omniSimplex->getNumCons() +
-    //                                memory.size());
-    // omniSimplex->reserveExtraRows(memory.size());
-    auto C{omniSimplex->getConstraints()};
-    size_t i = size_t{C.numRow()} - numSlack, s = numLambda,
-           o = 1 + numSlack + numLambda + numOmegaCoefs;
-    if (d == 0) {
-      // add ones >= 0
-      for (auto &&node : nodes) {
-        if (node.phiIsScheduled(d) || (!hasActiveEdges(g, node, d))) continue;
-        C(i, 0) = 1;
-        C(i, node.getPhiOffsetRange() + o) << 1;
-        C(i++, ++s) = -1; // for >=
-      }
-    } else {
-      DenseMatrix<int64_t> A, N;
-      for (auto &&node : nodes) {
-        if (node.phiIsScheduled(d) || (d >= node.getNumLoops()) ||
-            (!hasActiveEdges(g, node, d)))
-          continue;
-        A.resizeForOverwrite(Row{size_t(node.getPhi().numCol())}, Col{d});
-        A << node.getPhi()(_(0, d), _).transpose();
-        NormalForm::nullSpace11(N, A);
-        // we add sum(NullSpace,dims=1) >= 1
-        // via 1 = sum(NullSpace,dims=1) - s, s >= 0
-        C(i, 0) = 1;
-        MutPtrVector<int64_t> cc{C(i, node.getPhiOffsetRange() + o)};
-        // sum(N,dims=1) >= 1 after flipping row signs to be lex > 0
-        for (size_t m = 0; m < N.numRow(); ++m)
-          cc += N(m, _) * lexSign(N(m, _));
-        C(i++, ++s) = -1; // for >=
-      }
-    }
-    invariant(size_t(omniSimplex->getNumCons()), i);
-    assert(!allZero(omniSimplex->getConstraints()(last, _)));
-  }
-  [[nodiscard]] static auto nonZeroMask(const AbstractVector auto &x)
-    -> uint64_t {
-    assert(x.size() <= 64);
-    uint64_t m = 0;
-    for (auto y : x) m = ((m << 1) | (y != 0));
-    return m;
-  }
-  static void nonZeroMasks(Vector<uint64_t> &masks,
-                           const AbstractMatrix auto &A) {
-    const auto [M, N] = A.size();
-    assert(N <= 64);
-    masks.resizeForOverwrite(M);
-    for (size_t m = 0; m < M; ++m) masks[m] = nonZeroMask(A(m, _));
-  }
-  [[nodiscard]] static auto nonZeroMasks(const AbstractMatrix auto &A)
-    -> Vector<uint64_t> {
-    Vector<uint64_t> masks;
-    nonZeroMasks(masks, A);
-    return masks;
-  }
-  [[nodiscard]] static auto nonZeroMask(const AbstractMatrix auto A)
-    -> uint64_t {
-    const auto [M, N] = A.size();
-    assert(N <= 64);
-    uint64_t mask = 0;
-    for (size_t m = 0; m < M; ++m) mask |= nonZeroMask(A(m, _));
-    return mask;
-  }
-  void setSchedulesIndependent(const Graph &g, size_t depth) {
-    // IntMatrix A, N;
-    for (auto &&node : nodes) {
-      if ((depth >= node.getNumLoops()) || node.phiIsScheduled(depth)) continue;
-      // we should only be here if numLambda==0
-      assert(!hasActiveEdges(g, node));
-      setDepFreeSchedule(memory, node, depth);
-    }
-  }
-  void resetPhiOffsets() {
-    for (auto &&node : nodes) node.resetPhiOffset();
-  }
+
   [[nodiscard]] auto isSatisfied(Dependence &e, size_t d) -> bool {
     size_t inIndex = e.nodeIn();
     size_t outIndex = e.nodeOut();
@@ -1290,146 +1355,6 @@ private:
         if (!isSatisfied(e, d)) return false;
     }
     return true;
-  }
-  // NOLINTNEXTLINE(misc-no-recursion)
-  [[nodiscard]] auto breakGraph(Graph g, size_t d) -> std::optional<BitSet> {
-    llvm::SmallVector<BitSet> components;
-    Graphs::stronglyConnectedComponents(components, g);
-    if (components.size() <= 1) return {};
-    // components are sorted in topological order.
-    // We split all of them, solve independently,
-    // and then try to fuse again after if/where optimal schedules
-    // allow it.
-    auto graphs = g.split(components);
-    assert(graphs.size() == components.size());
-    BitSet satDeps{};
-    for (auto &sg : graphs) {
-      if (d >= sg.calcMaxDepth()) continue;
-      countAuxParamsAndConstraints(sg, d);
-      setScheduleMemoryOffsets(sg, d);
-      if (std::optional<BitSet> sat = solveGraph(sg, d, false)) satDeps |= *sat;
-      else return {}; // give up
-    }
-    int64_t unfusedOffset = 0;
-    // For now, just greedily try and fuse from top down
-    // we do this by setting the Omegas in a loop.
-    // If fusion is legal, we don't increment the Omega offset.
-    // else, we do.
-    Graph *gp = graphs.data();
-    Vector<unsigned> baseGraphs;
-    baseGraphs.push_back(0);
-    for (size_t i = 1; i < components.size(); ++i) {
-      Graph &gi = graphs[i];
-      if (!canFuse(*gp, gi, d)) {
-        // do not fuse
-        for (auto &&v : *gp) v.getFusionOmega(d) = unfusedOffset;
-        ++unfusedOffset;
-        // gi is the new base graph
-        gp = &gi;
-        baseGraphs.push_back(i);
-      } else // fuse
-        (*gp) |= gi;
-    }
-    // set omegas for gp
-    for (auto &&v : *gp) v.getFusionOmega(d) = unfusedOffset;
-    ++d;
-    // size_t numSat = satDeps.size();
-    for (auto i : baseGraphs)
-      if (std::optional<BitSet> sat =
-            optimize(graphs[i], d, graphs[i].calcMaxDepth())) {
-        // TODO: try and satisfy extra dependences
-        // if ((numSat > 0) && (sat->size()>0)){}
-        satDeps |= *sat;
-      } else {
-        return {};
-      }
-    // remove
-    return satDeps;
-  }
-  static constexpr auto numParams(const Dependence &edge)
-    -> math::SVector<size_t, 4> {
-    return {edge.getNumLambda(), edge.getDynSymDim(), edge.getNumConstraints(),
-            1};
-  }
-  template <typename F> void for_each_edge(const Graph &g, size_t d, F &&f) {
-    for (size_t e = 0; e < edges.size(); ++e) {
-      if (g.isInactive(e, d)) continue;
-      f(edges[e]);
-    }
-  }
-  constexpr void countAuxParamsAndConstraints(const Graph &g, size_t d) {
-    math::SVector<size_t, 4> params{};
-    assert(allZero(params));
-    for (auto &&e : g.getEdges(d)) params += numParams(e);
-    numLambda = params[0];
-    numBounding = params[1];
-    numConstraints = params[2];
-    numActiveEdges = params[3];
-  }
-  constexpr void countAuxAndStash(const Graph &g, size_t d) {
-    math::SVector<size_t, 4> params{};
-    assert(allZero(params));
-    for (auto &&e : g.getEdges(d)) params += numParams(e.stashSatLevel());
-    numLambda = params[0];
-    numBounding = params[1];
-    numConstraints = params[2];
-    numActiveEdges = params[3];
-  }
-  // NOLINTNEXTLINE(misc-no-recursion)
-  [[nodiscard]] auto optimizeSatDep(Graph g, size_t d, size_t maxDepth,
-                                    BitSet depSatLevel, BitSet activeEdges)
-    -> BitSet {
-    // if we're here, there are satisfied deps in both
-    // depSatLevel and depSatNest
-    // what we want to know is, can we satisfy all the deps
-    // in depSatNest?
-    // backup in case we fail
-    // activeEdges was the old original; swap it in
-    BitSet oldEdges = g.activeEdges, nodeIds = g.nodeIds;
-    g.activeEdges = activeEdges;
-    auto chckpt = allocator.checkpoint();
-    auto oldSchedules = vector<AffineSchedule>(allocator, g.nodeIds.size());
-    // oldSchedules.reserve(g.nodeIds.size()); // is this worth it?
-    size_t i = 0;
-    for (auto &n : g) oldSchedules[i++] = n.getSchedule().copy(allocator);
-    countAuxAndStash(g, d);
-    setScheduleMemoryOffsets(g, d);
-    if (std::optional<BitSet> depSat = solveGraph(g, d, true))
-      if (std::optional<BitSet> depSatN = optimize(g, d + 1, maxDepth))
-        return *depSat |= *depSatN;
-    // we failed, so reset solved schedules
-    std::swap(g.nodeIds, nodeIds);
-    g.activeEdges = activeEdges; // undo such that g.getEdges(d) is correct
-    for (auto &&e : g.getEdges(d)) e.popSatLevel();
-    g.activeEdges = oldEdges;    // restore backup
-    auto *oldNodeIter = oldSchedules.begin();
-    for (auto &&n : g) n.getSchedule() = *(oldNodeIter++);
-    allocator.rollback(chckpt);
-    return depSatLevel;
-  }
-  /// optimize at depth `d`
-  /// receives graph by value, so that it is not invalidated when
-  /// recursing
-  // NOLINTNEXTLINE(misc-no-recursion)
-  [[nodiscard]] auto optimize(Graph g, size_t d, size_t maxDepth)
-    -> std::optional<BitSet> {
-    if (d >= maxDepth) return BitSet{};
-    countAuxParamsAndConstraints(g, d);
-    setScheduleMemoryOffsets(g, d);
-    // if we fail on this level, break the graph
-    BitSet activeEdgesBackup = g.activeEdges;
-    if (std::optional<BitSet> depSat = solveGraph(g, d, false)) {
-      const size_t dp1 = d + 1;
-      if (dp1 == maxDepth) return *depSat;
-      if (std::optional<BitSet> depSatNest = optimize(g, dp1, maxDepth)) {
-        bool depSatEmpty = depSat->empty();
-        *depSat |= *depSatNest;
-        if (!(depSatEmpty || depSatNest->empty())) // try and sat all this level
-          return optimizeSatDep(g, d, maxDepth, *depSat, activeEdgesBackup);
-        return *depSat;
-      }
-    }
-    return breakGraph(g, d);
   }
   // returns a BitSet indicating satisfied dependencies
   [[nodiscard]] auto optimize() -> std::optional<BitSet> {

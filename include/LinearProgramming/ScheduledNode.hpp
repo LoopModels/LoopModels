@@ -12,7 +12,7 @@ namespace poly::lp {
 using IR::Addr, IR::Value, IR::Instruction, IR::Load, IR::Stow;
 using math::PtrVector, math::MutPtrVector, math::DensePtrMatrix,
   math::MutDensePtrMatrix, math::SquarePtrMatrix, math::MutSquarePtrMatrix,
-  math::end, math::_, math::Simplex;
+  math::end, math::last, math::_, math::Simplex;
 using poly::Dependence, poly::DepPoly;
 using utils::NotNull, utils::invariant, utils::Optional, utils::Arena;
 
@@ -102,11 +102,11 @@ public:
   // [[nodiscard]] constexpr auto getNumMem() const -> size_t {
   //   return memory.size();
   // }
-  constexpr auto getStore() -> Addr * { return store; }
+  [[nodiscard]] constexpr auto getStore() -> Addr * { return store; }
   [[nodiscard]] constexpr auto getStore() const -> const Addr * {
     return store;
   }
-  constexpr auto nodesRange()
+  [[nodiscard]] constexpr auto nodesRange()
     -> utils::ListRange<ScheduledNode, utils::GetNext, utils::Identity> {
     return utils::ListRange{this, utils::GetNext{}};
   }
@@ -114,13 +114,13 @@ public:
   // convention: `local` means only for this node
   // `each` for all connected nodes
   // range of `Addr` for this node
-  constexpr auto localAddr() {
+  [[nodiscard]] constexpr auto localAddr() {
     return utils::ListRange{(Addr *)store, [](Addr *a) -> Addr * {
                               return llvm::cast_or_null<Addr>(a->getChild());
                             }};
   }
   // range of all `Addr` for the list starting with this node
-  constexpr auto eachAddr() {
+  [[nodiscard]] constexpr auto eachAddr() {
     return utils::NestedListRange{
       this, utils::GetNext{},
       [](Addr *a) -> Addr * { return llvm::cast_or_null<Addr>(a->getChild()); },
@@ -128,7 +128,7 @@ public:
   }
   // all nodes that are memory inputs to this one; i.e. all parents
   // NOTE: we may reach each node multiple times
-  constexpr auto inputNodes() {
+  [[nodiscard]] constexpr auto inputNodes() {
     return utils::NestedListRange{
       store,
       [](Addr *a) -> Addr * { return llvm::cast_or_null<Addr>(a->getChild()); },
@@ -138,7 +138,7 @@ public:
   }
   // all nodes that are memory outputs of this one; i.e. all children
   // NOTE: we may reach each node multiple times
-  constexpr auto outputNodes() {
+  [[nodiscard]] constexpr auto outputNodes() {
     return utils::NestedListRange{
       store,
       [](Addr *a) -> Addr * { return llvm::cast_or_null<Addr>(a->getChild()); },
@@ -146,19 +146,46 @@ public:
       [](Addr *a) -> Dependence * { return a->getEdgeOut(); },
       [](Dependence *d) -> ScheduledNode * { return d->output()->getNode(); }};
   }
-  constexpr auto inputEdges() {
+  [[nodiscard]] constexpr auto inputEdges() {
     return utils::NestedListRange{
       store,
       [](Addr *a) -> Addr * { return llvm::cast_or_null<Addr>(a->getChild()); },
       [](Dependence *d) -> Dependence * { return d->getNextInput(); },
       [](Addr *a) -> Dependence * { return a->getEdgeIn(); }};
   }
-  constexpr auto outputEdges() {
+  [[nodiscard]] constexpr auto outputEdges() {
     return utils::NestedListRange{
       store,
       [](Addr *a) -> Addr * { return llvm::cast_or_null<Addr>(a->getChild()); },
       [](Dependence *d) -> Dependence * { return d->getNextOutput(); },
       [](Addr *a) -> Dependence * { return a->getEdgeOut(); }};
+  }
+  [[nodiscard]] constexpr auto inputEdges() const {
+    return utils::NestedListRange{
+      (const Addr *)store,
+      [](const Addr *a) -> const Addr * {
+        return llvm::cast_or_null<Addr>(a->getChild());
+      },
+      [](const Dependence *d) -> const Dependence * {
+        return d->getNextInput();
+      },
+      [](const Addr *a) -> const Dependence * { return a->getEdgeIn(); }};
+  }
+  [[nodiscard]] constexpr auto outputEdges() const {
+    return utils::NestedListRange{
+      (const Addr *)store,
+      [](const Addr *a) -> const Addr * {
+        return llvm::cast_or_null<Addr>(a->getChild());
+      },
+      [](const Dependence *d) -> const Dependence * {
+        return d->getNextOutput();
+      },
+      [](const Addr *a) -> const Dependence * { return a->getEdgeOut(); }};
+  }
+  [[nodiscard]] constexpr auto hasActiveEdges(unsigned depth) const -> bool {
+    const auto f = [depth](const Dependence *d) { return d->isActive(depth); };
+    return std::ranges::any_of(inputEdges(), f) ||
+           std::ranges::any_of(outputEdges(), f);
   }
 
   // constexpr auto eachInputNodes() {
@@ -279,7 +306,7 @@ public:
   }
   // 'phiIsScheduled()` means that `phi`'s schedule has been
   // set for the outer `rank` loops.
-  [[nodiscard]] constexpr auto phiIsScheduled(size_t d) const -> bool {
+  [[nodiscard]] constexpr auto phiIsScheduled(unsigned d) const -> bool {
     return d < rank;
   }
 
