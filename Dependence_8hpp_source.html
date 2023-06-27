@@ -350,11 +350,11 @@ $(function() {
 <div class="line"><a name="l00288"></a><span class="lineno">  288</span>&#160;    : depPoly(poly), dependenceSatisfaction(depSatBound[0]),</div>
 <div class="line"><a name="l00289"></a><span class="lineno">  289</span>&#160;      dependenceBounding(depSatBound[1]), in(i), out(o), forward(fwd) {}</div>
 <div class="line"><a name="l00290"></a><span class="lineno">  290</span>&#160; </div>
-<div class="line"><a name="l00298"></a><span class="lineno"><a class="line" href="classpoly_1_1poly_1_1Dependence.html#abeada112f74a97c338aa14e3425de063">  298</a></span>&#160;  constexpr <span class="keyword">auto</span> <a class="code" href="classpoly_1_1poly_1_1Dependence.html#abeada112f74a97c338aa14e3425de063">stashSatLevel</a>() -&gt; <a class="code" href="classpoly_1_1poly_1_1Dependence.html">Dependence</a> &amp; {</div>
+<div class="line"><a name="l00298"></a><span class="lineno"><a class="line" href="classpoly_1_1poly_1_1Dependence.html#ab0b2ff38f39e89f64efe973c10e9d324">  298</a></span>&#160;  constexpr <span class="keyword">auto</span> <a class="code" href="classpoly_1_1poly_1_1Dependence.html#ab0b2ff38f39e89f64efe973c10e9d324">stashSatLevel</a>() -&gt; <a class="code" href="classpoly_1_1poly_1_1Dependence.html">Dependence</a> * {</div>
 <div class="line"><a name="l00299"></a><span class="lineno">  299</span>&#160;    assert(satLvl.back() == 255 || <span class="stringliteral">&quot;satLevel overflow&quot;</span>);</div>
 <div class="line"><a name="l00300"></a><span class="lineno">  300</span>&#160;    std::copy_backward(satLvl.begin(), satLvl.end() - 1, satLvl.end());</div>
 <div class="line"><a name="l00301"></a><span class="lineno">  301</span>&#160;    satLvl.front() = 255;</div>
-<div class="line"><a name="l00302"></a><span class="lineno">  302</span>&#160;    <span class="keywordflow">return</span> *<span class="keyword">this</span>;</div>
+<div class="line"><a name="l00302"></a><span class="lineno">  302</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">this</span>;</div>
 <div class="line"><a name="l00303"></a><span class="lineno">  303</span>&#160;  }</div>
 <div class="line"><a name="l00304"></a><span class="lineno">  304</span>&#160;  constexpr <span class="keywordtype">void</span> popSatLevel() {</div>
 <div class="line"><a name="l00305"></a><span class="lineno">  305</span>&#160;    std::copy(satLvl.begin() + 1, satLvl.end(), satLvl.begin());</div>
@@ -388,7 +388,7 @@ $(function() {
 <div class="line"><a name="l00335"></a><span class="lineno">  335</span>&#160;  <span class="comment">// [[nodiscard]] constexpr auto nodeOut() const -&gt; unsigned {</span></div>
 <div class="line"><a name="l00336"></a><span class="lineno">  336</span>&#160;  <span class="comment">//   return out-&gt;getNode();</span></div>
 <div class="line"><a name="l00337"></a><span class="lineno">  337</span>&#160;  <span class="comment">// }</span></div>
-<div class="line"><a name="l00338"></a><span class="lineno">  338</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getDynSymDim() const -&gt; <span class="keywordtype">size_t</span> {</div>
+<div class="line"><a name="l00338"></a><span class="lineno">  338</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getDynSymDim() const -&gt; <span class="keywordtype">unsigned</span> {</div>
 <div class="line"><a name="l00339"></a><span class="lineno">  339</span>&#160;    <span class="keywordflow">return</span> depPoly-&gt;getNumDynSym();</div>
 <div class="line"><a name="l00340"></a><span class="lineno">  340</span>&#160;  }</div>
 <div class="line"><a name="l00341"></a><span class="lineno">  341</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> inputIsLoad() const -&gt; <span class="keywordtype">bool</span> { <span class="keywordflow">return</span> in-&gt;isLoad(); }</div>
@@ -543,335 +543,327 @@ $(function() {
 <div class="line"><a name="l00492"></a><span class="lineno">  492</span>&#160;                getNumOmegaCoefficients();</div>
 <div class="line"><a name="l00493"></a><span class="lineno">  493</span>&#160;    <span class="keywordflow">return</span> getBndConstraints()(_, _(lb, end));</div>
 <div class="line"><a name="l00494"></a><span class="lineno">  494</span>&#160;  }</div>
-<div class="line"><a name="l00495"></a><span class="lineno">  495</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> splitSatisfaction() const</div>
-<div class="line"><a name="l00496"></a><span class="lineno">  496</span>&#160;    -&gt; std::tuple&lt;math::StridedVector&lt;int64_t&gt;, PtrMatrix&lt;int64_t&gt;,</div>
-<div class="line"><a name="l00497"></a><span class="lineno">  497</span>&#160;                  PtrMatrix&lt;int64_t&gt;, PtrMatrix&lt;int64_t&gt;, PtrMatrix&lt;int64_t&gt;,</div>
-<div class="line"><a name="l00498"></a><span class="lineno">  498</span>&#160;                  math::StridedVector&lt;int64_t&gt;&gt; {</div>
-<div class="line"><a name="l00499"></a><span class="lineno">  499</span>&#160;    PtrMatrix&lt;int64_t&gt; phiCoefsIn = getSatPhi1Coefs(),</div>
-<div class="line"><a name="l00500"></a><span class="lineno">  500</span>&#160;                       phiCoefsOut = getSatPhi0Coefs();</div>
-<div class="line"><a name="l00501"></a><span class="lineno">  501</span>&#160;    <span class="keywordflow">if</span> (isForward()) std::swap(phiCoefsIn, phiCoefsOut);</div>
-<div class="line"><a name="l00502"></a><span class="lineno">  502</span>&#160;    <span class="keywordflow">return</span> {getSatConstants(), getSatLambda(),     phiCoefsIn,</div>
-<div class="line"><a name="l00503"></a><span class="lineno">  503</span>&#160;            phiCoefsOut,       getSatOmegaCoefs(), getSatW()};</div>
-<div class="line"><a name="l00504"></a><span class="lineno">  504</span>&#160;  }</div>
-<div class="line"><a name="l00505"></a><span class="lineno">  505</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> splitBounding() const</div>
-<div class="line"><a name="l00506"></a><span class="lineno">  506</span>&#160;    -&gt; std::tuple&lt;math::StridedVector&lt;int64_t&gt;, PtrMatrix&lt;int64_t&gt;,</div>
-<div class="line"><a name="l00507"></a><span class="lineno">  507</span>&#160;                  PtrMatrix&lt;int64_t&gt;, PtrMatrix&lt;int64_t&gt;, PtrMatrix&lt;int64_t&gt;,</div>
-<div class="line"><a name="l00508"></a><span class="lineno">  508</span>&#160;                  PtrMatrix&lt;int64_t&gt;&gt; {</div>
-<div class="line"><a name="l00509"></a><span class="lineno">  509</span>&#160;    PtrMatrix&lt;int64_t&gt; phiCoefsIn = getBndPhi1Coefs(),</div>
-<div class="line"><a name="l00510"></a><span class="lineno">  510</span>&#160;                       phiCoefsOut = getBndPhi0Coefs();</div>
-<div class="line"><a name="l00511"></a><span class="lineno">  511</span>&#160;    <span class="keywordflow">if</span> (isForward()) std::swap(phiCoefsIn, phiCoefsOut);</div>
-<div class="line"><a name="l00512"></a><span class="lineno">  512</span>&#160;    <span class="keywordflow">return</span> {getBndConstants(), getBndLambda(),     phiCoefsIn,</div>
-<div class="line"><a name="l00513"></a><span class="lineno">  513</span>&#160;            phiCoefsOut,       getBndOmegaCoefs(), getBndCoefs()};</div>
-<div class="line"><a name="l00514"></a><span class="lineno">  514</span>&#160;  }</div>
-<div class="line"><a name="l00515"></a><span class="lineno">  515</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> isSatisfied(Arena&lt;&gt; alloc,</div>
-<div class="line"><a name="l00516"></a><span class="lineno">  516</span>&#160;                                 NotNull&lt;const AffineSchedule&gt; schIn,</div>
-<div class="line"><a name="l00517"></a><span class="lineno">  517</span>&#160;                                 NotNull&lt;const AffineSchedule&gt; schOut) <span class="keyword">const</span></div>
-<div class="line"><a name="l00518"></a><span class="lineno">  518</span>&#160;    -&gt; <span class="keywordtype">bool</span> {</div>
-<div class="line"><a name="l00519"></a><span class="lineno">  519</span>&#160;    <span class="keywordtype">unsigned</span> numLoopsIn = in-&gt;getNumLoops(), numLoopsOut = out-&gt;getNumLoops(),</div>
-<div class="line"><a name="l00520"></a><span class="lineno">  520</span>&#160;             numLoopsCommon = std::min(numLoopsIn, numLoopsOut),</div>
-<div class="line"><a name="l00521"></a><span class="lineno">  521</span>&#160;             numLoopsTotal = numLoopsIn + numLoopsOut,</div>
-<div class="line"><a name="l00522"></a><span class="lineno">  522</span>&#160;             numVar = numLoopsIn + numLoopsOut + 2;</div>
-<div class="line"><a name="l00523"></a><span class="lineno">  523</span>&#160;    invariant(dependenceSatisfaction-&gt;getNumVars(), numVar);</div>
-<div class="line"><a name="l00524"></a><span class="lineno">  524</span>&#160;    <span class="keyword">auto</span> schv = vector(&amp;alloc, numVar, int64_t(0));</div>
-<div class="line"><a name="l00525"></a><span class="lineno">  525</span>&#160;    <span class="keyword">const</span> SquarePtrMatrix&lt;int64_t&gt; inPhi = schIn-&gt;getPhi();</div>
-<div class="line"><a name="l00526"></a><span class="lineno">  526</span>&#160;    <span class="keyword">const</span> SquarePtrMatrix&lt;int64_t&gt; outPhi = schOut-&gt;getPhi();</div>
-<div class="line"><a name="l00527"></a><span class="lineno">  527</span>&#160;    <span class="keyword">auto</span> inFusOmega = schIn-&gt;getFusionOmega();</div>
-<div class="line"><a name="l00528"></a><span class="lineno">  528</span>&#160;    <span class="keyword">auto</span> outFusOmega = schOut-&gt;getFusionOmega();</div>
-<div class="line"><a name="l00529"></a><span class="lineno">  529</span>&#160;    <span class="keyword">auto</span> inOffOmega = schIn-&gt;getOffsetOmega();</div>
-<div class="line"><a name="l00530"></a><span class="lineno">  530</span>&#160;    <span class="keyword">auto</span> outOffOmega = schOut-&gt;getOffsetOmega();</div>
-<div class="line"><a name="l00531"></a><span class="lineno">  531</span>&#160;    <span class="keyword">const</span> <span class="keywordtype">unsigned</span> numLambda = getNumLambda();</div>
-<div class="line"><a name="l00532"></a><span class="lineno">  532</span>&#160;    <span class="comment">// when i == numLoopsCommon, we&#39;ve passed the last loop</span></div>
-<div class="line"><a name="l00533"></a><span class="lineno">  533</span>&#160;    <span class="keywordflow">for</span> (ptrdiff_t i = 0; i &lt;= numLoopsCommon; ++i) {</div>
-<div class="line"><a name="l00534"></a><span class="lineno">  534</span>&#160;      <span class="keywordflow">if</span> (ptrdiff_t o2idiff = outFusOmega[i] - inFusOmega[i])</div>
-<div class="line"><a name="l00535"></a><span class="lineno">  535</span>&#160;        <span class="keywordflow">return</span> (o2idiff &gt; 0);</div>
-<div class="line"><a name="l00536"></a><span class="lineno">  536</span>&#160;      <span class="comment">// we should not be able to reach `numLoopsCommon`</span></div>
-<div class="line"><a name="l00537"></a><span class="lineno">  537</span>&#160;      <span class="comment">// because at the very latest, this last schedule value</span></div>
-<div class="line"><a name="l00538"></a><span class="lineno">  538</span>&#160;      <span class="comment">// should be different, because either:</span></div>
-<div class="line"><a name="l00539"></a><span class="lineno">  539</span>&#160;      <span class="comment">// if (numLoopsX == numLoopsY){</span></div>
-<div class="line"><a name="l00540"></a><span class="lineno">  540</span>&#160;      <span class="comment">//   we&#39;re at the inner most loop, where one of the instructions</span></div>
-<div class="line"><a name="l00541"></a><span class="lineno">  541</span>&#160;      <span class="comment">//   must have appeared before the other.</span></div>
-<div class="line"><a name="l00542"></a><span class="lineno">  542</span>&#160;      <span class="comment">// } else {</span></div>
-<div class="line"><a name="l00543"></a><span class="lineno">  543</span>&#160;      <span class="comment">//   the loop nests differ in depth, in which case the deeper</span></div>
-<div class="line"><a name="l00544"></a><span class="lineno">  544</span>&#160;      <span class="comment">//   loop must appear either above or below the instructions</span></div>
-<div class="line"><a name="l00545"></a><span class="lineno">  545</span>&#160;      <span class="comment">//   present at that level</span></div>
-<div class="line"><a name="l00546"></a><span class="lineno">  546</span>&#160;      <span class="comment">// }</span></div>
-<div class="line"><a name="l00547"></a><span class="lineno">  547</span>&#160;      invariant(i != numLoopsCommon);</div>
-<div class="line"><a name="l00548"></a><span class="lineno">  548</span>&#160;      <span class="comment">// forward means offset is 2nd - 1st</span></div>
-<div class="line"><a name="l00549"></a><span class="lineno">  549</span>&#160;      schv[0] = outOffOmega[i];</div>
-<div class="line"><a name="l00550"></a><span class="lineno">  550</span>&#160;      schv[1] = inOffOmega[i];</div>
-<div class="line"><a name="l00551"></a><span class="lineno">  551</span>&#160;      schv[_(2, 2 + numLoopsIn)] &lt;&lt; inPhi(last - i, _);</div>
-<div class="line"><a name="l00552"></a><span class="lineno">  552</span>&#160;      schv[_(2 + numLoopsIn, 2 + numLoopsTotal)] &lt;&lt; outPhi(last - i, _);</div>
-<div class="line"><a name="l00553"></a><span class="lineno">  553</span>&#160;      <span class="comment">// dependenceSatisfaction is phi_t - phi_s &gt;= 0</span></div>
-<div class="line"><a name="l00554"></a><span class="lineno">  554</span>&#160;      <span class="comment">// dependenceBounding is w + u&#39;N - (phi_t - phi_s) &gt;= 0</span></div>
-<div class="line"><a name="l00555"></a><span class="lineno">  555</span>&#160;      <span class="comment">// we implicitly 0-out `w` and `u` here,</span></div>
-<div class="line"><a name="l00556"></a><span class="lineno">  556</span>&#160;      <span class="keywordflow">if</span> (dependenceSatisfaction-&gt;unSatisfiable(alloc, schv, numLambda) ||</div>
-<div class="line"><a name="l00557"></a><span class="lineno">  557</span>&#160;          dependenceBounding-&gt;unSatisfiable(alloc, schv, numLambda)) {</div>
-<div class="line"><a name="l00558"></a><span class="lineno">  558</span>&#160;        <span class="comment">// if zerod-out bounding not &gt;= 0, then that means</span></div>
-<div class="line"><a name="l00559"></a><span class="lineno">  559</span>&#160;        <span class="comment">// phi_t - phi_s &gt; 0, so the dependence is satisfied</span></div>
-<div class="line"><a name="l00560"></a><span class="lineno">  560</span>&#160;        <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
-<div class="line"><a name="l00561"></a><span class="lineno">  561</span>&#160;      }</div>
-<div class="line"><a name="l00562"></a><span class="lineno">  562</span>&#160;    }</div>
-<div class="line"><a name="l00563"></a><span class="lineno">  563</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">true</span>;</div>
-<div class="line"><a name="l00564"></a><span class="lineno">  564</span>&#160;  }</div>
-<div class="line"><a name="l00565"></a><span class="lineno">  565</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> isSatisfied(Arena&lt;&gt; alloc, PtrVector&lt;unsigned&gt; inFusOmega,</div>
-<div class="line"><a name="l00566"></a><span class="lineno">  566</span>&#160;                                 PtrVector&lt;unsigned&gt; outFusOmega) <span class="keyword">const</span></div>
-<div class="line"><a name="l00567"></a><span class="lineno">  567</span>&#160;    -&gt; <span class="keywordtype">bool</span> {</div>
-<div class="line"><a name="l00568"></a><span class="lineno">  568</span>&#160;    <span class="keywordtype">unsigned</span> numLoopsIn = in-&gt;getNumLoops(), numLoopsOut = out-&gt;getNumLoops(),</div>
-<div class="line"><a name="l00569"></a><span class="lineno">  569</span>&#160;             numLoopsCommon = std::min(numLoopsIn, numLoopsOut),</div>
-<div class="line"><a name="l00570"></a><span class="lineno">  570</span>&#160;             numVar = numLoopsIn + numLoopsOut + 2;</div>
-<div class="line"><a name="l00571"></a><span class="lineno">  571</span>&#160;    invariant(dependenceSatisfaction-&gt;getNumVars(), numVar);</div>
-<div class="line"><a name="l00572"></a><span class="lineno">  572</span>&#160;    <span class="keyword">auto</span> schv = vector(&amp;alloc, numVar, int64_t(0));</div>
-<div class="line"><a name="l00573"></a><span class="lineno">  573</span>&#160;    <span class="comment">// Vector&lt;int64_t&gt; schv(dependenceSatisfaction-&gt;getNumVars(),int64_t(0));</span></div>
-<div class="line"><a name="l00574"></a><span class="lineno">  574</span>&#160;    <span class="keyword">const</span> <span class="keywordtype">unsigned</span> numLambda = getNumLambda();</div>
-<div class="line"><a name="l00575"></a><span class="lineno">  575</span>&#160;    <span class="comment">// when i == numLoopsCommon, we&#39;ve passed the last loop</span></div>
-<div class="line"><a name="l00576"></a><span class="lineno">  576</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt;= numLoopsCommon; ++i) {</div>
-<div class="line"><a name="l00577"></a><span class="lineno">  577</span>&#160;      <span class="keywordflow">if</span> (int64_t o2idiff = outFusOmega[i] - inFusOmega[i])</div>
-<div class="line"><a name="l00578"></a><span class="lineno">  578</span>&#160;        <span class="keywordflow">return</span> (o2idiff &gt; 0);</div>
-<div class="line"><a name="l00579"></a><span class="lineno">  579</span>&#160;      <span class="comment">// we should not be able to reach `numLoopsCommon`</span></div>
-<div class="line"><a name="l00580"></a><span class="lineno">  580</span>&#160;      <span class="comment">// because at the very latest, this last schedule value</span></div>
-<div class="line"><a name="l00581"></a><span class="lineno">  581</span>&#160;      <span class="comment">// should be different, because either:</span></div>
-<div class="line"><a name="l00582"></a><span class="lineno">  582</span>&#160;      <span class="comment">// if (numLoopsX == numLoopsY){</span></div>
-<div class="line"><a name="l00583"></a><span class="lineno">  583</span>&#160;      <span class="comment">//   we&#39;re at the inner most loop, where one of the instructions</span></div>
-<div class="line"><a name="l00584"></a><span class="lineno">  584</span>&#160;      <span class="comment">//   must have appeared before the other.</span></div>
-<div class="line"><a name="l00585"></a><span class="lineno">  585</span>&#160;      <span class="comment">// } else {</span></div>
-<div class="line"><a name="l00586"></a><span class="lineno">  586</span>&#160;      <span class="comment">//   the loop nests differ in depth, in which case the deeper</span></div>
-<div class="line"><a name="l00587"></a><span class="lineno">  587</span>&#160;      <span class="comment">//   loop must appear either above or below the instructions</span></div>
-<div class="line"><a name="l00588"></a><span class="lineno">  588</span>&#160;      <span class="comment">//   present at that level</span></div>
-<div class="line"><a name="l00589"></a><span class="lineno">  589</span>&#160;      <span class="comment">// }</span></div>
-<div class="line"><a name="l00590"></a><span class="lineno">  590</span>&#160;      invariant(i != numLoopsCommon);</div>
-<div class="line"><a name="l00591"></a><span class="lineno">  591</span>&#160;      schv[2 + i] = 1;</div>
-<div class="line"><a name="l00592"></a><span class="lineno">  592</span>&#160;      schv[2 + numLoopsIn + i] = 1;</div>
-<div class="line"><a name="l00593"></a><span class="lineno">  593</span>&#160;      <span class="comment">// forward means offset is 2nd - 1st</span></div>
-<div class="line"><a name="l00594"></a><span class="lineno">  594</span>&#160;      <span class="comment">// dependenceSatisfaction is phi_t - phi_s &gt;= 0</span></div>
-<div class="line"><a name="l00595"></a><span class="lineno">  595</span>&#160;      <span class="comment">// dependenceBounding is w + u&#39;N - (phi_t - phi_s) &gt;= 0</span></div>
-<div class="line"><a name="l00596"></a><span class="lineno">  596</span>&#160;      <span class="comment">// we implicitly 0-out `w` and `u` here,</span></div>
-<div class="line"><a name="l00597"></a><span class="lineno">  597</span>&#160;      <span class="keywordflow">if</span> (dependenceSatisfaction-&gt;unSatisfiable(alloc, schv, numLambda) ||</div>
-<div class="line"><a name="l00598"></a><span class="lineno">  598</span>&#160;          dependenceBounding-&gt;unSatisfiable(alloc, schv, numLambda)) {</div>
-<div class="line"><a name="l00599"></a><span class="lineno">  599</span>&#160;        <span class="comment">// if zerod-out bounding not &gt;= 0, then that means</span></div>
-<div class="line"><a name="l00600"></a><span class="lineno">  600</span>&#160;        <span class="comment">// phi_t - phi_s &gt; 0, so the dependence is satisfied</span></div>
-<div class="line"><a name="l00601"></a><span class="lineno">  601</span>&#160;        <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
-<div class="line"><a name="l00602"></a><span class="lineno">  602</span>&#160;      }</div>
-<div class="line"><a name="l00603"></a><span class="lineno">  603</span>&#160;      schv[2 + i] = 0;</div>
-<div class="line"><a name="l00604"></a><span class="lineno">  604</span>&#160;      schv[2 + numLoopsIn + i] = 0;</div>
-<div class="line"><a name="l00605"></a><span class="lineno">  605</span>&#160;    }</div>
-<div class="line"><a name="l00606"></a><span class="lineno">  606</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">true</span>;</div>
-<div class="line"><a name="l00607"></a><span class="lineno">  607</span>&#160;  }</div>
-<div class="line"><a name="l00608"></a><span class="lineno">  608</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> isSatisfied(Arena&lt;&gt; alloc,</div>
-<div class="line"><a name="l00609"></a><span class="lineno">  609</span>&#160;                                 NotNull&lt;const AffineSchedule&gt; sx,</div>
-<div class="line"><a name="l00610"></a><span class="lineno">  610</span>&#160;                                 NotNull&lt;const AffineSchedule&gt; sy,</div>
-<div class="line"><a name="l00611"></a><span class="lineno">  611</span>&#160;                                 <span class="keywordtype">size_t</span> d) <span class="keyword">const</span> -&gt; <span class="keywordtype">bool</span> {</div>
-<div class="line"><a name="l00612"></a><span class="lineno">  612</span>&#160;    <span class="keywordtype">unsigned</span> numLambda = depPoly-&gt;getNumLambda(), nLoopX = depPoly-&gt;getDim0(),</div>
-<div class="line"><a name="l00613"></a><span class="lineno">  613</span>&#160;             nLoopY = depPoly-&gt;getDim1(), numLoopsTotal = nLoopX + nLoopY;</div>
-<div class="line"><a name="l00614"></a><span class="lineno">  614</span>&#160;    MutPtrVector&lt;int64_t&gt; sch{math::vector&lt;int64_t&gt;(&amp;alloc, numLoopsTotal + 2)};</div>
-<div class="line"><a name="l00615"></a><span class="lineno">  615</span>&#160;    sch[0] = sx-&gt;getOffsetOmega()[d];</div>
-<div class="line"><a name="l00616"></a><span class="lineno">  616</span>&#160;    sch[1] = sy-&gt;getOffsetOmega()[d];</div>
-<div class="line"><a name="l00617"></a><span class="lineno">  617</span>&#160;    sch[_(2, nLoopX + 2)] &lt;&lt; sx-&gt;getSchedule(d)[_(end - nLoopX, end)];</div>
-<div class="line"><a name="l00618"></a><span class="lineno">  618</span>&#160;    sch[_(nLoopX + 2, numLoopsTotal + 2)]</div>
-<div class="line"><a name="l00619"></a><span class="lineno">  619</span>&#160;      &lt;&lt; sy-&gt;getSchedule(d)[_(end - nLoopY, end)];</div>
-<div class="line"><a name="l00620"></a><span class="lineno">  620</span>&#160;    <span class="keywordflow">return</span> dependenceSatisfaction-&gt;satisfiable(alloc, sch, numLambda);</div>
-<div class="line"><a name="l00621"></a><span class="lineno">  621</span>&#160;  }</div>
-<div class="line"><a name="l00622"></a><span class="lineno">  622</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> isSatisfied(Arena&lt;&gt; alloc, <span class="keywordtype">size_t</span> d) <span class="keyword">const</span> -&gt; <span class="keywordtype">bool</span> {</div>
-<div class="line"><a name="l00623"></a><span class="lineno">  623</span>&#160;    <span class="keywordtype">unsigned</span> numLambda = depPoly-&gt;getNumLambda(),</div>
-<div class="line"><a name="l00624"></a><span class="lineno">  624</span>&#160;             numLoopsX = depPoly-&gt;getDim0(),</div>
-<div class="line"><a name="l00625"></a><span class="lineno">  625</span>&#160;             numLoopsTotal = numLoopsX + depPoly-&gt;getDim1();</div>
-<div class="line"><a name="l00626"></a><span class="lineno">  626</span>&#160;    MutPtrVector&lt;int64_t&gt; sch{math::vector&lt;int64_t&gt;(&amp;alloc, numLoopsTotal + 2)};</div>
-<div class="line"><a name="l00627"></a><span class="lineno">  627</span>&#160;    sch &lt;&lt; 0;</div>
-<div class="line"><a name="l00628"></a><span class="lineno">  628</span>&#160;    invariant(sch.size(), numLoopsTotal + 2);</div>
-<div class="line"><a name="l00629"></a><span class="lineno">  629</span>&#160;    sch[2 + d] = 1;</div>
-<div class="line"><a name="l00630"></a><span class="lineno">  630</span>&#160;    sch[2 + d + numLoopsX] = 1;</div>
-<div class="line"><a name="l00631"></a><span class="lineno">  631</span>&#160;    <span class="keywordflow">return</span> dependenceSatisfaction-&gt;satisfiable(alloc, sch, numLambda);</div>
-<div class="line"><a name="l00632"></a><span class="lineno">  632</span>&#160;  }</div>
-<div class="line"><a name="l00633"></a><span class="lineno">  633</span>&#160;  <span class="keyword">static</span> <span class="keyword">auto</span> checkDirection(Arena&lt;&gt; alloc,</div>
-<div class="line"><a name="l00634"></a><span class="lineno">  634</span>&#160;                             <span class="keyword">const</span> std::array&lt;NotNull&lt;math::Simplex&gt;, 2&gt; &amp;p,</div>
-<div class="line"><a name="l00635"></a><span class="lineno">  635</span>&#160;                             NotNull&lt;const IR::Addr&gt; x,</div>
-<div class="line"><a name="l00636"></a><span class="lineno">  636</span>&#160;                             NotNull&lt;const IR::Addr&gt; y,</div>
-<div class="line"><a name="l00637"></a><span class="lineno">  637</span>&#160;                             NotNull&lt;const AffineSchedule&gt; xSchedule,</div>
-<div class="line"><a name="l00638"></a><span class="lineno">  638</span>&#160;                             NotNull&lt;const AffineSchedule&gt; ySchedule,</div>
-<div class="line"><a name="l00639"></a><span class="lineno">  639</span>&#160;                             <span class="keywordtype">unsigned</span> numLambda, Col nonTimeDim) -&gt; <span class="keywordtype">bool</span> {</div>
-<div class="line"><a name="l00640"></a><span class="lineno">  640</span>&#160;    <span class="keyword">const</span> <span class="keyword">auto</span> &amp;[fxy, fyx] = p;</div>
-<div class="line"><a name="l00641"></a><span class="lineno">  641</span>&#160;    <span class="keywordtype">unsigned</span> numLoopsX = x-&gt;getNumLoops(), numLoopsY = y-&gt;getNumLoops(),</div>
-<div class="line"><a name="l00642"></a><span class="lineno">  642</span>&#160;             numLoopsTotal = numLoopsX + numLoopsY;</div>
-<div class="line"><a name="l00643"></a><span class="lineno">  643</span>&#160;<span class="preprocessor">#ifndef NDEBUG</span></div>
-<div class="line"><a name="l00644"></a><span class="lineno">  644</span>&#160;    <span class="keywordtype">unsigned</span> numLoopsCommon = std::min(numLoopsX, numLoopsY);</div>
-<div class="line"><a name="l00645"></a><span class="lineno">  645</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00646"></a><span class="lineno">  646</span>&#160;    SquarePtrMatrix&lt;int64_t&gt; xPhi = xSchedule-&gt;getPhi();</div>
-<div class="line"><a name="l00647"></a><span class="lineno">  647</span>&#160;    SquarePtrMatrix&lt;int64_t&gt; yPhi = ySchedule-&gt;getPhi();</div>
-<div class="line"><a name="l00648"></a><span class="lineno">  648</span>&#160;    PtrVector&lt;int64_t&gt; xOffOmega = xSchedule-&gt;getOffsetOmega();</div>
-<div class="line"><a name="l00649"></a><span class="lineno">  649</span>&#160;    PtrVector&lt;int64_t&gt; yOffOmega = ySchedule-&gt;getOffsetOmega();</div>
-<div class="line"><a name="l00650"></a><span class="lineno">  650</span>&#160;    PtrVector&lt;int64_t&gt; xFusOmega = xSchedule-&gt;getFusionOmega();</div>
-<div class="line"><a name="l00651"></a><span class="lineno">  651</span>&#160;    PtrVector&lt;int64_t&gt; yFusOmega = ySchedule-&gt;getFusionOmega();</div>
-<div class="line"><a name="l00652"></a><span class="lineno">  652</span>&#160;    MutPtrVector&lt;int64_t&gt; sch{math::vector&lt;int64_t&gt;(&amp;alloc, numLoopsTotal + 2)};</div>
-<div class="line"><a name="l00653"></a><span class="lineno">  653</span>&#160;    <span class="comment">// i iterates from outer-most to inner most common loop</span></div>
-<div class="line"><a name="l00654"></a><span class="lineno">  654</span>&#160;    <span class="keywordflow">for</span> (ptrdiff_t i = 0; <span class="comment">/*i &lt;= numLoopsCommon*/</span>; ++i) {</div>
-<div class="line"><a name="l00655"></a><span class="lineno">  655</span>&#160;      <span class="keywordflow">if</span> (yFusOmega[i] != xFusOmega[i]) <span class="keywordflow">return</span> yFusOmega[i] &gt; xFusOmega[i];</div>
-<div class="line"><a name="l00656"></a><span class="lineno">  656</span>&#160;      <span class="comment">// we should not be able to reach `numLoopsCommon`</span></div>
-<div class="line"><a name="l00657"></a><span class="lineno">  657</span>&#160;      <span class="comment">// because at the very latest, this last schedule value</span></div>
-<div class="line"><a name="l00658"></a><span class="lineno">  658</span>&#160;      <span class="comment">// should be different, because either:</span></div>
-<div class="line"><a name="l00659"></a><span class="lineno">  659</span>&#160;      <span class="comment">// if (numLoopsX == numLoopsY){</span></div>
-<div class="line"><a name="l00660"></a><span class="lineno">  660</span>&#160;      <span class="comment">//   we&#39;re at the inner most loop, where one of the instructions</span></div>
-<div class="line"><a name="l00661"></a><span class="lineno">  661</span>&#160;      <span class="comment">//   must have appeared before the other.</span></div>
-<div class="line"><a name="l00662"></a><span class="lineno">  662</span>&#160;      <span class="comment">// } else {</span></div>
-<div class="line"><a name="l00663"></a><span class="lineno">  663</span>&#160;      <span class="comment">//   the loop nests differ in depth, in which case the deeper</span></div>
-<div class="line"><a name="l00664"></a><span class="lineno">  664</span>&#160;      <span class="comment">//   loop must appear either above or below the instructions</span></div>
-<div class="line"><a name="l00665"></a><span class="lineno">  665</span>&#160;      <span class="comment">//   present at that level</span></div>
-<div class="line"><a name="l00666"></a><span class="lineno">  666</span>&#160;      <span class="comment">// }</span></div>
-<div class="line"><a name="l00667"></a><span class="lineno">  667</span>&#160;      assert(i != numLoopsCommon);</div>
-<div class="line"><a name="l00668"></a><span class="lineno">  668</span>&#160;      sch[0] = xOffOmega[i];</div>
-<div class="line"><a name="l00669"></a><span class="lineno">  669</span>&#160;      sch[1] = yOffOmega[i];</div>
-<div class="line"><a name="l00670"></a><span class="lineno">  670</span>&#160;      sch[_(2, 2 + numLoopsX)] &lt;&lt; xPhi(last - i, _);</div>
-<div class="line"><a name="l00671"></a><span class="lineno">  671</span>&#160;      sch[_(2 + numLoopsX, 2 + numLoopsTotal)] &lt;&lt; yPhi(last - i, _);</div>
-<div class="line"><a name="l00672"></a><span class="lineno">  672</span>&#160;      <span class="keywordflow">if</span> (fxy-&gt;unSatisfiableZeroRem(alloc, sch, numLambda,</div>
-<div class="line"><a name="l00673"></a><span class="lineno">  673</span>&#160;                                    <span class="keywordtype">unsigned</span>(nonTimeDim))) {</div>
-<div class="line"><a name="l00674"></a><span class="lineno">  674</span>&#160;        assert(!fyx-&gt;unSatisfiableZeroRem(alloc, sch, numLambda,</div>
-<div class="line"><a name="l00675"></a><span class="lineno">  675</span>&#160;                                          <span class="keywordtype">unsigned</span>(nonTimeDim)));</div>
-<div class="line"><a name="l00676"></a><span class="lineno">  676</span>&#160;        <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
-<div class="line"><a name="l00677"></a><span class="lineno">  677</span>&#160;      }</div>
-<div class="line"><a name="l00678"></a><span class="lineno">  678</span>&#160;      <span class="keywordflow">if</span> (fyx-&gt;unSatisfiableZeroRem(alloc, sch, numLambda,</div>
-<div class="line"><a name="l00679"></a><span class="lineno">  679</span>&#160;                                    <span class="keywordtype">unsigned</span>(nonTimeDim)))</div>
-<div class="line"><a name="l00680"></a><span class="lineno">  680</span>&#160;        <span class="keywordflow">return</span> <span class="keyword">true</span>;</div>
-<div class="line"><a name="l00681"></a><span class="lineno">  681</span>&#160;    }</div>
-<div class="line"><a name="l00682"></a><span class="lineno">  682</span>&#160;    <span class="comment">// assert(false);</span></div>
-<div class="line"><a name="l00683"></a><span class="lineno">  683</span>&#160;    <span class="comment">// return false;</span></div>
-<div class="line"><a name="l00684"></a><span class="lineno">  684</span>&#160;  }</div>
-<div class="line"><a name="l00685"></a><span class="lineno">  685</span>&#160;  <span class="comment">// returns `true` if forward, x-&gt;y</span></div>
-<div class="line"><a name="l00686"></a><span class="lineno">  686</span>&#160;  <span class="keyword">static</span> <span class="keyword">auto</span> checkDirection(Arena&lt;&gt; alloc,</div>
-<div class="line"><a name="l00687"></a><span class="lineno">  687</span>&#160;                             <span class="keyword">const</span> std::array&lt;NotNull&lt;math::Simplex&gt;, 2&gt; &amp;p,</div>
-<div class="line"><a name="l00688"></a><span class="lineno">  688</span>&#160;                             NotNull&lt;const IR::Addr&gt; x,</div>
-<div class="line"><a name="l00689"></a><span class="lineno">  689</span>&#160;                             NotNull&lt;const IR::Addr&gt; y, <span class="keywordtype">unsigned</span> numLambda,</div>
-<div class="line"><a name="l00690"></a><span class="lineno">  690</span>&#160;                             Col nonTimeDim) -&gt; <span class="keywordtype">bool</span> {</div>
-<div class="line"><a name="l00691"></a><span class="lineno">  691</span>&#160;    <span class="keyword">const</span> <span class="keyword">auto</span> &amp;[fxy, fyx] = p;</div>
-<div class="line"><a name="l00692"></a><span class="lineno">  692</span>&#160;    <span class="keywordtype">unsigned</span> numLoopsX = x-&gt;getNumLoops(), nTD = unsigned(nonTimeDim);</div>
-<div class="line"><a name="l00693"></a><span class="lineno">  693</span>&#160;<span class="preprocessor">#ifndef NDEBUG</span></div>
-<div class="line"><a name="l00694"></a><span class="lineno">  694</span>&#160;    <span class="keyword">const</span> <span class="keywordtype">unsigned</span> numLoopsCommon = std::min(numLoopsX, y-&gt;getNumLoops());</div>
-<div class="line"><a name="l00695"></a><span class="lineno">  695</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00696"></a><span class="lineno">  696</span>&#160;    PtrVector&lt;int64_t&gt; xFusOmega = x-&gt;getFusionOmega();</div>
-<div class="line"><a name="l00697"></a><span class="lineno">  697</span>&#160;    PtrVector&lt;int64_t&gt; yFusOmega = y-&gt;getFusionOmega();</div>
-<div class="line"><a name="l00698"></a><span class="lineno">  698</span>&#160;    <span class="comment">// i iterates from outer-most to inner most common loop</span></div>
-<div class="line"><a name="l00699"></a><span class="lineno">  699</span>&#160;    <span class="keywordflow">for</span> (ptrdiff_t i = 0; <span class="comment">/*i &lt;= numLoopsCommon*/</span>; ++i) {</div>
-<div class="line"><a name="l00700"></a><span class="lineno">  700</span>&#160;      <span class="keywordflow">if</span> (yFusOmega[i] != xFusOmega[i]) <span class="keywordflow">return</span> yFusOmega[i] &gt; xFusOmega[i];</div>
-<div class="line"><a name="l00701"></a><span class="lineno">  701</span>&#160;      <span class="comment">// we should not be able to reach `numLoopsCommon`</span></div>
-<div class="line"><a name="l00702"></a><span class="lineno">  702</span>&#160;      <span class="comment">// because at the very latest, this last schedule value</span></div>
-<div class="line"><a name="l00703"></a><span class="lineno">  703</span>&#160;      <span class="comment">// should be different, because either:</span></div>
-<div class="line"><a name="l00704"></a><span class="lineno">  704</span>&#160;      <span class="comment">// if (numLoopsX == numLoopsY){</span></div>
-<div class="line"><a name="l00705"></a><span class="lineno">  705</span>&#160;      <span class="comment">//   we&#39;re at the inner most loop, where one of the instructions</span></div>
-<div class="line"><a name="l00706"></a><span class="lineno">  706</span>&#160;      <span class="comment">//   must have appeared before the other.</span></div>
-<div class="line"><a name="l00707"></a><span class="lineno">  707</span>&#160;      <span class="comment">// } else {</span></div>
-<div class="line"><a name="l00708"></a><span class="lineno">  708</span>&#160;      <span class="comment">//   the loop nests differ in depth, in which case the deeper</span></div>
-<div class="line"><a name="l00709"></a><span class="lineno">  709</span>&#160;      <span class="comment">//   loop must appear either above or below the instructions</span></div>
-<div class="line"><a name="l00710"></a><span class="lineno">  710</span>&#160;      <span class="comment">//   present at that level</span></div>
-<div class="line"><a name="l00711"></a><span class="lineno">  711</span>&#160;      <span class="comment">// }</span></div>
-<div class="line"><a name="l00712"></a><span class="lineno">  712</span>&#160;      assert(i &lt; numLoopsCommon);</div>
-<div class="line"><a name="l00713"></a><span class="lineno">  713</span>&#160;      std::array&lt;ptrdiff_t, 2&gt; inds{2 + i, 2 + i + numLoopsX};</div>
-<div class="line"><a name="l00714"></a><span class="lineno">  714</span>&#160;      <span class="keywordflow">if</span> (fxy-&gt;unSatisfiableZeroRem(alloc, numLambda, inds, nTD)) {</div>
-<div class="line"><a name="l00715"></a><span class="lineno">  715</span>&#160;        assert(!fyx-&gt;unSatisfiableZeroRem(alloc, numLambda, inds, nTD));</div>
-<div class="line"><a name="l00716"></a><span class="lineno">  716</span>&#160;        <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
-<div class="line"><a name="l00717"></a><span class="lineno">  717</span>&#160;      }</div>
-<div class="line"><a name="l00718"></a><span class="lineno">  718</span>&#160;      <span class="keywordflow">if</span> (fyx-&gt;unSatisfiableZeroRem(alloc, numLambda, inds, nTD)) <span class="keywordflow">return</span> <span class="keyword">true</span>;</div>
-<div class="line"><a name="l00719"></a><span class="lineno">  719</span>&#160;    }</div>
-<div class="line"><a name="l00720"></a><span class="lineno">  720</span>&#160;    invariant(<span class="keyword">false</span>);</div>
-<div class="line"><a name="l00721"></a><span class="lineno">  721</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
-<div class="line"><a name="l00722"></a><span class="lineno">  722</span>&#160;  }</div>
-<div class="line"><a name="l00723"></a><span class="lineno">  723</span>&#160; </div>
-<div class="line"><a name="l00724"></a><span class="lineno">  724</span>&#160;  <span class="keyword">static</span> <span class="keywordtype">void</span> check(Arena&lt;&gt; *alloc, NotNull&lt;IR::Addr&gt; x, NotNull&lt;IR::Addr&gt; y) {</div>
-<div class="line"><a name="l00725"></a><span class="lineno">  725</span>&#160;    <span class="comment">// TODO: implement gcd test</span></div>
-<div class="line"><a name="l00726"></a><span class="lineno">  726</span>&#160;    <span class="comment">// if (x.gcdKnownIndependent(y)) return {};</span></div>
-<div class="line"><a name="l00727"></a><span class="lineno">  727</span>&#160;    DepPoly *dxy{DepPoly::dependence(alloc, x, y)};</div>
-<div class="line"><a name="l00728"></a><span class="lineno">  728</span>&#160;    <span class="keywordflow">if</span> (!dxy) <span class="keywordflow">return</span>;</div>
-<div class="line"><a name="l00729"></a><span class="lineno">  729</span>&#160;    invariant(x-&gt;getNumLoops(), dxy-&gt;getDim0());</div>
-<div class="line"><a name="l00730"></a><span class="lineno">  730</span>&#160;    invariant(y-&gt;getNumLoops(), dxy-&gt;getDim1());</div>
-<div class="line"><a name="l00731"></a><span class="lineno">  731</span>&#160;    invariant(x-&gt;getNumLoops() + y-&gt;getNumLoops(), dxy-&gt;getNumPhiCoef());</div>
-<div class="line"><a name="l00732"></a><span class="lineno">  732</span>&#160;    <span class="comment">// note that we set boundAbove=true, so we reverse the</span></div>
-<div class="line"><a name="l00733"></a><span class="lineno">  733</span>&#160;    <span class="comment">// dependence direction for the dependency we week, we&#39;ll</span></div>
-<div class="line"><a name="l00734"></a><span class="lineno">  734</span>&#160;    <span class="comment">// discard the program variables x then y</span></div>
-<div class="line"><a name="l00735"></a><span class="lineno">  735</span>&#160;    std::array&lt;NotNull&lt;math::Simplex&gt;, 2&gt; pair(dxy-&gt;farkasPair(alloc));</div>
-<div class="line"><a name="l00736"></a><span class="lineno">  736</span>&#160;    <span class="keywordflow">if</span> (dxy-&gt;getTimeDim()) timeCheck(alloc, dxy, x, y, pair);</div>
-<div class="line"><a name="l00737"></a><span class="lineno">  737</span>&#160;    <span class="keywordflow">else</span> timelessCheck(alloc, dxy, x, y, pair);</div>
-<div class="line"><a name="l00738"></a><span class="lineno">  738</span>&#160;  }</div>
-<div class="line"><a name="l00739"></a><span class="lineno">  739</span>&#160;  <span class="keyword">static</span> <span class="keywordtype">void</span> copyDependencies(Arena&lt;&gt; *alloc, IR::Addr *src, IR::Addr *dst) {</div>
-<div class="line"><a name="l00740"></a><span class="lineno">  740</span>&#160;    <span class="keywordflow">for</span> (Dependence *d = src-&gt;getEdgeIn(); d; d = d-&gt;getNextInput()) {</div>
-<div class="line"><a name="l00741"></a><span class="lineno">  741</span>&#160;      IR::Addr *input = d-&gt;in;</div>
-<div class="line"><a name="l00742"></a><span class="lineno">  742</span>&#160;      <span class="keywordflow">if</span> (input-&gt;isLoad()) <span class="keywordflow">continue</span>;</div>
-<div class="line"><a name="l00743"></a><span class="lineno">  743</span>&#160;      <span class="keyword">auto</span> *in = alloc-&gt;create&lt;Dependence&gt;(d-&gt;getDepPoly(), d-&gt;getSimplexPair(),</div>
-<div class="line"><a name="l00744"></a><span class="lineno">  744</span>&#160;                                           input, dst, d-&gt;isForward());</div>
-<div class="line"><a name="l00745"></a><span class="lineno">  745</span>&#160;      dst-&gt;addEdgeIn(in);</div>
-<div class="line"><a name="l00746"></a><span class="lineno">  746</span>&#160;    }</div>
-<div class="line"><a name="l00747"></a><span class="lineno">  747</span>&#160;    <span class="keywordflow">for</span> (Dependence *d = src-&gt;getEdgeOut(); d; d = d-&gt;getNextOutput()) {</div>
-<div class="line"><a name="l00748"></a><span class="lineno">  748</span>&#160;      IR::Addr *output = d-&gt;out;</div>
-<div class="line"><a name="l00749"></a><span class="lineno">  749</span>&#160;      <span class="keywordflow">if</span> (output-&gt;isLoad()) <span class="keywordflow">continue</span>;</div>
-<div class="line"><a name="l00750"></a><span class="lineno">  750</span>&#160;      <span class="keyword">auto</span> *out = alloc-&gt;create&lt;Dependence&gt;(</div>
-<div class="line"><a name="l00751"></a><span class="lineno">  751</span>&#160;        d-&gt;getDepPoly(), d-&gt;getSimplexPair(), dst, output, d-&gt;isForward());</div>
-<div class="line"><a name="l00752"></a><span class="lineno">  752</span>&#160;      dst-&gt;addEdgeOut(out);</div>
-<div class="line"><a name="l00753"></a><span class="lineno">  753</span>&#160;    }</div>
-<div class="line"><a name="l00754"></a><span class="lineno">  754</span>&#160;  }</div>
-<div class="line"><a name="l00755"></a><span class="lineno">  755</span>&#160;  <span class="comment">// reload store `x`</span></div>
-<div class="line"><a name="l00756"></a><span class="lineno">  756</span>&#160;  <span class="keyword">static</span> <span class="keyword">auto</span> reload(Arena&lt;&gt; *alloc, NotNull&lt;IR::Addr&gt; store)</div>
-<div class="line"><a name="l00757"></a><span class="lineno">  757</span>&#160;    -&gt; NotNull&lt;IR::Addr&gt; {</div>
-<div class="line"><a name="l00758"></a><span class="lineno">  758</span>&#160;    NotNull&lt;DepPoly&gt; dxy{DepPoly::self(alloc, store)};</div>
-<div class="line"><a name="l00759"></a><span class="lineno">  759</span>&#160;    std::array&lt;NotNull&lt;math::Simplex&gt;, 2&gt; pair(dxy-&gt;farkasPair(alloc));</div>
-<div class="line"><a name="l00760"></a><span class="lineno">  760</span>&#160;    NotNull&lt;IR::Addr&gt; load = store-&gt;reload(alloc);</div>
-<div class="line"><a name="l00761"></a><span class="lineno">  761</span>&#160;    copyDependencies(alloc, store, load);</div>
-<div class="line"><a name="l00762"></a><span class="lineno">  762</span>&#160;    <span class="keywordflow">if</span> (dxy-&gt;getTimeDim()) timeCheck(alloc, dxy, store, load, pair, <span class="keyword">true</span>);</div>
-<div class="line"><a name="l00763"></a><span class="lineno">  763</span>&#160;    <span class="keywordflow">else</span> timelessCheck(alloc, dxy, store, load, pair, <span class="keyword">true</span>);</div>
-<div class="line"><a name="l00764"></a><span class="lineno">  764</span>&#160;    <span class="keywordflow">return</span> load;</div>
-<div class="line"><a name="l00765"></a><span class="lineno">  765</span>&#160;  }</div>
-<div class="line"><a name="l00766"></a><span class="lineno">  766</span>&#160;  constexpr <span class="keyword">auto</span> replaceInput(NotNull&lt;IR::Addr&gt; newIn) -&gt; Dependence {</div>
-<div class="line"><a name="l00767"></a><span class="lineno">  767</span>&#160;    Dependence edge = *<span class="keyword">this</span>;</div>
-<div class="line"><a name="l00768"></a><span class="lineno">  768</span>&#160;    edge.in = newIn;</div>
-<div class="line"><a name="l00769"></a><span class="lineno">  769</span>&#160;    <span class="keywordflow">return</span> edge;</div>
-<div class="line"><a name="l00770"></a><span class="lineno">  770</span>&#160;  }</div>
-<div class="line"><a name="l00771"></a><span class="lineno">  771</span>&#160;  constexpr <span class="keyword">auto</span> replaceOutput(NotNull&lt;IR::Addr&gt; newOut) -&gt; Dependence {</div>
-<div class="line"><a name="l00772"></a><span class="lineno">  772</span>&#160;    Dependence edge = *<span class="keyword">this</span>;</div>
-<div class="line"><a name="l00773"></a><span class="lineno">  773</span>&#160;    edge.out = newOut;</div>
-<div class="line"><a name="l00774"></a><span class="lineno">  774</span>&#160;    <span class="keywordflow">return</span> edge;</div>
-<div class="line"><a name="l00775"></a><span class="lineno">  775</span>&#160;  }</div>
-<div class="line"><a name="l00776"></a><span class="lineno">  776</span>&#160; </div>
-<div class="line"><a name="l00777"></a><span class="lineno">  777</span>&#160;  <span class="keyword">friend</span> <span class="keyword">inline</span> <span class="keyword">auto</span> operator&lt;&lt;(llvm::raw_ostream &amp;os, <span class="keyword">const</span> Dependence &amp;d)</div>
-<div class="line"><a name="l00778"></a><span class="lineno">  778</span>&#160;    -&gt; llvm::raw_ostream &amp; {</div>
-<div class="line"><a name="l00779"></a><span class="lineno">  779</span>&#160;    os &lt;&lt; <span class="stringliteral">&quot;Dependence Poly &quot;</span>;</div>
-<div class="line"><a name="l00780"></a><span class="lineno">  780</span>&#160;    <span class="keywordflow">if</span> (d.isForward()) os &lt;&lt; <span class="stringliteral">&quot;x -&gt; y:&quot;</span>;</div>
-<div class="line"><a name="l00781"></a><span class="lineno">  781</span>&#160;    <span class="keywordflow">else</span> os &lt;&lt; <span class="stringliteral">&quot;y -&gt; x:&quot;</span>;</div>
-<div class="line"><a name="l00782"></a><span class="lineno">  782</span>&#160;    os &lt;&lt; <span class="stringliteral">&quot;\n\tInput:\n&quot;</span> &lt;&lt; *d.in;</div>
-<div class="line"><a name="l00783"></a><span class="lineno">  783</span>&#160;    os &lt;&lt; <span class="stringliteral">&quot;\n\tOutput:\n&quot;</span> &lt;&lt; *d.out;</div>
-<div class="line"><a name="l00784"></a><span class="lineno">  784</span>&#160;    os &lt;&lt; <span class="stringliteral">&quot;\nA = &quot;</span> &lt;&lt; d.depPoly-&gt;getA() &lt;&lt; <span class="stringliteral">&quot;\nE = &quot;</span> &lt;&lt; d.depPoly-&gt;getE()</div>
-<div class="line"><a name="l00785"></a><span class="lineno">  785</span>&#160;       &lt;&lt; <span class="stringliteral">&quot;\nSchedule Constraints:&quot;</span></div>
-<div class="line"><a name="l00786"></a><span class="lineno">  786</span>&#160;       &lt;&lt; d.dependenceSatisfaction-&gt;getConstraints()</div>
-<div class="line"><a name="l00787"></a><span class="lineno">  787</span>&#160;       &lt;&lt; <span class="stringliteral">&quot;\nBounding Constraints:&quot;</span> &lt;&lt; d.dependenceBounding-&gt;getConstraints();</div>
-<div class="line"><a name="l00788"></a><span class="lineno">  788</span>&#160;    <span class="keywordflow">return</span> os &lt;&lt; <span class="stringliteral">&quot;\nSatisfied (isCondIndep() == &quot;</span> &lt;&lt; d.isCondIndep()</div>
-<div class="line"><a name="l00789"></a><span class="lineno">  789</span>&#160;              &lt;&lt; <span class="stringliteral">&quot;) = &quot;</span> &lt;&lt; int(d.satLevel()) &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
-<div class="line"><a name="l00790"></a><span class="lineno">  790</span>&#160;  }</div>
-<div class="line"><a name="l00791"></a><span class="lineno">  791</span>&#160;};</div>
-<div class="line"><a name="l00792"></a><span class="lineno">  792</span>&#160; </div>
-<div class="line"><a name="l00793"></a><span class="lineno">  793</span>&#160;} <span class="comment">// namespace poly</span></div>
-<div class="line"><a name="l00794"></a><span class="lineno">  794</span>&#160;<span class="keyword">namespace </span>IR {</div>
-<div class="line"><a name="l00795"></a><span class="lineno">  795</span>&#160;constexpr <span class="keywordtype">void</span> IR::Addr::forEachInput(<span class="keyword">const</span> <span class="keyword">auto</span> &amp;f) {</div>
-<div class="line"><a name="l00796"></a><span class="lineno">  796</span>&#160;  poly::Dependence *d = edgeIn;</div>
-<div class="line"><a name="l00797"></a><span class="lineno">  797</span>&#160;  <span class="keywordflow">while</span> (d) {</div>
-<div class="line"><a name="l00798"></a><span class="lineno">  798</span>&#160;    f(d-&gt;input());</div>
-<div class="line"><a name="l00799"></a><span class="lineno">  799</span>&#160;    d = d-&gt;getNextInput();</div>
-<div class="line"><a name="l00800"></a><span class="lineno">  800</span>&#160;  }</div>
-<div class="line"><a name="l00801"></a><span class="lineno">  801</span>&#160;}</div>
-<div class="line"><a name="l00802"></a><span class="lineno">  802</span>&#160;<span class="keyword">inline</span> constexpr <span class="keywordtype">void</span> Addr::setEdgeIn(Dependence *dep) {</div>
-<div class="line"><a name="l00803"></a><span class="lineno">  803</span>&#160;  edgeIn = dep-&gt;setNextInput(edgeIn);</div>
-<div class="line"><a name="l00804"></a><span class="lineno">  804</span>&#160;}</div>
-<div class="line"><a name="l00805"></a><span class="lineno">  805</span>&#160;<span class="keyword">inline</span> constexpr <span class="keywordtype">void</span> Addr::setEdgeOut(Dependence *dep) {</div>
-<div class="line"><a name="l00806"></a><span class="lineno">  806</span>&#160;  edgeOut = dep-&gt;setNextOutput(edgeOut);</div>
+<div class="line"><a name="l00495"></a><span class="lineno">  495</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> satPhiCoefs() const -&gt; std::array&lt;PtrMatrix&lt;int64_t&gt;, 2&gt; {</div>
+<div class="line"><a name="l00496"></a><span class="lineno">  496</span>&#160;    PtrMatrix&lt;int64_t&gt; phiCoefsIn = getSatPhi1Coefs(),</div>
+<div class="line"><a name="l00497"></a><span class="lineno">  497</span>&#160;                       phiCoefsOut = getSatPhi0Coefs();</div>
+<div class="line"><a name="l00498"></a><span class="lineno">  498</span>&#160;    <span class="keywordflow">if</span> (isForward()) std::swap(phiCoefsIn, phiCoefsOut);</div>
+<div class="line"><a name="l00499"></a><span class="lineno">  499</span>&#160;    <span class="keywordflow">return</span> {phiCoefsIn, phiCoefsOut};</div>
+<div class="line"><a name="l00500"></a><span class="lineno">  500</span>&#160;  }</div>
+<div class="line"><a name="l00501"></a><span class="lineno">  501</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> bndPhiCoefs() const -&gt; std::array&lt;PtrMatrix&lt;int64_t&gt;, 2&gt; {</div>
+<div class="line"><a name="l00502"></a><span class="lineno">  502</span>&#160;    PtrMatrix&lt;int64_t&gt; phiCoefsIn = getBndPhi1Coefs(),</div>
+<div class="line"><a name="l00503"></a><span class="lineno">  503</span>&#160;                       phiCoefsOut = getBndPhi0Coefs();</div>
+<div class="line"><a name="l00504"></a><span class="lineno">  504</span>&#160;    <span class="keywordflow">if</span> (isForward()) std::swap(phiCoefsIn, phiCoefsOut);</div>
+<div class="line"><a name="l00505"></a><span class="lineno">  505</span>&#160;    <span class="keywordflow">return</span> {phiCoefsIn, phiCoefsOut};</div>
+<div class="line"><a name="l00506"></a><span class="lineno">  506</span>&#160;  }</div>
+<div class="line"><a name="l00507"></a><span class="lineno">  507</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> isSatisfied(Arena&lt;&gt; alloc,</div>
+<div class="line"><a name="l00508"></a><span class="lineno">  508</span>&#160;                                 NotNull&lt;const AffineSchedule&gt; schIn,</div>
+<div class="line"><a name="l00509"></a><span class="lineno">  509</span>&#160;                                 NotNull&lt;const AffineSchedule&gt; schOut) <span class="keyword">const</span></div>
+<div class="line"><a name="l00510"></a><span class="lineno">  510</span>&#160;    -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l00511"></a><span class="lineno">  511</span>&#160;    <span class="keywordtype">unsigned</span> numLoopsIn = in-&gt;getNumLoops(), numLoopsOut = out-&gt;getNumLoops(),</div>
+<div class="line"><a name="l00512"></a><span class="lineno">  512</span>&#160;             numLoopsCommon = std::min(numLoopsIn, numLoopsOut),</div>
+<div class="line"><a name="l00513"></a><span class="lineno">  513</span>&#160;             numLoopsTotal = numLoopsIn + numLoopsOut,</div>
+<div class="line"><a name="l00514"></a><span class="lineno">  514</span>&#160;             numVar = numLoopsIn + numLoopsOut + 2;</div>
+<div class="line"><a name="l00515"></a><span class="lineno">  515</span>&#160;    invariant(dependenceSatisfaction-&gt;getNumVars(), numVar);</div>
+<div class="line"><a name="l00516"></a><span class="lineno">  516</span>&#160;    <span class="keyword">auto</span> schv = vector(&amp;alloc, numVar, int64_t(0));</div>
+<div class="line"><a name="l00517"></a><span class="lineno">  517</span>&#160;    <span class="keyword">const</span> SquarePtrMatrix&lt;int64_t&gt; inPhi = schIn-&gt;getPhi();</div>
+<div class="line"><a name="l00518"></a><span class="lineno">  518</span>&#160;    <span class="keyword">const</span> SquarePtrMatrix&lt;int64_t&gt; outPhi = schOut-&gt;getPhi();</div>
+<div class="line"><a name="l00519"></a><span class="lineno">  519</span>&#160;    <span class="keyword">auto</span> inFusOmega = schIn-&gt;getFusionOmega();</div>
+<div class="line"><a name="l00520"></a><span class="lineno">  520</span>&#160;    <span class="keyword">auto</span> outFusOmega = schOut-&gt;getFusionOmega();</div>
+<div class="line"><a name="l00521"></a><span class="lineno">  521</span>&#160;    <span class="keyword">auto</span> inOffOmega = schIn-&gt;getOffsetOmega();</div>
+<div class="line"><a name="l00522"></a><span class="lineno">  522</span>&#160;    <span class="keyword">auto</span> outOffOmega = schOut-&gt;getOffsetOmega();</div>
+<div class="line"><a name="l00523"></a><span class="lineno">  523</span>&#160;    <span class="keyword">const</span> <span class="keywordtype">unsigned</span> numLambda = getNumLambda();</div>
+<div class="line"><a name="l00524"></a><span class="lineno">  524</span>&#160;    <span class="comment">// when i == numLoopsCommon, we&#39;ve passed the last loop</span></div>
+<div class="line"><a name="l00525"></a><span class="lineno">  525</span>&#160;    <span class="keywordflow">for</span> (ptrdiff_t i = 0; i &lt;= numLoopsCommon; ++i) {</div>
+<div class="line"><a name="l00526"></a><span class="lineno">  526</span>&#160;      <span class="keywordflow">if</span> (ptrdiff_t o2idiff = outFusOmega[i] - inFusOmega[i])</div>
+<div class="line"><a name="l00527"></a><span class="lineno">  527</span>&#160;        <span class="keywordflow">return</span> (o2idiff &gt; 0);</div>
+<div class="line"><a name="l00528"></a><span class="lineno">  528</span>&#160;      <span class="comment">// we should not be able to reach `numLoopsCommon`</span></div>
+<div class="line"><a name="l00529"></a><span class="lineno">  529</span>&#160;      <span class="comment">// because at the very latest, this last schedule value</span></div>
+<div class="line"><a name="l00530"></a><span class="lineno">  530</span>&#160;      <span class="comment">// should be different, because either:</span></div>
+<div class="line"><a name="l00531"></a><span class="lineno">  531</span>&#160;      <span class="comment">// if (numLoopsX == numLoopsY){</span></div>
+<div class="line"><a name="l00532"></a><span class="lineno">  532</span>&#160;      <span class="comment">//   we&#39;re at the inner most loop, where one of the instructions</span></div>
+<div class="line"><a name="l00533"></a><span class="lineno">  533</span>&#160;      <span class="comment">//   must have appeared before the other.</span></div>
+<div class="line"><a name="l00534"></a><span class="lineno">  534</span>&#160;      <span class="comment">// } else {</span></div>
+<div class="line"><a name="l00535"></a><span class="lineno">  535</span>&#160;      <span class="comment">//   the loop nests differ in depth, in which case the deeper</span></div>
+<div class="line"><a name="l00536"></a><span class="lineno">  536</span>&#160;      <span class="comment">//   loop must appear either above or below the instructions</span></div>
+<div class="line"><a name="l00537"></a><span class="lineno">  537</span>&#160;      <span class="comment">//   present at that level</span></div>
+<div class="line"><a name="l00538"></a><span class="lineno">  538</span>&#160;      <span class="comment">// }</span></div>
+<div class="line"><a name="l00539"></a><span class="lineno">  539</span>&#160;      invariant(i != numLoopsCommon);</div>
+<div class="line"><a name="l00540"></a><span class="lineno">  540</span>&#160;      <span class="comment">// forward means offset is 2nd - 1st</span></div>
+<div class="line"><a name="l00541"></a><span class="lineno">  541</span>&#160;      schv[0] = outOffOmega[i];</div>
+<div class="line"><a name="l00542"></a><span class="lineno">  542</span>&#160;      schv[1] = inOffOmega[i];</div>
+<div class="line"><a name="l00543"></a><span class="lineno">  543</span>&#160;      schv[_(2, 2 + numLoopsIn)] &lt;&lt; inPhi(last - i, _);</div>
+<div class="line"><a name="l00544"></a><span class="lineno">  544</span>&#160;      schv[_(2 + numLoopsIn, 2 + numLoopsTotal)] &lt;&lt; outPhi(last - i, _);</div>
+<div class="line"><a name="l00545"></a><span class="lineno">  545</span>&#160;      <span class="comment">// dependenceSatisfaction is phi_t - phi_s &gt;= 0</span></div>
+<div class="line"><a name="l00546"></a><span class="lineno">  546</span>&#160;      <span class="comment">// dependenceBounding is w + u&#39;N - (phi_t - phi_s) &gt;= 0</span></div>
+<div class="line"><a name="l00547"></a><span class="lineno">  547</span>&#160;      <span class="comment">// we implicitly 0-out `w` and `u` here,</span></div>
+<div class="line"><a name="l00548"></a><span class="lineno">  548</span>&#160;      <span class="keywordflow">if</span> (dependenceSatisfaction-&gt;unSatisfiable(alloc, schv, numLambda) ||</div>
+<div class="line"><a name="l00549"></a><span class="lineno">  549</span>&#160;          dependenceBounding-&gt;unSatisfiable(alloc, schv, numLambda)) {</div>
+<div class="line"><a name="l00550"></a><span class="lineno">  550</span>&#160;        <span class="comment">// if zerod-out bounding not &gt;= 0, then that means</span></div>
+<div class="line"><a name="l00551"></a><span class="lineno">  551</span>&#160;        <span class="comment">// phi_t - phi_s &gt; 0, so the dependence is satisfied</span></div>
+<div class="line"><a name="l00552"></a><span class="lineno">  552</span>&#160;        <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
+<div class="line"><a name="l00553"></a><span class="lineno">  553</span>&#160;      }</div>
+<div class="line"><a name="l00554"></a><span class="lineno">  554</span>&#160;    }</div>
+<div class="line"><a name="l00555"></a><span class="lineno">  555</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">true</span>;</div>
+<div class="line"><a name="l00556"></a><span class="lineno">  556</span>&#160;  }</div>
+<div class="line"><a name="l00557"></a><span class="lineno">  557</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> isSatisfied(Arena&lt;&gt; alloc, PtrVector&lt;unsigned&gt; inFusOmega,</div>
+<div class="line"><a name="l00558"></a><span class="lineno">  558</span>&#160;                                 PtrVector&lt;unsigned&gt; outFusOmega) <span class="keyword">const</span></div>
+<div class="line"><a name="l00559"></a><span class="lineno">  559</span>&#160;    -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l00560"></a><span class="lineno">  560</span>&#160;    <span class="keywordtype">unsigned</span> numLoopsIn = in-&gt;getNumLoops(), numLoopsOut = out-&gt;getNumLoops(),</div>
+<div class="line"><a name="l00561"></a><span class="lineno">  561</span>&#160;             numLoopsCommon = std::min(numLoopsIn, numLoopsOut),</div>
+<div class="line"><a name="l00562"></a><span class="lineno">  562</span>&#160;             numVar = numLoopsIn + numLoopsOut + 2;</div>
+<div class="line"><a name="l00563"></a><span class="lineno">  563</span>&#160;    invariant(dependenceSatisfaction-&gt;getNumVars(), numVar);</div>
+<div class="line"><a name="l00564"></a><span class="lineno">  564</span>&#160;    <span class="keyword">auto</span> schv = vector(&amp;alloc, numVar, int64_t(0));</div>
+<div class="line"><a name="l00565"></a><span class="lineno">  565</span>&#160;    <span class="comment">// Vector&lt;int64_t&gt; schv(dependenceSatisfaction-&gt;getNumVars(),int64_t(0));</span></div>
+<div class="line"><a name="l00566"></a><span class="lineno">  566</span>&#160;    <span class="keyword">const</span> <span class="keywordtype">unsigned</span> numLambda = getNumLambda();</div>
+<div class="line"><a name="l00567"></a><span class="lineno">  567</span>&#160;    <span class="comment">// when i == numLoopsCommon, we&#39;ve passed the last loop</span></div>
+<div class="line"><a name="l00568"></a><span class="lineno">  568</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt;= numLoopsCommon; ++i) {</div>
+<div class="line"><a name="l00569"></a><span class="lineno">  569</span>&#160;      <span class="keywordflow">if</span> (int64_t o2idiff = outFusOmega[i] - inFusOmega[i])</div>
+<div class="line"><a name="l00570"></a><span class="lineno">  570</span>&#160;        <span class="keywordflow">return</span> (o2idiff &gt; 0);</div>
+<div class="line"><a name="l00571"></a><span class="lineno">  571</span>&#160;      <span class="comment">// we should not be able to reach `numLoopsCommon`</span></div>
+<div class="line"><a name="l00572"></a><span class="lineno">  572</span>&#160;      <span class="comment">// because at the very latest, this last schedule value</span></div>
+<div class="line"><a name="l00573"></a><span class="lineno">  573</span>&#160;      <span class="comment">// should be different, because either:</span></div>
+<div class="line"><a name="l00574"></a><span class="lineno">  574</span>&#160;      <span class="comment">// if (numLoopsX == numLoopsY){</span></div>
+<div class="line"><a name="l00575"></a><span class="lineno">  575</span>&#160;      <span class="comment">//   we&#39;re at the inner most loop, where one of the instructions</span></div>
+<div class="line"><a name="l00576"></a><span class="lineno">  576</span>&#160;      <span class="comment">//   must have appeared before the other.</span></div>
+<div class="line"><a name="l00577"></a><span class="lineno">  577</span>&#160;      <span class="comment">// } else {</span></div>
+<div class="line"><a name="l00578"></a><span class="lineno">  578</span>&#160;      <span class="comment">//   the loop nests differ in depth, in which case the deeper</span></div>
+<div class="line"><a name="l00579"></a><span class="lineno">  579</span>&#160;      <span class="comment">//   loop must appear either above or below the instructions</span></div>
+<div class="line"><a name="l00580"></a><span class="lineno">  580</span>&#160;      <span class="comment">//   present at that level</span></div>
+<div class="line"><a name="l00581"></a><span class="lineno">  581</span>&#160;      <span class="comment">// }</span></div>
+<div class="line"><a name="l00582"></a><span class="lineno">  582</span>&#160;      invariant(i != numLoopsCommon);</div>
+<div class="line"><a name="l00583"></a><span class="lineno">  583</span>&#160;      schv[2 + i] = 1;</div>
+<div class="line"><a name="l00584"></a><span class="lineno">  584</span>&#160;      schv[2 + numLoopsIn + i] = 1;</div>
+<div class="line"><a name="l00585"></a><span class="lineno">  585</span>&#160;      <span class="comment">// forward means offset is 2nd - 1st</span></div>
+<div class="line"><a name="l00586"></a><span class="lineno">  586</span>&#160;      <span class="comment">// dependenceSatisfaction is phi_t - phi_s &gt;= 0</span></div>
+<div class="line"><a name="l00587"></a><span class="lineno">  587</span>&#160;      <span class="comment">// dependenceBounding is w + u&#39;N - (phi_t - phi_s) &gt;= 0</span></div>
+<div class="line"><a name="l00588"></a><span class="lineno">  588</span>&#160;      <span class="comment">// we implicitly 0-out `w` and `u` here,</span></div>
+<div class="line"><a name="l00589"></a><span class="lineno">  589</span>&#160;      <span class="keywordflow">if</span> (dependenceSatisfaction-&gt;unSatisfiable(alloc, schv, numLambda) ||</div>
+<div class="line"><a name="l00590"></a><span class="lineno">  590</span>&#160;          dependenceBounding-&gt;unSatisfiable(alloc, schv, numLambda)) {</div>
+<div class="line"><a name="l00591"></a><span class="lineno">  591</span>&#160;        <span class="comment">// if zerod-out bounding not &gt;= 0, then that means</span></div>
+<div class="line"><a name="l00592"></a><span class="lineno">  592</span>&#160;        <span class="comment">// phi_t - phi_s &gt; 0, so the dependence is satisfied</span></div>
+<div class="line"><a name="l00593"></a><span class="lineno">  593</span>&#160;        <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
+<div class="line"><a name="l00594"></a><span class="lineno">  594</span>&#160;      }</div>
+<div class="line"><a name="l00595"></a><span class="lineno">  595</span>&#160;      schv[2 + i] = 0;</div>
+<div class="line"><a name="l00596"></a><span class="lineno">  596</span>&#160;      schv[2 + numLoopsIn + i] = 0;</div>
+<div class="line"><a name="l00597"></a><span class="lineno">  597</span>&#160;    }</div>
+<div class="line"><a name="l00598"></a><span class="lineno">  598</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">true</span>;</div>
+<div class="line"><a name="l00599"></a><span class="lineno">  599</span>&#160;  }</div>
+<div class="line"><a name="l00600"></a><span class="lineno">  600</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> isSatisfied(Arena&lt;&gt; alloc,</div>
+<div class="line"><a name="l00601"></a><span class="lineno">  601</span>&#160;                                 NotNull&lt;const AffineSchedule&gt; sx,</div>
+<div class="line"><a name="l00602"></a><span class="lineno">  602</span>&#160;                                 NotNull&lt;const AffineSchedule&gt; sy,</div>
+<div class="line"><a name="l00603"></a><span class="lineno">  603</span>&#160;                                 <span class="keywordtype">size_t</span> d) <span class="keyword">const</span> -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l00604"></a><span class="lineno">  604</span>&#160;    <span class="keywordtype">unsigned</span> numLambda = depPoly-&gt;getNumLambda(), nLoopX = depPoly-&gt;getDim0(),</div>
+<div class="line"><a name="l00605"></a><span class="lineno">  605</span>&#160;             nLoopY = depPoly-&gt;getDim1(), numLoopsTotal = nLoopX + nLoopY;</div>
+<div class="line"><a name="l00606"></a><span class="lineno">  606</span>&#160;    MutPtrVector&lt;int64_t&gt; sch{math::vector&lt;int64_t&gt;(&amp;alloc, numLoopsTotal + 2)};</div>
+<div class="line"><a name="l00607"></a><span class="lineno">  607</span>&#160;    sch[0] = sx-&gt;getOffsetOmega()[d];</div>
+<div class="line"><a name="l00608"></a><span class="lineno">  608</span>&#160;    sch[1] = sy-&gt;getOffsetOmega()[d];</div>
+<div class="line"><a name="l00609"></a><span class="lineno">  609</span>&#160;    sch[_(2, nLoopX + 2)] &lt;&lt; sx-&gt;getSchedule(d)[_(end - nLoopX, end)];</div>
+<div class="line"><a name="l00610"></a><span class="lineno">  610</span>&#160;    sch[_(nLoopX + 2, numLoopsTotal + 2)]</div>
+<div class="line"><a name="l00611"></a><span class="lineno">  611</span>&#160;      &lt;&lt; sy-&gt;getSchedule(d)[_(end - nLoopY, end)];</div>
+<div class="line"><a name="l00612"></a><span class="lineno">  612</span>&#160;    <span class="keywordflow">return</span> dependenceSatisfaction-&gt;satisfiable(alloc, sch, numLambda);</div>
+<div class="line"><a name="l00613"></a><span class="lineno">  613</span>&#160;  }</div>
+<div class="line"><a name="l00614"></a><span class="lineno">  614</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> isSatisfied(Arena&lt;&gt; alloc, <span class="keywordtype">size_t</span> d) <span class="keyword">const</span> -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l00615"></a><span class="lineno">  615</span>&#160;    <span class="keywordtype">unsigned</span> numLambda = depPoly-&gt;getNumLambda(),</div>
+<div class="line"><a name="l00616"></a><span class="lineno">  616</span>&#160;             numLoopsX = depPoly-&gt;getDim0(),</div>
+<div class="line"><a name="l00617"></a><span class="lineno">  617</span>&#160;             numLoopsTotal = numLoopsX + depPoly-&gt;getDim1();</div>
+<div class="line"><a name="l00618"></a><span class="lineno">  618</span>&#160;    MutPtrVector&lt;int64_t&gt; sch{math::vector&lt;int64_t&gt;(&amp;alloc, numLoopsTotal + 2)};</div>
+<div class="line"><a name="l00619"></a><span class="lineno">  619</span>&#160;    sch &lt;&lt; 0;</div>
+<div class="line"><a name="l00620"></a><span class="lineno">  620</span>&#160;    invariant(sch.size(), numLoopsTotal + 2);</div>
+<div class="line"><a name="l00621"></a><span class="lineno">  621</span>&#160;    sch[2 + d] = 1;</div>
+<div class="line"><a name="l00622"></a><span class="lineno">  622</span>&#160;    sch[2 + d + numLoopsX] = 1;</div>
+<div class="line"><a name="l00623"></a><span class="lineno">  623</span>&#160;    <span class="keywordflow">return</span> dependenceSatisfaction-&gt;satisfiable(alloc, sch, numLambda);</div>
+<div class="line"><a name="l00624"></a><span class="lineno">  624</span>&#160;  }</div>
+<div class="line"><a name="l00625"></a><span class="lineno">  625</span>&#160;  <span class="keyword">static</span> <span class="keyword">auto</span> checkDirection(Arena&lt;&gt; alloc,</div>
+<div class="line"><a name="l00626"></a><span class="lineno">  626</span>&#160;                             <span class="keyword">const</span> std::array&lt;NotNull&lt;math::Simplex&gt;, 2&gt; &amp;p,</div>
+<div class="line"><a name="l00627"></a><span class="lineno">  627</span>&#160;                             NotNull&lt;const IR::Addr&gt; x,</div>
+<div class="line"><a name="l00628"></a><span class="lineno">  628</span>&#160;                             NotNull&lt;const IR::Addr&gt; y,</div>
+<div class="line"><a name="l00629"></a><span class="lineno">  629</span>&#160;                             NotNull&lt;const AffineSchedule&gt; xSchedule,</div>
+<div class="line"><a name="l00630"></a><span class="lineno">  630</span>&#160;                             NotNull&lt;const AffineSchedule&gt; ySchedule,</div>
+<div class="line"><a name="l00631"></a><span class="lineno">  631</span>&#160;                             <span class="keywordtype">unsigned</span> numLambda, Col nonTimeDim) -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l00632"></a><span class="lineno">  632</span>&#160;    <span class="keyword">const</span> <span class="keyword">auto</span> &amp;[fxy, fyx] = p;</div>
+<div class="line"><a name="l00633"></a><span class="lineno">  633</span>&#160;    <span class="keywordtype">unsigned</span> numLoopsX = x-&gt;getNumLoops(), numLoopsY = y-&gt;getNumLoops(),</div>
+<div class="line"><a name="l00634"></a><span class="lineno">  634</span>&#160;             numLoopsTotal = numLoopsX + numLoopsY;</div>
+<div class="line"><a name="l00635"></a><span class="lineno">  635</span>&#160;<span class="preprocessor">#ifndef NDEBUG</span></div>
+<div class="line"><a name="l00636"></a><span class="lineno">  636</span>&#160;    <span class="keywordtype">unsigned</span> numLoopsCommon = std::min(numLoopsX, numLoopsY);</div>
+<div class="line"><a name="l00637"></a><span class="lineno">  637</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00638"></a><span class="lineno">  638</span>&#160;    SquarePtrMatrix&lt;int64_t&gt; xPhi = xSchedule-&gt;getPhi();</div>
+<div class="line"><a name="l00639"></a><span class="lineno">  639</span>&#160;    SquarePtrMatrix&lt;int64_t&gt; yPhi = ySchedule-&gt;getPhi();</div>
+<div class="line"><a name="l00640"></a><span class="lineno">  640</span>&#160;    PtrVector&lt;int64_t&gt; xOffOmega = xSchedule-&gt;getOffsetOmega();</div>
+<div class="line"><a name="l00641"></a><span class="lineno">  641</span>&#160;    PtrVector&lt;int64_t&gt; yOffOmega = ySchedule-&gt;getOffsetOmega();</div>
+<div class="line"><a name="l00642"></a><span class="lineno">  642</span>&#160;    PtrVector&lt;int64_t&gt; xFusOmega = xSchedule-&gt;getFusionOmega();</div>
+<div class="line"><a name="l00643"></a><span class="lineno">  643</span>&#160;    PtrVector&lt;int64_t&gt; yFusOmega = ySchedule-&gt;getFusionOmega();</div>
+<div class="line"><a name="l00644"></a><span class="lineno">  644</span>&#160;    MutPtrVector&lt;int64_t&gt; sch{math::vector&lt;int64_t&gt;(&amp;alloc, numLoopsTotal + 2)};</div>
+<div class="line"><a name="l00645"></a><span class="lineno">  645</span>&#160;    <span class="comment">// i iterates from outer-most to inner most common loop</span></div>
+<div class="line"><a name="l00646"></a><span class="lineno">  646</span>&#160;    <span class="keywordflow">for</span> (ptrdiff_t i = 0; <span class="comment">/*i &lt;= numLoopsCommon*/</span>; ++i) {</div>
+<div class="line"><a name="l00647"></a><span class="lineno">  647</span>&#160;      <span class="keywordflow">if</span> (yFusOmega[i] != xFusOmega[i]) <span class="keywordflow">return</span> yFusOmega[i] &gt; xFusOmega[i];</div>
+<div class="line"><a name="l00648"></a><span class="lineno">  648</span>&#160;      <span class="comment">// we should not be able to reach `numLoopsCommon`</span></div>
+<div class="line"><a name="l00649"></a><span class="lineno">  649</span>&#160;      <span class="comment">// because at the very latest, this last schedule value</span></div>
+<div class="line"><a name="l00650"></a><span class="lineno">  650</span>&#160;      <span class="comment">// should be different, because either:</span></div>
+<div class="line"><a name="l00651"></a><span class="lineno">  651</span>&#160;      <span class="comment">// if (numLoopsX == numLoopsY){</span></div>
+<div class="line"><a name="l00652"></a><span class="lineno">  652</span>&#160;      <span class="comment">//   we&#39;re at the inner most loop, where one of the instructions</span></div>
+<div class="line"><a name="l00653"></a><span class="lineno">  653</span>&#160;      <span class="comment">//   must have appeared before the other.</span></div>
+<div class="line"><a name="l00654"></a><span class="lineno">  654</span>&#160;      <span class="comment">// } else {</span></div>
+<div class="line"><a name="l00655"></a><span class="lineno">  655</span>&#160;      <span class="comment">//   the loop nests differ in depth, in which case the deeper</span></div>
+<div class="line"><a name="l00656"></a><span class="lineno">  656</span>&#160;      <span class="comment">//   loop must appear either above or below the instructions</span></div>
+<div class="line"><a name="l00657"></a><span class="lineno">  657</span>&#160;      <span class="comment">//   present at that level</span></div>
+<div class="line"><a name="l00658"></a><span class="lineno">  658</span>&#160;      <span class="comment">// }</span></div>
+<div class="line"><a name="l00659"></a><span class="lineno">  659</span>&#160;      assert(i != numLoopsCommon);</div>
+<div class="line"><a name="l00660"></a><span class="lineno">  660</span>&#160;      sch[0] = xOffOmega[i];</div>
+<div class="line"><a name="l00661"></a><span class="lineno">  661</span>&#160;      sch[1] = yOffOmega[i];</div>
+<div class="line"><a name="l00662"></a><span class="lineno">  662</span>&#160;      sch[_(2, 2 + numLoopsX)] &lt;&lt; xPhi(last - i, _);</div>
+<div class="line"><a name="l00663"></a><span class="lineno">  663</span>&#160;      sch[_(2 + numLoopsX, 2 + numLoopsTotal)] &lt;&lt; yPhi(last - i, _);</div>
+<div class="line"><a name="l00664"></a><span class="lineno">  664</span>&#160;      <span class="keywordflow">if</span> (fxy-&gt;unSatisfiableZeroRem(alloc, sch, numLambda,</div>
+<div class="line"><a name="l00665"></a><span class="lineno">  665</span>&#160;                                    <span class="keywordtype">unsigned</span>(nonTimeDim))) {</div>
+<div class="line"><a name="l00666"></a><span class="lineno">  666</span>&#160;        assert(!fyx-&gt;unSatisfiableZeroRem(alloc, sch, numLambda,</div>
+<div class="line"><a name="l00667"></a><span class="lineno">  667</span>&#160;                                          <span class="keywordtype">unsigned</span>(nonTimeDim)));</div>
+<div class="line"><a name="l00668"></a><span class="lineno">  668</span>&#160;        <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
+<div class="line"><a name="l00669"></a><span class="lineno">  669</span>&#160;      }</div>
+<div class="line"><a name="l00670"></a><span class="lineno">  670</span>&#160;      <span class="keywordflow">if</span> (fyx-&gt;unSatisfiableZeroRem(alloc, sch, numLambda,</div>
+<div class="line"><a name="l00671"></a><span class="lineno">  671</span>&#160;                                    <span class="keywordtype">unsigned</span>(nonTimeDim)))</div>
+<div class="line"><a name="l00672"></a><span class="lineno">  672</span>&#160;        <span class="keywordflow">return</span> <span class="keyword">true</span>;</div>
+<div class="line"><a name="l00673"></a><span class="lineno">  673</span>&#160;    }</div>
+<div class="line"><a name="l00674"></a><span class="lineno">  674</span>&#160;    <span class="comment">// assert(false);</span></div>
+<div class="line"><a name="l00675"></a><span class="lineno">  675</span>&#160;    <span class="comment">// return false;</span></div>
+<div class="line"><a name="l00676"></a><span class="lineno">  676</span>&#160;  }</div>
+<div class="line"><a name="l00677"></a><span class="lineno">  677</span>&#160;  <span class="comment">// returns `true` if forward, x-&gt;y</span></div>
+<div class="line"><a name="l00678"></a><span class="lineno">  678</span>&#160;  <span class="keyword">static</span> <span class="keyword">auto</span> checkDirection(Arena&lt;&gt; alloc,</div>
+<div class="line"><a name="l00679"></a><span class="lineno">  679</span>&#160;                             <span class="keyword">const</span> std::array&lt;NotNull&lt;math::Simplex&gt;, 2&gt; &amp;p,</div>
+<div class="line"><a name="l00680"></a><span class="lineno">  680</span>&#160;                             NotNull&lt;const IR::Addr&gt; x,</div>
+<div class="line"><a name="l00681"></a><span class="lineno">  681</span>&#160;                             NotNull&lt;const IR::Addr&gt; y, <span class="keywordtype">unsigned</span> numLambda,</div>
+<div class="line"><a name="l00682"></a><span class="lineno">  682</span>&#160;                             Col nonTimeDim) -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l00683"></a><span class="lineno">  683</span>&#160;    <span class="keyword">const</span> <span class="keyword">auto</span> &amp;[fxy, fyx] = p;</div>
+<div class="line"><a name="l00684"></a><span class="lineno">  684</span>&#160;    <span class="keywordtype">unsigned</span> numLoopsX = x-&gt;getNumLoops(), nTD = unsigned(nonTimeDim);</div>
+<div class="line"><a name="l00685"></a><span class="lineno">  685</span>&#160;<span class="preprocessor">#ifndef NDEBUG</span></div>
+<div class="line"><a name="l00686"></a><span class="lineno">  686</span>&#160;    <span class="keyword">const</span> <span class="keywordtype">unsigned</span> numLoopsCommon = std::min(numLoopsX, y-&gt;getNumLoops());</div>
+<div class="line"><a name="l00687"></a><span class="lineno">  687</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00688"></a><span class="lineno">  688</span>&#160;    PtrVector&lt;int64_t&gt; xFusOmega = x-&gt;getFusionOmega();</div>
+<div class="line"><a name="l00689"></a><span class="lineno">  689</span>&#160;    PtrVector&lt;int64_t&gt; yFusOmega = y-&gt;getFusionOmega();</div>
+<div class="line"><a name="l00690"></a><span class="lineno">  690</span>&#160;    <span class="comment">// i iterates from outer-most to inner most common loop</span></div>
+<div class="line"><a name="l00691"></a><span class="lineno">  691</span>&#160;    <span class="keywordflow">for</span> (ptrdiff_t i = 0; <span class="comment">/*i &lt;= numLoopsCommon*/</span>; ++i) {</div>
+<div class="line"><a name="l00692"></a><span class="lineno">  692</span>&#160;      <span class="keywordflow">if</span> (yFusOmega[i] != xFusOmega[i]) <span class="keywordflow">return</span> yFusOmega[i] &gt; xFusOmega[i];</div>
+<div class="line"><a name="l00693"></a><span class="lineno">  693</span>&#160;      <span class="comment">// we should not be able to reach `numLoopsCommon`</span></div>
+<div class="line"><a name="l00694"></a><span class="lineno">  694</span>&#160;      <span class="comment">// because at the very latest, this last schedule value</span></div>
+<div class="line"><a name="l00695"></a><span class="lineno">  695</span>&#160;      <span class="comment">// should be different, because either:</span></div>
+<div class="line"><a name="l00696"></a><span class="lineno">  696</span>&#160;      <span class="comment">// if (numLoopsX == numLoopsY){</span></div>
+<div class="line"><a name="l00697"></a><span class="lineno">  697</span>&#160;      <span class="comment">//   we&#39;re at the inner most loop, where one of the instructions</span></div>
+<div class="line"><a name="l00698"></a><span class="lineno">  698</span>&#160;      <span class="comment">//   must have appeared before the other.</span></div>
+<div class="line"><a name="l00699"></a><span class="lineno">  699</span>&#160;      <span class="comment">// } else {</span></div>
+<div class="line"><a name="l00700"></a><span class="lineno">  700</span>&#160;      <span class="comment">//   the loop nests differ in depth, in which case the deeper</span></div>
+<div class="line"><a name="l00701"></a><span class="lineno">  701</span>&#160;      <span class="comment">//   loop must appear either above or below the instructions</span></div>
+<div class="line"><a name="l00702"></a><span class="lineno">  702</span>&#160;      <span class="comment">//   present at that level</span></div>
+<div class="line"><a name="l00703"></a><span class="lineno">  703</span>&#160;      <span class="comment">// }</span></div>
+<div class="line"><a name="l00704"></a><span class="lineno">  704</span>&#160;      assert(i &lt; numLoopsCommon);</div>
+<div class="line"><a name="l00705"></a><span class="lineno">  705</span>&#160;      std::array&lt;ptrdiff_t, 2&gt; inds{2 + i, 2 + i + numLoopsX};</div>
+<div class="line"><a name="l00706"></a><span class="lineno">  706</span>&#160;      <span class="keywordflow">if</span> (fxy-&gt;unSatisfiableZeroRem(alloc, numLambda, inds, nTD)) {</div>
+<div class="line"><a name="l00707"></a><span class="lineno">  707</span>&#160;        assert(!fyx-&gt;unSatisfiableZeroRem(alloc, numLambda, inds, nTD));</div>
+<div class="line"><a name="l00708"></a><span class="lineno">  708</span>&#160;        <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
+<div class="line"><a name="l00709"></a><span class="lineno">  709</span>&#160;      }</div>
+<div class="line"><a name="l00710"></a><span class="lineno">  710</span>&#160;      <span class="keywordflow">if</span> (fyx-&gt;unSatisfiableZeroRem(alloc, numLambda, inds, nTD)) <span class="keywordflow">return</span> <span class="keyword">true</span>;</div>
+<div class="line"><a name="l00711"></a><span class="lineno">  711</span>&#160;    }</div>
+<div class="line"><a name="l00712"></a><span class="lineno">  712</span>&#160;    invariant(<span class="keyword">false</span>);</div>
+<div class="line"><a name="l00713"></a><span class="lineno">  713</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
+<div class="line"><a name="l00714"></a><span class="lineno">  714</span>&#160;  }</div>
+<div class="line"><a name="l00715"></a><span class="lineno">  715</span>&#160; </div>
+<div class="line"><a name="l00716"></a><span class="lineno">  716</span>&#160;  <span class="keyword">static</span> <span class="keywordtype">void</span> check(Arena&lt;&gt; *alloc, NotNull&lt;IR::Addr&gt; x, NotNull&lt;IR::Addr&gt; y) {</div>
+<div class="line"><a name="l00717"></a><span class="lineno">  717</span>&#160;    <span class="comment">// TODO: implement gcd test</span></div>
+<div class="line"><a name="l00718"></a><span class="lineno">  718</span>&#160;    <span class="comment">// if (x.gcdKnownIndependent(y)) return {};</span></div>
+<div class="line"><a name="l00719"></a><span class="lineno">  719</span>&#160;    DepPoly *dxy{DepPoly::dependence(alloc, x, y)};</div>
+<div class="line"><a name="l00720"></a><span class="lineno">  720</span>&#160;    <span class="keywordflow">if</span> (!dxy) <span class="keywordflow">return</span>;</div>
+<div class="line"><a name="l00721"></a><span class="lineno">  721</span>&#160;    invariant(x-&gt;getNumLoops(), dxy-&gt;getDim0());</div>
+<div class="line"><a name="l00722"></a><span class="lineno">  722</span>&#160;    invariant(y-&gt;getNumLoops(), dxy-&gt;getDim1());</div>
+<div class="line"><a name="l00723"></a><span class="lineno">  723</span>&#160;    invariant(x-&gt;getNumLoops() + y-&gt;getNumLoops(), dxy-&gt;getNumPhiCoef());</div>
+<div class="line"><a name="l00724"></a><span class="lineno">  724</span>&#160;    <span class="comment">// note that we set boundAbove=true, so we reverse the</span></div>
+<div class="line"><a name="l00725"></a><span class="lineno">  725</span>&#160;    <span class="comment">// dependence direction for the dependency we week, we&#39;ll</span></div>
+<div class="line"><a name="l00726"></a><span class="lineno">  726</span>&#160;    <span class="comment">// discard the program variables x then y</span></div>
+<div class="line"><a name="l00727"></a><span class="lineno">  727</span>&#160;    std::array&lt;NotNull&lt;math::Simplex&gt;, 2&gt; pair(dxy-&gt;farkasPair(alloc));</div>
+<div class="line"><a name="l00728"></a><span class="lineno">  728</span>&#160;    <span class="keywordflow">if</span> (dxy-&gt;getTimeDim()) timeCheck(alloc, dxy, x, y, pair);</div>
+<div class="line"><a name="l00729"></a><span class="lineno">  729</span>&#160;    <span class="keywordflow">else</span> timelessCheck(alloc, dxy, x, y, pair);</div>
+<div class="line"><a name="l00730"></a><span class="lineno">  730</span>&#160;  }</div>
+<div class="line"><a name="l00731"></a><span class="lineno">  731</span>&#160;  <span class="keyword">static</span> <span class="keywordtype">void</span> copyDependencies(Arena&lt;&gt; *alloc, IR::Addr *src, IR::Addr *dst) {</div>
+<div class="line"><a name="l00732"></a><span class="lineno">  732</span>&#160;    <span class="keywordflow">for</span> (Dependence *d = src-&gt;getEdgeIn(); d; d = d-&gt;getNextInput()) {</div>
+<div class="line"><a name="l00733"></a><span class="lineno">  733</span>&#160;      IR::Addr *input = d-&gt;in;</div>
+<div class="line"><a name="l00734"></a><span class="lineno">  734</span>&#160;      <span class="keywordflow">if</span> (input-&gt;isLoad()) <span class="keywordflow">continue</span>;</div>
+<div class="line"><a name="l00735"></a><span class="lineno">  735</span>&#160;      <span class="keyword">auto</span> *in = alloc-&gt;create&lt;Dependence&gt;(d-&gt;getDepPoly(), d-&gt;getSimplexPair(),</div>
+<div class="line"><a name="l00736"></a><span class="lineno">  736</span>&#160;                                           input, dst, d-&gt;isForward());</div>
+<div class="line"><a name="l00737"></a><span class="lineno">  737</span>&#160;      dst-&gt;addEdgeIn(in);</div>
+<div class="line"><a name="l00738"></a><span class="lineno">  738</span>&#160;    }</div>
+<div class="line"><a name="l00739"></a><span class="lineno">  739</span>&#160;    <span class="keywordflow">for</span> (Dependence *d = src-&gt;getEdgeOut(); d; d = d-&gt;getNextOutput()) {</div>
+<div class="line"><a name="l00740"></a><span class="lineno">  740</span>&#160;      IR::Addr *output = d-&gt;out;</div>
+<div class="line"><a name="l00741"></a><span class="lineno">  741</span>&#160;      <span class="keywordflow">if</span> (output-&gt;isLoad()) <span class="keywordflow">continue</span>;</div>
+<div class="line"><a name="l00742"></a><span class="lineno">  742</span>&#160;      <span class="keyword">auto</span> *out = alloc-&gt;create&lt;Dependence&gt;(</div>
+<div class="line"><a name="l00743"></a><span class="lineno">  743</span>&#160;        d-&gt;getDepPoly(), d-&gt;getSimplexPair(), dst, output, d-&gt;isForward());</div>
+<div class="line"><a name="l00744"></a><span class="lineno">  744</span>&#160;      dst-&gt;addEdgeOut(out);</div>
+<div class="line"><a name="l00745"></a><span class="lineno">  745</span>&#160;    }</div>
+<div class="line"><a name="l00746"></a><span class="lineno">  746</span>&#160;  }</div>
+<div class="line"><a name="l00747"></a><span class="lineno">  747</span>&#160;  <span class="comment">// reload store `x`</span></div>
+<div class="line"><a name="l00748"></a><span class="lineno">  748</span>&#160;  <span class="keyword">static</span> <span class="keyword">auto</span> reload(Arena&lt;&gt; *alloc, NotNull&lt;IR::Addr&gt; store)</div>
+<div class="line"><a name="l00749"></a><span class="lineno">  749</span>&#160;    -&gt; NotNull&lt;IR::Addr&gt; {</div>
+<div class="line"><a name="l00750"></a><span class="lineno">  750</span>&#160;    NotNull&lt;DepPoly&gt; dxy{DepPoly::self(alloc, store)};</div>
+<div class="line"><a name="l00751"></a><span class="lineno">  751</span>&#160;    std::array&lt;NotNull&lt;math::Simplex&gt;, 2&gt; pair(dxy-&gt;farkasPair(alloc));</div>
+<div class="line"><a name="l00752"></a><span class="lineno">  752</span>&#160;    NotNull&lt;IR::Addr&gt; load = store-&gt;reload(alloc);</div>
+<div class="line"><a name="l00753"></a><span class="lineno">  753</span>&#160;    copyDependencies(alloc, store, load);</div>
+<div class="line"><a name="l00754"></a><span class="lineno">  754</span>&#160;    <span class="keywordflow">if</span> (dxy-&gt;getTimeDim()) timeCheck(alloc, dxy, store, load, pair, <span class="keyword">true</span>);</div>
+<div class="line"><a name="l00755"></a><span class="lineno">  755</span>&#160;    <span class="keywordflow">else</span> timelessCheck(alloc, dxy, store, load, pair, <span class="keyword">true</span>);</div>
+<div class="line"><a name="l00756"></a><span class="lineno">  756</span>&#160;    <span class="keywordflow">return</span> load;</div>
+<div class="line"><a name="l00757"></a><span class="lineno">  757</span>&#160;  }</div>
+<div class="line"><a name="l00758"></a><span class="lineno">  758</span>&#160;  constexpr <span class="keyword">auto</span> replaceInput(NotNull&lt;IR::Addr&gt; newIn) -&gt; Dependence {</div>
+<div class="line"><a name="l00759"></a><span class="lineno">  759</span>&#160;    Dependence edge = *<span class="keyword">this</span>;</div>
+<div class="line"><a name="l00760"></a><span class="lineno">  760</span>&#160;    edge.in = newIn;</div>
+<div class="line"><a name="l00761"></a><span class="lineno">  761</span>&#160;    <span class="keywordflow">return</span> edge;</div>
+<div class="line"><a name="l00762"></a><span class="lineno">  762</span>&#160;  }</div>
+<div class="line"><a name="l00763"></a><span class="lineno">  763</span>&#160;  constexpr <span class="keyword">auto</span> replaceOutput(NotNull&lt;IR::Addr&gt; newOut) -&gt; Dependence {</div>
+<div class="line"><a name="l00764"></a><span class="lineno">  764</span>&#160;    Dependence edge = *<span class="keyword">this</span>;</div>
+<div class="line"><a name="l00765"></a><span class="lineno">  765</span>&#160;    edge.out = newOut;</div>
+<div class="line"><a name="l00766"></a><span class="lineno">  766</span>&#160;    <span class="keywordflow">return</span> edge;</div>
+<div class="line"><a name="l00767"></a><span class="lineno">  767</span>&#160;  }</div>
+<div class="line"><a name="l00768"></a><span class="lineno">  768</span>&#160; </div>
+<div class="line"><a name="l00769"></a><span class="lineno">  769</span>&#160;  <span class="keyword">friend</span> <span class="keyword">inline</span> <span class="keyword">auto</span> operator&lt;&lt;(llvm::raw_ostream &amp;os, <span class="keyword">const</span> Dependence &amp;d)</div>
+<div class="line"><a name="l00770"></a><span class="lineno">  770</span>&#160;    -&gt; llvm::raw_ostream &amp; {</div>
+<div class="line"><a name="l00771"></a><span class="lineno">  771</span>&#160;    os &lt;&lt; <span class="stringliteral">&quot;Dependence Poly &quot;</span>;</div>
+<div class="line"><a name="l00772"></a><span class="lineno">  772</span>&#160;    <span class="keywordflow">if</span> (d.isForward()) os &lt;&lt; <span class="stringliteral">&quot;x -&gt; y:&quot;</span>;</div>
+<div class="line"><a name="l00773"></a><span class="lineno">  773</span>&#160;    <span class="keywordflow">else</span> os &lt;&lt; <span class="stringliteral">&quot;y -&gt; x:&quot;</span>;</div>
+<div class="line"><a name="l00774"></a><span class="lineno">  774</span>&#160;    os &lt;&lt; <span class="stringliteral">&quot;\n\tInput:\n&quot;</span> &lt;&lt; *d.in;</div>
+<div class="line"><a name="l00775"></a><span class="lineno">  775</span>&#160;    os &lt;&lt; <span class="stringliteral">&quot;\n\tOutput:\n&quot;</span> &lt;&lt; *d.out;</div>
+<div class="line"><a name="l00776"></a><span class="lineno">  776</span>&#160;    os &lt;&lt; <span class="stringliteral">&quot;\nA = &quot;</span> &lt;&lt; d.depPoly-&gt;getA() &lt;&lt; <span class="stringliteral">&quot;\nE = &quot;</span> &lt;&lt; d.depPoly-&gt;getE()</div>
+<div class="line"><a name="l00777"></a><span class="lineno">  777</span>&#160;       &lt;&lt; <span class="stringliteral">&quot;\nSchedule Constraints:&quot;</span></div>
+<div class="line"><a name="l00778"></a><span class="lineno">  778</span>&#160;       &lt;&lt; d.dependenceSatisfaction-&gt;getConstraints()</div>
+<div class="line"><a name="l00779"></a><span class="lineno">  779</span>&#160;       &lt;&lt; <span class="stringliteral">&quot;\nBounding Constraints:&quot;</span> &lt;&lt; d.dependenceBounding-&gt;getConstraints();</div>
+<div class="line"><a name="l00780"></a><span class="lineno">  780</span>&#160;    <span class="keywordflow">return</span> os &lt;&lt; <span class="stringliteral">&quot;\nSatisfied (isCondIndep() == &quot;</span> &lt;&lt; d.isCondIndep()</div>
+<div class="line"><a name="l00781"></a><span class="lineno">  781</span>&#160;              &lt;&lt; <span class="stringliteral">&quot;) = &quot;</span> &lt;&lt; int(d.satLevel()) &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
+<div class="line"><a name="l00782"></a><span class="lineno">  782</span>&#160;  }</div>
+<div class="line"><a name="l00783"></a><span class="lineno">  783</span>&#160;};</div>
+<div class="line"><a name="l00784"></a><span class="lineno">  784</span>&#160; </div>
+<div class="line"><a name="l00785"></a><span class="lineno">  785</span>&#160;} <span class="comment">// namespace poly</span></div>
+<div class="line"><a name="l00786"></a><span class="lineno">  786</span>&#160;<span class="keyword">namespace </span>IR {</div>
+<div class="line"><a name="l00787"></a><span class="lineno">  787</span>&#160;constexpr <span class="keywordtype">void</span> IR::Addr::forEachInput(<span class="keyword">const</span> <span class="keyword">auto</span> &amp;f) {</div>
+<div class="line"><a name="l00788"></a><span class="lineno">  788</span>&#160;  poly::Dependence *d = edgeIn;</div>
+<div class="line"><a name="l00789"></a><span class="lineno">  789</span>&#160;  <span class="keywordflow">while</span> (d) {</div>
+<div class="line"><a name="l00790"></a><span class="lineno">  790</span>&#160;    f(d-&gt;input());</div>
+<div class="line"><a name="l00791"></a><span class="lineno">  791</span>&#160;    d = d-&gt;getNextInput();</div>
+<div class="line"><a name="l00792"></a><span class="lineno">  792</span>&#160;  }</div>
+<div class="line"><a name="l00793"></a><span class="lineno">  793</span>&#160;}</div>
+<div class="line"><a name="l00794"></a><span class="lineno">  794</span>&#160;<span class="keyword">inline</span> constexpr <span class="keywordtype">void</span> Addr::setEdgeIn(Dependence *dep) {</div>
+<div class="line"><a name="l00795"></a><span class="lineno">  795</span>&#160;  edgeIn = dep-&gt;setNextInput(edgeIn);</div>
+<div class="line"><a name="l00796"></a><span class="lineno">  796</span>&#160;}</div>
+<div class="line"><a name="l00797"></a><span class="lineno">  797</span>&#160;<span class="keyword">inline</span> constexpr <span class="keywordtype">void</span> Addr::setEdgeOut(Dependence *dep) {</div>
+<div class="line"><a name="l00798"></a><span class="lineno">  798</span>&#160;  edgeOut = dep-&gt;setNextOutput(edgeOut);</div>
+<div class="line"><a name="l00799"></a><span class="lineno">  799</span>&#160;}</div>
+<div class="line"><a name="l00800"></a><span class="lineno">  800</span>&#160;<span class="keyword">inline</span> constexpr <span class="keywordtype">void</span> Addr::addEdgeIn(Dependence *dep) {</div>
+<div class="line"><a name="l00801"></a><span class="lineno">  801</span>&#160;  setEdgeIn(dep);</div>
+<div class="line"><a name="l00802"></a><span class="lineno">  802</span>&#160;  dep-&gt;input()-&gt;setEdgeOut(dep);</div>
+<div class="line"><a name="l00803"></a><span class="lineno">  803</span>&#160;}</div>
+<div class="line"><a name="l00804"></a><span class="lineno">  804</span>&#160;<span class="keyword">inline</span> constexpr <span class="keywordtype">void</span> Addr::addEdgeOut(Dependence *dep) {</div>
+<div class="line"><a name="l00805"></a><span class="lineno">  805</span>&#160;  setEdgeOut(dep);</div>
+<div class="line"><a name="l00806"></a><span class="lineno">  806</span>&#160;  dep-&gt;output()-&gt;setEdgeIn(dep);</div>
 <div class="line"><a name="l00807"></a><span class="lineno">  807</span>&#160;}</div>
-<div class="line"><a name="l00808"></a><span class="lineno">  808</span>&#160;<span class="keyword">inline</span> constexpr <span class="keywordtype">void</span> Addr::addEdgeIn(Dependence *dep) {</div>
-<div class="line"><a name="l00809"></a><span class="lineno">  809</span>&#160;  setEdgeIn(dep);</div>
-<div class="line"><a name="l00810"></a><span class="lineno">  810</span>&#160;  dep-&gt;input()-&gt;setEdgeOut(dep);</div>
-<div class="line"><a name="l00811"></a><span class="lineno">  811</span>&#160;}</div>
-<div class="line"><a name="l00812"></a><span class="lineno">  812</span>&#160;<span class="keyword">inline</span> constexpr <span class="keywordtype">void</span> Addr::addEdgeOut(Dependence *dep) {</div>
-<div class="line"><a name="l00813"></a><span class="lineno">  813</span>&#160;  setEdgeOut(dep);</div>
-<div class="line"><a name="l00814"></a><span class="lineno">  814</span>&#160;  dep-&gt;output()-&gt;setEdgeIn(dep);</div>
-<div class="line"><a name="l00815"></a><span class="lineno">  815</span>&#160;}</div>
-<div class="line"><a name="l00816"></a><span class="lineno">  816</span>&#160; </div>
-<div class="line"><a name="l00817"></a><span class="lineno">  817</span>&#160;} <span class="comment">// namespace IR</span></div>
-<div class="line"><a name="l00818"></a><span class="lineno">  818</span>&#160;} <span class="comment">// namespace poly</span></div>
+<div class="line"><a name="l00808"></a><span class="lineno">  808</span>&#160; </div>
+<div class="line"><a name="l00809"></a><span class="lineno">  809</span>&#160;} <span class="comment">// namespace IR</span></div>
+<div class="line"><a name="l00810"></a><span class="lineno">  810</span>&#160;} <span class="comment">// namespace poly</span></div>
 <div class="ttc" id="aclasspoly_1_1poly_1_1Dependence_html"><div class="ttname"><a href="classpoly_1_1poly_1_1Dependence.html">poly::poly::Dependence</a></div><div class="ttdef"><b>Definition:</b> Dependence.hpp:17</div></div>
 <div class="ttc" id="aclasspoly_1_1poly_1_1Dependence_html_a0abb755d8e7a698e081db7292e11e44b"><div class="ttname"><a href="classpoly_1_1poly_1_1Dependence.html#a0abb755d8e7a698e081db7292e11e44b">poly::poly::Dependence::getInIndMat</a></div><div class="ttdeci">auto getInIndMat() const -&gt; DensePtrMatrix&lt; int64_t &gt;</div><div class="ttdoc">getInIndMat() -&gt; getInNumLoops() x arrayDim()</div><div class="ttdef"><b>Definition:</b> Dependence.hpp:346</div></div>
 <div class="ttc" id="aclasspoly_1_1poly_1_1Dependence_html_a3e863ed72e68c568e3b0426c6f7f76e1"><div class="ttname"><a href="classpoly_1_1poly_1_1Dependence.html#a3e863ed72e68c568e3b0426c6f7f76e1">poly::poly::Dependence::isCondIndep</a></div><div class="ttdeci">constexpr auto isCondIndep() const -&gt; bool</div><div class="ttdoc">if true, then conditioned on the sat level,</div><div class="ttdef"><b>Definition:</b> Dependence.hpp:324</div></div>
+<div class="ttc" id="aclasspoly_1_1poly_1_1Dependence_html_ab0b2ff38f39e89f64efe973c10e9d324"><div class="ttname"><a href="classpoly_1_1poly_1_1Dependence.html#ab0b2ff38f39e89f64efe973c10e9d324">poly::poly::Dependence::stashSatLevel</a></div><div class="ttdeci">constexpr auto stashSatLevel() -&gt; Dependence *</div><div class="ttdef"><b>Definition:</b> Dependence.hpp:298</div></div>
 <div class="ttc" id="aclasspoly_1_1poly_1_1Dependence_html_ab2caff477ed0560c811298fe432010ec"><div class="ttname"><a href="classpoly_1_1poly_1_1Dependence.html#ab2caff477ed0560c811298fe432010ec">poly::poly::Dependence::getOutIndMat</a></div><div class="ttdeci">constexpr auto getOutIndMat() const -&gt; PtrMatrix&lt; int64_t &gt;</div><div class="ttdoc">getOutIndMat() -&gt; getOutNumLoops() x arrayDim()</div><div class="ttdef"><b>Definition:</b> Dependence.hpp:374</div></div>
-<div class="ttc" id="aclasspoly_1_1poly_1_1Dependence_html_abeada112f74a97c338aa14e3425de063"><div class="ttname"><a href="classpoly_1_1poly_1_1Dependence.html#abeada112f74a97c338aa14e3425de063">poly::poly::Dependence::stashSatLevel</a></div><div class="ttdeci">constexpr auto stashSatLevel() -&gt; Dependence &amp;</div><div class="ttdef"><b>Definition:</b> Dependence.hpp:298</div></div>
 <div class="ttc" id="aclasspoly_1_1poly_1_1Dependence_html_af0d8b4e19c0fd884c1b46874a5cffd65"><div class="ttname"><a href="classpoly_1_1poly_1_1Dependence.html#af0d8b4e19c0fd884c1b46874a5cffd65">poly::poly::Dependence::isForward</a></div><div class="ttdeci">constexpr auto isForward() const -&gt; bool</div><div class="ttdoc">indicates whether forward is non-empty</div><div class="ttdef"><b>Definition:</b> Dependence.hpp:331</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->

@@ -8,7 +8,7 @@ var searchData=
   ['set_98',['Set',['../structpoly_1_1IR_1_1Predicate_1_1Set.html',1,'poly::IR::Predicate']]],
   ['setfusionomega_99',['setFusionOmega',['../classpoly_1_1IR_1_1Addr.html#a26d3b32498e5ea5373a423a9bb463477',1,'poly::IR::Addr']]],
   ['squarematrixprinter_100',['SquareMatrixPrinter',['../classprettyprinters_1_1SquareMatrixPrinter.html',1,'prettyprinters']]],
-  ['stashsatlevel_101',['stashSatLevel',['../classpoly_1_1poly_1_1Dependence.html#abeada112f74a97c338aa14e3425de063',1,'poly::poly::Dependence']]],
+  ['stashsatlevel_101',['stashSatLevel',['../classpoly_1_1poly_1_1Dependence.html#ab0b2ff38f39e89f64efe973c10e9d324',1,'poly::poly::Dependence']]],
   ['state_102',['State',['../structpoly_1_1graph_1_1State.html',1,'poly::graph']]],
   ['stow_103',['Stow',['../classpoly_1_1IR_1_1Stow.html',1,'poly::IR']]],
   ['stridedmatrixprinter_104',['StridedMatrixPrinter',['../classprettyprinters_1_1StridedMatrixPrinter.html',1,'prettyprinters']]]

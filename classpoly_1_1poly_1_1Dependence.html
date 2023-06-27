@@ -112,8 +112,8 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>setNextOutp
 <tr class="memitem:a17701299d29d284ae5b83ecb92b8eb00"><td class="memItemLeft" align="right" valign="top"><a id="a17701299d29d284ae5b83ecb92b8eb00"></a>
 constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Dependence</b> (NotNull&lt; <a class="el" href="classpoly_1_1poly_1_1DepPoly.html">DepPoly</a> &gt; poly, std::array&lt; NotNull&lt; math::Simplex &gt;, 2 &gt; depSatBound, NotNull&lt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> &gt; i, NotNull&lt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> &gt; o, bool fwd)</td></tr>
 <tr class="separator:a17701299d29d284ae5b83ecb92b8eb00"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abeada112f74a97c338aa14e3425de063"><td class="memItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1poly_1_1Dependence.html#abeada112f74a97c338aa14e3425de063">stashSatLevel</a> () -&gt; <a class="el" href="classpoly_1_1poly_1_1Dependence.html">Dependence</a> &amp;</td></tr>
-<tr class="separator:abeada112f74a97c338aa14e3425de063"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab0b2ff38f39e89f64efe973c10e9d324"><td class="memItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1poly_1_1Dependence.html#ab0b2ff38f39e89f64efe973c10e9d324">stashSatLevel</a> () -&gt; <a class="el" href="classpoly_1_1poly_1_1Dependence.html">Dependence</a> *</td></tr>
+<tr class="separator:ab0b2ff38f39e89f64efe973c10e9d324"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afe55dc08d9fb0cba1e26e950eabd3895"><td class="memItemLeft" align="right" valign="top"><a id="afe55dc08d9fb0cba1e26e950eabd3895"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>popSatLevel</b> ()</td></tr>
 <tr class="separator:afe55dc08d9fb0cba1e26e950eabd3895"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -143,9 +143,9 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" 
 <tr class="memitem:a90ee1fb55e9189d63060b6154534f27c"><td class="memItemLeft" align="right" valign="top"><a id="a90ee1fb55e9189d63060b6154534f27c"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>nodeIn</b> () const -&gt; const <a class="el" href="classpoly_1_1lp_1_1ScheduledNode.html">lp::ScheduledNode</a> *</td></tr>
 <tr class="separator:a90ee1fb55e9189d63060b6154534f27c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a41e78023f8b4e1c9d721e1c4b90f14cb"><td class="memItemLeft" align="right" valign="top"><a id="a41e78023f8b4e1c9d721e1c4b90f14cb"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getDynSymDim</b> () const -&gt; size_t</td></tr>
-<tr class="separator:a41e78023f8b4e1c9d721e1c4b90f14cb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7504121f61010ba26878ee305cba8420"><td class="memItemLeft" align="right" valign="top"><a id="a7504121f61010ba26878ee305cba8420"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getDynSymDim</b> () const -&gt; unsigned</td></tr>
+<tr class="separator:a7504121f61010ba26878ee305cba8420"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a19ed97cd2cddec2c67caedffa5405fdd"><td class="memItemLeft" align="right" valign="top"><a id="a19ed97cd2cddec2c67caedffa5405fdd"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>inputIsLoad</b> () const -&gt; bool</td></tr>
 <tr class="separator:a19ed97cd2cddec2c67caedffa5405fdd"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -265,12 +265,12 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>getSatW</b> () const 
 <tr class="memitem:ae6b9826bc8a5a5acd4818e932f9811b2"><td class="memItemLeft" align="right" valign="top"><a id="ae6b9826bc8a5a5acd4818e932f9811b2"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>getBndCoefs</b> () const -&gt; PtrMatrix&lt; int64_t &gt;</td></tr>
 <tr class="separator:ae6b9826bc8a5a5acd4818e932f9811b2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1fcc43ad42a213f35543d8b61c8372ca"><td class="memItemLeft" align="right" valign="top"><a id="a1fcc43ad42a213f35543d8b61c8372ca"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>splitSatisfaction</b> () const -&gt; std::tuple&lt; math::StridedVector&lt; int64_t &gt;, PtrMatrix&lt; int64_t &gt;, PtrMatrix&lt; int64_t &gt;, PtrMatrix&lt; int64_t &gt;, PtrMatrix&lt; int64_t &gt;, math::StridedVector&lt; int64_t &gt;&gt;</td></tr>
-<tr class="separator:a1fcc43ad42a213f35543d8b61c8372ca"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7f71ca3cf426eb9aed02db7a8f2f2844"><td class="memItemLeft" align="right" valign="top"><a id="a7f71ca3cf426eb9aed02db7a8f2f2844"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>splitBounding</b> () const -&gt; std::tuple&lt; math::StridedVector&lt; int64_t &gt;, PtrMatrix&lt; int64_t &gt;, PtrMatrix&lt; int64_t &gt;, PtrMatrix&lt; int64_t &gt;, PtrMatrix&lt; int64_t &gt;, PtrMatrix&lt; int64_t &gt;&gt;</td></tr>
-<tr class="separator:a7f71ca3cf426eb9aed02db7a8f2f2844"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aaec39e43dc34151dac01edc162161caa"><td class="memItemLeft" align="right" valign="top"><a id="aaec39e43dc34151dac01edc162161caa"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>satPhiCoefs</b> () const -&gt; std::array&lt; PtrMatrix&lt; int64_t &gt;, 2 &gt;</td></tr>
+<tr class="separator:aaec39e43dc34151dac01edc162161caa"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a59232a0eaf157c92c488ddfea5549b36"><td class="memItemLeft" align="right" valign="top"><a id="a59232a0eaf157c92c488ddfea5549b36"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>bndPhiCoefs</b> () const -&gt; std::array&lt; PtrMatrix&lt; int64_t &gt;, 2 &gt;</td></tr>
+<tr class="separator:a59232a0eaf157c92c488ddfea5549b36"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad6ba3b950f9bcb16adea39d7c66415c8"><td class="memItemLeft" align="right" valign="top"><a id="ad6ba3b950f9bcb16adea39d7c66415c8"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>isSatisfied</b> (Arena&lt;&gt; alloc, NotNull&lt; const <a class="el" href="structpoly_1_1poly_1_1AffineSchedule.html">AffineSchedule</a> &gt; schIn, NotNull&lt; const <a class="el" href="structpoly_1_1poly_1_1AffineSchedule.html">AffineSchedule</a> &gt; schOut) const -&gt; bool</td></tr>
 <tr class="separator:ad6ba3b950f9bcb16adea39d7c66415c8"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -320,8 +320,8 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> 
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p><a class="el" href="classpoly_1_1poly_1_1Dependence.html">Dependence</a> Represents a dependence relationship between two memory accesses. It contains simplices representing constraints that affine schedules are allowed to take. </p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
-<a id="abeada112f74a97c338aa14e3425de063"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#abeada112f74a97c338aa14e3425de063">&#9670;&nbsp;</a></span>stashSatLevel()</h2>
+<a id="ab0b2ff38f39e89f64efe973c10e9d324"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab0b2ff38f39e89f64efe973c10e9d324">&#9670;&nbsp;</a></span>stashSatLevel()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -333,7 +333,7 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> 
           <td class="memname">constexpr auto poly::poly::Dependence::stashSatLevel </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
-          <td> -&gt; <a class="el" href="classpoly_1_1poly_1_1Dependence.html">Dependence</a> &amp; </td>
+          <td> -&gt; <a class="el" href="classpoly_1_1poly_1_1Dependence.html">Dependence</a> * </td>
         </tr>
       </table>
   </td>
@@ -342,7 +342,7 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> 
   </tr>
 </table>
 </div><div class="memdoc">
-<p><a class="el" href="classpoly_1_1poly_1_1Dependence.html#abeada112f74a97c338aa14e3425de063">stashSatLevel()</a> -&gt; <a class="el" href="classpoly_1_1poly_1_1Dependence.html">Dependence</a> &amp; This is used to track sat levels in the LP recursion. Recursion works from outer -&gt; inner most loop. On each level of the recursion, we</p><ol type="1">
+<p><a class="el" href="classpoly_1_1poly_1_1Dependence.html#ab0b2ff38f39e89f64efe973c10e9d324">stashSatLevel()</a> -&gt; <a class="el" href="classpoly_1_1poly_1_1Dependence.html">Dependence</a> &amp; This is used to track sat levels in the LP recursion. Recursion works from outer -&gt; inner most loop. On each level of the recursion, we</p><ol type="1">
 <li>evaluate the level.</li>
 <li>if we succeed w/out deps, update sat levels and go a level deeper.</li>
 <li></li>
