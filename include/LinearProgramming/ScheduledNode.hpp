@@ -1,5 +1,6 @@
 #pragma once
 #include "Dependence.hpp"
+#include "Graphs/Graphs.hpp"
 #include "IR/Address.hpp"
 #include "Polyhedra/DependencyPolyhedra.hpp"
 #include "Polyhedra/Loops.hpp"
@@ -8,7 +9,8 @@
 #include <Utilities/Valid.hpp>
 #include <ranges>
 
-namespace poly::lp {
+namespace poly {
+namespace lp {
 using IR::Addr, IR::Value, IR::Instruction, IR::Load, IR::Stow;
 using math::PtrVector, math::MutPtrVector, math::DensePtrMatrix,
   math::MutDensePtrMatrix, math::SquarePtrMatrix, math::MutSquarePtrMatrix,
@@ -33,10 +35,11 @@ class ScheduledNode {
   ScheduledNode *component{nullptr}; // SCC cycle, or last node in a chain
   // Dependence *dep{nullptr};          // input edges (points to parents)
   int64_t *offsets{nullptr};
-  uint32_t phiOffset{0};   // used in LoopBlock
-  uint32_t omegaOffset{0}; // used in LoopBlock
+  uint32_t phiOffset{0}, omegaOffset{0}; // used in LoopBlock
+  unsigned index_, lowLink_;
   uint8_t rank{0};
-  bool visited{false};
+  bool visited_{false};
+  bool onStack_{false};
 #if !defined(__clang__) && defined(__GNUC__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
@@ -62,6 +65,15 @@ class ScheduledNode {
   };
 
 public:
+  using VertexType = ScheduledNode;
+  constexpr auto index() -> unsigned & { return index_; }
+  constexpr auto lowLink() -> unsigned & { return lowLink_; }
+  [[nodiscard]] constexpr auto onStack() const -> bool { return onStack_; }
+  constexpr void addToStack() { onStack_ = true; }
+  constexpr void removeFromStack() { onStack_ = false; }
+  [[nodiscard]] constexpr auto visited() const -> bool { return visited_; }
+  constexpr void visit() { visited_ = true; }
+  constexpr auto unVisit() { visited_ = false; }
   constexpr auto addNext(ScheduledNode *n) -> ScheduledNode * {
     next = n;
     return this;
@@ -77,6 +89,11 @@ public:
   constexpr auto getNext() -> ScheduledNode * { return next; }
   constexpr auto setNext(ScheduledNode *n) -> ScheduledNode * {
     next = n;
+    return this;
+  }
+  constexpr auto getNextComponent() -> ScheduledNode * { return component; }
+  constexpr auto setNextComponent(ScheduledNode *n) -> ScheduledNode * {
+    component = n;
     return this;
   }
   constexpr auto getLoopOffsets() -> MutPtrVector<int64_t> {
@@ -109,7 +126,7 @@ public:
   [[nodiscard]] constexpr auto getStore() const -> const Addr * {
     return store;
   }
-  [[nodiscard]] constexpr auto nodesRange()
+  [[nodiscard]] constexpr auto getVertices()
     -> utils::ListRange<ScheduledNode, utils::GetNext, utils::Identity> {
     return utils::ListRange{this, utils::GetNext{}};
   }
@@ -131,7 +148,7 @@ public:
   }
   // all nodes that are memory inputs to this one; i.e. all parents
   // NOTE: we may reach each node multiple times
-  [[nodiscard]] constexpr auto inputNodes() {
+  [[nodiscard]] constexpr auto inNeighbors() {
     return utils::NestedListRange{
       store,
       [](Addr *a) -> Addr * { return llvm::cast_or_null<Addr>(a->getChild()); },
@@ -141,7 +158,7 @@ public:
   }
   // all nodes that are memory outputs of this one; i.e. all children
   // NOTE: we may reach each node multiple times
-  [[nodiscard]] constexpr auto outputNodes() {
+  [[nodiscard]] constexpr auto outNeighbors() {
     return utils::NestedListRange{
       store,
       [](Addr *a) -> Addr * { return llvm::cast_or_null<Addr>(a->getChild()); },
@@ -298,9 +315,6 @@ public:
     return offsets;
   }
 
-  [[nodiscard]] constexpr auto wasVisited() const -> bool { return visited; }
-  constexpr void visit() { visited = true; }
-  constexpr void unVisit() { visited = false; }
   // [[nodiscard]] constexpr auto wasVisited2() const -> bool { return visited2;
   // } constexpr void visit2() { visited2 = true; } constexpr void unVisit2() {
   // visited2 = false; }
@@ -403,4 +417,8 @@ public:
 };
 static_assert(std::is_trivially_destructible_v<ScheduledNode>);
 
-} // namespace poly::lp
+} // namespace lp
+namespace graph {
+static_assert(AbstractPtrGraph<lp::ScheduledNode>);
+} // namespace graph
+} // namespace poly

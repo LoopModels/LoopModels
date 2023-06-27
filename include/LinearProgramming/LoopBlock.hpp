@@ -153,7 +153,7 @@ public:
          stow = llvm::cast_or_null<Addr>(stow->getNext()))
       nodes = addScheduledNode(cache, stow)->addNext(nodes);
     unsigned maxDepth = 0;
-    for (ScheduledNode *node : nodes->nodesRange()) {
+    for (ScheduledNode *node : nodes->getVertices()) {
       maxDepth = std::max(maxDepth, node->getDepth());
       shiftOmega(node);
     }
@@ -405,7 +405,7 @@ private:
     static_assert(sizeof(size_t) == sizeof(Optional<size_t>));
     // check for orthogonalization opportunities
     bool tryOrth = false;
-    for (ScheduledNode *node : nodes->nodesRange()) {
+    for (ScheduledNode *node : nodes->getVertices()) {
       for (Dependence *edge : node->inputEdges()) {
         // this edge's output is `node`
         // we want edges whose input is also `node`,
@@ -426,7 +426,7 @@ private:
     }
     if (tryOrth) {
       if (optimize(g, 0, maxDepth)) return true;
-      for (ScheduledNode *n : nodes->nodesRange()) n->unschedulePhi();
+      for (ScheduledNode *n : nodes->getVertices()) n->unschedulePhi();
     }
     return optimize(g, 0, maxDepth);
   }
@@ -440,7 +440,7 @@ private:
     -> math::SVector<unsigned, 4> {
     math::SVector<unsigned, 4> params{};
     assert(allZero(params));
-    for (ScheduledNode *node : nodes->nodesRange())
+    for (ScheduledNode *node : nodes->getVertices())
       for (Dependence *d : node->inputEdges()) params += numParams(d);
     return params;
   }
@@ -448,7 +448,7 @@ private:
     -> math::SVector<unsigned, 4> {
     math::SVector<unsigned, 4> params{};
     assert(allZero(params));
-    for (ScheduledNode *node : nodes->nodesRange())
+    for (ScheduledNode *node : nodes->getVertices())
       for (Dependence *d : node->inputEdges())
         params += numParams(d->stashSatLevel());
     return params;
@@ -458,7 +458,7 @@ private:
     -> std::array<unsigned, 3> {
     // C, lambdas, omegas, Phis
     unsigned numOmegaCoefs = 0, numPhiCoefs = 0, numSlack = 0;
-    for (ScheduledNode *node : nodes->nodesRange()) {
+    for (ScheduledNode *node : nodes->getVertices()) {
       // note, we had d > node->getNumLoops() for omegas earlier; why?
       // TODO: audit edge-sat and skip checks; e.g. are edges being deactivated
       // when depth exceeds the number of loops?
@@ -532,7 +532,7 @@ private:
   }
   void setSchedulesIndependent(ScheduledNode *nodes, unsigned depth) {
     // IntMatrix A, N;
-    for (ScheduledNode *node : nodes->nodesRange()) {
+    for (ScheduledNode *node : nodes->getVertices()) {
       if ((depth >= node->getNumLoops()) || node->phiIsScheduled(depth))
         continue;
       assert(!node->hasActiveEdges(depth)); //  numLambda==0
@@ -672,7 +672,7 @@ private:
     // loop is, if we must already execute this loop in order, we should try and
     // cover as many dependencies at that time as possible.
     size_t deactivated = 0;
-    for (ScheduledNode *outNode : nodes->nodesRange()) {
+    for (ScheduledNode *outNode : nodes->getVertices()) {
       for (Dependence *edge : outNode->inputEdges()) {
         if (edge->isInactive(depth)) continue;
         Col uu = u + edge->getNumDynamicBoundingVar();
@@ -694,7 +694,7 @@ private:
     return deactivated << depth;
   }
   auto checkEmptySatEdges(ScheduledNode *nodes, unsigned depth) -> size_t {
-    for (ScheduledNode *outNode : nodes->nodesRange()) {
+    for (ScheduledNode *outNode : nodes->getVertices()) {
       for (Dependence *edge : outNode->inputEdges()) {
         if (edge->isSat(depth)) continue;
         ScheduledNode *inNode = edge->input();
@@ -720,11 +720,11 @@ private:
     // activeEdges was the old original; swap it in
     auto scope = allocator.scope();
     ptrdiff_t numNodes = 0;
-    for (ScheduledNode *node : nodes->nodesRange()) ++numNodes;
+    for (ScheduledNode *node : nodes->getVertices()) ++numNodes;
     auto oldSchedules = vector<AffineSchedule>(allocator, numNodes);
     auto oldNodes = vector<ScheduledNode *>(allocator, numNodes);
     ptrdiff_t i = 0;
-    for (ScheduledNode *node : nodes->nodesRange()) {
+    for (ScheduledNode *node : nodes->getVertices()) {
       oldSchedules[i] = node->getSchedule().copy(allocator);
       oldNodes[i++] = node;
     }
@@ -732,7 +732,7 @@ private:
     if (Optional<size_t> depSat = solveGraph(g, d, true, counts))
       if (Optional<size_t> depSatN = optimize(g, d + 1, maxDepth))
         return *depSat |= *depSatN;
-    for (ScheduledNode *node : nodes->nodesRange())
+    for (ScheduledNode *node : nodes->getVertices())
       for (Dependence *d : node->inputEdges()) d->popSatLevel();
     // reconnect nodes, in case they became disconnected in breakGraph
     ScheduledNode *n = nullptr;
