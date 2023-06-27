@@ -67,6 +67,7 @@ $(function() {
 <div class="header">
   <div class="summary">
 <a href="#nested-classes">Classes</a> &#124;
+<a href="#pub-types">Public Types</a> &#124;
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-static-methods">Static Public Member Functions</a> &#124;
 <a href="#friends">Friends</a> &#124;
@@ -78,8 +79,38 @@ $(function() {
 
 <p><code>#include &lt;<a class="el" href="ScheduledNode_8hpp_source.html">ScheduledNode.hpp</a>&gt;</code></p>
 <table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
+Public Types</h2></td></tr>
+<tr class="memitem:a2574dfee95e94ddb1a37e54e282f0789"><td class="memItemLeft" align="right" valign="top"><a id="a2574dfee95e94ddb1a37e54e282f0789"></a>
+using&#160;</td><td class="memItemRight" valign="bottom"><b>VertexType</b> = <a class="el" href="classpoly_1_1lp_1_1ScheduledNode.html">ScheduledNode</a></td></tr>
+<tr class="separator:a2574dfee95e94ddb1a37e54e282f0789"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
+<tr class="memitem:a546ed05ca86472d9b0e9b949bdfb5e01"><td class="memItemLeft" align="right" valign="top"><a id="a546ed05ca86472d9b0e9b949bdfb5e01"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>index</b> () -&gt; unsigned &amp;</td></tr>
+<tr class="separator:a546ed05ca86472d9b0e9b949bdfb5e01"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3f251808b85f2ed0450e7fd757288e0c"><td class="memItemLeft" align="right" valign="top"><a id="a3f251808b85f2ed0450e7fd757288e0c"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>lowLink</b> () -&gt; unsigned &amp;</td></tr>
+<tr class="separator:a3f251808b85f2ed0450e7fd757288e0c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6203d96235cc1ff20331da2c60264a92"><td class="memItemLeft" align="right" valign="top"><a id="a6203d96235cc1ff20331da2c60264a92"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>onStack</b> () const -&gt; bool</td></tr>
+<tr class="separator:a6203d96235cc1ff20331da2c60264a92"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2fb715df4d25cceab1a3897377100504"><td class="memItemLeft" align="right" valign="top"><a id="a2fb715df4d25cceab1a3897377100504"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>addToStack</b> ()</td></tr>
+<tr class="separator:a2fb715df4d25cceab1a3897377100504"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2e04fae3199d916a977e4574be92875b"><td class="memItemLeft" align="right" valign="top"><a id="a2e04fae3199d916a977e4574be92875b"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>removeFromStack</b> ()</td></tr>
+<tr class="separator:a2e04fae3199d916a977e4574be92875b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6365223722587518e13d9033699aa7a3"><td class="memItemLeft" align="right" valign="top"><a id="a6365223722587518e13d9033699aa7a3"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>visited</b> () const -&gt; bool</td></tr>
+<tr class="separator:a6365223722587518e13d9033699aa7a3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a23918eab20453c249d1c19f984ecda72"><td class="memItemLeft" align="right" valign="top"><a id="a23918eab20453c249d1c19f984ecda72"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> ()</td></tr>
+<tr class="separator:a23918eab20453c249d1c19f984ecda72"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab3ee4ac2e1de09f334503f3a38346c5a"><td class="memItemLeft" align="right" valign="top"><a id="ab3ee4ac2e1de09f334503f3a38346c5a"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>unVisit</b> ()</td></tr>
+<tr class="separator:ab3ee4ac2e1de09f334503f3a38346c5a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3820cf267f6813fa8ae003884ab5ed85"><td class="memItemLeft" align="right" valign="top"><a id="a3820cf267f6813fa8ae003884ab5ed85"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>addNext</b> (<a class="el" href="classpoly_1_1lp_1_1ScheduledNode.html">ScheduledNode</a> *n) -&gt; <a class="el" href="classpoly_1_1lp_1_1ScheduledNode.html">ScheduledNode</a> *</td></tr>
 <tr class="separator:a3820cf267f6813fa8ae003884ab5ed85"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -89,6 +120,12 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNext</b>
 <tr class="memitem:a02d3d89d9315c0661aa2825ba449eb41"><td class="memItemLeft" align="right" valign="top"><a id="a02d3d89d9315c0661aa2825ba449eb41"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>setNext</b> (<a class="el" href="classpoly_1_1lp_1_1ScheduledNode.html">ScheduledNode</a> *n) -&gt; <a class="el" href="classpoly_1_1lp_1_1ScheduledNode.html">ScheduledNode</a> *</td></tr>
 <tr class="separator:a02d3d89d9315c0661aa2825ba449eb41"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3efce26b6685d0b52851b0e2e9ad1e26"><td class="memItemLeft" align="right" valign="top"><a id="a3efce26b6685d0b52851b0e2e9ad1e26"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNextComponent</b> () -&gt; <a class="el" href="classpoly_1_1lp_1_1ScheduledNode.html">ScheduledNode</a> *</td></tr>
+<tr class="separator:a3efce26b6685d0b52851b0e2e9ad1e26"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9129ab47f54d8c56d32f4baa514eaf46"><td class="memItemLeft" align="right" valign="top"><a id="a9129ab47f54d8c56d32f4baa514eaf46"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>setNextComponent</b> (<a class="el" href="classpoly_1_1lp_1_1ScheduledNode.html">ScheduledNode</a> *n) -&gt; <a class="el" href="classpoly_1_1lp_1_1ScheduledNode.html">ScheduledNode</a> *</td></tr>
+<tr class="separator:a9129ab47f54d8c56d32f4baa514eaf46"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adac7747665394d573293fc521192f5b3"><td class="memItemLeft" align="right" valign="top"><a id="adac7747665394d573293fc521192f5b3"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getLoopOffsets</b> () -&gt; MutPtrVector&lt; int64_t &gt;</td></tr>
 <tr class="separator:adac7747665394d573293fc521192f5b3"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -101,21 +138,21 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getStore</b
 <tr class="memitem:a23144d570f99cc802ee4df2e5f2bd807"><td class="memItemLeft" align="right" valign="top"><a id="a23144d570f99cc802ee4df2e5f2bd807"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getStore</b> () const -&gt; const <a class="el" href="classpoly_1_1IR_1_1Addr.html">Addr</a> *</td></tr>
 <tr class="separator:a23144d570f99cc802ee4df2e5f2bd807"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aff4c9e3a8634be288ba4e0f84cf38156"><td class="memItemLeft" align="right" valign="top"><a id="aff4c9e3a8634be288ba4e0f84cf38156"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>nodesRange</b> () -&gt; utils::ListRange&lt; <a class="el" href="classpoly_1_1lp_1_1ScheduledNode.html">ScheduledNode</a>, utils::GetNext, utils::Identity &gt;</td></tr>
-<tr class="separator:aff4c9e3a8634be288ba4e0f84cf38156"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a62a814462d4dd5a643178cc1a45150ef"><td class="memItemLeft" align="right" valign="top"><a id="a62a814462d4dd5a643178cc1a45150ef"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getVertices</b> () -&gt; utils::ListRange&lt; <a class="el" href="classpoly_1_1lp_1_1ScheduledNode.html">ScheduledNode</a>, utils::GetNext, utils::Identity &gt;</td></tr>
+<tr class="separator:a62a814462d4dd5a643178cc1a45150ef"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a952dfc664035829601cd05c2fd9a2394"><td class="memItemLeft" align="right" valign="top"><a id="a952dfc664035829601cd05c2fd9a2394"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>localAddr</b> ()</td></tr>
 <tr class="separator:a952dfc664035829601cd05c2fd9a2394"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2d042663b0f7dc2318059de271bfa54b"><td class="memItemLeft" align="right" valign="top"><a id="a2d042663b0f7dc2318059de271bfa54b"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>eachAddr</b> ()</td></tr>
 <tr class="separator:a2d042663b0f7dc2318059de271bfa54b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a534b21d93d010da83af7e2b91a53734d"><td class="memItemLeft" align="right" valign="top"><a id="a534b21d93d010da83af7e2b91a53734d"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>inputNodes</b> ()</td></tr>
-<tr class="separator:a534b21d93d010da83af7e2b91a53734d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1488e6b5796bb3922d1fc01088cbb4af"><td class="memItemLeft" align="right" valign="top"><a id="a1488e6b5796bb3922d1fc01088cbb4af"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>outputNodes</b> ()</td></tr>
-<tr class="separator:a1488e6b5796bb3922d1fc01088cbb4af"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2aae51b5e039a66ee5aa2aa8279f8424"><td class="memItemLeft" align="right" valign="top"><a id="a2aae51b5e039a66ee5aa2aa8279f8424"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>inNeighbors</b> ()</td></tr>
+<tr class="separator:a2aae51b5e039a66ee5aa2aa8279f8424"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7a05f3f66b86025af2675eb2a72aed44"><td class="memItemLeft" align="right" valign="top"><a id="a7a05f3f66b86025af2675eb2a72aed44"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>outNeighbors</b> ()</td></tr>
+<tr class="separator:a7a05f3f66b86025af2675eb2a72aed44"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6243afdbee60017e781afca845029f7e"><td class="memItemLeft" align="right" valign="top"><a id="a6243afdbee60017e781afca845029f7e"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>inputEdges</b> ()</td></tr>
 <tr class="separator:a6243afdbee60017e781afca845029f7e"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -188,15 +225,6 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getLoopNest
 <tr class="memitem:a1c5ed0818fce0fbb8418d7eb68b1913b"><td class="memItemLeft" align="right" valign="top"><a id="a1c5ed0818fce0fbb8418d7eb68b1913b"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getOffset</b> () const -&gt; const int64_t *</td></tr>
 <tr class="separator:a1c5ed0818fce0fbb8418d7eb68b1913b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a33cb9b2febcf2ab53ec9aafb1f64df63"><td class="memItemLeft" align="right" valign="top"><a id="a33cb9b2febcf2ab53ec9aafb1f64df63"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>wasVisited</b> () const -&gt; bool</td></tr>
-<tr class="separator:a33cb9b2febcf2ab53ec9aafb1f64df63"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a23918eab20453c249d1c19f984ecda72"><td class="memItemLeft" align="right" valign="top"><a id="a23918eab20453c249d1c19f984ecda72"></a>
-constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> ()</td></tr>
-<tr class="separator:a23918eab20453c249d1c19f984ecda72"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a97791f47f44040f8d44cd75545152c90"><td class="memItemLeft" align="right" valign="top"><a id="a97791f47f44040f8d44cd75545152c90"></a>
-constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>unVisit</b> ()</td></tr>
-<tr class="separator:a97791f47f44040f8d44cd75545152c90"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad2c0e6e947b23483b974f1b9f796c768"><td class="memItemLeft" align="right" valign="top"><a id="ad2c0e6e947b23483b974f1b9f796c768"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumLoops</b> () const -&gt; unsigned</td></tr>
 <tr class="separator:ad2c0e6e947b23483b974f1b9f796c768"><td class="memSeparator" colspan="2">&#160;</td></tr>
