@@ -31,6 +31,7 @@
 #include <llvm/ADT/ArrayRef.h>
 #include <llvm/ADT/STLExtras.h>
 #include <llvm/ADT/SmallVector.h>
+#include <llvm/Analysis/ScalarEvolution.h>
 #include <llvm/IR/Instructions.h>
 #include <llvm/IR/User.h>
 #include <llvm/IR/Value.h>
@@ -41,7 +42,7 @@
 #include <type_traits>
 
 namespace poly::lp {
-using math::MutPtrMatrix;
+using math::PtrMatrix, math::MutPtrMatrix, math::Row, math::Col;
 /// A loop block is a block of the program that may include multiple loops.
 /// These loops are either all executed (note iteration count may be 0, or
 /// loops may be in rotated form and the guard prevents execution; this is okay
@@ -124,7 +125,7 @@ class LoopBlock {
 
 public:
   LoopBlock() = default;
-  void optimize(IR::Cache &cache, IR::TreeResult tr) {
+  auto optimize(IR::Cache &cache, IR::TreeResult tr) -> Optional<size_t> {
     // first, we peel loops for which affine repr failed
     if (unsigned numReject = tr.rejectDepth) {
       auto *SE = cache.getScalarEvolution();
@@ -141,11 +142,11 @@ public:
       Addr *next = llvm::cast_or_null<Addr>(stow->getNext());
       for (Addr *other = next; other;
            other = llvm::cast_or_null<Addr>(other->getNext()))
-        check(&allocator, stow, other);
+        Dependence::check(&allocator, stow, other);
       for (Addr *other = tr.load; other;
            other = llvm::cast_or_null<Addr>(other->getNext()))
-        check(&allocator, stow, other);
-      stow = next
+        Dependence::check(&allocator, stow, other);
+      stow = next;
     }
     // link stores with loads connected through registers
     ScheduledNode *nodes{nullptr};
@@ -154,13 +155,15 @@ public:
       nodes = addScheduledNode(cache, stow)->addNext(nodes);
     unsigned maxDepth = 0;
     for (ScheduledNode *node : nodes->getVertices()) {
-      maxDepth = std::max(maxDepth, node->getDepth());
+      maxDepth = std::max(maxDepth, node->getNumLoops());
       shiftOmega(node);
     }
     return optOrth(nodes, maxDepth);
   }
   void clear() { allocator.reset(); }
-  [[nodiscard]] constexpr auto getAllocator() -> Arena<> * { return allocator; }
+  [[nodiscard]] constexpr auto getAllocator() -> Arena<> * {
+    return &allocator;
+  }
 
 private:
   auto addScheduledNode(IR::Cache &cache, IR::Stow stow) -> ScheduledNode * {
@@ -185,10 +188,10 @@ private:
     // If one has already been visited, duplicate and
     // mark the new one.
     auto [storedVal, maxLoop] =
-      searchOperandsForLoads(stow, stow.getStoredVal());
+      searchOperandsForLoads(cache, stow, stow.getStoredVal());
     maxLoop = deeperLoop(maxLoop, stow.getLoop());
     stow.setVal(storedVal); // in case it changed
-    return addScheduledNode(cache.getAllocator(), stow, maxLoop);
+    return ScheduledNode::construct(cache.getAllocator(), stow, maxLoop);
   }
   static constexpr auto deeperLoop(poly::Loop *a, poly::Loop *b)
     -> poly::Loop * {
@@ -199,16 +202,16 @@ private:
   // NOLINTNEXTLINE(misc-no-recursion)
   auto searchOperandsForLoads(IR::Cache &cache, IR::Stow stow, Value *val)
     -> std::pair<Value *, poly::Loop *> {
-    Instruction *inst = dyn_cast<Instruction>(val);
+    Instruction *inst = llvm::dyn_cast<Instruction>(val);
     if (!inst) return {val, nullptr};
     // we use parent/child relationships here instead of next/prev
     if (Load load = IR::Load(inst)) {
       // TODO: check we don't have mutually exclusive predicates
       // we found a load; first we check if it has already been added
       if (load.getParent() != nullptr) {
-        Arena<> *allocator = cache.getAllocator();
-        IR::Addr *reload = ((Addr *)load)->reload(allocator);
-        Dependence::copyDependencies(allocator, load, reload);
+        Arena<> *alloc = cache.getAllocator();
+        IR::Addr *reload = ((Addr *)load)->reload(alloc);
+        Dependence::copyDependencies(alloc, load, reload);
         invariant(reload->isLoad());
         load = reload;
       }
@@ -224,17 +227,18 @@ private:
         if (other == stow) break; // scan all users
       }
     }
-    if (store && (store != stow)) {
-      Addr *load = Dependence::reload(allocator, store);
+    if (store && (store != (Addr *)stow)) {
+      Addr *load = Dependence::reload(&allocator, store);
       stow.insertChild(load); // insert load after stow
-      return {load, load.getLoop()};
+      return {load, load->getLoop()};
     }
-    Compute *C = llvm::cast<Compute>(inst);
+    IR::Compute *C = llvm::cast<IR::Compute>(inst);
     // could not find a load, so now we recurse, searching operands
     poly::Loop *maxLoop = nullptr;
     auto s = allocator.scope(); // create temporary
     unsigned numOps = C->getNumOperands();
-    MutPtrVector<Value *> newOperands{allocator, numOps};
+    MutPtrVector<Value *> newOperands{
+      math::vector<Value *>(&allocator, numOps)};
     bool opsChanged = false;
     for (ptrdiff_t i = 0; i < numOps; ++i) {
       Value *op = C->getOperand(i);
@@ -251,9 +255,10 @@ private:
     unsigned nLoops = node->getNumLoops();
     if (nLoops == 0) return;
     auto p0 = allocator.checkpoint();
-    MutPtrVector<int64_t> offs = vector<int64_t>(allocator, nLoops);
+    MutPtrVector<int64_t> offs = math::vector<int64_t>(&allocator, nLoops);
     auto p1 = allocator.checkpoint();
-    MutSquarePtrMatrix<int64_t> A = matrix<int64_t>(allocator, nLoops + 1);
+    MutSquarePtrMatrix<int64_t> A =
+      math::matrix<int64_t>(&allocator, nLoops + 1);
     // MutPtrVector<BumpPtrVector<int64_t>> offsets{
     //   vector<BumpPtrVector<int64_t>>(allocator, nLoops)};
     // for (size_t i = 0; i < nLoops; ++i)
@@ -268,12 +273,12 @@ private:
     for (ScheduledNode *n = node; n; n = n->getNext()) {
       for (Addr *m = n->getStore(); m;
            m = llvm::cast_or_null<Addr>(m->getChild())) {
-        for (Dependence *d = addr->getEdgeIn(); d; d = d->getNextInput()) {
-          const DepPoly *depPoly = d->getDepPoly();
+        for (Dependence *dep = m->getEdgeIn(); dep; dep = dep->getNextInput()) {
+          const DepPoly *depPoly = dep->getDepPoly();
           unsigned numSyms = depPoly->getNumSymbols(),
                    dep0 = depPoly->getDim0(), dep1 = depPoly->getDim1();
           PtrMatrix<int64_t> E = depPoly->getE();
-          if (dep.input()->getNode() == n) {
+          if (dep->input()->getNode() == n) {
             // dep within node
             unsigned depCommon = std::min(dep0, dep1),
                      depMax = std::max(dep0, dep1);
@@ -292,13 +297,13 @@ private:
                 for (; j < depMax; ++j) x[L - j] = E(d, j + offset);
               }
               for (; j < nLoops; ++j) x[L - j] = 0;
-              rank = NormalForm::updateForNewRow(A(_(0, rank + 1), _));
+              rank = math::NormalForm::updateForNewRow(A(_(0, rank + 1), _));
             }
           } else {
             // dep between nodes
             // is forward means other -> mem, else mem <- other
-            unsigned offset = dep.isForward() ? numSyms + dep0 : numSyms,
-                     numDep = dep.isForward() ? dep1 : dep0;
+            unsigned offset = dep->isForward() ? numSyms + dep0 : numSyms,
+                     numDep = dep->isForward() ? dep1 : dep0;
             for (ptrdiff_t d = 0; d < E.numRow(); ++d) {
               MutPtrVector<int64_t> x = A(rank, _);
               x[last] = E(d, 0);
@@ -306,19 +311,20 @@ private:
               ptrdiff_t j = 0;
               for (; j < numDep; ++j) x[L - j] = E(d, j + offset);
               for (; j < nLoops; ++j) x[L - j] = 0;
-              rank = NormalForm::updateForNewRow(A(_(0, rank + 1), _));
+              rank = math::NormalForm::updateForNewRow(A(_(0, rank + 1), _));
             }
           }
         }
-        for (Dependence *d = addr->getEdgeOut(); d; d = d->getNextOutput()) {
-          if (d->output()->getNode() == n) continue;
-          const DepPoly *depPoly = d->getDepPoly();
+        for (Dependence *dep = m->getEdgeOut(); dep;
+             dep = dep->getNextOutput()) {
+          if (dep->output()->getNode() == n) continue;
+          const DepPoly *depPoly = dep->getDepPoly();
           unsigned numSyms = depPoly->getNumSymbols(),
                    dep0 = depPoly->getDim0(), dep1 = depPoly->getDim1();
           PtrMatrix<int64_t> E = depPoly->getE();
           // is forward means mem -> other, else other <- mem
-          unsigned offset = dep.isForward() ? numSyms : numSyms + dep0,
-                   numDep = dep.isForward() ? dep0 : dep1;
+          unsigned offset = dep->isForward() ? numSyms : numSyms + dep0,
+                   numDep = dep->isForward() ? dep0 : dep1;
           for (ptrdiff_t d = 0; d < E.numRow(); ++d) {
             MutPtrVector<int64_t> x = A(rank, _);
             x[last] = E(d, 0);
@@ -326,7 +332,7 @@ private:
             ptrdiff_t j = 0;
             for (; j < numDep; ++j) x[L - j] = E(d, j + offset);
             for (; j < nLoops; ++j) x[L - j] = 0;
-            rank = NormalForm::updateForNewRow(A(_(0, rank + 1), _));
+            rank = math::NormalForm::updateForNewRow(A(_(0, rank + 1), _));
           }
         }
       }
@@ -358,14 +364,14 @@ private:
     for (ScheduledNode *n = node; n; n = n->getNext()) {
       for (Addr *m = n->getStore(); m;
            m = llvm::cast_or_null<Addr>(m->getChild())) {
-        for (Dependence *d = addr->getEdgeIn(); d; d = d->getNextInput()) {
-          d->copySimplices(allocator); // in case it is aliased
+        for (Dependence *d = m->getEdgeIn(); d; d = d->getNextInput()) {
+          d->copySimplices(&allocator); // in case it is aliased
           DepPoly *depPoly = d->getDepPoly();
           unsigned numSyms = depPoly->getNumSymbols(),
                    dep0 = depPoly->getDim0(), dep1 = depPoly->getDim1();
           MutPtrMatrix<int64_t> satL = d->getSatLambda();
           MutPtrMatrix<int64_t> bndL = d->getBndLambda();
-          bool pick = d->isForward(), repeat = d->input()->getNode() == nIdx;
+          bool pick = d->isForward(), repeat = d->input()->getNode() == n;
           while (true) {
             unsigned offset = pick ? numSyms + dep0 : numSyms,
                      numDep = pick ? dep1 : dep0;
@@ -380,22 +386,22 @@ private:
             pick = !pick;
           }
         }
-      }
-      for (Dependence *d = addr->getEdgeOut(); d; d = d->getNextOutput()) {
-        if (d->output()->getNode() == n) continue; // handled above
-        d->copySimplices(allocator); // we don't want to copy twice
-        DepPoly *depPoly = d->getDepPoly();
-        unsigned numSyms = depPoly->getNumSymbols(), dep0 = depPoly->getDim0(),
-                 dep1 = depPoly->getDim1();
-        MutPtrMatrix<int64_t> satL = d->getSatLambda();
-        MutPtrMatrix<int64_t> bndL = d->getBndLambda();
-        unsigned offset = d->isForward() ? numSyms : numSyms + dep0,
-                 numDep = d->isForward() ? dep0 : dep1;
-        for (size_t l = 0; l < numDep; ++l) {
-          int64_t mlt = offs[l];
-          if (mlt == 0) continue;
-          satL(0, _) -= mlt * satL(offset + l, _);
-          bndL(0, _) -= mlt * bndL(offset + l, _);
+        for (Dependence *d = m->getEdgeOut(); d; d = d->getNextOutput()) {
+          if (d->output()->getNode() == n) continue; // handled above
+          d->copySimplices(&allocator); // we don't want to copy twice
+          DepPoly *depPoly = d->getDepPoly();
+          unsigned numSyms = depPoly->getNumSymbols(),
+                   dep0 = depPoly->getDim0(), dep1 = depPoly->getDim1();
+          MutPtrMatrix<int64_t> satL = d->getSatLambda();
+          MutPtrMatrix<int64_t> bndL = d->getBndLambda();
+          unsigned offset = d->isForward() ? numSyms : numSyms + dep0,
+                   numDep = d->isForward() ? dep0 : dep1;
+          for (size_t l = 0; l < numDep; ++l) {
+            int64_t mlt = offs[l];
+            if (mlt == 0) continue;
+            satL(0, _) -= mlt * satL(offset + l, _);
+            bndL(0, _) -= mlt * bndL(offset + l, _);
+          }
         }
       }
     }
@@ -416,7 +422,7 @@ private:
         // iteration of this loop, and that the indmats are the same
         if (node->phiIsScheduled(0) || (indMat != edge->getOutIndMat()))
           continue;
-        size_t r = NormalForm::rank(indMat);
+        size_t r = math::NormalForm::rank(indMat);
         if (r == edge->getInNumLoops()) continue;
         // TODO handle linearly dependent acceses, filtering them out
         if (r != size_t(indMat.numRow())) continue;
@@ -425,10 +431,10 @@ private:
       }
     }
     if (tryOrth) {
-      if (optimize(g, 0, maxDepth)) return true;
+      if (optimize(nodes, 0, maxDepth)) return true;
       for (ScheduledNode *n : nodes->getVertices()) n->unschedulePhi();
     }
-    return optimize(g, 0, maxDepth);
+    return optimize(nodes, 0, maxDepth);
   }
   // NOLINTNEXTLINE(misc-no-recursion)
   static constexpr auto numParams(const Dependence *edge)
@@ -436,21 +442,23 @@ private:
     return {edge->getNumLambda(), edge->getDynSymDim(),
             edge->getNumConstraints(), 1};
   }
-  constexpr auto countAuxParamsAndConstraints(ScheduledNode *nodes, unsigned d)
-    -> math::SVector<unsigned, 4> {
-    math::SVector<unsigned, 4> params{};
-    assert(allZero(params));
-    for (ScheduledNode *node : nodes->getVertices())
-      for (Dependence *d : node->inputEdges()) params += numParams(d);
-    return params;
-  }
-  constexpr auto countAuxAndStash(ScheduledNode *nodes, unsigned d)
+  constexpr auto countAuxParamsAndConstraints(ScheduledNode *nodes,
+                                              unsigned depth)
     -> math::SVector<unsigned, 4> {
     math::SVector<unsigned, 4> params{};
     assert(allZero(params));
     for (ScheduledNode *node : nodes->getVertices())
       for (Dependence *d : node->inputEdges())
-        params += numParams(d->stashSatLevel());
+        if (d->isActive(depth)) params += numParams(d);
+    return params;
+  }
+  constexpr auto countAuxAndStash(ScheduledNode *nodes, unsigned depth)
+    -> math::SVector<unsigned, 4> {
+    math::SVector<unsigned, 4> params{};
+    assert(allZero(params));
+    for (ScheduledNode *node : nodes->getVertices())
+      for (Dependence *d : node->inputEdges())
+        if (d->isActive(depth)) params += numParams(d->stashSatLevel());
     return params;
   }
 
@@ -836,10 +844,13 @@ private:
       Dependence &edge = edges[e];
       if (g.isInactive(e, d)) continue;
       size_t outNodeIndex = edge->nodeOut(), inNodeIndex = edge->nodeIn();
-      const auto [satC, satL, satPp, satPc, satO, satW] =
-        edge->splitSatisfaction();
-      const auto [bndC, bndL, bndPp, bndPc, bndO, bndWU] =
-        edge->splitBounding();
+      const auto [satPp, satPc] = edge->satPhiCoefs();
+      const auto [bndPp, bndPc] = edge->bndPhiCoefs();
+      math::StridedVector<int64_t> satC{edge->getSatConstants()},
+        satW{edge->getSatW()}, bndC{edge->getBndConstants()};
+      math::PtrMatrix<int64_t> satL{edge->getSatLambda()},
+        bndL{edge->getBndLambda()}, satO{edge->getSatOmegaCoefs()},
+        bndO{edge->getBndOmegaCoefs()}, bndWU{edge->getBndCoefs()};
       const size_t numSatConstraints = satC.size(),
                    numBndConstraints = bndC.size();
       const Col nPc = satPc.numCol(), nPp = satPp.numCol();

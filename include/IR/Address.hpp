@@ -813,6 +813,7 @@ public:
   [[nodiscard]] constexpr auto getLoop() const -> poly::Loop * {
     return addr->getLoop();
   }
+  constexpr operator Addr *() { return addr; }
 };
 
 class Load : public AddrWrapper {

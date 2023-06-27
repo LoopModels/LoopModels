@@ -295,11 +295,11 @@ public:
   /// 1. evaluate the level.
   /// 2. if we succeed w/out deps, update sat levels and go a level deeper.
   /// 3.
-  constexpr auto stashSatLevel() -> Dependence & {
+  constexpr auto stashSatLevel() -> Dependence * {
     assert(satLvl.back() == 255 || "satLevel overflow");
     std::copy_backward(satLvl.begin(), satLvl.end() - 1, satLvl.end());
     satLvl.front() = 255;
-    return *this;
+    return this;
   }
   constexpr void popSatLevel() {
     std::copy(satLvl.begin() + 1, satLvl.end(), satLvl.begin());
@@ -335,7 +335,7 @@ public:
   // [[nodiscard]] constexpr auto nodeOut() const -> unsigned {
   //   return out->getNode();
   // }
-  [[nodiscard]] constexpr auto getDynSymDim() const -> size_t {
+  [[nodiscard]] constexpr auto getDynSymDim() const -> unsigned {
     return depPoly->getNumDynSym();
   }
   [[nodiscard]] auto inputIsLoad() const -> bool { return in->isLoad(); }
@@ -492,25 +492,17 @@ public:
                 getNumOmegaCoefficients();
     return getBndConstraints()(_, _(lb, end));
   }
-  [[nodiscard]] auto splitSatisfaction() const
-    -> std::tuple<math::StridedVector<int64_t>, PtrMatrix<int64_t>,
-                  PtrMatrix<int64_t>, PtrMatrix<int64_t>, PtrMatrix<int64_t>,
-                  math::StridedVector<int64_t>> {
+  [[nodiscard]] auto satPhiCoefs() const -> std::array<PtrMatrix<int64_t>, 2> {
     PtrMatrix<int64_t> phiCoefsIn = getSatPhi1Coefs(),
                        phiCoefsOut = getSatPhi0Coefs();
     if (isForward()) std::swap(phiCoefsIn, phiCoefsOut);
-    return {getSatConstants(), getSatLambda(),     phiCoefsIn,
-            phiCoefsOut,       getSatOmegaCoefs(), getSatW()};
+    return {phiCoefsIn, phiCoefsOut};
   }
-  [[nodiscard]] auto splitBounding() const
-    -> std::tuple<math::StridedVector<int64_t>, PtrMatrix<int64_t>,
-                  PtrMatrix<int64_t>, PtrMatrix<int64_t>, PtrMatrix<int64_t>,
-                  PtrMatrix<int64_t>> {
+  [[nodiscard]] auto bndPhiCoefs() const -> std::array<PtrMatrix<int64_t>, 2> {
     PtrMatrix<int64_t> phiCoefsIn = getBndPhi1Coefs(),
                        phiCoefsOut = getBndPhi0Coefs();
     if (isForward()) std::swap(phiCoefsIn, phiCoefsOut);
-    return {getBndConstants(), getBndLambda(),     phiCoefsIn,
-            phiCoefsOut,       getBndOmegaCoefs(), getBndCoefs()};
+    return {phiCoefsIn, phiCoefsOut};
   }
   [[nodiscard]] auto isSatisfied(Arena<> alloc,
                                  NotNull<const AffineSchedule> schIn,

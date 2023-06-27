@@ -391,12 +391,6 @@ private:
     }
     return subTrees[i];
   }
-  auto getLoopTripple(size_t i)
-    -> std::tuple<InstructionBlock &, LoopTreeSchedule *, InstructionBlock &> {
-    auto loopAndExit = subTrees[i];
-    if (i) return {subTrees[i - 1].exit, loopAndExit.subTree, loopAndExit.exit};
-    return {header, loopAndExit.subTree, loopAndExit.exit};
-  }
   auto getLoop(Arena<> *alloc, size_t i, uint8_t d) -> LoopTreeSchedule * {
     return getLoopAndExit(alloc, i, d).subTree;
   }

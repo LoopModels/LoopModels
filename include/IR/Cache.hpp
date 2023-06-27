@@ -281,7 +281,7 @@ class Cache {
 
 public:
   [[nodiscard]] constexpr auto getScalarEvolution() const
-    -> const llvm::ScalarEvolution * {
+    -> llvm::ScalarEvolution * {
     return SE;
   }
   /// complete the operands

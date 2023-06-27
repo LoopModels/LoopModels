@@ -65,8 +65,7 @@ template <class N> struct State {
 // TODO: address code duplication by abstracting between AbstractIndexGraph and
 // AbstractPtrGraph
 template <typename N>
-inline auto strongConnect(State<N> state, N *v)
-  -> std::tuple<N *, N *, unsigned> {
+inline auto strongConnect(State<N> state, N *v) -> State<N> {
   v->index() = v->lowLink() = state.index++;
   v->addToStack();
   v->visit();
