@@ -59,10 +59,10 @@ class ScheduledNode {
     return L * L;
   }
   constexpr ScheduledNode(Addr *store, poly::Loop *L)
-    : store(store), loopNest(L) {}
-  struct AllEdgeIterator {
-    ScheduledNode *node;
-  };
+    : store(store), loopNest(L) {
+    mem[0] = L->getNumLoops();
+    getFusionOmega() << 0;
+  }
 
 public:
   using VertexType = ScheduledNode;
@@ -86,7 +86,10 @@ public:
       alloc->allocate(sizeof(ScheduledNode) + memNeeded * sizeof(int64_t));
     return new (p) ScheduledNode(store, L);
   }
-  constexpr auto getNext() -> ScheduledNode * { return next; }
+  [[nodiscard]] constexpr auto getNext() -> ScheduledNode * { return next; }
+  [[nodiscard]] constexpr auto getNext() const -> const ScheduledNode * {
+    return next;
+  }
   constexpr auto setNext(ScheduledNode *n) -> ScheduledNode * {
     next = n;
     return this;
@@ -128,6 +131,10 @@ public:
   }
   [[nodiscard]] constexpr auto getVertices()
     -> utils::ListRange<ScheduledNode, utils::GetNext, utils::Identity> {
+    return utils::ListRange{this, utils::GetNext{}};
+  }
+  [[nodiscard]] constexpr auto getVertices() const
+    -> utils::ListRange<const ScheduledNode, utils::GetNext, utils::Identity> {
     return utils::ListRange{this, utils::GetNext{}};
   }
 
@@ -311,6 +318,7 @@ public:
     -> NotNull<const poly::Loop> {
     return loopNest;
   }
+
   [[nodiscard]] constexpr auto getOffset() const -> const int64_t * {
     return offsets;
   }
@@ -339,7 +347,7 @@ public:
     return phiOffset;
   }
   [[nodiscard]] constexpr auto getPhiOffsetRange() const
-    -> math::Range<size_t, size_t> {
+    -> math::Range<ptrdiff_t, ptrdiff_t> {
     return _(phiOffset, phiOffset + getNumLoops());
   }
   // NOLINTNEXTLINE(readability-make-member-function-const)
@@ -407,6 +415,12 @@ public:
     return omegaOffset;
   }
   void resetPhiOffset() { phiOffset = std::numeric_limits<unsigned>::max(); }
+  [[nodiscard]] constexpr auto calcGraphMaxDepth() const -> unsigned {
+    unsigned maxDepth = 0;
+    for (const ScheduledNode *n : getVertices())
+      maxDepth = std::max(maxDepth, n->getNumLoops());
+    return maxDepth;
+  }
   friend inline auto operator<<(llvm::raw_ostream &os,
                                 const ScheduledNode &node)
     -> llvm::raw_ostream & {

@@ -42,7 +42,8 @@
 #include <type_traits>
 
 namespace poly::lp {
-using math::PtrMatrix, math::MutPtrMatrix, math::Row, math::Col;
+using math::PtrMatrix, math::MutPtrMatrix, math::Vector, math::DenseMatrix,
+  math::begin, math::end, math::last, math::Row, math::Col, utils::invariant;
 /// A loop block is a block of the program that may include multiple loops.
 /// These loops are either all executed (note iteration count may be 0, or
 /// loops may be in rotated form and the guard prevents execution; this is okay
@@ -509,7 +510,7 @@ private:
         return *depSat;
       }
     }
-    return breakGraph(nodes, d, maxDepth); // TODO
+    return breakGraph(nodes, d); // TODO
   }
   /// solveGraph(ScheduledNode *nodes, unsigned depth, bool satisfyDeps)
   /// solve the `nodes` graph at depth `d`
@@ -518,7 +519,7 @@ private:
   ///
   [[nodiscard]] auto solveGraph(ScheduledNode *nodes, unsigned depth,
                                 bool satisfyDeps) -> Optional<size_t> {
-    CoefCounts counts{calcCoefs(nodes, d)};
+    CoefCounts counts{calcCoefs(nodes, depth)};
     return solveGraph(nodes, depth, satisfyDeps, counts);
   }
   [[nodiscard]] auto solveGraph(ScheduledNode *nodes, unsigned depth,
@@ -528,15 +529,19 @@ private:
       setSchedulesIndependent(nodes, depth);
       return checkEmptySatEdges(nodes, depth);
     }
+    // TODO: sat Deps should check which stashed ones to satisfy
+    // use `edge->isCondIndep()`/`edge->preventsReodering()` to check
+    // which edges should be satisfied on this level if `satisfyDeps`
     auto omniSimplex =
-      instantiateOmniSimplex(g, depth, counts, satisfyDeps); // TODO
+      instantiateOmniSimplex(nodes, depth, satisfyDeps, counts);
     if (omniSimplex->initiateFeasible()) return {};
     auto sol = omniSimplex->rLexMinStop(counts.numLambda + counts.numSlack);
     assert(sol.size() == counts.numBounding + counts.numActiveEdges +
                            counts.numPhiCoefs + counts.numOmegaCoefs);
-    updateSchedules(nodes, depth, sol);
+    updateSchedules(nodes, depth, counts, sol);
     return deactivateSatisfiedEdges(
-      nodes, depth, sol[_(counts.numPhiCoefs + counts.numOmegaCoefs, end)]);
+      nodes, depth, counts,
+      sol[_(counts.numPhiCoefs + counts.numOmegaCoefs, end)]);
   }
   void setSchedulesIndependent(ScheduledNode *nodes, unsigned depth) {
     // IntMatrix A, N;
@@ -562,19 +567,21 @@ private:
     // auto s = allocator->scope(); // TODO: use bumpalloc
     DenseMatrix<int64_t> nullSpace; // d x lfull
     DenseMatrix<int64_t> A{node->getPhi()(_(0, depth), _).transpose()};
-    NormalForm::nullSpace11(nullSpace, A);
-    invariant(nullSpace.numRow(), node->getNumLoops() - depth);
+    math::NormalForm::nullSpace11(nullSpace, A);
+    invariant(unsigned(nullSpace.numRow()), node->getNumLoops() - depth);
     // Now, we search index matrices for schedules not in the null space of
     // existing phi. This is because we're looking to orthogonalize a
     // memory access if possible, rather than setting a schedule
     // arbitrarily.
     // Here, we collect candidates for the next schedule
-    DenseMatrix<int64_t> candidates{DenseDims{0, node->getNumLoops() + 1}};
+    DenseMatrix<int64_t> candidates{
+      math::DenseDims{0, node->getNumLoops() + 1}};
     Vector<int64_t> indv;
     indv.resizeForOverwrite(node->getNumLoops());
     for (Addr *mem : node->localAddr()) {
       PtrMatrix<int64_t> indMat = mem->indexMatrix(); // lsub x d
-      A.resizeForOverwrite(DenseDims{nullSpace.numRow(), indMat.numCol()});
+      A.resizeForOverwrite(
+        math::DenseDims{nullSpace.numRow(), indMat.numCol()});
       A = nullSpace(_, _(0, indMat.numRow())) * indMat;
       // we search A for rows that aren't all zero
       for (ptrdiff_t d = 0; d < A.numCol(); ++d) {
@@ -613,27 +620,27 @@ private:
     }
     invariant(false);
   }
-  void updateSchedules(ScheduledNode *node, unsigned depth,
+  void updateSchedules(ScheduledNode *nodes, unsigned depth, CoefCounts counts,
                        Simplex::Solution sol) {
 #ifndef NDEBUG
-    if (numPhiCoefs > 0)
-      assert(
-        std::ranges::any_of(sol, [](Rational s) -> bool { return s != 0; }));
+    if (counts.numPhiCoefs > 0)
+      assert(std::ranges::any_of(
+        sol, [](math::Rational s) -> bool { return s != 0; }));
 #endif
-    unsigned o = numOmegaCoefs;
-    for (ScheduledNode *node : nodes->nodeRange()) {
+    unsigned o = counts.numOmegaCoefs;
+    for (ScheduledNode *node : nodes->getVertices()) {
       if (depth >= node->getNumLoops()) continue;
-      if (!hasActiveEdges(g, node)) {
-        setDepFreeSchedule(memory, node, depth);
+      if (!node->hasActiveEdges(depth)) {
+        setDepFreeSchedule(node, depth);
         continue;
       }
-      Rational sOmega = sol[node->getOmegaOffset()];
+      math::Rational sOmega = sol[node->getOmegaOffset()];
       // TODO: handle s.denominator != 1
       if (!node->phiIsScheduled(depth)) {
         auto phi = node->getSchedule(depth);
         auto s = sol[node->getPhiOffsetRange() + o];
         int64_t baseDenom = sOmega.denominator;
-        int64_t l = lcm(s.denomLCM(), baseDenom);
+        int64_t l = math::lcm(s.denomLCM(), baseDenom);
 #ifndef NDEBUG
         for (ptrdiff_t i = 0; i < phi.size(); ++i)
           assert(((s[i].numerator * l) / (s[i].denominator)) >= 0);
@@ -660,12 +667,12 @@ private:
 #endif
     }
   }
-  [[nodiscard]] auto deactivateSatisfiedEdges(ScheduledNode *node,
-                                              unsigned depth,
+  [[nodiscard]] auto deactivateSatisfiedEdges(ScheduledNode *nodes,
+                                              unsigned depth, CoefCounts counts,
                                               Simplex::Solution sol) -> size_t {
-    if (allZero(sol[_(begin, numBounding + numActiveEdges)]))
-      return checkEmptySatEdges(node, depth);
-    ptrdiff_t w = 0, u = numActiveEdges;
+    if (allZero(sol[_(begin, counts.numBounding + counts.numActiveEdges)]))
+      return checkEmptySatEdges(nodes, depth);
+    ptrdiff_t w = 0, u = counts.numActiveEdges;
     // TODO: update the deactivated edge handling
     // must consider it w/ respect to `optimize`, `breakGraph`, and
     // `optimizeSatDep`
@@ -688,12 +695,12 @@ private:
           edge->setSatLevelLP(depth);
           deactivated = 1;
         } else {
-          ScheduledNode *inNode = edge->input();
+          ScheduledNode *inNode = edge->input()->getNode();
           DensePtrMatrix<int64_t> inPhi = inNode->getPhi()(_(0, depth + 1), _),
                                   outPhi =
                                     outNode->getPhi()(_(0, depth + 1), _);
           edge->checkEmptySat(
-            allocator, inNode->getLoopNest(), inNode->getOffset(), inPhi,
+            &allocator, inNode->getLoopNest(), inNode->getOffset(), inPhi,
             outNode->getLoopNest(), outNode->getOffset(), outPhi);
         }
         u = ptrdiff_t(uu);
@@ -705,19 +712,19 @@ private:
     for (ScheduledNode *outNode : nodes->getVertices()) {
       for (Dependence *edge : outNode->inputEdges()) {
         if (edge->isSat(depth)) continue;
-        ScheduledNode *inNode = edge->input();
-        invariant(edge->output(), outNode());
-        DensePtrMatrix<int64_t> inPhi = inNode.getPhi()(_(0, depth + 1), _),
-                                outPhi = outNode.getPhi()(_(0, depth + 1), _);
-        edge->checkEmptySat(allocator, inNode->getLoopNest(),
-                            inNode->getOffset(), inPhi, outNode->LoopNest(),
+        ScheduledNode *inNode = edge->input()->getNode();
+        invariant(edge->output()->getNode(), outNode);
+        DensePtrMatrix<int64_t> inPhi = inNode->getPhi()(_(0, depth + 1), _),
+                                outPhi = outNode->getPhi()(_(0, depth + 1), _);
+        edge->checkEmptySat(&allocator, inNode->getLoopNest(),
+                            inNode->getOffset(), inPhi, outNode->getLoopNest(),
                             outNode->getOffset(), outPhi);
       }
     }
     return 0;
   }
   // NOLINTNEXTLINE(misc-no-recursion)
-  [[nodiscard]] auto optimizeSatDep(ScheduledNode *nodes, unsigned d,
+  [[nodiscard]] auto optimizeSatDep(ScheduledNode *nodes, unsigned depth,
                                     unsigned maxDepth, size_t depSatLevel)
     -> size_t {
     // if we're here, there are satisfied deps in both
@@ -728,17 +735,17 @@ private:
     // activeEdges was the old original; swap it in
     auto scope = allocator.scope();
     ptrdiff_t numNodes = 0;
-    for (ScheduledNode *node : nodes->getVertices()) ++numNodes;
-    auto oldSchedules = vector<AffineSchedule>(allocator, numNodes);
-    auto oldNodes = vector<ScheduledNode *>(allocator, numNodes);
+    for (ScheduledNode *n : nodes->getVertices()) ++numNodes;
+    auto oldSchedules =
+      math::vector<poly::AffineSchedule>(&allocator, numNodes);
+    auto oldNodes = math::vector<ScheduledNode *>(&allocator, numNodes);
     ptrdiff_t i = 0;
     for (ScheduledNode *node : nodes->getVertices()) {
-      oldSchedules[i] = node->getSchedule().copy(allocator);
+      oldSchedules[i] = node->getSchedule().copy(&allocator);
       oldNodes[i++] = node;
     }
-    CoefCounts counts = calcCoefsStash(nodes, d);
-    if (Optional<size_t> depSat = solveGraph(g, d, true, counts))
-      if (Optional<size_t> depSatN = optimize(g, d + 1, maxDepth))
+    if (Optional<size_t> depSat = solveGraph(nodes, depth, true))
+      if (Optional<size_t> depSatN = optimize(nodes, depth + 1, maxDepth))
         return *depSat |= *depSatN;
     for (ScheduledNode *node : nodes->getVertices())
       for (Dependence *d : node->inputEdges()) d->popSatLevel();
@@ -1061,49 +1068,6 @@ private:
     return d;
   }
 
-  /// NOTE: this relies on two important assumptions:
-  /// 1. Code has been fully delinearized, so that axes all match
-  ///    (this means that even C[i], 0<=i<M*N -> C[m*M*n])
-  ///    (TODO: what if we have C[n+N*m] and C[m+M*n]???)
-  ///    (this of course means we have to see other uses in
-  ///     deciding whether to expand `C[i]`, and what to expand
-  ///     it into.)
-  /// 2. Reduction targets have been orthogonalized, so that
-  ///     the number of axes reflects the number of loops they
-  ///     depend on.
-  /// if we have
-  /// for (i = I, j = J, m = M, n = N) {
-  ///   C(m,n) = foo(C(m,n), ...)
-  /// }
-  /// then we have dependencies that
-  /// the load C(m,n) [ i = x, j = y ]
-  /// happens after the store C(m,n) [ i = x-1, j = y], and
-  /// happens after the store C(m,n) [ i = x, j = y-1]
-  /// and that the store C(m,n) [ i = x, j = y ]
-  /// happens after the load C(m,n) [ i = x-1, j = y], and
-  /// happens after the load C(m,n) [ i = x, j = y-1]
-  ///
-  void addEdge(NotNull<Addr> mai, NotNull<Addr> maj) {
-    // note, axes should be fully delinearized, so should line up
-    // as a result of preprocessing.
-    auto d = Dependence::check(allocator, mai, maj);
-    __builtin_trap();
-  }
-  /// fills all the edges between memory accesses, checking for
-  /// dependencies.
-  void fillEdges() {
-    // TODO: handle predicates
-    for (size_t i = 1; i < memory.size(); ++i) {
-      MemoryAccess *mai = memory[i];
-      for (size_t j = 0; j < i; ++j) {
-        MemoryAccess *maj = memory[j];
-        if ((mai->getArrayPointer() != maj->getArrayPointer()) ||
-            ((mai->isLoad()) && (maj->isLoad())))
-          continue;
-        addEdge(mai, maj);
-      }
-    }
-  }
   /// used in searchOperandsForLoads
   /// if an operand is stored, we can reload it.
   /// This will insert a new store memory access.

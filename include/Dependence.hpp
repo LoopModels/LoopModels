@@ -320,9 +320,13 @@ public:
     return satLevel() > depth;
   }
 
-  /// if true, then conditioned on the sat level,
+  /// if true, then it's independent conditioned on the phis...
   [[nodiscard]] constexpr auto isCondIndep() const -> bool {
     return (satLvl.front() & uint8_t(128)) == uint8_t(0);
+  }
+  // prevents reordering satisfied level if `true`
+  [[nodiscard]] constexpr auto preventsReordering() const -> bool {
+    return satLvl.front() & uint8_t(128);
   }
   [[nodiscard]] constexpr auto getArrayPointer() -> const llvm::SCEV * {
     return in->getArrayPointer();
