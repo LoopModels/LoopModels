@@ -66,7 +66,6 @@ $(function() {
 </div><!-- top -->
 <div class="header">
   <div class="summary">
-<a href="#nested-classes">Classes</a> &#124;
 <a href="#pub-types">Public Types</a> &#124;
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-static-methods">Static Public Member Functions</a> &#124;
@@ -117,6 +116,9 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>addNext</b>
 <tr class="memitem:a641c4bf56787cdd8d5a89cb6e5a67740"><td class="memItemLeft" align="right" valign="top"><a id="a641c4bf56787cdd8d5a89cb6e5a67740"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNext</b> () -&gt; <a class="el" href="classpoly_1_1lp_1_1ScheduledNode.html">ScheduledNode</a> *</td></tr>
 <tr class="separator:a641c4bf56787cdd8d5a89cb6e5a67740"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af09280e74a795505e81d27f3679d2f63"><td class="memItemLeft" align="right" valign="top"><a id="af09280e74a795505e81d27f3679d2f63"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNext</b> () const -&gt; const <a class="el" href="classpoly_1_1lp_1_1ScheduledNode.html">ScheduledNode</a> *</td></tr>
+<tr class="separator:af09280e74a795505e81d27f3679d2f63"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a02d3d89d9315c0661aa2825ba449eb41"><td class="memItemLeft" align="right" valign="top"><a id="a02d3d89d9315c0661aa2825ba449eb41"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>setNext</b> (<a class="el" href="classpoly_1_1lp_1_1ScheduledNode.html">ScheduledNode</a> *n) -&gt; <a class="el" href="classpoly_1_1lp_1_1ScheduledNode.html">ScheduledNode</a> *</td></tr>
 <tr class="separator:a02d3d89d9315c0661aa2825ba449eb41"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -141,6 +143,9 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getStore</b
 <tr class="memitem:a62a814462d4dd5a643178cc1a45150ef"><td class="memItemLeft" align="right" valign="top"><a id="a62a814462d4dd5a643178cc1a45150ef"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getVertices</b> () -&gt; utils::ListRange&lt; <a class="el" href="classpoly_1_1lp_1_1ScheduledNode.html">ScheduledNode</a>, utils::GetNext, utils::Identity &gt;</td></tr>
 <tr class="separator:a62a814462d4dd5a643178cc1a45150ef"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad04ca907bb4ba6f05efe847ae272cda8"><td class="memItemLeft" align="right" valign="top"><a id="ad04ca907bb4ba6f05efe847ae272cda8"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getVertices</b> () const -&gt; utils::ListRange&lt; const <a class="el" href="classpoly_1_1lp_1_1ScheduledNode.html">ScheduledNode</a>, utils::GetNext, utils::Identity &gt;</td></tr>
+<tr class="separator:ad04ca907bb4ba6f05efe847ae272cda8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a952dfc664035829601cd05c2fd9a2394"><td class="memItemLeft" align="right" valign="top"><a id="a952dfc664035829601cd05c2fd9a2394"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>localAddr</b> ()</td></tr>
 <tr class="separator:a952dfc664035829601cd05c2fd9a2394"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -240,9 +245,9 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>updateOmega
 <tr class="memitem:aaea545d5b3da1978fad6f9be3abd26cb"><td class="memItemLeft" align="right" valign="top"><a id="aaea545d5b3da1978fad6f9be3abd26cb"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getPhiOffset</b> () const -&gt; size_t</td></tr>
 <tr class="separator:aaea545d5b3da1978fad6f9be3abd26cb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a753f87d959f912d70fd9b68c1179f380"><td class="memItemLeft" align="right" valign="top"><a id="a753f87d959f912d70fd9b68c1179f380"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getPhiOffsetRange</b> () const -&gt; math::Range&lt; size_t, size_t &gt;</td></tr>
-<tr class="separator:a753f87d959f912d70fd9b68c1179f380"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4d8a10d330d577e8aa83eb4ef2c5d30e"><td class="memItemLeft" align="right" valign="top"><a id="a4d8a10d330d577e8aa83eb4ef2c5d30e"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getPhiOffsetRange</b> () const -&gt; math::Range&lt; ptrdiff_t, ptrdiff_t &gt;</td></tr>
+<tr class="separator:a4d8a10d330d577e8aa83eb4ef2c5d30e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a84004f4089316dcf55f5e9031a37f6c4"><td class="memItemLeft" align="right" valign="top"><a id="a84004f4089316dcf55f5e9031a37f6c4"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getPhi</b> () -&gt; MutSquarePtrMatrix&lt; int64_t &gt;</td></tr>
 <tr class="separator:a84004f4089316dcf55f5e9031a37f6c4"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -292,6 +297,9 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getOmegaOff
 <tr class="memitem:ad0fde0c99806271b26a3bfb625261310"><td class="memItemLeft" align="right" valign="top"><a id="ad0fde0c99806271b26a3bfb625261310"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>resetPhiOffset</b> ()</td></tr>
 <tr class="separator:ad0fde0c99806271b26a3bfb625261310"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3cb9a4dc46d1e89b91db02ac8bdfb49f"><td class="memItemLeft" align="right" valign="top"><a id="a3cb9a4dc46d1e89b91db02ac8bdfb49f"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>calcGraphMaxDepth</b> () const -&gt; unsigned</td></tr>
+<tr class="separator:a3cb9a4dc46d1e89b91db02ac8bdfb49f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
