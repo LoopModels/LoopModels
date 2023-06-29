@@ -733,17 +733,16 @@ private:
     // in depSatNest?
     // backup in case we fail
     // activeEdges was the old original; swap it in
+    // we don't create long lasting allocations
     auto scope = allocator.scope();
-    ptrdiff_t numNodes = 0;
-    for (ScheduledNode *n : nodes->getVertices()) ++numNodes;
-    auto oldSchedules =
-      math::vector<poly::AffineSchedule>(&allocator, numNodes);
-    auto oldNodes = math::vector<ScheduledNode *>(&allocator, numNodes);
-    ptrdiff_t i = 0;
-    for (ScheduledNode *node : nodes->getVertices()) {
-      oldSchedules[i] = node->getSchedule().copy(&allocator);
-      oldNodes[i++] = node;
-    }
+    // auto old =
+    //   math::vector<std::pair<poly::AffineSchedule,ScheduledNode
+    //   *>>(&allocator, numNodes);
+    math::ResizeableView<std::pair<poly::AffineSchedule, ScheduledNode *>,
+                         unsigned>
+      old{&allocator, 0, 8};
+    for (ScheduledNode *node : nodes->getVertices())
+      old.emplace_backa(&allocator, node->getSchedule().copy(&allocator), node);
     if (Optional<size_t> depSat = solveGraph(nodes, depth, true))
       if (Optional<size_t> depSatN = optimize(nodes, depth + 1, maxDepth))
         return *depSat |= *depSatN;
@@ -751,17 +750,22 @@ private:
       for (Dependence *d : node->inputEdges()) d->popSatLevel();
     // reconnect nodes, in case they became disconnected in breakGraph
     ScheduledNode *n = nullptr;
-    for (; i--;) {
-      n = oldNodes[i]->addNext(n);
-      n->getSchedule() = oldSchedules[i];
+    for (auto it = old.rbegin(), e = old.rend(); it != e; ++it) {
+      n = it->second->addNext(n);
+      n->getSchedule() = it->first;
     }
     return depSatLevel;
   }
   // NOLINTNEXTLINE(misc-no-recursion)
-  [[nodiscard]] auto breakGraph(ScheduledNode *node, unsigned d) -> size_t {
-    llvm::SmallVector<BitSet> components;
-    graphs::stronglyConnectedComponents(components, g);
-    if (components.size() <= 1) return {};
+  [[nodiscard]] auto breakGraph(ScheduledNode *node, unsigned d)
+    -> Optional<size_t> {
+    // TODO: how to incorporate `d`? Perhaps (again) redefine the graph
+    // to allow make most methods take the graph object itself,
+    // so it can forward the depth.
+    //
+    ScheduledNode *components =
+      graph::stronglyConnectedComponents(ScheduleGraph(node, d));
+    if (components->getNextComponent() == nullptr) return {};
     // components are sorted in topological order.
     // We split all of them, solve independently,
     // and then try to fuse again after if/where optimal schedules

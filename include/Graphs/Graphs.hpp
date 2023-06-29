@@ -35,13 +35,13 @@ namespace poly::graph {
 template <typename G>
 concept AbstractPtrGraph = requires(G *g, typename G::VertexType *v) {
   {
-    *(g->getVertices().begin())
+    *(g.getVertices().begin())
   } -> std::template same_as<typename G::VertexType *>;
-  { g->getVertices() } -> std::ranges::forward_range;
+  { g.getVertices() } -> std::ranges::forward_range;
   {
-    *(v->outNeighbors().begin())
+    *(g.outNeighbors(v).begin())
   } -> std::template same_as<typename G::VertexType *>;
-  { v->outNeighbors() } -> std::ranges::forward_range;
+  { g.outNeighbors(v) } -> std::ranges::forward_range;
   { v->index() } -> std::assignable_from<unsigned>;
   { v->lowLink() } -> std::assignable_from<unsigned>;
   { v->onStack() } -> std::same_as<bool>;
@@ -83,17 +83,20 @@ inline auto strongConnect(State<N> state, N *v) -> State<N> {
       s->removeFromStack();
       component = s->setNext(component);
     } while (s != v);
-    state.components = v->setNextComponent(component);
+    state.components = component->setNextComponent(state.components);
   }
   return state;
 }
-
+/// Returns a list of lists; each SCC will be connected via `getNext()`
+/// while the SCCs will be connected by `component` pointers.
+/// These next component pointers are only stored in the list-heads.
+/// This allows for immediately checking if there is only a single SCC
+/// (by comparing with `nullptr`)
 template <AbstractPtrGraph G>
-inline auto stronglyConnectedComponents(const G &g) ->
-  typename G::VertexType * {
+inline auto stronglyConnectedComponents(G *g) -> typename G::VertexType * {
   using N = typename G::VertexType;
   State<N *> state{};
-  for (auto *v : getVertices(g))
+  for (auto *v : g->getVertices())
     if (!v->wasVisited()) state = strongConnect(state, v);
   return state.components;
 }

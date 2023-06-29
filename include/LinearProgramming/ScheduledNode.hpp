@@ -65,7 +65,6 @@ class ScheduledNode {
   }
 
 public:
-  using VertexType = ScheduledNode;
   constexpr auto index() -> unsigned & { return index_; }
   constexpr auto lowLink() -> unsigned & { return lowLink_; }
   [[nodiscard]] constexpr auto onStack() const -> bool { return onStack_; }
@@ -431,8 +430,17 @@ public:
 };
 static_assert(std::is_trivially_destructible_v<ScheduledNode>);
 
+class ScheduleGraph {
+  ScheduledNode *nodes;
+  unsigned depth;
+
+public:
+  using VertexType = ScheduledNode;
+};
+
 } // namespace lp
 namespace graph {
-static_assert(AbstractPtrGraph<lp::ScheduledNode>);
+// static_assert(AbstractPtrGraph<lp::ScheduledNode>);
+static_assert(AbstractPtrGraph<lp::ScheduleGraph>);
 } // namespace graph
 } // namespace poly
