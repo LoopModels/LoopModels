@@ -1,9 +1,8 @@
 var searchData=
 [
-  ['cache_24',['Cache',['../classpoly_1_1IR_1_1Cache.html',1,'poly::IR']]],
-  ['call_25',['Call',['../classpoly_1_1IR_1_1Call.html',1,'poly::IR']]],
-  ['checksat_26',['checkSat',['../classpoly_1_1poly_1_1DepPoly.html#adf5466c660c3bbeafd6133788d9f9986',1,'poly::poly::DepPoly']]],
-  ['child_27',['Child',['../structpoly_1_1lp_1_1ScheduledNode_1_1Child.html',1,'poly::lp::ScheduledNode']]],
+  ['cache_25',['Cache',['../classpoly_1_1IR_1_1Cache.html',1,'poly::IR']]],
+  ['call_26',['Call',['../classpoly_1_1IR_1_1Call.html',1,'poly::IR']]],
+  ['checksat_27',['checkSat',['../classpoly_1_1poly_1_1DepPoly.html#adf5466c660c3bbeafd6133788d9f9986',1,'poly::poly::DepPoly']]],
   ['compactunion_28',['compactUnion',['../structpoly_1_1IR_1_1Predicate_1_1Intersection.html#a61a44178c94724c643b1e13e295af03d',1,'poly::IR::Predicate::Intersection']]],
   ['complete_29',['complete',['../classpoly_1_1IR_1_1Cache.html#a676ae808fe76addfbec6eda207c9bda2',1,'poly::IR::Cache']]],
   ['compute_30',['Compute',['../classpoly_1_1IR_1_1Compute.html',1,'poly::IR']]],

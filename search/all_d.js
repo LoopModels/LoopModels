@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['graphs_85',['graphs',['../namespacepoly_1_1graphs.html',1,'poly']]],
-  ['proxyreference_86',['ProxyReference',['../structpoly_1_1IR_1_1cost_1_1VectorizationCosts_1_1ProxyReference.html',1,'poly::IR::cost::VectorizationCosts']]],
-  ['ptrsymboliccomparator_87',['PtrSymbolicComparator',['../structpoly_1_1comparator_1_1PtrSymbolicComparator.html',1,'poly::comparator']]]
+  ['graphs_88',['graphs',['../namespacepoly_1_1graphs.html',1,'poly']]],
+  ['proxyreference_89',['ProxyReference',['../structpoly_1_1IR_1_1cost_1_1VectorizationCosts_1_1ProxyReference.html',1,'poly::IR::cost::VectorizationCosts']]],
+  ['ptrsymboliccomparator_90',['PtrSymbolicComparator',['../structpoly_1_1comparator_1_1PtrSymbolicComparator.html',1,'poly::comparator']]]
 ];
