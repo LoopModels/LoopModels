@@ -124,6 +124,11 @@ public:
   // [[nodiscard]] constexpr auto getNumMem() const -> size_t {
   //   return memory.size();
   // }
+  struct Child {
+    constexpr auto operator()(Addr *a) -> Addr * {
+      return llvm::cast_or_null<Addr>(a->getChild());
+    }
+  };
   [[nodiscard]] constexpr auto getStore() -> Addr * { return store; }
   [[nodiscard]] constexpr auto getStore() const -> const Addr * {
     return store;
@@ -141,72 +146,87 @@ public:
   // `each` for all connected nodes
   // range of `Addr` for this node
   [[nodiscard]] constexpr auto localAddr() {
-    return utils::ListRange{(Addr *)store, [](Addr *a) -> Addr * {
-                              return llvm::cast_or_null<Addr>(a->getChild());
-                            }};
+    return utils::ListRange{(Addr *)store, Child{}};
   }
   // range of all `Addr` for the list starting with this node
   [[nodiscard]] constexpr auto eachAddr() {
-    return utils::NestedListRange{
-      this, utils::GetNext{},
-      [](Addr *a) -> Addr * { return llvm::cast_or_null<Addr>(a->getChild()); },
-      [](ScheduledNode *n) -> Addr * { return n->getStore(); }};
+    return utils::NestedList{
+      utils::ListRange{
+        this, utils::GetNext{},
+        [](ScheduledNode *n) -> Addr * { return n->getStore(); }},
+
+      [](Addr *a) -> utils::ListRange<Addr, utils::GetNext, utils::Identity> {
+        return utils::ListRange{llvm::cast<Addr>(a->getChild()),
+                                utils::GetNext{}};
+      }};
   }
   // all nodes that are memory inputs to this one; i.e. all parents
   // NOTE: we may reach each node multiple times
   [[nodiscard]] constexpr auto inNeighbors() {
-    return utils::NestedListRange{
-      store,
-      [](Addr *a) -> Addr * { return llvm::cast_or_null<Addr>(a->getChild()); },
-      [](Dependence *d) -> Dependence * { return d->getNextInput(); },
-      [](Addr *a) -> Dependence * { return a->getEdgeIn(); },
-      [](Dependence *d) -> ScheduledNode * { return d->input()->getNode(); }};
+    return utils::NestedList{
+      utils::ListRange{store, Child{},
+                       [](Addr *a) -> Dependence * { return a->getEdgeIn(); }},
+      [](Dependence *d) {
+        return utils::ListRange{
+          d, [](Dependence *d) -> Dependence * { return d->getNextInput(); },
+          [](Dependence *d) -> ScheduledNode * {
+            return d->input()->getNode();
+          }};
+      }};
   }
   // all nodes that are memory outputs of this one; i.e. all children
   // NOTE: we may reach each node multiple times
   [[nodiscard]] constexpr auto outNeighbors() {
-    return utils::NestedListRange{
-      store,
-      [](Addr *a) -> Addr * { return llvm::cast_or_null<Addr>(a->getChild()); },
-      [](Dependence *d) -> Dependence * { return d->getNextOutput(); },
-      [](Addr *a) -> Dependence * { return a->getEdgeOut(); },
-      [](Dependence *d) -> ScheduledNode * { return d->output()->getNode(); }};
+    return utils::NestedList{
+      utils::ListRange{store, Child{},
+                       [](Addr *a) -> Dependence * { return a->getEdgeOut(); }},
+      [](Dependence *d) {
+        return utils::ListRange{
+          d, [](Dependence *d) -> Dependence * { return d->getNextOutput(); },
+          [](Dependence *d) -> ScheduledNode * {
+            return d->output()->getNode();
+          }};
+      }};
   }
   [[nodiscard]] constexpr auto inputEdges() {
-    return utils::NestedListRange{
-      store,
-      [](Addr *a) -> Addr * { return llvm::cast_or_null<Addr>(a->getChild()); },
-      [](Dependence *d) -> Dependence * { return d->getNextInput(); },
-      [](Addr *a) -> Dependence * { return a->getEdgeIn(); }};
+    return utils::NestedList{
+      utils::ListRange{store, Child{},
+                       [](Addr *a) -> Dependence * { return a->getEdgeIn(); }},
+      [](Dependence *d) {
+        return utils::ListRange{
+          d, [](Dependence *d) -> Dependence * { return d->getNextInput(); },
+          [](Dependence *d) -> Dependence * { return d; }};
+      }};
   }
   [[nodiscard]] constexpr auto outputEdges() {
-    return utils::NestedListRange{
-      store,
-      [](Addr *a) -> Addr * { return llvm::cast_or_null<Addr>(a->getChild()); },
-      [](Dependence *d) -> Dependence * { return d->getNextOutput(); },
-      [](Addr *a) -> Dependence * { return a->getEdgeOut(); }};
+    return utils::NestedList{
+      utils::ListRange{store, Child{},
+                       [](Addr *a) -> Dependence * { return a->getEdgeOut(); }},
+      [](Dependence *d) {
+        return utils::ListRange{
+          d, [](Dependence *d) -> Dependence * { return d->getNextOutput(); },
+          [](Dependence *d) -> Dependence * { return d; }};
+      }};
   }
   [[nodiscard]] constexpr auto inputEdges() const {
-    return utils::NestedListRange{
-      (const Addr *)store,
-      [](const Addr *a) -> const Addr * {
-        return llvm::cast_or_null<Addr>(a->getChild());
-      },
-      [](const Dependence *d) -> const Dependence * {
-        return d->getNextInput();
-      },
-      [](const Addr *a) -> const Dependence * { return a->getEdgeIn(); }};
+    return utils::NestedList{
+      utils::ListRange{store, Child{},
+                       [](Addr *a) -> Dependence * { return a->getEdgeIn(); }},
+      [](Dependence *d) {
+        return utils::ListRange{
+          d, [](Dependence *d) -> Dependence * { return d->getNextInput(); },
+          [](Dependence *d) -> const Dependence * { return d; }};
+      }};
   }
   [[nodiscard]] constexpr auto outputEdges() const {
-    return utils::NestedListRange{
-      (const Addr *)store,
-      [](const Addr *a) -> const Addr * {
-        return llvm::cast_or_null<Addr>(a->getChild());
-      },
-      [](const Dependence *d) -> const Dependence * {
-        return d->getNextOutput();
-      },
-      [](const Addr *a) -> const Dependence * { return a->getEdgeOut(); }};
+    return utils::NestedList{
+      utils::ListRange{store, Child{},
+                       [](Addr *a) -> Dependence * { return a->getEdgeOut(); }},
+      [](Dependence *d) {
+        return utils::ListRange{
+          d, [](Dependence *d) -> Dependence * { return d->getNextOutput(); },
+          [](Dependence *d) -> const Dependence * { return d; }};
+      }};
   }
   [[nodiscard]] constexpr auto hasActiveEdges(unsigned depth) const -> bool {
     const auto f = [depth](const Dependence *d) { return d->isActive(depth); };
