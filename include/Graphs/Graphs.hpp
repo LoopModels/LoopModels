@@ -33,11 +33,11 @@ namespace poly::graph {
 //
 //
 template <typename G>
-concept AbstractPtrGraph = requires(G *g, typename G::VertexType *v) {
+concept AbstractPtrGraph = requires(G g, typename G::VertexType *v) {
   {
-    *(g.getVertices().begin())
+    *(g.getVertices(v).begin())
   } -> std::template same_as<typename G::VertexType *>;
-  { g.getVertices() } -> std::ranges::forward_range;
+  { g.getVertices(v) } -> std::ranges::forward_range;
   {
     *(g.outNeighbors(v).begin())
   } -> std::template same_as<typename G::VertexType *>;
@@ -62,22 +62,25 @@ template <class N> struct State {
   unsigned index{0};
 };
 
+template <AbstractPtrGraph G> using vertex_t = typename G::VertexType;
+
 // TODO: address code duplication by abstracting between AbstractIndexGraph and
 // AbstractPtrGraph
-template <typename N>
-inline auto strongConnect(State<N> state, N *v) -> State<N> {
+template <AbstractPtrGraph G>
+inline auto strongConnect(G g, State<vertex_t<G>> state, vertex_t<G> *v)
+  -> State<vertex_t<G>> {
   v->index() = v->lowLink() = state.index++;
   v->addToStack();
   v->visit();
 
   state.stack = v->setNext(state.stack);
-  for (auto *w : outNeighbors(v))
+  for (auto *w : g.outNeighbors(v))
     if (!w->wasVisited()) {
-      state = strongConnect(state, w);
+      state = strongConnect(g, state, w);
       v->lowLink() = std::min(v->lowLink(), w->lowLink());
     } else if (w->onStack()) v->lowLink() = std::min(v->lowLink(), w->index());
   if (v->index() == v->lowLink()) {
-    N *component{nullptr}, *s;
+    vertex_t<G> *component{nullptr}, *s;
     do {
       s = std::exchange(state.stack, state.stack->getNext());
       s->removeFromStack();
@@ -93,27 +96,29 @@ inline auto strongConnect(State<N> state, N *v) -> State<N> {
 /// This allows for immediately checking if there is only a single SCC
 /// (by comparing with `nullptr`)
 template <AbstractPtrGraph G>
-inline auto stronglyConnectedComponents(G *g) -> typename G::VertexType * {
-  using N = typename G::VertexType;
+inline auto stronglyConnectedComponents(G g, vertex_t<G> *seed)
+  -> vertex_t<G> * {
+  using N = vertex_t<G>;
   State<N *> state{};
-  for (auto *v : g->getVertices())
-    if (!v->wasVisited()) state = strongConnect(state, v);
+  for (auto *v : g->getVertices(seed))
+    if (!v->wasVisited()) state = strongConnect(g, state, v);
   return state.components;
 }
 
-template <class N> inline auto topVisit(N *list, N *v) -> N * {
+template <AbstractPtrGraph G, class N>
+inline auto topVisit(G g, N *list, N *v) -> N * {
   v->visit();
-  for (auto *w : v->outNeighbors())
-    if (!w->wasVisited()) list = topVisit(list, w);
+  for (auto *w : g.outNeighbors(v))
+    if (!w->wasVisited()) list = topVisit(g, list, w);
   return v->setNext(list);
 }
 
 template <AbstractPtrGraph G>
-inline auto topSort(const G &g) -> typename G::VertexType * {
+inline auto topSort(G g, vertex_t<G> *seed) -> vertex_t<G> * {
   using N = typename G::VertexType;
   N *list{nullptr};
-  for (auto *v : g->getVertices())
-    if (!v->wasVisited()) list = topVisit(list, v);
+  for (auto *v : g.getVertices(seed))
+    if (!v->wasVisited()) list = topVisit(g, list, v);
   return list;
 }
 

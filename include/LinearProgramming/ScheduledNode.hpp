@@ -7,6 +7,7 @@
 #include "Utilities/ListRanges.hpp"
 #include <Utilities/Invariant.hpp>
 #include <Utilities/Valid.hpp>
+#include <bits/iterator_concepts.h>
 #include <ranges>
 
 namespace poly {
@@ -124,10 +125,12 @@ public:
   // [[nodiscard]] constexpr auto getNumMem() const -> size_t {
   //   return memory.size();
   // }
-  class Active {
+  struct Active {
     unsigned depth;
-
-  public:
+    constexpr Active(const Active &) noexcept = default;
+    constexpr Active(Active &&) noexcept = default;
+    constexpr Active() noexcept = default;
+    constexpr auto operator=(const Active &) noexcept -> Active & = default;
     constexpr Active(unsigned depth) : depth(depth) {}
     constexpr auto operator()(const Dependence *d) const -> bool {
       return d->isActive(depth);
@@ -285,6 +288,46 @@ public:
         return utils::ListRange{d, NextOutput{}} |
                std::views::filter(Active{depth});
       }};
+  }
+  struct InNode {
+    constexpr auto operator()(Dependence *d) const -> ScheduledNode * {
+      return d->input()->getNode();
+    }
+  };
+  struct OutNode {
+    constexpr auto operator()(Dependence *d) const -> ScheduledNode * {
+      return d->output()->getNode();
+    }
+  };
+  template <bool Out> struct DepFilter {
+    unsigned depth;
+
+    constexpr auto operator()(Dependence *d) const {
+      if constexpr (Out)
+        return utils::ListRange{d, NextOutput{}} |
+               std::views::filter(Active{depth}) |
+               std::views::transform(OutNode{});
+      else
+        return utils::ListRange{d, NextInput{}} |
+               std::views::filter(Active{depth}) |
+               std::views::transform(InNode{});
+    }
+  };
+  template <bool Out> struct GetEdge {
+    constexpr auto operator()(Addr *a) const -> Dependence * {
+      if constexpr (Out) return a->getEdgeOut();
+      else return a->getEdgeIn();
+    }
+  };
+  [[nodiscard]] constexpr auto outNeighbors(unsigned depth) {
+    return utils::NestedList{
+      utils::ListRange{store, NextAddr{}, GetEdge<true>{}},
+      DepFilter<true>{depth}};
+  }
+  [[nodiscard]] constexpr auto inNeighbors(unsigned depth) {
+    return utils::NestedList{
+      utils::ListRange{store, NextAddr{}, GetEdge<false>{}},
+      DepFilter<false>{depth}};
   }
   [[nodiscard]] constexpr auto hasActiveEdges(unsigned depth) const -> bool {
     const auto f = [depth](const Dependence *d) { return d->isActive(depth); };
@@ -509,16 +552,36 @@ public:
 static_assert(std::is_trivially_destructible_v<ScheduledNode>);
 
 class ScheduleGraph {
-  ScheduledNode *nodes;
   unsigned depth;
 
 public:
   using VertexType = ScheduledNode;
+  constexpr ScheduleGraph(unsigned depth) : depth(depth) {}
+
+  [[nodiscard]] static constexpr auto getVertices(ScheduledNode *nodes)
+    -> utils::ListRange<ScheduledNode, utils::GetNext, utils::Identity> {
+    return nodes->getVertices();
+  }
+  [[nodiscard]] static constexpr auto getVertices(const ScheduledNode *nodes)
+    -> utils::ListRange<const ScheduledNode, utils::GetNext, utils::Identity> {
+    return static_cast<const ScheduledNode *>(nodes)->getVertices();
+  }
+  [[nodiscard]] constexpr auto outNeighbors(ScheduledNode *v) const {
+    return v->outNeighbors(depth);
+  }
+  [[nodiscard]] constexpr auto inNeighbors(ScheduledNode *v) const {
+    return v->inNeighbors(depth);
+  }
 };
 
 } // namespace lp
+
 namespace graph {
 // static_assert(AbstractPtrGraph<lp::ScheduledNode>);
+static_assert(std::forward_iterator<
+              decltype(lp::ScheduleGraph{0}.outNeighbors(nullptr).begin())>);
+static_assert(std::forward_iterator<
+              decltype(lp::ScheduleGraph{0}.inNeighbors(nullptr).begin())>);
 static_assert(AbstractPtrGraph<lp::ScheduleGraph>);
 } // namespace graph
 } // namespace poly
