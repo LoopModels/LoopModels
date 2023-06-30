@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['recipthroughputlatency_177',['RecipThroughputLatency',['../structpoly_1_1IR_1_1cost_1_1RecipThroughputLatency.html',1,'poly::IR::cost']]],
-  ['reference_178',['Reference',['../structpoly_1_1IR_1_1Predicate_1_1Intersection_1_1Reference.html',1,'poly::IR::Predicate::Intersection']]],
-  ['remapper_179',['ReMapper',['../classpoly_1_1IR_1_1ReMapper.html',1,'poly::IR']]]
+  ['recipthroughputlatency_179',['RecipThroughputLatency',['../structpoly_1_1IR_1_1cost_1_1RecipThroughputLatency.html',1,'poly::IR::cost']]],
+  ['reference_180',['Reference',['../structpoly_1_1IR_1_1Predicate_1_1Intersection_1_1Reference.html',1,'poly::IR::Predicate::Intersection']]],
+  ['remapper_181',['ReMapper',['../classpoly_1_1IR_1_1ReMapper.html',1,'poly::IR']]]
 ];
