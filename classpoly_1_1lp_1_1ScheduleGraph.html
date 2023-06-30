@@ -67,6 +67,8 @@ $(function() {
 <div class="header">
   <div class="summary">
 <a href="#pub-types">Public Types</a> &#124;
+<a href="#pub-methods">Public Member Functions</a> &#124;
+<a href="#pub-static-methods">Static Public Member Functions</a> &#124;
 <a href="classpoly_1_1lp_1_1ScheduleGraph-members.html">List of all members</a>  </div>
   <div class="headertitle">
 <div class="title">poly::lp::ScheduleGraph Class Reference</div>  </div>
@@ -78,6 +80,27 @@ Public Types</h2></td></tr>
 <tr class="memitem:a33cabba152f14c09366466e37ef9262a"><td class="memItemLeft" align="right" valign="top"><a id="a33cabba152f14c09366466e37ef9262a"></a>
 using&#160;</td><td class="memItemRight" valign="bottom"><b>VertexType</b> = <a class="el" href="classpoly_1_1lp_1_1ScheduledNode.html">ScheduledNode</a></td></tr>
 <tr class="separator:a33cabba152f14c09366466e37ef9262a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
+Public Member Functions</h2></td></tr>
+<tr class="memitem:a804f79b34a95f590fa1420cbeb11c112"><td class="memItemLeft" align="right" valign="top"><a id="a804f79b34a95f590fa1420cbeb11c112"></a>
+constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>ScheduleGraph</b> (unsigned depth)</td></tr>
+<tr class="separator:a804f79b34a95f590fa1420cbeb11c112"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad8b76cd26c1a61eb7dff91f6c1cbc2b6"><td class="memItemLeft" align="right" valign="top"><a id="ad8b76cd26c1a61eb7dff91f6c1cbc2b6"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>outNeighbors</b> (<a class="el" href="classpoly_1_1lp_1_1ScheduledNode.html">ScheduledNode</a> *v) const</td></tr>
+<tr class="separator:ad8b76cd26c1a61eb7dff91f6c1cbc2b6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abaaea8a8fd7ee107996e4a893b2fe027"><td class="memItemLeft" align="right" valign="top"><a id="abaaea8a8fd7ee107996e4a893b2fe027"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>inNeighbors</b> (<a class="el" href="classpoly_1_1lp_1_1ScheduledNode.html">ScheduledNode</a> *v) const</td></tr>
+<tr class="separator:abaaea8a8fd7ee107996e4a893b2fe027"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
+Static Public Member Functions</h2></td></tr>
+<tr class="memitem:a24b537b50ee0312b16b0437076a0ece4"><td class="memItemLeft" align="right" valign="top"><a id="a24b537b50ee0312b16b0437076a0ece4"></a>
+static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getVertices</b> (<a class="el" href="classpoly_1_1lp_1_1ScheduledNode.html">ScheduledNode</a> *nodes) -&gt; utils::ListRange&lt; <a class="el" href="classpoly_1_1lp_1_1ScheduledNode.html">ScheduledNode</a>, utils::GetNext, utils::Identity &gt;</td></tr>
+<tr class="separator:a24b537b50ee0312b16b0437076a0ece4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6447bd6699c2fe80ad36e3b11f65e24c"><td class="memItemLeft" align="right" valign="top"><a id="a6447bd6699c2fe80ad36e3b11f65e24c"></a>
+static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getVertices</b> (const <a class="el" href="classpoly_1_1lp_1_1ScheduledNode.html">ScheduledNode</a> *nodes) -&gt; utils::ListRange&lt; const <a class="el" href="classpoly_1_1lp_1_1ScheduledNode.html">ScheduledNode</a>, utils::GetNext, utils::Identity &gt;</td></tr>
+<tr class="separator:a6447bd6699c2fe80ad36e3b11f65e24c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <hr/>The documentation for this class was generated from the following file:<ul>
 <li>include/LinearProgramming/<a class="el" href="ScheduledNode_8hpp_source.html">ScheduledNode.hpp</a></li>
