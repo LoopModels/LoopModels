@@ -200,10 +200,34 @@ private:
     if (!b) return a;
     return (a->getNumLoops() > b->getNumLoops()) ? a : b;
   }
+  /// We search uses of user `u` for any stores so that we can assign the use
+  /// and the store the same schedule. This is done because it is assumed the
+  /// data is held in registers (or, if things go wrong, spilled to the stack)
+  /// in between a load and a store. A complication is that LLVM IR can be
+  /// messy, e.g. we may have
+  /// %x = load %a
+  /// %y = call foo(x)
+  /// store %y, %b
+  /// %z = call bar(y)
+  /// store %z, %c
+  /// here, we might lock all three operations
+  /// together. However, this limits reordering opportunities; we thus want to
+  /// insert a new load instruction so that we have:
+  /// %x = load %a
+  /// %y = call foo(x)
+  /// store %y, %b
+  /// %y.reload = load %b
+  /// %z = call bar(y.reload)
+  /// store %z, %c
+  /// and we create a new edge from `store %y, %b` to `load %b`.
+  /// We're going to also build up the `Node` graph,
+  /// this is to avoid duplicating any logic or needing to traverse the object
+  /// graph an extra time as we go.
+  ///
   // NOLINTNEXTLINE(misc-no-recursion)
   auto searchOperandsForLoads(IR::Cache &cache, IR::Stow stow, Value *val)
     -> std::pair<Value *, poly::Loop *> {
-    Instruction *inst = llvm::dyn_cast<Instruction>(val);
+    auto *inst = llvm::dyn_cast<Instruction>(val);
     if (!inst) return {val, nullptr};
     // we use parent/child relationships here instead of next/prev
     if (Load load = IR::Load(inst)) {
@@ -223,7 +247,7 @@ private:
     // if not a load, check if it is stored, so we reload
     Addr *store{nullptr};
     for (Value *use : inst->getUsers()) {
-      if (IR::Stow other = IR::Stow(use)) {
+      if (auto other = IR::Stow(use)) {
         store = other;
         if (other == stow) break; // scan all users
       }
@@ -233,7 +257,7 @@ private:
       stow.insertChild(load); // insert load after stow
       return {load, load->getLoop()};
     }
-    IR::Compute *C = llvm::cast<IR::Compute>(inst);
+    auto *C = llvm::cast<IR::Compute>(inst);
     // could not find a load, so now we recurse, searching operands
     poly::Loop *maxLoop = nullptr;
     auto s = allocator.scope(); // create temporary
@@ -439,8 +463,8 @@ private:
     return {edge->getNumLambda(), edge->getDynSymDim(),
             edge->getNumConstraints(), 1};
   }
-  constexpr auto countAuxParamsAndConstraints(ScheduledNode *nodes,
-                                              unsigned depth)
+  static constexpr auto countAuxParamsAndConstraints(ScheduledNode *nodes,
+                                                     unsigned depth)
     -> math::SVector<unsigned, 4> {
     math::SVector<unsigned, 4> params{};
     assert(allZero(params));
@@ -449,7 +473,7 @@ private:
         if (d->isActive(depth)) params += numParams(d);
     return params;
   }
-  constexpr auto countAuxAndStash(ScheduledNode *nodes, unsigned depth)
+  static constexpr auto countAuxAndStash(ScheduledNode *nodes, unsigned depth)
     -> math::SVector<unsigned, 4> {
     math::SVector<unsigned, 4> params{};
     assert(allZero(params));
@@ -459,7 +483,8 @@ private:
     return params;
   }
 
-  constexpr auto setScheduleMemoryOffsets(ScheduledNode *nodes, unsigned d)
+  static constexpr auto setScheduleMemoryOffsets(ScheduledNode *nodes,
+                                                 unsigned d)
     -> std::array<unsigned, 3> {
     // C, lambdas, omegas, Phis
     unsigned numOmegaCoefs = 0, numPhiCoefs = 0, numSlack = 0;
@@ -475,7 +500,8 @@ private:
     }
     return {numOmegaCoefs, numPhiCoefs, numSlack};
   }
-  constexpr auto calcCoefs(ScheduledNode *nodes, unsigned d) -> CoefCounts {
+  static constexpr auto calcCoefs(ScheduledNode *nodes, unsigned d)
+    -> CoefCounts {
     auto [numOmegaCoefs, numPhiCoefs, numSlack] =
       setScheduleMemoryOffsets(nodes, d);
     auto [numLambda, numBounding, numConstraints, numActiveEdges] =
@@ -483,7 +509,7 @@ private:
     return {numOmegaCoefs, numPhiCoefs,    numSlack,      numLambda,
             numBounding,   numConstraints, numActiveEdges};
   }
-  constexpr auto calcCoefsStash(ScheduledNode *nodes, unsigned d)
+  static constexpr auto calcCoefsStash(ScheduledNode *nodes, unsigned d)
     -> CoefCounts {
     auto [numOmegaCoefs, numPhiCoefs, numSlack] =
       setScheduleMemoryOffsets(nodes, d);
@@ -492,6 +518,7 @@ private:
     return {numOmegaCoefs, numPhiCoefs,    numSlack,      numLambda,
             numBounding,   numConstraints, numActiveEdges};
   }
+  // NOLINTNEXTLINE(misc-no-recursion)
   [[nodiscard]] auto optimize(ScheduledNode *nodes, unsigned d,
                               unsigned maxDepth) -> Optional<size_t> {
     if (d >= maxDepth) return true;
@@ -539,7 +566,7 @@ private:
       nodes, depth, counts,
       sol[_(counts.numPhiCoefs + counts.numOmegaCoefs, end)]);
   }
-  void setSchedulesIndependent(ScheduledNode *nodes, unsigned depth) {
+  static void setSchedulesIndependent(ScheduledNode *nodes, unsigned depth) {
     // IntMatrix A, N;
     for (ScheduledNode *node : nodes->getVertices()) {
       if ((depth >= node->getNumLoops()) || node->phiIsScheduled(depth))
@@ -616,8 +643,8 @@ private:
     }
     invariant(false);
   }
-  void updateSchedules(ScheduledNode *nodes, unsigned depth, CoefCounts counts,
-                       Simplex::Solution sol) {
+  static void updateSchedules(ScheduledNode *nodes, unsigned depth,
+                              CoefCounts counts, Simplex::Solution sol) {
 #ifndef NDEBUG
     if (counts.numPhiCoefs > 0)
       assert(std::ranges::any_of(
@@ -732,16 +759,17 @@ private:
     -> std::pair<Backup, CoefCounts> {
     return {stashFitCore(nodes), calcCoefsStash(nodes, depth)};
   }
-  auto popStash(math::ResizeableView<
-                std::pair<poly::AffineSchedule, ScheduledNode *>, unsigned>
-                  old) -> void {
+  static auto popStash(
+    math::ResizeableView<std::pair<poly::AffineSchedule, ScheduledNode *>,
+                         unsigned>
+      old) -> void {
     // reconnect nodes, in case they became disconnected in breakGraph
     // because we go in reverse order, connections should be the same
     // so the original `nodes` should be restored.
     ScheduledNode *n = nullptr;
-    for (auto it = old.rbegin(), e = old.rend(); it != e; ++it) {
-      n = it->second->addNext(n);
-      n->getSchedule() << it->first; // copy over
+    for (auto &it : std::ranges::reverse_view(old)) {
+      n = it.second->addNext(n);
+      n->getSchedule() << it.first; // copy over
     }
     for (ScheduledNode *node : n->getVertices())
       for (Dependence *d : node->inputEdges()) d->popSatLevel();
@@ -765,6 +793,7 @@ private:
     popStash(old);
     return depSatLevel;
   }
+  // NOLINTNEXTLINE(misc-no-recursion)
   auto tryFuse(ScheduledNode *n0, ScheduledNode *n1, unsigned depth)
     -> Optional<size_t> {
     auto s = allocator.scope();
@@ -814,7 +843,7 @@ private:
     // and then try to fuse again after if/where optimal schedules
     // allow it.
     size_t satd{0};
-    for (auto g : components->getComponents())
+    for (auto *g : components->getComponents())
       if (Optional<size_t> sat = solveSplitGraph(g, d)) satd |= *sat;
       else return {};
     // We find we can successfully solve by splitting all legal splits.
@@ -827,7 +856,7 @@ private:
     auto it = range.begin();
     ScheduledNode *seed = *it;
     int64_t unfusedOffset = 0;
-    for (auto e = range.end(); ++it != e;) {
+    for (auto e = decltype(range)::end(); ++it != e;) {
       if (auto opt = tryFuse(seed, *it, d)) satd |= *opt;
       else {
         for (ScheduledNode *v : seed->getVertices())
@@ -855,8 +884,8 @@ private:
   /// Phis: scheduling rotations
   /// w: bounding offsets, independent of symbolic variables
   /// u: bounding offsets, dependent on symbolic variables
-  auto instantiateOmniSimplex(ScheduledNode *nodes, unsigned d,
-                              bool satisfyDeps, CoefCounts counts)
+  static auto instantiateOmniSimplex(ScheduledNode *nodes, unsigned d,
+                                     bool satisfyDeps, CoefCounts counts)
     -> std::unique_ptr<Simplex> {
     auto [numOmegaCoefs, numPhiCoefs, numSlack, numLambda, numBounding,
           numConstraints, numActiveEdges] = counts;
@@ -874,180 +903,185 @@ private:
     Row c = 0;
     Col l = 1, o = 1 + numLambda + numSlack, p = o + numOmegaCoefs,
         w = p + numPhiCoefs, u = w + numActiveEdges;
-    // TODO: we're going to invert the order of edge and node iteration?
-    for (size_t e = 0; e < edges.size(); ++e) {
-      Dependence &edge = edges[e];
-      if (g.isInactive(e, d)) continue;
-      size_t outNodeIndex = edge->nodeOut(), inNodeIndex = edge->nodeIn();
-      const auto [satPp, satPc] = edge->satPhiCoefs();
-      const auto [bndPp, bndPc] = edge->bndPhiCoefs();
-      math::StridedVector<int64_t> satC{edge->getSatConstants()},
-        satW{edge->getSatW()}, bndC{edge->getBndConstants()};
-      math::PtrMatrix<int64_t> satL{edge->getSatLambda()},
-        bndL{edge->getBndLambda()}, satO{edge->getSatOmegaCoefs()},
-        bndO{edge->getBndOmegaCoefs()}, bndWU{edge->getBndCoefs()};
-      const size_t numSatConstraints = satC.size(),
-                   numBndConstraints = bndC.size();
-      const Col nPc = satPc.numCol(), nPp = satPp.numCol();
-      invariant(nPc, bndPc.numCol());
-      invariant(nPp, bndPp.numCol());
-      const ScheduledNode &outNode = nodes[outNodeIndex];
-      const ScheduledNode &inNode = nodes[inNodeIndex];
+    for (ScheduledNode *inNode : nodes->getVertices()) {
+      for (Dependence *edge : inNode->outputEdges(d)) {
+        ScheduledNode *outNode = edge->output()->getNode();
+        const auto [satPp, satPc] = edge->satPhiCoefs();
+        const auto [bndPp, bndPc] = edge->bndPhiCoefs();
+        math::StridedVector<int64_t> satC{edge->getSatConstants()},
+          satW{edge->getSatW()}, bndC{edge->getBndConstants()};
+        math::PtrMatrix<int64_t> satL{edge->getSatLambda()},
+          bndL{edge->getBndLambda()}, satO{edge->getSatOmegaCoefs()},
+          bndO{edge->getBndOmegaCoefs()}, bndWU{edge->getBndCoefs()};
+        const ptrdiff_t numSatConstraints = satC.size(),
+                        numBndConstraints = bndC.size();
+        const Col nPc = satPc.numCol(), nPp = satPp.numCol();
+        invariant(nPc, bndPc.numCol());
+        invariant(nPp, bndPp.numCol());
+        Row cc = c + numSatConstraints;
+        Row ccc = cc + numBndConstraints;
 
-      Row cc = c + numSatConstraints;
-      Row ccc = cc + numBndConstraints;
-
-      Col ll = l + satL.numCol();
-      Col lll = ll + bndL.numCol();
-      C(_(c, cc), _(l, ll)) << satL;
-      C(_(cc, ccc), _(ll, lll)) << bndL;
-      l = lll;
-      // bounding
-      C(_(cc, ccc), w++) << bndWU(_, 0);
-      Col uu = u + bndWU.numCol() - 1;
-      C(_(cc, ccc), _(u, uu)) << bndWU(_, _(1, end));
-      u = uu;
-      if (satisfyDeps) C(_(c, cc), 0) << satC + satW;
-      else C(_(c, cc), 0) << satC;
-      C(_(cc, ccc), 0) << bndC;
-      // now, handle Phi and Omega
-      // phis are not constrained to be 0
-      if (outNodeIndex == inNodeIndex) {
-        if (d < outNode.getNumLoops()) {
-          if (nPc == nPp) {
-            if (outNode.phiIsScheduled(d)) {
+        Col ll = l + satL.numCol();
+        Col lll = ll + bndL.numCol();
+        C(_(c, cc), _(l, ll)) << satL;
+        C(_(cc, ccc), _(ll, lll)) << bndL;
+        l = lll;
+        // bounding
+        C(_(cc, ccc), w++) << bndWU(_, 0);
+        Col uu = u + bndWU.numCol() - 1;
+        C(_(cc, ccc), _(u, uu)) << bndWU(_, _(1, end));
+        u = uu;
+        if (satisfyDeps) C(_(c, cc), 0) << satC + satW;
+        else C(_(c, cc), 0) << satC;
+        C(_(cc, ccc), 0) << bndC;
+        // now, handle Phi and Omega
+        // phis are not constrained to be 0
+        if (outNode == inNode) {
+          if (d < outNode->getNumLoops()) {
+            if (nPc == nPp) {
+              if (outNode->phiIsScheduled(d)) {
+                // add it constants
+                auto sch = outNode->getSchedule(d);
+                C(_(c, cc), 0) -=
+                  satPc * sch[_(0, nPc)] + satPp * sch[_(0, nPp)];
+                C(_(cc, ccc), 0) -=
+                  bndPc * sch[_(0, nPc)] + bndPp * sch[_(0, nPp)];
+              } else {
+                // FIXME: phiChild = [14:18), 4 cols
+                // while Dependence seems to indicate 2
+                // loops why the disagreement?
+                auto po = outNode->getPhiOffset() + p;
+                C(_(c, cc), _(po, po + nPc)) << satPc + satPp;
+                C(_(cc, ccc), _(po, po + nPc)) << bndPc + bndPp;
+              }
+            } else if (outNode->phiIsScheduled(d)) {
               // add it constants
-              auto sch = outNode.getSchedule(d);
-              C(_(c, cc), 0) -= satPc * sch[_(0, nPc)] + satPp * sch[_(0, nPp)];
-              C(_(cc, ccc), 0) -=
-                bndPc * sch[_(0, nPc)] + bndPp * sch[_(0, nPp)];
-            } else {
-              // FIXME: phiChild = [14:18), 4 cols
-              // while Dependence seems to indicate 2
-              // loops why the disagreement?
-              auto po = outNode.getPhiOffset() + p;
-              C(_(c, cc), _(po, po + nPc)) << satPc + satPp;
-              C(_(cc, ccc), _(po, po + nPc)) << bndPc + bndPp;
+              // note that loop order in schedule goes
+              // inner -> outer
+              // so we need to drop inner most if one has less
+              auto sch = outNode->getSchedule(d);
+              auto schP = sch[_(0, nPp)];
+              auto schC = sch[_(0, nPc)];
+              C(_(c, cc), 0) -= satPc * schC + satPp * schP;
+              C(_(cc, ccc), 0) -= bndPc * schC + bndPp * schP;
+            } else if (nPc < nPp) {
+              // Pp has more cols, so outer/leftmost overlap
+              auto po = outNode->getPhiOffset() + p, poc = po + nPc,
+                   pop = po + nPp;
+              C(_(c, cc), _(po, poc)) << satPc + satPp(_, _(0, nPc));
+              C(_(cc, ccc), _(po, poc)) << bndPc + bndPp(_, _(0, nPc));
+              C(_(c, cc), _(poc, pop)) << satPp(_, _(nPc, end));
+              C(_(cc, ccc), _(poc, pop)) << bndPp(_, _(nPc, end));
+            } else /* if (nPc > nPp) */ {
+              auto po = outNode->getPhiOffset() + p, poc = po + nPc,
+                   pop = po + nPp;
+              C(_(c, cc), _(po, pop)) << satPc(_, _(0, nPp)) + satPp;
+              C(_(cc, ccc), _(po, pop)) << bndPc(_, _(0, nPp)) + bndPp;
+              C(_(c, cc), _(pop, poc)) << satPc(_, _(nPp, end));
+              C(_(cc, ccc), _(pop, poc)) << bndPc(_, _(nPp, end));
             }
-          } else if (outNode.phiIsScheduled(d)) {
-            // add it constants
-            // note that loop order in schedule goes
-            // inner -> outer
-            // so we need to drop inner most if one has less
-            auto sch = outNode.getSchedule(d);
-            auto schP = sch[_(0, nPp)];
-            auto schC = sch[_(0, nPc)];
-            C(_(c, cc), 0) -= satPc * schC + satPp * schP;
-            C(_(cc, ccc), 0) -= bndPc * schC + bndPp * schP;
-          } else if (nPc < nPp) {
-            // Pp has more cols, so outer/leftmost overlap
-            auto po = outNode.getPhiOffset() + p, poc = po + nPc,
-                 pop = po + nPp;
-            C(_(c, cc), _(po, poc)) << satPc + satPp(_, _(0, nPc));
-            C(_(cc, ccc), _(po, poc)) << bndPc + bndPp(_, _(0, nPc));
-            C(_(c, cc), _(poc, pop)) << satPp(_, _(nPc, end));
-            C(_(cc, ccc), _(poc, pop)) << bndPp(_, _(nPc, end));
-          } else /* if (nPc > nPp) */ {
-            auto po = outNode.getPhiOffset() + p, poc = po + nPc,
-                 pop = po + nPp;
-            C(_(c, cc), _(po, pop)) << satPc(_, _(0, nPp)) + satPp;
-            C(_(cc, ccc), _(po, pop)) << bndPc(_, _(0, nPp)) + bndPp;
-            C(_(c, cc), _(pop, poc)) << satPc(_, _(nPp, end));
-            C(_(cc, ccc), _(pop, poc)) << bndPc(_, _(nPp, end));
+            C(_(c, cc), outNode->getOmegaOffset() + o)
+              << satO(_, 0) + satO(_, 1);
+            C(_(cc, ccc), outNode->getOmegaOffset() + o)
+              << bndO(_, 0) + bndO(_, 1);
           }
-          C(_(c, cc), outNode.getOmegaOffset() + o) << satO(_, 0) + satO(_, 1);
-          C(_(cc, ccc), outNode.getOmegaOffset() + o)
-            << bndO(_, 0) + bndO(_, 1);
-        }
-      } else {
-        if (d < edge->getOutNumLoops())
-          updateConstraints(C, outNode, satPc, bndPc, d, c, cc, ccc, p);
-        if (d < edge->getInNumLoops()) {
-          if (d < edge->getOutNumLoops() && !inNode.phiIsScheduled(d) &&
-              !outNode.phiIsScheduled(d)) {
-            invariant(inNode.getPhiOffset() != outNode.getPhiOffset());
+        } else {
+          if (d < edge->getOutNumLoops())
+            updateConstraints(C, outNode, satPc, bndPc, d, c, cc, ccc, p);
+          if (d < edge->getInNumLoops()) {
+            if (d < edge->getOutNumLoops() && !inNode->phiIsScheduled(d) &&
+                !outNode->phiIsScheduled(d)) {
+              invariant(inNode->getPhiOffset() != outNode->getPhiOffset());
+            }
+            updateConstraints(C, inNode, satPp, bndPp, d, c, cc, ccc, p);
           }
-          updateConstraints(C, inNode, satPp, bndPp, d, c, cc, ccc, p);
+          // Omegas are included regardless of rotation
+          if (d < edge->getOutNumLoops()) {
+            if (d < edge->getInNumLoops())
+              invariant(inNode->getOmegaOffset() != outNode->getOmegaOffset());
+            C(_(c, cc), outNode->getOmegaOffset() + o)
+              << satO(_, edge->isForward());
+            C(_(cc, ccc), outNode->getOmegaOffset() + o)
+              << bndO(_, edge->isForward());
+          }
+          if (d < edge->getInNumLoops()) {
+            C(_(c, cc), inNode->getOmegaOffset() + o)
+              << satO(_, !edge->isForward());
+            C(_(cc, ccc), inNode->getOmegaOffset() + o)
+              << bndO(_, !edge->isForward());
+          }
         }
-        // Omegas are included regardless of rotation
-        if (d < edge->getOutNumLoops()) {
-          if (d < edge->getInNumLoops())
-            invariant(inNode.getOmegaOffset() != outNode.getOmegaOffset());
-          C(_(c, cc), outNode.getOmegaOffset() + o)
-            << satO(_, edge->isForward());
-          C(_(cc, ccc), outNode.getOmegaOffset() + o)
-            << bndO(_, edge->isForward());
-        }
-        if (d < edge->getInNumLoops()) {
-          C(_(c, cc), inNode.getOmegaOffset() + o)
-            << satO(_, !edge->isForward());
-          C(_(cc, ccc), inNode.getOmegaOffset() + o)
-            << bndO(_, !edge->isForward());
-        }
+        c = ccc;
       }
-      c = ccc;
     }
     invariant(size_t(l), size_t(1 + numLambda));
     invariant(size_t(c), size_t(numConstraints));
-    addIndependentSolutionConstraints(omniSimplex.get(), g, d);
+    addIndependentSolutionConstraints(omniSimplex.get(), nodes, d, counts);
     return omniSimplex;
   }
   static void updateConstraints(MutPtrMatrix<int64_t> C,
-                                const ScheduledNode &node,
+                                const ScheduledNode *node,
                                 PtrMatrix<int64_t> sat, PtrMatrix<int64_t> bnd,
-                                size_t d, Row c, Row cc, Row ccc, Col p) {
+                                unsigned d, Row c, Row cc, Row ccc, Col p) {
     invariant(sat.numCol(), bnd.numCol());
-    if (node.phiIsScheduled(d)) {
+    if (node->phiIsScheduled(d)) {
       // add it constants
-      auto sch = node.getSchedule(d)[_(0, sat.numCol())];
+      auto sch = node->getSchedule(d)[_(0, sat.numCol())];
       // order is inner <-> outer
       // so we need the end of schedule if it is larger
       C(_(c, cc), 0) -= sat * sch;
       C(_(cc, ccc), 0) -= bnd * sch;
     } else {
       // add it to C
-      auto po = node.getPhiOffset() + p;
+      auto po = node->getPhiOffset() + p;
       C(_(c, cc), _(po, po + sat.numCol())) << sat;
       C(_(cc, ccc), _(po, po + bnd.numCol())) << bnd;
     }
   }
-  void addIndependentSolutionConstraints(NotNull<Simplex> omniSimplex,
-                                         const Graph &g, size_t d) {
+  static void addIndependentSolutionConstraints(NotNull<Simplex> omniSimplex,
+                                                const ScheduledNode *nodes,
+                                                unsigned d, CoefCounts counts) {
     // omniSimplex->setNumCons(omniSimplex->getNumCons() +
     //                                memory.size());
     // omniSimplex->reserveExtraRows(memory.size());
     auto C{omniSimplex->getConstraints()};
-    size_t i = size_t{C.numRow()} - numSlack, s = numLambda,
-           o = 1 + numSlack + numLambda + numOmegaCoefs;
+    ptrdiff_t i = ptrdiff_t{C.numRow()} - counts.numSlack, s = counts.numLambda,
+              o = 1 + counts.numSlack + counts.numLambda + counts.numOmegaCoefs;
     if (d == 0) {
       // add ones >= 0
-      for (auto &&node : nodes) {
-        if (node.phiIsScheduled(d) || (!hasActiveEdges(g, node, d))) continue;
+      for (const ScheduledNode *node : nodes->getVertices()) {
+        if (node->phiIsScheduled(d) || (!node->hasActiveEdges(d))) continue;
         C(i, 0) = 1;
-        C(i, node.getPhiOffsetRange() + o) << 1;
+        C(i, node->getPhiOffsetRange() + o) << 1;
         C(i++, ++s) = -1; // for >=
       }
     } else {
       DenseMatrix<int64_t> A, N;
-      for (auto &&node : nodes) {
-        if (node.phiIsScheduled(d) || (d >= node.getNumLoops()) ||
-            (!hasActiveEdges(g, node, d)))
+      for (const ScheduledNode *node : nodes->getVertices()) {
+        if (node->phiIsScheduled(d) || (d >= node->getNumLoops()) ||
+            (!node->hasActiveEdges(d)))
           continue;
-        A.resizeForOverwrite(Row{size_t(node.getPhi().numCol())}, Col{d});
-        A << node.getPhi()(_(0, d), _).transpose();
-        NormalForm::nullSpace11(N, A);
+        A.resizeForOverwrite(Row{ptrdiff_t(node->getPhi().numCol())}, Col{d});
+        A << node->getPhi()(_(0, d), _).transpose();
+        math::NormalForm::nullSpace11(N, A);
         // we add sum(NullSpace,dims=1) >= 1
         // via 1 = sum(NullSpace,dims=1) - s, s >= 0
         C(i, 0) = 1;
-        MutPtrVector<int64_t> cc{C(i, node.getPhiOffsetRange() + o)};
+        MutPtrVector<int64_t> cc{C(i, node->getPhiOffsetRange() + o)};
         // sum(N,dims=1) >= 1 after flipping row signs to be lex > 0
-        for (size_t m = 0; m < N.numRow(); ++m)
+        for (ptrdiff_t m = 0; m < N.numRow(); ++m)
           cc += N(m, _) * lexSign(N(m, _));
         C(i++, ++s) = -1; // for >=
       }
     }
-    invariant(size_t(omniSimplex->getNumCons()), i);
+    invariant(ptrdiff_t(omniSimplex->getNumCons()), i);
     assert(!allZero(omniSimplex->getConstraints()(last, _)));
+  }
+  [[nodiscard]] static constexpr auto lexSign(PtrVector<int64_t> x) -> int64_t {
+    for (auto a : x)
+      if (a) return 2 * (a > 0) - 1;
+    invariant(false);
+    return 0;
   }
 
   //
@@ -1056,382 +1090,56 @@ private:
   //
   //
   // Old junk:
-  constexpr void setLI(llvm::LoopInfo *loopInfo) { LI = loopInfo; }
-  constexpr void addAddr(Addr *addr) {
-    if (memory != nullptr) addr->setNext(memory);
-    memory = addr;
-    userToMem[addr->getInstruction()] = addr;
-  }
   /// L is the inner-most loop getting dropped, i.e. it is the level at which
   /// the TreeResult rejected
-  [[nodiscard]] constexpr auto numVerticies() const -> size_t {
-    return nodes.size();
-  }
-  [[nodiscard]] constexpr auto getVerticies() -> MutPtrVector<ScheduledNode> {
-    return nodes;
-  }
-  [[nodiscard]] constexpr auto getVerticies() const
-    -> PtrVector<ScheduledNode> {
-    return nodes;
-  }
-  [[nodiscard]] constexpr auto getAddr() const -> const Addr * {
-    return memory;
-  }
-  constexpr auto getAddr() -> Addr * { return memory; }
-
-  auto getNode(size_t i) -> ScheduledNode & { return nodes[i]; }
-  [[nodiscard]] auto getNode(size_t i) const -> const ScheduledNode & {
-    return nodes[i];
-  }
-  auto getNodes() -> MutPtrVector<ScheduledNode> { return nodes; }
-  auto getEdges() -> MutPtrVector<Dependence> { return edges; }
-  [[nodiscard]] auto numNodes() const -> size_t { return nodes.size(); }
-  [[nodiscard]] auto numEdges() const -> size_t { return edges.size(); }
-  [[nodiscard]] auto numMemoryAccesses() const -> size_t {
-    return memory.size();
-  }
-  [[nodiscard]] auto calcMaxDepth() const -> size_t {
-    unsigned d = 0;
-    for (const auto *mem : memory) d = std::max(d, mem->getNumLoops());
-    return d;
-  }
-
-  /// used in searchOperandsForLoads
-  /// if an operand is stored, we can reload it.
-  /// This will insert a new store memory access.
-  ///
-  /// If an instruction was stored somewhere, we don't keep
-  /// searching for place it was loaded, and instead add a reload.
-  [[nodiscard]] auto searchValueForStores(ScheduledNode &node, llvm::User *user,
-                                          unsigned nodeIdx) -> bool {
-    for (llvm::User *use : user->users()) {
-      if (visited.contains(use)) continue;
-      if (llvm::isa<llvm::StoreInst>(use)) {
-        auto ma = userToMem.find(use);
-        if (ma == userToMem.end()) continue;
-        // we want to reload a store
-        // this store will be treated as a load
-        NotNull<MemoryAccess> store = memory[ma->second];
-        auto [load, d] = Dependence::reload(allocator, store);
-        // for every store->store, we also want a load->store
-        for (auto o : store->outputEdges()) {
-          Dependence edge = edges[o];
-          if (!edge.outputIsStore()) continue;
-          pushToEdgeVector(edges, edge.replaceInput(load));
-        }
-        pushToEdgeVector(edges, d);
-        unsigned memId = memory.size();
-        memory.push_back(load);
-        node.addMemory(memId, load, nodeIdx);
-        return true;
-      }
-    }
-    return false;
-  }
-  auto duplicateLoad(NotNull<Addr> load, unsigned &memId) -> NotNull<Addr> {
-    NotNull<Addr> newLoad = allocator.create<Addr>(load->getArrayRef(), true);
-    memId = memory.size();
-    memory.push_back(load);
-    for (auto l : load->inputEdges())
-      pushToEdgeVector(edges, edges[l].replaceOutput(newLoad));
-    for (auto o : load->outputEdges())
-      pushToEdgeVector(edges, edges[o].replaceInput(newLoad));
-    return newLoad;
-  }
-  // NOLINTNEXTLINE(misc-no-recursion)
-  void checkUserForLoads(ScheduledNode &node, llvm::User *user,
-                         unsigned nodeIdx) {
-    if (!user || visited.contains(user)) return;
-    if (llvm::isa<llvm::LoadInst>(user)) {
-      // check if load is a part of the LoopBlock
-      auto ma = userToMem.find(user);
-      if (ma == userToMem.end()) return;
-      unsigned memId = ma->second;
-      NotNull<MemoryAccess> load = memory[memId];
-      if (load->getNode() != std::numeric_limits<unsigned>::max())
-        load = duplicateLoad(load, memId);
-      node.addMemory(memId, load, nodeIdx);
-    } else if (!searchValueForStores(node, user, nodeIdx))
-      searchOperandsForLoads(node, user, nodeIdx);
-  }
-  /// We search uses of user `u` for any stores so that we can assign the use
-  /// and the store the same schedule. This is done because it is assumed the
-  /// data is held in registers (or, if things go wrong, spilled to the stack)
-  /// in between a load and a store. A complication is that LLVM IR can be
-  /// messy, e.g. we may have
-  /// %x = load %a
-  /// %y = call foo(x)
-  /// store %y, %b
-  /// %z = call bar(y)
-  /// store %z, %c
-  /// here, we might lock all three operations
-  /// together. However, this limits reordering opportunities; we thus want to
-  /// insert a new load instruction so that we have:
-  /// %x = load %a
-  /// %y = call foo(x)
-  /// store %y, %b
-  /// %y.reload = load %b
-  /// %z = call bar(y.reload)
-  /// store %z, %c
-  /// and we create a new edge from `store %y, %b` to `load %b`.
-  /// We're going to also build up the `Node` graph,
-  /// this is to avoid duplicating any logic or needing to traverse the object
-  /// graph an extra time as we go.
-  ///
-  // NOLINTNEXTLINE(misc-no-recursion)
-  void searchOperandsForLoads(ScheduledNode &node, llvm::User *u,
-                              unsigned nodeIdx) {
-    visited.insert(u);
-    if (auto *s = llvm::dyn_cast<llvm::StoreInst>(u)) {
-      if (auto *user = llvm::dyn_cast<llvm::User>(s->getValueOperand()))
-        checkUserForLoads(node, user, nodeIdx);
-      return;
-    }
-    for (auto &&op : u->operands())
-      if (auto *user = llvm::dyn_cast<llvm::User>(op.get()))
-        checkUserForLoads(node, user, nodeIdx);
-  }
-  void connect(unsigned inIndex, unsigned outIndex) {
-    nodes[inIndex].addOutNeighbor(outIndex);
-    nodes[outIndex].addInNeighbor(inIndex);
-  }
-  [[nodiscard]] auto calcNumStores() const -> size_t {
-    return std::ranges::count_if(memory,
-                                 [](const auto &m) { return m->isStore(); });
-  }
-  /// When connecting a graph, we draw direct connections between stores and
-  /// loads loads may be duplicated across stores to allow for greater
-  /// reordering flexibility (which should generally reduce the ultimate
-  /// amount of loads executed in the eventual generated code)
-  void connectGraph() {
-    // assembles direct connections in node graph
-    for (unsigned i = 0; i < memory.size(); ++i)
-      userToMem.insert({memory[i]->getInstruction(), i});
-
-    nodes.reserve(calcNumStores());
-    for (unsigned i = 0; i < memory.size(); ++i) {
-      MemoryAccess *mai = memory[i];
-      if (mai->isLoad()) continue;
-      unsigned nodeIdx = nodes.size();
-      searchOperandsForLoads(nodes.emplace_back(i, mai, nodeIdx),
-                             mai->getInstruction(), nodeIdx);
-      visited.clear();
-    }
-    // destructors of amap and aset poison memory
-  }
-  void buildGraph() {
-    connectGraph();
-    // now that we've assigned each MemoryAccess to a NodeIndex, we
-    // build the actual graph
-    for (auto e : edges) connect(e.nodeIn(), e.nodeOut());
-    for (auto &&node : nodes) node.init(allocator);
-  }
-  struct Graph {
-    ScheduledNode *nodes;
-    class Iterator {
-      ScheduledNode *node;
-      constexpr auto operator*() const -> ScheduledNode & { return *node; }
-      constexpr auto operator->() const -> ScheduledNode * { return node; }
-      constexpr auto operator++() -> Iterator & {
-        node = node->getNext();
-        return *this;
-      }
-      constexpr auto operator==(const Iterator &other) const -> bool {
-        return node == other.node;
-      }
-      constexpr auto operator!=(const Iterator &other) const -> bool {
-        return node != other.node;
-      }
-    };
-    class ConstIterator {
-      const ScheduledNode *node;
-      constexpr auto operator*() const -> const ScheduledNode & {
-        return *node;
-      }
-      constexpr auto operator->() const -> const ScheduledNode * {
-        return node;
-      }
-      constexpr auto operator++() -> ConstIterator & {
-        node = node->getNext();
-        return *this;
-      }
-      constexpr auto operator==(const ConstIterator &other) const -> bool {
-        return node == other.node;
-      }
-      constexpr auto operator!=(const ConstIterator &other) const -> bool {
-        return node != other.node;
-      }
-    };
-    [[nodiscard]] constexpr auto begin() -> Iterator { return {node}; }
-    [[nodiscard]] constexpr auto begin() const -> ConstIterator {
-      return {node};
-    }
-    [[nodiscard]] constexpr auto end() -> Iterator { return {nullptr}; }
-    [[nodiscard]] constexpr auto end() const -> ConstIterator {
-      return {nullptr};
-    }
-    [[nodiscard]] constexpr auto calcMaxDepth() const -> size_t {
-      if (nodeIds.data.empty()) return 0;
-      size_t d = 0;
-      for (auto n : nodeIds) d = std::max(d, nodes[n].getNumLoops());
-      return d;
-    }
-
-    constexpr void forEachEdge(const auto &f) {
-      for (Iterator i : (*this)) i->forEachInputEdge(f);
-    }
-    constexpr void forEachEdge(const auto &f) const {
-      for (ConstIterator i : (*this)) i->forEachInputEdge(f);
-    }
-    constexpr void forEachEdge(unsigned depth, const auto &f) {
-      for (Iterator i : (*this)) i->forEachEdge(depth, f);
-    }
-    constexpr void forEachEdge(unsigned depth, const auto &f) const {
-      for (ConstIterator i : (*this)) i->forEachInputEdge(depth, f);
-    }
-    constexpr auto reduceEachEdge(auto x, const auto &f) {
-      for (Iterator i : (*this)) x = i->reduceEachInputEdge(x, f);
-      return x;
-    }
-    constexpr void reduceEachEdge(auto x, const auto &f) const {
-      for (ConstIterator i : (*this)) x = i->reduceEachInputEdge(x, f);
-      return x;
-    }
-    constexpr void reduceEachEdge(auto x, unsigned depth, const auto &f) {
-      for (Iterator i : (*this)) x = i->reduceEachInputEdge(x, depth, f);
-      return x;
-    }
-    constexpr void reduceEachEdge(auto x, unsigned depth, const auto &f) const {
-      for (ConstIterator i : (*this)) x = i->reduceEachInputEdge(x, depth, f);
-      return x;
-    }
-  };
-  // bool connects(const Dependence &e, Graph &g0, Graph &g1, size_t d) const
-  // {
-  //     return ((e.getInNumLoops() > d) && (e.getOutNumLoops() > d)) &&
-  //            connects(e, g0, g1);
-  // }
-  static auto connects(const Dependence &e, Graph &g0, Graph &g1) -> bool {
-    size_t nodeIn = e.nodeIn(), nodeOut = e.nodeOut();
-    return ((g0.nodeIds.contains(nodeIn) && g1.nodeIds.contains(nodeOut)) ||
-            (g1.nodeIds.contains(nodeIn) && g0.nodeIds.contains(nodeOut)));
-  }
-  constexpr auto fullGraph() -> Graph {
-    return {BitSet::dense(nodes.size()), BitSet::dense(edges.size()), memory,
-            nodes, edges};
-  }
-  [[nodiscard]] static constexpr auto anyActive(const Graph &g, const BitSet &b)
-    -> bool {
-    return std::ranges::any_of(b, [&](size_t e) { return !g.isInactive(e); });
-  }
-  [[nodiscard]] static constexpr auto anyActive(const Graph &g, size_t d,
-                                                const BitSet &b) -> bool {
-    return std::ranges::any_of(b,
-                               [&](size_t e) { return !g.isInactive(e, d); });
-  }
-  constexpr void setScheduleMemoryOffsets(const Graph &g, size_t d) {
-    // C, lambdas, omegas, Phis
-    numOmegaCoefs = 0;
-    numPhiCoefs = 0;
-    numSlack = 0;
-    for (auto &&node : nodes) {
-      // note, we had d > node.getNumLoops() for omegas earlier; why?
-      if ((d >= node.getNumLoops()) || (!hasActiveEdges(g, node, d))) continue;
-      numOmegaCoefs = node.updateOmegaOffset(numOmegaCoefs);
-      if (node.phiIsScheduled(d)) continue;
-      numPhiCoefs = node.updatePhiOffset(numPhiCoefs);
-      ++numSlack;
-    }
-  }
-#ifndef NDEBUG
-  void validateEdges() {
-    for (auto edge : edges) edge.validate();
-  }
-#endif
   // Note this is based on the assumption that original loops are in
   // outer<->inner order. With that assumption, using lexSign on the null
   // space will tend to preserve the original traversal order.
-  [[nodiscard]] static constexpr auto lexSign(PtrVector<int64_t> x) -> int64_t {
-    for (auto a : x)
-      if (a) return 2 * (a > 0) - 1;
-    invariant(false);
-    return 0;
-  }
 
-  [[nodiscard]] auto isSatisfied(Dependence &e, size_t d) -> bool {
-    size_t inIndex = e.nodeIn();
-    size_t outIndex = e.nodeOut();
-    AffineSchedule first = nodes[inIndex].getSchedule();
-    AffineSchedule second = nodes[outIndex].getSchedule();
-    if (!e.isForward()) std::swap(first, second);
-    if (!e.isSatisfied(allocator, first, second, d)) return false;
-    return true;
-  }
-  [[nodiscard]] auto canFuse(Graph &g0, Graph &g1, size_t d) -> bool {
-    for (auto e : edges) {
-      if ((e.getInNumLoops() <= d) || (e.getOutNumLoops() <= d)) return false;
-      if (connects(e, g0, g1))
-        if (!isSatisfied(e, d)) return false;
-    }
-    return true;
-  }
-  // returns a BitSet indicating satisfied dependencies
-  [[nodiscard]] auto optimize() -> std::optional<BitSet> {
-    fillEdges();
-    buildGraph();
-    shiftOmegas();
-#ifndef NDEBUG
-    validateEdges();
-#endif
-    return optOrth(fullGraph());
-  }
-  auto summarizeMemoryAccesses(llvm::raw_ostream &os) const
+  static auto summarizeMemoryAccesses(llvm::raw_ostream &os,
+                                      ScheduledNode *nodes)
     -> llvm::raw_ostream & {
     os << "MemoryAccesses:\n";
-    for (const auto *m : memory) {
+    for (const Addr *m : nodes->eachAddr()) {
       os << "Inst: " << *m->getInstruction()
          << "\nOrder: " << m->getFusionOmega() << "\nLoop:" << *m->getLoop()
          << "\n";
     }
     return os;
   }
-  friend inline auto operator<<(llvm::raw_ostream &os, const LoopBlock &lblock)
+  friend inline auto operator<<(llvm::raw_ostream &os, ScheduledNode *nodes)
     -> llvm::raw_ostream & {
-    os << "\nLoopBlock graph (#nodes = " << lblock.nodes.size() << "):\n";
-    for (size_t i = 0; i < lblock.nodes.size(); ++i) {
-      const auto &v = lblock.getNode(i);
-      os << "v_" << i << ":\nmem =\n";
-      for (auto m : v.getMemory())
-        os << *lblock.memory[m]->getInstruction() << "\n";
+    os << "\nLoopBlock graph:\n";
+    size_t i = 0;
+    for (ScheduledNode *v : nodes->getVertices()) {
+      os << "v_" << i++ << ":\nmem =\n";
+      for (const Addr *m : v->localAddr()) os << *m->getInstruction() << "\n";
       os << v << "\n";
     }
     // BitSet
-    os << "\nLoopBlock Edges (#edges = " << lblock.edges.size() << "):";
-    for (const auto &edge : lblock.edges) {
-      os << "\n\n\tEdge = " << edge;
-      size_t inIndex = edge.nodeIn();
-      const AffineSchedule sin = lblock.getNode(inIndex).getSchedule();
-      os << "Schedule In: nodeIndex = " << edge.nodeIn()
-         << "\ns.getPhi() =" << sin.getPhi()
-         << "\ns.getFusionOmega() = " << sin.getFusionOmega()
-         << "\ns.getOffsetOmega() = " << sin.getOffsetOmega();
+    os << "\nLoopBlock Edges:";
+    for (ScheduledNode *inNode : nodes->getVertices()) {
+      poly::AffineSchedule sin = inNode->getSchedule();
+      for (Dependence *edge : nodes->outputEdges()) {
+        os << "\n\n\tEdge = " << edge;
+        ScheduledNode *outNode = edge->output()->getNode();
+        os << "Schedule In: s.getPhi() =" << sin.getPhi()
+           << "\ns.getFusionOmega() = " << sin.getFusionOmega()
+           << "\ns.getOffsetOmega() = " << sin.getOffsetOmega();
+        poly::AffineSchedule sout = outNode->getSchedule();
+        os << "\n\nSchedule Out: s.getPhi() =" << sout.getPhi()
+           << "\ns.getFusionOmega() = " << sout.getFusionOmega()
+           << "\ns.getOffsetOmega() = " << sout.getOffsetOmega();
 
-      size_t outIndex = edge.nodeOut();
-      const AffineSchedule sout = lblock.getNode(outIndex).getSchedule();
-      os << "\n\nSchedule Out: nodeIndex = " << edge.nodeOut()
-         << "\ns.getPhi() =" << sout.getPhi()
-         << "\ns.getFusionOmega() = " << sout.getFusionOmega()
-         << "\ns.getOffsetOmega() = " << sout.getOffsetOmega();
-
-      os << "\n\n";
+        os << "\n\n";
+      }
     }
-    os << "\nLoopBlock schedule (#mem accesses = " << lblock.memory.size()
-       << "):\n\n";
-    for (const auto &mem : lblock.memory) {
-      os << "Ref = " << *mem->getArrayRef();
-      size_t nodeIndex = mem->getNode();
-      const AffineSchedule s = lblock.getNode(nodeIndex).getSchedule();
-      os << "\nnodeIndex = " << nodeIndex << "\ns.getPhi()" << s.getPhi()
+    os << "\nLoopBlock schedule:\n";
+    for (Addr *mem : nodes->eachAddr()) {
+      os << "Ref = " << *mem->getArrayPointer();
+      ScheduledNode *node = mem->getNode();
+      poly::AffineSchedule s = node->getSchedule();
+      os << "s.getPhi()" << s.getPhi()
          << "\ns.getFusionOmega() = " << s.getFusionOmega()
          << "\ns.getOffsetOmega() = " << s.getOffsetOmega() << "\n";
     }
@@ -1439,14 +1147,4 @@ private:
   }
 };
 
-template <> struct std::iterator_traits<LoopBlock::Graph> {
-  using difference_type = ptrdiff_t;
-  using iterator_category = std::forward_iterator_tag;
-  using value_type = ScheduledNode;
-  using reference_type = ScheduledNode &;
-  using pointer_type = ScheduledNode *;
-};
-// static_assert(std::ranges::range<LoopBlock::Graph>);
-static_assert(Graphs::AbstractIndexGraph<LoopBlock::Graph>);
-static_assert(std::is_trivially_destructible_v<LoopBlock::Graph>);
 } // namespace poly::lp

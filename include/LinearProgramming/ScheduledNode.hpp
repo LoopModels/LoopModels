@@ -8,6 +8,7 @@
 #include <Utilities/Invariant.hpp>
 #include <Utilities/Valid.hpp>
 #include <bits/iterator_concepts.h>
+#include <cstddef>
 #include <ranges>
 
 namespace poly {
@@ -218,9 +219,8 @@ public:
         this, utils::GetNext{},
         [](ScheduledNode *n) -> Addr * { return n->getStore(); }},
 
-      [](Addr *a) -> utils::ListRange<Addr, utils::GetNext, utils::Identity> {
-        return utils::ListRange{llvm::cast<Addr>(a->getChild()),
-                                utils::GetNext{}};
+      [](Addr *a) -> utils::ListRange<Addr, NextAddr, utils::Identity> {
+        return utils::ListRange{llvm::cast<Addr>(a->getChild()), NextAddr{}};
       }};
   }
   // all nodes that are memory inputs to this one; i.e. all parents
@@ -486,15 +486,15 @@ public:
     return d < rank;
   }
 
-  [[nodiscard]] constexpr auto updatePhiOffset(size_t p) -> size_t {
+  [[nodiscard]] constexpr auto updatePhiOffset(size_t p) -> ptrdiff_t {
     phiOffset = p;
     return p + getNumLoops();
   }
-  [[nodiscard]] constexpr auto updateOmegaOffset(size_t o) -> size_t {
+  [[nodiscard]] constexpr auto updateOmegaOffset(size_t o) -> ptrdiff_t {
     omegaOffset = o;
     return ++o;
   }
-  [[nodiscard]] constexpr auto getPhiOffset() const -> size_t {
+  [[nodiscard]] constexpr auto getPhiOffset() const -> ptrdiff_t {
     return phiOffset;
   }
   [[nodiscard]] constexpr auto getPhiOffsetRange() const
@@ -562,7 +562,7 @@ public:
     rank = r;
   }
   constexpr void unschedulePhi() { rank = 0; }
-  [[nodiscard]] constexpr auto getOmegaOffset() const -> size_t {
+  [[nodiscard]] constexpr auto getOmegaOffset() const -> ptrdiff_t {
     return omegaOffset;
   }
   void resetPhiOffset() { phiOffset = std::numeric_limits<unsigned>::max(); }
