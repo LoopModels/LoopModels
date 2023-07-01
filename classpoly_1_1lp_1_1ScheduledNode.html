@@ -82,6 +82,8 @@ $(function() {
 Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpoly_1_1lp_1_1ScheduledNode_1_1Active.html">Active</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpoly_1_1lp_1_1ScheduledNode_1_1Component.html">Component</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpoly_1_1lp_1_1ScheduledNode_1_1DepFilter.html">DepFilter</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpoly_1_1lp_1_1ScheduledNode_1_1GetEdge.html">GetEdge</a></td></tr>
@@ -135,9 +137,14 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNext</b>
 <tr class="memitem:a02d3d89d9315c0661aa2825ba449eb41"><td class="memItemLeft" align="right" valign="top"><a id="a02d3d89d9315c0661aa2825ba449eb41"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>setNext</b> (<a class="el" href="classpoly_1_1lp_1_1ScheduledNode.html">ScheduledNode</a> *n) -&gt; <a class="el" href="classpoly_1_1lp_1_1ScheduledNode.html">ScheduledNode</a> *</td></tr>
 <tr class="separator:a02d3d89d9315c0661aa2825ba449eb41"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0dca20e729df1a3fcd6080fd80176061"><td class="memItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1lp_1_1ScheduledNode.html#a0dca20e729df1a3fcd6080fd80176061">fuse</a> (<a class="el" href="classpoly_1_1lp_1_1ScheduledNode.html">ScheduledNode</a> *n) -&gt; <a class="el" href="classpoly_1_1lp_1_1ScheduledNode.html">ScheduledNode</a> *</td></tr>
+<tr class="separator:a0dca20e729df1a3fcd6080fd80176061"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3efce26b6685d0b52851b0e2e9ad1e26"><td class="memItemLeft" align="right" valign="top"><a id="a3efce26b6685d0b52851b0e2e9ad1e26"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNextComponent</b> () -&gt; <a class="el" href="classpoly_1_1lp_1_1ScheduledNode.html">ScheduledNode</a> *</td></tr>
 <tr class="separator:a3efce26b6685d0b52851b0e2e9ad1e26"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0a1e586cf81e89d05a05c786edcf2f08"><td class="memItemLeft" align="right" valign="top"><a id="a0a1e586cf81e89d05a05c786edcf2f08"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNextComponent</b> () const -&gt; const <a class="el" href="classpoly_1_1lp_1_1ScheduledNode.html">ScheduledNode</a> *</td></tr>
+<tr class="separator:a0a1e586cf81e89d05a05c786edcf2f08"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9129ab47f54d8c56d32f4baa514eaf46"><td class="memItemLeft" align="right" valign="top"><a id="a9129ab47f54d8c56d32f4baa514eaf46"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>setNextComponent</b> (<a class="el" href="classpoly_1_1lp_1_1ScheduledNode.html">ScheduledNode</a> *n) -&gt; <a class="el" href="classpoly_1_1lp_1_1ScheduledNode.html">ScheduledNode</a> *</td></tr>
 <tr class="separator:a9129ab47f54d8c56d32f4baa514eaf46"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -159,6 +166,12 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getVertices
 <tr class="memitem:ad04ca907bb4ba6f05efe847ae272cda8"><td class="memItemLeft" align="right" valign="top"><a id="ad04ca907bb4ba6f05efe847ae272cda8"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getVertices</b> () const -&gt; utils::ListRange&lt; const <a class="el" href="classpoly_1_1lp_1_1ScheduledNode.html">ScheduledNode</a>, utils::GetNext, utils::Identity &gt;</td></tr>
 <tr class="separator:ad04ca907bb4ba6f05efe847ae272cda8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae3df43291d1c7edbe6b85208d49b02e9"><td class="memItemLeft" align="right" valign="top"><a id="ae3df43291d1c7edbe6b85208d49b02e9"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getComponents</b> () -&gt; utils::ListRange&lt; <a class="el" href="classpoly_1_1lp_1_1ScheduledNode.html">ScheduledNode</a>, <a class="el" href="structpoly_1_1lp_1_1ScheduledNode_1_1Component.html">Component</a>, utils::Identity &gt;</td></tr>
+<tr class="separator:ae3df43291d1c7edbe6b85208d49b02e9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5b6def6f56227322b0b7f4fbdf750785"><td class="memItemLeft" align="right" valign="top"><a id="a5b6def6f56227322b0b7f4fbdf750785"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getComponents</b> () const -&gt; utils::ListRange&lt; const <a class="el" href="classpoly_1_1lp_1_1ScheduledNode.html">ScheduledNode</a>, <a class="el" href="structpoly_1_1lp_1_1ScheduledNode_1_1Component.html">Component</a>, utils::Identity &gt;</td></tr>
+<tr class="separator:a5b6def6f56227322b0b7f4fbdf750785"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a952dfc664035829601cd05c2fd9a2394"><td class="memItemLeft" align="right" valign="top"><a id="a952dfc664035829601cd05c2fd9a2394"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>localAddr</b> ()</td></tr>
 <tr class="separator:a952dfc664035829601cd05c2fd9a2394"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -346,7 +359,35 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> 
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p><a class="el" href="classpoly_1_1lp_1_1ScheduledNode.html">ScheduledNode</a> Represents a set of memory accesses that are optimized together in the LP. These instructions are all connected directly by through registers. E.g., <code>A[i] = B[i] + C[i]</code> is a single node because we load from <code>B[i]</code> and <code>C[i]</code> into registers, compute, and <code>A[i]</code>; When splitting <a class="el" href="classpoly_1_1lp_1_1LoopBlock.html">LoopBlock</a> graphs, these graphs will have edges between them that we drop. This is only a problem if we merge graphs later. </p>
-</div><hr/>The documentation for this class was generated from the following file:<ul>
+</div><h2 class="groupheader">Member Function Documentation</h2>
+<a id="a0dca20e729df1a3fcd6080fd80176061"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0dca20e729df1a3fcd6080fd80176061">&#9670;&nbsp;</a></span>fuse()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">constexpr auto poly::lp::ScheduledNode::fuse </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classpoly_1_1lp_1_1ScheduledNode.html">ScheduledNode</a> *&#160;</td>
+          <td class="paramname"><em>n</em></td><td>)</td>
+          <td> -&gt; <a class="el" href="classpoly_1_1lp_1_1ScheduledNode.html">ScheduledNode</a> * </td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">constexpr</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>fuse; difference between <code>setNext</code> is that this assumes both have <code>next</code>s Note, this is expensive: O(N) in size, because we don't keep an <code>end</code>... </p>
+
+</div>
+</div>
+<hr/>The documentation for this class was generated from the following file:<ul>
 <li>include/LinearProgramming/<a class="el" href="ScheduledNode_8hpp_source.html">ScheduledNode.hpp</a></li>
 </ul>
 </div><!-- contents -->

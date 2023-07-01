@@ -1,16 +1,9 @@
 var searchData=
 [
-  ['scc_101',['SCC',['../structpoly_1_1graphs_1_1SCC.html',1,'poly::graphs']]],
-  ['schedulednode_102',['ScheduledNode',['../classpoly_1_1lp_1_1ScheduledNode.html',1,'poly::lp']]],
-  ['schedulegraph_103',['ScheduleGraph',['../classpoly_1_1lp_1_1ScheduleGraph.html',1,'poly::lp']]],
-  ['selectallocator_104',['SelectAllocator',['../structpoly_1_1IR_1_1MergingCost_1_1SelectAllocator.html',1,'poly::IR::MergingCost']]],
-  ['selectcost_105',['selectCost',['../classpoly_1_1IR_1_1Operation.html#a3c026a3b9192dea51a7dc6b57e6833b9',1,'poly::IR::Operation']]],
-  ['selectcounter_106',['SelectCounter',['../structpoly_1_1IR_1_1MergingCost_1_1SelectCounter.html',1,'poly::IR::MergingCost']]],
-  ['set_107',['Set',['../structpoly_1_1IR_1_1Predicate_1_1Set.html',1,'poly::IR::Predicate']]],
-  ['setfusionomega_108',['setFusionOmega',['../classpoly_1_1IR_1_1Addr.html#a26d3b32498e5ea5373a423a9bb463477',1,'poly::IR::Addr']]],
-  ['squarematrixprinter_109',['SquareMatrixPrinter',['../classprettyprinters_1_1SquareMatrixPrinter.html',1,'prettyprinters']]],
-  ['stashsatlevel_110',['stashSatLevel',['../classpoly_1_1poly_1_1Dependence.html#ab0b2ff38f39e89f64efe973c10e9d324',1,'poly::poly::Dependence']]],
-  ['state_111',['State',['../structpoly_1_1graph_1_1State.html',1,'poly::graph']]],
-  ['stow_112',['Stow',['../classpoly_1_1IR_1_1Stow.html',1,'poly::IR']]],
-  ['stridedmatrixprinter_113',['StridedMatrixPrinter',['../classprettyprinters_1_1StridedMatrixPrinter.html',1,'prettyprinters']]]
+  ['recipthroughputlatency_97',['RecipThroughputLatency',['../structpoly_1_1IR_1_1cost_1_1RecipThroughputLatency.html',1,'poly::IR::cost']]],
+  ['reference_98',['Reference',['../structpoly_1_1IR_1_1Predicate_1_1Intersection_1_1Reference.html',1,'poly::IR::Predicate::Intersection']]],
+  ['remapper_99',['ReMapper',['../classpoly_1_1IR_1_1ReMapper.html',1,'poly::IR']]],
+  ['removeemptymask_100',['removeEmptyMask',['../structpoly_1_1IR_1_1Predicate_1_1Intersection.html#a03f0fec36c260a442aa37efaae474cdd',1,'poly::IR::Predicate::Intersection']]],
+  ['replacealluseswith_101',['replaceAllUsesWith',['../classpoly_1_1IR_1_1Cache.html#a56195133a3bc424f28e12e1c7c60d1f8',1,'poly::IR::Cache']]],
+  ['rotate_102',['rotate',['../classpoly_1_1poly_1_1Loop.html#a8c131cfad158a7b87c6ce6c987645be7',1,'poly::poly::Loop']]]
 ];

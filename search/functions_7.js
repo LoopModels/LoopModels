@@ -1,6 +1,5 @@
 var searchData=
 [
-  ['removeemptymask_242',['removeEmptyMask',['../structpoly_1_1IR_1_1Predicate_1_1Intersection.html#a03f0fec36c260a442aa37efaae474cdd',1,'poly::IR::Predicate::Intersection']]],
-  ['replacealluseswith_243',['replaceAllUsesWith',['../classpoly_1_1IR_1_1Cache.html#a56195133a3bc424f28e12e1c7c60d1f8',1,'poly::IR::Cache']]],
-  ['rotate_244',['rotate',['../classpoly_1_1poly_1_1Loop.html#a8c131cfad158a7b87c6ce6c987645be7',1,'poly::poly::Loop']]]
+  ['mergemap_244',['mergeMap',['../classpoly_1_1poly_1_1DepPoly.html#afc4fa536b4d8eddca8b17a10e04b466c',1,'poly::poly::DepPoly']]],
+  ['mergeoperands_245',['mergeOperands',['../structpoly_1_1IR_1_1MergingCost.html#af52ae253e1281d3e0dfc121afc381561',1,'poly::IR::MergingCost']]]
 ];

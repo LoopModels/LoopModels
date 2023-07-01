@@ -1,6 +1,11 @@
 var searchData=
 [
-  ['hash_3c_20poly_3a_3air_3a_3acnst_3a_3aidentifier_20_3e_54',['hash&lt; poly::IR::Cnst::Identifier &gt;',['../structankerl_1_1unordered__dense_1_1hash_3_01poly_1_1IR_1_1Cnst_1_1Identifier_01_4.html',1,'ankerl::unordered_dense']]],
-  ['hash_3c_20poly_3a_3air_3a_3aidentifier_20_3e_55',['hash&lt; poly::IR::Identifier &gt;',['../structankerl_1_1unordered__dense_1_1hash_3_01poly_1_1IR_1_1Identifier_01_4.html',1,'ankerl::unordered_dense']]],
-  ['hash_3c_20poly_3a_3air_3a_3ainstbyvalue_20_3e_56',['hash&lt; poly::IR::InstByValue &gt;',['../structankerl_1_1unordered__dense_1_1hash_3_01poly_1_1IR_1_1InstByValue_01_4.html',1,'ankerl::unordered_dense']]]
+  ['getallocator_48',['getAllocator',['../classpoly_1_1IR_1_1Cache.html#a6fc976093ca556ac42bc46e2c8e372f0',1,'poly::IR::Cache']]],
+  ['getcost_49',['getCost',['../classpoly_1_1IR_1_1Compute.html#a3ffde0af9933fbd4793d549830a0e8a2',1,'poly::IR::Compute']]],
+  ['getedge_50',['GetEdge',['../structpoly_1_1lp_1_1ScheduledNode_1_1GetEdge.html',1,'poly::lp::ScheduledNode']]],
+  ['getfusionomega_51',['getFusionOmega',['../classArrayIndex.html#ac50bf625a59c9a19bd0bcf14c6d0d980',1,'ArrayIndex::getFusionOmega() -&gt; MutPtrVector&lt; int64_t &gt;'],['../classArrayIndex.html#a0e86ce8a1a3a5cb7a08e684419afe8d8',1,'ArrayIndex::getFusionOmega() const -&gt; PtrVector&lt; int64_t &gt;']]],
+  ['getinindmat_52',['getInIndMat',['../classpoly_1_1poly_1_1Dependence.html#a0abb755d8e7a698e081db7292e11e44b',1,'poly::poly::Dependence']]],
+  ['getoutindmat_53',['getOutIndMat',['../classpoly_1_1poly_1_1Dependence.html#ab2caff477ed0560c811298fe432010ec',1,'poly::poly::Dependence']]],
+  ['getschedule_54',['getSchedule',['../classpoly_1_1lp_1_1ScheduledNode.html#aab0d96d0f1eb92a09855c5a9c2a71de4',1,'poly::lp::ScheduledNode::getSchedule()'],['../structpoly_1_1poly_1_1AffineSchedule.html#a59920bb4ddd40e454a495277d538d79c',1,'poly::poly::AffineSchedule::getSchedule()']]],
+  ['getvalue_55',['getValue',['../classpoly_1_1IR_1_1Cache.html#a8752442da530803e458fedf4e8d97600',1,'poly::IR::Cache']]]
 ];

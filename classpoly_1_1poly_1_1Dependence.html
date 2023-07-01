@@ -112,20 +112,23 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>setNextOutp
 <tr class="memitem:a17701299d29d284ae5b83ecb92b8eb00"><td class="memItemLeft" align="right" valign="top"><a id="a17701299d29d284ae5b83ecb92b8eb00"></a>
 constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Dependence</b> (NotNull&lt; <a class="el" href="classpoly_1_1poly_1_1DepPoly.html">DepPoly</a> &gt; poly, std::array&lt; NotNull&lt; math::Simplex &gt;, 2 &gt; depSatBound, NotNull&lt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> &gt; i, NotNull&lt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> &gt; o, bool fwd)</td></tr>
 <tr class="separator:a17701299d29d284ae5b83ecb92b8eb00"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab0b2ff38f39e89f64efe973c10e9d324"><td class="memItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1poly_1_1Dependence.html#ab0b2ff38f39e89f64efe973c10e9d324">stashSatLevel</a> () -&gt; <a class="el" href="classpoly_1_1poly_1_1Dependence.html">Dependence</a> *</td></tr>
-<tr class="separator:ab0b2ff38f39e89f64efe973c10e9d324"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5c78100d24d5241d7514bf702e30a666"><td class="memItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1poly_1_1Dependence.html#a5c78100d24d5241d7514bf702e30a666">stashSatLevel</a> (unsigned depth) -&gt; <a class="el" href="classpoly_1_1poly_1_1Dependence.html">Dependence</a> *</td></tr>
+<tr class="separator:a5c78100d24d5241d7514bf702e30a666"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afe55dc08d9fb0cba1e26e950eabd3895"><td class="memItemLeft" align="right" valign="top"><a id="afe55dc08d9fb0cba1e26e950eabd3895"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>popSatLevel</b> ()</td></tr>
 <tr class="separator:afe55dc08d9fb0cba1e26e950eabd3895"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad61450183ac23f948dd96d0b8090bc00"><td class="memItemLeft" align="right" valign="top"><a id="ad61450183ac23f948dd96d0b8090bc00"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>setSatLevelLP</b> (uint8_t d)</td></tr>
 <tr class="separator:ad61450183ac23f948dd96d0b8090bc00"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3c125a1d6aa911656389bf6c9bc25a52"><td class="memItemLeft" align="right" valign="top"><a id="a3c125a1d6aa911656389bf6c9bc25a52"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>setSatLevelParallel</b> (uint8_t d)</td></tr>
+<tr class="separator:a3c125a1d6aa911656389bf6c9bc25a52"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa3fe2f66faac86572a1eaa02d766cac5"><td class="memItemLeft" align="right" valign="top"><a id="aa3fe2f66faac86572a1eaa02d766cac5"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>satLevel</b> () const -&gt; uint8_t</td></tr>
 <tr class="separator:aa3fe2f66faac86572a1eaa02d766cac5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abbc5d1898db7b6a38b342e6e96d375cb"><td class="memItemLeft" align="right" valign="top"><a id="abbc5d1898db7b6a38b342e6e96d375cb"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>isSat</b> (unsigned d) const -&gt; bool</td></tr>
-<tr class="separator:abbc5d1898db7b6a38b342e6e96d375cb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acea7518b1eb415d472534fe71b0926ba"><td class="memItemLeft" align="right" valign="top"><a id="acea7518b1eb415d472534fe71b0926ba"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>isSat</b> (unsigned depth) const -&gt; bool</td></tr>
+<tr class="separator:acea7518b1eb415d472534fe71b0926ba"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abfb3407f2593b7115043a04a94fab530"><td class="memItemLeft" align="right" valign="top"><a id="abfb3407f2593b7115043a04a94fab530"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>isActive</b> (unsigned depth) const -&gt; bool</td></tr>
 <tr class="separator:abfb3407f2593b7115043a04a94fab530"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -323,8 +326,8 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> 
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p><a class="el" href="classpoly_1_1poly_1_1Dependence.html">Dependence</a> Represents a dependence relationship between two memory accesses. It contains simplices representing constraints that affine schedules are allowed to take. </p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
-<a id="ab0b2ff38f39e89f64efe973c10e9d324"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab0b2ff38f39e89f64efe973c10e9d324">&#9670;&nbsp;</a></span>stashSatLevel()</h2>
+<a id="a5c78100d24d5241d7514bf702e30a666"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5c78100d24d5241d7514bf702e30a666">&#9670;&nbsp;</a></span>stashSatLevel()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -335,7 +338,8 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> 
         <tr>
           <td class="memname">constexpr auto poly::poly::Dependence::stashSatLevel </td>
           <td>(</td>
-          <td class="paramname"></td><td>)</td>
+          <td class="paramtype">unsigned&#160;</td>
+          <td class="paramname"><em>depth</em></td><td>)</td>
           <td> -&gt; <a class="el" href="classpoly_1_1poly_1_1Dependence.html">Dependence</a> * </td>
         </tr>
       </table>
@@ -345,7 +349,7 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> 
   </tr>
 </table>
 </div><div class="memdoc">
-<p><a class="el" href="classpoly_1_1poly_1_1Dependence.html#ab0b2ff38f39e89f64efe973c10e9d324">stashSatLevel()</a> -&gt; <a class="el" href="classpoly_1_1poly_1_1Dependence.html">Dependence</a> &amp; This is used to track sat levels in the LP recursion. Recursion works from outer -&gt; inner most loop. On each level of the recursion, we</p><ol type="1">
+<p><a class="el" href="classpoly_1_1poly_1_1Dependence.html#a5c78100d24d5241d7514bf702e30a666">stashSatLevel()</a> -&gt; <a class="el" href="classpoly_1_1poly_1_1Dependence.html">Dependence</a> &amp; This is used to track sat levels in the LP recursion. Recursion works from outer -&gt; inner most loop. On each level of the recursion, we</p><ol type="1">
 <li>evaluate the level.</li>
 <li>if we succeed w/out deps, update sat levels and go a level deeper.</li>
 <li></li>

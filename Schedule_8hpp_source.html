@@ -173,11 +173,15 @@ $(function() {
 <div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getOffsetOmega() -&gt; MutPtrVector&lt;int64_t&gt; {</div>
 <div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;    <span class="keywordflow">return</span> {data() + getNumLoopsSquared() + getNumLoops() + 1, getNumLoops()};</div>
 <div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;  }</div>
-<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160; </div>
-<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;<span class="keyword">private</span>:</div>
-<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;  int64_t *mem;</div>
-<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;};</div>
-<div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;} <span class="comment">// namespace poly::poly</span></div>
+<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;  constexpr <span class="keywordtype">void</span> operator&lt;&lt;(AffineSchedule <span class="keyword">const</span> &amp;rhs) {</div>
+<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;    utils::invariant(getNumLoops(), rhs.getNumLoops());</div>
+<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;    std::copy_n(rhs.mem, requiredScheduleStorage(rhs.getNumLoops()), mem);</div>
+<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;  }</div>
+<div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160; </div>
+<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;<span class="keyword">private</span>:</div>
+<div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;  int64_t *mem;</div>
+<div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;};</div>
+<div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160;} <span class="comment">// namespace poly::poly</span></div>
 <div class="ttc" id="astructpoly_1_1poly_1_1AffineSchedule_html"><div class="ttname"><a href="structpoly_1_1poly_1_1AffineSchedule.html">poly::poly::AffineSchedule</a></div><div class="ttdef"><b>Definition:</b> Schedule.hpp:37</div></div>
 <div class="ttc" id="astructpoly_1_1poly_1_1AffineSchedule_html_a59920bb4ddd40e454a495277d538d79c"><div class="ttname"><a href="structpoly_1_1poly_1_1AffineSchedule.html#a59920bb4ddd40e454a495277d538d79c">poly::poly::AffineSchedule::getSchedule</a></div><div class="ttdeci">constexpr auto getSchedule(size_t d) const -&gt; math::PtrVector&lt; int64_t &gt;</div><div class="ttdoc">getSchedule, loops are always indexed from outer to inner</div><div class="ttdef"><b>Definition:</b> Schedule.hpp:82</div></div>
 </div><!-- fragment --></div><!-- contents -->

@@ -1,7 +1,9 @@
 var searchData=
 [
-  ['nextaddr_83',['NextAddr',['../structpoly_1_1lp_1_1ScheduledNode_1_1NextAddr.html',1,'poly::lp::ScheduledNode']]],
-  ['nextinput_84',['NextInput',['../structpoly_1_1lp_1_1ScheduledNode_1_1NextInput.html',1,'poly::lp::ScheduledNode']]],
-  ['nextoutput_85',['NextOutput',['../structpoly_1_1lp_1_1ScheduledNode_1_1NextOutput.html',1,'poly::lp::ScheduledNode']]],
-  ['nowraprewriter_86',['NoWrapRewriter',['../structpoly_1_1poly_1_1NoWrapRewriter.html',1,'poly::poly']]]
+  ['map_79',['Map',['../classpoly_1_1IR_1_1Predicate_1_1Map.html',1,'poly::IR::Predicate']]],
+  ['mergemap_80',['mergeMap',['../classpoly_1_1poly_1_1DepPoly.html#afc4fa536b4d8eddca8b17a10e04b466c',1,'poly::poly::DepPoly']]],
+  ['mergeoperands_81',['mergeOperands',['../structpoly_1_1IR_1_1MergingCost.html#af52ae253e1281d3e0dfc121afc381561',1,'poly::IR::MergingCost']]],
+  ['mergingcost_82',['MergingCost',['../structpoly_1_1IR_1_1MergingCost.html',1,'poly::IR']]],
+  ['mockgraph_83',['MockGraph',['../structMockGraph.html',1,'']]],
+  ['mockvertex_84',['MockVertex',['../structMockVertex.html',1,'']]]
 ];

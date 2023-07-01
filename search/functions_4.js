@@ -1,10 +1,10 @@
 var searchData=
 [
-  ['indexmatrix_232',['indexMatrix',['../classArrayIndex.html#a2607d77465585f6d60d9f71d998af759',1,'ArrayIndex::indexMatrix() -&gt; MutDensePtrMatrix&lt; int64_t &gt;'],['../classArrayIndex.html#abd53828a7c4da4199bb84242cfcdae30',1,'ArrayIndex::indexMatrix() const -&gt; DensePtrMatrix&lt; int64_t &gt;'],['../classpoly_1_1IR_1_1Addr.html#af4838372d11fd32b964c9a7cb6d4b1b8',1,'poly::IR::Addr::indexMatrix() -&gt; MutDensePtrMatrix&lt; int64_t &gt;'],['../classpoly_1_1IR_1_1Addr.html#af5ceceb3d01057d14b1027cc9c8325f6',1,'poly::IR::Addr::indexMatrix() const -&gt; DensePtrMatrix&lt; int64_t &gt;']]],
-  ['initancestors_233',['initAncestors',['../structpoly_1_1IR_1_1MergingCost.html#a1bb269c73bb1d0771378624b259ee0e0',1,'poly::IR::MergingCost']]],
-  ['initnonnegative_234',['initNonNegative',['../structpoly_1_1comparator_1_1BaseSymbolicComparator.html#a86d6285e8a8d391d3f9492e5d71c2dba',1,'poly::comparator::BaseSymbolicComparator']]],
-  ['intersectionisempty_235',['intersectionIsEmpty',['../structpoly_1_1IR_1_1Predicate_1_1Set.html#a1895952ec0bcc73daba680faef2d1610',1,'poly::IR::Predicate::Set']]],
-  ['iscondindep_236',['isCondIndep',['../classpoly_1_1poly_1_1Dependence.html#a3e863ed72e68c568e3b0426c6f7f76e1',1,'poly::poly::Dependence']]],
-  ['isforward_237',['isForward',['../classpoly_1_1poly_1_1Dependence.html#af0d8b4e19c0fd884c1b46874a5cffd65',1,'poly::poly::Dependence']]],
-  ['ismerged_238',['isMerged',['../structpoly_1_1IR_1_1MergingCost.html#a0f5c22824734316304ca40f3a5e613f6',1,'poly::IR::MergingCost::isMerged(Instruction *key) const -&gt; bool'],['../structpoly_1_1IR_1_1MergingCost.html#a1422508a6cccaee192ddbe9f6da038a9',1,'poly::IR::MergingCost::isMerged(Instruction *L, Instruction *J) const -&gt; bool']]]
+  ['getallocator_229',['getAllocator',['../classpoly_1_1IR_1_1Cache.html#a6fc976093ca556ac42bc46e2c8e372f0',1,'poly::IR::Cache']]],
+  ['getcost_230',['getCost',['../classpoly_1_1IR_1_1Compute.html#a3ffde0af9933fbd4793d549830a0e8a2',1,'poly::IR::Compute']]],
+  ['getfusionomega_231',['getFusionOmega',['../classArrayIndex.html#ac50bf625a59c9a19bd0bcf14c6d0d980',1,'ArrayIndex::getFusionOmega() -&gt; MutPtrVector&lt; int64_t &gt;'],['../classArrayIndex.html#a0e86ce8a1a3a5cb7a08e684419afe8d8',1,'ArrayIndex::getFusionOmega() const -&gt; PtrVector&lt; int64_t &gt;']]],
+  ['getinindmat_232',['getInIndMat',['../classpoly_1_1poly_1_1Dependence.html#a0abb755d8e7a698e081db7292e11e44b',1,'poly::poly::Dependence']]],
+  ['getoutindmat_233',['getOutIndMat',['../classpoly_1_1poly_1_1Dependence.html#ab2caff477ed0560c811298fe432010ec',1,'poly::poly::Dependence']]],
+  ['getschedule_234',['getSchedule',['../classpoly_1_1lp_1_1ScheduledNode.html#aab0d96d0f1eb92a09855c5a9c2a71de4',1,'poly::lp::ScheduledNode::getSchedule()'],['../structpoly_1_1poly_1_1AffineSchedule.html#a59920bb4ddd40e454a495277d538d79c',1,'poly::poly::AffineSchedule::getSchedule()']]],
+  ['getvalue_235',['getValue',['../classpoly_1_1IR_1_1Cache.html#a8752442da530803e458fedf4e8d97600',1,'poly::IR::Cache']]]
 ];
