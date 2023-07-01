@@ -91,9 +91,9 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getAllocato
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="friends"></a>
 Friends</h2></td></tr>
-<tr class="memitem:a6098f54914de803a484e74d66045979f"><td class="memItemLeft" align="right" valign="top"><a id="a6098f54914de803a484e74d66045979f"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> (llvm::raw_ostream &amp;os, const <a class="el" href="classpoly_1_1lp_1_1LoopBlock.html">LoopBlock</a> &amp;lblock) -&gt; llvm::raw_ostream &amp;</td></tr>
-<tr class="separator:a6098f54914de803a484e74d66045979f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3fa3415868c09c06f7c0d44cf7989c77"><td class="memItemLeft" align="right" valign="top"><a id="a3fa3415868c09c06f7c0d44cf7989c77"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> (llvm::raw_ostream &amp;os, <a class="el" href="classpoly_1_1lp_1_1ScheduledNode.html">ScheduledNode</a> *nodes) -&gt; llvm::raw_ostream &amp;</td></tr>
+<tr class="separator:a3fa3415868c09c06f7c0d44cf7989c77"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>A loop block is a block of the program that may include multiple loops. These loops are either all executed (note iteration count may be 0, or loops may be in rotated form and the guard prevents execution; this is okay and counts as executed for our purposes here ), or none of them are. That is, the <a class="el" href="classpoly_1_1lp_1_1LoopBlock.html">LoopBlock</a> does not contain divergent control flow, or guards unrelated to loop bounds. The loops within a <a class="el" href="classpoly_1_1lp_1_1LoopBlock.html">LoopBlock</a> are optimized together, so we can consider optimizations such as reordering or fusing them together as a set.</p>

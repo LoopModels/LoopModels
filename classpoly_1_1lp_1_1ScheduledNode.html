@@ -280,15 +280,15 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumLoops
 <tr class="memitem:a9c955d8a0f1b30f6ec1099a2abf76627"><td class="memItemLeft" align="right" valign="top"><a id="a9c955d8a0f1b30f6ec1099a2abf76627"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>phiIsScheduled</b> (unsigned d) const -&gt; bool</td></tr>
 <tr class="separator:a9c955d8a0f1b30f6ec1099a2abf76627"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acb8effa18ab1b7d3f42fcd69db1f3a73"><td class="memItemLeft" align="right" valign="top"><a id="acb8effa18ab1b7d3f42fcd69db1f3a73"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>updatePhiOffset</b> (size_t p) -&gt; size_t</td></tr>
-<tr class="separator:acb8effa18ab1b7d3f42fcd69db1f3a73"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a304019aa01410648ca02ba62724059e4"><td class="memItemLeft" align="right" valign="top"><a id="a304019aa01410648ca02ba62724059e4"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>updateOmegaOffset</b> (size_t o) -&gt; size_t</td></tr>
-<tr class="separator:a304019aa01410648ca02ba62724059e4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aaea545d5b3da1978fad6f9be3abd26cb"><td class="memItemLeft" align="right" valign="top"><a id="aaea545d5b3da1978fad6f9be3abd26cb"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getPhiOffset</b> () const -&gt; size_t</td></tr>
-<tr class="separator:aaea545d5b3da1978fad6f9be3abd26cb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2f0fd61790eafa6e4f0369813f4b61ff"><td class="memItemLeft" align="right" valign="top"><a id="a2f0fd61790eafa6e4f0369813f4b61ff"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>updatePhiOffset</b> (size_t p) -&gt; ptrdiff_t</td></tr>
+<tr class="separator:a2f0fd61790eafa6e4f0369813f4b61ff"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0c518198c7642cea12796efab30525cf"><td class="memItemLeft" align="right" valign="top"><a id="a0c518198c7642cea12796efab30525cf"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>updateOmegaOffset</b> (size_t o) -&gt; ptrdiff_t</td></tr>
+<tr class="separator:a0c518198c7642cea12796efab30525cf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a36b99dbb9a0c3695afbd47279f9094c6"><td class="memItemLeft" align="right" valign="top"><a id="a36b99dbb9a0c3695afbd47279f9094c6"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getPhiOffset</b> () const -&gt; ptrdiff_t</td></tr>
+<tr class="separator:a36b99dbb9a0c3695afbd47279f9094c6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4d8a10d330d577e8aa83eb4ef2c5d30e"><td class="memItemLeft" align="right" valign="top"><a id="a4d8a10d330d577e8aa83eb4ef2c5d30e"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getPhiOffsetRange</b> () const -&gt; math::Range&lt; ptrdiff_t, ptrdiff_t &gt;</td></tr>
 <tr class="separator:a4d8a10d330d577e8aa83eb4ef2c5d30e"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -335,9 +335,9 @@ constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>schedulePhi
 <tr class="memitem:a1ec112c446627c12a0ab901d75351380"><td class="memItemLeft" align="right" valign="top"><a id="a1ec112c446627c12a0ab901d75351380"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>unschedulePhi</b> ()</td></tr>
 <tr class="separator:a1ec112c446627c12a0ab901d75351380"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6c4b2c87a84580f9dfb8f7f79b13a76e"><td class="memItemLeft" align="right" valign="top"><a id="a6c4b2c87a84580f9dfb8f7f79b13a76e"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getOmegaOffset</b> () const -&gt; size_t</td></tr>
-<tr class="separator:a6c4b2c87a84580f9dfb8f7f79b13a76e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad95ba532cc381f2ab36dca40a70c691f"><td class="memItemLeft" align="right" valign="top"><a id="ad95ba532cc381f2ab36dca40a70c691f"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getOmegaOffset</b> () const -&gt; ptrdiff_t</td></tr>
+<tr class="separator:ad95ba532cc381f2ab36dca40a70c691f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad0fde0c99806271b26a3bfb625261310"><td class="memItemLeft" align="right" valign="top"><a id="ad0fde0c99806271b26a3bfb625261310"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>resetPhiOffset</b> ()</td></tr>
 <tr class="separator:ad0fde0c99806271b26a3bfb625261310"><td class="memSeparator" colspan="2">&#160;</td></tr>
