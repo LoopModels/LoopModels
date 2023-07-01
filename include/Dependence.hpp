@@ -295,10 +295,12 @@ public:
   /// 1. evaluate the level.
   /// 2. if we succeed w/out deps, update sat levels and go a level deeper.
   /// 3.
-  constexpr auto stashSatLevel() -> Dependence * {
+  constexpr auto stashSatLevel(unsigned depth) -> Dependence * {
+    invariant(depth <= 127);
     assert(satLvl.back() == 255 || "satLevel overflow");
     std::copy_backward(satLvl.begin(), satLvl.end() - 1, satLvl.end());
-    satLvl.front() = 255;
+    // we clear `d` level as well; we're pretending we're a level deeper
+    if ((satLevel() + 1) > depth) satLvl.front() = 255;
     return this;
   }
   constexpr void popSatLevel() {
@@ -307,13 +309,16 @@ public:
     satLvl.back() = 255;
 #endif
   }
+  // Set sat level and flag as indicating that this loop cannot be parallelized
   constexpr void setSatLevelLP(uint8_t d) { satLvl.front() = uint8_t(128) | d; }
+  // Set sat level, but allow parallelizing this loop
+  constexpr void setSatLevelParallel(uint8_t d) { satLvl.front() = d; }
   [[nodiscard]] constexpr auto satLevel() const -> uint8_t {
     return satLvl.front() & uint8_t(127);
   }
-  [[nodiscard]] constexpr auto isSat(unsigned d) const -> bool {
-    invariant(d <= 127);
-    return satLevel() <= d;
+  [[nodiscard]] constexpr auto isSat(unsigned depth) const -> bool {
+    invariant(depth <= 127);
+    return satLevel() <= depth;
   }
   [[nodiscard]] constexpr auto isActive(unsigned depth) const -> bool {
     invariant(depth <= 127);

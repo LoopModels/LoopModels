@@ -114,6 +114,10 @@ struct AffineSchedule {
   [[nodiscard]] constexpr auto getOffsetOmega() -> MutPtrVector<int64_t> {
     return {data() + getNumLoopsSquared() + getNumLoops() + 1, getNumLoops()};
   }
+  constexpr void operator<<(AffineSchedule const &rhs) {
+    utils::invariant(getNumLoops(), rhs.getNumLoops());
+    std::copy_n(rhs.mem, requiredScheduleStorage(rhs.getNumLoops()), mem);
+  }
 
 private:
   int64_t *mem;

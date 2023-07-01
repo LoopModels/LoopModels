@@ -94,7 +94,22 @@ public:
     next = n;
     return this;
   }
+  /// fuse; difference between `setNext` is that this assumes both have `next`s
+  /// Note, this is expensive: O(N) in size, because we don't keep an `end`...
+  constexpr auto fuse(ScheduledNode *n) -> ScheduledNode * {
+    while (true) {
+      ScheduledNode *ns = n->getNext();
+      if (ns == nullptr) break;
+      n = ns;
+    }
+    return n->setNext(this);
+  }
+
   constexpr auto getNextComponent() -> ScheduledNode * { return component; }
+  [[nodiscard]] constexpr auto getNextComponent() const
+    -> const ScheduledNode * {
+    return component;
+  }
   constexpr auto setNextComponent(ScheduledNode *n) -> ScheduledNode * {
     component = n;
     return this;
@@ -160,6 +175,15 @@ public:
       return d->getNextOutput();
     }
   };
+  struct Component {
+    constexpr auto operator()(ScheduledNode *n) const -> ScheduledNode * {
+      return n->getNextComponent();
+    }
+    constexpr auto operator()(const ScheduledNode *n) const
+      -> const ScheduledNode * {
+      return n->getNextComponent();
+    }
+  };
 
   [[nodiscard]] constexpr auto getStore() -> Addr * { return store; }
   [[nodiscard]] constexpr auto getStore() const -> const Addr * {
@@ -173,7 +197,14 @@ public:
     -> utils::ListRange<const ScheduledNode, utils::GetNext, utils::Identity> {
     return utils::ListRange{this, utils::GetNext{}};
   }
-
+  [[nodiscard]] constexpr auto getComponents()
+    -> utils::ListRange<ScheduledNode, Component, utils::Identity> {
+    return utils::ListRange{this, Component{}};
+  }
+  [[nodiscard]] constexpr auto getComponents() const
+    -> utils::ListRange<const ScheduledNode, Component, utils::Identity> {
+    return utils::ListRange{this, Component{}};
+  }
   // convention: `local` means only for this node
   // `each` for all connected nodes
   // range of `Addr` for this node

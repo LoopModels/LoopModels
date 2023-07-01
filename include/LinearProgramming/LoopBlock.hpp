@@ -260,10 +260,6 @@ private:
     auto p1 = allocator.checkpoint();
     MutSquarePtrMatrix<int64_t> A =
       math::matrix<int64_t>(&allocator, nLoops + 1);
-    // MutPtrVector<BumpPtrVector<int64_t>> offsets{
-    //   vector<BumpPtrVector<int64_t>>(allocator, nLoops)};
-    // for (size_t i = 0; i < nLoops; ++i)
-    //   offsets[i] = BumpPtrVector<int64_t>(allocator);
     // BumpPtrVector<std::pair<BitSet64, int64_t>> omegaOffsets{allocator};
     // // we check all memory accesses in the node, to see if applying the same
     // omega offsets can zero dependence offsets. If so, we apply the shift.
@@ -459,7 +455,7 @@ private:
     assert(allZero(params));
     for (ScheduledNode *node : nodes->getVertices())
       for (Dependence *d : node->inputEdges())
-        if (d->isActive(depth)) params += numParams(d->stashSatLevel());
+        if (d->isActive(depth)) params += numParams(d->stashSatLevel(depth));
     return params;
   }
 
@@ -723,6 +719,33 @@ private:
     }
     return 0;
   }
+  using Backup =
+    math::ResizeableView<std::pair<poly::AffineSchedule, ScheduledNode *>,
+                         unsigned>;
+  auto stashFitCore(ScheduledNode *nodes) -> Backup {
+    Backup old{&allocator, 0, 8};
+    for (ScheduledNode *node : nodes->getVertices())
+      old.emplace_backa(&allocator, node->getSchedule().copy(&allocator), node);
+    return old;
+  }
+  auto stashFit(ScheduledNode *nodes, unsigned depth)
+    -> std::pair<Backup, CoefCounts> {
+    return {stashFitCore(nodes), calcCoefsStash(nodes, depth)};
+  }
+  auto popStash(math::ResizeableView<
+                std::pair<poly::AffineSchedule, ScheduledNode *>, unsigned>
+                  old) -> void {
+    // reconnect nodes, in case they became disconnected in breakGraph
+    // because we go in reverse order, connections should be the same
+    // so the original `nodes` should be restored.
+    ScheduledNode *n = nullptr;
+    for (auto it = old.rbegin(), e = old.rend(); it != e; ++it) {
+      n = it->second->addNext(n);
+      n->getSchedule() << it->first; // copy over
+    }
+    for (ScheduledNode *node : n->getVertices())
+      for (Dependence *d : node->inputEdges()) d->popSatLevel();
+  }
   // NOLINTNEXTLINE(misc-no-recursion)
   [[nodiscard]] auto optimizeSatDep(ScheduledNode *nodes, unsigned depth,
                                     unsigned maxDepth, size_t depSatLevel)
@@ -735,86 +758,87 @@ private:
     // activeEdges was the old original; swap it in
     // we don't create long lasting allocations
     auto scope = allocator.scope();
-    // auto old =
-    //   math::vector<std::pair<poly::AffineSchedule,ScheduledNode
-    //   *>>(&allocator, numNodes);
-    math::ResizeableView<std::pair<poly::AffineSchedule, ScheduledNode *>,
-                         unsigned>
-      old{&allocator, 0, 8};
-    for (ScheduledNode *node : nodes->getVertices())
-      old.emplace_backa(&allocator, node->getSchedule().copy(&allocator), node);
-    if (Optional<size_t> depSat = solveGraph(nodes, depth, true))
+    auto [old, counts] = stashFit(nodes, depth);
+    if (Optional<size_t> depSat = solveGraph(nodes, depth, true, counts))
       if (Optional<size_t> depSatN = optimize(nodes, depth + 1, maxDepth))
         return *depSat |= *depSatN;
-    for (ScheduledNode *node : nodes->getVertices())
-      for (Dependence *d : node->inputEdges()) d->popSatLevel();
-    // reconnect nodes, in case they became disconnected in breakGraph
-    ScheduledNode *n = nullptr;
-    for (auto it = old.rbegin(), e = old.rend(); it != e; ++it) {
-      n = it->second->addNext(n);
-      n->getSchedule() = it->first;
-    }
+    popStash(old);
     return depSatLevel;
+  }
+  auto tryFuse(ScheduledNode *n0, ScheduledNode *n1, unsigned depth)
+    -> Optional<size_t> {
+    auto s = allocator.scope();
+    auto old0 = stashFitCore(n0);
+    auto old1 = stashFitCore(n1);
+    ScheduledNode *n = n0->fuse(n1);
+    if (Optional<size_t> depSat = solveSplitGraph(n, depth))
+      if (Optional<size_t> depSatN = optimize(n, depth + 1, depth + 1))
+        return *depSat |= *depSatN;
+    popStash(old0);
+    popStash(old1);
+    return {};
+  }
+  auto satisfySplitEdges(ScheduledNode *nodes, unsigned depth) -> size_t {
+    auto s = allocator.scope();
+    dict::aset<ScheduledNode *> graph{&allocator};
+    for (ScheduledNode *node : nodes->getVertices()) graph.insert(node);
+    bool found = false;
+    for (ScheduledNode *node : nodes->getVertices()) {
+      for (Dependence *edge : node->inputEdges()) {
+        if (!graph.count(edge->input()->getNode())) {
+          edge->setSatLevelParallel(depth);
+          found = true;
+        }
+      }
+    }
+    return (found) ? size_t(1) << depth : size_t(0);
+  }
+  auto solveSplitGraph(ScheduledNode *nodes, unsigned depth)
+    -> Optional<size_t> {
+    size_t sat = satisfySplitEdges(nodes, depth);
+    Optional<size_t> opt =
+      solveGraph(nodes, depth, false, calcCoefs(nodes, depth));
+    if (!opt) return {};
+    return *opt | sat;
   }
   // NOLINTNEXTLINE(misc-no-recursion)
   [[nodiscard]] auto breakGraph(ScheduledNode *node, unsigned d)
     -> Optional<size_t> {
-    // TODO: how to incorporate `d`? Perhaps (again) redefine the graph
-    // to allow make most methods take the graph object itself,
-    // so it can forward the depth.
-    //
+    // Get a top sorting of SCC's; because we couldn't solve the graph
+    // with these dependencies fused, we'll try splitting them.
     ScheduledNode *components =
-      graph::stronglyConnectedComponents(ScheduleGraph(node, d));
+      graph::stronglyConnectedComponents(ScheduleGraph(d), node);
     if (components->getNextComponent() == nullptr) return {};
     // components are sorted in topological order.
     // We split all of them, solve independently,
     // and then try to fuse again after if/where optimal schedules
     // allow it.
-    auto graphs = g.split(components);
-    assert(graphs.size() == components.size());
-    BitSet satDeps{};
-    for (auto &sg : graphs) {
-      if (d >= sg.calcMaxDepth()) continue;
-      countAuxParamsAndConstraints(sg, d);
-      setScheduleMemoryOffsets(sg, d);
-      if (std::optional<BitSet> sat = solveGraph(sg, d, false)) satDeps |= *sat;
-      else return {}; // give up
-    }
+    size_t satd{0};
+    for (auto g : components->getComponents())
+      if (Optional<size_t> sat = solveSplitGraph(g, d)) satd |= *sat;
+      else return {};
+    // We find we can successfully solve by splitting all legal splits.
+    // We could try and implement a better algorithm in the future, but for now
+    // we take a single greedy pass over the components.
+    // On each iteration, we either fuse our seed with the current component, or
+    // swap them. Thus, on each iteration, we're trying to merge each component
+    // with the topologically previous one (and those that one has fused with).
+    auto range = components->getComponents();
+    auto it = range.begin();
+    ScheduledNode *seed = *it;
     int64_t unfusedOffset = 0;
-    // For now, just greedily try and fuse from top down
-    // we do this by setting the Omegas in a loop.
-    // If fusion is legal, we don't increment the Omega offset.
-    // else, we do.
-    Graph *gp = graphs.data();
-    Vector<unsigned> baseGraphs;
-    baseGraphs.push_back(0);
-    for (size_t i = 1; i < components.size(); ++i) {
-      Graph &gi = graphs[i];
-      if (!canFuse(*gp, gi, d)) {
-        // do not fuse
-        for (auto &&v : *gp) v.getFusionOmega(d) = unfusedOffset;
+    for (auto e = range.end(); ++it != e;) {
+      if (auto opt = tryFuse(seed, *it, d)) satd |= *opt;
+      else {
+        for (ScheduledNode *v : seed->getVertices())
+          v->getFusionOmega(d) = unfusedOffset;
         ++unfusedOffset;
-        // gi is the new base graph
-        gp = &gi;
-        baseGraphs.push_back(i);
-      } else // fuse
-        (*gp) |= gi;
-    }
-    // set omegas for gp
-    for (auto &&v : *gp) v.getFusionOmega(d) = unfusedOffset;
-    ++d;
-    // size_t numSat = satDeps.size();
-    for (auto i : baseGraphs)
-      if (std::optional<BitSet> sat =
-            optimize(graphs[i], d, graphs[i].calcMaxDepth())) {
-        // TODO: try and satisfy extra dependences
-        // if ((numSat > 0) && (sat->size()>0)){}
-        satDeps |= *sat;
-      } else {
-        return {};
       }
-    // remove
-    return satDeps;
+      seed = *it; // if fused, seed was appended to `*it`
+    }
+    for (ScheduledNode *v : seed->getVertices())
+      v->getFusionOmega(d) = unfusedOffset;
+    return satd;
   }
   /// For now, we instantiate a dense simplex specifying the full problem.
   ///
