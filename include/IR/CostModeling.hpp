@@ -1,15 +1,15 @@
 #pragma once
 
 // #include "./ControlFlowMerging.hpp"
-#include "Dependence.hpp"
-#include "Graphs.hpp"
+#include "Graphs/Graphs.hpp"
 #include "IR/Address.hpp"
-#include "LoopBlock.hpp"
-#include "Math/Array.hpp"
-#include "Math/Math.hpp"
-#include "MemoryAccess.hpp"
-#include "Schedule.hpp"
-#include "Utilities/Allocators.hpp"
+#include "LinearProgramming/LoopBlock.hpp"
+#include "LinearProgramming/ScheduledNode.hpp"
+#include "Polyhedra/Dependence.hpp"
+#include "Polyhedra/Schedule.hpp"
+#include <Math/Array.hpp>
+#include <Math/Math.hpp>
+#include <Utilities/Allocators.hpp>
 #include <algorithm>
 #include <any>
 #include <cassert>
@@ -137,6 +137,67 @@ public:
 //         pushBlock(trackInstr, chainBBs, pred, succ1);
 //     }
 // }
+template <typename T> using Vec = math::ResizeableView<T, unsigned>;
+
+/// LoopTree
+/// A tree of loops, with an indexable vector of IR::Loop*s, to facilitate
+/// construction of the IR::Loop graph, from the fusion omegas
+class LoopTree {
+  // The root of this subtree
+  IR::Loop *root;
+  LoopTree *parent; // do we need this?
+  Vec<LoopTree *> children{};
+  unsigned depth;
+  // We do not need to know the previous loop, as dependencies between
+  // the `Addr`s and instructions will determine the ordering.
+  LoopTree(Arena<> *salloc, Arena<> *lalloc, LoopTree *parent_)
+    : parent(parent_), depth(parent_->depth) {
+    // allocate the root node, and connect it to parent's node, as well as
+    // previous loop of the same level.
+    root = lalloc->create<IR::Loop>(depth);
+    root->setParent(parent_->root);
+  }
+
+public:
+  // salloc: Short lived allocator, for the indexable `Vec`s
+  // Longer lived allocator, for the IR::Loop nodes
+  void addNode(Arena<> *salloc, Arena<> *lalloc, lp::ScheduledNode *node) {
+    if (node->getNumLoops() == depth) {
+      // Then it belongs here, and we add loop's dependencies.
+      // We only need to add deps to support SCC/top sort now.
+      // We also apply the rotation here.
+      // For dependencies in SCC iteration, only indvar deps get iterated.
+      for (IR::Addr *m : node->localAddr()) {}
+      return;
+    }
+    // we need to find the correct sub-loop tree to which to add it
+    ptrdiff_t idx = node->getFusionOmega(depth);
+    invariant(idx >= 0);
+    ptrdiff_t numChildren = children.size();
+    if (idx >= children.size()) {
+      if (idx >= children.getCapacity()) {
+        // allocate extra capacity
+        children.reserve(salloc, 2 * (idx + 1));
+      }
+      // allocate new nodes and resize
+      children.resize(idx + 1);
+      for (ptrdiff_t i = numChildren; i < idx + 1; ++i)
+        children[i] = new (lalloc) LoopTree{salloc, lalloc, this};
+      numChildren = idx + 1;
+    }
+    children[idx]->addNode(salloc, lalloc, node);
+  }
+};
+
+/// Optimize the schedule
+void optimize(IR::Cache &instr, Arena<> *alloc, lp::ScheduledNode *nodes) {
+  /// we must build the IR::Loop
+  /// Initially, to help, we use a nested vector, so that we can index into it
+  /// using the fusion omegas. We allocate it with the longer lived `instr`
+  /// alloc, so we can checkpoint it here, and use alloc for other IR nodes.
+  Vec<Vec<IR::Loop *>> loops{instr.get_allocator(), 0, 4};
+  for (lp::ScheduledNode *node : nodes->getAllVertices()) {}
+}
 
 /// How should the IR look?
 /// We could have a flat IR, which may be useful for things like loop placement

@@ -1,14 +1,15 @@
 #pragma once
-#include "Dependence.hpp"
 #include "Graphs/Graphs.hpp"
 #include "IR/Address.hpp"
+#include "Polyhedra/Dependence.hpp"
 #include "Polyhedra/DependencyPolyhedra.hpp"
 #include "Polyhedra/Loops.hpp"
+#include "Polyhedra/Schedule.hpp"
 #include "Utilities/ListRanges.hpp"
 #include <Utilities/Invariant.hpp>
 #include <Utilities/Valid.hpp>
-#include <bits/iterator_concepts.h>
 #include <cstddef>
+#include <cstdint>
 #include <ranges>
 
 namespace poly {
@@ -38,10 +39,11 @@ class ScheduledNode {
   // Dependence *dep{nullptr};          // input edges (points to parents)
   int64_t *offsets{nullptr};
   uint32_t phiOffset{0}, omegaOffset{0}; // used in LoopBlock
-  unsigned index_, lowLink_;
+  uint16_t index_, lowLink_;
   uint8_t rank{0};
   bool visited_{false};
   bool onStack_{false};
+  ScheduledNode *originalNext{nullptr};
 #if !defined(__clang__) && defined(__GNUC__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
@@ -67,22 +69,25 @@ class ScheduledNode {
   }
 
 public:
-  constexpr auto index() -> unsigned & { return index_; }
-  constexpr auto lowLink() -> unsigned & { return lowLink_; }
+  constexpr auto index() -> uint16_t & { return index_; }
+  constexpr auto lowLink() -> uint16_t & { return lowLink_; }
   [[nodiscard]] constexpr auto onStack() const -> bool { return onStack_; }
   constexpr void addToStack() { onStack_ = true; }
   constexpr void removeFromStack() { onStack_ = false; }
   [[nodiscard]] constexpr auto visited() const -> bool { return visited_; }
   constexpr void visit() { visited_ = true; }
   constexpr auto unVisit() { visited_ = false; }
-  constexpr auto addNext(ScheduledNode *n) -> ScheduledNode * {
+  constexpr auto setNext(ScheduledNode *n) -> ScheduledNode * {
     next = n;
     return this;
   }
-
+  constexpr auto setOrigNext(ScheduledNode *n) -> ScheduledNode * {
+    originalNext = next = n;
+    return this;
+  }
   static auto construct(Arena<> *alloc, Addr *store, poly::Loop *L)
     -> ScheduledNode * {
-    size_t memNeeded = poly::requiredScheduleStorage(L->getNumLoops());
+    ptrdiff_t memNeeded = poly::requiredScheduleStorage(L->getNumLoops());
     void *p =
       alloc->allocate(sizeof(ScheduledNode) + memNeeded * sizeof(int64_t));
     return new (p) ScheduledNode(store, L);
@@ -91,10 +96,7 @@ public:
   [[nodiscard]] constexpr auto getNext() const -> const ScheduledNode * {
     return next;
   }
-  constexpr auto setNext(ScheduledNode *n) -> ScheduledNode * {
-    next = n;
-    return this;
-  }
+
   /// fuse; difference between `setNext` is that this assumes both have `next`s
   /// Note, this is expensive: O(N) in size, because we don't keep an `end`...
   constexpr auto fuse(ScheduledNode *n) -> ScheduledNode * {
@@ -138,7 +140,7 @@ public:
   //     if (i != storeId && (memAccess[i]->isStore()))
   //       memAccess[i]->replicateAddr();
   // }
-  // [[nodiscard]] constexpr auto getNumMem() const -> size_t {
+  // [[nodiscard]] constexpr auto getNumMem() const -> ptrdiff_t {
   //   return memory.size();
   // }
   struct Active {
@@ -198,6 +200,12 @@ public:
     -> utils::ListRange<const ScheduledNode, utils::GetNext, utils::Identity> {
     return utils::ListRange{this, utils::GetNext{}};
   }
+  constexpr auto getOrigNext() -> ScheduledNode * { return originalNext; }
+  [[nodiscard]] constexpr auto getAllVertices() {
+    return utils::ListRange{this, [](ScheduledNode *n) -> ScheduledNode * {
+                              return n->getOrigNext();
+                            }};
+  }
   [[nodiscard]] constexpr auto getComponents()
     -> utils::ListRange<ScheduledNode, Component, utils::Identity> {
     return utils::ListRange{this, Component{}};
@@ -211,6 +219,9 @@ public:
   // range of `Addr` for this node
   [[nodiscard]] constexpr auto localAddr() {
     return utils::ListRange{(Addr *)store, NextAddr{}};
+  }
+  [[nodiscard]] constexpr auto localAddr() const {
+    return utils::ListRange{(const Addr *)store, NextAddr{}};
   }
   // range of all `Addr` for the list starting with this node
   [[nodiscard]] constexpr auto eachAddr() {
@@ -366,102 +377,6 @@ public:
            std::ranges::any_of(outputEdges(), f);
   }
 
-  // constexpr auto eachInputNodes() {
-  //   return utils::NestedListRange{
-  //     this, utils::GetNext{},
-  //     [](ScheduledNode *n) -> ScheduledNode * { return n->getNext(); },
-  //     [](ScheduledNode *n) -> ScheduledNode * { return n->getNext(); }};
-  // }
-
-  // for each input node, i.e. for each where this is the output
-  constexpr void forEachInput(const auto &f) {
-    for (Addr *a = store; a; a = llvm::cast_or_null<Addr>(a->getChild()))
-      for (Dependence *d = a->getEdgeIn(); d; d = d->getNextInput())
-        f(d->input()->getNode());
-  }
-  constexpr void forEachInput(const auto &f) const {
-    for (const Addr *a = store; a; a = llvm::cast_or_null<Addr>(a->getChild()))
-      for (const Dependence *d = a->getEdgeIn(); d; d = d->getNextInput())
-        f(d->input()->getNode());
-  }
-  constexpr void forEachInput(unsigned depth, const auto &f) {
-    for (Addr *a = store; a; a = llvm::cast_or_null<Addr>(a->getChild()))
-      for (Dependence *d = a->getEdgeIn(); d; d = d->getNextInput())
-        if (!d->isSat(depth)) f(d->input()->getNode());
-  }
-  constexpr void forEachInput(unsigned depth, const auto &f) const {
-    for (const Addr *a = store; a; a = llvm::cast_or_null<Addr>(a->getChild()))
-      for (const Dependence *d = a->getEdgeIn(); d; d = d->getNextInput())
-        if (!d->isSat(depth)) f(d->input()->getNode());
-  }
-  constexpr auto reduceEachInput(auto x, const auto &f) {
-    for (Addr *a = store; a; a = llvm::cast_or_null<Addr>(a->getChild()))
-      for (Dependence *d = a->getEdgeIn(); d; d = d->getNextInput())
-        x = f(x, d->input()->getNode());
-    return x;
-  }
-  constexpr void reduceEachInput(auto x, const auto &f) const {
-    for (const Addr *a = store; a; a = llvm::cast_or_null<Addr>(a->getChild()))
-      for (const Dependence *d = a->getEdgeIn(); d; d = d->getNextInput())
-        x = f(x, d->input()->getNode());
-    return x;
-  }
-  constexpr void reduceEachInput(auto x, unsigned depth, const auto &f) {
-    for (Addr *a = store; a; a = llvm::cast_or_null<Addr>(a->getChild()))
-      for (Dependence *d = a->getEdgeIn(); d; d = d->getNextInput())
-        if (!d->isSat(depth)) x = f(x, d->input()->getNode());
-    return x;
-  }
-  constexpr void reduceEachInput(auto x, unsigned depth, const auto &f) const {
-    for (const Addr *a = store; a; a = llvm::cast_or_null<Addr>(a->getChild()))
-      for (const Dependence *d = a->getEdgeIn(); d; d = d->getNextInput())
-        if (!d->isSat(depth)) x = f(x, d->input()->getNode());
-    return x;
-  }
-  constexpr void forEachInputEdge(const auto &f) {
-    for (Addr *a = store; a; a = llvm::cast_or_null<Addr>(a->getChild()))
-      for (Dependence *d = a->getEdgeIn(); d; d = d->getNextInput()) f(d);
-  }
-  constexpr void forEachInputEdge(const auto &f) const {
-    for (const Addr *a = store; a; a = llvm::cast_or_null<Addr>(a->getChild()))
-      for (const Dependence *d = a->getEdgeIn(); d; d = d->getNextInput()) f(d);
-  }
-  constexpr void forEachInputEdge(unsigned depth, const auto &f) {
-    for (Addr *a = store; a; a = llvm::cast_or_null<Addr>(a->getChild()))
-      for (Dependence *d = a->getEdgeIn(); d; d = d->getNextInput())
-        if (!d->isSat(depth)) f(d);
-  }
-  constexpr void forEachInputEdge(unsigned depth, const auto &f) const {
-    for (const Addr *a = store; a; a = llvm::cast_or_null<Addr>(a->getChild()))
-      for (const Dependence *d = a->getEdgeIn(); d; d = d->getNextInput())
-        if (!d->isSat(depth)) f(d);
-  }
-  constexpr auto reduceEachInputEdge(auto x, const auto &f) {
-    for (Addr *a = store; a; a = llvm::cast_or_null<Addr>(a->getChild()))
-      for (Dependence *d = a->getEdgeIn(); d; d = d->getNextInput())
-        x = f(x, d);
-    return x;
-  }
-  constexpr void reduceEachInputEdge(auto x, const auto &f) const {
-    for (const Addr *a = store; a; a = llvm::cast_or_null<Addr>(a->getChild()))
-      for (const Dependence *d = a->getEdgeIn(); d; d = d->getNextInput())
-        x = f(x, d);
-    return x;
-  }
-  constexpr void reduceEachInputEdge(auto x, unsigned depth, const auto &f) {
-    for (Addr *a = store; a; a = llvm::cast_or_null<Addr>(a->getChild()))
-      for (Dependence *d = a->getEdgeIn(); d; d = d->getNextInput())
-        if (!d->isSat(depth)) x = f(x, d);
-    return x;
-  }
-  constexpr void reduceEachInputEdge(auto x, unsigned depth,
-                                     const auto &f) const {
-    for (const Addr *a = store; a; a = llvm::cast_or_null<Addr>(a->getChild()))
-      for (const Dependence *d = a->getEdgeIn(); d; d = d->getNextInput())
-        if (!d->isSat(depth)) x = f(x, d);
-    return x;
-  }
-
   [[nodiscard]] constexpr auto getSchedule() -> poly::AffineSchedule {
     return {mem};
   }
@@ -486,11 +401,11 @@ public:
     return d < rank;
   }
 
-  [[nodiscard]] constexpr auto updatePhiOffset(size_t p) -> ptrdiff_t {
+  [[nodiscard]] constexpr auto updatePhiOffset(ptrdiff_t p) -> ptrdiff_t {
     phiOffset = p;
     return p + getNumLoops();
   }
-  [[nodiscard]] constexpr auto updateOmegaOffset(size_t o) -> ptrdiff_t {
+  [[nodiscard]] constexpr auto updateOmegaOffset(ptrdiff_t o) -> ptrdiff_t {
     omegaOffset = o;
     return ++o;
   }
@@ -509,25 +424,26 @@ public:
     return {const_cast<int64_t *>(mem) + 1, math::SquareDims{getNumLoops()}};
   }
   /// getSchedule, loops are always indexed from outer to inner
-  [[nodiscard]] constexpr auto getSchedule(size_t d) const
+  [[nodiscard]] constexpr auto getSchedule(ptrdiff_t d) const
     -> PtrVector<int64_t> {
     return getPhi()(d, _);
   }
-  [[nodiscard]] constexpr auto getSchedule(size_t d) -> MutPtrVector<int64_t> {
+  [[nodiscard]] constexpr auto getSchedule(ptrdiff_t d)
+    -> MutPtrVector<int64_t> {
     return getPhi()(d, _);
   }
-  [[nodiscard]] constexpr auto getFusionOmega(size_t i) const -> int64_t {
+  [[nodiscard]] constexpr auto getFusionOmega(ptrdiff_t i) const -> int64_t {
     return (mem + 1)[getNumLoopsSquared() + i];
   }
-  [[nodiscard]] constexpr auto getOffsetOmega(size_t i) const -> int64_t {
+  [[nodiscard]] constexpr auto getOffsetOmega(ptrdiff_t i) const -> int64_t {
     return (mem + 2)[getNumLoopsSquared() + getNumLoops() + i];
   }
   // NOLINTNEXTLINE(readability-make-member-function-const)
-  [[nodiscard]] constexpr auto getFusionOmega(size_t i) -> int64_t & {
+  [[nodiscard]] constexpr auto getFusionOmega(ptrdiff_t i) -> int64_t & {
     return (mem + 1)[getNumLoopsSquared() + i];
   }
   // NOLINTNEXTLINE(readability-make-member-function-const)
-  [[nodiscard]] constexpr auto getOffsetOmega(size_t i) -> int64_t & {
+  [[nodiscard]] constexpr auto getOffsetOmega(ptrdiff_t i) -> int64_t & {
     return (mem + 2)[getNumLoopsSquared() + getNumLoops() + i];
   }
   [[nodiscard]] constexpr auto getFusionOmega() const -> PtrVector<int64_t> {
@@ -548,14 +464,14 @@ public:
     return {mem + 2 + getNumLoopsSquared() + getNumLoops(), getNumLoops()};
   }
 
-  constexpr void schedulePhi(DensePtrMatrix<int64_t> indMat, size_t r) {
+  constexpr void schedulePhi(DensePtrMatrix<int64_t> indMat, ptrdiff_t r) {
     // indMat indvars are indexed from outer<->inner
     // phi indvars are indexed from outer<->inner
     // so, indMat is indvars[outer<->inner] x array dim
     // phi is loop[outer<->inner] x indvars[outer<->inner]
     MutSquarePtrMatrix<int64_t> phi = getPhi();
-    size_t indR = size_t(indMat.numCol());
-    for (size_t i = 0; i < r; ++i) {
+    ptrdiff_t indR = ptrdiff_t(indMat.numCol());
+    for (ptrdiff_t i = 0; i < r; ++i) {
       phi(i, _(0, indR)) << indMat(i, _);
       phi(i, _(indR, end)) << 0;
     }
@@ -576,11 +492,12 @@ public:
                                 const ScheduledNode &node)
     -> llvm::raw_ostream & {
     os << "inNeighbors = ";
-    node.forEachInput([&](auto m) { os << "v_" << m << ", "; });
+    for (const Addr *m : node.localAddr()) os << "v_" << m << ", ";
     return os << "\n";
   }
 };
 static_assert(std::is_trivially_destructible_v<ScheduledNode>);
+static_assert(sizeof(ScheduledNode) <= 64); // fits in cache line
 
 class ScheduleGraph {
   unsigned depth;

@@ -336,6 +336,9 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
 
   void optimize(IR::TreeResult tr) {
     // now we build the LinearProgram
+    lp::ScheduledNode *nodes = loopBlock.optimize(instructions, tr);
+    if (!nodes) return;
+    CostModeling::optimize(nodes);
   }
   /*
     auto isLoopPreHeader(const llvm::BasicBlock *BB) const -> bool {

@@ -63,8 +63,8 @@ using utils::NotNull, utils::invariant, utils::Arena, containers::UList;
 ///             \-> 3 -> 4 -> 8-> 9 -> 10 -> 11 -> 17 -> 18 -> 19 -> 20
 ///                       \-> 5 -> 6 -> 7     \-> 12 -> 13 -> 14 -> 15 -> 16
 /// For a `Loop`, `getChild()` returns the first contained instruction, and
-/// `getParent()` returns the enclosing (outer) loop.
 /// For `Instruction`s, `getChild()` returns the first sub-loop.
+/// `getParent()` returns the enclosing (outer) loop.
 /// This, for example, we can iterate over all sub-loops of `L` via
 /// ```c++
 /// Node* C = getChild();
@@ -225,7 +225,9 @@ class Loop : public Node {
   poly::Loop *affineLoop{nullptr};
 
 public:
-  Loop(unsigned d, poly::Loop *AL) : Node(VK_Loop, d), affineLoop(AL) {}
+  constexpr Loop(unsigned d) : Node(VK_Loop, d) {}
+  constexpr Loop(unsigned d, poly::Loop *AL)
+    : Node(VK_Loop, d), affineLoop(AL) {}
   static constexpr auto classof(const Node *v) -> bool {
     return v->getKind() == VK_Loop;
   }

@@ -1,14 +1,14 @@
 #pragma once
 
-#include "Dependence.hpp"
 #include "Graphs/Graphs.hpp"
 #include "IR/Address.hpp"
 #include "IR/Cache.hpp"
 #include "IR/Node.hpp"
 #include "LinearProgramming/ScheduledNode.hpp"
+#include "Polyhedra/Dependence.hpp"
 #include "Polyhedra/DependencyPolyhedra.hpp"
 #include "Polyhedra/Loops.hpp"
-#include "Schedule.hpp"
+#include "Polyhedra/Schedule.hpp"
 #include <Containers/BitSets.hpp>
 #include <Math/Array.hpp>
 #include <Math/Comparisons.hpp>
@@ -151,7 +151,7 @@ class LoopBlock {
 
 public:
   LoopBlock() = default;
-  auto optimize(IR::Cache &cache, IR::TreeResult tr) -> Result {
+  auto optimize(IR::Cache &cache, IR::TreeResult tr) -> ScheduledNode * {
     // first, we peel loops for which affine repr failed
     if (unsigned numReject = tr.rejectDepth) {
       auto *SE = cache.getScalarEvolution();
@@ -178,13 +178,13 @@ public:
     ScheduledNode *nodes{nullptr};
     for (Addr *stow = tr.stow; stow;
          stow = llvm::cast_or_null<Addr>(stow->getNext()))
-      nodes = addScheduledNode(cache, stow)->addNext(nodes);
+      nodes = addScheduledNode(cache, stow)->setOrigNext(nodes);
     unsigned maxDepth = 0;
     for (ScheduledNode *node : nodes->getVertices()) {
       maxDepth = std::max(maxDepth, node->getNumLoops());
       shiftOmega(node);
     }
-    return optOrth(nodes, maxDepth);
+    return optOrth(nodes, maxDepth) ? nodes : nullptr;
   }
   void clear() { allocator.reset(); }
   [[nodiscard]] constexpr auto getAllocator() -> Arena<> * {
@@ -467,10 +467,10 @@ private:
         // iteration of this loop, and that the indmats are the same
         if (node->phiIsScheduled(0) || (indMat != edge->getOutIndMat()))
           continue;
-        size_t r = math::NormalForm::rank(indMat);
+        ptrdiff_t r = math::NormalForm::rank(indMat);
         if (r == edge->getInNumLoops()) continue;
         // TODO handle linearly dependent acceses, filtering them out
-        if (r != size_t(indMat.numRow())) continue;
+        if (r != ptrdiff_t(indMat.numRow())) continue;
         node->schedulePhi(indMat, r);
         tryOrth = true;
       }
@@ -768,6 +768,18 @@ private:
     }
     return Result::independent();
   }
+  /// What happens to our ScheduledNode linked list after `breakGraph`?
+  /// N0 -> N1 -> N2 -> N3 -> N4 -> N5
+  /// may become
+  /// N2 -> N1
+  /// N4 -> N3 -> N5
+  /// N0
+  /// where `components` pointer points N2 -> N4 -> N0 -> `nullptr`
+  /// Our original `ScheduledNode` head, `N0` thereby loses its connection.
+  /// Another level of recursion may then split N4, N3, and N5, so their
+  /// components link. Now `N4` doesn't point to `N0` anymore, either, but `N3`.
+  /// For this reason, we cache temporary info in `Backup`
+  /// And additionally, the `ScheduledNode`s hold their `originalNext`.
   using Backup =
     math::ResizeableView<std::pair<poly::AffineSchedule, ScheduledNode *>,
                          unsigned>;
@@ -781,16 +793,13 @@ private:
     -> std::pair<Backup, CoefCounts> {
     return {stashFitCore(nodes), calcCoefsStash(nodes, depth)};
   }
-  static auto popStash(
-    math::ResizeableView<std::pair<poly::AffineSchedule, ScheduledNode *>,
-                         unsigned>
-      old) -> void {
+  static auto popStash(Backup old) -> void {
     // reconnect nodes, in case they became disconnected in breakGraph
     // because we go in reverse order, connections should be the same
     // so the original `nodes` should be restored.
     ScheduledNode *n = nullptr;
     for (auto &it : std::ranges::reverse_view(old)) {
-      n = it.second->addNext(n);
+      n = it.second->setNext(n);
       n->getSchedule() << it.first; // copy over
     }
     for (ScheduledNode *node : n->getVertices())
@@ -865,6 +874,7 @@ private:
       if (Result sat = solveSplitGraph(g, d)) res &= sat;
       else return Result::failure();
     // We find we can successfully solve by splitting all legal splits.
+    // Next, we want to try and re-fuse as many as we can.
     // We could try and implement a better algorithm in the future, but for now
     // we take a single greedy pass over the components.
     // On each iteration, we either fuse our seed with the current component, or

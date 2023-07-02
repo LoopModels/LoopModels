@@ -2,7 +2,7 @@
 #include "IR/Address.hpp"
 #include "Polyhedra/DependencyPolyhedra.hpp"
 #include "Polyhedra/Loops.hpp"
-#include "Polyhedra/Schedule.hpp"
+#include "Schedule.hpp"
 #include <Math/Constructors.hpp>
 #include <Utilities/Allocators.hpp>
 #include <Utilities/Invariant.hpp>
