@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.9.1"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>LoopModels: poly::CostModeling::LoopTree Class Reference</title>
+<title>LoopModels: poly::CostModeling::NodeAlloc Class Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -61,36 +61,37 @@ $(function() {
 
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><b>poly</b></li><li class="navelem"><b>CostModeling</b></li><li class="navelem"><a class="el" href="classpoly_1_1CostModeling_1_1LoopTree.html">LoopTree</a></li>  </ul>
+<li class="navelem"><b>poly</b></li><li class="navelem"><b>CostModeling</b></li><li class="navelem"><a class="el" href="classpoly_1_1CostModeling_1_1NodeAlloc.html">NodeAlloc</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="header">
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
-<a href="#pub-static-methods">Static Public Member Functions</a> &#124;
-<a href="classpoly_1_1CostModeling_1_1LoopTree-members.html">List of all members</a>  </div>
+<a href="classpoly_1_1CostModeling_1_1NodeAlloc-members.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">poly::CostModeling::LoopTree Class Reference</div>  </div>
+<div class="title">poly::CostModeling::NodeAlloc Class Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-
-<p><code>#include &lt;<a class="el" href="CostModeling_8hpp_source.html">CostModeling.hpp</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a01fd0f1f55ab3394c4f1bf8e1b1c6e19"><td class="memItemLeft" align="right" valign="top"><a id="a01fd0f1f55ab3394c4f1bf8e1b1c6e19"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>addNode</b> (Arena&lt;&gt; *salloc, <a class="el" href="classpoly_1_1CostModeling_1_1NodeAlloc.html">NodeAlloc</a> nalloc, <a class="el" href="classpoly_1_1lp_1_1ScheduledNode.html">lp::ScheduledNode</a> *node)</td></tr>
-<tr class="separator:a01fd0f1f55ab3394c4f1bf8e1b1c6e19"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
-Static Public Member Functions</h2></td></tr>
-<tr class="memitem:a90ea943a92653dd78f2135c34d56ea09"><td class="memItemLeft" align="right" valign="top"><a id="a90ea943a92653dd78f2135c34d56ea09"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>root</b> (Arena&lt;&gt; *salloc, Arena&lt;&gt; *lalloc) -&gt; <a class="el" href="classpoly_1_1CostModeling_1_1LoopTree.html">LoopTree</a> *</td></tr>
-<tr class="separator:a90ea943a92653dd78f2135c34d56ea09"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad5c5d1b12703e4976334a2137f005d28"><td class="memItemLeft" align="right" valign="top"><a id="ad5c5d1b12703e4976334a2137f005d28"></a>
+constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>NodeAlloc</b> (Arena&lt;&gt; *alloc_)</td></tr>
+<tr class="separator:ad5c5d1b12703e4976334a2137f005d28"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acb1d1903ae27a97d691e12fc402d2b60"><td class="memItemLeft" align="right" valign="top"><a id="acb1d1903ae27a97d691e12fc402d2b60"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getAllocator</b> () const -&gt; Arena&lt;&gt; *</td></tr>
+<tr class="separator:acb1d1903ae27a97d691e12fc402d2b60"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a644861ddc86f8ca6986d5f20bb582a24"><td class="memItemLeft" align="right" valign="top"><a id="a644861ddc86f8ca6986d5f20bb582a24"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>allocateAddr</b> (unsigned numLoops, unsigned dim) -&gt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> *</td></tr>
+<tr class="separator:a644861ddc86f8ca6986d5f20bb582a24"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3296c49f528739aa0ebc3301dd91603d"><td class="memItemLeft" align="right" valign="top"><a id="a3296c49f528739aa0ebc3301dd91603d"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>newLoop</b> (unsigned depth) -&gt; IR::Loop *</td></tr>
+<tr class="separator:a3296c49f528739aa0ebc3301dd91603d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7a9fb7076d3b6fd506fd1facd6fadeb1"><td class="memItemLeft" align="right" valign="top"><a id="a7a9fb7076d3b6fd506fd1facd6fadeb1"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>free</b> (<a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> *addr)</td></tr>
+<tr class="separator:a7a9fb7076d3b6fd506fd1facd6fadeb1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p><a class="el" href="classpoly_1_1CostModeling_1_1LoopTree.html">LoopTree</a> A tree of loops, with an indexable vector of IR::Loop*s, to facilitate construction of the IR::Loop graph, from the fusion omegas </p>
-</div><hr/>The documentation for this class was generated from the following file:<ul>
+<hr/>The documentation for this class was generated from the following file:<ul>
 <li>include/IR/<a class="el" href="CostModeling_8hpp_source.html">CostModeling.hpp</a></li>
 </ul>
 </div><!-- contents -->

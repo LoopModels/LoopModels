@@ -84,6 +84,9 @@ Inheritance diagram for poly::IR::Addr:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
+<tr class="memitem:a139ada12dd1094b1f6fe35e2b4a38b75"><td class="memItemLeft" align="right" valign="top"><a id="a139ada12dd1094b1f6fe35e2b4a38b75"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>intMemNeeded</b> () const -&gt; size_t</td></tr>
+<tr class="separator:a139ada12dd1094b1f6fe35e2b4a38b75"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a97324c64f8a2205e4bcd4e1c5d8d1be4"><td class="memItemLeft" align="right" valign="top"><a id="a97324c64f8a2205e4bcd4e1c5d8d1be4"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>Addr</b> (const <a class="el" href="classpoly_1_1IR_1_1Addr.html">Addr</a> &amp;)=delete</td></tr>
 <tr class="separator:a97324c64f8a2205e4bcd4e1c5d8d1be4"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -222,15 +225,18 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>calculateCostContiguo
 <tr class="memitem:a1acf4e77e6ada3fd6a1676e812fb06f8"><td class="memItemLeft" align="right" valign="top"><a id="a1acf4e77e6ada3fd6a1676e812fb06f8"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>getCost</b> (llvm::TargetTransformInfo &amp;TTI, <a class="el" href="classpoly_1_1IR_1_1cost_1_1VectorWidth.html">cost::VectorWidth</a> W) -&gt; <a class="el" href="structpoly_1_1IR_1_1cost_1_1RecipThroughputLatency.html">cost::RecipThroughputLatency</a></td></tr>
 <tr class="separator:a1acf4e77e6ada3fd6a1676e812fb06f8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8ba8c2d378d5c41ce36c230e3e0a24cd"><td class="memItemLeft" align="right" valign="top"><a id="a8ba8c2d378d5c41ce36c230e3e0a24cd"></a>
+<tr class="memitem:a0fc1ce2ca5cabf056b3b7a94c27d9e61"><td class="memItemLeft" align="right" valign="top"><a id="a0fc1ce2ca5cabf056b3b7a94c27d9e61"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getCurrentDepth</b> () const -&gt; unsigned</td></tr>
-<tr class="separator:a8ba8c2d378d5c41ce36c230e3e0a24cd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:a0fc1ce2ca5cabf056b3b7a94c27d9e61"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a797bae936e0c26a7c501d52affa7c213"><td class="memItemLeft" align="right" valign="top"><a id="a797bae936e0c26a7c501d52affa7c213"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>printDotName</b> (llvm::raw_ostream &amp;os) const</td></tr>
 <tr class="separator:a797bae936e0c26a7c501d52affa7c213"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
+<tr class="memitem:a712aa75eca27597834492f74a16abdaf"><td class="memItemLeft" align="right" valign="top"><a id="a712aa75eca27597834492f74a16abdaf"></a>
+static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>intMemNeeded</b> (size_t numLoops, size_t dim) -&gt; size_t</td></tr>
+<tr class="separator:a712aa75eca27597834492f74a16abdaf"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6f0aacac4190843b23f652b4f9ad06fd"><td class="memItemLeft" align="right" valign="top"><a id="a6f0aacac4190843b23f652b4f9ad06fd"></a>
 static auto&#160;</td><td class="memItemRight" valign="bottom"><b>construct</b> (Arena&lt;&gt; *alloc, const llvm::SCEVUnknown *ptr, llvm::Instruction *user, unsigned numLoops) -&gt; NotNull&lt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">Addr</a> &gt;</td></tr>
 <tr class="separator:a6f0aacac4190843b23f652b4f9ad06fd"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -330,8 +336,7 @@ static auto&#160;</td><td class="memItemRight" valign="bottom"><b>construct</b> 
 </div>
 <hr/>The documentation for this class was generated from the following files:<ul>
 <li>include/IR/<a class="el" href="Address_8hpp_source.html">Address.hpp</a></li>
-<li>include/<a class="el" href="Dependence_8hpp_source.html">Dependence.hpp</a></li>
-<li>include/IR/<a class="el" href="CostModeling_8hpp_source.html">CostModeling.hpp</a></li>
+<li>include/Polyhedra/<a class="el" href="Dependence_8hpp_source.html">Dependence.hpp</a></li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->
