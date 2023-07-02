@@ -139,6 +139,8 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" 
 <tr class="memitem:ae38884a4eadb5b7db719fe12b0f38b70"><td class="memItemLeft" align="right" valign="top"><a id="ae38884a4eadb5b7db719fe12b0f38b70"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>preventsReordering</b> () const -&gt; bool</td></tr>
 <tr class="separator:ae38884a4eadb5b7db719fe12b0f38b70"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7e7c6210c36668e3d1b290e4eed76955"><td class="memItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1poly_1_1Dependence.html#a7e7c6210c36668e3d1b290e4eed76955">stashedPreventsReordering</a> (unsigned depth) const -&gt; bool</td></tr>
+<tr class="separator:a7e7c6210c36668e3d1b290e4eed76955"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2d8d2d9c5f6e03014aeff9730c60e98e"><td class="memItemLeft" align="right" valign="top"><a id="a2d8d2d9c5f6e03014aeff9730c60e98e"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getArrayPointer</b> () -&gt; const llvm::SCEV *</td></tr>
 <tr class="separator:a2d8d2d9c5f6e03014aeff9730c60e98e"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -298,6 +300,9 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>replaceOutp
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
+<tr class="memitem:aa4b3dc9ae63f927ed17fc3d2d8920cbd"><td class="memItemLeft" align="right" valign="top"><a id="aa4b3dc9ae63f927ed17fc3d2d8920cbd"></a>
+static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>preventsReordering</b> (uint8_t depth) -&gt; bool</td></tr>
+<tr class="separator:aa4b3dc9ae63f927ed17fc3d2d8920cbd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1adfbae6f0d0721f4b957031cdf79db0"><td class="memItemLeft" align="right" valign="top"><a id="a1adfbae6f0d0721f4b957031cdf79db0"></a>
 static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumOmegaCoefficients</b> () -&gt; unsigned</td></tr>
 <tr class="separator:a1adfbae6f0d0721f4b957031cdf79db0"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -326,6 +331,33 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> 
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p><a class="el" href="classpoly_1_1poly_1_1Dependence.html">Dependence</a> Represents a dependence relationship between two memory accesses. It contains simplices representing constraints that affine schedules are allowed to take. </p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
+<a id="a7e7c6210c36668e3d1b290e4eed76955"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7e7c6210c36668e3d1b290e4eed76955">&#9670;&nbsp;</a></span>stashedPreventsReordering()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">constexpr auto poly::poly::Dependence::stashedPreventsReordering </td>
+          <td>(</td>
+          <td class="paramtype">unsigned&#160;</td>
+          <td class="paramname"><em>depth</em></td><td>)</td>
+          <td> const -&gt; bool </td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">constexpr</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>checks the stash is active at <code>depth</code>, and that the stash does prevent reordering. </p>
+
+</div>
+</div>
 <a id="a5c78100d24d5241d7514bf702e30a666"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a5c78100d24d5241d7514bf702e30a666">&#9670;&nbsp;</a></span>stashSatLevel()</h2>
 

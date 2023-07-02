@@ -9,8 +9,9 @@ var searchData=
   ['set_107',['Set',['../structpoly_1_1IR_1_1Predicate_1_1Set.html',1,'poly::IR::Predicate']]],
   ['setfusionomega_108',['setFusionOmega',['../classpoly_1_1IR_1_1Addr.html#a26d3b32498e5ea5373a423a9bb463477',1,'poly::IR::Addr']]],
   ['squarematrixprinter_109',['SquareMatrixPrinter',['../classprettyprinters_1_1SquareMatrixPrinter.html',1,'prettyprinters']]],
-  ['stashsatlevel_110',['stashSatLevel',['../classpoly_1_1poly_1_1Dependence.html#a5c78100d24d5241d7514bf702e30a666',1,'poly::poly::Dependence']]],
-  ['state_111',['State',['../structpoly_1_1graph_1_1State.html',1,'poly::graph']]],
-  ['stow_112',['Stow',['../classpoly_1_1IR_1_1Stow.html',1,'poly::IR']]],
-  ['stridedmatrixprinter_113',['StridedMatrixPrinter',['../classprettyprinters_1_1StridedMatrixPrinter.html',1,'prettyprinters']]]
+  ['stashedpreventsreordering_110',['stashedPreventsReordering',['../classpoly_1_1poly_1_1Dependence.html#a7e7c6210c36668e3d1b290e4eed76955',1,'poly::poly::Dependence']]],
+  ['stashsatlevel_111',['stashSatLevel',['../classpoly_1_1poly_1_1Dependence.html#a5c78100d24d5241d7514bf702e30a666',1,'poly::poly::Dependence']]],
+  ['state_112',['State',['../structpoly_1_1graph_1_1State.html',1,'poly::graph']]],
+  ['stow_113',['Stow',['../classpoly_1_1IR_1_1Stow.html',1,'poly::IR']]],
+  ['stridedmatrixprinter_114',['StridedMatrixPrinter',['../classprettyprinters_1_1StridedMatrixPrinter.html',1,'prettyprinters']]]
 ];
