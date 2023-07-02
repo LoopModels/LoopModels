@@ -324,14 +324,24 @@ public:
     invariant(depth <= 127);
     return satLevel() > depth;
   }
-
   /// if true, then it's independent conditioned on the phis...
   [[nodiscard]] constexpr auto isCondIndep() const -> bool {
     return (satLvl.front() & uint8_t(128)) == uint8_t(0);
   }
+  [[nodiscard]] static constexpr auto preventsReordering(uint8_t depth)
+    -> bool {
+    return depth & uint8_t(128);
+  }
   // prevents reordering satisfied level if `true`
   [[nodiscard]] constexpr auto preventsReordering() const -> bool {
-    return satLvl.front() & uint8_t(128);
+    return preventsReordering(satLvl.front());
+  }
+  /// checks the stash is active at `depth`, and that the stash
+  /// does prevent reordering.
+  [[nodiscard]] constexpr auto stashedPreventsReordering(unsigned depth) const
+    -> bool {
+    invariant(depth <= 127);
+    return preventsReordering(satLvl[1]) && satLvl[1] > depth;
   }
   [[nodiscard]] constexpr auto getArrayPointer() -> const llvm::SCEV * {
     return in->getArrayPointer();

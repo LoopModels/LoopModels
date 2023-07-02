@@ -949,8 +949,9 @@ private:
         Col uu = u + bndWU.numCol() - 1;
         C(_(cc, ccc), _(u, uu)) << bndWU(_, _(1, end));
         u = uu;
-        if (satisfyDeps) C(_(c, cc), 0) << satC + satW;
-        else C(_(c, cc), 0) << satC;
+        if (!satisfyDeps || !edge->stashedPreventsReordering(d))
+          C(_(c, cc), 0) << satC;
+        else C(_(c, cc), 0) << satC + satW;
         C(_(cc, ccc), 0) << bndC;
         // now, handle Phi and Omega
         // phis are not constrained to be 0
