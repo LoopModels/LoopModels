@@ -101,15 +101,6 @@ class Addr : public Instruction {
 #else
 #pragma clang diagnostic pop
 #endif
-  [[nodiscard]] static constexpr auto intMemNeeded(size_t numLoops, size_t dim)
-    -> size_t {
-    // 1 for denom
-    // dim for OffsetOmega
-    // dim*numLoops for indexMatrix
-    // numLoops for FusionOmega
-    // 1 + dim + dim*numLoops + numLoops == 1 + (dim + 1)*(numLoops + 1)
-    return 1 + (numLoops + 1) * (dim + 1);
-  }
   // this is a reload
   explicit Addr(Addr *other)
     : Instruction(VK_Load, other->depth), basePointer(other->basePointer),
@@ -137,13 +128,13 @@ class Addr : public Instruction {
                  PtrVector<int64_t> omega, bool isStr, int64_t *offsets)
     : Instruction(isStr ? VK_Stow : VK_Load, unsigned(Pinv.numCol())),
       basePointer(ma->getArrayPointer()), loop(explicitLoop),
-      instr(ma->getInstruction()), offSym(ma->getOffSym()) {
+      instr(ma->getInstruction()), offSym(ma->getOffSym()), syms(ma->syms) {
     DensePtrMatrix<int64_t> M{ma->indexMatrix()};    // aD x nLma
     MutDensePtrMatrix<int64_t> mStar{indexMatrix()}; // aD x nLp
     // M is implicitly padded with zeros, nLp >= nLma
     unsigned nLma = ma->getNumLoops();
     invariant(nLma <= depth);
-    invariant(size_t(nLma), size_t(M.numRow()));
+    invariant(ptrdiff_t(nLma), ptrdiff_t(M.numRow()));
     mStar << M * Pinv(_(0, nLma), _);
     getDenominator() = denom;
     getOffsetOmega() << ma->getOffsetOmega() - mStar * omega;
@@ -184,6 +175,18 @@ class Addr : public Instruction {
   inline constexpr void setEdgeOut(Dependence *);
 
 public:
+  [[nodiscard]] static constexpr auto intMemNeeded(size_t numLoops, size_t dim)
+    -> size_t {
+    // 1 for denom
+    // dim for OffsetOmega
+    // dim*numLoops for indexMatrix
+    // numLoops for FusionOmega
+    // 1 + dim + dim*numLoops + numLoops == 1 + (dim + 1)*(numLoops + 1)
+    return 1 + (numLoops + 1) * (dim + 1);
+  }
+  [[nodiscard]] constexpr auto intMemNeeded() const -> size_t {
+    return intMemNeeded(getNumLoops(), getArrayDim());
+  }
   Addr(const Addr &) = delete;
   inline constexpr void addEdgeIn(Dependence *);
   inline constexpr void addEdgeOut(Dependence *);
