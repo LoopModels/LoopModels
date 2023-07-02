@@ -321,45 +321,48 @@ $(function() {
 <div class="line"><a name="l00336"></a><span class="lineno">  336</span>&#160; </div>
 <div class="line"><a name="l00337"></a><span class="lineno">  337</span>&#160;  <span class="keywordtype">void</span> optimize(<a class="code" href="structpoly_1_1IR_1_1TreeResult.html">IR::TreeResult</a> tr) {</div>
 <div class="line"><a name="l00338"></a><span class="lineno">  338</span>&#160;    <span class="comment">// now we build the LinearProgram</span></div>
-<div class="line"><a name="l00339"></a><span class="lineno">  339</span>&#160;  }</div>
-<div class="line"><a name="l00340"></a><span class="lineno">  340</span>&#160;  <span class="comment">/*</span></div>
-<div class="line"><a name="l00341"></a><span class="lineno">  341</span>&#160;<span class="comment">    auto isLoopPreHeader(const llvm::BasicBlock *BB) const -&gt; bool {</span></div>
-<div class="line"><a name="l00342"></a><span class="lineno">  342</span>&#160;<span class="comment">      if (const llvm::Instruction *term = BB-&gt;getTerminator())</span></div>
-<div class="line"><a name="l00343"></a><span class="lineno">  343</span>&#160;<span class="comment">        if (const auto *BI = llvm::dyn_cast&lt;llvm::BranchInst&gt;(term))</span></div>
-<div class="line"><a name="l00344"></a><span class="lineno">  344</span>&#160;<span class="comment">          if (!BI-&gt;isConditional()) return</span></div>
-<div class="line"><a name="l00345"></a><span class="lineno">  345</span>&#160;<span class="comment">  LI-&gt;isLoopHeader(BI-&gt;getSuccessor(0)); return false;</span></div>
-<div class="line"><a name="l00346"></a><span class="lineno">  346</span>&#160;<span class="comment">    }</span></div>
-<div class="line"><a name="l00347"></a><span class="lineno">  347</span>&#160;<span class="comment">    inline static auto containsPeeled(const llvm::SCEV *Sc, size_t numPeeled)</span></div>
-<div class="line"><a name="l00348"></a><span class="lineno">  348</span>&#160;<span class="comment">      -&gt; bool {</span></div>
-<div class="line"><a name="l00349"></a><span class="lineno">  349</span>&#160;<span class="comment">      return llvm::SCEVExprContains(Sc, [numPeeled](const llvm::SCEV *S) {</span></div>
-<div class="line"><a name="l00350"></a><span class="lineno">  350</span>&#160;<span class="comment">        if (const auto *r = llvm::dyn_cast&lt;llvm::SCEVAddRecExpr&gt;(S))</span></div>
-<div class="line"><a name="l00351"></a><span class="lineno">  351</span>&#160;<span class="comment">          if (r-&gt;getLoop()-&gt;getLoopDepth() &lt;= numPeeled) return true;</span></div>
-<div class="line"><a name="l00352"></a><span class="lineno">  352</span>&#160;<span class="comment">        return false;</span></div>
-<div class="line"><a name="l00353"></a><span class="lineno">  353</span>&#160;<span class="comment">      });</span></div>
-<div class="line"><a name="l00354"></a><span class="lineno">  354</span>&#160;<span class="comment">  }</span></div>
-<div class="line"><a name="l00355"></a><span class="lineno">  355</span>&#160;<span class="comment">    */</span></div>
-<div class="line"><a name="l00356"></a><span class="lineno">  356</span>&#160;  <span class="comment">// https://llvm.org/doxygen/LoopVectorize_8cpp_source.html#l00932</span></div>
-<div class="line"><a name="l00357"></a><span class="lineno">  357</span>&#160;  <span class="keywordtype">void</span> remark(<span class="keyword">const</span> llvm::StringRef remarkName, llvm::Loop *L,</div>
-<div class="line"><a name="l00358"></a><span class="lineno">  358</span>&#160;              <span class="keyword">const</span> llvm::StringRef remarkMessage,</div>
-<div class="line"><a name="l00359"></a><span class="lineno">  359</span>&#160;              llvm::Instruction *J = <span class="keyword">nullptr</span>)<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l00360"></a><span class="lineno">  360</span>&#160; </div>
-<div class="line"><a name="l00361"></a><span class="lineno">  361</span>&#160;    llvm::OptimizationRemarkAnalysis analysis{remarkAnalysis(remarkName, L, J)};</div>
-<div class="line"><a name="l00362"></a><span class="lineno">  362</span>&#160;    ORE-&gt;emit(analysis &lt;&lt; remarkMessage);</div>
-<div class="line"><a name="l00363"></a><span class="lineno">  363</span>&#160;  }</div>
-<div class="line"><a name="l00364"></a><span class="lineno">  364</span>&#160;  <span class="comment">// void buildInstructionGraph(LoopTree &amp;root) {</span></div>
-<div class="line"><a name="l00365"></a><span class="lineno">  365</span>&#160;  <span class="comment">//     // predicates</span></div>
-<div class="line"><a name="l00366"></a><span class="lineno">  366</span>&#160;  <span class="comment">// }</span></div>
-<div class="line"><a name="l00367"></a><span class="lineno">  367</span>&#160;<span class="keyword">public</span>:</div>
-<div class="line"><a name="l00368"></a><span class="lineno">  368</span>&#160;  <span class="keyword">auto</span> run(llvm::Function &amp;F, llvm::FunctionAnalysisManager &amp;AM)</div>
-<div class="line"><a name="l00369"></a><span class="lineno">  369</span>&#160;    -&gt; llvm::PreservedAnalyses;</div>
-<div class="line"><a name="l00370"></a><span class="lineno">  370</span>&#160;  <a class="code" href="classpoly_1_1TurboLoopPass.html">TurboLoopPass</a>() = <span class="keywordflow">default</span>;</div>
-<div class="line"><a name="l00371"></a><span class="lineno">  371</span>&#160;  <a class="code" href="classpoly_1_1TurboLoopPass.html">TurboLoopPass</a>(<span class="keyword">const</span> <a class="code" href="classpoly_1_1TurboLoopPass.html">TurboLoopPass</a> &amp;) = <span class="keyword">delete</span>;</div>
-<div class="line"><a name="l00372"></a><span class="lineno">  372</span>&#160;  <a class="code" href="classpoly_1_1TurboLoopPass.html">TurboLoopPass</a>(<a class="code" href="classpoly_1_1TurboLoopPass.html">TurboLoopPass</a> &amp;&amp;) = <span class="keywordflow">default</span>;</div>
-<div class="line"><a name="l00373"></a><span class="lineno">  373</span>&#160;  <span class="comment">// ~TurboLoopPass() {</span></div>
-<div class="line"><a name="l00374"></a><span class="lineno">  374</span>&#160;  <span class="comment">//   for (auto l : loopForests) l-&gt;~LoopTree();</span></div>
-<div class="line"><a name="l00375"></a><span class="lineno">  375</span>&#160;  <span class="comment">// }</span></div>
-<div class="line"><a name="l00376"></a><span class="lineno">  376</span>&#160;};</div>
-<div class="line"><a name="l00377"></a><span class="lineno">  377</span>&#160;} <span class="comment">// namespace poly</span></div>
+<div class="line"><a name="l00339"></a><span class="lineno">  339</span>&#160;    <a class="code" href="classpoly_1_1lp_1_1ScheduledNode.html">lp::ScheduledNode</a> *nodes = loopBlock.optimize(instructions, tr);</div>
+<div class="line"><a name="l00340"></a><span class="lineno">  340</span>&#160;    <span class="keywordflow">if</span> (!nodes) <span class="keywordflow">return</span>;</div>
+<div class="line"><a name="l00341"></a><span class="lineno">  341</span>&#160;    CostModeling::optimize(nodes);</div>
+<div class="line"><a name="l00342"></a><span class="lineno">  342</span>&#160;  }</div>
+<div class="line"><a name="l00343"></a><span class="lineno">  343</span>&#160;  <span class="comment">/*</span></div>
+<div class="line"><a name="l00344"></a><span class="lineno">  344</span>&#160;<span class="comment">    auto isLoopPreHeader(const llvm::BasicBlock *BB) const -&gt; bool {</span></div>
+<div class="line"><a name="l00345"></a><span class="lineno">  345</span>&#160;<span class="comment">      if (const llvm::Instruction *term = BB-&gt;getTerminator())</span></div>
+<div class="line"><a name="l00346"></a><span class="lineno">  346</span>&#160;<span class="comment">        if (const auto *BI = llvm::dyn_cast&lt;llvm::BranchInst&gt;(term))</span></div>
+<div class="line"><a name="l00347"></a><span class="lineno">  347</span>&#160;<span class="comment">          if (!BI-&gt;isConditional()) return</span></div>
+<div class="line"><a name="l00348"></a><span class="lineno">  348</span>&#160;<span class="comment">  LI-&gt;isLoopHeader(BI-&gt;getSuccessor(0)); return false;</span></div>
+<div class="line"><a name="l00349"></a><span class="lineno">  349</span>&#160;<span class="comment">    }</span></div>
+<div class="line"><a name="l00350"></a><span class="lineno">  350</span>&#160;<span class="comment">    inline static auto containsPeeled(const llvm::SCEV *Sc, size_t numPeeled)</span></div>
+<div class="line"><a name="l00351"></a><span class="lineno">  351</span>&#160;<span class="comment">      -&gt; bool {</span></div>
+<div class="line"><a name="l00352"></a><span class="lineno">  352</span>&#160;<span class="comment">      return llvm::SCEVExprContains(Sc, [numPeeled](const llvm::SCEV *S) {</span></div>
+<div class="line"><a name="l00353"></a><span class="lineno">  353</span>&#160;<span class="comment">        if (const auto *r = llvm::dyn_cast&lt;llvm::SCEVAddRecExpr&gt;(S))</span></div>
+<div class="line"><a name="l00354"></a><span class="lineno">  354</span>&#160;<span class="comment">          if (r-&gt;getLoop()-&gt;getLoopDepth() &lt;= numPeeled) return true;</span></div>
+<div class="line"><a name="l00355"></a><span class="lineno">  355</span>&#160;<span class="comment">        return false;</span></div>
+<div class="line"><a name="l00356"></a><span class="lineno">  356</span>&#160;<span class="comment">      });</span></div>
+<div class="line"><a name="l00357"></a><span class="lineno">  357</span>&#160;<span class="comment">  }</span></div>
+<div class="line"><a name="l00358"></a><span class="lineno">  358</span>&#160;<span class="comment">    */</span></div>
+<div class="line"><a name="l00359"></a><span class="lineno">  359</span>&#160;  <span class="comment">// https://llvm.org/doxygen/LoopVectorize_8cpp_source.html#l00932</span></div>
+<div class="line"><a name="l00360"></a><span class="lineno">  360</span>&#160;  <span class="keywordtype">void</span> remark(<span class="keyword">const</span> llvm::StringRef remarkName, llvm::Loop *L,</div>
+<div class="line"><a name="l00361"></a><span class="lineno">  361</span>&#160;              <span class="keyword">const</span> llvm::StringRef remarkMessage,</div>
+<div class="line"><a name="l00362"></a><span class="lineno">  362</span>&#160;              llvm::Instruction *J = <span class="keyword">nullptr</span>)<span class="keyword"> const </span>{</div>
+<div class="line"><a name="l00363"></a><span class="lineno">  363</span>&#160; </div>
+<div class="line"><a name="l00364"></a><span class="lineno">  364</span>&#160;    llvm::OptimizationRemarkAnalysis analysis{remarkAnalysis(remarkName, L, J)};</div>
+<div class="line"><a name="l00365"></a><span class="lineno">  365</span>&#160;    ORE-&gt;emit(analysis &lt;&lt; remarkMessage);</div>
+<div class="line"><a name="l00366"></a><span class="lineno">  366</span>&#160;  }</div>
+<div class="line"><a name="l00367"></a><span class="lineno">  367</span>&#160;  <span class="comment">// void buildInstructionGraph(LoopTree &amp;root) {</span></div>
+<div class="line"><a name="l00368"></a><span class="lineno">  368</span>&#160;  <span class="comment">//     // predicates</span></div>
+<div class="line"><a name="l00369"></a><span class="lineno">  369</span>&#160;  <span class="comment">// }</span></div>
+<div class="line"><a name="l00370"></a><span class="lineno">  370</span>&#160;<span class="keyword">public</span>:</div>
+<div class="line"><a name="l00371"></a><span class="lineno">  371</span>&#160;  <span class="keyword">auto</span> run(llvm::Function &amp;F, llvm::FunctionAnalysisManager &amp;AM)</div>
+<div class="line"><a name="l00372"></a><span class="lineno">  372</span>&#160;    -&gt; llvm::PreservedAnalyses;</div>
+<div class="line"><a name="l00373"></a><span class="lineno">  373</span>&#160;  <a class="code" href="classpoly_1_1TurboLoopPass.html">TurboLoopPass</a>() = <span class="keywordflow">default</span>;</div>
+<div class="line"><a name="l00374"></a><span class="lineno">  374</span>&#160;  <a class="code" href="classpoly_1_1TurboLoopPass.html">TurboLoopPass</a>(<span class="keyword">const</span> <a class="code" href="classpoly_1_1TurboLoopPass.html">TurboLoopPass</a> &amp;) = <span class="keyword">delete</span>;</div>
+<div class="line"><a name="l00375"></a><span class="lineno">  375</span>&#160;  <a class="code" href="classpoly_1_1TurboLoopPass.html">TurboLoopPass</a>(<a class="code" href="classpoly_1_1TurboLoopPass.html">TurboLoopPass</a> &amp;&amp;) = <span class="keywordflow">default</span>;</div>
+<div class="line"><a name="l00376"></a><span class="lineno">  376</span>&#160;  <span class="comment">// ~TurboLoopPass() {</span></div>
+<div class="line"><a name="l00377"></a><span class="lineno">  377</span>&#160;  <span class="comment">//   for (auto l : loopForests) l-&gt;~LoopTree();</span></div>
+<div class="line"><a name="l00378"></a><span class="lineno">  378</span>&#160;  <span class="comment">// }</span></div>
+<div class="line"><a name="l00379"></a><span class="lineno">  379</span>&#160;};</div>
+<div class="line"><a name="l00380"></a><span class="lineno">  380</span>&#160;} <span class="comment">// namespace poly</span></div>
 <div class="ttc" id="aclasspoly_1_1CostModeling_1_1CPURegisterFile_html"><div class="ttname"><a href="classpoly_1_1CostModeling_1_1CPURegisterFile.html">poly::CostModeling::CPURegisterFile</a></div><div class="ttdef"><b>Definition:</b> CostModeling.hpp:37</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Addr_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Addr.html">poly::IR::Addr</a></div><div class="ttdef"><b>Definition:</b> Address.hpp:74</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Addr_html_a26d3b32498e5ea5373a423a9bb463477"><div class="ttname"><a href="classpoly_1_1IR_1_1Addr.html#a26d3b32498e5ea5373a423a9bb463477">poly::IR::Addr::setFusionOmega</a></div><div class="ttdeci">constexpr void setFusionOmega(MutPtrVector&lt; int &gt; o)</div><div class="ttdef"><b>Definition:</b> Address.hpp:242</div></div>
@@ -369,6 +372,7 @@ $(function() {
 <div class="ttc" id="aclasspoly_1_1IR_1_1Predicate_1_1Map_html_a8fccd8417b7ce435fe3f8f94cbd7bef3"><div class="ttname"><a href="classpoly_1_1IR_1_1Predicate_1_1Map.html#a8fccd8417b7ce435fe3f8f94cbd7bef3">poly::IR::Predicate::Map::descend</a></div><div class="ttdeci">static auto descend(Arena&lt;&gt; *, IR::Cache &amp;, llvm::BasicBlock *, llvm::BasicBlock *, llvm::Loop *, TreeResult &amp;) -&gt; std::optional&lt; Map &gt;</div><div class="ttdef"><b>Definition:</b> Cache.hpp:797</div></div>
 <div class="ttc" id="aclasspoly_1_1TurboLoopPass_html"><div class="ttname"><a href="classpoly_1_1TurboLoopPass.html">poly::TurboLoopPass</a></div><div class="ttdef"><b>Definition:</b> TurboLoop.hpp:68</div></div>
 <div class="ttc" id="aclasspoly_1_1lp_1_1LoopBlock_html"><div class="ttname"><a href="classpoly_1_1lp_1_1LoopBlock.html">poly::lp::LoopBlock</a></div><div class="ttdef"><b>Definition:</b> LoopBlock.hpp:125</div></div>
+<div class="ttc" id="aclasspoly_1_1lp_1_1ScheduledNode_html"><div class="ttname"><a href="classpoly_1_1lp_1_1ScheduledNode.html">poly::lp::ScheduledNode</a></div><div class="ttdef"><b>Definition:</b> ScheduledNode.hpp:33</div></div>
 <div class="ttc" id="aclasspoly_1_1poly_1_1Loop_html"><div class="ttname"><a href="classpoly_1_1poly_1_1Loop.html">poly::poly::Loop</a></div><div class="ttdef"><b>Definition:</b> Loops.hpp:329</div></div>
 <div class="ttc" id="astructpoly_1_1IR_1_1TreeResult_html"><div class="ttname"><a href="structpoly_1_1IR_1_1TreeResult.html">poly::IR::TreeResult</a></div><div class="ttdef"><b>Definition:</b> Cache.hpp:46</div></div>
 <div class="ttc" id="astructpoly_1_1poly_1_1NoWrapRewriter_html"><div class="ttname"><a href="structpoly_1_1poly_1_1NoWrapRewriter.html">poly::poly::NoWrapRewriter</a></div><div class="ttdef"><b>Definition:</b> Loops.hpp:71</div></div>

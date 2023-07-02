@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.9.1"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>LoopModels: include/Dependence.hpp Source File</title>
+<title>LoopModels: include/Polyhedra/Dependence.hpp Source File</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -61,7 +61,7 @@ $(function() {
 
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><a class="el" href="dir_d44c64559bbebec7f509842c48db8b23.html">include</a></li>  </ul>
+<li class="navelem"><a class="el" href="dir_d44c64559bbebec7f509842c48db8b23.html">include</a></li><li class="navelem"><a class="el" href="dir_4f42881ec616af22a951b115e120c2fb.html">Polyhedra</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="header">
@@ -73,7 +73,7 @@ $(function() {
 <div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="preprocessor">#include &quot;IR/Address.hpp&quot;</span></div>
 <div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="preprocessor">#include &quot;Polyhedra/DependencyPolyhedra.hpp&quot;</span></div>
 <div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor">#include &quot;Polyhedra/Loops.hpp&quot;</span></div>
-<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="preprocessor">#include &quot;Polyhedra/Schedule.hpp&quot;</span></div>
+<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="preprocessor">#include &quot;Schedule.hpp&quot;</span></div>
 <div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="preprocessor">#include &lt;Math/Constructors.hpp&gt;</span></div>
 <div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="preprocessor">#include &lt;Utilities/Allocators.hpp&gt;</span></div>
 <div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="preprocessor">#include &lt;Utilities/Invariant.hpp&gt;</span></div>
@@ -81,7 +81,7 @@ $(function() {
 <div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160; </div>
 <div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="keyword">namespace </span>poly {</div>
 <div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="keyword">namespace </span>poly {</div>
-<div class="line"><a name="l00017"></a><span class="lineno"><a class="line" href="classpoly_1_1poly_1_1Dependence.html">   17</a></span>&#160;<span class="keyword">class </span><a class="code" href="classpoly_1_1poly_1_1Dependence.html">Dependence</a> {</div>
+<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;<span class="keyword">class </span>Dependence {</div>
 <div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;  <span class="comment">// Plan here is...</span></div>
 <div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;  <span class="comment">// depPoly gives the constraints</span></div>
 <div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;  <span class="comment">// dependenceFwd gives forward constraints</span></div>
@@ -159,8 +159,8 @@ $(function() {
 <div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;  [[no_unique_address]] NotNull&lt;math::Simplex&gt; dependenceBounding;</div>
 <div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;  [[no_unique_address]] NotNull&lt;IR::Addr&gt; in;</div>
 <div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;  [[no_unique_address]] NotNull&lt;IR::Addr&gt; out;</div>
-<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;  [[no_unique_address]] <a class="code" href="classpoly_1_1poly_1_1Dependence.html">Dependence</a> *nextInput{<span class="keyword">nullptr</span>};  <span class="comment">// all share same `in`</span></div>
-<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;  [[no_unique_address]] <a class="code" href="classpoly_1_1poly_1_1Dependence.html">Dependence</a> *nextOutput{<span class="keyword">nullptr</span>}; <span class="comment">// all share same `out`</span></div>
+<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;  [[no_unique_address]] Dependence *nextInput{<span class="keyword">nullptr</span>};  <span class="comment">// all share same `in`</span></div>
+<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;  [[no_unique_address]] Dependence *nextOutput{<span class="keyword">nullptr</span>}; <span class="comment">// all share same `out`</span></div>
 <div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;  <span class="comment">// the upper bit of satLvl indicates whether the satisfaction is because of</span></div>
 <div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;  <span class="comment">// conditional independence (value = 0), or whether it was because of offsets</span></div>
 <div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;  <span class="comment">// when solving the linear program (value = 1).</span></div>
@@ -179,7 +179,7 @@ $(function() {
 <div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;      std::swap(x, y);</div>
 <div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;    }</div>
 <div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;    pair[0]-&gt;truncateVars(1 + numLambda + dxy-&gt;getNumScheduleCoef());</div>
-<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;    y-&gt;addEdgeIn(alloc-&gt;create&lt;<a class="code" href="classpoly_1_1poly_1_1Dependence.html">Dependence</a>&gt;(dxy, pair, x, y, isFwd));</div>
+<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;    y-&gt;addEdgeIn(alloc-&gt;create&lt;Dependence&gt;(dxy, pair, x, y, isFwd));</div>
 <div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;  }</div>
 <div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;  <span class="keyword">static</span> <span class="keywordtype">void</span> timelessCheck(Arena&lt;&gt; *alloc, NotNull&lt;DepPoly&gt; dxy,</div>
 <div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;                            NotNull&lt;IR::Addr&gt; x, NotNull&lt;IR::Addr&gt; y,</div>
@@ -223,7 +223,7 @@ $(function() {
 <div class="line"><a name="l00161"></a><span class="lineno">  161</span>&#160;    }</div>
 <div class="line"><a name="l00162"></a><span class="lineno">  162</span>&#160;    pair[0]-&gt;truncateVars(1 + numLambda + numScheduleCoefs);</div>
 <div class="line"><a name="l00163"></a><span class="lineno">  163</span>&#160;    <span class="keyword">auto</span> *dep0 =</div>
-<div class="line"><a name="l00164"></a><span class="lineno">  164</span>&#160;      alloc-&gt;create&lt;<a class="code" href="classpoly_1_1poly_1_1Dependence.html">Dependence</a>&gt;(dxy-&gt;copy(alloc), pair, in, out, isFwd);</div>
+<div class="line"><a name="l00164"></a><span class="lineno">  164</span>&#160;      alloc-&gt;create&lt;Dependence&gt;(dxy-&gt;copy(alloc), pair, in, out, isFwd);</div>
 <div class="line"><a name="l00165"></a><span class="lineno">  165</span>&#160;    invariant(out-&gt;getNumLoops() + in-&gt;getNumLoops(),</div>
 <div class="line"><a name="l00166"></a><span class="lineno">  166</span>&#160;              dep0-&gt;getNumPhiCoefficients());</div>
 <div class="line"><a name="l00167"></a><span class="lineno">  167</span>&#160;    out-&gt;addEdgeIn(dep0);</div>
@@ -308,7 +308,7 @@ $(function() {
 <div class="line"><a name="l00246"></a><span class="lineno">  246</span>&#160;    <span class="comment">// dxy-&gt;truncateVars(numVar);</span></div>
 <div class="line"><a name="l00247"></a><span class="lineno">  247</span>&#160;    <span class="comment">// dxy-&gt;setTimeDim(0);</span></div>
 <div class="line"><a name="l00248"></a><span class="lineno">  248</span>&#160;    farkasBackups[0]-&gt;truncateVars(1 + numLambda + numScheduleCoefs);</div>
-<div class="line"><a name="l00249"></a><span class="lineno">  249</span>&#160;    <span class="keyword">auto</span> *dep1 = alloc-&gt;create&lt;<a class="code" href="classpoly_1_1poly_1_1Dependence.html">Dependence</a>&gt;(dxy, farkasBackups, out, in, !isFwd);</div>
+<div class="line"><a name="l00249"></a><span class="lineno">  249</span>&#160;    <span class="keyword">auto</span> *dep1 = alloc-&gt;create&lt;Dependence&gt;(dxy, farkasBackups, out, in, !isFwd);</div>
 <div class="line"><a name="l00250"></a><span class="lineno">  250</span>&#160;    invariant(out-&gt;getNumLoops() + in-&gt;getNumLoops(),</div>
 <div class="line"><a name="l00251"></a><span class="lineno">  251</span>&#160;              dep0-&gt;getNumPhiCoefficients());</div>
 <div class="line"><a name="l00252"></a><span class="lineno">  252</span>&#160;    in-&gt;addEdgeIn(dep1);</div>
@@ -318,33 +318,33 @@ $(function() {
 <div class="line"><a name="l00256"></a><span class="lineno">  256</span>&#160;  }</div>
 <div class="line"><a name="l00257"></a><span class="lineno">  257</span>&#160; </div>
 <div class="line"><a name="l00258"></a><span class="lineno">  258</span>&#160;<span class="keyword">public</span>:</div>
-<div class="line"><a name="l00259"></a><span class="lineno">  259</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getNextInput() -&gt; <a class="code" href="classpoly_1_1poly_1_1Dependence.html">Dependence</a> * {</div>
+<div class="line"><a name="l00259"></a><span class="lineno">  259</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getNextInput() -&gt; Dependence * {</div>
 <div class="line"><a name="l00260"></a><span class="lineno">  260</span>&#160;    <span class="keywordflow">return</span> nextInput;</div>
 <div class="line"><a name="l00261"></a><span class="lineno">  261</span>&#160;  }</div>
-<div class="line"><a name="l00262"></a><span class="lineno">  262</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getNextInput() <span class="keyword">const</span> -&gt; <span class="keyword">const</span> <a class="code" href="classpoly_1_1poly_1_1Dependence.html">Dependence</a> * {</div>
+<div class="line"><a name="l00262"></a><span class="lineno">  262</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getNextInput() const -&gt; const Dependence * {</div>
 <div class="line"><a name="l00263"></a><span class="lineno">  263</span>&#160;    <span class="keywordflow">return</span> nextInput;</div>
 <div class="line"><a name="l00264"></a><span class="lineno">  264</span>&#160;  }</div>
-<div class="line"><a name="l00265"></a><span class="lineno">  265</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getNextOutput() -&gt; <a class="code" href="classpoly_1_1poly_1_1Dependence.html">Dependence</a> * {</div>
+<div class="line"><a name="l00265"></a><span class="lineno">  265</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getNextOutput() -&gt; Dependence * {</div>
 <div class="line"><a name="l00266"></a><span class="lineno">  266</span>&#160;    <span class="keywordflow">return</span> nextInput;</div>
 <div class="line"><a name="l00267"></a><span class="lineno">  267</span>&#160;  }</div>
-<div class="line"><a name="l00268"></a><span class="lineno">  268</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getNextOutput() <span class="keyword">const</span> -&gt; <span class="keyword">const</span> <a class="code" href="classpoly_1_1poly_1_1Dependence.html">Dependence</a> * {</div>
+<div class="line"><a name="l00268"></a><span class="lineno">  268</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getNextOutput() const -&gt; const Dependence * {</div>
 <div class="line"><a name="l00269"></a><span class="lineno">  269</span>&#160;    <span class="keywordflow">return</span> nextInput;</div>
 <div class="line"><a name="l00270"></a><span class="lineno">  270</span>&#160;  }</div>
 <div class="line"><a name="l00271"></a><span class="lineno">  271</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> input() -&gt; NotNull&lt;IR::Addr&gt; { <span class="keywordflow">return</span> in; }</div>
 <div class="line"><a name="l00272"></a><span class="lineno">  272</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> output() -&gt; NotNull&lt;IR::Addr&gt; { <span class="keywordflow">return</span> out; }</div>
-<div class="line"><a name="l00273"></a><span class="lineno">  273</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> input() <span class="keyword">const</span> -&gt; NotNull&lt;const IR::Addr&gt; {</div>
+<div class="line"><a name="l00273"></a><span class="lineno">  273</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> input() const -&gt; NotNull&lt;const IR::Addr&gt; {</div>
 <div class="line"><a name="l00274"></a><span class="lineno">  274</span>&#160;    <span class="keywordflow">return</span> in;</div>
 <div class="line"><a name="l00275"></a><span class="lineno">  275</span>&#160;  }</div>
-<div class="line"><a name="l00276"></a><span class="lineno">  276</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> output() <span class="keyword">const</span> -&gt; NotNull&lt;const IR::Addr&gt; {</div>
+<div class="line"><a name="l00276"></a><span class="lineno">  276</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> output() const -&gt; NotNull&lt;const IR::Addr&gt; {</div>
 <div class="line"><a name="l00277"></a><span class="lineno">  277</span>&#160;    <span class="keywordflow">return</span> out;</div>
 <div class="line"><a name="l00278"></a><span class="lineno">  278</span>&#160;  }</div>
-<div class="line"><a name="l00279"></a><span class="lineno">  279</span>&#160;  constexpr <span class="keyword">auto</span> setNextInput(<a class="code" href="classpoly_1_1poly_1_1Dependence.html">Dependence</a> *n) -&gt; <a class="code" href="classpoly_1_1poly_1_1Dependence.html">Dependence</a> * {</div>
+<div class="line"><a name="l00279"></a><span class="lineno">  279</span>&#160;  constexpr <span class="keyword">auto</span> setNextInput(Dependence *n) -&gt; Dependence * {</div>
 <div class="line"><a name="l00280"></a><span class="lineno">  280</span>&#160;    <span class="keywordflow">return</span> nextInput = n;</div>
 <div class="line"><a name="l00281"></a><span class="lineno">  281</span>&#160;  }</div>
-<div class="line"><a name="l00282"></a><span class="lineno">  282</span>&#160;  constexpr <span class="keyword">auto</span> setNextOutput(<a class="code" href="classpoly_1_1poly_1_1Dependence.html">Dependence</a> *n) -&gt; <a class="code" href="classpoly_1_1poly_1_1Dependence.html">Dependence</a> * {</div>
+<div class="line"><a name="l00282"></a><span class="lineno">  282</span>&#160;  constexpr <span class="keyword">auto</span> setNextOutput(Dependence *n) -&gt; Dependence * {</div>
 <div class="line"><a name="l00283"></a><span class="lineno">  283</span>&#160;    <span class="keywordflow">return</span> nextOutput = n;</div>
 <div class="line"><a name="l00284"></a><span class="lineno">  284</span>&#160;  }</div>
-<div class="line"><a name="l00285"></a><span class="lineno">  285</span>&#160;  constexpr <a class="code" href="classpoly_1_1poly_1_1Dependence.html">Dependence</a>(NotNull&lt;DepPoly&gt; poly,</div>
+<div class="line"><a name="l00285"></a><span class="lineno">  285</span>&#160;  constexpr Dependence(NotNull&lt;DepPoly&gt; poly,</div>
 <div class="line"><a name="l00286"></a><span class="lineno">  286</span>&#160;                       std::array&lt;NotNull&lt;math::Simplex&gt;, 2&gt; depSatBound,</div>
 <div class="line"><a name="l00287"></a><span class="lineno">  287</span>&#160;                       NotNull&lt;IR::Addr&gt; i, NotNull&lt;IR::Addr&gt; o, <span class="keywordtype">bool</span> fwd)</div>
 <div class="line"><a name="l00288"></a><span class="lineno">  288</span>&#160;    : depPoly(poly), dependenceSatisfaction(depSatBound[0]),</div>
