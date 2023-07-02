@@ -20,7 +20,6 @@
 #include <Utilities/Allocators.hpp>
 #include <Utilities/Invariant.hpp>
 #include <Utilities/ListRanges.hpp>
-#include <Utilities/Optional.hpp>
 #include <Utilities/Valid.hpp>
 #include <algorithm>
 #include <bits/ranges_algo.h>
@@ -44,6 +43,32 @@
 namespace poly::lp {
 using math::PtrMatrix, math::MutPtrMatrix, math::Vector, math::DenseMatrix,
   math::begin, math::end, math::last, math::Row, math::Col, utils::invariant;
+
+struct Result {
+  enum { Failure = 0, Dependent = 1, Independent = 3 } Value;
+
+  constexpr explicit operator bool() const { return Value != Failure; }
+  constexpr auto operator==(Result r) const -> bool { return Value == r.Value; }
+  constexpr auto operator!() const -> bool { return Value == Failure; }
+  constexpr auto operator&(Result r) -> Result {
+    return Result(static_cast<decltype(Value)>(Value & r.Value));
+  }
+  constexpr auto operator&=(Result r) -> Result & {
+    Value = static_cast<decltype(Value)>(Value & r.Value);
+    return *this;
+  }
+  static constexpr auto failure() -> Result { return Result{Failure}; }
+  static constexpr auto dependent() -> Result { return Result{Dependent}; }
+  static constexpr auto independent() -> Result { return Result{Independent}; }
+};
+static_assert(!Result::failure());
+static_assert(Result::independent());
+static_assert(Result::dependent());
+static_assert((Result::dependent() & Result::independent()) ==
+              Result::dependent());
+static_assert((Result::failure() & Result::independent()) == Result::failure());
+static_assert((Result::failure() & Result::dependent()) == Result::failure());
+
 /// A loop block is a block of the program that may include multiple loops.
 /// These loops are either all executed (note iteration count may be 0, or
 /// loops may be in rotated form and the guard prevents execution; this is okay
@@ -126,7 +151,7 @@ class LoopBlock {
 
 public:
   LoopBlock() = default;
-  auto optimize(IR::Cache &cache, IR::TreeResult tr) -> Optional<size_t> {
+  auto optimize(IR::Cache &cache, IR::TreeResult tr) -> Result {
     // first, we peel loops for which affine repr failed
     if (unsigned numReject = tr.rejectDepth) {
       auto *SE = cache.getScalarEvolution();
@@ -428,8 +453,7 @@ private:
     }
   }
   // returns a `1` for each level containing a dependency
-  auto optOrth(ScheduledNode *nodes, unsigned maxDepth) -> Optional<size_t> {
-    static_assert(sizeof(size_t) == sizeof(Optional<size_t>));
+  auto optOrth(ScheduledNode *nodes, unsigned maxDepth) -> Result {
     // check for orthogonalization opportunities
     bool tryOrth = false;
     for (ScheduledNode *node : nodes->getVertices()) {
@@ -452,7 +476,7 @@ private:
       }
     }
     if (tryOrth) {
-      if (optimize(nodes, 0, maxDepth)) return true;
+      if (Result r = optimize(nodes, 0, maxDepth)) return r;
       for (ScheduledNode *n : nodes->getVertices()) n->unschedulePhi();
     }
     return optimize(nodes, 0, maxDepth);
@@ -520,20 +544,19 @@ private:
   }
   // NOLINTNEXTLINE(misc-no-recursion)
   [[nodiscard]] auto optimize(ScheduledNode *nodes, unsigned d,
-                              unsigned maxDepth) -> Optional<size_t> {
-    if (d >= maxDepth) return true;
-    if (Optional<size_t> depSat = solveGraph(nodes, maxDepth, false)) {
+                              unsigned maxDepth) -> Result {
+    if (d >= maxDepth) return Result::independent();
+    if (Result r = solveGraph(nodes, maxDepth, false)) {
       unsigned descend = d + 1;
-      if (descend == maxDepth) return depSat;
-      if (Optional<size_t> depSatNest = optimize(nodes, descend, maxDepth)) {
-        bool hadDep = (*depSat) != 0;
-        *depSat |= *depSatNest;
-        if (hadDep && (*depSatNest != 0)) // try and sat all this level
-          return optimizeSatDep(nodes, d, maxDepth, *depSat);
-        return *depSat;
+      if (descend == maxDepth) return r;
+      if (Result n = optimize(nodes, descend, maxDepth)) {
+        if ((r == Result::dependent()) &&
+            (n == Result::dependent())) // try and sat all this level
+          return optimizeSatDep(nodes, d, maxDepth, r & n);
+        return r & n;
       }
     }
-    return breakGraph(nodes, d); // TODO
+    return breakGraph(nodes, d);
   }
   /// solveGraph(ScheduledNode *nodes, unsigned depth, bool satisfyDeps)
   /// solve the `nodes` graph at depth `d`
@@ -541,13 +564,12 @@ private:
   /// this level
   ///
   [[nodiscard]] auto solveGraph(ScheduledNode *nodes, unsigned depth,
-                                bool satisfyDeps) -> Optional<size_t> {
+                                bool satisfyDeps) -> Result {
     CoefCounts counts{calcCoefs(nodes, depth)};
     return solveGraph(nodes, depth, satisfyDeps, counts);
   }
   [[nodiscard]] auto solveGraph(ScheduledNode *nodes, unsigned depth,
-                                bool satisfyDeps, CoefCounts counts)
-    -> Optional<size_t> {
+                                bool satisfyDeps, CoefCounts counts) -> Result {
     if (counts.numLambda == 0) {
       setSchedulesIndependent(nodes, depth);
       return checkEmptySatEdges(nodes, depth);
@@ -692,7 +714,7 @@ private:
   }
   [[nodiscard]] auto deactivateSatisfiedEdges(ScheduledNode *nodes,
                                               unsigned depth, CoefCounts counts,
-                                              Simplex::Solution sol) -> size_t {
+                                              Simplex::Solution sol) -> Result {
     if (allZero(sol[_(begin, counts.numBounding + counts.numActiveEdges)]))
       return checkEmptySatEdges(nodes, depth);
     ptrdiff_t w = 0, u = counts.numActiveEdges;
@@ -709,14 +731,14 @@ private:
     // lost anything! The idea of trying to consolidate dependencies into one
     // loop is, if we must already execute this loop in order, we should try and
     // cover as many dependencies at that time as possible.
-    size_t deactivated = 0;
+    Result result{Result::Independent};
     for (ScheduledNode *outNode : nodes->getVertices()) {
       for (Dependence *edge : outNode->inputEdges()) {
         if (edge->isInactive(depth)) continue;
         Col uu = u + edge->getNumDynamicBoundingVar();
         if ((sol[w++] != 0) || (anyNEZero(sol[_(u, uu)]))) {
           edge->setSatLevelLP(depth);
-          deactivated = 1;
+          result = Result::dependent();
         } else {
           ScheduledNode *inNode = edge->input()->getNode();
           DensePtrMatrix<int64_t> inPhi = inNode->getPhi()(_(0, depth + 1), _),
@@ -729,9 +751,9 @@ private:
         u = ptrdiff_t(uu);
       }
     }
-    return deactivated << depth;
+    return result;
   }
-  auto checkEmptySatEdges(ScheduledNode *nodes, unsigned depth) -> size_t {
+  auto checkEmptySatEdges(ScheduledNode *nodes, unsigned depth) -> Result {
     for (ScheduledNode *outNode : nodes->getVertices()) {
       for (Dependence *edge : outNode->inputEdges()) {
         if (edge->isSat(depth)) continue;
@@ -744,7 +766,7 @@ private:
                             outNode->getOffset(), outPhi);
       }
     }
-    return 0;
+    return Result::independent();
   }
   using Backup =
     math::ResizeableView<std::pair<poly::AffineSchedule, ScheduledNode *>,
@@ -776,8 +798,8 @@ private:
   }
   // NOLINTNEXTLINE(misc-no-recursion)
   [[nodiscard]] auto optimizeSatDep(ScheduledNode *nodes, unsigned depth,
-                                    unsigned maxDepth, size_t depSatLevel)
-    -> size_t {
+                                    unsigned maxDepth, Result backupResult)
+    -> Result {
     // if we're here, there are satisfied deps in both
     // depSatLevel and depSatNest
     // what we want to know is, can we satisfy all the deps
@@ -787,27 +809,26 @@ private:
     // we don't create long lasting allocations
     auto scope = allocator.scope();
     auto [old, counts] = stashFit(nodes, depth);
-    if (Optional<size_t> depSat = solveGraph(nodes, depth, true, counts))
-      if (Optional<size_t> depSatN = optimize(nodes, depth + 1, maxDepth))
-        return *depSat |= *depSatN;
+    if (Result depSat = solveGraph(nodes, depth, true, counts))
+      if (Result depSatN = optimize(nodes, depth + 1, maxDepth))
+        return depSat & depSatN;
     popStash(old);
-    return depSatLevel;
+    return backupResult;
   }
   // NOLINTNEXTLINE(misc-no-recursion)
-  auto tryFuse(ScheduledNode *n0, ScheduledNode *n1, unsigned depth)
-    -> Optional<size_t> {
+  auto tryFuse(ScheduledNode *n0, ScheduledNode *n1, unsigned depth) -> Result {
     auto s = allocator.scope();
     auto old0 = stashFitCore(n0);
     auto old1 = stashFitCore(n1);
     ScheduledNode *n = n0->fuse(n1);
-    if (Optional<size_t> depSat = solveSplitGraph(n, depth))
-      if (Optional<size_t> depSatN = optimize(n, depth + 1, depth + 1))
-        return *depSat |= *depSatN;
+    if (Result depSat = solveSplitGraph(n, depth))
+      if (Result depSatN = optimize(n, depth + 1, depth + 1))
+        return depSat & depSatN;
     popStash(old0);
     popStash(old1);
-    return {};
+    return Result::failure();
   }
-  auto satisfySplitEdges(ScheduledNode *nodes, unsigned depth) -> size_t {
+  auto satisfySplitEdges(ScheduledNode *nodes, unsigned depth) -> Result {
     auto s = allocator.scope();
     dict::aset<ScheduledNode *> graph{&allocator};
     for (ScheduledNode *node : nodes->getVertices()) graph.insert(node);
@@ -820,19 +841,16 @@ private:
         }
       }
     }
-    return (found) ? size_t(1) << depth : size_t(0);
+    return (found) ? Result::dependent() : Result::independent();
   }
-  auto solveSplitGraph(ScheduledNode *nodes, unsigned depth)
-    -> Optional<size_t> {
-    size_t sat = satisfySplitEdges(nodes, depth);
-    Optional<size_t> opt =
-      solveGraph(nodes, depth, false, calcCoefs(nodes, depth));
-    if (!opt) return {};
-    return *opt | sat;
+  auto solveSplitGraph(ScheduledNode *nodes, unsigned depth) -> Result {
+    Result sat = satisfySplitEdges(nodes, depth);
+    Result opt = solveGraph(nodes, depth, false, calcCoefs(nodes, depth));
+    if (!opt) return opt;
+    return opt & sat;
   }
   // NOLINTNEXTLINE(misc-no-recursion)
-  [[nodiscard]] auto breakGraph(ScheduledNode *node, unsigned d)
-    -> Optional<size_t> {
+  [[nodiscard]] auto breakGraph(ScheduledNode *node, unsigned d) -> Result {
     // Get a top sorting of SCC's; because we couldn't solve the graph
     // with these dependencies fused, we'll try splitting them.
     ScheduledNode *components =
@@ -842,10 +860,10 @@ private:
     // We split all of them, solve independently,
     // and then try to fuse again after if/where optimal schedules
     // allow it.
-    size_t satd{0};
+    Result res{Result::Independent};
     for (auto *g : components->getComponents())
-      if (Optional<size_t> sat = solveSplitGraph(g, d)) satd |= *sat;
-      else return {};
+      if (Result sat = solveSplitGraph(g, d)) res &= sat;
+      else return Result::failure();
     // We find we can successfully solve by splitting all legal splits.
     // We could try and implement a better algorithm in the future, but for now
     // we take a single greedy pass over the components.
@@ -857,7 +875,7 @@ private:
     ScheduledNode *seed = *it;
     int64_t unfusedOffset = 0;
     for (auto e = decltype(range)::end(); ++it != e;) {
-      if (auto opt = tryFuse(seed, *it, d)) satd |= *opt;
+      if (auto opt = tryFuse(seed, *it, d)) res &= opt;
       else {
         for (ScheduledNode *v : seed->getVertices())
           v->getFusionOmega(d) = unfusedOffset;
@@ -867,7 +885,7 @@ private:
     }
     for (ScheduledNode *v : seed->getVertices())
       v->getFusionOmega(d) = unfusedOffset;
-    return satd;
+    return res;
   }
   /// For now, we instantiate a dense simplex specifying the full problem.
   ///
