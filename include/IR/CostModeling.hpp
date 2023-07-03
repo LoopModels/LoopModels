@@ -204,19 +204,46 @@ public:
     children[idx]->addNode(salloc, lalloc, node);
   }
   constexpr auto getChildren() -> Vec<LoopTree *> { return children; }
+  constexpr auto getLoop() -> IR::Loop * { return loop; }
 };
-auto topologicalSort(LoopTree *root, unsigned depth) -> IR::Node * {
-
+auto topologicalSort(IR::Loop *root, unsigned depth) -> IR::Node * {
+  // basic plan for the top sort:
+  // We iterate across all users, once all of node's users have been added,
+  // we push it to the front of the list. Thus, we get a top-sorted list.
+  // We're careful about the order, so that this top sort should LICM all the
+  // addresses that it can.
+  //
+  // We must push the exit before the root (as the exit depends on the loop, and
+  // we iterate users).
+  // The exit doesn't use any in this block, so we begin by trying to push any
+  // instructions that don't depend on the loop. If we fail to push them (i.e.,
+  // because they have uses that do depend on the loop), then they get added to
+  // a revisit queue. Any instructions we are able to push-front before we push
+  // the exit, implicitly happen after the exit, i.e. they have been LICMed into
+  // the exit block. We unvisit the revisit-queue, and add them back to the main
+  // worklist. Then, we proceed with a depth-first topological sort normally
+  // (iterating over uses, pushing to the front), starting with the loop root,
+  // so that it gets pushed to the front as soon as possible. That is, so that
+  // it happens as late as possible Any instructions that get pushed to the
+  // front afterwards have been LICMed into the loop pre-header.
   return nullptr;
 }
 // NOLINTNEXTLINE(misc-no-recursion)
-auto buildGraph(LoopTree *root, unsigned depth) -> IR::Node * {
+auto buildGraph(IR::Loop *root, unsigned depth) -> IR::Node * {
   // We build the instruction graph, via traversing the tree, and then
   // top sorting as we recurse out
-  for (LoopTree *child : root->getChildren()) buildGraph(child, depth + 1);
+  for (LoopTree *child : root->getSubLoops()) buildGraph(child, depth + 1);
   return topologicalSort(root, depth);
 }
 
+auto addAddrToGraph(Arena<> *salloc, Arena<> *lalloc, lp::ScheduledNode *nodes)
+  -> IR::Loop * {
+  auto s = salloc->scope();
+  LoopTree *root = LoopTree::root(salloc, lalloc);
+  for (lp::ScheduledNode *node : nodes->getAllVertices())
+    root->addNode(salloc, lalloc, node);
+  return root->getLoop();
+}
 /// Optimize the schedule
 void optimize(IR::Cache &instr, Arena<> *lalloc, lp::ScheduledNode *nodes,
               IR::Addr *addr) {
@@ -225,13 +252,8 @@ void optimize(IR::Cache &instr, Arena<> *lalloc, lp::ScheduledNode *nodes,
   /// using the fusion omegas. We allocate it with the longer lived `instr`
   /// alloc, so we can checkpoint it here, and use alloc for other IR nodes.
   Arena<> *salloc = instr.getAllocator();
-  {
-    auto s = salloc->scope();
-    LoopTree *root = LoopTree::root(salloc, lalloc);
-    for (lp::ScheduledNode *node : nodes->getAllVertices())
-      root->addNode(salloc, lalloc, node);
-    IR::Node *N = buildGraph(root, 0);
-  }
+
+  IR::Node *N = buildGraph(addAddrToGraph(salloc, lalloc, nodes), 0);
 }
 
 /// How should the IR look?
