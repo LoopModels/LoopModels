@@ -445,7 +445,7 @@ $(function() {
 <div class="line"><a name="l00385"></a><span class="lineno">  385</span>&#160;    <span class="keywordflow">return</span> loopNest;</div>
 <div class="line"><a name="l00386"></a><span class="lineno">  386</span>&#160;  }</div>
 <div class="line"><a name="l00387"></a><span class="lineno">  387</span>&#160; </div>
-<div class="line"><a name="l00388"></a><span class="lineno">  388</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getOffset() const -&gt; const int64_t * {</div>
+<div class="line"><a name="l00388"></a><span class="lineno">  388</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getOffset() const -&gt; int64_t * {</div>
 <div class="line"><a name="l00389"></a><span class="lineno">  389</span>&#160;    <span class="keywordflow">return</span> offsets;</div>
 <div class="line"><a name="l00390"></a><span class="lineno">  390</span>&#160;  }</div>
 <div class="line"><a name="l00391"></a><span class="lineno">  391</span>&#160; </div>
@@ -461,11 +461,11 @@ $(function() {
 <div class="line"><a name="l00401"></a><span class="lineno">  401</span>&#160;    <span class="keywordflow">return</span> d &lt; rank;</div>
 <div class="line"><a name="l00402"></a><span class="lineno">  402</span>&#160;  }</div>
 <div class="line"><a name="l00403"></a><span class="lineno">  403</span>&#160; </div>
-<div class="line"><a name="l00404"></a><span class="lineno">  404</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> updatePhiOffset(ptrdiff_t p) -&gt; ptrdiff_t {</div>
+<div class="line"><a name="l00404"></a><span class="lineno">  404</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> updatePhiOffset(<span class="keywordtype">unsigned</span> p) -&gt; <span class="keywordtype">unsigned</span> {</div>
 <div class="line"><a name="l00405"></a><span class="lineno">  405</span>&#160;    phiOffset = p;</div>
 <div class="line"><a name="l00406"></a><span class="lineno">  406</span>&#160;    <span class="keywordflow">return</span> p + getNumLoops();</div>
 <div class="line"><a name="l00407"></a><span class="lineno">  407</span>&#160;  }</div>
-<div class="line"><a name="l00408"></a><span class="lineno">  408</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> updateOmegaOffset(ptrdiff_t o) -&gt; ptrdiff_t {</div>
+<div class="line"><a name="l00408"></a><span class="lineno">  408</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> updateOmegaOffset(<span class="keywordtype">unsigned</span> o) -&gt; <span class="keywordtype">unsigned</span> {</div>
 <div class="line"><a name="l00409"></a><span class="lineno">  409</span>&#160;    omegaOffset = o;</div>
 <div class="line"><a name="l00410"></a><span class="lineno">  410</span>&#160;    <span class="keywordflow">return</span> ++o;</div>
 <div class="line"><a name="l00411"></a><span class="lineno">  411</span>&#160;  }</div>
