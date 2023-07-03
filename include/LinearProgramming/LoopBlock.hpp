@@ -155,36 +155,22 @@ public:
     // first, we peel loops for which affine repr failed
     if (unsigned numReject = tr.rejectDepth) {
       auto *SE = cache.getScalarEvolution();
-      for (Addr *stow = tr.stow; stow;
-           stow = llvm::cast_or_null<Addr>(stow->getNext()))
-        stow->peelLoops(cache.getAllocator(), numReject, SE);
-      for (Addr *load = tr.load; load;
-           load = llvm::cast_or_null<Addr>(load->getNext()))
-        load->peelLoops(cache.getAllocator(), numReject, SE);
+      for (Addr *addr : tr.getAddr())
+        addr->peelLoops(cache.getAllocator(), numReject, SE);
     }
     // fill the dependence edges between memory accesses
-    for (Addr *stow = tr.stow; stow;) {
-      // TODO: check we don't have mutually exclusive predicates
-      Addr *next = llvm::cast_or_null<Addr>(stow->getNext());
+    for (Addr *stow : tr.getStores()) {
+      Addr *next = llvm::cast_or_null<Addr>(stow->getNextAddr());
       for (Addr *other = next; other;
-           other = llvm::cast_or_null<Addr>(other->getNext()))
+           other = llvm::cast_or_null<Addr>(other->getNextAddr()))
         Dependence::check(&allocator, stow, other);
-      for (Addr *other = tr.load; other;
-           other = llvm::cast_or_null<Addr>(other->getNext()))
-        Dependence::check(&allocator, stow, other);
-      stow = next;
     }
     // link stores with loads connected through registers
     ScheduledNode *nodes{nullptr};
-    for (Addr *stow = tr.stow; stow;
-         stow = llvm::cast_or_null<Addr>(stow->getNext()))
+    for (Addr *stow : tr.getStores())
       nodes = addScheduledNode(cache, stow)->setOrigNext(nodes);
-    unsigned maxDepth = 0;
-    for (ScheduledNode *node : nodes->getVertices()) {
-      maxDepth = std::max(maxDepth, node->getNumLoops());
-      shiftOmega(node);
-    }
-    return optOrth(nodes, maxDepth) ? nodes : nullptr;
+    for (ScheduledNode *node : nodes->getVertices()) shiftOmega(node);
+    return optOrth(nodes, tr.getMaxDepth()) ? nodes : nullptr;
   }
   void clear() { allocator.reset(); }
   [[nodiscard]] constexpr auto getAllocator() -> Arena<> * {

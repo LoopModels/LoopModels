@@ -115,6 +115,9 @@ struct TreeResult {
   [[nodiscard]] constexpr auto getLoop() const -> poly::Loop * {
     return (addr) ? addr->getLoop() : nullptr;
   }
+  [[nodiscard]] constexpr auto getMaxDepth() const -> unsigned {
+    return maxDepth - rejectDepth;
+  }
 
 private:
   static constexpr auto concatenate(Compute *A, Compute *B) -> Compute * {
