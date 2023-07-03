@@ -83,7 +83,6 @@ public:
     VK_Load,
     VK_Stow, // used for ordered comparisons; all `Addr` types <= Stow
     VK_Loop,
-    VK_Exit,
     VK_CVal,
     VK_Cint,
     VK_Bint,

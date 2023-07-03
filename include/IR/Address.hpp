@@ -125,6 +125,28 @@ class Addr : public Instruction {
       basePointer(arrayPtr), instr(user){};
   /// Constructor for 0 dimensional memory access
 
+  [[nodiscard]] constexpr auto getIntMemory() -> int64_t * { return mem; }
+  [[nodiscard]] constexpr auto getIntMemory() const -> int64_t * {
+    return const_cast<int64_t *>(mem);
+  }
+  // memory layout:
+  // 0: denominator
+  // 1: offset omega
+
+  constexpr auto getOffSym() -> int64_t * { return offSym; }
+  [[nodiscard]] constexpr auto indMatPtr() const -> int64_t * {
+    return getIntMemory() + 1 + getArrayDim();
+  }
+  [[nodiscard]] auto getSymbolicOffsets() -> MutPtrVector<const llvm::SCEV *> {
+    return {syms + numDim, numDynSym};
+  }
+  [[nodiscard]] constexpr auto offsetMatrix() -> MutDensePtrMatrix<int64_t> {
+    return {offSym, DenseDims{getArrayDim(), numDynSym}};
+  }
+  inline constexpr void setEdgeIn(Dependence *);
+  inline constexpr void setEdgeOut(Dependence *);
+
+public:
   constexpr void rotate(NotNull<poly::Loop> explicitLoop,
                         SquarePtrMatrix<int64_t> Pinv, int64_t denom,
                         PtrVector<int64_t> omega, int64_t *offsets) {
@@ -162,28 +184,6 @@ class Addr : public Instruction {
     // use `mStar` to update offsetOmega`
     offsetOmega -= mStar * omega;
   }
-  [[nodiscard]] constexpr auto getIntMemory() -> int64_t * { return mem; }
-  [[nodiscard]] constexpr auto getIntMemory() const -> int64_t * {
-    return const_cast<int64_t *>(mem);
-  }
-  // memory layout:
-  // 0: denominator
-  // 1: offset omega
-
-  constexpr auto getOffSym() -> int64_t * { return offSym; }
-  [[nodiscard]] constexpr auto indMatPtr() const -> int64_t * {
-    return getIntMemory() + 1 + getArrayDim();
-  }
-  [[nodiscard]] auto getSymbolicOffsets() -> MutPtrVector<const llvm::SCEV *> {
-    return {syms + numDim, numDynSym};
-  }
-  [[nodiscard]] constexpr auto offsetMatrix() -> MutDensePtrMatrix<int64_t> {
-    return {offSym, DenseDims{getArrayDim(), numDynSym}};
-  }
-  inline constexpr void setEdgeIn(Dependence *);
-  inline constexpr void setEdgeOut(Dependence *);
-
-public:
   [[nodiscard]] constexpr auto eachAddr() {
     return utils::ListRange{this, [](Addr *a) { return a->getNextAddr(); }};
   }

@@ -54,7 +54,7 @@ class CPURegisterFile {
     if (hasAVX512(C, TTI)) return 7; // 7, because k0 is reserved for unmasked
     return 0;
   }
-  // returns vector width in bits
+  // returns vector width in bits, ignoring mprefer-vector-width
   static auto estimateMaximumVectorWidth(llvm::LLVMContext &C,
                                          const llvm::TargetTransformInfo &TTI)
     -> uint8_t {
@@ -143,50 +143,23 @@ template <typename T> using Vec = math::ResizeableView<T, unsigned>;
 // to correspond with max depth?
 // Because we parse in reverse order, we have max possible depth of
 // `ScheduledNode`s using it at time we create.
-class NodeAlloc {
-  Arena<> *alloc;
-  IR::Addr *freeList{nullptr};
-
-public:
-  constexpr NodeAlloc(Arena<> *alloc_) : alloc(alloc_) {}
-  constexpr auto getAllocator() const -> Arena<> * { return alloc; }
-  constexpr auto allocateAddr(unsigned numLoops, unsigned dim) -> IR::Addr * {
-    size_t memSz = IR::Addr::intMemNeeded(numLoops, dim);
-    for (IR::Addr *a = freeList; a; a = llvm::cast<IR::Addr>(a->getNext())) {
-      if (a->intMemNeeded() >= memSz) {
-        if (a == freeList) freeList = llvm::cast<IR::Addr>(a->getNext());
-        a->removeFromList();
-        return a;
-      }
-    }
-    return (IR::Addr *)alloc->allocate(memSz * sizeof(int64_t) +
-                                       sizeof(IR::Addr));
-  }
-  constexpr auto newLoop(unsigned depth) -> IR::Loop * {
-    return alloc->create<IR::Loop>(depth);
-  }
-  constexpr void free(IR::Addr *addr) {
-    addr->setNext(freeList);
-    freeList = addr;
-  }
-};
 
 /// LoopTree
 /// A tree of loops, with an indexable vector of IR::Loop*s, to facilitate
 /// construction of the IR::Loop graph, from the fusion omegas
 class LoopTree {
   // The root of this subtree
-  IR::Loop *loop;
+  NotNull<IR::Loop> loop;
   LoopTree *parent{nullptr}; // do we need this?
   Vec<LoopTree *> children{};
   unsigned depth{0};
   // We do not need to know the previous loop, as dependencies between
   // the `Addr`s and instructions will determine the ordering.
-  LoopTree(NodeAlloc nalloc, LoopTree *parent_)
-    : parent(parent_), depth(parent_->depth) {
+  constexpr LoopTree(Arena<> *lalloc, LoopTree *parent_)
+    : loop{lalloc->create<IR::Loop>(depth)}, parent(parent_),
+      depth(parent_->depth) {
     // allocate the root node, and connect it to parent's node, as well as
     // previous loop of the same level.
-    loop = nalloc.newLoop(depth);
     loop->setParent(parent_->loop);
   }
   constexpr LoopTree(Arena<> *lalloc) : loop{lalloc->create<IR::Loop>(0)} {}
@@ -197,17 +170,20 @@ public:
   }
   // salloc: Short lived allocator, for the indexable `Vec`s
   // Longer lived allocator, for the IR::Loop nodes
-  void addNode(Arena<> *salloc, NodeAlloc nalloc, lp::ScheduledNode *node) {
+  void addNode(Arena<> *salloc, Arena<> *lalloc, lp::ScheduledNode *node) {
     if (node->getNumLoops() == depth) {
       // Then it belongs here, and we add loop's dependencies.
       // We only need to add deps to support SCC/top sort now.
       // We also apply the rotation here.
       // For dependencies in SCC iteration, only indvar deps get iterated.
       auto [Pinv, denom] = math::NormalForm::scaledInv(node->getPhi());
-      NotNull<poly::Loop> affloop = node->getLoopNest()->rotate(
-        nalloc.getAllocator(), Pinv, node->getOffset());
-      // NOTE: if max num loops <= 1, w
-      for (IR::Addr *m : node->localAddr()) m->setLoopNest(affloop);
+      NotNull<poly::Loop> affloop =
+        node->getLoopNest()->rotate(lalloc, Pinv, node->getOffset());
+      for (IR::Addr *m : node->localAddr()) {
+        m->rotate(affloop, Pinv, denom, node->getOffsetOmega(),
+                  node->getOffset());
+        loop->insertAfter(m);
+      }
       return;
     }
     // we need to find the correct sub-loop tree to which to add it
@@ -222,23 +198,40 @@ public:
       // allocate new nodes and resize
       children.resize(idx + 1);
       for (ptrdiff_t i = numChildren; i < idx + 1; ++i)
-        children[i] = new (salloc) LoopTree{nalloc, this};
+        children[i] = new (salloc) LoopTree{lalloc, this};
       numChildren = idx + 1;
     }
-    children[idx]->addNode(salloc, nalloc, node);
+    children[idx]->addNode(salloc, lalloc, node);
   }
+  constexpr auto getChildren() -> Vec<LoopTree *> { return children; }
 };
+auto topologicalSort(LoopTree *root, unsigned depth) -> IR::Node * {
+
+  return nullptr;
+}
+// NOLINTNEXTLINE(misc-no-recursion)
+auto buildGraph(LoopTree *root, unsigned depth) -> IR::Node * {
+  // We build the instruction graph, via traversing the tree, and then
+  // top sorting as we recurse out
+  for (LoopTree *child : root->getChildren()) buildGraph(child, depth + 1);
+  return topologicalSort(root, depth);
+}
 
 /// Optimize the schedule
-void optimize(IR::Cache &instr, Arena<> *lalloc, lp::ScheduledNode *nodes) {
+void optimize(IR::Cache &instr, Arena<> *lalloc, lp::ScheduledNode *nodes,
+              IR::Addr *addr) {
   /// we must build the IR::Loop
   /// Initially, to help, we use a nested vector, so that we can index into it
   /// using the fusion omegas. We allocate it with the longer lived `instr`
   /// alloc, so we can checkpoint it here, and use alloc for other IR nodes.
   Arena<> *salloc = instr.getAllocator();
-  LoopTree *root = LoopTree::root(salloc, lalloc);
-  for (lp::ScheduledNode *node : nodes->getAllVertices())
-    root->addNode(salloc, lalloc, node);
+  {
+    auto s = salloc->scope();
+    LoopTree *root = LoopTree::root(salloc, lalloc);
+    for (lp::ScheduledNode *node : nodes->getAllVertices())
+      root->addNode(salloc, lalloc, node);
+    IR::Node *N = buildGraph(root, 0);
+  }
 }
 
 /// How should the IR look?

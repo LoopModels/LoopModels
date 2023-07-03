@@ -385,7 +385,7 @@ public:
     return loopNest;
   }
 
-  [[nodiscard]] constexpr auto getOffset() const -> const int64_t * {
+  [[nodiscard]] constexpr auto getOffset() const -> int64_t * {
     return offsets;
   }
 
@@ -401,11 +401,11 @@ public:
     return d < rank;
   }
 
-  [[nodiscard]] constexpr auto updatePhiOffset(ptrdiff_t p) -> ptrdiff_t {
+  [[nodiscard]] constexpr auto updatePhiOffset(unsigned p) -> unsigned {
     phiOffset = p;
     return p + getNumLoops();
   }
-  [[nodiscard]] constexpr auto updateOmegaOffset(ptrdiff_t o) -> ptrdiff_t {
+  [[nodiscard]] constexpr auto updateOmegaOffset(unsigned o) -> unsigned {
     omegaOffset = o;
     return ++o;
   }
