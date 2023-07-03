@@ -114,10 +114,6 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
     if (tr.accept(0)) optimize(tr);
   }
 
-  // void addInstructions(IR::Addr *addr, llvm::Loop *L) {
-  //   addr->forEach([&, L](Addr *a) { instructions.addParents(a, L); });
-  // }
-
   /// parse a from `H` to `E`, nested within loop `L`
   /// we try to form a chain of blocks from `H` to `E`, representing
   /// contiguous control flow. If we have
@@ -143,7 +139,8 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
       IR::Predicate::Map::descend(shortAllocator(), instructions, H, E, L);
     if (!predMapAbridged) return {};
     // Now we need to create Addrs
-    size_t depth = omega.size() - 1;
+    unsigned depth = omega.size() - 1;
+    tr.maxDepth = std::max(tr.maxDepth, depth);
     for (auto &[BB, P] : *predMapAbridged) { // rev order
       for (llvm::Instruction &J : llvm::reverse(*BB)) {
         if (L) assert(L->contains(&J));
@@ -158,13 +155,13 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
           else return {};
         else continue;
         if (ptr == nullptr) return {};
-        auto [N, trret] = instructions.getArrayRef(&J, L, ptr, tr);
+        auto [V, trret] = instructions.getArrayRef(&J, L, ptr, tr);
         tr = trret;
         if (tr.reject(depth)) return tr;
-        IR::Addr *A = llvm::cast<IR::Addr>(A);
+        IR::Addr *A = llvm::cast<IR::Addr>(V);
         // if we didn't reject, it must have been an `Addr`
         A->setFusionOmega(omega);
-        instructions.addPredicate(A, P, &*predMapAbridged);
+        instructions.addPredicate(A, P, &predMapAbridged.get_value());
         A->setLoopNest(AL);
       }
     }
@@ -188,8 +185,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
     NotNull<poly::Loop> AL =
       poly::Loop::construct(lalloc, L, nwr.visit(BT), *SE);
     IR::TreeResult tr = parseExitBlocks(L);
-    tr.rejectDepth =
-      std::max(tr.rejectDepth, size_t(omega.size() - AL->getNumLoops()));
+    tr.rejectDepth = std::max(tr.rejectDepth, omega.size() - AL->getNumLoops());
     omega.push_back(0); // we start with 0 at the end, walking backwards
     tr = parseBlocks(L->getHeader(), L->getLoopLatch(), L, omega, AL, tr);
     omega.pop_back();

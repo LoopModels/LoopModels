@@ -38,7 +38,7 @@ using utils::NotNull, utils::invariant, utils::Arena, containers::UList;
 ///  4.   for j in J // VK_Loop
 ///  5.     z = b[j]
 ///  6.     e = foo(x, y, z)
-///  7.     c[j,i] = e
+///  7.     c[j,i] = e // VK_Exit
 ///  8.   q = 3y - c[i,i]
 ///  9.   y2 = y*y
 /// 10.   w = y2 - q
@@ -47,14 +47,14 @@ using utils::NotNull, utils::invariant, utils::Arena, containers::UList;
 /// 13.     e = bar(z, y2)
 /// 14.     f = a[i]
 /// 15.     g = baz(e, f, w)
-/// 16.     a[i] = g
+/// 16.     a[i] = g // VK_Exit
 /// 17.   z = a[i]
 /// 18.   e = p[]
 /// 19.   f = z + e
-/// 20.   p[] = f
+/// 20.   p[] = f // VK_Exit
 /// 21. z = p[]
 /// 22. e = z*z
-/// 23. p[] = z
+/// 23. p[] = z // VK_Exit
 ///
 /// Same level -> means getNext()
 /// Sub-level \-> means getChild()
@@ -83,6 +83,7 @@ public:
     VK_Load,
     VK_Stow, // used for ordered comparisons; all `Addr` types <= Stow
     VK_Loop,
+    VK_Exit,
     VK_CVal,
     VK_Cint,
     VK_Bint,

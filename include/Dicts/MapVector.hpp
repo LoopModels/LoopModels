@@ -77,4 +77,5 @@ public:
   auto count(const K &key) const -> size_t { return map.count(key); }
   auto contains(const K &key) const -> bool { return map.contains(key); }
 };
+
 } // namespace poly::dict

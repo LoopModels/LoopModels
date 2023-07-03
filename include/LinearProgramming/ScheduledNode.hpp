@@ -156,10 +156,10 @@ public:
   };
   struct NextAddr {
     constexpr auto operator()(Addr *a) const -> Addr * {
-      return llvm::cast_or_null<Addr>(a->getChild());
+      return llvm::cast_or_null<Addr>(a->getNext());
     }
     constexpr auto operator()(const Addr *a) const -> const Addr * {
-      return llvm::cast_or_null<Addr>(a->getChild());
+      return llvm::cast_or_null<Addr>(a->getNext());
     }
   };
   struct NextInput {
@@ -231,7 +231,7 @@ public:
         [](ScheduledNode *n) -> Addr * { return n->getStore(); }},
 
       [](Addr *a) -> utils::ListRange<Addr, NextAddr, utils::Identity> {
-        return utils::ListRange{llvm::cast<Addr>(a->getChild()), NextAddr{}};
+        return utils::ListRange{llvm::cast<Addr>(a->getNext()), NextAddr{}};
       }};
   }
   // all nodes that are memory inputs to this one; i.e. all parents

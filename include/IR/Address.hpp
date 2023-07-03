@@ -5,6 +5,7 @@
 #include "IR/Users.hpp"
 #include "Polyhedra/Loops.hpp"
 #include "Support/OStream.hpp"
+#include "Utilities/ListRanges.hpp"
 #include <Containers/UnrolledList.hpp>
 #include <Math/Array.hpp>
 #include <Math/Comparisons.hpp>
@@ -87,6 +88,7 @@ class Addr : public Instruction {
   [[no_unique_address]] int64_t *offSym{nullptr};
   [[no_unique_address]] const llvm::SCEV **syms;
   [[no_unique_address]] Value *predicate{nullptr};
+  [[no_unique_address]] Addr *origNext{nullptr};
   [[no_unique_address]] unsigned numDim{0}, numDynSym{0};
 #if !defined(__clang__) && defined(__GNUC__)
 #pragma GCC diagnostic push
@@ -123,44 +125,51 @@ class Addr : public Instruction {
       basePointer(arrayPtr), instr(user){};
   /// Constructor for 0 dimensional memory access
 
-  constexpr Addr(NotNull<poly::Loop> explicitLoop, NotNull<Addr> ma,
-                 SquarePtrMatrix<int64_t> Pinv, int64_t denom,
-                 PtrVector<int64_t> omega, bool isStr, int64_t *offsets)
-    : Instruction(isStr ? VK_Stow : VK_Load, unsigned(Pinv.numCol())),
-      basePointer(ma->getArrayPointer()), loop(explicitLoop),
-      instr(ma->getInstruction()), offSym(ma->getOffSym()), syms(ma->syms) {
-    DensePtrMatrix<int64_t> M{ma->indexMatrix()};    // aD x nLma
-    MutDensePtrMatrix<int64_t> mStar{indexMatrix()}; // aD x nLp
-    // M is implicitly padded with zeros, nLp >= nLma
-    unsigned nLma = ma->getNumLoops();
-    invariant(nLma <= depth);
-    invariant(ptrdiff_t(nLma), ptrdiff_t(M.numRow()));
-    mStar << M * Pinv(_(0, nLma), _);
+  constexpr void rotate(NotNull<poly::Loop> explicitLoop,
+                        SquarePtrMatrix<int64_t> Pinv, int64_t denom,
+                        PtrVector<int64_t> omega, int64_t *offsets) {
+    loop = explicitLoop;
+    // we are updating in place; we may now have more loops than we did before
+    unsigned oldNumLoops = getNumLoops();
+    DensePtrMatrix<int64_t> M{indexMatrix()}; // aD x nLma
+    MutPtrVector<int64_t> offsetOmega{getOffsetOmega()};
+    this->depth = unsigned(Pinv.numCol());
+    MutDensePtrMatrix<int64_t> mStar{indexMatrix()};
+    // M is implicitly padded with zeros, newNumLoops >= oldNumLoops
+    invariant(oldNumLoops <= depth);
+    invariant(ptrdiff_t(oldNumLoops), ptrdiff_t(M.numRow()));
     getDenominator() = denom;
-    getOffsetOmega() << ma->getOffsetOmega() - mStar * omega;
-    if (offsets) getOffsetOmega() -= M * PtrVector<int64_t>{offsets, nLma};
+    // layout goes offsetOmega, indexMatrix, fusionOmega
+    // When we call `rotate`, we don't need fusionOmega anymore, because
+    // placement represented via the `ScheduledNode` and then IR graph
+    // Thus, we only need to update indexMatrix and offsetOmega
+    // offsetOmegas exactly alias, so we have no worries there.
+    // For `indexMatrix`, we use the unused `fusionOmega` space
+    // as a temporary, to avoid the aliasing problem.
+    //
+    // Use `M` before updating it, to update `offsetOmega`
+    if (offsets) offsetOmega -= M * PtrVector<int64_t>{offsets, oldNumLoops};
+    // update `M` into `mStar`
+    // mStar << M * Pinv(_(0, oldNumLoops), _);
+    MutPtrVector<int64_t> buff{getFusionOmega()[_(0, math::last)]};
+    invariant(buff.size(), unsigned(depth));
+    for (ptrdiff_t d = getArrayDim(); d--;) {
+      buff << 0;
+      for (ptrdiff_t k = 0; k < oldNumLoops; ++k) buff += M(d, k) * Pinv(k, _);
+      mStar(d, _) << buff;
+    }
+
+    // use `mStar` to update offsetOmega`
+    offsetOmega -= mStar * omega;
   }
   [[nodiscard]] constexpr auto getIntMemory() -> int64_t * { return mem; }
   [[nodiscard]] constexpr auto getIntMemory() const -> int64_t * {
     return const_cast<int64_t *>(mem);
   }
-  // [[nodiscard]] constexpr auto getAddrMemory() const -> Addr ** {
-  //   const void *m =
-  //     mem +
-  //     (1 + getArrayDim() + (getArrayDim() * getNumLoops())) *
-  //     sizeof(int64_t);
-  //   // const void *m = addr_;
-  //   void *p = const_cast<void *>(static_cast<const void *>(m));
-  //   return (Addr **)p;
-  // }
-  // [[nodiscard]] constexpr auto getDDepthMemory() const -> uint8_t * {
-  //   const void *m =
-  //     mem +
-  //     (1 + getArrayDim() + (getArrayDim() * getNumLoops())) * sizeof(int64_t)
-  //     + (numMemInputs + numDirectEdges + numMemOutputs) * sizeof(Addr *);
-  //   void *p = const_cast<void *>(static_cast<const void *>(m));
-  //   return (uint8_t *)p;
-  // }
+  // memory layout:
+  // 0: denominator
+  // 1: offset omega
+
   constexpr auto getOffSym() -> int64_t * { return offSym; }
   [[nodiscard]] constexpr auto indMatPtr() const -> int64_t * {
     return getIntMemory() + 1 + getArrayDim();
@@ -175,13 +184,31 @@ class Addr : public Instruction {
   inline constexpr void setEdgeOut(Dependence *);
 
 public:
+  [[nodiscard]] constexpr auto eachAddr() {
+    return utils::ListRange{this, [](Addr *a) { return a->getNextAddr(); }};
+  }
+  constexpr auto getNextAddr() -> Addr * { return origNext; }
+  [[nodiscard]] constexpr auto getNextAddr() const -> const Addr * {
+    return origNext;
+  }
+  constexpr auto insertNextAddr(Addr *a) -> Addr * {
+    if (a) a->origNext = origNext;
+    origNext = a;
+    return this;
+  }
+  constexpr auto setNextAddr(Addr *a) -> Addr * {
+    origNext = a;
+    return this;
+  }
   [[nodiscard]] static constexpr auto intMemNeeded(size_t numLoops, size_t dim)
     -> size_t {
-    // 1 for denom
-    // dim for OffsetOmega
-    // dim*numLoops for indexMatrix
-    // numLoops for FusionOmega
-    // 1 + dim + dim*numLoops + numLoops == 1 + (dim + 1)*(numLoops + 1)
+    // d = dim, l = numLoops
+    // Memory layout: offset, size
+    // 0,1 for denom
+    // 1,d for offsetOmega
+    // 1 + d, d*l for indexMatrix
+    // 1 + d + d*l, l+1 for fusionOmega
+    // 1 + d + d*l + l + 1 == 1 + (d + 1)*(l + 1)
     return 1 + (numLoops + 1) * (dim + 1);
   }
   [[nodiscard]] constexpr auto intMemNeeded() const -> size_t {
@@ -222,11 +249,11 @@ public:
   construct(Arena<> *alloc, const llvm::SCEVUnknown *arrayPtr,
             llvm::Instruction *user, PtrMatrix<int64_t> indMat,
             std::array<llvm::SmallVector<const llvm::SCEV *, 3>, 2> szOff,
-            PtrVector<int64_t> coffsets, int64_t *offsets, unsigned numLoops)
-    -> NotNull<Addr> {
+            PtrVector<int64_t> coffsets, int64_t *offsets, unsigned numLoops,
+            unsigned maxNumLoops) -> NotNull<Addr> {
     // we don't want to hold any other pointers that may need freeing
     unsigned arrayDim = szOff[0].size(), nOff = szOff[1].size();
-    size_t memNeeded = intMemNeeded(numLoops, arrayDim);
+    size_t memNeeded = intMemNeeded(maxNumLoops, arrayDim);
     auto *mem =
       (Addr *)alloc->allocate(sizeof(Addr) + memNeeded * sizeof(int64_t));
     const auto **syms = // over alloc by numLoops - 1, in case we remove
@@ -570,29 +597,6 @@ public:
                    sizeof(Addr);
     return (Addr *)alloc->allocate(memSz);
   }
-  [[nodiscard]] static auto
-  construct(Arena<> *alloc, NotNull<poly::Loop> explicitLoop, NotNull<Addr> ma,
-            bool isStr, SquarePtrMatrix<int64_t> Pinv, int64_t denom,
-            PtrVector<int64_t> omega, unsigned inputEdges, unsigned directEdges,
-            unsigned outputEdges, int64_t *offsets) -> NotNull<Addr> {
-
-    size_t numLoops = size_t(Pinv.numCol()), arrayDim = ma->getArrayDim(),
-           memSz = (1 + arrayDim + (arrayDim * numLoops)) * sizeof(int64_t) +
-                   (inputEdges + directEdges + outputEdges) *
-                     (sizeof(Addr *) + sizeof(uint8_t)) +
-                   sizeof(Addr);
-    // size_t memSz = ma->getNumLoops() * (1 + ma->getArrayDim());
-    auto *pt = alloc->allocate(memSz);
-    // we could use the passkey idiom to make the constructor public yet
-    // un-callable so that we can use std::construct_at (which requires a
-    // public constructor) or, we can just use placement new and not mark this
-    // function which will never be constant evaluated anyway constexpr (main
-    // benefit of constexpr is UB is not allowed, so we get more warnings).
-
-    // return std::construct_at((Address *)pt, explicitLoop, ma, Pinv, denom,
-    // omega, isStr);
-    return new (pt) Addr(explicitLoop, ma, Pinv, denom, omega, isStr, offsets);
-  }
   // constexpr void addDirectConnection(Addr *store, size_t loadEdge) {
   //   assert(isLoad() && store->isStore());
   //   directEdges().front() = store;
@@ -626,10 +630,10 @@ public:
     return getIntMemory()[0];
   }
   [[nodiscard]] constexpr auto getOffsetOmega() -> MutPtrVector<int64_t> {
-    return {getIntMemory() + 1, unsigned(getArrayDim())};
+    return {getIntMemory() + 1, getArrayDim()};
   }
   [[nodiscard]] constexpr auto getOffsetOmega() const -> PtrVector<int64_t> {
-    return {getIntMemory() + 1, unsigned(getArrayDim())};
+    return {getIntMemory() + 1, getArrayDim()};
   }
   /// indexMatrix() -> arrayDim() x getNumLoops()
   [[nodiscard]] constexpr auto indexMatrix() -> MutDensePtrMatrix<int64_t> {
@@ -807,6 +811,8 @@ public:
   constexpr void setParent(Node *n) { addr->setParent(n); }
   constexpr void insertChild(Node *n) { addr->insertChild(n); }
   constexpr void insertParent(Node *n) { addr->insertParent(n); }
+  constexpr void insertAfter(Node *n) { addr->insertAfter(n); }
+  constexpr void insertAhead(Node *n) { addr->insertAhead(n); }
   [[nodiscard]] constexpr auto getNumLoops() const -> unsigned {
     return addr->getNumLoops();
   }

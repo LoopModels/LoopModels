@@ -150,7 +150,7 @@ class LoopBlock {
   };
 
 public:
-  LoopBlock() = default;
+  constexpr LoopBlock() = default;
   auto optimize(IR::Cache &cache, IR::TreeResult tr) -> ScheduledNode * {
     // first, we peel loops for which affine repr failed
     if (unsigned numReject = tr.rejectDepth) {
@@ -265,7 +265,7 @@ private:
         invariant(reload->isLoad());
         load = reload;
       }
-      stow.insertChild(load);
+      stow.insertAfter(load);
       return {load, load.getLoop()};
       // it has been, therefore we need to copy the load
     }
@@ -279,7 +279,7 @@ private:
     }
     if (store && (store != (Addr *)stow)) {
       Addr *load = Dependence::reload(&allocator, store);
-      stow.insertChild(load); // insert load after stow
+      stow.insertAfter(load); // insert load after stow
       return {load, load->getLoop()};
     }
     auto *C = llvm::cast<IR::Compute>(inst);

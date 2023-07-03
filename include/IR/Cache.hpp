@@ -6,6 +6,7 @@
 #include "IR/Instruction.hpp"
 #include "IR/Node.hpp"
 #include "IR/Predicate.hpp"
+#include "Utilities/ListRanges.hpp"
 #include <cstddef>
 #include <llvm/Analysis/Delinearization.h>
 #include <llvm/Analysis/LoopInfo.h>
@@ -44,12 +45,15 @@ using dict::map;
 /// only the very first is guaranteed to be correct, as we
 /// do not update the old when concatenating
 struct TreeResult {
-  Addr *load{nullptr};
-  Addr *stow{nullptr};
+  /// `Addr`s, sorted `[stow..., load...]`
+  /// stow's getChild() points to last stow
+  /// load's getChild() points to last load
+  Addr *addr{nullptr};
   Compute *incomplete{nullptr};
-  size_t rejectDepth{0};
-  [[nodiscard]] constexpr auto reject(size_t depth) const -> bool {
-    return (depth < rejectDepth) || (stow == nullptr);
+  unsigned rejectDepth{0};
+  unsigned maxDepth{0};
+  [[nodiscard]] constexpr auto reject(unsigned depth) const -> bool {
+    return (depth < rejectDepth) || (addr == nullptr);
   }
   [[nodiscard]] constexpr auto accept(size_t depth) const -> bool {
     // depth >= rejectDepth && stow != nullptr
@@ -60,44 +64,94 @@ struct TreeResult {
     incomplete = static_cast<Compute *>(I->setNext(incomplete));
     I->setChild(last);
   }
+  // TODO: single load/stow list, but sorted
+  // we accumulate `maxDepth` as we go
+  // Newly constructed addrs have enough space for the max depth,
+  // so we can resize mostly in place later.
+  // we have all addr in a line
   constexpr void addAddr(Addr *A) {
-    if (A->isLoad()) {
-      Node *last = load ? load->getChild() : A;
-      load = static_cast<Addr *>(A->setNext(load));
-      load->setChild(last);
-    } else {
-      Node *last = stow ? stow->getChild() : A;
-      stow = static_cast<Addr *>(A->setNext(stow));
-      stow->setChild(last);
-    }
+    if (!addr || addr->isLoad()) addr = A->insertNextAddr(addr);
+    else getLastStore()->insertNextAddr(A);
+    if (addr->isLoad()) {
+      Addr *L = addr->getNextAddr();
+      addr->setChild(L ? L->getChild() : addr);
+    } else addr->setChild(A);
   }
-  // NOTE: this sets the loop nest of all members,
+  [[nodiscard]] constexpr auto getAddr() const {
+    return utils::ListRange(static_cast<Addr *>(addr), NextAddr{});
+  }
+  [[nodiscard]] constexpr auto getLoads() const {
+    return utils::ListRange(getFirstLoad(), NextAddr{});
+  }
+  [[nodiscard]] constexpr auto getStores() const {
+    Addr *S = (addr && addr->isStore()) ? addr : nullptr;
+    return utils::ListRange(S, [](Addr *A) -> Addr * {
+      Addr *S = A->getNextAddr();
+      if (S && S->isStore()) return S;
+      return nullptr;
+    });
+  }
   void setLoopNest(NotNull<poly::Loop> L) const {
-    for (Addr *A = load; A; A = static_cast<Addr *>(A->getNext()))
-      A->setLoopNest(L);
-    for (Addr *A = stow; A; A = static_cast<Addr *>(A->getNext()))
-      A->setLoopNest(L);
+    for (Addr *A : getAddr()) A->setLoopNest(L);
   }
-  static constexpr auto concateNodes(Node *A, Node *B) -> Node * {
+  constexpr auto operator*=(TreeResult tr) -> TreeResult & {
+    if (tr.addr) {
+      if (addr && addr->isStore()) {
+        // [this_stow..., other..., this_load...]
+        Addr *LS = getLastStore(), *FL = LS->getNextAddr();
+        LS->setNextAddr(tr.addr);
+        tr.getLastAddr()->setNextAddr(FL);
+      } else {
+        // [other..., this_load...]
+        tr.getLastAddr()->setNextAddr(addr);
+        addr = tr.addr;
+      }
+    }
+    incomplete = concatenate(incomplete, tr.incomplete);
+    rejectDepth = std::max(rejectDepth, tr.rejectDepth);
+    return *this;
+  }
+
+  [[nodiscard]] constexpr auto getLoop() const -> poly::Loop * {
+    return (addr) ? addr->getLoop() : nullptr;
+  }
+
+private:
+  static constexpr auto concatenate(Compute *A, Compute *B) -> Compute * {
     if (!A) return B;
     if (!B) return A;
     A->getChild()->setNext(B);
     A->setChild(B->getChild());
     return A;
   }
-  constexpr auto operator*=(TreeResult tr) -> TreeResult & {
-    load = static_cast<Addr *>(concateNodes(load, tr.load));
-    stow = static_cast<Addr *>(concateNodes(stow, tr.stow));
-    incomplete =
-      static_cast<Compute *>(concateNodes(incomplete, tr.incomplete));
-    rejectDepth = std::max(rejectDepth, tr.rejectDepth);
-    return *this;
+  [[nodiscard]] constexpr auto getFirstStore() const -> Addr * {
+    return (addr && addr->isStore()) ? addr : nullptr;
   }
-  [[nodiscard]] constexpr auto getLoop() const -> poly::Loop * {
-    if (stow) return stow->getLoop();
-    if (load) return load->getLoop();
-    return nullptr;
+  [[nodiscard]] constexpr auto getLastStore() const -> Addr * {
+    if (!addr || addr->isLoad()) return nullptr;
+    return llvm::cast<Addr>(addr->getChild());
   }
+  [[nodiscard]] constexpr auto getFirstLoad() const -> Addr * {
+    if (!addr || addr->isLoad()) return addr;
+    return llvm::cast<Addr>(addr->getChild())->getNextAddr();
+  }
+  [[nodiscard]] constexpr auto getLastLoad() const -> Addr * {
+    Addr *L = getFirstLoad();
+    return L ? llvm::cast<Addr>(L->getChild()) : nullptr;
+  }
+  [[nodiscard]] constexpr auto getLastAddr() const -> Addr * {
+    if (!addr) return nullptr;
+    // if (addr->isLoad()) return llvm::cast<Addr>(addr->getChild());
+    Addr *C = llvm::cast<Addr>(addr->getChild());
+    if (C->isLoad()) return C;
+    Addr *L = C->getNextAddr();
+    return L ? llvm::cast<Addr>(L->getChild()) : C;
+  }
+  struct NextAddr {
+    constexpr auto operator()(Addr *A) const -> Addr * {
+      return A->getNextAddr();
+    }
+  };
 };
 
 class Cache {
@@ -437,7 +491,7 @@ public:
     const llvm::SCEV *accessFn = SE->getSCEVAtScope(ptr, L);
     unsigned numLoops = L->getLoopDepth();
     if (!ptr) {
-      tr.rejectDepth = std::max(tr.rejectDepth, size_t(numLoops));
+      tr.rejectDepth = std::max(tr.rejectDepth, numLoops);
       return {alloc.create<CVal>(loadOrStore), tr};
     }
     return createArrayRef(loadOrStore, accessFn, numLoops, elSz, tr);
@@ -452,7 +506,7 @@ public:
     const auto *arrayPtr = llvm::dyn_cast<llvm::SCEVUnknown>(pb);
     // Do not delinearize if we cannot find the base pointer.
     if (!arrayPtr) {
-      tr.rejectDepth = std::max(tr.rejectDepth, size_t(numLoops));
+      tr.rejectDepth = std::max(tr.rejectDepth, numLoops);
       return {alloc.create<CVal>(loadOrStore), tr};
     }
     accessFn = SE->getMinusSCEV(accessFn, arrayPtr);
@@ -485,7 +539,7 @@ public:
     Addr *op = Addr::construct(&alloc, arrayPtr, loadOrStore,
                                Rt(_, _(numExtraLoopsToPeel, end)),
                                {std::move(sizes), std::move(symbolicOffsets)},
-                               coffsets, offsMat.data(), numLoops);
+                               coffsets, offsMat.data(), numLoops, tr.maxDepth);
     tr.addAddr(op);
     tr.rejectDepth += numExtraLoopsToPeel;
     return {op, tr};
