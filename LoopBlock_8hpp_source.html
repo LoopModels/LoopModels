@@ -168,7 +168,7 @@ $(function() {
 <div class="line"><a name="l00150"></a><span class="lineno">  150</span>&#160;  };</div>
 <div class="line"><a name="l00151"></a><span class="lineno">  151</span>&#160; </div>
 <div class="line"><a name="l00152"></a><span class="lineno">  152</span>&#160;<span class="keyword">public</span>:</div>
-<div class="line"><a name="l00153"></a><span class="lineno">  153</span>&#160;  <a class="code" href="classpoly_1_1lp_1_1LoopBlock.html">LoopBlock</a>() = <span class="keywordflow">default</span>;</div>
+<div class="line"><a name="l00153"></a><span class="lineno">  153</span>&#160;  constexpr <a class="code" href="classpoly_1_1lp_1_1LoopBlock.html">LoopBlock</a>() = <span class="keywordflow">default</span>;</div>
 <div class="line"><a name="l00154"></a><span class="lineno">  154</span>&#160;  <span class="keyword">auto</span> optimize(<a class="code" href="classpoly_1_1IR_1_1Cache.html">IR::Cache</a> &amp;cache, <a class="code" href="structpoly_1_1IR_1_1TreeResult.html">IR::TreeResult</a> tr) -&gt; <a class="code" href="classpoly_1_1lp_1_1ScheduledNode.html">ScheduledNode</a> * {</div>
 <div class="line"><a name="l00155"></a><span class="lineno">  155</span>&#160;    <span class="comment">// first, we peel loops for which affine repr failed</span></div>
 <div class="line"><a name="l00156"></a><span class="lineno">  156</span>&#160;    <span class="keywordflow">if</span> (<span class="keywordtype">unsigned</span> numReject = tr.rejectDepth) {</div>
@@ -259,7 +259,7 @@ $(function() {
 <div class="line"><a name="l00265"></a><span class="lineno">  265</span>&#160;        invariant(reload-&gt;isLoad());</div>
 <div class="line"><a name="l00266"></a><span class="lineno">  266</span>&#160;        load = reload;</div>
 <div class="line"><a name="l00267"></a><span class="lineno">  267</span>&#160;      }</div>
-<div class="line"><a name="l00268"></a><span class="lineno">  268</span>&#160;      stow.insertChild(load);</div>
+<div class="line"><a name="l00268"></a><span class="lineno">  268</span>&#160;      stow.insertAfter(load);</div>
 <div class="line"><a name="l00269"></a><span class="lineno">  269</span>&#160;      <span class="keywordflow">return</span> {load, load.getLoop()};</div>
 <div class="line"><a name="l00270"></a><span class="lineno">  270</span>&#160;      <span class="comment">// it has been, therefore we need to copy the load</span></div>
 <div class="line"><a name="l00271"></a><span class="lineno">  271</span>&#160;    }</div>
@@ -273,7 +273,7 @@ $(function() {
 <div class="line"><a name="l00279"></a><span class="lineno">  279</span>&#160;    }</div>
 <div class="line"><a name="l00280"></a><span class="lineno">  280</span>&#160;    <span class="keywordflow">if</span> (store &amp;&amp; (store != (<a class="code" href="classpoly_1_1IR_1_1Addr.html">Addr</a> *)stow)) {</div>
 <div class="line"><a name="l00281"></a><span class="lineno">  281</span>&#160;      <a class="code" href="classpoly_1_1IR_1_1Addr.html">Addr</a> *load = Dependence::reload(&amp;allocator, store);</div>
-<div class="line"><a name="l00282"></a><span class="lineno">  282</span>&#160;      stow.insertChild(load); <span class="comment">// insert load after stow</span></div>
+<div class="line"><a name="l00282"></a><span class="lineno">  282</span>&#160;      stow.insertAfter(load); <span class="comment">// insert load after stow</span></div>
 <div class="line"><a name="l00283"></a><span class="lineno">  283</span>&#160;      <span class="keywordflow">return</span> {load, load-&gt;getLoop()};</div>
 <div class="line"><a name="l00284"></a><span class="lineno">  284</span>&#160;    }</div>
 <div class="line"><a name="l00285"></a><span class="lineno">  285</span>&#160;    <span class="keyword">auto</span> *C = llvm::cast&lt;IR::Compute&gt;(inst);</div>
@@ -1137,11 +1137,11 @@ $(function() {
 <div class="line"><a name="l01177"></a><span class="lineno"> 1177</span>&#160;};</div>
 <div class="line"><a name="l01178"></a><span class="lineno"> 1178</span>&#160; </div>
 <div class="line"><a name="l01179"></a><span class="lineno"> 1179</span>&#160;} <span class="comment">// namespace poly::lp</span></div>
-<div class="ttc" id="aclasspoly_1_1IR_1_1Addr_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Addr.html">poly::IR::Addr</a></div><div class="ttdef"><b>Definition:</b> Address.hpp:74</div></div>
-<div class="ttc" id="aclasspoly_1_1IR_1_1Cache_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Cache.html">poly::IR::Cache</a></div><div class="ttdef"><b>Definition:</b> Cache.hpp:103</div></div>
-<div class="ttc" id="aclasspoly_1_1IR_1_1Cache_html_a6fc976093ca556ac42bc46e2c8e372f0"><div class="ttname"><a href="classpoly_1_1IR_1_1Cache.html#a6fc976093ca556ac42bc46e2c8e372f0">poly::IR::Cache::getAllocator</a></div><div class="ttdeci">constexpr auto getAllocator() -&gt; Arena&lt;&gt; *</div><div class="ttdef"><b>Definition:</b> Cache.hpp:320</div></div>
-<div class="ttc" id="aclasspoly_1_1IR_1_1Load_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Load.html">poly::IR::Load</a></div><div class="ttdef"><b>Definition:</b> Address.hpp:822</div></div>
-<div class="ttc" id="aclasspoly_1_1IR_1_1Stow_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Stow.html">poly::IR::Stow</a></div><div class="ttdef"><b>Definition:</b> Address.hpp:834</div></div>
+<div class="ttc" id="aclasspoly_1_1IR_1_1Addr_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Addr.html">poly::IR::Addr</a></div><div class="ttdef"><b>Definition:</b> Address.hpp:75</div></div>
+<div class="ttc" id="aclasspoly_1_1IR_1_1Cache_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Cache.html">poly::IR::Cache</a></div><div class="ttdef"><b>Definition:</b> Cache.hpp:157</div></div>
+<div class="ttc" id="aclasspoly_1_1IR_1_1Cache_html_a6fc976093ca556ac42bc46e2c8e372f0"><div class="ttname"><a href="classpoly_1_1IR_1_1Cache.html#a6fc976093ca556ac42bc46e2c8e372f0">poly::IR::Cache::getAllocator</a></div><div class="ttdeci">constexpr auto getAllocator() -&gt; Arena&lt;&gt; *</div><div class="ttdef"><b>Definition:</b> Cache.hpp:374</div></div>
+<div class="ttc" id="aclasspoly_1_1IR_1_1Load_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Load.html">poly::IR::Load</a></div><div class="ttdef"><b>Definition:</b> Address.hpp:828</div></div>
+<div class="ttc" id="aclasspoly_1_1IR_1_1Stow_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Stow.html">poly::IR::Stow</a></div><div class="ttdef"><b>Definition:</b> Address.hpp:840</div></div>
 <div class="ttc" id="aclasspoly_1_1lp_1_1LoopBlock_html"><div class="ttname"><a href="classpoly_1_1lp_1_1LoopBlock.html">poly::lp::LoopBlock</a></div><div class="ttdef"><b>Definition:</b> LoopBlock.hpp:125</div></div>
 <div class="ttc" id="aclasspoly_1_1lp_1_1ScheduleGraph_html"><div class="ttname"><a href="classpoly_1_1lp_1_1ScheduleGraph.html">poly::lp::ScheduleGraph</a></div><div class="ttdef"><b>Definition:</b> ScheduledNode.hpp:502</div></div>
 <div class="ttc" id="aclasspoly_1_1lp_1_1ScheduledNode_html"><div class="ttname"><a href="classpoly_1_1lp_1_1ScheduledNode.html">poly::lp::ScheduledNode</a></div><div class="ttdef"><b>Definition:</b> ScheduledNode.hpp:33</div></div>
@@ -1151,7 +1151,7 @@ $(function() {
 <div class="ttc" id="aclasspoly_1_1poly_1_1Dependence_html_a7e7c6210c36668e3d1b290e4eed76955"><div class="ttname"><a href="classpoly_1_1poly_1_1Dependence.html#a7e7c6210c36668e3d1b290e4eed76955">poly::poly::Dependence::stashedPreventsReordering</a></div><div class="ttdeci">constexpr auto stashedPreventsReordering(unsigned depth) const -&gt; bool</div><div class="ttdef"><b>Definition:</b> Dependence.hpp:341</div></div>
 <div class="ttc" id="aclasspoly_1_1poly_1_1Dependence_html_af0d8b4e19c0fd884c1b46874a5cffd65"><div class="ttname"><a href="classpoly_1_1poly_1_1Dependence.html#af0d8b4e19c0fd884c1b46874a5cffd65">poly::poly::Dependence::isForward</a></div><div class="ttdeci">constexpr auto isForward() const -&gt; bool</div><div class="ttdoc">indicates whether forward is non-empty</div><div class="ttdef"><b>Definition:</b> Dependence.hpp:350</div></div>
 <div class="ttc" id="aclasspoly_1_1poly_1_1Loop_html"><div class="ttname"><a href="classpoly_1_1poly_1_1Loop.html">poly::poly::Loop</a></div><div class="ttdef"><b>Definition:</b> Loops.hpp:329</div></div>
-<div class="ttc" id="astructpoly_1_1IR_1_1TreeResult_html"><div class="ttname"><a href="structpoly_1_1IR_1_1TreeResult.html">poly::IR::TreeResult</a></div><div class="ttdef"><b>Definition:</b> Cache.hpp:46</div></div>
+<div class="ttc" id="astructpoly_1_1IR_1_1TreeResult_html"><div class="ttname"><a href="structpoly_1_1IR_1_1TreeResult.html">poly::IR::TreeResult</a></div><div class="ttdef"><b>Definition:</b> Cache.hpp:47</div></div>
 <div class="ttc" id="astructpoly_1_1dict_1_1aset_html"><div class="ttname"><a href="structpoly_1_1dict_1_1aset.html">poly::dict::aset</a></div><div class="ttdef"><b>Definition:</b> BumpMapSet.hpp:26</div></div>
 <div class="ttc" id="astructpoly_1_1lp_1_1Result_html"><div class="ttname"><a href="structpoly_1_1lp_1_1Result.html">poly::lp::Result</a></div><div class="ttdef"><b>Definition:</b> LoopBlock.hpp:47</div></div>
 <div class="ttc" id="astructpoly_1_1poly_1_1AffineSchedule_html"><div class="ttname"><a href="structpoly_1_1poly_1_1AffineSchedule.html">poly::poly::AffineSchedule</a></div><div class="ttdef"><b>Definition:</b> Schedule.hpp:37</div></div>

@@ -66,8 +66,8 @@ $(function() {
 </div><!-- top -->
 <div class="header">
   <div class="summary">
+<a href="#nested-classes">Classes</a> &#124;
 <a href="#pub-methods">Public Member Functions</a> &#124;
-<a href="#pub-static-methods">Static Public Member Functions</a> &#124;
 <a href="#pub-attribs">Public Attributes</a> &#124;
 <a href="structpoly_1_1IR_1_1TreeResult-members.html">List of all members</a>  </div>
   <div class="headertitle">
@@ -79,9 +79,9 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:ae89614ee9b37a4987e07b569963b8914"><td class="memItemLeft" align="right" valign="top"><a id="ae89614ee9b37a4987e07b569963b8914"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>reject</b> (size_t depth) const -&gt; bool</td></tr>
-<tr class="separator:ae89614ee9b37a4987e07b569963b8914"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aec12ad134668f20875ad7e079c813e44"><td class="memItemLeft" align="right" valign="top"><a id="aec12ad134668f20875ad7e079c813e44"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>reject</b> (unsigned depth) const -&gt; bool</td></tr>
+<tr class="separator:aec12ad134668f20875ad7e079c813e44"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a61c6413a89171420289b278f528bd99f"><td class="memItemLeft" align="right" valign="top"><a id="a61c6413a89171420289b278f528bd99f"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>accept</b> (size_t depth) const -&gt; bool</td></tr>
 <tr class="separator:a61c6413a89171420289b278f528bd99f"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -91,6 +91,15 @@ constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>addIncomple
 <tr class="memitem:ad5681e8d18f018f19e83b4921e0823fb"><td class="memItemLeft" align="right" valign="top"><a id="ad5681e8d18f018f19e83b4921e0823fb"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>addAddr</b> (<a class="el" href="classpoly_1_1IR_1_1Addr.html">Addr</a> *A)</td></tr>
 <tr class="separator:ad5681e8d18f018f19e83b4921e0823fb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abc85edef759e756b353b57d27ba1ffc4"><td class="memItemLeft" align="right" valign="top"><a id="abc85edef759e756b353b57d27ba1ffc4"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getAddr</b> () const</td></tr>
+<tr class="separator:abc85edef759e756b353b57d27ba1ffc4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abccb6f6231de4aca071678cbc60e426f"><td class="memItemLeft" align="right" valign="top"><a id="abccb6f6231de4aca071678cbc60e426f"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getLoads</b> () const</td></tr>
+<tr class="separator:abccb6f6231de4aca071678cbc60e426f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4f2d163b83a9378dec5cf46689e5c3c1"><td class="memItemLeft" align="right" valign="top"><a id="a4f2d163b83a9378dec5cf46689e5c3c1"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getStores</b> () const</td></tr>
+<tr class="separator:a4f2d163b83a9378dec5cf46689e5c3c1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a19ba456ac6e45deaf659f6b51bd99b09"><td class="memItemLeft" align="right" valign="top"><a id="a19ba456ac6e45deaf659f6b51bd99b09"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>setLoopNest</b> (NotNull&lt; <a class="el" href="classpoly_1_1poly_1_1Loop.html">poly::Loop</a> &gt; L) const</td></tr>
 <tr class="separator:a19ba456ac6e45deaf659f6b51bd99b09"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -101,26 +110,19 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator*=<
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getLoop</b> () const -&gt; <a class="el" href="classpoly_1_1poly_1_1Loop.html">poly::Loop</a> *</td></tr>
 <tr class="separator:a8a662d714ba18064791c1ac80bee59fd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
-Static Public Member Functions</h2></td></tr>
-<tr class="memitem:a3f50ca96d8e1fc4687e8c950e24e29f7"><td class="memItemLeft" align="right" valign="top"><a id="a3f50ca96d8e1fc4687e8c950e24e29f7"></a>
-static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>concateNodes</b> (Node *A, Node *B) -&gt; Node *</td></tr>
-<tr class="separator:a3f50ca96d8e1fc4687e8c950e24e29f7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
-<tr class="memitem:a2c2bfedfbf35ffd5250702c868ba4f33"><td class="memItemLeft" align="right" valign="top"><a id="a2c2bfedfbf35ffd5250702c868ba4f33"></a>
-<a class="el" href="classpoly_1_1IR_1_1Addr.html">Addr</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>load</b> {nullptr}</td></tr>
-<tr class="separator:a2c2bfedfbf35ffd5250702c868ba4f33"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4c5b2837c7b1479d867399f7bc854bbc"><td class="memItemLeft" align="right" valign="top"><a id="a4c5b2837c7b1479d867399f7bc854bbc"></a>
-<a class="el" href="classpoly_1_1IR_1_1Addr.html">Addr</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>stow</b> {nullptr}</td></tr>
-<tr class="separator:a4c5b2837c7b1479d867399f7bc854bbc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8e04a2f11dec53771e998a4b42588be2"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classpoly_1_1IR_1_1Addr.html">Addr</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpoly_1_1IR_1_1TreeResult.html#a8e04a2f11dec53771e998a4b42588be2">addr</a> {nullptr}</td></tr>
+<tr class="separator:a8e04a2f11dec53771e998a4b42588be2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5be97918164b160efcdef47af995d0ad"><td class="memItemLeft" align="right" valign="top"><a id="a5be97918164b160efcdef47af995d0ad"></a>
 <a class="el" href="classpoly_1_1IR_1_1Compute.html">Compute</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>incomplete</b> {nullptr}</td></tr>
 <tr class="separator:a5be97918164b160efcdef47af995d0ad"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2af1e728bff27894bee1a2d52ffe0d60"><td class="memItemLeft" align="right" valign="top"><a id="a2af1e728bff27894bee1a2d52ffe0d60"></a>
-size_t&#160;</td><td class="memItemRight" valign="bottom"><b>rejectDepth</b> {0}</td></tr>
-<tr class="separator:a2af1e728bff27894bee1a2d52ffe0d60"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a630c48a46dd6d47bf61ca5e6d3dc1323"><td class="memItemLeft" align="right" valign="top"><a id="a630c48a46dd6d47bf61ca5e6d3dc1323"></a>
+unsigned&#160;</td><td class="memItemRight" valign="bottom"><b>rejectDepth</b> {0}</td></tr>
+<tr class="separator:a630c48a46dd6d47bf61ca5e6d3dc1323"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afdfc143689db02b643f5675211966117"><td class="memItemLeft" align="right" valign="top"><a id="afdfc143689db02b643f5675211966117"></a>
+unsigned&#160;</td><td class="memItemRight" valign="bottom"><b>maxDepth</b> {0}</td></tr>
+<tr class="separator:afdfc143689db02b643f5675211966117"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>The <code><a class="el" href="structpoly_1_1IR_1_1TreeResult.html">TreeResult</a></code> gives the result of parsing a loop tree. The purpose of the <code><a class="el" href="structpoly_1_1IR_1_1TreeResult.html">TreeResult</a></code> is to accumulate results while building the loop tree, in particular, the <code><a class="el" href="classpoly_1_1IR_1_1Addr.html">Addr</a></code>s so far, the incomplete instructions we must complete as we move out, and how many outer loop layers we are forced to reject.</p>
@@ -132,7 +134,23 @@ size_t&#160;</td><td class="memItemRight" valign="bottom"><b>rejectDepth</b> {0}
 <li><code>size_t rejectDepth</code> is how many outer loops were rejected, due to to failure to produce an affine representation of the loop or memory accesses. Either because an affine representation is not possible, or because our analysis failed and needs improvement.</li>
 </ul>
 <p>We use setChild for setting the last load/stow/incomplete only the very first is guaranteed to be correct, as we do not update the old when concatenating </p>
-</div><hr/>The documentation for this struct was generated from the following file:<ul>
+</div><h2 class="groupheader">Member Data Documentation</h2>
+<a id="a8e04a2f11dec53771e998a4b42588be2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8e04a2f11dec53771e998a4b42588be2">&#9670;&nbsp;</a></span>addr</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classpoly_1_1IR_1_1Addr.html">Addr</a>* poly::IR::TreeResult::addr {nullptr}</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p><code><a class="el" href="classpoly_1_1IR_1_1Addr.html">Addr</a></code>s, sorted <code>[stow..., load...]</code> stow's getChild() points to last stow load's getChild() points to last load </p>
+
+</div>
+</div>
+<hr/>The documentation for this struct was generated from the following file:<ul>
 <li>include/IR/<a class="el" href="Cache_8hpp_source.html">Cache.hpp</a></li>
 </ul>
 </div><!-- contents -->

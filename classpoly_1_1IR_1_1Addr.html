@@ -84,6 +84,21 @@ Inheritance diagram for poly::IR::Addr:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
+<tr class="memitem:abd377ab7b485e2cc3158839d65e59f2a"><td class="memItemLeft" align="right" valign="top"><a id="abd377ab7b485e2cc3158839d65e59f2a"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>eachAddr</b> ()</td></tr>
+<tr class="separator:abd377ab7b485e2cc3158839d65e59f2a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2bab01ae484c9525d07bf40c956557d8"><td class="memItemLeft" align="right" valign="top"><a id="a2bab01ae484c9525d07bf40c956557d8"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNextAddr</b> () -&gt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">Addr</a> *</td></tr>
+<tr class="separator:a2bab01ae484c9525d07bf40c956557d8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1231e9b232bd68773535d13515eceddd"><td class="memItemLeft" align="right" valign="top"><a id="a1231e9b232bd68773535d13515eceddd"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNextAddr</b> () const -&gt; const <a class="el" href="classpoly_1_1IR_1_1Addr.html">Addr</a> *</td></tr>
+<tr class="separator:a1231e9b232bd68773535d13515eceddd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9302ea6fed036780a023e9e742def6ba"><td class="memItemLeft" align="right" valign="top"><a id="a9302ea6fed036780a023e9e742def6ba"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>insertNextAddr</b> (<a class="el" href="classpoly_1_1IR_1_1Addr.html">Addr</a> *a) -&gt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">Addr</a> *</td></tr>
+<tr class="separator:a9302ea6fed036780a023e9e742def6ba"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae624521620a92fb859379ffdd2fcb0c8"><td class="memItemLeft" align="right" valign="top"><a id="ae624521620a92fb859379ffdd2fcb0c8"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>setNextAddr</b> (<a class="el" href="classpoly_1_1IR_1_1Addr.html">Addr</a> *a) -&gt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">Addr</a> *</td></tr>
+<tr class="separator:ae624521620a92fb859379ffdd2fcb0c8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a139ada12dd1094b1f6fe35e2b4a38b75"><td class="memItemLeft" align="right" valign="top"><a id="a139ada12dd1094b1f6fe35e2b4a38b75"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>intMemNeeded</b> () const -&gt; size_t</td></tr>
 <tr class="separator:a139ada12dd1094b1f6fe35e2b4a38b75"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -240,19 +255,16 @@ static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>intM
 <tr class="memitem:a6f0aacac4190843b23f652b4f9ad06fd"><td class="memItemLeft" align="right" valign="top"><a id="a6f0aacac4190843b23f652b4f9ad06fd"></a>
 static auto&#160;</td><td class="memItemRight" valign="bottom"><b>construct</b> (Arena&lt;&gt; *alloc, const llvm::SCEVUnknown *ptr, llvm::Instruction *user, unsigned numLoops) -&gt; NotNull&lt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">Addr</a> &gt;</td></tr>
 <tr class="separator:a6f0aacac4190843b23f652b4f9ad06fd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aff573bf52e178f2b94045f153e20cd05"><td class="memItemLeft" align="right" valign="top"><a id="aff573bf52e178f2b94045f153e20cd05"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1IR_1_1Addr.html#aff573bf52e178f2b94045f153e20cd05">construct</a> (Arena&lt;&gt; *alloc, const llvm::SCEVUnknown *arrayPtr, llvm::Instruction *user, PtrMatrix&lt; int64_t &gt; indMat, std::array&lt; llvm::SmallVector&lt; const llvm::SCEV *, 3 &gt;, 2 &gt; szOff, PtrVector&lt; int64_t &gt; coffsets, int64_t *offsets, unsigned numLoops) -&gt; NotNull&lt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">Addr</a> &gt;</td></tr>
-<tr class="memdesc:aff573bf52e178f2b94045f153e20cd05"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor for regular indexing. <br /></td></tr>
-<tr class="separator:aff573bf52e178f2b94045f153e20cd05"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2dc2526ae4d8b61af7f8fff28ef2bb6f"><td class="memItemLeft" align="right" valign="top"><a id="a2dc2526ae4d8b61af7f8fff28ef2bb6f"></a>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1IR_1_1Addr.html#a2dc2526ae4d8b61af7f8fff28ef2bb6f">construct</a> (Arena&lt;&gt; *alloc, const llvm::SCEVUnknown *arrayPtr, llvm::Instruction *user, PtrMatrix&lt; int64_t &gt; indMat, std::array&lt; llvm::SmallVector&lt; const llvm::SCEV *, 3 &gt;, 2 &gt; szOff, PtrVector&lt; int64_t &gt; coffsets, int64_t *offsets, unsigned numLoops, unsigned maxNumLoops) -&gt; NotNull&lt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">Addr</a> &gt;</td></tr>
+<tr class="memdesc:a2dc2526ae4d8b61af7f8fff28ef2bb6f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor for regular indexing. <br /></td></tr>
+<tr class="separator:a2dc2526ae4d8b61af7f8fff28ef2bb6f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a35ba12a92e78e9cef78eb36c1f0c4862"><td class="memItemLeft" align="right" valign="top"><a id="a35ba12a92e78e9cef78eb36c1f0c4862"></a>
 static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>classof</b> (const Node *v) -&gt; bool</td></tr>
 <tr class="separator:a35ba12a92e78e9cef78eb36c1f0c4862"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad245f122ec9defe10d1bceb4a5be08c8"><td class="memItemLeft" align="right" valign="top"><a id="ad245f122ec9defe10d1bceb4a5be08c8"></a>
 static auto&#160;</td><td class="memItemRight" valign="bottom"><b>allocate</b> (Arena&lt;&gt; *alloc, NotNull&lt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">Addr</a> &gt; ma, unsigned inputEdges, unsigned directEdges, unsigned outputEdges) -&gt; NotNull&lt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">Addr</a> &gt;</td></tr>
 <tr class="separator:ad245f122ec9defe10d1bceb4a5be08c8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a772b61af88af58ff8fe3da9a28605821"><td class="memItemLeft" align="right" valign="top"><a id="a772b61af88af58ff8fe3da9a28605821"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>construct</b> (Arena&lt;&gt; *alloc, NotNull&lt; <a class="el" href="classpoly_1_1poly_1_1Loop.html">poly::Loop</a> &gt; explicitLoop, NotNull&lt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">Addr</a> &gt; ma, bool isStr, SquarePtrMatrix&lt; int64_t &gt; Pinv, int64_t denom, PtrVector&lt; int64_t &gt; omega, unsigned inputEdges, unsigned directEdges, unsigned outputEdges, int64_t *offsets) -&gt; NotNull&lt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">Addr</a> &gt;</td></tr>
-<tr class="separator:a772b61af88af58ff8fe3da9a28605821"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Represents a memory access that has been rotated according to some affine transform. Return the memory accesses after applying the Schedule. Let</p>
