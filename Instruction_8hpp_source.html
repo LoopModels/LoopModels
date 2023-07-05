@@ -140,7 +140,7 @@ $(function() {
 <div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;  <span class="keywordflow">return</span> containsCycleCore(S, visited, S);</div>
 <div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;}</div>
 <div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160; </div>
-<div class="line"><a name="l00072"></a><span class="lineno"><a class="line" href="classpoly_1_1IR_1_1Compute.html">   72</a></span>&#160;<span class="keyword">class </span><a class="code" href="classpoly_1_1IR_1_1Compute.html">Compute</a> : <span class="keyword">public</span> Instruction {</div>
+<div class="line"><a name="l00072"></a><span class="lineno"><a class="line" href="classpoly_1_1IR_1_1Compute.html">   72</a></span>&#160;<span class="keyword">class </span><a class="code" href="classpoly_1_1IR_1_1Compute.html">Compute</a> : <span class="keyword">public</span> <a class="code" href="classpoly_1_1IR_1_1Instruction.html">Instruction</a> {</div>
 <div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160; </div>
 <div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;<span class="keyword">protected</span>:</div>
 <div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;  llvm::Instruction *inst{<span class="keyword">nullptr</span>};</div>
@@ -156,7 +156,7 @@ $(function() {
 <div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;<span class="preprocessor">#pragma clang diagnostic push</span></div>
 <div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;<span class="preprocessor">#pragma clang diagnostic ignored &quot;-Wc99-extensions&quot;</span></div>
 <div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;  Value *operands[]; <span class="comment">// NOLINT(modernize-avoid-c-arrays)</span></div>
+<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;  <a class="code" href="classpoly_1_1IR_1_1Value.html">Value</a> *operands[]; <span class="comment">// NOLINT(modernize-avoid-c-arrays)</span></div>
 <div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;<span class="preprocessor">#if !defined(__clang__) &amp;&amp; defined(__GNUC__)</span></div>
 <div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;<span class="preprocessor">#pragma GCC diagnostic pop</span></div>
 <div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;<span class="preprocessor">#else</span></div>
@@ -167,11 +167,11 @@ $(function() {
 <div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;  <a class="code" href="classpoly_1_1IR_1_1Compute.html">Compute</a>(<span class="keyword">const</span> <a class="code" href="classpoly_1_1IR_1_1Compute.html">Compute</a> &amp;) = <span class="keyword">delete</span>;</div>
 <div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;  constexpr <a class="code" href="classpoly_1_1IR_1_1Compute.html">Compute</a>(ValKind k, llvm::Instruction *i, llvm::Intrinsic::ID <span class="keywordtype">id</span>,</div>
 <div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;                    <span class="keywordtype">int</span> numOps)</div>
-<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;    : Instruction(k), inst(i), type(i-&gt;getType()), opId(<span class="keywordtype">id</span>),</div>
+<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;    : <a class="code" href="classpoly_1_1IR_1_1Instruction.html#a03ac07d26dc92b783043755108fac3e4">Instruction</a>(k), inst(i), type(i-&gt;getType()), opId(<span class="keywordtype">id</span>),</div>
 <div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;      numOperands(numOps), fastMathFlags(i-&gt;getFastMathFlags()) {}</div>
 <div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;  constexpr <a class="code" href="classpoly_1_1IR_1_1Compute.html">Compute</a>(ValKind k, llvm::Intrinsic::ID <span class="keywordtype">id</span>, <span class="keywordtype">int</span> numOps,</div>
 <div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;                    llvm::Type *t, llvm::FastMathFlags fmf)</div>
-<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;    : Instruction(k), type(t), opId(<span class="keywordtype">id</span>), numOperands(numOps),</div>
+<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;    : <a class="code" href="classpoly_1_1IR_1_1Instruction.html#a03ac07d26dc92b783043755108fac3e4">Instruction</a>(k), type(t), opId(<span class="keywordtype">id</span>), numOperands(numOps),</div>
 <div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;      fastMathFlags(fmf) {}</div>
 <div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160; </div>
 <div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;  <span class="comment">// static constexpr auto construct(Arena&lt;&gt; *alloc, ValKind k,</span></div>
@@ -184,7 +184,7 @@ $(function() {
 <div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;  <span class="comment">//   return std::construct_at(p, k, i, id);</span></div>
 <div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;  <span class="comment">// }</span></div>
 <div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160; </div>
-<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> classof(<span class="keyword">const</span> Node *v) -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> classof(<span class="keyword">const</span> <a class="code" href="classpoly_1_1IR_1_1Node.html">Node</a> *v) -&gt; <span class="keywordtype">bool</span> {</div>
 <div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;    <span class="keywordflow">return</span> v-&gt;getKind() &gt;= VK_Func;</div>
 <div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;  }</div>
 <div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getLLVMInstruction() <span class="keyword">const</span></div>
@@ -222,9 +222,9 @@ $(function() {
 <div class="line"><a name="l00151"></a><span class="lineno">  151</span>&#160;    <span class="keywordflow">return</span> {operands, numOperands};</div>
 <div class="line"><a name="l00152"></a><span class="lineno">  152</span>&#160;  }</div>
 <div class="line"><a name="l00153"></a><span class="lineno">  153</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getOperands() <span class="keyword">const</span> -&gt; PtrVector&lt;Value *&gt; {</div>
-<div class="line"><a name="l00154"></a><span class="lineno">  154</span>&#160;    <span class="keywordflow">return</span> {<span class="keyword">const_cast&lt;</span>Value **<span class="keyword">&gt;</span>(operands), <span class="keywordtype">unsigned</span>(numOperands)};</div>
+<div class="line"><a name="l00154"></a><span class="lineno">  154</span>&#160;    <span class="keywordflow">return</span> {<span class="keyword">const_cast&lt;</span><a class="code" href="classpoly_1_1IR_1_1Value.html">Value</a> **<span class="keyword">&gt;</span>(operands), <span class="keywordtype">unsigned</span>(numOperands)};</div>
 <div class="line"><a name="l00155"></a><span class="lineno">  155</span>&#160;  }</div>
-<div class="line"><a name="l00156"></a><span class="lineno">  156</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getOperand(<span class="keywordtype">size_t</span> i) <span class="keyword">const</span> -&gt; Value * {</div>
+<div class="line"><a name="l00156"></a><span class="lineno">  156</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getOperand(<span class="keywordtype">size_t</span> i) <span class="keyword">const</span> -&gt; <a class="code" href="classpoly_1_1IR_1_1Value.html">Value</a> * {</div>
 <div class="line"><a name="l00157"></a><span class="lineno">  157</span>&#160;    <span class="keywordflow">return</span> operands[i];</div>
 <div class="line"><a name="l00158"></a><span class="lineno">  158</span>&#160;  }</div>
 <div class="line"><a name="l00159"></a><span class="lineno">  159</span>&#160;  constexpr <span class="keywordtype">void</span> setOperands(Arena&lt;&gt; *alloc, PtrVector&lt;Value *&gt; ops) {</div>
@@ -385,7 +385,7 @@ $(function() {
 <div class="line"><a name="l00315"></a><span class="lineno">  315</span>&#160;  constexpr <span class="keyword">operator</span> <a class="code" href="classpoly_1_1IR_1_1Compute.html">Compute</a> *() <span class="keyword">const</span> { <span class="keywordflow">return</span> ins; }</div>
 <div class="line"><a name="l00316"></a><span class="lineno">  316</span>&#160;  constexpr <a class="code" href="classpoly_1_1IR_1_1Operation.html">Operation</a>(<a class="code" href="classpoly_1_1IR_1_1Compute.html">Compute</a> *I)</div>
 <div class="line"><a name="l00317"></a><span class="lineno">  317</span>&#160;    : ins(I-&gt;getKind() == Node::VK_Oprn ? I : <span class="keyword">nullptr</span>) {}</div>
-<div class="line"><a name="l00318"></a><span class="lineno">  318</span>&#160;  constexpr <a class="code" href="classpoly_1_1IR_1_1Operation.html">Operation</a>(Node *n)</div>
+<div class="line"><a name="l00318"></a><span class="lineno">  318</span>&#160;  constexpr <a class="code" href="classpoly_1_1IR_1_1Operation.html">Operation</a>(<a class="code" href="classpoly_1_1IR_1_1Node.html">Node</a> *n)</div>
 <div class="line"><a name="l00319"></a><span class="lineno">  319</span>&#160;    : ins(n-&gt;getKind() == Node::VK_Oprn ? <span class="keyword">static_cast&lt;</span><a class="code" href="classpoly_1_1IR_1_1Compute.html">Compute</a> *<span class="keyword">&gt;</span>(n) : <span class="keyword">nullptr</span>) {</div>
 <div class="line"><a name="l00320"></a><span class="lineno">  320</span>&#160;  }</div>
 <div class="line"><a name="l00321"></a><span class="lineno">  321</span>&#160;  constexpr <span class="keyword">explicit</span> <span class="keyword">operator</span> bool()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> ins; }</div>
@@ -399,7 +399,7 @@ $(function() {
 <div class="line"><a name="l00329"></a><span class="lineno">  329</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getOperands() <span class="keyword">const</span> -&gt; PtrVector&lt;Value *&gt; {</div>
 <div class="line"><a name="l00330"></a><span class="lineno">  330</span>&#160;    <span class="keywordflow">return</span> ins-&gt;getOperands();</div>
 <div class="line"><a name="l00331"></a><span class="lineno">  331</span>&#160;  }</div>
-<div class="line"><a name="l00332"></a><span class="lineno">  332</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getOperand(<span class="keywordtype">size_t</span> i) <span class="keyword">const</span> -&gt; Value * {</div>
+<div class="line"><a name="l00332"></a><span class="lineno">  332</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getOperand(<span class="keywordtype">size_t</span> i) <span class="keyword">const</span> -&gt; <a class="code" href="classpoly_1_1IR_1_1Value.html">Value</a> * {</div>
 <div class="line"><a name="l00333"></a><span class="lineno">  333</span>&#160;    <span class="keywordflow">return</span> ins-&gt;getOperand(i);</div>
 <div class="line"><a name="l00334"></a><span class="lineno">  334</span>&#160;  }</div>
 <div class="line"><a name="l00335"></a><span class="lineno">  335</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getNumOperands() <span class="keyword">const</span> -&gt; <span class="keywordtype">unsigned</span> {</div>
@@ -409,59 +409,59 @@ $(function() {
 <div class="line"><a name="l00339"></a><span class="lineno">  339</span>&#160;    -&gt; <span class="keywordtype">bool</span> {</div>
 <div class="line"><a name="l00340"></a><span class="lineno">  340</span>&#160;    <span class="keywordflow">return</span> getOpCode() == opCode;</div>
 <div class="line"><a name="l00341"></a><span class="lineno">  341</span>&#160;  }</div>
-<div class="line"><a name="l00342"></a><span class="lineno">  342</span>&#160;  <span class="keyword">static</span> <span class="keyword">auto</span> isFMul(Node *n) -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l00342"></a><span class="lineno">  342</span>&#160;  <span class="keyword">static</span> <span class="keyword">auto</span> isFMul(<a class="code" href="classpoly_1_1IR_1_1Node.html">Node</a> *n) -&gt; <span class="keywordtype">bool</span> {</div>
 <div class="line"><a name="l00343"></a><span class="lineno">  343</span>&#160;    <span class="keywordflow">if</span> (<span class="keyword">auto</span> op = <a class="code" href="classpoly_1_1IR_1_1Operation.html">Operation</a>(n)) <span class="keywordflow">return</span> op.isFMul();</div>
 <div class="line"><a name="l00344"></a><span class="lineno">  344</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
 <div class="line"><a name="l00345"></a><span class="lineno">  345</span>&#160;  }</div>
-<div class="line"><a name="l00346"></a><span class="lineno">  346</span>&#160;  <span class="keyword">static</span> <span class="keyword">auto</span> isFNeg(Node *n) -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l00346"></a><span class="lineno">  346</span>&#160;  <span class="keyword">static</span> <span class="keyword">auto</span> isFNeg(<a class="code" href="classpoly_1_1IR_1_1Node.html">Node</a> *n) -&gt; <span class="keywordtype">bool</span> {</div>
 <div class="line"><a name="l00347"></a><span class="lineno">  347</span>&#160;    <span class="keywordflow">if</span> (<span class="keyword">auto</span> op = <a class="code" href="classpoly_1_1IR_1_1Operation.html">Operation</a>(n)) <span class="keywordflow">return</span> op.isFNeg();</div>
 <div class="line"><a name="l00348"></a><span class="lineno">  348</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
 <div class="line"><a name="l00349"></a><span class="lineno">  349</span>&#160;  }</div>
-<div class="line"><a name="l00350"></a><span class="lineno">  350</span>&#160;  <span class="keyword">static</span> <span class="keyword">auto</span> isFMulOrFNegOfFMul(Node *n) -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l00350"></a><span class="lineno">  350</span>&#160;  <span class="keyword">static</span> <span class="keyword">auto</span> isFMulOrFNegOfFMul(<a class="code" href="classpoly_1_1IR_1_1Node.html">Node</a> *n) -&gt; <span class="keywordtype">bool</span> {</div>
 <div class="line"><a name="l00351"></a><span class="lineno">  351</span>&#160;    <span class="keywordflow">if</span> (<span class="keyword">auto</span> op = <a class="code" href="classpoly_1_1IR_1_1Operation.html">Operation</a>(n)) <span class="keywordflow">return</span> op.isFMulOrFNegOfFMul();</div>
 <div class="line"><a name="l00352"></a><span class="lineno">  352</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
 <div class="line"><a name="l00353"></a><span class="lineno">  353</span>&#160;  }</div>
-<div class="line"><a name="l00354"></a><span class="lineno">  354</span>&#160;  <span class="keyword">static</span> <span class="keyword">auto</span> isFAdd(Node *n) -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l00354"></a><span class="lineno">  354</span>&#160;  <span class="keyword">static</span> <span class="keyword">auto</span> isFAdd(<a class="code" href="classpoly_1_1IR_1_1Node.html">Node</a> *n) -&gt; <span class="keywordtype">bool</span> {</div>
 <div class="line"><a name="l00355"></a><span class="lineno">  355</span>&#160;    <span class="keywordflow">if</span> (<span class="keyword">auto</span> op = <a class="code" href="classpoly_1_1IR_1_1Operation.html">Operation</a>(n)) <span class="keywordflow">return</span> op.isFAdd();</div>
 <div class="line"><a name="l00356"></a><span class="lineno">  356</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
 <div class="line"><a name="l00357"></a><span class="lineno">  357</span>&#160;  }</div>
-<div class="line"><a name="l00358"></a><span class="lineno">  358</span>&#160;  <span class="keyword">static</span> <span class="keyword">auto</span> isFSub(Node *n) -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l00358"></a><span class="lineno">  358</span>&#160;  <span class="keyword">static</span> <span class="keyword">auto</span> isFSub(<a class="code" href="classpoly_1_1IR_1_1Node.html">Node</a> *n) -&gt; <span class="keywordtype">bool</span> {</div>
 <div class="line"><a name="l00359"></a><span class="lineno">  359</span>&#160;    <span class="keywordflow">if</span> (<span class="keyword">auto</span> op = <a class="code" href="classpoly_1_1IR_1_1Operation.html">Operation</a>(n)) <span class="keywordflow">return</span> op.isFSub();</div>
 <div class="line"><a name="l00360"></a><span class="lineno">  360</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
 <div class="line"><a name="l00361"></a><span class="lineno">  361</span>&#160;  }</div>
-<div class="line"><a name="l00362"></a><span class="lineno">  362</span>&#160;  <span class="keyword">static</span> <span class="keyword">auto</span> isShuffle(Node *n) -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l00362"></a><span class="lineno">  362</span>&#160;  <span class="keyword">static</span> <span class="keyword">auto</span> isShuffle(<a class="code" href="classpoly_1_1IR_1_1Node.html">Node</a> *n) -&gt; <span class="keywordtype">bool</span> {</div>
 <div class="line"><a name="l00363"></a><span class="lineno">  363</span>&#160;    <span class="keywordflow">if</span> (<span class="keyword">auto</span> op = <a class="code" href="classpoly_1_1IR_1_1Operation.html">Operation</a>(n)) <span class="keywordflow">return</span> op.isShuffle();</div>
 <div class="line"><a name="l00364"></a><span class="lineno">  364</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
 <div class="line"><a name="l00365"></a><span class="lineno">  365</span>&#160;  }</div>
-<div class="line"><a name="l00366"></a><span class="lineno">  366</span>&#160;  <span class="keyword">static</span> <span class="keyword">auto</span> isFcmp(Node *n) -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l00366"></a><span class="lineno">  366</span>&#160;  <span class="keyword">static</span> <span class="keyword">auto</span> isFcmp(<a class="code" href="classpoly_1_1IR_1_1Node.html">Node</a> *n) -&gt; <span class="keywordtype">bool</span> {</div>
 <div class="line"><a name="l00367"></a><span class="lineno">  367</span>&#160;    <span class="keywordflow">if</span> (<span class="keyword">auto</span> op = <a class="code" href="classpoly_1_1IR_1_1Operation.html">Operation</a>(n)) <span class="keywordflow">return</span> op.isFcmp();</div>
 <div class="line"><a name="l00368"></a><span class="lineno">  368</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
 <div class="line"><a name="l00369"></a><span class="lineno">  369</span>&#160;  }</div>
-<div class="line"><a name="l00370"></a><span class="lineno">  370</span>&#160;  <span class="keyword">static</span> <span class="keyword">auto</span> isIcmp(Node *n) -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l00370"></a><span class="lineno">  370</span>&#160;  <span class="keyword">static</span> <span class="keyword">auto</span> isIcmp(<a class="code" href="classpoly_1_1IR_1_1Node.html">Node</a> *n) -&gt; <span class="keywordtype">bool</span> {</div>
 <div class="line"><a name="l00371"></a><span class="lineno">  371</span>&#160;    <span class="keywordflow">if</span> (<span class="keyword">auto</span> op = <a class="code" href="classpoly_1_1IR_1_1Operation.html">Operation</a>(n)) <span class="keywordflow">return</span> op.isIcmp();</div>
 <div class="line"><a name="l00372"></a><span class="lineno">  372</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
 <div class="line"><a name="l00373"></a><span class="lineno">  373</span>&#160;  }</div>
-<div class="line"><a name="l00374"></a><span class="lineno">  374</span>&#160;  <span class="keyword">static</span> <span class="keyword">auto</span> isCmp(Node *n) -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l00374"></a><span class="lineno">  374</span>&#160;  <span class="keyword">static</span> <span class="keyword">auto</span> isCmp(<a class="code" href="classpoly_1_1IR_1_1Node.html">Node</a> *n) -&gt; <span class="keywordtype">bool</span> {</div>
 <div class="line"><a name="l00375"></a><span class="lineno">  375</span>&#160;    <span class="keywordflow">if</span> (<span class="keyword">auto</span> op = <a class="code" href="classpoly_1_1IR_1_1Operation.html">Operation</a>(n)) <span class="keywordflow">return</span> op.isCmp();</div>
 <div class="line"><a name="l00376"></a><span class="lineno">  376</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
 <div class="line"><a name="l00377"></a><span class="lineno">  377</span>&#160;  }</div>
-<div class="line"><a name="l00378"></a><span class="lineno">  378</span>&#160;  <span class="keyword">static</span> <span class="keyword">auto</span> isSelect(Node *n) -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l00378"></a><span class="lineno">  378</span>&#160;  <span class="keyword">static</span> <span class="keyword">auto</span> isSelect(<a class="code" href="classpoly_1_1IR_1_1Node.html">Node</a> *n) -&gt; <span class="keywordtype">bool</span> {</div>
 <div class="line"><a name="l00379"></a><span class="lineno">  379</span>&#160;    <span class="keywordflow">if</span> (<span class="keyword">auto</span> op = <a class="code" href="classpoly_1_1IR_1_1Operation.html">Operation</a>(n)) <span class="keywordflow">return</span> op.isSelect();</div>
 <div class="line"><a name="l00380"></a><span class="lineno">  380</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
 <div class="line"><a name="l00381"></a><span class="lineno">  381</span>&#160;  }</div>
-<div class="line"><a name="l00382"></a><span class="lineno">  382</span>&#160;  <span class="keyword">static</span> <span class="keyword">auto</span> isExtract(Node *n) -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l00382"></a><span class="lineno">  382</span>&#160;  <span class="keyword">static</span> <span class="keyword">auto</span> isExtract(<a class="code" href="classpoly_1_1IR_1_1Node.html">Node</a> *n) -&gt; <span class="keywordtype">bool</span> {</div>
 <div class="line"><a name="l00383"></a><span class="lineno">  383</span>&#160;    <span class="keywordflow">if</span> (<span class="keyword">auto</span> op = <a class="code" href="classpoly_1_1IR_1_1Operation.html">Operation</a>(n)) <span class="keywordflow">return</span> op.isExtract();</div>
 <div class="line"><a name="l00384"></a><span class="lineno">  384</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
 <div class="line"><a name="l00385"></a><span class="lineno">  385</span>&#160;  }</div>
-<div class="line"><a name="l00386"></a><span class="lineno">  386</span>&#160;  <span class="keyword">static</span> <span class="keyword">auto</span> isInsert(Node *n) -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l00386"></a><span class="lineno">  386</span>&#160;  <span class="keyword">static</span> <span class="keyword">auto</span> isInsert(<a class="code" href="classpoly_1_1IR_1_1Node.html">Node</a> *n) -&gt; <span class="keywordtype">bool</span> {</div>
 <div class="line"><a name="l00387"></a><span class="lineno">  387</span>&#160;    <span class="keywordflow">if</span> (<span class="keyword">auto</span> op = <a class="code" href="classpoly_1_1IR_1_1Operation.html">Operation</a>(n)) <span class="keywordflow">return</span> op.isInsert();</div>
 <div class="line"><a name="l00388"></a><span class="lineno">  388</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
 <div class="line"><a name="l00389"></a><span class="lineno">  389</span>&#160;  }</div>
-<div class="line"><a name="l00390"></a><span class="lineno">  390</span>&#160;  <span class="keyword">static</span> <span class="keyword">auto</span> isExtractValue(Node *n) -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l00390"></a><span class="lineno">  390</span>&#160;  <span class="keyword">static</span> <span class="keyword">auto</span> isExtractValue(<a class="code" href="classpoly_1_1IR_1_1Node.html">Node</a> *n) -&gt; <span class="keywordtype">bool</span> {</div>
 <div class="line"><a name="l00391"></a><span class="lineno">  391</span>&#160;    <span class="keywordflow">if</span> (<span class="keyword">auto</span> op = <a class="code" href="classpoly_1_1IR_1_1Operation.html">Operation</a>(n)) <span class="keywordflow">return</span> op.isExtractValue();</div>
 <div class="line"><a name="l00392"></a><span class="lineno">  392</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
 <div class="line"><a name="l00393"></a><span class="lineno">  393</span>&#160;  }</div>
-<div class="line"><a name="l00394"></a><span class="lineno">  394</span>&#160;  <span class="keyword">static</span> <span class="keyword">auto</span> isInsertValue(Node *n) -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l00394"></a><span class="lineno">  394</span>&#160;  <span class="keyword">static</span> <span class="keyword">auto</span> isInsertValue(<a class="code" href="classpoly_1_1IR_1_1Node.html">Node</a> *n) -&gt; <span class="keywordtype">bool</span> {</div>
 <div class="line"><a name="l00395"></a><span class="lineno">  395</span>&#160;    <span class="keywordflow">if</span> (<span class="keyword">auto</span> op = <a class="code" href="classpoly_1_1IR_1_1Operation.html">Operation</a>(n)) <span class="keywordflow">return</span> op.isInsertValue();</div>
 <div class="line"><a name="l00396"></a><span class="lineno">  396</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
 <div class="line"><a name="l00397"></a><span class="lineno">  397</span>&#160;  }</div>
@@ -679,7 +679,7 @@ $(function() {
 <div class="line"><a name="l00611"></a><span class="lineno">  611</span>&#160;    invariant(ins-&gt;getKind(), Node::VK_Call);</div>
 <div class="line"><a name="l00612"></a><span class="lineno">  612</span>&#160;  }</div>
 <div class="line"><a name="l00613"></a><span class="lineno">  613</span>&#160; </div>
-<div class="line"><a name="l00614"></a><span class="lineno">  614</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> classof(<span class="keyword">const</span> Node *v) -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l00614"></a><span class="lineno">  614</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> classof(<span class="keyword">const</span> <a class="code" href="classpoly_1_1IR_1_1Node.html">Node</a> *v) -&gt; <span class="keywordtype">bool</span> {</div>
 <div class="line"><a name="l00615"></a><span class="lineno">  615</span>&#160;    <span class="keywordflow">return</span> v-&gt;getKind() == Node::VK_Call;</div>
 <div class="line"><a name="l00616"></a><span class="lineno">  616</span>&#160;  }</div>
 <div class="line"><a name="l00617"></a><span class="lineno">  617</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getIntrinsicID() <span class="keyword">const</span> -&gt; llvm::Intrinsic::ID {</div>
@@ -706,10 +706,10 @@ $(function() {
 <div class="line"><a name="l00638"></a><span class="lineno">  638</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getOperands() <span class="keyword">const</span> -&gt; PtrVector&lt;Value *&gt; {</div>
 <div class="line"><a name="l00639"></a><span class="lineno">  639</span>&#160;    <span class="keywordflow">return</span> ins-&gt;getOperands();</div>
 <div class="line"><a name="l00640"></a><span class="lineno">  640</span>&#160;  }</div>
-<div class="line"><a name="l00641"></a><span class="lineno">  641</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getOperand(<span class="keywordtype">size_t</span> i) -&gt; Value * {</div>
+<div class="line"><a name="l00641"></a><span class="lineno">  641</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getOperand(<span class="keywordtype">size_t</span> i) -&gt; <a class="code" href="classpoly_1_1IR_1_1Value.html">Value</a> * {</div>
 <div class="line"><a name="l00642"></a><span class="lineno">  642</span>&#160;    <span class="keywordflow">return</span> ins-&gt;getOperand(i);</div>
 <div class="line"><a name="l00643"></a><span class="lineno">  643</span>&#160;  }</div>
-<div class="line"><a name="l00644"></a><span class="lineno">  644</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getOperand(<span class="keywordtype">size_t</span> i) <span class="keyword">const</span> -&gt; Value * {</div>
+<div class="line"><a name="l00644"></a><span class="lineno">  644</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getOperand(<span class="keywordtype">size_t</span> i) <span class="keyword">const</span> -&gt; <a class="code" href="classpoly_1_1IR_1_1Value.html">Value</a> * {</div>
 <div class="line"><a name="l00645"></a><span class="lineno">  645</span>&#160;    <span class="keywordflow">return</span> ins-&gt;getOperand(i);</div>
 <div class="line"><a name="l00646"></a><span class="lineno">  646</span>&#160;  }</div>
 <div class="line"><a name="l00647"></a><span class="lineno">  647</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getNumOperands() <span class="keyword">const</span> -&gt; <span class="keywordtype">size_t</span> {</div>
@@ -731,7 +731,7 @@ $(function() {
 <div class="line"><a name="l00663"></a><span class="lineno">  663</span>&#160;  }</div>
 <div class="line"><a name="l00664"></a><span class="lineno">  664</span>&#160;};</div>
 <div class="line"><a name="l00665"></a><span class="lineno">  665</span>&#160; </div>
-<div class="line"><a name="l00666"></a><span class="lineno">  666</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> Value::getCost(llvm::TargetTransformInfo &amp;TTI, <a class="code" href="classpoly_1_1IR_1_1cost_1_1VectorWidth.html">cost::VectorWidth</a> W)</div>
+<div class="line"><a name="l00666"></a><span class="lineno"><a class="line" href="classpoly_1_1IR_1_1Value.html#adb093c83013329c7391357aa9f19144d">  666</a></span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> <a class="code" href="classpoly_1_1IR_1_1Value.html#adb093c83013329c7391357aa9f19144d">Value::getCost</a>(llvm::TargetTransformInfo &amp;TTI, <a class="code" href="classpoly_1_1IR_1_1cost_1_1VectorWidth.html">cost::VectorWidth</a> W)</div>
 <div class="line"><a name="l00667"></a><span class="lineno">  667</span>&#160;  -&gt; <a class="code" href="structpoly_1_1IR_1_1cost_1_1RecipThroughputLatency.html">cost::RecipThroughputLatency</a> {</div>
 <div class="line"><a name="l00668"></a><span class="lineno">  668</span>&#160;  <span class="keywordflow">if</span> (<span class="keyword">auto</span> *a = llvm::dyn_cast&lt;Addr&gt;(<span class="keyword">this</span>)) <span class="keywordflow">return</span> a-&gt;getCost(TTI, W);</div>
 <div class="line"><a name="l00669"></a><span class="lineno">  669</span>&#160;  invariant(getKind() &gt;= VK_Func);</div>
@@ -741,7 +741,7 @@ $(function() {
 <div class="line"><a name="l00673"></a><span class="lineno">  673</span>&#160;  <span class="keywordflow">if</span> (<span class="keyword">auto</span> *a = llvm::dyn_cast&lt;Addr&gt;(<span class="keyword">this</span>)) <span class="keywordflow">return</span> a-&gt;getInstruction();</div>
 <div class="line"><a name="l00674"></a><span class="lineno">  674</span>&#160;  <span class="keywordflow">if</span> (<span class="keyword">auto</span> *I = llvm::dyn_cast&lt;Compute&gt;(<span class="keyword">this</span>)) <span class="keywordflow">return</span> I-&gt;getLLVMInstruction();</div>
 <div class="line"><a name="l00675"></a><span class="lineno">  675</span>&#160;  invariant(getKind() == VK_CVal);</div>
-<div class="line"><a name="l00676"></a><span class="lineno">  676</span>&#160;  <span class="keywordflow">return</span> <span class="keyword">static_cast&lt;</span>CVal *<span class="keyword">&gt;</span>(<span class="keyword">this</span>)-&gt;getValue();</div>
+<div class="line"><a name="l00676"></a><span class="lineno">  676</span>&#160;  <span class="keywordflow">return</span> <span class="keyword">static_cast&lt;</span><a class="code" href="classpoly_1_1IR_1_1CVal.html">CVal</a> *<span class="keyword">&gt;</span>(<span class="keyword">this</span>)-&gt;getValue();</div>
 <div class="line"><a name="l00677"></a><span class="lineno">  677</span>&#160;}</div>
 <div class="line"><a name="l00678"></a><span class="lineno">  678</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> Value::getValue() const -&gt; const llvm::Value * {</div>
 <div class="line"><a name="l00679"></a><span class="lineno">  679</span>&#160;  <span class="keywordflow">if</span> (<span class="keyword">const</span> <span class="keyword">auto</span> *a = llvm::dyn_cast&lt;Addr&gt;(<span class="keyword">this</span>)) <span class="keywordflow">return</span> a-&gt;getInstruction();</div>
@@ -755,7 +755,7 @@ $(function() {
 <div class="line"><a name="l00687"></a><span class="lineno">  687</span>&#160;  invariant(getKind() &gt;= VK_Func);</div>
 <div class="line"><a name="l00688"></a><span class="lineno">  688</span>&#160;  <span class="keywordflow">return</span> <span class="keyword">static_cast&lt;</span>Compute *<span class="keyword">&gt;</span>(<span class="keyword">this</span>)-&gt;getLLVMInstruction();</div>
 <div class="line"><a name="l00689"></a><span class="lineno">  689</span>&#160;}</div>
-<div class="line"><a name="l00690"></a><span class="lineno">  690</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> Value::getInstruction() const -&gt; const llvm::Instruction * {</div>
+<div class="line"><a name="l00690"></a><span class="lineno">  690</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> Value::getInstruction() const -&gt; const llvm::<a class="code" href="classpoly_1_1IR_1_1Instruction.html#a03ac07d26dc92b783043755108fac3e4">Instruction</a> * {</div>
 <div class="line"><a name="l00691"></a><span class="lineno">  691</span>&#160;  <span class="keywordflow">if</span> (<span class="keyword">const</span> <span class="keyword">auto</span> *a = llvm::dyn_cast&lt;Addr&gt;(<span class="keyword">this</span>)) <span class="keywordflow">return</span> a-&gt;getInstruction();</div>
 <div class="line"><a name="l00692"></a><span class="lineno">  692</span>&#160;  invariant(getKind() &gt;= VK_Func);</div>
 <div class="line"><a name="l00693"></a><span class="lineno">  693</span>&#160;  <span class="keywordflow">return</span> <span class="keyword">static_cast&lt;</span><span class="keyword">const </span>Compute *<span class="keyword">&gt;</span>(<span class="keyword">this</span>)-&gt;getLLVMInstruction();</div>
@@ -839,7 +839,7 @@ $(function() {
 <div class="line"><a name="l00771"></a><span class="lineno">  771</span>&#160;  <span class="keywordflow">return</span> <span class="keyword">nullptr</span>;</div>
 <div class="line"><a name="l00772"></a><span class="lineno">  772</span>&#160;}</div>
 <div class="line"><a name="l00773"></a><span class="lineno">  773</span>&#160;[[nodiscard]] constexpr <span class="keyword">auto</span> Instruction::getIdentifier() const</div>
-<div class="line"><a name="l00774"></a><span class="lineno">  774</span>&#160;  -&gt; Instruction::Identifier {</div>
+<div class="line"><a name="l00774"></a><span class="lineno">  774</span>&#160;  -&gt; <a class="code" href="classpoly_1_1IR_1_1Instruction.html#a03ac07d26dc92b783043755108fac3e4">Instruction</a>::Identifier {</div>
 <div class="line"><a name="l00775"></a><span class="lineno">  775</span>&#160;  llvm::Intrinsic::ID id;</div>
 <div class="line"><a name="l00776"></a><span class="lineno">  776</span>&#160;  <span class="keywordflow">if</span> (<span class="keyword">const</span> <span class="keyword">auto</span> *I = llvm::dyn_cast&lt;Compute&gt;(<span class="keyword">this</span>)) <span class="keywordtype">id</span> = I-&gt;getOpId();</div>
 <div class="line"><a name="l00777"></a><span class="lineno">  777</span>&#160;  <span class="keywordflow">switch</span> (getKind()) {</div>
@@ -873,12 +873,18 @@ $(function() {
 <div class="line"><a name="l00805"></a><span class="lineno">  805</span>&#160;<span class="comment">// llvm::Intrinsic::IndependentIntrinsics y = llvm::Intrinsic::sin;</span></div>
 <div class="line"><a name="l00806"></a><span class="lineno">  806</span>&#160; </div>
 <div class="line"><a name="l00807"></a><span class="lineno">  807</span>&#160;} <span class="comment">// namespace poly::IR</span></div>
+<div class="ttc" id="aclasspoly_1_1IR_1_1CVal_html"><div class="ttname"><a href="classpoly_1_1IR_1_1CVal.html">poly::IR::CVal</a></div><div class="ttdef"><b>Definition:</b> Node.hpp:430</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Call_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Call.html">poly::IR::Call</a></div><div class="ttdef"><b>Definition:</b> Instruction.hpp:605</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Compute_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Compute.html">poly::IR::Compute</a></div><div class="ttdef"><b>Definition:</b> Instruction.hpp:72</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Compute_html_a3ffde0af9933fbd4793d549830a0e8a2"><div class="ttname"><a href="classpoly_1_1IR_1_1Compute.html#a3ffde0af9933fbd4793d549830a0e8a2">poly::IR::Compute::getCost</a></div><div class="ttdeci">auto getCost(llvm::TargetTransformInfo &amp;TTI, VectorWidth W) -&gt; RecipThroughputLatency</div><div class="ttdoc">fall back in case we need value operand</div><div class="ttdef"><b>Definition:</b> Instruction.hpp:230</div></div>
+<div class="ttc" id="aclasspoly_1_1IR_1_1Instruction_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Instruction.html">poly::IR::Instruction</a></div><div class="ttdef"><b>Definition:</b> Node.hpp:406</div></div>
+<div class="ttc" id="aclasspoly_1_1IR_1_1Instruction_html_a03ac07d26dc92b783043755108fac3e4"><div class="ttname"><a href="classpoly_1_1IR_1_1Instruction.html#a03ac07d26dc92b783043755108fac3e4">poly::IR::Instruction::Instruction</a></div><div class="ttdeci">constexpr Instruction(ValKind kind)</div><div class="ttdef"><b>Definition:</b> Node.hpp:411</div></div>
+<div class="ttc" id="aclasspoly_1_1IR_1_1Node_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Node.html">poly::IR::Node</a></div><div class="ttdef"><b>Definition:</b> Node.hpp:82</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1OpaqueFunc_html"><div class="ttname"><a href="classpoly_1_1IR_1_1OpaqueFunc.html">poly::IR::OpaqueFunc</a></div><div class="ttdef"><b>Definition:</b> Instruction.hpp:273</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Operation_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Operation.html">poly::IR::Operation</a></div><div class="ttdef"><b>Definition:</b> Instruction.hpp:311</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Operation_html_a3c026a3b9192dea51a7dc6b57e6833b9"><div class="ttname"><a href="classpoly_1_1IR_1_1Operation.html#a3c026a3b9192dea51a7dc6b57e6833b9">poly::IR::Operation::selectCost</a></div><div class="ttdeci">auto selectCost(llvm::TargetTransformInfo &amp;TTI, unsigned int vectorWidth) const -&gt; llvm::InstructionCost</div><div class="ttdef"><b>Definition:</b> Instruction.hpp:496</div></div>
+<div class="ttc" id="aclasspoly_1_1IR_1_1Value_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Value.html">poly::IR::Value</a></div><div class="ttdef"><b>Definition:</b> Node.hpp:316</div></div>
+<div class="ttc" id="aclasspoly_1_1IR_1_1Value_html_adb093c83013329c7391357aa9f19144d"><div class="ttname"><a href="classpoly_1_1IR_1_1Value.html#adb093c83013329c7391357aa9f19144d">poly::IR::Value::getCost</a></div><div class="ttdeci">auto getCost(llvm::TargetTransformInfo &amp;TTI, cost::VectorWidth W) -&gt; cost::RecipThroughputLatency</div><div class="ttdoc">these methods are overloaded for specific subtypes</div><div class="ttdef"><b>Definition:</b> Instruction.hpp:666</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1cost_1_1VectorWidth_html"><div class="ttname"><a href="classpoly_1_1IR_1_1cost_1_1VectorWidth.html">poly::IR::cost::VectorWidth</a></div><div class="ttdef"><b>Definition:</b> InstructionCost.hpp:45</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1cost_1_1VectorizationCosts_html"><div class="ttname"><a href="classpoly_1_1IR_1_1cost_1_1VectorizationCosts.html">poly::IR::cost::VectorizationCosts</a></div><div class="ttdef"><b>Definition:</b> InstructionCost.hpp:68</div></div>
 <div class="ttc" id="astructpoly_1_1IR_1_1InstByValue_html"><div class="ttname"><a href="structpoly_1_1IR_1_1InstByValue.html">poly::IR::InstByValue</a></div><div class="ttdef"><b>Definition:</b> Instruction.hpp:265</div></div>

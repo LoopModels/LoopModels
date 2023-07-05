@@ -83,7 +83,7 @@ constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>operator Compute
 constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Operation</b> (<a class="el" href="classpoly_1_1IR_1_1Compute.html">Compute</a> *I)</td></tr>
 <tr class="separator:a9bdebc59f9486c49cdd094fbf8185c74"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a83ca35cdceee2596ff2ff3871e3c4369"><td class="memItemLeft" align="right" valign="top"><a id="a83ca35cdceee2596ff2ff3871e3c4369"></a>
-constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Operation</b> (Node *n)</td></tr>
+constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Operation</b> (<a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a> *n)</td></tr>
 <tr class="separator:a83ca35cdceee2596ff2ff3871e3c4369"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0745ca67123294d09e18c85ab7c69f55"><td class="memItemLeft" align="right" valign="top"><a id="a0745ca67123294d09e18c85ab7c69f55"></a>
 constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>operator bool</b> () const</td></tr>
@@ -92,10 +92,10 @@ constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>operator bool</b
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>getOpCode</b> () const -&gt; llvm::Intrinsic::ID</td></tr>
 <tr class="separator:aa66bf186982320d67a71e3cdedad13a4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab43c9c0ee2505f59f571fb7c304fc05b"><td class="memItemLeft" align="right" valign="top"><a id="ab43c9c0ee2505f59f571fb7c304fc05b"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getOperands</b> () const -&gt; PtrVector&lt; Value * &gt;</td></tr>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getOperands</b> () const -&gt; PtrVector&lt; <a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> * &gt;</td></tr>
 <tr class="separator:ab43c9c0ee2505f59f571fb7c304fc05b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a79a6bfc0c32f58a6bd56d9bc743dff1d"><td class="memItemLeft" align="right" valign="top"><a id="a79a6bfc0c32f58a6bd56d9bc743dff1d"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getOperand</b> (size_t i) const -&gt; Value *</td></tr>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getOperand</b> (size_t i) const -&gt; <a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> *</td></tr>
 <tr class="separator:a79a6bfc0c32f58a6bd56d9bc743dff1d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a29ae5e2078aed6a93aa93376e1dc0ed4"><td class="memItemLeft" align="right" valign="top"><a id="a29ae5e2078aed6a93aa93376e1dc0ed4"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumOperands</b> () const -&gt; unsigned</td></tr>
@@ -190,46 +190,46 @@ Static Public Member Functions</h2></td></tr>
 static auto&#160;</td><td class="memItemRight" valign="bottom"><b>getOpCode</b> (llvm::Value *v) -&gt; std::optional&lt; llvm::Intrinsic::ID &gt;</td></tr>
 <tr class="separator:a308e6d6020fabdb35ba8f62c2b66db40"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a42291afda31b17106e7fca67fa3ebbe7"><td class="memItemLeft" align="right" valign="top"><a id="a42291afda31b17106e7fca67fa3ebbe7"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>isFMul</b> (Node *n) -&gt; bool</td></tr>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>isFMul</b> (<a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a> *n) -&gt; bool</td></tr>
 <tr class="separator:a42291afda31b17106e7fca67fa3ebbe7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a678eae7ddeed820d46c9ff3908154a9c"><td class="memItemLeft" align="right" valign="top"><a id="a678eae7ddeed820d46c9ff3908154a9c"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>isFNeg</b> (Node *n) -&gt; bool</td></tr>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>isFNeg</b> (<a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a> *n) -&gt; bool</td></tr>
 <tr class="separator:a678eae7ddeed820d46c9ff3908154a9c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2c9791d960f480cacaf33970be755db2"><td class="memItemLeft" align="right" valign="top"><a id="a2c9791d960f480cacaf33970be755db2"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>isFMulOrFNegOfFMul</b> (Node *n) -&gt; bool</td></tr>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>isFMulOrFNegOfFMul</b> (<a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a> *n) -&gt; bool</td></tr>
 <tr class="separator:a2c9791d960f480cacaf33970be755db2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac68c469f310620e80627866c20feb7d4"><td class="memItemLeft" align="right" valign="top"><a id="ac68c469f310620e80627866c20feb7d4"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>isFAdd</b> (Node *n) -&gt; bool</td></tr>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>isFAdd</b> (<a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a> *n) -&gt; bool</td></tr>
 <tr class="separator:ac68c469f310620e80627866c20feb7d4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a97b1a3a975d7be5658950f018c22de25"><td class="memItemLeft" align="right" valign="top"><a id="a97b1a3a975d7be5658950f018c22de25"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>isFSub</b> (Node *n) -&gt; bool</td></tr>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>isFSub</b> (<a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a> *n) -&gt; bool</td></tr>
 <tr class="separator:a97b1a3a975d7be5658950f018c22de25"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a477286dfd7f5a98e169d8d1c46cbb119"><td class="memItemLeft" align="right" valign="top"><a id="a477286dfd7f5a98e169d8d1c46cbb119"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>isShuffle</b> (Node *n) -&gt; bool</td></tr>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>isShuffle</b> (<a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a> *n) -&gt; bool</td></tr>
 <tr class="separator:a477286dfd7f5a98e169d8d1c46cbb119"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a38e1ae9ed2c3782af562cab34183860c"><td class="memItemLeft" align="right" valign="top"><a id="a38e1ae9ed2c3782af562cab34183860c"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>isFcmp</b> (Node *n) -&gt; bool</td></tr>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>isFcmp</b> (<a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a> *n) -&gt; bool</td></tr>
 <tr class="separator:a38e1ae9ed2c3782af562cab34183860c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8cd5feb83068de1a51baee82a6d8a9a5"><td class="memItemLeft" align="right" valign="top"><a id="a8cd5feb83068de1a51baee82a6d8a9a5"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>isIcmp</b> (Node *n) -&gt; bool</td></tr>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>isIcmp</b> (<a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a> *n) -&gt; bool</td></tr>
 <tr class="separator:a8cd5feb83068de1a51baee82a6d8a9a5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a03e4c5cf65858501afd6636d42e8d564"><td class="memItemLeft" align="right" valign="top"><a id="a03e4c5cf65858501afd6636d42e8d564"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>isCmp</b> (Node *n) -&gt; bool</td></tr>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>isCmp</b> (<a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a> *n) -&gt; bool</td></tr>
 <tr class="separator:a03e4c5cf65858501afd6636d42e8d564"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab7c4869e0a7ae2d5aaf507a02eea9e48"><td class="memItemLeft" align="right" valign="top"><a id="ab7c4869e0a7ae2d5aaf507a02eea9e48"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>isSelect</b> (Node *n) -&gt; bool</td></tr>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>isSelect</b> (<a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a> *n) -&gt; bool</td></tr>
 <tr class="separator:ab7c4869e0a7ae2d5aaf507a02eea9e48"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abda3afc55fb802f82e561c5d553f906b"><td class="memItemLeft" align="right" valign="top"><a id="abda3afc55fb802f82e561c5d553f906b"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>isExtract</b> (Node *n) -&gt; bool</td></tr>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>isExtract</b> (<a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a> *n) -&gt; bool</td></tr>
 <tr class="separator:abda3afc55fb802f82e561c5d553f906b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acdf144b4c763f34b8b471709f7323ecb"><td class="memItemLeft" align="right" valign="top"><a id="acdf144b4c763f34b8b471709f7323ecb"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>isInsert</b> (Node *n) -&gt; bool</td></tr>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>isInsert</b> (<a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a> *n) -&gt; bool</td></tr>
 <tr class="separator:acdf144b4c763f34b8b471709f7323ecb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2aa5d6009c90c63b3226933870c6098d"><td class="memItemLeft" align="right" valign="top"><a id="a2aa5d6009c90c63b3226933870c6098d"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>isExtractValue</b> (Node *n) -&gt; bool</td></tr>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>isExtractValue</b> (<a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a> *n) -&gt; bool</td></tr>
 <tr class="separator:a2aa5d6009c90c63b3226933870c6098d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a47dba46b777982d54be42c7e79e71092"><td class="memItemLeft" align="right" valign="top"><a id="a47dba46b777982d54be42c7e79e71092"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>isInsertValue</b> (Node *n) -&gt; bool</td></tr>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>isInsertValue</b> (<a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a> *n) -&gt; bool</td></tr>
 <tr class="separator:a47dba46b777982d54be42c7e79e71092"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a357ea3b020ad27842e551413b60a4b9b"><td class="memItemLeft" align="right" valign="top"><a id="a357ea3b020ad27842e551413b60a4b9b"></a>
 static auto&#160;</td><td class="memItemRight" valign="bottom"><b>selectCost</b> (llvm::TargetTransformInfo &amp;TTI, llvm::Type *T) -&gt; llvm::InstructionCost</td></tr>

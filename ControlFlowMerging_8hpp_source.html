@@ -101,15 +101,15 @@ $(function() {
 <div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;  dict::map&lt;Instruction *, Instruction *&gt; reMap;</div>
 <div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160; </div>
 <div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;<span class="keyword">public</span>:</div>
-<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;  <span class="keyword">auto</span> operator[](Instruction *J) -&gt; Instruction * {</div>
+<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;  <span class="keyword">auto</span> operator[](<a class="code" href="classpoly_1_1IR_1_1Instruction.html">Instruction</a> *J) -&gt; <a class="code" href="classpoly_1_1IR_1_1Instruction.html">Instruction</a> * {</div>
 <div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;    <span class="keywordflow">if</span> (<span class="keyword">auto</span> f = reMap.find(J); f != reMap.end()) <span class="keywordflow">return</span> f-&gt;second;</div>
 <div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;    <span class="keywordflow">return</span> J;</div>
 <div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;  }</div>
-<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;  <span class="keyword">auto</span> operator[](Value *J) -&gt; Value * {</div>
+<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;  <span class="keyword">auto</span> operator[](<a class="code" href="classpoly_1_1IR_1_1Value.html">Value</a> *J) -&gt; <a class="code" href="classpoly_1_1IR_1_1Value.html">Value</a> * {</div>
 <div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;    <span class="keywordflow">if</span> (<span class="keyword">auto</span> *I = llvm::dyn_cast&lt;Instruction&gt;(J)) <span class="keywordflow">return</span> (*<span class="keyword">this</span>)[I];</div>
 <div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;    <span class="keywordflow">return</span> J;</div>
 <div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;  }</div>
-<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;  <span class="keywordtype">void</span> remapFromTo(Instruction *K, Instruction *J) { reMap[K] = J; }</div>
+<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;  <span class="keywordtype">void</span> remapFromTo(<a class="code" href="classpoly_1_1IR_1_1Instruction.html">Instruction</a> *K, <a class="code" href="classpoly_1_1IR_1_1Instruction.html">Instruction</a> *J) { reMap[K] = J; }</div>
 <div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;};</div>
 <div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160; </div>
 <div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;<span class="comment">// represents the cost of merging key=&gt;values; cost is hopefully negative.</span></div>
@@ -132,23 +132,23 @@ $(function() {
 <div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;  <a class="code" href="structpoly_1_1dict_1_1amap.html">amap&lt;Instruction *, aset&lt;Instruction *&gt;</a> *&gt; ancestorMap;</div>
 <div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;  llvm::InstructionCost cost;</div>
 <div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160; </div>
-<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;  <span class="keyword">auto</span> getAncestors(Value *op) -&gt; <a class="code" href="structpoly_1_1dict_1_1aset.html">aset&lt;Instruction *&gt;</a> * {</div>
+<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;  <span class="keyword">auto</span> getAncestors(<a class="code" href="classpoly_1_1IR_1_1Value.html">Value</a> *op) -&gt; <a class="code" href="structpoly_1_1dict_1_1aset.html">aset&lt;Instruction *&gt;</a> * {</div>
 <div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;    <span class="keywordflow">if</span> (<span class="keyword">auto</span> *I = llvm::dyn_cast&lt;Instruction&gt;(op))</div>
 <div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;      <span class="keywordflow">if</span> (<span class="keyword">auto</span> *f = ancestorMap.find(I); f != ancestorMap.end())</div>
 <div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;        <span class="keywordflow">return</span> f-&gt;second;</div>
 <div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">nullptr</span>;</div>
 <div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;  }</div>
-<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;  <span class="keyword">auto</span> setAncestors(Value *op, <a class="code" href="structpoly_1_1dict_1_1aset.html">aset&lt;Instruction *&gt;</a> *ancestors) {</div>
+<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;  <span class="keyword">auto</span> setAncestors(<a class="code" href="classpoly_1_1IR_1_1Value.html">Value</a> *op, <a class="code" href="structpoly_1_1dict_1_1aset.html">aset&lt;Instruction *&gt;</a> *ancestors) {</div>
 <div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;    <span class="keywordflow">if</span> (<span class="keyword">auto</span> *I = llvm::dyn_cast&lt;Instruction&gt;(op)) ancestorMap[I] = ancestors;</div>
 <div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;  }</div>
 <div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;  <span class="comment">// NOLINTNEXTLINE(misc-no-recursion)</span></div>
-<div class="line"><a name="l00076"></a><span class="lineno"><a class="line" href="structpoly_1_1IR_1_1MergingCost.html#a1bb269c73bb1d0771378624b259ee0e0">   76</a></span>&#160;  <span class="keyword">auto</span> <a class="code" href="structpoly_1_1IR_1_1MergingCost.html#a1bb269c73bb1d0771378624b259ee0e0">initAncestors</a>(Arena&lt;&gt; *alloc, Instruction *key)</div>
+<div class="line"><a name="l00076"></a><span class="lineno"><a class="line" href="structpoly_1_1IR_1_1MergingCost.html#a1bb269c73bb1d0771378624b259ee0e0">   76</a></span>&#160;  <span class="keyword">auto</span> <a class="code" href="structpoly_1_1IR_1_1MergingCost.html#a1bb269c73bb1d0771378624b259ee0e0">initAncestors</a>(Arena&lt;&gt; *alloc, <a class="code" href="classpoly_1_1IR_1_1Instruction.html">Instruction</a> *key)</div>
 <div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;    -&gt; <a class="code" href="structpoly_1_1dict_1_1aset.html">aset&lt;Instruction *&gt;</a> * {</div>
 <div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160; </div>
 <div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;    <span class="keyword">auto</span> *set = alloc-&gt;construct&lt;<a class="code" href="structpoly_1_1dict_1_1aset.html">aset&lt;Instruction *&gt;</a>&gt;(alloc);</div>
 <div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;    set-&gt;insert(key);</div>
 <div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;    ancestorMap[key] = set;</div>
-<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;    <span class="keywordflow">for</span> (Value *op : key-&gt;getOperands()) {</div>
+<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;    <span class="keywordflow">for</span> (<a class="code" href="classpoly_1_1IR_1_1Value.html">Value</a> *op : key-&gt;getOperands()) {</div>
 <div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;      <span class="keywordflow">if</span> (<span class="keyword">auto</span> *I = llvm::dyn_cast&lt;Compute&gt;(op); I &amp;&amp; I-&gt;isComplete()) {</div>
 <div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;        <span class="keyword">auto</span> *A = getAncestors(alloc, I);</div>
 <div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;        set-&gt;insert(A-&gt;begin(), A-&gt;end());</div>
@@ -181,20 +181,20 @@ $(function() {
 <div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;      <span class="keywordflow">return</span> it-&gt;second;</div>
 <div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">nullptr</span>;</div>
 <div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;  }</div>
-<div class="line"><a name="l00118"></a><span class="lineno"><a class="line" href="structpoly_1_1IR_1_1MergingCost.html#a0f5c22824734316304ca40f3a5e613f6">  118</a></span>&#160;  <span class="keyword">auto</span> <a class="code" href="structpoly_1_1IR_1_1MergingCost.html#a0f5c22824734316304ca40f3a5e613f6">isMerged</a>(Instruction *key) <span class="keyword">const</span> -&gt; <span class="keywordtype">bool</span> { <span class="keywordflow">return</span> mergeMap.count(key); }</div>
+<div class="line"><a name="l00118"></a><span class="lineno"><a class="line" href="structpoly_1_1IR_1_1MergingCost.html#a0f5c22824734316304ca40f3a5e613f6">  118</a></span>&#160;  <span class="keyword">auto</span> <a class="code" href="structpoly_1_1IR_1_1MergingCost.html#a0f5c22824734316304ca40f3a5e613f6">isMerged</a>(<a class="code" href="classpoly_1_1IR_1_1Instruction.html">Instruction</a> *key) <span class="keyword">const</span> -&gt; <span class="keywordtype">bool</span> { <span class="keywordflow">return</span> mergeMap.count(key); }</div>
 <div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;  <span class="comment">// note: this is not the same as `isMerged(I) &amp;&amp; isMerged(J)`,</span></div>
 <div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;  <span class="comment">// as `I` and `J` may be merged with different Instructions</span></div>
 <div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;  <span class="comment">// however, isMerged(I, J) == isMerged(J, I)</span></div>
 <div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;  <span class="comment">// so we ignore easily swappable parameters</span></div>
-<div class="line"><a name="l00125"></a><span class="lineno"><a class="line" href="structpoly_1_1IR_1_1MergingCost.html#a1422508a6cccaee192ddbe9f6da038a9">  125</a></span>&#160;  <span class="keyword">auto</span> <a class="code" href="structpoly_1_1IR_1_1MergingCost.html#a1422508a6cccaee192ddbe9f6da038a9">isMerged</a>(Instruction *L, Instruction *J) <span class="keyword">const</span> -&gt; <span class="keywordtype">bool</span> {</div>
-<div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;    Instruction *K = J;</div>
+<div class="line"><a name="l00125"></a><span class="lineno"><a class="line" href="structpoly_1_1IR_1_1MergingCost.html#a1422508a6cccaee192ddbe9f6da038a9">  125</a></span>&#160;  <span class="keyword">auto</span> <a class="code" href="structpoly_1_1IR_1_1MergingCost.html#a1422508a6cccaee192ddbe9f6da038a9">isMerged</a>(<a class="code" href="classpoly_1_1IR_1_1Instruction.html">Instruction</a> *L, <a class="code" href="classpoly_1_1IR_1_1Instruction.html">Instruction</a> *J) <span class="keyword">const</span> -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;    <a class="code" href="classpoly_1_1IR_1_1Instruction.html">Instruction</a> *K = J;</div>
 <div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;    <span class="keywordflow">do</span> {</div>
 <div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160;      <span class="keywordflow">if</span> (L == K) <span class="keywordflow">return</span> <span class="keyword">true</span>;</div>
 <div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160;      K = findMerge(K);</div>
 <div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160;    } <span class="keywordflow">while</span> (K &amp;&amp; K != J);</div>
 <div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
 <div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160;  }</div>
-<div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;  <span class="keyword">auto</span> <a class="code" href="structpoly_1_1IR_1_1MergingCost.html#a0f5c22824734316304ca40f3a5e613f6">isMerged</a>(Value *L, Value *J) <span class="keyword">const</span> -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;  <span class="keyword">auto</span> <a class="code" href="structpoly_1_1IR_1_1MergingCost.html#a0f5c22824734316304ca40f3a5e613f6">isMerged</a>(<a class="code" href="classpoly_1_1IR_1_1Value.html">Value</a> *L, <a class="code" href="classpoly_1_1IR_1_1Value.html">Value</a> *J) <span class="keyword">const</span> -&gt; <span class="keywordtype">bool</span> {</div>
 <div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;    <span class="keywordflow">if</span> (L == J) <span class="keywordflow">return</span> <span class="keyword">true</span>;</div>
 <div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;    <span class="keywordflow">if</span> (<span class="keyword">auto</span> *I = llvm::dyn_cast&lt;Instruction&gt;(L))</div>
 <div class="line"><a name="l00136"></a><span class="lineno">  136</span>&#160;      <span class="keywordflow">if</span> (<span class="keyword">auto</span> *K = llvm::dyn_cast&lt;Instruction&gt;(J)) <span class="keywordflow">return</span> <a class="code" href="structpoly_1_1IR_1_1MergingCost.html#a0f5c22824734316304ca40f3a5e613f6">isMerged</a>(I, K);</div>
@@ -227,7 +227,7 @@ $(function() {
 <div class="line"><a name="l00163"></a><span class="lineno"><a class="line" href="structpoly_1_1IR_1_1MergingCost_1_1SelectCounter.html">  163</a></span>&#160;  <span class="keyword">struct </span><a class="code" href="structpoly_1_1IR_1_1MergingCost_1_1SelectCounter.html">SelectCounter</a> {</div>
 <div class="line"><a name="l00164"></a><span class="lineno">  164</span>&#160;    <span class="keywordtype">unsigned</span> numSelects{0};</div>
 <div class="line"><a name="l00165"></a><span class="lineno">  165</span>&#160;    constexpr <span class="keyword">explicit</span> <span class="keyword">operator</span> unsigned()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> numSelects; }</div>
-<div class="line"><a name="l00166"></a><span class="lineno">  166</span>&#160;    constexpr <span class="keywordtype">void</span> select(<span class="keywordtype">size_t</span>, Value *, Value *) { ++numSelects; }</div>
+<div class="line"><a name="l00166"></a><span class="lineno">  166</span>&#160;    constexpr <span class="keywordtype">void</span> select(<span class="keywordtype">size_t</span>, <a class="code" href="classpoly_1_1IR_1_1Value.html">Value</a> *, <a class="code" href="classpoly_1_1IR_1_1Value.html">Value</a> *) { ++numSelects; }</div>
 <div class="line"><a name="l00167"></a><span class="lineno">  167</span>&#160;  };</div>
 <div class="line"><a name="l00168"></a><span class="lineno"><a class="line" href="structpoly_1_1IR_1_1MergingCost_1_1SelectAllocator.html">  168</a></span>&#160;  <span class="keyword">struct </span><a class="code" href="structpoly_1_1IR_1_1MergingCost_1_1SelectAllocator.html">SelectAllocator</a> {</div>
 <div class="line"><a name="l00169"></a><span class="lineno">  169</span>&#160;    Arena&lt;&gt; *alloc; <span class="comment">// short term allocator</span></div>
@@ -239,7 +239,7 @@ $(function() {
 <div class="line"><a name="l00175"></a><span class="lineno">  175</span>&#160;    UList&lt;Value *&gt; *predicates;</div>
 <div class="line"><a name="l00176"></a><span class="lineno">  176</span>&#160; </div>
 <div class="line"><a name="l00177"></a><span class="lineno">  177</span>&#160;    constexpr <span class="keyword">explicit</span> <span class="keyword">operator</span> unsigned()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> 0; }</div>
-<div class="line"><a name="l00178"></a><span class="lineno">  178</span>&#160;    <span class="keywordtype">void</span> select(<span class="keywordtype">size_t</span> i, Value *A, Value *B) {</div>
+<div class="line"><a name="l00178"></a><span class="lineno">  178</span>&#160;    <span class="keywordtype">void</span> select(<span class="keywordtype">size_t</span> i, <a class="code" href="classpoly_1_1IR_1_1Value.html">Value</a> *A, <a class="code" href="classpoly_1_1IR_1_1Value.html">Value</a> *B) {</div>
 <div class="line"><a name="l00179"></a><span class="lineno">  179</span>&#160;      A = reMap[A];</div>
 <div class="line"><a name="l00180"></a><span class="lineno">  180</span>&#160;      B = reMap[B];</div>
 <div class="line"><a name="l00181"></a><span class="lineno">  181</span>&#160;      <a class="code" href="classpoly_1_1IR_1_1Compute.html">Compute</a> *C = cache.<a class="code" href="classpoly_1_1IR_1_1Cache.html#a6faece9ac31b45aae0353250ff03084d">createSelect</a>(pred, A, B, predicates);</div>
@@ -253,7 +253,7 @@ $(function() {
 <div class="line"><a name="l00189"></a><span class="lineno">  189</span>&#160;    }</div>
 <div class="line"><a name="l00190"></a><span class="lineno">  190</span>&#160;  };</div>
 <div class="line"><a name="l00191"></a><span class="lineno">  191</span>&#160; </div>
-<div class="line"><a name="l00192"></a><span class="lineno">  192</span>&#160;  <span class="keyword">static</span> <span class="keyword">auto</span> init(<a class="code" href="structpoly_1_1IR_1_1MergingCost_1_1Allocate.html">Allocate</a> a, Instruction *A, Instruction *B)</div>
+<div class="line"><a name="l00192"></a><span class="lineno">  192</span>&#160;  <span class="keyword">static</span> <span class="keyword">auto</span> init(<a class="code" href="structpoly_1_1IR_1_1MergingCost_1_1Allocate.html">Allocate</a> a, <a class="code" href="classpoly_1_1IR_1_1Instruction.html">Instruction</a> *A, <a class="code" href="classpoly_1_1IR_1_1Instruction.html">Instruction</a> *B)</div>
 <div class="line"><a name="l00193"></a><span class="lineno">  193</span>&#160;    -&gt; <a class="code" href="structpoly_1_1IR_1_1MergingCost_1_1SelectAllocator.html">SelectAllocator</a> {</div>
 <div class="line"><a name="l00194"></a><span class="lineno">  194</span>&#160;    <a class="code" href="structpoly_1_1IR_1_1Predicate_1_1Intersection.html">Predicate::Intersection</a> P = a.valToPred[A].getConflict(a.valToPred[B]);</div>
 <div class="line"><a name="l00195"></a><span class="lineno">  195</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="structpoly_1_1IR_1_1MergingCost_1_1SelectAllocator.html">SelectAllocator</a>{a.alloc,     a.cache, a.reMap,     a.operands,</div>
@@ -270,7 +270,7 @@ $(function() {
 <div class="line"><a name="l00206"></a><span class="lineno">  206</span>&#160;  <span class="comment">// take the same code paths, to both avoid code duplication and to</span></div>
 <div class="line"><a name="l00207"></a><span class="lineno">  207</span>&#160;  <span class="comment">// make sure the cost modeling reflects the actual code we&#39;re generating.</span></div>
 <div class="line"><a name="l00208"></a><span class="lineno">  208</span>&#160;  <span class="keyword">template</span> &lt;<span class="keyword">typename</span> S&gt;</div>
-<div class="line"><a name="l00209"></a><span class="lineno"><a class="line" href="structpoly_1_1IR_1_1MergingCost.html#af52ae253e1281d3e0dfc121afc381561">  209</a></span>&#160;  <span class="keyword">auto</span> <a class="code" href="structpoly_1_1IR_1_1MergingCost.html#af52ae253e1281d3e0dfc121afc381561">mergeOperands</a>(Instruction *A, Instruction *B, S selects) {</div>
+<div class="line"><a name="l00209"></a><span class="lineno"><a class="line" href="structpoly_1_1IR_1_1MergingCost.html#af52ae253e1281d3e0dfc121afc381561">  209</a></span>&#160;  <span class="keyword">auto</span> <a class="code" href="structpoly_1_1IR_1_1MergingCost.html#af52ae253e1281d3e0dfc121afc381561">mergeOperands</a>(<a class="code" href="classpoly_1_1IR_1_1Instruction.html">Instruction</a> *A, <a class="code" href="classpoly_1_1IR_1_1Instruction.html">Instruction</a> *B, S selects) {</div>
 <div class="line"><a name="l00210"></a><span class="lineno">  210</span>&#160;    <span class="comment">// TODO: does this update the predicates?</span></div>
 <div class="line"><a name="l00211"></a><span class="lineno">  211</span>&#160;    <span class="comment">// now, we need to check everything connected to O and I in the mergeMap</span></div>
 <div class="line"><a name="l00212"></a><span class="lineno">  212</span>&#160;    <span class="comment">// to see if any of them need to be updated.</span></div>
@@ -348,7 +348,7 @@ $(function() {
 <div class="line"><a name="l00285"></a><span class="lineno">  285</span>&#160;  }</div>
 <div class="line"><a name="l00286"></a><span class="lineno">  286</span>&#160; </div>
 <div class="line"><a name="l00287"></a><span class="lineno">  287</span>&#160;  <span class="keywordtype">void</span> merge(Arena&lt;&gt; *alloc, llvm::TargetTransformInfo &amp;TTI,</div>
-<div class="line"><a name="l00288"></a><span class="lineno">  288</span>&#160;             <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> vectorBits, Instruction *A, Instruction *B) {</div>
+<div class="line"><a name="l00288"></a><span class="lineno">  288</span>&#160;             <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> vectorBits, <a class="code" href="classpoly_1_1IR_1_1Instruction.html">Instruction</a> *A, <a class="code" href="classpoly_1_1IR_1_1Instruction.html">Instruction</a> *B) {</div>
 <div class="line"><a name="l00289"></a><span class="lineno">  289</span>&#160;    mergeList.emplace_back(A, B);</div>
 <div class="line"><a name="l00290"></a><span class="lineno">  290</span>&#160;    <span class="keyword">auto</span> *aA = ancestorMap.find(B);</div>
 <div class="line"><a name="l00291"></a><span class="lineno">  291</span>&#160;    <span class="keyword">auto</span> *aB = ancestorMap.find(A);</div>
@@ -368,7 +368,7 @@ $(function() {
 <div class="line"><a name="l00305"></a><span class="lineno">  305</span>&#160;    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> W = vectorBits / B-&gt;getNumScalarBits();</div>
 <div class="line"><a name="l00306"></a><span class="lineno">  306</span>&#160;    <span class="keywordflow">if</span> (numSelects)</div>
 <div class="line"><a name="l00307"></a><span class="lineno">  307</span>&#160;      cost += numSelects * <a class="code" href="classpoly_1_1IR_1_1Operation.html#a3c026a3b9192dea51a7dc6b57e6833b9">Operation::selectCost</a>(TTI, B-&gt;getType(W));</div>
-<div class="line"><a name="l00308"></a><span class="lineno">  308</span>&#160;    cost -= B-&gt;getCost(TTI, VectorWidth(W)).recipThroughput;</div>
+<div class="line"><a name="l00308"></a><span class="lineno">  308</span>&#160;    cost -= B-&gt;<a class="code" href="classpoly_1_1IR_1_1Value.html#adb093c83013329c7391357aa9f19144d">getCost</a>(TTI, VectorWidth(W)).recipThroughput;</div>
 <div class="line"><a name="l00309"></a><span class="lineno">  309</span>&#160;    <span class="keyword">auto</span> *mB = findMerge(B);</div>
 <div class="line"><a name="l00310"></a><span class="lineno">  310</span>&#160;    <span class="keywordflow">if</span> (mB) cycleUpdateMerged(merged, B, mB);</div>
 <div class="line"><a name="l00311"></a><span class="lineno">  311</span>&#160;    <span class="comment">// fuse the merge map cycles</span></div>
@@ -536,8 +536,11 @@ $(function() {
 <div class="ttc" id="aclasspoly_1_1IR_1_1Cache_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Cache.html">poly::IR::Cache</a></div><div class="ttdef"><b>Definition:</b> Cache.hpp:160</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Cache_html_a6faece9ac31b45aae0353250ff03084d"><div class="ttname"><a href="classpoly_1_1IR_1_1Cache.html#a6faece9ac31b45aae0353250ff03084d">poly::IR::Cache::createSelect</a></div><div class="ttdeci">auto createSelect(Predicate::Intersection P, Value *A, Value *B, UList&lt; Value * &gt; *pred) -&gt; Compute *</div><div class="ttdef"><b>Definition:</b> Cache.hpp:703</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Compute_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Compute.html">poly::IR::Compute</a></div><div class="ttdef"><b>Definition:</b> Instruction.hpp:72</div></div>
+<div class="ttc" id="aclasspoly_1_1IR_1_1Instruction_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Instruction.html">poly::IR::Instruction</a></div><div class="ttdef"><b>Definition:</b> Node.hpp:406</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Operation_html_a3c026a3b9192dea51a7dc6b57e6833b9"><div class="ttname"><a href="classpoly_1_1IR_1_1Operation.html#a3c026a3b9192dea51a7dc6b57e6833b9">poly::IR::Operation::selectCost</a></div><div class="ttdeci">auto selectCost(llvm::TargetTransformInfo &amp;TTI, unsigned int vectorWidth) const -&gt; llvm::InstructionCost</div><div class="ttdef"><b>Definition:</b> Instruction.hpp:496</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1ReMapper_html"><div class="ttname"><a href="classpoly_1_1IR_1_1ReMapper.html">poly::IR::ReMapper</a></div><div class="ttdef"><b>Definition:</b> ControlFlowMerging.hpp:28</div></div>
+<div class="ttc" id="aclasspoly_1_1IR_1_1Value_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Value.html">poly::IR::Value</a></div><div class="ttdef"><b>Definition:</b> Node.hpp:316</div></div>
+<div class="ttc" id="aclasspoly_1_1IR_1_1Value_html_adb093c83013329c7391357aa9f19144d"><div class="ttname"><a href="classpoly_1_1IR_1_1Value.html#adb093c83013329c7391357aa9f19144d">poly::IR::Value::getCost</a></div><div class="ttdeci">auto getCost(llvm::TargetTransformInfo &amp;TTI, cost::VectorWidth W) -&gt; cost::RecipThroughputLatency</div><div class="ttdoc">these methods are overloaded for specific subtypes</div><div class="ttdef"><b>Definition:</b> Instruction.hpp:666</div></div>
 <div class="ttc" id="astructpoly_1_1IR_1_1MergingCost_1_1Allocate_html"><div class="ttname"><a href="structpoly_1_1IR_1_1MergingCost_1_1Allocate.html">poly::IR::MergingCost::Allocate</a></div><div class="ttdef"><b>Definition:</b> ControlFlowMerging.hpp:153</div></div>
 <div class="ttc" id="astructpoly_1_1IR_1_1MergingCost_1_1Count_html"><div class="ttname"><a href="structpoly_1_1IR_1_1MergingCost_1_1Count.html">poly::IR::MergingCost::Count</a></div><div class="ttdef"><b>Definition:</b> ControlFlowMerging.hpp:161</div></div>
 <div class="ttc" id="astructpoly_1_1IR_1_1MergingCost_1_1SelectAllocator_html"><div class="ttname"><a href="structpoly_1_1IR_1_1MergingCost_1_1SelectAllocator.html">poly::IR::MergingCost::SelectAllocator</a></div><div class="ttdef"><b>Definition:</b> ControlFlowMerging.hpp:168</div></div>
