@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['active_0',['Active',['../structpoly_1_1lp_1_1ScheduledNode_1_1Active.html',1,'poly::lp::ScheduledNode']]],
+  ['active_0',['Active',['../structpoly_1_1poly_1_1Dependence_1_1Active.html',1,'poly::poly::Dependence']]],
   ['addr_1',['addr',['../structpoly_1_1IR_1_1TreeResult.html#a8e04a2f11dec53771e998a4b42588be2',1,'poly::IR::TreeResult']]],
   ['addr_2',['Addr',['../classpoly_1_1IR_1_1Addr.html',1,'poly::IR']]],
   ['addressgraph_3',['AddressGraph',['../structpoly_1_1CostModeling_1_1LoopTreeSchedule_1_1AddressGraph.html',1,'poly::CostModeling::LoopTreeSchedule']]],

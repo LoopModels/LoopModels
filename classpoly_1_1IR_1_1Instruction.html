@@ -175,15 +175,18 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>getBasicBlock</b> () 
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>getBasicBlock</b> () const -&gt; const llvm::BasicBlock *</td></tr>
 <tr class="separator:a0fc92f2cdf29182423c499ce28e97f03 inherit pub_methods_classpoly_1_1IR_1_1Value"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_methods_classpoly_1_1IR_1_1Node"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_classpoly_1_1IR_1_1Node')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="classpoly_1_1IR_1_1Node.html">poly::IR::Node</a></td></tr>
-<tr class="memitem:a4b82d73cd358fbf4dd926e07329b9d67 inherit pub_methods_classpoly_1_1IR_1_1Node"><td class="memItemLeft" align="right" valign="top"><a id="a4b82d73cd358fbf4dd926e07329b9d67"></a>
-constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> ()</td></tr>
-<tr class="separator:a4b82d73cd358fbf4dd926e07329b9d67 inherit pub_methods_classpoly_1_1IR_1_1Node"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a06f2cf0ada34290b401debeccb1e4607 inherit pub_methods_classpoly_1_1IR_1_1Node"><td class="memItemLeft" align="right" valign="top"><a id="a06f2cf0ada34290b401debeccb1e4607"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>visit</b> (uint8_t d)</td></tr>
+<tr class="separator:a06f2cf0ada34290b401debeccb1e4607 inherit pub_methods_classpoly_1_1IR_1_1Node"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab549eb35185f2418d1d6344afd71ffaa inherit pub_methods_classpoly_1_1IR_1_1Node"><td class="memItemLeft" align="right" valign="top"><a id="ab549eb35185f2418d1d6344afd71ffaa"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getVisitDepth</b> () const -&gt; uint8_t</td></tr>
+<tr class="separator:ab549eb35185f2418d1d6344afd71ffaa inherit pub_methods_classpoly_1_1IR_1_1Node"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8b52f8632fa32eb1b52d5a8c4fab8e84 inherit pub_methods_classpoly_1_1IR_1_1Node"><td class="memItemLeft" align="right" valign="top"><a id="a8b52f8632fa32eb1b52d5a8c4fab8e84"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>clearVisited</b> ()</td></tr>
 <tr class="separator:a8b52f8632fa32eb1b52d5a8c4fab8e84 inherit pub_methods_classpoly_1_1IR_1_1Node"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4c95a8f715bf251770abff33bd12da14 inherit pub_methods_classpoly_1_1IR_1_1Node"><td class="memItemLeft" align="right" valign="top"><a id="a4c95a8f715bf251770abff33bd12da14"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>wasVisited</b> () const -&gt; bool</td></tr>
-<tr class="separator:a4c95a8f715bf251770abff33bd12da14 inherit pub_methods_classpoly_1_1IR_1_1Node"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aac0107aaff71836a2e73ce03e8119fa1 inherit pub_methods_classpoly_1_1IR_1_1Node"><td class="memItemLeft" align="right" valign="top"><a id="aac0107aaff71836a2e73ce03e8119fa1"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>wasVisited</b> (uint8_t d) const -&gt; bool</td></tr>
+<tr class="separator:aac0107aaff71836a2e73ce03e8119fa1 inherit pub_methods_classpoly_1_1IR_1_1Node"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac67130a93ce27c618e3d300bd33d0325 inherit pub_methods_classpoly_1_1IR_1_1Node"><td class="memItemLeft" align="right" valign="top"><a id="ac67130a93ce27c618e3d300bd33d0325"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>setDependsOnParentLoop</b> ()</td></tr>
 <tr class="separator:ac67130a93ce27c618e3d300bd33d0325 inherit pub_methods_classpoly_1_1IR_1_1Node"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -326,9 +329,9 @@ const ValKind&#160;</td><td class="memItemRight" valign="bottom"><b>kind</b></td
 <tr class="memitem:ab702b9eeae0aa89fc857130b6439e5fe inherit pro_attribs_classpoly_1_1IR_1_1Node"><td class="memItemLeft" align="right" valign="top"><a id="ab702b9eeae0aa89fc857130b6439e5fe"></a>
 uint8_t&#160;</td><td class="memItemRight" valign="bottom"><b>depth</b> {0}</td></tr>
 <tr class="separator:ab702b9eeae0aa89fc857130b6439e5fe inherit pro_attribs_classpoly_1_1IR_1_1Node"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a54986e7b38a8664c3993f4e72c27b854 inherit pro_attribs_classpoly_1_1IR_1_1Node"><td class="memItemLeft" align="right" valign="top"><a id="a54986e7b38a8664c3993f4e72c27b854"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><b>visited</b> {false}</td></tr>
-<tr class="separator:a54986e7b38a8664c3993f4e72c27b854 inherit pro_attribs_classpoly_1_1IR_1_1Node"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a60e7cf219151c252a2dc4e614c1d7020 inherit pro_attribs_classpoly_1_1IR_1_1Node"><td class="memItemLeft" align="right" valign="top"><a id="a60e7cf219151c252a2dc4e614c1d7020"></a>
+uint8_t&#160;</td><td class="memItemRight" valign="bottom"><b>visitDepth</b> {255}</td></tr>
+<tr class="separator:a60e7cf219151c252a2dc4e614c1d7020 inherit pro_attribs_classpoly_1_1IR_1_1Node"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aedb6a87db89f84d2a25e5b6a09f34eed inherit pro_attribs_classpoly_1_1IR_1_1Node"><td class="memItemLeft" align="right" valign="top"><a id="aedb6a87db89f84d2a25e5b6a09f34eed"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>dependsOnParentLoop_</b> {false}</td></tr>
 <tr class="separator:aedb6a87db89f84d2a25e5b6a09f34eed inherit pro_attribs_classpoly_1_1IR_1_1Node"><td class="memSeparator" colspan="2">&#160;</td></tr>
