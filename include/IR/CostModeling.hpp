@@ -28,6 +28,7 @@
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/Type.h>
 #include <llvm/Support/Allocator.h>
+#include <llvm/Support/Casting.h>
 #include <llvm/Support/raw_ostream.h>
 #include <string_view>
 #include <utility>
@@ -206,7 +207,49 @@ public:
   constexpr auto getChildren() -> Vec<LoopTree *> { return children; }
   constexpr auto getLoop() -> IR::Loop * { return loop; }
 };
-auto topologicalSort(IR::Loop *root, unsigned depth) -> IR::Node * {
+struct LoopIndependent {
+  IR::Node *afterExit;
+  bool independent;
+  constexpr auto operator*=(LoopIndependent other) -> LoopIndependent & {
+    afterExit = other.afterExit;
+    independent = independent && other.independent;
+    return *this;
+  }
+};
+//
+
+// searches `N` and it's users for loop-independent users
+// this exits early if it finds a dependent user; we search everything
+// anyway, so we'll revist later anyway.
+// We return a `IR::Node *, bool` pair, where the `bool` is true if
+// `N` was loop independent.
+// We do this rather than something like returning a `nullptr`, as
+// we may have descended into instructions, found some users that are
+// but then also found some that are not; we need to return `false`
+// in this case, but we of course want to still return those we found.
+inline auto searchLoopIndependentUsers(IR::Loop *L, IR::Node *N,
+                                       IR::Node *afterExit) -> LoopIndependent {
+  if (N->dependsOnParentLoop()) return {afterExit, false};
+  if (llvm::isa<IR::Loop>(N)) return {afterExit, false};
+  if (IR::Addr *a = llvm::dyn_cast<IR::Addr>(N))
+    if (a->indexedByInnermostLoop()) return {afterExit, false};
+  if (IR::Loop *P = N->getLoop(); P != L)
+    return {afterExit, !(P && L->contains(P))};
+  LoopIndependent ret{afterExit, true};
+  // if it isn't a Loop, must be an `Instruction`
+  IR::Value *I = llvm::cast<IR::Instruction>(N);
+  for (IR::Node *U : I->getUsers())
+    ret *= searchLoopIndependentUsers(L, U, afterExit);
+  if (ret.independent) {
+    // then we can push it to the front of the list
+    I->clearPrevNext();
+    I->insertAfter(ret.afterExit);
+    ret.afterExit = I;
+    I->visit();
+  } else I->setDependsOnParentLoop();
+  return ret;
+}
+inline auto topologicalSort(IR::Loop *root, unsigned depth) -> IR::Node * {
   // basic plan for the top sort:
   // We iterate across all users, once all of node's users have been added,
   // we push it to the front of the list. Thus, we get a top-sorted list.
@@ -226,18 +269,26 @@ auto topologicalSort(IR::Loop *root, unsigned depth) -> IR::Node * {
   // so that it gets pushed to the front as soon as possible. That is, so that
   // it happens as late as possible Any instructions that get pushed to the
   // front afterwards have been LICMed into the loop pre-header.
+  //
+  // In this first pass, we iterate over all nodes, pushing those
+  // that can be hoisted after the exit block.
+  IR::Node *C = root->getChild(), *afterExit{nullptr};
+  for (IR::Node *N : C->nodes())
+    afterExit = searchLoopIndependentUsers(root, N, afterExit).afterExit;
+  // afterExit will be hoisted out; every member has been marked as `visited`
+  // So, now we search all of root's users, i.e. every addr that depends on it
   return nullptr;
 }
 // NOLINTNEXTLINE(misc-no-recursion)
-auto buildGraph(IR::Loop *root, unsigned depth) -> IR::Node * {
+inline auto buildGraph(IR::Loop *root, unsigned depth) -> IR::Node * {
   // We build the instruction graph, via traversing the tree, and then
   // top sorting as we recurse out
-  for (LoopTree *child : root->getSubLoops()) buildGraph(child, depth + 1);
+  for (IR::Loop *child : root->subLoops()) buildGraph(child, depth + 1);
   return topologicalSort(root, depth);
 }
 
-auto addAddrToGraph(Arena<> *salloc, Arena<> *lalloc, lp::ScheduledNode *nodes)
-  -> IR::Loop * {
+inline auto addAddrToGraph(Arena<> *salloc, Arena<> *lalloc,
+                           lp::ScheduledNode *nodes) -> IR::Loop * {
   auto s = salloc->scope();
   LoopTree *root = LoopTree::root(salloc, lalloc);
   for (lp::ScheduledNode *node : nodes->getAllVertices())
@@ -245,8 +296,8 @@ auto addAddrToGraph(Arena<> *salloc, Arena<> *lalloc, lp::ScheduledNode *nodes)
   return root->getLoop();
 }
 /// Optimize the schedule
-void optimize(IR::Cache &instr, Arena<> *lalloc, lp::ScheduledNode *nodes,
-              IR::Addr *addr) {
+inline void optimize(IR::Cache &instr, Arena<> *lalloc,
+                     lp::ScheduledNode *nodes, IR::Addr *addr) {
   /// we must build the IR::Loop
   /// Initially, to help, we use a nested vector, so that we can index into it
   /// using the fusion omegas. We allocate it with the longer lived `instr`

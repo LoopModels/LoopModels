@@ -78,6 +78,11 @@ class Addr : public Instruction {
   // ScheduledNode is used in solving a LinearProgram
   // Before this, on constructing the Addr, we use maxDepth
   // numDim = maxDepth - TreeResult.rejectDepth; we may need to reduce dim
+  // maxDepth is the original maximum depth (assuming no rejects),
+  // not the amount of allocated space, which could be greater,
+  // to support sinking deeper into a subloop.
+  // On rotate, we switch it back to `maxDepth`
+  // which can then be decremented as we hoist
   [[no_unique_address]] union {
     lp::ScheduledNode *node;
     ptrdiff_t maxDepth;
@@ -183,6 +188,15 @@ public:
 
     // use `mStar` to update offsetOmega`
     offsetOmega -= mStar * omega;
+    nodeOrDepth.maxDepth = depth;
+  }
+  // NOTE: this requires `nodeOrDepth` to be set to innmost loop depth
+  [[nodiscard]] constexpr auto indexedByInnermostLoop() -> bool {
+    if (nodeOrDepth.maxDepth == 0) return true; // we can't hoist further
+    bool ret = std::ranges::any_of(indexMatrix()(_, nodeOrDepth.maxDepth - 1),
+                                   [](int64_t i) { return i != 0; });
+    if (ret) setDependsOnParentLoop();
+    return ret;
   }
   [[nodiscard]] constexpr auto eachAddr() {
     return utils::ListRange{this, [](Addr *a) { return a->getNextAddr(); }};

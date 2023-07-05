@@ -5,6 +5,7 @@
 #include "IR/Users.hpp"
 #include "Polyhedra/Loops.hpp"
 #include "Utilities/Allocators.hpp"
+#include "Utilities/ListRanges.hpp"
 #include <Math/Array.hpp>
 #include <cstdint>
 #include <llvm/Analysis/TargetTransformInfo.h>
@@ -14,9 +15,11 @@
 #include <llvm/IR/Type.h>
 #include <llvm/IR/Value.h>
 #include <llvm/Support/Casting.h>
+#include <utility>
 
 namespace poly::IR {
 using utils::NotNull, utils::invariant, utils::Arena, containers::UList;
+class Loop;
 /// We take an approach similar to LLVM's RTTI
 /// however, we want to take advantage of FAMs while having a "hieararchy"
 /// we accomplish this via a base class, and then wrapper classes that simply
@@ -74,7 +77,7 @@ using utils::NotNull, utils::invariant, utils::Arena, containers::UList;
 ///   C = C->getNext()
 ///   C = (C || llvm::isa<Loop>(C)) ? C : C->getChild();
 /// }
-///
+/// ```
 /// IR types: Loop, Block, Addr, Instr, Consts
 class Node {
 
@@ -113,30 +116,40 @@ private:
 protected:
   const ValKind kind;
   uint8_t depth{0};
-  uint16_t index_;
-  uint16_t lowLink_;
-  uint16_t bitfield;
+  bool visited{false};
+  bool dependsOnParentLoop_{false};
+  // uint16_t index_;
+  // uint16_t lowLink_;
+  // uint16_t bitfield;
 
   constexpr Node(ValKind kind) : kind(kind) {}
   constexpr Node(ValKind kind, unsigned d) : kind(kind), depth(d) {}
 
 public:
-  [[nodiscard]] constexpr auto wasVisited() const -> bool {
-    return bitfield & 0x1;
+  constexpr void visit() { visited = true; }
+  constexpr void clearVisited() { visited = false; }
+  [[nodiscard]] constexpr auto wasVisited() const -> bool { return visited; }
+  constexpr void setDependsOnParentLoop() { dependsOnParentLoop_ = true; }
+  [[nodiscard]] constexpr auto dependsOnParentLoop() const -> bool {
+    return dependsOnParentLoop_;
   }
-  constexpr void setVisited() { bitfield |= 0x1; }
-  constexpr void clearVisited() { bitfield &= ~0x1; }
-  [[nodiscard]] constexpr auto isOnStack() const -> bool {
-    return bitfield & 0x2;
-  }
-  constexpr void setOnStack() { bitfield |= 0x2; }
-  constexpr void removeFromStack() { bitfield &= ~0x2; }
-  [[nodiscard]] constexpr auto lowLink() -> uint16_t & { return lowLink_; }
-  [[nodiscard]] constexpr auto lowLink() const -> unsigned { return lowLink_; }
-  constexpr void setLowLink(unsigned l) { lowLink_ = l; }
-  [[nodiscard]] constexpr auto index() -> uint16_t & { return index_; }
-  [[nodiscard]] constexpr auto getIndex() const -> unsigned { return index_; }
-  constexpr void setIndex(unsigned i) { index_ = i; }
+  // [[nodiscard]] constexpr auto wasVisited() const -> bool {
+  //   return bitfield & 0x1;
+  // }
+  // constexpr void setVisited() { bitfield |= 0x1; }
+  // constexpr void clearVisited() { bitfield &= ~0x1; }
+  // [[nodiscard]] constexpr auto isOnStack() const -> bool {
+  //   return bitfield & 0x2;
+  // }
+  // constexpr void setOnStack() { bitfield |= 0x2; }
+  // constexpr void removeFromStack() { bitfield &= ~0x2; }
+  // constexpr void setDependsOnParentLoop() { bitfield |= 0x4; }
+  // [[nodiscard]] constexpr auto lowLink() -> uint16_t & { return lowLink_; }
+  // [[nodiscard]] constexpr auto lowLink() const -> unsigned { return lowLink_;
+  // } constexpr void setLowLink(unsigned l) { lowLink_ = l; }
+  // [[nodiscard]] constexpr auto index() -> uint16_t & { return index_; }
+  // [[nodiscard]] constexpr auto getIndex() const -> unsigned { return index_;
+  // } constexpr void setIndex(unsigned i) { index_ = i; }
   [[nodiscard]] constexpr auto getKind() const -> ValKind { return kind; }
   [[nodiscard]] constexpr auto getDepth() const -> unsigned { return depth; }
   [[nodiscard]] constexpr auto getParent() const -> Node * { return parent; }
@@ -178,6 +191,10 @@ public:
     if (next) next->setPrev(d);
     next = d;
   }
+  constexpr void clearPrevNext() {
+    prev = nullptr;
+    next = nullptr;
+  }
   constexpr void removeFromList() {
     if (prev) prev->setNext(next);
     if (next) next->setPrev(prev);
@@ -214,6 +231,15 @@ public:
     if (llvm::isa<llvm::ConstantFP>(v)) return VK_Bflt;
     return VK_CVal;
   }
+  [[nodiscard]] constexpr auto nodes() noexcept
+    -> utils::ListRange<Node, utils::GetNext, utils::Identity> {
+    return utils::ListRange{this, utils::GetNext{}};
+  }
+  [[nodiscard]] constexpr auto nodes() const noexcept
+    -> utils::ListRange<const Node, utils::GetNext, utils::Identity> {
+    return utils::ListRange{this, utils::GetNext{}};
+  }
+  [[nodiscard]] inline constexpr auto getLoop() const noexcept -> Loop *;
 };
 static_assert(sizeof(Node) == 4 * sizeof(Node *) + 8);
 
@@ -231,27 +257,26 @@ public:
   static constexpr auto classof(const Node *v) -> bool {
     return v->getKind() == VK_Loop;
   }
+  /// Get the first subloop.
   [[nodiscard]] constexpr auto getSubLoop() const -> Loop * {
-    return static_cast<Loop *>(getChild());
-  }
-  [[nodiscard]] constexpr auto getOuterLoop() const -> Loop * {
-    return static_cast<Loop *>(getParent());
-  }
-  [[nodiscard]] constexpr auto getNextLoop() const -> Loop * {
     Node *C = getChild();
     C = (C || llvm::isa<Loop>(C)) ? C : C->getChild();
     return static_cast<Loop *>(C);
   }
-  constexpr void forEachSubLoop(const auto &f) {
-    for (auto *c = getSubLoop(); c; c = c->getNextLoop()) f(c);
+  /// Return the enclosing, parent loop.
+  [[nodiscard]] constexpr auto getOuterLoop() const -> Loop * {
+    return static_cast<Loop *>(getParent());
   }
-  /// call `f` for this loop train, and all subloops
-  ///
-  constexpr void forEachLoop(const auto &f) {
-    for (auto *c = this; c; c = c->getNextLoop()) {
-      f(c);
-      if (auto *s = c->getSubLoop()) s->forEachLoop(f);
-    }
+  /// Returns the next loop at the same level
+  [[nodiscard]] constexpr auto getNextLoop() const -> Loop * {
+    Node *N = getNext();
+    if (!N) return nullptr;
+    if (!llvm::isa<Loop>(N)) N = N->getChild();
+    return static_cast<Loop *>(N);
+  }
+  [[nodiscard]] constexpr auto subLoops() const {
+    return utils::ListRange{getSubLoop(),
+                            [](Loop *L) { return L->getNextLoop(); }};
   }
   static constexpr auto create(Arena<> *alloc, poly::Loop *AL, size_t depth)
     -> Loop * {
@@ -263,7 +288,28 @@ public:
   [[nodiscard]] constexpr auto getAffineLoop() const -> poly::Loop * {
     return affineLoop;
   }
+  [[nodiscard]] constexpr auto contains(IR::Node *N) const -> bool {
+    for (Loop *L = N->getLoop(); L; L = L->getLoop())
+      if (L == this) return true;
+    return false;
+  }
+  // get the outermost subloop of `this` to which `N` belongs
+  [[nodiscard]] constexpr auto getSubloop(IR::Node *N) -> Loop * {
+    Loop *L = N->getLoop();
+    if (L == this) return this;
+    for (; L;) {
+      Loop *O = L->getOuterLoop();
+      if (O == this) return L;
+      L = O;
+    }
+    return nullptr;
+  }
 };
+[[nodiscard]] inline constexpr auto Node::getLoop() const noexcept -> Loop * {
+  if (!parent) return nullptr;
+  if (parent->kind != VK_Loop) return nullptr;
+  return static_cast<Loop *>(parent);
+}
 
 class Instruction;
 
