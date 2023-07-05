@@ -207,11 +207,17 @@ public:
   constexpr auto getChildren() -> Vec<LoopTree *> { return children; }
   constexpr auto getLoop() -> IR::Loop * { return loop; }
 };
+
+struct LoopDepSummary {
+  IR::Node *afterExit{nullptr};
+  IR::Addr *indexedByLoop{nullptr};
+  IR::Addr *notIndexedByLoop{nullptr};
+};
 struct LoopIndependent {
-  IR::Node *afterExit;
+  LoopDepSummary summary;
   bool independent;
   constexpr auto operator*=(LoopIndependent other) -> LoopIndependent & {
-    afterExit = other.afterExit;
+    summary = other.summary;
     independent = independent && other.independent;
     return *this;
   }
@@ -227,27 +233,96 @@ struct LoopIndependent {
 // we may have descended into instructions, found some users that are
 // but then also found some that are not; we need to return `false`
 // in this case, but we of course want to still return those we found.
-inline auto searchLoopIndependentUsers(IR::Loop *L, IR::Node *N,
-                                       IR::Node *afterExit) -> LoopIndependent {
-  if (N->dependsOnParentLoop()) return {afterExit, false};
-  if (llvm::isa<IR::Loop>(N)) return {afterExit, false};
-  if (IR::Addr *a = llvm::dyn_cast<IR::Addr>(N))
-    if (a->indexedByInnermostLoop()) return {afterExit, false};
+inline auto searchLoopIndependentUsers(IR::Loop *L, IR::Node *N, uint8_t depth,
+                                       LoopDepSummary summary)
+  -> LoopIndependent {
+  if (N->dependsOnParentLoop()) return {summary, false};
+  if (llvm::isa<IR::Loop>(N)) return {summary, false};
   if (IR::Loop *P = N->getLoop(); P != L)
-    return {afterExit, !(P && L->contains(P))};
-  LoopIndependent ret{afterExit, true};
+    return {summary, !(P && L->contains(P))};
+  LoopIndependent ret{summary, true};
+  IR::Addr *a = llvm::dyn_cast<IR::Addr>(N);
+  if (a) {
+    a->removeFromList();
+    if (a->indexedByInnermostLoop()) {
+      a->insertAfter(ret.summary.indexedByLoop);
+      ret.summary.indexedByLoop = a;
+      return {summary, false};
+    } else {
+      a->insertAfter(ret.summary.notIndexedByLoop);
+      ret.summary.notIndexedByLoop = a;
+    }
+    for (IR::Addr *m : a->outputAddrs(depth)) {
+      ret *= searchLoopIndependentUsers(L, m, depth, summary);
+      if (ret.independent) continue;
+      a->setDependsOnParentLoop();
+      return ret;
+    }
+  }
   // if it isn't a Loop, must be an `Instruction`
   IR::Value *I = llvm::cast<IR::Instruction>(N);
-  for (IR::Node *U : I->getUsers())
-    ret *= searchLoopIndependentUsers(L, U, afterExit);
-  if (ret.independent) {
-    // then we can push it to the front of the list
-    I->clearPrevNext();
-    I->insertAfter(ret.afterExit);
-    ret.afterExit = I;
-    I->visit();
-  } else I->setDependsOnParentLoop();
+  for (IR::Node *U : I->getUsers()) {
+    ret *= searchLoopIndependentUsers(L, U, depth, summary);
+    if (ret.independent) continue;
+    I->setDependsOnParentLoop();
+    return ret;
+  }
+  // then we can push it to the front of the list
+  if (a && ret.summary.notIndexedByLoop == a)
+    ret.summary.notIndexedByLoop = llvm::cast_or_null<IR::Addr>(a->getNext());
+  I->removeFromList();
+  I->insertAfter(ret.summary.afterExit);
+  ret.summary.afterExit = I;
+  I->visit(depth);
   return ret;
+}
+inline auto visitLoopDependent(IR::Loop *L, IR::Node *N, uint8_t depth,
+                               IR::Node *body) -> IR::Node * {
+  invariant(N->getVisitDepth() != 254);
+  // N may have been visited as a dependent of an inner loop, which is why
+  // `visited` accepts a depth argument
+  if (N->wasVisited(depth) || !(L->contains(N))) return body;
+#ifndef NDEBUG
+  // Our goal here is to check for cycles in debug mode.
+  // Each level of our graph is acyclic, meaning that there are no cycles at
+  // that level when traversing only edges active at that given level. However,
+  // when considering edges active at level `I`, we may have cycles at level `J`
+  // if `J>I`. In otherwords, here we are travering all edges active at
+  // `I=depth`. Within subloops, which necessarilly have depth `J>I`, we may
+  // have cycles.
+  //
+  // Thus, we need to prevent getting stuck in a cycle for these deeper loops by
+  // setting `N->visit(depth)` here, so `wasVisited` will allow them to
+  // immediately return. But, in debug mode, we'll set nodes of the same depth
+  // to `254` to check for cycles.
+  if (N->getLoop() == L) N->visit(254);
+  else N->visit(depth);
+#else
+  N->visit(depth);
+#endif
+  // iterate over users
+  if (IR::Addr *A = llvm::dyn_cast<IR::Addr>(N)) {
+    for (IR::Addr *m : A->outputAddrs(depth)) {
+      if (m->wasVisited(depth)) continue;
+      body = visitLoopDependent(L, m, depth, body);
+    }
+  }
+  if (IR::Instruction *I = llvm::cast<IR::Instruction>(N)) {
+    for (IR::Node *U : I->getUsers()) {
+      if (U->wasVisited(depth)) continue;
+      body = visitLoopDependent(L, U, depth, body);
+    }
+  } else if (IR::Loop *S = llvm::cast<IR::Loop>(N)) {
+    for (IR::Node *U : S->getChild()->nodes()) {
+      if (U->wasVisited(depth)) continue;
+      body = visitLoopDependent(L, U, depth, body);
+    }
+  }
+#ifndef NDEBUG
+  if (N->getLoop() == L) N->visit(depth);
+#endif
+  if (N->getLoop() == L) body = N->setNext(body);
+  return body;
 }
 inline auto topologicalSort(IR::Loop *root, unsigned depth) -> IR::Node * {
   // basic plan for the top sort:
@@ -272,12 +347,21 @@ inline auto topologicalSort(IR::Loop *root, unsigned depth) -> IR::Node * {
   //
   // In this first pass, we iterate over all nodes, pushing those
   // that can be hoisted after the exit block.
-  IR::Node *C = root->getChild(), *afterExit{nullptr};
+  IR::Node *C = root->getChild();
+  LoopDepSummary summary;
   for (IR::Node *N : C->nodes())
-    afterExit = searchLoopIndependentUsers(root, N, afterExit).afterExit;
-  // afterExit will be hoisted out; every member has been marked as `visited`
-  // So, now we search all of root's users, i.e. every addr that depends on it
-  return nullptr;
+    summary = searchLoopIndependentUsers(root, N, depth, summary).summary;
+  // summary.afterExit will be hoisted out; every member has been marked as
+  // `visited` So, now we search all of root's users, i.e. every addr that
+  // depends on it
+  IR::Node *body;
+  for (IR::Node *N : summary.indexedByLoop->nodes())
+    body = visitLoopDependent(root, N, depth, body);
+  body = root->setNext(body); // now we can place the loop
+  for (IR::Node *N : summary.notIndexedByLoop->nodes())
+    body = visitLoopDependent(root, N, depth, body);
+  // and any remaining edges
+  return body;
 }
 // NOLINTNEXTLINE(misc-no-recursion)
 inline auto buildGraph(IR::Loop *root, unsigned depth) -> IR::Node * {

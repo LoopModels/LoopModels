@@ -248,7 +248,11 @@ public:
     return nodeOrDepth.node;
   }
   constexpr void setNode(lp::ScheduledNode *n) { nodeOrDepth.node = n; }
-  constexpr void forEachInput(const auto &f);
+  inline constexpr void forEachInput(const auto &f);
+  inline constexpr auto inputAddrs();
+  inline constexpr auto outputAddrs();
+  inline constexpr auto inputAddrs(unsigned depth);
+  inline constexpr auto outputAddrs(unsigned depth);
   [[nodiscard]] static auto construct(Arena<> *alloc,
                                       const llvm::SCEVUnknown *ptr,
                                       llvm::Instruction *user,
@@ -319,52 +323,6 @@ public:
   [[nodiscard]] constexpr auto getLoop() const -> NotNull<poly::Loop> {
     return loop;
   }
-  /*
-  [[nodiscard]] constexpr auto getBlockIdx() const -> uint8_t {
-    return blckIdx;
-  }
-  constexpr void setBlockIdx(uint8_t idx) { blckIdx = idx; }
-  // constexpr void setLoopTreeSchedule(CostModeling::LoopTreeSchedule *L,
-  //                                    unsigned blockIdx) {
-  //   node = L;
-  //   blckIdx = blockIdx;
-  // }
-  // bits: 0 = visited, 1 = on stack, 2 = placed, 4 = visited2, 5 = activeSubset
-  constexpr void visit() { bitfield |= 1; }
-  constexpr void unVisit() { bitfield &= ~uint8_t(1); }
-  [[nodiscard]] constexpr auto wasVisited() const -> bool {
-    return bitfield & 1;
-  }
-  constexpr void visit2() { bitfield |= 16; }
-  constexpr void unVisit2() { bitfield &= ~uint8_t(16); }
-  [[nodiscard]] constexpr auto wasVisited2() const -> bool {
-    return bitfield & 16;
-  }
-  constexpr void visit3() { bitfield |= 64; }
-  constexpr void unVisit3() { bitfield &= ~uint8_t(64); }
-  [[nodiscard]] constexpr auto wasVisited3() const -> bool {
-    return bitfield & 64;
-  }
-  // constexpr void unVisit02() { bitfield &= ~uint8_t(17); }
-  constexpr void addToSubset() { bitfield |= 32; }
-  constexpr void removeFromSubset() { bitfield &= ~uint8_t(32); }
-  [[nodiscard]] constexpr auto inActiveSubset() const -> bool {
-    return bitfield & 32;
-  }
-  constexpr void addToStack() { bitfield |= 2; }
-  constexpr void removeFromStack() { bitfield &= ~uint8_t(2); }
-  // doesn't reset isStore or wasPlaced
-  constexpr void resetBitfield() { bitfield &= uint8_t(12); }
-  [[nodiscard]] constexpr auto onStack() const -> bool { return bitfield & 2; }
-  constexpr void place() { bitfield |= 4; }
-  [[nodiscard]] constexpr auto wasPlaced() const -> bool {
-    return bitfield & 4;
-  }
-  constexpr auto index() -> uint8_t & { return index_; }
-  [[nodiscard]] constexpr auto index() const -> unsigned { return index_; }
-  constexpr auto lowLink() -> uint8_t & { return lowLink_; }
-  [[nodiscard]] constexpr auto lowLink() const -> unsigned { return lowLink_; }
-  */
   [[nodiscard]] constexpr auto getStoredVal() const -> Value * {
     invariant(isStore());
     return users.getVal();
@@ -459,147 +417,6 @@ public:
       dst += depth;
     }
   }
-
-  // struct EndSentinel {};
-  // class ActiveEdgeIterator {
-  //   Addr **p;
-  //   Addr **e;
-  //   uint8_t *d;
-  //   uint8_t filtdepth;
-
-  // public:
-  //   constexpr auto operator*() const -> Addr * { return *p; }
-  //   constexpr auto operator->() const -> Addr * { return *p; }
-  //   /// true means skip, false means we evaluate
-  //   /// so *d <= filtdepth means we skip, evaluating only *d > filtdepth
-  //   [[nodiscard]] constexpr auto hasNext() const -> bool {
-  //     return ((p != e) && ((*d <= filtdepth) ||
-  //     (!((*p)->inActiveSubset()))));
-  //   }
-  //   constexpr auto operator++() -> ActiveEdgeIterator & {
-  //     // meaning of filtdepth 127?
-  //     do {
-  //       ++p;
-  //       ++d;
-  //     } while (hasNext());
-  //     return *this;
-  //   }
-  //   constexpr auto operator==(EndSentinel) const -> bool { return p == e; }
-  //   constexpr auto operator!=(EndSentinel) const -> bool { return p != e; }
-  //   constexpr ActiveEdgeIterator(Addr **_p, Addr **_e, uint8_t *_d, uint8_t
-  //   fd)
-  //     : p(_p), e(_e), d(_d), filtdepth(fd) {
-  //     while (hasNext()) {
-  //       ++p;
-  //       ++d;
-  //     }
-  //   }
-  //   constexpr auto operator++(int) -> ActiveEdgeIterator {
-  //     ActiveEdgeIterator tmp = *this;
-  //     ++*this;
-  //     return tmp;
-  //   }
-  //   [[nodiscard]] constexpr auto begin() const -> ActiveEdgeIterator {
-  //     return *this;
-  //   }
-  //   [[nodiscard]] static constexpr auto end() -> EndSentinel { return {}; }
-  // };
-  // [[nodiscard]] constexpr auto numInNeighbors() const -> unsigned {
-  //   return isStore() ? numMemInputs + numDirectEdges : numMemInputs;
-  // }
-  // [[nodiscard]] constexpr auto numOutNeighbors() const -> unsigned {
-  //   return isStore() ? numMemOutputs : numDirectEdges + numMemOutputs;
-  // }
-  // [[nodiscard]] constexpr auto numNeighbors() const -> unsigned {
-  //   return numMemInputs + numDirectEdges + numMemOutputs;
-  // }
-  // [[nodiscard]] auto inNeighbors(uint8_t filtd) -> ActiveEdgeIterator {
-  //   Addr **p = getAddrMemory();
-  //   return {p, p + numInNeighbors(), getDDepthMemory(), filtd};
-  // }
-  // [[nodiscard]] auto outNeighbors(uint8_t filtd) -> ActiveEdgeIterator {
-  //   unsigned n = numInNeighbors();
-  //   Addr **p = getAddrMemory() + n;
-  //   return {p, p + numOutNeighbors(), getDDepthMemory() + n, filtd};
-  // }
-  // #ifndef NDEBUG
-  //   [[gnu::used, nodiscard]] constexpr auto directEdges()
-  //     -> MutPtrVector<Addr *> {
-  //     Addr **p = getAddrMemory() + numMemInputs;
-  //     return {p, numDirectEdges};
-  //   }
-  //   [[gnu::used, nodiscard]] constexpr auto directEdges() const
-  //     -> PtrVector<Addr *> {
-  //     Addr **p = getAddrMemory() + numMemInputs;
-  //     return {p, numDirectEdges};
-  //   }
-  //   [[gnu::used, nodiscard]] constexpr auto inDepSat() const
-  //     -> PtrVector<uint8_t> {
-  //     return {getDDepthMemory(), numInNeighbors()};
-  //   }
-  //   [[gnu::used, nodiscard]] constexpr auto outDepSat() const
-  //     -> PtrVector<uint8_t> {
-  //     return {getDDepthMemory() + numInNeighbors(), numOutNeighbors()};
-  //   }
-  //   [[gnu::used, nodiscard]] constexpr auto inNeighbors() const
-  //     -> PtrVector<Addr *> {
-  //     return PtrVector<Addr *>{getAddrMemory(), numInNeighbors()};
-  //   }
-  //   [[gnu::used, nodiscard]] constexpr auto outNeighbors() const
-  //     -> PtrVector<Addr *> {
-  //     return PtrVector<Addr *>{getAddrMemory() + numInNeighbors(),
-  //                              numOutNeighbors()};
-  //   }
-  //   [[gnu::used, nodiscard]] constexpr auto inNeighbors()
-  //     -> MutPtrVector<Addr *> {
-  //     return MutPtrVector<Addr *>{getAddrMemory(), numInNeighbors()};
-  //   }
-  //   [[gnu::used, nodiscard]] constexpr auto outNeighbors()
-  //     -> MutPtrVector<Addr *> {
-  //     return MutPtrVector<Addr *>{getAddrMemory() + numInNeighbors(),
-  //                                 numOutNeighbors()};
-  //   }
-  // #else
-  //   [[nodiscard]] constexpr auto directEdges() -> MutPtrVector<Address *> {
-  //     Address **p = getAddrMemory() + numMemInputs;
-  //     return {p, numDirectEdges};
-  //   }
-  //   [[nodiscard]] constexpr auto directEdges() const -> PtrVector<Address *>
-  //   {
-  //     Address **p = getAddrMemory() + numMemInputs;
-  //     return {p, numDirectEdges};
-  //   }
-  //   [[nodiscard]] constexpr auto inDepSat() const -> PtrVector<uint8_t> {
-  //     return {getDDepthMemory(), numInNeighbors()};
-  //   }
-  //   [[nodiscard]] constexpr auto outDepSat() const -> PtrVector<uint8_t> {
-  //     return {getDDepthMemory() + numInNeighbors(), numOutNeighbors()};
-  //   }
-  //   [[nodiscard]] constexpr auto inNeighbors() const -> PtrVector<Address *>
-  //   {
-  //     return PtrVector<Address *>{getAddrMemory(), numInNeighbors()};
-  //   }
-  //   [[nodiscard]] constexpr auto outNeighbors() const -> PtrVector<Address *>
-  //   {
-  //     return PtrVector<Address *>{getAddrMemory() + numInNeighbors(),
-  //                                 numOutNeighbors()};
-  //   }
-  //   [[nodiscard]] constexpr auto inNeighbors() -> MutPtrVector<Address *> {
-  //     return MutPtrVector<Address *>{getAddrMemory(), numInNeighbors()};
-  //   }
-  //   [[nodiscard]] constexpr auto outNeighbors() -> MutPtrVector<Address *> {
-  //     return MutPtrVector<Address *>{getAddrMemory() + numInNeighbors(),
-  //                                    numOutNeighbors()};
-  //   }
-  // #endif
-  // constexpr void indirectInNeighbor(Addr *other, size_t i, uint8_t d) {
-  //   getAddrMemory()[i] = other;
-  //   getDDepthMemory()[i] = d;
-  // }
-  // constexpr void indirectOutNeighbor(Addr *other, size_t i, uint8_t d) {
-  //   getAddrMemory()[numMemInputs + numDirectEdges + i] = other;
-  //   getDDepthMemory()[numMemInputs + numDirectEdges + i] = d;
-  // }
   [[nodiscard]] static auto allocate(Arena<> *alloc, NotNull<Addr> ma,
                                      unsigned inputEdges, unsigned directEdges,
                                      unsigned outputEdges) -> NotNull<Addr> {
@@ -611,20 +428,6 @@ public:
                    sizeof(Addr);
     return (Addr *)alloc->allocate(memSz);
   }
-  // constexpr void addDirectConnection(Addr *store, size_t loadEdge) {
-  //   assert(isLoad() && store->isStore());
-  //   directEdges().front() = store;
-  //   store->directEdges()[loadEdge] = this;
-  //   // never ignored
-  //   getDDepthMemory()[numMemInputs] = 255;
-  //   store->getDDepthMemory()[numMemInputs + loadEdge] = 255;
-  // }
-  // constexpr void addOut(Addr *child, uint8_t d) {
-  //   // we hijack index_ and lowLink_ before they're used for SCC
-  //   size_t inInd = index_++, outInd = child->lowLink_++;
-  //   indirectOutNeighbor(child, inInd, d);
-  //   child->indirectInNeighbor(this, outInd, d);
-  // }
   [[nodiscard]] constexpr auto getNumLoops() const -> unsigned { return depth; }
   [[nodiscard]] constexpr auto getArrayDim() const -> unsigned {
     return numDim;

@@ -799,16 +799,62 @@ public:
     return os << "\nSatisfied (isCondIndep() == " << d.isCondIndep()
               << ") = " << int(d.satLevel()) << "\n";
   }
+
+  struct NextInput {
+    constexpr auto operator()(Dependence *d) const -> Dependence * {
+      return d->getNextInput();
+    }
+    constexpr auto operator()(const Dependence *d) const -> const Dependence * {
+      return d->getNextInput();
+    }
+  };
+  struct NextOutput {
+    constexpr auto operator()(Dependence *d) const -> Dependence * {
+      return d->getNextOutput();
+    }
+    constexpr auto operator()(const Dependence *d) const -> const Dependence * {
+      return d->getNextOutput();
+    }
+  };
+  struct Active {
+    unsigned depth;
+    constexpr Active(const Active &) noexcept = default;
+    constexpr Active(Active &&) noexcept = default;
+    constexpr Active() noexcept = default;
+    constexpr auto operator=(const Active &) noexcept -> Active & = default;
+    constexpr Active(unsigned depth) : depth(depth) {}
+    constexpr auto operator()(const Dependence *d) const -> bool {
+      return d->isActive(depth);
+    }
+  };
 };
 
 } // namespace poly
 namespace IR {
-constexpr void IR::Addr::forEachInput(const auto &f) {
+inline constexpr void IR::Addr::forEachInput(const auto &f) {
   poly::Dependence *d = edgeIn;
   while (d) {
     f(d->input());
     d = d->getNextInput();
   }
+}
+inline constexpr auto IR::Addr::inputAddrs() {
+  return utils::ListRange{getEdgeIn(), Dependence::NextInput{},
+                          [](Dependence *d) { return d->input(); }};
+}
+inline constexpr auto IR::Addr::outputAddrs() {
+  return utils::ListRange{getEdgeOut(), Dependence::NextOutput{},
+                          [](Dependence *d) { return d->output(); }};
+}
+inline constexpr auto IR::Addr::inputAddrs(unsigned depth) {
+  return utils::ListRange{getEdgeIn(), Dependence::NextInput{}} |
+         std::views::filter(Dependence::Active{depth}) |
+         std::views::transform([](Dependence *d) { return d->input(); });
+}
+inline constexpr auto IR::Addr::outputAddrs(unsigned depth) {
+  return utils::ListRange{getEdgeOut(), Dependence::NextOutput{}} |
+         std::views::filter(Dependence::Active{depth}) |
+         std::views::transform([](Dependence *d) { return d->output(); });
 }
 inline constexpr void Addr::setEdgeIn(Dependence *dep) {
   edgeIn = dep->setNextInput(edgeIn);

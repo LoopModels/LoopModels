@@ -116,7 +116,7 @@ private:
 protected:
   const ValKind kind;
   uint8_t depth{0};
-  bool visited{false};
+  uint8_t visitDepth{255};
   bool dependsOnParentLoop_{false};
   // uint16_t index_;
   // uint16_t lowLink_;
@@ -126,9 +126,14 @@ protected:
   constexpr Node(ValKind kind, unsigned d) : kind(kind), depth(d) {}
 
 public:
-  constexpr void visit() { visited = true; }
-  constexpr void clearVisited() { visited = false; }
-  [[nodiscard]] constexpr auto wasVisited() const -> bool { return visited; }
+  constexpr void visit(uint8_t d) { visitDepth = d; }
+  [[nodiscard]] constexpr auto getVisitDepth() const -> uint8_t {
+    return visitDepth;
+  }
+  constexpr void clearVisited() { visitDepth = 255; }
+  [[nodiscard]] constexpr auto wasVisited(uint8_t d) const -> bool {
+    return visitDepth == d;
+  }
   constexpr void setDependsOnParentLoop() { dependsOnParentLoop_ = true; }
   [[nodiscard]] constexpr auto dependsOnParentLoop() const -> bool {
     return dependsOnParentLoop_;
@@ -198,8 +203,7 @@ public:
   constexpr void removeFromList() {
     if (prev) prev->setNext(next);
     if (next) next->setPrev(prev);
-    prev = nullptr;
-    next = nullptr;
+    clearPrevNext();
   }
   constexpr void insertChild(Node *d) {
     d->setParent(this);

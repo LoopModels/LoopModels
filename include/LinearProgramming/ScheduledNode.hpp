@@ -143,39 +143,12 @@ public:
   // [[nodiscard]] constexpr auto getNumMem() const -> ptrdiff_t {
   //   return memory.size();
   // }
-  struct Active {
-    unsigned depth;
-    constexpr Active(const Active &) noexcept = default;
-    constexpr Active(Active &&) noexcept = default;
-    constexpr Active() noexcept = default;
-    constexpr auto operator=(const Active &) noexcept -> Active & = default;
-    constexpr Active(unsigned depth) : depth(depth) {}
-    constexpr auto operator()(const Dependence *d) const -> bool {
-      return d->isActive(depth);
-    }
-  };
   struct NextAddr {
     constexpr auto operator()(Addr *a) const -> Addr * {
       return llvm::cast_or_null<Addr>(a->getNext());
     }
     constexpr auto operator()(const Addr *a) const -> const Addr * {
       return llvm::cast_or_null<Addr>(a->getNext());
-    }
-  };
-  struct NextInput {
-    constexpr auto operator()(Dependence *d) const -> Dependence * {
-      return d->getNextInput();
-    }
-    constexpr auto operator()(const Dependence *d) const -> const Dependence * {
-      return d->getNextInput();
-    }
-  };
-  struct NextOutput {
-    constexpr auto operator()(Dependence *d) const -> Dependence * {
-      return d->getNextOutput();
-    }
-    constexpr auto operator()(const Dependence *d) const -> const Dependence * {
-      return d->getNextOutput();
     }
   };
   struct Component {
@@ -241,7 +214,7 @@ public:
       utils::ListRange{store, NextAddr{},
                        [](Addr *a) -> Dependence * { return a->getEdgeIn(); }},
       [](Dependence *d) {
-        return utils::ListRange{d, NextInput{},
+        return utils::ListRange{d, Dependence::NextInput{},
                                 [](Dependence *d) -> ScheduledNode * {
                                   return d->input()->getNode();
                                 }};
@@ -257,7 +230,7 @@ public:
       utils::ListRange{store, NextAddr{},
                        [](Addr *a) -> Dependence * { return a->getEdgeOut(); }},
       [](Dependence *d) {
-        return utils::ListRange{d, NextOutput{},
+        return utils::ListRange{d, Dependence::NextOutput{},
                                 [](Dependence *d) -> ScheduledNode * {
                                   return d->output()->getNode();
                                 }};
@@ -268,7 +241,7 @@ public:
       utils::ListRange{store, NextAddr{},
                        [](Addr *a) -> Dependence * { return a->getEdgeIn(); }},
       [](Dependence *d) {
-        return utils::ListRange{d, NextInput{}};
+        return utils::ListRange{d, Dependence::NextInput{}};
       }};
   }
   [[nodiscard]] constexpr auto outputEdges() {
@@ -276,7 +249,7 @@ public:
       utils::ListRange{store, NextAddr{},
                        [](Addr *a) -> Dependence * { return a->getEdgeOut(); }},
       [](Dependence *d) {
-        return utils::ListRange{d, NextOutput{}};
+        return utils::ListRange{d, Dependence::NextOutput{}};
       }};
   }
   [[nodiscard]] constexpr auto inputEdges() const {
@@ -284,7 +257,7 @@ public:
       utils::ListRange{store, NextAddr{},
                        [](Addr *a) -> Dependence * { return a->getEdgeIn(); }},
       [](Dependence *d) {
-        return utils::ListRange{d, NextInput{}};
+        return utils::ListRange{d, Dependence::NextInput{}};
       }};
   }
   [[nodiscard]] constexpr auto outputEdges() const {
@@ -292,7 +265,7 @@ public:
       utils::ListRange{store, NextAddr{},
                        [](Addr *a) -> Dependence * { return a->getEdgeOut(); }},
       [](Dependence *d) {
-        return utils::ListRange{d, NextOutput{}};
+        return utils::ListRange{d, Dependence::NextOutput{}};
       }};
   }
   [[nodiscard]] constexpr auto inputEdges(unsigned depth) {
@@ -300,8 +273,8 @@ public:
       utils::ListRange{store, NextAddr{},
                        [](Addr *a) -> Dependence * { return a->getEdgeIn(); }},
       [depth](Dependence *d) {
-        return utils::ListRange{d, NextInput{}} |
-               std::views::filter(Active{depth});
+        return utils::ListRange{d, Dependence::NextInput{}} |
+               std::views::filter(Dependence::Active{depth});
       }};
   }
   [[nodiscard]] constexpr auto outputEdges(unsigned depth) {
@@ -309,8 +282,8 @@ public:
       utils::ListRange{store, NextAddr{},
                        [](Addr *a) -> Dependence * { return a->getEdgeOut(); }},
       [depth](Dependence *d) {
-        return utils::ListRange{d, NextOutput{}} |
-               std::views::filter(Active{depth});
+        return utils::ListRange{d, Dependence::NextOutput{}} |
+               std::views::filter(Dependence::Active{depth});
       }};
   }
   [[nodiscard]] constexpr auto inputEdges(unsigned depth) const {
@@ -318,8 +291,8 @@ public:
       utils::ListRange{store, NextAddr{},
                        [](Addr *a) -> Dependence * { return a->getEdgeIn(); }},
       [depth](Dependence *d) {
-        return utils::ListRange{d, NextInput{}} |
-               std::views::filter(Active{depth});
+        return utils::ListRange{d, Dependence::NextInput{}} |
+               std::views::filter(Dependence::Active{depth});
       }};
   }
   [[nodiscard]] constexpr auto outputEdges(unsigned depth) const {
@@ -327,8 +300,8 @@ public:
       utils::ListRange{store, NextAddr{},
                        [](Addr *a) -> Dependence * { return a->getEdgeOut(); }},
       [depth](Dependence *d) {
-        return utils::ListRange{d, NextOutput{}} |
-               std::views::filter(Active{depth});
+        return utils::ListRange{d, Dependence::NextOutput{}} |
+               std::views::filter(Dependence::Active{depth});
       }};
   }
   struct InNode {
@@ -346,12 +319,12 @@ public:
 
     constexpr auto operator()(Dependence *d) const {
       if constexpr (Out)
-        return utils::ListRange{d, NextOutput{}} |
-               std::views::filter(Active{depth}) |
+        return utils::ListRange{d, Dependence::NextOutput{}} |
+               std::views::filter(Dependence::Active{depth}) |
                std::views::transform(OutNode{});
       else
-        return utils::ListRange{d, NextInput{}} |
-               std::views::filter(Active{depth}) |
+        return utils::ListRange{d, Dependence::NextInput{}} |
+               std::views::filter(Dependence::Active{depth}) |
                std::views::transform(InNode{});
     }
   };
