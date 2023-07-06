@@ -16,6 +16,86 @@
 
 namespace poly::IR {
 using dict::map;
+
+struct AddrChain {
+  /// `Addr`s, sorted `[stow..., load...]`
+  /// stow's getChild() points to last stow
+  /// load's getChild() points to last load
+  Addr *addr{nullptr};
+
+  // we accumulate `maxDepth` as we go
+  // Newly constructed addrs have enough space for the max depth,
+  // so we can resize mostly in place later.
+  // we have all addr in a line
+  constexpr void addAddr(Addr *A) {
+    if (!addr || addr->isLoad()) addr = A->insertNextAddr(addr);
+    else getLastStore()->insertNextAddr(A);
+    if (addr->isLoad()) {
+      Addr *L = addr->getNextAddr();
+      addr->setChild(L ? L->getChild() : addr);
+    } else addr->setChild(A);
+  }
+  [[nodiscard]] constexpr auto getAddr() const {
+    return utils::ListRange(static_cast<Addr *>(addr), NextAddr{});
+  }
+  [[nodiscard]] constexpr auto getLoads() const {
+    return utils::ListRange(getFirstLoad(), NextAddr{});
+  }
+  [[nodiscard]] constexpr auto getStores() const {
+    Addr *S = (addr && addr->isStore()) ? addr : nullptr;
+    return utils::ListRange(S, [](Addr *A) -> Addr * {
+      Addr *S = A->getNextAddr();
+      if (S && S->isStore()) return S;
+      return nullptr;
+    });
+  }
+  constexpr auto operator*=(Addr other) -> Addr & {
+    if (other.addr) {
+      if (addr && addr->isStore()) {
+        // [this_stow..., other..., this_load...]
+        Addr *LS = getLastStore(), *FL = LS->getNextAddr();
+        LS->setNextAddr(tr.addr);
+        tr.getLastAddr()->setNextAddr(FL);
+      } else {
+        // [other..., this_load...]
+        tr.getLastAddr()->setNextAddr(addr);
+        addr = tr.addr;
+      }
+    }
+    return *this;
+  }
+
+private:
+  [[nodiscard]] constexpr auto getFirstStore() const -> Addr * {
+    return (addr && addr->isStore()) ? addr : nullptr;
+  }
+  [[nodiscard]] constexpr auto getLastStore() const -> Addr * {
+    if (!addr || addr->isLoad()) return nullptr;
+    return llvm::cast<Addr>(addr->getChild());
+  }
+  [[nodiscard]] constexpr auto getFirstLoad() const -> Addr * {
+    if (!addr || addr->isLoad()) return addr;
+    return llvm::cast<Addr>(addr->getChild())->getNextAddr();
+  }
+  [[nodiscard]] constexpr auto getLastLoad() const -> Addr * {
+    Addr *L = getFirstLoad();
+    return L ? llvm::cast<Addr>(L->getChild()) : nullptr;
+  }
+  [[nodiscard]] constexpr auto getLastAddr() const -> Addr * {
+    if (!addr) return nullptr;
+    // if (addr->isLoad()) return llvm::cast<Addr>(addr->getChild());
+    Addr *C = llvm::cast<Addr>(addr->getChild());
+    if (C->isLoad()) return C;
+    Addr *L = C->getNextAddr();
+    return L ? llvm::cast<Addr>(L->getChild()) : C;
+  }
+  struct NextAddr {
+    constexpr auto operator()(Addr *A) const -> Addr * {
+      return A->getNextAddr();
+    }
+  };
+};
+
 /// The `TreeResult` gives the result of parsing a loop tree.
 /// The purpose of the `TreeResult` is to accumulate results while
 /// building the loop tree, in particular, the `Addr`s so far,
@@ -45,10 +125,7 @@ using dict::map;
 /// only the very first is guaranteed to be correct, as we
 /// do not update the old when concatenating
 struct TreeResult {
-  /// `Addr`s, sorted `[stow..., load...]`
-  /// stow's getChild() points to last stow
-  /// load's getChild() points to last load
-  Addr *addr{nullptr};
+  AddrChain addr{};
   Compute *incomplete{nullptr};
   unsigned rejectDepth{0};
   unsigned maxDepth{0};
@@ -64,56 +141,22 @@ struct TreeResult {
     incomplete = static_cast<Compute *>(I->setNext(incomplete));
     I->setChild(last);
   }
-  // TODO: single load/stow list, but sorted
-  // we accumulate `maxDepth` as we go
-  // Newly constructed addrs have enough space for the max depth,
-  // so we can resize mostly in place later.
-  // we have all addr in a line
-  constexpr void addAddr(Addr *A) {
-    if (!addr || addr->isLoad()) addr = A->insertNextAddr(addr);
-    else getLastStore()->insertNextAddr(A);
-    if (addr->isLoad()) {
-      Addr *L = addr->getNextAddr();
-      addr->setChild(L ? L->getChild() : addr);
-    } else addr->setChild(A);
-  }
-  [[nodiscard]] constexpr auto getAddr() const {
-    return utils::ListRange(static_cast<Addr *>(addr), NextAddr{});
-  }
-  [[nodiscard]] constexpr auto getLoads() const {
-    return utils::ListRange(getFirstLoad(), NextAddr{});
-  }
-  [[nodiscard]] constexpr auto getStores() const {
-    Addr *S = (addr && addr->isStore()) ? addr : nullptr;
-    return utils::ListRange(S, [](Addr *A) -> Addr * {
-      Addr *S = A->getNextAddr();
-      if (S && S->isStore()) return S;
-      return nullptr;
-    });
-  }
+  constexpr void addAddr(Addr *A) { addr.addAddr(A); }
+  [[nodiscard]] constexpr auto getAddr() const { return addr.getAddr(); }
+  [[nodiscard]] constexpr auto getLoads() const { return addr.getLoads(); }
+  [[nodiscard]] constexpr auto getStores() const { return addr.getStores(); }
   void setLoopNest(NotNull<poly::Loop> L) const {
     for (Addr *A : getAddr()) A->setLoopNest(L);
   }
   constexpr auto operator*=(TreeResult tr) -> TreeResult & {
-    if (tr.addr) {
-      if (addr && addr->isStore()) {
-        // [this_stow..., other..., this_load...]
-        Addr *LS = getLastStore(), *FL = LS->getNextAddr();
-        LS->setNextAddr(tr.addr);
-        tr.getLastAddr()->setNextAddr(FL);
-      } else {
-        // [other..., this_load...]
-        tr.getLastAddr()->setNextAddr(addr);
-        addr = tr.addr;
-      }
-    }
+    addr *= tr.addr;
     incomplete = concatenate(incomplete, tr.incomplete);
     rejectDepth = std::max(rejectDepth, tr.rejectDepth);
     return *this;
   }
 
   [[nodiscard]] constexpr auto getLoop() const -> poly::Loop * {
-    return (addr) ? addr->getLoop() : nullptr;
+    return (addr.addr) ? addr.addr->getLoop() : nullptr;
   }
   [[nodiscard]] constexpr auto getMaxDepth() const -> unsigned {
     return maxDepth - rejectDepth;
@@ -127,34 +170,6 @@ private:
     A->setChild(B->getChild());
     return A;
   }
-  [[nodiscard]] constexpr auto getFirstStore() const -> Addr * {
-    return (addr && addr->isStore()) ? addr : nullptr;
-  }
-  [[nodiscard]] constexpr auto getLastStore() const -> Addr * {
-    if (!addr || addr->isLoad()) return nullptr;
-    return llvm::cast<Addr>(addr->getChild());
-  }
-  [[nodiscard]] constexpr auto getFirstLoad() const -> Addr * {
-    if (!addr || addr->isLoad()) return addr;
-    return llvm::cast<Addr>(addr->getChild())->getNextAddr();
-  }
-  [[nodiscard]] constexpr auto getLastLoad() const -> Addr * {
-    Addr *L = getFirstLoad();
-    return L ? llvm::cast<Addr>(L->getChild()) : nullptr;
-  }
-  [[nodiscard]] constexpr auto getLastAddr() const -> Addr * {
-    if (!addr) return nullptr;
-    // if (addr->isLoad()) return llvm::cast<Addr>(addr->getChild());
-    Addr *C = llvm::cast<Addr>(addr->getChild());
-    if (C->isLoad()) return C;
-    Addr *L = C->getNextAddr();
-    return L ? llvm::cast<Addr>(L->getChild()) : C;
-  }
-  struct NextAddr {
-    constexpr auto operator()(Addr *A) const -> Addr * {
-      return A->getNextAddr();
-    }
-  };
 };
 
 class Cache {

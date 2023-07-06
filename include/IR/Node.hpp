@@ -110,17 +110,25 @@ public:
   // and we want a common base that we can query to avoid monomorphization.
 protected:
   const ValKind kind;
-  uint8_t currentDepth{0};
-  uint8_t naturalDepth{0};
+  uint8_t currentDepth{0}; // current depth
+  uint8_t naturalDepth{0}; // original, or, for Addr, `indMat.numCol()`
   uint8_t visitDepth{255};
-  uint8_t maxDepth;
+  uint8_t maxDepth; // memory allocated to support up to this depth
   bool dependsOnParentLoop_{false};
+  // 7 bytes; we have 1 left!
   // uint16_t index_;
   // uint16_t lowLink_;
   // uint16_t bitfield;
 
   constexpr Node(ValKind kind) : kind(kind) {}
-  constexpr Node(ValKind kind, unsigned d) : kind(kind), naturalDepth(d) {}
+  constexpr Node(ValKind kind, unsigned depth)
+    : kind(kind), currentDepth(depth), naturalDepth(depth) {}
+  constexpr Node(ValKind kind, unsigned curDepth, unsigned natDepth)
+    : kind(kind), currentDepth(curDepth), naturalDepth(natDepth) {}
+  constexpr Node(ValKind kind, unsigned curDepth, unsigned natDepth,
+                 unsigned maxDepth_)
+    : kind(kind), currentDepth(curDepth), naturalDepth(natDepth),
+      maxDepth(maxDepth_) {}
 
 private:
   Node *prev{nullptr};
@@ -337,6 +345,12 @@ class Value : public Node {
 protected:
   constexpr Value(ValKind kind) : Node(kind) {}
   constexpr Value(ValKind kind, unsigned depth) : Node(kind, depth) {}
+  constexpr Value(ValKind kind, unsigned curDepth, unsigned natDepth)
+    : Node(kind, curDepth, natDepth) {}
+  constexpr Value(ValKind kind, unsigned curDepth, unsigned natDepth,
+                  unsigned maxDepth_)
+    : Node(kind, curDepth, natDepth, maxDepth_) {}
+
   Users users;
 
   // union {
@@ -430,6 +444,11 @@ class Instruction : public Value {
 protected:
   constexpr Instruction(ValKind kind) : Value(kind) {}
   constexpr Instruction(ValKind kind, unsigned depth) : Value(kind, depth) {}
+  constexpr Instruction(ValKind kind, unsigned curDepth, unsigned natDepth)
+    : Value(kind, curDepth, natDepth) {}
+  constexpr Instruction(ValKind kind, unsigned curDepth, unsigned natDepth,
+                        unsigned maxDepth_)
+    : Value(kind, curDepth, natDepth, maxDepth_) {}
 
 public:
   static constexpr auto classof(const Node *v) -> bool {

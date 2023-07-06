@@ -31,6 +31,7 @@
 #include <llvm/ADT/STLExtras.h>
 #include <llvm/ADT/SmallVector.h>
 #include <llvm/Analysis/ScalarEvolution.h>
+#include <llvm/IR/DiagnosticInfo.h>
 #include <llvm/IR/Instructions.h>
 #include <llvm/IR/User.h>
 #include <llvm/IR/Value.h>
@@ -150,8 +151,18 @@ class LoopBlock {
   };
 
 public:
+  struct OptimizationResult {
+    IR::AddrChain addr;
+    ScheduledNode *nodes;
+    constexpr auto getVertices() const { return nodes->getVertices(); }
+    constexpr auto setOrigNext(ScheduledNode *node) -> OptimizationResult {
+      nodes->setOrigNext(node);
+      return *this;
+    }
+  };
+
   constexpr LoopBlock() = default;
-  auto optimize(IR::Cache &cache, IR::TreeResult tr) -> ScheduledNode * {
+  auto optimize(IR::Cache &cache, IR::TreeResult tr) -> OptimizationResult {
     // first, we peel loops for which affine repr failed
     if (unsigned numReject = tr.rejectDepth) {
       auto *SE = cache.getScalarEvolution();
@@ -167,10 +178,11 @@ public:
     }
     // link stores with loads connected through registers
     ScheduledNode *nodes{nullptr};
+    OptimizationResult opt{tr.addr, nodes};
     for (Addr *stow : tr.getStores())
-      nodes = addScheduledNode(cache, stow)->setOrigNext(nodes);
-    for (ScheduledNode *node : nodes->getVertices()) shiftOmega(node);
-    return optOrth(nodes, tr.getMaxDepth()) ? nodes : nullptr;
+      opt = addScheduledNode(cache, stow, opt.addr).setOrigNext(nodes);
+    for (ScheduledNode *node : opt.getVertices()) shiftOmega(node);
+    return optOrth(nodes, tr.getMaxDepth()) ? opt : OptimizationResult{};
   }
   void clear() { allocator.reset(); }
   [[nodiscard]] constexpr auto getAllocator() -> Arena<> * {
@@ -178,7 +190,8 @@ public:
   }
 
 private:
-  auto addScheduledNode(IR::Cache &cache, IR::Stow stow) -> ScheduledNode * {
+  auto addScheduledNode(IR::Cache &cache, IR::Stow stow, IR::AddrChain addr)
+    -> OptimizationResult {
     // how are we going to handle load duplication?
     // we also need to duplicate the instruction graph leading to the node
     // implying we need to track that tree.
@@ -199,11 +212,11 @@ private:
     // the store that visited it.
     // If one has already been visited, duplicate and
     // mark the new one.
-    auto [storedVal, maxLoop] =
-      searchOperandsForLoads(cache, stow, stow.getStoredVal());
+    auto [storedVal, maxLoop, ac] =
+      searchOperandsForLoads(cache, stow, stow.getStoredVal(), addr);
     maxLoop = deeperLoop(maxLoop, stow.getLoop());
     stow.setVal(storedVal); // in case it changed
-    return ScheduledNode::construct(cache.getAllocator(), stow, maxLoop);
+    return {ac, ScheduledNode::construct(cache.getAllocator(), stow, maxLoop)};
   }
   static constexpr auto deeperLoop(poly::Loop *a, poly::Loop *b)
     -> poly::Loop * {
@@ -236,10 +249,11 @@ private:
   /// graph an extra time as we go.
   ///
   // NOLINTNEXTLINE(misc-no-recursion)
-  auto searchOperandsForLoads(IR::Cache &cache, IR::Stow stow, Value *val)
-    -> std::pair<Value *, poly::Loop *> {
+  auto searchOperandsForLoads(IR::Cache &cache, IR::Stow stow, Value *val,
+                              IR::AddrChain addr)
+    -> std::tuple<Value *, poly::Loop *, IR::AddrChain> {
     auto *inst = llvm::dyn_cast<Instruction>(val);
-    if (!inst) return {val, nullptr};
+    if (!inst) return {val, nullptr, addr};
     // we use parent/child relationships here instead of next/prev
     if (Load load = IR::Load(inst)) {
       // TODO: check we don't have mutually exclusive predicates
@@ -250,9 +264,10 @@ private:
         Dependence::copyDependencies(alloc, load, reload);
         invariant(reload->isLoad());
         load = reload;
+        addr.addAddr(reload);
       }
       stow.insertAfter(load);
-      return {load, load.getLoop()};
+      return {load, load.getLoop(), addr};
       // it has been, therefore we need to copy the load
     }
     // if not a load, check if it is stored, so we reload
@@ -266,7 +281,8 @@ private:
     if (store && (store != (Addr *)stow)) {
       Addr *load = Dependence::reload(&allocator, store);
       stow.insertAfter(load); // insert load after stow
-      return {load, load->getLoop()};
+      addr.addAddr(load);
+      return {load, load->getLoop(), addr};
     }
     auto *C = llvm::cast<IR::Compute>(inst);
     // could not find a load, so now we recurse, searching operands
@@ -278,13 +294,15 @@ private:
     bool opsChanged = false;
     for (ptrdiff_t i = 0; i < numOps; ++i) {
       Value *op = C->getOperand(i);
-      auto [updatedOp, loop] = searchOperandsForLoads(cache, stow, op);
+      auto [updatedOp, loop, ac] =
+        searchOperandsForLoads(cache, stow, op, addr);
+      addr = ac;
       maxLoop = deeperLoop(maxLoop, loop);
       if (op != updatedOp) opsChanged = true;
       newOperands[i] = updatedOp;
     }
     if (opsChanged) val = cache.similarCompute(C, newOperands);
-    return {val, maxLoop};
+    return {val, maxLoop, addr};
   }
 
   void shiftOmega(ScheduledNode *node) {

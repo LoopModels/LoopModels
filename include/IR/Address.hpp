@@ -74,25 +74,17 @@ using math::PtrVector, math::MutPtrVector, math::DensePtrMatrix,
 /// `oldLoop->rotate(PhiInv)`
 // clang-format on
 class Addr : public Instruction {
-  [[no_unique_address]] Dependence *edgeIn{nullptr};
-  [[no_unique_address]] Dependence *edgeOut{nullptr};
-  // ScheduledNode is used in solving a LinearProgram
-  // Before this, on constructing the Addr, we use maxDepth
-  // numDim = maxDepth - TreeResult.rejectDepth; we may need to reduce dim
-  // maxDepth is the original maximum depth (assuming no rejects),
-  // not the amount of allocated space, which could be greater,
-  // to support sinking deeper into a subloop.
-  // On rotate, we switch it back to `maxDepth`
-  // which can then be decremented as we hoist
-  [[no_unique_address]] lp::ScheduledNode *node;
-  [[no_unique_address]] NotNull<const llvm::SCEVUnknown> basePointer;
-  [[no_unique_address]] poly::Loop *loop{nullptr};
-  [[no_unique_address]] llvm::Instruction *instr;
-  [[no_unique_address]] int64_t *offSym{nullptr};
-  [[no_unique_address]] const llvm::SCEV **syms;
-  [[no_unique_address]] Value *predicate{nullptr};
-  [[no_unique_address]] Addr *origNext{nullptr};
-  [[no_unique_address]] unsigned numDim{0}, numDynSym{0};
+  Dependence *edgeIn{nullptr};
+  Dependence *edgeOut{nullptr};
+  lp::ScheduledNode *node;
+  NotNull<const llvm::SCEVUnknown> basePointer;
+  poly::Loop *loop{nullptr};
+  llvm::Instruction *instr;
+  int64_t *offSym{nullptr};
+  const llvm::SCEV **syms;
+  Value *predicate{nullptr};
+  Addr *origNext{nullptr};
+  unsigned numDim{0}, numDynSym{0};
 #if !defined(__clang__) && defined(__GNUC__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
@@ -108,9 +100,10 @@ class Addr : public Instruction {
 #endif
   explicit Addr(const llvm::SCEVUnknown *arrayPtr, llvm::Instruction *user,
                 int64_t *offsym, const llvm::SCEV **s,
-                std::array<unsigned, 2> dimOff, unsigned numLoops)
+                std::array<unsigned, 2> dimOff, unsigned numLoops,
+                unsigned natDepth, unsigned maxNumLoops)
     : Instruction(llvm::isa<llvm::StoreInst>(user) ? VK_Stow : VK_Load,
-                  numLoops),
+                  numLoops, natDepth, maxNumLoops),
       basePointer(arrayPtr), instr(user), offSym(offsym), syms(s),
       numDim(dimOff[0]), numDynSym(dimOff[1]){};
   explicit Addr(const llvm::SCEVUnknown *arrayPtr, llvm::Instruction *user,
@@ -127,7 +120,8 @@ class Addr : public Instruction {
   // memory layout:
   // 0: denominator
   // 1: offset omega
-
+  // 2: index matrix
+  // 3: fusion omega
   constexpr auto getOffSym() -> int64_t * { return offSym; }
   [[nodiscard]] constexpr auto indMatPtr() const -> int64_t * {
     return getIntMemory() + 1 + getArrayDim();
@@ -147,15 +141,15 @@ public:
                         PtrVector<int64_t> omega, int64_t *offsets) {
     loop = explicitLoop;
     // we are updating in place; we may now have more loops than we did before
-    unsigned oldOrigDepth = getOriginalDepth();
+    unsigned oldNatDepth = getNaturalDepth();
     DensePtrMatrix<int64_t> M{indexMatrix()}; // aD x nLma
     MutPtrVector<int64_t> offsetOmega{getOffsetOmega()};
-    this->originalDepth = uint8_t(Pinv.numCol());
+    unsigned depth = this->naturalDepth = uint8_t(Pinv.numCol());
     MutDensePtrMatrix<int64_t> mStar{indexMatrix()};
     // M is implicitly padded with zeros, newNumLoops >= oldNumLoops
-    invariant(maxDepth >= originalDepth);
-    invariant(oldOrigDepth <= originalDepth);
-    invariant(ptrdiff_t(oldNumLoops), ptrdiff_t(M.numRow()));
+    invariant(maxDepth >= naturalDepth);
+    invariant(oldNatDepth <= naturalDepth);
+    invariant(ptrdiff_t(oldNatDepth), ptrdiff_t(M.numRow()));
     getDenominator() = denom;
     // layout goes offsetOmega, indexMatrix, fusionOmega
     // When we call `rotate`, we don't need fusionOmega anymore, because
@@ -166,26 +160,36 @@ public:
     // as a temporary, to avoid the aliasing problem.
     //
     // Use `M` before updating it, to update `offsetOmega`
-    if (offsets) offsetOmega -= M * PtrVector<int64_t>{offsets, oldNumLoops};
+    if (offsets) offsetOmega -= M * PtrVector<int64_t>{offsets, oldNatDepth};
     // update `M` into `mStar`
     // mStar << M * Pinv(_(0, oldNumLoops), _);
     MutPtrVector<int64_t> buff{getFusionOmega()[_(0, math::last)]};
     invariant(buff.size(), unsigned(depth));
+    unsigned newNatDepth = 0;
     for (ptrdiff_t d = getArrayDim(); d--;) {
       buff << 0;
-      for (ptrdiff_t k = 0; k < oldNumLoops; ++k) buff += M(d, k) * Pinv(k, _);
+      for (ptrdiff_t k = 0; k < oldNatDepth; ++k) buff += M(d, k) * Pinv(k, _);
       mStar(d, _) << buff;
+      if (newNatDepth == depth) continue;
+      // find last
+      auto range = std::ranges::reverse_view{buff[_(newNatDepth, depth)]};
+      auto m = std::ranges::find_if(range, [](int64_t i) { return i != 0; });
+      if (m == range.end()) continue;
+      newNatDepth = depth - std::distance(range.begin(), m);
     }
-
     // use `mStar` to update offsetOmega`
     offsetOmega -= mStar * omega;
-    maxDepth = depth;
+    if (newNatDepth == depth) return;
+    invariant(newNatDepth < depth);
+    this->naturalDepth = newNatDepth;
+    MutDensePtrMatrix<int64_t> indMat{this->indexMatrix()};
+    for (ptrdiff_t d = 1; d < getArrayDim(); ++d)
+      indMat(d, _) << mStar(d, _(0, newNatDepth));
+    this->naturalDepth = newNatDepth;
   }
   // NOTE: this requires `nodeOrDepth` to be set to innmost loop depth
   [[nodiscard]] constexpr auto indexedByInnermostLoop() -> bool {
-    if (nodeOrDepth.maxDepth == 0) return true; // we can't hoist further
-    bool ret = std::ranges::any_of(indexMatrix()(_, nodeOrDepth.maxDepth - 1),
-                                   [](int64_t i) { return i != 0; });
+    bool ret = currentDepth == naturalDepth;
     if (ret) setDependsOnParentLoop();
     return ret;
   }
@@ -216,8 +220,16 @@ public:
     // 1 + d + d*l + l + 1 == 1 + (d + 1)*(l + 1)
     return 1 + (numLoops + 1) * (dim + 1);
   }
-  [[nodiscard]] constexpr auto intMemNeeded() const -> size_t {
-    return intMemNeeded(getNumLoops(), getArrayDim());
+  [[nodiscard]] static constexpr auto intMemNeededFuseFree(size_t numLoops,
+                                                           size_t dim)
+    -> size_t {
+    // d = dim, l = numLoops
+    // Memory layout: offset, size
+    // 0,1 for denom
+    // 1,d for offsetOmega
+    // 1 + d, d*l for indexMatrix
+    // 1 + d + d*l == 1 + d*(1+l)
+    return 1 + (numLoops + 1) * dim;
   }
   Addr(const Addr &) = delete;
   inline constexpr void addEdgeIn(Dependence *);
@@ -232,13 +244,11 @@ public:
   }
   constexpr void setLoopNest(poly::Loop *L) { loop = L; }
   // NOLINTNEXTLINE(readability-make-member-function-const)
-  [[nodiscard]] constexpr auto getNode() -> lp::ScheduledNode * {
-    return nodeOrDepth.node;
-  }
+  [[nodiscard]] constexpr auto getNode() -> lp::ScheduledNode * { return node; }
   [[nodiscard]] constexpr auto getNode() const -> const lp::ScheduledNode * {
-    return nodeOrDepth.node;
+    return node;
   }
-  constexpr void setNode(lp::ScheduledNode *n) { nodeOrDepth.node = n; }
+  constexpr void setNode(lp::ScheduledNode *n) { node = n; }
   inline constexpr void forEachInput(const auto &f);
   inline constexpr auto inputAddrs();
   inline constexpr auto outputAddrs();
@@ -263,36 +273,44 @@ public:
     // we don't want to hold any other pointers that may need freeing
     unsigned arrayDim = szOff[0].size(), nOff = szOff[1].size();
     size_t memNeeded = intMemNeeded(maxNumLoops, arrayDim);
-    auto *mem =
-      (Addr *)alloc->allocate(sizeof(Addr) + memNeeded * sizeof(int64_t));
+    auto *mem = static_cast<Addr *>(
+      alloc->allocate(sizeof(Addr) + memNeeded * sizeof(int64_t)));
     const auto **syms = // over alloc by numLoops - 1, in case we remove
       alloc->allocate<const llvm::SCEV *>(arrayDim + nOff + numLoops - 1);
-    auto *ma =
-      new (mem) Addr(arrayPtr, user, offsets, syms,
-                     std::array<unsigned, 2>{arrayDim, nOff}, numLoops);
+    unsigned natDepth = numLoops;
+    for (; natDepth; --natDepth)
+      if (math::anyNEZero(indMat(_, natDepth - 1))) break;
+    auto *ma = new (mem) Addr(arrayPtr, user, offsets, syms,
+                              std::array<unsigned, 2>{arrayDim, nOff}, numLoops,
+                              natDepth, maxNumLoops);
     std::copy_n(szOff[0].begin(), arrayDim, syms);
     std::copy_n(szOff[1].begin(), nOff, syms + arrayDim);
-    ma->indexMatrix() << indMat;
+    ma->indexMatrix() << indMat(_, _(0, natDepth)); // naturalDepth
     ma->getOffsetOmega() << coffsets;
     return ma;
   }
   /// copies `o` and decrements the last element
   /// it decrements, as we iterate in reverse order
   constexpr void setFusionOmega(MutPtrVector<int> o) {
-    invariant(o.size(), getNumLoops() + 1);
-    std::copy_n(o.begin(), getNumLoops(), getFusionOmega().begin());
+    invariant(o.size(), getCurrentDepth() + 1);
+    std::copy_n(o.begin(), getCurrentDepth(), getFusionOmega().begin());
     getFusionOmega().back() = o.back()--;
   }
   [[nodiscard]] auto reload(Arena<> *alloc) -> NotNull<Addr> {
     size_t memNeeded = intMemNeeded(maxDepth, numDim);
-    void *p alloc->allocate(sizeof(Addr) + memNeeded * sizeof(int64_t));
-    static_cast<ValKind *>(p) = VK_Load;
+    void *p = alloc->allocate(sizeof(Addr) + memNeeded * sizeof(int64_t));
+    *static_cast<ValKind *>(p) = VK_Load;
+    // we don't need to copy fusion omega; only needed for initial
+    // dependence analysis
     std::memcpy(static_cast<char *>(p) + sizeof(VK_Load),
                 static_cast<char *>(static_cast<void *>(this)) +
                   sizeof(VK_Load),
                 sizeof(Addr) - sizeof(VK_Load) +
-                  intMemNeeded(originalDepth, numDim) * sizeof(int64_t));
-    return static_cast<Addr *>(p);
+                  intMemNeededFuseFree(naturalDepth, numDim) * sizeof(int64_t));
+    auto *r = static_cast<Addr *>(p);
+    r->edgeIn = nullptr;
+    r->edgeOut = nullptr;
+    return r;
   }
   [[nodiscard]] auto getSizes() const -> PtrVector<const llvm::SCEV *> {
     return {syms, numDim};
@@ -366,7 +384,8 @@ public:
     MutDensePtrMatrix<int64_t> offsMat{offsetMatrix()};
     if (dynSymInd) offsMat(_, _(0, dynSymInd)) << oldOffsMat;
     llvm::Loop *L = loop->getLLVMLoop();
-    for (unsigned d = getNumLoops() - numToPeel; d--;) L = L->getParentLoop();
+    for (unsigned d = loop->getNumLoops() - numToPeel; d--;)
+      L = L->getParentLoop();
     for (size_t i = numToPeel; i;) {
       L = L->getParentLoop();
       if (allZero(Rt(_, --i))) continue;
@@ -383,11 +402,14 @@ public:
       }
     }
   }
+  // we peel off the outer `numToPeel` loops
+  // however, we may have already peeled off some number of loops
+  // we check how many have already been peeled via...
   void peelLoops(Arena<> *alloc, ptrdiff_t numToPeel,
                  llvm::ScalarEvolution *SE) {
     invariant(numToPeel > 0);
     loop->removeOuterMost(numToPeel, SE);
-    ptrdiff_t maxDepth = nodeOrDepth.maxDepth, numLoops = getNumLoops();
+    ptrdiff_t numLoops = getCurrentDepth();
     invariant(numToPeel <= maxDepth);
     // we need to compare numToPeel with actual depth
     // because we might have peeled some loops already
@@ -403,26 +425,17 @@ public:
     // - indexMatrix (arrayDim x numLoops)
     // - fusionOmegas (numLoops+1)
     int64_t *dst = indMatPtr(), *src = dst + numToPeel;
-    depth = numLoops - numToPeel;
-    size_t dim = getArrayDim();
-    invariant(depth < numLoops);
+    ptrdiff_t dim = getArrayDim(), oldNatDepth = this->naturalDepth;
+    this->currentDepth = numLoops - numToPeel;
+    this->naturalDepth = oldNatDepth - numToPeel;
+    invariant(currentDepth < numLoops);
     // we want d < dim for indexMatrix, and then == dim for fusion omega
-    for (size_t d = 0; d <= dim; ++d) {
-      std::copy_n(src, depth + (d == dim), dst);
-      src += numLoops;
-      dst += depth;
+    for (ptrdiff_t d = dim;;) {
+      std::copy_n(src, (d) ? naturalDepth : (currentDepth + 1), dst);
+      if (!d--) break;
+      src += oldNatDepth;
+      dst += naturalDepth;
     }
-  }
-  [[nodiscard]] static auto allocate(Arena<> *alloc, NotNull<Addr> ma,
-                                     unsigned inputEdges, unsigned directEdges,
-                                     unsigned outputEdges) -> NotNull<Addr> {
-
-    size_t numLoops = ma->getNumLoops(), arrayDim = ma->getArrayDim(),
-           memSz = (1 + arrayDim + (arrayDim * numLoops)) * sizeof(int64_t) +
-                   (inputEdges + directEdges + outputEdges) *
-                     (sizeof(Addr *) + sizeof(uint8_t)) +
-                   sizeof(Addr);
-    return (Addr *)alloc->allocate(memSz);
   }
   [[nodiscard]] constexpr auto getArrayDim() const -> unsigned {
     return numDim;
@@ -449,21 +462,22 @@ public:
   }
   /// indexMatrix() -> arrayDim() x getNumLoops()
   [[nodiscard]] constexpr auto indexMatrix() -> MutDensePtrMatrix<int64_t> {
-    return {indMatPtr(), DenseDims{getArrayDim(), getNumLoops()}};
+    return {indMatPtr(), DenseDims{getArrayDim(), getNaturalDepth()}};
   }
   /// indexMatrix() -> arrayDim() x getNumLoops()
   [[nodiscard]] constexpr auto indexMatrix() const -> DensePtrMatrix<int64_t> {
-    return {indMatPtr(), DenseDims{getArrayDim(), getNumLoops()}};
+    return {indMatPtr(), DenseDims{getArrayDim(), getNaturalDepth()}};
   }
   [[nodiscard]] constexpr auto getFusionOmega() -> MutPtrVector<int64_t> {
-    unsigned L = getNumLoops() + 1;
+    unsigned L = getCurrentDepth() + 1;
     // L + 1 means we add the extra array dim for `offsetOmega`
     size_t d = getArrayDim(), off = 1 + d * L;
     return {getIntMemory() + off, L};
   }
   [[nodiscard]] constexpr auto getFusionOmega() const -> PtrVector<int64_t> {
-    unsigned L = getNumLoops() + 1;
-    size_t d = getArrayDim(), off = 1 + d * L;
+    unsigned L = getCurrentDepth() + 1;
+    invariant(getCurrentDepth() >= getNaturalDepth());
+    size_t off = 1 + getArrayDim() * (getNaturalDepth() + 1);
     return {getIntMemory() + off, L};
   }
   [[nodiscard]] constexpr auto offsetMatrix() const -> DensePtrMatrix<int64_t> {
@@ -505,8 +519,6 @@ public:
     // TODO: cache?
     return calculateCostContiguousLoadStore(TTI, W.getWidth());
   }
-
-  [[nodiscard]] constexpr auto getCurrentDepth() const -> unsigned;
 
   void printDotName(llvm::raw_ostream &os) const {
     if (isLoad()) os << "... = ";
@@ -557,7 +569,7 @@ inline auto operator<<(llvm::raw_ostream &os, const Addr &m)
   else os << "Store: ";
   os << *m.getInstruction();
   os << "\nArrayIndex " << *m.getArrayPointer() << " (dim = " << m.getArrayDim()
-     << ", num loops: " << m.getNumLoops();
+     << ", natural depth: " << m.getNaturalDepth();
   if (m.getArrayDim()) os << ", element size: " << *m.getSizes().back();
   os << "):\n";
   PtrMatrix<int64_t> A{m.indexMatrix()};
@@ -625,8 +637,11 @@ public:
   constexpr void insertParent(Node *n) { addr->insertParent(n); }
   constexpr void insertAfter(Node *n) { addr->insertAfter(n); }
   constexpr void insertAhead(Node *n) { addr->insertAhead(n); }
-  [[nodiscard]] constexpr auto getNumLoops() const -> unsigned {
-    return addr->getNumLoops();
+  [[nodiscard]] constexpr auto getCurrentDepth() const -> unsigned {
+    return addr->getCurrentDepth();
+  }
+  [[nodiscard]] constexpr auto getNaturalDepth() const -> unsigned {
+    return addr->getNaturalDepth();
   }
   constexpr auto operator==(const AddrWrapper &other) const -> bool {
     return addr == other.addr;
