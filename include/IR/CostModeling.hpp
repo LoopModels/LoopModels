@@ -267,9 +267,11 @@ inline auto searchLoopIndependentUsers(IR::Loop *L, IR::Node *N, uint8_t depth,
     I->setDependsOnParentLoop();
     return ret;
   }
-  // then we can push it to the front of the list
-  if (a && ret.summary.notIndexedByLoop == a)
-    ret.summary.notIndexedByLoop = llvm::cast_or_null<IR::Addr>(a->getNext());
+  // then we can push it to the front of the list, meaning it is hoisted out
+  if (a) {
+    if (ret.summary.notIndexedByLoop == a)
+      ret.summary.notIndexedByLoop = llvm::cast_or_null<IR::Addr>(a->getNext());
+  }
   I->removeFromList();
   I->insertAfter(ret.summary.afterExit);
   ret.summary.afterExit = I;
@@ -379,37 +381,42 @@ inline auto addAddrToGraph(Arena<> *salloc, Arena<> *lalloc,
     root->addNode(salloc, lalloc, node);
   return root->getLoop();
 }
+inline void eliminateAddr(IR::Addr *a, IR::Addr *b) {
+  if (a->indexMatrix() != b->indexMatrix()) return;
+  /// are there any addr between them?
+  if (a->isStore()) {
+    if (b->isStore()) { // Write->Write
+      // Are there reads in between? If so, we must keep--
+      // --unless we're storing the same value twice (???)
+      // without other intervening store-edges.
+      // Without reads in between, it's safe.
+    } else { // Write->Read
+      // Can we replace the read with using the written value?
+      if (a->getLoop() != b->getLoop()) return;
+    }
+  } else if (b->isLoad()) { // Read->Read
+    // If they don't have the same parent, either...
+    // They're in different branches of loops, and load can't live
+    // in between them
+    // for (i : I){
+    //   for (j : J){
+    //     A[i,j];
+    //   }
+    //   for (j : J){
+    //     A[i,j];
+    //   }
+    // }
+    // or it is a subloop, but dependencies prevented us from hoisting.
+    if (a->getLoop() != b->getLoop()) return;
+    // Any writes in between them?
+  } // Read->Write, can't delete either
+}
+
 inline void removeRedundantAddr(IR::Addr *addr) {
   for (IR::Addr *a : addr->eachAddr()) {
-    for (IR::Addr *b : a->outputAddrs()) {
-      if (a->indexMatrix() != b->indexMatrix()) continue;
-      /// are there any addr between them?
-      if (a->isStore()) {
-        if (b->isStore()) { // Write->Write
-          // Are there reads in between? If so, we must keep--
-          // --unless we're storing the same value twice (???)
-          // without other intervening store-edges.
-          // Without reads in between, it's safe.
-        } else { // Write->Read
-          // Can we replace the read with using the written value?
-          if (a->getLoop() != b->getLoop()) continue;
-        }
-      } else if (b->isLoad()) { // Read->Read
-        // If they don't have the same parent, either...
-        // They're in different branches of loops, and load can't live
-        // in between them
-        // for (i : I){
-        //   for (j : J){
-        //     A[i,j];
-        //   }
-        //   for (j : J){
-        //     A[i,j];
-        //   }
-        // }
-        // or it is a subloop, but dependencies prevented us from hoisting.
-        if (a->getLoop() != b->getLoop()) continue;
-        // Any writes in between them?
-      } // Read->Write, can't delete either
+    for (poly::Dependence *d = a->getEdgeOut(); d; d = d->getNextOutput()) {
+      IR::Addr *b = d->output();
+      eliminateAddr(a, b);
     }
   }
 }
@@ -1112,34 +1119,3 @@ static_assert(Graphs::AbstractIndexGraph<LoopTreeSchedule::AddressGraph>);
 //   [[no_unique_address]] Arena<> *allocator;
 // };
 } // namespace poly::CostModeling
-
-constexpr void
-ScheduledNode::insertMem(Arena<> *alloc, PtrVector<MemoryAccess *> memAccess,
-                         CostModeling::LoopTreeSchedule *L) const {
-  // First, we invert the schedule matrix.
-  SquarePtrMatrix<int64_t> Phi = schedule.getPhi();
-  auto [Pinv, denom] = NormalForm::scaledInv(Phi);
-  // TODO: if (s == 1) {}
-  // TODO: make this function out of line
-  auto &accesses{L->getInitAddr(alloc)};
-  unsigned numMem = memory.size(), offset = accesses.size(),
-           sId = std::numeric_limits<unsigned>::max() >> 1, j = 0;
-  NotNull<poly::Loop> loop = loopNest->rotate(alloc, Pinv, offsets);
-  for (size_t i : memory) {
-    NotNull<MemoryAccess> mem = memAccess[i];
-    bool isStore = mem->isStore();
-    if (isStore) sId = j;
-    ++j;
-    size_t inputEdges = mem->inputEdges().size(),
-           outputEdges = mem->outputEdges().size();
-    Addr *addr = Addr::construct(
-      alloc, loop, mem, isStore, Pinv, denom, schedule.getOffsetOmega(), L,
-      inputEdges, isStore ? numMem - 1 : 1, outputEdges, offsets);
-    mem->setAddress(addr);
-    accesses.push_back(addr);
-  }
-  Addr *store = accesses[offset + sId];
-  // addrs all need direct connections
-  for (size_t i = 0, k = 0; i < numMem; ++i)
-    if (i != sId) accesses[offset + i]->addDirectConnection(store, k++);
-}

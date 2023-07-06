@@ -121,28 +121,6 @@ public:
     return {offsets, getNumLoops()};
   }
   constexpr void setOffsets(int64_t *o) { offsets = o; }
-  // MemAccess addrCapacity field gives the replication count
-  // so for each memory access, we can count the number of edges in
-  // and the number of edges out through iterating edges in and summing
-  // repCounts
-  //
-  // we use these to
-  // 1. alloc enough memory for each Addresses*
-  // 2. add each created address to the MemoryAddress's remap
-  // TODO:
-  // 1. the above
-  // 2. add the direct Addr connections corresponding to the node
-  // constexpr void insertMem(Arena<> *alloc, PtrVector<Addr *> memAccess,
-  //                          CostModeling::LoopTreeSchedule *L) const;
-  // constexpr void
-  // incrementReplicationCounts(PtrVector<MemoryAccess *> memAccess) const {
-  //   for (auto i : memory)
-  //     if (i != storeId && (memAccess[i]->isStore()))
-  //       memAccess[i]->replicateAddr();
-  // }
-  // [[nodiscard]] constexpr auto getNumMem() const -> ptrdiff_t {
-  //   return memory.size();
-  // }
   struct NextAddr {
     constexpr auto operator()(Addr *a) const -> Addr * {
       return llvm::cast_or_null<Addr>(a->getNext());

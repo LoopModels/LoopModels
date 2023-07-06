@@ -8,6 +8,7 @@
 #include "Utilities/ListRanges.hpp"
 #include <Math/Array.hpp>
 #include <cstdint>
+#include <limits>
 #include <llvm/Analysis/TargetTransformInfo.h>
 #include <llvm/IR/Constants.h>
 #include <llvm/IR/FMF.h>
@@ -96,12 +97,6 @@ public:
     VK_Oprn,
   };
 
-private:
-  Node *prev{nullptr};
-  Node *next{nullptr};
-  Node *parent{nullptr};
-  Node *child{nullptr};
-
   // we have a private pointer so different types can share
   // in manner not exacctly congruent with type hiearchy
   // in particular, `Inst` and `Load` want `User` lists
@@ -115,15 +110,23 @@ private:
   // and we want a common base that we can query to avoid monomorphization.
 protected:
   const ValKind kind;
-  uint8_t depth{0};
+  uint8_t currentDepth{0};
+  uint8_t naturalDepth{0};
   uint8_t visitDepth{255};
+  uint8_t maxDepth;
   bool dependsOnParentLoop_{false};
   // uint16_t index_;
   // uint16_t lowLink_;
   // uint16_t bitfield;
 
   constexpr Node(ValKind kind) : kind(kind) {}
-  constexpr Node(ValKind kind, unsigned d) : kind(kind), depth(d) {}
+  constexpr Node(ValKind kind, unsigned d) : kind(kind), naturalDepth(d) {}
+
+private:
+  Node *prev{nullptr};
+  Node *next{nullptr};
+  Node *parent{nullptr};
+  Node *child{nullptr};
 
 public:
   constexpr void visit(uint8_t d) { visitDepth = d; }
@@ -141,6 +144,7 @@ public:
   [[nodiscard]] constexpr auto sameBlock(const Node *other) const -> bool {
     return other && other->parent == parent && other->child == child;
   }
+
   // [[nodiscard]] constexpr auto wasVisited() const -> bool {
   //   return bitfield & 0x1;
   // }
@@ -159,7 +163,13 @@ public:
   // [[nodiscard]] constexpr auto getIndex() const -> unsigned { return index_;
   // } constexpr void setIndex(unsigned i) { index_ = i; }
   [[nodiscard]] constexpr auto getKind() const -> ValKind { return kind; }
-  [[nodiscard]] constexpr auto getDepth() const -> unsigned { return depth; }
+  [[nodiscard]] constexpr auto getCurrentDepth() const -> unsigned {
+    return currentDepth;
+  }
+  [[nodiscard]] constexpr auto getNaturalDepth() const -> unsigned {
+    return naturalDepth;
+  }
+
   [[nodiscard]] constexpr auto getParent() const -> Node * { return parent; }
   [[nodiscard]] constexpr auto getChild() const -> Node * { return child; }
   [[nodiscard]] constexpr auto getPrev() const -> Node * { return prev; }
@@ -184,7 +194,10 @@ public:
     if (n) n->child = this;
     return this;
   }
-  constexpr void setDepth(unsigned d) { depth = d; }
+  constexpr void setCurrentDepth(unsigned d) {
+    invariant(d <= std::numeric_limits<decltype(currentDepth)>::max());
+    currentDepth = d;
+  }
   /// insert `d` ahead of `this`
   constexpr void insertAhead(Node *d) {
     d->setNext(this);

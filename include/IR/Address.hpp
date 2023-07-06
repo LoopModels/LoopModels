@@ -14,6 +14,7 @@
 #include <Utilities/Valid.hpp>
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include <llvm/IR/Instructions.h>
 #include <llvm/IR/PatternMatch.h>
 #include <llvm/Support/Casting.h>
@@ -83,10 +84,7 @@ class Addr : public Instruction {
   // to support sinking deeper into a subloop.
   // On rotate, we switch it back to `maxDepth`
   // which can then be decremented as we hoist
-  [[no_unique_address]] union {
-    lp::ScheduledNode *node;
-    ptrdiff_t maxDepth;
-  } nodeOrDepth;
+  [[no_unique_address]] lp::ScheduledNode *node;
   [[no_unique_address]] NotNull<const llvm::SCEVUnknown> basePointer;
   [[no_unique_address]] poly::Loop *loop{nullptr};
   [[no_unique_address]] llvm::Instruction *instr;
@@ -108,14 +106,6 @@ class Addr : public Instruction {
 #else
 #pragma clang diagnostic pop
 #endif
-  // this is a reload
-  explicit Addr(Addr *other)
-    : Instruction(VK_Load, other->depth), basePointer(other->basePointer),
-      loop(other->loop), instr(other->instr), offSym(other->offSym),
-      syms(other->syms), predicate(other->predicate), numDim(other->numDim),
-      numDynSym(other->numDynSym) {
-    std::memcpy(mem, other->mem, intMemNeeded(depth, numDim) * sizeof(int64_t));
-  }
   explicit Addr(const llvm::SCEVUnknown *arrayPtr, llvm::Instruction *user,
                 int64_t *offsym, const llvm::SCEV **s,
                 std::array<unsigned, 2> dimOff, unsigned numLoops)
@@ -157,13 +147,14 @@ public:
                         PtrVector<int64_t> omega, int64_t *offsets) {
     loop = explicitLoop;
     // we are updating in place; we may now have more loops than we did before
-    unsigned oldNumLoops = getNumLoops();
+    unsigned oldOrigDepth = getOriginalDepth();
     DensePtrMatrix<int64_t> M{indexMatrix()}; // aD x nLma
     MutPtrVector<int64_t> offsetOmega{getOffsetOmega()};
-    this->depth = unsigned(Pinv.numCol());
+    this->originalDepth = uint8_t(Pinv.numCol());
     MutDensePtrMatrix<int64_t> mStar{indexMatrix()};
     // M is implicitly padded with zeros, newNumLoops >= oldNumLoops
-    invariant(oldNumLoops <= depth);
+    invariant(maxDepth >= originalDepth);
+    invariant(oldOrigDepth <= originalDepth);
     invariant(ptrdiff_t(oldNumLoops), ptrdiff_t(M.numRow()));
     getDenominator() = denom;
     // layout goes offsetOmega, indexMatrix, fusionOmega
@@ -188,7 +179,7 @@ public:
 
     // use `mStar` to update offsetOmega`
     offsetOmega -= mStar * omega;
-    nodeOrDepth.maxDepth = depth;
+    maxDepth = depth;
   }
   // NOTE: this requires `nodeOrDepth` to be set to innmost loop depth
   [[nodiscard]] constexpr auto indexedByInnermostLoop() -> bool {
@@ -293,10 +284,15 @@ public:
     getFusionOmega().back() = o.back()--;
   }
   [[nodiscard]] auto reload(Arena<> *alloc) -> NotNull<Addr> {
-    size_t memNeeded = intMemNeeded(getNumLoops(), numDim);
-    auto *p =
-      (Addr *)alloc->allocate(sizeof(Addr) + memNeeded * sizeof(int64_t));
-    return new (p) Addr(this);
+    size_t memNeeded = intMemNeeded(maxDepth, numDim);
+    void *p alloc->allocate(sizeof(Addr) + memNeeded * sizeof(int64_t));
+    static_cast<ValKind *>(p) = VK_Load;
+    std::memcpy(static_cast<char *>(p) + sizeof(VK_Load),
+                static_cast<char *>(static_cast<void *>(this)) +
+                  sizeof(VK_Load),
+                sizeof(Addr) - sizeof(VK_Load) +
+                  intMemNeeded(originalDepth, numDim) * sizeof(int64_t));
+    return static_cast<Addr *>(p);
   }
   [[nodiscard]] auto getSizes() const -> PtrVector<const llvm::SCEV *> {
     return {syms, numDim};
@@ -428,7 +424,6 @@ public:
                    sizeof(Addr);
     return (Addr *)alloc->allocate(memSz);
   }
-  [[nodiscard]] constexpr auto getNumLoops() const -> unsigned { return depth; }
   [[nodiscard]] constexpr auto getArrayDim() const -> unsigned {
     return numDim;
   }
