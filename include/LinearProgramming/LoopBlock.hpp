@@ -1117,7 +1117,7 @@ private:
     os << "MemoryAccesses:\n";
     for (const Addr *m : nodes->eachAddr()) {
       os << "Inst: " << *m->getInstruction()
-         << "\nOrder: " << m->getFusionOmega() << "\nLoop:" << *m->getLoop()
+         << "\nOrder: " << m->getFusionOmega() << "\nLoop:" << *m->getAffLoop()
          << "\n";
     }
     return os;

@@ -414,7 +414,7 @@ inline void mergeInstructions(
     }
   }
   // descendants aren't legal merge candidates, so check before merging
-  for (Instruction *U : *J->getUsers()) {
+  for (Instruction *U : J->getUsers()) {
     if (llvm::BasicBlock *BBU = U->getBasicBlock()) {
       if (BBU == BB) // fast path, skip lookup
         mergeInstructions(alloc, cache, predMap, TTI, vectorBits, opMap,

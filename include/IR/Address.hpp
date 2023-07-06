@@ -320,7 +320,7 @@ public:
       if (anyNEZero(indexMatrix()(i, _(d, end)))) return true;
     return false;
   }
-  [[nodiscard]] constexpr auto getLoop() const -> NotNull<poly::Loop> {
+  [[nodiscard]] constexpr auto getAffLoop() const -> NotNull<poly::Loop> {
     return loop;
   }
   [[nodiscard]] constexpr auto getStoredVal() const -> Value * {
@@ -546,7 +546,7 @@ public:
           }
           if (j) {
             if (offij != 1) os << offij << '*';
-            os << *getLoop()->getSyms()[j - 1];
+            os << *getAffLoop()->getSyms()[j - 1];
           } else os << offij;
           printPlus = true;
         }
@@ -601,14 +601,14 @@ inline auto operator<<(llvm::raw_ostream &os, const Addr &m)
         }
         if (j) {
           if (offij != 1) os << offij << '*';
-          os << *m.getLoop()->getSyms()[j - 1];
+          os << *m.getAffLoop()->getSyms()[j - 1];
         } else os << offij;
         printPlus = true;
       }
     }
   }
   return os << "]\nInitial Fusion Omega: " << m.getFusionOmega()
-            << "\npoly::Loop:" << *m.getLoop();
+            << "\npoly::Loop:" << *m.getAffLoop();
 }
 class AddrWrapper {
 

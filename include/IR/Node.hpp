@@ -138,6 +138,9 @@ public:
   [[nodiscard]] constexpr auto dependsOnParentLoop() const -> bool {
     return dependsOnParentLoop_;
   }
+  [[nodiscard]] constexpr auto sameBlock(const Node *other) const -> bool {
+    return other && other->parent == parent && other->child == child;
+  }
   // [[nodiscard]] constexpr auto wasVisited() const -> bool {
   //   return bitfield & 0x1;
   // }

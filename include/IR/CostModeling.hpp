@@ -157,8 +157,8 @@ class LoopTree {
   // We do not need to know the previous loop, as dependencies between
   // the `Addr`s and instructions will determine the ordering.
   constexpr LoopTree(Arena<> *lalloc, LoopTree *parent_)
-    : loop{lalloc->create<IR::Loop>(depth)}, parent(parent_),
-      depth(parent_->depth) {
+    : loop{lalloc->create<IR::Loop>(parent_->depth + 1)}, parent(parent_),
+      depth(parent_->depth + 1) {
     // allocate the root node, and connect it to parent's node, as well as
     // previous loop of the same level.
     loop->setParent(parent_->loop);
@@ -187,7 +187,7 @@ public:
       }
       return;
     }
-    // we need to find the correct sub-loop tree to which to add it
+    // we need to find the sub-loop tree to which we add `node`
     ptrdiff_t idx = node->getFusionOmega(depth);
     invariant(idx >= 0);
     ptrdiff_t numChildren = children.size();
@@ -379,6 +379,40 @@ inline auto addAddrToGraph(Arena<> *salloc, Arena<> *lalloc,
     root->addNode(salloc, lalloc, node);
   return root->getLoop();
 }
+inline void removeRedundantAddr(IR::Addr *addr) {
+  for (IR::Addr *a : addr->eachAddr()) {
+    for (IR::Addr *b : a->outputAddrs()) {
+      if (a->indexMatrix() != b->indexMatrix()) continue;
+      /// are there any addr between them?
+      if (a->isStore()) {
+        if (b->isStore()) { // Write->Write
+          // Are there reads in between? If so, we must keep--
+          // --unless we're storing the same value twice (???)
+          // without other intervening store-edges.
+          // Without reads in between, it's safe.
+        } else { // Write->Read
+          // Can we replace the read with using the written value?
+          if (a->getLoop() != b->getLoop()) continue;
+        }
+      } else if (b->isLoad()) { // Read->Read
+        // If they don't have the same parent, either...
+        // They're in different branches of loops, and load can't live
+        // in between them
+        // for (i : I){
+        //   for (j : J){
+        //     A[i,j];
+        //   }
+        //   for (j : J){
+        //     A[i,j];
+        //   }
+        // }
+        // or it is a subloop, but dependencies prevented us from hoisting.
+        if (a->getLoop() != b->getLoop()) continue;
+        // Any writes in between them?
+      } // Read->Write, can't delete either
+    }
+  }
+}
 /// Optimize the schedule
 inline void optimize(IR::Cache &instr, Arena<> *lalloc,
                      lp::ScheduledNode *nodes, IR::Addr *addr) {
@@ -389,6 +423,9 @@ inline void optimize(IR::Cache &instr, Arena<> *lalloc,
   Arena<> *salloc = instr.getAllocator();
 
   IR::Node *N = buildGraph(addAddrToGraph(salloc, lalloc, nodes), 0);
+  // `N` is the head of the topologically sorted graph
+  // We now try to remove redundant memory operations
+  removeRedundantAddr(addr);
 }
 
 /// How should the IR look?
@@ -1019,14 +1056,14 @@ public:
     -> poly::Loop * {
     poly::Loop *loop{nullptr};
     size_t j = 0;
-    for (auto *addr : header.getAddr()) loop = addr->getLoop();
+    for (auto *addr : header.getAddr()) loop = addr->getAffLoop();
     for (auto &subTree : subTrees) {
       // `names` might realloc, relocating `names[this]`
       if (getDepth())
         names[subTree.subTree] = names[this] + "SubLoop#" + std::to_string(j++);
       else names[subTree.subTree] = "LoopNest#" + std::to_string(j++);
       if (loop == nullptr)
-        for (auto *addr : subTree.exit.getAddr()) loop = addr->getLoop();
+        for (auto *addr : subTree.exit.getAddr()) loop = addr->getAffLoop();
       loop = subTree.subTree->printSubDotFile(alloc, out, names, addrNames,
                                               addrIndOffset, loop);
     }

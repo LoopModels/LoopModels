@@ -343,8 +343,8 @@ public:
   static auto dependence(Arena<> *alloc, NotNull<const IR::Addr> aix,
                          NotNull<const IR::Addr> aiy) -> DepPoly * {
     assert(aix->sizesMatch(aiy));
-    NotNull<const poly::Loop> loopx = aix->getLoop();
-    NotNull<const poly::Loop> loopy = aiy->getLoop();
+    NotNull<const poly::Loop> loopx = aix->getAffLoop();
+    NotNull<const poly::Loop> loopy = aiy->getAffLoop();
     DensePtrMatrix<int64_t> Ax{loopx->getA()}, Ay{loopy->getA()};
     auto Sx{loopx->getSyms()}, Sy{loopy->getSyms()};
     // numLoops x numDim
@@ -432,7 +432,7 @@ public:
   }
   static auto self(Arena<> *alloc, NotNull<const IR::Addr> ai)
     -> NotNull<DepPoly> {
-    NotNull<const poly::Loop> loop = ai->getLoop();
+    NotNull<const poly::Loop> loop = ai->getAffLoop();
     DensePtrMatrix<int64_t> B{loop->getA()};
     auto S{loop->getSyms()};
     // numLoops x numDim
