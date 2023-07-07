@@ -49,17 +49,17 @@ struct AddrChain {
       return nullptr;
     });
   }
-  constexpr auto operator*=(Addr other) -> Addr & {
+  constexpr auto operator*=(AddrChain other) -> AddrChain & {
     if (other.addr) {
       if (addr && addr->isStore()) {
         // [this_stow..., other..., this_load...]
         Addr *LS = getLastStore(), *FL = LS->getNextAddr();
-        LS->setNextAddr(tr.addr);
-        tr.getLastAddr()->setNextAddr(FL);
+        LS->setNextAddr(other.addr);
+        other.getLastAddr()->setNextAddr(FL);
       } else {
         // [other..., this_load...]
-        tr.getLastAddr()->setNextAddr(addr);
-        addr = tr.addr;
+        other.getLastAddr()->setNextAddr(addr);
+        addr = other.addr;
       }
     }
     return *this;
@@ -130,7 +130,7 @@ struct TreeResult {
   unsigned rejectDepth{0};
   unsigned maxDepth{0};
   [[nodiscard]] constexpr auto reject(unsigned depth) const -> bool {
-    return (depth < rejectDepth) || (addr == nullptr);
+    return (depth < rejectDepth) || (addr.addr == nullptr);
   }
   [[nodiscard]] constexpr auto accept(size_t depth) const -> bool {
     // depth >= rejectDepth && stow != nullptr

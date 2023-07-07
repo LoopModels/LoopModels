@@ -154,7 +154,9 @@ public:
   struct OptimizationResult {
     IR::AddrChain addr;
     ScheduledNode *nodes;
-    constexpr auto getVertices() const { return nodes->getVertices(); }
+    [[nodiscard]] constexpr auto getVertices() const {
+      return nodes->getVertices();
+    }
     constexpr auto setOrigNext(ScheduledNode *node) -> OptimizationResult {
       nodes->setOrigNext(node);
       return *this;
@@ -472,7 +474,7 @@ private:
         if (node->phiIsScheduled(0) || (indMat != edge->getOutIndMat()))
           continue;
         ptrdiff_t r = math::NormalForm::rank(indMat);
-        if (r == edge->getInNumLoops()) continue;
+        if (r == edge->getInCurrentDepth()) continue;
         // TODO handle linearly dependent acceses, filtering them out
         if (r != ptrdiff_t(indMat.numRow())) continue;
         node->schedulePhi(indMat, r);
@@ -488,8 +490,8 @@ private:
   // NOLINTNEXTLINE(misc-no-recursion)
   static constexpr auto numParams(const Dependence *edge)
     -> math::SVector<unsigned, 4> {
-    return {edge->getNumLambda(), edge->getDynSymDim(),
-            edge->getNumConstraints(), 1};
+    return math::SVector<unsigned, 4>{
+      edge->getNumLambda(), edge->getDynSymDim(), edge->getNumConstraints(), 1};
   }
   static constexpr auto countAuxParamsAndConstraints(ScheduledNode *nodes,
                                                      unsigned depth)
@@ -1019,25 +1021,25 @@ private:
               << bndO(_, 0) + bndO(_, 1);
           }
         } else {
-          if (d < edge->getOutNumLoops())
+          if (d < edge->getOutCurrentDepth())
             updateConstraints(C, outNode, satPc, bndPc, d, c, cc, ccc, p);
-          if (d < edge->getInNumLoops()) {
-            if (d < edge->getOutNumLoops() && !inNode->phiIsScheduled(d) &&
+          if (d < edge->getInCurrentDepth()) {
+            if (d < edge->getOutCurrentDepth() && !inNode->phiIsScheduled(d) &&
                 !outNode->phiIsScheduled(d)) {
               invariant(inNode->getPhiOffset() != outNode->getPhiOffset());
             }
             updateConstraints(C, inNode, satPp, bndPp, d, c, cc, ccc, p);
           }
           // Omegas are included regardless of rotation
-          if (d < edge->getOutNumLoops()) {
-            if (d < edge->getInNumLoops())
+          if (d < edge->getOutCurrentDepth()) {
+            if (d < edge->getInCurrentDepth())
               invariant(inNode->getOmegaOffset() != outNode->getOmegaOffset());
             C(_(c, cc), outNode->getOmegaOffset() + o)
               << satO(_, edge->isForward());
             C(_(cc, ccc), outNode->getOmegaOffset() + o)
               << bndO(_, edge->isForward());
           }
-          if (d < edge->getInNumLoops()) {
+          if (d < edge->getInCurrentDepth()) {
             C(_(c, cc), inNode->getOmegaOffset() + o)
               << satO(_, !edge->isForward());
             C(_(cc, ccc), inNode->getOmegaOffset() + o)

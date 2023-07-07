@@ -247,7 +247,7 @@ class Dependence {
     // dxy->setTimeDim(0);
     farkasBackups[0]->truncateVars(1 + numLambda + numScheduleCoefs);
     auto *dep1 = alloc->create<Dependence>(dxy, farkasBackups, out, in, !isFwd);
-    invariant(out->getNumLoops() + in->getNumLoops(),
+    invariant(out->getCurrentDepth() + in->getCurrentDepth(),
               dep0->getNumPhiCoefficients());
     in->addEdgeIn(dep1);
   }
@@ -403,14 +403,20 @@ public:
     if (in->isStore()) return {in, out};
     return {out, in};
   }
-  [[nodiscard]] constexpr auto getInNumLoops() const -> unsigned {
-    return in->getNumLoops();
+  [[nodiscard]] constexpr auto getInCurrentDepth() const -> unsigned {
+    return in->getCurrentDepth();
   }
-  [[nodiscard]] constexpr auto getOutNumLoops() const -> unsigned {
-    return out->getNumLoops();
+  [[nodiscard]] constexpr auto getOutCurrentDepth() const -> unsigned {
+    return out->getCurrentDepth();
+  }
+  [[nodiscard]] constexpr auto getInNaturalDepth() const -> unsigned {
+    return in->getNaturalDepth();
+  }
+  [[nodiscard]] constexpr auto getOutNatrualDepth() const -> unsigned {
+    return out->getNaturalDepth();
   }
   [[nodiscard]] constexpr auto isInactive(size_t depth) const -> bool {
-    return (depth >= std::min(out->getNumLoops(), in->getNumLoops()));
+    return (depth >= std::min(out->getCurrentDepth(), in->getCurrentDepth()));
   }
   [[nodiscard]] constexpr auto getNumLambda() const -> unsigned {
     return depPoly->getNumLambda() << 1;
@@ -435,7 +441,8 @@ public:
     return getNumDepBndConstraintVar() - getNumDepSatConstraintVar();
   }
   constexpr void validate() {
-    assert(getInNumLoops() + getOutNumLoops() == getNumPhiCoefficients());
+    assert(getInCurrentDepth() + getOutCurrentDepth() ==
+           getNumPhiCoefficients());
     // 2 == 1 for const offset + 1 for w
     assert(2 + depPoly->getNumLambda() + getNumPhiCoefficients() +
              getNumOmegaCoefficients() ==
@@ -527,7 +534,8 @@ public:
                                  NotNull<const AffineSchedule> schIn,
                                  NotNull<const AffineSchedule> schOut) const
     -> bool {
-    unsigned numLoopsIn = in->getNumLoops(), numLoopsOut = out->getNumLoops(),
+    unsigned numLoopsIn = in->getCurrentDepth(),
+             numLoopsOut = out->getCurrentDepth(),
              numLoopsCommon = std::min(numLoopsIn, numLoopsOut),
              numLoopsTotal = numLoopsIn + numLoopsOut,
              numVar = numLoopsIn + numLoopsOut + 2;
@@ -576,7 +584,8 @@ public:
   [[nodiscard]] auto isSatisfied(Arena<> alloc, PtrVector<unsigned> inFusOmega,
                                  PtrVector<unsigned> outFusOmega) const
     -> bool {
-    unsigned numLoopsIn = in->getNumLoops(), numLoopsOut = out->getNumLoops(),
+    unsigned numLoopsIn = in->getCurrentDepth(),
+             numLoopsOut = out->getCurrentDepth(),
              numLoopsCommon = std::min(numLoopsIn, numLoopsOut),
              numVar = numLoopsIn + numLoopsOut + 2;
     invariant(dependenceSatisfaction->getNumVars(), numVar);
@@ -649,7 +658,7 @@ public:
                              NotNull<const AffineSchedule> ySchedule,
                              unsigned numLambda, Col nonTimeDim) -> bool {
     const auto &[fxy, fyx] = p;
-    unsigned numLoopsX = x->getNumLoops(), numLoopsY = y->getNumLoops(),
+    unsigned numLoopsX = x->getCurrentDepth(), numLoopsY = y->getCurrentDepth(),
              numLoopsTotal = numLoopsX + numLoopsY;
 #ifndef NDEBUG
     unsigned numLoopsCommon = std::min(numLoopsX, numLoopsY);
@@ -700,9 +709,9 @@ public:
                              NotNull<const IR::Addr> y, unsigned numLambda,
                              Col nonTimeDim) -> bool {
     const auto &[fxy, fyx] = p;
-    unsigned numLoopsX = x->getNumLoops(), nTD = unsigned(nonTimeDim);
+    unsigned numLoopsX = x->getCurrentDepth(), nTD = unsigned(nonTimeDim);
 #ifndef NDEBUG
-    const unsigned numLoopsCommon = std::min(numLoopsX, y->getNumLoops());
+    const unsigned numLoopsCommon = std::min(numLoopsX, y->getCurrentDepth());
 #endif
     PtrVector<int64_t> xFusOmega = x->getFusionOmega();
     PtrVector<int64_t> yFusOmega = y->getFusionOmega();
@@ -737,9 +746,10 @@ public:
     // if (x.gcdKnownIndependent(y)) return {};
     DepPoly *dxy{DepPoly::dependence(alloc, x, y)};
     if (!dxy) return;
-    invariant(x->getNumLoops(), dxy->getDim0());
-    invariant(y->getNumLoops(), dxy->getDim1());
-    invariant(x->getNumLoops() + y->getNumLoops(), dxy->getNumPhiCoef());
+    invariant(x->getCurrentDepth(), dxy->getDim0());
+    invariant(y->getCurrentDepth(), dxy->getDim1());
+    invariant(x->getCurrentDepth() + y->getCurrentDepth(),
+              dxy->getNumPhiCoef());
     // note that we set boundAbove=true, so we reverse the
     // dependence direction for the dependency we week, we'll
     // discard the program variables x then y
