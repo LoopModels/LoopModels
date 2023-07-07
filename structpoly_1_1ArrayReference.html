@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.9.1"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>LoopModels: ArrayReference Struct Reference</title>
+<title>LoopModels: poly::ArrayReference Struct Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -59,52 +59,56 @@ $(function() {
 </iframe>
 </div>
 
+<div id="nav-path" class="navpath">
+  <ul>
+<li class="navelem"><b>poly</b></li><li class="navelem"><a class="el" href="structpoly_1_1ArrayReference.html">ArrayReference</a></li>  </ul>
+</div>
 </div><!-- top -->
 <div class="header">
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-attribs">Public Attributes</a> &#124;
-<a href="structArrayReference-members.html">List of all members</a>  </div>
+<a href="structpoly_1_1ArrayReference-members.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">ArrayReference Struct Reference</div>  </div>
+<div class="title">poly::ArrayReference Struct Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a236490069a4df0d4cda4c1a617cfe002"><td class="memItemLeft" align="right" valign="top"><a id="a236490069a4df0d4cda4c1a617cfe002"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>ArrayReference</b> (const llvm::SCEVUnknown *p, poly::Loop *l, size_t dim)</td></tr>
-<tr class="separator:a236490069a4df0d4cda4c1a617cfe002"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab4ec03b617aa495ff89ced7c605909a5"><td class="memItemLeft" align="right" valign="top"><a id="ab4ec03b617aa495ff89ced7c605909a5"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>ArrayReference</b> (const <a class="el" href="structArrayReference.html">ArrayReference</a> &amp;other, poly::Loop *al, PtrMatrix&lt; int64_t &gt; iM)</td></tr>
-<tr class="separator:ab4ec03b617aa495ff89ced7c605909a5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3d3f6e08d8a26e16c15c1490c9ba3e4f"><td class="memItemLeft" align="right" valign="top"><a id="a3d3f6e08d8a26e16c15c1490c9ba3e4f"></a>
+<tr class="memitem:a71fd93e0258589c485abde1e147529a4"><td class="memItemLeft" align="right" valign="top"><a id="a71fd93e0258589c485abde1e147529a4"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>ArrayReference</b> (const llvm::SCEVUnknown *p, <a class="el" href="classpoly_1_1poly_1_1Loop.html">poly::Loop</a> *l, size_t dim)</td></tr>
+<tr class="separator:a71fd93e0258589c485abde1e147529a4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5ed22afc0feca53d4f21f7dc28a59b14"><td class="memItemLeft" align="right" valign="top"><a id="a5ed22afc0feca53d4f21f7dc28a59b14"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>ArrayReference</b> (const <a class="el" href="structpoly_1_1ArrayReference.html">ArrayReference</a> &amp;other, <a class="el" href="classpoly_1_1poly_1_1Loop.html">poly::Loop</a> *al, PtrMatrix&lt; int64_t &gt; iM)</td></tr>
+<tr class="separator:a5ed22afc0feca53d4f21f7dc28a59b14"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6c1f9d4ed10ff6f512d431d3dd5d43fe"><td class="memItemLeft" align="right" valign="top"><a id="a6c1f9d4ed10ff6f512d431d3dd5d43fe"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>indexMatrix</b> () -&gt; MutPtrMatrix&lt; int64_t &gt;</td></tr>
-<tr class="separator:a3d3f6e08d8a26e16c15c1490c9ba3e4f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a77e221474ba01803db673a227a0517c5"><td class="memItemLeft" align="right" valign="top"><a id="a77e221474ba01803db673a227a0517c5"></a>
+<tr class="separator:a6c1f9d4ed10ff6f512d431d3dd5d43fe"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a682370af4d2bcef88296533cea4fb7e9"><td class="memItemLeft" align="right" valign="top"><a id="a682370af4d2bcef88296533cea4fb7e9"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>offsetMatrix</b> () -&gt; MutPtrMatrix&lt; int64_t &gt;</td></tr>
-<tr class="separator:a77e221474ba01803db673a227a0517c5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a41feb6478a3954f734f40d404ca5a440"><td class="memItemLeft" align="right" valign="top"><a id="a41feb6478a3954f734f40d404ca5a440"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>getArrayDim</b> () const -&gt; size_t</td></tr>
-<tr class="separator:a41feb6478a3954f734f40d404ca5a440"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:a682370af4d2bcef88296533cea4fb7e9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a86ff2bfdc8ac5115961b68baa8baa697"><td class="memItemLeft" align="right" valign="top"><a id="a86ff2bfdc8ac5115961b68baa8baa697"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getArrayDim</b> () const -&gt; ptrdiff_t</td></tr>
+<tr class="separator:a86ff2bfdc8ac5115961b68baa8baa697"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
-<tr class="memitem:ad374ce241fb45dae63df02bb6f80d9b7"><td class="memItemLeft" align="right" valign="top"><a id="ad374ce241fb45dae63df02bb6f80d9b7"></a>
+<tr class="memitem:a44c83ddfb3d9e051b487690ac55ea7c2"><td class="memItemLeft" align="right" valign="top"><a id="a44c83ddfb3d9e051b487690ac55ea7c2"></a>
 const llvm::SCEVUnknown *&#160;</td><td class="memItemRight" valign="bottom"><b>basePointer</b></td></tr>
-<tr class="separator:ad374ce241fb45dae63df02bb6f80d9b7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a231d92f185916ca9b02d5281fd4b09c0"><td class="memItemLeft" align="right" valign="top"><a id="a231d92f185916ca9b02d5281fd4b09c0"></a>
-poly::Loop *&#160;</td><td class="memItemRight" valign="bottom"><b>loop</b></td></tr>
-<tr class="separator:a231d92f185916ca9b02d5281fd4b09c0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afdc6e240c7b86f0ae8939a8fc5299789"><td class="memItemLeft" align="right" valign="top"><a id="afdc6e240c7b86f0ae8939a8fc5299789"></a>
+<tr class="separator:a44c83ddfb3d9e051b487690ac55ea7c2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a395b7a37260a691ef453eb89fd10a0b7"><td class="memItemLeft" align="right" valign="top"><a id="a395b7a37260a691ef453eb89fd10a0b7"></a>
+<a class="el" href="classpoly_1_1poly_1_1Loop.html">poly::Loop</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>loop</b></td></tr>
+<tr class="separator:a395b7a37260a691ef453eb89fd10a0b7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5a68544b98d43c3d6c5d03154fb9ccbf"><td class="memItemLeft" align="right" valign="top"><a id="a5a68544b98d43c3d6c5d03154fb9ccbf"></a>
 DenseMatrix&lt; int64_t &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>indMat</b></td></tr>
-<tr class="separator:afdc6e240c7b86f0ae8939a8fc5299789"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a51fa48440c943c8b078d6969caae9999"><td class="memItemLeft" align="right" valign="top"><a id="a51fa48440c943c8b078d6969caae9999"></a>
+<tr class="separator:a5a68544b98d43c3d6c5d03154fb9ccbf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a30a862270a9ec3065fdd3b8dfc855694"><td class="memItemLeft" align="right" valign="top"><a id="a30a862270a9ec3065fdd3b8dfc855694"></a>
 DenseMatrix&lt; int64_t &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>offMat</b></td></tr>
-<tr class="separator:a51fa48440c943c8b078d6969caae9999"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abdf130b316a4919177a5b57fb267ad7a"><td class="memItemLeft" align="right" valign="top"><a id="abdf130b316a4919177a5b57fb267ad7a"></a>
+<tr class="separator:a30a862270a9ec3065fdd3b8dfc855694"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5a636845468580785c85cb7ff13444da"><td class="memItemLeft" align="right" valign="top"><a id="a5a636845468580785c85cb7ff13444da"></a>
 llvm::SmallVector&lt; const llvm::SCEV *, 3 &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>sizes</b></td></tr>
-<tr class="separator:abdf130b316a4919177a5b57fb267ad7a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:a5a636845468580785c85cb7ff13444da"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <hr/>The documentation for this struct was generated from the following file:<ul>
 <li>test/<a class="el" href="ArrayReference_8hpp_source.html">ArrayReference.hpp</a></li>

@@ -1,6 +1,7 @@
 var searchData=
 [
-  ['testloopfunction_132',['TestLoopFunction',['../classTestLoopFunction.html',1,'']]],
+  ['testloopfunction_132',['TestLoopFunction',['../classpoly_1_1TestLoopFunction.html',1,'poly']]],
   ['treeresult_133',['TreeResult',['../structpoly_1_1IR_1_1TreeResult.html',1,'poly::IR']]],
-  ['turbolooppass_134',['TurboLoopPass',['../classpoly_1_1TurboLoopPass.html',1,'poly']]]
+  ['turboloop_134',['TurboLoop',['../classpoly_1_1TurboLoop.html',1,'poly']]],
+  ['turbolooppass_135',['TurboLoopPass',['../classTurboLoopPass.html',1,'']]]
 ];

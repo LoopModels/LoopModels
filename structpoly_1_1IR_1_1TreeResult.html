@@ -129,7 +129,7 @@ unsigned&#160;</td><td class="memItemRight" valign="bottom"><b>maxDepth</b> {0}<
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>The <code><a class="el" href="structpoly_1_1IR_1_1TreeResult.html">TreeResult</a></code> gives the result of parsing a loop tree. The purpose of the <code><a class="el" href="structpoly_1_1IR_1_1TreeResult.html">TreeResult</a></code> is to accumulate results while building the loop tree, in particular, the <code><a class="el" href="classpoly_1_1IR_1_1Addr.html">Addr</a></code>s so far, the incomplete instructions we must complete as we move out, and how many outer loop layers we are forced to reject.</p>
-<p>We parse <code><a class="el" href="classpoly_1_1IR_1_1Addr.html">Addr</a></code>s specifically inside the <code>TurboLoop</code> parse block function, and add the appropriate <code>omega</code> value then.</p>
+<p>We parse <code><a class="el" href="classpoly_1_1IR_1_1Addr.html">Addr</a></code>s specifically inside the <code><a class="el" href="classpoly_1_1TurboLoop.html">TurboLoop</a></code> parse block function, and add the appropriate <code>omega</code> value then.</p>
 <p>Fields:</p><ul>
 <li><code>Addr* load</code>: a linked list giving the loads of the loop tree. These contain ordering information, which is enough for the linear program to deduce the orders of memory accesses, and perform an analysis. Note that adding loads and stores always pushes to the front. Thus, old <code><a class="el" href="structpoly_1_1IR_1_1TreeResult.html">TreeResult</a></code>s are not invalidated; they just start at the middle of the grown list.</li>
 <li><code>Addr* stow</code>: same as load, but for stores.</li>

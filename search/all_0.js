@@ -12,6 +12,6 @@ var searchData=
   ['amap_3c_20poly_3a_3air_3a_3ainstruction_20_2a_2c_20poly_3a_3adict_3a_3aaset_3c_20poly_3a_3air_3a_3ainstruction_20_2a_20_3e_20_2a_20_3e_9',['amap&lt; poly::IR::Instruction *, poly::dict::aset&lt; poly::IR::Instruction * &gt; * &gt;',['../structpoly_1_1dict_1_1amap.html',1,'poly::dict']]],
   ['amap_3c_20poly_3a_3air_3a_3ainstruction_20_2a_2c_20poly_3a_3air_3a_3ainstruction_20_2a_20_3e_10',['amap&lt; poly::IR::Instruction *, poly::IR::Instruction * &gt;',['../structpoly_1_1dict_1_1amap.html',1,'poly::dict']]],
   ['amap_3c_20poly_3a_3air_3a_3ainstruction_20_2a_2c_20poly_3a_3air_3a_3apredicate_3a_3aset_20_3e_11',['amap&lt; poly::IR::Instruction *, poly::IR::Predicate::Set &gt;',['../structpoly_1_1dict_1_1amap.html',1,'poly::dict']]],
-  ['arrayreference_12',['ArrayReference',['../structArrayReference.html',1,'']]],
+  ['arrayreference_12',['ArrayReference',['../structpoly_1_1ArrayReference.html',1,'poly']]],
   ['aset_13',['aset',['../structpoly_1_1dict_1_1aset.html',1,'poly::dict']]]
 ];
