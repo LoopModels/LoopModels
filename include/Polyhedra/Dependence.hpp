@@ -162,7 +162,7 @@ class Dependence {
     pair[0]->truncateVars(1 + numLambda + numScheduleCoefs);
     auto *dep0 =
       alloc->create<Dependence>(dxy->copy(alloc), pair, in, out, isFwd);
-    invariant(out->getNumLoops() + in->getNumLoops(),
+    invariant(out->getCurrentDepth() + in->getCurrentDepth(),
               dep0->getNumPhiCoefficients());
     out->addEdgeIn(dep0);
     // pair is invalid
@@ -174,7 +174,7 @@ class Dependence {
     // dep0.depPoly->truncateVars(numVar);
 
     // dep0.depPoly->setTimeDim(0);
-    invariant(out->getNumLoops() + in->getNumLoops(),
+    invariant(out->getCurrentDepth() + in->getCurrentDepth(),
               dep0->getNumPhiCoefficients());
     // now we need to check the time direction for all times
     // anything approaching 16 time dimensions would be absolutely

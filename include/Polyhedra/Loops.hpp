@@ -35,7 +35,7 @@
 #include <utility>
 
 namespace poly::poly {
-using math::IntMatrix, math::PtrVector, math::PtrMatrix;
+using math::IntMatrix, math::PtrVector, math::PtrMatrix, math::MutPtrMatrix;
 using utils::Optional, utils::NotNull, utils::invariant;
 inline auto isKnownOne(llvm::ScalarEvolution &SE, llvm::Value *v) -> bool {
   return v && SE.getSCEV(v)->isOne();
@@ -489,7 +489,7 @@ public:
     auto A{getA()};
     auto ret = Loop::allocate(alloc, L->getParentLoop(), unsigned(A.numRow()),
                               getNumLoops() - 1, getSyms(), isNonNegative());
-    math::MutPtrMatrix<int64_t> B{ret->getA()};
+    MutPtrMatrix<int64_t> B{ret->getA()};
     B << A(_, _(0, last));
     // no loop may be conditioned on the innermost loop, so we should be able to
     // safely remove all constraints that reference it
@@ -846,6 +846,24 @@ public:
       memory + sizeof(const llvm::SCEV *const *) * numDynSymbols;
     auto *p = (int64_t *)const_cast<void *>(ptr);
     return {p, math::DenseDims{numConstraints, numLoops + numDynSymbols + 1}};
+  };
+  [[nodiscard]] constexpr auto getOuterA(unsigned subLoop)
+    -> MutPtrMatrix<int64_t> {
+    const void *ptr =
+      memory + sizeof(const llvm::SCEV *const *) * numDynSymbols;
+    auto *p = (int64_t *)const_cast<void *>(ptr);
+    unsigned numSym = numDynSymbols + 1;
+    return {p, math::StridedDims{numConstraints, subLoop + numSym,
+                                 numLoops + numSym}};
+  };
+  [[nodiscard]] constexpr auto getOuterA(unsigned subLoop) const
+    -> PtrMatrix<int64_t> {
+    const void *ptr =
+      memory + sizeof(const llvm::SCEV *const *) * numDynSymbols;
+    auto *p = (int64_t *)const_cast<void *>(ptr);
+    unsigned numSym = numDynSymbols + 1;
+    return {p, math::StridedDims{numConstraints, subLoop + numSym,
+                                 numLoops + numSym}};
   };
   [[nodiscard]] auto getSyms() -> llvm::MutableArrayRef<const llvm::SCEV *> {
     void *ptr = memory;

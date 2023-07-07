@@ -280,20 +280,24 @@ public:
     if (!numLoopsCommon) return A;
     // indMats cols are [outerMostLoop,...,innerMostLoop]
     PtrMatrix<int64_t> indMatX = x->indexMatrix(), indMatY = y->indexMatrix();
-    for (ptrdiff_t i = 0; i < numLoopsCommon; ++i) {
-      A(i, _(math::begin, xDim)) << indMatX(_, i);
+    unsigned indDepth = std::min(x->getNaturalDepth(), y->getNaturalDepth());
+    for (ptrdiff_t i = 0; i < std::min(numLoopsCommon, indDepth); ++i) {
+      A(i, _(0, xDim)) << indMatX(_, i);
       A(i, _(xDim, end)) << indMatY(_, i);
     }
+    for (ptrdiff_t i = indDepth; i < numLoopsCommon; ++i) A(i, _) << 0;
     // returns rank x num loops
     return orthogonalNullSpace(std::move(A));
   }
   static auto nullSpace(NotNull<const IR::Addr> x)
     -> math::DenseMatrix<int64_t> {
-    unsigned numLoopsCommon = x->getNumLoops(), dim = x->getArrayDim();
+    unsigned numLoopsCommon = x->getCurrentDepth(), dim = x->getArrayDim(),
+             natDepth = x->getNaturalDepth();
     math::DenseMatrix<int64_t> A(math::DenseDims{numLoopsCommon, dim});
     if (!numLoopsCommon) return A;
     // indMats cols are [outerMostLoop,...,innerMostLoop]
-    A << x->indexMatrix().transpose();
+    A(_(0, natDepth), _) << x->indexMatrix().transpose();
+    if (natDepth < numLoopsCommon) A(_(natDepth, end), _) << 0;
     // returns rank x num loops
     return orthogonalNullSpace(std::move(A));
   }
@@ -343,20 +347,22 @@ public:
   static auto dependence(Arena<> *alloc, NotNull<const IR::Addr> aix,
                          NotNull<const IR::Addr> aiy) -> DepPoly * {
     assert(aix->sizesMatch(aiy));
+    unsigned numDep0Var = aix->getCurrentDepth(),
+             numDep1Var = aiy->getCurrentDepth(),
+             numVar = numDep0Var + numDep1Var;
     NotNull<const poly::Loop> loopx = aix->getAffLoop();
     NotNull<const poly::Loop> loopy = aiy->getAffLoop();
-    DensePtrMatrix<int64_t> Ax{loopx->getA()}, Ay{loopy->getA()};
+    PtrMatrix<int64_t> Ax{loopx->getOuterA(numDep0Var)},
+      Ay{loopy->getOuterA(numDep1Var)};
     auto Sx{loopx->getSyms()}, Sy{loopy->getSyms()};
     // numLoops x numDim
     PtrMatrix<int64_t> Cx{aix->indexMatrix()}, Cy{aiy->indexMatrix()},
       Ox{aix->offsetMatrix()}, Oy{aiy->offsetMatrix()};
     invariant(Cx.numRow(), Cy.numRow());
-
+    invariant(Cx.numCol() <= numDep0Var);
+    invariant(Cy.numCol() <= numDep1Var);
     auto [nc0, nv0] = Ax.size();
     auto [nc1, nv1] = Ay.size();
-    unsigned numDep0Var = loopx->getNumLoops(),
-             numDep1Var = loopy->getNumLoops(),
-             numVar = numDep0Var + numDep1Var;
 
     math::Vector<unsigned> map;
     unsigned numDynSym = mergeMap(map, Sx, Sy);
@@ -411,11 +417,11 @@ public:
     // i_0 + j_0 - i_1 - j_1 = off_1 - off_0
     for (ptrdiff_t i = 0; i < indexDim; ++i) {
       E(i, _(0, Ox.numCol())) << Ox(i, _);
-      E(i, _(numSym, numDep0Var + numSym)) << Cx(i, _(0, numDep0Var));
+      E(i, _(0, Cx.numCol()) + numSym) << Cx(i, _);
       E(i, 0) -= Oy(i, 0);
       for (ptrdiff_t j = 0; j < Oy.numCol() - 1; ++j)
         E(i, 1 + map[j]) -= Oy(i, 1 + j);
-      E(i, _(0, numDep1Var) + numSym + numDep0Var) << -Cy(i, _(0, numDep1Var));
+      E(i, _(0, Cy.numCol()) + numSym + numDep0Var) << -Cy(i, _);
     }
     for (ptrdiff_t i = 0; i < timeDim; ++i) {
       for (ptrdiff_t j = 0; j < NS.numCol(); ++j) {
@@ -430,22 +436,23 @@ public:
     alloc->rollback(p);
     return nullptr;
   }
+  // self dependence
   static auto self(Arena<> *alloc, NotNull<const IR::Addr> ai)
     -> NotNull<DepPoly> {
     NotNull<const poly::Loop> loop = ai->getAffLoop();
-    DensePtrMatrix<int64_t> B{loop->getA()};
+    unsigned numDepVar = ai->getCurrentDepth(), numVar = numDepVar + numDepVar;
+    PtrMatrix<int64_t> B{loop->getOuterA(numDepVar)};
     auto S{loop->getSyms()};
     // numLoops x numDim
     PtrMatrix<int64_t> C{ai->indexMatrix()}, O{ai->offsetMatrix()};
 
     auto [nco, nv] = B.size();
-    unsigned numDepVar = loop->getNumLoops(), numVar = numDepVar + numDepVar,
-             numDynSym = S.size(), numSym = numDynSym + 1;
     math::DenseMatrix<int64_t> NS{nullSpace(ai)};
-    unsigned timeDim = unsigned{NS.numRow()},
+    unsigned numDynSym = S.size(), numSym = numDynSym + 1,
+             timeDim = unsigned{NS.numRow()},
              numCols = numVar + timeDim + numDynSym + 1,
              conCapacity = unsigned(2 * B.numRow()) + numVar,
-             eqConCapacity = unsigned(C.numCol()) + timeDim;
+             eqConCapacity = unsigned(C.numRow()) + timeDim;
 
     size_t memNeeded =
       sizeof(int64_t) * ((conCapacity + eqConCapacity) * numCols + timeDim) +
@@ -483,8 +490,8 @@ public:
     // e.g. i_0 + j_0 + off_0 = i_1 + j_1 + off_1
     // i_0 + j_0 - i_1 - j_1 = off_1 - off_0
     for (ptrdiff_t i = 0; i < indexDim; ++i) {
-      for (ptrdiff_t j = 0; j < numDepVar; ++j) {
-        int64_t Cji = C(j, i);
+      for (ptrdiff_t j = 0; j < C.numCol(); ++j) {
+        int64_t Cji = C(i, j);
         E(i, j + numSym) = Cji;
         E(i, j + numSym + numDepVar) = -Cji;
       }
