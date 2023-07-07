@@ -117,17 +117,17 @@ $(function() {
 <div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;      <span class="keywordflow">return</span> <span class="keyword">nullptr</span>;</div>
 <div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;    });</div>
 <div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;  }</div>
-<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;  constexpr <span class="keyword">auto</span> operator*=(Addr other) -&gt; Addr &amp; {</div>
+<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;  constexpr <span class="keyword">auto</span> operator*=(AddrChain other) -&gt; AddrChain &amp; {</div>
 <div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;    <span class="keywordflow">if</span> (other.addr) {</div>
 <div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;      <span class="keywordflow">if</span> (<a class="code" href="structpoly_1_1IR_1_1AddrChain.html#a6cdfc5708bd48ed38b1b8b151b272dbb">addr</a> &amp;&amp; <a class="code" href="structpoly_1_1IR_1_1AddrChain.html#a6cdfc5708bd48ed38b1b8b151b272dbb">addr</a>-&gt;<a class="code" href="classpoly_1_1IR_1_1Value.html#a6b2b299b85ea7f73459b85597df1b2d3">isStore</a>()) {</div>
 <div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;        <span class="comment">// [this_stow..., other..., this_load...]</span></div>
 <div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;        Addr *LS = getLastStore(), *FL = LS-&gt;getNextAddr();</div>
-<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;        LS-&gt;setNextAddr(tr.addr);</div>
-<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;        tr.getLastAddr()-&gt;setNextAddr(FL);</div>
+<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;        LS-&gt;setNextAddr(other.addr);</div>
+<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;        other.getLastAddr()-&gt;setNextAddr(FL);</div>
 <div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;      } <span class="keywordflow">else</span> {</div>
 <div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;        <span class="comment">// [other..., this_load...]</span></div>
-<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;        tr.getLastAddr()-&gt;setNextAddr(<a class="code" href="structpoly_1_1IR_1_1AddrChain.html#a6cdfc5708bd48ed38b1b8b151b272dbb">addr</a>);</div>
-<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;        <a class="code" href="structpoly_1_1IR_1_1AddrChain.html#a6cdfc5708bd48ed38b1b8b151b272dbb">addr</a> = tr.addr;</div>
+<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;        other.getLastAddr()-&gt;setNextAddr(<a class="code" href="structpoly_1_1IR_1_1AddrChain.html#a6cdfc5708bd48ed38b1b8b151b272dbb">addr</a>);</div>
+<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;        <a class="code" href="structpoly_1_1IR_1_1AddrChain.html#a6cdfc5708bd48ed38b1b8b151b272dbb">addr</a> = other.addr;</div>
 <div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;      }</div>
 <div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;    }</div>
 <div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;    <span class="keywordflow">return</span> *<span class="keyword">this</span>;</div>
@@ -170,7 +170,7 @@ $(function() {
 <div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160;  <span class="keywordtype">unsigned</span> rejectDepth{0};</div>
 <div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160;  <span class="keywordtype">unsigned</span> maxDepth{0};</div>
 <div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> reject(<span class="keywordtype">unsigned</span> depth) <span class="keyword">const</span> -&gt; <span class="keywordtype">bool</span> {</div>
-<div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;    <span class="keywordflow">return</span> (depth &lt; rejectDepth) || (addr == <span class="keyword">nullptr</span>);</div>
+<div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;    <span class="keywordflow">return</span> (depth &lt; rejectDepth) || (addr.<a class="code" href="structpoly_1_1IR_1_1AddrChain.html#a6cdfc5708bd48ed38b1b8b151b272dbb">addr</a> == <span class="keyword">nullptr</span>);</div>
 <div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;  }</div>
 <div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> accept(<span class="keywordtype">size_t</span> depth) <span class="keyword">const</span> -&gt; <span class="keywordtype">bool</span> {</div>
 <div class="line"><a name="l00136"></a><span class="lineno">  136</span>&#160;    <span class="comment">// depth &gt;= rejectDepth &amp;&amp; stow != nullptr</span></div>
