@@ -1,7 +1,6 @@
 #include "../include/TurboLoop.hpp"
-#include "../include/CostModeling.hpp"
-#include "../include/LoopBlock.hpp"
-#include "../include/LoopForest.hpp"
+#include "../include/IR/CostModeling.hpp"
+#include "../include/LinearProgramming/LoopBlock.hpp"
 #include <cstdio>
 #include <llvm/ADT/APInt.h>
 #include <llvm/ADT/DepthFirstIterator.h>

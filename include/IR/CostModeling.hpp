@@ -6,7 +6,6 @@
 #include "LinearProgramming/LoopBlock.hpp"
 #include "LinearProgramming/ScheduledNode.hpp"
 #include "Polyhedra/Dependence.hpp"
-#include "Polyhedra/Schedule.hpp"
 #include <Math/Array.hpp>
 #include <Math/Math.hpp>
 #include <Utilities/Allocators.hpp>
@@ -81,14 +80,16 @@ public:
     numGeneralPurposeRegisters = TTI.getNumberOfRegisters(false);
     numPredicateRegisters = estimateNumPredicateRegisters(C, TTI);
   }
-  constexpr auto getNumVectorBits() const -> uint8_t {
+  [[nodiscard]] constexpr auto getNumVectorBits() const -> uint8_t {
     return maximumVectorWidth;
   }
-  constexpr auto getNumVector() const -> uint8_t { return numVectorRegisters; }
-  constexpr auto getNumScalar() const -> uint8_t {
+  [[nodiscard]] constexpr auto getNumVector() const -> uint8_t {
+    return numVectorRegisters;
+  }
+  [[nodiscard]] constexpr auto getNumScalar() const -> uint8_t {
     return numGeneralPurposeRegisters;
   }
-  constexpr auto getNumPredicate() const -> uint8_t {
+  [[nodiscard]] constexpr auto getNumPredicate() const -> uint8_t {
     return numPredicateRegisters;
   }
 };
@@ -171,6 +172,7 @@ public:
   }
   // salloc: Short lived allocator, for the indexable `Vec`s
   // Longer lived allocator, for the IR::Loop nodes
+  // NOLINTNEXTLINE(misc-no-recursion)
   void addNode(Arena<> *salloc, Arena<> *lalloc, lp::ScheduledNode *node) {
     if (node->getNumLoops() == depth) {
       // Then it belongs here, and we add loop's dependencies.
@@ -233,6 +235,7 @@ struct LoopIndependent {
 // we may have descended into instructions, found some users that are
 // but then also found some that are not; we need to return `false`
 // in this case, but we of course want to still return those we found.
+// NOLINTNEXTLINE(misc-no-recursion)
 inline auto searchLoopIndependentUsers(IR::Loop *L, IR::Node *N, uint8_t depth,
                                        LoopDepSummary summary)
   -> LoopIndependent {
@@ -241,17 +244,16 @@ inline auto searchLoopIndependentUsers(IR::Loop *L, IR::Node *N, uint8_t depth,
   if (IR::Loop *P = N->getLoop(); P != L)
     return {summary, !(P && L->contains(P))};
   LoopIndependent ret{summary, true};
-  IR::Addr *a = llvm::dyn_cast<IR::Addr>(N);
+  auto *a = llvm::dyn_cast<IR::Addr>(N);
   if (a) {
     a->removeFromList();
     if (a->indexedByInnermostLoop()) {
       a->insertAfter(ret.summary.indexedByLoop);
       ret.summary.indexedByLoop = a;
       return {summary, false};
-    } else {
-      a->insertAfter(ret.summary.notIndexedByLoop);
-      ret.summary.notIndexedByLoop = a;
     }
+    a->insertAfter(ret.summary.notIndexedByLoop);
+    ret.summary.notIndexedByLoop = a;
     for (IR::Addr *m : a->outputAddrs(depth)) {
       ret *= searchLoopIndependentUsers(L, m, depth, summary);
       if (ret.independent) continue;
@@ -278,6 +280,7 @@ inline auto searchLoopIndependentUsers(IR::Loop *L, IR::Node *N, uint8_t depth,
   I->visit(depth);
   return ret;
 }
+// NOLINTNEXTLINE(misc-no-recursion)
 inline auto visitLoopDependent(IR::Loop *L, IR::Node *N, uint8_t depth,
                                IR::Node *body) -> IR::Node * {
   invariant(N->getVisitDepth() != 254);
@@ -303,18 +306,18 @@ inline auto visitLoopDependent(IR::Loop *L, IR::Node *N, uint8_t depth,
   N->visit(depth);
 #endif
   // iterate over users
-  if (IR::Addr *A = llvm::dyn_cast<IR::Addr>(N)) {
+  if (auto *A = llvm::dyn_cast<IR::Addr>(N)) {
     for (IR::Addr *m : A->outputAddrs(depth)) {
       if (m->wasVisited(depth)) continue;
       body = visitLoopDependent(L, m, depth, body);
     }
   }
-  if (IR::Instruction *I = llvm::cast<IR::Instruction>(N)) {
+  if (auto *I = llvm::dyn_cast<IR::Instruction>(N)) {
     for (IR::Node *U : I->getUsers()) {
       if (U->wasVisited(depth)) continue;
       body = visitLoopDependent(L, U, depth, body);
     }
-  } else if (IR::Loop *S = llvm::cast<IR::Loop>(N)) {
+  } else if (auto *S = llvm::dyn_cast<IR::Loop>(N)) {
     for (IR::Node *U : S->getChild()->nodes()) {
       if (U->wasVisited(depth)) continue;
       body = visitLoopDependent(L, U, depth, body);
@@ -479,6 +482,49 @@ inline void removeRedundantAddr(IR::Addr *addr) {
     }
   }
 }
+//
+// Considering reordering legality, example
+// for (int i = 0: i < I; ++i){
+//   for (int j = 0 : j < i; ++j){
+//     x[i] -= x[j]*U[j,i];
+//   }
+//   x[i] /= U[i,i];
+// }
+// We have an edge from the store `x[i] = x[i] / U[i,i]=` to the load of
+// `x[j]`, when `j = ` the current `i`, on some future iteration.
+// We want to unroll;
+// for (int i = 0: i < I-3; i += 4){
+//   for (int j = 0 : j < i; ++j){
+//     x[i] -= x[j]*U[j,i];
+//     x[i+1] -= x[j]*U[j,i+1];
+//     x[i+2] -= x[j]*U[j,i+2];
+//     x[i+3] -= x[j]*U[j,i+3];
+//   }
+//   x[i] /= U[i,i]; // store 0
+//   { // perform unrolled j = i iter
+//     int j = i; // these all depend on store 0
+//     x[i+1] -= x[j]*U[j,i+1];
+//     x[i+2] -= x[j]*U[j,i+2];
+//     x[i+3] -= x[j]*U[j,i+3];
+//   }
+//   x[i+1] /= U[i+1,i+1]; // store 1
+//   { // perform unrolled j = i + 1 iter
+//     int j = i+1; // these all depend on store 1
+//     x[i+2] -= x[j]*U[j,i+2];
+//     x[i+3] -= x[j]*U[j,i+3];
+//   }
+//   x[i+2] /= U[i+2,i+2]; // store 2
+//   { // perform unrolled j = i + 2 iter
+//     int j = i+2; // this depends on store 2
+//     x[i+3] -= x[j]*U[j,i+3];
+//   }
+//   x[i+3] /= U[i+3,i+3];
+// }
+// The key to legality here is that we peel off the dependence polyhedra
+// from the loop's iteration space.
+// We can then perform the dependent iterations in order.
+// With masking, the above code can be vectorized in this manner.
+///
 /// Optimize the schedule
 inline void optimize(IR::Cache &instr, Arena<> *lalloc,
                      lp::LoopBlock::OptimizationResult res) {
@@ -491,6 +537,7 @@ inline void optimize(IR::Cache &instr, Arena<> *lalloc,
   IR::Node *N = buildGraph(addAddrToGraph(salloc, lalloc, res.nodes), 0);
   // `N` is the head of the topologically sorted graph
   // We now try to remove redundant memory operations
+
   removeRedundantAddr(res.addr.addr);
 }
 
