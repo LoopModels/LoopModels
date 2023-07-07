@@ -524,6 +524,55 @@ inline void removeRedundantAddr(IR::Addr *addr) {
 // from the loop's iteration space.
 // We can then perform the dependent iterations in order.
 // With masking, the above code can be vectorized in this manner.
+// The basic approach is that we have the dependence polyhedra:
+//
+// 0 <= i_s < I
+// 0 <= i_l < I
+// 0 <= j_l < i_l
+// i_s = j_l // dependence, yields same address in `x`
+//
+// Note that our schedule sets
+// i_s = i_l
+// Which gives:
+// i_l = i_s = j_l < i_l
+// a contradiction, meaning that the dependency is
+// conditionally (on our schedule) independent.
+// Excluding the `i_s = i_l` constraint from the
+// polyhedra gives us the region of overlap.
+//
+// When unrolling by `U`, we get using `U=4` as an example:
+// i^0_s + 1 = i^1_s
+// i^0_s + 2 = i^2_s
+// i^0_s + 3 = i^3_s
+// 0 <= i^0_s < I
+// 0 <= i^1_s < I
+// 0 <= i^2_s < I
+// 0 <= i^3_s < I
+// 0 <= i^0_l < I
+// 0 <= i^1_l < I
+// 0 <= i^2_l < I
+// 0 <= i^3_l < I
+// 0 <= j_l < i^0_l
+// 0 <= j_l < i^1_l
+// 0 <= j_l < i^2_l
+// 0 <= j_l < i^3_l
+// i^0_s = j_l ||  i^1_s = j_l || i^2_s = j_l || i^3_s = j_l
+// where the final union can be replaced with
+// i^0_s = j_l ||  i^0_s+1 = j_l || i^0_s+2 = j_l || i^0_s+3 = j_l
+// i^0_s <= j_1 <= i^0_s+3
+//
+// Similarly, we can compress the other inequalities...
+// 0 <= i^0_s < I - 3
+// 0 <= i^0_l < I - 3
+// 0 <= j_l < i^0_l
+// i^0_s <= j_1 <= i^0_s+3 // dependence region
+//
+// So, the parallel region is the union
+// i^0_s > j_1 || j_1 > i^0_s+3
+//
+// In this example, note that the region `j_1 > i^0_s+3` is empty
+// so we have one parallel region, and then one serial region.
+//
 ///
 /// Optimize the schedule
 inline void optimize(IR::Cache &instr, Arena<> *lalloc,
@@ -541,42 +590,6 @@ inline void optimize(IR::Cache &instr, Arena<> *lalloc,
   removeRedundantAddr(res.addr.addr);
 }
 
-/// How should the IR look?
-/// We could have a flat IR, which may be useful for things like loop
-/// placement via SCC Alternatively, we could have a much more structured IR,
-/// where we have the loop blocks and loops. Then how do we do SCC? Add
-/// dummies? Or, can loops exist as IR components? What do we need to do with
-/// the IR?
-/// 1. Placement, e.g. the SCC
-/// 2. lifetime as a function of loops.
-/// Could we do something with the LoopAndExit, where both are represented?
-/// exit's parents are all loop members, loop's the prev loop?
-/// Seems like it could be straightforward.
-///
-/// Perhaps define:
-/// using vertex_t = std::variant<Address*,LoopStart,LoopEnd>
-///
-/// Perhaps, for now...focus on InstructionnBlock, where we do want an
-/// Instruction linked list.
-///
-///
-/// For register consumption -- we want to know last use676767
-/// Can the Instruction's children
-
-/// Given: llvm::SmallVector<LoopAndExit> subTrees;
-/// subTrees[i].second is the preheader for
-/// subTrees[i+1].first, which has exit block
-/// subTrees[i+1].second
-
-/// Initialized from a LoopBlock
-/// First, all memory accesses are placed.
-///  - Topologically sort at the same level
-///  - Hoist out as far as posible
-/// Then, merge eligible loads.
-///  - I.e., merge loads that are in the same block with same address and not
-///  aliasing stores in between
-/// Finally, place instructions, seeded by stores, hoisted as far out as
-/// possible. With this, we can begin cost modeling.
 /*
 // NOLINTNEXTLINE(misc-no-recursion)
 inline auto printSubDotFile(Arena<> *alloc, llvm::raw_ostream &out,

@@ -15,7 +15,7 @@
 TEST(BumpDownMapTest, BasicAssertions) {
   OwningArena<> alloc;
   for (int i = 0; i < 100; ++i) {
-    amap<uint64_t, uint64_t> map(alloc);
+    poly::dict::amap<uint64_t, uint64_t> map{&alloc};
     for (int j = 0; j < 100; ++j) map.insert({j, j});
     for (int j = 0; j < 100; ++j) EXPECT_EQ(map.find(j)->second, j);
     alloc.reset();

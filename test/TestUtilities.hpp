@@ -1,14 +1,14 @@
 #pragma once
 #include "Polyhedra/Loops.hpp"
-#include "Utilities/Allocators.hpp"
+#include <Utilities/Allocators.hpp>
 #include <cstdint>
 #include <llvm/ADT/SmallPtrSet.h>
+#include <llvm/ADT/SmallVector.h>
 #include <llvm/ADT/Triple.h>
 #include <llvm/Analysis/AssumptionCache.h>
 #include <llvm/Analysis/LoopInfo.h>
 #include <llvm/Analysis/ScalarEvolution.h>
 #include <llvm/Analysis/ScalarEvolutionExpressions.h>
-#include <llvm/Analysis/SmallVector.h>
 #include <llvm/Analysis/TargetLibraryInfo.h>
 #include <llvm/Analysis/TargetTransformInfo.h>
 #include <llvm/IR/DerivedTypes.h>
@@ -20,9 +20,11 @@
 #include <llvm/IR/Type.h>
 #include <llvm/Support/Casting.h>
 #include <string>
+namespace poly {
+using math::PtrMatrix;
 
 class TestLoopFunction {
-  OwningArena<> alloc;
+  utils::OwningArena<> alloc;
   llvm::LLVMContext ctx;
   llvm::Module *mod;
   llvm::LoopInfo LI{};
@@ -43,7 +45,7 @@ class TestLoopFunction {
   size_t ptrIntOffset{0};
 
 public:
-  auto getAlloc() -> Arena<>*  { return &alloc; }
+  auto getAlloc() -> utils::Arena<> * { return &alloc; }
   auto getLoopNest(size_t i) -> poly::Loop * { return alns[i]; }
   auto getNumLoopNests() -> size_t { return alns.size(); }
   void addLoop(PtrMatrix<int64_t> A, size_t numLoops) {
@@ -67,7 +69,7 @@ public:
       for (size_t i = numSymbolSource; i < numSym; ++i)
         symbols.push_back(SE.getUnknown(createInt64()));
     }
-    alns.push_back(poly::Loop::construct(alloc, A, symbols));
+    alns.push_back(poly::Loop::construct(&alloc, nullptr, A, symbols, true));
   }
   // for creating some black box value
   auto loadValueFromPtr(llvm::Type *typ) -> llvm::Value * {
@@ -114,23 +116,21 @@ public:
   auto getBuilder() -> llvm::IRBuilder<> & { return builder; }
   // ~TestLoopFunction() = default;
   auto CreateLoad(llvm::Value *ptr, llvm::Value *offset) -> llvm::LoadInst * {
-    llvm::Type *Float64 = builder.getDoubleTy();
-    auto *load_m = builder.CreateAlignedLoad(
-      Float64,
-      builder.CreateGEP(Float64, ptr,
-                        llvm::SmallVector<llvm::Value *, 1>{offset}),
+    llvm::Type *f64 = builder.getDoubleTy();
+    auto *loadM = builder.CreateAlignedLoad(
+      f64,
+      builder.CreateGEP(f64, ptr, llvm::SmallVector<llvm::Value *, 1>{offset}),
       llvm::MaybeAlign(8));
-    return load_m;
+    return loadM;
   }
   auto CreateStore(llvm::Value *val, llvm::Value *ptr, llvm::Value *offset)
     -> llvm::StoreInst * {
-    llvm::Type *Float64 = builder.getDoubleTy();
-    auto *store_m = builder.CreateAlignedStore(
+    llvm::Type *f64 = builder.getDoubleTy();
+    auto *storeM = builder.CreateAlignedStore(
       val,
-      builder.CreateGEP(Float64, ptr,
-                        llvm::SmallVector<llvm::Value *, 1>{offset}),
+      builder.CreateGEP(f64, ptr, llvm::SmallVector<llvm::Value *, 1>{offset}),
       llvm::MaybeAlign(8));
-    return store_m;
+    return storeM;
   }
   auto getZeroF64() -> llvm::Value * {
     auto *z = llvm::ConstantFP::getZero(builder.getDoubleTy());
@@ -162,13 +162,14 @@ public:
     return fdiv;
   }
   auto CreateSqrt(llvm::Value *v) -> llvm::Value * {
-    llvm::Type *Float64 = builder.getDoubleTy();
+    llvm::Type *f64 = builder.getDoubleTy();
     llvm::Function *sqrt =
-      llvm::Intrinsic::getDeclaration(mod, llvm::Intrinsic::sqrt, Float64);
+      llvm::Intrinsic::getDeclaration(mod, llvm::Intrinsic::sqrt, f64);
     llvm::FunctionType *sqrtTyp =
-      llvm::Intrinsic::getType(ctx, llvm::Intrinsic::sqrt, {Float64});
+      llvm::Intrinsic::getType(ctx, llvm::Intrinsic::sqrt, {f64});
     auto *sqrtCall = builder.CreateCall(sqrtTyp, sqrt, {v});
     // auto sqrtCall = builder.CreateUnaryIntrinsic(llvm::Intrinsic::sqrt, v);
     return sqrtCall;
   }
 };
+} // namespace poly

@@ -1,10 +1,14 @@
-
 #pragma once
 #include "IR/Address.hpp"
 #include "Math/Math.hpp"
 #include "Polyhedra/Loops.hpp"
 #include <cstdint>
 #include <llvm/Support/Allocator.h>
+
+namespace poly {
+
+using math::DenseMatrix, math::PtrMatrix, math::MutPtrMatrix, utils::Arena,
+  math::PtrVector, utils::NotNull;
 
 struct ArrayReference {
   const llvm::SCEVUnknown *basePointer;
@@ -24,15 +28,16 @@ struct ArrayReference {
       offMat(other.offMat), sizes(other.sizes) {}
   auto indexMatrix() -> MutPtrMatrix<int64_t> { return indMat; }
   auto offsetMatrix() -> MutPtrMatrix<int64_t> { return offMat; }
-  [[nodiscard]] auto getArrayDim() const -> size_t {
-    return size_t(offMat.numRow());
+  [[nodiscard]] auto getArrayDim() const -> ptrdiff_t {
+    return ptrdiff_t(offMat.numRow());
   }
 };
 inline auto createMemAccess(Arena<> *alloc, ArrayReference &ar,
                             llvm::Instruction *IC, PtrVector<unsigned> omegas)
-  -> NotNull<MemoryAccess> {
+  -> NotNull<IR::Addr> {
 
   IntMatrix indMatT(ar.indMat.transpose());
-  return MemoryAccess::construct(alloc, ar.basePointer, *ar.loop, IC, indMatT,
-                                 {ar.sizes, {}}, ar.offsetMatrix(), omegas);
+  return IR::Addr::construct(alloc, ar.basePointer, *ar.loop, IC, indMatT,
+                             {ar.sizes, {}}, ar.offsetMatrix(), omegas);
 }
+} // namespace poly

@@ -1,7 +1,7 @@
 #include "./ArrayReference.hpp"
-#include "./CostModeling.hpp"
 #include "./TestUtilities.hpp"
-#include "LoopBlock.hpp"
+#include "IR/CostModeling.hpp"
+#include "LinearProgramming/LoopBlock.hpp"
 #include "MemoryAccess.hpp"
 #include "Polyheda/DependencyPolyhedra.hpp"
 #include "Polyheda/Loops.hpp"
@@ -21,6 +21,11 @@
 #include <llvm/IR/Type.h>
 #include <llvm/Support/Allocator.h>
 #include <utility>
+
+namespace poly {
+using math::DenseMatrix, math::DenseDims, math::PtrMatrix, math::MutPtrMatrix,
+  math::Vector, math::IntMatrix, math::Col, math::end, math::last, math::_,
+  utils::operator""_mat;
 
 // NOLINTNEXTLINE(modernize-use-trailing-return-type)
 TEST(DependenceTest, BasicAssertions) {
@@ -125,10 +130,10 @@ TEST(DependenceTest, BasicAssertions) {
   Vector<unsigned, 4> schLoad0(3, 0);
   Vector<unsigned, 4> schStore(3, 0);
   schStore[2] = 2;
-  OwningArena<> alloc;
-  MemoryAccess *msrc{createMemAccess(alloc, srcA, storeA11, schStore)};
-  MemoryAccess *mtgt01{createMemAccess(alloc, tgtA01, loadA01, schLoad0)};
-  DepPoly *dep0{DepPoly::dependence(alloc, *msrc, *mtgt01)};
+  utils::OwningArena<> alloc;
+  IR::Addr *msrc{createMemAccess(&alloc, srcA, storeA11, schStore)};
+  IR::Addr *mtgt01{createMemAccess(&alloc, tgtA01, loadA01, schLoad0)};
+  poly::DepPoly *dep0{poly::DepPoly::dependence(&alloc, *msrc, *mtgt01)};
   EXPECT_FALSE(dep0->isEmpty());
   dep0->pruneBounds();
   llvm::errs() << "Dep0 = \n" << dep0 << "\n";
@@ -140,8 +145,8 @@ TEST(DependenceTest, BasicAssertions) {
 
   Vector<unsigned, 4> schLoad1(3, 0);
   schLoad1[2] = 1;
-  MemoryAccess *mtgt10{createMemAccess(alloc, tgtA10, loadA10, schLoad1)};
-  DepPoly *dep1{DepPoly::dependence(alloc, *msrc, *mtgt10)};
+  IR::Addr *mtgt10{createMemAccess(&alloc, tgtA10, loadA10, schLoad1)};
+  poly::DepPoly *dep1{poly::DepPoly::dependence(&alloc, *msrc, *mtgt10)};
   EXPECT_FALSE(dep1->isEmpty());
   dep1->pruneBounds();
   llvm::errs() << "Dep1 = \n" << dep1 << "\n";
@@ -150,16 +155,16 @@ TEST(DependenceTest, BasicAssertions) {
   assert(dep1->getNumInequalityConstraints() == 4);
   assert(dep1->getNumEqualityConstraints() == 2);
   // MemoryAccess mtgt1{Atgt1,nullptr,schLoad,true};
-  auto e01 = Dependence::check(alloc, *msrc, *mtgt01);
+  poly::Dependence::check(&alloc, *msrc, *mtgt01);
   EXPECT_EQ(e01.size(), 1);
   EXPECT_TRUE(e01.front().isForward());
   llvm::errs() << e01.front() << "\n";
   EXPECT_FALSE(allZero(e01.front().getSatConstraints()(last, _)));
-  auto e01rev = Dependence::check(alloc, *mtgt01, *msrc);
+  poly::Dependence::check(&alloc, *mtgt01, *msrc);
   EXPECT_EQ(e01rev.size(), 1);
   EXPECT_FALSE(e01rev.front().isForward());
 
-  auto e10 = Dependence::check(alloc, *msrc, *mtgt10);
+  poly::Dependence::check(&alloc, *msrc, *mtgt10);
   EXPECT_EQ(e10.size(), 1);
   EXPECT_TRUE(e10.front().isForward());
   llvm::errs() << e10.front() << "\n";
@@ -1586,3 +1591,4 @@ TEST(ConvReversePass, BasicAssertions) {
     llvm::errs() << "s.getOffsetOmega(): " << s.getOffsetOmega() << "\n";
   }
 }
+} // namespace poly

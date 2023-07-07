@@ -2,8 +2,8 @@
 #pragma once
 
 #include "Dicts/BumpMapSet.hpp"
-#include "IR/Address.hpp"
 #include "IR/Cache.hpp"
+#include "IR/ControlFlowMerging.hpp"
 #include "IR/CostModeling.hpp"
 #include "IR/Instruction.hpp"
 #include "IR/Node.hpp"
@@ -43,6 +43,7 @@
 #include <llvm/IR/Value.h>
 #include <llvm/Support/Casting.h>
 #include <llvm/Support/Debug.h>
+#include <llvm/Support/FormatVariadic.h>
 #include <llvm/Support/raw_ostream.h>
 #include <llvm/Transforms/Utils/LoopUtils.h>
 #include <llvm/Transforms/Utils/ScalarEvolutionExpander.h>
@@ -65,17 +66,16 @@ concept LoadOrStoreInst =
   std::same_as<llvm::LoadInst, std::remove_cvref_t<T>> ||
   std::same_as<llvm::StoreInst, std::remove_cvref_t<T>>;
 
-class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
-  [[no_unique_address]] IR::Loop *forest;
-  [[no_unique_address]] dict::map<llvm::Loop *, IR::Loop *> loopMap;
-  [[no_unique_address]] const llvm::TargetLibraryInfo *TLI;
-  [[no_unique_address]] const llvm::TargetTransformInfo *TTI;
-  [[no_unique_address]] llvm::LoopInfo *LI;
-  [[no_unique_address]] llvm::ScalarEvolution *SE;
-  [[no_unique_address]] llvm::OptimizationRemarkEmitter *ORE;
-  [[no_unique_address]] lp::LoopBlock loopBlock;
-  [[no_unique_address]] IR::Cache instructions;
-  [[no_unique_address]] CostModeling::CPURegisterFile registers;
+class TurboLoop {
+  dict::map<llvm::Loop *, IR::Loop *> loopMap;
+  // const llvm::TargetLibraryInfo *TLI;
+  const llvm::TargetTransformInfo *TTI;
+  llvm::LoopInfo *LI;
+  llvm::ScalarEvolution *SE;
+  llvm::OptimizationRemarkEmitter *ORE;
+  lp::LoopBlock loopBlock{};
+  IR::Cache instructions{};
+  CostModeling::CPURegisterFile registers;
 
   // this is an allocator that it is safe to reset completely when
   // a subtree fails, so it is not allowed to allocate anything
@@ -99,9 +99,9 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
   /// 3. Existing forests are searched for indirect control flow between
   ///    successive loops. In all such cases, the loops at that level are
   ///    split into separate forests.
-  void initializeLoopForest() {
+  auto initializeLoopForest() -> IR::TreeResult {
     // NOTE: LoopInfo stores loops in reverse program order
-    if (LI->empty()) return;
+    if (LI->empty()) return {};
     auto revLI = llvm::reverse(*LI);
     // should normally be stack allocated; we don't want to monomorphize
     // excessively, so we produce an `ArrayRef<llvm::Loop *>` here
@@ -110,8 +110,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
     llvm::SmallVector<llvm::Loop *> rLI{revLI};
     poly::NoWrapRewriter nwr(*SE);
     math::Vector<int, 8> omega{0};
-    IR::TreeResult tr = runOnLoop(nullptr, rLI, omega, nwr);
-    if (tr.accept(0)) optimize(tr);
+    return runOnLoop(nullptr, rLI, omega, nwr);
   }
 
   /// parse a from `H` to `E`, nested within loop `L`
@@ -136,7 +135,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
     -> IR::TreeResult {
     // TODO: need to be able to connect instructions as we move out
     auto predMapAbridged =
-      IR::Predicate::Map::descend(shortAllocator(), instructions, H, E, L);
+      IR::Predicate::Map::descend(shortAllocator(), instructions, H, E, L, tr);
     if (!predMapAbridged) return {};
     // Now we need to create Addrs
     unsigned depth = omega.size() - 1;
@@ -158,16 +157,16 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
         auto [V, trret] = instructions.getArrayRef(&J, L, ptr, tr);
         tr = trret;
         if (tr.reject(depth)) return tr;
-        IR::Addr *A = llvm::cast<IR::Addr>(V);
+        auto *A = llvm::cast<IR::Addr>(V);
         // if we didn't reject, it must have been an `Addr`
         A->setFusionOmega(omega);
-        instructions.addPredicate(A, P, &predMapAbridged.get_value());
+        instructions.addPredicate(A, P, &(*predMapAbridged));
         A->setLoopNest(AL);
       }
     }
-    return mergeInstructions(instructions, *predMapAbridged, TTI,
-                             shortAllocator(), registers.getNumVectorBits(),
-                             tr);
+    return IR::mergeInstructions(instructions, *predMapAbridged, *TTI,
+                                 *shortAllocator(),
+                                 registers.getNumVectorBits(), tr);
   }
   /// factored out codepath, returns number of rejected loops
   /// current depth is omega.size()-1
@@ -332,9 +331,9 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
 
   void optimize(IR::TreeResult tr) {
     // now we build the LinearProgram
-    lp::ScheduledNode *nodes = loopBlock.optimize(instructions, tr);
-    if (!nodes) return;
-    CostModeling::optimize(nodes);
+    lp::OptimizationResult lpor = loopBlock.optimize(instructions, tr);
+    if (!lpor.nodes) return;
+    CostModeling::optimize(instructions, loopBlock.getAllocator(), lpor);
   }
   /*
     auto isLoopPreHeader(const llvm::BasicBlock *BB) const -> bool {
@@ -363,14 +362,40 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
   // void buildInstructionGraph(LoopTree &root) {
   //     // predicates
   // }
-public:
-  auto run(llvm::Function &F, llvm::FunctionAnalysisManager &AM)
-    -> llvm::PreservedAnalyses;
-  TurboLoopPass() = default;
-  TurboLoopPass(const TurboLoopPass &) = delete;
-  TurboLoopPass(TurboLoopPass &&) = default;
   // ~TurboLoopPass() {
   //   for (auto l : loopForests) l->~LoopTree();
   // }
+public:
+  TurboLoop(llvm::Function &F, llvm::FunctionAnalysisManager &FAM)
+    : TTI{&FAM.getResult<llvm::TargetIRAnalysis>(F)},
+      LI{&FAM.getResult<llvm::LoopAnalysis>(F)},
+      SE{&FAM.getResult<llvm::ScalarEvolutionAnalysis>(F)},
+      ORE{&FAM.getResult<llvm::OptimizationRemarkEmitterAnalysis>(F)},
+      registers{F.getContext(), *TTI} {}
+  // llvm::LoopNest LA = FAM.getResult<llvm::LoopNestAnalysis>(F);
+  // llvm::AssumptionCache &AC = FAM.getResult<llvm::AssumptionAnalysis>(F);
+  // llvm::DominatorTree &DT = FAM.getResult<llvm::DominatorTreeAnalysis>(F);
+  // TLI = &FAM.getResult<llvm::TargetLibraryAnalysis>(F);
+  auto run() {
+
+    if (!ORE->enabled()) ORE = nullptr; // cheaper check
+    if (ORE) {
+      // llvm::OptimizationRemarkAnalysis
+      // analysis{remarkAnalysis("RegisterCount", *LI->begin())};
+      // ORE->emit(analysis << "There are
+      // "<<TTI->getNumberOfRegisters(0)<<" scalar registers");
+      llvm::SmallString<32> str = llvm::formatv(
+        "there are {0} scalar registers", TTI->getNumberOfRegisters(0));
+
+      remark("ScalarRegisterCount", *LI->begin(), str);
+      str = llvm::formatv("there are {0} vector registers",
+                          registers.getNumVectorBits());
+      remark("VectorRegisterCount", *LI->begin(), str);
+    }
+    // Builds the loopForest, constructing predicate chains and loop nests
+    IR::TreeResult tr = initializeLoopForest();
+    if (tr.accept(0)) optimize(tr);
+    return llvm::PreservedAnalyses::none();
+  }
 };
 } // namespace poly

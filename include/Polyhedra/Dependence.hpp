@@ -125,7 +125,6 @@ class Dependence {
     return timelessCheck(alloc, dxy, x, y, pair,
                          checkDirection(*alloc, pair, x, y, dxy->getNumLambda(),
                                         dxy->getNumVar() + 1));
-    ;
   }
 
   // emplaces dependencies with repeat accesses to the same memory across
@@ -263,10 +262,10 @@ public:
     return nextInput;
   }
   [[nodiscard]] constexpr auto getNextOutput() -> Dependence * {
-    return nextInput;
+    return nextOutput;
   }
   [[nodiscard]] constexpr auto getNextOutput() const -> const Dependence * {
-    return nextInput;
+    return nextOutput;
   }
   [[nodiscard]] constexpr auto input() -> NotNull<IR::Addr> { return in; }
   [[nodiscard]] constexpr auto output() -> NotNull<IR::Addr> { return out; }
@@ -838,16 +837,9 @@ public:
     }
   };
 };
-
+static_assert(sizeof(Dependence) <= 64);
 } // namespace poly
 namespace IR {
-inline constexpr void IR::Addr::forEachInput(const auto &f) {
-  poly::Dependence *d = edgeIn;
-  while (d) {
-    f(d->input());
-    d = d->getNextInput();
-  }
-}
 inline constexpr auto IR::Addr::inputAddrs() {
   return utils::ListRange{getEdgeIn(), Dependence::NextInput{},
                           [](Dependence *d) { return d->input(); }};

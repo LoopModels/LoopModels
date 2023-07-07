@@ -164,7 +164,8 @@ public:
   };
 
   constexpr LoopBlock() = default;
-  auto optimize(IR::Cache &cache, IR::TreeResult tr) -> OptimizationResult {
+  [[nodiscard]] auto optimize(IR::Cache &cache, IR::TreeResult tr)
+    -> OptimizationResult {
     // first, we peel loops for which affine repr failed
     if (unsigned numReject = tr.rejectDepth) {
       auto *SE = cache.getScalarEvolution();

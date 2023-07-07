@@ -249,7 +249,6 @@ public:
     return node;
   }
   constexpr void setNode(lp::ScheduledNode *n) { node = n; }
-  inline constexpr void forEachInput(const auto &f);
   inline constexpr auto inputAddrs();
   inline constexpr auto outputAddrs();
   inline constexpr auto inputAddrs(unsigned depth);

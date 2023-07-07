@@ -1,10 +1,12 @@
+
 #include "ArrayReference.hpp"
+#include "Math/Array.hpp"
 #include "Math/Comparisons.hpp"
 #include "Math/Math.hpp"
 #include "Math/Orthogonalize.hpp"
-#include "MatrixStringParse.hpp"
 #include "Polyhedra/Loops.hpp"
 #include "TestUtilities.hpp"
+#include <Utilities/MatrixStringParse.hpp>
 #include <cstddef>
 #include <cstdint>
 #include <gtest/gtest.h>
@@ -22,8 +24,13 @@
 #include <memory>
 #include <random>
 
+namespace poly {
+
+using math::DenseMatrix, math::DenseDims, math::PtrMatrix, math::MutPtrMatrix,
+  math::Col, math::end, math::_, utils::operator""_mat;
+
 namespace {
-auto orthogonalize(Arena<> *alloc,
+auto orthogonalize(utils::Arena<> *alloc,
                    llvm::SmallVectorImpl<ArrayReference *> const &ai)
   -> std::optional<
     std::pair<poly::Loop *, llvm::SmallVector<ArrayReference, 0>>> {
@@ -38,19 +45,19 @@ auto orthogonalize(Arena<> *alloc,
   // assuming that `B` is an invertible integer matrix (i.e. is unimodular),
   // OwningArena<> alloc;
   const poly::Loop &alnp = *(ai[0]->loop);
-  const size_t numLoops = alnp.getNumLoops();
-  const size_t numSymbols = alnp.getNumSymbols();
-  size_t numRow = 0;
+  const ptrdiff_t numLoops = alnp.getNumLoops();
+  const ptrdiff_t numSymbols = alnp.getNumSymbols();
+  ptrdiff_t numRow = 0;
   for (auto *a : ai) numRow += a->getArrayDim();
   DenseMatrix<int64_t> S(DenseDims{numLoops, numRow}, int64_t(0));
   Col i = 0;
   for (auto *a : ai) {
     PtrMatrix<int64_t> A = a->indexMatrix();
-    for (size_t j = 0; j < numLoops; ++j)
-      for (size_t k = 0; k < A.numCol(); ++k) S(j, i + k) = A(j, k);
+    for (ptrdiff_t j = 0; j < numLoops; ++j)
+      for (ptrdiff_t k = 0; k < A.numCol(); ++k) S(j, i + k) = A(j, k);
     i += A.numCol();
   }
-  auto [K, included] = NormalForm::orthogonalize(S);
+  auto [K, included] = math::NormalForm::orthogonalize(S);
   if (included.empty()) return {};
   // We let
   // L = K'*J
@@ -63,9 +70,9 @@ auto orthogonalize(Arena<> *alloc,
     << alnp.getA()(_, _(numSymbols, end)) * K.transpose();
 
   auto *alnNew =
-    poly::Loop::construct(alloc, std::move(AK), alnp.getSyms());
+    poly::Loop::construct(alloc, nullptr, std::move(AK), alnp.getSyms(), true);
   alnNew->pruneBounds();
-  IntMatrix KS{K * S};
+  math::IntMatrix KS{K * S};
   std::pair<poly::Loop *, llvm::SmallVector<ArrayReference, 0>> ret{
     std::make_pair(alnNew, llvm::SmallVector<ArrayReference, 0>())};
   llvm::SmallVector<ArrayReference, 0> &newArrayRefs = ret.second;
@@ -87,14 +94,14 @@ TEST(OrthogonalizeTest, BasicAssertions) {
   //   W[m + i, n + j] += C[i,j] * B[m,n]
   //
   // Loops: m, n, i, j
-  IntMatrix A{"[-1 1 0 0 0 -1 0 0 0; "
-              "0 0 0 0 0 1 0 0 0; "
-              "-1 0 1 0 0 0 -1 0 0; "
-              "0 0 0 0 0 0 1 0 0; "
-              "-1 0 0 1 0 0 0 -1 0; "
-              "0 0 0 0 0 0 0 1 0; "
-              "-1 0 0 0 1 0 0 0 -1; "
-              "0 0 0 0 0 0 0 0 1]"_mat};
+  math::IntMatrix A{"[-1 1 0 0 0 -1 0 0 0; "
+                    "0 0 0 0 0 1 0 0 0; "
+                    "-1 0 1 0 0 0 -1 0 0; "
+                    "0 0 0 0 0 0 1 0 0; "
+                    "-1 0 0 1 0 0 0 -1 0; "
+                    "0 0 0 0 0 0 0 1 0; "
+                    "-1 0 0 0 1 0 0 0 -1; "
+                    "0 0 0 0 0 0 0 0 1]"_mat};
 
   TestLoopFunction tlf;
   tlf.addLoop(std::move(A), 4);
@@ -152,8 +159,7 @@ TEST(OrthogonalizeTest, BasicAssertions) {
   llvm::SmallVector<ArrayReference *> ai{
     allArrayRefs.data(), allArrayRefs.data() + 1, allArrayRefs.data() + 2};
 
-  std::optional<
-    std::pair<poly::Loop *, llvm::SmallVector<ArrayReference, 0>>>
+  std::optional<std::pair<poly::Loop *, llvm::SmallVector<ArrayReference, 0>>>
     orth(orthogonalize(tlf.getAlloc(), ai));
 
   EXPECT_TRUE(orth.has_value());
@@ -193,16 +199,16 @@ TEST(OrthogonalizeTest, BasicAssertions) {
 
 // NOLINTNEXTLINE(modernize-use-trailing-return-type)
 TEST(BadMul, BasicAssertions) {
-  IntMatrix A{"[-3 1 1 1 -1 0 0; "
-              "0 0 0 0 1 0 0; "
-              "-2 1 0 1 0 -1 0; "
-              "0 0 0 0 0 1 0; "
-              "0 0 0 0 1 -1 0; "
-              "-1 0 1 0 -1 1 0; "
-              "-1 1 0 0 0 0 -1; "
-              "0 0 0 0 0 0 1; "
-              "0 0 0 0 0 1 -1; "
-              "-1 0 0 1 0 -1 1]"_mat};
+  math::IntMatrix A{"[-3 1 1 1 -1 0 0; "
+                    "0 0 0 0 1 0 0; "
+                    "-2 1 0 1 0 -1 0; "
+                    "0 0 0 0 0 1 0; "
+                    "0 0 0 0 1 -1 0; "
+                    "-1 0 1 0 -1 1 0; "
+                    "-1 1 0 0 0 0 -1; "
+                    "0 0 0 0 0 0 1; "
+                    "0 0 0 0 0 1 -1; "
+                    "-1 0 0 1 0 -1 1]"_mat};
 
   TestLoopFunction tlf;
   tlf.addLoop(std::move(A), 3);
@@ -275,8 +281,7 @@ TEST(BadMul, BasicAssertions) {
   llvm::SmallVector<ArrayReference *> ai{
     allArrayRefs.data(), allArrayRefs.data() + 1, allArrayRefs.data() + 2};
 
-  std::optional<
-    std::pair<poly::Loop *, llvm::SmallVector<ArrayReference, 0>>>
+  std::optional<std::pair<poly::Loop *, llvm::SmallVector<ArrayReference, 0>>>
     orth{orthogonalize(tlf.getAlloc(), ai)};
 
   EXPECT_TRUE(orth.has_value());
@@ -319,7 +324,7 @@ TEST(OrthogonalizeMatricesTest, BasicAssertions) {
   for (size_t i = 0; i < iters; ++i) {
     for (auto &&a : A) a = distrib(gen);
     // llvm::errs() << "Random A =\n" << A << "\n";
-    A = orthogonalize(std::move(A));
+    A = math::orthogonalize(std::move(A));
     // llvm::errs() << "Orthogonal A =\n" << A << "\n";
     // note, A'A is not diagonal
     // but AA' is
@@ -337,3 +342,4 @@ TEST(OrthogonalizeMatricesTest, BasicAssertions) {
 #endif
   }
 }
+} // namespace poly

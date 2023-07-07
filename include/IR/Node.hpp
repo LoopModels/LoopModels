@@ -120,14 +120,14 @@ protected:
   // uint16_t lowLink_;
   // uint16_t bitfield;
 
-  constexpr Node(ValKind kind) : kind(kind) {}
-  constexpr Node(ValKind kind, unsigned depth)
-    : kind(kind), currentDepth(depth), naturalDepth(depth) {}
-  constexpr Node(ValKind kind, unsigned curDepth, unsigned natDepth)
-    : kind(kind), currentDepth(curDepth), naturalDepth(natDepth) {}
-  constexpr Node(ValKind kind, unsigned curDepth, unsigned natDepth,
+  constexpr Node(ValKind kind_) : kind(kind_) {}
+  constexpr Node(ValKind kind_, unsigned depth)
+    : kind(kind_), currentDepth(depth), naturalDepth(depth) {}
+  constexpr Node(ValKind kind_, unsigned curDepth, unsigned natDepth)
+    : kind(kind_), currentDepth(curDepth), naturalDepth(natDepth) {}
+  constexpr Node(ValKind kind_, unsigned curDepth, unsigned natDepth,
                  unsigned maxDepth_)
-    : kind(kind), currentDepth(curDepth), naturalDepth(natDepth),
+    : kind(kind_), currentDepth(curDepth), naturalDepth(natDepth),
       maxDepth(maxDepth_) {}
 
 private:
@@ -343,13 +343,13 @@ class Instruction;
 
 class Value : public Node {
 protected:
-  constexpr Value(ValKind kind) : Node(kind) {}
-  constexpr Value(ValKind kind, unsigned depth) : Node(kind, depth) {}
-  constexpr Value(ValKind kind, unsigned curDepth, unsigned natDepth)
-    : Node(kind, curDepth, natDepth) {}
-  constexpr Value(ValKind kind, unsigned curDepth, unsigned natDepth,
+  constexpr Value(ValKind kind_) : Node(kind_) {}
+  constexpr Value(ValKind kind_, unsigned depth) : Node(kind_, depth) {}
+  constexpr Value(ValKind kind_, unsigned curDepth, unsigned natDepth)
+    : Node(kind_, curDepth, natDepth) {}
+  constexpr Value(ValKind kind_, unsigned curDepth, unsigned natDepth,
                   unsigned maxDepth_)
-    : Node(kind, curDepth, natDepth, maxDepth_) {}
+    : Node(kind_, curDepth, natDepth, maxDepth_) {}
 
   Users users;
 
@@ -442,13 +442,13 @@ class Instruction : public Value {
   /// same operation on same type with disparate branches can be merged
   /// This only identifies instructions
 protected:
-  constexpr Instruction(ValKind kind) : Value(kind) {}
-  constexpr Instruction(ValKind kind, unsigned depth) : Value(kind, depth) {}
-  constexpr Instruction(ValKind kind, unsigned curDepth, unsigned natDepth)
-    : Value(kind, curDepth, natDepth) {}
-  constexpr Instruction(ValKind kind, unsigned curDepth, unsigned natDepth,
+  constexpr Instruction(ValKind kind_) : Value(kind_) {}
+  constexpr Instruction(ValKind kind_, unsigned depth) : Value(kind_, depth) {}
+  constexpr Instruction(ValKind kind_, unsigned curDepth, unsigned natDepth)
+    : Value(kind_, curDepth, natDepth) {}
+  constexpr Instruction(ValKind kind_, unsigned curDepth, unsigned natDepth,
                         unsigned maxDepth_)
-    : Value(kind, curDepth, natDepth, maxDepth_) {}
+    : Value(kind_, curDepth, natDepth, maxDepth_) {}
 
 public:
   static constexpr auto classof(const Node *v) -> bool {
