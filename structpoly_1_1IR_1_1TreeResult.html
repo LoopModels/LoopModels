@@ -66,7 +66,6 @@ $(function() {
 </div><!-- top -->
 <div class="header">
   <div class="summary">
-<a href="#nested-classes">Classes</a> &#124;
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-attribs">Public Attributes</a> &#124;
 <a href="structpoly_1_1IR_1_1TreeResult-members.html">List of all members</a>  </div>
@@ -115,8 +114,9 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getMaxDepth
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
-<tr class="memitem:a8e04a2f11dec53771e998a4b42588be2"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classpoly_1_1IR_1_1Addr.html">Addr</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpoly_1_1IR_1_1TreeResult.html#a8e04a2f11dec53771e998a4b42588be2">addr</a> {nullptr}</td></tr>
-<tr class="separator:a8e04a2f11dec53771e998a4b42588be2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa42fa05b9fb28911afc521aef34d4aea"><td class="memItemLeft" align="right" valign="top"><a id="aa42fa05b9fb28911afc521aef34d4aea"></a>
+<a class="el" href="structpoly_1_1IR_1_1AddrChain.html">AddrChain</a>&#160;</td><td class="memItemRight" valign="bottom"><b>addr</b> {}</td></tr>
+<tr class="separator:aa42fa05b9fb28911afc521aef34d4aea"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5be97918164b160efcdef47af995d0ad"><td class="memItemLeft" align="right" valign="top"><a id="a5be97918164b160efcdef47af995d0ad"></a>
 <a class="el" href="classpoly_1_1IR_1_1Compute.html">Compute</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>incomplete</b> {nullptr}</td></tr>
 <tr class="separator:a5be97918164b160efcdef47af995d0ad"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -137,23 +137,7 @@ unsigned&#160;</td><td class="memItemRight" valign="bottom"><b>maxDepth</b> {0}<
 <li><code>size_t rejectDepth</code> is how many outer loops were rejected, due to to failure to produce an affine representation of the loop or memory accesses. Either because an affine representation is not possible, or because our analysis failed and needs improvement.</li>
 </ul>
 <p>We use setChild for setting the last load/stow/incomplete only the very first is guaranteed to be correct, as we do not update the old when concatenating </p>
-</div><h2 class="groupheader">Member Data Documentation</h2>
-<a id="a8e04a2f11dec53771e998a4b42588be2"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8e04a2f11dec53771e998a4b42588be2">&#9670;&nbsp;</a></span>addr</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="classpoly_1_1IR_1_1Addr.html">Addr</a>* poly::IR::TreeResult::addr {nullptr}</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p><code><a class="el" href="classpoly_1_1IR_1_1Addr.html">Addr</a></code>s, sorted <code>[stow..., load...]</code> stow's getChild() points to last stow load's getChild() points to last load </p>
-
-</div>
-</div>
-<hr/>The documentation for this struct was generated from the following file:<ul>
+</div><hr/>The documentation for this struct was generated from the following file:<ul>
 <li>include/IR/<a class="el" href="Cache_8hpp_source.html">Cache.hpp</a></li>
 </ul>
 </div><!-- contents -->
