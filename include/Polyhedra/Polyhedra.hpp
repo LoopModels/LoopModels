@@ -109,8 +109,8 @@ struct BasePolyhedra {
   constexpr auto calcIsEmpty() -> bool {
     return initializeComparator().isEmpty();
   }
-  constexpr auto calcIsEmpty(math::Alloc<int64_t> auto &alloc) -> bool {
-    return initializeComparator(alloc).isEmpty(alloc);
+  constexpr auto calcIsEmpty(Arena<> alloc) -> bool {
+    return initializeComparator(&alloc).isEmpty(alloc);
   }
   [[nodiscard]] constexpr auto getNumCon() const -> unsigned {
     return static_cast<const P *>(this)->getNumCon();

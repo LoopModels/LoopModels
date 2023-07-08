@@ -593,19 +593,17 @@ public:
     eraseConstraintImpl(getA(), c);
     --numConstraints;
   }
-  [[nodiscard]] auto
-  zeroExtraItersUponExtending(math::Alloc<int64_t> auto &alloc, ptrdiff_t _i,
-                              bool extendLower) const -> bool {
+  [[nodiscard]] auto zeroExtraItersUponExtending(Arena<> alloc, ptrdiff_t _i,
+                                                 bool extendLower) const
+    -> bool {
     auto p = alloc.scope();
-    Loop *tmp = copy(alloc);
+    Loop *tmp = copy(&alloc);
     // question is, does the inner most loop have 0 extra iterations?
     const ptrdiff_t numPrevLoops = getNumLoops() - 1;
     // we changed the behavior of removeLoop to actually drop loops that are
     // no longer present.
     for (ptrdiff_t i = 0; i < numPrevLoops - 1; ++i)
-      tmp = tmp->removeLoop(alloc, i >= _i);
-    // for (ptrdiff_t i = 0; i < numPrevLoops; ++i)
-    //   if (i != _i) tmp = tmp->removeLoop(alloc, i);
+      tmp = tmp->removeLoop(&alloc, i >= _i);
     // loop _i is now loop 0
     // innermost loop is now loop 1
     bool indep = true;
@@ -614,7 +612,7 @@ public:
     for (ptrdiff_t n = 0; n < A.numRow(); ++n)
       if ((A(n, numConst) != 0) && (A(n, 1 + numConst) != 0)) indep = false;
     if (indep) return false;
-    Loop *margi = tmp->removeLoop(alloc, 1), *tmp2;
+    Loop *margi = tmp->removeLoop(&alloc, 1), *tmp2;
     invariant(margi->getNumLoops(), unsigned(1));
     invariant(tmp->getNumLoops(), unsigned(2));
     invariant(margi->getA().numCol() + 1, tmp->getA().numCol());
@@ -627,7 +625,7 @@ public:
       int64_t b = sign * margi->getA()(c, numConst);
       if (b <= 0) continue;
       alloc.rollback(p2);
-      tmp2 = tmp->copy(alloc);
+      tmp2 = tmp->copy(&alloc);
       invariant(tmp2->getNumLoops(), unsigned(2));
       invariant(margi->getNumLoops() + 1, tmp2->getNumLoops());
       // increment to increase bound

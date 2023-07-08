@@ -1,4 +1,6 @@
+#include "Math/Array.hpp"
 #include "Polyhedra/Loops.hpp"
+#include "Support/OStream.hpp"
 #include "TestUtilities.hpp"
 #include <Math/Constraints.hpp>
 #include <Math/Math.hpp>
@@ -9,6 +11,10 @@
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/LLVMContext.h>
 #include <memory>
+
+namespace poly {
+
+using math::IntMatrix, utils::operator""_mat;
 
 // NOLINTNEXTLINE(modernize-use-trailing-return-type)
 TEST(TrivialPruneBounds0, BasicAssertions) {
@@ -58,7 +64,7 @@ TEST(TrivialPruneBounds1, BasicAssertions) {
   TestLoopFunction tlf;
   tlf.addLoop(std::move(A), 2);
   poly::Loop *aff = tlf.getLoopNest(0);
-  aff->pruneBounds(tlf.getAlloc());
+  aff->pruneBounds(*tlf.getAlloc());
 #ifndef NDEBUG
   aff->dump();
 #endif
@@ -132,18 +138,18 @@ TEST(AffineTest0, BasicAssertions) {
   llvm::errs() << "Constructed affine obj\n";
   llvm::errs() << "About to run first compat test\n";
   llvm::errs() << "aff.getA() = " << aff.getA();
-  EXPECT_FALSE(aff.zeroExtraItersUponExtending(tlf.getAlloc(), 0, false));
-  EXPECT_FALSE(aff.zeroExtraItersUponExtending(tlf.getAlloc(), 0, true));
-  EXPECT_TRUE(aff.zeroExtraItersUponExtending(tlf.getAlloc(), 1, false));
+  EXPECT_FALSE(aff.zeroExtraItersUponExtending(*tlf.getAlloc(), 0, false));
+  EXPECT_FALSE(aff.zeroExtraItersUponExtending(*tlf.getAlloc(), 0, true));
+  EXPECT_TRUE(aff.zeroExtraItersUponExtending(*tlf.getAlloc(), 1, false));
   llvm::errs() << "About to run second compat test\n";
-  EXPECT_FALSE(aff.zeroExtraItersUponExtending(tlf.getAlloc(), 1, true));
+  EXPECT_FALSE(aff.zeroExtraItersUponExtending(*tlf.getAlloc(), 1, true));
 #ifndef NDEBUG
   aff.dump();
 #endif
   llvm::errs() << "About to run first set of bounds tests\n";
   llvm::errs() << "\nPermuting loops 1 and 2\n";
-  OwningArena<> allocator;
-  NotNull<poly::Loop> affp021ptr{
+  utils::OwningArena<> allocator;
+  utils::NotNull<poly::Loop> affp021ptr{
     aff.rotate(allocator, "[1 0 0; 0 0 1; 0 1 0]"_mat, nullptr)};
   poly::Loop &affp021 = *affp021ptr;
   // Now that we've swapped loops 1 and 2, we should have
@@ -193,8 +199,7 @@ TEST(NonUnimodularExperiment, BasicAssertions) {
   poly::Loop &aff2 = *tlf.getLoopNest(tlf.getNumLoopNests() - 1);
   EXPECT_FALSE(aff2.isEmpty());
   OwningArena<> allocator;
-  NotNull<poly::Loop> affp10{
-    aff2.rotate(allocator, "[0 1; 1 0]"_mat, nullptr)};
+  NotNull<poly::Loop> affp10{aff2.rotate(allocator, "[0 1; 1 0]"_mat, nullptr)};
 
   llvm::errs() << "Swapped order:\n";
 #ifndef NDEBUG
@@ -202,3 +207,4 @@ TEST(NonUnimodularExperiment, BasicAssertions) {
 #endif
   EXPECT_FALSE(affp10->isEmpty());
 }
+} // namespace poly
