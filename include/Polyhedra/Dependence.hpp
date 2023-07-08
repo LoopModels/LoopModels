@@ -28,9 +28,8 @@ class Dependence {
   //   for (i = 0; i < I; ++i)
   //     for (j = 0; j < J; ++j)
   //       for (l = 0; l < L; ++l)
-  //         A(i, j) = f(A(i+1, j), A(i, j-1), A(j, j), A(j, i), A(i, j -
-  //         k))
-  // label:     0             1        2          3        4        5
+  //         A(i,j) = f(A(i+1,j), A(i,j-1), A(j,j), A(j,i), A(i,j-k))
+  // label:     0           1        2         3       4       5
   // We have...
   ////// 0 <-> 1 //////
   // i_0 = i_1 + 1
@@ -92,19 +91,20 @@ class Dependence {
   //
   //
   //
-  [[no_unique_address]] NotNull<DepPoly> depPoly;
-  [[no_unique_address]] NotNull<math::Simplex> dependenceSatisfaction;
-  [[no_unique_address]] NotNull<math::Simplex> dependenceBounding;
-  [[no_unique_address]] NotNull<IR::Addr> in;
-  [[no_unique_address]] NotNull<IR::Addr> out;
-  [[no_unique_address]] Dependence *nextInput{nullptr};  // all share same `in`
-  [[no_unique_address]] Dependence *nextOutput{nullptr}; // all share same `out`
-  // the upper bit of satLvl indicates whether the satisfaction is because of
-  // conditional independence (value = 0), or whether it was because of offsets
-  // when solving the linear program (value = 1).
-  [[no_unique_address]] std::array<uint8_t, 7> satLvl{255, 255, 255, 255,
-                                                      255, 255, 255};
-  [[no_unique_address]] bool forward;
+  NotNull<DepPoly> depPoly;
+  NotNull<math::Simplex> dependenceSatisfaction;
+  NotNull<math::Simplex> dependenceBounding;
+  NotNull<IR::Addr> in;
+  NotNull<IR::Addr> out;
+  Dependence *nextInput{nullptr}; // all share same `in`
+  Dependence *nextOutput{nullptr};
+  // all share same `out`
+  // the upper bit of satLvl indicates whether the satisfaction is
+  // because of conditional independence (value = 0), or whether it
+  // was because of offsets when solving the linear program (value =
+  // 1).
+  std::array<uint8_t, 7> satLvl{255, 255, 255, 255, 255, 255, 255};
+  bool forward;
 
   static void timelessCheck(Arena<> *alloc, NotNull<DepPoly> dxy,
                             NotNull<IR::Addr> x, NotNull<IR::Addr> y,

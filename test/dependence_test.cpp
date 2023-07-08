@@ -717,52 +717,60 @@ TEST(TriangularExampleTest, BasicAssertions) {
   // First, comparisons of store to `A(n,m) = B(n,m)` versus...
   // // load in `A(n,m) = A(n,m) / U(n,n)`
   {
-    auto dep = poly::Dependence::check(&alloc, *mSch2t0t1, *mSch2t1t0);
-    EXPECT_EQ(dep.size(), 1);
-    EXPECT_TRUE(dep[0].isForward());
-    llvm::errs() << "dep#" << 0 << ":\n" << dep[0] << "\n";
+    poly::Dependence::check(&alloc, *mSch2t0t1, *mSch2t1t0);
+    EXPECT_EQ(mSch2t0t1->getEdgeIn(), nullptr);
+    EXPECT_EQ(mSch2t1t0->getEdgeOut(), nullptr);
+    EXPECT_EQ(mSch2t0t1->getEdgeOut(), mSch2t1t0->getEdgeIn());
+    poly::Dependence *dep = mSch2t1t0->getEdgeIn();
+    EXPECT_TRUE(dep->isForward());
+    llvm::errs() << "dep#" << 0 << ":\n" << *dep << "\n";
   }
   //
   //
   // store in `A(n,m) = A(n,m) / U(n,n)`
   {
-    auto dep = poly::Dependence::check(&alloc, *mSch2t0t1, *mSch2t1t2);
-    EXPECT_EQ(dep.size(), 1);
-    EXPECT_TRUE(dep[0].isForward());
-    llvm::errs() << "dep#" << 1 << ":\n" << dep[0] << "\n";
+    poly::Dependence::check(&alloc, *mSch2t0t1, *mSch2t1t2);
+    auto dep = mSch2t0t1->getEdgeOut();
+    EXPECT_EQ(dep, mSch2t1t2->getEdgeIn());
+    EXPECT_TRUE(dep->isForward());
+    llvm::errs() << "dep#" << 1 << ":\n" << *dep << "\n";
   }
   //
   // sch3_               3        0         1     2
   // load `A(n,m)` in 'A(k,m) = A(k,m) - A(n,m)*U(k,n)'
   {
-    auto dep = poly::Dependence::check(&alloc, *mSch2t0t1, *mSch3t1);
-    EXPECT_EQ(dep.size(), 1);
-    EXPECT_TRUE(dep[0].isForward());
-    llvm::errs() << "dep#" << 2 << ":\n" << dep[0] << "\n";
+    poly::Dependence::check(&alloc, *mSch2t0t1, *mSch3t1);
+    auto dep = mSch2t0t1->getEdgeOut();
+    EXPECT_EQ(dep, mSch3t1->getEdgeIn());
+    EXPECT_TRUE(dep->isForward());
+    llvm::errs() << "dep#" << 2 << ":\n" << *dep << "\n";
   }
   // load `A(k,m)` in 'A(k,m) = A(k,m) - A(n,m)*U(k,n)'
   //
   {
-    auto dep = poly::Dependence::check(&alloc, *mSch2t0t1, *mSch3t2);
-    EXPECT_EQ(dep.size(), 1);
-    EXPECT_TRUE(dep[0].isForward());
-    llvm::errs() << "dep#" << 3 << ":\n" << dep[0] << "\n";
+    poly::Dependence::check(&alloc, *mSch2t0t1, *mSch3t2);
+    auto dep = mSch2t0t1->getEdgeOut();
+    EXPECT_EQ(dep, mSch3t2->getEdgeIn());
+    EXPECT_TRUE(dep->isForward());
+    llvm::errs() << "dep#" << 3 << ":\n" << *dep << "\n";
   }
   // store `A(k,m)` in 'A(k,m) = A(k,m) - A(n,m)*U(k,n)'
   {
-    auto dep = poly::Dependence::check(&alloc, *mSch2t0t1, *mSch3t3);
-    EXPECT_EQ(dep.size(), 1);
-    EXPECT_TRUE(dep[0].isForward());
-    llvm::errs() << "dep#" << 4 << ":\n" << dep[0] << "\n";
+    poly::Dependence::check(&alloc, *mSch2t0t1, *mSch3t3);
+    auto dep = mSch2t0t1->getEdgeOut();
+    EXPECT_EQ(dep, mSch3t3->getEdgeIn());
+    EXPECT_TRUE(dep->isForward());
+    llvm::errs() << "dep#" << 4 << ":\n" << *dep << "\n";
   }
 
   // Second, comparisons of load in `A(m,n) = A(m,n) / U(n,n)`
   // with...
   // store in `A(n,m) = A(n,m) / U(n,n)`
   {
-    auto dep = poly::Dependence::check(&alloc, *mSch2t1t0, *mSch2t1t2);
-    EXPECT_EQ(dep.size(), 1);
-    EXPECT_TRUE(dep[0].isForward());
+    poly::Dependence::check(&alloc, *mSch2t1t0, *mSch2t1t2);
+    auto dep = mSch2t1t0->getEdgeOut();
+    EXPECT_EQ(dep, mSch2t1t2->getEdgeIn());
+    EXPECT_TRUE(dep->isForward());
     llvm::errs() << "dep#" << 5 << ":\n" << dep[0] << "\n";
   }
 
@@ -770,24 +778,27 @@ TEST(TriangularExampleTest, BasicAssertions) {
   // sch3_               3        0         1     2
   // load `A(n,m)` in 'A(k,m) = A(k,m) - A(n,m)*U(k,n)'
   {
-    auto dep = poly::Dependence::check(&alloc, *mSch2t1t0, *mSch3t1);
-    EXPECT_EQ(dep.size(), 1);
-    EXPECT_TRUE(dep[0].isForward());
-    llvm::errs() << "dep#" << 6 << ":\n" << dep[0] << "\n";
+    poly::Dependence::check(&alloc, *mSch2t1t0, *mSch3t1);
+    auto dep = mSch2t1t0->getEdgeOut();
+    EXPECT_EQ(dep, mSch3t1->getEdgeIn());
+    EXPECT_TRUE(dep->isForward());
+    llvm::errs() << "dep#" << 6 << ":\n" << *dep << "\n";
   }
   // load `A(k,m)` in 'A(k,m) = A(k,m) - A(n,m)*U(k,n)'
   {
-    auto dep = poly::Dependence::check(&alloc, *mSch2t1t0, *mSch3t2);
-    EXPECT_EQ(dep.size(), 1);
-    EXPECT_FALSE(dep[0].isForward());
-    llvm::errs() << "dep#" << 7 << ":\n" << dep[0] << "\n";
+    poly::Dependence::check(&alloc, *mSch2t1t0, *mSch3t2);
+    auto dep = mSch2t1t0->getEdgeOut();
+    EXPECT_EQ(dep, mSch3t2->getEdgeIn());
+    EXPECT_FALSE(dep->isForward());
+    llvm::errs() << "dep#" << 7 << ":\n" << *dep << "\n";
   }
   // store `A(k,m)` in 'A(k,m) = A(k,m) - A(n,m)*U(k,n)'
   {
-    auto dep = poly::Dependence::check(&alloc, *mSch2t1t0, *mSch3t3);
-    EXPECT_EQ(dep.size(), 1);
-    EXPECT_FALSE(dep[0].isForward());
-    llvm::errs() << "dep#" << 8 << ":\n" << dep[0] << "\n";
+    poly::Dependence::check(&alloc, *mSch2t1t0, *mSch3t3);
+    auto dep = mSch2t1t0->getEdgeOut();
+    EXPECT_EQ(dep, mSch3t3->getEdgeIn());
+    EXPECT_FALSE(dep->isForward());
+    llvm::errs() << "dep#" << 8 << ":\n" << *dep << "\n";
   }
 
   // Third, comparisons of store in `A(m,n) = A(m,n) / U(n,n)`
@@ -795,24 +806,27 @@ TEST(TriangularExampleTest, BasicAssertions) {
   // sch3_               3        0         1     2
   // load `A(n,m)` in 'A(k,m) = A(k,m) - A(n,m)*U(k,n)'
   {
-    auto dep = poly::Dependence::check(&alloc, *mSch2t1t2, *mSch3t1);
-    EXPECT_EQ(dep.size(), 1);
-    EXPECT_TRUE(dep[0].isForward());
-    llvm::errs() << "dep#" << 9 << ":\n" << dep[0] << "\n";
+    poly::Dependence::check(&alloc, *mSch2t1t2, *mSch3t1);
+    auto dep = mSch2t1t2->getEdgeOut();
+    EXPECT_EQ(dep, mSch3t1->getEdgeIn());
+    EXPECT_TRUE(dep->isForward());
+    llvm::errs() << "dep#" << 9 << ":\n" << *dep << "\n";
   }
   // load `A(k,m)` in 'A(k,m) = A(k,m) - A(n,m)*U(k,n)'
   {
-    auto dep = poly::Dependence::check(&alloc, *mSch2t1t2, *mSch3t2);
-    EXPECT_EQ(dep.size(), 1);
-    EXPECT_FALSE(dep[0].isForward());
-    llvm::errs() << "dep#" << 10 << ":\n" << dep[0] << "\n";
+    poly::Dependence::check(&alloc, *mSch2t1t2, *mSch3t2);
+    auto dep = mSch2t1t2->getEdgeOut();
+    EXPECT_EQ(dep, mSch3t2->getEdgeIn());
+    EXPECT_FALSE(dep->isForward());
+    llvm::errs() << "dep#" << 10 << ":\n" << *dep << "\n";
   }
   // store `A(k,m)` in 'A(k,m) = A(k,m) - A(n,m)*U(k,n)'
   {
-    auto dep = poly::Dependence::check(&alloc, *mSch2t1t2, *mSch3t3);
-    EXPECT_EQ(dep.size(), 1);
-    EXPECT_FALSE(dep[0].isForward());
-    llvm::errs() << "dep#" << 11 << ":\n" << dep[0] << "\n";
+    poly::Dependence::check(&alloc, *mSch2t1t2, *mSch3t3);
+    auto dep = mSch2t1t2->getEdgeOut();
+    EXPECT_EQ(dep, mSch3t3->getEdgeIn());
+    EXPECT_FALSE(dep->isForward());
+    llvm::errs() << "dep#" << 11 << ":\n" << *dep << "\n";
   }
 
   // Fourth, comparisons of load `A(m,n)` in
@@ -821,17 +835,19 @@ TEST(TriangularExampleTest, BasicAssertions) {
   // with...
   // load `A(k,m)` in 'A(k,m) = A(k,m) - A(n,m)*U(k,n)'
   {
+    poly::Dependence::check(&alloc, *mSch3t1, *mSch3t2);
     auto dep = poly::Dependence::check(&alloc, *mSch3t1, *mSch3t2);
-    EXPECT_EQ(dep.size(), 1);
-    EXPECT_FALSE(dep[0].isForward());
-    llvm::errs() << "dep#" << 12 << ":\n" << dep[0] << "\n";
+    EXPECT_EQ(dep, mSch3t2->getEdgeIn());
+    EXPECT_FALSE(dep->isForward());
+    llvm::errs() << "dep#" << 12 << ":\n" << *dep << "\n";
   }
   // store `A(k,m)` in 'A(k,m) = A(k,m) - A(n,m)*U(k,n)'
   {
-    auto dep = poly::Dependence::check(&alloc, *mSch3t1, *mSch3t3);
-    EXPECT_EQ(dep.size(), 1);
-    EXPECT_FALSE(dep[0].isForward());
-    llvm::errs() << "dep#" << 13 << ":\n" << dep[0] << "\n";
+    poly::Dependence::check(&alloc, *mSch3t1, *mSch3t3);
+    auto dep = mSch3t1->getEdgeOut();
+    EXPECT_EQ(dep, mSch3t3->getEdgeIn());
+    EXPECT_FALSE(dep->isForward());
+    llvm::errs() << "dep#" << 13 << ":\n" << *dep << "\n";
   }
 
   // Fifth, comparisons of load `A(m,k)` in
@@ -840,19 +856,20 @@ TEST(TriangularExampleTest, BasicAssertions) {
   // with...
   // store `A(k,m)` in 'A(k,m) = A(k,m) - A(n,m)*U(k,n)'
   {
-    auto fwdrev = poly::Dependence::check(&alloc, *mSch3t2, *mSch3t3);
-    EXPECT_EQ(fwdrev.size(), 2);
-    auto &forward = fwdrev[0];
-    auto &reverse = fwdrev[1];
-    EXPECT_TRUE(forward.isForward());
-    EXPECT_FALSE(reverse.isForward());
+    poly::Dependence::check(&alloc, *mSch3t2, *mSch3t3);
+    auto *forward = mSch3t2->getEdgeOut();
+    auto *reverse = mSch3t2->getEdgeIn();
+    EXPECT_EQ(forward, mSch3t3->getEdgeIn());
+    EXPECT_EQ(reverse, mSch3t3->getEdgeOut());
+    EXPECT_TRUE(forward->isForward());
+    EXPECT_FALSE(reverse->isForward());
     llvm::errs() << "dep# 14 and 15\n";
     llvm::errs() << "\nforward dependence:\n" << forward;
     llvm::errs() << "\nreverse dependence:\n" << reverse;
-    assert(forward.isForward());
-    assert(!reverse.isForward());
-    auto fwdDepPoly = forward.getDepPoly();
-    auto revDepPoly = reverse.getDepPoly();
+    assert(forward->isForward());
+    assert(!reverse->isForward());
+    auto fwdDepPoly = forward->getDepPoly();
+    auto revDepPoly = reverse->getDepPoly();
     EXPECT_TRUE(allZero(fwdDepPoly->getE()(_, 0)));
     EXPECT_FALSE(allZero(revDepPoly->getE()(_, 0)));
 
