@@ -905,7 +905,8 @@ TEST(TriangularExampleTest, BasicAssertions) {
     }
   }
 
-  std::optional<BitSet<std::array<uint64_t, 2>>> optDeps = lblock.optimize();
+  lp::OptimizationResult optRes = lblock.optimize(addr);
+
   EXPECT_TRUE(optDeps.has_value());
   // orig order (inner <-> outer): n, m
   DenseMatrix<int64_t> optPhi2{DenseDims{2, 2}, 0};
@@ -1139,7 +1140,7 @@ TEST(MeanStDevTest0, BasicAssertions) {
   lp::LoopBlock iOuterLoopNest;
   llvm::SmallVector<IR::Addr *> iOuterMem;
 
-  OwningArena<> alloc;
+  utils::OwningArena<> alloc;
   iOuterMem.emplace_back(createMemAccess(&alloc, xInd1, storeX0, sch0t0)); // 0
 
   iOuterMem.emplace_back(
