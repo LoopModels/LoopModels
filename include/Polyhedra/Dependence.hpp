@@ -10,6 +10,7 @@
 
 namespace poly {
 namespace poly {
+
 /// Dependence
 /// Represents a dependence relationship between two memory accesses.
 /// It contains simplices representing constraints that affine schedules
@@ -838,6 +839,103 @@ public:
   };
 };
 static_assert(sizeof(Dependence) <= 64);
+
+class Dependencies {
+  char *data;
+  unsigned numData{0};
+  // int32_t tombstone{-1};
+
+  static constexpr auto memNeeded(size_t N) -> size_t {
+    constexpr size_t memPer = sizeof(int32_t) * 2 + sizeof(DepPoly *) +
+                              sizeof(math::Simplex *) * 2 + sizeof(bool) +
+                              sizeof(uint8_t);
+    return N * memPer;
+  }
+
+public:
+  Dependencies(Arena<> *alloc) : data(alloc->allocate<char>(memNeeded(64))) {}
+  Dependencies(const Dependencies &) = default; // or delete?
+  [[nodiscard]] constexpr auto size() const noexcept { return numData; }
+  [[nodiscard]] constexpr auto getCapacity() const noexcept -> unsigned {
+    return std::bit_ceil(numData);
+  }
+  // field order:
+  // AddrOut
+  // AddrIn
+  // nextOut
+  // nextIn
+  // dependenceSatisfaction
+  // dependenceBounding
+  // depPoly
+  // satLevel
+  // isForward
+  constexpr auto addrOut(ptrdiff_t i) -> NotNull<IR::Addr> {
+    void *p = data + sizeof(IR::Addr *) * i;
+    return *static_cast<IR::Addr **>(p);
+  }
+  [[nodiscard]] constexpr auto addrOut(ptrdiff_t i) const
+    -> NotNull<const IR::Addr> {
+    const void *p = data + sizeof(IR::Addr *) * i;
+    return *static_cast<IR::Addr *const *>(p);
+  }
+  constexpr auto addrIn(ptrdiff_t i) -> NotNull<IR::Addr> {
+    unsigned cap = getCapacity();
+    void *p = data + sizeof(IR::Addr *) * (i + cap);
+    return *static_cast<IR::Addr **>(p);
+  }
+  [[nodiscard]] constexpr auto addrIn(ptrdiff_t i) const
+    -> NotNull<const IR::Addr> {
+    unsigned cap = getCapacity();
+    const void *p = data + sizeof(IR::Addr *) * (i + cap);
+    return *static_cast<IR::Addr *const *>(p);
+  }
+  constexpr auto nextIn(ptrdiff_t i) -> int32_t {
+    unsigned cap = getCapacity();
+    void *p = data + sizeof(int32_t) * (i + cap) + sizeof(IR::Addr *) * 2 * cap;
+    return *static_cast<int32_t *>(p);
+  }
+  constexpr auto depSat(ptrdiff_t i) -> NotNull<math::Simplex> {
+    unsigned cap = getCapacity();
+    void *p = data + sizeof(math::Simplex *) * i +
+              (sizeof(IR::Addr *) + sizeof(int32_t)) * 2 * cap;
+    return *static_cast<math::Simplex **>(p);
+  }
+  constexpr auto depBnd(ptrdiff_t i) -> NotNull<math::Simplex> {
+    unsigned cap = getCapacity();
+    void *p = data + sizeof(math::Simplex *) * (i + cap) +
+              (sizeof(IR::Addr *) + sizeof(int32_t)) * 2 * cap;
+    return *static_cast<math::Simplex **>(p);
+  }
+  constexpr auto depPoly(ptrdiff_t i) -> NotNull<DepPoly> {
+    unsigned cap = getCapacity();
+    void *p = data + sizeof(DepPoly *) * i +
+              (sizeof(IR::Addr *) + sizeof(int32_t) + sizeof(math::Simplex *)) *
+                2 * cap;
+    return *static_cast<DepPoly **>(p);
+  }
+  constexpr auto satLevel(ptrdiff_t i) -> uint8_t & {
+    unsigned cap = getCapacity();
+    void *p =
+      data + sizeof(uint8_t) * i +
+      ((sizeof(IR::Addr *) + sizeof(int32_t) + sizeof(math::Simplex *)) * 2 +
+       sizeof(DepPoly *)) *
+        cap;
+    return *static_cast<uint8_t *>(p);
+  }
+
+  [[nodiscard]] constexpr auto isForward(ptrdiff_t i) const noexcept -> bool {
+    unsigned cap = getCapacity();
+    void *p =
+      data + sizeof(bool) * i +
+      ((sizeof(IR::Addr *) + sizeof(int32_t) + sizeof(math::Simplex *)) * 2 +
+       sizeof(DepPoly *) + sizeof(uint8_t)) *
+        cap;
+    return *static_cast<bool *>(p);
+  }
+
+  constexpr auto operator[](ptrdiff_t i) { return Dependence{}; }
+};
+
 } // namespace poly
 namespace IR {
 inline constexpr auto IR::Addr::inputAddrs() {

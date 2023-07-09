@@ -834,8 +834,8 @@ private:
   // NOLINTNEXTLINE(misc-no-recursion)
   auto tryFuse(ScheduledNode *n0, ScheduledNode *n1, unsigned depth) -> Result {
     auto s = allocator.scope();
-    auto old0 = stashFitCore(n0);
-    auto old1 = stashFitCore(n1);
+    auto old0 = stashFitCore(n0); // FIXME: stash dep sat level
+    auto old1 = stashFitCore(n1); // FIXME: stash dep sat level
     ScheduledNode *n = n0->fuse(n1);
     if (Result depSat = solveSplitGraph(n, depth))
       if (Result depSatN = optimize(n, depth + 1, depth + 1))
