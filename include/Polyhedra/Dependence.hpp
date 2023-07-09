@@ -24,7 +24,6 @@ public:
 private:
   //
   //
-  //
   NotNull<DepPoly> depPoly;
   NotNull<math::Simplex> dependenceSatisfaction;
   NotNull<math::Simplex> dependenceBounding;
@@ -41,6 +40,7 @@ private:
   uint8_t satLvl;
   uint8_t satLvlBackup;
   bool forward;
+
 
   constexpr auto getSimplexPair() -> std::array<NotNull<math::Simplex>, 2> {
     return {dependenceSatisfaction, dependenceBounding};
