@@ -836,7 +836,7 @@ TEST(TriangularExampleTest, BasicAssertions) {
   // load `A(k,m)` in 'A(k,m) = A(k,m) - A(n,m)*U(k,n)'
   {
     poly::Dependence::check(&alloc, *mSch3t1, *mSch3t2);
-    auto dep = poly::Dependence::check(&alloc, *mSch3t1, *mSch3t2);
+    auto dep = mSch3t1->getEdgeOut();
     EXPECT_EQ(dep, mSch3t2->getEdgeIn());
     EXPECT_FALSE(dep->isForward());
     llvm::errs() << "dep#" << 12 << ":\n" << *dep << "\n";
