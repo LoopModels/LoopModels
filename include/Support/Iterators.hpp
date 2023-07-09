@@ -60,6 +60,8 @@ class VCycleRange {
 public:
   constexpr VCycleRange(math::PtrVector<int32_t> data, int32_t start) noexcept
     : data(data.begin()), start(start) {}
+  constexpr VCycleRange(const int32_t *data, int32_t start) noexcept
+    : data(data), start(start) {}
 
   [[nodiscard]] constexpr auto begin() const noexcept -> VCycleIterator {
     return {data, start};
@@ -117,6 +119,8 @@ class VForwardRange {
 public:
   constexpr VForwardRange(math::PtrVector<int32_t> data, int32_t start) noexcept
     : data(data.begin()), start(start) {}
+  constexpr VForwardRange(const int32_t *data, int32_t start) noexcept
+    : data(data), start(start) {}
 
   [[nodiscard]] constexpr auto begin() const noexcept -> VForwardIterator {
     return {data, start};

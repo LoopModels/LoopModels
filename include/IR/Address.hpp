@@ -25,11 +25,12 @@ class ScheduledNode;
 } // namespace lp
 namespace poly {
 class Dependence;
+class Dependencies;
 } // namespace poly
 namespace IR {
 using math::PtrVector, math::MutPtrVector, math::DensePtrMatrix,
   math::MutDensePtrMatrix, math::SquarePtrMatrix, math::_, math::DenseDims,
-  math::PtrMatrix, math::end, poly::Dependence;
+  math::PtrMatrix, math::end, poly::Dependence, poly::Dependencies;
 
 /// Represents a memory access that has been rotated according to some affine
 /// transform.
@@ -74,8 +75,8 @@ using math::PtrVector, math::MutPtrVector, math::DensePtrMatrix,
 /// `oldLoop->rotate(PhiInv)`
 // clang-format on
 class Addr : public Instruction {
-  Dependence *edgeIn{nullptr};
-  Dependence *edgeOut{nullptr};
+  int32_t edgeIn{-1};
+  int32_t edgeOut{-1};
   lp::ScheduledNode *node;
   NotNull<const llvm::SCEVUnknown> basePointer;
   poly::Loop *loop{nullptr};
@@ -136,57 +137,6 @@ class Addr : public Instruction {
   inline constexpr void setEdgeOut(Dependence *);
 
 public:
-  constexpr void rotate(NotNull<poly::Loop> explicitLoop,
-                        SquarePtrMatrix<int64_t> Pinv, int64_t denom,
-                        PtrVector<int64_t> omega, int64_t *offsets) {
-    loop = explicitLoop;
-    // we are updating in place; we may now have more loops than we did before
-    unsigned oldNatDepth = getNaturalDepth();
-    DensePtrMatrix<int64_t> M{indexMatrix()}; // aD x nLma
-    MutPtrVector<int64_t> offsetOmega{getOffsetOmega()};
-    unsigned depth = this->naturalDepth = uint8_t(Pinv.numCol());
-    MutDensePtrMatrix<int64_t> mStar{indexMatrix()};
-    // M is implicitly padded with zeros, newNumLoops >= oldNumLoops
-    invariant(maxDepth >= naturalDepth);
-    invariant(oldNatDepth <= naturalDepth);
-    invariant(ptrdiff_t(oldNatDepth), ptrdiff_t(M.numRow()));
-    getDenominator() = denom;
-    // layout goes offsetOmega, indexMatrix, fusionOmega
-    // When we call `rotate`, we don't need fusionOmega anymore, because
-    // placement represented via the `ScheduledNode` and then IR graph
-    // Thus, we only need to update indexMatrix and offsetOmega
-    // offsetOmegas exactly alias, so we have no worries there.
-    // For `indexMatrix`, we use the unused `fusionOmega` space
-    // as a temporary, to avoid the aliasing problem.
-    //
-    // Use `M` before updating it, to update `offsetOmega`
-    if (offsets) offsetOmega -= M * PtrVector<int64_t>{offsets, oldNatDepth};
-    // update `M` into `mStar`
-    // mStar << M * Pinv(_(0, oldNumLoops), _);
-    MutPtrVector<int64_t> buff{getFusionOmega()[_(0, math::last)]};
-    invariant(buff.size(), unsigned(depth));
-    unsigned newNatDepth = 0;
-    for (ptrdiff_t d = getArrayDim(); d--;) {
-      buff << 0;
-      for (ptrdiff_t k = 0; k < oldNatDepth; ++k) buff += M(d, k) * Pinv(k, _);
-      mStar(d, _) << buff;
-      if (newNatDepth == depth) continue;
-      // find last
-      auto range = std::ranges::reverse_view{buff[_(newNatDepth, depth)]};
-      auto m = std::ranges::find_if(range, [](int64_t i) { return i != 0; });
-      if (m == range.end()) continue;
-      newNatDepth = depth - std::distance(range.begin(), m);
-    }
-    // use `mStar` to update offsetOmega`
-    offsetOmega -= mStar * omega;
-    if (newNatDepth == depth) return;
-    invariant(newNatDepth < depth);
-    this->naturalDepth = newNatDepth;
-    MutDensePtrMatrix<int64_t> indMat{this->indexMatrix()};
-    for (ptrdiff_t d = 1; d < getArrayDim(); ++d)
-      indMat(d, _) << mStar(d, _(0, newNatDepth));
-    this->naturalDepth = newNatDepth;
-  }
   // NOTE: this requires `nodeOrDepth` to be set to innmost loop depth
   [[nodiscard]] constexpr auto indexedByInnermostLoop() -> bool {
     bool ret = currentDepth == naturalDepth;
@@ -234,14 +184,8 @@ public:
   Addr(const Addr &) = delete;
   inline constexpr void addEdgeIn(Dependence *);
   inline constexpr void addEdgeOut(Dependence *);
-  [[nodiscard]] constexpr auto getEdgeIn() -> Dependence * { return edgeIn; }
-  [[nodiscard]] constexpr auto getEdgeIn() const -> const Dependence * {
-    return edgeIn;
-  }
-  [[nodiscard]] constexpr auto getEdgeOut() -> Dependence * { return edgeOut; }
-  [[nodiscard]] constexpr auto getEdgeOut() const -> const Dependence * {
-    return edgeOut;
-  }
+  [[nodiscard]] constexpr auto getEdgeIn() const -> int32_t { return edgeIn; }
+  [[nodiscard]] constexpr auto getEdgeOut() const -> int32_t { return edgeOut; }
   constexpr void setLoopNest(poly::Loop *L) { loop = L; }
   // NOLINTNEXTLINE(readability-make-member-function-const)
   [[nodiscard]] constexpr auto getNode() -> lp::ScheduledNode * { return node; }
@@ -249,10 +193,15 @@ public:
     return node;
   }
   constexpr void setNode(lp::ScheduledNode *n) { node = n; }
-  inline constexpr auto inputAddrs();
-  inline constexpr auto outputAddrs();
-  inline constexpr auto inputAddrs(unsigned depth);
-  inline constexpr auto outputAddrs(unsigned depth);
+  [[nodiscard]] inline auto inputAddrs(Dependencies) const;
+  [[nodiscard]] inline auto outputAddrs(Dependencies) const;
+  [[nodiscard]] inline auto inputAddrs(Dependencies, unsigned depth) const;
+  [[nodiscard]] inline auto outputAddrs(Dependencies, unsigned depth) const;
+  [[nodiscard]] inline auto inputEdges(Dependencies) const;
+  [[nodiscard]] inline auto outputEdges(Dependencies) const;
+  [[nodiscard]] inline auto inputEdges(Dependencies, unsigned depth) const;
+  [[nodiscard]] inline auto outputEdges(Dependencies, unsigned depth) const;
+
   [[nodiscard]] static auto construct(Arena<> *alloc,
                                       const llvm::SCEVUnknown *ptr,
                                       llvm::Instruction *user,
@@ -307,8 +256,8 @@ public:
                 sizeof(Addr) - sizeof(VK_Load) +
                   intMemNeededFuseFree(naturalDepth, numDim) * sizeof(int64_t));
     auto *r = static_cast<Addr *>(p);
-    r->edgeIn = nullptr;
-    r->edgeOut = nullptr;
+    r->edgeIn = -1;
+    r->edgeOut = -1;
     return r;
   }
   [[nodiscard]] auto getSizes() const -> PtrVector<const llvm::SCEV *> {
