@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.9.1"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>LoopModels: poly::poly::Dependence::NextOutput Struct Reference</title>
+<title>LoopModels: poly::utils::VCycleRange Class Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -61,29 +61,36 @@ $(function() {
 
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><b>poly</b></li><li class="navelem"><b>poly</b></li><li class="navelem"><a class="el" href="classpoly_1_1poly_1_1Dependence.html">Dependence</a></li><li class="navelem"><a class="el" href="structpoly_1_1poly_1_1Dependence_1_1NextOutput.html">NextOutput</a></li>  </ul>
+<li class="navelem"><b>poly</b></li><li class="navelem"><b>utils</b></li><li class="navelem"><a class="el" href="classpoly_1_1utils_1_1VCycleRange.html">VCycleRange</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="header">
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
-<a href="structpoly_1_1poly_1_1Dependence_1_1NextOutput-members.html">List of all members</a>  </div>
+<a href="#pub-static-methods">Static Public Member Functions</a> &#124;
+<a href="classpoly_1_1utils_1_1VCycleRange-members.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">poly::poly::Dependence::NextOutput Struct Reference</div>  </div>
+<div class="title">poly::utils::VCycleRange Class Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a1fc9da1a51c120ac8724f861d7ee1a81"><td class="memItemLeft" align="right" valign="top"><a id="a1fc9da1a51c120ac8724f861d7ee1a81"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (<a class="el" href="classpoly_1_1poly_1_1Dependence.html">Dependence</a> *d) const -&gt; <a class="el" href="classpoly_1_1poly_1_1Dependence.html">Dependence</a> *</td></tr>
-<tr class="separator:a1fc9da1a51c120ac8724f861d7ee1a81"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a63c2394f314ba12cd00ed1a2a3e83166"><td class="memItemLeft" align="right" valign="top"><a id="a63c2394f314ba12cd00ed1a2a3e83166"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (const <a class="el" href="classpoly_1_1poly_1_1Dependence.html">Dependence</a> *d) const -&gt; const <a class="el" href="classpoly_1_1poly_1_1Dependence.html">Dependence</a> *</td></tr>
-<tr class="separator:a63c2394f314ba12cd00ed1a2a3e83166"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a52cd5a97614f1cba241f345640d408ac"><td class="memItemLeft" align="right" valign="top"><a id="a52cd5a97614f1cba241f345640d408ac"></a>
+constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>VCycleRange</b> (math::PtrVector&lt; int32_t &gt; data, int32_t start) noexcept</td></tr>
+<tr class="separator:a52cd5a97614f1cba241f345640d408ac"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae3416a48ed25d162facc4dd642b9fae7"><td class="memItemLeft" align="right" valign="top"><a id="ae3416a48ed25d162facc4dd642b9fae7"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>begin</b> () const noexcept -&gt; <a class="el" href="classpoly_1_1utils_1_1VCycleIterator.html">VCycleIterator</a></td></tr>
+<tr class="separator:ae3416a48ed25d162facc4dd642b9fae7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
+Static Public Member Functions</h2></td></tr>
+<tr class="memitem:aaead9dae265e8e02510b4b840580fd9e"><td class="memItemLeft" align="right" valign="top"><a id="aaead9dae265e8e02510b4b840580fd9e"></a>
+static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>end</b> () noexcept</td></tr>
+<tr class="separator:aaead9dae265e8e02510b4b840580fd9e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<hr/>The documentation for this struct was generated from the following file:<ul>
-<li>include/Polyhedra/<a class="el" href="Dependence_8hpp_source.html">Dependence.hpp</a></li>
+<hr/>The documentation for this class was generated from the following file:<ul>
+<li>include/Support/<a class="el" href="Iterators_8hpp_source.html">Iterators.hpp</a></li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->
