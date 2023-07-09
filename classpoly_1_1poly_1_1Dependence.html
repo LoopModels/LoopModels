@@ -69,6 +69,7 @@ $(function() {
 <a href="#nested-classes">Classes</a> &#124;
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-static-methods">Static Public Member Functions</a> &#124;
+<a href="#friends">Friends</a> &#124;
 <a href="classpoly_1_1poly_1_1Dependence-members.html">List of all members</a>  </div>
   <div class="headertitle">
 <div class="title">poly::poly::Dependence Class Reference</div>  </div>
@@ -101,9 +102,9 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>output</b> 
 <tr class="memitem:a17701299d29d284ae5b83ecb92b8eb00"><td class="memItemLeft" align="right" valign="top"><a id="a17701299d29d284ae5b83ecb92b8eb00"></a>
 constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Dependence</b> (NotNull&lt; <a class="el" href="classpoly_1_1poly_1_1DepPoly.html">DepPoly</a> &gt; poly, std::array&lt; NotNull&lt; math::Simplex &gt;, 2 &gt; depSatBound, NotNull&lt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> &gt; i, NotNull&lt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> &gt; o, bool fwd)</td></tr>
 <tr class="separator:a17701299d29d284ae5b83ecb92b8eb00"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7ac634219f6a30b3ede42ad7792ef4c4"><td class="memItemLeft" align="right" valign="top"><a id="a7ac634219f6a30b3ede42ad7792ef4c4"></a>
-constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Dependence</b> (NotNull&lt; <a class="el" href="classpoly_1_1poly_1_1DepPoly.html">DepPoly</a> &gt; poly, std::array&lt; NotNull&lt; math::Simplex &gt;, 2 &gt; depSatBound, NotNull&lt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> &gt; i, NotNull&lt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> &gt; o, uint8_t sL, bool fwd)</td></tr>
-<tr class="separator:a7ac634219f6a30b3ede42ad7792ef4c4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a54c1872219f6a6f60f379d9d61a5be62"><td class="memItemLeft" align="right" valign="top"><a id="a54c1872219f6a6f60f379d9d61a5be62"></a>
+constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Dependence</b> (NotNull&lt; <a class="el" href="classpoly_1_1poly_1_1DepPoly.html">DepPoly</a> &gt; poly, std::array&lt; NotNull&lt; math::Simplex &gt;, 2 &gt; depSatBound, NotNull&lt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> &gt; i, NotNull&lt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> &gt; o, std::array&lt; uint8_t, 2 &gt; sL, bool fwd)</td></tr>
+<tr class="separator:a54c1872219f6a6f60f379d9d61a5be62"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad61450183ac23f948dd96d0b8090bc00"><td class="memItemLeft" align="right" valign="top">constexpr void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1poly_1_1Dependence.html#ad61450183ac23f948dd96d0b8090bc00">setSatLevelLP</a> (uint8_t d)</td></tr>
 <tr class="separator:ad61450183ac23f948dd96d0b8090bc00"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3c125a1d6aa911656389bf6c9bc25a52"><td class="memItemLeft" align="right" valign="top"><a id="a3c125a1d6aa911656389bf6c9bc25a52"></a>
@@ -292,12 +293,12 @@ static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>prev
 <tr class="memitem:a1adfbae6f0d0721f4b957031cdf79db0"><td class="memItemLeft" align="right" valign="top"><a id="a1adfbae6f0d0721f4b957031cdf79db0"></a>
 static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumOmegaCoefficients</b> () -&gt; unsigned</td></tr>
 <tr class="separator:a1adfbae6f0d0721f4b957031cdf79db0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aae69ebac6044d13733534ba41e0fe242"><td class="memItemLeft" align="right" valign="top"><a id="aae69ebac6044d13733534ba41e0fe242"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>checkDirection</b> (Arena&lt;&gt; alloc, const std::array&lt; NotNull&lt; math::Simplex &gt;, 2 &gt; &amp;p, NotNull&lt; const <a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> &gt; x, NotNull&lt; const <a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> &gt; y, NotNull&lt; const <a class="el" href="structpoly_1_1poly_1_1AffineSchedule.html">AffineSchedule</a> &gt; xSchedule, NotNull&lt; const <a class="el" href="structpoly_1_1poly_1_1AffineSchedule.html">AffineSchedule</a> &gt; ySchedule, unsigned numLambda, Col nonTimeDim) -&gt; bool</td></tr>
-<tr class="separator:aae69ebac6044d13733534ba41e0fe242"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac70c3a595a871148b89be47b93a07c97"><td class="memItemLeft" align="right" valign="top"><a id="ac70c3a595a871148b89be47b93a07c97"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>checkDirection</b> (Arena&lt;&gt; alloc, const std::array&lt; NotNull&lt; math::Simplex &gt;, 2 &gt; &amp;p, NotNull&lt; const <a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> &gt; x, NotNull&lt; const <a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> &gt; y, unsigned numLambda, Col nonTimeDim) -&gt; bool</td></tr>
-<tr class="separator:ac70c3a595a871148b89be47b93a07c97"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="friends"></a>
+Friends</h2></td></tr>
+<tr class="memitem:a7efb44d1e85f9d7d9fb1d6cc785eeccd"><td class="memItemLeft" align="right" valign="top"><a id="a7efb44d1e85f9d7d9fb1d6cc785eeccd"></a>
+class&#160;</td><td class="memItemRight" valign="bottom"><b>Dependencies</b></td></tr>
+<tr class="separator:a7efb44d1e85f9d7d9fb1d6cc785eeccd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p><a class="el" href="classpoly_1_1poly_1_1Dependence.html">Dependence</a> Represents a dependence relationship between two memory accesses. It contains simplices representing constraints that affine schedules are allowed to take. </p>
