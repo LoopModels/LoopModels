@@ -137,6 +137,57 @@ class Addr : public Instruction {
   inline constexpr void setEdgeOut(Dependence *);
 
 public:
+  constexpr void rotate(NotNull<poly::Loop> explicitLoop,
+                        SquarePtrMatrix<int64_t> Pinv, int64_t denom,
+                        PtrVector<int64_t> omega, int64_t *offsets) {
+    loop = explicitLoop;
+    // we are updating in place; we may now have more loops than we did before
+    unsigned oldNatDepth = getNaturalDepth();
+    DensePtrMatrix<int64_t> M{indexMatrix()}; // aD x nLma
+    MutPtrVector<int64_t> offsetOmega{getOffsetOmega()};
+    unsigned depth = this->naturalDepth = uint8_t(Pinv.numCol());
+    MutDensePtrMatrix<int64_t> mStar{indexMatrix()};
+    // M is implicitly padded with zeros, newNumLoops >= oldNumLoops
+    invariant(maxDepth >= naturalDepth);
+    invariant(oldNatDepth <= naturalDepth);
+    invariant(ptrdiff_t(oldNatDepth), ptrdiff_t(M.numRow()));
+    getDenominator() = denom;
+    // layout goes offsetOmega, indexMatrix, fusionOmega
+    // When we call `rotate`, we don't need fusionOmega anymore, because
+    // placement represented via the `ScheduledNode` and then IR graph
+    // Thus, we only need to update indexMatrix and offsetOmega
+    // offsetOmegas exactly alias, so we have no worries there.
+    // For `indexMatrix`, we use the unused `fusionOmega` space
+    // as a temporary, to avoid the aliasing problem.
+    //
+    // Use `M` before updating it, to update `offsetOmega`
+    if (offsets) offsetOmega -= M * PtrVector<int64_t>{offsets, oldNatDepth};
+    // update `M` into `mStar`
+    // mStar << M * Pinv(_(0, oldNumLoops), _);
+    MutPtrVector<int64_t> buff{getFusionOmega()[_(0, math::last)]};
+    invariant(buff.size(), unsigned(depth));
+    unsigned newNatDepth = 0;
+    for (ptrdiff_t d = getArrayDim(); d--;) {
+      buff << 0;
+      for (ptrdiff_t k = 0; k < oldNatDepth; ++k) buff += M(d, k) * Pinv(k, _);
+      mStar(d, _) << buff;
+      if (newNatDepth == depth) continue;
+      // find last
+      auto range = std::ranges::reverse_view{buff[_(newNatDepth, depth)]};
+      auto m = std::ranges::find_if(range, [](int64_t i) { return i != 0; });
+      if (m == range.end()) continue;
+      newNatDepth = depth - std::distance(range.begin(), m);
+    }
+    // use `mStar` to update offsetOmega`
+    offsetOmega -= mStar * omega;
+    if (newNatDepth == depth) return;
+    invariant(newNatDepth < depth);
+    this->naturalDepth = newNatDepth;
+    MutDensePtrMatrix<int64_t> indMat{this->indexMatrix()};
+    for (ptrdiff_t d = 1; d < getArrayDim(); ++d)
+      indMat(d, _) << mStar(d, _(0, newNatDepth));
+    this->naturalDepth = newNatDepth;
+  }
   // NOTE: this requires `nodeOrDepth` to be set to innmost loop depth
   [[nodiscard]] constexpr auto indexedByInnermostLoop() -> bool {
     bool ret = currentDepth == naturalDepth;
