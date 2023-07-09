@@ -811,8 +811,8 @@ $(function() {
 <div class="line"><a name="l00834"></a><span class="lineno">  834</span>&#160;  <span class="comment">// NOLINTNEXTLINE(misc-no-recursion)</span></div>
 <div class="line"><a name="l00835"></a><span class="lineno">  835</span>&#160;  <span class="keyword">auto</span> tryFuse(ScheduledNode *n0, ScheduledNode *n1, <span class="keywordtype">unsigned</span> depth) -&gt; Result {</div>
 <div class="line"><a name="l00836"></a><span class="lineno">  836</span>&#160;    <span class="keyword">auto</span> s = allocator.scope();</div>
-<div class="line"><a name="l00837"></a><span class="lineno">  837</span>&#160;    <span class="keyword">auto</span> old0 = stashFitCore(n0); <span class="comment">// FIXME: stash dep sat level</span></div>
-<div class="line"><a name="l00838"></a><span class="lineno">  838</span>&#160;    <span class="keyword">auto</span> old1 = stashFitCore(n1); <span class="comment">// FIXME: stash dep sat level</span></div>
+<div class="line"><a name="l00837"></a><span class="lineno">  837</span>&#160;    <span class="keyword">auto</span> old0 = stashFitCore(n0);</div>
+<div class="line"><a name="l00838"></a><span class="lineno">  838</span>&#160;    <span class="keyword">auto</span> old1 = stashFitCore(n1);</div>
 <div class="line"><a name="l00839"></a><span class="lineno">  839</span>&#160;    ScheduledNode *n = n0-&gt;fuse(n1);</div>
 <div class="line"><a name="l00840"></a><span class="lineno">  840</span>&#160;    <span class="keywordflow">if</span> (Result depSat = solveSplitGraph(n, depth))</div>
 <div class="line"><a name="l00841"></a><span class="lineno">  841</span>&#160;      <span class="keywordflow">if</span> (Result depSatN = optimize(n, depth + 1, depth + 1))</div>
