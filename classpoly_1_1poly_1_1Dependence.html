@@ -69,7 +69,6 @@ $(function() {
 <a href="#nested-classes">Classes</a> &#124;
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-static-methods">Static Public Member Functions</a> &#124;
-<a href="#friends">Friends</a> &#124;
 <a href="classpoly_1_1poly_1_1Dependence-members.html">List of all members</a>  </div>
   <div class="headertitle">
 <div class="title">poly::poly::Dependence Class Reference</div>  </div>
@@ -82,25 +81,11 @@ $(function() {
 Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpoly_1_1poly_1_1Dependence_1_1Active.html">Active</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpoly_1_1poly_1_1Dependence_1_1NextInput.html">NextInput</a></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpoly_1_1poly_1_1Dependence_1_1NextOutput.html">NextOutput</a></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">ID</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a7accbf6a4e53305a0d3bf589546522aa"><td class="memItemLeft" align="right" valign="top"><a id="a7accbf6a4e53305a0d3bf589546522aa"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNextInput</b> () -&gt; <a class="el" href="classpoly_1_1poly_1_1Dependence.html">Dependence</a> *</td></tr>
-<tr class="separator:a7accbf6a4e53305a0d3bf589546522aa"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab6ecc227ba46d0f54e9cf2053bf914a0"><td class="memItemLeft" align="right" valign="top"><a id="ab6ecc227ba46d0f54e9cf2053bf914a0"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNextInput</b> () const -&gt; const <a class="el" href="classpoly_1_1poly_1_1Dependence.html">Dependence</a> *</td></tr>
-<tr class="separator:ab6ecc227ba46d0f54e9cf2053bf914a0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab08105b79717a52cf10c928859115188"><td class="memItemLeft" align="right" valign="top"><a id="ab08105b79717a52cf10c928859115188"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNextOutput</b> () -&gt; <a class="el" href="classpoly_1_1poly_1_1Dependence.html">Dependence</a> *</td></tr>
-<tr class="separator:ab08105b79717a52cf10c928859115188"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0b286873e5b14b8e601f45aa979ec91e"><td class="memItemLeft" align="right" valign="top"><a id="a0b286873e5b14b8e601f45aa979ec91e"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNextOutput</b> () const -&gt; const <a class="el" href="classpoly_1_1poly_1_1Dependence.html">Dependence</a> *</td></tr>
-<tr class="separator:a0b286873e5b14b8e601f45aa979ec91e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad3c000d6e26291f1a2901b85ff1e8018"><td class="memItemLeft" align="right" valign="top"><a id="ad3c000d6e26291f1a2901b85ff1e8018"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>input</b> () -&gt; NotNull&lt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> &gt;</td></tr>
 <tr class="separator:ad3c000d6e26291f1a2901b85ff1e8018"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -113,22 +98,13 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>input</b> (
 <tr class="memitem:a499273838008fcadea7c9d5be6bb2445"><td class="memItemLeft" align="right" valign="top"><a id="a499273838008fcadea7c9d5be6bb2445"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>output</b> () const -&gt; NotNull&lt; const <a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> &gt;</td></tr>
 <tr class="separator:a499273838008fcadea7c9d5be6bb2445"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae08240d7c5f62f492ac0cea069e280bb"><td class="memItemLeft" align="right" valign="top"><a id="ae08240d7c5f62f492ac0cea069e280bb"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>setNextInput</b> (<a class="el" href="classpoly_1_1poly_1_1Dependence.html">Dependence</a> *n) -&gt; <a class="el" href="classpoly_1_1poly_1_1Dependence.html">Dependence</a> *</td></tr>
-<tr class="separator:ae08240d7c5f62f492ac0cea069e280bb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a76d63bc69ab5f386ee91aa9daacf2f1f"><td class="memItemLeft" align="right" valign="top"><a id="a76d63bc69ab5f386ee91aa9daacf2f1f"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>setNextOutput</b> (<a class="el" href="classpoly_1_1poly_1_1Dependence.html">Dependence</a> *n) -&gt; <a class="el" href="classpoly_1_1poly_1_1Dependence.html">Dependence</a> *</td></tr>
-<tr class="separator:a76d63bc69ab5f386ee91aa9daacf2f1f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a17701299d29d284ae5b83ecb92b8eb00"><td class="memItemLeft" align="right" valign="top"><a id="a17701299d29d284ae5b83ecb92b8eb00"></a>
 constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Dependence</b> (NotNull&lt; <a class="el" href="classpoly_1_1poly_1_1DepPoly.html">DepPoly</a> &gt; poly, std::array&lt; NotNull&lt; math::Simplex &gt;, 2 &gt; depSatBound, NotNull&lt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> &gt; i, NotNull&lt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> &gt; o, bool fwd)</td></tr>
 <tr class="separator:a17701299d29d284ae5b83ecb92b8eb00"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5c78100d24d5241d7514bf702e30a666"><td class="memItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1poly_1_1Dependence.html#a5c78100d24d5241d7514bf702e30a666">stashSatLevel</a> (unsigned depth) -&gt; <a class="el" href="classpoly_1_1poly_1_1Dependence.html">Dependence</a> *</td></tr>
-<tr class="separator:a5c78100d24d5241d7514bf702e30a666"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afe55dc08d9fb0cba1e26e950eabd3895"><td class="memItemLeft" align="right" valign="top"><a id="afe55dc08d9fb0cba1e26e950eabd3895"></a>
-constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>popSatLevel</b> ()</td></tr>
-<tr class="separator:afe55dc08d9fb0cba1e26e950eabd3895"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad61450183ac23f948dd96d0b8090bc00"><td class="memItemLeft" align="right" valign="top"><a id="ad61450183ac23f948dd96d0b8090bc00"></a>
-constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>setSatLevelLP</b> (uint8_t d)</td></tr>
+<tr class="memitem:a7ac634219f6a30b3ede42ad7792ef4c4"><td class="memItemLeft" align="right" valign="top"><a id="a7ac634219f6a30b3ede42ad7792ef4c4"></a>
+constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Dependence</b> (NotNull&lt; <a class="el" href="classpoly_1_1poly_1_1DepPoly.html">DepPoly</a> &gt; poly, std::array&lt; NotNull&lt; math::Simplex &gt;, 2 &gt; depSatBound, NotNull&lt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> &gt; i, NotNull&lt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> &gt; o, uint8_t sL, bool fwd)</td></tr>
+<tr class="separator:a7ac634219f6a30b3ede42ad7792ef4c4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad61450183ac23f948dd96d0b8090bc00"><td class="memItemLeft" align="right" valign="top">constexpr void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1poly_1_1Dependence.html#ad61450183ac23f948dd96d0b8090bc00">setSatLevelLP</a> (uint8_t d)</td></tr>
 <tr class="separator:ad61450183ac23f948dd96d0b8090bc00"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3c125a1d6aa911656389bf6c9bc25a52"><td class="memItemLeft" align="right" valign="top"><a id="a3c125a1d6aa911656389bf6c9bc25a52"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>setSatLevelParallel</b> (uint8_t d)</td></tr>
@@ -307,12 +283,6 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>isSatisfied</b> (Aren
 <tr class="memitem:af2b5ccda5d7bab2bdb61a01b75360379"><td class="memItemLeft" align="right" valign="top"><a id="af2b5ccda5d7bab2bdb61a01b75360379"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>isSatisfied</b> (Arena&lt;&gt; alloc, size_t d) const -&gt; bool</td></tr>
 <tr class="separator:af2b5ccda5d7bab2bdb61a01b75360379"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0ab4a4cffc347cc61048cab40760093f"><td class="memItemLeft" align="right" valign="top"><a id="a0ab4a4cffc347cc61048cab40760093f"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>replaceInput</b> (NotNull&lt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> &gt; newIn) -&gt; <a class="el" href="classpoly_1_1poly_1_1Dependence.html">Dependence</a></td></tr>
-<tr class="separator:a0ab4a4cffc347cc61048cab40760093f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa157148f0bc18352c92a029f6663f43b"><td class="memItemLeft" align="right" valign="top"><a id="aa157148f0bc18352c92a029f6663f43b"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>replaceOutput</b> (NotNull&lt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> &gt; newOut) -&gt; <a class="el" href="classpoly_1_1poly_1_1Dependence.html">Dependence</a></td></tr>
-<tr class="separator:aa157148f0bc18352c92a029f6663f43b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
@@ -328,25 +298,41 @@ static auto&#160;</td><td class="memItemRight" valign="bottom"><b>checkDirection
 <tr class="memitem:ac70c3a595a871148b89be47b93a07c97"><td class="memItemLeft" align="right" valign="top"><a id="ac70c3a595a871148b89be47b93a07c97"></a>
 static auto&#160;</td><td class="memItemRight" valign="bottom"><b>checkDirection</b> (Arena&lt;&gt; alloc, const std::array&lt; NotNull&lt; math::Simplex &gt;, 2 &gt; &amp;p, NotNull&lt; const <a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> &gt; x, NotNull&lt; const <a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> &gt; y, unsigned numLambda, Col nonTimeDim) -&gt; bool</td></tr>
 <tr class="separator:ac70c3a595a871148b89be47b93a07c97"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6da5bcc3c5956bfcd9474e60147bddec"><td class="memItemLeft" align="right" valign="top"><a id="a6da5bcc3c5956bfcd9474e60147bddec"></a>
-static void&#160;</td><td class="memItemRight" valign="bottom"><b>check</b> (Arena&lt;&gt; *alloc, NotNull&lt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> &gt; x, NotNull&lt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> &gt; y)</td></tr>
-<tr class="separator:a6da5bcc3c5956bfcd9474e60147bddec"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aacf12b4b323895618f37329385e9c980"><td class="memItemLeft" align="right" valign="top"><a id="aacf12b4b323895618f37329385e9c980"></a>
-static void&#160;</td><td class="memItemRight" valign="bottom"><b>copyDependencies</b> (Arena&lt;&gt; *alloc, <a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> *src, <a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> *dst)</td></tr>
-<tr class="separator:aacf12b4b323895618f37329385e9c980"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad2cf140a69c3d330ead3fe6471ebdaef"><td class="memItemLeft" align="right" valign="top"><a id="ad2cf140a69c3d330ead3fe6471ebdaef"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>reload</b> (Arena&lt;&gt; *alloc, NotNull&lt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> &gt; store) -&gt; NotNull&lt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> &gt;</td></tr>
-<tr class="separator:ad2cf140a69c3d330ead3fe6471ebdaef"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="friends"></a>
-Friends</h2></td></tr>
-<tr class="memitem:a1a8f7a1c387c26e22d8cf5723a4a72b2"><td class="memItemLeft" align="right" valign="top"><a id="a1a8f7a1c387c26e22d8cf5723a4a72b2"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> (llvm::raw_ostream &amp;os, const <a class="el" href="classpoly_1_1poly_1_1Dependence.html">Dependence</a> &amp;d) -&gt; llvm::raw_ostream &amp;</td></tr>
-<tr class="separator:a1a8f7a1c387c26e22d8cf5723a4a72b2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p><a class="el" href="classpoly_1_1poly_1_1Dependence.html">Dependence</a> Represents a dependence relationship between two memory accesses. It contains simplices representing constraints that affine schedules are allowed to take. </p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
+<a id="ad61450183ac23f948dd96d0b8090bc00"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad61450183ac23f948dd96d0b8090bc00">&#9670;&nbsp;</a></span>setSatLevelLP()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">constexpr void poly::poly::Dependence::setSatLevelLP </td>
+          <td>(</td>
+          <td class="paramtype">uint8_t&#160;</td>
+          <td class="paramname"><em>d</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">constexpr</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>stashSatLevel() -&gt; <a class="el" href="classpoly_1_1poly_1_1Dependence.html">Dependence</a> &amp; This is used to track sat levels in the LP recursion. Recursion works from outer -&gt; inner most loop. On each level of the recursion, we</p><ol type="1">
+<li>evaluate the level.</li>
+<li>if we succeed w/out deps, update sat levels and go a level deeper.</li>
+<li></li>
+</ol>
+
+</div>
+</div>
 <a id="a7e7c6210c36668e3d1b290e4eed76955"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a7e7c6210c36668e3d1b290e4eed76955">&#9670;&nbsp;</a></span>stashedPreventsReordering()</h2>
 
@@ -371,37 +357,6 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> 
 </table>
 </div><div class="memdoc">
 <p>checks the stash is active at <code>depth</code>, and that the stash does prevent reordering. </p>
-
-</div>
-</div>
-<a id="a5c78100d24d5241d7514bf702e30a666"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a5c78100d24d5241d7514bf702e30a666">&#9670;&nbsp;</a></span>stashSatLevel()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">constexpr auto poly::poly::Dependence::stashSatLevel </td>
-          <td>(</td>
-          <td class="paramtype">unsigned&#160;</td>
-          <td class="paramname"><em>depth</em></td><td>)</td>
-          <td> -&gt; <a class="el" href="classpoly_1_1poly_1_1Dependence.html">Dependence</a> * </td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">constexpr</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-<p><a class="el" href="classpoly_1_1poly_1_1Dependence.html#a5c78100d24d5241d7514bf702e30a666">stashSatLevel()</a> -&gt; <a class="el" href="classpoly_1_1poly_1_1Dependence.html">Dependence</a> &amp; This is used to track sat levels in the LP recursion. Recursion works from outer -&gt; inner most loop. On each level of the recursion, we</p><ol type="1">
-<li>evaluate the level.</li>
-<li>if we succeed w/out deps, update sat levels and go a level deeper.</li>
-<li></li>
-</ol>
 
 </div>
 </div>
