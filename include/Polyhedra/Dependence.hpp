@@ -37,16 +37,15 @@ private:
   // // was because of offsets when solving the linear program (value =
   // // 1).
   // std::array<uint8_t, 7> satLvl{255, 255, 255, 255, 255, 255, 255};
-  uint8_t satLvl;
-  uint8_t satLvlBackup;
+  std::array<uint8_t, 2> satLvl;
   bool forward;
-
 
   constexpr auto getSimplexPair() -> std::array<NotNull<math::Simplex>, 2> {
     return {dependenceSatisfaction, dependenceBounding};
   }
 
 public:
+  friend class Dependencies;
   // constexpr auto getNextInput() -> Dependence * { return nextInput; }
   // [[nodiscard]] constexpr auto getNextInput() const -> const Dependence * {
   //   return nextInput;
@@ -78,8 +77,8 @@ public:
       dependenceBounding(depSatBound[1]), in(i), out(o), forward(fwd) {}
   constexpr Dependence(NotNull<DepPoly> poly,
                        std::array<NotNull<math::Simplex>, 2> depSatBound,
-                       NotNull<IR::Addr> i, NotNull<IR::Addr> o, uint8_t sL,
-                       bool fwd)
+                       NotNull<IR::Addr> i, NotNull<IR::Addr> o,
+                       std::array<uint8_t, 2> sL, bool fwd)
     : depPoly(poly), dependenceSatisfaction(depSatBound[0]),
       dependenceBounding(depSatBound[1]), in(i), out(o), satLvl(sL),
       forward(fwd) {}
@@ -106,11 +105,11 @@ public:
   // #endif
   //   }
   // Set sat level and flag as indicating that this loop cannot be parallelized
-  constexpr void setSatLevelLP(uint8_t d) { satLvl = uint8_t(128) | d; }
+  constexpr void setSatLevelLP(uint8_t d) { satLvl[0] = uint8_t(128) | d; }
   // Set sat level, but allow parallelizing this loop
-  constexpr void setSatLevelParallel(uint8_t d) { satLvl = d; }
+  constexpr void setSatLevelParallel(uint8_t d) { satLvl[0] = d; }
   [[nodiscard]] constexpr auto satLevel() const -> uint8_t {
-    return satLvl & uint8_t(127);
+    return satLvl[0] & uint8_t(127);
   }
   [[nodiscard]] constexpr auto isSat(unsigned depth) const -> bool {
     invariant(depth <= 127);
@@ -122,7 +121,7 @@ public:
   }
   /// if true, then it's independent conditioned on the phis...
   [[nodiscard]] constexpr auto isCondIndep() const -> bool {
-    return (satLvl & uint8_t(128)) == uint8_t(0);
+    return (satLvl[0] & uint8_t(128)) == uint8_t(0);
   }
   [[nodiscard]] static constexpr auto preventsReordering(uint8_t depth)
     -> bool {
@@ -130,14 +129,14 @@ public:
   }
   // prevents reordering satisfied level if `true`
   [[nodiscard]] constexpr auto preventsReordering() const -> bool {
-    return preventsReordering(satLvl);
+    return preventsReordering(satLvl[0]);
   }
   /// checks the stash is active at `depth`, and that the stash
   /// does prevent reordering.
   [[nodiscard]] constexpr auto stashedPreventsReordering(unsigned depth) const
     -> bool {
     invariant(depth <= 127);
-    return preventsReordering(satLvlBackup) && satLvlBackup > depth;
+    return preventsReordering(satLvl[1]) && satLvl[1] > depth;
   }
   [[nodiscard]] constexpr auto getArrayPointer() -> const llvm::SCEV * {
     return in->getArrayPointer();
@@ -174,7 +173,7 @@ public:
     invariant(inPhi.numRow(), outPhi.numRow());
     if (depPoly->checkSat(*alloc, inLoop, inOff, inPhi, outLoop, outOff,
                           outPhi))
-      satLvl = uint8_t(inPhi.numRow() - 1);
+      satLvl[0] = uint8_t(inPhi.numRow() - 1);
   }
   // constexpr auto addEdge(size_t i) -> Dependence & {
   //   in->addEdgeOut(i);
@@ -446,96 +445,6 @@ public:
     sch[2 + d + numLoopsX] = 1;
     return dependenceSatisfaction->satisfiable(alloc, sch, numLambda);
   }
-  static auto checkDirection(Arena<> alloc,
-                             const std::array<NotNull<math::Simplex>, 2> &p,
-                             NotNull<const IR::Addr> x,
-                             NotNull<const IR::Addr> y,
-                             NotNull<const AffineSchedule> xSchedule,
-                             NotNull<const AffineSchedule> ySchedule,
-                             unsigned numLambda, Col nonTimeDim) -> bool {
-    const auto &[fxy, fyx] = p;
-    unsigned numLoopsX = x->getCurrentDepth(), numLoopsY = y->getCurrentDepth(),
-             numLoopsTotal = numLoopsX + numLoopsY;
-#ifndef NDEBUG
-    unsigned numLoopsCommon = std::min(numLoopsX, numLoopsY);
-#endif
-    SquarePtrMatrix<int64_t> xPhi = xSchedule->getPhi();
-    SquarePtrMatrix<int64_t> yPhi = ySchedule->getPhi();
-    PtrVector<int64_t> xOffOmega = xSchedule->getOffsetOmega();
-    PtrVector<int64_t> yOffOmega = ySchedule->getOffsetOmega();
-    PtrVector<int64_t> xFusOmega = xSchedule->getFusionOmega();
-    PtrVector<int64_t> yFusOmega = ySchedule->getFusionOmega();
-    MutPtrVector<int64_t> sch{math::vector<int64_t>(&alloc, numLoopsTotal + 2)};
-    // i iterates from outer-most to inner most common loop
-    for (ptrdiff_t i = 0; /*i <= numLoopsCommon*/; ++i) {
-      if (yFusOmega[i] != xFusOmega[i]) return yFusOmega[i] > xFusOmega[i];
-      // we should not be able to reach `numLoopsCommon`
-      // because at the very latest, this last schedule value
-      // should be different, because either:
-      // if (numLoopsX == numLoopsY){
-      //   we're at the inner most loop, where one of the instructions
-      //   must have appeared before the other.
-      // } else {
-      //   the loop nests differ in depth, in which case the deeper
-      //   loop must appear either above or below the instructions
-      //   present at that level
-      // }
-      assert(i != numLoopsCommon);
-      sch[0] = xOffOmega[i];
-      sch[1] = yOffOmega[i];
-      sch[_(2, 2 + numLoopsX)] << xPhi(last - i, _);
-      sch[_(2 + numLoopsX, 2 + numLoopsTotal)] << yPhi(last - i, _);
-      if (fxy->unSatisfiableZeroRem(alloc, sch, numLambda,
-                                    unsigned(nonTimeDim))) {
-        assert(!fyx->unSatisfiableZeroRem(alloc, sch, numLambda,
-                                          unsigned(nonTimeDim)));
-        return false;
-      }
-      if (fyx->unSatisfiableZeroRem(alloc, sch, numLambda,
-                                    unsigned(nonTimeDim)))
-        return true;
-    }
-    // assert(false);
-    // return false;
-  }
-  // returns `true` if forward, x->y
-  static auto checkDirection(Arena<> alloc,
-                             const std::array<NotNull<math::Simplex>, 2> &p,
-                             NotNull<const IR::Addr> x,
-                             NotNull<const IR::Addr> y, unsigned numLambda,
-                             Col nonTimeDim) -> bool {
-    const auto &[fxy, fyx] = p;
-    unsigned numLoopsX = x->getCurrentDepth(), nTD = unsigned(nonTimeDim);
-#ifndef NDEBUG
-    const unsigned numLoopsCommon = std::min(numLoopsX, y->getCurrentDepth());
-#endif
-    PtrVector<int64_t> xFusOmega = x->getFusionOmega();
-    PtrVector<int64_t> yFusOmega = y->getFusionOmega();
-    // i iterates from outer-most to inner most common loop
-    for (ptrdiff_t i = 0; /*i <= numLoopsCommon*/; ++i) {
-      if (yFusOmega[i] != xFusOmega[i]) return yFusOmega[i] > xFusOmega[i];
-      // we should not be able to reach `numLoopsCommon`
-      // because at the very latest, this last schedule value
-      // should be different, because either:
-      // if (numLoopsX == numLoopsY){
-      //   we're at the inner most loop, where one of the instructions
-      //   must have appeared before the other.
-      // } else {
-      //   the loop nests differ in depth, in which case the deeper
-      //   loop must appear either above or below the instructions
-      //   present at that level
-      // }
-      assert(i < numLoopsCommon);
-      std::array<ptrdiff_t, 2> inds{2 + i, 2 + i + numLoopsX};
-      if (fxy->unSatisfiableZeroRem(alloc, numLambda, inds, nTD)) {
-        assert(!fyx->unSatisfiableZeroRem(alloc, numLambda, inds, nTD));
-        return false;
-      }
-      if (fyx->unSatisfiableZeroRem(alloc, numLambda, inds, nTD)) return true;
-    }
-    invariant(false);
-    return false;
-  }
 
   struct Active {
     unsigned depth;
@@ -779,15 +688,134 @@ class Dependencies {
               dep0->getNumPhiCoefficients());
     in->addEdgeIn(dep1);
   }
+  static auto checkDirection(Arena<> alloc,
+                             const std::array<NotNull<math::Simplex>, 2> &p,
+                             NotNull<const IR::Addr> x,
+                             NotNull<const IR::Addr> y,
+                             NotNull<const AffineSchedule> xSchedule,
+                             NotNull<const AffineSchedule> ySchedule,
+                             unsigned numLambda, Col nonTimeDim) -> bool {
+    const auto &[fxy, fyx] = p;
+    unsigned numLoopsX = x->getCurrentDepth(), numLoopsY = y->getCurrentDepth(),
+             numLoopsTotal = numLoopsX + numLoopsY;
+#ifndef NDEBUG
+    unsigned numLoopsCommon = std::min(numLoopsX, numLoopsY);
+#endif
+    SquarePtrMatrix<int64_t> xPhi = xSchedule->getPhi();
+    SquarePtrMatrix<int64_t> yPhi = ySchedule->getPhi();
+    PtrVector<int64_t> xOffOmega = xSchedule->getOffsetOmega();
+    PtrVector<int64_t> yOffOmega = ySchedule->getOffsetOmega();
+    PtrVector<int64_t> xFusOmega = xSchedule->getFusionOmega();
+    PtrVector<int64_t> yFusOmega = ySchedule->getFusionOmega();
+    MutPtrVector<int64_t> sch{math::vector<int64_t>(&alloc, numLoopsTotal + 2)};
+    // i iterates from outer-most to inner most common loop
+    for (ptrdiff_t i = 0; /*i <= numLoopsCommon*/; ++i) {
+      if (yFusOmega[i] != xFusOmega[i]) return yFusOmega[i] > xFusOmega[i];
+      // we should not be able to reach `numLoopsCommon`
+      // because at the very latest, this last schedule value
+      // should be different, because either:
+      // if (numLoopsX == numLoopsY){
+      //   we're at the inner most loop, where one of the instructions
+      //   must have appeared before the other.
+      // } else {
+      //   the loop nests differ in depth, in which case the deeper
+      //   loop must appear either above or below the instructions
+      //   present at that level
+      // }
+      assert(i != numLoopsCommon);
+      sch[0] = xOffOmega[i];
+      sch[1] = yOffOmega[i];
+      sch[_(2, 2 + numLoopsX)] << xPhi(last - i, _);
+      sch[_(2 + numLoopsX, 2 + numLoopsTotal)] << yPhi(last - i, _);
+      if (fxy->unSatisfiableZeroRem(alloc, sch, numLambda,
+                                    unsigned(nonTimeDim))) {
+        assert(!fyx->unSatisfiableZeroRem(alloc, sch, numLambda,
+                                          unsigned(nonTimeDim)));
+        return false;
+      }
+      if (fyx->unSatisfiableZeroRem(alloc, sch, numLambda,
+                                    unsigned(nonTimeDim)))
+        return true;
+    }
+    // assert(false);
+    // return false;
+  }
+  // returns `true` if forward, x->y
+  static auto checkDirection(Arena<> alloc,
+                             const std::array<NotNull<math::Simplex>, 2> &p,
+                             NotNull<const IR::Addr> x,
+                             NotNull<const IR::Addr> y, unsigned numLambda,
+                             Col nonTimeDim) -> bool {
+    const auto &[fxy, fyx] = p;
+    unsigned numLoopsX = x->getCurrentDepth(), nTD = unsigned(nonTimeDim);
+#ifndef NDEBUG
+    const unsigned numLoopsCommon = std::min(numLoopsX, y->getCurrentDepth());
+#endif
+    PtrVector<int64_t> xFusOmega = x->getFusionOmega();
+    PtrVector<int64_t> yFusOmega = y->getFusionOmega();
+    // i iterates from outer-most to inner most common loop
+    for (ptrdiff_t i = 0; /*i <= numLoopsCommon*/; ++i) {
+      if (yFusOmega[i] != xFusOmega[i]) return yFusOmega[i] > xFusOmega[i];
+      // we should not be able to reach `numLoopsCommon`
+      // because at the very latest, this last schedule value
+      // should be different, because either:
+      // if (numLoopsX == numLoopsY){
+      //   we're at the inner most loop, where one of the instructions
+      //   must have appeared before the other.
+      // } else {
+      //   the loop nests differ in depth, in which case the deeper
+      //   loop must appear either above or below the instructions
+      //   present at that level
+      // }
+      assert(i < numLoopsCommon);
+      std::array<ptrdiff_t, 2> inds{2 + i, 2 + i + numLoopsX};
+      if (fxy->unSatisfiableZeroRem(alloc, numLambda, inds, nTD)) {
+        assert(!fyx->unSatisfiableZeroRem(alloc, numLambda, inds, nTD));
+        return false;
+      }
+      if (fyx->unSatisfiableZeroRem(alloc, numLambda, inds, nTD)) return true;
+    }
+    invariant(false);
+    return false;
+  }
+  constexpr auto get(ID i) -> Dependence {
+    return Dependence{depPoly(i),  depSatBnd(i), input(i), output(i),
+                      satLevel(i), isForward(i)
+
+    };
+  }
+  constexpr void set(ID i, Dependence d) {
+    output(i) = d.output();
+    input(i) = d.input();
+    nextOut(i) = d.output()->getEdgeOut();
+    nextIn(i) = d.input()->getEdgeIn();
+    depSatBnd(i) = d.getSimplexPair();
+    depPoly(i) = d.getDepPoly();
+    satLevel(i) = d.satLvl;
+    isForward(i) = d.isForward();
+  }
+
+  auto push_pack(Arena<> *alloc, Dependence d) -> void * {
+    void *ret = nullptr;
+    if (numData == getCapacity()) {
+      auto newCapacity = getCapacity() * 2;
+      auto newData = alloc->allocate<char>(memNeeded(newCapacity));
+      std::memcpy(newData, data, memNeeded(numData));
+      ret = std::exchange(data, newData);
+    }
+    set(ID{numData++}, d);
+    return ret;
+  }
+  [[nodiscard]] constexpr auto getCapacity() const noexcept -> unsigned {
+    return std::bit_ceil(numData);
+  }
 
 public:
   using ID = Dependence::ID;
   Dependencies(Arena<> *alloc) : data(alloc->allocate<char>(memNeeded(64))) {}
   Dependencies(const Dependencies &) = default; // or delete?
   [[nodiscard]] constexpr auto size() const noexcept { return numData; }
-  [[nodiscard]] constexpr auto getCapacity() const noexcept -> unsigned {
-    return std::bit_ceil(numData);
-  }
+
   // field order:
   // AddrOut
   // AddrIn
@@ -806,7 +834,7 @@ public:
     void *p = data + sizeof(IR::Addr *) * getCapacity();
     return {static_cast<IR::Addr **>(p), numData};
   }
-  constexpr auto output(ID i) -> NotNull<IR::Addr> {
+  constexpr auto output(ID i) -> IR::Addr *& {
     void *p = data + sizeof(IR::Addr *) * i.id;
     return *static_cast<IR::Addr **>(p);
   }
@@ -814,7 +842,7 @@ public:
     const void *p = data + sizeof(IR::Addr *) * i.id;
     return *static_cast<IR::Addr *const *>(p);
   }
-  constexpr auto input(ID i) -> NotNull<IR::Addr> {
+  constexpr auto input(ID i) -> IR::Addr *& {
     unsigned cap = getCapacity();
     void *p = data + sizeof(IR::Addr *) * (i.id + cap);
     return *static_cast<IR::Addr **>(p);
@@ -824,56 +852,62 @@ public:
     const void *p = data + sizeof(IR::Addr *) * (i.id + cap);
     return *static_cast<IR::Addr *const *>(p);
   }
-  constexpr auto nextOut(ID i) -> int32_t {
+  constexpr auto nextOut(ID i) -> int32_t & {
     unsigned cap = getCapacity();
     void *p = data + sizeof(int32_t) * i.id + sizeof(IR::Addr *) * 2 * cap;
     return *static_cast<int32_t *>(p);
   }
-  constexpr auto nextIn(ID i) -> int32_t {
+  constexpr auto nextIn(ID i) -> int32_t & {
     unsigned cap = getCapacity();
     void *p = data + sizeof(int32_t) * i.id +
               (sizeof(IR::Addr *) * 2 + sizeof(int32_t)) * cap;
     return *static_cast<int32_t *>(p);
   }
-  constexpr auto depSatBnd(ID i) -> std::array<NotNull<math::Simplex>, 2> {
+  constexpr auto depSatBnd(ID i) -> std::array<NotNull<math::Simplex>, 2> & {
     unsigned cap = getCapacity();
     void *p = data + 2 * sizeof(math::Simplex *) * i.id +
               (sizeof(IR::Addr *) + sizeof(int32_t)) * 2 * cap;
     return *static_cast<std::array<NotNull<math::Simplex>, 2> *>(p);
   }
-  constexpr auto depPoly(ID i) -> NotNull<DepPoly> {
+  constexpr auto depPoly(ID i) -> DepPoly *& {
     unsigned cap = getCapacity();
     void *p = data + sizeof(DepPoly *) * i.id +
               (sizeof(IR::Addr *) + sizeof(int32_t) + sizeof(math::Simplex *)) *
                 2 * cap;
     return *static_cast<DepPoly **>(p);
   }
-  constexpr auto satLevel(ID i) -> uint8_t & {
+  constexpr auto satLevel(ID i) -> std::array<uint8_t, 2> & {
     unsigned cap = getCapacity();
     void *p =
-      data + sizeof(uint8_t) * i.id +
+      data + sizeof(std::array<uint8_t, 2>) * i.id +
       ((sizeof(IR::Addr *) + sizeof(int32_t) + sizeof(math::Simplex *)) * 2 +
        sizeof(DepPoly *)) *
         cap;
-    return *static_cast<uint8_t *>(p);
+    return *static_cast<std::array<uint8_t, 2> *>(p);
   }
 
-  [[nodiscard]] constexpr auto isForward(ID i) const noexcept -> bool {
+  [[nodiscard]] constexpr auto isForward(ID i) const noexcept -> bool & {
     unsigned cap = getCapacity();
-    void *p = data + sizeof(bool) * i.id +
-              ((sizeof(IR::Addr *) + sizeof(int32_t) + sizeof(math::Simplex *) +
-                sizeof(uint8_t)) *
-                 2 +
-               sizeof(DepPoly *)) *
-                cap;
+    void *p =
+      data + sizeof(bool) * i.id +
+      ((sizeof(IR::Addr *) + sizeof(int32_t) + sizeof(math::Simplex *)) * 2 +
+       sizeof(std::array<uint8_t, 2>) + sizeof(DepPoly *)) *
+        cap;
     return *static_cast<bool *>(p);
   }
-  constexpr auto operator[](ID i) {
-    return Dependence{depPoly(i),  depSatBnd(i), input(i), output(i),
-                      satLevel(i), isForward(i)
 
-    };
-  }
+  class Ref {
+    Dependencies *deps;
+    ID i;
+
+  public:
+    Ref(Dependencies *deps, ID i) : deps(deps), i(i) {}
+    operator Dependence() const { return deps->get(i); }
+    auto operator=(Dependence d) -> Ref & {
+      deps->set(i, d);
+      return *this;
+    }
+  };
 
   static void check(Arena<> *alloc, NotNull<IR::Addr> x, NotNull<IR::Addr> y) {
     // TODO: implement gcd test
