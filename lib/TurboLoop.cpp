@@ -1,7 +1,4 @@
 #include "../include/TurboLoop.hpp"
-#include "../include/CostModeling.hpp"
-#include "../include/LoopBlock.hpp"
-#include "../include/LoopForest.hpp"
 #include <cstdio>
 #include <llvm/ADT/APInt.h>
 #include <llvm/ADT/DepthFirstIterator.h>
@@ -50,82 +47,19 @@
 // directly leads to another, which would be important for whether two loops may
 // be fused.
 
-auto __attribute__((visibility("default")))
-TurboLoopPass::run(llvm::Function &F, llvm::FunctionAnalysisManager &FAM)
-  -> llvm::PreservedAnalyses {
-  // llvm::LoopNest LA = FAM.getResult<llvm::LoopNestAnalysis>(F);
-  // llvm::AssumptionCache &AC = FAM.getResult<llvm::AssumptionAnalysis>(F);
-  // llvm::DominatorTree &DT = FAM.getResult<llvm::DominatorTreeAnalysis>(F);
-  // TLI = &FAM.getResult<llvm::TargetLibraryAnalysis>(F);
-  TTI = &FAM.getResult<llvm::TargetIRAnalysis>(F);
-  LI = &FAM.getResult<llvm::LoopAnalysis>(F);
-  SE = &FAM.getResult<llvm::ScalarEvolutionAnalysis>(F);
-  ORE = &FAM.getResult<llvm::OptimizationRemarkEmitterAnalysis>(F);
-  if (!ORE->enabled()) ORE = nullptr; // cheaper check
-  if (ORE) {
-    // llvm::OptimizationRemarkAnalysis analysis{remarkAnalysis("RegisterCount",
-    // *LI->begin())}; ORE->emit(analysis << "There are
-    // "<<TTI->getNumberOfRegisters(0)<<" scalar registers");
-    llvm::SmallString<32> str = llvm::formatv("there are {0} scalar registers",
-                                              TTI->getNumberOfRegisters(0));
+class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
+public:
+  TurboLoopPass() = default;
+  TurboLoopPass(const TurboLoopPass &) = delete;
+  TurboLoopPass(TurboLoopPass &&) = default;
 
-    remark("ScalarRegisterCount", *LI->begin(), str);
-    str = llvm::formatv("there are {0} vector registers",
-                        TTI->getNumberOfRegisters(1));
-    remark("VectorRegisterCount", *LI->begin(), str);
+  static auto __attribute__((visibility("default")))
+  run(llvm::Function &F, llvm::FunctionAnalysisManager &FAM)
+    -> llvm::PreservedAnalyses {
+    poly::TurboLoop tl{F, FAM};
+    return tl.run();
   }
-  // Builds the loopForest, constructing predicate chains and loop nests
-  initializeLoopForest();
-  if (loopForests.empty()) return llvm::PreservedAnalyses::all();
-
-  // first, we try and parse the function to find sets of loop nests
-  // then we search for sets of fusile loops
-
-  // fills array refs
-  parseNest();
-  bool changed = false;
-  // TODO: fill schedules
-  for (auto forest : loopForests) {
-    fillLoopBlock(*forest);
-    if (ORE) [[unlikely]] {
-      llvm::SmallVector<char, 512> str;
-      llvm::raw_svector_ostream os(str);
-      // loopBlock.initialSummary(os << "Initial summary:") << "\n";
-      loopBlock.summarizeMemoryAccesses(os) << "\n";
-      remark("LinearProgram LoopSet", forest->getOuterLoop(), os.str());
-    }
-    std::optional<MemoryAccess::BitSet> optDeps = loopBlock.optimize();
-    if (ORE) [[unlikely]] {
-      if (optDeps) {
-        llvm::SmallVector<char, 512> str;
-        llvm::raw_svector_ostream os(str);
-        os << "Solved linear program:" << loopBlock << "\n";
-        remark("LinearProgramSuccess", forest->getOuterLoop(), os.str());
-      } else {
-        remark("LinearProgramFailure", forest->getOuterLoop(),
-               "Failed to solve linear program");
-      }
-    }
-    CostModeling::LoopTreeSchedule *LTS = nullptr;
-    if (optDeps) {
-      changed = true;
-      LTS = CostModeling::LoopTreeSchedule::init(allocator, loopBlock);
-    }
-    // NOTE: we're not actually changing anything yet
-    if (ORE) [[unlikely]] {
-      if (optDeps) {
-        llvm::SmallVector<char, 512> str;
-        str.clear();
-        llvm::raw_svector_ostream os(str);
-        LTS->printDotFile(allocator, os);
-        remark("DotFile", forest->getOuterLoop(), os.str());
-      }
-    }
-    loopBlock.clear();
-  }
-  return changed ? llvm::PreservedAnalyses::none()
-                 : llvm::PreservedAnalyses::all();
-}
+};
 auto __attribute__((visibility("default")))
 PipelineParsingCB(llvm::StringRef Name, llvm::FunctionPassManager &FPM,
                   llvm::ArrayRef<llvm::PassBuilder::PipelineElement>) -> bool {

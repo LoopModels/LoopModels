@@ -1,12 +1,14 @@
-#include "Math/Array.hpp"
-#include "Math/Comparators.hpp"
-#include "Math/Math.hpp"
-#include "MatrixStringParse.hpp"
+#include "Polyhedra/Comparators.hpp"
+#include <Math/Array.hpp>
+#include <Math/Math.hpp>
+#include <Utilities/MatrixStringParse.hpp>
 #include <cstdint>
 #include <gtest/gtest.h>
 #include <iostream>
 #include <llvm/ADT/SmallVector.h>
 #include <memory>
+using namespace poly::math;
+using poly::utils::operator""_mat;
 
 // NOLINTNEXTLINE(modernize-use-trailing-return-type)
 TEST(BasicCompare, BasicAssertions) {
@@ -21,8 +23,8 @@ TEST(BasicCompare, BasicAssertions) {
   //    0  0 -1 1 0
   //    0  0 -1 0 1 ]
   IntMatrix A = "[-1 0 1 0 0; 0 -1 1 0 0; 0 0 -1 1 0; 0 0 -1 0 1]"_mat;
-  auto comp = comparator::linear(std::allocator<int64_t>{}, A,
-                                 EmptyMatrix<int64_t>{}, false);
+  auto comp = poly::comparator::linear(std::allocator<int64_t>{}, A,
+                                       EmptyMatrix<int64_t>{}, false);
   Vector<int64_t> query{{-1, 0, 0, 1, 0}};
 
   EXPECT_TRUE(comp.greaterEqual(query));
@@ -32,7 +34,7 @@ TEST(BasicCompare, BasicAssertions) {
   //  we add x >= a; b >= a
   IntMatrix A2 = "[-1 0 1 0 0; 0 -1 1 0 0; 0 0 -1 1 0; 0 0 "
                  "-1 0 1; -1 1 0 0 0; -1 0 0 1 0]"_mat;
-  auto comp2 = comparator::LinearSymbolicComparator::construct(A2, false);
+  auto comp2 = poly::comparator::LinearSymbolicComparator::construct(A2, false);
   Vector<int64_t> query2{{-1, 0, 0, 0, 1}};
   Vector<int64_t> query3{{0, 0, 0, -1, 1}};
   EXPECT_TRUE(comp2.greaterEqual(query2));
@@ -43,7 +45,7 @@ TEST(BasicCompare, BasicAssertions) {
   // Vector representation of the diagonal matrix will become [1, ... , 1, 2]
   IntMatrix A3 = "[-1 0 1 0 0; 0 -1 1 0 0; 0 0 -1 1 0; 0 0 "
                  "-1 0 1; -1 1 0 0 0; -2 -1 0 1 0]"_mat;
-  auto comp3 = comparator::LinearSymbolicComparator::construct(A3, false);
+  auto comp3 = poly::comparator::LinearSymbolicComparator::construct(A3, false);
   // Vector<int64_t> query2{-1, 0, 0, 1, 0};
   // Vector<int64_t> query3{0, 0, 0, -1, 1};
   Vector<int64_t> query4{{-3, 0, 0, 1, 0}}; // x >= 3a is expected to be true
@@ -94,7 +96,7 @@ TEST(V2Matrix, BasicAssertions) {
   // 0 0 0 -1 0; 0 0 1 0 0 0 0 0 0 0 0 1; 0 0 0 1 0 0 0 0 0 0 0 0; 0 0 0 0 1 0
   // 0 0 0 0 -1 0; 0 0 0 0 0 1 0 0 0 0 0 -1; 0 0 0 0 0 0 1 0 0 0 1 1; 0 0 0 0
   // 0 0 0 1 0 0 -1 0; 0 0 0 0 0 0 0 0 1 0 0 1; 0 0 0 0 0 0 0 0 0 1 0 0]"_mat;
-  auto comp = comparator::LinearSymbolicComparator::construct(A, false);
+  auto comp = poly::comparator::LinearSymbolicComparator::construct(A, false);
   auto [H, U] = NormalForm::hermite(std::move(A));
   IntMatrix Ht = H.transpose();
   // llvm::errs() << "Ht matrix:" << Ht << "\n";
@@ -116,7 +118,7 @@ TEST(V2Matrix, BasicAssertions) {
 // NOLINTNEXTLINE(modernize-use-trailing-return-type)
 TEST(ConstantTest, BasicAssertions) {
   auto A{"[0 1 0; -1 1 -1; 0 0 1; -2 1 -1; 1 0 1]"_mat};
-  auto comp = comparator::LinearSymbolicComparator::construct(A, true);
+  auto comp = poly::comparator::LinearSymbolicComparator::construct(A, true);
   Vector<int64_t> query0{{-1, 0, 0}};
   Vector<int64_t> query1{{1, 0, 0}};
   EXPECT_FALSE(comp.isEmpty());
@@ -128,7 +130,7 @@ TEST(ConstantTest, BasicAssertions) {
 // NOLINTNEXTLINE(modernize-use-trailing-return-type)
 TEST(ConstantTest2, BasicAssertions) {
   auto A{"[0 1 0; -1 1 -1; 0 0 1; -2 1 -1; 1 0 1]"_mat};
-  auto comp = comparator::LinearSymbolicComparator::construct(A, false);
+  auto comp = poly::comparator::LinearSymbolicComparator::construct(A, false);
   Vector<int64_t> query0{{-1, 0, 0}};
   Vector<int64_t> query1{{1, 0, 0}};
   EXPECT_FALSE(comp.greaterEqual(query0));
@@ -141,7 +143,7 @@ TEST(EqTest, BasicAssertions) {
     "[-2 1 0 -1 0 0 0; 0 0 0 1 0 0 0; -2 0 1 0 -1 0 0; 0 0 0 0 1 0 0; -2 1 "
     "0 0 0 -1 0; 0 0 0 0 0 1 0; -2 0 1 0 0 0 -1; 0 0 0 0 0 0 1]"_mat};
   IntMatrix E{"[1 0 0 1 0 -1 0; 1 0 0 0 1 0 -1]"_mat};
-  auto comp = comparator::LinearSymbolicComparator::construct(A, E, true);
+  auto comp = poly::comparator::LinearSymbolicComparator::construct(A, E, true);
   Vector<int64_t> diff = A(7, _) - A(3, _);
   EXPECT_FALSE(comp.isEmpty());
   EXPECT_TRUE(comp.greaterEqual(diff));
@@ -161,7 +163,8 @@ TEST(TestEmpty, BasicAssertions) {
   // not Empty
   IntMatrix E1{"[0 0 1 0 -1 0; 0 0 0 1 0 -1]"_mat};
   Vector<int64_t> zeros{unsigned(6), 0};
-  auto compEmpty = comparator::LinearSymbolicComparator::construct(A, E0, true);
+  auto compEmpty =
+    poly::comparator::LinearSymbolicComparator::construct(A, E0, true);
   // contradiction, 0 can't be less than 0
   EXPECT_TRUE(compEmpty.greater(zeros));
   // contradiction, 0 can't be greater than 0
@@ -170,7 +173,7 @@ TEST(TestEmpty, BasicAssertions) {
   EXPECT_TRUE(compEmpty.lessEqual(zeros));
   EXPECT_TRUE(compEmpty.isEmpty());
   auto compNonEmpty =
-    comparator::LinearSymbolicComparator::construct(A, E1, true);
+    poly::comparator::LinearSymbolicComparator::construct(A, E1, true);
   // contradiction, 0 can't be less than 0
   EXPECT_FALSE(compNonEmpty.greater(zeros));
   // contradiction, 0 can't be greater than 0

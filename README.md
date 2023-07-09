@@ -78,3 +78,8 @@ Some options you can try include:
 `cpu-cycles`,`task-clock`,`instructions`,`branch-instructions`,`branch-misses`, `L1-dcache-load-misses`, `L1-dcache-loads`, `cache-misses`, `cache-references`.
 
 Google benchmark calls [pfm_get_os_event_encoding](https://man7.org/linux/man-pages/man3/pfm_get_os_event_encoding.3.html).
+
+`compile_commands.json` generated with [compdb](https://github.com/Sarcasm/compdb):
+```sh
+compdb -p buildclang/nosan/ list > compile_commands.json
+```

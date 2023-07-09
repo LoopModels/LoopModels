@@ -11,7 +11,6 @@
 #include <benchmark/benchmark.h>
 #include <concepts>
 #include <cstdint>
-#include <llvm/ADT/TinyPtrVector.h>
 #include <random>
 
 template <class T, size_t N> class Dual {
@@ -316,9 +315,9 @@ BENCHMARK(BM_expm_dual4x2)->DenseRange(2, 10, 1);
 using D4D2 = Dual<Dual<double, 4>, 2>;
 using SMDD = SquareMatrix<D4D2>;
 #ifdef __INTEL_LLVM_COMPILER
-using SMDD0 = LinAlg::ManagedArray<D4D2, SquareDims, 0>;
+using SMDD0 = math::ManagedArray<D4D2, SquareDims, 0>;
 #else
-using SMDD0 = LinAlg::ManagedArray<D4D2, SquareDims>;
+using SMDD0 = math::ManagedArray<D4D2, SquareDims>;
 #endif
 #pragma omp declare reduction(+ : SMDD0 : omp_out += omp_in)                   \
   initializer(omp_priv = SMDD0{omp_orig.dim(), D4D2{}})

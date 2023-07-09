@@ -1,14 +1,13 @@
 #include "./ArrayReference.hpp"
-#include "./CostModeling.hpp"
 #include "./TestUtilities.hpp"
-#include "DependencyPolyhedra.hpp"
-#include "LoopBlock.hpp"
-#include "Loops.hpp"
-#include "Math/Array.hpp"
-#include "Math/Math.hpp"
-#include "MatrixStringParse.hpp"
-#include "MemoryAccess.hpp"
+#include "IR/CostModeling.hpp"
+#include "LinearProgramming/LoopBlock.hpp"
+#include "Polyhedra/DependencyPolyhedra.hpp"
+#include "Polyhedra/Loops.hpp"
+#include <Math/Array.hpp>
 #include <Math/Comparisons.hpp>
+#include <Math/Math.hpp>
+#include <Utilities/MatrixStringParse.hpp>
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
@@ -21,6 +20,11 @@
 #include <llvm/IR/Type.h>
 #include <llvm/Support/Allocator.h>
 #include <utility>
+
+namespace poly {
+using math::DenseMatrix, math::DenseDims, math::PtrMatrix, math::MutPtrMatrix,
+  math::Vector, math::IntMatrix, math::Col, math::end, math::last, math::_,
+  utils::operator""_mat;
 
 // NOLINTNEXTLINE(modernize-use-trailing-return-type)
 TEST(DependenceTest, BasicAssertions) {
@@ -125,10 +129,10 @@ TEST(DependenceTest, BasicAssertions) {
   Vector<unsigned, 4> schLoad0(3, 0);
   Vector<unsigned, 4> schStore(3, 0);
   schStore[2] = 2;
-  BumpAlloc<> alloc;
-  MemoryAccess *msrc{createMemAccess(alloc, srcA, storeA11, schStore)};
-  MemoryAccess *mtgt01{createMemAccess(alloc, tgtA01, loadA01, schLoad0)};
-  DepPoly *dep0{DepPoly::dependence(alloc, *msrc, *mtgt01)};
+  utils::OwningArena<> alloc;
+  IR::Addr *msrc{createMemAccess(&alloc, srcA, storeA11, schStore)};
+  IR::Addr *mtgt01{createMemAccess(&alloc, tgtA01, loadA01, schLoad0)};
+  poly::DepPoly *dep0{poly::DepPoly::dependence(&alloc, *msrc, *mtgt01)};
   EXPECT_FALSE(dep0->isEmpty());
   dep0->pruneBounds();
   llvm::errs() << "Dep0 = \n" << dep0 << "\n";
@@ -140,8 +144,8 @@ TEST(DependenceTest, BasicAssertions) {
 
   Vector<unsigned, 4> schLoad1(3, 0);
   schLoad1[2] = 1;
-  MemoryAccess *mtgt10{createMemAccess(alloc, tgtA10, loadA10, schLoad1)};
-  DepPoly *dep1{DepPoly::dependence(alloc, *msrc, *mtgt10)};
+  IR::Addr *mtgt10{createMemAccess(&alloc, tgtA10, loadA10, schLoad1)};
+  poly::DepPoly *dep1{poly::DepPoly::dependence(&alloc, *msrc, *mtgt10)};
   EXPECT_FALSE(dep1->isEmpty());
   dep1->pruneBounds();
   llvm::errs() << "Dep1 = \n" << dep1 << "\n";
@@ -150,23 +154,37 @@ TEST(DependenceTest, BasicAssertions) {
   assert(dep1->getNumInequalityConstraints() == 4);
   assert(dep1->getNumEqualityConstraints() == 2);
   // MemoryAccess mtgt1{Atgt1,nullptr,schLoad,true};
-  auto e01 = Dependence::check(alloc, *msrc, *mtgt01);
-  EXPECT_EQ(e01.size(), 1);
-  EXPECT_TRUE(e01.front().isForward());
-  llvm::errs() << e01.front() << "\n";
-  EXPECT_FALSE(allZero(e01.front().getSatConstraints()(last, _)));
-  auto e01rev = Dependence::check(alloc, *mtgt01, *msrc);
-  EXPECT_EQ(e01rev.size(), 1);
-  EXPECT_FALSE(e01rev.front().isForward());
+  poly::Dependence::check(&alloc, *msrc, *mtgt01);
+  EXPECT_EQ(msrc->getEdgeIn(), nullptr);
+  EXPECT_NE(msrc->getEdgeOut(), nullptr);
+  EXPECT_NE(mtgt01->getEdgeIn(), nullptr);
+  EXPECT_EQ(mtgt01->getEdgeOut(), nullptr);
+  EXPECT_EQ(mtgt01->getEdgeIn(), msrc->getEdgeOut());
+  poly::Dependence *e01 = mtgt01->getEdgeIn();
+  llvm::errs() << *e01 << "\n";
+  EXPECT_FALSE(allZero(msrc->getEdgeOut()->getSatConstraints()(last, _)));
+  poly::Dependence::check(&alloc, *mtgt01, *msrc);
+  poly::Dependence *e01rev = msrc->getEdgeIn();
+  EXPECT_NE(e01rev, nullptr);
+  EXPECT_NE(mtgt01->getEdgeOut(), nullptr);
+  EXPECT_EQ(mtgt01->getEdgeOut(), msrc->getEdgeIn());
+  // should still be e0
+  EXPECT_EQ(msrc->getEdgeOut(), e01);
+  EXPECT_EQ(mtgt01->getEdgeIn(), e01);
 
-  auto e10 = Dependence::check(alloc, *msrc, *mtgt10);
-  EXPECT_EQ(e10.size(), 1);
-  EXPECT_TRUE(e10.front().isForward());
-  llvm::errs() << e10.front() << "\n";
-  EXPECT_FALSE(allZero(e10.front().getSatConstraints()(last, _)));
-  auto e10rev = Dependence::check(alloc, *mtgt10, *msrc);
-  EXPECT_EQ(e10rev.size(), 1);
-  EXPECT_FALSE(e10rev.front().isForward());
+  poly::Dependence::check(&alloc, *msrc, *mtgt10);
+  poly::Dependence *e10 = mtgt10->getEdgeIn();
+  EXPECT_EQ(e10, msrc->getEdgeOut());
+  // it should've been pushed to the font of `msrc`'s outputs
+  EXPECT_EQ(e10->getNextOutput(), e01);
+  EXPECT_EQ(mtgt10->getEdgeOut(), nullptr);
+
+  llvm::errs() << *e10 << "\n";
+  EXPECT_FALSE(allZero(e10->getSatConstraints()(last, _)));
+  poly::Dependence::check(&alloc, *mtgt10, *msrc);
+  auto e10rev = msrc->getEdgeIn();
+  EXPECT_EQ(e10rev->getNextInput(), e01rev);
+  EXPECT_EQ(e10rev, mtgt10->getEdgeOut());
 }
 
 // NOLINTNEXTLINE(modernize-use-trailing-return-type)
@@ -238,15 +256,18 @@ TEST(SymmetricIndependentTest, BasicAssertions) {
   Vector<unsigned, 4> schLoad(3, 0);
   Vector<unsigned, 4> schStore(3, 0);
   schStore[2] = 1;
-  BumpAlloc<> alloc;
-  MemoryAccess *msrc{createMemAccess(alloc, srcA, storeAij, schStore)};
-  MemoryAccess *mtgt{createMemAccess(alloc, tgtA, loadAji, schLoad)};
-  DepPoly *dep{DepPoly::dependence(alloc, *msrc, *mtgt)};
+  utils::OwningArena<> alloc;
+  IR::Addr *msrc{createMemAccess(&alloc, srcA, storeAij, schStore)};
+  IR::Addr *mtgt{createMemAccess(&alloc, tgtA, loadAji, schLoad)};
+  poly::DepPoly *dep{poly::DepPoly::dependence(&alloc, *msrc, *mtgt)};
   llvm::errs() << "Dep = \n" << dep << "\n";
   EXPECT_TRUE(dep == nullptr);
   assert(dep == nullptr);
-  auto e = Dependence::check(alloc, *msrc, *mtgt);
-  EXPECT_TRUE(e.empty());
+  poly::Dependence::check(&alloc, *msrc, *mtgt);
+  EXPECT_EQ(msrc->getEdgeOut(), nullptr);
+  EXPECT_EQ(msrc->getEdgeIn(), nullptr);
+  EXPECT_EQ(mtgt->getEdgeOut(), nullptr);
+  EXPECT_EQ(mtgt->getEdgeIn(), nullptr);
 }
 
 // NOLINTNEXTLINE(modernize-use-trailing-return-type)
@@ -320,13 +341,16 @@ TEST(RankDeficientLoad, BasicAssertions) {
   Vector<unsigned, 4> schLoad(2 + 1, 0);
   Vector<unsigned, 4> schStore(2 + 1, 0);
   schStore[2] = 1;
-  BumpAlloc<> alloc;
-  MemoryAccess *msrc{createMemAccess(alloc, srcA, storeAij, schStore)};
-  MemoryAccess *mtgt{createMemAccess(alloc, tgtA, loadAii, schLoad)};
+  utils::OwningArena<> alloc;
+  IR::Addr *msrc{createMemAccess(&alloc, srcA, storeAij, schStore)};
+  IR::Addr *mtgt{createMemAccess(&alloc, tgtA, loadAii, schLoad)};
 
-  auto e = Dependence::check(alloc, *msrc, *mtgt);
-  EXPECT_EQ(e.size(), 1);
-  EXPECT_FALSE(e[0].isForward()); // load -> store
+  poly::Dependence::check(&alloc, *msrc, *mtgt);
+  poly::Dependence *e = msrc->getEdgeOut();
+  EXPECT_EQ(e, mtgt->getEdgeIn());
+  EXPECT_NE(e, nullptr);
+  EXPECT_EQ(msrc->getEdgeIn(), nullptr);
+  EXPECT_EQ(mtgt->getEdgeOut(), nullptr);
   llvm::errs() << "Blog post example:\n" << e[0] << "\n";
 }
 
@@ -413,15 +437,20 @@ TEST(TimeHidingInRankDeficiency, BasicAssertions) {
   Vector<unsigned, 4> schLoad(3 + 1, 0);
   Vector<unsigned, 4> schStore(3 + 1, 0);
   schStore[3] = 1;
-  BumpAlloc<> alloc;
-  MemoryAccess *msrc{createMemAccess(alloc, refA, storeA, schStore)};
-  MemoryAccess *mtgt{createMemAccess(alloc, refA, loadA, schLoad)};
+  utils::OwningArena<> alloc;
+  IR::Addr *msrc{createMemAccess(&alloc, refA, storeA, schStore)};
+  IR::Addr *mtgt{createMemAccess(&alloc, refA, loadA, schLoad)};
 
-  auto e = Dependence::check(alloc, *msrc, *mtgt);
-  EXPECT_EQ(e.size(), 2);
+  poly::Dependence::check(&alloc, *msrc, *mtgt);
+  poly::Dependence *e0 = msrc->getEdgeIn();
+  poly::Dependence *e1 = msrc->getEdgeOut();
+  EXPECT_NE(e0, nullptr);
+  EXPECT_NE(e1, nullptr);
+  EXPECT_EQ(e0, mtgt->getEdgeOut());
+  EXPECT_EQ(e1, mtgt->getEdgeIn());
   llvm::errs() << "Rank deficicient example:\nForward:\n"
-               << e[0] << "\nReverse:\n"
-               << e[1] << "\n";
+               << e0 << "\nReverse:\n"
+               << e1 << "\n";
 }
 
 // NOLINTNEXTLINE(modernize-use-trailing-return-type)
@@ -440,9 +469,9 @@ TEST(TriangularExampleTest, BasicAssertions) {
   TestLoopFunction tlf;
   tlf.addLoop(std::move(matAmn), 2);
   tlf.addLoop(std::move(matAmnk), 3);
-  AffineLoopNest<true> *loopMN = tlf.getLoopNest(0);
+  poly::Loop *loopMN = tlf.getLoopNest(0);
   EXPECT_FALSE(loopMN->isEmpty());
-  AffineLoopNest<true> *loopMNK = tlf.getLoopNest(1);
+  poly::Loop *loopMNK = tlf.getLoopNest(1);
   EXPECT_FALSE(loopMNK->isEmpty());
   EXPECT_EQ(loopMN->getSyms().size(), loopMNK->getSyms().size());
   for (size_t i = 0; i < loopMN->getSyms().size(); ++i)
@@ -542,7 +571,7 @@ TEST(TriangularExampleTest, BasicAssertions) {
   constexpr size_t m = 0, n = 1, k = 2;
   // construct indices
   // ind mat, loops currently indexed from outside-in
-  LinearProgramLoopBlock lblock;
+  lp::LoopBlock lblock;
   // B[n, m]
   ArrayReference indBmn{scevB, loopMN, 2};
   {
@@ -620,59 +649,59 @@ TEST(TriangularExampleTest, BasicAssertions) {
   //   foo(arg...) // [ 0, _, 2 ]
   // }
   // NOTE: shared ptrs get set to NULL when `lblock.memory` reallocs...
+  IR::AddrChain addr;
   Vector<unsigned, 4> sch2t0t0(2 + 1, 0);
   Vector<unsigned, 4> sch2t0t1{sch2t0t0};
-  BumpAlloc<> alloc;
+  utils::OwningArena<> alloc;
   // A(n,m) = -> B(n,m) <-
-  MemoryAccess *mSch2t0t0(createMemAccess(alloc, indBmn, loadB, sch2t0t0));
-  lblock.addMemory(mSch2t0t0);
+  IR::Addr *mSch2t0t0(createMemAccess(&alloc, indBmn, loadB, sch2t0t0));
+  addr.addAddr(mSch2t0t0);
   sch2t0t1[2] = 1;
   Vector<unsigned, 4> sch2t1t0{sch2t0t1};
   // -> A(n,m) <- = B(n,m)
-  MemoryAccess *mSch2t0t1(createMemAccess(alloc, indAmn2, storeA0, sch2t0t1));
+  IR::Addr *mSch2t0t1(createMemAccess(&alloc, indAmn2, storeA0, sch2t0t1));
   assert(mSch2t0t1->getInstruction() == storeA0);
-  assert(mSch2t0t1->getStore() == storeA0);
-  lblock.addMemory(mSch2t0t1);
+  assert(mSch2t0t1->isStore());
+  addr.addAddr(mSch2t0t1);
   sch2t1t0[1] = 1;
   sch2t1t0[2] = 0;
   Vector<unsigned, 4> sch2t1t1{sch2t1t0};
   // A(n,m) = -> A(n,m) <- / U(n,n); // sch2
-  MemoryAccess *mSch2t1t0(createMemAccess(alloc, indAmn2, loadA0, sch2t1t0));
+  IR::Addr *mSch2t1t0(createMemAccess(&alloc, indAmn2, loadA0, sch2t1t0));
   assert(mSch2t1t0->getInstruction() == loadA0);
-  assert(mSch2t1t0->getLoad() == loadA0);
-  lblock.addMemory(mSch2t1t0);
+  assert(mSch2t1t0->isLoad());
+  addr.addAddr(mSch2t1t0);
   sch2t1t1[2] = 1;
   Vector<unsigned, 4> sch2t1t2{sch2t1t1};
   // A(n,m) = A(n,m) / -> U(n,n) <-;
-  MemoryAccess *mSch2t1t1(createMemAccess(alloc, indUnn, loadUnn, sch2t1t1));
-  lblock.addMemory(mSch2t1t1);
+  IR::Addr *mSch2t1t1(createMemAccess(&alloc, indUnn, loadUnn, sch2t1t1));
+  addr.addAddr(mSch2t1t1);
   sch2t1t2[2] = 2;
   // -> A(n,m) <- = A(n,m) / U(n,n); // sch2
-  MemoryAccess *mSch2t1t2(
-    createMemAccess(alloc, indAmn2, storeAFDiv, sch2t1t2));
-  lblock.addMemory(mSch2t1t2);
+  IR::Addr *mSch2t1t2(createMemAccess(&alloc, indAmn2, storeAFDiv, sch2t1t2));
+  addr.addAddr(mSch2t1t2);
 
   Vector<unsigned, 4> sch3t0(3 + 1, 0);
   sch3t0[1] = 1;
   sch3t0[2] = 3;
   Vector<unsigned, 4> sch3t1{sch3t0};
   // A(k,m) = A(k,m) - A(n,m)* -> U(k,n) <-;
-  MemoryAccess *mSch3t0(createMemAccess(alloc, indUnk, loadUnk, sch3t0));
-  lblock.addMemory(mSch3t0);
+  IR::Addr *mSch3t0(createMemAccess(&alloc, indUnk, loadUnk, sch3t0));
+  addr.addAddr(mSch3t0);
   sch3t1[3] = 1;
   Vector<unsigned, 4> sch3t2{sch3t1};
   // A(k,m) = A(k,m) - -> A(n,m) <- *U(k,n);
-  MemoryAccess *mSch3t1(createMemAccess(alloc, indAmn3, loadA1mn, sch3t1));
-  lblock.addMemory(mSch3t1);
+  IR::Addr *mSch3t1(createMemAccess(&alloc, indAmn3, loadA1mn, sch3t1));
+  addr.addAddr(mSch3t1);
   sch3t2[3] = 2;
   Vector<unsigned, 8> sch3t3{sch3t2};
   // A(k,m) = -> A(k,m) <- - A(n,m)*U(k,n);
-  MemoryAccess *mSch3t2(createMemAccess(alloc, indAmk, loadA1mk, sch3t2));
-  lblock.addMemory(mSch3t2);
+  IR::Addr *mSch3t2(createMemAccess(&alloc, indAmk, loadA1mk, sch3t2));
+  addr.addAddr(mSch3t2);
   sch3t3[3] = 3;
   // -> A(k,m) <- = A(k,m) - A(n,m)*U(k,n);
-  MemoryAccess *mSch3t3(createMemAccess(alloc, indAmk, storeA2mk, sch3t3));
-  lblock.addMemory(mSch3t3);
+  IR::Addr *mSch3t3(createMemAccess(&alloc, indAmk, storeA2mk, sch3t3));
+  addr.addAddr(mSch3t3);
 
   // for (m = 0; m < M; ++m){createMemAccess(
   //   for (n = 0; n < N; ++n){
@@ -688,52 +717,60 @@ TEST(TriangularExampleTest, BasicAssertions) {
   // First, comparisons of store to `A(n,m) = B(n,m)` versus...
   // // load in `A(n,m) = A(n,m) / U(n,n)`
   {
-    auto dep = Dependence::check(alloc, *mSch2t0t1, *mSch2t1t0);
-    EXPECT_EQ(dep.size(), 1);
-    EXPECT_TRUE(dep[0].isForward());
-    llvm::errs() << "dep#" << 0 << ":\n" << dep[0] << "\n";
+    poly::Dependence::check(&alloc, *mSch2t0t1, *mSch2t1t0);
+    EXPECT_EQ(mSch2t0t1->getEdgeIn(), nullptr);
+    EXPECT_EQ(mSch2t1t0->getEdgeOut(), nullptr);
+    EXPECT_EQ(mSch2t0t1->getEdgeOut(), mSch2t1t0->getEdgeIn());
+    poly::Dependence *dep = mSch2t1t0->getEdgeIn();
+    EXPECT_TRUE(dep->isForward());
+    llvm::errs() << "dep#" << 0 << ":\n" << *dep << "\n";
   }
   //
   //
   // store in `A(n,m) = A(n,m) / U(n,n)`
   {
-    auto dep = Dependence::check(alloc, *mSch2t0t1, *mSch2t1t2);
-    EXPECT_EQ(dep.size(), 1);
-    EXPECT_TRUE(dep[0].isForward());
-    llvm::errs() << "dep#" << 1 << ":\n" << dep[0] << "\n";
+    poly::Dependence::check(&alloc, *mSch2t0t1, *mSch2t1t2);
+    auto dep = mSch2t0t1->getEdgeOut();
+    EXPECT_EQ(dep, mSch2t1t2->getEdgeIn());
+    EXPECT_TRUE(dep->isForward());
+    llvm::errs() << "dep#" << 1 << ":\n" << *dep << "\n";
   }
   //
   // sch3_               3        0         1     2
   // load `A(n,m)` in 'A(k,m) = A(k,m) - A(n,m)*U(k,n)'
   {
-    auto dep = Dependence::check(alloc, *mSch2t0t1, *mSch3t1);
-    EXPECT_EQ(dep.size(), 1);
-    EXPECT_TRUE(dep[0].isForward());
-    llvm::errs() << "dep#" << 2 << ":\n" << dep[0] << "\n";
+    poly::Dependence::check(&alloc, *mSch2t0t1, *mSch3t1);
+    auto dep = mSch2t0t1->getEdgeOut();
+    EXPECT_EQ(dep, mSch3t1->getEdgeIn());
+    EXPECT_TRUE(dep->isForward());
+    llvm::errs() << "dep#" << 2 << ":\n" << *dep << "\n";
   }
   // load `A(k,m)` in 'A(k,m) = A(k,m) - A(n,m)*U(k,n)'
   //
   {
-    auto dep = Dependence::check(alloc, *mSch2t0t1, *mSch3t2);
-    EXPECT_EQ(dep.size(), 1);
-    EXPECT_TRUE(dep[0].isForward());
-    llvm::errs() << "dep#" << 3 << ":\n" << dep[0] << "\n";
+    poly::Dependence::check(&alloc, *mSch2t0t1, *mSch3t2);
+    auto dep = mSch2t0t1->getEdgeOut();
+    EXPECT_EQ(dep, mSch3t2->getEdgeIn());
+    EXPECT_TRUE(dep->isForward());
+    llvm::errs() << "dep#" << 3 << ":\n" << *dep << "\n";
   }
   // store `A(k,m)` in 'A(k,m) = A(k,m) - A(n,m)*U(k,n)'
   {
-    auto dep = Dependence::check(alloc, *mSch2t0t1, *mSch3t3);
-    EXPECT_EQ(dep.size(), 1);
-    EXPECT_TRUE(dep[0].isForward());
-    llvm::errs() << "dep#" << 4 << ":\n" << dep[0] << "\n";
+    poly::Dependence::check(&alloc, *mSch2t0t1, *mSch3t3);
+    auto dep = mSch2t0t1->getEdgeOut();
+    EXPECT_EQ(dep, mSch3t3->getEdgeIn());
+    EXPECT_TRUE(dep->isForward());
+    llvm::errs() << "dep#" << 4 << ":\n" << *dep << "\n";
   }
 
   // Second, comparisons of load in `A(m,n) = A(m,n) / U(n,n)`
   // with...
   // store in `A(n,m) = A(n,m) / U(n,n)`
   {
-    auto dep = Dependence::check(alloc, *mSch2t1t0, *mSch2t1t2);
-    EXPECT_EQ(dep.size(), 1);
-    EXPECT_TRUE(dep[0].isForward());
+    poly::Dependence::check(&alloc, *mSch2t1t0, *mSch2t1t2);
+    auto dep = mSch2t1t0->getEdgeOut();
+    EXPECT_EQ(dep, mSch2t1t2->getEdgeIn());
+    EXPECT_TRUE(dep->isForward());
     llvm::errs() << "dep#" << 5 << ":\n" << dep[0] << "\n";
   }
 
@@ -741,24 +778,27 @@ TEST(TriangularExampleTest, BasicAssertions) {
   // sch3_               3        0         1     2
   // load `A(n,m)` in 'A(k,m) = A(k,m) - A(n,m)*U(k,n)'
   {
-    auto dep = Dependence::check(alloc, *mSch2t1t0, *mSch3t1);
-    EXPECT_EQ(dep.size(), 1);
-    EXPECT_TRUE(dep[0].isForward());
-    llvm::errs() << "dep#" << 6 << ":\n" << dep[0] << "\n";
+    poly::Dependence::check(&alloc, *mSch2t1t0, *mSch3t1);
+    auto dep = mSch2t1t0->getEdgeOut();
+    EXPECT_EQ(dep, mSch3t1->getEdgeIn());
+    EXPECT_TRUE(dep->isForward());
+    llvm::errs() << "dep#" << 6 << ":\n" << *dep << "\n";
   }
   // load `A(k,m)` in 'A(k,m) = A(k,m) - A(n,m)*U(k,n)'
   {
-    auto dep = Dependence::check(alloc, *mSch2t1t0, *mSch3t2);
-    EXPECT_EQ(dep.size(), 1);
-    EXPECT_FALSE(dep[0].isForward());
-    llvm::errs() << "dep#" << 7 << ":\n" << dep[0] << "\n";
+    poly::Dependence::check(&alloc, *mSch2t1t0, *mSch3t2);
+    auto dep = mSch2t1t0->getEdgeOut();
+    EXPECT_EQ(dep, mSch3t2->getEdgeIn());
+    EXPECT_FALSE(dep->isForward());
+    llvm::errs() << "dep#" << 7 << ":\n" << *dep << "\n";
   }
   // store `A(k,m)` in 'A(k,m) = A(k,m) - A(n,m)*U(k,n)'
   {
-    auto dep = Dependence::check(alloc, *mSch2t1t0, *mSch3t3);
-    EXPECT_EQ(dep.size(), 1);
-    EXPECT_FALSE(dep[0].isForward());
-    llvm::errs() << "dep#" << 8 << ":\n" << dep[0] << "\n";
+    poly::Dependence::check(&alloc, *mSch2t1t0, *mSch3t3);
+    auto dep = mSch2t1t0->getEdgeOut();
+    EXPECT_EQ(dep, mSch3t3->getEdgeIn());
+    EXPECT_FALSE(dep->isForward());
+    llvm::errs() << "dep#" << 8 << ":\n" << *dep << "\n";
   }
 
   // Third, comparisons of store in `A(m,n) = A(m,n) / U(n,n)`
@@ -766,24 +806,27 @@ TEST(TriangularExampleTest, BasicAssertions) {
   // sch3_               3        0         1     2
   // load `A(n,m)` in 'A(k,m) = A(k,m) - A(n,m)*U(k,n)'
   {
-    auto dep = Dependence::check(alloc, *mSch2t1t2, *mSch3t1);
-    EXPECT_EQ(dep.size(), 1);
-    EXPECT_TRUE(dep[0].isForward());
-    llvm::errs() << "dep#" << 9 << ":\n" << dep[0] << "\n";
+    poly::Dependence::check(&alloc, *mSch2t1t2, *mSch3t1);
+    auto dep = mSch2t1t2->getEdgeOut();
+    EXPECT_EQ(dep, mSch3t1->getEdgeIn());
+    EXPECT_TRUE(dep->isForward());
+    llvm::errs() << "dep#" << 9 << ":\n" << *dep << "\n";
   }
   // load `A(k,m)` in 'A(k,m) = A(k,m) - A(n,m)*U(k,n)'
   {
-    auto dep = Dependence::check(alloc, *mSch2t1t2, *mSch3t2);
-    EXPECT_EQ(dep.size(), 1);
-    EXPECT_FALSE(dep[0].isForward());
-    llvm::errs() << "dep#" << 10 << ":\n" << dep[0] << "\n";
+    poly::Dependence::check(&alloc, *mSch2t1t2, *mSch3t2);
+    auto dep = mSch2t1t2->getEdgeOut();
+    EXPECT_EQ(dep, mSch3t2->getEdgeIn());
+    EXPECT_FALSE(dep->isForward());
+    llvm::errs() << "dep#" << 10 << ":\n" << *dep << "\n";
   }
   // store `A(k,m)` in 'A(k,m) = A(k,m) - A(n,m)*U(k,n)'
   {
-    auto dep = Dependence::check(alloc, *mSch2t1t2, *mSch3t3);
-    EXPECT_EQ(dep.size(), 1);
-    EXPECT_FALSE(dep[0].isForward());
-    llvm::errs() << "dep#" << 11 << ":\n" << dep[0] << "\n";
+    poly::Dependence::check(&alloc, *mSch2t1t2, *mSch3t3);
+    auto dep = mSch2t1t2->getEdgeOut();
+    EXPECT_EQ(dep, mSch3t3->getEdgeIn());
+    EXPECT_FALSE(dep->isForward());
+    llvm::errs() << "dep#" << 11 << ":\n" << *dep << "\n";
   }
 
   // Fourth, comparisons of load `A(m,n)` in
@@ -792,17 +835,19 @@ TEST(TriangularExampleTest, BasicAssertions) {
   // with...
   // load `A(k,m)` in 'A(k,m) = A(k,m) - A(n,m)*U(k,n)'
   {
-    auto dep = Dependence::check(alloc, *mSch3t1, *mSch3t2);
-    EXPECT_EQ(dep.size(), 1);
-    EXPECT_FALSE(dep[0].isForward());
-    llvm::errs() << "dep#" << 12 << ":\n" << dep[0] << "\n";
+    poly::Dependence::check(&alloc, *mSch3t1, *mSch3t2);
+    auto dep = mSch3t1->getEdgeOut();
+    EXPECT_EQ(dep, mSch3t2->getEdgeIn());
+    EXPECT_FALSE(dep->isForward());
+    llvm::errs() << "dep#" << 12 << ":\n" << *dep << "\n";
   }
   // store `A(k,m)` in 'A(k,m) = A(k,m) - A(n,m)*U(k,n)'
   {
-    auto dep = Dependence::check(alloc, *mSch3t1, *mSch3t3);
-    EXPECT_EQ(dep.size(), 1);
-    EXPECT_FALSE(dep[0].isForward());
-    llvm::errs() << "dep#" << 13 << ":\n" << dep[0] << "\n";
+    poly::Dependence::check(&alloc, *mSch3t1, *mSch3t3);
+    auto dep = mSch3t1->getEdgeOut();
+    EXPECT_EQ(dep, mSch3t3->getEdgeIn());
+    EXPECT_FALSE(dep->isForward());
+    llvm::errs() << "dep#" << 13 << ":\n" << *dep << "\n";
   }
 
   // Fifth, comparisons of load `A(m,k)` in
@@ -811,19 +856,20 @@ TEST(TriangularExampleTest, BasicAssertions) {
   // with...
   // store `A(k,m)` in 'A(k,m) = A(k,m) - A(n,m)*U(k,n)'
   {
-    auto fwdrev = Dependence::check(alloc, *mSch3t2, *mSch3t3);
-    EXPECT_EQ(fwdrev.size(), 2);
-    auto &forward = fwdrev[0];
-    auto &reverse = fwdrev[1];
-    EXPECT_TRUE(forward.isForward());
-    EXPECT_FALSE(reverse.isForward());
+    poly::Dependence::check(&alloc, *mSch3t2, *mSch3t3);
+    auto *forward = mSch3t2->getEdgeOut();
+    auto *reverse = mSch3t2->getEdgeIn();
+    EXPECT_EQ(forward, mSch3t3->getEdgeIn());
+    EXPECT_EQ(reverse, mSch3t3->getEdgeOut());
+    EXPECT_TRUE(forward->isForward());
+    EXPECT_FALSE(reverse->isForward());
     llvm::errs() << "dep# 14 and 15\n";
     llvm::errs() << "\nforward dependence:\n" << forward;
     llvm::errs() << "\nreverse dependence:\n" << reverse;
-    assert(forward.isForward());
-    assert(!reverse.isForward());
-    auto fwdDepPoly = forward.getDepPoly();
-    auto revDepPoly = reverse.getDepPoly();
+    assert(forward->isForward());
+    assert(!reverse->isForward());
+    auto fwdDepPoly = forward->getDepPoly();
+    auto revDepPoly = reverse->getDepPoly();
     EXPECT_TRUE(allZero(fwdDepPoly->getE()(_, 0)));
     EXPECT_FALSE(allZero(revDepPoly->getE()(_, 0)));
 
@@ -859,7 +905,8 @@ TEST(TriangularExampleTest, BasicAssertions) {
     }
   }
 
-  std::optional<BitSet<std::array<uint64_t, 2>>> optDeps = lblock.optimize();
+  lp::OptimizationResult optRes = lblock.optimize(addr);
+
   EXPECT_TRUE(optDeps.has_value());
   // orig order (inner <-> outer): n, m
   DenseMatrix<int64_t> optPhi2{DenseDims{2, 2}, 0};
@@ -939,9 +986,9 @@ TEST(MeanStDevTest0, BasicAssertions) {
                           "-1 1 0 0 -1; "
                           "0 0 0 0 1]"_mat};
   tlf.addLoop(std::move(twoLoopsMatJI), 2);
-  AffineLoopNest<true> *loopIJ = tlf.getLoopNest(0);
-  AffineLoopNest<true> *loopI = tlf.getLoopNest(1);
-  AffineLoopNest<true> *loopJI = tlf.getLoopNest(2);
+  poly::Loop *loopIJ = tlf.getLoopNest(0);
+  poly::Loop *loopI = tlf.getLoopNest(1);
+  poly::Loop *loopJI = tlf.getLoopNest(2);
   std::swap(loopJI->getSyms()[0], loopJI->getSyms()[1]);
   llvm::IRBuilder<> &builder = tlf.getBuilder();
 
@@ -1090,59 +1137,59 @@ TEST(MeanStDevTest0, BasicAssertions) {
   sch0t6[1] = 6;
   Vector<unsigned, 4> sch0t7(1 + 1, 0);
   sch0t7[1] = 7;
-  LinearProgramLoopBlock iOuterLoopNest;
-  llvm::SmallVector<MemoryAccess *> iOuterMem;
+  lp::LoopBlock iOuterLoopNest;
+  llvm::SmallVector<IR::Addr *> iOuterMem;
 
-  BumpAlloc<> alloc;
-  iOuterMem.emplace_back(createMemAccess(alloc, xInd1, storeX0, sch0t0)); // 0
-
-  iOuterMem.emplace_back(
-    createMemAccess(alloc, indAiOuter, loadAm, sch0t1t0));  // 1
-  iOuterMem.emplace_back(
-    createMemAccess(alloc, xInd2IOuter, loadX0, sch0t1t1)); // 2
+  utils::OwningArena<> alloc;
+  iOuterMem.emplace_back(createMemAccess(&alloc, xInd1, storeX0, sch0t0)); // 0
 
   iOuterMem.emplace_back(
-    createMemAccess(alloc, xInd2IOuter, storeX1, sch0t1t2));              // 3
+    createMemAccess(&alloc, indAiOuter, loadAm, sch0t1t0)); // 1
+  iOuterMem.emplace_back(
+    createMemAccess(&alloc, xInd2IOuter, loadX0, sch0t1t1)); // 2
 
-  iOuterMem.emplace_back(createMemAccess(alloc, xInd1, loadX1, sch0t2));  // 4
-  iOuterMem.emplace_back(createMemAccess(alloc, xInd1, storeX2, sch0t3)); // 5
+  iOuterMem.emplace_back(
+    createMemAccess(&alloc, xInd2IOuter, storeX1, sch0t1t2)); // 3
 
-  iOuterMem.emplace_back(createMemAccess(alloc, sInd1, storeS0, sch0t4)); // 6
-  iOuterMem.emplace_back(
-    createMemAccess(alloc, indAiOuter, loadAs, sch0t5t0));                // 7
-  iOuterMem.emplace_back(
-    createMemAccess(alloc, xInd2IOuter, loadX2, sch0t5t1));               // 8
-  iOuterMem.emplace_back(
-    createMemAccess(alloc, sInd2IOuter, loadS0, sch0t5t2));               // 9
-  iOuterMem.emplace_back(
-    createMemAccess(alloc, sInd2IOuter, storeS1, sch0t5t3));              // 10
+  iOuterMem.emplace_back(createMemAccess(&alloc, xInd1, loadX1, sch0t2));  // 4
+  iOuterMem.emplace_back(createMemAccess(&alloc, xInd1, storeX2, sch0t3)); // 5
 
-  iOuterMem.emplace_back(createMemAccess(alloc, sInd1, loadS1, sch0t6));  // 11
-  iOuterMem.emplace_back(createMemAccess(alloc, sInd1, storeS2, sch0t7)); // 12
+  iOuterMem.emplace_back(createMemAccess(&alloc, sInd1, storeS0, sch0t4)); // 6
+  iOuterMem.emplace_back(
+    createMemAccess(&alloc, indAiOuter, loadAs, sch0t5t0)); // 7
+  iOuterMem.emplace_back(
+    createMemAccess(&alloc, xInd2IOuter, loadX2, sch0t5t1)); // 8
+  iOuterMem.emplace_back(
+    createMemAccess(&alloc, sInd2IOuter, loadS0, sch0t5t2)); // 9
+  iOuterMem.emplace_back(
+    createMemAccess(&alloc, sInd2IOuter, storeS1, sch0t5t3)); // 10
+
+  iOuterMem.emplace_back(createMemAccess(&alloc, sInd1, loadS1, sch0t6));  // 11
+  iOuterMem.emplace_back(createMemAccess(&alloc, sInd1, storeS2, sch0t7)); // 12
   for (auto &&mem : iOuterMem) iOuterLoopNest.addMemory(mem);
   {
-    auto d0 = Dependence::check(alloc, *iOuterLoopNest.getMemoryAccess(3),
-                                *iOuterLoopNest.getMemoryAccess(5));
+    auto d0 = poly::Dependence::check(&alloc, *iOuterLoopNest.getIR::Addr(3),
+                                      *iOuterLoopNest.getIR::Addr(5));
     EXPECT_EQ(d0.size(), 1);
     EXPECT_TRUE(d0[0].isForward());
-    auto d1 = Dependence::check(alloc, *iOuterLoopNest.getMemoryAccess(5),
-                                *iOuterLoopNest.getMemoryAccess(3));
+    auto d1 = poly::Dependence::check(&alloc, *iOuterLoopNest.getIR::Addr(5),
+                                      *iOuterLoopNest.getIR::Addr(3));
     EXPECT_EQ(d1.size(), 1);
     EXPECT_FALSE(d1[0].isForward());
-    auto d2 = Dependence::check(alloc, *iOuterLoopNest.getMemoryAccess(4),
-                                *iOuterLoopNest.getMemoryAccess(5));
+    auto d2 = poly::Dependence::check(&alloc, *iOuterLoopNest.getIR::Addr(4),
+                                      *iOuterLoopNest.getIR::Addr(5));
     EXPECT_EQ(d2.size(), 1);
     EXPECT_TRUE(d2[0].isForward());
-    auto d3 = Dependence::check(alloc, *iOuterLoopNest.getMemoryAccess(5),
-                                *iOuterLoopNest.getMemoryAccess(4));
+    auto d3 = poly::Dependence::check(&alloc, *iOuterLoopNest.getIR::Addr(5),
+                                      *iOuterLoopNest.getIR::Addr(4));
     EXPECT_EQ(d3.size(), 1);
     EXPECT_FALSE(d3[0].isForward());
   }
   std::optional<BitSet<std::array<uint64_t, 2>>> optDeps =
     iOuterLoopNest.optimize();
   EXPECT_TRUE(optDeps.has_value());
-  map<MemoryAccess *, size_t> memAccessIds;
-  MutPtrVector<MemoryAccess *> mem = iOuterLoopNest.getMem();
+  map<IR::Addr *, size_t> memAccessIds;
+  MutPtrVector<IR::Addr *> mem = iOuterLoopNest.getMem();
   for (size_t jj = 0; jj < mem.size(); ++jj) memAccessIds[mem[jj]] = jj;
   for (auto &e : iOuterLoopNest.getEdges()) {
     auto [in, out] = e.getInOutPair();
@@ -1169,12 +1216,12 @@ TEST(MeanStDevTest0, BasicAssertions) {
     llvm::errs() << "s.getOffsetOmega() =" << s.getOffsetOmega() << "\n";
   }
 
-  LinearProgramLoopBlock jOuterLoopNest;
-  llvm::SmallVector<MemoryAccess *> jOuterMem;
-  jOuterMem.emplace_back(createMemAccess(alloc, xInd1, storeX0, sch0t0)); // 0
+  lp::LoopBlock jOuterLoopNest;
+  llvm::SmallVector<IR::Addr *> jOuterMem;
+  jOuterMem.emplace_back(createMemAccess(&alloc, xInd1, storeX0, sch0t0)); // 0
   Vector<unsigned, 4> sch0t1(1 + 1, 0);
   sch0t1[1] = 1;
-  jOuterMem.emplace_back(createMemAccess(alloc, sInd1, storeS0, sch0t1)); // 6
+  jOuterMem.emplace_back(createMemAccess(&alloc, sInd1, storeS0, sch0t1)); // 6
   Vector<unsigned, 4> sch1t0t0(2 + 1, 0);
   sch1t0t0[0] = 1;
   Vector<unsigned, 4> sch1t0t1(2 + 1, 0);
@@ -1184,19 +1231,19 @@ TEST(MeanStDevTest0, BasicAssertions) {
   sch1t0t2[0] = 1;
   sch1t0t2[2] = 2;
   jOuterMem.emplace_back(
-    createMemAccess(alloc, indAjOuter, loadAm, sch1t0t0));   // 1
+    createMemAccess(&alloc, indAjOuter, loadAm, sch1t0t0)); // 1
   jOuterMem.emplace_back(
-    createMemAccess(alloc, xInd2JOuter, loadX0, sch1t0t1));  // 2
+    createMemAccess(&alloc, xInd2JOuter, loadX0, sch1t0t1)); // 2
   jOuterMem.emplace_back(
-    createMemAccess(alloc, xInd2JOuter, storeX1, sch1t0t2)); // 3
+    createMemAccess(&alloc, xInd2JOuter, storeX1, sch1t0t2)); // 3
 
   Vector<unsigned, 4> sch2t0(1 + 1, 0);
   sch2t0[0] = 2;
   Vector<unsigned, 4> sch2t1(1 + 1, 0);
   sch2t1[0] = 2;
   sch2t1[1] = 1;
-  jOuterMem.emplace_back(createMemAccess(alloc, xInd1, loadX1, sch2t0));  // 4
-  jOuterMem.emplace_back(createMemAccess(alloc, xInd1, storeX2, sch2t1)); // 5
+  jOuterMem.emplace_back(createMemAccess(&alloc, xInd1, loadX1, sch2t0));  // 4
+  jOuterMem.emplace_back(createMemAccess(&alloc, xInd1, storeX2, sch2t1)); // 5
 
   Vector<unsigned, 4> sch3t0t0(2 + 1, 0);
   sch3t0t0[0] = 3;
@@ -1211,21 +1258,21 @@ TEST(MeanStDevTest0, BasicAssertions) {
   sch3t0t3[2] = 3;
 
   jOuterMem.emplace_back(
-    createMemAccess(alloc, indAjOuter, loadAs, sch3t0t0));   // 7
+    createMemAccess(&alloc, indAjOuter, loadAs, sch3t0t0)); // 7
   jOuterMem.emplace_back(
-    createMemAccess(alloc, xInd2JOuter, loadX2, sch3t0t1));  // 8
+    createMemAccess(&alloc, xInd2JOuter, loadX2, sch3t0t1)); // 8
   jOuterMem.emplace_back(
-    createMemAccess(alloc, sInd2JOuter, loadS0, sch3t0t2));  // 9
+    createMemAccess(&alloc, sInd2JOuter, loadS0, sch3t0t2)); // 9
   jOuterMem.emplace_back(
-    createMemAccess(alloc, sInd2JOuter, storeS1, sch3t0t3)); // 10
+    createMemAccess(&alloc, sInd2JOuter, storeS1, sch3t0t3)); // 10
 
   Vector<unsigned, 4> sch4t0(1 + 1, 0);
   sch4t0[0] = 4;
   Vector<unsigned, 4> sch4t1(1 + 1, 0);
   sch4t1[0] = 4;
   sch4t1[1] = 1;
-  jOuterMem.emplace_back(createMemAccess(alloc, sInd1, loadS1, sch4t0));  // 11
-  jOuterMem.emplace_back(createMemAccess(alloc, sInd1, storeS2, sch4t1)); // 12
+  jOuterMem.emplace_back(createMemAccess(&alloc, sInd1, loadS1, sch4t0));  // 11
+  jOuterMem.emplace_back(createMemAccess(&alloc, sInd1, storeS2, sch4t1)); // 12
 
   for (auto &&memj : jOuterMem) jOuterLoopNest.addMemory(memj);
 
@@ -1260,7 +1307,7 @@ TEST(DoubleDependenceTest, BasicAssertions) {
                   "-2 0 1 0 -1; "
                   "0 0 0 0 1]"_mat};
   tlf.addLoop(std::move(loopA), 2);
-  AffineLoopNest<true> *loop = tlf.getLoopNest(0);
+  poly::Loop *loop = tlf.getLoopNest(0);
 
   // create arrays
   llvm::Type *f64 = builder.getDoubleTy();
@@ -1357,9 +1404,9 @@ TEST(DoubleDependenceTest, BasicAssertions) {
   Vector<unsigned, 4> schLoad0(2 + 1, 0);
   Vector<unsigned, 4> schStore(2 + 1, 0);
   schStore[2] = 2;
-  BumpAlloc<> alloc;
-  MemoryAccess *msrc{createMemAccess(alloc, srcA, storeA, schStore)};
-  MemoryAccess *mtgt0{createMemAccess(alloc, tgtA0, loadAip1j, schLoad0)};
+  OwningArena<> alloc;
+  IR::Addr *msrc{createMemAccess(&alloc, srcA, storeA, schStore)};
+  IR::Addr *mtgt0{createMemAccess(&alloc, tgtA0, loadAip1j, schLoad0)};
   DepPoly *dep0{DepPoly::dependence(alloc, *msrc, *mtgt0)};
   EXPECT_FALSE(dep0->isEmpty());
   dep0->pruneBounds();
@@ -1372,7 +1419,7 @@ TEST(DoubleDependenceTest, BasicAssertions) {
 
   Vector<unsigned, 4> schLoad1(2 + 1, 0);
   schLoad1[2] = 1;
-  MemoryAccess *mtgt1{createMemAccess(alloc, tgtA1, loadijp1, schLoad1)};
+  IR::Addr *mtgt1{createMemAccess(&alloc, tgtA1, loadijp1, schLoad1)};
   DepPoly *dep1{DepPoly::dependence(alloc, *msrc, *mtgt1)};
   EXPECT_FALSE(dep1->isEmpty());
   dep1->pruneBounds();
@@ -1381,26 +1428,26 @@ TEST(DoubleDependenceTest, BasicAssertions) {
   EXPECT_EQ(dep1->getNumEqualityConstraints(), 2);
   assert(dep1->getNumInequalityConstraints() == 4);
   assert(dep1->getNumEqualityConstraints() == 2);
-  auto d = Dependence::check(alloc, *msrc, *mtgt0);
+  auto d = poly::Dependence::check(&alloc, *msrc, *mtgt0);
   EXPECT_EQ(d.size(), 1);
   EXPECT_TRUE(d[0].isForward());
   llvm::errs() << d[0] << "\n";
   assert(d[0].isForward());
   assert(!allZero(d[0].getSatConstraints()(last, _)));
 
-  LinearProgramLoopBlock loopBlock;
-  MemoryAccess *mSchLoad0(createMemAccess(alloc, tgtA0, loadAip1j, schLoad0));
+  lp::LoopBlock loopBlock;
+  IR::Addr *mSchLoad0(createMemAccess(&alloc, tgtA0, loadAip1j, schLoad0));
   loopBlock.addMemory(mSchLoad0);
-  MemoryAccess *mSchLoad1(createMemAccess(alloc, tgtA1, loadijp1, schLoad1));
+  IR::Addr *mSchLoad1(createMemAccess(&alloc, tgtA1, loadijp1, schLoad1));
   loopBlock.addMemory(mSchLoad1);
-  MemoryAccess *mSchStore(createMemAccess(alloc, srcA, storeA, schStore));
+  IR::Addr *mSchStore(createMemAccess(&alloc, srcA, storeA, schStore));
   loopBlock.addMemory(mSchStore);
 
   EXPECT_TRUE(loopBlock.optimize().has_value());
   EXPECT_EQ(loopBlock.numEdges(), 2);
-  map<MemoryAccess *, size_t> memAccessIds;
-  for (size_t jj = 0; jj < loopBlock.numMemoryAccesses(); ++jj)
-    memAccessIds[loopBlock.getMemoryAccess(jj)] = jj;
+  map<IR::Addr *, size_t> memAccessIds;
+  for (size_t jj = 0; jj < loopBlock.numIR::Addres(); ++jj)
+    memAccessIds[loopBlock.getIR::Addr(jj)] = jj;
   for (auto &e : loopBlock.getEdges()) {
     auto [in, out] = e.getInOutPair();
     llvm::errs() << "\nEdge for array " << *e.getArrayPointer()
@@ -1450,7 +1497,7 @@ TEST(ConvReversePass, BasicAssertions) {
                   "-1 0 0 1 0 0 0 -1 0; "
                   "0 0 0 0 0 0 0 1 0]"_mat};
   tlf.addLoop(std::move(loopA), 4);
-  AffineLoopNest<true> *loop = tlf.getLoopNest(0);
+  poly::Loop *loop = tlf.getLoopNest(0);
 
   // create arrays
   llvm::Type *f64 = builder.getDoubleTy();
@@ -1552,26 +1599,26 @@ TEST(ConvReversePass, BasicAssertions) {
   //     }
   //   }
   // }
-  LinearProgramLoopBlock loopBlock;
+  lp::LoopBlock loopBlock;
   Vector<unsigned, 8> scht0(4 + 1, 0);
   Vector<unsigned, 8> scht1{scht0};
-  BumpAlloc<> &alloc = tlf.getAlloc();
+  Arena<> *alloc = tlf.getAlloc();
   //         C[m+i,j+n] = C[m+i,j+n] + A[m,n] * -> B[i,j] <-;
-  MemoryAccess *mscht0(createMemAccess(alloc, indBmn, loadB, scht0));
+  IR::Addr *mscht0(createMemAccess(&alloc, indBmn, loadB, scht0));
   loopBlock.addMemory(mscht0);
   scht1[4] = 1;
   Vector<unsigned, 8> scht2{scht1};
   //         C[m+i,j+n] = C[m+i,j+n] + -> A[m,n] <- * B[i,j];
-  MemoryAccess *mscht1(createMemAccess(alloc, indAmn, loadA, scht1));
+  IR::Addr *mscht1(createMemAccess(&alloc, indAmn, loadA, scht1));
   loopBlock.addMemory(mscht1);
   scht2[4] = 2;
   Vector<unsigned, 8> scht3{scht2};
   //         C[m+i,j+n] = -> C[m+i,j+n] <- + A[m,n] * B[i,j];
-  MemoryAccess *mscht2(createMemAccess(alloc, indCmijn, loadC, scht2));
+  IR::Addr *mscht2(createMemAccess(&alloc, indCmijn, loadC, scht2));
   loopBlock.addMemory(mscht2);
   scht3[4] = 3;
   //         -> C[m+i,j+n] <- = C[m+i,j+n] + A[m,n] * B[i,j];
-  MemoryAccess *mscht3(createMemAccess(alloc, indCmijn, storeC, scht3));
+  IR::Addr *mscht3(createMemAccess(&alloc, indCmijn, storeC, scht3));
   loopBlock.addMemory(mscht3);
 
   std::optional<BitSet<std::array<uint64_t, 2>>> optRes = loopBlock.optimize();
@@ -1586,3 +1633,4 @@ TEST(ConvReversePass, BasicAssertions) {
     llvm::errs() << "s.getOffsetOmega(): " << s.getOffsetOmega() << "\n";
   }
 }
+} // namespace poly

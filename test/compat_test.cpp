@@ -1,14 +1,20 @@
-#include "Loops.hpp"
-#include "Math/Constraints.hpp"
-#include "Math/Math.hpp"
-#include "MatrixStringParse.hpp"
+#include "Math/Array.hpp"
+#include "Polyhedra/Loops.hpp"
+#include "Support/OStream.hpp"
 #include "TestUtilities.hpp"
+#include <Math/Constraints.hpp>
+#include <Math/Math.hpp>
+#include <Utilities/MatrixStringParse.hpp>
 #include <cstdint>
 #include <cstdio>
 #include <gtest/gtest.h>
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/LLVMContext.h>
 #include <memory>
+
+namespace poly {
+
+using math::IntMatrix, utils::operator""_mat;
 
 // NOLINTNEXTLINE(modernize-use-trailing-return-type)
 TEST(TrivialPruneBounds0, BasicAssertions) {
@@ -38,7 +44,7 @@ TEST(TrivialPruneBounds0, BasicAssertions) {
   auto A{"[0 1 0; -1 1 -1; 0 0 1; -2 1 -1; 1 0 1]"_mat};
   TestLoopFunction tlf;
   tlf.addLoop(std::move(A), 1);
-  AffineLoopNest<true> *aff = tlf.getLoopNest(0);
+  poly::Loop *aff = tlf.getLoopNest(0);
   aff->pruneBounds();
   llvm::errs() << *aff << "\naff.A = " << aff->getA() << "\n";
   // M >= 0 is redundant
@@ -57,8 +63,8 @@ TEST(TrivialPruneBounds1, BasicAssertions) {
   auto A{"[-1 0 0 0 1 0; -1 1 0 0 0 0; -1 0 1 0 -1 0; -1 0 1 0 0 0]"_mat};
   TestLoopFunction tlf;
   tlf.addLoop(std::move(A), 2);
-  AffineLoopNest<true> *aff = tlf.getLoopNest(0);
-  aff->pruneBounds(tlf.getAlloc());
+  poly::Loop *aff = tlf.getLoopNest(0);
+  aff->pruneBounds(*tlf.getAlloc());
 #ifndef NDEBUG
   aff->dump();
 #endif
@@ -85,7 +91,7 @@ TEST(LessTrivialPruneBounds, BasicAssertions) {
 
   TestLoopFunction tlf;
   tlf.addLoop(std::move(A), 3);
-  AffineLoopNest<true> &aff = *tlf.getLoopNest(0);
+  poly::Loop &aff = *tlf.getLoopNest(0);
 
   aff.pruneBounds();
   llvm::errs() << "LessTrival test Bounds pruned:\n";
@@ -125,27 +131,27 @@ TEST(AffineTest0, BasicAssertions) {
   TestLoopFunction tlf;
   llvm::errs() << "About to construct affine obj\n";
   tlf.addLoop(std::move(A), 3);
-  AffineLoopNest<true> &aff = *tlf.getLoopNest(0);
+  poly::Loop &aff = *tlf.getLoopNest(0);
   aff.pruneBounds();
   EXPECT_EQ(aff.getA().numRow(), 3);
 
   llvm::errs() << "Constructed affine obj\n";
   llvm::errs() << "About to run first compat test\n";
   llvm::errs() << "aff.getA() = " << aff.getA();
-  EXPECT_FALSE(aff.zeroExtraItersUponExtending(tlf.getAlloc(), 0, false));
-  EXPECT_FALSE(aff.zeroExtraItersUponExtending(tlf.getAlloc(), 0, true));
-  EXPECT_TRUE(aff.zeroExtraItersUponExtending(tlf.getAlloc(), 1, false));
+  EXPECT_FALSE(aff.zeroExtraItersUponExtending(*tlf.getAlloc(), 0, false));
+  EXPECT_FALSE(aff.zeroExtraItersUponExtending(*tlf.getAlloc(), 0, true));
+  EXPECT_TRUE(aff.zeroExtraItersUponExtending(*tlf.getAlloc(), 1, false));
   llvm::errs() << "About to run second compat test\n";
-  EXPECT_FALSE(aff.zeroExtraItersUponExtending(tlf.getAlloc(), 1, true));
+  EXPECT_FALSE(aff.zeroExtraItersUponExtending(*tlf.getAlloc(), 1, true));
 #ifndef NDEBUG
   aff.dump();
 #endif
   llvm::errs() << "About to run first set of bounds tests\n";
   llvm::errs() << "\nPermuting loops 1 and 2\n";
-  BumpAlloc<> allocator;
-  NotNull<AffineLoopNest<false>> affp021ptr{
+  utils::OwningArena<> allocator;
+  utils::NotNull<poly::Loop> affp021ptr{
     aff.rotate(allocator, "[1 0 0; 0 0 1; 0 1 0]"_mat, nullptr)};
-  AffineLoopNest<false> &affp021 = *affp021ptr;
+  poly::Loop &affp021 = *affp021ptr;
   // Now that we've swapped loops 1 and 2, we should have
   // for m in 0:M-1, k in 1:N-1, n in 0:k-1
 #ifndef NDEBUG
@@ -174,7 +180,7 @@ TEST(NonUnimodularExperiment, BasicAssertions) {
               " 0 1 0 0]"_mat};
   TestLoopFunction tlf;
   tlf.addLoop(std::move(A), 2);
-  AffineLoopNest<true> &aff = *tlf.getLoopNest(tlf.getNumLoopNests() - 1);
+  poly::Loop &aff = *tlf.getLoopNest(tlf.getNumLoopNests() - 1);
   llvm::errs() << "Original order:\n";
 #ifndef NDEBUG
   aff.dump();
@@ -190,11 +196,10 @@ TEST(NonUnimodularExperiment, BasicAssertions) {
                            "8 0 -1 -1; "
                            " 0 1 0 0]"_mat;
   tlf.addLoop(std::move(B), 2);
-  AffineLoopNest<true> &aff2 = *tlf.getLoopNest(tlf.getNumLoopNests() - 1);
+  poly::Loop &aff2 = *tlf.getLoopNest(tlf.getNumLoopNests() - 1);
   EXPECT_FALSE(aff2.isEmpty());
-  BumpAlloc<> allocator;
-  NotNull<AffineLoopNest<false>> affp10{
-    aff2.rotate(allocator, "[0 1; 1 0]"_mat, nullptr)};
+  OwningArena<> allocator;
+  NotNull<poly::Loop> affp10{aff2.rotate(allocator, "[0 1; 1 0]"_mat, nullptr)};
 
   llvm::errs() << "Swapped order:\n";
 #ifndef NDEBUG
@@ -202,3 +207,4 @@ TEST(NonUnimodularExperiment, BasicAssertions) {
 #endif
   EXPECT_FALSE(affp10->isEmpty());
 }
+} // namespace poly

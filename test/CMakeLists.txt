@@ -5,7 +5,6 @@ project(LoopModelsTests LANGUAGES CXX)
 # ---- Options ----
 
 option(ENABLE_TEST_COVERAGE "Enable test coverage" OFF)
-option(ENABLE_TEST_EXCEPTIONS "Enable test exceptions" OFF)
 option(TEST_INSTALLED_VERSION "Test the version found by find_package" OFF)
 option(ENABLE_LLD "Use lld for linking" ON)
 
@@ -26,14 +25,20 @@ CPMAddPackage(
   NAME googletest
   GITHUB_REPOSITORY google/googletest
   GIT_TAG v1.13.0
-  VERSION 1.13.0
-  OPTIONS "INSTALL_GTEST OFF" "BUILD_GMOCK OFF" "gtest_hide_internal_symbols ON" SYSTEM TRUE
+  VERSION 1.13.0 SYSTEM TRUE
+  OPTIONS "INSTALL_GTEST OFF" "BUILD_GMOCK OFF" "gtest_hide_internal_symbols ON"
 )
 CPMAddPackage(
   NAME unordered_dense
   GITHUB_REPOSITORY chriselrod/unordered_dense
   GIT_TAG fnoexceptions
 )
+FetchContent_Declare(
+  Math
+  GIT_REPOSITORY git@github.com:LoopModels/Math.git
+  GIT_TAG origin/main
+)
+FetchContent_MakeAvailable(Math)
 
 if(TEST_INSTALLED_VERSION)
   find_package(LoopModels REQUIRED)
@@ -77,9 +82,8 @@ message(STATUS "PROJECT_BINARY_DIR: ${PROJECT_BINARY_DIR}")
 message(STATUS "PROJECT_SOURCE_DIR: ${PROJECT_SOURCE_DIR}")
 message(STATUS "LLVM_INCLUDE_DIRS: ${LLVM_INCLUDE_DIRS}")
 
-target_include_directories(
-  ${PROJECT_NAME} SYSTEM PRIVATE ${PROJECT_SOURCE_DIR}/../include ${LLVM_INCLUDE_DIRS}
-)
+target_include_directories(${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/../include)
+target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${LLVM_INCLUDE_DIRS})
 target_precompile_headers(
   ${PROJECT_NAME}
   PRIVATE
@@ -116,7 +120,6 @@ target_precompile_headers(
   <limits>
   <ranges>
   <utility>
-  <cstddef>
   <concepts>
   <gtest/gtest.h>
   <iterator>
@@ -126,13 +129,12 @@ target_precompile_headers(
   <ostream>
   <random>
   <string>
-  <tuple>
   <type_traits>
   <utility>
 )
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(
-  ${PROJECT_NAME} PRIVATE GTest::gtest_main LLVM unordered_dense::unordered_dense
+  ${PROJECT_NAME} PRIVATE GTest::gtest_main LLVM unordered_dense::unordered_dense Math
 )
 set(CXX_STANDARD_REQUIRED ON)
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 20)
@@ -140,16 +142,12 @@ set_target_properties(
   ${PROJECT_NAME} PROPERTIES ENVIRONMENT WORKING_DIRECTORY=${PROJECT_BINARY_DIR}
 )
 
-if(ENABLE_TEST_EXCEPTIONS)
-  target_compile_options(${PROJECT_NAME} PRIVATE -fexceptions)
-else()
-  target_compile_options(${PROJECT_NAME} PRIVATE -fno-exceptions)
-endif()
+target_compile_options(${PROJECT_NAME} PRIVATE -fno-exceptions)
 
 if((USE_SANITIZER MATCHES "([Uu]ndefined)") OR (USE_SANITIZER MATCHES "([Aa]ddress);([Uu]ndefined)"
                                                )
 )
-  # we use rtti, which is incompatible with the vptr check:
+  # we use don't rtti, which is incompatible with the vptr check:
   # https://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html
   if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 13.0)
     target_compile_options(${PROJECT_NAME} PRIVATE -fno-omit-frame-pointer -fsanitize-trap=all)
@@ -158,8 +156,6 @@ if((USE_SANITIZER MATCHES "([Uu]ndefined)") OR (USE_SANITIZER MATCHES "([Aa]ddre
       ${PROJECT_NAME} PRIVATE -fno-omit-frame-pointer -fno-sanitize-recover=all
     )
   endif()
-  # target_compile_options(${PROJECT_NAME} PRIVATE -fno-omit-frame-pointer
-  # -fno-sanitize-recover=all)
 else()
   target_compile_options(${PROJECT_NAME} PRIVATE -fno-rtti)
 endif()

@@ -1,13 +1,17 @@
+
 #pragma once
 
-#include "./Instruction.hpp"
-#include "./LoopBlock.hpp"
-#include "./LoopForest.hpp"
-#include "./Loops.hpp"
-#include "./MemoryAccess.hpp"
-#include "./RemarkAnalysis.hpp"
-#include "Math/Array.hpp"
-#include "Math/Math.hpp"
+#include "Dicts/BumpMapSet.hpp"
+#include "IR/Cache.hpp"
+#include "IR/ControlFlowMerging.hpp"
+#include "IR/CostModeling.hpp"
+#include "IR/Instruction.hpp"
+#include "IR/Node.hpp"
+#include "LinearProgramming/LoopBlock.hpp"
+#include "Polyhedra/Loops.hpp"
+#include "RemarkAnalysis.hpp"
+#include <Math/Array.hpp>
+#include <Math/Math.hpp>
 #include <algorithm>
 #include <cassert>
 #include <cmath>
@@ -39,11 +43,15 @@
 #include <llvm/IR/Value.h>
 #include <llvm/Support/Casting.h>
 #include <llvm/Support/Debug.h>
+#include <llvm/Support/FormatVariadic.h>
 #include <llvm/Support/raw_ostream.h>
 #include <llvm/Transforms/Utils/LoopUtils.h>
 #include <llvm/Transforms/Utils/ScalarEvolutionExpander.h>
+#include <pthread.h>
 #include <ranges>
 #include <utility>
+
+namespace poly {
 
 // NOLINTNEXTLINE(misc-no-recursion)
 inline auto countNumLoopsPlusLeaves(const llvm::Loop *L) -> size_t {
@@ -58,621 +66,291 @@ concept LoadOrStoreInst =
   std::same_as<llvm::LoadInst, std::remove_cvref_t<T>> ||
   std::same_as<llvm::StoreInst, std::remove_cvref_t<T>>;
 
-// requires `isRecursivelyLCSSAForm`
-class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
-public:
-  auto run(llvm::Function &F, llvm::FunctionAnalysisManager &AM)
-    -> llvm::PreservedAnalyses;
-  // llvm::SmallVector<AffineLoopNest<true>, 0> affineLoopNests;
-  // one reason to prefer SmallVector is because it bounds checks `ifndef
-  // NDEBUG`
-  // [[no_unique_address]] llvm::SmallVector<LoopTree, 0> loopTrees;
-  [[no_unique_address]] llvm::SmallVector<NotNull<LoopTree>> loopForests;
-  [[no_unique_address]] map<llvm::Loop *, LoopTree *> loopMap;
-  // [[no_unique_address]] BlockPredicates predicates;
-  // llvm::AssumptionCache *AC;
-  [[no_unique_address]] const llvm::TargetLibraryInfo *TLI;
-  [[no_unique_address]] const llvm::TargetTransformInfo *TTI;
-  [[no_unique_address]] llvm::LoopInfo *LI;
-  [[no_unique_address]] llvm::ScalarEvolution *SE;
-  [[no_unique_address]] llvm::OptimizationRemarkEmitter *ORE;
-  [[no_unique_address]] LinearProgramLoopBlock loopBlock;
-  [[no_unique_address]] BumpAlloc<> allocator;
-  [[no_unique_address]] Instruction::Cache instrCache;
-  [[no_unique_address]] unsigned registerCount;
+class TurboLoop {
+  dict::map<llvm::Loop *, IR::Loop *> loopMap;
+  // const llvm::TargetLibraryInfo *TLI;
+  const llvm::TargetTransformInfo *TTI;
+  llvm::LoopInfo *LI;
+  llvm::ScalarEvolution *SE;
+  llvm::OptimizationRemarkEmitter *ORE;
+  lp::LoopBlock loopBlock{};
+  IR::Cache instructions{};
+  CostModeling::CPURegisterFile registers;
 
-  TurboLoopPass() = default;
-  TurboLoopPass(const TurboLoopPass &) = delete;
-  TurboLoopPass(TurboLoopPass &&) = default;
-  ~TurboLoopPass() {
-    for (auto l : loopForests) l->~LoopTree();
+  // this is an allocator that it is safe to reset completely when
+  // a subtree fails, so it is not allowed to allocate anything
+  // that we want to live longer than that.
+  constexpr auto shortAllocator() -> Arena<> * {
+    return loopBlock.getAllocator();
+  }
+  // It is of course safe to checkpoint & rollback or scope
+  // this allocator, but best to avoid excessive allocations
+  // that result in extra slabs being allocated that
+  // then are not going to get freed until we are done with the
+  // `TurboLoopPass`
+  constexpr auto longAllocator() -> Arena<> * {
+    return instructions.getAllocator();
   }
 
   /// the process of building the LoopForest has the following steps:
   /// 1. build initial forest of trees
-  /// 2. instantiate AffineLoopNest<true>s; any non-affine loops
+  /// 2. instantiate poly::Loops; any non-affine loops
   ///    are pruned, and their inner loops added as new, separate forests.
   /// 3. Existing forests are searched for indirect control flow between
   ///    successive loops. In all such cases, the loops at that level are
   ///    split into separate forests.
-  void initializeLoopForest() {
-    // NOTE: LoopInfo stores loops in reverse program order (opposite of
-    // loops)
+  auto initializeLoopForest() -> IR::TreeResult {
+    // NOTE: LoopInfo stores loops in reverse program order
+    if (LI->empty()) return {};
     auto revLI = llvm::reverse(*LI);
-    auto ib = revLI.begin();
-    auto ie = revLI.end();
-    if (ib == ie) return;
-    // pushLoopTree wants a direct path from the last loop's exit block to
-    // E; we drop loops until we find one for which this is trivial.
-    llvm::BasicBlock *E = (*--ie)->getExitBlock();
-    while (!E) {
-      if (ie == ib) return;
-      E = (*--ie)->getExitingBlock();
-    }
-    // pushLoopTree wants a direct path from H to the first loop's header;
-    // we drop loops until we find one for which this is trivial.
-    llvm::BasicBlock *H = (*ib)->getLoopPreheader();
-    while (!H) {
-      if (ie == ib) return;
-      H = (*++ib)->getLoopPreheader();
-    }
-    // should normally be stack allocated; we want to avoid different
-    // specializations for `llvm::reverse(*LoopInfo)` and
+    // should normally be stack allocated; we don't want to monomorphize
+    // excessively, so we produce an `ArrayRef<llvm::Loop *>` here
     // `llvm::Loop->getSubLoops()`.
     // But we could consider specializing on top level vs not.
-    // Track position within the loop nest
-    {
-      llvm::SmallVector<llvm::Loop *> rLI{ib, ie + 1};
-      NoWrapRewriter nwr(*SE);
-      pushLoopTree(loopForests, nullptr, rLI, H, E, nwr);
-    }
-    for (auto forest : loopForests) forest->addZeroLowerBounds(loopMap);
+    llvm::SmallVector<llvm::Loop *> rLI{revLI};
+    poly::NoWrapRewriter nwr(*SE);
+    math::Vector<int, 8> omega{0};
+    return runOnLoop(nullptr, rLI, omega, nwr);
   }
 
-  auto initLoopTree(llvm::SmallVector<NotNull<LoopTree>> &pForest,
-                    llvm::Loop *L, llvm::ArrayRef<llvm::Loop *> subLoops,
-                    llvm::BasicBlock *H, llvm::BasicBlock *E,
-                    NoWrapRewriter &nwr) -> size_t {
-    invariant(subLoops.empty());
-    if (const auto *BT = getBackedgeTakenCount(*SE, L);
-        !llvm::isa<llvm::SCEVCouldNotCompute>(BT)) {
-      // we're at the bottom of the recursion
-      if (auto predMapAbridged =
-            Predicate::Map::descend(allocator, instrCache, H, E, L)) {
-        auto *newTree = new (allocator) LoopTree{
-          allocator, L, nwr.visit(BT), *SE, {std::move(*predMapAbridged)}};
-        pForest.push_back(newTree);
-        return 1;
+  /// parse a from `H` to `E`, nested within loop `L`
+  /// we try to form a chain of blocks from `H` to `E`, representing
+  /// contiguous control flow. If we have
+  /// H-->A-->E
+  ///  \->B-/
+  /// Then we would try to merge blocks A and B, predicating the associated
+  /// instructions, and attempting to merge when possible.
+  /// We parse in reverse order, decrementing `omega.back()` for
+  /// each address.
+  /// The initial store construction leaves the stored value incomplete;
+  /// as we also parse the different H->E sets in reverse order,
+  /// we build up all incomplete instructions we care about in the current H->E
+  /// block within the `TreeResult tr` we receive as an argument.
+  /// This is needed by the mergeInstructions function, which parses
+  /// these, and continues searching parents until it leaves our block chain,
+  /// building the relevant part of the instruction graph.
+  [[nodiscard]] auto parseBlocks(llvm::BasicBlock *H, llvm::BasicBlock *E,
+                                 llvm::Loop *L, MutPtrVector<int> omega,
+                                 poly::Loop *AL, IR::TreeResult tr)
+    -> IR::TreeResult {
+    // TODO: need to be able to connect instructions as we move out
+    auto predMapAbridged =
+      IR::Predicate::Map::descend(shortAllocator(), instructions, H, E, L, tr);
+    if (!predMapAbridged) return {};
+    // Now we need to create Addrs
+    unsigned depth = omega.size() - 1;
+    tr.maxDepth = std::max(tr.maxDepth, depth);
+    for (auto &[BB, P] : *predMapAbridged) { // rev order
+      for (llvm::Instruction &J : llvm::reverse(*BB)) {
+        if (L) assert(L->contains(&J));
+        llvm::Value *ptr{nullptr};
+        if (J.mayReadFromMemory())
+          if (auto *load = llvm::dyn_cast<llvm::LoadInst>(&J))
+            ptr = load->getPointerOperand();
+          else return {};
+        else if (J.mayWriteToMemory())
+          if (auto *store = llvm::dyn_cast<llvm::StoreInst>(&J))
+            ptr = store->getPointerOperand();
+          else return {};
+        else continue;
+        if (ptr == nullptr) return {};
+        auto [V, trret] = instructions.getArrayRef(&J, L, ptr, tr);
+        tr = trret;
+        if (tr.reject(depth)) return tr;
+        auto *A = llvm::cast<IR::Addr>(V);
+        // if we didn't reject, it must have been an `Addr`
+        A->setFusionOmega(omega);
+        instructions.addPredicate(A, P, &(*predMapAbridged));
+        A->setLoopNest(AL);
       }
     }
-    // Finally, we need `H` to have a direct path to `E`.
-    return 0;
+    return IR::mergeInstructions(instructions, *predMapAbridged, *TTI,
+                                 *shortAllocator(),
+                                 registers.getNumVectorBits(), tr);
   }
+  /// factored out codepath, returns number of rejected loops
+  /// current depth is omega.size()-1
+  auto initLoopTree(llvm::Loop *L, math::Vector<int, 8> &omega,
+                    poly::NoWrapRewriter &nwr) -> IR::TreeResult {
 
+    const auto *BT = poly::getBackedgeTakenCount(*SE, L);
+    if (llvm::isa<llvm::SCEVCouldNotCompute>(BT)) return {};
+    Arena<> *salloc{shortAllocator()};
+    Arena<> *lalloc{longAllocator()};
+    // TODO: check pointing seems dangerous, as
+    // we'd have to make sure none of the allocated instructions
+    // can be referenced again (e.g., through the free list)
+    // auto p = lalloc.checkpoint();
+    NotNull<poly::Loop> AL =
+      poly::Loop::construct(lalloc, L, nwr.visit(BT), *SE);
+    IR::TreeResult tr = parseExitBlocks(L);
+    tr.rejectDepth = std::max(tr.rejectDepth, omega.size() - AL->getNumLoops());
+    omega.push_back(0); // we start with 0 at the end, walking backwards
+    tr = parseBlocks(L->getHeader(), L->getLoopLatch(), L, omega, AL, tr);
+    omega.pop_back();
+    if (tr.accept(omega.size() - 1)) return tr;
+    salloc->reset();
+    // lalloc.rollback(p);
+    return {};
+  }
+  /// parseExitBlocks(llvm::Loop *L) -> IR::TreeResult
+  /// We require loops be in LCSSA form
+  /// parseExitBlock
+  /// FIXME: some of these phis are likely to either be stored,
+  /// or otherwise be values accumulated in the loop, and we
+  /// currently have no way of representing things as simple as a sum.
+  /// If we ultimately fail to expand outwards (i.e. if we can't represent the
+  /// outer loop in an affine way, or if it is not a loop at all, but is
+  /// toplevel) then we should represent these phis internally as storing to a
+  /// zero-dimensional address.
+  auto parseExitBlocks(llvm::Loop *L) -> IR::TreeResult {
+    IR::TreeResult tr;
+    for (auto &P : L->getExitBlock()->phis()) {
+      for (unsigned i = 0, N = P.getNumIncomingValues(); i < N; ++i) {
+        auto *J = llvm::dyn_cast<llvm::Instruction>(P.getIncomingValue(i));
+        if (!J || !L->contains(J)) continue;
+        tr = instructions.getValue(J, nullptr, tr).second;
+      }
+    }
+    return tr;
+  }
+  /// runOnLoop, parses LLVM
+  /// We construct our linear programs first, which means creating
+  /// `poly::Loop`s and `Addr`s, and tracking original locations.
+  /// We also build the instruction graphs in order to perform control flow
+  /// merging, prior to analyzing the linear program. The linear program
+  /// produces its own loop forest, different in general from the original, so
+  /// it is here that we finish creating our own internal IR with `Loop`s.
   ///
-  /// pushLoopTree
   ///
-  /// pushLoopTree pushes `llvm::Loop* L` into a `LoopTree` object
-  /// if `L == nullptr`, then this represents a top level loop.
-  /// If we fail at some level of the recursion, we push the tree we have
-  /// successfully built into loopForests as its own loop forest.
-  /// If we succeed, we push the tree into the parent tree.
+  /// We parse the loop forest depth-first
+  /// on each failure, we run the analysis on what we can.
+  /// E.g.
+  /// invalid -> [A] valid -> valid
+  ///        \-> [B] valid -> valid
+  ///                     \-> valid
+  /// Here, we would run on [A] and [B] separately.
+  /// valid -> [A] valid ->     valid
+  ///      \->     valid -> [B] valid
+  ///                   \->   invalid
+  /// Here, we would also run on [A] and [B] separately.
+  /// We evaluate all branches before evaluating a node itself.
   ///
-  /// To be successful, the following conditions need to be met:
-  /// 1. We can represent that and all inner levels as an affine loop nest.
-  /// 2. We can represent all indices as affine expressions.
-  /// 3. We have a direct path between exits of one loop at a level and the
-  /// header of the next.
+  /// On each level, we get information on how far out we can go,
+  /// building up a IR::Cache::TreeResult, which accumulates
+  /// the memory accesses, as well as instructions in need
+  /// of completion, and the number of outer loops we need to reject.
   ///
-  /// The arguments are:
-  /// 1. `llvm::SmallVectorImpl<llvm::Loop *> &pForest`: the forest in which
-  /// we are planting our tree.
-  /// 2. `llvm::Loop* loop`: the loop we are trying to plant.
-  /// 3. `llvm::SmallVector<unsigned> &omega`: The current position of the
-  /// parser, for recording in memory accesses.
-  /// 4. `llvm::ArrayRef<llvm::Loop *> subLoops`: the sub-loops of `L`; we
+  /// At each level of `runOnLoop`, we iterate over the subloops in reverse
+  /// order, checking if the subtrees are valid, and if we have a direct flow of
+  /// instructions allowing us to represent all of them as a single affine nest.
+  /// If so, then return up the tree, continuing the process of building up a
+  /// large nest.
+  ///
+  /// If any of the subloops fail, or we fail to draw the connection, then we
+  /// can optimize the continuous succesful block we've produced, and return a
+  /// failure up the tree.
+  ///
+  ///
+  ///
+  ///
+  /// arguments:
+  /// 0. `llvm::Loop *L`: the loop we are currently processing, exterior to this
+  /// 1. `llvm::ArrayRef<llvm::Loop *> subLoops`: the sub-loops of `L`; we
   /// don't access it directly via `L->getSubLoops` because we use
   /// `L==nullptr` to repesent the top level nest, in which case we get the
   /// sub-loops from the `llvm::LoopInfo*` object.
-  /// 5. `llvm::BasicBlock *H`: Header - we need a direct path from here to
+  /// 2. `llvm::BasicBlock *H`: Header - we need a direct path from here to
   /// the first sub-loop's preheader
-  /// 6. `llvm::BasicBlock *E`: Exit - we need a direct path from the last
+  /// 3. `llvm::BasicBlock *E`: Exit - we need a direct path from the last
   /// sub-loop's exit block to this.
+  /// 4. `Vector<int,8> &omega`: the current position within the loopnest
   // NOLINTNEXTLINE(misc-no-recursion)
-  auto pushLoopTree(llvm::SmallVector<NotNull<LoopTree>> &pForest,
-                    llvm::Loop *L, llvm::ArrayRef<llvm::Loop *> subLoops,
-                    llvm::BasicBlock *H, llvm::BasicBlock *E,
-                    NoWrapRewriter &nwr) -> size_t {
-
-    size_t numSubLoops = subLoops.size();
-    if (!numSubLoops) return initLoopTree(pForest, L, subLoops, H, E, nwr);
-    // branches of this tree;
-    llvm::SmallVector<NotNull<LoopTree>> branches;
-    branches.reserve(numSubLoops);
-    llvm::SmallVector<Predicate::Map> branchBlocks;
-    branchBlocks.reserve(numSubLoops + 1);
-    bool anyFail = false;
-    size_t interiorDepth = 0;
-    for (size_t i = 0; i < numSubLoops; ++i) {
+  auto runOnLoop(llvm::Loop *L, llvm::ArrayRef<llvm::Loop *> subLoops,
+                 math::Vector<int, 8> &omega, poly::NoWrapRewriter &nwr)
+    -> IR::TreeResult {
+    unsigned numSubLoops = subLoops.size();
+    // This is a special case, as it is when we build poly::Loop
+    if (!numSubLoops) return initLoopTree(L, omega, nwr);
+    unsigned depth = omega.size();
+    bool failed = false;
+    IR::TreeResult tr = parseExitBlocks(L);
+    omega.push_back(0); // we start with 0 at the end, walking backwards
+    poly::Loop *AL = nullptr;
+    llvm::BasicBlock *E = L->getLoopLatch();
+    for (size_t i = numSubLoops; i--; --omega.back()) {
       llvm::Loop *subLoop = subLoops[i];
-      if (size_t depth = pushLoopTree(branches, subLoop, subLoop->getSubLoops(),
-                                      subLoop->getHeader(),
-                                      subLoop->getExitingBlock(), nwr)) {
-        // pushLoopTree succeeded, and we have `depth` inner loops
-        // within `subLoop` (inclusive, i.e. `depth == 1` would
-        // indicate that `subLoop` doesn't have any subLoops itself,
-        // which we check with the following assertion:
-        assert((depth > 1) || (subLoop->getSubLoops().empty()));
+      // we need to parse backwards, so we first evaluate
+      // TODO: support having multiple exit blocks?
+      IR::TreeResult trec =
+        runOnLoop(subLoop, subLoop->getSubLoops(), omega, nwr);
 
-        // Now we check if we can create a direct path from `H` to
-        // `subLoop->getLoopPreheader();`
-        llvm::BasicBlock *subLoopPreheader = subLoop->getLoopPreheader();
-        if (auto predMap = Predicate::Map::descend(allocator, instrCache, H,
-                                                   subLoopPreheader, L)) {
-          interiorDepth = std::max(interiorDepth, depth);
-          branchBlocks.push_back(std::move(*predMap));
-          H = subLoop->getExitBlock();
-        } else {
-          // oops, no direct path, we split
-          anyFail = true;
-          if (branches.size() > 1) {
-            // we need to split off the last tree
-            LoopTree *lastTree = branches.pop_back_val();
-            // so we can push previous branches as one set
-            // for the final branchBlocks, we'll push H->H
-            split(branches, branchBlocks, H, L);
-            // reinsert last tree
-            branches.push_back(lastTree);
+      if (trec.accept(depth)) {
+        if (!AL) AL = trec.getLoop();
+        if (AL) {
+          // recursion succeeded; see if we can connect the path
+          llvm::BasicBlock *subLoopExit = subLoop->getExitBlock();
+          // for fusion, we need to build a path from subLoopExit to E
+          // where E is the preheader of the preceding loopnest
+          IR::TreeResult trblock =
+            parseBlocks(subLoopExit, E, L, omega, AL, tr);
+          if (trblock.accept(depth)) {
+            tr = trblock;
+            tr *= trec;
+          } else {
+            failed = true;
+            if (tr.accept(depth)) optimize(tr);
+            // we start now with trec
+            tr = trec;
           }
-          if (i + 1 < numSubLoops) H = subLoops[i + 1]->getLoopPreheader();
-        }
-        // for the next loop, we'll want a path to its preheader
-        // from this loop's exit block.
-      } else {
-        // `depth == 0` indicates failure, therefore we need to
-        // split loops
-        anyFail = true;
-        if (!branches.empty()) split(branches, branchBlocks, H, L);
-        if (i + 1 < numSubLoops) H = subLoops[i + 1]->getLoopPreheader();
-      }
-    }
-    if (!anyFail) {
-      // branches.size() > 0 because we have numSubLoops > 0 and !anyFail
-      // !anyFail means we called pushLoopTree, and returned depth > 0
-      // which means it must have called pushLoopTree, pushing into branches
-      // (pushLoopTree pushes into first arg, pForest, whenever ret > 0)
-      invariant(!branches.empty());
-      if (auto predMapAbridged =
-            Predicate::Map::descend(allocator, instrCache, H, E, L)) {
-        branchBlocks.push_back(std::move(*predMapAbridged));
-
-        auto *newTree = new (allocator)
-          LoopTree{allocator, L,
-                   branches.front()->affineLoop->removeInnerMost(allocator),
-                   std::move(branches), std::move(branchBlocks)};
-        pForest.push_back(newTree);
-        return ++interiorDepth;
-      }
-    }
-    if (!branches.empty()) split(branches, branchBlocks, H, L);
-    return 0;
-  }
-  void split(llvm::SmallVector<NotNull<LoopTree>> &branches,
-             llvm::SmallVector<Predicate::Map> &branchBlocks,
-             llvm::BasicBlock *BB, llvm::Loop *L) {
-
-    auto predMapAbridged =
-      Predicate::Map::descend(allocator, instrCache, BB, BB, L);
-    assert(predMapAbridged);
-    branchBlocks.push_back(std::move(*predMapAbridged));
-    LoopTree::split(allocator, loopForests, branchBlocks, branches);
-  }
-
-  auto isLoopPreHeader(const llvm::BasicBlock *BB) const -> bool {
-    if (const llvm::Instruction *term = BB->getTerminator())
-      if (const auto *BI = llvm::dyn_cast<llvm::BranchInst>(term))
-        if (!BI->isConditional()) return LI->isLoopHeader(BI->getSuccessor(0));
-    return false;
-  }
-  inline static auto containsPeeled(const llvm::SCEV *Sc, size_t numPeeled)
-    -> bool {
-    return llvm::SCEVExprContains(Sc, [numPeeled](const llvm::SCEV *S) {
-      if (const auto *r = llvm::dyn_cast<llvm::SCEVAddRecExpr>(S))
-        if (r->getLoop()->getLoopDepth() <= numPeeled) return true;
-      return false;
-    });
-  }
-  static void addSymbolic(Vector<int64_t> &offsets,
-                          llvm::SmallVector<const llvm::SCEV *, 3> &symbols,
-                          const llvm::SCEV *S, int64_t x = 1) {
-    if (size_t i = findSymbolicIndex(symbols, S)) {
-      offsets[i] += x;
-    } else {
-      symbols.push_back(S);
-      offsets.push_back(x);
-    }
-  }
-  // NOLINTNEXTLINE(misc-no-recursion)
-  static auto blackListAllDependentLoops(const llvm::SCEV *S) -> uint64_t {
-    uint64_t flag{0};
-    if (const auto *x = llvm::dyn_cast<const llvm::SCEVNAryExpr>(S)) {
-      if (const auto *y = llvm::dyn_cast<const llvm::SCEVAddRecExpr>(x))
-        flag |= uint64_t(1) << y->getLoop()->getLoopDepth();
-      for (size_t i = 0; i < x->getNumOperands(); ++i)
-        flag |= blackListAllDependentLoops(x->getOperand(i));
-    } else if (const auto *c = llvm::dyn_cast<const llvm::SCEVCastExpr>(S)) {
-      for (size_t i = 0; i < c->getNumOperands(); ++i)
-        flag |= blackListAllDependentLoops(c->getOperand(i));
-      return flag;
-    } else if (const auto *d = llvm::dyn_cast<const llvm::SCEVUDivExpr>(S)) {
-      for (size_t i = 0; i < d->getNumOperands(); ++i)
-        flag |= blackListAllDependentLoops(d->getOperand(i));
-      return flag;
-    }
-    return flag;
-  }
-  static auto blackListAllDependentLoops(const llvm::SCEV *S, size_t numPeeled)
-    -> uint64_t {
-    return blackListAllDependentLoops(S) >> (numPeeled + 1);
-  }
-  // translates scev S into loops and symbols
-  auto // NOLINTNEXTLINE(misc-no-recursion)
-  fillAffineIndices(MutPtrVector<int64_t> v, Vector<int64_t> &offsets,
-                    llvm::SmallVector<const llvm::SCEV *, 3> &symbolicOffsets,
-                    const llvm::SCEV *S, int64_t mlt, size_t numPeeled)
-    -> uint64_t {
-    uint64_t blackList{0};
-    if (const auto *x = llvm::dyn_cast<const llvm::SCEVAddRecExpr>(S)) {
-      const llvm::Loop *L = x->getLoop();
-      size_t depth = L->getLoopDepth();
-      if (depth <= numPeeled) {
-        // we effectively have an offset
-        // we'll add an
-        addSymbolic(offsets, symbolicOffsets, S, 1);
-        for (size_t i = 1; i < x->getNumOperands(); ++i)
-          blackList |= blackListAllDependentLoops(x->getOperand(i));
-
-        return blackList;
-      }
-      // outermost loop has loopInd 0
-      ptrdiff_t loopInd = ptrdiff_t(depth) - ptrdiff_t(numPeeled + 1);
-      if (x->isAffine()) {
-        if (loopInd >= 0) {
-          if (auto c = getConstantInt(x->getOperand(1))) {
-            // we want the innermost loop to have index 0
-            v[loopInd] += *c;
-            return fillAffineIndices(v, offsets, symbolicOffsets,
-                                     x->getOperand(0), mlt, numPeeled);
-          }
-          blackList |= (uint64_t(1) << uint64_t(loopInd));
-        }
-        // we separate out the addition
-        // the multiplication was either peeled or involved
-        // non-const multiple
-        blackList |= fillAffineIndices(v, offsets, symbolicOffsets,
-                                       x->getOperand(0), mlt, numPeeled);
-        // and then add just the multiple here as a symbolic offset
-        const llvm::SCEV *addRec = SE->getAddRecExpr(
-          SE->getZero(x->getOperand(0)->getType()), x->getOperand(1),
-          x->getLoop(), x->getNoWrapFlags());
-        addSymbolic(offsets, symbolicOffsets, addRec, mlt);
-        return blackList;
-      }
-      if (loopInd >= 0) blackList |= (uint64_t(1) << uint64_t(loopInd));
-    } else if (std::optional<int64_t> c = getConstantInt(S)) {
-      offsets[0] += *c;
-      return 0;
-    } else if (const auto *ar = llvm::dyn_cast<const llvm::SCEVAddExpr>(S)) {
-      return fillAffineIndices(v, offsets, symbolicOffsets, ar->getOperand(0),
-                               mlt, numPeeled) |
-             fillAffineIndices(v, offsets, symbolicOffsets, ar->getOperand(1),
-                               mlt, numPeeled);
-    } else if (const auto *m = llvm::dyn_cast<const llvm::SCEVMulExpr>(S)) {
-      if (auto op0 = getConstantInt(m->getOperand(0))) {
-        return fillAffineIndices(v, offsets, symbolicOffsets, m->getOperand(1),
-                                 mlt * (*op0), numPeeled);
-      }
-      if (auto op1 = getConstantInt(m->getOperand(1))) {
-        return fillAffineIndices(v, offsets, symbolicOffsets, m->getOperand(0),
-                                 mlt * (*op1), numPeeled);
-      }
-    } else if (const auto *ca = llvm::dyn_cast<llvm::SCEVCastExpr>(S))
-      return fillAffineIndices(v, offsets, symbolicOffsets, ca->getOperand(0),
-                               mlt, numPeeled);
-    addSymbolic(offsets, symbolicOffsets, S, mlt);
-    return blackList | blackListAllDependentLoops(S, numPeeled);
-  }
-  auto arrayRef(LoopTree &LT, llvm::Instruction *ptr, const llvm::SCEV *elSize,
-                llvm::Instruction *loadOrStore, MutPtrVector<unsigned> omegas)
-    -> bool {
-    llvm::Loop *L = LT.loop;
-    // code modified from
-    // https://llvm.org/doxygen/Delinearization_8cpp_source.html#l00582
-    const llvm::SCEV *accessFn = SE->getSCEVAtScope(ptr, L);
-
-    const llvm::SCEV *pb = SE->getPointerBase(accessFn);
-    const auto *basePointer = llvm::dyn_cast<llvm::SCEVUnknown>(pb);
-    // Do not delinearize if we cannot find the base pointer.
-    if (!basePointer) {
-      if (ORE && L) [[unlikely]] {
-        remark("ArrayRefDeliniarize", LT.loop,
-               "ArrayReference failed because !basePointer\n", ptr);
-      }
-      conditionOnLoop(L);
-      return true;
-    }
-    accessFn = SE->getMinusSCEV(accessFn, basePointer);
-    llvm::SmallVector<const llvm::SCEV *, 3> subscripts, sizes;
-    llvm::delinearize(*SE, accessFn, subscripts, sizes, elSize);
-    size_t numDims = subscripts.size();
-    invariant(numDims, sizes.size());
-    AffineLoopNest<true> *aln = loopMap[L]->affineLoop;
-    if (numDims == 0) {
-      LT.memAccesses.push_back(MemoryAccess::construct(
-        allocator, basePointer, *aln, loadOrStore, omegas));
-      ++omegas.back();
-      return false;
-    }
-    size_t numLoops{aln->getNumLoops()};
-    // numLoops x arrayDim
-    // IntMatrix R(numLoops, numDims);
-    size_t numPeeled = L->getLoopDepth() - numLoops;
-    // numLoops x arrayDim
-    IntMatrix Rt{StridedDims{numDims, numLoops}, 0};
-    IntMatrix Bt;
-    llvm::SmallVector<const llvm::SCEV *, 3> symbolicOffsets;
-    uint64_t blackList{0};
-    {
-      Vector<int64_t> offsets;
-      for (size_t i = 0; i < numDims; ++i) {
-        offsets.clear();
-        offsets.push_back(0);
-        blackList |= fillAffineIndices(Rt(i, _), offsets, symbolicOffsets,
-                                       subscripts[i], 1, numPeeled);
-        Bt.resize(numDims, offsets.size());
-        Bt(i, _) << offsets;
-      }
-    }
-    uint64_t numExtraLoopsToPeel = 0;
-    if (blackList) {
-      // blacklist: inner - outer
-      uint64_t leadingZeros = std::countl_zero(blackList);
-      numExtraLoopsToPeel = 64 - leadingZeros;
-      // need to condition on loop
-      // remove the numExtraLoopsToPeel from Rt
-      // that is, we want to move Rt(_,_(end-numExtraLoopsToPeel,end))
-      // to would this code below actually be expected to boost
-      // performance? if
-      // (Bt.numCol()+numExtraLoopsToPeel>Bt.rowStride())
-      // 	Bt.resize(Bt.numRow(),Bt.numCol(),Bt.numCol()+numExtraLoopsToPeel);
-      // order of loops in Rt is innermost -> outermost
-      size_t remainingLoops = numLoops - numExtraLoopsToPeel;
-      llvm::Loop *P = L;
-      for (size_t i = 1; i < remainingLoops; ++i) P = P->getParentLoop();
-      // remove
-      conditionOnLoop(P->getParentLoop());
-      for (size_t i = 0; i < numExtraLoopsToPeel; ++i) {
-        P = P->getParentLoop();
-        if (allZero(Rt(_, i))) continue;
-        // push the SCEV
-        auto *intType = P->getInductionVariable(*SE)->getType();
-        const llvm::SCEV *S = SE->getAddRecExpr(
-          SE->getZero(intType), SE->getOne(intType), P, llvm::SCEV::NoWrapMask);
-        if (size_t j = findSymbolicIndex(symbolicOffsets, S)) {
-          Bt(_, j) += Rt(_, i);
-        } else {
-          Col N = Bt.numCol();
-          Bt.resize(N + 1);
-          Bt(_, N) << Rt(_, i);
-          symbolicOffsets.push_back(S);
+          E = subLoop->getLoopPreheader(); // want to draw a path from trec
+          continue;
         }
       }
+      // we reject, because we failed to build a trec with a LoopNest
+      failed = true;
+      optimize(tr);
+      tr = {};
+      // we don't need to draw a path from anything, so only exit needed
+      if (i) E = subLoops[i - 1]->getExitBlock();
     }
-    LT.memAccesses.push_back(MemoryAccess::construct(
-      allocator, basePointer, *aln, loadOrStore,
-      Rt(_, _(numExtraLoopsToPeel, end)),
-      {std::move(sizes), std::move(symbolicOffsets)}, Bt, omegas));
-    ++omegas.back();
-    if (ORE) [[unlikely]] {
-      llvm::SmallVector<char> x;
-      llvm::raw_svector_ostream os{x};
-      os << "Found ref: " << *LT.memAccesses.back()->getArrayRef();
-      remark("AffineRef", LT.loop, os.str());
+    if (failed) {
+      if (tr.accept(depth)) optimize(tr);
+      omega.pop_back();
+      return {};
     }
-    return false;
-  }
-  // LoopTree &getLoopTree(unsigned i) { return loopTrees[i]; }
-  auto getLoopTree(llvm::Loop *L) -> LoopTree * { return loopMap[L]; }
-  auto addRef(LoopTree &LT, LoadOrStoreInst auto *J, Vector<unsigned> &omega)
-    -> bool {
-    llvm::Value *ptr = J->getPointerOperand();
-    // llvm::Type *type = I->getPointerOperandType();
-    const llvm::SCEV *elSize = SE->getElementSize(J);
-    // TODO: support top level array refs
-    if (LT.loop) {
-      if (auto *iptr = llvm::dyn_cast<llvm::Instruction>(ptr)) {
-        if (!arrayRef(LT, iptr, elSize, J, omega)) return false;
-        if (ORE) [[unlikely]] {
-          llvm::SmallVector<char> x;
-          llvm::raw_svector_ostream os{x};
-          if (llvm::isa<llvm::LoadInst>(J))
-            os << "No affine representation for load: " << *J << "\n";
-          else os << "No affine representation for store: " << *J << "\n";
-          remark("AddAffineLoad", LT.loop, os.str(), J);
-        }
-      }
-      return true;
-    }
-    return false;
-  }
-  void parseBB(LoopTree &LT, llvm::BasicBlock *BB, Vector<unsigned> &omega) {
-    for (llvm::Instruction &J : *BB) {
-      if (LT.loop) assert(LT.loop->contains(&J));
-      if (J.mayReadFromMemory()) {
-        if (auto *load = llvm::dyn_cast<llvm::LoadInst>(&J))
-          if (addRef(LT, load, omega)) return;
-      } else if (J.mayWriteToMemory())
-        if (auto *store = llvm::dyn_cast<llvm::StoreInst>(&J))
-          if (addRef(LT, store, omega)) return;
-    }
-  }
-  // NOLINTNEXTLINE(misc-no-recursion)
-  void visit(LoopTree &LT, Predicate::Map &map, Vector<unsigned> &omega,
-             aset<llvm::BasicBlock *> &visited, llvm::BasicBlock *BB) {
-    if ((!map.isInPath(BB)) || visited.contains(BB)) return;
-    visited.insert(BB);
-    for (llvm::BasicBlock *pred : llvm::predecessors(BB))
-      visit(LT, map, omega, visited, pred);
-    parseBB(LT, BB, omega);
-  }
-  void parseBBMap(LoopTree &LT, Predicate::Map &map, Vector<unsigned> &omega) {
-    aset<llvm::BasicBlock *> visited{allocator};
-    for (auto &pair : map) visit(LT, map, omega, visited, pair.first);
-  }
-  // we fill omegas, we have loop pos only, not shifts
-  // pR: 0
-  // pL: 0
-  // pL: 0
-  //
-  // [0, 0]
-  // NOLINTNEXTLINE(misc-no-recursion)
-  void parseLoop(LoopTree &LT, Vector<unsigned> &omega) {
-#ifndef NDEBUG
-    size_t numOmegaInitial = omega.size();
-    // FIXME:
-    // two issues, currently:
-    // 1. multiple parses produce the same omega
-    // 2. we have the same BB showing up multiple times
-    // for (auto &&path : LT.paths)
-    //     for (auto PBB : path) {
-    //         assert(!paths.contains(PBB.basicBlock));
-    //         paths.insert(PBB.basicBlock);
-    //     }
-    assert(LT.subLoops.size() + 1 == LT.paths.size());
-#endif
-    omega.push_back(0);
-    // now we walk blocks
-    // auto &subLoops = L->getSubLoops();
-    for (size_t i = 0; i < LT.subLoops.size(); ++i) {
-      parseBBMap(LT, LT.paths[i], omega);
-      parseLoop(*LT.subLoops[i], omega);
-      ++omega.back();
-    }
-    parseBBMap(LT, LT.paths.back(), omega);
+    // now we try to go from E to H
+    IR::TreeResult trblock = parseBlocks(L->getHeader(), E, L, omega, AL, tr);
+    if (trblock.reject(depth)) {
+      optimize(tr); // optimize old tr
+      tr = {};
+    } else tr = trblock;
     omega.pop_back();
-#ifndef NDEBUG
-    assert(omega.size() == numOmegaInitial);
-#endif
-  }
-  void parseNest() {
-    Vector<unsigned> omega;
-    for (auto forest : loopForests) {
-      omega.clear();
-      parseLoop(*forest, omega);
-    }
+    return tr;
   }
 
-  void peelOuterLoops(llvm::Loop *L, size_t numToPeel) {
-    peelOuterLoops(*loopMap[L], numToPeel);
+  void optimize(IR::TreeResult tr) {
+    // now we build the LinearProgram
+    lp::OptimizationResult lpor = loopBlock.optimize(instructions, tr);
+    if (!lpor.nodes) return;
+    CostModeling::optimize(instructions, loopBlock.getAllocator(), lpor);
   }
-  // peelOuterLoops is recursive inwards
-  // NOLINTNEXTLINE(misc-no-recursion)
-  void peelOuterLoops(LoopTree &LT, size_t numToPeel) {
-    for (auto SL : LT) peelOuterLoops(*SL, numToPeel);
-    for (auto &MA : LT.memAccesses) MA->peelLoops(numToPeel);
-    LT.affineLoop->removeOuterMost(numToPeel, LT.loop, *SE);
-  }
-  // conditionOnLoop(llvm::Loop *L)
-  // means to remove the loop L, and all those exterior to it.
-  //
-  //        /-> C /-> F  -> J
-  // -A -> B -> D  -> G \-> K
-  //  |     \-> E  -> H  -> L
-  //  |           \-> I
-  //   \-> M -> N
-  // if we condition on D
-  // then we get
-  //
-  //     /-> J
-  // _/ F -> K
-  //  \ G
-  // -C
-  // -E -> H -> L
-  //   \-> I
-  // -M -> N
-  // algorithm:
-  // 1. peel the outer loops from D's children (peel 3)
-  // 2. add each of D's children as new forests
-  // 3. remove D from B's subLoops; add prev and following loops as
-  // separate new forests
-  // 4. conditionOnLoop(B)
-  //
-  // approach: remove LoopIndex, and all loops that follow, unless it is
-  // first in which case, just remove LoopIndex
-  void conditionOnLoop(llvm::Loop *L) { conditionOnLoop(loopMap[L]); }
-  void conditionOnLoop(LoopTree *LT) { // NOLINT(misc-no-recursion)
-    if (!LT->parentLoop) return;
-    LoopTree &PT = *LT->parentLoop;
-    size_t numLoops = LT->getNumLoops();
-    for (auto ST : *LT) peelOuterLoops(*ST, numLoops);
-
-    LT->parentLoop = nullptr; // LT is now top of the tree
-    loopForests.push_back(LT);
-    llvm::SmallVector<NotNull<LoopTree>> &friendLoops = PT.subLoops;
-    if (friendLoops.front() != LT) {
-      // we're cutting off the front
-      size_t numFriendLoops = friendLoops.size();
-      assert(numFriendLoops);
-      size_t loopIndex = 0;
-      for (size_t i = 1; i < numFriendLoops; ++i) {
-        if (friendLoops[i] == LT) {
-          loopIndex = i;
-          break;
-        }
-      }
-      assert(loopIndex);
-      size_t j = loopIndex + 1;
-      if (j != numFriendLoops) {
-        // we have some remaining paths we split off
-        llvm::SmallVector<NotNull<LoopTree>> tmp;
-        tmp.reserve(numFriendLoops - j);
-        // for paths, we're dropping LT
-        // thus, our paths are paths(_(0,j)), paths(_(j,end))
-        llvm::SmallVector<Predicate::Map> paths;
-        paths.reserve(numFriendLoops - loopIndex);
-        for (size_t i = j; i < numFriendLoops; ++i) {
-          peelOuterLoops(*friendLoops[i], numLoops - 1);
-          tmp.push_back(friendLoops[i]);
-          paths.push_back(std::move(PT.paths[i]));
-        }
-        paths.push_back(std::move(PT.paths[numFriendLoops]));
-        auto *newTree =
-          new (allocator) LoopTree(std::move(tmp), std::move(paths));
-        loopForests.push_back(newTree);
-        // TODO: split paths
-      }
-      friendLoops.truncate(loopIndex);
-      PT.paths.truncate(j);
-    } else {
-      friendLoops.erase(friendLoops.begin());
-      PT.paths.erase(PT.paths.begin());
+  /*
+    auto isLoopPreHeader(const llvm::BasicBlock *BB) const -> bool {
+      if (const llvm::Instruction *term = BB->getTerminator())
+        if (const auto *BI = llvm::dyn_cast<llvm::BranchInst>(term))
+          if (!BI->isConditional()) return
+  LI->isLoopHeader(BI->getSuccessor(0)); return false;
     }
-    conditionOnLoop(&PT);
+    inline static auto containsPeeled(const llvm::SCEV *Sc, size_t numPeeled)
+      -> bool {
+      return llvm::SCEVExprContains(Sc, [numPeeled](const llvm::SCEV *S) {
+        if (const auto *r = llvm::dyn_cast<llvm::SCEVAddRecExpr>(S))
+          if (r->getLoop()->getLoopDepth() <= numPeeled) return true;
+        return false;
+      });
   }
-  auto isLoopDependent(llvm::Value *v) const -> bool {
-    return !std::ranges::all_of(
-      *LI, [v](const auto &L) { return L->isLoopInvariant(v); });
-  }
-  // NOLINTNEXTLINE(misc-no-recursion)
-  static auto mayReadOrWriteMemory(llvm::Value *v) -> bool {
-    if (auto *inst = llvm::dyn_cast<llvm::Instruction>(v))
-      if (inst->mayReadOrWriteMemory()) return true;
-    return false;
-  }
-  void fillLoopBlock(LoopTree &root) { // NOLINT(misc-no-recursion)
-    for (auto mem : root.memAccesses) loopBlock.addMemory(mem);
-    for (auto sub : root.subLoops) fillLoopBlock(*sub);
-  }
+    */
   // https://llvm.org/doxygen/LoopVectorize_8cpp_source.html#l00932
   void remark(const llvm::StringRef remarkName, llvm::Loop *L,
               const llvm::StringRef remarkMessage,
@@ -684,4 +362,40 @@ public:
   // void buildInstructionGraph(LoopTree &root) {
   //     // predicates
   // }
+  // ~TurboLoopPass() {
+  //   for (auto l : loopForests) l->~LoopTree();
+  // }
+public:
+  TurboLoop(llvm::Function &F, llvm::FunctionAnalysisManager &FAM)
+    : TTI{&FAM.getResult<llvm::TargetIRAnalysis>(F)},
+      LI{&FAM.getResult<llvm::LoopAnalysis>(F)},
+      SE{&FAM.getResult<llvm::ScalarEvolutionAnalysis>(F)},
+      ORE{&FAM.getResult<llvm::OptimizationRemarkEmitterAnalysis>(F)},
+      registers{F.getContext(), *TTI} {}
+  // llvm::LoopNest LA = FAM.getResult<llvm::LoopNestAnalysis>(F);
+  // llvm::AssumptionCache &AC = FAM.getResult<llvm::AssumptionAnalysis>(F);
+  // llvm::DominatorTree &DT = FAM.getResult<llvm::DominatorTreeAnalysis>(F);
+  // TLI = &FAM.getResult<llvm::TargetLibraryAnalysis>(F);
+  auto run() {
+
+    if (!ORE->enabled()) ORE = nullptr; // cheaper check
+    if (ORE) {
+      // llvm::OptimizationRemarkAnalysis
+      // analysis{remarkAnalysis("RegisterCount", *LI->begin())};
+      // ORE->emit(analysis << "There are
+      // "<<TTI->getNumberOfRegisters(0)<<" scalar registers");
+      llvm::SmallString<32> str = llvm::formatv(
+        "there are {0} scalar registers", TTI->getNumberOfRegisters(0));
+
+      remark("ScalarRegisterCount", *LI->begin(), str);
+      str = llvm::formatv("there are {0} vector registers",
+                          registers.getNumVectorBits());
+      remark("VectorRegisterCount", *LI->begin(), str);
+    }
+    // Builds the loopForest, constructing predicate chains and loop nests
+    IR::TreeResult tr = initializeLoopForest();
+    if (tr.accept(0)) optimize(tr);
+    return llvm::PreservedAnalyses::none();
+  }
 };
+} // namespace poly

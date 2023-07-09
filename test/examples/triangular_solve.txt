@@ -5,7 +5,7 @@ ArrayIndex %52 (dim = 2, num loops: 2, element size: 8):
 Sizes: [ unknown, %20 ]
 Subscripts: [ i_1 , i_0 ]
 Initial Fusion Omega: [ 0, 0, 0 ]
-AffineLoopNest:
+poly::Loop:
 Loop 1: , 0 ≤ i_1 ≤ %23 - 1
 Loop 0: , 0 ≤ i_0 ≤ %20 - 1
 remark: REPL[26]:8:0: Found ref: Store:   store double %64, ptr addrspace(13) %65, align 8, !dbg !61, !tbaa !59
@@ -13,7 +13,7 @@ ArrayIndex %55 (dim = 2, num loops: 2, element size: 8):
 Sizes: [ unknown, %20 ]
 Subscripts: [ i_1 , i_0 ]
 Initial Fusion Omega: [ 0, 0, 1 ]
-AffineLoopNest:
+poly::Loop:
 Loop 1: , 0 ≤ i_1 ≤ %23 - 1
 Loop 0: , 0 ≤ i_0 ≤ %20 - 1
 remark: REPL[26]:11:0: Found ref: Load:   %71 = load double, ptr addrspace(13) %70, align 8, !dbg !66, !tbaa !59
@@ -21,7 +21,7 @@ ArrayIndex %55 (dim = 2, num loops: 2, element size: 8):
 Sizes: [ unknown, %20 ]
 Subscripts: [ i_1 , i_0 ]
 Initial Fusion Omega: [ 0, 1, 0 ]
-AffineLoopNest:
+poly::Loop:
 Loop 1: , 0 ≤ i_1 ≤ %23 - 1
 Loop 0: , 0 ≤ i_0 ≤ %20 - 1
 remark: REPL[26]:11:0: Found ref: Load:   %75 = load double, ptr addrspace(13) %74, align 8, !dbg !66, !tbaa !59
@@ -29,7 +29,7 @@ ArrayIndex %58 (dim = 2, num loops: 2, element size: 8):
 Sizes: [ unknown, %23 ]
 Subscripts: [ i_1 , i_1 ]
 Initial Fusion Omega: [ 0, 1, 1 ]
-AffineLoopNest:
+poly::Loop:
 Loop 1: , 0 ≤ i_1 ≤ %23 - 1
 Loop 0: , 0 ≤ i_0 ≤ %20 - 1
 remark: REPL[26]:11:0: Found ref: Store:   store double %76, ptr addrspace(13) %70, align 8, !dbg !71, !tbaa !59
@@ -37,7 +37,7 @@ ArrayIndex %55 (dim = 2, num loops: 2, element size: 8):
 Sizes: [ unknown, %20 ]
 Subscripts: [ i_1 , i_0 ]
 Initial Fusion Omega: [ 0, 1, 2 ]
-AffineLoopNest:
+poly::Loop:
 Loop 1: , 0 ≤ i_1 ≤ %23 - 1
 Loop 0: , 0 ≤ i_0 ≤ %20 - 1
 remark: REPL[26]:13:0: Found ref: Load:   %83 = load double, ptr addrspace(13) %82, align 8, !dbg !89, !tbaa !59
@@ -45,7 +45,7 @@ ArrayIndex %55 (dim = 2, num loops: 3, element size: 8):
 Sizes: [ unknown, %20 ]
 Subscripts: [ i_1  + i_2  + 1, i_0 ]
 Initial Fusion Omega: [ 0, 1, 3, 0 ]
-AffineLoopNest:
+poly::Loop:
 Loop 2: , 0 ≤ i_2 ≤ %23 - 2 - i_1
 Loop 1: , 0 ≤ i_1 ≤ %23 - 2
 Loop 0: , 0 ≤ i_0 ≤ %20 - 1
@@ -54,7 +54,7 @@ ArrayIndex %58 (dim = 2, num loops: 3, element size: 8):
 Sizes: [ unknown, %23 ]
 Subscripts: [ i_1  + i_2  + 1, i_1 ]
 Initial Fusion Omega: [ 0, 1, 3, 1 ]
-AffineLoopNest:
+poly::Loop:
 Loop 2: , 0 ≤ i_2 ≤ %23 - 2 - i_1
 Loop 1: , 0 ≤ i_1 ≤ %23 - 2
 Loop 0: , 0 ≤ i_0 ≤ %20 - 1
@@ -63,7 +63,7 @@ ArrayIndex %55 (dim = 2, num loops: 3, element size: 8):
 Sizes: [ unknown, %20 ]
 Subscripts: [ i_1  + i_2  + 1, i_0 ]
 Initial Fusion Omega: [ 0, 1, 3, 2 ]
-AffineLoopNest:
+poly::Loop:
 Loop 2: , 0 ≤ i_2 ≤ %23 - 2 - i_1
 Loop 1: , 0 ≤ i_1 ≤ %23 - 2
 Loop 0: , 0 ≤ i_0 ≤ %20 - 1
@@ -149,7 +149,7 @@ ArrayIndex %55 (dim = 2, num loops: 2, element size: 8):
 Sizes: [ unknown, %20 ]
 Subscripts: [ i_1 , i_0 ]
 Initial Fusion Omega: [ 0, 0, 1 ]
-AffineLoopNest:
+poly::Loop:
 Loop 1: , 0 ≤ i_1 ≤ %23 - 1
 Loop 0: , 0 ≤ i_0 ≤ %20 - 1
 	Output:
@@ -158,7 +158,7 @@ ArrayIndex %55 (dim = 2, num loops: 2, element size: 8):
 Sizes: [ unknown, %20 ]
 Subscripts: [ i_1 , i_0 ]
 Initial Fusion Omega: [ 0, 1, 0 ]
-AffineLoopNest:
+poly::Loop:
 Loop 1: , 0 ≤ i_1 ≤ %23 - 1
 Loop 0: , 0 ≤ i_0 ≤ %20 - 1
 A = 
@@ -209,7 +209,7 @@ ArrayIndex %55 (dim = 2, num loops: 2, element size: 8):
 Sizes: [ unknown, %20 ]
 Subscripts: [ i_1 , i_0 ]
 Initial Fusion Omega: [ 0, 0, 1 ]
-AffineLoopNest:
+poly::Loop:
 Loop 1: , 0 ≤ i_1 ≤ %23 - 1
 Loop 0: , 0 ≤ i_0 ≤ %20 - 1
 	Output:
@@ -218,7 +218,7 @@ ArrayIndex %55 (dim = 2, num loops: 2, element size: 8):
 Sizes: [ unknown, %20 ]
 Subscripts: [ i_1 , i_0 ]
 Initial Fusion Omega: [ 0, 1, 2 ]
-AffineLoopNest:
+poly::Loop:
 Loop 1: , 0 ≤ i_1 ≤ %23 - 1
 Loop 0: , 0 ≤ i_0 ≤ %20 - 1
 A = 
@@ -269,7 +269,7 @@ ArrayIndex %55 (dim = 2, num loops: 2, element size: 8):
 Sizes: [ unknown, %20 ]
 Subscripts: [ i_1 , i_0 ]
 Initial Fusion Omega: [ 0, 1, 0 ]
-AffineLoopNest:
+poly::Loop:
 Loop 1: , 0 ≤ i_1 ≤ %23 - 1
 Loop 0: , 0 ≤ i_0 ≤ %20 - 1
 	Output:
@@ -278,7 +278,7 @@ ArrayIndex %55 (dim = 2, num loops: 2, element size: 8):
 Sizes: [ unknown, %20 ]
 Subscripts: [ i_1 , i_0 ]
 Initial Fusion Omega: [ 0, 1, 2 ]
-AffineLoopNest:
+poly::Loop:
 Loop 1: , 0 ≤ i_1 ≤ %23 - 1
 Loop 0: , 0 ≤ i_0 ≤ %20 - 1
 A = 
@@ -329,7 +329,7 @@ ArrayIndex %55 (dim = 2, num loops: 2, element size: 8):
 Sizes: [ unknown, %20 ]
 Subscripts: [ i_1 , i_0 ]
 Initial Fusion Omega: [ 0, 0, 1 ]
-AffineLoopNest:
+poly::Loop:
 Loop 1: , 0 ≤ i_1 ≤ %23 - 1
 Loop 0: , 0 ≤ i_0 ≤ %20 - 1
 	Output:
@@ -338,7 +338,7 @@ ArrayIndex %55 (dim = 2, num loops: 3, element size: 8):
 Sizes: [ unknown, %20 ]
 Subscripts: [ i_1  + i_2  + 1, i_0 ]
 Initial Fusion Omega: [ 0, 1, 3, 0 ]
-AffineLoopNest:
+poly::Loop:
 Loop 2: , 0 ≤ i_2 ≤ %23 - 2 - i_1
 Loop 1: , 0 ≤ i_1 ≤ %23 - 2
 Loop 0: , 0 ≤ i_0 ≤ %20 - 1
@@ -394,7 +394,7 @@ ArrayIndex %55 (dim = 2, num loops: 3, element size: 8):
 Sizes: [ unknown, %20 ]
 Subscripts: [ i_1  + i_2  + 1, i_0 ]
 Initial Fusion Omega: [ 0, 1, 3, 0 ]
-AffineLoopNest:
+poly::Loop:
 Loop 2: , 0 ≤ i_2 ≤ %23 - 2 - i_1
 Loop 1: , 0 ≤ i_1 ≤ %23 - 2
 Loop 0: , 0 ≤ i_0 ≤ %20 - 1
@@ -404,7 +404,7 @@ ArrayIndex %55 (dim = 2, num loops: 2, element size: 8):
 Sizes: [ unknown, %20 ]
 Subscripts: [ i_1 , i_0 ]
 Initial Fusion Omega: [ 0, 1, 2 ]
-AffineLoopNest:
+poly::Loop:
 Loop 1: , 0 ≤ i_1 ≤ %23 - 1
 Loop 0: , 0 ≤ i_0 ≤ %20 - 1
 A = 
@@ -459,7 +459,7 @@ ArrayIndex %55 (dim = 2, num loops: 2, element size: 8):
 Sizes: [ unknown, %20 ]
 Subscripts: [ i_1 , i_0 ]
 Initial Fusion Omega: [ 0, 0, 1 ]
-AffineLoopNest:
+poly::Loop:
 Loop 1: , 0 ≤ i_1 ≤ %23 - 1
 Loop 0: , 0 ≤ i_0 ≤ %20 - 1
 	Output:
@@ -468,7 +468,7 @@ ArrayIndex %55 (dim = 2, num loops: 3, element size: 8):
 Sizes: [ unknown, %20 ]
 Subscripts: [ i_1  + i_2  + 1, i_0 ]
 Initial Fusion Omega: [ 0, 1, 3, 2 ]
-AffineLoopNest:
+poly::Loop:
 Loop 2: , 0 ≤ i_2 ≤ %23 - 2 - i_1
 Loop 1: , 0 ≤ i_1 ≤ %23 - 2
 Loop 0: , 0 ≤ i_0 ≤ %20 - 1
@@ -524,7 +524,7 @@ ArrayIndex %55 (dim = 2, num loops: 3, element size: 8):
 Sizes: [ unknown, %20 ]
 Subscripts: [ i_1  + i_2  + 1, i_0 ]
 Initial Fusion Omega: [ 0, 1, 3, 2 ]
-AffineLoopNest:
+poly::Loop:
 Loop 2: , 0 ≤ i_2 ≤ %23 - 2 - i_1
 Loop 1: , 0 ≤ i_1 ≤ %23 - 2
 Loop 0: , 0 ≤ i_0 ≤ %20 - 1
@@ -534,7 +534,7 @@ ArrayIndex %55 (dim = 2, num loops: 2, element size: 8):
 Sizes: [ unknown, %20 ]
 Subscripts: [ i_1 , i_0 ]
 Initial Fusion Omega: [ 0, 1, 0 ]
-AffineLoopNest:
+poly::Loop:
 Loop 1: , 0 ≤ i_1 ≤ %23 - 1
 Loop 0: , 0 ≤ i_0 ≤ %20 - 1
 A = 
@@ -589,7 +589,7 @@ ArrayIndex %55 (dim = 2, num loops: 3, element size: 8):
 Sizes: [ unknown, %20 ]
 Subscripts: [ i_1  + i_2  + 1, i_0 ]
 Initial Fusion Omega: [ 0, 1, 3, 2 ]
-AffineLoopNest:
+poly::Loop:
 Loop 2: , 0 ≤ i_2 ≤ %23 - 2 - i_1
 Loop 1: , 0 ≤ i_1 ≤ %23 - 2
 Loop 0: , 0 ≤ i_0 ≤ %20 - 1
@@ -599,7 +599,7 @@ ArrayIndex %55 (dim = 2, num loops: 2, element size: 8):
 Sizes: [ unknown, %20 ]
 Subscripts: [ i_1 , i_0 ]
 Initial Fusion Omega: [ 0, 1, 2 ]
-AffineLoopNest:
+poly::Loop:
 Loop 1: , 0 ≤ i_1 ≤ %23 - 1
 Loop 0: , 0 ≤ i_0 ≤ %20 - 1
 A = 
@@ -654,7 +654,7 @@ ArrayIndex %55 (dim = 2, num loops: 3, element size: 8):
 Sizes: [ unknown, %20 ]
 Subscripts: [ i_1  + i_2  + 1, i_0 ]
 Initial Fusion Omega: [ 0, 1, 3, 0 ]
-AffineLoopNest:
+poly::Loop:
 Loop 2: , 0 ≤ i_2 ≤ %23 - 2 - i_1
 Loop 1: , 0 ≤ i_1 ≤ %23 - 2
 Loop 0: , 0 ≤ i_0 ≤ %20 - 1
@@ -664,7 +664,7 @@ ArrayIndex %55 (dim = 2, num loops: 3, element size: 8):
 Sizes: [ unknown, %20 ]
 Subscripts: [ i_1  + i_2  + 1, i_0 ]
 Initial Fusion Omega: [ 0, 1, 3, 2 ]
-AffineLoopNest:
+poly::Loop:
 Loop 2: , 0 ≤ i_2 ≤ %23 - 2 - i_1
 Loop 1: , 0 ≤ i_1 ≤ %23 - 2
 Loop 0: , 0 ≤ i_0 ≤ %20 - 1
@@ -726,7 +726,7 @@ ArrayIndex %55 (dim = 2, num loops: 3, element size: 8):
 Sizes: [ unknown, %20 ]
 Subscripts: [ i_1  + i_2  + 1, i_0 ]
 Initial Fusion Omega: [ 0, 1, 3, 2 ]
-AffineLoopNest:
+poly::Loop:
 Loop 2: , 0 ≤ i_2 ≤ %23 - 2 - i_1
 Loop 1: , 0 ≤ i_1 ≤ %23 - 2
 Loop 0: , 0 ≤ i_0 ≤ %20 - 1
@@ -736,7 +736,7 @@ ArrayIndex %55 (dim = 2, num loops: 3, element size: 8):
 Sizes: [ unknown, %20 ]
 Subscripts: [ i_1  + i_2  + 1, i_0 ]
 Initial Fusion Omega: [ 0, 1, 3, 0 ]
-AffineLoopNest:
+poly::Loop:
 Loop 2: , 0 ≤ i_2 ≤ %23 - 2 - i_1
 Loop 1: , 0 ≤ i_1 ≤ %23 - 2
 Loop 0: , 0 ≤ i_0 ≤ %20 - 1
@@ -798,7 +798,7 @@ ArrayIndex %55 (dim = 2, num loops: 2, element size: 8):
 Sizes: [ unknown, %20 ]
 Subscripts: [ i_1 , i_0 ]
 Initial Fusion Omega: [ 0, 1, 2 ]
-AffineLoopNest:
+poly::Loop:
 Loop 1: , 0 ≤ i_1 ≤ %23 - 1
 Loop 0: , 0 ≤ i_0 ≤ %20 - 1
 	Output:
@@ -807,7 +807,7 @@ ArrayIndex %55 (dim = 2, num loops: 2, element size: 8):
 Sizes: [ unknown, %20 ]
 Subscripts: [ i_1 , i_0 ]
 Initial Fusion Omega: [ 0, 1, 2 ]
-AffineLoopNest:
+poly::Loop:
 Loop 1: , 0 ≤ i_1 ≤ %23 - 1
 Loop 0: , 0 ≤ i_0 ≤ %20 - 1
 A = 
@@ -858,7 +858,7 @@ ArrayIndex %52 (dim = 2, num loops: 2, element size: 8):
 Sizes: [ unknown, %20 ]
 Subscripts: [ i_1 , i_0 ]
 Initial Fusion Omega: [ 0, 0, 0 ]
-AffineLoopNest:
+poly::Loop:
 Loop 1: , 0 ≤ i_1 ≤ %23 - 1
 Loop 0: , 0 ≤ i_0 ≤ %20 - 1
 nodeIndex = 0
@@ -872,7 +872,7 @@ ArrayIndex %55 (dim = 2, num loops: 2, element size: 8):
 Sizes: [ unknown, %20 ]
 Subscripts: [ i_1 , i_0 ]
 Initial Fusion Omega: [ 0, 0, 1 ]
-AffineLoopNest:
+poly::Loop:
 Loop 1: , 0 ≤ i_1 ≤ %23 - 1
 Loop 0: , 0 ≤ i_0 ≤ %20 - 1
 nodeIndex = 0
@@ -886,7 +886,7 @@ ArrayIndex %55 (dim = 2, num loops: 2, element size: 8):
 Sizes: [ unknown, %20 ]
 Subscripts: [ i_1 , i_0 ]
 Initial Fusion Omega: [ 0, 1, 0 ]
-AffineLoopNest:
+poly::Loop:
 Loop 1: , 0 ≤ i_1 ≤ %23 - 1
 Loop 0: , 0 ≤ i_0 ≤ %20 - 1
 nodeIndex = 1
@@ -900,7 +900,7 @@ ArrayIndex %58 (dim = 2, num loops: 2, element size: 8):
 Sizes: [ unknown, %23 ]
 Subscripts: [ i_1 , i_1 ]
 Initial Fusion Omega: [ 0, 1, 1 ]
-AffineLoopNest:
+poly::Loop:
 Loop 1: , 0 ≤ i_1 ≤ %23 - 1
 Loop 0: , 0 ≤ i_0 ≤ %20 - 1
 nodeIndex = 1
@@ -914,7 +914,7 @@ ArrayIndex %55 (dim = 2, num loops: 2, element size: 8):
 Sizes: [ unknown, %20 ]
 Subscripts: [ i_1 , i_0 ]
 Initial Fusion Omega: [ 0, 1, 2 ]
-AffineLoopNest:
+poly::Loop:
 Loop 1: , 0 ≤ i_1 ≤ %23 - 1
 Loop 0: , 0 ≤ i_0 ≤ %20 - 1
 nodeIndex = 1
@@ -928,7 +928,7 @@ ArrayIndex %55 (dim = 2, num loops: 3, element size: 8):
 Sizes: [ unknown, %20 ]
 Subscripts: [ i_1  + i_2  + 1, i_0 ]
 Initial Fusion Omega: [ 0, 1, 3, 0 ]
-AffineLoopNest:
+poly::Loop:
 Loop 2: , 0 ≤ i_2 ≤ %23 - 2 - i_1
 Loop 1: , 0 ≤ i_1 ≤ %23 - 2
 Loop 0: , 0 ≤ i_0 ≤ %20 - 1
@@ -944,7 +944,7 @@ ArrayIndex %58 (dim = 2, num loops: 3, element size: 8):
 Sizes: [ unknown, %23 ]
 Subscripts: [ i_1  + i_2  + 1, i_1 ]
 Initial Fusion Omega: [ 0, 1, 3, 1 ]
-AffineLoopNest:
+poly::Loop:
 Loop 2: , 0 ≤ i_2 ≤ %23 - 2 - i_1
 Loop 1: , 0 ≤ i_1 ≤ %23 - 2
 Loop 0: , 0 ≤ i_0 ≤ %20 - 1
@@ -960,7 +960,7 @@ ArrayIndex %55 (dim = 2, num loops: 3, element size: 8):
 Sizes: [ unknown, %20 ]
 Subscripts: [ i_1  + i_2  + 1, i_0 ]
 Initial Fusion Omega: [ 0, 1, 3, 2 ]
-AffineLoopNest:
+poly::Loop:
 Loop 2: , 0 ≤ i_2 ≤ %23 - 2 - i_1
 Loop 1: , 0 ≤ i_1 ≤ %23 - 2
 Loop 0: , 0 ≤ i_0 ≤ %20 - 1
@@ -976,7 +976,7 @@ ArrayIndex %55 (dim = 2, num loops: 2, element size: 8):
 Sizes: [ unknown, %20 ]
 Subscripts: [ i_1 , i_0 ]
 Initial Fusion Omega: [ 0, 1, 2 ]
-AffineLoopNest:
+poly::Loop:
 Loop 1: , 0 ≤ i_1 ≤ %23 - 1
 Loop 0: , 0 ≤ i_0 ≤ %20 - 1
 nodeIndex = 2
