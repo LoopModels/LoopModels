@@ -69,7 +69,6 @@ $(function() {
 <a href="#nested-classes">Classes</a> &#124;
 <a href="#pub-types">Public Types</a> &#124;
 <a href="#pub-methods">Public Member Functions</a> &#124;
-<a href="#pub-static-methods">Static Public Member Functions</a> &#124;
 <a href="#friends">Friends</a> &#124;
 <a href="classpoly_1_1poly_1_1Dependencies-members.html">List of all members</a>  </div>
   <div class="headertitle">
@@ -96,9 +95,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:aec5f70e179af09786e391ceef983d16a"><td class="memItemLeft" align="right" valign="top"><a id="aec5f70e179af09786e391ceef983d16a"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>Dependencies</b> (const <a class="el" href="classpoly_1_1poly_1_1Dependencies.html">Dependencies</a> &amp;)=default</td></tr>
 <tr class="separator:aec5f70e179af09786e391ceef983d16a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1d1032bc0857ebd6dedf740f9812ef01"><td class="memItemLeft" align="right" valign="top"><a id="a1d1032bc0857ebd6dedf740f9812ef01"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>size</b> () const noexcept</td></tr>
-<tr class="separator:a1d1032bc0857ebd6dedf740f9812ef01"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a88e886f68e49de9c7e4592ff95454d71"><td class="memItemLeft" align="right" valign="top"><a id="a88e886f68e49de9c7e4592ff95454d71"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>size</b> () const noexcept -&gt; int32_t</td></tr>
+<tr class="separator:a88e886f68e49de9c7e4592ff95454d71"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a38a0456ba9b5151161ee832aedd59c3c"><td class="memItemLeft" align="right" valign="top"><a id="a38a0456ba9b5151161ee832aedd59c3c"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>outAddrs</b> () -&gt; MutPtrVector&lt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> * &gt;</td></tr>
 <tr class="separator:a38a0456ba9b5151161ee832aedd59c3c"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -147,18 +146,15 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>isSat</b> (
 <tr class="memitem:ab114001e234a1a84eda989691cf2ef76"><td class="memItemLeft" align="right" valign="top"><a id="ab114001e234a1a84eda989691cf2ef76"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>isForward</b> (<a class="el" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">ID</a> i) const noexcept -&gt; bool &amp;</td></tr>
 <tr class="separator:ab114001e234a1a84eda989691cf2ef76"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab915832a76f5560a288ebe210d707d4b"><td class="memItemLeft" align="right" valign="top"><a id="ab915832a76f5560a288ebe210d707d4b"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>check</b> (Arena&lt;&gt; *alloc, NotNull&lt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> &gt; x, NotNull&lt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> &gt; y)</td></tr>
+<tr class="separator:ab915832a76f5560a288ebe210d707d4b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adbab147d34eb72c4204413c0cf3510a6"><td class="memItemLeft" align="right" valign="top"><a id="adbab147d34eb72c4204413c0cf3510a6"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>copyDependencies</b> (Arena&lt;&gt; *alloc, <a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> *src, <a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> *dst)</td></tr>
 <tr class="separator:adbab147d34eb72c4204413c0cf3510a6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac9ba94f2688d936c316999df04e28886"><td class="memItemLeft" align="right" valign="top"><a id="ac9ba94f2688d936c316999df04e28886"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>reload</b> (Arena&lt;&gt; *alloc, NotNull&lt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> &gt; store) -&gt; NotNull&lt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> &gt;</td></tr>
 <tr class="separator:ac9ba94f2688d936c316999df04e28886"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
-Static Public Member Functions</h2></td></tr>
-<tr class="memitem:adc0083bf44602f4fc6a290453a06e7f1"><td class="memItemLeft" align="right" valign="top"><a id="adc0083bf44602f4fc6a290453a06e7f1"></a>
-static void&#160;</td><td class="memItemRight" valign="bottom"><b>check</b> (Arena&lt;&gt; *alloc, NotNull&lt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> &gt; x, NotNull&lt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> &gt; y)</td></tr>
-<tr class="separator:adc0083bf44602f4fc6a290453a06e7f1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="friends"></a>
 Friends</h2></td></tr>
