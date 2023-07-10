@@ -19,7 +19,7 @@ namespace poly {
 class Dependence {
 public:
   struct ID {
-    ptrdiff_t id;
+    int32_t id;
   };
 
 private:
@@ -179,11 +179,6 @@ public:
                           outPhi))
       satLvl[0] = uint8_t(inPhi.numRow() - 1);
   }
-  // constexpr auto addEdge(size_t i) -> Dependence & {
-  //   in->addEdgeOut(i);
-  //   out->addEdgeIn(i);
-  //   return *this;
-  // }
   constexpr void copySimplices(Arena<> *alloc) {
     dependenceSatisfaction = dependenceSatisfaction->copy(alloc);
     dependenceBounding = dependenceBounding->copy(alloc);
@@ -538,15 +533,24 @@ static_assert(sizeof(Dependence) <= 64);
 // j_0 = j_1 - k_1
 class Dependencies {
   char *data;
-  unsigned numData{0};
+  int32_t numData{0};
   // int32_t tombstone{-1};
+
 public:
   using ID = Dependence::ID;
   Dependencies(Arena<> *alloc) : data(alloc->allocate<char>(memNeeded(64))) {}
   Dependencies(const Dependencies &) = default; // or delete?
-  [[nodiscard]] constexpr auto size() const noexcept { return numData; }
+  [[nodiscard]] constexpr auto size() const noexcept -> int32_t {
+    return numData;
+  }
 
 private:
+  void addEdge(Arena<> *alloc, Dependence d) {
+    int32_t id = size();
+    push_pack(alloc, d);
+    d.input()->setEdgeOut(id);
+    d.output()->setEdgeIn(id);
+  }
   static constexpr auto memNeeded(size_t N) -> size_t {
     constexpr size_t memPer = sizeof(int32_t) * 2 + sizeof(DepPoly *) +
                               sizeof(math::Simplex *) * 2 + sizeof(bool) +
@@ -554,10 +558,9 @@ private:
     return N * memPer;
   }
 
-  static void timelessCheck(Arena<> *alloc, NotNull<DepPoly> dxy,
-                            NotNull<IR::Addr> x, NotNull<IR::Addr> y,
-                            std::array<NotNull<math::Simplex>, 2> pair,
-                            bool isFwd) {
+  void timelessCheck(Arena<> *alloc, NotNull<DepPoly> dxy, NotNull<IR::Addr> x,
+                     NotNull<IR::Addr> y,
+                     std::array<NotNull<math::Simplex>, 2> pair, bool isFwd) {
     const size_t numLambda = dxy->getNumLambda();
     invariant(dxy->getTimeDim(), unsigned(0));
     if (!isFwd) {
@@ -565,11 +568,11 @@ private:
       std::swap(x, y);
     }
     pair[0]->truncateVars(1 + numLambda + dxy->getNumScheduleCoef());
-    y->addEdgeIn(alloc->create<Dependence>(dxy, pair, x, y, isFwd));
+    addEdge(alloc, Dependence{dxy, pair, x, y, isFwd});
   }
-  static void timelessCheck(Arena<> *alloc, NotNull<DepPoly> dxy,
-                            NotNull<IR::Addr> x, NotNull<IR::Addr> y,
-                            std::array<NotNull<math::Simplex>, 2> pair) {
+  void timelessCheck(Arena<> *alloc, NotNull<DepPoly> dxy, NotNull<IR::Addr> x,
+                     NotNull<IR::Addr> y,
+                     std::array<NotNull<math::Simplex>, 2> pair) {
     return timelessCheck(alloc, dxy, x, y, pair,
                          checkDirection(*alloc, pair, x, y, dxy->getNumLambda(),
                                         dxy->getNumVar() + 1));
@@ -577,17 +580,16 @@ private:
 
   // emplaces dependencies with repeat accesses to the same memory across
   // time
-  static void timeCheck(Arena<> *alloc, NotNull<DepPoly> dxy,
-                        NotNull<IR::Addr> x, NotNull<IR::Addr> y,
-                        std::array<NotNull<math::Simplex>, 2> pair) {
+  void timeCheck(Arena<> *alloc, NotNull<DepPoly> dxy, NotNull<IR::Addr> x,
+                 NotNull<IR::Addr> y,
+                 std::array<NotNull<math::Simplex>, 2> pair) {
     bool isFwd = checkDirection(*alloc, pair, x, y, dxy->getNumLambda(),
                                 dxy->getA().numCol() - dxy->getTimeDim());
     timeCheck(alloc, dxy, x, y, pair, isFwd);
   }
-  static void timeCheck(Arena<> *alloc, NotNull<DepPoly> dxy,
-                        NotNull<IR::Addr> x, NotNull<IR::Addr> y,
-                        std::array<NotNull<math::Simplex>, 2> pair,
-                        bool isFwd) {
+  void timeCheck(Arena<> *alloc, NotNull<DepPoly> dxy, NotNull<IR::Addr> x,
+                 NotNull<IR::Addr> y,
+                 std::array<NotNull<math::Simplex>, 2> pair, bool isFwd) {
     const unsigned numInequalityConstraintsOld =
                      dxy->getNumInequalityConstraints(),
                    numEqualityConstraintsOld = dxy->getNumEqualityConstraints(),
@@ -607,11 +609,10 @@ private:
       std::swap(pair[0], pair[1]);
     }
     pair[0]->truncateVars(1 + numLambda + numScheduleCoefs);
-    auto *dep0 =
-      alloc->create<Dependence>(dxy->copy(alloc), pair, in, out, isFwd);
+    auto dep0 = Dependence{dxy->copy(alloc), pair, in, out, isFwd};
     invariant(out->getCurrentDepth() + in->getCurrentDepth(),
-              dep0->getNumPhiCoefficients());
-    out->addEdgeIn(dep0);
+              dep0.getNumPhiCoefficients());
+    addEdge(alloc, dep0);
     // pair is invalid
     const ptrdiff_t timeDim = dxy->getTimeDim(),
                     numVar = 1 + dxy->getNumVar() - timeDim;
@@ -622,7 +623,7 @@ private:
 
     // dep0.depPoly->setTimeDim(0);
     invariant(out->getCurrentDepth() + in->getCurrentDepth(),
-              dep0->getNumPhiCoefficients());
+              dep0.getNumPhiCoefficients());
     // now we need to check the time direction for all times
     // anything approaching 16 time dimensions would be absolutely
     // insane
@@ -693,10 +694,10 @@ private:
     // dxy->truncateVars(numVar);
     // dxy->setTimeDim(0);
     farkasBackups[0]->truncateVars(1 + numLambda + numScheduleCoefs);
-    auto *dep1 = alloc->create<Dependence>(dxy, farkasBackups, out, in, !isFwd);
+    auto dep1 = Dependence{dxy, farkasBackups, out, in, !isFwd};
     invariant(out->getCurrentDepth() + in->getCurrentDepth(),
-              dep0->getNumPhiCoefficients());
-    in->addEdgeIn(dep1);
+              dep1.getNumPhiCoefficients());
+    addEdge(alloc, dep1);
   }
   static auto checkDirection(Arena<> alloc,
                              const std::array<NotNull<math::Simplex>, 2> &p,
@@ -788,17 +789,20 @@ private:
     invariant(false);
     return false;
   }
-  constexpr auto get(ID i) -> Dependence {
-    return Dependence{depPoly(i),      depSatBnd(i), input(i), output(i),
+  constexpr auto get(ID i, IR::Addr *in, IR::Addr *out) -> Dependence {
+    return Dependence{depPoly(i),      depSatBnd(i), in, out,
                       satLevelPair(i), isForward(i)
 
     };
   }
+  constexpr auto get(ID i) -> Dependence { return get(i, input(i), output(i)); }
   constexpr void set(ID i, Dependence d) {
-    output(i) = d.output();
-    input(i) = d.input();
-    nextOut(i) = d.output()->getEdgeOut();
-    nextIn(i) = d.input()->getEdgeIn();
+    auto out = d.output();
+    auto in = d.input();
+    output(i) = out;
+    nextOut(i) = out->getEdgeOut();
+    input(i) = in;
+    nextIn(i) = in->getEdgeIn();
     depSatBnd(i) = d.getSimplexPair();
     depPoly(i) = d.getDepPoly();
     satLevelPair(i) = d.satLvl;
@@ -816,8 +820,8 @@ private:
     set(ID{numData++}, d);
     return ret;
   }
-  [[nodiscard]] constexpr auto getCapacity() const noexcept -> unsigned {
-    return std::bit_ceil(numData);
+  [[nodiscard]] constexpr auto getCapacity() const noexcept -> int32_t {
+    return int32_t(std::bit_ceil(uint32_t(numData)));
   }
 
   constexpr auto outAddrPtr() -> IR::Addr ** {
@@ -953,7 +957,7 @@ public:
     auto pair = satLevelPair(i);
     return Dependence::satLevelMask(pair[0]);
   }
-  constexpr auto isSat(ID i, unsigned depth) const -> uint8_t {
+  [[nodiscard]] constexpr auto isSat(ID i, unsigned depth) const -> uint8_t {
     auto pair = satLevelPair(i);
     return Dependence::satLevelMask(pair[0]) <= depth;
   }
@@ -981,7 +985,7 @@ public:
     }
   };
 
-  static void check(Arena<> *alloc, NotNull<IR::Addr> x, NotNull<IR::Addr> y) {
+  void check(Arena<> *alloc, NotNull<IR::Addr> x, NotNull<IR::Addr> y) {
     // TODO: implement gcd test
     // if (x.gcdKnownIndependent(y)) return {};
     DepPoly *dxy{DepPoly::dependence(alloc, x, y)};
@@ -1064,46 +1068,22 @@ inline auto IR::Addr::outputAddrs(Dependencies deps, unsigned depth) const {
   return outputEdges(deps, depth) | std::views::transform(f);
 }
 
-inline constexpr void Addr::setEdgeIn(Dependence *dep) {
-  edgeIn = dep->setNextInput(edgeIn);
-}
-inline constexpr void Addr::setEdgeOut(Dependence *dep) {
-  edgeOut = dep->setNextOutput(edgeOut);
-}
-inline constexpr void Addr::addEdgeIn(Dependence *dep) {
-  setEdgeIn(dep);
-  dep->input()->setEdgeOut(dep);
-}
-inline constexpr void Addr::addEdgeOut(Dependence *dep) {
-  setEdgeOut(dep);
-  dep->output()->setEdgeIn(dep);
-}
-
 } // namespace IR
 
 namespace poly {
 inline void Dependencies::copyDependencies(Arena<> *alloc, IR::Addr *src,
                                            IR::Addr *dst) {
-  for (Dependence d : src->inputEdges(*this)) {
-    IR::Addr *input = d.in;
+  for (int32_t id : src->inputEdges(*this)) {
+    IR::Addr *input = this->input(Dependence::ID{id});
     if (input->isLoad()) continue;
-    auto *in = alloc->create<Dependence>(d.getDepPoly(), d.getSimplexPair(),
-                                         input, dst, d.isForward());
-    dst->addEdgeIn(in);
+    Dependence d = get(Dependence::ID{id}, input, dst);
+    addEdge(alloc, d);
   }
-  for (Dependence *d = src->getEdgeIn(); d; d = d->getNextInput()) {
-    IR::Addr *input = d->in;
-    if (input->isLoad()) continue;
-    auto *in = alloc->create<Dependence>(d->getDepPoly(), d->getSimplexPair(),
-                                         input, dst, d->isForward());
-    dst->addEdgeIn(in);
-  }
-  for (Dependence *d = src->getEdgeOut(); d; d = d->getNextOutput()) {
-    IR::Addr *output = d->out;
+  for (int32_t id : src->outputEdges(*this)) {
+    IR::Addr *output = this->output(Dependence::ID{id});
     if (output->isLoad()) continue;
-    auto *out = alloc->create<Dependence>(d->getDepPoly(), d->getSimplexPair(),
-                                          dst, output, d->isForward());
-    dst->addEdgeOut(out);
+    Dependence d = get(Dependence::ID{id}, dst, output);
+    addEdge(alloc, d);
   }
 }
 

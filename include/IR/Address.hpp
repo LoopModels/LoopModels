@@ -133,8 +133,6 @@ class Addr : public Instruction {
   [[nodiscard]] constexpr auto offsetMatrix() -> MutDensePtrMatrix<int64_t> {
     return {offSym, DenseDims{getArrayDim(), numDynSym}};
   }
-  inline constexpr void setEdgeIn(Dependence *);
-  inline constexpr void setEdgeOut(Dependence *);
 
 public:
   constexpr void rotate(NotNull<poly::Loop> explicitLoop,
@@ -233,8 +231,9 @@ public:
     return 1 + (numLoops + 1) * dim;
   }
   Addr(const Addr &) = delete;
-  inline constexpr void addEdgeIn(Dependence *);
-  inline constexpr void addEdgeOut(Dependence *);
+  constexpr void setEdgeIn(int32_t id) { edgeIn = id; }
+  constexpr void setEdgeOut(int32_t id) { edgeOut = id; }
+
   [[nodiscard]] constexpr auto getEdgeIn() const -> int32_t { return edgeIn; }
   [[nodiscard]] constexpr auto getEdgeOut() const -> int32_t { return edgeOut; }
   constexpr void setLoopNest(poly::Loop *L) { loop = L; }
