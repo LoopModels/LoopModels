@@ -50,10 +50,16 @@ public:
     }
     return diff;
   }
+  constexpr VCycleIterator(const VCycleIterator &) noexcept = default;
+  constexpr VCycleIterator(VCycleIterator &&) noexcept = default;
+  constexpr auto operator=(const VCycleIterator &) noexcept
+    -> VCycleIterator & = default;
+  constexpr auto operator=(VCycleIterator &&) noexcept
+    -> VCycleIterator & = default;
 };
 static_assert(std::forward_iterator<VCycleIterator>);
 
-class VCycleRange {
+class VCycleRange : public std::ranges::view_interface<VCycleRange> {
   const int32_t *data;
   int32_t start;
 
@@ -109,10 +115,16 @@ public:
     }
     return diff;
   }
+  constexpr VForwardIterator(const VForwardIterator &) noexcept = default;
+  constexpr VForwardIterator(VForwardIterator &&) noexcept = default;
+  constexpr auto operator=(const VForwardIterator &) noexcept
+    -> VForwardIterator & = default;
+  constexpr auto operator=(VForwardIterator &&) noexcept
+    -> VForwardIterator & = default;
 };
 static_assert(std::forward_iterator<VForwardIterator>);
 
-class VForwardRange {
+class VForwardRange : public std::ranges::view_interface<VForwardRange> {
   const int32_t *data;
   int32_t start;
 
@@ -127,6 +139,14 @@ public:
   }
   [[nodiscard]] static constexpr auto end() noexcept { return End{}; }
 };
-static_assert(std::ranges::forward_range<VForwardRange>);
 
 }; // namespace poly::utils
+template <>
+inline constexpr bool
+  std::ranges::enable_borrowed_range<poly::utils::VForwardRange> = true;
+template <>
+inline constexpr bool
+  std::ranges::enable_borrowed_range<poly::utils::VCycleRange> = true;
+
+static_assert(std::ranges::forward_range<poly::utils::VForwardRange>);
+static_assert(std::ranges::view<poly::utils::VForwardRange>);

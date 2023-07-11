@@ -8,6 +8,7 @@
 #include <Utilities/Allocators.hpp>
 #include <Utilities/Invariant.hpp>
 #include <cstdint>
+#include <ranges>
 
 namespace poly {
 namespace poly {
@@ -532,14 +533,22 @@ static_assert(sizeof(Dependence) <= 64);
 // i_0 = i_1
 // j_0 = j_1 - k_1
 class Dependencies {
-  char *data;
+  char *data{nullptr};
   int32_t numData{0};
   // int32_t tombstone{-1};
 
 public:
   using ID = Dependence::ID;
-  Dependencies(Arena<> *alloc) : data(alloc->allocate<char>(memNeeded(64))) {}
-  Dependencies(const Dependencies &) = default; // or delete?
+  constexpr Dependencies() noexcept = default;
+  constexpr Dependencies(Arena<> *alloc)
+    : data(alloc->allocate<char>(memNeeded(64))) {}
+  constexpr Dependencies(const Dependencies &) noexcept = default; // or delete?
+  constexpr Dependencies(Dependencies &&) noexcept = default;      // or delete?
+  constexpr auto operator=(Dependencies &&other) noexcept
+    -> Dependencies & = default;
+  constexpr auto operator=(const Dependencies &other) noexcept
+    -> Dependencies & = default;
+
   [[nodiscard]] constexpr auto size() const noexcept -> int32_t {
     return numData;
   }
@@ -795,7 +804,7 @@ private:
 
     };
   }
-  constexpr auto get(ID i) -> Dependence { return get(i, input(i), output(i)); }
+
   constexpr void set(ID i, Dependence d) {
     auto out = d.output();
     auto in = d.input();
@@ -899,6 +908,7 @@ public:
   // depPoly
   // satLevel
   // isForward
+  constexpr auto get(ID i) -> Dependence { return get(i, input(i), output(i)); }
   constexpr auto outAddrs() -> MutPtrVector<IR::Addr *> {
     return {outAddrPtr(), numData};
   }
@@ -911,23 +921,27 @@ public:
   constexpr auto inEdges() -> MutPtrVector<int32_t> {
     return {inEdgePtr(), numData};
   }
+  [[nodiscard]] constexpr auto outEdges() const -> PtrVector<int32_t> {
+    return {outEdgePtr(), unsigned(numData)};
+  }
+  [[nodiscard]] constexpr auto inEdges() const -> PtrVector<int32_t> {
+    return {inEdgePtr(), unsigned(numData)};
+  }
   constexpr auto satLevels() -> MutPtrVector<std::array<uint8_t, 2>> {
     return {satLevelsPtr(), numData};
   }
 
-  constexpr auto output(ID i) -> IR::Addr *& { return outAddrPtr()[i.id]; }
-  [[nodiscard]] constexpr auto output(ID i) const -> NotNull<const IR::Addr> {
+  [[nodiscard]] constexpr auto output(ID i) -> IR::Addr *& {
     return outAddrPtr()[i.id];
   }
-  constexpr auto input(ID i) -> IR::Addr *& {
-    unsigned cap = getCapacity();
-    void *p = data + sizeof(IR::Addr *) * (i.id + cap);
-    return *static_cast<IR::Addr **>(p);
+  [[nodiscard]] constexpr auto output(ID i) const -> const IR::Addr * {
+    return outAddrPtr()[i.id];
   }
-  [[nodiscard]] constexpr auto input(ID i) const -> NotNull<const IR::Addr> {
-    unsigned cap = getCapacity();
-    const void *p = data + sizeof(IR::Addr *) * (i.id + cap);
-    return *static_cast<IR::Addr *const *>(p);
+  [[nodiscard]] constexpr auto input(ID i) -> IR::Addr *& {
+    return inAddrPtr()[i.id];
+  }
+  [[nodiscard]] constexpr auto input(ID i) const -> const IR::Addr * {
+    return inAddrPtr()[i.id];
   }
   constexpr auto nextOut(ID i) -> int32_t & {
     unsigned cap = getCapacity();
@@ -1012,7 +1026,12 @@ public:
     else timelessCheck(alloc, dxy, store, load, pair, true);
     return load;
   }
-
+  [[nodiscard]] constexpr auto inputEdges(int32_t id) const {
+    return utils::VForwardRange{inEdges(), id};
+  }
+  [[nodiscard]] constexpr auto outputEdges(int32_t id) const {
+    return utils::VForwardRange{outEdges(), id};
+  }
   friend inline auto operator<<(llvm::raw_ostream &os, const Dependence &d)
     -> llvm::raw_ostream & {
     os << "Dependence Poly ";
@@ -1027,6 +1046,21 @@ public:
     return os << "\nSatisfied (isCondIndep() == " << d.isCondIndep()
               << ") = " << int(d.satLevel()) << "\n";
   }
+
+  [[nodiscard]] constexpr auto activeFilter(unsigned depth) const {
+    auto f = [=](int32_t id) -> bool {
+      return !isSat(Dependence::ID{id}, depth);
+    };
+    return std::views::filter(f);
+  }
+  [[nodiscard]] constexpr auto inputAddrTransform() const {
+    auto f = [=](int32_t id) { return input(Dependence::ID{id}); };
+    return std::views::transform(f);
+  }
+  [[nodiscard]] constexpr auto outputAddrTransform() const {
+    auto f = [=](int32_t id) { return output(Dependence::ID{id}); };
+    return std::views::transform(f);
+  }
 };
 static_assert(std::is_trivially_copyable_v<Dependencies>);
 static_assert(std::is_trivially_destructible_v<Dependencies>);
@@ -1035,37 +1069,31 @@ namespace IR {
 using poly::Dependencies;
 
 inline auto Addr::inputEdges(Dependencies deps) const {
-  return utils::VForwardRange{deps.inEdges(), getEdgeIn()};
+  return deps.inputEdges(getEdgeIn());
 }
 inline auto Addr::outputEdges(Dependencies deps) const {
-  return utils::VForwardRange{deps.outEdges(), getEdgeOut()};
+  return deps.outputEdges(getEdgeOut());
 }
 
 inline auto IR::Addr::inputAddrs(Dependencies deps) const {
-  auto f = [=](int32_t id) { return deps.input(Dependence::ID{id}); };
-  return inputEdges(deps) | std::views::transform(f);
+  return inputEdges(deps) | deps.inputAddrTransform();
 }
 inline auto IR::Addr::outputAddrs(Dependencies deps) const {
-  auto f = [=](int32_t id) { return deps.output(Dependence::ID{id}); };
-  return outputEdges(deps) | std::views::transform(f);
+  return outputEdges(deps) | deps.outputAddrTransform();
 }
 
 inline auto Addr::inputEdges(Dependencies deps, unsigned depth) const {
-  auto f = [=](int32_t id) { return deps.isSat(Dependence::ID{id}, depth); };
-  return inputEdges(deps) | std::views::filter(f);
+  return inputEdges(deps) | deps.activeFilter(depth);
 }
 inline auto Addr::outputEdges(Dependencies deps, unsigned depth) const {
-  auto f = [=](int32_t id) { return deps.isSat(Dependence::ID{id}, depth); };
-  return outputEdges(deps) | std::views::filter(f);
+  return outputEdges(deps) | deps.activeFilter(depth);
 }
 
 inline auto IR::Addr::inputAddrs(Dependencies deps, unsigned depth) const {
-  auto f = [=](int32_t id) { return deps.input(Dependence::ID{id}); };
-  return inputEdges(deps, depth) | std::views::transform(f);
+  return inputEdges(deps, depth) | deps.inputAddrTransform();
 }
 inline auto IR::Addr::outputAddrs(Dependencies deps, unsigned depth) const {
-  auto f = [=](int32_t id) { return deps.output(Dependence::ID{id}); };
-  return outputEdges(deps, depth) | std::views::transform(f);
+  return outputEdges(deps, depth) | deps.outputAddrTransform();
 }
 
 } // namespace IR
