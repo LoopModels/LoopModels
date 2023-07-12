@@ -251,16 +251,11 @@ public:
   [[nodiscard]] inline auto outputEdges(Dependencies) const;
   [[nodiscard]] inline auto inputEdges(Dependencies, unsigned depth) const;
   [[nodiscard]] inline auto outputEdges(Dependencies, unsigned depth) const;
+  [[nodiscard]] inline auto inputEdgeIDs(Dependencies) const;
+  [[nodiscard]] inline auto outputEdgeIDs(Dependencies) const;
+  [[nodiscard]] inline auto inputEdgeIDs(Dependencies, unsigned depth) const;
+  [[nodiscard]] inline auto outputEdgeIDs(Dependencies, unsigned depth) const;
 
-  [[nodiscard]] static auto construct(Arena<> *alloc,
-                                      const llvm::SCEVUnknown *ptr,
-                                      llvm::Instruction *user,
-                                      unsigned numLoops) -> NotNull<Addr> {
-    auto *mem =
-      (Addr *)alloc->allocate(sizeof(Addr) + numLoops * sizeof(int64_t));
-    auto *ma = new (mem) Addr(ptr, user, numLoops);
-    return ma;
-  }
   /// Constructor for regular indexing
   [[nodiscard]] static auto
   construct(Arena<> *alloc, const llvm::SCEVUnknown *arrayPtr,

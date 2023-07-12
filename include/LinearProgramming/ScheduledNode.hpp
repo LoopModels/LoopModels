@@ -196,8 +196,8 @@ public:
 
     constexpr auto operator()(int32_t id) const {
       if constexpr (Out)
-        return dep.outputEdges(id) | std::views::transform(OutNode{dep});
-      else return dep.inputEdges(id) | std::views::transform(InNode{dep});
+        return dep.outputEdgeIDs(id) | std::views::transform(OutNode{dep});
+      else return dep.inputEdgeIDs(id) | std::views::transform(InNode{dep});
     }
     constexpr auto operator()(IR::Addr *a) const {
       if constexpr (Out) return (*this)(a->getEdgeOut());
@@ -208,8 +208,8 @@ public:
     poly::Dependencies dep;
 
     constexpr auto operator()(int32_t id) const {
-      if constexpr (Out) return dep.outputEdges(id);
-      else return dep.inputEdges(id);
+      if constexpr (Out) return dep.outputEdgeIDs(id);
+      else return dep.inputEdgeIDs(id);
     }
     constexpr auto operator()(IR::Addr *a) const {
       if constexpr (Out) return (*this)(a->getEdgeOut());
@@ -222,10 +222,10 @@ public:
 
     constexpr auto operator()(int32_t id) const {
       if constexpr (Out)
-        return dep.outputEdges(id) | dep.activeFilter(depth) |
+        return dep.outputEdgeIDs(id) | dep.activeFilter(depth) |
                std::views::transform(OutNode{dep});
       else
-        return dep.inputEdges(id) | dep.activeFilter(depth) |
+        return dep.inputEdgeIDs(id) | dep.activeFilter(depth) |
                std::views::transform(InNode{dep});
     }
     constexpr auto operator()(IR::Addr *a) const {
@@ -280,7 +280,7 @@ public:
       utils::ListRange{store, NextAddr{},
                        [](Addr *a) -> int32_t { return a->getEdgeIn(); }},
       [=](int32_t id) {
-        return dep.inputEdges(id) |
+        return dep.inputEdgeIDs(id) |
                std::views::transform([=](int32_t i) -> Dependence {
                  IR::Dependencies d2 = dep;
                  return d2.get(Dependence::ID{i});
@@ -293,7 +293,7 @@ public:
       utils::ListRange{store, NextAddr{},
                        [](Addr *a) -> int32_t { return a->getEdgeOut(); }},
       [=](int32_t id) {
-        return dep.outputEdges(id) |
+        return dep.outputEdgeIDs(id) |
                std::views::transform([=](int32_t i) -> Dependence {
                  IR::Dependencies d2 = dep;
                  return d2.get(Dependence::ID{i});
@@ -306,7 +306,7 @@ public:
       utils::ListRange{store, NextAddr{},
                        [](Addr *a) -> int32_t { return a->getEdgeIn(); }},
       [=](int32_t id) {
-        return dep.inputEdges(id) | dep.activeFilter(depth) |
+        return dep.inputEdgeIDs(id) | dep.activeFilter(depth) |
                std::views::transform([=](int32_t i) -> Dependence {
                  IR::Dependencies d2 = dep;
                  return d2.get(Dependence::ID{i});
@@ -319,7 +319,7 @@ public:
       utils::ListRange{store, NextAddr{},
                        [](Addr *a) -> int32_t { return a->getEdgeOut(); }},
       [=](int32_t id) {
-        return dep.outputEdges(id) | dep.activeFilter(depth) |
+        return dep.outputEdgeIDs(id) | dep.activeFilter(depth) |
                std::views::transform([=](int32_t i) -> Dependence {
                  IR::Dependencies d2 = dep;
                  return d2.get(Dependence::ID{i});
@@ -354,17 +354,6 @@ public:
     const auto f = [=](int32_t d) {
       return !dep.isSat(Dependence::ID{d}, depth);
     };
-
-    auto iei = inputEdgeIds(dep);
-    iei.begin();
-    for (auto x : iei) {}
-    // FIXME: doesn't satisfy moveable, lambdas at fault?
-    static_assert(std::forward_iterator<decltype(iei.begin())>);
-
-    static_assert(std::ranges::range<decltype(iei)>);
-    static_assert(std::ranges::forward_range<decltype(iei)>);
-    std::ranges::begin(iei);
-
     return std::ranges::any_of(inputEdgeIds(dep), f) ||
            std::ranges::any_of(outputEdgeIds(dep), f);
   }
@@ -492,6 +481,7 @@ static_assert(std::is_trivially_destructible_v<ScheduledNode>);
 static_assert(sizeof(ScheduledNode) <= 64); // fits in cache line
 
 class ScheduleGraph {
+  IR::Dependencies deps;
   unsigned depth;
 
 public:
@@ -507,10 +497,10 @@ public:
     return static_cast<const ScheduledNode *>(nodes)->getVertices();
   }
   [[nodiscard]] constexpr auto outNeighbors(ScheduledNode *v) const {
-    return v->outNeighbors(depth);
+    return v->outNeighbors(deps, depth);
   }
   [[nodiscard]] constexpr auto inNeighbors(ScheduledNode *v) const {
-    return v->inNeighbors(depth);
+    return v->inNeighbors(deps, depth);
   }
 };
 

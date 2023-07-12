@@ -1026,11 +1026,25 @@ public:
     else timelessCheck(alloc, dxy, store, load, pair, true);
     return load;
   }
-  [[nodiscard]] constexpr auto inputEdges(int32_t id) const {
+  [[nodiscard]] constexpr auto inputEdgeIDs(int32_t id) const {
     return utils::VForwardRange{inEdges(), id};
   }
-  [[nodiscard]] constexpr auto outputEdges(int32_t id) const {
+  [[nodiscard]] constexpr auto outputEdgeIDs(int32_t id) const {
     return utils::VForwardRange{outEdges(), id};
+  }
+  [[nodiscard]] constexpr auto inputEdges(int32_t id) const {
+    auto f = [this](int32_t id) {
+      Dependencies d = *this;
+      return d.get(ID{id});
+    };
+    return inputEdgeIDs(id) | std::views::transform(f);
+  }
+  [[nodiscard]] constexpr auto outputEdges(int32_t id) const {
+    auto f = [this](int32_t id) {
+      Dependencies d = *this;
+      return d.get(Dependence::ID{id});
+    };
+    return outputEdgeIDs(id) | std::views::transform(f);
   }
   friend inline auto operator<<(llvm::raw_ostream &os, const Dependence &d)
     -> llvm::raw_ostream & {
@@ -1074,19 +1088,25 @@ inline auto Addr::inputEdges(Dependencies deps) const {
 inline auto Addr::outputEdges(Dependencies deps) const {
   return deps.outputEdges(getEdgeOut());
 }
+inline auto Addr::inputEdgeIDs(Dependencies deps) const {
+  return deps.inputEdgeIDs(getEdgeIn());
+}
+inline auto Addr::outputEdgeIDs(Dependencies deps) const {
+  return deps.outputEdgeIDs(getEdgeOut());
+}
 
 inline auto IR::Addr::inputAddrs(Dependencies deps) const {
-  return inputEdges(deps) | deps.inputAddrTransform();
+  return inputEdgeIDs(deps) | deps.inputAddrTransform();
 }
 inline auto IR::Addr::outputAddrs(Dependencies deps) const {
-  return outputEdges(deps) | deps.outputAddrTransform();
+  return outputEdgeIDs(deps) | deps.outputAddrTransform();
 }
 
 inline auto Addr::inputEdges(Dependencies deps, unsigned depth) const {
-  return inputEdges(deps) | deps.activeFilter(depth);
+  return inputEdgeIDs(deps) | deps.activeFilter(depth);
 }
 inline auto Addr::outputEdges(Dependencies deps, unsigned depth) const {
-  return outputEdges(deps) | deps.activeFilter(depth);
+  return outputEdgeIDs(deps) | deps.activeFilter(depth);
 }
 
 inline auto IR::Addr::inputAddrs(Dependencies deps, unsigned depth) const {
@@ -1101,13 +1121,13 @@ inline auto IR::Addr::outputAddrs(Dependencies deps, unsigned depth) const {
 namespace poly {
 inline void Dependencies::copyDependencies(Arena<> *alloc, IR::Addr *src,
                                            IR::Addr *dst) {
-  for (int32_t id : src->inputEdges(*this)) {
+  for (int32_t id : src->inputEdgeIDs(*this)) {
     IR::Addr *input = this->input(Dependence::ID{id});
     if (input->isLoad()) continue;
     Dependence d = get(Dependence::ID{id}, input, dst);
     addEdge(alloc, d);
   }
-  for (int32_t id : src->outputEdges(*this)) {
+  for (int32_t id : src->outputEdgeIDs(*this)) {
     IR::Addr *output = this->output(Dependence::ID{id});
     if (output->isLoad()) continue;
     Dependence d = get(Dependence::ID{id}, dst, output);
