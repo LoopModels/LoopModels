@@ -43,7 +43,8 @@
 
 namespace poly::lp {
 using math::PtrMatrix, math::MutPtrMatrix, math::Vector, math::DenseMatrix,
-  math::begin, math::end, math::last, math::Row, math::Col, utils::invariant;
+  math::begin, math::end, math::last, math::Row, math::Col, utils::invariant,
+  IR::Dependencies;
 
 struct Result {
   enum { Failure = 0, Dependent = 1, Independent = 3 } Value;
@@ -124,6 +125,7 @@ static_assert((Result::failure() & Result::dependent()) == Result::failure());
 ///   f(m, ...); // Omega = [2, _, 0]
 /// }
 class LoopBlock {
+
   // TODO: figure out how to handle the graph's dependencies based on
   // operation/instruction chains.
   // Perhaps implicitly via the graph when using internal orthogonalization
@@ -494,8 +496,9 @@ private:
     return math::SVector<unsigned, 4>{edge.getNumLambda(), edge.getDynSymDim(),
                                       edge.getNumConstraints(), 1};
   }
-  constexpr auto countAuxParamsAndConstraints(ScheduledNode *nodes,
-                                              unsigned depth)
+  static constexpr auto countAuxParamsAndConstraints(IR::Dependencies deps,
+                                                     ScheduledNode *nodes,
+                                                     unsigned depth)
     -> math::SVector<unsigned, 4> {
     math::SVector<unsigned, 4> params{};
     assert(allZero(params));
@@ -504,7 +507,8 @@ private:
         if (d.isActive(depth)) params += numParams(d);
     return params;
   }
-  constexpr auto countAuxAndStash(ScheduledNode *nodes, unsigned depth)
+  static constexpr auto countAuxAndStash(IR::Dependencies deps,
+                                         ScheduledNode *nodes, unsigned depth)
     -> math::SVector<unsigned, 4> {
     math::SVector<unsigned, 4> params{};
     assert(allZero(params));
@@ -513,7 +517,8 @@ private:
         if (d.isActive(depth)) params += numParams(d.stashSatLevel(depth));
     return params;
   }
-  constexpr auto setScheduleMemoryOffsets(ScheduledNode *nodes, unsigned d)
+  static constexpr auto
+  setScheduleMemoryOffsets(Dependencies deps, ScheduledNode *nodes, unsigned d)
     -> std::array<unsigned, 3> {
     // C, lambdas, omegas, Phis
     unsigned numOmegaCoefs = 0, numPhiCoefs = 0, numSlack = 0;
@@ -530,20 +535,21 @@ private:
     }
     return {numOmegaCoefs, numPhiCoefs, numSlack};
   }
-  constexpr auto calcCoefs(ScheduledNode *nodes, unsigned d) -> CoefCounts {
+  static constexpr auto calcCoefs(Dependencies deps, ScheduledNode *nodes,
+                                  unsigned d) -> CoefCounts {
     auto [numOmegaCoefs, numPhiCoefs, numSlack] =
-      setScheduleMemoryOffsets(nodes, d);
+      setScheduleMemoryOffsets(deps, nodes, d);
     auto [numLambda, numBounding, numConstraints, numActiveEdges] =
-      countAuxParamsAndConstraints(nodes, d);
+      countAuxParamsAndConstraints(deps, nodes, d);
     return {numOmegaCoefs, numPhiCoefs,    numSlack,      numLambda,
             numBounding,   numConstraints, numActiveEdges};
   }
-  constexpr auto calcCoefsStash(ScheduledNode *nodes, unsigned d)
-    -> CoefCounts {
+  static constexpr auto calcCoefsStash(Dependencies deps, ScheduledNode *nodes,
+                                       unsigned d) -> CoefCounts {
     auto [numOmegaCoefs, numPhiCoefs, numSlack] =
-      setScheduleMemoryOffsets(nodes, d);
+      setScheduleMemoryOffsets(deps, nodes, d);
     auto [numLambda, numBounding, numConstraints, numActiveEdges] =
-      countAuxAndStash(nodes, d);
+      countAuxAndStash(deps, nodes, d);
     return {numOmegaCoefs, numPhiCoefs,    numSlack,      numLambda,
             numBounding,   numConstraints, numActiveEdges};
   }
@@ -570,7 +576,7 @@ private:
   ///
   [[nodiscard]] auto solveGraph(ScheduledNode *nodes, unsigned depth,
                                 bool satisfyDeps) -> Result {
-    CoefCounts counts{calcCoefs(nodes, depth)};
+    CoefCounts counts{calcCoefs(deps, nodes, depth)};
     return solveGraph(nodes, depth, satisfyDeps, counts);
   }
   [[nodiscard]] auto solveGraph(ScheduledNode *nodes, unsigned depth,
@@ -785,30 +791,44 @@ private:
   /// components link. Now `N4` doesn't point to `N0` anymore, either, but `N3`.
   /// For this reason, we cache temporary info in `Backup`
   /// And additionally, the `ScheduledNode`s hold their `originalNext`.
-  using Backup =
+  using BackupSchedule =
     math::ResizeableView<std::pair<poly::AffineSchedule, ScheduledNode *>,
                          unsigned>;
+  using BackupSat = math::ResizeableView<std::array<uint8_t, 2>, unsigned>;
+  using Backup = std::pair<BackupSchedule, BackupSat>;
   auto stashFitCore(ScheduledNode *nodes) -> Backup {
-    Backup old{&allocator, 0, 8};
-    for (ScheduledNode *node : nodes->getVertices())
+    BackupSchedule old{&allocator, 0, 8};
+    BackupSat sat{&allocator, 0, 32};
+    for (ScheduledNode *node : nodes->getVertices()) {
       old.emplace_backa(&allocator, node->getSchedule().copy(&allocator), node);
-    return old;
+      for (int32_t dID : node->outputEdgeIds(deps)) {
+        std::array<uint8_t, 2> &stash = deps.satLevelPair(Dependence::ID{dID});
+        sat.emplace_backa(&allocator, stash);
+        stash[1] = stash[0];
+        stash[0] = std::numeric_limits<uint8_t>::max();
+      }
+    }
+    return {old, sat};
   }
   auto stashFit(ScheduledNode *nodes, unsigned depth)
     -> std::pair<Backup, CoefCounts> {
-    return {stashFitCore(nodes), calcCoefsStash(nodes, depth)};
+    return {stashFitCore(nodes), calcCoefsStash(deps, nodes, depth)};
   }
-  auto popStash(Backup old) -> void {
+  void popStash(Backup backup) {
     // reconnect nodes, in case they became disconnected in breakGraph
     // because we go in reverse order, connections should be the same
     // so the original `nodes` should be restored.
     ScheduledNode *n = nullptr;
+    BackupSchedule old{backup.first};
     for (auto &it : std::ranges::reverse_view(old)) {
       n = it.second->setNext(n);
       n->getSchedule() << it.first; // copy over
     }
+    BackupSat sat{backup.second};
+    ptrdiff_t i = 0;
     for (ScheduledNode *node : n->getVertices())
-      for (Dependence d : node->inputEdges(deps)) d.popSatLevel();
+      for (int32_t dID : node->outputEdgeIds(deps))
+        deps.satLevelPair(Dependence::ID{dID}) = sat[i++];
   }
   // NOLINTNEXTLINE(misc-no-recursion)
   [[nodiscard]] auto optimizeSatDep(ScheduledNode *nodes, unsigned depth,
@@ -859,7 +879,7 @@ private:
   }
   auto solveSplitGraph(ScheduledNode *nodes, unsigned depth) -> Result {
     Result sat = satisfySplitEdges(nodes, depth);
-    Result opt = solveGraph(nodes, depth, false, calcCoefs(nodes, depth));
+    Result opt = solveGraph(nodes, depth, false, calcCoefs(deps, nodes, depth));
     if (!opt) return opt;
     return opt & sat;
   }

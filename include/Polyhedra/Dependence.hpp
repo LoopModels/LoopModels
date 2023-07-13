@@ -889,14 +889,6 @@ private:
     return static_cast<const std::array<uint8_t, 2> *>(p);
   }
 
-  constexpr auto satLevelPair(ID i) -> std::array<uint8_t, 2> & {
-    return satLevelsPtr()[i.id];
-  }
-  [[nodiscard]] constexpr auto satLevelPair(ID i) const
-    -> const std::array<uint8_t, 2> & {
-    return satLevelsPtr()[i.id];
-  }
-
 public:
   // field order:
   // AddrOut
@@ -966,6 +958,13 @@ public:
               (sizeof(IR::Addr *) + sizeof(int32_t) + sizeof(math::Simplex *)) *
                 2 * cap;
     return *static_cast<DepPoly **>(p);
+  }
+  constexpr auto satLevelPair(ID i) -> std::array<uint8_t, 2> & {
+    return satLevelsPtr()[i.id];
+  }
+  [[nodiscard]] constexpr auto satLevelPair(ID i) const
+    -> const std::array<uint8_t, 2> & {
+    return satLevelsPtr()[i.id];
   }
   constexpr auto satLevel(ID i) -> uint8_t {
     auto pair = satLevelPair(i);
