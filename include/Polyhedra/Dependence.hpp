@@ -3,92 +3,27 @@
 #include "Polyhedra/DependencyPolyhedra.hpp"
 #include "Polyhedra/Loops.hpp"
 #include "Polyhedra/Schedule.hpp"
+#include "Support/Iterators.hpp"
 #include <Math/Constructors.hpp>
 #include <Utilities/Allocators.hpp>
 #include <Utilities/Invariant.hpp>
 #include <cstdint>
+#include <ranges>
 
 namespace poly {
 namespace poly {
+
 /// Dependence
 /// Represents a dependence relationship between two memory accesses.
 /// It contains simplices representing constraints that affine schedules
 /// are allowed to take.
 class Dependence {
-  // Plan here is...
-  // depPoly gives the constraints
-  // dependenceFwd gives forward constraints
-  // dependenceBwd gives forward constraints
-  // isBackward() indicates whether backward is non-empty
-  // bounding constraints, used for ILP solve, are reverse,
-  // i.e. fwd uses dependenceBwd and bwd uses dependenceFwd.
-  //
-  // Consider the following simple example dependencies:
-  // for (k = 0; k < K; ++k)
-  //   for (i = 0; i < I; ++i)
-  //     for (j = 0; j < J; ++j)
-  //       for (l = 0; l < L; ++l)
-  //         A(i,j) = f(A(i+1,j), A(i,j-1), A(j,j), A(j,i), A(i,j-k))
-  // label:     0           1        2         3       4       5
-  // We have...
-  ////// 0 <-> 1 //////
-  // i_0 = i_1 + 1
-  // j_0 = j_1
-  // null spaces: [k_0, l_0], [k_1, l_1]
-  // forward:  k_0 <= k_1 - 1
-  //           l_0 <= l_1 - 1
-  // backward: k_0 >= k_1
-  //           l_0 >= l_1
-  //
-  //
-  ////// 0 <-> 2 //////
-  // i_0 = i_1
-  // j_0 = j_1 - 1
-  // null spaces: [k_0, l_0], [k_1, l_1]
-  // forward:  k_0 <= k_1 - 1
-  //           l_0 <= l_1 - 1
-  // backward: k_0 >= k_1
-  //           l_0 >= l_1
-  //
-  ////// 0 <-> 3 //////
-  // i_0 = j_1
-  // j_0 = j_1
-  // null spaces: [k_0, l_0], [i_1, k_1, l_1]
-  // forward:  k_0 <= k_1 - 1
-  //           l_0 <= l_1 - 1
-  // backward: k_0 >= k_1
-  //           l_0 >= l_1
-  //
-  // i_0 = j_1, we essentially lose the `i` dimension.
-  // Thus, to get fwd/bwd, we take the intersection of nullspaces to get
-  // the time dimension?
-  // TODO: try and come up with counter examples where this will fail.
-  //
-  ////// 0 <-> 4 //////
-  // i_0 = j_1
-  // j_0 = i_1
-  // null spaces: [k_0, l_0], [k_1, l_1]
-  // if j_0 > i_0) [store first]
-  //   forward:  k_0 >= k_1
-  //             l_0 >= l_1
-  //   backward: k_0 <= k_1 - 1
-  //             l_0 <= l_1 - 1
-  // else (if j_0 <= i_0) [load first]
-  //   forward:  k_0 <= k_1 - 1
-  //             l_0 <= l_1 - 1
-  //   backward: k_0 >= k_1
-  //             l_0 >= l_1
-  //
-  // Note that the dependency on `l` is broken when we can condition on
-  // `i_0
-  // != j_0`, meaning that we can fully reorder interior loops when we can
-  // break dependencies.
-  //
-  //
-  ////// 0 <-> 5 //////
-  // i_0 = i_1
-  // j_0 = j_1 - k_1
-  //
+public:
+  struct ID {
+    int32_t id;
+  };
+
+private:
   //
   //
   NotNull<DepPoly> depPoly;
@@ -96,177 +31,33 @@ class Dependence {
   NotNull<math::Simplex> dependenceBounding;
   NotNull<IR::Addr> in;
   NotNull<IR::Addr> out;
-  Dependence *nextInput{nullptr}; // all share same `in`
-  Dependence *nextOutput{nullptr};
-  // all share same `out`
-  // the upper bit of satLvl indicates whether the satisfaction is
-  // because of conditional independence (value = 0), or whether it
-  // was because of offsets when solving the linear program (value =
-  // 1).
-  std::array<uint8_t, 7> satLvl{255, 255, 255, 255, 255, 255, 255};
+  // Dependence *nextInput{nullptr}; // all share same `in`
+  // Dependence *nextOutput{nullptr};
+  // // all share same `out`
+  // // the upper bit of satLvl indicates whether the satisfaction is
+  // // because of conditional independence (value = 0), or whether it
+  // // was because of offsets when solving the linear program (value =
+  // // 1).
+  // std::array<uint8_t, 7> satLvl{255, 255, 255, 255, 255, 255, 255};
+  std::array<uint8_t, 2> satLvl;
   bool forward;
 
-  static void timelessCheck(Arena<> *alloc, NotNull<DepPoly> dxy,
-                            NotNull<IR::Addr> x, NotNull<IR::Addr> y,
-                            std::array<NotNull<math::Simplex>, 2> pair,
-                            bool isFwd) {
-    const size_t numLambda = dxy->getNumLambda();
-    invariant(dxy->getTimeDim(), unsigned(0));
-    if (!isFwd) {
-      std::swap(pair[0], pair[1]);
-      std::swap(x, y);
-    }
-    pair[0]->truncateVars(1 + numLambda + dxy->getNumScheduleCoef());
-    y->addEdgeIn(alloc->create<Dependence>(dxy, pair, x, y, isFwd));
-  }
-  static void timelessCheck(Arena<> *alloc, NotNull<DepPoly> dxy,
-                            NotNull<IR::Addr> x, NotNull<IR::Addr> y,
-                            std::array<NotNull<math::Simplex>, 2> pair) {
-    return timelessCheck(alloc, dxy, x, y, pair,
-                         checkDirection(*alloc, pair, x, y, dxy->getNumLambda(),
-                                        dxy->getNumVar() + 1));
-  }
-
-  // emplaces dependencies with repeat accesses to the same memory across
-  // time
-  static void timeCheck(Arena<> *alloc, NotNull<DepPoly> dxy,
-                        NotNull<IR::Addr> x, NotNull<IR::Addr> y,
-                        std::array<NotNull<math::Simplex>, 2> pair) {
-    bool isFwd = checkDirection(*alloc, pair, x, y, dxy->getNumLambda(),
-                                dxy->getA().numCol() - dxy->getTimeDim());
-    timeCheck(alloc, dxy, x, y, pair, isFwd);
-  }
-  static void timeCheck(Arena<> *alloc, NotNull<DepPoly> dxy,
-                        NotNull<IR::Addr> x, NotNull<IR::Addr> y,
-                        std::array<NotNull<math::Simplex>, 2> pair,
-                        bool isFwd) {
-    const unsigned numInequalityConstraintsOld =
-                     dxy->getNumInequalityConstraints(),
-                   numEqualityConstraintsOld = dxy->getNumEqualityConstraints(),
-                   ineqEnd = 1 + numInequalityConstraintsOld,
-                   posEqEnd = ineqEnd + numEqualityConstraintsOld,
-                   numLambda = posEqEnd + numEqualityConstraintsOld,
-                   numScheduleCoefs = dxy->getNumScheduleCoef();
-    invariant(numLambda, dxy->getNumLambda());
-    // copy backup
-    std::array<NotNull<math::Simplex>, 2> farkasBackups{pair[0]->copy(alloc),
-                                                        pair[1]->copy(alloc)};
-    NotNull<IR::Addr> in = x, out = y;
-    if (isFwd) {
-      std::swap(farkasBackups[0], farkasBackups[1]);
-    } else {
-      std::swap(in, out);
-      std::swap(pair[0], pair[1]);
-    }
-    pair[0]->truncateVars(1 + numLambda + numScheduleCoefs);
-    auto *dep0 =
-      alloc->create<Dependence>(dxy->copy(alloc), pair, in, out, isFwd);
-    invariant(out->getCurrentDepth() + in->getCurrentDepth(),
-              dep0->getNumPhiCoefficients());
-    out->addEdgeIn(dep0);
-    // pair is invalid
-    const ptrdiff_t timeDim = dxy->getTimeDim(),
-                    numVar = 1 + dxy->getNumVar() - timeDim;
-    invariant(timeDim > 0);
-    // 1 + because we're indexing into A and E, ignoring the constants
-    // remove the time dims from the deps
-    // dep0.depPoly->truncateVars(numVar);
-
-    // dep0.depPoly->setTimeDim(0);
-    invariant(out->getCurrentDepth() + in->getCurrentDepth(),
-              dep0->getNumPhiCoefficients());
-    // now we need to check the time direction for all times
-    // anything approaching 16 time dimensions would be absolutely
-    // insane
-    math::Vector<bool, 16> timeDirection(timeDim);
-    ptrdiff_t t = 0;
-    auto fE{farkasBackups[0]->getConstraints()(_, _(1, end))};
-    auto sE{farkasBackups[1]->getConstraints()(_, _(1, end))};
-    do {
-      // set `t`th timeDim to +1/-1
-      // basically, what we do here is set it to `step` and pretend it was
-      // a constant. so a value of c = a'x + t*step -> c - t*step = a'x so
-      // we update the constant `c` via `c -= t*step`.
-      // we have the problem that.
-      int64_t step = dxy->getNullStep(t);
-      ptrdiff_t v = numVar + t, i = 0;
-      while (true) {
-        for (ptrdiff_t c = 0; c < numInequalityConstraintsOld; ++c) {
-          int64_t Acv = dxy->getA(c, v);
-          if (!Acv) continue;
-          Acv *= step;
-          fE(0, c + 1) -= Acv; // *1
-          sE(0, c + 1) -= Acv; // *1
-        }
-        for (ptrdiff_t c = 0; c < numEqualityConstraintsOld; ++c) {
-          // each of these actually represents 2 inds
-          int64_t Ecv = dxy->getE(c, v);
-          if (!Ecv) continue;
-          Ecv *= step;
-          fE(0, c + ineqEnd) -= Ecv;
-          fE(0, c + posEqEnd) += Ecv;
-          sE(0, c + ineqEnd) -= Ecv;
-          sE(0, c + posEqEnd) += Ecv;
-        }
-        if (i++ != 0) break; // break after undoing
-        timeDirection[t] =
-          checkDirection(*alloc, farkasBackups, *out, *in, numLambda,
-                         dxy->getA().numCol() - dxy->getTimeDim());
-        step *= -1; // flip to undo, then break
-      }
-    } while (++t < timeDim);
-    t = 0;
-    do {
-      // checkDirection(farkasBackups, x, y, numLambda) == false
-      // correct time direction would make it return true
-      // thus sign = timeDirection[t] ? 1 : -1
-      int64_t step = (2 * timeDirection[t] - 1) * dxy->getNullStep(t);
-      ptrdiff_t v = numVar + t;
-      for (ptrdiff_t c = 0; c < numInequalityConstraintsOld; ++c) {
-        int64_t Acv = dxy->getA(c, v);
-        if (!Acv) continue;
-        Acv *= step;
-        dxy->getA(c, 0) -= Acv;
-        fE(0, c + 1) -= Acv; // *1
-        sE(0, c + 1) -= Acv; // *-1
-      }
-      for (ptrdiff_t c = 0; c < numEqualityConstraintsOld; ++c) {
-        // each of these actually represents 2 inds
-        int64_t Ecv = dxy->getE(c, v);
-        if (!Ecv) continue;
-        Ecv *= step;
-        dxy->getE(c, 0) -= Ecv;
-        fE(0, c + ineqEnd) -= Ecv;
-        fE(0, c + posEqEnd) += Ecv;
-        sE(0, c + ineqEnd) -= Ecv;
-        sE(0, c + posEqEnd) += Ecv;
-      }
-    } while (++t < timeDim);
-    // dxy->truncateVars(numVar);
-    // dxy->setTimeDim(0);
-    farkasBackups[0]->truncateVars(1 + numLambda + numScheduleCoefs);
-    auto *dep1 = alloc->create<Dependence>(dxy, farkasBackups, out, in, !isFwd);
-    invariant(out->getCurrentDepth() + in->getCurrentDepth(),
-              dep0->getNumPhiCoefficients());
-    in->addEdgeIn(dep1);
-  }
   constexpr auto getSimplexPair() -> std::array<NotNull<math::Simplex>, 2> {
     return {dependenceSatisfaction, dependenceBounding};
   }
 
 public:
-  [[nodiscard]] constexpr auto getNextInput() -> Dependence * {
-    return nextInput;
-  }
-  [[nodiscard]] constexpr auto getNextInput() const -> const Dependence * {
-    return nextInput;
-  }
-  [[nodiscard]] constexpr auto getNextOutput() -> Dependence * {
-    return nextOutput;
-  }
-  [[nodiscard]] constexpr auto getNextOutput() const -> const Dependence * {
-    return nextOutput;
-  }
+  friend class Dependencies;
+  // constexpr auto getNextInput() -> Dependence * { return nextInput; }
+  // [[nodiscard]] constexpr auto getNextInput() const -> const Dependence * {
+  //   return nextInput;
+  // }
+  // [[nodiscard]] constexpr auto getNextOutput() -> Dependence * {
+  //   return nextOutput;
+  // }
+  // [[nodiscard]] constexpr auto getNextOutput() const -> const Dependence * {
+  //   return nextOutput;
+  // }
   [[nodiscard]] constexpr auto input() -> NotNull<IR::Addr> { return in; }
   [[nodiscard]] constexpr auto output() -> NotNull<IR::Addr> { return out; }
   [[nodiscard]] constexpr auto input() const -> NotNull<const IR::Addr> {
@@ -275,17 +66,24 @@ public:
   [[nodiscard]] constexpr auto output() const -> NotNull<const IR::Addr> {
     return out;
   }
-  constexpr auto setNextInput(Dependence *n) -> Dependence * {
-    return nextInput = n;
-  }
-  constexpr auto setNextOutput(Dependence *n) -> Dependence * {
-    return nextOutput = n;
-  }
+  // constexpr auto setNextInput(Dependence *n) -> Dependence * {
+  //   return nextInput = n;
+  // }
+  // constexpr auto setNextOutput(Dependence *n) -> Dependence * {
+  //   return nextOutput = n;
+  // }
   constexpr Dependence(NotNull<DepPoly> poly,
                        std::array<NotNull<math::Simplex>, 2> depSatBound,
                        NotNull<IR::Addr> i, NotNull<IR::Addr> o, bool fwd)
     : depPoly(poly), dependenceSatisfaction(depSatBound[0]),
       dependenceBounding(depSatBound[1]), in(i), out(o), forward(fwd) {}
+  constexpr Dependence(NotNull<DepPoly> poly,
+                       std::array<NotNull<math::Simplex>, 2> depSatBound,
+                       NotNull<IR::Addr> i, NotNull<IR::Addr> o,
+                       std::array<uint8_t, 2> sL, bool fwd)
+    : depPoly(poly), dependenceSatisfaction(depSatBound[0]),
+      dependenceBounding(depSatBound[1]), in(i), out(o), satLvl(sL),
+      forward(fwd) {}
 
   /// stashSatLevel() -> Dependence &
   /// This is used to track sat levels in the LP recursion.
@@ -294,26 +92,29 @@ public:
   /// 1. evaluate the level.
   /// 2. if we succeed w/out deps, update sat levels and go a level deeper.
   /// 3.
-  constexpr auto stashSatLevel(unsigned depth) -> Dependence * {
-    invariant(depth <= 127);
-    assert(satLvl.back() == 255 || "satLevel overflow");
-    std::copy_backward(satLvl.begin(), satLvl.end() - 1, satLvl.end());
-    // we clear `d` level as well; we're pretending we're a level deeper
-    if ((satLevel() + 1) > depth) satLvl.front() = 255;
-    return this;
-  }
-  constexpr void popSatLevel() {
-    std::copy(satLvl.begin() + 1, satLvl.end(), satLvl.begin());
-#ifndef NDEBUG
-    satLvl.back() = 255;
-#endif
-  }
+  //   constexpr auto stashSatLevel(unsigned depth) -> Dependence * {
+  //     invariant(depth <= 127);
+  //     assert(satLvl.back() == 255 || "satLevel overflow");
+  //     std::copy_backward(satLvl.begin(), satLvl.end() - 1, satLvl.end());
+  //     // we clear `d` level as well; we're pretending we're a level deeper
+  //     if ((satLevel() + 1) > depth) satLvl.front() = 255;
+  //     return this;
+  //   }
+  //   constexpr void popSatLevel() {
+  //     std::copy(satLvl.begin() + 1, satLvl.end(), satLvl.begin());
+  // #ifndef NDEBUG
+  //     satLvl.back() = 255;
+  // #endif
+  //   }
   // Set sat level and flag as indicating that this loop cannot be parallelized
-  constexpr void setSatLevelLP(uint8_t d) { satLvl.front() = uint8_t(128) | d; }
+  constexpr void setSatLevelLP(uint8_t d) { satLvl[0] = uint8_t(128) | d; }
   // Set sat level, but allow parallelizing this loop
-  constexpr void setSatLevelParallel(uint8_t d) { satLvl.front() = d; }
+  constexpr void setSatLevelParallel(uint8_t d) { satLvl[0] = d; }
+  static constexpr auto satLevelMask(uint8_t slvl) -> uint8_t {
+    return slvl & uint8_t(127); // NOTE: deduces to `int`
+  }
   [[nodiscard]] constexpr auto satLevel() const -> uint8_t {
-    return satLvl.front() & uint8_t(127);
+    return satLevelMask(satLvl[0]);
   }
   [[nodiscard]] constexpr auto isSat(unsigned depth) const -> bool {
     invariant(depth <= 127);
@@ -325,7 +126,7 @@ public:
   }
   /// if true, then it's independent conditioned on the phis...
   [[nodiscard]] constexpr auto isCondIndep() const -> bool {
-    return (satLvl.front() & uint8_t(128)) == uint8_t(0);
+    return (satLvl[0] & uint8_t(128)) == uint8_t(0);
   }
   [[nodiscard]] static constexpr auto preventsReordering(uint8_t depth)
     -> bool {
@@ -333,7 +134,7 @@ public:
   }
   // prevents reordering satisfied level if `true`
   [[nodiscard]] constexpr auto preventsReordering() const -> bool {
-    return preventsReordering(satLvl.front());
+    return preventsReordering(satLvl[0]);
   }
   /// checks the stash is active at `depth`, and that the stash
   /// does prevent reordering.
@@ -377,13 +178,8 @@ public:
     invariant(inPhi.numRow(), outPhi.numRow());
     if (depPoly->checkSat(*alloc, inLoop, inOff, inPhi, outLoop, outOff,
                           outPhi))
-      satLvl.front() = uint8_t(inPhi.numRow() - 1);
+      satLvl[0] = uint8_t(inPhi.numRow() - 1);
   }
-  // constexpr auto addEdge(size_t i) -> Dependence & {
-  //   in->addEdgeOut(i);
-  //   out->addEdgeIn(i);
-  //   return *this;
-  // }
   constexpr void copySimplices(Arena<> *alloc) {
     dependenceSatisfaction = dependenceSatisfaction->copy(alloc);
     dependenceBounding = dependenceBounding->copy(alloc);
@@ -649,6 +445,284 @@ public:
     sch[2 + d + numLoopsX] = 1;
     return dependenceSatisfaction->satisfiable(alloc, sch, numLambda);
   }
+
+  struct Active {
+    unsigned depth;
+    constexpr Active(const Active &) noexcept = default;
+    constexpr Active(Active &&) noexcept = default;
+    constexpr Active() noexcept = default;
+    constexpr auto operator=(const Active &) noexcept -> Active & = default;
+    constexpr Active(unsigned depth) : depth(depth) {}
+    constexpr auto operator()(const Dependence *d) const -> bool {
+      return d->isActive(depth);
+    }
+  };
+
+  friend inline auto operator<<(llvm::raw_ostream &os, const Dependence &d)
+    -> llvm::raw_ostream & {
+    os << "Dependence Poly ";
+    if (d.isForward()) os << "x -> y:";
+    else os << "y -> x:";
+    os << "\n\tInput:\n" << *d.in;
+    os << "\n\tOutput:\n" << *d.out;
+    os << "\nA = " << d.depPoly->getA() << "\nE = " << d.depPoly->getE()
+       << "\nSchedule Constraints:"
+       << d.dependenceSatisfaction->getConstraints()
+       << "\nBounding Constraints:" << d.dependenceBounding->getConstraints();
+    return os << "\nSatisfied (isCondIndep() == " << d.isCondIndep()
+              << ") = " << int(d.satLevel()) << "\n";
+  }
+};
+static_assert(sizeof(Dependence) <= 64);
+
+// depPoly gives the constraints
+// dependenceFwd gives forward constraints
+// dependenceBwd gives forward constraints
+// isBackward() indicates whether backward is non-empty
+// bounding constraints, used for ILP solve, are reverse,
+// i.e. fwd uses dependenceBwd and bwd uses dependenceFwd.
+//
+// Consider the following simple example dependencies:
+// for (k = 0; k < K; ++k)
+//   for (i = 0; i < I; ++i)
+//     for (j = 0; j < J; ++j)
+//       for (l = 0; l < L; ++l)
+//         A(i,j) = f(A(i+1,j), A(i,j-1), A(j,j), A(j,i), A(i,j-k))
+// label:     0           1        2         3       4       5
+// We have...
+////// 0 <-> 1 //////
+// i_0 = i_1 + 1
+// j_0 = j_1
+// null spaces: [k_0, l_0], [k_1, l_1]
+// forward:  k_0 <= k_1 - 1
+//           l_0 <= l_1 - 1
+// backward: k_0 >= k_1
+//           l_0 >= l_1
+//
+//
+////// 0 <-> 2 //////
+// i_0 = i_1
+// j_0 = j_1 - 1
+// null spaces: [k_0, l_0], [k_1, l_1]
+// forward:  k_0 <= k_1 - 1
+//           l_0 <= l_1 - 1
+// backward: k_0 >= k_1
+//           l_0 >= l_1
+//
+////// 0 <-> 3 //////
+// i_0 = j_1
+// j_0 = j_1
+// null spaces: [k_0, l_0], [i_1, k_1, l_1]
+// forward:  k_0 <= k_1 - 1
+//           l_0 <= l_1 - 1
+// backward: k_0 >= k_1
+//           l_0 >= l_1
+//
+// i_0 = j_1, we essentially lose the `i` dimension.
+// Thus, to get fwd/bwd, we take the intersection of nullspaces to get
+// the time dimension?
+// TODO: try and come up with counter examples where this will fail.
+//
+////// 0 <-> 4 //////
+// i_0 = j_1
+// j_0 = i_1
+// null spaces: [k_0, l_0], [k_1, l_1]
+// if j_0 > i_0) [store first]
+//   forward:  k_0 >= k_1
+//             l_0 >= l_1
+//   backward: k_0 <= k_1 - 1
+//             l_0 <= l_1 - 1
+// else (if j_0 <= i_0) [load first]
+//   forward:  k_0 <= k_1 - 1
+//             l_0 <= l_1 - 1
+//   backward: k_0 >= k_1
+//             l_0 >= l_1
+//
+// Note that the dependency on `l` is broken when we can condition on
+// `i_0
+// != j_0`, meaning that we can fully reorder interior loops when we can
+// break dependencies.
+//
+//
+////// 0 <-> 5 //////
+// i_0 = i_1
+// j_0 = j_1 - k_1
+class Dependencies {
+  char *data{nullptr};
+  int32_t numData{0};
+  // int32_t tombstone{-1};
+
+public:
+  using ID = Dependence::ID;
+  constexpr Dependencies() noexcept = default;
+  constexpr Dependencies(Arena<> *alloc)
+    : data(alloc->allocate<char>(memNeeded(64))) {}
+  constexpr Dependencies(const Dependencies &) noexcept = default; // or delete?
+  constexpr Dependencies(Dependencies &&) noexcept = default;      // or delete?
+  constexpr auto operator=(Dependencies &&other) noexcept
+    -> Dependencies & = default;
+  constexpr auto operator=(const Dependencies &other) noexcept
+    -> Dependencies & = default;
+
+  [[nodiscard]] constexpr auto size() const noexcept -> int32_t {
+    return numData;
+  }
+
+private:
+  void addEdge(Arena<> *alloc, Dependence d) {
+    int32_t id = size();
+    push_pack(alloc, d);
+    d.input()->setEdgeOut(id);
+    d.output()->setEdgeIn(id);
+  }
+  static constexpr auto memNeeded(size_t N) -> size_t {
+    constexpr size_t memPer = sizeof(int32_t) * 2 + sizeof(DepPoly *) +
+                              sizeof(math::Simplex *) * 2 + sizeof(bool) +
+                              sizeof(uint8_t);
+    return N * memPer;
+  }
+
+  void timelessCheck(Arena<> *alloc, NotNull<DepPoly> dxy, NotNull<IR::Addr> x,
+                     NotNull<IR::Addr> y,
+                     std::array<NotNull<math::Simplex>, 2> pair, bool isFwd) {
+    const size_t numLambda = dxy->getNumLambda();
+    invariant(dxy->getTimeDim(), unsigned(0));
+    if (!isFwd) {
+      std::swap(pair[0], pair[1]);
+      std::swap(x, y);
+    }
+    pair[0]->truncateVars(1 + numLambda + dxy->getNumScheduleCoef());
+    addEdge(alloc, Dependence{dxy, pair, x, y, isFwd});
+  }
+  void timelessCheck(Arena<> *alloc, NotNull<DepPoly> dxy, NotNull<IR::Addr> x,
+                     NotNull<IR::Addr> y,
+                     std::array<NotNull<math::Simplex>, 2> pair) {
+    return timelessCheck(alloc, dxy, x, y, pair,
+                         checkDirection(*alloc, pair, x, y, dxy->getNumLambda(),
+                                        dxy->getNumVar() + 1));
+  }
+
+  // emplaces dependencies with repeat accesses to the same memory across
+  // time
+  void timeCheck(Arena<> *alloc, NotNull<DepPoly> dxy, NotNull<IR::Addr> x,
+                 NotNull<IR::Addr> y,
+                 std::array<NotNull<math::Simplex>, 2> pair) {
+    bool isFwd = checkDirection(*alloc, pair, x, y, dxy->getNumLambda(),
+                                dxy->getA().numCol() - dxy->getTimeDim());
+    timeCheck(alloc, dxy, x, y, pair, isFwd);
+  }
+  void timeCheck(Arena<> *alloc, NotNull<DepPoly> dxy, NotNull<IR::Addr> x,
+                 NotNull<IR::Addr> y,
+                 std::array<NotNull<math::Simplex>, 2> pair, bool isFwd) {
+    const unsigned numInequalityConstraintsOld =
+                     dxy->getNumInequalityConstraints(),
+                   numEqualityConstraintsOld = dxy->getNumEqualityConstraints(),
+                   ineqEnd = 1 + numInequalityConstraintsOld,
+                   posEqEnd = ineqEnd + numEqualityConstraintsOld,
+                   numLambda = posEqEnd + numEqualityConstraintsOld,
+                   numScheduleCoefs = dxy->getNumScheduleCoef();
+    invariant(numLambda, dxy->getNumLambda());
+    // copy backup
+    std::array<NotNull<math::Simplex>, 2> farkasBackups{pair[0]->copy(alloc),
+                                                        pair[1]->copy(alloc)};
+    NotNull<IR::Addr> in = x, out = y;
+    if (isFwd) {
+      std::swap(farkasBackups[0], farkasBackups[1]);
+    } else {
+      std::swap(in, out);
+      std::swap(pair[0], pair[1]);
+    }
+    pair[0]->truncateVars(1 + numLambda + numScheduleCoefs);
+    auto dep0 = Dependence{dxy->copy(alloc), pair, in, out, isFwd};
+    invariant(out->getCurrentDepth() + in->getCurrentDepth(),
+              dep0.getNumPhiCoefficients());
+    addEdge(alloc, dep0);
+    // pair is invalid
+    const ptrdiff_t timeDim = dxy->getTimeDim(),
+                    numVar = 1 + dxy->getNumVar() - timeDim;
+    invariant(timeDim > 0);
+    // 1 + because we're indexing into A and E, ignoring the constants
+    // remove the time dims from the deps
+    // dep0.depPoly->truncateVars(numVar);
+
+    // dep0.depPoly->setTimeDim(0);
+    invariant(out->getCurrentDepth() + in->getCurrentDepth(),
+              dep0.getNumPhiCoefficients());
+    // now we need to check the time direction for all times
+    // anything approaching 16 time dimensions would be absolutely
+    // insane
+    math::Vector<bool, 16> timeDirection(timeDim);
+    ptrdiff_t t = 0;
+    auto fE{farkasBackups[0]->getConstraints()(_, _(1, end))};
+    auto sE{farkasBackups[1]->getConstraints()(_, _(1, end))};
+    do {
+      // set `t`th timeDim to +1/-1
+      // basically, what we do here is set it to `step` and pretend it was
+      // a constant. so a value of c = a'x + t*step -> c - t*step = a'x so
+      // we update the constant `c` via `c -= t*step`.
+      // we have the problem that.
+      int64_t step = dxy->getNullStep(t);
+      ptrdiff_t v = numVar + t, i = 0;
+      while (true) {
+        for (ptrdiff_t c = 0; c < numInequalityConstraintsOld; ++c) {
+          int64_t Acv = dxy->getA(c, v);
+          if (!Acv) continue;
+          Acv *= step;
+          fE(0, c + 1) -= Acv; // *1
+          sE(0, c + 1) -= Acv; // *1
+        }
+        for (ptrdiff_t c = 0; c < numEqualityConstraintsOld; ++c) {
+          // each of these actually represents 2 inds
+          int64_t Ecv = dxy->getE(c, v);
+          if (!Ecv) continue;
+          Ecv *= step;
+          fE(0, c + ineqEnd) -= Ecv;
+          fE(0, c + posEqEnd) += Ecv;
+          sE(0, c + ineqEnd) -= Ecv;
+          sE(0, c + posEqEnd) += Ecv;
+        }
+        if (i++ != 0) break; // break after undoing
+        timeDirection[t] =
+          checkDirection(*alloc, farkasBackups, *out, *in, numLambda,
+                         dxy->getA().numCol() - dxy->getTimeDim());
+        step *= -1; // flip to undo, then break
+      }
+    } while (++t < timeDim);
+    t = 0;
+    do {
+      // checkDirection(farkasBackups, x, y, numLambda) == false
+      // correct time direction would make it return true
+      // thus sign = timeDirection[t] ? 1 : -1
+      int64_t step = (2 * timeDirection[t] - 1) * dxy->getNullStep(t);
+      ptrdiff_t v = numVar + t;
+      for (ptrdiff_t c = 0; c < numInequalityConstraintsOld; ++c) {
+        int64_t Acv = dxy->getA(c, v);
+        if (!Acv) continue;
+        Acv *= step;
+        dxy->getA(c, 0) -= Acv;
+        fE(0, c + 1) -= Acv; // *1
+        sE(0, c + 1) -= Acv; // *-1
+      }
+      for (ptrdiff_t c = 0; c < numEqualityConstraintsOld; ++c) {
+        // each of these actually represents 2 inds
+        int64_t Ecv = dxy->getE(c, v);
+        if (!Ecv) continue;
+        Ecv *= step;
+        dxy->getE(c, 0) -= Ecv;
+        fE(0, c + ineqEnd) -= Ecv;
+        fE(0, c + posEqEnd) += Ecv;
+        sE(0, c + ineqEnd) -= Ecv;
+        sE(0, c + posEqEnd) += Ecv;
+      }
+    } while (++t < timeDim);
+    // dxy->truncateVars(numVar);
+    // dxy->setTimeDim(0);
+    farkasBackups[0]->truncateVars(1 + numLambda + numScheduleCoefs);
+    auto dep1 = Dependence{dxy, farkasBackups, out, in, !isFwd};
+    invariant(out->getCurrentDepth() + in->getCurrentDepth(),
+              dep1.getNumPhiCoefficients());
+    addEdge(alloc, dep1);
+  }
   static auto checkDirection(Arena<> alloc,
                              const std::array<NotNull<math::Simplex>, 2> &p,
                              NotNull<const IR::Addr> x,
@@ -739,8 +813,207 @@ public:
     invariant(false);
     return false;
   }
+  constexpr auto get(ID i, IR::Addr *in, IR::Addr *out) -> Dependence {
+    return Dependence{depPoly(i),      depSatBnd(i), in, out,
+                      satLevelPair(i), isForward(i)
 
-  static void check(Arena<> *alloc, NotNull<IR::Addr> x, NotNull<IR::Addr> y) {
+    };
+  }
+
+  constexpr void set(ID i, Dependence d) {
+    auto out = d.output();
+    auto in = d.input();
+    output(i) = out;
+    nextOut(i) = out->getEdgeOut();
+    input(i) = in;
+    nextIn(i) = in->getEdgeIn();
+    depSatBnd(i) = d.getSimplexPair();
+    depPoly(i) = d.getDepPoly();
+    satLevelPair(i) = d.satLvl;
+    isForward(i) = d.isForward();
+  }
+
+  auto push_pack(Arena<> *alloc, Dependence d) -> void * {
+    void *ret = nullptr;
+    if (numData == getCapacity()) {
+      auto newCapacity = getCapacity() * 2;
+      auto *newData = alloc->allocate<char>(memNeeded(newCapacity));
+      std::memcpy(newData, data, memNeeded(numData));
+      ret = std::exchange(data, newData);
+    }
+    set(ID{numData++}, d);
+    return ret;
+  }
+  [[nodiscard]] constexpr auto getCapacity() const noexcept -> int32_t {
+    return int32_t(std::bit_ceil(uint32_t(numData)));
+  }
+
+  constexpr auto outAddrPtr() -> IR::Addr ** {
+    void *p = data;
+    return static_cast<IR::Addr **>(p);
+  }
+  [[nodiscard]] constexpr auto outAddrPtr() const -> IR::Addr *const * {
+    const void *p = data;
+    return static_cast<IR::Addr *const *>(p);
+  }
+  constexpr auto inAddrPtr() -> IR::Addr ** {
+    void *p = data + sizeof(IR::Addr *) * getCapacity();
+    return static_cast<IR::Addr **>(p);
+  }
+  [[nodiscard]] constexpr auto inAddrPtr() const -> IR::Addr *const * {
+    const void *p = data + sizeof(IR::Addr *) * getCapacity();
+    return static_cast<IR::Addr *const *>(p);
+  }
+  constexpr auto outEdgePtr() -> int32_t * {
+    unsigned cap = getCapacity();
+    void *p = data + sizeof(IR::Addr *) * 2 * cap;
+    return static_cast<int32_t *>(p);
+  }
+  [[nodiscard]] constexpr auto outEdgePtr() const -> const int32_t * {
+    unsigned cap = getCapacity();
+    const void *p = data + sizeof(IR::Addr *) * 2 * cap;
+    return static_cast<const int32_t *>(p);
+  }
+  constexpr auto inEdgePtr() -> int32_t * {
+    unsigned cap = getCapacity();
+    void *p = data + (sizeof(IR::Addr *) * 2 + sizeof(int32_t)) * cap;
+    return static_cast<int32_t *>(p);
+  }
+  [[nodiscard]] constexpr auto inEdgePtr() const -> const int32_t * {
+    unsigned cap = getCapacity();
+    const void *p = data + (sizeof(IR::Addr *) * 2 + sizeof(int32_t)) * cap;
+    return static_cast<const int32_t *>(p);
+  }
+  constexpr auto satLevelsPtr() -> std::array<uint8_t, 2> * {
+    unsigned cap = getCapacity();
+    void *p =
+      data +
+      ((sizeof(IR::Addr *) + sizeof(int32_t) + sizeof(math::Simplex *)) * 2 +
+       sizeof(DepPoly *)) *
+        cap;
+    return static_cast<std::array<uint8_t, 2> *>(p);
+  }
+  [[nodiscard]] constexpr auto satLevelsPtr() const
+    -> const std::array<uint8_t, 2> * {
+    unsigned cap = getCapacity();
+    const void *p =
+      data +
+      ((sizeof(IR::Addr *) + sizeof(int32_t) + sizeof(math::Simplex *)) * 2 +
+       sizeof(DepPoly *)) *
+        cap;
+    return static_cast<const std::array<uint8_t, 2> *>(p);
+  }
+
+public:
+  // field order:
+  // AddrOut
+  // AddrIn
+  // nextOut
+  // nextIn
+  // dependenceSatisfaction
+  // dependenceBounding
+  // depPoly
+  // satLevel
+  // isForward
+  constexpr auto get(ID i) -> Dependence { return get(i, input(i), output(i)); }
+  constexpr auto outAddrs() -> MutPtrVector<IR::Addr *> {
+    return {outAddrPtr(), numData};
+  }
+  constexpr auto inAddrs() -> MutPtrVector<IR::Addr *> {
+    return {inAddrPtr(), numData};
+  }
+  constexpr auto outEdges() -> MutPtrVector<int32_t> {
+    return {outEdgePtr(), numData};
+  }
+  constexpr auto inEdges() -> MutPtrVector<int32_t> {
+    return {inEdgePtr(), numData};
+  }
+  [[nodiscard]] constexpr auto outEdges() const -> PtrVector<int32_t> {
+    return {outEdgePtr(), unsigned(numData)};
+  }
+  [[nodiscard]] constexpr auto inEdges() const -> PtrVector<int32_t> {
+    return {inEdgePtr(), unsigned(numData)};
+  }
+  constexpr auto satLevels() -> MutPtrVector<std::array<uint8_t, 2>> {
+    return {satLevelsPtr(), numData};
+  }
+
+  [[nodiscard]] constexpr auto output(ID i) -> IR::Addr *& {
+    return outAddrPtr()[i.id];
+  }
+  [[nodiscard]] constexpr auto output(ID i) const -> const IR::Addr * {
+    return outAddrPtr()[i.id];
+  }
+  [[nodiscard]] constexpr auto input(ID i) -> IR::Addr *& {
+    return inAddrPtr()[i.id];
+  }
+  [[nodiscard]] constexpr auto input(ID i) const -> const IR::Addr * {
+    return inAddrPtr()[i.id];
+  }
+  constexpr auto nextOut(ID i) -> int32_t & {
+    unsigned cap = getCapacity();
+    void *p = data + sizeof(int32_t) * i.id + sizeof(IR::Addr *) * 2 * cap;
+    return *static_cast<int32_t *>(p);
+  }
+  constexpr auto nextIn(ID i) -> int32_t & {
+    unsigned cap = getCapacity();
+    void *p = data + sizeof(int32_t) * i.id +
+              (sizeof(IR::Addr *) * 2 + sizeof(int32_t)) * cap;
+    return *static_cast<int32_t *>(p);
+  }
+  constexpr auto depSatBnd(ID i) -> std::array<NotNull<math::Simplex>, 2> & {
+    unsigned cap = getCapacity();
+    void *p = data + 2 * sizeof(math::Simplex *) * i.id +
+              (sizeof(IR::Addr *) + sizeof(int32_t)) * 2 * cap;
+    return *static_cast<std::array<NotNull<math::Simplex>, 2> *>(p);
+  }
+  constexpr auto depPoly(ID i) -> DepPoly *& {
+    unsigned cap = getCapacity();
+    void *p = data + sizeof(DepPoly *) * i.id +
+              (sizeof(IR::Addr *) + sizeof(int32_t) + sizeof(math::Simplex *)) *
+                2 * cap;
+    return *static_cast<DepPoly **>(p);
+  }
+  constexpr auto satLevelPair(ID i) -> std::array<uint8_t, 2> & {
+    return satLevelsPtr()[i.id];
+  }
+  [[nodiscard]] constexpr auto satLevelPair(ID i) const
+    -> const std::array<uint8_t, 2> & {
+    return satLevelsPtr()[i.id];
+  }
+  constexpr auto satLevel(ID i) -> uint8_t {
+    auto pair = satLevelPair(i);
+    return Dependence::satLevelMask(pair[0]);
+  }
+  [[nodiscard]] constexpr auto isSat(ID i, unsigned depth) const -> uint8_t {
+    auto pair = satLevelPair(i);
+    return Dependence::satLevelMask(pair[0]) <= depth;
+  }
+
+  [[nodiscard]] constexpr auto isForward(ID i) const noexcept -> bool & {
+    unsigned cap = getCapacity();
+    void *p =
+      data + sizeof(bool) * i.id +
+      ((sizeof(IR::Addr *) + sizeof(int32_t) + sizeof(math::Simplex *)) * 2 +
+       sizeof(std::array<uint8_t, 2>) + sizeof(DepPoly *)) *
+        cap;
+    return *static_cast<bool *>(p);
+  }
+
+  class Ref {
+    Dependencies *deps;
+    ID i;
+
+  public:
+    Ref(Dependencies *deps, ID i) : deps(deps), i(i) {}
+    operator Dependence() const { return deps->get(i); }
+    auto operator=(Dependence d) -> Ref & {
+      deps->set(i, d);
+      return *this;
+    }
+  };
+
+  void check(Arena<> *alloc, NotNull<IR::Addr> x, NotNull<IR::Addr> y) {
     // TODO: implement gcd test
     // if (x.gcdKnownIndependent(y)) return {};
     DepPoly *dxy{DepPoly::dependence(alloc, x, y)};
@@ -756,25 +1029,9 @@ public:
     if (dxy->getTimeDim()) timeCheck(alloc, dxy, x, y, pair);
     else timelessCheck(alloc, dxy, x, y, pair);
   }
-  static void copyDependencies(Arena<> *alloc, IR::Addr *src, IR::Addr *dst) {
-    for (Dependence *d = src->getEdgeIn(); d; d = d->getNextInput()) {
-      IR::Addr *input = d->in;
-      if (input->isLoad()) continue;
-      auto *in = alloc->create<Dependence>(d->getDepPoly(), d->getSimplexPair(),
-                                           input, dst, d->isForward());
-      dst->addEdgeIn(in);
-    }
-    for (Dependence *d = src->getEdgeOut(); d; d = d->getNextOutput()) {
-      IR::Addr *output = d->out;
-      if (output->isLoad()) continue;
-      auto *out = alloc->create<Dependence>(
-        d->getDepPoly(), d->getSimplexPair(), dst, output, d->isForward());
-      dst->addEdgeOut(out);
-    }
-  }
+  inline void copyDependencies(Arena<> *alloc, IR::Addr *src, IR::Addr *dst);
   // reload store `x`
-  static auto reload(Arena<> *alloc, NotNull<IR::Addr> store)
-    -> NotNull<IR::Addr> {
+  auto reload(Arena<> *alloc, NotNull<IR::Addr> store) -> NotNull<IR::Addr> {
     NotNull<DepPoly> dxy{DepPoly::self(alloc, store)};
     std::array<NotNull<math::Simplex>, 2> pair(dxy->farkasPair(alloc));
     NotNull<IR::Addr> load = store->reload(alloc);
@@ -783,95 +1040,102 @@ public:
     else timelessCheck(alloc, dxy, store, load, pair, true);
     return load;
   }
-  constexpr auto replaceInput(NotNull<IR::Addr> newIn) -> Dependence {
-    Dependence edge = *this;
-    edge.in = newIn;
-    return edge;
+  [[nodiscard]] constexpr auto inputEdgeIDs(int32_t id) const {
+    return utils::VForwardRange{inEdges(), id};
   }
-  constexpr auto replaceOutput(NotNull<IR::Addr> newOut) -> Dependence {
-    Dependence edge = *this;
-    edge.out = newOut;
-    return edge;
+  [[nodiscard]] constexpr auto outputEdgeIDs(int32_t id) const {
+    return utils::VForwardRange{outEdges(), id};
   }
-
-  friend inline auto operator<<(llvm::raw_ostream &os, const Dependence &d)
-    -> llvm::raw_ostream & {
-    os << "Dependence Poly ";
-    if (d.isForward()) os << "x -> y:";
-    else os << "y -> x:";
-    os << "\n\tInput:\n" << *d.in;
-    os << "\n\tOutput:\n" << *d.out;
-    os << "\nA = " << d.depPoly->getA() << "\nE = " << d.depPoly->getE()
-       << "\nSchedule Constraints:"
-       << d.dependenceSatisfaction->getConstraints()
-       << "\nBounding Constraints:" << d.dependenceBounding->getConstraints();
-    return os << "\nSatisfied (isCondIndep() == " << d.isCondIndep()
-              << ") = " << int(d.satLevel()) << "\n";
+  [[nodiscard]] constexpr auto inputEdges(int32_t id) const {
+    auto f = [this](int32_t id) {
+      Dependencies d = *this;
+      return d.get(ID{id});
+    };
+    return inputEdgeIDs(id) | std::views::transform(f);
+  }
+  [[nodiscard]] constexpr auto outputEdges(int32_t id) const {
+    auto f = [this](int32_t id) {
+      Dependencies d = *this;
+      return d.get(Dependence::ID{id});
+    };
+    return outputEdgeIDs(id) | std::views::transform(f);
   }
 
-  struct NextInput {
-    constexpr auto operator()(Dependence *d) const -> Dependence * {
-      return d->getNextInput();
-    }
-    constexpr auto operator()(const Dependence *d) const -> const Dependence * {
-      return d->getNextInput();
-    }
-  };
-  struct NextOutput {
-    constexpr auto operator()(Dependence *d) const -> Dependence * {
-      return d->getNextOutput();
-    }
-    constexpr auto operator()(const Dependence *d) const -> const Dependence * {
-      return d->getNextOutput();
-    }
-  };
-  struct Active {
-    unsigned depth;
-    constexpr Active(const Active &) noexcept = default;
-    constexpr Active(Active &&) noexcept = default;
-    constexpr Active() noexcept = default;
-    constexpr auto operator=(const Active &) noexcept -> Active & = default;
-    constexpr Active(unsigned depth) : depth(depth) {}
-    constexpr auto operator()(const Dependence *d) const -> bool {
-      return d->isActive(depth);
-    }
-  };
+  [[nodiscard]] constexpr auto activeFilter(unsigned depth) const {
+    auto f = [=](int32_t id) -> bool {
+      return !isSat(Dependence::ID{id}, depth);
+    };
+    return std::views::filter(f);
+  }
+  [[nodiscard]] constexpr auto inputAddrTransform() const {
+    auto f = [=](int32_t id) { return input(Dependence::ID{id}); };
+    return std::views::transform(f);
+  }
+  [[nodiscard]] constexpr auto outputAddrTransform() const {
+    auto f = [=](int32_t id) { return output(Dependence::ID{id}); };
+    return std::views::transform(f);
+  }
 };
-static_assert(sizeof(Dependence) <= 64);
+
+static_assert(std::is_trivially_copyable_v<Dependencies>);
+static_assert(std::is_trivially_destructible_v<Dependencies>);
 } // namespace poly
 namespace IR {
-inline constexpr auto IR::Addr::inputAddrs() {
-  return utils::ListRange{getEdgeIn(), Dependence::NextInput{},
-                          [](Dependence *d) { return d->input(); }};
+using poly::Dependencies;
+
+inline auto Addr::inputEdges(Dependencies deps) const {
+  return deps.inputEdges(getEdgeIn());
 }
-inline constexpr auto IR::Addr::outputAddrs() {
-  return utils::ListRange{getEdgeOut(), Dependence::NextOutput{},
-                          [](Dependence *d) { return d->output(); }};
+inline auto Addr::outputEdges(Dependencies deps) const {
+  return deps.outputEdges(getEdgeOut());
 }
-inline constexpr auto IR::Addr::inputAddrs(unsigned depth) {
-  return utils::ListRange{getEdgeIn(), Dependence::NextInput{}} |
-         std::views::filter(Dependence::Active{depth}) |
-         std::views::transform([](Dependence *d) { return d->input(); });
+inline auto Addr::inputEdgeIDs(Dependencies deps) const {
+  return deps.inputEdgeIDs(getEdgeIn());
 }
-inline constexpr auto IR::Addr::outputAddrs(unsigned depth) {
-  return utils::ListRange{getEdgeOut(), Dependence::NextOutput{}} |
-         std::views::filter(Dependence::Active{depth}) |
-         std::views::transform([](Dependence *d) { return d->output(); });
+inline auto Addr::outputEdgeIDs(Dependencies deps) const {
+  return deps.outputEdgeIDs(getEdgeOut());
 }
-inline constexpr void Addr::setEdgeIn(Dependence *dep) {
-  edgeIn = dep->setNextInput(edgeIn);
+
+inline auto IR::Addr::inputAddrs(Dependencies deps) const {
+  return inputEdgeIDs(deps) | deps.inputAddrTransform();
 }
-inline constexpr void Addr::setEdgeOut(Dependence *dep) {
-  edgeOut = dep->setNextOutput(edgeOut);
+inline auto IR::Addr::outputAddrs(Dependencies deps) const {
+  return outputEdgeIDs(deps) | deps.outputAddrTransform();
 }
-inline constexpr void Addr::addEdgeIn(Dependence *dep) {
-  setEdgeIn(dep);
-  dep->input()->setEdgeOut(dep);
+
+inline auto Addr::inputEdges(Dependencies deps, unsigned depth) const {
+  return inputEdgeIDs(deps) | deps.activeFilter(depth);
 }
-inline constexpr void Addr::addEdgeOut(Dependence *dep) {
-  setEdgeOut(dep);
-  dep->output()->setEdgeIn(dep);
+inline auto Addr::outputEdges(Dependencies deps, unsigned depth) const {
+  return outputEdgeIDs(deps) | deps.activeFilter(depth);
+}
+
+inline auto IR::Addr::inputAddrs(Dependencies deps, unsigned depth) const {
+  return inputEdges(deps, depth) | deps.inputAddrTransform();
+}
+inline auto IR::Addr::outputAddrs(Dependencies deps, unsigned depth) const {
+  return outputEdges(deps, depth) | deps.outputAddrTransform();
 }
 
 } // namespace IR
+
+namespace poly {
+inline void Dependencies::copyDependencies(Arena<> *alloc, IR::Addr *src,
+                                           IR::Addr *dst) {
+  for (int32_t id : src->inputEdgeIDs(*this)) {
+    IR::Addr *input = this->input(Dependence::ID{id});
+    if (input->isLoad()) continue;
+    Dependence d = get(Dependence::ID{id}, input, dst);
+    addEdge(alloc, d);
+  }
+  for (int32_t id : src->outputEdgeIDs(*this)) {
+    IR::Addr *output = this->output(Dependence::ID{id});
+    if (output->isLoad()) continue;
+    Dependence d = get(Dependence::ID{id}, dst, output);
+    addEdge(alloc, d);
+  }
+}
+
+} // namespace poly
+
 } // namespace poly

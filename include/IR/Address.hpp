@@ -25,11 +25,12 @@ class ScheduledNode;
 } // namespace lp
 namespace poly {
 class Dependence;
+class Dependencies;
 } // namespace poly
 namespace IR {
 using math::PtrVector, math::MutPtrVector, math::DensePtrMatrix,
   math::MutDensePtrMatrix, math::SquarePtrMatrix, math::_, math::DenseDims,
-  math::PtrMatrix, math::end, poly::Dependence;
+  math::PtrMatrix, math::end, poly::Dependence, poly::Dependencies;
 
 /// Represents a memory access that has been rotated according to some affine
 /// transform.
@@ -74,8 +75,8 @@ using math::PtrVector, math::MutPtrVector, math::DensePtrMatrix,
 /// `oldLoop->rotate(PhiInv)`
 // clang-format on
 class Addr : public Instruction {
-  Dependence *edgeIn{nullptr};
-  Dependence *edgeOut{nullptr};
+  int32_t edgeIn{-1};
+  int32_t edgeOut{-1};
   lp::ScheduledNode *node;
   NotNull<const llvm::SCEVUnknown> basePointer;
   poly::Loop *loop{nullptr};
@@ -132,8 +133,6 @@ class Addr : public Instruction {
   [[nodiscard]] constexpr auto offsetMatrix() -> MutDensePtrMatrix<int64_t> {
     return {offSym, DenseDims{getArrayDim(), numDynSym}};
   }
-  inline constexpr void setEdgeIn(Dependence *);
-  inline constexpr void setEdgeOut(Dependence *);
 
 public:
   constexpr void rotate(NotNull<poly::Loop> explicitLoop,
@@ -232,16 +231,11 @@ public:
     return 1 + (numLoops + 1) * dim;
   }
   Addr(const Addr &) = delete;
-  inline constexpr void addEdgeIn(Dependence *);
-  inline constexpr void addEdgeOut(Dependence *);
-  [[nodiscard]] constexpr auto getEdgeIn() -> Dependence * { return edgeIn; }
-  [[nodiscard]] constexpr auto getEdgeIn() const -> const Dependence * {
-    return edgeIn;
-  }
-  [[nodiscard]] constexpr auto getEdgeOut() -> Dependence * { return edgeOut; }
-  [[nodiscard]] constexpr auto getEdgeOut() const -> const Dependence * {
-    return edgeOut;
-  }
+  constexpr void setEdgeIn(int32_t id) { edgeIn = id; }
+  constexpr void setEdgeOut(int32_t id) { edgeOut = id; }
+
+  [[nodiscard]] constexpr auto getEdgeIn() const -> int32_t { return edgeIn; }
+  [[nodiscard]] constexpr auto getEdgeOut() const -> int32_t { return edgeOut; }
   constexpr void setLoopNest(poly::Loop *L) { loop = L; }
   // NOLINTNEXTLINE(readability-make-member-function-const)
   [[nodiscard]] constexpr auto getNode() -> lp::ScheduledNode * { return node; }
@@ -249,19 +243,19 @@ public:
     return node;
   }
   constexpr void setNode(lp::ScheduledNode *n) { node = n; }
-  inline constexpr auto inputAddrs();
-  inline constexpr auto outputAddrs();
-  inline constexpr auto inputAddrs(unsigned depth);
-  inline constexpr auto outputAddrs(unsigned depth);
-  [[nodiscard]] static auto construct(Arena<> *alloc,
-                                      const llvm::SCEVUnknown *ptr,
-                                      llvm::Instruction *user,
-                                      unsigned numLoops) -> NotNull<Addr> {
-    auto *mem =
-      (Addr *)alloc->allocate(sizeof(Addr) + numLoops * sizeof(int64_t));
-    auto *ma = new (mem) Addr(ptr, user, numLoops);
-    return ma;
-  }
+  [[nodiscard]] inline auto inputAddrs(Dependencies) const;
+  [[nodiscard]] inline auto outputAddrs(Dependencies) const;
+  [[nodiscard]] inline auto inputAddrs(Dependencies, unsigned depth) const;
+  [[nodiscard]] inline auto outputAddrs(Dependencies, unsigned depth) const;
+  [[nodiscard]] inline auto inputEdges(Dependencies) const;
+  [[nodiscard]] inline auto outputEdges(Dependencies) const;
+  [[nodiscard]] inline auto inputEdges(Dependencies, unsigned depth) const;
+  [[nodiscard]] inline auto outputEdges(Dependencies, unsigned depth) const;
+  [[nodiscard]] inline auto inputEdgeIDs(Dependencies) const;
+  [[nodiscard]] inline auto outputEdgeIDs(Dependencies) const;
+  [[nodiscard]] inline auto inputEdgeIDs(Dependencies, unsigned depth) const;
+  [[nodiscard]] inline auto outputEdgeIDs(Dependencies, unsigned depth) const;
+
   /// Constructor for regular indexing
   [[nodiscard]] static auto
   construct(Arena<> *alloc, const llvm::SCEVUnknown *arrayPtr,
@@ -307,8 +301,8 @@ public:
                 sizeof(Addr) - sizeof(VK_Load) +
                   intMemNeededFuseFree(naturalDepth, numDim) * sizeof(int64_t));
     auto *r = static_cast<Addr *>(p);
-    r->edgeIn = nullptr;
-    r->edgeOut = nullptr;
+    r->edgeIn = -1;
+    r->edgeOut = -1;
     return r;
   }
   [[nodiscard]] auto getSizes() const -> PtrVector<const llvm::SCEV *> {
