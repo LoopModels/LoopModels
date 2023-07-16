@@ -98,7 +98,6 @@ class StridedMatrixPrinter(BaseMatrixPrinter):
             val["sz"]["strideM"],
         )
 
-
 pp = gdb.printing.RegexpCollectionPrettyPrinter("LoopModels")
 pp.add_printer("poly::math::Array", "^poly::math::Array<.*, unsigned int>$", VectorPrinter)
 pp.add_printer("poly::math::::ManagedArray", "^poly::math::ManagedArray<.*, unsigned int, .*, std::allocator<.*>, .*>$", VectorPrinter)

@@ -457,6 +457,21 @@ public:
       return d->isActive(depth);
     }
   };
+
+  friend inline auto operator<<(llvm::raw_ostream &os, const Dependence &d)
+    -> llvm::raw_ostream & {
+    os << "Dependence Poly ";
+    if (d.isForward()) os << "x -> y:";
+    else os << "y -> x:";
+    os << "\n\tInput:\n" << *d.in;
+    os << "\n\tOutput:\n" << *d.out;
+    os << "\nA = " << d.depPoly->getA() << "\nE = " << d.depPoly->getE()
+       << "\nSchedule Constraints:"
+       << d.dependenceSatisfaction->getConstraints()
+       << "\nBounding Constraints:" << d.dependenceBounding->getConstraints();
+    return os << "\nSatisfied (isCondIndep() == " << d.isCondIndep()
+              << ") = " << int(d.satLevel()) << "\n";
+  }
 };
 static_assert(sizeof(Dependence) <= 64);
 
@@ -1045,20 +1060,6 @@ public:
     };
     return outputEdgeIDs(id) | std::views::transform(f);
   }
-  friend inline auto operator<<(llvm::raw_ostream &os, const Dependence &d)
-    -> llvm::raw_ostream & {
-    os << "Dependence Poly ";
-    if (d.isForward()) os << "x -> y:";
-    else os << "y -> x:";
-    os << "\n\tInput:\n" << *d.in;
-    os << "\n\tOutput:\n" << *d.out;
-    os << "\nA = " << d.depPoly->getA() << "\nE = " << d.depPoly->getE()
-       << "\nSchedule Constraints:"
-       << d.dependenceSatisfaction->getConstraints()
-       << "\nBounding Constraints:" << d.dependenceBounding->getConstraints();
-    return os << "\nSatisfied (isCondIndep() == " << d.isCondIndep()
-              << ") = " << int(d.satLevel()) << "\n";
-  }
 
   [[nodiscard]] constexpr auto activeFilter(unsigned depth) const {
     auto f = [=](int32_t id) -> bool {
@@ -1075,6 +1076,7 @@ public:
     return std::views::transform(f);
   }
 };
+
 static_assert(std::is_trivially_copyable_v<Dependencies>);
 static_assert(std::is_trivially_destructible_v<Dependencies>);
 } // namespace poly

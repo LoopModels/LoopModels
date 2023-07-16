@@ -507,16 +507,12 @@ private:
         if (d.isActive(depth)) params += numParams(d);
     return params;
   }
-  static constexpr auto countAuxAndStash(IR::Dependencies deps,
-                                         ScheduledNode *nodes, unsigned depth)
-    -> math::SVector<unsigned, 4> {
-    math::SVector<unsigned, 4> params{};
-    assert(allZero(params));
-    for (ScheduledNode *node : nodes->getVertices())
-      for (Dependence d : node->inputEdges(deps))
-        if (d.isActive(depth)) params += numParams(d.stashSatLevel(depth));
-    return params;
-  }
+  using BackupSchedule =
+    math::ResizeableView<std::pair<poly::AffineSchedule, ScheduledNode *>,
+                         unsigned>;
+  using BackupSat = math::ResizeableView<std::array<uint8_t, 2>, unsigned>;
+  using Backup = std::pair<BackupSchedule, BackupSat>;
+
   static constexpr auto
   setScheduleMemoryOffsets(Dependencies deps, ScheduledNode *nodes, unsigned d)
     -> std::array<unsigned, 3> {
@@ -544,15 +540,7 @@ private:
     return {numOmegaCoefs, numPhiCoefs,    numSlack,      numLambda,
             numBounding,   numConstraints, numActiveEdges};
   }
-  static constexpr auto calcCoefsStash(Dependencies deps, ScheduledNode *nodes,
-                                       unsigned d) -> CoefCounts {
-    auto [numOmegaCoefs, numPhiCoefs, numSlack] =
-      setScheduleMemoryOffsets(deps, nodes, d);
-    auto [numLambda, numBounding, numConstraints, numActiveEdges] =
-      countAuxAndStash(deps, nodes, d);
-    return {numOmegaCoefs, numPhiCoefs,    numSlack,      numLambda,
-            numBounding,   numConstraints, numActiveEdges};
-  }
+
   // NOLINTNEXTLINE(misc-no-recursion)
   [[nodiscard]] auto optimize(ScheduledNode *nodes, unsigned d,
                               unsigned maxDepth) -> Result {
@@ -791,12 +779,7 @@ private:
   /// components link. Now `N4` doesn't point to `N0` anymore, either, but `N3`.
   /// For this reason, we cache temporary info in `Backup`
   /// And additionally, the `ScheduledNode`s hold their `originalNext`.
-  using BackupSchedule =
-    math::ResizeableView<std::pair<poly::AffineSchedule, ScheduledNode *>,
-                         unsigned>;
-  using BackupSat = math::ResizeableView<std::array<uint8_t, 2>, unsigned>;
-  using Backup = std::pair<BackupSchedule, BackupSat>;
-  auto stashFitCore(ScheduledNode *nodes) -> Backup {
+  auto stashFit(ScheduledNode *nodes) -> Backup {
     BackupSchedule old{&allocator, 0, 8};
     BackupSat sat{&allocator, 0, 32};
     for (ScheduledNode *node : nodes->getVertices()) {
@@ -809,10 +792,6 @@ private:
       }
     }
     return {old, sat};
-  }
-  auto stashFit(ScheduledNode *nodes, unsigned depth)
-    -> std::pair<Backup, CoefCounts> {
-    return {stashFitCore(nodes), calcCoefsStash(deps, nodes, depth)};
   }
   void popStash(Backup backup) {
     // reconnect nodes, in case they became disconnected in breakGraph
@@ -842,8 +821,9 @@ private:
     // activeEdges was the old original; swap it in
     // we don't create long lasting allocations
     auto scope = allocator.scope();
-    auto [old, counts] = stashFit(nodes, depth);
-    if (Result depSat = solveGraph(nodes, depth, true, counts))
+    auto old = stashFit(nodes);
+    if (Result depSat =
+          solveGraph(nodes, depth, true, calcCoefs(deps, nodes, depth)))
       if (Result depSatN = optimize(nodes, depth + 1, maxDepth))
         return depSat & depSatN;
     popStash(old);
@@ -852,8 +832,8 @@ private:
   // NOLINTNEXTLINE(misc-no-recursion)
   auto tryFuse(ScheduledNode *n0, ScheduledNode *n1, unsigned depth) -> Result {
     auto s = allocator.scope();
-    auto old0 = stashFitCore(n0); // FIXME: stash dep sat level
-    auto old1 = stashFitCore(n1); // FIXME: stash dep sat level
+    auto old0 = stashFit(n0); // FIXME: stash dep sat level
+    auto old1 = stashFit(n1); // FIXME: stash dep sat level
     ScheduledNode *n = n0->fuse(n1);
     if (Result depSat = solveSplitGraph(n, depth))
       if (Result depSatN = optimize(n, depth + 1, depth + 1))
@@ -1162,44 +1142,46 @@ private:
     }
     return os;
   }
-  friend inline auto operator<<(llvm::raw_ostream &os, ScheduledNode *nodes)
-    -> llvm::raw_ostream & {
-    os << "\nLoopBlock graph:\n";
-    size_t i = 0;
-    for (ScheduledNode *v : nodes->getVertices()) {
-      os << "v_" << i++ << ":\nmem =\n";
-      for (const Addr *m : v->localAddr()) os << *m->getInstruction() << "\n";
-      os << v << "\n";
-    }
-    // BitSet
-    os << "\nLoopBlock Edges:";
-    for (ScheduledNode *inNode : nodes->getVertices()) {
-      poly::AffineSchedule sin = inNode->getSchedule();
-      for (Dependence *edge : nodes->outputEdges()) {
-        os << "\n\n\tEdge = " << edge;
-        ScheduledNode *outNode = edge->output()->getNode();
-        os << "Schedule In: s.getPhi() =" << sin.getPhi()
-           << "\ns.getFusionOmega() = " << sin.getFusionOmega()
-           << "\ns.getOffsetOmega() = " << sin.getOffsetOmega();
-        poly::AffineSchedule sout = outNode->getSchedule();
-        os << "\n\nSchedule Out: s.getPhi() =" << sout.getPhi()
-           << "\ns.getFusionOmega() = " << sout.getFusionOmega()
-           << "\ns.getOffsetOmega() = " << sout.getOffsetOmega();
-
-        os << "\n\n";
-      }
-    }
-    os << "\nLoopBlock schedule:\n";
-    for (Addr *mem : nodes->eachAddr()) {
-      os << "Ref = " << *mem->getArrayPointer();
-      ScheduledNode *node = mem->getNode();
-      poly::AffineSchedule s = node->getSchedule();
-      os << "s.getPhi()" << s.getPhi()
-         << "\ns.getFusionOmega() = " << s.getFusionOmega()
-         << "\ns.getOffsetOmega() = " << s.getOffsetOmega() << "\n";
-    }
-    return os << "\n";
-  }
 };
+inline auto operator<<(llvm::raw_ostream &os,
+                       std::pair<ScheduledNode *, Dependencies> nodesdeps)
+  -> llvm::raw_ostream & {
+  auto [nodes, deps] = nodesdeps;
+  os << "\nLoopBlock graph:\n";
+  size_t i = 0;
+  for (ScheduledNode *v : nodes->getVertices()) {
+    os << "v_" << i++ << ":\nmem =\n";
+    for (const Addr *m : v->localAddr()) os << *m->getInstruction() << "\n";
+    os << v << "\n";
+  }
+  // BitSet
+  os << "\nLoopBlock Edges:";
+  for (ScheduledNode *inNode : nodes->getVertices()) {
+    poly::AffineSchedule sin = inNode->getSchedule();
+    for (Dependence edge : nodes->outputEdges(deps)) {
+      os << "\n\n\tEdge = " << edge;
+      ScheduledNode *outNode = edge.output()->getNode();
+      os << "Schedule In: s.getPhi() =" << sin.getPhi()
+         << "\ns.getFusionOmega() = " << sin.getFusionOmega()
+         << "\ns.getOffsetOmega() = " << sin.getOffsetOmega();
+      poly::AffineSchedule sout = outNode->getSchedule();
+      os << "\n\nSchedule Out: s.getPhi() =" << sout.getPhi()
+         << "\ns.getFusionOmega() = " << sout.getFusionOmega()
+         << "\ns.getOffsetOmega() = " << sout.getOffsetOmega();
+
+      os << "\n\n";
+    }
+  }
+  os << "\nLoopBlock schedule:\n";
+  for (Addr *mem : nodes->eachAddr()) {
+    os << "Ref = " << *mem->getArrayPointer();
+    ScheduledNode *node = mem->getNode();
+    poly::AffineSchedule s = node->getSchedule();
+    os << "s.getPhi()" << s.getPhi()
+       << "\ns.getFusionOmega() = " << s.getFusionOmega()
+       << "\ns.getOffsetOmega() = " << s.getOffsetOmega() << "\n";
+  }
+  return os << "\n";
+}
 
 } // namespace poly::lp
