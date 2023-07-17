@@ -236,7 +236,8 @@ struct LoopIndependent {
 // but then also found some that are not; we need to return `false`
 // in this case, but we of course want to still return those we found.
 // NOLINTNEXTLINE(misc-no-recursion)
-inline auto searchLoopIndependentUsers(IR::Loop *L, IR::Node *N, uint8_t depth,
+inline auto searchLoopIndependentUsers(IR::Dependencies deps, IR::Loop *L,
+                                       IR::Node *N, uint8_t depth,
                                        LoopDepSummary summary)
   -> LoopIndependent {
   if (N->dependsOnParentLoop()) return {summary, false};
@@ -254,8 +255,8 @@ inline auto searchLoopIndependentUsers(IR::Loop *L, IR::Node *N, uint8_t depth,
     }
     a->insertAfter(ret.summary.notIndexedByLoop);
     ret.summary.notIndexedByLoop = a;
-    for (IR::Addr *m : a->outputAddrs(depth)) {
-      ret *= searchLoopIndependentUsers(L, m, depth, summary);
+    for (IR::Addr *m : a->outputAddrs(deps, depth)) {
+      ret *= searchLoopIndependentUsers(deps, L, m, depth, summary);
       if (ret.independent) continue;
       a->setDependsOnParentLoop();
       return ret;
@@ -264,7 +265,7 @@ inline auto searchLoopIndependentUsers(IR::Loop *L, IR::Node *N, uint8_t depth,
   // if it isn't a Loop, must be an `Instruction`
   IR::Value *I = llvm::cast<IR::Instruction>(N);
   for (IR::Node *U : I->getUsers()) {
-    ret *= searchLoopIndependentUsers(L, U, depth, summary);
+    ret *= searchLoopIndependentUsers(deps, L, U, depth, summary);
     if (ret.independent) continue;
     I->setDependsOnParentLoop();
     return ret;
@@ -281,8 +282,8 @@ inline auto searchLoopIndependentUsers(IR::Loop *L, IR::Node *N, uint8_t depth,
   return ret;
 }
 // NOLINTNEXTLINE(misc-no-recursion)
-inline auto visitLoopDependent(IR::Loop *L, IR::Node *N, uint8_t depth,
-                               IR::Node *body) -> IR::Node * {
+inline auto visitLoopDependent(IR::Dependencies deps, IR::Loop *L, IR::Node *N,
+                               uint8_t depth, IR::Node *body) -> IR::Node * {
   invariant(N->getVisitDepth() != 254);
   // N may have been visited as a dependent of an inner loop, which is why
   // `visited` accepts a depth argument
@@ -307,20 +308,20 @@ inline auto visitLoopDependent(IR::Loop *L, IR::Node *N, uint8_t depth,
 #endif
   // iterate over users
   if (auto *A = llvm::dyn_cast<IR::Addr>(N)) {
-    for (IR::Addr *m : A->outputAddrs(depth)) {
+    for (IR::Addr *m : A->outputAddrs(deps, depth)) {
       if (m->wasVisited(depth)) continue;
-      body = visitLoopDependent(L, m, depth, body);
+      body = visitLoopDependent(deps, L, m, depth, body);
     }
   }
   if (auto *I = llvm::dyn_cast<IR::Instruction>(N)) {
     for (IR::Node *U : I->getUsers()) {
       if (U->wasVisited(depth)) continue;
-      body = visitLoopDependent(L, U, depth, body);
+      body = visitLoopDependent(deps, L, U, depth, body);
     }
   } else if (auto *S = llvm::dyn_cast<IR::Loop>(N)) {
     for (IR::Node *U : S->getChild()->nodes()) {
       if (U->wasVisited(depth)) continue;
-      body = visitLoopDependent(L, U, depth, body);
+      body = visitLoopDependent(deps, L, U, depth, body);
     }
   }
 #ifndef NDEBUG
@@ -329,7 +330,8 @@ inline auto visitLoopDependent(IR::Loop *L, IR::Node *N, uint8_t depth,
   if (N->getLoop() == L) body = N->setNext(body);
   return body;
 }
-inline auto topologicalSort(IR::Loop *root, unsigned depth) -> IR::Node * {
+inline auto topologicalSort(IR::Dependencies deps, IR::Loop *root,
+                            unsigned depth) -> IR::Node * {
   // basic plan for the top sort:
   // We iterate across all users, once all of node's users have been added,
   // we push it to the front of the list. Thus, we get a top-sorted list.
@@ -355,25 +357,26 @@ inline auto topologicalSort(IR::Loop *root, unsigned depth) -> IR::Node * {
   IR::Node *C = root->getChild();
   LoopDepSummary summary;
   for (IR::Node *N : C->nodes())
-    summary = searchLoopIndependentUsers(root, N, depth, summary).summary;
+    summary = searchLoopIndependentUsers(deps, root, N, depth, summary).summary;
   // summary.afterExit will be hoisted out; every member has been marked as
   // `visited` So, now we search all of root's users, i.e. every addr that
   // depends on it
   IR::Node *body;
   for (IR::Node *N : summary.indexedByLoop->nodes())
-    body = visitLoopDependent(root, N, depth, body);
+    body = visitLoopDependent(deps, root, N, depth, body);
   body = root->setNext(body); // now we can place the loop
   for (IR::Node *N : summary.notIndexedByLoop->nodes())
-    body = visitLoopDependent(root, N, depth, body);
+    body = visitLoopDependent(deps, root, N, depth, body);
   // and any remaining edges
   return body;
 }
 // NOLINTNEXTLINE(misc-no-recursion)
-inline auto buildGraph(IR::Loop *root, unsigned depth) -> IR::Node * {
+inline auto buildGraph(IR::Dependencies deps, IR::Loop *root, unsigned depth)
+  -> IR::Node * {
   // We build the instruction graph, via traversing the tree, and then
   // top sorting as we recurse out
-  for (IR::Loop *child : root->subLoops()) buildGraph(child, depth + 1);
-  return topologicalSort(root, depth);
+  for (IR::Loop *child : root->subLoops()) buildGraph(deps, child, depth + 1);
+  return topologicalSort(deps, root, depth);
 }
 
 inline auto addAddrToGraph(Arena<> *salloc, Arena<> *lalloc,
@@ -474,7 +477,7 @@ inline void eliminateAddr(IR::Addr *a, IR::Addr *b) {
 // remove that array temporary (e.g., if it were malloc'd).
 // E.g. check if the array is a `llvm::isNonEscapingLocalObject` and allocated
 // by `llvm::isRemovableAlloc`.
-inline void removeRedundantAddr(IR::Addr *addr) {
+inline void removeRedundantAddr(IR::Dependencies deps, IR::Addr *addr) {
   for (IR::Addr *a : addr->eachAddr()) {
     for (poly::Dependence *d = a->getEdgeOut(); d; d = d->getNextOutput()) {
       IR::Addr *b = d->output();

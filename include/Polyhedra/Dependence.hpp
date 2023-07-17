@@ -1067,11 +1067,11 @@ public:
     };
     return std::views::filter(f);
   }
-  [[nodiscard]] constexpr auto inputAddrTransform() const {
+  [[nodiscard]] constexpr auto inputAddrTransform() {
     auto f = [=](int32_t id) { return input(Dependence::ID{id}); };
     return std::views::transform(f);
   }
-  [[nodiscard]] constexpr auto outputAddrTransform() const {
+  [[nodiscard]] constexpr auto outputAddrTransform() {
     auto f = [=](int32_t id) { return output(Dependence::ID{id}); };
     return std::views::transform(f);
   }
