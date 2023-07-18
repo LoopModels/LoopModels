@@ -477,7 +477,9 @@ public:
     invariant(offSym != nullptr || numDynSym == 0);
     return {offSym, DenseDims{getArrayDim(), numDynSym}};
   }
-  [[nodiscard]] constexpr auto getLoop() -> NotNull<poly::Loop> { return loop; }
+  [[nodiscard]] constexpr auto getAffineLoop() -> NotNull<poly::Loop> {
+    return loop;
+  }
   [[nodiscard]] constexpr auto sizesMatch(NotNull<const Addr> x) const -> bool {
     auto thisSizes = getSizes(), xSizes = x->getSizes();
     return std::equal(thisSizes.begin(), thisSizes.end(), xSizes.begin(),
@@ -640,7 +642,7 @@ public:
     return addr == other.addr;
   }
   [[nodiscard]] constexpr auto getLoop() const -> poly::Loop * {
-    return addr->getLoop();
+    return addr->getAffineLoop();
   }
   constexpr operator Addr *() { return addr; }
 };

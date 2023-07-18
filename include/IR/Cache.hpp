@@ -156,7 +156,7 @@ struct TreeResult {
   }
 
   [[nodiscard]] constexpr auto getLoop() const -> poly::Loop * {
-    return (addr.addr) ? addr.addr->getLoop() : nullptr;
+    return (addr.addr) ? addr.addr->getAffineLoop() : nullptr;
   }
   [[nodiscard]] constexpr auto getMaxDepth() const -> unsigned {
     return maxDepth - rejectDepth;

@@ -288,7 +288,7 @@ private:
       Addr *load = deps.reload(&allocator, store);
       stow.insertAfter(load); // insert load after stow
       addr.addAddr(load);
-      return {load, load->getLoop(), addr};
+      return {load, load->getAffineLoop(), addr};
     }
     auto *C = llvm::cast<IR::Compute>(inst);
     // could not find a load, so now we recurse, searching operands

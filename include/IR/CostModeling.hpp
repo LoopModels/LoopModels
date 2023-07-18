@@ -152,13 +152,13 @@ template <typename T> using Vec = math::ResizeableView<T, unsigned>;
 class LoopTree {
   // The root of this subtree
   NotNull<IR::Loop> loop;
-  LoopTree *parent{nullptr}; // do we need this?
+  // LoopTree *parent{nullptr}; // do we need this?
   Vec<LoopTree *> children{};
   unsigned depth{0};
   // We do not need to know the previous loop, as dependencies between
   // the `Addr`s and instructions will determine the ordering.
   constexpr LoopTree(Arena<> *lalloc, LoopTree *parent_)
-    : loop{lalloc->create<IR::Loop>(parent_->depth + 1)}, parent(parent_),
+    : loop{lalloc->create<IR::Loop>(parent_->depth + 1)},
       depth(parent_->depth + 1) {
     // allocate the root node, and connect it to parent's node, as well as
     // previous loop of the same level.
@@ -376,6 +376,7 @@ inline auto buildGraph(IR::Dependencies deps, IR::Loop *root, unsigned depth)
   // We build the instruction graph, via traversing the tree, and then
   // top sorting as we recurse out
   for (IR::Loop *child : root->subLoops()) buildGraph(deps, child, depth + 1);
+
   return topologicalSort(deps, root, depth);
 }
 
@@ -398,7 +399,7 @@ inline void eliminateAddr(IR::Addr *a, IR::Addr *b) {
       // Without reads in between, it's safe.
     } else { // Write->Read
       // Can we replace the read with using the written value?
-      if (a->getLoop() != b->getLoop()) return;
+      if (a->getAffineLoop() != b->getAffineLoop()) return;
     }
   } else if (b->isLoad()) { // Read->Read
     // If they don't have the same parent, either...
@@ -413,7 +414,7 @@ inline void eliminateAddr(IR::Addr *a, IR::Addr *b) {
     //   }
     // }
     // or it is a subloop, but dependencies prevented us from hoisting.
-    if (a->getLoop() != b->getLoop()) return;
+    if (a->getAffineLoop() != b->getAffineLoop()) return;
     // Any writes in between them?
   } // Read->Write, can't delete either
 }
@@ -479,12 +480,28 @@ inline void eliminateAddr(IR::Addr *a, IR::Addr *b) {
 // by `llvm::isRemovableAlloc`.
 inline void removeRedundantAddr(IR::Dependencies deps, IR::Addr *addr) {
   for (IR::Addr *a : addr->eachAddr()) {
-    for (poly::Dependence *d = a->getEdgeOut(); d; d = d->getNextOutput()) {
-      IR::Addr *b = d->output();
+    for (poly::Dependence d : a->outputEdges(deps)) {
+      IR::Addr *b = d.output();
       eliminateAddr(a, b);
     }
   }
 }
+inline auto loopDepSats(Arena<> *alloc, IR::Dependencies deps,
+                        lp::LoopBlock::OptimizationResult res)
+  -> MutPtrVector<int32_t> {
+  IR::MutPtrVector<int32_t> loopDeps{
+    math::vector<int32_t>(alloc, unsigned(deps.size()))};
+  // place deps at sat level for loops
+  for (IR::Addr *a : res.addr.getAddr()) {
+    IR::Loop *L = a->getLoop();
+    for (int32_t id : a->inputEdgeIDs(deps)) {
+      uint8_t lvl = deps.satLevel(IR::Dependence::ID{id});
+      L->getLoopAtDepth(lvl)->addEdge(loopDeps, id);
+    }
+  }
+  return loopDeps;
+}
+
 //
 // Considering reordering legality, example
 // for (int i = 0: i < I; ++i){
@@ -578,19 +595,18 @@ inline void removeRedundantAddr(IR::Dependencies deps, IR::Addr *addr) {
 //
 ///
 /// Optimize the schedule
-inline void optimize(IR::Cache &instr, Arena<> *lalloc,
+inline void optimize(IR::Dependencies deps, IR::Cache &instr, Arena<> *lalloc,
                      lp::LoopBlock::OptimizationResult res) {
   /// we must build the IR::Loop
   /// Initially, to help, we use a nested vector, so that we can index into it
   /// using the fusion omegas. We allocate it with the longer lived `instr`
   /// alloc, so we can checkpoint it here, and use alloc for other IR nodes.
   Arena<> *salloc = instr.getAllocator();
-
-  IR::Node *N = buildGraph(addAddrToGraph(salloc, lalloc, res.nodes), 0);
+  IR::Node *N = buildGraph(deps, addAddrToGraph(salloc, lalloc, res.nodes), 0);
   // `N` is the head of the topologically sorted graph
   // We now try to remove redundant memory operations
 
-  removeRedundantAddr(res.addr.addr);
+  removeRedundantAddr(deps, res.addr.addr);
 }
 
 /*

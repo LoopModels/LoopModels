@@ -277,6 +277,7 @@ static_assert(sizeof(Node) == 4 * sizeof(Node *) + 8);
 /// exit is the associated exit block
 class Loop : public Node {
   poly::Loop *affineLoop{nullptr};
+  int32_t edgeId{-1};
 
 public:
   constexpr Loop(unsigned d) : Node(VK_Loop, d) {}
@@ -331,6 +332,22 @@ public:
       L = O;
     }
     return nullptr;
+  }
+  [[nodiscard]] constexpr auto getEdge() const -> int32_t { return edgeId; }
+  constexpr void addEdge(math::MutPtrVector<int32_t> deps, int32_t d) {
+    invariant(d >= 0);
+    // [ -1, -1, -1, -1, -1 ] // d = 2, edgeId = -1
+    // [  2, -1, -1, -1, -1 ] // d = 0, edgeId = 2
+    // [  2, -1, -1, -1,  0 ] // d = 4, edgeId = 0
+    // now edgeId = 4, and we can follow path 4->0->2
+    deps[d] = edgeId;
+    edgeId = d;
+  }
+  constexpr auto getLoopAtDepth(uint8_t d) -> Loop * {
+    Loop *L = this;
+    for (uint8_t currDepth = this->currentDepth; currDepth > d; --currDepth)
+      L = L->getOuterLoop();
+    return L;
   }
 };
 [[nodiscard]] inline constexpr auto Node::getLoop() const noexcept -> Loop * {

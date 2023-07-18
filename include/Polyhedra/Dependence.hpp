@@ -978,16 +978,14 @@ public:
     return satLevelsPtr()[i.id];
   }
   [[nodiscard]] constexpr auto satLevelPair(ID i) const
-    -> const std::array<uint8_t, 2> & {
+    -> std::array<uint8_t, 2> {
     return satLevelsPtr()[i.id];
   }
-  constexpr auto satLevel(ID i) -> uint8_t {
-    auto pair = satLevelPair(i);
-    return Dependence::satLevelMask(pair[0]);
+  [[nodiscard]] constexpr auto satLevel(ID i) const -> uint8_t {
+    return Dependence::satLevelMask(satLevelPair(i)[0]);
   }
   [[nodiscard]] constexpr auto isSat(ID i, unsigned depth) const -> uint8_t {
-    auto pair = satLevelPair(i);
-    return Dependence::satLevelMask(pair[0]) <= depth;
+    return Dependence::satLevelMask(satLevelPair(i)[0]) <= depth;
   }
 
   [[nodiscard]] constexpr auto isForward(ID i) const noexcept -> bool & {
