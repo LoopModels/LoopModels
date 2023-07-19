@@ -64,7 +64,7 @@ public:
   }
   constexpr void grow(unsigned i) {
     if (i == vector.getCapacity())
-      vector.reserve(*(map.get_allocator().get_allocator()),
+      vector.reserve((map.get_allocator().get_allocator()),
                      std::max<unsigned>(8, 2 * i));
   }
   constexpr void insert(std::pair<K, V> &&value) {

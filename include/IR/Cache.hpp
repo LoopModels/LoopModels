@@ -483,7 +483,7 @@ public:
   auto zeroDimRef(llvm::Instruction *loadOrStore,
                   llvm::SCEVUnknown const *arrayPtr, unsigned numLoops)
     -> Addr * {
-    return Addr::construct(&alloc, arrayPtr, loadOrStore, numLoops);
+    return Addr::zeroDim(&alloc, arrayPtr, loadOrStore, numLoops);
   }
   // create Addr
   auto getArrayRef(llvm::Instruction *loadOrStore, llvm::Loop *L,

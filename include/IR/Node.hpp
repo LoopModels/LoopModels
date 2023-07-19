@@ -87,6 +87,7 @@ public:
     VK_Load,
     VK_Stow, // used for ordered comparisons; all `Addr` types <= Stow
     VK_Loop,
+    VK_Exit,
     VK_CVal,
     VK_Cint,
     VK_Bint,
@@ -277,7 +278,12 @@ static_assert(sizeof(Node) == 4 * sizeof(Node *) + 8);
 /// exit is the associated exit block
 class Loop : public Node {
   poly::Loop *affineLoop{nullptr};
+  Node *last{nullptr};
   int32_t edgeId{-1};
+
+  // while `child` points to the first contained instruction,
+  // `last` points to the last contained instruction,
+  // and can be used for backwards iteration over the graph.
 
 public:
   constexpr Loop(unsigned d) : Node(VK_Loop, d) {}
@@ -307,6 +313,8 @@ public:
     return utils::ListRange{getSubLoop(),
                             [](Loop *L) { return L->getNextLoop(); }};
   }
+  [[nodiscard]] constexpr auto getLast() const -> Node * { return last; }
+  constexpr void setLast(Node *n) { last = n; }
   static constexpr auto create(Arena<> *alloc, poly::Loop *AL, size_t depth)
     -> Loop * {
     return alloc->create<Loop>(depth, AL);
@@ -355,6 +363,13 @@ public:
   if (parent->kind != VK_Loop) return nullptr;
   return static_cast<Loop *>(parent);
 }
+
+struct Exit : Node {
+  Exit() : Node(VK_Exit) {}
+  static constexpr auto classof(const Node *v) -> bool {
+    return v->getKind() == VK_Exit;
+  }
+};
 
 class Instruction;
 

@@ -108,12 +108,6 @@ class Addr : public Instruction {
                   numLoops, natDepth, maxNumLoops),
       basePointer(arrayPtr), instr(user), offSym(offsym), syms(s),
       numDim(dimOff[0]), numDynSym(dimOff[1]){};
-  explicit Addr(const llvm::SCEVUnknown *arrayPtr, llvm::Instruction *user,
-                unsigned numLoops)
-    : Instruction(llvm::isa<llvm::StoreInst>(user) ? VK_Stow : VK_Load,
-                  numLoops),
-      basePointer(arrayPtr), instr(user){};
-  /// Constructor for 0 dimensional memory access
 
   [[nodiscard]] constexpr auto getIntMemory() -> int64_t * { return mem; }
   [[nodiscard]] constexpr auto getIntMemory() const -> int64_t * {
@@ -136,6 +130,15 @@ class Addr : public Instruction {
   }
 
 public:
+  /// Constructor for 0 dimensional memory access
+  /// public for use with `std::construct_at`
+  /// Perhaps it should use a passkey?
+  explicit Addr(const llvm::SCEVUnknown *arrayPtr, llvm::Instruction *user,
+                unsigned numLoops)
+    : Instruction(llvm::isa<llvm::StoreInst>(user) ? VK_Stow : VK_Load,
+                  numLoops),
+      basePointer(arrayPtr), instr(user){};
+
   constexpr void rotate(NotNull<poly::Loop> explicitLoop,
                         SquarePtrMatrix<int64_t> Pinv, int64_t denom,
                         PtrVector<int64_t> omega, int64_t *offsets) {
@@ -257,6 +260,12 @@ public:
   [[nodiscard]] inline auto inputEdgeIDs(Dependencies, unsigned depth) const;
   [[nodiscard]] inline auto outputEdgeIDs(Dependencies, unsigned depth) const;
 
+  [[nodiscard]] static auto zeroDim(Arena<> *alloc,
+                                    llvm::SCEVUnknown const *arrayPtr,
+                                    llvm::Instruction *loadOrStore,
+                                    unsigned numLoops) {
+    return alloc->create<Addr>(arrayPtr, loadOrStore, numLoops);
+  }
   /// Constructor for regular indexing
   [[nodiscard]] static auto
   construct(Arena<> *alloc, const llvm::SCEVUnknown *arrayPtr,

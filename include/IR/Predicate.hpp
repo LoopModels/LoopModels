@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Containers/UnrolledList.hpp"
 #include "Dicts/BumpVector.hpp"
 #include <Containers/TinyVector.hpp>
 #include <Utilities/Allocators.hpp>
@@ -153,7 +154,7 @@ struct Intersection {
     uint64_t mask = emptyMask(bitUnion);
     if (std::popcount(mask) == 1) { // a single b & !b case
       uint64_t remUnionMask =
-        ~(mask | (mask << 1));      // 0s `b`, meaning b can be either.
+        ~(mask | (mask << 1)); // 0s `b`, meaning b can be either.
       uint64_t w = remUnionMask & x;
       uint64_t z = remUnionMask & y;
       if (w == z) return {Intersection{w}};
@@ -281,7 +282,7 @@ struct Set {
       } else {
         allocated = true;
         intersectUnion.intersects =
-          alloc.create<containers::UList<Intersection>>();
+          alloc->create<containers::UList<Intersection>>();
         if (u.size() == 2) {
           intersectUnion.intersects->pushHasCapacity(u[0]);
           intersectUnion.intersects->pushHasCapacity(u[1]);
