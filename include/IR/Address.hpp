@@ -85,7 +85,8 @@ class Addr : public Instruction {
   const llvm::SCEV **syms;
   Value *predicate{nullptr};
   Addr *origNext{nullptr};
-  unsigned numDim{0}, numDynSym{0};
+  uint16_t numDim{0}, numDynSym{0};
+  uint32_t topologicalPosition;
 #if !defined(__clang__) && defined(__GNUC__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
