@@ -33,7 +33,7 @@
 #include <utility>
 
 namespace poly::CostModeling {
-
+using poly::Dependence;
 class CPURegisterFile {
   [[no_unique_address]] uint8_t maximumVectorWidth;
   [[no_unique_address]] uint8_t numVectorRegisters;
@@ -415,7 +415,7 @@ inline auto addAddrToGraph(Arena<> *salloc, Arena<> *lalloc,
 
 class IROptimizer {
   IR::Dependencies deps;
-  IR::Node *nodes;
+  IR::Loop *root;
   MutPtrVector<int32_t> loopDeps;
   Arena<> *lalloc;
   Arena<> *salloc;
@@ -498,7 +498,7 @@ class IROptimizer {
   // allocated by `llvm::isRemovableAlloc`.
   void removeRedundantAddr(IR::AddrChain addr) {
     for (IR::Addr *a : addr.getAddr()) {
-      for (poly::Dependence d : a->outputEdges(deps)) {
+      for (Dependence d : a->outputEdges(deps)) {
         IR::Addr *b = d.output();
         eliminateAddr(a, b);
       }
@@ -538,14 +538,45 @@ class IROptimizer {
       // Any writes in between them?
     } // else Read->Write, can't delete either
   }
-  // the approach to sorting edges is to iterate through nodes backwards
-  void sortEdges() {}
+  /// The approach to sorting edges is to iterate through nodes backwards
+  /// whenever we encounter an `Addr`, we push it to the front of each
+  /// output edge list to which it belongs.
+  /// We can consider also assigning each `Addr` an order by,
+  /// decrementing an integer each time we encounter one.
+  /// However, that isn't necessary for the elimination of redundant `Addr`s,
+  /// because if their `indexMatrix` are equal, we aren't going to have
+  /// a dependency `A -> B`, in which `B` appears before `A`, meaning that we do
+  /// not need to actually check the relative positioning of `A` and `B` when
+  /// considering eliminating one of the `Addr`s.
+  // NOLINTNEXTLINE(misc-no-recursion)
+  void sortEdges(IR::Loop *R) {
+    for (IR::Node *n = R->getLast(); n != R; n = n->getPrev()) {
+      if (auto *L = llvm::dyn_cast<IR::Loop>(n)) {
+        sortEdges(L);
+        continue;
+      }
+      auto *a = llvm::dyn_cast<IR::Addr>(n);
+      if (!a) continue;
+      // for each input edge, we push `a` to the front of the output list
+      for (int32_t id : a->inputEdgeIDs(deps)) {
+        if (deps.prevOut(Dependence::ID{id}) < 0) continue;
+        deps.removeOutEdge(id);
+        IR::Addr *b = deps.input(Dependence::ID{id});
+        int32_t oldFirst = b->getEdgeOut();
+        deps.prevOut(Dependence::ID{oldFirst}) = id;
+        deps.prevOut(Dependence::ID{id}) = -1;
+        deps.nextOut(Dependence::ID{id}) = oldFirst;
+        b->setEdgeOut(id);
+      }
+    }
+  }
 
 public:
-  IROptimizer(IR::Dependencies deps, IR::Node *nodes, Arena<> *lalloc,
+  IROptimizer(IR::Dependencies deps, IR::Loop *root_, Arena<> *lalloc,
               Arena<> *salloc, lp::LoopBlock::OptimizationResult res)
-    : deps{deps}, nodes{nodes}, loopDeps{loopDepSats(lalloc, deps, res)},
+    : deps{deps}, root{root_}, loopDeps{loopDepSats(lalloc, deps, res)},
       lalloc{lalloc}, salloc{salloc} {
+    sortEdges(root);
     removeRedundantAddr(res.addr);
   }
 };

@@ -1,5 +1,6 @@
 #pragma once
 #include "IR/Address.hpp"
+#include "Math/Simplex.hpp"
 #include "Polyhedra/DependencyPolyhedra.hpp"
 #include "Polyhedra/Loops.hpp"
 #include "Polyhedra/Schedule.hpp"
@@ -569,16 +570,37 @@ public:
   }
 
 private:
-  void addEdge(Arena<> *alloc, Dependence d) {
-    int32_t id = size();
-    push_pack(alloc, d);
-    d.input()->setEdgeOut(id);
-    d.output()->setEdgeIn(id);
+  constexpr void set(ID i, Dependence d) {
+    auto out = d.output();
+    auto in = d.input();
+    output(i) = out;
+    nextOut(i) = out->getEdgeOut();
+    if (out->getEdgeOut() >= 0) prevOut(ID{out->getEdgeOut()}) = i.id;
+    prevOut(i) = -1;
+    input(i) = in;
+    nextIn(i) = in->getEdgeIn();
+    depSatBnd(i) = d.getSimplexPair();
+    depPoly(i) = d.getDepPoly();
+    satLevelPair(i) = d.satLvl;
+    isForward(i) = d.isForward();
+    in->setEdgeOut(i.id);
+    out->setEdgeIn(i.id);
+  }
+  auto addEdge(Arena<> *alloc, Dependence d) -> void * {
+    void *ret = nullptr;
+    if (numData == getCapacity()) {
+      auto newCapacity = getCapacity() * 2;
+      auto *newData = alloc->allocate<char>(memNeeded(newCapacity));
+      std::memcpy(newData, data, memNeeded(numData));
+      ret = std::exchange(data, newData);
+    }
+    set(ID{numData++}, d);
+    return ret;
   }
   static constexpr auto memNeeded(size_t N) -> size_t {
     constexpr size_t memPer = sizeof(int32_t) * 2 + sizeof(DepPoly *) +
-                              sizeof(math::Simplex *) * 2 + sizeof(bool) +
-                              sizeof(uint8_t);
+                              sizeof(NotNull<math::Simplex>) * 2 +
+                              sizeof(bool) + sizeof(uint8_t);
     return N * memPer;
   }
 
@@ -820,32 +842,44 @@ private:
     };
   }
 
-  constexpr void set(ID i, Dependence d) {
-    auto out = d.output();
-    auto in = d.input();
-    output(i) = out;
-    nextOut(i) = out->getEdgeOut();
-    input(i) = in;
-    nextIn(i) = in->getEdgeIn();
-    depSatBnd(i) = d.getSimplexPair();
-    depPoly(i) = d.getDepPoly();
-    satLevelPair(i) = d.satLvl;
-    isForward(i) = d.isForward();
-  }
-
-  auto push_pack(Arena<> *alloc, Dependence d) -> void * {
-    void *ret = nullptr;
-    if (numData == getCapacity()) {
-      auto newCapacity = getCapacity() * 2;
-      auto *newData = alloc->allocate<char>(memNeeded(newCapacity));
-      std::memcpy(newData, data, memNeeded(numData));
-      ret = std::exchange(data, newData);
-    }
-    set(ID{numData++}, d);
-    return ret;
-  }
   [[nodiscard]] constexpr auto getCapacity() const noexcept -> int32_t {
     return int32_t(std::bit_ceil(uint32_t(numData)));
+  }
+
+  // field order:
+  // AddrOut
+  // AddrIn
+  // nextOut
+  // prevOut
+  // nextIn
+  // dependenceSatisfaction
+  // dependenceBounding
+  // depPoly
+  // satLevel
+  // isForward
+  [[nodiscard]] static constexpr auto inAddrOffset() -> size_t {
+    return sizeof(IR::Addr *);
+  }
+  [[nodiscard]] static constexpr auto nextEdgeOutOffset() -> size_t {
+    return inAddrOffset() + sizeof(IR::Addr *);
+  }
+  [[nodiscard]] static constexpr auto prevEdgeOutOffset() -> size_t {
+    return nextEdgeOutOffset() + sizeof(int32_t);
+  }
+  [[nodiscard]] static constexpr auto inEdgeOffset() -> size_t {
+    return prevEdgeOutOffset() + sizeof(int32_t);
+  }
+  [[nodiscard]] static constexpr auto depSatBndOffset() -> size_t {
+    return inEdgeOffset() + sizeof(int32_t);
+  }
+  [[nodiscard]] static constexpr auto depPolyOffset() -> size_t {
+    return depSatBndOffset() + sizeof(std::array<NotNull<math::Simplex>, 2>);
+  }
+  [[nodiscard]] static constexpr auto satLevelsOffset() -> size_t {
+    return depPolyOffset() + sizeof(DepPoly *);
+  }
+  [[nodiscard]] static constexpr auto isForwardOffset() -> size_t {
+    return satLevelsOffset() + sizeof(std::array<uint8_t, 2>);
   }
 
   constexpr auto outAddrPtr() -> IR::Addr ** {
@@ -857,64 +891,79 @@ private:
     return static_cast<IR::Addr *const *>(p);
   }
   constexpr auto inAddrPtr() -> IR::Addr ** {
-    void *p = data + sizeof(IR::Addr *) * getCapacity();
+    void *p = data + inAddrOffset() * getCapacity();
     return static_cast<IR::Addr **>(p);
   }
   [[nodiscard]] constexpr auto inAddrPtr() const -> IR::Addr *const * {
-    const void *p = data + sizeof(IR::Addr *) * getCapacity();
+    const void *p = data + inAddrOffset() * getCapacity();
     return static_cast<IR::Addr *const *>(p);
   }
   constexpr auto outEdgePtr() -> int32_t * {
-    unsigned cap = getCapacity();
-    void *p = data + sizeof(IR::Addr *) * 2 * cap;
+    void *p = data + nextEdgeOutOffset() * getCapacity();
     return static_cast<int32_t *>(p);
   }
   [[nodiscard]] constexpr auto outEdgePtr() const -> const int32_t * {
-    unsigned cap = getCapacity();
-    const void *p = data + sizeof(IR::Addr *) * 2 * cap;
+    const void *p = data + nextEdgeOutOffset() * getCapacity();
+    return static_cast<const int32_t *>(p);
+  }
+  constexpr auto prevOutEdgePtr() -> int32_t * {
+    void *p = data + prevEdgeOutOffset() * getCapacity();
+    return static_cast<int32_t *>(p);
+  }
+  [[nodiscard]] constexpr auto prevOutEdgePtr() const -> const int32_t * {
+    const void *p = data + prevEdgeOutOffset() * getCapacity();
     return static_cast<const int32_t *>(p);
   }
   constexpr auto inEdgePtr() -> int32_t * {
-    unsigned cap = getCapacity();
-    void *p = data + (sizeof(IR::Addr *) * 2 + sizeof(int32_t)) * cap;
+    void *p = data + inEdgeOffset() * getCapacity();
     return static_cast<int32_t *>(p);
   }
   [[nodiscard]] constexpr auto inEdgePtr() const -> const int32_t * {
-    unsigned cap = getCapacity();
-    const void *p = data + (sizeof(IR::Addr *) * 2 + sizeof(int32_t)) * cap;
+    const void *p = data + inEdgeOffset() * getCapacity();
     return static_cast<const int32_t *>(p);
   }
+  constexpr auto depSatBndPtr() -> std::array<NotNull<math::Simplex>, 2> * {
+    void *p = data + depSatBndOffset() * getCapacity();
+    return static_cast<std::array<NotNull<math::Simplex>, 2> *>(p);
+  }
+  [[nodiscard]] constexpr auto depSatBndPtr() const
+    -> const std::array<NotNull<math::Simplex>, 2> * {
+    const void *p = data + depSatBndOffset() * getCapacity();
+    return static_cast<const std::array<NotNull<math::Simplex>, 2> *>(p);
+  }
+  constexpr auto depPolyPtr() -> DepPoly ** {
+    void *p = data + depPolyOffset() * getCapacity();
+    return static_cast<DepPoly **>(p);
+  }
+  [[nodiscard]] constexpr auto depPolyPtr() const -> DepPoly *const * {
+    const void *p = data + depPolyOffset() * getCapacity();
+    return static_cast<DepPoly *const *>(p);
+  }
   constexpr auto satLevelsPtr() -> std::array<uint8_t, 2> * {
-    unsigned cap = getCapacity();
-    void *p =
-      data +
-      ((sizeof(IR::Addr *) + sizeof(int32_t) + sizeof(math::Simplex *)) * 2 +
-       sizeof(DepPoly *)) *
-        cap;
+    void *p = data + satLevelsOffset() * getCapacity();
     return static_cast<std::array<uint8_t, 2> *>(p);
   }
   [[nodiscard]] constexpr auto satLevelsPtr() const
     -> const std::array<uint8_t, 2> * {
-    unsigned cap = getCapacity();
-    const void *p =
-      data +
-      ((sizeof(IR::Addr *) + sizeof(int32_t) + sizeof(math::Simplex *)) * 2 +
-       sizeof(DepPoly *)) *
-        cap;
+    const void *p = data + satLevelsOffset() * getCapacity();
     return static_cast<const std::array<uint8_t, 2> *>(p);
+  }
+  constexpr auto isForwardPtr() -> bool * {
+    void *p = data + isForwardOffset() * getCapacity();
+    return static_cast<bool *>(p);
+  }
+  [[nodiscard]] constexpr auto isForwardPtr() const -> const bool * {
+    const void *p = data + isForwardOffset() * getCapacity();
+    return static_cast<const bool *>(p);
   }
 
 public:
-  // field order:
-  // AddrOut
-  // AddrIn
-  // nextOut
-  // nextIn
-  // dependenceSatisfaction
-  // dependenceBounding
-  // depPoly
-  // satLevel
-  // isForward
+  constexpr void removeOutEdge(int32_t id) {
+    int32_t prev = prevOut(poly::Dependence::ID{id});
+    int32_t next = nextOut(poly::Dependence::ID{id});
+    if (prev >= 0) nextOut(poly::Dependence::ID{prev}) = next;
+    if (next >= 0) prevOut(poly::Dependence::ID{next}) = prev;
+  }
   constexpr auto get(ID i) -> Dependence { return get(i, input(i), output(i)); }
   constexpr auto outAddrs() -> MutPtrVector<IR::Addr *> {
     return {outAddrPtr(), numData};
@@ -950,30 +999,13 @@ public:
   [[nodiscard]] constexpr auto input(ID i) const -> const IR::Addr * {
     return inAddrPtr()[i.id];
   }
-  constexpr auto nextOut(ID i) -> int32_t & {
-    unsigned cap = getCapacity();
-    void *p = data + sizeof(int32_t) * i.id + sizeof(IR::Addr *) * 2 * cap;
-    return *static_cast<int32_t *>(p);
-  }
-  constexpr auto nextIn(ID i) -> int32_t & {
-    unsigned cap = getCapacity();
-    void *p = data + sizeof(int32_t) * i.id +
-              (sizeof(IR::Addr *) * 2 + sizeof(int32_t)) * cap;
-    return *static_cast<int32_t *>(p);
-  }
+  constexpr auto nextOut(ID i) -> int32_t & { return outEdgePtr()[i.id]; }
+  constexpr auto prevOut(ID i) -> int32_t & { return prevOutEdgePtr()[i.id]; }
+  constexpr auto nextIn(ID i) -> int32_t & { return inEdgePtr()[i.id]; }
   constexpr auto depSatBnd(ID i) -> std::array<NotNull<math::Simplex>, 2> & {
-    unsigned cap = getCapacity();
-    void *p = data + 2 * sizeof(math::Simplex *) * i.id +
-              (sizeof(IR::Addr *) + sizeof(int32_t)) * 2 * cap;
-    return *static_cast<std::array<NotNull<math::Simplex>, 2> *>(p);
+    return depSatBndPtr()[i.id];
   }
-  constexpr auto depPoly(ID i) -> DepPoly *& {
-    unsigned cap = getCapacity();
-    void *p = data + sizeof(DepPoly *) * i.id +
-              (sizeof(IR::Addr *) + sizeof(int32_t) + sizeof(math::Simplex *)) *
-                2 * cap;
-    return *static_cast<DepPoly **>(p);
-  }
+  constexpr auto depPoly(ID i) -> DepPoly *& { return depPolyPtr()[i.id]; }
   constexpr auto satLevelPair(ID i) -> std::array<uint8_t, 2> & {
     return satLevelsPtr()[i.id];
   }
@@ -988,14 +1020,11 @@ public:
     return Dependence::satLevelMask(satLevelPair(i)[0]) <= depth;
   }
 
-  [[nodiscard]] constexpr auto isForward(ID i) const noexcept -> bool & {
-    unsigned cap = getCapacity();
-    void *p =
-      data + sizeof(bool) * i.id +
-      ((sizeof(IR::Addr *) + sizeof(int32_t) + sizeof(math::Simplex *)) * 2 +
-       sizeof(std::array<uint8_t, 2>) + sizeof(DepPoly *)) *
-        cap;
-    return *static_cast<bool *>(p);
+  [[nodiscard]] constexpr auto isForward(ID i) noexcept -> bool & {
+    return isForwardPtr()[i.id];
+  }
+  [[nodiscard]] constexpr auto isForward(ID i) const noexcept -> bool {
+    return isForwardPtr()[i.id];
   }
 
   class Ref {
