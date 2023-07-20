@@ -435,6 +435,27 @@ class IROptimizer {
     }
     return loopDeps;
   }
+  inline auto eliminateAddr(IR::Addr *a) -> bool {
+    for (int32_t id : a->outputEdgeIDs(deps, a->getCurrentDepth())) {
+      IR::Addr *b = deps.output(Dependence::ID{id});
+      // TODO: also check loop extants
+      if (a->indexMatrix() != b->indexMatrix()) return false;
+      if (a->isStore()) {
+        // On a Write->Write, we remove the first write.
+        if (b->isStore()) return true;
+        // Write->Load, we will remove the load if it's in the same block as the
+        // write, and we can forward the stored value.
+        if (a->getLoop() != b->getLoop()) return false;
+        // TODO: delete `b`, replacing with val stored in `a`
+      } else if (b->isLoad()) { // Read->Read
+        // If they're not in the same loop, we need to reload anyway
+        if (a->getLoop() != b->getLoop()) return false;
+        // If they're in the same loop, we can delete the second read
+        // TODO: delete `b`, replacing with `a`
+      } else return false; // Read->Write, can't delete either
+    }
+    return false;
+  }
 
   // plan: SCC? Iterate over nodes in program order?
   // then we can iterate in order.
@@ -515,13 +536,8 @@ class IROptimizer {
       // S0R->S2W, no change; break.
       // S2W->S3R, replace read with stored value forwarding.
       // S2W->S3W, remove S2W as it is shadowed by S3W.
-      for (int32_t id : a->outputEdgeIDs(deps, a->getCurrentDepth())) {
-        IR::Addr *b = deps.output(Dependence::ID{id});
-        if (!eliminateAddr(a, b)) break;
-      }
-      for (Dependence d : a->outputEdges(deps)) {
-        IR::Addr *b = d.output();
-        eliminateAddr(a, b);
+      if (eliminateAddr(a)) {
+        // TODO: we remove `a` without replacement
       }
     }
   }
