@@ -498,6 +498,23 @@ class IROptimizer {
   // allocated by `llvm::isRemovableAlloc`.
   void removeRedundantAddr(IR::AddrChain addr) {
     for (IR::Addr *a : addr.getAddr()) {
+      // outputEdges are sorted topologically from first to last.
+      // Example:
+      // for (int i = 0 : i < I; ++i){
+      //   acc = x[i];           // Statement: 0
+      //   for (int j = 0; j < i; ++j){
+      //     acc -= x[j]*U[j,i]; // Statement: 1
+      //   }
+      //   x[i] = acc;           // Statement: 2
+      //   x[i] = x[i] / U[i,i]; // Statement: 3
+      // }
+      // Here, we have a lot of redundant edges connecting the various `x[i]`s.
+      // We also have output edges between the `x[i]` and the `x[j]` load in
+      // statement 1. It is, however, satisfied at `x[i]`'s depth, and ignored.
+      // So, what would happen here:
+      // S0R->S2W, no change; break.
+      // S2W->S3R, replace read with stored value forwarding.
+      // S2W->S3W, remove S2W as it is shadowed by S3W.
       for (Dependence d : a->outputEdges(deps)) {
         IR::Addr *b = d.output();
         eliminateAddr(a, b);
@@ -566,6 +583,7 @@ class IROptimizer {
         b->setEdgeOut(id);
       }
     }
+    return pos;
   }
 
 public:
