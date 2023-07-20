@@ -86,7 +86,7 @@ class Addr : public Instruction {
   Value *predicate{nullptr};
   Addr *origNext{nullptr};
   uint16_t numDim{0}, numDynSym{0};
-  uint32_t topologicalPosition;
+  int32_t topologicalPosition;
 #if !defined(__clang__) && defined(__GNUC__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
@@ -130,6 +130,11 @@ class Addr : public Instruction {
   }
 
 public:
+  constexpr void setTopPosition(int32_t pos) { topologicalPosition = pos; }
+  [[nodiscard]] constexpr auto getTopPosition() const -> int32_t {
+    return topologicalPosition;
+  }
+
   /// Constructor for 0 dimensional memory access
   /// public for use with `std::construct_at`
   /// Perhaps it should use a passkey?

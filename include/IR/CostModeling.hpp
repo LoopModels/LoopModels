@@ -541,22 +541,19 @@ class IROptimizer {
   /// The approach to sorting edges is to iterate through nodes backwards
   /// whenever we encounter an `Addr`, we push it to the front of each
   /// output edge list to which it belongs.
-  /// We can consider also assigning each `Addr` an order by,
-  /// decrementing an integer each time we encounter one.
-  /// However, that isn't necessary for the elimination of redundant `Addr`s,
-  /// because if their `indexMatrix` are equal, we aren't going to have
-  /// a dependency `A -> B`, in which `B` appears before `A`, meaning that we do
-  /// not need to actually check the relative positioning of `A` and `B` when
-  /// considering eliminating one of the `Addr`s.
+  /// We also assigning each `Addr` an order by decrementing an integer each
+  /// time we encounter one. This is also necessary for Addr elimination, as we
+  /// want to find the first topologically greater Addr.
   // NOLINTNEXTLINE(misc-no-recursion)
-  void sortEdges(IR::Loop *R) {
+  auto sortEdges(IR::Loop *R, int32_t pos) -> int32_t {
     for (IR::Node *n = R->getLast(); n != R; n = n->getPrev()) {
       if (auto *L = llvm::dyn_cast<IR::Loop>(n)) {
-        sortEdges(L);
+        pos = sortEdges(L, pos);
         continue;
       }
       auto *a = llvm::dyn_cast<IR::Addr>(n);
       if (!a) continue;
+      a->setTopPosition(pos--);
       // for each input edge, we push `a` to the front of the output list
       for (int32_t id : a->inputEdgeIDs(deps)) {
         if (deps.prevOut(Dependence::ID{id}) < 0) continue;
@@ -576,7 +573,7 @@ public:
               Arena<> *salloc, lp::LoopBlock::OptimizationResult res)
     : deps{deps}, root{root_}, loopDeps{loopDepSats(lalloc, deps, res)},
       lalloc{lalloc}, salloc{salloc} {
-    sortEdges(root);
+    sortEdges(root, 0);
     removeRedundantAddr(res.addr);
   }
 };
