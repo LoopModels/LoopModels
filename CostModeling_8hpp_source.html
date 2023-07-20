@@ -566,250 +566,277 @@ $(function() {
 <div class="line"><a name="l00498"></a><span class="lineno">  498</span>&#160;  <span class="comment">// allocated by `llvm::isRemovableAlloc`.</span></div>
 <div class="line"><a name="l00499"></a><span class="lineno">  499</span>&#160;  <span class="keywordtype">void</span> removeRedundantAddr(<a class="code" href="structpoly_1_1IR_1_1AddrChain.html">IR::AddrChain</a> addr) {</div>
 <div class="line"><a name="l00500"></a><span class="lineno">  500</span>&#160;    <span class="keywordflow">for</span> (<a class="code" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> *a : addr.getAddr()) {</div>
-<div class="line"><a name="l00501"></a><span class="lineno">  501</span>&#160;      <span class="keywordflow">for</span> (<a class="code" href="classpoly_1_1poly_1_1Dependence.html">Dependence</a> d : a-&gt;outputEdges(deps)) {</div>
-<div class="line"><a name="l00502"></a><span class="lineno">  502</span>&#160;        <a class="code" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> *b = d.output();</div>
-<div class="line"><a name="l00503"></a><span class="lineno">  503</span>&#160;        eliminateAddr(a, b);</div>
-<div class="line"><a name="l00504"></a><span class="lineno">  504</span>&#160;      }</div>
-<div class="line"><a name="l00505"></a><span class="lineno">  505</span>&#160;    }</div>
-<div class="line"><a name="l00506"></a><span class="lineno">  506</span>&#160;  }</div>
-<div class="line"><a name="l00507"></a><span class="lineno">  507</span>&#160;  <span class="comment">// The plan here is to index all arrays by relative position, and then</span></div>
-<div class="line"><a name="l00508"></a><span class="lineno">  508</span>&#160;  <span class="comment">// sort outputEdges based on first-&gt;last, so that we can try to eliminate in</span></div>
-<div class="line"><a name="l00509"></a><span class="lineno">  509</span>&#160;  <span class="comment">// order. We break on first failure to eliminate.</span></div>
-<div class="line"><a name="l00510"></a><span class="lineno">  510</span>&#160;  <span class="comment">// a is the input, b the output</span></div>
-<div class="line"><a name="l00511"></a><span class="lineno">  511</span>&#160;  <span class="keywordtype">void</span> eliminateAddr(<a class="code" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> *a, <a class="code" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> *b) {</div>
-<div class="line"><a name="l00512"></a><span class="lineno">  512</span>&#160;    <span class="keywordflow">if</span> (a-&gt;<a class="code" href="classpoly_1_1IR_1_1Addr.html#af4838372d11fd32b964c9a7cb6d4b1b8">indexMatrix</a>() != b-&gt;<a class="code" href="classpoly_1_1IR_1_1Addr.html#af4838372d11fd32b964c9a7cb6d4b1b8">indexMatrix</a>()) <span class="keywordflow">return</span>;</div>
-<div class="line"><a name="l00514"></a><span class="lineno">  514</span>&#160;    <span class="keywordflow">if</span> (a-&gt;<a class="code" href="classpoly_1_1IR_1_1Value.html#a6b2b299b85ea7f73459b85597df1b2d3">isStore</a>()) {</div>
-<div class="line"><a name="l00515"></a><span class="lineno">  515</span>&#160;      <span class="keywordflow">if</span> (b-&gt;<a class="code" href="classpoly_1_1IR_1_1Value.html#a6b2b299b85ea7f73459b85597df1b2d3">isStore</a>()) { <span class="comment">// Write-&gt;Write</span></div>
-<div class="line"><a name="l00516"></a><span class="lineno">  516</span>&#160;        <span class="comment">// Are there reads in between? If so, we must keep--</span></div>
-<div class="line"><a name="l00517"></a><span class="lineno">  517</span>&#160;        <span class="comment">// --unless we&#39;re storing the same value twice (???)</span></div>
-<div class="line"><a name="l00518"></a><span class="lineno">  518</span>&#160;        <span class="comment">// without other intervening store-edges.</span></div>
-<div class="line"><a name="l00519"></a><span class="lineno">  519</span>&#160;        <span class="comment">// Without reads in between, it&#39;s safe.</span></div>
-<div class="line"><a name="l00520"></a><span class="lineno">  520</span>&#160;      } <span class="keywordflow">else</span> { <span class="comment">// Write-&gt;Read</span></div>
-<div class="line"><a name="l00521"></a><span class="lineno">  521</span>&#160;        <span class="comment">// Can we replace the read with using the written value?</span></div>
-<div class="line"><a name="l00522"></a><span class="lineno">  522</span>&#160;        <span class="keywordflow">if</span> (a-&gt;getLoop() != b-&gt;getLoop()) <span class="keywordflow">return</span>;</div>
-<div class="line"><a name="l00523"></a><span class="lineno">  523</span>&#160;      }</div>
-<div class="line"><a name="l00524"></a><span class="lineno">  524</span>&#160;    } <span class="keywordflow">else</span> <span class="keywordflow">if</span> (b-&gt;isLoad()) { <span class="comment">// Read-&gt;Read</span></div>
-<div class="line"><a name="l00525"></a><span class="lineno">  525</span>&#160;      <span class="comment">// If they don&#39;t have the same parent, either...</span></div>
-<div class="line"><a name="l00526"></a><span class="lineno">  526</span>&#160;      <span class="comment">// They&#39;re in different branches of loops, and load can&#39;t live</span></div>
-<div class="line"><a name="l00527"></a><span class="lineno">  527</span>&#160;      <span class="comment">// in between them</span></div>
-<div class="line"><a name="l00528"></a><span class="lineno">  528</span>&#160;      <span class="comment">// for (i : I){</span></div>
-<div class="line"><a name="l00529"></a><span class="lineno">  529</span>&#160;      <span class="comment">//   for (j : J){</span></div>
-<div class="line"><a name="l00530"></a><span class="lineno">  530</span>&#160;      <span class="comment">//     A[i,j];</span></div>
-<div class="line"><a name="l00531"></a><span class="lineno">  531</span>&#160;      <span class="comment">//   }</span></div>
-<div class="line"><a name="l00532"></a><span class="lineno">  532</span>&#160;      <span class="comment">//   for (j : J){</span></div>
-<div class="line"><a name="l00533"></a><span class="lineno">  533</span>&#160;      <span class="comment">//     A[i,j];</span></div>
-<div class="line"><a name="l00534"></a><span class="lineno">  534</span>&#160;      <span class="comment">//   }</span></div>
-<div class="line"><a name="l00535"></a><span class="lineno">  535</span>&#160;      <span class="comment">// }</span></div>
-<div class="line"><a name="l00536"></a><span class="lineno">  536</span>&#160;      <span class="comment">// or it is a subloop, but dependencies prevented us from hoisting.</span></div>
-<div class="line"><a name="l00537"></a><span class="lineno">  537</span>&#160;      <span class="keywordflow">if</span> (a-&gt;getAffineLoop() != b-&gt;getAffineLoop()) <span class="keywordflow">return</span>;</div>
-<div class="line"><a name="l00538"></a><span class="lineno">  538</span>&#160;      <span class="comment">// Any writes in between them?</span></div>
-<div class="line"><a name="l00539"></a><span class="lineno">  539</span>&#160;    } <span class="comment">// else Read-&gt;Write, can&#39;t delete either</span></div>
-<div class="line"><a name="l00540"></a><span class="lineno">  540</span>&#160;  }</div>
-<div class="line"><a name="l00547"></a><span class="lineno">  547</span>&#160;  <span class="comment">// NOLINTNEXTLINE(misc-no-recursion)</span></div>
-<div class="line"><a name="l00548"></a><span class="lineno">  548</span>&#160;  <span class="keyword">auto</span> sortEdges(<a class="code" href="classpoly_1_1IR_1_1Loop.html">IR::Loop</a> *R, int32_t pos) -&gt; int32_t {</div>
-<div class="line"><a name="l00549"></a><span class="lineno">  549</span>&#160;    <span class="keywordflow">for</span> (<a class="code" href="classpoly_1_1IR_1_1Node.html">IR::Node</a> *n = R-&gt;getLast(); n != R; n = n-&gt;getPrev()) {</div>
-<div class="line"><a name="l00550"></a><span class="lineno">  550</span>&#160;      <span class="keywordflow">if</span> (<span class="keyword">auto</span> *L = llvm::dyn_cast&lt;IR::Loop&gt;(n)) {</div>
-<div class="line"><a name="l00551"></a><span class="lineno">  551</span>&#160;        pos = sortEdges(L, pos);</div>
-<div class="line"><a name="l00552"></a><span class="lineno">  552</span>&#160;        <span class="keywordflow">continue</span>;</div>
-<div class="line"><a name="l00553"></a><span class="lineno">  553</span>&#160;      }</div>
-<div class="line"><a name="l00554"></a><span class="lineno">  554</span>&#160;      <span class="keyword">auto</span> *a = llvm::dyn_cast&lt;IR::Addr&gt;(n);</div>
-<div class="line"><a name="l00555"></a><span class="lineno">  555</span>&#160;      <span class="keywordflow">if</span> (!a) <span class="keywordflow">continue</span>;</div>
-<div class="line"><a name="l00556"></a><span class="lineno">  556</span>&#160;      a-&gt;setTopPosition(pos--);</div>
-<div class="line"><a name="l00557"></a><span class="lineno">  557</span>&#160;      <span class="comment">// for each input edge, we push `a` to the front of the output list</span></div>
-<div class="line"><a name="l00558"></a><span class="lineno">  558</span>&#160;      <span class="keywordflow">for</span> (int32_t <span class="keywordtype">id</span> : a-&gt;inputEdgeIDs(deps)) {</div>
-<div class="line"><a name="l00559"></a><span class="lineno">  559</span>&#160;        <span class="keywordflow">if</span> (deps.prevOut(<a class="code" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">Dependence::ID</a>{id}) &lt; 0) <span class="keywordflow">continue</span>;</div>
-<div class="line"><a name="l00560"></a><span class="lineno">  560</span>&#160;        deps.removeOutEdge(<span class="keywordtype">id</span>);</div>
-<div class="line"><a name="l00561"></a><span class="lineno">  561</span>&#160;        <a class="code" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> *b = deps.input(<a class="code" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">Dependence::ID</a>{<span class="keywordtype">id</span>});</div>
-<div class="line"><a name="l00562"></a><span class="lineno">  562</span>&#160;        int32_t oldFirst = b-&gt;getEdgeOut();</div>
-<div class="line"><a name="l00563"></a><span class="lineno">  563</span>&#160;        deps.prevOut(<a class="code" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">Dependence::ID</a>{oldFirst}) = <span class="keywordtype">id</span>;</div>
-<div class="line"><a name="l00564"></a><span class="lineno">  564</span>&#160;        deps.prevOut(<a class="code" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">Dependence::ID</a>{<span class="keywordtype">id</span>}) = -1;</div>
-<div class="line"><a name="l00565"></a><span class="lineno">  565</span>&#160;        deps.nextOut(<a class="code" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">Dependence::ID</a>{<span class="keywordtype">id</span>}) = oldFirst;</div>
-<div class="line"><a name="l00566"></a><span class="lineno">  566</span>&#160;        b-&gt;setEdgeOut(<span class="keywordtype">id</span>);</div>
-<div class="line"><a name="l00567"></a><span class="lineno">  567</span>&#160;      }</div>
-<div class="line"><a name="l00568"></a><span class="lineno">  568</span>&#160;    }</div>
-<div class="line"><a name="l00569"></a><span class="lineno">  569</span>&#160;  }</div>
-<div class="line"><a name="l00570"></a><span class="lineno">  570</span>&#160; </div>
-<div class="line"><a name="l00571"></a><span class="lineno">  571</span>&#160;<span class="keyword">public</span>:</div>
-<div class="line"><a name="l00572"></a><span class="lineno">  572</span>&#160;  <a class="code" href="classpoly_1_1CostModeling_1_1IROptimizer.html">IROptimizer</a>(<a class="code" href="classpoly_1_1poly_1_1Dependencies.html">IR::Dependencies</a> deps, <a class="code" href="classpoly_1_1IR_1_1Loop.html">IR::Loop</a> *root_, Arena&lt;&gt; *lalloc,</div>
-<div class="line"><a name="l00573"></a><span class="lineno">  573</span>&#160;              Arena&lt;&gt; *salloc, <a class="code" href="structpoly_1_1lp_1_1LoopBlock_1_1OptimizationResult.html">lp::LoopBlock::OptimizationResult</a> res)</div>
-<div class="line"><a name="l00574"></a><span class="lineno">  574</span>&#160;    : deps{deps}, root{root_}, loopDeps{loopDepSats(lalloc, deps, res)},</div>
-<div class="line"><a name="l00575"></a><span class="lineno">  575</span>&#160;      lalloc{lalloc}, salloc{salloc} {</div>
-<div class="line"><a name="l00576"></a><span class="lineno">  576</span>&#160;    sortEdges(root, 0);</div>
-<div class="line"><a name="l00577"></a><span class="lineno">  577</span>&#160;    removeRedundantAddr(res.addr);</div>
-<div class="line"><a name="l00578"></a><span class="lineno">  578</span>&#160;  }</div>
-<div class="line"><a name="l00579"></a><span class="lineno">  579</span>&#160;};</div>
-<div class="line"><a name="l00580"></a><span class="lineno">  580</span>&#160; </div>
-<div class="line"><a name="l00581"></a><span class="lineno">  581</span>&#160;<span class="comment">//</span></div>
-<div class="line"><a name="l00582"></a><span class="lineno">  582</span>&#160;<span class="comment">// Considering reordering legality, example</span></div>
-<div class="line"><a name="l00583"></a><span class="lineno">  583</span>&#160;<span class="comment">// for (int i = 0: i &lt; I; ++i){</span></div>
-<div class="line"><a name="l00584"></a><span class="lineno">  584</span>&#160;<span class="comment">//   for (int j = 0 : j &lt; i; ++j){</span></div>
-<div class="line"><a name="l00585"></a><span class="lineno">  585</span>&#160;<span class="comment">//     x[i] -= x[j]*U[j,i];</span></div>
-<div class="line"><a name="l00586"></a><span class="lineno">  586</span>&#160;<span class="comment">//   }</span></div>
-<div class="line"><a name="l00587"></a><span class="lineno">  587</span>&#160;<span class="comment">//   x[i] /= U[i,i];</span></div>
-<div class="line"><a name="l00588"></a><span class="lineno">  588</span>&#160;<span class="comment">// }</span></div>
-<div class="line"><a name="l00589"></a><span class="lineno">  589</span>&#160;<span class="comment">// We have an edge from the store `x[i] = x[i] / U[i,i]=` to the load of</span></div>
-<div class="line"><a name="l00590"></a><span class="lineno">  590</span>&#160;<span class="comment">// `x[j]`, when `j = ` the current `i`, on some future iteration.</span></div>
-<div class="line"><a name="l00591"></a><span class="lineno">  591</span>&#160;<span class="comment">// We want to unroll;</span></div>
-<div class="line"><a name="l00592"></a><span class="lineno">  592</span>&#160;<span class="comment">// for (int i = 0: i &lt; I-3; i += 4){</span></div>
-<div class="line"><a name="l00593"></a><span class="lineno">  593</span>&#160;<span class="comment">//   for (int j = 0 : j &lt; i; ++j){</span></div>
-<div class="line"><a name="l00594"></a><span class="lineno">  594</span>&#160;<span class="comment">//     x[i] -= x[j]*U[j,i];</span></div>
-<div class="line"><a name="l00595"></a><span class="lineno">  595</span>&#160;<span class="comment">//     x[i+1] -= x[j]*U[j,i+1];</span></div>
-<div class="line"><a name="l00596"></a><span class="lineno">  596</span>&#160;<span class="comment">//     x[i+2] -= x[j]*U[j,i+2];</span></div>
-<div class="line"><a name="l00597"></a><span class="lineno">  597</span>&#160;<span class="comment">//     x[i+3] -= x[j]*U[j,i+3];</span></div>
-<div class="line"><a name="l00598"></a><span class="lineno">  598</span>&#160;<span class="comment">//   }</span></div>
-<div class="line"><a name="l00599"></a><span class="lineno">  599</span>&#160;<span class="comment">//   x[i] /= U[i,i]; // store 0</span></div>
-<div class="line"><a name="l00600"></a><span class="lineno">  600</span>&#160;<span class="comment">//   { // perform unrolled j = i iter</span></div>
-<div class="line"><a name="l00601"></a><span class="lineno">  601</span>&#160;<span class="comment">//     int j = i; // these all depend on store 0</span></div>
-<div class="line"><a name="l00602"></a><span class="lineno">  602</span>&#160;<span class="comment">//     x[i+1] -= x[j]*U[j,i+1];</span></div>
-<div class="line"><a name="l00603"></a><span class="lineno">  603</span>&#160;<span class="comment">//     x[i+2] -= x[j]*U[j,i+2];</span></div>
-<div class="line"><a name="l00604"></a><span class="lineno">  604</span>&#160;<span class="comment">//     x[i+3] -= x[j]*U[j,i+3];</span></div>
-<div class="line"><a name="l00605"></a><span class="lineno">  605</span>&#160;<span class="comment">//   }</span></div>
-<div class="line"><a name="l00606"></a><span class="lineno">  606</span>&#160;<span class="comment">//   x[i+1] /= U[i+1,i+1]; // store 1</span></div>
-<div class="line"><a name="l00607"></a><span class="lineno">  607</span>&#160;<span class="comment">//   { // perform unrolled j = i + 1 iter</span></div>
-<div class="line"><a name="l00608"></a><span class="lineno">  608</span>&#160;<span class="comment">//     int j = i+1; // these all depend on store 1</span></div>
-<div class="line"><a name="l00609"></a><span class="lineno">  609</span>&#160;<span class="comment">//     x[i+2] -= x[j]*U[j,i+2];</span></div>
-<div class="line"><a name="l00610"></a><span class="lineno">  610</span>&#160;<span class="comment">//     x[i+3] -= x[j]*U[j,i+3];</span></div>
-<div class="line"><a name="l00611"></a><span class="lineno">  611</span>&#160;<span class="comment">//   }</span></div>
-<div class="line"><a name="l00612"></a><span class="lineno">  612</span>&#160;<span class="comment">//   x[i+2] /= U[i+2,i+2]; // store 2</span></div>
-<div class="line"><a name="l00613"></a><span class="lineno">  613</span>&#160;<span class="comment">//   { // perform unrolled j = i + 2 iter</span></div>
-<div class="line"><a name="l00614"></a><span class="lineno">  614</span>&#160;<span class="comment">//     int j = i+2; // this depends on store 2</span></div>
-<div class="line"><a name="l00615"></a><span class="lineno">  615</span>&#160;<span class="comment">//     x[i+3] -= x[j]*U[j,i+3];</span></div>
-<div class="line"><a name="l00616"></a><span class="lineno">  616</span>&#160;<span class="comment">//   }</span></div>
-<div class="line"><a name="l00617"></a><span class="lineno">  617</span>&#160;<span class="comment">//   x[i+3] /= U[i+3,i+3];</span></div>
-<div class="line"><a name="l00618"></a><span class="lineno">  618</span>&#160;<span class="comment">// }</span></div>
-<div class="line"><a name="l00619"></a><span class="lineno">  619</span>&#160;<span class="comment">// The key to legality here is that we peel off the dependence polyhedra</span></div>
-<div class="line"><a name="l00620"></a><span class="lineno">  620</span>&#160;<span class="comment">// from the loop&#39;s iteration space.</span></div>
-<div class="line"><a name="l00621"></a><span class="lineno">  621</span>&#160;<span class="comment">// We can then perform the dependent iterations in order.</span></div>
-<div class="line"><a name="l00622"></a><span class="lineno">  622</span>&#160;<span class="comment">// With masking, the above code can be vectorized in this manner.</span></div>
-<div class="line"><a name="l00623"></a><span class="lineno">  623</span>&#160;<span class="comment">// The basic approach is that we have the dependence polyhedra:</span></div>
-<div class="line"><a name="l00624"></a><span class="lineno">  624</span>&#160;<span class="comment">//</span></div>
-<div class="line"><a name="l00625"></a><span class="lineno">  625</span>&#160;<span class="comment">// 0 &lt;= i_s &lt; I</span></div>
-<div class="line"><a name="l00626"></a><span class="lineno">  626</span>&#160;<span class="comment">// 0 &lt;= i_l &lt; I</span></div>
-<div class="line"><a name="l00627"></a><span class="lineno">  627</span>&#160;<span class="comment">// 0 &lt;= j_l &lt; i_l</span></div>
-<div class="line"><a name="l00628"></a><span class="lineno">  628</span>&#160;<span class="comment">// i_s = j_l // dependence, yields same address in `x`</span></div>
-<div class="line"><a name="l00629"></a><span class="lineno">  629</span>&#160;<span class="comment">//</span></div>
-<div class="line"><a name="l00630"></a><span class="lineno">  630</span>&#160;<span class="comment">// Note that our schedule sets</span></div>
-<div class="line"><a name="l00631"></a><span class="lineno">  631</span>&#160;<span class="comment">// i_s = i_l</span></div>
-<div class="line"><a name="l00632"></a><span class="lineno">  632</span>&#160;<span class="comment">// Which gives:</span></div>
-<div class="line"><a name="l00633"></a><span class="lineno">  633</span>&#160;<span class="comment">// i_l = i_s = j_l &lt; i_l</span></div>
-<div class="line"><a name="l00634"></a><span class="lineno">  634</span>&#160;<span class="comment">// a contradiction, meaning that the dependency is</span></div>
-<div class="line"><a name="l00635"></a><span class="lineno">  635</span>&#160;<span class="comment">// conditionally (on our schedule) independent.</span></div>
-<div class="line"><a name="l00636"></a><span class="lineno">  636</span>&#160;<span class="comment">// Excluding the `i_s = i_l` constraint from the</span></div>
-<div class="line"><a name="l00637"></a><span class="lineno">  637</span>&#160;<span class="comment">// polyhedra gives us the region of overlap.</span></div>
-<div class="line"><a name="l00638"></a><span class="lineno">  638</span>&#160;<span class="comment">//</span></div>
-<div class="line"><a name="l00639"></a><span class="lineno">  639</span>&#160;<span class="comment">// When unrolling by `U`, we get using `U=4` as an example:</span></div>
-<div class="line"><a name="l00640"></a><span class="lineno">  640</span>&#160;<span class="comment">// i^0_s + 1 = i^1_s</span></div>
-<div class="line"><a name="l00641"></a><span class="lineno">  641</span>&#160;<span class="comment">// i^0_s + 2 = i^2_s</span></div>
-<div class="line"><a name="l00642"></a><span class="lineno">  642</span>&#160;<span class="comment">// i^0_s + 3 = i^3_s</span></div>
-<div class="line"><a name="l00643"></a><span class="lineno">  643</span>&#160;<span class="comment">// 0 &lt;= i^0_s &lt; I</span></div>
-<div class="line"><a name="l00644"></a><span class="lineno">  644</span>&#160;<span class="comment">// 0 &lt;= i^1_s &lt; I</span></div>
-<div class="line"><a name="l00645"></a><span class="lineno">  645</span>&#160;<span class="comment">// 0 &lt;= i^2_s &lt; I</span></div>
-<div class="line"><a name="l00646"></a><span class="lineno">  646</span>&#160;<span class="comment">// 0 &lt;= i^3_s &lt; I</span></div>
-<div class="line"><a name="l00647"></a><span class="lineno">  647</span>&#160;<span class="comment">// 0 &lt;= i^0_l &lt; I</span></div>
-<div class="line"><a name="l00648"></a><span class="lineno">  648</span>&#160;<span class="comment">// 0 &lt;= i^1_l &lt; I</span></div>
-<div class="line"><a name="l00649"></a><span class="lineno">  649</span>&#160;<span class="comment">// 0 &lt;= i^2_l &lt; I</span></div>
-<div class="line"><a name="l00650"></a><span class="lineno">  650</span>&#160;<span class="comment">// 0 &lt;= i^3_l &lt; I</span></div>
-<div class="line"><a name="l00651"></a><span class="lineno">  651</span>&#160;<span class="comment">// 0 &lt;= j_l &lt; i^0_l</span></div>
-<div class="line"><a name="l00652"></a><span class="lineno">  652</span>&#160;<span class="comment">// 0 &lt;= j_l &lt; i^1_l</span></div>
-<div class="line"><a name="l00653"></a><span class="lineno">  653</span>&#160;<span class="comment">// 0 &lt;= j_l &lt; i^2_l</span></div>
-<div class="line"><a name="l00654"></a><span class="lineno">  654</span>&#160;<span class="comment">// 0 &lt;= j_l &lt; i^3_l</span></div>
-<div class="line"><a name="l00655"></a><span class="lineno">  655</span>&#160;<span class="comment">// i^0_s = j_l ||  i^1_s = j_l || i^2_s = j_l || i^3_s = j_l</span></div>
-<div class="line"><a name="l00656"></a><span class="lineno">  656</span>&#160;<span class="comment">// where the final union can be replaced with</span></div>
-<div class="line"><a name="l00657"></a><span class="lineno">  657</span>&#160;<span class="comment">// i^0_s = j_l ||  i^0_s+1 = j_l || i^0_s+2 = j_l || i^0_s+3 = j_l</span></div>
-<div class="line"><a name="l00658"></a><span class="lineno">  658</span>&#160;<span class="comment">// i^0_s &lt;= j_1 &lt;= i^0_s+3</span></div>
-<div class="line"><a name="l00659"></a><span class="lineno">  659</span>&#160;<span class="comment">//</span></div>
-<div class="line"><a name="l00660"></a><span class="lineno">  660</span>&#160;<span class="comment">// Similarly, we can compress the other inequalities...</span></div>
-<div class="line"><a name="l00661"></a><span class="lineno">  661</span>&#160;<span class="comment">// 0 &lt;= i^0_s &lt; I - 3</span></div>
-<div class="line"><a name="l00662"></a><span class="lineno">  662</span>&#160;<span class="comment">// 0 &lt;= i^0_l &lt; I - 3</span></div>
-<div class="line"><a name="l00663"></a><span class="lineno">  663</span>&#160;<span class="comment">// 0 &lt;= j_l &lt; i^0_l</span></div>
-<div class="line"><a name="l00664"></a><span class="lineno">  664</span>&#160;<span class="comment">// i^0_s &lt;= j_1 &lt;= i^0_s+3 // dependence region</span></div>
+<div class="line"><a name="l00501"></a><span class="lineno">  501</span>&#160;      <span class="comment">// outputEdges are sorted topologically from first to last.</span></div>
+<div class="line"><a name="l00502"></a><span class="lineno">  502</span>&#160;      <span class="comment">// Example:</span></div>
+<div class="line"><a name="l00503"></a><span class="lineno">  503</span>&#160;      <span class="comment">// for (int i = 0 : i &lt; I; ++i){</span></div>
+<div class="line"><a name="l00504"></a><span class="lineno">  504</span>&#160;      <span class="comment">//   acc = x[i];           // Statement: 0</span></div>
+<div class="line"><a name="l00505"></a><span class="lineno">  505</span>&#160;      <span class="comment">//   for (int j = 0; j &lt; i; ++j){</span></div>
+<div class="line"><a name="l00506"></a><span class="lineno">  506</span>&#160;      <span class="comment">//     acc -= x[j]*U[j,i]; // Statement: 1</span></div>
+<div class="line"><a name="l00507"></a><span class="lineno">  507</span>&#160;      <span class="comment">//   }</span></div>
+<div class="line"><a name="l00508"></a><span class="lineno">  508</span>&#160;      <span class="comment">//   x[i] = acc;           // Statement: 2</span></div>
+<div class="line"><a name="l00509"></a><span class="lineno">  509</span>&#160;      <span class="comment">//   x[i] = x[i] / U[i,i]; // Statement: 3</span></div>
+<div class="line"><a name="l00510"></a><span class="lineno">  510</span>&#160;      <span class="comment">// }</span></div>
+<div class="line"><a name="l00511"></a><span class="lineno">  511</span>&#160;      <span class="comment">// Here, we have a lot of redundant edges connecting the various `x[i]`s.</span></div>
+<div class="line"><a name="l00512"></a><span class="lineno">  512</span>&#160;      <span class="comment">// We also have output edges between the `x[i]` and the `x[j]` load in</span></div>
+<div class="line"><a name="l00513"></a><span class="lineno">  513</span>&#160;      <span class="comment">// statement 1. It is, however, satisfied at `x[i]`&#39;s depth, and ignored.</span></div>
+<div class="line"><a name="l00514"></a><span class="lineno">  514</span>&#160;      <span class="comment">// So, what would happen here:</span></div>
+<div class="line"><a name="l00515"></a><span class="lineno">  515</span>&#160;      <span class="comment">// S0R-&gt;S2W, no change; break.</span></div>
+<div class="line"><a name="l00516"></a><span class="lineno">  516</span>&#160;      <span class="comment">// S2W-&gt;S3R, replace read with stored value forwarding.</span></div>
+<div class="line"><a name="l00517"></a><span class="lineno">  517</span>&#160;      <span class="comment">// S2W-&gt;S3W, remove S2W as it is shadowed by S3W.</span></div>
+<div class="line"><a name="l00518"></a><span class="lineno">  518</span>&#160;      <span class="keywordflow">for</span> (int32_t <span class="keywordtype">id</span> : a-&gt;outputEdgeIDs(deps, a-&gt;getCurrentDepth())) {</div>
+<div class="line"><a name="l00519"></a><span class="lineno">  519</span>&#160;        <a class="code" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> *b = deps.output(<a class="code" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">Dependence::ID</a>{<span class="keywordtype">id</span>});</div>
+<div class="line"><a name="l00520"></a><span class="lineno">  520</span>&#160;        <span class="keywordflow">if</span> (!eliminateAddr(a, b)) <span class="keywordflow">break</span>;</div>
+<div class="line"><a name="l00521"></a><span class="lineno">  521</span>&#160;      }</div>
+<div class="line"><a name="l00522"></a><span class="lineno">  522</span>&#160;      <span class="keywordflow">for</span> (<a class="code" href="classpoly_1_1poly_1_1Dependence.html">Dependence</a> d : a-&gt;outputEdges(deps)) {</div>
+<div class="line"><a name="l00523"></a><span class="lineno">  523</span>&#160;        <a class="code" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> *b = d.output();</div>
+<div class="line"><a name="l00524"></a><span class="lineno">  524</span>&#160;        eliminateAddr(a, b);</div>
+<div class="line"><a name="l00525"></a><span class="lineno">  525</span>&#160;      }</div>
+<div class="line"><a name="l00526"></a><span class="lineno">  526</span>&#160;    }</div>
+<div class="line"><a name="l00527"></a><span class="lineno">  527</span>&#160;  }</div>
+<div class="line"><a name="l00528"></a><span class="lineno">  528</span>&#160;  <span class="comment">// The plan here is to index all arrays by relative position, and then</span></div>
+<div class="line"><a name="l00529"></a><span class="lineno">  529</span>&#160;  <span class="comment">// sort outputEdges based on first-&gt;last, so that we can try to eliminate in</span></div>
+<div class="line"><a name="l00530"></a><span class="lineno">  530</span>&#160;  <span class="comment">// order. We break on first failure to eliminate.</span></div>
+<div class="line"><a name="l00531"></a><span class="lineno">  531</span>&#160;  <span class="comment">// a is the input, b the output</span></div>
+<div class="line"><a name="l00532"></a><span class="lineno">  532</span>&#160;  <span class="keyword">auto</span> eliminateAddr(<a class="code" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> *a, <a class="code" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> *b) -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l00533"></a><span class="lineno">  533</span>&#160;    <span class="comment">// TODO: check a&#39;s and b&#39;s loops have same extants!</span></div>
+<div class="line"><a name="l00534"></a><span class="lineno">  534</span>&#160;    <span class="keywordflow">if</span> (a-&gt;<a class="code" href="classpoly_1_1IR_1_1Addr.html#af4838372d11fd32b964c9a7cb6d4b1b8">indexMatrix</a>() != b-&gt;<a class="code" href="classpoly_1_1IR_1_1Addr.html#af4838372d11fd32b964c9a7cb6d4b1b8">indexMatrix</a>()) <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
+<div class="line"><a name="l00536"></a><span class="lineno">  536</span>&#160;    <span class="keywordflow">if</span> (a-&gt;<a class="code" href="classpoly_1_1IR_1_1Value.html#a6b2b299b85ea7f73459b85597df1b2d3">isStore</a>()) {</div>
+<div class="line"><a name="l00537"></a><span class="lineno">  537</span>&#160;      <span class="keywordflow">if</span> (b-&gt;<a class="code" href="classpoly_1_1IR_1_1Value.html#a6b2b299b85ea7f73459b85597df1b2d3">isStore</a>()) { <span class="comment">// Write-&gt;Write</span></div>
+<div class="line"><a name="l00538"></a><span class="lineno">  538</span>&#160;        <span class="comment">// Are there reads in between? If so, we must keep--</span></div>
+<div class="line"><a name="l00539"></a><span class="lineno">  539</span>&#160;        <span class="comment">// --unless we&#39;re storing the same value twice (???)</span></div>
+<div class="line"><a name="l00540"></a><span class="lineno">  540</span>&#160;        <span class="comment">// without other intervening store-edges.</span></div>
+<div class="line"><a name="l00541"></a><span class="lineno">  541</span>&#160;        <span class="comment">// Without reads in between, it&#39;s safe.</span></div>
+<div class="line"><a name="l00542"></a><span class="lineno">  542</span>&#160;        <span class="keywordflow">return</span> <span class="keyword">true</span>;</div>
+<div class="line"><a name="l00543"></a><span class="lineno">  543</span>&#160;      } <span class="keywordflow">else</span> { <span class="comment">// Write-&gt;Read</span></div>
+<div class="line"><a name="l00544"></a><span class="lineno">  544</span>&#160;        <span class="comment">// Can we replace the read with using the written value?</span></div>
+<div class="line"><a name="l00545"></a><span class="lineno">  545</span>&#160;        <span class="keywordflow">if</span> (a-&gt;getLoop() != b-&gt;getLoop()) <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
+<div class="line"><a name="l00546"></a><span class="lineno">  546</span>&#160;        <span class="comment">// TODO: forward</span></div>
+<div class="line"><a name="l00547"></a><span class="lineno">  547</span>&#160;        <span class="keywordflow">return</span> <span class="keyword">true</span>;</div>
+<div class="line"><a name="l00548"></a><span class="lineno">  548</span>&#160;      }</div>
+<div class="line"><a name="l00549"></a><span class="lineno">  549</span>&#160;    } <span class="keywordflow">else</span> <span class="keywordflow">if</span> (b-&gt;isLoad()) { <span class="comment">// Read-&gt;Read</span></div>
+<div class="line"><a name="l00550"></a><span class="lineno">  550</span>&#160;      <span class="comment">// If they don&#39;t have the same parent, either...</span></div>
+<div class="line"><a name="l00551"></a><span class="lineno">  551</span>&#160;      <span class="comment">// They&#39;re in different branches of loops, and load can&#39;t live</span></div>
+<div class="line"><a name="l00552"></a><span class="lineno">  552</span>&#160;      <span class="comment">// in between them</span></div>
+<div class="line"><a name="l00553"></a><span class="lineno">  553</span>&#160;      <span class="comment">// for (i : I){</span></div>
+<div class="line"><a name="l00554"></a><span class="lineno">  554</span>&#160;      <span class="comment">//   for (j : J){</span></div>
+<div class="line"><a name="l00555"></a><span class="lineno">  555</span>&#160;      <span class="comment">//     A[i,j];</span></div>
+<div class="line"><a name="l00556"></a><span class="lineno">  556</span>&#160;      <span class="comment">//   }</span></div>
+<div class="line"><a name="l00557"></a><span class="lineno">  557</span>&#160;      <span class="comment">//   for (j : J){</span></div>
+<div class="line"><a name="l00558"></a><span class="lineno">  558</span>&#160;      <span class="comment">//     A[i,j];</span></div>
+<div class="line"><a name="l00559"></a><span class="lineno">  559</span>&#160;      <span class="comment">//   }</span></div>
+<div class="line"><a name="l00560"></a><span class="lineno">  560</span>&#160;      <span class="comment">// }</span></div>
+<div class="line"><a name="l00561"></a><span class="lineno">  561</span>&#160;      <span class="comment">// or it is a subloop, but dependencies prevented us from hoisting.</span></div>
+<div class="line"><a name="l00562"></a><span class="lineno">  562</span>&#160;      <span class="keywordflow">if</span> (a-&gt;getLoop() != b-&gt;getLoop()) <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
+<div class="line"><a name="l00563"></a><span class="lineno">  563</span>&#160;      <span class="keywordflow">return</span> <span class="keyword">true</span>;</div>
+<div class="line"><a name="l00564"></a><span class="lineno">  564</span>&#160;      <span class="comment">// Any writes in between them?</span></div>
+<div class="line"><a name="l00565"></a><span class="lineno">  565</span>&#160;    } <span class="keywordflow">else</span> <span class="keywordflow">return</span> <span class="keyword">false</span>; <span class="comment">// Read-&gt;Write, can&#39;t delete either</span></div>
+<div class="line"><a name="l00566"></a><span class="lineno">  566</span>&#160;  }</div>
+<div class="line"><a name="l00573"></a><span class="lineno">  573</span>&#160;  <span class="comment">// NOLINTNEXTLINE(misc-no-recursion)</span></div>
+<div class="line"><a name="l00574"></a><span class="lineno">  574</span>&#160;  <span class="keyword">auto</span> sortEdges(<a class="code" href="classpoly_1_1IR_1_1Loop.html">IR::Loop</a> *R, int32_t pos) -&gt; int32_t {</div>
+<div class="line"><a name="l00575"></a><span class="lineno">  575</span>&#160;    <span class="keywordflow">for</span> (<a class="code" href="classpoly_1_1IR_1_1Node.html">IR::Node</a> *n = R-&gt;getLast(); n != R; n = n-&gt;getPrev()) {</div>
+<div class="line"><a name="l00576"></a><span class="lineno">  576</span>&#160;      <span class="keywordflow">if</span> (<span class="keyword">auto</span> *L = llvm::dyn_cast&lt;IR::Loop&gt;(n)) {</div>
+<div class="line"><a name="l00577"></a><span class="lineno">  577</span>&#160;        pos = sortEdges(L, pos);</div>
+<div class="line"><a name="l00578"></a><span class="lineno">  578</span>&#160;        <span class="keywordflow">continue</span>;</div>
+<div class="line"><a name="l00579"></a><span class="lineno">  579</span>&#160;      }</div>
+<div class="line"><a name="l00580"></a><span class="lineno">  580</span>&#160;      <span class="keyword">auto</span> *a = llvm::dyn_cast&lt;IR::Addr&gt;(n);</div>
+<div class="line"><a name="l00581"></a><span class="lineno">  581</span>&#160;      <span class="keywordflow">if</span> (!a) <span class="keywordflow">continue</span>;</div>
+<div class="line"><a name="l00582"></a><span class="lineno">  582</span>&#160;      a-&gt;setTopPosition(pos--);</div>
+<div class="line"><a name="l00583"></a><span class="lineno">  583</span>&#160;      <span class="comment">// for each input edge, we push `a` to the front of the output list</span></div>
+<div class="line"><a name="l00584"></a><span class="lineno">  584</span>&#160;      <span class="keywordflow">for</span> (int32_t <span class="keywordtype">id</span> : a-&gt;inputEdgeIDs(deps)) {</div>
+<div class="line"><a name="l00585"></a><span class="lineno">  585</span>&#160;        <span class="keywordflow">if</span> (deps.prevOut(<a class="code" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">Dependence::ID</a>{id}) &lt; 0) <span class="keywordflow">continue</span>;</div>
+<div class="line"><a name="l00586"></a><span class="lineno">  586</span>&#160;        deps.removeOutEdge(<span class="keywordtype">id</span>);</div>
+<div class="line"><a name="l00587"></a><span class="lineno">  587</span>&#160;        <a class="code" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> *b = deps.input(<a class="code" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">Dependence::ID</a>{<span class="keywordtype">id</span>});</div>
+<div class="line"><a name="l00588"></a><span class="lineno">  588</span>&#160;        int32_t oldFirst = b-&gt;getEdgeOut();</div>
+<div class="line"><a name="l00589"></a><span class="lineno">  589</span>&#160;        deps.prevOut(<a class="code" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">Dependence::ID</a>{oldFirst}) = <span class="keywordtype">id</span>;</div>
+<div class="line"><a name="l00590"></a><span class="lineno">  590</span>&#160;        deps.prevOut(<a class="code" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">Dependence::ID</a>{<span class="keywordtype">id</span>}) = -1;</div>
+<div class="line"><a name="l00591"></a><span class="lineno">  591</span>&#160;        deps.nextOut(<a class="code" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">Dependence::ID</a>{<span class="keywordtype">id</span>}) = oldFirst;</div>
+<div class="line"><a name="l00592"></a><span class="lineno">  592</span>&#160;        b-&gt;setEdgeOut(<span class="keywordtype">id</span>);</div>
+<div class="line"><a name="l00593"></a><span class="lineno">  593</span>&#160;      }</div>
+<div class="line"><a name="l00594"></a><span class="lineno">  594</span>&#160;    }</div>
+<div class="line"><a name="l00595"></a><span class="lineno">  595</span>&#160;    <span class="keywordflow">return</span> pos;</div>
+<div class="line"><a name="l00596"></a><span class="lineno">  596</span>&#160;  }</div>
+<div class="line"><a name="l00597"></a><span class="lineno">  597</span>&#160; </div>
+<div class="line"><a name="l00598"></a><span class="lineno">  598</span>&#160;<span class="keyword">public</span>:</div>
+<div class="line"><a name="l00599"></a><span class="lineno">  599</span>&#160;  <a class="code" href="classpoly_1_1CostModeling_1_1IROptimizer.html">IROptimizer</a>(<a class="code" href="classpoly_1_1poly_1_1Dependencies.html">IR::Dependencies</a> deps, <a class="code" href="classpoly_1_1IR_1_1Loop.html">IR::Loop</a> *root_, Arena&lt;&gt; *lalloc,</div>
+<div class="line"><a name="l00600"></a><span class="lineno">  600</span>&#160;              Arena&lt;&gt; *salloc, <a class="code" href="structpoly_1_1lp_1_1LoopBlock_1_1OptimizationResult.html">lp::LoopBlock::OptimizationResult</a> res)</div>
+<div class="line"><a name="l00601"></a><span class="lineno">  601</span>&#160;    : deps{deps}, root{root_}, loopDeps{loopDepSats(lalloc, deps, res)},</div>
+<div class="line"><a name="l00602"></a><span class="lineno">  602</span>&#160;      lalloc{lalloc}, salloc{salloc} {</div>
+<div class="line"><a name="l00603"></a><span class="lineno">  603</span>&#160;    sortEdges(root, 0);</div>
+<div class="line"><a name="l00604"></a><span class="lineno">  604</span>&#160;    removeRedundantAddr(res.addr);</div>
+<div class="line"><a name="l00605"></a><span class="lineno">  605</span>&#160;  }</div>
+<div class="line"><a name="l00606"></a><span class="lineno">  606</span>&#160;};</div>
+<div class="line"><a name="l00607"></a><span class="lineno">  607</span>&#160; </div>
+<div class="line"><a name="l00608"></a><span class="lineno">  608</span>&#160;<span class="comment">//</span></div>
+<div class="line"><a name="l00609"></a><span class="lineno">  609</span>&#160;<span class="comment">// Considering reordering legality, example</span></div>
+<div class="line"><a name="l00610"></a><span class="lineno">  610</span>&#160;<span class="comment">// for (int i = 0: i &lt; I; ++i){</span></div>
+<div class="line"><a name="l00611"></a><span class="lineno">  611</span>&#160;<span class="comment">//   for (int j = 0 : j &lt; i; ++j){</span></div>
+<div class="line"><a name="l00612"></a><span class="lineno">  612</span>&#160;<span class="comment">//     x[i] -= x[j]*U[j,i];</span></div>
+<div class="line"><a name="l00613"></a><span class="lineno">  613</span>&#160;<span class="comment">//   }</span></div>
+<div class="line"><a name="l00614"></a><span class="lineno">  614</span>&#160;<span class="comment">//   x[i] /= U[i,i];</span></div>
+<div class="line"><a name="l00615"></a><span class="lineno">  615</span>&#160;<span class="comment">// }</span></div>
+<div class="line"><a name="l00616"></a><span class="lineno">  616</span>&#160;<span class="comment">// We have an edge from the store `x[i] = x[i] / U[i,i]=` to the load of</span></div>
+<div class="line"><a name="l00617"></a><span class="lineno">  617</span>&#160;<span class="comment">// `x[j]`, when `j = ` the current `i`, on some future iteration.</span></div>
+<div class="line"><a name="l00618"></a><span class="lineno">  618</span>&#160;<span class="comment">// We want to unroll;</span></div>
+<div class="line"><a name="l00619"></a><span class="lineno">  619</span>&#160;<span class="comment">// for (int i = 0: i &lt; I-3; i += 4){</span></div>
+<div class="line"><a name="l00620"></a><span class="lineno">  620</span>&#160;<span class="comment">//   for (int j = 0 : j &lt; i; ++j){</span></div>
+<div class="line"><a name="l00621"></a><span class="lineno">  621</span>&#160;<span class="comment">//     x[i] -= x[j]*U[j,i];</span></div>
+<div class="line"><a name="l00622"></a><span class="lineno">  622</span>&#160;<span class="comment">//     x[i+1] -= x[j]*U[j,i+1];</span></div>
+<div class="line"><a name="l00623"></a><span class="lineno">  623</span>&#160;<span class="comment">//     x[i+2] -= x[j]*U[j,i+2];</span></div>
+<div class="line"><a name="l00624"></a><span class="lineno">  624</span>&#160;<span class="comment">//     x[i+3] -= x[j]*U[j,i+3];</span></div>
+<div class="line"><a name="l00625"></a><span class="lineno">  625</span>&#160;<span class="comment">//   }</span></div>
+<div class="line"><a name="l00626"></a><span class="lineno">  626</span>&#160;<span class="comment">//   x[i] /= U[i,i]; // store 0</span></div>
+<div class="line"><a name="l00627"></a><span class="lineno">  627</span>&#160;<span class="comment">//   { // perform unrolled j = i iter</span></div>
+<div class="line"><a name="l00628"></a><span class="lineno">  628</span>&#160;<span class="comment">//     int j = i; // these all depend on store 0</span></div>
+<div class="line"><a name="l00629"></a><span class="lineno">  629</span>&#160;<span class="comment">//     x[i+1] -= x[j]*U[j,i+1];</span></div>
+<div class="line"><a name="l00630"></a><span class="lineno">  630</span>&#160;<span class="comment">//     x[i+2] -= x[j]*U[j,i+2];</span></div>
+<div class="line"><a name="l00631"></a><span class="lineno">  631</span>&#160;<span class="comment">//     x[i+3] -= x[j]*U[j,i+3];</span></div>
+<div class="line"><a name="l00632"></a><span class="lineno">  632</span>&#160;<span class="comment">//   }</span></div>
+<div class="line"><a name="l00633"></a><span class="lineno">  633</span>&#160;<span class="comment">//   x[i+1] /= U[i+1,i+1]; // store 1</span></div>
+<div class="line"><a name="l00634"></a><span class="lineno">  634</span>&#160;<span class="comment">//   { // perform unrolled j = i + 1 iter</span></div>
+<div class="line"><a name="l00635"></a><span class="lineno">  635</span>&#160;<span class="comment">//     int j = i+1; // these all depend on store 1</span></div>
+<div class="line"><a name="l00636"></a><span class="lineno">  636</span>&#160;<span class="comment">//     x[i+2] -= x[j]*U[j,i+2];</span></div>
+<div class="line"><a name="l00637"></a><span class="lineno">  637</span>&#160;<span class="comment">//     x[i+3] -= x[j]*U[j,i+3];</span></div>
+<div class="line"><a name="l00638"></a><span class="lineno">  638</span>&#160;<span class="comment">//   }</span></div>
+<div class="line"><a name="l00639"></a><span class="lineno">  639</span>&#160;<span class="comment">//   x[i+2] /= U[i+2,i+2]; // store 2</span></div>
+<div class="line"><a name="l00640"></a><span class="lineno">  640</span>&#160;<span class="comment">//   { // perform unrolled j = i + 2 iter</span></div>
+<div class="line"><a name="l00641"></a><span class="lineno">  641</span>&#160;<span class="comment">//     int j = i+2; // this depends on store 2</span></div>
+<div class="line"><a name="l00642"></a><span class="lineno">  642</span>&#160;<span class="comment">//     x[i+3] -= x[j]*U[j,i+3];</span></div>
+<div class="line"><a name="l00643"></a><span class="lineno">  643</span>&#160;<span class="comment">//   }</span></div>
+<div class="line"><a name="l00644"></a><span class="lineno">  644</span>&#160;<span class="comment">//   x[i+3] /= U[i+3,i+3];</span></div>
+<div class="line"><a name="l00645"></a><span class="lineno">  645</span>&#160;<span class="comment">// }</span></div>
+<div class="line"><a name="l00646"></a><span class="lineno">  646</span>&#160;<span class="comment">// The key to legality here is that we peel off the dependence polyhedra</span></div>
+<div class="line"><a name="l00647"></a><span class="lineno">  647</span>&#160;<span class="comment">// from the loop&#39;s iteration space.</span></div>
+<div class="line"><a name="l00648"></a><span class="lineno">  648</span>&#160;<span class="comment">// We can then perform the dependent iterations in order.</span></div>
+<div class="line"><a name="l00649"></a><span class="lineno">  649</span>&#160;<span class="comment">// With masking, the above code can be vectorized in this manner.</span></div>
+<div class="line"><a name="l00650"></a><span class="lineno">  650</span>&#160;<span class="comment">// The basic approach is that we have the dependence polyhedra:</span></div>
+<div class="line"><a name="l00651"></a><span class="lineno">  651</span>&#160;<span class="comment">//</span></div>
+<div class="line"><a name="l00652"></a><span class="lineno">  652</span>&#160;<span class="comment">// 0 &lt;= i_s &lt; I</span></div>
+<div class="line"><a name="l00653"></a><span class="lineno">  653</span>&#160;<span class="comment">// 0 &lt;= i_l &lt; I</span></div>
+<div class="line"><a name="l00654"></a><span class="lineno">  654</span>&#160;<span class="comment">// 0 &lt;= j_l &lt; i_l</span></div>
+<div class="line"><a name="l00655"></a><span class="lineno">  655</span>&#160;<span class="comment">// i_s = j_l // dependence, yields same address in `x`</span></div>
+<div class="line"><a name="l00656"></a><span class="lineno">  656</span>&#160;<span class="comment">//</span></div>
+<div class="line"><a name="l00657"></a><span class="lineno">  657</span>&#160;<span class="comment">// Note that our schedule sets</span></div>
+<div class="line"><a name="l00658"></a><span class="lineno">  658</span>&#160;<span class="comment">// i_s = i_l</span></div>
+<div class="line"><a name="l00659"></a><span class="lineno">  659</span>&#160;<span class="comment">// Which gives:</span></div>
+<div class="line"><a name="l00660"></a><span class="lineno">  660</span>&#160;<span class="comment">// i_l = i_s = j_l &lt; i_l</span></div>
+<div class="line"><a name="l00661"></a><span class="lineno">  661</span>&#160;<span class="comment">// a contradiction, meaning that the dependency is</span></div>
+<div class="line"><a name="l00662"></a><span class="lineno">  662</span>&#160;<span class="comment">// conditionally (on our schedule) independent.</span></div>
+<div class="line"><a name="l00663"></a><span class="lineno">  663</span>&#160;<span class="comment">// Excluding the `i_s = i_l` constraint from the</span></div>
+<div class="line"><a name="l00664"></a><span class="lineno">  664</span>&#160;<span class="comment">// polyhedra gives us the region of overlap.</span></div>
 <div class="line"><a name="l00665"></a><span class="lineno">  665</span>&#160;<span class="comment">//</span></div>
-<div class="line"><a name="l00666"></a><span class="lineno">  666</span>&#160;<span class="comment">// So, the parallel region is the union</span></div>
-<div class="line"><a name="l00667"></a><span class="lineno">  667</span>&#160;<span class="comment">// i^0_s &gt; j_1 || j_1 &gt; i^0_s+3</span></div>
-<div class="line"><a name="l00668"></a><span class="lineno">  668</span>&#160;<span class="comment">//</span></div>
-<div class="line"><a name="l00669"></a><span class="lineno">  669</span>&#160;<span class="comment">// In this example, note that the region `j_1 &gt; i^0_s+3` is empty</span></div>
-<div class="line"><a name="l00670"></a><span class="lineno">  670</span>&#160;<span class="comment">// so we have one parallel region, and then one serial region.</span></div>
-<div class="line"><a name="l00671"></a><span class="lineno">  671</span>&#160;<span class="comment">//</span></div>
-<div class="line"><a name="l00674"></a><span class="lineno">  674</span>&#160;<span class="comment"></span><span class="keyword">inline</span> <span class="keywordtype">void</span> optimize(<a class="code" href="classpoly_1_1poly_1_1Dependencies.html">IR::Dependencies</a> deps, <a class="code" href="classpoly_1_1IR_1_1Cache.html">IR::Cache</a> &amp;instr, Arena&lt;&gt; *lalloc,</div>
-<div class="line"><a name="l00675"></a><span class="lineno">  675</span>&#160;                     <a class="code" href="structpoly_1_1lp_1_1LoopBlock_1_1OptimizationResult.html">lp::LoopBlock::OptimizationResult</a> res) {</div>
-<div class="line"><a name="l00676"></a><span class="lineno">  676</span>&#160;  <span class="comment">// we must build the IR::Loop</span></div>
-<div class="line"><a name="l00677"></a><span class="lineno">  677</span>&#160;  <span class="comment">// Initially, to help, we use a nested vector, so that we can index into it</span></div>
-<div class="line"><a name="l00678"></a><span class="lineno">  678</span>&#160;  <span class="comment">// using the fusion omegas. We allocate it with the longer lived `instr`</span></div>
-<div class="line"><a name="l00679"></a><span class="lineno">  679</span>&#160;  <span class="comment">// alloc, so we can checkpoint it here, and use alloc for other IR nodes.</span></div>
-<div class="line"><a name="l00680"></a><span class="lineno">  680</span>&#160;  <span class="comment">// The `instr` allocator is more generally the longer lived allocator,</span></div>
-<div class="line"><a name="l00681"></a><span class="lineno">  681</span>&#160;  <span class="comment">// as it allocates the actual nodes.</span></div>
-<div class="line"><a name="l00682"></a><span class="lineno">  682</span>&#160;  Arena&lt;&gt; *salloc = instr.<a class="code" href="classpoly_1_1IR_1_1Cache.html#a6fc976093ca556ac42bc46e2c8e372f0">getAllocator</a>();</div>
-<div class="line"><a name="l00683"></a><span class="lineno">  683</span>&#160;  <a class="code" href="classpoly_1_1IR_1_1Loop.html">IR::Loop</a> *root = addAddrToGraph(salloc, lalloc, res.nodes);</div>
-<div class="line"><a name="l00684"></a><span class="lineno">  684</span>&#160;  buildGraph(deps, root);</div>
-<div class="line"><a name="l00685"></a><span class="lineno">  685</span>&#160;  <span class="comment">// `N` is the head of the topologically sorted graph</span></div>
-<div class="line"><a name="l00686"></a><span class="lineno">  686</span>&#160;  <span class="comment">// We now try to remove redundant memory operations</span></div>
-<div class="line"><a name="l00687"></a><span class="lineno">  687</span>&#160; </div>
-<div class="line"><a name="l00688"></a><span class="lineno">  688</span>&#160;  <a class="code" href="classpoly_1_1CostModeling_1_1IROptimizer.html">IROptimizer</a>(deps, root, lalloc, salloc, res);</div>
-<div class="line"><a name="l00689"></a><span class="lineno">  689</span>&#160;}</div>
-<div class="line"><a name="l00690"></a><span class="lineno">  690</span>&#160; </div>
-<div class="line"><a name="l00691"></a><span class="lineno">  691</span>&#160;<span class="comment">/*</span></div>
-<div class="line"><a name="l00692"></a><span class="lineno">  692</span>&#160;<span class="comment">// NOLINTNEXTLINE(misc-no-recursion)</span></div>
-<div class="line"><a name="l00693"></a><span class="lineno">  693</span>&#160;<span class="comment">inline auto printSubDotFile(Arena&lt;&gt; *alloc, llvm::raw_ostream &amp;out,</span></div>
-<div class="line"><a name="l00694"></a><span class="lineno">  694</span>&#160;<span class="comment">                          map&lt;LoopTreeSchedule *, std::string&gt; &amp;names,</span></div>
-<div class="line"><a name="l00695"></a><span class="lineno">  695</span>&#160;<span class="comment">                          llvm::SmallVectorImpl&lt;std::string&gt; &amp;addrNames,</span></div>
-<div class="line"><a name="l00696"></a><span class="lineno">  696</span>&#160;<span class="comment">                          unsigned addrIndOffset, poly::Loop *lret)</span></div>
-<div class="line"><a name="l00697"></a><span class="lineno">  697</span>&#160;<span class="comment">-&gt; poly::Loop * {</span></div>
-<div class="line"><a name="l00698"></a><span class="lineno">  698</span>&#160;<span class="comment">poly::Loop *loop{nullptr};</span></div>
-<div class="line"><a name="l00699"></a><span class="lineno">  699</span>&#160;<span class="comment">size_t j = 0;</span></div>
-<div class="line"><a name="l00700"></a><span class="lineno">  700</span>&#160;<span class="comment">for (auto *addr : header.getAddr()) loop = addr-&gt;getAffLoop();</span></div>
-<div class="line"><a name="l00701"></a><span class="lineno">  701</span>&#160;<span class="comment">for (auto &amp;subTree : subTrees) {</span></div>
-<div class="line"><a name="l00702"></a><span class="lineno">  702</span>&#160;<span class="comment">  // `names` might realloc, relocating `names[this]`</span></div>
-<div class="line"><a name="l00703"></a><span class="lineno">  703</span>&#160;<span class="comment">  if (getDepth())</span></div>
-<div class="line"><a name="l00704"></a><span class="lineno">  704</span>&#160;<span class="comment">    names[subTree.subTree] = names[this] + &quot;SubLoop#&quot; + std::to_string(j++);</span></div>
-<div class="line"><a name="l00705"></a><span class="lineno">  705</span>&#160;<span class="comment">  else names[subTree.subTree] = &quot;LoopNest#&quot; + std::to_string(j++);</span></div>
-<div class="line"><a name="l00706"></a><span class="lineno">  706</span>&#160;<span class="comment">  if (loop == nullptr)</span></div>
-<div class="line"><a name="l00707"></a><span class="lineno">  707</span>&#160;<span class="comment">    for (auto *addr : subTree.exit.getAddr()) loop = addr-&gt;getAffLoop();</span></div>
-<div class="line"><a name="l00708"></a><span class="lineno">  708</span>&#160;<span class="comment">  loop = subTree.subTree-&gt;printSubDotFile(alloc, out, names, addrNames,</span></div>
-<div class="line"><a name="l00709"></a><span class="lineno">  709</span>&#160;<span class="comment">                                          addrIndOffset, loop);</span></div>
-<div class="line"><a name="l00710"></a><span class="lineno">  710</span>&#160;<span class="comment">}</span></div>
-<div class="line"><a name="l00711"></a><span class="lineno">  711</span>&#160;<span class="comment">const std::string &amp;name = names[this];</span></div>
-<div class="line"><a name="l00712"></a><span class="lineno">  712</span>&#160;<span class="comment">out &lt;&lt; &quot;\&quot;&quot; &lt;&lt; name</span></div>
-<div class="line"><a name="l00713"></a><span class="lineno">  713</span>&#160;<span class="comment">    &lt;&lt; &quot;\&quot; [shape=plain\nlabel = &lt;&lt;table&gt;&lt;tr&gt;&lt;td port=\&quot;f0\&quot;&gt;&quot;;</span></div>
-<div class="line"><a name="l00714"></a><span class="lineno">  714</span>&#160;<span class="comment">// assert(depth == 0 || (loop != nullptr));</span></div>
-<div class="line"><a name="l00715"></a><span class="lineno">  715</span>&#160;<span class="comment">if (loop &amp;&amp; (getDepth() &gt; 0)) {</span></div>
-<div class="line"><a name="l00716"></a><span class="lineno">  716</span>&#160;<span class="comment">  for (size_t i = loop-&gt;getNumLoops(), k = getDepth(); i &gt; k;)</span></div>
-<div class="line"><a name="l00717"></a><span class="lineno">  717</span>&#160;<span class="comment">    loop = loop-&gt;removeLoop(alloc, --i);</span></div>
-<div class="line"><a name="l00718"></a><span class="lineno">  718</span>&#160;<span class="comment">  loop-&gt;pruneBounds(alloc);</span></div>
-<div class="line"><a name="l00719"></a><span class="lineno">  719</span>&#160;<span class="comment">  loop-&gt;printBounds(out);</span></div>
-<div class="line"><a name="l00720"></a><span class="lineno">  720</span>&#160;<span class="comment">} else out &lt;&lt; &quot;Top Level&quot;;</span></div>
-<div class="line"><a name="l00721"></a><span class="lineno">  721</span>&#160;<span class="comment">out &lt;&lt; &quot;&lt;/td&gt;&lt;/tr&gt;\n&quot;;</span></div>
-<div class="line"><a name="l00722"></a><span class="lineno">  722</span>&#160;<span class="comment">size_t i = header.printDotNodes(out, 0, addrNames, addrIndOffset, name);</span></div>
-<div class="line"><a name="l00723"></a><span class="lineno">  723</span>&#160;<span class="comment">j = 0;</span></div>
-<div class="line"><a name="l00724"></a><span class="lineno">  724</span>&#160;<span class="comment">std::string loopEdges;</span></div>
-<div class="line"><a name="l00725"></a><span class="lineno">  725</span>&#160;<span class="comment">for (auto &amp;subTree : subTrees) {</span></div>
-<div class="line"><a name="l00726"></a><span class="lineno">  726</span>&#160;<span class="comment">  std::string label = &quot;f&quot; + std::to_string(++i);</span></div>
-<div class="line"><a name="l00727"></a><span class="lineno">  727</span>&#160;<span class="comment">  out &lt;&lt; &quot; &lt;tr&gt; &lt;td port=\&quot;&quot; &lt;&lt; label &lt;&lt; &quot;\&quot;&gt; SubLoop#&quot; &lt;&lt; j++</span></div>
-<div class="line"><a name="l00728"></a><span class="lineno">  728</span>&#160;<span class="comment">      &lt;&lt; &quot;&lt;/td&gt;&lt;/tr&gt;\n&quot;;</span></div>
-<div class="line"><a name="l00729"></a><span class="lineno">  729</span>&#160;<span class="comment">  loopEdges += &quot;\&quot;&quot; + name + &quot;\&quot;:f&quot; + std::to_string(i) + &quot; -&gt; \&quot;&quot; +</span></div>
-<div class="line"><a name="l00730"></a><span class="lineno">  730</span>&#160;<span class="comment">               names[subTree.subTree] + &quot;\&quot;:f0 [color=\&quot;#ff0000\&quot;];\n&quot;;</span></div>
-<div class="line"><a name="l00731"></a><span class="lineno">  731</span>&#160;<span class="comment">  i = subTree.exit.printDotNodes(out, i, addrNames, addrIndOffset, name);</span></div>
-<div class="line"><a name="l00732"></a><span class="lineno">  732</span>&#160;<span class="comment">}</span></div>
-<div class="line"><a name="l00733"></a><span class="lineno">  733</span>&#160;<span class="comment">out &lt;&lt; &quot;&lt;/table&gt;&gt;];\n&quot; &lt;&lt; loopEdges;</span></div>
-<div class="line"><a name="l00734"></a><span class="lineno">  734</span>&#160;<span class="comment">if (lret) return lret;</span></div>
-<div class="line"><a name="l00735"></a><span class="lineno">  735</span>&#160;<span class="comment">if ((loop == nullptr) || (getDepth() &lt;= 1)) return nullptr;</span></div>
-<div class="line"><a name="l00736"></a><span class="lineno">  736</span>&#160;<span class="comment">return loop-&gt;removeLoop(alloc, getDepth() - 1);</span></div>
+<div class="line"><a name="l00666"></a><span class="lineno">  666</span>&#160;<span class="comment">// When unrolling by `U`, we get using `U=4` as an example:</span></div>
+<div class="line"><a name="l00667"></a><span class="lineno">  667</span>&#160;<span class="comment">// i^0_s + 1 = i^1_s</span></div>
+<div class="line"><a name="l00668"></a><span class="lineno">  668</span>&#160;<span class="comment">// i^0_s + 2 = i^2_s</span></div>
+<div class="line"><a name="l00669"></a><span class="lineno">  669</span>&#160;<span class="comment">// i^0_s + 3 = i^3_s</span></div>
+<div class="line"><a name="l00670"></a><span class="lineno">  670</span>&#160;<span class="comment">// 0 &lt;= i^0_s &lt; I</span></div>
+<div class="line"><a name="l00671"></a><span class="lineno">  671</span>&#160;<span class="comment">// 0 &lt;= i^1_s &lt; I</span></div>
+<div class="line"><a name="l00672"></a><span class="lineno">  672</span>&#160;<span class="comment">// 0 &lt;= i^2_s &lt; I</span></div>
+<div class="line"><a name="l00673"></a><span class="lineno">  673</span>&#160;<span class="comment">// 0 &lt;= i^3_s &lt; I</span></div>
+<div class="line"><a name="l00674"></a><span class="lineno">  674</span>&#160;<span class="comment">// 0 &lt;= i^0_l &lt; I</span></div>
+<div class="line"><a name="l00675"></a><span class="lineno">  675</span>&#160;<span class="comment">// 0 &lt;= i^1_l &lt; I</span></div>
+<div class="line"><a name="l00676"></a><span class="lineno">  676</span>&#160;<span class="comment">// 0 &lt;= i^2_l &lt; I</span></div>
+<div class="line"><a name="l00677"></a><span class="lineno">  677</span>&#160;<span class="comment">// 0 &lt;= i^3_l &lt; I</span></div>
+<div class="line"><a name="l00678"></a><span class="lineno">  678</span>&#160;<span class="comment">// 0 &lt;= j_l &lt; i^0_l</span></div>
+<div class="line"><a name="l00679"></a><span class="lineno">  679</span>&#160;<span class="comment">// 0 &lt;= j_l &lt; i^1_l</span></div>
+<div class="line"><a name="l00680"></a><span class="lineno">  680</span>&#160;<span class="comment">// 0 &lt;= j_l &lt; i^2_l</span></div>
+<div class="line"><a name="l00681"></a><span class="lineno">  681</span>&#160;<span class="comment">// 0 &lt;= j_l &lt; i^3_l</span></div>
+<div class="line"><a name="l00682"></a><span class="lineno">  682</span>&#160;<span class="comment">// i^0_s = j_l ||  i^1_s = j_l || i^2_s = j_l || i^3_s = j_l</span></div>
+<div class="line"><a name="l00683"></a><span class="lineno">  683</span>&#160;<span class="comment">// where the final union can be replaced with</span></div>
+<div class="line"><a name="l00684"></a><span class="lineno">  684</span>&#160;<span class="comment">// i^0_s = j_l ||  i^0_s+1 = j_l || i^0_s+2 = j_l || i^0_s+3 = j_l</span></div>
+<div class="line"><a name="l00685"></a><span class="lineno">  685</span>&#160;<span class="comment">// i^0_s &lt;= j_1 &lt;= i^0_s+3</span></div>
+<div class="line"><a name="l00686"></a><span class="lineno">  686</span>&#160;<span class="comment">//</span></div>
+<div class="line"><a name="l00687"></a><span class="lineno">  687</span>&#160;<span class="comment">// Similarly, we can compress the other inequalities...</span></div>
+<div class="line"><a name="l00688"></a><span class="lineno">  688</span>&#160;<span class="comment">// 0 &lt;= i^0_s &lt; I - 3</span></div>
+<div class="line"><a name="l00689"></a><span class="lineno">  689</span>&#160;<span class="comment">// 0 &lt;= i^0_l &lt; I - 3</span></div>
+<div class="line"><a name="l00690"></a><span class="lineno">  690</span>&#160;<span class="comment">// 0 &lt;= j_l &lt; i^0_l</span></div>
+<div class="line"><a name="l00691"></a><span class="lineno">  691</span>&#160;<span class="comment">// i^0_s &lt;= j_1 &lt;= i^0_s+3 // dependence region</span></div>
+<div class="line"><a name="l00692"></a><span class="lineno">  692</span>&#160;<span class="comment">//</span></div>
+<div class="line"><a name="l00693"></a><span class="lineno">  693</span>&#160;<span class="comment">// So, the parallel region is the union</span></div>
+<div class="line"><a name="l00694"></a><span class="lineno">  694</span>&#160;<span class="comment">// i^0_s &gt; j_1 || j_1 &gt; i^0_s+3</span></div>
+<div class="line"><a name="l00695"></a><span class="lineno">  695</span>&#160;<span class="comment">//</span></div>
+<div class="line"><a name="l00696"></a><span class="lineno">  696</span>&#160;<span class="comment">// In this example, note that the region `j_1 &gt; i^0_s+3` is empty</span></div>
+<div class="line"><a name="l00697"></a><span class="lineno">  697</span>&#160;<span class="comment">// so we have one parallel region, and then one serial region.</span></div>
+<div class="line"><a name="l00698"></a><span class="lineno">  698</span>&#160;<span class="comment">//</span></div>
+<div class="line"><a name="l00701"></a><span class="lineno">  701</span>&#160;<span class="comment"></span><span class="keyword">inline</span> <span class="keywordtype">void</span> optimize(<a class="code" href="classpoly_1_1poly_1_1Dependencies.html">IR::Dependencies</a> deps, <a class="code" href="classpoly_1_1IR_1_1Cache.html">IR::Cache</a> &amp;instr, Arena&lt;&gt; *lalloc,</div>
+<div class="line"><a name="l00702"></a><span class="lineno">  702</span>&#160;                     <a class="code" href="structpoly_1_1lp_1_1LoopBlock_1_1OptimizationResult.html">lp::LoopBlock::OptimizationResult</a> res) {</div>
+<div class="line"><a name="l00703"></a><span class="lineno">  703</span>&#160;  <span class="comment">// we must build the IR::Loop</span></div>
+<div class="line"><a name="l00704"></a><span class="lineno">  704</span>&#160;  <span class="comment">// Initially, to help, we use a nested vector, so that we can index into it</span></div>
+<div class="line"><a name="l00705"></a><span class="lineno">  705</span>&#160;  <span class="comment">// using the fusion omegas. We allocate it with the longer lived `instr`</span></div>
+<div class="line"><a name="l00706"></a><span class="lineno">  706</span>&#160;  <span class="comment">// alloc, so we can checkpoint it here, and use alloc for other IR nodes.</span></div>
+<div class="line"><a name="l00707"></a><span class="lineno">  707</span>&#160;  <span class="comment">// The `instr` allocator is more generally the longer lived allocator,</span></div>
+<div class="line"><a name="l00708"></a><span class="lineno">  708</span>&#160;  <span class="comment">// as it allocates the actual nodes.</span></div>
+<div class="line"><a name="l00709"></a><span class="lineno">  709</span>&#160;  Arena&lt;&gt; *salloc = instr.<a class="code" href="classpoly_1_1IR_1_1Cache.html#a6fc976093ca556ac42bc46e2c8e372f0">getAllocator</a>();</div>
+<div class="line"><a name="l00710"></a><span class="lineno">  710</span>&#160;  <a class="code" href="classpoly_1_1IR_1_1Loop.html">IR::Loop</a> *root = addAddrToGraph(salloc, lalloc, res.nodes);</div>
+<div class="line"><a name="l00711"></a><span class="lineno">  711</span>&#160;  buildGraph(deps, root);</div>
+<div class="line"><a name="l00712"></a><span class="lineno">  712</span>&#160;  <span class="comment">// `N` is the head of the topologically sorted graph</span></div>
+<div class="line"><a name="l00713"></a><span class="lineno">  713</span>&#160;  <span class="comment">// We now try to remove redundant memory operations</span></div>
+<div class="line"><a name="l00714"></a><span class="lineno">  714</span>&#160; </div>
+<div class="line"><a name="l00715"></a><span class="lineno">  715</span>&#160;  <a class="code" href="classpoly_1_1CostModeling_1_1IROptimizer.html">IROptimizer</a>(deps, root, lalloc, salloc, res);</div>
+<div class="line"><a name="l00716"></a><span class="lineno">  716</span>&#160;}</div>
+<div class="line"><a name="l00717"></a><span class="lineno">  717</span>&#160; </div>
+<div class="line"><a name="l00718"></a><span class="lineno">  718</span>&#160;<span class="comment">/*</span></div>
+<div class="line"><a name="l00719"></a><span class="lineno">  719</span>&#160;<span class="comment">// NOLINTNEXTLINE(misc-no-recursion)</span></div>
+<div class="line"><a name="l00720"></a><span class="lineno">  720</span>&#160;<span class="comment">inline auto printSubDotFile(Arena&lt;&gt; *alloc, llvm::raw_ostream &amp;out,</span></div>
+<div class="line"><a name="l00721"></a><span class="lineno">  721</span>&#160;<span class="comment">                          map&lt;LoopTreeSchedule *, std::string&gt; &amp;names,</span></div>
+<div class="line"><a name="l00722"></a><span class="lineno">  722</span>&#160;<span class="comment">                          llvm::SmallVectorImpl&lt;std::string&gt; &amp;addrNames,</span></div>
+<div class="line"><a name="l00723"></a><span class="lineno">  723</span>&#160;<span class="comment">                          unsigned addrIndOffset, poly::Loop *lret)</span></div>
+<div class="line"><a name="l00724"></a><span class="lineno">  724</span>&#160;<span class="comment">-&gt; poly::Loop * {</span></div>
+<div class="line"><a name="l00725"></a><span class="lineno">  725</span>&#160;<span class="comment">poly::Loop *loop{nullptr};</span></div>
+<div class="line"><a name="l00726"></a><span class="lineno">  726</span>&#160;<span class="comment">size_t j = 0;</span></div>
+<div class="line"><a name="l00727"></a><span class="lineno">  727</span>&#160;<span class="comment">for (auto *addr : header.getAddr()) loop = addr-&gt;getAffLoop();</span></div>
+<div class="line"><a name="l00728"></a><span class="lineno">  728</span>&#160;<span class="comment">for (auto &amp;subTree : subTrees) {</span></div>
+<div class="line"><a name="l00729"></a><span class="lineno">  729</span>&#160;<span class="comment">  // `names` might realloc, relocating `names[this]`</span></div>
+<div class="line"><a name="l00730"></a><span class="lineno">  730</span>&#160;<span class="comment">  if (getDepth())</span></div>
+<div class="line"><a name="l00731"></a><span class="lineno">  731</span>&#160;<span class="comment">    names[subTree.subTree] = names[this] + &quot;SubLoop#&quot; + std::to_string(j++);</span></div>
+<div class="line"><a name="l00732"></a><span class="lineno">  732</span>&#160;<span class="comment">  else names[subTree.subTree] = &quot;LoopNest#&quot; + std::to_string(j++);</span></div>
+<div class="line"><a name="l00733"></a><span class="lineno">  733</span>&#160;<span class="comment">  if (loop == nullptr)</span></div>
+<div class="line"><a name="l00734"></a><span class="lineno">  734</span>&#160;<span class="comment">    for (auto *addr : subTree.exit.getAddr()) loop = addr-&gt;getAffLoop();</span></div>
+<div class="line"><a name="l00735"></a><span class="lineno">  735</span>&#160;<span class="comment">  loop = subTree.subTree-&gt;printSubDotFile(alloc, out, names, addrNames,</span></div>
+<div class="line"><a name="l00736"></a><span class="lineno">  736</span>&#160;<span class="comment">                                          addrIndOffset, loop);</span></div>
 <div class="line"><a name="l00737"></a><span class="lineno">  737</span>&#160;<span class="comment">}</span></div>
-<div class="line"><a name="l00738"></a><span class="lineno">  738</span>&#160;<span class="comment"></span> </div>
-<div class="line"><a name="l00739"></a><span class="lineno">  739</span>&#160;<span class="comment">inline void printDotFile(Arena&lt;&gt; *alloc, llvm::raw_ostream &amp;out) {</span></div>
-<div class="line"><a name="l00740"></a><span class="lineno">  740</span>&#160;<span class="comment">map&lt;LoopTreeSchedule *, std::string&gt; names;</span></div>
-<div class="line"><a name="l00741"></a><span class="lineno">  741</span>&#160;<span class="comment">llvm::SmallVector&lt;std::string&gt; addrNames(numAddr_);</span></div>
-<div class="line"><a name="l00742"></a><span class="lineno">  742</span>&#160;<span class="comment">names[this] = &quot;toplevel&quot;;</span></div>
-<div class="line"><a name="l00743"></a><span class="lineno">  743</span>&#160;<span class="comment">out &lt;&lt; &quot;digraph LoopNest {\n&quot;;</span></div>
-<div class="line"><a name="l00744"></a><span class="lineno">  744</span>&#160;<span class="comment">auto p = alloc.scope();</span></div>
-<div class="line"><a name="l00745"></a><span class="lineno">  745</span>&#160;<span class="comment">printSubDotFile(alloc, out, names, addrNames, subTrees.size(), nullptr);</span></div>
-<div class="line"><a name="l00746"></a><span class="lineno">  746</span>&#160;<span class="comment">printDotEdges(out, addrNames);</span></div>
-<div class="line"><a name="l00747"></a><span class="lineno">  747</span>&#160;<span class="comment">out &lt;&lt; &quot;}\n&quot;;</span></div>
-<div class="line"><a name="l00748"></a><span class="lineno">  748</span>&#160;<span class="comment">}</span></div>
-<div class="line"><a name="l00749"></a><span class="lineno">  749</span>&#160;<span class="comment">*/</span></div>
-<div class="line"><a name="l00750"></a><span class="lineno">  750</span>&#160;<span class="comment">// class LoopForestSchedule : LoopTreeSchedule {</span></div>
-<div class="line"><a name="l00751"></a><span class="lineno">  751</span>&#160;<span class="comment">//   [[no_unique_address]] Arena&lt;&gt; *allocator;</span></div>
-<div class="line"><a name="l00752"></a><span class="lineno">  752</span>&#160;<span class="comment">// };</span></div>
-<div class="line"><a name="l00753"></a><span class="lineno">  753</span>&#160;} <span class="comment">// namespace poly::CostModeling</span></div>
+<div class="line"><a name="l00738"></a><span class="lineno">  738</span>&#160;<span class="comment">const std::string &amp;name = names[this];</span></div>
+<div class="line"><a name="l00739"></a><span class="lineno">  739</span>&#160;<span class="comment">out &lt;&lt; &quot;\&quot;&quot; &lt;&lt; name</span></div>
+<div class="line"><a name="l00740"></a><span class="lineno">  740</span>&#160;<span class="comment">    &lt;&lt; &quot;\&quot; [shape=plain\nlabel = &lt;&lt;table&gt;&lt;tr&gt;&lt;td port=\&quot;f0\&quot;&gt;&quot;;</span></div>
+<div class="line"><a name="l00741"></a><span class="lineno">  741</span>&#160;<span class="comment">// assert(depth == 0 || (loop != nullptr));</span></div>
+<div class="line"><a name="l00742"></a><span class="lineno">  742</span>&#160;<span class="comment">if (loop &amp;&amp; (getDepth() &gt; 0)) {</span></div>
+<div class="line"><a name="l00743"></a><span class="lineno">  743</span>&#160;<span class="comment">  for (size_t i = loop-&gt;getNumLoops(), k = getDepth(); i &gt; k;)</span></div>
+<div class="line"><a name="l00744"></a><span class="lineno">  744</span>&#160;<span class="comment">    loop = loop-&gt;removeLoop(alloc, --i);</span></div>
+<div class="line"><a name="l00745"></a><span class="lineno">  745</span>&#160;<span class="comment">  loop-&gt;pruneBounds(alloc);</span></div>
+<div class="line"><a name="l00746"></a><span class="lineno">  746</span>&#160;<span class="comment">  loop-&gt;printBounds(out);</span></div>
+<div class="line"><a name="l00747"></a><span class="lineno">  747</span>&#160;<span class="comment">} else out &lt;&lt; &quot;Top Level&quot;;</span></div>
+<div class="line"><a name="l00748"></a><span class="lineno">  748</span>&#160;<span class="comment">out &lt;&lt; &quot;&lt;/td&gt;&lt;/tr&gt;\n&quot;;</span></div>
+<div class="line"><a name="l00749"></a><span class="lineno">  749</span>&#160;<span class="comment">size_t i = header.printDotNodes(out, 0, addrNames, addrIndOffset, name);</span></div>
+<div class="line"><a name="l00750"></a><span class="lineno">  750</span>&#160;<span class="comment">j = 0;</span></div>
+<div class="line"><a name="l00751"></a><span class="lineno">  751</span>&#160;<span class="comment">std::string loopEdges;</span></div>
+<div class="line"><a name="l00752"></a><span class="lineno">  752</span>&#160;<span class="comment">for (auto &amp;subTree : subTrees) {</span></div>
+<div class="line"><a name="l00753"></a><span class="lineno">  753</span>&#160;<span class="comment">  std::string label = &quot;f&quot; + std::to_string(++i);</span></div>
+<div class="line"><a name="l00754"></a><span class="lineno">  754</span>&#160;<span class="comment">  out &lt;&lt; &quot; &lt;tr&gt; &lt;td port=\&quot;&quot; &lt;&lt; label &lt;&lt; &quot;\&quot;&gt; SubLoop#&quot; &lt;&lt; j++</span></div>
+<div class="line"><a name="l00755"></a><span class="lineno">  755</span>&#160;<span class="comment">      &lt;&lt; &quot;&lt;/td&gt;&lt;/tr&gt;\n&quot;;</span></div>
+<div class="line"><a name="l00756"></a><span class="lineno">  756</span>&#160;<span class="comment">  loopEdges += &quot;\&quot;&quot; + name + &quot;\&quot;:f&quot; + std::to_string(i) + &quot; -&gt; \&quot;&quot; +</span></div>
+<div class="line"><a name="l00757"></a><span class="lineno">  757</span>&#160;<span class="comment">               names[subTree.subTree] + &quot;\&quot;:f0 [color=\&quot;#ff0000\&quot;];\n&quot;;</span></div>
+<div class="line"><a name="l00758"></a><span class="lineno">  758</span>&#160;<span class="comment">  i = subTree.exit.printDotNodes(out, i, addrNames, addrIndOffset, name);</span></div>
+<div class="line"><a name="l00759"></a><span class="lineno">  759</span>&#160;<span class="comment">}</span></div>
+<div class="line"><a name="l00760"></a><span class="lineno">  760</span>&#160;<span class="comment">out &lt;&lt; &quot;&lt;/table&gt;&gt;];\n&quot; &lt;&lt; loopEdges;</span></div>
+<div class="line"><a name="l00761"></a><span class="lineno">  761</span>&#160;<span class="comment">if (lret) return lret;</span></div>
+<div class="line"><a name="l00762"></a><span class="lineno">  762</span>&#160;<span class="comment">if ((loop == nullptr) || (getDepth() &lt;= 1)) return nullptr;</span></div>
+<div class="line"><a name="l00763"></a><span class="lineno">  763</span>&#160;<span class="comment">return loop-&gt;removeLoop(alloc, getDepth() - 1);</span></div>
+<div class="line"><a name="l00764"></a><span class="lineno">  764</span>&#160;<span class="comment">}</span></div>
+<div class="line"><a name="l00765"></a><span class="lineno">  765</span>&#160;<span class="comment"></span> </div>
+<div class="line"><a name="l00766"></a><span class="lineno">  766</span>&#160;<span class="comment">inline void printDotFile(Arena&lt;&gt; *alloc, llvm::raw_ostream &amp;out) {</span></div>
+<div class="line"><a name="l00767"></a><span class="lineno">  767</span>&#160;<span class="comment">map&lt;LoopTreeSchedule *, std::string&gt; names;</span></div>
+<div class="line"><a name="l00768"></a><span class="lineno">  768</span>&#160;<span class="comment">llvm::SmallVector&lt;std::string&gt; addrNames(numAddr_);</span></div>
+<div class="line"><a name="l00769"></a><span class="lineno">  769</span>&#160;<span class="comment">names[this] = &quot;toplevel&quot;;</span></div>
+<div class="line"><a name="l00770"></a><span class="lineno">  770</span>&#160;<span class="comment">out &lt;&lt; &quot;digraph LoopNest {\n&quot;;</span></div>
+<div class="line"><a name="l00771"></a><span class="lineno">  771</span>&#160;<span class="comment">auto p = alloc.scope();</span></div>
+<div class="line"><a name="l00772"></a><span class="lineno">  772</span>&#160;<span class="comment">printSubDotFile(alloc, out, names, addrNames, subTrees.size(), nullptr);</span></div>
+<div class="line"><a name="l00773"></a><span class="lineno">  773</span>&#160;<span class="comment">printDotEdges(out, addrNames);</span></div>
+<div class="line"><a name="l00774"></a><span class="lineno">  774</span>&#160;<span class="comment">out &lt;&lt; &quot;}\n&quot;;</span></div>
+<div class="line"><a name="l00775"></a><span class="lineno">  775</span>&#160;<span class="comment">}</span></div>
+<div class="line"><a name="l00776"></a><span class="lineno">  776</span>&#160;<span class="comment">*/</span></div>
+<div class="line"><a name="l00777"></a><span class="lineno">  777</span>&#160;<span class="comment">// class LoopForestSchedule : LoopTreeSchedule {</span></div>
+<div class="line"><a name="l00778"></a><span class="lineno">  778</span>&#160;<span class="comment">//   [[no_unique_address]] Arena&lt;&gt; *allocator;</span></div>
+<div class="line"><a name="l00779"></a><span class="lineno">  779</span>&#160;<span class="comment">// };</span></div>
+<div class="line"><a name="l00780"></a><span class="lineno">  780</span>&#160;} <span class="comment">// namespace poly::CostModeling</span></div>
 <div class="ttc" id="aclasspoly_1_1CostModeling_1_1CPURegisterFile_html"><div class="ttname"><a href="classpoly_1_1CostModeling_1_1CPURegisterFile.html">poly::CostModeling::CPURegisterFile</a></div><div class="ttdef"><b>Definition:</b> CostModeling.hpp:37</div></div>
 <div class="ttc" id="aclasspoly_1_1CostModeling_1_1IROptimizer_html"><div class="ttname"><a href="classpoly_1_1CostModeling_1_1IROptimizer.html">poly::CostModeling::IROptimizer</a></div><div class="ttdef"><b>Definition:</b> CostModeling.hpp:416</div></div>
 <div class="ttc" id="aclasspoly_1_1CostModeling_1_1LoopTree_html"><div class="ttname"><a href="classpoly_1_1CostModeling_1_1LoopTree.html">poly::CostModeling::LoopTree</a></div><div class="ttdef"><b>Definition:</b> CostModeling.hpp:152</div></div>
