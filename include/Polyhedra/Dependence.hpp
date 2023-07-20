@@ -835,7 +835,7 @@ private:
     invariant(false);
     return false;
   }
-  constexpr auto get(ID i, IR::Addr *in, IR::Addr *out) -> Dependence {
+  constexpr auto get(ID i, IR::Addr *in, IR::Addr *out) const -> Dependence {
     return Dependence{depPoly(i),      depSatBnd(i), in, out,
                       satLevelPair(i), isForward(i)
 
@@ -964,7 +964,9 @@ public:
     if (prev >= 0) nextOut(poly::Dependence::ID{prev}) = next;
     if (next >= 0) prevOut(poly::Dependence::ID{next}) = prev;
   }
-  constexpr auto get(ID i) -> Dependence { return get(i, input(i), output(i)); }
+  [[nodiscard]] constexpr auto get(ID i) const -> Dependence {
+    return get(i, input(i), output(i));
+  }
   constexpr auto outAddrs() -> MutPtrVector<IR::Addr *> {
     return {outAddrPtr(), numData};
   }
@@ -990,13 +992,13 @@ public:
   [[nodiscard]] constexpr auto output(ID i) -> IR::Addr *& {
     return outAddrPtr()[i.id];
   }
-  [[nodiscard]] constexpr auto output(ID i) const -> const IR::Addr * {
+  [[nodiscard]] constexpr auto output(ID i) const -> IR::Addr * {
     return outAddrPtr()[i.id];
   }
   [[nodiscard]] constexpr auto input(ID i) -> IR::Addr *& {
     return inAddrPtr()[i.id];
   }
-  [[nodiscard]] constexpr auto input(ID i) const -> const IR::Addr * {
+  [[nodiscard]] constexpr auto input(ID i) const -> IR::Addr * {
     return inAddrPtr()[i.id];
   }
   constexpr auto nextOut(ID i) -> int32_t & { return outEdgePtr()[i.id]; }
@@ -1006,6 +1008,13 @@ public:
     return depSatBndPtr()[i.id];
   }
   constexpr auto depPoly(ID i) -> DepPoly *& { return depPolyPtr()[i.id]; }
+  [[nodiscard]] constexpr auto depSatBnd(ID i) const
+    -> std::array<NotNull<math::Simplex>, 2> {
+    return depSatBndPtr()[i.id];
+  }
+  [[nodiscard]] constexpr auto depPoly(ID i) const -> DepPoly * {
+    return depPolyPtr()[i.id];
+  }
   constexpr auto satLevelPair(ID i) -> std::array<uint8_t, 2> & {
     return satLevelsPtr()[i.id];
   }
@@ -1073,19 +1082,15 @@ public:
   [[nodiscard]] constexpr auto outputEdgeIDs(int32_t id) const {
     return utils::VForwardRange{outEdges(), id};
   }
+  [[nodiscard]] constexpr auto getEdgeTransform() const {
+    auto f = [=](int32_t id) { return get(Dependence::ID{id}); };
+    return std::views::transform(f);
+  }
   [[nodiscard]] constexpr auto inputEdges(int32_t id) const {
-    auto f = [this](int32_t id) {
-      Dependencies d = *this;
-      return d.get(ID{id});
-    };
-    return inputEdgeIDs(id) | std::views::transform(f);
+    return inputEdgeIDs(id) | getEdgeTransform();
   }
   [[nodiscard]] constexpr auto outputEdges(int32_t id) const {
-    auto f = [this](int32_t id) {
-      Dependencies d = *this;
-      return d.get(Dependence::ID{id});
-    };
-    return outputEdgeIDs(id) | std::views::transform(f);
+    return outputEdgeIDs(id) | getEdgeTransform();
   }
 
   [[nodiscard]] constexpr auto activeFilter(unsigned depth) const {
@@ -1122,6 +1127,12 @@ inline auto Addr::inputEdgeIDs(Dependencies deps) const {
 inline auto Addr::outputEdgeIDs(Dependencies deps) const {
   return deps.outputEdgeIDs(getEdgeOut());
 }
+inline auto Addr::inputEdgeIDs(Dependencies deps, unsigned depth) const {
+  return inputEdgeIDs(deps) | deps.activeFilter(depth);
+}
+inline auto Addr::outputEdgeIDs(Dependencies deps, unsigned depth) const {
+  return outputEdgeIDs(deps) | deps.activeFilter(depth);
+}
 
 inline auto IR::Addr::inputAddrs(Dependencies deps) const {
   return inputEdgeIDs(deps) | deps.inputAddrTransform();
@@ -1131,17 +1142,19 @@ inline auto IR::Addr::outputAddrs(Dependencies deps) const {
 }
 
 inline auto Addr::inputEdges(Dependencies deps, unsigned depth) const {
-  return inputEdgeIDs(deps) | deps.activeFilter(depth);
+  return inputEdgeIDs(deps) | deps.activeFilter(depth) |
+         deps.getEdgeTransform();
 }
 inline auto Addr::outputEdges(Dependencies deps, unsigned depth) const {
-  return outputEdgeIDs(deps) | deps.activeFilter(depth);
+  return outputEdgeIDs(deps) | deps.activeFilter(depth) |
+         deps.getEdgeTransform();
 }
 
 inline auto IR::Addr::inputAddrs(Dependencies deps, unsigned depth) const {
-  return inputEdges(deps, depth) | deps.inputAddrTransform();
+  return inputEdgeIDs(deps, depth) | deps.inputAddrTransform();
 }
 inline auto IR::Addr::outputAddrs(Dependencies deps, unsigned depth) const {
-  return outputEdges(deps, depth) | deps.outputAddrTransform();
+  return outputEdgeIDs(deps, depth) | deps.outputAddrTransform();
 }
 
 } // namespace IR

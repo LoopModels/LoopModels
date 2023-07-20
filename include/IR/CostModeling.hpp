@@ -515,6 +515,10 @@ class IROptimizer {
       // S0R->S2W, no change; break.
       // S2W->S3R, replace read with stored value forwarding.
       // S2W->S3W, remove S2W as it is shadowed by S3W.
+      for (int32_t id : a->outputEdgeIDs(deps, a->getCurrentDepth())) {
+        IR::Addr *b = deps.output(Dependence::ID{id});
+        if (!eliminateAddr(a, b)) break;
+      }
       for (Dependence d : a->outputEdges(deps)) {
         IR::Addr *b = d.output();
         eliminateAddr(a, b);
@@ -525,8 +529,9 @@ class IROptimizer {
   // sort outputEdges based on first->last, so that we can try to eliminate in
   // order. We break on first failure to eliminate.
   // a is the input, b the output
-  void eliminateAddr(IR::Addr *a, IR::Addr *b) {
-    if (a->indexMatrix() != b->indexMatrix()) return;
+  auto eliminateAddr(IR::Addr *a, IR::Addr *b) -> bool {
+    // TODO: check a's and b's loops have same extants!
+    if (a->indexMatrix() != b->indexMatrix()) return false;
     /// are there any addr between them?
     if (a->isStore()) {
       if (b->isStore()) { // Write->Write
@@ -534,9 +539,12 @@ class IROptimizer {
         // --unless we're storing the same value twice (???)
         // without other intervening store-edges.
         // Without reads in between, it's safe.
+        return true;
       } else { // Write->Read
         // Can we replace the read with using the written value?
-        if (a->getLoop() != b->getLoop()) return;
+        if (a->getLoop() != b->getLoop()) return false;
+        // TODO: forward
+        return true;
       }
     } else if (b->isLoad()) { // Read->Read
       // If they don't have the same parent, either...
@@ -551,9 +559,10 @@ class IROptimizer {
       //   }
       // }
       // or it is a subloop, but dependencies prevented us from hoisting.
-      if (a->getAffineLoop() != b->getAffineLoop()) return;
+      if (a->getLoop() != b->getLoop()) return false;
+      return true;
       // Any writes in between them?
-    } // else Read->Write, can't delete either
+    } else return false; // Read->Write, can't delete either
   }
   /// The approach to sorting edges is to iterate through nodes backwards
   /// whenever we encounter an `Addr`, we push it to the front of each

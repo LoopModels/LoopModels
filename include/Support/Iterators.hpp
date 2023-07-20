@@ -76,19 +76,24 @@ public:
 };
 static_assert(std::ranges::forward_range<VCycleRange>);
 
+/// VForwardIterator is safe with respect to removing the current iteration from
+/// the list. However, behavior is undefined if you remove or move the next
+/// element.
 class VForwardIterator {
   const int32_t *data{nullptr};
   int32_t state{-1};
+  int32_t next{-1};
 
 public:
   using value_type = int32_t;
   constexpr VForwardIterator() noexcept = default;
   constexpr VForwardIterator(const int32_t *data, int32_t start) noexcept
-    : data(data), state(start) {}
+    : data{data}, state{start}, next{start < 0 ? start : data[start]} {}
 
   constexpr auto operator*() const noexcept -> int32_t { return state; }
   constexpr auto operator++() noexcept -> VForwardIterator & {
-    state = data[state];
+    state = next;
+    if (next >= 0) next = data[next];
     return *this;
   }
   constexpr auto operator++(int) noexcept -> VForwardIterator {
