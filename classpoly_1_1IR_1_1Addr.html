@@ -89,6 +89,14 @@ Inheritance diagram for poly::IR::Addr:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
+<tr class="memitem:aa111da08c5c25e39aa076c3385cadb04"><td class="memItemLeft" align="right" valign="top"><a id="aa111da08c5c25e39aa076c3385cadb04"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>setTopPosition</b> (int32_t pos)</td></tr>
+<tr class="separator:aa111da08c5c25e39aa076c3385cadb04"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac61084d6490f7fb15f6d2504adb5d2f4"><td class="memItemLeft" align="right" valign="top"><a id="ac61084d6490f7fb15f6d2504adb5d2f4"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getTopPosition</b> () const -&gt; int32_t</td></tr>
+<tr class="separator:ac61084d6490f7fb15f6d2504adb5d2f4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab49520c0888ccdf75f17d8f7de22023e"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1IR_1_1Addr.html#ab49520c0888ccdf75f17d8f7de22023e">Addr</a> (const llvm::SCEVUnknown *arrayPtr, llvm::Instruction *user, unsigned numLoops)</td></tr>
+<tr class="separator:ab49520c0888ccdf75f17d8f7de22023e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8f32f8beabcb03b6c34609e50382055a"><td class="memItemLeft" align="right" valign="top"><a id="a8f32f8beabcb03b6c34609e50382055a"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>rotate</b> (NotNull&lt; <a class="el" href="classpoly_1_1poly_1_1Loop.html">poly::Loop</a> &gt; explicitLoop, SquarePtrMatrix&lt; int64_t &gt; Pinv, int64_t denom, PtrVector&lt; int64_t &gt; omega, int64_t *offsets)</td></tr>
 <tr class="separator:a8f32f8beabcb03b6c34609e50382055a"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -161,6 +169,18 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>inputEdges</b> (<a cl
 <tr class="memitem:ab387fc3bd7625a34c7d6cedd137d5a16"><td class="memItemLeft" align="right" valign="top"><a id="ab387fc3bd7625a34c7d6cedd137d5a16"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>outputEdges</b> (<a class="el" href="classpoly_1_1poly_1_1Dependencies.html">Dependencies</a>, unsigned depth) const</td></tr>
 <tr class="separator:ab387fc3bd7625a34c7d6cedd137d5a16"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac6835c13edb138686f8e03898852efb5"><td class="memItemLeft" align="right" valign="top"><a id="ac6835c13edb138686f8e03898852efb5"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>inputEdgeIDs</b> (<a class="el" href="classpoly_1_1poly_1_1Dependencies.html">Dependencies</a>) const</td></tr>
+<tr class="separator:ac6835c13edb138686f8e03898852efb5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9e222a5d08ab02a3199385416f4acd86"><td class="memItemLeft" align="right" valign="top"><a id="a9e222a5d08ab02a3199385416f4acd86"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>outputEdgeIDs</b> (<a class="el" href="classpoly_1_1poly_1_1Dependencies.html">Dependencies</a>) const</td></tr>
+<tr class="separator:a9e222a5d08ab02a3199385416f4acd86"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a181276ef0199c61eed9d333355050d6c"><td class="memItemLeft" align="right" valign="top"><a id="a181276ef0199c61eed9d333355050d6c"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>inputEdgeIDs</b> (<a class="el" href="classpoly_1_1poly_1_1Dependencies.html">Dependencies</a>, unsigned depth) const</td></tr>
+<tr class="separator:a181276ef0199c61eed9d333355050d6c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a28ef529a87f1dc63e8c05450131b1a1f"><td class="memItemLeft" align="right" valign="top"><a id="a28ef529a87f1dc63e8c05450131b1a1f"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>outputEdgeIDs</b> (<a class="el" href="classpoly_1_1poly_1_1Dependencies.html">Dependencies</a>, unsigned depth) const</td></tr>
+<tr class="separator:a28ef529a87f1dc63e8c05450131b1a1f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a26d3b32498e5ea5373a423a9bb463477"><td class="memItemLeft" align="right" valign="top">constexpr void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1IR_1_1Addr.html#a26d3b32498e5ea5373a423a9bb463477">setFusionOmega</a> (MutPtrVector&lt; int &gt; o)</td></tr>
 <tr class="separator:a26d3b32498e5ea5373a423a9bb463477"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae56b4e9ab910596a595056d37de7b6d1"><td class="memItemLeft" align="right" valign="top"><a id="ae56b4e9ab910596a595056d37de7b6d1"></a>
@@ -248,9 +268,9 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getFusionOm
 <tr class="memitem:aaa5f488f9aae0245669eb5942af3cae1"><td class="memItemLeft" align="right" valign="top"><a id="aaa5f488f9aae0245669eb5942af3cae1"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>offsetMatrix</b> () const -&gt; DensePtrMatrix&lt; int64_t &gt;</td></tr>
 <tr class="separator:aaa5f488f9aae0245669eb5942af3cae1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ada27d9491e0eab79b6fd1db29fc1a7e2"><td class="memItemLeft" align="right" valign="top"><a id="ada27d9491e0eab79b6fd1db29fc1a7e2"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getLoop</b> () -&gt; NotNull&lt; <a class="el" href="classpoly_1_1poly_1_1Loop.html">poly::Loop</a> &gt;</td></tr>
-<tr class="separator:ada27d9491e0eab79b6fd1db29fc1a7e2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a820b07f1fd82c605aa17b8672d94978c"><td class="memItemLeft" align="right" valign="top"><a id="a820b07f1fd82c605aa17b8672d94978c"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getAffineLoop</b> () -&gt; NotNull&lt; <a class="el" href="classpoly_1_1poly_1_1Loop.html">poly::Loop</a> &gt;</td></tr>
+<tr class="separator:a820b07f1fd82c605aa17b8672d94978c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1bd85fd91e0e9d16b2417d9f9479fe1e"><td class="memItemLeft" align="right" valign="top"><a id="a1bd85fd91e0e9d16b2417d9f9479fe1e"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>sizesMatch</b> (NotNull&lt; const <a class="el" href="classpoly_1_1IR_1_1Addr.html">Addr</a> &gt; x) const -&gt; bool</td></tr>
 <tr class="separator:a1bd85fd91e0e9d16b2417d9f9479fe1e"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -442,9 +462,9 @@ static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>intM
 <tr class="memitem:aac806be2cd9b8d0aef5bece37f32e091"><td class="memItemLeft" align="right" valign="top"><a id="aac806be2cd9b8d0aef5bece37f32e091"></a>
 static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>intMemNeededFuseFree</b> (size_t numLoops, size_t dim) -&gt; size_t</td></tr>
 <tr class="separator:aac806be2cd9b8d0aef5bece37f32e091"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6f0aacac4190843b23f652b4f9ad06fd"><td class="memItemLeft" align="right" valign="top"><a id="a6f0aacac4190843b23f652b4f9ad06fd"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>construct</b> (Arena&lt;&gt; *alloc, const llvm::SCEVUnknown *ptr, llvm::Instruction *user, unsigned numLoops) -&gt; NotNull&lt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">Addr</a> &gt;</td></tr>
-<tr class="separator:a6f0aacac4190843b23f652b4f9ad06fd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5299f10dcddb298078957721053969f3"><td class="memItemLeft" align="right" valign="top"><a id="a5299f10dcddb298078957721053969f3"></a>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>zeroDim</b> (Arena&lt;&gt; *alloc, llvm::SCEVUnknown const *arrayPtr, llvm::Instruction *loadOrStore, unsigned numLoops)</td></tr>
+<tr class="separator:a5299f10dcddb298078957721053969f3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2dc2526ae4d8b61af7f8fff28ef2bb6f"><td class="memItemLeft" align="right" valign="top"><a id="a2dc2526ae4d8b61af7f8fff28ef2bb6f"></a>
 static auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1IR_1_1Addr.html#a2dc2526ae4d8b61af7f8fff28ef2bb6f">construct</a> (Arena&lt;&gt; *alloc, const llvm::SCEVUnknown *arrayPtr, llvm::Instruction *user, PtrMatrix&lt; int64_t &gt; indMat, std::array&lt; llvm::SmallVector&lt; const llvm::SCEV *, 3 &gt;, 2 &gt; szOff, PtrVector&lt; int64_t &gt; coffsets, int64_t *offsets, unsigned numLoops, unsigned maxNumLoops) -&gt; NotNull&lt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">Addr</a> &gt;</td></tr>
 <tr class="memdesc:a2dc2526ae4d8b61af7f8fff28ef2bb6f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor for regular indexing. <br /></td></tr>
@@ -475,14 +495,15 @@ Additional Inherited Members</h2></td></tr>
 &#160;&#160;<b>VK_Load</b>
 , <b>VK_Stow</b>
 , <b>VK_Loop</b>
-, <b>VK_CVal</b>
+, <b>VK_Exit</b>
 , <br />
-&#160;&#160;<b>VK_Cint</b>
+&#160;&#160;<b>VK_CVal</b>
+, <b>VK_Cint</b>
 , <b>VK_Bint</b>
 , <b>VK_Cflt</b>
-, <b>VK_Bflt</b>
 , <br />
-&#160;&#160;<b>VK_Func</b>
+&#160;&#160;<b>VK_Bflt</b>
+, <b>VK_Func</b>
 , <b>VK_Call</b>
 , <b>VK_Oprn</b>
 <br />
@@ -559,7 +580,51 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><b>dependsOnParentLoop_<
 <img class="formulaDsp" alt="\begin{eqnarray*} \textbf{j} &amp;=&amp; \boldsymbol{\Phi}\textbf{i} + \boldsymbol{\omega}\\ % \textbf{i} &amp;=&amp; \boldsymbol{\Phi}^{-1}\left(j - \boldsymbol{\omega}\right)\\ % \textbf{x} &amp;=&amp; \textbf{M}'\textbf{i} + \textbf{c} + \textbf{Cs} \\ % \textbf{x} &amp;=&amp; \textbf{M}'\boldsymbol{\Phi}^{-1}\left(j - \boldsymbol{\omega}\right) + \textbf{c} + \textbf{Cs} \\ % \textbf{M}'_* &amp;=&amp; \textbf{M}'\boldsymbol{\Phi}^{-1}\\ % \textbf{x} &amp;=&amp; \textbf{M}'_*\left(j - \boldsymbol{\omega}\right) + \textbf{c} + \textbf{Cs} \\ % \textbf{x} &amp;=&amp; \textbf{M}'_*j - \textbf{M}'_*\boldsymbol{\omega} + \textbf{c} + \textbf{Cs} \\ % \textbf{c}_* &amp;=&amp; \textbf{c} - \textbf{M}'_*\boldsymbol{\omega} \\ % \textbf{x} &amp;=&amp; \textbf{M}'_*j + \textbf{c}_* + \textbf{Cs} \\ % \end{eqnarray*}" src="form_2.png"/>
 </p>
 <p> Therefore, to update the memory accesses from the old induction variables $i$ to the new variables $j$, we must simply compute the updated <img class="formulaInl" alt="$\textbf{c}_*$" src="form_3.png"/> and <img class="formulaInl" alt="$\textbf{M}'_*$" src="form_4.png"/>. We can also test for the case where <img class="formulaInl" alt="$\boldsymbol{\Phi} = \textbf{E}$" src="form_5.png"/>, or equivalently that $\textbf{E}\boldsymbol{\Phi} = \boldsymbol{\Phi} = \textbf{I}$. Note that to get the new <a class="el" href="classpoly_1_1poly_1_1Loop.html">poly::Loop</a>, we call <code>oldLoop-&gt;rotate(PhiInv)</code> </p>
-</div><h2 class="groupheader">Member Function Documentation</h2>
+</div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
+<a id="ab49520c0888ccdf75f17d8f7de22023e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab49520c0888ccdf75f17d8f7de22023e">&#9670;&nbsp;</a></span>Addr()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">poly::IR::Addr::Addr </td>
+          <td>(</td>
+          <td class="paramtype">const llvm::SCEVUnknown *&#160;</td>
+          <td class="paramname"><em>arrayPtr</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">llvm::Instruction *&#160;</td>
+          <td class="paramname"><em>user</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">unsigned&#160;</td>
+          <td class="paramname"><em>numLoops</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">explicit</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Constructor for 0 dimensional memory access public for use with <code>std::construct_at</code> Perhaps it should use a passkey? </p>
+
+</div>
+</div>
+<h2 class="groupheader">Member Function Documentation</h2>
 <a id="a26d3b32498e5ea5373a423a9bb463477"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a26d3b32498e5ea5373a423a9bb463477">&#9670;&nbsp;</a></span>setFusionOmega()</h2>
 

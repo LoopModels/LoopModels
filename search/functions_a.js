@@ -1,5 +1,7 @@
 var searchData=
 [
-  ['union_301',['Union',['../structpoly_1_1IR_1_1Predicate_1_1Set.html#a9dbe51049dcc1443411c76c62075c249',1,'poly::IR::Predicate::Set::Union(Arena&lt;&gt; *alloc, Intersection other) -&gt; Set &amp;'],['../structpoly_1_1IR_1_1Predicate_1_1Set.html#a784ee9fcde87f530ce83c333c59c8869',1,'poly::IR::Predicate::Set::Union(Arena&lt;&gt; *alloc, const Set &amp;other) -&gt; Set &amp;']]],
-  ['updateoffsmat_302',['updateOffsMat',['../classpoly_1_1IR_1_1Addr.html#a218eb171572ded2bb68130151bc8f0bd',1,'poly::IR::Addr']]]
+  ['selectcost_302',['selectCost',['../classpoly_1_1IR_1_1Operation.html#a3c026a3b9192dea51a7dc6b57e6833b9',1,'poly::IR::Operation']]],
+  ['setfusionomega_303',['setFusionOmega',['../classpoly_1_1IR_1_1Addr.html#a26d3b32498e5ea5373a423a9bb463477',1,'poly::IR::Addr']]],
+  ['setsatlevellp_304',['setSatLevelLP',['../classpoly_1_1poly_1_1Dependence.html#ad61450183ac23f948dd96d0b8090bc00',1,'poly::poly::Dependence']]],
+  ['stashedpreventsreordering_305',['stashedPreventsReordering',['../classpoly_1_1poly_1_1Dependence.html#a7e7c6210c36668e3d1b290e4eed76955',1,'poly::poly::Dependence']]]
 ];
