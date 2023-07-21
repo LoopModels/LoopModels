@@ -106,9 +106,15 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator=</
 <tr class="memitem:a88e886f68e49de9c7e4592ff95454d71"><td class="memItemLeft" align="right" valign="top"><a id="a88e886f68e49de9c7e4592ff95454d71"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>size</b> () const noexcept -&gt; int32_t</td></tr>
 <tr class="separator:a88e886f68e49de9c7e4592ff95454d71"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aad261426ea6c9a40cc734eccd7d197a7"><td class="memItemLeft" align="right" valign="top"><a id="aad261426ea6c9a40cc734eccd7d197a7"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>removeEdge</b> (<a class="el" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">ID</a> id)</td></tr>
+<tr class="separator:aad261426ea6c9a40cc734eccd7d197a7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3d8f709b24c65bff0f1698d73bb886da"><td class="memItemLeft" align="right" valign="top"><a id="a3d8f709b24c65bff0f1698d73bb886da"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>removeOutEdge</b> (int32_t id)</td></tr>
 <tr class="separator:a3d8f709b24c65bff0f1698d73bb886da"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3b8ca1770abf3082fecc8c7d7a26ea83"><td class="memItemLeft" align="right" valign="top"><a id="a3b8ca1770abf3082fecc8c7d7a26ea83"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>removeInEdge</b> (int32_t id)</td></tr>
+<tr class="separator:a3b8ca1770abf3082fecc8c7d7a26ea83"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6e5101f6b6eaf454395a012ba8d13597"><td class="memItemLeft" align="right" valign="top"><a id="a6e5101f6b6eaf454395a012ba8d13597"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>get</b> (<a class="el" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">ID</a> i) const -&gt; <a class="el" href="classpoly_1_1poly_1_1Dependence.html">Dependence</a></td></tr>
 <tr class="separator:a6e5101f6b6eaf454395a012ba8d13597"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -154,6 +160,9 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>prevOut</b>
 <tr class="memitem:a46f4728f4ab198fe73b8aff5fd15c68a"><td class="memItemLeft" align="right" valign="top"><a id="a46f4728f4ab198fe73b8aff5fd15c68a"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>nextIn</b> (<a class="el" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">ID</a> i) -&gt; int32_t &amp;</td></tr>
 <tr class="separator:a46f4728f4ab198fe73b8aff5fd15c68a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aac8ee70dbfc69468e55584526afc35e7"><td class="memItemLeft" align="right" valign="top"><a id="aac8ee70dbfc69468e55584526afc35e7"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>prevIn</b> (<a class="el" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">ID</a> i) -&gt; int32_t &amp;</td></tr>
+<tr class="separator:aac8ee70dbfc69468e55584526afc35e7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a350f7af39a40976af6e1f05f020819e9"><td class="memItemLeft" align="right" valign="top"><a id="a350f7af39a40976af6e1f05f020819e9"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>depSatBnd</b> (<a class="el" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">ID</a> i) -&gt; std::array&lt; NotNull&lt; math::Simplex &gt;, 2 &gt; &amp;</td></tr>
 <tr class="separator:a350f7af39a40976af6e1f05f020819e9"><td class="memSeparator" colspan="2">&#160;</td></tr>
