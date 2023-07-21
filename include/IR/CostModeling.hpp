@@ -417,8 +417,8 @@ class IROptimizer {
   IR::Dependencies deps;
   IR::Loop *root;
   MutPtrVector<int32_t> loopDeps;
+  IR::Cache &instructions;
   Arena<> *lalloc;
-  Arena<> *salloc;
 
   static auto loopDepSats(Arena<> *alloc, IR::Dependencies deps,
                           lp::LoopBlock::OptimizationResult res)
@@ -435,26 +435,27 @@ class IROptimizer {
     }
     return loopDeps;
   }
-  inline auto eliminateAddr(IR::Addr *a) -> bool {
+  inline void eliminateAddr(IR::Addr *a) {
     for (int32_t id : a->outputEdgeIDs(deps, a->getCurrentDepth())) {
       IR::Addr *b = deps.output(Dependence::ID{id});
       // TODO: also check loop extants
-      if (a->indexMatrix() != b->indexMatrix()) return false;
+      if (a->indexMatrix() != b->indexMatrix()) return;
       if (a->isStore()) {
         // On a Write->Write, we remove the first write.
-        if (b->isStore()) return true;
+        if (b->isStore()) return a->drop(deps);
         // Write->Load, we will remove the load if it's in the same block as the
         // write, and we can forward the stored value.
-        if (a->getLoop() != b->getLoop()) return false;
-        // TODO: delete `b`, replacing with val stored in `a`
+        if (a->getLoop() != b->getLoop()) return;
+        instructions.replaceAllUsesWith(b, a->getStoredVal());
+        b->drop(deps);
       } else if (b->isLoad()) { // Read->Read
         // If they're not in the same loop, we need to reload anyway
-        if (a->getLoop() != b->getLoop()) return false;
+        if (a->getLoop() != b->getLoop()) return;
         // If they're in the same loop, we can delete the second read
-        // TODO: delete `b`, replacing with `a`
-      } else return false; // Read->Write, can't delete either
+        instructions.replaceAllUsesWith(b, a);
+        b->drop(deps);
+      } else return; // Read->Write, can't delete either
     }
-    return false;
   }
 
   // plan: SCC? Iterate over nodes in program order?
@@ -518,67 +519,26 @@ class IROptimizer {
   // E.g. check if the array is a `llvm::isNonEscapingLocalObject` and
   // allocated by `llvm::isRemovableAlloc`.
   void removeRedundantAddr(IR::AddrChain addr) {
-    for (IR::Addr *a : addr.getAddr()) {
-      // outputEdges are sorted topologically from first to last.
-      // Example:
-      // for (int i = 0 : i < I; ++i){
-      //   acc = x[i];           // Statement: 0
-      //   for (int j = 0; j < i; ++j){
-      //     acc -= x[j]*U[j,i]; // Statement: 1
-      //   }
-      //   x[i] = acc;           // Statement: 2
-      //   x[i] = x[i] / U[i,i]; // Statement: 3
-      // }
-      // Here, we have a lot of redundant edges connecting the various `x[i]`s.
-      // We also have output edges between the `x[i]` and the `x[j]` load in
-      // statement 1. It is, however, satisfied at `x[i]`'s depth, and ignored.
-      // So, what would happen here:
-      // S0R->S2W, no change; break.
-      // S2W->S3R, replace read with stored value forwarding.
-      // S2W->S3W, remove S2W as it is shadowed by S3W.
-      if (eliminateAddr(a)) {
-        // TODO: we remove `a` without replacement
-      }
-    }
-  }
-  // The plan here is to index all arrays by relative position, and then
-  // sort outputEdges based on first->last, so that we can try to eliminate in
-  // order. We break on first failure to eliminate.
-  // a is the input, b the output
-  auto eliminateAddr(IR::Addr *a, IR::Addr *b) -> bool {
-    // TODO: check a's and b's loops have same extants!
-    if (a->indexMatrix() != b->indexMatrix()) return false;
-    /// are there any addr between them?
-    if (a->isStore()) {
-      if (b->isStore()) { // Write->Write
-        // Are there reads in between? If so, we must keep--
-        // --unless we're storing the same value twice (???)
-        // without other intervening store-edges.
-        // Without reads in between, it's safe.
-        return true;
-      } else { // Write->Read
-        // Can we replace the read with using the written value?
-        if (a->getLoop() != b->getLoop()) return false;
-        // TODO: forward
-        return true;
-      }
-    } else if (b->isLoad()) { // Read->Read
-      // If they don't have the same parent, either...
-      // They're in different branches of loops, and load can't live
-      // in between them
-      // for (i : I){
-      //   for (j : J){
-      //     A[i,j];
-      //   }
-      //   for (j : J){
-      //     A[i,j];
-      //   }
-      // }
-      // or it is a subloop, but dependencies prevented us from hoisting.
-      if (a->getLoop() != b->getLoop()) return false;
-      return true;
-      // Any writes in between them?
-    } else return false; // Read->Write, can't delete either
+    // outputEdges are sorted topologically from first to last.
+    // Example:
+    // for (int i = 0 : i < I; ++i){
+    //   acc = x[i];           // Statement: 0
+    //   for (int j = 0; j < i; ++j){
+    //     acc -= x[j]*U[j,i]; // Statement: 1
+    //   }
+    //   x[i] = acc;           // Statement: 2
+    //   x[i] = x[i] / U[i,i]; // Statement: 3
+    // }
+    // Here, we have a lot of redundant edges connecting the various `x[i]`s.
+    // We also have output edges between the `x[i]` and the `x[j]` load in
+    // statement 1. It is, however, satisfied at `x[i]`'s depth, and ignored.
+    // So, what would happen here:
+    // S0R->S2W, no change; break.
+    // S2W->S3R, replace read with stored value forwarding.
+    // S2W->S3W, remove S2W as it is shadowed by S3W.
+    // NOTE: we rely on the `ListRange` iterator supporting safely removing the
+    // current iter from the list.
+    for (IR::Addr *a : addr.getAddr()) eliminateAddr(a);
   }
   /// The approach to sorting edges is to iterate through nodes backwards
   /// whenever we encounter an `Addr`, we push it to the front of each
@@ -613,9 +573,9 @@ class IROptimizer {
 
 public:
   IROptimizer(IR::Dependencies deps, IR::Loop *root_, Arena<> *lalloc,
-              Arena<> *salloc, lp::LoopBlock::OptimizationResult res)
+              IR::Cache &instr, lp::LoopBlock::OptimizationResult res)
     : deps{deps}, root{root_}, loopDeps{loopDepSats(lalloc, deps, res)},
-      lalloc{lalloc}, salloc{salloc} {
+      instructions{instr}, lalloc{lalloc} {
     sortEdges(root, 0);
     removeRedundantAddr(res.addr);
   }
@@ -722,13 +682,13 @@ inline void optimize(IR::Dependencies deps, IR::Cache &instr, Arena<> *lalloc,
   // alloc, so we can checkpoint it here, and use alloc for other IR nodes.
   // The `instr` allocator is more generally the longer lived allocator,
   // as it allocates the actual nodes.
-  Arena<> *salloc = instr.getAllocator();
-  IR::Loop *root = addAddrToGraph(salloc, lalloc, res.nodes);
+
+  IR::Loop *root = addAddrToGraph(instr.getAllocator(), lalloc, res.nodes);
   buildGraph(deps, root);
   // `N` is the head of the topologically sorted graph
   // We now try to remove redundant memory operations
 
-  IROptimizer(deps, root, lalloc, salloc, res);
+  IROptimizer(deps, root, lalloc, instr, res);
 }
 
 /*

@@ -574,11 +574,13 @@ private:
     auto out = d.output();
     auto in = d.input();
     output(i) = out;
+    input(i) = in;
     nextOut(i) = out->getEdgeOut();
     if (out->getEdgeOut() >= 0) prevOut(ID{out->getEdgeOut()}) = i.id;
     prevOut(i) = -1;
-    input(i) = in;
     nextIn(i) = in->getEdgeIn();
+    if (in->getEdgeIn() >= 0) prevIn(ID{in->getEdgeIn()}) = i.id;
+    prevIn(i) = -1;
     depSatBnd(i) = d.getSimplexPair();
     depPoly(i) = d.getDepPoly();
     satLevelPair(i) = d.satLvl;
@@ -852,6 +854,7 @@ private:
   // nextOut
   // prevOut
   // nextIn
+  // prevIn
   // dependenceSatisfaction
   // dependenceBounding
   // depPoly
@@ -866,11 +869,14 @@ private:
   [[nodiscard]] static constexpr auto prevEdgeOutOffset() -> size_t {
     return nextEdgeOutOffset() + sizeof(int32_t);
   }
-  [[nodiscard]] static constexpr auto inEdgeOffset() -> size_t {
+  [[nodiscard]] static constexpr auto nextEdgeInOffset() -> size_t {
     return prevEdgeOutOffset() + sizeof(int32_t);
   }
+  [[nodiscard]] static constexpr auto prevEdgeInOffset() -> size_t {
+    return nextEdgeInOffset() + sizeof(int32_t);
+  }
   [[nodiscard]] static constexpr auto depSatBndOffset() -> size_t {
-    return inEdgeOffset() + sizeof(int32_t);
+    return prevEdgeInOffset() + sizeof(int32_t);
   }
   [[nodiscard]] static constexpr auto depPolyOffset() -> size_t {
     return depSatBndOffset() + sizeof(std::array<NotNull<math::Simplex>, 2>);
@@ -915,11 +921,19 @@ private:
     return static_cast<const int32_t *>(p);
   }
   constexpr auto inEdgePtr() -> int32_t * {
-    void *p = data + inEdgeOffset() * getCapacity();
+    void *p = data + nextEdgeInOffset() * getCapacity();
     return static_cast<int32_t *>(p);
   }
   [[nodiscard]] constexpr auto inEdgePtr() const -> const int32_t * {
-    const void *p = data + inEdgeOffset() * getCapacity();
+    const void *p = data + nextEdgeInOffset() * getCapacity();
+    return static_cast<const int32_t *>(p);
+  }
+  constexpr auto prevInEdgePtr() -> int32_t * {
+    void *p = data + prevEdgeInOffset() * getCapacity();
+    return static_cast<int32_t *>(p);
+  }
+  [[nodiscard]] constexpr auto prevEdgePtr() const -> const int32_t * {
+    const void *p = data + prevEdgeInOffset() * getCapacity();
     return static_cast<const int32_t *>(p);
   }
   constexpr auto depSatBndPtr() -> std::array<NotNull<math::Simplex>, 2> * {
@@ -958,11 +972,21 @@ private:
   }
 
 public:
+  constexpr void removeEdge(ID id) {
+    removeOutEdge(id.id);
+    removeInEdge(id.id);
+  }
   constexpr void removeOutEdge(int32_t id) {
     int32_t prev = prevOut(poly::Dependence::ID{id});
     int32_t next = nextOut(poly::Dependence::ID{id});
     if (prev >= 0) nextOut(poly::Dependence::ID{prev}) = next;
     if (next >= 0) prevOut(poly::Dependence::ID{next}) = prev;
+  }
+  constexpr void removeInEdge(int32_t id) {
+    int32_t prev = prevIn(poly::Dependence::ID{id});
+    int32_t next = nextIn(poly::Dependence::ID{id});
+    if (prev >= 0) nextIn(poly::Dependence::ID{prev}) = next;
+    if (next >= 0) prevIn(poly::Dependence::ID{next}) = prev;
   }
   [[nodiscard]] constexpr auto get(ID i) const -> Dependence {
     return get(i, input(i), output(i));
@@ -1004,6 +1028,7 @@ public:
   constexpr auto nextOut(ID i) -> int32_t & { return outEdgePtr()[i.id]; }
   constexpr auto prevOut(ID i) -> int32_t & { return prevOutEdgePtr()[i.id]; }
   constexpr auto nextIn(ID i) -> int32_t & { return inEdgePtr()[i.id]; }
+  constexpr auto prevIn(ID i) -> int32_t & { return prevInEdgePtr()[i.id]; }
   constexpr auto depSatBnd(ID i) -> std::array<NotNull<math::Simplex>, 2> & {
     return depSatBndPtr()[i.id];
   }
@@ -1155,6 +1180,14 @@ inline auto IR::Addr::inputAddrs(Dependencies deps, unsigned depth) const {
 }
 inline auto IR::Addr::outputAddrs(Dependencies deps, unsigned depth) const {
   return outputEdgeIDs(deps, depth) | deps.outputAddrTransform();
+}
+
+inline void IR::Addr::drop(Dependencies deps) {
+  // NOTE: this doesn't get removed from the `origAddr` list/the addrChain
+  if (IR::Loop *L = getLoop(); L->getChild() == this) L->setChild(getNext());
+  removeFromList();
+  for (int32_t id : inputEdgeIDs(deps)) deps.removeEdge(Dependence::ID{id});
+  for (int32_t id : outputEdgeIDs(deps)) deps.removeEdge(Dependence::ID{id});
 }
 
 } // namespace IR

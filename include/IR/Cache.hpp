@@ -205,6 +205,12 @@ class Cache {
       return {createConstant(c, n), tr};
     return {createConstantVal(v, n), tr};
   }
+  /// void replaceUsesByUsers(Value *oldNode, Value *newNode)
+  /// The name is confusing. This iterates through oldNode's users
+  /// (i.e. things using oldNode), and swaps the `oldNode` for `newNode`.
+  /// It checks if those users are `newNode` itself, if so, it does not modify.
+  /// This allows replacing `x` with `f(x)`, for example. That feature is used
+  /// for control flow merging.
   // NOLINTNEXTLINE(misc-no-recursion)
   constexpr void replaceUsesByUsers(Value *oldNode, Value *newNode) {
     invariant(oldNode->getKind() == Node::VK_Load ||

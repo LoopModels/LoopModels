@@ -529,6 +529,8 @@ public:
     // TODO: cache?
     return calculateCostContiguousLoadStore(TTI, W.getWidth());
   }
+  /// drop `this` and remove it from `Dependencies`
+  inline void drop(Dependencies);
 
   void printDotName(llvm::raw_ostream &os) const {
     if (isLoad()) os << "... = ";
