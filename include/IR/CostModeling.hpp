@@ -18,6 +18,8 @@
 #include <llvm/ADT/ArrayRef.h>
 #include <llvm/ADT/SmallPtrSet.h>
 #include <llvm/ADT/SmallVector.h>
+#include <llvm/Analysis/CaptureTracking.h>
+#include <llvm/Analysis/MemoryBuiltins.h>
 #include <llvm/Analysis/TargetTransformInfo.h>
 #include <llvm/IR/BasicBlock.h>
 #include <llvm/IR/Constant.h>
@@ -419,7 +421,12 @@ class IROptimizer {
   MutPtrVector<int32_t> loopDeps;
   IR::Cache &instructions;
   Arena<> *lalloc;
+  llvm::TargetLibraryInfo *TLI;
 
+  /// `loopDepSats` places the dependencies at the correct loop level so that
+  /// we can more easily check all dependencies carried by a particular loop.
+  /// We use these for checks w/ respect to unrolling and vectorization
+  /// legality.
   static auto loopDepSats(Arena<> *alloc, IR::Dependencies deps,
                           lp::LoopBlock::OptimizationResult res)
     -> MutPtrVector<int32_t> {
@@ -435,6 +442,7 @@ class IROptimizer {
     }
     return loopDeps;
   }
+  // this compares `a` with each of its active outputs.
   inline void eliminateAddr(IR::Addr *a) {
     for (int32_t id : a->outputEdgeIDs(deps, a->getCurrentDepth())) {
       IR::Addr *b = deps.output(Dependence::ID{id});
@@ -455,6 +463,28 @@ class IROptimizer {
         instructions.replaceAllUsesWith(b, a);
         b->drop(deps);
       } else return; // Read->Write, can't delete either
+    }
+  }
+  // we eliminate temporaries that meet these conditions:
+  // 1. are only ever stored to (this can be achieved via
+  // load-elimination/stored-val forwarding in `removeRedundantAddr`)
+  // 2. are non-escaping, i.e. `llvm::isNonEscapingLocalObject`
+  // 3. returned by `llvm::isRemovableAlloc`
+  inline void eliminateTemporaries(IR::AddrChain addr) {
+    auto s = lalloc->scope();
+    dict::aset<IR::Addr *> loaded{lalloc};
+    for (IR::Addr *a : addr.getAddr())
+      if (a->isLoad()) loaded.insert(a);
+
+    for (IR::Addr *a : addr.getAddr()) {
+      if (a->isDropped()) continue;
+      if (loaded.contains(a)) continue;
+      const llvm::SCEVUnknown *ptr = a->getArrayPointer();
+      auto *call = llvm::dyn_cast<llvm::CallBase>(ptr->getValue());
+      if (!call) continue;
+      if (llvm::isNonEscapingLocalObject(call, nullptr) &&
+          llvm::isRemovableAlloc(call, TLI))
+        a->drop(deps);
     }
   }
 
@@ -574,10 +604,11 @@ class IROptimizer {
 public:
   IROptimizer(IR::Dependencies deps, IR::Loop *root_, Arena<> *lalloc,
               IR::Cache &instr, lp::LoopBlock::OptimizationResult res)
-    : deps{deps}, root{root_}, loopDeps{loopDepSats(lalloc, deps, res)},
-      instructions{instr}, lalloc{lalloc} {
+    : deps{deps}, root{root_}, instructions{instr}, lalloc{lalloc} {
     sortEdges(root, 0);
     removeRedundantAddr(res.addr);
+    eliminateTemporaries(res.addr);
+    loopDeps = loopDepSats(lalloc, deps, res);
   }
 };
 

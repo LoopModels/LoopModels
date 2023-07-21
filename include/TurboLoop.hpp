@@ -68,7 +68,7 @@ concept LoadOrStoreInst =
 
 class TurboLoop {
   dict::map<llvm::Loop *, IR::Loop *> loopMap;
-  // const llvm::TargetLibraryInfo *TLI;
+  const llvm::TargetLibraryInfo *TLI;
   const llvm::TargetTransformInfo *TTI;
   llvm::LoopInfo *LI;
   llvm::ScalarEvolution *SE;
@@ -367,7 +367,8 @@ class TurboLoop {
   // }
 public:
   TurboLoop(llvm::Function &F, llvm::FunctionAnalysisManager &FAM)
-    : TTI{&FAM.getResult<llvm::TargetIRAnalysis>(F)},
+    : TLI{&FAM.getResult<llvm::TargetLibraryAnalysis>(F)},
+      TTI{&FAM.getResult<llvm::TargetIRAnalysis>(F)},
       LI{&FAM.getResult<llvm::LoopAnalysis>(F)},
       SE{&FAM.getResult<llvm::ScalarEvolutionAnalysis>(F)},
       ORE{&FAM.getResult<llvm::OptimizationRemarkEmitterAnalysis>(F)},

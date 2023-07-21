@@ -1188,6 +1188,7 @@ inline void IR::Addr::drop(Dependencies deps) {
   removeFromList();
   for (int32_t id : inputEdgeIDs(deps)) deps.removeEdge(Dependence::ID{id});
   for (int32_t id : outputEdgeIDs(deps)) deps.removeEdge(Dependence::ID{id});
+  arrayP
 }
 
 } // namespace IR

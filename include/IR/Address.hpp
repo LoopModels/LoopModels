@@ -130,6 +130,9 @@ class Addr : public Instruction {
   }
 
 public:
+  [[nodiscard]] constexpr auto isDropped() const -> bool {
+    return (getNext() == nullptr) && (getPrev() == nullptr);
+  }
   constexpr void setTopPosition(int32_t pos) { topologicalPosition = pos; }
   [[nodiscard]] constexpr auto getTopPosition() const -> int32_t {
     return topologicalPosition;
