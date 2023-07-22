@@ -22,6 +22,7 @@
 #include <llvm/Analysis/MemoryBuiltins.h>
 #include <llvm/Analysis/TargetTransformInfo.h>
 #include <llvm/IR/BasicBlock.h>
+#include <llvm/IR/CFG.h>
 #include <llvm/IR/Constant.h>
 #include <llvm/IR/DerivedTypes.h>
 #include <llvm/IR/Function.h>
@@ -415,6 +416,19 @@ inline auto addAddrToGraph(Arena<> *salloc, Arena<> *lalloc,
   return root->getLoop();
 }
 
+inline auto hasFutureReads(Arena<> *alloc, dict::set<llvm::BasicBlock *> &LBBs,
+                           llvm::Instruction *I) -> bool {
+  auto s = alloc->scope();
+  dict::aset<llvm::BasicBlock *> successors{alloc};
+  for (llvm::BasicBlock *S : llvm::successors(I->getParent()))
+    if (!LBBs.count(S)) successors.insert(S);
+  for (auto *U : I->users())
+    if (auto *UI = llvm::dyn_cast<llvm::Instruction>(U);
+        UI->mayReadFromMemory() && successors.count(UI->getParent()))
+      return true;
+  return false;
+}
+
 class IROptimizer {
   IR::Dependencies deps;
   IR::Loop *root;
@@ -482,9 +496,13 @@ class IROptimizer {
       const llvm::SCEVUnknown *ptr = a->getArrayPointer();
       auto *call = llvm::dyn_cast<llvm::CallBase>(ptr->getValue());
       if (!call) continue;
-      if (llvm::isNonEscapingLocalObject(call, nullptr) &&
-          llvm::isRemovableAlloc(call, TLI))
-        a->drop(deps);
+      if (!llvm::isNonEscapingLocalObject(call, nullptr)) continue;
+      if (!llvm::isRemovableAlloc(call, TLI)) continue;
+      if (hasFutureReads(lalloc, LBBs, call)) continue;
+      // TODO: find associated free, and confirm a lack of other uses
+      // check if we can eliminate the malloc/new and free/delete
+      // FIXME: check for reads after this...
+      a->drop(deps);
     }
   }
 
