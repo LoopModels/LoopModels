@@ -1,6 +1,7 @@
 #pragma once
 
 // #include "./ControlFlowMerging.hpp"
+#include "Dicts/BumpMapSet.hpp"
 #include "Graphs/Graphs.hpp"
 #include "IR/Address.hpp"
 #include "LinearProgramming/LoopBlock.hpp"
@@ -27,6 +28,7 @@
 #include <llvm/IR/DerivedTypes.h>
 #include <llvm/IR/Function.h>
 #include <llvm/IR/Instruction.h>
+#include <llvm/IR/Instructions.h>
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/Type.h>
 #include <llvm/Support/Allocator.h>
@@ -415,25 +417,39 @@ inline auto addAddrToGraph(Arena<> *salloc, Arena<> *lalloc,
     root->addNode(salloc, lalloc, node);
   return root->getLoop();
 }
-
+// NOLINTNEXTLINE(misc-no-recursion)
+inline auto hasFutureReadsCore(dict::aset<llvm::BasicBlock *> &successors,
+                               llvm::Instruction *I) -> bool {
+  for (auto *U : I->users()) {
+    auto *UI = llvm::dyn_cast<llvm::Instruction>(U);
+    if (!UI) continue;
+    if (UI->mayReadFromMemory() && successors.count(UI->getParent()))
+      return true;
+    if (llvm::isa<llvm::GetElementPtrInst>(UI) &&
+        hasFutureReadsCore(successors, UI))
+      return true;
+    // TODO: don't just give up if we cast to int?
+    if (llvm::isa<llvm::PtrToIntInst>(UI) || llvm::isa<llvm::BitCastInst>(UI))
+      return true;
+  }
+  return false;
+}
 inline auto hasFutureReads(Arena<> *alloc, dict::set<llvm::BasicBlock *> &LBBs,
                            llvm::Instruction *I) -> bool {
   auto s = alloc->scope();
   dict::aset<llvm::BasicBlock *> successors{alloc};
   for (llvm::BasicBlock *S : llvm::successors(I->getParent()))
     if (!LBBs.count(S)) successors.insert(S);
-  for (auto *U : I->users())
-    if (auto *UI = llvm::dyn_cast<llvm::Instruction>(U);
-        UI->mayReadFromMemory() && successors.count(UI->getParent()))
-      return true;
-  return false;
+  return hasFutureReadsCore(successors, I);
 }
 
 class IROptimizer {
   IR::Dependencies deps;
+  IR::Cache &instructions;
+  dict::set<llvm::BasicBlock *> &LBBs;
+  dict::set<llvm::CallBase *> &eraseCandidates;
   IR::Loop *root;
   MutPtrVector<int32_t> loopDeps;
-  IR::Cache &instructions;
   Arena<> *lalloc;
   llvm::TargetLibraryInfo *TLI;
 
@@ -499,10 +515,13 @@ class IROptimizer {
       if (!llvm::isNonEscapingLocalObject(call, nullptr)) continue;
       if (!llvm::isRemovableAlloc(call, TLI)) continue;
       if (hasFutureReads(lalloc, LBBs, call)) continue;
-      // TODO: find associated free, and confirm a lack of other uses
-      // check if we can eliminate the malloc/new and free/delete
-      // FIXME: check for reads after this...
       a->drop(deps);
+      // we later check if any uses remain other than the associated free
+      // if not, we can delete them.
+      // We may want to go ahead and do this here. We don't for now,
+      // because we have live `llvm::Instruction`s that we haven't removed yet.
+      // TODO: revisit when handling code generation (and deleting old code)
+      eraseCandidates.insert(call);
     }
   }
 
@@ -620,9 +639,12 @@ class IROptimizer {
   }
 
 public:
-  IROptimizer(IR::Dependencies deps, IR::Loop *root_, Arena<> *lalloc,
-              IR::Cache &instr, lp::LoopBlock::OptimizationResult res)
-    : deps{deps}, root{root_}, instructions{instr}, lalloc{lalloc} {
+  IROptimizer(IR::Dependencies deps, IR::Cache &instr,
+              dict::set<llvm::BasicBlock *> &loopBBs,
+              dict::set<llvm::CallBase *> &eraseCandidates_, IR::Loop *root_,
+              Arena<> *lalloc, lp::LoopBlock::OptimizationResult res)
+    : deps{deps}, instructions{instr}, LBBs{loopBBs},
+      eraseCandidates{eraseCandidates_}, root{root_}, lalloc{lalloc} {
     sortEdges(root, 0);
     removeRedundantAddr(res.addr);
     eliminateTemporaries(res.addr);
@@ -723,8 +745,10 @@ public:
 //
 ///
 /// Optimize the schedule
-inline void optimize(IR::Dependencies deps, IR::Cache &instr, Arena<> *lalloc,
-                     lp::LoopBlock::OptimizationResult res) {
+inline void optimize(IR::Dependencies deps, IR::Cache &instr,
+                     dict::set<llvm::BasicBlock *> &loopBBs,
+                     dict::set<llvm::CallBase *> &eraseCandidates,
+                     Arena<> *lalloc, lp::LoopBlock::OptimizationResult res) {
   // we must build the IR::Loop
   // Initially, to help, we use a nested vector, so that we can index into it
   // using the fusion omegas. We allocate it with the longer lived `instr`
@@ -737,7 +761,7 @@ inline void optimize(IR::Dependencies deps, IR::Cache &instr, Arena<> *lalloc,
   // `N` is the head of the topologically sorted graph
   // We now try to remove redundant memory operations
 
-  IROptimizer(deps, root, lalloc, instr, res);
+  IROptimizer(deps, instr, loopBBs, eraseCandidates, root, lalloc, res);
 }
 
 /*

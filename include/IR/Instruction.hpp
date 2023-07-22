@@ -227,13 +227,13 @@ public:
 
   /// fall back in case we need value operand
   // [[nodiscard]] auto isValue() const -> bool { return id.isValue(); }
-  auto getCost(llvm::TargetTransformInfo &TTI, VectorWidth W)
+  auto getCost(const llvm::TargetTransformInfo &TTI, VectorWidth W)
     -> RecipThroughputLatency {
     RecipThroughputLatency c = costs[W];
     if (c.notYetComputed()) costs[W] = c = calcCost(TTI, W.getWidth());
     return c;
   }
-  [[nodiscard]] inline auto calcCost(llvm::TargetTransformInfo &TTI,
+  [[nodiscard]] inline auto calcCost(const llvm::TargetTransformInfo &TTI,
                                      unsigned vectorWidth)
     -> RecipThroughputLatency;
   [[nodiscard]] auto getType(unsigned int vectorWidth) const -> llvm::Type * {
@@ -284,8 +284,8 @@ public:
   auto getFunction() -> llvm::Function * {
     return ins->getLLVMInstruction()->getFunction();
   }
-  auto calcCallCost(llvm::TargetTransformInfo &TTI, unsigned int vectorWidth)
-    -> RecipThroughputLatency {
+  auto calcCallCost(const llvm::TargetTransformInfo &TTI,
+                    unsigned int vectorWidth) -> RecipThroughputLatency {
     llvm::Type *T = ins->getType(vectorWidth);
     llvm::SmallVector<llvm::Type *, 4> argTypes;
     for (auto *op : getOperands()) argTypes.push_back(op->getType(vectorWidth));
@@ -296,7 +296,7 @@ public:
       TTI.getCallInstrCost(getFunction(), T, argTypes,
                            llvm::TargetTransformInfo::TCK_Latency)};
   }
-  auto calcCallCost(llvm::TargetTransformInfo &TTI, llvm::Function *F,
+  auto calcCallCost(const llvm::TargetTransformInfo &TTI, llvm::Function *F,
                     unsigned int vectorWidth) -> RecipThroughputLatency {
     llvm::Type *T = ins->getType(vectorWidth);
     llvm::SmallVector<llvm::Type *, 4> argTypes;
@@ -440,8 +440,9 @@ public:
   [[nodiscard]] auto getType(unsigned w) const -> llvm::Type * {
     return ins->getType(w);
   }
-  auto calcUnaryArithmeticCost(llvm::TargetTransformInfo &TTI,
-                               unsigned int vectorWidth) const
+  [[nodiscard]] auto
+  calcUnaryArithmeticCost(const llvm::TargetTransformInfo &TTI,
+                          unsigned int vectorWidth) const
     -> RecipThroughputLatency {
     auto op0info = ins->getOperandInfo(0);
     llvm::Type *T = getType(vectorWidth);
@@ -454,8 +455,9 @@ public:
   [[nodiscard]] auto getInstruction() const -> llvm::Instruction * {
     return ins->getLLVMInstruction();
   }
-  auto calcBinaryArithmeticCost(llvm::TargetTransformInfo &TTI,
-                                unsigned int vectorWidth) const
+  [[nodiscard]] auto
+  calcBinaryArithmeticCost(const llvm::TargetTransformInfo &TTI,
+                           unsigned int vectorWidth) const
     -> RecipThroughputLatency {
     auto op0info = ins->getOperandInfo(0);
     auto op1info = ins->getOperandInfo(1);
@@ -477,8 +479,8 @@ public:
     return isFcmp() ? llvm::CmpInst::BAD_FCMP_PREDICATE
                     : llvm::CmpInst::BAD_ICMP_PREDICATE;
   }
-  auto calcCmpSelectCost(llvm::TargetTransformInfo &TTI,
-                         unsigned int vectorWidth) const
+  [[nodiscard]] auto calcCmpSelectCost(const llvm::TargetTransformInfo &TTI,
+                                       unsigned int vectorWidth) const
     -> RecipThroughputLatency {
     llvm::Type *T = getType(vectorWidth),
                *cmpT = llvm::CmpInst::makeCmpResultType(T);
@@ -493,11 +495,12 @@ public:
 
   /// for calculating the cost of a select when merging this instruction with
   /// another one.
-  auto selectCost(llvm::TargetTransformInfo &TTI,
-                  unsigned int vectorWidth) const -> llvm::InstructionCost {
+  [[nodiscard]] auto selectCost(const llvm::TargetTransformInfo &TTI,
+                                unsigned int vectorWidth) const
+    -> llvm::InstructionCost {
     return selectCost(TTI, getType(vectorWidth));
   }
-  static auto selectCost(llvm::TargetTransformInfo &TTI, llvm::Type *T)
+  static auto selectCost(const llvm::TargetTransformInfo &TTI, llvm::Type *T)
     -> llvm::InstructionCost {
     llvm::Type *cmpT = llvm::CmpInst::makeCmpResultType(T);
     // llvm::CmpInst::Predicate pred =
@@ -512,7 +515,8 @@ public:
       llvm::Instruction::Select, T, cmpT, pred,
       llvm::TargetTransformInfo::TCK_RecipThroughput);
   }
-  auto getCastContext(llvm::TargetTransformInfo & /*TTI*/) const
+  [[nodiscard]] auto
+  getCastContext(const llvm::TargetTransformInfo & /*TTI*/) const
     -> llvm::TargetTransformInfo::CastContextHint {
     if (ins->operandIsLoad() || ins->userIsStore())
       return llvm::TargetTransformInfo::CastContextHint::Normal;
@@ -521,8 +525,9 @@ public:
     // TODO: check for whether mask, interleave, or reversed is likely.
     return llvm::TargetTransformInfo::CastContextHint::None;
   }
-  auto calcCastCost(llvm::TargetTransformInfo &TTI,
-                    unsigned int vectorWidth) const -> RecipThroughputLatency {
+  [[nodiscard]] auto calcCastCost(const llvm::TargetTransformInfo &TTI,
+                                  unsigned int vectorWidth) const
+    -> RecipThroughputLatency {
     llvm::Type *srcT = cost::getType(getOperand(0)->getType(), vectorWidth),
                *dstT = getType(vectorWidth);
     llvm::TargetTransformInfo::CastContextHint ctx = getCastContext(TTI);
@@ -533,8 +538,8 @@ public:
       TTI.getCastInstrCost(idt, dstT, srcT, ctx,
                            llvm::TargetTransformInfo::TCK_Latency)};
   }
-  auto calculateCostFAddFSub(llvm::TargetTransformInfo &TTI,
-                             unsigned int vectorWidth) const
+  [[nodiscard]] auto calculateCostFAddFSub(const llvm::TargetTransformInfo &TTI,
+                                           unsigned int vectorWidth) const
     -> RecipThroughputLatency {
     // TODO: allow not assuming hardware FMA support
     if ((isFMulOrFNegOfFMul(getOperand(0)) ||
@@ -543,15 +548,15 @@ public:
       return {};
     return calcBinaryArithmeticCost(TTI, vectorWidth);
   }
-  auto calculateFNegCost(llvm::TargetTransformInfo &TTI,
-                         unsigned int vectorWidth) const
+  [[nodiscard]] auto calculateFNegCost(const llvm::TargetTransformInfo &TTI,
+                                       unsigned int vectorWidth) const
     -> RecipThroughputLatency {
 
     if (isFMul(getOperand(0)) && ins->allUsersAdditiveContract()) return {};
     return calcUnaryArithmeticCost(TTI, vectorWidth);
   }
 
-  [[nodiscard]] auto calcCost(llvm::TargetTransformInfo &TTI,
+  [[nodiscard]] auto calcCost(const llvm::TargetTransformInfo &TTI,
                               unsigned int vectorWidth) const
     -> RecipThroughputLatency {
     switch (getOpCode()) {
@@ -647,8 +652,8 @@ public:
   [[nodiscard]] auto getNumOperands() const -> size_t {
     return ins->getNumOperands();
   }
-  auto calcCallCost(llvm::TargetTransformInfo &TTI, unsigned int vectorWidth)
-    -> RecipThroughputLatency {
+  auto calcCallCost(const llvm::TargetTransformInfo &TTI,
+                    unsigned int vectorWidth) -> RecipThroughputLatency {
     llvm::Type *T = ins->getType(vectorWidth);
     llvm::SmallVector<llvm::Type *, 4> argTypes;
     for (auto *op : ins->getOperands())
@@ -663,7 +668,8 @@ public:
   }
 };
 
-inline auto Value::getCost(llvm::TargetTransformInfo &TTI, cost::VectorWidth W)
+inline auto Value::getCost(const llvm::TargetTransformInfo &TTI,
+                           cost::VectorWidth W)
   -> cost::RecipThroughputLatency {
   if (auto *a = llvm::dyn_cast<Addr>(this)) return a->getCost(TTI, W);
   invariant(getKind() >= VK_Func);
@@ -702,8 +708,8 @@ inline auto Value::getType() const -> llvm::Type * {
 inline auto Value::getType(unsigned w) const -> llvm::Type * {
   return cost::getType(getType(), w);
 }
-[[nodiscard]] inline auto Compute::calcCost(llvm::TargetTransformInfo &TTI,
-                                            unsigned vectorWidth)
+[[nodiscard]] inline auto
+Compute::calcCost(const llvm::TargetTransformInfo &TTI, unsigned vectorWidth)
   -> RecipThroughputLatency {
   if (auto op = Operation(this)) return op.calcCost(TTI, vectorWidth);
   if (auto call = Call(this)) return call.calcCallCost(TTI, vectorWidth);

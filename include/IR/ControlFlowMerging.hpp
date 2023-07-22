@@ -284,7 +284,7 @@ struct MergingCost {
     return unsigned(selector);
   }
 
-  void merge(Arena<> *alloc, llvm::TargetTransformInfo &TTI,
+  void merge(Arena<> *alloc, const llvm::TargetTransformInfo &TTI,
              unsigned int vectorBits, Instruction *A, Instruction *B) {
     mergeList.emplace_back(A, B);
     auto *aA = ancestorMap.find(B);
@@ -369,7 +369,7 @@ struct MergingCost {
 // NOLINTNEXTLINE(misc-no-recursion)
 inline void mergeInstructions(
   Arena<> *alloc, IR::Cache &cache, Predicate::Map &predMap,
-  llvm::TargetTransformInfo &TTI, unsigned int vectorBits,
+  const llvm::TargetTransformInfo &TTI, unsigned int vectorBits,
   amap<Instruction::Identifier, math::ResizeableView<Instruction *, unsigned>>
     opMap,
   amap<Instruction *, Predicate::Set> &valToPred,
@@ -445,11 +445,10 @@ inline void mergeInstructions(
 /// merging as it allocates a lot of memory that it can free when it is done.
 /// TODO: this algorithm is exponential in time and memory.
 /// Odds are that there's way smarter things we can do.
-[[nodiscard]] inline auto mergeInstructions(IR::Cache &cache,
-                                            Predicate::Map &predMap,
-                                            llvm::TargetTransformInfo &TTI,
-                                            Arena<> tAlloc, unsigned vectorBits,
-                                            TreeResult tr) -> TreeResult {
+[[nodiscard]] inline auto
+mergeInstructions(IR::Cache &cache, Predicate::Map &predMap,
+                  const llvm::TargetTransformInfo &TTI, Arena<> tAlloc,
+                  unsigned vectorBits, TreeResult tr) -> TreeResult {
   auto [completed, trret] = cache.completeInstructions(&predMap, tr);
   tr = trret;
   if (!predMap.isDivergent()) return tr;

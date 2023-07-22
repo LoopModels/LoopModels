@@ -18,6 +18,9 @@
 #include <llvm/Support/Casting.h>
 #include <utility>
 
+namespace poly::poly {
+class Dependencies;
+} // namespace poly::poly
 namespace poly::IR {
 using utils::NotNull, utils::invariant, utils::Arena, containers::UList;
 class Loop;
@@ -277,10 +280,12 @@ static_assert(sizeof(Node) == 4 * sizeof(Node *) + 8);
 /// child: inner (sub) loop
 /// exit is the associated exit block
 class Loop : public Node {
+  enum LegalTransforms { Unknown, None, Unroll, All };
+
   poly::Loop *affineLoop{nullptr};
   Node *last{nullptr};
   int32_t edgeId{-1};
-
+  LegalTransforms legal{Unknown};
   // while `child` points to the first contained instruction,
   // `last` points to the last contained instruction,
   // and can be used for backwards iteration over the graph.
@@ -357,6 +362,8 @@ public:
       L = L->getOuterLoop();
     return L;
   }
+  inline auto getLegality(poly::Dependencies, math::PtrVector<int32_t>)
+    -> LegalTransforms;
 };
 [[nodiscard]] inline constexpr auto Node::getLoop() const noexcept -> Loop * {
   if (!parent) return nullptr;
@@ -449,7 +456,7 @@ public:
 
   [[nodiscard]] inline auto getFastMathFlags() const -> llvm::FastMathFlags;
   /// these methods are overloaded for specific subtypes
-  inline auto getCost(llvm::TargetTransformInfo &TTI, cost::VectorWidth W)
+  inline auto getCost(const llvm::TargetTransformInfo &TTI, cost::VectorWidth W)
     -> cost::RecipThroughputLatency;
   [[nodiscard]] inline auto getValue() -> llvm::Value *;
   [[nodiscard]] inline auto getValue() const -> const llvm::Value *;

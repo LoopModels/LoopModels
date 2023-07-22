@@ -1188,9 +1188,14 @@ inline void IR::Addr::drop(Dependencies deps) {
   removeFromList();
   for (int32_t id : inputEdgeIDs(deps)) deps.removeEdge(Dependence::ID{id});
   for (int32_t id : outputEdgeIDs(deps)) deps.removeEdge(Dependence::ID{id});
-  arrayP
 }
 
+inline auto Loop::getLegality(poly::Dependencies deps,
+                              math::PtrVector<int32_t> loopDeps)
+  -> LegalTransforms {
+  if (legal != Unknown) return legal;
+  // TODO: determine legality...
+}
 } // namespace IR
 
 namespace poly {

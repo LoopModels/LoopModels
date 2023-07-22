@@ -10,7 +10,7 @@ template <typename K, typename V>
 using map = ankerl::unordered_dense::map<K, V>;
 
 template <typename K, typename V>
-struct amap
+struct amap // NOLINT(readability-identifier-naming)
   : ankerl::unordered_dense::map<K, V, ankerl::unordered_dense::hash<K>,
                                  std::equal_to<K>,
                                  math::BumpPtrVector<std::pair<K, V>>> {
@@ -21,7 +21,7 @@ struct amap
   amap(Arena<> *alloc) : Base{WArena<std::pair<K, V>>(alloc)} {}
 };
 template <typename K>
-struct aset
+struct aset // NOLINT(readability-identifier-naming)
   : ankerl::unordered_dense::set<K, ankerl::unordered_dense::hash<K>,
                                  std::equal_to<K>, math::BumpPtrVector<K>> {
   using Base =

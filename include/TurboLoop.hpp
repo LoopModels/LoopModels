@@ -67,7 +67,6 @@ concept LoadOrStoreInst =
   std::same_as<llvm::StoreInst, std::remove_cvref_t<T>>;
 
 class TurboLoop {
-  dict::map<llvm::Loop *, IR::Loop *> loopMap;
   const llvm::TargetLibraryInfo *TLI;
   const llvm::TargetTransformInfo *TTI;
   llvm::LoopInfo *LI;
@@ -75,6 +74,8 @@ class TurboLoop {
   llvm::OptimizationRemarkEmitter *ORE;
   lp::LoopBlock loopBlock{};
   IR::Cache instructions{};
+  dict::set<llvm::BasicBlock *> loopBBs;
+  dict::set<llvm::CallBase *> eraseCandidates;
   CostModeling::CPURegisterFile registers;
 
   // this is an allocator that it is safe to reset completely when
@@ -163,6 +164,7 @@ class TurboLoop {
         instructions.addPredicate(A, P, &(*predMapAbridged));
         A->setLoopNest(AL);
       }
+      loopBBs.insert(BB);
     }
     return IR::mergeInstructions(instructions, *predMapAbridged, *TTI,
                                  *shortAllocator(),
@@ -331,9 +333,14 @@ class TurboLoop {
 
   void optimize(IR::TreeResult tr) {
     // now we build the LinearProgram
-    lp::OptimizationResult lpor = loopBlock.optimize(instructions, tr);
+    lp::LoopBlock::OptimizationResult lpor =
+      loopBlock.optimize(instructions, tr);
     if (!lpor.nodes) return;
-    CostModeling::optimize(instructions, loopBlock.getAllocator(), lpor);
+    for (IR::Addr *addr : lpor.addr.getAddr())
+      loopBBs.insert(addr->getBasicBlock());
+    CostModeling::optimize(loopBlock.getDependencies(), instructions, loopBBs,
+                           eraseCandidates, loopBlock.getAllocator(), lpor);
+    loopBBs.clear();
   }
   /*
     auto isLoopPreHeader(const llvm::BasicBlock *BB) const -> bool {

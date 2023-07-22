@@ -194,6 +194,9 @@ public:
   [[nodiscard]] constexpr auto getAllocator() -> Arena<> * {
     return &allocator;
   }
+  [[nodiscard]] constexpr auto getDependencies() const -> IR::Dependencies {
+    return deps;
+  }
 
 private:
   auto addScheduledNode(IR::Cache &cache, IR::Stow stow, IR::AddrChain addr)
@@ -1118,7 +1121,6 @@ private:
     invariant(false);
     return 0;
   }
-
   //
   //
   //

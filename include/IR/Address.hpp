@@ -503,7 +503,7 @@ public:
     return std::equal(thisSizes.begin(), thisSizes.end(), xSizes.begin(),
                       xSizes.end());
   }
-  auto calculateCostContiguousLoadStore(llvm::TargetTransformInfo &TTI,
+  auto calculateCostContiguousLoadStore(const llvm::TargetTransformInfo &TTI,
                                         unsigned int vectorWidth)
     -> cost::RecipThroughputLatency {
     constexpr unsigned int addrSpace = 0;
@@ -527,7 +527,7 @@ public:
                                 llvm::TargetTransformInfo::TCK_Latency)};
   }
 
-  auto getCost(llvm::TargetTransformInfo &TTI, cost::VectorWidth W)
+  auto getCost(const llvm::TargetTransformInfo &TTI, cost::VectorWidth W)
     -> cost::RecipThroughputLatency {
     // TODO: cache?
     return calculateCostContiguousLoadStore(TTI, W.getWidth());
