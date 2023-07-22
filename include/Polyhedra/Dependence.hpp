@@ -1190,11 +1190,18 @@ inline void IR::Addr::drop(Dependencies deps) {
   for (int32_t id : outputEdgeIDs(deps)) deps.removeEdge(Dependence::ID{id});
 }
 
-inline auto Loop::getLegality(poly::Dependencies deps,
+inline auto Loop::getLegality(Arena<> *alloc, poly::Dependencies deps,
                               math::PtrVector<int32_t> loopDeps)
   -> LegalTransforms {
   if (legal != Unknown) return legal;
-  // TODO: determine legality...
+  legal = All;
+  for (int32_t id : edges(loopDeps)) {
+    poly::DepPoly *dp = deps.depPoly(Dependence::ID{id});
+    // the idea here is to check the dep's volume compared to the loop;
+    // if the dependency is bounded (e.g. at a point), we can scalarize
+    // that region and parallelize the rest.
+  }
+  return legal;
 }
 } // namespace IR
 

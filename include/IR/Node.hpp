@@ -4,6 +4,7 @@
 #include "IR/InstructionCost.hpp"
 #include "IR/Users.hpp"
 #include "Polyhedra/Loops.hpp"
+#include "Support/Iterators.hpp"
 #include "Utilities/Allocators.hpp"
 #include "Utilities/ListRanges.hpp"
 #include <Math/Array.hpp>
@@ -280,7 +281,7 @@ static_assert(sizeof(Node) == 4 * sizeof(Node *) + 8);
 /// child: inner (sub) loop
 /// exit is the associated exit block
 class Loop : public Node {
-  enum LegalTransforms { Unknown, None, Unroll, All };
+  enum LegalTransforms { Unknown = 0, None = 1, Unroll = 2, All = 3 };
 
   poly::Loop *affineLoop{nullptr};
   Node *last{nullptr};
@@ -291,6 +292,10 @@ class Loop : public Node {
   // and can be used for backwards iteration over the graph.
 
 public:
+  [[nodiscard]] constexpr auto edges(poly::PtrVector<int32_t> edges) const
+    -> utils::VForwardRange {
+    return utils::VForwardRange{edges, edgeId};
+  }
   constexpr Loop(unsigned d) : Node(VK_Loop, d) {}
   constexpr Loop(unsigned d, poly::Loop *AL)
     : Node(VK_Loop, d), affineLoop(AL) {}
@@ -362,8 +367,8 @@ public:
       L = L->getOuterLoop();
     return L;
   }
-  inline auto getLegality(poly::Dependencies, math::PtrVector<int32_t>)
-    -> LegalTransforms;
+  inline auto getLegality(Arena<> *, poly::Dependencies,
+                          math::PtrVector<int32_t>) -> LegalTransforms;
 };
 [[nodiscard]] inline constexpr auto Node::getLoop() const noexcept -> Loop * {
   if (!parent) return nullptr;
