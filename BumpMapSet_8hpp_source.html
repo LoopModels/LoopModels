@@ -81,7 +81,7 @@ $(function() {
 <div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="keyword">using</span> map = ankerl::unordered_dense::map&lt;K, V&gt;;</div>
 <div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160; </div>
 <div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> K, <span class="keyword">typename</span> V&gt;</div>
-<div class="line"><a name="l00013"></a><span class="lineno"><a class="line" href="structpoly_1_1dict_1_1amap.html">   13</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structpoly_1_1dict_1_1amap.html">amap</a></div>
+<div class="line"><a name="l00013"></a><span class="lineno"><a class="line" href="structpoly_1_1dict_1_1amap.html">   13</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structpoly_1_1dict_1_1amap.html">amap</a> <span class="comment">// NOLINT(readability-identifier-naming)</span></div>
 <div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;  : ankerl::unordered_dense::map&lt;K, V, ankerl::unordered_dense::hash&lt;K&gt;,</div>
 <div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;                                 std::equal_to&lt;K&gt;,</div>
 <div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;                                 math::BumpPtrVector&lt;std::pair&lt;K, V&gt;&gt;&gt; {</div>
@@ -92,7 +92,7 @@ $(function() {
 <div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;  <a class="code" href="structpoly_1_1dict_1_1amap.html">amap</a>(Arena&lt;&gt; *alloc) : Base{WArena&lt;std::pair&lt;K, V&gt;&gt;(alloc)} {}</div>
 <div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;};</div>
 <div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> K&gt;</div>
-<div class="line"><a name="l00024"></a><span class="lineno"><a class="line" href="structpoly_1_1dict_1_1aset.html">   24</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structpoly_1_1dict_1_1aset.html">aset</a></div>
+<div class="line"><a name="l00024"></a><span class="lineno"><a class="line" href="structpoly_1_1dict_1_1aset.html">   24</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structpoly_1_1dict_1_1aset.html">aset</a> <span class="comment">// NOLINT(readability-identifier-naming)</span></div>
 <div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;  : ankerl::unordered_dense::set&lt;K, ankerl::unordered_dense::hash&lt;K&gt;,</div>
 <div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;                                 std::equal_to&lt;K&gt;, math::BumpPtrVector&lt;K&gt;&gt; {</div>
 <div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;  <span class="keyword">using</span> Base =</div>

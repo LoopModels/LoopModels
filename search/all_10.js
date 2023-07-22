@@ -4,7 +4,7 @@ var searchData=
   ['schedulednode_126',['ScheduledNode',['../classpoly_1_1lp_1_1ScheduledNode.html',1,'poly::lp']]],
   ['schedulegraph_127',['ScheduleGraph',['../classpoly_1_1lp_1_1ScheduleGraph.html',1,'poly::lp']]],
   ['selectallocator_128',['SelectAllocator',['../structpoly_1_1IR_1_1MergingCost_1_1SelectAllocator.html',1,'poly::IR::MergingCost']]],
-  ['selectcost_129',['selectCost',['../classpoly_1_1IR_1_1Operation.html#a3c026a3b9192dea51a7dc6b57e6833b9',1,'poly::IR::Operation']]],
+  ['selectcost_129',['selectCost',['../classpoly_1_1IR_1_1Operation.html#aa149e4b9cf989c4e38971610a00729de',1,'poly::IR::Operation']]],
   ['selectcounter_130',['SelectCounter',['../structpoly_1_1IR_1_1MergingCost_1_1SelectCounter.html',1,'poly::IR::MergingCost']]],
   ['set_131',['Set',['../structpoly_1_1IR_1_1Predicate_1_1Set.html',1,'poly::IR::Predicate']]],
   ['setfusionomega_132',['setFusionOmega',['../classpoly_1_1IR_1_1Addr.html#a26d3b32498e5ea5373a423a9bb463477',1,'poly::IR::Addr']]],

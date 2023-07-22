@@ -277,12 +277,12 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getAffineLo
 <tr class="memitem:a1bd85fd91e0e9d16b2417d9f9479fe1e"><td class="memItemLeft" align="right" valign="top"><a id="a1bd85fd91e0e9d16b2417d9f9479fe1e"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>sizesMatch</b> (NotNull&lt; const <a class="el" href="classpoly_1_1IR_1_1Addr.html">Addr</a> &gt; x) const -&gt; bool</td></tr>
 <tr class="separator:a1bd85fd91e0e9d16b2417d9f9479fe1e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a45d8f70537abd0ca165df1bc2aab2a6b"><td class="memItemLeft" align="right" valign="top"><a id="a45d8f70537abd0ca165df1bc2aab2a6b"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>calculateCostContiguousLoadStore</b> (llvm::TargetTransformInfo &amp;TTI, unsigned int vectorWidth) -&gt; <a class="el" href="structpoly_1_1IR_1_1cost_1_1RecipThroughputLatency.html">cost::RecipThroughputLatency</a></td></tr>
-<tr class="separator:a45d8f70537abd0ca165df1bc2aab2a6b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1acf4e77e6ada3fd6a1676e812fb06f8"><td class="memItemLeft" align="right" valign="top"><a id="a1acf4e77e6ada3fd6a1676e812fb06f8"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>getCost</b> (llvm::TargetTransformInfo &amp;TTI, <a class="el" href="classpoly_1_1IR_1_1cost_1_1VectorWidth.html">cost::VectorWidth</a> W) -&gt; <a class="el" href="structpoly_1_1IR_1_1cost_1_1RecipThroughputLatency.html">cost::RecipThroughputLatency</a></td></tr>
-<tr class="separator:a1acf4e77e6ada3fd6a1676e812fb06f8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1663b6f4202cc6b8c09559039d40dc4b"><td class="memItemLeft" align="right" valign="top"><a id="a1663b6f4202cc6b8c09559039d40dc4b"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>calculateCostContiguousLoadStore</b> (const llvm::TargetTransformInfo &amp;TTI, unsigned int vectorWidth) -&gt; <a class="el" href="structpoly_1_1IR_1_1cost_1_1RecipThroughputLatency.html">cost::RecipThroughputLatency</a></td></tr>
+<tr class="separator:a1663b6f4202cc6b8c09559039d40dc4b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a72b0a5ead7fe9a22f84df10535a6f380"><td class="memItemLeft" align="right" valign="top"><a id="a72b0a5ead7fe9a22f84df10535a6f380"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getCost</b> (const llvm::TargetTransformInfo &amp;TTI, <a class="el" href="classpoly_1_1IR_1_1cost_1_1VectorWidth.html">cost::VectorWidth</a> W) -&gt; <a class="el" href="structpoly_1_1IR_1_1cost_1_1RecipThroughputLatency.html">cost::RecipThroughputLatency</a></td></tr>
+<tr class="separator:a72b0a5ead7fe9a22f84df10535a6f380"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1c11ac80919c828f4ffe2e9623605750"><td class="memItemLeft" align="right" valign="top"><a id="a1c11ac80919c828f4ffe2e9623605750"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1IR_1_1Addr.html#a1c11ac80919c828f4ffe2e9623605750">drop</a> (<a class="el" href="classpoly_1_1poly_1_1Dependencies.html">Dependencies</a>)</td></tr>
 <tr class="memdesc:a1c11ac80919c828f4ffe2e9623605750"><td class="mdescLeft">&#160;</td><td class="mdescRight">drop <code>this</code> and remove it from <code>Dependencies</code> <br /></td></tr>
@@ -321,10 +321,10 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>isLoad</b> 
 <tr class="memitem:a8dbc06f01e77ab9a0e7e03d8f0cca054 inherit pub_methods_classpoly_1_1IR_1_1Value"><td class="memItemLeft" align="right" valign="top"><a id="a8dbc06f01e77ab9a0e7e03d8f0cca054"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>getFastMathFlags</b> () const -&gt; llvm::FastMathFlags</td></tr>
 <tr class="separator:a8dbc06f01e77ab9a0e7e03d8f0cca054 inherit pub_methods_classpoly_1_1IR_1_1Value"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:adb093c83013329c7391357aa9f19144d inherit pub_methods_classpoly_1_1IR_1_1Value"><td class="memItemLeft" align="right" valign="top"><a id="adb093c83013329c7391357aa9f19144d"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1IR_1_1Value.html#adb093c83013329c7391357aa9f19144d">getCost</a> (llvm::TargetTransformInfo &amp;TTI, <a class="el" href="classpoly_1_1IR_1_1cost_1_1VectorWidth.html">cost::VectorWidth</a> W) -&gt; <a class="el" href="structpoly_1_1IR_1_1cost_1_1RecipThroughputLatency.html">cost::RecipThroughputLatency</a></td></tr>
-<tr class="memdesc:adb093c83013329c7391357aa9f19144d inherit pub_methods_classpoly_1_1IR_1_1Value"><td class="mdescLeft">&#160;</td><td class="mdescRight">these methods are overloaded for specific subtypes <br /></td></tr>
-<tr class="separator:adb093c83013329c7391357aa9f19144d inherit pub_methods_classpoly_1_1IR_1_1Value"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0f89539ccba0c8fc06e2bd3e7539e503 inherit pub_methods_classpoly_1_1IR_1_1Value"><td class="memItemLeft" align="right" valign="top"><a id="a0f89539ccba0c8fc06e2bd3e7539e503"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1IR_1_1Value.html#a0f89539ccba0c8fc06e2bd3e7539e503">getCost</a> (const llvm::TargetTransformInfo &amp;TTI, <a class="el" href="classpoly_1_1IR_1_1cost_1_1VectorWidth.html">cost::VectorWidth</a> W) -&gt; <a class="el" href="structpoly_1_1IR_1_1cost_1_1RecipThroughputLatency.html">cost::RecipThroughputLatency</a></td></tr>
+<tr class="memdesc:a0f89539ccba0c8fc06e2bd3e7539e503 inherit pub_methods_classpoly_1_1IR_1_1Value"><td class="mdescLeft">&#160;</td><td class="mdescRight">these methods are overloaded for specific subtypes <br /></td></tr>
+<tr class="separator:a0f89539ccba0c8fc06e2bd3e7539e503 inherit pub_methods_classpoly_1_1IR_1_1Value"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2569ba828037d7258a52aada246d67d5 inherit pub_methods_classpoly_1_1IR_1_1Value"><td class="memItemLeft" align="right" valign="top"><a id="a2569ba828037d7258a52aada246d67d5"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>getValue</b> () -&gt; llvm::Value *</td></tr>
 <tr class="separator:a2569ba828037d7258a52aada246d67d5 inherit pub_methods_classpoly_1_1IR_1_1Value"><td class="memSeparator" colspan="2">&#160;</td></tr>
