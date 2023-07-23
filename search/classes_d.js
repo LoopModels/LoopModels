@@ -1,8 +1,5 @@
 var searchData=
 [
-  ['recipthroughputlatency_236',['RecipThroughputLatency',['../structpoly_1_1IR_1_1cost_1_1RecipThroughputLatency.html',1,'poly::IR::cost']]],
-  ['ref_237',['Ref',['../classpoly_1_1poly_1_1Dependencies_1_1Ref.html',1,'poly::poly::Dependencies']]],
-  ['reference_238',['Reference',['../structpoly_1_1IR_1_1Predicate_1_1Intersection_1_1Reference.html',1,'poly::IR::Predicate::Intersection']]],
-  ['remapper_239',['ReMapper',['../classpoly_1_1IR_1_1ReMapper.html',1,'poly::IR']]],
-  ['result_240',['Result',['../structpoly_1_1lp_1_1Result.html',1,'poly::lp']]]
+  ['proxyreference_237',['ProxyReference',['../structpoly_1_1IR_1_1cost_1_1VectorizationCosts_1_1ProxyReference.html',1,'poly::IR::cost::VectorizationCosts']]],
+  ['ptrsymboliccomparator_238',['PtrSymbolicComparator',['../structpoly_1_1comparator_1_1PtrSymbolicComparator.html',1,'poly::comparator']]]
 ];

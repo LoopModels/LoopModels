@@ -1,6 +1,7 @@
 var searchData=
 [
-  ['urand_255',['URand',['../structURand.html',1,'']]],
-  ['urand_3c_20double_20_3e_256',['URand&lt; double &gt;',['../structURand_3_01double_01_4.html',1,'']]],
-  ['users_257',['Users',['../classpoly_1_1IR_1_1Users.html',1,'poly::IR']]]
+  ['testloopfunction_255',['TestLoopFunction',['../classpoly_1_1TestLoopFunction.html',1,'poly']]],
+  ['treeresult_256',['TreeResult',['../structpoly_1_1IR_1_1TreeResult.html',1,'poly::IR']]],
+  ['turboloop_257',['TurboLoop',['../classpoly_1_1TurboLoop.html',1,'poly']]],
+  ['turbolooppass_258',['TurboLoopPass',['../classTurboLoopPass.html',1,'']]]
 ];

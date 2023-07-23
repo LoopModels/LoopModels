@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['getedge_202',['GetEdge',['../structpoly_1_1lp_1_1ScheduledNode_1_1GetEdge.html',1,'poly::lp::ScheduledNode']]]
+  ['fastvectorization_204',['FastVectorization',['../classFastVectorization.html',1,'']]]
 ];
