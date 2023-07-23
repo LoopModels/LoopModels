@@ -281,7 +281,7 @@ static_assert(sizeof(Node) == 4 * sizeof(Node *) + 8);
 /// child: inner (sub) loop
 /// exit is the associated exit block
 class Loop : public Node {
-  enum LegalTransforms { Unknown = 0, None = 1, Unroll = 2, All = 3 };
+  enum LegalTransforms { Unknown, None, DependenceFree, IndexyMismatch };
 
   poly::Loop *affineLoop{nullptr};
   Node *last{nullptr};
@@ -367,8 +367,8 @@ public:
       L = L->getOuterLoop();
     return L;
   }
-  inline auto getLegality(Arena<> *, poly::Dependencies,
-                          math::PtrVector<int32_t>) -> LegalTransforms;
+  inline auto getLegality(poly::Dependencies, math::PtrVector<int32_t>)
+    -> LegalTransforms;
 };
 [[nodiscard]] inline constexpr auto Node::getLoop() const noexcept -> Loop * {
   if (!parent) return nullptr;

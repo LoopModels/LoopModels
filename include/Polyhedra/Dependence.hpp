@@ -1,5 +1,8 @@
 #pragma once
 #include "IR/Address.hpp"
+#include "IR/Node.hpp"
+#include "Math/Array.hpp"
+#include "Math/Comparisons.hpp"
 #include "Math/Simplex.hpp"
 #include "Polyhedra/DependencyPolyhedra.hpp"
 #include "Polyhedra/Loops.hpp"
@@ -1190,18 +1193,27 @@ inline void IR::Addr::drop(Dependencies deps) {
   for (int32_t id : outputEdgeIDs(deps)) deps.removeEdge(Dependence::ID{id});
 }
 
-inline auto Loop::getLegality(Arena<> *alloc, poly::Dependencies deps,
+using math::StridedVector;
+inline auto Loop::getLegality(poly::Dependencies deps,
                               math::PtrVector<int32_t> loopDeps)
   -> LegalTransforms {
   if (legal != Unknown) return legal;
-  legal = All;
+  if (edgeId < 0) return legal = DependenceFree;
+  if (this->currentDepth == 0) return legal = None;
+  ptrdiff_t loop = this->currentDepth - 1;
   for (int32_t id : edges(loopDeps)) {
-    poly::DepPoly *dp = deps.depPoly(Dependence::ID{id});
-    // the idea here is to check the dep's volume compared to the loop;
-    // if the dependency is bounded (e.g. at a point), we can scalarize
-    // that region and parallelize the rest.
+    Dependence::ID i{id};
+    StridedVector<int64_t> in = deps.input(i)->indexMatrix()(_, loop),
+                           out = deps.output(i)->indexMatrix()(_, loop);
+    invariant(in.size(), out.size());
+    if (in != out) return legal = IndexMismatch;
+    // ptrdiff_t common = std::min(in.size(), out.size());
+    // if ((in[_(0, common)] != out[_(0, common)]) ||
+    //     math::anyNEZero(((in.size() > out.size() ? in : out)[_(common,
+    //     end)])))
+    //   return legal = IndexMismatch;
   }
-  return legal;
+  return legal = None;
 }
 } // namespace IR
 
