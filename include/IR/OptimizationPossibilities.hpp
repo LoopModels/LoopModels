@@ -27,11 +27,11 @@ public:
   }
 };
 
-class FastVectorization {
+class LoopDependencies {
   uint32_t nonContiguous; // bitmask
   uint32_t contiguous;    // bitmask, A[i+j,k+l]; multiple may be set
 public:
-  constexpr FastVectorization(uint32_t nonContiguous, uint32_t contiguous)
+  constexpr LoopDependencies(uint32_t nonContiguous, uint32_t contiguous)
     : nonContiguous(nonContiguous), contiguous(contiguous) {}
   [[nodiscard]] constexpr auto getNonContiguous() const -> uint32_t {
     return nonContiguous;
@@ -39,8 +39,8 @@ public:
   [[nodiscard]] constexpr auto getContiguous() const -> uint32_t {
     return contiguous;
   }
-  [[nodiscard]] constexpr auto operator&(FastVectorization other) const
-    -> FastVectorization {
+  [[nodiscard]] constexpr auto operator&(LoopDependencies other) const
+    -> LoopDependencies {
     uint32_t nonContig = nonContiguous | other.nonContiguous;
     return {nonContig, (contiguous & other.contiguous) & ~nonContig};
   }

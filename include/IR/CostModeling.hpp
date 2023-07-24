@@ -162,8 +162,8 @@ class LoopTree {
   unsigned depth{0};
   // We do not need to know the previous loop, as dependencies between
   // the `Addr`s and instructions will determine the ordering.
-  constexpr LoopTree(Arena<> *lalloc, LoopTree *parent_)
-    : loop{lalloc->create<IR::Loop>(parent_->depth + 1)},
+  constexpr LoopTree(Arena<> *lalloc, poly::Loop *L, LoopTree *parent_)
+    : loop{lalloc->create<IR::Loop>(parent_->depth + 1, L)},
       depth(parent_->depth + 1) {
     // allocate the root node, and connect it to parent's node, as well as
     // previous loop of the same level.
@@ -185,10 +185,10 @@ public:
       // We also apply the rotation here.
       // For dependencies in SCC iteration, only indvar deps get iterated.
       auto [Pinv, denom] = math::NormalForm::scaledInv(node->getPhi());
-      NotNull<poly::Loop> affloop =
+      NotNull<poly::Loop> explicitLoop =
         node->getLoopNest()->rotate(lalloc, Pinv, node->getOffset());
       for (IR::Addr *m : node->localAddr()) {
-        m->rotate(affloop, Pinv, denom, node->getOffsetOmega(),
+        m->rotate(explicitLoop, Pinv, denom, node->getOffsetOmega(),
                   node->getOffset());
         loop->insertAfter(m);
       }
@@ -206,7 +206,7 @@ public:
       // allocate new nodes and resize
       children.resize(idx + 1);
       for (ptrdiff_t i = numChildren; i < idx + 1; ++i)
-        children[i] = new (salloc) LoopTree{lalloc, this};
+        children[i] = new (salloc) LoopTree{lalloc, node->getLoopNest(), this};
       numChildren = idx + 1;
     }
     children[idx]->addNode(salloc, lalloc, node);
@@ -335,6 +335,10 @@ inline auto visitLoopDependent(IR::Dependencies deps, IR::Loop *L, IR::Node *N,
   if (N->getLoop() == L) body = N->setNext(body);
   return body;
 }
+struct LoopBuild {
+  IR::Node *node;
+  uint32_t count;
+};
 inline void addBody(IR::Dependencies deps, IR::Loop *root, unsigned depth,
                     IR::Node *nodes) {
   IR::Exit exit{}; // use to capture last node
@@ -346,8 +350,8 @@ inline void addBody(IR::Dependencies deps, IR::Loop *root, unsigned depth,
   if (last) last->setNext(nullptr);
   root->setLast(last);
 }
-inline auto topologicalSort(IR::Dependencies deps, IR::Loop *root,
-                            unsigned depth) -> IR::Node * {
+inline void topologicalSort(IR::Dependencies deps, IR::Loop *root,
+                            unsigned depth) {
   // basic plan for the top sort:
   // We iterate across all users, once all of node's users have been added,
   // we push it to the front of the list. Thus, we get a top-sorted list.
@@ -383,29 +387,32 @@ inline auto topologicalSort(IR::Dependencies deps, IR::Loop *root,
   for (IR::Node *N : summary.notIndexedByLoop->nodes())
     body = visitLoopDependent(deps, root, N, depth, body);
   // and any remaining edges
-  return body;
 }
 // NOLINTNEXTLINE(misc-no-recursion)
-inline auto buildSubGraph(IR::Dependencies deps, IR::Loop *root, unsigned depth)
-  -> IR::Node * {
+inline auto buildSubGraph(IR::Dependencies deps, IR::Loop *root, unsigned depth,
+                          uint32_t id) -> uint32_t {
   // We build the instruction graph, via traversing the tree, and then
   // top sorting as we recurse out
+  root->setMeta(id++);
   for (IR::Loop *child : root->subLoops())
-    buildSubGraph(deps, child, depth + 1);
+    id = buildSubGraph(deps, child, depth + 1, id);
 
   // The very outer `root` needs to have all instr constituents
   // we also need to add the last instruction of each loop as `last`
-  return topologicalSort(deps, root, depth);
+  topologicalSort(deps, root, depth);
+  return id;
 }
-inline auto buildGraph(IR::Dependencies deps, IR::Loop *root) -> IR::Node * {
+inline auto buildGraph(IR::Dependencies deps, IR::Loop *root) -> uint32_t {
   // We build the instruction graph, via traversing the tree, and then
   // top sorting as we recurse out
-  for (IR::Loop *child : root->subLoops()) buildSubGraph(deps, child, 1);
+  uint32_t id = 0;
+  for (IR::Loop *child : root->subLoops())
+    id = buildSubGraph(deps, child, 1, id);
 
   // The very outer `root` needs to have all instr constituents
   // we also need to add the last instruction of each loop as `last`
   addBody(deps, root, 0, root->getChild());
-  return root;
+  return id;
 }
 
 inline auto addAddrToGraph(Arena<> *salloc, Arena<> *lalloc,
@@ -757,7 +764,7 @@ inline void optimize(IR::Dependencies deps, IR::Cache &instr,
   // as it allocates the actual nodes.
 
   IR::Loop *root = addAddrToGraph(instr.getAllocator(), lalloc, res.nodes);
-  buildGraph(deps, root);
+  uint32_t numLoops = buildGraph(deps, root);
   // `N` is the head of the topologically sorted graph
   // We now try to remove redundant memory operations
 

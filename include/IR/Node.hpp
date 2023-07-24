@@ -281,24 +281,44 @@ static_assert(sizeof(Node) == 4 * sizeof(Node *) + 8);
 /// child: inner (sub) loop
 /// exit is the associated exit block
 class Loop : public Node {
-  enum LegalTransforms { Unknown, None, DependenceFree, IndexyMismatch };
-
+  enum LegalTransforms {
+    Unknown = 0,
+    DependenceFree = 1,
+    IndexMismatch = 2,
+    None = 3
+  };
   poly::Loop *affineLoop{nullptr};
   Node *last{nullptr};
+  /// loopMeta's leading 2 bits give `LegalTransforms`
+  /// remaining 30 bits give an ID to the loop.
+  /// IDs are in topologically sorted order.
+  uint32_t loopMeta;
   int32_t edgeId{-1};
-  LegalTransforms legal{Unknown};
+  // LegalTransforms legal{Unknown};
   // while `child` points to the first contained instruction,
   // `last` points to the last contained instruction,
   // and can be used for backwards iteration over the graph.
 
 public:
+  constexpr void setMeta(uint32_t m) { loopMeta = m; }
+  [[nodiscard]] constexpr auto getID() const -> uint32_t {
+    return loopMeta & 0x3FFFFFFF;
+  }
+  [[nodiscard]] constexpr auto getLegal() const -> LegalTransforms {
+    return static_cast<LegalTransforms>(loopMeta >> 30);
+  }
+  constexpr auto setLegal(LegalTransforms l) -> LegalTransforms {
+    loopMeta = (loopMeta & 0x3FFFFFFF) | (static_cast<uint32_t>(l) << 30);
+    return l;
+  }
   [[nodiscard]] constexpr auto edges(poly::PtrVector<int32_t> edges) const
     -> utils::VForwardRange {
     return utils::VForwardRange{edges, edgeId};
   }
-  constexpr Loop(unsigned d) : Node(VK_Loop, d) {}
+  constexpr Loop(unsigned d)
+    : Node{VK_Loop, d}, loopMeta{std::numeric_limits<uint32_t>::max()} {}
   constexpr Loop(unsigned d, poly::Loop *AL)
-    : Node(VK_Loop, d), affineLoop(AL) {}
+    : Node{VK_Loop, d}, affineLoop{AL} {}
   static constexpr auto classof(const Node *v) -> bool {
     return v->getKind() == VK_Loop;
   }
@@ -321,14 +341,13 @@ public:
   }
   [[nodiscard]] constexpr auto subLoops() const {
     return utils::ListRange{getSubLoop(),
-                            [](Loop *L) { return L->getNextLoop(); }};
+                            [](Loop *L) -> Loop * { return L->getNextLoop(); }};
   }
+  /// getLast()
+  /// Get the last node in the loop.
+  /// Useful for iterating backwardss.
   [[nodiscard]] constexpr auto getLast() const -> Node * { return last; }
   constexpr void setLast(Node *n) { last = n; }
-  static constexpr auto create(Arena<> *alloc, poly::Loop *AL, size_t depth)
-    -> Loop * {
-    return alloc->create<Loop>(depth, AL);
-  }
   [[nodiscard]] constexpr auto getLLVMLoop() const -> llvm::Loop * {
     return affineLoop->getLLVMLoop();
   }

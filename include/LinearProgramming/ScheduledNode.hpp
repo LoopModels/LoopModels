@@ -361,8 +361,7 @@ public:
   [[nodiscard]] constexpr auto getSchedule() -> poly::AffineSchedule {
     return {mem};
   }
-  [[nodiscard]] constexpr auto getLoopNest() const
-    -> NotNull<const poly::Loop> {
+  [[nodiscard]] constexpr auto getLoopNest() const -> poly::Loop * {
     return loopNest;
   }
 

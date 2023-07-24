@@ -1197,23 +1197,24 @@ using math::StridedVector;
 inline auto Loop::getLegality(poly::Dependencies deps,
                               math::PtrVector<int32_t> loopDeps)
   -> LegalTransforms {
+  const auto legal = getLegal();
   if (legal != Unknown) return legal;
-  if (edgeId < 0) return legal = DependenceFree;
-  if (this->currentDepth == 0) return legal = None;
+  if (edgeId < 0) return setLegal(DependenceFree);
+  if (this->currentDepth == 0) return setLegal(None);
   ptrdiff_t loop = this->currentDepth - 1;
   for (int32_t id : edges(loopDeps)) {
     Dependence::ID i{id};
     StridedVector<int64_t> in = deps.input(i)->indexMatrix()(_, loop),
                            out = deps.output(i)->indexMatrix()(_, loop);
     invariant(in.size(), out.size());
-    if (in != out) return legal = IndexMismatch;
+    if (in != out) return setLegal(IndexMismatch);
     // ptrdiff_t common = std::min(in.size(), out.size());
     // if ((in[_(0, common)] != out[_(0, common)]) ||
     //     math::anyNEZero(((in.size() > out.size() ? in : out)[_(common,
     //     end)])))
     //   return legal = IndexMismatch;
   }
-  return legal = None;
+  return setLegal(None);
 }
 } // namespace IR
 
