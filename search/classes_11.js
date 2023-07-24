@@ -1,7 +1,11 @@
 var searchData=
 [
-  ['unrolloptions_259',['UnrollOptions',['../classUnrollOptions.html',1,'']]],
-  ['urand_260',['URand',['../structURand.html',1,'']]],
-  ['urand_3c_20double_20_3e_261',['URand&lt; double &gt;',['../structURand_3_01double_01_4.html',1,'']]],
-  ['users_262',['Users',['../classpoly_1_1IR_1_1Users.html',1,'poly::IR']]]
+  ['value_266',['Value',['../classpoly_1_1IR_1_1Value.html',1,'poly::IR']]],
+  ['vcycleiterator_267',['VCycleIterator',['../classpoly_1_1utils_1_1VCycleIterator.html',1,'poly::utils']]],
+  ['vcyclerange_268',['VCycleRange',['../classpoly_1_1utils_1_1VCycleRange.html',1,'poly::utils']]],
+  ['vectorizationcosts_269',['VectorizationCosts',['../classpoly_1_1IR_1_1cost_1_1VectorizationCosts.html',1,'poly::IR::cost']]],
+  ['vectorprinter_270',['VectorPrinter',['../classprettyprinters_1_1VectorPrinter.html',1,'prettyprinters']]],
+  ['vectorwidth_271',['VectorWidth',['../classpoly_1_1IR_1_1cost_1_1VectorWidth.html',1,'poly::IR::cost']]],
+  ['vforwarditerator_272',['VForwardIterator',['../classpoly_1_1utils_1_1VForwardIterator.html',1,'poly::utils']]],
+  ['vforwardrange_273',['VForwardRange',['../classpoly_1_1utils_1_1VForwardRange.html',1,'poly::utils']]]
 ];

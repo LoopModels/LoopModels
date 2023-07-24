@@ -1,9 +1,9 @@
 var searchData=
 [
-  ['union_144',['Union',['../structpoly_1_1IR_1_1Predicate_1_1Set.html#a9dbe51049dcc1443411c76c62075c249',1,'poly::IR::Predicate::Set::Union(Arena&lt;&gt; *alloc, Intersection other) -&gt; Set &amp;'],['../structpoly_1_1IR_1_1Predicate_1_1Set.html#a784ee9fcde87f530ce83c333c59c8869',1,'poly::IR::Predicate::Set::Union(Arena&lt;&gt; *alloc, const Set &amp;other) -&gt; Set &amp;']]],
-  ['unrolloptions_145',['UnrollOptions',['../classUnrollOptions.html',1,'']]],
-  ['updateoffsmat_146',['updateOffsMat',['../classpoly_1_1IR_1_1Addr.html#a218eb171572ded2bb68130151bc8f0bd',1,'poly::IR::Addr']]],
-  ['urand_147',['URand',['../structURand.html',1,'']]],
-  ['urand_3c_20double_20_3e_148',['URand&lt; double &gt;',['../structURand_3_01double_01_4.html',1,'']]],
-  ['users_149',['Users',['../classpoly_1_1IR_1_1Users.html',1,'poly::IR']]]
+  ['union_146',['Union',['../structpoly_1_1IR_1_1Predicate_1_1Set.html#a9dbe51049dcc1443411c76c62075c249',1,'poly::IR::Predicate::Set::Union(Arena&lt;&gt; *alloc, Intersection other) -&gt; Set &amp;'],['../structpoly_1_1IR_1_1Predicate_1_1Set.html#a784ee9fcde87f530ce83c333c59c8869',1,'poly::IR::Predicate::Set::Union(Arena&lt;&gt; *alloc, const Set &amp;other) -&gt; Set &amp;']]],
+  ['unrolloptions_147',['UnrollOptions',['../classUnrollOptions.html',1,'']]],
+  ['updateoffsmat_148',['updateOffsMat',['../classpoly_1_1IR_1_1Addr.html#a218eb171572ded2bb68130151bc8f0bd',1,'poly::IR::Addr']]],
+  ['urand_149',['URand',['../structURand.html',1,'']]],
+  ['urand_3c_20double_20_3e_150',['URand&lt; double &gt;',['../structURand_3_01double_01_4.html',1,'']]],
+  ['users_151',['Users',['../classpoly_1_1IR_1_1Users.html',1,'poly::IR']]]
 ];

@@ -1,10 +1,13 @@
 var searchData=
 [
-  ['id_209',['ID',['../structpoly_1_1poly_1_1Dependence_1_1ID.html',1,'poly::poly::Dependence']]],
-  ['identifier_210',['Identifier',['../structpoly_1_1IR_1_1Cnst_1_1Identifier.html',1,'poly::IR::Cnst::Identifier'],['../structpoly_1_1IR_1_1Instruction_1_1Identifier.html',1,'poly::IR::Instruction::Identifier']]],
-  ['innode_211',['InNode',['../structpoly_1_1lp_1_1ScheduledNode_1_1InNode.html',1,'poly::lp::ScheduledNode']]],
-  ['instbyvalue_212',['InstByValue',['../structpoly_1_1IR_1_1InstByValue.html',1,'poly::IR']]],
-  ['instruction_213',['Instruction',['../classpoly_1_1IR_1_1Instruction.html',1,'poly::IR']]],
-  ['intersection_214',['Intersection',['../structpoly_1_1IR_1_1Predicate_1_1Intersection.html',1,'poly::IR::Predicate']]],
-  ['iroptimizer_215',['IROptimizer',['../classpoly_1_1CostModeling_1_1IROptimizer.html',1,'poly::CostModeling']]]
+  ['linearsymboliccomparator_217',['LinearSymbolicComparator',['../structpoly_1_1comparator_1_1LinearSymbolicComparator.html',1,'poly::comparator']]],
+  ['literalcomparator_218',['LiteralComparator',['../structpoly_1_1comparator_1_1LiteralComparator.html',1,'poly::comparator']]],
+  ['load_219',['Load',['../classpoly_1_1IR_1_1Load.html',1,'poly::IR']]],
+  ['loop_220',['Loop',['../classpoly_1_1IR_1_1Loop.html',1,'poly::IR::Loop'],['../classpoly_1_1poly_1_1Loop.html',1,'poly::poly::Loop']]],
+  ['loopblock_221',['LoopBlock',['../classpoly_1_1lp_1_1LoopBlock.html',1,'poly::lp']]],
+  ['loopbuild_222',['LoopBuild',['../structpoly_1_1CostModeling_1_1LoopBuild.html',1,'poly::CostModeling']]],
+  ['loopdependencies_223',['LoopDependencies',['../classLoopDependencies.html',1,'']]],
+  ['loopdepsummary_224',['LoopDepSummary',['../structpoly_1_1CostModeling_1_1LoopDepSummary.html',1,'poly::CostModeling']]],
+  ['loopindependent_225',['LoopIndependent',['../structpoly_1_1CostModeling_1_1LoopIndependent.html',1,'poly::CostModeling']]],
+  ['looptree_226',['LoopTree',['../classpoly_1_1CostModeling_1_1LoopTree.html',1,'poly::CostModeling']]]
 ];

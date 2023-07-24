@@ -1246,46 +1246,47 @@ $(function() {
 <div class="line"><a name="l01197"></a><span class="lineno"> 1197</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> Loop::getLegality(<a class="code" href="classpoly_1_1poly_1_1Dependencies.html">poly::Dependencies</a> deps,</div>
 <div class="line"><a name="l01198"></a><span class="lineno"> 1198</span>&#160;                              math::PtrVector&lt;int32_t&gt; loopDeps)</div>
 <div class="line"><a name="l01199"></a><span class="lineno"> 1199</span>&#160;  -&gt; LegalTransforms {</div>
-<div class="line"><a name="l01200"></a><span class="lineno"> 1200</span>&#160;  <span class="keywordflow">if</span> (legal != Unknown) <span class="keywordflow">return</span> legal;</div>
-<div class="line"><a name="l01201"></a><span class="lineno"> 1201</span>&#160;  <span class="keywordflow">if</span> (edgeId &lt; 0) <span class="keywordflow">return</span> legal = DependenceFree;</div>
-<div class="line"><a name="l01202"></a><span class="lineno"> 1202</span>&#160;  <span class="keywordflow">if</span> (this-&gt;currentDepth == 0) <span class="keywordflow">return</span> legal = None;</div>
-<div class="line"><a name="l01203"></a><span class="lineno"> 1203</span>&#160;  ptrdiff_t loop = this-&gt;currentDepth - 1;</div>
-<div class="line"><a name="l01204"></a><span class="lineno"> 1204</span>&#160;  <span class="keywordflow">for</span> (int32_t <span class="keywordtype">id</span> : edges(loopDeps)) {</div>
-<div class="line"><a name="l01205"></a><span class="lineno"> 1205</span>&#160;    <a class="code" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">Dependence::ID</a> i{<span class="keywordtype">id</span>};</div>
-<div class="line"><a name="l01206"></a><span class="lineno"> 1206</span>&#160;    StridedVector&lt;int64_t&gt; in = deps.input(i)-&gt;<a class="code" href="classpoly_1_1IR_1_1Addr.html#af4838372d11fd32b964c9a7cb6d4b1b8">indexMatrix</a>()(_, loop),</div>
-<div class="line"><a name="l01207"></a><span class="lineno"> 1207</span>&#160;                           out = deps.output(i)-&gt;indexMatrix()(_, loop);</div>
-<div class="line"><a name="l01208"></a><span class="lineno"> 1208</span>&#160;    invariant(in.size(), out.size());</div>
-<div class="line"><a name="l01209"></a><span class="lineno"> 1209</span>&#160;    <span class="keywordflow">if</span> (in != out) <span class="keywordflow">return</span> legal = IndexMismatch;</div>
-<div class="line"><a name="l01210"></a><span class="lineno"> 1210</span>&#160;    <span class="comment">// ptrdiff_t common = std::min(in.size(), out.size());</span></div>
-<div class="line"><a name="l01211"></a><span class="lineno"> 1211</span>&#160;    <span class="comment">// if ((in[_(0, common)] != out[_(0, common)]) ||</span></div>
-<div class="line"><a name="l01212"></a><span class="lineno"> 1212</span>&#160;    <span class="comment">//     math::anyNEZero(((in.size() &gt; out.size() ? in : out)[_(common,</span></div>
-<div class="line"><a name="l01213"></a><span class="lineno"> 1213</span>&#160;    <span class="comment">//     end)])))</span></div>
-<div class="line"><a name="l01214"></a><span class="lineno"> 1214</span>&#160;    <span class="comment">//   return legal = IndexMismatch;</span></div>
-<div class="line"><a name="l01215"></a><span class="lineno"> 1215</span>&#160;  }</div>
-<div class="line"><a name="l01216"></a><span class="lineno"> 1216</span>&#160;  <span class="keywordflow">return</span> legal = None;</div>
-<div class="line"><a name="l01217"></a><span class="lineno"> 1217</span>&#160;}</div>
-<div class="line"><a name="l01218"></a><span class="lineno"> 1218</span>&#160;} <span class="comment">// namespace IR</span></div>
-<div class="line"><a name="l01219"></a><span class="lineno"> 1219</span>&#160; </div>
-<div class="line"><a name="l01220"></a><span class="lineno"> 1220</span>&#160;<span class="keyword">namespace </span>poly {</div>
-<div class="line"><a name="l01221"></a><span class="lineno"> 1221</span>&#160;<span class="keyword">inline</span> <span class="keywordtype">void</span> Dependencies::copyDependencies(Arena&lt;&gt; *alloc, IR::Addr *src,</div>
-<div class="line"><a name="l01222"></a><span class="lineno"> 1222</span>&#160;                                           IR::Addr *dst) {</div>
-<div class="line"><a name="l01223"></a><span class="lineno"> 1223</span>&#160;  <span class="keywordflow">for</span> (int32_t <span class="keywordtype">id</span> : src-&gt;inputEdgeIDs(*<span class="keyword">this</span>)) {</div>
-<div class="line"><a name="l01224"></a><span class="lineno"> 1224</span>&#160;    IR::Addr *input = this-&gt;input(Dependence::ID{<span class="keywordtype">id</span>});</div>
-<div class="line"><a name="l01225"></a><span class="lineno"> 1225</span>&#160;    <span class="keywordflow">if</span> (input-&gt;isLoad()) <span class="keywordflow">continue</span>;</div>
-<div class="line"><a name="l01226"></a><span class="lineno"> 1226</span>&#160;    Dependence d = get(Dependence::ID{<span class="keywordtype">id</span>}, input, dst);</div>
-<div class="line"><a name="l01227"></a><span class="lineno"> 1227</span>&#160;    addEdge(alloc, d);</div>
-<div class="line"><a name="l01228"></a><span class="lineno"> 1228</span>&#160;  }</div>
-<div class="line"><a name="l01229"></a><span class="lineno"> 1229</span>&#160;  <span class="keywordflow">for</span> (int32_t <span class="keywordtype">id</span> : src-&gt;outputEdgeIDs(*<span class="keyword">this</span>)) {</div>
-<div class="line"><a name="l01230"></a><span class="lineno"> 1230</span>&#160;    IR::Addr *output = this-&gt;output(Dependence::ID{<span class="keywordtype">id</span>});</div>
-<div class="line"><a name="l01231"></a><span class="lineno"> 1231</span>&#160;    <span class="keywordflow">if</span> (output-&gt;isLoad()) <span class="keywordflow">continue</span>;</div>
-<div class="line"><a name="l01232"></a><span class="lineno"> 1232</span>&#160;    Dependence d = get(Dependence::ID{<span class="keywordtype">id</span>}, dst, output);</div>
-<div class="line"><a name="l01233"></a><span class="lineno"> 1233</span>&#160;    addEdge(alloc, d);</div>
-<div class="line"><a name="l01234"></a><span class="lineno"> 1234</span>&#160;  }</div>
-<div class="line"><a name="l01235"></a><span class="lineno"> 1235</span>&#160;}</div>
-<div class="line"><a name="l01236"></a><span class="lineno"> 1236</span>&#160; </div>
-<div class="line"><a name="l01237"></a><span class="lineno"> 1237</span>&#160;} <span class="comment">// namespace poly</span></div>
-<div class="line"><a name="l01238"></a><span class="lineno"> 1238</span>&#160; </div>
-<div class="line"><a name="l01239"></a><span class="lineno"> 1239</span>&#160;} <span class="comment">// namespace poly</span></div>
+<div class="line"><a name="l01200"></a><span class="lineno"> 1200</span>&#160;  <span class="keyword">const</span> <span class="keyword">auto</span> legal = getLegal();</div>
+<div class="line"><a name="l01201"></a><span class="lineno"> 1201</span>&#160;  <span class="keywordflow">if</span> (legal != Unknown) <span class="keywordflow">return</span> legal;</div>
+<div class="line"><a name="l01202"></a><span class="lineno"> 1202</span>&#160;  <span class="keywordflow">if</span> (edgeId &lt; 0) <span class="keywordflow">return</span> setLegal(DependenceFree);</div>
+<div class="line"><a name="l01203"></a><span class="lineno"> 1203</span>&#160;  <span class="keywordflow">if</span> (this-&gt;currentDepth == 0) <span class="keywordflow">return</span> setLegal(None);</div>
+<div class="line"><a name="l01204"></a><span class="lineno"> 1204</span>&#160;  ptrdiff_t loop = this-&gt;currentDepth - 1;</div>
+<div class="line"><a name="l01205"></a><span class="lineno"> 1205</span>&#160;  <span class="keywordflow">for</span> (int32_t <span class="keywordtype">id</span> : edges(loopDeps)) {</div>
+<div class="line"><a name="l01206"></a><span class="lineno"> 1206</span>&#160;    <a class="code" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">Dependence::ID</a> i{<span class="keywordtype">id</span>};</div>
+<div class="line"><a name="l01207"></a><span class="lineno"> 1207</span>&#160;    StridedVector&lt;int64_t&gt; in = deps.input(i)-&gt;<a class="code" href="classpoly_1_1IR_1_1Addr.html#af4838372d11fd32b964c9a7cb6d4b1b8">indexMatrix</a>()(_, loop),</div>
+<div class="line"><a name="l01208"></a><span class="lineno"> 1208</span>&#160;                           out = deps.output(i)-&gt;indexMatrix()(_, loop);</div>
+<div class="line"><a name="l01209"></a><span class="lineno"> 1209</span>&#160;    invariant(in.size(), out.size());</div>
+<div class="line"><a name="l01210"></a><span class="lineno"> 1210</span>&#160;    <span class="keywordflow">if</span> (in != out) <span class="keywordflow">return</span> setLegal(IndexMismatch);</div>
+<div class="line"><a name="l01211"></a><span class="lineno"> 1211</span>&#160;    <span class="comment">// ptrdiff_t common = std::min(in.size(), out.size());</span></div>
+<div class="line"><a name="l01212"></a><span class="lineno"> 1212</span>&#160;    <span class="comment">// if ((in[_(0, common)] != out[_(0, common)]) ||</span></div>
+<div class="line"><a name="l01213"></a><span class="lineno"> 1213</span>&#160;    <span class="comment">//     math::anyNEZero(((in.size() &gt; out.size() ? in : out)[_(common,</span></div>
+<div class="line"><a name="l01214"></a><span class="lineno"> 1214</span>&#160;    <span class="comment">//     end)])))</span></div>
+<div class="line"><a name="l01215"></a><span class="lineno"> 1215</span>&#160;    <span class="comment">//   return legal = IndexMismatch;</span></div>
+<div class="line"><a name="l01216"></a><span class="lineno"> 1216</span>&#160;  }</div>
+<div class="line"><a name="l01217"></a><span class="lineno"> 1217</span>&#160;  <span class="keywordflow">return</span> setLegal(None);</div>
+<div class="line"><a name="l01218"></a><span class="lineno"> 1218</span>&#160;}</div>
+<div class="line"><a name="l01219"></a><span class="lineno"> 1219</span>&#160;} <span class="comment">// namespace IR</span></div>
+<div class="line"><a name="l01220"></a><span class="lineno"> 1220</span>&#160; </div>
+<div class="line"><a name="l01221"></a><span class="lineno"> 1221</span>&#160;<span class="keyword">namespace </span>poly {</div>
+<div class="line"><a name="l01222"></a><span class="lineno"> 1222</span>&#160;<span class="keyword">inline</span> <span class="keywordtype">void</span> Dependencies::copyDependencies(Arena&lt;&gt; *alloc, IR::Addr *src,</div>
+<div class="line"><a name="l01223"></a><span class="lineno"> 1223</span>&#160;                                           IR::Addr *dst) {</div>
+<div class="line"><a name="l01224"></a><span class="lineno"> 1224</span>&#160;  <span class="keywordflow">for</span> (int32_t <span class="keywordtype">id</span> : src-&gt;inputEdgeIDs(*<span class="keyword">this</span>)) {</div>
+<div class="line"><a name="l01225"></a><span class="lineno"> 1225</span>&#160;    IR::Addr *input = this-&gt;input(Dependence::ID{<span class="keywordtype">id</span>});</div>
+<div class="line"><a name="l01226"></a><span class="lineno"> 1226</span>&#160;    <span class="keywordflow">if</span> (input-&gt;isLoad()) <span class="keywordflow">continue</span>;</div>
+<div class="line"><a name="l01227"></a><span class="lineno"> 1227</span>&#160;    Dependence d = get(Dependence::ID{<span class="keywordtype">id</span>}, input, dst);</div>
+<div class="line"><a name="l01228"></a><span class="lineno"> 1228</span>&#160;    addEdge(alloc, d);</div>
+<div class="line"><a name="l01229"></a><span class="lineno"> 1229</span>&#160;  }</div>
+<div class="line"><a name="l01230"></a><span class="lineno"> 1230</span>&#160;  <span class="keywordflow">for</span> (int32_t <span class="keywordtype">id</span> : src-&gt;outputEdgeIDs(*<span class="keyword">this</span>)) {</div>
+<div class="line"><a name="l01231"></a><span class="lineno"> 1231</span>&#160;    IR::Addr *output = this-&gt;output(Dependence::ID{<span class="keywordtype">id</span>});</div>
+<div class="line"><a name="l01232"></a><span class="lineno"> 1232</span>&#160;    <span class="keywordflow">if</span> (output-&gt;isLoad()) <span class="keywordflow">continue</span>;</div>
+<div class="line"><a name="l01233"></a><span class="lineno"> 1233</span>&#160;    Dependence d = get(Dependence::ID{<span class="keywordtype">id</span>}, dst, output);</div>
+<div class="line"><a name="l01234"></a><span class="lineno"> 1234</span>&#160;    addEdge(alloc, d);</div>
+<div class="line"><a name="l01235"></a><span class="lineno"> 1235</span>&#160;  }</div>
+<div class="line"><a name="l01236"></a><span class="lineno"> 1236</span>&#160;}</div>
+<div class="line"><a name="l01237"></a><span class="lineno"> 1237</span>&#160; </div>
+<div class="line"><a name="l01238"></a><span class="lineno"> 1238</span>&#160;} <span class="comment">// namespace poly</span></div>
+<div class="line"><a name="l01239"></a><span class="lineno"> 1239</span>&#160; </div>
+<div class="line"><a name="l01240"></a><span class="lineno"> 1240</span>&#160;} <span class="comment">// namespace poly</span></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Addr_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Addr.html">poly::IR::Addr</a></div><div class="ttdef"><b>Definition:</b> Address.hpp:77</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Addr_html_a1c11ac80919c828f4ffe2e9623605750"><div class="ttname"><a href="classpoly_1_1IR_1_1Addr.html#a1c11ac80919c828f4ffe2e9623605750">poly::IR::Addr::drop</a></div><div class="ttdeci">void drop(Dependencies)</div><div class="ttdoc">drop this and remove it from Dependencies</div><div class="ttdef"><b>Definition:</b> Dependence.hpp:1188</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Addr_html_af4838372d11fd32b964c9a7cb6d4b1b8"><div class="ttname"><a href="classpoly_1_1IR_1_1Addr.html#af4838372d11fd32b964c9a7cb6d4b1b8">poly::IR::Addr::indexMatrix</a></div><div class="ttdeci">constexpr auto indexMatrix() -&gt; MutDensePtrMatrix&lt; int64_t &gt;</div><div class="ttdoc">indexMatrix() -&gt; arrayDim() x getNumLoops()</div><div class="ttdef"><b>Definition:</b> Address.hpp:475</div></div>

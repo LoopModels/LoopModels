@@ -1,7 +1,6 @@
 var searchData=
 [
-  ['map_224',['Map',['../classpoly_1_1IR_1_1Predicate_1_1Map.html',1,'poly::IR::Predicate']]],
-  ['mergingcost_225',['MergingCost',['../structpoly_1_1IR_1_1MergingCost.html',1,'poly::IR']]],
-  ['mockgraph_226',['MockGraph',['../structpoly_1_1MockGraph.html',1,'poly']]],
-  ['mockvertex_227',['MockVertex',['../structpoly_1_1MockVertex.html',1,'poly']]]
+  ['nextaddr_231',['NextAddr',['../structpoly_1_1lp_1_1ScheduledNode_1_1NextAddr.html',1,'poly::lp::ScheduledNode']]],
+  ['node_232',['Node',['../classpoly_1_1IR_1_1Node.html',1,'poly::IR']]],
+  ['nowraprewriter_233',['NoWrapRewriter',['../structpoly_1_1poly_1_1NoWrapRewriter.html',1,'poly::poly']]]
 ];

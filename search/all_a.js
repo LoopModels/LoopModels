@@ -5,8 +5,10 @@ var searchData=
   ['load_92',['Load',['../classpoly_1_1IR_1_1Load.html',1,'poly::IR']]],
   ['loop_93',['Loop',['../classpoly_1_1IR_1_1Loop.html',1,'poly::IR::Loop'],['../classpoly_1_1poly_1_1Loop.html',1,'poly::poly::Loop']]],
   ['loopblock_94',['LoopBlock',['../classpoly_1_1lp_1_1LoopBlock.html',1,'poly::lp']]],
-  ['loopdepsummary_95',['LoopDepSummary',['../structpoly_1_1CostModeling_1_1LoopDepSummary.html',1,'poly::CostModeling']]],
-  ['loopindependent_96',['LoopIndependent',['../structpoly_1_1CostModeling_1_1LoopIndependent.html',1,'poly::CostModeling']]],
-  ['loopmodels_97',['LoopModels',['../md_README.html',1,'']]],
-  ['looptree_98',['LoopTree',['../classpoly_1_1CostModeling_1_1LoopTree.html',1,'poly::CostModeling']]]
+  ['loopbuild_95',['LoopBuild',['../structpoly_1_1CostModeling_1_1LoopBuild.html',1,'poly::CostModeling']]],
+  ['loopdependencies_96',['LoopDependencies',['../classLoopDependencies.html',1,'']]],
+  ['loopdepsummary_97',['LoopDepSummary',['../structpoly_1_1CostModeling_1_1LoopDepSummary.html',1,'poly::CostModeling']]],
+  ['loopindependent_98',['LoopIndependent',['../structpoly_1_1CostModeling_1_1LoopIndependent.html',1,'poly::CostModeling']]],
+  ['loopmodels_99',['LoopModels',['../md_README.html',1,'']]],
+  ['looptree_100',['LoopTree',['../classpoly_1_1CostModeling_1_1LoopTree.html',1,'poly::CostModeling']]]
 ];
