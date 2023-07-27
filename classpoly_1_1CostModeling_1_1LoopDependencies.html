@@ -90,15 +90,15 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:af9c3ed5948c894a5fa90ac0078eef3cb"><td class="memItemLeft" align="right" valign="top"><a id="af9c3ed5948c894a5fa90ac0078eef3cb"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>LoopDependencies</b> (const <a class="el" href="classpoly_1_1CostModeling_1_1LoopDependencies.html">LoopDependencies</a> &amp;)=default</td></tr>
 <tr class="separator:af9c3ed5948c894a5fa90ac0078eef3cb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5e8916799219eea36b31dc832a80e659"><td class="memItemLeft" align="right" valign="top"><a id="a5e8916799219eea36b31dc832a80e659"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>subTree</b> () -&gt; uint32_t</td></tr>
-<tr class="separator:a5e8916799219eea36b31dc832a80e659"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aefa113c56922e0a4b44d8f21799d1abf"><td class="memItemLeft" align="right" valign="top"><a id="aefa113c56922e0a4b44d8f21799d1abf"></a>
-constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>resetTree</b> (uint32_t newOffset)</td></tr>
-<tr class="separator:aefa113c56922e0a4b44d8f21799d1abf"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6996d832c9e7d7a992b27de4062280b5"><td class="memItemLeft" align="right" valign="top"><a id="a6996d832c9e7d7a992b27de4062280b5"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator[]</b> (size_t i) -&gt; <a class="el" href="classpoly_1_1CostModeling_1_1AddrSummary.html">AddrSummary</a></td></tr>
-<tr class="separator:a6996d832c9e7d7a992b27de4062280b5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab884d0d118de5fb0dde969820df944cc"><td class="memItemLeft" align="right" valign="top"><a id="ab884d0d118de5fb0dde969820df944cc"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>subTree</b> () -&gt; int32_t</td></tr>
+<tr class="separator:ab884d0d118de5fb0dde969820df944cc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a00718dd8d23cba1b0b5ed1bf07f632fe"><td class="memItemLeft" align="right" valign="top"><a id="a00718dd8d23cba1b0b5ed1bf07f632fe"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>resetTree</b> (int32_t newOffset)</td></tr>
+<tr class="separator:a00718dd8d23cba1b0b5ed1bf07f632fe"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae72d98cf368e773dcad68548067da491"><td class="memItemLeft" align="right" valign="top"><a id="ae72d98cf368e773dcad68548067da491"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator[]</b> (ptrdiff_t i) -&gt; <a class="el" href="classpoly_1_1CostModeling_1_1AddrSummary.html">AddrSummary</a></td></tr>
+<tr class="separator:ae72d98cf368e773dcad68548067da491"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a74b5fe39014adb10124fbc4186a51052"><td class="memItemLeft" align="right" valign="top"><a id="a74b5fe39014adb10124fbc4186a51052"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>size</b> () const -&gt; ptrdiff_t</td></tr>
 <tr class="separator:a74b5fe39014adb10124fbc4186a51052"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -108,9 +108,23 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>begin</b> (
 <tr class="memitem:a5905df8681bc8cdce68de81edf52b26d"><td class="memItemLeft" align="right" valign="top"><a id="a5905df8681bc8cdce68de81edf52b26d"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>end</b> () -&gt; <a class="el" href="classpoly_1_1CostModeling_1_1LoopDependencies_1_1Iterator.html">Iterator</a></td></tr>
 <tr class="separator:a5905df8681bc8cdce68de81edf52b26d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1ba4a3bc0c2f9f052031754a7428bf87"><td class="memItemLeft" align="right" valign="top"><a id="a1ba4a3bc0c2f9f052031754a7428bf87"></a>
-constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>addAddr</b> (utils::Arena&lt;&gt; *, math::ResizeableView&lt; <a class="el" href="classpoly_1_1CostModeling_1_1OptimizationOptions.html">OptimizationOptions</a>, unsigned &gt;, <a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> *)</td></tr>
-<tr class="separator:a1ba4a3bc0c2f9f052031754a7428bf87"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a49bcbc0db8bf7721f9882ee8a07c7450"><td class="memItemLeft" align="right" valign="top"><a id="a49bcbc0db8bf7721f9882ee8a07c7450"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>findShared</b> (<a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> *a) -&gt; std::pair&lt; <a class="el" href="structpoly_1_1CostModeling_1_1ArrayIndex.html">ArrayIndex</a>, int32_t &gt; *</td></tr>
+<tr class="separator:a49bcbc0db8bf7721f9882ee8a07c7450"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a29020f7ccc9f1039d031fb9c950e4110"><td class="memItemLeft" align="right" valign="top"><a id="a29020f7ccc9f1039d031fb9c950e4110"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>sharedChain</b> () -&gt; int32_t *</td></tr>
+<tr class="separator:a29020f7ccc9f1039d031fb9c950e4110"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2cd468a1888064365ab28c3b23bf2e6c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1CostModeling_1_1LoopDependencies.html#a2cd468a1888064365ab28c3b23bf2e6c">evalCollections</a> (const auto &amp;f)</td></tr>
+<tr class="separator:a2cd468a1888064365ab28c3b23bf2e6c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9226eea08efc9e8acf5024e4e6a459b0"><td class="memItemLeft" align="right" valign="top"><a id="a9226eea08efc9e8acf5024e4e6a459b0"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>sharedIndex</b> (<a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> *a) -&gt; <a class="el" href="classpoly_1_1utils_1_1VForwardRange.html">utils::VForwardRange</a></td></tr>
+<tr class="separator:a9226eea08efc9e8acf5024e4e6a459b0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9831c0f4b24b3b479ed7f117e23e9756"><td class="memItemLeft" align="right" valign="top"><a id="a9831c0f4b24b3b479ed7f117e23e9756"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>commonIndices</b> (<a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> *a)</td></tr>
+<tr class="separator:a9831c0f4b24b3b479ed7f117e23e9756"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7292f251ec8faffcbc9cae9116ef0522"><td class="memItemLeft" align="right" valign="top"><a id="a7292f251ec8faffcbc9cae9116ef0522"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>addAddr</b> (utils::Arena&lt;&gt; *, math::ResizeableView&lt; <a class="el" href="classpoly_1_1CostModeling_1_1OptimizationOptions.html">OptimizationOptions</a>, unsigned &gt; &amp;, <a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> *)</td></tr>
+<tr class="separator:a7292f251ec8faffcbc9cae9116ef0522"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
@@ -121,7 +135,35 @@ static auto&#160;</td><td class="memItemRight" valign="bottom"><b>create</b> (ut
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>3-d array, numAddr x (2 x cld(numLoops,64) + 1) The <code>1</code> is a static multiplier (e.g. 2) on strides We store the minimum-static rank dependency of each addr, the static rank, and the remaining dependencies.</p>
 <p>We also want to collect addrs corresponding to arrays, to find unroll possibilities. </p>
-</div><hr/>The documentation for this class was generated from the following file:<ul>
+</div><h2 class="groupheader">Member Function Documentation</h2>
+<a id="a2cd468a1888064365ab28c3b23bf2e6c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2cd468a1888064365ab28c3b23bf2e6c">&#9670;&nbsp;</a></span>evalCollections()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void poly::CostModeling::LoopDependencies::evalCollections </td>
+          <td>(</td>
+          <td class="paramtype">const auto &amp;&#160;</td>
+          <td class="paramname"><em>f</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>calls <code>f</code> with <code>this</code> and an iterator over a set of array pointers that share <code>indexMatrix</code> </p>
+
+</div>
+</div>
+<hr/>The documentation for this class was generated from the following file:<ul>
 <li>include/IR/<a class="el" href="OptimizationPossibilities_8hpp_source.html">OptimizationPossibilities.hpp</a></li>
 </ul>
 </div><!-- contents -->
