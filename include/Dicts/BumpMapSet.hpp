@@ -2,6 +2,7 @@
 #include <Dicts/BumpVector.hpp>
 #include <Utilities/Allocators.hpp>
 #include <ankerl/unordered_dense.h>
+#include <type_traits>
 
 namespace poly::dict {
 
@@ -29,4 +30,6 @@ struct aset // NOLINT(readability-identifier-naming)
                                  std::equal_to<K>, math::BumpPtrVector<K>>;
   aset(Arena<> *alloc) : Base{WArena<K>(alloc)} {}
 };
+static_assert(std::is_trivially_destructible_v<int>);
+
 } // namespace poly::dict

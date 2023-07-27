@@ -2,7 +2,6 @@
 #include "IR/Address.hpp"
 #include "IR/Node.hpp"
 #include "Math/Array.hpp"
-#include "Math/Comparisons.hpp"
 #include "Math/Simplex.hpp"
 #include "Polyhedra/DependencyPolyhedra.hpp"
 #include "Polyhedra/Loops.hpp"

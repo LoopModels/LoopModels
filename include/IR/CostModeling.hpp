@@ -393,9 +393,9 @@ inline auto buildSubGraph(IR::Dependencies deps, IR::Loop *root, unsigned depth,
                           uint32_t id) -> uint32_t {
   // We build the instruction graph, via traversing the tree, and then
   // top sorting as we recurse out
-  root->setMeta(id++);
   for (IR::Loop *child : root->subLoops())
     id = buildSubGraph(deps, child, depth + 1, id);
+  root->setMeta(id++);
 
   // The very outer `root` needs to have all instr constituents
   // we also need to add the last instruction of each loop as `last`
@@ -484,7 +484,9 @@ class IROptimizer {
     for (int32_t id : a->outputEdgeIDs(deps, a->getCurrentDepth())) {
       IR::Addr *b = deps.output(Dependence::ID{id});
       // TODO: also check loop extants
-      if (a->indexMatrix() != b->indexMatrix()) return;
+      if (a->indexMatrix() != b->indexMatrix() ||
+          a->getOffsetOmega() != b->getOffsetOmega())
+        return;
       if (a->isStore()) {
         // On a Write->Write, we remove the first write.
         if (b->isStore()) return a->drop(deps);
@@ -507,14 +509,15 @@ class IROptimizer {
   // load-elimination/stored-val forwarding in `removeRedundantAddr`)
   // 2. are non-escaping, i.e. `llvm::isNonEscapingLocalObject`
   // 3. returned by `llvm::isRemovableAlloc`
-  inline void eliminateTemporaries(IR::AddrChain addr) {
+  inline auto eliminateTemporaries(IR::AddrChain addr) -> unsigned {
     auto s = lalloc->scope();
     dict::aset<IR::Addr *> loaded{lalloc};
     for (IR::Addr *a : addr.getAddr())
       if (a->isLoad()) loaded.insert(a);
-
+    unsigned remaining = 0;
     for (IR::Addr *a : addr.getAddr()) {
       if (a->isDropped()) continue;
+      ++remaining;
       if (loaded.contains(a)) continue;
       const llvm::SCEVUnknown *ptr = a->getArrayPointer();
       auto *call = llvm::dyn_cast<llvm::CallBase>(ptr->getValue());
@@ -529,7 +532,9 @@ class IROptimizer {
       // because we have live `llvm::Instruction`s that we haven't removed yet.
       // TODO: revisit when handling code generation (and deleting old code)
       eraseCandidates.insert(call);
+      --remaining;
     }
+    return remaining;
   }
 
   // plan: SCC? Iterate over nodes in program order?
@@ -649,13 +654,18 @@ public:
   IROptimizer(IR::Dependencies deps, IR::Cache &instr,
               dict::set<llvm::BasicBlock *> &loopBBs,
               dict::set<llvm::CallBase *> &eraseCandidates_, IR::Loop *root_,
-              Arena<> *lalloc, lp::LoopBlock::OptimizationResult res)
+              Arena<> *lalloc, lp::LoopBlock::OptimizationResult res,
+              uint32_t numLoops)
     : deps{deps}, instructions{instr}, LBBs{loopBBs},
       eraseCandidates{eraseCandidates_}, root{root_}, lalloc{lalloc} {
     sortEdges(root, 0);
     removeRedundantAddr(res.addr);
-    eliminateTemporaries(res.addr);
+    unsigned numAddr = eliminateTemporaries(res.addr);
     loopDeps = loopDepSats(lalloc, deps, res);
+    // plan now is to have a `BitArray` big enough to hold `numLoops` entries
+    // and `numAddr` rows; final axis is contiguous vs non-contiguous
+    // Additionally, we will have a vector of unroll strategies to consider
+    // -
   }
 };
 
@@ -768,7 +778,8 @@ inline void optimize(IR::Dependencies deps, IR::Cache &instr,
   // `N` is the head of the topologically sorted graph
   // We now try to remove redundant memory operations
 
-  IROptimizer(deps, instr, loopBBs, eraseCandidates, root, lalloc, res);
+  IROptimizer(deps, instr, loopBBs, eraseCandidates, root, lalloc, res,
+              numLoops);
 }
 
 /*

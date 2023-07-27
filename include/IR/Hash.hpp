@@ -37,9 +37,11 @@ template <> struct ankerl::unordered_dense::hash<poly::IR::Cnst::Identifier> {
   }
 };
 
-template <> struct ankerl::unordered_dense::hash<poly::IR::Identifier> {
+template <>
+struct ankerl::unordered_dense::hash<poly::IR::Instruction::Identifier> {
   using is_avalanching = void;
-  [[nodiscard]] auto operator()(poly::IR::Identifier const &x) const noexcept
+  [[nodiscard]] auto
+  operator()(poly::IR::Instruction::Identifier const &x) const noexcept
     -> uint64_t {
     using poly::Hash::combineHash, poly::Hash::getHash;
     uint64_t seed = getHash(x.kind);
