@@ -2,6 +2,7 @@
 #include "Dicts/BumpMapSet.hpp"
 #include "IR/Address.hpp"
 #include "IR/Hash.hpp"
+#include "Support/Iterators.hpp"
 #include <Containers/BitSets.hpp>
 #include <Math/Array.hpp>
 #include <Utilities/Allocators.hpp>
@@ -9,6 +10,7 @@
 #include <bit>
 #include <cstddef>
 #include <cstdint>
+#include <ranges>
 #include <utility>
 
 namespace poly::CostModeling {
@@ -16,6 +18,7 @@ using math::MutPtrVector, math::DensePtrMatrix;
 struct ArrayIndex {
   const llvm::SCEVUnknown *array;
   DensePtrMatrix<int64_t> index;
+
   ArrayIndex(IR::Addr *a)
     : array{a->getArrayPointer()}, index{a->indexMatrix()} {}
   constexpr auto operator==(const ArrayIndex &) const -> bool = default;
@@ -114,11 +117,12 @@ class OptimizationOptions;
 /// We also want to collect addrs corresponding to arrays, to find
 /// unroll possibilities.
 class LoopDependencies {
-  dict::amap<ArrayIndex, uint32_t> addrMap;
+  dict::amap<ArrayIndex, int32_t> addrMap;
   /// the chain is for mappings of indices w/in LoopDependencies
   unsigned numLoops;
-  unsigned numAddr;
-  uint32_t offset{0};
+  unsigned maxAddr;
+  unsigned numAddr{0};
+  int32_t offset{0};
   // data is an array of `AddrSummary`, and then a chain of length `numAddr`
   // giving the position among `AddrSummary` of the next in the chain
 #if !defined(__clang__) && defined(__GNUC__)
@@ -148,20 +152,17 @@ public:
   static auto create(utils::Arena<> *alloc, unsigned numLoops, unsigned numAddr)
     -> LoopDependencies * {
 
-    size_t size =
-      size_t(numAddr) * (bytesPerAddr(numLoops) + sizeof(uint32_t)) +
-      sizeof(LoopDependencies);
+    size_t size = size_t(numAddr) * (bytesPerAddr(numLoops) + sizeof(int32_t)) +
+                  sizeof(LoopDependencies);
     void *data = alloc->allocate(size);
     char *p = static_cast<char *>(data);
     std::fill(p + sizeof(LoopDependencies), p + size, 0);
     auto *ldp = static_cast<LoopDependencies *>(data);
     return std::construct_at(ldp, alloc, numLoops, numAddr);
   }
-  constexpr auto subTree() -> uint32_t {
-    return std::exchange(offset, numAddr);
-  }
-  constexpr void resetTree(uint32_t newOffset) { offset = newOffset; }
-  constexpr auto operator[](size_t i) -> AddrSummary {
+  constexpr auto subTree() -> int32_t { return std::exchange(offset, numAddr); }
+  constexpr void resetTree(int32_t newOffset) { offset = newOffset; }
+  constexpr auto operator[](ptrdiff_t i) -> AddrSummary {
     utils::invariant(i < numAddr);
     char *base = data + i * bytesPerAddr(numLoops);
     void *addr = base;
@@ -205,12 +206,48 @@ public:
       return tmp;
     }
   };
-  constexpr auto begin() -> Iterator { return {this, 0}; }
+  constexpr auto begin() -> Iterator { return {this, offset}; }
   constexpr auto end() -> Iterator { return {this, size()}; }
+  constexpr auto findShared(IR::Addr *a) -> std::pair<ArrayIndex, int32_t> * {
+    return addrMap.find(ArrayIndex{a});
+  }
+  // constexpr auto getShared(IR::Addr *a) -> int32_t & {
+  //   return addrMap[ArrayIndex{a}];
+  // }
+  [[nodiscard]] constexpr auto sharedChain() -> int32_t * {
+    void *p = data + maxAddr * bytesPerAddr(numLoops);
+    return static_cast<int32_t *>(p);
+  }
+  /// calls `f` with `this` and an iterator over a set of
+  /// array pointers that share `indexMatrix`
+  void evalCollections(const auto &f) {
+    int32_t *p = sharedChain();
+    for (auto [s, i] : addrMap) {
+      if ((i < offset) || (p[i] < offset)) continue;
+      f(this, utils::VForwardRange{p, i});
+    }
+  }
+  // constexpr auto hasMultiple(IR::Addr *a) -> bool {
+  //   auto *f = findShared(a);
+  //   if (!f) return false;
+
+  // }
+  constexpr auto sharedIndex(IR::Addr *a) -> utils::VForwardRange {
+    auto *f = findShared(a);
+    if (f == addrMap.end()) return utils::VForwardRange{nullptr, -1};
+
+    return utils::VForwardRange{sharedChain(), f->second};
+  }
+  constexpr auto commonIndices(IR::Addr *a) {
+    return sharedIndex(a) |
+           std::views::filter([=](int32_t i) -> bool { return i >= offset; }) |
+           std::views::transform(
+             [this](int32_t i) -> AddrSummary { return (*this)[i]; });
+  }
   // adding an Addr should adds unroll options
   inline constexpr void
-  addAddr(utils::Arena<> *, math::ResizeableView<OptimizationOptions, unsigned>,
-          IR::Addr *);
+  addAddr(utils::Arena<> *,
+          math::ResizeableView<OptimizationOptions, unsigned> &, IR::Addr *);
 };
 
 /// What we want is a map from {array,indexMatrix()} pairs to
@@ -278,11 +315,27 @@ public:
 // I think we should have sub-tree ref sets.
 inline constexpr void LoopDependencies::addAddr(
   utils::Arena<> *alloc,
-  math::ResizeableView<OptimizationOptions, unsigned> optops, IR::Addr *a) {
+  math::ResizeableView<OptimizationOptions, unsigned> &optops, IR::Addr *a) {
+  auto *f = findShared(a);
+  if (f && f->second >= offset) return; // already added
+
+  bool foundMatchInd = false;
+  for (AddrSummary s : commonIndices(a)) {
+    IR::Addr *b = s.getAddr();
+    // we share the same array and IndexMatrix
+    // check for patterns like `A[i,2*j], A[i,2*j + 1]`
+    // if we're not part of the same BB
+    if ((a->getParent() != b->getParent()) || (a->isLoad() != b->isLoad()))
+      continue;
+    // we can check top positions
+    invariant(a->getTopPosition() > b->getTopPosition());
+    // note that outputEdgeIDs are sorted; can we use this to check for
+    // no intervening edges?
+  }
+  if (foundMatchInd) return; // already added this `indexMatrix`
   for (AddrSummary s : *this) {
     if (s.getAddr() == a) {
       // check for patterns like `A[i,2*j], A[i,2*j + 1]`
-      //
     }
   }
 }

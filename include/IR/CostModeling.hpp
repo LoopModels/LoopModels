@@ -4,6 +4,7 @@
 #include "Dicts/BumpMapSet.hpp"
 #include "Graphs/Graphs.hpp"
 #include "IR/Address.hpp"
+#include "IR/OptimizationPossibilities.hpp"
 #include "LinearProgramming/LoopBlock.hpp"
 #include "LinearProgramming/ScheduledNode.hpp"
 #include "Polyhedra/Dependence.hpp"
@@ -665,7 +666,7 @@ public:
     // plan now is to have a `BitArray` big enough to hold `numLoops` entries
     // and `numAddr` rows; final axis is contiguous vs non-contiguous
     // Additionally, we will have a vector of unroll strategies to consider
-    // -
+    LoopDependencies *ld = LoopDependencies::create(lalloc, numLoops, numAddr);
   }
 };
 
