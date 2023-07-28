@@ -67,6 +67,7 @@ $(function() {
 <div class="header">
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
+<a href="#pub-static-methods">Static Public Member Functions</a> &#124;
 <a href="classpoly_1_1CostModeling_1_1AddrSummary-members.html">List of all members</a>  </div>
   <div class="headertitle">
 <div class="title">poly::CostModeling::AddrSummary Class Reference</div>  </div>
@@ -93,6 +94,21 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>remainingLo
 <tr class="memitem:a7849dfa781903ad994f0f088a1a6581d"><td class="memItemLeft" align="right" valign="top"><a id="a7849dfa781903ad994f0f088a1a6581d"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getAddr</b> () -&gt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> *</td></tr>
 <tr class="separator:a7849dfa781903ad994f0f088a1a6581d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3f1ff316939e261f7fda2b8342e239b0"><td class="memItemLeft" align="right" valign="top"><a id="a3f1ff316939e261f7fda2b8342e239b0"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>copyTo</b> (char *dst)</td></tr>
+<tr class="separator:a3f1ff316939e261f7fda2b8342e239b0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3a8af20e6328301d791fcb077030b0f8"><td class="memItemLeft" align="right" valign="top"><a id="a3a8af20e6328301d791fcb077030b0f8"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>setAddr</b> (<a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> *a) -&gt; <a class="el" href="classpoly_1_1CostModeling_1_1AddrSummary.html">AddrSummary</a> &amp;</td></tr>
+<tr class="separator:a3a8af20e6328301d791fcb077030b0f8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
+Static Public Member Functions</h2></td></tr>
+<tr class="memitem:a89d7d1fb2029c98f2096792fa6dba3e8"><td class="memItemLeft" align="right" valign="top"><a id="a89d7d1fb2029c98f2096792fa6dba3e8"></a>
+static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>minStaticStrideLoops</b> (uint64_t *data, unsigned words) -&gt; containers::BitSet&lt; math::MutPtrVector&lt; uint64_t &gt;&gt;</td></tr>
+<tr class="separator:a89d7d1fb2029c98f2096792fa6dba3e8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aff96419ecb425acfba2e820a0ee9f410"><td class="memItemLeft" align="right" valign="top"><a id="aff96419ecb425acfba2e820a0ee9f410"></a>
+static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>remainingLoops</b> (uint64_t *data, unsigned words) -&gt; containers::BitSet&lt; math::MutPtrVector&lt; uint64_t &gt;&gt;</td></tr>
+<tr class="separator:aff96419ecb425acfba2e820a0ee9f410"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <hr/>The documentation for this class was generated from the following file:<ul>
 <li>include/IR/<a class="el" href="OptimizationPossibilities_8hpp_source.html">OptimizationPossibilities.hpp</a></li>

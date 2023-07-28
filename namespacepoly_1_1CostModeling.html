@@ -146,6 +146,9 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>hasFutureReads</b> (A
 void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacepoly_1_1CostModeling.html#ac6b2c5a3ffaaba5a609c5b8f387565cc">optimize</a> (<a class="el" href="classpoly_1_1poly_1_1Dependencies.html">IR::Dependencies</a> deps, <a class="el" href="classpoly_1_1IR_1_1Cache.html">IR::Cache</a> &amp;instr, dict::set&lt; llvm::BasicBlock * &gt; &amp;loopBBs, dict::set&lt; llvm::CallBase * &gt; &amp;eraseCandidates, Arena&lt;&gt; *lalloc, <a class="el" href="structpoly_1_1lp_1_1LoopBlock_1_1OptimizationResult.html">lp::LoopBlock::OptimizationResult</a> res)</td></tr>
 <tr class="memdesc:ac6b2c5a3ffaaba5a609c5b8f387565cc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Optimize the schedule. <br /></td></tr>
 <tr class="separator:ac6b2c5a3ffaaba5a609c5b8f387565cc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acd5b68d31f6b9feb50783ce6fe686eb6"><td class="memItemLeft" align="right" valign="top"><a id="acd5b68d31f6b9feb50783ce6fe686eb6"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>cld64</b> (unsigned x) -&gt; unsigned</td></tr>
+<tr class="separator:acd5b68d31f6b9feb50783ce6fe686eb6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>It would be best to actually use the tree structure Let's consider a depth first search approach. A(9) --&gt; B(3) --&gt; C(2) --&gt; D(0) -&gt; E(5) --&gt; F(4) -&gt; G(1) -&gt; H(8) --&gt; I(7) --&gt; J(6) At a given level, we do need to decide whether to unroll and vectorize, using context of both upper and lower levels. Thus, it is a non-local decision that doesn't map well to a single traversal.</p>

@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['proxyreference_260',['ProxyReference',['../structpoly_1_1IR_1_1cost_1_1VectorizationCosts_1_1ProxyReference.html',1,'poly::IR::cost::VectorizationCosts']]],
-  ['ptrsymboliccomparator_261',['PtrSymbolicComparator',['../structpoly_1_1comparator_1_1PtrSymbolicComparator.html',1,'poly::comparator']]]
+  ['proxyreference_259',['ProxyReference',['../structpoly_1_1IR_1_1cost_1_1VectorizationCosts_1_1ProxyReference.html',1,'poly::IR::cost::VectorizationCosts']]],
+  ['ptrsymboliccomparator_260',['PtrSymbolicComparator',['../structpoly_1_1comparator_1_1PtrSymbolicComparator.html',1,'poly::comparator']]]
 ];
