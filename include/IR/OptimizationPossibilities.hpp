@@ -15,6 +15,67 @@
 #include <utility>
 
 namespace poly::CostModeling {
+
+class LoopIndexDependency {
+  // for (j : J){
+  //   b = B[j];
+  //   for (i : I) f(A[i], b);
+  // }
+  // In this example, if `j` and `i` have the same stride category,
+  // we'd want to add the option to unroll and vectorize `j`
+  // If `i` has a small static stride and `j` does not, we'd want
+  // to add the option to vectorize `i` (while still unrolling `j`)
+  //
+  // Another thing to consider with optimization options is that we may
+  // want to be able to combine separate ones; do we need some
+  // indicator of what we would like to discourage?
+  //
+  // Nested: benefit from unrolling
+  // Non-static stride: penalize vectorization
+  //
+  //
+  // Mappings:
+  // A[i] in j, B[j] in i => i,j;
+  // A[i] in j, B[j] in !i => j;
+  // A[i] in !j, B[j] in i => i;
+  // A[i] in !j, B[j] in !i => {};
+
+  // A[i,j], B[j] in i => i;
+  // A[i,j], B[j] in !i => {};
+  // A[i] in j, B[j,i] => j;
+  // A[i] in !j, B[j,i] => {};
+  // A[i,j], B[j,i] => {};
+
+  // An access only benefits from a loop it is nested inside but doesn't depend
+  // on being unrolled.
+  // How can we do the mapping?
+  // Nested and dynamic or small static -> benefit from unrolling
+  //
+  // For now, we'll use 4 bits per...
+  uint64_t *data;
+  unsigned words;
+  // 4 bits/loop
+  // 64 bits/word
+  static constexpr unsigned numBits = 4; // wasteful
+  static constexpr unsigned numLoopsPerUInt = 64 / numBits;
+  [[nodiscard]] static constexpr auto numWords(unsigned numLoops) -> unsigned {
+    return (numLoops + numLoopsPerUInt - 1) / numLoopsPerUInt;
+  }
+  static constexpr auto numberToShift(uint64_t x) -> unsigned {
+    return std::countr_zero(x) & ~(numBits - 1);
+  }
+
+public:
+  constexpr LoopIndexDependency(uint64_t *data, unsigned numLoops)
+    : data{data}, words{numWords(numLoops)} {}
+  enum class DependencyType {
+    Independent = 0, // 000 //
+    Nested = 1,      // 001 // cheap to vectorize
+    Dynamic = 2,     // 010 // expensive to vectorize
+    SmallStatic = 4  // 100 // cheap to vectorize
+  };
+};
+
 using math::MutPtrVector, math::DensePtrMatrix;
 struct ArrayIndex {
   const llvm::SCEVUnknown *array;
@@ -159,8 +220,7 @@ class LoopDependencies {
 #endif
 
   static constexpr auto bytesPerAddr(unsigned numLoops) -> size_t {
-    return (2 * ((numLoops + 63) / 64) + 1) * sizeof(uint64_t) +
-           sizeof(IR::Addr *);
+    return (2 * cld64(numLoops) + 1) * sizeof(uint64_t) + sizeof(IR::Addr *);
   }
   struct AddrReference {
     IR::Addr **addr;
@@ -281,6 +341,10 @@ public:
   inline constexpr void
   addAddr(utils::Arena<> *,
           math::ResizeableView<OptimizationOptions, unsigned> &, IR::Addr *);
+  inline constexpr void
+  addOptOption(utils::Arena<> *,
+               math::ResizeableView<OptimizationOptions, unsigned> &,
+               AddrSummary);
 };
 
 /// What we want is a map from {array,indexMatrix()} pairs to
@@ -355,10 +419,11 @@ inline constexpr void LoopDependencies::addAddr(
   auto *f = findShared(a);
   size_t bpa = bytesPerAddr(numLoops);
   if (f) {
-    push((*this)[f->second].setAddr(a));
+    AddrSummary s = (*this)[f->second].setAddr(a);
+    push(s);
     std::copy_n(data + bpa * f->second, bpa, data + bpa * id);
     if (f && f->second >= offset) return;
-    // TODO: add it to opt results
+    addOptOption(alloc, optops, s);
     return;
   }
   ++numAddr;
@@ -366,32 +431,43 @@ inline constexpr void LoopDependencies::addAddr(
   *ref.addr = a;
   // calc minStaticStride
   DensePtrMatrix<int64_t> indMat = a->indexMatrix(); // dim x loop
+  // we want mapping from `indMat` index to loop index
   uint64_t minStaticStride = std::numeric_limits<uint64_t>::max();
-  for (ptrdiff_t i = ptrdiff_t{indMat.numCol()}; i--;)
-    if (int64_t x = indMat(last, i))
-      minStaticStride =
-        std::min<uint64_t>(minStaticStride, math::constexpr_abs(x));
-
-  // TODO: create `AddrSummary` and optResults
-
-  bool foundMatchInd = false;
-  for (AddrSummary s : commonIndices(a)) {
-    IR::Addr *b = s.getAddr();
-    // we share the same array and IndexMatrix
-    // check for patterns like `A[i,2*j], A[i,2*j + 1]`
-    // if we're not part of the same BB
-    if ((a->getParent() != b->getParent()) || (a->isLoad() != b->isLoad()))
-      continue;
-    // we can check top positions
-    invariant(a->getTopPosition() > b->getTopPosition());
-    // note that outputEdgeIDs are sorted; can we use this to check for
-    // no intervening edges?
-  }
-  if (foundMatchInd) return; // already added this `indexMatrix`
-  for (AddrSummary s : *this) {
-    if (s.getAddr() == a) {
-      // check for patterns like `A[i,2*j], A[i,2*j + 1]`
+  auto minStaticStrideLoops =
+    AddrSummary::minStaticStrideLoops(ref.bits, cld64(numLoops));
+  auto remainingLoops = AddrSummary::remainingLoops(ref.bits, cld64(numLoops));
+  IR::Loop *L = a->getLoop();
+  for (ptrdiff_t l = ptrdiff_t{indMat.numCol()}; l--; L = L->getLoop()) {
+    uint32_t lid = L->getID();
+    for (ptrdiff_t j = 0; j < ptrdiff_t{indMat.numRow()} - 1; ++j)
+      if (indMat(j, l)) remainingLoops.insert(lid);
+    if (int64_t x = indMat(last, l)) {
+      uint64_t absx = math::constexpr_abs(x);
+      if (minStaticStride > absx) {
+        minStaticStride = absx;
+        remainingLoops |= minStaticStrideLoops;
+        minStaticStrideLoops.clear();
+        minStaticStrideLoops.insert(lid);
+      } else if (minStaticStride == absx) {
+        minStaticStrideLoops.insert(lid);
+      } else {
+        remainingLoops.insert(lid);
+      }
     }
+  }
+  *ref.stride = minStaticStride;
+  addOptOption(alloc, optops, {a, minStaticStride, ref.bits, numLoops});
+}
+
+inline constexpr void LoopDependencies::addOptOption(
+  utils::Arena<> *alloc,
+  math::ResizeableView<OptimizationOptions, unsigned> &optops, AddrSummary s) {
+  // scan older `AddrSummary`s, compare with `s`
+  for (ptrdiff_t i = 0; i < numAddr - 1; ++i) {
+    AddrSummary o = (*this)[i];
+    // to identify tiling opportunities...we need to know which loops `s` and
+    // `o` are actually both nested inside.
+    //
   }
 }
 
