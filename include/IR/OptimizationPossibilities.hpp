@@ -2,6 +2,7 @@
 #include "Dicts/BumpMapSet.hpp"
 #include "IR/Address.hpp"
 #include "IR/Hash.hpp"
+#include "Math/GreatestCommonDivisor.hpp"
 #include "Support/Iterators.hpp"
 #include <Containers/BitSets.hpp>
 #include <Math/Array.hpp>
@@ -75,37 +76,55 @@ struct ankerl::unordered_dense::hash<poly::CostModeling::ArrayIndex> {
 /// it's opt, or the composition of the subtrees. The recursion continues until
 /// we get the best alg for the whole tree.
 namespace poly::CostModeling {
+using math::end, math::last;
+constexpr auto cld64(unsigned x) -> unsigned { return (x + 63) / 64; }
 
 class AddrSummary {
   IR::Addr *addr;
   uint64_t minStaticStride;
   uint64_t *data;
-  unsigned numLoops;
-  [[nodiscard]] constexpr auto numLoopWords() const -> size_t {
-    return (numLoops + 63) / 64;
-  }
+  unsigned words;
 
 public:
   constexpr AddrSummary(IR::Addr *addr, uint64_t minStaticStride,
                         uint64_t *data, unsigned numLoops)
     : addr(addr), minStaticStride(minStaticStride), data(data),
-      numLoops(numLoops) {}
+      words(cld64(numLoops)) {}
   [[nodiscard]] constexpr auto getAddr() const -> IR::Addr * { return addr; }
   [[nodiscard]] constexpr auto getMinStaticStride() const -> uint64_t {
     return minStaticStride;
   }
+  static constexpr auto minStaticStrideLoops(uint64_t *data, unsigned words)
+    -> containers::BitSet<math::MutPtrVector<uint64_t>> {
+    math::MutPtrVector<uint64_t> v{data, words};
+    return containers::BitSet<math::MutPtrVector<uint64_t>>{v};
+  }
+  static constexpr auto remainingLoops(uint64_t *data, unsigned words)
+    -> containers::BitSet<math::MutPtrVector<uint64_t>> {
+    math::MutPtrVector<uint64_t> v{data + words, words};
+    return containers::BitSet<math::MutPtrVector<uint64_t>>{v};
+  }
   constexpr auto minStaticStrideLoops()
     -> containers::BitSet<math::MutPtrVector<uint64_t>> {
-    math::MutPtrVector<uint64_t> v{data, numLoopWords()};
-    return containers::BitSet<math::MutPtrVector<uint64_t>>{v};
+    return minStaticStrideLoops(data, words);
   }
   constexpr auto remainingLoops()
     -> containers::BitSet<math::MutPtrVector<uint64_t>> {
-    size_t nL = numLoopWords();
-    math::MutPtrVector<uint64_t> v{data + nL, nL};
-    return containers::BitSet<math::MutPtrVector<uint64_t>>{v};
+    return remainingLoops(data, words);
   }
   constexpr auto getAddr() -> IR::Addr * { return addr; }
+  constexpr void copyTo(char *dst) {
+    void *paddr = dst;
+    void *stride = dst + sizeof(IR::Addr *);
+    void *bits = dst + sizeof(IR::Addr *) + sizeof(uint64_t);
+    *static_cast<IR::Addr **>(paddr) = addr;
+    *static_cast<uint64_t *>(stride) = minStaticStride;
+    std::copy_n(data, 2 * words, static_cast<uint64_t *>(bits));
+  }
+  constexpr auto setAddr(IR::Addr *a) -> AddrSummary & {
+    addr = a;
+    return *this;
+  }
 };
 
 class OptimizationOptions;
@@ -120,8 +139,8 @@ class LoopDependencies {
   dict::amap<ArrayIndex, int32_t> addrMap;
   /// the chain is for mappings of indices w/in LoopDependencies
   unsigned numLoops;
-  unsigned maxAddr;
-  unsigned numAddr{0};
+  int32_t maxAddr;
+  int32_t numAddr{0};
   int32_t offset{0};
   // data is an array of `AddrSummary`, and then a chain of length `numAddr`
   // giving the position among `AddrSummary` of the next in the chain
@@ -143,10 +162,24 @@ class LoopDependencies {
     return (2 * ((numLoops + 63) / 64) + 1) * sizeof(uint64_t) +
            sizeof(IR::Addr *);
   }
+  struct AddrReference {
+    IR::Addr **addr;
+    uint64_t *stride;
+    uint64_t *bits;
+  };
+  constexpr auto addrRef(ptrdiff_t i) -> AddrReference {
+    utils::invariant(i < numAddr);
+    char *base = data + i * bytesPerAddr(numLoops);
+    void *addr = base;
+    void *stride = base + sizeof(IR::Addr *);
+    void *bits = base + sizeof(IR::Addr *) + sizeof(uint64_t);
+    return {static_cast<IR::Addr **>(addr), static_cast<uint64_t *>(stride),
+            static_cast<uint64_t *>(bits)};
+  }
 
 public:
   LoopDependencies(Arena<> *alloc, unsigned numLoops, unsigned numAddr)
-    : addrMap(alloc), numLoops(numLoops), numAddr(numAddr) {}
+    : addrMap(alloc), numLoops(numLoops), numAddr(int32_t(numAddr)) {}
 
   LoopDependencies(const LoopDependencies &) = default;
   static auto create(utils::Arena<> *alloc, unsigned numLoops, unsigned numAddr)
@@ -163,13 +196,8 @@ public:
   constexpr auto subTree() -> int32_t { return std::exchange(offset, numAddr); }
   constexpr void resetTree(int32_t newOffset) { offset = newOffset; }
   constexpr auto operator[](ptrdiff_t i) -> AddrSummary {
-    utils::invariant(i < numAddr);
-    char *base = data + i * bytesPerAddr(numLoops);
-    void *addr = base;
-    void *stride = base + sizeof(IR::Addr *);
-    void *bits = base + sizeof(IR::Addr *) + sizeof(uint64_t);
-    return {*static_cast<IR::Addr **>(addr), *static_cast<uint64_t *>(stride),
-            static_cast<uint64_t *>(bits), numLoops};
+    AddrReference ref = addrRef(i);
+    return {*(ref.addr), *(ref.stride), ref.bits, numLoops};
   }
   [[nodiscard]] constexpr auto size() const -> ptrdiff_t { return numAddr; }
   class Iterator {
@@ -244,6 +272,11 @@ public:
            std::views::transform(
              [this](int32_t i) -> AddrSummary { return (*this)[i]; });
   }
+  constexpr void push(AddrSummary s) {
+    invariant(numAddr < maxAddr);
+    s.copyTo(data + (numAddr++) * bytesPerAddr(numLoops));
+  }
+
   // adding an Addr should adds unroll options
   inline constexpr void
   addAddr(utils::Arena<> *,
@@ -316,8 +349,30 @@ public:
 inline constexpr void LoopDependencies::addAddr(
   utils::Arena<> *alloc,
   math::ResizeableView<OptimizationOptions, unsigned> &optops, IR::Addr *a) {
+  int32_t id = numAddr;
+  // something to think about here is how to handle the mix of `Addr` reference
+  // as pointers, vs `Addr` references as indices into a vector.
   auto *f = findShared(a);
-  if (f && f->second >= offset) return; // already added
+  size_t bpa = bytesPerAddr(numLoops);
+  if (f) {
+    push((*this)[f->second].setAddr(a));
+    std::copy_n(data + bpa * f->second, bpa, data + bpa * id);
+    if (f && f->second >= offset) return;
+    // TODO: add it to opt results
+    return;
+  }
+  ++numAddr;
+  AddrReference ref = addrRef(id);
+  *ref.addr = a;
+  // calc minStaticStride
+  DensePtrMatrix<int64_t> indMat = a->indexMatrix(); // dim x loop
+  uint64_t minStaticStride = std::numeric_limits<uint64_t>::max();
+  for (ptrdiff_t i = ptrdiff_t{indMat.numCol()}; i--;)
+    if (int64_t x = indMat(last, i))
+      minStaticStride =
+        std::min<uint64_t>(minStaticStride, math::constexpr_abs(x));
+
+  // TODO: create `AddrSummary` and optResults
 
   bool foundMatchInd = false;
   for (AddrSummary s : commonIndices(a)) {
