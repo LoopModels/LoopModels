@@ -9,6 +9,7 @@ var searchData=
   ['loopdependencies_104',['LoopDependencies',['../classpoly_1_1CostModeling_1_1LoopDependencies.html',1,'poly::CostModeling']]],
   ['loopdepsummary_105',['LoopDepSummary',['../structpoly_1_1CostModeling_1_1LoopDepSummary.html',1,'poly::CostModeling']]],
   ['loopindependent_106',['LoopIndependent',['../structpoly_1_1CostModeling_1_1LoopIndependent.html',1,'poly::CostModeling']]],
-  ['loopmodels_107',['LoopModels',['../md_README.html',1,'']]],
-  ['looptree_108',['LoopTree',['../classpoly_1_1CostModeling_1_1LoopTree.html',1,'poly::CostModeling']]]
+  ['loopindexdependency_107',['LoopIndexDependency',['../classpoly_1_1CostModeling_1_1LoopIndexDependency.html',1,'poly::CostModeling']]],
+  ['loopmodels_108',['LoopModels',['../md_README.html',1,'']]],
+  ['looptree_109',['LoopTree',['../classpoly_1_1CostModeling_1_1LoopTree.html',1,'poly::CostModeling']]]
 ];
