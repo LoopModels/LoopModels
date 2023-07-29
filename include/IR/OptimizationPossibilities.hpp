@@ -15,7 +15,52 @@
 #include <utility>
 
 namespace poly::CostModeling {
+using math::DensePtrMatrix;
 
+// loop subsets are contiguous
+//
+// comparing addrs; NaN == independent of?
+// for (j : J){
+//   b = B[j];
+//   for (i : I) f(A[i], b);
+// }
+//
+// Lets start with the actual cost:
+// Ca and Cb are cost of loading from A and B, respectively.
+// Ui and Uj are the unrolling factors for i and j, respectively.
+// Vi and Vj are the vectorization factors; only one is allowed to be !=0
+// C = Ca * J * I/(Uj*Vj*Vi) + Cb * J/Vj
+//
+// Vi: C = Ca * J * I/(Uj*Vi) + Cb * J
+// Vj: C = Ca * J * I/(Uj*Vj) + Cb * J/Vj
+//
+// Cost of `A` is Ca * Uj^0 * Ui^1 * I*J / (Uj * Ui)
+// = Ca * I * J / Uj
+// Cost of `B` is Cb * Uj^1 * Ui^0 * I^0*J / (Uj * Ui^0)
+// = Cb * J
+// Perhaps easier to work with logarithms?
+//
+//
+//     j    i
+// A:  0    1
+// B:  1   NaN
+//
+//
+//
+//   i     j     k
+// NaN   NaN   NaN
+class Costs {
+  DensePtrMatrix<double> costs;
+
+  [[nodiscard]] constexpr auto numAddr() const -> ptrdiff_t {
+    return ptrdiff_t{costs.numRow()};
+  }
+  [[nodiscard]] constexpr auto numLoops() const -> ptrdiff_t {
+    return ptrdiff_t{costs.numCol()};
+  }
+};
+
+// perhaps should just store costs?
 class LoopIndexDependency {
   // for (j : J){
   //   b = B[j];
@@ -421,6 +466,7 @@ inline constexpr void LoopDependencies::addAddr(
   if (f) {
     AddrSummary s = (*this)[f->second].setAddr(a);
     push(s);
+    // FIXME: not okay!!! We may have different loops
     std::copy_n(data + bpa * f->second, bpa, data + bpa * id);
     if (f && f->second >= offset) return;
     addOptOption(alloc, optops, s);

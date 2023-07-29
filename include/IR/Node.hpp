@@ -444,30 +444,6 @@ public:
     users.push_back(alloc, I);
   }
   constexpr void removeFromUsers(Instruction *I) { users.remove(I); }
-  // unionPtr methods
-  // [[nodiscard]] constexpr auto getUsers() const
-  //   -> const UList<Instruction *> * {
-  //   invariant(kind == VK_Load || kind >= VK_Func);
-  //   return unionPtr.users;
-  // }
-  // [[nodiscard]] constexpr auto getUsers() -> UList<Instruction *> * {
-  //   invariant(kind == VK_Load || kind >= VK_Func);
-  //   return unionPtr.users;
-  // }
-  // constexpr void setUsers(UList<Instruction *> *users) {
-  //   invariant(kind == VK_Load || kind >= VK_Func);
-  //   unionPtr.users = users;
-  // }
-  // constexpr void addUser(Arena<> *alloc, Instruction *n) {
-  //   invariant(kind == VK_Load || kind >= VK_Func);
-  //   if (!unionPtr.users)
-  //     unionPtr.users = alloc->create<UList<Instruction *>>(n);
-  //   else unionPtr.users = unionPtr.users->pushUnique(alloc, n);
-  // }
-  // constexpr void removeFromUsers(Instruction *n) {
-  //   invariant(kind == VK_Load || kind >= VK_Func);
-  //   unionPtr.users->eraseUnordered(n);
-  // }
 
   /// isStore() is true if the address is a store, false if it is a load
   /// If the memory access is a store, this can still be a reload
