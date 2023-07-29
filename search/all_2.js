@@ -12,9 +12,10 @@ var searchData=
   ['compute_40',['Compute',['../classpoly_1_1IR_1_1Compute.html',1,'poly::IR']]],
   ['construct_41',['construct',['../classpoly_1_1IR_1_1Addr.html#a2dc2526ae4d8b61af7f8fff28ef2bb6f',1,'poly::IR::Addr']]],
   ['contigsummary_42',['ContigSummary',['../classpoly_1_1CostModeling_1_1ContigSummary.html',1,'poly::CostModeling']]],
-  ['count_43',['Count',['../structpoly_1_1IR_1_1MergingCost_1_1Count.html',1,'poly::IR::MergingCost']]],
-  ['cpuregisterfile_44',['CPURegisterFile',['../classpoly_1_1CostModeling_1_1CPURegisterFile.html',1,'poly::CostModeling']]],
-  ['createselect_45',['createSelect',['../classpoly_1_1IR_1_1Cache.html#a6faece9ac31b45aae0353250ff03084d',1,'poly::IR::Cache']]],
-  ['cse_46',['cse',['../classpoly_1_1IR_1_1Cache.html#a4f693e5bc775271888cb0343dc12e750',1,'poly::IR::Cache']]],
-  ['cval_47',['CVal',['../classpoly_1_1IR_1_1CVal.html',1,'poly::IR']]]
+  ['costs_43',['Costs',['../classpoly_1_1CostModeling_1_1Costs.html',1,'poly::CostModeling']]],
+  ['count_44',['Count',['../structpoly_1_1IR_1_1MergingCost_1_1Count.html',1,'poly::IR::MergingCost']]],
+  ['cpuregisterfile_45',['CPURegisterFile',['../classpoly_1_1CostModeling_1_1CPURegisterFile.html',1,'poly::CostModeling']]],
+  ['createselect_46',['createSelect',['../classpoly_1_1IR_1_1Cache.html#a6faece9ac31b45aae0353250ff03084d',1,'poly::IR::Cache']]],
+  ['cse_47',['cse',['../classpoly_1_1IR_1_1Cache.html#a4f693e5bc775271888cb0343dc12e750',1,'poly::IR::Cache']]],
+  ['cval_48',['CVal',['../classpoly_1_1IR_1_1CVal.html',1,'poly::IR']]]
 ];
