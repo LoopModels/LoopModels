@@ -11,11 +11,55 @@
 #include <bit>
 #include <cstddef>
 #include <cstdint>
+#include <limits>
 #include <ranges>
 #include <utility>
 
 namespace poly::CostModeling {
 using math::DensePtrMatrix;
+
+// Classifies the type of loop dependency
+// Possibilities:
+// Not nested: this address is not nested inside the loop
+// Dynamic: unknown stride
+// Static: 0...
+// Special values:
+// 0: nested inside, but not dependent
+// 1: contiguous
+// -1: contiguous, but reversed
+// From here, small values like `2` might mean we can efficiently shuffle.
+// Ideally, we'd be paired with another address offset by 1.
+// But even just `A[2*i]`, it may take less micro-ops to shuffle than to
+// use a gather.
+struct LoopDependency {
+  int type_;
+  static constexpr int notNested = std::numeric_limits<int>::min();
+  static constexpr int dynamic = notNested + 1;
+  // NOLINTNEXTLINE(readability-identifier-naming)
+  static constexpr auto NotNested() -> LoopDependency { return {notNested}; }
+  // NOLINTNEXTLINE(readability-identifier-naming)
+  static constexpr auto Dynamic() -> LoopDependency { return {dynamic}; }
+  // NOLINTNEXTLINE(readability-identifier-naming)
+  static constexpr auto Static(int stride) -> LoopDependency {
+    // incredibly unlikely, but we don't want to mistake "notNested"
+    // for a static stride with that value. It isn't something we can optimize
+    // anyway, so we'll just return dynamic.
+    return {stride == notNested ? dynamic : stride};
+  }
+  [[nodiscard]] constexpr auto stride() const -> std::optional<int> {
+    switch (type_) {
+    case notNested:
+    case dynamic: return std::nullopt;
+    default: return type_;
+    }
+  }
+  [[nodiscard]] constexpr auto isDynamic() const -> bool {
+    return type_ == dynamic;
+  }
+  [[nodiscard]] constexpr auto isNotNested() const -> bool {
+    return type_ == notNested;
+  }
+};
 
 // loop subsets are contiguous
 //
