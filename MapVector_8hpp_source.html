@@ -135,7 +135,7 @@ $(function() {
 <div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;  }</div>
 <div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;  constexpr <span class="keywordtype">void</span> grow(<span class="keywordtype">unsigned</span> i) {</div>
 <div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;    <span class="keywordflow">if</span> (i == vector.getCapacity())</div>
-<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;      vector.reserve((map.get_allocator().get_allocator()),</div>
+<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;      vector.reserve(*(map.get_allocator().get_allocator()),</div>
 <div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;                     std::max&lt;unsigned&gt;(8, 2 * i));</div>
 <div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;  }</div>
 <div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;  constexpr <span class="keywordtype">void</span> insert(std::pair&lt;K, V&gt; &amp;&amp;value) {</div>

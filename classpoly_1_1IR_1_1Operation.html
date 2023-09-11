@@ -151,38 +151,38 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>getType</b> () const 
 <tr class="memitem:a9cc8b51b399b6bf337b150f7f39bd0b9"><td class="memItemLeft" align="right" valign="top"><a id="a9cc8b51b399b6bf337b150f7f39bd0b9"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>getType</b> (unsigned w) const -&gt; llvm::Type *</td></tr>
 <tr class="separator:a9cc8b51b399b6bf337b150f7f39bd0b9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a33dd705caec9957354d5fe4ec9c50e71"><td class="memItemLeft" align="right" valign="top"><a id="a33dd705caec9957354d5fe4ec9c50e71"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>calcUnaryArithmeticCost</b> (const llvm::TargetTransformInfo &amp;TTI, unsigned int vectorWidth) const -&gt; <a class="el" href="structpoly_1_1IR_1_1cost_1_1RecipThroughputLatency.html">RecipThroughputLatency</a></td></tr>
-<tr class="separator:a33dd705caec9957354d5fe4ec9c50e71"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a72127428b3c489bbbce4e846cf7cfeb6"><td class="memItemLeft" align="right" valign="top"><a id="a72127428b3c489bbbce4e846cf7cfeb6"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>calcUnaryArithmeticCost</b> (llvm::TargetTransformInfo &amp;TTI, unsigned int vectorWidth) const -&gt; <a class="el" href="structpoly_1_1IR_1_1cost_1_1RecipThroughputLatency.html">RecipThroughputLatency</a></td></tr>
+<tr class="separator:a72127428b3c489bbbce4e846cf7cfeb6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9be280ba411983bbb56f7e8b9df3f434"><td class="memItemLeft" align="right" valign="top"><a id="a9be280ba411983bbb56f7e8b9df3f434"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>getInstruction</b> () const -&gt; llvm::Instruction *</td></tr>
 <tr class="separator:a9be280ba411983bbb56f7e8b9df3f434"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aeb6c6abcc138ad79ea3cf98bc43f9ef5"><td class="memItemLeft" align="right" valign="top"><a id="aeb6c6abcc138ad79ea3cf98bc43f9ef5"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>calcBinaryArithmeticCost</b> (const llvm::TargetTransformInfo &amp;TTI, unsigned int vectorWidth) const -&gt; <a class="el" href="structpoly_1_1IR_1_1cost_1_1RecipThroughputLatency.html">RecipThroughputLatency</a></td></tr>
-<tr class="separator:aeb6c6abcc138ad79ea3cf98bc43f9ef5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa441b0e3e44c817afd03f429b0a0d9ff"><td class="memItemLeft" align="right" valign="top"><a id="aa441b0e3e44c817afd03f429b0a0d9ff"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>calcBinaryArithmeticCost</b> (llvm::TargetTransformInfo &amp;TTI, unsigned int vectorWidth) const -&gt; <a class="el" href="structpoly_1_1IR_1_1cost_1_1RecipThroughputLatency.html">RecipThroughputLatency</a></td></tr>
+<tr class="separator:aa441b0e3e44c817afd03f429b0a0d9ff"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6d75da26979820e14af5e8efcbc973e2"><td class="memItemLeft" align="right" valign="top"><a id="a6d75da26979820e14af5e8efcbc973e2"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>getPredicate</b> () const -&gt; llvm::CmpInst::Predicate</td></tr>
 <tr class="separator:a6d75da26979820e14af5e8efcbc973e2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a39f879ca372d435ee138c5a08f6c4323"><td class="memItemLeft" align="right" valign="top"><a id="a39f879ca372d435ee138c5a08f6c4323"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>calcCmpSelectCost</b> (const llvm::TargetTransformInfo &amp;TTI, unsigned int vectorWidth) const -&gt; <a class="el" href="structpoly_1_1IR_1_1cost_1_1RecipThroughputLatency.html">RecipThroughputLatency</a></td></tr>
-<tr class="separator:a39f879ca372d435ee138c5a08f6c4323"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa149e4b9cf989c4e38971610a00729de"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1IR_1_1Operation.html#aa149e4b9cf989c4e38971610a00729de">selectCost</a> (const llvm::TargetTransformInfo &amp;TTI, unsigned int vectorWidth) const -&gt; llvm::InstructionCost</td></tr>
-<tr class="separator:aa149e4b9cf989c4e38971610a00729de"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5dd7dce6b8adee3474ae3c57e68f541b"><td class="memItemLeft" align="right" valign="top"><a id="a5dd7dce6b8adee3474ae3c57e68f541b"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>getCastContext</b> (const llvm::TargetTransformInfo &amp;) const -&gt; llvm::TargetTransformInfo::CastContextHint</td></tr>
-<tr class="separator:a5dd7dce6b8adee3474ae3c57e68f541b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac5185d32b34440c0574bef209ec4b2e0"><td class="memItemLeft" align="right" valign="top"><a id="ac5185d32b34440c0574bef209ec4b2e0"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>calcCastCost</b> (const llvm::TargetTransformInfo &amp;TTI, unsigned int vectorWidth) const -&gt; <a class="el" href="structpoly_1_1IR_1_1cost_1_1RecipThroughputLatency.html">RecipThroughputLatency</a></td></tr>
-<tr class="separator:ac5185d32b34440c0574bef209ec4b2e0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a411f7a4759feb8c5261664bb8956199a"><td class="memItemLeft" align="right" valign="top"><a id="a411f7a4759feb8c5261664bb8956199a"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>calculateCostFAddFSub</b> (const llvm::TargetTransformInfo &amp;TTI, unsigned int vectorWidth) const -&gt; <a class="el" href="structpoly_1_1IR_1_1cost_1_1RecipThroughputLatency.html">RecipThroughputLatency</a></td></tr>
-<tr class="separator:a411f7a4759feb8c5261664bb8956199a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1eac9a44baf4505334805c4d2f826296"><td class="memItemLeft" align="right" valign="top"><a id="a1eac9a44baf4505334805c4d2f826296"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>calculateFNegCost</b> (const llvm::TargetTransformInfo &amp;TTI, unsigned int vectorWidth) const -&gt; <a class="el" href="structpoly_1_1IR_1_1cost_1_1RecipThroughputLatency.html">RecipThroughputLatency</a></td></tr>
-<tr class="separator:a1eac9a44baf4505334805c4d2f826296"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8beb501b2c6eb097bb520154684f98d0"><td class="memItemLeft" align="right" valign="top"><a id="a8beb501b2c6eb097bb520154684f98d0"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>calcCost</b> (const llvm::TargetTransformInfo &amp;TTI, unsigned int vectorWidth) const -&gt; <a class="el" href="structpoly_1_1IR_1_1cost_1_1RecipThroughputLatency.html">RecipThroughputLatency</a></td></tr>
-<tr class="separator:a8beb501b2c6eb097bb520154684f98d0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a08a71132d0d8827bde07b39ecbbf7a60"><td class="memItemLeft" align="right" valign="top"><a id="a08a71132d0d8827bde07b39ecbbf7a60"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>calcCmpSelectCost</b> (llvm::TargetTransformInfo &amp;TTI, unsigned int vectorWidth) const -&gt; <a class="el" href="structpoly_1_1IR_1_1cost_1_1RecipThroughputLatency.html">RecipThroughputLatency</a></td></tr>
+<tr class="separator:a08a71132d0d8827bde07b39ecbbf7a60"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3c026a3b9192dea51a7dc6b57e6833b9"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1IR_1_1Operation.html#a3c026a3b9192dea51a7dc6b57e6833b9">selectCost</a> (llvm::TargetTransformInfo &amp;TTI, unsigned int vectorWidth) const -&gt; llvm::InstructionCost</td></tr>
+<tr class="separator:a3c026a3b9192dea51a7dc6b57e6833b9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:addac34e19bc028b5b8230b30ca9f0e86"><td class="memItemLeft" align="right" valign="top"><a id="addac34e19bc028b5b8230b30ca9f0e86"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getCastContext</b> (llvm::TargetTransformInfo &amp;) const -&gt; llvm::TargetTransformInfo::CastContextHint</td></tr>
+<tr class="separator:addac34e19bc028b5b8230b30ca9f0e86"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af9125034767e358a1a0014783e9be94c"><td class="memItemLeft" align="right" valign="top"><a id="af9125034767e358a1a0014783e9be94c"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>calcCastCost</b> (llvm::TargetTransformInfo &amp;TTI, unsigned int vectorWidth) const -&gt; <a class="el" href="structpoly_1_1IR_1_1cost_1_1RecipThroughputLatency.html">RecipThroughputLatency</a></td></tr>
+<tr class="separator:af9125034767e358a1a0014783e9be94c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6c5edde9a72803dd208cdfdb26ae46c4"><td class="memItemLeft" align="right" valign="top"><a id="a6c5edde9a72803dd208cdfdb26ae46c4"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>calculateCostFAddFSub</b> (llvm::TargetTransformInfo &amp;TTI, unsigned int vectorWidth) const -&gt; <a class="el" href="structpoly_1_1IR_1_1cost_1_1RecipThroughputLatency.html">RecipThroughputLatency</a></td></tr>
+<tr class="separator:a6c5edde9a72803dd208cdfdb26ae46c4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a37e317c13d3a0fb835e1c34ff5ba71dd"><td class="memItemLeft" align="right" valign="top"><a id="a37e317c13d3a0fb835e1c34ff5ba71dd"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>calculateFNegCost</b> (llvm::TargetTransformInfo &amp;TTI, unsigned int vectorWidth) const -&gt; <a class="el" href="structpoly_1_1IR_1_1cost_1_1RecipThroughputLatency.html">RecipThroughputLatency</a></td></tr>
+<tr class="separator:a37e317c13d3a0fb835e1c34ff5ba71dd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a343d1716f8938129e087f99d9e11be44"><td class="memItemLeft" align="right" valign="top"><a id="a343d1716f8938129e087f99d9e11be44"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>calcCost</b> (llvm::TargetTransformInfo &amp;TTI, unsigned int vectorWidth) const -&gt; <a class="el" href="structpoly_1_1IR_1_1cost_1_1RecipThroughputLatency.html">RecipThroughputLatency</a></td></tr>
+<tr class="separator:a343d1716f8938129e087f99d9e11be44"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
@@ -231,13 +231,13 @@ static auto&#160;</td><td class="memItemRight" valign="bottom"><b>isExtractValue
 <tr class="memitem:a47dba46b777982d54be42c7e79e71092"><td class="memItemLeft" align="right" valign="top"><a id="a47dba46b777982d54be42c7e79e71092"></a>
 static auto&#160;</td><td class="memItemRight" valign="bottom"><b>isInsertValue</b> (<a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a> *n) -&gt; bool</td></tr>
 <tr class="separator:a47dba46b777982d54be42c7e79e71092"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1abdf6aa0936d3c907786b62fcf62150"><td class="memItemLeft" align="right" valign="top"><a id="a1abdf6aa0936d3c907786b62fcf62150"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>selectCost</b> (const llvm::TargetTransformInfo &amp;TTI, llvm::Type *T) -&gt; llvm::InstructionCost</td></tr>
-<tr class="separator:a1abdf6aa0936d3c907786b62fcf62150"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a357ea3b020ad27842e551413b60a4b9b"><td class="memItemLeft" align="right" valign="top"><a id="a357ea3b020ad27842e551413b60a4b9b"></a>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>selectCost</b> (llvm::TargetTransformInfo &amp;TTI, llvm::Type *T) -&gt; llvm::InstructionCost</td></tr>
+<tr class="separator:a357ea3b020ad27842e551413b60a4b9b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Member Function Documentation</h2>
-<a id="aa149e4b9cf989c4e38971610a00729de"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa149e4b9cf989c4e38971610a00729de">&#9670;&nbsp;</a></span>selectCost()</h2>
+<a id="a3c026a3b9192dea51a7dc6b57e6833b9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3c026a3b9192dea51a7dc6b57e6833b9">&#9670;&nbsp;</a></span>selectCost()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -248,7 +248,7 @@ static auto&#160;</td><td class="memItemRight" valign="bottom"><b>selectCost</b>
         <tr>
           <td class="memname">auto poly::IR::Operation::selectCost </td>
           <td>(</td>
-          <td class="paramtype">const llvm::TargetTransformInfo &amp;&#160;</td>
+          <td class="paramtype">llvm::TargetTransformInfo &amp;&#160;</td>
           <td class="paramname"><em>TTI</em>, </td>
         </tr>
         <tr>
