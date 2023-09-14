@@ -47,12 +47,22 @@ class CPURegisterFile {
   [[no_unique_address]] uint8_t numGeneralPurposeRegisters;
   [[no_unique_address]] uint8_t numPredicateRegisters;
 
+#if defined(__x86_64__)
   // hacky check for has AVX512
   static inline auto hasAVX512(llvm::LLVMContext &C,
                                const llvm::TargetTransformInfo &TTI) -> bool {
     return TTI.isLegalMaskedExpandLoad(
       llvm::FixedVectorType::get(llvm::Type::getDoubleTy(C), 8));
   }
+#else
+  // assume we're not cross-compiling to x64 from some other arch to reduce the
+  // risk of false positives
+  static constexpr hasAVX512(llvm::LLVMContext &,
+                             const llvm::TargetTransformInfo &)
+    ->bool {
+    return false;
+  }
+#endif
 
   static auto estimateNumPredicateRegisters(
     llvm::LLVMContext &C, const llvm::TargetTransformInfo &TTI) -> uint8_t {
@@ -679,7 +689,7 @@ public:
 //   }
 //   x[i] /= U[i,i];
 // }
-// We have an edge from the store `x[i] = x[i] / U[i,i]=` to the load of
+// We have an edge from the store `x[i] = x[i] / U[i,i]` to the load of
 // `x[j]`, when `j = ` the current `i`, on some future iteration.
 // We want to unroll;
 // for (int i = 0: i < I-3; i += 4){
