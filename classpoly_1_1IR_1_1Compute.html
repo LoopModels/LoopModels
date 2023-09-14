@@ -154,13 +154,13 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>associativeOperandsFl
 <tr class="memitem:af78ae343936d95fa03311d6404f34154"><td class="memItemLeft" align="right" valign="top"><a id="af78ae343936d95fa03311d6404f34154"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator==</b> (<a class="el" href="classpoly_1_1IR_1_1Compute.html">Compute</a> const &amp;other) const -&gt; bool</td></tr>
 <tr class="separator:af78ae343936d95fa03311d6404f34154"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3ffde0af9933fbd4793d549830a0e8a2"><td class="memItemLeft" align="right" valign="top"><a id="a3ffde0af9933fbd4793d549830a0e8a2"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1IR_1_1Compute.html#a3ffde0af9933fbd4793d549830a0e8a2">getCost</a> (llvm::TargetTransformInfo &amp;TTI, <a class="el" href="classpoly_1_1IR_1_1cost_1_1VectorWidth.html">VectorWidth</a> W) -&gt; <a class="el" href="structpoly_1_1IR_1_1cost_1_1RecipThroughputLatency.html">RecipThroughputLatency</a></td></tr>
-<tr class="memdesc:a3ffde0af9933fbd4793d549830a0e8a2"><td class="mdescLeft">&#160;</td><td class="mdescRight">fall back in case we need value operand <br /></td></tr>
-<tr class="separator:a3ffde0af9933fbd4793d549830a0e8a2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a480f65530d4e8e03f55c4c24099be3c8"><td class="memItemLeft" align="right" valign="top"><a id="a480f65530d4e8e03f55c4c24099be3c8"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>calcCost</b> (llvm::TargetTransformInfo &amp;TTI, unsigned vectorWidth) -&gt; <a class="el" href="structpoly_1_1IR_1_1cost_1_1RecipThroughputLatency.html">RecipThroughputLatency</a></td></tr>
-<tr class="separator:a480f65530d4e8e03f55c4c24099be3c8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aaadd761eb65489417c37e1b933d1211f"><td class="memItemLeft" align="right" valign="top"><a id="aaadd761eb65489417c37e1b933d1211f"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1IR_1_1Compute.html#aaadd761eb65489417c37e1b933d1211f">getCost</a> (const llvm::TargetTransformInfo &amp;TTI, <a class="el" href="classpoly_1_1IR_1_1cost_1_1VectorWidth.html">VectorWidth</a> W) -&gt; <a class="el" href="structpoly_1_1IR_1_1cost_1_1RecipThroughputLatency.html">RecipThroughputLatency</a></td></tr>
+<tr class="memdesc:aaadd761eb65489417c37e1b933d1211f"><td class="mdescLeft">&#160;</td><td class="mdescRight">fall back in case we need value operand <br /></td></tr>
+<tr class="separator:aaadd761eb65489417c37e1b933d1211f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1a8bf8cf66f5d7290d9a3b7fe367524e"><td class="memItemLeft" align="right" valign="top"><a id="a1a8bf8cf66f5d7290d9a3b7fe367524e"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>calcCost</b> (const llvm::TargetTransformInfo &amp;TTI, unsigned vectorWidth) -&gt; <a class="el" href="structpoly_1_1IR_1_1cost_1_1RecipThroughputLatency.html">RecipThroughputLatency</a></td></tr>
+<tr class="separator:a1a8bf8cf66f5d7290d9a3b7fe367524e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a248ddfa9592a7ab5ead3f9aa2fedb6c3"><td class="memItemLeft" align="right" valign="top"><a id="a248ddfa9592a7ab5ead3f9aa2fedb6c3"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>getType</b> (unsigned int vectorWidth) const -&gt; llvm::Type *</td></tr>
 <tr class="separator:a248ddfa9592a7ab5ead3f9aa2fedb6c3"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -210,10 +210,10 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>isLoad</b> 
 <tr class="memitem:a8dbc06f01e77ab9a0e7e03d8f0cca054 inherit pub_methods_classpoly_1_1IR_1_1Value"><td class="memItemLeft" align="right" valign="top"><a id="a8dbc06f01e77ab9a0e7e03d8f0cca054"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>getFastMathFlags</b> () const -&gt; llvm::FastMathFlags</td></tr>
 <tr class="separator:a8dbc06f01e77ab9a0e7e03d8f0cca054 inherit pub_methods_classpoly_1_1IR_1_1Value"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:adb093c83013329c7391357aa9f19144d inherit pub_methods_classpoly_1_1IR_1_1Value"><td class="memItemLeft" align="right" valign="top"><a id="adb093c83013329c7391357aa9f19144d"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1IR_1_1Value.html#adb093c83013329c7391357aa9f19144d">getCost</a> (llvm::TargetTransformInfo &amp;TTI, <a class="el" href="classpoly_1_1IR_1_1cost_1_1VectorWidth.html">cost::VectorWidth</a> W) -&gt; <a class="el" href="structpoly_1_1IR_1_1cost_1_1RecipThroughputLatency.html">cost::RecipThroughputLatency</a></td></tr>
-<tr class="memdesc:adb093c83013329c7391357aa9f19144d inherit pub_methods_classpoly_1_1IR_1_1Value"><td class="mdescLeft">&#160;</td><td class="mdescRight">these methods are overloaded for specific subtypes <br /></td></tr>
-<tr class="separator:adb093c83013329c7391357aa9f19144d inherit pub_methods_classpoly_1_1IR_1_1Value"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0f89539ccba0c8fc06e2bd3e7539e503 inherit pub_methods_classpoly_1_1IR_1_1Value"><td class="memItemLeft" align="right" valign="top"><a id="a0f89539ccba0c8fc06e2bd3e7539e503"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1IR_1_1Value.html#a0f89539ccba0c8fc06e2bd3e7539e503">getCost</a> (const llvm::TargetTransformInfo &amp;TTI, <a class="el" href="classpoly_1_1IR_1_1cost_1_1VectorWidth.html">cost::VectorWidth</a> W) -&gt; <a class="el" href="structpoly_1_1IR_1_1cost_1_1RecipThroughputLatency.html">cost::RecipThroughputLatency</a></td></tr>
+<tr class="memdesc:a0f89539ccba0c8fc06e2bd3e7539e503 inherit pub_methods_classpoly_1_1IR_1_1Value"><td class="mdescLeft">&#160;</td><td class="mdescRight">these methods are overloaded for specific subtypes <br /></td></tr>
+<tr class="separator:a0f89539ccba0c8fc06e2bd3e7539e503 inherit pub_methods_classpoly_1_1IR_1_1Value"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2569ba828037d7258a52aada246d67d5 inherit pub_methods_classpoly_1_1IR_1_1Value"><td class="memItemLeft" align="right" valign="top"><a id="a2569ba828037d7258a52aada246d67d5"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>getValue</b> () -&gt; llvm::Value *</td></tr>
 <tr class="separator:a2569ba828037d7258a52aada246d67d5 inherit pub_methods_classpoly_1_1IR_1_1Value"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -428,14 +428,15 @@ Additional Inherited Members</h2></td></tr>
 &#160;&#160;<b>VK_Load</b>
 , <b>VK_Stow</b>
 , <b>VK_Loop</b>
-, <b>VK_CVal</b>
+, <b>VK_Exit</b>
 , <br />
-&#160;&#160;<b>VK_Cint</b>
+&#160;&#160;<b>VK_CVal</b>
+, <b>VK_Cint</b>
 , <b>VK_Bint</b>
 , <b>VK_Cflt</b>
-, <b>VK_Bflt</b>
 , <br />
-&#160;&#160;<b>VK_Func</b>
+&#160;&#160;<b>VK_Bflt</b>
+, <b>VK_Func</b>
 , <b>VK_Call</b>
 , <b>VK_Oprn</b>
 <br />
