@@ -16,7 +16,7 @@
 #include <utility>
 
 namespace poly::CostModeling {
-using math::DensePtrMatrix;
+using math::DensePtrMatrix, math::MutDensePtrMatrix;
 
 // Classifies the type of loop dependency
 // Possibilities:
@@ -31,22 +31,24 @@ using math::DensePtrMatrix;
 // Ideally, we'd be paired with another address offset by 1.
 // But even just `A[2*i]`, it may take less micro-ops to shuffle than to
 // use a gather.
+//
 struct LoopDependency {
-  int type_;
-  static constexpr int notNested = std::numeric_limits<int>::min();
-  static constexpr int dynamic = notNested + 1;
+  using I = int;
+  I type_;
+  static constexpr I notNested = std::numeric_limits<I>::min();
+  static constexpr I dynamic = notNested + 1;
   // NOLINTNEXTLINE(readability-identifier-naming)
   static constexpr auto NotNested() -> LoopDependency { return {notNested}; }
   // NOLINTNEXTLINE(readability-identifier-naming)
   static constexpr auto Dynamic() -> LoopDependency { return {dynamic}; }
   // NOLINTNEXTLINE(readability-identifier-naming)
-  static constexpr auto Static(int stride) -> LoopDependency {
+  static constexpr auto Static(I stride) -> LoopDependency {
     // incredibly unlikely, but we don't want to mistake "notNested"
     // for a static stride with that value. It isn't something we can optimize
     // anyway, so we'll just return dynamic.
     return {stride == notNested ? dynamic : stride};
   }
-  [[nodiscard]] constexpr auto stride() const -> std::optional<int> {
+  [[nodiscard]] constexpr auto stride() const -> std::optional<I> {
     switch (type_) {
     case notNested:
     case dynamic: return std::nullopt;
@@ -59,6 +61,60 @@ struct LoopDependency {
   [[nodiscard]] constexpr auto isNotNested() const -> bool {
     return type_ == notNested;
   }
+};
+// So, our data structure can be a `MutDensePtrMatrix<LoopDependency>`
+// with a column per loop, and a row per address.
+// We create these per independent sub-tree.
+// (Can we use some sparse block structure for better efficiency?)
+//
+// The addr's order corresponds to the loop tree structure's traversal order.
+class LoopDependencies {
+  MutDensePtrMatrix<LoopDependency> deps;
+  unsigned numAddr_;
+  unsigned offset_{0};
+  // We also do want an addrMap to associate uses of the same Addr
+
+public:
+  LoopDependencies(utils::Arena<> *a, unsigned numAddr, unsigned numLoops)
+    : deps{math::matrix<LoopDependency>(a, math::Row{numAddr},
+                                        math::Col{numLoops},
+                                        LoopDependency::NotNested())},
+      numAddr_{numAddr} {}
+};
+
+/// Optimizes one option.
+class OptionOptimizer {};
+
+/// Traverses, generating options and optimizing them
+class LoopTreeOptimizer {
+  /// addrMap yields start of a chain of addrs sharing the same array and index
+  /// (modulo any offsets). Indices are into the `LoopDependencies` class,
+  /// following the same order.
+  dict::amap<ArrayIndex, int32_t> addrMap;
+  MutPtrVector<int32_t> addrChain;
+  /// This class provides the functionality for traversing the loop IR, and
+  /// picking the optimal schedule. We do a depth-first traversal, analyzing and
+  /// picking an optimal schedule as we return. This, given loops such as
+  /// A(9) --> B(3) --> C(2) --> D(0)
+  ///      \-> E(5) --> F(4) \-> G(1)
+  ///      \-> H(8) --> I(7) --> J(6)
+  /// We would descend A->B->C->D
+  /// Then we would add the Addr inside `D` (which is loop 0)
+  /// and determine the optimal schedule.
+  /// Then we return, ascending, to C, which immediately descends to `G`.
+  /// We add the Addr inside `G` (which is loop 1), and determine the optimal
+  /// vectorization and unrolling.
+  /// Upon returning to `C`, with no sub-loops left, we similarly add its Addr,
+  /// and determine the optimal schedule for the set of loops D, G, and C.
+  /// Does C need to retraverse the `Addr` in order to add them with the
+  /// appropriate loop index (2)?
+  ///
+  /// The optimization process involves adding optimization possibilities,
+  /// for each of these, we perform a more expensive analysis.
+  /// That analysis -- what kind of information do we need to accumulate?
+  /// Lets start with that...
+public:
+  void descend() {}
 };
 
 // loop subsets are contiguous

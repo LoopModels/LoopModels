@@ -50,5 +50,10 @@ using math::DensePtrMatrix;
 /// accumulators. Each step in the reduction has a latency of 4 cycles, and we
 /// need to do `log2(Uj)` steps.
 ///
+/// Note, `y-softplus(l*(y-x))/l` is a good smooth minimum function,
+/// monotonic in `x` and differentiable everywhere. `l` controls
+  /// sharpness. Likewise, `y+softplus(l*(x-y))/l` for `max`.
+///
+///
 /// ///
 } // namespace poly::CostModeling
