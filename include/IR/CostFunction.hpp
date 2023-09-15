@@ -30,9 +30,12 @@ using math::DensePtrMatrix;
 ///
 /// Furthermore, we also need to consider the possibility of dependency chains.
 /// Consider, for example
-/// for (ptrdiff_t i = 0; i < I; ++i)
+/// for (ptrdiff_t i = 0; i < I; ++i){
+///   eltype_t<A> xi = x[i];
 ///   for (ptrdiff_t j = 0; j < J; ++j)
-///     x[i] += A[i][j] * y[j];
+///     xi += A[i][j] * y[j];
+///   x[i] = xi;
+/// }
 /// The `j` loop itself has a dependency chain.
 /// Two options for addressing this:
 /// 1. unrolling `j`, cloning the accumulation registers, and reducing at the
@@ -52,8 +55,23 @@ using math::DensePtrMatrix;
 ///
 /// Note, `y-softplus(l*(y-x))/l` is a good smooth minimum function,
 /// monotonic in `x` and differentiable everywhere. `l` controls
-  /// sharpness. Likewise, `y+softplus(l*(x-y))/l` for `max`.
+/// sharpness. Likewise, `y+softplus(l*(x-y))/l` for `max`.
 ///
+/// Thus, a cost function for the above gemv could be something like
+/// memcost = I*J*(Ui*Uj*C_{Al} + Uj*C_{yl}) / (Ui*Uj) +
+///    I*(C_{xl}*Ui + C_{xs}*Ui) / Ui
+/// cthroughput = I*J*(Ui*Uj*C_{t,fma}) / (Ui*Uj) + I*(Ui*C_{t,add}*(Uj-1)) / Ui
+/// clatency = I*J*C_{l,fma}/smin(Ui*Uj, C_{l,fma}/C_{t,fma}) +
+///    I*C_{l,add}*log2(Uj)
+/// cost = memcost + smax(cthroughput, clatency)
+/// or, if the it is easier to solve:
+/// cost = memcost + cthroughput + clatency
+///
+/// We may initially want to add a small cost for loop increment and cmp/branch,
+/// to encourage unrolling more generally, plus a cost for unrolling to
+/// discourse any excess unrolling when it doesn't provide meaningful benefits
+/// (representing the general cost of code size/ filling uop cache -- we
+/// definitely want loops to fit in the uop cache of any CPU sporting one!!! ).
 ///
 /// ///
 } // namespace poly::CostModeling
