@@ -87,26 +87,51 @@ using math::DensePtrMatrix;
 /// That is, we only consider reductions across the inner-most loop as requiring
 /// cloning of accumulators.
 ///
-  /// On throughput modeling, LLVM seems to generally give a recip throughput of 1 for pipelined instructions, regardless of number of ports. This is actually what we want, as this allows RTs to be additive (e.g., we may have a fma that is able to run on 2 ports (e.g. p0 or p5) and a permute that can only execute on one (e.g. p5); when mixing these instructions, they have the same effective cost -- they use a port -- and the more limited port choices of one isn't a problem so long as others can use what remains.
-  /// For our purposes, it isn't worth getting too fancy here. It is worth noting that the baseline model presented here
+/// On throughput modeling, LLVM seems to generally give a recip throughput of 1
+/// for pipelined instructions, regardless of number of ports. This is actually
+/// what we want, as this allows RTs to be additive (e.g., we may have a fma
+/// that is able to run on 2 ports (e.g. p0 or p5) and a permute that can only
+/// execute on one (e.g. p5); when mixing these instructions, they have the same
+/// effective cost -- they use a port -- and the more limited port choices of
+/// one isn't a problem so long as others can use what remains. For our
+/// purposes, it isn't worth getting too fancy here. It is worth noting that the
+/// baseline model presented here
 /// https://arxiv.org/pdf/2107.14210.pdf
-  /// performed respectively well when compared to vastly more sophisticated tools; for example, it performed similarly well as llvm-mca on most tested architectures!
+/// performed respectively well when compared to vastly more sophisticated
+/// tools; for example, it performed similarly well as llvm-mca on most tested
+/// architectures!
 /// The baseline model used above for loops was
-  /// max(1, (n-1)/i, m_r/m, m_w/w)
+/// max(1, (n-1)/i, m_r/m, m_w/w)
 /// where
-  /// n - the number of instructions in the benchmark (-1 because of assumption that the cmp and branch are macro-fused, meaning the last two instructions count as 1)
+/// n - the number of instructions in the benchmark (-1 because of assumption
+/// that the cmp and branch are macro-fused, meaning the last two instructions
+/// count as 1)
 /// m_r - number of memory reads
 /// m_w - number of memory writes
-  /// i - the issue width, e.g. 4 for Intel Skylake CPUs. 
-  /// m - number of reads the CPU can do per cycle (2 for all in the article)
-  /// w - number of writes the CPU can do per cycle (e.g. 2 for Ice Lake and newer, 1 for older)
-  /// Unfortunately, we cannot get the CPU-specific information (`i`,`m`,or`w`) from LLVM.
-  /// However, these are largely a matter of scale, and are generally correlated. E.g., Intel's Alderlake's values would be 6, 3, and 2, vs the older Skylake's 4, 2, and 1.
-  /// While not all the ratios are equal (`w`'s is 2 instead of 1.5), it is unlikely that many optimization decisions are going to be made differently between them.
-/// A possible exception is that we may wish to unroll more for CPUs with more out of order execution abilities.
-/// `getMaxInterleaveFactor` is an indicator of whether the pipeline might be very narrow.
+/// i - the issue width, e.g. 4 for Intel Skylake CPUs.
+/// m - number of reads the CPU can do per cycle (2 for all in the article)
+/// w - number of writes the CPU can do per cycle (e.g. 2 for Ice Lake and
+/// newer, 1 for older) Unfortunately, we cannot get the CPU-specific
+/// information (`i`,`m`,or`w`) from LLVM. However, these are largely a matter
+/// of scale, and are generally correlated. E.g., Intel's Alderlake's values
+/// would be 6, 3, and 2, vs the older Skylake's 4, 2, and 1. While not all the
+/// ratios are equal (`w`'s is 2 instead of 1.5), it is unlikely that many
+/// optimization decisions are going to be made differently between them.
+/// A possible exception is that we may wish to unroll more for CPUs with more
+/// out of order execution abilities. `getMaxInterleaveFactor` is an indicator
+/// of whether the pipeline might be very narrow.
+///
+///
+///
+///
+///
 ///
 ///
 /// ///
-/// ///
+class LoopTreeCostFn {
+
+public:
+  constexpr auto operator()(const AbstractVector auto &x) const { return 0.0; }
+};
+
 } // namespace poly::CostModeling
