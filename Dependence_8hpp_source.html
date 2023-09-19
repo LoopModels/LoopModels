@@ -509,7 +509,7 @@ $(function() {
 <div class="line"><a name="l00455"></a><span class="lineno">  455</span>&#160;    constexpr <a class="code" href="structpoly_1_1poly_1_1Dependence_1_1Active.html">Active</a>(<a class="code" href="structpoly_1_1poly_1_1Dependence_1_1Active.html">Active</a> &amp;&amp;) noexcept = <span class="keywordflow">default</span>;</div>
 <div class="line"><a name="l00456"></a><span class="lineno">  456</span>&#160;    constexpr <a class="code" href="structpoly_1_1poly_1_1Dependence_1_1Active.html">Active</a>() noexcept = <span class="keywordflow">default</span>;</div>
 <div class="line"><a name="l00457"></a><span class="lineno">  457</span>&#160;    constexpr <span class="keyword">auto</span> operator=(<span class="keyword">const</span> <a class="code" href="structpoly_1_1poly_1_1Dependence_1_1Active.html">Active</a> &amp;) noexcept -&gt; <a class="code" href="structpoly_1_1poly_1_1Dependence_1_1Active.html">Active</a> &amp; = <span class="keywordflow">default</span>;</div>
-<div class="line"><a name="l00458"></a><span class="lineno">  458</span>&#160;    constexpr <a class="code" href="structpoly_1_1poly_1_1Dependence_1_1Active.html">Active</a>(<span class="keywordtype">unsigned</span> depth) : depth(depth) {}</div>
+<div class="line"><a name="l00458"></a><span class="lineno">  458</span>&#160;    constexpr <a class="code" href="structpoly_1_1poly_1_1Dependence_1_1Active.html">Active</a>(<span class="keywordtype">unsigned</span> d) : depth(d) {}</div>
 <div class="line"><a name="l00459"></a><span class="lineno">  459</span>&#160;    constexpr <span class="keyword">auto</span> operator()(<span class="keyword">const</span> <a class="code" href="classpoly_1_1poly_1_1Dependence.html">Dependence</a> *d) <span class="keyword">const</span> -&gt; <span class="keywordtype">bool</span> {</div>
 <div class="line"><a name="l00460"></a><span class="lineno">  460</span>&#160;      <span class="keywordflow">return</span> d-&gt;isActive(depth);</div>
 <div class="line"><a name="l00461"></a><span class="lineno">  461</span>&#160;    }</div>
@@ -1113,14 +1113,14 @@ $(function() {
 <div class="line"><a name="l01064"></a><span class="lineno"> 1064</span>&#160;  }</div>
 <div class="line"><a name="l01065"></a><span class="lineno"> 1065</span>&#160; </div>
 <div class="line"><a name="l01066"></a><span class="lineno"><a class="line" href="classpoly_1_1poly_1_1Dependencies_1_1Ref.html"> 1066</a></span>&#160;  <span class="keyword">class </span><a class="code" href="classpoly_1_1poly_1_1Dependencies_1_1Ref.html">Ref</a> {</div>
-<div class="line"><a name="l01067"></a><span class="lineno"> 1067</span>&#160;    <a class="code" href="classpoly_1_1poly_1_1Dependencies.html">Dependencies</a> *deps;</div>
-<div class="line"><a name="l01068"></a><span class="lineno"> 1068</span>&#160;    <a class="code" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">ID</a> i;</div>
+<div class="line"><a name="l01067"></a><span class="lineno"> 1067</span>&#160;    <a class="code" href="classpoly_1_1poly_1_1Dependencies.html">Dependencies</a> *deps_;</div>
+<div class="line"><a name="l01068"></a><span class="lineno"> 1068</span>&#160;    <a class="code" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">ID</a> i_;</div>
 <div class="line"><a name="l01069"></a><span class="lineno"> 1069</span>&#160; </div>
 <div class="line"><a name="l01070"></a><span class="lineno"> 1070</span>&#160;  <span class="keyword">public</span>:</div>
-<div class="line"><a name="l01071"></a><span class="lineno"> 1071</span>&#160;    <a class="code" href="classpoly_1_1poly_1_1Dependencies_1_1Ref.html">Ref</a>(<a class="code" href="classpoly_1_1poly_1_1Dependencies.html">Dependencies</a> *deps, <a class="code" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">ID</a> i) : deps(deps), i(i) {}</div>
-<div class="line"><a name="l01072"></a><span class="lineno"> 1072</span>&#160;    <span class="keyword">operator</span> <a class="code" href="classpoly_1_1poly_1_1Dependence.html">Dependence</a>()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> deps-&gt;get(i); }</div>
+<div class="line"><a name="l01071"></a><span class="lineno"> 1071</span>&#160;    constexpr <a class="code" href="classpoly_1_1poly_1_1Dependencies_1_1Ref.html">Ref</a>(<a class="code" href="classpoly_1_1poly_1_1Dependencies.html">Dependencies</a> *deps, <a class="code" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">ID</a> i) : deps_(deps), i_(i) {}</div>
+<div class="line"><a name="l01072"></a><span class="lineno"> 1072</span>&#160;    <span class="keyword">operator</span> <a class="code" href="classpoly_1_1poly_1_1Dependence.html">Dependence</a>()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> deps_-&gt;get(i_); }</div>
 <div class="line"><a name="l01073"></a><span class="lineno"> 1073</span>&#160;    <span class="keyword">auto</span> operator=(<a class="code" href="classpoly_1_1poly_1_1Dependence.html">Dependence</a> d) -&gt; <a class="code" href="classpoly_1_1poly_1_1Dependencies_1_1Ref.html">Ref</a> &amp; {</div>
-<div class="line"><a name="l01074"></a><span class="lineno"> 1074</span>&#160;      deps-&gt;set(i, d);</div>
+<div class="line"><a name="l01074"></a><span class="lineno"> 1074</span>&#160;      deps_-&gt;set(i_, d);</div>
 <div class="line"><a name="l01075"></a><span class="lineno"> 1075</span>&#160;      <span class="keywordflow">return</span> *<span class="keyword">this</span>;</div>
 <div class="line"><a name="l01076"></a><span class="lineno"> 1076</span>&#160;    }</div>
 <div class="line"><a name="l01077"></a><span class="lineno"> 1077</span>&#160;  };</div>
@@ -1159,7 +1159,7 @@ $(function() {
 <div class="line"><a name="l01110"></a><span class="lineno"> 1110</span>&#160;    <span class="keywordflow">return</span> utils::VForwardRange{outEdges(), <span class="keywordtype">id</span>};</div>
 <div class="line"><a name="l01111"></a><span class="lineno"> 1111</span>&#160;  }</div>
 <div class="line"><a name="l01112"></a><span class="lineno"> 1112</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getEdgeTransform()<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l01113"></a><span class="lineno"> 1113</span>&#160;    <span class="keyword">auto</span> f = [=](int32_t id) { <span class="keywordflow">return</span> get(Dependence::ID{<span class="keywordtype">id</span>}); };</div>
+<div class="line"><a name="l01113"></a><span class="lineno"> 1113</span>&#160;    <span class="keyword">auto</span> f = [=, <span class="keyword">this</span>](int32_t id) { <span class="keywordflow">return</span> get(Dependence::ID{<span class="keywordtype">id</span>}); };</div>
 <div class="line"><a name="l01114"></a><span class="lineno"> 1114</span>&#160;    <span class="keywordflow">return</span> std::views::transform(f);</div>
 <div class="line"><a name="l01115"></a><span class="lineno"> 1115</span>&#160;  }</div>
 <div class="line"><a name="l01116"></a><span class="lineno"> 1116</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> inputEdges(int32_t <span class="keywordtype">id</span>)<span class="keyword"> const </span>{</div>
@@ -1170,17 +1170,17 @@ $(function() {
 <div class="line"><a name="l01121"></a><span class="lineno"> 1121</span>&#160;  }</div>
 <div class="line"><a name="l01122"></a><span class="lineno"> 1122</span>&#160; </div>
 <div class="line"><a name="l01123"></a><span class="lineno"> 1123</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> activeFilter(<span class="keywordtype">unsigned</span> depth)<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l01124"></a><span class="lineno"> 1124</span>&#160;    <span class="keyword">auto</span> f = [=](int32_t id) -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l01124"></a><span class="lineno"> 1124</span>&#160;    <span class="keyword">auto</span> f = [=, <span class="keyword">this</span>](int32_t id) -&gt; <span class="keywordtype">bool</span> {</div>
 <div class="line"><a name="l01125"></a><span class="lineno"> 1125</span>&#160;      <span class="keywordflow">return</span> !isSat(Dependence::ID{<span class="keywordtype">id</span>}, depth);</div>
 <div class="line"><a name="l01126"></a><span class="lineno"> 1126</span>&#160;    };</div>
 <div class="line"><a name="l01127"></a><span class="lineno"> 1127</span>&#160;    <span class="keywordflow">return</span> std::views::filter(f);</div>
 <div class="line"><a name="l01128"></a><span class="lineno"> 1128</span>&#160;  }</div>
 <div class="line"><a name="l01129"></a><span class="lineno"> 1129</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> inputAddrTransform() {</div>
-<div class="line"><a name="l01130"></a><span class="lineno"> 1130</span>&#160;    <span class="keyword">auto</span> f = [=](int32_t id) { <span class="keywordflow">return</span> input(Dependence::ID{<span class="keywordtype">id</span>}); };</div>
+<div class="line"><a name="l01130"></a><span class="lineno"> 1130</span>&#160;    <span class="keyword">auto</span> f = [=, <span class="keyword">this</span>](int32_t id) { <span class="keywordflow">return</span> input(Dependence::ID{<span class="keywordtype">id</span>}); };</div>
 <div class="line"><a name="l01131"></a><span class="lineno"> 1131</span>&#160;    <span class="keywordflow">return</span> std::views::transform(f);</div>
 <div class="line"><a name="l01132"></a><span class="lineno"> 1132</span>&#160;  }</div>
 <div class="line"><a name="l01133"></a><span class="lineno"> 1133</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> outputAddrTransform() {</div>
-<div class="line"><a name="l01134"></a><span class="lineno"> 1134</span>&#160;    <span class="keyword">auto</span> f = [=](int32_t id) { <span class="keywordflow">return</span> output(Dependence::ID{<span class="keywordtype">id</span>}); };</div>
+<div class="line"><a name="l01134"></a><span class="lineno"> 1134</span>&#160;    <span class="keyword">auto</span> f = [=, <span class="keyword">this</span>](int32_t id) { <span class="keywordflow">return</span> output(Dependence::ID{<span class="keywordtype">id</span>}); };</div>
 <div class="line"><a name="l01135"></a><span class="lineno"> 1135</span>&#160;    <span class="keywordflow">return</span> std::views::transform(f);</div>
 <div class="line"><a name="l01136"></a><span class="lineno"> 1136</span>&#160;  }</div>
 <div class="line"><a name="l01137"></a><span class="lineno"> 1137</span>&#160;};</div>
@@ -1288,9 +1288,9 @@ $(function() {
 <div class="line"><a name="l01239"></a><span class="lineno"> 1239</span>&#160;} <span class="comment">// namespace poly</span></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Addr_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Addr.html">poly::IR::Addr</a></div><div class="ttdef"><b>Definition:</b> Address.hpp:77</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Addr_html_a1c11ac80919c828f4ffe2e9623605750"><div class="ttname"><a href="classpoly_1_1IR_1_1Addr.html#a1c11ac80919c828f4ffe2e9623605750">poly::IR::Addr::drop</a></div><div class="ttdeci">void drop(Dependencies)</div><div class="ttdoc">drop this and remove it from Dependencies</div><div class="ttdef"><b>Definition:</b> Dependence.hpp:1187</div></div>
-<div class="ttc" id="aclasspoly_1_1IR_1_1Addr_html_af4838372d11fd32b964c9a7cb6d4b1b8"><div class="ttname"><a href="classpoly_1_1IR_1_1Addr.html#af4838372d11fd32b964c9a7cb6d4b1b8">poly::IR::Addr::indexMatrix</a></div><div class="ttdeci">constexpr auto indexMatrix() -&gt; MutDensePtrMatrix&lt; int64_t &gt;</div><div class="ttdoc">indexMatrix() -&gt; arrayDim() x getNumLoops()</div><div class="ttdef"><b>Definition:</b> Address.hpp:475</div></div>
-<div class="ttc" id="aclasspoly_1_1IR_1_1Loop_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Loop.html">poly::IR::Loop</a></div><div class="ttdef"><b>Definition:</b> Node.hpp:283</div></div>
-<div class="ttc" id="aclasspoly_1_1poly_1_1DepPoly_html"><div class="ttname"><a href="classpoly_1_1poly_1_1DepPoly.html">poly::poly::DepPoly</a></div><div class="ttdef"><b>Definition:</b> DependencyPolyhedra.hpp:100</div></div>
+<div class="ttc" id="aclasspoly_1_1IR_1_1Addr_html_af4838372d11fd32b964c9a7cb6d4b1b8"><div class="ttname"><a href="classpoly_1_1IR_1_1Addr.html#af4838372d11fd32b964c9a7cb6d4b1b8">poly::IR::Addr::indexMatrix</a></div><div class="ttdeci">constexpr auto indexMatrix() -&gt; MutDensePtrMatrix&lt; int64_t &gt;</div><div class="ttdoc">indexMatrix() -&gt; arrayDim() x getNumLoops()</div><div class="ttdef"><b>Definition:</b> Address.hpp:477</div></div>
+<div class="ttc" id="aclasspoly_1_1IR_1_1Loop_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Loop.html">poly::IR::Loop</a></div><div class="ttdef"><b>Definition:</b> Node.hpp:282</div></div>
+<div class="ttc" id="aclasspoly_1_1poly_1_1DepPoly_html"><div class="ttname"><a href="classpoly_1_1poly_1_1DepPoly.html">poly::poly::DepPoly</a></div><div class="ttdef"><b>Definition:</b> DependencyPolyhedra.hpp:99</div></div>
 <div class="ttc" id="aclasspoly_1_1poly_1_1Dependence_html"><div class="ttname"><a href="classpoly_1_1poly_1_1Dependence.html">poly::poly::Dependence</a></div><div class="ttdef"><b>Definition:</b> Dependence.hpp:23</div></div>
 <div class="ttc" id="aclasspoly_1_1poly_1_1Dependence_html_a0abb755d8e7a698e081db7292e11e44b"><div class="ttname"><a href="classpoly_1_1poly_1_1Dependence.html#a0abb755d8e7a698e081db7292e11e44b">poly::poly::Dependence::getInIndMat</a></div><div class="ttdeci">auto getInIndMat() const -&gt; DensePtrMatrix&lt; int64_t &gt;</div><div class="ttdoc">getInIndMat() -&gt; getInNumLoops() x arrayDim()</div><div class="ttdef"><b>Definition:</b> Dependence.hpp:168</div></div>
 <div class="ttc" id="aclasspoly_1_1poly_1_1Dependence_html_a3e863ed72e68c568e3b0426c6f7f76e1"><div class="ttname"><a href="classpoly_1_1poly_1_1Dependence.html#a3e863ed72e68c568e3b0426c6f7f76e1">poly::poly::Dependence::isCondIndep</a></div><div class="ttdeci">constexpr auto isCondIndep() const -&gt; bool</div><div class="ttdoc">if true, then it's independent conditioned on the phis...</div><div class="ttdef"><b>Definition:</b> Dependence.hpp:131</div></div>

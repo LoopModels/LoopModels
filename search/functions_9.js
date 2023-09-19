@@ -1,4 +1,6 @@
 var searchData=
 [
-  ['optimize_345',['optimize',['../namespacepoly_1_1CostModeling.html#ac6b2c5a3ffaaba5a609c5b8f387565cc',1,'poly::CostModeling']]]
+  ['removeemptymask_308',['removeEmptyMask',['../structpoly_1_1IR_1_1Predicate_1_1Intersection.html#a03f0fec36c260a442aa37efaae474cdd',1,'poly::IR::Predicate::Intersection']]],
+  ['replacealluseswith_309',['replaceAllUsesWith',['../classpoly_1_1IR_1_1Cache.html#a40325b31d215da23367410a8eb41519f',1,'poly::IR::Cache']]],
+  ['rotate_310',['rotate',['../classpoly_1_1poly_1_1Loop.html#a90e1eceee8f71d004765f765888b2f1c',1,'poly::poly::Loop']]]
 ];

@@ -323,7 +323,7 @@ $(function() {
 <div class="line"><a name="l00338"></a><span class="lineno">  338</span>&#160;    <span class="keywordflow">if</span> (!lpor.nodes) <span class="keywordflow">return</span>;</div>
 <div class="line"><a name="l00339"></a><span class="lineno">  339</span>&#160;    <span class="keywordflow">for</span> (<a class="code" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> *addr : lpor.addr.getAddr())</div>
 <div class="line"><a name="l00340"></a><span class="lineno">  340</span>&#160;      loopBBs.insert(addr-&gt;getBasicBlock());</div>
-<div class="line"><a name="l00341"></a><span class="lineno">  341</span>&#160;    <a class="code" href="namespacepoly_1_1CostModeling.html#ac6b2c5a3ffaaba5a609c5b8f387565cc">CostModeling::optimize</a>(loopBlock.getDependencies(), instructions, loopBBs,</div>
+<div class="line"><a name="l00341"></a><span class="lineno">  341</span>&#160;    CostModeling::optimize(loopBlock.getDependencies(), instructions, loopBBs,</div>
 <div class="line"><a name="l00342"></a><span class="lineno">  342</span>&#160;                           eraseCandidates, loopBlock.getAllocator(), lpor);</div>
 <div class="line"><a name="l00343"></a><span class="lineno">  343</span>&#160;    loopBBs.clear();</div>
 <div class="line"><a name="l00344"></a><span class="lineno">  344</span>&#160;  }</div>
@@ -400,11 +400,10 @@ $(function() {
 <div class="ttc" id="aclasspoly_1_1IR_1_1Predicate_1_1Map_html_a8fccd8417b7ce435fe3f8f94cbd7bef3"><div class="ttname"><a href="classpoly_1_1IR_1_1Predicate_1_1Map.html#a8fccd8417b7ce435fe3f8f94cbd7bef3">poly::IR::Predicate::Map::descend</a></div><div class="ttdeci">static auto descend(Arena&lt;&gt; *, IR::Cache &amp;, llvm::BasicBlock *, llvm::BasicBlock *, llvm::Loop *, TreeResult &amp;) -&gt; std::optional&lt; Map &gt;</div><div class="ttdef"><b>Definition:</b> Cache.hpp:875</div></div>
 <div class="ttc" id="aclasspoly_1_1TurboLoop_html"><div class="ttname"><a href="classpoly_1_1TurboLoop.html">poly::TurboLoop</a></div><div class="ttdef"><b>Definition:</b> TurboLoop.hpp:69</div></div>
 <div class="ttc" id="aclasspoly_1_1lp_1_1LoopBlock_html"><div class="ttname"><a href="classpoly_1_1lp_1_1LoopBlock.html">poly::lp::LoopBlock</a></div><div class="ttdef"><b>Definition:</b> LoopBlock.hpp:127</div></div>
-<div class="ttc" id="aclasspoly_1_1poly_1_1Loop_html"><div class="ttname"><a href="classpoly_1_1poly_1_1Loop.html">poly::poly::Loop</a></div><div class="ttdef"><b>Definition:</b> Loops.hpp:329</div></div>
-<div class="ttc" id="anamespacepoly_1_1CostModeling_html_ac6b2c5a3ffaaba5a609c5b8f387565cc"><div class="ttname"><a href="namespacepoly_1_1CostModeling.html#ac6b2c5a3ffaaba5a609c5b8f387565cc">poly::CostModeling::optimize</a></div><div class="ttdeci">void optimize(IR::Dependencies deps, IR::Cache &amp;instr, dict::set&lt; llvm::BasicBlock * &gt; &amp;loopBBs, dict::set&lt; llvm::CallBase * &gt; &amp;eraseCandidates, Arena&lt;&gt; *lalloc, lp::LoopBlock::OptimizationResult res)</div><div class="ttdoc">Optimize the schedule.</div><div class="ttdef"><b>Definition:</b> CostModeling.hpp:777</div></div>
+<div class="ttc" id="aclasspoly_1_1poly_1_1Loop_html"><div class="ttname"><a href="classpoly_1_1poly_1_1Loop.html">poly::poly::Loop</a></div><div class="ttdef"><b>Definition:</b> Loops.hpp:328</div></div>
 <div class="ttc" id="astructpoly_1_1IR_1_1TreeResult_html"><div class="ttname"><a href="structpoly_1_1IR_1_1TreeResult.html">poly::IR::TreeResult</a></div><div class="ttdef"><b>Definition:</b> Cache.hpp:127</div></div>
 <div class="ttc" id="astructpoly_1_1lp_1_1LoopBlock_1_1OptimizationResult_html"><div class="ttname"><a href="structpoly_1_1lp_1_1LoopBlock_1_1OptimizationResult.html">poly::lp::LoopBlock::OptimizationResult</a></div><div class="ttdef"><b>Definition:</b> LoopBlock.hpp:157</div></div>
-<div class="ttc" id="astructpoly_1_1poly_1_1NoWrapRewriter_html"><div class="ttname"><a href="structpoly_1_1poly_1_1NoWrapRewriter.html">poly::poly::NoWrapRewriter</a></div><div class="ttdef"><b>Definition:</b> Loops.hpp:71</div></div>
+<div class="ttc" id="astructpoly_1_1poly_1_1NoWrapRewriter_html"><div class="ttname"><a href="structpoly_1_1poly_1_1NoWrapRewriter.html">poly::poly::NoWrapRewriter</a></div><div class="ttdef"><b>Definition:</b> Loops.hpp:70</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
