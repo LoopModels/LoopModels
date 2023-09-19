@@ -11,7 +11,6 @@
 #include <cstdint>
 #include <gtest/gtest.h>
 #include <llvm/ADT/SmallVector.h>
-#include <llvm/ADT/Triple.h>
 #include <llvm/Analysis/AssumptionCache.h>
 #include <llvm/Analysis/ScalarEvolution.h>
 #include <llvm/Analysis/TargetLibraryInfo.h>

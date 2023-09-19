@@ -62,8 +62,8 @@ class ScheduledNode {
     auto L = getNumLoops();
     return L * L;
   }
-  constexpr ScheduledNode(Addr *store, poly::Loop *L)
-    : store(store), loopNest(L) {
+  constexpr ScheduledNode(Addr *write, poly::Loop *L)
+    : store(write), loopNest(L) {
     mem[0] = L->getNumLoops();
     getFusionOmega() << 0;
   }
@@ -122,10 +122,10 @@ public:
   }
   constexpr void setOffsets(int64_t *o) { offsets = o; }
   struct NextAddr {
-    constexpr auto operator()(Addr *a) const -> Addr * {
+    auto operator()(Addr *a) const -> Addr * {
       return llvm::cast_or_null<Addr>(a->getNext());
     }
-    constexpr auto operator()(const Addr *a) const -> const Addr * {
+    auto operator()(const Addr *a) const -> const Addr * {
       return llvm::cast_or_null<Addr>(a->getNext());
     }
   };
@@ -481,11 +481,11 @@ static_assert(sizeof(ScheduledNode) <= 64); // fits in cache line
 
 class ScheduleGraph {
   IR::Dependencies deps;
-  unsigned depth;
+  unsigned depth_;
 
 public:
   using VertexType = ScheduledNode;
-  constexpr ScheduleGraph(unsigned depth) : depth(depth) {}
+  constexpr ScheduleGraph(unsigned depth) : depth_(depth) {}
 
   [[nodiscard]] static constexpr auto getVertices(ScheduledNode *nodes)
     -> utils::ListRange<ScheduledNode, utils::GetNext, utils::Identity> {
@@ -495,11 +495,11 @@ public:
     -> utils::ListRange<const ScheduledNode, utils::GetNext, utils::Identity> {
     return static_cast<const ScheduledNode *>(nodes)->getVertices();
   }
-  [[nodiscard]] constexpr auto outNeighbors(ScheduledNode *v) const {
-    return v->outNeighbors(deps, depth);
+  [[nodiscard]] auto outNeighbors(ScheduledNode *v) const {
+    return v->outNeighbors(deps, depth_);
   }
-  [[nodiscard]] constexpr auto inNeighbors(ScheduledNode *v) const {
-    return v->inNeighbors(deps, depth);
+  [[nodiscard]] auto inNeighbors(ScheduledNode *v) const {
+    return v->inNeighbors(deps, depth_);
   }
 };
 

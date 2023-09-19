@@ -1,7 +1,11 @@
 #pragma once
+
 #include <Math/Array.hpp>
+#include <Math/Math.hpp>
+#include <Math/Vector.hpp>
 
 namespace poly::CostModeling {
+using math::AbstractVector;
 using math::DensePtrMatrix;
 
 /// Here, we define a cost fn that can be optimized to produce

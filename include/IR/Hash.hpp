@@ -1,6 +1,6 @@
 #pragma once
-#include "IR/Instruction.hpp"
 #include "IR/Node.hpp"
+#include <Utilities/Invariant.hpp>
 #include <ankerl/unordered_dense.h>
 #include <llvm/ADT/Hashing.h>
 
@@ -31,7 +31,7 @@ template <> struct ankerl::unordered_dense::hash<poly::IR::Cnst::Identifier> {
     case poly::IR::Node::VK_Bint:
       return combineHash(seed, llvm::hash_value(*x.payload.ci));
     default:
-      poly::invariant(x.kind == poly::IR::Node::VK_Bint);
+      poly::utils::invariant(x.kind == poly::IR::Node::VK_Bint);
       return combineHash(seed, llvm::hash_value(*x.payload.cf));
     }
   }
@@ -54,27 +54,6 @@ struct ankerl::unordered_dense::hash<poly::IR::Instruction::Identifier> {
 ///
 template <> struct ankerl::unordered_dense::hash<poly::IR::InstByValue> {
   using is_avalanching = void;
-  [[nodiscard]] auto operator()(poly::IR::InstByValue const &x) const noexcept
-    -> uint64_t {
-    using poly::Hash::combineHash, poly::Hash::getHash, poly::containers::UList,
-      poly::IR::Value;
-    uint64_t seed = getHash(x.inst->getKind());
-    seed = combineHash(seed, getHash(x.inst->getType()));
-    seed = combineHash(seed, getHash(x.inst->getOpId()));
-    if (x.inst->isIncomplete())
-      return combineHash(seed, getHash(x.inst->getLLVMInstruction()));
-    uint8_t assocFlag = x.inst->associativeOperandsFlag();
-    // combine all operands
-    size_t offset = 0;
-    poly::PtrVector<Value *> operands = x.inst->getOperands();
-    if (assocFlag) {
-      poly::invariant(assocFlag, uint8_t(3));
-      // we combine hashes in a commutative way
-      seed = combineHash(seed, getHash(operands[0]) + getHash(operands[1]));
-      offset = 2;
-    }
-    for (auto B = operands.begin() + offset, E = operands.end(); B != E; ++B)
-      seed = combineHash(seed, getHash(*B));
-    return seed;
-  }
+  [[nodiscard]] inline auto
+  operator()(poly::IR::InstByValue const &x) const noexcept -> uint64_t;
 };

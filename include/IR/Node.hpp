@@ -17,7 +17,6 @@
 #include <llvm/IR/Type.h>
 #include <llvm/IR/Value.h>
 #include <llvm/Support/Casting.h>
-#include <utility>
 
 namespace poly::poly {
 class Dependencies;
@@ -499,7 +498,7 @@ public:
     llvm::Type *type;
   };
   // declarations
-  [[nodiscard]] constexpr auto getIdentifier() const -> Identifier;
+  [[nodiscard]] auto getIdentifier() const -> Identifier;
   inline void setOperands(Arena<> *alloc, math::PtrVector<Value *>);
 };
 
@@ -526,7 +525,7 @@ class Cnst : public Value {
   llvm::Type *typ;
 
 protected:
-  constexpr Cnst(ValKind kind, llvm::Type *t) : Value(kind) { typ = t; }
+  constexpr Cnst(ValKind knd, llvm::Type *t) : Value(knd) { typ = t; }
 
 public:
   static constexpr auto classof(const Node *v) -> bool {
@@ -604,7 +603,7 @@ class Bint : public Cnst {
   const llvm::APInt &val;
 
 public:
-  constexpr Bint(llvm::ConstantInt *v, llvm::Type *t)
+  Bint(llvm::ConstantInt *v, llvm::Type *t)
     : Cnst(VK_Bint, t), val(v->getValue()) {}
   static constexpr auto create(Arena<> *alloc, llvm::ConstantInt *v,
                                llvm::Type *t) -> Bint * {
@@ -624,7 +623,7 @@ class Bflt : public Cnst {
   const llvm::APFloat &val;
 
 public:
-  constexpr Bflt(llvm::ConstantFP *v, llvm::Type *t)
+  Bflt(llvm::ConstantFP *v, llvm::Type *t)
     : Cnst(VK_Bflt, t), val(v->getValue()) {}
   static constexpr auto create(Arena<> *alloc, llvm::ConstantFP *v,
                                llvm::Type *t) -> Bflt * {
@@ -644,5 +643,11 @@ public:
   if (Bint *c = llvm::dyn_cast<Bint>(n)) return c->getVal().isOne();
   return false;
 }
+
+class Compute;
+struct InstByValue {
+  Compute *inst;
+  inline auto operator==(InstByValue const &other) const -> bool;
+};
 
 } // namespace poly::IR

@@ -1,6 +1,7 @@
 #pragma once
 #include "IR/Address.hpp"
 #include "Math/Math.hpp"
+#include "Math/MatrixDimensions.hpp"
 #include "Polyhedra/Loops.hpp"
 #include <cstdint>
 #include <llvm/Support/Allocator.h>
@@ -8,7 +9,7 @@
 namespace poly {
 
 using math::DenseMatrix, math::PtrMatrix, math::MutPtrMatrix, utils::Arena,
-  math::PtrVector, utils::NotNull;
+  math::PtrVector, math::DenseDims, utils::NotNull;
 
 struct ArrayReference {
   const llvm::SCEVUnknown *basePointer;
@@ -16,7 +17,7 @@ struct ArrayReference {
   DenseMatrix<int64_t> indMat;
   DenseMatrix<int64_t> offMat;
   llvm::SmallVector<const llvm::SCEV *, 3> sizes;
-  ArrayReference(const llvm::SCEVUnknown *p, poly::Loop *l, size_t dim)
+  ArrayReference(const llvm::SCEVUnknown *p, poly::Loop *l, unsigned dim)
     : basePointer(p), loop(l), indMat(DenseDims{loop->getNumLoops(), dim}),
       offMat(DenseDims{dim, 1}), sizes(dim) {
     indexMatrix() << 0;
@@ -32,12 +33,13 @@ struct ArrayReference {
     return ptrdiff_t(offMat.numRow());
   }
 };
-inline auto createMemAccess(Arena<> *alloc, ArrayReference &ar,
-                            llvm::Instruction *IC, PtrVector<unsigned> omegas)
-  -> NotNull<IR::Addr> {
+// inline auto createMemAccess(Arena<> *alloc, ArrayReference &ar,
+//                             llvm::Instruction *IC, PtrVector<unsigned>
+//                             omegas)
+//   -> NotNull<IR::Addr> {
 
-  IntMatrix indMatT(ar.indMat.transpose());
-  return IR::Addr::construct(alloc, ar.basePointer, *ar.loop, IC, indMatT,
-                             {ar.sizes, {}}, ar.offsetMatrix(), omegas);
-}
+//   math::IntMatrix indMatT{ar.indMat.transpose()};
+//   return IR::Addr::construct(alloc, ar.basePointer, *ar.loop, IC, indMatT,
+//                              {ar.sizes, {}}, ar.offsetMatrix(), omegas);
+// }
 } // namespace poly

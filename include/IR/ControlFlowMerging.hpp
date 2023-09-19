@@ -457,7 +457,7 @@ mergeInstructions(IR::Cache &cache, Predicate::Map &predMap,
     opMap{&tAlloc};
   amap<Instruction *, Predicate::Set> valToPred{&tAlloc};
   llvm::SmallVector<MergingCost *> mergingCosts;
-  mergingCosts.emplace_back(tAlloc);
+  mergingCosts.emplace_back(&tAlloc);
   // We search through incomplete instructions inside the predMap
   // this should yield all merge candidates.L
   for (auto *C = completed; C; C = static_cast<Compute *>(C->getNext())) {

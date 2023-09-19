@@ -467,9 +467,9 @@ class IROptimizer {
   IR::Cache &instructions;
   dict::set<llvm::BasicBlock *> &LBBs;
   dict::set<llvm::CallBase *> &eraseCandidates;
-  IR::Loop *root;
+  IR::Loop *root_;
   MutPtrVector<int32_t> loopDeps;
-  Arena<> *lalloc;
+  Arena<> *lalloc_;
   llvm::TargetLibraryInfo *TLI;
 
   /// `loopDepSats` places the dependencies at the correct loop level so that
@@ -522,8 +522,8 @@ class IROptimizer {
   // 2. are non-escaping, i.e. `llvm::isNonEscapingLocalObject`
   // 3. returned by `llvm::isRemovableAlloc`
   inline auto eliminateTemporaries(IR::AddrChain addr) -> unsigned {
-    auto s = lalloc->scope();
-    dict::aset<IR::Addr *> loaded{lalloc};
+    auto s = lalloc_->scope();
+    dict::aset<IR::Addr *> loaded{lalloc_};
     for (IR::Addr *a : addr.getAddr())
       if (a->isLoad()) loaded.insert(a);
     unsigned remaining = 0;
@@ -536,7 +536,7 @@ class IROptimizer {
       if (!call) continue;
       if (!llvm::isNonEscapingLocalObject(call, nullptr)) continue;
       if (!llvm::isRemovableAlloc(call, TLI)) continue;
-      if (hasFutureReads(lalloc, LBBs, call)) continue;
+      if (hasFutureReads(lalloc_, LBBs, call)) continue;
       a->drop(deps);
       // we later check if any uses remain other than the associated free
       // if not, we can delete them.
@@ -665,19 +665,20 @@ class IROptimizer {
 public:
   IROptimizer(IR::Dependencies deps, IR::Cache &instr,
               dict::set<llvm::BasicBlock *> &loopBBs,
-              dict::set<llvm::CallBase *> &eraseCandidates_, IR::Loop *root_,
+              dict::set<llvm::CallBase *> &eraseCandidates_, IR::Loop *root,
               Arena<> *lalloc, lp::LoopBlock::OptimizationResult res,
               uint32_t numLoops)
     : deps{deps}, instructions{instr}, LBBs{loopBBs},
-      eraseCandidates{eraseCandidates_}, root{root_}, lalloc{lalloc} {
-    sortEdges(root, 0);
+      eraseCandidates{eraseCandidates_}, root_{root}, lalloc_{lalloc} {
+    sortEdges(root_, 0);
     removeRedundantAddr(res.addr);
     unsigned numAddr = eliminateTemporaries(res.addr);
     loopDeps = loopDepSats(lalloc, deps, res);
     // plan now is to have a `BitArray` big enough to hold `numLoops` entries
     // and `numAddr` rows; final axis is contiguous vs non-contiguous
     // Additionally, we will have a vector of unroll strategies to consider
-    LoopDependencies *ld = LoopDependencies::create(lalloc, numLoops, numAddr);
+    // LoopDependencies *ld = LoopDependencies::create(lalloc_, numLoops,
+    // numAddr);
   }
 };
 

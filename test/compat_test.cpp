@@ -2,6 +2,7 @@
 #include "Polyhedra/Loops.hpp"
 #include "Support/OStream.hpp"
 #include "TestUtilities.hpp"
+#include "Utilities/Valid.hpp"
 #include <Math/Constraints.hpp>
 #include <Math/Math.hpp>
 #include <Utilities/MatrixStringParse.hpp>
@@ -14,7 +15,7 @@
 
 namespace poly {
 
-using math::IntMatrix, utils::operator""_mat;
+using math::IntMatrix, math::DenseMatrix, utils::operator""_mat;
 
 // NOLINTNEXTLINE(modernize-use-trailing-return-type)
 TEST(TrivialPruneBounds0, BasicAssertions) {
@@ -150,7 +151,7 @@ TEST(AffineTest0, BasicAssertions) {
   llvm::errs() << "\nPermuting loops 1 and 2\n";
   utils::OwningArena<> allocator;
   utils::NotNull<poly::Loop> affp021ptr{
-    aff.rotate(allocator, "[1 0 0; 0 0 1; 0 1 0]"_mat, nullptr)};
+    aff.rotate(&allocator, "[1 0 0; 0 0 1; 0 1 0]"_mat, nullptr)};
   poly::Loop &affp021 = *affp021ptr;
   // Now that we've swapped loops 1 and 2, we should have
   // for m in 0:M-1, k in 1:N-1, n in 0:k-1
@@ -164,9 +165,9 @@ TEST(AffineTest0, BasicAssertions) {
                << "\n";
   llvm::errs() << "Constructed affine obj\n";
   llvm::errs() << "About to run first compat test\n";
-  EXPECT_FALSE(affp021.zeroExtraItersUponExtending(tlf.getAlloc(), 1, false));
+  EXPECT_FALSE(affp021.zeroExtraItersUponExtending(*tlf.getAlloc(), 1, false));
   llvm::errs() << "About to run second compat test\n";
-  EXPECT_TRUE(affp021.zeroExtraItersUponExtending(tlf.getAlloc(), 1, true));
+  EXPECT_TRUE(affp021.zeroExtraItersUponExtending(*tlf.getAlloc(), 1, true));
 
   // affp021.zeroExtraIterationsUponExtending(poset, 1, )
 }
@@ -198,8 +199,9 @@ TEST(NonUnimodularExperiment, BasicAssertions) {
   tlf.addLoop(std::move(B), 2);
   poly::Loop &aff2 = *tlf.getLoopNest(tlf.getNumLoopNests() - 1);
   EXPECT_FALSE(aff2.isEmpty());
-  OwningArena<> allocator;
-  NotNull<poly::Loop> affp10{aff2.rotate(allocator, "[0 1; 1 0]"_mat, nullptr)};
+  utils::OwningArena<> allocator;
+  utils::NotNull<poly::Loop> affp10{
+    aff2.rotate(&allocator, "[0 1; 1 0]"_mat, nullptr)};
 
   llvm::errs() << "Swapped order:\n";
 #ifndef NDEBUG

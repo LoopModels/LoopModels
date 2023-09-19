@@ -14,7 +14,6 @@
 #include <Utilities/Valid.hpp>
 #include <cstddef>
 #include <cstdint>
-#include <limits>
 #include <llvm/ADT/ArrayRef.h>
 #include <llvm/ADT/SmallVector.h>
 #include <llvm/Analysis/LoopInfo.h>
@@ -431,9 +430,8 @@ public:
   /// offset the loops by `offsets`, e.g. if we have
   /// offsets[0] = 2, then the first loop is shifted by 2.
   /// this shifting is applied before rotation.
-  [[nodiscard]] constexpr auto rotate(Arena<> *alloc, DensePtrMatrix<int64_t> R,
-                                      const int64_t *offsets) const
-    -> NotNull<Loop> {
+  [[nodiscard]] auto rotate(Arena<> *alloc, DensePtrMatrix<int64_t> R,
+                            const int64_t *offsets) const -> NotNull<Loop> {
     // if offsets is not null, we have the equivalent of
     // A * O * [I 0; 0 R]
     // where O = I - [0 0; offsets 0],
@@ -558,14 +556,13 @@ public:
     -> PtrVector<int64_t> {
     return getA()(j, _(0, getNumSymbols()));
   }
-  [[nodiscard]] constexpr auto copy(Arena<> *alloc) const -> NotNull<Loop> {
+  [[nodiscard]] auto copy(Arena<> *alloc) const -> NotNull<Loop> {
     auto ret = Loop::allocate(alloc, L, numConstraints, numLoops, getSyms(),
                               isNonNegative());
     ret->getA() << getA();
     return ret;
   }
-  [[nodiscard]] constexpr auto removeLoop(Arena<> *alloc, ptrdiff_t v) const
-    -> Loop * {
+  [[nodiscard]] auto removeLoop(Arena<> *alloc, ptrdiff_t v) const -> Loop * {
     auto A{getA()};
     v += getNumSymbols();
     auto zeroNegPos = indsZeroNegPos(A(_, v));

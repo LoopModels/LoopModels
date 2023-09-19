@@ -16,7 +16,6 @@
 #include <llvm/Pass.h>
 #include <llvm/Support/Allocator.h>
 #include <utility>
-#include <variant>
 
 namespace poly::IR {
 
@@ -378,7 +377,7 @@ struct Set {
   [[nodiscard]] auto operator&=(Set &pred) -> Set & {
     if (!pred.allocated) return *this &= pred.intersectUnion.intersect;
     pred.intersectUnion.intersects->forEach(
-      [&](Intersection pred) { *this &= pred; });
+      [&](Intersection prd) { *this &= prd; });
     return *this;
   }
   auto copy(Arena<> *alloc) const -> Set {

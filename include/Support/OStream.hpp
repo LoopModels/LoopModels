@@ -13,7 +13,8 @@ template <typename T>
 inline auto operator<<(llvm::raw_ostream &os, PtrVector<T> const &A)
   -> llvm::raw_ostream & {
   std::ostringstream sos;
-  return os << printVector(sos, A).str();
+  printVector(sos, A);
+  return os << sos.str();
 }
 inline auto operator<<(llvm::raw_ostream &os, const AbstractVector auto &A)
   -> llvm::raw_ostream & {
@@ -25,17 +26,18 @@ template <typename T>
 inline auto operator<<(llvm::raw_ostream &os, PtrMatrix<T> A)
   -> llvm::raw_ostream & {
   std::ostringstream sos;
-  return os << printMatrix(sos, A).str();
+  printMatrix(sos, A);
+  return os << sos.str();
 }
 template <typename T>
 inline auto operator<<(llvm::raw_ostream &os, Array<T, SquareDims> A)
-  -> std::ostream & {
-  return printMatrix(os, PtrMatrix<T>{A});
+  -> llvm::raw_ostream & {
+  return os << PtrMatrix<T>{A};
 }
 template <typename T>
 inline auto operator<<(llvm::raw_ostream &os, Array<T, DenseDims> A)
-  -> std::ostream & {
-  return printMatrix(os, PtrMatrix<T>{A});
+  -> llvm::raw_ostream & {
+  return os << PtrMatrix<T>{A};
 }
 } // namespace math
 namespace utils {

@@ -18,8 +18,8 @@ class VCycleIterator {
 public:
   using value_type = int32_t;
   constexpr VCycleIterator() noexcept = default;
-  constexpr VCycleIterator(const int32_t *data, int32_t start) noexcept
-    : data(data), state(start), start(start), dobreak(start < 0) {}
+  constexpr VCycleIterator(const int32_t *data_, int32_t start_) noexcept
+    : data(data_), state(start_), start(start_), dobreak(start_ < 0) {}
   constexpr auto operator*() const noexcept -> int32_t { return state; }
   constexpr auto operator++() noexcept -> VCycleIterator & {
     state = data[state];
@@ -64,10 +64,10 @@ class VCycleRange : public std::ranges::view_interface<VCycleRange> {
   int32_t start;
 
 public:
-  constexpr VCycleRange(math::PtrVector<int32_t> data, int32_t start) noexcept
-    : data(data.begin()), start(start) {}
-  constexpr VCycleRange(const int32_t *data, int32_t start) noexcept
-    : data(data), start(start) {}
+  constexpr VCycleRange(math::PtrVector<int32_t> data_, int32_t start_) noexcept
+    : data(data_.begin()), start(start_) {}
+  constexpr VCycleRange(const int32_t *data_, int32_t start_) noexcept
+    : data(data_), start(start_) {}
 
   [[nodiscard]] constexpr auto begin() const noexcept -> VCycleIterator {
     return {data, start};
@@ -87,8 +87,8 @@ class VForwardIterator {
 public:
   using value_type = int32_t;
   constexpr VForwardIterator() noexcept = default;
-  constexpr VForwardIterator(const int32_t *data, int32_t start) noexcept
-    : data{data}, state{start}, next{start < 0 ? start : data[start]} {}
+  constexpr VForwardIterator(const int32_t *data_, int32_t start_) noexcept
+    : data{data_}, state{start_}, next{start_ < 0 ? start_ : data_[start_]} {}
 
   constexpr auto operator*() const noexcept -> int32_t { return state; }
   constexpr auto operator++() noexcept -> VForwardIterator & {
@@ -134,10 +134,11 @@ class VForwardRange : public std::ranges::view_interface<VForwardRange> {
   int32_t start;
 
 public:
-  constexpr VForwardRange(math::PtrVector<int32_t> data, int32_t start) noexcept
-    : data(data.begin()), start(start) {}
-  constexpr VForwardRange(const int32_t *data, int32_t start) noexcept
-    : data(data), start(start) {}
+  constexpr VForwardRange(math::PtrVector<int32_t> data_,
+                          int32_t start_) noexcept
+    : data(data_.begin()), start(start_) {}
+  constexpr VForwardRange(const int32_t *data_, int32_t start_) noexcept
+    : data(data_), start(start_) {}
 
   [[nodiscard]] constexpr auto begin() const noexcept -> VForwardIterator {
     return {data, start};

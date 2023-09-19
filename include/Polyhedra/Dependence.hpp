@@ -455,7 +455,7 @@ public:
     constexpr Active(Active &&) noexcept = default;
     constexpr Active() noexcept = default;
     constexpr auto operator=(const Active &) noexcept -> Active & = default;
-    constexpr Active(unsigned depth) : depth(depth) {}
+    constexpr Active(unsigned d) : depth(d) {}
     constexpr auto operator()(const Dependence *d) const -> bool {
       return d->isActive(depth);
     }
@@ -1064,14 +1064,14 @@ public:
   }
 
   class Ref {
-    Dependencies *deps;
-    ID i;
+    Dependencies *deps_;
+    ID i_;
 
   public:
-    Ref(Dependencies *deps, ID i) : deps(deps), i(i) {}
-    operator Dependence() const { return deps->get(i); }
+    constexpr Ref(Dependencies *deps, ID i) : deps_(deps), i_(i) {}
+    operator Dependence() const { return deps_->get(i_); }
     auto operator=(Dependence d) -> Ref & {
-      deps->set(i, d);
+      deps_->set(i_, d);
       return *this;
     }
   };
@@ -1110,7 +1110,7 @@ public:
     return utils::VForwardRange{outEdges(), id};
   }
   [[nodiscard]] constexpr auto getEdgeTransform() const {
-    auto f = [=](int32_t id) { return get(Dependence::ID{id}); };
+    auto f = [=, this](int32_t id) { return get(Dependence::ID{id}); };
     return std::views::transform(f);
   }
   [[nodiscard]] constexpr auto inputEdges(int32_t id) const {
@@ -1121,17 +1121,17 @@ public:
   }
 
   [[nodiscard]] constexpr auto activeFilter(unsigned depth) const {
-    auto f = [=](int32_t id) -> bool {
+    auto f = [=, this](int32_t id) -> bool {
       return !isSat(Dependence::ID{id}, depth);
     };
     return std::views::filter(f);
   }
   [[nodiscard]] constexpr auto inputAddrTransform() {
-    auto f = [=](int32_t id) { return input(Dependence::ID{id}); };
+    auto f = [=, this](int32_t id) { return input(Dependence::ID{id}); };
     return std::views::transform(f);
   }
   [[nodiscard]] constexpr auto outputAddrTransform() {
-    auto f = [=](int32_t id) { return output(Dependence::ID{id}); };
+    auto f = [=, this](int32_t id) { return output(Dependence::ID{id}); };
     return std::views::transform(f);
   }
 };

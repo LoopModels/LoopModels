@@ -122,7 +122,8 @@ class Addr : public Instruction {
   [[nodiscard]] constexpr auto indMatPtr() const -> int64_t * {
     return getIntMemory() + 1 + getArrayDim();
   }
-  [[nodiscard]] auto getSymbolicOffsets() -> MutPtrVector<const llvm::SCEV *> {
+  [[nodiscard]] constexpr auto getSymbolicOffsets()
+    -> MutPtrVector<const llvm::SCEV *> {
     return {syms + numDim, numDynSym};
   }
   [[nodiscard]] constexpr auto offsetMatrix() -> MutDensePtrMatrix<int64_t> {
@@ -323,10 +324,11 @@ public:
     r->edgeOut = -1;
     return r;
   }
-  [[nodiscard]] auto getSizes() const -> PtrVector<const llvm::SCEV *> {
+  [[nodiscard]] constexpr auto getSizes() const
+    -> PtrVector<const llvm::SCEV *> {
     return {syms, numDim};
   }
-  [[nodiscard]] auto getSymbolicOffsets() const
+  [[nodiscard]] constexpr auto getSymbolicOffsets() const
     -> PtrVector<const llvm::SCEV *> {
     return {syms + numDim, numDynSym};
   }
@@ -674,7 +676,7 @@ public:
   Load(Node *a)
     : AddrWrapper(a->getKind() == Node::VK_Load ? static_cast<Addr *>(a)
                                                 : nullptr) {}
-  [[nodiscard]] constexpr auto getInstruction() const -> llvm::Instruction * {
+  [[nodiscard]] auto getInstruction() const -> llvm::Instruction * {
     // could be load or store
     return llvm::cast<llvm::Instruction>(this->addr->getInstruction());
   }
@@ -686,7 +688,7 @@ public:
   Stow(Node *a)
     : AddrWrapper(a->getKind() == Node::VK_Stow ? static_cast<Addr *>(a)
                                                 : nullptr) {}
-  [[nodiscard]] constexpr auto getInstruction() const -> llvm::StoreInst * {
+  [[nodiscard]] auto getInstruction() const -> llvm::StoreInst * {
     // must be store
     return llvm::cast<llvm::StoreInst>(this->addr->getInstruction());
   }

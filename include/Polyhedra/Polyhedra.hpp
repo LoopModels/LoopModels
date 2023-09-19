@@ -3,6 +3,7 @@
 #include "Polyhedra/Comparators.hpp"
 #include <Math/Array.hpp>
 #include <Math/Constraints.hpp>
+#include <Math/Constructors.hpp>
 #include <Math/EmptyArrays.hpp>
 #include <Math/Math.hpp>
 #include <Math/VectorGreatestCommonDivisor.hpp>
@@ -19,7 +20,7 @@
 namespace poly::poly {
 using math::DensePtrMatrix, math::MutDensePtrMatrix, math::EmptyMatrix,
   math::Row, math::Col, math::vector, math::matrix, math::_, math::end,
-  math::last;
+  math::last, math::operator<<;
 using utils::Arena;
 inline auto printPositive(std::ostream &os, ptrdiff_t stop) -> std::ostream & {
   for (ptrdiff_t i = 0; i < stop; ++i) os << "v_" << i << " >= 0\n";
@@ -229,13 +230,13 @@ struct BasePolyhedra {
     dropEmptyConstraints(getA());
     if constexpr (HasEqualities) dropEmptyConstraints(getE());
   }
-  friend inline auto operator<<(llvm::raw_ostream &os, const BasePolyhedra &p)
-    -> llvm::raw_ostream & {
-    auto &&os2 = printConstraints(os << "\n", p.getA());
+  friend inline auto operator<<(std::ostream &os, const BasePolyhedra &p)
+    -> std::ostream & {
+    printConstraints(os << "\n", p.getA());
     if constexpr (MaybeNonNeg)
-      if (p.isNonNegative()) printPositive(os2, p.getNumDynamic());
-    if constexpr (HasEqualities) return printConstraints(os2, p.getE(), false);
-    return os2;
+      if (p.isNonNegative()) printPositive(os, p.getNumDynamic());
+    if constexpr (HasEqualities) return printConstraints(os, p.getE(), false);
+    return os;
   }
 #ifndef NDEBUG
   [[gnu::used]] void dump() const {

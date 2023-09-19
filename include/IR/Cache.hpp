@@ -44,8 +44,8 @@ struct AddrChain {
   [[nodiscard]] constexpr auto getStores() const {
     Addr *S = (addr && addr->isStore()) ? addr : nullptr;
     return utils::ListRange(S, [](Addr *A) -> Addr * {
-      Addr *S = A->getNextAddr();
-      if (S && S->isStore()) return S;
+      Addr *W = A->getNextAddr();
+      if (W && W->isStore()) return W;
       return nullptr;
     });
   }
@@ -416,7 +416,7 @@ public:
   /// updating the operands of all users of `oldNode`
   /// and the `users` of all operands of `oldNode`
   // NOLINTNEXTLINE(misc-no-recursion)
-  constexpr void replaceAllUsesWith(Instruction *oldNode, Value *newNode) {
+  void replaceAllUsesWith(Instruction *oldNode, Value *newNode) {
     invariant(oldNode->getKind() == Node::VK_Load ||
               oldNode->getKind() >= Node::VK_Func);
     replaceUsesByUsers(oldNode, newNode);

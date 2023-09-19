@@ -17,7 +17,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <limits>
-#include <llvm/ADT/Optional.h>
 #include <llvm/ADT/SmallVector.h>
 #include <llvm/Analysis/ScalarEvolution.h>
 #include <llvm/Support/Allocator.h>

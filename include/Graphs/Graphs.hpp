@@ -34,13 +34,9 @@ namespace poly::graph {
 //
 template <typename G>
 concept AbstractPtrGraph = requires(G g, typename G::VertexType *v) {
-  {
-    *(g.getVertices(v).begin())
-  } -> std::template same_as<typename G::VertexType *>;
+  { *(g.getVertices(v).begin()) } -> std::same_as<typename G::VertexType *>;
   { g.getVertices(v) } -> std::ranges::forward_range;
-  {
-    *(g.outNeighbors(v).begin())
-  } -> std::template same_as<typename G::VertexType *>;
+  { *(g.outNeighbors(v).begin()) } -> std::same_as<typename G::VertexType *>;
   { g.outNeighbors(v) } -> std::ranges::forward_range;
   { v->index() } -> std::assignable_from<unsigned>;
   { v->lowLink() } -> std::assignable_from<unsigned>;
@@ -50,10 +46,10 @@ concept AbstractPtrGraph = requires(G g, typename G::VertexType *v) {
   { v->visited() } -> std::same_as<bool>;
   { v->visit() };
   { v->unVisit() };
-  { v->setNext(v) } -> std::template same_as<typename G::VertexType *>;
-  { v->getNext() } -> std::template same_as<typename G::VertexType *>;
-  { v->setNextComponent(v) } -> std::template same_as<typename G::VertexType *>;
-  { v->getNextComponent() } -> std::template same_as<typename G::VertexType *>;
+  { v->setNext(v) } -> std::same_as<typename G::VertexType *>;
+  { v->getNext() } -> std::same_as<typename G::VertexType *>;
+  { v->setNextComponent(v) } -> std::same_as<typename G::VertexType *>;
+  { v->getNextComponent() } -> std::same_as<typename G::VertexType *>;
 };
 
 template <class N> struct State {
@@ -99,8 +95,8 @@ template <AbstractPtrGraph G>
 inline auto stronglyConnectedComponents(G g, vertex_t<G> *seed)
   -> vertex_t<G> * {
   using N = vertex_t<G>;
-  State<N *> state{};
-  for (auto *v : g->getVertices(seed))
+  State<N> state{};
+  for (auto *v : g.getVertices(seed))
     if (!v->wasVisited()) state = strongConnect(g, state, v);
   return state.components;
 }

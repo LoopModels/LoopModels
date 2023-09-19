@@ -1,5 +1,6 @@
 #pragma once
 #include <Dicts/BumpVector.hpp>
+#include <IR/Hash.hpp>
 #include <Utilities/Allocators.hpp>
 #include <ankerl/unordered_dense.h>
 #include <type_traits>
@@ -30,6 +31,10 @@ struct aset // NOLINT(readability-identifier-naming)
                                  std::equal_to<K>, math::BumpPtrVector<K>>;
   aset(Arena<> *alloc) : Base{WArena<K>(alloc)} {}
 };
-static_assert(std::is_trivially_destructible_v<int>);
+
+static_assert(std::same_as<amap<int, int>::value_container_type,
+                           math::BumpPtrVector<std::pair<int, int>>>);
+static_assert(std::same_as<amap<int, int>::allocator_type,
+                           utils::WArena<std::pair<int, int>, 16384, true>>);
 
 } // namespace poly::dict

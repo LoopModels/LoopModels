@@ -94,8 +94,7 @@ protected:
 
 public:
   Compute(const Compute &) = delete;
-  constexpr Compute(ValKind k, llvm::Instruction *i, llvm::Intrinsic::ID id,
-                    int numOps)
+  Compute(ValKind k, llvm::Instruction *i, llvm::Intrinsic::ID id, int numOps)
     : Instruction(k), inst(i), type(i->getType()), opId(id),
       numOperands(numOps), fastMathFlags(i->getFastMathFlags()) {}
   constexpr Compute(ValKind k, llvm::Intrinsic::ID id, int numOps,
@@ -260,14 +259,12 @@ public:
   // which case it is free
   [[nodiscard]] inline auto allUsersAdditiveContract() const -> bool;
 
-}; // class Inst
+}; // class Compute
 
-struct InstByValue {
-  Compute *inst;
-  auto operator==(InstByValue const &other) const -> bool {
-    return *inst == *other.inst;
-  }
-};
+inline auto InstByValue::operator==(InstByValue const &other) const -> bool {
+  if (inst == other.inst) return true;
+  return *inst == *other.inst;
+}
 
 // some opaque function
 class OpaqueFunc {
@@ -335,8 +332,7 @@ public:
   [[nodiscard]] constexpr auto getNumOperands() const -> unsigned {
     return ins->getNumOperands();
   }
-  [[nodiscard]] constexpr auto isInstruction(llvm::Intrinsic::ID opCode) const
-    -> bool {
+  [[nodiscard]] auto isInstruction(llvm::Intrinsic::ID opCode) const -> bool {
     return getOpCode() == opCode;
   }
   static auto isFMul(Node *n) -> bool {
@@ -776,7 +772,7 @@ Compute::calcCost(const llvm::TargetTransformInfo &TTI, unsigned vectorWidth)
   if (auto *I = getInstruction()) return I->getParent();
   return nullptr;
 }
-[[nodiscard]] constexpr auto Instruction::getIdentifier() const
+[[nodiscard]] auto Instruction::getIdentifier() const
   -> Instruction::Identifier {
   llvm::Intrinsic::ID id;
   if (const auto *I = llvm::dyn_cast<Compute>(this)) id = I->getOpId();
@@ -811,3 +807,28 @@ inline void Instruction::setOperands(Arena<> *alloc,
 // llvm::Intrinsic::IndependentIntrinsics y = llvm::Intrinsic::sin;
 
 } // namespace poly::IR
+
+[[nodiscard]] inline auto
+ankerl::unordered_dense::hash<poly::IR::InstByValue>::operator()(
+  poly::IR::InstByValue const &x) const noexcept -> uint64_t {
+  using poly::Hash::combineHash, poly::Hash::getHash, poly::containers::UList,
+    poly::IR::Value;
+  uint64_t seed = getHash(x.inst->getKind());
+  seed = combineHash(seed, getHash(x.inst->getType()));
+  seed = combineHash(seed, getHash(x.inst->getOpId()));
+  if (x.inst->isIncomplete())
+    return combineHash(seed, getHash(x.inst->getLLVMInstruction()));
+  uint8_t assocFlag = x.inst->associativeOperandsFlag();
+  // combine all operands
+  size_t offset = 0;
+  poly::PtrVector<Value *> operands = x.inst->getOperands();
+  if (assocFlag) {
+    poly::invariant(assocFlag, uint8_t(3));
+    // we combine hashes in a commutative way
+    seed = combineHash(seed, getHash(operands[0]) + getHash(operands[1]));
+    offset = 2;
+  }
+  for (auto B = operands.begin() + offset, E = operands.end(); B != E; ++B)
+    seed = combineHash(seed, getHash(*B));
+  return seed;
+}
