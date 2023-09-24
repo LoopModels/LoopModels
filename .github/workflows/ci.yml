@@ -10,9 +10,9 @@ jobs:
         sudo bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)"
         sudo wget https://apt.llvm.org/llvm.sh
         sudo chmod +x llvm.sh
-        sudo ./llvm.sh 16 all
+        sudo ./llvm.sh 17 all
         sudo apt install g++-12 libgtest-dev ninja-build pkg-config cmake gcovr
-        sudo ln -s $(which opt-16) /usr/local/bin/opt
+        sudo ln -s $(which opt-17) /usr/local/bin/opt
     - run: cmake -G Ninja -S test -B build/test -DUSE_SANITIZER='Undefined' -DENABLE_TEST_COVERAGE=1 -DCMAKE_BUILD_TYPE=Debug -DENABLE_LLD=OFF
       env:
         CXX: g++-12
@@ -22,7 +22,7 @@ jobs:
         CTEST_OUTPUT_ON_FAILURE: 1
     - run: cmake -G Ninja -S test -B builddirclang/test -DCMAKE_BUILD_TYPE=RelWithDebInfo -DUSE_SANITIZER='Undefined' -DCMAKE_PREFIX_PATH=/usr/local -DENABLE_LLD=OFF
       env:
-        CXX: clang++-16
+        CXX: clang++-17
     - run: cmake --build builddirclang/test
     - run: cmake --build builddirclang/test --target test
       env:
@@ -37,7 +37,7 @@ jobs:
   #   - uses: actions/checkout@v3
   #   - run: sudo xcode-select --switch /Library/Developer/CommandLineTools
   #   - run: echo $(pkgutil --pkg-info=com.apple.pkg.CLTools_Executables)
-  #   - run: brew install llvm@16 ninja pkg-config cmake gcovr # gcc
+  #   - run: brew install llvm@17 ninja pkg-config cmake gcovr # gcc
   #   - run: echo "/usr/local/opt/llvm/bin" >> $GITHUB_PATH
   #   - run: echo $(which clang++)
   #   - run: cmake -G Ninja -S test -B build/test -DUSE_SANITIZER='Undefined' -DCMAKE_PREFIX_PATH=/usr/local  -DCMAKE_BUILD_TYPE=Debug -DENABLE_LLD=OFF

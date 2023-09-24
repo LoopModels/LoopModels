@@ -36,7 +36,7 @@ CPMAddPackage(
 # file(GLOB_RECURSE headers CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/include/*.hpp)
 file(GLOB benchmarks CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
 
-find_package(LLVM 16 REQUIRED CONFIG)
+find_package(LLVM 17 REQUIRED CONFIG)
 list(APPEND CMAKE_MODULE_PATH ${LLVM_CMAKE_DIR})
 include(${LLVM_DIR}/AddLLVM.cmake)
 # message(STATUS "headers: ${headers}") add_executable(${PROJECT_NAME} ${headers} ${benchmarks})
@@ -78,7 +78,7 @@ if(ENABLE_NATIVE_COMPILATION)
 endif()
 set_target_properties(
   ${PROJECT_NAME}
-  PROPERTIES CXX_STANDARD 20
+  PROPERTIES CXX_STANDARD 23
              CXX_VISIBILITY_PRESET hidden
              VISIBILITY_INLINES_HIDDEN ON
 )

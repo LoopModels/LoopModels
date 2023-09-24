@@ -126,8 +126,72 @@ using math::DensePtrMatrix;
 /// of whether the pipeline might be very narrow.
 ///
 ///
+/// Given `x[a*i + b*j]`, where neither `i` or `j` are vectorized (and `a` and
+/// `b` are compile time constants), we use:
+/// (a_g*U_i + b_g*U_j - a_g*b_g) / (U_i * U_j)
+/// as the cost, where `a_g = abs(a/gcd(a,b))` and `b_g = abs(b/gcd(a,b))`.
 ///
 ///
+/// Given `x[a*i + b*j + c*k]`, where neither `i` or `j` are vectorized (and
+/// `a`, `b`, and `c` are compile time constants), we use:
+/// (a_g*U_i + b_g*U_j + c_g*U_k - a_g*b_g - a_g*c_g - b_g*c_g + a_g*b_g*c_g) /
+/// (U_i * U_j * U_k)
+/// as the cost, where the `_g`s are same as before, but using the gcd of all
+/// three `a`, `b`, and `c`.
+/// NOTE: these, unlike the 2-case, are wrong, but they happen to be correct
+/// when the gcds are all `1`. It hopefully at least dominates the actual cost.
+/// Eventually, it'd be great to actually derive a general formula.
+///
+/// For register consumption, we
+/// 1. Determine an ordering of unroll factors for each inner most loop.
+/// 2. Define a registers used as a function of these unroll factors.
+///
+/// Loads from inner unrolls that don't depend on any outer-unrolls must have
+/// lifetimes spanning all outer-unrolls, if they're re-used by an op depending
+/// on that outer.
+/// Our heuristic for ordering unrolls is based on the twin observations:
+/// 1. Inner unrolls are likely to consume more registers for longer.
+/// 2. More ops with overlapping lifetimes dependent on one particular loop
+/// require more registers.
+///
+/// As the ordering of unrolls influences register pressure, we sort them first
+/// by register cost per unroll (placing those with the highest register cost
+/// outside), and then by memory op cost within these categories, placing the
+/// highest costs innermost  (higher memory cost means lower unroll relative to
+/// the lower cost, so that we get more reuse on the higher cost operations;
+/// lower unroll means we place inside, reducing the cost of these unrolls).
+///
+/// So, how do we define register cost per unroll in an unroll-order independent
+/// manner, so that we can use this for determining the order?
+/// for (int m=0; m<M; ++m){
+///   for (int n=0; n<N; ++n){
+///     auto Cmn = C[m,n];
+///     for (int k=0; k<K; ++k)
+///       Cmn += A[m,k]*B[k,n];
+///     C[m,n] = Cmn;
+///   }
+/// }
+/// In this example, we have 4 ops in the inner loop
+/// A[m,k] --->*--> (Cmn +=)
+/// B[k,n] -/
+///
+/// Register Costs:
+/// Amk_rc = U_m * U_k // live until use
+/// Bkn_rc = U_k * U_n // live until use
+/// Cmn_rc = U_m * U_n // live until end of loop
+/// Memory Op Costs, m-vectorized (assuming column-major):
+/// Amk_rc = L_c * U_m * U_k
+/// Bkn_rc = L_b * U_k * U_n
+/// Cmn_rc = 0 * U_m * U_n
+/// L_c > L_b, so A-contiguous load should be interior to B-broadcast load.
+///
+/// As the cost function is evaluated many times, we try and move as much work
+/// to the setup as possible. Loop cost is thus divided into some structured
+/// components, and much of the interpreting work hoisted to a step defining a
+/// parameterization.
+/// Ideally, we would avoid repeating this work for different vectorization
+/// decisions. However, vectorization decisions may impact unroll ordering
+/// decisions.
 ///
 ///
 ///
