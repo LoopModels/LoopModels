@@ -143,33 +143,54 @@ $(function() {
 <div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;  }</div>
 <div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;};</div>
 <div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160; </div>
-<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;<span class="keyword">template</span> &lt;<span class="keywordtype">bool</span> EfficientErase, <span class="keyword">class</span> K, <span class="keyword">class</span> V&gt;</div>
-<div class="line"><a name="l00076"></a><span class="lineno"><a class="line" href="structpoly_1_1dict_1_1TrieMap.html">   76</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structpoly_1_1dict_1_1TrieMap.html">TrieMap</a> : <a class="code" href="structpoly_1_1dict_1_1TrieMapNode.html">TrieMapNode</a>&lt;K, V&gt; {</div>
-<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;  <span class="keyword">using</span> <a class="code" href="structpoly_1_1dict_1_1TrieMapNode.html">BaseT</a> = <a class="code" href="structpoly_1_1dict_1_1TrieMapNode.html">TrieMapNode&lt;K, V&gt;</a>;</div>
-<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;  <a class="code" href="structpoly_1_1dict_1_1TrieMapNode.html">BaseT</a> *list{};</div>
-<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;  <span class="comment">// TODO: implement using `list` to avoid allocs</span></div>
-<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;  <span class="keywordtype">void</span> erase(<span class="keyword">const</span> K &amp;k) {</div>
-<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;    <a class="code" href="structpoly_1_1dict_1_1TrieMapNode.html">BaseT</a> erased = this-&gt;eraseImpl(k);</div>
-<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;    erased.children[0] = list;</div>
-<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;    list = erased;</div>
-<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;  }</div>
-<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;};</div>
-<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160; </div>
-<div class="line"><a name="l00087"></a><span class="lineno"><a class="line" href="structpoly_1_1dict_1_1TrieMap_3_01false_00_01K_00_01V_01_4.html">   87</a></span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">class</span> K, <span class="keyword">class</span> V&gt; <span class="keyword">struct </span><a class="code" href="structpoly_1_1dict_1_1TrieMap.html">TrieMap</a>&lt;false, K, V&gt; : <a class="code" href="structpoly_1_1dict_1_1TrieMapNode.html">TrieMapNode</a>&lt;K, V&gt; {</div>
-<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;  <span class="keyword">using</span> <a class="code" href="structpoly_1_1dict_1_1TrieMapNode.html">BaseT</a> = <a class="code" href="structpoly_1_1dict_1_1TrieMapNode.html">TrieMapNode&lt;K, V&gt;</a>;</div>
-<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;  <span class="keywordtype">void</span> erase(<span class="keyword">const</span> K &amp;k) { this-&gt;eraseImpl(k); }</div>
-<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;};</div>
-<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160; </div>
-<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;static_assert(<span class="keyword">sizeof</span>(<a class="code" href="structpoly_1_1dict_1_1TrieMap.html">TrieMap&lt;false, int, int&gt;</a>) ==</div>
-<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;              <span class="keyword">sizeof</span>(<a class="code" href="structpoly_1_1dict_1_1TrieMapNode.html">TrieMapNode&lt;int, int&gt;</a>));</div>
-<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;static_assert(<span class="keyword">sizeof</span>(<a class="code" href="structpoly_1_1dict_1_1TrieMap.html">TrieMap&lt;true, int, int&gt;</a>) ==</div>
-<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;              <span class="keyword">sizeof</span>(<a class="code" href="structpoly_1_1dict_1_1TrieMapNode.html">TrieMapNode&lt;int, int&gt;</a>) + <span class="keyword">sizeof</span>(<a class="code" href="structpoly_1_1dict_1_1TrieMapNode.html">TrieMapNode&lt;int, int&gt;</a> *));</div>
-<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;<span class="comment">// static_assert(sizeof(std::array&lt;TrieMapNode&lt;int,int&gt;*,0 &gt;)==1);</span></div>
-<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160; </div>
-<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;} <span class="comment">// namespace poly::dict</span></div>
+<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;<span class="comment">// If `EfficientErase = true`, it stores a list of erased nodes.</span></div>
+<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;<span class="comment">// Future allocations will allocate from this list if possible.</span></div>
+<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;<span class="comment">// Thus, whenever using a pattern that involves interleaving erase and insertions,</span></div>
+<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;<span class="comment">// it is worth setting `EfficientErase = true`.</span></div>
+<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;<span class="comment">// It is common enough not to do this, that the option for `false` also exists.</span></div>
+<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;<span class="comment">// Don&#39;t pay for what you don&#39;t use.</span></div>
+<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;<span class="keyword">template</span> &lt;<span class="keywordtype">bool</span> EfficientErase, <span class="keyword">class</span> K, <span class="keyword">class</span> V&gt;</div>
+<div class="line"><a name="l00082"></a><span class="lineno"><a class="line" href="structpoly_1_1dict_1_1TrieMap.html">   82</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structpoly_1_1dict_1_1TrieMap.html">TrieMap</a> : <a class="code" href="structpoly_1_1dict_1_1TrieMapNode.html">TrieMapNode</a>&lt;K, V&gt; {</div>
+<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;  <span class="keyword">using</span> <a class="code" href="structpoly_1_1dict_1_1TrieMapNode.html">BaseT</a> = <a class="code" href="structpoly_1_1dict_1_1TrieMapNode.html">TrieMapNode&lt;K, V&gt;</a>;</div>
+<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;  <span class="keyword">using</span> <a class="code" href="structpoly_1_1dict_1_1TrieMapNode_1_1Child.html">BaseT::Child</a>;</div>
+<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;  <a class="code" href="structpoly_1_1dict_1_1TrieMapNode.html">BaseT</a> *list{<span class="keyword">nullptr</span>};</div>
+<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;  <span class="comment">// TODO: implement using `list` to avoid allocs</span></div>
+<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;  <span class="keywordtype">void</span> erase(<span class="keyword">const</span> K &amp;k) {</div>
+<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;    <a class="code" href="structpoly_1_1dict_1_1TrieMapNode.html">BaseT</a> erased = this-&gt;eraseImpl(k);</div>
+<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;    erased.children[0] = list;</div>
+<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;    list = erased;</div>
+<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;  }</div>
+<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;  <span class="keyword">auto</span> operator[](utils::NotNull&lt;utils::Arena&lt;&gt;&gt; alloc, <span class="keyword">const</span> K &amp;k) -&gt; V &amp; {</div>
+<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;    <a class="code" href="structpoly_1_1dict_1_1TrieMapNode_1_1Child.html">Child</a> c = findChild(k);</div>
+<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;    <span class="keywordflow">if</span> (c.child) <span class="keywordflow">return</span> c.second;</div>
+<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;    invariant(c.parent != <span class="keyword">nullptr</span>);</div>
+<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;    invariant(c.index &lt; 4);</div>
+<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;    <span class="keywordflow">if</span> (list) {</div>
+<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;      c.parent[c.index] = list;</div>
+<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;      list = list.children[0];</div>
+<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;    } <span class="keywordflow">else</span> {</div>
+<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;      c.parent[c.index] = alloc-&gt;create&lt;<a class="code" href="structpoly_1_1dict_1_1TrieMapNode.html">TrieMapNode</a>&gt;();</div>
+<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;    }</div>
+<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;    c.parent[c.index]-&gt;first = k;</div>
+<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;    <span class="keywordflow">return</span> c.parent[c.index]-&gt;second;</div>
+<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;  }</div>
+<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;};</div>
+<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160; </div>
+<div class="line"><a name="l00108"></a><span class="lineno"><a class="line" href="structpoly_1_1dict_1_1TrieMap_3_01false_00_01K_00_01V_01_4.html">  108</a></span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">class</span> K, <span class="keyword">class</span> V&gt; <span class="keyword">struct </span><a class="code" href="structpoly_1_1dict_1_1TrieMap.html">TrieMap</a>&lt;false, K, V&gt; : <a class="code" href="structpoly_1_1dict_1_1TrieMapNode.html">TrieMapNode</a>&lt;K, V&gt; {</div>
+<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;  <span class="keyword">using</span> <a class="code" href="structpoly_1_1dict_1_1TrieMapNode.html">BaseT</a> = <a class="code" href="structpoly_1_1dict_1_1TrieMapNode.html">TrieMapNode&lt;K, V&gt;</a>;</div>
+<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;  <span class="keywordtype">void</span> erase(<span class="keyword">const</span> K &amp;k) { this-&gt;eraseImpl(k); }</div>
+<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;};</div>
+<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160; </div>
+<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;static_assert(<span class="keyword">sizeof</span>(<a class="code" href="structpoly_1_1dict_1_1TrieMap.html">TrieMap&lt;false, int, int&gt;</a>) ==</div>
+<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;              <span class="keyword">sizeof</span>(<a class="code" href="structpoly_1_1dict_1_1TrieMapNode.html">TrieMapNode&lt;int, int&gt;</a>));</div>
+<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;static_assert(<span class="keyword">sizeof</span>(<a class="code" href="structpoly_1_1dict_1_1TrieMap.html">TrieMap&lt;true, int, int&gt;</a>) ==</div>
+<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;              <span class="keyword">sizeof</span>(<a class="code" href="structpoly_1_1dict_1_1TrieMapNode.html">TrieMapNode&lt;int, int&gt;</a>) + <span class="keyword">sizeof</span>(<a class="code" href="structpoly_1_1dict_1_1TrieMapNode.html">TrieMapNode&lt;int, int&gt;</a> *));</div>
+<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;<span class="comment">// static_assert(sizeof(std::array&lt;TrieMapNode&lt;int,int&gt;*,0 &gt;)==1);</span></div>
+<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160; </div>
+<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;} <span class="comment">// namespace poly::dict</span></div>
 <div class="ttc" id="astructpoly_1_1dict_1_1TrieMapNode_1_1Child_html"><div class="ttname"><a href="structpoly_1_1dict_1_1TrieMapNode_1_1Child.html">poly::dict::TrieMapNode::Child</a></div><div class="ttdef"><b>Definition:</b> Trie.hpp:28</div></div>
 <div class="ttc" id="astructpoly_1_1dict_1_1TrieMapNode_html"><div class="ttname"><a href="structpoly_1_1dict_1_1TrieMapNode.html">poly::dict::TrieMapNode</a></div><div class="ttdef"><b>Definition:</b> Trie.hpp:9</div></div>
-<div class="ttc" id="astructpoly_1_1dict_1_1TrieMap_html"><div class="ttname"><a href="structpoly_1_1dict_1_1TrieMap.html">poly::dict::TrieMap</a></div><div class="ttdef"><b>Definition:</b> Trie.hpp:76</div></div>
+<div class="ttc" id="astructpoly_1_1dict_1_1TrieMap_html"><div class="ttname"><a href="structpoly_1_1dict_1_1TrieMap.html">poly::dict::TrieMap</a></div><div class="ttdef"><b>Definition:</b> Trie.hpp:82</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
