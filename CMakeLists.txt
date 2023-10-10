@@ -85,7 +85,7 @@ add_library(${PROJECT_NAME} MODULE ${headers} ${sources})
 set(CXX_STANDARD_REQUIRED ON)
 set_target_properties(
   ${PROJECT_NAME}
-  PROPERTIES CXX_STANDARD 20
+  PROPERTIES CXX_STANDARD 23
              CXX_VISIBILITY_PRESET hidden
              VISIBILITY_INLINES_HIDDEN ON
 )

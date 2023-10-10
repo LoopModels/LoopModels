@@ -72,15 +72,36 @@ protected:
   }
 };
 
+// If `EfficientErase = true`, it stores a list of erased nodes.
+// Future allocations will allocate from this list if possible.
+// Thus, whenever using a pattern that involves interleaving erase and insertions,
+// it is worth setting `EfficientErase = true`.
+// It is common enough not to do this, that the option for `false` also exists.
+// Don't pay for what you don't use.
 template <bool EfficientErase, class K, class V>
 struct TrieMap : TrieMapNode<K, V> {
   using BaseT = TrieMapNode<K, V>;
-  BaseT *list{};
+  using BaseT::Child;
+  BaseT *list{nullptr};
   // TODO: implement using `list` to avoid allocs
   void erase(const K &k) {
     BaseT erased = this->eraseImpl(k);
     erased.children[0] = list;
     list = erased;
+  }
+  auto operator[](utils::NotNull<utils::Arena<>> alloc, const K &k) -> V & {
+    Child c = findChild(k);
+    if (c.child) return c.second;
+    invariant(c.parent != nullptr);
+    invariant(c.index < 4);
+    if (list) {
+      c.parent[c.index] = list;
+      list = list.children[0];
+    } else {
+      c.parent[c.index] = alloc->create<TrieMapNode>();
+    }
+    c.parent[c.index]->first = k;
+    return c.parent[c.index]->second;
   }
 };
 

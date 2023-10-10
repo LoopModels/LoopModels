@@ -136,7 +136,7 @@ target_link_libraries(
   ${PROJECT_NAME} PRIVATE GTest::gtest_main LLVM unordered_dense::unordered_dense Math
 )
 set(CXX_STANDARD_REQUIRED ON)
-set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 20)
+set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 23)
 set_target_properties(
   ${PROJECT_NAME} PROPERTIES ENVIRONMENT WORKING_DIRECTORY=${PROJECT_BINARY_DIR}
 )
