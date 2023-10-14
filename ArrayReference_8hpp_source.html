@@ -79,8 +79,8 @@ $(function() {
 <div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160; </div>
 <div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="keyword">namespace </span>poly {</div>
 <div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160; </div>
-<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="keyword">using</span> math::DenseMatrix, math::PtrMatrix, math::MutPtrMatrix, utils::Arena,</div>
-<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;  math::PtrVector, math::DenseDims, utils::NotNull;</div>
+<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="keyword">using</span> math::DenseMatrix, math::PtrMatrix, math::MutPtrMatrix, alloc::Arena,</div>
+<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;  math::PtrVector, math::DenseDims, utils::Valid;</div>
 <div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160; </div>
 <div class="line"><a name="l00014"></a><span class="lineno"><a class="line" href="structpoly_1_1ArrayReference.html">   14</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structpoly_1_1ArrayReference.html">ArrayReference</a> {</div>
 <div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;  <span class="keyword">const</span> llvm::SCEVUnknown *basePointer;</div>
@@ -107,7 +107,7 @@ $(function() {
 <div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;<span class="comment">// inline auto createMemAccess(Arena&lt;&gt; *alloc, ArrayReference &amp;ar,</span></div>
 <div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;<span class="comment">//                             llvm::Instruction *IC, PtrVector&lt;unsigned&gt;</span></div>
 <div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;<span class="comment">//                             omegas)</span></div>
-<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;<span class="comment">//   -&gt; NotNull&lt;IR::Addr&gt; {</span></div>
+<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;<span class="comment">//   -&gt; Valid&lt;IR::Addr&gt; {</span></div>
 <div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160; </div>
 <div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;<span class="comment">//   math::IntMatrix indMatT{ar.indMat.transpose()};</span></div>
 <div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;<span class="comment">//   return IR::Addr::construct(alloc, ar.basePointer, *ar.loop, IC, indMatT,</span></div>

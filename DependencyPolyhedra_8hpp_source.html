@@ -81,7 +81,7 @@ $(function() {
 <div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="preprocessor">#include &lt;Math/NormalForm.hpp&gt;</span></div>
 <div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="preprocessor">#include &lt;Math/Orthogonalize.hpp&gt;</span></div>
 <div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="preprocessor">#include &lt;Math/Simplex.hpp&gt;</span></div>
-<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="preprocessor">#include &lt;Utilities/Allocators.hpp&gt;</span></div>
+<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="preprocessor">#include &lt;Alloc/Arena.hpp&gt;</span></div>
 <div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;<span class="preprocessor">#include &lt;Utilities/Valid.hpp&gt;</span></div>
 <div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;<span class="preprocessor">#include &lt;algorithm&gt;</span></div>
 <div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;<span class="preprocessor">#include &lt;array&gt;</span></div>
@@ -290,7 +290,7 @@ $(function() {
 <div class="line"><a name="l00270"></a><span class="lineno">  270</span>&#160;    <span class="keywordflow">return</span> std::distance(</div>
 <div class="line"><a name="l00271"></a><span class="lineno">  271</span>&#160;      x.begin(), std::mismatch(x.begin(), x.end(), y.begin(), y.end()).first);</div>
 <div class="line"><a name="l00272"></a><span class="lineno">  272</span>&#160;  }</div>
-<div class="line"><a name="l00273"></a><span class="lineno">  273</span>&#160;  <span class="keyword">static</span> <span class="keyword">auto</span> nullSpace(NotNull&lt;const IR::Addr&gt; x, NotNull&lt;const IR::Addr&gt; y)</div>
+<div class="line"><a name="l00273"></a><span class="lineno">  273</span>&#160;  <span class="keyword">static</span> <span class="keyword">auto</span> nullSpace(Valid&lt;const IR::Addr&gt; x, Valid&lt;const IR::Addr&gt; y)</div>
 <div class="line"><a name="l00274"></a><span class="lineno">  274</span>&#160;    -&gt; math::DenseMatrix&lt;int64_t&gt; {</div>
 <div class="line"><a name="l00275"></a><span class="lineno">  275</span>&#160;    <span class="keywordtype">unsigned</span> numLoopsCommon =</div>
 <div class="line"><a name="l00276"></a><span class="lineno">  276</span>&#160;               findFirstNonEqual(x-&gt;getFusionOmega(), y-&gt;getFusionOmega()),</div>
@@ -308,7 +308,7 @@ $(function() {
 <div class="line"><a name="l00288"></a><span class="lineno">  288</span>&#160;    <span class="comment">// returns rank x num loops</span></div>
 <div class="line"><a name="l00289"></a><span class="lineno">  289</span>&#160;    <span class="keywordflow">return</span> orthogonalNullSpace(std::move(A));</div>
 <div class="line"><a name="l00290"></a><span class="lineno">  290</span>&#160;  }</div>
-<div class="line"><a name="l00291"></a><span class="lineno">  291</span>&#160;  <span class="keyword">static</span> <span class="keyword">auto</span> nullSpace(NotNull&lt;const IR::Addr&gt; x)</div>
+<div class="line"><a name="l00291"></a><span class="lineno">  291</span>&#160;  <span class="keyword">static</span> <span class="keyword">auto</span> nullSpace(Valid&lt;const IR::Addr&gt; x)</div>
 <div class="line"><a name="l00292"></a><span class="lineno">  292</span>&#160;    -&gt; math::DenseMatrix&lt;int64_t&gt; {</div>
 <div class="line"><a name="l00293"></a><span class="lineno">  293</span>&#160;    <span class="keywordtype">unsigned</span> numLoopsCommon = x-&gt;getCurrentDepth(), dim = x-&gt;getArrayDim(),</div>
 <div class="line"><a name="l00294"></a><span class="lineno">  294</span>&#160;             natDepth = x-&gt;getNaturalDepth();</div>
@@ -356,19 +356,19 @@ $(function() {
 <div class="line"><a name="l00338"></a><span class="lineno">  338</span>&#160;             ((conCapacity + eqConCapacity) * (getNumVar() + 1) + timeDim) +</div>
 <div class="line"><a name="l00339"></a><span class="lineno">  339</span>&#160;           <span class="keyword">sizeof</span>(<span class="keyword">const</span> llvm::SCEV *) * numDynSym;</div>
 <div class="line"><a name="l00340"></a><span class="lineno">  340</span>&#160;  }</div>
-<div class="line"><a name="l00341"></a><span class="lineno">  341</span>&#160;  <span class="keyword">auto</span> copy(Arena&lt;&gt; *alloc) <span class="keyword">const</span> -&gt; NotNull&lt;DepPoly&gt; {</div>
+<div class="line"><a name="l00341"></a><span class="lineno">  341</span>&#160;  <span class="keyword">auto</span> copy(Arena&lt;&gt; *alloc) <span class="keyword">const</span> -&gt; Valid&lt;DepPoly&gt; {</div>
 <div class="line"><a name="l00342"></a><span class="lineno">  342</span>&#160;    <span class="keyword">auto</span> *p = alloc-&gt;template allocate&lt;DepPoly&gt;(neededBytes());</div>
 <div class="line"><a name="l00343"></a><span class="lineno">  343</span>&#160;    std::memcpy(p, <span class="keyword">this</span>, neededBytes());</div>
-<div class="line"><a name="l00344"></a><span class="lineno">  344</span>&#160;    <span class="keywordflow">return</span> NotNull&lt;DepPoly&gt;{p};</div>
+<div class="line"><a name="l00344"></a><span class="lineno">  344</span>&#160;    <span class="keywordflow">return</span> Valid&lt;DepPoly&gt;{p};</div>
 <div class="line"><a name="l00345"></a><span class="lineno">  345</span>&#160;  }</div>
-<div class="line"><a name="l00346"></a><span class="lineno">  346</span>&#160;  <span class="keyword">static</span> <span class="keyword">auto</span> dependence(Arena&lt;&gt; *alloc, NotNull&lt;const IR::Addr&gt; aix,</div>
-<div class="line"><a name="l00347"></a><span class="lineno">  347</span>&#160;                         NotNull&lt;const IR::Addr&gt; aiy) -&gt; DepPoly * {</div>
+<div class="line"><a name="l00346"></a><span class="lineno">  346</span>&#160;  <span class="keyword">static</span> <span class="keyword">auto</span> dependence(Arena&lt;&gt; *alloc, Valid&lt;const IR::Addr&gt; aix,</div>
+<div class="line"><a name="l00347"></a><span class="lineno">  347</span>&#160;                         Valid&lt;const IR::Addr&gt; aiy) -&gt; DepPoly * {</div>
 <div class="line"><a name="l00348"></a><span class="lineno">  348</span>&#160;    assert(aix-&gt;sizesMatch(aiy));</div>
 <div class="line"><a name="l00349"></a><span class="lineno">  349</span>&#160;    <span class="keywordtype">unsigned</span> numDep0Var = aix-&gt;getCurrentDepth(),</div>
 <div class="line"><a name="l00350"></a><span class="lineno">  350</span>&#160;             numDep1Var = aiy-&gt;getCurrentDepth(),</div>
 <div class="line"><a name="l00351"></a><span class="lineno">  351</span>&#160;             numVar = numDep0Var + numDep1Var;</div>
-<div class="line"><a name="l00352"></a><span class="lineno">  352</span>&#160;    NotNull&lt;const poly::Loop&gt; loopx = aix-&gt;getAffLoop();</div>
-<div class="line"><a name="l00353"></a><span class="lineno">  353</span>&#160;    NotNull&lt;const poly::Loop&gt; loopy = aiy-&gt;getAffLoop();</div>
+<div class="line"><a name="l00352"></a><span class="lineno">  352</span>&#160;    Valid&lt;const poly::Loop&gt; loopx = aix-&gt;getAffLoop();</div>
+<div class="line"><a name="l00353"></a><span class="lineno">  353</span>&#160;    Valid&lt;const poly::Loop&gt; loopy = aiy-&gt;getAffLoop();</div>
 <div class="line"><a name="l00354"></a><span class="lineno">  354</span>&#160;    PtrMatrix&lt;int64_t&gt; Ax{loopx-&gt;getOuterA(numDep0Var)},</div>
 <div class="line"><a name="l00355"></a><span class="lineno">  355</span>&#160;      Ay{loopy-&gt;getOuterA(numDep1Var)};</div>
 <div class="line"><a name="l00356"></a><span class="lineno">  356</span>&#160;    <span class="keyword">auto</span> Sx{loopx-&gt;getSyms()}, Sy{loopy-&gt;getSyms()};</div>
@@ -454,9 +454,9 @@ $(function() {
 <div class="line"><a name="l00436"></a><span class="lineno">  436</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">nullptr</span>;</div>
 <div class="line"><a name="l00437"></a><span class="lineno">  437</span>&#160;  }</div>
 <div class="line"><a name="l00438"></a><span class="lineno">  438</span>&#160;  <span class="comment">// self dependence</span></div>
-<div class="line"><a name="l00439"></a><span class="lineno">  439</span>&#160;  <span class="keyword">static</span> <span class="keyword">auto</span> <span class="keyword">self</span>(Arena&lt;&gt; *alloc, NotNull&lt;const IR::Addr&gt; ai)</div>
-<div class="line"><a name="l00440"></a><span class="lineno">  440</span>&#160;    -&gt; NotNull&lt;DepPoly&gt; {</div>
-<div class="line"><a name="l00441"></a><span class="lineno">  441</span>&#160;    NotNull&lt;const poly::Loop&gt; loop = ai-&gt;getAffLoop();</div>
+<div class="line"><a name="l00439"></a><span class="lineno">  439</span>&#160;  <span class="keyword">static</span> <span class="keyword">auto</span> <span class="keyword">self</span>(Arena&lt;&gt; *alloc, Valid&lt;const IR::Addr&gt; ai)</div>
+<div class="line"><a name="l00440"></a><span class="lineno">  440</span>&#160;    -&gt; Valid&lt;DepPoly&gt; {</div>
+<div class="line"><a name="l00441"></a><span class="lineno">  441</span>&#160;    Valid&lt;const poly::Loop&gt; loop = ai-&gt;getAffLoop();</div>
 <div class="line"><a name="l00442"></a><span class="lineno">  442</span>&#160;    <span class="keywordtype">unsigned</span> numDepVar = ai-&gt;getCurrentDepth(), numVar = numDepVar + numDepVar;</div>
 <div class="line"><a name="l00443"></a><span class="lineno">  443</span>&#160;    PtrMatrix&lt;int64_t&gt; B{loop-&gt;getOuterA(numDepVar)};</div>
 <div class="line"><a name="l00444"></a><span class="lineno">  444</span>&#160;    <span class="keyword">auto</span> S{loop-&gt;getSyms()};</div>
@@ -540,7 +540,7 @@ $(function() {
 <div class="line"><a name="l00522"></a><span class="lineno">  522</span>&#160;  <span class="comment">//</span></div>
 <div class="line"><a name="l00523"></a><span class="lineno">  523</span>&#160;  <span class="comment">// Time parameters are carried over into farkas polys</span></div>
 <div class="line"><a name="l00524"></a><span class="lineno">  524</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> farkasPair(Arena&lt;&gt; *alloc) <span class="keyword">const</span></div>
-<div class="line"><a name="l00525"></a><span class="lineno">  525</span>&#160;    -&gt; std::array&lt;NotNull&lt;math::Simplex&gt;, 2&gt; {</div>
+<div class="line"><a name="l00525"></a><span class="lineno">  525</span>&#160;    -&gt; std::array&lt;Valid&lt;math::Simplex&gt;, 2&gt; {</div>
 <div class="line"><a name="l00526"></a><span class="lineno">  526</span>&#160; </div>
 <div class="line"><a name="l00527"></a><span class="lineno">  527</span>&#160;    <span class="keyword">auto</span> A{getA()}, E{getE()};</div>
 <div class="line"><a name="l00528"></a><span class="lineno">  528</span>&#160;    <span class="keyword">const</span> ptrdiff_t numEqualityConstraintsOld = ptrdiff_t(E.numRow());</div>
@@ -567,8 +567,8 @@ $(function() {
 <div class="line"><a name="l00549"></a><span class="lineno">  549</span>&#160;    <span class="keyword">const</span> ptrdiff_t numLambda = posEqEnd + numEqualityConstraintsOld;</div>
 <div class="line"><a name="l00550"></a><span class="lineno">  550</span>&#160;    <span class="keyword">const</span> ptrdiff_t numVarNew = numVarInterest + numLambda;</div>
 <div class="line"><a name="l00551"></a><span class="lineno">  551</span>&#160;    invariant(ptrdiff_t(getNumLambda()), numLambda);</div>
-<div class="line"><a name="l00552"></a><span class="lineno">  552</span>&#160;    <span class="comment">// std::array&lt;NotNull&lt;Simplex&gt;, 2&gt; pair;</span></div>
-<div class="line"><a name="l00553"></a><span class="lineno">  553</span>&#160;    NotNull&lt;math::Simplex&gt; fw =</div>
+<div class="line"><a name="l00552"></a><span class="lineno">  552</span>&#160;    <span class="comment">// std::array&lt;Valid&lt;Simplex&gt;, 2&gt; pair;</span></div>
+<div class="line"><a name="l00553"></a><span class="lineno">  553</span>&#160;    Valid&lt;math::Simplex&gt; fw =</div>
 <div class="line"><a name="l00554"></a><span class="lineno">  554</span>&#160;      math::Simplex::create(alloc, numConstraintsNew, numVarNew, 0);</div>
 <div class="line"><a name="l00555"></a><span class="lineno">  555</span>&#160;    <span class="comment">// Simplex &amp;fw(pair[0]);</span></div>
 <div class="line"><a name="l00556"></a><span class="lineno">  556</span>&#160;    <span class="comment">// fw.resize(numConstraintsNew, numVarNew + 1);</span></div>
@@ -615,7 +615,7 @@ $(function() {
 <div class="line"><a name="l00597"></a><span class="lineno">  597</span>&#160; </div>
 <div class="line"><a name="l00598"></a><span class="lineno">  598</span>&#160;    <span class="comment">// so far, both have been identical</span></div>
 <div class="line"><a name="l00599"></a><span class="lineno">  599</span>&#160; </div>
-<div class="line"><a name="l00600"></a><span class="lineno">  600</span>&#160;    NotNull&lt;math::Simplex&gt; bw =</div>
+<div class="line"><a name="l00600"></a><span class="lineno">  600</span>&#160;    Valid&lt;math::Simplex&gt; bw =</div>
 <div class="line"><a name="l00601"></a><span class="lineno">  601</span>&#160;      math::Simplex::create(alloc, numConstraintsNew, numVarNew, 0);</div>
 <div class="line"><a name="l00602"></a><span class="lineno">  602</span>&#160;    <span class="keyword">auto</span> bCF{bw-&gt;getConstraints()};</div>
 <div class="line"><a name="l00603"></a><span class="lineno">  603</span>&#160;    bCF &lt;&lt; fCF;</div>
@@ -646,9 +646,9 @@ $(function() {
 <div class="line"><a name="l00628"></a><span class="lineno">  628</span>&#160;    <span class="keywordflow">return</span> {fw, bw};</div>
 <div class="line"><a name="l00629"></a><span class="lineno">  629</span>&#160;  }</div>
 <div class="line"><a name="l00630"></a><span class="lineno">  630</span>&#160; </div>
-<div class="line"><a name="l00633"></a><span class="lineno"><a class="line" href="classpoly_1_1poly_1_1DepPoly.html#adf5466c660c3bbeafd6133788d9f9986">  633</a></span>&#160;  [[nodiscard]] <span class="keyword">auto</span> <a class="code" href="classpoly_1_1poly_1_1DepPoly.html#adf5466c660c3bbeafd6133788d9f9986">checkSat</a>(Arena&lt;&gt; alloc, NotNull&lt;const poly::Loop&gt; xLoop,</div>
+<div class="line"><a name="l00633"></a><span class="lineno"><a class="line" href="classpoly_1_1poly_1_1DepPoly.html#ac1f4cd56acb6036c53c98397ed1af8ba">  633</a></span>&#160;  [[nodiscard]] <span class="keyword">auto</span> <a class="code" href="classpoly_1_1poly_1_1DepPoly.html#ac1f4cd56acb6036c53c98397ed1af8ba">checkSat</a>(Arena&lt;&gt; alloc, Valid&lt;const poly::Loop&gt; xLoop,</div>
 <div class="line"><a name="l00634"></a><span class="lineno">  634</span>&#160;                              <span class="keyword">const</span> int64_t *xOff, DensePtrMatrix&lt;int64_t&gt; xPhi,</div>
-<div class="line"><a name="l00635"></a><span class="lineno">  635</span>&#160;                              NotNull&lt;const poly::Loop&gt; yLoop,</div>
+<div class="line"><a name="l00635"></a><span class="lineno">  635</span>&#160;                              Valid&lt;const poly::Loop&gt; yLoop,</div>
 <div class="line"><a name="l00636"></a><span class="lineno">  636</span>&#160;                              <span class="keyword">const</span> int64_t *yOff, DensePtrMatrix&lt;int64_t&gt; yPhi)</div>
 <div class="line"><a name="l00637"></a><span class="lineno">  637</span>&#160;    -&gt; <span class="keywordtype">bool</span> {</div>
 <div class="line"><a name="l00638"></a><span class="lineno">  638</span>&#160;    <span class="comment">// we take in loops because we might be moving deeper inside the loopnest</span></div>
@@ -750,7 +750,7 @@ $(function() {
 <div class="line"><a name="l00734"></a><span class="lineno">  734</span>&#160;}; <span class="comment">// class DepPoly</span></div>
 <div class="line"><a name="l00735"></a><span class="lineno">  735</span>&#160;} <span class="comment">// namespace poly::poly</span></div>
 <div class="ttc" id="aclasspoly_1_1poly_1_1DepPoly_html"><div class="ttname"><a href="classpoly_1_1poly_1_1DepPoly.html">poly::poly::DepPoly</a></div><div class="ttdef"><b>Definition:</b> DependencyPolyhedra.hpp:99</div></div>
-<div class="ttc" id="aclasspoly_1_1poly_1_1DepPoly_html_adf5466c660c3bbeafd6133788d9f9986"><div class="ttname"><a href="classpoly_1_1poly_1_1DepPoly.html#adf5466c660c3bbeafd6133788d9f9986">poly::poly::DepPoly::checkSat</a></div><div class="ttdeci">auto checkSat(Arena&lt;&gt; alloc, NotNull&lt; const poly::Loop &gt; xLoop, const int64_t *xOff, DensePtrMatrix&lt; int64_t &gt; xPhi, NotNull&lt; const poly::Loop &gt; yLoop, const int64_t *yOff, DensePtrMatrix&lt; int64_t &gt; yPhi) -&gt; bool</div><div class="ttdef"><b>Definition:</b> DependencyPolyhedra.hpp:633</div></div>
+<div class="ttc" id="aclasspoly_1_1poly_1_1DepPoly_html_ac1f4cd56acb6036c53c98397ed1af8ba"><div class="ttname"><a href="classpoly_1_1poly_1_1DepPoly.html#ac1f4cd56acb6036c53c98397ed1af8ba">poly::poly::DepPoly::checkSat</a></div><div class="ttdeci">auto checkSat(Arena&lt;&gt; alloc, Valid&lt; const poly::Loop &gt; xLoop, const int64_t *xOff, DensePtrMatrix&lt; int64_t &gt; xPhi, Valid&lt; const poly::Loop &gt; yLoop, const int64_t *yOff, DensePtrMatrix&lt; int64_t &gt; yPhi) -&gt; bool</div><div class="ttdef"><b>Definition:</b> DependencyPolyhedra.hpp:633</div></div>
 <div class="ttc" id="aclasspoly_1_1poly_1_1DepPoly_html_afc4fa536b4d8eddca8b17a10e04b466c"><div class="ttname"><a href="classpoly_1_1poly_1_1DepPoly.html#afc4fa536b4d8eddca8b17a10e04b466c">poly::poly::DepPoly::mergeMap</a></div><div class="ttdeci">static auto mergeMap(math::Vector&lt; unsigned &gt; &amp;map, llvm::ArrayRef&lt; const llvm::SCEV * &gt; s0, llvm::ArrayRef&lt; const llvm::SCEV * &gt; s1) -&gt; unsigned</div><div class="ttdef"><b>Definition:</b> DependencyPolyhedra.hpp:315</div></div>
 <div class="ttc" id="astructpoly_1_1poly_1_1BasePolyhedra_html"><div class="ttname"><a href="structpoly_1_1poly_1_1BasePolyhedra.html">poly::poly::BasePolyhedra</a></div><div class="ttdef"><b>Definition:</b> Polyhedra.hpp:66</div></div>
 </div><!-- fragment --></div><!-- contents -->

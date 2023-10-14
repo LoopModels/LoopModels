@@ -77,7 +77,7 @@ $(function() {
 <div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="preprocessor">#include &quot;Support/Iterators.hpp&quot;</span></div>
 <div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="preprocessor">#include &lt;Containers/BitSets.hpp&gt;</span></div>
 <div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="preprocessor">#include &lt;Math/Array.hpp&gt;</span></div>
-<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="preprocessor">#include &lt;Utilities/Allocators.hpp&gt;</span></div>
+<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="preprocessor">#include &lt;Alloc/Arena.hpp&gt;</span></div>
 <div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="preprocessor">#include &lt;algorithm&gt;</span></div>
 <div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="preprocessor">#include &lt;bit&gt;</span></div>
 <div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="preprocessor">#include &lt;cstddef&gt;</span></div>
@@ -146,7 +146,7 @@ $(function() {
 <div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;<span class="comment">  // We also do want an addrMap to associate uses of the same Addr</span></div>
 <div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;<span class="comment"></span> </div>
 <div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;<span class="comment">public:</span></div>
-<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;<span class="comment">  LoopDependencies(utils::Arena&lt;&gt; *a, unsigned numAddr, unsigned numLoops)</span></div>
+<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;<span class="comment">  LoopDependencies(alloc::Arena&lt;&gt; *a, unsigned numAddr, unsigned numLoops)</span></div>
 <div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;<span class="comment">    : deps{math::matrix&lt;LoopDependency&gt;(a, math::Row{numAddr},</span></div>
 <div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;<span class="comment">                                        math::Col{numLoops},</span></div>
 <div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;<span class="comment">                                        LoopDependency::NotNested())},</span></div>
@@ -390,7 +390,7 @@ $(function() {
 <div class="line"><a name="l00387"></a><span class="lineno">  387</span>&#160;<span class="comment">    : addrMap(alloc), numLoops(numLoops), numAddr(int32_t(numAddr)) {}</span></div>
 <div class="line"><a name="l00388"></a><span class="lineno">  388</span>&#160;<span class="comment"></span> </div>
 <div class="line"><a name="l00389"></a><span class="lineno">  389</span>&#160;<span class="comment">  LoopDependencies(const LoopDependencies &amp;) = default;</span></div>
-<div class="line"><a name="l00390"></a><span class="lineno">  390</span>&#160;<span class="comment">  static auto create(utils::Arena&lt;&gt; *alloc, unsigned numLoops, unsigned numAddr)</span></div>
+<div class="line"><a name="l00390"></a><span class="lineno">  390</span>&#160;<span class="comment">  static auto create(alloc::Arena&lt;&gt; *alloc, unsigned numLoops, unsigned numAddr)</span></div>
 <div class="line"><a name="l00391"></a><span class="lineno">  391</span>&#160;<span class="comment">    -&gt; LoopDependencies * {</span></div>
 <div class="line"><a name="l00392"></a><span class="lineno">  392</span>&#160;<span class="comment"></span> </div>
 <div class="line"><a name="l00393"></a><span class="lineno">  393</span>&#160;<span class="comment">    size_t size = size_t(numAddr) * (bytesPerAddr(numLoops) + sizeof(int32_t)) +</span></div>
@@ -485,10 +485,10 @@ $(function() {
 <div class="line"><a name="l00484"></a><span class="lineno">  484</span>&#160;<span class="comment"></span> </div>
 <div class="line"><a name="l00485"></a><span class="lineno">  485</span>&#160;<span class="comment">  // adding an Addr should adds unroll options</span></div>
 <div class="line"><a name="l00486"></a><span class="lineno">  486</span>&#160;<span class="comment">  inline constexpr void</span></div>
-<div class="line"><a name="l00487"></a><span class="lineno">  487</span>&#160;<span class="comment">  addAddr(utils::Arena&lt;&gt; *,</span></div>
+<div class="line"><a name="l00487"></a><span class="lineno">  487</span>&#160;<span class="comment">  addAddr(alloc::Arena&lt;&gt; *,</span></div>
 <div class="line"><a name="l00488"></a><span class="lineno">  488</span>&#160;<span class="comment">          math::ResizeableView&lt;OptimizationOptions, unsigned&gt; &amp;, IR::Addr *);</span></div>
 <div class="line"><a name="l00489"></a><span class="lineno">  489</span>&#160;<span class="comment">  inline constexpr void</span></div>
-<div class="line"><a name="l00490"></a><span class="lineno">  490</span>&#160;<span class="comment">  addOptOption(utils::Arena&lt;&gt; *,</span></div>
+<div class="line"><a name="l00490"></a><span class="lineno">  490</span>&#160;<span class="comment">  addOptOption(alloc::Arena&lt;&gt; *,</span></div>
 <div class="line"><a name="l00491"></a><span class="lineno">  491</span>&#160;<span class="comment">               math::ResizeableView&lt;OptimizationOptions, unsigned&gt; &amp;,</span></div>
 <div class="line"><a name="l00492"></a><span class="lineno">  492</span>&#160;<span class="comment">               AddrSummary);</span></div>
 <div class="line"><a name="l00493"></a><span class="lineno">  493</span>&#160;<span class="comment">};</span></div>
@@ -549,7 +549,7 @@ $(function() {
 <div class="line"><a name="l00556"></a><span class="lineno">  556</span>&#160;<span class="comment">// Here, we scan the addr so far,</span></div>
 <div class="line"><a name="l00557"></a><span class="lineno">  557</span>&#160;<span class="comment">// I think we should have sub-tree ref sets.</span></div>
 <div class="line"><a name="l00558"></a><span class="lineno">  558</span>&#160;<span class="comment">inline constexpr void LoopDependencies::addAddr(</span></div>
-<div class="line"><a name="l00559"></a><span class="lineno">  559</span>&#160;<span class="comment">  utils::Arena&lt;&gt; *alloc,</span></div>
+<div class="line"><a name="l00559"></a><span class="lineno">  559</span>&#160;<span class="comment">  alloc::Arena&lt;&gt; *alloc,</span></div>
 <div class="line"><a name="l00560"></a><span class="lineno">  560</span>&#160;<span class="comment">  math::ResizeableView&lt;OptimizationOptions, unsigned&gt; &amp;optops, IR::Addr *a) {</span></div>
 <div class="line"><a name="l00561"></a><span class="lineno">  561</span>&#160;<span class="comment">  int32_t id = numAddr;</span></div>
 <div class="line"><a name="l00562"></a><span class="lineno">  562</span>&#160;<span class="comment">  // something to think about here is how to handle the mix of `Addr` reference</span></div>
@@ -599,7 +599,7 @@ $(function() {
 <div class="line"><a name="l00606"></a><span class="lineno">  606</span>&#160;<span class="comment">}</span></div>
 <div class="line"><a name="l00607"></a><span class="lineno">  607</span>&#160;<span class="comment"></span> </div>
 <div class="line"><a name="l00608"></a><span class="lineno">  608</span>&#160;<span class="comment">inline constexpr void LoopDependencies::addOptOption(</span></div>
-<div class="line"><a name="l00609"></a><span class="lineno">  609</span>&#160;<span class="comment">  utils::Arena&lt;&gt; *alloc,</span></div>
+<div class="line"><a name="l00609"></a><span class="lineno">  609</span>&#160;<span class="comment">  alloc::Arena&lt;&gt; *alloc,</span></div>
 <div class="line"><a name="l00610"></a><span class="lineno">  610</span>&#160;<span class="comment">  math::ResizeableView&lt;OptimizationOptions, unsigned&gt; &amp;optops, AddrSummary s) {</span></div>
 <div class="line"><a name="l00611"></a><span class="lineno">  611</span>&#160;<span class="comment">  // scan older `AddrSummary`s, compare with `s`</span></div>
 <div class="line"><a name="l00612"></a><span class="lineno">  612</span>&#160;<span class="comment">  for (ptrdiff_t i = 0; i &lt; numAddr - 1; ++i) {</span></div>

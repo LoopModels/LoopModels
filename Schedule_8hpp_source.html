@@ -72,7 +72,7 @@ $(function() {
 <div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="preprocessor">#pragma once</span></div>
 <div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160; </div>
 <div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="preprocessor">#include &quot;Math/Array.hpp&quot;</span></div>
-<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor">#include &quot;Utilities/Allocators.hpp&quot;</span></div>
+<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor">#include &quot;Alloc/Arena.hpp&quot;</span></div>
 <div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="preprocessor">#include &lt;algorithm&gt;</span></div>
 <div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="preprocessor">#include &lt;cstddef&gt;</span></div>
 <div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="preprocessor">#include &lt;cstdint&gt;</span></div>
@@ -106,11 +106,11 @@ $(function() {
 <div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160; </div>
 <div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;  constexpr <a class="code" href="structpoly_1_1poly_1_1AffineSchedule.html">AffineSchedule</a>() : mem(<span class="keyword">nullptr</span>) {}</div>
 <div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;  constexpr <a class="code" href="structpoly_1_1poly_1_1AffineSchedule.html">AffineSchedule</a>(int64_t *m) : mem(m) {}</div>
-<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;  constexpr <a class="code" href="structpoly_1_1poly_1_1AffineSchedule.html">AffineSchedule</a>(utils::Arena&lt;&gt; *alloc, <span class="keywordtype">unsigned</span> nL)</div>
+<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;  constexpr <a class="code" href="structpoly_1_1poly_1_1AffineSchedule.html">AffineSchedule</a>(alloc::Arena&lt;&gt; *alloc, <span class="keywordtype">unsigned</span> nL)</div>
 <div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;    : mem(alloc-&gt;allocate&lt;int64_t&gt;(requiredScheduleStorage(nL))) {</div>
 <div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;    mem[0] = nL;</div>
 <div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;  }</div>
-<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;  constexpr <span class="keyword">auto</span> copy(utils::Arena&lt;&gt; *alloc) <span class="keyword">const</span> -&gt; <a class="code" href="structpoly_1_1poly_1_1AffineSchedule.html">AffineSchedule</a> {</div>
+<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;  constexpr <span class="keyword">auto</span> copy(alloc::Arena&lt;&gt; *alloc) <span class="keyword">const</span> -&gt; <a class="code" href="structpoly_1_1poly_1_1AffineSchedule.html">AffineSchedule</a> {</div>
 <div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;    <span class="keywordtype">size_t</span> reqMem = requiredScheduleStorage(getNumLoops());</div>
 <div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;    <a class="code" href="structpoly_1_1poly_1_1AffineSchedule.html">AffineSchedule</a> res{alloc-&gt;allocate&lt;int64_t&gt;(reqMem)};</div>
 <div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;    std::copy_n(mem, reqMem, res.mem);</div>

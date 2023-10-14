@@ -80,7 +80,7 @@ $(function() {
 <div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="preprocessor">#include &lt;Math/NormalForm.hpp&gt;</span></div>
 <div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="preprocessor">#include &lt;Math/Simplex.hpp&gt;</span></div>
 <div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="preprocessor">#include &lt;Math/VectorGreatestCommonDivisor.hpp&gt;</span></div>
-<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="preprocessor">#include &lt;Utilities/Allocators.hpp&gt;</span></div>
+<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="preprocessor">#include &lt;Alloc/Arena.hpp&gt;</span></div>
 <div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="preprocessor">#include &lt;Utilities/Invariant.hpp&gt;</span></div>
 <div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;<span class="preprocessor">#include &lt;algorithm&gt;</span></div>
 <div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;<span class="preprocessor">#include &lt;cassert&gt;</span></div>
@@ -95,7 +95,7 @@ $(function() {
 <div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;  math::NormalForm::simplifySystemsImpl, math::NormalForm::solveSystem,</div>
 <div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;  math::StridedVector, math::vector, math::matrix, math::identity,</div>
 <div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;  math::Simplex, math::DenseDims, math::DenseMatrix;</div>
-<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;<span class="keyword">using</span> utils::invariant, utils::Arena, utils::Optional;</div>
+<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;<span class="keyword">using</span> utils::invariant, alloc::Arena, utils::Optional;</div>
 <div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;<span class="comment">// For `== 0` constraints</span></div>
 <div class="line"><a name="l00029"></a><span class="lineno"><a class="line" href="structpoly_1_1comparator_1_1EmptyComparator.html">   29</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structpoly_1_1comparator_1_1EmptyComparator.html">EmptyComparator</a> {</div>
 <div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> getNumConstTerms() -&gt; ptrdiff_t { <span class="keywordflow">return</span> 0; }</div>

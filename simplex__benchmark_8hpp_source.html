@@ -946,10 +946,10 @@ $(function() {
 <div class="line"><a name="l00875"></a><span class="lineno">  875</span>&#160;  OwningArena&lt;&gt; alloc;</div>
 <div class="line"><a name="l00876"></a><span class="lineno">  876</span>&#160;  <span class="keywordtype">unsigned</span> numCon = unsigned(tableau.numRow()) - 1;</div>
 <div class="line"><a name="l00877"></a><span class="lineno">  877</span>&#160;  <span class="keywordtype">unsigned</span> numVar = unsigned(tableau.numCol()) - 1;</div>
-<div class="line"><a name="l00878"></a><span class="lineno">  878</span>&#160;  NotNull&lt;Simplex&gt; simpBackup{Simplex::create(alloc, numCon, numVar, 0)};</div>
+<div class="line"><a name="l00878"></a><span class="lineno">  878</span>&#160;  Valid&lt;Simplex&gt; simpBackup{Simplex::create(alloc, numCon, numVar, 0)};</div>
 <div class="line"><a name="l00879"></a><span class="lineno">  879</span>&#160;  simpBackup-&gt;getTableau() &lt;&lt; tableau;</div>
 <div class="line"><a name="l00880"></a><span class="lineno">  880</span>&#160;  <span class="comment">// Simplex simpBackup{tableau};</span></div>
-<div class="line"><a name="l00881"></a><span class="lineno">  881</span>&#160;  NotNull&lt;Simplex&gt; simp{Simplex::create(alloc, simpBackup-&gt;getNumCons(),</div>
+<div class="line"><a name="l00881"></a><span class="lineno">  881</span>&#160;  Valid&lt;Simplex&gt; simp{Simplex::create(alloc, simpBackup-&gt;getNumCons(),</div>
 <div class="line"><a name="l00882"></a><span class="lineno">  882</span>&#160;                                        simpBackup-&gt;getNumVars(), 0)};</div>
 <div class="line"><a name="l00883"></a><span class="lineno">  883</span>&#160;  <span class="comment">// Vector&lt;Rational&gt; sol(37);</span></div>
 <div class="line"><a name="l00884"></a><span class="lineno">  884</span>&#160;  <span class="keywordflow">for</span> (<span class="keyword">auto</span> b : state) {</div>
@@ -1185,9 +1185,9 @@ $(function() {
 <div class="line"><a name="l01114"></a><span class="lineno"> 1114</span>&#160;  OwningArena&lt;&gt; alloc;</div>
 <div class="line"><a name="l01115"></a><span class="lineno"> 1115</span>&#160;  <span class="keywordtype">unsigned</span> numCon = unsigned(tableau.numRow()) - 1;</div>
 <div class="line"><a name="l01116"></a><span class="lineno"> 1116</span>&#160;  <span class="keywordtype">unsigned</span> numVar = unsigned(tableau.numCol()) - 1;</div>
-<div class="line"><a name="l01117"></a><span class="lineno"> 1117</span>&#160;  NotNull&lt;Simplex&gt; simpBackup{Simplex::create(alloc, numCon, numVar, 0)};</div>
+<div class="line"><a name="l01117"></a><span class="lineno"> 1117</span>&#160;  Valid&lt;Simplex&gt; simpBackup{Simplex::create(alloc, numCon, numVar, 0)};</div>
 <div class="line"><a name="l01118"></a><span class="lineno"> 1118</span>&#160;  simpBackup-&gt;getTableau() &lt;&lt; tableau;</div>
-<div class="line"><a name="l01119"></a><span class="lineno"> 1119</span>&#160;  NotNull&lt;Simplex&gt; simp{Simplex::create(alloc, simpBackup-&gt;getNumCons(),</div>
+<div class="line"><a name="l01119"></a><span class="lineno"> 1119</span>&#160;  Valid&lt;Simplex&gt; simp{Simplex::create(alloc, simpBackup-&gt;getNumCons(),</div>
 <div class="line"><a name="l01120"></a><span class="lineno"> 1120</span>&#160;                                        simpBackup-&gt;getNumVars(), 0)};</div>
 <div class="line"><a name="l01121"></a><span class="lineno"> 1121</span>&#160;  <span class="keywordflow">for</span> (<span class="keyword">auto</span> b : state) {</div>
 <div class="line"><a name="l01122"></a><span class="lineno"> 1122</span>&#160;    *simp &lt;&lt; *simpBackup;</div>

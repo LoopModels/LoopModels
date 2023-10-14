@@ -95,14 +95,14 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>isNonNegati
 <tr class="memitem:a44dee0a6e771f9290801832a8b0330ee"><td class="memItemLeft" align="right" valign="top"><a id="a44dee0a6e771f9290801832a8b0330ee"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>findIndex</b> (const llvm::SCEV *v) const -&gt; ptrdiff_t</td></tr>
 <tr class="separator:a44dee0a6e771f9290801832a8b0330ee"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a90e1eceee8f71d004765f765888b2f1c"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1poly_1_1Loop.html#a90e1eceee8f71d004765f765888b2f1c">rotate</a> (Arena&lt;&gt; *alloc, DensePtrMatrix&lt; int64_t &gt; R, const int64_t *offsets) const -&gt; NotNull&lt; <a class="el" href="classpoly_1_1poly_1_1Loop.html">Loop</a> &gt;</td></tr>
-<tr class="separator:a90e1eceee8f71d004765f765888b2f1c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a51fc605c54f45ad6dfa1bb0856e8c7ad"><td class="memItemLeft" align="right" valign="top"><a id="a51fc605c54f45ad6dfa1bb0856e8c7ad"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>rotate</b> (Arena&lt;&gt; *alloc, DensePtrMatrix&lt; int64_t &gt; R, const int64_t *offsets) -&gt; NotNull&lt; <a class="el" href="classpoly_1_1poly_1_1Loop.html">Loop</a> &gt;</td></tr>
-<tr class="separator:a51fc605c54f45ad6dfa1bb0856e8c7ad"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0240684b6e5bc675c7f42558723711aa"><td class="memItemLeft" align="right" valign="top"><a id="a0240684b6e5bc675c7f42558723711aa"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>removeInnerMost</b> (Arena&lt;&gt; *alloc) const -&gt; NotNull&lt; <a class="el" href="classpoly_1_1poly_1_1Loop.html">Loop</a> &gt;</td></tr>
-<tr class="separator:a0240684b6e5bc675c7f42558723711aa"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a03240e7893974248eddd72423304b2b5"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1poly_1_1Loop.html#a03240e7893974248eddd72423304b2b5">rotate</a> (Arena&lt;&gt; *alloc, DensePtrMatrix&lt; int64_t &gt; R, const int64_t *offsets) const -&gt; Valid&lt; <a class="el" href="classpoly_1_1poly_1_1Loop.html">Loop</a> &gt;</td></tr>
+<tr class="separator:a03240e7893974248eddd72423304b2b5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af69a7fbd357490a859c756c4281b09da"><td class="memItemLeft" align="right" valign="top"><a id="af69a7fbd357490a859c756c4281b09da"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>rotate</b> (Arena&lt;&gt; *alloc, DensePtrMatrix&lt; int64_t &gt; R, const int64_t *offsets) -&gt; Valid&lt; <a class="el" href="classpoly_1_1poly_1_1Loop.html">Loop</a> &gt;</td></tr>
+<tr class="separator:af69a7fbd357490a859c756c4281b09da"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad4b6cecb2793f75829e5546abe567bf6"><td class="memItemLeft" align="right" valign="top"><a id="ad4b6cecb2793f75829e5546abe567bf6"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>removeInnerMost</b> (Arena&lt;&gt; *alloc) const -&gt; Valid&lt; <a class="el" href="classpoly_1_1poly_1_1Loop.html">Loop</a> &gt;</td></tr>
+<tr class="separator:ad4b6cecb2793f75829e5546abe567bf6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9b20025bd9ed80ace07e630da19e37dd"><td class="memItemLeft" align="right" valign="top"><a id="a9b20025bd9ed80ace07e630da19e37dd"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>truncateConstraints</b> (unsigned newNumConstraints)</td></tr>
 <tr class="separator:a9b20025bd9ed80ace07e630da19e37dd"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -121,9 +121,9 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>addZeroLowerBounds</b
 <tr class="memitem:ac43e41799744cd90a4cdde259ebd16a3"><td class="memItemLeft" align="right" valign="top"><a id="ac43e41799744cd90a4cdde259ebd16a3"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getProgVars</b> (ptrdiff_t j) const -&gt; PtrVector&lt; int64_t &gt;</td></tr>
 <tr class="separator:ac43e41799744cd90a4cdde259ebd16a3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a13dcb5e65a568f4cfca0d830aa35dc92"><td class="memItemLeft" align="right" valign="top"><a id="a13dcb5e65a568f4cfca0d830aa35dc92"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>copy</b> (Arena&lt;&gt; *alloc) const -&gt; NotNull&lt; <a class="el" href="classpoly_1_1poly_1_1Loop.html">Loop</a> &gt;</td></tr>
-<tr class="separator:a13dcb5e65a568f4cfca0d830aa35dc92"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a311823d401d15a239e42e965434abafc"><td class="memItemLeft" align="right" valign="top"><a id="a311823d401d15a239e42e965434abafc"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>copy</b> (Arena&lt;&gt; *alloc) const -&gt; Valid&lt; <a class="el" href="classpoly_1_1poly_1_1Loop.html">Loop</a> &gt;</td></tr>
+<tr class="separator:a311823d401d15a239e42e965434abafc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0e8f8149cd4b4d4602e961f5bf67d565"><td class="memItemLeft" align="right" valign="top"><a id="a0e8f8149cd4b4d4602e961f5bf67d565"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>removeLoop</b> (Arena&lt;&gt; *alloc, ptrdiff_t v) const -&gt; <a class="el" href="classpoly_1_1poly_1_1Loop.html">Loop</a> *</td></tr>
 <tr class="separator:a0e8f8149cd4b4d4602e961f5bf67d565"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -284,18 +284,18 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>truncateVars</b> (ptr
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
-<tr class="memitem:a4581579e919ac513008419c9cb4fc36a"><td class="memItemLeft" align="right" valign="top"><a id="a4581579e919ac513008419c9cb4fc36a"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>construct</b> (Arena&lt;&gt; *alloc, llvm::Loop *L, const llvm::SCEV *BT, llvm::ScalarEvolution &amp;SE, llvm::OptimizationRemarkEmitter *ORE=nullptr) -&gt; NotNull&lt; <a class="el" href="classpoly_1_1poly_1_1Loop.html">Loop</a> &gt;</td></tr>
-<tr class="separator:a4581579e919ac513008419c9cb4fc36a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3cc189d927b07bb9d5caa3a9bef8f5e7"><td class="memItemLeft" align="right" valign="top"><a id="a3cc189d927b07bb9d5caa3a9bef8f5e7"></a>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>construct</b> (Arena&lt;&gt; *alloc, llvm::Loop *L, const llvm::SCEV *BT, llvm::ScalarEvolution &amp;SE, llvm::OptimizationRemarkEmitter *ORE=nullptr) -&gt; Valid&lt; <a class="el" href="classpoly_1_1poly_1_1Loop.html">Loop</a> &gt;</td></tr>
+<tr class="separator:a3cc189d927b07bb9d5caa3a9bef8f5e7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad216d64edfdd6a7d50b2e5962cda22a8"><td class="memItemLeft" align="right" valign="top"><a id="ad216d64edfdd6a7d50b2e5962cda22a8"></a>
 static constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>setNumEqConstraints</b> (ptrdiff_t)</td></tr>
 <tr class="separator:ad216d64edfdd6a7d50b2e5962cda22a8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa303b67726f15e1f7dd57f8e872b60ca"><td class="memItemLeft" align="right" valign="top"><a id="aa303b67726f15e1f7dd57f8e872b60ca"></a>
 static auto&#160;</td><td class="memItemRight" valign="bottom"><b>construct</b> (Arena&lt;&gt; *alloc, llvm::Loop *L, PtrMatrix&lt; int64_t &gt; A, llvm::ArrayRef&lt; const llvm::SCEV * &gt; syms, bool nonNeg) -&gt; <a class="el" href="classpoly_1_1poly_1_1Loop.html">Loop</a> *</td></tr>
 <tr class="separator:aa303b67726f15e1f7dd57f8e872b60ca"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af847e5cc2c9792bc25f2ffe0bf4b8f9c"><td class="memItemLeft" align="right" valign="top"><a id="af847e5cc2c9792bc25f2ffe0bf4b8f9c"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>allocate</b> (Arena&lt;&gt; *alloc, llvm::Loop *L, unsigned numCon, unsigned numLoops, llvm::ArrayRef&lt; const llvm::SCEV * &gt; syms, bool nonNegative) -&gt; NotNull&lt; <a class="el" href="classpoly_1_1poly_1_1Loop.html">Loop</a> &gt;</td></tr>
-<tr class="separator:af847e5cc2c9792bc25f2ffe0bf4b8f9c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af58ba07cd1cc166f8d639523247b86f4"><td class="memItemLeft" align="right" valign="top"><a id="af58ba07cd1cc166f8d639523247b86f4"></a>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>allocate</b> (Arena&lt;&gt; *alloc, llvm::Loop *L, unsigned numCon, unsigned numLoops, llvm::ArrayRef&lt; const llvm::SCEV * &gt; syms, bool nonNegative) -&gt; Valid&lt; <a class="el" href="classpoly_1_1poly_1_1Loop.html">Loop</a> &gt;</td></tr>
+<tr class="separator:af58ba07cd1cc166f8d639523247b86f4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="friends"></a>
 Friends</h2></td></tr>
@@ -304,8 +304,8 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> 
 <tr class="separator:a020ab24c4c23e27de7782448c5c27a3f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Member Function Documentation</h2>
-<a id="a90e1eceee8f71d004765f765888b2f1c"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a90e1eceee8f71d004765f765888b2f1c">&#9670;&nbsp;</a></span>rotate()</h2>
+<a id="a03240e7893974248eddd72423304b2b5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a03240e7893974248eddd72423304b2b5">&#9670;&nbsp;</a></span>rotate()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -334,7 +334,7 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> 
         <tr>
           <td></td>
           <td>)</td>
-          <td></td><td> const -&gt; NotNull&lt;<a class="el" href="classpoly_1_1poly_1_1Loop.html">Loop</a>&gt; </td>
+          <td></td><td> const -&gt; Valid&lt;<a class="el" href="classpoly_1_1poly_1_1Loop.html">Loop</a>&gt; </td>
         </tr>
       </table>
   </td>

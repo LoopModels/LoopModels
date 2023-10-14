@@ -90,12 +90,12 @@ $(function() {
 <div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;  math::MutDensePtrMatrix, math::SquarePtrMatrix, math::MutSquarePtrMatrix,</div>
 <div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;  math::end, math::last, math::_, math::Simplex;</div>
 <div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;<span class="keyword">using</span> poly::Dependence, poly::DepPoly;</div>
-<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;<span class="keyword">using</span> utils::NotNull, utils::invariant, utils::Optional, utils::Arena;</div>
+<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;<span class="keyword">using</span> utils::Valid, utils::invariant, utils::Optional, alloc::Arena;</div>
 <div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160; </div>
 <div class="line"><a name="l00033"></a><span class="lineno"><a class="line" href="classpoly_1_1lp_1_1ScheduledNode.html">   33</a></span>&#160;<span class="keyword">class </span><a class="code" href="classpoly_1_1lp_1_1ScheduledNode.html">ScheduledNode</a> {</div>
 <div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160; </div>
-<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;  NotNull&lt;Addr&gt; store; <span class="comment">// linked list to loads, iterate over getChild</span></div>
-<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;  NotNull&lt;poly::Loop&gt; loopNest;</div>
+<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;  Valid&lt;Addr&gt; store; <span class="comment">// linked list to loads, iterate over getChild</span></div>
+<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;  Valid&lt;poly::Loop&gt; loopNest;</div>
 <div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;  <a class="code" href="classpoly_1_1lp_1_1ScheduledNode.html">ScheduledNode</a> *next{<span class="keyword">nullptr</span>};</div>
 <div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;  <a class="code" href="classpoly_1_1lp_1_1ScheduledNode.html">ScheduledNode</a> *component{<span class="keyword">nullptr</span>}; <span class="comment">// SCC cycle, or last node in a chain</span></div>
 <div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;  <span class="comment">// Dependence *dep{nullptr};          // input edges (points to parents)</span></div>

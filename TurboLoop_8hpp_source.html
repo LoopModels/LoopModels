@@ -229,7 +229,7 @@ $(function() {
 <div class="line"><a name="l00183"></a><span class="lineno">  183</span>&#160;    <span class="comment">// we&#39;d have to make sure none of the allocated instructions</span></div>
 <div class="line"><a name="l00184"></a><span class="lineno">  184</span>&#160;    <span class="comment">// can be referenced again (e.g., through the free list)</span></div>
 <div class="line"><a name="l00185"></a><span class="lineno">  185</span>&#160;    <span class="comment">// auto p = lalloc.checkpoint();</span></div>
-<div class="line"><a name="l00186"></a><span class="lineno">  186</span>&#160;    NotNull&lt;poly::Loop&gt; AL =</div>
+<div class="line"><a name="l00186"></a><span class="lineno">  186</span>&#160;    Valid&lt;poly::Loop&gt; AL =</div>
 <div class="line"><a name="l00187"></a><span class="lineno">  187</span>&#160;      poly::Loop::construct(lalloc, L, nwr.visit(BT), *SE);</div>
 <div class="line"><a name="l00188"></a><span class="lineno">  188</span>&#160;    <a class="code" href="structpoly_1_1IR_1_1TreeResult.html">IR::TreeResult</a> tr = parseExitBlocks(L);</div>
 <div class="line"><a name="l00189"></a><span class="lineno">  189</span>&#160;    tr.rejectDepth = std::max(tr.rejectDepth, omega.size() - AL-&gt;getNumLoops());</div>

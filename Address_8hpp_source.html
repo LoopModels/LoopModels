@@ -81,7 +81,7 @@ $(function() {
 <div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="preprocessor">#include &lt;Math/Array.hpp&gt;</span></div>
 <div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="preprocessor">#include &lt;Math/Comparisons.hpp&gt;</span></div>
 <div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="preprocessor">#include &lt;Math/Math.hpp&gt;</span></div>
-<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="preprocessor">#include &lt;Utilities/Allocators.hpp&gt;</span></div>
+<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="preprocessor">#include &lt;Alloc/Arena.hpp&gt;</span></div>
 <div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;<span class="preprocessor">#include &lt;Utilities/Valid.hpp&gt;</span></div>
 <div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;<span class="preprocessor">#include &lt;cstddef&gt;</span></div>
 <div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;<span class="preprocessor">#include &lt;cstdint&gt;</span></div>
@@ -109,7 +109,7 @@ $(function() {
 <div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;  int32_t edgeIn{-1};</div>
 <div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;  int32_t edgeOut{-1};</div>
 <div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;  <a class="code" href="classpoly_1_1lp_1_1ScheduledNode.html">lp::ScheduledNode</a> *node;</div>
-<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;  NotNull&lt;const llvm::SCEVUnknown&gt; basePointer;</div>
+<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;  Valid&lt;const llvm::SCEVUnknown&gt; basePointer;</div>
 <div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;  <a class="code" href="classpoly_1_1poly_1_1Loop.html">poly::Loop</a> *loop{<span class="keyword">nullptr</span>};</div>
 <div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;  llvm::Instruction *instr;</div>
 <div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;  int64_t *offSym{<span class="keyword">nullptr</span>};</div>
@@ -176,7 +176,7 @@ $(function() {
 <div class="line"><a name="l00148"></a><span class="lineno">  148</span>&#160;                  numLoops),</div>
 <div class="line"><a name="l00149"></a><span class="lineno">  149</span>&#160;      basePointer(arrayPtr), instr(user){};</div>
 <div class="line"><a name="l00150"></a><span class="lineno">  150</span>&#160; </div>
-<div class="line"><a name="l00151"></a><span class="lineno">  151</span>&#160;  constexpr <span class="keywordtype">void</span> rotate(NotNull&lt;poly::Loop&gt; explicitLoop,</div>
+<div class="line"><a name="l00151"></a><span class="lineno">  151</span>&#160;  constexpr <span class="keywordtype">void</span> rotate(Valid&lt;poly::Loop&gt; explicitLoop,</div>
 <div class="line"><a name="l00152"></a><span class="lineno">  152</span>&#160;                        SquarePtrMatrix&lt;int64_t&gt; Pinv, int64_t denom,</div>
 <div class="line"><a name="l00153"></a><span class="lineno">  153</span>&#160;                        PtrVector&lt;int64_t&gt; omega, int64_t *offsets) {</div>
 <div class="line"><a name="l00154"></a><span class="lineno">  154</span>&#160;    loop = explicitLoop;</div>
@@ -304,11 +304,11 @@ $(function() {
 <div class="line"><a name="l00276"></a><span class="lineno">  276</span>&#160;    <span class="keywordflow">return</span> alloc-&gt;create&lt;Addr&gt;(arrayPtr, loadOrStore, numLoops);</div>
 <div class="line"><a name="l00277"></a><span class="lineno">  277</span>&#160;  }</div>
 <div class="line"><a name="l00279"></a><span class="lineno">  279</span>&#160;  [[nodiscard]] <span class="keyword">static</span> <span class="keyword">auto</span></div>
-<div class="line"><a name="l00280"></a><span class="lineno"><a class="line" href="classpoly_1_1IR_1_1Addr.html#a2dc2526ae4d8b61af7f8fff28ef2bb6f">  280</a></span>&#160;  <a class="code" href="classpoly_1_1IR_1_1Addr.html#a2dc2526ae4d8b61af7f8fff28ef2bb6f">construct</a>(Arena&lt;&gt; *alloc, <span class="keyword">const</span> llvm::SCEVUnknown *arrayPtr,</div>
+<div class="line"><a name="l00280"></a><span class="lineno"><a class="line" href="classpoly_1_1IR_1_1Addr.html#acbd2f22ec7600b9c4ac4f536f281e6f4">  280</a></span>&#160;  <a class="code" href="classpoly_1_1IR_1_1Addr.html#acbd2f22ec7600b9c4ac4f536f281e6f4">construct</a>(Arena&lt;&gt; *alloc, <span class="keyword">const</span> llvm::SCEVUnknown *arrayPtr,</div>
 <div class="line"><a name="l00281"></a><span class="lineno">  281</span>&#160;            llvm::Instruction *user, PtrMatrix&lt;int64_t&gt; indMat,</div>
 <div class="line"><a name="l00282"></a><span class="lineno">  282</span>&#160;            std::array&lt;llvm::SmallVector&lt;const llvm::SCEV *, 3&gt;, 2&gt; szOff,</div>
 <div class="line"><a name="l00283"></a><span class="lineno">  283</span>&#160;            PtrVector&lt;int64_t&gt; coffsets, int64_t *offsets, <span class="keywordtype">unsigned</span> numLoops,</div>
-<div class="line"><a name="l00284"></a><span class="lineno">  284</span>&#160;            <span class="keywordtype">unsigned</span> maxNumLoops) -&gt; NotNull&lt;Addr&gt; {</div>
+<div class="line"><a name="l00284"></a><span class="lineno">  284</span>&#160;            <span class="keywordtype">unsigned</span> maxNumLoops) -&gt; Valid&lt;Addr&gt; {</div>
 <div class="line"><a name="l00285"></a><span class="lineno">  285</span>&#160;    <span class="comment">// we don&#39;t want to hold any other pointers that may need freeing</span></div>
 <div class="line"><a name="l00286"></a><span class="lineno">  286</span>&#160;    <span class="keywordtype">unsigned</span> arrayDim = szOff[0].size(), nOff = szOff[1].size();</div>
 <div class="line"><a name="l00287"></a><span class="lineno">  287</span>&#160;    <span class="keywordtype">size_t</span> memNeeded = intMemNeeded(maxNumLoops, arrayDim);</div>
@@ -333,7 +333,7 @@ $(function() {
 <div class="line"><a name="l00308"></a><span class="lineno">  308</span>&#160;    std::copy_n(o.begin(), getCurrentDepth(), getFusionOmega().begin());</div>
 <div class="line"><a name="l00309"></a><span class="lineno">  309</span>&#160;    getFusionOmega().back() = o.back()--;</div>
 <div class="line"><a name="l00310"></a><span class="lineno">  310</span>&#160;  }</div>
-<div class="line"><a name="l00311"></a><span class="lineno">  311</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> reload(Arena&lt;&gt; *alloc) -&gt; NotNull&lt;Addr&gt; {</div>
+<div class="line"><a name="l00311"></a><span class="lineno">  311</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> reload(Arena&lt;&gt; *alloc) -&gt; Valid&lt;Addr&gt; {</div>
 <div class="line"><a name="l00312"></a><span class="lineno">  312</span>&#160;    <span class="keywordtype">size_t</span> memNeeded = intMemNeeded(maxDepth, numDim);</div>
 <div class="line"><a name="l00313"></a><span class="lineno">  313</span>&#160;    <span class="keywordtype">void</span> *p = alloc-&gt;allocate(<span class="keyword">sizeof</span>(<a class="code" href="classpoly_1_1IR_1_1Addr.html">Addr</a>) + memNeeded * <span class="keyword">sizeof</span>(int64_t));</div>
 <div class="line"><a name="l00314"></a><span class="lineno">  314</span>&#160;    *<span class="keyword">static_cast&lt;</span>ValKind *<span class="keyword">&gt;</span>(p) = VK_Load;</div>
@@ -361,7 +361,7 @@ $(function() {
 <div class="line"><a name="l00336"></a><span class="lineno">  336</span>&#160;    <span class="keywordflow">return</span> v-&gt;getKind() &lt;= VK_Stow;</div>
 <div class="line"><a name="l00337"></a><span class="lineno">  337</span>&#160;  }</div>
 <div class="line"><a name="l00338"></a><span class="lineno">  338</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getArrayPointer() const</div>
-<div class="line"><a name="l00339"></a><span class="lineno">  339</span>&#160;    -&gt; NotNull&lt;const llvm::SCEVUnknown&gt; {</div>
+<div class="line"><a name="l00339"></a><span class="lineno">  339</span>&#160;    -&gt; Valid&lt;const llvm::SCEVUnknown&gt; {</div>
 <div class="line"><a name="l00340"></a><span class="lineno">  340</span>&#160;    <span class="keywordflow">return</span> basePointer;</div>
 <div class="line"><a name="l00341"></a><span class="lineno">  341</span>&#160;  }</div>
 <div class="line"><a name="l00342"></a><span class="lineno">  342</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getType() const -&gt; llvm::Type * {</div>
@@ -372,7 +372,7 @@ $(function() {
 <div class="line"><a name="l00347"></a><span class="lineno">  347</span>&#160;      <span class="keywordflow">if</span> (anyNEZero(<a class="code" href="classpoly_1_1IR_1_1Addr.html#af4838372d11fd32b964c9a7cb6d4b1b8">indexMatrix</a>()(i, _(d, end)))) <span class="keywordflow">return</span> <span class="keyword">true</span>;</div>
 <div class="line"><a name="l00348"></a><span class="lineno">  348</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
 <div class="line"><a name="l00349"></a><span class="lineno">  349</span>&#160;  }</div>
-<div class="line"><a name="l00350"></a><span class="lineno">  350</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getAffLoop() const -&gt; NotNull&lt;poly::Loop&gt; {</div>
+<div class="line"><a name="l00350"></a><span class="lineno">  350</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getAffLoop() const -&gt; Valid&lt;poly::Loop&gt; {</div>
 <div class="line"><a name="l00351"></a><span class="lineno">  351</span>&#160;    <span class="keywordflow">return</span> loop;</div>
 <div class="line"><a name="l00352"></a><span class="lineno">  352</span>&#160;  }</div>
 <div class="line"><a name="l00353"></a><span class="lineno">  353</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getStoredVal() const -&gt; Value * {</div>
@@ -518,10 +518,10 @@ $(function() {
 <div class="line"><a name="l00497"></a><span class="lineno">  497</span>&#160;    invariant(offSym != <span class="keyword">nullptr</span> || numDynSym == 0);</div>
 <div class="line"><a name="l00498"></a><span class="lineno">  498</span>&#160;    <span class="keywordflow">return</span> {offSym, DenseDims{getArrayDim(), numDynSym}};</div>
 <div class="line"><a name="l00499"></a><span class="lineno">  499</span>&#160;  }</div>
-<div class="line"><a name="l00500"></a><span class="lineno">  500</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getAffineLoop() -&gt; NotNull&lt;poly::Loop&gt; {</div>
+<div class="line"><a name="l00500"></a><span class="lineno">  500</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getAffineLoop() -&gt; Valid&lt;poly::Loop&gt; {</div>
 <div class="line"><a name="l00501"></a><span class="lineno">  501</span>&#160;    <span class="keywordflow">return</span> loop;</div>
 <div class="line"><a name="l00502"></a><span class="lineno">  502</span>&#160;  }</div>
-<div class="line"><a name="l00503"></a><span class="lineno">  503</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> sizesMatch(NotNull&lt;const Addr&gt; x) <span class="keyword">const</span> -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l00503"></a><span class="lineno">  503</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> sizesMatch(Valid&lt;const Addr&gt; x) <span class="keyword">const</span> -&gt; <span class="keywordtype">bool</span> {</div>
 <div class="line"><a name="l00504"></a><span class="lineno">  504</span>&#160;    <span class="keyword">auto</span> thisSizes = getSizes(), xSizes = x-&gt;getSizes();</div>
 <div class="line"><a name="l00505"></a><span class="lineno">  505</span>&#160;    <span class="keywordflow">return</span> std::equal(thisSizes.begin(), thisSizes.end(), xSizes.begin(),</div>
 <div class="line"><a name="l00506"></a><span class="lineno">  506</span>&#160;                      xSizes.end());</div>
@@ -729,8 +729,8 @@ $(function() {
 <div class="ttc" id="aclasspoly_1_1IR_1_1Addr_html_a1c11ac80919c828f4ffe2e9623605750"><div class="ttname"><a href="classpoly_1_1IR_1_1Addr.html#a1c11ac80919c828f4ffe2e9623605750">poly::IR::Addr::drop</a></div><div class="ttdeci">void drop(Dependencies)</div><div class="ttdoc">drop this and remove it from Dependencies</div><div class="ttdef"><b>Definition:</b> Dependence.hpp:1187</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Addr_html_a218eb171572ded2bb68130151bc8f0bd"><div class="ttname"><a href="classpoly_1_1IR_1_1Addr.html#a218eb171572ded2bb68130151bc8f0bd">poly::IR::Addr::updateOffsMat</a></div><div class="ttdeci">void updateOffsMat(Arena&lt;&gt; *alloc, size_t numToPeel, llvm::ScalarEvolution *SE)</div><div class="ttdef"><b>Definition:</b> Address.hpp:381</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Addr_html_a26d3b32498e5ea5373a423a9bb463477"><div class="ttname"><a href="classpoly_1_1IR_1_1Addr.html#a26d3b32498e5ea5373a423a9bb463477">poly::IR::Addr::setFusionOmega</a></div><div class="ttdeci">constexpr void setFusionOmega(MutPtrVector&lt; int &gt; o)</div><div class="ttdef"><b>Definition:</b> Address.hpp:306</div></div>
-<div class="ttc" id="aclasspoly_1_1IR_1_1Addr_html_a2dc2526ae4d8b61af7f8fff28ef2bb6f"><div class="ttname"><a href="classpoly_1_1IR_1_1Addr.html#a2dc2526ae4d8b61af7f8fff28ef2bb6f">poly::IR::Addr::construct</a></div><div class="ttdeci">static auto construct(Arena&lt;&gt; *alloc, const llvm::SCEVUnknown *arrayPtr, llvm::Instruction *user, PtrMatrix&lt; int64_t &gt; indMat, std::array&lt; llvm::SmallVector&lt; const llvm::SCEV *, 3 &gt;, 2 &gt; szOff, PtrVector&lt; int64_t &gt; coffsets, int64_t *offsets, unsigned numLoops, unsigned maxNumLoops) -&gt; NotNull&lt; Addr &gt;</div><div class="ttdoc">Constructor for regular indexing.</div><div class="ttdef"><b>Definition:</b> Address.hpp:280</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Addr_html_ab49520c0888ccdf75f17d8f7de22023e"><div class="ttname"><a href="classpoly_1_1IR_1_1Addr.html#ab49520c0888ccdf75f17d8f7de22023e">poly::IR::Addr::Addr</a></div><div class="ttdeci">Addr(const llvm::SCEVUnknown *arrayPtr, llvm::Instruction *user, unsigned numLoops)</div><div class="ttdef"><b>Definition:</b> Address.hpp:145</div></div>
+<div class="ttc" id="aclasspoly_1_1IR_1_1Addr_html_acbd2f22ec7600b9c4ac4f536f281e6f4"><div class="ttname"><a href="classpoly_1_1IR_1_1Addr.html#acbd2f22ec7600b9c4ac4f536f281e6f4">poly::IR::Addr::construct</a></div><div class="ttdeci">static auto construct(Arena&lt;&gt; *alloc, const llvm::SCEVUnknown *arrayPtr, llvm::Instruction *user, PtrMatrix&lt; int64_t &gt; indMat, std::array&lt; llvm::SmallVector&lt; const llvm::SCEV *, 3 &gt;, 2 &gt; szOff, PtrVector&lt; int64_t &gt; coffsets, int64_t *offsets, unsigned numLoops, unsigned maxNumLoops) -&gt; Valid&lt; Addr &gt;</div><div class="ttdoc">Constructor for regular indexing.</div><div class="ttdef"><b>Definition:</b> Address.hpp:280</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Addr_html_af4838372d11fd32b964c9a7cb6d4b1b8"><div class="ttname"><a href="classpoly_1_1IR_1_1Addr.html#af4838372d11fd32b964c9a7cb6d4b1b8">poly::IR::Addr::indexMatrix</a></div><div class="ttdeci">constexpr auto indexMatrix() -&gt; MutDensePtrMatrix&lt; int64_t &gt;</div><div class="ttdoc">indexMatrix() -&gt; arrayDim() x getNumLoops()</div><div class="ttdef"><b>Definition:</b> Address.hpp:477</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Addr_html_af5ceceb3d01057d14b1027cc9c8325f6"><div class="ttname"><a href="classpoly_1_1IR_1_1Addr.html#af5ceceb3d01057d14b1027cc9c8325f6">poly::IR::Addr::indexMatrix</a></div><div class="ttdeci">constexpr auto indexMatrix() const -&gt; DensePtrMatrix&lt; int64_t &gt;</div><div class="ttdoc">indexMatrix() -&gt; arrayDim() x getNumLoops()</div><div class="ttdef"><b>Definition:</b> Address.hpp:481</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Instruction_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Instruction.html">poly::IR::Instruction</a></div><div class="ttdef"><b>Definition:</b> Node.hpp:478</div></div>

@@ -82,7 +82,7 @@ $(function() {
 <div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="preprocessor">#include &quot;Polyhedra/Dependence.hpp&quot;</span></div>
 <div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="preprocessor">#include &lt;Math/Array.hpp&gt;</span></div>
 <div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="preprocessor">#include &lt;Math/Math.hpp&gt;</span></div>
-<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;<span class="preprocessor">#include &lt;Utilities/Allocators.hpp&gt;</span></div>
+<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;<span class="preprocessor">#include &lt;Alloc/Arena.hpp&gt;</span></div>
 <div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;<span class="preprocessor">#include &lt;algorithm&gt;</span></div>
 <div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;<span class="preprocessor">#include &lt;any&gt;</span></div>
 <div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;<span class="preprocessor">#include &lt;cassert&gt;</span></div>
@@ -236,7 +236,7 @@ $(function() {
 <div class="line"><a name="l00165"></a><span class="lineno">  165</span>&#160; </div>
 <div class="line"><a name="l00169"></a><span class="lineno"><a class="line" href="classpoly_1_1CostModeling_1_1LoopTree.html">  169</a></span>&#160;<span class="keyword">class </span><a class="code" href="classpoly_1_1CostModeling_1_1LoopTree.html">LoopTree</a> {</div>
 <div class="line"><a name="l00170"></a><span class="lineno">  170</span>&#160;  <span class="comment">// The root of this subtree</span></div>
-<div class="line"><a name="l00171"></a><span class="lineno">  171</span>&#160;  NotNull&lt;IR::Loop&gt; loop;</div>
+<div class="line"><a name="l00171"></a><span class="lineno">  171</span>&#160;  Valid&lt;IR::Loop&gt; loop;</div>
 <div class="line"><a name="l00172"></a><span class="lineno">  172</span>&#160;  <span class="comment">// LoopTree *parent{nullptr}; // do we need this?</span></div>
 <div class="line"><a name="l00173"></a><span class="lineno">  173</span>&#160;  Vec&lt;LoopTree *&gt; children{};</div>
 <div class="line"><a name="l00174"></a><span class="lineno">  174</span>&#160;  <span class="keywordtype">unsigned</span> depth{0};</div>
@@ -265,7 +265,7 @@ $(function() {
 <div class="line"><a name="l00197"></a><span class="lineno">  197</span>&#160;      <span class="comment">// We also apply the rotation here.</span></div>
 <div class="line"><a name="l00198"></a><span class="lineno">  198</span>&#160;      <span class="comment">// For dependencies in SCC iteration, only indvar deps get iterated.</span></div>
 <div class="line"><a name="l00199"></a><span class="lineno">  199</span>&#160;      <span class="keyword">auto</span> [Pinv, denom] = math::NormalForm::scaledInv(node-&gt;getPhi());</div>
-<div class="line"><a name="l00200"></a><span class="lineno">  200</span>&#160;      NotNull&lt;poly::Loop&gt; explicitLoop =</div>
+<div class="line"><a name="l00200"></a><span class="lineno">  200</span>&#160;      Valid&lt;poly::Loop&gt; explicitLoop =</div>
 <div class="line"><a name="l00201"></a><span class="lineno">  201</span>&#160;        node-&gt;getLoopNest()-&gt;rotate(lalloc, Pinv, node-&gt;getOffset());</div>
 <div class="line"><a name="l00202"></a><span class="lineno">  202</span>&#160;      <span class="keywordflow">for</span> (<a class="code" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> *m : node-&gt;localAddr()) {</div>
 <div class="line"><a name="l00203"></a><span class="lineno">  203</span>&#160;        m-&gt;rotate(explicitLoop, Pinv, denom, node-&gt;getOffsetOmega(),</div>

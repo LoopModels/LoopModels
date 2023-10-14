@@ -100,9 +100,9 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getTopPosit
 <tr class="separator:ac61084d6490f7fb15f6d2504adb5d2f4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab49520c0888ccdf75f17d8f7de22023e"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1IR_1_1Addr.html#ab49520c0888ccdf75f17d8f7de22023e">Addr</a> (const llvm::SCEVUnknown *arrayPtr, llvm::Instruction *user, unsigned numLoops)</td></tr>
 <tr class="separator:ab49520c0888ccdf75f17d8f7de22023e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8f32f8beabcb03b6c34609e50382055a"><td class="memItemLeft" align="right" valign="top"><a id="a8f32f8beabcb03b6c34609e50382055a"></a>
-constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>rotate</b> (NotNull&lt; <a class="el" href="classpoly_1_1poly_1_1Loop.html">poly::Loop</a> &gt; explicitLoop, SquarePtrMatrix&lt; int64_t &gt; Pinv, int64_t denom, PtrVector&lt; int64_t &gt; omega, int64_t *offsets)</td></tr>
-<tr class="separator:a8f32f8beabcb03b6c34609e50382055a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a136186b97137aa0fcfd884a7033ceb0d"><td class="memItemLeft" align="right" valign="top"><a id="a136186b97137aa0fcfd884a7033ceb0d"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>rotate</b> (Valid&lt; <a class="el" href="classpoly_1_1poly_1_1Loop.html">poly::Loop</a> &gt; explicitLoop, SquarePtrMatrix&lt; int64_t &gt; Pinv, int64_t denom, PtrVector&lt; int64_t &gt; omega, int64_t *offsets)</td></tr>
+<tr class="separator:a136186b97137aa0fcfd884a7033ceb0d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a09520f29a50bb1d2f3042b789824cb2d"><td class="memItemLeft" align="right" valign="top"><a id="a09520f29a50bb1d2f3042b789824cb2d"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>indexedByInnermostLoop</b> () -&gt; bool</td></tr>
 <tr class="separator:a09520f29a50bb1d2f3042b789824cb2d"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -186,27 +186,27 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>outputEdgeIDs</b> (<a
 <tr class="separator:a28ef529a87f1dc63e8c05450131b1a1f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a26d3b32498e5ea5373a423a9bb463477"><td class="memItemLeft" align="right" valign="top">constexpr void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1IR_1_1Addr.html#a26d3b32498e5ea5373a423a9bb463477">setFusionOmega</a> (MutPtrVector&lt; int &gt; o)</td></tr>
 <tr class="separator:a26d3b32498e5ea5373a423a9bb463477"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae56b4e9ab910596a595056d37de7b6d1"><td class="memItemLeft" align="right" valign="top"><a id="ae56b4e9ab910596a595056d37de7b6d1"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>reload</b> (Arena&lt;&gt; *alloc) -&gt; NotNull&lt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">Addr</a> &gt;</td></tr>
-<tr class="separator:ae56b4e9ab910596a595056d37de7b6d1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2218e571084b478254fd8f981da3c4b3"><td class="memItemLeft" align="right" valign="top"><a id="a2218e571084b478254fd8f981da3c4b3"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>reload</b> (Arena&lt;&gt; *alloc) -&gt; Valid&lt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">Addr</a> &gt;</td></tr>
+<tr class="separator:a2218e571084b478254fd8f981da3c4b3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a13041f4d7770b2f0bd9d0656abf051e0"><td class="memItemLeft" align="right" valign="top"><a id="a13041f4d7770b2f0bd9d0656abf051e0"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getSizes</b> () const -&gt; PtrVector&lt; const llvm::SCEV * &gt;</td></tr>
 <tr class="separator:a13041f4d7770b2f0bd9d0656abf051e0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7f41557d682ba23a59dd8c879d21a934"><td class="memItemLeft" align="right" valign="top"><a id="a7f41557d682ba23a59dd8c879d21a934"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getSymbolicOffsets</b> () const -&gt; PtrVector&lt; const llvm::SCEV * &gt;</td></tr>
 <tr class="separator:a7f41557d682ba23a59dd8c879d21a934"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8f5f7d33b9f749c7a9f910e701c82dc5"><td class="memItemLeft" align="right" valign="top"><a id="a8f5f7d33b9f749c7a9f910e701c82dc5"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getArrayPointer</b> () const -&gt; NotNull&lt; const llvm::SCEVUnknown &gt;</td></tr>
-<tr class="separator:a8f5f7d33b9f749c7a9f910e701c82dc5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aba21969d982538ebda1d7a20a39c21a7"><td class="memItemLeft" align="right" valign="top"><a id="aba21969d982538ebda1d7a20a39c21a7"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getArrayPointer</b> () const -&gt; Valid&lt; const llvm::SCEVUnknown &gt;</td></tr>
+<tr class="separator:aba21969d982538ebda1d7a20a39c21a7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aee6d5ece1c97d08d59e5c35f7a8f8770"><td class="memItemLeft" align="right" valign="top"><a id="aee6d5ece1c97d08d59e5c35f7a8f8770"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>getType</b> () const -&gt; llvm::Type *</td></tr>
 <tr class="separator:aee6d5ece1c97d08d59e5c35f7a8f8770"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a57ef4afc16289d645369b42135cced04"><td class="memItemLeft" align="right" valign="top"><a id="a57ef4afc16289d645369b42135cced04"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>dependsOnIndVars</b> (size_t d) -&gt; bool</td></tr>
 <tr class="separator:a57ef4afc16289d645369b42135cced04"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa997844d40e1b38241fbd7373ab2e010"><td class="memItemLeft" align="right" valign="top"><a id="aa997844d40e1b38241fbd7373ab2e010"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getAffLoop</b> () const -&gt; NotNull&lt; <a class="el" href="classpoly_1_1poly_1_1Loop.html">poly::Loop</a> &gt;</td></tr>
-<tr class="separator:aa997844d40e1b38241fbd7373ab2e010"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a62546ef597299bfc3eefbb488987d767"><td class="memItemLeft" align="right" valign="top"><a id="a62546ef597299bfc3eefbb488987d767"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getAffLoop</b> () const -&gt; Valid&lt; <a class="el" href="classpoly_1_1poly_1_1Loop.html">poly::Loop</a> &gt;</td></tr>
+<tr class="separator:a62546ef597299bfc3eefbb488987d767"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aec2e890888eb44690b0ff3d6ab5fa04d"><td class="memItemLeft" align="right" valign="top"><a id="aec2e890888eb44690b0ff3d6ab5fa04d"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getStoredVal</b> () const -&gt; <a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> *</td></tr>
 <tr class="separator:aec2e890888eb44690b0ff3d6ab5fa04d"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -271,12 +271,12 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getFusionOm
 <tr class="memitem:aaa5f488f9aae0245669eb5942af3cae1"><td class="memItemLeft" align="right" valign="top"><a id="aaa5f488f9aae0245669eb5942af3cae1"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>offsetMatrix</b> () const -&gt; DensePtrMatrix&lt; int64_t &gt;</td></tr>
 <tr class="separator:aaa5f488f9aae0245669eb5942af3cae1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a820b07f1fd82c605aa17b8672d94978c"><td class="memItemLeft" align="right" valign="top"><a id="a820b07f1fd82c605aa17b8672d94978c"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getAffineLoop</b> () -&gt; NotNull&lt; <a class="el" href="classpoly_1_1poly_1_1Loop.html">poly::Loop</a> &gt;</td></tr>
-<tr class="separator:a820b07f1fd82c605aa17b8672d94978c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1bd85fd91e0e9d16b2417d9f9479fe1e"><td class="memItemLeft" align="right" valign="top"><a id="a1bd85fd91e0e9d16b2417d9f9479fe1e"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>sizesMatch</b> (NotNull&lt; const <a class="el" href="classpoly_1_1IR_1_1Addr.html">Addr</a> &gt; x) const -&gt; bool</td></tr>
-<tr class="separator:a1bd85fd91e0e9d16b2417d9f9479fe1e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5d95e08520050ef18d0d5a125cc722b7"><td class="memItemLeft" align="right" valign="top"><a id="a5d95e08520050ef18d0d5a125cc722b7"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getAffineLoop</b> () -&gt; Valid&lt; <a class="el" href="classpoly_1_1poly_1_1Loop.html">poly::Loop</a> &gt;</td></tr>
+<tr class="separator:a5d95e08520050ef18d0d5a125cc722b7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8b53a168914d4a7e3a8c7f05a85bb9d0"><td class="memItemLeft" align="right" valign="top"><a id="a8b53a168914d4a7e3a8c7f05a85bb9d0"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>sizesMatch</b> (Valid&lt; const <a class="el" href="classpoly_1_1IR_1_1Addr.html">Addr</a> &gt; x) const -&gt; bool</td></tr>
+<tr class="separator:a8b53a168914d4a7e3a8c7f05a85bb9d0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1663b6f4202cc6b8c09559039d40dc4b"><td class="memItemLeft" align="right" valign="top"><a id="a1663b6f4202cc6b8c09559039d40dc4b"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>calculateCostContiguousLoadStore</b> (const llvm::TargetTransformInfo &amp;TTI, unsigned int vectorWidth) -&gt; <a class="el" href="structpoly_1_1IR_1_1cost_1_1RecipThroughputLatency.html">cost::RecipThroughputLatency</a></td></tr>
 <tr class="separator:a1663b6f4202cc6b8c09559039d40dc4b"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -472,10 +472,10 @@ static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>intM
 <tr class="memitem:a5299f10dcddb298078957721053969f3"><td class="memItemLeft" align="right" valign="top"><a id="a5299f10dcddb298078957721053969f3"></a>
 static auto&#160;</td><td class="memItemRight" valign="bottom"><b>zeroDim</b> (Arena&lt;&gt; *alloc, llvm::SCEVUnknown const *arrayPtr, llvm::Instruction *loadOrStore, unsigned numLoops)</td></tr>
 <tr class="separator:a5299f10dcddb298078957721053969f3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2dc2526ae4d8b61af7f8fff28ef2bb6f"><td class="memItemLeft" align="right" valign="top"><a id="a2dc2526ae4d8b61af7f8fff28ef2bb6f"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1IR_1_1Addr.html#a2dc2526ae4d8b61af7f8fff28ef2bb6f">construct</a> (Arena&lt;&gt; *alloc, const llvm::SCEVUnknown *arrayPtr, llvm::Instruction *user, PtrMatrix&lt; int64_t &gt; indMat, std::array&lt; llvm::SmallVector&lt; const llvm::SCEV *, 3 &gt;, 2 &gt; szOff, PtrVector&lt; int64_t &gt; coffsets, int64_t *offsets, unsigned numLoops, unsigned maxNumLoops) -&gt; NotNull&lt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">Addr</a> &gt;</td></tr>
-<tr class="memdesc:a2dc2526ae4d8b61af7f8fff28ef2bb6f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor for regular indexing. <br /></td></tr>
-<tr class="separator:a2dc2526ae4d8b61af7f8fff28ef2bb6f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acbd2f22ec7600b9c4ac4f536f281e6f4"><td class="memItemLeft" align="right" valign="top"><a id="acbd2f22ec7600b9c4ac4f536f281e6f4"></a>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1IR_1_1Addr.html#acbd2f22ec7600b9c4ac4f536f281e6f4">construct</a> (Arena&lt;&gt; *alloc, const llvm::SCEVUnknown *arrayPtr, llvm::Instruction *user, PtrMatrix&lt; int64_t &gt; indMat, std::array&lt; llvm::SmallVector&lt; const llvm::SCEV *, 3 &gt;, 2 &gt; szOff, PtrVector&lt; int64_t &gt; coffsets, int64_t *offsets, unsigned numLoops, unsigned maxNumLoops) -&gt; Valid&lt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">Addr</a> &gt;</td></tr>
+<tr class="memdesc:acbd2f22ec7600b9c4ac4f536f281e6f4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor for regular indexing. <br /></td></tr>
+<tr class="separator:acbd2f22ec7600b9c4ac4f536f281e6f4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a35ba12a92e78e9cef78eb36c1f0c4862"><td class="memItemLeft" align="right" valign="top"><a id="a35ba12a92e78e9cef78eb36c1f0c4862"></a>
 static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>classof</b> (const <a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a> *v) -&gt; bool</td></tr>
 <tr class="separator:a35ba12a92e78e9cef78eb36c1f0c4862"><td class="memSeparator" colspan="2">&#160;</td></tr>
