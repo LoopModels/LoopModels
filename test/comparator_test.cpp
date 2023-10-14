@@ -23,7 +23,7 @@ TEST(BasicCompare, BasicAssertions) {
   //    0  0 -1 1 0
   //    0  0 -1 0 1 ]
   IntMatrix A = "[-1 0 1 0 0; 0 -1 1 0 0; 0 0 -1 1 0; 0 0 -1 0 1]"_mat;
-  auto comp = poly::comparator::linear(std::allocator<int64_t>{}, A,
+  auto comp = poly::comparator::linear(alloc::Mallocator<int64_t>{}, A,
                                        EmptyMatrix<int64_t>{}, false);
   Vector<int64_t> query{{-1, 0, 0, 1, 0}};
 

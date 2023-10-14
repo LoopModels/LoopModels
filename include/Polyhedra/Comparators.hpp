@@ -1,6 +1,8 @@
 #pragma once
 
 #include "Utilities/Optional.hpp"
+#include <Alloc/Arena.hpp>
+#include <Alloc/Mallocator.hpp>
 #include <Math/Array.hpp>
 #include <Math/Constraints.hpp>
 #include <Math/EmptyArrays.hpp>
@@ -9,13 +11,11 @@
 #include <Math/NormalForm.hpp>
 #include <Math/Simplex.hpp>
 #include <Math/VectorGreatestCommonDivisor.hpp>
-#include <Alloc/Arena.hpp>
 #include <Utilities/Invariant.hpp>
 #include <algorithm>
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
-#include <memory>
 
 namespace poly::comparator {
 using math::PtrVector, math::MutPtrVector, math::Vector, math::_, math::Row,
@@ -682,14 +682,14 @@ struct LinearSymbolicComparator
   static constexpr auto construct(PtrMatrix<int64_t> Ap, bool pos0)
     -> LinearSymbolicComparator {
     LinearSymbolicComparator cmp;
-    std::allocator<int64_t> alloc{};
+    alloc::Mallocator<int64_t> alloc{};
     cmp.init(alloc, Ap, pos0);
     return cmp;
   };
   static constexpr auto construct(PtrMatrix<int64_t> Ap, PtrMatrix<int64_t> Ep,
                                   bool pos0) -> LinearSymbolicComparator {
     LinearSymbolicComparator cmp;
-    std::allocator<int64_t> alloc{};
+    alloc::Mallocator<int64_t> alloc{};
     cmp.init(alloc, Ap, Ep, pos0);
     return cmp;
   };
@@ -703,7 +703,7 @@ struct LinearSymbolicComparator
                                         ptrdiff_t numNonNeg)
     -> LinearSymbolicComparator {
     LinearSymbolicComparator cmp;
-    std::allocator<int64_t> alloc{};
+    alloc::Mallocator<int64_t> alloc{};
     cmp.initNonNegative(alloc, Ap, numNonNeg);
     return cmp;
   };
@@ -712,7 +712,7 @@ struct LinearSymbolicComparator
                                         ptrdiff_t numNonNeg)
     -> LinearSymbolicComparator {
     LinearSymbolicComparator cmp;
-    std::allocator<int64_t> alloc{};
+    alloc::Mallocator<int64_t> alloc{};
     cmp.initNonNegative(alloc, Ap, Ep, numNonNeg);
     return cmp;
   };
@@ -865,7 +865,7 @@ constexpr void moveEqualities(DenseMatrix<int64_t> &A, math::IntMatrix &E,
 }
 
 // NOLINTNEXTLINE(performance-unnecessary-value-param)
-constexpr auto linear(std::allocator<int64_t>, PtrMatrix<int64_t> A,
+constexpr auto linear(alloc::Mallocator<int64_t>, PtrMatrix<int64_t> A,
                       EmptyMatrix<int64_t>, bool pos0) {
   return LinearSymbolicComparator::construct(A, pos0);
 }
@@ -874,7 +874,7 @@ constexpr auto linear(Arena<> *alloc, PtrMatrix<int64_t> A,
   return PtrSymbolicComparator::construct(alloc, A, pos0);
 }
 // NOLINTNEXTLINE(performance-unnecessary-value-param)
-constexpr auto linear(std::allocator<int64_t>, PtrMatrix<int64_t> A,
+constexpr auto linear(alloc::Mallocator<int64_t>, PtrMatrix<int64_t> A,
                       PtrMatrix<int64_t> E, bool pos0) {
   return LinearSymbolicComparator::construct(A, E, pos0);
 }
@@ -884,8 +884,9 @@ constexpr auto linear(Arena<> *alloc, PtrMatrix<int64_t> A,
 }
 
 // NOLINTNEXTLINE(performance-unnecessary-value-param)
-constexpr auto linearNonNegative(std::allocator<int64_t>, PtrMatrix<int64_t> A,
-                                 EmptyMatrix<int64_t>, ptrdiff_t numNonNeg) {
+constexpr auto linearNonNegative(alloc::Mallocator<int64_t>,
+                                 PtrMatrix<int64_t> A, EmptyMatrix<int64_t>,
+                                 ptrdiff_t numNonNeg) {
   return LinearSymbolicComparator::constructNonNeg(A, numNonNeg);
 }
 constexpr auto linearNonNegative(Arena<> *alloc, PtrMatrix<int64_t> A,
@@ -893,8 +894,9 @@ constexpr auto linearNonNegative(Arena<> *alloc, PtrMatrix<int64_t> A,
   return PtrSymbolicComparator::constructNonNeg(alloc, A, numNonNeg);
 }
 // NOLINTNEXTLINE(performance-unnecessary-value-param)
-constexpr auto linearNonNegative(std::allocator<int64_t>, PtrMatrix<int64_t> A,
-                                 PtrMatrix<int64_t> E, ptrdiff_t numNonNeg) {
+constexpr auto linearNonNegative(alloc::Mallocator<int64_t>,
+                                 PtrMatrix<int64_t> A, PtrMatrix<int64_t> E,
+                                 ptrdiff_t numNonNeg) {
   return LinearSymbolicComparator::constructNonNeg(A, E, numNonNeg);
 }
 constexpr auto linearNonNegative(Arena<> *alloc, PtrMatrix<int64_t> A,

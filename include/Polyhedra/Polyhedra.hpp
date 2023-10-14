@@ -90,7 +90,7 @@ struct BasePolyhedra {
     if constexpr (HasEqualities) static_cast<P *>(this)->truncNumEqCon(r);
   }
   [[nodiscard]] constexpr auto
-  initializeComparator(std::allocator<int64_t> alloc =
+  initializeComparator(alloc::Mallocator<int64_t> alloc =
                          {}) // NOLINT(performance-unnecessary-value-param)
     -> comparator::LinearSymbolicComparator {
     if constexpr (MaybeNonNeg)
