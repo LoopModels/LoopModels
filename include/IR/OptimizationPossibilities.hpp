@@ -6,7 +6,7 @@
 #include "Support/Iterators.hpp"
 #include <Containers/BitSets.hpp>
 #include <Math/Array.hpp>
-#include <Utilities/Allocators.hpp>
+#include <Alloc/Arena.hpp>
 #include <algorithm>
 #include <bit>
 #include <cstddef>
@@ -75,7 +75,7 @@ class LoopDependencies {
   // We also do want an addrMap to associate uses of the same Addr
 
 public:
-  LoopDependencies(utils::Arena<> *a, unsigned numAddr, unsigned numLoops)
+  LoopDependencies(alloc::Arena<> *a, unsigned numAddr, unsigned numLoops)
     : deps{math::matrix<LoopDependency>(a, math::Row{numAddr},
                                         math::Col{numLoops},
                                         LoopDependency::NotNested())},
@@ -387,7 +387,7 @@ public:
     : addrMap(alloc), numLoops(numLoops), numAddr(int32_t(numAddr)) {}
 
   LoopDependencies(const LoopDependencies &) = default;
-  static auto create(utils::Arena<> *alloc, unsigned numLoops, unsigned numAddr)
+  static auto create(alloc::Arena<> *alloc, unsigned numLoops, unsigned numAddr)
     -> LoopDependencies * {
 
     size_t size = size_t(numAddr) * (bytesPerAddr(numLoops) + sizeof(int32_t)) +
@@ -484,10 +484,10 @@ public:
 
   // adding an Addr should adds unroll options
   inline constexpr void
-  addAddr(utils::Arena<> *,
+  addAddr(alloc::Arena<> *,
           math::ResizeableView<OptimizationOptions, unsigned> &, IR::Addr *);
   inline constexpr void
-  addOptOption(utils::Arena<> *,
+  addOptOption(alloc::Arena<> *,
                math::ResizeableView<OptimizationOptions, unsigned> &,
                AddrSummary);
 };
@@ -556,7 +556,7 @@ public:
 // Here, we scan the addr so far,
 // I think we should have sub-tree ref sets.
 inline constexpr void LoopDependencies::addAddr(
-  utils::Arena<> *alloc,
+  alloc::Arena<> *alloc,
   math::ResizeableView<OptimizationOptions, unsigned> &optops, IR::Addr *a) {
   int32_t id = numAddr;
   // something to think about here is how to handle the mix of `Addr` reference
@@ -606,7 +606,7 @@ inline constexpr void LoopDependencies::addAddr(
 }
 
 inline constexpr void LoopDependencies::addOptOption(
-  utils::Arena<> *alloc,
+  alloc::Arena<> *alloc,
   math::ResizeableView<OptimizationOptions, unsigned> &optops, AddrSummary s) {
   // scan older `AddrSummary`s, compare with `s`
   for (ptrdiff_t i = 0; i < numAddr - 1; ++i) {

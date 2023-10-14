@@ -19,7 +19,7 @@ using math::PtrVector, math::MutPtrVector, math::DensePtrMatrix,
   math::MutDensePtrMatrix, math::SquarePtrMatrix, math::MutSquarePtrMatrix,
   math::end, math::last, math::_, math::Simplex;
 using poly::Dependence, poly::DepPoly;
-using utils::NotNull, utils::invariant, utils::Optional, utils::Arena;
+using utils::Valid, utils::invariant, utils::Optional, alloc::Arena;
 
 /// ScheduledNode
 /// Represents a set of memory accesses that are optimized together in the LP.
@@ -32,8 +32,8 @@ using utils::NotNull, utils::invariant, utils::Optional, utils::Arena;
 ///
 class ScheduledNode {
 
-  NotNull<Addr> store; // linked list to loads, iterate over getChild
-  NotNull<poly::Loop> loopNest;
+  Valid<Addr> store; // linked list to loads, iterate over getChild
+  Valid<poly::Loop> loopNest;
   ScheduledNode *next{nullptr};
   ScheduledNode *component{nullptr}; // SCC cycle, or last node in a chain
   // Dependence *dep{nullptr};          // input edges (points to parents)

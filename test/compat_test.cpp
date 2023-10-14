@@ -150,7 +150,7 @@ TEST(AffineTest0, BasicAssertions) {
   llvm::errs() << "About to run first set of bounds tests\n";
   llvm::errs() << "\nPermuting loops 1 and 2\n";
   utils::OwningArena<> allocator;
-  utils::NotNull<poly::Loop> affp021ptr{
+  utils::Valid<poly::Loop> affp021ptr{
     aff.rotate(&allocator, "[1 0 0; 0 0 1; 0 1 0]"_mat, nullptr)};
   poly::Loop &affp021 = *affp021ptr;
   // Now that we've swapped loops 1 and 2, we should have
@@ -200,7 +200,7 @@ TEST(NonUnimodularExperiment, BasicAssertions) {
   poly::Loop &aff2 = *tlf.getLoopNest(tlf.getNumLoopNests() - 1);
   EXPECT_FALSE(aff2.isEmpty());
   utils::OwningArena<> allocator;
-  utils::NotNull<poly::Loop> affp10{
+  utils::Valid<poly::Loop> affp10{
     aff2.rotate(&allocator, "[0 1; 1 0]"_mat, nullptr)};
 
   llvm::errs() << "Swapped order:\n";

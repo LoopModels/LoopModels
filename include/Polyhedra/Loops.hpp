@@ -9,7 +9,7 @@
 #include <Math/Indexing.hpp>
 #include <Math/Math.hpp>
 #include <Math/MatrixDimensions.hpp>
-#include <Utilities/Allocators.hpp>
+#include <Alloc/Arena.hpp>
 #include <Utilities/Optional.hpp>
 #include <Utilities/Valid.hpp>
 #include <cstddef>
@@ -35,7 +35,7 @@
 
 namespace poly::poly {
 using math::IntMatrix, math::PtrVector, math::PtrMatrix, math::MutPtrMatrix;
-using utils::Optional, utils::NotNull, utils::invariant;
+using utils::Optional, utils::Valid, utils::invariant;
 inline auto isKnownOne(llvm::ScalarEvolution &SE, llvm::Value *v) -> bool {
   return v && SE.getSCEV(v)->isOne();
 }
@@ -359,7 +359,7 @@ public:
   static inline auto construct(Arena<> *alloc, llvm::Loop *L,
                                const llvm::SCEV *BT, llvm::ScalarEvolution &SE,
                                llvm::OptimizationRemarkEmitter *ORE = nullptr)
-    -> NotNull<Loop> {
+    -> Valid<Loop> {
     // A holds symbols
     // B holds loop bounds
     // they're separate so we can grow them independently
@@ -404,7 +404,7 @@ public:
     invariant(1 + std::ssize(symbols), ptrdiff_t(A.numCol()));
     ptrdiff_t depth = maxDepth - minDepth;
     unsigned numConstraints = unsigned(A.numRow()), N = unsigned(A.numCol());
-    NotNull<Loop> aln{
+    Valid<Loop> aln{
       Loop::allocate(alloc, L, numConstraints, depth, symbols, maxDepth)};
     aln->getA()(_, _(0, N)) << A;
     // copy the included loops from B
@@ -431,7 +431,7 @@ public:
   /// offsets[0] = 2, then the first loop is shifted by 2.
   /// this shifting is applied before rotation.
   [[nodiscard]] auto rotate(Arena<> *alloc, DensePtrMatrix<int64_t> R,
-                            const int64_t *offsets) const -> NotNull<Loop> {
+                            const int64_t *offsets) const -> Valid<Loop> {
     // if offsets is not null, we have the equivalent of
     // A * O * [I 0; 0 R]
     // where O = I - [0 0; offsets 0],
@@ -445,7 +445,7 @@ public:
     auto A{getA()};
     const auto [M, N] = A.size();
     auto syms{getSyms()};
-    NotNull<Loop> aln{Loop::allocate(alloc, L, ptrdiff_t(M) + numExtraVar,
+    Valid<Loop> aln{Loop::allocate(alloc, L, ptrdiff_t(M) + numExtraVar,
                                      numLoops, syms, nonNeg)};
     auto B{aln->getA()};
     invariant(B.numRow(), M + numExtraVar);
@@ -477,12 +477,12 @@ public:
     return aln;
   }
   [[nodiscard]] constexpr auto rotate(Arena<> *alloc, DensePtrMatrix<int64_t> R,
-                                      const int64_t *offsets) -> NotNull<Loop> {
+                                      const int64_t *offsets) -> Valid<Loop> {
     if (R == math::I) return this;
     return ((const Loop *)this)->rotate(alloc, R, offsets);
   }
 
-  [[nodiscard]] auto removeInnerMost(Arena<> *alloc) const -> NotNull<Loop> {
+  [[nodiscard]] auto removeInnerMost(Arena<> *alloc) const -> Valid<Loop> {
     // order is outer<->inner
     auto A{getA()};
     auto ret = Loop::allocate(alloc, L->getParentLoop(), unsigned(A.numRow()),
@@ -556,7 +556,7 @@ public:
     -> PtrVector<int64_t> {
     return getA()(j, _(0, getNumSymbols()));
   }
-  [[nodiscard]] auto copy(Arena<> *alloc) const -> NotNull<Loop> {
+  [[nodiscard]] auto copy(Arena<> *alloc) const -> Valid<Loop> {
     auto ret = Loop::allocate(alloc, L, numConstraints, numLoops, getSyms(),
                               isNonNegative());
     ret->getA() << getA();
@@ -892,7 +892,7 @@ public:
   [[nodiscard]] static auto allocate(Arena<> *alloc, llvm::Loop *L,
                                      unsigned numCon, unsigned numLoops,
                                      llvm::ArrayRef<const llvm::SCEV *> syms,
-                                     bool nonNegative) -> NotNull<Loop> {
+                                     bool nonNegative) -> Valid<Loop> {
     unsigned numDynSym = syms.size();
     unsigned N = numLoops + numDynSym + 1;
     // extra capacity for adding 0 lower bounds later, see
@@ -905,7 +905,7 @@ public:
     auto *mem = (Loop *)alloc->allocate(sizeof(Loop) + memNeeded);
     auto *aln = std::construct_at(mem, L, numCon, numLoops, numDynSym, M);
     std::copy_n(syms.begin(), numDynSym, aln->getSyms().begin());
-    return NotNull<Loop>{aln};
+    return Valid<Loop>{aln};
   }
   explicit constexpr Loop(llvm::Loop *loop, unsigned _numConstraints,
                           unsigned _numLoops, unsigned _numDynSymbols,

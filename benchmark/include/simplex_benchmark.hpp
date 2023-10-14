@@ -875,10 +875,10 @@ static void BM_Simplex0(benchmark::State &state) {
   OwningArena<> alloc;
   unsigned numCon = unsigned(tableau.numRow()) - 1;
   unsigned numVar = unsigned(tableau.numCol()) - 1;
-  NotNull<Simplex> simpBackup{Simplex::create(alloc, numCon, numVar, 0)};
+  Valid<Simplex> simpBackup{Simplex::create(alloc, numCon, numVar, 0)};
   simpBackup->getTableau() << tableau;
   // Simplex simpBackup{tableau};
-  NotNull<Simplex> simp{Simplex::create(alloc, simpBackup->getNumCons(),
+  Valid<Simplex> simp{Simplex::create(alloc, simpBackup->getNumCons(),
                                         simpBackup->getNumVars(), 0)};
   // Vector<Rational> sol(37);
   for (auto b : state) {
@@ -1114,9 +1114,9 @@ static void BM_Simplex1(benchmark::State &state) {
   OwningArena<> alloc;
   unsigned numCon = unsigned(tableau.numRow()) - 1;
   unsigned numVar = unsigned(tableau.numCol()) - 1;
-  NotNull<Simplex> simpBackup{Simplex::create(alloc, numCon, numVar, 0)};
+  Valid<Simplex> simpBackup{Simplex::create(alloc, numCon, numVar, 0)};
   simpBackup->getTableau() << tableau;
-  NotNull<Simplex> simp{Simplex::create(alloc, simpBackup->getNumCons(),
+  Valid<Simplex> simp{Simplex::create(alloc, simpBackup->getNumCons(),
                                         simpBackup->getNumVars(), 0)};
   for (auto b : state) {
     *simp << *simpBackup;

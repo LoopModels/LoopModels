@@ -3,7 +3,7 @@
 #include "Containers/UnrolledList.hpp"
 #include "Dicts/BumpVector.hpp"
 #include <Containers/TinyVector.hpp>
-#include <Utilities/Allocators.hpp>
+#include <Alloc/Arena.hpp>
 #include <Utilities/Invariant.hpp>
 #include <cstddef>
 #include <cstdint>

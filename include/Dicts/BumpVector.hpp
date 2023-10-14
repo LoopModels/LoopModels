@@ -1,13 +1,13 @@
 #pragma once
 #include <Math/Array.hpp>
 #include <Math/Indexing.hpp>
-#include <Utilities/Allocators.hpp>
+#include <Alloc/Arena.hpp>
 #include <cstdint>
 
 // In include/Dicts, as it primarily serves to support amap/aset
 
 namespace poly {
-using utils::WArena, utils::Arena;
+using utils::WArena, alloc::Arena;
 } // namespace poly
 
 namespace poly::math {
@@ -31,7 +31,7 @@ template <typename T, unsigned InitialCapacity = 8> struct BumpPtrVector {
   [[no_unique_address]] T *mem;
   [[no_unique_address]] unsigned Size;
   [[no_unique_address]] unsigned Capacity;
-  [[no_unique_address]] NotNull<Arena<>> Alloc;
+  [[no_unique_address]] Valid<Arena<>> Alloc;
 
   constexpr BumpPtrVector(WArena<T> a)
     : mem(a.allocate(InitialCapacity)), Size(0), Capacity(InitialCapacity),

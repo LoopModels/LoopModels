@@ -7,7 +7,7 @@
 #include <Math/EmptyArrays.hpp>
 #include <Math/Math.hpp>
 #include <Math/VectorGreatestCommonDivisor.hpp>
-#include <Utilities/Allocators.hpp>
+#include <Alloc/Arena.hpp>
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
@@ -21,7 +21,7 @@ namespace poly::poly {
 using math::DensePtrMatrix, math::MutDensePtrMatrix, math::EmptyMatrix,
   math::Row, math::Col, math::vector, math::matrix, math::_, math::end,
   math::last, math::operator<<;
-using utils::Arena;
+using alloc::Arena;
 inline auto printPositive(std::ostream &os, ptrdiff_t stop) -> std::ostream & {
   for (ptrdiff_t i = 0; i < stop; ++i) os << "v_" << i << " >= 0\n";
   return os;

@@ -1,7 +1,7 @@
 #pragma once
 #include <Dicts/BumpVector.hpp>
 #include <IR/Hash.hpp>
-#include <Utilities/Allocators.hpp>
+#include <Alloc/Arena.hpp>
 #include <ankerl/unordered_dense.h>
 #include <type_traits>
 

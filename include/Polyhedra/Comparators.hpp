@@ -9,7 +9,7 @@
 #include <Math/NormalForm.hpp>
 #include <Math/Simplex.hpp>
 #include <Math/VectorGreatestCommonDivisor.hpp>
-#include <Utilities/Allocators.hpp>
+#include <Alloc/Arena.hpp>
 #include <Utilities/Invariant.hpp>
 #include <algorithm>
 #include <cassert>
@@ -24,7 +24,7 @@ using math::PtrVector, math::MutPtrVector, math::Vector, math::_, math::Row,
   math::NormalForm::simplifySystemsImpl, math::NormalForm::solveSystem,
   math::StridedVector, math::vector, math::matrix, math::identity,
   math::Simplex, math::DenseDims, math::DenseMatrix;
-using utils::invariant, utils::Arena, utils::Optional;
+using utils::invariant, alloc::Arena, utils::Optional;
 // For `== 0` constraints
 struct EmptyComparator {
   static constexpr auto getNumConstTerms() -> ptrdiff_t { return 0; }

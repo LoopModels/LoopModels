@@ -5,7 +5,7 @@
 #include "IR/Users.hpp"
 #include "Polyhedra/Loops.hpp"
 #include "Support/Iterators.hpp"
-#include "Utilities/Allocators.hpp"
+#include "Alloc/Arena.hpp"
 #include "Utilities/ListRanges.hpp"
 #include <Math/Array.hpp>
 #include <cstdint>
@@ -22,7 +22,7 @@ namespace poly::poly {
 class Dependencies;
 } // namespace poly::poly
 namespace poly::IR {
-using utils::NotNull, utils::invariant, utils::Arena, containers::UList;
+using utils::Valid, utils::invariant, alloc::Arena, containers::UList;
 class Loop;
 /// We take an approach similar to LLVM's RTTI
 /// however, we want to take advantage of FAMs while having a "hieararchy"

@@ -10,7 +10,7 @@
 #include <Math/Array.hpp>
 #include <Math/Comparisons.hpp>
 #include <Math/Math.hpp>
-#include <Utilities/Allocators.hpp>
+#include <Alloc/Arena.hpp>
 #include <Utilities/Valid.hpp>
 #include <cstddef>
 #include <cstdint>
@@ -78,7 +78,7 @@ class Addr : public Instruction {
   int32_t edgeIn{-1};
   int32_t edgeOut{-1};
   lp::ScheduledNode *node;
-  NotNull<const llvm::SCEVUnknown> basePointer;
+  Valid<const llvm::SCEVUnknown> basePointer;
   poly::Loop *loop{nullptr};
   llvm::Instruction *instr;
   int64_t *offSym{nullptr};
@@ -148,7 +148,7 @@ public:
                   numLoops),
       basePointer(arrayPtr), instr(user){};
 
-  constexpr void rotate(NotNull<poly::Loop> explicitLoop,
+  constexpr void rotate(Valid<poly::Loop> explicitLoop,
                         SquarePtrMatrix<int64_t> Pinv, int64_t denom,
                         PtrVector<int64_t> omega, int64_t *offsets) {
     loop = explicitLoop;
@@ -281,7 +281,7 @@ public:
             llvm::Instruction *user, PtrMatrix<int64_t> indMat,
             std::array<llvm::SmallVector<const llvm::SCEV *, 3>, 2> szOff,
             PtrVector<int64_t> coffsets, int64_t *offsets, unsigned numLoops,
-            unsigned maxNumLoops) -> NotNull<Addr> {
+            unsigned maxNumLoops) -> Valid<Addr> {
     // we don't want to hold any other pointers that may need freeing
     unsigned arrayDim = szOff[0].size(), nOff = szOff[1].size();
     size_t memNeeded = intMemNeeded(maxNumLoops, arrayDim);
@@ -308,7 +308,7 @@ public:
     std::copy_n(o.begin(), getCurrentDepth(), getFusionOmega().begin());
     getFusionOmega().back() = o.back()--;
   }
-  [[nodiscard]] auto reload(Arena<> *alloc) -> NotNull<Addr> {
+  [[nodiscard]] auto reload(Arena<> *alloc) -> Valid<Addr> {
     size_t memNeeded = intMemNeeded(maxDepth, numDim);
     void *p = alloc->allocate(sizeof(Addr) + memNeeded * sizeof(int64_t));
     *static_cast<ValKind *>(p) = VK_Load;
@@ -336,7 +336,7 @@ public:
     return v->getKind() <= VK_Stow;
   }
   [[nodiscard]] constexpr auto getArrayPointer() const
-    -> NotNull<const llvm::SCEVUnknown> {
+    -> Valid<const llvm::SCEVUnknown> {
     return basePointer;
   }
   [[nodiscard]] auto getType() const -> llvm::Type * {
@@ -347,7 +347,7 @@ public:
       if (anyNEZero(indexMatrix()(i, _(d, end)))) return true;
     return false;
   }
-  [[nodiscard]] constexpr auto getAffLoop() const -> NotNull<poly::Loop> {
+  [[nodiscard]] constexpr auto getAffLoop() const -> Valid<poly::Loop> {
     return loop;
   }
   [[nodiscard]] constexpr auto getStoredVal() const -> Value * {
@@ -497,10 +497,10 @@ public:
     invariant(offSym != nullptr || numDynSym == 0);
     return {offSym, DenseDims{getArrayDim(), numDynSym}};
   }
-  [[nodiscard]] constexpr auto getAffineLoop() -> NotNull<poly::Loop> {
+  [[nodiscard]] constexpr auto getAffineLoop() -> Valid<poly::Loop> {
     return loop;
   }
-  [[nodiscard]] constexpr auto sizesMatch(NotNull<const Addr> x) const -> bool {
+  [[nodiscard]] constexpr auto sizesMatch(Valid<const Addr> x) const -> bool {
     auto thisSizes = getSizes(), xSizes = x->getSizes();
     return std::equal(thisSizes.begin(), thisSizes.end(), xSizes.begin(),
                       xSizes.end());

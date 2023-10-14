@@ -1,6 +1,6 @@
 #pragma once
 #include "Polyhedra/Loops.hpp"
-#include <Utilities/Allocators.hpp>
+#include <Alloc/Arena.hpp>
 #include <cstdint>
 #include <llvm/ADT/SmallPtrSet.h>
 #include <llvm/ADT/SmallVector.h>
@@ -44,7 +44,7 @@ class TestLoopFunction {
   size_t ptrIntOffset{0};
 
 public:
-  auto getAlloc() -> utils::Arena<> * { return &alloc; }
+  auto getAlloc() -> alloc::Arena<> * { return &alloc; }
   auto getLoopNest(size_t i) -> poly::Loop * { return alns[i]; }
   auto getNumLoopNests() -> size_t { return alns.size(); }
   void addLoop(PtrMatrix<int64_t> A, size_t numLoops) {

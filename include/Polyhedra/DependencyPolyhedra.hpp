@@ -10,7 +10,7 @@
 #include <Math/NormalForm.hpp>
 #include <Math/Orthogonalize.hpp>
 #include <Math/Simplex.hpp>
-#include <Utilities/Allocators.hpp>
+#include <Alloc/Arena.hpp>
 #include <Utilities/Valid.hpp>
 #include <algorithm>
 #include <array>
@@ -270,7 +270,7 @@ public:
     return std::distance(
       x.begin(), std::mismatch(x.begin(), x.end(), y.begin(), y.end()).first);
   }
-  static auto nullSpace(NotNull<const IR::Addr> x, NotNull<const IR::Addr> y)
+  static auto nullSpace(Valid<const IR::Addr> x, Valid<const IR::Addr> y)
     -> math::DenseMatrix<int64_t> {
     unsigned numLoopsCommon =
                findFirstNonEqual(x->getFusionOmega(), y->getFusionOmega()),
@@ -288,7 +288,7 @@ public:
     // returns rank x num loops
     return orthogonalNullSpace(std::move(A));
   }
-  static auto nullSpace(NotNull<const IR::Addr> x)
+  static auto nullSpace(Valid<const IR::Addr> x)
     -> math::DenseMatrix<int64_t> {
     unsigned numLoopsCommon = x->getCurrentDepth(), dim = x->getArrayDim(),
              natDepth = x->getNaturalDepth();
@@ -338,19 +338,19 @@ public:
              ((conCapacity + eqConCapacity) * (getNumVar() + 1) + timeDim) +
            sizeof(const llvm::SCEV *) * numDynSym;
   }
-  auto copy(Arena<> *alloc) const -> NotNull<DepPoly> {
+  auto copy(Arena<> *alloc) const -> Valid<DepPoly> {
     auto *p = alloc->template allocate<DepPoly>(neededBytes());
     std::memcpy(p, this, neededBytes());
-    return NotNull<DepPoly>{p};
+    return Valid<DepPoly>{p};
   }
-  static auto dependence(Arena<> *alloc, NotNull<const IR::Addr> aix,
-                         NotNull<const IR::Addr> aiy) -> DepPoly * {
+  static auto dependence(Arena<> *alloc, Valid<const IR::Addr> aix,
+                         Valid<const IR::Addr> aiy) -> DepPoly * {
     assert(aix->sizesMatch(aiy));
     unsigned numDep0Var = aix->getCurrentDepth(),
              numDep1Var = aiy->getCurrentDepth(),
              numVar = numDep0Var + numDep1Var;
-    NotNull<const poly::Loop> loopx = aix->getAffLoop();
-    NotNull<const poly::Loop> loopy = aiy->getAffLoop();
+    Valid<const poly::Loop> loopx = aix->getAffLoop();
+    Valid<const poly::Loop> loopy = aiy->getAffLoop();
     PtrMatrix<int64_t> Ax{loopx->getOuterA(numDep0Var)},
       Ay{loopy->getOuterA(numDep1Var)};
     auto Sx{loopx->getSyms()}, Sy{loopy->getSyms()};
@@ -436,9 +436,9 @@ public:
     return nullptr;
   }
   // self dependence
-  static auto self(Arena<> *alloc, NotNull<const IR::Addr> ai)
-    -> NotNull<DepPoly> {
-    NotNull<const poly::Loop> loop = ai->getAffLoop();
+  static auto self(Arena<> *alloc, Valid<const IR::Addr> ai)
+    -> Valid<DepPoly> {
+    Valid<const poly::Loop> loop = ai->getAffLoop();
     unsigned numDepVar = ai->getCurrentDepth(), numVar = numDepVar + numDepVar;
     PtrMatrix<int64_t> B{loop->getOuterA(numDepVar)};
     auto S{loop->getSyms()};
@@ -522,7 +522,7 @@ public:
   //
   // Time parameters are carried over into farkas polys
   [[nodiscard]] auto farkasPair(Arena<> *alloc) const
-    -> std::array<NotNull<math::Simplex>, 2> {
+    -> std::array<Valid<math::Simplex>, 2> {
 
     auto A{getA()}, E{getE()};
     const ptrdiff_t numEqualityConstraintsOld = ptrdiff_t(E.numRow());
@@ -549,8 +549,8 @@ public:
     const ptrdiff_t numLambda = posEqEnd + numEqualityConstraintsOld;
     const ptrdiff_t numVarNew = numVarInterest + numLambda;
     invariant(ptrdiff_t(getNumLambda()), numLambda);
-    // std::array<NotNull<Simplex>, 2> pair;
-    NotNull<math::Simplex> fw =
+    // std::array<Valid<Simplex>, 2> pair;
+    Valid<math::Simplex> fw =
       math::Simplex::create(alloc, numConstraintsNew, numVarNew, 0);
     // Simplex &fw(pair[0]);
     // fw.resize(numConstraintsNew, numVarNew + 1);
@@ -597,7 +597,7 @@ public:
 
     // so far, both have been identical
 
-    NotNull<math::Simplex> bw =
+    Valid<math::Simplex> bw =
       math::Simplex::create(alloc, numConstraintsNew, numVarNew, 0);
     auto bCF{bw->getConstraints()};
     bCF << fCF;
@@ -630,9 +630,9 @@ public:
 
   /// returns `true` if the array accesses are guaranteed independent
   /// conditioning on partial schedules xPhi and yPhi
-  [[nodiscard]] auto checkSat(Arena<> alloc, NotNull<const poly::Loop> xLoop,
+  [[nodiscard]] auto checkSat(Arena<> alloc, Valid<const poly::Loop> xLoop,
                               const int64_t *xOff, DensePtrMatrix<int64_t> xPhi,
-                              NotNull<const poly::Loop> yLoop,
+                              Valid<const poly::Loop> yLoop,
                               const int64_t *yOff, DensePtrMatrix<int64_t> yPhi)
     -> bool {
     // we take in loops because we might be moving deeper inside the loopnest

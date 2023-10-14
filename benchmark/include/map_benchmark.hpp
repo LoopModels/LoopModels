@@ -2,7 +2,7 @@
 #include "Dicts/BumpMapSet.hpp"
 #include "Dicts/BumpVector.hpp"
 #include "Dicts/Trie.hpp"
-#include "Utilities/Allocators.hpp"
+#include "Alloc/Arena.hpp"
 #include <ankerl/unordered_dense.h>
 #include <benchmark/benchmark.h>
 #include <cstdint>

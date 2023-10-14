@@ -29,7 +29,7 @@ using math::DenseMatrix, math::DenseDims, math::PtrMatrix, math::MutPtrMatrix,
   math::Col, math::end, math::_, utils::operator""_mat;
 
 namespace {
-auto orthogonalize(utils::Arena<> *alloc,
+auto orthogonalize(alloc::Arena<> *alloc,
                    llvm::SmallVectorImpl<ArrayReference *> const &ai)
   -> std::optional<
     std::pair<poly::Loop *, llvm::SmallVector<ArrayReference, 0>>> {

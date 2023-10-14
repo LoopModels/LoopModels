@@ -7,7 +7,7 @@
 #include "IR/Predicate.hpp"
 #include <Containers/UnrolledList.hpp>
 #include <Math/Array.hpp>
-#include <Utilities/Allocators.hpp>
+#include <Alloc/Arena.hpp>
 #include <algorithm>
 #include <concepts>
 #include <cstddef>
@@ -32,8 +32,8 @@
 #include <utility>
 
 namespace poly {
-using math::PtrVector, math::MutPtrVector, utils::Arena, utils::invariant,
-  utils::NotNull;
+using math::PtrVector, math::MutPtrVector, alloc::Arena, utils::invariant,
+  utils::Valid;
 }; // namespace poly
 
 namespace poly::IR {

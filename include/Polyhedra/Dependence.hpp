@@ -8,7 +8,7 @@
 #include "Polyhedra/Schedule.hpp"
 #include "Support/Iterators.hpp"
 #include <Math/Constructors.hpp>
-#include <Utilities/Allocators.hpp>
+#include <Alloc/Arena.hpp>
 #include <Utilities/Invariant.hpp>
 #include <cstdint>
 #include <ranges>
@@ -29,11 +29,11 @@ public:
 private:
   //
   //
-  NotNull<DepPoly> depPoly;
-  NotNull<math::Simplex> dependenceSatisfaction;
-  NotNull<math::Simplex> dependenceBounding;
-  NotNull<IR::Addr> in;
-  NotNull<IR::Addr> out;
+  Valid<DepPoly> depPoly;
+  Valid<math::Simplex> dependenceSatisfaction;
+  Valid<math::Simplex> dependenceBounding;
+  Valid<IR::Addr> in;
+  Valid<IR::Addr> out;
   // Dependence *nextInput{nullptr}; // all share same `in`
   // Dependence *nextOutput{nullptr};
   // // all share same `out`
@@ -45,7 +45,7 @@ private:
   std::array<uint8_t, 2> satLvl;
   bool forward;
 
-  constexpr auto getSimplexPair() -> std::array<NotNull<math::Simplex>, 2> {
+  constexpr auto getSimplexPair() -> std::array<Valid<math::Simplex>, 2> {
     return {dependenceSatisfaction, dependenceBounding};
   }
 
@@ -61,12 +61,12 @@ public:
   // [[nodiscard]] constexpr auto getNextOutput() const -> const Dependence * {
   //   return nextOutput;
   // }
-  [[nodiscard]] constexpr auto input() -> NotNull<IR::Addr> { return in; }
-  [[nodiscard]] constexpr auto output() -> NotNull<IR::Addr> { return out; }
-  [[nodiscard]] constexpr auto input() const -> NotNull<const IR::Addr> {
+  [[nodiscard]] constexpr auto input() -> Valid<IR::Addr> { return in; }
+  [[nodiscard]] constexpr auto output() -> Valid<IR::Addr> { return out; }
+  [[nodiscard]] constexpr auto input() const -> Valid<const IR::Addr> {
     return in;
   }
-  [[nodiscard]] constexpr auto output() const -> NotNull<const IR::Addr> {
+  [[nodiscard]] constexpr auto output() const -> Valid<const IR::Addr> {
     return out;
   }
   // constexpr auto setNextInput(Dependence *n) -> Dependence * {
@@ -75,14 +75,14 @@ public:
   // constexpr auto setNextOutput(Dependence *n) -> Dependence * {
   //   return nextOutput = n;
   // }
-  constexpr Dependence(NotNull<DepPoly> poly,
-                       std::array<NotNull<math::Simplex>, 2> depSatBound,
-                       NotNull<IR::Addr> i, NotNull<IR::Addr> o, bool fwd)
+  constexpr Dependence(Valid<DepPoly> poly,
+                       std::array<Valid<math::Simplex>, 2> depSatBound,
+                       Valid<IR::Addr> i, Valid<IR::Addr> o, bool fwd)
     : depPoly(poly), dependenceSatisfaction(depSatBound[0]),
       dependenceBounding(depSatBound[1]), in(i), out(o), forward(fwd) {}
-  constexpr Dependence(NotNull<DepPoly> poly,
-                       std::array<NotNull<math::Simplex>, 2> depSatBound,
-                       NotNull<IR::Addr> i, NotNull<IR::Addr> o,
+  constexpr Dependence(Valid<DepPoly> poly,
+                       std::array<Valid<math::Simplex>, 2> depSatBound,
+                       Valid<IR::Addr> i, Valid<IR::Addr> o,
                        std::array<uint8_t, 2> sL, bool fwd)
     : depPoly(poly), dependenceSatisfaction(depSatBound[0]),
       dependenceBounding(depSatBound[1]), in(i), out(o), satLvl(sL),
@@ -169,9 +169,9 @@ public:
     return in->indexMatrix();
   }
   // satisfies dep if it is empty when conditioning on inPhi and outPhi
-  void checkEmptySat(Arena<> *alloc, NotNull<const poly::Loop> inLoop,
+  void checkEmptySat(Arena<> *alloc, Valid<const poly::Loop> inLoop,
                      const int64_t *inOff, DensePtrMatrix<int64_t> inPhi,
-                     NotNull<const poly::Loop> outLoop, const int64_t *outOff,
+                     Valid<const poly::Loop> outLoop, const int64_t *outOff,
                      DensePtrMatrix<int64_t> outPhi) {
     if (!isForward()) {
       std::swap(inLoop, outLoop);
@@ -246,10 +246,10 @@ public:
              getNumOmegaCoefficients() ==
            size_t(dependenceSatisfaction->getConstraints().numCol()));
   }
-  [[nodiscard]] constexpr auto getDepPoly() -> NotNull<DepPoly> {
+  [[nodiscard]] constexpr auto getDepPoly() -> Valid<DepPoly> {
     return depPoly;
   }
-  [[nodiscard]] constexpr auto getDepPoly() const -> NotNull<const DepPoly> {
+  [[nodiscard]] constexpr auto getDepPoly() const -> Valid<const DepPoly> {
     return depPoly;
   }
   [[nodiscard]] constexpr auto getNumConstraints() const -> unsigned {
@@ -329,8 +329,8 @@ public:
     return {phiCoefsIn, phiCoefsOut};
   }
   [[nodiscard]] auto isSatisfied(Arena<> alloc,
-                                 NotNull<const AffineSchedule> schIn,
-                                 NotNull<const AffineSchedule> schOut) const
+                                 Valid<const AffineSchedule> schIn,
+                                 Valid<const AffineSchedule> schOut) const
     -> bool {
     unsigned numLoopsIn = in->getCurrentDepth(),
              numLoopsOut = out->getCurrentDepth(),
@@ -424,8 +424,8 @@ public:
     return true;
   }
   [[nodiscard]] auto isSatisfied(Arena<> alloc,
-                                 NotNull<const AffineSchedule> sx,
-                                 NotNull<const AffineSchedule> sy,
+                                 Valid<const AffineSchedule> sx,
+                                 Valid<const AffineSchedule> sy,
                                  size_t d) const -> bool {
     unsigned numLambda = depPoly->getNumLambda(), nLoopX = depPoly->getDim0(),
              nLoopY = depPoly->getDim1(), numLoopsTotal = nLoopX + nLoopY;
@@ -603,14 +603,14 @@ private:
   }
   static constexpr auto memNeeded(size_t N) -> size_t {
     constexpr size_t memPer = sizeof(int32_t) * 2 + sizeof(DepPoly *) +
-                              sizeof(NotNull<math::Simplex>) * 2 +
+                              sizeof(Valid<math::Simplex>) * 2 +
                               sizeof(bool) + sizeof(uint8_t);
     return N * memPer;
   }
 
-  void timelessCheck(Arena<> *alloc, NotNull<DepPoly> dxy, NotNull<IR::Addr> x,
-                     NotNull<IR::Addr> y,
-                     std::array<NotNull<math::Simplex>, 2> pair, bool isFwd) {
+  void timelessCheck(Arena<> *alloc, Valid<DepPoly> dxy, Valid<IR::Addr> x,
+                     Valid<IR::Addr> y,
+                     std::array<Valid<math::Simplex>, 2> pair, bool isFwd) {
     const size_t numLambda = dxy->getNumLambda();
     invariant(dxy->getTimeDim(), unsigned(0));
     if (!isFwd) {
@@ -620,9 +620,9 @@ private:
     pair[0]->truncateVars(1 + numLambda + dxy->getNumScheduleCoef());
     addEdge(alloc, Dependence{dxy, pair, x, y, isFwd});
   }
-  void timelessCheck(Arena<> *alloc, NotNull<DepPoly> dxy, NotNull<IR::Addr> x,
-                     NotNull<IR::Addr> y,
-                     std::array<NotNull<math::Simplex>, 2> pair) {
+  void timelessCheck(Arena<> *alloc, Valid<DepPoly> dxy, Valid<IR::Addr> x,
+                     Valid<IR::Addr> y,
+                     std::array<Valid<math::Simplex>, 2> pair) {
     return timelessCheck(alloc, dxy, x, y, pair,
                          checkDirection(*alloc, pair, x, y, dxy->getNumLambda(),
                                         dxy->getNumVar() + 1));
@@ -630,16 +630,16 @@ private:
 
   // emplaces dependencies with repeat accesses to the same memory across
   // time
-  void timeCheck(Arena<> *alloc, NotNull<DepPoly> dxy, NotNull<IR::Addr> x,
-                 NotNull<IR::Addr> y,
-                 std::array<NotNull<math::Simplex>, 2> pair) {
+  void timeCheck(Arena<> *alloc, Valid<DepPoly> dxy, Valid<IR::Addr> x,
+                 Valid<IR::Addr> y,
+                 std::array<Valid<math::Simplex>, 2> pair) {
     bool isFwd = checkDirection(*alloc, pair, x, y, dxy->getNumLambda(),
                                 dxy->getA().numCol() - dxy->getTimeDim());
     timeCheck(alloc, dxy, x, y, pair, isFwd);
   }
-  void timeCheck(Arena<> *alloc, NotNull<DepPoly> dxy, NotNull<IR::Addr> x,
-                 NotNull<IR::Addr> y,
-                 std::array<NotNull<math::Simplex>, 2> pair, bool isFwd) {
+  void timeCheck(Arena<> *alloc, Valid<DepPoly> dxy, Valid<IR::Addr> x,
+                 Valid<IR::Addr> y,
+                 std::array<Valid<math::Simplex>, 2> pair, bool isFwd) {
     const unsigned numInequalityConstraintsOld =
                      dxy->getNumInequalityConstraints(),
                    numEqualityConstraintsOld = dxy->getNumEqualityConstraints(),
@@ -649,9 +649,9 @@ private:
                    numScheduleCoefs = dxy->getNumScheduleCoef();
     invariant(numLambda, dxy->getNumLambda());
     // copy backup
-    std::array<NotNull<math::Simplex>, 2> farkasBackups{pair[0]->copy(alloc),
+    std::array<Valid<math::Simplex>, 2> farkasBackups{pair[0]->copy(alloc),
                                                         pair[1]->copy(alloc)};
-    NotNull<IR::Addr> in = x, out = y;
+    Valid<IR::Addr> in = x, out = y;
     if (isFwd) {
       std::swap(farkasBackups[0], farkasBackups[1]);
     } else {
@@ -750,11 +750,11 @@ private:
     addEdge(alloc, dep1);
   }
   static auto checkDirection(Arena<> alloc,
-                             const std::array<NotNull<math::Simplex>, 2> &p,
-                             NotNull<const IR::Addr> x,
-                             NotNull<const IR::Addr> y,
-                             NotNull<const AffineSchedule> xSchedule,
-                             NotNull<const AffineSchedule> ySchedule,
+                             const std::array<Valid<math::Simplex>, 2> &p,
+                             Valid<const IR::Addr> x,
+                             Valid<const IR::Addr> y,
+                             Valid<const AffineSchedule> xSchedule,
+                             Valid<const AffineSchedule> ySchedule,
                              unsigned numLambda, Col nonTimeDim) -> bool {
     const auto &[fxy, fyx] = p;
     unsigned numLoopsX = x->getCurrentDepth(), numLoopsY = y->getCurrentDepth(),
@@ -803,9 +803,9 @@ private:
   }
   // returns `true` if forward, x->y
   static auto checkDirection(Arena<> alloc,
-                             const std::array<NotNull<math::Simplex>, 2> &p,
-                             NotNull<const IR::Addr> x,
-                             NotNull<const IR::Addr> y, unsigned numLambda,
+                             const std::array<Valid<math::Simplex>, 2> &p,
+                             Valid<const IR::Addr> x,
+                             Valid<const IR::Addr> y, unsigned numLambda,
                              Col nonTimeDim) -> bool {
     const auto &[fxy, fyx] = p;
     unsigned numLoopsX = x->getCurrentDepth(), nTD = unsigned(nonTimeDim);
@@ -881,7 +881,7 @@ private:
     return prevEdgeInOffset() + sizeof(int32_t);
   }
   [[nodiscard]] static constexpr auto depPolyOffset() -> size_t {
-    return depSatBndOffset() + sizeof(std::array<NotNull<math::Simplex>, 2>);
+    return depSatBndOffset() + sizeof(std::array<Valid<math::Simplex>, 2>);
   }
   [[nodiscard]] static constexpr auto satLevelsOffset() -> size_t {
     return depPolyOffset() + sizeof(DepPoly *);
@@ -938,14 +938,14 @@ private:
     const void *p = data + prevEdgeInOffset() * getCapacity();
     return static_cast<const int32_t *>(p);
   }
-  constexpr auto depSatBndPtr() -> std::array<NotNull<math::Simplex>, 2> * {
+  constexpr auto depSatBndPtr() -> std::array<Valid<math::Simplex>, 2> * {
     void *p = data + depSatBndOffset() * getCapacity();
-    return static_cast<std::array<NotNull<math::Simplex>, 2> *>(p);
+    return static_cast<std::array<Valid<math::Simplex>, 2> *>(p);
   }
   [[nodiscard]] constexpr auto depSatBndPtr() const
-    -> const std::array<NotNull<math::Simplex>, 2> * {
+    -> const std::array<Valid<math::Simplex>, 2> * {
     const void *p = data + depSatBndOffset() * getCapacity();
-    return static_cast<const std::array<NotNull<math::Simplex>, 2> *>(p);
+    return static_cast<const std::array<Valid<math::Simplex>, 2> *>(p);
   }
   constexpr auto depPolyPtr() -> DepPoly ** {
     void *p = data + depPolyOffset() * getCapacity();
@@ -1031,12 +1031,12 @@ public:
   constexpr auto prevOut(ID i) -> int32_t & { return prevOutEdgePtr()[i.id]; }
   constexpr auto nextIn(ID i) -> int32_t & { return inEdgePtr()[i.id]; }
   constexpr auto prevIn(ID i) -> int32_t & { return prevInEdgePtr()[i.id]; }
-  constexpr auto depSatBnd(ID i) -> std::array<NotNull<math::Simplex>, 2> & {
+  constexpr auto depSatBnd(ID i) -> std::array<Valid<math::Simplex>, 2> & {
     return depSatBndPtr()[i.id];
   }
   constexpr auto depPoly(ID i) -> DepPoly *& { return depPolyPtr()[i.id]; }
   [[nodiscard]] constexpr auto depSatBnd(ID i) const
-    -> std::array<NotNull<math::Simplex>, 2> {
+    -> std::array<Valid<math::Simplex>, 2> {
     return depSatBndPtr()[i.id];
   }
   [[nodiscard]] constexpr auto depPoly(ID i) const -> DepPoly * {
@@ -1076,7 +1076,7 @@ public:
     }
   };
 
-  void check(Arena<> *alloc, NotNull<IR::Addr> x, NotNull<IR::Addr> y) {
+  void check(Arena<> *alloc, Valid<IR::Addr> x, Valid<IR::Addr> y) {
     // TODO: implement gcd test
     // if (x.gcdKnownIndependent(y)) return {};
     DepPoly *dxy{DepPoly::dependence(alloc, x, y)};
@@ -1088,16 +1088,16 @@ public:
     // note that we set boundAbove=true, so we reverse the
     // dependence direction for the dependency we week, we'll
     // discard the program variables x then y
-    std::array<NotNull<math::Simplex>, 2> pair(dxy->farkasPair(alloc));
+    std::array<Valid<math::Simplex>, 2> pair(dxy->farkasPair(alloc));
     if (dxy->getTimeDim()) timeCheck(alloc, dxy, x, y, pair);
     else timelessCheck(alloc, dxy, x, y, pair);
   }
   inline void copyDependencies(Arena<> *alloc, IR::Addr *src, IR::Addr *dst);
   // reload store `x`
-  auto reload(Arena<> *alloc, NotNull<IR::Addr> store) -> NotNull<IR::Addr> {
-    NotNull<DepPoly> dxy{DepPoly::self(alloc, store)};
-    std::array<NotNull<math::Simplex>, 2> pair(dxy->farkasPair(alloc));
-    NotNull<IR::Addr> load = store->reload(alloc);
+  auto reload(Arena<> *alloc, Valid<IR::Addr> store) -> Valid<IR::Addr> {
+    Valid<DepPoly> dxy{DepPoly::self(alloc, store)};
+    std::array<Valid<math::Simplex>, 2> pair(dxy->farkasPair(alloc));
+    Valid<IR::Addr> load = store->reload(alloc);
     copyDependencies(alloc, store, load);
     if (dxy->getTimeDim()) timeCheck(alloc, dxy, store, load, pair, true);
     else timelessCheck(alloc, dxy, store, load, pair, true);

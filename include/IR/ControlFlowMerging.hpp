@@ -5,7 +5,7 @@
 #include "IR/Cache.hpp"
 #include "IR/Instruction.hpp"
 #include "IR/Predicate.hpp"
-#include "Utilities/Allocators.hpp"
+#include "Alloc/Arena.hpp"
 #include <Containers/BitSets.hpp>
 #include <cassert>
 #include <cstddef>

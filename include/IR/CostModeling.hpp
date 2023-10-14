@@ -11,7 +11,7 @@
 #include "Polyhedra/Dependence.hpp"
 #include <Math/Array.hpp>
 #include <Math/Math.hpp>
-#include <Utilities/Allocators.hpp>
+#include <Alloc/Arena.hpp>
 #include <algorithm>
 #include <any>
 #include <cassert>
@@ -168,7 +168,7 @@ template <typename T> using Vec = math::ResizeableView<T, unsigned>;
 /// construction of the IR::Loop graph, from the fusion omegas
 class LoopTree {
   // The root of this subtree
-  NotNull<IR::Loop> loop;
+  Valid<IR::Loop> loop;
   // LoopTree *parent{nullptr}; // do we need this?
   Vec<LoopTree *> children{};
   unsigned depth{0};
@@ -197,7 +197,7 @@ public:
       // We also apply the rotation here.
       // For dependencies in SCC iteration, only indvar deps get iterated.
       auto [Pinv, denom] = math::NormalForm::scaledInv(node->getPhi());
-      NotNull<poly::Loop> explicitLoop =
+      Valid<poly::Loop> explicitLoop =
         node->getLoopNest()->rotate(lalloc, Pinv, node->getOffset());
       for (IR::Addr *m : node->localAddr()) {
         m->rotate(explicitLoop, Pinv, denom, node->getOffsetOmega(),

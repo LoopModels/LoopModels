@@ -145,7 +145,7 @@ struct TreeResult {
   [[nodiscard]] constexpr auto getAddr() const { return addr.getAddr(); }
   [[nodiscard]] constexpr auto getLoads() const { return addr.getLoads(); }
   [[nodiscard]] constexpr auto getStores() const { return addr.getStores(); }
-  void setLoopNest(NotNull<poly::Loop> L) const {
+  void setLoopNest(Valid<poly::Loop> L) const {
     for (Addr *A : getAddr()) A->setLoopNest(L);
   }
   constexpr auto operator*=(TreeResult tr) -> TreeResult & {

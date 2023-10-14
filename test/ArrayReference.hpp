@@ -8,8 +8,8 @@
 
 namespace poly {
 
-using math::DenseMatrix, math::PtrMatrix, math::MutPtrMatrix, utils::Arena,
-  math::PtrVector, math::DenseDims, utils::NotNull;
+using math::DenseMatrix, math::PtrMatrix, math::MutPtrMatrix, alloc::Arena,
+  math::PtrVector, math::DenseDims, utils::Valid;
 
 struct ArrayReference {
   const llvm::SCEVUnknown *basePointer;
@@ -36,7 +36,7 @@ struct ArrayReference {
 // inline auto createMemAccess(Arena<> *alloc, ArrayReference &ar,
 //                             llvm::Instruction *IC, PtrVector<unsigned>
 //                             omegas)
-//   -> NotNull<IR::Addr> {
+//   -> Valid<IR::Addr> {
 
 //   math::IntMatrix indMatT{ar.indMat.transpose()};
 //   return IR::Addr::construct(alloc, ar.basePointer, *ar.loop, IC, indMatT,

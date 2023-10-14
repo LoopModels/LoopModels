@@ -17,7 +17,7 @@
 #include <Math/NormalForm.hpp>
 #include <Math/Simplex.hpp>
 #include <Math/StaticArrays.hpp>
-#include <Utilities/Allocators.hpp>
+#include <Alloc/Arena.hpp>
 #include <Utilities/Invariant.hpp>
 #include <Utilities/ListRanges.hpp>
 #include <Utilities/Valid.hpp>
@@ -1075,7 +1075,7 @@ private:
       C(_(cc, ccc), _(po, po + bnd.numCol())) << bnd;
     }
   }
-  void addIndependentSolutionConstraints(NotNull<Simplex> omniSimplex,
+  void addIndependentSolutionConstraints(Valid<Simplex> omniSimplex,
                                          const ScheduledNode *nodes, unsigned d,
                                          CoefCounts counts) {
     // omniSimplex->setNumCons(omniSimplex->getNumCons() +

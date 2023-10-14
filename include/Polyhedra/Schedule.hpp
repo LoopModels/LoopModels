@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Math/Array.hpp"
-#include "Utilities/Allocators.hpp"
+#include "Alloc/Arena.hpp"
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
@@ -46,11 +46,11 @@ struct AffineSchedule {
 
   constexpr AffineSchedule() : mem(nullptr) {}
   constexpr AffineSchedule(int64_t *m) : mem(m) {}
-  constexpr AffineSchedule(utils::Arena<> *alloc, unsigned nL)
+  constexpr AffineSchedule(alloc::Arena<> *alloc, unsigned nL)
     : mem(alloc->allocate<int64_t>(requiredScheduleStorage(nL))) {
     mem[0] = nL;
   }
-  constexpr auto copy(utils::Arena<> *alloc) const -> AffineSchedule {
+  constexpr auto copy(alloc::Arena<> *alloc) const -> AffineSchedule {
     size_t reqMem = requiredScheduleStorage(getNumLoops());
     AffineSchedule res{alloc->allocate<int64_t>(reqMem)};
     std::copy_n(mem, reqMem, res.mem);
