@@ -1,5 +1,6 @@
 #pragma once
 #include <Alloc/Arena.hpp>
+#include <Utilities/Optional.hpp>
 #include <Utilities/Valid.hpp>
 #include <ankerl/unordered_dense.h>
 #include <cstdint>
@@ -44,8 +45,7 @@ protected:
   auto findChild(const K &k) -> Child {
     if (k == first) return {this, nullptr, 0};
     TrieMapNode *p = this, *c = nullptr;
-    uint64_t h = ankerl::unordered_dense::hash<K>{}(k);
-    for (;; h <<= 2) {
+    for (uint64_t h = ankerl::unordered_dense::hash<K>{}(k);; h <<= 2) {
       c = p->children[h >> 62];
       if (!c || (c->first == k)) return {c, p, h >> 62};
       p = c;
@@ -84,7 +84,7 @@ struct TrieMap : TrieMapNode<K, V> {
   NodeT *list{nullptr};
   // TODO: implement using `list` to avoid allocs
   void erase(const K &k) {
-    NodeT* erased = this->eraseImpl(k);
+    NodeT *erased = this->eraseImpl(k);
     erased->children[0] = list;
     list = erased;
   }
@@ -113,6 +113,79 @@ static_assert(sizeof(TrieMap<false, int, int>) ==
               sizeof(TrieMapNode<int, int>));
 static_assert(sizeof(TrieMap<true, int, int>) ==
               sizeof(TrieMapNode<int, int>) + sizeof(TrieMapNode<int, int> *));
+
+// Optional can be specialized for types to add dead-values without requiring
+// extra space. E.g., `sizeof(utils::Optional<T*>) == sizeof(T*)`, as `nullptr`
+// indicates empty.
+template <class K, class V> struct InlineTrie {
+  InlineTrie<K, V> *children[4];
+  utils::Optional<K> keys[4];
+  V values[4];
+
+  // Returns an optional pointer to the value.
+  constexpr auto find(const K &k) -> utils::Optional<V *> {
+    Child c = findChild<false>(this, k);
+    return (c.subIndex) ? nullptr : &c.node->values[c.index];
+  }
+
+  auto operator[](utils::Valid<alloc::Arena<>> alloc, const K &k) -> V & {
+    Child c = findChild<true>(this, k);
+    if (c.subIndex) {
+      c.node = c.node->children[*c.subIndex] =
+        alloc->create<InlineTrie<K, V>>();
+      c.node->keys[c.index] = k;
+    }
+    return c.node->values[c.index];
+  }
+
+  void eraseImpl(const K &k) {
+    Child c = findChild<false>(this, k);
+    if (c.subIndex) return; // was not found
+    // We now find a leaf key/value pair, and move them here.
+    InlineTrie *descendent = c.node[c.index];
+    if (!descendent) {
+      c.node->keys[c.index] = {}; // set to null
+      return;
+    }
+    for (;;) {
+      int i = 0;
+      for (; i < 4; ++i)
+        if (!descendent->children[i]) break;
+      if (i != 4) { // we found one
+        c.node->keys[c.index] = std::move(descendent->keys[i]);
+        c.node->values[c.index] = std::move(descendent->values[i]);
+        descendent->keys[i] = {};
+        return;
+      }
+      descendent = descendent->children[0];
+    }
+  }
+
+private:
+  struct Child {
+    InlineTrie *node;
+    size_t index;
+    utils::Optional<size_t> subIndex;
+  };
+
+  template <bool Insert>
+  static constexpr auto findChild(InlineTrie *node, const K &k) -> Child {
+    for (uint64_t h = ankerl::unordered_dense::hash<K>{}(k);;) {
+      uint64_t ind = h >> 62;
+      bool noKey = !node->keys[ind];
+      if constexpr (Insert) {
+        if (noKey) node->keys[ind] = k;
+      } else {
+        if (noKey) return {node, ind, ind};
+      }
+      if (noKey || (*node->keys[ind] == k)) return {node, ind, {}};
+      h <<= 2;
+      if (!node->children[ind]) return {node, h >> 62, ind};
+      node = node->children[ind];
+    }
+  };
+};
+
 // static_assert(sizeof(std::array<TrieMapNode<int,int>*,0 >)==1);
 
 } // namespace poly::dict

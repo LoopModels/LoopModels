@@ -35,6 +35,6 @@ struct aset // NOLINT(readability-identifier-naming)
 static_assert(std::same_as<amap<int, int>::value_container_type,
                            math::BumpPtrVector<std::pair<int, int>>>);
 static_assert(std::same_as<amap<int, int>::allocator_type,
-                           utils::WArena<std::pair<int, int>, 16384, true>>);
+                           alloc::WArena<std::pair<int, int>, 16384, true>>);
 
 } // namespace poly::dict

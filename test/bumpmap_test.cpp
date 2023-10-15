@@ -21,7 +21,7 @@ TEST(BumpDownMapTest, BasicAssertions) {
   static_assert(
     std::same_as<
       M::allocator_type,
-      poly::utils::WArena<std::pair<uint64_t, uint64_t>, 16384, true>>);
+      poly::alloc::WArena<std::pair<uint64_t, uint64_t>, 16384, true>>);
 
   poly::utils::OwningArena<> alloc;
   M::allocator_type walloc{&alloc};

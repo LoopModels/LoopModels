@@ -7,7 +7,7 @@
 // In include/Dicts, as it primarily serves to support amap/aset
 
 namespace poly {
-using utils::WArena, alloc::Arena;
+using alloc::WArena, alloc::Arena;
 } // namespace poly
 
 namespace poly::math {

@@ -2,7 +2,6 @@
 
 #include "Utilities/Invariant.hpp"
 #include <Alloc/Arena.hpp>
-#include <bits/ranges_base.h>
 #include <limits>
 
 namespace poly::IR {
