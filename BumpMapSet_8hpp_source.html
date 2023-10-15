@@ -106,7 +106,7 @@ $(function() {
 <div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;static_assert(std::same_as&lt;<a class="code" href="structpoly_1_1dict_1_1amap.html">amap&lt;int, int&gt;::value_container_type</a>,</div>
 <div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;                           <a class="code" href="structpoly_1_1math_1_1BumpPtrVector.html">math::BumpPtrVector</a>&lt;std::pair&lt;int, int&gt;&gt;&gt;);</div>
 <div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;static_assert(std::same_as&lt;<a class="code" href="structpoly_1_1dict_1_1amap.html">amap&lt;int, int&gt;::allocator_type</a>,</div>
-<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;                           utils::WArena&lt;std::pair&lt;int, int&gt;, 16384, <span class="keyword">true</span>&gt;&gt;);</div>
+<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;                           alloc::WArena&lt;std::pair&lt;int, int&gt;, 16384, <span class="keyword">true</span>&gt;&gt;);</div>
 <div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160; </div>
 <div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;} <span class="comment">// namespace poly::dict</span></div>
 <div class="ttc" id="astructpoly_1_1dict_1_1amap_html"><div class="ttname"><a href="structpoly_1_1dict_1_1amap.html">poly::dict::amap</a></div><div class="ttdef"><b>Definition:</b> BumpMapSet.hpp:18</div></div>
