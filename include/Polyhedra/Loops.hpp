@@ -3,13 +3,13 @@
 #include "Polyhedra/Comparators.hpp"
 #include "Polyhedra/Polyhedra.hpp"
 #include "RemarkAnalysis.hpp"
+#include <Alloc/Arena.hpp>
 #include <Math/Array.hpp>
 #include <Math/Comparisons.hpp>
 #include <Math/Constraints.hpp>
 #include <Math/Indexing.hpp>
 #include <Math/Math.hpp>
 #include <Math/MatrixDimensions.hpp>
-#include <Alloc/Arena.hpp>
 #include <Utilities/Optional.hpp>
 #include <Utilities/Valid.hpp>
 #include <cstddef>
@@ -167,34 +167,34 @@ namespace loopNestCtor {
 /// we try to break down value `v`, so that adding
 /// N, N - 1, N - 3 only adds the variable `N`, and adds the constant
 /// offsets
-inline void addSymbol(IntMatrix &A,
+inline void addSymbol(IntMatrix<math::StridedDims> &A,
                       llvm::SmallVectorImpl<const llvm::SCEV *> &symbols,
                       const llvm::SCEV *v, math::Range<ptrdiff_t, ptrdiff_t> lu,
                       int64_t mlt) {
   assert(lu.size());
   symbols.push_back(v);
   A.resize(A.numCol() + 1);
-  A(lu, symbols.size()) << mlt;
+  A[lu, symbols.size()] << mlt;
 }
 inline auto addRecMatchesLoop(const llvm::SCEV *S, llvm::Loop *L) -> bool {
   if (const auto *x = llvm::dyn_cast<const llvm::SCEVAddRecExpr>(S))
     return x->getLoop() == L;
   return false;
 }
-[[nodiscard]] inline auto
-addSymbol(std::array<IntMatrix, 2> &AB, // NOLINT(misc-no-recursion)
-          llvm::SmallVectorImpl<const llvm::SCEV *> &symbols, llvm::Loop *L,
-          const llvm::SCEV *v, llvm::ScalarEvolution &SE,
-          math::Range<ptrdiff_t, ptrdiff_t> lu, int64_t mlt, ptrdiff_t minDepth)
+[[nodiscard]] inline auto addSymbol(
+  std::array<IntMatrix<math::StridedDims>, 2> &AB, // NOLINT(misc-no-recursion)
+  llvm::SmallVectorImpl<const llvm::SCEV *> &symbols, llvm::Loop *L,
+  const llvm::SCEV *v, llvm::ScalarEvolution &SE,
+  math::Range<ptrdiff_t, ptrdiff_t> lu, int64_t mlt, ptrdiff_t minDepth)
   -> ptrdiff_t {
   auto &[A, B] = AB;
   // first, we check if `v` in `Symbols`
   if (ptrdiff_t i = findSymbolicIndex(symbols, v)) {
-    A(lu, i) += mlt;
+    A[lu, i] += mlt;
     return minDepth;
   }
   if (std::optional<int64_t> c = getConstantInt(v)) {
-    A(lu, 0) += mlt * (*c);
+    A[lu, 0] += mlt * (*c);
     return minDepth;
   }
   if (const auto *ar = llvm::dyn_cast<const llvm::SCEVAddExpr>(v)) {
@@ -221,7 +221,7 @@ addSymbol(std::array<IntMatrix, 2> &AB, // NOLINT(misc-no-recursion)
         addSymbol(AB, symbols, L, x->getOperand(0), SE, lu, mlt, minDepth);
       if (auto opc = getConstantInt(x->getOperand(1))) {
         // swap order vs recDepth to go inner<->outer
-        B(lu, recDepth - 1) << mlt * (*opc);
+        B[lu, recDepth - 1] << mlt * (*opc);
         return minDepth;
       }
       v = SE.getAddRecExpr(SE.getZero(x->getOperand(0)->getType()),
@@ -244,8 +244,8 @@ addSymbol(std::array<IntMatrix, 2> &AB, // NOLINT(misc-no-recursion)
       Row Mp = M + std::ssize(lu);
       A.resize(Mp);
       B.resize(Mp);
-      A(_(M, Mp), _) = A(lu, _);
-      B(_(M, Mp), _) = B(lu, _);
+      A[_(M, Mp), _] = A[lu, _];
+      B[_(M, Mp), _] = B[lu, _];
       minDepth = addSymbol(AB, symbols, L, op0, SE, lu, mlt, minDepth);
       minDepth = addSymbol(AB, symbols, L, op1, SE, _(M, Mp), mlt, minDepth);
     } else if (addRecMatchesLoop(op0, L)) {
@@ -259,16 +259,16 @@ addSymbol(std::array<IntMatrix, 2> &AB, // NOLINT(misc-no-recursion)
   return minDepth;
 }
 inline auto
-areSymbolsLoopInvariant(IntMatrix &A,
+areSymbolsLoopInvariant(IntMatrix<> &A,
                         llvm::SmallVectorImpl<const llvm::SCEV *> &symbols,
                         llvm::Loop *L, llvm::ScalarEvolution &SE) -> bool {
   for (ptrdiff_t i = 0; i < std::ssize(symbols); ++i)
-    if ((!allZero(A(_, i + 1))) && (!SE.isLoopInvariant(symbols[i], L)))
+    if ((!allZero(A[_, i + 1])) && (!SE.isLoopInvariant(symbols[i], L)))
       return false;
   return true;
 }
 inline auto // NOLINTNEXTLINE(misc-no-recursion)
-addBackedgeTakenCount(std::array<IntMatrix, 2> &AB,
+addBackedgeTakenCount(std::array<IntMatrix<math::StridedDims>, 2> &AB,
                       llvm::SmallVectorImpl<const llvm::SCEV *> &symbols,
                       llvm::Loop *L, const llvm::SCEV *BT,
                       llvm::ScalarEvolution &SE, ptrdiff_t minDepth,
@@ -281,7 +281,7 @@ addBackedgeTakenCount(std::array<IntMatrix, 2> &AB,
   minDepth = addSymbol(AB, symbols, L, BT, SE, _(M, M + 1), 1, minDepth);
   assert(A.numRow() == B.numRow());
   ptrdiff_t depth = L->getLoopDepth() - 1;
-  for (auto m = ptrdiff_t(M); m < A.numRow(); ++m) B(m, depth) = -1; // indvar
+  for (auto m = ptrdiff_t(M); m < A.numRow(); ++m) B[m, depth] = -1; // indvar
   // recurse, if possible to add an outer layer
   if (llvm::Loop *P = L->getParentLoop()) {
     if (areSymbolsLoopInvariant(A, symbols, P, SE)) {
@@ -363,7 +363,7 @@ public:
     // A holds symbols
     // B holds loop bounds
     // they're separate so we can grow them independently
-    std::array<IntMatrix, 2> AB;
+    std::array<IntMatrix<math::StridedDims>, 2> AB;
     auto &[A, B] = AB;
     // once we're done assembling these, we'll concatenate A and B
     unsigned maxDepth = L->getLoopDepth();
@@ -386,7 +386,7 @@ public:
       // search B(_,d) for references
       for (ptrdiff_t i = 0; i < B.numRow(); ++i) {
         // TODO; confirm `last` vs `end`
-        if (int64_t Bid = B(i, d)) {
+        if (int64_t Bid = B[i, d]) {
           if (!P) { // find P
             P = L;
             for (ptrdiff_t r = d + 1; r < maxDepth; ++r) P = P->getParentLoop();
@@ -406,10 +406,10 @@ public:
     unsigned numConstraints = unsigned(A.numRow()), N = unsigned(A.numCol());
     Valid<Loop> aln{
       Loop::allocate(alloc, L, numConstraints, depth, symbols, maxDepth)};
-    aln->getA()(_, _(0, N)) << A;
+    aln->getA()[_, _(0, N)] << A;
     // copy the included loops from B
     // we use outer <-> inner order, so we skip unsupported outer loops.
-    aln->getA()(_, _(N, N + depth)) << B(_, _(end - depth, end));
+    aln->getA()[_, _(N, N + depth)] << B[_, _(end - depth, end)];
     return aln;
     // addZeroLowerBounds();
     // NOTE: pruneBounds() is not legal here if we wish to use
@@ -446,15 +446,15 @@ public:
     const auto [M, N] = A.size();
     auto syms{getSyms()};
     Valid<Loop> aln{Loop::allocate(alloc, L, ptrdiff_t(M) + numExtraVar,
-                                     numLoops, syms, nonNeg)};
+                                   numLoops, syms, nonNeg)};
     auto B{aln->getA()};
     invariant(B.numRow(), M + numExtraVar);
     invariant(B.numCol(), N);
-    B(_(0, M), _(0, numConst)) << A(_, _(0, numConst));
-    B(_(0, M), _(numConst, end)) << A(_, _(numConst, end)) * R;
+    B[_(0, M), _(0, numConst)] << A[_, _(0, numConst)];
+    B[_(0, M), _(numConst, end)] << A[_, _(numConst, end)] * R;
     if (addExtra) {
-      B(_(M, end), _(0, numConst)) << 0;
-      B(_(M, end), _(numConst, end)) << R;
+      B[_(M, end), _(0, numConst)] << 0;
+      B[_(M, end), _(numConst, end)] << R;
     }
     // A * O * [I 0; 0 R] = A * [I 0; 0 R] - A * [0 0; offs 0] * [I 0; 0 R]
     // above, we computed `A * [I 0; 0 R]`, now if offsets != nullptr,
@@ -468,8 +468,8 @@ public:
     if (offsets) {
       for (ptrdiff_t l = 0, D = getNumLoops(); l < D; ++l) {
         if (int64_t mlt = offsets[l]) {
-          B(_(0, M), 0) -= mlt * A(_, numConst + l);
-          if (addExtra) B(M + l, 0) = -mlt;
+          B[_(0, M), 0] -= mlt * A[_, numConst + l];
+          if (addExtra) B[M + l, 0] = -mlt;
         }
       }
     }
@@ -488,12 +488,12 @@ public:
     auto ret = Loop::allocate(alloc, L->getParentLoop(), unsigned(A.numRow()),
                               getNumLoops() - 1, getSyms(), isNonNegative());
     MutPtrMatrix<int64_t> B{ret->getA()};
-    B << A(_, _(0, last));
+    B << A[_, _(0, last)];
     // no loop may be conditioned on the innermost loop, so we should be able to
     // safely remove all constraints that reference it
     for (Row m = B.numRow(); m--;) {
-      if (A(m, last)) {
-        if (m != B.numRow() - 1) B(m, _) << B(last, _);
+      if (A[m, last]) {
+        if (m != B.numRow() - 1) B[m, _] << B[last, _];
         B.truncate(B.numRow() - 1);
       }
     }
@@ -547,14 +547,14 @@ public:
     ptrdiff_t M = numConstraints;
     numConstraints += numLoops;
     auto A{getA()};
-    A(_(M, end), _) << 0;
-    for (ptrdiff_t i = 0; i < numLoops; ++i) A(M + i, end - numLoops + i) = 1;
+    A[_(M, end), _] << 0;
+    for (ptrdiff_t i = 0; i < numLoops; ++i) A[M + i, end - numLoops + i] = 1;
     // this->pruneBounds(alloc);
   }
 
   [[nodiscard]] constexpr auto getProgVars(ptrdiff_t j) const
     -> PtrVector<int64_t> {
-    return getA()(j, _(0, getNumSymbols()));
+    return getA()[j, _(0, getNumSymbols())];
   }
   [[nodiscard]] auto copy(Arena<> *alloc) const -> Valid<Loop> {
     auto ret = Loop::allocate(alloc, L, numConstraints, numLoops, getSyms(),
@@ -565,7 +565,7 @@ public:
   [[nodiscard]] auto removeLoop(Arena<> *alloc, ptrdiff_t v) const -> Loop * {
     auto A{getA()};
     v += getNumSymbols();
-    auto zeroNegPos = indsZeroNegPos(A(_, v));
+    auto zeroNegPos = indsZeroNegPos(A[_, v]);
     auto &[zer, neg, pos] = zeroNegPos;
     unsigned numCon =
       unsigned(A.numRow()) - pos.size() + neg.size() * pos.size();
@@ -820,7 +820,7 @@ public:
   // We pop off the outer most loop on every iteration.
   friend inline auto operator<<(llvm::raw_ostream &os, const Loop &aln)
     -> llvm::raw_ostream & {
-    utils::OwningArena<> alloc;
+    alloc::OwningArena<> alloc;
     aln.dump(os, &alloc);
     return os;
   }

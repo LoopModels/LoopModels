@@ -176,7 +176,7 @@ class Cache {
   map<llvm::Value *, Value *> llvmToInternalMap;
   map<InstByValue, Compute *> instCSEMap;
   map<Cnst::Identifier, Cnst *> constMap;
-  utils::OwningArena<> alloc;
+  alloc::OwningArena<> alloc;
   llvm::LoopInfo *LI;
   llvm::ScalarEvolution *SE;
   Compute *freeInstList{nullptr}; // positive numOps/complete, but empty

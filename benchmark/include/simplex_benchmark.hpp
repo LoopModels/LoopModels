@@ -1,10 +1,12 @@
 #pragma once
-#include "Math/Simplex.hpp"
-#include "MatrixStringParse.hpp"
+#include <Math/Simplex.hpp>
+#include <Utilities/MatrixStringParse.hpp>
 #include <benchmark/benchmark.h>
 
+using poly::utils::operator""_mat, poly::math::_;
+
 static void BM_Simplex0(benchmark::State &state) {
-  math::DenseMatrix<int64_t> tableau{
+  poly::math::DenseMatrix<int64_t> tableau{
     "[0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 "
     "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 "
     "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 "
@@ -871,15 +873,16 @@ static void BM_Simplex0(benchmark::State &state) {
     "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 "
     "1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ]"_mat};
 
-  tableau(0, _) << -5859553999884210514;
-  OwningArena<> alloc;
+  tableau[0, _] << -5859553999884210514;
+  poly::alloc::OwningArena<> alloc;
   unsigned numCon = unsigned(tableau.numRow()) - 1;
   unsigned numVar = unsigned(tableau.numCol()) - 1;
-  Valid<Simplex> simpBackup{Simplex::create(alloc, numCon, numVar, 0)};
+  poly::utils::Valid<poly::math::Simplex> simpBackup{
+    poly::math::Simplex::create(alloc, numCon, numVar)};
   simpBackup->getTableau() << tableau;
   // Simplex simpBackup{tableau};
-  Valid<Simplex> simp{Simplex::create(alloc, simpBackup->getNumCons(),
-                                        simpBackup->getNumVars(), 0)};
+  poly::utils::Valid<poly::math::Simplex> simp{poly::math::Simplex::create(
+    alloc, simpBackup->getNumCons(), simpBackup->getNumVars())};
   // Vector<Rational> sol(37);
   for (auto b : state) {
     *simp << *simpBackup;
@@ -1117,7 +1120,7 @@ static void BM_Simplex1(benchmark::State &state) {
   Valid<Simplex> simpBackup{Simplex::create(alloc, numCon, numVar, 0)};
   simpBackup->getTableau() << tableau;
   Valid<Simplex> simp{Simplex::create(alloc, simpBackup->getNumCons(),
-                                        simpBackup->getNumVars(), 0)};
+                                      simpBackup->getNumVars(), 0)};
   for (auto b : state) {
     *simp << *simpBackup;
     bool fail = simp->initiateFeasible();

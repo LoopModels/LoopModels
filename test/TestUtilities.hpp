@@ -23,7 +23,7 @@ namespace poly {
 using math::PtrMatrix;
 
 class TestLoopFunction {
-  utils::OwningArena<> alloc;
+  alloc::OwningArena<> alloc;
   llvm::LLVMContext ctx;
   llvm::Module *mod;
   llvm::LoopInfo LI{};

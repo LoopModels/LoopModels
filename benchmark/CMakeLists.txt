@@ -33,6 +33,13 @@ CPMAddPackage(
   GIT_TAG fnoexceptions SYSTEM TRUE
 )
 
+FetchContent_Declare(
+  Math
+  GIT_REPOSITORY git@github.com:LoopModels/Math.git
+  GIT_TAG origin/main
+)
+FetchContent_MakeAvailable(Math)
+
 # file(GLOB_RECURSE headers CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/include/*.hpp)
 file(GLOB benchmarks CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
 
@@ -52,7 +59,7 @@ target_include_directories(
 )
 find_package(OpenMP)
 target_link_libraries(
-  ${PROJECT_NAME} PRIVATE benchmark::benchmark LLVM unordered_dense::unordered_dense
+  ${PROJECT_NAME} PRIVATE benchmark::benchmark LLVM unordered_dense::unordered_dense Math
                           OpenMP::OpenMP_CXX
 )
 

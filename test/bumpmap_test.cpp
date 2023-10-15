@@ -23,7 +23,7 @@ TEST(BumpDownMapTest, BasicAssertions) {
       M::allocator_type,
       poly::alloc::WArena<std::pair<uint64_t, uint64_t>, 16384, true>>);
 
-  poly::utils::OwningArena<> alloc;
+  poly::alloc::OwningArena<> alloc;
   M::allocator_type walloc{&alloc};
   M::value_container_type mvals{walloc};
   // poly::math::BumpPtrVector<int> vec{&alloc};

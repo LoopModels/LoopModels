@@ -139,7 +139,7 @@ class LoopBlock {
   // dict::set<llvm::User *> visited{};
   // llvm::LoopInfo *LI;
   IR::Dependencies deps;
-  utils::OwningArena<> allocator{};
+  alloc::OwningArena<> allocator{};
   // we may turn off edges because we've exceeded its loop depth
   // or because the dependence has already been satisfied at an
   // earlier level.

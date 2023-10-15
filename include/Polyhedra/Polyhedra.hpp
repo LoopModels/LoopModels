@@ -134,7 +134,7 @@ struct BasePolyhedra {
     pruneBoundsCore<true>(&alloc);
   }
   constexpr void pruneBounds() {
-    utils::OwningArena<> alloc;
+    alloc::OwningArena<> alloc;
     pruneBounds(alloc);
   }
   constexpr void eraseConstraint(ptrdiff_t constraint) {

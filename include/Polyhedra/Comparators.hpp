@@ -327,7 +327,7 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
     ///
     auto B = getV(rowV, colV);
     std::fill_n(B.begin(), B.numRow() * B.numCol(), 0);
-    B(0, 0) = 1;
+    B[0, 0] = 1;
     // B = [ A_0 A_1
     //        0   I  ]
     // V = [B' 0
@@ -335,12 +335,12 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
     // V = [A_0'  0  0
     //      A_1'  I  0
     //      S_0  S_1 I]
-    B(_(begin, numVar), _(1, numConExplicit)) << A.transpose();
+    B[_(begin, numVar), _(1, numConExplicit)] << A.transpose();
     for (ptrdiff_t j = 0; j < numNonNegative; ++j)
-      B(j + numVar - numNonNegative, numConExplicit + j) = 1;
+      B[j + numVar - numNonNegative, numConExplicit + j] = 1;
     for (ptrdiff_t j = 0; j < numConTotal; ++j) {
-      B(j + numVar, j) = -1;
-      B(j + numVar, j + numConTotal) = 1;
+      B[j + numVar, j] = -1;
+      B[j + numVar, j + numConTotal] = 1;
     }
     numEquations = numConTotal;
     initCore(alloc);
@@ -358,7 +358,7 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
     Col colV = Col{2 * numInEqConTotal + numEqCon};
     auto B = getV(rowV, colV);
     std::fill_n(B.begin(), B.numRow() * B.numCol(), 0);
-    B(0, 0) = 1;
+    B[0, 0] = 1;
     // B is `A` augmented with the implicit non-negative constraints
     // B = [ A_0 A_1
     //        0   I  ]
@@ -368,17 +368,17 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
     //      A_1'  I  E_1' 0
     //      S_0  S_1  0   I]
     numEquations = numInEqConTotal + numEqCon;
-    B(_(begin, numVar), _(1, numInEqConExplicit)) << A.transpose();
-    B(_(begin, numVar), _(numInEqConTotal, numInEqConTotal + numEqCon))
+    B[_(begin, numVar), _(1, numInEqConExplicit)] << A.transpose();
+    B[_(begin, numVar), _(numInEqConTotal, numInEqConTotal + numEqCon)]
       << E.transpose();
     if (numNonNegative)
-      B(_(numVar - numNonNegative, numVar),
-        _(numInEqConExplicit, numInEqConExplicit + numNonNegative))
+      B[_(numVar - numNonNegative, numVar),
+        _(numInEqConExplicit, numInEqConExplicit + numNonNegative)]
           .diag()
         << 1;
     for (ptrdiff_t j = 0; j < numInEqConTotal; ++j) {
-      B(j + numVar, j) = -1;
-      B(j + numVar, j + numEquations) = 1;
+      B[j + numVar, j] = -1;
+      B[j + numVar, j + numEquations] = 1;
     }
     initCore(alloc);
   }
@@ -429,13 +429,13 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
     Col colV = 2 * numCon;
     auto B = getV(rowV, colV);
     std::fill_n(B.begin(), B.numRow() * B.numCol(), 0);
-    B(0, 0) = pos0;
+    B[0, 0] = pos0;
     // V = [A' 0
     //      S  I]
-    B(_(begin, numVar), _(pos0, numCon)) << A.transpose();
+    B[_(begin, numVar), _(pos0, numCon)] << A.transpose();
     for (ptrdiff_t j = 0; j < numCon; ++j) {
-      B(j + numVar, j) = -1;
-      B(j + numVar, j + numCon) = 1;
+      B[j + numVar, j] = -1;
+      B[j + numVar, j + numCon] = 1;
     }
     numEquations = numCon;
     initCore(alloc);
@@ -455,15 +455,15 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
     B << 0;
     // V = [A' E' 0
     //      S  0  I]
-    B(0, 0) = pos0;
-    B(_(begin, numVar), _(pos0, numInEqCon)) << A.transpose();
+    B[0, 0] = pos0;
+    B[_(begin, numVar), _(pos0, numInEqCon)] << A.transpose();
     // A(_, _(pos0, end)).transpose();
-    B(_(begin, numVar), _(numInEqCon, numInEqCon + numEqCon)) << E.transpose();
+    B[_(begin, numVar), _(numInEqCon, numInEqCon + numEqCon)] << E.transpose();
 
     numEquations = numInEqCon + numEqCon;
     for (ptrdiff_t j = 0; j < numInEqCon; ++j) {
-      B(j + numVar, j) = -1;
-      B(j + numVar, j + numEquations) = 1;
+      B[j + numVar, j] = -1;
+      B[j + numVar, j + numEquations] = 1;
     }
     initCore(alloc);
   }
@@ -477,7 +477,7 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
     U.diag() << 1;
     // We will have query of the form Ax = q;
     simplifySystemsImpl({B, U});
-    while ((R) && allZero(B(R - 1, _))) --R;
+    while ((R) && allZero(B[R - 1, _])) --R;
     setURank(R);
     ptrdiff_t numColB = ptrdiff_t(B.numCol());
     // upper bounded by numVar + numInEq x numVar + numInEq
@@ -491,7 +491,7 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
     // Ht.numRow() > Ht.numCol() = R
     // (2*numInEq + numEq) x R
     auto Ht = matrix<int64_t>(alloc, Row{numColB}, Col{ptrdiff_t(R)});
-    Ht << B(_(0, R), _).transpose();
+    Ht << B[_(0, R), _].transpose();
     solveSystem(Ht, Vt);
     // upper bounded by numVar + numInEq
     // rows/cols, but of rank R
@@ -507,23 +507,18 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
     auto V = getV();
     auto U = getU();
     auto d = getD();
-    StridedVector<int64_t> b{U(_, 0)};
+    StridedVector<int64_t> b{U[_, 0]};
     if (d.empty()) {
       if (!allZero(b[_(V.numRow(), end)])) return false;
       Col oldn = V.numCol();
       auto H{matrix<int64_t>(&alloc, V.numRow(), oldn + 1)};
       // IntMatrix H{V.numRow(), oldn + 1};
-      H(_, _(0, oldn)) << V;
-      H(_, oldn) << -b;
+      H[_, _(0, oldn)] << V;
+      H[_, oldn] << -b;
       solveSystem(H);
-      bool ret = true;
       for (ptrdiff_t i = numEquations; i < H.numRow(); ++i)
-        if (auto rhs = H(i, oldn))
-          if ((rhs > 0) != (H(i, i) > 0)) {
-            ret = false;
-            break;
-          }
-      return ret;
+        if ((H[i, oldn] > 0) != (H[i, i] > 0)) return false;
+      return true;
     }
     // Column rank deficient case
     Row numSlack = V.numRow() - numEquations;
@@ -536,7 +531,7 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
     // Vector<int64_t> b2 = -b * Dlcm / d;
     ptrdiff_t numRowTrunc = ptrdiff_t(U.numRow());
     auto c{vector<int64_t>(&alloc, ptrdiff_t(V.numRow() - numEquations))};
-    c << V(_(numEquations, end), _(begin, numRowTrunc)) * b2;
+    c << V[_(numEquations, end), _(begin, numRowTrunc)] * b2;
     // Vector<int64_t> c = V(_(numEquations, end), _(begin, numRowTrunc)) *
     // b2;
     auto dimNS = V.numCol() - numRowTrunc;
@@ -545,23 +540,23 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
     // where y2 = y2+ - y2-
     auto expandW{matrix<int64_t>(&alloc, Row{numSlack}, Col{dimNS * 2 + 1})};
     for (ptrdiff_t i = 0; i < numSlack; ++i) {
-      expandW(i, 0) = c[i];
+      expandW[i, 0] = c[i];
       // expandW(i, 0) *= Dlcm;
       for (ptrdiff_t j = 0; j < dimNS; ++j) {
-        auto val = V(i + numEquations, numRowTrunc + j) * lcmD;
-        expandW(i, j + 1) = -val;
-        expandW(i, dimNS + 1 + j) = val;
+        auto val = V[i + numEquations, numRowTrunc + j] * lcmD;
+        expandW[i, j + 1] = -val;
+        expandW[i, dimNS + 1 + j] = val;
       }
     }
     return Simplex::positiveVariables(&alloc, expandW).hasValue();
   }
   [[nodiscard]] constexpr auto isEmpty() const -> bool {
-    utils::OwningArena<> alloc;
+    alloc::OwningArena<> alloc;
     return isEmpty(alloc);
   }
   [[nodiscard]] constexpr auto greaterEqual(PtrVector<int64_t> query) const
     -> bool {
-    utils::OwningArena<> alloc;
+    alloc::OwningArena<> alloc;
     return greaterEqual(alloc, query);
   }
   [[nodiscard]] constexpr auto greaterEqualFullRank(Arena<> *alloc,
@@ -577,8 +572,7 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
     H(_, oldn) << b;
     solveSystem(H);
     for (ptrdiff_t i = numEquations; i < H.numRow(); ++i)
-      if (auto rhs = H(i, oldn))
-        if ((rhs > 0) != (H(i, i) > 0)) return false;
+      if ((H(i, oldn) > 0) != (H(i, i) > 0)) return false;
     return true;
   }
   [[nodiscard]] constexpr auto
@@ -839,7 +833,7 @@ static_assert(Comparator<LinearSymbolicComparator>);
 
 constexpr void moveEqualities(DenseMatrix<int64_t> &, EmptyMatrix<int64_t>,
                               const Comparator auto &) {}
-constexpr void moveEqualities(DenseMatrix<int64_t> &A, math::IntMatrix &E,
+constexpr void moveEqualities(DenseMatrix<int64_t> &A, math::IntMatrix<> &E,
                               const Comparator auto &C) {
   const ptrdiff_t numVar = ptrdiff_t(E.numCol());
   assert(A.numCol() == numVar);
@@ -848,15 +842,15 @@ constexpr void moveEqualities(DenseMatrix<int64_t> &A, math::IntMatrix &E,
     for (ptrdiff_t i = o--; i < A.numRow(); ++i) {
       bool isNeg = true;
       for (ptrdiff_t v = 0; v < numVar; ++v) {
-        if (A(i, v) != -A(o, v)) {
+        if (A[i, v] != -A[o, v]) {
           isNeg = false;
           break;
         }
       }
-      if (isNeg && C.equalNegative(A(i, _), A(o, _))) {
+      if (isNeg && C.equalNegative(A[i, _], A[o, _])) {
         ptrdiff_t e = ptrdiff_t(E.numRow());
         E.resize(e + 1, numVar);
-        for (ptrdiff_t v = 0; v < numVar; ++v) E(e, v) = A(i, v);
+        for (ptrdiff_t v = 0; v < numVar; ++v) E[e, v] = A[i, v];
         eraseConstraint(A, i, o);
         break;
       }

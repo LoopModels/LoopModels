@@ -149,7 +149,7 @@ TEST(AffineTest0, BasicAssertions) {
 #endif
   llvm::errs() << "About to run first set of bounds tests\n";
   llvm::errs() << "\nPermuting loops 1 and 2\n";
-  utils::OwningArena<> allocator;
+  alloc::OwningArena<> allocator;
   utils::Valid<poly::Loop> affp021ptr{
     aff.rotate(&allocator, "[1 0 0; 0 0 1; 0 1 0]"_mat, nullptr)};
   poly::Loop &affp021 = *affp021ptr;
@@ -199,7 +199,7 @@ TEST(NonUnimodularExperiment, BasicAssertions) {
   tlf.addLoop(std::move(B), 2);
   poly::Loop &aff2 = *tlf.getLoopNest(tlf.getNumLoopNests() - 1);
   EXPECT_FALSE(aff2.isEmpty());
-  utils::OwningArena<> allocator;
+  alloc::OwningArena<> allocator;
   utils::Valid<poly::Loop> affp10{
     aff2.rotate(&allocator, "[0 1; 1 0]"_mat, nullptr)};
 

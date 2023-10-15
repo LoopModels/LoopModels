@@ -129,7 +129,7 @@ TEST(DependenceTest, BasicAssertions) {
   Vector<unsigned, 4> schLoad0(3, 0);
   Vector<unsigned, 4> schStore(3, 0);
   schStore[2] = 2;
-  utils::OwningArena<> alloc;
+  alloc::OwningArena<> alloc;
   IR::Addr *msrc{createMemAccess(&alloc, srcA, storeA11, schStore)};
   IR::Addr *mtgt01{createMemAccess(&alloc, tgtA01, loadA01, schLoad0)};
   poly::DepPoly *dep0{poly::DepPoly::dependence(&alloc, *msrc, *mtgt01)};
@@ -256,7 +256,7 @@ TEST(SymmetricIndependentTest, BasicAssertions) {
   Vector<unsigned, 4> schLoad(3, 0);
   Vector<unsigned, 4> schStore(3, 0);
   schStore[2] = 1;
-  utils::OwningArena<> alloc;
+  alloc::OwningArena<> alloc;
   IR::Addr *msrc{createMemAccess(&alloc, srcA, storeAij, schStore)};
   IR::Addr *mtgt{createMemAccess(&alloc, tgtA, loadAji, schLoad)};
   poly::DepPoly *dep{poly::DepPoly::dependence(&alloc, *msrc, *mtgt)};
@@ -341,7 +341,7 @@ TEST(RankDeficientLoad, BasicAssertions) {
   Vector<unsigned, 4> schLoad(2 + 1, 0);
   Vector<unsigned, 4> schStore(2 + 1, 0);
   schStore[2] = 1;
-  utils::OwningArena<> alloc;
+  alloc::OwningArena<> alloc;
   IR::Addr *msrc{createMemAccess(&alloc, srcA, storeAij, schStore)};
   IR::Addr *mtgt{createMemAccess(&alloc, tgtA, loadAii, schLoad)};
 
@@ -437,7 +437,7 @@ TEST(TimeHidingInRankDeficiency, BasicAssertions) {
   Vector<unsigned, 4> schLoad(3 + 1, 0);
   Vector<unsigned, 4> schStore(3 + 1, 0);
   schStore[3] = 1;
-  utils::OwningArena<> alloc;
+  alloc::OwningArena<> alloc;
   IR::Addr *msrc{createMemAccess(&alloc, refA, storeA, schStore)};
   IR::Addr *mtgt{createMemAccess(&alloc, refA, loadA, schLoad)};
 
@@ -652,7 +652,7 @@ TEST(TriangularExampleTest, BasicAssertions) {
   IR::AddrChain addr;
   Vector<unsigned, 4> sch2t0t0(2 + 1, 0);
   Vector<unsigned, 4> sch2t0t1{sch2t0t0};
-  utils::OwningArena<> alloc;
+  alloc::OwningArena<> alloc;
   // A(n,m) = -> B(n,m) <-
   IR::Addr *mSch2t0t0(createMemAccess(&alloc, indBmn, loadB, sch2t0t0));
   addr.addAddr(mSch2t0t0);
@@ -1140,7 +1140,7 @@ TEST(MeanStDevTest0, BasicAssertions) {
   lp::LoopBlock iOuterLoopNest;
   llvm::SmallVector<IR::Addr *> iOuterMem;
 
-  utils::OwningArena<> alloc;
+  alloc::OwningArena<> alloc;
   iOuterMem.emplace_back(createMemAccess(&alloc, xInd1, storeX0, sch0t0)); // 0
 
   iOuterMem.emplace_back(
