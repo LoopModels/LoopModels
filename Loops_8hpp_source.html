@@ -74,13 +74,13 @@ $(function() {
 <div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="preprocessor">#include &quot;Polyhedra/Comparators.hpp&quot;</span></div>
 <div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor">#include &quot;Polyhedra/Polyhedra.hpp&quot;</span></div>
 <div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="preprocessor">#include &quot;RemarkAnalysis.hpp&quot;</span></div>
-<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="preprocessor">#include &lt;Math/Array.hpp&gt;</span></div>
-<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="preprocessor">#include &lt;Math/Comparisons.hpp&gt;</span></div>
-<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="preprocessor">#include &lt;Math/Constraints.hpp&gt;</span></div>
-<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="preprocessor">#include &lt;Math/Indexing.hpp&gt;</span></div>
-<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="preprocessor">#include &lt;Math/Math.hpp&gt;</span></div>
-<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="preprocessor">#include &lt;Math/MatrixDimensions.hpp&gt;</span></div>
-<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="preprocessor">#include &lt;Alloc/Arena.hpp&gt;</span></div>
+<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="preprocessor">#include &lt;Alloc/Arena.hpp&gt;</span></div>
+<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="preprocessor">#include &lt;Math/Array.hpp&gt;</span></div>
+<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="preprocessor">#include &lt;Math/Comparisons.hpp&gt;</span></div>
+<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="preprocessor">#include &lt;Math/Constraints.hpp&gt;</span></div>
+<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="preprocessor">#include &lt;Math/Indexing.hpp&gt;</span></div>
+<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="preprocessor">#include &lt;Math/Math.hpp&gt;</span></div>
+<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="preprocessor">#include &lt;Math/MatrixDimensions.hpp&gt;</span></div>
 <div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="preprocessor">#include &lt;Utilities/Optional.hpp&gt;</span></div>
 <div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;<span class="preprocessor">#include &lt;Utilities/Valid.hpp&gt;</span></div>
 <div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;<span class="preprocessor">#include &lt;cstddef&gt;</span></div>
@@ -232,34 +232,34 @@ $(function() {
 <div class="line"><a name="l00163"></a><span class="lineno">  163</span>&#160;}</div>
 <div class="line"><a name="l00164"></a><span class="lineno">  164</span>&#160; </div>
 <div class="line"><a name="l00165"></a><span class="lineno">  165</span>&#160;<span class="keyword">namespace </span>loopNestCtor {</div>
-<div class="line"><a name="l00170"></a><span class="lineno">  170</span>&#160;<span class="keyword">inline</span> <span class="keywordtype">void</span> addSymbol(IntMatrix &amp;A,</div>
+<div class="line"><a name="l00170"></a><span class="lineno">  170</span>&#160;<span class="keyword">inline</span> <span class="keywordtype">void</span> addSymbol(IntMatrix&lt;math::StridedDims&gt; &amp;A,</div>
 <div class="line"><a name="l00171"></a><span class="lineno">  171</span>&#160;                      llvm::SmallVectorImpl&lt;const llvm::SCEV *&gt; &amp;symbols,</div>
 <div class="line"><a name="l00172"></a><span class="lineno">  172</span>&#160;                      <span class="keyword">const</span> llvm::SCEV *v, math::Range&lt;ptrdiff_t, ptrdiff_t&gt; lu,</div>
 <div class="line"><a name="l00173"></a><span class="lineno">  173</span>&#160;                      int64_t mlt) {</div>
 <div class="line"><a name="l00174"></a><span class="lineno">  174</span>&#160;  assert(lu.size());</div>
 <div class="line"><a name="l00175"></a><span class="lineno">  175</span>&#160;  symbols.push_back(v);</div>
 <div class="line"><a name="l00176"></a><span class="lineno">  176</span>&#160;  A.resize(A.numCol() + 1);</div>
-<div class="line"><a name="l00177"></a><span class="lineno">  177</span>&#160;  A(lu, symbols.size()) &lt;&lt; mlt;</div>
+<div class="line"><a name="l00177"></a><span class="lineno">  177</span>&#160;  A[lu, symbols.size()] &lt;&lt; mlt;</div>
 <div class="line"><a name="l00178"></a><span class="lineno">  178</span>&#160;}</div>
 <div class="line"><a name="l00179"></a><span class="lineno">  179</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> addRecMatchesLoop(<span class="keyword">const</span> llvm::SCEV *S, llvm::Loop *L) -&gt; <span class="keywordtype">bool</span> {</div>
 <div class="line"><a name="l00180"></a><span class="lineno">  180</span>&#160;  <span class="keywordflow">if</span> (<span class="keyword">const</span> <span class="keyword">auto</span> *x = llvm::dyn_cast&lt;const llvm::SCEVAddRecExpr&gt;(S))</div>
 <div class="line"><a name="l00181"></a><span class="lineno">  181</span>&#160;    <span class="keywordflow">return</span> x-&gt;getLoop() == L;</div>
 <div class="line"><a name="l00182"></a><span class="lineno">  182</span>&#160;  <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
 <div class="line"><a name="l00183"></a><span class="lineno">  183</span>&#160;}</div>
-<div class="line"><a name="l00184"></a><span class="lineno">  184</span>&#160;[[nodiscard]] <span class="keyword">inline</span> <span class="keyword">auto</span></div>
-<div class="line"><a name="l00185"></a><span class="lineno">  185</span>&#160;addSymbol(std::array&lt;IntMatrix, 2&gt; &amp;AB, <span class="comment">// NOLINT(misc-no-recursion)</span></div>
-<div class="line"><a name="l00186"></a><span class="lineno">  186</span>&#160;          llvm::SmallVectorImpl&lt;const llvm::SCEV *&gt; &amp;symbols, llvm::Loop *L,</div>
-<div class="line"><a name="l00187"></a><span class="lineno">  187</span>&#160;          <span class="keyword">const</span> llvm::SCEV *v, llvm::ScalarEvolution &amp;SE,</div>
-<div class="line"><a name="l00188"></a><span class="lineno">  188</span>&#160;          math::Range&lt;ptrdiff_t, ptrdiff_t&gt; lu, int64_t mlt, ptrdiff_t minDepth)</div>
+<div class="line"><a name="l00184"></a><span class="lineno">  184</span>&#160;[[nodiscard]] <span class="keyword">inline</span> <span class="keyword">auto</span> addSymbol(</div>
+<div class="line"><a name="l00185"></a><span class="lineno">  185</span>&#160;  std::array&lt;IntMatrix&lt;math::StridedDims&gt;, 2&gt; &amp;AB, <span class="comment">// NOLINT(misc-no-recursion)</span></div>
+<div class="line"><a name="l00186"></a><span class="lineno">  186</span>&#160;  llvm::SmallVectorImpl&lt;const llvm::SCEV *&gt; &amp;symbols, llvm::Loop *L,</div>
+<div class="line"><a name="l00187"></a><span class="lineno">  187</span>&#160;  <span class="keyword">const</span> llvm::SCEV *v, llvm::ScalarEvolution &amp;SE,</div>
+<div class="line"><a name="l00188"></a><span class="lineno">  188</span>&#160;  math::Range&lt;ptrdiff_t, ptrdiff_t&gt; lu, int64_t mlt, ptrdiff_t minDepth)</div>
 <div class="line"><a name="l00189"></a><span class="lineno">  189</span>&#160;  -&gt; ptrdiff_t {</div>
 <div class="line"><a name="l00190"></a><span class="lineno">  190</span>&#160;  <span class="keyword">auto</span> &amp;[A, B] = AB;</div>
 <div class="line"><a name="l00191"></a><span class="lineno">  191</span>&#160;  <span class="comment">// first, we check if `v` in `Symbols`</span></div>
 <div class="line"><a name="l00192"></a><span class="lineno">  192</span>&#160;  <span class="keywordflow">if</span> (ptrdiff_t i = findSymbolicIndex(symbols, v)) {</div>
-<div class="line"><a name="l00193"></a><span class="lineno">  193</span>&#160;    A(lu, i) += mlt;</div>
+<div class="line"><a name="l00193"></a><span class="lineno">  193</span>&#160;    A[lu, i] += mlt;</div>
 <div class="line"><a name="l00194"></a><span class="lineno">  194</span>&#160;    <span class="keywordflow">return</span> minDepth;</div>
 <div class="line"><a name="l00195"></a><span class="lineno">  195</span>&#160;  }</div>
 <div class="line"><a name="l00196"></a><span class="lineno">  196</span>&#160;  <span class="keywordflow">if</span> (std::optional&lt;int64_t&gt; c = getConstantInt(v)) {</div>
-<div class="line"><a name="l00197"></a><span class="lineno">  197</span>&#160;    A(lu, 0) += mlt * (*c);</div>
+<div class="line"><a name="l00197"></a><span class="lineno">  197</span>&#160;    A[lu, 0] += mlt * (*c);</div>
 <div class="line"><a name="l00198"></a><span class="lineno">  198</span>&#160;    <span class="keywordflow">return</span> minDepth;</div>
 <div class="line"><a name="l00199"></a><span class="lineno">  199</span>&#160;  }</div>
 <div class="line"><a name="l00200"></a><span class="lineno">  200</span>&#160;  <span class="keywordflow">if</span> (<span class="keyword">const</span> <span class="keyword">auto</span> *ar = llvm::dyn_cast&lt;const llvm::SCEVAddExpr&gt;(v)) {</div>
@@ -286,7 +286,7 @@ $(function() {
 <div class="line"><a name="l00221"></a><span class="lineno">  221</span>&#160;        addSymbol(AB, symbols, L, x-&gt;getOperand(0), SE, lu, mlt, minDepth);</div>
 <div class="line"><a name="l00222"></a><span class="lineno">  222</span>&#160;      <span class="keywordflow">if</span> (<span class="keyword">auto</span> opc = getConstantInt(x-&gt;getOperand(1))) {</div>
 <div class="line"><a name="l00223"></a><span class="lineno">  223</span>&#160;        <span class="comment">// swap order vs recDepth to go inner&lt;-&gt;outer</span></div>
-<div class="line"><a name="l00224"></a><span class="lineno">  224</span>&#160;        B(lu, recDepth - 1) &lt;&lt; mlt * (*opc);</div>
+<div class="line"><a name="l00224"></a><span class="lineno">  224</span>&#160;        B[lu, recDepth - 1] &lt;&lt; mlt * (*opc);</div>
 <div class="line"><a name="l00225"></a><span class="lineno">  225</span>&#160;        <span class="keywordflow">return</span> minDepth;</div>
 <div class="line"><a name="l00226"></a><span class="lineno">  226</span>&#160;      }</div>
 <div class="line"><a name="l00227"></a><span class="lineno">  227</span>&#160;      v = SE.getAddRecExpr(SE.getZero(x-&gt;getOperand(0)-&gt;getType()),</div>
@@ -309,8 +309,8 @@ $(function() {
 <div class="line"><a name="l00244"></a><span class="lineno">  244</span>&#160;      Row Mp = M + std::ssize(lu);</div>
 <div class="line"><a name="l00245"></a><span class="lineno">  245</span>&#160;      A.resize(Mp);</div>
 <div class="line"><a name="l00246"></a><span class="lineno">  246</span>&#160;      B.resize(Mp);</div>
-<div class="line"><a name="l00247"></a><span class="lineno">  247</span>&#160;      A(_(M, Mp), _) = A(lu, _);</div>
-<div class="line"><a name="l00248"></a><span class="lineno">  248</span>&#160;      B(_(M, Mp), _) = B(lu, _);</div>
+<div class="line"><a name="l00247"></a><span class="lineno">  247</span>&#160;      A[_(M, Mp), _] = A[lu, _];</div>
+<div class="line"><a name="l00248"></a><span class="lineno">  248</span>&#160;      B[_(M, Mp), _] = B[lu, _];</div>
 <div class="line"><a name="l00249"></a><span class="lineno">  249</span>&#160;      minDepth = addSymbol(AB, symbols, L, op0, SE, lu, mlt, minDepth);</div>
 <div class="line"><a name="l00250"></a><span class="lineno">  250</span>&#160;      minDepth = addSymbol(AB, symbols, L, op1, SE, _(M, Mp), mlt, minDepth);</div>
 <div class="line"><a name="l00251"></a><span class="lineno">  251</span>&#160;    } <span class="keywordflow">else</span> <span class="keywordflow">if</span> (addRecMatchesLoop(op0, L)) {</div>
@@ -324,16 +324,16 @@ $(function() {
 <div class="line"><a name="l00259"></a><span class="lineno">  259</span>&#160;  <span class="keywordflow">return</span> minDepth;</div>
 <div class="line"><a name="l00260"></a><span class="lineno">  260</span>&#160;}</div>
 <div class="line"><a name="l00261"></a><span class="lineno">  261</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span></div>
-<div class="line"><a name="l00262"></a><span class="lineno">  262</span>&#160;areSymbolsLoopInvariant(IntMatrix &amp;A,</div>
+<div class="line"><a name="l00262"></a><span class="lineno">  262</span>&#160;areSymbolsLoopInvariant(IntMatrix&lt;&gt; &amp;A,</div>
 <div class="line"><a name="l00263"></a><span class="lineno">  263</span>&#160;                        llvm::SmallVectorImpl&lt;const llvm::SCEV *&gt; &amp;symbols,</div>
 <div class="line"><a name="l00264"></a><span class="lineno">  264</span>&#160;                        llvm::Loop *L, llvm::ScalarEvolution &amp;SE) -&gt; <span class="keywordtype">bool</span> {</div>
 <div class="line"><a name="l00265"></a><span class="lineno">  265</span>&#160;  <span class="keywordflow">for</span> (ptrdiff_t i = 0; i &lt; std::ssize(symbols); ++i)</div>
-<div class="line"><a name="l00266"></a><span class="lineno">  266</span>&#160;    <span class="keywordflow">if</span> ((!allZero(A(_, i + 1))) &amp;&amp; (!SE.isLoopInvariant(symbols[i], L)))</div>
+<div class="line"><a name="l00266"></a><span class="lineno">  266</span>&#160;    <span class="keywordflow">if</span> ((!allZero(A[_, i + 1])) &amp;&amp; (!SE.isLoopInvariant(symbols[i], L)))</div>
 <div class="line"><a name="l00267"></a><span class="lineno">  267</span>&#160;      <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
 <div class="line"><a name="l00268"></a><span class="lineno">  268</span>&#160;  <span class="keywordflow">return</span> <span class="keyword">true</span>;</div>
 <div class="line"><a name="l00269"></a><span class="lineno">  269</span>&#160;}</div>
 <div class="line"><a name="l00270"></a><span class="lineno">  270</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> <span class="comment">// NOLINTNEXTLINE(misc-no-recursion)</span></div>
-<div class="line"><a name="l00271"></a><span class="lineno">  271</span>&#160;addBackedgeTakenCount(std::array&lt;IntMatrix, 2&gt; &amp;AB,</div>
+<div class="line"><a name="l00271"></a><span class="lineno">  271</span>&#160;addBackedgeTakenCount(std::array&lt;IntMatrix&lt;math::StridedDims&gt;, 2&gt; &amp;AB,</div>
 <div class="line"><a name="l00272"></a><span class="lineno">  272</span>&#160;                      llvm::SmallVectorImpl&lt;const llvm::SCEV *&gt; &amp;symbols,</div>
 <div class="line"><a name="l00273"></a><span class="lineno">  273</span>&#160;                      llvm::Loop *L, <span class="keyword">const</span> llvm::SCEV *BT,</div>
 <div class="line"><a name="l00274"></a><span class="lineno">  274</span>&#160;                      llvm::ScalarEvolution &amp;SE, ptrdiff_t minDepth,</div>
@@ -346,7 +346,7 @@ $(function() {
 <div class="line"><a name="l00281"></a><span class="lineno">  281</span>&#160;  minDepth = addSymbol(AB, symbols, L, BT, SE, _(M, M + 1), 1, minDepth);</div>
 <div class="line"><a name="l00282"></a><span class="lineno">  282</span>&#160;  assert(A.numRow() == B.numRow());</div>
 <div class="line"><a name="l00283"></a><span class="lineno">  283</span>&#160;  ptrdiff_t depth = L-&gt;getLoopDepth() - 1;</div>
-<div class="line"><a name="l00284"></a><span class="lineno">  284</span>&#160;  <span class="keywordflow">for</span> (<span class="keyword">auto</span> m = ptrdiff_t(M); m &lt; A.numRow(); ++m) B(m, depth) = -1; <span class="comment">// indvar</span></div>
+<div class="line"><a name="l00284"></a><span class="lineno">  284</span>&#160;  <span class="keywordflow">for</span> (<span class="keyword">auto</span> m = ptrdiff_t(M); m &lt; A.numRow(); ++m) B[m, depth] = -1; <span class="comment">// indvar</span></div>
 <div class="line"><a name="l00285"></a><span class="lineno">  285</span>&#160;  <span class="comment">// recurse, if possible to add an outer layer</span></div>
 <div class="line"><a name="l00286"></a><span class="lineno">  286</span>&#160;  <span class="keywordflow">if</span> (llvm::Loop *P = L-&gt;getParentLoop()) {</div>
 <div class="line"><a name="l00287"></a><span class="lineno">  287</span>&#160;    <span class="keywordflow">if</span> (areSymbolsLoopInvariant(A, symbols, P, SE)) {</div>
@@ -428,7 +428,7 @@ $(function() {
 <div class="line"><a name="l00363"></a><span class="lineno">  363</span>&#160;    <span class="comment">// A holds symbols</span></div>
 <div class="line"><a name="l00364"></a><span class="lineno">  364</span>&#160;    <span class="comment">// B holds loop bounds</span></div>
 <div class="line"><a name="l00365"></a><span class="lineno">  365</span>&#160;    <span class="comment">// they&#39;re separate so we can grow them independently</span></div>
-<div class="line"><a name="l00366"></a><span class="lineno">  366</span>&#160;    std::array&lt;IntMatrix, 2&gt; AB;</div>
+<div class="line"><a name="l00366"></a><span class="lineno">  366</span>&#160;    std::array&lt;IntMatrix&lt;math::StridedDims&gt;, 2&gt; AB;</div>
 <div class="line"><a name="l00367"></a><span class="lineno">  367</span>&#160;    <span class="keyword">auto</span> &amp;[A, B] = AB;</div>
 <div class="line"><a name="l00368"></a><span class="lineno">  368</span>&#160;    <span class="comment">// once we&#39;re done assembling these, we&#39;ll concatenate A and B</span></div>
 <div class="line"><a name="l00369"></a><span class="lineno">  369</span>&#160;    <span class="keywordtype">unsigned</span> maxDepth = L-&gt;getLoopDepth();</div>
@@ -451,7 +451,7 @@ $(function() {
 <div class="line"><a name="l00386"></a><span class="lineno">  386</span>&#160;      <span class="comment">// search B(_,d) for references</span></div>
 <div class="line"><a name="l00387"></a><span class="lineno">  387</span>&#160;      <span class="keywordflow">for</span> (ptrdiff_t i = 0; i &lt; B.numRow(); ++i) {</div>
 <div class="line"><a name="l00388"></a><span class="lineno">  388</span>&#160;        <span class="comment">// TODO; confirm `last` vs `end`</span></div>
-<div class="line"><a name="l00389"></a><span class="lineno">  389</span>&#160;        <span class="keywordflow">if</span> (int64_t Bid = B(i, d)) {</div>
+<div class="line"><a name="l00389"></a><span class="lineno">  389</span>&#160;        <span class="keywordflow">if</span> (int64_t Bid = B[i, d]) {</div>
 <div class="line"><a name="l00390"></a><span class="lineno">  390</span>&#160;          <span class="keywordflow">if</span> (!P) { <span class="comment">// find P</span></div>
 <div class="line"><a name="l00391"></a><span class="lineno">  391</span>&#160;            P = L;</div>
 <div class="line"><a name="l00392"></a><span class="lineno">  392</span>&#160;            <span class="keywordflow">for</span> (ptrdiff_t r = d + 1; r &lt; maxDepth; ++r) P = P-&gt;getParentLoop();</div>
@@ -471,10 +471,10 @@ $(function() {
 <div class="line"><a name="l00406"></a><span class="lineno">  406</span>&#160;    <span class="keywordtype">unsigned</span> numConstraints = unsigned(A.numRow()), N = unsigned(A.numCol());</div>
 <div class="line"><a name="l00407"></a><span class="lineno">  407</span>&#160;    Valid&lt;Loop&gt; aln{</div>
 <div class="line"><a name="l00408"></a><span class="lineno">  408</span>&#160;      Loop::allocate(alloc, L, numConstraints, depth, symbols, maxDepth)};</div>
-<div class="line"><a name="l00409"></a><span class="lineno">  409</span>&#160;    aln-&gt;getA()(_, _(0, N)) &lt;&lt; A;</div>
+<div class="line"><a name="l00409"></a><span class="lineno">  409</span>&#160;    aln-&gt;getA()[_, _(0, N)] &lt;&lt; A;</div>
 <div class="line"><a name="l00410"></a><span class="lineno">  410</span>&#160;    <span class="comment">// copy the included loops from B</span></div>
 <div class="line"><a name="l00411"></a><span class="lineno">  411</span>&#160;    <span class="comment">// we use outer &lt;-&gt; inner order, so we skip unsupported outer loops.</span></div>
-<div class="line"><a name="l00412"></a><span class="lineno">  412</span>&#160;    aln-&gt;getA()(_, _(N, N + depth)) &lt;&lt; B(_, _(end - depth, end));</div>
+<div class="line"><a name="l00412"></a><span class="lineno">  412</span>&#160;    aln-&gt;getA()[_, _(N, N + depth)] &lt;&lt; B[_, _(end - depth, end)];</div>
 <div class="line"><a name="l00413"></a><span class="lineno">  413</span>&#160;    <span class="keywordflow">return</span> aln;</div>
 <div class="line"><a name="l00414"></a><span class="lineno">  414</span>&#160;    <span class="comment">// addZeroLowerBounds();</span></div>
 <div class="line"><a name="l00415"></a><span class="lineno">  415</span>&#160;    <span class="comment">// NOTE: pruneBounds() is not legal here if we wish to use</span></div>
@@ -501,15 +501,15 @@ $(function() {
 <div class="line"><a name="l00446"></a><span class="lineno">  446</span>&#160;    <span class="keyword">const</span> <span class="keyword">auto</span> [M, N] = A.size();</div>
 <div class="line"><a name="l00447"></a><span class="lineno">  447</span>&#160;    <span class="keyword">auto</span> syms{getSyms()};</div>
 <div class="line"><a name="l00448"></a><span class="lineno">  448</span>&#160;    Valid&lt;Loop&gt; aln{Loop::allocate(alloc, L, ptrdiff_t(M) + numExtraVar,</div>
-<div class="line"><a name="l00449"></a><span class="lineno">  449</span>&#160;                                     numLoops, syms, nonNeg)};</div>
+<div class="line"><a name="l00449"></a><span class="lineno">  449</span>&#160;                                   numLoops, syms, nonNeg)};</div>
 <div class="line"><a name="l00450"></a><span class="lineno">  450</span>&#160;    <span class="keyword">auto</span> B{aln-&gt;getA()};</div>
 <div class="line"><a name="l00451"></a><span class="lineno">  451</span>&#160;    invariant(B.numRow(), M + numExtraVar);</div>
 <div class="line"><a name="l00452"></a><span class="lineno">  452</span>&#160;    invariant(B.numCol(), N);</div>
-<div class="line"><a name="l00453"></a><span class="lineno">  453</span>&#160;    B(_(0, M), _(0, numConst)) &lt;&lt; A(_, _(0, numConst));</div>
-<div class="line"><a name="l00454"></a><span class="lineno">  454</span>&#160;    B(_(0, M), _(numConst, end)) &lt;&lt; A(_, _(numConst, end)) * R;</div>
+<div class="line"><a name="l00453"></a><span class="lineno">  453</span>&#160;    B[_(0, M), _(0, numConst)] &lt;&lt; A[_, _(0, numConst)];</div>
+<div class="line"><a name="l00454"></a><span class="lineno">  454</span>&#160;    B[_(0, M), _(numConst, end)] &lt;&lt; A[_, _(numConst, end)] * R;</div>
 <div class="line"><a name="l00455"></a><span class="lineno">  455</span>&#160;    <span class="keywordflow">if</span> (addExtra) {</div>
-<div class="line"><a name="l00456"></a><span class="lineno">  456</span>&#160;      B(_(M, end), _(0, numConst)) &lt;&lt; 0;</div>
-<div class="line"><a name="l00457"></a><span class="lineno">  457</span>&#160;      B(_(M, end), _(numConst, end)) &lt;&lt; R;</div>
+<div class="line"><a name="l00456"></a><span class="lineno">  456</span>&#160;      B[_(M, end), _(0, numConst)] &lt;&lt; 0;</div>
+<div class="line"><a name="l00457"></a><span class="lineno">  457</span>&#160;      B[_(M, end), _(numConst, end)] &lt;&lt; R;</div>
 <div class="line"><a name="l00458"></a><span class="lineno">  458</span>&#160;    }</div>
 <div class="line"><a name="l00459"></a><span class="lineno">  459</span>&#160;    <span class="comment">// A * O * [I 0; 0 R] = A * [I 0; 0 R] - A * [0 0; offs 0] * [I 0; 0 R]</span></div>
 <div class="line"><a name="l00460"></a><span class="lineno">  460</span>&#160;    <span class="comment">// above, we computed `A * [I 0; 0 R]`, now if offsets != nullptr,</span></div>
@@ -523,8 +523,8 @@ $(function() {
 <div class="line"><a name="l00468"></a><span class="lineno">  468</span>&#160;    <span class="keywordflow">if</span> (offsets) {</div>
 <div class="line"><a name="l00469"></a><span class="lineno">  469</span>&#160;      <span class="keywordflow">for</span> (ptrdiff_t l = 0, D = getNumLoops(); l &lt; D; ++l) {</div>
 <div class="line"><a name="l00470"></a><span class="lineno">  470</span>&#160;        <span class="keywordflow">if</span> (int64_t mlt = offsets[l]) {</div>
-<div class="line"><a name="l00471"></a><span class="lineno">  471</span>&#160;          B(_(0, M), 0) -= mlt * A(_, numConst + l);</div>
-<div class="line"><a name="l00472"></a><span class="lineno">  472</span>&#160;          <span class="keywordflow">if</span> (addExtra) B(M + l, 0) = -mlt;</div>
+<div class="line"><a name="l00471"></a><span class="lineno">  471</span>&#160;          B[_(0, M), 0] -= mlt * A[_, numConst + l];</div>
+<div class="line"><a name="l00472"></a><span class="lineno">  472</span>&#160;          <span class="keywordflow">if</span> (addExtra) B[M + l, 0] = -mlt;</div>
 <div class="line"><a name="l00473"></a><span class="lineno">  473</span>&#160;        }</div>
 <div class="line"><a name="l00474"></a><span class="lineno">  474</span>&#160;      }</div>
 <div class="line"><a name="l00475"></a><span class="lineno">  475</span>&#160;    }</div>
@@ -543,12 +543,12 @@ $(function() {
 <div class="line"><a name="l00488"></a><span class="lineno">  488</span>&#160;    <span class="keyword">auto</span> ret = Loop::allocate(alloc, L-&gt;getParentLoop(), <span class="keywordtype">unsigned</span>(A.numRow()),</div>
 <div class="line"><a name="l00489"></a><span class="lineno">  489</span>&#160;                              getNumLoops() - 1, getSyms(), isNonNegative());</div>
 <div class="line"><a name="l00490"></a><span class="lineno">  490</span>&#160;    MutPtrMatrix&lt;int64_t&gt; B{ret-&gt;getA()};</div>
-<div class="line"><a name="l00491"></a><span class="lineno">  491</span>&#160;    B &lt;&lt; A(_, _(0, last));</div>
+<div class="line"><a name="l00491"></a><span class="lineno">  491</span>&#160;    B &lt;&lt; A[_, _(0, last)];</div>
 <div class="line"><a name="l00492"></a><span class="lineno">  492</span>&#160;    <span class="comment">// no loop may be conditioned on the innermost loop, so we should be able to</span></div>
 <div class="line"><a name="l00493"></a><span class="lineno">  493</span>&#160;    <span class="comment">// safely remove all constraints that reference it</span></div>
 <div class="line"><a name="l00494"></a><span class="lineno">  494</span>&#160;    <span class="keywordflow">for</span> (Row m = B.numRow(); m--;) {</div>
-<div class="line"><a name="l00495"></a><span class="lineno">  495</span>&#160;      <span class="keywordflow">if</span> (A(m, last)) {</div>
-<div class="line"><a name="l00496"></a><span class="lineno">  496</span>&#160;        <span class="keywordflow">if</span> (m != B.numRow() - 1) B(m, _) &lt;&lt; B(last, _);</div>
+<div class="line"><a name="l00495"></a><span class="lineno">  495</span>&#160;      <span class="keywordflow">if</span> (A[m, last]) {</div>
+<div class="line"><a name="l00496"></a><span class="lineno">  496</span>&#160;        <span class="keywordflow">if</span> (m != B.numRow() - 1) B[m, _] &lt;&lt; B[last, _];</div>
 <div class="line"><a name="l00497"></a><span class="lineno">  497</span>&#160;        B.truncate(B.numRow() - 1);</div>
 <div class="line"><a name="l00498"></a><span class="lineno">  498</span>&#160;      }</div>
 <div class="line"><a name="l00499"></a><span class="lineno">  499</span>&#160;    }</div>
@@ -602,14 +602,14 @@ $(function() {
 <div class="line"><a name="l00547"></a><span class="lineno">  547</span>&#160;    ptrdiff_t M = numConstraints;</div>
 <div class="line"><a name="l00548"></a><span class="lineno">  548</span>&#160;    numConstraints += numLoops;</div>
 <div class="line"><a name="l00549"></a><span class="lineno">  549</span>&#160;    <span class="keyword">auto</span> A{getA()};</div>
-<div class="line"><a name="l00550"></a><span class="lineno">  550</span>&#160;    A(_(M, end), _) &lt;&lt; 0;</div>
-<div class="line"><a name="l00551"></a><span class="lineno">  551</span>&#160;    <span class="keywordflow">for</span> (ptrdiff_t i = 0; i &lt; numLoops; ++i) A(M + i, end - numLoops + i) = 1;</div>
+<div class="line"><a name="l00550"></a><span class="lineno">  550</span>&#160;    A[_(M, end), _] &lt;&lt; 0;</div>
+<div class="line"><a name="l00551"></a><span class="lineno">  551</span>&#160;    <span class="keywordflow">for</span> (ptrdiff_t i = 0; i &lt; numLoops; ++i) A[M + i, end - numLoops + i] = 1;</div>
 <div class="line"><a name="l00552"></a><span class="lineno">  552</span>&#160;    <span class="comment">// this-&gt;pruneBounds(alloc);</span></div>
 <div class="line"><a name="l00553"></a><span class="lineno">  553</span>&#160;  }</div>
 <div class="line"><a name="l00554"></a><span class="lineno">  554</span>&#160; </div>
 <div class="line"><a name="l00555"></a><span class="lineno">  555</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getProgVars(ptrdiff_t j) <span class="keyword">const</span></div>
 <div class="line"><a name="l00556"></a><span class="lineno">  556</span>&#160;    -&gt; PtrVector&lt;int64_t&gt; {</div>
-<div class="line"><a name="l00557"></a><span class="lineno">  557</span>&#160;    <span class="keywordflow">return</span> getA()(j, _(0, getNumSymbols()));</div>
+<div class="line"><a name="l00557"></a><span class="lineno">  557</span>&#160;    <span class="keywordflow">return</span> getA()[j, _(0, getNumSymbols())];</div>
 <div class="line"><a name="l00558"></a><span class="lineno">  558</span>&#160;  }</div>
 <div class="line"><a name="l00559"></a><span class="lineno">  559</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> copy(Arena&lt;&gt; *alloc) <span class="keyword">const</span> -&gt; Valid&lt;Loop&gt; {</div>
 <div class="line"><a name="l00560"></a><span class="lineno">  560</span>&#160;    <span class="keyword">auto</span> ret = Loop::allocate(alloc, L, numConstraints, numLoops, getSyms(),</div>
@@ -620,7 +620,7 @@ $(function() {
 <div class="line"><a name="l00565"></a><span class="lineno">  565</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> removeLoop(Arena&lt;&gt; *alloc, ptrdiff_t v) <span class="keyword">const</span> -&gt; Loop * {</div>
 <div class="line"><a name="l00566"></a><span class="lineno">  566</span>&#160;    <span class="keyword">auto</span> A{getA()};</div>
 <div class="line"><a name="l00567"></a><span class="lineno">  567</span>&#160;    v += getNumSymbols();</div>
-<div class="line"><a name="l00568"></a><span class="lineno">  568</span>&#160;    <span class="keyword">auto</span> zeroNegPos = indsZeroNegPos(A(_, v));</div>
+<div class="line"><a name="l00568"></a><span class="lineno">  568</span>&#160;    <span class="keyword">auto</span> zeroNegPos = indsZeroNegPos(A[_, v]);</div>
 <div class="line"><a name="l00569"></a><span class="lineno">  569</span>&#160;    <span class="keyword">auto</span> &amp;[zer, neg, pos] = zeroNegPos;</div>
 <div class="line"><a name="l00570"></a><span class="lineno">  570</span>&#160;    <span class="keywordtype">unsigned</span> numCon =</div>
 <div class="line"><a name="l00571"></a><span class="lineno">  571</span>&#160;      unsigned(A.numRow()) - pos.size() + neg.size() * pos.size();</div>
@@ -875,7 +875,7 @@ $(function() {
 <div class="line"><a name="l00820"></a><span class="lineno">  820</span>&#160;  <span class="comment">// We pop off the outer most loop on every iteration.</span></div>
 <div class="line"><a name="l00821"></a><span class="lineno">  821</span>&#160;  <span class="keyword">friend</span> <span class="keyword">inline</span> <span class="keyword">auto</span> operator&lt;&lt;(llvm::raw_ostream &amp;os, <span class="keyword">const</span> Loop &amp;aln)</div>
 <div class="line"><a name="l00822"></a><span class="lineno">  822</span>&#160;    -&gt; llvm::raw_ostream &amp; {</div>
-<div class="line"><a name="l00823"></a><span class="lineno">  823</span>&#160;    utils::OwningArena&lt;&gt; alloc;</div>
+<div class="line"><a name="l00823"></a><span class="lineno">  823</span>&#160;    alloc::OwningArena&lt;&gt; alloc;</div>
 <div class="line"><a name="l00824"></a><span class="lineno">  824</span>&#160;    aln.dump(os, &amp;alloc);</div>
 <div class="line"><a name="l00825"></a><span class="lineno">  825</span>&#160;    <span class="keywordflow">return</span> os;</div>
 <div class="line"><a name="l00826"></a><span class="lineno">  826</span>&#160;  }</div>
