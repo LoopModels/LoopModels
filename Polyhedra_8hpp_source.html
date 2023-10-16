@@ -72,13 +72,13 @@ $(function() {
 <div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="preprocessor">#pragma once</span></div>
 <div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160; </div>
 <div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="preprocessor">#include &quot;Polyhedra/Comparators.hpp&quot;</span></div>
-<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor">#include &lt;Math/Array.hpp&gt;</span></div>
-<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="preprocessor">#include &lt;Math/Constraints.hpp&gt;</span></div>
-<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="preprocessor">#include &lt;Math/Constructors.hpp&gt;</span></div>
-<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="preprocessor">#include &lt;Math/EmptyArrays.hpp&gt;</span></div>
-<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="preprocessor">#include &lt;Math/Math.hpp&gt;</span></div>
-<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="preprocessor">#include &lt;Math/VectorGreatestCommonDivisor.hpp&gt;</span></div>
-<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="preprocessor">#include &lt;Alloc/Arena.hpp&gt;</span></div>
+<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor">#include &lt;Alloc/Arena.hpp&gt;</span></div>
+<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="preprocessor">#include &lt;Math/Array.hpp&gt;</span></div>
+<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="preprocessor">#include &lt;Math/Constraints.hpp&gt;</span></div>
+<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="preprocessor">#include &lt;Math/Constructors.hpp&gt;</span></div>
+<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="preprocessor">#include &lt;Math/EmptyArrays.hpp&gt;</span></div>
+<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="preprocessor">#include &lt;Math/Math.hpp&gt;</span></div>
+<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="preprocessor">#include &lt;Math/VectorGreatestCommonDivisor.hpp&gt;</span></div>
 <div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="preprocessor">#include &lt;algorithm&gt;</span></div>
 <div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="preprocessor">#include &lt;cstddef&gt;</span></div>
 <div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="preprocessor">#include &lt;cstdint&gt;</span></div>
@@ -89,10 +89,10 @@ $(function() {
 <div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;<span class="preprocessor">#include &lt;ostream&gt;</span></div>
 <div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;<span class="preprocessor">#endif</span></div>
 <div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;<span class="keyword">namespace </span>poly::poly {</div>
-<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;<span class="keyword">using</span> math::DensePtrMatrix, math::MutDensePtrMatrix, math::EmptyMatrix,</div>
-<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;  math::Row, math::Col, math::vector, math::matrix, math::_, math::end,</div>
-<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;  math::last, math::operator&lt;&lt;;</div>
-<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;<span class="keyword">using</span> alloc::Arena;</div>
+<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;<span class="keyword">using</span> alloc::Arena;</div>
+<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;<span class="keyword">using</span> math::DensePtrMatrix, math::MutDensePtrMatrix, math::EmptyMatrix,</div>
+<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;  math::Row, math::Col, math::vector, math::matrix, math::_, math::end,</div>
+<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;  math::last, math::operator&lt;&lt;;</div>
 <div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> printPositive(std::ostream &amp;os, ptrdiff_t stop) -&gt; std::ostream &amp; {</div>
 <div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;  <span class="keywordflow">for</span> (ptrdiff_t i = 0; i &lt; stop; ++i) os &lt;&lt; <span class="stringliteral">&quot;v_&quot;</span> &lt;&lt; i &lt;&lt; <span class="stringliteral">&quot; &gt;= 0\n&quot;</span>;</div>
 <div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;  <span class="keywordflow">return</span> os;</div>
@@ -186,8 +186,8 @@ $(function() {
 <div class="line"><a name="l00150"></a><span class="lineno">  150</span>&#160;      setNumConstraints(<span class="keywordtype">unsigned</span>(ar));</div>
 <div class="line"><a name="l00151"></a><span class="lineno">  151</span>&#160;      setNumEqConstraints(<span class="keywordtype">unsigned</span>(er));</div>
 <div class="line"><a name="l00152"></a><span class="lineno">  152</span>&#160;      <span class="keywordflow">for</span> (ptrdiff_t i = 0; i &lt; getNumEqualityConstraints(); ++i) {</div>
-<div class="line"><a name="l00153"></a><span class="lineno">  153</span>&#160;        <span class="keyword">auto</span> l = gcd(getE()(i, _));</div>
-<div class="line"><a name="l00154"></a><span class="lineno">  154</span>&#160;        <span class="keywordflow">if</span> (l != 1) getE()(i, _) /= l;</div>
+<div class="line"><a name="l00153"></a><span class="lineno">  153</span>&#160;        <span class="keyword">auto</span> l = gcd(getE()[i, _]);</div>
+<div class="line"><a name="l00154"></a><span class="lineno">  154</span>&#160;        <span class="keywordflow">if</span> (l != 1) getE()[i, _] /= l;</div>
 <div class="line"><a name="l00155"></a><span class="lineno">  155</span>&#160;      }</div>
 <div class="line"><a name="l00156"></a><span class="lineno">  156</span>&#160;    }</div>
 <div class="line"><a name="l00157"></a><span class="lineno">  157</span>&#160;    <span class="keyword">auto</span> C = initializeComparator(alloc);</div>
@@ -202,7 +202,7 @@ $(function() {
 <div class="line"><a name="l00166"></a><span class="lineno">  166</span>&#160;      <span class="keywordtype">bool</span> broke = <span class="keyword">false</span>;</div>
 <div class="line"><a name="l00167"></a><span class="lineno">  167</span>&#160;      <span class="keywordflow">for</span> (<span class="keyword">auto</span> i = --j; i;) {</div>
 <div class="line"><a name="l00168"></a><span class="lineno">  168</span>&#160;        <span class="keywordflow">if</span> (getNumCon() &lt;= 1) <span class="keywordflow">return</span>;</div>
-<div class="line"><a name="l00169"></a><span class="lineno">  169</span>&#160;        diff &lt;&lt; getA()(--i, _) - getA()(j, _);</div>
+<div class="line"><a name="l00169"></a><span class="lineno">  169</span>&#160;        diff &lt;&lt; getA()[--i, _] - getA()[j, _];</div>
 <div class="line"><a name="l00170"></a><span class="lineno">  170</span>&#160;        <span class="keywordflow">if</span> (C.greaterEqual(*alloc, diff)) {</div>
 <div class="line"><a name="l00171"></a><span class="lineno">  171</span>&#160;          eraseConstraint(i);</div>
 <div class="line"><a name="l00172"></a><span class="lineno">  172</span>&#160;          rollback(alloc, p);</div>
@@ -219,7 +219,7 @@ $(function() {
 <div class="line"><a name="l00183"></a><span class="lineno">  183</span>&#160;      <span class="keywordflow">if</span> constexpr (MaybeNonNeg) {</div>
 <div class="line"><a name="l00184"></a><span class="lineno">  184</span>&#160;        <span class="keywordflow">if</span> (isNonNegative() &amp;&amp; !broke) {</div>
 <div class="line"><a name="l00185"></a><span class="lineno">  185</span>&#160;          <span class="keywordflow">for</span> (ptrdiff_t i = 0; i &lt; dyn; ++i) {</div>
-<div class="line"><a name="l00186"></a><span class="lineno">  186</span>&#160;            diff &lt;&lt; getA()(j, _);</div>
+<div class="line"><a name="l00186"></a><span class="lineno">  186</span>&#160;            diff &lt;&lt; getA()[j, _];</div>
 <div class="line"><a name="l00187"></a><span class="lineno">  187</span>&#160;            --diff[last - i];</div>
 <div class="line"><a name="l00188"></a><span class="lineno">  188</span>&#160;            <span class="keywordflow">if</span> (C.greaterEqual(*alloc, diff)) {</div>
 <div class="line"><a name="l00189"></a><span class="lineno">  189</span>&#160;              eraseConstraint(j);</div>

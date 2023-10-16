@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.9.1"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>LoopModels: URand&lt; double &gt; Struct Reference</title>
+<title>LoopModels: TrieWrap&lt; D &gt; Struct Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -63,20 +63,35 @@ $(function() {
 <div class="header">
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
-<a href="structURand_3_01double_01_4-members.html">List of all members</a>  </div>
+<a href="#pub-attribs">Public Attributes</a> &#124;
+<a href="structTrieWrap-members.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">URand&lt; double &gt; Struct Reference</div>  </div>
+<div class="title">TrieWrap&lt; D &gt; Struct Template Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a74f20e66c3d9800dc9b24aaafce882de"><td class="memItemLeft" align="right" valign="top"><a id="a74f20e66c3d9800dc9b24aaafce882de"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (std::mt19937_64 &amp;rng) -&gt; double</td></tr>
-<tr class="separator:a74f20e66c3d9800dc9b24aaafce882de"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8af460a0b046d654a6c64b4c83c85ff2"><td class="memTemplParams" colspan="2"><a id="a8af460a0b046d654a6c64b4c83c85ff2"></a>
+template&lt;class K &gt; </td></tr>
+<tr class="memitem:a8af460a0b046d654a6c64b4c83c85ff2"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>operator[]</b> (const K &amp;k) -&gt; auto &amp;</td></tr>
+<tr class="separator:a8af460a0b046d654a6c64b4c83c85ff2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a974730793ac64fe1496b0c6bb997b42c"><td class="memTemplParams" colspan="2"><a id="a974730793ac64fe1496b0c6bb997b42c"></a>
+template&lt;class K &gt; </td></tr>
+<tr class="memitem:a974730793ac64fe1496b0c6bb997b42c"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>erase</b> (const K &amp;k)</td></tr>
+<tr class="separator:a974730793ac64fe1496b0c6bb997b42c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
+Public Attributes</h2></td></tr>
+<tr class="memitem:aac596c2c1f878017a73f30a461e34b0d"><td class="memItemLeft" align="right" valign="top"><a id="aac596c2c1f878017a73f30a461e34b0d"></a>
+D&#160;</td><td class="memItemRight" valign="bottom"><b>d</b></td></tr>
+<tr class="separator:aac596c2c1f878017a73f30a461e34b0d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a00c0b6dcfda7483baf98b5dfccf5a55f"><td class="memItemLeft" align="right" valign="top"><a id="a00c0b6dcfda7483baf98b5dfccf5a55f"></a>
+poly::alloc::Arena *&#160;</td><td class="memItemRight" valign="bottom"><b>alloc</b></td></tr>
+<tr class="separator:a00c0b6dcfda7483baf98b5dfccf5a55f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <hr/>The documentation for this struct was generated from the following file:<ul>
-<li>benchmark/include/<a class="el" href="matrix__exp_8hpp_source.html">matrix_exp.hpp</a></li>
+<li>benchmark/include/<a class="el" href="map__benchmark_8hpp_source.html">map_benchmark.hpp</a></li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->

@@ -465,11 +465,11 @@ $(function() {
 <div class="line"><a name="l00405"></a><span class="lineno">  405</span>&#160;  }</div>
 <div class="line"><a name="l00407"></a><span class="lineno"><a class="line" href="classpoly_1_1lp_1_1ScheduledNode.html#a0f570dd701e4e41d75597c7cbb3a5e4c">  407</a></span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> <a class="code" href="classpoly_1_1lp_1_1ScheduledNode.html#a0f570dd701e4e41d75597c7cbb3a5e4c">getSchedule</a>(ptrdiff_t d) <span class="keyword">const</span></div>
 <div class="line"><a name="l00408"></a><span class="lineno">  408</span>&#160;    -&gt; PtrVector&lt;int64_t&gt; {</div>
-<div class="line"><a name="l00409"></a><span class="lineno">  409</span>&#160;    <span class="keywordflow">return</span> getPhi()(d, _);</div>
+<div class="line"><a name="l00409"></a><span class="lineno">  409</span>&#160;    <span class="keywordflow">return</span> getPhi()[d, _];</div>
 <div class="line"><a name="l00410"></a><span class="lineno">  410</span>&#160;  }</div>
 <div class="line"><a name="l00411"></a><span class="lineno">  411</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getSchedule(ptrdiff_t d)</div>
 <div class="line"><a name="l00412"></a><span class="lineno">  412</span>&#160;    -&gt; MutPtrVector&lt;int64_t&gt; {</div>
-<div class="line"><a name="l00413"></a><span class="lineno">  413</span>&#160;    <span class="keywordflow">return</span> getPhi()(d, _);</div>
+<div class="line"><a name="l00413"></a><span class="lineno">  413</span>&#160;    <span class="keywordflow">return</span> getPhi()[d, _];</div>
 <div class="line"><a name="l00414"></a><span class="lineno">  414</span>&#160;  }</div>
 <div class="line"><a name="l00415"></a><span class="lineno">  415</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getFusionOmega(ptrdiff_t i) <span class="keyword">const</span> -&gt; int64_t {</div>
 <div class="line"><a name="l00416"></a><span class="lineno">  416</span>&#160;    <span class="keywordflow">return</span> (mem + 1)[getNumLoopsSquared() + i];</div>
@@ -511,8 +511,8 @@ $(function() {
 <div class="line"><a name="l00452"></a><span class="lineno">  452</span>&#160;    MutSquarePtrMatrix&lt;int64_t&gt; phi = getPhi();</div>
 <div class="line"><a name="l00453"></a><span class="lineno">  453</span>&#160;    ptrdiff_t indR = ptrdiff_t(indMat.numCol());</div>
 <div class="line"><a name="l00454"></a><span class="lineno">  454</span>&#160;    <span class="keywordflow">for</span> (ptrdiff_t i = 0; i &lt; r; ++i) {</div>
-<div class="line"><a name="l00455"></a><span class="lineno">  455</span>&#160;      phi(i, _(0, indR)) &lt;&lt; indMat(i, _);</div>
-<div class="line"><a name="l00456"></a><span class="lineno">  456</span>&#160;      phi(i, _(indR, end)) &lt;&lt; 0;</div>
+<div class="line"><a name="l00455"></a><span class="lineno">  455</span>&#160;      phi[i, _(0, indR)] &lt;&lt; indMat[i, _];</div>
+<div class="line"><a name="l00456"></a><span class="lineno">  456</span>&#160;      phi[i, _(indR, end)] &lt;&lt; 0;</div>
 <div class="line"><a name="l00457"></a><span class="lineno">  457</span>&#160;    }</div>
 <div class="line"><a name="l00458"></a><span class="lineno">  458</span>&#160;    rank = r;</div>
 <div class="line"><a name="l00459"></a><span class="lineno">  459</span>&#160;  }</div>
@@ -579,7 +579,7 @@ $(function() {
 <div class="ttc" id="aclasspoly_1_1lp_1_1ScheduledNode_html_a0dca20e729df1a3fcd6080fd80176061"><div class="ttname"><a href="classpoly_1_1lp_1_1ScheduledNode.html#a0dca20e729df1a3fcd6080fd80176061">poly::lp::ScheduledNode::fuse</a></div><div class="ttdeci">constexpr auto fuse(ScheduledNode *n) -&gt; ScheduledNode *</div><div class="ttdef"><b>Definition:</b> ScheduledNode.hpp:102</div></div>
 <div class="ttc" id="aclasspoly_1_1lp_1_1ScheduledNode_html_a0f570dd701e4e41d75597c7cbb3a5e4c"><div class="ttname"><a href="classpoly_1_1lp_1_1ScheduledNode.html#a0f570dd701e4e41d75597c7cbb3a5e4c">poly::lp::ScheduledNode::getSchedule</a></div><div class="ttdeci">constexpr auto getSchedule(ptrdiff_t d) const -&gt; PtrVector&lt; int64_t &gt;</div><div class="ttdoc">getSchedule, loops are always indexed from outer to inner</div><div class="ttdef"><b>Definition:</b> ScheduledNode.hpp:407</div></div>
 <div class="ttc" id="aclasspoly_1_1poly_1_1Dependencies_html"><div class="ttname"><a href="classpoly_1_1poly_1_1Dependencies.html">poly::poly::Dependencies</a></div><div class="ttdef"><b>Definition:</b> Dependence.hpp:553</div></div>
-<div class="ttc" id="aclasspoly_1_1poly_1_1Loop_html"><div class="ttname"><a href="classpoly_1_1poly_1_1Loop.html">poly::poly::Loop</a></div><div class="ttdef"><b>Definition:</b> Loops.hpp:328</div></div>
+<div class="ttc" id="aclasspoly_1_1poly_1_1Loop_html"><div class="ttname"><a href="classpoly_1_1poly_1_1Loop.html">poly::poly::Loop</a></div><div class="ttdef"><b>Definition:</b> Loops.hpp:329</div></div>
 <div class="ttc" id="astructpoly_1_1lp_1_1ScheduledNode_1_1Component_html"><div class="ttname"><a href="structpoly_1_1lp_1_1ScheduledNode_1_1Component.html">poly::lp::ScheduledNode::Component</a></div><div class="ttdef"><b>Definition:</b> ScheduledNode.hpp:132</div></div>
 <div class="ttc" id="astructpoly_1_1lp_1_1ScheduledNode_1_1DepFilter_html"><div class="ttname"><a href="structpoly_1_1lp_1_1ScheduledNode_1_1DepFilter.html">poly::lp::ScheduledNode::DepFilter</a></div><div class="ttdef"><b>Definition:</b> ScheduledNode.hpp:219</div></div>
 <div class="ttc" id="astructpoly_1_1lp_1_1ScheduledNode_1_1DepIDs_html"><div class="ttname"><a href="structpoly_1_1lp_1_1ScheduledNode_1_1DepIDs.html">poly::lp::ScheduledNode::DepIDs</a></div><div class="ttdef"><b>Definition:</b> ScheduledNode.hpp:207</div></div>

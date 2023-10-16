@@ -102,9 +102,9 @@ $(function() {
 <div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;  <span class="keyword">const</span> Row numConstraints = A.numRow();</div>
 <div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;  <span class="keyword">const</span> <span class="keywordtype">unsigned</span> numSyms = syms.size() + 1;</div>
 <div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;  <span class="keywordflow">for</span> (Row c = 0; c &lt; numConstraints; ++c) {</div>
-<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;    printConstraint(os, A(c, _), numSyms, inequality);</div>
+<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;    printConstraint(os, A[c, _], numSyms, inequality);</div>
 <div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;    <span class="keywordflow">for</span> (ptrdiff_t v = 1; v &lt; numSyms; ++v) {</div>
-<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;      <span class="keywordflow">if</span> (int64_t Acv = A(c, v)) {</div>
+<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;      <span class="keywordflow">if</span> (int64_t Acv = A[c, v]) {</div>
 <div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;        os &lt;&lt; (Acv &gt; 0 ? <span class="stringliteral">&quot; + &quot;</span> : <span class="stringliteral">&quot; - &quot;</span>);</div>
 <div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;        Acv = math::constexpr_abs(Acv);</div>
 <div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;        <span class="keywordflow">if</span> (Acv != 1) os &lt;&lt; Acv &lt;&lt; <span class="stringliteral">&quot;*&quot;</span>;</div>
@@ -267,23 +267,23 @@ $(function() {
 <div class="line"><a name="l00247"></a><span class="lineno">  247</span>&#160;      numDynSym};</div>
 <div class="line"><a name="l00248"></a><span class="lineno">  248</span>&#160;  }</div>
 <div class="line"><a name="l00249"></a><span class="lineno">  249</span>&#160;  <span class="keyword">auto</span> getSymbols(ptrdiff_t i) -&gt; math::MutPtrVector&lt;int64_t&gt; {</div>
-<div class="line"><a name="l00250"></a><span class="lineno">  250</span>&#160;    <span class="keywordflow">return</span> getA()(i, _(math::begin, getNumSymbols()));</div>
+<div class="line"><a name="l00250"></a><span class="lineno">  250</span>&#160;    <span class="keywordflow">return</span> getA()[i, _(math::begin, getNumSymbols())];</div>
 <div class="line"><a name="l00251"></a><span class="lineno">  251</span>&#160;  }</div>
 <div class="line"><a name="l00252"></a><span class="lineno">  252</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getInEqSymbols(ptrdiff_t i) <span class="keyword">const</span> -&gt; PtrVector&lt;int64_t&gt; {</div>
-<div class="line"><a name="l00253"></a><span class="lineno">  253</span>&#160;    <span class="keywordflow">return</span> getA()(i, _(math::begin, getNumSymbols()));</div>
+<div class="line"><a name="l00253"></a><span class="lineno">  253</span>&#160;    <span class="keywordflow">return</span> getA()[i, _(math::begin, getNumSymbols())];</div>
 <div class="line"><a name="l00254"></a><span class="lineno">  254</span>&#160;  }</div>
 <div class="line"><a name="l00255"></a><span class="lineno">  255</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getEqSymbols(ptrdiff_t i) <span class="keyword">const</span> -&gt; PtrVector&lt;int64_t&gt; {</div>
-<div class="line"><a name="l00256"></a><span class="lineno">  256</span>&#160;    <span class="keywordflow">return</span> getE()(i, _(math::begin, getNumSymbols()));</div>
+<div class="line"><a name="l00256"></a><span class="lineno">  256</span>&#160;    <span class="keywordflow">return</span> getE()[i, _(math::begin, getNumSymbols())];</div>
 <div class="line"><a name="l00257"></a><span class="lineno">  257</span>&#160;  }</div>
 <div class="line"><a name="l00258"></a><span class="lineno">  258</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getCompTimeInEqOffset(ptrdiff_t i) <span class="keyword">const</span></div>
 <div class="line"><a name="l00259"></a><span class="lineno">  259</span>&#160;    -&gt; std::optional&lt;int64_t&gt; {</div>
-<div class="line"><a name="l00260"></a><span class="lineno">  260</span>&#160;    <span class="keywordflow">if</span> (!allZero(getA()(i, _(1, getNumSymbols())))) <span class="keywordflow">return</span> {};</div>
-<div class="line"><a name="l00261"></a><span class="lineno">  261</span>&#160;    <span class="keywordflow">return</span> getA()(i, 0);</div>
+<div class="line"><a name="l00260"></a><span class="lineno">  260</span>&#160;    <span class="keywordflow">if</span> (!allZero(getA()[i, _(1, getNumSymbols())])) <span class="keywordflow">return</span> {};</div>
+<div class="line"><a name="l00261"></a><span class="lineno">  261</span>&#160;    <span class="keywordflow">return</span> getA()[i, 0];</div>
 <div class="line"><a name="l00262"></a><span class="lineno">  262</span>&#160;  }</div>
 <div class="line"><a name="l00263"></a><span class="lineno">  263</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getCompTimeEqOffset(ptrdiff_t i) <span class="keyword">const</span></div>
 <div class="line"><a name="l00264"></a><span class="lineno">  264</span>&#160;    -&gt; std::optional&lt;int64_t&gt; {</div>
-<div class="line"><a name="l00265"></a><span class="lineno">  265</span>&#160;    <span class="keywordflow">if</span> (!allZero(getE()(i, _(1, getNumSymbols())))) <span class="keywordflow">return</span> {};</div>
-<div class="line"><a name="l00266"></a><span class="lineno">  266</span>&#160;    <span class="keywordflow">return</span> getE()(i, 0);</div>
+<div class="line"><a name="l00265"></a><span class="lineno">  265</span>&#160;    <span class="keywordflow">if</span> (!allZero(getE()[i, _(1, getNumSymbols())])) <span class="keywordflow">return</span> {};</div>
+<div class="line"><a name="l00266"></a><span class="lineno">  266</span>&#160;    <span class="keywordflow">return</span> getE()[i, 0];</div>
 <div class="line"><a name="l00267"></a><span class="lineno">  267</span>&#160;  }</div>
 <div class="line"><a name="l00268"></a><span class="lineno">  268</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> findFirstNonEqual(PtrVector&lt;int64_t&gt; x,</div>
 <div class="line"><a name="l00269"></a><span class="lineno">  269</span>&#160;                                          PtrVector&lt;int64_t&gt; y) -&gt; ptrdiff_t {</div>
@@ -301,10 +301,10 @@ $(function() {
 <div class="line"><a name="l00281"></a><span class="lineno">  281</span>&#160;    PtrMatrix&lt;int64_t&gt; indMatX = x-&gt;indexMatrix(), indMatY = y-&gt;indexMatrix();</div>
 <div class="line"><a name="l00282"></a><span class="lineno">  282</span>&#160;    <span class="keywordtype">unsigned</span> indDepth = std::min(x-&gt;getNaturalDepth(), y-&gt;getNaturalDepth());</div>
 <div class="line"><a name="l00283"></a><span class="lineno">  283</span>&#160;    <span class="keywordflow">for</span> (ptrdiff_t i = 0; i &lt; std::min(numLoopsCommon, indDepth); ++i) {</div>
-<div class="line"><a name="l00284"></a><span class="lineno">  284</span>&#160;      A(i, _(0, xDim)) &lt;&lt; indMatX(_, i);</div>
-<div class="line"><a name="l00285"></a><span class="lineno">  285</span>&#160;      A(i, _(xDim, end)) &lt;&lt; indMatY(_, i);</div>
+<div class="line"><a name="l00284"></a><span class="lineno">  284</span>&#160;      A[i, _(0, xDim)] &lt;&lt; indMatX[_, i];</div>
+<div class="line"><a name="l00285"></a><span class="lineno">  285</span>&#160;      A[i, _(xDim, end)] &lt;&lt; indMatY[_, i];</div>
 <div class="line"><a name="l00286"></a><span class="lineno">  286</span>&#160;    }</div>
-<div class="line"><a name="l00287"></a><span class="lineno">  287</span>&#160;    <span class="keywordflow">for</span> (ptrdiff_t i = indDepth; i &lt; numLoopsCommon; ++i) A(i, _) &lt;&lt; 0;</div>
+<div class="line"><a name="l00287"></a><span class="lineno">  287</span>&#160;    <span class="keywordflow">for</span> (ptrdiff_t i = indDepth; i &lt; numLoopsCommon; ++i) A[i, _] &lt;&lt; 0;</div>
 <div class="line"><a name="l00288"></a><span class="lineno">  288</span>&#160;    <span class="comment">// returns rank x num loops</span></div>
 <div class="line"><a name="l00289"></a><span class="lineno">  289</span>&#160;    <span class="keywordflow">return</span> orthogonalNullSpace(std::move(A));</div>
 <div class="line"><a name="l00290"></a><span class="lineno">  290</span>&#160;  }</div>
@@ -315,8 +315,8 @@ $(function() {
 <div class="line"><a name="l00295"></a><span class="lineno">  295</span>&#160;    math::DenseMatrix&lt;int64_t&gt; A(math::DenseDims{numLoopsCommon, dim});</div>
 <div class="line"><a name="l00296"></a><span class="lineno">  296</span>&#160;    <span class="keywordflow">if</span> (!numLoopsCommon) <span class="keywordflow">return</span> A;</div>
 <div class="line"><a name="l00297"></a><span class="lineno">  297</span>&#160;    <span class="comment">// indMats cols are [outerMostLoop,...,innerMostLoop]</span></div>
-<div class="line"><a name="l00298"></a><span class="lineno">  298</span>&#160;    A(_(0, natDepth), _) &lt;&lt; x-&gt;indexMatrix().transpose();</div>
-<div class="line"><a name="l00299"></a><span class="lineno">  299</span>&#160;    <span class="keywordflow">if</span> (natDepth &lt; numLoopsCommon) A(_(natDepth, end), _) &lt;&lt; 0;</div>
+<div class="line"><a name="l00298"></a><span class="lineno">  298</span>&#160;    A[_(0, natDepth), _] &lt;&lt; x-&gt;indexMatrix().transpose();</div>
+<div class="line"><a name="l00299"></a><span class="lineno">  299</span>&#160;    <span class="keywordflow">if</span> (natDepth &lt; numLoopsCommon) A[_(natDepth, end), _] &lt;&lt; 0;</div>
 <div class="line"><a name="l00300"></a><span class="lineno">  300</span>&#160;    <span class="comment">// returns rank x num loops</span></div>
 <div class="line"><a name="l00301"></a><span class="lineno">  301</span>&#160;    <span class="keywordflow">return</span> orthogonalNullSpace(std::move(A));</div>
 <div class="line"><a name="l00302"></a><span class="lineno">  302</span>&#160;  }</div>
@@ -404,7 +404,7 @@ $(function() {
 <div class="line"><a name="l00386"></a><span class="lineno">  386</span>&#160;    Row nc = nc0 + nc1;</div>
 <div class="line"><a name="l00387"></a><span class="lineno">  387</span>&#160;    <span class="keywordtype">unsigned</span> indexDim{aix-&gt;getArrayDim()};</div>
 <div class="line"><a name="l00388"></a><span class="lineno">  388</span>&#160;    <span class="keyword">auto</span> nullStep{dp-&gt;getNullStep()};</div>
-<div class="line"><a name="l00389"></a><span class="lineno">  389</span>&#160;    <span class="keywordflow">for</span> (ptrdiff_t i = 0; i &lt; timeDim; ++i) nullStep[i] = selfDot(NS(i, _));</div>
+<div class="line"><a name="l00389"></a><span class="lineno">  389</span>&#160;    <span class="keywordflow">for</span> (ptrdiff_t i = 0; i &lt; timeDim; ++i) nullStep[i] = selfDot(NS[i, _]);</div>
 <div class="line"><a name="l00390"></a><span class="lineno">  390</span>&#160;    <span class="comment">//           column meansing in in order</span></div>
 <div class="line"><a name="l00391"></a><span class="lineno">  391</span>&#160;    <span class="comment">// const size_t numSymbols = getNumSymbols();</span></div>
 <div class="line"><a name="l00392"></a><span class="lineno">  392</span>&#160;    <span class="keyword">auto</span> A{dp-&gt;getA()};</div>
@@ -415,38 +415,38 @@ $(function() {
 <div class="line"><a name="l00397"></a><span class="lineno">  397</span>&#160;    <span class="comment">// E.resize(indexDim + nullDim, A.numCol());</span></div>
 <div class="line"><a name="l00398"></a><span class="lineno">  398</span>&#160;    <span class="comment">// ma0 loop</span></div>
 <div class="line"><a name="l00399"></a><span class="lineno">  399</span>&#160;    <span class="keywordflow">for</span> (ptrdiff_t i = 0; i &lt; nc0; ++i) {</div>
-<div class="line"><a name="l00400"></a><span class="lineno">  400</span>&#160;      A(i, _(0, 1 + Sx.size())) &lt;&lt; Ax(i, _(0, 1 + Sx.size()));</div>
-<div class="line"><a name="l00401"></a><span class="lineno">  401</span>&#160;      A(i, _(numSym, numSym + numDep0Var))</div>
-<div class="line"><a name="l00402"></a><span class="lineno">  402</span>&#160;        &lt;&lt; Ax(i, _(1 + Sx.size(), 1 + Sx.size() + numDep0Var));</div>
+<div class="line"><a name="l00400"></a><span class="lineno">  400</span>&#160;      A[i, _(0, 1 + Sx.size())] &lt;&lt; Ax[i, _(0, 1 + Sx.size())];</div>
+<div class="line"><a name="l00401"></a><span class="lineno">  401</span>&#160;      A[i, _(numSym, numSym + numDep0Var)]</div>
+<div class="line"><a name="l00402"></a><span class="lineno">  402</span>&#160;        &lt;&lt; Ax[i, _(1 + Sx.size(), 1 + Sx.size() + numDep0Var)];</div>
 <div class="line"><a name="l00403"></a><span class="lineno">  403</span>&#160;    }</div>
 <div class="line"><a name="l00404"></a><span class="lineno">  404</span>&#160;    <span class="keywordflow">for</span> (ptrdiff_t i = 0; i &lt; nc1; ++i) {</div>
-<div class="line"><a name="l00405"></a><span class="lineno">  405</span>&#160;      A(nc0 + i, 0) = Ay(i, 0);</div>
+<div class="line"><a name="l00405"></a><span class="lineno">  405</span>&#160;      A[nc0 + i, 0] = Ay[i, 0];</div>
 <div class="line"><a name="l00406"></a><span class="lineno">  406</span>&#160;      <span class="keywordflow">for</span> (ptrdiff_t j = 0; j &lt; map.size(); ++j)</div>
-<div class="line"><a name="l00407"></a><span class="lineno">  407</span>&#160;        A(nc0 + i, 1 + map[j]) = Ay(i, 1 + j);</div>
+<div class="line"><a name="l00407"></a><span class="lineno">  407</span>&#160;        A[nc0 + i, 1 + map[j]] = Ay[i, 1 + j];</div>
 <div class="line"><a name="l00408"></a><span class="lineno">  408</span>&#160;      <span class="keywordflow">for</span> (ptrdiff_t j = 0; j &lt; numDep1Var; ++j)</div>
-<div class="line"><a name="l00409"></a><span class="lineno">  409</span>&#160;        A(nc0 + i, j + numSym + numDep0Var) = Ay(i, j + 1 + Sy.size());</div>
+<div class="line"><a name="l00409"></a><span class="lineno">  409</span>&#160;        A[nc0 + i, j + numSym + numDep0Var] = Ay[i, j + 1 + Sy.size()];</div>
 <div class="line"><a name="l00410"></a><span class="lineno">  410</span>&#160;    }</div>
-<div class="line"><a name="l00411"></a><span class="lineno">  411</span>&#160;    A(_(nc, end), _(numSym, numSym + numVar)).diag() &lt;&lt; 1;</div>
+<div class="line"><a name="l00411"></a><span class="lineno">  411</span>&#160;    A[_(nc, end), _(numSym, numSym + numVar)].diag() &lt;&lt; 1;</div>
 <div class="line"><a name="l00412"></a><span class="lineno">  412</span>&#160;    <span class="comment">// indMats are [outerMostLoop, ..., innerMostLoop] x arrayDim</span></div>
 <div class="line"><a name="l00413"></a><span class="lineno">  413</span>&#160;    <span class="comment">// offsetMats are arrayDim x numSymbols</span></div>
 <div class="line"><a name="l00414"></a><span class="lineno">  414</span>&#160;    <span class="comment">// E(i,:)* indVars = q[i]</span></div>
 <div class="line"><a name="l00415"></a><span class="lineno">  415</span>&#160;    <span class="comment">// e.g. i_0 + j_0 + off_0 = i_1 + j_1 + off_1</span></div>
 <div class="line"><a name="l00416"></a><span class="lineno">  416</span>&#160;    <span class="comment">// i_0 + j_0 - i_1 - j_1 = off_1 - off_0</span></div>
 <div class="line"><a name="l00417"></a><span class="lineno">  417</span>&#160;    <span class="keywordflow">for</span> (ptrdiff_t i = 0; i &lt; indexDim; ++i) {</div>
-<div class="line"><a name="l00418"></a><span class="lineno">  418</span>&#160;      E(i, _(0, Ox.numCol())) &lt;&lt; Ox(i, _);</div>
-<div class="line"><a name="l00419"></a><span class="lineno">  419</span>&#160;      E(i, _(0, Cx.numCol()) + numSym) &lt;&lt; Cx(i, _);</div>
-<div class="line"><a name="l00420"></a><span class="lineno">  420</span>&#160;      E(i, 0) -= Oy(i, 0);</div>
+<div class="line"><a name="l00418"></a><span class="lineno">  418</span>&#160;      E[i, _(0, Ox.numCol())] &lt;&lt; Ox[i, _];</div>
+<div class="line"><a name="l00419"></a><span class="lineno">  419</span>&#160;      E[i, _(0, Cx.numCol()) + numSym] &lt;&lt; Cx[i, _];</div>
+<div class="line"><a name="l00420"></a><span class="lineno">  420</span>&#160;      E[i, 0] -= Oy[i, 0];</div>
 <div class="line"><a name="l00421"></a><span class="lineno">  421</span>&#160;      <span class="keywordflow">for</span> (ptrdiff_t j = 0; j &lt; Oy.numCol() - 1; ++j)</div>
-<div class="line"><a name="l00422"></a><span class="lineno">  422</span>&#160;        E(i, 1 + map[j]) -= Oy(i, 1 + j);</div>
-<div class="line"><a name="l00423"></a><span class="lineno">  423</span>&#160;      E(i, _(0, Cy.numCol()) + numSym + numDep0Var) &lt;&lt; -Cy(i, _);</div>
+<div class="line"><a name="l00422"></a><span class="lineno">  422</span>&#160;        E[i, 1 + map[j]] -= Oy[i, 1 + j];</div>
+<div class="line"><a name="l00423"></a><span class="lineno">  423</span>&#160;      E[i, _(0, Cy.numCol()) + numSym + numDep0Var] &lt;&lt; -Cy[i, _];</div>
 <div class="line"><a name="l00424"></a><span class="lineno">  424</span>&#160;    }</div>
 <div class="line"><a name="l00425"></a><span class="lineno">  425</span>&#160;    <span class="keywordflow">for</span> (ptrdiff_t i = 0; i &lt; timeDim; ++i) {</div>
 <div class="line"><a name="l00426"></a><span class="lineno">  426</span>&#160;      <span class="keywordflow">for</span> (ptrdiff_t j = 0; j &lt; NS.numCol(); ++j) {</div>
-<div class="line"><a name="l00427"></a><span class="lineno">  427</span>&#160;        int64_t nsij = NS(i, j);</div>
-<div class="line"><a name="l00428"></a><span class="lineno">  428</span>&#160;        E(indexDim + i, j + numSym) = nsij;</div>
-<div class="line"><a name="l00429"></a><span class="lineno">  429</span>&#160;        E(indexDim + i, j + numSym + numDep0Var) = -nsij;</div>
+<div class="line"><a name="l00427"></a><span class="lineno">  427</span>&#160;        int64_t nsij = NS[i, j];</div>
+<div class="line"><a name="l00428"></a><span class="lineno">  428</span>&#160;        E[indexDim + i, j + numSym] = nsij;</div>
+<div class="line"><a name="l00429"></a><span class="lineno">  429</span>&#160;        E[indexDim + i, j + numSym + numDep0Var] = -nsij;</div>
 <div class="line"><a name="l00430"></a><span class="lineno">  430</span>&#160;      }</div>
-<div class="line"><a name="l00431"></a><span class="lineno">  431</span>&#160;      E(indexDim + i, numSym + numVar + i) = 1;</div>
+<div class="line"><a name="l00431"></a><span class="lineno">  431</span>&#160;      E[indexDim + i, numSym + numVar + i] = 1;</div>
 <div class="line"><a name="l00432"></a><span class="lineno">  432</span>&#160;    }</div>
 <div class="line"><a name="l00433"></a><span class="lineno">  433</span>&#160;    dp-&gt;pruneBounds(*alloc);</div>
 <div class="line"><a name="l00434"></a><span class="lineno">  434</span>&#160;    <span class="keywordflow">if</span> (dp-&gt;getNumCon()) <span class="keywordflow">return</span> dp;</div>
@@ -483,7 +483,7 @@ $(function() {
 <div class="line"><a name="l00465"></a><span class="lineno">  465</span>&#160;    Row nc = nco + nco;</div>
 <div class="line"><a name="l00466"></a><span class="lineno">  466</span>&#160;    <span class="keywordtype">unsigned</span> indexDim{ai-&gt;getArrayDim()};</div>
 <div class="line"><a name="l00467"></a><span class="lineno">  467</span>&#160;    <span class="keyword">auto</span> nullStep{dp-&gt;getNullStep()};</div>
-<div class="line"><a name="l00468"></a><span class="lineno">  468</span>&#160;    <span class="keywordflow">for</span> (ptrdiff_t i = 0; i &lt; timeDim; ++i) nullStep[i] = selfDot(NS(i, _));</div>
+<div class="line"><a name="l00468"></a><span class="lineno">  468</span>&#160;    <span class="keywordflow">for</span> (ptrdiff_t i = 0; i &lt; timeDim; ++i) nullStep[i] = selfDot(NS[i, _]);</div>
 <div class="line"><a name="l00469"></a><span class="lineno">  469</span>&#160;    <span class="comment">//           column meansing in in order</span></div>
 <div class="line"><a name="l00470"></a><span class="lineno">  470</span>&#160;    <span class="comment">// const size_t numSymbols = getNumSymbols();</span></div>
 <div class="line"><a name="l00471"></a><span class="lineno">  471</span>&#160;    <span class="keyword">auto</span> A{dp-&gt;getA()};</div>
@@ -494,12 +494,12 @@ $(function() {
 <div class="line"><a name="l00476"></a><span class="lineno">  476</span>&#160;    <span class="comment">// E.resize(indexDim + nullDim, A.numCol());</span></div>
 <div class="line"><a name="l00477"></a><span class="lineno">  477</span>&#160;    <span class="comment">// ma0 loop</span></div>
 <div class="line"><a name="l00478"></a><span class="lineno">  478</span>&#160;    <span class="keywordflow">for</span> (ptrdiff_t i = 0; i &lt; nco; ++i) {</div>
-<div class="line"><a name="l00479"></a><span class="lineno">  479</span>&#160;      <span class="keywordflow">for</span> (ptrdiff_t j = 0; j &lt; numSym; ++j) A(i + nco, j) = A(i, j) = B(i, j);</div>
+<div class="line"><a name="l00479"></a><span class="lineno">  479</span>&#160;      <span class="keywordflow">for</span> (ptrdiff_t j = 0; j &lt; numSym; ++j) A[i + nco, j] = A[i, j] = B[i, j];</div>
 <div class="line"><a name="l00480"></a><span class="lineno">  480</span>&#160;      <span class="keywordflow">for</span> (ptrdiff_t j = 0; j &lt; numDepVar; ++j)</div>
-<div class="line"><a name="l00481"></a><span class="lineno">  481</span>&#160;        A(i + nco, j + numSym + numDepVar) = A(i, j + numSym) =</div>
-<div class="line"><a name="l00482"></a><span class="lineno">  482</span>&#160;          B(i, j + numSym);</div>
+<div class="line"><a name="l00481"></a><span class="lineno">  481</span>&#160;        A[i + nco, j + numSym + numDepVar] = A[i, j + numSym] =</div>
+<div class="line"><a name="l00482"></a><span class="lineno">  482</span>&#160;          B[i, j + numSym];</div>
 <div class="line"><a name="l00483"></a><span class="lineno">  483</span>&#160;    }</div>
-<div class="line"><a name="l00484"></a><span class="lineno">  484</span>&#160;    A(_(nc, end), _(numSym, numSym + numVar)).diag() &lt;&lt; 1;</div>
+<div class="line"><a name="l00484"></a><span class="lineno">  484</span>&#160;    A[_(nc, end), _(numSym, numSym + numVar)].diag() &lt;&lt; 1;</div>
 <div class="line"><a name="l00485"></a><span class="lineno">  485</span>&#160;    <span class="comment">// L254: Assertion `col &lt; numCol()` failed</span></div>
 <div class="line"><a name="l00486"></a><span class="lineno">  486</span>&#160;    <span class="comment">// indMats are [innerMostLoop, ..., outerMostLoop] x arrayDim</span></div>
 <div class="line"><a name="l00487"></a><span class="lineno">  487</span>&#160;    <span class="comment">// offsetMats are arrayDim x numSymbols</span></div>
@@ -508,18 +508,18 @@ $(function() {
 <div class="line"><a name="l00490"></a><span class="lineno">  490</span>&#160;    <span class="comment">// i_0 + j_0 - i_1 - j_1 = off_1 - off_0</span></div>
 <div class="line"><a name="l00491"></a><span class="lineno">  491</span>&#160;    <span class="keywordflow">for</span> (ptrdiff_t i = 0; i &lt; indexDim; ++i) {</div>
 <div class="line"><a name="l00492"></a><span class="lineno">  492</span>&#160;      <span class="keywordflow">for</span> (ptrdiff_t j = 0; j &lt; C.numCol(); ++j) {</div>
-<div class="line"><a name="l00493"></a><span class="lineno">  493</span>&#160;        int64_t Cji = C(i, j);</div>
-<div class="line"><a name="l00494"></a><span class="lineno">  494</span>&#160;        E(i, j + numSym) = Cji;</div>
-<div class="line"><a name="l00495"></a><span class="lineno">  495</span>&#160;        E(i, j + numSym + numDepVar) = -Cji;</div>
+<div class="line"><a name="l00493"></a><span class="lineno">  493</span>&#160;        int64_t Cji = C[i, j];</div>
+<div class="line"><a name="l00494"></a><span class="lineno">  494</span>&#160;        E[i, j + numSym] = Cji;</div>
+<div class="line"><a name="l00495"></a><span class="lineno">  495</span>&#160;        E[i, j + numSym + numDepVar] = -Cji;</div>
 <div class="line"><a name="l00496"></a><span class="lineno">  496</span>&#160;      }</div>
 <div class="line"><a name="l00497"></a><span class="lineno">  497</span>&#160;    }</div>
 <div class="line"><a name="l00498"></a><span class="lineno">  498</span>&#160;    <span class="keywordflow">for</span> (ptrdiff_t i = 0; i &lt; timeDim; ++i) {</div>
 <div class="line"><a name="l00499"></a><span class="lineno">  499</span>&#160;      <span class="keywordflow">for</span> (ptrdiff_t j = 0; j &lt; NS.numCol(); ++j) {</div>
-<div class="line"><a name="l00500"></a><span class="lineno">  500</span>&#160;        int64_t nsij = NS(i, j);</div>
-<div class="line"><a name="l00501"></a><span class="lineno">  501</span>&#160;        E(indexDim + i, j + numSym) = nsij;</div>
-<div class="line"><a name="l00502"></a><span class="lineno">  502</span>&#160;        E(indexDim + i, j + numSym + numDepVar) = -nsij;</div>
+<div class="line"><a name="l00500"></a><span class="lineno">  500</span>&#160;        int64_t nsij = NS[i, j];</div>
+<div class="line"><a name="l00501"></a><span class="lineno">  501</span>&#160;        E[indexDim + i, j + numSym] = nsij;</div>
+<div class="line"><a name="l00502"></a><span class="lineno">  502</span>&#160;        E[indexDim + i, j + numSym + numDepVar] = -nsij;</div>
 <div class="line"><a name="l00503"></a><span class="lineno">  503</span>&#160;      }</div>
-<div class="line"><a name="l00504"></a><span class="lineno">  504</span>&#160;      E(indexDim + i, numSym + numVar + i) = 1;</div>
+<div class="line"><a name="l00504"></a><span class="lineno">  504</span>&#160;      E[indexDim + i, numSym + numVar + i] = 1;</div>
 <div class="line"><a name="l00505"></a><span class="lineno">  505</span>&#160;    }</div>
 <div class="line"><a name="l00506"></a><span class="lineno">  506</span>&#160;    dp-&gt;pruneBounds(*alloc);</div>
 <div class="line"><a name="l00507"></a><span class="lineno">  507</span>&#160;    invariant(dp-&gt;getNumCon() &gt; 0);</div>
@@ -574,11 +574,11 @@ $(function() {
 <div class="line"><a name="l00556"></a><span class="lineno">  556</span>&#160;    <span class="comment">// fw.resize(numConstraintsNew, numVarNew + 1);</span></div>
 <div class="line"><a name="l00557"></a><span class="lineno">  557</span>&#160;    <span class="keyword">auto</span> fCF{fw-&gt;getConstraints()};</div>
 <div class="line"><a name="l00558"></a><span class="lineno">  558</span>&#160;    fCF &lt;&lt; 0;</div>
-<div class="line"><a name="l00559"></a><span class="lineno">  559</span>&#160;    math::MutPtrMatrix&lt;int64_t&gt; fC{fCF(_, _(1, end))};</div>
+<div class="line"><a name="l00559"></a><span class="lineno">  559</span>&#160;    math::MutPtrMatrix&lt;int64_t&gt; fC{fCF[_, _(1, end)]};</div>
 <div class="line"><a name="l00560"></a><span class="lineno">  560</span>&#160;    <span class="comment">// fC(_, 0) &lt;&lt; 0;</span></div>
-<div class="line"><a name="l00561"></a><span class="lineno">  561</span>&#160;    fC(0, 0) = 1; <span class="comment">// lambda_0</span></div>
-<div class="line"><a name="l00562"></a><span class="lineno">  562</span>&#160;    fC(_, _(1, 1 + numInequalityConstraintsOld))</div>
-<div class="line"><a name="l00563"></a><span class="lineno">  563</span>&#160;      &lt;&lt; A(_, _(math::begin, numConstraintsNew)).transpose();</div>
+<div class="line"><a name="l00561"></a><span class="lineno">  561</span>&#160;    fC[0, 0] = 1; <span class="comment">// lambda_0</span></div>
+<div class="line"><a name="l00562"></a><span class="lineno">  562</span>&#160;    fC[_, _(1, 1 + numInequalityConstraintsOld)]</div>
+<div class="line"><a name="l00563"></a><span class="lineno">  563</span>&#160;      &lt;&lt; A[_, _(math::begin, numConstraintsNew)].transpose();</div>
 <div class="line"><a name="l00564"></a><span class="lineno">  564</span>&#160;    <span class="comment">// fC(_, _(ineqEnd, posEqEnd)) = E.transpose();</span></div>
 <div class="line"><a name="l00565"></a><span class="lineno">  565</span>&#160;    <span class="comment">// fC(_, _(posEqEnd, numVarNew)) = -E.transpose();</span></div>
 <div class="line"><a name="l00566"></a><span class="lineno">  566</span>&#160;    <span class="comment">// loading from `E` is expensive</span></div>
@@ -586,9 +586,9 @@ $(function() {
 <div class="line"><a name="l00568"></a><span class="lineno">  568</span>&#160;    <span class="comment">// go through and optimize loops like this</span></div>
 <div class="line"><a name="l00569"></a><span class="lineno">  569</span>&#160;    <span class="keywordflow">for</span> (ptrdiff_t j = 0; j &lt; numConstraintsNew; ++j) {</div>
 <div class="line"><a name="l00570"></a><span class="lineno">  570</span>&#160;      <span class="keywordflow">for</span> (ptrdiff_t i = 0; i &lt; numEqualityConstraintsOld; ++i) {</div>
-<div class="line"><a name="l00571"></a><span class="lineno">  571</span>&#160;        int64_t Eji = E(i, j);</div>
-<div class="line"><a name="l00572"></a><span class="lineno">  572</span>&#160;        fC(j, i + ineqEnd) = Eji;</div>
-<div class="line"><a name="l00573"></a><span class="lineno">  573</span>&#160;        fC(j, i + posEqEnd) = -Eji;</div>
+<div class="line"><a name="l00571"></a><span class="lineno">  571</span>&#160;        int64_t Eji = E[i, j];</div>
+<div class="line"><a name="l00572"></a><span class="lineno">  572</span>&#160;        fC[j, i + ineqEnd] = Eji;</div>
+<div class="line"><a name="l00573"></a><span class="lineno">  573</span>&#160;        fC[j, i + posEqEnd] = -Eji;</div>
 <div class="line"><a name="l00574"></a><span class="lineno">  574</span>&#160;      }</div>
 <div class="line"><a name="l00575"></a><span class="lineno">  575</span>&#160;    }</div>
 <div class="line"><a name="l00576"></a><span class="lineno">  576</span>&#160;    <span class="comment">// schedule</span></div>
@@ -611,7 +611,7 @@ $(function() {
 <div class="line"><a name="l00593"></a><span class="lineno">  593</span>&#160;    <span class="comment">// ... == w + u&#39;*N + psi</span></div>
 <div class="line"><a name="l00594"></a><span class="lineno">  594</span>&#160;    <span class="comment">// -1 as we flip sign</span></div>
 <div class="line"><a name="l00595"></a><span class="lineno">  595</span>&#160;    <span class="keywordflow">for</span> (ptrdiff_t i = 0; i &lt; numBoundingCoefs; ++i)</div>
-<div class="line"><a name="l00596"></a><span class="lineno">  596</span>&#160;      fC(i, i + numScheduleCoefs + numLambda) = -1;</div>
+<div class="line"><a name="l00596"></a><span class="lineno">  596</span>&#160;      fC[i, i + numScheduleCoefs + numLambda] = -1;</div>
 <div class="line"><a name="l00597"></a><span class="lineno">  597</span>&#160; </div>
 <div class="line"><a name="l00598"></a><span class="lineno">  598</span>&#160;    <span class="comment">// so far, both have been identical</span></div>
 <div class="line"><a name="l00599"></a><span class="lineno">  599</span>&#160; </div>
@@ -620,7 +620,7 @@ $(function() {
 <div class="line"><a name="l00602"></a><span class="lineno">  602</span>&#160;    <span class="keyword">auto</span> bCF{bw-&gt;getConstraints()};</div>
 <div class="line"><a name="l00603"></a><span class="lineno">  603</span>&#160;    bCF &lt;&lt; fCF;</div>
 <div class="line"><a name="l00604"></a><span class="lineno">  604</span>&#160;    <span class="comment">// bCF(_, _(0, numVarNew + 1)) &lt;&lt; fCF(_, _(0, numVarNew + 1));</span></div>
-<div class="line"><a name="l00605"></a><span class="lineno">  605</span>&#160;    math::MutPtrMatrix&lt;int64_t&gt; bC{bCF(_, _(1, end))};</div>
+<div class="line"><a name="l00605"></a><span class="lineno">  605</span>&#160;    math::MutPtrMatrix&lt;int64_t&gt; bC{bCF[_, _(1, end)]};</div>
 <div class="line"><a name="l00606"></a><span class="lineno">  606</span>&#160; </div>
 <div class="line"><a name="l00607"></a><span class="lineno">  607</span>&#160;    <span class="comment">// equality constraints get expanded into two inequalities</span></div>
 <div class="line"><a name="l00608"></a><span class="lineno">  608</span>&#160;    <span class="comment">// a == 0 -&gt;</span></div>
@@ -633,14 +633,14 @@ $(function() {
 <div class="line"><a name="l00615"></a><span class="lineno">  615</span>&#160;    <span class="comment">// so that the ILP rLexMin on coefficients</span></div>
 <div class="line"><a name="l00616"></a><span class="lineno">  616</span>&#160;    <span class="comment">// will tend to preserve the initial order (which is</span></div>
 <div class="line"><a name="l00617"></a><span class="lineno">  617</span>&#160;    <span class="comment">// better than tending to reverse the initial order).</span></div>
-<div class="line"><a name="l00618"></a><span class="lineno">  618</span>&#160;    fC(0, numLambda) = 1;</div>
-<div class="line"><a name="l00619"></a><span class="lineno">  619</span>&#160;    fC(0, 1 + numLambda) = -1;</div>
-<div class="line"><a name="l00620"></a><span class="lineno">  620</span>&#160;    bC(0, numLambda) = -1;</div>
-<div class="line"><a name="l00621"></a><span class="lineno">  621</span>&#160;    bC(0, 1 + numLambda) = 1;</div>
+<div class="line"><a name="l00618"></a><span class="lineno">  618</span>&#160;    fC[0, numLambda] = 1;</div>
+<div class="line"><a name="l00619"></a><span class="lineno">  619</span>&#160;    fC[0, 1 + numLambda] = -1;</div>
+<div class="line"><a name="l00620"></a><span class="lineno">  620</span>&#160;    bC[0, numLambda] = -1;</div>
+<div class="line"><a name="l00621"></a><span class="lineno">  621</span>&#160;    bC[0, 1 + numLambda] = 1;</div>
 <div class="line"><a name="l00622"></a><span class="lineno">  622</span>&#160;    <span class="keywordflow">for</span> (ptrdiff_t i = 0; i &lt; numPhiCoefs; ++i) {</div>
 <div class="line"><a name="l00623"></a><span class="lineno">  623</span>&#160;      int64_t s = (2 * (i &lt; numDep0Var) - 1);</div>
-<div class="line"><a name="l00624"></a><span class="lineno">  624</span>&#160;      fC(i + numBoundingCoefs, i + numLambda + 2) = s;</div>
-<div class="line"><a name="l00625"></a><span class="lineno">  625</span>&#160;      bC(i + numBoundingCoefs, i + numLambda + 2) = -s;</div>
+<div class="line"><a name="l00624"></a><span class="lineno">  624</span>&#160;      fC[i + numBoundingCoefs, i + numLambda + 2] = s;</div>
+<div class="line"><a name="l00625"></a><span class="lineno">  625</span>&#160;      bC[i + numBoundingCoefs, i + numLambda + 2] = -s;</div>
 <div class="line"><a name="l00626"></a><span class="lineno">  626</span>&#160;    }</div>
 <div class="line"><a name="l00627"></a><span class="lineno">  627</span>&#160;    <span class="comment">// note that delta/constant coef is handled as last `s`</span></div>
 <div class="line"><a name="l00628"></a><span class="lineno">  628</span>&#160;    <span class="keywordflow">return</span> {fw, bw};</div>
@@ -658,10 +658,10 @@ $(function() {
 <div class="line"><a name="l00642"></a><span class="lineno">  642</span>&#160;    DensePtrMatrix&lt;int64_t&gt; E{getE()};</div>
 <div class="line"><a name="l00643"></a><span class="lineno">  643</span>&#160;    <span class="keywordtype">unsigned</span> xNumLoops = unsigned(xPhi.numCol()),</div>
 <div class="line"><a name="l00644"></a><span class="lineno">  644</span>&#160;             yNumLoops = unsigned(yPhi.numCol());</div>
-<div class="line"><a name="l00645"></a><span class="lineno">  645</span>&#160;    <span class="keywordflow">if</span> ((numDep0Var == xNumLoops) || allZero(xPhi(_, _(numDep0Var, end))))</div>
+<div class="line"><a name="l00645"></a><span class="lineno">  645</span>&#160;    <span class="keywordflow">if</span> ((numDep0Var == xNumLoops) || allZero(xPhi[_, _(numDep0Var, end)]))</div>
 <div class="line"><a name="l00646"></a><span class="lineno">  646</span>&#160;      xNumLoops = numDep0Var;</div>
 <div class="line"><a name="l00647"></a><span class="lineno">  647</span>&#160;    <span class="keywordflow">else</span> invariant(numDep0Var &lt; xNumLoops);</div>
-<div class="line"><a name="l00648"></a><span class="lineno">  648</span>&#160;    <span class="keywordflow">if</span> ((numDep1Var == yNumLoops) || allZero(yPhi(_, _(numDep1Var, end))))</div>
+<div class="line"><a name="l00648"></a><span class="lineno">  648</span>&#160;    <span class="keywordflow">if</span> ((numDep1Var == yNumLoops) || allZero(yPhi[_, _(numDep1Var, end)]))</div>
 <div class="line"><a name="l00649"></a><span class="lineno">  649</span>&#160;      yNumLoops = numDep1Var;</div>
 <div class="line"><a name="l00650"></a><span class="lineno">  650</span>&#160;    <span class="keywordflow">else</span> invariant(numDep1Var &lt; yNumLoops);</div>
 <div class="line"><a name="l00651"></a><span class="lineno">  651</span>&#160;    <span class="keywordtype">unsigned</span> numSym = getNumSymbols(), numSymX = numSym + xNumLoops,</div>
@@ -672,24 +672,24 @@ $(function() {
 <div class="line"><a name="l00656"></a><span class="lineno">  656</span>&#160;    <span class="comment">// we truncate time dim</span></div>
 <div class="line"><a name="l00657"></a><span class="lineno">  657</span>&#160;    <span class="keywordflow">if</span> (extend || timeDim) {</div>
 <div class="line"><a name="l00658"></a><span class="lineno">  658</span>&#160;      <span class="keywordflow">for</span> (ptrdiff_t r = 0; r &lt; numEqCon; ++r) {</div>
-<div class="line"><a name="l00659"></a><span class="lineno">  659</span>&#160;        B(r, _(0, numSymD0)) &lt;&lt; E(r, _(0, numSymD0));</div>
-<div class="line"><a name="l00660"></a><span class="lineno">  660</span>&#160;        B(r, _(numDep0Var, xNumLoops) + numSym) &lt;&lt; 0;</div>
-<div class="line"><a name="l00661"></a><span class="lineno">  661</span>&#160;        B(r, _(0, numDep1Var) + numSymX) &lt;&lt; E(r, _(0, numDep1Var) + numSymD0);</div>
-<div class="line"><a name="l00662"></a><span class="lineno">  662</span>&#160;        B(r, _(numDep1Var, yNumLoops) + numSymX) &lt;&lt; 0;</div>
+<div class="line"><a name="l00659"></a><span class="lineno">  659</span>&#160;        B[r, _(0, numSymD0)] &lt;&lt; E[r, _(0, numSymD0)];</div>
+<div class="line"><a name="l00660"></a><span class="lineno">  660</span>&#160;        B[r, _(numDep0Var, xNumLoops) + numSym] &lt;&lt; 0;</div>
+<div class="line"><a name="l00661"></a><span class="lineno">  661</span>&#160;        B[r, _(0, numDep1Var) + numSymX] &lt;&lt; E[r, _(0, numDep1Var) + numSymD0];</div>
+<div class="line"><a name="l00662"></a><span class="lineno">  662</span>&#160;        B[r, _(numDep1Var, yNumLoops) + numSymX] &lt;&lt; 0;</div>
 <div class="line"><a name="l00663"></a><span class="lineno">  663</span>&#160;      }</div>
 <div class="line"><a name="l00664"></a><span class="lineno">  664</span>&#160;    } <span class="keywordflow">else</span> std::copy_n(E.begin(), E.numRow() * E.numCol(), B.begin());</div>
 <div class="line"><a name="l00665"></a><span class="lineno">  665</span>&#160;    <span class="keywordflow">if</span> (xOff)</div>
 <div class="line"><a name="l00666"></a><span class="lineno">  666</span>&#160;      <span class="keywordflow">for</span> (ptrdiff_t c = 0; c &lt; numDep0Var; ++c)</div>
 <div class="line"><a name="l00667"></a><span class="lineno">  667</span>&#160;        <span class="keywordflow">if</span> (int64_t mlt = xOff[c])</div>
-<div class="line"><a name="l00668"></a><span class="lineno">  668</span>&#160;          B(_(0, numEqCon), 0) -= mlt * B(_(0, numEqCon), numSym + c);</div>
+<div class="line"><a name="l00668"></a><span class="lineno">  668</span>&#160;          B[_(0, numEqCon), 0] -= mlt * B[_(0, numEqCon), numSym + c];</div>
 <div class="line"><a name="l00669"></a><span class="lineno">  669</span>&#160;    <span class="keywordflow">if</span> (yOff)</div>
 <div class="line"><a name="l00670"></a><span class="lineno">  670</span>&#160;      <span class="keywordflow">for</span> (ptrdiff_t c = 0; c &lt; numDep1Var; ++c)</div>
 <div class="line"><a name="l00671"></a><span class="lineno">  671</span>&#160;        <span class="keywordflow">if</span> (int64_t mlt = yOff[c])</div>
-<div class="line"><a name="l00672"></a><span class="lineno">  672</span>&#160;          B(_(0, numEqCon), 0) -= mlt * B(_(0, numEqCon), numSymX + c);</div>
+<div class="line"><a name="l00672"></a><span class="lineno">  672</span>&#160;          B[_(0, numEqCon), 0] -= mlt * B[_(0, numEqCon), numSymX + c];</div>
 <div class="line"><a name="l00673"></a><span class="lineno">  673</span>&#160;    <span class="keywordflow">for</span> (ptrdiff_t r = 0; r &lt; numPhi; ++r) {</div>
-<div class="line"><a name="l00674"></a><span class="lineno">  674</span>&#160;      B(r + numEqCon, _(0, numSym)) &lt;&lt; 0;</div>
-<div class="line"><a name="l00675"></a><span class="lineno">  675</span>&#160;      B(r + numEqCon, _(0, xNumLoops) + numSym) &lt;&lt; xPhi(r, _(0, xNumLoops));</div>
-<div class="line"><a name="l00676"></a><span class="lineno">  676</span>&#160;      B(r + numEqCon, _(0, yNumLoops) + numSymX) &lt;&lt; -yPhi(r, _(0, yNumLoops));</div>
+<div class="line"><a name="l00674"></a><span class="lineno">  674</span>&#160;      B[r + numEqCon, _(0, numSym)] &lt;&lt; 0;</div>
+<div class="line"><a name="l00675"></a><span class="lineno">  675</span>&#160;      B[r + numEqCon, _(0, xNumLoops) + numSym] &lt;&lt; xPhi[r, _(0, xNumLoops)];</div>
+<div class="line"><a name="l00676"></a><span class="lineno">  676</span>&#160;      B[r + numEqCon, _(0, yNumLoops) + numSymX] &lt;&lt; -yPhi[r, _(0, yNumLoops)];</div>
 <div class="line"><a name="l00677"></a><span class="lineno">  677</span>&#160;    }</div>
 <div class="line"><a name="l00678"></a><span class="lineno">  678</span>&#160;    <span class="keywordtype">unsigned</span> rank = unsigned(math::NormalForm::simplifySystemImpl(B));</div>
 <div class="line"><a name="l00679"></a><span class="lineno">  679</span>&#160;    <span class="keywordflow">if</span> (rank &lt;= numEqCon) <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
@@ -713,29 +713,29 @@ $(function() {
 <div class="line"><a name="l00697"></a><span class="lineno">  697</span>&#160;      <span class="comment">// numSyms should be the same; we aren&#39;t pruning symbols</span></div>
 <div class="line"><a name="l00698"></a><span class="lineno">  698</span>&#160;      invariant(numSym, 1 + nDS);</div>
 <div class="line"><a name="l00699"></a><span class="lineno">  699</span>&#160;      <span class="keywordflow">for</span> (ptrdiff_t r = 0; r &lt; xCon; ++r) {</div>
-<div class="line"><a name="l00700"></a><span class="lineno">  700</span>&#160;        A(r, _(0, xNumSym)) &lt;&lt; Ax(r, _(0, xNumSym));</div>
-<div class="line"><a name="l00701"></a><span class="lineno">  701</span>&#160;        A(r, _(xNumSym, numSym)) &lt;&lt; 0;</div>
-<div class="line"><a name="l00702"></a><span class="lineno">  702</span>&#160;        A(r, _(0, xNumLoops) + numSym) &lt;&lt; Ax(r, _(0, xNumLoops) + xNumSym);</div>
-<div class="line"><a name="l00703"></a><span class="lineno">  703</span>&#160;        A(r, _(0, yNumLoops) + numSymX) &lt;&lt; 0;</div>
+<div class="line"><a name="l00700"></a><span class="lineno">  700</span>&#160;        A[r, _(0, xNumSym)] &lt;&lt; Ax[r, _(0, xNumSym)];</div>
+<div class="line"><a name="l00701"></a><span class="lineno">  701</span>&#160;        A[r, _(xNumSym, numSym)] &lt;&lt; 0;</div>
+<div class="line"><a name="l00702"></a><span class="lineno">  702</span>&#160;        A[r, _(0, xNumLoops) + numSym] &lt;&lt; Ax[r, _(0, xNumLoops) + xNumSym];</div>
+<div class="line"><a name="l00703"></a><span class="lineno">  703</span>&#160;        A[r, _(0, yNumLoops) + numSymX] &lt;&lt; 0;</div>
 <div class="line"><a name="l00704"></a><span class="lineno">  704</span>&#160;      }</div>
 <div class="line"><a name="l00705"></a><span class="lineno">  705</span>&#160;      <span class="keywordflow">for</span> (ptrdiff_t r = 0; r &lt; yCon; ++r) {</div>
-<div class="line"><a name="l00706"></a><span class="lineno">  706</span>&#160;        A(r + xCon, _(0, numSym)) &lt;&lt; 0;</div>
+<div class="line"><a name="l00706"></a><span class="lineno">  706</span>&#160;        A[r + xCon, _(0, numSym)] &lt;&lt; 0;</div>
 <div class="line"><a name="l00707"></a><span class="lineno">  707</span>&#160;        <span class="keywordflow">for</span> (ptrdiff_t j = 0; j &lt; map.size(); ++j)</div>
-<div class="line"><a name="l00708"></a><span class="lineno">  708</span>&#160;          A(r + xCon, 1 + map[j]) = Ay(r, 1 + j);</div>
-<div class="line"><a name="l00709"></a><span class="lineno">  709</span>&#160;        A(r + xCon, _(0, xNumLoops) + numSym) &lt;&lt; 0;</div>
-<div class="line"><a name="l00710"></a><span class="lineno">  710</span>&#160;        A(r + xCon, _(0, yNumLoops) + numSymX)</div>
-<div class="line"><a name="l00711"></a><span class="lineno">  711</span>&#160;          &lt;&lt; Ay(r, _(0, yNumLoops) + yNumSym);</div>
+<div class="line"><a name="l00708"></a><span class="lineno">  708</span>&#160;          A[r + xCon, 1 + map[j]] = Ay[r, 1 + j];</div>
+<div class="line"><a name="l00709"></a><span class="lineno">  709</span>&#160;        A[r + xCon, _(0, xNumLoops) + numSym] &lt;&lt; 0;</div>
+<div class="line"><a name="l00710"></a><span class="lineno">  710</span>&#160;        A[r + xCon, _(0, yNumLoops) + numSymX]</div>
+<div class="line"><a name="l00711"></a><span class="lineno">  711</span>&#160;          &lt;&lt; Ay[r, _(0, yNumLoops) + yNumSym];</div>
 <div class="line"><a name="l00712"></a><span class="lineno">  712</span>&#160;      }</div>
 <div class="line"><a name="l00713"></a><span class="lineno">  713</span>&#160;      std::fill(A.begin() + <span class="keywordtype">size_t</span>(xCon + yCon) * nCol, A.end(), 0);</div>
-<div class="line"><a name="l00714"></a><span class="lineno">  714</span>&#160;      A(_(0, nLoop) + (xCon + yCon), _(0, nLoop) + numSym).diag() &lt;&lt; 1;</div>
-<div class="line"><a name="l00715"></a><span class="lineno">  715</span>&#160;    } <span class="keywordflow">else</span> dp-&gt;getA() &lt;&lt; getA()(_, _(0, nCol)); <span class="comment">// truncate time</span></div>
+<div class="line"><a name="l00714"></a><span class="lineno">  714</span>&#160;      A[_(0, nLoop) + (xCon + yCon), _(0, nLoop) + numSym].diag() &lt;&lt; 1;</div>
+<div class="line"><a name="l00715"></a><span class="lineno">  715</span>&#160;    } <span class="keywordflow">else</span> dp-&gt;getA() &lt;&lt; getA()[_, _(0, nCol)]; <span class="comment">// truncate time</span></div>
 <div class="line"><a name="l00716"></a><span class="lineno">  716</span>&#160;    <span class="keywordflow">if</span> (xOff)</div>
 <div class="line"><a name="l00717"></a><span class="lineno">  717</span>&#160;      <span class="keywordflow">for</span> (ptrdiff_t c = 0; c &lt; xNumLoops; ++c)</div>
-<div class="line"><a name="l00718"></a><span class="lineno">  718</span>&#160;        <span class="keywordflow">if</span> (int64_t mlt = xOff[c]) A(_, 0) -= mlt * A(_, numSym + c);</div>
+<div class="line"><a name="l00718"></a><span class="lineno">  718</span>&#160;        <span class="keywordflow">if</span> (int64_t mlt = xOff[c]) A[_, 0] -= mlt * A[_, numSym + c];</div>
 <div class="line"><a name="l00719"></a><span class="lineno">  719</span>&#160;    <span class="keywordflow">if</span> (yOff)</div>
 <div class="line"><a name="l00720"></a><span class="lineno">  720</span>&#160;      <span class="keywordflow">for</span> (ptrdiff_t c = 0; c &lt; yNumLoops; ++c)</div>
-<div class="line"><a name="l00721"></a><span class="lineno">  721</span>&#160;        <span class="keywordflow">if</span> (int64_t mlt = yOff[c]) A(_, 0) -= mlt * A(_, numSymX + c);</div>
-<div class="line"><a name="l00722"></a><span class="lineno">  722</span>&#160;    dp-&gt;getE() &lt;&lt; B(_(0, rank), _);</div>
+<div class="line"><a name="l00721"></a><span class="lineno">  721</span>&#160;        <span class="keywordflow">if</span> (int64_t mlt = yOff[c]) A[_, 0] -= mlt * A[_, numSymX + c];</div>
+<div class="line"><a name="l00722"></a><span class="lineno">  722</span>&#160;    dp-&gt;getE() &lt;&lt; B[_(0, rank), _];</div>
 <div class="line"><a name="l00723"></a><span class="lineno">  723</span>&#160;    dp-&gt;pruneBounds(alloc);</div>
 <div class="line"><a name="l00724"></a><span class="lineno">  724</span>&#160;    <span class="keywordflow">return</span> dp-&gt;getNumCon() == 0;</div>
 <div class="line"><a name="l00725"></a><span class="lineno">  725</span>&#160;  }</div>

@@ -323,52 +323,52 @@ $(function() {
 <div class="line"><a name="l00269"></a><span class="lineno">  269</span>&#160;    <span class="keywordflow">return</span> dependenceBounding-&gt;getConstraints();</div>
 <div class="line"><a name="l00270"></a><span class="lineno">  270</span>&#160;  }</div>
 <div class="line"><a name="l00271"></a><span class="lineno">  271</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getSatLambda() const -&gt; PtrMatrix&lt;int64_t&gt; {</div>
-<div class="line"><a name="l00272"></a><span class="lineno">  272</span>&#160;    <span class="keywordflow">return</span> getSatConstraints()(_, _(1, 1 + depPoly-&gt;getNumLambda()));</div>
+<div class="line"><a name="l00272"></a><span class="lineno">  272</span>&#160;    <span class="keywordflow">return</span> getSatConstraints()[_, _(1, 1 + depPoly-&gt;getNumLambda())];</div>
 <div class="line"><a name="l00273"></a><span class="lineno">  273</span>&#160;  }</div>
 <div class="line"><a name="l00274"></a><span class="lineno">  274</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getBndLambda() const -&gt; PtrMatrix&lt;int64_t&gt; {</div>
-<div class="line"><a name="l00275"></a><span class="lineno">  275</span>&#160;    <span class="keywordflow">return</span> getBndConstraints()(_, _(1, 1 + depPoly-&gt;getNumLambda()));</div>
+<div class="line"><a name="l00275"></a><span class="lineno">  275</span>&#160;    <span class="keywordflow">return</span> getBndConstraints()[_, _(1, 1 + depPoly-&gt;getNumLambda())];</div>
 <div class="line"><a name="l00276"></a><span class="lineno">  276</span>&#160;  }</div>
 <div class="line"><a name="l00277"></a><span class="lineno">  277</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getSatPhiCoefs() const -&gt; PtrMatrix&lt;int64_t&gt; {</div>
 <div class="line"><a name="l00278"></a><span class="lineno">  278</span>&#160;    <span class="keyword">auto</span> l = 3 + depPoly-&gt;getNumLambda();</div>
-<div class="line"><a name="l00279"></a><span class="lineno">  279</span>&#160;    <span class="keywordflow">return</span> getSatConstraints()(_, _(l, l + getNumPhiCoefficients()));</div>
+<div class="line"><a name="l00279"></a><span class="lineno">  279</span>&#160;    <span class="keywordflow">return</span> getSatConstraints()[_, _(l, l + getNumPhiCoefficients())];</div>
 <div class="line"><a name="l00280"></a><span class="lineno">  280</span>&#160;  }</div>
 <div class="line"><a name="l00281"></a><span class="lineno">  281</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getSatPhi0Coefs() const -&gt; PtrMatrix&lt;int64_t&gt; {</div>
 <div class="line"><a name="l00282"></a><span class="lineno">  282</span>&#160;    <span class="keyword">auto</span> l = 3 + depPoly-&gt;getNumLambda();</div>
-<div class="line"><a name="l00283"></a><span class="lineno">  283</span>&#160;    <span class="keywordflow">return</span> getSatConstraints()(_, _(l, l + depPoly-&gt;getDim0()));</div>
+<div class="line"><a name="l00283"></a><span class="lineno">  283</span>&#160;    <span class="keywordflow">return</span> getSatConstraints()[_, _(l, l + depPoly-&gt;getDim0())];</div>
 <div class="line"><a name="l00284"></a><span class="lineno">  284</span>&#160;  }</div>
 <div class="line"><a name="l00285"></a><span class="lineno">  285</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getSatPhi1Coefs() const -&gt; PtrMatrix&lt;int64_t&gt; {</div>
 <div class="line"><a name="l00286"></a><span class="lineno">  286</span>&#160;    <span class="keyword">auto</span> l = 3 + depPoly-&gt;getNumLambda() + depPoly-&gt;getDim0();</div>
-<div class="line"><a name="l00287"></a><span class="lineno">  287</span>&#160;    <span class="keywordflow">return</span> getSatConstraints()(_, _(l, l + depPoly-&gt;getDim1()));</div>
+<div class="line"><a name="l00287"></a><span class="lineno">  287</span>&#160;    <span class="keywordflow">return</span> getSatConstraints()[_, _(l, l + depPoly-&gt;getDim1())];</div>
 <div class="line"><a name="l00288"></a><span class="lineno">  288</span>&#160;  }</div>
 <div class="line"><a name="l00289"></a><span class="lineno">  289</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getBndPhiCoefs() const -&gt; PtrMatrix&lt;int64_t&gt; {</div>
 <div class="line"><a name="l00290"></a><span class="lineno">  290</span>&#160;    <span class="keyword">auto</span> l = 3 + depPoly-&gt;getNumLambda();</div>
-<div class="line"><a name="l00291"></a><span class="lineno">  291</span>&#160;    <span class="keywordflow">return</span> getBndConstraints()(_, _(l, l + getNumPhiCoefficients()));</div>
+<div class="line"><a name="l00291"></a><span class="lineno">  291</span>&#160;    <span class="keywordflow">return</span> getBndConstraints()[_, _(l, l + getNumPhiCoefficients())];</div>
 <div class="line"><a name="l00292"></a><span class="lineno">  292</span>&#160;  }</div>
 <div class="line"><a name="l00293"></a><span class="lineno">  293</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getBndPhi0Coefs() const -&gt; PtrMatrix&lt;int64_t&gt; {</div>
 <div class="line"><a name="l00294"></a><span class="lineno">  294</span>&#160;    <span class="keyword">auto</span> l = 3 + depPoly-&gt;getNumLambda();</div>
-<div class="line"><a name="l00295"></a><span class="lineno">  295</span>&#160;    <span class="keywordflow">return</span> getBndConstraints()(_, _(l, l + depPoly-&gt;getDim0()));</div>
+<div class="line"><a name="l00295"></a><span class="lineno">  295</span>&#160;    <span class="keywordflow">return</span> getBndConstraints()[_, _(l, l + depPoly-&gt;getDim0())];</div>
 <div class="line"><a name="l00296"></a><span class="lineno">  296</span>&#160;  }</div>
 <div class="line"><a name="l00297"></a><span class="lineno">  297</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getBndPhi1Coefs() const -&gt; PtrMatrix&lt;int64_t&gt; {</div>
 <div class="line"><a name="l00298"></a><span class="lineno">  298</span>&#160;    <span class="keyword">auto</span> l = 3 + depPoly-&gt;getNumLambda() + depPoly-&gt;getDim0();</div>
-<div class="line"><a name="l00299"></a><span class="lineno">  299</span>&#160;    <span class="keywordflow">return</span> getBndConstraints()(_, _(l, l + depPoly-&gt;getDim1()));</div>
+<div class="line"><a name="l00299"></a><span class="lineno">  299</span>&#160;    <span class="keywordflow">return</span> getBndConstraints()[_, _(l, l + depPoly-&gt;getDim1())];</div>
 <div class="line"><a name="l00300"></a><span class="lineno">  300</span>&#160;  }</div>
 <div class="line"><a name="l00301"></a><span class="lineno">  301</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getSatOmegaCoefs() const -&gt; PtrMatrix&lt;int64_t&gt; {</div>
 <div class="line"><a name="l00302"></a><span class="lineno">  302</span>&#160;    <span class="keyword">auto</span> l = 1 + depPoly-&gt;getNumLambda();</div>
-<div class="line"><a name="l00303"></a><span class="lineno">  303</span>&#160;    <span class="keywordflow">return</span> getSatConstraints()(_, _(l, l + getNumOmegaCoefficients()));</div>
+<div class="line"><a name="l00303"></a><span class="lineno">  303</span>&#160;    <span class="keywordflow">return</span> getSatConstraints()[_, _(l, l + getNumOmegaCoefficients())];</div>
 <div class="line"><a name="l00304"></a><span class="lineno">  304</span>&#160;  }</div>
 <div class="line"><a name="l00305"></a><span class="lineno">  305</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getBndOmegaCoefs() const -&gt; PtrMatrix&lt;int64_t&gt; {</div>
 <div class="line"><a name="l00306"></a><span class="lineno">  306</span>&#160;    <span class="keyword">auto</span> l = 1 + depPoly-&gt;getNumLambda();</div>
-<div class="line"><a name="l00307"></a><span class="lineno">  307</span>&#160;    <span class="keywordflow">return</span> getBndConstraints()(_, _(l, l + getNumOmegaCoefficients()));</div>
+<div class="line"><a name="l00307"></a><span class="lineno">  307</span>&#160;    <span class="keywordflow">return</span> getBndConstraints()[_, _(l, l + getNumOmegaCoefficients())];</div>
 <div class="line"><a name="l00308"></a><span class="lineno">  308</span>&#160;  }</div>
 <div class="line"><a name="l00309"></a><span class="lineno">  309</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getSatW() const -&gt; math::StridedVector&lt;int64_t&gt; {</div>
-<div class="line"><a name="l00310"></a><span class="lineno">  310</span>&#160;    <span class="keywordflow">return</span> getSatConstraints()(_, 1 + depPoly-&gt;getNumLambda() +</div>
+<div class="line"><a name="l00310"></a><span class="lineno">  310</span>&#160;    <span class="keywordflow">return</span> getSatConstraints()[_, 1 + depPoly-&gt;getNumLambda() +</div>
 <div class="line"><a name="l00311"></a><span class="lineno">  311</span>&#160;                                    getNumPhiCoefficients() +</div>
-<div class="line"><a name="l00312"></a><span class="lineno">  312</span>&#160;                                    getNumOmegaCoefficients());</div>
+<div class="line"><a name="l00312"></a><span class="lineno">  312</span>&#160;                                    getNumOmegaCoefficients()];</div>
 <div class="line"><a name="l00313"></a><span class="lineno">  313</span>&#160;  }</div>
 <div class="line"><a name="l00314"></a><span class="lineno">  314</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getBndCoefs() const -&gt; PtrMatrix&lt;int64_t&gt; {</div>
 <div class="line"><a name="l00315"></a><span class="lineno">  315</span>&#160;    <span class="keywordtype">size_t</span> lb = 1 + depPoly-&gt;getNumLambda() + getNumPhiCoefficients() +</div>
 <div class="line"><a name="l00316"></a><span class="lineno">  316</span>&#160;                getNumOmegaCoefficients();</div>
-<div class="line"><a name="l00317"></a><span class="lineno">  317</span>&#160;    <span class="keywordflow">return</span> getBndConstraints()(_, _(lb, end));</div>
+<div class="line"><a name="l00317"></a><span class="lineno">  317</span>&#160;    <span class="keywordflow">return</span> getBndConstraints()[_, _(lb, end)];</div>
 <div class="line"><a name="l00318"></a><span class="lineno">  318</span>&#160;  }</div>
 <div class="line"><a name="l00319"></a><span class="lineno">  319</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> satPhiCoefs() const -&gt; std::array&lt;PtrMatrix&lt;int64_t&gt;, 2&gt; {</div>
 <div class="line"><a name="l00320"></a><span class="lineno">  320</span>&#160;    PtrMatrix&lt;int64_t&gt; phiCoefsIn = getSatPhi1Coefs(),</div>
@@ -419,8 +419,8 @@ $(function() {
 <div class="line"><a name="l00365"></a><span class="lineno">  365</span>&#160;      <span class="comment">// forward means offset is 2nd - 1st</span></div>
 <div class="line"><a name="l00366"></a><span class="lineno">  366</span>&#160;      schv[0] = outOffOmega[i];</div>
 <div class="line"><a name="l00367"></a><span class="lineno">  367</span>&#160;      schv[1] = inOffOmega[i];</div>
-<div class="line"><a name="l00368"></a><span class="lineno">  368</span>&#160;      schv[_(2, 2 + numLoopsIn)] &lt;&lt; inPhi(last - i, _);</div>
-<div class="line"><a name="l00369"></a><span class="lineno">  369</span>&#160;      schv[_(2 + numLoopsIn, 2 + numLoopsTotal)] &lt;&lt; outPhi(last - i, _);</div>
+<div class="line"><a name="l00368"></a><span class="lineno">  368</span>&#160;      schv[_(2, 2 + numLoopsIn)] &lt;&lt; inPhi[last - i, _];</div>
+<div class="line"><a name="l00369"></a><span class="lineno">  369</span>&#160;      schv[_(2 + numLoopsIn, 2 + numLoopsTotal)] &lt;&lt; outPhi[last - i, _];</div>
 <div class="line"><a name="l00370"></a><span class="lineno">  370</span>&#160;      <span class="comment">// dependenceSatisfaction is phi_t - phi_s &gt;= 0</span></div>
 <div class="line"><a name="l00371"></a><span class="lineno">  371</span>&#160;      <span class="comment">// dependenceBounding is w + u&#39;N - (phi_t - phi_s) &gt;= 0</span></div>
 <div class="line"><a name="l00372"></a><span class="lineno">  372</span>&#160;      <span class="comment">// we implicitly 0-out `w` and `u` here,</span></div>
@@ -728,8 +728,8 @@ $(function() {
 <div class="line"><a name="l00679"></a><span class="lineno">  679</span>&#160;    <span class="comment">// insane</span></div>
 <div class="line"><a name="l00680"></a><span class="lineno">  680</span>&#160;    math::Vector&lt;bool, 16&gt; timeDirection(timeDim);</div>
 <div class="line"><a name="l00681"></a><span class="lineno">  681</span>&#160;    ptrdiff_t t = 0;</div>
-<div class="line"><a name="l00682"></a><span class="lineno">  682</span>&#160;    <span class="keyword">auto</span> fE{farkasBackups[0]-&gt;getConstraints()(_, _(1, end))};</div>
-<div class="line"><a name="l00683"></a><span class="lineno">  683</span>&#160;    <span class="keyword">auto</span> sE{farkasBackups[1]-&gt;getConstraints()(_, _(1, end))};</div>
+<div class="line"><a name="l00682"></a><span class="lineno">  682</span>&#160;    <span class="keyword">auto</span> fE{farkasBackups[0]-&gt;getConstraints()[_, _(1, end)]};</div>
+<div class="line"><a name="l00683"></a><span class="lineno">  683</span>&#160;    <span class="keyword">auto</span> sE{farkasBackups[1]-&gt;getConstraints()[_, _(1, end)]};</div>
 <div class="line"><a name="l00684"></a><span class="lineno">  684</span>&#160;    <span class="keywordflow">do</span> {</div>
 <div class="line"><a name="l00685"></a><span class="lineno">  685</span>&#160;      <span class="comment">// set `t`th timeDim to +1/-1</span></div>
 <div class="line"><a name="l00686"></a><span class="lineno">  686</span>&#160;      <span class="comment">// basically, what we do here is set it to `step` and pretend it was</span></div>
@@ -743,18 +743,18 @@ $(function() {
 <div class="line"><a name="l00694"></a><span class="lineno">  694</span>&#160;          int64_t Acv = dxy-&gt;getA(c, v);</div>
 <div class="line"><a name="l00695"></a><span class="lineno">  695</span>&#160;          <span class="keywordflow">if</span> (!Acv) <span class="keywordflow">continue</span>;</div>
 <div class="line"><a name="l00696"></a><span class="lineno">  696</span>&#160;          Acv *= step;</div>
-<div class="line"><a name="l00697"></a><span class="lineno">  697</span>&#160;          fE(0, c + 1) -= Acv; <span class="comment">// *1</span></div>
-<div class="line"><a name="l00698"></a><span class="lineno">  698</span>&#160;          sE(0, c + 1) -= Acv; <span class="comment">// *1</span></div>
+<div class="line"><a name="l00697"></a><span class="lineno">  697</span>&#160;          fE[0, c + 1] -= Acv; <span class="comment">// *1</span></div>
+<div class="line"><a name="l00698"></a><span class="lineno">  698</span>&#160;          sE[0, c + 1] -= Acv; <span class="comment">// *1</span></div>
 <div class="line"><a name="l00699"></a><span class="lineno">  699</span>&#160;        }</div>
 <div class="line"><a name="l00700"></a><span class="lineno">  700</span>&#160;        <span class="keywordflow">for</span> (ptrdiff_t c = 0; c &lt; numEqualityConstraintsOld; ++c) {</div>
 <div class="line"><a name="l00701"></a><span class="lineno">  701</span>&#160;          <span class="comment">// each of these actually represents 2 inds</span></div>
 <div class="line"><a name="l00702"></a><span class="lineno">  702</span>&#160;          int64_t Ecv = dxy-&gt;getE(c, v);</div>
 <div class="line"><a name="l00703"></a><span class="lineno">  703</span>&#160;          <span class="keywordflow">if</span> (!Ecv) <span class="keywordflow">continue</span>;</div>
 <div class="line"><a name="l00704"></a><span class="lineno">  704</span>&#160;          Ecv *= step;</div>
-<div class="line"><a name="l00705"></a><span class="lineno">  705</span>&#160;          fE(0, c + ineqEnd) -= Ecv;</div>
-<div class="line"><a name="l00706"></a><span class="lineno">  706</span>&#160;          fE(0, c + posEqEnd) += Ecv;</div>
-<div class="line"><a name="l00707"></a><span class="lineno">  707</span>&#160;          sE(0, c + ineqEnd) -= Ecv;</div>
-<div class="line"><a name="l00708"></a><span class="lineno">  708</span>&#160;          sE(0, c + posEqEnd) += Ecv;</div>
+<div class="line"><a name="l00705"></a><span class="lineno">  705</span>&#160;          fE[0, c + ineqEnd] -= Ecv;</div>
+<div class="line"><a name="l00706"></a><span class="lineno">  706</span>&#160;          fE[0, c + posEqEnd] += Ecv;</div>
+<div class="line"><a name="l00707"></a><span class="lineno">  707</span>&#160;          sE[0, c + ineqEnd] -= Ecv;</div>
+<div class="line"><a name="l00708"></a><span class="lineno">  708</span>&#160;          sE[0, c + posEqEnd] += Ecv;</div>
 <div class="line"><a name="l00709"></a><span class="lineno">  709</span>&#160;        }</div>
 <div class="line"><a name="l00710"></a><span class="lineno">  710</span>&#160;        <span class="keywordflow">if</span> (i++ != 0) <span class="keywordflow">break</span>; <span class="comment">// break after undoing</span></div>
 <div class="line"><a name="l00711"></a><span class="lineno">  711</span>&#160;        timeDirection[t] =</div>
@@ -775,8 +775,8 @@ $(function() {
 <div class="line"><a name="l00726"></a><span class="lineno">  726</span>&#160;        <span class="keywordflow">if</span> (!Acv) <span class="keywordflow">continue</span>;</div>
 <div class="line"><a name="l00727"></a><span class="lineno">  727</span>&#160;        Acv *= step;</div>
 <div class="line"><a name="l00728"></a><span class="lineno">  728</span>&#160;        dxy-&gt;getA(c, 0) -= Acv;</div>
-<div class="line"><a name="l00729"></a><span class="lineno">  729</span>&#160;        fE(0, c + 1) -= Acv; <span class="comment">// *1</span></div>
-<div class="line"><a name="l00730"></a><span class="lineno">  730</span>&#160;        sE(0, c + 1) -= Acv; <span class="comment">// *-1</span></div>
+<div class="line"><a name="l00729"></a><span class="lineno">  729</span>&#160;        fE[0, c + 1] -= Acv; <span class="comment">// *1</span></div>
+<div class="line"><a name="l00730"></a><span class="lineno">  730</span>&#160;        sE[0, c + 1] -= Acv; <span class="comment">// *-1</span></div>
 <div class="line"><a name="l00731"></a><span class="lineno">  731</span>&#160;      }</div>
 <div class="line"><a name="l00732"></a><span class="lineno">  732</span>&#160;      <span class="keywordflow">for</span> (ptrdiff_t c = 0; c &lt; numEqualityConstraintsOld; ++c) {</div>
 <div class="line"><a name="l00733"></a><span class="lineno">  733</span>&#160;        <span class="comment">// each of these actually represents 2 inds</span></div>
@@ -784,10 +784,10 @@ $(function() {
 <div class="line"><a name="l00735"></a><span class="lineno">  735</span>&#160;        <span class="keywordflow">if</span> (!Ecv) <span class="keywordflow">continue</span>;</div>
 <div class="line"><a name="l00736"></a><span class="lineno">  736</span>&#160;        Ecv *= step;</div>
 <div class="line"><a name="l00737"></a><span class="lineno">  737</span>&#160;        dxy-&gt;getE(c, 0) -= Ecv;</div>
-<div class="line"><a name="l00738"></a><span class="lineno">  738</span>&#160;        fE(0, c + ineqEnd) -= Ecv;</div>
-<div class="line"><a name="l00739"></a><span class="lineno">  739</span>&#160;        fE(0, c + posEqEnd) += Ecv;</div>
-<div class="line"><a name="l00740"></a><span class="lineno">  740</span>&#160;        sE(0, c + ineqEnd) -= Ecv;</div>
-<div class="line"><a name="l00741"></a><span class="lineno">  741</span>&#160;        sE(0, c + posEqEnd) += Ecv;</div>
+<div class="line"><a name="l00738"></a><span class="lineno">  738</span>&#160;        fE[0, c + ineqEnd] -= Ecv;</div>
+<div class="line"><a name="l00739"></a><span class="lineno">  739</span>&#160;        fE[0, c + posEqEnd] += Ecv;</div>
+<div class="line"><a name="l00740"></a><span class="lineno">  740</span>&#160;        sE[0, c + ineqEnd] -= Ecv;</div>
+<div class="line"><a name="l00741"></a><span class="lineno">  741</span>&#160;        sE[0, c + posEqEnd] += Ecv;</div>
 <div class="line"><a name="l00742"></a><span class="lineno">  742</span>&#160;      }</div>
 <div class="line"><a name="l00743"></a><span class="lineno">  743</span>&#160;    } <span class="keywordflow">while</span> (++t &lt; timeDim);</div>
 <div class="line"><a name="l00744"></a><span class="lineno">  744</span>&#160;    <span class="comment">// dxy-&gt;truncateVars(numVar);</span></div>
@@ -835,8 +835,8 @@ $(function() {
 <div class="line"><a name="l00786"></a><span class="lineno">  786</span>&#160;      assert(i != numLoopsCommon);</div>
 <div class="line"><a name="l00787"></a><span class="lineno">  787</span>&#160;      sch[0] = xOffOmega[i];</div>
 <div class="line"><a name="l00788"></a><span class="lineno">  788</span>&#160;      sch[1] = yOffOmega[i];</div>
-<div class="line"><a name="l00789"></a><span class="lineno">  789</span>&#160;      sch[_(2, 2 + numLoopsX)] &lt;&lt; xPhi(last - i, _);</div>
-<div class="line"><a name="l00790"></a><span class="lineno">  790</span>&#160;      sch[_(2 + numLoopsX, 2 + numLoopsTotal)] &lt;&lt; yPhi(last - i, _);</div>
+<div class="line"><a name="l00789"></a><span class="lineno">  789</span>&#160;      sch[_(2, 2 + numLoopsX)] &lt;&lt; xPhi[last - i, _];</div>
+<div class="line"><a name="l00790"></a><span class="lineno">  790</span>&#160;      sch[_(2 + numLoopsX, 2 + numLoopsTotal)] &lt;&lt; yPhi[last - i, _];</div>
 <div class="line"><a name="l00791"></a><span class="lineno">  791</span>&#160;      <span class="keywordflow">if</span> (fxy-&gt;unSatisfiableZeroRem(alloc, sch, numLambda,</div>
 <div class="line"><a name="l00792"></a><span class="lineno">  792</span>&#160;                                    <span class="keywordtype">unsigned</span>(nonTimeDim))) {</div>
 <div class="line"><a name="l00793"></a><span class="lineno">  793</span>&#160;        assert(!fyx-&gt;unSatisfiableZeroRem(alloc, sch, numLambda,</div>
@@ -1252,8 +1252,8 @@ $(function() {
 <div class="line"><a name="l01203"></a><span class="lineno"> 1203</span>&#160;  ptrdiff_t loop = this-&gt;currentDepth - 1;</div>
 <div class="line"><a name="l01204"></a><span class="lineno"> 1204</span>&#160;  <span class="keywordflow">for</span> (int32_t <span class="keywordtype">id</span> : edges(loopDeps)) {</div>
 <div class="line"><a name="l01205"></a><span class="lineno"> 1205</span>&#160;    <a class="code" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">Dependence::ID</a> i{<span class="keywordtype">id</span>};</div>
-<div class="line"><a name="l01206"></a><span class="lineno"> 1206</span>&#160;    StridedVector&lt;int64_t&gt; in = deps.input(i)-&gt;<a class="code" href="classpoly_1_1IR_1_1Addr.html#af4838372d11fd32b964c9a7cb6d4b1b8">indexMatrix</a>()(_, loop),</div>
-<div class="line"><a name="l01207"></a><span class="lineno"> 1207</span>&#160;                           out = deps.output(i)-&gt;indexMatrix()(_, loop);</div>
+<div class="line"><a name="l01206"></a><span class="lineno"> 1206</span>&#160;    StridedVector&lt;int64_t&gt; in = deps.input(i)-&gt;<a class="code" href="classpoly_1_1IR_1_1Addr.html#af4838372d11fd32b964c9a7cb6d4b1b8">indexMatrix</a>()[_, loop],</div>
+<div class="line"><a name="l01207"></a><span class="lineno"> 1207</span>&#160;                           out = deps.output(i)-&gt;<a class="code" href="classpoly_1_1IR_1_1Addr.html#af4838372d11fd32b964c9a7cb6d4b1b8">indexMatrix</a>()[_, loop];</div>
 <div class="line"><a name="l01208"></a><span class="lineno"> 1208</span>&#160;    invariant(in.size(), out.size());</div>
 <div class="line"><a name="l01209"></a><span class="lineno"> 1209</span>&#160;    <span class="keywordflow">if</span> (in != out) <span class="keywordflow">return</span> setLegal(IndexMismatch);</div>
 <div class="line"><a name="l01210"></a><span class="lineno"> 1210</span>&#160;    <span class="comment">// ptrdiff_t common = std::min(in.size(), out.size());</span></div>

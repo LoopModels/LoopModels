@@ -12,5 +12,5 @@ var searchData=
   ['bflt_186',['Bflt',['../classpoly_1_1IR_1_1Bflt.html',1,'poly::IR']]],
   ['bint_187',['Bint',['../classpoly_1_1IR_1_1Bint.html',1,'poly::IR']]],
   ['bumpptrvector_188',['BumpPtrVector',['../structpoly_1_1math_1_1BumpPtrVector.html',1,'poly::math']]],
-  ['bumpptrvector_3c_20std_3a_3apair_3c_20poly_3a_3air_3a_3ainstruction_20_2a_2c_20poly_3a_3air_3a_3ainstruction_20_2a_20_3e_20_3e_189',['BumpPtrVector&lt; std::pair&lt; poly::IR::Instruction *, poly::IR::Instruction * &gt; &gt;',['../structpoly_1_1math_1_1BumpPtrVector.html',1,'poly::math']]]
+  ['bumpptrvector_3c_20containers_3a_3apair_3c_20poly_3a_3air_3a_3ainstruction_20_2a_2c_20poly_3a_3air_3a_3ainstruction_20_2a_20_3e_20_3e_189',['BumpPtrVector&lt; containers::Pair&lt; poly::IR::Instruction *, poly::IR::Instruction * &gt; &gt;',['../structpoly_1_1math_1_1BumpPtrVector.html',1,'poly::math']]]
 ];

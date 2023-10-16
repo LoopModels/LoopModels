@@ -625,13 +625,13 @@ $(function() {
 <div class="line"><a name="l00566"></a><span class="lineno">  566</span>&#160;    <span class="keywordflow">if</span> (!allZero(b[_(V.numRow(), end)])) <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
 <div class="line"><a name="l00567"></a><span class="lineno">  567</span>&#160;    <span class="keyword">auto</span> H = matrix&lt;int64_t&gt;(alloc, V.numRow(), V.numCol() + 1);</div>
 <div class="line"><a name="l00568"></a><span class="lineno">  568</span>&#160;    Col oldn = V.numCol();</div>
-<div class="line"><a name="l00569"></a><span class="lineno">  569</span>&#160;    H(_, _(0, oldn)) &lt;&lt; V;</div>
+<div class="line"><a name="l00569"></a><span class="lineno">  569</span>&#160;    H[_, _(0, oldn)] &lt;&lt; V;</div>
 <div class="line"><a name="l00570"></a><span class="lineno">  570</span>&#160;    <span class="comment">// H.numRow() == b.size(), because we&#39;re only here if dimD == 0,</span></div>
 <div class="line"><a name="l00571"></a><span class="lineno">  571</span>&#160;    <span class="comment">// in which case V.numRow() == U.numRow() == b.size()</span></div>
-<div class="line"><a name="l00572"></a><span class="lineno">  572</span>&#160;    H(_, oldn) &lt;&lt; b;</div>
+<div class="line"><a name="l00572"></a><span class="lineno">  572</span>&#160;    H[_, oldn] &lt;&lt; b;</div>
 <div class="line"><a name="l00573"></a><span class="lineno">  573</span>&#160;    solveSystem(H);</div>
 <div class="line"><a name="l00574"></a><span class="lineno">  574</span>&#160;    <span class="keywordflow">for</span> (ptrdiff_t i = numEquations; i &lt; H.numRow(); ++i)</div>
-<div class="line"><a name="l00575"></a><span class="lineno">  575</span>&#160;      <span class="keywordflow">if</span> ((H(i, oldn) &gt; 0) != (H(i, i) &gt; 0)) <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
+<div class="line"><a name="l00575"></a><span class="lineno">  575</span>&#160;      <span class="keywordflow">if</span> ((H[i, oldn] &gt; 0) != (H[i, i] &gt; 0)) <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
 <div class="line"><a name="l00576"></a><span class="lineno">  576</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">true</span>;</div>
 <div class="line"><a name="l00577"></a><span class="lineno">  577</span>&#160;  }</div>
 <div class="line"><a name="l00578"></a><span class="lineno">  578</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span></div>
@@ -652,19 +652,19 @@ $(function() {
 <div class="line"><a name="l00593"></a><span class="lineno">  593</span>&#160;    }</div>
 <div class="line"><a name="l00594"></a><span class="lineno">  594</span>&#160;    ptrdiff_t numRowTrunc = getURank();</div>
 <div class="line"><a name="l00595"></a><span class="lineno">  595</span>&#160;    <span class="keyword">auto</span> c = vector&lt;int64_t&gt;(alloc, <span class="keywordtype">unsigned</span>(V.numRow() - numEquations));</div>
-<div class="line"><a name="l00596"></a><span class="lineno">  596</span>&#160;    c &lt;&lt; V(_(numEquations, end), _(begin, numRowTrunc)) * b;</div>
+<div class="line"><a name="l00596"></a><span class="lineno">  596</span>&#160;    c &lt;&lt; V[_(numEquations, end), _(begin, numRowTrunc)] * b;</div>
 <div class="line"><a name="l00597"></a><span class="lineno">  597</span>&#160;    <span class="keyword">auto</span> dimNS = V.numCol() - numRowTrunc;</div>
 <div class="line"><a name="l00598"></a><span class="lineno">  598</span>&#160;    <span class="comment">// expand W stores [c -JV2 JV2]</span></div>
 <div class="line"><a name="l00599"></a><span class="lineno">  599</span>&#160;    <span class="comment">//  we use simplex to solve [-JV2 JV2][y2+ y2-]&#39; &lt;= JV1D^(-1)Uq</span></div>
 <div class="line"><a name="l00600"></a><span class="lineno">  600</span>&#160;    <span class="comment">// where y2 = y2+ - y2-</span></div>
 <div class="line"><a name="l00601"></a><span class="lineno">  601</span>&#160;    <span class="keyword">auto</span> expandW = matrix&lt;int64_t&gt;(alloc, numSlack, dimNS * 2 + 1);</div>
 <div class="line"><a name="l00602"></a><span class="lineno">  602</span>&#160;    <span class="keywordflow">for</span> (ptrdiff_t i = 0; i &lt; numSlack; ++i) {</div>
-<div class="line"><a name="l00603"></a><span class="lineno">  603</span>&#160;      expandW(i, 0) = c[i];</div>
+<div class="line"><a name="l00603"></a><span class="lineno">  603</span>&#160;      expandW[i, 0] = c[i];</div>
 <div class="line"><a name="l00604"></a><span class="lineno">  604</span>&#160;      <span class="comment">// expandW(i, 0) *= Dlcm;</span></div>
 <div class="line"><a name="l00605"></a><span class="lineno">  605</span>&#160;      <span class="keywordflow">for</span> (ptrdiff_t j = 0; j &lt; dimNS;) {</div>
-<div class="line"><a name="l00606"></a><span class="lineno">  606</span>&#160;        <span class="keyword">auto</span> val = V(i + numEquations, numRowTrunc + j++) * lcmD;</div>
-<div class="line"><a name="l00607"></a><span class="lineno">  607</span>&#160;        expandW(i, j) = -val;</div>
-<div class="line"><a name="l00608"></a><span class="lineno">  608</span>&#160;        expandW(i, dimNS + j) = val;</div>
+<div class="line"><a name="l00606"></a><span class="lineno">  606</span>&#160;        <span class="keyword">auto</span> val = V[i + numEquations, numRowTrunc + j++] * lcmD;</div>
+<div class="line"><a name="l00607"></a><span class="lineno">  607</span>&#160;        expandW[i, j] = -val;</div>
+<div class="line"><a name="l00608"></a><span class="lineno">  608</span>&#160;        expandW[i, dimNS + j] = val;</div>
 <div class="line"><a name="l00609"></a><span class="lineno">  609</span>&#160;      }</div>
 <div class="line"><a name="l00610"></a><span class="lineno">  610</span>&#160;    }</div>
 <div class="line"><a name="l00611"></a><span class="lineno">  611</span>&#160;    Optional&lt;Simplex *&gt; optS{Simplex::positiveVariables(alloc, expandW)};</div>
@@ -675,7 +675,7 @@ $(function() {
 <div class="line"><a name="l00616"></a><span class="lineno">  616</span>&#160;    -&gt; <span class="keywordtype">bool</span> {</div>
 <div class="line"><a name="l00617"></a><span class="lineno">  617</span>&#160;    <span class="keyword">auto</span> U = getU();</div>
 <div class="line"><a name="l00618"></a><span class="lineno">  618</span>&#160;    <span class="keyword">auto</span> b = vector&lt;int64_t&gt;(&amp;alloc, <span class="keywordtype">unsigned</span>(U.numRow()));</div>
-<div class="line"><a name="l00619"></a><span class="lineno">  619</span>&#160;    b &lt;&lt; U(_, _(begin, query.size())) * query;</div>
+<div class="line"><a name="l00619"></a><span class="lineno">  619</span>&#160;    b &lt;&lt; U[_, _(begin, query.size())] * query;</div>
 <div class="line"><a name="l00620"></a><span class="lineno">  620</span>&#160;    <span class="keywordflow">return</span> getD().size() ? greaterEqualRankDeficient(&amp;alloc, b)</div>
 <div class="line"><a name="l00621"></a><span class="lineno">  621</span>&#160;                         : greaterEqualFullRank(&amp;alloc, b);</div>
 <div class="line"><a name="l00622"></a><span class="lineno">  622</span>&#160;  }</div>

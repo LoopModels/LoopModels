@@ -6,6 +6,5 @@ var searchData=
   ['depfilter_204',['DepFilter',['../structpoly_1_1lp_1_1ScheduledNode_1_1DepFilter.html',1,'poly::lp::ScheduledNode']]],
   ['depids_205',['DepIDs',['../structpoly_1_1lp_1_1ScheduledNode_1_1DepIDs.html',1,'poly::lp::ScheduledNode']]],
   ['deppoly_206',['DepPoly',['../classpoly_1_1poly_1_1DepPoly.html',1,'poly::poly']]],
-  ['deps_207',['Deps',['../structpoly_1_1lp_1_1ScheduledNode_1_1Deps.html',1,'poly::lp::ScheduledNode']]],
-  ['dual_208',['Dual',['../classDual.html',1,'']]]
+  ['deps_207',['Deps',['../structpoly_1_1lp_1_1ScheduledNode_1_1Deps.html',1,'poly::lp::ScheduledNode']]]
 ];
