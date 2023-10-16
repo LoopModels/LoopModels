@@ -21,27 +21,35 @@ template <class D> struct TrieWrap {
   template <class K> void erase(const K &k) { d.erase(k); }
 };
 
+inline auto randvp(std::mt19937_64 &rng, uint64_t mask) {
+  return reinterpret_cast<void *>((rng() & mask) | 8);
+}
+
 template <typename D>
 void InsertLookup2(std::mt19937_64 &rng, D &map, uint64_t mask) {
   for (uint64_t i = 0; i < 256; ++i) {
-    map[reinterpret_cast<void *>(rng() & mask)] +=
-      i + map[reinterpret_cast<void *>(rng() & mask)];
+    void *p0 = randvp(rng, mask);
+    void *p1 = randvp(rng, mask);
+    map[p0] += i + map[p1];
   }
 }
 
 template <typename D>
 void InsertErase(std::mt19937_64 &rng, D &map, uint64_t mask) {
   for (uint64_t i = 0; i < 256; ++i) {
-    map[reinterpret_cast<void *>(rng() & mask)] = i;
-    map.erase(reinterpret_cast<void *>(rng() & mask));
+    void *p0 = randvp(rng, mask);
+    void *p1 = randvp(rng, mask);
+    map[p0] = i;
+    map.erase(p1);
   }
 }
 template <typename D>
 void InsertLookup3(std::mt19937_64 &rng, D &map, uint64_t mask) {
   for (uint64_t i = 0; i < 256; ++i) {
-    map[reinterpret_cast<void *>(rng() & mask)] +=
-      map[reinterpret_cast<void *>(rng() & mask)] +
-      map[reinterpret_cast<void *>(rng() & mask)];
+    void *p0 = randvp(rng, mask);
+    void *p1 = randvp(rng, mask);
+    void *p2 = randvp(rng, mask);
+    map[p0] += map[p1] + map[p2];
   }
 }
 
@@ -79,7 +87,7 @@ static void BM_TrieInsertErase(benchmark::State &state) {
   uint64_t mask = ((1ULL << state.range(0)) - 1) << 3ULL;
   std::mt19937_64 rng;
   for (auto b : state) {
-    TrieWrap<poly::dict::TrieMap<true,void*,uint64_t>> map{{},&alloc};
+    TrieWrap<poly::dict::TrieMap<true, void *, uint64_t>> map{{}, &alloc};
     InsertErase(rng, map, mask);
     alloc.reset();
   }
@@ -91,7 +99,7 @@ static void BM_InlineTrieInsertErase(benchmark::State &state) {
   uint64_t mask = ((1ULL << state.range(0)) - 1) << 3ULL;
   std::mt19937_64 rng;
   for (auto b : state) {
-    TrieWrap<poly::dict::InlineTrie<void*,uint64_t>> map{{},&alloc};
+    TrieWrap<poly::dict::InlineTrie<void *, uint64_t>> map{{}, &alloc};
     InsertErase(rng, map, mask);
     alloc.reset();
   }

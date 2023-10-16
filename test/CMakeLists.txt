@@ -7,6 +7,7 @@ project(LoopModelsTests LANGUAGES CXX)
 option(ENABLE_TEST_COVERAGE "Enable test coverage" OFF)
 option(TEST_INSTALLED_VERSION "Test the version found by find_package" OFF)
 option(ENABLE_LLD "Use lld for linking" ON)
+option(TEST_LOOPMODELS "Test LoopModels" OFF) # ON FIXME
 
 # --- Import tools ----
 
@@ -19,10 +20,10 @@ include(../cmake/CPM.cmake)
 # ---- compile_commands.json ----
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-if(((USE_SANITIZER MATCHES "([Aa]ddress)") OR (USE_SANITIZER MATCHES "([Aa]ddress);([Uu]ndefined)"
-                                               )
-) AND (CMAKE_CXX_COMPILER_ID MATCHES "Clang"))
-  set(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -lunwind -Wno-unused-command-line-argument")
+if(((USE_SANITIZER MATCHES "([Aa]ddress)") OR (USE_SANITIZER MATCHES "([Aa]ddress);([Uu]ndefined)"))
+   AND (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+)
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lunwind -Wno-unused-command-line-argument")
 endif()
 
 # CPMAddPackage("gh:onqtam/doctest@2.4.9")
@@ -46,10 +47,12 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(Math)
 
-if(TEST_INSTALLED_VERSION)
-  find_package(LoopModels REQUIRED)
-else()
-  add_subdirectory(.. LoopModels)
+if(TEST_LOOPMODELS)
+  if(TEST_INSTALLED_VERSION)
+    find_package(LoopModels REQUIRED)
+  else()
+    add_subdirectory(.. LoopModels)
+  endif()
 endif()
 
 # ---- Create binary ----
@@ -60,18 +63,13 @@ file(
   tests
   CONFIGURE_DEPENDS
   ${CMAKE_CURRENT_SOURCE_DIR}/dict_test.cpp
-  # ${CMAKE_CURRENT_SOURCE_DIR}/bitset_test.cpp
-  # ${CMAKE_CURRENT_SOURCE_DIR}/bumpmap_test.cpp
-  # ${CMAKE_CURRENT_SOURCE_DIR}/comparator_test.cpp
-  # ${CMAKE_CURRENT_SOURCE_DIR}/compat_test.cpp
-  # # ${CMAKE_CURRENT_SOURCE_DIR}/dependence_test.cpp
-  # ${CMAKE_CURRENT_SOURCE_DIR}/graph_test.cpp
+  # ${CMAKE_CURRENT_SOURCE_DIR}/bitset_test.cpp ${CMAKE_CURRENT_SOURCE_DIR}/bumpmap_test.cpp
+  # ${CMAKE_CURRENT_SOURCE_DIR}/comparator_test.cpp ${CMAKE_CURRENT_SOURCE_DIR}/compat_test.cpp #
+  # ${CMAKE_CURRENT_SOURCE_DIR}/dependence_test.cpp ${CMAKE_CURRENT_SOURCE_DIR}/graph_test.cpp
   # ${CMAKE_CURRENT_SOURCE_DIR}/linear_algebra_test.cpp
   # ${CMAKE_CURRENT_SOURCE_DIR}/linear_diophantine_test.cpp
-  # ${CMAKE_CURRENT_SOURCE_DIR}/matrix_test.cpp
-  # ${CMAKE_CURRENT_SOURCE_DIR}/normal_form_test.cpp
-  # ${CMAKE_CURRENT_SOURCE_DIR}/orthogonalize_test.cpp
-  # ${CMAKE_CURRENT_SOURCE_DIR}/remarks_test.cpp
+  # ${CMAKE_CURRENT_SOURCE_DIR}/matrix_test.cpp ${CMAKE_CURRENT_SOURCE_DIR}/normal_form_test.cpp
+  # ${CMAKE_CURRENT_SOURCE_DIR}/orthogonalize_test.cpp ${CMAKE_CURRENT_SOURCE_DIR}/remarks_test.cpp
   # ${CMAKE_CURRENT_SOURCE_DIR}/simplex_test.cpp
   # ${CMAKE_CURRENT_SOURCE_DIR}/string_to_intmat_test.cpp
   # ${CMAKE_CURRENT_SOURCE_DIR}/unimodularization_test.cpp
@@ -182,26 +180,35 @@ endif()
 if(NOT TEST_INSTALLED_VERSION)
   if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU")
     # -Werror?
-    target_compile_options(LoopModels PUBLIC -Wall -Wpedantic -Wextra -Wshadow)
+    if(TEST_LOOPMODELS)
+      target_compile_options(LoopModels PUBLIC -Wall -Wpedantic -Wextra -Wshadow)
+    endif()
     target_compile_options(${PROJECT_NAME} PUBLIC -Wall -Wpedantic -Wextra -Wshadow)
-  elseif(MSVC)
+  elseif(MSVC and TEST_LOOPMODELS)
     target_compile_options(LoopModels PUBLIC /W4 /WX)
   endif()
 endif()
 # target_compile_options(LoopModels PRIVATE -D_GLIBCXX_DEBUG) target_compile_options(${PROJECT_NAME}
 # PRIVATE -D_GLIBCXX_DEBUG)
-target_compile_options(LoopModels PRIVATE -D_GLIBCXX_ASSERTIONS)
+
+if(TEST_LOOPMODELS)
+  target_compile_options(LoopModels PRIVATE -D_GLIBCXX_ASSERTIONS)
+endif()
 target_compile_options(${PROJECT_NAME} PRIVATE -D_GLIBCXX_ASSERTIONS)
 if(ENABLE_LLD)
   target_link_options(${PROJECT_NAME} PRIVATE -fuse-ld=lld)
-  target_link_options(LoopModels PRIVATE -fuse-ld=lld)
+  if(TEST_LOOPMODELS)
+    target_link_options(LoopModels PRIVATE -fuse-ld=lld)
+  endif()
 endif()
 # ---- code coverage ----
 
 message(STATUS "ENABLE_TEST_COVERAGE: ${ENABLE_TEST_COVERAGE}")
 if(ENABLE_TEST_COVERAGE)
-  target_compile_options(LoopModels PUBLIC -O0 -g --coverage)
-  target_link_options(LoopModels PUBLIC --coverage)
+  if(TEST_LOOPMODELS)
+    target_compile_options(LoopModels PUBLIC -O0 -g --coverage)
+    target_link_options(LoopModels PUBLIC --coverage)
+  endif()
   target_compile_options(${PROJECT_NAME} PUBLIC -O0 -g --coverage)
   target_link_options(${PROJECT_NAME} PUBLIC --coverage)
   add_custom_target(

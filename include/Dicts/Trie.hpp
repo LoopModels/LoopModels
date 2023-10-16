@@ -65,11 +65,11 @@ protected:
         if (!n.child) break;
         l = n;
       }
-      l.parent->children[l.index] = nullptr;    // leaf is moved up
+      l.parent->children[l.index] = nullptr;     // leaf is moved up
       l.child->children = child.child->children; // leaf takes child's children
     }
     child.parent->children[child.index] = l.child; // leaf replaces deleted
-
+    child.child->second = {};
     return child.child;
   }
 };
@@ -86,8 +86,8 @@ struct TrieMap : TrieMapNode<K, V> {
   NodeT *list{nullptr};
   // TODO: implement using `list` to avoid allocs
   void erase(const K &k) {
-    NodeT *erased = this->eraseImpl(k);
-    erased->children[0] = std::exchange(list, erased);
+    if (NodeT *erased = this->eraseImpl(k))
+      erased->children[0] = std::exchange(list, erased);
   }
   auto operator[](utils::Valid<alloc::Arena<>> alloc, const K &k) -> V & {
     typename NodeT::Child c = this->findChild(k);
@@ -124,9 +124,10 @@ template <class K, class V> struct InlineTrie {
   V values[4];
 
   // Returns an optional pointer to the value.
-  constexpr auto find(const K &k) -> utils::Optional<V *> {
+  constexpr auto find(const K &k) -> utils::Optional<V &> {
     Child c = findChild<false>(this, k);
-    return (c.subIndex) ? nullptr : &c.node->values[c.index];
+    return (c.subIndex) ? std::nullopt
+                        : utils::Optional<V &>{c.node->values[c.index]};
   }
 
   auto operator[](utils::Valid<alloc::Arena<>> alloc, const K &k) -> V & {
@@ -146,16 +147,16 @@ template <class K, class V> struct InlineTrie {
     InlineTrie *descendent = c.node->children[c.index];
     if (!descendent) {
       c.node->keys[c.index] = {}; // set to null
+      c.node->values[c.index] = {};
       return;
     }
     for (;;) {
-      int i = 0;
-      for (; i < 4; ++i)
-        if (!descendent->children[i]) break;
-      if (i != 4) { // we found one
+      for (int i = 0; i < 4; ++i) {
+        if (descendent->children[i]) continue;
         c.node->keys[c.index] = std::move(descendent->keys[i]);
         c.node->values[c.index] = std::move(descendent->values[i]);
         descendent->keys[i] = {};
+        descendent->values[i] = {};
         return;
       }
       descendent = descendent->children[0];
