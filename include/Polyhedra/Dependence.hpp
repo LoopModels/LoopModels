@@ -269,52 +269,52 @@ public:
     return dependenceBounding->getConstraints();
   }
   [[nodiscard]] auto getSatLambda() const -> PtrMatrix<int64_t> {
-    return getSatConstraints()(_, _(1, 1 + depPoly->getNumLambda()));
+    return getSatConstraints()[_, _(1, 1 + depPoly->getNumLambda())];
   }
   [[nodiscard]] auto getBndLambda() const -> PtrMatrix<int64_t> {
-    return getBndConstraints()(_, _(1, 1 + depPoly->getNumLambda()));
+    return getBndConstraints()[_, _(1, 1 + depPoly->getNumLambda())];
   }
   [[nodiscard]] auto getSatPhiCoefs() const -> PtrMatrix<int64_t> {
     auto l = 3 + depPoly->getNumLambda();
-    return getSatConstraints()(_, _(l, l + getNumPhiCoefficients()));
+    return getSatConstraints()[_, _(l, l + getNumPhiCoefficients())];
   }
   [[nodiscard]] auto getSatPhi0Coefs() const -> PtrMatrix<int64_t> {
     auto l = 3 + depPoly->getNumLambda();
-    return getSatConstraints()(_, _(l, l + depPoly->getDim0()));
+    return getSatConstraints()[_, _(l, l + depPoly->getDim0())];
   }
   [[nodiscard]] auto getSatPhi1Coefs() const -> PtrMatrix<int64_t> {
     auto l = 3 + depPoly->getNumLambda() + depPoly->getDim0();
-    return getSatConstraints()(_, _(l, l + depPoly->getDim1()));
+    return getSatConstraints()[_, _(l, l + depPoly->getDim1())];
   }
   [[nodiscard]] auto getBndPhiCoefs() const -> PtrMatrix<int64_t> {
     auto l = 3 + depPoly->getNumLambda();
-    return getBndConstraints()(_, _(l, l + getNumPhiCoefficients()));
+    return getBndConstraints()[_, _(l, l + getNumPhiCoefficients())];
   }
   [[nodiscard]] auto getBndPhi0Coefs() const -> PtrMatrix<int64_t> {
     auto l = 3 + depPoly->getNumLambda();
-    return getBndConstraints()(_, _(l, l + depPoly->getDim0()));
+    return getBndConstraints()[_, _(l, l + depPoly->getDim0())];
   }
   [[nodiscard]] auto getBndPhi1Coefs() const -> PtrMatrix<int64_t> {
     auto l = 3 + depPoly->getNumLambda() + depPoly->getDim0();
-    return getBndConstraints()(_, _(l, l + depPoly->getDim1()));
+    return getBndConstraints()[_, _(l, l + depPoly->getDim1())];
   }
   [[nodiscard]] auto getSatOmegaCoefs() const -> PtrMatrix<int64_t> {
     auto l = 1 + depPoly->getNumLambda();
-    return getSatConstraints()(_, _(l, l + getNumOmegaCoefficients()));
+    return getSatConstraints()[_, _(l, l + getNumOmegaCoefficients())];
   }
   [[nodiscard]] auto getBndOmegaCoefs() const -> PtrMatrix<int64_t> {
     auto l = 1 + depPoly->getNumLambda();
-    return getBndConstraints()(_, _(l, l + getNumOmegaCoefficients()));
+    return getBndConstraints()[_, _(l, l + getNumOmegaCoefficients())];
   }
   [[nodiscard]] auto getSatW() const -> math::StridedVector<int64_t> {
-    return getSatConstraints()(_, 1 + depPoly->getNumLambda() +
+    return getSatConstraints()[_, 1 + depPoly->getNumLambda() +
                                     getNumPhiCoefficients() +
-                                    getNumOmegaCoefficients());
+                                    getNumOmegaCoefficients()];
   }
   [[nodiscard]] auto getBndCoefs() const -> PtrMatrix<int64_t> {
     size_t lb = 1 + depPoly->getNumLambda() + getNumPhiCoefficients() +
                 getNumOmegaCoefficients();
-    return getBndConstraints()(_, _(lb, end));
+    return getBndConstraints()[_, _(lb, end)];
   }
   [[nodiscard]] auto satPhiCoefs() const -> std::array<PtrMatrix<int64_t>, 2> {
     PtrMatrix<int64_t> phiCoefsIn = getSatPhi1Coefs(),
@@ -365,8 +365,8 @@ public:
       // forward means offset is 2nd - 1st
       schv[0] = outOffOmega[i];
       schv[1] = inOffOmega[i];
-      schv[_(2, 2 + numLoopsIn)] << inPhi(last - i, _);
-      schv[_(2 + numLoopsIn, 2 + numLoopsTotal)] << outPhi(last - i, _);
+      schv[_(2, 2 + numLoopsIn)] << inPhi[last - i, _];
+      schv[_(2 + numLoopsIn, 2 + numLoopsTotal)] << outPhi[last - i, _];
       // dependenceSatisfaction is phi_t - phi_s >= 0
       // dependenceBounding is w + u'N - (phi_t - phi_s) >= 0
       // we implicitly 0-out `w` and `u` here,
@@ -679,8 +679,8 @@ private:
     // insane
     math::Vector<bool, 16> timeDirection(timeDim);
     ptrdiff_t t = 0;
-    auto fE{farkasBackups[0]->getConstraints()(_, _(1, end))};
-    auto sE{farkasBackups[1]->getConstraints()(_, _(1, end))};
+    auto fE{farkasBackups[0]->getConstraints()[_, _(1, end)]};
+    auto sE{farkasBackups[1]->getConstraints()[_, _(1, end)]};
     do {
       // set `t`th timeDim to +1/-1
       // basically, what we do here is set it to `step` and pretend it was
@@ -694,18 +694,18 @@ private:
           int64_t Acv = dxy->getA(c, v);
           if (!Acv) continue;
           Acv *= step;
-          fE(0, c + 1) -= Acv; // *1
-          sE(0, c + 1) -= Acv; // *1
+          fE[0, c + 1] -= Acv; // *1
+          sE[0, c + 1] -= Acv; // *1
         }
         for (ptrdiff_t c = 0; c < numEqualityConstraintsOld; ++c) {
           // each of these actually represents 2 inds
           int64_t Ecv = dxy->getE(c, v);
           if (!Ecv) continue;
           Ecv *= step;
-          fE(0, c + ineqEnd) -= Ecv;
-          fE(0, c + posEqEnd) += Ecv;
-          sE(0, c + ineqEnd) -= Ecv;
-          sE(0, c + posEqEnd) += Ecv;
+          fE[0, c + ineqEnd] -= Ecv;
+          fE[0, c + posEqEnd] += Ecv;
+          sE[0, c + ineqEnd] -= Ecv;
+          sE[0, c + posEqEnd] += Ecv;
         }
         if (i++ != 0) break; // break after undoing
         timeDirection[t] =
@@ -726,8 +726,8 @@ private:
         if (!Acv) continue;
         Acv *= step;
         dxy->getA(c, 0) -= Acv;
-        fE(0, c + 1) -= Acv; // *1
-        sE(0, c + 1) -= Acv; // *-1
+        fE[0, c + 1] -= Acv; // *1
+        sE[0, c + 1] -= Acv; // *-1
       }
       for (ptrdiff_t c = 0; c < numEqualityConstraintsOld; ++c) {
         // each of these actually represents 2 inds
@@ -735,10 +735,10 @@ private:
         if (!Ecv) continue;
         Ecv *= step;
         dxy->getE(c, 0) -= Ecv;
-        fE(0, c + ineqEnd) -= Ecv;
-        fE(0, c + posEqEnd) += Ecv;
-        sE(0, c + ineqEnd) -= Ecv;
-        sE(0, c + posEqEnd) += Ecv;
+        fE[0, c + ineqEnd] -= Ecv;
+        fE[0, c + posEqEnd] += Ecv;
+        sE[0, c + ineqEnd] -= Ecv;
+        sE[0, c + posEqEnd] += Ecv;
       }
     } while (++t < timeDim);
     // dxy->truncateVars(numVar);
@@ -786,8 +786,8 @@ private:
       assert(i != numLoopsCommon);
       sch[0] = xOffOmega[i];
       sch[1] = yOffOmega[i];
-      sch[_(2, 2 + numLoopsX)] << xPhi(last - i, _);
-      sch[_(2 + numLoopsX, 2 + numLoopsTotal)] << yPhi(last - i, _);
+      sch[_(2, 2 + numLoopsX)] << xPhi[last - i, _];
+      sch[_(2 + numLoopsX, 2 + numLoopsTotal)] << yPhi[last - i, _];
       if (fxy->unSatisfiableZeroRem(alloc, sch, numLambda,
                                     unsigned(nonTimeDim))) {
         assert(!fyx->unSatisfiableZeroRem(alloc, sch, numLambda,
@@ -1203,8 +1203,8 @@ inline auto Loop::getLegality(poly::Dependencies deps,
   ptrdiff_t loop = this->currentDepth - 1;
   for (int32_t id : edges(loopDeps)) {
     Dependence::ID i{id};
-    StridedVector<int64_t> in = deps.input(i)->indexMatrix()(_, loop),
-                           out = deps.output(i)->indexMatrix()(_, loop);
+    StridedVector<int64_t> in = deps.input(i)->indexMatrix()[_, loop],
+                           out = deps.output(i)->indexMatrix()[_, loop];
     invariant(in.size(), out.size());
     if (in != out) return setLegal(IndexMismatch);
     // ptrdiff_t common = std::min(in.size(), out.size());

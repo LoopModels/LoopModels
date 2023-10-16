@@ -878,11 +878,11 @@ static void BM_Simplex0(benchmark::State &state) {
   unsigned numCon = unsigned(tableau.numRow()) - 1;
   unsigned numVar = unsigned(tableau.numCol()) - 1;
   poly::utils::Valid<poly::math::Simplex> simpBackup{
-    poly::math::Simplex::create(alloc, numCon, numVar)};
+    poly::math::Simplex::create(&alloc, numCon, numVar)};
   simpBackup->getTableau() << tableau;
   // Simplex simpBackup{tableau};
   poly::utils::Valid<poly::math::Simplex> simp{poly::math::Simplex::create(
-    alloc, simpBackup->getNumCons(), simpBackup->getNumVars())};
+    &alloc, simpBackup->getNumCons(), simpBackup->getNumVars())};
   // Vector<Rational> sol(37);
   for (auto b : state) {
     *simp << *simpBackup;
@@ -895,7 +895,7 @@ static void BM_Simplex0(benchmark::State &state) {
 BENCHMARK(BM_Simplex0);
 
 static void BM_Simplex1(benchmark::State &state) {
-  IntMatrix tableau{
+  poly::math::IntMatrix<> tableau{
     "[0 0 0 1 0 -1 0 0 0 0 0 0 0 0 0 -1 0 0 0 0 0 0 1 0 -1 0 0 725849473193 "
     "94205055327856 11 11 11 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 1 -1 0 0 0 0 0 "
     "0 0 0 0 0 0 0 0 0 0 0 1 0 -1 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 "
@@ -1114,13 +1114,14 @@ static void BM_Simplex1(benchmark::State &state) {
     "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 1 1 1 0 "
     "0 0 0 0 0 0 0 0 0 ]"_mat};
 
-  OwningArena<> alloc;
+  poly::alloc::OwningArena<> alloc;
   unsigned numCon = unsigned(tableau.numRow()) - 1;
   unsigned numVar = unsigned(tableau.numCol()) - 1;
-  Valid<Simplex> simpBackup{Simplex::create(alloc, numCon, numVar, 0)};
+  poly::utils::Valid<poly::math::Simplex> simpBackup{
+    poly::math::Simplex::create(&alloc, numCon, numVar, 0)};
   simpBackup->getTableau() << tableau;
-  Valid<Simplex> simp{Simplex::create(alloc, simpBackup->getNumCons(),
-                                      simpBackup->getNumVars(), 0)};
+  poly::utils::Valid<poly::math::Simplex> simp{poly::math::Simplex::create(
+    &alloc, simpBackup->getNumCons(), simpBackup->getNumVars(), 0)};
   for (auto b : state) {
     *simp << *simpBackup;
     bool fail = simp->initiateFeasible();

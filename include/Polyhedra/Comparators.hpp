@@ -566,13 +566,13 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
     if (!allZero(b[_(V.numRow(), end)])) return false;
     auto H = matrix<int64_t>(alloc, V.numRow(), V.numCol() + 1);
     Col oldn = V.numCol();
-    H(_, _(0, oldn)) << V;
+    H[_, _(0, oldn)] << V;
     // H.numRow() == b.size(), because we're only here if dimD == 0,
     // in which case V.numRow() == U.numRow() == b.size()
-    H(_, oldn) << b;
+    H[_, oldn] << b;
     solveSystem(H);
     for (ptrdiff_t i = numEquations; i < H.numRow(); ++i)
-      if ((H(i, oldn) > 0) != (H(i, i) > 0)) return false;
+      if ((H[i, oldn] > 0) != (H[i, i] > 0)) return false;
     return true;
   }
   [[nodiscard]] constexpr auto
@@ -593,19 +593,19 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
     }
     ptrdiff_t numRowTrunc = getURank();
     auto c = vector<int64_t>(alloc, unsigned(V.numRow() - numEquations));
-    c << V(_(numEquations, end), _(begin, numRowTrunc)) * b;
+    c << V[_(numEquations, end), _(begin, numRowTrunc)] * b;
     auto dimNS = V.numCol() - numRowTrunc;
     // expand W stores [c -JV2 JV2]
     //  we use simplex to solve [-JV2 JV2][y2+ y2-]' <= JV1D^(-1)Uq
     // where y2 = y2+ - y2-
     auto expandW = matrix<int64_t>(alloc, numSlack, dimNS * 2 + 1);
     for (ptrdiff_t i = 0; i < numSlack; ++i) {
-      expandW(i, 0) = c[i];
+      expandW[i, 0] = c[i];
       // expandW(i, 0) *= Dlcm;
       for (ptrdiff_t j = 0; j < dimNS;) {
-        auto val = V(i + numEquations, numRowTrunc + j++) * lcmD;
-        expandW(i, j) = -val;
-        expandW(i, dimNS + j) = val;
+        auto val = V[i + numEquations, numRowTrunc + j++] * lcmD;
+        expandW[i, j] = -val;
+        expandW[i, dimNS + j] = val;
       }
     }
     Optional<Simplex *> optS{Simplex::positiveVariables(alloc, expandW)};
@@ -616,7 +616,7 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
     -> bool {
     auto U = getU();
     auto b = vector<int64_t>(&alloc, unsigned(U.numRow()));
-    b << U(_, _(begin, query.size())) * query;
+    b << U[_, _(begin, query.size())] * query;
     return getD().size() ? greaterEqualRankDeficient(&alloc, b)
                          : greaterEqualFullRank(&alloc, b);
   }

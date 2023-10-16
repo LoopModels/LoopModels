@@ -1,11 +1,13 @@
 #pragma once
 #include <Alloc/Arena.hpp>
+#include <Utilities/Invariant.hpp>
 #include <Utilities/Optional.hpp>
 #include <Utilities/Valid.hpp>
 #include <ankerl/unordered_dense.h>
 #include <cstdint>
 
 namespace poly::dict {
+using utils::invariant;
 // Idea from from https://nullprogram.com/blog/2023/09/30/
 template <class K, class V> struct TrieMapNode {
   K first;
@@ -17,7 +19,7 @@ template <class K, class V> struct TrieMapNode {
   }
   auto operator[](utils::Valid<alloc::Arena<>> alloc, const K &k) -> V & {
     Child c = findChild(k);
-    if (c.child) return c.second;
+    if (c.child) return c.child->second;
     invariant(c.parent != nullptr);
     invariant(c.index < 4);
     c.parent[c.index] = alloc->create<TrieMapNode>();
@@ -32,7 +34,7 @@ protected:
     uint64_t index; // child == parent->children[index];
   };
   constexpr auto firstChild() -> Child {
-    for (int i = 0; i < 4; ++i)
+    for (unsigned int i = 0; i < 4; ++i)
       if (TrieMapNode *c = children[i]) return Child{c, this, i};
     return Child{nullptr, this, 0};
   }
@@ -63,10 +65,10 @@ protected:
         if (!n.child) break;
         l = n;
       }
-      l.parent.children[l.index] = nullptr;    // leaf is moved up
-      l.child.children = child.child.children; // leaf takes child's children
+      l.parent->children[l.index] = nullptr;    // leaf is moved up
+      l.child->children = child.child->children; // leaf takes child's children
     }
-    child.parent[child.index] = l.child; // leaf replaces deleted
+    child.parent->children[child.index] = l.child; // leaf replaces deleted
 
     return child.child;
   }
@@ -85,22 +87,21 @@ struct TrieMap : TrieMapNode<K, V> {
   // TODO: implement using `list` to avoid allocs
   void erase(const K &k) {
     NodeT *erased = this->eraseImpl(k);
-    erased->children[0] = list;
-    list = erased;
+    erased->children[0] = std::exchange(list, erased);
   }
   auto operator[](utils::Valid<alloc::Arena<>> alloc, const K &k) -> V & {
-    typename NodeT::Child c = findChild(k);
-    if (c.child) return c.second;
+    typename NodeT::Child c = this->findChild(k);
+    if (c.child) return c.child->second;
     invariant(c.parent != nullptr);
     invariant(c.index < 4);
     if (list) {
-      c.parent[c.index] = list;
-      list = list->children[0];
+      c.parent->children[c.index] = list;
+      list = std::exchange(list->children[0], nullptr);
     } else {
-      c.parent[c.index] = alloc->create<NodeT>();
+      c.parent->children[c.index] = alloc->create<NodeT>();
     }
-    c.parent[c.index]->first = k;
-    return c.parent[c.index]->second;
+    c.parent->children[c.index]->first = k;
+    return c.parent->children[c.index]->second;
   }
 };
 
@@ -138,11 +139,11 @@ template <class K, class V> struct InlineTrie {
     return c.node->values[c.index];
   }
 
-  void eraseImpl(const K &k) {
+  void erase(const K &k) {
     Child c = findChild<false>(this, k);
     if (c.subIndex) return; // was not found
     // We now find a leaf key/value pair, and move them here.
-    InlineTrie *descendent = c.node[c.index];
+    InlineTrie *descendent = c.node->children[c.index];
     if (!descendent) {
       c.node->keys[c.index] = {}; // set to null
       return;

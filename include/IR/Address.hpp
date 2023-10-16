@@ -180,8 +180,8 @@ public:
     unsigned newNatDepth = 0;
     for (ptrdiff_t d = getArrayDim(); d--;) {
       buff << 0;
-      for (ptrdiff_t k = 0; k < oldNatDepth; ++k) buff += M(d, k) * Pinv(k, _);
-      mStar(d, _) << buff;
+      for (ptrdiff_t k = 0; k < oldNatDepth; ++k) buff += M[d, k] * Pinv[k, _];
+      mStar[d, _] << buff;
       if (newNatDepth == depth) continue;
       // find last
       auto range = std::ranges::reverse_view{buff[_(newNatDepth, depth)]};
@@ -196,7 +196,7 @@ public:
     this->naturalDepth = newNatDepth;
     MutDensePtrMatrix<int64_t> indMat{this->indexMatrix()};
     for (ptrdiff_t d = 1; d < getArrayDim(); ++d)
-      indMat(d, _) << mStar(d, _(0, newNatDepth));
+      indMat[d, _] << mStar[d, _(0, newNatDepth)];
     this->naturalDepth = newNatDepth;
   }
   // NOTE: this requires `nodeOrDepth` to be set to innmost loop depth
@@ -291,13 +291,13 @@ public:
       alloc->allocate<const llvm::SCEV *>(arrayDim + nOff + numLoops - 1);
     unsigned natDepth = numLoops;
     for (; natDepth; --natDepth)
-      if (math::anyNEZero(indMat(_, natDepth - 1))) break;
+      if (math::anyNEZero(indMat[_, natDepth - 1])) break;
     auto *ma = new (mem) Addr(arrayPtr, user, offsets, syms,
                               std::array<unsigned, 2>{arrayDim, nOff}, numLoops,
                               natDepth, maxNumLoops);
     std::copy_n(szOff[0].begin(), arrayDim, syms);
     std::copy_n(szOff[1].begin(), nOff, syms + arrayDim);
-    ma->indexMatrix() << indMat(_, _(0, natDepth)); // naturalDepth
+    ma->indexMatrix() << indMat[_, _(0, natDepth)]; // naturalDepth
     ma->getOffsetOmega() << coffsets;
     return ma;
   }
@@ -344,7 +344,7 @@ public:
   }
   [[nodiscard]] constexpr auto dependsOnIndVars(size_t d) -> bool {
     for (size_t i = 0, D = getArrayDim(); i < D; ++i)
-      if (anyNEZero(indexMatrix()(i, _(d, end)))) return true;
+      if (anyNEZero(indexMatrix()[i, _(d, end)])) return true;
     return false;
   }
   [[nodiscard]] constexpr auto getAffLoop() const -> Valid<poly::Loop> {
@@ -395,22 +395,22 @@ public:
     MutPtrVector<const llvm::SCEV *> sym{getSymbolicOffsets()};
     offSym = alloc->allocate<int64_t>(size_t(numDynSym) * numDim);
     MutDensePtrMatrix<int64_t> offsMat{offsetMatrix()};
-    if (dynSymInd) offsMat(_, _(0, dynSymInd)) << oldOffsMat;
+    if (dynSymInd) offsMat[_, _(0, dynSymInd)] << oldOffsMat;
     llvm::Loop *L = loop->getLLVMLoop();
     for (unsigned d = loop->getNumLoops() - numToPeel; d--;)
       L = L->getParentLoop();
     for (size_t i = numToPeel; i;) {
       L = L->getParentLoop();
-      if (allZero(Rt(_, --i))) continue;
+      if (allZero(Rt[_, --i])) continue;
       // push the SCEV
       auto *iTyp = L->getInductionVariable(*SE)->getType();
       const llvm::SCEV *S = SE->getAddRecExpr(
         SE->getZero(iTyp), SE->getOne(iTyp), L, llvm::SCEV::NoWrapMask);
       if (const llvm::SCEV **j = std::ranges::find(sym, S); j != sym.end()) {
         --numDynSym;
-        offsMat(_, std::distance(sym.begin(), j)) += Rt(_, i);
+        offsMat[_, std::distance(sym.begin(), j)] += Rt[_, i];
       } else {
-        offsMat(_, dynSymInd) << Rt(_, i);
+        offsMat[_, dynSymInd] << Rt[_, i];
         sym[dynSymInd++] = S;
       }
     }
@@ -548,7 +548,7 @@ public:
       if (i) os << ", ";
       bool printPlus = false;
       for (ptrdiff_t j = 0; j < numLoops; ++j) {
-        if (int64_t Aji = A(i, j)) {
+        if (int64_t Aji = A[i, j]) {
           if (printPlus) {
             if (Aji <= 0) {
               Aji *= -1;
@@ -561,7 +561,7 @@ public:
         }
       }
       for (ptrdiff_t j = 0; j < B.numCol(); ++j) {
-        if (int64_t offij = j ? B(i, j) : b[i]) {
+        if (int64_t offij = j ? B[i, j] : b[i]) {
           if (printPlus) {
             if (offij <= 0) {
               offij *= -1;
@@ -603,7 +603,7 @@ inline auto operator<<(llvm::raw_ostream &os, const Addr &m)
     if (i) os << ", ";
     bool printPlus = false;
     for (ptrdiff_t j = 0; j < numLoops; ++j) {
-      if (int64_t Aji = A(i, j)) {
+      if (int64_t Aji = A[i, j]) {
         if (printPlus) {
           if (Aji <= 0) {
             Aji *= -1;
@@ -616,7 +616,7 @@ inline auto operator<<(llvm::raw_ostream &os, const Addr &m)
       }
     }
     for (ptrdiff_t j = 0; j < offs.numCol(); ++j) {
-      if (int64_t offij = offs(i, j)) {
+      if (int64_t offij = offs[i, j]) {
         if (printPlus) {
           if (offij <= 0) {
             offij *= -1;

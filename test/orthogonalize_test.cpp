@@ -32,7 +32,7 @@ namespace {
 auto orthogonalize(alloc::Arena<> *alloc,
                    llvm::SmallVectorImpl<ArrayReference *> const &ai)
   -> std::optional<
-    std::pair<poly::Loop *, llvm::SmallVector<ArrayReference, 0>>> {
+    containers::Pair<poly::Loop *, llvm::SmallVector<ArrayReference, 0>>> {
 
   // need to construct matrix `A` of relationship
   // B*L = I
@@ -72,7 +72,7 @@ auto orthogonalize(alloc::Arena<> *alloc,
     poly::Loop::construct(alloc, nullptr, std::move(AK), alnp.getSyms(), true);
   alnNew->pruneBounds();
   math::IntMatrix KS{K * S};
-  std::pair<poly::Loop *, llvm::SmallVector<ArrayReference, 0>> ret{
+  containers::Pair<poly::Loop *, llvm::SmallVector<ArrayReference, 0>> ret{
     std::make_pair(alnNew, llvm::SmallVector<ArrayReference, 0>())};
   llvm::SmallVector<ArrayReference, 0> &newArrayRefs = ret.second;
   newArrayRefs.reserve(numRow);
@@ -115,7 +115,7 @@ TEST(OrthogonalizeTest, BasicAssertions) {
   const llvm::SCEVUnknown *scevB = tlf.getSCEVUnknown(tlf.createArray());
   // we have three array refs
   // W[i+m, j+n]
-  // llvm::SmallVector<std::pair<MPoly,MPoly>>
+  // llvm::SmallVector<containers::Pair<MPoly,MPoly>>
   ArrayReference War{scevW, aln, 2};
   {
     MutPtrMatrix<int64_t> indMat = War.indexMatrix();
@@ -158,7 +158,7 @@ TEST(OrthogonalizeTest, BasicAssertions) {
   llvm::SmallVector<ArrayReference *> ai{
     allArrayRefs.data(), allArrayRefs.data() + 1, allArrayRefs.data() + 2};
 
-  std::optional<std::pair<poly::Loop *, llvm::SmallVector<ArrayReference, 0>>>
+  std::optional<containers::Pair<poly::Loop *, llvm::SmallVector<ArrayReference, 0>>>
     orth(orthogonalize(tlf.getAlloc(), ai));
 
   EXPECT_TRUE(orth.has_value());
@@ -280,7 +280,7 @@ TEST(BadMul, BasicAssertions) {
   llvm::SmallVector<ArrayReference *> ai{
     allArrayRefs.data(), allArrayRefs.data() + 1, allArrayRefs.data() + 2};
 
-  std::optional<std::pair<poly::Loop *, llvm::SmallVector<ArrayReference, 0>>>
+  std::optional<containers::Pair<poly::Loop *, llvm::SmallVector<ArrayReference, 0>>>
     orth{orthogonalize(tlf.getAlloc(), ai)};
 
   EXPECT_TRUE(orth.has_value());

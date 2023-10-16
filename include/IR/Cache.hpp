@@ -196,7 +196,7 @@ class Cache {
   auto getCSE(Compute *I) -> Compute *& { return instCSEMap[InstByValue{I}]; }
   // NOLINTNEXTLINE(misc-no-recursion)
   auto createValue(llvm::Value *v, Predicate::Map *M, TreeResult tr, Value *&n)
-    -> std::pair<Value *, TreeResult> {
+    -> containers::Pair<Value *, TreeResult> {
     if (auto *i = llvm::dyn_cast<llvm::Instruction>(v))
       return createInstruction(i, M, tr, n);
     if (auto *c = llvm::dyn_cast<llvm::ConstantInt>(v))
@@ -343,8 +343,8 @@ class Cache {
                                     math::Col C) {
     MutDensePtrMatrix<int64_t> B{matrix<int64_t>(alloc, A.numRow(), C)};
     for (ptrdiff_t j = 0; j < R; ++j) {
-      B(j, _(0, A.numCol())) << A(j, _);
-      B(j, _(A.numCol(), end)) << 0;
+      B[j, _(0, A.numCol())] << A[j, _];
+      B[j, _(A.numCol(), end)] << 0;
     }
     std::swap(A, B);
   }
@@ -365,7 +365,7 @@ public:
   /// complete the operands
   // NOLINTNEXTLINE(misc-no-recursion)
   auto complete(Compute *I, Predicate::Map *M, TreeResult tr)
-    -> std::pair<Compute *, TreeResult> {
+    -> containers::Pair<Compute *, TreeResult> {
     auto *i = I->getLLVMInstruction();
     unsigned nOps = I->numCompleteOps();
     auto ops = I->getOperands();
@@ -380,7 +380,7 @@ public:
   }
   // update list of incomplets
   inline auto completeInstructions(Predicate::Map *M, TreeResult tr)
-    -> std::pair<Compute *, TreeResult> {
+    -> containers::Pair<Compute *, TreeResult> {
     Compute *completed = nullptr;
     for (Compute *I = tr.incomplete; I;
          I = static_cast<Compute *>(I->getNext())) {
@@ -439,21 +439,21 @@ public:
   /// `nullptr`, then all operands will be left incomplete.
   // NOLINTNEXTLINE(misc-no-recursion)
   auto getValue(llvm::Value *v, Predicate::Map *M, TreeResult tr)
-    -> std::pair<Value *, TreeResult> {
+    -> containers::Pair<Value *, TreeResult> {
     Value *&n = llvmToInternalMap[v];
     if (n) return {n, tr};
     // by reference, so we can update in creation
     return createValue(v, M, tr, n);
   }
   auto getValue(llvm::Instruction *I, Predicate::Map *M, TreeResult tr)
-    -> std::pair<Instruction *, TreeResult> {
+    -> containers::Pair<Instruction *, TreeResult> {
     auto [v, tret] = getValue(static_cast<llvm::Value *>(I), M, tr);
     return {llvm::cast<Instruction>(v), tret};
   }
 
   // NOLINTNEXTLINE(misc-no-recursion)
   auto createInstruction(llvm::Instruction *I, Predicate::Map *M, TreeResult tr,
-                         Value *&t) -> std::pair<Value *, TreeResult> {
+                         Value *&t) -> containers::Pair<Value *, TreeResult> {
     auto *load = llvm::dyn_cast<llvm::LoadInst>(I);
     auto *store = llvm::dyn_cast<llvm::StoreInst>(I);
     if (!load && !store) return createCompute(I, M, tr, t);
@@ -473,7 +473,7 @@ public:
 
   // NOLINTNEXTLINE(misc-no-recursion)
   auto createCompute(llvm::Instruction *I, Predicate::Map *M, TreeResult tr,
-                     Value *&t) -> std::pair<Compute *, TreeResult> {
+                     Value *&t) -> containers::Pair<Compute *, TreeResult> {
     auto [id, kind] = Compute::getIDKind(I);
     int numOps = int(I->getNumOperands());
     Compute *n = std::construct_at(allocateInst(numOps), kind, I, id, -numOps);
@@ -494,7 +494,7 @@ public:
   // create Addr
   auto getArrayRef(llvm::Instruction *loadOrStore, llvm::Loop *L,
                    llvm::Value *ptr, TreeResult tr)
-    -> std::pair<Value *, TreeResult> {
+    -> containers::Pair<Value *, TreeResult> {
     Value *&n = llvmToInternalMap[loadOrStore];
     if (n) return {n, tr};
     auto ret = createArrayRef(loadOrStore, L, ptr, tr);
@@ -503,14 +503,14 @@ public:
   }
   // create Addr
   auto createArrayRef(llvm::Instruction *loadOrStore, llvm::Value *ptr,
-                      TreeResult tr) -> std::pair<Value *, TreeResult> {
+                      TreeResult tr) -> containers::Pair<Value *, TreeResult> {
     llvm::Loop *L = LI->getLoopFor(loadOrStore->getParent());
     return createArrayRef(loadOrStore, L, ptr, tr);
   }
   // create Addr
   auto createArrayRef(llvm::Instruction *loadOrStore, llvm::Loop *L,
                       llvm::Value *ptr, TreeResult tr)
-    -> std::pair<Value *, TreeResult> {
+    -> containers::Pair<Value *, TreeResult> {
     const auto *elSz = SE->getElementSize(loadOrStore);
     const llvm::SCEV *accessFn = SE->getSCEVAtScope(ptr, L);
     unsigned numLoops = L->getLoopDepth();
@@ -523,7 +523,7 @@ public:
   auto createArrayRef(llvm::Instruction *loadOrStore,
                       const llvm::SCEV *accessFn, unsigned numLoops,
                       const llvm::SCEV *elSz, TreeResult tr)
-    -> std::pair<Value *, TreeResult> {
+    -> containers::Pair<Value *, TreeResult> {
     // https://llvm.org/doxygen/Delinearization_8cpp_source.html#l00582
 
     const llvm::SCEV *pb = SE->getPointerBase(accessFn);
@@ -541,7 +541,7 @@ public:
     if (numDims == 0) return {zeroDimRef(loadOrStore, arrayPtr, 0), tr};
     unsigned numPeeled = tr.rejectDepth;
     numLoops -= numPeeled;
-    math::IntMatrix Rt{math::StridedDims{numDims, numLoops}, 0};
+    math::IntMatrix<math::StridedDims> Rt{math::StridedDims{numDims, numLoops}, 0};
     llvm::SmallVector<const llvm::SCEV *, 3> symbolicOffsets;
     uint64_t blackList{0};
     math::Vector<int64_t> coffsets{unsigned(numDims), 0};
@@ -551,17 +551,17 @@ public:
       for (ptrdiff_t i = 0; i < numDims; ++i) {
         offsets << 0;
         blackList |=
-          fillAffineIndices(Rt(i, _), &coffsets[i], offsets, symbolicOffsets,
+          fillAffineIndices(Rt[i, _], &coffsets[i], offsets, symbolicOffsets,
                             subscripts[i], 1, numPeeled);
         if (offsets.size() > offsMat.numCol())
           extendDensePtrMatCols(&alloc, offsMat, math::Row{i},
                                 math::Col{offsets.size()});
-        offsMat(i, _) << offsets;
+        offsMat[i, _] << offsets;
       }
     }
     size_t numExtraLoopsToPeel = 64 - std::countl_zero(blackList);
     Addr *op = Addr::construct(&alloc, arrayPtr, loadOrStore,
-                               Rt(_, _(numExtraLoopsToPeel, end)),
+                               Rt[_, _(numExtraLoopsToPeel, end)],
                                {std::move(sizes), std::move(symbolicOffsets)},
                                coffsets, offsMat.data(), numLoops, tr.maxDepth);
     tr.addAddr(op);

@@ -406,11 +406,11 @@ public:
   /// getSchedule, loops are always indexed from outer to inner
   [[nodiscard]] constexpr auto getSchedule(ptrdiff_t d) const
     -> PtrVector<int64_t> {
-    return getPhi()(d, _);
+    return getPhi()[d, _];
   }
   [[nodiscard]] constexpr auto getSchedule(ptrdiff_t d)
     -> MutPtrVector<int64_t> {
-    return getPhi()(d, _);
+    return getPhi()[d, _];
   }
   [[nodiscard]] constexpr auto getFusionOmega(ptrdiff_t i) const -> int64_t {
     return (mem + 1)[getNumLoopsSquared() + i];
@@ -452,8 +452,8 @@ public:
     MutSquarePtrMatrix<int64_t> phi = getPhi();
     ptrdiff_t indR = ptrdiff_t(indMat.numCol());
     for (ptrdiff_t i = 0; i < r; ++i) {
-      phi(i, _(0, indR)) << indMat(i, _);
-      phi(i, _(indR, end)) << 0;
+      phi[i, _(0, indR)] << indMat[i, _];
+      phi[i, _(indR, end)] << 0;
     }
     rank = r;
   }

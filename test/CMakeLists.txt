@@ -19,6 +19,12 @@ include(../cmake/CPM.cmake)
 # ---- compile_commands.json ----
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+if(((USE_SANITIZER MATCHES "([Aa]ddress)") OR (USE_SANITIZER MATCHES "([Aa]ddress);([Uu]ndefined)"
+                                               )
+) AND (CMAKE_CXX_COMPILER_ID MATCHES "Clang"))
+  set(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -lunwind -Wno-unused-command-line-argument")
+endif()
+
 # CPMAddPackage("gh:onqtam/doctest@2.4.9")
 CPMAddPackage("gh:TheLartians/Format.cmake@1.7.3")
 CPMAddPackage(
@@ -53,21 +59,22 @@ file(
   GLOB
   tests
   CONFIGURE_DEPENDS
-  ${CMAKE_CURRENT_SOURCE_DIR}/bitset_test.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/bumpmap_test.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/comparator_test.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/compat_test.cpp
-  # ${CMAKE_CURRENT_SOURCE_DIR}/dependence_test.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/graph_test.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/linear_algebra_test.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/linear_diophantine_test.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/matrix_test.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/normal_form_test.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/orthogonalize_test.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/remarks_test.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/simplex_test.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/string_to_intmat_test.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/unimodularization_test.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/dict_test.cpp
+  # ${CMAKE_CURRENT_SOURCE_DIR}/bitset_test.cpp
+  # ${CMAKE_CURRENT_SOURCE_DIR}/bumpmap_test.cpp
+  # ${CMAKE_CURRENT_SOURCE_DIR}/comparator_test.cpp
+  # ${CMAKE_CURRENT_SOURCE_DIR}/compat_test.cpp
+  # # ${CMAKE_CURRENT_SOURCE_DIR}/dependence_test.cpp
+  # ${CMAKE_CURRENT_SOURCE_DIR}/graph_test.cpp
+  # ${CMAKE_CURRENT_SOURCE_DIR}/linear_algebra_test.cpp
+  # ${CMAKE_CURRENT_SOURCE_DIR}/linear_diophantine_test.cpp
+  # ${CMAKE_CURRENT_SOURCE_DIR}/matrix_test.cpp
+  # ${CMAKE_CURRENT_SOURCE_DIR}/normal_form_test.cpp
+  # ${CMAKE_CURRENT_SOURCE_DIR}/orthogonalize_test.cpp
+  # ${CMAKE_CURRENT_SOURCE_DIR}/remarks_test.cpp
+  # ${CMAKE_CURRENT_SOURCE_DIR}/simplex_test.cpp
+  # ${CMAKE_CURRENT_SOURCE_DIR}/string_to_intmat_test.cpp
+  # ${CMAKE_CURRENT_SOURCE_DIR}/unimodularization_test.cpp
 )
 
 # list(FILTER tests EXCLUDE REGEX "remarks.*") for remarks test

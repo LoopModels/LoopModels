@@ -1,16 +1,14 @@
 #pragma once
 
-#include "Math/Array.hpp"
 #include "Alloc/Arena.hpp"
+#include "Math/Array.hpp"
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
-#include <limits>
 #include <llvm/ADT/ArrayRef.h>
 #include <llvm/ADT/SmallVector.h>
 #include <llvm/IR/User.h>
 #include <llvm/Support/raw_ostream.h>
-#include <utility>
 
 namespace poly::poly {
 using math::_, math::PtrVector, math::MutPtrVector, math::SquarePtrMatrix,
@@ -81,10 +79,10 @@ struct AffineSchedule {
   /// getSchedule, loops are always indexed from outer to inner
   [[nodiscard]] constexpr auto getSchedule(size_t d) const
     -> math::PtrVector<int64_t> {
-    return getPhi()(d, _);
+    return getPhi()[d, _];
   }
   [[nodiscard]] constexpr auto getSchedule(size_t d) -> MutPtrVector<int64_t> {
-    return getPhi()(d, _);
+    return getPhi()[d, _];
   }
   [[nodiscard]] constexpr auto getFusionOmega(size_t i) const -> int64_t {
     return data()[getNumLoopsSquared() + i];

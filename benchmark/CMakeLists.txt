@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.23)
 project(LoopModelsBenchmarks LANGUAGES C CXX)
 
 option(ENABLE_NATIVE_COMPILATION "Compile with -march=native" ON)
+option(ENABLE_OPENMP "Use OpenMP for a multithreading benchmark" OFF)
 
 # --- Import tools ----
 
@@ -57,10 +58,12 @@ target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${LLVM_INCLUDE_DIRS})
 target_include_directories(
   ${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/../include ${PROJECT_SOURCE_DIR}/include
 )
-find_package(OpenMP)
+if(ENABLE_OPENMP)
+  find_package(OpenMP)
+  target_link_libraries(${PROJECT_NAME} OpenMP::OpenMP_CXX)
+endif()
 target_link_libraries(
   ${PROJECT_NAME} PRIVATE benchmark::benchmark LLVM unordered_dense::unordered_dense Math
-                          OpenMP::OpenMP_CXX
 )
 
 if((CMAKE_CXX_COMPILER_ID MATCHES "Clang") OR (CMAKE_CXX_COMPILER_ID MATCHES "IntelLLVM"))
@@ -110,10 +113,12 @@ target_compile_options(
           -Wextra
           -save-temps
 )
-if(CMAKE_CXX_COMPILER_ID MATCHES "IntelLLVM")
-  target_compile_options(${PROJECT_NAME} PRIVATE -fiopenmp)
-else()
-  target_compile_options(${PROJECT_NAME} PRIVATE -fopenmp)
+if(ENABLE_OPENMP)
+  if(CMAKE_CXX_COMPILER_ID MATCHES "IntelLLVM")
+    target_compile_options(${PROJECT_NAME} PRIVATE -fiopenmp)
+  else()
+    target_compile_options(${PROJECT_NAME} PRIVATE -fopenmp)
+  endif()
 endif()
 if(CMAKE_SYSTEM_PROCESSOR MATCHES "(x86)|(X86)|(amd64)|(AMD64)")
   target_compile_options(${PROJECT_NAME} PRIVATE -masm=intel)

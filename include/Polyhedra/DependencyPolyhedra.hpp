@@ -36,9 +36,9 @@ inline auto printConstraints(std::ostream &os, DensePtrMatrix<int64_t> A,
   const Row numConstraints = A.numRow();
   const unsigned numSyms = syms.size() + 1;
   for (Row c = 0; c < numConstraints; ++c) {
-    printConstraint(os, A(c, _), numSyms, inequality);
+    printConstraint(os, A[c, _], numSyms, inequality);
     for (ptrdiff_t v = 1; v < numSyms; ++v) {
-      if (int64_t Acv = A(c, v)) {
+      if (int64_t Acv = A[c, v]) {
         os << (Acv > 0 ? " + " : " - ");
         Acv = math::constexpr_abs(Acv);
         if (Acv != 1) os << Acv << "*";
@@ -247,23 +247,23 @@ public:
       numDynSym};
   }
   auto getSymbols(ptrdiff_t i) -> math::MutPtrVector<int64_t> {
-    return getA()(i, _(math::begin, getNumSymbols()));
+    return getA()[i, _(math::begin, getNumSymbols())];
   }
   [[nodiscard]] auto getInEqSymbols(ptrdiff_t i) const -> PtrVector<int64_t> {
-    return getA()(i, _(math::begin, getNumSymbols()));
+    return getA()[i, _(math::begin, getNumSymbols())];
   }
   [[nodiscard]] auto getEqSymbols(ptrdiff_t i) const -> PtrVector<int64_t> {
-    return getE()(i, _(math::begin, getNumSymbols()));
+    return getE()[i, _(math::begin, getNumSymbols())];
   }
   [[nodiscard]] auto getCompTimeInEqOffset(ptrdiff_t i) const
     -> std::optional<int64_t> {
-    if (!allZero(getA()(i, _(1, getNumSymbols())))) return {};
-    return getA()(i, 0);
+    if (!allZero(getA()[i, _(1, getNumSymbols())])) return {};
+    return getA()[i, 0];
   }
   [[nodiscard]] auto getCompTimeEqOffset(ptrdiff_t i) const
     -> std::optional<int64_t> {
-    if (!allZero(getE()(i, _(1, getNumSymbols())))) return {};
-    return getE()(i, 0);
+    if (!allZero(getE()[i, _(1, getNumSymbols())])) return {};
+    return getE()[i, 0];
   }
   static constexpr auto findFirstNonEqual(PtrVector<int64_t> x,
                                           PtrVector<int64_t> y) -> ptrdiff_t {
@@ -281,10 +281,10 @@ public:
     PtrMatrix<int64_t> indMatX = x->indexMatrix(), indMatY = y->indexMatrix();
     unsigned indDepth = std::min(x->getNaturalDepth(), y->getNaturalDepth());
     for (ptrdiff_t i = 0; i < std::min(numLoopsCommon, indDepth); ++i) {
-      A(i, _(0, xDim)) << indMatX(_, i);
-      A(i, _(xDim, end)) << indMatY(_, i);
+      A[i, _(0, xDim)] << indMatX[_, i];
+      A[i, _(xDim, end)] << indMatY[_, i];
     }
-    for (ptrdiff_t i = indDepth; i < numLoopsCommon; ++i) A(i, _) << 0;
+    for (ptrdiff_t i = indDepth; i < numLoopsCommon; ++i) A[i, _] << 0;
     // returns rank x num loops
     return orthogonalNullSpace(std::move(A));
   }
@@ -295,8 +295,8 @@ public:
     math::DenseMatrix<int64_t> A(math::DenseDims{numLoopsCommon, dim});
     if (!numLoopsCommon) return A;
     // indMats cols are [outerMostLoop,...,innerMostLoop]
-    A(_(0, natDepth), _) << x->indexMatrix().transpose();
-    if (natDepth < numLoopsCommon) A(_(natDepth, end), _) << 0;
+    A[_(0, natDepth), _] << x->indexMatrix().transpose();
+    if (natDepth < numLoopsCommon) A[_(natDepth, end), _] << 0;
     // returns rank x num loops
     return orthogonalNullSpace(std::move(A));
   }
@@ -386,7 +386,7 @@ public:
     Row nc = nc0 + nc1;
     unsigned indexDim{aix->getArrayDim()};
     auto nullStep{dp->getNullStep()};
-    for (ptrdiff_t i = 0; i < timeDim; ++i) nullStep[i] = selfDot(NS(i, _));
+    for (ptrdiff_t i = 0; i < timeDim; ++i) nullStep[i] = selfDot(NS[i, _]);
     //           column meansing in in order
     // const size_t numSymbols = getNumSymbols();
     auto A{dp->getA()};
@@ -397,38 +397,38 @@ public:
     // E.resize(indexDim + nullDim, A.numCol());
     // ma0 loop
     for (ptrdiff_t i = 0; i < nc0; ++i) {
-      A(i, _(0, 1 + Sx.size())) << Ax(i, _(0, 1 + Sx.size()));
-      A(i, _(numSym, numSym + numDep0Var))
-        << Ax(i, _(1 + Sx.size(), 1 + Sx.size() + numDep0Var));
+      A[i, _(0, 1 + Sx.size())] << Ax[i, _(0, 1 + Sx.size())];
+      A[i, _(numSym, numSym + numDep0Var)]
+        << Ax[i, _(1 + Sx.size(), 1 + Sx.size() + numDep0Var)];
     }
     for (ptrdiff_t i = 0; i < nc1; ++i) {
-      A(nc0 + i, 0) = Ay(i, 0);
+      A[nc0 + i, 0] = Ay[i, 0];
       for (ptrdiff_t j = 0; j < map.size(); ++j)
-        A(nc0 + i, 1 + map[j]) = Ay(i, 1 + j);
+        A[nc0 + i, 1 + map[j]] = Ay[i, 1 + j];
       for (ptrdiff_t j = 0; j < numDep1Var; ++j)
-        A(nc0 + i, j + numSym + numDep0Var) = Ay(i, j + 1 + Sy.size());
+        A[nc0 + i, j + numSym + numDep0Var] = Ay[i, j + 1 + Sy.size()];
     }
-    A(_(nc, end), _(numSym, numSym + numVar)).diag() << 1;
+    A[_(nc, end), _(numSym, numSym + numVar)].diag() << 1;
     // indMats are [outerMostLoop, ..., innerMostLoop] x arrayDim
     // offsetMats are arrayDim x numSymbols
     // E(i,:)* indVars = q[i]
     // e.g. i_0 + j_0 + off_0 = i_1 + j_1 + off_1
     // i_0 + j_0 - i_1 - j_1 = off_1 - off_0
     for (ptrdiff_t i = 0; i < indexDim; ++i) {
-      E(i, _(0, Ox.numCol())) << Ox(i, _);
-      E(i, _(0, Cx.numCol()) + numSym) << Cx(i, _);
-      E(i, 0) -= Oy(i, 0);
+      E[i, _(0, Ox.numCol())] << Ox[i, _];
+      E[i, _(0, Cx.numCol()) + numSym] << Cx[i, _];
+      E[i, 0] -= Oy[i, 0];
       for (ptrdiff_t j = 0; j < Oy.numCol() - 1; ++j)
-        E(i, 1 + map[j]) -= Oy(i, 1 + j);
-      E(i, _(0, Cy.numCol()) + numSym + numDep0Var) << -Cy(i, _);
+        E[i, 1 + map[j]] -= Oy[i, 1 + j];
+      E[i, _(0, Cy.numCol()) + numSym + numDep0Var] << -Cy[i, _];
     }
     for (ptrdiff_t i = 0; i < timeDim; ++i) {
       for (ptrdiff_t j = 0; j < NS.numCol(); ++j) {
-        int64_t nsij = NS(i, j);
-        E(indexDim + i, j + numSym) = nsij;
-        E(indexDim + i, j + numSym + numDep0Var) = -nsij;
+        int64_t nsij = NS[i, j];
+        E[indexDim + i, j + numSym] = nsij;
+        E[indexDim + i, j + numSym + numDep0Var] = -nsij;
       }
-      E(indexDim + i, numSym + numVar + i) = 1;
+      E[indexDim + i, numSym + numVar + i] = 1;
     }
     dp->pruneBounds(*alloc);
     if (dp->getNumCon()) return dp;
@@ -465,7 +465,7 @@ public:
     Row nc = nco + nco;
     unsigned indexDim{ai->getArrayDim()};
     auto nullStep{dp->getNullStep()};
-    for (ptrdiff_t i = 0; i < timeDim; ++i) nullStep[i] = selfDot(NS(i, _));
+    for (ptrdiff_t i = 0; i < timeDim; ++i) nullStep[i] = selfDot(NS[i, _]);
     //           column meansing in in order
     // const size_t numSymbols = getNumSymbols();
     auto A{dp->getA()};
@@ -476,12 +476,12 @@ public:
     // E.resize(indexDim + nullDim, A.numCol());
     // ma0 loop
     for (ptrdiff_t i = 0; i < nco; ++i) {
-      for (ptrdiff_t j = 0; j < numSym; ++j) A(i + nco, j) = A(i, j) = B(i, j);
+      for (ptrdiff_t j = 0; j < numSym; ++j) A[i + nco, j] = A[i, j] = B[i, j];
       for (ptrdiff_t j = 0; j < numDepVar; ++j)
-        A(i + nco, j + numSym + numDepVar) = A(i, j + numSym) =
-          B(i, j + numSym);
+        A[i + nco, j + numSym + numDepVar] = A[i, j + numSym] =
+          B[i, j + numSym];
     }
-    A(_(nc, end), _(numSym, numSym + numVar)).diag() << 1;
+    A[_(nc, end), _(numSym, numSym + numVar)].diag() << 1;
     // L254: Assertion `col < numCol()` failed
     // indMats are [innerMostLoop, ..., outerMostLoop] x arrayDim
     // offsetMats are arrayDim x numSymbols
@@ -490,18 +490,18 @@ public:
     // i_0 + j_0 - i_1 - j_1 = off_1 - off_0
     for (ptrdiff_t i = 0; i < indexDim; ++i) {
       for (ptrdiff_t j = 0; j < C.numCol(); ++j) {
-        int64_t Cji = C(i, j);
-        E(i, j + numSym) = Cji;
-        E(i, j + numSym + numDepVar) = -Cji;
+        int64_t Cji = C[i, j];
+        E[i, j + numSym] = Cji;
+        E[i, j + numSym + numDepVar] = -Cji;
       }
     }
     for (ptrdiff_t i = 0; i < timeDim; ++i) {
       for (ptrdiff_t j = 0; j < NS.numCol(); ++j) {
-        int64_t nsij = NS(i, j);
-        E(indexDim + i, j + numSym) = nsij;
-        E(indexDim + i, j + numSym + numDepVar) = -nsij;
+        int64_t nsij = NS[i, j];
+        E[indexDim + i, j + numSym] = nsij;
+        E[indexDim + i, j + numSym + numDepVar] = -nsij;
       }
-      E(indexDim + i, numSym + numVar + i) = 1;
+      E[indexDim + i, numSym + numVar + i] = 1;
     }
     dp->pruneBounds(*alloc);
     invariant(dp->getNumCon() > 0);
@@ -556,11 +556,11 @@ public:
     // fw.resize(numConstraintsNew, numVarNew + 1);
     auto fCF{fw->getConstraints()};
     fCF << 0;
-    math::MutPtrMatrix<int64_t> fC{fCF(_, _(1, end))};
+    math::MutPtrMatrix<int64_t> fC{fCF[_, _(1, end)]};
     // fC(_, 0) << 0;
-    fC(0, 0) = 1; // lambda_0
-    fC(_, _(1, 1 + numInequalityConstraintsOld))
-      << A(_, _(math::begin, numConstraintsNew)).transpose();
+    fC[0, 0] = 1; // lambda_0
+    fC[_, _(1, 1 + numInequalityConstraintsOld)]
+      << A[_, _(math::begin, numConstraintsNew)].transpose();
     // fC(_, _(ineqEnd, posEqEnd)) = E.transpose();
     // fC(_, _(posEqEnd, numVarNew)) = -E.transpose();
     // loading from `E` is expensive
@@ -568,9 +568,9 @@ public:
     // go through and optimize loops like this
     for (ptrdiff_t j = 0; j < numConstraintsNew; ++j) {
       for (ptrdiff_t i = 0; i < numEqualityConstraintsOld; ++i) {
-        int64_t Eji = E(i, j);
-        fC(j, i + ineqEnd) = Eji;
-        fC(j, i + posEqEnd) = -Eji;
+        int64_t Eji = E[i, j];
+        fC[j, i + ineqEnd] = Eji;
+        fC[j, i + posEqEnd] = -Eji;
       }
     }
     // schedule
@@ -593,7 +593,7 @@ public:
     // ... == w + u'*N + psi
     // -1 as we flip sign
     for (ptrdiff_t i = 0; i < numBoundingCoefs; ++i)
-      fC(i, i + numScheduleCoefs + numLambda) = -1;
+      fC[i, i + numScheduleCoefs + numLambda] = -1;
 
     // so far, both have been identical
 
@@ -602,7 +602,7 @@ public:
     auto bCF{bw->getConstraints()};
     bCF << fCF;
     // bCF(_, _(0, numVarNew + 1)) << fCF(_, _(0, numVarNew + 1));
-    math::MutPtrMatrix<int64_t> bC{bCF(_, _(1, end))};
+    math::MutPtrMatrix<int64_t> bC{bCF[_, _(1, end)]};
 
     // equality constraints get expanded into two inequalities
     // a == 0 ->
@@ -615,14 +615,14 @@ public:
     // so that the ILP rLexMin on coefficients
     // will tend to preserve the initial order (which is
     // better than tending to reverse the initial order).
-    fC(0, numLambda) = 1;
-    fC(0, 1 + numLambda) = -1;
-    bC(0, numLambda) = -1;
-    bC(0, 1 + numLambda) = 1;
+    fC[0, numLambda] = 1;
+    fC[0, 1 + numLambda] = -1;
+    bC[0, numLambda] = -1;
+    bC[0, 1 + numLambda] = 1;
     for (ptrdiff_t i = 0; i < numPhiCoefs; ++i) {
       int64_t s = (2 * (i < numDep0Var) - 1);
-      fC(i + numBoundingCoefs, i + numLambda + 2) = s;
-      bC(i + numBoundingCoefs, i + numLambda + 2) = -s;
+      fC[i + numBoundingCoefs, i + numLambda + 2] = s;
+      bC[i + numBoundingCoefs, i + numLambda + 2] = -s;
     }
     // note that delta/constant coef is handled as last `s`
     return {fw, bw};
@@ -642,10 +642,10 @@ public:
     DensePtrMatrix<int64_t> E{getE()};
     unsigned xNumLoops = unsigned(xPhi.numCol()),
              yNumLoops = unsigned(yPhi.numCol());
-    if ((numDep0Var == xNumLoops) || allZero(xPhi(_, _(numDep0Var, end))))
+    if ((numDep0Var == xNumLoops) || allZero(xPhi[_, _(numDep0Var, end)]))
       xNumLoops = numDep0Var;
     else invariant(numDep0Var < xNumLoops);
-    if ((numDep1Var == yNumLoops) || allZero(yPhi(_, _(numDep1Var, end))))
+    if ((numDep1Var == yNumLoops) || allZero(yPhi[_, _(numDep1Var, end)]))
       yNumLoops = numDep1Var;
     else invariant(numDep1Var < yNumLoops);
     unsigned numSym = getNumSymbols(), numSymX = numSym + xNumLoops,
@@ -656,24 +656,24 @@ public:
     // we truncate time dim
     if (extend || timeDim) {
       for (ptrdiff_t r = 0; r < numEqCon; ++r) {
-        B(r, _(0, numSymD0)) << E(r, _(0, numSymD0));
-        B(r, _(numDep0Var, xNumLoops) + numSym) << 0;
-        B(r, _(0, numDep1Var) + numSymX) << E(r, _(0, numDep1Var) + numSymD0);
-        B(r, _(numDep1Var, yNumLoops) + numSymX) << 0;
+        B[r, _(0, numSymD0)] << E[r, _(0, numSymD0)];
+        B[r, _(numDep0Var, xNumLoops) + numSym] << 0;
+        B[r, _(0, numDep1Var) + numSymX] << E[r, _(0, numDep1Var) + numSymD0];
+        B[r, _(numDep1Var, yNumLoops) + numSymX] << 0;
       }
     } else std::copy_n(E.begin(), E.numRow() * E.numCol(), B.begin());
     if (xOff)
       for (ptrdiff_t c = 0; c < numDep0Var; ++c)
         if (int64_t mlt = xOff[c])
-          B(_(0, numEqCon), 0) -= mlt * B(_(0, numEqCon), numSym + c);
+          B[_(0, numEqCon), 0] -= mlt * B[_(0, numEqCon), numSym + c];
     if (yOff)
       for (ptrdiff_t c = 0; c < numDep1Var; ++c)
         if (int64_t mlt = yOff[c])
-          B(_(0, numEqCon), 0) -= mlt * B(_(0, numEqCon), numSymX + c);
+          B[_(0, numEqCon), 0] -= mlt * B[_(0, numEqCon), numSymX + c];
     for (ptrdiff_t r = 0; r < numPhi; ++r) {
-      B(r + numEqCon, _(0, numSym)) << 0;
-      B(r + numEqCon, _(0, xNumLoops) + numSym) << xPhi(r, _(0, xNumLoops));
-      B(r + numEqCon, _(0, yNumLoops) + numSymX) << -yPhi(r, _(0, yNumLoops));
+      B[r + numEqCon, _(0, numSym)] << 0;
+      B[r + numEqCon, _(0, xNumLoops) + numSym] << xPhi[r, _(0, xNumLoops)];
+      B[r + numEqCon, _(0, yNumLoops) + numSymX] << -yPhi[r, _(0, yNumLoops)];
     }
     unsigned rank = unsigned(math::NormalForm::simplifySystemImpl(B));
     if (rank <= numEqCon) return false;
@@ -697,29 +697,29 @@ public:
       // numSyms should be the same; we aren't pruning symbols
       invariant(numSym, 1 + nDS);
       for (ptrdiff_t r = 0; r < xCon; ++r) {
-        A(r, _(0, xNumSym)) << Ax(r, _(0, xNumSym));
-        A(r, _(xNumSym, numSym)) << 0;
-        A(r, _(0, xNumLoops) + numSym) << Ax(r, _(0, xNumLoops) + xNumSym);
-        A(r, _(0, yNumLoops) + numSymX) << 0;
+        A[r, _(0, xNumSym)] << Ax[r, _(0, xNumSym)];
+        A[r, _(xNumSym, numSym)] << 0;
+        A[r, _(0, xNumLoops) + numSym] << Ax[r, _(0, xNumLoops) + xNumSym];
+        A[r, _(0, yNumLoops) + numSymX] << 0;
       }
       for (ptrdiff_t r = 0; r < yCon; ++r) {
-        A(r + xCon, _(0, numSym)) << 0;
+        A[r + xCon, _(0, numSym)] << 0;
         for (ptrdiff_t j = 0; j < map.size(); ++j)
-          A(r + xCon, 1 + map[j]) = Ay(r, 1 + j);
-        A(r + xCon, _(0, xNumLoops) + numSym) << 0;
-        A(r + xCon, _(0, yNumLoops) + numSymX)
-          << Ay(r, _(0, yNumLoops) + yNumSym);
+          A[r + xCon, 1 + map[j]] = Ay[r, 1 + j];
+        A[r + xCon, _(0, xNumLoops) + numSym] << 0;
+        A[r + xCon, _(0, yNumLoops) + numSymX]
+          << Ay[r, _(0, yNumLoops) + yNumSym];
       }
       std::fill(A.begin() + size_t(xCon + yCon) * nCol, A.end(), 0);
-      A(_(0, nLoop) + (xCon + yCon), _(0, nLoop) + numSym).diag() << 1;
-    } else dp->getA() << getA()(_, _(0, nCol)); // truncate time
+      A[_(0, nLoop) + (xCon + yCon), _(0, nLoop) + numSym].diag() << 1;
+    } else dp->getA() << getA()[_, _(0, nCol)]; // truncate time
     if (xOff)
       for (ptrdiff_t c = 0; c < xNumLoops; ++c)
-        if (int64_t mlt = xOff[c]) A(_, 0) -= mlt * A(_, numSym + c);
+        if (int64_t mlt = xOff[c]) A[_, 0] -= mlt * A[_, numSym + c];
     if (yOff)
       for (ptrdiff_t c = 0; c < yNumLoops; ++c)
-        if (int64_t mlt = yOff[c]) A(_, 0) -= mlt * A(_, numSymX + c);
-    dp->getE() << B(_(0, rank), _);
+        if (int64_t mlt = yOff[c]) A[_, 0] -= mlt * A[_, numSymX + c];
+    dp->getE() << B[_(0, rank), _];
     dp->pruneBounds(alloc);
     return dp->getNumCon() == 0;
   }

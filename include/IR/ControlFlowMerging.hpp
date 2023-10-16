@@ -7,6 +7,7 @@
 #include "IR/Predicate.hpp"
 #include "Alloc/Arena.hpp"
 #include <Containers/BitSets.hpp>
+#include <Containers/Pair.hpp>
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
@@ -57,7 +58,7 @@ struct MergingCost {
   // that is, if we're fusing c and d, we can make each point toward
   // what the other one was pointing to, in order to link the chains.
   amap<Instruction *, Instruction *> mergeMap;
-  math::BumpPtrVector<std::pair<Instruction *, Instruction *>> mergeList;
+  math::BumpPtrVector<containers::Pair<Instruction *, Instruction *>> mergeList;
   amap<Instruction *, aset<Instruction *> *> ancestorMap;
   llvm::InstructionCost cost;
 
@@ -146,8 +147,8 @@ struct MergingCost {
       H = mergeMap[H];
     }
   }
-  static constexpr auto popBit(uint8_t x) -> std::pair<bool, uint8_t> {
-    return {x & 1, x >> 1};
+  static constexpr auto popBit(uint8_t x) -> containers::Pair<bool, uint8_t> {
+    return {bool(x & 1), uint8_t(x >> 1)};
   }
 
   struct Allocate {

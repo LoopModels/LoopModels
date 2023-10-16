@@ -1,11 +1,11 @@
 #pragma once
 
+#include "Alloc/Arena.hpp"
 #include "Containers/UnrolledList.hpp"
 #include "IR/InstructionCost.hpp"
 #include "IR/Users.hpp"
 #include "Polyhedra/Loops.hpp"
 #include "Support/Iterators.hpp"
-#include "Alloc/Arena.hpp"
 #include "Utilities/ListRanges.hpp"
 #include <Math/Array.hpp>
 #include <cstdint>
@@ -496,11 +496,13 @@ public:
     llvm::Intrinsic::ID ID;
     Node::ValKind kind;
     llvm::Type *type;
+    constexpr auto operator==(const Identifier &other) const -> bool = default;
   };
   // declarations
   [[nodiscard]] auto getIdentifier() const -> Identifier;
   inline void setOperands(Arena<> *alloc, math::PtrVector<Value *>);
 };
+static_assert(std::is_copy_assignable_v<Instruction::Identifier>); 
 
 /// CVal
 /// A constant value w/ respect to the loopnest.

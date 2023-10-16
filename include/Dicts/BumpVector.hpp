@@ -90,19 +90,19 @@ template <typename T, unsigned InitialCapacity = 8> struct BumpPtrVector {
     return mem[canonicalize(i, Size)];
   }
   [[nodiscard]] constexpr auto front() -> T & {
-    assert(Size > 0);
+    invariant(Size > 0);
     return mem[0];
   }
   [[nodiscard]] constexpr auto back() -> T & {
-    assert(Size > 0);
+    invariant(Size > 0);
     return mem[Size - 1];
   }
   [[nodiscard]] constexpr auto front() const -> const T & {
-    assert(Size > 0);
+    invariant(Size > 0);
     return mem[0];
   }
   [[nodiscard]] constexpr auto back() const -> const T & {
-    assert(Size > 0);
+    invariant(Size > 0);
     return mem[Size - 1];
   }
   [[nodiscard]] constexpr auto isEmpty() const -> bool { return Size == 0; }
@@ -114,13 +114,13 @@ template <typename T, unsigned InitialCapacity = 8> struct BumpPtrVector {
   //   : mem(x.data()), N(x.size()) {}
   // constexpr MutPtrVector(T *pt, size_t NN) : mem(pt), N(NN) {}
   constexpr auto operator[](Range<size_t, size_t> i) -> MutPtrVector<T> {
-    assert(i.b <= i.e);
-    assert(i.e <= Size);
+    invariant(i.b <= i.e);
+    invariant(i.e <= Size);
     return MutPtrVector<T>{mem + i.b, i.e - i.b};
   }
   constexpr auto operator[](Range<size_t, size_t> i) const -> PtrVector<T> {
-    assert(i.b <= i.e);
-    assert(i.e <= Size);
+    invariant(i.b <= i.e);
+    invariant(i.e <= Size);
     return PtrVector<T>{mem + i.b, i.e - i.b};
   }
   template <typename F, typename L>
@@ -228,7 +228,7 @@ template <typename T, unsigned InitialCapacity = 8> struct BumpPtrVector {
     Capacity = N;
   }
   constexpr void truncate(size_t N) {
-    assert(N <= Capacity);
+    invariant(N <= Capacity);
     Size = N;
   }
   constexpr void resize(size_t N) {
@@ -267,7 +267,7 @@ template <typename T, unsigned InitialCapacity = 8> struct BumpPtrVector {
   [[nodiscard]] constexpr auto empty() const -> bool { return Size == 0; }
   constexpr void pop_back() { --Size; }
   constexpr void erase(T *x) {
-    assert(x >= mem && x < mem + Size);
+    invariant(x >= mem && x < mem + Size);
     std::destroy_at(x);
     std::copy_n(x + 1, Size, x);
     --Size;

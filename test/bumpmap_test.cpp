@@ -17,11 +17,11 @@ TEST(BumpDownMapTest, BasicAssertions) {
   using M = poly::dict::amap<uint64_t, uint64_t>;
   static_assert(
     std::same_as<M::value_container_type,
-                 poly::math::BumpPtrVector<std::pair<uint64_t, uint64_t>>>);
+                 poly::math::BumpPtrVector<containers::Pair<uint64_t, uint64_t>>>);
   static_assert(
     std::same_as<
       M::allocator_type,
-      poly::alloc::WArena<std::pair<uint64_t, uint64_t>, 16384, true>>);
+      poly::alloc::WArena<containers::Pair<uint64_t, uint64_t>, 16384, true>>);
 
   poly::alloc::OwningArena<> alloc;
   M::allocator_type walloc{&alloc};

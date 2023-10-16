@@ -55,7 +55,7 @@ public:
   [[nodiscard]] auto operator[](llvm::Instruction *inst) -> std::optional<Set> {
     return (*this)[inst->getParent()];
   }
-  void insert(std::pair<llvm::BasicBlock *, Set> &&pair) {
+  void insert(containers::Pair<llvm::BasicBlock *, Set> &&pair) {
     map.insert(std::move(pair));
   }
   [[nodiscard]] auto contains(llvm::BasicBlock *BB) const -> bool {

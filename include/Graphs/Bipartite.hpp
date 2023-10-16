@@ -31,7 +31,7 @@ inline auto bipartiteMatch(Matrix<bool> &bpGraph, int u,
 /// Returns maximum number
 /// of matching from M to N
 inline auto maxBipartiteMatch(Matrix<bool> &bpGraph)
-  -> std::pair<size_t, Vector<int>> {
+  -> containers::Pair<size_t, Vector<int>> {
   // An array to keep track of the
   // applicants assigned to jobs.
   // The value of matchR[i] is the
@@ -39,7 +39,7 @@ inline auto maxBipartiteMatch(Matrix<bool> &bpGraph)
   // the value -1 indicates nobody is
   // assigned.
   auto [N, M] = bpGraph.size();
-  std::pair<size_t, Vector<int>> res{0, {unsigned(N), -1}};
+  containers::Pair<size_t, Vector<int>> res{0, {unsigned(N), -1}};
   size_t &result = res.first;
   Vector<int> &matchR{res.second};
   if (M) {

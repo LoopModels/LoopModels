@@ -9,6 +9,7 @@
 #include "Polyhedra/DependencyPolyhedra.hpp"
 #include "Polyhedra/Loops.hpp"
 #include "Polyhedra/Schedule.hpp"
+#include <Alloc/Arena.hpp>
 #include <Containers/BitSets.hpp>
 #include <Math/Array.hpp>
 #include <Math/Comparisons.hpp>
@@ -17,12 +18,10 @@
 #include <Math/NormalForm.hpp>
 #include <Math/Simplex.hpp>
 #include <Math/StaticArrays.hpp>
-#include <Alloc/Arena.hpp>
 #include <Utilities/Invariant.hpp>
 #include <Utilities/ListRanges.hpp>
 #include <Utilities/Valid.hpp>
 #include <algorithm>
-#include <bits/ranges_algo.h>
 #include <cstddef>
 #include <cstdint>
 #include <iterator>
@@ -322,7 +321,7 @@ private:
     auto p1 = allocator.checkpoint();
     MutSquarePtrMatrix<int64_t> A =
       math::matrix<int64_t>(&allocator, nLoops + 1);
-    // BumpPtrVector<std::pair<BitSet64, int64_t>> omegaOffsets{allocator};
+    // BumpPtrVector<containers::Pair<BitSet64, int64_t>> omegaOffsets{allocator};
     // // we check all memory accesses in the node, to see if applying the same
     // omega offsets can zero dependence offsets. If so, we apply the shift.
     // we look for offsets, then try and validate that the shift
@@ -345,18 +344,18 @@ private:
             // input and output, no relative shift of shared loops possible
             // but indices may of course differ.
             for (ptrdiff_t d = 0; d < E.numRow(); ++d) {
-              MutPtrVector<int64_t> x = A(rank, _);
-              x[last] = E(d, 0);
+              MutPtrVector<int64_t> x = A[rank, _];
+              x[last] = E[d, 0];
               foundNonZeroOffset |= x[last] != 0;
               ptrdiff_t j = 0;
               for (; j < depCommon; ++j)
-                x[L - j] = E(d, j + numSyms) + E(d, j + numSyms + dep0);
+                x[L - j] = E[d, j + numSyms] + E[d, j + numSyms + dep0];
               if (dep0 != dep1) {
                 ptrdiff_t offset = dep0 > dep1 ? numSyms : numSyms + dep0;
-                for (; j < depMax; ++j) x[L - j] = E(d, j + offset);
+                for (; j < depMax; ++j) x[L - j] = E[d, j + offset];
               }
               for (; j < nLoops; ++j) x[L - j] = 0;
-              rank = math::NormalForm::updateForNewRow(A(_(0, rank + 1), _));
+              rank = math::NormalForm::updateForNewRow(A[_(0, rank + 1), _]);
             }
           } else {
             // dep between nodes
@@ -364,13 +363,13 @@ private:
             unsigned offset = dep.isForward() ? numSyms + dep0 : numSyms,
                      numDep = dep.isForward() ? dep1 : dep0;
             for (ptrdiff_t d = 0; d < E.numRow(); ++d) {
-              MutPtrVector<int64_t> x = A(rank, _);
-              x[last] = E(d, 0);
+              MutPtrVector<int64_t> x = A[rank, _];
+              x[last] = E[d, 0];
               foundNonZeroOffset |= x[last] != 0;
               ptrdiff_t j = 0;
-              for (; j < numDep; ++j) x[L - j] = E(d, j + offset);
+              for (; j < numDep; ++j) x[L - j] = E[d, j + offset];
               for (; j < nLoops; ++j) x[L - j] = 0;
-              rank = math::NormalForm::updateForNewRow(A(_(0, rank + 1), _));
+              rank = math::NormalForm::updateForNewRow(A[_(0, rank + 1), _]);
             }
           }
         }
@@ -384,13 +383,13 @@ private:
           unsigned offset = dep.isForward() ? numSyms : numSyms + dep0,
                    numDep = dep.isForward() ? dep0 : dep1;
           for (ptrdiff_t d = 0; d < E.numRow(); ++d) {
-            MutPtrVector<int64_t> x = A(rank, _);
-            x[last] = E(d, 0);
+            MutPtrVector<int64_t> x = A[rank, _];
+            x[last] = E[d, 0];
             foundNonZeroOffset |= x[last] != 0;
             ptrdiff_t j = 0;
-            for (; j < numDep; ++j) x[L - j] = E(d, j + offset);
+            for (; j < numDep; ++j) x[L - j] = E[d, j + offset];
             for (; j < nLoops; ++j) x[L - j] = 0;
-            rank = math::NormalForm::updateForNewRow(A(_(0, rank + 1), _));
+            rank = math::NormalForm::updateForNewRow(A[_(0, rank + 1), _]);
           }
         }
       }
@@ -400,14 +399,14 @@ private:
     // matrix A is reasonably diagonalized, should indicate
     ptrdiff_t c = 0;
     for (ptrdiff_t r = 0; r < rank; ++r) {
-      int64_t off = A(r, last);
+      int64_t off = A[r, last];
       if (off == 0) continue;
       for (; c < nLoops; ++c) {
-        if (A(r, c) != 0) break;
+        if (A[r, c] != 0) break;
         offs[L - c] = 0;
       }
       if (c == nLoops) return;
-      int64_t Arc = A(r, c), x = off / Arc;
+      int64_t Arc = A[r, c], x = off / Arc;
       if (x * Arc != off) continue;
       offs[L - c++] = x; // decrement loop `L-c` by `x`
       nonZero = true;
@@ -436,8 +435,8 @@ private:
             for (ptrdiff_t l = 0; l < numDep; ++l) {
               int64_t mlt = offs[l];
               if (mlt == 0) continue;
-              satL(0, _) -= mlt * satL(offset + l, _);
-              bndL(0, _) -= mlt * bndL(offset + l, _);
+              satL[0, _] -= mlt * satL[offset + l, _];
+              bndL[0, _] -= mlt * bndL[offset + l, _];
             }
             if (!repeat) break;
             repeat = false;
@@ -457,8 +456,8 @@ private:
           for (size_t l = 0; l < numDep; ++l) {
             int64_t mlt = offs[l];
             if (mlt == 0) continue;
-            satL(0, _) -= mlt * satL(offset + l, _);
-            bndL(0, _) -= mlt * bndL(offset + l, _);
+            satL[0, _] -= mlt * satL[offset + l, _];
+            bndL[0, _] -= mlt * bndL[offset + l, _];
           }
         }
       }
@@ -511,10 +510,10 @@ private:
     return params;
   }
   using BackupSchedule =
-    math::ResizeableView<std::pair<poly::AffineSchedule, ScheduledNode *>,
+    math::ResizeableView<containers::Pair<poly::AffineSchedule, ScheduledNode *>,
                          unsigned>;
   using BackupSat = math::ResizeableView<std::array<uint8_t, 2>, unsigned>;
-  using Backup = std::pair<BackupSchedule, BackupSat>;
+  using Backup = containers::Pair<BackupSchedule, BackupSat>;
 
   static constexpr auto
   setScheduleMemoryOffsets(Dependencies deps, ScheduledNode *nodes, unsigned d)
@@ -613,7 +612,7 @@ private:
     }
     // auto s = allocator->scope(); // TODO: use bumpalloc
     DenseMatrix<int64_t> nullSpace; // d x lfull
-    DenseMatrix<int64_t> A{node->getPhi()(_(0, depth), _).transpose()};
+    DenseMatrix<int64_t> A{node->getPhi()[_(0, depth), _].transpose()};
     math::NormalForm::nullSpace11(nullSpace, A);
     invariant(unsigned(nullSpace.numRow()), node->getNumLoops() - depth);
     // Now, we search index matrices for schedules not in the null space of
@@ -629,22 +628,22 @@ private:
       PtrMatrix<int64_t> indMat = mem->indexMatrix(); // lsub x d
       A.resizeForOverwrite(
         math::DenseDims{nullSpace.numRow(), indMat.numCol()});
-      A = nullSpace(_, _(0, indMat.numRow())) * indMat;
+      A = nullSpace[_, _(0, indMat.numRow())] * indMat;
       // we search A for rows that aren't all zero
       for (ptrdiff_t d = 0; d < A.numCol(); ++d) {
-        if (allZero(A(_, d))) continue;
-        indv << indMat(_, d);
+        if (allZero(A[_, d])) continue;
+        indv << indMat[_, d];
         bool found = false;
         for (ptrdiff_t j = 0; j < candidates.numRow(); ++j) {
-          if (candidates(j, _(0, last)) != indv) continue;
+          if (candidates[j, _(0, last)] != indv) continue;
           found = true;
-          ++candidates(j, 0);
+          ++candidates[j, 0];
           break;
         }
         if (!found) {
           candidates.resize(candidates.numRow() + 1);
-          assert(candidates(last, 0) == 0);
-          candidates(last, _(1, end)) << indv;
+          assert((candidates[last, 0]) == 0);
+          candidates[last, _(1, end)] << indv;
         }
       }
     }
@@ -653,15 +652,15 @@ private:
       // number of repetitions (which were placed in first index)
       ptrdiff_t i = 0;
       for (ptrdiff_t j = 1; j < candidates.numRow(); ++j)
-        if (candidates(j, _) > candidates(i, _)) i = j;
-      node->getSchedule(depth) << candidates(i, _(1, end));
+        if (candidates[j, _] > candidates[i, _]) i = j;
+      node->getSchedule(depth) << candidates[i, _(1, end)];
       return;
     }
     // do we want to pick the outermost original loop,
     // or do we want to pick the outermost lex null space?
     node->getSchedule(depth) << 0;
     for (ptrdiff_t c = 0; c < nullSpace.numCol(); ++c) {
-      if (allZero(nullSpace(_, c))) continue;
+      if (allZero(nullSpace[_, c])) continue;
       node->getSchedule(depth)[c] = 1;
       return;
     }
@@ -708,7 +707,7 @@ private:
       if (!node->phiIsScheduled(depth)) {
         int64_t l = sol[node->getPhiOffsetRange() + o].denomLCM();
         for (ptrdiff_t i = 0; i < node->getPhi().numCol(); ++i)
-          assert(node->getPhi()(depth, i) ==
+          assert((node->getPhi()[depth, i]) ==
                  sol[node->getPhiOffsetRange() + o][i] * l);
       }
 #endif
@@ -743,9 +742,9 @@ private:
           result = Result::dependent();
         } else {
           ScheduledNode *inNode = edge.input()->getNode();
-          DensePtrMatrix<int64_t> inPhi = inNode->getPhi()(_(0, depth + 1), _),
+          DensePtrMatrix<int64_t> inPhi = inNode->getPhi()[_(0, depth + 1), _],
                                   outPhi =
-                                    outNode->getPhi()(_(0, depth + 1), _);
+                                    outNode->getPhi()[_(0, depth + 1), _];
           edge.checkEmptySat(&allocator, inNode->getLoopNest(),
                              inNode->getOffset(), inPhi, outNode->getLoopNest(),
                              outNode->getOffset(), outPhi);
@@ -761,8 +760,8 @@ private:
         if (edge.isSat(depth)) continue;
         ScheduledNode *inNode = edge.input()->getNode();
         invariant(edge.output()->getNode(), outNode);
-        DensePtrMatrix<int64_t> inPhi = inNode->getPhi()(_(0, depth + 1), _),
-                                outPhi = outNode->getPhi()(_(0, depth + 1), _);
+        DensePtrMatrix<int64_t> inPhi = inNode->getPhi()[_(0, depth + 1), _],
+                                outPhi = outNode->getPhi()[_(0, depth + 1), _];
         edge.checkEmptySat(&allocator, inNode->getLoopNest(),
                            inNode->getOffset(), inPhi, outNode->getLoopNest(),
                            outNode->getOffset(), outPhi);
@@ -959,18 +958,18 @@ private:
 
         Col ll = l + satL.numCol();
         Col lll = ll + bndL.numCol();
-        C(_(c, cc), _(l, ll)) << satL;
-        C(_(cc, ccc), _(ll, lll)) << bndL;
+        C[_(c, cc), _(l, ll)] << satL;
+        C[_(cc, ccc), _(ll, lll)] << bndL;
         l = lll;
         // bounding
-        C(_(cc, ccc), w++) << bndWU(_, 0);
+        C[_(cc, ccc), w++] << bndWU[_, 0];
         Col uu = u + bndWU.numCol() - 1;
-        C(_(cc, ccc), _(u, uu)) << bndWU(_, _(1, end));
+        C[_(cc, ccc), _(u, uu)] << bndWU[_, _(1, end)];
         u = uu;
         if (!satisfyDeps || !edge.stashedPreventsReordering(d))
-          C(_(c, cc), 0) << satC;
-        else C(_(c, cc), 0) << satC + satW;
-        C(_(cc, ccc), 0) << bndC;
+          C[_(c, cc), 0] << satC;
+        else C[_(c, cc), 0] << satC + satW;
+        C[_(cc, ccc), 0] << bndC;
         // now, handle Phi and Omega
         // phis are not constrained to be 0
         if (outNode == inNode) {
@@ -979,17 +978,17 @@ private:
               if (outNode->phiIsScheduled(d)) {
                 // add it constants
                 auto sch = outNode->getSchedule(d);
-                C(_(c, cc), 0) -=
+                C[_(c, cc), 0] -=
                   satPc * sch[_(0, nPc)] + satPp * sch[_(0, nPp)];
-                C(_(cc, ccc), 0) -=
+                C[_(cc, ccc), 0] -=
                   bndPc * sch[_(0, nPc)] + bndPp * sch[_(0, nPp)];
               } else {
                 // FIXME: phiChild = [14:18), 4 cols
                 // while Dependence seems to indicate 2
                 // loops why the disagreement?
                 auto po = outNode->getPhiOffset() + p;
-                C(_(c, cc), _(po, po + nPc)) << satPc + satPp;
-                C(_(cc, ccc), _(po, po + nPc)) << bndPc + bndPp;
+                C[_(c, cc), _(po, po + nPc)] << satPc + satPp;
+                C[_(cc, ccc), _(po, po + nPc)] << bndPc + bndPp;
               }
             } else if (outNode->phiIsScheduled(d)) {
               // add it constants
@@ -999,28 +998,28 @@ private:
               auto sch = outNode->getSchedule(d);
               auto schP = sch[_(0, nPp)];
               auto schC = sch[_(0, nPc)];
-              C(_(c, cc), 0) -= satPc * schC + satPp * schP;
-              C(_(cc, ccc), 0) -= bndPc * schC + bndPp * schP;
+              C[_(c, cc), 0] -= satPc * schC + satPp * schP;
+              C[_(cc, ccc), 0] -= bndPc * schC + bndPp * schP;
             } else if (nPc < nPp) {
               // Pp has more cols, so outer/leftmost overlap
               auto po = outNode->getPhiOffset() + p, poc = po + nPc,
                    pop = po + nPp;
-              C(_(c, cc), _(po, poc)) << satPc + satPp(_, _(0, nPc));
-              C(_(cc, ccc), _(po, poc)) << bndPc + bndPp(_, _(0, nPc));
-              C(_(c, cc), _(poc, pop)) << satPp(_, _(nPc, end));
-              C(_(cc, ccc), _(poc, pop)) << bndPp(_, _(nPc, end));
+              C[_(c, cc), _(po, poc)] << satPc + satPp[_, _(0, nPc)];
+              C[_(cc, ccc), _(po, poc)] << bndPc + bndPp[_, _(0, nPc)];
+              C[_(c, cc), _(poc, pop)] << satPp[_, _(nPc, end)];
+              C[_(cc, ccc), _(poc, pop)] << bndPp[_, _(nPc, end)];
             } else /* if (nPc > nPp) */ {
               auto po = outNode->getPhiOffset() + p, poc = po + nPc,
                    pop = po + nPp;
-              C(_(c, cc), _(po, pop)) << satPc(_, _(0, nPp)) + satPp;
-              C(_(cc, ccc), _(po, pop)) << bndPc(_, _(0, nPp)) + bndPp;
-              C(_(c, cc), _(pop, poc)) << satPc(_, _(nPp, end));
-              C(_(cc, ccc), _(pop, poc)) << bndPc(_, _(nPp, end));
+              C[_(c, cc), _(po, pop)] << satPc[_, _(0, nPp)] + satPp;
+              C[_(cc, ccc), _(po, pop)] << bndPc[_, _(0, nPp)] + bndPp;
+              C[_(c, cc), _(pop, poc)] << satPc[_, _(nPp, end)];
+              C[_(cc, ccc), _(pop, poc)] << bndPc[_, _(nPp, end)];
             }
-            C(_(c, cc), outNode->getOmegaOffset() + o)
-              << satO(_, 0) + satO(_, 1);
-            C(_(cc, ccc), outNode->getOmegaOffset() + o)
-              << bndO(_, 0) + bndO(_, 1);
+            C[_(c, cc), outNode->getOmegaOffset() + o]
+              << satO[_, 0] + satO[_, 1];
+            C[_(cc, ccc), outNode->getOmegaOffset() + o]
+              << bndO[_, 0] + bndO[_, 1];
           }
         } else {
           if (d < edge.getOutCurrentDepth())
@@ -1036,16 +1035,16 @@ private:
           if (d < edge.getOutCurrentDepth()) {
             if (d < edge.getInCurrentDepth())
               invariant(inNode->getOmegaOffset() != outNode->getOmegaOffset());
-            C(_(c, cc), outNode->getOmegaOffset() + o)
-              << satO(_, edge.isForward());
-            C(_(cc, ccc), outNode->getOmegaOffset() + o)
-              << bndO(_, edge.isForward());
+            C[_(c, cc), outNode->getOmegaOffset() + o]
+              << satO[_, edge.isForward()];
+            C[_(cc, ccc), outNode->getOmegaOffset() + o]
+              << bndO[_, edge.isForward()];
           }
           if (d < edge.getInCurrentDepth()) {
-            C(_(c, cc), inNode->getOmegaOffset() + o)
-              << satO(_, !edge.isForward());
-            C(_(cc, ccc), inNode->getOmegaOffset() + o)
-              << bndO(_, !edge.isForward());
+            C[_(c, cc), inNode->getOmegaOffset() + o]
+              << satO[_, !edge.isForward()];
+            C[_(cc, ccc), inNode->getOmegaOffset() + o]
+              << bndO[_, !edge.isForward()];
           }
         }
         c = ccc;
@@ -1066,13 +1065,13 @@ private:
       auto sch = node->getSchedule(d)[_(0, sat.numCol())];
       // order is inner <-> outer
       // so we need the end of schedule if it is larger
-      C(_(c, cc), 0) -= sat * sch;
-      C(_(cc, ccc), 0) -= bnd * sch;
+      C[_(c, cc), 0] -= sat * sch;
+      C[_(cc, ccc), 0] -= bnd * sch;
     } else {
       // add it to C
       auto po = node->getPhiOffset() + p;
-      C(_(c, cc), _(po, po + sat.numCol())) << sat;
-      C(_(cc, ccc), _(po, po + bnd.numCol())) << bnd;
+      C[_(c, cc), _(po, po + sat.numCol())] << sat;
+      C[_(cc, ccc), _(po, po + bnd.numCol())] << bnd;
     }
   }
   void addIndependentSolutionConstraints(Valid<Simplex> omniSimplex,
@@ -1089,9 +1088,9 @@ private:
       for (const ScheduledNode *node : nodes->getVertices()) {
         if (node->phiIsScheduled(d) || (!node->hasActiveEdges(deps, d)))
           continue;
-        C(i, 0) = 1;
-        C(i, node->getPhiOffsetRange() + o) << 1;
-        C(i++, ++s) = -1; // for >=
+        C[i, 0] = 1;
+        C[i, node->getPhiOffsetRange() + o] << 1;
+        C[i++, ++s] = -1; // for >=
       }
     } else {
       DenseMatrix<int64_t> A, N;
@@ -1100,20 +1099,20 @@ private:
             (!node->hasActiveEdges(deps, d)))
           continue;
         A.resizeForOverwrite(Row{ptrdiff_t(node->getPhi().numCol())}, Col{d});
-        A << node->getPhi()(_(0, d), _).transpose();
+        A << node->getPhi()[_(0, d), _].transpose();
         math::NormalForm::nullSpace11(N, A);
         // we add sum(NullSpace,dims=1) >= 1
         // via 1 = sum(NullSpace,dims=1) - s, s >= 0
-        C(i, 0) = 1;
-        MutPtrVector<int64_t> cc{C(i, node->getPhiOffsetRange() + o)};
+        C[i, 0] = 1;
+        MutPtrVector<int64_t> cc{C[i, node->getPhiOffsetRange() + o]};
         // sum(N,dims=1) >= 1 after flipping row signs to be lex > 0
         for (ptrdiff_t m = 0; m < N.numRow(); ++m)
-          cc += N(m, _) * lexSign(N(m, _));
-        C(i++, ++s) = -1; // for >=
+          cc += N[m, _] * lexSign(N[m, _]);
+        C[i++, ++s] = -1; // for >=
       }
     }
     invariant(ptrdiff_t(omniSimplex->getNumCons()), i);
-    assert(!allZero(omniSimplex->getConstraints()(last, _)));
+    assert(!allZero(omniSimplex->getConstraints()[last, _]));
   }
   [[nodiscard]] static constexpr auto lexSign(PtrVector<int64_t> x) -> int64_t {
     for (auto a : x)
@@ -1146,7 +1145,7 @@ private:
   }
 };
 inline auto operator<<(llvm::raw_ostream &os,
-                       std::pair<ScheduledNode *, Dependencies> nodesdeps)
+                       containers::Pair<ScheduledNode *, Dependencies> nodesdeps)
   -> llvm::raw_ostream & {
   auto [nodes, deps] = nodesdeps;
   os << "\nLoopBlock graph:\n";

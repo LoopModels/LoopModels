@@ -1,13 +1,13 @@
 #pragma once
 
 #include "Polyhedra/Comparators.hpp"
+#include <Alloc/Arena.hpp>
 #include <Math/Array.hpp>
 #include <Math/Constraints.hpp>
 #include <Math/Constructors.hpp>
 #include <Math/EmptyArrays.hpp>
 #include <Math/Math.hpp>
 #include <Math/VectorGreatestCommonDivisor.hpp>
-#include <Alloc/Arena.hpp>
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
@@ -18,10 +18,10 @@
 #include <ostream>
 #endif
 namespace poly::poly {
+using alloc::Arena;
 using math::DensePtrMatrix, math::MutDensePtrMatrix, math::EmptyMatrix,
   math::Row, math::Col, math::vector, math::matrix, math::_, math::end,
   math::last, math::operator<<;
-using alloc::Arena;
 inline auto printPositive(std::ostream &os, ptrdiff_t stop) -> std::ostream & {
   for (ptrdiff_t i = 0; i < stop; ++i) os << "v_" << i << " >= 0\n";
   return os;
@@ -150,8 +150,8 @@ struct BasePolyhedra {
       setNumConstraints(unsigned(ar));
       setNumEqConstraints(unsigned(er));
       for (ptrdiff_t i = 0; i < getNumEqualityConstraints(); ++i) {
-        auto l = gcd(getE()(i, _));
-        if (l != 1) getE()(i, _) /= l;
+        auto l = gcd(getE()[i, _]);
+        if (l != 1) getE()[i, _] /= l;
       }
     }
     auto C = initializeComparator(alloc);
@@ -166,7 +166,7 @@ struct BasePolyhedra {
       bool broke = false;
       for (auto i = --j; i;) {
         if (getNumCon() <= 1) return;
-        diff << getA()(--i, _) - getA()(j, _);
+        diff << getA()[--i, _] - getA()[j, _];
         if (C.greaterEqual(*alloc, diff)) {
           eraseConstraint(i);
           rollback(alloc, p);
@@ -183,7 +183,7 @@ struct BasePolyhedra {
       if constexpr (MaybeNonNeg) {
         if (isNonNegative() && !broke) {
           for (ptrdiff_t i = 0; i < dyn; ++i) {
-            diff << getA()(j, _);
+            diff << getA()[j, _];
             --diff[last - i];
             if (C.greaterEqual(*alloc, diff)) {
               eraseConstraint(j);

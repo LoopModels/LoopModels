@@ -3,7 +3,6 @@
 #include <IR/Hash.hpp>
 #include <Alloc/Arena.hpp>
 #include <ankerl/unordered_dense.h>
-#include <type_traits>
 
 namespace poly::dict {
 

@@ -7,8 +7,8 @@ namespace poly::dict {
 
 template <class K, class V> class OrderedMap {
   amap<K, size_t> map;
-  // math::BumpPtrVector<std::pair<K, V>> vector;
-  math::ResizeableView<std::pair<K, V>, unsigned> vector;
+  // math::BumpPtrVector<containers::Pair<K, V>> vector;
+  math::ResizeableView<containers::Pair<K, V>, unsigned> vector;
 
 public:
   constexpr OrderedMap(Arena<> *alloc) : map(alloc), vector() {}
@@ -67,7 +67,7 @@ public:
       vector.reserve((map.get_allocator().get_allocator()),
                      std::max<unsigned>(8, 2 * i));
   }
-  constexpr void insert(std::pair<K, V> &&value) {
+  constexpr void insert(containers::Pair<K, V> &&value) {
     insert(std::move(value.first), std::move(value.second));
   }
   constexpr void clear() {

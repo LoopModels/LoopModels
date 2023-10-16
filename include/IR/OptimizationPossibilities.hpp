@@ -441,7 +441,7 @@ public:
   };
   constexpr auto begin() -> Iterator { return {this, offset}; }
   constexpr auto end() -> Iterator { return {this, size()}; }
-  constexpr auto findShared(IR::Addr *a) -> std::pair<ArrayIndex, int32_t> * {
+  constexpr auto findShared(IR::Addr *a) -> containers::Pair<ArrayIndex, int32_t> * {
     return addrMap.find(ArrayIndex{a});
   }
   // constexpr auto getShared(IR::Addr *a) -> int32_t & {

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Containers/Pair.hpp"
 #include "Polyhedra/Comparators.hpp"
 #include "Polyhedra/Polyhedra.hpp"
 #include "RemarkAnalysis.hpp"
@@ -112,26 +113,26 @@ findSymbolicIndex(llvm::ArrayRef<const llvm::SCEV *> symbols,
 
 [[nodiscard]] inline auto getMinMaxValueSCEV(llvm::ScalarEvolution &SE,
                                              const llvm::SCEVAddRecExpr *S)
-  -> std::pair<const llvm::SCEV *, const llvm::SCEV *> {
+  -> containers::Pair<const llvm::SCEV *, const llvm::SCEV *> {
   // if (!SE.containsAddRecurrence(S))
   // 	return S;
-  if ((!S) || (!(S->isAffine()))) return std::make_pair(S, S);
+  if ((!S) || (!(S->isAffine()))) return {S, S};
   const auto *opStart = S->getStart();
   const auto *opStep = S->getStepRecurrence(SE);
   const auto *opFinal = SE.getSCEVAtScope(S, nullptr);
   // auto opFinal = SE.getSCEVAtScope(S, S->getLoop()->getParentLoop());
   // FIXME: what if there are more AddRecs nested inside?
-  if (SE.isKnownNonNegative(opStep)) return std::make_pair(opStart, opFinal);
-  if (SE.isKnownNonPositive(opStep)) return std::make_pair(opFinal, opStart);
-  return std::make_pair(S, S);
+  if (SE.isKnownNonNegative(opStep)) return {opStart, opFinal};
+  if (SE.isKnownNonPositive(opStep)) return {opFinal, opStart};
+  return {S, S};
 }
 // TODO: strengthen through recursion
 [[nodiscard]] inline auto getMinMaxValueSCEV(llvm::ScalarEvolution &SE,
                                              const llvm::SCEV *S)
-  -> std::pair<const llvm::SCEV *, const llvm::SCEV *> {
+  -> containers::Pair<const llvm::SCEV *, const llvm::SCEV *> {
   if (const auto *T = llvm::dyn_cast<llvm::SCEVAddRecExpr>(S))
     return getMinMaxValueSCEV(SE, T);
-  return std::make_pair(S, S);
+  return {S, S};
 }
 [[nodiscard]] inline auto simplifyMinMax(llvm::ScalarEvolution &SE,
                                          const llvm::SCEVMinMaxExpr *S)
@@ -259,7 +260,7 @@ inline auto addRecMatchesLoop(const llvm::SCEV *S, llvm::Loop *L) -> bool {
   return minDepth;
 }
 inline auto
-areSymbolsLoopInvariant(IntMatrix<> &A,
+areSymbolsLoopInvariant(IntMatrix<math::StridedDims> &A,
                         llvm::SmallVectorImpl<const llvm::SCEV *> &symbols,
                         llvm::Loop *L, llvm::ScalarEvolution &SE) -> bool {
   for (ptrdiff_t i = 0; i < std::ssize(symbols); ++i)
@@ -607,7 +608,7 @@ public:
     const ptrdiff_t numConst = getNumSymbols();
     auto A{tmp->getA()};
     for (ptrdiff_t n = 0; n < A.numRow(); ++n)
-      if ((A(n, numConst) != 0) && (A(n, 1 + numConst) != 0)) indep = false;
+      if ((A[n, numConst] != 0) && (A[n, 1 + numConst] != 0)) indep = false;
     if (indep) return false;
     Loop *margi = tmp->removeLoop(&alloc, 1), *tmp2;
     invariant(margi->getNumLoops(), unsigned(1));
@@ -619,7 +620,7 @@ public:
     auto p2 = alloc.checkpoint();
     int64_t sign = 2 * extendLower - 1; // extendLower ? 1 : -1
     for (ptrdiff_t c = 0; c < margi->getNumInequalityConstraints(); ++c) {
-      int64_t b = sign * margi->getA()(c, numConst);
+      int64_t b = sign * margi->getA()[c, numConst];
       if (b <= 0) continue;
       alloc.rollback(p2);
       tmp2 = tmp->copy(&alloc);
@@ -631,18 +632,18 @@ public:
       // upper: a'x - i + b >= 0 -> i <=  a'x + b
       // to decrease the lower bound or increase the upper, we increment
       // `b`
-      ++(margi->getA())(c, 0);
+      ++(margi->getA())[c, 0];
       // our approach here is to set `_i` equal to the extended bound
       // and then check if the resulting polyhedra is empty.
       // if not, then we may have >0 iterations.
       for (ptrdiff_t cc = 0; cc < tmp2->getNumCon(); ++cc) {
-        if (int64_t d = tmp2->getA()(cc, numConst)) {
-          tmp2->getA()(cc, _(0, last)) << b * tmp2->getA()(cc, _(0, last)) -
-                                            (d * sign) * margi->getA()(c, _);
+        if (int64_t d = tmp2->getA()[cc, numConst]) {
+          tmp2->getA()[cc, _(0, last)] << b * tmp2->getA()[cc, _(0, last)] -
+                                            (d * sign) * margi->getA()[c, _];
         }
       }
       for (auto cc = ptrdiff_t(tmp2->getNumCon()); cc;)
-        if (tmp2->getA()(--cc, 1 + numConst) == 0) tmp2->eraseConstraint(cc);
+        if (tmp2->getA()[--cc, 1 + numConst] == 0) tmp2->eraseConstraint(cc);
       if (!(tmp2->calcIsEmpty(alloc))) return false;
     }
     if (isNonNegative()) {
@@ -656,16 +657,16 @@ public:
         // extended bound and then check if the resulting polyhedra is
         // empty. if not, then we may have >0 iterations.
         for (ptrdiff_t cc = 0; cc < tmp->getNumCon(); ++cc) {
-          if (int64_t d = tmp->getA()(cc, numConst)) {
+          if (int64_t d = tmp->getA()[cc, numConst]) {
             // lower bound is i >= 0
             // so setting equal to the extended lower bound now
             // means that i = -1 so we decrement `d` from the column
-            tmp->getA()(cc, 0) -= d;
-            tmp->getA()(cc, numConst) = 0;
+            tmp->getA()[cc, 0] -= d;
+            tmp->getA()[cc, numConst] = 0;
           }
         }
         for (auto cc = ptrdiff_t(tmp->getNumCon()); cc;)
-          if (tmp->getA()(--cc, 1 + numConst) == 0) tmp->eraseConstraint(cc);
+          if (tmp->getA()[--cc, 1 + numConst] == 0) tmp->eraseConstraint(cc);
         if (!(tmp->calcIsEmpty(alloc))) return false;
       }
     }
@@ -703,7 +704,7 @@ public:
     DensePtrMatrix<int64_t> A{getA()};
     bool printed = printSymbol(os, b, -sign);
     for (ptrdiff_t k = 0; k < numVarMinus1; ++k) {
-      if (int64_t lakj = A(j, k + numConst)) {
+      if (int64_t lakj = A[j, k + numConst]) {
         if (lakj * sign > 0) os << " - ";
         else if (printed) os << " + ";
         lakj = math::constexpr_abs(lakj);
@@ -727,7 +728,7 @@ public:
     if (numRow > 1) os << (isUpper ? "min(" : "max(");
     DensePtrMatrix<int64_t> A{getA()};
     for (ptrdiff_t j = 0, k = 0; j < A.numRow(); ++j) {
-      if (A(j, last) * sign <= 0) continue;
+      if (A[j, last] * sign <= 0) continue;
       if (k++) os << ", ";
       printBound(os, sign, numVarMinus1, numConst, j);
     }
@@ -750,7 +751,7 @@ public:
     ptrdiff_t numRow = 0;
     int64_t allAj = 0;
     for (ptrdiff_t j = 0; j < A.numRow(); ++j) {
-      int64_t Ajr = A(j, last), Aj = Ajr * sign;
+      int64_t Ajr = A[j, last], Aj = Ajr * sign;
       if (Aj <= 0) continue;
       if (allAj) allAj = allAj == Aj ? allAj : -1;
       else allAj = Aj;
@@ -766,7 +767,7 @@ public:
     if (allAj > 0)
       return printBoundShort(os, sign, numVarM1, numConst, allAj, numRow, true);
     for (ptrdiff_t j = 0; j < A.numRow(); ++j) {
-      int64_t Ajr = A(j, end - 1), Aj = Ajr * sign;
+      int64_t Ajr = A[j, end - 1], Aj = Ajr * sign;
       if (Aj <= 0) continue;
       if (hasPrintedLine)
         for (ptrdiff_t k = 0; k < 21; ++k) os << ' ';
@@ -787,7 +788,7 @@ public:
     int64_t allAj = 0;
     ptrdiff_t numPos = 0, numNeg = 0;
     for (ptrdiff_t j = 0; j < A.numRow(); ++j) {
-      int64_t Ajr = A(j, last);
+      int64_t Ajr = A[j, last];
       if (Ajr == 0) continue;
       numPos += Ajr > 0;
       numNeg += Ajr < 0;

@@ -9,10 +9,8 @@
 #include <Math/Array.hpp>
 #include <Alloc/Arena.hpp>
 #include <algorithm>
-#include <concepts>
 #include <cstddef>
 #include <cstdint>
-#include <limits>
 #include <llvm/ADT/APInt.h>
 #include <llvm/Analysis/TargetTransformInfo.h>
 #include <llvm/IR/BasicBlock.h>
@@ -120,7 +118,7 @@ public:
     return inst;
   }
   static auto getIDKind(llvm::Instruction *I)
-    -> std::pair<llvm::Intrinsic::ID, ValKind> {
+    -> containers::Pair<llvm::Intrinsic::ID, ValKind> {
     if (auto *c = llvm::dyn_cast<llvm::CallInst>(I)) {
       if (auto *J = llvm::dyn_cast<llvm::IntrinsicInst>(c))
         return {J->getIntrinsicID(), VK_Call};
