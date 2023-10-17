@@ -27,30 +27,6 @@ template <class K, class V> struct TrieMapNode {
   constexpr auto find(const K &k) -> TrieMapNode * {
     return findChild(k).child;
   }
-  auto operator[](utils::Valid<alloc::Arena<>> alloc, const K &k) -> V & {
-    Child c = findChild(k);
-    if constexpr (std::same_as<K, void *>)
-      if (reinterpret_cast<uintptr_t>(k) == 0x12e8)
-        std::cout << "c.child = " << c.child << "\n";
-      else std::cout << "k = " << k;
-    else std::cout << "k = " << k;
-    if (c.child) return c.child->second;
-    invariant(c.parent != nullptr);
-    invariant(c.index < 4);
-    invariant(c.parent->children[c.index] == nullptr);
-    TrieMapNode res = c.parent->children[c.index] =
-      alloc->create<TrieMapNode>();
-    for (int i = 0; i < 4; ++i) invariant(res->children[i] == nullptr);
-    invariant(res->second == 0);
-    res->first = k;
-    ASSERT(find(k) == res);
-    if constexpr (std::same_as<K, void *>) {
-      if (reinterpret_cast<uintptr_t>(k) == 0x12e8)
-        std::cout << "res->first = " << res->first
-                  << "res->second = " << res->second << "\n";
-    }
-    return res->second;
-  }
 
 protected:
   struct Child {
@@ -72,11 +48,6 @@ protected:
   constexpr auto getSubLeaf() -> Child {
     Child c = getLeaf();
     return c.child != this ? c : Child{nullptr, nullptr, 0};
-  }
-  constexpr auto numChildren() -> int {
-    int count = 0;
-    for (auto c : children) count += (c != nullptr);
-    return count;
   }
   auto findChild(const K &k) -> Child {
     if (k == first) return {this, nullptr, 0};
@@ -139,8 +110,18 @@ struct TrieMap : TrieMapNode<K, V> {
 };
 
 template <class K, class V> struct TrieMap<false, K, V> : TrieMapNode<K, V> {
-  using BaseT = TrieMapNode<K, V>;
+  using NodeT = TrieMapNode<K, V>;
   void erase(const K &k) { this->eraseImpl(k); }
+  auto operator[](utils::Valid<alloc::Arena<>> alloc, const K &k) -> V & {
+    typename NodeT::Child c = findChild(k);
+    if (c.child) return c.child->second;
+    invariant(c.parent != nullptr);
+    invariant(c.index < 4);
+    invariant(c.parent->children[c.index] == nullptr);
+    TrieMapNode res = c.parent->children[c.index] = alloc->create<NodeT>();
+    res->first = k;
+    return res->second;
+  }
 };
 
 static_assert(sizeof(TrieMap<false, int, int>) ==
