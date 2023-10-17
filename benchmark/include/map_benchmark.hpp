@@ -54,7 +54,7 @@ void InsertLookup3(std::mt19937_64 &rng, D &map, uint64_t mask) {
 }
 
 static void BM_llvmDenseMapInsertErase(benchmark::State &state) {
-  uint64_t mask = ((1ULL << state.range(0)) - 1) << 3ULL;
+  uint64_t mask = ((1ULL << state.range(0)) - 1) << 4ULL;
   std::mt19937_64 rng{};
   for (auto b : state) {
     llvm::DenseMap<void *, uint64_t> map{};
@@ -63,7 +63,7 @@ static void BM_llvmDenseMapInsertErase(benchmark::State &state) {
 }
 BENCHMARK(BM_llvmDenseMapInsertErase)->DenseRange(2, 8, 1);
 static void BM_llvmSmallDenseMapInsertErase(benchmark::State &state) {
-  uint64_t mask = ((1ULL << state.range(0)) - 1) << 3ULL;
+  uint64_t mask = ((1ULL << state.range(0)) - 1) << 4ULL;
   std::mt19937_64 rng;
   for (auto b : state) {
     llvm::SmallDenseMap<void *, uint64_t> map{};
@@ -73,7 +73,7 @@ static void BM_llvmSmallDenseMapInsertErase(benchmark::State &state) {
 BENCHMARK(BM_llvmSmallDenseMapInsertErase)->DenseRange(2, 8, 1);
 static void BM_BumpMapInsertErase(benchmark::State &state) {
   poly::alloc::OwningArena<> alloc;
-  uint64_t mask = ((1ULL << state.range(0)) - 1) << 3ULL;
+  uint64_t mask = ((1ULL << state.range(0)) - 1) << 4ULL;
   std::mt19937_64 rng;
   for (auto b : state) {
     poly::dict::amap<void *, uint64_t> map{&alloc};
@@ -84,7 +84,7 @@ static void BM_BumpMapInsertErase(benchmark::State &state) {
 BENCHMARK(BM_BumpMapInsertErase)->DenseRange(2, 8, 1);
 static void BM_TrieInsertErase(benchmark::State &state) {
   poly::alloc::OwningArena<> alloc;
-  uint64_t mask = ((1ULL << state.range(0)) - 1) << 3ULL;
+  uint64_t mask = ((1ULL << state.range(0)) - 1) << 4ULL;
   std::mt19937_64 rng;
   for (auto b : state) {
     TrieWrap<poly::dict::TrieMap<true, void *, uint64_t>> map{{}, &alloc};
@@ -96,7 +96,7 @@ BENCHMARK(BM_TrieInsertErase)->DenseRange(2, 8, 1);
 
 static void BM_InlineTrieInsertErase(benchmark::State &state) {
   poly::alloc::OwningArena<> alloc;
-  uint64_t mask = ((1ULL << state.range(0)) - 1) << 3ULL;
+  uint64_t mask = ((1ULL << state.range(0)) - 1) << 4ULL;
   std::mt19937_64 rng;
   for (auto b : state) {
     TrieWrap<poly::dict::InlineTrie<void *, uint64_t>> map{{}, &alloc};
@@ -107,7 +107,7 @@ static void BM_InlineTrieInsertErase(benchmark::State &state) {
 BENCHMARK(BM_InlineTrieInsertErase)->DenseRange(2, 8, 1);
 
 static void BM_ankerlMapInsertErase(benchmark::State &state) {
-  uint64_t mask = ((1ULL << state.range(0)) - 1) << 3ULL;
+  uint64_t mask = ((1ULL << state.range(0)) - 1) << 4ULL;
   std::mt19937_64 rng;
   for (auto b : state) {
     ankerl::unordered_dense::map<void *, uint64_t> map;
@@ -116,7 +116,7 @@ static void BM_ankerlMapInsertErase(benchmark::State &state) {
 }
 BENCHMARK(BM_ankerlMapInsertErase)->DenseRange(2, 8, 1);
 static void BM_stdUnorderedMapInsertErase(benchmark::State &state) {
-  uint64_t mask = ((1ULL << state.range(0)) - 1) << 3ULL;
+  uint64_t mask = ((1ULL << state.range(0)) - 1) << 4ULL;
   std::mt19937_64 rng;
   for (auto b : state) {
     std::unordered_map<void *, uint64_t> map;
@@ -126,7 +126,7 @@ static void BM_stdUnorderedMapInsertErase(benchmark::State &state) {
 BENCHMARK(BM_stdUnorderedMapInsertErase)->DenseRange(2, 8, 1);
 
 static void BM_llvmDenseMapInsertLookup(benchmark::State &state) {
-  uint64_t mask = ((1ULL << state.range(0)) - 1) << 3ULL;
+  uint64_t mask = ((1ULL << state.range(0)) - 1) << 4ULL;
   std::mt19937_64 rng;
   for (auto b : state) {
     llvm::DenseMap<void *, uint64_t> map{};
@@ -135,7 +135,7 @@ static void BM_llvmDenseMapInsertLookup(benchmark::State &state) {
 }
 BENCHMARK(BM_llvmDenseMapInsertLookup)->DenseRange(2, 8, 1);
 static void BM_llvmSmallDenseMapInsertLookup(benchmark::State &state) {
-  uint64_t mask = ((1ULL << state.range(0)) - 1) << 3ULL;
+  uint64_t mask = ((1ULL << state.range(0)) - 1) << 4ULL;
   std::mt19937_64 rng;
   for (auto b : state) {
     llvm::SmallDenseMap<void *, uint64_t> map{};
@@ -145,7 +145,7 @@ static void BM_llvmSmallDenseMapInsertLookup(benchmark::State &state) {
 BENCHMARK(BM_llvmSmallDenseMapInsertLookup)->DenseRange(2, 8, 1);
 static void BM_BumpMapInsertLookup(benchmark::State &state) {
   poly::alloc::OwningArena<> alloc;
-  uint64_t mask = ((1ULL << state.range(0)) - 1) << 3ULL;
+  uint64_t mask = ((1ULL << state.range(0)) - 1) << 4ULL;
   std::mt19937_64 rng;
   for (auto b : state) {
     poly::dict::amap<void *, uint64_t> map{&alloc};
@@ -155,7 +155,7 @@ static void BM_BumpMapInsertLookup(benchmark::State &state) {
 }
 BENCHMARK(BM_BumpMapInsertLookup)->DenseRange(2, 8, 1);
 static void BM_ankerlMapInsertLookup(benchmark::State &state) {
-  uint64_t mask = ((1ULL << state.range(0)) - 1) << 3ULL;
+  uint64_t mask = ((1ULL << state.range(0)) - 1) << 4ULL;
   std::mt19937_64 rng;
   for (auto b : state) {
     ankerl::unordered_dense::map<void *, uint64_t> map;
@@ -164,7 +164,7 @@ static void BM_ankerlMapInsertLookup(benchmark::State &state) {
 }
 BENCHMARK(BM_ankerlMapInsertLookup)->DenseRange(2, 8, 1);
 static void BM_stdUnorderedMapInsertLookup(benchmark::State &state) {
-  uint64_t mask = ((1ULL << state.range(0)) - 1) << 3ULL;
+  uint64_t mask = ((1ULL << state.range(0)) - 1) << 4ULL;
   std::mt19937_64 rng;
   for (auto b : state) {
     std::unordered_map<void *, uint64_t> map;
@@ -174,7 +174,7 @@ static void BM_stdUnorderedMapInsertLookup(benchmark::State &state) {
 BENCHMARK(BM_stdUnorderedMapInsertLookup)->DenseRange(2, 8, 1);
 
 static void BM_llvmDenseMapInsertLookup3(benchmark::State &state) {
-  uint64_t mask = ((1ULL << state.range(0)) - 1) << 3ULL;
+  uint64_t mask = ((1ULL << state.range(0)) - 1) << 4ULL;
   std::mt19937_64 rng;
   for (auto b : state) {
     llvm::DenseMap<void *, uint64_t> map{};
@@ -183,7 +183,7 @@ static void BM_llvmDenseMapInsertLookup3(benchmark::State &state) {
 }
 BENCHMARK(BM_llvmDenseMapInsertLookup3)->DenseRange(2, 8, 1);
 static void BM_llvmSmallDenseMapInsertLookup3(benchmark::State &state) {
-  uint64_t mask = ((1ULL << state.range(0)) - 1) << 3ULL;
+  uint64_t mask = ((1ULL << state.range(0)) - 1) << 4ULL;
   std::mt19937_64 rng;
   for (auto b : state) {
     llvm::SmallDenseMap<void *, uint64_t> map{};
@@ -193,7 +193,7 @@ static void BM_llvmSmallDenseMapInsertLookup3(benchmark::State &state) {
 BENCHMARK(BM_llvmSmallDenseMapInsertLookup3)->DenseRange(2, 8, 1);
 static void BM_BumpMapInsertLookup3(benchmark::State &state) {
   poly::alloc::OwningArena<> alloc;
-  uint64_t mask = ((1ULL << state.range(0)) - 1) << 3ULL;
+  uint64_t mask = ((1ULL << state.range(0)) - 1) << 4ULL;
   std::mt19937_64 rng;
   for (auto b : state) {
     poly::dict::amap<void *, uint64_t> map{&alloc};
@@ -203,7 +203,7 @@ static void BM_BumpMapInsertLookup3(benchmark::State &state) {
 }
 BENCHMARK(BM_BumpMapInsertLookup3)->DenseRange(2, 8, 1);
 static void BM_ankerlMapInsertLookup3(benchmark::State &state) {
-  uint64_t mask = ((1ULL << state.range(0)) - 1) << 3ULL;
+  uint64_t mask = ((1ULL << state.range(0)) - 1) << 4ULL;
   std::mt19937_64 rng;
   for (auto b : state) {
     ankerl::unordered_dense::map<void *, uint64_t> map;
@@ -212,7 +212,7 @@ static void BM_ankerlMapInsertLookup3(benchmark::State &state) {
 }
 BENCHMARK(BM_ankerlMapInsertLookup3)->DenseRange(2, 8, 1);
 static void BM_stdUnorderedMapInsertLookup3(benchmark::State &state) {
-  uint64_t mask = ((1ULL << state.range(0)) - 1) << 3ULL;
+  uint64_t mask = ((1ULL << state.range(0)) - 1) << 4ULL;
   std::mt19937_64 rng;
   for (auto b : state) {
     std::unordered_map<void *, uint64_t> map;
