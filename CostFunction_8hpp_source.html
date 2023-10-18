@@ -72,21 +72,100 @@ $(function() {
 <div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="preprocessor">#pragma once</span></div>
 <div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160; </div>
 <div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="preprocessor">#include &lt;Math/Array.hpp&gt;</span></div>
-<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor">#include &lt;Math/Math.hpp&gt;</span></div>
-<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="preprocessor">#include &lt;Math/Vector.hpp&gt;</span></div>
-<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160; </div>
+<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor">#include &lt;Math/Exp.hpp&gt;</span></div>
+<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="preprocessor">#include &lt;Math/Math.hpp&gt;</span></div>
+<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="preprocessor">#include &lt;Math/Vector.hpp&gt;</span></div>
 <div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="keyword">namespace </span>poly::CostModeling {</div>
-<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="keyword">using</span> math::AbstractVector;</div>
-<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="keyword">using</span> math::DensePtrMatrix;</div>
+<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="keyword">using</span> math::AbstractVector, math::DensePtrMatrix;</div>
+<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="keyword">using</span> utils::Optional;</div>
 <div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160; </div>
-<div class="line"><a name="l00199"></a><span class="lineno"><a class="line" href="classpoly_1_1CostModeling_1_1LoopTreeCostFn.html">  199</a></span>&#160;<span class="keyword">class </span><a class="code" href="classpoly_1_1CostModeling_1_1LoopTreeCostFn.html">LoopTreeCostFn</a> {</div>
-<div class="line"><a name="l00200"></a><span class="lineno">  200</span>&#160; </div>
-<div class="line"><a name="l00201"></a><span class="lineno">  201</span>&#160;<span class="keyword">public</span>:</div>
-<div class="line"><a name="l00202"></a><span class="lineno">  202</span>&#160;  constexpr <span class="keyword">auto</span> operator()(<span class="keyword">const</span> AbstractVector <span class="keyword">auto</span> &amp;x)<span class="keyword"> const </span>{ <span class="keywordflow">return</span> 0.0; }</div>
-<div class="line"><a name="l00203"></a><span class="lineno">  203</span>&#160;};</div>
-<div class="line"><a name="l00204"></a><span class="lineno">  204</span>&#160; </div>
-<div class="line"><a name="l00205"></a><span class="lineno">  205</span>&#160;} <span class="comment">// namespace poly::CostModeling</span></div>
-<div class="ttc" id="aclasspoly_1_1CostModeling_1_1LoopTreeCostFn_html"><div class="ttname"><a href="classpoly_1_1CostModeling_1_1LoopTreeCostFn.html">poly::CostModeling::LoopTreeCostFn</a></div><div class="ttdef"><b>Definition:</b> CostFunction.hpp:199</div></div>
+<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="comment">// Order is outermost -&gt; innermost</span></div>
+<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="comment">// Costs are relative to Scalar, i.e. scalar == 1</span></div>
+<div class="line"><a name="l00013"></a><span class="lineno"><a class="line" href="structpoly_1_1CostModeling_1_1MemoryCosts.html">   13</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structpoly_1_1CostModeling_1_1MemoryCosts.html">MemoryCosts</a> {</div>
+<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;  <span class="keywordtype">unsigned</span> contiguous;    <span class="comment">// vload/vstore</span></div>
+<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;  <span class="keywordtype">unsigned</span> discontiguous; <span class="comment">// gather/scatter</span></div>
+<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;};</div>
+<div class="line"><a name="l00017"></a><span class="lineno"><a class="line" href="structpoly_1_1CostModeling_1_1VectorizationFactor.html">   17</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structpoly_1_1CostModeling_1_1VectorizationFactor.html">VectorizationFactor</a> {</div>
+<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;  <span class="keywordtype">unsigned</span> l2factor;</div>
+<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;  <span class="keywordtype">unsigned</span> index; <span class="comment">// outermost == 0</span></div>
+<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;};</div>
+<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160; </div>
+<div class="line"><a name="l00022"></a><span class="lineno"><a class="line" href="structpoly_1_1CostModeling_1_1OrthogonalAxes.html">   22</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structpoly_1_1CostModeling_1_1OrthogonalAxes.html">OrthogonalAxes</a> {</div>
+<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;  uint32_t data;</div>
+<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> contigAxis() <span class="keyword">const</span> -&gt; uint32_t {</div>
+<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;    <span class="keywordflow">return</span> data &amp; 0xff;</div>
+<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;  }</div>
+<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;  <span class="comment">// mask containing `0` for dependent axes, 1s for independent</span></div>
+<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;  <span class="comment">// should contain `0` for all non-existent loops, e.g.</span></div>
+<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;  <span class="comment">// for (i = I, j = J, k = K, l = L) {</span></div>
+<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;  <span class="comment">//   A[j,l]</span></div>
+<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;  <span class="comment">//   for (a = A, b = B){ .... }</span></div>
+<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;  <span class="comment">// }</span></div>
+<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;  <span class="comment">// The mask should equal (1&lt;&lt;0) | (1&lt;&lt;2)  (for the i and k).</span></div>
+<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;  <span class="comment">// Only loops it is nested in that it doesn&#39;t depend on count.</span></div>
+<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> indepAxes() <span class="keyword">const</span> -&gt; uint32_t {</div>
+<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;    <span class="keywordflow">return</span> data &gt;&gt; 8;</div>
+<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;  };</div>
+<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;};</div>
+<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;<span class="comment">// costs is an array of length two.</span></div>
+<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;<span class="comment">// memory costs, unnormalized by `prod(unrolls)`</span></div>
+<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;constexpr <span class="keyword">auto</span> cost(<a class="code" href="structpoly_1_1CostModeling_1_1MemoryCosts.html">MemoryCosts</a> mc, AbstractVector <span class="keyword">auto</span> invunrolls,</div>
+<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;                    <a class="code" href="structpoly_1_1CostModeling_1_1VectorizationFactor.html">VectorizationFactor</a> vfi, <a class="code" href="structpoly_1_1CostModeling_1_1OrthogonalAxes.html">OrthogonalAxes</a> orth)</div>
+<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;  -&gt; utils::eltype_t&lt;decltype(invunrolls)&gt; {</div>
+<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160; </div>
+<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;  utils::eltype_t&lt;decltype(invunrolls)&gt; c;</div>
+<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;  uint32_t da = orth.indepAxes();</div>
+<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;  <span class="keywordflow">if</span> (da) {</div>
+<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;    uint32_t tz = std::countr_zero(da);</div>
+<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;    c = invunrolls[tz++];</div>
+<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;    <span class="keywordflow">for</span> (uint32_t d = da &gt;&gt; tz, i = tz; d; d &gt;&gt;= tz, i += tz) {</div>
+<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;      tz = std::countr_zero(d);</div>
+<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;      c *= invunrolls[i + tz++];</div>
+<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;    }</div>
+<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;  } <span class="keywordflow">else</span> c = 1;</div>
+<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160; </div>
+<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;  <span class="keywordflow">if</span> ((vfi.index &lt; 32) &amp;&amp; !(da &amp; (1 &lt;&lt; vfi.index))) {</div>
+<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;    <span class="comment">// depends vectorized index</span></div>
+<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;    <span class="keywordflow">if</span> (vfi.index == orth.contigAxis()) {</div>
+<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;      c *= mc.contiguous;</div>
+<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;    } <span class="keywordflow">else</span> <span class="keywordflow">if</span> (orth.contigAxis() &gt;= 32) {</div>
+<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;      c *= mc.discontiguous;</div>
+<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;    } <span class="keywordflow">else</span> {</div>
+<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;      <span class="comment">// Discontiguous vector load.</span></div>
+<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;      <span class="comment">// We consider two alternatives:</span></div>
+<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;      <span class="comment">// 1. gather/scatter (discontiguous)</span></div>
+<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;      <span class="comment">// 2. contiguous load for each vectorization factor of length equal to</span></div>
+<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;      <span class="comment">// unroll, followed by shuffles.</span></div>
+<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;      <span class="comment">// E.g., unroll contig by 4, another dim is vectorized by 8:</span></div>
+<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;      <span class="comment">// we&#39;d have 8 vloads (max(4/8,1) * 8), followed by 4*log2(8) +</span></div>
+<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;      <span class="comment">// log2(max(8/4,1))*4 shuffles.</span></div>
+<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;      <span class="comment">// Or, if we unroll contig by 8, and another dim is vectorzeed by 2, we&#39;d</span></div>
+<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;      <span class="comment">// have 8 = (max(8/2,1) * 2) vloads, 8*log2(2) + log2(max(2/8,1))*8</span></div>
+<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;      <span class="comment">// shuffles.</span></div>
+<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;      <span class="comment">// We divide by `u[contig]`, as it is now accounted for</span></div>
+<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;      <span class="comment">// So we have</span></div>
+<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;      <span class="comment">// max(v/u, 1) + u*log2(v) + log2(max(v/u ,1))*u</span></div>
+<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;      utils::eltype_t&lt;decltype(invunrolls)&gt; iu{invunrolls[orth.contigAxis()]},</div>
+<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;        u{1 / iu}, mr{math::smax((1 &lt;&lt; vfi.l2factor) * iu, 1)};</div>
+<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160; </div>
+<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;      c *= math::smin(mc.contiguous * mr + u * (vfi.l2factor + log2(mr)),</div>
+<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;                      mc.discontiguous);</div>
+<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;    }</div>
+<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;  }</div>
+<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;  <span class="keywordflow">return</span> c;</div>
+<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;}</div>
+<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160; </div>
+<div class="line"><a name="l00275"></a><span class="lineno"><a class="line" href="classpoly_1_1CostModeling_1_1LoopTreeCostFn.html">  275</a></span>&#160;<span class="keyword">class </span><a class="code" href="classpoly_1_1CostModeling_1_1LoopTreeCostFn.html">LoopTreeCostFn</a> {</div>
+<div class="line"><a name="l00276"></a><span class="lineno">  276</span>&#160; </div>
+<div class="line"><a name="l00277"></a><span class="lineno">  277</span>&#160;<span class="keyword">public</span>:</div>
+<div class="line"><a name="l00278"></a><span class="lineno">  278</span>&#160;  constexpr <span class="keyword">auto</span> operator()(<span class="keyword">const</span> AbstractVector <span class="keyword">auto</span> &amp;x)<span class="keyword"> const </span>{ <span class="keywordflow">return</span> 0.0; }</div>
+<div class="line"><a name="l00279"></a><span class="lineno">  279</span>&#160;};</div>
+<div class="line"><a name="l00280"></a><span class="lineno">  280</span>&#160; </div>
+<div class="line"><a name="l00281"></a><span class="lineno">  281</span>&#160;} <span class="comment">// namespace poly::CostModeling</span></div>
+<div class="ttc" id="aclasspoly_1_1CostModeling_1_1LoopTreeCostFn_html"><div class="ttname"><a href="classpoly_1_1CostModeling_1_1LoopTreeCostFn.html">poly::CostModeling::LoopTreeCostFn</a></div><div class="ttdef"><b>Definition:</b> CostFunction.hpp:275</div></div>
+<div class="ttc" id="astructpoly_1_1CostModeling_1_1MemoryCosts_html"><div class="ttname"><a href="structpoly_1_1CostModeling_1_1MemoryCosts.html">poly::CostModeling::MemoryCosts</a></div><div class="ttdef"><b>Definition:</b> CostFunction.hpp:13</div></div>
+<div class="ttc" id="astructpoly_1_1CostModeling_1_1OrthogonalAxes_html"><div class="ttname"><a href="structpoly_1_1CostModeling_1_1OrthogonalAxes.html">poly::CostModeling::OrthogonalAxes</a></div><div class="ttdef"><b>Definition:</b> CostFunction.hpp:22</div></div>
+<div class="ttc" id="astructpoly_1_1CostModeling_1_1VectorizationFactor_html"><div class="ttname"><a href="structpoly_1_1CostModeling_1_1VectorizationFactor.html">poly::CostModeling::VectorizationFactor</a></div><div class="ttdef"><b>Definition:</b> CostFunction.hpp:17</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
