@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Containers/BitSets.hpp"
 #include <Math/Array.hpp>
 #include <Math/Exp.hpp>
 #include <Math/GreatestCommonDivisor.hpp>
@@ -96,7 +97,10 @@ constexpr auto cost(MemoryCosts mc, const AbstractVector auto &invunrolls,
   -> utils::eltype_t<decltype(invunrolls)> {
   utils::eltype_t<decltype(invunrolls)> c{1};
   auto [arrayDim, numLoops] = inds.size();
-  utils::invariant(arrayDim <= 16);
+  utils::invariant(numLoops > 0);
+  utils::invariant(arrayDim > 0);
+  utils::invariant(arrayDim <= 64);
+  containers::BitSet64 bs;
   for (ptrdiff_t d = 0; d < arrayDim; ++d) {
     int64_t g = 0;
     utils::eltype_t<decltype(invunrolls)> uprod;
@@ -105,6 +109,14 @@ constexpr auto cost(MemoryCosts mc, const AbstractVector auto &invunrolls,
       if (l == vfi.index) continue;
       int64_t a = inds[d, l];
       if (!a) continue;
+      bool docontinue;
+      for (ptrdiff_t k = 0; k < arrayDim; ++k) {
+        if (k == d) continue;
+        docontinue = (inds[d, _] != inds[k, _]) || (d > k);
+        if (docontinue) break;
+      }
+      if (docontinue) continue;
+      bs.insert(l);
       if (count++) {
         g = math::gcd(g, a);
         uprod *= invunrolls[l];
@@ -115,7 +127,7 @@ constexpr auto cost(MemoryCosts mc, const AbstractVector auto &invunrolls,
     };
     if (count < 2) continue;
     utils::eltype_t<decltype(invunrolls)> prod{1};
-    for (ptrdiff_t l = 0; l < numLoops; ++l) {
+    for (ptrdiff_t l : bs) {
       if (l == vfi.index) continue;
       int64_t a = inds[d, l];
       if (!a) continue;
