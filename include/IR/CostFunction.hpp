@@ -2,10 +2,11 @@
 
 #include <Math/Array.hpp>
 #include <Math/Exp.hpp>
+#include <Math/GreatestCommonDivisor.hpp>
 #include <Math/Math.hpp>
 #include <Math/Vector.hpp>
 namespace poly::CostModeling {
-using math::AbstractVector, math::DensePtrMatrix;
+using math::AbstractVector, math::DensePtrMatrix, math::_;
 using utils::Optional;
 
 // Order is outermost -> innermost
@@ -38,11 +39,11 @@ struct OrthogonalAxes {
 };
 // costs is an array of length two.
 // memory costs, unnormalized by `prod(unrolls)`
-constexpr auto cost(MemoryCosts mc, AbstractVector auto invunrolls,
+constexpr auto cost(MemoryCosts mc, const AbstractVector auto &invunrolls,
                     VectorizationFactor vfi, OrthogonalAxes orth)
   -> utils::eltype_t<decltype(invunrolls)> {
 
-  utils::eltype_t<decltype(invunrolls)> c;
+  utils::eltype_t<decltype(invunrolls)> c{};
   uint32_t da = orth.indepAxes();
   if (da) {
     uint32_t tz = std::countr_zero(da);
@@ -81,6 +82,51 @@ constexpr auto cost(MemoryCosts mc, AbstractVector auto invunrolls,
                       mc.discontiguous);
     }
   }
+  return c;
+}
+/// General fallback method for those without easy to represent structure
+/// inds is an `IR::Address->indexMatrix()`, thus it is `arrayDim() x
+/// getNumLoops()`
+/// Non-standard structure here means that we have at least one loop with
+/// more than one array dimension.
+/// For these, we use the incorrect formula:
+///
+constexpr auto cost(MemoryCosts mc, const AbstractVector auto &invunrolls,
+                    VectorizationFactor vfi, DensePtrMatrix<int64_t> inds)
+  -> utils::eltype_t<decltype(invunrolls)> {
+  utils::eltype_t<decltype(invunrolls)> c{1};
+  auto [arrayDim, numLoops] = inds.size();
+  utils::invariant(arrayDim <= 16);
+  for (ptrdiff_t d = 0; d < arrayDim; ++d) {
+    int64_t g = 0;
+    utils::eltype_t<decltype(invunrolls)> uprod;
+    ptrdiff_t count = 0;
+    for (ptrdiff_t l = 0; l < numLoops; ++l) {
+      if (l == vfi.index) continue;
+      int64_t a = inds[d, l];
+      if (!a) continue;
+      if (count++) {
+        g = math::gcd(g, a);
+        uprod *= invunrolls[l];
+      } else {
+        g = a;
+        uprod = invunrolls[l];
+      }
+    };
+    if (count < 2) continue;
+    utils::eltype_t<decltype(invunrolls)> prod{1};
+    for (ptrdiff_t l = 0; l < numLoops; ++l) {
+      if (l == vfi.index) continue;
+      int64_t a = inds[d, l];
+      if (!a) continue;
+      prod *= (1 - (a / g) * (uprod / invunrolls[l]));
+    }
+    c *= (1 - prod);
+  }
+  // c is a scaling factor; now we proceed to calculate cost similaly to the
+  // orth-axis implementation above.
+  // That is, prod of all dependent unrolls, divided by prod of all, or
+  // (equivalently), prod off all non-dep inverse unrolls.
   return c;
 }
 
@@ -204,18 +250,24 @@ constexpr auto cost(MemoryCosts mc, AbstractVector auto invunrolls,
 ///
 /// Given `x[a*i + b*j]`, where neither `i` or `j` are vectorized (and `a` and
 /// `b` are compile time constants), we use:
-/// (a_g*U_i + b_g*U_j - a_g*b_g) / (U_i * U_j)
+/// (a_g*U_i + b_g*U_j - a_g*b_g) / (U_i*U_j)
+/// = a_g/U_j + b_g/U_i - a_g*b_g / (U_i*U_j)
+/// = 1 - (1 - a_g/U_j ) * (1 - b_g/U_i)
 /// as the cost, where `a_g = abs(a/gcd(a,b))` and `b_g = abs(b/gcd(a,b))`.
 ///
+/// For more, we generalize this pattern
+/// = 1 - \prod_{d}^{D}\left(1 - \frac{coef_{g,d}*U_d}{\prod_{i}^{D}U_i}\right)
 ///
-/// Given `x[a*i + b*j + c*k]`, where none of `i`, `j`, or `k` are vectorized
-/// (and `a`, `b`, and `c` are compile time constants), we use: (a_g*U_i +
-/// b_g*U_j + c_g*U_k - a_g*b_g - a_g*c_g - b_g*c_g + a_g*b_g*c_g) / (U_i *
-/// U_j * U_k) as the cost, where the `_g`s are same as before, but using the
-/// gcd of all three `a`, `b`, and `c`. NOTE: these, unlike the 2-case, are
-/// wrong, but they happen to be correct when the gcds are all `1`. It
-/// hopefully at least dominates the actual cost. Eventually, it'd be great to
-/// actually derive a general formula.
+/// In the `D=3` case, this expands to
+/// 1 - (1 - a_g/(U_j*U_k))(1 - b_g/(U_i*U_k))(1 - c_g/(U_i*U_j))
+/// = 1 - (1 - c_g/(U_i*U_j))*
+///    (1 - a_g/(U_j*U_k) - b_g/(U_i*U_k)) + a_g*b_g/(U_i*U_j*U_k^2))
+/// = a_g/(U_j*U_k) + b_g/(U_i*U_k)) + c_g/(U_i*U_j) - a_g*b_g/(U_i*U_j*U_k^2))
+///     - a_g*c_g/(U_i*U_j^2*U_k) - b_g*c_g/(U_i^2*U_j*U_k))
+///     + a_g*b_g*c_g/(U_i^2*U_j^2*U_k^2))
+///
+/// TODO: check the degree of correctness...
+/// I kind of just made something up that looks sort of right.
 ///
 /// For register consumption, we
 /// 1. Determine an ordering of unroll factors for each inner most loop.
