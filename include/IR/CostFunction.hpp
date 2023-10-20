@@ -1,13 +1,14 @@
 #pragma once
 
-#include "Containers/BitSets.hpp"
+#include <Containers/BitSets.hpp>
 #include <Math/Array.hpp>
 #include <Math/Exp.hpp>
 #include <Math/GreatestCommonDivisor.hpp>
 #include <Math/Math.hpp>
+#include <Math/Matrix.hpp>
 #include <Math/Vector.hpp>
 namespace poly::CostModeling {
-using math::AbstractVector, math::DensePtrMatrix, math::_;
+using math::AbstractVector, math::AbstractMatrix, math::DensePtrMatrix, math::_;
 using utils::Optional;
 
 // Order is outermost -> innermost
@@ -40,7 +41,8 @@ struct OrthogonalAxes {
 };
 // costs is an array of length two.
 // memory costs, unnormalized by `prod(unrolls)`
-constexpr auto cost(MemoryCosts mc, const AbstractVector auto &invunrolls,
+// `invunrolls` is a matrix, row-0 are the inverse unrolls, row-1 unrolls.
+constexpr auto cost(MemoryCosts mc, const AbstractMatrix auto &invunrolls,
                     VectorizationFactor vfi, OrthogonalAxes orth)
   -> utils::eltype_t<decltype(invunrolls)> {
 
@@ -48,10 +50,10 @@ constexpr auto cost(MemoryCosts mc, const AbstractVector auto &invunrolls,
   uint32_t da = orth.indepAxes();
   if (da) {
     uint32_t tz = std::countr_zero(da);
-    c = invunrolls[tz++];
+    c = invunrolls[0, tz++];
     for (uint32_t d = da >> tz, i = tz; d; d >>= tz, i += tz) {
       tz = std::countr_zero(d);
-      c *= invunrolls[i + tz++];
+      c *= invunrolls[0, i + tz++];
     }
   } else c = 1;
 
@@ -76,9 +78,11 @@ constexpr auto cost(MemoryCosts mc, const AbstractVector auto &invunrolls,
       // We divide by `u[contig]`, as it is now accounted for
       // So we have
       // max(v/u, 1) + u*log2(v) + log2(max(v/u ,1))*u
-      utils::eltype_t<decltype(invunrolls)> iu{invunrolls[orth.contigAxis()]},
-        u{1 / iu}, mr{math::smax((1 << vfi.l2factor) * iu, 1)};
-
+      utils::eltype_t<decltype(invunrolls)> iu{
+        invunrolls[0, orth.contigAxis()]},
+        u{invunrolls[1, orth.contigAxis()]},
+        mr{math::smax((1 << vfi.l2factor) * iu, 1)};
+      utils::invariant(iu == 1 / u);
       c *= math::smin(mc.contiguous * mr + u * (vfi.l2factor + log2(mr)),
                       mc.discontiguous);
     }
@@ -92,55 +96,81 @@ constexpr auto cost(MemoryCosts mc, const AbstractVector auto &invunrolls,
 /// more than one array dimension.
 /// For these, we use the incorrect formula:
 ///
-constexpr auto cost(MemoryCosts mc, const AbstractVector auto &invunrolls,
-                    VectorizationFactor vfi, DensePtrMatrix<int64_t> inds)
+constexpr auto cost(MemoryCosts mc, const AbstractMatrix auto &invunrolls,
+                    VectorizationFactor vfi, OrthogonalAxes orth,
+                    DensePtrMatrix<int64_t> inds)
   -> utils::eltype_t<decltype(invunrolls)> {
   utils::eltype_t<decltype(invunrolls)> c{1};
   auto [arrayDim, numLoops] = inds.size();
   utils::invariant(numLoops > 0);
   utils::invariant(arrayDim > 0);
   utils::invariant(arrayDim <= 64);
-  containers::BitSet64 bs;
+  utils::invariant(invunrolls.numCol(), inds.numCol());
   for (ptrdiff_t d = 0; d < arrayDim; ++d) {
     int64_t g = 0;
+    containers::BitSet64 bs;
     utils::eltype_t<decltype(invunrolls)> uprod;
-    ptrdiff_t count = 0;
     for (ptrdiff_t l = 0; l < numLoops; ++l) {
       if (l == vfi.index) continue;
       int64_t a = inds[d, l];
       if (!a) continue;
-      bool docontinue;
+      bool docontinue{false};
+      // We only
       for (ptrdiff_t k = 0; k < arrayDim; ++k) {
-        if (k == d) continue;
+        if ((k == d) || (!inds[k, l])) continue;
         docontinue = (inds[d, _] != inds[k, _]) || (d > k);
         if (docontinue) break;
       }
       if (docontinue) continue;
-      bs.insert(l);
-      if (count++) {
-        g = math::gcd(g, a);
-        uprod *= invunrolls[l];
-      } else {
+      if (bs.empty()) {
         g = a;
-        uprod = invunrolls[l];
+        uprod = invunrolls[0, l];
+      } else {
+        g = math::gcd(g, a);
+        uprod *= invunrolls[0, l];
       }
+      bs.insert(l);
     };
-    if (count < 2) continue;
+    if (bs.size() < 2) continue;
     utils::eltype_t<decltype(invunrolls)> prod{1};
     for (ptrdiff_t l : bs) {
       if (l == vfi.index) continue;
       int64_t a = inds[d, l];
       if (!a) continue;
-      prod *= (1 - (a / g) * (uprod / invunrolls[l]));
+      prod *= (1 - (a / g) * (uprod / invunrolls[0, l]));
     }
     c *= (1 - prod);
   }
   // c is a scaling factor; now we proceed to calculate cost similaly to the
   // orth-axis implementation above.
-  // That is, prod of all dependent unrolls, divided by prod of all, or
-  // (equivalently), prod off all non-dep inverse unrolls.
-  return c;
+  return c * cost(mc, invunrolls, vfi, orth);
 }
+// We need to define an unroll ordering.
+struct RegisterUseByUnroll {
+  math::PtrVector<uint32_t> masks;
+  unsigned register_count;
+  [[nodiscard]] constexpr auto begin() const -> const uint32_t * {
+    return masks.begin();
+  }
+  [[nodiscard]] constexpr auto end() const -> const uint32_t * {
+    return masks.end();
+  }
+};
+// TODO: define function to implement register_count
+constexpr auto registerPressure(const AbstractMatrix auto &invunrolls,
+                                const RegisterUseByUnroll &r)
+  -> utils::eltype_t<decltype(invunrolls)> {
+  utils::eltype_t<decltype(invunrolls)> c{0};
+  for (uint32_t m : r) {
+    utils::eltype_t<decltype(invunrolls)> t{1};
+    containers::BitSet64 bs{std::array<uint64_t, 1>{m}};
+    for (ptrdiff_t i : bs) t *= invunrolls[1, i];
+    c += t;
+  }
+  return r.register_count - c;
+}
+// We then additionally need a throughput vs latency estimator, and code for
+// handling the tail.
 
 /// Here, we define a cost fn that can be optimized to produce
 /// vectorization and unrolling factors.
@@ -167,12 +197,15 @@ constexpr auto cost(MemoryCosts mc, const AbstractVector auto &invunrolls,
 /// store/reload pair of a spill.
 ///
 /// Furthermore, we also need to consider the possibility of dependency
-/// chains. Consider, for example for (ptrdiff_t i = 0; i < I; ++i){
+/// chains. Consider, for example
+/// ```
+/// for (ptrdiff_t i = 0; i < I; ++i){
 ///   eltype_t<A> xi = x[i];
 ///   for (ptrdiff_t j = 0; j < J; ++j)
 ///     xi += A[i][j] * y[j];
 ///   x[i] = xi;
 /// }
+/// ```
 /// The `j` loop itself has a dependency chain.
 /// Two options for addressing this:
 /// 1. unrolling `j`, cloning the accumulation registers, and reducing at the
@@ -214,16 +247,17 @@ constexpr auto cost(MemoryCosts mc, const AbstractVector auto &invunrolls,
 ///
 ///
 /// Note that if we had
+/// ```
 /// for (ptrdiff_t i = 0; i < I; ++i){
 ///   eltype_t<A> yi = y[i];
 ///   for (ptrdiff_t j = 0; j < J; ++j)
 ///     x[j] += A[i][j] * yi;
 /// }
-/// then unrolling the `i` loop doesn't increase OOO,
+/// ```
+/// then unrolling the `i` loop doesn't increase OOO (Out Of Order execution),
 /// but we can assume that as successive `j` iterations are independent/do not
-/// have a dependency chain, this isn't an issue.
-/// That is, we only consider reductions across the inner-most loop as
-/// requiring cloning of accumulators.
+/// have a dependency chain, this isn't an issue. That is, we only consider
+/// reductions across the inner-most loop as requiring cloning of accumulators.
 ///
 /// On throughput modeling, LLVM seems to generally give a recip throughput of
 /// 1 for pipelined instructions, regardless of number of ports. This is
@@ -302,8 +336,9 @@ constexpr auto cost(MemoryCosts mc, const AbstractVector auto &invunrolls,
 /// unrolls).
 ///
 /// So, how do we define register cost per unroll in an unroll-order
-/// independent manner, so that we can use this for determining the order? for
-/// (int m=0; m<M; ++m){
+/// independent manner, so that we can use this for determining the order?
+/// ```
+/// for (int m=0; m<M; ++m){
 ///   for (int n=0; n<N; ++n){
 ///     auto Cmn = C[m,n];
 ///     for (int k=0; k<K; ++k)
@@ -311,6 +346,7 @@ constexpr auto cost(MemoryCosts mc, const AbstractVector auto &invunrolls,
 ///     C[m,n] = Cmn;
 ///   }
 /// }
+/// ```
 /// In this example, we have 4 ops in the inner loop
 /// A[m,k] --->*--> (Cmn +=)
 /// B[k,n] -/
