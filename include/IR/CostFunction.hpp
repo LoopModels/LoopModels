@@ -147,12 +147,13 @@ constexpr auto cost(MemoryCosts mc, const AbstractMatrix auto &invunrolls,
 }
 // We need to define an unroll ordering.
 struct RegisterUseByUnroll {
-  math::PtrVector<uint32_t> masks;
-  unsigned register_count;
-  [[nodiscard]] constexpr auto begin() const -> const uint32_t * {
+  math::PtrVector<std::array<uint32_t, 2>> masks; // coef, mask pairs
+  unsigned register_count;                        // includes constant offset
+  [[nodiscard]] constexpr auto begin() const
+    -> const std::array<uint32_t, 2> * {
     return masks.begin();
   }
-  [[nodiscard]] constexpr auto end() const -> const uint32_t * {
+  [[nodiscard]] constexpr auto end() const -> const std::array<uint32_t, 2> * {
     return masks.end();
   }
 };
@@ -160,17 +161,27 @@ struct RegisterUseByUnroll {
 constexpr auto registerPressure(const AbstractMatrix auto &invunrolls,
                                 const RegisterUseByUnroll &r)
   -> utils::eltype_t<decltype(invunrolls)> {
-  utils::eltype_t<decltype(invunrolls)> c{0};
-  for (uint32_t m : r) {
+  utils::eltype_t<decltype(invunrolls)> acc{0};
+  for (auto [c, m] : r) {
     utils::eltype_t<decltype(invunrolls)> t{1};
     containers::BitSet64 bs{std::array<uint64_t, 1>{m}};
     for (ptrdiff_t i : bs) t *= invunrolls[1, i];
-    c += t;
+    acc += c * t;
   }
-  return r.register_count - c;
+  return 0.25 * math::softplus(8.0 * (acc - r.register_count));
 }
 // We then additionally need a throughput vs latency estimator, and code for
 // handling the tail.
+// Standard throughput is fairly trivial/should be a vector sum,
+// although we may have some operations not dependent on all loops,
+// in which case unrolling the loops they don't depend on will help.
+// Thus, it would probably be best to handle these with code
+// similar to the memory cost-fun above, ideally we can abstract away the core.
+/// memcost = I*J*(Ui*Uj*C_{Al} + Uj*C_{yl}) / (Ui*Uj) +
+///    I*(C_{xl}*Ui + C_{xs}*Ui) / Ui
+/// cthroughput = I*J*(Ui*Uj*C_{t,fma}) / (Ui*Uj) + I*(Ui*C_{t,add}*(Uj-1)) /
+/// Ui clatency = I*J*C_{l,fma}/smin(Ui*Uj, C_{l,fma}/C_{t,fma}) +
+///    I*C_{l,add}*log2(Uj)
 
 /// Here, we define a cost fn that can be optimized to produce
 /// vectorization and unrolling factors.
