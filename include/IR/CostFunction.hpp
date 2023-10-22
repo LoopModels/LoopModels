@@ -39,6 +39,23 @@ struct OrthogonalAxes {
     return data >> 8;
   };
 };
+constexpr auto operator&(OrthogonalAxes a, OrthogonalAxes b) -> uint32_t {
+  return a.indepAxes() & b.indepAxes();
+}
+constexpr auto cost(const AbstractMatrix auto &invunrolls,
+                    uint32_t independentAxes)
+  -> utils::eltype_t<decltype(invunrolls)> {
+  utils::eltype_t<decltype(invunrolls)> c{};
+  if (independentAxes) {
+    uint32_t tz = std::countr_zero(independentAxes);
+    c = invunrolls[0, tz++];
+    for (uint32_t d = independentAxes >> tz, i = tz; d; d >>= tz, i += tz) {
+      tz = std::countr_zero(d);
+      c *= invunrolls[0, i + tz++];
+    }
+  } else c = 1;
+  return c;
+}
 // costs is an array of length two.
 // memory costs, unnormalized by `prod(unrolls)`
 // `invunrolls` is a matrix, row-0 are the inverse unrolls, row-1 unrolls.
@@ -46,18 +63,8 @@ constexpr auto cost(MemoryCosts mc, const AbstractMatrix auto &invunrolls,
                     VectorizationFactor vfi, OrthogonalAxes orth)
   -> utils::eltype_t<decltype(invunrolls)> {
 
-  utils::eltype_t<decltype(invunrolls)> c{};
-  uint32_t da = orth.indepAxes();
-  if (da) {
-    uint32_t tz = std::countr_zero(da);
-    c = invunrolls[0, tz++];
-    for (uint32_t d = da >> tz, i = tz; d; d >>= tz, i += tz) {
-      tz = std::countr_zero(d);
-      c *= invunrolls[0, i + tz++];
-    }
-  } else c = 1;
-
-  if ((vfi.index < 32) && !(da & (1 << vfi.index))) {
+  utils::eltype_t<decltype(invunrolls)> c{cost(invunrolls, orth.indepAxes())};
+  if ((vfi.index < 32) && !(orth.indepAxes() & (1 << vfi.index))) {
     // depends vectorized index
     if (vfi.index == orth.contigAxis()) {
       c *= mc.contiguous;
@@ -168,6 +175,8 @@ constexpr auto registerPressure(const AbstractMatrix auto &invunrolls,
     for (ptrdiff_t i : bs) t *= invunrolls[1, i];
     acc += c * t;
   }
+  // note the softplus(8x)/4, so 2x scaling on penalty representing
+  // the stack load+store combination.
   return 0.25 * math::softplus(8.0 * (acc - r.register_count));
 }
 // We then additionally need a throughput vs latency estimator, and code for
@@ -386,7 +395,16 @@ constexpr auto registerPressure(const AbstractMatrix auto &invunrolls,
 class LoopTreeCostFn {
 
 public:
-  constexpr auto operator()(const AbstractVector auto &x) const { return 0.0; }
+    // this is a vector fun, where indexing may do non-trivial computation
+    // also, mapping from this vector to loop position isn't trivial either
+    // hence, we use a 2 x max_depth matrix that we copy into as we descend
+    // (and pop from as we ascend). Row `0` is for inverse values,
+    // and row `1` for direct values.
+    // Inverses are favored as our costs fns use them more often. 
+  constexpr auto operator()(const AbstractVector auto &x) const { 
+
+      return 0.0;
+  }
 };
 
 } // namespace poly::CostModeling
