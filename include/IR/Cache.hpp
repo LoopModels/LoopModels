@@ -339,8 +339,8 @@ class Cache {
     return blackList | blackListAllDependentLoops(S, numPeeled);
   }
   static void extendDensePtrMatCols(Arena<> *alloc,
-                                    MutDensePtrMatrix<int64_t> &A, math::Row R,
-                                    math::Col C) {
+                                    MutDensePtrMatrix<int64_t> &A,
+                                    math::Row<> R, math::Col<> C) {
     MutDensePtrMatrix<int64_t> B{matrix<int64_t>(alloc, A.numRow(), C)};
     for (ptrdiff_t j = 0; j < R; ++j) {
       B[j, _(0, A.numCol())] << A[j, _];
@@ -541,11 +541,12 @@ public:
     if (numDims == 0) return {zeroDimRef(loadOrStore, arrayPtr, 0), tr};
     unsigned numPeeled = tr.rejectDepth;
     numLoops -= numPeeled;
-    math::IntMatrix<math::StridedDims> Rt{math::StridedDims{numDims, numLoops}, 0};
+    math::IntMatrix<math::StridedDims<>> Rt{
+      math::StridedDims<>{{numDims}, {numLoops}}, 0};
     llvm::SmallVector<const llvm::SCEV *, 3> symbolicOffsets;
     uint64_t blackList{0};
     math::Vector<int64_t> coffsets{unsigned(numDims), 0};
-    MutDensePtrMatrix<int64_t> offsMat{nullptr, DenseDims{numDims, 0}};
+    MutDensePtrMatrix<int64_t> offsMat{nullptr, DenseDims<>{{numDims}, {0}}};
     {
       math::Vector<int64_t> offsets;
       for (ptrdiff_t i = 0; i < numDims; ++i) {
@@ -554,8 +555,8 @@ public:
           fillAffineIndices(Rt[i, _], &coffsets[i], offsets, symbolicOffsets,
                             subscripts[i], 1, numPeeled);
         if (offsets.size() > offsMat.numCol())
-          extendDensePtrMatCols(&alloc, offsMat, math::Row{i},
-                                math::Col{offsets.size()});
+          extendDensePtrMatCols(&alloc, offsMat, math::Row<>{i},
+                                math::Col<>{offsets.size()});
         offsMat[i, _] << offsets;
       }
     }
@@ -607,7 +608,7 @@ public:
     return B;
   }
   auto similarCompute(Compute *A, PtrVector<Value *> ops) -> Compute * {
-    invariant(A->getNumOperands(), ops.size());
+    invariant(ptrdiff_t(A->getNumOperands()), ops.size());
     return createCompute(A->getOpId(), A->getKind(), ops, A->getType(),
                          A->getFastMathFlags());
   }

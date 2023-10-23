@@ -83,10 +83,10 @@ struct BasePolyhedra {
     if constexpr (HasEqualities) return static_cast<const P *>(this)->getE();
     else return EmptyMatrix<int64_t>();
   }
-  constexpr void truncNumInEqCon(Row r) {
+  constexpr void truncNumInEqCon(Row<> r) {
     static_cast<P *>(this)->truncNumInEqCon(r);
   }
-  constexpr void truncNumEqCon(Row r) {
+  constexpr void truncNumEqCon(Row<> r) {
     if constexpr (HasEqualities) static_cast<P *>(this)->truncNumEqCon(r);
   }
   [[nodiscard]] constexpr auto
@@ -138,11 +138,11 @@ struct BasePolyhedra {
     pruneBounds(alloc);
   }
   constexpr void eraseConstraint(ptrdiff_t constraint) {
-    eraseConstraintImpl(getA(), constraint);
+    eraseConstraintImpl(getA(), Row<>{constraint});
     decrementNumConstraints();
   }
   template <bool CheckEmpty> constexpr void pruneBoundsCore(Arena<> *alloc) {
-    auto diff = vector<int64_t>(alloc, unsigned(getA().numCol()));
+    auto diff = vector<int64_t>(alloc, ptrdiff_t(getA().numCol()));
     auto p = checkpoint(alloc);
     const ptrdiff_t dyn = getNumDynamic();
     if constexpr (HasEqualities) {
@@ -253,8 +253,8 @@ struct BasePolyhedra {
     // return false;
   }
   void truncateVars(ptrdiff_t numVar) {
-    if constexpr (HasEqualities) getE().truncate(Col{numVar});
-    getA().truncate(Col{numVar});
+    if constexpr (HasEqualities) getE().truncate(Col<>{numVar});
+    getA().truncate(Col<>{numVar});
   }
 };
 } // namespace poly::poly

@@ -11,7 +11,7 @@ using poly::math::Vector,poly::math::IntMatrix, poly::math::Row, poly::math::Col
   poly::math::DenseDims, poly::math::_, poly::utils::operator""_mat;
 static void BM_NullSpace(benchmark::State &state) {
 
-  IntMatrix<> B(poly::math::DenseDims{Row{6}, Col{3}});
+  IntMatrix<> B(poly::math::DenseDims{Row<>{6}, Col<>{3}});
   B[0, 0] = 1;
   B[1, 0] = 0;
   B[2, 0] = -3;
@@ -44,7 +44,7 @@ BENCHMARK(BM_NullSpace);
 
 static void BM_NullSpace2000(benchmark::State &state) {
   const size_t N = 20;
-  IntMatrix<> A(DenseDims{Row{N}, Col{N}});
+  IntMatrix<> A(DenseDims{Row<>{N}, Col<>{N}});
   A << 0;
   A[0, 0] = 2;
   for (size_t i = 1; i < N; ++i) {
@@ -76,7 +76,7 @@ BENCHMARK(BM_Orthogonalize);
 
 static void BM_Bareiss2000(benchmark::State &state) {
   const size_t N = 20;
-  IntMatrix<> A(DenseDims{Row{N}, Col{N}});
+  IntMatrix<> A(DenseDims{Row<>{N}, Col<>{N}});
   A << 0;
   A[0, 0] = 2;
   for (size_t i = 1; i < N; ++i) {

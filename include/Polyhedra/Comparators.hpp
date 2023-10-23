@@ -264,8 +264,8 @@ concept Comparator = requires(T t, PtrVector<int64_t> x, int64_t y) {
 
 template <typename T>
 struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
-  [[no_unique_address]] unsigned int numVar{0};
-  [[no_unique_address]] unsigned int numEquations{0};
+  [[no_unique_address]] ptrdiff_t numVar{0};
+  [[no_unique_address]] ptrdiff_t numEquations{0};
   using ThisT = BaseSymbolicComparator<T>;
   using BaseT = BaseComparator<ThisT>;
   using BaseT::greaterEqual;
@@ -291,16 +291,16 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
   [[nodiscard]] constexpr auto getD() const -> PtrVector<int64_t> {
     return static_cast<const T *>(this)->getDImpl();
   }
-  constexpr auto getV(Row r, Col c) -> MutDensePtrMatrix<int64_t> {
+  constexpr auto getV(Row<> r, Col<> c) -> MutDensePtrMatrix<int64_t> {
     return static_cast<T *>(this)->getVImpl(r, c);
   }
-  constexpr auto getU(Row r, Col c) -> MutDensePtrMatrix<int64_t> {
+  constexpr auto getU(Row<> r, Col<> c) -> MutDensePtrMatrix<int64_t> {
     return static_cast<T *>(this)->getUImpl(r, c);
   }
-  constexpr auto getD(Row n) -> MutPtrVector<int64_t> {
+  constexpr auto getD(Row<> n) -> MutPtrVector<int64_t> {
     return static_cast<T *>(this)->getDImpl(n);
   }
-  constexpr void setURank(Row r) { static_cast<T *>(this)->setURankImpl(r); }
+  constexpr void setURank(Row<> r) { static_cast<T *>(this)->setURankImpl(r); }
   [[nodiscard]] constexpr auto getURank() const -> ptrdiff_t {
     return static_cast<const T *>(this)->getURankImpl();
   }
@@ -320,13 +320,13 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
     const ptrdiff_t numConExplicit = ptrdiff_t(A.numRow()) + 1;
     const ptrdiff_t numConTotal = numConExplicit + numNonNegative;
     numVar = ptrdiff_t(A.numCol());
-    Row rowV = Row{numVar + numConTotal};
-    Col colV = Col{2 * numConTotal};
+    Row rowV = Row<>{numVar + numConTotal};
+    Col colV = Col<>{2 * numConTotal};
     /// B.size() == (A.numCol() + A.numRow() + 1 + numNonNegative) x
     ///             (2 * (A.numRow() + 1 + numNonNegative))
     ///
     auto B = getV(rowV, colV);
-    std::fill_n(B.begin(), B.numRow() * B.numCol(), 0);
+    std::fill_n(B.begin(), ptrdiff_t(B.numRow()) * ptrdiff_t(B.numCol()), 0);
     B[0, 0] = 1;
     // B = [ A_0 A_1
     //        0   I  ]
@@ -354,10 +354,10 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
     const ptrdiff_t numInEqConTotal = numInEqConExplicit + numNonNegative;
     const ptrdiff_t numEqCon = ptrdiff_t(E.numRow());
     numVar = ptrdiff_t(A.numCol());
-    Row rowV = Row{numVar + numInEqConTotal};
-    Col colV = Col{2 * numInEqConTotal + numEqCon};
+    Row rowV = Row<>{numVar + numInEqConTotal};
+    Col colV = Col<>{2 * numInEqConTotal + numEqCon};
     auto B = getV(rowV, colV);
-    std::fill_n(B.begin(), B.numRow() * B.numCol(), 0);
+    std::fill_n(B.begin(), ptrdiff_t(B.numRow()) * ptrdiff_t(B.numCol()), 0);
     B[0, 0] = 1;
     // B is `A` augmented with the implicit non-negative constraints
     // B = [ A_0 A_1
@@ -386,10 +386,11 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
   [[nodiscard]] static constexpr auto
   memoryNeededNonNegative(PtrMatrix<int64_t> A, EmptyMatrix<int64_t>,
                           ptrdiff_t numNonNegative) -> ptrdiff_t {
-    return memoryNeededImpl(A.numRow(), A.numCol(), Row{0}, ++numNonNegative);
+    return memoryNeededImpl(A.numRow(), A.numCol(), Row<>{0}, ++numNonNegative);
   }
   [[nodiscard]] inline static constexpr auto
-  memoryNeededImpl(Row Ar, Col Ac, Row Er, ptrdiff_t numPos) -> ptrdiff_t {
+  memoryNeededImpl(Row<> Ar, Col<> Ac, Row<> Er, ptrdiff_t numPos)
+    -> ptrdiff_t {
     // alternative:
     ptrdiff_t numInEqConTotal = ptrdiff_t(Ar) + numPos;
     ptrdiff_t colV = (numInEqConTotal << 1) + ptrdiff_t(Er);
@@ -399,7 +400,7 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
   [[nodiscard]] static constexpr auto
   memoryNeededNonNegative(PtrMatrix<int64_t> A, ptrdiff_t numNonNegative)
     -> ptrdiff_t {
-    return memoryNeededImpl(A.numRow(), A.numCol(), Row{0}, ++numNonNegative);
+    return memoryNeededImpl(A.numRow(), A.numCol(), Row<>{0}, ++numNonNegative);
   }
   [[nodiscard]] static constexpr auto
   memoryNeededNonNegative(PtrMatrix<int64_t> A, PtrMatrix<int64_t> E,
@@ -410,11 +411,11 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
   [[nodiscard]] static constexpr auto memoryNeeded(PtrMatrix<int64_t> A,
                                                    EmptyMatrix<int64_t>,
                                                    bool pos0) -> ptrdiff_t {
-    return memoryNeededImpl(A.numRow(), A.numCol(), Row{0}, pos0);
+    return memoryNeededImpl(A.numRow(), A.numCol(), Row<>{0}, pos0);
   }
   [[nodiscard]] static constexpr auto memoryNeeded(PtrMatrix<int64_t> A,
                                                    bool pos0) -> ptrdiff_t {
-    return memoryNeededImpl(A.numRow(), A.numCol(), Row{0}, pos0);
+    return memoryNeededImpl(A.numRow(), A.numCol(), Row<>{0}, pos0);
   }
   [[nodiscard]] static constexpr auto memoryNeeded(PtrMatrix<int64_t> A,
                                                    PtrMatrix<int64_t> E,
@@ -425,10 +426,10 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
                       bool pos0) {
     const ptrdiff_t numCon = ptrdiff_t(A.numRow()) + pos0;
     numVar = ptrdiff_t(A.numCol());
-    Row rowV = numVar + numCon;
-    Col colV = 2 * numCon;
+    Row<> rowV = {numVar + numCon};
+    Col<> colV = {2 * numCon};
     auto B = getV(rowV, colV);
-    std::fill_n(B.begin(), B.numRow() * B.numCol(), 0);
+    std::fill_n(B.begin(), ptrdiff_t(B.numRow()) * ptrdiff_t(B.numCol()), 0);
     B[0, 0] = pos0;
     // V = [A' 0
     //      S  I]
@@ -449,8 +450,8 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
     const ptrdiff_t numInEqCon = ptrdiff_t(A.numRow()) + pos0;
     numVar = ptrdiff_t(A.numCol());
     const ptrdiff_t numEqCon = ptrdiff_t(E.numRow());
-    Row rowV = Row{numVar + numInEqCon};
-    Col colV = Col{2 * numInEqCon + numEqCon};
+    Row rowV = Row<>{numVar + numInEqCon};
+    Col colV = Col<>{2 * numInEqCon + numEqCon};
     auto B = getV(rowV, colV);
     B << 0;
     // V = [A' E' 0
@@ -477,7 +478,7 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
     U.diag() << 1;
     // We will have query of the form Ax = q;
     simplifySystemsImpl({B, U});
-    while ((R) && allZero(B[R - 1, _])) --R;
+    while ((R) && allZero(B[ptrdiff_t(R) - 1, _])) --R;
     setURank(R);
     ptrdiff_t numColB = ptrdiff_t(B.numCol());
     // upper bounded by numVar + numInEq x numVar + numInEq
@@ -490,7 +491,7 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
     auto Vt{identity<int64_t>(alloc, numColB)};
     // Ht.numRow() > Ht.numCol() = R
     // (2*numInEq + numEq) x R
-    auto Ht = matrix<int64_t>(alloc, Row{numColB}, Col{ptrdiff_t(R)});
+    auto Ht = matrix<int64_t>(alloc, Row<>{numColB}, Col<>{ptrdiff_t(R)});
     Ht << B[_(0, R), _].transpose();
     solveSystem(Ht, Vt);
     // upper bounded by numVar + numInEq
@@ -511,7 +512,7 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
     if (d.empty()) {
       if (!allZero(b[_(V.numRow(), end)])) return false;
       Col oldn = V.numCol();
-      auto H{matrix<int64_t>(&alloc, V.numRow(), oldn + 1)};
+      auto H{matrix<int64_t>(&alloc, V.numRow(), ++auto{oldn})};
       // IntMatrix H{V.numRow(), oldn + 1};
       H[_, _(0, oldn)] << V;
       H[_, oldn] << -b;
@@ -521,7 +522,7 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
       return true;
     }
     // Column rank deficient case
-    Row numSlack = V.numRow() - numEquations;
+    Row numSlack = Row<>{ptrdiff_t(V.numRow()) - numEquations};
     // Vector<int64_t> dinv = d; // copy
     // We represent D martix as a vector, and multiply the lcm to the
     // linear equation to avoid store D^(-1) as rational type
@@ -530,15 +531,15 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
     b2 << -b * lcmD / d;
     // Vector<int64_t> b2 = -b * Dlcm / d;
     ptrdiff_t numRowTrunc = ptrdiff_t(U.numRow());
-    auto c{vector<int64_t>(&alloc, ptrdiff_t(V.numRow() - numEquations))};
+    auto c{vector<int64_t>(&alloc, ptrdiff_t(V.numRow()) - numEquations)};
     c << V[_(numEquations, end), _(begin, numRowTrunc)] * b2;
     // Vector<int64_t> c = V(_(numEquations, end), _(begin, numRowTrunc)) *
     // b2;
-    auto dimNS = V.numCol() - numRowTrunc;
+    ptrdiff_t dimNS = ptrdiff_t(V.numCol()) - numRowTrunc;
     // expand W stores [c -JV2 JV2]
     //  we use simplex to solve [-JV2 JV2][y2+ y2-]' <= JV1D^(-1)Uq
     // where y2 = y2+ - y2-
-    auto expandW{matrix<int64_t>(&alloc, Row{numSlack}, Col{dimNS * 2 + 1})};
+    auto expandW{matrix<int64_t>(&alloc, numSlack, Col<>{dimNS * 2 + 1})};
     for (ptrdiff_t i = 0; i < numSlack; ++i) {
       expandW[i, 0] = c[i];
       // expandW(i, 0) *= Dlcm;
@@ -564,7 +565,7 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
     -> bool {
     auto V = getV();
     if (!allZero(b[_(V.numRow(), end)])) return false;
-    auto H = matrix<int64_t>(alloc, V.numRow(), V.numCol() + 1);
+    auto H = matrix<int64_t>(alloc, V.numRow(), ++auto{V.numCol()});
     Col oldn = V.numCol();
     H[_, _(0, oldn)] << V;
     // H.numRow() == b.size(), because we're only here if dimD == 0,
@@ -580,7 +581,7 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
     -> bool {
     auto V = getV();
     auto d = getD();
-    Row numSlack = V.numRow() - numEquations;
+    Row numSlack = Row<>{ptrdiff_t(V.numRow()) - numEquations};
     auto dinv = vector<int64_t>(alloc, d.size());
     dinv << d; // copy
     // We represent D martix as a vector, and multiply the lcm to the
@@ -592,13 +593,13 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
       b[i] *= x;
     }
     ptrdiff_t numRowTrunc = getURank();
-    auto c = vector<int64_t>(alloc, unsigned(V.numRow() - numEquations));
+    auto c = vector<int64_t>(alloc, ptrdiff_t(V.numRow()) - numEquations);
     c << V[_(numEquations, end), _(begin, numRowTrunc)] * b;
-    auto dimNS = V.numCol() - numRowTrunc;
+    auto dimNS = ptrdiff_t(V.numCol()) - numRowTrunc;
     // expand W stores [c -JV2 JV2]
     //  we use simplex to solve [-JV2 JV2][y2+ y2-]' <= JV1D^(-1)Uq
     // where y2 = y2+ - y2-
-    auto expandW = matrix<int64_t>(alloc, numSlack, dimNS * 2 + 1);
+    auto expandW = matrix<int64_t>(alloc, numSlack, Col<>{dimNS * 2 + 1});
     for (ptrdiff_t i = 0; i < numSlack; ++i) {
       expandW[i, 0] = c[i];
       // expandW(i, 0) *= Dlcm;
@@ -615,7 +616,7 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
                                             PtrVector<int64_t> query) const
     -> bool {
     auto U = getU();
-    auto b = vector<int64_t>(&alloc, unsigned(U.numRow()));
+    auto b = vector<int64_t>(&alloc, ptrdiff_t(U.numRow()));
     b << U[_, _(begin, query.size())] * query;
     return getD().size() ? greaterEqualRankDeficient(&alloc, b)
                          : greaterEqualFullRank(&alloc, b);
@@ -625,7 +626,7 @@ struct LinearSymbolicComparator
   : public BaseSymbolicComparator<LinearSymbolicComparator> {
   using Base = BaseSymbolicComparator<LinearSymbolicComparator>;
   using Base::init;
-  using Matrix = math::ManagedArray<int64_t, DenseDims>;
+  using Matrix = math::ManagedArray<int64_t, DenseDims<>>;
   [[no_unique_address]] Matrix U;
   [[no_unique_address]] Matrix V;
   [[no_unique_address]] Vector<int64_t> d;
@@ -642,7 +643,7 @@ struct LinearSymbolicComparator
     return d;
   }
 
-  constexpr void setURankImpl(Row r) {
+  constexpr void setURankImpl(Row<> r) {
     V.truncate(r);
     U.truncate(r);
   }
@@ -655,18 +656,18 @@ struct LinearSymbolicComparator
   [[nodiscard]] constexpr auto getURankImpl() const -> ptrdiff_t {
     return ptrdiff_t(U.numRow());
   }
-  constexpr auto getUImpl(Row r, Col c) -> MutDensePtrMatrix<int64_t> {
+  constexpr auto getUImpl(Row<> r, Col<> c) -> MutDensePtrMatrix<int64_t> {
     U.resizeForOverwrite(r, c);
     return U;
   }
-  constexpr auto getVImpl(Row r, Col c) -> MutDensePtrMatrix<int64_t> {
+  constexpr auto getVImpl(Row<> r, Col<> c) -> MutDensePtrMatrix<int64_t> {
     V.setSize(r, c);
-    U.setSize(r, Col{ptrdiff_t(r)});
+    U.setSize(r, Col<>{ptrdiff_t(r)});
     return V;
   }
-  constexpr auto getDImpl(Row N) -> MutPtrVector<int64_t> {
+  constexpr auto getDImpl(Row<> N) -> MutPtrVector<int64_t> {
     d.resizeForOverwrite(ptrdiff_t(N));
-    V.resizeForOverwrite(Row{ptrdiff_t{V.numCol()}});
+    V.resizeForOverwrite(Row<>{ptrdiff_t{V.numCol()}});
     return d;
   }
   static constexpr auto construct(PtrMatrix<int64_t> Ap, EmptyMatrix<int64_t>,
@@ -716,15 +717,12 @@ struct PtrSymbolicComparator
   using Base = BaseSymbolicComparator<PtrSymbolicComparator>;
   using Base::init;
   int64_t *mem;
-  // unsigned int numVar;
-  // unsigned int numInEq;
-  // unsigned int numEq;
-  unsigned int rankU{0};
-  unsigned int colU{0};
-  unsigned int dimV{0};
-  unsigned int dimD{0};
+  ptrdiff_t rankU{0};
+  ptrdiff_t colU{0};
+  ptrdiff_t dimV{0};
+  ptrdiff_t dimD{0};
 
-  constexpr void setURankImpl(Row r) { rankU = unsigned(r); }
+  constexpr void setURankImpl(Row<> r) { rankU = ptrdiff_t(r); }
   [[nodiscard]] constexpr auto getURankImpl() const -> ptrdiff_t {
     return rankU;
   }
@@ -741,18 +739,15 @@ struct PtrSymbolicComparator
   // }
   // NOLINTNEXTLINE(readability-make-member-function-const)
   constexpr auto getUImpl() -> MutDensePtrMatrix<int64_t> {
-    return {mem, DenseDims{rankU, colU}};
+    return {mem, DenseDims<>{{rankU}, {colU}}};
   }
   // A = V
   // H = A
   // H.truncate(Row());
   // size is H.numCol() * H.numCol()
-  [[nodiscard]] constexpr auto numVRows() const -> unsigned {
-    return dimD ? dimV : rankU;
-  }
   // offset by (numVar + numInEq)*(numVar + numInEq)
   constexpr auto getVImpl() -> MutDensePtrMatrix<int64_t> {
-    return {getUImpl().end(), DenseDims{numVRows(), dimV}};
+    return {getUImpl().end(), DenseDims<>{numVRows(), Col<>{dimV}}};
   }
   // size D
   constexpr auto getDImpl() -> MutPtrVector<int64_t> {
@@ -760,24 +755,25 @@ struct PtrSymbolicComparator
     return {getVImpl().end(), dimD};
   }
   [[nodiscard]] constexpr auto getUImpl() const -> DensePtrMatrix<int64_t> {
-    return {mem, DenseDims{rankU, colU}};
+    return {mem, DenseDims<>{Row<>{rankU}, Col<>{colU}}};
   }
   [[nodiscard]] constexpr auto getVImpl() const -> DensePtrMatrix<int64_t> {
-    return {mem + ptrdiff_t(rankU) * colU, DenseDims{numVRows(), dimV}};
+    return {mem + ptrdiff_t(rankU) * colU,
+            DenseDims<>{numVRows(), Col<>{dimV}}};
   }
   [[nodiscard]] constexpr auto getDImpl() const -> PtrVector<int64_t> {
     return {mem + ptrdiff_t(rankU) * colU + ptrdiff_t(numVRows()) * dimV, dimD};
   }
   // constexpr auto getUImpl(Row r, Col c) -> MutPtrMatrix<int64_t> {}
-  constexpr auto getVImpl(Row r, Col c) -> MutDensePtrMatrix<int64_t> {
-    colU = rankU = unsigned(r);
-    dimV = unsigned(c);
+  constexpr auto getVImpl(Row<> r, Col<> c) -> MutDensePtrMatrix<int64_t> {
+    colU = rankU = ptrdiff_t(r);
+    dimV = ptrdiff_t(c);
     getUImpl() << 0;
     dimD = 0;
     return getVImpl();
   }
-  constexpr auto getDImpl(Row r) -> MutPtrVector<int64_t> {
-    dimD = unsigned(r);
+  constexpr auto getDImpl(Row<> r) -> MutPtrVector<int64_t> {
+    dimD = ptrdiff_t(r);
     invariant(dimD > 0);
     return getDImpl();
   }
@@ -825,6 +821,10 @@ struct PtrSymbolicComparator
   };
 
 private:
+  [[nodiscard]] constexpr auto numVRows() const -> Row<> {
+    return {ptrdiff_t(dimD ? dimV : rankU)};
+  }
+
   constexpr PtrSymbolicComparator(int64_t *p) : mem(p) {}
 };
 
@@ -849,7 +849,7 @@ constexpr void moveEqualities(DenseMatrix<int64_t> &A, math::IntMatrix<> &E,
       }
       if (isNeg && C.equalNegative(A[i, _], A[o, _])) {
         ptrdiff_t e = ptrdiff_t(E.numRow());
-        E.resize(e + 1, numVar);
+        E.resize(Row<>{e + 1}, Col<>{numVar});
         for (ptrdiff_t v = 0; v < numVar; ++v) E[e, v] = A[i, v];
         eraseConstraint(A, i, o);
         break;

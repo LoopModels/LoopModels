@@ -30,12 +30,12 @@ inline auto operator<<(llvm::raw_ostream &os, PtrMatrix<T> A)
   return os << sos.str();
 }
 template <typename T>
-inline auto operator<<(llvm::raw_ostream &os, Array<T, SquareDims> A)
+inline auto operator<<(llvm::raw_ostream &os, Array<T, SquareDims<>> A)
   -> llvm::raw_ostream & {
   return os << PtrMatrix<T>{A};
 }
 template <typename T>
-inline auto operator<<(llvm::raw_ostream &os, Array<T, DenseDims> A)
+inline auto operator<<(llvm::raw_ostream &os, Array<T, DenseDims<>> A)
   -> llvm::raw_ostream & {
   return os << PtrMatrix<T>{A};
 }

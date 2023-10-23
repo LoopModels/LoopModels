@@ -127,7 +127,7 @@ class Addr : public Instruction {
     return {syms + numDim, numDynSym};
   }
   [[nodiscard]] constexpr auto offsetMatrix() -> MutDensePtrMatrix<int64_t> {
-    return {offSym, DenseDims{getArrayDim(), numDynSym}};
+    return {offSym, DenseDims<>{{getArrayDim()}, {numDynSym}}};
   }
 
 public:
@@ -156,7 +156,7 @@ public:
     unsigned oldNatDepth = getNaturalDepth();
     DensePtrMatrix<int64_t> M{indexMatrix()}; // aD x nLma
     MutPtrVector<int64_t> offsetOmega{getOffsetOmega()};
-    unsigned depth = this->naturalDepth = uint8_t(Pinv.numCol());
+    unsigned depth = this->naturalDepth = uint8_t(ptrdiff_t(Pinv.numCol()));
     MutDensePtrMatrix<int64_t> mStar{indexMatrix()};
     // M is implicitly padded with zeros, newNumLoops >= oldNumLoops
     invariant(maxDepth >= naturalDepth);
@@ -176,7 +176,7 @@ public:
     // update `M` into `mStar`
     // mStar << M * Pinv(_(0, oldNumLoops), _);
     MutPtrVector<int64_t> buff{getFusionOmega()[_(0, math::last)]};
-    invariant(buff.size(), unsigned(depth));
+    invariant(buff.size(), ptrdiff_t(depth));
     unsigned newNatDepth = 0;
     for (ptrdiff_t d = getArrayDim(); d--;) {
       buff << 0;
@@ -304,7 +304,7 @@ public:
   /// copies `o` and decrements the last element
   /// it decrements, as we iterate in reverse order
   constexpr void setFusionOmega(MutPtrVector<int> o) {
-    invariant(o.size(), getCurrentDepth() + 1);
+    invariant(o.size(), ptrdiff_t(getCurrentDepth()) + 1);
     std::copy_n(o.begin(), getCurrentDepth(), getFusionOmega().begin());
     getFusionOmega().back() = o.back()--;
   }
@@ -475,11 +475,11 @@ public:
   }
   /// indexMatrix() -> arrayDim() x getNumLoops()
   [[nodiscard]] constexpr auto indexMatrix() -> MutDensePtrMatrix<int64_t> {
-    return {indMatPtr(), DenseDims{getArrayDim(), getNaturalDepth()}};
+    return {indMatPtr(), DenseDims<>{{getArrayDim()}, {getNaturalDepth()}}};
   }
   /// indexMatrix() -> arrayDim() x getNumLoops()
   [[nodiscard]] constexpr auto indexMatrix() const -> DensePtrMatrix<int64_t> {
-    return {indMatPtr(), DenseDims{getArrayDim(), getNaturalDepth()}};
+    return {indMatPtr(), DenseDims<>{{getArrayDim()}, {getNaturalDepth()}}};
   }
   [[nodiscard]] constexpr auto getFusionOmega() -> MutPtrVector<int64_t> {
     unsigned L = getCurrentDepth() + 1;
@@ -495,7 +495,7 @@ public:
   }
   [[nodiscard]] constexpr auto offsetMatrix() const -> DensePtrMatrix<int64_t> {
     invariant(offSym != nullptr || numDynSym == 0);
-    return {offSym, DenseDims{getArrayDim(), numDynSym}};
+    return {offSym, DenseDims<>{{getArrayDim()}, {numDynSym}}};
   }
   [[nodiscard]] constexpr auto getAffineLoop() -> Valid<poly::Loop> {
     return loop;
