@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Containers/Pair.hpp"
+#include "Math/Constructors.hpp"
 #include <Containers/BitSets.hpp>
 #include <Math/Array.hpp>
 #include <Math/Exp.hpp>
@@ -11,22 +13,38 @@ namespace poly::CostModeling {
 using math::AbstractVector, math::AbstractMatrix, math::DensePtrMatrix, math::_;
 using utils::Optional;
 
-// Order is outermost -> innermost
-// Costs are relative to Scalar, i.e. scalar == 1
-struct MemoryCosts {
-  unsigned contiguous;    // vload/vstore
-  unsigned discontiguous; // gather/scatter
-};
-struct VectorizationFactor {
-  unsigned l2factor;
-  unsigned index; // outermost == 0
+/// Gives counts for the different kinds of costs.
+struct LoopCostCounts {
+  uint32_t memory;
+  uint32_t ascend : 1; // ascend means come out of loop
+  uint32_t compute : 31;
 };
 
+/// Order is outermost -> innermost
+/// Costs are relative to Scalar, i.e. scalar == 1
+struct MemoryCosts {
+  uint32_t contiguous;    // vload/vstore
+  uint32_t discontiguous; // gather/scatter
+};
+struct VectorizationFactor {
+  uint32_t l2factor;
+  uint32_t index; // outermost == 0
+};
+
+/// TODO: maybe two `uint8_t`s + `uint16_t`
+/// We only get up to 16 dimensions, but that is already excessive
+/// One `uint8_t` gives contig axis, the other the index into
+/// the memory cost kind. Thus, the struct could differentiate
+/// loads vs stores by itself, while also differentiating
+/// between eltypes.
+/// Another option is to store individual `MemoryCosts`,
+/// so that we can aggregate/sum up.
 struct OrthogonalAxes {
-  uint32_t data;
-  [[nodiscard]] constexpr auto contigAxis() const -> uint32_t {
-    return data & 0xff;
-  }
+  uint32_t contig : 8;
+  uint32_t indep : 24;
+  // [[nodiscard]] constexpr auto contigAxis() const -> uint32_t {
+  //   return data & 0xff;
+  // }
   // mask containing `0` for dependent axes, 1s for independent
   // should contain `0` for all non-existent loops, e.g.
   // for (i = I, j = J, k = K, l = L) {
@@ -35,12 +53,12 @@ struct OrthogonalAxes {
   // }
   // The mask should equal (1<<0) | (1<<2)  (for the i and k).
   // Only loops it is nested in that it doesn't depend on count.
-  [[nodiscard]] constexpr auto indepAxes() const -> uint32_t {
-    return data >> 8;
-  };
+  // [[nodiscard]] constexpr auto indepAxes() const -> uint32_t {
+  //   return data >> 8;
+  // };
 };
 constexpr auto operator&(OrthogonalAxes a, OrthogonalAxes b) -> uint32_t {
-  return a.indepAxes() & b.indepAxes();
+  return a.indep & b.indep;
 }
 constexpr auto cost(const AbstractMatrix auto &invunrolls,
                     uint32_t independentAxes)
@@ -63,12 +81,12 @@ constexpr auto cost(MemoryCosts mc, const AbstractMatrix auto &invunrolls,
                     VectorizationFactor vfi, OrthogonalAxes orth)
   -> utils::eltype_t<decltype(invunrolls)> {
 
-  utils::eltype_t<decltype(invunrolls)> c{cost(invunrolls, orth.indepAxes())};
-  if ((vfi.index < 32) && !(orth.indepAxes() & (1 << vfi.index))) {
+  utils::eltype_t<decltype(invunrolls)> c{cost(invunrolls, orth.indep)};
+  if ((vfi.index < 32) && !(orth.indep & (1 << vfi.index))) {
     // depends vectorized index
-    if (vfi.index == orth.contigAxis()) {
+    if (vfi.index == orth.contig) {
       c *= mc.contiguous;
-    } else if (orth.contigAxis() >= 32) {
+    } else if (orth.contig >= 32) {
       c *= mc.discontiguous;
     } else {
       // Discontiguous vector load.
@@ -85,9 +103,8 @@ constexpr auto cost(MemoryCosts mc, const AbstractMatrix auto &invunrolls,
       // We divide by `u[contig]`, as it is now accounted for
       // So we have
       // max(v/u, 1) + u*log2(v) + log2(max(v/u ,1))*u
-      utils::eltype_t<decltype(invunrolls)> iu{
-        invunrolls[0, orth.contigAxis()]},
-        u{invunrolls[1, orth.contigAxis()]},
+      utils::eltype_t<decltype(invunrolls)> iu{invunrolls[0, orth.contig]},
+        u{invunrolls[1, orth.contig]},
         mr{math::smax((1 << vfi.l2factor) * iu, 1)};
       utils::invariant(iu == 1 / u);
       c *= math::smin(mc.contiguous * mr + u * (vfi.l2factor + log2(mr)),
@@ -152,6 +169,9 @@ constexpr auto cost(MemoryCosts mc, const AbstractMatrix auto &invunrolls,
   // orth-axis implementation above.
   return c * cost(mc, invunrolls, vfi, orth);
 }
+
+constexpr auto calcLeafCosts(const AbstractMatrix auto &invunrolls);
+
 // We need to define an unroll ordering.
 struct RegisterUseByUnroll {
   math::PtrVector<std::array<uint32_t, 2>> masks; // coef, mask pairs
@@ -393,17 +413,37 @@ constexpr auto registerPressure(const AbstractMatrix auto &invunrolls,
 ///
 /// ///
 class LoopTreeCostFn {
+  math::PtrVector<LoopCostCounts> cost_counts;
+  math::PtrVector<containers::Pair<OrthogonalAxes, MemoryCosts>> orth_axes;
+  math::PtrVector<std::array<uint32_t, 2>> compute_independence;
+  math::PtrVector<uint32_t> leaf_reductions;
+  VectorizationFactor vf;
+  ptrdiff_t max_depth;
 
 public:
-    // this is a vector fun, where indexing may do non-trivial computation
-    // also, mapping from this vector to loop position isn't trivial either
-    // hence, we use a 2 x max_depth matrix that we copy into as we descend
-    // (and pop from as we ascend). Row `0` is for inverse values,
-    // and row `1` for direct values.
-    // Inverses are favored as our costs fns use them more often. 
-  constexpr auto operator()(const AbstractVector auto &x) const { 
-
-      return 0.0;
+  // this is a vector fun, where indexing may do non-trivial computation
+  // also, mapping from this vector to loop position isn't trivial either
+  // hence, we use a 2 x max_depth matrix that we copy into as we descend
+  // (and pop from as we ascend). Row `0` is for inverse values,
+  // and row `1` for direct values.
+  // Inverses are favored as our costs fns use them more often.
+  constexpr auto operator()(alloc::Arena<> alloc,
+                            const AbstractVector auto &x) const {
+    using T = utils::eltype_t<decltype(x)>;
+    math::MutArray<T, math::DenseDims<2>> invunrolls{
+      math::matrix<T>(alloc, math::Row<2>{}, math::Col<>{max_depth})};
+    ptrdiff_t i = 0, depth = 0;
+    bool ascended = false;
+    T cost{};
+    for (auto [memory, ascend, compute] : cost_counts) {
+      if ((!ascended) & bool(ascend)) {
+        // we're now in a leaf, meaning we must consider register costs,
+        // as well as reduction costs and latency of reduction chains.
+        calcLeafCosts(invunrolls);
+      }
+      ascended = ascend;
+    }
+    return cost;
   }
 };
 
