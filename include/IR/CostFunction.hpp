@@ -13,12 +13,20 @@ namespace poly::CostModeling {
 using math::AbstractVector, math::AbstractMatrix, math::DensePtrMatrix, math::_;
 using utils::Optional;
 
-/// Gives counts for the different kinds of costs.
+/// POD. Gives counts for the different kinds of costs.
+/// Fields:
+/// `int16_t trip_count`- we're unlikely to change decisions for >32k
+///         negative indicates compile-time known size.
+/// `uint16_t memory` number of mem sets.
+/// `bool exit` loop exit/entry.
+/// `uint31_t compute` number of compute sets.
 struct LoopCostCounts {
-  uint32_t memory;
-  uint32_t ascend : 1; // ascend means come out of loop
+  int16_t trip_count; /// we're unlikely to make different decisions for >65k
+  uint16_t memory;
+  uint32_t exit : 1; /// ascend means come out of loop
   uint32_t compute : 31;
 };
+static_assert(sizeof(LoopCostCounts) == 8);
 
 /// Order is outermost -> innermost
 /// Costs are relative to Scalar, i.e. scalar == 1
@@ -60,14 +68,13 @@ struct OrthogonalAxes {
 constexpr auto operator&(OrthogonalAxes a, OrthogonalAxes b) -> uint32_t {
   return a.indep & b.indep;
 }
-constexpr auto cost(const AbstractMatrix auto &invunrolls,
-                    uint32_t independentAxes)
+constexpr auto cost(const AbstractMatrix auto &invunrolls, uint32_t indepAxes)
   -> utils::eltype_t<decltype(invunrolls)> {
   utils::eltype_t<decltype(invunrolls)> c{};
-  if (independentAxes) {
-    uint32_t tz = std::countr_zero(independentAxes);
+  if (indepAxes) {
+    uint32_t tz = std::countr_zero(indepAxes);
     c = invunrolls[0, tz++];
-    for (uint32_t d = independentAxes >> tz, i = tz; d; d >>= tz, i += tz) {
+    for (uint32_t d = indepAxes >> tz, i = tz; d; d >>= tz, i += tz) {
       tz = std::countr_zero(d);
       c *= invunrolls[0, i + tz++];
     }
@@ -77,8 +84,8 @@ constexpr auto cost(const AbstractMatrix auto &invunrolls,
 // costs is an array of length two.
 // memory costs, unnormalized by `prod(unrolls)`
 // `invunrolls` is a matrix, row-0 are the inverse unrolls, row-1 unrolls.
-constexpr auto cost(MemoryCosts mc, const AbstractMatrix auto &invunrolls,
-                    VectorizationFactor vfi, OrthogonalAxes orth)
+constexpr auto cost(const AbstractMatrix auto &invunrolls, OrthogonalAxes orth,
+                    MemoryCosts mc, VectorizationFactor vfi)
   -> utils::eltype_t<decltype(invunrolls)> {
 
   utils::eltype_t<decltype(invunrolls)> c{cost(invunrolls, orth.indep)};
@@ -120,8 +127,8 @@ constexpr auto cost(MemoryCosts mc, const AbstractMatrix auto &invunrolls,
 /// more than one array dimension.
 /// For these, we use the incorrect formula:
 ///
-constexpr auto cost(MemoryCosts mc, const AbstractMatrix auto &invunrolls,
-                    VectorizationFactor vfi, OrthogonalAxes orth,
+constexpr auto cost(const AbstractMatrix auto &invunrolls, OrthogonalAxes orth,
+                    MemoryCosts mc, VectorizationFactor vfi,
                     DensePtrMatrix<int64_t> inds)
   -> utils::eltype_t<decltype(invunrolls)> {
   utils::eltype_t<decltype(invunrolls)> c{1};
@@ -199,6 +206,20 @@ constexpr auto registerPressure(const AbstractMatrix auto &invunrolls,
   // the stack load+store combination.
   return 0.25 * math::softplus(8.0 * (acc - r.register_count));
 }
+
+auto memcosts(
+  const AbstractMatrix auto &invunrolls, VectorizationFactor vf,
+  math::PtrVector<containers::Pair<OrthogonalAxes, MemoryCosts>> orth_axes) {
+  utils::eltype_t<decltype(invunrolls)> ic{};
+  for (auto [oa, mc] : orth_axes) ic += cost(invunrolls, oa, vf, mc);
+  return ic;
+}
+auto compcosts(const AbstractMatrix auto &invunrolls,
+               math::PtrVector<std::array<uint32_t, 2>> compindep) {
+  utils::eltype_t<decltype(invunrolls)> cc{};
+  for (auto [oa, sf] : compindep) cc += cost(invunrolls, oa) * sf;
+  return cc;
+}
 // We then additionally need a throughput vs latency estimator, and code for
 // handling the tail.
 // Standard throughput is fairly trivial/should be a vector sum,
@@ -211,7 +232,7 @@ constexpr auto registerPressure(const AbstractMatrix auto &invunrolls,
 /// cthroughput = I*J*(Ui*Uj*C_{t,fma}) / (Ui*Uj) + I*(Ui*C_{t,add}*(Uj-1)) /
 /// Ui clatency = I*J*C_{l,fma}/smin(Ui*Uj, C_{l,fma}/C_{t,fma}) +
 ///    I*C_{l,add}*log2(Uj)
-
+///
 /// Here, we define a cost fn that can be optimized to produce
 /// vectorization and unrolling factors.
 /// We assemble all addrs into a vector, sorted by depth first traversal order
@@ -416,7 +437,7 @@ class LoopTreeCostFn {
   math::PtrVector<LoopCostCounts> cost_counts;
   math::PtrVector<containers::Pair<OrthogonalAxes, MemoryCosts>> orth_axes;
   math::PtrVector<std::array<uint32_t, 2>> compute_independence;
-  math::PtrVector<uint32_t> leaf_reductions;
+  math::PtrVector<containers::Pair<RegisterUseByUnroll, uint32_t>> leafs;
   VectorizationFactor vf;
   ptrdiff_t max_depth;
 
@@ -432,18 +453,41 @@ public:
     using T = utils::eltype_t<decltype(x)>;
     math::MutArray<T, math::DenseDims<2>> invunrolls{
       math::matrix<T>(alloc, math::Row<2>{}, math::Col<>{max_depth})};
-    ptrdiff_t i = 0, depth = 0;
-    bool ascended = false;
-    T cost{};
-    for (auto [memory, ascend, compute] : cost_counts) {
-      if ((!ascended) & bool(ascend)) {
-        // we're now in a leaf, meaning we must consider register costs,
-        // as well as reduction costs and latency of reduction chains.
-        calcLeafCosts(invunrolls);
+    ptrdiff_t i = 0, depth = 0, mi = 0, ci = 0, li = 0;
+    double tc = 1;
+    // we evaluate every iteration
+    bool exiting = false;
+    T c{};
+    for (auto [trip_count, memory, exit, compute] : cost_counts) {
+      T ic{};
+      if (!exit) {
+        // we're in a header
+        invunrolls[1, depth] = x[i++];
+        invunrolls[0, depth] = 1 / invunrolls[1, depth];
+        ++depth;
+        tc *= trip_count;
       }
-      ascended = ascend;
+      T mc{memcosts(invunrolls, vf, orth_axes[_(0, memory) + mi])};
+      mi += memory;
+      T cc{compcosts(invunrolls, compute_independence[_(0, compute) + ci])};
+      ci += compute;
+      if (exit) {
+        if (exiting) {
+        } else {
+          auto [reguse, lreduct] = leafs[li++];
+          // we're now in a leaf, meaning we must consider register costs,
+          // as well as reduction costs and latency of reduction chains.
+          auto [lrtp, ll] = calcLeafCosts(invunrolls[_, depth]) * lreduct;
+          ic += registerPressure(invunrolls, reguse);
+        }
+        --depth;
+        tc /= trip_count;
+      }
+      exiting = exit;
+      // TODO: memcost + smax(cthroughput, clatency);
+      c += tc * ic;
     }
-    return cost;
+    return c;
   }
 };
 
