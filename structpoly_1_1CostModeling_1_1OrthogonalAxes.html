@@ -66,30 +66,27 @@ $(function() {
 </div><!-- top -->
 <div class="header">
   <div class="summary">
-<a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-attribs">Public Attributes</a> &#124;
 <a href="structpoly_1_1CostModeling_1_1OrthogonalAxes-members.html">List of all members</a>  </div>
   <div class="headertitle">
 <div class="title">poly::CostModeling::OrthogonalAxes Struct Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
+
+<p><code>#include &lt;<a class="el" href="CostFunction_8hpp_source.html">CostFunction.hpp</a>&gt;</code></p>
 <table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
-Public Member Functions</h2></td></tr>
-<tr class="memitem:ae3c61409d361b68218d11aafd7d0716c"><td class="memItemLeft" align="right" valign="top"><a id="ae3c61409d361b68218d11aafd7d0716c"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>contigAxis</b> () const -&gt; uint32_t</td></tr>
-<tr class="separator:ae3c61409d361b68218d11aafd7d0716c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0d76a5ed67af9d5d06cecb973d08a191"><td class="memItemLeft" align="right" valign="top"><a id="a0d76a5ed67af9d5d06cecb973d08a191"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>indepAxes</b> () const -&gt; uint32_t</td></tr>
-<tr class="separator:a0d76a5ed67af9d5d06cecb973d08a191"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
-<tr class="memitem:ac2055d924bbd25a62447277da6a7c6b4"><td class="memItemLeft" align="right" valign="top"><a id="ac2055d924bbd25a62447277da6a7c6b4"></a>
-uint32_t&#160;</td><td class="memItemRight" valign="bottom"><b>data</b></td></tr>
-<tr class="separator:ac2055d924bbd25a62447277da6a7c6b4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad1861ea1ac6e8c2da34ed4d31c2c5342"><td class="memItemLeft" align="right" valign="top"><a id="ad1861ea1ac6e8c2da34ed4d31c2c5342"></a>
+uint32_t&#160;</td><td class="memItemRight" valign="bottom"><b>contig</b>: 8</td></tr>
+<tr class="separator:ad1861ea1ac6e8c2da34ed4d31c2c5342"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a935bc09cbc10f027c7e076a8271f1f06"><td class="memItemLeft" align="right" valign="top"><a id="a935bc09cbc10f027c7e076a8271f1f06"></a>
+uint32_t&#160;</td><td class="memItemRight" valign="bottom"><b>indep</b>: 24</td></tr>
+<tr class="separator:a935bc09cbc10f027c7e076a8271f1f06"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<hr/>The documentation for this struct was generated from the following file:<ul>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<div class="textblock"><p>TODO: maybe two <code>uint8_t</code>s + <code>uint16_t</code> We only get up to 16 dimensions, but that is already excessive One <code>uint8_t</code> gives contig axis, the other the index into the memory cost kind. Thus, the struct could differentiate loads vs stores by itself, while also differentiating between eltypes. Another option is to store individual <code><a class="el" href="structpoly_1_1CostModeling_1_1MemoryCosts.html">MemoryCosts</a></code>, so that we can aggregate/sum up. </p>
+</div><hr/>The documentation for this struct was generated from the following file:<ul>
 <li>include/IR/<a class="el" href="CostFunction_8hpp_source.html">CostFunction.hpp</a></li>
 </ul>
 </div><!-- contents -->
