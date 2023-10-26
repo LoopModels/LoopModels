@@ -20,13 +20,32 @@ using utils::Optional;
 /// `uint16_t memory` number of mem sets.
 /// `bool exit` loop exit/entry.
 /// `uint31_t compute` number of compute sets.
+/// These give us info for iterating over the costs associated with a loop.
+/// for (i : I){
+///   for (j : J){
+///     for (k : K){ // leaf
+///       ...
+///     }
+///     for (k : K){ // leaf
+///       ...
+///     }
+///   }
+///   for (j : J){ // leaf
+///     ...
+///   }
+/// }
+/// For leaves, we compute latency as well as register cost.
+/// Note that we compute all costs at the header for a given depth,
+/// thus we only need headers and num-pops.
 struct LoopCostCounts {
-  int16_t trip_count; /// we're unlikely to make different decisions for >65k
+  uint16_t known_trip : 1;
+  uint16_t
+    trip_count : 15; /// we're unlikely to make different decisions for >32k
   uint16_t memory;
-  uint32_t exit : 1; /// ascend means come out of loop
-  uint32_t compute : 31;
+  uint16_t exit : 5; /// how many blocks we exit after this
+  uint16_t compute : 11;
 };
-static_assert(sizeof(LoopCostCounts) == 8);
+static_assert(sizeof(LoopCostCounts) == 6);
 
 /// Order is outermost -> innermost
 /// Costs are relative to Scalar, i.e. scalar == 1
@@ -48,8 +67,8 @@ struct VectorizationFactor {
 /// Another option is to store individual `MemoryCosts`,
 /// so that we can aggregate/sum up.
 struct OrthogonalAxes {
-  uint32_t contig : 8;
-  uint32_t indep : 24;
+  uint32_t contig : 8; // max number of array dims of 255
+  uint32_t indep : 24; // max loop depth of 24
   // [[nodiscard]] constexpr auto contigAxis() const -> uint32_t {
   //   return data & 0xff;
   // }
@@ -451,41 +470,37 @@ public:
   constexpr auto operator()(alloc::Arena<> alloc,
                             const AbstractVector auto &x) const {
     using T = utils::eltype_t<decltype(x)>;
+    utils::invariant(max_depth < 16);
     math::MutArray<T, math::DenseDims<2>> invunrolls{
       math::matrix<T>(alloc, math::Row<2>{}, math::Col<>{max_depth})};
     ptrdiff_t i = 0, depth = 0, mi = 0, ci = 0, li = 0;
-    double tc = 1;
+    double trip_counts[16];
+    trip_counts[0] = 1;
     // we evaluate every iteration
-    bool exiting = false;
     T c{};
-    for (auto [trip_count, memory, exit, compute] : cost_counts) {
-      T ic{};
-      if (!exit) {
-        // we're in a header
-        invunrolls[1, depth] = x[i++];
-        invunrolls[0, depth] = 1 / invunrolls[1, depth];
-        ++depth;
-        tc *= trip_count;
-      }
-      T mc{memcosts(invunrolls, vf, orth_axes[_(0, memory) + mi])};
+    for (auto [comptimetrip, trip_count, memory, exit, compute] : cost_counts) {
+      invunrolls[1, depth] = x[i++];
+      invunrolls[0, depth] = 1 / invunrolls[1, depth];
+      trip_counts[depth + 1] = trip_counts[depth] * trip_count;
+      T ic{memcosts(invunrolls, vf, orth_axes[_(0, memory) + mi])};
       mi += memory;
       T cc{compcosts(invunrolls, compute_independence[_(0, compute) + ci])};
       ci += compute;
       if (exit) {
-        if (exiting) {
-        } else {
-          auto [reguse, lreduct] = leafs[li++];
-          // we're now in a leaf, meaning we must consider register costs,
-          // as well as reduction costs and latency of reduction chains.
-          auto [lrtp, ll] = calcLeafCosts(invunrolls[_, depth]) * lreduct;
-          ic += registerPressure(invunrolls, reguse);
-        }
-        --depth;
-        tc /= trip_count;
+        auto [reguse, lreduct] = leafs[li++];
+        // we're now in a leaf, meaning we must consider register costs,
+        // as well as reduction costs and latency of reduction chains.
+        // TODO: 1. define/get `l` for latency below
+        //       2. add extra latency and compute cost for reductions.
+        cc = smax(cc, l / invunrolls[depth]);
+        auto [lrtp, ll] = calcLeafCosts(invunrolls[_, depth]) * lreduct;
+        ic += registerPressure(invunrolls, reguse);
       }
-      exiting = exit;
-      // TODO: memcost + smax(cthroughput, clatency);
-      c += tc * ic;
+      c += trip_counts[++depth] * (ic + cc);
+      // We increment depth to represent the loop header.
+      // It was left unincremented for indexing into `invunrolls`.
+      // Now we decrement for the number of loops we are exiting.
+      depth -= exit;
     }
     return c;
   }
