@@ -42,7 +42,8 @@ struct LoopCostCounts {
   uint16_t known_trip : 1;
   uint16_t
     trip_count : 15; /// we're unlikely to make different decisions for >32k
-  uint16_t memory;
+  uint16_t omemory : 11;
+  uint16_t cmemory : 5;
   uint16_t exit : 5; /// how many blocks we exit after this
   uint16_t compute : 11;
 };
@@ -228,7 +229,16 @@ constexpr auto registerPressure(const AbstractMatrix auto &invunrolls,
 auto memcosts(const AbstractMatrix auto &invunrolls, VectorizationFactor vf,
               math::PtrVector<Pair<OrthogonalAxes, MemoryCosts>> orth_axes) {
   utils::eltype_t<decltype(invunrolls)> ic{};
-  for (auto [oa, mc] : orth_axes) ic += cost(invunrolls, oa, vf, mc);
+  for (auto [oa, mc] : orth_axes) ic += cost(invunrolls, oa, mc, vf);
+  return ic;
+}
+auto memcosts(const AbstractMatrix auto &invunrolls, VectorizationFactor vf,
+              math::PtrVector<std::tuple<OrthogonalAxes, MemoryCosts,
+                                         DensePtrMatrix<int64_t>>>
+                orth_axes) {
+  utils::eltype_t<decltype(invunrolls)> ic{};
+  for (auto [oa, mc, inds] : orth_axes)
+    ic += cost(invunrolls, oa, mc, vf, inds);
   return ic;
 }
 auto compcosts(const AbstractMatrix auto &invunrolls,
@@ -453,6 +463,9 @@ auto compcosts(const AbstractMatrix auto &invunrolls,
 class LoopTreeCostFn {
   math::PtrVector<LoopCostCounts> cost_counts;
   math::PtrVector<Pair<OrthogonalAxes, MemoryCosts>> orth_axes;
+  math::PtrVector<
+    std::tuple<OrthogonalAxes, MemoryCosts, DensePtrMatrix<int64_t>>>
+    conv_axes;
   math::PtrVector<std::array<uint32_t, 2>> compute_independence;
   math::PtrVector<Pair<RegisterUseByUnroll, Pair<uint16_t, uint16_t>>> leafs;
   VectorizationFactor vf;
@@ -471,11 +484,12 @@ public:
     utils::invariant(max_depth < 16);
     math::MutArray<T, math::DenseDims<2>> invunrolls{
       math::matrix<T>(alloc, math::Row<2>{}, math::Col<>{max_depth})};
-    ptrdiff_t i = 0, depth = 0, mi = 0, ci = 0, li = 0;
+    ptrdiff_t i = 0, depth = 0, mi = 0, mc = 0, ci = 0, li = 0;
     double tripcounts[16];
     // we evaluate every iteration
     T c{};
-    for (auto [comptimetrip, trip_count, memory, exit, compute] : cost_counts) {
+    for (auto [comptimetrip, trip_count, omem, cmem, exit, compute] :
+         cost_counts) {
       invunrolls[1, depth] = x[i++];
       invunrolls[0, depth] = 1 / invunrolls[1, depth];
       tripcounts[depth] =
@@ -495,12 +509,14 @@ public:
         if (numreduct) {
           cc +=
             compcost(invunrolls, compute_independence[_(0, numreduct) + ci]) *
-            log2(invunrolls[1, depth]) / tripcounts[depth];
+            log2(invunrolls[1, depth]) / trip_count;
           ci += numreduct;
         }
       }
-      cc += memcosts(invunrolls, vf, orth_axes[_(0, memory) + mi]);
-      mi += memory;
+      cc += memcosts(invunrolls, vf, orth_axes[_(0, omem) + mi]);
+      mi += omem;
+      cc += memcosts(invunrolls, vf, conv_axes[_(0, cmem) + mc]);
+      mc += cmem;
       c += tripcounts[depth] * cc;
       // Decrement depth by `exit - 1`; the `-1` corresponds
       // to descending into this header, while we exit `exit` loops afterwards.
