@@ -10,6 +10,7 @@
 #include <Math/Matrix.hpp>
 #include <Math/Vector.hpp>
 namespace poly::CostModeling {
+using containers::Pair;
 using math::AbstractVector, math::AbstractMatrix, math::DensePtrMatrix, math::_;
 using utils::Optional;
 
@@ -196,8 +197,6 @@ constexpr auto cost(const AbstractMatrix auto &invunrolls, OrthogonalAxes orth,
   return c * cost(mc, invunrolls, vfi, orth);
 }
 
-constexpr auto calcLeafCosts(const AbstractMatrix auto &invunrolls);
-
 // We need to define an unroll ordering.
 struct RegisterUseByUnroll {
   math::PtrVector<std::array<uint32_t, 2>> masks; // coef, mask pairs
@@ -226,9 +225,8 @@ constexpr auto registerPressure(const AbstractMatrix auto &invunrolls,
   return 0.25 * math::softplus(8.0 * (acc - r.register_count));
 }
 
-auto memcosts(
-  const AbstractMatrix auto &invunrolls, VectorizationFactor vf,
-  math::PtrVector<containers::Pair<OrthogonalAxes, MemoryCosts>> orth_axes) {
+auto memcosts(const AbstractMatrix auto &invunrolls, VectorizationFactor vf,
+              math::PtrVector<Pair<OrthogonalAxes, MemoryCosts>> orth_axes) {
   utils::eltype_t<decltype(invunrolls)> ic{};
   for (auto [oa, mc] : orth_axes) ic += cost(invunrolls, oa, vf, mc);
   return ic;
@@ -454,9 +452,9 @@ auto compcosts(const AbstractMatrix auto &invunrolls,
 /// ///
 class LoopTreeCostFn {
   math::PtrVector<LoopCostCounts> cost_counts;
-  math::PtrVector<containers::Pair<OrthogonalAxes, MemoryCosts>> orth_axes;
+  math::PtrVector<Pair<OrthogonalAxes, MemoryCosts>> orth_axes;
   math::PtrVector<std::array<uint32_t, 2>> compute_independence;
-  math::PtrVector<containers::Pair<RegisterUseByUnroll, uint32_t>> leafs;
+  math::PtrVector<Pair<RegisterUseByUnroll, Pair<uint16_t, uint16_t>>> leafs;
   VectorizationFactor vf;
   ptrdiff_t max_depth;
 
@@ -474,33 +472,39 @@ public:
     math::MutArray<T, math::DenseDims<2>> invunrolls{
       math::matrix<T>(alloc, math::Row<2>{}, math::Col<>{max_depth})};
     ptrdiff_t i = 0, depth = 0, mi = 0, ci = 0, li = 0;
-    double trip_counts[16];
-    trip_counts[0] = 1;
+    double tripcounts[16];
     // we evaluate every iteration
     T c{};
     for (auto [comptimetrip, trip_count, memory, exit, compute] : cost_counts) {
       invunrolls[1, depth] = x[i++];
       invunrolls[0, depth] = 1 / invunrolls[1, depth];
-      trip_counts[depth + 1] = trip_counts[depth] * trip_count;
-      T ic{memcosts(invunrolls, vf, orth_axes[_(0, memory) + mi])};
-      mi += memory;
+      tripcounts[depth] =
+        (depth ? tripcounts[depth - 1] * trip_count : trip_count);
       T cc{compcosts(invunrolls, compute_independence[_(0, compute) + ci])};
       ci += compute;
       if (exit) {
-        auto [reguse, lreduct] = leafs[li++];
+        auto [reguse, lt] = leafs[li++];
+        auto [l, numreduct] = lt;
         // we're now in a leaf, meaning we must consider register costs,
         // as well as reduction costs and latency of reduction chains.
         // TODO: 1. define/get `l` for latency below
         //       2. add extra latency and compute cost for reductions.
+        // auto [l, t] = compute_independence[ci++];
         cc = smax(cc, l / invunrolls[depth]);
-        auto [lrtp, ll] = calcLeafCosts(invunrolls[_, depth]) * lreduct;
-        ic += registerPressure(invunrolls, reguse);
+        cc += registerPressure(invunrolls, reguse);
+        if (numreduct) {
+          cc +=
+            compcost(invunrolls, compute_independence[_(0, numreduct) + ci]) *
+            log2(invunrolls[1, depth]) / tripcounts[depth];
+          ci += numreduct;
+        }
       }
-      c += trip_counts[++depth] * (ic + cc);
-      // We increment depth to represent the loop header.
-      // It was left unincremented for indexing into `invunrolls`.
-      // Now we decrement for the number of loops we are exiting.
-      depth -= exit;
+      cc += memcosts(invunrolls, vf, orth_axes[_(0, memory) + mi]);
+      mi += memory;
+      c += tripcounts[depth] * cc;
+      // Decrement depth by `exit - 1`; the `-1` corresponds
+      // to descending into this header, while we exit `exit` loops afterwards.
+      depth -= exit - 1;
     }
     return c;
   }

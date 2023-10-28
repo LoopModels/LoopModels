@@ -245,7 +245,7 @@ struct LoopIndependent {
 
 // searches `N` and it's users for loop-independent users
 // this exits early if it finds a dependent user; we search everything
-// anyway, so we'll revist later anyway.
+// anyway, so we'll revisit later anyway.
 // We return a `IR::Node *, bool` pair, where the `bool` is true if
 // `N` was loop independent.
 // We do this rather than something like returning a `nullptr`, as

@@ -660,7 +660,7 @@ public:
         B[r, _(0, numDep1Var) + numSymX] << E[r, _(0, numDep1Var) + numSymD0];
         B[r, _(numDep1Var, yNumLoops) + numSymX] << 0;
       }
-    } else std::copy_n(E.begin(), E.numRow() *E.numCol(), B.begin());
+    } else std::copy_n(E.begin(), E.numRow() * E.numCol(), B.begin());
     if (xOff)
       for (ptrdiff_t c = 0; c < numDep0Var; ++c)
         if (int64_t mlt = xOff[c])

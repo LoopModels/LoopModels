@@ -102,7 +102,7 @@ public:
   };
 
   // we have a private pointer so different types can share
-  // in manner not exacctly congruent with type hiearchy
+  // in manner not exacctly congruent with type hierarchy
   // in particular, `Inst` and `Load` want `User` lists
   // while `Stow`s do not.
   // `Addr` is the common load/store subtype
