@@ -1,5 +1,6 @@
 var searchData=
 [
+  ['omemory_114',['omemory',['../structpoly_1_1CostModeling_1_1LoopCostCounts.html#a2fe2e7f1dad80b0e9b6ab5463a444ccf',1,'poly::CostModeling::LoopCostCounts']]],
   ['opaquefunc_115',['OpaqueFunc',['../classpoly_1_1IR_1_1OpaqueFunc.html',1,'poly::IR']]],
   ['operation_116',['Operation',['../classpoly_1_1IR_1_1Operation.html',1,'poly::IR']]],
   ['optimizationresult_117',['OptimizationResult',['../structpoly_1_1lp_1_1LoopBlock_1_1OptimizationResult.html',1,'poly::lp::LoopBlock']]],
