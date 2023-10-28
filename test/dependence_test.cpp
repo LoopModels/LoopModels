@@ -1446,7 +1446,7 @@ TEST(DoubleDependenceTest, BasicAssertions) {
   EXPECT_TRUE(loopBlock.optimize().has_value());
   EXPECT_EQ(loopBlock.numEdges(), 2);
   map<IR::Addr *, size_t> memAccessIds;
-  for (size_t jj = 0; jj < loopBlock.numIR::Addres(); ++jj)
+  for (size_t jj = 0; jj < loopBlock.numIR::Address(); ++jj)
     memAccessIds[loopBlock.getIR::Addr(jj)] = jj;
   for (auto &e : loopBlock.getEdges()) {
     auto [in, out] = e.getInOutPair();

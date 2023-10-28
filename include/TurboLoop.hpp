@@ -250,7 +250,7 @@ class TurboLoop {
   /// large nest.
   ///
   /// If any of the subloops fail, or we fail to draw the connection, then we
-  /// can optimize the continuous succesful block we've produced, and return a
+  /// can optimize the continuous successful block we've produced, and return a
   /// failure up the tree.
   ///
   ///

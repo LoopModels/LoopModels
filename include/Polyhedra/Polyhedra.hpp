@@ -8,12 +8,9 @@
 #include <Math/EmptyArrays.hpp>
 #include <Math/Math.hpp>
 #include <Math/VectorGreatestCommonDivisor.hpp>
-#include <algorithm>
 #include <cstddef>
 #include <cstdint>
-#include <limits>
 #include <llvm/Support/raw_ostream.h>
-#include <memory>
 #ifndef NDEBUG
 #include <ostream>
 #endif
@@ -147,8 +144,8 @@ struct BasePolyhedra {
     const ptrdiff_t dyn = getNumDynamic();
     if constexpr (HasEqualities) {
       auto [ar, er] = removeRedundantRows(getA(), getE());
-      setNumConstraints(unsigned(ar));
-      setNumEqConstraints(unsigned(er));
+      setNumConstraints(ptrdiff_t(ar));
+      setNumEqConstraints(ptrdiff_t(er));
       for (ptrdiff_t i = 0; i < getNumEqualityConstraints(); ++i) {
         auto l = gcd(getE()[i, _]);
         if (l != 1) getE()[i, _] /= l;

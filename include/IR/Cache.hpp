@@ -399,7 +399,7 @@ public:
   /// try to remove `I` as a duplicate
   /// this travels downstream;
   /// if `I` is eliminated, all users of `I`
-  /// get updated, making them CSE-candiates.
+  /// get updated, making them CSE-candidates.
   /// In this manner, we travel downstream through users.
   // NOLINTNEXTLINE(misc-no-recursion)
   auto cse(Compute *I) -> Compute * {

@@ -110,7 +110,7 @@ public:
   // but only load to inherit 'hasUsers' and only store to inherit the operand.
   // `Inst` would also inherit 'hasUsers', but would want a different operands
   // type.
-  // Addr has a FAM, so multiple inheritence isn't an option for `Load`/`Stow`,
+  // Addr has a FAM, so multiple inheritance isn't an option for `Load`/`Stow`,
   // and we want a common base that we can query to avoid monomorphization.
 protected:
   const ValKind kind;
@@ -344,7 +344,7 @@ public:
   }
   /// getLast()
   /// Get the last node in the loop.
-  /// Useful for iterating backwardss.
+  /// Useful for iterating backwards.
   [[nodiscard]] constexpr auto getLast() const -> Node * { return last; }
   constexpr void setLast(Node *n) { last = n; }
   [[nodiscard]] constexpr auto getLLVMLoop() const -> llvm::Loop * {

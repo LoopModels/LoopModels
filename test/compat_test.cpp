@@ -95,7 +95,7 @@ TEST(LessTrivialPruneBounds, BasicAssertions) {
   poly::Loop &aff = *tlf.getLoopNest(0);
 
   aff.pruneBounds();
-  llvm::errs() << "LessTrival test Bounds pruned:\n";
+  llvm::errs() << "LessTrivial test Bounds pruned:\n";
 #ifndef NDEBUG
   aff.dump();
 #endif

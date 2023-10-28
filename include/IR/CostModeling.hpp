@@ -310,8 +310,8 @@ inline auto visitLoopDependent(IR::Dependencies deps, IR::Loop *L, IR::Node *N,
   // Each level of our graph is acyclic, meaning that there are no cycles at
   // that level when traversing only edges active at that given level.
   // However, when considering edges active at level `I`, we may have cycles
-  // at level `J` if `J>I`. In otherwords, here we are travering all edges
-  // active at `I=depth`. Within subloops, which necessarilly have depth
+  // at level `J` if `J>I`. In otherwords, here we are traversing all edges
+  // active at `I=depth`. Within subloops, which necessarily have depth
   // `J>I`, we may have cycles.
   //
   // Thus, we need to prevent getting stuck in a cycle for these deeper loops

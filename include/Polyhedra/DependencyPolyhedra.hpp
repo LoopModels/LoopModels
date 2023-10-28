@@ -4,13 +4,13 @@
 #include "Polyhedra/Loops.hpp"
 #include "Polyhedra/Polyhedra.hpp"
 #include "Support/OStream.hpp"
+#include <Alloc/Arena.hpp>
 #include <Math/Array.hpp>
 #include <Math/Comparisons.hpp>
 #include <Math/Math.hpp>
 #include <Math/NormalForm.hpp>
 #include <Math/Orthogonalize.hpp>
 #include <Math/Simplex.hpp>
-#include <Alloc/Arena.hpp>
 #include <Utilities/Valid.hpp>
 #include <algorithm>
 #include <array>
@@ -28,14 +28,14 @@ namespace poly::poly {
 /// prints in current permutation order.
 /// TODO: decide if we want to make poly::Loop a `SymbolicPolyhedra`
 /// in which case, we have to remove `currentToOriginalPerm`,
-/// which menas either change printing, or move prints `<<` into
+/// which means either change printing, or move prints `<<` into
 /// the derived classes.
 inline auto printConstraints(std::ostream &os, DensePtrMatrix<int64_t> A,
                              llvm::ArrayRef<const llvm::SCEV *> syms,
                              bool inequality = true) -> std::ostream & {
   const Row numConstraints = A.numRow();
   const unsigned numSyms = syms.size() + 1;
-  for (Row c = 0; c < numConstraints; ++c) {
+  for (ptrdiff_t c = 0; c < numConstraints; ++c) {
     printConstraint(os, A[c, _], numSyms, inequality);
     for (ptrdiff_t v = 1; v < numSyms; ++v) {
       if (int64_t Acv = A[c, v]) {
@@ -179,12 +179,12 @@ public:
   constexpr void decrementNumConstraints() { invariant(numCon-- > 0); }
   constexpr auto getA() -> MutDensePtrMatrix<int64_t> {
     void *p = memory;
-    return {(int64_t *)p, math::DenseDims{numCon, getNumVar() + 1}};
+    return {(int64_t *)p, math::DenseDims<>{numCon, getNumVar() + 1}};
   }
   constexpr auto getE() -> MutDensePtrMatrix<int64_t> {
     void *p = memory;
     return {(int64_t *)p + size_t(conCapacity) * (getNumVar() + 1),
-            math::DenseDims{numEqCon, getNumVar() + 1}};
+            math::DenseDims<>{numEqCon, getNumVar() + 1}};
   }
   constexpr auto getNullStep() -> math::MutPtrVector<int64_t> {
     void *p = memory;
@@ -209,28 +209,28 @@ public:
   [[nodiscard]] auto getA() const -> DensePtrMatrix<int64_t> {
     const char *p = memory;
     return {const_cast<int64_t *>(reinterpret_cast<const int64_t *>(p)),
-            math::DenseDims{numCon, getNumVar() + 1}};
+            math::DenseDims<>{numCon, getNumVar() + 1}};
   }
-  [[nodiscard]] auto getA(Row r, Col c) -> int64_t & {
+  [[nodiscard]] auto getA(Row<> r, Col<> c) -> int64_t & {
     auto *p = reinterpret_cast<int64_t *>(memory);
-    return p[size_t(r) * (getNumVar() + 1) + size_t(c)];
+    return p[ptrdiff_t(r) * (getNumVar() + 1) + ptrdiff_t(c)];
   }
-  [[nodiscard]] auto getA(Row r, Col c) const -> int64_t {
+  [[nodiscard]] auto getA(Row<> r, Col<> c) const -> int64_t {
     const auto *p = reinterpret_cast<const int64_t *>(memory);
-    return p[size_t(r) * (getNumVar() + 1) + size_t(c)];
+    return p[ptrdiff_t(r) * (getNumVar() + 1) + ptrdiff_t(c)];
   }
   [[nodiscard]] auto getE() const -> DensePtrMatrix<int64_t> {
     const auto *p = reinterpret_cast<const int64_t *>(memory);
     return {const_cast<int64_t *>(p + size_t(conCapacity) * (getNumVar() + 1)),
-            math::DenseDims{numEqCon, getNumVar() + 1}};
+            math::DenseDims<>{numEqCon, getNumVar() + 1}};
   }
-  [[nodiscard]] auto getE(Row r, Col c) -> int64_t & {
+  [[nodiscard]] auto getE(Row<> r, Col<> c) -> int64_t & {
     auto *p = reinterpret_cast<int64_t *>(memory);
-    return p[(conCapacity + size_t(r)) * (getNumVar() + 1) + size_t(c)];
+    return p[(conCapacity + ptrdiff_t(r)) * (getNumVar() + 1) + ptrdiff_t(c)];
   }
-  [[nodiscard]] auto getE(Row r, Col c) const -> int64_t {
+  [[nodiscard]] auto getE(Row<> r, Col<> c) const -> int64_t {
     const auto *p = reinterpret_cast<const int64_t *>(memory);
-    return p[(conCapacity + size_t(r)) * (getNumVar() + 1) + size_t(c)];
+    return p[(conCapacity + ptrdiff_t(r)) * (getNumVar() + 1) + ptrdiff_t(c)];
   }
   [[nodiscard]] auto getNullStep() const -> PtrVector<int64_t> {
     const auto *p = reinterpret_cast<const int64_t *>(memory);
@@ -275,7 +275,8 @@ public:
     unsigned numLoopsCommon =
                findFirstNonEqual(x->getFusionOmega(), y->getFusionOmega()),
              xDim = x->getArrayDim(), yDim = y->getArrayDim();
-    math::DenseMatrix<int64_t> A(math::DenseDims{numLoopsCommon, xDim + yDim});
+    math::DenseMatrix<int64_t> A(
+      math::DenseDims<>{numLoopsCommon, xDim + yDim});
     if (!numLoopsCommon) return A;
     // indMats cols are [outerMostLoop,...,innerMostLoop]
     PtrMatrix<int64_t> indMatX = x->indexMatrix(), indMatY = y->indexMatrix();
@@ -288,11 +289,10 @@ public:
     // returns rank x num loops
     return orthogonalNullSpace(std::move(A));
   }
-  static auto nullSpace(Valid<const IR::Addr> x)
-    -> math::DenseMatrix<int64_t> {
+  static auto nullSpace(Valid<const IR::Addr> x) -> math::DenseMatrix<int64_t> {
     unsigned numLoopsCommon = x->getCurrentDepth(), dim = x->getArrayDim(),
              natDepth = x->getNaturalDepth();
-    math::DenseMatrix<int64_t> A(math::DenseDims{numLoopsCommon, dim});
+    math::DenseMatrix<int64_t> A(math::DenseDims<>{numLoopsCommon, dim});
     if (!numLoopsCommon) return A;
     // indMats cols are [outerMostLoop,...,innerMostLoop]
     A[_(0, natDepth), _] << x->indexMatrix().transpose();
@@ -368,10 +368,10 @@ public:
     invariant(ptrdiff_t(map.size()), ptrdiff_t(Sy.size()));
     unsigned numSym = numDynSym + 1;
     math::DenseMatrix<int64_t> NS{nullSpace(aix, aiy)};
-    unsigned timeDim = unsigned{NS.numRow()},
-             numCols = numVar + timeDim + numDynSym + 1,
-             conCapacity = unsigned(Ax.numRow() + Ay.numRow()) + numVar,
-             eqConCapacity = unsigned(Cx.numRow()) + timeDim;
+    ptrdiff_t timeDim = ptrdiff_t{NS.numRow()},
+              numCols = numVar + timeDim + numDynSym + 1,
+              conCapacity = ptrdiff_t(Ax.numRow() + Ay.numRow()) + numVar,
+              eqConCapacity = ptrdiff_t(Cx.numRow()) + timeDim;
 
     size_t memNeeded =
       sizeof(int64_t) * ((conCapacity + eqConCapacity) * numCols + timeDim) +
@@ -383,7 +383,7 @@ public:
                                  timeDim, conCapacity, eqConCapacity);
 
     // numDep1Var = nv1;
-    Row nc = nc0 + nc1;
+    ptrdiff_t nc = nc0 + nc1;
     unsigned indexDim{aix->getArrayDim()};
     auto nullStep{dp->getNullStep()};
     for (ptrdiff_t i = 0; i < timeDim; ++i) nullStep[i] = selfDot(NS[i, _]);
@@ -418,7 +418,7 @@ public:
       E[i, _(0, Ox.numCol())] << Ox[i, _];
       E[i, _(0, Cx.numCol()) + numSym] << Cx[i, _];
       E[i, 0] -= Oy[i, 0];
-      for (ptrdiff_t j = 0; j < Oy.numCol() - 1; ++j)
+      for (ptrdiff_t j = 0, J = ptrdiff_t(Oy.numCol()) - 1; j < J; ++j)
         E[i, 1 + map[j]] -= Oy[i, 1 + j];
       E[i, _(0, Cy.numCol()) + numSym + numDep0Var] << -Cy[i, _];
     }
@@ -436,8 +436,7 @@ public:
     return nullptr;
   }
   // self dependence
-  static auto self(Arena<> *alloc, Valid<const IR::Addr> ai)
-    -> Valid<DepPoly> {
+  static auto self(Arena<> *alloc, Valid<const IR::Addr> ai) -> Valid<DepPoly> {
     Valid<const poly::Loop> loop = ai->getAffLoop();
     unsigned numDepVar = ai->getCurrentDepth(), numVar = numDepVar + numDepVar;
     PtrMatrix<int64_t> B{loop->getOuterA(numDepVar)};
@@ -447,11 +446,11 @@ public:
 
     auto [nco, nv] = B.size();
     math::DenseMatrix<int64_t> NS{nullSpace(ai)};
-    unsigned numDynSym = S.size(), numSym = numDynSym + 1,
-             timeDim = unsigned{NS.numRow()},
-             numCols = numVar + timeDim + numDynSym + 1,
-             conCapacity = unsigned(2 * B.numRow()) + numVar,
-             eqConCapacity = unsigned(C.numRow()) + timeDim;
+    ptrdiff_t numDynSym = ptrdiff_t(S.size()), numSym = numDynSym + 1,
+              timeDim = ptrdiff_t{NS.numRow()},
+              numCols = numVar + timeDim + numDynSym + 1,
+              conCapacity = 2 * ptrdiff_t(B.numRow()) + numVar,
+              eqConCapacity = ptrdiff_t(C.numRow()) + timeDim;
 
     size_t memNeeded =
       sizeof(int64_t) * ((conCapacity + eqConCapacity) * numCols + timeDim) +
@@ -462,7 +461,7 @@ public:
                                  conCapacity, eqConCapacity);
 
     // numDep1Var = nv1;
-    Row nc = nco + nco;
+    ptrdiff_t nc = nco + nco;
     unsigned indexDim{ai->getArrayDim()};
     auto nullStep{dp->getNullStep()};
     for (ptrdiff_t i = 0; i < timeDim; ++i) nullStep[i] = selfDot(NS[i, _]);
@@ -640,8 +639,8 @@ public:
     Row numPhi = xPhi.numRow();
     invariant(yPhi.numRow(), numPhi);
     DensePtrMatrix<int64_t> E{getE()};
-    unsigned xNumLoops = unsigned(xPhi.numCol()),
-             yNumLoops = unsigned(yPhi.numCol());
+    ptrdiff_t xNumLoops = ptrdiff_t(xPhi.numCol()),
+              yNumLoops = ptrdiff_t(yPhi.numCol());
     if ((numDep0Var == xNumLoops) || allZero(xPhi[_, _(numDep0Var, end)]))
       xNumLoops = numDep0Var;
     else invariant(numDep0Var < xNumLoops);
@@ -651,7 +650,7 @@ public:
     unsigned numSym = getNumSymbols(), numSymX = numSym + xNumLoops,
              numSymD0 = numSym + numDep0Var, nCol = numSymX + yNumLoops;
     MutDensePtrMatrix<int64_t> B{
-      matrix<int64_t>(&alloc, numEqCon + numPhi, nCol)};
+      matrix<int64_t>(&alloc, numEqCon + ptrdiff_t(numPhi), nCol)};
     bool extend = (numDep0Var != xNumLoops) || (numDep1Var != yNumLoops);
     // we truncate time dim
     if (extend || timeDim) {
@@ -661,7 +660,7 @@ public:
         B[r, _(0, numDep1Var) + numSymX] << E[r, _(0, numDep1Var) + numSymD0];
         B[r, _(numDep1Var, yNumLoops) + numSymX] << 0;
       }
-    } else std::copy_n(E.begin(), E.numRow() * E.numCol(), B.begin());
+    } else std::copy_n(E.begin(), E.numRow() *E.numCol(), B.begin());
     if (xOff)
       for (ptrdiff_t c = 0; c < numDep0Var; ++c)
         if (int64_t mlt = xOff[c])
@@ -675,7 +674,7 @@ public:
       B[r + numEqCon, _(0, xNumLoops) + numSym] << xPhi[r, _(0, xNumLoops)];
       B[r + numEqCon, _(0, yNumLoops) + numSymX] << -yPhi[r, _(0, yNumLoops)];
     }
-    unsigned rank = unsigned(math::NormalForm::simplifySystemImpl(B));
+    unsigned rank = ptrdiff_t(math::NormalForm::simplifySystemImpl(B));
     if (rank <= numEqCon) return false;
     unsigned numConstraints =
       extend ? (xLoop->getNumCon() + xNumLoops + yLoop->getNumCon() + yNumLoops)

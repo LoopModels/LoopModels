@@ -480,7 +480,7 @@ private:
           continue;
         ptrdiff_t r = math::NormalForm::rank(indMat);
         if (r == edge.getInCurrentDepth()) continue;
-        // TODO handle linearly dependent acceses, filtering them out
+        // TODO handle linearly dependent accesses, filtering them out
         if (r != ptrdiff_t(indMat.numRow())) continue;
         node->schedulePhi(indMat, r);
         tryOrth = true;
