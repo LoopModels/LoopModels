@@ -378,8 +378,8 @@ $(function() {
 <div class="line"><a name="l00310"></a><span class="lineno">  310</span>&#160;  <span class="comment">// Each level of our graph is acyclic, meaning that there are no cycles at</span></div>
 <div class="line"><a name="l00311"></a><span class="lineno">  311</span>&#160;  <span class="comment">// that level when traversing only edges active at that given level.</span></div>
 <div class="line"><a name="l00312"></a><span class="lineno">  312</span>&#160;  <span class="comment">// However, when considering edges active at level `I`, we may have cycles</span></div>
-<div class="line"><a name="l00313"></a><span class="lineno">  313</span>&#160;  <span class="comment">// at level `J` if `J&gt;I`. In otherwords, here we are travering all edges</span></div>
-<div class="line"><a name="l00314"></a><span class="lineno">  314</span>&#160;  <span class="comment">// active at `I=depth`. Within subloops, which necessarilly have depth</span></div>
+<div class="line"><a name="l00313"></a><span class="lineno">  313</span>&#160;  <span class="comment">// at level `J` if `J&gt;I`. In otherwords, here we are traversing all edges</span></div>
+<div class="line"><a name="l00314"></a><span class="lineno">  314</span>&#160;  <span class="comment">// active at `I=depth`. Within subloops, which necessarily have depth</span></div>
 <div class="line"><a name="l00315"></a><span class="lineno">  315</span>&#160;  <span class="comment">// `J&gt;I`, we may have cycles.</span></div>
 <div class="line"><a name="l00316"></a><span class="lineno">  316</span>&#160;  <span class="comment">//</span></div>
 <div class="line"><a name="l00317"></a><span class="lineno">  317</span>&#160;  <span class="comment">// Thus, we need to prevent getting stuck in a cycle for these deeper loops</span></div>
