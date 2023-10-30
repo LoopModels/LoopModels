@@ -131,10 +131,10 @@ $(function() {
 <div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;  }</div>
 <div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;  <span class="comment">// NOLINTNEXTLINE(readability-make-member-function-const)</span></div>
 <div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getPhi() -&gt; MutSquarePtrMatrix&lt;int64_t&gt; {</div>
-<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;    <span class="keywordflow">return</span> {data(), math::SquareDims{unsigned(getNumLoops())}};</div>
+<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;    <span class="keywordflow">return</span> {data(), math::SquareDims&lt;&gt;{getNumLoops()}};</div>
 <div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;  }</div>
 <div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getPhi() <span class="keyword">const</span> -&gt; SquarePtrMatrix&lt;int64_t&gt; {</div>
-<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;    <span class="keywordflow">return</span> {data(), math::SquareDims{getNumLoops()}}; <span class="comment">//</span></div>
+<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;    <span class="keywordflow">return</span> {data(), math::SquareDims&lt;&gt;{getNumLoops()}}; <span class="comment">//</span></div>
 <div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;  }</div>
 <div class="line"><a name="l00080"></a><span class="lineno"><a class="line" href="structpoly_1_1poly_1_1AffineSchedule.html#a59920bb4ddd40e454a495277d538d79c">   80</a></span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> <a class="code" href="structpoly_1_1poly_1_1AffineSchedule.html#a59920bb4ddd40e454a495277d538d79c">getSchedule</a>(<span class="keywordtype">size_t</span> d) <span class="keyword">const</span></div>
 <div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;    -&gt; math::PtrVector&lt;int64_t&gt; {</div>
