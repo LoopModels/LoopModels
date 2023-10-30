@@ -79,7 +79,7 @@ class Loop;
 /// while (C){
 ///   // do stuff with `C`
 ///   C = C->getNext()
-///   C = (C || llvm::isa<Loop>(C)) ? C : C->getChild();
+///   C = (!C || llvm::isa<Loop>(C)) ? C : C->getChild();
 /// }
 /// ```
 /// IR types: Loop, Block, Addr, Instr, Consts
@@ -324,7 +324,7 @@ public:
   /// Get the first subloop.
   [[nodiscard]] constexpr auto getSubLoop() const -> Loop * {
     Node *C = getChild();
-    C = (C || llvm::isa<Loop>(C)) ? C : C->getChild();
+    C = (!C || llvm::isa<Loop>(C)) ? C : C->getChild();
     return static_cast<Loop *>(C);
   }
   /// Return the enclosing, parent loop.
@@ -387,8 +387,7 @@ public:
     -> LegalTransforms;
 };
 [[nodiscard]] inline constexpr auto Node::getLoop() const noexcept -> Loop * {
-  if (!parent) return nullptr;
-  if (parent->kind != VK_Loop) return nullptr;
+  if (!parent || (parent->kind != VK_Loop)) return nullptr;
   return static_cast<Loop *>(parent);
 }
 

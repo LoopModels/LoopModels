@@ -12,12 +12,8 @@
 #include <Alloc/Arena.hpp>
 #include <Math/Array.hpp>
 #include <Math/Math.hpp>
-#include <algorithm>
-#include <any>
-#include <cassert>
 #include <cstddef>
 #include <cstdint>
-#include <limits>
 #include <llvm/ADT/ArrayRef.h>
 #include <llvm/ADT/SmallPtrSet.h>
 #include <llvm/ADT/SmallVector.h>
@@ -36,16 +32,13 @@
 #include <llvm/Support/Allocator.h>
 #include <llvm/Support/Casting.h>
 #include <llvm/Support/raw_ostream.h>
-#include <string_view>
-#include <utility>
-
 namespace poly::CostModeling {
 using poly::Dependence;
 class CPURegisterFile {
-  [[no_unique_address]] uint8_t maximumVectorWidth;
-  [[no_unique_address]] uint8_t numVectorRegisters;
-  [[no_unique_address]] uint8_t numGeneralPurposeRegisters;
-  [[no_unique_address]] uint8_t numPredicateRegisters;
+  uint8_t maximumVectorWidth;
+  uint8_t numVectorRegisters;
+  uint8_t numGeneralPurposeRegisters;
+  uint8_t numPredicateRegisters;
 
 #if defined(__x86_64__)
   // hacky check for has AVX512

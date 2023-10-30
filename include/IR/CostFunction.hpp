@@ -520,8 +520,21 @@ public:
     }
     return c;
   }
-  LoopTreeCostFn(alloc::Arena<>* alloc, IR::Loop*root){
-
+  LoopTreeCostFn(alloc::Arena<> *alloc, IR::Loop *root) {
+    // the root is top-level
+    IR::Loop *L = root->getSubLoop();
+    ptrdiff_t depth = 0;
+    for (IR::Node *N = L->getChild(); N;) {
+      if (auto *A = llvm::dyn_cast<IR::Addr>(N)) {
+      } else if (auto *I = llvm::dyn_cast<IR::Instruction>(N)) {
+      } else if (auto *S = llvm::dyn_cast<IR::Loop>(N)) {
+        // we enter subloop, S
+      } else if (auto *E = llvm::dyn_cast<IR::Exit>(N)) {
+        // E->getParent()->getNext() returns following instr
+        // With this, we increment exit count
+      }
+      N = N->getNext();
+    }
   }
 };
 
