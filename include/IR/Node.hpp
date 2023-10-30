@@ -360,12 +360,11 @@ public:
   }
   // get the outermost subloop of `this` to which `N` belongs
   [[nodiscard]] constexpr auto getSubloop(IR::Node *N) -> Loop * {
-    Loop *L = N->getLoop();
+    Loop *L = N->getLoop(), *O;
     if (L == this) return this;
-    for (; L;) {
-      Loop *O = L->getOuterLoop();
+    for (; L; L = O) {
+      O = L->getOuterLoop();
       if (O == this) return L;
-      L = O;
     }
     return nullptr;
   }
@@ -376,8 +375,7 @@ public:
     // [  2, -1, -1, -1, -1 ] // d = 0, edgeId = 2
     // [  2, -1, -1, -1,  0 ] // d = 4, edgeId = 0
     // now edgeId = 4, and we can follow path 4->0->2
-    deps[d] = edgeId;
-    edgeId = d;
+    deps[d] = std::exchange(edgeId, d);
   }
   constexpr auto getLoopAtDepth(uint8_t d) -> Loop * {
     Loop *L = this;
@@ -502,7 +500,7 @@ public:
   [[nodiscard]] auto getIdentifier() const -> Identifier;
   inline void setOperands(Arena<> *alloc, math::PtrVector<Value *>);
 };
-static_assert(std::is_copy_assignable_v<Instruction::Identifier>); 
+static_assert(std::is_copy_assignable_v<Instruction::Identifier>);
 
 /// CVal
 /// A constant value w/ respect to the loopnest.

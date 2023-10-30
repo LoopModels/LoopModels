@@ -9,9 +9,9 @@
 #include "LinearProgramming/LoopBlock.hpp"
 #include "LinearProgramming/ScheduledNode.hpp"
 #include "Polyhedra/Dependence.hpp"
+#include <Alloc/Arena.hpp>
 #include <Math/Array.hpp>
 #include <Math/Math.hpp>
-#include <Alloc/Arena.hpp>
 #include <algorithm>
 #include <any>
 #include <cassert>
@@ -156,7 +156,7 @@ public:
 //         pushBlock(trackInstr, chainBBs, pred, succ1);
 //     }
 // }
-template <typename T> using Vec = math::ResizeableView<T, unsigned>;
+template <typename T> using Vec = math::ResizeableView<T, ptrdiff_t>;
 
 // TODO: instead of this, update in-place and ensure all Addr are
 // over-allocated to correspond with max depth? Because we parse in reverse
@@ -244,8 +244,8 @@ struct LoopIndependent {
 //
 
 // searches `N` and it's users for loop-independent users
-// this exits early if it finds a dependent user; we search everything
-// anyway, so we'll revisit later anyway.
+// this exits early if it finds a dependent user, becase we search everything
+// meaning we'll revisit later anyway.
 // We return a `IR::Node *, bool` pair, where the `bool` is true if
 // `N` was loop independent.
 // We do this rather than something like returning a `nullptr`, as

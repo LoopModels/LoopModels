@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Containers/Pair.hpp"
+#include "IR/Node.hpp"
 #include "Math/Constructors.hpp"
 #include <Containers/BitSets.hpp>
 #include <Math/Array.hpp>
@@ -40,8 +41,7 @@ using utils::Optional;
 /// thus we only need headers and num-pops.
 struct LoopCostCounts {
   uint16_t known_trip : 1;
-  uint16_t
-    trip_count : 15; /// we're unlikely to make different decisions for >32k
+  uint16_t trip_count : 15;
   uint16_t omemory : 11;
   uint16_t cmemory : 5;
   uint16_t exit : 5; /// how many blocks we exit after this
@@ -52,8 +52,8 @@ static_assert(sizeof(LoopCostCounts) == 6);
 /// Order is outermost -> innermost
 /// Costs are relative to Scalar, i.e. scalar == 1
 struct MemoryCosts {
-  uint32_t contiguous;    // vload/vstore
-  uint32_t discontiguous; // gather/scatter
+  double contiguous;    // vload/vstore
+  double discontiguous; // gather/scatter
 };
 struct VectorizationFactor {
   uint32_t l2factor;
@@ -69,6 +69,7 @@ struct VectorizationFactor {
 /// Another option is to store individual `MemoryCosts`,
 /// so that we can aggregate/sum up.
 struct OrthogonalAxes {
+  MemoryCosts memcost;
   uint32_t contig : 8; // max number of array dims of 255
   uint32_t indep : 24; // max loop depth of 24
   // [[nodiscard]] constexpr auto contigAxis() const -> uint32_t {
@@ -106,16 +107,16 @@ constexpr auto cost(const AbstractMatrix auto &invunrolls, uint32_t indepAxes)
 // memory costs, unnormalized by `prod(unrolls)`
 // `invunrolls` is a matrix, row-0 are the inverse unrolls, row-1 unrolls.
 constexpr auto cost(const AbstractMatrix auto &invunrolls, OrthogonalAxes orth,
-                    MemoryCosts mc, VectorizationFactor vfi)
+                    VectorizationFactor vfi)
   -> utils::eltype_t<decltype(invunrolls)> {
 
   utils::eltype_t<decltype(invunrolls)> c{cost(invunrolls, orth.indep)};
   if ((vfi.index < 32) && !(orth.indep & (1 << vfi.index))) {
     // depends vectorized index
     if (vfi.index == orth.contig) {
-      c *= mc.contiguous;
+      c *= orth.memcost.contiguous;
     } else if (orth.contig >= 32) {
-      c *= mc.discontiguous;
+      c *= orth.memcost.discontiguous;
     } else {
       // Discontiguous vector load.
       // We consider two alternatives:
@@ -135,8 +136,9 @@ constexpr auto cost(const AbstractMatrix auto &invunrolls, OrthogonalAxes orth,
         u{invunrolls[1, orth.contig]},
         mr{math::smax((1 << vfi.l2factor) * iu, 1)};
       utils::invariant(iu == 1 / u);
-      c *= math::smin(mc.contiguous * mr + u * (vfi.l2factor + log2(mr)),
-                      mc.discontiguous);
+      c *=
+        math::smin(orth.memcost.contiguous * mr + u * (vfi.l2factor + log2(mr)),
+                   orth.memcost.discontiguous);
     }
   }
   return c;
@@ -149,8 +151,7 @@ constexpr auto cost(const AbstractMatrix auto &invunrolls, OrthogonalAxes orth,
 /// For these, we use the incorrect formula:
 ///
 constexpr auto cost(const AbstractMatrix auto &invunrolls, OrthogonalAxes orth,
-                    MemoryCosts mc, VectorizationFactor vfi,
-                    DensePtrMatrix<int64_t> inds)
+                    VectorizationFactor vfi, DensePtrMatrix<int64_t> inds)
   -> utils::eltype_t<decltype(invunrolls)> {
   utils::eltype_t<decltype(invunrolls)> c{1};
   auto [arrayDim, numLoops] = inds.size();
@@ -195,7 +196,7 @@ constexpr auto cost(const AbstractMatrix auto &invunrolls, OrthogonalAxes orth,
   }
   // c is a scaling factor; now we proceed to calculate cost similaly to the
   // orth-axis implementation above.
-  return c * cost(mc, invunrolls, vfi, orth);
+  return c * cost(invunrolls, vfi, orth);
 }
 
 // We need to define an unroll ordering.
@@ -462,10 +463,8 @@ auto compcosts(const AbstractMatrix auto &invunrolls,
 /// ///
 class LoopTreeCostFn {
   math::PtrVector<LoopCostCounts> cost_counts;
-  math::PtrVector<Pair<OrthogonalAxes, MemoryCosts>> orth_axes;
-  math::PtrVector<
-    std::tuple<OrthogonalAxes, MemoryCosts, DensePtrMatrix<int64_t>>>
-    conv_axes;
+  math::PtrVector<OrthogonalAxes> orth_axes;
+  math::PtrVector<Pair<OrthogonalAxes, DensePtrMatrix<int64_t>>> conv_axes;
   math::PtrVector<std::array<uint32_t, 2>> compute_independence;
   math::PtrVector<Pair<RegisterUseByUnroll, Pair<uint16_t, uint16_t>>> leafs;
   VectorizationFactor vf;
@@ -501,9 +500,6 @@ public:
         auto [l, numreduct] = lt;
         // we're now in a leaf, meaning we must consider register costs,
         // as well as reduction costs and latency of reduction chains.
-        // TODO: 1. define/get `l` for latency below
-        //       2. add extra latency and compute cost for reductions.
-        // auto [l, t] = compute_independence[ci++];
         cc = smax(cc, l / invunrolls[depth]);
         cc += registerPressure(invunrolls, reguse);
         if (numreduct) {
@@ -523,6 +519,9 @@ public:
       depth -= exit - 1;
     }
     return c;
+  }
+  LoopTreeCostFn(alloc::Arena<>* alloc, IR::Loop*root){
+
   }
 };
 
