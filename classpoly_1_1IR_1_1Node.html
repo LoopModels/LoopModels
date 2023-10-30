@@ -294,7 +294,7 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><b>dependsOnParentLoop_<
 <div class="line"><span class="keywordflow">while</span> (C){</div>
 <div class="line">  <span class="comment">// do stuff with `C`</span></div>
 <div class="line">  C = C-&gt;getNext()</div>
-<div class="line">  C = (C || llvm::isa&lt;Loop&gt;(C)) ? C : C-&gt;getChild();</div>
+<div class="line">  C = (!C || llvm::isa&lt;Loop&gt;(C)) ? C : C-&gt;getChild();</div>
 <div class="line">}</div>
 </div><!-- fragment --><p> IR types: <a class="el" href="classpoly_1_1IR_1_1Loop.html">Loop</a>, Block, <a class="el" href="classpoly_1_1IR_1_1Addr.html">Addr</a>, Instr, Consts </p>
 </div><hr/>The documentation for this class was generated from the following file:<ul>

@@ -344,14 +344,29 @@ $(function() {
 <div class="line"><a name="l00520"></a><span class="lineno">  520</span>&#160;    }</div>
 <div class="line"><a name="l00521"></a><span class="lineno">  521</span>&#160;    <span class="keywordflow">return</span> c;</div>
 <div class="line"><a name="l00522"></a><span class="lineno">  522</span>&#160;  }</div>
-<div class="line"><a name="l00523"></a><span class="lineno">  523</span>&#160;  <a class="code" href="classpoly_1_1CostModeling_1_1LoopTreeCostFn.html">LoopTreeCostFn</a>(alloc::Arena&lt;&gt;* alloc, <a class="code" href="classpoly_1_1IR_1_1Loop.html">IR::Loop</a>*root){</div>
-<div class="line"><a name="l00524"></a><span class="lineno">  524</span>&#160; </div>
-<div class="line"><a name="l00525"></a><span class="lineno">  525</span>&#160;  }</div>
-<div class="line"><a name="l00526"></a><span class="lineno">  526</span>&#160;};</div>
-<div class="line"><a name="l00527"></a><span class="lineno">  527</span>&#160; </div>
-<div class="line"><a name="l00528"></a><span class="lineno">  528</span>&#160;} <span class="comment">// namespace poly::CostModeling</span></div>
+<div class="line"><a name="l00523"></a><span class="lineno">  523</span>&#160;  <a class="code" href="classpoly_1_1CostModeling_1_1LoopTreeCostFn.html">LoopTreeCostFn</a>(alloc::Arena&lt;&gt; *alloc, <a class="code" href="classpoly_1_1IR_1_1Loop.html">IR::Loop</a> *root) {</div>
+<div class="line"><a name="l00524"></a><span class="lineno">  524</span>&#160;    <span class="comment">// the root is top-level</span></div>
+<div class="line"><a name="l00525"></a><span class="lineno">  525</span>&#160;    <a class="code" href="classpoly_1_1IR_1_1Loop.html">IR::Loop</a> *L = root-&gt;<a class="code" href="classpoly_1_1IR_1_1Loop.html#aafb52d2d14ecc6e68e9f2ced4f2dc2e8">getSubLoop</a>();</div>
+<div class="line"><a name="l00526"></a><span class="lineno">  526</span>&#160;    ptrdiff_t depth = 0;</div>
+<div class="line"><a name="l00527"></a><span class="lineno">  527</span>&#160;    <span class="keywordflow">for</span> (<a class="code" href="classpoly_1_1IR_1_1Node.html">IR::Node</a> *N = L-&gt;getChild(); N;) {</div>
+<div class="line"><a name="l00528"></a><span class="lineno">  528</span>&#160;      <span class="keywordflow">if</span> (<span class="keyword">auto</span> *A = llvm::dyn_cast&lt;IR::Addr&gt;(N)) {</div>
+<div class="line"><a name="l00529"></a><span class="lineno">  529</span>&#160;      } <span class="keywordflow">else</span> <span class="keywordflow">if</span> (<span class="keyword">auto</span> *I = llvm::dyn_cast&lt;IR::Instruction&gt;(N)) {</div>
+<div class="line"><a name="l00530"></a><span class="lineno">  530</span>&#160;      } <span class="keywordflow">else</span> <span class="keywordflow">if</span> (<span class="keyword">auto</span> *S = llvm::dyn_cast&lt;IR::Loop&gt;(N)) {</div>
+<div class="line"><a name="l00531"></a><span class="lineno">  531</span>&#160;        <span class="comment">// we enter subloop, S</span></div>
+<div class="line"><a name="l00532"></a><span class="lineno">  532</span>&#160;      } <span class="keywordflow">else</span> <span class="keywordflow">if</span> (<span class="keyword">auto</span> *E = llvm::dyn_cast&lt;IR::Exit&gt;(N)) {</div>
+<div class="line"><a name="l00533"></a><span class="lineno">  533</span>&#160;        <span class="comment">// E-&gt;getParent()-&gt;getNext() returns following instr</span></div>
+<div class="line"><a name="l00534"></a><span class="lineno">  534</span>&#160;        <span class="comment">// With this, we increment exit count</span></div>
+<div class="line"><a name="l00535"></a><span class="lineno">  535</span>&#160;      }</div>
+<div class="line"><a name="l00536"></a><span class="lineno">  536</span>&#160;      N = N-&gt;getNext();</div>
+<div class="line"><a name="l00537"></a><span class="lineno">  537</span>&#160;    }</div>
+<div class="line"><a name="l00538"></a><span class="lineno">  538</span>&#160;  }</div>
+<div class="line"><a name="l00539"></a><span class="lineno">  539</span>&#160;};</div>
+<div class="line"><a name="l00540"></a><span class="lineno">  540</span>&#160; </div>
+<div class="line"><a name="l00541"></a><span class="lineno">  541</span>&#160;} <span class="comment">// namespace poly::CostModeling</span></div>
 <div class="ttc" id="aclasspoly_1_1CostModeling_1_1LoopTreeCostFn_html"><div class="ttname"><a href="classpoly_1_1CostModeling_1_1LoopTreeCostFn.html">poly::CostModeling::LoopTreeCostFn</a></div><div class="ttdef"><b>Definition:</b> CostFunction.hpp:464</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Loop_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Loop.html">poly::IR::Loop</a></div><div class="ttdef"><b>Definition:</b> Node.hpp:282</div></div>
+<div class="ttc" id="aclasspoly_1_1IR_1_1Loop_html_aafb52d2d14ecc6e68e9f2ced4f2dc2e8"><div class="ttname"><a href="classpoly_1_1IR_1_1Loop.html#aafb52d2d14ecc6e68e9f2ced4f2dc2e8">poly::IR::Loop::getSubLoop</a></div><div class="ttdeci">constexpr auto getSubLoop() const -&gt; Loop *</div><div class="ttdoc">Get the first subloop.</div><div class="ttdef"><b>Definition:</b> Node.hpp:325</div></div>
+<div class="ttc" id="aclasspoly_1_1IR_1_1Node_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Node.html">poly::IR::Node</a></div><div class="ttdef"><b>Definition:</b> Node.hpp:86</div></div>
 <div class="ttc" id="astructpoly_1_1CostModeling_1_1LoopCostCounts_html"><div class="ttname"><a href="structpoly_1_1CostModeling_1_1LoopCostCounts.html">poly::CostModeling::LoopCostCounts</a></div><div class="ttdef"><b>Definition:</b> CostFunction.hpp:42</div></div>
 <div class="ttc" id="astructpoly_1_1CostModeling_1_1LoopCostCounts_html_af172017336799a06839e3c474ab5418a"><div class="ttname"><a href="structpoly_1_1CostModeling_1_1LoopCostCounts.html#af172017336799a06839e3c474ab5418a">poly::CostModeling::LoopCostCounts::compute</a></div><div class="ttdeci">uint16_t compute</div><div class="ttdoc">how many blocks we exit after this</div><div class="ttdef"><b>Definition:</b> CostFunction.hpp:48</div></div>
 <div class="ttc" id="astructpoly_1_1CostModeling_1_1MemoryCosts_html"><div class="ttname"><a href="structpoly_1_1CostModeling_1_1MemoryCosts.html">poly::CostModeling::MemoryCosts</a></div><div class="ttdef"><b>Definition:</b> CostFunction.hpp:54</div></div>
