@@ -80,9 +80,9 @@ $(function() {
 <div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="preprocessor">#include &quot;LinearProgramming/LoopBlock.hpp&quot;</span></div>
 <div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="preprocessor">#include &quot;LinearProgramming/ScheduledNode.hpp&quot;</span></div>
 <div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="preprocessor">#include &quot;Polyhedra/Dependence.hpp&quot;</span></div>
-<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="preprocessor">#include &lt;Math/Array.hpp&gt;</span></div>
-<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="preprocessor">#include &lt;Math/Math.hpp&gt;</span></div>
-<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;<span class="preprocessor">#include &lt;Alloc/Arena.hpp&gt;</span></div>
+<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="preprocessor">#include &lt;Alloc/Arena.hpp&gt;</span></div>
+<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="preprocessor">#include &lt;Math/Array.hpp&gt;</span></div>
+<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;<span class="preprocessor">#include &lt;Math/Math.hpp&gt;</span></div>
 <div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;<span class="preprocessor">#include &lt;algorithm&gt;</span></div>
 <div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;<span class="preprocessor">#include &lt;any&gt;</span></div>
 <div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;<span class="preprocessor">#include &lt;cassert&gt;</span></div>
@@ -227,7 +227,7 @@ $(function() {
 <div class="line"><a name="l00156"></a><span class="lineno">  156</span>&#160;<span class="comment">//         pushBlock(trackInstr, chainBBs, pred, succ1);</span></div>
 <div class="line"><a name="l00157"></a><span class="lineno">  157</span>&#160;<span class="comment">//     }</span></div>
 <div class="line"><a name="l00158"></a><span class="lineno">  158</span>&#160;<span class="comment">// }</span></div>
-<div class="line"><a name="l00159"></a><span class="lineno">  159</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt; <span class="keyword">using</span> Vec = math::ResizeableView&lt;T, unsigned&gt;;</div>
+<div class="line"><a name="l00159"></a><span class="lineno">  159</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt; <span class="keyword">using</span> Vec = math::ResizeableView&lt;T, ptrdiff_t&gt;;</div>
 <div class="line"><a name="l00160"></a><span class="lineno">  160</span>&#160; </div>
 <div class="line"><a name="l00161"></a><span class="lineno">  161</span>&#160;<span class="comment">// TODO: instead of this, update in-place and ensure all Addr are</span></div>
 <div class="line"><a name="l00162"></a><span class="lineno">  162</span>&#160;<span class="comment">// over-allocated to correspond with max depth? Because we parse in reverse</span></div>
@@ -312,8 +312,8 @@ $(function() {
 <div class="line"><a name="l00244"></a><span class="lineno">  244</span>&#160;<span class="comment">//</span></div>
 <div class="line"><a name="l00245"></a><span class="lineno">  245</span>&#160; </div>
 <div class="line"><a name="l00246"></a><span class="lineno">  246</span>&#160;<span class="comment">// searches `N` and it&#39;s users for loop-independent users</span></div>
-<div class="line"><a name="l00247"></a><span class="lineno">  247</span>&#160;<span class="comment">// this exits early if it finds a dependent user; we search everything</span></div>
-<div class="line"><a name="l00248"></a><span class="lineno">  248</span>&#160;<span class="comment">// anyway, so we&#39;ll revisit later anyway.</span></div>
+<div class="line"><a name="l00247"></a><span class="lineno">  247</span>&#160;<span class="comment">// this exits early if it finds a dependent user, becase we search everything</span></div>
+<div class="line"><a name="l00248"></a><span class="lineno">  248</span>&#160;<span class="comment">// meaning we&#39;ll revisit later anyway.</span></div>
 <div class="line"><a name="l00249"></a><span class="lineno">  249</span>&#160;<span class="comment">// We return a `IR::Node *, bool` pair, where the `bool` is true if</span></div>
 <div class="line"><a name="l00250"></a><span class="lineno">  250</span>&#160;<span class="comment">// `N` was loop independent.</span></div>
 <div class="line"><a name="l00251"></a><span class="lineno">  251</span>&#160;<span class="comment">// We do this rather than something like returning a `nullptr`, as</span></div>
@@ -926,7 +926,7 @@ $(function() {
 <div class="ttc" id="aclasspoly_1_1IR_1_1Loop_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Loop.html">poly::IR::Loop</a></div><div class="ttdef"><b>Definition:</b> Node.hpp:282</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Loop_html_a7570a422be7a0a39b0fbd2989f89111e"><div class="ttname"><a href="classpoly_1_1IR_1_1Loop.html#a7570a422be7a0a39b0fbd2989f89111e">poly::IR::Loop::getLast</a></div><div class="ttdeci">constexpr auto getLast() const -&gt; Node *</div><div class="ttdef"><b>Definition:</b> Node.hpp:348</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Node_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Node.html">poly::IR::Node</a></div><div class="ttdef"><b>Definition:</b> Node.hpp:86</div></div>
-<div class="ttc" id="aclasspoly_1_1IR_1_1Value_html_a6b2b299b85ea7f73459b85597df1b2d3"><div class="ttname"><a href="classpoly_1_1IR_1_1Value.html#a6b2b299b85ea7f73459b85597df1b2d3">poly::IR::Value::isStore</a></div><div class="ttdeci">constexpr auto isStore() const -&gt; bool</div><div class="ttdef"><b>Definition:</b> Node.hpp:449</div></div>
+<div class="ttc" id="aclasspoly_1_1IR_1_1Value_html_a6b2b299b85ea7f73459b85597df1b2d3"><div class="ttname"><a href="classpoly_1_1IR_1_1Value.html#a6b2b299b85ea7f73459b85597df1b2d3">poly::IR::Value::isStore</a></div><div class="ttdeci">constexpr auto isStore() const -&gt; bool</div><div class="ttdef"><b>Definition:</b> Node.hpp:447</div></div>
 <div class="ttc" id="aclasspoly_1_1lp_1_1ScheduledNode_html"><div class="ttname"><a href="classpoly_1_1lp_1_1ScheduledNode.html">poly::lp::ScheduledNode</a></div><div class="ttdef"><b>Definition:</b> ScheduledNode.hpp:33</div></div>
 <div class="ttc" id="aclasspoly_1_1poly_1_1Dependencies_html"><div class="ttname"><a href="classpoly_1_1poly_1_1Dependencies.html">poly::poly::Dependencies</a></div><div class="ttdef"><b>Definition:</b> Dependence.hpp:553</div></div>
 <div class="ttc" id="aclasspoly_1_1poly_1_1Loop_html"><div class="ttname"><a href="classpoly_1_1poly_1_1Loop.html">poly::poly::Loop</a></div><div class="ttdef"><b>Definition:</b> Loops.hpp:330</div></div>
@@ -934,7 +934,7 @@ $(function() {
 <div class="ttc" id="astructpoly_1_1CostModeling_1_1LoopDepSummary_html"><div class="ttname"><a href="structpoly_1_1CostModeling_1_1LoopDepSummary.html">poly::CostModeling::LoopDepSummary</a></div><div class="ttdef"><b>Definition:</b> CostModeling.hpp:230</div></div>
 <div class="ttc" id="astructpoly_1_1CostModeling_1_1LoopIndependent_html"><div class="ttname"><a href="structpoly_1_1CostModeling_1_1LoopIndependent.html">poly::CostModeling::LoopIndependent</a></div><div class="ttdef"><b>Definition:</b> CostModeling.hpp:235</div></div>
 <div class="ttc" id="astructpoly_1_1IR_1_1AddrChain_html"><div class="ttname"><a href="structpoly_1_1IR_1_1AddrChain.html">poly::IR::AddrChain</a></div><div class="ttdef"><b>Definition:</b> Cache.hpp:20</div></div>
-<div class="ttc" id="astructpoly_1_1IR_1_1Exit_html"><div class="ttname"><a href="structpoly_1_1IR_1_1Exit.html">poly::IR::Exit</a></div><div class="ttdef"><b>Definition:</b> Node.hpp:397</div></div>
+<div class="ttc" id="astructpoly_1_1IR_1_1Exit_html"><div class="ttname"><a href="structpoly_1_1IR_1_1Exit.html">poly::IR::Exit</a></div><div class="ttdef"><b>Definition:</b> Node.hpp:395</div></div>
 <div class="ttc" id="astructpoly_1_1dict_1_1aset_html"><div class="ttname"><a href="structpoly_1_1dict_1_1aset.html">poly::dict::aset</a></div><div class="ttdef"><b>Definition:</b> BumpMapSet.hpp:27</div></div>
 <div class="ttc" id="astructpoly_1_1lp_1_1LoopBlock_1_1OptimizationResult_html"><div class="ttname"><a href="structpoly_1_1lp_1_1LoopBlock_1_1OptimizationResult.html">poly::lp::LoopBlock::OptimizationResult</a></div><div class="ttdef"><b>Definition:</b> LoopBlock.hpp:156</div></div>
 <div class="ttc" id="astructpoly_1_1poly_1_1Dependence_1_1ID_html"><div class="ttname"><a href="structpoly_1_1poly_1_1Dependence_1_1ID.html">poly::poly::Dependence::ID</a></div><div class="ttdef"><b>Definition:</b> Dependence.hpp:25</div></div>
