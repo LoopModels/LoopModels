@@ -321,7 +321,8 @@ private:
     auto p1 = allocator.checkpoint();
     MutSquarePtrMatrix<int64_t> A =
       math::matrix<int64_t>(&allocator, nLoops + 1);
-    // BumpPtrVector<containers::Pair<BitSet64, int64_t>> omegaOffsets{allocator};
+    // BumpPtrVector<containers::Pair<BitSet64, int64_t>>
+    // omegaOffsets{allocator};
     // // we check all memory accesses in the node, to see if applying the same
     // omega offsets can zero dependence offsets. If so, we apply the shift.
     // we look for offsets, then try and validate that the shift
@@ -509,10 +510,9 @@ private:
         if (d.isActive(depth)) params += numParams(d);
     return params;
   }
-  using BackupSchedule =
-    math::ResizeableView<containers::Pair<poly::AffineSchedule, ScheduledNode *>,
-                         unsigned>;
-  using BackupSat = math::ResizeableView<std::array<uint8_t, 2>, unsigned>;
+  using BackupSchedule = math::ResizeableView<
+    containers::Pair<poly::AffineSchedule, ScheduledNode *>, ptrdiff_t>;
+  using BackupSat = math::ResizeableView<std::array<uint8_t, 2>, ptrdiff_t>;
   using Backup = containers::Pair<BackupSchedule, BackupSat>;
 
   static constexpr auto
@@ -614,14 +614,15 @@ private:
     DenseMatrix<int64_t> nullSpace; // d x lfull
     DenseMatrix<int64_t> A{node->getPhi()[_(0, depth), _].transpose()};
     math::NormalForm::nullSpace11(nullSpace, A);
-    invariant(unsigned(nullSpace.numRow()), node->getNumLoops() - depth);
+    invariant(ptrdiff_t(nullSpace.numRow()),
+              ptrdiff_t(node->getNumLoops()) - depth);
     // Now, we search index matrices for schedules not in the null space of
     // existing phi. This is because we're looking to orthogonalize a
     // memory access if possible, rather than setting a schedule
     // arbitrarily.
     // Here, we collect candidates for the next schedule
     DenseMatrix<int64_t> candidates{
-      math::DenseDims{0, node->getNumLoops() + 1}};
+      math::DenseDims<>{0, node->getNumLoops() + 1}};
     Vector<int64_t> indv;
     indv.resizeForOverwrite(node->getNumLoops());
     for (Addr *mem : node->localAddr()) {
@@ -641,7 +642,7 @@ private:
           break;
         }
         if (!found) {
-          candidates.resize(candidates.numRow() + 1);
+          candidates.resize(++auto{candidates.numRow()});
           assert((candidates[last, 0]) == 0);
           candidates[last, _(1, end)] << indv;
         }
@@ -736,7 +737,7 @@ private:
     for (ScheduledNode *outNode : nodes->getVertices()) {
       for (Dependence edge : outNode->inputEdges(deps)) {
         if (edge.isInactive(depth)) continue;
-        Col uu = u + edge.getNumDynamicBoundingVar();
+        ptrdiff_t uu = u + edge.getNumDynamicBoundingVar();
         if ((sol[w++] != 0) || (anyNEZero(sol[_(u, uu)]))) {
           edge.setSatLevelLP(depth);
           result = Result::dependent();
@@ -935,9 +936,9 @@ private:
     // rows give constraints; each edge gets its own
     // numBounding = num u
     // numActiveEdges = num w
-    Row c = 0;
-    Col l = 1, o = 1 + numLambda + numSlack, p = o + numOmegaCoefs,
-        w = p + numPhiCoefs, u = w + numActiveEdges;
+    ptrdiff_t c = 0;
+    ptrdiff_t l = 1, o = 1 + numLambda + numSlack, p = o + numOmegaCoefs,
+              w = p + numPhiCoefs, u = w + numActiveEdges;
     for (ScheduledNode *inNode : nodes->getVertices()) {
       for (Dependence edge : inNode->outputEdges(deps, d)) {
         ScheduledNode *outNode = edge.output()->getNode();
@@ -950,20 +951,21 @@ private:
           bndO{edge.getBndOmegaCoefs()}, bndWU{edge.getBndCoefs()};
         const ptrdiff_t numSatConstraints = satC.size(),
                         numBndConstraints = bndC.size();
-        const Col nPc = satPc.numCol(), nPp = satPp.numCol();
-        invariant(nPc, bndPc.numCol());
-        invariant(nPp, bndPp.numCol());
-        Row cc = c + numSatConstraints;
-        Row ccc = cc + numBndConstraints;
+        const ptrdiff_t nPc = ptrdiff_t(satPc.numCol()),
+                        nPp = ptrdiff_t(satPp.numCol());
+        invariant(nPc, ptrdiff_t(bndPc.numCol()));
+        invariant(nPp, ptrdiff_t(bndPp.numCol()));
+        ptrdiff_t cc = c + numSatConstraints;
+        ptrdiff_t ccc = cc + numBndConstraints;
 
-        Col ll = l + satL.numCol();
-        Col lll = ll + bndL.numCol();
+        ptrdiff_t ll = l + ptrdiff_t(satL.numCol());
+        ptrdiff_t lll = ll + ptrdiff_t(bndL.numCol());
         C[_(c, cc), _(l, ll)] << satL;
         C[_(cc, ccc), _(ll, lll)] << bndL;
         l = lll;
         // bounding
         C[_(cc, ccc), w++] << bndWU[_, 0];
-        Col uu = u + bndWU.numCol() - 1;
+        ptrdiff_t uu = u + ptrdiff_t(bndWU.numCol()) - 1;
         C[_(cc, ccc), _(u, uu)] << bndWU[_, _(1, end)];
         u = uu;
         if (!satisfyDeps || !edge.stashedPreventsReordering(d))
@@ -1058,7 +1060,8 @@ private:
   static void updateConstraints(MutPtrMatrix<int64_t> C,
                                 const ScheduledNode *node,
                                 PtrMatrix<int64_t> sat, PtrMatrix<int64_t> bnd,
-                                unsigned d, Row c, Row cc, Row ccc, Col p) {
+                                unsigned d, ptrdiff_t c, ptrdiff_t cc,
+                                ptrdiff_t ccc, ptrdiff_t p) {
     invariant(sat.numCol(), bnd.numCol());
     if (node->phiIsScheduled(d)) {
       // add it constants
@@ -1070,13 +1073,13 @@ private:
     } else {
       // add it to C
       auto po = node->getPhiOffset() + p;
-      C[_(c, cc), _(po, po + sat.numCol())] << sat;
-      C[_(cc, ccc), _(po, po + bnd.numCol())] << bnd;
+      C[_(c, cc), _(po, po + ptrdiff_t(sat.numCol()))] << sat;
+      C[_(cc, ccc), _(po, po + ptrdiff_t(bnd.numCol()))] << bnd;
     }
   }
   void addIndependentSolutionConstraints(Valid<Simplex> omniSimplex,
-                                         const ScheduledNode *nodes, unsigned d,
-                                         CoefCounts counts) {
+                                         const ScheduledNode *nodes,
+                                         ptrdiff_t d, CoefCounts counts) {
     // omniSimplex->setNumCons(omniSimplex->getNumCons() +
     //                                memory.size());
     // omniSimplex->reserveExtraRows(memory.size());
@@ -1098,7 +1101,8 @@ private:
         if (node->phiIsScheduled(d) || (d >= node->getNumLoops()) ||
             (!node->hasActiveEdges(deps, d)))
           continue;
-        A.resizeForOverwrite(Row{ptrdiff_t(node->getPhi().numCol())}, Col{d});
+        A.resizeForOverwrite(Row<>{ptrdiff_t(node->getPhi().numCol())},
+                             Col<>{d});
         A << node->getPhi()[_(0, d), _].transpose();
         math::NormalForm::nullSpace11(N, A);
         // we add sum(NullSpace,dims=1) >= 1
@@ -1144,8 +1148,9 @@ private:
     return os;
   }
 };
-inline auto operator<<(llvm::raw_ostream &os,
-                       containers::Pair<ScheduledNode *, Dependencies> nodesdeps)
+inline auto
+operator<<(llvm::raw_ostream &os,
+           containers::Pair<ScheduledNode *, Dependencies> nodesdeps)
   -> llvm::raw_ostream & {
   auto [nodes, deps] = nodesdeps;
   os << "\nLoopBlock graph:\n";

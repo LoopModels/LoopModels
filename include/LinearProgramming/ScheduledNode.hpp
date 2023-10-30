@@ -398,10 +398,10 @@ public:
   }
   // NOLINTNEXTLINE(readability-make-member-function-const)
   [[nodiscard]] constexpr auto getPhi() -> MutSquarePtrMatrix<int64_t> {
-    return {mem + 1, math::SquareDims{unsigned(getNumLoops())}};
+    return {mem + 1, math::SquareDims<>{unsigned(getNumLoops())}};
   }
   [[nodiscard]] constexpr auto getPhi() const -> SquarePtrMatrix<int64_t> {
-    return {const_cast<int64_t *>(mem) + 1, math::SquareDims{getNumLoops()}};
+    return {const_cast<int64_t *>(mem) + 1, math::SquareDims<>{getNumLoops()}};
   }
   /// getSchedule, loops are always indexed from outer to inner
   [[nodiscard]] constexpr auto getSchedule(ptrdiff_t d) const

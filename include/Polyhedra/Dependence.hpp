@@ -7,8 +7,8 @@
 #include "Polyhedra/Loops.hpp"
 #include "Polyhedra/Schedule.hpp"
 #include "Support/Iterators.hpp"
-#include <Math/Constructors.hpp>
 #include <Alloc/Arena.hpp>
+#include <Math/Constructors.hpp>
 #include <Utilities/Invariant.hpp>
 #include <cstdint>
 #include <ranges>
@@ -181,7 +181,7 @@ public:
     invariant(inPhi.numRow(), outPhi.numRow());
     if (depPoly->checkSat(*alloc, inLoop, inOff, inPhi, outLoop, outOff,
                           outPhi))
-      satLvl[0] = uint8_t(inPhi.numRow() - 1);
+      satLvl[0] = uint8_t(ptrdiff_t(inPhi.numRow()) - 1);
   }
   constexpr void copySimplices(Arena<> *alloc) {
     dependenceSatisfaction = dependenceSatisfaction->copy(alloc);
@@ -244,7 +244,7 @@ public:
     // 2 == 1 for const offset + 1 for w
     assert(2 + depPoly->getNumLambda() + getNumPhiCoefficients() +
              getNumOmegaCoefficients() ==
-           size_t(dependenceSatisfaction->getConstraints().numCol()));
+           ptrdiff_t(dependenceSatisfaction->getConstraints().numCol()));
   }
   [[nodiscard]] constexpr auto getDepPoly() -> Valid<DepPoly> {
     return depPoly;
@@ -332,11 +332,11 @@ public:
                                  Valid<const AffineSchedule> schIn,
                                  Valid<const AffineSchedule> schOut) const
     -> bool {
-    unsigned numLoopsIn = in->getCurrentDepth(),
-             numLoopsOut = out->getCurrentDepth(),
-             numLoopsCommon = std::min(numLoopsIn, numLoopsOut),
-             numLoopsTotal = numLoopsIn + numLoopsOut,
-             numVar = numLoopsIn + numLoopsOut + 2;
+    ptrdiff_t numLoopsIn = in->getCurrentDepth(),
+              numLoopsOut = out->getCurrentDepth(),
+              numLoopsCommon = std::min(numLoopsIn, numLoopsOut),
+              numLoopsTotal = numLoopsIn + numLoopsOut,
+              numVar = numLoopsIn + numLoopsOut + 2;
     invariant(dependenceSatisfaction->getNumVars(), numVar);
     auto schv = vector(&alloc, numVar, int64_t(0));
     const SquarePtrMatrix<int64_t> inPhi = schIn->getPhi();
@@ -382,10 +382,10 @@ public:
   [[nodiscard]] auto isSatisfied(Arena<> alloc, PtrVector<unsigned> inFusOmega,
                                  PtrVector<unsigned> outFusOmega) const
     -> bool {
-    unsigned numLoopsIn = in->getCurrentDepth(),
-             numLoopsOut = out->getCurrentDepth(),
-             numLoopsCommon = std::min(numLoopsIn, numLoopsOut),
-             numVar = numLoopsIn + numLoopsOut + 2;
+    ptrdiff_t numLoopsIn = in->getCurrentDepth(),
+              numLoopsOut = out->getCurrentDepth(),
+              numLoopsCommon = std::min(numLoopsIn, numLoopsOut),
+              numVar = numLoopsIn + numLoopsOut + 2;
     invariant(dependenceSatisfaction->getNumVars(), numVar);
     auto schv = vector(&alloc, numVar, int64_t(0));
     // Vector<int64_t> schv(dependenceSatisfaction->getNumVars(),int64_t(0));
@@ -423,10 +423,9 @@ public:
     }
     return true;
   }
-  [[nodiscard]] auto isSatisfied(Arena<> alloc,
-                                 Valid<const AffineSchedule> sx,
-                                 Valid<const AffineSchedule> sy,
-                                 size_t d) const -> bool {
+  [[nodiscard]] auto isSatisfied(Arena<> alloc, Valid<const AffineSchedule> sx,
+                                 Valid<const AffineSchedule> sy, size_t d) const
+    -> bool {
     unsigned numLambda = depPoly->getNumLambda(), nLoopX = depPoly->getDim0(),
              nLoopY = depPoly->getDim1(), numLoopsTotal = nLoopX + nLoopY;
     MutPtrVector<int64_t> sch{math::vector<int64_t>(&alloc, numLoopsTotal + 2)};
@@ -438,9 +437,9 @@ public:
     return dependenceSatisfaction->satisfiable(alloc, sch, numLambda);
   }
   [[nodiscard]] auto isSatisfied(Arena<> alloc, size_t d) const -> bool {
-    unsigned numLambda = depPoly->getNumLambda(),
-             numLoopsX = depPoly->getDim0(),
-             numLoopsTotal = numLoopsX + depPoly->getDim1();
+    ptrdiff_t numLambda = depPoly->getNumLambda(),
+              numLoopsX = depPoly->getDim0(),
+              numLoopsTotal = numLoopsX + depPoly->getDim1();
     MutPtrVector<int64_t> sch{math::vector<int64_t>(&alloc, numLoopsTotal + 2)};
     sch << 0;
     invariant(sch.size(), numLoopsTotal + 2);
@@ -603,8 +602,8 @@ private:
   }
   static constexpr auto memNeeded(size_t N) -> size_t {
     constexpr size_t memPer = sizeof(int32_t) * 2 + sizeof(DepPoly *) +
-                              sizeof(Valid<math::Simplex>) * 2 +
-                              sizeof(bool) + sizeof(uint8_t);
+                              sizeof(Valid<math::Simplex>) * 2 + sizeof(bool) +
+                              sizeof(uint8_t);
     return N * memPer;
   }
 
@@ -625,21 +624,20 @@ private:
                      std::array<Valid<math::Simplex>, 2> pair) {
     return timelessCheck(alloc, dxy, x, y, pair,
                          checkDirection(*alloc, pair, x, y, dxy->getNumLambda(),
-                                        dxy->getNumVar() + 1));
+                                        Col<>{dxy->getNumVar() + 1}));
   }
 
   // emplaces dependencies with repeat accesses to the same memory across
   // time
   void timeCheck(Arena<> *alloc, Valid<DepPoly> dxy, Valid<IR::Addr> x,
-                 Valid<IR::Addr> y,
-                 std::array<Valid<math::Simplex>, 2> pair) {
+                 Valid<IR::Addr> y, std::array<Valid<math::Simplex>, 2> pair) {
     bool isFwd = checkDirection(*alloc, pair, x, y, dxy->getNumLambda(),
-                                dxy->getA().numCol() - dxy->getTimeDim());
+                                Col<>{ptrdiff_t(dxy->getA().numCol()) - dxy->getTimeDim()});
     timeCheck(alloc, dxy, x, y, pair, isFwd);
   }
   void timeCheck(Arena<> *alloc, Valid<DepPoly> dxy, Valid<IR::Addr> x,
-                 Valid<IR::Addr> y,
-                 std::array<Valid<math::Simplex>, 2> pair, bool isFwd) {
+                 Valid<IR::Addr> y, std::array<Valid<math::Simplex>, 2> pair,
+                 bool isFwd) {
     const unsigned numInequalityConstraintsOld =
                      dxy->getNumInequalityConstraints(),
                    numEqualityConstraintsOld = dxy->getNumEqualityConstraints(),
@@ -650,7 +648,7 @@ private:
     invariant(numLambda, dxy->getNumLambda());
     // copy backup
     std::array<Valid<math::Simplex>, 2> farkasBackups{pair[0]->copy(alloc),
-                                                        pair[1]->copy(alloc)};
+                                                      pair[1]->copy(alloc)};
     Valid<IR::Addr> in = x, out = y;
     if (isFwd) {
       std::swap(farkasBackups[0], farkasBackups[1]);
@@ -691,7 +689,7 @@ private:
       ptrdiff_t v = numVar + t, i = 0;
       while (true) {
         for (ptrdiff_t c = 0; c < numInequalityConstraintsOld; ++c) {
-          int64_t Acv = dxy->getA(c, v);
+          int64_t Acv = dxy->getA(Row<>{c}, Col<>{v});
           if (!Acv) continue;
           Acv *= step;
           fE[0, c + 1] -= Acv; // *1
@@ -699,7 +697,7 @@ private:
         }
         for (ptrdiff_t c = 0; c < numEqualityConstraintsOld; ++c) {
           // each of these actually represents 2 inds
-          int64_t Ecv = dxy->getE(c, v);
+          int64_t Ecv = dxy->getE(Row<>{c}, Col<>{v});
           if (!Ecv) continue;
           Ecv *= step;
           fE[0, c + ineqEnd] -= Ecv;
@@ -710,7 +708,7 @@ private:
         if (i++ != 0) break; // break after undoing
         timeDirection[t] =
           checkDirection(*alloc, farkasBackups, *out, *in, numLambda,
-                         dxy->getA().numCol() - dxy->getTimeDim());
+                         Col<>{ptrdiff_t(dxy->getA().numCol()) - dxy->getTimeDim()});
         step *= -1; // flip to undo, then break
       }
     } while (++t < timeDim);
@@ -722,19 +720,19 @@ private:
       int64_t step = (2 * timeDirection[t] - 1) * dxy->getNullStep(t);
       ptrdiff_t v = numVar + t;
       for (ptrdiff_t c = 0; c < numInequalityConstraintsOld; ++c) {
-        int64_t Acv = dxy->getA(c, v);
+        int64_t Acv = dxy->getA(Row<>{c}, Col<>{v});
         if (!Acv) continue;
         Acv *= step;
-        dxy->getA(c, 0) -= Acv;
+        dxy->getA(Row<>{c}, Col<>{0}) -= Acv;
         fE[0, c + 1] -= Acv; // *1
         sE[0, c + 1] -= Acv; // *-1
       }
       for (ptrdiff_t c = 0; c < numEqualityConstraintsOld; ++c) {
         // each of these actually represents 2 inds
-        int64_t Ecv = dxy->getE(c, v);
+        int64_t Ecv = dxy->getE(Row<>{c}, Col<>{v});
         if (!Ecv) continue;
         Ecv *= step;
-        dxy->getE(c, 0) -= Ecv;
+        dxy->getE(Row<>{c}, Col<>{0}) -= Ecv;
         fE[0, c + ineqEnd] -= Ecv;
         fE[0, c + posEqEnd] += Ecv;
         sE[0, c + ineqEnd] -= Ecv;
@@ -751,11 +749,10 @@ private:
   }
   static auto checkDirection(Arena<> alloc,
                              const std::array<Valid<math::Simplex>, 2> &p,
-                             Valid<const IR::Addr> x,
-                             Valid<const IR::Addr> y,
+                             Valid<const IR::Addr> x, Valid<const IR::Addr> y,
                              Valid<const AffineSchedule> xSchedule,
                              Valid<const AffineSchedule> ySchedule,
-                             unsigned numLambda, Col nonTimeDim) -> bool {
+                             ptrdiff_t numLambda, Col<> nonTimeDim) -> bool {
     const auto &[fxy, fyx] = p;
     unsigned numLoopsX = x->getCurrentDepth(), numLoopsY = y->getCurrentDepth(),
              numLoopsTotal = numLoopsX + numLoopsY;
@@ -789,13 +786,13 @@ private:
       sch[_(2, 2 + numLoopsX)] << xPhi[last - i, _];
       sch[_(2 + numLoopsX, 2 + numLoopsTotal)] << yPhi[last - i, _];
       if (fxy->unSatisfiableZeroRem(alloc, sch, numLambda,
-                                    unsigned(nonTimeDim))) {
+                                    ptrdiff_t(nonTimeDim))) {
         assert(!fyx->unSatisfiableZeroRem(alloc, sch, numLambda,
-                                          unsigned(nonTimeDim)));
+                                          ptrdiff_t(nonTimeDim)));
         return false;
       }
       if (fyx->unSatisfiableZeroRem(alloc, sch, numLambda,
-                                    unsigned(nonTimeDim)))
+                                    ptrdiff_t(nonTimeDim)))
         return true;
     }
     // assert(false);
@@ -804,11 +801,10 @@ private:
   // returns `true` if forward, x->y
   static auto checkDirection(Arena<> alloc,
                              const std::array<Valid<math::Simplex>, 2> &p,
-                             Valid<const IR::Addr> x,
-                             Valid<const IR::Addr> y, unsigned numLambda,
-                             Col nonTimeDim) -> bool {
+                             Valid<const IR::Addr> x, Valid<const IR::Addr> y,
+                             ptrdiff_t numLambda, Col<> nonTimeDim) -> bool {
     const auto &[fxy, fyx] = p;
-    unsigned numLoopsX = x->getCurrentDepth(), nTD = unsigned(nonTimeDim);
+    unsigned numLoopsX = x->getCurrentDepth(), nTD = ptrdiff_t(nonTimeDim);
 #ifndef NDEBUG
     const unsigned numLoopsCommon = std::min(numLoopsX, y->getCurrentDepth());
 #endif

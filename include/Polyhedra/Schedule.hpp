@@ -71,10 +71,10 @@ struct AffineSchedule {
   }
   // NOLINTNEXTLINE(readability-make-member-function-const)
   [[nodiscard]] constexpr auto getPhi() -> MutSquarePtrMatrix<int64_t> {
-    return {data(), math::SquareDims{unsigned(getNumLoops())}};
+    return {data(), math::SquareDims<>{getNumLoops()}};
   }
   [[nodiscard]] constexpr auto getPhi() const -> SquarePtrMatrix<int64_t> {
-    return {data(), math::SquareDims{getNumLoops()}}; //
+    return {data(), math::SquareDims<>{getNumLoops()}}; //
   }
   /// getSchedule, loops are always indexed from outer to inner
   [[nodiscard]] constexpr auto getSchedule(size_t d) const
