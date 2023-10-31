@@ -2,15 +2,16 @@
 
 #include "IR/InstructionCost.hpp"
 #include "IR/Node.hpp"
+#include "IR/OrthogonalAxes.hpp"
 #include "IR/Users.hpp"
 #include "Polyhedra/Loops.hpp"
 #include "Support/OStream.hpp"
 #include "Utilities/ListRanges.hpp"
+#include <Alloc/Arena.hpp>
 #include <Containers/UnrolledList.hpp>
 #include <Math/Array.hpp>
 #include <Math/Comparisons.hpp>
 #include <Math/Math.hpp>
-#include <Alloc/Arena.hpp>
 #include <Utilities/Valid.hpp>
 #include <cstddef>
 #include <cstdint>
@@ -87,6 +88,7 @@ class Addr : public Instruction {
   Addr *origNext{nullptr};
   uint16_t numDim{0}, numDynSym{0};
   int32_t topologicalPosition;
+  OrthogonalAxes axes;
 #if !defined(__clang__) && defined(__GNUC__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
@@ -131,6 +133,32 @@ class Addr : public Instruction {
   }
 
 public:
+  [[nodiscard]] constexpr auto getOrthAxes() const -> OrthogonalAxes {
+    return axes;
+  }
+  constexpr auto calcOrthAxes(ptrdiff_t depth) -> OrthogonalAxes {
+    invariant((depth <= 24) && (depth >= 0));
+    invariant(depth >= naturalDepth);
+    invariant(currentDepth >= depth);
+    bool indepAxes = true;
+    uint32_t contig{0}, indep{(uint32_t(1) << depth) - 1};
+    /// indexMatrix() -> arrayDim() x getNumLoops()
+    DensePtrMatrix<int64_t> inds{indexMatrix()};
+    for (ptrdiff_t l = 0; l < inds.numCol(); ++l) {
+      if (!inds[0, l]) continue;
+      contig |= uint32_t(1) << l;
+      indep &= ~(uint32_t(1) << l);
+    }
+    for (ptrdiff_t d = 1; d < inds.numRow(); ++d) {
+      for (ptrdiff_t l = 0; l < inds.numCol(); ++l) {
+        if (!inds[d, l]) continue;
+        if (!(indep & (uint32_t(1) << l))) indepAxes = false;
+        indep &= ~(uint32_t(1) << l);
+      }
+    }
+    axes = {indepAxes, contig, indep};
+    return axes;
+  }
   [[nodiscard]] constexpr auto isDropped() const -> bool {
     return (getNext() == nullptr) && (getPrev() == nullptr);
   }
@@ -474,10 +502,12 @@ public:
     return {getIntMemory() + 1, getArrayDim()};
   }
   /// indexMatrix() -> arrayDim() x getNumLoops()
+  /// First dimension is contiguous
   [[nodiscard]] constexpr auto indexMatrix() -> MutDensePtrMatrix<int64_t> {
     return {indMatPtr(), DenseDims<>{{getArrayDim()}, {getNaturalDepth()}}};
   }
   /// indexMatrix() -> arrayDim() x getNumLoops()
+  /// First dimension is contiguous
   [[nodiscard]] constexpr auto indexMatrix() const -> DensePtrMatrix<int64_t> {
     return {indMatPtr(), DenseDims<>{{getArrayDim()}, {getNaturalDepth()}}};
   }
@@ -529,11 +559,50 @@ public:
                                 llvm::TargetTransformInfo::TCK_Latency)};
   }
 
-  auto getCost(const llvm::TargetTransformInfo &TTI, cost::VectorWidth W)
-    -> cost::RecipThroughputLatency {
-    // TODO: cache?
-    return calculateCostContiguousLoadStore(TTI, W.getWidth());
+  /// RecipThroughput
+  struct Costs {
+    double contiguous;
+    double discontiguous;
+    double scalar;
+  };
+  auto calcCostContigDiscontig(const llvm::TargetTransformInfo &TTI,
+                               unsigned int vectorWidth) -> Costs {
+    constexpr unsigned int addrSpace = 0;
+    llvm::Type *T = cost::getType(getType(), vectorWidth);
+    llvm::Align alignment = getAlign();
+
+    llvm::Intrinsic::ID id =
+      isLoad() ? llvm::Instruction::Load : llvm::Instruction::Store;
+
+    llvm::InstructionCost gsc{TTI.getGatherScatterOpCost(
+      id, T, basePointer->getValue(), predicate, alignment,
+      llvm::TargetTransformInfo::TCK_RecipThroughput)},
+      contig, scalar;
+
+    if (!predicate) {
+      contig =
+        TTI.getMemoryOpCost(id, T, alignment, addrSpace,
+                            llvm::TargetTransformInfo::TCK_RecipThroughput);
+      scalar =
+        TTI.getMemoryOpCost(id, T, alignment, addrSpace,
+                            llvm::TargetTransformInfo::TCK_RecipThroughput);
+    } else {
+      llvm::Intrinsic::ID mid =
+        isLoad() ? llvm::Intrinsic::masked_load : llvm::Intrinsic::masked_store;
+      contig = TTI.getMaskedMemoryOpCost(
+        mid, T, alignment, addrSpace,
+        llvm::TargetTransformInfo::TCK_RecipThroughput);
+      scalar = TTI.getMaskedMemoryOpCost(
+        mid, T, alignment, addrSpace,
+        llvm::TargetTransformInfo::TCK_RecipThroughput);
+    }
+    double dc{NAN}, dd{NAN}, ds{NAN};
+    if (std::optional<double> o = contig.getValue()) dc = *o;
+    if (std::optional<double> o = gsc.getValue()) dc = *o;
+    if (std::optional<double> o = scalar.getValue()) dc = *o;
+    return {dc, dd, ds};
   }
+
   /// drop `this` and remove it from `Dependencies`
   inline void drop(Dependencies);
 

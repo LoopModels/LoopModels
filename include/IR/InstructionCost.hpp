@@ -1,7 +1,6 @@
 #pragma once
 #include <Utilities/Invariant.hpp>
 #include <bit>
-#include <cstdint>
 #include <llvm/IR/DerivedTypes.h>
 #include <llvm/IR/Type.h>
 #include <llvm/Support/InstructionCost.h>

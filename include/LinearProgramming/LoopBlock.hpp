@@ -198,6 +198,11 @@ public:
   }
 
 private:
+  struct LoadSummary {
+    Value *store;
+    poly::Loop *deepestLoop;
+    IR::AddrChain ac;
+  };
   auto addScheduledNode(IR::Cache &cache, IR::Stow stow, IR::AddrChain addr)
     -> OptimizationResult {
     // how are we going to handle load duplication?
@@ -258,8 +263,7 @@ private:
   ///
   // NOLINTNEXTLINE(misc-no-recursion)
   auto searchOperandsForLoads(IR::Cache &cache, IR::Stow stow, Value *val,
-                              IR::AddrChain addr)
-    -> std::tuple<Value *, poly::Loop *, IR::AddrChain> {
+                              IR::AddrChain addr) -> LoadSummary {
     auto *inst = llvm::dyn_cast<Instruction>(val);
     if (!inst) return {val, nullptr, addr};
     // we use parent/child relationships here instead of next/prev

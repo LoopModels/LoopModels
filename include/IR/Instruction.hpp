@@ -27,7 +27,6 @@
 #include <llvm/Support/Allocator.h>
 #include <llvm/Support/Casting.h>
 #include <llvm/Support/MathExtras.h>
-#include <utility>
 
 namespace poly {
 using math::PtrVector, math::MutPtrVector, alloc::Arena, utils::invariant,

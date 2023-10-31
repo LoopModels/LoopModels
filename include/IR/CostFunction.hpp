@@ -1,10 +1,13 @@
 #pragma once
 
-#include "Containers/Pair.hpp"
+#include "IR/Address.hpp"
+#include "IR/Instruction.hpp"
 #include "IR/Node.hpp"
-#include "Math/Constructors.hpp"
+#include "IR/OrthogonalAxes.hpp"
 #include <Containers/BitSets.hpp>
+#include <Containers/Pair.hpp>
 #include <Math/Array.hpp>
+#include <Math/Constructors.hpp>
 #include <Math/Exp.hpp>
 #include <Math/GreatestCommonDivisor.hpp>
 #include <Math/Math.hpp>
@@ -42,22 +45,23 @@ using utils::Optional;
 struct LoopCostCounts {
   uint16_t known_trip : 1;
   uint16_t trip_count : 15;
-  uint16_t omemory : 11;
-  uint16_t cmemory : 5;
-  uint16_t exit : 5; /// how many blocks we exit after this
-  uint16_t compute : 11;
+  uint16_t compute;
+  uint16_t omemory;
+  uint8_t cmemory;
+  uint8_t exit : 5;          /// how many blocks we exit after this
+  uint8_t l2vectorWidth : 3; // 1<<7 == 128
 };
-static_assert(sizeof(LoopCostCounts) == 6);
+static_assert(sizeof(LoopCostCounts) == 8);
 
 /// Order is outermost -> innermost
-/// Costs are relative to Scalar, i.e. scalar == 1
-struct MemoryCosts {
-  double contiguous;    // vload/vstore
-  double discontiguous; // gather/scatter
-};
 struct VectorizationFactor {
   uint32_t l2factor;
-  uint32_t index; // outermost == 0
+  // trailing bit is outermost loop, so if iterating by shifting,
+  // we go outer->inner
+  uint32_t indexMask;
+  constexpr operator IR::VectorWidth() const {
+    return IR::VectorWidth{unsigned(1) << l2factor, l2factor};
+  }
 };
 
 /// TODO: maybe two `uint8_t`s + `uint16_t`
@@ -68,10 +72,9 @@ struct VectorizationFactor {
 /// between eltypes.
 /// Another option is to store individual `MemoryCosts`,
 /// so that we can aggregate/sum up.
-struct OrthogonalAxes {
-  MemoryCosts memcost;
-  uint32_t contig : 8; // max number of array dims of 255
-  uint32_t indep : 24; // max loop depth of 24
+struct MemCostSummary {
+  IR::Addr::Costs memcost;
+  OrthogonalAxes orth;
   // [[nodiscard]] constexpr auto contigAxis() const -> uint32_t {
   //   return data & 0xff;
   // }
@@ -87,8 +90,8 @@ struct OrthogonalAxes {
   //   return data >> 8;
   // };
 };
-constexpr auto operator&(OrthogonalAxes a, OrthogonalAxes b) -> uint32_t {
-  return a.indep & b.indep;
+constexpr auto operator&(MemCostSummary a, MemCostSummary b) -> uint32_t {
+  return a.orth.indep & b.orth.indep;
 }
 constexpr auto cost(const AbstractMatrix auto &invunrolls, uint32_t indepAxes)
   -> utils::eltype_t<decltype(invunrolls)> {
@@ -106,17 +109,17 @@ constexpr auto cost(const AbstractMatrix auto &invunrolls, uint32_t indepAxes)
 // costs is an array of length two.
 // memory costs, unnormalized by `prod(unrolls)`
 // `invunrolls` is a matrix, row-0 are the inverse unrolls, row-1 unrolls.
-constexpr auto cost(const AbstractMatrix auto &invunrolls, OrthogonalAxes orth,
+constexpr auto cost(const AbstractMatrix auto &invunrolls, MemCostSummary mcs,
                     VectorizationFactor vfi)
   -> utils::eltype_t<decltype(invunrolls)> {
-
+  auto [mc, orth] = mcs;
   utils::eltype_t<decltype(invunrolls)> c{cost(invunrolls, orth.indep)};
-  if ((vfi.index < 32) && !(orth.indep & (1 << vfi.index))) {
-    // depends vectorized index
-    if (vfi.index == orth.contig) {
-      c *= orth.memcost.contiguous;
-    } else if (orth.contig >= 32) {
-      c *= orth.memcost.discontiguous;
+  if (!(orth.indep & vfi.indexMask)) {
+    // depends on vectorized index
+    if (vfi.indexMask & orth.contig) {
+      c *= mc.contiguous;
+    } else if (!orth.contig) {
+      c *= mc.discontiguous;
     } else {
       // Discontiguous vector load.
       // We consider two alternatives:
@@ -136,11 +139,10 @@ constexpr auto cost(const AbstractMatrix auto &invunrolls, OrthogonalAxes orth,
         u{invunrolls[1, orth.contig]},
         mr{math::smax((1 << vfi.l2factor) * iu, 1)};
       utils::invariant(iu == 1 / u);
-      c *=
-        math::smin(orth.memcost.contiguous * mr + u * (vfi.l2factor + log2(mr)),
-                   orth.memcost.discontiguous);
+      c *= math::smin(mc.contiguous * mr + u * (vfi.l2factor + log2(mr)),
+                      mc.discontiguous);
     }
-  }
+  } else c *= mc.scalar;
   return c;
 }
 /// General fallback method for those without easy to represent structure
@@ -150,7 +152,7 @@ constexpr auto cost(const AbstractMatrix auto &invunrolls, OrthogonalAxes orth,
 /// more than one array dimension.
 /// For these, we use the incorrect formula:
 ///
-constexpr auto cost(const AbstractMatrix auto &invunrolls, OrthogonalAxes orth,
+constexpr auto cost(const AbstractMatrix auto &invunrolls, MemCostSummary orth,
                     VectorizationFactor vfi, DensePtrMatrix<int64_t> inds)
   -> utils::eltype_t<decltype(invunrolls)> {
   utils::eltype_t<decltype(invunrolls)> c{1};
@@ -164,7 +166,7 @@ constexpr auto cost(const AbstractMatrix auto &invunrolls, OrthogonalAxes orth,
     containers::BitSet64 bs;
     utils::eltype_t<decltype(invunrolls)> uprod;
     for (ptrdiff_t l = 0; l < numLoops; ++l) {
-      if (l == vfi.index) continue;
+      if ((uint32_t(1) << l) == vfi.indexMask) continue;
       int64_t a = inds[d, l];
       if (!a) continue;
       bool docontinue{false};
@@ -187,7 +189,7 @@ constexpr auto cost(const AbstractMatrix auto &invunrolls, OrthogonalAxes orth,
     if (bs.size() < 2) continue;
     utils::eltype_t<decltype(invunrolls)> prod{1};
     for (ptrdiff_t l : bs) {
-      if (l == vfi.index) continue;
+      if ((uint32_t(1) << l) == vfi.indexMask) continue;
       int64_t a = inds[d, l];
       if (!a) continue;
       prod *= (1 - (a / g) * (uprod / invunrolls[0, l]));
@@ -196,7 +198,7 @@ constexpr auto cost(const AbstractMatrix auto &invunrolls, OrthogonalAxes orth,
   }
   // c is a scaling factor; now we proceed to calculate cost similaly to the
   // orth-axis implementation above.
-  return c * cost(invunrolls, vfi, orth);
+  return c * cost(invunrolls, orth, vfi);
 }
 
 // We need to define an unroll ordering.
@@ -227,19 +229,19 @@ constexpr auto registerPressure(const AbstractMatrix auto &invunrolls,
   return 0.25 * math::softplus(8.0 * (acc - r.register_count));
 }
 
-auto memcosts(const AbstractMatrix auto &invunrolls, VectorizationFactor vf,
-              math::PtrVector<Pair<OrthogonalAxes, MemoryCosts>> orth_axes) {
+auto memcosts(
+  const AbstractMatrix auto &invunrolls, VectorizationFactor vf,
+  math::PtrVector<Pair<MemCostSummary, IR::Addr::Costs>> orth_axes) {
   utils::eltype_t<decltype(invunrolls)> ic{};
   for (auto [oa, mc] : orth_axes) ic += cost(invunrolls, oa, mc, vf);
   return ic;
 }
-auto memcosts(const AbstractMatrix auto &invunrolls, VectorizationFactor vf,
-              math::PtrVector<std::tuple<OrthogonalAxes, MemoryCosts,
-                                         DensePtrMatrix<int64_t>>>
-                orth_axes) {
+auto memcosts(
+  const AbstractMatrix auto &invunrolls, VectorizationFactor vf,
+  math::PtrVector<std::tuple<MemCostSummary, DensePtrMatrix<int64_t>>>
+    orth_axes) {
   utils::eltype_t<decltype(invunrolls)> ic{};
-  for (auto [oa, mc, inds] : orth_axes)
-    ic += cost(invunrolls, oa, mc, vf, inds);
+  for (auto [oa, inds] : orth_axes) ic += cost(invunrolls, oa, vf, inds);
   return ic;
 }
 auto compcosts(const AbstractMatrix auto &invunrolls,
@@ -462,13 +464,22 @@ auto compcosts(const AbstractMatrix auto &invunrolls,
 ///
 /// ///
 class LoopTreeCostFn {
-  math::PtrVector<LoopCostCounts> cost_counts;
-  math::PtrVector<OrthogonalAxes> orth_axes;
-  math::PtrVector<Pair<OrthogonalAxes, DensePtrMatrix<int64_t>>> conv_axes;
-  math::PtrVector<std::array<uint32_t, 2>> compute_independence;
-  math::PtrVector<Pair<RegisterUseByUnroll, Pair<uint16_t, uint16_t>>> leafs;
-  VectorizationFactor vf;
+  math::Vector<LoopCostCounts> cost_counts{};
+  math::Vector<MemCostSummary> orth_axes{};
+  math::Vector<Pair<MemCostSummary, DensePtrMatrix<int64_t>>> conv_axes{};
+  math::Vector<std::array<uint32_t, 2>> compute_independence{};
+  math::Vector<Pair<RegisterUseByUnroll, Pair<uint16_t, uint16_t>>> leafs{};
+  unsigned maxVectorBytes;
   ptrdiff_t max_depth;
+
+  constexpr void clear() {
+    cost_counts.clear();
+    orth_axes.clear();
+    conv_axes.clear();
+    compute_independence.clear();
+    leafs.clear();
+    max_depth = 0;
+  }
 
 public:
   // this is a vector fun, where indexing may do non-trivial computation
@@ -481,16 +492,27 @@ public:
                             const AbstractVector auto &x) const {
     using T = utils::eltype_t<decltype(x)>;
     utils::invariant(max_depth < 16);
-    math::MutArray<T, math::DenseDims<2>> invunrolls{
-      math::matrix<T>(alloc, math::Row<2>{}, math::Col<>{max_depth})};
+    // row 0: inverse unrolls
+    // row 1: unrolls
+    // row 2: cumprod invunroll
+    math::MutArray<T, math::DenseDims<3>> invunrolls{
+      math::matrix<T>(alloc, math::Row<3>{}, math::Col<>{max_depth})};
     ptrdiff_t i = 0, depth = 0, mi = 0, mc = 0, ci = 0, li = 0;
     double tripcounts[16];
+    VectorizationFactor vf{};
     // we evaluate every iteration
     T c{};
-    for (auto [comptimetrip, trip_count, omem, cmem, exit, compute] :
+    for (auto [comptimetrip, trip_count, compute, omem, cmem, exit, l2vw] :
          cost_counts) {
+      if (l2vw) {
+        invariant(vf.l2factor == 0);
+        invariant(vf.indexMask == 0);
+        vf.l2factor = l2vw;
+        vf.indexMask = uint32_t(1) << depth;
+      }
       invunrolls[1, depth] = x[i++];
-      invunrolls[0, depth] = 1 / invunrolls[1, depth];
+      invunrolls[2, depth] = invunrolls[0, depth] = 1 / invunrolls[1, depth];
+      if (depth) invunrolls[2, depth] *= invunrolls[2, depth - 1];
       tripcounts[depth] =
         (depth ? tripcounts[depth - 1] * trip_count : trip_count);
       T cc{compcosts(invunrolls, compute_independence[_(0, compute) + ci])};
@@ -500,7 +522,7 @@ public:
         auto [l, numreduct] = lt;
         // we're now in a leaf, meaning we must consider register costs,
         // as well as reduction costs and latency of reduction chains.
-        cc = smax(cc, l / invunrolls[depth]);
+        cc = smax(cc, l * invunrolls[2, depth]);
         cc += registerPressure(invunrolls, reguse);
         if (numreduct) {
           cc +=
@@ -517,24 +539,43 @@ public:
       // Decrement depth by `exit - 1`; the `-1` corresponds
       // to descending into this header, while we exit `exit` loops afterwards.
       depth -= exit - 1;
+      if (depth <= std::countr_zero(vf.indexMask)) {
+        vf.l2factor = 0;
+        vf.indexMask = 0;
+      }
     }
     return c;
   }
-  LoopTreeCostFn(alloc::Arena<> *alloc, IR::Loop *root) {
+  // should only have to `init` once per `root`, with `VectorizationFactor`
+  // being adjustable.
+  // TODO: vec factor should be a tree-flag
+  void init(IR::Loop *root, unsigned maxVF,
+            const llvm::TargetTransformInfo &TTI) {
+    clear(); // max_depth = 0;
     // the root is top-level
     IR::Loop *L = root->getSubLoop();
     ptrdiff_t depth = 0;
+    uint16_t omemory, cmemory, exit, compute;
+    IR::Node *child;
     for (IR::Node *N = L->getChild(); N;) {
       if (auto *A = llvm::dyn_cast<IR::Addr>(N)) {
-      } else if (auto *I = llvm::dyn_cast<IR::Instruction>(N)) {
+        OrthogonalAxes oa = A->calcOrthAxes(depth);
+        IR::Addr::Costs rtl = A->calcCostContigDiscontig(TTI, maxVF);
+
+      } else if (auto *C = llvm::dyn_cast<IR::Compute>(N)) {
       } else if (auto *S = llvm::dyn_cast<IR::Loop>(N)) {
         // we enter subloop, S
       } else if (auto *E = llvm::dyn_cast<IR::Exit>(N)) {
+        max_depth = std::max(max_depth, depth);
         // E->getParent()->getNext() returns following instr
         // With this, we increment exit count
       }
       N = N->getNext();
     }
+  }
+  LoopTreeCostFn(IR::Loop *root, unsigned maxVF,
+                 const llvm::TargetTransformInfo &TTI) {
+    init(root, maxVF, TTI);
   }
 };
 

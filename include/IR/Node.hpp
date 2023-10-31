@@ -278,6 +278,7 @@ static_assert(sizeof(Node) == 4 * sizeof(Node *) + 8);
 /// Loop
 /// parent: outer loop
 /// child: inner (sub) loop
+/// last is the last instruction in the body
 /// exit is the associated exit block
 class Loop : public Node {
   enum LegalTransforms {
@@ -391,6 +392,8 @@ public:
   return static_cast<Loop *>(parent);
 }
 
+/// This is used for convenience in top sort, but our canonical IR
+/// does not actually contain Exit nodes!
 struct Exit : Node {
   Exit() : Node(VK_Exit) {}
   static constexpr auto classof(const Node *v) -> bool {

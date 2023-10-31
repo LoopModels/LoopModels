@@ -182,9 +182,8 @@ inline auto addRecMatchesLoop(const llvm::SCEV *S, llvm::Loop *L) -> bool {
     return x->getLoop() == L;
   return false;
 }
-[[nodiscard]] inline auto
-addSymbol(std::array<IntMatrix<math::StridedDims<>>, 2>
-            &AB, // NOLINT(misc-no-recursion)
+[[nodiscard]] inline auto // NOLINTNEXTLINE(misc-no-recursion)
+addSymbol(std::array<IntMatrix<math::StridedDims<>>, 2> &AB,
           llvm::SmallVectorImpl<const llvm::SCEV *> &symbols, llvm::Loop *L,
           const llvm::SCEV *v, llvm::ScalarEvolution &SE,
           math::Range<ptrdiff_t, ptrdiff_t> lu, int64_t mlt, ptrdiff_t minDepth)
@@ -222,7 +221,6 @@ addSymbol(std::array<IntMatrix<math::StridedDims<>>, 2>
       minDepth =
         addSymbol(AB, symbols, L, x->getOperand(0), SE, lu, mlt, minDepth);
       if (auto opc = getConstantInt(x->getOperand(1))) {
-        // swap order vs recDepth to go inner<->outer
         B[lu, recDepth - 1] << mlt * (*opc);
         return minDepth;
       }
@@ -836,13 +834,15 @@ public:
     const void *ptr =
       memory + sizeof(const llvm::SCEV *const *) * numDynSymbols;
     auto *p = (int64_t *)const_cast<void *>(ptr);
-    return {p, math::DenseDims<>{{numConstraints}, {numLoops + numDynSymbols + 1}}};
+    return {
+      p, math::DenseDims<>{{numConstraints}, {numLoops + numDynSymbols + 1}}};
   };
   [[nodiscard]] constexpr auto getA() const -> DensePtrMatrix<int64_t> {
     const void *ptr =
       memory + sizeof(const llvm::SCEV *const *) * numDynSymbols;
     auto *p = (int64_t *)const_cast<void *>(ptr);
-    return {p, math::DenseDims<>{{numConstraints}, {numLoops + numDynSymbols + 1}}};
+    return {
+      p, math::DenseDims<>{{numConstraints}, {numLoops + numDynSymbols + 1}}};
   };
   [[nodiscard]] constexpr auto getOuterA(ptrdiff_t subLoop)
     -> MutPtrMatrix<int64_t> {
@@ -850,8 +850,8 @@ public:
       memory + sizeof(const llvm::SCEV *const *) * numDynSymbols;
     auto *p = (int64_t *)const_cast<void *>(ptr);
     ptrdiff_t numSym = numDynSymbols + 1;
-    return {p, math::StridedDims<>{{numConstraints}, {subLoop + numSym},
-                                 {numLoops + numSym}}};
+    return {p, math::StridedDims<>{
+                 {numConstraints}, {subLoop + numSym}, {numLoops + numSym}}};
   };
   [[nodiscard]] constexpr auto getOuterA(ptrdiff_t subLoop) const
     -> PtrMatrix<int64_t> {
@@ -859,8 +859,8 @@ public:
       memory + sizeof(const llvm::SCEV *const *) * numDynSymbols;
     auto *p = (int64_t *)const_cast<void *>(ptr);
     ptrdiff_t numSym = numDynSymbols + 1;
-    return {p, math::StridedDims<>{{numConstraints}, {subLoop + numSym},
-                                 {numLoops + numSym}}};
+    return {p, math::StridedDims<>{
+                 {numConstraints}, {subLoop + numSym}, {numLoops + numSym}}};
   };
   [[nodiscard]] auto getSyms() -> llvm::MutableArrayRef<const llvm::SCEV *> {
     void *ptr = memory;
