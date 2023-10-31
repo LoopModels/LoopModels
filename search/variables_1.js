@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['compute_340',['compute',['../structpoly_1_1CostModeling_1_1LoopCostCounts.html#af172017336799a06839e3c474ab5418a',1,'poly::CostModeling::LoopCostCounts']]]
+  ['l2vectorwidth_343',['l2vectorWidth',['../structpoly_1_1CostModeling_1_1LoopCostCounts.html#a00277cb177ddf1728536431c52d788ac',1,'poly::CostModeling::LoopCostCounts']]]
 ];

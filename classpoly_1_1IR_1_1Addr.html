@@ -66,6 +66,7 @@ $(function() {
 </div><!-- top -->
 <div class="header">
   <div class="summary">
+<a href="#nested-classes">Classes</a> &#124;
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-static-methods">Static Public Member Functions</a> &#124;
 <a href="classpoly_1_1IR_1_1Addr-members.html">List of all members</a>  </div>
@@ -87,8 +88,19 @@ Inheritance diagram for poly::IR::Addr:</div>
   </map>
 </div></div>
 <table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
+Classes</h2></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpoly_1_1IR_1_1Addr_1_1Costs.html">Costs</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">RecipThroughput.  <a href="structpoly_1_1IR_1_1Addr_1_1Costs.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
+<tr class="memitem:ae90f06af325c0788ee728fccb626faca"><td class="memItemLeft" align="right" valign="top"><a id="ae90f06af325c0788ee728fccb626faca"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getOrthAxes</b> () const -&gt; <a class="el" href="structOrthogonalAxes.html">OrthogonalAxes</a></td></tr>
+<tr class="separator:ae90f06af325c0788ee728fccb626faca"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a40b1da00d77ef7a86abb6a3f5be9b36f"><td class="memItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1IR_1_1Addr.html#a40b1da00d77ef7a86abb6a3f5be9b36f">calcOrthAxes</a> (ptrdiff_t depth) -&gt; <a class="el" href="structOrthogonalAxes.html">OrthogonalAxes</a></td></tr>
+<tr class="separator:a40b1da00d77ef7a86abb6a3f5be9b36f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acbe12a9d742924c8052de8d8375e7dcc"><td class="memItemLeft" align="right" valign="top"><a id="acbe12a9d742924c8052de8d8375e7dcc"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>isDropped</b> () const -&gt; bool</td></tr>
 <tr class="separator:acbe12a9d742924c8052de8d8375e7dcc"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -254,13 +266,9 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getOffsetOm
 <tr class="memitem:afd0a3407c1c8a1b83ca9137ca924084f"><td class="memItemLeft" align="right" valign="top"><a id="afd0a3407c1c8a1b83ca9137ca924084f"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getOffsetOmega</b> () const -&gt; PtrVector&lt; int64_t &gt;</td></tr>
 <tr class="separator:afd0a3407c1c8a1b83ca9137ca924084f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af4838372d11fd32b964c9a7cb6d4b1b8"><td class="memItemLeft" align="right" valign="top"><a id="af4838372d11fd32b964c9a7cb6d4b1b8"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1IR_1_1Addr.html#af4838372d11fd32b964c9a7cb6d4b1b8">indexMatrix</a> () -&gt; MutDensePtrMatrix&lt; int64_t &gt;</td></tr>
-<tr class="memdesc:af4838372d11fd32b964c9a7cb6d4b1b8"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classpoly_1_1IR_1_1Addr.html#af4838372d11fd32b964c9a7cb6d4b1b8" title="indexMatrix() -&gt; arrayDim() x getNumLoops()">indexMatrix()</a> -&gt; arrayDim() x getNumLoops() <br /></td></tr>
+<tr class="memitem:af4838372d11fd32b964c9a7cb6d4b1b8"><td class="memItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1IR_1_1Addr.html#af4838372d11fd32b964c9a7cb6d4b1b8">indexMatrix</a> () -&gt; MutDensePtrMatrix&lt; int64_t &gt;</td></tr>
 <tr class="separator:af4838372d11fd32b964c9a7cb6d4b1b8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af5ceceb3d01057d14b1027cc9c8325f6"><td class="memItemLeft" align="right" valign="top"><a id="af5ceceb3d01057d14b1027cc9c8325f6"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1IR_1_1Addr.html#af5ceceb3d01057d14b1027cc9c8325f6">indexMatrix</a> () const -&gt; DensePtrMatrix&lt; int64_t &gt;</td></tr>
-<tr class="memdesc:af5ceceb3d01057d14b1027cc9c8325f6"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classpoly_1_1IR_1_1Addr.html#af4838372d11fd32b964c9a7cb6d4b1b8" title="indexMatrix() -&gt; arrayDim() x getNumLoops()">indexMatrix()</a> -&gt; arrayDim() x getNumLoops() <br /></td></tr>
+<tr class="memitem:af5ceceb3d01057d14b1027cc9c8325f6"><td class="memItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1IR_1_1Addr.html#af5ceceb3d01057d14b1027cc9c8325f6">indexMatrix</a> () const -&gt; DensePtrMatrix&lt; int64_t &gt;</td></tr>
 <tr class="separator:af5ceceb3d01057d14b1027cc9c8325f6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7006cafdd6fbbde4c5975cc8169d3e91"><td class="memItemLeft" align="right" valign="top"><a id="a7006cafdd6fbbde4c5975cc8169d3e91"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getFusionOmega</b> () -&gt; MutPtrVector&lt; int64_t &gt;</td></tr>
@@ -280,9 +288,9 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>sizesMatch<
 <tr class="memitem:a1663b6f4202cc6b8c09559039d40dc4b"><td class="memItemLeft" align="right" valign="top"><a id="a1663b6f4202cc6b8c09559039d40dc4b"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>calculateCostContiguousLoadStore</b> (const llvm::TargetTransformInfo &amp;TTI, unsigned int vectorWidth) -&gt; <a class="el" href="structpoly_1_1IR_1_1cost_1_1RecipThroughputLatency.html">cost::RecipThroughputLatency</a></td></tr>
 <tr class="separator:a1663b6f4202cc6b8c09559039d40dc4b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a72b0a5ead7fe9a22f84df10535a6f380"><td class="memItemLeft" align="right" valign="top"><a id="a72b0a5ead7fe9a22f84df10535a6f380"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>getCost</b> (const llvm::TargetTransformInfo &amp;TTI, <a class="el" href="classpoly_1_1IR_1_1cost_1_1VectorWidth.html">cost::VectorWidth</a> W) -&gt; <a class="el" href="structpoly_1_1IR_1_1cost_1_1RecipThroughputLatency.html">cost::RecipThroughputLatency</a></td></tr>
-<tr class="separator:a72b0a5ead7fe9a22f84df10535a6f380"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4d25935502393f8a05f3fcc392d9ca61"><td class="memItemLeft" align="right" valign="top"><a id="a4d25935502393f8a05f3fcc392d9ca61"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>calcCostContigDiscontig</b> (const llvm::TargetTransformInfo &amp;TTI, unsigned int vectorWidth) -&gt; <a class="el" href="structpoly_1_1IR_1_1Addr_1_1Costs.html">Costs</a></td></tr>
+<tr class="separator:a4d25935502393f8a05f3fcc392d9ca61"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1c11ac80919c828f4ffe2e9623605750"><td class="memItemLeft" align="right" valign="top"><a id="a1c11ac80919c828f4ffe2e9623605750"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1IR_1_1Addr.html#a1c11ac80919c828f4ffe2e9623605750">drop</a> (<a class="el" href="classpoly_1_1poly_1_1Dependencies.html">Dependencies</a>)</td></tr>
 <tr class="memdesc:a1c11ac80919c828f4ffe2e9623605750"><td class="mdescLeft">&#160;</td><td class="mdescRight">drop <code>this</code> and remove it from <code>Dependencies</code> <br /></td></tr>
@@ -632,6 +640,85 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><b>dependsOnParentLoop_<
 </div>
 </div>
 <h2 class="groupheader">Member Function Documentation</h2>
+<a id="a40b1da00d77ef7a86abb6a3f5be9b36f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a40b1da00d77ef7a86abb6a3f5be9b36f">&#9670;&nbsp;</a></span>calcOrthAxes()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">constexpr auto poly::IR::Addr::calcOrthAxes </td>
+          <td>(</td>
+          <td class="paramtype">ptrdiff_t&#160;</td>
+          <td class="paramname"><em>depth</em></td><td>)</td>
+          <td> -&gt; <a class="el" href="structOrthogonalAxes.html">OrthogonalAxes</a> </td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">constexpr</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p><a class="el" href="classpoly_1_1IR_1_1Addr.html#af4838372d11fd32b964c9a7cb6d4b1b8">indexMatrix()</a> -&gt; arrayDim() x getNumLoops()</p>
+
+</div>
+</div>
+<a id="af4838372d11fd32b964c9a7cb6d4b1b8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af4838372d11fd32b964c9a7cb6d4b1b8">&#9670;&nbsp;</a></span>indexMatrix() <span class="overload">[1/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">constexpr auto poly::IR::Addr::indexMatrix </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> -&gt; MutDensePtrMatrix&lt;int64_t&gt; </td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">constexpr</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p><a class="el" href="classpoly_1_1IR_1_1Addr.html#af4838372d11fd32b964c9a7cb6d4b1b8">indexMatrix()</a> -&gt; arrayDim() x getNumLoops() First dimension is contiguous </p>
+
+</div>
+</div>
+<a id="af5ceceb3d01057d14b1027cc9c8325f6"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af5ceceb3d01057d14b1027cc9c8325f6">&#9670;&nbsp;</a></span>indexMatrix() <span class="overload">[2/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">constexpr auto poly::IR::Addr::indexMatrix </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const -&gt; DensePtrMatrix&lt;int64_t&gt; </td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">constexpr</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p><a class="el" href="classpoly_1_1IR_1_1Addr.html#af4838372d11fd32b964c9a7cb6d4b1b8">indexMatrix()</a> -&gt; arrayDim() x getNumLoops() First dimension is contiguous </p>
+
+</div>
+</div>
 <a id="a26d3b32498e5ea5373a423a9bb463477"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a26d3b32498e5ea5373a423a9bb463477">&#9670;&nbsp;</a></span>setFusionOmega()</h2>
 

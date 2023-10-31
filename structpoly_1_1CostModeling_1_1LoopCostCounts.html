@@ -83,19 +83,22 @@ uint16_t&#160;</td><td class="memItemRight" valign="bottom"><b>known_trip</b>: 1
 <tr class="memitem:ac5c63ec3f82553185e52d7dc5b570509"><td class="memItemLeft" align="right" valign="top"><a id="ac5c63ec3f82553185e52d7dc5b570509"></a>
 uint16_t&#160;</td><td class="memItemRight" valign="bottom"><b>trip_count</b>: 15</td></tr>
 <tr class="separator:ac5c63ec3f82553185e52d7dc5b570509"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2fe2e7f1dad80b0e9b6ab5463a444ccf"><td class="memItemLeft" align="right" valign="top"><a id="a2fe2e7f1dad80b0e9b6ab5463a444ccf"></a>
-uint16_t&#160;</td><td class="memItemRight" valign="bottom"><b>omemory</b>: 11</td></tr>
-<tr class="separator:a2fe2e7f1dad80b0e9b6ab5463a444ccf"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad1961fe976f6c63eed72a40b300e63b6"><td class="memItemLeft" align="right" valign="top"><a id="ad1961fe976f6c63eed72a40b300e63b6"></a>
-uint16_t&#160;</td><td class="memItemRight" valign="bottom"><b>cmemory</b>: 5</td></tr>
-<tr class="separator:ad1961fe976f6c63eed72a40b300e63b6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af364f249d93578b5751cd756d022d73e"><td class="memItemLeft" align="right" valign="top"><a id="af364f249d93578b5751cd756d022d73e"></a>
-uint16_t&#160;</td><td class="memItemRight" valign="bottom"><b>exit</b>: 5</td></tr>
-<tr class="separator:af364f249d93578b5751cd756d022d73e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af172017336799a06839e3c474ab5418a"><td class="memItemLeft" align="right" valign="top"><a id="af172017336799a06839e3c474ab5418a"></a>
-uint16_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpoly_1_1CostModeling_1_1LoopCostCounts.html#af172017336799a06839e3c474ab5418a">compute</a>: 11</td></tr>
-<tr class="memdesc:af172017336799a06839e3c474ab5418a"><td class="mdescLeft">&#160;</td><td class="mdescRight">how many blocks we exit after this <br /></td></tr>
+uint16_t&#160;</td><td class="memItemRight" valign="bottom"><b>compute</b></td></tr>
 <tr class="separator:af172017336799a06839e3c474ab5418a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2fe2e7f1dad80b0e9b6ab5463a444ccf"><td class="memItemLeft" align="right" valign="top"><a id="a2fe2e7f1dad80b0e9b6ab5463a444ccf"></a>
+uint16_t&#160;</td><td class="memItemRight" valign="bottom"><b>omemory</b></td></tr>
+<tr class="separator:a2fe2e7f1dad80b0e9b6ab5463a444ccf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a18596b57b7ab6f8e50efa87c8dc6fe3d"><td class="memItemLeft" align="right" valign="top"><a id="a18596b57b7ab6f8e50efa87c8dc6fe3d"></a>
+uint8_t&#160;</td><td class="memItemRight" valign="bottom"><b>cmemory</b></td></tr>
+<tr class="separator:a18596b57b7ab6f8e50efa87c8dc6fe3d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5c06f70b6e29cf8ca246e36af7f9f2b9"><td class="memItemLeft" align="right" valign="top"><a id="a5c06f70b6e29cf8ca246e36af7f9f2b9"></a>
+uint8_t&#160;</td><td class="memItemRight" valign="bottom"><b>exit</b>: 5</td></tr>
+<tr class="separator:a5c06f70b6e29cf8ca246e36af7f9f2b9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a00277cb177ddf1728536431c52d788ac"><td class="memItemLeft" align="right" valign="top"><a id="a00277cb177ddf1728536431c52d788ac"></a>
+uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpoly_1_1CostModeling_1_1LoopCostCounts.html#a00277cb177ddf1728536431c52d788ac">l2vectorWidth</a>: 3</td></tr>
+<tr class="memdesc:a00277cb177ddf1728536431c52d788ac"><td class="mdescLeft">&#160;</td><td class="mdescRight">how many blocks we exit after this <br /></td></tr>
+<tr class="separator:a00277cb177ddf1728536431c52d788ac"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>POD. Gives counts for the different kinds of costs. Fields: <code>int16_t trip_count</code>- we're unlikely to change decisions for &gt;32k negative indicates compile-time known size. <code>uint16_t memory</code> number of mem sets. <code>bool exit</code> loop exit/entry. <code>uint31_t compute</code> number of compute sets. These give us info for iterating over the costs associated with a loop. for (i : I){ for (j : J){ for (k : K){ // leaf ... } for (k : K){ // leaf ... } } for (j : J){ // leaf ... } } For leaves, we compute latency as well as register cost. Note that we compute all costs at the header for a given depth, thus we only need headers and num-pops. </p>

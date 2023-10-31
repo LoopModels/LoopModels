@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.9.1"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>LoopModels: poly::CostModeling::MemoryCosts Struct Reference</title>
+<title>LoopModels: include/IR/OrthogonalAxes.hpp Source File</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -61,35 +61,28 @@ $(function() {
 
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><b>poly</b></li><li class="navelem"><b>CostModeling</b></li><li class="navelem"><a class="el" href="structpoly_1_1CostModeling_1_1MemoryCosts.html">MemoryCosts</a></li>  </ul>
+<li class="navelem"><a class="el" href="dir_d44c64559bbebec7f509842c48db8b23.html">include</a></li><li class="navelem"><a class="el" href="dir_78c0d8ab8ef6b4c751ca147eb40b5e7c.html">IR</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="header">
-  <div class="summary">
-<a href="#pub-attribs">Public Attributes</a> &#124;
-<a href="structpoly_1_1CostModeling_1_1MemoryCosts-members.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">poly::CostModeling::MemoryCosts Struct Reference</div>  </div>
+<div class="title">OrthogonalAxes.hpp</div>  </div>
 </div><!--header-->
 <div class="contents">
-
-<p><code>#include &lt;<a class="el" href="CostFunction_8hpp_source.html">CostFunction.hpp</a>&gt;</code></p>
-<table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
-Public Attributes</h2></td></tr>
-<tr class="memitem:ae7cd924eda6fd4ea6461d86bea5957e3"><td class="memItemLeft" align="right" valign="top"><a id="ae7cd924eda6fd4ea6461d86bea5957e3"></a>
-double&#160;</td><td class="memItemRight" valign="bottom"><b>contiguous</b></td></tr>
-<tr class="separator:ae7cd924eda6fd4ea6461d86bea5957e3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5c7454174d2aac73579f9c458d3d97d3"><td class="memItemLeft" align="right" valign="top"><a id="a5c7454174d2aac73579f9c458d3d97d3"></a>
-double&#160;</td><td class="memItemRight" valign="bottom"><b>discontiguous</b></td></tr>
-<tr class="separator:a5c7454174d2aac73579f9c458d3d97d3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table>
-<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>Order is outermost -&gt; innermost Costs are relative to Scalar, i.e. scalar == 1 </p>
-</div><hr/>The documentation for this struct was generated from the following file:<ul>
-<li>include/IR/<a class="el" href="CostFunction_8hpp_source.html">CostFunction.hpp</a></li>
-</ul>
-</div><!-- contents -->
+<div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="preprocessor">#pragma once</span></div>
+<div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="preprocessor">#ifndef OrthogonalAxes_hpp_INCLUDED</span></div>
+<div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="preprocessor">#define OrthogonalAxes_hpp_INCLUDED</span></div>
+<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160; </div>
+<div class="line"><a name="l00006"></a><span class="lineno"><a class="line" href="structOrthogonalAxes.html">    6</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structOrthogonalAxes.html">OrthogonalAxes</a> {</div>
+<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;  uint32_t indep_axes : 1;</div>
+<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;  uint32_t contig : 31; <span class="comment">// max number of dims of 31</span></div>
+<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;  uint32_t indep;       <span class="comment">// max loop depth of 32</span></div>
+<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;};</div>
+<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;static_assert(<span class="keyword">sizeof</span>(<a class="code" href="structOrthogonalAxes.html">OrthogonalAxes</a>) == 8);</div>
+<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160; </div>
+<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="preprocessor">#endif </span><span class="comment">// OrthogonalAxes_hpp_INCLUDED</span></div>
+<div class="ttc" id="astructOrthogonalAxes_html"><div class="ttname"><a href="structOrthogonalAxes.html">OrthogonalAxes</a></div><div class="ttdoc">indep must be 0 for any invunrolls it doesn't depend on</div><div class="ttdef"><b>Definition:</b> OrthogonalAxes.hpp:6</div></div>
+</div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
 Generated by&#160;<a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.1

@@ -80,9 +80,12 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a6fdfbdfa21e5fdacdf97c9a08623b609"><td class="memItemLeft" align="right" valign="top"><a id="a6fdfbdfa21e5fdacdf97c9a08623b609"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (alloc::Arena&lt;&gt; alloc, const AbstractVector auto &amp;x) const</td></tr>
 <tr class="separator:a6fdfbdfa21e5fdacdf97c9a08623b609"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aefeff67958e097276b5d58092eb7a3e2"><td class="memItemLeft" align="right" valign="top"><a id="aefeff67958e097276b5d58092eb7a3e2"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>LoopTreeCostFn</b> (alloc::Arena&lt;&gt; *alloc, <a class="el" href="classpoly_1_1IR_1_1Loop.html">IR::Loop</a> *root)</td></tr>
-<tr class="separator:aefeff67958e097276b5d58092eb7a3e2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af689935b5d98f3927dd56f070b000ef7"><td class="memItemLeft" align="right" valign="top"><a id="af689935b5d98f3927dd56f070b000ef7"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>init</b> (<a class="el" href="classpoly_1_1IR_1_1Loop.html">IR::Loop</a> *root, unsigned maxVF, const llvm::TargetTransformInfo &amp;TTI)</td></tr>
+<tr class="separator:af689935b5d98f3927dd56f070b000ef7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab6521dde6936df3be4c994a07f8d672b"><td class="memItemLeft" align="right" valign="top"><a id="ab6521dde6936df3be4c994a07f8d672b"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>LoopTreeCostFn</b> (<a class="el" href="classpoly_1_1IR_1_1Loop.html">IR::Loop</a> *root, unsigned maxVF, const llvm::TargetTransformInfo &amp;TTI)</td></tr>
+<tr class="separator:ab6521dde6936df3be4c994a07f8d672b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>memcost = I*J*(Ui*Uj*C_{Al} + Uj*C_{yl}) / (Ui*Uj) + I*(C_{xl}*Ui + C_{xs}*Ui) / Ui cthroughput = I*J*(Ui*Uj*C_{t,fma}) / (Ui*Uj) + I*(Ui*C_{t,add}*(Uj-1)) / Ui clatency = I*J*C_{l,fma}/smin(Ui*Uj, C_{l,fma}/C_{t,fma}) + I*C_{l,add}*log2(Uj)</p>
