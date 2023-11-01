@@ -68,6 +68,7 @@ $(function() {
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-static-methods">Static Public Member Functions</a> &#124;
+<a href="#pro-static-methods">Static Protected Member Functions</a> &#124;
 <a href="#pro-attribs">Protected Attributes</a> &#124;
 <a href="classpoly_1_1IR_1_1Compute-members.html">List of all members</a>  </div>
   <div class="headertitle">
@@ -121,6 +122,12 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getOpId</b>
 <tr class="memitem:a8fffe2cfb40abc90a87e6f6caa3572f1"><td class="memItemLeft" align="right" valign="top"><a id="a8fffe2cfb40abc90a87e6f6caa3572f1"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getOperands</b> () -&gt; MutPtrVector&lt; <a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> * &gt;</td></tr>
 <tr class="separator:a8fffe2cfb40abc90a87e6f6caa3572f1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2c24700f7746bcb287e77a91f2c7f254"><td class="memItemLeft" align="right" valign="top"><a id="a2c24700f7746bcb287e77a91f2c7f254"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getLoopIndepFlag</b> () const</td></tr>
+<tr class="separator:a2c24700f7746bcb287e77a91f2c7f254"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a93e6038748bc7835e5efac07578c6d30"><td class="memItemLeft" align="right" valign="top"><a id="a93e6038748bc7835e5efac07578c6d30"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>calcLoopDepFlag</b> (ptrdiff_t depth) -&gt; uint32_t</td></tr>
+<tr class="separator:a93e6038748bc7835e5efac07578c6d30"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afe2e72d4eb323754f6974e34c511ef60"><td class="memItemLeft" align="right" valign="top"><a id="afe2e72d4eb323754f6974e34c511ef60"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getOperands</b> () const -&gt; PtrVector&lt; <a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> * &gt;</td></tr>
 <tr class="separator:afe2e72d4eb323754f6974e34c511ef60"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -374,6 +381,15 @@ static auto&#160;</td><td class="memItemRight" valign="bottom"><b>getInstKind</b
 static auto&#160;</td><td class="memItemRight" valign="bottom"><b>getKind</b> (llvm::Value *v) -&gt; ValKind</td></tr>
 <tr class="separator:a4d38e73207e6b16c143429bfe6b282cb inherit pub_static_methods_classpoly_1_1IR_1_1Node"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-static-methods"></a>
+Static Protected Member Functions</h2></td></tr>
+<tr class="memitem:a7ef3ecddde51d4779ec6ba8b971129d5"><td class="memItemLeft" align="right" valign="top"><a id="a7ef3ecddde51d4779ec6ba8b971129d5"></a>
+static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>diffMask</b> (ptrdiff_t smaller, ptrdiff_t larger) -&gt; uint32_t</td></tr>
+<tr class="separator:a7ef3ecddde51d4779ec6ba8b971129d5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a53ea33e5df2cdb6e8adaf1eca9d1b0f6"><td class="memItemLeft" align="right" valign="top"><a id="a53ea33e5df2cdb6e8adaf1eca9d1b0f6"></a>
+static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>diffMask</b> (<a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> *v, ptrdiff_t depth) -&gt; uint32_t</td></tr>
+<tr class="separator:a53ea33e5df2cdb6e8adaf1eca9d1b0f6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-attribs"></a>
 Protected Attributes</h2></td></tr>
 <tr class="memitem:a0bae1e4310a811a366dea987f3604e9b"><td class="memItemLeft" align="right" valign="top"><a id="a0bae1e4310a811a366dea987f3604e9b"></a>
@@ -385,15 +401,18 @@ llvm::Type *&#160;</td><td class="memItemRight" valign="bottom"><b>type</b></td>
 <tr class="memitem:a638afa442a9f735e697fd7cf8480fa8a"><td class="memItemLeft" align="right" valign="top"><a id="a638afa442a9f735e697fd7cf8480fa8a"></a>
 llvm::Intrinsic::ID&#160;</td><td class="memItemRight" valign="bottom"><b>opId</b></td></tr>
 <tr class="separator:a638afa442a9f735e697fd7cf8480fa8a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a40a162af5293291a1ac93e133d2bfbab"><td class="memItemLeft" align="right" valign="top"><a id="a40a162af5293291a1ac93e133d2bfbab"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>numOperands</b></td></tr>
-<tr class="separator:a40a162af5293291a1ac93e133d2bfbab"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad4a51a92841f98887339539b00243322"><td class="memItemLeft" align="right" valign="top"><a id="ad4a51a92841f98887339539b00243322"></a>
 llvm::FastMathFlags&#160;</td><td class="memItemRight" valign="bottom"><b>fastMathFlags</b></td></tr>
 <tr class="separator:ad4a51a92841f98887339539b00243322"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a00595afeef4ba5ef37162031b9697e59"><td class="memItemLeft" align="right" valign="top"><a id="a00595afeef4ba5ef37162031b9697e59"></a>
 <a class="el" href="classpoly_1_1IR_1_1cost_1_1VectorizationCosts.html">VectorizationCosts</a>&#160;</td><td class="memItemRight" valign="bottom"><b>costs</b></td></tr>
 <tr class="separator:a00595afeef4ba5ef37162031b9697e59"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4096c9d107c88e09c38749c7506ae20f"><td class="memItemLeft" align="right" valign="top"><a id="a4096c9d107c88e09c38749c7506ae20f"></a>
+uint32_t&#160;</td><td class="memItemRight" valign="bottom"><b>loopIndepFlag</b></td></tr>
+<tr class="separator:a4096c9d107c88e09c38749c7506ae20f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a40a162af5293291a1ac93e133d2bfbab"><td class="memItemLeft" align="right" valign="top"><a id="a40a162af5293291a1ac93e133d2bfbab"></a>
+int&#160;</td><td class="memItemRight" valign="bottom"><b>numOperands</b></td></tr>
+<tr class="separator:a40a162af5293291a1ac93e133d2bfbab"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae8a5e3660779de43a5ce0a74df3e1cde"><td class="memItemLeft" align="right" valign="top"><a id="ae8a5e3660779de43a5ce0a74df3e1cde"></a>
 <a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>operands</b> []</td></tr>
 <tr class="separator:ae8a5e3660779de43a5ce0a74df3e1cde"><td class="memSeparator" colspan="2">&#160;</td></tr>
