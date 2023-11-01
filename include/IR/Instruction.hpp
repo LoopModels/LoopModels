@@ -5,9 +5,9 @@
 #include "IR/InstructionCost.hpp"
 #include "IR/Node.hpp"
 #include "IR/Predicate.hpp"
+#include <Alloc/Arena.hpp>
 #include <Containers/UnrolledList.hpp>
 #include <Math/Array.hpp>
-#include <Alloc/Arena.hpp>
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
@@ -72,9 +72,10 @@ protected:
   llvm::Instruction *inst{nullptr};
   llvm::Type *type;
   llvm::Intrinsic::ID opId;          // unsigned
-  int numOperands;                   // negative means incomplete
   llvm::FastMathFlags fastMathFlags; // holds unsigned
   VectorizationCosts costs;
+  uint32_t loopIndepFlag;
+  int numOperands; // negative means incomplete
 #if !defined(__clang__) && defined(__GNUC__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
@@ -88,6 +89,19 @@ protected:
 #else
 #pragma clang diagnostic pop
 #endif
+
+  static constexpr auto diffMask(ptrdiff_t smaller, ptrdiff_t larger)
+    -> uint32_t {
+    invariant(smaller <= larger);
+    invariant(larger < 32);
+    // return ((uint32_t(1) << (larger - smaller)) - 1) << smaller;
+    uint32_t umask = ((uint32_t(1) << larger) - 1),
+             lmask = ((uint32_t(1) << smaller) - 1);
+    return umask ^ lmask;
+  }
+  static constexpr auto diffMask(Value *v, ptrdiff_t depth) -> uint32_t {
+    return diffMask(v->getCurrentDepth(), depth);
+  }
 
 public:
   Compute(const Compute &) = delete;
@@ -145,6 +159,19 @@ public:
   }
   constexpr auto getOperands() -> MutPtrVector<Value *> {
     return {operands, numOperands};
+  }
+  [[nodiscard]] constexpr auto getLoopIndepFlag() const {
+    return loopIndepFlag;
+  }
+  constexpr auto calcLoopDepFlag(ptrdiff_t depth) -> uint32_t {
+    this->currentDepth = depth;
+    loopIndepFlag = (1 << depth) - 1;
+    for (auto *op : getOperands())
+      if (auto *C = llvm::dyn_cast<Compute>(op))
+        loopIndepFlag &= C->getLoopIndepFlag() | diffMask(C, depth);
+      else if (auto *A = llvm::dyn_cast<Addr>(op))
+        loopIndepFlag &= A->getOrthAxes().indep | diffMask(C, depth);
+    return loopIndepFlag;
   }
   [[nodiscard]] constexpr auto getOperands() const -> PtrVector<Value *> {
     return {const_cast<Value **>(operands), unsigned(numOperands)};

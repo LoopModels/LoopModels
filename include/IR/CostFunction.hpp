@@ -467,7 +467,7 @@ class LoopTreeCostFn {
   math::Vector<LoopCostCounts> cost_counts{};
   math::Vector<MemCostSummary> orth_axes{};
   math::Vector<Pair<MemCostSummary, DensePtrMatrix<int64_t>>> conv_axes{};
-  math::Vector<std::array<uint32_t, 2>> compute_independence{};
+  math::Vector<Pair<float, uint32_t>> compute_independence{};
   math::Vector<Pair<RegisterUseByUnroll, Pair<uint16_t, uint16_t>>> leafs{};
   unsigned maxVectorBytes;
   ptrdiff_t max_depth;
@@ -548,21 +548,56 @@ public:
   }
   // should only have to `init` once per `root`, with `VectorizationFactor`
   // being adjustable.
+  // Note: we are dependent upon scanning in top order, so that operands'
+  // `calcLoopDepFlag()` are calculated before we get.
   // TODO: vec factor should be a tree-flag
-  void init(IR::Loop *root, unsigned maxVF,
+  void init(IR::Loop *root, unsigned maxl2VF,
             const llvm::TargetTransformInfo &TTI) {
     clear(); // max_depth = 0;
     // the root is top-level
     IR::Loop *L = root->getSubLoop();
     ptrdiff_t depth = 0;
-    uint16_t omemory, cmemory, exit, compute;
+    uint16_t omemory{0}, cmemory{0}, exit{0}, compute{0};
+    unsigned maxVF = 1 << maxl2VF;
     IR::Node *child;
     for (IR::Node *N = L->getChild(); N;) {
       if (auto *A = llvm::dyn_cast<IR::Addr>(N)) {
         OrthogonalAxes oa = A->calcOrthAxes(depth);
         IR::Addr::Costs rtl = A->calcCostContigDiscontig(TTI, maxVF);
-
+        if (oa.indep_axes) {
+          // check for duplicate
+          bool found = false;
+          for (ptrdiff_t i = omemory; i < orth_axes.size(); ++i) {
+            if (orth_axes[i].orth != oa) continue;
+            found = true;
+            orth_axes[i].memcost += rtl;
+            break;
+          }
+          if (!found) orth_axes.emplace_back(rtl, oa);
+        } else {
+          bool found = false;
+          for (ptrdiff_t i = cmemory; i < conv_axes.size(); ++i) {
+            if (conv_axes[i].first.orth != oa) continue;
+            if (conv_axes[i].second != A->indexMatrix()) continue;
+            found = true;
+            conv_axes[i].first.memcost += rtl;
+            break;
+          }
+          if (!found)
+            conv_axes.emplace_back(MemCostSummary{rtl, oa}, A->indexMatrix());
+        }
       } else if (auto *C = llvm::dyn_cast<IR::Compute>(N)) {
+        bool found = false;
+        uint32_t indep = C->calcLoopDepFlag(depth);
+        float cc{float(
+          C->getCost(TTI, IR::VectorWidth{maxVF, maxl2VF}).recipThroughput)};
+        for (ptrdiff_t i = compute; i < compute_independence.size(); ++i) {
+          if (compute_independence[i].second != indep) continue;
+          found = true;
+          compute_independence[i].first += cc;
+          break;
+        }
+        if (!found) compute_independence.emplace_back(cc, indep);
       } else if (auto *S = llvm::dyn_cast<IR::Loop>(N)) {
         // we enter subloop, S
       } else if (auto *E = llvm::dyn_cast<IR::Exit>(N)) {

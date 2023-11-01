@@ -140,6 +140,7 @@ public:
     invariant((depth <= 24) && (depth >= 0));
     invariant(depth >= naturalDepth);
     invariant(currentDepth >= depth);
+    currentDepth=depth;
     bool indepAxes = true;
     uint32_t contig{0}, indep{(uint32_t(1) << depth) - 1};
     /// indexMatrix() -> arrayDim() x getNumLoops()
@@ -564,6 +565,12 @@ public:
     double contiguous;
     double discontiguous;
     double scalar;
+    constexpr auto operator+=(Costs c) -> Costs & {
+      contiguous += c.contiguous;
+      discontiguous += c.discontiguous;
+      scalar += c.scalar;
+      return *this;
+    }
   };
   auto calcCostContigDiscontig(const llvm::TargetTransformInfo &TTI,
                                unsigned int vectorWidth) -> Costs {
