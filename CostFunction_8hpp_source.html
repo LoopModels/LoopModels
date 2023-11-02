@@ -363,7 +363,7 @@ $(function() {
 <div class="line"><a name="l00538"></a><span class="lineno">  538</span>&#160;      c += tripcounts[depth] * cc;</div>
 <div class="line"><a name="l00539"></a><span class="lineno">  539</span>&#160;      <span class="comment">// Decrement depth by `exit - 1`; the `-1` corresponds</span></div>
 <div class="line"><a name="l00540"></a><span class="lineno">  540</span>&#160;      <span class="comment">// to descending into this header, while we exit `exit` loops afterwards.</span></div>
-<div class="line"><a name="l00541"></a><span class="lineno">  541</span>&#160;      depth -= exit - 1;</div>
+<div class="line"><a name="l00541"></a><span class="lineno">  541</span>&#160;      depth -= exit - 1; <span class="comment">// don&#39;t fuse `-1` to keep `exit` unsigned</span></div>
 <div class="line"><a name="l00542"></a><span class="lineno">  542</span>&#160;      <span class="keywordflow">if</span> (depth &lt;= std::countr_zero(vf.indexMask)) {</div>
 <div class="line"><a name="l00543"></a><span class="lineno">  543</span>&#160;        vf.l2factor = 0;</div>
 <div class="line"><a name="l00544"></a><span class="lineno">  544</span>&#160;        vf.indexMask = 0;</div>
@@ -376,70 +376,89 @@ $(function() {
 <div class="line"><a name="l00551"></a><span class="lineno">  551</span>&#160;  <span class="comment">// Note: we are dependent upon scanning in top order, so that operands&#39;</span></div>
 <div class="line"><a name="l00552"></a><span class="lineno">  552</span>&#160;  <span class="comment">// `calcLoopDepFlag()` are calculated before we get.</span></div>
 <div class="line"><a name="l00553"></a><span class="lineno">  553</span>&#160;  <span class="comment">// TODO: vec factor should be a tree-flag</span></div>
-<div class="line"><a name="l00554"></a><span class="lineno">  554</span>&#160;  <span class="keywordtype">void</span> init(<a class="code" href="classpoly_1_1IR_1_1Loop.html">IR::Loop</a> *root, <span class="keywordtype">unsigned</span> maxl2VF,</div>
-<div class="line"><a name="l00555"></a><span class="lineno">  555</span>&#160;            <span class="keyword">const</span> llvm::TargetTransformInfo &amp;TTI) {</div>
-<div class="line"><a name="l00556"></a><span class="lineno">  556</span>&#160;    clear(); <span class="comment">// max_depth = 0;</span></div>
-<div class="line"><a name="l00557"></a><span class="lineno">  557</span>&#160;    <span class="comment">// the root is top-level</span></div>
-<div class="line"><a name="l00558"></a><span class="lineno">  558</span>&#160;    <a class="code" href="classpoly_1_1IR_1_1Loop.html">IR::Loop</a> *L = root-&gt;<a class="code" href="classpoly_1_1IR_1_1Loop.html#aafb52d2d14ecc6e68e9f2ced4f2dc2e8">getSubLoop</a>();</div>
-<div class="line"><a name="l00559"></a><span class="lineno">  559</span>&#160;    ptrdiff_t depth = 0;</div>
-<div class="line"><a name="l00560"></a><span class="lineno">  560</span>&#160;    uint16_t omemory{0}, cmemory{0}, exit{0}, compute{0};</div>
-<div class="line"><a name="l00561"></a><span class="lineno">  561</span>&#160;    <span class="keywordtype">unsigned</span> maxVF = 1 &lt;&lt; maxl2VF;</div>
-<div class="line"><a name="l00562"></a><span class="lineno">  562</span>&#160;    <a class="code" href="classpoly_1_1IR_1_1Node.html">IR::Node</a> *child;</div>
-<div class="line"><a name="l00563"></a><span class="lineno">  563</span>&#160;    <span class="keywordflow">for</span> (<a class="code" href="classpoly_1_1IR_1_1Node.html">IR::Node</a> *N = L-&gt;getChild(); N;) {</div>
-<div class="line"><a name="l00564"></a><span class="lineno">  564</span>&#160;      <span class="keywordflow">if</span> (<span class="keyword">auto</span> *A = llvm::dyn_cast&lt;IR::Addr&gt;(N)) {</div>
-<div class="line"><a name="l00565"></a><span class="lineno">  565</span>&#160;        <a class="code" href="structOrthogonalAxes.html">OrthogonalAxes</a> oa = A-&gt;calcOrthAxes(depth);</div>
-<div class="line"><a name="l00566"></a><span class="lineno">  566</span>&#160;        <a class="code" href="structpoly_1_1IR_1_1Addr_1_1Costs.html">IR::Addr::Costs</a> rtl = A-&gt;calcCostContigDiscontig(TTI, maxVF);</div>
-<div class="line"><a name="l00567"></a><span class="lineno">  567</span>&#160;        <span class="keywordflow">if</span> (oa.indep_axes) {</div>
-<div class="line"><a name="l00568"></a><span class="lineno">  568</span>&#160;          <span class="comment">// check for duplicate</span></div>
-<div class="line"><a name="l00569"></a><span class="lineno">  569</span>&#160;          <span class="keywordtype">bool</span> found = <span class="keyword">false</span>;</div>
-<div class="line"><a name="l00570"></a><span class="lineno">  570</span>&#160;          <span class="keywordflow">for</span> (ptrdiff_t i = omemory; i &lt; orth_axes.size(); ++i) {</div>
-<div class="line"><a name="l00571"></a><span class="lineno">  571</span>&#160;            <span class="keywordflow">if</span> (orth_axes[i].orth != oa) <span class="keywordflow">continue</span>;</div>
-<div class="line"><a name="l00572"></a><span class="lineno">  572</span>&#160;            found = <span class="keyword">true</span>;</div>
-<div class="line"><a name="l00573"></a><span class="lineno">  573</span>&#160;            orth_axes[i].memcost += rtl;</div>
-<div class="line"><a name="l00574"></a><span class="lineno">  574</span>&#160;            <span class="keywordflow">break</span>;</div>
-<div class="line"><a name="l00575"></a><span class="lineno">  575</span>&#160;          }</div>
-<div class="line"><a name="l00576"></a><span class="lineno">  576</span>&#160;          <span class="keywordflow">if</span> (!found) orth_axes.emplace_back(rtl, oa);</div>
-<div class="line"><a name="l00577"></a><span class="lineno">  577</span>&#160;        } <span class="keywordflow">else</span> {</div>
-<div class="line"><a name="l00578"></a><span class="lineno">  578</span>&#160;          <span class="keywordtype">bool</span> found = <span class="keyword">false</span>;</div>
-<div class="line"><a name="l00579"></a><span class="lineno">  579</span>&#160;          <span class="keywordflow">for</span> (ptrdiff_t i = cmemory; i &lt; conv_axes.size(); ++i) {</div>
-<div class="line"><a name="l00580"></a><span class="lineno">  580</span>&#160;            <span class="keywordflow">if</span> (conv_axes[i].first.orth != oa) <span class="keywordflow">continue</span>;</div>
-<div class="line"><a name="l00581"></a><span class="lineno">  581</span>&#160;            <span class="keywordflow">if</span> (conv_axes[i].second != A-&gt;indexMatrix()) <span class="keywordflow">continue</span>;</div>
-<div class="line"><a name="l00582"></a><span class="lineno">  582</span>&#160;            found = <span class="keyword">true</span>;</div>
-<div class="line"><a name="l00583"></a><span class="lineno">  583</span>&#160;            conv_axes[i].first.memcost += rtl;</div>
-<div class="line"><a name="l00584"></a><span class="lineno">  584</span>&#160;            <span class="keywordflow">break</span>;</div>
-<div class="line"><a name="l00585"></a><span class="lineno">  585</span>&#160;          }</div>
-<div class="line"><a name="l00586"></a><span class="lineno">  586</span>&#160;          <span class="keywordflow">if</span> (!found)</div>
-<div class="line"><a name="l00587"></a><span class="lineno">  587</span>&#160;            conv_axes.emplace_back(<a class="code" href="structpoly_1_1CostModeling_1_1MemCostSummary.html">MemCostSummary</a>{rtl, oa}, A-&gt;indexMatrix());</div>
-<div class="line"><a name="l00588"></a><span class="lineno">  588</span>&#160;        }</div>
-<div class="line"><a name="l00589"></a><span class="lineno">  589</span>&#160;      } <span class="keywordflow">else</span> <span class="keywordflow">if</span> (<span class="keyword">auto</span> *C = llvm::dyn_cast&lt;IR::Compute&gt;(N)) {</div>
-<div class="line"><a name="l00590"></a><span class="lineno">  590</span>&#160;        <span class="keywordtype">bool</span> found = <span class="keyword">false</span>;</div>
-<div class="line"><a name="l00591"></a><span class="lineno">  591</span>&#160;        uint32_t indep = C-&gt;calcLoopDepFlag(depth);</div>
-<div class="line"><a name="l00592"></a><span class="lineno">  592</span>&#160;        <span class="keywordtype">float</span> cc{float(</div>
-<div class="line"><a name="l00593"></a><span class="lineno">  593</span>&#160;          C-&gt;getCost(TTI, <a class="code" href="classpoly_1_1IR_1_1cost_1_1VectorWidth.html">IR::VectorWidth</a>{maxVF, maxl2VF}).recipThroughput)};</div>
-<div class="line"><a name="l00594"></a><span class="lineno">  594</span>&#160;        <span class="keywordflow">for</span> (ptrdiff_t i = compute; i &lt; compute_independence.size(); ++i) {</div>
-<div class="line"><a name="l00595"></a><span class="lineno">  595</span>&#160;          <span class="keywordflow">if</span> (compute_independence[i].second != indep) <span class="keywordflow">continue</span>;</div>
-<div class="line"><a name="l00596"></a><span class="lineno">  596</span>&#160;          found = <span class="keyword">true</span>;</div>
-<div class="line"><a name="l00597"></a><span class="lineno">  597</span>&#160;          compute_independence[i].first += cc;</div>
-<div class="line"><a name="l00598"></a><span class="lineno">  598</span>&#160;          <span class="keywordflow">break</span>;</div>
-<div class="line"><a name="l00599"></a><span class="lineno">  599</span>&#160;        }</div>
-<div class="line"><a name="l00600"></a><span class="lineno">  600</span>&#160;        <span class="keywordflow">if</span> (!found) compute_independence.emplace_back(cc, indep);</div>
-<div class="line"><a name="l00601"></a><span class="lineno">  601</span>&#160;      } <span class="keywordflow">else</span> <span class="keywordflow">if</span> (<span class="keyword">auto</span> *S = llvm::dyn_cast&lt;IR::Loop&gt;(N)) {</div>
-<div class="line"><a name="l00602"></a><span class="lineno">  602</span>&#160;        <span class="comment">// we enter subloop, S</span></div>
-<div class="line"><a name="l00603"></a><span class="lineno">  603</span>&#160;      } <span class="keywordflow">else</span> <span class="keywordflow">if</span> (<span class="keyword">auto</span> *E = llvm::dyn_cast&lt;IR::Exit&gt;(N)) {</div>
-<div class="line"><a name="l00604"></a><span class="lineno">  604</span>&#160;        max_depth = std::max(max_depth, depth);</div>
-<div class="line"><a name="l00605"></a><span class="lineno">  605</span>&#160;        <span class="comment">// E-&gt;getParent()-&gt;getNext() returns following instr</span></div>
-<div class="line"><a name="l00606"></a><span class="lineno">  606</span>&#160;        <span class="comment">// With this, we increment exit count</span></div>
-<div class="line"><a name="l00607"></a><span class="lineno">  607</span>&#160;      }</div>
-<div class="line"><a name="l00608"></a><span class="lineno">  608</span>&#160;      N = N-&gt;getNext();</div>
-<div class="line"><a name="l00609"></a><span class="lineno">  609</span>&#160;    }</div>
-<div class="line"><a name="l00610"></a><span class="lineno">  610</span>&#160;  }</div>
-<div class="line"><a name="l00611"></a><span class="lineno">  611</span>&#160;  <a class="code" href="classpoly_1_1CostModeling_1_1LoopTreeCostFn.html">LoopTreeCostFn</a>(<a class="code" href="classpoly_1_1IR_1_1Loop.html">IR::Loop</a> *root, <span class="keywordtype">unsigned</span> maxVF,</div>
-<div class="line"><a name="l00612"></a><span class="lineno">  612</span>&#160;                 <span class="keyword">const</span> llvm::TargetTransformInfo &amp;TTI) {</div>
-<div class="line"><a name="l00613"></a><span class="lineno">  613</span>&#160;    init(root, maxVF, TTI);</div>
-<div class="line"><a name="l00614"></a><span class="lineno">  614</span>&#160;  }</div>
-<div class="line"><a name="l00615"></a><span class="lineno">  615</span>&#160;};</div>
-<div class="line"><a name="l00616"></a><span class="lineno">  616</span>&#160; </div>
-<div class="line"><a name="l00617"></a><span class="lineno">  617</span>&#160;} <span class="comment">// namespace poly::CostModeling</span></div>
+<div class="line"><a name="l00554"></a><span class="lineno">  554</span>&#160;  <span class="comment">// Iteration order:</span></div>
+<div class="line"><a name="l00555"></a><span class="lineno">  555</span>&#160;  <span class="comment">// We fully iterate over a loop before descending</span></div>
+<div class="line"><a name="l00556"></a><span class="lineno">  556</span>&#160;  <span class="comment">// for (i : I){</span></div>
+<div class="line"><a name="l00557"></a><span class="lineno">  557</span>&#160;  <span class="comment">//   // block 0</span></div>
+<div class="line"><a name="l00558"></a><span class="lineno">  558</span>&#160;  <span class="comment">//   for (j : J){</span></div>
+<div class="line"><a name="l00559"></a><span class="lineno">  559</span>&#160;  <span class="comment">//     // block 1</span></div>
+<div class="line"><a name="l00560"></a><span class="lineno">  560</span>&#160;  <span class="comment">//   }</span></div>
+<div class="line"><a name="l00561"></a><span class="lineno">  561</span>&#160;  <span class="comment">//   // block 2</span></div>
+<div class="line"><a name="l00562"></a><span class="lineno">  562</span>&#160;  <span class="comment">//   for (j : J){</span></div>
+<div class="line"><a name="l00563"></a><span class="lineno">  563</span>&#160;  <span class="comment">//     // block 3</span></div>
+<div class="line"><a name="l00564"></a><span class="lineno">  564</span>&#160;  <span class="comment">//   }</span></div>
+<div class="line"><a name="l00565"></a><span class="lineno">  565</span>&#160;  <span class="comment">//   // block 4</span></div>
+<div class="line"><a name="l00566"></a><span class="lineno">  566</span>&#160;  <span class="comment">// }</span></div>
+<div class="line"><a name="l00567"></a><span class="lineno">  567</span>&#160;  <span class="comment">// we&#39;d iterate 0, 2, 4, 1, 3.</span></div>
+<div class="line"><a name="l00568"></a><span class="lineno">  568</span>&#160;  <span class="comment">// This way we can store once we hit the end.</span></div>
+<div class="line"><a name="l00569"></a><span class="lineno">  569</span>&#160;  <span class="comment">// If there are no subloops to iterate to after, then we store the exit count.</span></div>
+<div class="line"><a name="l00570"></a><span class="lineno">  570</span>&#160;  <span class="comment">// If there are, then the exit-count is 0, forward &#39;1+exit&#39; count to the last</span></div>
+<div class="line"><a name="l00571"></a><span class="lineno">  571</span>&#160;  <span class="comment">// sub-loop, and `1` to all previous sub-loops.</span></div>
+<div class="line"><a name="l00572"></a><span class="lineno">  572</span>&#160;  <span class="comment">// It&#39;s thus natural to implement recursively.</span></div>
+<div class="line"><a name="l00573"></a><span class="lineno">  573</span>&#160;  <span class="keywordtype">void</span> init(<a class="code" href="classpoly_1_1IR_1_1Loop.html">IR::Loop</a> *root, <span class="keywordtype">unsigned</span> maxl2VF,</div>
+<div class="line"><a name="l00574"></a><span class="lineno">  574</span>&#160;            <span class="keyword">const</span> llvm::TargetTransformInfo &amp;TTI) {</div>
+<div class="line"><a name="l00575"></a><span class="lineno">  575</span>&#160;    clear(); <span class="comment">// max_depth = 0;</span></div>
+<div class="line"><a name="l00576"></a><span class="lineno">  576</span>&#160;    <span class="comment">// the root is top-level</span></div>
+<div class="line"><a name="l00577"></a><span class="lineno">  577</span>&#160;    <a class="code" href="classpoly_1_1IR_1_1Loop.html">IR::Loop</a> *L = root-&gt;<a class="code" href="classpoly_1_1IR_1_1Loop.html#aafb52d2d14ecc6e68e9f2ced4f2dc2e8">getSubLoop</a>();</div>
+<div class="line"><a name="l00578"></a><span class="lineno">  578</span>&#160;    ptrdiff_t depth = 0;</div>
+<div class="line"><a name="l00579"></a><span class="lineno">  579</span>&#160;    uint16_t omemory{0}, cmemory{0}, exit{0}, compute{0};</div>
+<div class="line"><a name="l00580"></a><span class="lineno">  580</span>&#160;    <span class="keywordtype">unsigned</span> maxVF = 1 &lt;&lt; maxl2VF;</div>
+<div class="line"><a name="l00581"></a><span class="lineno">  581</span>&#160;    <a class="code" href="classpoly_1_1IR_1_1Node.html">IR::Node</a> *child;</div>
+<div class="line"><a name="l00582"></a><span class="lineno">  582</span>&#160;    <span class="keywordflow">for</span> (<a class="code" href="classpoly_1_1IR_1_1Node.html">IR::Node</a> *N = L-&gt;getChild(); N;) {</div>
+<div class="line"><a name="l00583"></a><span class="lineno">  583</span>&#160;      <span class="keywordflow">if</span> (<span class="keyword">auto</span> *A = llvm::dyn_cast&lt;IR::Addr&gt;(N)) {</div>
+<div class="line"><a name="l00584"></a><span class="lineno">  584</span>&#160;        <a class="code" href="structOrthogonalAxes.html">OrthogonalAxes</a> oa = A-&gt;calcOrthAxes(depth);</div>
+<div class="line"><a name="l00585"></a><span class="lineno">  585</span>&#160;        <a class="code" href="structpoly_1_1IR_1_1Addr_1_1Costs.html">IR::Addr::Costs</a> rtl = A-&gt;calcCostContigDiscontig(TTI, maxVF);</div>
+<div class="line"><a name="l00586"></a><span class="lineno">  586</span>&#160;        <span class="keywordflow">if</span> (oa.indep_axes) {</div>
+<div class="line"><a name="l00587"></a><span class="lineno">  587</span>&#160;          <span class="comment">// check for duplicate</span></div>
+<div class="line"><a name="l00588"></a><span class="lineno">  588</span>&#160;          <span class="keywordtype">bool</span> found = <span class="keyword">false</span>;</div>
+<div class="line"><a name="l00589"></a><span class="lineno">  589</span>&#160;          <span class="keywordflow">for</span> (ptrdiff_t i = omemory; i &lt; orth_axes.size(); ++i) {</div>
+<div class="line"><a name="l00590"></a><span class="lineno">  590</span>&#160;            <span class="keywordflow">if</span> (orth_axes[i].orth != oa) <span class="keywordflow">continue</span>;</div>
+<div class="line"><a name="l00591"></a><span class="lineno">  591</span>&#160;            found = <span class="keyword">true</span>;</div>
+<div class="line"><a name="l00592"></a><span class="lineno">  592</span>&#160;            orth_axes[i].memcost += rtl;</div>
+<div class="line"><a name="l00593"></a><span class="lineno">  593</span>&#160;            <span class="keywordflow">break</span>;</div>
+<div class="line"><a name="l00594"></a><span class="lineno">  594</span>&#160;          }</div>
+<div class="line"><a name="l00595"></a><span class="lineno">  595</span>&#160;          <span class="keywordflow">if</span> (!found) orth_axes.emplace_back(rtl, oa);</div>
+<div class="line"><a name="l00596"></a><span class="lineno">  596</span>&#160;        } <span class="keywordflow">else</span> {</div>
+<div class="line"><a name="l00597"></a><span class="lineno">  597</span>&#160;          <span class="keywordtype">bool</span> found = <span class="keyword">false</span>;</div>
+<div class="line"><a name="l00598"></a><span class="lineno">  598</span>&#160;          <span class="keywordflow">for</span> (ptrdiff_t i = cmemory; i &lt; conv_axes.size(); ++i) {</div>
+<div class="line"><a name="l00599"></a><span class="lineno">  599</span>&#160;            <span class="keywordflow">if</span> (conv_axes[i].first.orth != oa) <span class="keywordflow">continue</span>;</div>
+<div class="line"><a name="l00600"></a><span class="lineno">  600</span>&#160;            <span class="keywordflow">if</span> (conv_axes[i].second != A-&gt;indexMatrix()) <span class="keywordflow">continue</span>;</div>
+<div class="line"><a name="l00601"></a><span class="lineno">  601</span>&#160;            found = <span class="keyword">true</span>;</div>
+<div class="line"><a name="l00602"></a><span class="lineno">  602</span>&#160;            conv_axes[i].first.memcost += rtl;</div>
+<div class="line"><a name="l00603"></a><span class="lineno">  603</span>&#160;            <span class="keywordflow">break</span>;</div>
+<div class="line"><a name="l00604"></a><span class="lineno">  604</span>&#160;          }</div>
+<div class="line"><a name="l00605"></a><span class="lineno">  605</span>&#160;          <span class="keywordflow">if</span> (!found)</div>
+<div class="line"><a name="l00606"></a><span class="lineno">  606</span>&#160;            conv_axes.emplace_back(<a class="code" href="structpoly_1_1CostModeling_1_1MemCostSummary.html">MemCostSummary</a>{rtl, oa}, A-&gt;indexMatrix());</div>
+<div class="line"><a name="l00607"></a><span class="lineno">  607</span>&#160;        }</div>
+<div class="line"><a name="l00608"></a><span class="lineno">  608</span>&#160;      } <span class="keywordflow">else</span> <span class="keywordflow">if</span> (<span class="keyword">auto</span> *C = llvm::dyn_cast&lt;IR::Compute&gt;(N)) {</div>
+<div class="line"><a name="l00609"></a><span class="lineno">  609</span>&#160;        <span class="keywordtype">bool</span> found = <span class="keyword">false</span>;</div>
+<div class="line"><a name="l00610"></a><span class="lineno">  610</span>&#160;        uint32_t indep = C-&gt;calcLoopDepFlag(depth);</div>
+<div class="line"><a name="l00611"></a><span class="lineno">  611</span>&#160;        <span class="keywordtype">float</span> cc{float(</div>
+<div class="line"><a name="l00612"></a><span class="lineno">  612</span>&#160;          C-&gt;getCost(TTI, <a class="code" href="classpoly_1_1IR_1_1cost_1_1VectorWidth.html">IR::VectorWidth</a>{maxVF, maxl2VF}).recipThroughput)};</div>
+<div class="line"><a name="l00613"></a><span class="lineno">  613</span>&#160;        <span class="keywordflow">for</span> (ptrdiff_t i = compute; i &lt; compute_independence.size(); ++i) {</div>
+<div class="line"><a name="l00614"></a><span class="lineno">  614</span>&#160;          <span class="keywordflow">if</span> (compute_independence[i].second != indep) <span class="keywordflow">continue</span>;</div>
+<div class="line"><a name="l00615"></a><span class="lineno">  615</span>&#160;          found = <span class="keyword">true</span>;</div>
+<div class="line"><a name="l00616"></a><span class="lineno">  616</span>&#160;          compute_independence[i].first += cc;</div>
+<div class="line"><a name="l00617"></a><span class="lineno">  617</span>&#160;          <span class="keywordflow">break</span>;</div>
+<div class="line"><a name="l00618"></a><span class="lineno">  618</span>&#160;        }</div>
+<div class="line"><a name="l00619"></a><span class="lineno">  619</span>&#160;        <span class="keywordflow">if</span> (!found) compute_independence.emplace_back(cc, indep);</div>
+<div class="line"><a name="l00620"></a><span class="lineno">  620</span>&#160;      } <span class="keywordflow">else</span> <span class="keywordflow">if</span> (<span class="keyword">auto</span> *S = llvm::dyn_cast&lt;IR::Loop&gt;(N)) {</div>
+<div class="line"><a name="l00621"></a><span class="lineno">  621</span>&#160;        <span class="comment">// we enter subloop, S</span></div>
+<div class="line"><a name="l00622"></a><span class="lineno">  622</span>&#160;      } <span class="keywordflow">else</span> <span class="keywordflow">if</span> (<span class="keyword">auto</span> *E = llvm::dyn_cast&lt;IR::Exit&gt;(N)) {</div>
+<div class="line"><a name="l00623"></a><span class="lineno">  623</span>&#160;        max_depth = std::max(max_depth, depth);</div>
+<div class="line"><a name="l00624"></a><span class="lineno">  624</span>&#160;        <span class="comment">// E-&gt;getParent()-&gt;getNext() returns following instr</span></div>
+<div class="line"><a name="l00625"></a><span class="lineno">  625</span>&#160;        <span class="comment">// With this, we increment exit count</span></div>
+<div class="line"><a name="l00626"></a><span class="lineno">  626</span>&#160;      }</div>
+<div class="line"><a name="l00627"></a><span class="lineno">  627</span>&#160;      N = N-&gt;getNext();</div>
+<div class="line"><a name="l00628"></a><span class="lineno">  628</span>&#160;    }</div>
+<div class="line"><a name="l00629"></a><span class="lineno">  629</span>&#160;  }</div>
+<div class="line"><a name="l00630"></a><span class="lineno">  630</span>&#160;  <a class="code" href="classpoly_1_1CostModeling_1_1LoopTreeCostFn.html">LoopTreeCostFn</a>(<a class="code" href="classpoly_1_1IR_1_1Loop.html">IR::Loop</a> *root, <span class="keywordtype">unsigned</span> maxVF,</div>
+<div class="line"><a name="l00631"></a><span class="lineno">  631</span>&#160;                 <span class="keyword">const</span> llvm::TargetTransformInfo &amp;TTI) {</div>
+<div class="line"><a name="l00632"></a><span class="lineno">  632</span>&#160;    init(root, maxVF, TTI);</div>
+<div class="line"><a name="l00633"></a><span class="lineno">  633</span>&#160;  }</div>
+<div class="line"><a name="l00634"></a><span class="lineno">  634</span>&#160;};</div>
+<div class="line"><a name="l00635"></a><span class="lineno">  635</span>&#160; </div>
+<div class="line"><a name="l00636"></a><span class="lineno">  636</span>&#160;} <span class="comment">// namespace poly::CostModeling</span></div>
 <div class="ttc" id="aclasspoly_1_1CostModeling_1_1LoopTreeCostFn_html"><div class="ttname"><a href="classpoly_1_1CostModeling_1_1LoopTreeCostFn.html">poly::CostModeling::LoopTreeCostFn</a></div><div class="ttdef"><b>Definition:</b> CostFunction.hpp:466</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Loop_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Loop.html">poly::IR::Loop</a></div><div class="ttdef"><b>Definition:</b> Node.hpp:283</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Loop_html_aafb52d2d14ecc6e68e9f2ced4f2dc2e8"><div class="ttname"><a href="classpoly_1_1IR_1_1Loop.html#aafb52d2d14ecc6e68e9f2ced4f2dc2e8">poly::IR::Loop::getSubLoop</a></div><div class="ttdeci">constexpr auto getSubLoop() const -&gt; Loop *</div><div class="ttdoc">Get the first subloop.</div><div class="ttdef"><b>Definition:</b> Node.hpp:326</div></div>
