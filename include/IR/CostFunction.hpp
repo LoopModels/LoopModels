@@ -538,7 +538,7 @@ public:
       c += tripcounts[depth] * cc;
       // Decrement depth by `exit - 1`; the `-1` corresponds
       // to descending into this header, while we exit `exit` loops afterwards.
-      depth -= exit - 1;
+      depth -= exit - 1; // don't fuse `-1` to keep `exit` unsigned
       if (depth <= std::countr_zero(vf.indexMask)) {
         vf.l2factor = 0;
         vf.indexMask = 0;
@@ -551,6 +551,25 @@ public:
   // Note: we are dependent upon scanning in top order, so that operands'
   // `calcLoopDepFlag()` are calculated before we get.
   // TODO: vec factor should be a tree-flag
+  // Iteration order:
+  // We fully iterate over a loop before descending
+  // for (i : I){
+  //   // block 0
+  //   for (j : J){
+  //     // block 1
+  //   }
+  //   // block 2
+  //   for (j : J){
+  //     // block 3
+  //   }
+  //   // block 4
+  // }
+  // we'd iterate 0, 2, 4, 1, 3.
+  // This way we can store once we hit the end.
+  // If there are no subloops to iterate to after, then we store the exit count.
+  // If there are, then the exit-count is 0, forward '1+exit' count to the last
+  // sub-loop, and `1` to all previous sub-loops.
+  // It's thus natural to implement recursively.
   void init(IR::Loop *root, unsigned maxl2VF,
             const llvm::TargetTransformInfo &TTI) {
     clear(); // max_depth = 0;
