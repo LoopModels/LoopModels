@@ -416,7 +416,32 @@ public:
     // removeInnerMost later.
     // pruneBounds();
   }
-
+  /// Gives a very rough trip count estimate (second return value)
+  /// with a boolean fist arg indicating whether it is exact or estimated.
+  /// The estimation approach here can be seriously improved.
+  /// Currently, if not exact, it simply returns 128.
+  [[nodiscard]] auto tripCount(ptrdiff_t depth) const
+    -> std::array<uint16_t, 2> {
+    auto A{getA()};
+    // `i` is position of depth's indvar
+    ptrdiff_t i = 1 + numDynSymbols + depth, j = -1, k = -1;
+    // `A * loopindvars >= 0`
+    // Aci >= 0 is a lower bound
+    // Aci <= 0 is an upper bound
+    for (ptrdiff_t c = 0; c < A.numRow(); ++c) {
+      int64_t Aci = A[c, i];
+      if (Aci > 0) {
+        if ((j >= 0) || (!math::allZero(A[c, _(1, i)]))) return {0, 128};
+        j = c;
+      } else if (Aci < 0) {
+        if ((k >= 0) || (!math::allZero(A[c, _(1, i)]))) return {0, 128};
+        k = c;
+      }
+    }
+    invariant(j >= 0); // must have lower bound
+    invariant(k >= 0); // must have upper bound
+    return {1, std::min<uint16_t>(0xffff, A[k, 0] - A[j, 0])};
+  }
   auto findIndex(const llvm::SCEV *v) const -> ptrdiff_t {
     return findSymbolicIndex(getSyms(), v);
   }
@@ -837,6 +862,11 @@ public:
     return {
       p, math::DenseDims<>{{numConstraints}, {numLoops + numDynSymbols + 1}}};
   };
+  /// returns the `A` where `A * i >= 0`, `i` are loop indvars
+  /// Number of rows indicate number of constraints, columns are
+  /// /// returns the `A` where `A * i >= 0`, `i` are loop indvars
+  /// Number of rows indicate number of constraints, columns are
+  /// 1 (constant) + numDynSymbols + number of loops
   [[nodiscard]] constexpr auto getA() const -> DensePtrMatrix<int64_t> {
     const void *ptr =
       memory + sizeof(const llvm::SCEV *const *) * numDynSymbols;

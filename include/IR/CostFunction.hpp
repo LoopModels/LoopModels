@@ -48,8 +48,8 @@ struct LoopCostCounts {
   uint16_t compute;
   uint16_t omemory;
   uint8_t cmemory;
-  uint8_t exit : 5;          /// how many blocks we exit after this
-  uint8_t l2vectorWidth : 3; // 1<<7 == 128
+  uint8_t exit : 5;              /// how many blocks we exit after this
+  uint8_t l2vectorWidth : 3 {0}; // 1<<7 == 128
 };
 static_assert(sizeof(LoopCostCounts) == 8);
 
@@ -469,8 +469,8 @@ class LoopTreeCostFn {
   math::Vector<Pair<MemCostSummary, DensePtrMatrix<int64_t>>> conv_axes{};
   math::Vector<Pair<float, uint32_t>> compute_independence{};
   math::Vector<Pair<RegisterUseByUnroll, Pair<uint16_t, uint16_t>>> leafs{};
-  unsigned maxVectorBytes;
-  ptrdiff_t max_depth;
+  unsigned maxVectorWidth;
+  ptrdiff_t max_depth{};
 
   constexpr void clear() {
     cost_counts.clear();
@@ -479,6 +479,106 @@ class LoopTreeCostFn {
     compute_independence.clear();
     leafs.clear();
     max_depth = 0;
+  }
+
+  // should only have to `init` once per `root`, with `VectorizationFactor`
+  // being adjustable.
+  // Note: we are dependent upon scanning in top order, so that operands'
+  // `calcLoopDepFlag()` are calculated before we get.
+  // TODO: vec factor should be a tree-flag
+  // Iteration order:
+  // We fully iterate over a loop before descending
+  // for (i : I){
+  //   // block 0
+  //   for (j : J){
+  //     // block 1
+  //   }
+  //   // block 2
+  //   for (j : J){
+  //     // block 3
+  //   }
+  //   // block 4
+  // }
+  // we'd iterate 0, 2, 4, 1, 3.
+  // This way we can store once we hit the end.
+  // If there are no subloops to iterate to after, then we store the exit count.
+  // If there are, then the exit-count is 0, forward '1+exit' count to the last
+  // sub-loop, and `1` to all previous sub-loops.
+  // It's thus natural to implement recursively.
+  // NOLINTNEXTLINE(misc-no-recursion)
+  void initLoop(IR::Loop *L, unsigned maxl2VF,
+                const llvm::TargetTransformInfo &TTI, ptrdiff_t depth,
+                unsigned exitCount) {
+    invariant(depth > 0);
+    ptrdiff_t compute = compute_independence.size(), omemory = orth_axes.size(),
+              cmemory = conv_axes.size();
+    unsigned maxVF = 1 << maxl2VF;
+    // Loop and push throughput costs
+    for (IR::Node *N = L->getChild(); N; N = N->getNext()) {
+      if (auto *A = llvm::dyn_cast<IR::Addr>(N)) {
+        OrthogonalAxes oa = A->calcOrthAxes(depth);
+        IR::Addr::Costs rtl = A->calcCostContigDiscontig(TTI, maxVF);
+        if (oa.indep_axes) {
+          // check for duplicate
+          bool found = false;
+          for (ptrdiff_t i = omemory; i < orth_axes.size(); ++i) {
+            if (orth_axes[i].orth != oa) continue;
+            found = true;
+            orth_axes[i].memcost += rtl;
+            break;
+          }
+          if (!found) orth_axes.emplace_back(rtl, oa);
+        } else {
+          bool found = false;
+          for (ptrdiff_t i = cmemory; i < conv_axes.size(); ++i) {
+            if (conv_axes[i].first.orth != oa) continue;
+            if (conv_axes[i].second != A->indexMatrix()) continue;
+            found = true;
+            conv_axes[i].first.memcost += rtl;
+            break;
+          }
+          if (!found)
+            conv_axes.emplace_back(MemCostSummary{rtl, oa}, A->indexMatrix());
+        }
+      } else if (auto *C = llvm::dyn_cast<IR::Compute>(N)) {
+        bool found = false;
+        uint32_t indep = C->calcLoopDepFlag(depth);
+        float cc{float(
+          C->getCost(TTI, IR::VectorWidth{maxVF, maxl2VF}).recipThroughput)};
+        for (ptrdiff_t i = compute; i < compute_independence.size(); ++i) {
+          if (compute_independence[i].second != indep) continue;
+          found = true;
+          compute_independence[i].first += cc;
+          break;
+        }
+        if (!found) compute_independence.emplace_back(cc, indep);
+      } // else if (auto *S = llvm::dyn_cast<IR::Loop>(N)) {
+    }
+    auto [known_trip, trip_count] = L->getAffineLoop()->tripCount(depth);
+    uint16_t compcnt = compute_independence.size() - compute,
+             omemcnt = orth_axes.size() - omemory,
+             cmemcnt = conv_axes.size() - cmemory;
+    IR::Loop *SL = L->getSubLoop();
+    cost_counts.emplace_back(known_trip, trip_count, compcnt, omemcnt, cmemcnt,
+                             SL ? 0 : exitCount);
+    if (SL) iterLoopLevel(SL, maxl2VF, TTI, ++depth, exitCount);
+    // TODO: if (!SL) we're in a leaf, and need compute latency
+    // The process here is to check if any computations are stored outside of
+    // this loop. If so, walk predecessors (counting accumulated latency as we
+    // go) to find a chain. We also track if we're able to reassociate the
+    // chain, i.e. if we're able to split accumulators (e.g. are they all
+    // additions with reassoc flag?).
+  }
+  // NOLINTNEXTLINE(misc-no-recursion)
+  void iterLoopLevel(IR::Loop *L, unsigned maxl2VF,
+                     const llvm::TargetTransformInfo &TTI, ptrdiff_t depth,
+                     unsigned exitCount) {
+    do {
+      IR::Loop *N = L->getNextLoop();
+      unsigned ec = N ? ++exitCount : 1;
+      initLoop(L, maxl2VF, TTI, depth, ec);
+      L = N;
+    } while (L);
   }
 
 public:
@@ -546,89 +646,14 @@ public:
     }
     return c;
   }
-  // should only have to `init` once per `root`, with `VectorizationFactor`
-  // being adjustable.
-  // Note: we are dependent upon scanning in top order, so that operands'
-  // `calcLoopDepFlag()` are calculated before we get.
-  // TODO: vec factor should be a tree-flag
-  // Iteration order:
-  // We fully iterate over a loop before descending
-  // for (i : I){
-  //   // block 0
-  //   for (j : J){
-  //     // block 1
-  //   }
-  //   // block 2
-  //   for (j : J){
-  //     // block 3
-  //   }
-  //   // block 4
-  // }
-  // we'd iterate 0, 2, 4, 1, 3.
-  // This way we can store once we hit the end.
-  // If there are no subloops to iterate to after, then we store the exit count.
-  // If there are, then the exit-count is 0, forward '1+exit' count to the last
-  // sub-loop, and `1` to all previous sub-loops.
-  // It's thus natural to implement recursively.
   void init(IR::Loop *root, unsigned maxl2VF,
             const llvm::TargetTransformInfo &TTI) {
     clear(); // max_depth = 0;
-    // the root is top-level
-    IR::Loop *L = root->getSubLoop();
-    ptrdiff_t depth = 0;
-    uint16_t omemory{0}, cmemory{0}, exit{0}, compute{0};
-    unsigned maxVF = 1 << maxl2VF;
-    IR::Node *child;
-    for (IR::Node *N = L->getChild(); N;) {
-      if (auto *A = llvm::dyn_cast<IR::Addr>(N)) {
-        OrthogonalAxes oa = A->calcOrthAxes(depth);
-        IR::Addr::Costs rtl = A->calcCostContigDiscontig(TTI, maxVF);
-        if (oa.indep_axes) {
-          // check for duplicate
-          bool found = false;
-          for (ptrdiff_t i = omemory; i < orth_axes.size(); ++i) {
-            if (orth_axes[i].orth != oa) continue;
-            found = true;
-            orth_axes[i].memcost += rtl;
-            break;
-          }
-          if (!found) orth_axes.emplace_back(rtl, oa);
-        } else {
-          bool found = false;
-          for (ptrdiff_t i = cmemory; i < conv_axes.size(); ++i) {
-            if (conv_axes[i].first.orth != oa) continue;
-            if (conv_axes[i].second != A->indexMatrix()) continue;
-            found = true;
-            conv_axes[i].first.memcost += rtl;
-            break;
-          }
-          if (!found)
-            conv_axes.emplace_back(MemCostSummary{rtl, oa}, A->indexMatrix());
-        }
-      } else if (auto *C = llvm::dyn_cast<IR::Compute>(N)) {
-        bool found = false;
-        uint32_t indep = C->calcLoopDepFlag(depth);
-        float cc{float(
-          C->getCost(TTI, IR::VectorWidth{maxVF, maxl2VF}).recipThroughput)};
-        for (ptrdiff_t i = compute; i < compute_independence.size(); ++i) {
-          if (compute_independence[i].second != indep) continue;
-          found = true;
-          compute_independence[i].first += cc;
-          break;
-        }
-        if (!found) compute_independence.emplace_back(cc, indep);
-      } else if (auto *S = llvm::dyn_cast<IR::Loop>(N)) {
-        // we enter subloop, S
-      } else if (auto *E = llvm::dyn_cast<IR::Exit>(N)) {
-        max_depth = std::max(max_depth, depth);
-        // E->getParent()->getNext() returns following instr
-        // With this, we increment exit count
-      }
-      N = N->getNext();
-    }
+    iterLoopLevel(root->getSubLoop(), maxl2VF, TTI, 0, 0);
   }
   LoopTreeCostFn(IR::Loop *root, unsigned maxVF,
-                 const llvm::TargetTransformInfo &TTI) {
+                 const llvm::TargetTransformInfo &TTI)
+    : maxVectorWidth{unsigned(1) << maxVF} {
     init(root, maxVF, TTI);
   }
 };
