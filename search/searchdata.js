@@ -3,7 +3,7 @@ var indexSectionsWithContent =
   0: "abcdefghiklmnoprstuv",
   1: "abcdeghilmnoprstuv",
   2: "p",
-  3: "acdefgikmrsu",
+  3: "acdefgikmrstu",
   4: "al",
   5: "l"
 };

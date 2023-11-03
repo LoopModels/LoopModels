@@ -92,6 +92,8 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:adfbe9b2bae5998949f5bb9f07ac43152"><td class="memItemLeft" align="right" valign="top"><a id="adfbe9b2bae5998949f5bb9f07ac43152"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>isNonNegative</b> () const -&gt; bool</td></tr>
 <tr class="separator:adfbe9b2bae5998949f5bb9f07ac43152"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a36654e1921b64095af6be501fc1e22db"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1poly_1_1Loop.html#a36654e1921b64095af6be501fc1e22db">tripCount</a> (ptrdiff_t depth) const -&gt; std::array&lt; uint16_t, 2 &gt;</td></tr>
+<tr class="separator:a36654e1921b64095af6be501fc1e22db"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a44dee0a6e771f9290801832a8b0330ee"><td class="memItemLeft" align="right" valign="top"><a id="a44dee0a6e771f9290801832a8b0330ee"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>findIndex</b> (const llvm::SCEV *v) const -&gt; ptrdiff_t</td></tr>
 <tr class="separator:a44dee0a6e771f9290801832a8b0330ee"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -166,8 +168,7 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumCon</
 <tr class="memitem:a7d26bc23ad981dbc5eef149476b4ded3"><td class="memItemLeft" align="right" valign="top"><a id="a7d26bc23ad981dbc5eef149476b4ded3"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getA</b> () -&gt; MutDensePtrMatrix&lt; int64_t &gt;</td></tr>
 <tr class="separator:a7d26bc23ad981dbc5eef149476b4ded3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9f23d8e6010cda90b7fdeddea825fdf4"><td class="memItemLeft" align="right" valign="top"><a id="a9f23d8e6010cda90b7fdeddea825fdf4"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getA</b> () const -&gt; DensePtrMatrix&lt; int64_t &gt;</td></tr>
+<tr class="memitem:a9f23d8e6010cda90b7fdeddea825fdf4"><td class="memItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1poly_1_1Loop.html#a9f23d8e6010cda90b7fdeddea825fdf4">getA</a> () const -&gt; DensePtrMatrix&lt; int64_t &gt;</td></tr>
 <tr class="separator:a9f23d8e6010cda90b7fdeddea825fdf4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7a9154cb0df051a52bfb13ee2f676490"><td class="memItemLeft" align="right" valign="top"><a id="a7a9154cb0df051a52bfb13ee2f676490"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getOuterA</b> (ptrdiff_t subLoop) -&gt; MutPtrMatrix&lt; int64_t &gt;</td></tr>
@@ -304,6 +305,32 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> 
 <tr class="separator:a020ab24c4c23e27de7782448c5c27a3f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Member Function Documentation</h2>
+<a id="a9f23d8e6010cda90b7fdeddea825fdf4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9f23d8e6010cda90b7fdeddea825fdf4">&#9670;&nbsp;</a></span>getA()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">constexpr auto poly::poly::Loop::getA </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const -&gt; DensePtrMatrix&lt;int64_t&gt; </td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">constexpr</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>returns the <code>A</code> where <code>A * i &gt;= 0</code>, <code>i</code> are loop indvars Number of rows indicate number of constraints, columns are /// returns the <code>A</code> where <code>A * i &gt;= 0</code>, <code>i</code> are loop indvars Number of rows indicate number of constraints, columns are 1 (constant) + numDynSymbols + number of loops </p>
+
+</div>
+</div>
 <a id="a03240e7893974248eddd72423304b2b5"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a03240e7893974248eddd72423304b2b5">&#9670;&nbsp;</a></span>rotate()</h2>
 
@@ -344,6 +371,33 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> 
 </table>
 </div><div class="memdoc">
 <p>A.rotate( R ) A(_,const) + A(_,var)*var &gt;= 0 this method applies rotation matrix R A(_,const) + (A(_,var)*R)*(R^{-1}*var) &gt;= 0 So that our new loop nest has matrix [A(_,const) (A(_,var)*R)] while the new &lsquo;var&rsquo; is <code>(R^{-1}*var)</code> offset the loops by <code>offsets</code>, e.g. if we have offsets[0] = 2, then the first loop is shifted by 2. this shifting is applied before rotation. </p>
+
+</div>
+</div>
+<a id="a36654e1921b64095af6be501fc1e22db"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a36654e1921b64095af6be501fc1e22db">&#9670;&nbsp;</a></span>tripCount()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">auto poly::poly::Loop::tripCount </td>
+          <td>(</td>
+          <td class="paramtype">ptrdiff_t&#160;</td>
+          <td class="paramname"><em>depth</em></td><td>)</td>
+          <td> const -&gt; std::array&lt;uint16_t, 2&gt; </td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Gives a very rough trip count estimate (second return value) with a boolean fist arg indicating whether it is exact or estimated. The estimation approach here can be seriously improved. Currently, if not exact, it simply returns 128. </p>
 
 </div>
 </div>
