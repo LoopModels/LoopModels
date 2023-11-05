@@ -173,9 +173,11 @@ public:
         loopIndepFlag &= A->getOrthAxes().indep | diffMask(C, depth);
     return loopIndepFlag;
   }
+  /// Get the arguments to this function
   [[nodiscard]] constexpr auto getOperands() const -> PtrVector<Value *> {
     return {const_cast<Value **>(operands), unsigned(numOperands)};
   }
+  /// Get the `i`th argument of this function
   [[nodiscard]] constexpr auto getOperand(size_t i) const -> Value * {
     return operands[i];
   }
@@ -204,7 +206,12 @@ public:
     return (getKind() == VK_Call) && ((opId == llvm::Intrinsic::fmuladd) ||
                                       (opId == llvm::Intrinsic::fma));
   }
-  [[nodiscard]] auto associativeOperandsFlag() const -> uint8_t {
+  // Bitmask indicating which args are commutative
+  // E.g. `muladd(a, b, c)` returns `0x3`
+  // where the bitpattern is 11000000
+  // indicating that the first two arguments are commutative.
+  // That is, `muladd(a, b, c) == muladd(b, a, c)`.
+  [[nodiscard]] auto commuatativeOperandsFlag() const -> uint8_t {
     switch (getKind()) {
     case VK_Call: return (isMulAdd() || isCommutativeCall()) ? 0x3 : 0;
     case VK_Oprn:
@@ -233,7 +240,7 @@ public:
     size_t offset = 0;
     auto opst = getOperands();
     auto opso = other.getOperands();
-    if (uint8_t flag = associativeOperandsFlag()) {
+    if (uint8_t flag = commuatativeOperandsFlag()) {
       invariant(flag, uint8_t(3));
       auto *ot0 = opst[0];
       auto *oo0 = opso[0];
@@ -776,9 +783,9 @@ Compute::calcCost(const llvm::TargetTransformInfo &TTI, unsigned vectorWidth)
   if (const auto *I = llvm::dyn_cast<Compute>(this)) return I->getNumOperands();
   return getKind() == VK_Stow;
 }
-[[nodiscard]] inline auto Value::associativeOperandsFlag() const -> uint8_t {
+[[nodiscard]] inline auto Value::commutativeOperandsFlag() const -> uint8_t {
   if (const auto *I = llvm::dyn_cast<Compute>(this))
-    return I->associativeOperandsFlag();
+    return I->commuatativeOperandsFlag();
   return 0;
 }
 [[nodiscard]] inline auto Value::getNumScalarBits() const -> unsigned int {
@@ -842,7 +849,7 @@ ankerl::unordered_dense::hash<poly::IR::InstByValue>::operator()(
   seed = combineHash(seed, getHash(x.inst->getOpId()));
   if (x.inst->isIncomplete())
     return combineHash(seed, getHash(x.inst->getLLVMInstruction()));
-  uint8_t assocFlag = x.inst->associativeOperandsFlag();
+  uint8_t assocFlag = x.inst->commuatativeOperandsFlag();
   // combine all operands
   size_t offset = 0;
   poly::PtrVector<Value *> operands = x.inst->getOperands();

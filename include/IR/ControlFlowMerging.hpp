@@ -1,11 +1,11 @@
 #pragma once
 
+#include "Alloc/Arena.hpp"
 #include "Dicts/BumpMapSet.hpp"
 #include "IR/BBPredPath.hpp"
 #include "IR/Cache.hpp"
 #include "IR/Instruction.hpp"
 #include "IR/Predicate.hpp"
-#include "Alloc/Arena.hpp"
 #include <Containers/BitSets.hpp>
 #include <Containers/Pair.hpp>
 #include <cassert>
@@ -216,7 +216,7 @@ struct MergingCost {
     // select(p, f(a,b), f(c,d)) => f(select(p, a, c), select(p, b, d))
     // but we can often do better, e.g. we may have
     // select(p, f(a,b), f(c,b)) => f(select(p, a, c), b)
-    // additionally, we can check `I->associativeOperandsFlag()`
+    // additionally, we can check `I->commutativeOperandsFlag()`
     // select(p, f(a,b), f(c,a)) => f(a, select(p, b, c))
     // we need to figure out which operands we're merging with which,
     //
@@ -224,26 +224,26 @@ struct MergingCost {
     // arguments are merged, as this may be common when two
     // control flow branches have relatively similar pieces.
     // E.g., if b and c are already merged,
-    // and if `f`'s ops are associative, then we'd get
+    // and if `f`'s ops are commutative, then we'd get
     // select(p, f(a,b), f(c,a)) => f(a, b)
     // so we need to check if any operand pairs are merged with each other.
     // note `isMerged(a,a) == true`, so that's the one query we need to use.
     auto selector = init(selects, A, B);
     MutPtrVector<Value *> operandsA = A->getOperands();
     MutPtrVector<Value *> operandsB = B->getOperands();
-    size_t numOperands = operandsA.size();
+    ptrdiff_t numOperands = operandsA.size();
     assert(numOperands == operandsB.size());
     /// associate ops means `f(a, b) == f(b, a)`
-    uint8_t associativeOpsFlag = B->associativeOperandsFlag();
+    uint8_t commutativeOpsFlag = B->commutativeOperandsFlag();
     // For example,
     // we keep track of which operands we've already merged,
     // f(a, b), f(b, b)
     // we can't merge b twice!
-    for (size_t i = 0; i < numOperands; ++i) {
+    for (ptrdiff_t i = 0; i < numOperands; ++i) {
       auto *opA = A->getOperand(i);
       auto *opB = B->getOperand(i);
-      auto [assoc, assocFlag] = popBit(associativeOpsFlag);
-      associativeOpsFlag = assocFlag;
+      auto [assoc, assocFlag] = popBit(commutativeOpsFlag);
+      commutativeOpsFlag = assocFlag;
       if (opA == opB) continue;
       // if both operands were merged, we can ignore it's associativity
       if (isMerged(opB, opA)) {
@@ -252,7 +252,7 @@ struct MergingCost {
         continue;
       }
       if (!((assoc) && (assocFlag))) {
-        // this op isn't associative with any remaining
+        // this op isn't commutative with any remaining
         selector.select(i, opA, opB);
         continue;
       }
@@ -371,7 +371,7 @@ struct MergingCost {
 inline void mergeInstructions(
   Arena<> *alloc, IR::Cache &cache, Predicate::Map &predMap,
   const llvm::TargetTransformInfo &TTI, unsigned int vectorBits,
-  amap<Instruction::Identifier, math::ResizeableView<Instruction *, unsigned>>
+  amap<Instruction::Identifier, math::ResizeableView<Instruction *, ptrdiff_t>>
     opMap,
   amap<Instruction *, Predicate::Set> &valToPred,
   llvm::SmallVectorImpl<MergingCost *> &mergingCosts, Instruction *J,
@@ -429,7 +429,7 @@ inline void mergeInstructions(
   }
   // descendants aren't legal merge candidates, so push after merging
   if (vec.getCapacity() <= vec.size())
-    vec.reserve(alloc, std::max(unsigned(8), 2 * vec.size()));
+    vec.reserve(alloc, std::max(ptrdiff_t(8), 2 * vec.size()));
   vec.push_back(J);
   valToPred[J] = preds;
   // TODO: prune bad candidates from mergingCosts
@@ -454,7 +454,7 @@ mergeInstructions(IR::Cache &cache, Predicate::Map &predMap,
   tr = trret;
   if (!predMap.isDivergent()) return tr;
   // there is a divergence in the control flow that we can ideally merge
-  amap<Instruction::Identifier, math::ResizeableView<Instruction *, unsigned>>
+  amap<Instruction::Identifier, math::ResizeableView<Instruction *, ptrdiff_t>>
     opMap{&tAlloc};
   amap<Instruction *, Predicate::Set> valToPred{&tAlloc};
   llvm::SmallVector<MergingCost *> mergingCosts;

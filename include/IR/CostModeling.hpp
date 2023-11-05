@@ -380,6 +380,18 @@ inline auto hasFutureReads(Arena<> *alloc, dict::set<llvm::BasicBlock *> &LBBs,
   return hasFutureReadsCore(successors, I);
 }
 
+struct LoopDepSatisfaction {
+  IR::Dependencies deps;
+  MutPtrVector<int32_t> loopDeps;
+
+  constexpr auto dependencyIDs(IR::Loop *L) {
+    return utils::VForwardRange{loopDeps.begin(), L->getEdge()};
+  }
+  constexpr auto depencencies(IR::Loop *L) {
+    return depIDs(L) | deps.getEdgeTransform();
+  }
+};
+
 class IROptimizer {
   IR::Dependencies deps;
   IR::Cache &instructions;
@@ -394,11 +406,14 @@ class IROptimizer {
   /// we can more easily check all dependencies carried by a particular loop.
   /// We use these for checks w/ respect to unrolling and vectorization
   /// legality.
+  /// The returned vector is an integer vector, giving a mapping of loops
+  /// to depencencies handled at that level.
+  /// We can use these dependencies for searching reductions for
+  /// trying to prove legality.
   static auto loopDepSats(Arena<> *alloc, IR::Dependencies deps,
                           lp::LoopBlock::OptimizationResult res)
     -> MutPtrVector<int32_t> {
-    IR::MutPtrVector<int32_t> loopDeps{
-      math::vector<int32_t>(alloc, unsigned(deps.size()))};
+    MutPtrVector<int32_t> loopDeps{math::vector<int32_t>(alloc, deps.size())};
     // place deps at sat level for loops
     for (IR::Addr *a : res.addr.getAddr()) {
       IR::Loop *L = a->getLoop();
@@ -408,6 +423,9 @@ class IROptimizer {
       }
     }
     return loopDeps;
+  }
+  [[nodiscard]] constexpr auto getLoopDeps() const -> LoopDepSatisfaction {
+    return {deps, loopDeps};
   }
   // this compares `a` with each of its active outputs.
   inline void eliminateAddr(IR::Addr *a) {

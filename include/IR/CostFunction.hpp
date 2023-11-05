@@ -3,7 +3,9 @@
 #include "IR/Address.hpp"
 #include "IR/Instruction.hpp"
 #include "IR/Node.hpp"
+#include "IR/CostModeling.hpp"
 #include "IR/OrthogonalAxes.hpp"
+#include "Polyhedra/Dependence.hpp"
 #include <Containers/BitSets.hpp>
 #include <Containers/Pair.hpp>
 #include <Math/Array.hpp>
@@ -506,7 +508,7 @@ class LoopTreeCostFn {
   // sub-loop, and `1` to all previous sub-loops.
   // It's thus natural to implement recursively.
   // NOLINTNEXTLINE(misc-no-recursion)
-  void initLoop(IR::Loop *L, unsigned maxl2VF,
+  void initLoop(LoopDepSatisfaction deps, IR::Loop *L, unsigned maxl2VF,
                 const llvm::TargetTransformInfo &TTI, ptrdiff_t depth,
                 unsigned exitCount) {
     invariant(depth > 0);
@@ -561,22 +563,43 @@ class LoopTreeCostFn {
     IR::Loop *SL = L->getSubLoop();
     cost_counts.emplace_back(known_trip, trip_count, compcnt, omemcnt, cmemcnt,
                              SL ? 0 : exitCount);
-    if (SL) iterLoopLevel(SL, maxl2VF, TTI, ++depth, exitCount);
-    // TODO: if (!SL) we're in a leaf, and need compute latency
-    // The process here is to check if any computations are stored outside of
-    // this loop. If so, walk predecessors (counting accumulated latency as we
-    // go) to find a chain. We also track if we're able to reassociate the
-    // chain, i.e. if we're able to split accumulators (e.g. are they all
-    // additions with reassoc flag?).
+    if (SL) iterLoopLevel(deps, SL, maxl2VF, TTI, ++depth, exitCount);
+    else leafCosts(deps, L, maxl2VF, TTI);
   }
+  void leafCosts(LoopDepSatisfaction deps, IR::Loop *L, unsigned maxl2VF,
+                 const llvm::TargetTransformInfo &TTI) {
+    // TODO: if (!SL) we're in a leaf, and need compute latency
+    // We use the `IROptimizer::loopDepSats` to check the depencencies held at
+    // the loop. We check these for those that look like reductions that are
+    // legal to reassociate, e.g. integer add chains or floating point with the
+    // reassociate FMF set. We can also calculate the latency while walking the
+    // chain. Note that in our IR, dependencies may look something like this
+    // after load/store hoisting: for (j in J){ // arbitrary number of outer
+    // loops
+    //   %w = %array[j...];
+    //   %x = foo(%w);
+    //   for (i in I){ // inner loop(s)
+    //     %y = bar(%x);
+    //   }
+    //   %z = quz(%y);
+    //   %array[j...] = %z;
+    // }
+    // Rather than using PhiNodes, we represent dependencies through addresses.
+    bool vectorizationLegal = true, unrollLegal = true;
+    for (poly::Dependence d : deps.depencencies(L)){
+      // is 
+    }
+    // for (IR::Node *N = L->getChild(); N; N = N->getNext()) {}
+    return;
+  };
   // NOLINTNEXTLINE(misc-no-recursion)
-  void iterLoopLevel(IR::Loop *L, unsigned maxl2VF,
+  void iterLoopLevel(LoopDepSatisfaction deps, IR::Loop *L, unsigned maxl2VF,
                      const llvm::TargetTransformInfo &TTI, ptrdiff_t depth,
                      unsigned exitCount) {
     do {
       IR::Loop *N = L->getNextLoop();
       unsigned ec = N ? ++exitCount : 1;
-      initLoop(L, maxl2VF, TTI, depth, ec);
+      initLoop(deps, N, maxl2VF, TTI, depth, ec);
       L = N;
     } while (L);
   }
@@ -646,15 +669,15 @@ public:
     }
     return c;
   }
-  void init(IR::Loop *root, unsigned maxl2VF,
+  void init(LoopDepSatisfaction deps, IR::Loop *root, unsigned maxl2VF,
             const llvm::TargetTransformInfo &TTI) {
     clear(); // max_depth = 0;
-    iterLoopLevel(root->getSubLoop(), maxl2VF, TTI, 0, 0);
+    iterLoopLevel(deps, root->getSubLoop(), maxl2VF, TTI, 0, 0);
   }
-  LoopTreeCostFn(IR::Loop *root, unsigned maxVF,
+  LoopTreeCostFn(LoopDepSatisfaction deps, IR::Loop *root, unsigned maxVF,
                  const llvm::TargetTransformInfo &TTI)
     : maxVectorWidth{unsigned(1) << maxVF} {
-    init(root, maxVF, TTI);
+    init(deps, root, maxVF, TTI);
   }
 };
 
