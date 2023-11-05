@@ -71,12 +71,12 @@ $(function() {
 <div class="contents">
 <div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="preprocessor">#pragma once</span></div>
 <div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160; </div>
-<div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="preprocessor">#include &quot;Dicts/BumpMapSet.hpp&quot;</span></div>
-<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor">#include &quot;IR/BBPredPath.hpp&quot;</span></div>
-<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="preprocessor">#include &quot;IR/Cache.hpp&quot;</span></div>
-<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="preprocessor">#include &quot;IR/Instruction.hpp&quot;</span></div>
-<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="preprocessor">#include &quot;IR/Predicate.hpp&quot;</span></div>
-<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="preprocessor">#include &quot;Alloc/Arena.hpp&quot;</span></div>
+<div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="preprocessor">#include &quot;Alloc/Arena.hpp&quot;</span></div>
+<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor">#include &quot;Dicts/BumpMapSet.hpp&quot;</span></div>
+<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="preprocessor">#include &quot;IR/BBPredPath.hpp&quot;</span></div>
+<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="preprocessor">#include &quot;IR/Cache.hpp&quot;</span></div>
+<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="preprocessor">#include &quot;IR/Instruction.hpp&quot;</span></div>
+<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="preprocessor">#include &quot;IR/Predicate.hpp&quot;</span></div>
 <div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="preprocessor">#include &lt;Containers/BitSets.hpp&gt;</span></div>
 <div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="preprocessor">#include &lt;Containers/Pair.hpp&gt;</span></div>
 <div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="preprocessor">#include &lt;cassert&gt;</span></div>
@@ -280,7 +280,7 @@ $(function() {
 <div class="line"><a name="l00216"></a><span class="lineno">  216</span>&#160;    <span class="comment">// select(p, f(a,b), f(c,d)) =&gt; f(select(p, a, c), select(p, b, d))</span></div>
 <div class="line"><a name="l00217"></a><span class="lineno">  217</span>&#160;    <span class="comment">// but we can often do better, e.g. we may have</span></div>
 <div class="line"><a name="l00218"></a><span class="lineno">  218</span>&#160;    <span class="comment">// select(p, f(a,b), f(c,b)) =&gt; f(select(p, a, c), b)</span></div>
-<div class="line"><a name="l00219"></a><span class="lineno">  219</span>&#160;    <span class="comment">// additionally, we can check `I-&gt;associativeOperandsFlag()`</span></div>
+<div class="line"><a name="l00219"></a><span class="lineno">  219</span>&#160;    <span class="comment">// additionally, we can check `I-&gt;commutativeOperandsFlag()`</span></div>
 <div class="line"><a name="l00220"></a><span class="lineno">  220</span>&#160;    <span class="comment">// select(p, f(a,b), f(c,a)) =&gt; f(a, select(p, b, c))</span></div>
 <div class="line"><a name="l00221"></a><span class="lineno">  221</span>&#160;    <span class="comment">// we need to figure out which operands we&#39;re merging with which,</span></div>
 <div class="line"><a name="l00222"></a><span class="lineno">  222</span>&#160;    <span class="comment">//</span></div>
@@ -288,25 +288,25 @@ $(function() {
 <div class="line"><a name="l00224"></a><span class="lineno">  224</span>&#160;    <span class="comment">// arguments are merged, as this may be common when two</span></div>
 <div class="line"><a name="l00225"></a><span class="lineno">  225</span>&#160;    <span class="comment">// control flow branches have relatively similar pieces.</span></div>
 <div class="line"><a name="l00226"></a><span class="lineno">  226</span>&#160;    <span class="comment">// E.g., if b and c are already merged,</span></div>
-<div class="line"><a name="l00227"></a><span class="lineno">  227</span>&#160;    <span class="comment">// and if `f`&#39;s ops are associative, then we&#39;d get</span></div>
+<div class="line"><a name="l00227"></a><span class="lineno">  227</span>&#160;    <span class="comment">// and if `f`&#39;s ops are commutative, then we&#39;d get</span></div>
 <div class="line"><a name="l00228"></a><span class="lineno">  228</span>&#160;    <span class="comment">// select(p, f(a,b), f(c,a)) =&gt; f(a, b)</span></div>
 <div class="line"><a name="l00229"></a><span class="lineno">  229</span>&#160;    <span class="comment">// so we need to check if any operand pairs are merged with each other.</span></div>
 <div class="line"><a name="l00230"></a><span class="lineno">  230</span>&#160;    <span class="comment">// note `isMerged(a,a) == true`, so that&#39;s the one query we need to use.</span></div>
 <div class="line"><a name="l00231"></a><span class="lineno">  231</span>&#160;    <span class="keyword">auto</span> selector = init(selects, A, B);</div>
 <div class="line"><a name="l00232"></a><span class="lineno">  232</span>&#160;    MutPtrVector&lt;Value *&gt; operandsA = A-&gt;getOperands();</div>
 <div class="line"><a name="l00233"></a><span class="lineno">  233</span>&#160;    MutPtrVector&lt;Value *&gt; operandsB = B-&gt;getOperands();</div>
-<div class="line"><a name="l00234"></a><span class="lineno">  234</span>&#160;    <span class="keywordtype">size_t</span> numOperands = operandsA.size();</div>
+<div class="line"><a name="l00234"></a><span class="lineno">  234</span>&#160;    ptrdiff_t numOperands = operandsA.size();</div>
 <div class="line"><a name="l00235"></a><span class="lineno">  235</span>&#160;    assert(numOperands == operandsB.size());</div>
-<div class="line"><a name="l00237"></a><span class="lineno">  237</span>&#160;    uint8_t associativeOpsFlag = B-&gt;associativeOperandsFlag();</div>
+<div class="line"><a name="l00237"></a><span class="lineno">  237</span>&#160;    uint8_t commutativeOpsFlag = B-&gt;commutativeOperandsFlag();</div>
 <div class="line"><a name="l00238"></a><span class="lineno">  238</span>&#160;    <span class="comment">// For example,</span></div>
 <div class="line"><a name="l00239"></a><span class="lineno">  239</span>&#160;    <span class="comment">// we keep track of which operands we&#39;ve already merged,</span></div>
 <div class="line"><a name="l00240"></a><span class="lineno">  240</span>&#160;    <span class="comment">// f(a, b), f(b, b)</span></div>
 <div class="line"><a name="l00241"></a><span class="lineno">  241</span>&#160;    <span class="comment">// we can&#39;t merge b twice!</span></div>
-<div class="line"><a name="l00242"></a><span class="lineno">  242</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; numOperands; ++i) {</div>
+<div class="line"><a name="l00242"></a><span class="lineno">  242</span>&#160;    <span class="keywordflow">for</span> (ptrdiff_t i = 0; i &lt; numOperands; ++i) {</div>
 <div class="line"><a name="l00243"></a><span class="lineno">  243</span>&#160;      <span class="keyword">auto</span> *opA = A-&gt;getOperand(i);</div>
 <div class="line"><a name="l00244"></a><span class="lineno">  244</span>&#160;      <span class="keyword">auto</span> *opB = B-&gt;getOperand(i);</div>
-<div class="line"><a name="l00245"></a><span class="lineno">  245</span>&#160;      <span class="keyword">auto</span> [assoc, assocFlag] = popBit(associativeOpsFlag);</div>
-<div class="line"><a name="l00246"></a><span class="lineno">  246</span>&#160;      associativeOpsFlag = assocFlag;</div>
+<div class="line"><a name="l00245"></a><span class="lineno">  245</span>&#160;      <span class="keyword">auto</span> [assoc, assocFlag] = popBit(commutativeOpsFlag);</div>
+<div class="line"><a name="l00246"></a><span class="lineno">  246</span>&#160;      commutativeOpsFlag = assocFlag;</div>
 <div class="line"><a name="l00247"></a><span class="lineno">  247</span>&#160;      <span class="keywordflow">if</span> (opA == opB) <span class="keywordflow">continue</span>;</div>
 <div class="line"><a name="l00248"></a><span class="lineno">  248</span>&#160;      <span class="comment">// if both operands were merged, we can ignore it&#39;s associativity</span></div>
 <div class="line"><a name="l00249"></a><span class="lineno">  249</span>&#160;      <span class="keywordflow">if</span> (<a class="code" href="structpoly_1_1IR_1_1MergingCost.html#a0f5c22824734316304ca40f3a5e613f6">isMerged</a>(opB, opA)) {</div>
@@ -315,7 +315,7 @@ $(function() {
 <div class="line"><a name="l00252"></a><span class="lineno">  252</span>&#160;        <span class="keywordflow">continue</span>;</div>
 <div class="line"><a name="l00253"></a><span class="lineno">  253</span>&#160;      }</div>
 <div class="line"><a name="l00254"></a><span class="lineno">  254</span>&#160;      <span class="keywordflow">if</span> (!((assoc) &amp;&amp; (assocFlag))) {</div>
-<div class="line"><a name="l00255"></a><span class="lineno">  255</span>&#160;        <span class="comment">// this op isn&#39;t associative with any remaining</span></div>
+<div class="line"><a name="l00255"></a><span class="lineno">  255</span>&#160;        <span class="comment">// this op isn&#39;t commutative with any remaining</span></div>
 <div class="line"><a name="l00256"></a><span class="lineno">  256</span>&#160;        selector.select(i, opA, opB);</div>
 <div class="line"><a name="l00257"></a><span class="lineno">  257</span>&#160;        <span class="keywordflow">continue</span>;</div>
 <div class="line"><a name="l00258"></a><span class="lineno">  258</span>&#160;      }</div>
@@ -434,7 +434,7 @@ $(function() {
 <div class="line"><a name="l00371"></a><span class="lineno">  371</span>&#160;<span class="keyword">inline</span> <span class="keywordtype">void</span> mergeInstructions(</div>
 <div class="line"><a name="l00372"></a><span class="lineno">  372</span>&#160;  Arena&lt;&gt; *alloc, IR::Cache &amp;cache, Predicate::Map &amp;predMap,</div>
 <div class="line"><a name="l00373"></a><span class="lineno">  373</span>&#160;  <span class="keyword">const</span> llvm::TargetTransformInfo &amp;TTI, <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> vectorBits,</div>
-<div class="line"><a name="l00374"></a><span class="lineno">  374</span>&#160;  amap&lt;Instruction::Identifier, math::ResizeableView&lt;Instruction *, unsigned&gt;&gt;</div>
+<div class="line"><a name="l00374"></a><span class="lineno">  374</span>&#160;  amap&lt;Instruction::Identifier, math::ResizeableView&lt;Instruction *, ptrdiff_t&gt;&gt;</div>
 <div class="line"><a name="l00375"></a><span class="lineno">  375</span>&#160;    opMap,</div>
 <div class="line"><a name="l00376"></a><span class="lineno">  376</span>&#160;  amap&lt;Instruction *, Predicate::Set&gt; &amp;valToPred,</div>
 <div class="line"><a name="l00377"></a><span class="lineno">  377</span>&#160;  llvm::SmallVectorImpl&lt;MergingCost *&gt; &amp;mergingCosts, Instruction *J,</div>
@@ -492,7 +492,7 @@ $(function() {
 <div class="line"><a name="l00429"></a><span class="lineno">  429</span>&#160;  }</div>
 <div class="line"><a name="l00430"></a><span class="lineno">  430</span>&#160;  <span class="comment">// descendants aren&#39;t legal merge candidates, so push after merging</span></div>
 <div class="line"><a name="l00431"></a><span class="lineno">  431</span>&#160;  <span class="keywordflow">if</span> (vec.getCapacity() &lt;= vec.size())</div>
-<div class="line"><a name="l00432"></a><span class="lineno">  432</span>&#160;    vec.reserve(alloc, std::max(<span class="keywordtype">unsigned</span>(8), 2 * vec.size()));</div>
+<div class="line"><a name="l00432"></a><span class="lineno">  432</span>&#160;    vec.reserve(alloc, std::max(ptrdiff_t(8), 2 * vec.size()));</div>
 <div class="line"><a name="l00433"></a><span class="lineno">  433</span>&#160;  vec.push_back(J);</div>
 <div class="line"><a name="l00434"></a><span class="lineno">  434</span>&#160;  valToPred[J] = preds;</div>
 <div class="line"><a name="l00435"></a><span class="lineno">  435</span>&#160;  <span class="comment">// TODO: prune bad candidates from mergingCosts</span></div>
@@ -506,7 +506,7 @@ $(function() {
 <div class="line"><a name="l00454"></a><span class="lineno">  454</span>&#160;  tr = trret;</div>
 <div class="line"><a name="l00455"></a><span class="lineno">  455</span>&#160;  <span class="keywordflow">if</span> (!predMap.isDivergent()) <span class="keywordflow">return</span> tr;</div>
 <div class="line"><a name="l00456"></a><span class="lineno">  456</span>&#160;  <span class="comment">// there is a divergence in the control flow that we can ideally merge</span></div>
-<div class="line"><a name="l00457"></a><span class="lineno">  457</span>&#160;  amap&lt;Instruction::Identifier, math::ResizeableView&lt;Instruction *, unsigned&gt;&gt;</div>
+<div class="line"><a name="l00457"></a><span class="lineno">  457</span>&#160;  amap&lt;Instruction::Identifier, math::ResizeableView&lt;Instruction *, ptrdiff_t&gt;&gt;</div>
 <div class="line"><a name="l00458"></a><span class="lineno">  458</span>&#160;    opMap{&amp;tAlloc};</div>
 <div class="line"><a name="l00459"></a><span class="lineno">  459</span>&#160;  amap&lt;Instruction *, Predicate::Set&gt; valToPred{&amp;tAlloc};</div>
 <div class="line"><a name="l00460"></a><span class="lineno">  460</span>&#160;  llvm::SmallVector&lt;MergingCost *&gt; mergingCosts;</div>
@@ -537,10 +537,10 @@ $(function() {
 <div class="ttc" id="aclasspoly_1_1IR_1_1Cache_html_a6faece9ac31b45aae0353250ff03084d"><div class="ttname"><a href="classpoly_1_1IR_1_1Cache.html#a6faece9ac31b45aae0353250ff03084d">poly::IR::Cache::createSelect</a></div><div class="ttdeci">auto createSelect(Predicate::Intersection P, Value *A, Value *B, UList&lt; Value * &gt; *pred) -&gt; Compute *</div><div class="ttdef"><b>Definition:</b> Cache.hpp:725</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Compute_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Compute.html">poly::IR::Compute</a></div><div class="ttdef"><b>Definition:</b> Instruction.hpp:69</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Instruction_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Instruction.html">poly::IR::Instruction</a></div><div class="ttdef"><b>Definition:</b> Node.hpp:478</div></div>
-<div class="ttc" id="aclasspoly_1_1IR_1_1Operation_html_aa149e4b9cf989c4e38971610a00729de"><div class="ttname"><a href="classpoly_1_1IR_1_1Operation.html#aa149e4b9cf989c4e38971610a00729de">poly::IR::Operation::selectCost</a></div><div class="ttdeci">auto selectCost(const llvm::TargetTransformInfo &amp;TTI, unsigned int vectorWidth) const -&gt; llvm::InstructionCost</div><div class="ttdef"><b>Definition:</b> Instruction.hpp:518</div></div>
+<div class="ttc" id="aclasspoly_1_1IR_1_1Operation_html_aa149e4b9cf989c4e38971610a00729de"><div class="ttname"><a href="classpoly_1_1IR_1_1Operation.html#aa149e4b9cf989c4e38971610a00729de">poly::IR::Operation::selectCost</a></div><div class="ttdeci">auto selectCost(const llvm::TargetTransformInfo &amp;TTI, unsigned int vectorWidth) const -&gt; llvm::InstructionCost</div><div class="ttdef"><b>Definition:</b> Instruction.hpp:525</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1ReMapper_html"><div class="ttname"><a href="classpoly_1_1IR_1_1ReMapper.html">poly::IR::ReMapper</a></div><div class="ttdef"><b>Definition:</b> ControlFlowMerging.hpp:29</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Value_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Value.html">poly::IR::Value</a></div><div class="ttdef"><b>Definition:</b> Node.hpp:406</div></div>
-<div class="ttc" id="aclasspoly_1_1IR_1_1Value_html_a0f89539ccba0c8fc06e2bd3e7539e503"><div class="ttname"><a href="classpoly_1_1IR_1_1Value.html#a0f89539ccba0c8fc06e2bd3e7539e503">poly::IR::Value::getCost</a></div><div class="ttdeci">auto getCost(const llvm::TargetTransformInfo &amp;TTI, cost::VectorWidth W) -&gt; cost::RecipThroughputLatency</div><div class="ttdoc">these methods are overloaded for specific subtypes</div><div class="ttdef"><b>Definition:</b> Instruction.hpp:691</div></div>
+<div class="ttc" id="aclasspoly_1_1IR_1_1Value_html_a0f89539ccba0c8fc06e2bd3e7539e503"><div class="ttname"><a href="classpoly_1_1IR_1_1Value.html#a0f89539ccba0c8fc06e2bd3e7539e503">poly::IR::Value::getCost</a></div><div class="ttdeci">auto getCost(const llvm::TargetTransformInfo &amp;TTI, cost::VectorWidth W) -&gt; cost::RecipThroughputLatency</div><div class="ttdoc">these methods are overloaded for specific subtypes</div><div class="ttdef"><b>Definition:</b> Instruction.hpp:698</div></div>
 <div class="ttc" id="astructpoly_1_1IR_1_1MergingCost_1_1Allocate_html"><div class="ttname"><a href="structpoly_1_1IR_1_1MergingCost_1_1Allocate.html">poly::IR::MergingCost::Allocate</a></div><div class="ttdef"><b>Definition:</b> ControlFlowMerging.hpp:154</div></div>
 <div class="ttc" id="astructpoly_1_1IR_1_1MergingCost_1_1Count_html"><div class="ttname"><a href="structpoly_1_1IR_1_1MergingCost_1_1Count.html">poly::IR::MergingCost::Count</a></div><div class="ttdef"><b>Definition:</b> ControlFlowMerging.hpp:162</div></div>
 <div class="ttc" id="astructpoly_1_1IR_1_1MergingCost_1_1SelectAllocator_html"><div class="ttname"><a href="structpoly_1_1IR_1_1MergingCost_1_1SelectAllocator.html">poly::IR::MergingCost::SelectAllocator</a></div><div class="ttdef"><b>Definition:</b> ControlFlowMerging.hpp:169</div></div>
