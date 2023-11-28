@@ -103,7 +103,7 @@ uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="s
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>POD. Gives counts for the different kinds of costs. Fields: <code>int16_t trip_count</code>- we're unlikely to change decisions for &gt;32k negative indicates compile-time known size. <code>uint16_t memory</code> number of mem sets. <code>bool exit</code> loop exit/entry. <code>uint31_t compute</code> number of compute sets. These give us info for iterating over the costs associated with a loop. for (i : I){ for (j : J){ for (k : K){ // leaf ... } for (k : K){ // leaf ... } } for (j : J){ // leaf ... } } For leaves, we compute latency as well as register cost. Note that we compute all costs at the header for a given depth, thus we only need headers and num-pops. </p>
 </div><hr/>The documentation for this struct was generated from the following file:<ul>
-<li>include/IR/<a class="el" href="CostFunction_8hpp_source.html">CostFunction.hpp</a></li>
+<li>include/Optimize/<a class="el" href="CostFunction_8hpp_source.html">CostFunction.hpp</a></li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->

@@ -947,9 +947,9 @@ $(function() {
 <div class="line"><a name="l00985"></a><span class="lineno">  985</span>&#160;                <span class="comment">// add it constants</span></div>
 <div class="line"><a name="l00986"></a><span class="lineno">  986</span>&#160;                <span class="keyword">auto</span> sch = outNode-&gt;getSchedule(d);</div>
 <div class="line"><a name="l00987"></a><span class="lineno">  987</span>&#160;                C[_(c, cc), 0] -=</div>
-<div class="line"><a name="l00988"></a><span class="lineno">  988</span>&#160;                  satPc * sch[_(0, nPc)] + satPp * sch[_(0, nPp)];</div>
+<div class="line"><a name="l00988"></a><span class="lineno">  988</span>&#160;                  satPc * sch[_(0, nPc)].t() + satPp * sch[_(0, nPp)].t();</div>
 <div class="line"><a name="l00989"></a><span class="lineno">  989</span>&#160;                C[_(cc, ccc), 0] -=</div>
-<div class="line"><a name="l00990"></a><span class="lineno">  990</span>&#160;                  bndPc * sch[_(0, nPc)] + bndPp * sch[_(0, nPp)];</div>
+<div class="line"><a name="l00990"></a><span class="lineno">  990</span>&#160;                  bndPc * sch[_(0, nPc)].t() + bndPp * sch[_(0, nPp)].t();</div>
 <div class="line"><a name="l00991"></a><span class="lineno">  991</span>&#160;              } <span class="keywordflow">else</span> {</div>
 <div class="line"><a name="l00992"></a><span class="lineno">  992</span>&#160;                <span class="comment">// FIXME: phiChild = [14:18), 4 cols</span></div>
 <div class="line"><a name="l00993"></a><span class="lineno">  993</span>&#160;                <span class="comment">// while Dependence seems to indicate 2</span></div>
@@ -964,8 +964,8 @@ $(function() {
 <div class="line"><a name="l01002"></a><span class="lineno"> 1002</span>&#160;              <span class="comment">// inner -&gt; outer</span></div>
 <div class="line"><a name="l01003"></a><span class="lineno"> 1003</span>&#160;              <span class="comment">// so we need to drop inner most if one has less</span></div>
 <div class="line"><a name="l01004"></a><span class="lineno"> 1004</span>&#160;              <span class="keyword">auto</span> sch = outNode-&gt;getSchedule(d);</div>
-<div class="line"><a name="l01005"></a><span class="lineno"> 1005</span>&#160;              <span class="keyword">auto</span> schP = sch[_(0, nPp)];</div>
-<div class="line"><a name="l01006"></a><span class="lineno"> 1006</span>&#160;              <span class="keyword">auto</span> schC = sch[_(0, nPc)];</div>
+<div class="line"><a name="l01005"></a><span class="lineno"> 1005</span>&#160;              <span class="keyword">auto</span> schP = sch[_(0, nPp)].t();</div>
+<div class="line"><a name="l01006"></a><span class="lineno"> 1006</span>&#160;              <span class="keyword">auto</span> schC = sch[_(0, nPc)].t();</div>
 <div class="line"><a name="l01007"></a><span class="lineno"> 1007</span>&#160;              C[_(c, cc), 0] -= satPc * schC + satPp * schP;</div>
 <div class="line"><a name="l01008"></a><span class="lineno"> 1008</span>&#160;              C[_(cc, ccc), 0] -= bndPc * schC + bndPp * schP;</div>
 <div class="line"><a name="l01009"></a><span class="lineno"> 1009</span>&#160;            } <span class="keywordflow">else</span> <span class="keywordflow">if</span> (nPc &lt; nPp) {</div>
@@ -1031,7 +1031,7 @@ $(function() {
 <div class="line"><a name="l01069"></a><span class="lineno"> 1069</span>&#160;    invariant(sat.numCol(), bnd.numCol());</div>
 <div class="line"><a name="l01070"></a><span class="lineno"> 1070</span>&#160;    <span class="keywordflow">if</span> (node-&gt;phiIsScheduled(d)) {</div>
 <div class="line"><a name="l01071"></a><span class="lineno"> 1071</span>&#160;      <span class="comment">// add it constants</span></div>
-<div class="line"><a name="l01072"></a><span class="lineno"> 1072</span>&#160;      <span class="keyword">auto</span> sch = node-&gt;getSchedule(d)[_(0, sat.numCol())];</div>
+<div class="line"><a name="l01072"></a><span class="lineno"> 1072</span>&#160;      <span class="keyword">auto</span> sch = node-&gt;getSchedule(d)[_(0, sat.numCol())].t();</div>
 <div class="line"><a name="l01073"></a><span class="lineno"> 1073</span>&#160;      <span class="comment">// order is inner &lt;-&gt; outer</span></div>
 <div class="line"><a name="l01074"></a><span class="lineno"> 1074</span>&#160;      <span class="comment">// so we need the end of schedule if it is larger</span></div>
 <div class="line"><a name="l01075"></a><span class="lineno"> 1075</span>&#160;      C[_(c, cc), 0] -= sat * sch;</div>
