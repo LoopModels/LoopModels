@@ -3,8 +3,8 @@
 #include "IR/Address.hpp"
 #include "IR/Instruction.hpp"
 #include "IR/Node.hpp"
-#include "IR/CostModeling.hpp"
 #include "IR/OrthogonalAxes.hpp"
+#include "Optimize/CostModeling.hpp"
 #include "Polyhedra/Dependence.hpp"
 #include <Containers/BitSets.hpp>
 #include <Containers/Pair.hpp>
@@ -14,7 +14,6 @@
 #include <Math/GreatestCommonDivisor.hpp>
 #include <Math/Math.hpp>
 #include <Math/Matrix.hpp>
-#include <Math/Vector.hpp>
 namespace poly::CostModeling {
 using containers::Pair;
 using math::AbstractVector, math::AbstractMatrix, math::DensePtrMatrix, math::_;
@@ -158,7 +157,7 @@ constexpr auto cost(const AbstractMatrix auto &invunrolls, MemCostSummary orth,
                     VectorizationFactor vfi, DensePtrMatrix<int64_t> inds)
   -> utils::eltype_t<decltype(invunrolls)> {
   utils::eltype_t<decltype(invunrolls)> c{1};
-  auto [arrayDim, numLoops] = inds.size();
+  auto [arrayDim, numLoops] = shape(inds);
   utils::invariant(numLoops > 0);
   utils::invariant(arrayDim > 0);
   utils::invariant(arrayDim <= 64);
@@ -586,8 +585,8 @@ class LoopTreeCostFn {
     // }
     // Rather than using PhiNodes, we represent dependencies through addresses.
     bool vectorizationLegal = true, unrollLegal = true;
-    for (poly::Dependence d : deps.depencencies(L)){
-      // is 
+    for (poly::Dependence d : deps.depencencies(L)) {
+      // is
     }
     // for (IR::Node *N = L->getChild(); N; N = N->getNext()) {}
     return;

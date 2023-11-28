@@ -388,7 +388,7 @@ struct LoopDepSatisfaction {
     return utils::VForwardRange{loopDeps.begin(), L->getEdge()};
   }
   constexpr auto depencencies(IR::Loop *L) {
-    return depIDs(L) | deps.getEdgeTransform();
+    return dependencyIDs(L) | deps.getEdgeTransform();
   }
 };
 
