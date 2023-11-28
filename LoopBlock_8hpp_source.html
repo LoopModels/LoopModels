@@ -605,7 +605,7 @@ $(function() {
 <div class="line"><a name="l00616"></a><span class="lineno">  616</span>&#160;    }</div>
 <div class="line"><a name="l00617"></a><span class="lineno">  617</span>&#160;    <span class="comment">// auto s = allocator-&gt;scope(); // TODO: use bumpalloc</span></div>
 <div class="line"><a name="l00618"></a><span class="lineno">  618</span>&#160;    DenseMatrix&lt;int64_t&gt; nullSpace; <span class="comment">// d x lfull</span></div>
-<div class="line"><a name="l00619"></a><span class="lineno">  619</span>&#160;    DenseMatrix&lt;int64_t&gt; A{node-&gt;getPhi()[_(0, depth), _].transpose()};</div>
+<div class="line"><a name="l00619"></a><span class="lineno">  619</span>&#160;    DenseMatrix&lt;int64_t&gt; A{node-&gt;getPhi()[_(0, depth), _].t()};</div>
 <div class="line"><a name="l00620"></a><span class="lineno">  620</span>&#160;    math::NormalForm::nullSpace11(nullSpace, A);</div>
 <div class="line"><a name="l00621"></a><span class="lineno">  621</span>&#160;    invariant(ptrdiff_t(nullSpace.numRow()),</div>
 <div class="line"><a name="l00622"></a><span class="lineno">  622</span>&#160;              ptrdiff_t(node-&gt;getNumLoops()) - depth);</div>
@@ -1069,7 +1069,7 @@ $(function() {
 <div class="line"><a name="l01107"></a><span class="lineno"> 1107</span>&#160;          <span class="keywordflow">continue</span>;</div>
 <div class="line"><a name="l01108"></a><span class="lineno"> 1108</span>&#160;        A.resizeForOverwrite(Row&lt;&gt;{ptrdiff_t(node-&gt;getPhi().numCol())},</div>
 <div class="line"><a name="l01109"></a><span class="lineno"> 1109</span>&#160;                             Col&lt;&gt;{d});</div>
-<div class="line"><a name="l01110"></a><span class="lineno"> 1110</span>&#160;        A &lt;&lt; node-&gt;getPhi()[_(0, d), _].transpose();</div>
+<div class="line"><a name="l01110"></a><span class="lineno"> 1110</span>&#160;        A &lt;&lt; node-&gt;getPhi()[_(0, d), _].t();</div>
 <div class="line"><a name="l01111"></a><span class="lineno"> 1111</span>&#160;        math::NormalForm::nullSpace11(N, A);</div>
 <div class="line"><a name="l01112"></a><span class="lineno"> 1112</span>&#160;        <span class="comment">// we add sum(NullSpace,dims=1) &gt;= 1</span></div>
 <div class="line"><a name="l01113"></a><span class="lineno"> 1113</span>&#160;        <span class="comment">// via 1 = sum(NullSpace,dims=1) - s, s &gt;= 0</span></div>

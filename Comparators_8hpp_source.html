@@ -394,7 +394,7 @@ $(function() {
 <div class="line"><a name="l00335"></a><span class="lineno">  335</span>&#160;    <span class="comment">// V = [A_0&#39;  0  0</span></div>
 <div class="line"><a name="l00336"></a><span class="lineno">  336</span>&#160;    <span class="comment">//      A_1&#39;  I  0</span></div>
 <div class="line"><a name="l00337"></a><span class="lineno">  337</span>&#160;    <span class="comment">//      S_0  S_1 I]</span></div>
-<div class="line"><a name="l00338"></a><span class="lineno">  338</span>&#160;    B[_(begin, numVar), _(1, numConExplicit)] &lt;&lt; A.transpose();</div>
+<div class="line"><a name="l00338"></a><span class="lineno">  338</span>&#160;    B[_(begin, numVar), _(1, numConExplicit)] &lt;&lt; A.t();</div>
 <div class="line"><a name="l00339"></a><span class="lineno">  339</span>&#160;    <span class="keywordflow">for</span> (ptrdiff_t j = 0; j &lt; numNonNegative; ++j)</div>
 <div class="line"><a name="l00340"></a><span class="lineno">  340</span>&#160;      B[j + numVar - numNonNegative, numConExplicit + j] = 1;</div>
 <div class="line"><a name="l00341"></a><span class="lineno">  341</span>&#160;    <span class="keywordflow">for</span> (ptrdiff_t j = 0; j &lt; numConTotal; ++j) {</div>
@@ -427,9 +427,9 @@ $(function() {
 <div class="line"><a name="l00368"></a><span class="lineno">  368</span>&#160;    <span class="comment">//      A_1&#39;  I  E_1&#39; 0</span></div>
 <div class="line"><a name="l00369"></a><span class="lineno">  369</span>&#160;    <span class="comment">//      S_0  S_1  0   I]</span></div>
 <div class="line"><a name="l00370"></a><span class="lineno">  370</span>&#160;    numEquations = numInEqConTotal + numEqCon;</div>
-<div class="line"><a name="l00371"></a><span class="lineno">  371</span>&#160;    B[_(begin, numVar), _(1, numInEqConExplicit)] &lt;&lt; A.transpose();</div>
+<div class="line"><a name="l00371"></a><span class="lineno">  371</span>&#160;    B[_(begin, numVar), _(1, numInEqConExplicit)] &lt;&lt; A.t();</div>
 <div class="line"><a name="l00372"></a><span class="lineno">  372</span>&#160;    B[_(begin, numVar), _(numInEqConTotal, numInEqConTotal + numEqCon)]</div>
-<div class="line"><a name="l00373"></a><span class="lineno">  373</span>&#160;      &lt;&lt; E.transpose();</div>
+<div class="line"><a name="l00373"></a><span class="lineno">  373</span>&#160;      &lt;&lt; E.t();</div>
 <div class="line"><a name="l00374"></a><span class="lineno">  374</span>&#160;    <span class="keywordflow">if</span> (numNonNegative)</div>
 <div class="line"><a name="l00375"></a><span class="lineno">  375</span>&#160;      B[_(numVar - numNonNegative, numVar),</div>
 <div class="line"><a name="l00376"></a><span class="lineno">  376</span>&#160;        _(numInEqConExplicit, numInEqConExplicit + numNonNegative)]</div>
@@ -492,7 +492,7 @@ $(function() {
 <div class="line"><a name="l00433"></a><span class="lineno">  433</span>&#160;    B[0, 0] = pos0;</div>
 <div class="line"><a name="l00434"></a><span class="lineno">  434</span>&#160;    <span class="comment">// V = [A&#39; 0</span></div>
 <div class="line"><a name="l00435"></a><span class="lineno">  435</span>&#160;    <span class="comment">//      S  I]</span></div>
-<div class="line"><a name="l00436"></a><span class="lineno">  436</span>&#160;    B[_(begin, numVar), _(pos0, numCon)] &lt;&lt; A.transpose();</div>
+<div class="line"><a name="l00436"></a><span class="lineno">  436</span>&#160;    B[_(begin, numVar), _(pos0, numCon)] &lt;&lt; A.t();</div>
 <div class="line"><a name="l00437"></a><span class="lineno">  437</span>&#160;    <span class="keywordflow">for</span> (ptrdiff_t j = 0; j &lt; numCon; ++j) {</div>
 <div class="line"><a name="l00438"></a><span class="lineno">  438</span>&#160;      B[j + numVar, j] = -1;</div>
 <div class="line"><a name="l00439"></a><span class="lineno">  439</span>&#160;      B[j + numVar, j + numCon] = 1;</div>
@@ -516,9 +516,9 @@ $(function() {
 <div class="line"><a name="l00457"></a><span class="lineno">  457</span>&#160;    <span class="comment">// V = [A&#39; E&#39; 0</span></div>
 <div class="line"><a name="l00458"></a><span class="lineno">  458</span>&#160;    <span class="comment">//      S  0  I]</span></div>
 <div class="line"><a name="l00459"></a><span class="lineno">  459</span>&#160;    B[0, 0] = pos0;</div>
-<div class="line"><a name="l00460"></a><span class="lineno">  460</span>&#160;    B[_(begin, numVar), _(pos0, numInEqCon)] &lt;&lt; A.transpose();</div>
-<div class="line"><a name="l00461"></a><span class="lineno">  461</span>&#160;    <span class="comment">// A(_, _(pos0, end)).transpose();</span></div>
-<div class="line"><a name="l00462"></a><span class="lineno">  462</span>&#160;    B[_(begin, numVar), _(numInEqCon, numInEqCon + numEqCon)] &lt;&lt; E.transpose();</div>
+<div class="line"><a name="l00460"></a><span class="lineno">  460</span>&#160;    B[_(begin, numVar), _(pos0, numInEqCon)] &lt;&lt; A.t();</div>
+<div class="line"><a name="l00461"></a><span class="lineno">  461</span>&#160;    <span class="comment">// A(_, _(pos0, end)).t();</span></div>
+<div class="line"><a name="l00462"></a><span class="lineno">  462</span>&#160;    B[_(begin, numVar), _(numInEqCon, numInEqCon + numEqCon)] &lt;&lt; E.t();</div>
 <div class="line"><a name="l00463"></a><span class="lineno">  463</span>&#160; </div>
 <div class="line"><a name="l00464"></a><span class="lineno">  464</span>&#160;    numEquations = numInEqCon + numEqCon;</div>
 <div class="line"><a name="l00465"></a><span class="lineno">  465</span>&#160;    <span class="keywordflow">for</span> (ptrdiff_t j = 0; j &lt; numInEqCon; ++j) {</div>
@@ -551,14 +551,14 @@ $(function() {
 <div class="line"><a name="l00492"></a><span class="lineno">  492</span>&#160;    <span class="comment">// Ht.numRow() &gt; Ht.numCol() = R</span></div>
 <div class="line"><a name="l00493"></a><span class="lineno">  493</span>&#160;    <span class="comment">// (2*numInEq + numEq) x R</span></div>
 <div class="line"><a name="l00494"></a><span class="lineno">  494</span>&#160;    <span class="keyword">auto</span> Ht = matrix&lt;int64_t&gt;(alloc, Row&lt;&gt;{numColB}, Col&lt;&gt;{ptrdiff_t(R)});</div>
-<div class="line"><a name="l00495"></a><span class="lineno">  495</span>&#160;    Ht &lt;&lt; B[_(0, R), _].transpose();</div>
+<div class="line"><a name="l00495"></a><span class="lineno">  495</span>&#160;    Ht &lt;&lt; B[_(0, R), _].t();</div>
 <div class="line"><a name="l00496"></a><span class="lineno">  496</span>&#160;    solveSystem(Ht, Vt);</div>
 <div class="line"><a name="l00497"></a><span class="lineno">  497</span>&#160;    <span class="comment">// upper bounded by numVar + numInEq</span></div>
 <div class="line"><a name="l00498"></a><span class="lineno">  498</span>&#160;    <span class="comment">// rows/cols, but of rank R</span></div>
 <div class="line"><a name="l00499"></a><span class="lineno">  499</span>&#160;    <span class="comment">// smaller based on rank</span></div>
 <div class="line"><a name="l00500"></a><span class="lineno">  500</span>&#160;    getD(R) &lt;&lt; Ht.diag(); <span class="comment">// d.size() == R</span></div>
 <div class="line"><a name="l00501"></a><span class="lineno">  501</span>&#160;    <span class="comment">// upper bounded by 2*numInEq + numEq x 2*numInEq + numEq</span></div>
-<div class="line"><a name="l00502"></a><span class="lineno">  502</span>&#160;    getV() &lt;&lt; Vt.transpose();</div>
+<div class="line"><a name="l00502"></a><span class="lineno">  502</span>&#160;    getV() &lt;&lt; Vt.t();</div>
 <div class="line"><a name="l00503"></a><span class="lineno">  503</span>&#160;  }</div>
 <div class="line"><a name="l00504"></a><span class="lineno">  504</span>&#160; </div>
 <div class="line"><a name="l00505"></a><span class="lineno">  505</span>&#160;  <span class="comment">// Note that this is only valid when the comparator was constructed</span></div>
@@ -591,7 +591,7 @@ $(function() {
 <div class="line"><a name="l00532"></a><span class="lineno">  532</span>&#160;    <span class="comment">// Vector&lt;int64_t&gt; b2 = -b * Dlcm / d;</span></div>
 <div class="line"><a name="l00533"></a><span class="lineno">  533</span>&#160;    ptrdiff_t numRowTrunc = ptrdiff_t(U.numRow());</div>
 <div class="line"><a name="l00534"></a><span class="lineno">  534</span>&#160;    <span class="keyword">auto</span> c{vector&lt;int64_t&gt;(&amp;alloc, ptrdiff_t(V.numRow()) - numEquations)};</div>
-<div class="line"><a name="l00535"></a><span class="lineno">  535</span>&#160;    c &lt;&lt; V[_(numEquations, end), _(begin, numRowTrunc)] * b2;</div>
+<div class="line"><a name="l00535"></a><span class="lineno">  535</span>&#160;    c &lt;&lt; b2 * V[_(numEquations, end), _(begin, numRowTrunc)].t();</div>
 <div class="line"><a name="l00536"></a><span class="lineno">  536</span>&#160;    <span class="comment">// Vector&lt;int64_t&gt; c = V(_(numEquations, end), _(begin, numRowTrunc)) *</span></div>
 <div class="line"><a name="l00537"></a><span class="lineno">  537</span>&#160;    <span class="comment">// b2;</span></div>
 <div class="line"><a name="l00538"></a><span class="lineno">  538</span>&#160;    ptrdiff_t dimNS = ptrdiff_t(V.numCol()) - numRowTrunc;</div>
@@ -653,7 +653,7 @@ $(function() {
 <div class="line"><a name="l00594"></a><span class="lineno">  594</span>&#160;    }</div>
 <div class="line"><a name="l00595"></a><span class="lineno">  595</span>&#160;    ptrdiff_t numRowTrunc = getURank();</div>
 <div class="line"><a name="l00596"></a><span class="lineno">  596</span>&#160;    <span class="keyword">auto</span> c = vector&lt;int64_t&gt;(alloc, ptrdiff_t(V.numRow()) - numEquations);</div>
-<div class="line"><a name="l00597"></a><span class="lineno">  597</span>&#160;    c &lt;&lt; V[_(numEquations, end), _(begin, numRowTrunc)] * b;</div>
+<div class="line"><a name="l00597"></a><span class="lineno">  597</span>&#160;    c &lt;&lt; b * V[_(numEquations, end), _(begin, numRowTrunc)].t();</div>
 <div class="line"><a name="l00598"></a><span class="lineno">  598</span>&#160;    <span class="keyword">auto</span> dimNS = ptrdiff_t(V.numCol()) - numRowTrunc;</div>
 <div class="line"><a name="l00599"></a><span class="lineno">  599</span>&#160;    <span class="comment">// expand W stores [c -JV2 JV2]</span></div>
 <div class="line"><a name="l00600"></a><span class="lineno">  600</span>&#160;    <span class="comment">//  we use simplex to solve [-JV2 JV2][y2+ y2-]&#39; &lt;= JV1D^(-1)Uq</span></div>
@@ -676,7 +676,7 @@ $(function() {
 <div class="line"><a name="l00617"></a><span class="lineno">  617</span>&#160;    -&gt; <span class="keywordtype">bool</span> {</div>
 <div class="line"><a name="l00618"></a><span class="lineno">  618</span>&#160;    <span class="keyword">auto</span> U = getU();</div>
 <div class="line"><a name="l00619"></a><span class="lineno">  619</span>&#160;    <span class="keyword">auto</span> b = vector&lt;int64_t&gt;(&amp;alloc, ptrdiff_t(U.numRow()));</div>
-<div class="line"><a name="l00620"></a><span class="lineno">  620</span>&#160;    b &lt;&lt; U[_, _(begin, query.size())] * query;</div>
+<div class="line"><a name="l00620"></a><span class="lineno">  620</span>&#160;    b &lt;&lt; query * U[_, _(begin, query.size())].t();</div>
 <div class="line"><a name="l00621"></a><span class="lineno">  621</span>&#160;    <span class="keywordflow">return</span> getD().size() ? greaterEqualRankDeficient(&amp;alloc, b)</div>
 <div class="line"><a name="l00622"></a><span class="lineno">  622</span>&#160;                         : greaterEqualFullRank(&amp;alloc, b);</div>
 <div class="line"><a name="l00623"></a><span class="lineno">  623</span>&#160;  }</div>
