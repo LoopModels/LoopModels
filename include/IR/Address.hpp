@@ -140,7 +140,7 @@ public:
     invariant((depth <= 24) && (depth >= 0));
     invariant(depth >= naturalDepth);
     invariant(currentDepth >= depth);
-    currentDepth=depth;
+    currentDepth = depth;
     bool indepAxes = true;
     uint32_t contig{0}, indep{(uint32_t(1) << depth) - 1};
     /// indexMatrix() -> arrayDim() x getNumLoops()
@@ -201,7 +201,8 @@ public:
     // as a temporary, to avoid the aliasing problem.
     //
     // Use `M` before updating it, to update `offsetOmega`
-    if (offsets) offsetOmega -= M * PtrVector<int64_t>{offsets, oldNatDepth};
+    if (offsets)
+      offsetOmega -= PtrVector<int64_t>{offsets, oldNatDepth} * M.t();
     // update `M` into `mStar`
     // mStar << M * Pinv(_(0, oldNumLoops), _);
     MutPtrVector<int64_t> buff{getFusionOmega()[_(0, math::last)]};
@@ -219,7 +220,7 @@ public:
       newNatDepth = depth - std::distance(range.begin(), m);
     }
     // use `mStar` to update offsetOmega`
-    offsetOmega -= mStar * omega;
+    offsetOmega -= omega * mStar.t();
     if (newNatDepth == depth) return;
     invariant(newNatDepth < depth);
     this->naturalDepth = newNatDepth;

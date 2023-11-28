@@ -616,7 +616,7 @@ private:
     }
     // auto s = allocator->scope(); // TODO: use bumpalloc
     DenseMatrix<int64_t> nullSpace; // d x lfull
-    DenseMatrix<int64_t> A{node->getPhi()[_(0, depth), _].transpose()};
+    DenseMatrix<int64_t> A{node->getPhi()[_(0, depth), _].t()};
     math::NormalForm::nullSpace11(nullSpace, A);
     invariant(ptrdiff_t(nullSpace.numRow()),
               ptrdiff_t(node->getNumLoops()) - depth);
@@ -1107,7 +1107,7 @@ private:
           continue;
         A.resizeForOverwrite(Row<>{ptrdiff_t(node->getPhi().numCol())},
                              Col<>{d});
-        A << node->getPhi()[_(0, d), _].transpose();
+        A << node->getPhi()[_(0, d), _].t();
         math::NormalForm::nullSpace11(N, A);
         // we add sum(NullSpace,dims=1) >= 1
         // via 1 = sum(NullSpace,dims=1) - s, s >= 0

@@ -98,7 +98,7 @@ TEST(V2Matrix, BasicAssertions) {
   // 0 0 0 1 0 0 -1 0; 0 0 0 0 0 0 0 0 1 0 0 1; 0 0 0 0 0 0 0 0 0 1 0 0]"_mat;
   auto comp = poly::comparator::LinearSymbolicComparator::construct(A, false);
   auto [H, U] = NormalForm::hermite(std::move(A));
-  IntMatrix Ht = H.transpose();
+  IntMatrix Ht = H.t();
   // llvm::errs() << "Ht matrix:" << Ht << "\n";
   auto Vt = IntMatrix::identity(Ht.numRow());
   auto NS = NormalForm::nullSpace(Ht);

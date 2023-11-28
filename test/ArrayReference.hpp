@@ -38,7 +38,7 @@ struct ArrayReference {
 //                             omegas)
 //   -> Valid<IR::Addr> {
 
-//   math::IntMatrix indMatT{ar.indMat.transpose()};
+//   math::IntMatrix indMatT{ar.indMat.t()};
 //   return IR::Addr::construct(alloc, ar.basePointer, *ar.loop, IC, indMatT,
 //                              {ar.sizes, {}}, ar.offsetMatrix(), omegas);
 // }

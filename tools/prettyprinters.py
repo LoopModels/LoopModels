@@ -99,21 +99,21 @@ class StridedMatrixPrinter(BaseMatrixPrinter):
         )
 
 pp = gdb.printing.RegexpCollectionPrettyPrinter("LoopModels")
-pp.add_printer("poly::math::Array", "^poly::math::Array<.*, unsigned int>$", VectorPrinter)
-pp.add_printer("poly::math::::ManagedArray", "^poly::math::ManagedArray<.*, unsigned int, .*, alloc::Mallocator<.*>, .*>$", VectorPrinter)
+pp.add_printer("poly::math::Array", "^poly::math::Array<.*, ptrdiff_t>$", VectorPrinter)
+pp.add_printer("poly::math::::ManagedArray", "^poly::math::ManagedArray<.*, ptrdiff_t, .*, alloc::Mallocator<.*>, .*>$", VectorPrinter)
 pp.add_printer(
     "poly::math::::Array",
-    "^poly::math::::Array<.*, poly::math::::SquareDims>$",
+    "^poly::math::::Array<.*, poly::math::::SquareDims<>>$",
     SquareMatrixPrinter,
 )
 pp.add_printer(
     "poly::math::::Array",
-    "^poly::math::::Array<.*, poly::math::::DenseDims>$",
+    "^poly::math::::Array<.*, poly::math::::DenseDims<>>$",
     DenseMatrixPrinter,
 )
 pp.add_printer(
     "poly::math::::Array",
-    "^poly::math::::Array<.*, poly::math::::StridedDims>$",
+    "^poly::math::::Array<.*, poly::math::::StridedDims<>>$",
     StridedMatrixPrinter,
 )
 gdb.printing.register_pretty_printer(gdb.current_objfile(), pp)

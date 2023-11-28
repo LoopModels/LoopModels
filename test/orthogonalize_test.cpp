@@ -65,8 +65,7 @@ auto orthogonalize(alloc::Arena<> *alloc,
   // now, we have (A = alnp.aln->A, r = alnp.aln->r)
   // (A*K')*J <= r
   DenseMatrix<int64_t> AK{alnp.getA()};
-  AK(_, _(numSymbols, end))
-    << alnp.getA()(_, _(numSymbols, end)) * K.transpose();
+  AK(_, _(numSymbols, end)) << alnp.getA()(_, _(numSymbols, end)) * K.t();
 
   auto *alnNew =
     poly::Loop::construct(alloc, nullptr, std::move(AK), alnp.getSyms(), true);
@@ -158,7 +157,8 @@ TEST(OrthogonalizeTest, BasicAssertions) {
   llvm::SmallVector<ArrayReference *> ai{
     allArrayRefs.data(), allArrayRefs.data() + 1, allArrayRefs.data() + 2};
 
-  std::optional<containers::Pair<poly::Loop *, llvm::SmallVector<ArrayReference, 0>>>
+  std::optional<
+    containers::Pair<poly::Loop *, llvm::SmallVector<ArrayReference, 0>>>
     orth(orthogonalize(tlf.getAlloc(), ai));
 
   EXPECT_TRUE(orth.has_value());
@@ -280,7 +280,8 @@ TEST(BadMul, BasicAssertions) {
   llvm::SmallVector<ArrayReference *> ai{
     allArrayRefs.data(), allArrayRefs.data() + 1, allArrayRefs.data() + 2};
 
-  std::optional<containers::Pair<poly::Loop *, llvm::SmallVector<ArrayReference, 0>>>
+  std::optional<
+    containers::Pair<poly::Loop *, llvm::SmallVector<ArrayReference, 0>>>
     orth{orthogonalize(tlf.getAlloc(), ai)};
 
   EXPECT_TRUE(orth.has_value());
@@ -327,7 +328,7 @@ TEST(OrthogonalizeMatricesTest, BasicAssertions) {
     // llvm::errs() << "Orthogonal A =\n" << A << "\n";
     // note, A'A is not diagonal
     // but AA' is
-    B = A * A.transpose();
+    B = A * A.t();
     // llvm::errs() << "A'A =\n" << B << "\n";
 #if !defined(__clang__) && defined(__GNUC__)
 #pragma GCC diagnostic push

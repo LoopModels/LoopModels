@@ -335,7 +335,7 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
     // V = [A_0'  0  0
     //      A_1'  I  0
     //      S_0  S_1 I]
-    B[_(begin, numVar), _(1, numConExplicit)] << A.transpose();
+    B[_(begin, numVar), _(1, numConExplicit)] << A.t();
     for (ptrdiff_t j = 0; j < numNonNegative; ++j)
       B[j + numVar - numNonNegative, numConExplicit + j] = 1;
     for (ptrdiff_t j = 0; j < numConTotal; ++j) {
@@ -368,9 +368,9 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
     //      A_1'  I  E_1' 0
     //      S_0  S_1  0   I]
     numEquations = numInEqConTotal + numEqCon;
-    B[_(begin, numVar), _(1, numInEqConExplicit)] << A.transpose();
+    B[_(begin, numVar), _(1, numInEqConExplicit)] << A.t();
     B[_(begin, numVar), _(numInEqConTotal, numInEqConTotal + numEqCon)]
-      << E.transpose();
+      << E.t();
     if (numNonNegative)
       B[_(numVar - numNonNegative, numVar),
         _(numInEqConExplicit, numInEqConExplicit + numNonNegative)]
@@ -433,7 +433,7 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
     B[0, 0] = pos0;
     // V = [A' 0
     //      S  I]
-    B[_(begin, numVar), _(pos0, numCon)] << A.transpose();
+    B[_(begin, numVar), _(pos0, numCon)] << A.t();
     for (ptrdiff_t j = 0; j < numCon; ++j) {
       B[j + numVar, j] = -1;
       B[j + numVar, j + numCon] = 1;
@@ -457,9 +457,9 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
     // V = [A' E' 0
     //      S  0  I]
     B[0, 0] = pos0;
-    B[_(begin, numVar), _(pos0, numInEqCon)] << A.transpose();
-    // A(_, _(pos0, end)).transpose();
-    B[_(begin, numVar), _(numInEqCon, numInEqCon + numEqCon)] << E.transpose();
+    B[_(begin, numVar), _(pos0, numInEqCon)] << A.t();
+    // A(_, _(pos0, end)).t();
+    B[_(begin, numVar), _(numInEqCon, numInEqCon + numEqCon)] << E.t();
 
     numEquations = numInEqCon + numEqCon;
     for (ptrdiff_t j = 0; j < numInEqCon; ++j) {
@@ -492,14 +492,14 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
     // Ht.numRow() > Ht.numCol() = R
     // (2*numInEq + numEq) x R
     auto Ht = matrix<int64_t>(alloc, Row<>{numColB}, Col<>{ptrdiff_t(R)});
-    Ht << B[_(0, R), _].transpose();
+    Ht << B[_(0, R), _].t();
     solveSystem(Ht, Vt);
     // upper bounded by numVar + numInEq
     // rows/cols, but of rank R
     // smaller based on rank
     getD(R) << Ht.diag(); // d.size() == R
     // upper bounded by 2*numInEq + numEq x 2*numInEq + numEq
-    getV() << Vt.transpose();
+    getV() << Vt.t();
   }
 
   // Note that this is only valid when the comparator was constructed
@@ -532,7 +532,7 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
     // Vector<int64_t> b2 = -b * Dlcm / d;
     ptrdiff_t numRowTrunc = ptrdiff_t(U.numRow());
     auto c{vector<int64_t>(&alloc, ptrdiff_t(V.numRow()) - numEquations)};
-    c << V[_(numEquations, end), _(begin, numRowTrunc)] * b2;
+    c << b2 * V[_(numEquations, end), _(begin, numRowTrunc)].t();
     // Vector<int64_t> c = V(_(numEquations, end), _(begin, numRowTrunc)) *
     // b2;
     ptrdiff_t dimNS = ptrdiff_t(V.numCol()) - numRowTrunc;
@@ -594,7 +594,7 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
     }
     ptrdiff_t numRowTrunc = getURank();
     auto c = vector<int64_t>(alloc, ptrdiff_t(V.numRow()) - numEquations);
-    c << V[_(numEquations, end), _(begin, numRowTrunc)] * b;
+    c << b * V[_(numEquations, end), _(begin, numRowTrunc)].t();
     auto dimNS = ptrdiff_t(V.numCol()) - numRowTrunc;
     // expand W stores [c -JV2 JV2]
     //  we use simplex to solve [-JV2 JV2][y2+ y2-]' <= JV1D^(-1)Uq
@@ -617,7 +617,7 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
     -> bool {
     auto U = getU();
     auto b = vector<int64_t>(&alloc, ptrdiff_t(U.numRow()));
-    b << U[_, _(begin, query.size())] * query;
+    b << query * U[_, _(begin, query.size())].t();
     return getD().size() ? greaterEqualRankDeficient(&alloc, b)
                          : greaterEqualFullRank(&alloc, b);
   }

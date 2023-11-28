@@ -25,6 +25,7 @@
 #include <utility>
 
 namespace poly::poly {
+using math::shape;
 /// prints in current permutation order.
 /// TODO: decide if we want to make poly::Loop a `SymbolicPolyhedra`
 /// in which case, we have to remove `currentToOriginalPerm`,
@@ -295,7 +296,7 @@ public:
     math::DenseMatrix<int64_t> A(math::DenseDims<>{numLoopsCommon, dim});
     if (!numLoopsCommon) return A;
     // indMats cols are [outerMostLoop,...,innerMostLoop]
-    A[_(0, natDepth), _] << x->indexMatrix().transpose();
+    A[_(0, natDepth), _] << x->indexMatrix().t();
     if (natDepth < numLoopsCommon) A[_(natDepth, end), _] << 0;
     // returns rank x num loops
     return orthogonalNullSpace(std::move(A));
@@ -360,8 +361,8 @@ public:
     invariant(Cx.numRow(), Cy.numRow());
     invariant(Cx.numCol() <= numDep0Var);
     invariant(Cy.numCol() <= numDep1Var);
-    auto [nc0, nv0] = Ax.size();
-    auto [nc1, nv1] = Ay.size();
+    auto [nc0, nv0] = shape(Ax);
+    auto [nc1, nv1] = shape(Ay);
 
     math::Vector<unsigned> map;
     unsigned numDynSym = mergeMap(map, Sx, Sy);
@@ -386,7 +387,7 @@ public:
     ptrdiff_t nc = nc0 + nc1;
     unsigned indexDim{aix->getArrayDim()};
     auto nullStep{dp->getNullStep()};
-    for (ptrdiff_t i = 0; i < timeDim; ++i) nullStep[i] = selfDot(NS[i, _]);
+    for (ptrdiff_t i = 0; i < timeDim; ++i) nullStep[i] = norm2(NS[i, _]);
     //           column meansing in in order
     // const size_t numSymbols = getNumSymbols();
     auto A{dp->getA()};
@@ -444,7 +445,7 @@ public:
     // numLoops x numDim
     PtrMatrix<int64_t> C{ai->indexMatrix()}, O{ai->offsetMatrix()};
 
-    auto [nco, nv] = B.size();
+    auto [nco, nv] = shape(B);
     math::DenseMatrix<int64_t> NS{nullSpace(ai)};
     ptrdiff_t numDynSym = ptrdiff_t(S.size()), numSym = numDynSym + 1,
               timeDim = ptrdiff_t{NS.numRow()},
@@ -464,7 +465,7 @@ public:
     ptrdiff_t nc = nco + nco;
     unsigned indexDim{ai->getArrayDim()};
     auto nullStep{dp->getNullStep()};
-    for (ptrdiff_t i = 0; i < timeDim; ++i) nullStep[i] = selfDot(NS[i, _]);
+    for (ptrdiff_t i = 0; i < timeDim; ++i) nullStep[i] = norm2(NS[i, _]);
     //           column meansing in in order
     // const size_t numSymbols = getNumSymbols();
     auto A{dp->getA()};
@@ -559,9 +560,9 @@ public:
     // fC(_, 0) << 0;
     fC[0, 0] = 1; // lambda_0
     fC[_, _(1, 1 + numInequalityConstraintsOld)]
-      << A[_, _(math::begin, numConstraintsNew)].transpose();
-    // fC(_, _(ineqEnd, posEqEnd)) = E.transpose();
-    // fC(_, _(posEqEnd, numVarNew)) = -E.transpose();
+      << A[_, _(math::begin, numConstraintsNew)].t();
+    // fC(_, _(ineqEnd, posEqEnd)) = E.t();
+    // fC(_, _(posEqEnd, numVarNew)) = -E.t();
     // loading from `E` is expensive
     // NOTE: if optimizing expression templates, should also
     // go through and optimize loops like this
