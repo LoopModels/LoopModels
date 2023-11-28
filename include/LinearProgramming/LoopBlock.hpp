@@ -985,9 +985,9 @@ private:
                 // add it constants
                 auto sch = outNode->getSchedule(d);
                 C[_(c, cc), 0] -=
-                  satPc * sch[_(0, nPc)] + satPp * sch[_(0, nPp)];
+                  satPc * sch[_(0, nPc)].t() + satPp * sch[_(0, nPp)].t();
                 C[_(cc, ccc), 0] -=
-                  bndPc * sch[_(0, nPc)] + bndPp * sch[_(0, nPp)];
+                  bndPc * sch[_(0, nPc)].t() + bndPp * sch[_(0, nPp)].t();
               } else {
                 // FIXME: phiChild = [14:18), 4 cols
                 // while Dependence seems to indicate 2
@@ -1002,8 +1002,8 @@ private:
               // inner -> outer
               // so we need to drop inner most if one has less
               auto sch = outNode->getSchedule(d);
-              auto schP = sch[_(0, nPp)];
-              auto schC = sch[_(0, nPc)];
+              auto schP = sch[_(0, nPp)].t();
+              auto schC = sch[_(0, nPc)].t();
               C[_(c, cc), 0] -= satPc * schC + satPp * schP;
               C[_(cc, ccc), 0] -= bndPc * schC + bndPp * schP;
             } else if (nPc < nPp) {
@@ -1069,7 +1069,7 @@ private:
     invariant(sat.numCol(), bnd.numCol());
     if (node->phiIsScheduled(d)) {
       // add it constants
-      auto sch = node->getSchedule(d)[_(0, sat.numCol())];
+      auto sch = node->getSchedule(d)[_(0, sat.numCol())].t();
       // order is inner <-> outer
       // so we need the end of schedule if it is larger
       C[_(c, cc), 0] -= sat * sch;
