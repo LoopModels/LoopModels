@@ -456,7 +456,7 @@ $(function() {
 <div class="line"><a name="l00388"></a><span class="lineno">  388</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="classpoly_1_1utils_1_1VForwardRange.html">utils::VForwardRange</a>{loopDeps.begin(), L-&gt;getEdge()};</div>
 <div class="line"><a name="l00389"></a><span class="lineno">  389</span>&#160;  }</div>
 <div class="line"><a name="l00390"></a><span class="lineno">  390</span>&#160;  constexpr <span class="keyword">auto</span> depencencies(<a class="code" href="classpoly_1_1IR_1_1Loop.html">IR::Loop</a> *L) {</div>
-<div class="line"><a name="l00391"></a><span class="lineno">  391</span>&#160;    <span class="keywordflow">return</span> depIDs(L) | deps.getEdgeTransform();</div>
+<div class="line"><a name="l00391"></a><span class="lineno">  391</span>&#160;    <span class="keywordflow">return</span> dependencyIDs(L) | deps.getEdgeTransform();</div>
 <div class="line"><a name="l00392"></a><span class="lineno">  392</span>&#160;  }</div>
 <div class="line"><a name="l00393"></a><span class="lineno">  393</span>&#160;};</div>
 <div class="line"><a name="l00394"></a><span class="lineno">  394</span>&#160; </div>
