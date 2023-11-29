@@ -565,6 +565,21 @@ class LoopTreeCostFn {
     if (SL) iterLoopLevel(deps, SL, maxl2VF, TTI, ++depth, exitCount);
     else leafCosts(deps, L, maxl2VF, TTI);
   }
+  // checks a loop for legality of vectorization and unrolling
+  // If a loop doesn't carry a dependency, it is legal
+  // If a loop does carry a dependency, we can still consider
+  // unrolling and vectorization if at least one of:
+  // - that depenedncy is a reassociable reduction
+  // - the overlap is for a bounded number of iters, in which case we can peel
+  //
+  void checkLegality(LoopDepSatisfaction deps, IR::Loop *L) {
+    bool canVectorize = true, canUnroll = true;
+    for (poly::Dependence d : deps.depencencies(L)) {
+      // analyze d
+      canVectorize = false;
+    }
+  }
+
   void leafCosts(LoopDepSatisfaction deps, IR::Loop *L, unsigned maxl2VF,
                  const llvm::TargetTransformInfo &TTI) {
     // TODO: if (!SL) we're in a leaf, and need compute latency
@@ -591,6 +606,7 @@ class LoopTreeCostFn {
     // for (IR::Node *N = L->getChild(); N; N = N->getNext()) {}
     return;
   };
+
   // NOLINTNEXTLINE(misc-no-recursion)
   void iterLoopLevel(LoopDepSatisfaction deps, IR::Loop *L, unsigned maxl2VF,
                      const llvm::TargetTransformInfo &TTI, ptrdiff_t depth,
