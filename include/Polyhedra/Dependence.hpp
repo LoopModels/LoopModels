@@ -552,7 +552,7 @@ static_assert(sizeof(Dependence) <= 64);
 class Dependencies {
   char *data{nullptr};
   int32_t numData{0};
-  static constexpr int32_t initialCapacity = 64;
+  static constexpr int32_t initialCapacity = 16;
   // int32_t tombstone{-1};
 
 public:
@@ -590,28 +590,52 @@ private:
     in->setEdgeOut(i.id);
     out->setEdgeIn(i.id);
   }
+  /// NOTE: this reallocate implementation is dependent on `getCapacity()`
+  /// being defined as `std::bit_ceil(numData)`, and only getting called
+  /// when `numData == getCapacity()` and we're about to increment `numData`
+  /// after the call
+  /// TODO: would perhaps make more sense to use a normal heap allocator here...
   void reallocate(Arena<> *alloc) {
-    auto newCapacity = getCapacity() * 2;
+    size_t oldCapaciy = numData, newCapacity = 2 * oldCapaciy;
     auto *newData = alloc->allocate<char>(memNeeded(newCapacity));
-    std::memcpy(newData, data, memNeeded(numData));
+    std::memcpy(newData + outAddrOffset * newCapacity,
+                data + outAddrOffset * oldCapaciy,
+                numData * sizeof(IR::Addr *));
+    std::memcpy(newData + inAddrOffset * newCapacity,
+                data + inAddrOffset * oldCapaciy, numData * sizeof(IR::Addr *));
+    std::memcpy(newData + depSatBndOffset * newCapacity,
+                data + depSatBndOffset * oldCapaciy,
+                numData * sizeof(std::array<Valid<math::Simplex>, 2>));
+    std::memcpy(newData + depPolyOffset * newCapacity,
+                data + depPolyOffset * oldCapaciy, numData * sizeof(DepPoly *));
+    std::memcpy(newData + nextEdgeOutOffset * newCapacity,
+                data + nextEdgeOutOffset * oldCapaciy,
+                numData * sizeof(int32_t));
+    std::memcpy(newData + prevEdgeOutOffset * newCapacity,
+                data + prevEdgeOutOffset * oldCapaciy,
+                numData * sizeof(int32_t));
+    std::memcpy(newData + nextEdgeInOffset * newCapacity,
+                data + nextEdgeInOffset * oldCapaciy,
+                numData * sizeof(int32_t));
+    std::memcpy(newData + prevEdgeInOffset * newCapacity,
+                data + prevEdgeInOffset * oldCapaciy,
+                numData * sizeof(int32_t));
+    std::memcpy(newData + revTimeEdgeOffset * newCapacity,
+                data + revTimeEdgeOffset * oldCapaciy,
+                numData * sizeof(int32_t));
+    std::memcpy(newData + satLevelsOffset * newCapacity,
+                data + satLevelsOffset * oldCapaciy,
+                numData * sizeof(std::array<uint8_t, 2>));
+    std::memcpy(newData + isForwardOffset * newCapacity,
+                data + isForwardOffset * oldCapaciy, numData * sizeof(bool));
     data = newData;
-    // return std::exchange(data, newData);
   }
   void addEdge(Arena<> *alloc, Dependence d) {
     if (numData == getCapacity()) reallocate(alloc);
     set(ID{numData++}, d);
   }
   static constexpr auto memNeeded(size_t N) -> size_t {
-    // memory per:
-    // - 3 `int32_t` vectors
-    // - `DepPoly*`
-    // - 2x Simplex
-    // - bool // pack??
-    // - uint8_t
-    constexpr size_t memPer = 3 * sizeof(int32_t) + sizeof(DepPoly *) +
-                              2 * sizeof(Valid<math::Simplex>) + sizeof(bool) +
-                              sizeof(uint8_t);
-    return N * memPer;
+    return N * memNeededPer;
   }
 
   void addOrdered(Arena<> *alloc, Valid<DepPoly> dxy, Valid<IR::Addr> x,
@@ -846,125 +870,113 @@ private:
   }
 
   // field order:
-  // AddrOut
-  // AddrIn
-  // nextOut
-  // prevOut
-  // nextIn
-  // prevIn
-  // dependenceSatisfaction
-  // dependenceBounding
-  // depPoly
-  // satLevel
-  // isForward
-  [[nodiscard]] static constexpr auto inAddrOffset() -> size_t {
-    return sizeof(IR::Addr *);
-  }
-  [[nodiscard]] static constexpr auto nextEdgeOutOffset() -> size_t {
-    return inAddrOffset() + sizeof(IR::Addr *);
-  }
-  [[nodiscard]] static constexpr auto prevEdgeOutOffset() -> size_t {
-    return nextEdgeOutOffset() + sizeof(int32_t);
-  }
-  [[nodiscard]] static constexpr auto nextEdgeInOffset() -> size_t {
-    return prevEdgeOutOffset() + sizeof(int32_t);
-  }
-  [[nodiscard]] static constexpr auto prevEdgeInOffset() -> size_t {
-    return nextEdgeInOffset() + sizeof(int32_t);
-  }
-  [[nodiscard]] static constexpr auto depSatBndOffset() -> size_t {
-    return prevEdgeInOffset() + sizeof(int32_t);
-  }
-  [[nodiscard]] static constexpr auto depPolyOffset() -> size_t {
-    return depSatBndOffset() + sizeof(std::array<Valid<math::Simplex>, 2>);
-  }
-  [[nodiscard]] static constexpr auto satLevelsOffset() -> size_t {
-    return depPolyOffset() + sizeof(DepPoly *);
-  }
-  [[nodiscard]] static constexpr auto isForwardOffset() -> size_t {
-    return satLevelsOffset() + sizeof(std::array<uint8_t, 2>);
-  }
+  // IR::Addr* AddrOut
+  // IR::Addr* AddrIn
+  // std::array<Valid<math::Simplex>, 2> {depSat, depBnd}
+  // DepPoly* depPoly
+  // int32_t nextOut
+  // int32_t prevOut
+  // int32_t nextIn
+  // int32_t prevIn
+  // int32_t revTimeEdge
+  // std::array<uint8_t,2> satLevel
+  // bool isForward
+  static constexpr size_t outAddrOffset = 0;
+  static constexpr size_t inAddrOffset = outAddrOffset + sizeof(IR::Addr *);
+  static constexpr size_t depSatBndOffset = inAddrOffset + sizeof(IR::Addr *);
+  static constexpr size_t depPolyOffset =
+    inAddrOffset + sizeof(std::array<Valid<math::Simplex>, 2>);
+  static constexpr size_t nextEdgeOutOffset = depPolyOffset + sizeof(DepPoly *);
+  static constexpr size_t prevEdgeOutOffset = depPolyOffset + sizeof(int32_t);
+  static constexpr size_t nextEdgeInOffset =
+    prevEdgeOutOffset + sizeof(int32_t);
+  static constexpr size_t prevEdgeInOffset = nextEdgeInOffset + sizeof(int32_t);
+  static constexpr size_t revTimeEdgeOffset = depSatBndOffset + sizeof(int32_t);
+  static constexpr size_t satLevelsOffset = prevEdgeInOffset + sizeof(int32_t);
+  static constexpr size_t isForwardOffset =
+    satLevelsOffset + sizeof(std::array<uint8_t, 2>);
+  static constexpr size_t memNeededPer = isForwardOffset + sizeof(bool);
 
   constexpr auto outAddrPtr() -> IR::Addr ** {
-    void *p = data;
+    void *p = data + outAddrOffset * getCapacity();
     return static_cast<IR::Addr **>(p);
   }
   [[nodiscard]] constexpr auto outAddrPtr() const -> IR::Addr *const * {
-    const void *p = data;
+    const void *p = data + outAddrOffset * getCapacity();
     return static_cast<IR::Addr *const *>(p);
   }
   constexpr auto inAddrPtr() -> IR::Addr ** {
-    void *p = data + inAddrOffset() * getCapacity();
+    void *p = data + inAddrOffset * getCapacity();
     return static_cast<IR::Addr **>(p);
   }
   [[nodiscard]] constexpr auto inAddrPtr() const -> IR::Addr *const * {
-    const void *p = data + inAddrOffset() * getCapacity();
+    const void *p = data + inAddrOffset * getCapacity();
     return static_cast<IR::Addr *const *>(p);
   }
   constexpr auto outEdgePtr() -> int32_t * {
-    void *p = data + nextEdgeOutOffset() * getCapacity();
+    void *p = data + nextEdgeOutOffset * getCapacity();
     return static_cast<int32_t *>(p);
   }
   [[nodiscard]] constexpr auto outEdgePtr() const -> const int32_t * {
-    const void *p = data + nextEdgeOutOffset() * getCapacity();
+    const void *p = data + nextEdgeOutOffset * getCapacity();
     return static_cast<const int32_t *>(p);
   }
   constexpr auto prevOutEdgePtr() -> int32_t * {
-    void *p = data + prevEdgeOutOffset() * getCapacity();
+    void *p = data + prevEdgeOutOffset * getCapacity();
     return static_cast<int32_t *>(p);
   }
   [[nodiscard]] constexpr auto prevOutEdgePtr() const -> const int32_t * {
-    const void *p = data + prevEdgeOutOffset() * getCapacity();
+    const void *p = data + prevEdgeOutOffset * getCapacity();
     return static_cast<const int32_t *>(p);
   }
   constexpr auto inEdgePtr() -> int32_t * {
-    void *p = data + nextEdgeInOffset() * getCapacity();
+    void *p = data + nextEdgeInOffset * getCapacity();
     return static_cast<int32_t *>(p);
   }
   [[nodiscard]] constexpr auto inEdgePtr() const -> const int32_t * {
-    const void *p = data + nextEdgeInOffset() * getCapacity();
+    const void *p = data + nextEdgeInOffset * getCapacity();
     return static_cast<const int32_t *>(p);
   }
   constexpr auto prevInEdgePtr() -> int32_t * {
-    void *p = data + prevEdgeInOffset() * getCapacity();
+    void *p = data + prevEdgeInOffset * getCapacity();
     return static_cast<int32_t *>(p);
   }
   [[nodiscard]] constexpr auto prevEdgePtr() const -> const int32_t * {
-    const void *p = data + prevEdgeInOffset() * getCapacity();
+    const void *p = data + prevEdgeInOffset * getCapacity();
     return static_cast<const int32_t *>(p);
   }
   constexpr auto depSatBndPtr() -> std::array<Valid<math::Simplex>, 2> * {
-    void *p = data + depSatBndOffset() * getCapacity();
+    void *p = data + depSatBndOffset * getCapacity();
     return static_cast<std::array<Valid<math::Simplex>, 2> *>(p);
   }
   [[nodiscard]] constexpr auto depSatBndPtr() const
     -> const std::array<Valid<math::Simplex>, 2> * {
-    const void *p = data + depSatBndOffset() * getCapacity();
+    const void *p = data + depSatBndOffset * getCapacity();
     return static_cast<const std::array<Valid<math::Simplex>, 2> *>(p);
   }
   constexpr auto depPolyPtr() -> DepPoly ** {
-    void *p = data + depPolyOffset() * getCapacity();
+    void *p = data + depPolyOffset * getCapacity();
     return static_cast<DepPoly **>(p);
   }
   [[nodiscard]] constexpr auto depPolyPtr() const -> DepPoly *const * {
-    const void *p = data + depPolyOffset() * getCapacity();
+    const void *p = data + depPolyOffset * getCapacity();
     return static_cast<DepPoly *const *>(p);
   }
   constexpr auto satLevelsPtr() -> std::array<uint8_t, 2> * {
-    void *p = data + satLevelsOffset() * getCapacity();
+    void *p = data + satLevelsOffset * getCapacity();
     return static_cast<std::array<uint8_t, 2> *>(p);
   }
   [[nodiscard]] constexpr auto satLevelsPtr() const
     -> const std::array<uint8_t, 2> * {
-    const void *p = data + satLevelsOffset() * getCapacity();
+    const void *p = data + satLevelsOffset * getCapacity();
     return static_cast<const std::array<uint8_t, 2> *>(p);
   }
   constexpr auto isForwardPtr() -> bool * {
-    void *p = data + isForwardOffset() * getCapacity();
+    void *p = data + isForwardOffset * getCapacity();
     return static_cast<bool *>(p);
   }
   [[nodiscard]] constexpr auto isForwardPtr() const -> const bool * {
-    const void *p = data + isForwardOffset() * getCapacity();
+    const void *p = data + isForwardOffset * getCapacity();
     return static_cast<const bool *>(p);
   }
 
