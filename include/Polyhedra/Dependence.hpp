@@ -552,13 +552,14 @@ static_assert(sizeof(Dependence) <= 64);
 class Dependencies {
   char *data{nullptr};
   int32_t numData{0};
+  static constexpr int32_t initialCapacity = 64;
   // int32_t tombstone{-1};
 
 public:
   using ID = Dependence::ID;
   constexpr Dependencies() noexcept = default;
   constexpr Dependencies(Arena<> *alloc)
-    : data(alloc->allocate<char>(memNeeded(64))) {}
+    : data(alloc->allocate<char>(memNeeded(initialCapacity))) {}
   constexpr Dependencies(const Dependencies &) noexcept = default; // or delete?
   constexpr Dependencies(Dependencies &&) noexcept = default;      // or delete?
   constexpr auto operator=(Dependencies &&other) noexcept
@@ -589,20 +590,26 @@ private:
     in->setEdgeOut(i.id);
     out->setEdgeIn(i.id);
   }
-  auto addEdge(Arena<> *alloc, Dependence d) -> void * {
-    void *ret = nullptr;
-    if (numData == getCapacity()) {
-      auto newCapacity = getCapacity() * 2;
-      auto *newData = alloc->allocate<char>(memNeeded(newCapacity));
-      std::memcpy(newData, data, memNeeded(numData));
-      ret = std::exchange(data, newData);
-    }
+  void reallocate(Arena<> *alloc) {
+    auto newCapacity = getCapacity() * 2;
+    auto *newData = alloc->allocate<char>(memNeeded(newCapacity));
+    std::memcpy(newData, data, memNeeded(numData));
+    data = newData;
+    // return std::exchange(data, newData);
+  }
+  void addEdge(Arena<> *alloc, Dependence d) {
+    if (numData == getCapacity()) reallocate(alloc);
     set(ID{numData++}, d);
-    return ret;
   }
   static constexpr auto memNeeded(size_t N) -> size_t {
-    constexpr size_t memPer = sizeof(int32_t) * 2 + sizeof(DepPoly *) +
-                              sizeof(Valid<math::Simplex>) * 2 + sizeof(bool) +
+    // memory per:
+    // - 3 `int32_t` vectors
+    // - `DepPoly*`
+    // - 2x Simplex
+    // - bool // pack??
+    // - uint8_t
+    constexpr size_t memPer = 3 * sizeof(int32_t) + sizeof(DepPoly *) +
+                              2 * sizeof(Valid<math::Simplex>) + sizeof(bool) +
                               sizeof(uint8_t);
     return N * memPer;
   }
@@ -835,7 +842,7 @@ private:
   }
 
   [[nodiscard]] constexpr auto getCapacity() const noexcept -> int32_t {
-    return int32_t(std::bit_ceil(uint32_t(numData)));
+    return std::max(initialCapacity, int32_t(std::bit_ceil(uint32_t(numData))));
   }
 
   // field order:
@@ -1088,7 +1095,7 @@ public:
     Valid<IR::Addr> load = store->reload(alloc);
     copyDependencies(alloc, store, load);
     if (dxy->getTimeDim()) timeCheck(alloc, dxy, store, load, pair, true);
-    else timelessCheck(alloc, dxy, store, load, pair, true);
+    else addOrdered(alloc, dxy, store, load, pair, true);
     return load;
   }
   [[nodiscard]] constexpr auto inputEdgeIDs(int32_t id) const {
