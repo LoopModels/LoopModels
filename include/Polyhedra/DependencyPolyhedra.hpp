@@ -34,8 +34,8 @@ using math::shape;
 inline auto printConstraints(std::ostream &os, DensePtrMatrix<int64_t> A,
                              llvm::ArrayRef<const llvm::SCEV *> syms,
                              bool inequality = true) -> std::ostream & {
-  const Row numConstraints = A.numRow();
-  const unsigned numSyms = syms.size() + 1;
+  Row numConstraints = A.numRow();
+  unsigned numSyms = syms.size() + 1;
   for (ptrdiff_t c = 0; c < numConstraints; ++c) {
     printConstraint(os, A[c, _], numSyms, inequality);
     for (ptrdiff_t v = 1; v < numSyms; ++v) {
@@ -180,12 +180,12 @@ public:
   constexpr void decrementNumConstraints() { invariant(numCon-- > 0); }
   constexpr auto getA() -> MutDensePtrMatrix<int64_t> {
     void *p = memory;
-    return {(int64_t *)p, math::DenseDims<>{numCon, getNumVar() + 1}};
+    return {(int64_t *)p, math::DenseDims<>{{numCon}, {getNumVar() + 1}}};
   }
   constexpr auto getE() -> MutDensePtrMatrix<int64_t> {
     void *p = memory;
     return {(int64_t *)p + size_t(conCapacity) * (getNumVar() + 1),
-            math::DenseDims<>{numEqCon, getNumVar() + 1}};
+            math::DenseDims<>{{numEqCon}, {getNumVar() + 1}}};
   }
   constexpr auto getNullStep() -> math::MutPtrVector<int64_t> {
     void *p = memory;
@@ -210,7 +210,7 @@ public:
   [[nodiscard]] auto getA() const -> DensePtrMatrix<int64_t> {
     const char *p = memory;
     return {const_cast<int64_t *>(reinterpret_cast<const int64_t *>(p)),
-            math::DenseDims<>{numCon, getNumVar() + 1}};
+            math::DenseDims<>{{numCon}, {getNumVar() + 1}}};
   }
   [[nodiscard]] auto getA(Row<> r, Col<> c) -> int64_t & {
     auto *p = reinterpret_cast<int64_t *>(memory);

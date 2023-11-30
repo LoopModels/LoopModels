@@ -391,7 +391,7 @@ public:
     // Vector<int64_t> schv(dependenceSatisfaction->getNumVars(),int64_t(0));
     const unsigned numLambda = getNumLambda();
     // when i == numLoopsCommon, we've passed the last loop
-    for (size_t i = 0; i <= numLoopsCommon; ++i) {
+    for (ptrdiff_t i = 0; i <= numLoopsCommon; ++i) {
       if (int64_t o2idiff = outFusOmega[i] - inFusOmega[i])
         return (o2idiff > 0);
       // we should not be able to reach `numLoopsCommon`
@@ -607,11 +607,10 @@ private:
     return N * memPer;
   }
 
-  void timelessCheck(Arena<> *alloc, Valid<DepPoly> dxy, Valid<IR::Addr> x,
-                     Valid<IR::Addr> y,
-                     std::array<Valid<math::Simplex>, 2> pair, bool isFwd) {
-    const size_t numLambda = dxy->getNumLambda();
-    invariant(dxy->getTimeDim(), unsigned(0));
+  void addOrdered(Arena<> *alloc, Valid<DepPoly> dxy, Valid<IR::Addr> x,
+                  Valid<IR::Addr> y, std::array<Valid<math::Simplex>, 2> pair,
+                  bool isFwd) {
+    ptrdiff_t numLambda = dxy->getNumLambda();
     if (!isFwd) {
       std::swap(pair[0], pair[1]);
       std::swap(x, y);
@@ -622,18 +621,43 @@ private:
   void timelessCheck(Arena<> *alloc, Valid<DepPoly> dxy, Valid<IR::Addr> x,
                      Valid<IR::Addr> y,
                      std::array<Valid<math::Simplex>, 2> pair) {
-    return timelessCheck(alloc, dxy, x, y, pair,
-                         checkDirection(*alloc, pair, x, y, dxy->getNumLambda(),
-                                        Col<>{dxy->getNumVar() + 1}));
+    invariant(dxy->getTimeDim(), unsigned(0));
+    return addOrdered(alloc, dxy, x, y, pair,
+                      checkDirection(*alloc, pair, x, y, dxy->getNumLambda(),
+                                     Col<>{dxy->getNumVar() + 1}));
   }
 
   // emplaces dependencies with repeat accesses to the same memory across
   // time
   void timeCheck(Arena<> *alloc, Valid<DepPoly> dxy, Valid<IR::Addr> x,
                  Valid<IR::Addr> y, std::array<Valid<math::Simplex>, 2> pair) {
-    bool isFwd = checkDirection(*alloc, pair, x, y, dxy->getNumLambda(),
-                                Col<>{ptrdiff_t(dxy->getA().numCol()) - dxy->getTimeDim()});
+    bool isFwd = checkDirection(
+      *alloc, pair, x, y, dxy->getNumLambda(),
+      Col<>{ptrdiff_t(dxy->getA().numCol()) - dxy->getTimeDim()});
     timeCheck(alloc, dxy, x, y, pair, isFwd);
+  }
+  static void timeStep(Valid<DepPoly> dxy, MutPtrMatrix<int64_t> fE,
+                       MutPtrMatrix<int64_t> sE,
+                       ptrdiff_t numInequalityConstraintsOld,
+                       ptrdiff_t numEqualityConstraintsOld, ptrdiff_t ineqEnd,
+                       ptrdiff_t posEqEnd, ptrdiff_t v, ptrdiff_t step) {
+    for (ptrdiff_t c = 0; c < numInequalityConstraintsOld; ++c) {
+      int64_t Acv = dxy->getA(Row<>{c}, Col<>{v});
+      if (!Acv) continue;
+      Acv *= step;
+      fE[0, c + 1] -= Acv; // *1
+      sE[0, c + 1] -= Acv; // *1
+    }
+    for (ptrdiff_t c = 0; c < numEqualityConstraintsOld; ++c) {
+      // each of these actually represents 2 inds
+      int64_t Ecv = dxy->getE(Row<>{c}, Col<>{v});
+      if (!Ecv) continue;
+      Ecv *= step;
+      fE[0, c + ineqEnd] -= Ecv;
+      fE[0, c + posEqEnd] += Ecv;
+      sE[0, c + ineqEnd] -= Ecv;
+      sE[0, c + posEqEnd] += Ecv;
+    }
   }
   void timeCheck(Arena<> *alloc, Valid<DepPoly> dxy, Valid<IR::Addr> x,
                  Valid<IR::Addr> y, std::array<Valid<math::Simplex>, 2> pair,
@@ -675,77 +699,45 @@ private:
     // now we need to check the time direction for all times
     // anything approaching 16 time dimensions would be absolutely
     // insane
-    math::Vector<bool, 16> timeDirection(timeDim);
-    ptrdiff_t t = 0;
-    auto fE{farkasBackups[0]->getConstraints()[_, _(1, end)]};
-    auto sE{farkasBackups[1]->getConstraints()[_, _(1, end)]};
-    do {
+    for (ptrdiff_t t = 0;;) {
       // set `t`th timeDim to +1/-1
       // basically, what we do here is set it to `step` and pretend it was
       // a constant. so a value of c = a'x + t*step -> c - t*step = a'x so
       // we update the constant `c` via `c -= t*step`.
       // we have the problem that.
       int64_t step = dxy->getNullStep(t);
-      ptrdiff_t v = numVar + t, i = 0;
-      while (true) {
-        for (ptrdiff_t c = 0; c < numInequalityConstraintsOld; ++c) {
-          int64_t Acv = dxy->getA(Row<>{c}, Col<>{v});
-          if (!Acv) continue;
-          Acv *= step;
-          fE[0, c + 1] -= Acv; // *1
-          sE[0, c + 1] -= Acv; // *1
-        }
-        for (ptrdiff_t c = 0; c < numEqualityConstraintsOld; ++c) {
-          // each of these actually represents 2 inds
-          int64_t Ecv = dxy->getE(Row<>{c}, Col<>{v});
-          if (!Ecv) continue;
-          Ecv *= step;
-          fE[0, c + ineqEnd] -= Ecv;
-          fE[0, c + posEqEnd] += Ecv;
-          sE[0, c + ineqEnd] -= Ecv;
-          sE[0, c + posEqEnd] += Ecv;
-        }
-        if (i++ != 0) break; // break after undoing
-        timeDirection[t] =
-          checkDirection(*alloc, farkasBackups, *out, *in, numLambda,
-                         Col<>{ptrdiff_t(dxy->getA().numCol()) - dxy->getTimeDim()});
-        step *= -1; // flip to undo, then break
-      }
-    } while (++t < timeDim);
-    t = 0;
-    do {
-      // checkDirection(farkasBackups, x, y, numLambda) == false
-      // correct time direction would make it return true
-      // thus sign = timeDirection[t] ? 1 : -1
-      int64_t step = (2 * timeDirection[t] - 1) * dxy->getNullStep(t);
       ptrdiff_t v = numVar + t;
-      for (ptrdiff_t c = 0; c < numInequalityConstraintsOld; ++c) {
-        int64_t Acv = dxy->getA(Row<>{c}, Col<>{v});
-        if (!Acv) continue;
-        Acv *= step;
-        dxy->getA(Row<>{c}, Col<>{0}) -= Acv;
-        fE[0, c + 1] -= Acv; // *1
-        sE[0, c + 1] -= Acv; // *-1
+      bool repeat = (++t < timeDim);
+      std::array<Valid<math::Simplex>, 2> fp{farkasBackups};
+      if (repeat) {
+        fp[0] = fp[0]->copy(alloc);
+        fp[1] = fp[1]->copy(alloc);
       }
-      for (ptrdiff_t c = 0; c < numEqualityConstraintsOld; ++c) {
-        // each of these actually represents 2 inds
-        int64_t Ecv = dxy->getE(Row<>{c}, Col<>{v});
-        if (!Ecv) continue;
-        Ecv *= step;
-        dxy->getE(Row<>{c}, Col<>{0}) -= Ecv;
-        fE[0, c + ineqEnd] -= Ecv;
-        fE[0, c + posEqEnd] += Ecv;
-        sE[0, c + ineqEnd] -= Ecv;
-        sE[0, c + posEqEnd] += Ecv;
-      }
-    } while (++t < timeDim);
-    // dxy->truncateVars(numVar);
-    // dxy->setTimeDim(0);
-    farkasBackups[0]->truncateVars(1 + numLambda + numScheduleCoefs);
-    auto dep1 = Dependence{dxy, farkasBackups, out, in, !isFwd};
-    invariant(out->getCurrentDepth() + in->getCurrentDepth(),
-              dep1.getNumPhiCoefficients());
-    addEdge(alloc, dep1);
+      // set (or unset) for this timedim
+      auto fE{fp[0]->getConstraints()[_, _(1, end)]};
+      auto sE{fp[1]->getConstraints()[_, _(1, end)]};
+      timeStep(dxy, fE, sE, numInequalityConstraintsOld,
+               numEqualityConstraintsOld, ineqEnd, posEqEnd, v, step);
+      // checkDirection should be `true`, so if `false` we flip the sign
+      // this is because `isFwd = checkDirection` of the original
+      // `if (isFwd)`, we swapped farkasBackups args, making the result
+      // `false`; for our timeDim to capture the opposite movement
+      // through time, we thus need to flip it back to `true`.
+      // `if (!isFwd)`, i.e. the `else` branch above, we don't flip the
+      // args, so it'd still return `false` and a flip would still mean `true`.
+      if (!checkDirection(
+            *alloc, fp, *out, *in, numLambda,
+            Col<>{ptrdiff_t(dxy->getA().numCol()) - dxy->getTimeDim()}))
+        timeStep(dxy, fE, sE, numInequalityConstraintsOld,
+                 numEqualityConstraintsOld, ineqEnd, posEqEnd, v, -2 * step);
+
+      fp[0]->truncateVars(1 + numLambda + numScheduleCoefs);
+      auto dep1 = Dependence{dxy, farkasBackups, out, in, !isFwd};
+      invariant(out->getCurrentDepth() + in->getCurrentDepth(),
+                dep1.getNumPhiCoefficients());
+      addEdge(alloc, dep1);
+      if (!repeat) break;
+    }
   }
   static auto checkDirection(Arena<> alloc,
                              const std::array<Valid<math::Simplex>, 2> &p,

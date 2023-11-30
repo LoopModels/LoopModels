@@ -566,12 +566,6 @@ class LoopTreeCostFn {
     else leafCosts(deps, L, maxl2VF, TTI);
   }
   // checks a loop for legality of vectorization and unrolling
-  // If a loop doesn't carry a dependency, it is legal
-  // If a loop does carry a dependency, we can still consider
-  // unrolling and vectorization if at least one of:
-  // - that depenedncy is a reassociable reduction
-  // - the overlap is for a bounded number of iters, in which case we can peel
-  //
   void checkLegality(LoopDepSatisfaction deps, IR::Loop *L) {
     bool canVectorize = true, canUnroll = true;
     for (poly::Dependence d : deps.depencencies(L)) {
