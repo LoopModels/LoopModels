@@ -391,137 +391,131 @@ $(function() {
 <div class="line"><a name="l00566"></a><span class="lineno">  566</span>&#160;    <span class="keywordflow">else</span> leafCosts(deps, L, maxl2VF, TTI);</div>
 <div class="line"><a name="l00567"></a><span class="lineno">  567</span>&#160;  }</div>
 <div class="line"><a name="l00568"></a><span class="lineno">  568</span>&#160;  <span class="comment">// checks a loop for legality of vectorization and unrolling</span></div>
-<div class="line"><a name="l00569"></a><span class="lineno">  569</span>&#160;  <span class="comment">// If a loop doesn&#39;t carry a dependency, it is legal</span></div>
-<div class="line"><a name="l00570"></a><span class="lineno">  570</span>&#160;  <span class="comment">// If a loop does carry a dependency, we can still consider</span></div>
-<div class="line"><a name="l00571"></a><span class="lineno">  571</span>&#160;  <span class="comment">// unrolling and vectorization if at least one of:</span></div>
-<div class="line"><a name="l00572"></a><span class="lineno">  572</span>&#160;  <span class="comment">// - that depenedncy is a reassociable reduction</span></div>
-<div class="line"><a name="l00573"></a><span class="lineno">  573</span>&#160;  <span class="comment">// - the overlap is for a bounded number of iters, in which case we can peel</span></div>
-<div class="line"><a name="l00574"></a><span class="lineno">  574</span>&#160;  <span class="comment">//</span></div>
-<div class="line"><a name="l00575"></a><span class="lineno">  575</span>&#160;  <span class="keywordtype">void</span> checkLegality(<a class="code" href="structpoly_1_1CostModeling_1_1LoopDepSatisfaction.html">LoopDepSatisfaction</a> deps, <a class="code" href="classpoly_1_1IR_1_1Loop.html">IR::Loop</a> *L) {</div>
-<div class="line"><a name="l00576"></a><span class="lineno">  576</span>&#160;    <span class="keywordtype">bool</span> canVectorize = <span class="keyword">true</span>, canUnroll = <span class="keyword">true</span>;</div>
-<div class="line"><a name="l00577"></a><span class="lineno">  577</span>&#160;    <span class="keywordflow">for</span> (<a class="code" href="classpoly_1_1poly_1_1Dependence.html">poly::Dependence</a> d : deps.depencencies(L)) {</div>
-<div class="line"><a name="l00578"></a><span class="lineno">  578</span>&#160;      <span class="comment">// analyze d</span></div>
-<div class="line"><a name="l00579"></a><span class="lineno">  579</span>&#160;      canVectorize = <span class="keyword">false</span>;</div>
-<div class="line"><a name="l00580"></a><span class="lineno">  580</span>&#160;    }</div>
-<div class="line"><a name="l00581"></a><span class="lineno">  581</span>&#160;  }</div>
-<div class="line"><a name="l00582"></a><span class="lineno">  582</span>&#160; </div>
-<div class="line"><a name="l00583"></a><span class="lineno">  583</span>&#160;  <span class="keywordtype">void</span> leafCosts(<a class="code" href="structpoly_1_1CostModeling_1_1LoopDepSatisfaction.html">LoopDepSatisfaction</a> deps, <a class="code" href="classpoly_1_1IR_1_1Loop.html">IR::Loop</a> *L, <span class="keywordtype">unsigned</span> maxl2VF,</div>
-<div class="line"><a name="l00584"></a><span class="lineno">  584</span>&#160;                 <span class="keyword">const</span> llvm::TargetTransformInfo &amp;TTI) {</div>
-<div class="line"><a name="l00585"></a><span class="lineno">  585</span>&#160;    <span class="comment">// TODO: if (!SL) we&#39;re in a leaf, and need compute latency</span></div>
-<div class="line"><a name="l00586"></a><span class="lineno">  586</span>&#160;    <span class="comment">// We use the `IROptimizer::loopDepSats` to check the depencencies held at</span></div>
-<div class="line"><a name="l00587"></a><span class="lineno">  587</span>&#160;    <span class="comment">// the loop. We check these for those that look like reductions that are</span></div>
-<div class="line"><a name="l00588"></a><span class="lineno">  588</span>&#160;    <span class="comment">// legal to reassociate, e.g. integer add chains or floating point with the</span></div>
-<div class="line"><a name="l00589"></a><span class="lineno">  589</span>&#160;    <span class="comment">// reassociate FMF set. We can also calculate the latency while walking the</span></div>
-<div class="line"><a name="l00590"></a><span class="lineno">  590</span>&#160;    <span class="comment">// chain. Note that in our IR, dependencies may look something like this</span></div>
-<div class="line"><a name="l00591"></a><span class="lineno">  591</span>&#160;    <span class="comment">// after load/store hoisting: for (j in J){ // arbitrary number of outer</span></div>
-<div class="line"><a name="l00592"></a><span class="lineno">  592</span>&#160;    <span class="comment">// loops</span></div>
-<div class="line"><a name="l00593"></a><span class="lineno">  593</span>&#160;    <span class="comment">//   %w = %array[j...];</span></div>
-<div class="line"><a name="l00594"></a><span class="lineno">  594</span>&#160;    <span class="comment">//   %x = foo(%w);</span></div>
-<div class="line"><a name="l00595"></a><span class="lineno">  595</span>&#160;    <span class="comment">//   for (i in I){ // inner loop(s)</span></div>
-<div class="line"><a name="l00596"></a><span class="lineno">  596</span>&#160;    <span class="comment">//     %y = bar(%x);</span></div>
-<div class="line"><a name="l00597"></a><span class="lineno">  597</span>&#160;    <span class="comment">//   }</span></div>
-<div class="line"><a name="l00598"></a><span class="lineno">  598</span>&#160;    <span class="comment">//   %z = quz(%y);</span></div>
-<div class="line"><a name="l00599"></a><span class="lineno">  599</span>&#160;    <span class="comment">//   %array[j...] = %z;</span></div>
-<div class="line"><a name="l00600"></a><span class="lineno">  600</span>&#160;    <span class="comment">// }</span></div>
-<div class="line"><a name="l00601"></a><span class="lineno">  601</span>&#160;    <span class="comment">// Rather than using PhiNodes, we represent dependencies through addresses.</span></div>
-<div class="line"><a name="l00602"></a><span class="lineno">  602</span>&#160;    <span class="keywordtype">bool</span> vectorizationLegal = <span class="keyword">true</span>, unrollLegal = <span class="keyword">true</span>;</div>
-<div class="line"><a name="l00603"></a><span class="lineno">  603</span>&#160;    <span class="keywordflow">for</span> (<a class="code" href="classpoly_1_1poly_1_1Dependence.html">poly::Dependence</a> d : deps.depencencies(L)) {</div>
-<div class="line"><a name="l00604"></a><span class="lineno">  604</span>&#160;      <span class="comment">// is</span></div>
-<div class="line"><a name="l00605"></a><span class="lineno">  605</span>&#160;    }</div>
-<div class="line"><a name="l00606"></a><span class="lineno">  606</span>&#160;    <span class="comment">// for (IR::Node *N = L-&gt;getChild(); N; N = N-&gt;getNext()) {}</span></div>
-<div class="line"><a name="l00607"></a><span class="lineno">  607</span>&#160;    <span class="keywordflow">return</span>;</div>
-<div class="line"><a name="l00608"></a><span class="lineno">  608</span>&#160;  };</div>
-<div class="line"><a name="l00609"></a><span class="lineno">  609</span>&#160; </div>
-<div class="line"><a name="l00610"></a><span class="lineno">  610</span>&#160;  <span class="comment">// NOLINTNEXTLINE(misc-no-recursion)</span></div>
-<div class="line"><a name="l00611"></a><span class="lineno">  611</span>&#160;  <span class="keywordtype">void</span> iterLoopLevel(<a class="code" href="structpoly_1_1CostModeling_1_1LoopDepSatisfaction.html">LoopDepSatisfaction</a> deps, <a class="code" href="classpoly_1_1IR_1_1Loop.html">IR::Loop</a> *L, <span class="keywordtype">unsigned</span> maxl2VF,</div>
-<div class="line"><a name="l00612"></a><span class="lineno">  612</span>&#160;                     <span class="keyword">const</span> llvm::TargetTransformInfo &amp;TTI, ptrdiff_t depth,</div>
-<div class="line"><a name="l00613"></a><span class="lineno">  613</span>&#160;                     <span class="keywordtype">unsigned</span> exitCount) {</div>
-<div class="line"><a name="l00614"></a><span class="lineno">  614</span>&#160;    <span class="keywordflow">do</span> {</div>
-<div class="line"><a name="l00615"></a><span class="lineno">  615</span>&#160;      <a class="code" href="classpoly_1_1IR_1_1Loop.html">IR::Loop</a> *N = L-&gt;<a class="code" href="classpoly_1_1IR_1_1Loop.html#a2f7536df8daae2f5cd38078a37a6ecb6">getNextLoop</a>();</div>
-<div class="line"><a name="l00616"></a><span class="lineno">  616</span>&#160;      <span class="keywordtype">unsigned</span> ec = N ? ++exitCount : 1;</div>
-<div class="line"><a name="l00617"></a><span class="lineno">  617</span>&#160;      initLoop(deps, N, maxl2VF, TTI, depth, ec);</div>
-<div class="line"><a name="l00618"></a><span class="lineno">  618</span>&#160;      L = N;</div>
-<div class="line"><a name="l00619"></a><span class="lineno">  619</span>&#160;    } <span class="keywordflow">while</span> (L);</div>
-<div class="line"><a name="l00620"></a><span class="lineno">  620</span>&#160;  }</div>
-<div class="line"><a name="l00621"></a><span class="lineno">  621</span>&#160; </div>
-<div class="line"><a name="l00622"></a><span class="lineno">  622</span>&#160;<span class="keyword">public</span>:</div>
-<div class="line"><a name="l00623"></a><span class="lineno">  623</span>&#160;  <span class="comment">// this is a vector fun, where indexing may do non-trivial computation</span></div>
-<div class="line"><a name="l00624"></a><span class="lineno">  624</span>&#160;  <span class="comment">// also, mapping from this vector to loop position isn&#39;t trivial either</span></div>
-<div class="line"><a name="l00625"></a><span class="lineno">  625</span>&#160;  <span class="comment">// hence, we use a 2 x max_depth matrix that we copy into as we descend</span></div>
-<div class="line"><a name="l00626"></a><span class="lineno">  626</span>&#160;  <span class="comment">// (and pop from as we ascend). Row `0` is for inverse values,</span></div>
-<div class="line"><a name="l00627"></a><span class="lineno">  627</span>&#160;  <span class="comment">// and row `1` for direct values.</span></div>
-<div class="line"><a name="l00628"></a><span class="lineno">  628</span>&#160;  <span class="comment">// Inverses are favored as our costs fns use them more often.</span></div>
-<div class="line"><a name="l00629"></a><span class="lineno">  629</span>&#160;  constexpr <span class="keyword">auto</span> operator()(alloc::Arena&lt;&gt; alloc,</div>
-<div class="line"><a name="l00630"></a><span class="lineno">  630</span>&#160;                            <span class="keyword">const</span> AbstractVector <span class="keyword">auto</span> &amp;x)<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l00631"></a><span class="lineno">  631</span>&#160;    <span class="keyword">using</span> T = utils::eltype_t&lt;decltype(x)&gt;;</div>
-<div class="line"><a name="l00632"></a><span class="lineno">  632</span>&#160;    utils::invariant(max_depth &lt; 16);</div>
-<div class="line"><a name="l00633"></a><span class="lineno">  633</span>&#160;    <span class="comment">// row 0: inverse unrolls</span></div>
-<div class="line"><a name="l00634"></a><span class="lineno">  634</span>&#160;    <span class="comment">// row 1: unrolls</span></div>
-<div class="line"><a name="l00635"></a><span class="lineno">  635</span>&#160;    <span class="comment">// row 2: cumprod invunroll</span></div>
-<div class="line"><a name="l00636"></a><span class="lineno">  636</span>&#160;    math::MutArray&lt;T, math::DenseDims&lt;3&gt;&gt; invunrolls{</div>
-<div class="line"><a name="l00637"></a><span class="lineno">  637</span>&#160;      math::matrix&lt;T&gt;(alloc, math::Row&lt;3&gt;{}, math::Col&lt;&gt;{max_depth})};</div>
-<div class="line"><a name="l00638"></a><span class="lineno">  638</span>&#160;    ptrdiff_t i = 0, depth = 0, mi = 0, mc = 0, ci = 0, li = 0;</div>
-<div class="line"><a name="l00639"></a><span class="lineno">  639</span>&#160;    <span class="keywordtype">double</span> tripcounts[16];</div>
-<div class="line"><a name="l00640"></a><span class="lineno">  640</span>&#160;    <a class="code" href="structpoly_1_1CostModeling_1_1VectorizationFactor.html">VectorizationFactor</a> vf{};</div>
-<div class="line"><a name="l00641"></a><span class="lineno">  641</span>&#160;    <span class="comment">// we evaluate every iteration</span></div>
-<div class="line"><a name="l00642"></a><span class="lineno">  642</span>&#160;    T c{};</div>
-<div class="line"><a name="l00643"></a><span class="lineno">  643</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">auto</span> [comptimetrip, trip_count, compute, omem, cmem, exit, l2vw] :</div>
-<div class="line"><a name="l00644"></a><span class="lineno">  644</span>&#160;         cost_counts) {</div>
-<div class="line"><a name="l00645"></a><span class="lineno">  645</span>&#160;      <span class="keywordflow">if</span> (l2vw) {</div>
-<div class="line"><a name="l00646"></a><span class="lineno">  646</span>&#160;        invariant(vf.l2factor == 0);</div>
-<div class="line"><a name="l00647"></a><span class="lineno">  647</span>&#160;        invariant(vf.indexMask == 0);</div>
-<div class="line"><a name="l00648"></a><span class="lineno">  648</span>&#160;        vf.l2factor = l2vw;</div>
-<div class="line"><a name="l00649"></a><span class="lineno">  649</span>&#160;        vf.indexMask = uint32_t(1) &lt;&lt; depth;</div>
-<div class="line"><a name="l00650"></a><span class="lineno">  650</span>&#160;      }</div>
-<div class="line"><a name="l00651"></a><span class="lineno">  651</span>&#160;      invunrolls[1, depth] = x[i++];</div>
-<div class="line"><a name="l00652"></a><span class="lineno">  652</span>&#160;      invunrolls[2, depth] = invunrolls[0, depth] = 1 / invunrolls[1, depth];</div>
-<div class="line"><a name="l00653"></a><span class="lineno">  653</span>&#160;      <span class="keywordflow">if</span> (depth) invunrolls[2, depth] *= invunrolls[2, depth - 1];</div>
-<div class="line"><a name="l00654"></a><span class="lineno">  654</span>&#160;      tripcounts[depth] =</div>
-<div class="line"><a name="l00655"></a><span class="lineno">  655</span>&#160;        (depth ? tripcounts[depth - 1] * trip_count : trip_count);</div>
-<div class="line"><a name="l00656"></a><span class="lineno">  656</span>&#160;      T cc{compcosts(invunrolls, compute_independence[_(0, compute) + ci])};</div>
-<div class="line"><a name="l00657"></a><span class="lineno">  657</span>&#160;      ci += compute;</div>
-<div class="line"><a name="l00658"></a><span class="lineno">  658</span>&#160;      <span class="keywordflow">if</span> (exit) {</div>
-<div class="line"><a name="l00659"></a><span class="lineno">  659</span>&#160;        <span class="keyword">auto</span> [reguse, lt] = leafs[li++];</div>
-<div class="line"><a name="l00660"></a><span class="lineno">  660</span>&#160;        <span class="keyword">auto</span> [l, numreduct] = lt;</div>
-<div class="line"><a name="l00661"></a><span class="lineno">  661</span>&#160;        <span class="comment">// we&#39;re now in a leaf, meaning we must consider register costs,</span></div>
-<div class="line"><a name="l00662"></a><span class="lineno">  662</span>&#160;        <span class="comment">// as well as reduction costs and latency of reduction chains.</span></div>
-<div class="line"><a name="l00663"></a><span class="lineno">  663</span>&#160;        cc = smax(cc, l * invunrolls[2, depth]);</div>
-<div class="line"><a name="l00664"></a><span class="lineno">  664</span>&#160;        cc += registerPressure(invunrolls, reguse);</div>
-<div class="line"><a name="l00665"></a><span class="lineno">  665</span>&#160;        <span class="keywordflow">if</span> (numreduct) {</div>
-<div class="line"><a name="l00666"></a><span class="lineno">  666</span>&#160;          cc +=</div>
-<div class="line"><a name="l00667"></a><span class="lineno">  667</span>&#160;            compcost(invunrolls, compute_independence[_(0, numreduct) + ci]) *</div>
-<div class="line"><a name="l00668"></a><span class="lineno">  668</span>&#160;            log2(invunrolls[1, depth]) / trip_count;</div>
-<div class="line"><a name="l00669"></a><span class="lineno">  669</span>&#160;          ci += numreduct;</div>
-<div class="line"><a name="l00670"></a><span class="lineno">  670</span>&#160;        }</div>
-<div class="line"><a name="l00671"></a><span class="lineno">  671</span>&#160;      }</div>
-<div class="line"><a name="l00672"></a><span class="lineno">  672</span>&#160;      cc += memcosts(invunrolls, vf, orth_axes[_(0, omem) + mi]);</div>
-<div class="line"><a name="l00673"></a><span class="lineno">  673</span>&#160;      mi += omem;</div>
-<div class="line"><a name="l00674"></a><span class="lineno">  674</span>&#160;      cc += memcosts(invunrolls, vf, conv_axes[_(0, cmem) + mc]);</div>
-<div class="line"><a name="l00675"></a><span class="lineno">  675</span>&#160;      mc += cmem;</div>
-<div class="line"><a name="l00676"></a><span class="lineno">  676</span>&#160;      c += tripcounts[depth] * cc;</div>
-<div class="line"><a name="l00677"></a><span class="lineno">  677</span>&#160;      <span class="comment">// Decrement depth by `exit - 1`; the `-1` corresponds</span></div>
-<div class="line"><a name="l00678"></a><span class="lineno">  678</span>&#160;      <span class="comment">// to descending into this header, while we exit `exit` loops afterwards.</span></div>
-<div class="line"><a name="l00679"></a><span class="lineno">  679</span>&#160;      depth -= exit - 1; <span class="comment">// don&#39;t fuse `-1` to keep `exit` unsigned</span></div>
-<div class="line"><a name="l00680"></a><span class="lineno">  680</span>&#160;      <span class="keywordflow">if</span> (depth &lt;= std::countr_zero(vf.indexMask)) {</div>
-<div class="line"><a name="l00681"></a><span class="lineno">  681</span>&#160;        vf.l2factor = 0;</div>
-<div class="line"><a name="l00682"></a><span class="lineno">  682</span>&#160;        vf.indexMask = 0;</div>
-<div class="line"><a name="l00683"></a><span class="lineno">  683</span>&#160;      }</div>
-<div class="line"><a name="l00684"></a><span class="lineno">  684</span>&#160;    }</div>
-<div class="line"><a name="l00685"></a><span class="lineno">  685</span>&#160;    <span class="keywordflow">return</span> c;</div>
-<div class="line"><a name="l00686"></a><span class="lineno">  686</span>&#160;  }</div>
-<div class="line"><a name="l00687"></a><span class="lineno">  687</span>&#160;  <span class="keywordtype">void</span> init(<a class="code" href="structpoly_1_1CostModeling_1_1LoopDepSatisfaction.html">LoopDepSatisfaction</a> deps, <a class="code" href="classpoly_1_1IR_1_1Loop.html">IR::Loop</a> *root, <span class="keywordtype">unsigned</span> maxl2VF,</div>
-<div class="line"><a name="l00688"></a><span class="lineno">  688</span>&#160;            <span class="keyword">const</span> llvm::TargetTransformInfo &amp;TTI) {</div>
-<div class="line"><a name="l00689"></a><span class="lineno">  689</span>&#160;    clear(); <span class="comment">// max_depth = 0;</span></div>
-<div class="line"><a name="l00690"></a><span class="lineno">  690</span>&#160;    iterLoopLevel(deps, root-&gt;<a class="code" href="classpoly_1_1IR_1_1Loop.html#aafb52d2d14ecc6e68e9f2ced4f2dc2e8">getSubLoop</a>(), maxl2VF, TTI, 0, 0);</div>
-<div class="line"><a name="l00691"></a><span class="lineno">  691</span>&#160;  }</div>
-<div class="line"><a name="l00692"></a><span class="lineno">  692</span>&#160;  <a class="code" href="classpoly_1_1CostModeling_1_1LoopTreeCostFn.html">LoopTreeCostFn</a>(<a class="code" href="structpoly_1_1CostModeling_1_1LoopDepSatisfaction.html">LoopDepSatisfaction</a> deps, <a class="code" href="classpoly_1_1IR_1_1Loop.html">IR::Loop</a> *root, <span class="keywordtype">unsigned</span> maxVF,</div>
-<div class="line"><a name="l00693"></a><span class="lineno">  693</span>&#160;                 <span class="keyword">const</span> llvm::TargetTransformInfo &amp;TTI)</div>
-<div class="line"><a name="l00694"></a><span class="lineno">  694</span>&#160;    : maxVectorWidth{unsigned(1) &lt;&lt; maxVF} {</div>
-<div class="line"><a name="l00695"></a><span class="lineno">  695</span>&#160;    init(deps, root, maxVF, TTI);</div>
-<div class="line"><a name="l00696"></a><span class="lineno">  696</span>&#160;  }</div>
-<div class="line"><a name="l00697"></a><span class="lineno">  697</span>&#160;};</div>
-<div class="line"><a name="l00698"></a><span class="lineno">  698</span>&#160; </div>
-<div class="line"><a name="l00699"></a><span class="lineno">  699</span>&#160;} <span class="comment">// namespace poly::CostModeling</span></div>
+<div class="line"><a name="l00569"></a><span class="lineno">  569</span>&#160;  <span class="keywordtype">void</span> checkLegality(<a class="code" href="structpoly_1_1CostModeling_1_1LoopDepSatisfaction.html">LoopDepSatisfaction</a> deps, <a class="code" href="classpoly_1_1IR_1_1Loop.html">IR::Loop</a> *L) {</div>
+<div class="line"><a name="l00570"></a><span class="lineno">  570</span>&#160;    <span class="keywordtype">bool</span> canVectorize = <span class="keyword">true</span>, canUnroll = <span class="keyword">true</span>;</div>
+<div class="line"><a name="l00571"></a><span class="lineno">  571</span>&#160;    <span class="keywordflow">for</span> (<a class="code" href="classpoly_1_1poly_1_1Dependence.html">poly::Dependence</a> d : deps.depencencies(L)) {</div>
+<div class="line"><a name="l00572"></a><span class="lineno">  572</span>&#160;      <span class="comment">// analyze d</span></div>
+<div class="line"><a name="l00573"></a><span class="lineno">  573</span>&#160;      canVectorize = <span class="keyword">false</span>;</div>
+<div class="line"><a name="l00574"></a><span class="lineno">  574</span>&#160;    }</div>
+<div class="line"><a name="l00575"></a><span class="lineno">  575</span>&#160;  }</div>
+<div class="line"><a name="l00576"></a><span class="lineno">  576</span>&#160; </div>
+<div class="line"><a name="l00577"></a><span class="lineno">  577</span>&#160;  <span class="keywordtype">void</span> leafCosts(<a class="code" href="structpoly_1_1CostModeling_1_1LoopDepSatisfaction.html">LoopDepSatisfaction</a> deps, <a class="code" href="classpoly_1_1IR_1_1Loop.html">IR::Loop</a> *L, <span class="keywordtype">unsigned</span> maxl2VF,</div>
+<div class="line"><a name="l00578"></a><span class="lineno">  578</span>&#160;                 <span class="keyword">const</span> llvm::TargetTransformInfo &amp;TTI) {</div>
+<div class="line"><a name="l00579"></a><span class="lineno">  579</span>&#160;    <span class="comment">// TODO: if (!SL) we&#39;re in a leaf, and need compute latency</span></div>
+<div class="line"><a name="l00580"></a><span class="lineno">  580</span>&#160;    <span class="comment">// We use the `IROptimizer::loopDepSats` to check the depencencies held at</span></div>
+<div class="line"><a name="l00581"></a><span class="lineno">  581</span>&#160;    <span class="comment">// the loop. We check these for those that look like reductions that are</span></div>
+<div class="line"><a name="l00582"></a><span class="lineno">  582</span>&#160;    <span class="comment">// legal to reassociate, e.g. integer add chains or floating point with the</span></div>
+<div class="line"><a name="l00583"></a><span class="lineno">  583</span>&#160;    <span class="comment">// reassociate FMF set. We can also calculate the latency while walking the</span></div>
+<div class="line"><a name="l00584"></a><span class="lineno">  584</span>&#160;    <span class="comment">// chain. Note that in our IR, dependencies may look something like this</span></div>
+<div class="line"><a name="l00585"></a><span class="lineno">  585</span>&#160;    <span class="comment">// after load/store hoisting: for (j in J){ // arbitrary number of outer</span></div>
+<div class="line"><a name="l00586"></a><span class="lineno">  586</span>&#160;    <span class="comment">// loops</span></div>
+<div class="line"><a name="l00587"></a><span class="lineno">  587</span>&#160;    <span class="comment">//   %w = %array[j...];</span></div>
+<div class="line"><a name="l00588"></a><span class="lineno">  588</span>&#160;    <span class="comment">//   %x = foo(%w);</span></div>
+<div class="line"><a name="l00589"></a><span class="lineno">  589</span>&#160;    <span class="comment">//   for (i in I){ // inner loop(s)</span></div>
+<div class="line"><a name="l00590"></a><span class="lineno">  590</span>&#160;    <span class="comment">//     %y = bar(%x);</span></div>
+<div class="line"><a name="l00591"></a><span class="lineno">  591</span>&#160;    <span class="comment">//   }</span></div>
+<div class="line"><a name="l00592"></a><span class="lineno">  592</span>&#160;    <span class="comment">//   %z = quz(%y);</span></div>
+<div class="line"><a name="l00593"></a><span class="lineno">  593</span>&#160;    <span class="comment">//   %array[j...] = %z;</span></div>
+<div class="line"><a name="l00594"></a><span class="lineno">  594</span>&#160;    <span class="comment">// }</span></div>
+<div class="line"><a name="l00595"></a><span class="lineno">  595</span>&#160;    <span class="comment">// Rather than using PhiNodes, we represent dependencies through addresses.</span></div>
+<div class="line"><a name="l00596"></a><span class="lineno">  596</span>&#160;    <span class="keywordtype">bool</span> vectorizationLegal = <span class="keyword">true</span>, unrollLegal = <span class="keyword">true</span>;</div>
+<div class="line"><a name="l00597"></a><span class="lineno">  597</span>&#160;    <span class="keywordflow">for</span> (<a class="code" href="classpoly_1_1poly_1_1Dependence.html">poly::Dependence</a> d : deps.depencencies(L)) {</div>
+<div class="line"><a name="l00598"></a><span class="lineno">  598</span>&#160;      <span class="comment">// is</span></div>
+<div class="line"><a name="l00599"></a><span class="lineno">  599</span>&#160;    }</div>
+<div class="line"><a name="l00600"></a><span class="lineno">  600</span>&#160;    <span class="comment">// for (IR::Node *N = L-&gt;getChild(); N; N = N-&gt;getNext()) {}</span></div>
+<div class="line"><a name="l00601"></a><span class="lineno">  601</span>&#160;    <span class="keywordflow">return</span>;</div>
+<div class="line"><a name="l00602"></a><span class="lineno">  602</span>&#160;  };</div>
+<div class="line"><a name="l00603"></a><span class="lineno">  603</span>&#160; </div>
+<div class="line"><a name="l00604"></a><span class="lineno">  604</span>&#160;  <span class="comment">// NOLINTNEXTLINE(misc-no-recursion)</span></div>
+<div class="line"><a name="l00605"></a><span class="lineno">  605</span>&#160;  <span class="keywordtype">void</span> iterLoopLevel(<a class="code" href="structpoly_1_1CostModeling_1_1LoopDepSatisfaction.html">LoopDepSatisfaction</a> deps, <a class="code" href="classpoly_1_1IR_1_1Loop.html">IR::Loop</a> *L, <span class="keywordtype">unsigned</span> maxl2VF,</div>
+<div class="line"><a name="l00606"></a><span class="lineno">  606</span>&#160;                     <span class="keyword">const</span> llvm::TargetTransformInfo &amp;TTI, ptrdiff_t depth,</div>
+<div class="line"><a name="l00607"></a><span class="lineno">  607</span>&#160;                     <span class="keywordtype">unsigned</span> exitCount) {</div>
+<div class="line"><a name="l00608"></a><span class="lineno">  608</span>&#160;    <span class="keywordflow">do</span> {</div>
+<div class="line"><a name="l00609"></a><span class="lineno">  609</span>&#160;      <a class="code" href="classpoly_1_1IR_1_1Loop.html">IR::Loop</a> *N = L-&gt;<a class="code" href="classpoly_1_1IR_1_1Loop.html#a2f7536df8daae2f5cd38078a37a6ecb6">getNextLoop</a>();</div>
+<div class="line"><a name="l00610"></a><span class="lineno">  610</span>&#160;      <span class="keywordtype">unsigned</span> ec = N ? ++exitCount : 1;</div>
+<div class="line"><a name="l00611"></a><span class="lineno">  611</span>&#160;      initLoop(deps, N, maxl2VF, TTI, depth, ec);</div>
+<div class="line"><a name="l00612"></a><span class="lineno">  612</span>&#160;      L = N;</div>
+<div class="line"><a name="l00613"></a><span class="lineno">  613</span>&#160;    } <span class="keywordflow">while</span> (L);</div>
+<div class="line"><a name="l00614"></a><span class="lineno">  614</span>&#160;  }</div>
+<div class="line"><a name="l00615"></a><span class="lineno">  615</span>&#160; </div>
+<div class="line"><a name="l00616"></a><span class="lineno">  616</span>&#160;<span class="keyword">public</span>:</div>
+<div class="line"><a name="l00617"></a><span class="lineno">  617</span>&#160;  <span class="comment">// this is a vector fun, where indexing may do non-trivial computation</span></div>
+<div class="line"><a name="l00618"></a><span class="lineno">  618</span>&#160;  <span class="comment">// also, mapping from this vector to loop position isn&#39;t trivial either</span></div>
+<div class="line"><a name="l00619"></a><span class="lineno">  619</span>&#160;  <span class="comment">// hence, we use a 2 x max_depth matrix that we copy into as we descend</span></div>
+<div class="line"><a name="l00620"></a><span class="lineno">  620</span>&#160;  <span class="comment">// (and pop from as we ascend). Row `0` is for inverse values,</span></div>
+<div class="line"><a name="l00621"></a><span class="lineno">  621</span>&#160;  <span class="comment">// and row `1` for direct values.</span></div>
+<div class="line"><a name="l00622"></a><span class="lineno">  622</span>&#160;  <span class="comment">// Inverses are favored as our costs fns use them more often.</span></div>
+<div class="line"><a name="l00623"></a><span class="lineno">  623</span>&#160;  constexpr <span class="keyword">auto</span> operator()(alloc::Arena&lt;&gt; alloc,</div>
+<div class="line"><a name="l00624"></a><span class="lineno">  624</span>&#160;                            <span class="keyword">const</span> AbstractVector <span class="keyword">auto</span> &amp;x)<span class="keyword"> const </span>{</div>
+<div class="line"><a name="l00625"></a><span class="lineno">  625</span>&#160;    <span class="keyword">using</span> T = utils::eltype_t&lt;decltype(x)&gt;;</div>
+<div class="line"><a name="l00626"></a><span class="lineno">  626</span>&#160;    utils::invariant(max_depth &lt; 16);</div>
+<div class="line"><a name="l00627"></a><span class="lineno">  627</span>&#160;    <span class="comment">// row 0: inverse unrolls</span></div>
+<div class="line"><a name="l00628"></a><span class="lineno">  628</span>&#160;    <span class="comment">// row 1: unrolls</span></div>
+<div class="line"><a name="l00629"></a><span class="lineno">  629</span>&#160;    <span class="comment">// row 2: cumprod invunroll</span></div>
+<div class="line"><a name="l00630"></a><span class="lineno">  630</span>&#160;    math::MutArray&lt;T, math::DenseDims&lt;3&gt;&gt; invunrolls{</div>
+<div class="line"><a name="l00631"></a><span class="lineno">  631</span>&#160;      math::matrix&lt;T&gt;(alloc, math::Row&lt;3&gt;{}, math::Col&lt;&gt;{max_depth})};</div>
+<div class="line"><a name="l00632"></a><span class="lineno">  632</span>&#160;    ptrdiff_t i = 0, depth = 0, mi = 0, mc = 0, ci = 0, li = 0;</div>
+<div class="line"><a name="l00633"></a><span class="lineno">  633</span>&#160;    <span class="keywordtype">double</span> tripcounts[16];</div>
+<div class="line"><a name="l00634"></a><span class="lineno">  634</span>&#160;    <a class="code" href="structpoly_1_1CostModeling_1_1VectorizationFactor.html">VectorizationFactor</a> vf{};</div>
+<div class="line"><a name="l00635"></a><span class="lineno">  635</span>&#160;    <span class="comment">// we evaluate every iteration</span></div>
+<div class="line"><a name="l00636"></a><span class="lineno">  636</span>&#160;    T c{};</div>
+<div class="line"><a name="l00637"></a><span class="lineno">  637</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">auto</span> [comptimetrip, trip_count, compute, omem, cmem, exit, l2vw] :</div>
+<div class="line"><a name="l00638"></a><span class="lineno">  638</span>&#160;         cost_counts) {</div>
+<div class="line"><a name="l00639"></a><span class="lineno">  639</span>&#160;      <span class="keywordflow">if</span> (l2vw) {</div>
+<div class="line"><a name="l00640"></a><span class="lineno">  640</span>&#160;        invariant(vf.l2factor == 0);</div>
+<div class="line"><a name="l00641"></a><span class="lineno">  641</span>&#160;        invariant(vf.indexMask == 0);</div>
+<div class="line"><a name="l00642"></a><span class="lineno">  642</span>&#160;        vf.l2factor = l2vw;</div>
+<div class="line"><a name="l00643"></a><span class="lineno">  643</span>&#160;        vf.indexMask = uint32_t(1) &lt;&lt; depth;</div>
+<div class="line"><a name="l00644"></a><span class="lineno">  644</span>&#160;      }</div>
+<div class="line"><a name="l00645"></a><span class="lineno">  645</span>&#160;      invunrolls[1, depth] = x[i++];</div>
+<div class="line"><a name="l00646"></a><span class="lineno">  646</span>&#160;      invunrolls[2, depth] = invunrolls[0, depth] = 1 / invunrolls[1, depth];</div>
+<div class="line"><a name="l00647"></a><span class="lineno">  647</span>&#160;      <span class="keywordflow">if</span> (depth) invunrolls[2, depth] *= invunrolls[2, depth - 1];</div>
+<div class="line"><a name="l00648"></a><span class="lineno">  648</span>&#160;      tripcounts[depth] =</div>
+<div class="line"><a name="l00649"></a><span class="lineno">  649</span>&#160;        (depth ? tripcounts[depth - 1] * trip_count : trip_count);</div>
+<div class="line"><a name="l00650"></a><span class="lineno">  650</span>&#160;      T cc{compcosts(invunrolls, compute_independence[_(0, compute) + ci])};</div>
+<div class="line"><a name="l00651"></a><span class="lineno">  651</span>&#160;      ci += compute;</div>
+<div class="line"><a name="l00652"></a><span class="lineno">  652</span>&#160;      <span class="keywordflow">if</span> (exit) {</div>
+<div class="line"><a name="l00653"></a><span class="lineno">  653</span>&#160;        <span class="keyword">auto</span> [reguse, lt] = leafs[li++];</div>
+<div class="line"><a name="l00654"></a><span class="lineno">  654</span>&#160;        <span class="keyword">auto</span> [l, numreduct] = lt;</div>
+<div class="line"><a name="l00655"></a><span class="lineno">  655</span>&#160;        <span class="comment">// we&#39;re now in a leaf, meaning we must consider register costs,</span></div>
+<div class="line"><a name="l00656"></a><span class="lineno">  656</span>&#160;        <span class="comment">// as well as reduction costs and latency of reduction chains.</span></div>
+<div class="line"><a name="l00657"></a><span class="lineno">  657</span>&#160;        cc = smax(cc, l * invunrolls[2, depth]);</div>
+<div class="line"><a name="l00658"></a><span class="lineno">  658</span>&#160;        cc += registerPressure(invunrolls, reguse);</div>
+<div class="line"><a name="l00659"></a><span class="lineno">  659</span>&#160;        <span class="keywordflow">if</span> (numreduct) {</div>
+<div class="line"><a name="l00660"></a><span class="lineno">  660</span>&#160;          cc +=</div>
+<div class="line"><a name="l00661"></a><span class="lineno">  661</span>&#160;            compcost(invunrolls, compute_independence[_(0, numreduct) + ci]) *</div>
+<div class="line"><a name="l00662"></a><span class="lineno">  662</span>&#160;            log2(invunrolls[1, depth]) / trip_count;</div>
+<div class="line"><a name="l00663"></a><span class="lineno">  663</span>&#160;          ci += numreduct;</div>
+<div class="line"><a name="l00664"></a><span class="lineno">  664</span>&#160;        }</div>
+<div class="line"><a name="l00665"></a><span class="lineno">  665</span>&#160;      }</div>
+<div class="line"><a name="l00666"></a><span class="lineno">  666</span>&#160;      cc += memcosts(invunrolls, vf, orth_axes[_(0, omem) + mi]);</div>
+<div class="line"><a name="l00667"></a><span class="lineno">  667</span>&#160;      mi += omem;</div>
+<div class="line"><a name="l00668"></a><span class="lineno">  668</span>&#160;      cc += memcosts(invunrolls, vf, conv_axes[_(0, cmem) + mc]);</div>
+<div class="line"><a name="l00669"></a><span class="lineno">  669</span>&#160;      mc += cmem;</div>
+<div class="line"><a name="l00670"></a><span class="lineno">  670</span>&#160;      c += tripcounts[depth] * cc;</div>
+<div class="line"><a name="l00671"></a><span class="lineno">  671</span>&#160;      <span class="comment">// Decrement depth by `exit - 1`; the `-1` corresponds</span></div>
+<div class="line"><a name="l00672"></a><span class="lineno">  672</span>&#160;      <span class="comment">// to descending into this header, while we exit `exit` loops afterwards.</span></div>
+<div class="line"><a name="l00673"></a><span class="lineno">  673</span>&#160;      depth -= exit - 1; <span class="comment">// don&#39;t fuse `-1` to keep `exit` unsigned</span></div>
+<div class="line"><a name="l00674"></a><span class="lineno">  674</span>&#160;      <span class="keywordflow">if</span> (depth &lt;= std::countr_zero(vf.indexMask)) {</div>
+<div class="line"><a name="l00675"></a><span class="lineno">  675</span>&#160;        vf.l2factor = 0;</div>
+<div class="line"><a name="l00676"></a><span class="lineno">  676</span>&#160;        vf.indexMask = 0;</div>
+<div class="line"><a name="l00677"></a><span class="lineno">  677</span>&#160;      }</div>
+<div class="line"><a name="l00678"></a><span class="lineno">  678</span>&#160;    }</div>
+<div class="line"><a name="l00679"></a><span class="lineno">  679</span>&#160;    <span class="keywordflow">return</span> c;</div>
+<div class="line"><a name="l00680"></a><span class="lineno">  680</span>&#160;  }</div>
+<div class="line"><a name="l00681"></a><span class="lineno">  681</span>&#160;  <span class="keywordtype">void</span> init(<a class="code" href="structpoly_1_1CostModeling_1_1LoopDepSatisfaction.html">LoopDepSatisfaction</a> deps, <a class="code" href="classpoly_1_1IR_1_1Loop.html">IR::Loop</a> *root, <span class="keywordtype">unsigned</span> maxl2VF,</div>
+<div class="line"><a name="l00682"></a><span class="lineno">  682</span>&#160;            <span class="keyword">const</span> llvm::TargetTransformInfo &amp;TTI) {</div>
+<div class="line"><a name="l00683"></a><span class="lineno">  683</span>&#160;    clear(); <span class="comment">// max_depth = 0;</span></div>
+<div class="line"><a name="l00684"></a><span class="lineno">  684</span>&#160;    iterLoopLevel(deps, root-&gt;<a class="code" href="classpoly_1_1IR_1_1Loop.html#aafb52d2d14ecc6e68e9f2ced4f2dc2e8">getSubLoop</a>(), maxl2VF, TTI, 0, 0);</div>
+<div class="line"><a name="l00685"></a><span class="lineno">  685</span>&#160;  }</div>
+<div class="line"><a name="l00686"></a><span class="lineno">  686</span>&#160;  <a class="code" href="classpoly_1_1CostModeling_1_1LoopTreeCostFn.html">LoopTreeCostFn</a>(<a class="code" href="structpoly_1_1CostModeling_1_1LoopDepSatisfaction.html">LoopDepSatisfaction</a> deps, <a class="code" href="classpoly_1_1IR_1_1Loop.html">IR::Loop</a> *root, <span class="keywordtype">unsigned</span> maxVF,</div>
+<div class="line"><a name="l00687"></a><span class="lineno">  687</span>&#160;                 <span class="keyword">const</span> llvm::TargetTransformInfo &amp;TTI)</div>
+<div class="line"><a name="l00688"></a><span class="lineno">  688</span>&#160;    : maxVectorWidth{unsigned(1) &lt;&lt; maxVF} {</div>
+<div class="line"><a name="l00689"></a><span class="lineno">  689</span>&#160;    init(deps, root, maxVF, TTI);</div>
+<div class="line"><a name="l00690"></a><span class="lineno">  690</span>&#160;  }</div>
+<div class="line"><a name="l00691"></a><span class="lineno">  691</span>&#160;};</div>
+<div class="line"><a name="l00692"></a><span class="lineno">  692</span>&#160; </div>
+<div class="line"><a name="l00693"></a><span class="lineno">  693</span>&#160;} <span class="comment">// namespace poly::CostModeling</span></div>
 <div class="ttc" id="aclasspoly_1_1CostModeling_1_1LoopTreeCostFn_html"><div class="ttname"><a href="classpoly_1_1CostModeling_1_1LoopTreeCostFn.html">poly::CostModeling::LoopTreeCostFn</a></div><div class="ttdef"><b>Definition:</b> CostFunction.hpp:467</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Loop_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Loop.html">poly::IR::Loop</a></div><div class="ttdef"><b>Definition:</b> Node.hpp:283</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Loop_html_a2f7536df8daae2f5cd38078a37a6ecb6"><div class="ttname"><a href="classpoly_1_1IR_1_1Loop.html#a2f7536df8daae2f5cd38078a37a6ecb6">poly::IR::Loop::getNextLoop</a></div><div class="ttdeci">constexpr auto getNextLoop() const -&gt; Loop *</div><div class="ttdoc">Returns the next loop at the same level.</div><div class="ttdef"><b>Definition:</b> Node.hpp:336</div></div>
