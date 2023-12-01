@@ -66,7 +66,6 @@ $(function() {
 </div><!-- top -->
 <div class="header">
   <div class="summary">
-<a href="#pub-types">Public Types</a> &#124;
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-attribs">Public Attributes</a> &#124;
 <a href="structpoly_1_1CostModeling_1_1Legality-members.html">List of all members</a>  </div>
@@ -75,19 +74,8 @@ $(function() {
 </div><!--header-->
 <div class="contents">
 <table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
-Public Types</h2></td></tr>
-<tr class="memitem:a5a1a93c25d62b24c0ec65f229678a815"><td class="memItemLeft" align="right" valign="top"><a id="a5a1a93c25d62b24c0ec65f229678a815"></a>enum class &#160;</td><td class="memItemRight" valign="bottom"><b>Reduction</b> { <b>None</b> = 0
-, <b>Unordered</b> = 1
-, <b>Ordered</b> = 2
- }</td></tr>
-<tr class="separator:a5a1a93c25d62b24c0ec65f229678a815"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a1df14b4d8581caef578e7c46e0f276ff"><td class="memItemLeft" align="right" valign="top"><a id="a1df14b4d8581caef578e7c46e0f276ff"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getReduction</b> () const -&gt; Reduction</td></tr>
-<tr class="separator:a1df14b4d8581caef578e7c46e0f276ff"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac54daf09321cabdc83919729cf2b2ff7"><td class="memItemLeft" align="right" valign="top"><a id="ac54daf09321cabdc83919729cf2b2ff7"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>minDistance</b> () const -&gt; uint16_t</td></tr>
 <tr class="separator:ac54daf09321cabdc83919729cf2b2ff7"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -106,24 +94,24 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&am
 <tr class="memitem:a56d8b397e648baabb65f5a0291dfea89"><td class="memItemLeft" align="right" valign="top"><a id="a56d8b397e648baabb65f5a0291dfea89"></a>
 constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Legality</b> (const <a class="el" href="structpoly_1_1CostModeling_1_1Legality.html">Legality</a> &amp;)=default</td></tr>
 <tr class="separator:a56d8b397e648baabb65f5a0291dfea89"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a42375a6501f107790a14956bdc63b71f"><td class="memItemLeft" align="right" valign="top"><a id="a42375a6501f107790a14956bdc63b71f"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>Legality</b> (<a class="el" href="structpoly_1_1poly_1_1Dependence.html">Dependence</a> d)</td></tr>
-<tr class="separator:a42375a6501f107790a14956bdc63b71f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af2c4dcc0283689152bed61a331d0ff62"><td class="memItemLeft" align="right" valign="top"><a id="af2c4dcc0283689152bed61a331d0ff62"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>Legality</b> (<a class="el" href="classpoly_1_1poly_1_1Dependencies.html">IR::Dependencies</a> deps, <a class="el" href="structpoly_1_1poly_1_1Dependence.html">Dependence</a> d)</td></tr>
+<tr class="separator:af2c4dcc0283689152bed61a331d0ff62"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a054bdb6426904053a3ccd4ddf1751031"><td class="memItemLeft" align="right" valign="top"><a id="a054bdb6426904053a3ccd4ddf1751031"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>Legality</b> (<a class="el" href="structpoly_1_1CostModeling_1_1LoopDepSatisfaction.html">LoopDepSatisfaction</a> deps, <a class="el" href="classpoly_1_1IR_1_1Loop.html">IR::Loop</a> *L)</td></tr>
 <tr class="separator:a054bdb6426904053a3ccd4ddf1751031"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
-<tr class="memitem:a6241dd317548f2fb2a292b24ba0f5d36"><td class="memItemLeft" align="right" valign="top"><a id="a6241dd317548f2fb2a292b24ba0f5d36"></a>
-uint8_t&#160;</td><td class="memItemRight" valign="bottom"><b>reduction</b>: 2 {0}</td></tr>
-<tr class="separator:a6241dd317548f2fb2a292b24ba0f5d36"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2ef23397c71a9a283ee3a982259cbbd6"><td class="memItemLeft" align="right" valign="top"><a id="a2ef23397c71a9a283ee3a982259cbbd6"></a>
-uint8_t&#160;</td><td class="memItemRight" valign="bottom"><b>mindistance</b>: 6 {(1 &lt;&lt; 6) - 1}</td></tr>
-<tr class="separator:a2ef23397c71a9a283ee3a982259cbbd6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af25ab034422d8e6b979ebb600370bd52"><td class="memItemLeft" align="right" valign="top"><a id="af25ab034422d8e6b979ebb600370bd52"></a>
-uint8_t&#160;</td><td class="memItemRight" valign="bottom"><b>maxdistance</b> {0}</td></tr>
-<tr class="separator:af25ab034422d8e6b979ebb600370bd52"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac0580d949b06e01b3390778175f1cb18"><td class="memItemLeft" align="right" valign="top"><a id="ac0580d949b06e01b3390778175f1cb18"></a>
+uint16_t&#160;</td><td class="memItemRight" valign="bottom"><b>unordered_reduction_count</b> {0}</td></tr>
+<tr class="separator:ac0580d949b06e01b3390778175f1cb18"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a280236f4ff763fb56c22936b3a846460"><td class="memItemLeft" align="right" valign="top"><a id="a280236f4ff763fb56c22936b3a846460"></a>
+uint16_t&#160;</td><td class="memItemRight" valign="bottom"><b>mindistance</b> {std::numeric_limits&lt;uint16_t&gt;::max()}</td></tr>
+<tr class="separator:a280236f4ff763fb56c22936b3a846460"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a773b4f417031dce2dd2a175b36f072e9"><td class="memItemLeft" align="right" valign="top"><a id="a773b4f417031dce2dd2a175b36f072e9"></a>
+uint16_t&#160;</td><td class="memItemRight" valign="bottom"><b>maxdistance</b> {0}</td></tr>
+<tr class="separator:a773b4f417031dce2dd2a175b36f072e9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a265e4fa7723d8aa371d53b9fbef5709e"><td class="memItemLeft" align="right" valign="top"><a id="a265e4fa7723d8aa371d53b9fbef5709e"></a>
 uint16_t&#160;</td><td class="memItemRight" valign="bottom"><b>maxiters</b> {0}</td></tr>
 <tr class="separator:a265e4fa7723d8aa371d53b9fbef5709e"><td class="memSeparator" colspan="2">&#160;</td></tr>
