@@ -25,7 +25,7 @@ namespace lp {
 class ScheduledNode;
 } // namespace lp
 namespace poly {
-class Dependence;
+struct Dependence;
 class Dependencies;
 } // namespace poly
 namespace IR {

@@ -20,13 +20,13 @@ namespace poly {
 /// Represents a dependence relationship between two memory accesses.
 /// It contains simplices representing constraints that affine schedules
 /// are allowed to take.
-class Dependence {
-public:
+struct Dependence {
+  // public:
   struct ID {
     int32_t id;
   };
 
-private:
+  // private:
   //
   //
   Valid<DepPoly> depPoly;
@@ -42,6 +42,7 @@ private:
   // // was because of offsets when solving the linear program (value =
   // // 1).
   // std::array<uint8_t, 7> satLvl{255, 255, 255, 255, 255, 255, 255};
+  ID revTimeEdge_{-1};
   std::array<uint8_t, 2> satLvl;
   bool forward;
 
@@ -49,7 +50,7 @@ private:
     return {dependenceSatisfaction, dependenceBounding};
   }
 
-public:
+  // public:
   friend class Dependencies;
   // constexpr auto getNextInput() -> Dependence * { return nextInput; }
   // [[nodiscard]] constexpr auto getNextInput() const -> const Dependence * {
@@ -61,13 +62,10 @@ public:
   // [[nodiscard]] constexpr auto getNextOutput() const -> const Dependence * {
   //   return nextOutput;
   // }
-  [[nodiscard]] constexpr auto input() -> Valid<IR::Addr> { return in; }
-  [[nodiscard]] constexpr auto output() -> Valid<IR::Addr> { return out; }
-  [[nodiscard]] constexpr auto input() const -> Valid<const IR::Addr> {
-    return in;
-  }
-  [[nodiscard]] constexpr auto output() const -> Valid<const IR::Addr> {
-    return out;
+  [[nodiscard]] constexpr auto input() const -> Valid<IR::Addr> { return in; }
+  [[nodiscard]] constexpr auto output() const -> Valid<IR::Addr> { return out; }
+  [[nodiscard]] constexpr auto revTimeEdge() const -> ID {
+    return revTimeEdge_;
   }
   // constexpr auto setNextInput(Dependence *n) -> Dependence * {
   //   return nextInput = n;
@@ -75,18 +73,18 @@ public:
   // constexpr auto setNextOutput(Dependence *n) -> Dependence * {
   //   return nextOutput = n;
   // }
-  constexpr Dependence(Valid<DepPoly> poly,
-                       std::array<Valid<math::Simplex>, 2> depSatBound,
-                       Valid<IR::Addr> i, Valid<IR::Addr> o, bool fwd)
-    : depPoly(poly), dependenceSatisfaction(depSatBound[0]),
-      dependenceBounding(depSatBound[1]), in(i), out(o), forward(fwd) {}
-  constexpr Dependence(Valid<DepPoly> poly,
-                       std::array<Valid<math::Simplex>, 2> depSatBound,
-                       Valid<IR::Addr> i, Valid<IR::Addr> o,
-                       std::array<uint8_t, 2> sL, bool fwd)
-    : depPoly(poly), dependenceSatisfaction(depSatBound[0]),
-      dependenceBounding(depSatBound[1]), in(i), out(o), satLvl(sL),
-      forward(fwd) {}
+  // constexpr Dependence(Valid<DepPoly> poly,
+  //                      std::array<Valid<math::Simplex>, 2> depSatBound,
+  //                      Valid<IR::Addr> i, Valid<IR::Addr> o, bool fwd)
+  //   : depPoly(poly), dependenceSatisfaction(depSatBound[0]),
+  //     dependenceBounding(depSatBound[1]), in(i), out(o), forward(fwd) {}
+  // constexpr Dependence(Valid<DepPoly> poly,
+  //                      std::array<Valid<math::Simplex>, 2> depSatBound,
+  //                      Valid<IR::Addr> i, Valid<IR::Addr> o,
+  //                      std::array<uint8_t, 2> sL, bool fwd)
+  //   : depPoly(poly), dependenceSatisfaction(depSatBound[0]),
+  //     dependenceBounding(depSatBound[1]), in(i), out(o), satLvl(sL),
+  //     forward(fwd) {}
 
   /// stashSatLevel() -> Dependence &
   /// This is used to track sat levels in the LP recursion.
@@ -572,6 +570,9 @@ public:
   }
 
 private:
+  /// set(ID i, Dependence d)
+  /// stores `d` at index `i`
+  /// Dependence `d` is pushed to the fronts of the edgeOut and edgeIn chains.
   constexpr void set(ID i, Dependence d) {
     auto out = d.output();
     auto in = d.input();
@@ -584,6 +585,7 @@ private:
     if (in->getEdgeIn() >= 0) prevIn(ID{in->getEdgeIn()}) = i.id;
     prevIn(i) = -1;
     depSatBnd(i) = d.getSimplexPair();
+    revTimeEdge(i) = d.revTimeEdge().id;
     depPoly(i) = d.getDepPoly();
     satLevelPair(i) = d.satLvl;
     isForward(i) = d.isForward();
@@ -630,9 +632,11 @@ private:
                 data + isForwardOffset * oldCapaciy, numData * sizeof(bool));
     data = newData;
   }
-  void addEdge(Arena<> *alloc, Dependence d) {
+  auto addEdge(Arena<> *alloc, Dependence d) -> ID {
     if (numData == getCapacity()) reallocate(alloc);
-    set(ID{numData++}, d);
+    ID id{numData++};
+    set(id, d);
+    return id;
   }
   static constexpr auto memNeeded(size_t N) -> size_t {
     return N * memNeededPer;
@@ -647,7 +651,12 @@ private:
       std::swap(x, y);
     }
     pair[0]->truncateVars(1 + numLambda + dxy->getNumScheduleCoef());
-    addEdge(alloc, Dependence{dxy, pair, x, y, isFwd});
+    addEdge(alloc, Dependence{.depPoly = dxy,
+                              .dependenceSatisfaction = pair[0],
+                              .dependenceBounding = pair[1],
+                              .in = x,
+                              .out = y,
+                              .forward = isFwd});
   }
   void timelessCheck(Arena<> *alloc, Valid<DepPoly> dxy, Valid<IR::Addr> x,
                      Valid<IR::Addr> y,
@@ -712,10 +721,15 @@ private:
       std::swap(pair[0], pair[1]);
     }
     pair[0]->truncateVars(1 + numLambda + numScheduleCoefs);
-    auto dep0 = Dependence{dxy->copy(alloc), pair, in, out, isFwd};
+    Dependence dep0{.depPoly = dxy->copy(alloc),
+                    .dependenceSatisfaction = pair[0],
+                    .dependenceBounding = pair[1],
+                    .in = in,
+                    .out = out,
+                    .forward = isFwd};
     invariant(out->getCurrentDepth() + in->getCurrentDepth(),
               dep0.getNumPhiCoefficients());
-    addEdge(alloc, dep0);
+    ID d0id{addEdge(alloc, dep0)};
     // pair is invalid
     const ptrdiff_t timeDim = dxy->getTimeDim(),
                     numVar = 1 + dxy->getNumVar() - timeDim;
@@ -763,7 +777,13 @@ private:
                  numEqualityConstraintsOld, ineqEnd, posEqEnd, v, -2 * step);
 
       fp[0]->truncateVars(1 + numLambda + numScheduleCoefs);
-      auto dep1 = Dependence{dxy, farkasBackups, out, in, !isFwd};
+      Dependence dep1{.depPoly = dxy,
+                      .dependenceSatisfaction = farkasBackups[0],
+                      .dependenceBounding = farkasBackups[1],
+                      .in = out,
+                      .out = in,
+                      .revTimeEdge_ = d0id,
+                      .forward = !isFwd};
       invariant(out->getCurrentDepth() + in->getCurrentDepth(),
                 dep1.getNumPhiCoefficients());
       addEdge(alloc, dep1);
@@ -859,8 +879,14 @@ private:
     return false;
   }
   constexpr auto get(ID i, IR::Addr *in, IR::Addr *out) const -> Dependence {
-    return Dependence{depPoly(i),      depSatBnd(i), in, out,
-                      satLevelPair(i), isForward(i)
+    auto [depSat, depBnd] = depSatBnd(i);
+    return Dependence{.depPoly = depPoly(i),
+                      .dependenceSatisfaction = depSat,
+                      .dependenceBounding = depBnd,
+                      .in = in,
+                      .out = out,
+                      .satLvl = satLevelPair(i),
+                      .forward = isForward(i)
 
     };
   }
@@ -944,6 +970,10 @@ private:
   [[nodiscard]] constexpr auto prevEdgePtr() const -> const int32_t * {
     const void *p = data + prevEdgeInOffset * getCapacity();
     return static_cast<const int32_t *>(p);
+  }
+  constexpr auto revTimeEdgePtr() -> int32_t * {
+    void *p = data + revTimeEdgeOffset * getCapacity();
+    return static_cast<int32_t *>(p);
   }
   constexpr auto depSatBndPtr() -> std::array<Valid<math::Simplex>, 2> * {
     void *p = data + depSatBndOffset * getCapacity();
@@ -1040,6 +1070,9 @@ public:
   constexpr auto prevIn(ID i) -> int32_t & { return prevInEdgePtr()[i.id]; }
   constexpr auto depSatBnd(ID i) -> std::array<Valid<math::Simplex>, 2> & {
     return depSatBndPtr()[i.id];
+  }
+  constexpr auto revTimeEdge(ID i) -> int32_t & {
+    return revTimeEdgePtr()[i.id];
   }
   constexpr auto depPoly(ID i) -> DepPoly *& { return depPolyPtr()[i.id]; }
   [[nodiscard]] constexpr auto depSatBnd(ID i) const
