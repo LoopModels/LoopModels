@@ -24,6 +24,7 @@ struct Dependence {
   // public:
   struct ID {
     int32_t id;
+    [[nodiscard]] constexpr explicit operator bool() const { return id >= 0; }
   };
 
   // private:

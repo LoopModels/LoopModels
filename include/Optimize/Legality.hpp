@@ -10,6 +10,11 @@
 
 namespace poly::CostModeling {
 
+
+auto searchReduction(IR::Instruction* in, IR::Instruction*out)->bool{
+
+}
+
 // If a loop doesn't carry a dependency, it is legal
 // If a loop does carry a dependency, we can still consider
 // unrolling and vectorization if at least one of:
@@ -29,14 +34,11 @@ namespace poly::CostModeling {
 // This is useful for considering, e.g., trapezoidal tiling.
 // - `maxIters()` - maximum number of iterations in which a dependence is held
 struct Legality {
-  enum class Reduction { None = 0, Unordered = 1, Ordered = 2 };
-  uint8_t reduction : 2 {0};
-  uint8_t mindistance : 6 {(1 << 6) - 1};
-  uint8_t maxdistance{0};
+  // enum class Reduction { None = 0, Unordered = 1, Ordered = 2 };
+  uint16_t unordered_reduction_count{0};
+  uint16_t mindistance{std::numeric_limits<uint16_t>::max()};
+  uint16_t maxdistance{0};
   uint16_t maxiters{0};
-  [[nodiscard]] constexpr auto getReduction() const -> Reduction {
-    return Reduction(reduction);
-  }
   [[nodiscard]] constexpr auto minDistance() const -> uint16_t {
     return mindistance;
   }
@@ -45,7 +47,7 @@ struct Legality {
   }
   [[nodiscard]] constexpr auto maxIters() const -> uint16_t { return maxiters; }
   constexpr auto operator&=(Legality other) -> Legality & {
-    reduction = std::max(reduction, other.reduction);
+    unordered_reduction_count += other.unordered_reduction_count;
     mindistance = std::min(mindistance, other.mindistance);
     maxdistance = std::max(maxdistance, other.maxdistance);
     maxiters = std::max(maxiters, other.maxiters);
@@ -57,14 +59,33 @@ struct Legality {
   }
   constexpr Legality() = default;
   constexpr Legality(const Legality &) = default;
-  Legality(Dependence d){
+  Legality(IR::Dependencies deps, Dependence d) {
     // TODO: check if addr match
     // "Reduction" dependences should correspond to time dims.
     // In the memory-optimized IR, we have read/write to the
     // same address hoisted outside of the loop carrying `d`
+    if (d.revTimeEdge() && d.out->isLoad()) {
+      // Dependence rd = deps.get(rid);
+      // We don't actually need to use rid
+      // TODO: search between out and in
+      // If we have a reduction, then `d.out` is a load from an address
+      // that is then updated by some sequence of operations, before
+      // being stord in `d.in`
+      // (Because this is revTime, the load is the output as it must
+      //  happen after the previous iteration's store.)
+      // We thus search the operation graph to find all paths
+      // from `d.out` to `d.in`. If there are none, then it is
+      // not a reduction, but updated in some other manner.
+      // If there is exactly one reassociable path, the reduction is unordered.
+      // Else, it is ordered? Do we need to consider ordered differently from no
+      // reduction?
+      IR::Addr *in = d.out, *out = d.in;
+      // If we have an operation chain leading from in->out
+    }
   };
-  Legality(LoopDepSatisfaction deps, IR::Loop *L)   {
-    for (poly::Dependence d : deps.depencencies(L)) (*this) &= Legality(d);
+  Legality(LoopDepSatisfaction deps, IR::Loop *L) {
+    for (poly::Dependence d : deps.depencencies(L))
+      (*this) &= Legality(deps.deps, d);
   }
 };
 

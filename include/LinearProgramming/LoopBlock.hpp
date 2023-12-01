@@ -317,6 +317,9 @@ private:
     return {val, maxLoop, addr};
   }
 
+  // We canonicalize offsets from `x[i - 1]` to `x[i]`, but being omega-shifted
+  // The LP minimizes omegas, which is intended to reduce distances. Thus, we
+  // want the distances to be reflected in the omegas.
   void shiftOmega(ScheduledNode *node) {
     unsigned nLoops = node->getNumLoops();
     if (nLoops == 0) return;
