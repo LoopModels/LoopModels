@@ -86,6 +86,12 @@ class Addr : public Instruction {
   const llvm::SCEV **syms;
   Value *predicate{nullptr};
   Addr *origNext{nullptr};
+  /// We find reductionns during `IROptimizer` initialization
+  /// after sorting edges and removing redundant `Addr`
+  /// this is because we may have multiple repeat stores to the the same
+  /// location, and a reduction would be the closest pair. Thus, we want to have
+  /// an ordering.
+  Addr *reassociableReduction{nullptr}; // if reduction, corresponding addr
   uint16_t numDim{0}, numDynSym{0};
   int32_t topologicalPosition;
   OrthogonalAxes axes;
@@ -131,6 +137,7 @@ class Addr : public Instruction {
   [[nodiscard]] constexpr auto offsetMatrix() -> MutDensePtrMatrix<int64_t> {
     return {offSym, DenseDims<>{{getArrayDim()}, {numDynSym}}};
   }
+  /// recursive reassociability search
 
 public:
   [[nodiscard]] constexpr auto getOrthAxes() const -> OrthogonalAxes {
@@ -251,6 +258,17 @@ public:
     origNext = a;
     return this;
   }
+  // Called from IROptimizer
+  // In a reduction, `in` must be a load and `out` a store
+  // This should only be called once, between nearest load/store pair
+  // as it doesn't store detecting invalidity.
+  // It checks for invalidity, in which case it doesn't set the reassociable
+  // reduction.
+  constexpr inline void maybeReassociableReduction(Addr *dst);
+  constexpr auto reassociableReductionPair() -> Addr * {
+    return reassociableReduction;
+  }
+
   [[nodiscard]] static constexpr auto intMemNeeded(size_t numLoops, size_t dim)
     -> size_t {
     // d = dim, l = numLoops

@@ -192,6 +192,10 @@ public:
   [[nodiscard]] auto allowsContract() const -> bool {
     return fastMathFlags.allowContract();
   }
+  [[nodiscard]] auto reassociableArgs() const -> uint32_t {
+    if (!fastMathFlags.allowReassoc()) return 0;
+    return isMulAdd() ? 0x4 : ((0x1 << numOperands) - 1);
+  }
   // Incomplete stores the correct number of ops it was allocated with as a
   // negative number. The primary reason for being able to check
   // completeness is for `==` checks and hashing.
@@ -803,7 +807,7 @@ Compute::calcCost(const llvm::TargetTransformInfo &TTI, unsigned vectorWidth)
   if (auto *I = getInstruction()) return I->getParent();
   return nullptr;
 }
-[[nodiscard]] auto Instruction::getIdentifier() const
+[[nodiscard]] inline auto Instruction::getIdentifier() const
   -> Instruction::Identifier {
   llvm::Intrinsic::ID id;
   if (const auto *I = llvm::dyn_cast<Compute>(this)) id = I->getOpId();
@@ -836,6 +840,42 @@ inline void Instruction::setOperands(Arena<> *alloc,
 // // getIntrinsicID()
 // llvm::Intrinsic::IndependentIntrinsics x = llvm::Intrinsic::sqrt;
 // llvm::Intrinsic::IndependentIntrinsics y = llvm::Intrinsic::sin;
+
+/// Defined here, because we're using `Compute`
+constexpr auto find(Addr *src, Compute *dst) -> bool {
+  return std::ranges::any_of(dst->getOperands(), [=](Value *op) -> bool {
+    if (op == src) return true;
+    if (auto *c = llvm::dyn_cast<IR::Compute>(op)) return find(src, c);
+    return false;
+  });
+}
+// NOLINTNEXTLINE misc-no-recursion
+constexpr auto findThroughReassociable(Addr *src, Compute *dst) -> unsigned {
+  uint32_t reassociable = dst->reassociableArgs();
+  // foundflag&1 == found reassociable
+  // foundflag&2 == found non-reassociable
+  unsigned foundflag = 0;
+  for (Value *op : dst->getOperands()) {
+    auto *c = llvm::dyn_cast<IR::Compute>(op);
+    if (reassociable & 1)
+      if (op == src) foundflag |= 1;
+      else foundflag |= findThroughReassociable(src, c);
+    else if ((op == src) || (c && find(src, c))) return 0x2;
+    if (foundflag & 2) return 0x2;
+    reassociable >>= 1;
+  }
+  return foundflag;
+}
+constexpr inline void Addr::maybeReassociableReduction(Addr *dst) {
+  if (!isLoad()) return;
+  if (dst->isLoad()) return;
+  auto *c = llvm::dyn_cast<IR::Compute>(dst->getStoredVal());
+  if (!c) return;
+  unsigned f = findThroughReassociable(this, c);
+  if (f != 1) return;
+  reassociableReduction = dst;
+  dst->reassociableReduction = this;
+}
 
 } // namespace poly::IR
 

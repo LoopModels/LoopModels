@@ -597,6 +597,9 @@ class IROptimizer {
     }
     return pos;
   }
+  void findReductions(IR::AddrChain) {
+    static_assert(false, "not implemented yet");
+  };
 
 public:
   IROptimizer(IR::Dependencies deps, IR::Cache &instr,
@@ -608,6 +611,7 @@ public:
       eraseCandidates{eraseCandidates_}, root_{root}, lalloc_{lalloc} {
     sortEdges(root_, 0);
     removeRedundantAddr(res.addr);
+    findReductions(res.addr);
     unsigned numAddr = eliminateTemporaries(res.addr);
     loopDeps = loopDepSats(lalloc, deps, res);
     // plan now is to have a `BitArray` big enough to hold `numLoops` entries

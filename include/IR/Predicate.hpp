@@ -2,9 +2,10 @@
 
 #include "Containers/UnrolledList.hpp"
 #include "Dicts/BumpVector.hpp"
-#include <Containers/TinyVector.hpp>
 #include <Alloc/Arena.hpp>
+#include <Containers/TinyVector.hpp>
 #include <Utilities/Invariant.hpp>
+#include <bit>
 #include <cstddef>
 #include <cstdint>
 #include <cwchar>
@@ -49,18 +50,18 @@ struct Intersection {
   constexpr Intersection(size_t index, Relation value)
     : predicates(static_cast<uint64_t>(value) << (2 * index)) {}
   constexpr auto operator[](size_t index) const -> Relation {
-    assert(index < 32);
+    invariant(index < 32);
     return static_cast<Relation>((predicates >> (2 * (index))) & 3);
   }
   void set(size_t index, Relation value) {
-    assert(index < 32);
+    invariant(index < 32);
     index += index;
     uint64_t maskedOff = predicates & ~(3ULL << (index));
     predicates = maskedOff | static_cast<uint64_t>(value) << (index);
   }
   [[nodiscard]] auto intersect(size_t index, Relation value) const
     -> Intersection {
-    assert(index < 32);
+    invariant(index < 32);
     index += index;
     return {predicates | static_cast<uint64_t>(value) << (index)};
   }
