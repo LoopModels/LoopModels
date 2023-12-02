@@ -134,9 +134,8 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>insertNextA
 <tr class="memitem:ae624521620a92fb859379ffdd2fcb0c8"><td class="memItemLeft" align="right" valign="top"><a id="ae624521620a92fb859379ffdd2fcb0c8"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>setNextAddr</b> (<a class="el" href="classpoly_1_1IR_1_1Addr.html">Addr</a> *a) -&gt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">Addr</a> *</td></tr>
 <tr class="separator:ae624521620a92fb859379ffdd2fcb0c8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab6c749e4d6048bdf7c5db679fe15ac83"><td class="memItemLeft" align="right" valign="top"><a id="ab6c749e4d6048bdf7c5db679fe15ac83"></a>
-constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>maybeReassociableReduction</b> (<a class="el" href="classpoly_1_1IR_1_1Addr.html">Addr</a> *dst)</td></tr>
-<tr class="separator:ab6c749e4d6048bdf7c5db679fe15ac83"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af39a7505afb02797c4f214db13491cda"><td class="memItemLeft" align="right" valign="top">constexpr void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1IR_1_1Addr.html#af39a7505afb02797c4f214db13491cda">maybeReassociableReduction</a> (<a class="el" href="classpoly_1_1poly_1_1Dependencies.html">Dependencies</a>)</td></tr>
+<tr class="separator:af39a7505afb02797c4f214db13491cda"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9fd17abbbfb9173b75c02615199300bf"><td class="memItemLeft" align="right" valign="top"><a id="a9fd17abbbfb9173b75c02615199300bf"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>reassociableReductionPair</b> () -&gt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">Addr</a> *</td></tr>
 <tr class="separator:a9fd17abbbfb9173b75c02615199300bf"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -726,6 +725,33 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><b>dependsOnParentLoop_<
 
 </div>
 </div>
+<a id="af39a7505afb02797c4f214db13491cda"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af39a7505afb02797c4f214db13491cda">&#9670;&nbsp;</a></span>maybeReassociableReduction()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">constexpr void poly::IR::Addr::maybeReassociableReduction </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classpoly_1_1poly_1_1Dependencies.html">Dependencies</a>&#160;</td>
+          <td class="paramname"><em>deps</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">constexpr</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>If this is a store of a reassocialbe reduction, this sets the <code>reassociableReduction</code> field to the corresponding load, and that field of the load to <code>this</code> store. It requires <code><a class="el" href="classpoly_1_1IR_1_1Addr.html">Addr</a></code> to have been sorted, so we check the first output edge of this store. If that edge is a load within the same loop, and has a time dependence, we check for a reassociable chain of compute operations connecting them. If such a chain, without any non-reassociable chains, exists, then we mark them as reassociable. </p>
+
+</div>
+</div>
 <a id="a26d3b32498e5ea5373a423a9bb463477"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a26d3b32498e5ea5373a423a9bb463477">&#9670;&nbsp;</a></span>setFusionOmega()</h2>
 
@@ -798,7 +824,7 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><b>dependsOnParentLoop_<
 </div>
 <hr/>The documentation for this class was generated from the following files:<ul>
 <li>include/IR/<a class="el" href="Address_8hpp_source.html">Address.hpp</a></li>
-<li>include/IR/<a class="el" href="Instruction_8hpp_source.html">Instruction.hpp</a></li>
+<li>include/Optimize/<a class="el" href="CostModeling_8hpp_source.html">CostModeling.hpp</a></li>
 <li>include/Polyhedra/<a class="el" href="Dependence_8hpp_source.html">Dependence.hpp</a></li>
 </ul>
 </div><!-- contents -->
