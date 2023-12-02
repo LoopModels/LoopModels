@@ -39,6 +39,29 @@ namespace poly::IR {
 /// dependence, we check for a reassociable chain of compute operations
 /// connecting them. If such a chain, without any non-reassociable chains,
 /// exists, then we mark them as reassociable.
+/// Note, with sorting
+/// for (int i = 0; i < I; ++i)
+///   for (int j = 0; j < J; ++j)
+///     x[i] = x[i] + A[j,i] * y[j];
+///   x[i] = acc;
+///   
+/// we have the store `x[i]` is the source for the `x[i]` load on a future
+/// `j` iteration.
+/// However, our IR would be optimized into:
+  /// 
+/// for (int i = 0; i < I; ++i){
+///   acc = x[i];
+///   for (int j = 0; j < J; ++j)
+///     acc += A[j,i] * y[j];
+///   x[i] = acc;
+/// }
+/// 
+/// The same thing applies: `j` is the loop that satifies the dependency,
+/// but we hoisted the load/store pair out.
+/// This must be called after `sortEdges`, so that output edges of the store
+/// `x[i] = acc` are top sorted. The load `acc = x[i]` should be the very
+/// first output topologically -- afterall, it occus before the store!!
+/// TODO: does `Addr` hoisting handle this??
 constexpr inline void Addr::maybeReassociableReduction(Dependencies deps) {
   if (isLoad()) return;
   // we should have a store whose first output edge is the load for
@@ -51,6 +74,9 @@ constexpr inline void Addr::maybeReassociableReduction(Dependencies deps) {
   if (!deps.revTimeEdge(id)) return;
   IR::Addr *dst = deps.output(id);
   if (dst->isStore() || (getLoop() != dst->getLoop())) return;
+  // if we failed to hoist the `Addr` out of time-dims, then we cannot optimize.
+  if (getCurrentDepth() >= deps.satLevel(id)) return;
+  if (reassociableReduction == dst) return; // multiple time dims, already found
   auto *c = llvm::dyn_cast<IR::Compute>(getStoredVal());
   if (!c) return;
   unsigned f = findThroughReassociable(dst, c);
@@ -534,7 +560,7 @@ class IROptimizer {
   void removeRedundantAddr(IR::AddrChain addr) {
     // outputEdges are sorted topologically from first to last.
     // Example:
-    // for (int i = 0 : i < I; ++i){
+    // for (int i = 0; i < I; ++i){
     //   acc = x[i];           // Statement: 0
     //   for (int j = 0; j < i; ++j){
     //     acc -= x[j]*U[j,i]; // Statement: 1
@@ -553,6 +579,9 @@ class IROptimizer {
     // current iter from the list.
     for (IR::Addr *a : addr.getAddr()) eliminateAddr(a);
   }
+  /// `sortEdges` sorts each `Addr`'s output edges
+  /// So that each `Addr`'s output edges are sorted based on the
+  /// topological ordering of the outputs.
   /// The approach to sorting edges is to iterate through nodes backwards
   /// whenever we encounter an `Addr`, we push it to the front of each
   /// output edge list to which it belongs.
@@ -662,7 +691,7 @@ public:
 // Which gives:
 // i_l = i_s = j_l < i_l
 // a contradiction, meaning that the dependency is
-// conditionally (on our schedule) independent.
+// conditionally (on our schedule) satisfied.
 // Excluding the `i_s = i_l` constraint from the
 // polyhedra gives us the region of overlap.
 //

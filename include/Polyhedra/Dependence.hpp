@@ -1257,7 +1257,7 @@ inline auto Loop::getLegality(poly::Dependencies deps,
   }
   return setLegal(None);
 }
-
+// 
 } // namespace IR
 
 namespace poly {

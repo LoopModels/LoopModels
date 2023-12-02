@@ -398,6 +398,10 @@ public:
   [[nodiscard]] constexpr auto getAffLoop() const -> Valid<poly::Loop> {
     return loop;
   }
+  /// Get the value stored by this instruction.
+  /// invariant: this instruction must only be called if `Addr` is a store!
+  /// For a load, use `getUsers()` to get a range of the users.
+  /// Returns the parent (other than predicates).
   [[nodiscard]] constexpr auto getStoredVal() const -> Value * {
     invariant(isStore());
     return users.getVal();
@@ -419,6 +423,10 @@ public:
     invariant(Value::classof(n));
     predicate = static_cast<Value *>(n);
   }
+  /// Get the users of this load.
+  /// invariant: this instruction must only be called if `Addr` is a load!
+  /// For a store, use `getStoredVal()` to get the stored value.
+  /// Returns the children.
   [[nodiscard]] constexpr auto getUsers() -> Users & {
     invariant(isLoad());
     return users;

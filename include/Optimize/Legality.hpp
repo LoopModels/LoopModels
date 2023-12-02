@@ -10,10 +10,7 @@
 
 namespace poly::CostModeling {
 
-
-auto searchReduction(IR::Instruction* in, IR::Instruction*out)->bool{
-
-}
+auto searchReduction(IR::Instruction *in, IR::Instruction *out) -> bool {}
 
 // If a loop doesn't carry a dependency, it is legal
 // If a loop does carry a dependency, we can still consider
@@ -33,6 +30,71 @@ auto searchReduction(IR::Instruction* in, IR::Instruction*out)->bool{
 // In the above example, the value is also `8`.
 // This is useful for considering, e.g., trapezoidal tiling.
 // - `maxIters()` - maximum number of iterations in which a dependence is held
+//
+// Note that it is always legal to unroll an innermost loop (scalarizing).
+// But we need reorderability for unroll and jam.
+// For example, this loop carries a dependency
+// example 0:
+// for (ptrdiff_t i = 1; i < x.size(); ++i)
+//   x[i] += x[i-1];
+// but we may wish to unroll it to reduce the amount of `mov` instructions
+// needed, as well as `i` increments.
+// However, if we had some other loop dependent on this
+//
+// example 1:
+// for (ptrdiff_t i = 1; i < x.size(); ++i){
+//   decltype(y[0,0]/x[0]) s = 0;
+//   for (ptrdiff_t j = 0; j < y.size(); ++j)
+//     s += y[i,j] / x[i-1];
+//   x[i] += s * x[i-1];
+// }
+// an unroll and jam would be illegal.
+// TODO: what if the innermost loop isn't dependent?
+// example 2:
+// for (ptrdiff_t i = 1; i < x.size(); ++i){
+//   decltype(y[0,0]+y[0,0]) s = 0;
+//   for (ptrdiff_t j = 0; j < y.size(); ++j)
+//     s += y[i,j];
+//   x[i] += s * x[i-1];
+// }
+// Here, we can unroll and jam.
+// example 3:
+// for (ptrdiff_t i = 1; i < x.size()-3; i+=4){
+//   decltype(y[0,0]+y[0,0]) s0 = 0;
+//   decltype(y[0,0]+y[0,0]) s1 = 0;
+//   decltype(y[0,0]+y[0,0]) s2 = 0;
+//   decltype(y[0,0]+y[0,0]) s3 = 0;
+//   for (ptrdiff_t j = 0; j < y.size(); ++j){
+//     s0 += y[i,j];
+//     s1 += y[i+1,j];
+//     s2 += y[i+2,j];
+//     s3 += y[i+3,j];
+//   }
+//   x[i] += s0 * x[i-1];
+//   x[i+1] += s1 * x[i];
+//   x[i+2] += s2 * x[i+1];
+//   x[i+3] += s3 * x[i+2];
+// }
+// So we can generalize to say, we can always unroll the innermost where the
+// addr are read.
+//
+// example 4:
+// for (i : I)
+//   for (j : J)
+//     for (k : K)
+//       for (l : L)
+//         B[i,j] += A[i+k,j+l] * K[k,l];
+//
+//
+// TODO items:
+// 1. Store time deps in cycle w/in `Dependencies` object so we can iterate over
+//    all of them. This also requires pruning these as we drop deps, updating
+//    IR::Addr::operator->drop(Dependence).
+// 2. Check `Addr` hoisting code for how it handles reductions, ensuring we can
+//    hoist them out.
+// 3. Fuse legality checking, at least in part, with it, as that may indicate
+//    unrolling in example 3 above.
+// 4. See discussionin CostModeling.hpp above `optimize` about unrolling.
 struct Legality {
   // enum class Reduction { None = 0, Unordered = 1, Ordered = 2 };
   uint16_t unordered_reduction_count{0};
@@ -59,29 +121,17 @@ struct Legality {
   }
   constexpr Legality() = default;
   constexpr Legality(const Legality &) = default;
-  Legality(IR::Dependencies deps, Dependence d) {
-    // TODO: check if addr match
-    // "Reduction" dependences should correspond to time dims.
-    // In the memory-optimized IR, we have read/write to the
-    // same address hoisted outside of the loop carrying `d`
-    if (d.revTimeEdge() && d.out->isLoad()) {
-      // Dependence rd = deps.get(rid);
-      // We don't actually need to use rid
-      // TODO: search between out and in
-      // If we have a reduction, then `d.out` is a load from an address
-      // that is then updated by some sequence of operations, before
-      // being stord in `d.in`
-      // (Because this is revTime, the load is the output as it must
-      //  happen after the previous iteration's store.)
-      // We thus search the operation graph to find all paths
-      // from `d.out` to `d.in`. If there are none, then it is
-      // not a reduction, but updated in some other manner.
-      // If there is exactly one reassociable path, the reduction is unordered.
-      // Else, it is ordered? Do we need to consider ordered differently from no
-      // reduction?
-      IR::Addr *in = d.out, *out = d.in;
-      // If we have an operation chain leading from in->out
+  constexpr Legality(IR::Dependencies deps, Dependence d) {
+    IR::Addr *in = d.out, *out = d.in;
+    if (d.revTimeEdge()) {
+      if (in->reassociableReductionPair() != out) {
+        mindistance = 0;
+        maxdistance = maxiters = std::numeric_limits<uint16_t>::max();
+      } else ++unordered_reduction_count;
+      return;
     }
+    // now we must analyze the dependence...
+    //
   };
   Legality(LoopDepSatisfaction deps, IR::Loop *L) {
     for (poly::Dependence d : deps.depencencies(L))
