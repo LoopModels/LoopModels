@@ -1015,6 +1015,7 @@ public:
   constexpr void removeEdge(ID id) {
     removeOutEdge(id.id);
     removeInEdge(id.id);
+    /// TODO: remove revTimeEdge?
   }
   constexpr void removeOutEdge(int32_t id) {
     int32_t prev = prevOut(poly::Dependence::ID{id});
@@ -1256,6 +1257,7 @@ inline auto Loop::getLegality(poly::Dependencies deps,
   }
   return setLegal(None);
 }
+
 } // namespace IR
 
 namespace poly {

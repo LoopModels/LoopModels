@@ -30,54 +30,40 @@
 #include <llvm/Support/Allocator.h>
 #include <llvm/Support/Casting.h>
 #include <llvm/Support/raw_ostream.h>
+namespace poly::IR {
+/// If this is a store of a reassocialbe reduction, this sets the
+/// `reassociableReduction` field to the corresponding load, and that field of
+/// the load to `this` store.
+/// It requires `Addr` to have been sorted, so we check the first output edge of
+/// this store. If that edge is a load within the same loop, and has a time
+/// dependence, we check for a reassociable chain of compute operations
+/// connecting them. If such a chain, without any non-reassociable chains,
+/// exists, then we mark them as reassociable.
+constexpr inline void Addr::maybeReassociableReduction(Dependencies deps) {
+  if (isLoad()) return;
+  // we should have a store whose first output edge is the load for
+  // the following iteration. This iter is the reverse-time
+  // edge.
+  auto edges{outputEdgeIDs(deps, getCurrentDepth())};
+  auto B = edges.begin();
+  if (B == edges.end()) return;
+  poly::Dependence::ID id{*B};
+  if (!deps.revTimeEdge(id)) return;
+  IR::Addr *dst = deps.output(id);
+  if (dst->isStore() || (getLoop() != dst->getLoop())) return;
+  auto *c = llvm::dyn_cast<IR::Compute>(getStoredVal());
+  if (!c) return;
+  unsigned f = findThroughReassociable(dst, c);
+  if (f != 1) return;
+  reassociableReduction = dst;
+  dst->reassociableReduction = this;
+}
+
+} // namespace poly::IR
 namespace poly::CostModeling {
 using poly::Dependence;
 // struct CPUExecutionModel {};
 
-// Plan for cost modeling:
-// 1. Build Instruction graph
-// 2. Iterate over all PredicatedChains, merging instructions across branches
-// where possible
-// 3. Create a loop tree structure for optimization
-// 4. Create InstructionBlocks at each level.
-
-// void pushBlock(llvm::SmallPtrSet<llvm::Instruction *, 32> &trackInstr,
-//                llvm::SmallPtrSet<llvm::BasicBlock *, 32> &chainBBs,
-//                Predicates &pred, llvm::BasicBlock *BB) {
-//     assert(chainBBs.contains(block));
-//     chainBBs.erase(BB);
-//     // we only want to extract relevant instructions, i.e. parents of
-//     stores for (llvm::Instruction &instr : *BB) {
-//         if (trackInstr.contains(&instr))
-//             instructions.emplace_back(pred, instr);
-//     }
-//     llvm::Instruction *term = BB->getTerminator();
-//     if (!term)
-//         return;
-//     switch (term->getNumSuccessors()) {
-//     case 0:
-//         return;
-//     case 1:
-//         BB = term->getSuccessor(0);
-//         if (chainBBs.contains(BB))
-//             pushBlock(trackInstr, chainBBs, pred, BB);
-//         return;
-//     case 2:
-//         break;
-//     default:
-//         assert(false);
-//     }
-//     auto succ0 = term->getSuccessor(0);
-//     auto succ1 = term->getSuccessor(1);
-//     if (chainBBs.contains(succ0) && chainBBs.contains(succ1)) {
-//         // TODO: we need to fuse these blocks.
-
-//     } else if (chainBBs.contains(succ0)) {
-//         pushBlock(trackInstr, chainBBs, pred, succ0);
-//     } else if (chainBBs.contains(succ1)) {
-//         pushBlock(trackInstr, chainBBs, pred, succ1);
-//     }
-// }
 template <typename T> using Vec = math::ResizeableView<T, ptrdiff_t>;
 
 // TODO: instead of this, update in-place and ensure all Addr are
@@ -597,8 +583,8 @@ class IROptimizer {
     }
     return pos;
   }
-  void findReductions(IR::AddrChain) {
-    static_assert(false, "not implemented yet");
+  void findReductions(IR::AddrChain addr) {
+    for (IR::Addr *a : addr.getAddr()) a->maybeReassociableReduction(deps);
   };
 
 public:

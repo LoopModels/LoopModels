@@ -264,7 +264,7 @@ public:
   // as it doesn't store detecting invalidity.
   // It checks for invalidity, in which case it doesn't set the reassociable
   // reduction.
-  constexpr inline void maybeReassociableReduction(Addr *dst);
+  constexpr inline void maybeReassociableReduction(Dependencies);
   constexpr auto reassociableReductionPair() -> Addr * {
     return reassociableReduction;
   }

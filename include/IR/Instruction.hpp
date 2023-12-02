@@ -866,17 +866,6 @@ constexpr auto findThroughReassociable(Addr *src, Compute *dst) -> unsigned {
   }
   return foundflag;
 }
-constexpr inline void Addr::maybeReassociableReduction(Addr *dst) {
-  if (!isLoad()) return;
-  if (dst->isLoad()) return;
-  auto *c = llvm::dyn_cast<IR::Compute>(dst->getStoredVal());
-  if (!c) return;
-  unsigned f = findThroughReassociable(this, c);
-  if (f != 1) return;
-  reassociableReduction = dst;
-  dst->reassociableReduction = this;
-}
-
 } // namespace poly::IR
 
 [[nodiscard]] inline auto
