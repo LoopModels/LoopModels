@@ -13,6 +13,8 @@ var searchData=
   ['getouterloop_71',['getOuterLoop',['../classpoly_1_1IR_1_1Loop.html#a755f4c7aa801d35a149c735832a6fedd',1,'poly::IR::Loop']]],
   ['getoutindmat_72',['getOutIndMat',['../structpoly_1_1poly_1_1Dependence.html#ab2caff477ed0560c811298fe432010ec',1,'poly::poly::Dependence']]],
   ['getschedule_73',['getSchedule',['../classpoly_1_1lp_1_1ScheduledNode.html#a0f570dd701e4e41d75597c7cbb3a5e4c',1,'poly::lp::ScheduledNode::getSchedule()'],['../structpoly_1_1poly_1_1AffineSchedule.html#a59920bb4ddd40e454a495277d538d79c',1,'poly::poly::AffineSchedule::getSchedule()']]],
-  ['getsubloop_74',['getSubLoop',['../classpoly_1_1IR_1_1Loop.html#aafb52d2d14ecc6e68e9f2ced4f2dc2e8',1,'poly::IR::Loop']]],
-  ['getvalue_75',['getValue',['../classpoly_1_1IR_1_1Cache.html#a94b8346dba5031648a989204bd24937c',1,'poly::IR::Cache']]]
+  ['getstoredval_74',['getStoredVal',['../classpoly_1_1IR_1_1Addr.html#aec2e890888eb44690b0ff3d6ab5fa04d',1,'poly::IR::Addr']]],
+  ['getsubloop_75',['getSubLoop',['../classpoly_1_1IR_1_1Loop.html#aafb52d2d14ecc6e68e9f2ced4f2dc2e8',1,'poly::IR::Loop']]],
+  ['getusers_76',['getUsers',['../classpoly_1_1IR_1_1Addr.html#a66e194eeceb899e0e0343153d7579ff7',1,'poly::IR::Addr']]],
+  ['getvalue_77',['getValue',['../classpoly_1_1IR_1_1Cache.html#a94b8346dba5031648a989204bd24937c',1,'poly::IR::Cache']]]
 ];

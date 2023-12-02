@@ -225,8 +225,7 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>dependsOnIn
 <tr class="memitem:a62546ef597299bfc3eefbb488987d767"><td class="memItemLeft" align="right" valign="top"><a id="a62546ef597299bfc3eefbb488987d767"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getAffLoop</b> () const -&gt; Valid&lt; <a class="el" href="classpoly_1_1poly_1_1Loop.html">poly::Loop</a> &gt;</td></tr>
 <tr class="separator:a62546ef597299bfc3eefbb488987d767"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aec2e890888eb44690b0ff3d6ab5fa04d"><td class="memItemLeft" align="right" valign="top"><a id="aec2e890888eb44690b0ff3d6ab5fa04d"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getStoredVal</b> () const -&gt; <a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> *</td></tr>
+<tr class="memitem:aec2e890888eb44690b0ff3d6ab5fa04d"><td class="memItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1IR_1_1Addr.html#aec2e890888eb44690b0ff3d6ab5fa04d">getStoredVal</a> () const -&gt; <a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> *</td></tr>
 <tr class="separator:aec2e890888eb44690b0ff3d6ab5fa04d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9ee2b06702099170430da20f4c5ee4d6"><td class="memItemLeft" align="right" valign="top"><a id="a9ee2b06702099170430da20f4c5ee4d6"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getStoredValPtr</b> () -&gt; <a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> **</td></tr>
@@ -240,8 +239,7 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getPredicat
 <tr class="memitem:a06ddc5fdaaafe3ce9503c88c32acfc09"><td class="memItemLeft" align="right" valign="top"><a id="a06ddc5fdaaafe3ce9503c88c32acfc09"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>setPredicate</b> (<a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a> *n)</td></tr>
 <tr class="separator:a06ddc5fdaaafe3ce9503c88c32acfc09"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a66e194eeceb899e0e0343153d7579ff7"><td class="memItemLeft" align="right" valign="top"><a id="a66e194eeceb899e0e0343153d7579ff7"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getUsers</b> () -&gt; <a class="el" href="classpoly_1_1IR_1_1Users.html">Users</a> &amp;</td></tr>
+<tr class="memitem:a66e194eeceb899e0e0343153d7579ff7"><td class="memItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1IR_1_1Addr.html#a66e194eeceb899e0e0343153d7579ff7">getUsers</a> () -&gt; <a class="el" href="classpoly_1_1IR_1_1Users.html">Users</a> &amp;</td></tr>
 <tr class="separator:a66e194eeceb899e0e0343153d7579ff7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a218eb171572ded2bb68130151bc8f0bd"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1IR_1_1Addr.html#a218eb171572ded2bb68130151bc8f0bd">updateOffsMat</a> (Arena&lt;&gt; *alloc, size_t numToPeel, llvm::ScalarEvolution *SE)</td></tr>
 <tr class="separator:a218eb171572ded2bb68130151bc8f0bd"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -673,6 +671,58 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><b>dependsOnParentLoop_<
 
 </div>
 </div>
+<a id="aec2e890888eb44690b0ff3d6ab5fa04d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aec2e890888eb44690b0ff3d6ab5fa04d">&#9670;&nbsp;</a></span>getStoredVal()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">constexpr auto poly::IR::Addr::getStoredVal </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const -&gt; <a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> * </td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">constexpr</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Get the value stored by this instruction. invariant: this instruction must only be called if <code><a class="el" href="classpoly_1_1IR_1_1Addr.html">Addr</a></code> is a store! For a load, use <code><a class="el" href="classpoly_1_1IR_1_1Addr.html#a66e194eeceb899e0e0343153d7579ff7">getUsers()</a></code> to get a range of the users. Returns the parent (other than predicates). </p>
+
+</div>
+</div>
+<a id="a66e194eeceb899e0e0343153d7579ff7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a66e194eeceb899e0e0343153d7579ff7">&#9670;&nbsp;</a></span>getUsers()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">constexpr auto poly::IR::Addr::getUsers </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> -&gt; <a class="el" href="classpoly_1_1IR_1_1Users.html">Users</a> &amp; </td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">constexpr</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Get the users of this load. invariant: this instruction must only be called if <code><a class="el" href="classpoly_1_1IR_1_1Addr.html">Addr</a></code> is a load! For a store, use <code><a class="el" href="classpoly_1_1IR_1_1Addr.html#aec2e890888eb44690b0ff3d6ab5fa04d">getStoredVal()</a></code> to get the stored value. Returns the children. </p>
+
+</div>
+</div>
 <a id="af4838372d11fd32b964c9a7cb6d4b1b8"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#af4838372d11fd32b964c9a7cb6d4b1b8">&#9670;&nbsp;</a></span>indexMatrix() <span class="overload">[1/2]</span></h2>
 
@@ -748,7 +798,9 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><b>dependsOnParentLoop_<
   </tr>
 </table>
 </div><div class="memdoc">
-<p>If this is a store of a reassocialbe reduction, this sets the <code>reassociableReduction</code> field to the corresponding load, and that field of the load to <code>this</code> store. It requires <code><a class="el" href="classpoly_1_1IR_1_1Addr.html">Addr</a></code> to have been sorted, so we check the first output edge of this store. If that edge is a load within the same loop, and has a time dependence, we check for a reassociable chain of compute operations connecting them. If such a chain, without any non-reassociable chains, exists, then we mark them as reassociable. </p>
+<p>If this is a store of a reassocialbe reduction, this sets the <code>reassociableReduction</code> field to the corresponding load, and that field of the load to <code>this</code> store. It requires <code><a class="el" href="classpoly_1_1IR_1_1Addr.html">Addr</a></code> to have been sorted, so we check the first output edge of this store. If that edge is a load within the same loop, and has a time dependence, we check for a reassociable chain of compute operations connecting them. If such a chain, without any non-reassociable chains, exists, then we mark them as reassociable. Note, with sorting for (int i = 0; i &lt; I; ++i) for (int j = 0; j &lt; J; ++j) x[i] = x[i] + A[j,i] * y[j]; x[i] = acc;</p>
+<p>we have the store <code>x[i]</code> is the source for the <code>x[i]</code> load on a future <code>j</code> iteration. However, our IR would be optimized into: for (int i = 0; i &lt; I; ++i){ acc = x[i]; for (int j = 0; j &lt; J; ++j) acc += A[j,i] * y[j]; x[i] = acc; }</p>
+<p>The same thing applies: <code>j</code> is the loop that satifies the dependency, but we hoisted the load/store pair out. This must be called after <code>sortEdges</code>, so that output edges of the store <code>x[i] = acc</code> are top sorted. The load <code>acc = x[i]</code> should be the very first output topologically &ndash; afterall, it occus before the store!! TODO: does <code><a class="el" href="classpoly_1_1IR_1_1Addr.html">Addr</a></code> hoisting handle this?? </p>
 
 </div>
 </div>
