@@ -1,7 +1,6 @@
 
 #pragma once
 
-// #include "./ControlFlowMerging.hpp"
 #include "Dicts/BumpMapSet.hpp"
 #include "Graphs/Graphs.hpp"
 #include "IR/Address.hpp"
@@ -44,18 +43,18 @@ namespace poly::IR {
 ///   for (int j = 0; j < J; ++j)
 ///     x[i] = x[i] + A[j,i] * y[j];
 ///   x[i] = acc;
-///   
+///
 /// we have the store `x[i]` is the source for the `x[i]` load on a future
 /// `j` iteration.
 /// However, our IR would be optimized into:
-  /// 
+///
 /// for (int i = 0; i < I; ++i){
 ///   acc = x[i];
 ///   for (int j = 0; j < J; ++j)
 ///     acc += A[j,i] * y[j];
 ///   x[i] = acc;
 /// }
-/// 
+///
 /// The same thing applies: `j` is the loop that satifies the dependency,
 /// but we hoisted the load/store pair out.
 /// This must be called after `sortEdges`, so that output edges of the store
@@ -175,18 +174,19 @@ struct LoopIndependent {
     return *this;
   }
 };
-//
-
-// searches `N` and it's users for loop-independent users
-// this exits early if it finds a dependent user, becase we search everything
-// meaning we'll revisit later anyway.
-// We return a `IR::Node *, bool` pair, where the `bool` is true if
-// `N` was loop independent.
-// We do this rather than something like returning a `nullptr`, as
-// we may have descended into instructions, found some users that are
-// but then also found some that are not; we need to return `false`
-// in this case, but we of course want to still return those we found.
-// NOLINTNEXTLINE(misc-no-recursion)
+/// inline auto searchLoopIndependentUsers(IR::Dependencies deps, IR::Loop *L,
+///                                        IR::Node *N, uint8_t depth,
+///                                        LoopDepSummary summary)
+///
+///   Searches `N` and it's users for loop-independent users, and returns them
+/// as a list to process.
+///   This exits early if it finds a dependent user, meaning it will only return
+/// a partial list in this case. We search the entire graph eventually, meaning
+/// the remainder will be processed later.
+///   We return a `LoopDepSummary, bool` pair, where the `bool` is true if `N` was
+/// loop independent. We use the `bool` rather than a `nullptr` or optional so
+/// that we can still return those results we did find on failure.
+///  NOLINTNEXTLINE(misc-no-recursion)
 inline auto searchLoopIndependentUsers(IR::Dependencies deps, IR::Loop *L,
                                        IR::Node *N, uint8_t depth,
                                        LoopDepSummary summary)

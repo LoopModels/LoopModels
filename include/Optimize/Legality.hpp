@@ -10,8 +10,6 @@
 
 namespace poly::CostModeling {
 
-auto searchReduction(IR::Instruction *in, IR::Instruction *out) -> bool {}
-
 // If a loop doesn't carry a dependency, it is legal
 // If a loop does carry a dependency, we can still consider
 // unrolling and vectorization if at least one of:
@@ -87,14 +85,13 @@ auto searchReduction(IR::Instruction *in, IR::Instruction *out) -> bool {}
 //
 //
 // TODO items:
-// 1. Store time deps in cycle w/in `Dependencies` object so we can iterate over
-//    all of them. This also requires pruning these as we drop deps, updating
-//    IR::Addr::operator->drop(Dependence).
-// 2. Check `Addr` hoisting code for how it handles reductions, ensuring we can
-//    hoist them out.
-// 3. Fuse legality checking, at least in part, with it, as that may indicate
-//    unrolling in example 3 above.
-// 4. See discussionin CostModeling.hpp above `optimize` about unrolling.
+// [x] Store time deps in cycle w/in `Dependencies` object so we can iterate
+//     over all of them.
+// [ ] Check `Addr` hoisting code for how it handles reductions, ensuring we can
+//     hoist them out.
+// [ ] Fuse legality checking, at least in part, with it, as that may indicate
+//     unrolling in example 3 above.
+// [ ] See discussionin CostModeling.hpp above `optimize` about unrolling.
 struct Legality {
   // enum class Reduction { None = 0, Unordered = 1, Ordered = 2 };
   uint16_t unordered_reduction_count{0};

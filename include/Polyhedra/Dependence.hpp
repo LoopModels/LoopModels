@@ -730,7 +730,7 @@ private:
                     .forward = isFwd};
     invariant(out->getCurrentDepth() + in->getCurrentDepth(),
               dep0.getNumPhiCoefficients());
-    ID d0id{addEdge(alloc, dep0)};
+    ID d0ID{addEdge(alloc, dep0)}, prevID = d0ID;
     // pair is invalid
     const ptrdiff_t timeDim = dxy->getTimeDim(),
                     numVar = 1 + dxy->getNumVar() - timeDim;
@@ -743,8 +743,7 @@ private:
     invariant(out->getCurrentDepth() + in->getCurrentDepth(),
               dep0.getNumPhiCoefficients());
     // now we need to check the time direction for all times
-    // anything approaching 16 time dimensions would be absolutely
-    // insane
+    // anything approaching 16 time dimensions would be insane
     for (ptrdiff_t t = 0;;) {
       // set `t`th timeDim to +1/-1
       // basically, what we do here is set it to `step` and pretend it was
@@ -783,13 +782,14 @@ private:
                       .dependenceBounding = farkasBackups[1],
                       .in = out,
                       .out = in,
-                      .revTimeEdge_ = d0id,
+                      .revTimeEdge_ = prevID,
                       .forward = !isFwd};
       invariant(out->getCurrentDepth() + in->getCurrentDepth(),
                 dep1.getNumPhiCoefficients());
-      addEdge(alloc, dep1);
+      prevID = addEdge(alloc, dep1);
       if (!repeat) break;
     }
+    revTimeEdge(d0ID) = prevID.id;
   }
   static auto checkDirection(Arena<> alloc,
                              const std::array<Valid<math::Simplex>, 2> &p,
@@ -1257,7 +1257,7 @@ inline auto Loop::getLegality(poly::Dependencies deps,
   }
   return setLegal(None);
 }
-// 
+//
 } // namespace IR
 
 namespace poly {
