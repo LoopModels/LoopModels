@@ -771,7 +771,7 @@ $(function() {
 <div class="line"><a name="l00730"></a><span class="lineno">  730</span>&#160;                    .forward = isFwd};</div>
 <div class="line"><a name="l00731"></a><span class="lineno">  731</span>&#160;    invariant(out-&gt;getCurrentDepth() + in-&gt;getCurrentDepth(),</div>
 <div class="line"><a name="l00732"></a><span class="lineno">  732</span>&#160;              dep0.getNumPhiCoefficients());</div>
-<div class="line"><a name="l00733"></a><span class="lineno">  733</span>&#160;    <a class="code" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">ID</a> d0id{addEdge(alloc, dep0)};</div>
+<div class="line"><a name="l00733"></a><span class="lineno">  733</span>&#160;    <a class="code" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">ID</a> d0ID{addEdge(alloc, dep0)}, prevID = d0ID;</div>
 <div class="line"><a name="l00734"></a><span class="lineno">  734</span>&#160;    <span class="comment">// pair is invalid</span></div>
 <div class="line"><a name="l00735"></a><span class="lineno">  735</span>&#160;    <span class="keyword">const</span> ptrdiff_t timeDim = dxy-&gt;getTimeDim(),</div>
 <div class="line"><a name="l00736"></a><span class="lineno">  736</span>&#160;                    numVar = 1 + dxy-&gt;getNumVar() - timeDim;</div>
@@ -784,53 +784,53 @@ $(function() {
 <div class="line"><a name="l00743"></a><span class="lineno">  743</span>&#160;    invariant(out-&gt;getCurrentDepth() + in-&gt;getCurrentDepth(),</div>
 <div class="line"><a name="l00744"></a><span class="lineno">  744</span>&#160;              dep0.getNumPhiCoefficients());</div>
 <div class="line"><a name="l00745"></a><span class="lineno">  745</span>&#160;    <span class="comment">// now we need to check the time direction for all times</span></div>
-<div class="line"><a name="l00746"></a><span class="lineno">  746</span>&#160;    <span class="comment">// anything approaching 16 time dimensions would be absolutely</span></div>
-<div class="line"><a name="l00747"></a><span class="lineno">  747</span>&#160;    <span class="comment">// insane</span></div>
-<div class="line"><a name="l00748"></a><span class="lineno">  748</span>&#160;    <span class="keywordflow">for</span> (ptrdiff_t t = 0;;) {</div>
-<div class="line"><a name="l00749"></a><span class="lineno">  749</span>&#160;      <span class="comment">// set `t`th timeDim to +1/-1</span></div>
-<div class="line"><a name="l00750"></a><span class="lineno">  750</span>&#160;      <span class="comment">// basically, what we do here is set it to `step` and pretend it was</span></div>
-<div class="line"><a name="l00751"></a><span class="lineno">  751</span>&#160;      <span class="comment">// a constant. so a value of c = a&#39;x + t*step -&gt; c - t*step = a&#39;x so</span></div>
-<div class="line"><a name="l00752"></a><span class="lineno">  752</span>&#160;      <span class="comment">// we update the constant `c` via `c -= t*step`.</span></div>
-<div class="line"><a name="l00753"></a><span class="lineno">  753</span>&#160;      <span class="comment">// we have the problem that.</span></div>
-<div class="line"><a name="l00754"></a><span class="lineno">  754</span>&#160;      int64_t step = dxy-&gt;getNullStep(t);</div>
-<div class="line"><a name="l00755"></a><span class="lineno">  755</span>&#160;      ptrdiff_t v = numVar + t;</div>
-<div class="line"><a name="l00756"></a><span class="lineno">  756</span>&#160;      <span class="keywordtype">bool</span> repeat = (++t &lt; timeDim);</div>
-<div class="line"><a name="l00757"></a><span class="lineno">  757</span>&#160;      std::array&lt;Valid&lt;math::Simplex&gt;, 2&gt; fp{farkasBackups};</div>
-<div class="line"><a name="l00758"></a><span class="lineno">  758</span>&#160;      <span class="keywordflow">if</span> (repeat) {</div>
-<div class="line"><a name="l00759"></a><span class="lineno">  759</span>&#160;        fp[0] = fp[0]-&gt;copy(alloc);</div>
-<div class="line"><a name="l00760"></a><span class="lineno">  760</span>&#160;        fp[1] = fp[1]-&gt;copy(alloc);</div>
-<div class="line"><a name="l00761"></a><span class="lineno">  761</span>&#160;      }</div>
-<div class="line"><a name="l00762"></a><span class="lineno">  762</span>&#160;      <span class="comment">// set (or unset) for this timedim</span></div>
-<div class="line"><a name="l00763"></a><span class="lineno">  763</span>&#160;      <span class="keyword">auto</span> fE{fp[0]-&gt;getConstraints()[_, _(1, end)]};</div>
-<div class="line"><a name="l00764"></a><span class="lineno">  764</span>&#160;      <span class="keyword">auto</span> sE{fp[1]-&gt;getConstraints()[_, _(1, end)]};</div>
-<div class="line"><a name="l00765"></a><span class="lineno">  765</span>&#160;      timeStep(dxy, fE, sE, numInequalityConstraintsOld,</div>
-<div class="line"><a name="l00766"></a><span class="lineno">  766</span>&#160;               numEqualityConstraintsOld, ineqEnd, posEqEnd, v, step);</div>
-<div class="line"><a name="l00767"></a><span class="lineno">  767</span>&#160;      <span class="comment">// checkDirection should be `true`, so if `false` we flip the sign</span></div>
-<div class="line"><a name="l00768"></a><span class="lineno">  768</span>&#160;      <span class="comment">// this is because `isFwd = checkDirection` of the original</span></div>
-<div class="line"><a name="l00769"></a><span class="lineno">  769</span>&#160;      <span class="comment">// `if (isFwd)`, we swapped farkasBackups args, making the result</span></div>
-<div class="line"><a name="l00770"></a><span class="lineno">  770</span>&#160;      <span class="comment">// `false`; for our timeDim to capture the opposite movement</span></div>
-<div class="line"><a name="l00771"></a><span class="lineno">  771</span>&#160;      <span class="comment">// through time, we thus need to flip it back to `true`.</span></div>
-<div class="line"><a name="l00772"></a><span class="lineno">  772</span>&#160;      <span class="comment">// `if (!isFwd)`, i.e. the `else` branch above, we don&#39;t flip the</span></div>
-<div class="line"><a name="l00773"></a><span class="lineno">  773</span>&#160;      <span class="comment">// args, so it&#39;d still return `false` and a flip would still mean `true`.</span></div>
-<div class="line"><a name="l00774"></a><span class="lineno">  774</span>&#160;      <span class="keywordflow">if</span> (!checkDirection(</div>
-<div class="line"><a name="l00775"></a><span class="lineno">  775</span>&#160;            *alloc, fp, *out, *in, numLambda,</div>
-<div class="line"><a name="l00776"></a><span class="lineno">  776</span>&#160;            Col&lt;&gt;{ptrdiff_t(dxy-&gt;getA().numCol()) - dxy-&gt;getTimeDim()}))</div>
-<div class="line"><a name="l00777"></a><span class="lineno">  777</span>&#160;        timeStep(dxy, fE, sE, numInequalityConstraintsOld,</div>
-<div class="line"><a name="l00778"></a><span class="lineno">  778</span>&#160;                 numEqualityConstraintsOld, ineqEnd, posEqEnd, v, -2 * step);</div>
-<div class="line"><a name="l00779"></a><span class="lineno">  779</span>&#160; </div>
-<div class="line"><a name="l00780"></a><span class="lineno">  780</span>&#160;      fp[0]-&gt;truncateVars(1 + numLambda + numScheduleCoefs);</div>
-<div class="line"><a name="l00781"></a><span class="lineno">  781</span>&#160;      <a class="code" href="structpoly_1_1poly_1_1Dependence.html">Dependence</a> dep1{.depPoly = dxy,</div>
-<div class="line"><a name="l00782"></a><span class="lineno">  782</span>&#160;                      .dependenceSatisfaction = farkasBackups[0],</div>
-<div class="line"><a name="l00783"></a><span class="lineno">  783</span>&#160;                      .dependenceBounding = farkasBackups[1],</div>
-<div class="line"><a name="l00784"></a><span class="lineno">  784</span>&#160;                      .in = out,</div>
-<div class="line"><a name="l00785"></a><span class="lineno">  785</span>&#160;                      .out = in,</div>
-<div class="line"><a name="l00786"></a><span class="lineno">  786</span>&#160;                      .revTimeEdge_ = d0id,</div>
-<div class="line"><a name="l00787"></a><span class="lineno">  787</span>&#160;                      .forward = !isFwd};</div>
-<div class="line"><a name="l00788"></a><span class="lineno">  788</span>&#160;      invariant(out-&gt;getCurrentDepth() + in-&gt;getCurrentDepth(),</div>
-<div class="line"><a name="l00789"></a><span class="lineno">  789</span>&#160;                dep1.getNumPhiCoefficients());</div>
-<div class="line"><a name="l00790"></a><span class="lineno">  790</span>&#160;      addEdge(alloc, dep1);</div>
-<div class="line"><a name="l00791"></a><span class="lineno">  791</span>&#160;      <span class="keywordflow">if</span> (!repeat) <span class="keywordflow">break</span>;</div>
-<div class="line"><a name="l00792"></a><span class="lineno">  792</span>&#160;    }</div>
+<div class="line"><a name="l00746"></a><span class="lineno">  746</span>&#160;    <span class="comment">// anything approaching 16 time dimensions would be insane</span></div>
+<div class="line"><a name="l00747"></a><span class="lineno">  747</span>&#160;    <span class="keywordflow">for</span> (ptrdiff_t t = 0;;) {</div>
+<div class="line"><a name="l00748"></a><span class="lineno">  748</span>&#160;      <span class="comment">// set `t`th timeDim to +1/-1</span></div>
+<div class="line"><a name="l00749"></a><span class="lineno">  749</span>&#160;      <span class="comment">// basically, what we do here is set it to `step` and pretend it was</span></div>
+<div class="line"><a name="l00750"></a><span class="lineno">  750</span>&#160;      <span class="comment">// a constant. so a value of c = a&#39;x + t*step -&gt; c - t*step = a&#39;x so</span></div>
+<div class="line"><a name="l00751"></a><span class="lineno">  751</span>&#160;      <span class="comment">// we update the constant `c` via `c -= t*step`.</span></div>
+<div class="line"><a name="l00752"></a><span class="lineno">  752</span>&#160;      <span class="comment">// we have the problem that.</span></div>
+<div class="line"><a name="l00753"></a><span class="lineno">  753</span>&#160;      int64_t step = dxy-&gt;getNullStep(t);</div>
+<div class="line"><a name="l00754"></a><span class="lineno">  754</span>&#160;      ptrdiff_t v = numVar + t;</div>
+<div class="line"><a name="l00755"></a><span class="lineno">  755</span>&#160;      <span class="keywordtype">bool</span> repeat = (++t &lt; timeDim);</div>
+<div class="line"><a name="l00756"></a><span class="lineno">  756</span>&#160;      std::array&lt;Valid&lt;math::Simplex&gt;, 2&gt; fp{farkasBackups};</div>
+<div class="line"><a name="l00757"></a><span class="lineno">  757</span>&#160;      <span class="keywordflow">if</span> (repeat) {</div>
+<div class="line"><a name="l00758"></a><span class="lineno">  758</span>&#160;        fp[0] = fp[0]-&gt;copy(alloc);</div>
+<div class="line"><a name="l00759"></a><span class="lineno">  759</span>&#160;        fp[1] = fp[1]-&gt;copy(alloc);</div>
+<div class="line"><a name="l00760"></a><span class="lineno">  760</span>&#160;      }</div>
+<div class="line"><a name="l00761"></a><span class="lineno">  761</span>&#160;      <span class="comment">// set (or unset) for this timedim</span></div>
+<div class="line"><a name="l00762"></a><span class="lineno">  762</span>&#160;      <span class="keyword">auto</span> fE{fp[0]-&gt;getConstraints()[_, _(1, end)]};</div>
+<div class="line"><a name="l00763"></a><span class="lineno">  763</span>&#160;      <span class="keyword">auto</span> sE{fp[1]-&gt;getConstraints()[_, _(1, end)]};</div>
+<div class="line"><a name="l00764"></a><span class="lineno">  764</span>&#160;      timeStep(dxy, fE, sE, numInequalityConstraintsOld,</div>
+<div class="line"><a name="l00765"></a><span class="lineno">  765</span>&#160;               numEqualityConstraintsOld, ineqEnd, posEqEnd, v, step);</div>
+<div class="line"><a name="l00766"></a><span class="lineno">  766</span>&#160;      <span class="comment">// checkDirection should be `true`, so if `false` we flip the sign</span></div>
+<div class="line"><a name="l00767"></a><span class="lineno">  767</span>&#160;      <span class="comment">// this is because `isFwd = checkDirection` of the original</span></div>
+<div class="line"><a name="l00768"></a><span class="lineno">  768</span>&#160;      <span class="comment">// `if (isFwd)`, we swapped farkasBackups args, making the result</span></div>
+<div class="line"><a name="l00769"></a><span class="lineno">  769</span>&#160;      <span class="comment">// `false`; for our timeDim to capture the opposite movement</span></div>
+<div class="line"><a name="l00770"></a><span class="lineno">  770</span>&#160;      <span class="comment">// through time, we thus need to flip it back to `true`.</span></div>
+<div class="line"><a name="l00771"></a><span class="lineno">  771</span>&#160;      <span class="comment">// `if (!isFwd)`, i.e. the `else` branch above, we don&#39;t flip the</span></div>
+<div class="line"><a name="l00772"></a><span class="lineno">  772</span>&#160;      <span class="comment">// args, so it&#39;d still return `false` and a flip would still mean `true`.</span></div>
+<div class="line"><a name="l00773"></a><span class="lineno">  773</span>&#160;      <span class="keywordflow">if</span> (!checkDirection(</div>
+<div class="line"><a name="l00774"></a><span class="lineno">  774</span>&#160;            *alloc, fp, *out, *in, numLambda,</div>
+<div class="line"><a name="l00775"></a><span class="lineno">  775</span>&#160;            Col&lt;&gt;{ptrdiff_t(dxy-&gt;getA().numCol()) - dxy-&gt;getTimeDim()}))</div>
+<div class="line"><a name="l00776"></a><span class="lineno">  776</span>&#160;        timeStep(dxy, fE, sE, numInequalityConstraintsOld,</div>
+<div class="line"><a name="l00777"></a><span class="lineno">  777</span>&#160;                 numEqualityConstraintsOld, ineqEnd, posEqEnd, v, -2 * step);</div>
+<div class="line"><a name="l00778"></a><span class="lineno">  778</span>&#160; </div>
+<div class="line"><a name="l00779"></a><span class="lineno">  779</span>&#160;      fp[0]-&gt;truncateVars(1 + numLambda + numScheduleCoefs);</div>
+<div class="line"><a name="l00780"></a><span class="lineno">  780</span>&#160;      <a class="code" href="structpoly_1_1poly_1_1Dependence.html">Dependence</a> dep1{.depPoly = dxy,</div>
+<div class="line"><a name="l00781"></a><span class="lineno">  781</span>&#160;                      .dependenceSatisfaction = farkasBackups[0],</div>
+<div class="line"><a name="l00782"></a><span class="lineno">  782</span>&#160;                      .dependenceBounding = farkasBackups[1],</div>
+<div class="line"><a name="l00783"></a><span class="lineno">  783</span>&#160;                      .in = out,</div>
+<div class="line"><a name="l00784"></a><span class="lineno">  784</span>&#160;                      .out = in,</div>
+<div class="line"><a name="l00785"></a><span class="lineno">  785</span>&#160;                      .revTimeEdge_ = prevID,</div>
+<div class="line"><a name="l00786"></a><span class="lineno">  786</span>&#160;                      .forward = !isFwd};</div>
+<div class="line"><a name="l00787"></a><span class="lineno">  787</span>&#160;      invariant(out-&gt;getCurrentDepth() + in-&gt;getCurrentDepth(),</div>
+<div class="line"><a name="l00788"></a><span class="lineno">  788</span>&#160;                dep1.getNumPhiCoefficients());</div>
+<div class="line"><a name="l00789"></a><span class="lineno">  789</span>&#160;      prevID = addEdge(alloc, dep1);</div>
+<div class="line"><a name="l00790"></a><span class="lineno">  790</span>&#160;      <span class="keywordflow">if</span> (!repeat) <span class="keywordflow">break</span>;</div>
+<div class="line"><a name="l00791"></a><span class="lineno">  791</span>&#160;    }</div>
+<div class="line"><a name="l00792"></a><span class="lineno">  792</span>&#160;    revTimeEdge(d0ID) = prevID.id;</div>
 <div class="line"><a name="l00793"></a><span class="lineno">  793</span>&#160;  }</div>
 <div class="line"><a name="l00794"></a><span class="lineno">  794</span>&#160;  <span class="keyword">static</span> <span class="keyword">auto</span> checkDirection(Arena&lt;&gt; alloc,</div>
 <div class="line"><a name="l00795"></a><span class="lineno">  795</span>&#160;                             <span class="keyword">const</span> std::array&lt;Valid&lt;math::Simplex&gt;, 2&gt; &amp;p,</div>
@@ -1297,7 +1297,7 @@ $(function() {
 <div class="line"><a name="l01257"></a><span class="lineno"> 1257</span>&#160;  }</div>
 <div class="line"><a name="l01258"></a><span class="lineno"> 1258</span>&#160;  <span class="keywordflow">return</span> setLegal(None);</div>
 <div class="line"><a name="l01259"></a><span class="lineno"> 1259</span>&#160;}</div>
-<div class="line"><a name="l01260"></a><span class="lineno"> 1260</span>&#160;<span class="comment">// </span></div>
+<div class="line"><a name="l01260"></a><span class="lineno"> 1260</span>&#160;<span class="comment">//</span></div>
 <div class="line"><a name="l01261"></a><span class="lineno"> 1261</span>&#160;} <span class="comment">// namespace IR</span></div>
 <div class="line"><a name="l01262"></a><span class="lineno"> 1262</span>&#160; </div>
 <div class="line"><a name="l01263"></a><span class="lineno"> 1263</span>&#160;<span class="keyword">namespace </span>poly {</div>
