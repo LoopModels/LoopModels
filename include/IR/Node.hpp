@@ -146,6 +146,7 @@ public:
     return visitDepth;
   }
   constexpr void clearVisited() { visitDepth = 255; }
+  /// wasVisited(d) { return visitDepth == d; }
   [[nodiscard]] constexpr auto wasVisited(uint8_t d) const -> bool {
     return visitDepth == d;
   }

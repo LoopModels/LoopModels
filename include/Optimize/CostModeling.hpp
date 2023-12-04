@@ -183,7 +183,8 @@ struct LoopIndependent {
 ///   This exits early if it finds a dependent user, meaning it will only return
 /// a partial list in this case. We search the entire graph eventually, meaning
 /// the remainder will be processed later.
-///   We return a `LoopDepSummary, bool` pair, where the `bool` is true if `N` was
+///   We return a `LoopDepSummary, bool` pair, where the `bool` is true if `N`
+///   was
 /// loop independent. We use the `bool` rather than a `nullptr` or optional so
 /// that we can still return those results we did find on failure.
 ///  NOLINTNEXTLINE(misc-no-recursion)
@@ -259,6 +260,28 @@ inline auto visitLoopDependent(IR::Dependencies deps, IR::Loop *L, IR::Node *N,
 #endif
   // iterate over users
   if (auto *A = llvm::dyn_cast<IR::Addr>(N)) {
+    // How we handle reductions (repeated accesses across time):
+    // for (ptrdiff_t m = 0; m < M; ++m)
+    //   for (ptrdiff_t n = 0; n < N; ++n)
+    //     for (ptrdiff_t k = 0; k < K; ++k) C[m,n] = C[m,n] + A[m,k]*B[k,n];
+    // we have cyclic dependencies between the load from/store to `C[m,n]`.
+    // Note that here `depth` is `0` for top-level,
+    // 1 for the outer most loop, etc. I.e., when we're inside the `k` loop,
+    // `depth = 3`.
+    // The `C[m,n]` load -> `C[m,n]` store was not satisfied by any loop, so
+    // the sat level is 255.
+    // The `C[m,n]` store -> `C[m,n]` load has satLevel = 2.
+    // `outputAddrs` filters, keeping
+    // !isSat(depth) == !(satLevel() <= depth) == satLevel() > depth
+    // FIXME: so we should probably do `depth-1`?? 
+    // 
+    // a. load->store is not satisfied by any loop, instead handled by sorting
+    //    of instructions in the innermost loop, i.e. sat is depth=3.
+    //    Because it is never marked satisfied, `outputAddrs` will always
+    //    include this.
+    // b. store->load is carried by the `k` loop, i.e. sat is depth=2.
+    //    when we're here in the inner most loop, depth=3
+    //
     for (IR::Addr *m : A->outputAddrs(deps, depth)) {
       if (m->wasVisited(depth)) continue;
       body = visitLoopDependent(deps, L, m, depth, body);
@@ -316,6 +339,7 @@ inline void topologicalSort(IR::Dependencies deps, IR::Loop *root,
   //
   // In this first pass, we iterate over all nodes, pushing those
   // that can be hoisted after the exit block.
+  //
   IR::Node *C = root->getChild();
   LoopDepSummary summary{};
   for (IR::Node *N : C->nodes())

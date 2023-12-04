@@ -1226,6 +1226,8 @@ inline auto IR::Addr::outputAddrs(Dependencies deps, unsigned depth) const {
   return outputEdgeIDs(deps, depth) | deps.outputAddrTransform();
 }
 
+/// Addr::operator->(Dependencies deps)
+/// drop `this` from the graph, and remove it from `deps`
 inline void IR::Addr::drop(Dependencies deps) {
   // NOTE: this doesn't get removed from the `origAddr` list/the addrChain
   if (IR::Loop *L = getLoop(); L->getChild() == this) L->setChild(getNext());

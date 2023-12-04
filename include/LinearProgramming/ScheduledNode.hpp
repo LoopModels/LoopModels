@@ -396,10 +396,12 @@ public:
     -> math::Range<ptrdiff_t, ptrdiff_t> {
     return _(phiOffset, phiOffset + getNumLoops());
   }
+  /// numLoops x numLoops
   // NOLINTNEXTLINE(readability-make-member-function-const)
   [[nodiscard]] constexpr auto getPhi() -> MutSquarePtrMatrix<int64_t> {
     return {mem + 1, math::SquareDims<>{unsigned(getNumLoops())}};
   }
+  /// numLoops x numLoops
   [[nodiscard]] constexpr auto getPhi() const -> SquarePtrMatrix<int64_t> {
     return {const_cast<int64_t *>(mem) + 1, math::SquareDims<>{getNumLoops()}};
   }
