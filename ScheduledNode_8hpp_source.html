@@ -456,128 +456,130 @@ $(function() {
 <div class="line"><a name="l00396"></a><span class="lineno">  396</span>&#160;    -&gt; math::Range&lt;ptrdiff_t, ptrdiff_t&gt; {</div>
 <div class="line"><a name="l00397"></a><span class="lineno">  397</span>&#160;    <span class="keywordflow">return</span> _(phiOffset, phiOffset + getNumLoops());</div>
 <div class="line"><a name="l00398"></a><span class="lineno">  398</span>&#160;  }</div>
-<div class="line"><a name="l00399"></a><span class="lineno">  399</span>&#160;  <span class="comment">// NOLINTNEXTLINE(readability-make-member-function-const)</span></div>
-<div class="line"><a name="l00400"></a><span class="lineno">  400</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getPhi() -&gt; MutSquarePtrMatrix&lt;int64_t&gt; {</div>
-<div class="line"><a name="l00401"></a><span class="lineno">  401</span>&#160;    <span class="keywordflow">return</span> {mem + 1, math::SquareDims&lt;&gt;{unsigned(getNumLoops())}};</div>
-<div class="line"><a name="l00402"></a><span class="lineno">  402</span>&#160;  }</div>
-<div class="line"><a name="l00403"></a><span class="lineno">  403</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getPhi() const -&gt; SquarePtrMatrix&lt;int64_t&gt; {</div>
-<div class="line"><a name="l00404"></a><span class="lineno">  404</span>&#160;    <span class="keywordflow">return</span> {<span class="keyword">const_cast&lt;</span>int64_t *<span class="keyword">&gt;</span>(mem) + 1, math::SquareDims&lt;&gt;{getNumLoops()}};</div>
-<div class="line"><a name="l00405"></a><span class="lineno">  405</span>&#160;  }</div>
-<div class="line"><a name="l00407"></a><span class="lineno"><a class="line" href="classpoly_1_1lp_1_1ScheduledNode.html#a0f570dd701e4e41d75597c7cbb3a5e4c">  407</a></span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> <a class="code" href="classpoly_1_1lp_1_1ScheduledNode.html#a0f570dd701e4e41d75597c7cbb3a5e4c">getSchedule</a>(ptrdiff_t d) <span class="keyword">const</span></div>
-<div class="line"><a name="l00408"></a><span class="lineno">  408</span>&#160;    -&gt; PtrVector&lt;int64_t&gt; {</div>
-<div class="line"><a name="l00409"></a><span class="lineno">  409</span>&#160;    <span class="keywordflow">return</span> getPhi()[d, _];</div>
-<div class="line"><a name="l00410"></a><span class="lineno">  410</span>&#160;  }</div>
-<div class="line"><a name="l00411"></a><span class="lineno">  411</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getSchedule(ptrdiff_t d)</div>
-<div class="line"><a name="l00412"></a><span class="lineno">  412</span>&#160;    -&gt; MutPtrVector&lt;int64_t&gt; {</div>
-<div class="line"><a name="l00413"></a><span class="lineno">  413</span>&#160;    <span class="keywordflow">return</span> getPhi()[d, _];</div>
-<div class="line"><a name="l00414"></a><span class="lineno">  414</span>&#160;  }</div>
-<div class="line"><a name="l00415"></a><span class="lineno">  415</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getFusionOmega(ptrdiff_t i) <span class="keyword">const</span> -&gt; int64_t {</div>
-<div class="line"><a name="l00416"></a><span class="lineno">  416</span>&#160;    <span class="keywordflow">return</span> (mem + 1)[getNumLoopsSquared() + i];</div>
-<div class="line"><a name="l00417"></a><span class="lineno">  417</span>&#160;  }</div>
-<div class="line"><a name="l00418"></a><span class="lineno">  418</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getOffsetOmega(ptrdiff_t i) <span class="keyword">const</span> -&gt; int64_t {</div>
-<div class="line"><a name="l00419"></a><span class="lineno">  419</span>&#160;    <span class="keywordflow">return</span> (mem + 2)[getNumLoopsSquared() + getNumLoops() + i];</div>
-<div class="line"><a name="l00420"></a><span class="lineno">  420</span>&#160;  }</div>
-<div class="line"><a name="l00421"></a><span class="lineno">  421</span>&#160;  <span class="comment">// NOLINTNEXTLINE(readability-make-member-function-const)</span></div>
-<div class="line"><a name="l00422"></a><span class="lineno">  422</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getFusionOmega(ptrdiff_t i) -&gt; int64_t &amp; {</div>
-<div class="line"><a name="l00423"></a><span class="lineno">  423</span>&#160;    <span class="keywordflow">return</span> (mem + 1)[getNumLoopsSquared() + i];</div>
-<div class="line"><a name="l00424"></a><span class="lineno">  424</span>&#160;  }</div>
-<div class="line"><a name="l00425"></a><span class="lineno">  425</span>&#160;  <span class="comment">// NOLINTNEXTLINE(readability-make-member-function-const)</span></div>
-<div class="line"><a name="l00426"></a><span class="lineno">  426</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getOffsetOmega(ptrdiff_t i) -&gt; int64_t &amp; {</div>
-<div class="line"><a name="l00427"></a><span class="lineno">  427</span>&#160;    <span class="keywordflow">return</span> (mem + 2)[getNumLoopsSquared() + getNumLoops() + i];</div>
-<div class="line"><a name="l00428"></a><span class="lineno">  428</span>&#160;  }</div>
-<div class="line"><a name="l00429"></a><span class="lineno">  429</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getFusionOmega() const -&gt; PtrVector&lt;int64_t&gt; {</div>
-<div class="line"><a name="l00430"></a><span class="lineno">  430</span>&#160;    <span class="keywordflow">return</span> {<span class="keyword">const_cast&lt;</span>int64_t *<span class="keyword">&gt;</span>(mem + 1) + getNumLoopsSquared(),</div>
-<div class="line"><a name="l00431"></a><span class="lineno">  431</span>&#160;            getNumLoops() + 1};</div>
-<div class="line"><a name="l00432"></a><span class="lineno">  432</span>&#160;  }</div>
-<div class="line"><a name="l00433"></a><span class="lineno">  433</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getOffsetOmega() const -&gt; PtrVector&lt;int64_t&gt; {</div>
-<div class="line"><a name="l00434"></a><span class="lineno">  434</span>&#160;    <span class="keywordflow">return</span> {<span class="keyword">const_cast&lt;</span>int64_t *<span class="keyword">&gt;</span>(mem) + 2 + getNumLoopsSquared() +</div>
-<div class="line"><a name="l00435"></a><span class="lineno">  435</span>&#160;              getNumLoops(),</div>
-<div class="line"><a name="l00436"></a><span class="lineno">  436</span>&#160;            getNumLoops()};</div>
-<div class="line"><a name="l00437"></a><span class="lineno">  437</span>&#160;  }</div>
-<div class="line"><a name="l00438"></a><span class="lineno">  438</span>&#160;  <span class="comment">// NOLINTNEXTLINE(readability-make-member-function-const)</span></div>
-<div class="line"><a name="l00439"></a><span class="lineno">  439</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getFusionOmega() -&gt; MutPtrVector&lt;int64_t&gt; {</div>
-<div class="line"><a name="l00440"></a><span class="lineno">  440</span>&#160;    <span class="keywordflow">return</span> {mem + 1 + getNumLoopsSquared(), getNumLoops() + 1};</div>
-<div class="line"><a name="l00441"></a><span class="lineno">  441</span>&#160;  }</div>
-<div class="line"><a name="l00442"></a><span class="lineno">  442</span>&#160;  <span class="comment">// NOLINTNEXTLINE(readability-make-member-function-const)</span></div>
-<div class="line"><a name="l00443"></a><span class="lineno">  443</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getOffsetOmega() -&gt; MutPtrVector&lt;int64_t&gt; {</div>
-<div class="line"><a name="l00444"></a><span class="lineno">  444</span>&#160;    <span class="keywordflow">return</span> {mem + 2 + getNumLoopsSquared() + getNumLoops(), getNumLoops()};</div>
-<div class="line"><a name="l00445"></a><span class="lineno">  445</span>&#160;  }</div>
-<div class="line"><a name="l00446"></a><span class="lineno">  446</span>&#160; </div>
-<div class="line"><a name="l00447"></a><span class="lineno">  447</span>&#160;  constexpr <span class="keywordtype">void</span> schedulePhi(DensePtrMatrix&lt;int64_t&gt; indMat, ptrdiff_t r) {</div>
-<div class="line"><a name="l00448"></a><span class="lineno">  448</span>&#160;    <span class="comment">// indMat indvars are indexed from outer&lt;-&gt;inner</span></div>
-<div class="line"><a name="l00449"></a><span class="lineno">  449</span>&#160;    <span class="comment">// phi indvars are indexed from outer&lt;-&gt;inner</span></div>
-<div class="line"><a name="l00450"></a><span class="lineno">  450</span>&#160;    <span class="comment">// so, indMat is indvars[outer&lt;-&gt;inner] x array dim</span></div>
-<div class="line"><a name="l00451"></a><span class="lineno">  451</span>&#160;    <span class="comment">// phi is loop[outer&lt;-&gt;inner] x indvars[outer&lt;-&gt;inner]</span></div>
-<div class="line"><a name="l00452"></a><span class="lineno">  452</span>&#160;    MutSquarePtrMatrix&lt;int64_t&gt; phi = getPhi();</div>
-<div class="line"><a name="l00453"></a><span class="lineno">  453</span>&#160;    ptrdiff_t indR = ptrdiff_t(indMat.numCol());</div>
-<div class="line"><a name="l00454"></a><span class="lineno">  454</span>&#160;    <span class="keywordflow">for</span> (ptrdiff_t i = 0; i &lt; r; ++i) {</div>
-<div class="line"><a name="l00455"></a><span class="lineno">  455</span>&#160;      phi[i, _(0, indR)] &lt;&lt; indMat[i, _];</div>
-<div class="line"><a name="l00456"></a><span class="lineno">  456</span>&#160;      phi[i, _(indR, end)] &lt;&lt; 0;</div>
-<div class="line"><a name="l00457"></a><span class="lineno">  457</span>&#160;    }</div>
-<div class="line"><a name="l00458"></a><span class="lineno">  458</span>&#160;    rank = r;</div>
-<div class="line"><a name="l00459"></a><span class="lineno">  459</span>&#160;  }</div>
-<div class="line"><a name="l00460"></a><span class="lineno">  460</span>&#160;  constexpr <span class="keywordtype">void</span> unschedulePhi() { rank = 0; }</div>
-<div class="line"><a name="l00461"></a><span class="lineno">  461</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getOmegaOffset() const -&gt; ptrdiff_t {</div>
-<div class="line"><a name="l00462"></a><span class="lineno">  462</span>&#160;    <span class="keywordflow">return</span> omegaOffset;</div>
-<div class="line"><a name="l00463"></a><span class="lineno">  463</span>&#160;  }</div>
-<div class="line"><a name="l00464"></a><span class="lineno">  464</span>&#160;  <span class="keywordtype">void</span> resetPhiOffset() { phiOffset = std::numeric_limits&lt;unsigned&gt;::max(); }</div>
-<div class="line"><a name="l00465"></a><span class="lineno">  465</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> calcGraphMaxDepth() const -&gt; <span class="keywordtype">unsigned</span> {</div>
-<div class="line"><a name="l00466"></a><span class="lineno">  466</span>&#160;    <span class="keywordtype">unsigned</span> maxDepth = 0;</div>
-<div class="line"><a name="l00467"></a><span class="lineno">  467</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">const</span> ScheduledNode *n : getVertices())</div>
-<div class="line"><a name="l00468"></a><span class="lineno">  468</span>&#160;      maxDepth = std::max(maxDepth, n-&gt;getNumLoops());</div>
-<div class="line"><a name="l00469"></a><span class="lineno">  469</span>&#160;    <span class="keywordflow">return</span> maxDepth;</div>
-<div class="line"><a name="l00470"></a><span class="lineno">  470</span>&#160;  }</div>
-<div class="line"><a name="l00471"></a><span class="lineno">  471</span>&#160;  <span class="keyword">friend</span> <span class="keyword">inline</span> <span class="keyword">auto</span> operator&lt;&lt;(llvm::raw_ostream &amp;os,</div>
-<div class="line"><a name="l00472"></a><span class="lineno">  472</span>&#160;                                <span class="keyword">const</span> ScheduledNode &amp;node)</div>
-<div class="line"><a name="l00473"></a><span class="lineno">  473</span>&#160;    -&gt; llvm::raw_ostream &amp; {</div>
-<div class="line"><a name="l00474"></a><span class="lineno">  474</span>&#160;    os &lt;&lt; <span class="stringliteral">&quot;inNeighbors = &quot;</span>;</div>
-<div class="line"><a name="l00475"></a><span class="lineno">  475</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">const</span> Addr *m : node.localAddr()) os &lt;&lt; <span class="stringliteral">&quot;v_&quot;</span> &lt;&lt; m &lt;&lt; <span class="stringliteral">&quot;, &quot;</span>;</div>
-<div class="line"><a name="l00476"></a><span class="lineno">  476</span>&#160;    <span class="keywordflow">return</span> os &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
-<div class="line"><a name="l00477"></a><span class="lineno">  477</span>&#160;  }</div>
-<div class="line"><a name="l00478"></a><span class="lineno">  478</span>&#160;};</div>
-<div class="line"><a name="l00479"></a><span class="lineno">  479</span>&#160;static_assert(std::is_trivially_destructible_v&lt;ScheduledNode&gt;);</div>
-<div class="line"><a name="l00480"></a><span class="lineno">  480</span>&#160;static_assert(<span class="keyword">sizeof</span>(ScheduledNode) &lt;= 64); <span class="comment">// fits in cache line</span></div>
-<div class="line"><a name="l00481"></a><span class="lineno">  481</span>&#160; </div>
-<div class="line"><a name="l00482"></a><span class="lineno"><a class="line" href="classpoly_1_1lp_1_1ScheduleGraph.html">  482</a></span>&#160;<span class="keyword">class </span><a class="code" href="classpoly_1_1lp_1_1ScheduleGraph.html">ScheduleGraph</a> {</div>
-<div class="line"><a name="l00483"></a><span class="lineno">  483</span>&#160;  <a class="code" href="classpoly_1_1poly_1_1Dependencies.html">IR::Dependencies</a> deps;</div>
-<div class="line"><a name="l00484"></a><span class="lineno">  484</span>&#160;  <span class="keywordtype">unsigned</span> depth_;</div>
-<div class="line"><a name="l00485"></a><span class="lineno">  485</span>&#160; </div>
-<div class="line"><a name="l00486"></a><span class="lineno">  486</span>&#160;<span class="keyword">public</span>:</div>
-<div class="line"><a name="l00487"></a><span class="lineno">  487</span>&#160;  <span class="keyword">using</span> <a class="code" href="classpoly_1_1lp_1_1ScheduledNode.html">VertexType</a> = <a class="code" href="classpoly_1_1lp_1_1ScheduledNode.html">ScheduledNode</a>;</div>
-<div class="line"><a name="l00488"></a><span class="lineno">  488</span>&#160;  constexpr <a class="code" href="classpoly_1_1lp_1_1ScheduleGraph.html">ScheduleGraph</a>(<span class="keywordtype">unsigned</span> depth) : depth_(depth) {}</div>
-<div class="line"><a name="l00489"></a><span class="lineno">  489</span>&#160; </div>
-<div class="line"><a name="l00490"></a><span class="lineno">  490</span>&#160;  [[nodiscard]] <span class="keyword">static</span> constexpr <span class="keyword">auto</span> getVertices(<a class="code" href="classpoly_1_1lp_1_1ScheduledNode.html">ScheduledNode</a> *nodes)</div>
-<div class="line"><a name="l00491"></a><span class="lineno">  491</span>&#160;    -&gt; utils::ListRange&lt;ScheduledNode, utils::GetNext, utils::Identity&gt; {</div>
-<div class="line"><a name="l00492"></a><span class="lineno">  492</span>&#160;    <span class="keywordflow">return</span> nodes-&gt;getVertices();</div>
-<div class="line"><a name="l00493"></a><span class="lineno">  493</span>&#160;  }</div>
-<div class="line"><a name="l00494"></a><span class="lineno">  494</span>&#160;  [[nodiscard]] <span class="keyword">static</span> constexpr <span class="keyword">auto</span> getVertices(<span class="keyword">const</span> <a class="code" href="classpoly_1_1lp_1_1ScheduledNode.html">ScheduledNode</a> *nodes)</div>
-<div class="line"><a name="l00495"></a><span class="lineno">  495</span>&#160;    -&gt; utils::ListRange&lt;const ScheduledNode, utils::GetNext, utils::Identity&gt; {</div>
-<div class="line"><a name="l00496"></a><span class="lineno">  496</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">static_cast&lt;</span><span class="keyword">const </span><a class="code" href="classpoly_1_1lp_1_1ScheduledNode.html">ScheduledNode</a> *<span class="keyword">&gt;</span>(nodes)-&gt;getVertices();</div>
-<div class="line"><a name="l00497"></a><span class="lineno">  497</span>&#160;  }</div>
-<div class="line"><a name="l00498"></a><span class="lineno">  498</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> outNeighbors(<a class="code" href="classpoly_1_1lp_1_1ScheduledNode.html">ScheduledNode</a> *v)<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l00499"></a><span class="lineno">  499</span>&#160;    <span class="keywordflow">return</span> v-&gt;outNeighbors(deps, depth_);</div>
-<div class="line"><a name="l00500"></a><span class="lineno">  500</span>&#160;  }</div>
-<div class="line"><a name="l00501"></a><span class="lineno">  501</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> inNeighbors(<a class="code" href="classpoly_1_1lp_1_1ScheduledNode.html">ScheduledNode</a> *v)<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l00502"></a><span class="lineno">  502</span>&#160;    <span class="keywordflow">return</span> v-&gt;inNeighbors(deps, depth_);</div>
-<div class="line"><a name="l00503"></a><span class="lineno">  503</span>&#160;  }</div>
-<div class="line"><a name="l00504"></a><span class="lineno">  504</span>&#160;};</div>
-<div class="line"><a name="l00505"></a><span class="lineno">  505</span>&#160; </div>
-<div class="line"><a name="l00506"></a><span class="lineno">  506</span>&#160;} <span class="comment">// namespace lp</span></div>
+<div class="line"><a name="l00400"></a><span class="lineno">  400</span>&#160;  <span class="comment">// NOLINTNEXTLINE(readability-make-member-function-const)</span></div>
+<div class="line"><a name="l00401"></a><span class="lineno"><a class="line" href="classpoly_1_1lp_1_1ScheduledNode.html#a84004f4089316dcf55f5e9031a37f6c4">  401</a></span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> <a class="code" href="classpoly_1_1lp_1_1ScheduledNode.html#a84004f4089316dcf55f5e9031a37f6c4">getPhi</a>() -&gt; MutSquarePtrMatrix&lt;int64_t&gt; {</div>
+<div class="line"><a name="l00402"></a><span class="lineno">  402</span>&#160;    <span class="keywordflow">return</span> {mem + 1, math::SquareDims&lt;&gt;{unsigned(getNumLoops())}};</div>
+<div class="line"><a name="l00403"></a><span class="lineno">  403</span>&#160;  }</div>
+<div class="line"><a name="l00405"></a><span class="lineno"><a class="line" href="classpoly_1_1lp_1_1ScheduledNode.html#a48c8bca790f2fa2b2eb24cee7c159253">  405</a></span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> <a class="code" href="classpoly_1_1lp_1_1ScheduledNode.html#a48c8bca790f2fa2b2eb24cee7c159253">getPhi</a>() const -&gt; SquarePtrMatrix&lt;int64_t&gt; {</div>
+<div class="line"><a name="l00406"></a><span class="lineno">  406</span>&#160;    <span class="keywordflow">return</span> {<span class="keyword">const_cast&lt;</span>int64_t *<span class="keyword">&gt;</span>(mem) + 1, math::SquareDims&lt;&gt;{getNumLoops()}};</div>
+<div class="line"><a name="l00407"></a><span class="lineno">  407</span>&#160;  }</div>
+<div class="line"><a name="l00409"></a><span class="lineno"><a class="line" href="classpoly_1_1lp_1_1ScheduledNode.html#a0f570dd701e4e41d75597c7cbb3a5e4c">  409</a></span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> <a class="code" href="classpoly_1_1lp_1_1ScheduledNode.html#a0f570dd701e4e41d75597c7cbb3a5e4c">getSchedule</a>(ptrdiff_t d) <span class="keyword">const</span></div>
+<div class="line"><a name="l00410"></a><span class="lineno">  410</span>&#160;    -&gt; PtrVector&lt;int64_t&gt; {</div>
+<div class="line"><a name="l00411"></a><span class="lineno">  411</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="classpoly_1_1lp_1_1ScheduledNode.html#a84004f4089316dcf55f5e9031a37f6c4">getPhi</a>()[d, _];</div>
+<div class="line"><a name="l00412"></a><span class="lineno">  412</span>&#160;  }</div>
+<div class="line"><a name="l00413"></a><span class="lineno">  413</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getSchedule(ptrdiff_t d)</div>
+<div class="line"><a name="l00414"></a><span class="lineno">  414</span>&#160;    -&gt; MutPtrVector&lt;int64_t&gt; {</div>
+<div class="line"><a name="l00415"></a><span class="lineno">  415</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="classpoly_1_1lp_1_1ScheduledNode.html#a84004f4089316dcf55f5e9031a37f6c4">getPhi</a>()[d, _];</div>
+<div class="line"><a name="l00416"></a><span class="lineno">  416</span>&#160;  }</div>
+<div class="line"><a name="l00417"></a><span class="lineno">  417</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getFusionOmega(ptrdiff_t i) <span class="keyword">const</span> -&gt; int64_t {</div>
+<div class="line"><a name="l00418"></a><span class="lineno">  418</span>&#160;    <span class="keywordflow">return</span> (mem + 1)[getNumLoopsSquared() + i];</div>
+<div class="line"><a name="l00419"></a><span class="lineno">  419</span>&#160;  }</div>
+<div class="line"><a name="l00420"></a><span class="lineno">  420</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getOffsetOmega(ptrdiff_t i) <span class="keyword">const</span> -&gt; int64_t {</div>
+<div class="line"><a name="l00421"></a><span class="lineno">  421</span>&#160;    <span class="keywordflow">return</span> (mem + 2)[getNumLoopsSquared() + getNumLoops() + i];</div>
+<div class="line"><a name="l00422"></a><span class="lineno">  422</span>&#160;  }</div>
+<div class="line"><a name="l00423"></a><span class="lineno">  423</span>&#160;  <span class="comment">// NOLINTNEXTLINE(readability-make-member-function-const)</span></div>
+<div class="line"><a name="l00424"></a><span class="lineno">  424</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getFusionOmega(ptrdiff_t i) -&gt; int64_t &amp; {</div>
+<div class="line"><a name="l00425"></a><span class="lineno">  425</span>&#160;    <span class="keywordflow">return</span> (mem + 1)[getNumLoopsSquared() + i];</div>
+<div class="line"><a name="l00426"></a><span class="lineno">  426</span>&#160;  }</div>
+<div class="line"><a name="l00427"></a><span class="lineno">  427</span>&#160;  <span class="comment">// NOLINTNEXTLINE(readability-make-member-function-const)</span></div>
+<div class="line"><a name="l00428"></a><span class="lineno">  428</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getOffsetOmega(ptrdiff_t i) -&gt; int64_t &amp; {</div>
+<div class="line"><a name="l00429"></a><span class="lineno">  429</span>&#160;    <span class="keywordflow">return</span> (mem + 2)[getNumLoopsSquared() + getNumLoops() + i];</div>
+<div class="line"><a name="l00430"></a><span class="lineno">  430</span>&#160;  }</div>
+<div class="line"><a name="l00431"></a><span class="lineno">  431</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getFusionOmega() const -&gt; PtrVector&lt;int64_t&gt; {</div>
+<div class="line"><a name="l00432"></a><span class="lineno">  432</span>&#160;    <span class="keywordflow">return</span> {<span class="keyword">const_cast&lt;</span>int64_t *<span class="keyword">&gt;</span>(mem + 1) + getNumLoopsSquared(),</div>
+<div class="line"><a name="l00433"></a><span class="lineno">  433</span>&#160;            getNumLoops() + 1};</div>
+<div class="line"><a name="l00434"></a><span class="lineno">  434</span>&#160;  }</div>
+<div class="line"><a name="l00435"></a><span class="lineno">  435</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getOffsetOmega() const -&gt; PtrVector&lt;int64_t&gt; {</div>
+<div class="line"><a name="l00436"></a><span class="lineno">  436</span>&#160;    <span class="keywordflow">return</span> {<span class="keyword">const_cast&lt;</span>int64_t *<span class="keyword">&gt;</span>(mem) + 2 + getNumLoopsSquared() +</div>
+<div class="line"><a name="l00437"></a><span class="lineno">  437</span>&#160;              getNumLoops(),</div>
+<div class="line"><a name="l00438"></a><span class="lineno">  438</span>&#160;            getNumLoops()};</div>
+<div class="line"><a name="l00439"></a><span class="lineno">  439</span>&#160;  }</div>
+<div class="line"><a name="l00440"></a><span class="lineno">  440</span>&#160;  <span class="comment">// NOLINTNEXTLINE(readability-make-member-function-const)</span></div>
+<div class="line"><a name="l00441"></a><span class="lineno">  441</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getFusionOmega() -&gt; MutPtrVector&lt;int64_t&gt; {</div>
+<div class="line"><a name="l00442"></a><span class="lineno">  442</span>&#160;    <span class="keywordflow">return</span> {mem + 1 + getNumLoopsSquared(), getNumLoops() + 1};</div>
+<div class="line"><a name="l00443"></a><span class="lineno">  443</span>&#160;  }</div>
+<div class="line"><a name="l00444"></a><span class="lineno">  444</span>&#160;  <span class="comment">// NOLINTNEXTLINE(readability-make-member-function-const)</span></div>
+<div class="line"><a name="l00445"></a><span class="lineno">  445</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getOffsetOmega() -&gt; MutPtrVector&lt;int64_t&gt; {</div>
+<div class="line"><a name="l00446"></a><span class="lineno">  446</span>&#160;    <span class="keywordflow">return</span> {mem + 2 + getNumLoopsSquared() + getNumLoops(), getNumLoops()};</div>
+<div class="line"><a name="l00447"></a><span class="lineno">  447</span>&#160;  }</div>
+<div class="line"><a name="l00448"></a><span class="lineno">  448</span>&#160; </div>
+<div class="line"><a name="l00449"></a><span class="lineno">  449</span>&#160;  constexpr <span class="keywordtype">void</span> schedulePhi(DensePtrMatrix&lt;int64_t&gt; indMat, ptrdiff_t r) {</div>
+<div class="line"><a name="l00450"></a><span class="lineno">  450</span>&#160;    <span class="comment">// indMat indvars are indexed from outer&lt;-&gt;inner</span></div>
+<div class="line"><a name="l00451"></a><span class="lineno">  451</span>&#160;    <span class="comment">// phi indvars are indexed from outer&lt;-&gt;inner</span></div>
+<div class="line"><a name="l00452"></a><span class="lineno">  452</span>&#160;    <span class="comment">// so, indMat is indvars[outer&lt;-&gt;inner] x array dim</span></div>
+<div class="line"><a name="l00453"></a><span class="lineno">  453</span>&#160;    <span class="comment">// phi is loop[outer&lt;-&gt;inner] x indvars[outer&lt;-&gt;inner]</span></div>
+<div class="line"><a name="l00454"></a><span class="lineno">  454</span>&#160;    MutSquarePtrMatrix&lt;int64_t&gt; phi = <a class="code" href="classpoly_1_1lp_1_1ScheduledNode.html#a84004f4089316dcf55f5e9031a37f6c4">getPhi</a>();</div>
+<div class="line"><a name="l00455"></a><span class="lineno">  455</span>&#160;    ptrdiff_t indR = ptrdiff_t(indMat.numCol());</div>
+<div class="line"><a name="l00456"></a><span class="lineno">  456</span>&#160;    <span class="keywordflow">for</span> (ptrdiff_t i = 0; i &lt; r; ++i) {</div>
+<div class="line"><a name="l00457"></a><span class="lineno">  457</span>&#160;      phi[i, _(0, indR)] &lt;&lt; indMat[i, _];</div>
+<div class="line"><a name="l00458"></a><span class="lineno">  458</span>&#160;      phi[i, _(indR, end)] &lt;&lt; 0;</div>
+<div class="line"><a name="l00459"></a><span class="lineno">  459</span>&#160;    }</div>
+<div class="line"><a name="l00460"></a><span class="lineno">  460</span>&#160;    rank = r;</div>
+<div class="line"><a name="l00461"></a><span class="lineno">  461</span>&#160;  }</div>
+<div class="line"><a name="l00462"></a><span class="lineno">  462</span>&#160;  constexpr <span class="keywordtype">void</span> unschedulePhi() { rank = 0; }</div>
+<div class="line"><a name="l00463"></a><span class="lineno">  463</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getOmegaOffset() const -&gt; ptrdiff_t {</div>
+<div class="line"><a name="l00464"></a><span class="lineno">  464</span>&#160;    <span class="keywordflow">return</span> omegaOffset;</div>
+<div class="line"><a name="l00465"></a><span class="lineno">  465</span>&#160;  }</div>
+<div class="line"><a name="l00466"></a><span class="lineno">  466</span>&#160;  <span class="keywordtype">void</span> resetPhiOffset() { phiOffset = std::numeric_limits&lt;unsigned&gt;::max(); }</div>
+<div class="line"><a name="l00467"></a><span class="lineno">  467</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> calcGraphMaxDepth() const -&gt; <span class="keywordtype">unsigned</span> {</div>
+<div class="line"><a name="l00468"></a><span class="lineno">  468</span>&#160;    <span class="keywordtype">unsigned</span> maxDepth = 0;</div>
+<div class="line"><a name="l00469"></a><span class="lineno">  469</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">const</span> ScheduledNode *n : getVertices())</div>
+<div class="line"><a name="l00470"></a><span class="lineno">  470</span>&#160;      maxDepth = std::max(maxDepth, n-&gt;getNumLoops());</div>
+<div class="line"><a name="l00471"></a><span class="lineno">  471</span>&#160;    <span class="keywordflow">return</span> maxDepth;</div>
+<div class="line"><a name="l00472"></a><span class="lineno">  472</span>&#160;  }</div>
+<div class="line"><a name="l00473"></a><span class="lineno">  473</span>&#160;  <span class="keyword">friend</span> <span class="keyword">inline</span> <span class="keyword">auto</span> operator&lt;&lt;(llvm::raw_ostream &amp;os,</div>
+<div class="line"><a name="l00474"></a><span class="lineno">  474</span>&#160;                                <span class="keyword">const</span> ScheduledNode &amp;node)</div>
+<div class="line"><a name="l00475"></a><span class="lineno">  475</span>&#160;    -&gt; llvm::raw_ostream &amp; {</div>
+<div class="line"><a name="l00476"></a><span class="lineno">  476</span>&#160;    os &lt;&lt; <span class="stringliteral">&quot;inNeighbors = &quot;</span>;</div>
+<div class="line"><a name="l00477"></a><span class="lineno">  477</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">const</span> Addr *m : node.localAddr()) os &lt;&lt; <span class="stringliteral">&quot;v_&quot;</span> &lt;&lt; m &lt;&lt; <span class="stringliteral">&quot;, &quot;</span>;</div>
+<div class="line"><a name="l00478"></a><span class="lineno">  478</span>&#160;    <span class="keywordflow">return</span> os &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
+<div class="line"><a name="l00479"></a><span class="lineno">  479</span>&#160;  }</div>
+<div class="line"><a name="l00480"></a><span class="lineno">  480</span>&#160;};</div>
+<div class="line"><a name="l00481"></a><span class="lineno">  481</span>&#160;static_assert(std::is_trivially_destructible_v&lt;ScheduledNode&gt;);</div>
+<div class="line"><a name="l00482"></a><span class="lineno">  482</span>&#160;static_assert(<span class="keyword">sizeof</span>(ScheduledNode) &lt;= 64); <span class="comment">// fits in cache line</span></div>
+<div class="line"><a name="l00483"></a><span class="lineno">  483</span>&#160; </div>
+<div class="line"><a name="l00484"></a><span class="lineno"><a class="line" href="classpoly_1_1lp_1_1ScheduleGraph.html">  484</a></span>&#160;<span class="keyword">class </span><a class="code" href="classpoly_1_1lp_1_1ScheduleGraph.html">ScheduleGraph</a> {</div>
+<div class="line"><a name="l00485"></a><span class="lineno">  485</span>&#160;  <a class="code" href="classpoly_1_1poly_1_1Dependencies.html">IR::Dependencies</a> deps;</div>
+<div class="line"><a name="l00486"></a><span class="lineno">  486</span>&#160;  <span class="keywordtype">unsigned</span> depth_;</div>
+<div class="line"><a name="l00487"></a><span class="lineno">  487</span>&#160; </div>
+<div class="line"><a name="l00488"></a><span class="lineno">  488</span>&#160;<span class="keyword">public</span>:</div>
+<div class="line"><a name="l00489"></a><span class="lineno">  489</span>&#160;  <span class="keyword">using</span> <a class="code" href="classpoly_1_1lp_1_1ScheduledNode.html">VertexType</a> = <a class="code" href="classpoly_1_1lp_1_1ScheduledNode.html">ScheduledNode</a>;</div>
+<div class="line"><a name="l00490"></a><span class="lineno">  490</span>&#160;  constexpr <a class="code" href="classpoly_1_1lp_1_1ScheduleGraph.html">ScheduleGraph</a>(<span class="keywordtype">unsigned</span> depth) : depth_(depth) {}</div>
+<div class="line"><a name="l00491"></a><span class="lineno">  491</span>&#160; </div>
+<div class="line"><a name="l00492"></a><span class="lineno">  492</span>&#160;  [[nodiscard]] <span class="keyword">static</span> constexpr <span class="keyword">auto</span> getVertices(<a class="code" href="classpoly_1_1lp_1_1ScheduledNode.html">ScheduledNode</a> *nodes)</div>
+<div class="line"><a name="l00493"></a><span class="lineno">  493</span>&#160;    -&gt; utils::ListRange&lt;ScheduledNode, utils::GetNext, utils::Identity&gt; {</div>
+<div class="line"><a name="l00494"></a><span class="lineno">  494</span>&#160;    <span class="keywordflow">return</span> nodes-&gt;getVertices();</div>
+<div class="line"><a name="l00495"></a><span class="lineno">  495</span>&#160;  }</div>
+<div class="line"><a name="l00496"></a><span class="lineno">  496</span>&#160;  [[nodiscard]] <span class="keyword">static</span> constexpr <span class="keyword">auto</span> getVertices(<span class="keyword">const</span> <a class="code" href="classpoly_1_1lp_1_1ScheduledNode.html">ScheduledNode</a> *nodes)</div>
+<div class="line"><a name="l00497"></a><span class="lineno">  497</span>&#160;    -&gt; utils::ListRange&lt;const ScheduledNode, utils::GetNext, utils::Identity&gt; {</div>
+<div class="line"><a name="l00498"></a><span class="lineno">  498</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">static_cast&lt;</span><span class="keyword">const </span><a class="code" href="classpoly_1_1lp_1_1ScheduledNode.html">ScheduledNode</a> *<span class="keyword">&gt;</span>(nodes)-&gt;getVertices();</div>
+<div class="line"><a name="l00499"></a><span class="lineno">  499</span>&#160;  }</div>
+<div class="line"><a name="l00500"></a><span class="lineno">  500</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> outNeighbors(<a class="code" href="classpoly_1_1lp_1_1ScheduledNode.html">ScheduledNode</a> *v)<span class="keyword"> const </span>{</div>
+<div class="line"><a name="l00501"></a><span class="lineno">  501</span>&#160;    <span class="keywordflow">return</span> v-&gt;outNeighbors(deps, depth_);</div>
+<div class="line"><a name="l00502"></a><span class="lineno">  502</span>&#160;  }</div>
+<div class="line"><a name="l00503"></a><span class="lineno">  503</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> inNeighbors(<a class="code" href="classpoly_1_1lp_1_1ScheduledNode.html">ScheduledNode</a> *v)<span class="keyword"> const </span>{</div>
+<div class="line"><a name="l00504"></a><span class="lineno">  504</span>&#160;    <span class="keywordflow">return</span> v-&gt;inNeighbors(deps, depth_);</div>
+<div class="line"><a name="l00505"></a><span class="lineno">  505</span>&#160;  }</div>
+<div class="line"><a name="l00506"></a><span class="lineno">  506</span>&#160;};</div>
 <div class="line"><a name="l00507"></a><span class="lineno">  507</span>&#160; </div>
-<div class="line"><a name="l00508"></a><span class="lineno">  508</span>&#160;<span class="keyword">namespace </span>graph {</div>
-<div class="line"><a name="l00509"></a><span class="lineno">  509</span>&#160;<span class="comment">// static_assert(AbstractPtrGraph&lt;lp::ScheduledNode&gt;);</span></div>
-<div class="line"><a name="l00510"></a><span class="lineno">  510</span>&#160;static_assert(std::forward_iterator&lt;</div>
-<div class="line"><a name="l00511"></a><span class="lineno">  511</span>&#160;              decltype(<a class="code" href="classpoly_1_1lp_1_1ScheduleGraph.html">lp::ScheduleGraph</a>{0}.outNeighbors(<span class="keyword">nullptr</span>).begin())&gt;);</div>
+<div class="line"><a name="l00508"></a><span class="lineno">  508</span>&#160;} <span class="comment">// namespace lp</span></div>
+<div class="line"><a name="l00509"></a><span class="lineno">  509</span>&#160; </div>
+<div class="line"><a name="l00510"></a><span class="lineno">  510</span>&#160;<span class="keyword">namespace </span>graph {</div>
+<div class="line"><a name="l00511"></a><span class="lineno">  511</span>&#160;<span class="comment">// static_assert(AbstractPtrGraph&lt;lp::ScheduledNode&gt;);</span></div>
 <div class="line"><a name="l00512"></a><span class="lineno">  512</span>&#160;static_assert(std::forward_iterator&lt;</div>
-<div class="line"><a name="l00513"></a><span class="lineno">  513</span>&#160;              decltype(lp::ScheduleGraph{0}.inNeighbors(<span class="keyword">nullptr</span>).begin())&gt;);</div>
-<div class="line"><a name="l00514"></a><span class="lineno">  514</span>&#160;static_assert(AbstractPtrGraph&lt;lp::ScheduleGraph&gt;);</div>
-<div class="line"><a name="l00515"></a><span class="lineno">  515</span>&#160;} <span class="comment">// namespace graph</span></div>
-<div class="line"><a name="l00516"></a><span class="lineno">  516</span>&#160;} <span class="comment">// namespace poly</span></div>
+<div class="line"><a name="l00513"></a><span class="lineno">  513</span>&#160;              decltype(<a class="code" href="classpoly_1_1lp_1_1ScheduleGraph.html">lp::ScheduleGraph</a>{0}.outNeighbors(<span class="keyword">nullptr</span>).begin())&gt;);</div>
+<div class="line"><a name="l00514"></a><span class="lineno">  514</span>&#160;static_assert(std::forward_iterator&lt;</div>
+<div class="line"><a name="l00515"></a><span class="lineno">  515</span>&#160;              decltype(lp::ScheduleGraph{0}.inNeighbors(<span class="keyword">nullptr</span>).begin())&gt;);</div>
+<div class="line"><a name="l00516"></a><span class="lineno">  516</span>&#160;static_assert(AbstractPtrGraph&lt;lp::ScheduleGraph&gt;);</div>
+<div class="line"><a name="l00517"></a><span class="lineno">  517</span>&#160;} <span class="comment">// namespace graph</span></div>
+<div class="line"><a name="l00518"></a><span class="lineno">  518</span>&#160;} <span class="comment">// namespace poly</span></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Addr_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Addr.html">poly::IR::Addr</a></div><div class="ttdef"><b>Definition:</b> Address.hpp:78</div></div>
-<div class="ttc" id="aclasspoly_1_1lp_1_1ScheduleGraph_html"><div class="ttname"><a href="classpoly_1_1lp_1_1ScheduleGraph.html">poly::lp::ScheduleGraph</a></div><div class="ttdef"><b>Definition:</b> ScheduledNode.hpp:482</div></div>
+<div class="ttc" id="aclasspoly_1_1lp_1_1ScheduleGraph_html"><div class="ttname"><a href="classpoly_1_1lp_1_1ScheduleGraph.html">poly::lp::ScheduleGraph</a></div><div class="ttdef"><b>Definition:</b> ScheduledNode.hpp:484</div></div>
 <div class="ttc" id="aclasspoly_1_1lp_1_1ScheduledNode_html"><div class="ttname"><a href="classpoly_1_1lp_1_1ScheduledNode.html">poly::lp::ScheduledNode</a></div><div class="ttdef"><b>Definition:</b> ScheduledNode.hpp:33</div></div>
 <div class="ttc" id="aclasspoly_1_1lp_1_1ScheduledNode_html_a0dca20e729df1a3fcd6080fd80176061"><div class="ttname"><a href="classpoly_1_1lp_1_1ScheduledNode.html#a0dca20e729df1a3fcd6080fd80176061">poly::lp::ScheduledNode::fuse</a></div><div class="ttdeci">constexpr auto fuse(ScheduledNode *n) -&gt; ScheduledNode *</div><div class="ttdef"><b>Definition:</b> ScheduledNode.hpp:102</div></div>
-<div class="ttc" id="aclasspoly_1_1lp_1_1ScheduledNode_html_a0f570dd701e4e41d75597c7cbb3a5e4c"><div class="ttname"><a href="classpoly_1_1lp_1_1ScheduledNode.html#a0f570dd701e4e41d75597c7cbb3a5e4c">poly::lp::ScheduledNode::getSchedule</a></div><div class="ttdeci">constexpr auto getSchedule(ptrdiff_t d) const -&gt; PtrVector&lt; int64_t &gt;</div><div class="ttdoc">getSchedule, loops are always indexed from outer to inner</div><div class="ttdef"><b>Definition:</b> ScheduledNode.hpp:407</div></div>
+<div class="ttc" id="aclasspoly_1_1lp_1_1ScheduledNode_html_a0f570dd701e4e41d75597c7cbb3a5e4c"><div class="ttname"><a href="classpoly_1_1lp_1_1ScheduledNode.html#a0f570dd701e4e41d75597c7cbb3a5e4c">poly::lp::ScheduledNode::getSchedule</a></div><div class="ttdeci">constexpr auto getSchedule(ptrdiff_t d) const -&gt; PtrVector&lt; int64_t &gt;</div><div class="ttdoc">getSchedule, loops are always indexed from outer to inner</div><div class="ttdef"><b>Definition:</b> ScheduledNode.hpp:409</div></div>
+<div class="ttc" id="aclasspoly_1_1lp_1_1ScheduledNode_html_a48c8bca790f2fa2b2eb24cee7c159253"><div class="ttname"><a href="classpoly_1_1lp_1_1ScheduledNode.html#a48c8bca790f2fa2b2eb24cee7c159253">poly::lp::ScheduledNode::getPhi</a></div><div class="ttdeci">constexpr auto getPhi() const -&gt; SquarePtrMatrix&lt; int64_t &gt;</div><div class="ttdoc">numLoops x numLoops</div><div class="ttdef"><b>Definition:</b> ScheduledNode.hpp:405</div></div>
+<div class="ttc" id="aclasspoly_1_1lp_1_1ScheduledNode_html_a84004f4089316dcf55f5e9031a37f6c4"><div class="ttname"><a href="classpoly_1_1lp_1_1ScheduledNode.html#a84004f4089316dcf55f5e9031a37f6c4">poly::lp::ScheduledNode::getPhi</a></div><div class="ttdeci">constexpr auto getPhi() -&gt; MutSquarePtrMatrix&lt; int64_t &gt;</div><div class="ttdoc">numLoops x numLoops</div><div class="ttdef"><b>Definition:</b> ScheduledNode.hpp:401</div></div>
 <div class="ttc" id="aclasspoly_1_1poly_1_1Dependencies_html"><div class="ttname"><a href="classpoly_1_1poly_1_1Dependencies.html">poly::poly::Dependencies</a></div><div class="ttdef"><b>Definition:</b> Dependence.hpp:551</div></div>
 <div class="ttc" id="aclasspoly_1_1poly_1_1Loop_html"><div class="ttname"><a href="classpoly_1_1poly_1_1Loop.html">poly::poly::Loop</a></div><div class="ttdef"><b>Definition:</b> Loops.hpp:328</div></div>
 <div class="ttc" id="astructpoly_1_1lp_1_1ScheduledNode_1_1Component_html"><div class="ttname"><a href="structpoly_1_1lp_1_1ScheduledNode_1_1Component.html">poly::lp::ScheduledNode::Component</a></div><div class="ttdef"><b>Definition:</b> ScheduledNode.hpp:132</div></div>
