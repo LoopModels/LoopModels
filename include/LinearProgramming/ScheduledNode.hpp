@@ -258,7 +258,7 @@ public:
                              DepIDs<true>{dep}};
   }
   [[nodiscard]] inline auto inputEdgeIds(IR::Dependencies dep,
-                                         unsigned depth) const {
+                                         int depth) const {
     static_assert(std::forward_iterator<
                   decltype(DepIDs<false>{dep}((IR::Addr *)nullptr).begin())>);
     static_assert(std::forward_iterator<decltype(utils::ListRange{
@@ -268,7 +268,7 @@ public:
     return inputEdgeIds(dep) | dep.activeFilter(depth);
   }
   [[nodiscard]] inline auto outputEdgeIds(IR::Dependencies dep,
-                                          unsigned depth) const {
+                                          int depth) const {
     static_assert(std::forward_iterator<decltype(outputEdgeIds(dep).begin())>);
 
     static_assert(std::ranges::range<decltype(outputEdgeIds(dep))>);
@@ -301,7 +301,7 @@ public:
       }};
   }
 
-  [[nodiscard]] inline auto inputEdges(IR::Dependencies dep, unsigned depth) {
+  [[nodiscard]] inline auto inputEdges(IR::Dependencies dep, int depth) {
     return utils::NestedList{
       utils::ListRange{store, NextAddr{},
                        [](Addr *a) -> int32_t { return a->getEdgeIn(); }},
@@ -313,7 +313,7 @@ public:
                });
       }};
   }
-  [[nodiscard]] inline auto outputEdges(IR::Dependencies dep, unsigned depth) {
+  [[nodiscard]] inline auto outputEdges(IR::Dependencies dep, int depth) {
 
     return utils::NestedList{
       utils::ListRange{store, NextAddr{},
@@ -372,8 +372,8 @@ public:
   // [[nodiscard]] constexpr auto wasVisited2() const -> bool { return visited2;
   // } constexpr void visit2() { visited2 = true; } constexpr void unVisit2() {
   // visited2 = false; }
-  [[nodiscard]] constexpr auto getNumLoops() const -> unsigned {
-    return unsigned(mem[0]);
+  [[nodiscard]] constexpr auto getNumLoops() const -> ptrdiff_t {
+    return mem[0];
   }
   // 'phiIsScheduled()` means that `phi`'s schedule has been
   // set for the outer `rank` loops.

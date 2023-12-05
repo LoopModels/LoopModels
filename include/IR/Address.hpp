@@ -306,16 +306,16 @@ public:
   constexpr void setNode(lp::ScheduledNode *n) { node = n; }
   [[nodiscard]] inline auto inputAddrs(Dependencies) const;
   [[nodiscard]] inline auto outputAddrs(Dependencies) const;
-  [[nodiscard]] inline auto inputAddrs(Dependencies, unsigned depth) const;
-  [[nodiscard]] inline auto outputAddrs(Dependencies, unsigned depth) const;
+  [[nodiscard]] inline auto inputAddrs(Dependencies, int depth) const;
+  [[nodiscard]] inline auto outputAddrs(Dependencies, int depth) const;
   [[nodiscard]] inline auto inputEdges(Dependencies) const;
   [[nodiscard]] inline auto outputEdges(Dependencies) const;
-  [[nodiscard]] inline auto inputEdges(Dependencies, unsigned depth) const;
-  [[nodiscard]] inline auto outputEdges(Dependencies, unsigned depth) const;
+  [[nodiscard]] inline auto inputEdges(Dependencies, int depth) const;
+  [[nodiscard]] inline auto outputEdges(Dependencies, int depth) const;
   [[nodiscard]] inline auto inputEdgeIDs(Dependencies) const;
   [[nodiscard]] inline auto outputEdgeIDs(Dependencies) const;
-  [[nodiscard]] inline auto inputEdgeIDs(Dependencies, unsigned depth) const;
-  [[nodiscard]] inline auto outputEdgeIDs(Dependencies, unsigned depth) const;
+  [[nodiscard]] inline auto inputEdgeIDs(Dependencies, int depth) const;
+  [[nodiscard]] inline auto outputEdgeIDs(Dependencies, int depth) const;
 
   [[nodiscard]] static auto zeroDim(Arena<> *alloc,
                                     llvm::SCEVUnknown const *arrayPtr,

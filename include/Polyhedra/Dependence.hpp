@@ -118,13 +118,18 @@ struct Dependence {
   [[nodiscard]] constexpr auto satLevel() const -> uint8_t {
     return satLevelMask(satLvl[0]);
   }
-  [[nodiscard]] constexpr auto isSat(unsigned depth) const -> bool {
+  /// `isSat` returns `true` on the level that satisfies it
+  [[nodiscard]] constexpr auto isSat(int depth) const -> bool {
     invariant(depth <= 127);
     return satLevel() <= depth;
   }
-  [[nodiscard]] constexpr auto isActive(unsigned depth) const -> bool {
+  /// `isActive` returns `false` on the level that satisfies it
+  /// however, the level that satisfies it shouldn't be reordered
+  /// so `depth-1` may be necessary
+  /// TODO: replace impl with `satLevel() >= depth`
+  [[nodiscard]] constexpr auto isActive(int depth) const -> bool {
     invariant(depth <= 127);
-    return satLevel() > depth;
+    return satLevel() >= depth;
   }
   /// if true, then it's independent conditioned on the phis...
   [[nodiscard]] constexpr auto isCondIndep() const -> bool {
@@ -446,18 +451,6 @@ struct Dependence {
     sch[2 + d + numLoopsX] = 1;
     return dependenceSatisfaction->satisfiable(alloc, sch, numLambda);
   }
-
-  struct Active {
-    unsigned depth;
-    constexpr Active(const Active &) noexcept = default;
-    constexpr Active(Active &&) noexcept = default;
-    constexpr Active() noexcept = default;
-    constexpr auto operator=(const Active &) noexcept -> Active & = default;
-    constexpr Active(unsigned d) : depth(d) {}
-    constexpr auto operator()(const Dependence *d) const -> bool {
-      return d->isActive(depth);
-    }
-  };
 
   friend inline auto operator<<(llvm::raw_ostream &os, const Dependence &d)
     -> llvm::raw_ostream & {
@@ -1097,6 +1090,9 @@ public:
   [[nodiscard]] constexpr auto isSat(ID i, unsigned depth) const -> uint8_t {
     return Dependence::satLevelMask(satLevelPair(i)[0]) <= depth;
   }
+  [[nodiscard]] constexpr auto isActive(ID i, unsigned depth) const -> uint8_t {
+    return Dependence::satLevelMask(satLevelPair(i)[0]) >= depth;
+  }
 
   [[nodiscard]] constexpr auto isForward(ID i) noexcept -> bool & {
     return isForwardPtr()[i.id];
@@ -1123,10 +1119,10 @@ public:
     // if (x.gcdKnownIndependent(y)) return {};
     DepPoly *dxy{DepPoly::dependence(alloc, x, y)};
     if (!dxy) return;
-    invariant(x->getCurrentDepth(), dxy->getDim0());
-    invariant(y->getCurrentDepth(), dxy->getDim1());
-    invariant(x->getCurrentDepth() + y->getCurrentDepth(),
-              dxy->getNumPhiCoef());
+    invariant(x->getCurrentDepth() == ptrdiff_t(dxy->getDim0()));
+    invariant(y->getCurrentDepth() == ptrdiff_t(dxy->getDim1()));
+    invariant(x->getCurrentDepth() + y->getCurrentDepth() ==
+              ptrdiff_t(dxy->getNumPhiCoef()));
     // note that we set boundAbove=true, so we reverse the
     // dependence direction for the dependency we week, we'll
     // discard the program variables x then y
@@ -1162,9 +1158,9 @@ public:
     return outputEdgeIDs(id) | getEdgeTransform();
   }
 
-  [[nodiscard]] constexpr auto activeFilter(unsigned depth) const {
+  [[nodiscard]] constexpr auto activeFilter(int depth) const {
     auto f = [=, this](int32_t id) -> bool {
-      return !isSat(Dependence::ID{id}, depth);
+      return isActive(Dependence::ID{id}, depth);
     };
     return std::views::filter(f);
   }
@@ -1196,10 +1192,10 @@ inline auto Addr::inputEdgeIDs(Dependencies deps) const {
 inline auto Addr::outputEdgeIDs(Dependencies deps) const {
   return deps.outputEdgeIDs(getEdgeOut());
 }
-inline auto Addr::inputEdgeIDs(Dependencies deps, unsigned depth) const {
+inline auto Addr::inputEdgeIDs(Dependencies deps, int depth) const {
   return inputEdgeIDs(deps) | deps.activeFilter(depth);
 }
-inline auto Addr::outputEdgeIDs(Dependencies deps, unsigned depth) const {
+inline auto Addr::outputEdgeIDs(Dependencies deps, int depth) const {
   return outputEdgeIDs(deps) | deps.activeFilter(depth);
 }
 
@@ -1209,20 +1205,18 @@ inline auto IR::Addr::inputAddrs(Dependencies deps) const {
 inline auto IR::Addr::outputAddrs(Dependencies deps) const {
   return outputEdgeIDs(deps) | deps.outputAddrTransform();
 }
-
-inline auto Addr::inputEdges(Dependencies deps, unsigned depth) const {
+inline auto Addr::inputEdges(Dependencies deps, int depth) const {
   return inputEdgeIDs(deps) | deps.activeFilter(depth) |
          deps.getEdgeTransform();
 }
-inline auto Addr::outputEdges(Dependencies deps, unsigned depth) const {
+inline auto Addr::outputEdges(Dependencies deps, int depth) const {
   return outputEdgeIDs(deps) | deps.activeFilter(depth) |
          deps.getEdgeTransform();
 }
-
-inline auto IR::Addr::inputAddrs(Dependencies deps, unsigned depth) const {
+inline auto IR::Addr::inputAddrs(Dependencies deps, int depth) const {
   return inputEdgeIDs(deps, depth) | deps.inputAddrTransform();
 }
-inline auto IR::Addr::outputAddrs(Dependencies deps, unsigned depth) const {
+inline auto IR::Addr::outputAddrs(Dependencies deps, int depth) const {
   return outputEdgeIDs(deps, depth) | deps.outputAddrTransform();
 }
 

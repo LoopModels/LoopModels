@@ -508,13 +508,13 @@ private:
   }
   static constexpr auto countAuxParamsAndConstraints(IR::Dependencies deps,
                                                      ScheduledNode *nodes,
-                                                     unsigned depth)
+                                                     int depth)
     -> math::SVector<unsigned, 4> {
     math::SVector<unsigned, 4> params{};
     assert(allZero(params));
     for (ScheduledNode *node : nodes->getVertices())
       for (Dependence d : node->inputEdges(deps))
-        if (d.isActive(depth)) params += numParams(d);
+        if (!d.isSat(depth)) params += numParams(d);
     return params;
   }
   using BackupSchedule = math::ResizeableView<
@@ -541,7 +541,7 @@ private:
     return {numOmegaCoefs, numPhiCoefs, numSlack};
   }
   static constexpr auto calcCoefs(Dependencies deps, ScheduledNode *nodes,
-                                  unsigned d) -> CoefCounts {
+                                  int d) -> CoefCounts {
     auto [numOmegaCoefs, numPhiCoefs, numSlack] =
       setScheduleMemoryOffsets(deps, nodes, d);
     auto [numLambda, numBounding, numConstraints, numActiveEdges] =
@@ -551,11 +551,11 @@ private:
   }
 
   // NOLINTNEXTLINE(misc-no-recursion)
-  [[nodiscard]] auto optimize(ScheduledNode *nodes, unsigned d,
-                              unsigned maxDepth) -> Result {
+  [[nodiscard]] auto optimize(ScheduledNode *nodes, int d, int maxDepth)
+    -> Result {
     if (d >= maxDepth) return Result::independent();
     if (Result r = solveGraph(nodes, maxDepth, false)) {
-      unsigned descend = d + 1;
+      int descend = d + 1;
       if (descend == maxDepth) return r;
       if (Result n = optimize(nodes, descend, maxDepth)) {
         if ((r == Result::dependent()) &&
@@ -566,17 +566,17 @@ private:
     }
     return breakGraph(nodes, d);
   }
-  /// solveGraph(ScheduledNode *nodes, unsigned depth, bool satisfyDeps)
+  /// solveGraph(ScheduledNode *nodes, int depth, bool satisfyDeps)
   /// solve the `nodes` graph at depth `d`
   /// if `satisfyDeps` is true, then we are trying to satisfy dependencies at
   /// this level
   ///
-  [[nodiscard]] auto solveGraph(ScheduledNode *nodes, unsigned depth,
+  [[nodiscard]] auto solveGraph(ScheduledNode *nodes, int depth,
                                 bool satisfyDeps) -> Result {
     CoefCounts counts{calcCoefs(deps, nodes, depth)};
     return solveGraph(nodes, depth, satisfyDeps, counts);
   }
-  [[nodiscard]] auto solveGraph(ScheduledNode *nodes, unsigned depth,
+  [[nodiscard]] auto solveGraph(ScheduledNode *nodes, int depth,
                                 bool satisfyDeps, CoefCounts counts) -> Result {
     if (counts.numLambda == 0) {
       setSchedulesIndependent(nodes, depth);
@@ -596,7 +596,7 @@ private:
       nodes, depth, counts,
       sol[_(counts.numPhiCoefs + counts.numOmegaCoefs, end)]);
   }
-  void setSchedulesIndependent(ScheduledNode *nodes, unsigned depth) {
+  void setSchedulesIndependent(ScheduledNode *nodes, int depth) {
     // IntMatrix A, N;
     for (ScheduledNode *node : nodes->getVertices()) {
       if ((depth >= node->getNumLoops()) || node->phiIsScheduled(depth))
@@ -605,7 +605,7 @@ private:
       setDepFreeSchedule(node, depth);
     }
   }
-  static void setDepFreeSchedule(ScheduledNode *node, unsigned depth) {
+  static void setDepFreeSchedule(ScheduledNode *node, int depth) {
     node->getOffsetOmega(depth) = 0;
     if (node->phiIsScheduled(depth)) return;
     // we'll check the null space of the phi's so far
@@ -629,7 +629,7 @@ private:
     // arbitrarily.
     // Here, we collect candidates for the next schedule
     DenseMatrix<int64_t> candidates{
-      math::DenseDims<>{0, node->getNumLoops() + 1}};
+      math::DenseDims<>{{0}, {node->getNumLoops() + 1}}};
     Vector<int64_t> indv;
     indv.resizeForOverwrite(node->getNumLoops());
     for (Addr *mem : node->localAddr()) {
@@ -674,7 +674,7 @@ private:
     }
     invariant(false);
   }
-  void updateSchedules(ScheduledNode *nodes, unsigned depth, CoefCounts counts,
+  void updateSchedules(ScheduledNode *nodes, int depth, CoefCounts counts,
                        Simplex::Solution sol) {
 #ifndef NDEBUG
     if (counts.numPhiCoefs > 0)
@@ -721,8 +721,8 @@ private:
 #endif
     }
   }
-  [[nodiscard]] auto deactivateSatisfiedEdges(ScheduledNode *nodes,
-                                              unsigned depth, CoefCounts counts,
+  [[nodiscard]] auto deactivateSatisfiedEdges(ScheduledNode *nodes, int depth,
+                                              CoefCounts counts,
                                               Simplex::Solution sol) -> Result {
     if (allZero(sol[_(begin, counts.numBounding + counts.numActiveEdges)]))
       return checkEmptySatEdges(nodes, depth);
@@ -762,7 +762,7 @@ private:
     }
     return result;
   }
-  auto checkEmptySatEdges(ScheduledNode *nodes, unsigned depth) -> Result {
+  auto checkEmptySatEdges(ScheduledNode *nodes, int depth) -> Result {
     for (ScheduledNode *outNode : nodes->getVertices()) {
       for (Dependence edge : outNode->inputEdges(deps)) {
         if (edge.isSat(depth)) continue;
@@ -820,8 +820,8 @@ private:
         deps.satLevelPair(Dependence::ID{dID}) = sat[i++];
   }
   // NOLINTNEXTLINE(misc-no-recursion)
-  [[nodiscard]] auto optimizeSatDep(ScheduledNode *nodes, unsigned depth,
-                                    unsigned maxDepth, Result backupResult)
+  [[nodiscard]] auto optimizeSatDep(ScheduledNode *nodes, int depth,
+                                    int maxDepth, Result backupResult)
     -> Result {
     // if we're here, there are satisfied deps in both
     // depSatLevel and depSatNest
@@ -840,7 +840,7 @@ private:
     return backupResult;
   }
   // NOLINTNEXTLINE(misc-no-recursion)
-  auto tryFuse(ScheduledNode *n0, ScheduledNode *n1, unsigned depth) -> Result {
+  auto tryFuse(ScheduledNode *n0, ScheduledNode *n1, int depth) -> Result {
     auto s = allocator.scope();
     auto old0 = stashFit(n0); // FIXME: stash dep sat level
     auto old1 = stashFit(n1); // FIXME: stash dep sat level
@@ -852,7 +852,7 @@ private:
     popStash(old1);
     return Result::failure();
   }
-  auto satisfySplitEdges(ScheduledNode *nodes, unsigned depth) -> Result {
+  auto satisfySplitEdges(ScheduledNode *nodes, int depth) -> Result {
     auto s = allocator.scope();
     dict::aset<ScheduledNode *> graph{&allocator};
     for (ScheduledNode *node : nodes->getVertices()) graph.insert(node);
@@ -867,14 +867,14 @@ private:
     }
     return (found) ? Result::dependent() : Result::independent();
   }
-  auto solveSplitGraph(ScheduledNode *nodes, unsigned depth) -> Result {
+  auto solveSplitGraph(ScheduledNode *nodes, int depth) -> Result {
     Result sat = satisfySplitEdges(nodes, depth);
     Result opt = solveGraph(nodes, depth, false, calcCoefs(deps, nodes, depth));
     if (!opt) return opt;
     return opt & sat;
   }
   // NOLINTNEXTLINE(misc-no-recursion)
-  [[nodiscard]] auto breakGraph(ScheduledNode *node, unsigned d) -> Result {
+  [[nodiscard]] auto breakGraph(ScheduledNode *node, int d) -> Result {
     // Get a top sorting of SCC's; because we couldn't solve the graph
     // with these dependencies fused, we'll try splitting them.
     ScheduledNode *components =
@@ -927,9 +927,8 @@ private:
   /// Phis: scheduling rotations
   /// w: bounding offsets, independent of symbolic variables
   /// u: bounding offsets, dependent on symbolic variables
-  auto instantiateOmniSimplex(ScheduledNode *nodes, unsigned d,
-                              bool satisfyDeps, CoefCounts counts)
-    -> std::unique_ptr<Simplex> {
+  auto instantiateOmniSimplex(ScheduledNode *nodes, int d, bool satisfyDeps,
+                              CoefCounts counts) -> std::unique_ptr<Simplex> {
     auto [numOmegaCoefs, numPhiCoefs, numSlack, numLambda, numBounding,
           numConstraints, numActiveEdges] = counts;
     auto omniSimplex = Simplex::create(

@@ -176,10 +176,10 @@ public:
   // [[nodiscard]] constexpr auto getIndex() const -> unsigned { return index_;
   // } constexpr void setIndex(unsigned i) { index_ = i; }
   [[nodiscard]] constexpr auto getKind() const -> ValKind { return kind; }
-  [[nodiscard]] constexpr auto getCurrentDepth() const -> unsigned {
+  [[nodiscard]] constexpr auto getCurrentDepth() const -> int {
     return currentDepth;
   }
-  [[nodiscard]] constexpr auto getNaturalDepth() const -> unsigned {
+  [[nodiscard]] constexpr auto getNaturalDepth() const -> int {
     return naturalDepth;
   }
 
