@@ -8,6 +8,7 @@
 #include "Utilities/ListRanges.hpp"
 #include <Utilities/Invariant.hpp>
 #include <Utilities/Valid.hpp>
+#include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <ranges>
@@ -464,10 +465,10 @@ public:
     return omegaOffset;
   }
   void resetPhiOffset() { phiOffset = std::numeric_limits<unsigned>::max(); }
-  [[nodiscard]] constexpr auto calcGraphMaxDepth() const -> unsigned {
-    unsigned maxDepth = 0;
+  [[nodiscard]] constexpr auto calcGraphMaxDepth() const -> int {
+    int maxDepth = 0;
     for (const ScheduledNode *n : getVertices())
-      maxDepth = std::max(maxDepth, n->getNumLoops());
+      maxDepth = std::max(maxDepth, int(n->getNumLoops()));
     return maxDepth;
   }
   friend inline auto operator<<(llvm::raw_ostream &os,

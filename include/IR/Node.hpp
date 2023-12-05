@@ -114,7 +114,11 @@ public:
   // and we want a common base that we can query to avoid monomorphization.
 protected:
   const ValKind kind;
+  /// The current position, `0` means top level, 1 inside a single loop
   uint8_t currentDepth{0}; // current depth
+  /// For an `Addr`, this is the "natural depth" where it would be
+  /// placed in a loop without dependencies, i.e., the inner mostindex
+  /// `0` means top level, `1` inside a single loop, etc
   uint8_t naturalDepth{0}; // original, or, for Addr, `indMat.numCol()`
   uint8_t visitDepth{255};
   uint8_t maxDepth; // memory allocated to support up to this depth
@@ -207,7 +211,8 @@ public:
     if (n) n->child = this;
     return this;
   }
-  constexpr void setCurrentDepth(unsigned d) {
+  constexpr void setCurrentDepth(int d) {
+    invariant(d >= 0);
     invariant(d <= std::numeric_limits<decltype(currentDepth)>::max());
     currentDepth = d;
   }

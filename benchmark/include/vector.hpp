@@ -1,6 +1,5 @@
 #pragma once
 #include "Math/Array.hpp"
-#include "Math/Vector.hpp"
 #include <benchmark/benchmark.h>
 #include <cstddef>
 #include <llvm/ADT/SmallVector.h>

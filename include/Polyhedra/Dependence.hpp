@@ -966,6 +966,10 @@ private:
     void *p = data + revTimeEdgeOffset * getCapacity();
     return static_cast<int32_t *>(p);
   }
+  [[nodiscard]] constexpr auto revTimeEdgePtr() const -> const int32_t * {
+    void *p = data + revTimeEdgeOffset * getCapacity();
+    return static_cast<int32_t *>(p);
+  }
   constexpr auto depSatBndPtr() -> std::array<Valid<math::Simplex>, 2> * {
     void *p = data + depSatBndOffset * getCapacity();
     return static_cast<std::array<Valid<math::Simplex>, 2> *>(p);
@@ -1064,6 +1068,12 @@ public:
     return depSatBndPtr()[i.id];
   }
   constexpr auto revTimeEdge(ID i) -> int32_t & {
+    return revTimeEdgePtr()[i.id];
+  }
+  constexpr auto revTimeEdge(ID i) -> int32_t & {
+    return revTimeEdgePtr()[i.id];
+  }
+  constexpr auto revTimeEdge(ID i) const -> int32_t {
     return revTimeEdgePtr()[i.id];
   }
   constexpr auto depPoly(ID i) -> DepPoly *& { return depPolyPtr()[i.id]; }
@@ -1169,6 +1179,31 @@ public:
     auto f = [=, this](int32_t id) { return output(Dependence::ID{id}); };
     return std::views::transform(f);
   }
+  /// this function essentially indicates that this dependency does not prevent
+  /// the hoisting of a memory access out of a loop, because a memory->register
+  /// transform is possible.
+  /// The requirements are that the `indexMatrix` match
+  [[nodiscard]] constexpr auto registerEligible(ID id) const -> bool {
+    /// If no repeated accesses across time, it can't be hoisted out
+    if (revTimeEdge(id) < 0) return false;
+    DensePtrMatrix<int64_t> inMat{input(id)->indexMatrix()},
+      outMat{output(id)->indexMatrix()};
+    ptrdiff_t numLoopsIn = ptrdiff_t(inMat.numCol()),
+              numLoopsOut = ptrdiff_t(outMat.numCol()),
+              numLoops = std::min(numLoopsIn, numLoopsOut);
+    if ((numLoopsIn != numLoopsOut) &&
+        math::anyNEZero(numLoopsIn > numLoopsOut
+                          ? inMat[_, _(numLoopsOut, numLoopsIn)]
+                          : outMat[_, _(numLoopsIn, numLoopsOut)]))
+      return false;
+    return inMat[_, _(0, numLoops)] == outMat[_, _(0, numLoops)];
+  }
+  [[nodiscard]] constexpr auto registerEligibleFilter() const {
+    auto f = [=, this](int32_t id) -> bool {
+      return registerEligible(Dependence::ID{id});
+    };
+    return std::views::filter(f);
+  }
 };
 
 static_assert(std::is_trivially_copyable_v<Dependencies>);
@@ -1215,6 +1250,10 @@ inline auto IR::Addr::inputAddrs(Dependencies deps, int depth) const {
 }
 inline auto IR::Addr::outputAddrs(Dependencies deps, int depth) const {
   return outputEdgeIDs(deps, depth) | deps.outputAddrTransform();
+}
+inline auto IR::Addr::unhoistableOutputs(Dependencies deps, int depth) const {
+  return outputEdgeIDs(deps, depth) | deps.registerEligibleFilter() |
+         deps.outputAddrTransform();
 }
 
 /// Addr::operator->(Dependencies deps)

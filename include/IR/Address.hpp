@@ -31,7 +31,8 @@ class Dependencies;
 namespace IR {
 using math::PtrVector, math::MutPtrVector, math::DensePtrMatrix,
   math::MutDensePtrMatrix, math::SquarePtrMatrix, math::_, math::DenseDims,
-  math::PtrMatrix, math::end, poly::Dependence, poly::Dependencies;
+  math::PtrMatrix, math::end, poly::Dependence, poly::Dependencies,
+  utils::ListRange;
 
 /// Represents a memory access that has been rotated according to some affine
 /// transform.
@@ -192,7 +193,7 @@ public:
     unsigned oldNatDepth = getNaturalDepth();
     DensePtrMatrix<int64_t> M{indexMatrix()}; // aD x nLma
     MutPtrVector<int64_t> offsetOmega{getOffsetOmega()};
-    unsigned depth = this->naturalDepth = uint8_t(ptrdiff_t(Pinv.numCol()));
+    unsigned depth = uint8_t(ptrdiff_t(Pinv.numCol()));
     MutDensePtrMatrix<int64_t> mStar{indexMatrix()};
     // M is implicitly padded with zeros, newNumLoops >= oldNumLoops
     invariant(maxDepth >= naturalDepth);
@@ -220,7 +221,7 @@ public:
       for (ptrdiff_t k = 0; k < oldNatDepth; ++k) buff += M[d, k] * Pinv[k, _];
       mStar[d, _] << buff;
       if (newNatDepth == depth) continue;
-      // find last
+      // find last, as buf goes outer<->inner
       auto range = std::ranges::reverse_view{buff[_(newNatDepth, depth)]};
       auto m = std::ranges::find_if(range, [](int64_t i) { return i != 0; });
       if (m == range.end()) continue;
@@ -228,13 +229,12 @@ public:
     }
     // use `mStar` to update offsetOmega`
     offsetOmega -= omega * mStar.t();
+    this->naturalDepth = newNatDepth;
     if (newNatDepth == depth) return;
     invariant(newNatDepth < depth);
-    this->naturalDepth = newNatDepth;
     MutDensePtrMatrix<int64_t> indMat{this->indexMatrix()};
     for (ptrdiff_t d = 1; d < getArrayDim(); ++d)
       indMat[d, _] << mStar[d, _(0, newNatDepth)];
-    this->naturalDepth = newNatDepth;
   }
   // NOTE: this requires `nodeOrDepth` to be set to innmost loop depth
   [[nodiscard]] constexpr auto indexedByInnermostLoop() -> bool {
@@ -243,7 +243,7 @@ public:
     return ret;
   }
   [[nodiscard]] constexpr auto eachAddr() {
-    return utils::ListRange{this, [](Addr *a) { return a->getNextAddr(); }};
+    return ListRange{this, [](Addr *a) -> Addr * { return a->getNextAddr(); }};
   }
   constexpr auto getNextAddr() -> Addr * { return origNext; }
   [[nodiscard]] constexpr auto getNextAddr() const -> const Addr * {
@@ -316,6 +316,7 @@ public:
   [[nodiscard]] inline auto outputEdgeIDs(Dependencies) const;
   [[nodiscard]] inline auto inputEdgeIDs(Dependencies, int depth) const;
   [[nodiscard]] inline auto outputEdgeIDs(Dependencies, int depth) const;
+  [[nodiscard]] inline auto unhoistableOutputs(Dependencies, int depth) const;
 
   [[nodiscard]] static auto zeroDim(Arena<> *alloc,
                                     llvm::SCEVUnknown const *arrayPtr,

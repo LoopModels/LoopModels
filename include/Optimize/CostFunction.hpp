@@ -94,17 +94,17 @@ struct MemCostSummary {
 constexpr auto operator&(MemCostSummary a, MemCostSummary b) -> uint32_t {
   return a.orth.indep & b.orth.indep;
 }
+/// Basic idea is that costs are divided by loops they do not depend on
+///
 constexpr auto cost(const AbstractMatrix auto &invunrolls, uint32_t indepAxes)
   -> utils::eltype_t<decltype(invunrolls)> {
-  utils::eltype_t<decltype(invunrolls)> c{};
-  if (indepAxes) {
-    uint32_t tz = std::countr_zero(indepAxes);
-    c = invunrolls[0, tz++];
-    for (uint32_t d = indepAxes >> tz, i = tz; d; d >>= tz, i += tz) {
-      tz = std::countr_zero(d);
-      c *= invunrolls[0, i + tz++];
-    }
-  } else c = 1;
+  if (!indepAxes) return 1;
+  uint32_t tz = std::countr_zero(indepAxes);
+  utils::eltype_t<decltype(invunrolls)> c{invunrolls[0, tz++]};
+  for (uint32_t d = indepAxes >> tz, i = tz; d; d >>= tz, i += tz) {
+    tz = std::countr_zero(d);
+    c *= invunrolls[0, i + tz++];
+  }
   return c;
 }
 // costs is an array of length two.

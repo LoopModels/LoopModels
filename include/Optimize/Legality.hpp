@@ -92,6 +92,9 @@ namespace poly::CostModeling {
 // [ ] Fuse legality checking, at least in part, with it, as that may indicate
 //     unrolling in example 3 above.
 // [ ] See discussionin CostModeling.hpp above `optimize` about unrolling.
+// Okay, we'll take a somewhat different approach:
+// it shouldn't be too difficult to check for extra outputs, etc.
+// so we do that all here, after the `Addr` placements and simplifications
 struct Legality {
   // enum class Reduction { None = 0, Unordered = 1, Ordered = 2 };
   uint16_t unordered_reduction_count{0};

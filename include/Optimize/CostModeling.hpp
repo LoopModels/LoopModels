@@ -160,6 +160,11 @@ public:
   constexpr auto getLoop() -> IR::Loop * { return loop; }
 };
 
+void hoist(IR::Node *N, IR::Loop *P, int depth) {
+  N->setParent(P);
+  N->setCurrentDepth(depth);
+}
+
 struct LoopDepSummary {
   IR::Node *afterExit{nullptr};
   IR::Addr *indexedByLoop{nullptr};
@@ -207,7 +212,7 @@ inline auto searchLoopIndependentUsers(IR::Dependencies deps, IR::Loop *L,
     }
     a->insertAfter(ret.summary.notIndexedByLoop);
     ret.summary.notIndexedByLoop = a;
-    for (IR::Addr *m : a->outputAddrs(deps, depth - 1)) {
+    for (IR::Addr *m : a->unhoistableOutputs(deps, depth - 1)) {
       ret *= searchLoopIndependentUsers(deps, L, m, depth, summary);
       if (ret.independent) continue;
       a->setDependsOnParentLoop();
@@ -223,19 +228,20 @@ inline auto searchLoopIndependentUsers(IR::Dependencies deps, IR::Loop *L,
     return ret;
   }
   // then we can push it to the front of the list, meaning it is hoisted out
-  if (a) {
-    if (ret.summary.notIndexedByLoop == a)
-      ret.summary.notIndexedByLoop = llvm::cast_or_null<IR::Addr>(a->getNext());
-  }
+  if (a && (ret.summary.notIndexedByLoop == a))
+    ret.summary.notIndexedByLoop = llvm::cast_or_null<IR::Addr>(a->getNext());
   I->removeFromList();
   I->insertAfter(ret.summary.afterExit);
   ret.summary.afterExit = I;
   I->visit(depth);
   return ret;
 }
+/// `R`: remove from loop, if not `nullptr`, set the parent of `N` to `R`
+/// `R` is applied recursivvely, forwarded to all calls.
 // NOLINTNEXTLINE(misc-no-recursion)
 inline auto visitLoopDependent(IR::Dependencies deps, IR::Loop *L, IR::Node *N,
-                               int depth, IR::Node *body) -> IR::Node * {
+                               int depth, IR::Node *body, IR::Loop *R = nullptr)
+  -> IR::Node * {
   invariant(N->getVisitDepth() != 254);
   // N may have been visited as a dependent of an inner loop, which is why
   // `visited` accepts a depth argument
@@ -266,8 +272,8 @@ inline auto visitLoopDependent(IR::Dependencies deps, IR::Loop *L, IR::Node *N,
     // Note that here `depth` is `0` for top-level, 1 for the outer most loop,
     // etc. That is, loops are effectively 1-indexed here, while `satLevel`
     // is effectively 0-indexed by loop.
-    //   Example 1: for
-    // (ptrdiff_t m = 0; m < M; ++m)
+    //   Example 1:
+    // for (ptrdiff_t m = 0; m < M; ++m)
     //   for (ptrdiff_t n = 0; n < N; ++n)
     //     for (ptrdiff_t k = 0; k < K; ++k) C[m,n] = C[m,n] + A[m,k]*B[k,n];
     // we have cyclic dependencies between the load from/store to `C[m,n]`.
@@ -289,32 +295,41 @@ inline auto visitLoopDependent(IR::Dependencies deps, IR::Loop *L, IR::Node *N,
     //    of instructions in the innermost loop, i.e. sat is depth=3.
     // b. store->load is carried by the `k` loop, i.e. sat is depth=2.
     //    Because `2 > (3-1) == false`, we do not add it here,
-    //    it's sorting isn't positional!
+    //    its sorting isn't positional!
+    //
     // TODO:
-    // 1. When does a dependency on a loop without an index mean that we cannot
-    //    hoist it out of the loop?
-    // 2. Hoist reductions that are legal to hoist.
-    // 3. Incorporate the legality setting here.
-    for (IR::Addr *m : A->outputAddrs(deps, depth - 1)) {
+    // - [ ] I think the current algorithm may illegally hoist certain
+    //       dependencies carried on this loop. Specifically, we can hoist
+    //       addresses that (a) are not indexed by this loop, but need to be
+    //       repeated anyway because of some other address operation, while that
+    //       combination can't be moved to registers, e.g. because their index
+    //       matrices are not equal.
+    //       We need to distinguish between order within the loop, for the
+    //       purpose of this topsort, and placement with respect to the loop.
+    //       Simply, we perhaps should simply avoid hoisting when we carry
+    //       a dependence that doesn't meet the criteria of `unhoistableOutputs`
+    // - [ ] Incorporate the legality setting here?
+    for (IR::Addr *m : A->unhoistableOutputs(deps, depth - 1)) {
       if (m->wasVisited(depth)) continue;
-      body = visitLoopDependent(deps, L, m, depth, body);
+      body = visitLoopDependent(deps, L, m, depth, body, R);
     }
   }
   if (auto *I = llvm::dyn_cast<IR::Instruction>(N)) {
     for (IR::Node *U : I->getUsers()) {
       if (U->wasVisited(depth)) continue;
-      body = visitLoopDependent(deps, L, U, depth, body);
+      body = visitLoopDependent(deps, L, U, depth, body, R);
     }
   } else if (auto *S = llvm::dyn_cast<IR::Loop>(N)) {
     for (IR::Node *U : S->getChild()->nodes()) {
       if (U->wasVisited(depth)) continue;
-      body = visitLoopDependent(deps, L, U, depth, body);
+      body = visitLoopDependent(deps, L, U, depth, body, R);
     }
   }
 #ifndef NDEBUG
   if (N->getLoop() == L) N->visit(depth);
 #endif
   if (N->getLoop() == L) body = N->setNext(body);
+  if (R) hoist(N, R, depth - 1);
   return body;
 }
 inline void addBody(IR::Dependencies deps, IR::Loop *root, int depth,
@@ -360,11 +375,12 @@ inline void topologicalSort(IR::Dependencies deps, IR::Loop *root, int depth) {
   // `visited` So, now we search all of root's users, i.e. every addr that
   // depends on it
   root->setNext(summary.afterExit);
+  IR::Loop *P = root->getLoop();
+  for (IR::Node *N : summary.afterExit->nodes()) hoist(N, P, depth - 1);
   addBody(deps, root, depth, summary.indexedByLoop);
   IR::Node *body{root};
   for (IR::Node *N : summary.notIndexedByLoop->nodes())
-    body = visitLoopDependent(deps, root, N, depth, body);
-  // and any remaining edges
+    body = visitLoopDependent(deps, root, N, depth, body, P);
 }
 // NOLINTNEXTLINE(misc-no-recursion)
 inline auto buildSubGraph(IR::Dependencies deps, IR::Loop *root, int depth,
@@ -662,9 +678,10 @@ public:
       eraseCandidates{eraseCandidates_}, root_{root}, lalloc_{lalloc} {
     sortEdges(root_, 0);
     removeRedundantAddr(res.addr);
-    findReductions(res.addr);
     unsigned numAddr = eliminateTemporaries(res.addr);
+    findReductions(res.addr);
     loopDeps = loopDepSats(lalloc, deps, res);
+    /// TODO: legality check
     // plan now is to have a `BitArray` big enough to hold `numLoops` entries
     // and `numAddr` rows; final axis is contiguous vs non-contiguous
     // Additionally, we will have a vector of unroll strategies to consider
