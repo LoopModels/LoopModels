@@ -124,12 +124,9 @@ struct Dependence {
     return satLevel() <= depth;
   }
   /// `isActive` returns `false` on the level that satisfies it
-  /// however, the level that satisfies it shouldn't be reordered
-  /// so `depth-1` may be necessary
-  /// TODO: replace impl with `satLevel() >= depth`
   [[nodiscard]] constexpr auto isActive(int depth) const -> bool {
     invariant(depth <= 127);
-    return satLevel() >= depth;
+    return satLevel() > depth;
   }
   /// if true, then it's independent conditioned on the phis...
   [[nodiscard]] constexpr auto isCondIndep() const -> bool {
@@ -1091,7 +1088,7 @@ public:
     return Dependence::satLevelMask(satLevelPair(i)[0]) <= depth;
   }
   [[nodiscard]] constexpr auto isActive(ID i, unsigned depth) const -> uint8_t {
-    return Dependence::satLevelMask(satLevelPair(i)[0]) >= depth;
+    return Dependence::satLevelMask(satLevelPair(i)[0]) > depth;
   }
 
   [[nodiscard]] constexpr auto isForward(ID i) noexcept -> bool & {

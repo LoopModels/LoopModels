@@ -189,7 +189,7 @@ struct LoopIndependent {
 /// that we can still return those results we did find on failure.
 ///  NOLINTNEXTLINE(misc-no-recursion)
 inline auto searchLoopIndependentUsers(IR::Dependencies deps, IR::Loop *L,
-                                       IR::Node *N, uint8_t depth,
+                                       IR::Node *N, int depth,
                                        LoopDepSummary summary)
   -> LoopIndependent {
   if (N->dependsOnParentLoop()) return {summary, false};
@@ -207,7 +207,7 @@ inline auto searchLoopIndependentUsers(IR::Dependencies deps, IR::Loop *L,
     }
     a->insertAfter(ret.summary.notIndexedByLoop);
     ret.summary.notIndexedByLoop = a;
-    for (IR::Addr *m : a->outputAddrs(deps, depth)) {
+    for (IR::Addr *m : a->outputAddrs(deps, depth - 1)) {
       ret *= searchLoopIndependentUsers(deps, L, m, depth, summary);
       if (ret.independent) continue;
       a->setDependsOnParentLoop();
@@ -235,7 +235,7 @@ inline auto searchLoopIndependentUsers(IR::Dependencies deps, IR::Loop *L,
 }
 // NOLINTNEXTLINE(misc-no-recursion)
 inline auto visitLoopDependent(IR::Dependencies deps, IR::Loop *L, IR::Node *N,
-                               uint8_t depth, IR::Node *body) -> IR::Node * {
+                               int depth, IR::Node *body) -> IR::Node * {
   invariant(N->getVisitDepth() != 254);
   // N may have been visited as a dependent of an inner loop, which is why
   // `visited` accepts a depth argument
@@ -283,21 +283,19 @@ inline auto visitLoopDependent(IR::Dependencies deps, IR::Loop *L, IR::Node *N,
     // The former has a sat level of 255, while the latter has a sat level of
     // `1`.
     //
-    // isActive(depth) == satLevel() >= depth
+    // isActive(depth) == satLevel() > depth
     //
     // a. load->store is not satisfied by any loop, instead handled by sorting
     //    of instructions in the innermost loop, i.e. sat is depth=3.
-    //    Because it is never marked satisfied, `outputAddrs` will always
-    //    include this.
     // b. store->load is carried by the `k` loop, i.e. sat is depth=2.
-    //    when we're here in the inner most loop, depth=3
+    //    Because `2 > (3-1) == false`, we do not add it here,
+    //    it's sorting isn't positional!
     // TODO:
-    // 1. Is our `outputAddrs` correct to use `depth - 1`? Provide a
-    //    counter-example where `depth` produces wrong code that is not handled
-    //    by `indexedByInnermostLoop`
+    // 1. When does a dependency on a loop without an index mean that we cannot
+    //    hoist it out of the loop?
     // 2. Hoist reductions that are legal to hoist.
     // 3. Incorporate the legality setting here.
-    for (IR::Addr *m : A->outputAddrs(deps, int(depth) - 1)) {
+    for (IR::Addr *m : A->outputAddrs(deps, depth - 1)) {
       if (m->wasVisited(depth)) continue;
       body = visitLoopDependent(deps, L, m, depth, body);
     }
@@ -319,7 +317,7 @@ inline auto visitLoopDependent(IR::Dependencies deps, IR::Loop *L, IR::Node *N,
   if (N->getLoop() == L) body = N->setNext(body);
   return body;
 }
-inline void addBody(IR::Dependencies deps, IR::Loop *root, unsigned depth,
+inline void addBody(IR::Dependencies deps, IR::Loop *root, int depth,
                     IR::Node *nodes) {
   IR::Exit exit{}; // use to capture last node
   IR::Node *body{&exit};
@@ -330,8 +328,7 @@ inline void addBody(IR::Dependencies deps, IR::Loop *root, unsigned depth,
   if (last) last->setNext(nullptr);
   root->setLast(last);
 }
-inline void topologicalSort(IR::Dependencies deps, IR::Loop *root,
-                            unsigned depth) {
+inline void topologicalSort(IR::Dependencies deps, IR::Loop *root, int depth) {
   // basic plan for the top sort:
   // We iterate across all users, once all of node's users have been added,
   // we push it to the front of the list. Thus, we get a top-sorted list.
@@ -370,7 +367,7 @@ inline void topologicalSort(IR::Dependencies deps, IR::Loop *root,
   // and any remaining edges
 }
 // NOLINTNEXTLINE(misc-no-recursion)
-inline auto buildSubGraph(IR::Dependencies deps, IR::Loop *root, unsigned depth,
+inline auto buildSubGraph(IR::Dependencies deps, IR::Loop *root, int depth,
                           uint32_t id) -> uint32_t {
   // We build the instruction graph, via traversing the tree, and then
   // top sorting as we recurse out
