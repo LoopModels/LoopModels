@@ -75,10 +75,83 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a44793a6d7f667cb7feb59a4d3c366462"><td class="memItemLeft" align="right" valign="top"><a id="a44793a6d7f667cb7feb59a4d3c366462"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>IROptimizer</b> (<a class="el" href="classpoly_1_1poly_1_1Dependencies.html">IR::Dependencies</a> deps, <a class="el" href="classpoly_1_1IR_1_1Cache.html">IR::Cache</a> &amp;instr, dict::set&lt; llvm::BasicBlock * &gt; &amp;loopBBs, dict::set&lt; llvm::CallBase * &gt; &amp;eraseCandidates_, <a class="el" href="classpoly_1_1IR_1_1Loop.html">IR::Loop</a> *root, Arena&lt;&gt; *lalloc, <a class="el" href="structpoly_1_1lp_1_1LoopBlock_1_1OptimizationResult.html">lp::LoopBlock::OptimizationResult</a> res, uint32_t numLoops)</td></tr>
+<tr class="memitem:a44793a6d7f667cb7feb59a4d3c366462"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1CostModeling_1_1IROptimizer.html#a44793a6d7f667cb7feb59a4d3c366462">IROptimizer</a> (<a class="el" href="classpoly_1_1poly_1_1Dependencies.html">IR::Dependencies</a> deps, <a class="el" href="classpoly_1_1IR_1_1Cache.html">IR::Cache</a> &amp;instr, dict::set&lt; llvm::BasicBlock * &gt; &amp;loopBBs, dict::set&lt; llvm::CallBase * &gt; &amp;eraseCandidates_, <a class="el" href="classpoly_1_1IR_1_1Loop.html">IR::Loop</a> *root, Arena&lt;&gt; *lalloc, <a class="el" href="structpoly_1_1lp_1_1LoopBlock_1_1OptimizationResult.html">lp::LoopBlock::OptimizationResult</a> res, uint32_t numLoops)</td></tr>
 <tr class="separator:a44793a6d7f667cb7feb59a4d3c366462"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
+<h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
+<a id="a44793a6d7f667cb7feb59a4d3c366462"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a44793a6d7f667cb7feb59a4d3c366462">&#9670;&nbsp;</a></span>IROptimizer()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">poly::CostModeling::IROptimizer::IROptimizer </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classpoly_1_1poly_1_1Dependencies.html">IR::Dependencies</a>&#160;</td>
+          <td class="paramname"><em>deps</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classpoly_1_1IR_1_1Cache.html">IR::Cache</a> &amp;&#160;</td>
+          <td class="paramname"><em>instr</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">dict::set&lt; llvm::BasicBlock * &gt; &amp;&#160;</td>
+          <td class="paramname"><em>loopBBs</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">dict::set&lt; llvm::CallBase * &gt; &amp;&#160;</td>
+          <td class="paramname"><em>eraseCandidates_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classpoly_1_1IR_1_1Loop.html">IR::Loop</a> *&#160;</td>
+          <td class="paramname"><em>root</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">Arena&lt;&gt; *&#160;</td>
+          <td class="paramname"><em>lalloc</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="structpoly_1_1lp_1_1LoopBlock_1_1OptimizationResult.html">lp::LoopBlock::OptimizationResult</a>&#160;</td>
+          <td class="paramname"><em>res</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint32_t&#160;</td>
+          <td class="paramname"><em>numLoops</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>TODO: legality check</p>
+
+</div>
+</div>
 <hr/>The documentation for this class was generated from the following file:<ul>
 <li>include/Optimize/<a class="el" href="CostModeling_8hpp_source.html">CostModeling.hpp</a></li>
 </ul>

@@ -77,17 +77,20 @@ $(function() {
 <div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="preprocessor">#include &lt;cstdint&gt;</span></div>
 <div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160; </div>
 <div class="line"><a name="l00009"></a><span class="lineno"><a class="line" href="structOrthogonalAxes.html">    9</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structOrthogonalAxes.html">OrthogonalAxes</a> {</div>
-<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;  uint32_t indep_axes : 1;</div>
-<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;  uint32_t contig : 31; <span class="comment">// max number of dims of 31</span></div>
-<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;  uint32_t indep;       <span class="comment">// max loop depth of 32</span></div>
-<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;};</div>
-<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;constexpr <span class="keyword">auto</span> operator==(<a class="code" href="structOrthogonalAxes.html">OrthogonalAxes</a> a, <a class="code" href="structOrthogonalAxes.html">OrthogonalAxes</a> b) -&gt; <span class="keywordtype">bool</span> {</div>
-<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;  <span class="keywordflow">return</span> std::bit_cast&lt;uint64_t&gt;(a) == std::bit_cast&lt;uint64_t&gt;(b);</div>
-<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;}</div>
-<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;static_assert(<span class="keyword">sizeof</span>(<a class="code" href="structOrthogonalAxes.html">OrthogonalAxes</a>) == 8);</div>
-<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160; </div>
-<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;<span class="preprocessor">#endif </span><span class="comment">// OrthogonalAxes_hpp_INCLUDED</span></div>
+<div class="line"><a name="l00011"></a><span class="lineno"><a class="line" href="structOrthogonalAxes.html#a3856d3d2b5a75d239a151f73e6dd4c7c">   11</a></span>&#160;  uint32_t <a class="code" href="structOrthogonalAxes.html#a3856d3d2b5a75d239a151f73e6dd4c7c">indep_axes</a> : 1;</div>
+<div class="line"><a name="l00013"></a><span class="lineno"><a class="line" href="structOrthogonalAxes.html#aa85a7e4723cadca5f8a0a30b0bb7b8cb">   13</a></span>&#160;  uint32_t <a class="code" href="structOrthogonalAxes.html#aa85a7e4723cadca5f8a0a30b0bb7b8cb">contig</a> : 31; <span class="comment">// max number of dims of 31</span></div>
+<div class="line"><a name="l00016"></a><span class="lineno"><a class="line" href="structOrthogonalAxes.html#a6494d7785325e6b35b5125b98be4d5e4">   16</a></span>&#160;<span class="comment"></span>  uint32_t <a class="code" href="structOrthogonalAxes.html#a6494d7785325e6b35b5125b98be4d5e4">indep</a>; <span class="comment">// max loop depth of 32</span></div>
+<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;};</div>
+<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;static_assert(<span class="keyword">sizeof</span>(<a class="code" href="structOrthogonalAxes.html">OrthogonalAxes</a>) == 8);</div>
+<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;constexpr <span class="keyword">auto</span> operator==(<a class="code" href="structOrthogonalAxes.html">OrthogonalAxes</a> a, <a class="code" href="structOrthogonalAxes.html">OrthogonalAxes</a> b) -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;  <span class="keywordflow">return</span> std::bit_cast&lt;uint64_t&gt;(a) == std::bit_cast&lt;uint64_t&gt;(b);</div>
+<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;}</div>
+<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160; </div>
+<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;<span class="preprocessor">#endif </span><span class="comment">// OrthogonalAxes_hpp_INCLUDED</span></div>
 <div class="ttc" id="astructOrthogonalAxes_html"><div class="ttname"><a href="structOrthogonalAxes.html">OrthogonalAxes</a></div><div class="ttdoc">indep must be 0 for any invunrolls it doesn't depend on</div><div class="ttdef"><b>Definition:</b> OrthogonalAxes.hpp:9</div></div>
+<div class="ttc" id="astructOrthogonalAxes_html_a3856d3d2b5a75d239a151f73e6dd4c7c"><div class="ttname"><a href="structOrthogonalAxes.html#a3856d3d2b5a75d239a151f73e6dd4c7c">OrthogonalAxes::indep_axes</a></div><div class="ttdeci">uint32_t indep_axes</div><div class="ttdoc">Boolean: Are the axes independent?</div><div class="ttdef"><b>Definition:</b> OrthogonalAxes.hpp:11</div></div>
+<div class="ttc" id="astructOrthogonalAxes_html_a6494d7785325e6b35b5125b98be4d5e4"><div class="ttname"><a href="structOrthogonalAxes.html#a6494d7785325e6b35b5125b98be4d5e4">OrthogonalAxes::indep</a></div><div class="ttdeci">uint32_t indep</div><div class="ttdef"><b>Definition:</b> OrthogonalAxes.hpp:16</div></div>
+<div class="ttc" id="astructOrthogonalAxes_html_aa85a7e4723cadca5f8a0a30b0bb7b8cb"><div class="ttname"><a href="structOrthogonalAxes.html#aa85a7e4723cadca5f8a0a30b0bb7b8cb">OrthogonalAxes::contig</a></div><div class="ttdeci">uint32_t contig</div><div class="ttdoc">Bit mask: are the axes contiguous?</div><div class="ttdef"><b>Definition:</b> OrthogonalAxes.hpp:13</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

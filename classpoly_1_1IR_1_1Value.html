@@ -224,9 +224,9 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>setChild</b
 <tr class="memitem:a8750903081b96ad0d19798f989df1daf inherit pub_methods_classpoly_1_1IR_1_1Node"><td class="memItemLeft" align="right" valign="top"><a id="a8750903081b96ad0d19798f989df1daf"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>setParent</b> (<a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a> *n) -&gt; <a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a> *</td></tr>
 <tr class="separator:a8750903081b96ad0d19798f989df1daf inherit pub_methods_classpoly_1_1IR_1_1Node"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a390626805250c9f677bda4966d5cd1cc inherit pub_methods_classpoly_1_1IR_1_1Node"><td class="memItemLeft" align="right" valign="top"><a id="a390626805250c9f677bda4966d5cd1cc"></a>
-constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>setCurrentDepth</b> (unsigned d)</td></tr>
-<tr class="separator:a390626805250c9f677bda4966d5cd1cc inherit pub_methods_classpoly_1_1IR_1_1Node"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7fc71542be195ffbf23482188c6b27f3 inherit pub_methods_classpoly_1_1IR_1_1Node"><td class="memItemLeft" align="right" valign="top"><a id="a7fc71542be195ffbf23482188c6b27f3"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>setCurrentDepth</b> (int d)</td></tr>
+<tr class="separator:a7fc71542be195ffbf23482188c6b27f3 inherit pub_methods_classpoly_1_1IR_1_1Node"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1b04b2bdc393d7b72ace4c27e758fbde inherit pub_methods_classpoly_1_1IR_1_1Node"><td class="memItemLeft" align="right" valign="top"><a id="a1b04b2bdc393d7b72ace4c27e758fbde"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1IR_1_1Node.html#a1b04b2bdc393d7b72ace4c27e758fbde">insertAhead</a> (<a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a> *d)</td></tr>
 <tr class="memdesc:a1b04b2bdc393d7b72ace4c27e758fbde inherit pub_methods_classpoly_1_1IR_1_1Node"><td class="mdescLeft">&#160;</td><td class="mdescRight">insert <code>d</code> ahead of <code>this</code> <br /></td></tr>
@@ -311,10 +311,10 @@ Protected Attributes</h2></td></tr>
 const ValKind&#160;</td><td class="memItemRight" valign="bottom"><b>kind</b></td></tr>
 <tr class="separator:a4f4152701237781b361122fbe03c91cd inherit pro_attribs_classpoly_1_1IR_1_1Node"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abae95c9a27f6ce1fafb2e0b4fb7844e8 inherit pro_attribs_classpoly_1_1IR_1_1Node"><td class="memItemLeft" align="right" valign="top"><a id="abae95c9a27f6ce1fafb2e0b4fb7844e8"></a>
-uint8_t&#160;</td><td class="memItemRight" valign="bottom"><b>currentDepth</b> {0}</td></tr>
+uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1IR_1_1Node.html#abae95c9a27f6ce1fafb2e0b4fb7844e8">currentDepth</a> {0}</td></tr>
+<tr class="memdesc:abae95c9a27f6ce1fafb2e0b4fb7844e8 inherit pro_attribs_classpoly_1_1IR_1_1Node"><td class="mdescLeft">&#160;</td><td class="mdescRight">The current position, <code>0</code> means top level, 1 inside a single loop. <br /></td></tr>
 <tr class="separator:abae95c9a27f6ce1fafb2e0b4fb7844e8 inherit pro_attribs_classpoly_1_1IR_1_1Node"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abba41fed05889ab36bc3ee55a9965ac8 inherit pro_attribs_classpoly_1_1IR_1_1Node"><td class="memItemLeft" align="right" valign="top"><a id="abba41fed05889ab36bc3ee55a9965ac8"></a>
-uint8_t&#160;</td><td class="memItemRight" valign="bottom"><b>naturalDepth</b> {0}</td></tr>
+<tr class="memitem:abba41fed05889ab36bc3ee55a9965ac8 inherit pro_attribs_classpoly_1_1IR_1_1Node"><td class="memItemLeft" align="right" valign="top">uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1IR_1_1Node.html#abba41fed05889ab36bc3ee55a9965ac8">naturalDepth</a> {0}</td></tr>
 <tr class="separator:abba41fed05889ab36bc3ee55a9965ac8 inherit pro_attribs_classpoly_1_1IR_1_1Node"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a60e7cf219151c252a2dc4e614c1d7020 inherit pro_attribs_classpoly_1_1IR_1_1Node"><td class="memItemLeft" align="right" valign="top"><a id="a60e7cf219151c252a2dc4e614c1d7020"></a>
 uint8_t&#160;</td><td class="memItemRight" valign="bottom"><b>visitDepth</b> {255}</td></tr>

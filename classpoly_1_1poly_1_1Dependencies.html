@@ -168,6 +168,12 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>depSatBnd</
 <tr class="memitem:a941753105fe7b4ee92f58ea5e02fe522"><td class="memItemLeft" align="right" valign="top"><a id="a941753105fe7b4ee92f58ea5e02fe522"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>revTimeEdge</b> (<a class="el" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">ID</a> i) -&gt; int32_t &amp;</td></tr>
 <tr class="separator:a941753105fe7b4ee92f58ea5e02fe522"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a941753105fe7b4ee92f58ea5e02fe522"><td class="memItemLeft" align="right" valign="top"><a id="a941753105fe7b4ee92f58ea5e02fe522"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>revTimeEdge</b> (<a class="el" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">ID</a> i) -&gt; int32_t &amp;</td></tr>
+<tr class="separator:a941753105fe7b4ee92f58ea5e02fe522"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a90d355295c43d9b7b37d5ed32ef734c4"><td class="memItemLeft" align="right" valign="top"><a id="a90d355295c43d9b7b37d5ed32ef734c4"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>revTimeEdge</b> (<a class="el" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">ID</a> i) const -&gt; int32_t</td></tr>
+<tr class="separator:a90d355295c43d9b7b37d5ed32ef734c4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a35aa8ae3cf5531396f377e1f19bf3507"><td class="memItemLeft" align="right" valign="top"><a id="a35aa8ae3cf5531396f377e1f19bf3507"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>depPoly</b> (<a class="el" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">ID</a> i) -&gt; <a class="el" href="classpoly_1_1poly_1_1DepPoly.html">DepPoly</a> *&amp;</td></tr>
 <tr class="separator:a35aa8ae3cf5531396f377e1f19bf3507"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -231,8 +237,41 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>inputAddrTr
 <tr class="memitem:add6c69301b6a6b043b7f3617844b9a56"><td class="memItemLeft" align="right" valign="top"><a id="add6c69301b6a6b043b7f3617844b9a56"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>outputAddrTransform</b> ()</td></tr>
 <tr class="separator:add6c69301b6a6b043b7f3617844b9a56"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2aded15694d978e2abbb32d52a9fd059"><td class="memItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1poly_1_1Dependencies.html#a2aded15694d978e2abbb32d52a9fd059">registerEligible</a> (<a class="el" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">ID</a> id) const -&gt; bool</td></tr>
+<tr class="separator:a2aded15694d978e2abbb32d52a9fd059"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a63de09031672cf984070202444ade954"><td class="memItemLeft" align="right" valign="top"><a id="a63de09031672cf984070202444ade954"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>registerEligibleFilter</b> () const</td></tr>
+<tr class="separator:a63de09031672cf984070202444ade954"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Member Function Documentation</h2>
+<a id="a2aded15694d978e2abbb32d52a9fd059"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2aded15694d978e2abbb32d52a9fd059">&#9670;&nbsp;</a></span>registerEligible()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">constexpr auto poly::poly::Dependencies::registerEligible </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">ID</a>&#160;</td>
+          <td class="paramname"><em>id</em></td><td>)</td>
+          <td> const -&gt; bool </td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">constexpr</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>this function essentially indicates that this dependency does not prevent the hoisting of a memory access out of a loop, because a memory-&gt;register transform is possible. The requirements are that the <code>indexMatrix</code> match </p>
+<p>If no repeated accesses across time, it can't be hoisted out</p>
+
+</div>
+</div>
 <a id="aad261426ea6c9a40cc734eccd7d197a7"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#aad261426ea6c9a40cc734eccd7d197a7">&#9670;&nbsp;</a></span>removeEdge()</h2>
 

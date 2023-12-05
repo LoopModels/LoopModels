@@ -132,17 +132,15 @@ $(function() {
 <div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;constexpr <span class="keyword">auto</span> operator&amp;(<a class="code" href="structpoly_1_1CostModeling_1_1MemCostSummary.html">MemCostSummary</a> a, <a class="code" href="structpoly_1_1CostModeling_1_1MemCostSummary.html">MemCostSummary</a> b) -&gt; uint32_t {</div>
 <div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;  <span class="keywordflow">return</span> a.orth.indep &amp; b.orth.indep;</div>
 <div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;}</div>
-<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;constexpr <span class="keyword">auto</span> cost(<span class="keyword">const</span> AbstractMatrix <span class="keyword">auto</span> &amp;invunrolls, uint32_t indepAxes)</div>
-<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;  -&gt; utils::eltype_t&lt;decltype(invunrolls)&gt; {</div>
-<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;  utils::eltype_t&lt;decltype(invunrolls)&gt; c{};</div>
-<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;  <span class="keywordflow">if</span> (indepAxes) {</div>
-<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;    uint32_t tz = std::countr_zero(indepAxes);</div>
-<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;    c = invunrolls[0, tz++];</div>
-<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;    <span class="keywordflow">for</span> (uint32_t d = indepAxes &gt;&gt; tz, i = tz; d; d &gt;&gt;= tz, i += tz) {</div>
-<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;      tz = std::countr_zero(d);</div>
-<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;      c *= invunrolls[0, i + tz++];</div>
-<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;    }</div>
-<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;  } <span class="keywordflow">else</span> c = 1;</div>
+<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;constexpr <span class="keyword">auto</span> cost(<span class="keyword">const</span> AbstractMatrix <span class="keyword">auto</span> &amp;invunrolls, uint32_t indepAxes)</div>
+<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;  -&gt; utils::eltype_t&lt;decltype(invunrolls)&gt; {</div>
+<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;  <span class="keywordflow">if</span> (!indepAxes) <span class="keywordflow">return</span> 1;</div>
+<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;  uint32_t tz = std::countr_zero(indepAxes);</div>
+<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;  utils::eltype_t&lt;decltype(invunrolls)&gt; c{invunrolls[0, tz++]};</div>
+<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;  <span class="keywordflow">for</span> (uint32_t d = indepAxes &gt;&gt; tz, i = tz; d; d &gt;&gt;= tz, i += tz) {</div>
+<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;    tz = std::countr_zero(d);</div>
+<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;    c *= invunrolls[0, i + tz++];</div>
+<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;  }</div>
 <div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;  <span class="keywordflow">return</span> c;</div>
 <div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;}</div>
 <div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;<span class="comment">// costs is an array of length two.</span></div>
@@ -344,7 +342,7 @@ $(function() {
 <div class="line"><a name="l00519"></a><span class="lineno">  519</span>&#160;      <span class="keywordflow">if</span> (<span class="keyword">auto</span> *A = llvm::dyn_cast&lt;IR::Addr&gt;(N)) {</div>
 <div class="line"><a name="l00520"></a><span class="lineno">  520</span>&#160;        <a class="code" href="structOrthogonalAxes.html">OrthogonalAxes</a> oa = A-&gt;calcOrthAxes(depth);</div>
 <div class="line"><a name="l00521"></a><span class="lineno">  521</span>&#160;        <a class="code" href="structpoly_1_1IR_1_1Addr_1_1Costs.html">IR::Addr::Costs</a> rtl = A-&gt;calcCostContigDiscontig(TTI, maxVF);</div>
-<div class="line"><a name="l00522"></a><span class="lineno">  522</span>&#160;        <span class="keywordflow">if</span> (oa.indep_axes) {</div>
+<div class="line"><a name="l00522"></a><span class="lineno">  522</span>&#160;        <span class="keywordflow">if</span> (oa.<a class="code" href="structOrthogonalAxes.html#a3856d3d2b5a75d239a151f73e6dd4c7c">indep_axes</a>) {</div>
 <div class="line"><a name="l00523"></a><span class="lineno">  523</span>&#160;          <span class="comment">// check for duplicate</span></div>
 <div class="line"><a name="l00524"></a><span class="lineno">  524</span>&#160;          <span class="keywordtype">bool</span> found = <span class="keyword">false</span>;</div>
 <div class="line"><a name="l00525"></a><span class="lineno">  525</span>&#160;          <span class="keywordflow">for</span> (ptrdiff_t i = omemory; i &lt; orth_axes.size(); ++i) {</div>
@@ -517,19 +515,20 @@ $(function() {
 <div class="line"><a name="l00692"></a><span class="lineno">  692</span>&#160; </div>
 <div class="line"><a name="l00693"></a><span class="lineno">  693</span>&#160;} <span class="comment">// namespace poly::CostModeling</span></div>
 <div class="ttc" id="aclasspoly_1_1CostModeling_1_1LoopTreeCostFn_html"><div class="ttname"><a href="classpoly_1_1CostModeling_1_1LoopTreeCostFn.html">poly::CostModeling::LoopTreeCostFn</a></div><div class="ttdef"><b>Definition:</b> CostFunction.hpp:467</div></div>
-<div class="ttc" id="aclasspoly_1_1IR_1_1Loop_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Loop.html">poly::IR::Loop</a></div><div class="ttdef"><b>Definition:</b> Node.hpp:284</div></div>
-<div class="ttc" id="aclasspoly_1_1IR_1_1Loop_html_a2f7536df8daae2f5cd38078a37a6ecb6"><div class="ttname"><a href="classpoly_1_1IR_1_1Loop.html#a2f7536df8daae2f5cd38078a37a6ecb6">poly::IR::Loop::getNextLoop</a></div><div class="ttdeci">constexpr auto getNextLoop() const -&gt; Loop *</div><div class="ttdoc">Returns the next loop at the same level.</div><div class="ttdef"><b>Definition:</b> Node.hpp:337</div></div>
-<div class="ttc" id="aclasspoly_1_1IR_1_1Loop_html_aafb52d2d14ecc6e68e9f2ced4f2dc2e8"><div class="ttname"><a href="classpoly_1_1IR_1_1Loop.html#aafb52d2d14ecc6e68e9f2ced4f2dc2e8">poly::IR::Loop::getSubLoop</a></div><div class="ttdeci">constexpr auto getSubLoop() const -&gt; Loop *</div><div class="ttdoc">Get the first subloop.</div><div class="ttdef"><b>Definition:</b> Node.hpp:327</div></div>
+<div class="ttc" id="aclasspoly_1_1IR_1_1Loop_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Loop.html">poly::IR::Loop</a></div><div class="ttdef"><b>Definition:</b> Node.hpp:289</div></div>
+<div class="ttc" id="aclasspoly_1_1IR_1_1Loop_html_a2f7536df8daae2f5cd38078a37a6ecb6"><div class="ttname"><a href="classpoly_1_1IR_1_1Loop.html#a2f7536df8daae2f5cd38078a37a6ecb6">poly::IR::Loop::getNextLoop</a></div><div class="ttdeci">constexpr auto getNextLoop() const -&gt; Loop *</div><div class="ttdoc">Returns the next loop at the same level.</div><div class="ttdef"><b>Definition:</b> Node.hpp:342</div></div>
+<div class="ttc" id="aclasspoly_1_1IR_1_1Loop_html_aafb52d2d14ecc6e68e9f2ced4f2dc2e8"><div class="ttname"><a href="classpoly_1_1IR_1_1Loop.html#aafb52d2d14ecc6e68e9f2ced4f2dc2e8">poly::IR::Loop::getSubLoop</a></div><div class="ttdeci">constexpr auto getSubLoop() const -&gt; Loop *</div><div class="ttdoc">Get the first subloop.</div><div class="ttdef"><b>Definition:</b> Node.hpp:332</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Node_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Node.html">poly::IR::Node</a></div><div class="ttdef"><b>Definition:</b> Node.hpp:86</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1cost_1_1VectorWidth_html"><div class="ttname"><a href="classpoly_1_1IR_1_1cost_1_1VectorWidth.html">poly::IR::cost::VectorWidth</a></div><div class="ttdef"><b>Definition:</b> InstructionCost.hpp:46</div></div>
 <div class="ttc" id="astructOrthogonalAxes_html"><div class="ttname"><a href="structOrthogonalAxes.html">OrthogonalAxes</a></div><div class="ttdoc">indep must be 0 for any invunrolls it doesn't depend on</div><div class="ttdef"><b>Definition:</b> OrthogonalAxes.hpp:9</div></div>
+<div class="ttc" id="astructOrthogonalAxes_html_a3856d3d2b5a75d239a151f73e6dd4c7c"><div class="ttname"><a href="structOrthogonalAxes.html#a3856d3d2b5a75d239a151f73e6dd4c7c">OrthogonalAxes::indep_axes</a></div><div class="ttdeci">uint32_t indep_axes</div><div class="ttdoc">Boolean: Are the axes independent?</div><div class="ttdef"><b>Definition:</b> OrthogonalAxes.hpp:11</div></div>
 <div class="ttc" id="astructpoly_1_1CostModeling_1_1LoopCostCounts_html"><div class="ttname"><a href="structpoly_1_1CostModeling_1_1LoopCostCounts.html">poly::CostModeling::LoopCostCounts</a></div><div class="ttdef"><b>Definition:</b> CostFunction.hpp:46</div></div>
 <div class="ttc" id="astructpoly_1_1CostModeling_1_1LoopCostCounts_html_a00277cb177ddf1728536431c52d788ac"><div class="ttname"><a href="structpoly_1_1CostModeling_1_1LoopCostCounts.html#a00277cb177ddf1728536431c52d788ac">poly::CostModeling::LoopCostCounts::l2vectorWidth</a></div><div class="ttdeci">uint8_t l2vectorWidth</div><div class="ttdoc">how many blocks we exit after this</div><div class="ttdef"><b>Definition:</b> CostFunction.hpp:53</div></div>
-<div class="ttc" id="astructpoly_1_1CostModeling_1_1LoopDepSatisfaction_html"><div class="ttname"><a href="structpoly_1_1CostModeling_1_1LoopDepSatisfaction.html">poly::CostModeling::LoopDepSatisfaction</a></div><div class="ttdef"><b>Definition:</b> CostModeling.hpp:431</div></div>
+<div class="ttc" id="astructpoly_1_1CostModeling_1_1LoopDepSatisfaction_html"><div class="ttname"><a href="structpoly_1_1CostModeling_1_1LoopDepSatisfaction.html">poly::CostModeling::LoopDepSatisfaction</a></div><div class="ttdef"><b>Definition:</b> CostModeling.hpp:447</div></div>
 <div class="ttc" id="astructpoly_1_1CostModeling_1_1MemCostSummary_html"><div class="ttname"><a href="structpoly_1_1CostModeling_1_1MemCostSummary.html">poly::CostModeling::MemCostSummary</a></div><div class="ttdef"><b>Definition:</b> CostFunction.hpp:76</div></div>
 <div class="ttc" id="astructpoly_1_1CostModeling_1_1RegisterUseByUnroll_html"><div class="ttname"><a href="structpoly_1_1CostModeling_1_1RegisterUseByUnroll.html">poly::CostModeling::RegisterUseByUnroll</a></div><div class="ttdef"><b>Definition:</b> CostFunction.hpp:206</div></div>
 <div class="ttc" id="astructpoly_1_1CostModeling_1_1VectorizationFactor_html"><div class="ttname"><a href="structpoly_1_1CostModeling_1_1VectorizationFactor.html">poly::CostModeling::VectorizationFactor</a></div><div class="ttdoc">Order is outermost -&gt; innermost.</div><div class="ttdef"><b>Definition:</b> CostFunction.hpp:58</div></div>
-<div class="ttc" id="astructpoly_1_1IR_1_1Addr_1_1Costs_html"><div class="ttname"><a href="structpoly_1_1IR_1_1Addr_1_1Costs.html">poly::IR::Addr::Costs</a></div><div class="ttdoc">RecipThroughput.</div><div class="ttdef"><b>Definition:</b> Address.hpp:591</div></div>
+<div class="ttc" id="astructpoly_1_1IR_1_1Addr_1_1Costs_html"><div class="ttname"><a href="structpoly_1_1IR_1_1Addr_1_1Costs.html">poly::IR::Addr::Costs</a></div><div class="ttdoc">RecipThroughput.</div><div class="ttdef"><b>Definition:</b> Address.hpp:592</div></div>
 <div class="ttc" id="astructpoly_1_1poly_1_1Dependence_html"><div class="ttname"><a href="structpoly_1_1poly_1_1Dependence.html">poly::poly::Dependence</a></div><div class="ttdef"><b>Definition:</b> Dependence.hpp:23</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->

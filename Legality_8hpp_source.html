@@ -163,57 +163,60 @@ $(function() {
 <div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;<span class="comment">// [ ] Fuse legality checking, at least in part, with it, as that may indicate</span></div>
 <div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;<span class="comment">//     unrolling in example 3 above.</span></div>
 <div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;<span class="comment">// [ ] See discussionin CostModeling.hpp above `optimize` about unrolling.</span></div>
-<div class="line"><a name="l00095"></a><span class="lineno"><a class="line" href="structpoly_1_1CostModeling_1_1Legality.html">   95</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structpoly_1_1CostModeling_1_1Legality.html">Legality</a> {</div>
-<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;  <span class="comment">// enum class Reduction { None = 0, Unordered = 1, Ordered = 2 };</span></div>
-<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;  uint16_t unordered_reduction_count{0};</div>
-<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;  uint16_t mindistance{std::numeric_limits&lt;uint16_t&gt;::max()};</div>
-<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;  uint16_t maxdistance{0};</div>
-<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;  uint16_t maxiters{0};</div>
-<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> minDistance() <span class="keyword">const</span> -&gt; uint16_t {</div>
-<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;    <span class="keywordflow">return</span> mindistance;</div>
-<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;  }</div>
-<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> maxDistance() <span class="keyword">const</span> -&gt; uint16_t {</div>
+<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;<span class="comment">// Okay, we&#39;ll take a somewhat different approach:</span></div>
+<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;<span class="comment">// it shouldn&#39;t be too difficult to check for extra outputs, etc.</span></div>
+<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;<span class="comment">// so we do that all here, after the `Addr` placements and simplifications</span></div>
+<div class="line"><a name="l00098"></a><span class="lineno"><a class="line" href="structpoly_1_1CostModeling_1_1Legality.html">   98</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structpoly_1_1CostModeling_1_1Legality.html">Legality</a> {</div>
+<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;  <span class="comment">// enum class Reduction { None = 0, Unordered = 1, Ordered = 2 };</span></div>
+<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;  uint16_t unordered_reduction_count{0};</div>
+<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;  uint16_t mindistance{std::numeric_limits&lt;uint16_t&gt;::max()};</div>
+<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;  uint16_t maxdistance{0};</div>
+<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;  uint16_t maxiters{0};</div>
+<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> minDistance() <span class="keyword">const</span> -&gt; uint16_t {</div>
 <div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;    <span class="keywordflow">return</span> mindistance;</div>
 <div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;  }</div>
-<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> maxIters() <span class="keyword">const</span> -&gt; uint16_t { <span class="keywordflow">return</span> maxiters; }</div>
-<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;  constexpr <span class="keyword">auto</span> operator&amp;=(<a class="code" href="structpoly_1_1CostModeling_1_1Legality.html">Legality</a> other) -&gt; <a class="code" href="structpoly_1_1CostModeling_1_1Legality.html">Legality</a> &amp; {</div>
-<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;    unordered_reduction_count += other.unordered_reduction_count;</div>
-<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;    mindistance = std::min(mindistance, other.mindistance);</div>
-<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;    maxdistance = std::max(maxdistance, other.maxdistance);</div>
-<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;    maxiters = std::max(maxiters, other.maxiters);</div>
-<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;    <span class="keywordflow">return</span> *<span class="keyword">this</span>;</div>
-<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;  }</div>
-<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> operator&amp;(<a class="code" href="structpoly_1_1CostModeling_1_1Legality.html">Legality</a> other) <span class="keyword">const</span> -&gt; <a class="code" href="structpoly_1_1CostModeling_1_1Legality.html">Legality</a> {</div>
-<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;    <a class="code" href="structpoly_1_1CostModeling_1_1Legality.html">Legality</a> l{*<span class="keyword">this</span>};</div>
-<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;    <span class="keywordflow">return</span> l &amp;= other;</div>
-<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;  }</div>
-<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;  constexpr <a class="code" href="structpoly_1_1CostModeling_1_1Legality.html">Legality</a>() = <span class="keywordflow">default</span>;</div>
-<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;  constexpr <a class="code" href="structpoly_1_1CostModeling_1_1Legality.html">Legality</a>(<span class="keyword">const</span> <a class="code" href="structpoly_1_1CostModeling_1_1Legality.html">Legality</a> &amp;) = <span class="keywordflow">default</span>;</div>
-<div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;  constexpr <a class="code" href="structpoly_1_1CostModeling_1_1Legality.html">Legality</a>(<a class="code" href="classpoly_1_1poly_1_1Dependencies.html">IR::Dependencies</a> deps, <a class="code" href="structpoly_1_1poly_1_1Dependence.html">Dependence</a> d) {</div>
-<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;    <a class="code" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> *in = d.out, *out = d.in;</div>
-<div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;    <span class="keywordflow">if</span> (d.revTimeEdge()) {</div>
-<div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;      <span class="keywordflow">if</span> (in-&gt;reassociableReductionPair() != out) {</div>
-<div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160;        mindistance = 0;</div>
-<div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;        maxdistance = maxiters = std::numeric_limits&lt;uint16_t&gt;::max();</div>
-<div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;      } <span class="keywordflow">else</span> ++unordered_reduction_count;</div>
-<div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160;      <span class="keywordflow">return</span>;</div>
-<div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160;    }</div>
-<div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160;    <span class="comment">// now we must analyze the dependence...</span></div>
-<div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160;    <span class="comment">//</span></div>
-<div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160;  };</div>
-<div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;  <a class="code" href="structpoly_1_1CostModeling_1_1Legality.html">Legality</a>(<a class="code" href="structpoly_1_1CostModeling_1_1LoopDepSatisfaction.html">LoopDepSatisfaction</a> deps, <a class="code" href="classpoly_1_1IR_1_1Loop.html">IR::Loop</a> *L) {</div>
-<div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;    <span class="keywordflow">for</span> (<a class="code" href="structpoly_1_1poly_1_1Dependence.html">poly::Dependence</a> d : deps.depencencies(L))</div>
-<div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;      (*this) &amp;= <a class="code" href="structpoly_1_1CostModeling_1_1Legality.html">Legality</a>(deps.deps, d);</div>
-<div class="line"><a name="l00136"></a><span class="lineno">  136</span>&#160;  }</div>
-<div class="line"><a name="l00137"></a><span class="lineno">  137</span>&#160;};</div>
-<div class="line"><a name="l00138"></a><span class="lineno">  138</span>&#160; </div>
-<div class="line"><a name="l00139"></a><span class="lineno">  139</span>&#160;} <span class="comment">// namespace poly::CostModeling</span></div>
-<div class="line"><a name="l00140"></a><span class="lineno">  140</span>&#160;<span class="preprocessor">#endif </span><span class="comment">// POLY_LEGALITY_HPP_INCLUDED</span></div>
-<div class="ttc" id="aclasspoly_1_1IR_1_1Addr_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Addr.html">poly::IR::Addr</a></div><div class="ttdef"><b>Definition:</b> Address.hpp:78</div></div>
-<div class="ttc" id="aclasspoly_1_1IR_1_1Loop_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Loop.html">poly::IR::Loop</a></div><div class="ttdef"><b>Definition:</b> Node.hpp:284</div></div>
+<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> maxDistance() <span class="keyword">const</span> -&gt; uint16_t {</div>
+<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;    <span class="keywordflow">return</span> mindistance;</div>
+<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;  }</div>
+<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> maxIters() <span class="keyword">const</span> -&gt; uint16_t { <span class="keywordflow">return</span> maxiters; }</div>
+<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;  constexpr <span class="keyword">auto</span> operator&amp;=(<a class="code" href="structpoly_1_1CostModeling_1_1Legality.html">Legality</a> other) -&gt; <a class="code" href="structpoly_1_1CostModeling_1_1Legality.html">Legality</a> &amp; {</div>
+<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;    unordered_reduction_count += other.unordered_reduction_count;</div>
+<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;    mindistance = std::min(mindistance, other.mindistance);</div>
+<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;    maxdistance = std::max(maxdistance, other.maxdistance);</div>
+<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;    maxiters = std::max(maxiters, other.maxiters);</div>
+<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;    <span class="keywordflow">return</span> *<span class="keyword">this</span>;</div>
+<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;  }</div>
+<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> operator&amp;(<a class="code" href="structpoly_1_1CostModeling_1_1Legality.html">Legality</a> other) <span class="keyword">const</span> -&gt; <a class="code" href="structpoly_1_1CostModeling_1_1Legality.html">Legality</a> {</div>
+<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;    <a class="code" href="structpoly_1_1CostModeling_1_1Legality.html">Legality</a> l{*<span class="keyword">this</span>};</div>
+<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;    <span class="keywordflow">return</span> l &amp;= other;</div>
+<div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;  }</div>
+<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;  constexpr <a class="code" href="structpoly_1_1CostModeling_1_1Legality.html">Legality</a>() = <span class="keywordflow">default</span>;</div>
+<div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;  constexpr <a class="code" href="structpoly_1_1CostModeling_1_1Legality.html">Legality</a>(<span class="keyword">const</span> <a class="code" href="structpoly_1_1CostModeling_1_1Legality.html">Legality</a> &amp;) = <span class="keywordflow">default</span>;</div>
+<div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;  constexpr <a class="code" href="structpoly_1_1CostModeling_1_1Legality.html">Legality</a>(<a class="code" href="classpoly_1_1poly_1_1Dependencies.html">IR::Dependencies</a> deps, <a class="code" href="structpoly_1_1poly_1_1Dependence.html">Dependence</a> d) {</div>
+<div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160;    <a class="code" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> *in = d.out, *out = d.in;</div>
+<div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;    <span class="keywordflow">if</span> (d.revTimeEdge()) {</div>
+<div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;      <span class="keywordflow">if</span> (in-&gt;reassociableReductionPair() != out) {</div>
+<div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160;        mindistance = 0;</div>
+<div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160;        maxdistance = maxiters = std::numeric_limits&lt;uint16_t&gt;::max();</div>
+<div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160;      } <span class="keywordflow">else</span> ++unordered_reduction_count;</div>
+<div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160;      <span class="keywordflow">return</span>;</div>
+<div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160;    }</div>
+<div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;    <span class="comment">// now we must analyze the dependence...</span></div>
+<div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;    <span class="comment">//</span></div>
+<div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;  };</div>
+<div class="line"><a name="l00136"></a><span class="lineno">  136</span>&#160;  <a class="code" href="structpoly_1_1CostModeling_1_1Legality.html">Legality</a>(<a class="code" href="structpoly_1_1CostModeling_1_1LoopDepSatisfaction.html">LoopDepSatisfaction</a> deps, <a class="code" href="classpoly_1_1IR_1_1Loop.html">IR::Loop</a> *L) {</div>
+<div class="line"><a name="l00137"></a><span class="lineno">  137</span>&#160;    <span class="keywordflow">for</span> (<a class="code" href="structpoly_1_1poly_1_1Dependence.html">poly::Dependence</a> d : deps.depencencies(L))</div>
+<div class="line"><a name="l00138"></a><span class="lineno">  138</span>&#160;      (*this) &amp;= <a class="code" href="structpoly_1_1CostModeling_1_1Legality.html">Legality</a>(deps.deps, d);</div>
+<div class="line"><a name="l00139"></a><span class="lineno">  139</span>&#160;  }</div>
+<div class="line"><a name="l00140"></a><span class="lineno">  140</span>&#160;};</div>
+<div class="line"><a name="l00141"></a><span class="lineno">  141</span>&#160; </div>
+<div class="line"><a name="l00142"></a><span class="lineno">  142</span>&#160;} <span class="comment">// namespace poly::CostModeling</span></div>
+<div class="line"><a name="l00143"></a><span class="lineno">  143</span>&#160;<span class="preprocessor">#endif </span><span class="comment">// POLY_LEGALITY_HPP_INCLUDED</span></div>
+<div class="ttc" id="aclasspoly_1_1IR_1_1Addr_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Addr.html">poly::IR::Addr</a></div><div class="ttdef"><b>Definition:</b> Address.hpp:79</div></div>
+<div class="ttc" id="aclasspoly_1_1IR_1_1Loop_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Loop.html">poly::IR::Loop</a></div><div class="ttdef"><b>Definition:</b> Node.hpp:289</div></div>
 <div class="ttc" id="aclasspoly_1_1poly_1_1Dependencies_html"><div class="ttname"><a href="classpoly_1_1poly_1_1Dependencies.html">poly::poly::Dependencies</a></div><div class="ttdef"><b>Definition:</b> Dependence.hpp:541</div></div>
-<div class="ttc" id="astructpoly_1_1CostModeling_1_1Legality_html"><div class="ttname"><a href="structpoly_1_1CostModeling_1_1Legality.html">poly::CostModeling::Legality</a></div><div class="ttdef"><b>Definition:</b> Legality.hpp:95</div></div>
-<div class="ttc" id="astructpoly_1_1CostModeling_1_1LoopDepSatisfaction_html"><div class="ttname"><a href="structpoly_1_1CostModeling_1_1LoopDepSatisfaction.html">poly::CostModeling::LoopDepSatisfaction</a></div><div class="ttdef"><b>Definition:</b> CostModeling.hpp:431</div></div>
+<div class="ttc" id="astructpoly_1_1CostModeling_1_1Legality_html"><div class="ttname"><a href="structpoly_1_1CostModeling_1_1Legality.html">poly::CostModeling::Legality</a></div><div class="ttdef"><b>Definition:</b> Legality.hpp:98</div></div>
+<div class="ttc" id="astructpoly_1_1CostModeling_1_1LoopDepSatisfaction_html"><div class="ttname"><a href="structpoly_1_1CostModeling_1_1LoopDepSatisfaction.html">poly::CostModeling::LoopDepSatisfaction</a></div><div class="ttdef"><b>Definition:</b> CostModeling.hpp:447</div></div>
 <div class="ttc" id="astructpoly_1_1poly_1_1Dependence_html"><div class="ttname"><a href="structpoly_1_1poly_1_1Dependence.html">poly::poly::Dependence</a></div><div class="ttdef"><b>Definition:</b> Dependence.hpp:23</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->

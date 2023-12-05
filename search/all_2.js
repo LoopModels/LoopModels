@@ -13,10 +13,12 @@ var searchData=
   ['component_36',['Component',['../structpoly_1_1lp_1_1ScheduledNode_1_1Component.html',1,'poly::lp::ScheduledNode']]],
   ['compute_37',['Compute',['../classpoly_1_1IR_1_1Compute.html',1,'poly::IR']]],
   ['construct_38',['construct',['../classpoly_1_1IR_1_1Addr.html#acbd2f22ec7600b9c4ac4f536f281e6f4',1,'poly::IR::Addr']]],
-  ['costs_39',['Costs',['../structpoly_1_1IR_1_1Addr_1_1Costs.html',1,'poly::IR::Addr']]],
-  ['count_40',['Count',['../structpoly_1_1IR_1_1MergingCost_1_1Count.html',1,'poly::IR::MergingCost']]],
-  ['cpuregisterfile_41',['CPURegisterFile',['../classCPURegisterFile.html',1,'']]],
-  ['createselect_42',['createSelect',['../classpoly_1_1IR_1_1Cache.html#a6faece9ac31b45aae0353250ff03084d',1,'poly::IR::Cache']]],
-  ['cse_43',['cse',['../classpoly_1_1IR_1_1Cache.html#a4f693e5bc775271888cb0343dc12e750',1,'poly::IR::Cache']]],
-  ['cval_44',['CVal',['../classpoly_1_1IR_1_1CVal.html',1,'poly::IR']]]
+  ['contig_39',['contig',['../structOrthogonalAxes.html#aa85a7e4723cadca5f8a0a30b0bb7b8cb',1,'OrthogonalAxes']]],
+  ['costs_40',['Costs',['../structpoly_1_1IR_1_1Addr_1_1Costs.html',1,'poly::IR::Addr']]],
+  ['count_41',['Count',['../structpoly_1_1IR_1_1MergingCost_1_1Count.html',1,'poly::IR::MergingCost']]],
+  ['cpuregisterfile_42',['CPURegisterFile',['../classCPURegisterFile.html',1,'']]],
+  ['createselect_43',['createSelect',['../classpoly_1_1IR_1_1Cache.html#a6faece9ac31b45aae0353250ff03084d',1,'poly::IR::Cache']]],
+  ['cse_44',['cse',['../classpoly_1_1IR_1_1Cache.html#a4f693e5bc775271888cb0343dc12e750',1,'poly::IR::Cache']]],
+  ['currentdepth_45',['currentDepth',['../classpoly_1_1IR_1_1Node.html#abae95c9a27f6ce1fafb2e0b4fb7844e8',1,'poly::IR::Node']]],
+  ['cval_46',['CVal',['../classpoly_1_1IR_1_1CVal.html',1,'poly::IR']]]
 ];
