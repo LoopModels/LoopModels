@@ -81,8 +81,6 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
 Classes</h2></td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpoly_1_1poly_1_1Dependence_1_1Active.html">Active</a></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">ID</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
@@ -108,12 +106,12 @@ constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>setSatLevel
 <tr class="memitem:aa3fe2f66faac86572a1eaa02d766cac5"><td class="memItemLeft" align="right" valign="top"><a id="aa3fe2f66faac86572a1eaa02d766cac5"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>satLevel</b> () const -&gt; uint8_t</td></tr>
 <tr class="separator:aa3fe2f66faac86572a1eaa02d766cac5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acea7518b1eb415d472534fe71b0926ba"><td class="memItemLeft" align="right" valign="top"><a id="acea7518b1eb415d472534fe71b0926ba"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>isSat</b> (unsigned depth) const -&gt; bool</td></tr>
-<tr class="separator:acea7518b1eb415d472534fe71b0926ba"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abfb3407f2593b7115043a04a94fab530"><td class="memItemLeft" align="right" valign="top"><a id="abfb3407f2593b7115043a04a94fab530"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>isActive</b> (unsigned depth) const -&gt; bool</td></tr>
-<tr class="separator:abfb3407f2593b7115043a04a94fab530"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac3b4f4afcc442f847ff0bc6faed6dd2d"><td class="memItemLeft" align="right" valign="top"><a id="ac3b4f4afcc442f847ff0bc6faed6dd2d"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpoly_1_1poly_1_1Dependence.html#ac3b4f4afcc442f847ff0bc6faed6dd2d">isSat</a> (int depth) const -&gt; bool</td></tr>
+<tr class="memdesc:ac3b4f4afcc442f847ff0bc6faed6dd2d"><td class="mdescLeft">&#160;</td><td class="mdescRight"><code>isSat</code> returns <code>true</code> on the level that satisfies it <br /></td></tr>
+<tr class="separator:ac3b4f4afcc442f847ff0bc6faed6dd2d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a40cd4a879088dff13f540603c4527859"><td class="memItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpoly_1_1poly_1_1Dependence.html#a40cd4a879088dff13f540603c4527859">isActive</a> (int depth) const -&gt; bool</td></tr>
+<tr class="separator:a40cd4a879088dff13f540603c4527859"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3e863ed72e68c568e3b0426c6f7f76e1"><td class="memItemLeft" align="right" valign="top"><a id="a3e863ed72e68c568e3b0426c6f7f76e1"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpoly_1_1poly_1_1Dependence.html#a3e863ed72e68c568e3b0426c6f7f76e1">isCondIndep</a> () const -&gt; bool</td></tr>
 <tr class="memdesc:a3e863ed72e68c568e3b0426c6f7f76e1"><td class="mdescLeft">&#160;</td><td class="mdescRight">if true, then it's independent conditioned on the phis... <br /></td></tr>
@@ -331,6 +329,33 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> 
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p><a class="el" href="structpoly_1_1poly_1_1Dependence.html">Dependence</a> Represents a dependence relationship between two memory accesses. It contains simplices representing constraints that affine schedules are allowed to take. </p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
+<a id="a40cd4a879088dff13f540603c4527859"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a40cd4a879088dff13f540603c4527859">&#9670;&nbsp;</a></span>isActive()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">constexpr auto poly::poly::Dependence::isActive </td>
+          <td>(</td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>depth</em></td><td>)</td>
+          <td> const -&gt; bool </td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">constexpr</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p><code>isActive</code> returns <code>false</code> on the level that satisfies it however, the level that satisfies it shouldn't be reordered so <code>depth-1</code> may be necessary TODO: replace impl with <code>satLevel() &gt;= depth</code> </p>
+
+</div>
+</div>
 <a id="ad61450183ac23f948dd96d0b8090bc00"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ad61450183ac23f948dd96d0b8090bc00">&#9670;&nbsp;</a></span>setSatLevelLP()</h2>
 

@@ -502,13 +502,13 @@ $(function() {
 <div class="line"><a name="l00508"></a><span class="lineno">  508</span>&#160;  }</div>
 <div class="line"><a name="l00509"></a><span class="lineno">  509</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> countAuxParamsAndConstraints(IR::Dependencies deps,</div>
 <div class="line"><a name="l00510"></a><span class="lineno">  510</span>&#160;                                                     ScheduledNode *nodes,</div>
-<div class="line"><a name="l00511"></a><span class="lineno">  511</span>&#160;                                                     <span class="keywordtype">unsigned</span> depth)</div>
+<div class="line"><a name="l00511"></a><span class="lineno">  511</span>&#160;                                                     <span class="keywordtype">int</span> depth)</div>
 <div class="line"><a name="l00512"></a><span class="lineno">  512</span>&#160;    -&gt; math::SVector&lt;unsigned, 4&gt; {</div>
 <div class="line"><a name="l00513"></a><span class="lineno">  513</span>&#160;    math::SVector&lt;unsigned, 4&gt; params{};</div>
 <div class="line"><a name="l00514"></a><span class="lineno">  514</span>&#160;    assert(allZero(params));</div>
 <div class="line"><a name="l00515"></a><span class="lineno">  515</span>&#160;    <span class="keywordflow">for</span> (ScheduledNode *node : nodes-&gt;getVertices())</div>
 <div class="line"><a name="l00516"></a><span class="lineno">  516</span>&#160;      <span class="keywordflow">for</span> (Dependence d : node-&gt;inputEdges(deps))</div>
-<div class="line"><a name="l00517"></a><span class="lineno">  517</span>&#160;        <span class="keywordflow">if</span> (d.isActive(depth)) params += numParams(d);</div>
+<div class="line"><a name="l00517"></a><span class="lineno">  517</span>&#160;        <span class="keywordflow">if</span> (!d.isSat(depth)) params += numParams(d);</div>
 <div class="line"><a name="l00518"></a><span class="lineno">  518</span>&#160;    <span class="keywordflow">return</span> params;</div>
 <div class="line"><a name="l00519"></a><span class="lineno">  519</span>&#160;  }</div>
 <div class="line"><a name="l00520"></a><span class="lineno">  520</span>&#160;  <span class="keyword">using</span> BackupSchedule = math::ResizeableView&lt;</div>
@@ -535,7 +535,7 @@ $(function() {
 <div class="line"><a name="l00541"></a><span class="lineno">  541</span>&#160;    <span class="keywordflow">return</span> {numOmegaCoefs, numPhiCoefs, numSlack};</div>
 <div class="line"><a name="l00542"></a><span class="lineno">  542</span>&#160;  }</div>
 <div class="line"><a name="l00543"></a><span class="lineno">  543</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> calcCoefs(Dependencies deps, ScheduledNode *nodes,</div>
-<div class="line"><a name="l00544"></a><span class="lineno">  544</span>&#160;                                  <span class="keywordtype">unsigned</span> d) -&gt; CoefCounts {</div>
+<div class="line"><a name="l00544"></a><span class="lineno">  544</span>&#160;                                  <span class="keywordtype">int</span> d) -&gt; CoefCounts {</div>
 <div class="line"><a name="l00545"></a><span class="lineno">  545</span>&#160;    <span class="keyword">auto</span> [numOmegaCoefs, numPhiCoefs, numSlack] =</div>
 <div class="line"><a name="l00546"></a><span class="lineno">  546</span>&#160;      setScheduleMemoryOffsets(deps, nodes, d);</div>
 <div class="line"><a name="l00547"></a><span class="lineno">  547</span>&#160;    <span class="keyword">auto</span> [numLambda, numBounding, numConstraints, numActiveEdges] =</div>
@@ -545,11 +545,11 @@ $(function() {
 <div class="line"><a name="l00551"></a><span class="lineno">  551</span>&#160;  }</div>
 <div class="line"><a name="l00552"></a><span class="lineno">  552</span>&#160; </div>
 <div class="line"><a name="l00553"></a><span class="lineno">  553</span>&#160;  <span class="comment">// NOLINTNEXTLINE(misc-no-recursion)</span></div>
-<div class="line"><a name="l00554"></a><span class="lineno">  554</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> optimize(ScheduledNode *nodes, <span class="keywordtype">unsigned</span> d,</div>
-<div class="line"><a name="l00555"></a><span class="lineno">  555</span>&#160;                              <span class="keywordtype">unsigned</span> maxDepth) -&gt; Result {</div>
+<div class="line"><a name="l00554"></a><span class="lineno">  554</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> optimize(ScheduledNode *nodes, <span class="keywordtype">int</span> d, <span class="keywordtype">int</span> maxDepth)</div>
+<div class="line"><a name="l00555"></a><span class="lineno">  555</span>&#160;    -&gt; Result {</div>
 <div class="line"><a name="l00556"></a><span class="lineno">  556</span>&#160;    <span class="keywordflow">if</span> (d &gt;= maxDepth) <span class="keywordflow">return</span> Result::independent();</div>
 <div class="line"><a name="l00557"></a><span class="lineno">  557</span>&#160;    <span class="keywordflow">if</span> (Result r = solveGraph(nodes, maxDepth, <span class="keyword">false</span>)) {</div>
-<div class="line"><a name="l00558"></a><span class="lineno">  558</span>&#160;      <span class="keywordtype">unsigned</span> descend = d + 1;</div>
+<div class="line"><a name="l00558"></a><span class="lineno">  558</span>&#160;      <span class="keywordtype">int</span> descend = d + 1;</div>
 <div class="line"><a name="l00559"></a><span class="lineno">  559</span>&#160;      <span class="keywordflow">if</span> (descend == maxDepth) <span class="keywordflow">return</span> r;</div>
 <div class="line"><a name="l00560"></a><span class="lineno">  560</span>&#160;      <span class="keywordflow">if</span> (Result n = optimize(nodes, descend, maxDepth)) {</div>
 <div class="line"><a name="l00561"></a><span class="lineno">  561</span>&#160;        <span class="keywordflow">if</span> ((r == Result::dependent()) &amp;&amp;</div>
@@ -560,12 +560,12 @@ $(function() {
 <div class="line"><a name="l00566"></a><span class="lineno">  566</span>&#160;    }</div>
 <div class="line"><a name="l00567"></a><span class="lineno">  567</span>&#160;    <span class="keywordflow">return</span> breakGraph(nodes, d);</div>
 <div class="line"><a name="l00568"></a><span class="lineno">  568</span>&#160;  }</div>
-<div class="line"><a name="l00574"></a><span class="lineno">  574</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> solveGraph(ScheduledNode *nodes, <span class="keywordtype">unsigned</span> depth,</div>
+<div class="line"><a name="l00574"></a><span class="lineno">  574</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> solveGraph(ScheduledNode *nodes, <span class="keywordtype">int</span> depth,</div>
 <div class="line"><a name="l00575"></a><span class="lineno">  575</span>&#160;                                <span class="keywordtype">bool</span> satisfyDeps) -&gt; Result {</div>
 <div class="line"><a name="l00576"></a><span class="lineno">  576</span>&#160;    CoefCounts counts{calcCoefs(deps, nodes, depth)};</div>
 <div class="line"><a name="l00577"></a><span class="lineno">  577</span>&#160;    <span class="keywordflow">return</span> solveGraph(nodes, depth, satisfyDeps, counts);</div>
 <div class="line"><a name="l00578"></a><span class="lineno">  578</span>&#160;  }</div>
-<div class="line"><a name="l00579"></a><span class="lineno">  579</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> solveGraph(ScheduledNode *nodes, <span class="keywordtype">unsigned</span> depth,</div>
+<div class="line"><a name="l00579"></a><span class="lineno">  579</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> solveGraph(ScheduledNode *nodes, <span class="keywordtype">int</span> depth,</div>
 <div class="line"><a name="l00580"></a><span class="lineno">  580</span>&#160;                                <span class="keywordtype">bool</span> satisfyDeps, CoefCounts counts) -&gt; Result {</div>
 <div class="line"><a name="l00581"></a><span class="lineno">  581</span>&#160;    <span class="keywordflow">if</span> (counts.numLambda == 0) {</div>
 <div class="line"><a name="l00582"></a><span class="lineno">  582</span>&#160;      setSchedulesIndependent(nodes, depth);</div>
@@ -585,7 +585,7 @@ $(function() {
 <div class="line"><a name="l00596"></a><span class="lineno">  596</span>&#160;      nodes, depth, counts,</div>
 <div class="line"><a name="l00597"></a><span class="lineno">  597</span>&#160;      sol[_(counts.numPhiCoefs + counts.numOmegaCoefs, end)]);</div>
 <div class="line"><a name="l00598"></a><span class="lineno">  598</span>&#160;  }</div>
-<div class="line"><a name="l00599"></a><span class="lineno">  599</span>&#160;  <span class="keywordtype">void</span> setSchedulesIndependent(ScheduledNode *nodes, <span class="keywordtype">unsigned</span> depth) {</div>
+<div class="line"><a name="l00599"></a><span class="lineno">  599</span>&#160;  <span class="keywordtype">void</span> setSchedulesIndependent(ScheduledNode *nodes, <span class="keywordtype">int</span> depth) {</div>
 <div class="line"><a name="l00600"></a><span class="lineno">  600</span>&#160;    <span class="comment">// IntMatrix A, N;</span></div>
 <div class="line"><a name="l00601"></a><span class="lineno">  601</span>&#160;    <span class="keywordflow">for</span> (ScheduledNode *node : nodes-&gt;getVertices()) {</div>
 <div class="line"><a name="l00602"></a><span class="lineno">  602</span>&#160;      <span class="keywordflow">if</span> ((depth &gt;= node-&gt;getNumLoops()) || node-&gt;phiIsScheduled(depth))</div>
@@ -594,7 +594,7 @@ $(function() {
 <div class="line"><a name="l00605"></a><span class="lineno">  605</span>&#160;      setDepFreeSchedule(node, depth);</div>
 <div class="line"><a name="l00606"></a><span class="lineno">  606</span>&#160;    }</div>
 <div class="line"><a name="l00607"></a><span class="lineno">  607</span>&#160;  }</div>
-<div class="line"><a name="l00608"></a><span class="lineno">  608</span>&#160;  <span class="keyword">static</span> <span class="keywordtype">void</span> setDepFreeSchedule(ScheduledNode *node, <span class="keywordtype">unsigned</span> depth) {</div>
+<div class="line"><a name="l00608"></a><span class="lineno">  608</span>&#160;  <span class="keyword">static</span> <span class="keywordtype">void</span> setDepFreeSchedule(ScheduledNode *node, <span class="keywordtype">int</span> depth) {</div>
 <div class="line"><a name="l00609"></a><span class="lineno">  609</span>&#160;    node-&gt;getOffsetOmega(depth) = 0;</div>
 <div class="line"><a name="l00610"></a><span class="lineno">  610</span>&#160;    <span class="keywordflow">if</span> (node-&gt;phiIsScheduled(depth)) <span class="keywordflow">return</span>;</div>
 <div class="line"><a name="l00611"></a><span class="lineno">  611</span>&#160;    <span class="comment">// we&#39;ll check the null space of the phi&#39;s so far</span></div>
@@ -618,7 +618,7 @@ $(function() {
 <div class="line"><a name="l00629"></a><span class="lineno">  629</span>&#160;    <span class="comment">// arbitrarily.</span></div>
 <div class="line"><a name="l00630"></a><span class="lineno">  630</span>&#160;    <span class="comment">// Here, we collect candidates for the next schedule</span></div>
 <div class="line"><a name="l00631"></a><span class="lineno">  631</span>&#160;    DenseMatrix&lt;int64_t&gt; candidates{</div>
-<div class="line"><a name="l00632"></a><span class="lineno">  632</span>&#160;      math::DenseDims&lt;&gt;{0, node-&gt;getNumLoops() + 1}};</div>
+<div class="line"><a name="l00632"></a><span class="lineno">  632</span>&#160;      math::DenseDims&lt;&gt;{{0}, {node-&gt;getNumLoops() + 1}}};</div>
 <div class="line"><a name="l00633"></a><span class="lineno">  633</span>&#160;    Vector&lt;int64_t&gt; indv;</div>
 <div class="line"><a name="l00634"></a><span class="lineno">  634</span>&#160;    indv.resizeForOverwrite(node-&gt;getNumLoops());</div>
 <div class="line"><a name="l00635"></a><span class="lineno">  635</span>&#160;    <span class="keywordflow">for</span> (Addr *mem : node-&gt;localAddr()) {</div>
@@ -663,7 +663,7 @@ $(function() {
 <div class="line"><a name="l00674"></a><span class="lineno">  674</span>&#160;    }</div>
 <div class="line"><a name="l00675"></a><span class="lineno">  675</span>&#160;    invariant(<span class="keyword">false</span>);</div>
 <div class="line"><a name="l00676"></a><span class="lineno">  676</span>&#160;  }</div>
-<div class="line"><a name="l00677"></a><span class="lineno">  677</span>&#160;  <span class="keywordtype">void</span> updateSchedules(ScheduledNode *nodes, <span class="keywordtype">unsigned</span> depth, CoefCounts counts,</div>
+<div class="line"><a name="l00677"></a><span class="lineno">  677</span>&#160;  <span class="keywordtype">void</span> updateSchedules(ScheduledNode *nodes, <span class="keywordtype">int</span> depth, CoefCounts counts,</div>
 <div class="line"><a name="l00678"></a><span class="lineno">  678</span>&#160;                       Simplex::Solution sol) {</div>
 <div class="line"><a name="l00679"></a><span class="lineno">  679</span>&#160;<span class="preprocessor">#ifndef NDEBUG</span></div>
 <div class="line"><a name="l00680"></a><span class="lineno">  680</span>&#160;    <span class="keywordflow">if</span> (counts.numPhiCoefs &gt; 0)</div>
@@ -710,8 +710,8 @@ $(function() {
 <div class="line"><a name="l00721"></a><span class="lineno">  721</span>&#160;<span class="preprocessor">#endif</span></div>
 <div class="line"><a name="l00722"></a><span class="lineno">  722</span>&#160;    }</div>
 <div class="line"><a name="l00723"></a><span class="lineno">  723</span>&#160;  }</div>
-<div class="line"><a name="l00724"></a><span class="lineno">  724</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> deactivateSatisfiedEdges(ScheduledNode *nodes,</div>
-<div class="line"><a name="l00725"></a><span class="lineno">  725</span>&#160;                                              <span class="keywordtype">unsigned</span> depth, CoefCounts counts,</div>
+<div class="line"><a name="l00724"></a><span class="lineno">  724</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> deactivateSatisfiedEdges(ScheduledNode *nodes, <span class="keywordtype">int</span> depth,</div>
+<div class="line"><a name="l00725"></a><span class="lineno">  725</span>&#160;                                              CoefCounts counts,</div>
 <div class="line"><a name="l00726"></a><span class="lineno">  726</span>&#160;                                              Simplex::Solution sol) -&gt; Result {</div>
 <div class="line"><a name="l00727"></a><span class="lineno">  727</span>&#160;    <span class="keywordflow">if</span> (allZero(sol[_(begin, counts.numBounding + counts.numActiveEdges)]))</div>
 <div class="line"><a name="l00728"></a><span class="lineno">  728</span>&#160;      <span class="keywordflow">return</span> checkEmptySatEdges(nodes, depth);</div>
@@ -751,7 +751,7 @@ $(function() {
 <div class="line"><a name="l00762"></a><span class="lineno">  762</span>&#160;    }</div>
 <div class="line"><a name="l00763"></a><span class="lineno">  763</span>&#160;    <span class="keywordflow">return</span> result;</div>
 <div class="line"><a name="l00764"></a><span class="lineno">  764</span>&#160;  }</div>
-<div class="line"><a name="l00765"></a><span class="lineno">  765</span>&#160;  <span class="keyword">auto</span> checkEmptySatEdges(ScheduledNode *nodes, <span class="keywordtype">unsigned</span> depth) -&gt; Result {</div>
+<div class="line"><a name="l00765"></a><span class="lineno">  765</span>&#160;  <span class="keyword">auto</span> checkEmptySatEdges(ScheduledNode *nodes, <span class="keywordtype">int</span> depth) -&gt; Result {</div>
 <div class="line"><a name="l00766"></a><span class="lineno">  766</span>&#160;    <span class="keywordflow">for</span> (ScheduledNode *outNode : nodes-&gt;getVertices()) {</div>
 <div class="line"><a name="l00767"></a><span class="lineno">  767</span>&#160;      <span class="keywordflow">for</span> (Dependence edge : outNode-&gt;inputEdges(deps)) {</div>
 <div class="line"><a name="l00768"></a><span class="lineno">  768</span>&#160;        <span class="keywordflow">if</span> (edge.isSat(depth)) <span class="keywordflow">continue</span>;</div>
@@ -797,8 +797,8 @@ $(function() {
 <div class="line"><a name="l00820"></a><span class="lineno">  820</span>&#160;        deps.satLevelPair(Dependence::ID{dID}) = sat[i++];</div>
 <div class="line"><a name="l00821"></a><span class="lineno">  821</span>&#160;  }</div>
 <div class="line"><a name="l00822"></a><span class="lineno">  822</span>&#160;  <span class="comment">// NOLINTNEXTLINE(misc-no-recursion)</span></div>
-<div class="line"><a name="l00823"></a><span class="lineno">  823</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> optimizeSatDep(ScheduledNode *nodes, <span class="keywordtype">unsigned</span> depth,</div>
-<div class="line"><a name="l00824"></a><span class="lineno">  824</span>&#160;                                    <span class="keywordtype">unsigned</span> maxDepth, Result backupResult)</div>
+<div class="line"><a name="l00823"></a><span class="lineno">  823</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> optimizeSatDep(ScheduledNode *nodes, <span class="keywordtype">int</span> depth,</div>
+<div class="line"><a name="l00824"></a><span class="lineno">  824</span>&#160;                                    <span class="keywordtype">int</span> maxDepth, Result backupResult)</div>
 <div class="line"><a name="l00825"></a><span class="lineno">  825</span>&#160;    -&gt; Result {</div>
 <div class="line"><a name="l00826"></a><span class="lineno">  826</span>&#160;    <span class="comment">// if we&#39;re here, there are satisfied deps in both</span></div>
 <div class="line"><a name="l00827"></a><span class="lineno">  827</span>&#160;    <span class="comment">// depSatLevel and depSatNest</span></div>
@@ -817,7 +817,7 @@ $(function() {
 <div class="line"><a name="l00840"></a><span class="lineno">  840</span>&#160;    <span class="keywordflow">return</span> backupResult;</div>
 <div class="line"><a name="l00841"></a><span class="lineno">  841</span>&#160;  }</div>
 <div class="line"><a name="l00842"></a><span class="lineno">  842</span>&#160;  <span class="comment">// NOLINTNEXTLINE(misc-no-recursion)</span></div>
-<div class="line"><a name="l00843"></a><span class="lineno">  843</span>&#160;  <span class="keyword">auto</span> tryFuse(ScheduledNode *n0, ScheduledNode *n1, <span class="keywordtype">unsigned</span> depth) -&gt; Result {</div>
+<div class="line"><a name="l00843"></a><span class="lineno">  843</span>&#160;  <span class="keyword">auto</span> tryFuse(ScheduledNode *n0, ScheduledNode *n1, <span class="keywordtype">int</span> depth) -&gt; Result {</div>
 <div class="line"><a name="l00844"></a><span class="lineno">  844</span>&#160;    <span class="keyword">auto</span> s = allocator.scope();</div>
 <div class="line"><a name="l00845"></a><span class="lineno">  845</span>&#160;    <span class="keyword">auto</span> old0 = stashFit(n0); <span class="comment">// FIXME: stash dep sat level</span></div>
 <div class="line"><a name="l00846"></a><span class="lineno">  846</span>&#160;    <span class="keyword">auto</span> old1 = stashFit(n1); <span class="comment">// FIXME: stash dep sat level</span></div>
@@ -829,7 +829,7 @@ $(function() {
 <div class="line"><a name="l00852"></a><span class="lineno">  852</span>&#160;    popStash(old1);</div>
 <div class="line"><a name="l00853"></a><span class="lineno">  853</span>&#160;    <span class="keywordflow">return</span> Result::failure();</div>
 <div class="line"><a name="l00854"></a><span class="lineno">  854</span>&#160;  }</div>
-<div class="line"><a name="l00855"></a><span class="lineno">  855</span>&#160;  <span class="keyword">auto</span> satisfySplitEdges(ScheduledNode *nodes, <span class="keywordtype">unsigned</span> depth) -&gt; Result {</div>
+<div class="line"><a name="l00855"></a><span class="lineno">  855</span>&#160;  <span class="keyword">auto</span> satisfySplitEdges(ScheduledNode *nodes, <span class="keywordtype">int</span> depth) -&gt; Result {</div>
 <div class="line"><a name="l00856"></a><span class="lineno">  856</span>&#160;    <span class="keyword">auto</span> s = allocator.scope();</div>
 <div class="line"><a name="l00857"></a><span class="lineno">  857</span>&#160;    dict::aset&lt;ScheduledNode *&gt; graph{&amp;allocator};</div>
 <div class="line"><a name="l00858"></a><span class="lineno">  858</span>&#160;    <span class="keywordflow">for</span> (ScheduledNode *node : nodes-&gt;getVertices()) graph.insert(node);</div>
@@ -844,14 +844,14 @@ $(function() {
 <div class="line"><a name="l00867"></a><span class="lineno">  867</span>&#160;    }</div>
 <div class="line"><a name="l00868"></a><span class="lineno">  868</span>&#160;    <span class="keywordflow">return</span> (found) ? Result::dependent() : Result::independent();</div>
 <div class="line"><a name="l00869"></a><span class="lineno">  869</span>&#160;  }</div>
-<div class="line"><a name="l00870"></a><span class="lineno">  870</span>&#160;  <span class="keyword">auto</span> solveSplitGraph(ScheduledNode *nodes, <span class="keywordtype">unsigned</span> depth) -&gt; Result {</div>
+<div class="line"><a name="l00870"></a><span class="lineno">  870</span>&#160;  <span class="keyword">auto</span> solveSplitGraph(ScheduledNode *nodes, <span class="keywordtype">int</span> depth) -&gt; Result {</div>
 <div class="line"><a name="l00871"></a><span class="lineno">  871</span>&#160;    Result sat = satisfySplitEdges(nodes, depth);</div>
 <div class="line"><a name="l00872"></a><span class="lineno">  872</span>&#160;    Result opt = solveGraph(nodes, depth, <span class="keyword">false</span>, calcCoefs(deps, nodes, depth));</div>
 <div class="line"><a name="l00873"></a><span class="lineno">  873</span>&#160;    <span class="keywordflow">if</span> (!opt) <span class="keywordflow">return</span> opt;</div>
 <div class="line"><a name="l00874"></a><span class="lineno">  874</span>&#160;    <span class="keywordflow">return</span> opt &amp; sat;</div>
 <div class="line"><a name="l00875"></a><span class="lineno">  875</span>&#160;  }</div>
 <div class="line"><a name="l00876"></a><span class="lineno">  876</span>&#160;  <span class="comment">// NOLINTNEXTLINE(misc-no-recursion)</span></div>
-<div class="line"><a name="l00877"></a><span class="lineno">  877</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> breakGraph(ScheduledNode *node, <span class="keywordtype">unsigned</span> d) -&gt; Result {</div>
+<div class="line"><a name="l00877"></a><span class="lineno">  877</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> breakGraph(ScheduledNode *node, <span class="keywordtype">int</span> d) -&gt; Result {</div>
 <div class="line"><a name="l00878"></a><span class="lineno">  878</span>&#160;    <span class="comment">// Get a top sorting of SCC&#39;s; because we couldn&#39;t solve the graph</span></div>
 <div class="line"><a name="l00879"></a><span class="lineno">  879</span>&#160;    <span class="comment">// with these dependencies fused, we&#39;ll try splitting them.</span></div>
 <div class="line"><a name="l00880"></a><span class="lineno">  880</span>&#160;    ScheduledNode *components =</div>
@@ -889,281 +889,280 @@ $(function() {
 <div class="line"><a name="l00912"></a><span class="lineno">  912</span>&#160;      v-&gt;getFusionOmega(d) = unfusedOffset;</div>
 <div class="line"><a name="l00913"></a><span class="lineno">  913</span>&#160;    <span class="keywordflow">return</span> res;</div>
 <div class="line"><a name="l00914"></a><span class="lineno">  914</span>&#160;  }</div>
-<div class="line"><a name="l00930"></a><span class="lineno">  930</span>&#160;  <span class="keyword">auto</span> instantiateOmniSimplex(ScheduledNode *nodes, <span class="keywordtype">unsigned</span> d,</div>
-<div class="line"><a name="l00931"></a><span class="lineno">  931</span>&#160;                              <span class="keywordtype">bool</span> satisfyDeps, CoefCounts counts)</div>
-<div class="line"><a name="l00932"></a><span class="lineno">  932</span>&#160;    -&gt; std::unique_ptr&lt;Simplex&gt; {</div>
-<div class="line"><a name="l00933"></a><span class="lineno">  933</span>&#160;    <span class="keyword">auto</span> [numOmegaCoefs, numPhiCoefs, numSlack, numLambda, numBounding,</div>
-<div class="line"><a name="l00934"></a><span class="lineno">  934</span>&#160;          numConstraints, numActiveEdges] = counts;</div>
-<div class="line"><a name="l00935"></a><span class="lineno">  935</span>&#160;    <span class="keyword">auto</span> omniSimplex = Simplex::create(</div>
-<div class="line"><a name="l00936"></a><span class="lineno">  936</span>&#160;      numConstraints + numSlack, numBounding + numActiveEdges + numPhiCoefs +</div>
-<div class="line"><a name="l00937"></a><span class="lineno">  937</span>&#160;                                   numOmegaCoefs + numSlack + numLambda);</div>
-<div class="line"><a name="l00938"></a><span class="lineno">  938</span>&#160;    <span class="keyword">auto</span> C{omniSimplex-&gt;getConstraints()};</div>
-<div class="line"><a name="l00939"></a><span class="lineno">  939</span>&#160;    C &lt;&lt; 0;</div>
-<div class="line"><a name="l00940"></a><span class="lineno">  940</span>&#160;    <span class="comment">// layout of omniSimplex:</span></div>
-<div class="line"><a name="l00941"></a><span class="lineno">  941</span>&#160;    <span class="comment">// Order: C, then rev-priority to minimize</span></div>
-<div class="line"><a name="l00942"></a><span class="lineno">  942</span>&#160;    <span class="comment">// C, lambdas, slack, omegas, Phis, w, u</span></div>
-<div class="line"><a name="l00943"></a><span class="lineno">  943</span>&#160;    <span class="comment">// rows give constraints; each edge gets its own</span></div>
-<div class="line"><a name="l00944"></a><span class="lineno">  944</span>&#160;    <span class="comment">// numBounding = num u</span></div>
-<div class="line"><a name="l00945"></a><span class="lineno">  945</span>&#160;    <span class="comment">// numActiveEdges = num w</span></div>
-<div class="line"><a name="l00946"></a><span class="lineno">  946</span>&#160;    ptrdiff_t c = 0;</div>
-<div class="line"><a name="l00947"></a><span class="lineno">  947</span>&#160;    ptrdiff_t l = 1, o = 1 + numLambda + numSlack, p = o + numOmegaCoefs,</div>
-<div class="line"><a name="l00948"></a><span class="lineno">  948</span>&#160;              w = p + numPhiCoefs, u = w + numActiveEdges;</div>
-<div class="line"><a name="l00949"></a><span class="lineno">  949</span>&#160;    <span class="keywordflow">for</span> (ScheduledNode *inNode : nodes-&gt;getVertices()) {</div>
-<div class="line"><a name="l00950"></a><span class="lineno">  950</span>&#160;      <span class="keywordflow">for</span> (Dependence edge : inNode-&gt;outputEdges(deps, d)) {</div>
-<div class="line"><a name="l00951"></a><span class="lineno">  951</span>&#160;        ScheduledNode *outNode = edge.output()-&gt;getNode();</div>
-<div class="line"><a name="l00952"></a><span class="lineno">  952</span>&#160;        <span class="keyword">const</span> <span class="keyword">auto</span> [satPp, satPc] = edge.satPhiCoefs();</div>
-<div class="line"><a name="l00953"></a><span class="lineno">  953</span>&#160;        <span class="keyword">const</span> <span class="keyword">auto</span> [bndPp, bndPc] = edge.bndPhiCoefs();</div>
-<div class="line"><a name="l00954"></a><span class="lineno">  954</span>&#160;        math::StridedVector&lt;int64_t&gt; satC{edge.getSatConstants()},</div>
-<div class="line"><a name="l00955"></a><span class="lineno">  955</span>&#160;          satW{edge.getSatW()}, bndC{edge.getBndConstants()};</div>
-<div class="line"><a name="l00956"></a><span class="lineno">  956</span>&#160;        math::PtrMatrix&lt;int64_t&gt; satL{edge.getSatLambda()},</div>
-<div class="line"><a name="l00957"></a><span class="lineno">  957</span>&#160;          bndL{edge.getBndLambda()}, satO{edge.getSatOmegaCoefs()},</div>
-<div class="line"><a name="l00958"></a><span class="lineno">  958</span>&#160;          bndO{edge.getBndOmegaCoefs()}, bndWU{edge.getBndCoefs()};</div>
-<div class="line"><a name="l00959"></a><span class="lineno">  959</span>&#160;        <span class="keyword">const</span> ptrdiff_t numSatConstraints = satC.size(),</div>
-<div class="line"><a name="l00960"></a><span class="lineno">  960</span>&#160;                        numBndConstraints = bndC.size();</div>
-<div class="line"><a name="l00961"></a><span class="lineno">  961</span>&#160;        <span class="keyword">const</span> ptrdiff_t nPc = ptrdiff_t(satPc.numCol()),</div>
-<div class="line"><a name="l00962"></a><span class="lineno">  962</span>&#160;                        nPp = ptrdiff_t(satPp.numCol());</div>
-<div class="line"><a name="l00963"></a><span class="lineno">  963</span>&#160;        invariant(nPc, ptrdiff_t(bndPc.numCol()));</div>
-<div class="line"><a name="l00964"></a><span class="lineno">  964</span>&#160;        invariant(nPp, ptrdiff_t(bndPp.numCol()));</div>
-<div class="line"><a name="l00965"></a><span class="lineno">  965</span>&#160;        ptrdiff_t cc = c + numSatConstraints;</div>
-<div class="line"><a name="l00966"></a><span class="lineno">  966</span>&#160;        ptrdiff_t ccc = cc + numBndConstraints;</div>
-<div class="line"><a name="l00967"></a><span class="lineno">  967</span>&#160; </div>
-<div class="line"><a name="l00968"></a><span class="lineno">  968</span>&#160;        ptrdiff_t ll = l + ptrdiff_t(satL.numCol());</div>
-<div class="line"><a name="l00969"></a><span class="lineno">  969</span>&#160;        ptrdiff_t lll = ll + ptrdiff_t(bndL.numCol());</div>
-<div class="line"><a name="l00970"></a><span class="lineno">  970</span>&#160;        C[_(c, cc), _(l, ll)] &lt;&lt; satL;</div>
-<div class="line"><a name="l00971"></a><span class="lineno">  971</span>&#160;        C[_(cc, ccc), _(ll, lll)] &lt;&lt; bndL;</div>
-<div class="line"><a name="l00972"></a><span class="lineno">  972</span>&#160;        l = lll;</div>
-<div class="line"><a name="l00973"></a><span class="lineno">  973</span>&#160;        <span class="comment">// bounding</span></div>
-<div class="line"><a name="l00974"></a><span class="lineno">  974</span>&#160;        C[_(cc, ccc), w++] &lt;&lt; bndWU[_, 0];</div>
-<div class="line"><a name="l00975"></a><span class="lineno">  975</span>&#160;        ptrdiff_t uu = u + ptrdiff_t(bndWU.numCol()) - 1;</div>
-<div class="line"><a name="l00976"></a><span class="lineno">  976</span>&#160;        C[_(cc, ccc), _(u, uu)] &lt;&lt; bndWU[_, _(1, end)];</div>
-<div class="line"><a name="l00977"></a><span class="lineno">  977</span>&#160;        u = uu;</div>
-<div class="line"><a name="l00978"></a><span class="lineno">  978</span>&#160;        <span class="keywordflow">if</span> (!satisfyDeps || !edge.stashedPreventsReordering(d))</div>
-<div class="line"><a name="l00979"></a><span class="lineno">  979</span>&#160;          C[_(c, cc), 0] &lt;&lt; satC;</div>
-<div class="line"><a name="l00980"></a><span class="lineno">  980</span>&#160;        <span class="keywordflow">else</span> C[_(c, cc), 0] &lt;&lt; satC + satW;</div>
-<div class="line"><a name="l00981"></a><span class="lineno">  981</span>&#160;        C[_(cc, ccc), 0] &lt;&lt; bndC;</div>
-<div class="line"><a name="l00982"></a><span class="lineno">  982</span>&#160;        <span class="comment">// now, handle Phi and Omega</span></div>
-<div class="line"><a name="l00983"></a><span class="lineno">  983</span>&#160;        <span class="comment">// phis are not constrained to be 0</span></div>
-<div class="line"><a name="l00984"></a><span class="lineno">  984</span>&#160;        <span class="keywordflow">if</span> (outNode == inNode) {</div>
-<div class="line"><a name="l00985"></a><span class="lineno">  985</span>&#160;          <span class="keywordflow">if</span> (d &lt; outNode-&gt;getNumLoops()) {</div>
-<div class="line"><a name="l00986"></a><span class="lineno">  986</span>&#160;            <span class="keywordflow">if</span> (nPc == nPp) {</div>
-<div class="line"><a name="l00987"></a><span class="lineno">  987</span>&#160;              <span class="keywordflow">if</span> (outNode-&gt;phiIsScheduled(d)) {</div>
-<div class="line"><a name="l00988"></a><span class="lineno">  988</span>&#160;                <span class="comment">// add it constants</span></div>
-<div class="line"><a name="l00989"></a><span class="lineno">  989</span>&#160;                <span class="keyword">auto</span> sch = outNode-&gt;getSchedule(d);</div>
-<div class="line"><a name="l00990"></a><span class="lineno">  990</span>&#160;                C[_(c, cc), 0] -=</div>
-<div class="line"><a name="l00991"></a><span class="lineno">  991</span>&#160;                  satPc * sch[_(0, nPc)].t() + satPp * sch[_(0, nPp)].t();</div>
-<div class="line"><a name="l00992"></a><span class="lineno">  992</span>&#160;                C[_(cc, ccc), 0] -=</div>
-<div class="line"><a name="l00993"></a><span class="lineno">  993</span>&#160;                  bndPc * sch[_(0, nPc)].t() + bndPp * sch[_(0, nPp)].t();</div>
-<div class="line"><a name="l00994"></a><span class="lineno">  994</span>&#160;              } <span class="keywordflow">else</span> {</div>
-<div class="line"><a name="l00995"></a><span class="lineno">  995</span>&#160;                <span class="comment">// FIXME: phiChild = [14:18), 4 cols</span></div>
-<div class="line"><a name="l00996"></a><span class="lineno">  996</span>&#160;                <span class="comment">// while Dependence seems to indicate 2</span></div>
-<div class="line"><a name="l00997"></a><span class="lineno">  997</span>&#160;                <span class="comment">// loops why the disagreement?</span></div>
-<div class="line"><a name="l00998"></a><span class="lineno">  998</span>&#160;                <span class="keyword">auto</span> po = outNode-&gt;getPhiOffset() + p;</div>
-<div class="line"><a name="l00999"></a><span class="lineno">  999</span>&#160;                C[_(c, cc), _(po, po + nPc)] &lt;&lt; satPc + satPp;</div>
-<div class="line"><a name="l01000"></a><span class="lineno"> 1000</span>&#160;                C[_(cc, ccc), _(po, po + nPc)] &lt;&lt; bndPc + bndPp;</div>
-<div class="line"><a name="l01001"></a><span class="lineno"> 1001</span>&#160;              }</div>
-<div class="line"><a name="l01002"></a><span class="lineno"> 1002</span>&#160;            } <span class="keywordflow">else</span> <span class="keywordflow">if</span> (outNode-&gt;phiIsScheduled(d)) {</div>
-<div class="line"><a name="l01003"></a><span class="lineno"> 1003</span>&#160;              <span class="comment">// add it constants</span></div>
-<div class="line"><a name="l01004"></a><span class="lineno"> 1004</span>&#160;              <span class="comment">// note that loop order in schedule goes</span></div>
-<div class="line"><a name="l01005"></a><span class="lineno"> 1005</span>&#160;              <span class="comment">// inner -&gt; outer</span></div>
-<div class="line"><a name="l01006"></a><span class="lineno"> 1006</span>&#160;              <span class="comment">// so we need to drop inner most if one has less</span></div>
-<div class="line"><a name="l01007"></a><span class="lineno"> 1007</span>&#160;              <span class="keyword">auto</span> sch = outNode-&gt;getSchedule(d);</div>
-<div class="line"><a name="l01008"></a><span class="lineno"> 1008</span>&#160;              <span class="keyword">auto</span> schP = sch[_(0, nPp)].t();</div>
-<div class="line"><a name="l01009"></a><span class="lineno"> 1009</span>&#160;              <span class="keyword">auto</span> schC = sch[_(0, nPc)].t();</div>
-<div class="line"><a name="l01010"></a><span class="lineno"> 1010</span>&#160;              C[_(c, cc), 0] -= satPc * schC + satPp * schP;</div>
-<div class="line"><a name="l01011"></a><span class="lineno"> 1011</span>&#160;              C[_(cc, ccc), 0] -= bndPc * schC + bndPp * schP;</div>
-<div class="line"><a name="l01012"></a><span class="lineno"> 1012</span>&#160;            } <span class="keywordflow">else</span> <span class="keywordflow">if</span> (nPc &lt; nPp) {</div>
-<div class="line"><a name="l01013"></a><span class="lineno"> 1013</span>&#160;              <span class="comment">// Pp has more cols, so outer/leftmost overlap</span></div>
-<div class="line"><a name="l01014"></a><span class="lineno"> 1014</span>&#160;              <span class="keyword">auto</span> po = outNode-&gt;getPhiOffset() + p, poc = po + nPc,</div>
-<div class="line"><a name="l01015"></a><span class="lineno"> 1015</span>&#160;                   pop = po + nPp;</div>
-<div class="line"><a name="l01016"></a><span class="lineno"> 1016</span>&#160;              C[_(c, cc), _(po, poc)] &lt;&lt; satPc + satPp[_, _(0, nPc)];</div>
-<div class="line"><a name="l01017"></a><span class="lineno"> 1017</span>&#160;              C[_(cc, ccc), _(po, poc)] &lt;&lt; bndPc + bndPp[_, _(0, nPc)];</div>
-<div class="line"><a name="l01018"></a><span class="lineno"> 1018</span>&#160;              C[_(c, cc), _(poc, pop)] &lt;&lt; satPp[_, _(nPc, end)];</div>
-<div class="line"><a name="l01019"></a><span class="lineno"> 1019</span>&#160;              C[_(cc, ccc), _(poc, pop)] &lt;&lt; bndPp[_, _(nPc, end)];</div>
-<div class="line"><a name="l01020"></a><span class="lineno"> 1020</span>&#160;            } <span class="keywordflow">else</span> <span class="comment">/* if (nPc &gt; nPp) */</span> {</div>
-<div class="line"><a name="l01021"></a><span class="lineno"> 1021</span>&#160;              <span class="keyword">auto</span> po = outNode-&gt;getPhiOffset() + p, poc = po + nPc,</div>
-<div class="line"><a name="l01022"></a><span class="lineno"> 1022</span>&#160;                   pop = po + nPp;</div>
-<div class="line"><a name="l01023"></a><span class="lineno"> 1023</span>&#160;              C[_(c, cc), _(po, pop)] &lt;&lt; satPc[_, _(0, nPp)] + satPp;</div>
-<div class="line"><a name="l01024"></a><span class="lineno"> 1024</span>&#160;              C[_(cc, ccc), _(po, pop)] &lt;&lt; bndPc[_, _(0, nPp)] + bndPp;</div>
-<div class="line"><a name="l01025"></a><span class="lineno"> 1025</span>&#160;              C[_(c, cc), _(pop, poc)] &lt;&lt; satPc[_, _(nPp, end)];</div>
-<div class="line"><a name="l01026"></a><span class="lineno"> 1026</span>&#160;              C[_(cc, ccc), _(pop, poc)] &lt;&lt; bndPc[_, _(nPp, end)];</div>
-<div class="line"><a name="l01027"></a><span class="lineno"> 1027</span>&#160;            }</div>
-<div class="line"><a name="l01028"></a><span class="lineno"> 1028</span>&#160;            C[_(c, cc), outNode-&gt;getOmegaOffset() + o]</div>
-<div class="line"><a name="l01029"></a><span class="lineno"> 1029</span>&#160;              &lt;&lt; satO[_, 0] + satO[_, 1];</div>
-<div class="line"><a name="l01030"></a><span class="lineno"> 1030</span>&#160;            C[_(cc, ccc), outNode-&gt;getOmegaOffset() + o]</div>
-<div class="line"><a name="l01031"></a><span class="lineno"> 1031</span>&#160;              &lt;&lt; bndO[_, 0] + bndO[_, 1];</div>
-<div class="line"><a name="l01032"></a><span class="lineno"> 1032</span>&#160;          }</div>
-<div class="line"><a name="l01033"></a><span class="lineno"> 1033</span>&#160;        } <span class="keywordflow">else</span> {</div>
-<div class="line"><a name="l01034"></a><span class="lineno"> 1034</span>&#160;          <span class="keywordflow">if</span> (d &lt; edge.getOutCurrentDepth())</div>
-<div class="line"><a name="l01035"></a><span class="lineno"> 1035</span>&#160;            updateConstraints(C, outNode, satPc, bndPc, d, c, cc, ccc, p);</div>
-<div class="line"><a name="l01036"></a><span class="lineno"> 1036</span>&#160;          <span class="keywordflow">if</span> (d &lt; edge.getInCurrentDepth()) {</div>
-<div class="line"><a name="l01037"></a><span class="lineno"> 1037</span>&#160;            <span class="keywordflow">if</span> (d &lt; edge.getOutCurrentDepth() &amp;&amp; !inNode-&gt;phiIsScheduled(d) &amp;&amp;</div>
-<div class="line"><a name="l01038"></a><span class="lineno"> 1038</span>&#160;                !outNode-&gt;phiIsScheduled(d)) {</div>
-<div class="line"><a name="l01039"></a><span class="lineno"> 1039</span>&#160;              invariant(inNode-&gt;getPhiOffset() != outNode-&gt;getPhiOffset());</div>
-<div class="line"><a name="l01040"></a><span class="lineno"> 1040</span>&#160;            }</div>
-<div class="line"><a name="l01041"></a><span class="lineno"> 1041</span>&#160;            updateConstraints(C, inNode, satPp, bndPp, d, c, cc, ccc, p);</div>
-<div class="line"><a name="l01042"></a><span class="lineno"> 1042</span>&#160;          }</div>
-<div class="line"><a name="l01043"></a><span class="lineno"> 1043</span>&#160;          <span class="comment">// Omegas are included regardless of rotation</span></div>
-<div class="line"><a name="l01044"></a><span class="lineno"> 1044</span>&#160;          <span class="keywordflow">if</span> (d &lt; edge.getOutCurrentDepth()) {</div>
-<div class="line"><a name="l01045"></a><span class="lineno"> 1045</span>&#160;            <span class="keywordflow">if</span> (d &lt; edge.getInCurrentDepth())</div>
-<div class="line"><a name="l01046"></a><span class="lineno"> 1046</span>&#160;              invariant(inNode-&gt;getOmegaOffset() != outNode-&gt;getOmegaOffset());</div>
-<div class="line"><a name="l01047"></a><span class="lineno"> 1047</span>&#160;            C[_(c, cc), outNode-&gt;getOmegaOffset() + o]</div>
-<div class="line"><a name="l01048"></a><span class="lineno"> 1048</span>&#160;              &lt;&lt; satO[_, edge.isForward()];</div>
-<div class="line"><a name="l01049"></a><span class="lineno"> 1049</span>&#160;            C[_(cc, ccc), outNode-&gt;getOmegaOffset() + o]</div>
-<div class="line"><a name="l01050"></a><span class="lineno"> 1050</span>&#160;              &lt;&lt; bndO[_, edge.isForward()];</div>
-<div class="line"><a name="l01051"></a><span class="lineno"> 1051</span>&#160;          }</div>
-<div class="line"><a name="l01052"></a><span class="lineno"> 1052</span>&#160;          <span class="keywordflow">if</span> (d &lt; edge.getInCurrentDepth()) {</div>
-<div class="line"><a name="l01053"></a><span class="lineno"> 1053</span>&#160;            C[_(c, cc), inNode-&gt;getOmegaOffset() + o]</div>
-<div class="line"><a name="l01054"></a><span class="lineno"> 1054</span>&#160;              &lt;&lt; satO[_, !edge.isForward()];</div>
-<div class="line"><a name="l01055"></a><span class="lineno"> 1055</span>&#160;            C[_(cc, ccc), inNode-&gt;getOmegaOffset() + o]</div>
-<div class="line"><a name="l01056"></a><span class="lineno"> 1056</span>&#160;              &lt;&lt; bndO[_, !edge.isForward()];</div>
-<div class="line"><a name="l01057"></a><span class="lineno"> 1057</span>&#160;          }</div>
-<div class="line"><a name="l01058"></a><span class="lineno"> 1058</span>&#160;        }</div>
-<div class="line"><a name="l01059"></a><span class="lineno"> 1059</span>&#160;        c = ccc;</div>
-<div class="line"><a name="l01060"></a><span class="lineno"> 1060</span>&#160;      }</div>
-<div class="line"><a name="l01061"></a><span class="lineno"> 1061</span>&#160;    }</div>
-<div class="line"><a name="l01062"></a><span class="lineno"> 1062</span>&#160;    invariant(<span class="keywordtype">size_t</span>(l), <span class="keywordtype">size_t</span>(1 + numLambda));</div>
-<div class="line"><a name="l01063"></a><span class="lineno"> 1063</span>&#160;    invariant(<span class="keywordtype">size_t</span>(c), <span class="keywordtype">size_t</span>(numConstraints));</div>
-<div class="line"><a name="l01064"></a><span class="lineno"> 1064</span>&#160;    addIndependentSolutionConstraints(omniSimplex.get(), nodes, d, counts);</div>
-<div class="line"><a name="l01065"></a><span class="lineno"> 1065</span>&#160;    <span class="keywordflow">return</span> omniSimplex;</div>
-<div class="line"><a name="l01066"></a><span class="lineno"> 1066</span>&#160;  }</div>
-<div class="line"><a name="l01067"></a><span class="lineno"> 1067</span>&#160;  <span class="keyword">static</span> <span class="keywordtype">void</span> updateConstraints(MutPtrMatrix&lt;int64_t&gt; C,</div>
-<div class="line"><a name="l01068"></a><span class="lineno"> 1068</span>&#160;                                <span class="keyword">const</span> ScheduledNode *node,</div>
-<div class="line"><a name="l01069"></a><span class="lineno"> 1069</span>&#160;                                PtrMatrix&lt;int64_t&gt; sat, PtrMatrix&lt;int64_t&gt; bnd,</div>
-<div class="line"><a name="l01070"></a><span class="lineno"> 1070</span>&#160;                                <span class="keywordtype">unsigned</span> d, ptrdiff_t c, ptrdiff_t cc,</div>
-<div class="line"><a name="l01071"></a><span class="lineno"> 1071</span>&#160;                                ptrdiff_t ccc, ptrdiff_t p) {</div>
-<div class="line"><a name="l01072"></a><span class="lineno"> 1072</span>&#160;    invariant(sat.numCol(), bnd.numCol());</div>
-<div class="line"><a name="l01073"></a><span class="lineno"> 1073</span>&#160;    <span class="keywordflow">if</span> (node-&gt;phiIsScheduled(d)) {</div>
-<div class="line"><a name="l01074"></a><span class="lineno"> 1074</span>&#160;      <span class="comment">// add it constants</span></div>
-<div class="line"><a name="l01075"></a><span class="lineno"> 1075</span>&#160;      <span class="keyword">auto</span> sch = node-&gt;getSchedule(d)[_(0, sat.numCol())].t();</div>
-<div class="line"><a name="l01076"></a><span class="lineno"> 1076</span>&#160;      <span class="comment">// order is inner &lt;-&gt; outer</span></div>
-<div class="line"><a name="l01077"></a><span class="lineno"> 1077</span>&#160;      <span class="comment">// so we need the end of schedule if it is larger</span></div>
-<div class="line"><a name="l01078"></a><span class="lineno"> 1078</span>&#160;      C[_(c, cc), 0] -= sat * sch;</div>
-<div class="line"><a name="l01079"></a><span class="lineno"> 1079</span>&#160;      C[_(cc, ccc), 0] -= bnd * sch;</div>
-<div class="line"><a name="l01080"></a><span class="lineno"> 1080</span>&#160;    } <span class="keywordflow">else</span> {</div>
-<div class="line"><a name="l01081"></a><span class="lineno"> 1081</span>&#160;      <span class="comment">// add it to C</span></div>
-<div class="line"><a name="l01082"></a><span class="lineno"> 1082</span>&#160;      <span class="keyword">auto</span> po = node-&gt;getPhiOffset() + p;</div>
-<div class="line"><a name="l01083"></a><span class="lineno"> 1083</span>&#160;      C[_(c, cc), _(po, po + ptrdiff_t(sat.numCol()))] &lt;&lt; sat;</div>
-<div class="line"><a name="l01084"></a><span class="lineno"> 1084</span>&#160;      C[_(cc, ccc), _(po, po + ptrdiff_t(bnd.numCol()))] &lt;&lt; bnd;</div>
-<div class="line"><a name="l01085"></a><span class="lineno"> 1085</span>&#160;    }</div>
-<div class="line"><a name="l01086"></a><span class="lineno"> 1086</span>&#160;  }</div>
-<div class="line"><a name="l01087"></a><span class="lineno"> 1087</span>&#160;  <span class="keywordtype">void</span> addIndependentSolutionConstraints(Valid&lt;Simplex&gt; omniSimplex,</div>
-<div class="line"><a name="l01088"></a><span class="lineno"> 1088</span>&#160;                                         <span class="keyword">const</span> ScheduledNode *nodes,</div>
-<div class="line"><a name="l01089"></a><span class="lineno"> 1089</span>&#160;                                         ptrdiff_t d, CoefCounts counts) {</div>
-<div class="line"><a name="l01090"></a><span class="lineno"> 1090</span>&#160;    <span class="comment">// omniSimplex-&gt;setNumCons(omniSimplex-&gt;getNumCons() +</span></div>
-<div class="line"><a name="l01091"></a><span class="lineno"> 1091</span>&#160;    <span class="comment">//                                memory.size());</span></div>
-<div class="line"><a name="l01092"></a><span class="lineno"> 1092</span>&#160;    <span class="comment">// omniSimplex-&gt;reserveExtraRows(memory.size());</span></div>
-<div class="line"><a name="l01093"></a><span class="lineno"> 1093</span>&#160;    <span class="keyword">auto</span> C{omniSimplex-&gt;getConstraints()};</div>
-<div class="line"><a name="l01094"></a><span class="lineno"> 1094</span>&#160;    ptrdiff_t i = ptrdiff_t{C.numRow()} - counts.numSlack, s = counts.numLambda,</div>
-<div class="line"><a name="l01095"></a><span class="lineno"> 1095</span>&#160;              o = 1 + counts.numSlack + counts.numLambda + counts.numOmegaCoefs;</div>
-<div class="line"><a name="l01096"></a><span class="lineno"> 1096</span>&#160;    <span class="keywordflow">if</span> (d == 0) {</div>
-<div class="line"><a name="l01097"></a><span class="lineno"> 1097</span>&#160;      <span class="comment">// add ones &gt;= 0</span></div>
-<div class="line"><a name="l01098"></a><span class="lineno"> 1098</span>&#160;      <span class="keywordflow">for</span> (<span class="keyword">const</span> ScheduledNode *node : nodes-&gt;getVertices()) {</div>
-<div class="line"><a name="l01099"></a><span class="lineno"> 1099</span>&#160;        <span class="keywordflow">if</span> (node-&gt;phiIsScheduled(d) || (!node-&gt;hasActiveEdges(deps, d)))</div>
-<div class="line"><a name="l01100"></a><span class="lineno"> 1100</span>&#160;          <span class="keywordflow">continue</span>;</div>
-<div class="line"><a name="l01101"></a><span class="lineno"> 1101</span>&#160;        C[i, 0] = 1;</div>
-<div class="line"><a name="l01102"></a><span class="lineno"> 1102</span>&#160;        C[i, node-&gt;getPhiOffsetRange() + o] &lt;&lt; 1;</div>
-<div class="line"><a name="l01103"></a><span class="lineno"> 1103</span>&#160;        C[i++, ++s] = -1; <span class="comment">// for &gt;=</span></div>
-<div class="line"><a name="l01104"></a><span class="lineno"> 1104</span>&#160;      }</div>
-<div class="line"><a name="l01105"></a><span class="lineno"> 1105</span>&#160;    } <span class="keywordflow">else</span> {</div>
-<div class="line"><a name="l01106"></a><span class="lineno"> 1106</span>&#160;      DenseMatrix&lt;int64_t&gt; A, N;</div>
-<div class="line"><a name="l01107"></a><span class="lineno"> 1107</span>&#160;      <span class="keywordflow">for</span> (<span class="keyword">const</span> ScheduledNode *node : nodes-&gt;getVertices()) {</div>
-<div class="line"><a name="l01108"></a><span class="lineno"> 1108</span>&#160;        <span class="keywordflow">if</span> (node-&gt;phiIsScheduled(d) || (d &gt;= node-&gt;getNumLoops()) ||</div>
-<div class="line"><a name="l01109"></a><span class="lineno"> 1109</span>&#160;            (!node-&gt;hasActiveEdges(deps, d)))</div>
-<div class="line"><a name="l01110"></a><span class="lineno"> 1110</span>&#160;          <span class="keywordflow">continue</span>;</div>
-<div class="line"><a name="l01111"></a><span class="lineno"> 1111</span>&#160;        A.resizeForOverwrite(Row&lt;&gt;{ptrdiff_t(node-&gt;getPhi().numCol())},</div>
-<div class="line"><a name="l01112"></a><span class="lineno"> 1112</span>&#160;                             Col&lt;&gt;{d});</div>
-<div class="line"><a name="l01113"></a><span class="lineno"> 1113</span>&#160;        A &lt;&lt; node-&gt;getPhi()[_(0, d), _].t();</div>
-<div class="line"><a name="l01114"></a><span class="lineno"> 1114</span>&#160;        math::NormalForm::nullSpace11(N, A);</div>
-<div class="line"><a name="l01115"></a><span class="lineno"> 1115</span>&#160;        <span class="comment">// we add sum(NullSpace,dims=1) &gt;= 1</span></div>
-<div class="line"><a name="l01116"></a><span class="lineno"> 1116</span>&#160;        <span class="comment">// via 1 = sum(NullSpace,dims=1) - s, s &gt;= 0</span></div>
-<div class="line"><a name="l01117"></a><span class="lineno"> 1117</span>&#160;        C[i, 0] = 1;</div>
-<div class="line"><a name="l01118"></a><span class="lineno"> 1118</span>&#160;        MutPtrVector&lt;int64_t&gt; cc{C[i, node-&gt;getPhiOffsetRange() + o]};</div>
-<div class="line"><a name="l01119"></a><span class="lineno"> 1119</span>&#160;        <span class="comment">// sum(N,dims=1) &gt;= 1 after flipping row signs to be lex &gt; 0</span></div>
-<div class="line"><a name="l01120"></a><span class="lineno"> 1120</span>&#160;        <span class="keywordflow">for</span> (ptrdiff_t m = 0; m &lt; N.numRow(); ++m)</div>
-<div class="line"><a name="l01121"></a><span class="lineno"> 1121</span>&#160;          cc += N[m, _] * lexSign(N[m, _]);</div>
-<div class="line"><a name="l01122"></a><span class="lineno"> 1122</span>&#160;        C[i++, ++s] = -1; <span class="comment">// for &gt;=</span></div>
-<div class="line"><a name="l01123"></a><span class="lineno"> 1123</span>&#160;      }</div>
-<div class="line"><a name="l01124"></a><span class="lineno"> 1124</span>&#160;    }</div>
-<div class="line"><a name="l01125"></a><span class="lineno"> 1125</span>&#160;    invariant(ptrdiff_t(omniSimplex-&gt;getNumCons()), i);</div>
-<div class="line"><a name="l01126"></a><span class="lineno"> 1126</span>&#160;    assert(!allZero(omniSimplex-&gt;getConstraints()[last, _]));</div>
-<div class="line"><a name="l01127"></a><span class="lineno"> 1127</span>&#160;  }</div>
-<div class="line"><a name="l01128"></a><span class="lineno"> 1128</span>&#160;  [[nodiscard]] <span class="keyword">static</span> constexpr <span class="keyword">auto</span> lexSign(PtrVector&lt;int64_t&gt; x) -&gt; int64_t {</div>
-<div class="line"><a name="l01129"></a><span class="lineno"> 1129</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">auto</span> a : x)</div>
-<div class="line"><a name="l01130"></a><span class="lineno"> 1130</span>&#160;      <span class="keywordflow">if</span> (a) <span class="keywordflow">return</span> 2 * (a &gt; 0) - 1;</div>
-<div class="line"><a name="l01131"></a><span class="lineno"> 1131</span>&#160;    invariant(<span class="keyword">false</span>);</div>
-<div class="line"><a name="l01132"></a><span class="lineno"> 1132</span>&#160;    <span class="keywordflow">return</span> 0;</div>
-<div class="line"><a name="l01133"></a><span class="lineno"> 1133</span>&#160;  }</div>
+<div class="line"><a name="l00930"></a><span class="lineno">  930</span>&#160;  <span class="keyword">auto</span> instantiateOmniSimplex(ScheduledNode *nodes, <span class="keywordtype">int</span> d, <span class="keywordtype">bool</span> satisfyDeps,</div>
+<div class="line"><a name="l00931"></a><span class="lineno">  931</span>&#160;                              CoefCounts counts) -&gt; std::unique_ptr&lt;Simplex&gt; {</div>
+<div class="line"><a name="l00932"></a><span class="lineno">  932</span>&#160;    <span class="keyword">auto</span> [numOmegaCoefs, numPhiCoefs, numSlack, numLambda, numBounding,</div>
+<div class="line"><a name="l00933"></a><span class="lineno">  933</span>&#160;          numConstraints, numActiveEdges] = counts;</div>
+<div class="line"><a name="l00934"></a><span class="lineno">  934</span>&#160;    <span class="keyword">auto</span> omniSimplex = Simplex::create(</div>
+<div class="line"><a name="l00935"></a><span class="lineno">  935</span>&#160;      numConstraints + numSlack, numBounding + numActiveEdges + numPhiCoefs +</div>
+<div class="line"><a name="l00936"></a><span class="lineno">  936</span>&#160;                                   numOmegaCoefs + numSlack + numLambda);</div>
+<div class="line"><a name="l00937"></a><span class="lineno">  937</span>&#160;    <span class="keyword">auto</span> C{omniSimplex-&gt;getConstraints()};</div>
+<div class="line"><a name="l00938"></a><span class="lineno">  938</span>&#160;    C &lt;&lt; 0;</div>
+<div class="line"><a name="l00939"></a><span class="lineno">  939</span>&#160;    <span class="comment">// layout of omniSimplex:</span></div>
+<div class="line"><a name="l00940"></a><span class="lineno">  940</span>&#160;    <span class="comment">// Order: C, then rev-priority to minimize</span></div>
+<div class="line"><a name="l00941"></a><span class="lineno">  941</span>&#160;    <span class="comment">// C, lambdas, slack, omegas, Phis, w, u</span></div>
+<div class="line"><a name="l00942"></a><span class="lineno">  942</span>&#160;    <span class="comment">// rows give constraints; each edge gets its own</span></div>
+<div class="line"><a name="l00943"></a><span class="lineno">  943</span>&#160;    <span class="comment">// numBounding = num u</span></div>
+<div class="line"><a name="l00944"></a><span class="lineno">  944</span>&#160;    <span class="comment">// numActiveEdges = num w</span></div>
+<div class="line"><a name="l00945"></a><span class="lineno">  945</span>&#160;    ptrdiff_t c = 0;</div>
+<div class="line"><a name="l00946"></a><span class="lineno">  946</span>&#160;    ptrdiff_t l = 1, o = 1 + numLambda + numSlack, p = o + numOmegaCoefs,</div>
+<div class="line"><a name="l00947"></a><span class="lineno">  947</span>&#160;              w = p + numPhiCoefs, u = w + numActiveEdges;</div>
+<div class="line"><a name="l00948"></a><span class="lineno">  948</span>&#160;    <span class="keywordflow">for</span> (ScheduledNode *inNode : nodes-&gt;getVertices()) {</div>
+<div class="line"><a name="l00949"></a><span class="lineno">  949</span>&#160;      <span class="keywordflow">for</span> (Dependence edge : inNode-&gt;outputEdges(deps, d)) {</div>
+<div class="line"><a name="l00950"></a><span class="lineno">  950</span>&#160;        ScheduledNode *outNode = edge.output()-&gt;getNode();</div>
+<div class="line"><a name="l00951"></a><span class="lineno">  951</span>&#160;        <span class="keyword">const</span> <span class="keyword">auto</span> [satPp, satPc] = edge.satPhiCoefs();</div>
+<div class="line"><a name="l00952"></a><span class="lineno">  952</span>&#160;        <span class="keyword">const</span> <span class="keyword">auto</span> [bndPp, bndPc] = edge.bndPhiCoefs();</div>
+<div class="line"><a name="l00953"></a><span class="lineno">  953</span>&#160;        math::StridedVector&lt;int64_t&gt; satC{edge.getSatConstants()},</div>
+<div class="line"><a name="l00954"></a><span class="lineno">  954</span>&#160;          satW{edge.getSatW()}, bndC{edge.getBndConstants()};</div>
+<div class="line"><a name="l00955"></a><span class="lineno">  955</span>&#160;        math::PtrMatrix&lt;int64_t&gt; satL{edge.getSatLambda()},</div>
+<div class="line"><a name="l00956"></a><span class="lineno">  956</span>&#160;          bndL{edge.getBndLambda()}, satO{edge.getSatOmegaCoefs()},</div>
+<div class="line"><a name="l00957"></a><span class="lineno">  957</span>&#160;          bndO{edge.getBndOmegaCoefs()}, bndWU{edge.getBndCoefs()};</div>
+<div class="line"><a name="l00958"></a><span class="lineno">  958</span>&#160;        <span class="keyword">const</span> ptrdiff_t numSatConstraints = satC.size(),</div>
+<div class="line"><a name="l00959"></a><span class="lineno">  959</span>&#160;                        numBndConstraints = bndC.size();</div>
+<div class="line"><a name="l00960"></a><span class="lineno">  960</span>&#160;        <span class="keyword">const</span> ptrdiff_t nPc = ptrdiff_t(satPc.numCol()),</div>
+<div class="line"><a name="l00961"></a><span class="lineno">  961</span>&#160;                        nPp = ptrdiff_t(satPp.numCol());</div>
+<div class="line"><a name="l00962"></a><span class="lineno">  962</span>&#160;        invariant(nPc, ptrdiff_t(bndPc.numCol()));</div>
+<div class="line"><a name="l00963"></a><span class="lineno">  963</span>&#160;        invariant(nPp, ptrdiff_t(bndPp.numCol()));</div>
+<div class="line"><a name="l00964"></a><span class="lineno">  964</span>&#160;        ptrdiff_t cc = c + numSatConstraints;</div>
+<div class="line"><a name="l00965"></a><span class="lineno">  965</span>&#160;        ptrdiff_t ccc = cc + numBndConstraints;</div>
+<div class="line"><a name="l00966"></a><span class="lineno">  966</span>&#160; </div>
+<div class="line"><a name="l00967"></a><span class="lineno">  967</span>&#160;        ptrdiff_t ll = l + ptrdiff_t(satL.numCol());</div>
+<div class="line"><a name="l00968"></a><span class="lineno">  968</span>&#160;        ptrdiff_t lll = ll + ptrdiff_t(bndL.numCol());</div>
+<div class="line"><a name="l00969"></a><span class="lineno">  969</span>&#160;        C[_(c, cc), _(l, ll)] &lt;&lt; satL;</div>
+<div class="line"><a name="l00970"></a><span class="lineno">  970</span>&#160;        C[_(cc, ccc), _(ll, lll)] &lt;&lt; bndL;</div>
+<div class="line"><a name="l00971"></a><span class="lineno">  971</span>&#160;        l = lll;</div>
+<div class="line"><a name="l00972"></a><span class="lineno">  972</span>&#160;        <span class="comment">// bounding</span></div>
+<div class="line"><a name="l00973"></a><span class="lineno">  973</span>&#160;        C[_(cc, ccc), w++] &lt;&lt; bndWU[_, 0];</div>
+<div class="line"><a name="l00974"></a><span class="lineno">  974</span>&#160;        ptrdiff_t uu = u + ptrdiff_t(bndWU.numCol()) - 1;</div>
+<div class="line"><a name="l00975"></a><span class="lineno">  975</span>&#160;        C[_(cc, ccc), _(u, uu)] &lt;&lt; bndWU[_, _(1, end)];</div>
+<div class="line"><a name="l00976"></a><span class="lineno">  976</span>&#160;        u = uu;</div>
+<div class="line"><a name="l00977"></a><span class="lineno">  977</span>&#160;        <span class="keywordflow">if</span> (!satisfyDeps || !edge.stashedPreventsReordering(d))</div>
+<div class="line"><a name="l00978"></a><span class="lineno">  978</span>&#160;          C[_(c, cc), 0] &lt;&lt; satC;</div>
+<div class="line"><a name="l00979"></a><span class="lineno">  979</span>&#160;        <span class="keywordflow">else</span> C[_(c, cc), 0] &lt;&lt; satC + satW;</div>
+<div class="line"><a name="l00980"></a><span class="lineno">  980</span>&#160;        C[_(cc, ccc), 0] &lt;&lt; bndC;</div>
+<div class="line"><a name="l00981"></a><span class="lineno">  981</span>&#160;        <span class="comment">// now, handle Phi and Omega</span></div>
+<div class="line"><a name="l00982"></a><span class="lineno">  982</span>&#160;        <span class="comment">// phis are not constrained to be 0</span></div>
+<div class="line"><a name="l00983"></a><span class="lineno">  983</span>&#160;        <span class="keywordflow">if</span> (outNode == inNode) {</div>
+<div class="line"><a name="l00984"></a><span class="lineno">  984</span>&#160;          <span class="keywordflow">if</span> (d &lt; outNode-&gt;getNumLoops()) {</div>
+<div class="line"><a name="l00985"></a><span class="lineno">  985</span>&#160;            <span class="keywordflow">if</span> (nPc == nPp) {</div>
+<div class="line"><a name="l00986"></a><span class="lineno">  986</span>&#160;              <span class="keywordflow">if</span> (outNode-&gt;phiIsScheduled(d)) {</div>
+<div class="line"><a name="l00987"></a><span class="lineno">  987</span>&#160;                <span class="comment">// add it constants</span></div>
+<div class="line"><a name="l00988"></a><span class="lineno">  988</span>&#160;                <span class="keyword">auto</span> sch = outNode-&gt;getSchedule(d);</div>
+<div class="line"><a name="l00989"></a><span class="lineno">  989</span>&#160;                C[_(c, cc), 0] -=</div>
+<div class="line"><a name="l00990"></a><span class="lineno">  990</span>&#160;                  satPc * sch[_(0, nPc)].t() + satPp * sch[_(0, nPp)].t();</div>
+<div class="line"><a name="l00991"></a><span class="lineno">  991</span>&#160;                C[_(cc, ccc), 0] -=</div>
+<div class="line"><a name="l00992"></a><span class="lineno">  992</span>&#160;                  bndPc * sch[_(0, nPc)].t() + bndPp * sch[_(0, nPp)].t();</div>
+<div class="line"><a name="l00993"></a><span class="lineno">  993</span>&#160;              } <span class="keywordflow">else</span> {</div>
+<div class="line"><a name="l00994"></a><span class="lineno">  994</span>&#160;                <span class="comment">// FIXME: phiChild = [14:18), 4 cols</span></div>
+<div class="line"><a name="l00995"></a><span class="lineno">  995</span>&#160;                <span class="comment">// while Dependence seems to indicate 2</span></div>
+<div class="line"><a name="l00996"></a><span class="lineno">  996</span>&#160;                <span class="comment">// loops why the disagreement?</span></div>
+<div class="line"><a name="l00997"></a><span class="lineno">  997</span>&#160;                <span class="keyword">auto</span> po = outNode-&gt;getPhiOffset() + p;</div>
+<div class="line"><a name="l00998"></a><span class="lineno">  998</span>&#160;                C[_(c, cc), _(po, po + nPc)] &lt;&lt; satPc + satPp;</div>
+<div class="line"><a name="l00999"></a><span class="lineno">  999</span>&#160;                C[_(cc, ccc), _(po, po + nPc)] &lt;&lt; bndPc + bndPp;</div>
+<div class="line"><a name="l01000"></a><span class="lineno"> 1000</span>&#160;              }</div>
+<div class="line"><a name="l01001"></a><span class="lineno"> 1001</span>&#160;            } <span class="keywordflow">else</span> <span class="keywordflow">if</span> (outNode-&gt;phiIsScheduled(d)) {</div>
+<div class="line"><a name="l01002"></a><span class="lineno"> 1002</span>&#160;              <span class="comment">// add it constants</span></div>
+<div class="line"><a name="l01003"></a><span class="lineno"> 1003</span>&#160;              <span class="comment">// note that loop order in schedule goes</span></div>
+<div class="line"><a name="l01004"></a><span class="lineno"> 1004</span>&#160;              <span class="comment">// inner -&gt; outer</span></div>
+<div class="line"><a name="l01005"></a><span class="lineno"> 1005</span>&#160;              <span class="comment">// so we need to drop inner most if one has less</span></div>
+<div class="line"><a name="l01006"></a><span class="lineno"> 1006</span>&#160;              <span class="keyword">auto</span> sch = outNode-&gt;getSchedule(d);</div>
+<div class="line"><a name="l01007"></a><span class="lineno"> 1007</span>&#160;              <span class="keyword">auto</span> schP = sch[_(0, nPp)].t();</div>
+<div class="line"><a name="l01008"></a><span class="lineno"> 1008</span>&#160;              <span class="keyword">auto</span> schC = sch[_(0, nPc)].t();</div>
+<div class="line"><a name="l01009"></a><span class="lineno"> 1009</span>&#160;              C[_(c, cc), 0] -= satPc * schC + satPp * schP;</div>
+<div class="line"><a name="l01010"></a><span class="lineno"> 1010</span>&#160;              C[_(cc, ccc), 0] -= bndPc * schC + bndPp * schP;</div>
+<div class="line"><a name="l01011"></a><span class="lineno"> 1011</span>&#160;            } <span class="keywordflow">else</span> <span class="keywordflow">if</span> (nPc &lt; nPp) {</div>
+<div class="line"><a name="l01012"></a><span class="lineno"> 1012</span>&#160;              <span class="comment">// Pp has more cols, so outer/leftmost overlap</span></div>
+<div class="line"><a name="l01013"></a><span class="lineno"> 1013</span>&#160;              <span class="keyword">auto</span> po = outNode-&gt;getPhiOffset() + p, poc = po + nPc,</div>
+<div class="line"><a name="l01014"></a><span class="lineno"> 1014</span>&#160;                   pop = po + nPp;</div>
+<div class="line"><a name="l01015"></a><span class="lineno"> 1015</span>&#160;              C[_(c, cc), _(po, poc)] &lt;&lt; satPc + satPp[_, _(0, nPc)];</div>
+<div class="line"><a name="l01016"></a><span class="lineno"> 1016</span>&#160;              C[_(cc, ccc), _(po, poc)] &lt;&lt; bndPc + bndPp[_, _(0, nPc)];</div>
+<div class="line"><a name="l01017"></a><span class="lineno"> 1017</span>&#160;              C[_(c, cc), _(poc, pop)] &lt;&lt; satPp[_, _(nPc, end)];</div>
+<div class="line"><a name="l01018"></a><span class="lineno"> 1018</span>&#160;              C[_(cc, ccc), _(poc, pop)] &lt;&lt; bndPp[_, _(nPc, end)];</div>
+<div class="line"><a name="l01019"></a><span class="lineno"> 1019</span>&#160;            } <span class="keywordflow">else</span> <span class="comment">/* if (nPc &gt; nPp) */</span> {</div>
+<div class="line"><a name="l01020"></a><span class="lineno"> 1020</span>&#160;              <span class="keyword">auto</span> po = outNode-&gt;getPhiOffset() + p, poc = po + nPc,</div>
+<div class="line"><a name="l01021"></a><span class="lineno"> 1021</span>&#160;                   pop = po + nPp;</div>
+<div class="line"><a name="l01022"></a><span class="lineno"> 1022</span>&#160;              C[_(c, cc), _(po, pop)] &lt;&lt; satPc[_, _(0, nPp)] + satPp;</div>
+<div class="line"><a name="l01023"></a><span class="lineno"> 1023</span>&#160;              C[_(cc, ccc), _(po, pop)] &lt;&lt; bndPc[_, _(0, nPp)] + bndPp;</div>
+<div class="line"><a name="l01024"></a><span class="lineno"> 1024</span>&#160;              C[_(c, cc), _(pop, poc)] &lt;&lt; satPc[_, _(nPp, end)];</div>
+<div class="line"><a name="l01025"></a><span class="lineno"> 1025</span>&#160;              C[_(cc, ccc), _(pop, poc)] &lt;&lt; bndPc[_, _(nPp, end)];</div>
+<div class="line"><a name="l01026"></a><span class="lineno"> 1026</span>&#160;            }</div>
+<div class="line"><a name="l01027"></a><span class="lineno"> 1027</span>&#160;            C[_(c, cc), outNode-&gt;getOmegaOffset() + o]</div>
+<div class="line"><a name="l01028"></a><span class="lineno"> 1028</span>&#160;              &lt;&lt; satO[_, 0] + satO[_, 1];</div>
+<div class="line"><a name="l01029"></a><span class="lineno"> 1029</span>&#160;            C[_(cc, ccc), outNode-&gt;getOmegaOffset() + o]</div>
+<div class="line"><a name="l01030"></a><span class="lineno"> 1030</span>&#160;              &lt;&lt; bndO[_, 0] + bndO[_, 1];</div>
+<div class="line"><a name="l01031"></a><span class="lineno"> 1031</span>&#160;          }</div>
+<div class="line"><a name="l01032"></a><span class="lineno"> 1032</span>&#160;        } <span class="keywordflow">else</span> {</div>
+<div class="line"><a name="l01033"></a><span class="lineno"> 1033</span>&#160;          <span class="keywordflow">if</span> (d &lt; edge.getOutCurrentDepth())</div>
+<div class="line"><a name="l01034"></a><span class="lineno"> 1034</span>&#160;            updateConstraints(C, outNode, satPc, bndPc, d, c, cc, ccc, p);</div>
+<div class="line"><a name="l01035"></a><span class="lineno"> 1035</span>&#160;          <span class="keywordflow">if</span> (d &lt; edge.getInCurrentDepth()) {</div>
+<div class="line"><a name="l01036"></a><span class="lineno"> 1036</span>&#160;            <span class="keywordflow">if</span> (d &lt; edge.getOutCurrentDepth() &amp;&amp; !inNode-&gt;phiIsScheduled(d) &amp;&amp;</div>
+<div class="line"><a name="l01037"></a><span class="lineno"> 1037</span>&#160;                !outNode-&gt;phiIsScheduled(d)) {</div>
+<div class="line"><a name="l01038"></a><span class="lineno"> 1038</span>&#160;              invariant(inNode-&gt;getPhiOffset() != outNode-&gt;getPhiOffset());</div>
+<div class="line"><a name="l01039"></a><span class="lineno"> 1039</span>&#160;            }</div>
+<div class="line"><a name="l01040"></a><span class="lineno"> 1040</span>&#160;            updateConstraints(C, inNode, satPp, bndPp, d, c, cc, ccc, p);</div>
+<div class="line"><a name="l01041"></a><span class="lineno"> 1041</span>&#160;          }</div>
+<div class="line"><a name="l01042"></a><span class="lineno"> 1042</span>&#160;          <span class="comment">// Omegas are included regardless of rotation</span></div>
+<div class="line"><a name="l01043"></a><span class="lineno"> 1043</span>&#160;          <span class="keywordflow">if</span> (d &lt; edge.getOutCurrentDepth()) {</div>
+<div class="line"><a name="l01044"></a><span class="lineno"> 1044</span>&#160;            <span class="keywordflow">if</span> (d &lt; edge.getInCurrentDepth())</div>
+<div class="line"><a name="l01045"></a><span class="lineno"> 1045</span>&#160;              invariant(inNode-&gt;getOmegaOffset() != outNode-&gt;getOmegaOffset());</div>
+<div class="line"><a name="l01046"></a><span class="lineno"> 1046</span>&#160;            C[_(c, cc), outNode-&gt;getOmegaOffset() + o]</div>
+<div class="line"><a name="l01047"></a><span class="lineno"> 1047</span>&#160;              &lt;&lt; satO[_, edge.isForward()];</div>
+<div class="line"><a name="l01048"></a><span class="lineno"> 1048</span>&#160;            C[_(cc, ccc), outNode-&gt;getOmegaOffset() + o]</div>
+<div class="line"><a name="l01049"></a><span class="lineno"> 1049</span>&#160;              &lt;&lt; bndO[_, edge.isForward()];</div>
+<div class="line"><a name="l01050"></a><span class="lineno"> 1050</span>&#160;          }</div>
+<div class="line"><a name="l01051"></a><span class="lineno"> 1051</span>&#160;          <span class="keywordflow">if</span> (d &lt; edge.getInCurrentDepth()) {</div>
+<div class="line"><a name="l01052"></a><span class="lineno"> 1052</span>&#160;            C[_(c, cc), inNode-&gt;getOmegaOffset() + o]</div>
+<div class="line"><a name="l01053"></a><span class="lineno"> 1053</span>&#160;              &lt;&lt; satO[_, !edge.isForward()];</div>
+<div class="line"><a name="l01054"></a><span class="lineno"> 1054</span>&#160;            C[_(cc, ccc), inNode-&gt;getOmegaOffset() + o]</div>
+<div class="line"><a name="l01055"></a><span class="lineno"> 1055</span>&#160;              &lt;&lt; bndO[_, !edge.isForward()];</div>
+<div class="line"><a name="l01056"></a><span class="lineno"> 1056</span>&#160;          }</div>
+<div class="line"><a name="l01057"></a><span class="lineno"> 1057</span>&#160;        }</div>
+<div class="line"><a name="l01058"></a><span class="lineno"> 1058</span>&#160;        c = ccc;</div>
+<div class="line"><a name="l01059"></a><span class="lineno"> 1059</span>&#160;      }</div>
+<div class="line"><a name="l01060"></a><span class="lineno"> 1060</span>&#160;    }</div>
+<div class="line"><a name="l01061"></a><span class="lineno"> 1061</span>&#160;    invariant(<span class="keywordtype">size_t</span>(l), <span class="keywordtype">size_t</span>(1 + numLambda));</div>
+<div class="line"><a name="l01062"></a><span class="lineno"> 1062</span>&#160;    invariant(<span class="keywordtype">size_t</span>(c), <span class="keywordtype">size_t</span>(numConstraints));</div>
+<div class="line"><a name="l01063"></a><span class="lineno"> 1063</span>&#160;    addIndependentSolutionConstraints(omniSimplex.get(), nodes, d, counts);</div>
+<div class="line"><a name="l01064"></a><span class="lineno"> 1064</span>&#160;    <span class="keywordflow">return</span> omniSimplex;</div>
+<div class="line"><a name="l01065"></a><span class="lineno"> 1065</span>&#160;  }</div>
+<div class="line"><a name="l01066"></a><span class="lineno"> 1066</span>&#160;  <span class="keyword">static</span> <span class="keywordtype">void</span> updateConstraints(MutPtrMatrix&lt;int64_t&gt; C,</div>
+<div class="line"><a name="l01067"></a><span class="lineno"> 1067</span>&#160;                                <span class="keyword">const</span> ScheduledNode *node,</div>
+<div class="line"><a name="l01068"></a><span class="lineno"> 1068</span>&#160;                                PtrMatrix&lt;int64_t&gt; sat, PtrMatrix&lt;int64_t&gt; bnd,</div>
+<div class="line"><a name="l01069"></a><span class="lineno"> 1069</span>&#160;                                <span class="keywordtype">unsigned</span> d, ptrdiff_t c, ptrdiff_t cc,</div>
+<div class="line"><a name="l01070"></a><span class="lineno"> 1070</span>&#160;                                ptrdiff_t ccc, ptrdiff_t p) {</div>
+<div class="line"><a name="l01071"></a><span class="lineno"> 1071</span>&#160;    invariant(sat.numCol(), bnd.numCol());</div>
+<div class="line"><a name="l01072"></a><span class="lineno"> 1072</span>&#160;    <span class="keywordflow">if</span> (node-&gt;phiIsScheduled(d)) {</div>
+<div class="line"><a name="l01073"></a><span class="lineno"> 1073</span>&#160;      <span class="comment">// add it constants</span></div>
+<div class="line"><a name="l01074"></a><span class="lineno"> 1074</span>&#160;      <span class="keyword">auto</span> sch = node-&gt;getSchedule(d)[_(0, sat.numCol())].t();</div>
+<div class="line"><a name="l01075"></a><span class="lineno"> 1075</span>&#160;      <span class="comment">// order is inner &lt;-&gt; outer</span></div>
+<div class="line"><a name="l01076"></a><span class="lineno"> 1076</span>&#160;      <span class="comment">// so we need the end of schedule if it is larger</span></div>
+<div class="line"><a name="l01077"></a><span class="lineno"> 1077</span>&#160;      C[_(c, cc), 0] -= sat * sch;</div>
+<div class="line"><a name="l01078"></a><span class="lineno"> 1078</span>&#160;      C[_(cc, ccc), 0] -= bnd * sch;</div>
+<div class="line"><a name="l01079"></a><span class="lineno"> 1079</span>&#160;    } <span class="keywordflow">else</span> {</div>
+<div class="line"><a name="l01080"></a><span class="lineno"> 1080</span>&#160;      <span class="comment">// add it to C</span></div>
+<div class="line"><a name="l01081"></a><span class="lineno"> 1081</span>&#160;      <span class="keyword">auto</span> po = node-&gt;getPhiOffset() + p;</div>
+<div class="line"><a name="l01082"></a><span class="lineno"> 1082</span>&#160;      C[_(c, cc), _(po, po + ptrdiff_t(sat.numCol()))] &lt;&lt; sat;</div>
+<div class="line"><a name="l01083"></a><span class="lineno"> 1083</span>&#160;      C[_(cc, ccc), _(po, po + ptrdiff_t(bnd.numCol()))] &lt;&lt; bnd;</div>
+<div class="line"><a name="l01084"></a><span class="lineno"> 1084</span>&#160;    }</div>
+<div class="line"><a name="l01085"></a><span class="lineno"> 1085</span>&#160;  }</div>
+<div class="line"><a name="l01086"></a><span class="lineno"> 1086</span>&#160;  <span class="keywordtype">void</span> addIndependentSolutionConstraints(Valid&lt;Simplex&gt; omniSimplex,</div>
+<div class="line"><a name="l01087"></a><span class="lineno"> 1087</span>&#160;                                         <span class="keyword">const</span> ScheduledNode *nodes,</div>
+<div class="line"><a name="l01088"></a><span class="lineno"> 1088</span>&#160;                                         ptrdiff_t d, CoefCounts counts) {</div>
+<div class="line"><a name="l01089"></a><span class="lineno"> 1089</span>&#160;    <span class="comment">// omniSimplex-&gt;setNumCons(omniSimplex-&gt;getNumCons() +</span></div>
+<div class="line"><a name="l01090"></a><span class="lineno"> 1090</span>&#160;    <span class="comment">//                                memory.size());</span></div>
+<div class="line"><a name="l01091"></a><span class="lineno"> 1091</span>&#160;    <span class="comment">// omniSimplex-&gt;reserveExtraRows(memory.size());</span></div>
+<div class="line"><a name="l01092"></a><span class="lineno"> 1092</span>&#160;    <span class="keyword">auto</span> C{omniSimplex-&gt;getConstraints()};</div>
+<div class="line"><a name="l01093"></a><span class="lineno"> 1093</span>&#160;    ptrdiff_t i = ptrdiff_t{C.numRow()} - counts.numSlack, s = counts.numLambda,</div>
+<div class="line"><a name="l01094"></a><span class="lineno"> 1094</span>&#160;              o = 1 + counts.numSlack + counts.numLambda + counts.numOmegaCoefs;</div>
+<div class="line"><a name="l01095"></a><span class="lineno"> 1095</span>&#160;    <span class="keywordflow">if</span> (d == 0) {</div>
+<div class="line"><a name="l01096"></a><span class="lineno"> 1096</span>&#160;      <span class="comment">// add ones &gt;= 0</span></div>
+<div class="line"><a name="l01097"></a><span class="lineno"> 1097</span>&#160;      <span class="keywordflow">for</span> (<span class="keyword">const</span> ScheduledNode *node : nodes-&gt;getVertices()) {</div>
+<div class="line"><a name="l01098"></a><span class="lineno"> 1098</span>&#160;        <span class="keywordflow">if</span> (node-&gt;phiIsScheduled(d) || (!node-&gt;hasActiveEdges(deps, d)))</div>
+<div class="line"><a name="l01099"></a><span class="lineno"> 1099</span>&#160;          <span class="keywordflow">continue</span>;</div>
+<div class="line"><a name="l01100"></a><span class="lineno"> 1100</span>&#160;        C[i, 0] = 1;</div>
+<div class="line"><a name="l01101"></a><span class="lineno"> 1101</span>&#160;        C[i, node-&gt;getPhiOffsetRange() + o] &lt;&lt; 1;</div>
+<div class="line"><a name="l01102"></a><span class="lineno"> 1102</span>&#160;        C[i++, ++s] = -1; <span class="comment">// for &gt;=</span></div>
+<div class="line"><a name="l01103"></a><span class="lineno"> 1103</span>&#160;      }</div>
+<div class="line"><a name="l01104"></a><span class="lineno"> 1104</span>&#160;    } <span class="keywordflow">else</span> {</div>
+<div class="line"><a name="l01105"></a><span class="lineno"> 1105</span>&#160;      DenseMatrix&lt;int64_t&gt; A, N;</div>
+<div class="line"><a name="l01106"></a><span class="lineno"> 1106</span>&#160;      <span class="keywordflow">for</span> (<span class="keyword">const</span> ScheduledNode *node : nodes-&gt;getVertices()) {</div>
+<div class="line"><a name="l01107"></a><span class="lineno"> 1107</span>&#160;        <span class="keywordflow">if</span> (node-&gt;phiIsScheduled(d) || (d &gt;= node-&gt;getNumLoops()) ||</div>
+<div class="line"><a name="l01108"></a><span class="lineno"> 1108</span>&#160;            (!node-&gt;hasActiveEdges(deps, d)))</div>
+<div class="line"><a name="l01109"></a><span class="lineno"> 1109</span>&#160;          <span class="keywordflow">continue</span>;</div>
+<div class="line"><a name="l01110"></a><span class="lineno"> 1110</span>&#160;        A.resizeForOverwrite(Row&lt;&gt;{ptrdiff_t(node-&gt;getPhi().numCol())},</div>
+<div class="line"><a name="l01111"></a><span class="lineno"> 1111</span>&#160;                             Col&lt;&gt;{d});</div>
+<div class="line"><a name="l01112"></a><span class="lineno"> 1112</span>&#160;        A &lt;&lt; node-&gt;getPhi()[_(0, d), _].t();</div>
+<div class="line"><a name="l01113"></a><span class="lineno"> 1113</span>&#160;        math::NormalForm::nullSpace11(N, A);</div>
+<div class="line"><a name="l01114"></a><span class="lineno"> 1114</span>&#160;        <span class="comment">// we add sum(NullSpace,dims=1) &gt;= 1</span></div>
+<div class="line"><a name="l01115"></a><span class="lineno"> 1115</span>&#160;        <span class="comment">// via 1 = sum(NullSpace,dims=1) - s, s &gt;= 0</span></div>
+<div class="line"><a name="l01116"></a><span class="lineno"> 1116</span>&#160;        C[i, 0] = 1;</div>
+<div class="line"><a name="l01117"></a><span class="lineno"> 1117</span>&#160;        MutPtrVector&lt;int64_t&gt; cc{C[i, node-&gt;getPhiOffsetRange() + o]};</div>
+<div class="line"><a name="l01118"></a><span class="lineno"> 1118</span>&#160;        <span class="comment">// sum(N,dims=1) &gt;= 1 after flipping row signs to be lex &gt; 0</span></div>
+<div class="line"><a name="l01119"></a><span class="lineno"> 1119</span>&#160;        <span class="keywordflow">for</span> (ptrdiff_t m = 0; m &lt; N.numRow(); ++m)</div>
+<div class="line"><a name="l01120"></a><span class="lineno"> 1120</span>&#160;          cc += N[m, _] * lexSign(N[m, _]);</div>
+<div class="line"><a name="l01121"></a><span class="lineno"> 1121</span>&#160;        C[i++, ++s] = -1; <span class="comment">// for &gt;=</span></div>
+<div class="line"><a name="l01122"></a><span class="lineno"> 1122</span>&#160;      }</div>
+<div class="line"><a name="l01123"></a><span class="lineno"> 1123</span>&#160;    }</div>
+<div class="line"><a name="l01124"></a><span class="lineno"> 1124</span>&#160;    invariant(ptrdiff_t(omniSimplex-&gt;getNumCons()), i);</div>
+<div class="line"><a name="l01125"></a><span class="lineno"> 1125</span>&#160;    assert(!allZero(omniSimplex-&gt;getConstraints()[last, _]));</div>
+<div class="line"><a name="l01126"></a><span class="lineno"> 1126</span>&#160;  }</div>
+<div class="line"><a name="l01127"></a><span class="lineno"> 1127</span>&#160;  [[nodiscard]] <span class="keyword">static</span> constexpr <span class="keyword">auto</span> lexSign(PtrVector&lt;int64_t&gt; x) -&gt; int64_t {</div>
+<div class="line"><a name="l01128"></a><span class="lineno"> 1128</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">auto</span> a : x)</div>
+<div class="line"><a name="l01129"></a><span class="lineno"> 1129</span>&#160;      <span class="keywordflow">if</span> (a) <span class="keywordflow">return</span> 2 * (a &gt; 0) - 1;</div>
+<div class="line"><a name="l01130"></a><span class="lineno"> 1130</span>&#160;    invariant(<span class="keyword">false</span>);</div>
+<div class="line"><a name="l01131"></a><span class="lineno"> 1131</span>&#160;    <span class="keywordflow">return</span> 0;</div>
+<div class="line"><a name="l01132"></a><span class="lineno"> 1132</span>&#160;  }</div>
+<div class="line"><a name="l01133"></a><span class="lineno"> 1133</span>&#160;  <span class="comment">//</span></div>
 <div class="line"><a name="l01134"></a><span class="lineno"> 1134</span>&#160;  <span class="comment">//</span></div>
 <div class="line"><a name="l01135"></a><span class="lineno"> 1135</span>&#160;  <span class="comment">//</span></div>
 <div class="line"><a name="l01136"></a><span class="lineno"> 1136</span>&#160;  <span class="comment">//</span></div>
 <div class="line"><a name="l01137"></a><span class="lineno"> 1137</span>&#160;  <span class="comment">//</span></div>
-<div class="line"><a name="l01138"></a><span class="lineno"> 1138</span>&#160;  <span class="comment">//</span></div>
-<div class="line"><a name="l01139"></a><span class="lineno"> 1139</span>&#160;  <span class="comment">// Old junk:</span></div>
-<div class="line"><a name="l01142"></a><span class="lineno"> 1142</span>&#160;<span class="comment"></span>  <span class="comment">// Note this is based on the assumption that original loops are in</span></div>
-<div class="line"><a name="l01143"></a><span class="lineno"> 1143</span>&#160;  <span class="comment">// outer&lt;-&gt;inner order. With that assumption, using lexSign on the null</span></div>
-<div class="line"><a name="l01144"></a><span class="lineno"> 1144</span>&#160;  <span class="comment">// space will tend to preserve the original traversal order.</span></div>
-<div class="line"><a name="l01145"></a><span class="lineno"> 1145</span>&#160; </div>
-<div class="line"><a name="l01146"></a><span class="lineno"> 1146</span>&#160;  <span class="keyword">static</span> <span class="keyword">auto</span> summarizeMemoryAccesses(llvm::raw_ostream &amp;os,</div>
-<div class="line"><a name="l01147"></a><span class="lineno"> 1147</span>&#160;                                      ScheduledNode *nodes)</div>
-<div class="line"><a name="l01148"></a><span class="lineno"> 1148</span>&#160;    -&gt; llvm::raw_ostream &amp; {</div>
-<div class="line"><a name="l01149"></a><span class="lineno"> 1149</span>&#160;    os &lt;&lt; <span class="stringliteral">&quot;MemoryAccesses:\n&quot;</span>;</div>
-<div class="line"><a name="l01150"></a><span class="lineno"> 1150</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">const</span> Addr *m : nodes-&gt;eachAddr()) {</div>
-<div class="line"><a name="l01151"></a><span class="lineno"> 1151</span>&#160;      os &lt;&lt; <span class="stringliteral">&quot;Inst: &quot;</span> &lt;&lt; *m-&gt;getInstruction()</div>
-<div class="line"><a name="l01152"></a><span class="lineno"> 1152</span>&#160;         &lt;&lt; <span class="stringliteral">&quot;\nOrder: &quot;</span> &lt;&lt; m-&gt;getFusionOmega() &lt;&lt; <span class="stringliteral">&quot;\nLoop:&quot;</span> &lt;&lt; *m-&gt;getAffLoop()</div>
-<div class="line"><a name="l01153"></a><span class="lineno"> 1153</span>&#160;         &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
-<div class="line"><a name="l01154"></a><span class="lineno"> 1154</span>&#160;    }</div>
-<div class="line"><a name="l01155"></a><span class="lineno"> 1155</span>&#160;    <span class="keywordflow">return</span> os;</div>
-<div class="line"><a name="l01156"></a><span class="lineno"> 1156</span>&#160;  }</div>
-<div class="line"><a name="l01157"></a><span class="lineno"> 1157</span>&#160;};</div>
-<div class="line"><a name="l01158"></a><span class="lineno"> 1158</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span></div>
-<div class="line"><a name="l01159"></a><span class="lineno"> 1159</span>&#160;operator&lt;&lt;(llvm::raw_ostream &amp;os,</div>
-<div class="line"><a name="l01160"></a><span class="lineno"> 1160</span>&#160;           containers::Pair&lt;ScheduledNode *, Dependencies&gt; nodesdeps)</div>
-<div class="line"><a name="l01161"></a><span class="lineno"> 1161</span>&#160;  -&gt; llvm::raw_ostream &amp; {</div>
-<div class="line"><a name="l01162"></a><span class="lineno"> 1162</span>&#160;  <span class="keyword">auto</span> [nodes, deps] = nodesdeps;</div>
-<div class="line"><a name="l01163"></a><span class="lineno"> 1163</span>&#160;  os &lt;&lt; <span class="stringliteral">&quot;\nLoopBlock graph:\n&quot;</span>;</div>
-<div class="line"><a name="l01164"></a><span class="lineno"> 1164</span>&#160;  <span class="keywordtype">size_t</span> i = 0;</div>
-<div class="line"><a name="l01165"></a><span class="lineno"> 1165</span>&#160;  <span class="keywordflow">for</span> (ScheduledNode *v : nodes-&gt;getVertices()) {</div>
-<div class="line"><a name="l01166"></a><span class="lineno"> 1166</span>&#160;    os &lt;&lt; <span class="stringliteral">&quot;v_&quot;</span> &lt;&lt; i++ &lt;&lt; <span class="stringliteral">&quot;:\nmem =\n&quot;</span>;</div>
-<div class="line"><a name="l01167"></a><span class="lineno"> 1167</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">const</span> Addr *m : v-&gt;localAddr()) os &lt;&lt; *m-&gt;getInstruction() &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
-<div class="line"><a name="l01168"></a><span class="lineno"> 1168</span>&#160;    os &lt;&lt; v &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
-<div class="line"><a name="l01169"></a><span class="lineno"> 1169</span>&#160;  }</div>
-<div class="line"><a name="l01170"></a><span class="lineno"> 1170</span>&#160;  <span class="comment">// BitSet</span></div>
-<div class="line"><a name="l01171"></a><span class="lineno"> 1171</span>&#160;  os &lt;&lt; <span class="stringliteral">&quot;\nLoopBlock Edges:&quot;</span>;</div>
-<div class="line"><a name="l01172"></a><span class="lineno"> 1172</span>&#160;  <span class="keywordflow">for</span> (ScheduledNode *inNode : nodes-&gt;getVertices()) {</div>
-<div class="line"><a name="l01173"></a><span class="lineno"> 1173</span>&#160;    poly::AffineSchedule sin = inNode-&gt;getSchedule();</div>
-<div class="line"><a name="l01174"></a><span class="lineno"> 1174</span>&#160;    <span class="keywordflow">for</span> (Dependence edge : nodes-&gt;outputEdges(deps)) {</div>
-<div class="line"><a name="l01175"></a><span class="lineno"> 1175</span>&#160;      os &lt;&lt; <span class="stringliteral">&quot;\n\n\tEdge = &quot;</span> &lt;&lt; edge;</div>
-<div class="line"><a name="l01176"></a><span class="lineno"> 1176</span>&#160;      ScheduledNode *outNode = edge.output()-&gt;getNode();</div>
-<div class="line"><a name="l01177"></a><span class="lineno"> 1177</span>&#160;      os &lt;&lt; <span class="stringliteral">&quot;Schedule In: s.getPhi() =&quot;</span> &lt;&lt; sin.getPhi()</div>
-<div class="line"><a name="l01178"></a><span class="lineno"> 1178</span>&#160;         &lt;&lt; <span class="stringliteral">&quot;\ns.getFusionOmega() = &quot;</span> &lt;&lt; sin.getFusionOmega()</div>
-<div class="line"><a name="l01179"></a><span class="lineno"> 1179</span>&#160;         &lt;&lt; <span class="stringliteral">&quot;\ns.getOffsetOmega() = &quot;</span> &lt;&lt; sin.getOffsetOmega();</div>
-<div class="line"><a name="l01180"></a><span class="lineno"> 1180</span>&#160;      poly::AffineSchedule sout = outNode-&gt;getSchedule();</div>
-<div class="line"><a name="l01181"></a><span class="lineno"> 1181</span>&#160;      os &lt;&lt; <span class="stringliteral">&quot;\n\nSchedule Out: s.getPhi() =&quot;</span> &lt;&lt; sout.getPhi()</div>
-<div class="line"><a name="l01182"></a><span class="lineno"> 1182</span>&#160;         &lt;&lt; <span class="stringliteral">&quot;\ns.getFusionOmega() = &quot;</span> &lt;&lt; sout.getFusionOmega()</div>
-<div class="line"><a name="l01183"></a><span class="lineno"> 1183</span>&#160;         &lt;&lt; <span class="stringliteral">&quot;\ns.getOffsetOmega() = &quot;</span> &lt;&lt; sout.getOffsetOmega();</div>
-<div class="line"><a name="l01184"></a><span class="lineno"> 1184</span>&#160; </div>
-<div class="line"><a name="l01185"></a><span class="lineno"> 1185</span>&#160;      os &lt;&lt; <span class="stringliteral">&quot;\n\n&quot;</span>;</div>
-<div class="line"><a name="l01186"></a><span class="lineno"> 1186</span>&#160;    }</div>
-<div class="line"><a name="l01187"></a><span class="lineno"> 1187</span>&#160;  }</div>
-<div class="line"><a name="l01188"></a><span class="lineno"> 1188</span>&#160;  os &lt;&lt; <span class="stringliteral">&quot;\nLoopBlock schedule:\n&quot;</span>;</div>
-<div class="line"><a name="l01189"></a><span class="lineno"> 1189</span>&#160;  <span class="keywordflow">for</span> (Addr *mem : nodes-&gt;eachAddr()) {</div>
-<div class="line"><a name="l01190"></a><span class="lineno"> 1190</span>&#160;    os &lt;&lt; <span class="stringliteral">&quot;Ref = &quot;</span> &lt;&lt; *mem-&gt;getArrayPointer();</div>
-<div class="line"><a name="l01191"></a><span class="lineno"> 1191</span>&#160;    ScheduledNode *node = mem-&gt;getNode();</div>
-<div class="line"><a name="l01192"></a><span class="lineno"> 1192</span>&#160;    poly::AffineSchedule s = node-&gt;getSchedule();</div>
-<div class="line"><a name="l01193"></a><span class="lineno"> 1193</span>&#160;    os &lt;&lt; <span class="stringliteral">&quot;s.getPhi()&quot;</span> &lt;&lt; s.getPhi()</div>
-<div class="line"><a name="l01194"></a><span class="lineno"> 1194</span>&#160;       &lt;&lt; <span class="stringliteral">&quot;\ns.getFusionOmega() = &quot;</span> &lt;&lt; s.getFusionOmega()</div>
-<div class="line"><a name="l01195"></a><span class="lineno"> 1195</span>&#160;       &lt;&lt; <span class="stringliteral">&quot;\ns.getOffsetOmega() = &quot;</span> &lt;&lt; s.getOffsetOmega() &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
-<div class="line"><a name="l01196"></a><span class="lineno"> 1196</span>&#160;  }</div>
-<div class="line"><a name="l01197"></a><span class="lineno"> 1197</span>&#160;  <span class="keywordflow">return</span> os &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
-<div class="line"><a name="l01198"></a><span class="lineno"> 1198</span>&#160;}</div>
-<div class="line"><a name="l01199"></a><span class="lineno"> 1199</span>&#160; </div>
-<div class="line"><a name="l01200"></a><span class="lineno"> 1200</span>&#160;} <span class="comment">// namespace poly::lp</span></div>
+<div class="line"><a name="l01138"></a><span class="lineno"> 1138</span>&#160;  <span class="comment">// Old junk:</span></div>
+<div class="line"><a name="l01141"></a><span class="lineno"> 1141</span>&#160;<span class="comment"></span>  <span class="comment">// Note this is based on the assumption that original loops are in</span></div>
+<div class="line"><a name="l01142"></a><span class="lineno"> 1142</span>&#160;  <span class="comment">// outer&lt;-&gt;inner order. With that assumption, using lexSign on the null</span></div>
+<div class="line"><a name="l01143"></a><span class="lineno"> 1143</span>&#160;  <span class="comment">// space will tend to preserve the original traversal order.</span></div>
+<div class="line"><a name="l01144"></a><span class="lineno"> 1144</span>&#160; </div>
+<div class="line"><a name="l01145"></a><span class="lineno"> 1145</span>&#160;  <span class="keyword">static</span> <span class="keyword">auto</span> summarizeMemoryAccesses(llvm::raw_ostream &amp;os,</div>
+<div class="line"><a name="l01146"></a><span class="lineno"> 1146</span>&#160;                                      ScheduledNode *nodes)</div>
+<div class="line"><a name="l01147"></a><span class="lineno"> 1147</span>&#160;    -&gt; llvm::raw_ostream &amp; {</div>
+<div class="line"><a name="l01148"></a><span class="lineno"> 1148</span>&#160;    os &lt;&lt; <span class="stringliteral">&quot;MemoryAccesses:\n&quot;</span>;</div>
+<div class="line"><a name="l01149"></a><span class="lineno"> 1149</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">const</span> Addr *m : nodes-&gt;eachAddr()) {</div>
+<div class="line"><a name="l01150"></a><span class="lineno"> 1150</span>&#160;      os &lt;&lt; <span class="stringliteral">&quot;Inst: &quot;</span> &lt;&lt; *m-&gt;getInstruction()</div>
+<div class="line"><a name="l01151"></a><span class="lineno"> 1151</span>&#160;         &lt;&lt; <span class="stringliteral">&quot;\nOrder: &quot;</span> &lt;&lt; m-&gt;getFusionOmega() &lt;&lt; <span class="stringliteral">&quot;\nLoop:&quot;</span> &lt;&lt; *m-&gt;getAffLoop()</div>
+<div class="line"><a name="l01152"></a><span class="lineno"> 1152</span>&#160;         &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
+<div class="line"><a name="l01153"></a><span class="lineno"> 1153</span>&#160;    }</div>
+<div class="line"><a name="l01154"></a><span class="lineno"> 1154</span>&#160;    <span class="keywordflow">return</span> os;</div>
+<div class="line"><a name="l01155"></a><span class="lineno"> 1155</span>&#160;  }</div>
+<div class="line"><a name="l01156"></a><span class="lineno"> 1156</span>&#160;};</div>
+<div class="line"><a name="l01157"></a><span class="lineno"> 1157</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span></div>
+<div class="line"><a name="l01158"></a><span class="lineno"> 1158</span>&#160;operator&lt;&lt;(llvm::raw_ostream &amp;os,</div>
+<div class="line"><a name="l01159"></a><span class="lineno"> 1159</span>&#160;           containers::Pair&lt;ScheduledNode *, Dependencies&gt; nodesdeps)</div>
+<div class="line"><a name="l01160"></a><span class="lineno"> 1160</span>&#160;  -&gt; llvm::raw_ostream &amp; {</div>
+<div class="line"><a name="l01161"></a><span class="lineno"> 1161</span>&#160;  <span class="keyword">auto</span> [nodes, deps] = nodesdeps;</div>
+<div class="line"><a name="l01162"></a><span class="lineno"> 1162</span>&#160;  os &lt;&lt; <span class="stringliteral">&quot;\nLoopBlock graph:\n&quot;</span>;</div>
+<div class="line"><a name="l01163"></a><span class="lineno"> 1163</span>&#160;  <span class="keywordtype">size_t</span> i = 0;</div>
+<div class="line"><a name="l01164"></a><span class="lineno"> 1164</span>&#160;  <span class="keywordflow">for</span> (ScheduledNode *v : nodes-&gt;getVertices()) {</div>
+<div class="line"><a name="l01165"></a><span class="lineno"> 1165</span>&#160;    os &lt;&lt; <span class="stringliteral">&quot;v_&quot;</span> &lt;&lt; i++ &lt;&lt; <span class="stringliteral">&quot;:\nmem =\n&quot;</span>;</div>
+<div class="line"><a name="l01166"></a><span class="lineno"> 1166</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">const</span> Addr *m : v-&gt;localAddr()) os &lt;&lt; *m-&gt;getInstruction() &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
+<div class="line"><a name="l01167"></a><span class="lineno"> 1167</span>&#160;    os &lt;&lt; v &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
+<div class="line"><a name="l01168"></a><span class="lineno"> 1168</span>&#160;  }</div>
+<div class="line"><a name="l01169"></a><span class="lineno"> 1169</span>&#160;  <span class="comment">// BitSet</span></div>
+<div class="line"><a name="l01170"></a><span class="lineno"> 1170</span>&#160;  os &lt;&lt; <span class="stringliteral">&quot;\nLoopBlock Edges:&quot;</span>;</div>
+<div class="line"><a name="l01171"></a><span class="lineno"> 1171</span>&#160;  <span class="keywordflow">for</span> (ScheduledNode *inNode : nodes-&gt;getVertices()) {</div>
+<div class="line"><a name="l01172"></a><span class="lineno"> 1172</span>&#160;    poly::AffineSchedule sin = inNode-&gt;getSchedule();</div>
+<div class="line"><a name="l01173"></a><span class="lineno"> 1173</span>&#160;    <span class="keywordflow">for</span> (Dependence edge : nodes-&gt;outputEdges(deps)) {</div>
+<div class="line"><a name="l01174"></a><span class="lineno"> 1174</span>&#160;      os &lt;&lt; <span class="stringliteral">&quot;\n\n\tEdge = &quot;</span> &lt;&lt; edge;</div>
+<div class="line"><a name="l01175"></a><span class="lineno"> 1175</span>&#160;      ScheduledNode *outNode = edge.output()-&gt;getNode();</div>
+<div class="line"><a name="l01176"></a><span class="lineno"> 1176</span>&#160;      os &lt;&lt; <span class="stringliteral">&quot;Schedule In: s.getPhi() =&quot;</span> &lt;&lt; sin.getPhi()</div>
+<div class="line"><a name="l01177"></a><span class="lineno"> 1177</span>&#160;         &lt;&lt; <span class="stringliteral">&quot;\ns.getFusionOmega() = &quot;</span> &lt;&lt; sin.getFusionOmega()</div>
+<div class="line"><a name="l01178"></a><span class="lineno"> 1178</span>&#160;         &lt;&lt; <span class="stringliteral">&quot;\ns.getOffsetOmega() = &quot;</span> &lt;&lt; sin.getOffsetOmega();</div>
+<div class="line"><a name="l01179"></a><span class="lineno"> 1179</span>&#160;      poly::AffineSchedule sout = outNode-&gt;getSchedule();</div>
+<div class="line"><a name="l01180"></a><span class="lineno"> 1180</span>&#160;      os &lt;&lt; <span class="stringliteral">&quot;\n\nSchedule Out: s.getPhi() =&quot;</span> &lt;&lt; sout.getPhi()</div>
+<div class="line"><a name="l01181"></a><span class="lineno"> 1181</span>&#160;         &lt;&lt; <span class="stringliteral">&quot;\ns.getFusionOmega() = &quot;</span> &lt;&lt; sout.getFusionOmega()</div>
+<div class="line"><a name="l01182"></a><span class="lineno"> 1182</span>&#160;         &lt;&lt; <span class="stringliteral">&quot;\ns.getOffsetOmega() = &quot;</span> &lt;&lt; sout.getOffsetOmega();</div>
+<div class="line"><a name="l01183"></a><span class="lineno"> 1183</span>&#160; </div>
+<div class="line"><a name="l01184"></a><span class="lineno"> 1184</span>&#160;      os &lt;&lt; <span class="stringliteral">&quot;\n\n&quot;</span>;</div>
+<div class="line"><a name="l01185"></a><span class="lineno"> 1185</span>&#160;    }</div>
+<div class="line"><a name="l01186"></a><span class="lineno"> 1186</span>&#160;  }</div>
+<div class="line"><a name="l01187"></a><span class="lineno"> 1187</span>&#160;  os &lt;&lt; <span class="stringliteral">&quot;\nLoopBlock schedule:\n&quot;</span>;</div>
+<div class="line"><a name="l01188"></a><span class="lineno"> 1188</span>&#160;  <span class="keywordflow">for</span> (Addr *mem : nodes-&gt;eachAddr()) {</div>
+<div class="line"><a name="l01189"></a><span class="lineno"> 1189</span>&#160;    os &lt;&lt; <span class="stringliteral">&quot;Ref = &quot;</span> &lt;&lt; *mem-&gt;getArrayPointer();</div>
+<div class="line"><a name="l01190"></a><span class="lineno"> 1190</span>&#160;    ScheduledNode *node = mem-&gt;getNode();</div>
+<div class="line"><a name="l01191"></a><span class="lineno"> 1191</span>&#160;    poly::AffineSchedule s = node-&gt;getSchedule();</div>
+<div class="line"><a name="l01192"></a><span class="lineno"> 1192</span>&#160;    os &lt;&lt; <span class="stringliteral">&quot;s.getPhi()&quot;</span> &lt;&lt; s.getPhi()</div>
+<div class="line"><a name="l01193"></a><span class="lineno"> 1193</span>&#160;       &lt;&lt; <span class="stringliteral">&quot;\ns.getFusionOmega() = &quot;</span> &lt;&lt; s.getFusionOmega()</div>
+<div class="line"><a name="l01194"></a><span class="lineno"> 1194</span>&#160;       &lt;&lt; <span class="stringliteral">&quot;\ns.getOffsetOmega() = &quot;</span> &lt;&lt; s.getOffsetOmega() &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
+<div class="line"><a name="l01195"></a><span class="lineno"> 1195</span>&#160;  }</div>
+<div class="line"><a name="l01196"></a><span class="lineno"> 1196</span>&#160;  <span class="keywordflow">return</span> os &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
+<div class="line"><a name="l01197"></a><span class="lineno"> 1197</span>&#160;}</div>
+<div class="line"><a name="l01198"></a><span class="lineno"> 1198</span>&#160; </div>
+<div class="line"><a name="l01199"></a><span class="lineno"> 1199</span>&#160;} <span class="comment">// namespace poly::lp</span></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Addr_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Addr.html">poly::IR::Addr</a></div><div class="ttdef"><b>Definition:</b> Address.hpp:78</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Cache_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Cache.html">poly::IR::Cache</a></div><div class="ttdef"><b>Definition:</b> Cache.hpp:175</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Value_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Value.html">poly::IR::Value</a></div><div class="ttdef"><b>Definition:</b> Node.hpp:407</div></div>
 <div class="ttc" id="aclasspoly_1_1lp_1_1LoopBlock_html"><div class="ttname"><a href="classpoly_1_1lp_1_1LoopBlock.html">poly::lp::LoopBlock</a></div><div class="ttdef"><b>Definition:</b> LoopBlock.hpp:126</div></div>
 <div class="ttc" id="aclasspoly_1_1lp_1_1ScheduledNode_html"><div class="ttname"><a href="classpoly_1_1lp_1_1ScheduledNode.html">poly::lp::ScheduledNode</a></div><div class="ttdef"><b>Definition:</b> ScheduledNode.hpp:33</div></div>
-<div class="ttc" id="aclasspoly_1_1poly_1_1Dependencies_html"><div class="ttname"><a href="classpoly_1_1poly_1_1Dependencies.html">poly::poly::Dependencies</a></div><div class="ttdef"><b>Definition:</b> Dependence.hpp:551</div></div>
+<div class="ttc" id="aclasspoly_1_1poly_1_1Dependencies_html"><div class="ttname"><a href="classpoly_1_1poly_1_1Dependencies.html">poly::poly::Dependencies</a></div><div class="ttdef"><b>Definition:</b> Dependence.hpp:544</div></div>
 <div class="ttc" id="astructpoly_1_1IR_1_1AddrChain_html"><div class="ttname"><a href="structpoly_1_1IR_1_1AddrChain.html">poly::IR::AddrChain</a></div><div class="ttdef"><b>Definition:</b> Cache.hpp:20</div></div>
 <div class="ttc" id="astructpoly_1_1IR_1_1TreeResult_html"><div class="ttname"><a href="structpoly_1_1IR_1_1TreeResult.html">poly::IR::TreeResult</a></div><div class="ttdef"><b>Definition:</b> Cache.hpp:127</div></div>
 <div class="ttc" id="astructpoly_1_1lp_1_1LoopBlock_1_1OptimizationResult_html"><div class="ttname"><a href="structpoly_1_1lp_1_1LoopBlock_1_1OptimizationResult.html">poly::lp::LoopBlock::OptimizationResult</a></div><div class="ttdef"><b>Definition:</b> LoopBlock.hpp:156</div></div>

@@ -318,7 +318,7 @@ $(function() {
 <div class="line"><a name="l00258"></a><span class="lineno">  258</span>&#160;                             DepIDs&lt;true&gt;{dep}};</div>
 <div class="line"><a name="l00259"></a><span class="lineno">  259</span>&#160;  }</div>
 <div class="line"><a name="l00260"></a><span class="lineno">  260</span>&#160;  [[nodiscard]] <span class="keyword">inline</span> <span class="keyword">auto</span> inputEdgeIds(IR::Dependencies dep,</div>
-<div class="line"><a name="l00261"></a><span class="lineno">  261</span>&#160;                                         <span class="keywordtype">unsigned</span> depth)<span class="keyword"> const </span>{</div>
+<div class="line"><a name="l00261"></a><span class="lineno">  261</span>&#160;                                         <span class="keywordtype">int</span> depth)<span class="keyword"> const </span>{</div>
 <div class="line"><a name="l00262"></a><span class="lineno">  262</span>&#160;    static_assert(std::forward_iterator&lt;</div>
 <div class="line"><a name="l00263"></a><span class="lineno">  263</span>&#160;                  decltype(DepIDs&lt;false&gt;{dep}((IR::Addr *)<span class="keyword">nullptr</span>).begin())&gt;);</div>
 <div class="line"><a name="l00264"></a><span class="lineno">  264</span>&#160;    static_assert(std::forward_iterator&lt;decltype(utils::ListRange{</div>
@@ -328,7 +328,7 @@ $(function() {
 <div class="line"><a name="l00268"></a><span class="lineno">  268</span>&#160;    <span class="keywordflow">return</span> inputEdgeIds(dep) | dep.activeFilter(depth);</div>
 <div class="line"><a name="l00269"></a><span class="lineno">  269</span>&#160;  }</div>
 <div class="line"><a name="l00270"></a><span class="lineno">  270</span>&#160;  [[nodiscard]] <span class="keyword">inline</span> <span class="keyword">auto</span> outputEdgeIds(IR::Dependencies dep,</div>
-<div class="line"><a name="l00271"></a><span class="lineno">  271</span>&#160;                                          <span class="keywordtype">unsigned</span> depth)<span class="keyword"> const </span>{</div>
+<div class="line"><a name="l00271"></a><span class="lineno">  271</span>&#160;                                          <span class="keywordtype">int</span> depth)<span class="keyword"> const </span>{</div>
 <div class="line"><a name="l00272"></a><span class="lineno">  272</span>&#160;    static_assert(std::forward_iterator&lt;decltype(outputEdgeIds(dep).begin())&gt;);</div>
 <div class="line"><a name="l00273"></a><span class="lineno">  273</span>&#160; </div>
 <div class="line"><a name="l00274"></a><span class="lineno">  274</span>&#160;    static_assert(std::ranges::range&lt;decltype(outputEdgeIds(dep))&gt;);</div>
@@ -361,7 +361,7 @@ $(function() {
 <div class="line"><a name="l00301"></a><span class="lineno">  301</span>&#160;      }};</div>
 <div class="line"><a name="l00302"></a><span class="lineno">  302</span>&#160;  }</div>
 <div class="line"><a name="l00303"></a><span class="lineno">  303</span>&#160; </div>
-<div class="line"><a name="l00304"></a><span class="lineno">  304</span>&#160;  [[nodiscard]] <span class="keyword">inline</span> <span class="keyword">auto</span> inputEdges(IR::Dependencies dep, <span class="keywordtype">unsigned</span> depth) {</div>
+<div class="line"><a name="l00304"></a><span class="lineno">  304</span>&#160;  [[nodiscard]] <span class="keyword">inline</span> <span class="keyword">auto</span> inputEdges(IR::Dependencies dep, <span class="keywordtype">int</span> depth) {</div>
 <div class="line"><a name="l00305"></a><span class="lineno">  305</span>&#160;    <span class="keywordflow">return</span> utils::NestedList{</div>
 <div class="line"><a name="l00306"></a><span class="lineno">  306</span>&#160;      utils::ListRange{store, NextAddr{},</div>
 <div class="line"><a name="l00307"></a><span class="lineno">  307</span>&#160;                       [](Addr *a) -&gt; int32_t { <span class="keywordflow">return</span> a-&gt;getEdgeIn(); }},</div>
@@ -373,7 +373,7 @@ $(function() {
 <div class="line"><a name="l00313"></a><span class="lineno">  313</span>&#160;               });</div>
 <div class="line"><a name="l00314"></a><span class="lineno">  314</span>&#160;      }};</div>
 <div class="line"><a name="l00315"></a><span class="lineno">  315</span>&#160;  }</div>
-<div class="line"><a name="l00316"></a><span class="lineno">  316</span>&#160;  [[nodiscard]] <span class="keyword">inline</span> <span class="keyword">auto</span> outputEdges(IR::Dependencies dep, <span class="keywordtype">unsigned</span> depth) {</div>
+<div class="line"><a name="l00316"></a><span class="lineno">  316</span>&#160;  [[nodiscard]] <span class="keyword">inline</span> <span class="keyword">auto</span> outputEdges(IR::Dependencies dep, <span class="keywordtype">int</span> depth) {</div>
 <div class="line"><a name="l00317"></a><span class="lineno">  317</span>&#160; </div>
 <div class="line"><a name="l00318"></a><span class="lineno">  318</span>&#160;    <span class="keywordflow">return</span> utils::NestedList{</div>
 <div class="line"><a name="l00319"></a><span class="lineno">  319</span>&#160;      utils::ListRange{store, NextAddr{},</div>
@@ -432,8 +432,8 @@ $(function() {
 <div class="line"><a name="l00372"></a><span class="lineno">  372</span>&#160;  <span class="comment">// [[nodiscard]] constexpr auto wasVisited2() const -&gt; bool { return visited2;</span></div>
 <div class="line"><a name="l00373"></a><span class="lineno">  373</span>&#160;  <span class="comment">// } constexpr void visit2() { visited2 = true; } constexpr void unVisit2() {</span></div>
 <div class="line"><a name="l00374"></a><span class="lineno">  374</span>&#160;  <span class="comment">// visited2 = false; }</span></div>
-<div class="line"><a name="l00375"></a><span class="lineno">  375</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getNumLoops() const -&gt; <span class="keywordtype">unsigned</span> {</div>
-<div class="line"><a name="l00376"></a><span class="lineno">  376</span>&#160;    <span class="keywordflow">return</span> unsigned(mem[0]);</div>
+<div class="line"><a name="l00375"></a><span class="lineno">  375</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getNumLoops() const -&gt; ptrdiff_t {</div>
+<div class="line"><a name="l00376"></a><span class="lineno">  376</span>&#160;    <span class="keywordflow">return</span> mem[0];</div>
 <div class="line"><a name="l00377"></a><span class="lineno">  377</span>&#160;  }</div>
 <div class="line"><a name="l00378"></a><span class="lineno">  378</span>&#160;  <span class="comment">// &#39;phiIsScheduled()` means that `phi`&#39;s schedule has been</span></div>
 <div class="line"><a name="l00379"></a><span class="lineno">  379</span>&#160;  <span class="comment">// set for the outer `rank` loops.</span></div>
@@ -580,7 +580,7 @@ $(function() {
 <div class="ttc" id="aclasspoly_1_1lp_1_1ScheduledNode_html_a0f570dd701e4e41d75597c7cbb3a5e4c"><div class="ttname"><a href="classpoly_1_1lp_1_1ScheduledNode.html#a0f570dd701e4e41d75597c7cbb3a5e4c">poly::lp::ScheduledNode::getSchedule</a></div><div class="ttdeci">constexpr auto getSchedule(ptrdiff_t d) const -&gt; PtrVector&lt; int64_t &gt;</div><div class="ttdoc">getSchedule, loops are always indexed from outer to inner</div><div class="ttdef"><b>Definition:</b> ScheduledNode.hpp:409</div></div>
 <div class="ttc" id="aclasspoly_1_1lp_1_1ScheduledNode_html_a48c8bca790f2fa2b2eb24cee7c159253"><div class="ttname"><a href="classpoly_1_1lp_1_1ScheduledNode.html#a48c8bca790f2fa2b2eb24cee7c159253">poly::lp::ScheduledNode::getPhi</a></div><div class="ttdeci">constexpr auto getPhi() const -&gt; SquarePtrMatrix&lt; int64_t &gt;</div><div class="ttdoc">numLoops x numLoops</div><div class="ttdef"><b>Definition:</b> ScheduledNode.hpp:405</div></div>
 <div class="ttc" id="aclasspoly_1_1lp_1_1ScheduledNode_html_a84004f4089316dcf55f5e9031a37f6c4"><div class="ttname"><a href="classpoly_1_1lp_1_1ScheduledNode.html#a84004f4089316dcf55f5e9031a37f6c4">poly::lp::ScheduledNode::getPhi</a></div><div class="ttdeci">constexpr auto getPhi() -&gt; MutSquarePtrMatrix&lt; int64_t &gt;</div><div class="ttdoc">numLoops x numLoops</div><div class="ttdef"><b>Definition:</b> ScheduledNode.hpp:401</div></div>
-<div class="ttc" id="aclasspoly_1_1poly_1_1Dependencies_html"><div class="ttname"><a href="classpoly_1_1poly_1_1Dependencies.html">poly::poly::Dependencies</a></div><div class="ttdef"><b>Definition:</b> Dependence.hpp:551</div></div>
+<div class="ttc" id="aclasspoly_1_1poly_1_1Dependencies_html"><div class="ttname"><a href="classpoly_1_1poly_1_1Dependencies.html">poly::poly::Dependencies</a></div><div class="ttdef"><b>Definition:</b> Dependence.hpp:544</div></div>
 <div class="ttc" id="aclasspoly_1_1poly_1_1Loop_html"><div class="ttname"><a href="classpoly_1_1poly_1_1Loop.html">poly::poly::Loop</a></div><div class="ttdef"><b>Definition:</b> Loops.hpp:328</div></div>
 <div class="ttc" id="astructpoly_1_1lp_1_1ScheduledNode_1_1Component_html"><div class="ttname"><a href="structpoly_1_1lp_1_1ScheduledNode_1_1Component.html">poly::lp::ScheduledNode::Component</a></div><div class="ttdef"><b>Definition:</b> ScheduledNode.hpp:132</div></div>
 <div class="ttc" id="astructpoly_1_1lp_1_1ScheduledNode_1_1DepFilter_html"><div class="ttname"><a href="structpoly_1_1lp_1_1ScheduledNode_1_1DepFilter.html">poly::lp::ScheduledNode::DepFilter</a></div><div class="ttdef"><b>Definition:</b> ScheduledNode.hpp:219</div></div>
