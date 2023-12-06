@@ -5,7 +5,6 @@
 #include "Optimize/CostModeling.hpp"
 #include "Polyhedra/Dependence.hpp"
 #include <algorithm>
-#include <array>
 #include <cstdint>
 
 namespace poly::CostModeling {
@@ -95,7 +94,7 @@ namespace poly::CostModeling {
 // Okay, we'll take a somewhat different approach:
 // it shouldn't be too difficult to check for extra outputs, etc.
 // so we do that all here, after the `Addr` placements and simplifications
-// 
+//
 struct Legality {
   // enum class Reduction { None = 0, Unordered = 1, Ordered = 2 };
   uint16_t unordered_reduction_count{0};
@@ -154,7 +153,7 @@ struct Legality {
     if (mindistance || maxdistance != std::numeric_limits<uint16_t>::max()) {
       // for now, just check peelability
     }
-    if (!canPeel){
+    if (!canPeel) {
       // then we have a dependence
     }
   };

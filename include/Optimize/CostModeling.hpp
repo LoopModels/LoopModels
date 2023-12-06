@@ -74,7 +74,7 @@ constexpr inline void Addr::maybeReassociableReduction(Dependencies deps) {
   IR::Addr *dst = deps.output(id);
   if (dst->isStore() || (getLoop() != dst->getLoop())) return;
   // if we failed to hoist the `Addr` out of time-dims, then we cannot optimize.
-  if (getCurrentDepth() >= deps.satLevel(id)) return;
+  if (getCurrentDepth() > deps.satLevel(id)) return;
   if (reassociableReduction == dst) return; // multiple time dims, already found
   auto *c = llvm::dyn_cast<IR::Compute>(getStoredVal());
   if (!c) return;
@@ -160,7 +160,7 @@ public:
   constexpr auto getLoop() -> IR::Loop * { return loop; }
 };
 
-void hoist(IR::Node *N, IR::Loop *P, int depth) {
+inline void hoist(IR::Node *N, IR::Loop *P, int depth) {
   N->setParent(P);
   N->setCurrentDepth(depth);
 }

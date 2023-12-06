@@ -26,6 +26,12 @@ struct Dependence {
     int32_t id;
     [[nodiscard]] constexpr explicit operator bool() const { return id >= 0; }
   };
+  enum class Type : uint8_t {
+    Strict = 0,
+    Reassociable = 1,
+    FreeOfDeeperDeps = 2,
+    Peelable = 4
+  };
 
   // private:
   //
@@ -46,6 +52,7 @@ struct Dependence {
   ID revTimeEdge_{-1};
   std::array<uint8_t, 2> satLvl;
   bool forward;
+  uint8_t meta{0};
 
   constexpr auto getSimplexPair() -> std::array<Valid<math::Simplex>, 2> {
     return {dependenceSatisfaction, dependenceBounding};
@@ -115,6 +122,9 @@ struct Dependence {
   static constexpr auto satLevelMask(uint8_t slvl) -> uint8_t {
     return slvl & uint8_t(127); // NOTE: deduces to `int`
   }
+  // note that sat levels start at `0`, `0` meaning the outer most loop
+  // satisfies it. Thus, `satLevel() == 0` means the `depth == 1` loop satisfied
+  // it.
   [[nodiscard]] constexpr auto satLevel() const -> uint8_t {
     return satLevelMask(satLvl[0]);
   }
@@ -565,8 +575,7 @@ private:
   /// stores `d` at index `i`
   /// Dependence `d` is pushed to the fronts of the edgeOut and edgeIn chains.
   constexpr void set(ID i, Dependence d) {
-    auto out = d.output();
-    auto in = d.input();
+    IR::Addr *out = d.output(), *in = d.input();
     output(i) = out;
     input(i) = in;
     nextOut(i) = out->getEdgeOut();
