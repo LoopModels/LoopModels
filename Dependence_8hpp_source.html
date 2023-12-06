@@ -1108,249 +1108,246 @@ $(function() {
 <div class="line"><a name="l01070"></a><span class="lineno"> 1070</span>&#160;  constexpr <span class="keyword">auto</span> revTimeEdge(ID i) -&gt; int32_t &amp; {</div>
 <div class="line"><a name="l01071"></a><span class="lineno"> 1071</span>&#160;    <span class="keywordflow">return</span> revTimeEdgePtr()[i.id];</div>
 <div class="line"><a name="l01072"></a><span class="lineno"> 1072</span>&#160;  }</div>
-<div class="line"><a name="l01073"></a><span class="lineno"> 1073</span>&#160;  constexpr <span class="keyword">auto</span> revTimeEdge(ID i) -&gt; int32_t &amp; {</div>
+<div class="line"><a name="l01073"></a><span class="lineno"> 1073</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> revTimeEdge(ID i) <span class="keyword">const</span> -&gt; int32_t {</div>
 <div class="line"><a name="l01074"></a><span class="lineno"> 1074</span>&#160;    <span class="keywordflow">return</span> revTimeEdgePtr()[i.id];</div>
 <div class="line"><a name="l01075"></a><span class="lineno"> 1075</span>&#160;  }</div>
-<div class="line"><a name="l01076"></a><span class="lineno"> 1076</span>&#160;  constexpr <span class="keyword">auto</span> revTimeEdge(ID i) <span class="keyword">const</span> -&gt; int32_t {</div>
-<div class="line"><a name="l01077"></a><span class="lineno"> 1077</span>&#160;    <span class="keywordflow">return</span> revTimeEdgePtr()[i.id];</div>
-<div class="line"><a name="l01078"></a><span class="lineno"> 1078</span>&#160;  }</div>
-<div class="line"><a name="l01079"></a><span class="lineno"> 1079</span>&#160;  constexpr <span class="keyword">auto</span> depPoly(ID i) -&gt; DepPoly *&amp; { <span class="keywordflow">return</span> depPolyPtr()[i.id]; }</div>
-<div class="line"><a name="l01080"></a><span class="lineno"> 1080</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> depSatBnd(ID i) <span class="keyword">const</span></div>
-<div class="line"><a name="l01081"></a><span class="lineno"> 1081</span>&#160;    -&gt; std::array&lt;Valid&lt;math::Simplex&gt;, 2&gt; {</div>
-<div class="line"><a name="l01082"></a><span class="lineno"> 1082</span>&#160;    <span class="keywordflow">return</span> depSatBndPtr()[i.id];</div>
+<div class="line"><a name="l01076"></a><span class="lineno"> 1076</span>&#160;  constexpr <span class="keyword">auto</span> depPoly(ID i) -&gt; DepPoly *&amp; { <span class="keywordflow">return</span> depPolyPtr()[i.id]; }</div>
+<div class="line"><a name="l01077"></a><span class="lineno"> 1077</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> depSatBnd(ID i) <span class="keyword">const</span></div>
+<div class="line"><a name="l01078"></a><span class="lineno"> 1078</span>&#160;    -&gt; std::array&lt;Valid&lt;math::Simplex&gt;, 2&gt; {</div>
+<div class="line"><a name="l01079"></a><span class="lineno"> 1079</span>&#160;    <span class="keywordflow">return</span> depSatBndPtr()[i.id];</div>
+<div class="line"><a name="l01080"></a><span class="lineno"> 1080</span>&#160;  }</div>
+<div class="line"><a name="l01081"></a><span class="lineno"> 1081</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> depPoly(ID i) <span class="keyword">const</span> -&gt; DepPoly * {</div>
+<div class="line"><a name="l01082"></a><span class="lineno"> 1082</span>&#160;    <span class="keywordflow">return</span> depPolyPtr()[i.id];</div>
 <div class="line"><a name="l01083"></a><span class="lineno"> 1083</span>&#160;  }</div>
-<div class="line"><a name="l01084"></a><span class="lineno"> 1084</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> depPoly(ID i) <span class="keyword">const</span> -&gt; DepPoly * {</div>
-<div class="line"><a name="l01085"></a><span class="lineno"> 1085</span>&#160;    <span class="keywordflow">return</span> depPolyPtr()[i.id];</div>
+<div class="line"><a name="l01084"></a><span class="lineno"> 1084</span>&#160;  constexpr <span class="keyword">auto</span> satLevelPair(ID i) -&gt; std::array&lt;uint8_t, 2&gt; &amp; {</div>
+<div class="line"><a name="l01085"></a><span class="lineno"> 1085</span>&#160;    <span class="keywordflow">return</span> satLevelsPtr()[i.id];</div>
 <div class="line"><a name="l01086"></a><span class="lineno"> 1086</span>&#160;  }</div>
-<div class="line"><a name="l01087"></a><span class="lineno"> 1087</span>&#160;  constexpr <span class="keyword">auto</span> satLevelPair(ID i) -&gt; std::array&lt;uint8_t, 2&gt; &amp; {</div>
-<div class="line"><a name="l01088"></a><span class="lineno"> 1088</span>&#160;    <span class="keywordflow">return</span> satLevelsPtr()[i.id];</div>
-<div class="line"><a name="l01089"></a><span class="lineno"> 1089</span>&#160;  }</div>
-<div class="line"><a name="l01090"></a><span class="lineno"> 1090</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> satLevelPair(ID i) <span class="keyword">const</span></div>
-<div class="line"><a name="l01091"></a><span class="lineno"> 1091</span>&#160;    -&gt; std::array&lt;uint8_t, 2&gt; {</div>
-<div class="line"><a name="l01092"></a><span class="lineno"> 1092</span>&#160;    <span class="keywordflow">return</span> satLevelsPtr()[i.id];</div>
+<div class="line"><a name="l01087"></a><span class="lineno"> 1087</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> satLevelPair(ID i) <span class="keyword">const</span></div>
+<div class="line"><a name="l01088"></a><span class="lineno"> 1088</span>&#160;    -&gt; std::array&lt;uint8_t, 2&gt; {</div>
+<div class="line"><a name="l01089"></a><span class="lineno"> 1089</span>&#160;    <span class="keywordflow">return</span> satLevelsPtr()[i.id];</div>
+<div class="line"><a name="l01090"></a><span class="lineno"> 1090</span>&#160;  }</div>
+<div class="line"><a name="l01091"></a><span class="lineno"> 1091</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> satLevel(ID i) <span class="keyword">const</span> -&gt; uint8_t {</div>
+<div class="line"><a name="l01092"></a><span class="lineno"> 1092</span>&#160;    <span class="keywordflow">return</span> Dependence::satLevelMask(satLevelPair(i)[0]);</div>
 <div class="line"><a name="l01093"></a><span class="lineno"> 1093</span>&#160;  }</div>
-<div class="line"><a name="l01094"></a><span class="lineno"> 1094</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> satLevel(ID i) <span class="keyword">const</span> -&gt; uint8_t {</div>
-<div class="line"><a name="l01095"></a><span class="lineno"> 1095</span>&#160;    <span class="keywordflow">return</span> Dependence::satLevelMask(satLevelPair(i)[0]);</div>
+<div class="line"><a name="l01094"></a><span class="lineno"> 1094</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> isSat(ID i, <span class="keywordtype">unsigned</span> depth) <span class="keyword">const</span> -&gt; uint8_t {</div>
+<div class="line"><a name="l01095"></a><span class="lineno"> 1095</span>&#160;    <span class="keywordflow">return</span> Dependence::satLevelMask(satLevelPair(i)[0]) &lt;= depth;</div>
 <div class="line"><a name="l01096"></a><span class="lineno"> 1096</span>&#160;  }</div>
-<div class="line"><a name="l01097"></a><span class="lineno"> 1097</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> isSat(ID i, <span class="keywordtype">unsigned</span> depth) <span class="keyword">const</span> -&gt; uint8_t {</div>
-<div class="line"><a name="l01098"></a><span class="lineno"> 1098</span>&#160;    <span class="keywordflow">return</span> Dependence::satLevelMask(satLevelPair(i)[0]) &lt;= depth;</div>
+<div class="line"><a name="l01097"></a><span class="lineno"> 1097</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> isActive(ID i, <span class="keywordtype">unsigned</span> depth) <span class="keyword">const</span> -&gt; uint8_t {</div>
+<div class="line"><a name="l01098"></a><span class="lineno"> 1098</span>&#160;    <span class="keywordflow">return</span> Dependence::satLevelMask(satLevelPair(i)[0]) &gt; depth;</div>
 <div class="line"><a name="l01099"></a><span class="lineno"> 1099</span>&#160;  }</div>
-<div class="line"><a name="l01100"></a><span class="lineno"> 1100</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> isActive(ID i, <span class="keywordtype">unsigned</span> depth) <span class="keyword">const</span> -&gt; uint8_t {</div>
-<div class="line"><a name="l01101"></a><span class="lineno"> 1101</span>&#160;    <span class="keywordflow">return</span> Dependence::satLevelMask(satLevelPair(i)[0]) &gt; depth;</div>
-<div class="line"><a name="l01102"></a><span class="lineno"> 1102</span>&#160;  }</div>
-<div class="line"><a name="l01103"></a><span class="lineno"> 1103</span>&#160; </div>
-<div class="line"><a name="l01104"></a><span class="lineno"> 1104</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> isForward(ID i) noexcept -&gt; <span class="keywordtype">bool</span> &amp; {</div>
+<div class="line"><a name="l01100"></a><span class="lineno"> 1100</span>&#160; </div>
+<div class="line"><a name="l01101"></a><span class="lineno"> 1101</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> isForward(ID i) noexcept -&gt; <span class="keywordtype">bool</span> &amp; {</div>
+<div class="line"><a name="l01102"></a><span class="lineno"> 1102</span>&#160;    <span class="keywordflow">return</span> isForwardPtr()[i.id];</div>
+<div class="line"><a name="l01103"></a><span class="lineno"> 1103</span>&#160;  }</div>
+<div class="line"><a name="l01104"></a><span class="lineno"> 1104</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> isForward(ID i) <span class="keyword">const</span> noexcept -&gt; <span class="keywordtype">bool</span> {</div>
 <div class="line"><a name="l01105"></a><span class="lineno"> 1105</span>&#160;    <span class="keywordflow">return</span> isForwardPtr()[i.id];</div>
 <div class="line"><a name="l01106"></a><span class="lineno"> 1106</span>&#160;  }</div>
-<div class="line"><a name="l01107"></a><span class="lineno"> 1107</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> isForward(ID i) <span class="keyword">const</span> noexcept -&gt; <span class="keywordtype">bool</span> {</div>
-<div class="line"><a name="l01108"></a><span class="lineno"> 1108</span>&#160;    <span class="keywordflow">return</span> isForwardPtr()[i.id];</div>
-<div class="line"><a name="l01109"></a><span class="lineno"> 1109</span>&#160;  }</div>
-<div class="line"><a name="l01110"></a><span class="lineno"> 1110</span>&#160; </div>
-<div class="line"><a name="l01111"></a><span class="lineno"><a class="line" href="classpoly_1_1poly_1_1Dependencies_1_1Ref.html"> 1111</a></span>&#160;  <span class="keyword">class </span><a class="code" href="classpoly_1_1poly_1_1Dependencies_1_1Ref.html">Ref</a> {</div>
-<div class="line"><a name="l01112"></a><span class="lineno"> 1112</span>&#160;    <a class="code" href="classpoly_1_1poly_1_1Dependencies.html">Dependencies</a> *deps_;</div>
-<div class="line"><a name="l01113"></a><span class="lineno"> 1113</span>&#160;    <a class="code" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">ID</a> i_;</div>
-<div class="line"><a name="l01114"></a><span class="lineno"> 1114</span>&#160; </div>
-<div class="line"><a name="l01115"></a><span class="lineno"> 1115</span>&#160;  <span class="keyword">public</span>:</div>
-<div class="line"><a name="l01116"></a><span class="lineno"> 1116</span>&#160;    constexpr <a class="code" href="classpoly_1_1poly_1_1Dependencies_1_1Ref.html">Ref</a>(<a class="code" href="classpoly_1_1poly_1_1Dependencies.html">Dependencies</a> *deps, <a class="code" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">ID</a> i) : deps_(deps), i_(i) {}</div>
-<div class="line"><a name="l01117"></a><span class="lineno"> 1117</span>&#160;    <span class="keyword">operator</span> <a class="code" href="structpoly_1_1poly_1_1Dependence.html">Dependence</a>()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> deps_-&gt;get(i_); }</div>
-<div class="line"><a name="l01118"></a><span class="lineno"> 1118</span>&#160;    <span class="keyword">auto</span> operator=(<a class="code" href="structpoly_1_1poly_1_1Dependence.html">Dependence</a> d) -&gt; <a class="code" href="classpoly_1_1poly_1_1Dependencies_1_1Ref.html">Ref</a> &amp; {</div>
-<div class="line"><a name="l01119"></a><span class="lineno"> 1119</span>&#160;      deps_-&gt;set(i_, d);</div>
-<div class="line"><a name="l01120"></a><span class="lineno"> 1120</span>&#160;      <span class="keywordflow">return</span> *<span class="keyword">this</span>;</div>
-<div class="line"><a name="l01121"></a><span class="lineno"> 1121</span>&#160;    }</div>
-<div class="line"><a name="l01122"></a><span class="lineno"> 1122</span>&#160;  };</div>
-<div class="line"><a name="l01123"></a><span class="lineno"> 1123</span>&#160; </div>
-<div class="line"><a name="l01124"></a><span class="lineno"> 1124</span>&#160;  <span class="keywordtype">void</span> check(Arena&lt;&gt; *alloc, Valid&lt;IR::Addr&gt; x, Valid&lt;IR::Addr&gt; y) {</div>
-<div class="line"><a name="l01125"></a><span class="lineno"> 1125</span>&#160;    <span class="comment">// TODO: implement gcd test</span></div>
-<div class="line"><a name="l01126"></a><span class="lineno"> 1126</span>&#160;    <span class="comment">// if (x.gcdKnownIndependent(y)) return {};</span></div>
-<div class="line"><a name="l01127"></a><span class="lineno"> 1127</span>&#160;    <a class="code" href="classpoly_1_1poly_1_1DepPoly.html">DepPoly</a> *dxy{DepPoly::dependence(alloc, x, y)};</div>
-<div class="line"><a name="l01128"></a><span class="lineno"> 1128</span>&#160;    <span class="keywordflow">if</span> (!dxy) <span class="keywordflow">return</span>;</div>
-<div class="line"><a name="l01129"></a><span class="lineno"> 1129</span>&#160;    invariant(x-&gt;getCurrentDepth() == ptrdiff_t(dxy-&gt;getDim0()));</div>
-<div class="line"><a name="l01130"></a><span class="lineno"> 1130</span>&#160;    invariant(y-&gt;getCurrentDepth() == ptrdiff_t(dxy-&gt;getDim1()));</div>
-<div class="line"><a name="l01131"></a><span class="lineno"> 1131</span>&#160;    invariant(x-&gt;getCurrentDepth() + y-&gt;getCurrentDepth() ==</div>
-<div class="line"><a name="l01132"></a><span class="lineno"> 1132</span>&#160;              ptrdiff_t(dxy-&gt;getNumPhiCoef()));</div>
-<div class="line"><a name="l01133"></a><span class="lineno"> 1133</span>&#160;    <span class="comment">// note that we set boundAbove=true, so we reverse the</span></div>
-<div class="line"><a name="l01134"></a><span class="lineno"> 1134</span>&#160;    <span class="comment">// dependence direction for the dependency we week, we&#39;ll</span></div>
-<div class="line"><a name="l01135"></a><span class="lineno"> 1135</span>&#160;    <span class="comment">// discard the program variables x then y</span></div>
-<div class="line"><a name="l01136"></a><span class="lineno"> 1136</span>&#160;    std::array&lt;Valid&lt;math::Simplex&gt;, 2&gt; pair(dxy-&gt;farkasPair(alloc));</div>
-<div class="line"><a name="l01137"></a><span class="lineno"> 1137</span>&#160;    <span class="keywordflow">if</span> (dxy-&gt;getTimeDim()) timeCheck(alloc, dxy, x, y, pair);</div>
-<div class="line"><a name="l01138"></a><span class="lineno"> 1138</span>&#160;    <span class="keywordflow">else</span> timelessCheck(alloc, dxy, x, y, pair);</div>
-<div class="line"><a name="l01139"></a><span class="lineno"> 1139</span>&#160;  }</div>
-<div class="line"><a name="l01140"></a><span class="lineno"> 1140</span>&#160;  <span class="keyword">inline</span> <span class="keywordtype">void</span> copyDependencies(Arena&lt;&gt; *alloc, <a class="code" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> *src, <a class="code" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> *dst);</div>
-<div class="line"><a name="l01141"></a><span class="lineno"> 1141</span>&#160;  <span class="comment">// reload store `x`</span></div>
-<div class="line"><a name="l01142"></a><span class="lineno"> 1142</span>&#160;  <span class="keyword">auto</span> reload(Arena&lt;&gt; *alloc, Valid&lt;IR::Addr&gt; store) -&gt; Valid&lt;IR::Addr&gt; {</div>
-<div class="line"><a name="l01143"></a><span class="lineno"> 1143</span>&#160;    Valid&lt;DepPoly&gt; dxy{DepPoly::self(alloc, store)};</div>
-<div class="line"><a name="l01144"></a><span class="lineno"> 1144</span>&#160;    std::array&lt;Valid&lt;math::Simplex&gt;, 2&gt; pair(dxy-&gt;farkasPair(alloc));</div>
-<div class="line"><a name="l01145"></a><span class="lineno"> 1145</span>&#160;    Valid&lt;IR::Addr&gt; load = store-&gt;reload(alloc);</div>
-<div class="line"><a name="l01146"></a><span class="lineno"> 1146</span>&#160;    copyDependencies(alloc, store, load);</div>
-<div class="line"><a name="l01147"></a><span class="lineno"> 1147</span>&#160;    <span class="keywordflow">if</span> (dxy-&gt;getTimeDim()) timeCheck(alloc, dxy, store, load, pair, <span class="keyword">true</span>);</div>
-<div class="line"><a name="l01148"></a><span class="lineno"> 1148</span>&#160;    <span class="keywordflow">else</span> addOrdered(alloc, dxy, store, load, pair, <span class="keyword">true</span>);</div>
-<div class="line"><a name="l01149"></a><span class="lineno"> 1149</span>&#160;    <span class="keywordflow">return</span> load;</div>
+<div class="line"><a name="l01107"></a><span class="lineno"> 1107</span>&#160; </div>
+<div class="line"><a name="l01108"></a><span class="lineno"><a class="line" href="classpoly_1_1poly_1_1Dependencies_1_1Ref.html"> 1108</a></span>&#160;  <span class="keyword">class </span><a class="code" href="classpoly_1_1poly_1_1Dependencies_1_1Ref.html">Ref</a> {</div>
+<div class="line"><a name="l01109"></a><span class="lineno"> 1109</span>&#160;    <a class="code" href="classpoly_1_1poly_1_1Dependencies.html">Dependencies</a> *deps_;</div>
+<div class="line"><a name="l01110"></a><span class="lineno"> 1110</span>&#160;    <a class="code" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">ID</a> i_;</div>
+<div class="line"><a name="l01111"></a><span class="lineno"> 1111</span>&#160; </div>
+<div class="line"><a name="l01112"></a><span class="lineno"> 1112</span>&#160;  <span class="keyword">public</span>:</div>
+<div class="line"><a name="l01113"></a><span class="lineno"> 1113</span>&#160;    constexpr <a class="code" href="classpoly_1_1poly_1_1Dependencies_1_1Ref.html">Ref</a>(<a class="code" href="classpoly_1_1poly_1_1Dependencies.html">Dependencies</a> *deps, <a class="code" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">ID</a> i) : deps_(deps), i_(i) {}</div>
+<div class="line"><a name="l01114"></a><span class="lineno"> 1114</span>&#160;    <span class="keyword">operator</span> <a class="code" href="structpoly_1_1poly_1_1Dependence.html">Dependence</a>()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> deps_-&gt;get(i_); }</div>
+<div class="line"><a name="l01115"></a><span class="lineno"> 1115</span>&#160;    <span class="keyword">auto</span> operator=(<a class="code" href="structpoly_1_1poly_1_1Dependence.html">Dependence</a> d) -&gt; <a class="code" href="classpoly_1_1poly_1_1Dependencies_1_1Ref.html">Ref</a> &amp; {</div>
+<div class="line"><a name="l01116"></a><span class="lineno"> 1116</span>&#160;      deps_-&gt;set(i_, d);</div>
+<div class="line"><a name="l01117"></a><span class="lineno"> 1117</span>&#160;      <span class="keywordflow">return</span> *<span class="keyword">this</span>;</div>
+<div class="line"><a name="l01118"></a><span class="lineno"> 1118</span>&#160;    }</div>
+<div class="line"><a name="l01119"></a><span class="lineno"> 1119</span>&#160;  };</div>
+<div class="line"><a name="l01120"></a><span class="lineno"> 1120</span>&#160; </div>
+<div class="line"><a name="l01121"></a><span class="lineno"> 1121</span>&#160;  <span class="keywordtype">void</span> check(Arena&lt;&gt; *alloc, Valid&lt;IR::Addr&gt; x, Valid&lt;IR::Addr&gt; y) {</div>
+<div class="line"><a name="l01122"></a><span class="lineno"> 1122</span>&#160;    <span class="comment">// TODO: implement gcd test</span></div>
+<div class="line"><a name="l01123"></a><span class="lineno"> 1123</span>&#160;    <span class="comment">// if (x.gcdKnownIndependent(y)) return {};</span></div>
+<div class="line"><a name="l01124"></a><span class="lineno"> 1124</span>&#160;    <a class="code" href="classpoly_1_1poly_1_1DepPoly.html">DepPoly</a> *dxy{DepPoly::dependence(alloc, x, y)};</div>
+<div class="line"><a name="l01125"></a><span class="lineno"> 1125</span>&#160;    <span class="keywordflow">if</span> (!dxy) <span class="keywordflow">return</span>;</div>
+<div class="line"><a name="l01126"></a><span class="lineno"> 1126</span>&#160;    invariant(x-&gt;getCurrentDepth() == ptrdiff_t(dxy-&gt;getDim0()));</div>
+<div class="line"><a name="l01127"></a><span class="lineno"> 1127</span>&#160;    invariant(y-&gt;getCurrentDepth() == ptrdiff_t(dxy-&gt;getDim1()));</div>
+<div class="line"><a name="l01128"></a><span class="lineno"> 1128</span>&#160;    invariant(x-&gt;getCurrentDepth() + y-&gt;getCurrentDepth() ==</div>
+<div class="line"><a name="l01129"></a><span class="lineno"> 1129</span>&#160;              ptrdiff_t(dxy-&gt;getNumPhiCoef()));</div>
+<div class="line"><a name="l01130"></a><span class="lineno"> 1130</span>&#160;    <span class="comment">// note that we set boundAbove=true, so we reverse the</span></div>
+<div class="line"><a name="l01131"></a><span class="lineno"> 1131</span>&#160;    <span class="comment">// dependence direction for the dependency we week, we&#39;ll</span></div>
+<div class="line"><a name="l01132"></a><span class="lineno"> 1132</span>&#160;    <span class="comment">// discard the program variables x then y</span></div>
+<div class="line"><a name="l01133"></a><span class="lineno"> 1133</span>&#160;    std::array&lt;Valid&lt;math::Simplex&gt;, 2&gt; pair(dxy-&gt;farkasPair(alloc));</div>
+<div class="line"><a name="l01134"></a><span class="lineno"> 1134</span>&#160;    <span class="keywordflow">if</span> (dxy-&gt;getTimeDim()) timeCheck(alloc, dxy, x, y, pair);</div>
+<div class="line"><a name="l01135"></a><span class="lineno"> 1135</span>&#160;    <span class="keywordflow">else</span> timelessCheck(alloc, dxy, x, y, pair);</div>
+<div class="line"><a name="l01136"></a><span class="lineno"> 1136</span>&#160;  }</div>
+<div class="line"><a name="l01137"></a><span class="lineno"> 1137</span>&#160;  <span class="keyword">inline</span> <span class="keywordtype">void</span> copyDependencies(Arena&lt;&gt; *alloc, <a class="code" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> *src, <a class="code" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> *dst);</div>
+<div class="line"><a name="l01138"></a><span class="lineno"> 1138</span>&#160;  <span class="comment">// reload store `x`</span></div>
+<div class="line"><a name="l01139"></a><span class="lineno"> 1139</span>&#160;  <span class="keyword">auto</span> reload(Arena&lt;&gt; *alloc, Valid&lt;IR::Addr&gt; store) -&gt; Valid&lt;IR::Addr&gt; {</div>
+<div class="line"><a name="l01140"></a><span class="lineno"> 1140</span>&#160;    Valid&lt;DepPoly&gt; dxy{DepPoly::self(alloc, store)};</div>
+<div class="line"><a name="l01141"></a><span class="lineno"> 1141</span>&#160;    std::array&lt;Valid&lt;math::Simplex&gt;, 2&gt; pair(dxy-&gt;farkasPair(alloc));</div>
+<div class="line"><a name="l01142"></a><span class="lineno"> 1142</span>&#160;    Valid&lt;IR::Addr&gt; load = store-&gt;reload(alloc);</div>
+<div class="line"><a name="l01143"></a><span class="lineno"> 1143</span>&#160;    copyDependencies(alloc, store, load);</div>
+<div class="line"><a name="l01144"></a><span class="lineno"> 1144</span>&#160;    <span class="keywordflow">if</span> (dxy-&gt;getTimeDim()) timeCheck(alloc, dxy, store, load, pair, <span class="keyword">true</span>);</div>
+<div class="line"><a name="l01145"></a><span class="lineno"> 1145</span>&#160;    <span class="keywordflow">else</span> addOrdered(alloc, dxy, store, load, pair, <span class="keyword">true</span>);</div>
+<div class="line"><a name="l01146"></a><span class="lineno"> 1146</span>&#160;    <span class="keywordflow">return</span> load;</div>
+<div class="line"><a name="l01147"></a><span class="lineno"> 1147</span>&#160;  }</div>
+<div class="line"><a name="l01148"></a><span class="lineno"> 1148</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> inputEdgeIDs(int32_t <span class="keywordtype">id</span>)<span class="keyword"> const </span>{</div>
+<div class="line"><a name="l01149"></a><span class="lineno"> 1149</span>&#160;    <span class="keywordflow">return</span> utils::VForwardRange{inEdges(), <span class="keywordtype">id</span>};</div>
 <div class="line"><a name="l01150"></a><span class="lineno"> 1150</span>&#160;  }</div>
-<div class="line"><a name="l01151"></a><span class="lineno"> 1151</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> inputEdgeIDs(int32_t <span class="keywordtype">id</span>)<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l01152"></a><span class="lineno"> 1152</span>&#160;    <span class="keywordflow">return</span> utils::VForwardRange{inEdges(), <span class="keywordtype">id</span>};</div>
+<div class="line"><a name="l01151"></a><span class="lineno"> 1151</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> outputEdgeIDs(int32_t <span class="keywordtype">id</span>)<span class="keyword"> const </span>{</div>
+<div class="line"><a name="l01152"></a><span class="lineno"> 1152</span>&#160;    <span class="keywordflow">return</span> utils::VForwardRange{outEdges(), <span class="keywordtype">id</span>};</div>
 <div class="line"><a name="l01153"></a><span class="lineno"> 1153</span>&#160;  }</div>
-<div class="line"><a name="l01154"></a><span class="lineno"> 1154</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> outputEdgeIDs(int32_t <span class="keywordtype">id</span>)<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l01155"></a><span class="lineno"> 1155</span>&#160;    <span class="keywordflow">return</span> utils::VForwardRange{outEdges(), <span class="keywordtype">id</span>};</div>
-<div class="line"><a name="l01156"></a><span class="lineno"> 1156</span>&#160;  }</div>
-<div class="line"><a name="l01157"></a><span class="lineno"> 1157</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getEdgeTransform()<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l01158"></a><span class="lineno"> 1158</span>&#160;    <span class="keyword">auto</span> f = [=, <span class="keyword">this</span>](int32_t id) { <span class="keywordflow">return</span> get(Dependence::ID{<span class="keywordtype">id</span>}); };</div>
-<div class="line"><a name="l01159"></a><span class="lineno"> 1159</span>&#160;    <span class="keywordflow">return</span> std::views::transform(f);</div>
+<div class="line"><a name="l01154"></a><span class="lineno"> 1154</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getEdgeTransform()<span class="keyword"> const </span>{</div>
+<div class="line"><a name="l01155"></a><span class="lineno"> 1155</span>&#160;    <span class="keyword">auto</span> f = [=, <span class="keyword">this</span>](int32_t id) { <span class="keywordflow">return</span> get(Dependence::ID{<span class="keywordtype">id</span>}); };</div>
+<div class="line"><a name="l01156"></a><span class="lineno"> 1156</span>&#160;    <span class="keywordflow">return</span> std::views::transform(f);</div>
+<div class="line"><a name="l01157"></a><span class="lineno"> 1157</span>&#160;  }</div>
+<div class="line"><a name="l01158"></a><span class="lineno"> 1158</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> inputEdges(int32_t <span class="keywordtype">id</span>)<span class="keyword"> const </span>{</div>
+<div class="line"><a name="l01159"></a><span class="lineno"> 1159</span>&#160;    <span class="keywordflow">return</span> inputEdgeIDs(<span class="keywordtype">id</span>) | getEdgeTransform();</div>
 <div class="line"><a name="l01160"></a><span class="lineno"> 1160</span>&#160;  }</div>
-<div class="line"><a name="l01161"></a><span class="lineno"> 1161</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> inputEdges(int32_t <span class="keywordtype">id</span>)<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l01162"></a><span class="lineno"> 1162</span>&#160;    <span class="keywordflow">return</span> inputEdgeIDs(<span class="keywordtype">id</span>) | getEdgeTransform();</div>
+<div class="line"><a name="l01161"></a><span class="lineno"> 1161</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> outputEdges(int32_t <span class="keywordtype">id</span>)<span class="keyword"> const </span>{</div>
+<div class="line"><a name="l01162"></a><span class="lineno"> 1162</span>&#160;    <span class="keywordflow">return</span> outputEdgeIDs(<span class="keywordtype">id</span>) | getEdgeTransform();</div>
 <div class="line"><a name="l01163"></a><span class="lineno"> 1163</span>&#160;  }</div>
-<div class="line"><a name="l01164"></a><span class="lineno"> 1164</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> outputEdges(int32_t <span class="keywordtype">id</span>)<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l01165"></a><span class="lineno"> 1165</span>&#160;    <span class="keywordflow">return</span> outputEdgeIDs(<span class="keywordtype">id</span>) | getEdgeTransform();</div>
-<div class="line"><a name="l01166"></a><span class="lineno"> 1166</span>&#160;  }</div>
-<div class="line"><a name="l01167"></a><span class="lineno"> 1167</span>&#160; </div>
-<div class="line"><a name="l01168"></a><span class="lineno"> 1168</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> activeFilter(<span class="keywordtype">int</span> depth)<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l01169"></a><span class="lineno"> 1169</span>&#160;    <span class="keyword">auto</span> f = [=, <span class="keyword">this</span>](int32_t id) -&gt; <span class="keywordtype">bool</span> {</div>
-<div class="line"><a name="l01170"></a><span class="lineno"> 1170</span>&#160;      <span class="keywordflow">return</span> isActive(Dependence::ID{<span class="keywordtype">id</span>}, depth);</div>
-<div class="line"><a name="l01171"></a><span class="lineno"> 1171</span>&#160;    };</div>
-<div class="line"><a name="l01172"></a><span class="lineno"> 1172</span>&#160;    <span class="keywordflow">return</span> std::views::filter(f);</div>
-<div class="line"><a name="l01173"></a><span class="lineno"> 1173</span>&#160;  }</div>
-<div class="line"><a name="l01174"></a><span class="lineno"> 1174</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> inputAddrTransform() {</div>
-<div class="line"><a name="l01175"></a><span class="lineno"> 1175</span>&#160;    <span class="keyword">auto</span> f = [=, <span class="keyword">this</span>](int32_t id) { <span class="keywordflow">return</span> input(Dependence::ID{<span class="keywordtype">id</span>}); };</div>
-<div class="line"><a name="l01176"></a><span class="lineno"> 1176</span>&#160;    <span class="keywordflow">return</span> std::views::transform(f);</div>
-<div class="line"><a name="l01177"></a><span class="lineno"> 1177</span>&#160;  }</div>
-<div class="line"><a name="l01178"></a><span class="lineno"> 1178</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> outputAddrTransform() {</div>
-<div class="line"><a name="l01179"></a><span class="lineno"> 1179</span>&#160;    <span class="keyword">auto</span> f = [=, <span class="keyword">this</span>](int32_t id) { <span class="keywordflow">return</span> output(Dependence::ID{<span class="keywordtype">id</span>}); };</div>
-<div class="line"><a name="l01180"></a><span class="lineno"> 1180</span>&#160;    <span class="keywordflow">return</span> std::views::transform(f);</div>
-<div class="line"><a name="l01181"></a><span class="lineno"> 1181</span>&#160;  }</div>
-<div class="line"><a name="l01186"></a><span class="lineno"><a class="line" href="classpoly_1_1poly_1_1Dependencies.html#a2aded15694d978e2abbb32d52a9fd059"> 1186</a></span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> <a class="code" href="classpoly_1_1poly_1_1Dependencies.html#a2aded15694d978e2abbb32d52a9fd059">registerEligible</a>(<a class="code" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">ID</a> <span class="keywordtype">id</span>) <span class="keyword">const</span> -&gt; <span class="keywordtype">bool</span> {</div>
-<div class="line"><a name="l01188"></a><span class="lineno"> 1188</span>&#160;    <span class="keywordflow">if</span> (revTimeEdge(<span class="keywordtype">id</span>) &lt; 0) <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
-<div class="line"><a name="l01189"></a><span class="lineno"> 1189</span>&#160;    DensePtrMatrix&lt;int64_t&gt; inMat{input(<span class="keywordtype">id</span>)-&gt;indexMatrix()},</div>
-<div class="line"><a name="l01190"></a><span class="lineno"> 1190</span>&#160;      outMat{output(<span class="keywordtype">id</span>)-&gt;indexMatrix()};</div>
-<div class="line"><a name="l01191"></a><span class="lineno"> 1191</span>&#160;    ptrdiff_t numLoopsIn = ptrdiff_t(inMat.numCol()),</div>
-<div class="line"><a name="l01192"></a><span class="lineno"> 1192</span>&#160;              numLoopsOut = ptrdiff_t(outMat.numCol()),</div>
-<div class="line"><a name="l01193"></a><span class="lineno"> 1193</span>&#160;              numLoops = std::min(numLoopsIn, numLoopsOut);</div>
-<div class="line"><a name="l01194"></a><span class="lineno"> 1194</span>&#160;    <span class="keywordflow">if</span> ((numLoopsIn != numLoopsOut) &amp;&amp;</div>
-<div class="line"><a name="l01195"></a><span class="lineno"> 1195</span>&#160;        math::anyNEZero(numLoopsIn &gt; numLoopsOut</div>
-<div class="line"><a name="l01196"></a><span class="lineno"> 1196</span>&#160;                          ? inMat[_, _(numLoopsOut, numLoopsIn)]</div>
-<div class="line"><a name="l01197"></a><span class="lineno"> 1197</span>&#160;                          : outMat[_, _(numLoopsIn, numLoopsOut)]))</div>
-<div class="line"><a name="l01198"></a><span class="lineno"> 1198</span>&#160;      <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
-<div class="line"><a name="l01199"></a><span class="lineno"> 1199</span>&#160;    <span class="keywordflow">return</span> inMat[_, _(0, numLoops)] == outMat[_, _(0, numLoops)];</div>
-<div class="line"><a name="l01200"></a><span class="lineno"> 1200</span>&#160;  }</div>
-<div class="line"><a name="l01201"></a><span class="lineno"> 1201</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> registerEligibleFilter()<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l01202"></a><span class="lineno"> 1202</span>&#160;    <span class="keyword">auto</span> f = [=, <span class="keyword">this</span>](int32_t id) -&gt; <span class="keywordtype">bool</span> {</div>
-<div class="line"><a name="l01203"></a><span class="lineno"> 1203</span>&#160;      <span class="keywordflow">return</span> registerEligible(<a class="code" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">Dependence::ID</a>{<span class="keywordtype">id</span>});</div>
-<div class="line"><a name="l01204"></a><span class="lineno"> 1204</span>&#160;    };</div>
-<div class="line"><a name="l01205"></a><span class="lineno"> 1205</span>&#160;    <span class="keywordflow">return</span> std::views::filter(f);</div>
-<div class="line"><a name="l01206"></a><span class="lineno"> 1206</span>&#160;  }</div>
-<div class="line"><a name="l01207"></a><span class="lineno"> 1207</span>&#160;};</div>
-<div class="line"><a name="l01208"></a><span class="lineno"> 1208</span>&#160; </div>
-<div class="line"><a name="l01209"></a><span class="lineno"> 1209</span>&#160;static_assert(std::is_trivially_copyable_v&lt;Dependencies&gt;);</div>
-<div class="line"><a name="l01210"></a><span class="lineno"> 1210</span>&#160;static_assert(std::is_trivially_destructible_v&lt;Dependencies&gt;);</div>
-<div class="line"><a name="l01211"></a><span class="lineno"> 1211</span>&#160;} <span class="comment">// namespace poly</span></div>
-<div class="line"><a name="l01212"></a><span class="lineno"> 1212</span>&#160;<span class="keyword">namespace </span>IR {</div>
-<div class="line"><a name="l01213"></a><span class="lineno"> 1213</span>&#160;<span class="keyword">using</span> poly::Dependencies;</div>
-<div class="line"><a name="l01214"></a><span class="lineno"> 1214</span>&#160; </div>
-<div class="line"><a name="l01215"></a><span class="lineno"> 1215</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> Addr::inputEdges(Dependencies deps)<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l01216"></a><span class="lineno"> 1216</span>&#160;  <span class="keywordflow">return</span> deps.inputEdges(getEdgeIn());</div>
+<div class="line"><a name="l01164"></a><span class="lineno"> 1164</span>&#160; </div>
+<div class="line"><a name="l01165"></a><span class="lineno"> 1165</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> activeFilter(<span class="keywordtype">int</span> depth)<span class="keyword"> const </span>{</div>
+<div class="line"><a name="l01166"></a><span class="lineno"> 1166</span>&#160;    <span class="keyword">auto</span> f = [=, <span class="keyword">this</span>](int32_t id) -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l01167"></a><span class="lineno"> 1167</span>&#160;      <span class="keywordflow">return</span> isActive(Dependence::ID{<span class="keywordtype">id</span>}, depth);</div>
+<div class="line"><a name="l01168"></a><span class="lineno"> 1168</span>&#160;    };</div>
+<div class="line"><a name="l01169"></a><span class="lineno"> 1169</span>&#160;    <span class="keywordflow">return</span> std::views::filter(f);</div>
+<div class="line"><a name="l01170"></a><span class="lineno"> 1170</span>&#160;  }</div>
+<div class="line"><a name="l01171"></a><span class="lineno"> 1171</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> inputAddrTransform() {</div>
+<div class="line"><a name="l01172"></a><span class="lineno"> 1172</span>&#160;    <span class="keyword">auto</span> f = [=, <span class="keyword">this</span>](int32_t id) { <span class="keywordflow">return</span> input(Dependence::ID{<span class="keywordtype">id</span>}); };</div>
+<div class="line"><a name="l01173"></a><span class="lineno"> 1173</span>&#160;    <span class="keywordflow">return</span> std::views::transform(f);</div>
+<div class="line"><a name="l01174"></a><span class="lineno"> 1174</span>&#160;  }</div>
+<div class="line"><a name="l01175"></a><span class="lineno"> 1175</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> outputAddrTransform() {</div>
+<div class="line"><a name="l01176"></a><span class="lineno"> 1176</span>&#160;    <span class="keyword">auto</span> f = [=, <span class="keyword">this</span>](int32_t id) { <span class="keywordflow">return</span> output(Dependence::ID{<span class="keywordtype">id</span>}); };</div>
+<div class="line"><a name="l01177"></a><span class="lineno"> 1177</span>&#160;    <span class="keywordflow">return</span> std::views::transform(f);</div>
+<div class="line"><a name="l01178"></a><span class="lineno"> 1178</span>&#160;  }</div>
+<div class="line"><a name="l01183"></a><span class="lineno"><a class="line" href="classpoly_1_1poly_1_1Dependencies.html#a2aded15694d978e2abbb32d52a9fd059"> 1183</a></span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> <a class="code" href="classpoly_1_1poly_1_1Dependencies.html#a2aded15694d978e2abbb32d52a9fd059">registerEligible</a>(<a class="code" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">ID</a> <span class="keywordtype">id</span>) <span class="keyword">const</span> -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l01185"></a><span class="lineno"> 1185</span>&#160;    <span class="keywordflow">if</span> (revTimeEdge(<span class="keywordtype">id</span>) &lt; 0) <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
+<div class="line"><a name="l01186"></a><span class="lineno"> 1186</span>&#160;    DensePtrMatrix&lt;int64_t&gt; inMat{input(<span class="keywordtype">id</span>)-&gt;indexMatrix()},</div>
+<div class="line"><a name="l01187"></a><span class="lineno"> 1187</span>&#160;      outMat{output(<span class="keywordtype">id</span>)-&gt;indexMatrix()};</div>
+<div class="line"><a name="l01188"></a><span class="lineno"> 1188</span>&#160;    ptrdiff_t numLoopsIn = ptrdiff_t(inMat.numCol()),</div>
+<div class="line"><a name="l01189"></a><span class="lineno"> 1189</span>&#160;              numLoopsOut = ptrdiff_t(outMat.numCol()),</div>
+<div class="line"><a name="l01190"></a><span class="lineno"> 1190</span>&#160;              numLoops = std::min(numLoopsIn, numLoopsOut);</div>
+<div class="line"><a name="l01191"></a><span class="lineno"> 1191</span>&#160;    <span class="keywordflow">if</span> ((numLoopsIn != numLoopsOut) &amp;&amp;</div>
+<div class="line"><a name="l01192"></a><span class="lineno"> 1192</span>&#160;        math::anyNEZero(numLoopsIn &gt; numLoopsOut</div>
+<div class="line"><a name="l01193"></a><span class="lineno"> 1193</span>&#160;                          ? inMat[_, _(numLoopsOut, numLoopsIn)]</div>
+<div class="line"><a name="l01194"></a><span class="lineno"> 1194</span>&#160;                          : outMat[_, _(numLoopsIn, numLoopsOut)]))</div>
+<div class="line"><a name="l01195"></a><span class="lineno"> 1195</span>&#160;      <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
+<div class="line"><a name="l01196"></a><span class="lineno"> 1196</span>&#160;    <span class="keywordflow">return</span> inMat[_, _(0, numLoops)] == outMat[_, _(0, numLoops)];</div>
+<div class="line"><a name="l01197"></a><span class="lineno"> 1197</span>&#160;  }</div>
+<div class="line"><a name="l01198"></a><span class="lineno"> 1198</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> registerEligibleFilter()<span class="keyword"> const </span>{</div>
+<div class="line"><a name="l01199"></a><span class="lineno"> 1199</span>&#160;    <span class="keyword">auto</span> f = [=, <span class="keyword">this</span>](int32_t id) -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l01200"></a><span class="lineno"> 1200</span>&#160;      <span class="keywordflow">return</span> registerEligible(<a class="code" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">Dependence::ID</a>{<span class="keywordtype">id</span>});</div>
+<div class="line"><a name="l01201"></a><span class="lineno"> 1201</span>&#160;    };</div>
+<div class="line"><a name="l01202"></a><span class="lineno"> 1202</span>&#160;    <span class="keywordflow">return</span> std::views::filter(f);</div>
+<div class="line"><a name="l01203"></a><span class="lineno"> 1203</span>&#160;  }</div>
+<div class="line"><a name="l01204"></a><span class="lineno"> 1204</span>&#160;};</div>
+<div class="line"><a name="l01205"></a><span class="lineno"> 1205</span>&#160; </div>
+<div class="line"><a name="l01206"></a><span class="lineno"> 1206</span>&#160;static_assert(std::is_trivially_copyable_v&lt;Dependencies&gt;);</div>
+<div class="line"><a name="l01207"></a><span class="lineno"> 1207</span>&#160;static_assert(std::is_trivially_destructible_v&lt;Dependencies&gt;);</div>
+<div class="line"><a name="l01208"></a><span class="lineno"> 1208</span>&#160;} <span class="comment">// namespace poly</span></div>
+<div class="line"><a name="l01209"></a><span class="lineno"> 1209</span>&#160;<span class="keyword">namespace </span>IR {</div>
+<div class="line"><a name="l01210"></a><span class="lineno"> 1210</span>&#160;<span class="keyword">using</span> poly::Dependencies;</div>
+<div class="line"><a name="l01211"></a><span class="lineno"> 1211</span>&#160; </div>
+<div class="line"><a name="l01212"></a><span class="lineno"> 1212</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> Addr::inputEdges(Dependencies deps)<span class="keyword"> const </span>{</div>
+<div class="line"><a name="l01213"></a><span class="lineno"> 1213</span>&#160;  <span class="keywordflow">return</span> deps.inputEdges(getEdgeIn());</div>
+<div class="line"><a name="l01214"></a><span class="lineno"> 1214</span>&#160;}</div>
+<div class="line"><a name="l01215"></a><span class="lineno"> 1215</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> Addr::outputEdges(Dependencies deps)<span class="keyword"> const </span>{</div>
+<div class="line"><a name="l01216"></a><span class="lineno"> 1216</span>&#160;  <span class="keywordflow">return</span> deps.outputEdges(getEdgeOut());</div>
 <div class="line"><a name="l01217"></a><span class="lineno"> 1217</span>&#160;}</div>
-<div class="line"><a name="l01218"></a><span class="lineno"> 1218</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> Addr::outputEdges(Dependencies deps)<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l01219"></a><span class="lineno"> 1219</span>&#160;  <span class="keywordflow">return</span> deps.outputEdges(getEdgeOut());</div>
+<div class="line"><a name="l01218"></a><span class="lineno"> 1218</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> Addr::inputEdgeIDs(Dependencies deps)<span class="keyword"> const </span>{</div>
+<div class="line"><a name="l01219"></a><span class="lineno"> 1219</span>&#160;  <span class="keywordflow">return</span> deps.inputEdgeIDs(getEdgeIn());</div>
 <div class="line"><a name="l01220"></a><span class="lineno"> 1220</span>&#160;}</div>
-<div class="line"><a name="l01221"></a><span class="lineno"> 1221</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> Addr::inputEdgeIDs(Dependencies deps)<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l01222"></a><span class="lineno"> 1222</span>&#160;  <span class="keywordflow">return</span> deps.inputEdgeIDs(getEdgeIn());</div>
+<div class="line"><a name="l01221"></a><span class="lineno"> 1221</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> Addr::outputEdgeIDs(Dependencies deps)<span class="keyword"> const </span>{</div>
+<div class="line"><a name="l01222"></a><span class="lineno"> 1222</span>&#160;  <span class="keywordflow">return</span> deps.outputEdgeIDs(getEdgeOut());</div>
 <div class="line"><a name="l01223"></a><span class="lineno"> 1223</span>&#160;}</div>
-<div class="line"><a name="l01224"></a><span class="lineno"> 1224</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> Addr::outputEdgeIDs(Dependencies deps)<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l01225"></a><span class="lineno"> 1225</span>&#160;  <span class="keywordflow">return</span> deps.outputEdgeIDs(getEdgeOut());</div>
+<div class="line"><a name="l01224"></a><span class="lineno"> 1224</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> Addr::inputEdgeIDs(Dependencies deps, <span class="keywordtype">int</span> depth)<span class="keyword"> const </span>{</div>
+<div class="line"><a name="l01225"></a><span class="lineno"> 1225</span>&#160;  <span class="keywordflow">return</span> inputEdgeIDs(deps) | deps.activeFilter(depth);</div>
 <div class="line"><a name="l01226"></a><span class="lineno"> 1226</span>&#160;}</div>
-<div class="line"><a name="l01227"></a><span class="lineno"> 1227</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> Addr::inputEdgeIDs(Dependencies deps, <span class="keywordtype">int</span> depth)<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l01228"></a><span class="lineno"> 1228</span>&#160;  <span class="keywordflow">return</span> inputEdgeIDs(deps) | deps.activeFilter(depth);</div>
+<div class="line"><a name="l01227"></a><span class="lineno"> 1227</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> Addr::outputEdgeIDs(Dependencies deps, <span class="keywordtype">int</span> depth)<span class="keyword"> const </span>{</div>
+<div class="line"><a name="l01228"></a><span class="lineno"> 1228</span>&#160;  <span class="keywordflow">return</span> outputEdgeIDs(deps) | deps.activeFilter(depth);</div>
 <div class="line"><a name="l01229"></a><span class="lineno"> 1229</span>&#160;}</div>
-<div class="line"><a name="l01230"></a><span class="lineno"> 1230</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> Addr::outputEdgeIDs(Dependencies deps, <span class="keywordtype">int</span> depth)<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l01231"></a><span class="lineno"> 1231</span>&#160;  <span class="keywordflow">return</span> outputEdgeIDs(deps) | deps.activeFilter(depth);</div>
-<div class="line"><a name="l01232"></a><span class="lineno"> 1232</span>&#160;}</div>
-<div class="line"><a name="l01233"></a><span class="lineno"> 1233</span>&#160; </div>
-<div class="line"><a name="l01234"></a><span class="lineno"> 1234</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> IR::Addr::inputAddrs(Dependencies deps)<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l01235"></a><span class="lineno"> 1235</span>&#160;  <span class="keywordflow">return</span> inputEdgeIDs(deps) | deps.inputAddrTransform();</div>
+<div class="line"><a name="l01230"></a><span class="lineno"> 1230</span>&#160; </div>
+<div class="line"><a name="l01231"></a><span class="lineno"> 1231</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> IR::Addr::inputAddrs(Dependencies deps)<span class="keyword"> const </span>{</div>
+<div class="line"><a name="l01232"></a><span class="lineno"> 1232</span>&#160;  <span class="keywordflow">return</span> inputEdgeIDs(deps) | deps.inputAddrTransform();</div>
+<div class="line"><a name="l01233"></a><span class="lineno"> 1233</span>&#160;}</div>
+<div class="line"><a name="l01234"></a><span class="lineno"> 1234</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> IR::Addr::outputAddrs(Dependencies deps)<span class="keyword"> const </span>{</div>
+<div class="line"><a name="l01235"></a><span class="lineno"> 1235</span>&#160;  <span class="keywordflow">return</span> outputEdgeIDs(deps) | deps.outputAddrTransform();</div>
 <div class="line"><a name="l01236"></a><span class="lineno"> 1236</span>&#160;}</div>
-<div class="line"><a name="l01237"></a><span class="lineno"> 1237</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> IR::Addr::outputAddrs(Dependencies deps)<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l01238"></a><span class="lineno"> 1238</span>&#160;  <span class="keywordflow">return</span> outputEdgeIDs(deps) | deps.outputAddrTransform();</div>
-<div class="line"><a name="l01239"></a><span class="lineno"> 1239</span>&#160;}</div>
-<div class="line"><a name="l01240"></a><span class="lineno"> 1240</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> Addr::inputEdges(Dependencies deps, <span class="keywordtype">int</span> depth)<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l01241"></a><span class="lineno"> 1241</span>&#160;  <span class="keywordflow">return</span> inputEdgeIDs(deps) | deps.activeFilter(depth) |</div>
-<div class="line"><a name="l01242"></a><span class="lineno"> 1242</span>&#160;         deps.getEdgeTransform();</div>
-<div class="line"><a name="l01243"></a><span class="lineno"> 1243</span>&#160;}</div>
-<div class="line"><a name="l01244"></a><span class="lineno"> 1244</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> Addr::outputEdges(Dependencies deps, <span class="keywordtype">int</span> depth)<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l01245"></a><span class="lineno"> 1245</span>&#160;  <span class="keywordflow">return</span> outputEdgeIDs(deps) | deps.activeFilter(depth) |</div>
-<div class="line"><a name="l01246"></a><span class="lineno"> 1246</span>&#160;         deps.getEdgeTransform();</div>
+<div class="line"><a name="l01237"></a><span class="lineno"> 1237</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> Addr::inputEdges(Dependencies deps, <span class="keywordtype">int</span> depth)<span class="keyword"> const </span>{</div>
+<div class="line"><a name="l01238"></a><span class="lineno"> 1238</span>&#160;  <span class="keywordflow">return</span> inputEdgeIDs(deps) | deps.activeFilter(depth) |</div>
+<div class="line"><a name="l01239"></a><span class="lineno"> 1239</span>&#160;         deps.getEdgeTransform();</div>
+<div class="line"><a name="l01240"></a><span class="lineno"> 1240</span>&#160;}</div>
+<div class="line"><a name="l01241"></a><span class="lineno"> 1241</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> Addr::outputEdges(Dependencies deps, <span class="keywordtype">int</span> depth)<span class="keyword"> const </span>{</div>
+<div class="line"><a name="l01242"></a><span class="lineno"> 1242</span>&#160;  <span class="keywordflow">return</span> outputEdgeIDs(deps) | deps.activeFilter(depth) |</div>
+<div class="line"><a name="l01243"></a><span class="lineno"> 1243</span>&#160;         deps.getEdgeTransform();</div>
+<div class="line"><a name="l01244"></a><span class="lineno"> 1244</span>&#160;}</div>
+<div class="line"><a name="l01245"></a><span class="lineno"> 1245</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> IR::Addr::inputAddrs(Dependencies deps, <span class="keywordtype">int</span> depth)<span class="keyword"> const </span>{</div>
+<div class="line"><a name="l01246"></a><span class="lineno"> 1246</span>&#160;  <span class="keywordflow">return</span> inputEdgeIDs(deps, depth) | deps.inputAddrTransform();</div>
 <div class="line"><a name="l01247"></a><span class="lineno"> 1247</span>&#160;}</div>
-<div class="line"><a name="l01248"></a><span class="lineno"> 1248</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> IR::Addr::inputAddrs(Dependencies deps, <span class="keywordtype">int</span> depth)<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l01249"></a><span class="lineno"> 1249</span>&#160;  <span class="keywordflow">return</span> inputEdgeIDs(deps, depth) | deps.inputAddrTransform();</div>
+<div class="line"><a name="l01248"></a><span class="lineno"> 1248</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> IR::Addr::outputAddrs(Dependencies deps, <span class="keywordtype">int</span> depth)<span class="keyword"> const </span>{</div>
+<div class="line"><a name="l01249"></a><span class="lineno"> 1249</span>&#160;  <span class="keywordflow">return</span> outputEdgeIDs(deps, depth) | deps.outputAddrTransform();</div>
 <div class="line"><a name="l01250"></a><span class="lineno"> 1250</span>&#160;}</div>
-<div class="line"><a name="l01251"></a><span class="lineno"> 1251</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> IR::Addr::outputAddrs(Dependencies deps, <span class="keywordtype">int</span> depth)<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l01252"></a><span class="lineno"> 1252</span>&#160;  <span class="keywordflow">return</span> outputEdgeIDs(deps, depth) | deps.outputAddrTransform();</div>
-<div class="line"><a name="l01253"></a><span class="lineno"> 1253</span>&#160;}</div>
-<div class="line"><a name="l01254"></a><span class="lineno"> 1254</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> IR::Addr::unhoistableOutputs(Dependencies deps, <span class="keywordtype">int</span> depth)<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l01255"></a><span class="lineno"> 1255</span>&#160;  <span class="keywordflow">return</span> outputEdgeIDs(deps, depth) | deps.registerEligibleFilter() |</div>
-<div class="line"><a name="l01256"></a><span class="lineno"> 1256</span>&#160;         deps.outputAddrTransform();</div>
-<div class="line"><a name="l01257"></a><span class="lineno"> 1257</span>&#160;}</div>
-<div class="line"><a name="l01258"></a><span class="lineno"> 1258</span>&#160; </div>
-<div class="line"><a name="l01261"></a><span class="lineno"><a class="line" href="classpoly_1_1IR_1_1Addr.html#a76ac3593591501269b56f682f5e95ed3"> 1261</a></span>&#160;<span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="classpoly_1_1IR_1_1Addr.html#a76ac3593591501269b56f682f5e95ed3">IR::Addr::drop</a>(<a class="code" href="classpoly_1_1poly_1_1Dependencies.html">Dependencies</a> deps) {</div>
-<div class="line"><a name="l01262"></a><span class="lineno"> 1262</span>&#160;  <span class="comment">// NOTE: this doesn&#39;t get removed from the `origAddr` list/the addrChain</span></div>
-<div class="line"><a name="l01263"></a><span class="lineno"> 1263</span>&#160;  <span class="keywordflow">if</span> (<a class="code" href="classpoly_1_1IR_1_1Loop.html">IR::Loop</a> *L = getLoop(); L-&gt;getChild() == <span class="keyword">this</span>) L-&gt;setChild(getNext());</div>
-<div class="line"><a name="l01264"></a><span class="lineno"> 1264</span>&#160;  removeFromList();</div>
-<div class="line"><a name="l01265"></a><span class="lineno"> 1265</span>&#160;  <span class="keywordflow">for</span> (int32_t <span class="keywordtype">id</span> : inputEdgeIDs(deps)) deps.<a class="code" href="classpoly_1_1poly_1_1Dependencies.html#aad261426ea6c9a40cc734eccd7d197a7">removeEdge</a>(<a class="code" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">Dependence::ID</a>{<span class="keywordtype">id</span>});</div>
-<div class="line"><a name="l01266"></a><span class="lineno"> 1266</span>&#160;  <span class="keywordflow">for</span> (int32_t <span class="keywordtype">id</span> : outputEdgeIDs(deps)) deps.<a class="code" href="classpoly_1_1poly_1_1Dependencies.html#aad261426ea6c9a40cc734eccd7d197a7">removeEdge</a>(<a class="code" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">Dependence::ID</a>{<span class="keywordtype">id</span>});</div>
-<div class="line"><a name="l01267"></a><span class="lineno"> 1267</span>&#160;}</div>
-<div class="line"><a name="l01268"></a><span class="lineno"> 1268</span>&#160; </div>
-<div class="line"><a name="l01269"></a><span class="lineno"> 1269</span>&#160;<span class="keyword">using</span> math::StridedVector;</div>
-<div class="line"><a name="l01270"></a><span class="lineno"> 1270</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> Loop::getLegality(<a class="code" href="classpoly_1_1poly_1_1Dependencies.html">poly::Dependencies</a> deps,</div>
-<div class="line"><a name="l01271"></a><span class="lineno"> 1271</span>&#160;                              math::PtrVector&lt;int32_t&gt; loopDeps)</div>
-<div class="line"><a name="l01272"></a><span class="lineno"> 1272</span>&#160;  -&gt; LegalTransforms {</div>
-<div class="line"><a name="l01273"></a><span class="lineno"> 1273</span>&#160;  <span class="keyword">const</span> <span class="keyword">auto</span> legal = getLegal();</div>
-<div class="line"><a name="l01274"></a><span class="lineno"> 1274</span>&#160;  <span class="keywordflow">if</span> (legal != Unknown) <span class="keywordflow">return</span> legal;</div>
-<div class="line"><a name="l01275"></a><span class="lineno"> 1275</span>&#160;  <span class="keywordflow">if</span> (edgeId &lt; 0) <span class="keywordflow">return</span> setLegal(DependenceFree);</div>
-<div class="line"><a name="l01276"></a><span class="lineno"> 1276</span>&#160;  <span class="keywordflow">if</span> (this-&gt;currentDepth == 0) <span class="keywordflow">return</span> setLegal(None);</div>
-<div class="line"><a name="l01277"></a><span class="lineno"> 1277</span>&#160;  ptrdiff_t loop = this-&gt;currentDepth - 1;</div>
-<div class="line"><a name="l01278"></a><span class="lineno"> 1278</span>&#160;  <span class="keywordflow">for</span> (int32_t <span class="keywordtype">id</span> : edges(loopDeps)) {</div>
-<div class="line"><a name="l01279"></a><span class="lineno"> 1279</span>&#160;    <a class="code" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">Dependence::ID</a> i{<span class="keywordtype">id</span>};</div>
-<div class="line"><a name="l01280"></a><span class="lineno"> 1280</span>&#160;    StridedVector&lt;int64_t&gt; in = deps.input(i)-&gt;<a class="code" href="classpoly_1_1IR_1_1Addr.html#af4838372d11fd32b964c9a7cb6d4b1b8">indexMatrix</a>()[_, loop],</div>
-<div class="line"><a name="l01281"></a><span class="lineno"> 1281</span>&#160;                           out = deps.output(i)-&gt;<a class="code" href="classpoly_1_1IR_1_1Addr.html#af4838372d11fd32b964c9a7cb6d4b1b8">indexMatrix</a>()[_, loop];</div>
-<div class="line"><a name="l01282"></a><span class="lineno"> 1282</span>&#160;    invariant(in.size(), out.size());</div>
-<div class="line"><a name="l01283"></a><span class="lineno"> 1283</span>&#160;    <span class="keywordflow">if</span> (in != out) <span class="keywordflow">return</span> setLegal(IndexMismatch);</div>
-<div class="line"><a name="l01284"></a><span class="lineno"> 1284</span>&#160;    <span class="comment">// ptrdiff_t common = std::min(in.size(), out.size());</span></div>
-<div class="line"><a name="l01285"></a><span class="lineno"> 1285</span>&#160;    <span class="comment">// if ((in[_(0, common)] != out[_(0, common)]) ||</span></div>
-<div class="line"><a name="l01286"></a><span class="lineno"> 1286</span>&#160;    <span class="comment">//     math::anyNEZero(((in.size() &gt; out.size() ? in : out)[_(common,</span></div>
-<div class="line"><a name="l01287"></a><span class="lineno"> 1287</span>&#160;    <span class="comment">//     end)])))</span></div>
-<div class="line"><a name="l01288"></a><span class="lineno"> 1288</span>&#160;    <span class="comment">//   return legal = IndexMismatch;</span></div>
-<div class="line"><a name="l01289"></a><span class="lineno"> 1289</span>&#160;  }</div>
-<div class="line"><a name="l01290"></a><span class="lineno"> 1290</span>&#160;  <span class="keywordflow">return</span> setLegal(None);</div>
-<div class="line"><a name="l01291"></a><span class="lineno"> 1291</span>&#160;}</div>
-<div class="line"><a name="l01292"></a><span class="lineno"> 1292</span>&#160;<span class="comment">//</span></div>
-<div class="line"><a name="l01293"></a><span class="lineno"> 1293</span>&#160;} <span class="comment">// namespace IR</span></div>
-<div class="line"><a name="l01294"></a><span class="lineno"> 1294</span>&#160; </div>
-<div class="line"><a name="l01295"></a><span class="lineno"> 1295</span>&#160;<span class="keyword">namespace </span>poly {</div>
-<div class="line"><a name="l01296"></a><span class="lineno"> 1296</span>&#160;<span class="keyword">inline</span> <span class="keywordtype">void</span> Dependencies::copyDependencies(Arena&lt;&gt; *alloc, IR::Addr *src,</div>
-<div class="line"><a name="l01297"></a><span class="lineno"> 1297</span>&#160;                                           IR::Addr *dst) {</div>
-<div class="line"><a name="l01298"></a><span class="lineno"> 1298</span>&#160;  <span class="keywordflow">for</span> (int32_t <span class="keywordtype">id</span> : src-&gt;inputEdgeIDs(*<span class="keyword">this</span>)) {</div>
-<div class="line"><a name="l01299"></a><span class="lineno"> 1299</span>&#160;    IR::Addr *input = this-&gt;input(Dependence::ID{<span class="keywordtype">id</span>});</div>
-<div class="line"><a name="l01300"></a><span class="lineno"> 1300</span>&#160;    <span class="keywordflow">if</span> (input-&gt;isLoad()) <span class="keywordflow">continue</span>;</div>
-<div class="line"><a name="l01301"></a><span class="lineno"> 1301</span>&#160;    Dependence d = get(Dependence::ID{<span class="keywordtype">id</span>}, input, dst);</div>
-<div class="line"><a name="l01302"></a><span class="lineno"> 1302</span>&#160;    addEdge(alloc, d);</div>
-<div class="line"><a name="l01303"></a><span class="lineno"> 1303</span>&#160;  }</div>
-<div class="line"><a name="l01304"></a><span class="lineno"> 1304</span>&#160;  <span class="keywordflow">for</span> (int32_t <span class="keywordtype">id</span> : src-&gt;outputEdgeIDs(*<span class="keyword">this</span>)) {</div>
-<div class="line"><a name="l01305"></a><span class="lineno"> 1305</span>&#160;    IR::Addr *output = this-&gt;output(Dependence::ID{<span class="keywordtype">id</span>});</div>
-<div class="line"><a name="l01306"></a><span class="lineno"> 1306</span>&#160;    <span class="keywordflow">if</span> (output-&gt;isLoad()) <span class="keywordflow">continue</span>;</div>
-<div class="line"><a name="l01307"></a><span class="lineno"> 1307</span>&#160;    Dependence d = get(Dependence::ID{<span class="keywordtype">id</span>}, dst, output);</div>
-<div class="line"><a name="l01308"></a><span class="lineno"> 1308</span>&#160;    addEdge(alloc, d);</div>
-<div class="line"><a name="l01309"></a><span class="lineno"> 1309</span>&#160;  }</div>
-<div class="line"><a name="l01310"></a><span class="lineno"> 1310</span>&#160;}</div>
-<div class="line"><a name="l01311"></a><span class="lineno"> 1311</span>&#160; </div>
-<div class="line"><a name="l01312"></a><span class="lineno"> 1312</span>&#160;} <span class="comment">// namespace poly</span></div>
-<div class="line"><a name="l01313"></a><span class="lineno"> 1313</span>&#160; </div>
-<div class="line"><a name="l01314"></a><span class="lineno"> 1314</span>&#160;} <span class="comment">// namespace poly</span></div>
+<div class="line"><a name="l01251"></a><span class="lineno"> 1251</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> IR::Addr::unhoistableOutputs(Dependencies deps, <span class="keywordtype">int</span> depth)<span class="keyword"> const </span>{</div>
+<div class="line"><a name="l01252"></a><span class="lineno"> 1252</span>&#160;  <span class="keywordflow">return</span> outputEdgeIDs(deps, depth) | deps.registerEligibleFilter() |</div>
+<div class="line"><a name="l01253"></a><span class="lineno"> 1253</span>&#160;         deps.outputAddrTransform();</div>
+<div class="line"><a name="l01254"></a><span class="lineno"> 1254</span>&#160;}</div>
+<div class="line"><a name="l01255"></a><span class="lineno"> 1255</span>&#160; </div>
+<div class="line"><a name="l01258"></a><span class="lineno"><a class="line" href="classpoly_1_1IR_1_1Addr.html#a76ac3593591501269b56f682f5e95ed3"> 1258</a></span>&#160;<span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="classpoly_1_1IR_1_1Addr.html#a76ac3593591501269b56f682f5e95ed3">IR::Addr::drop</a>(<a class="code" href="classpoly_1_1poly_1_1Dependencies.html">Dependencies</a> deps) {</div>
+<div class="line"><a name="l01259"></a><span class="lineno"> 1259</span>&#160;  <span class="comment">// NOTE: this doesn&#39;t get removed from the `origAddr` list/the addrChain</span></div>
+<div class="line"><a name="l01260"></a><span class="lineno"> 1260</span>&#160;  <span class="keywordflow">if</span> (<a class="code" href="classpoly_1_1IR_1_1Loop.html">IR::Loop</a> *L = getLoop(); L-&gt;getChild() == <span class="keyword">this</span>) L-&gt;setChild(getNext());</div>
+<div class="line"><a name="l01261"></a><span class="lineno"> 1261</span>&#160;  removeFromList();</div>
+<div class="line"><a name="l01262"></a><span class="lineno"> 1262</span>&#160;  <span class="keywordflow">for</span> (int32_t <span class="keywordtype">id</span> : inputEdgeIDs(deps)) deps.<a class="code" href="classpoly_1_1poly_1_1Dependencies.html#aad261426ea6c9a40cc734eccd7d197a7">removeEdge</a>(<a class="code" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">Dependence::ID</a>{<span class="keywordtype">id</span>});</div>
+<div class="line"><a name="l01263"></a><span class="lineno"> 1263</span>&#160;  <span class="keywordflow">for</span> (int32_t <span class="keywordtype">id</span> : outputEdgeIDs(deps)) deps.<a class="code" href="classpoly_1_1poly_1_1Dependencies.html#aad261426ea6c9a40cc734eccd7d197a7">removeEdge</a>(<a class="code" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">Dependence::ID</a>{<span class="keywordtype">id</span>});</div>
+<div class="line"><a name="l01264"></a><span class="lineno"> 1264</span>&#160;}</div>
+<div class="line"><a name="l01265"></a><span class="lineno"> 1265</span>&#160; </div>
+<div class="line"><a name="l01266"></a><span class="lineno"> 1266</span>&#160;<span class="keyword">using</span> math::StridedVector;</div>
+<div class="line"><a name="l01267"></a><span class="lineno"> 1267</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> Loop::getLegality(<a class="code" href="classpoly_1_1poly_1_1Dependencies.html">poly::Dependencies</a> deps,</div>
+<div class="line"><a name="l01268"></a><span class="lineno"> 1268</span>&#160;                              math::PtrVector&lt;int32_t&gt; loopDeps)</div>
+<div class="line"><a name="l01269"></a><span class="lineno"> 1269</span>&#160;  -&gt; LegalTransforms {</div>
+<div class="line"><a name="l01270"></a><span class="lineno"> 1270</span>&#160;  <span class="keyword">const</span> <span class="keyword">auto</span> legal = getLegal();</div>
+<div class="line"><a name="l01271"></a><span class="lineno"> 1271</span>&#160;  <span class="keywordflow">if</span> (legal != Unknown) <span class="keywordflow">return</span> legal;</div>
+<div class="line"><a name="l01272"></a><span class="lineno"> 1272</span>&#160;  <span class="keywordflow">if</span> (edgeId &lt; 0) <span class="keywordflow">return</span> setLegal(DependenceFree);</div>
+<div class="line"><a name="l01273"></a><span class="lineno"> 1273</span>&#160;  <span class="keywordflow">if</span> (this-&gt;currentDepth == 0) <span class="keywordflow">return</span> setLegal(None);</div>
+<div class="line"><a name="l01274"></a><span class="lineno"> 1274</span>&#160;  ptrdiff_t loop = this-&gt;currentDepth - 1;</div>
+<div class="line"><a name="l01275"></a><span class="lineno"> 1275</span>&#160;  <span class="keywordflow">for</span> (int32_t <span class="keywordtype">id</span> : edges(loopDeps)) {</div>
+<div class="line"><a name="l01276"></a><span class="lineno"> 1276</span>&#160;    <a class="code" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">Dependence::ID</a> i{<span class="keywordtype">id</span>};</div>
+<div class="line"><a name="l01277"></a><span class="lineno"> 1277</span>&#160;    StridedVector&lt;int64_t&gt; in = deps.input(i)-&gt;<a class="code" href="classpoly_1_1IR_1_1Addr.html#af4838372d11fd32b964c9a7cb6d4b1b8">indexMatrix</a>()[_, loop],</div>
+<div class="line"><a name="l01278"></a><span class="lineno"> 1278</span>&#160;                           out = deps.output(i)-&gt;<a class="code" href="classpoly_1_1IR_1_1Addr.html#af4838372d11fd32b964c9a7cb6d4b1b8">indexMatrix</a>()[_, loop];</div>
+<div class="line"><a name="l01279"></a><span class="lineno"> 1279</span>&#160;    invariant(in.size(), out.size());</div>
+<div class="line"><a name="l01280"></a><span class="lineno"> 1280</span>&#160;    <span class="keywordflow">if</span> (in != out) <span class="keywordflow">return</span> setLegal(IndexMismatch);</div>
+<div class="line"><a name="l01281"></a><span class="lineno"> 1281</span>&#160;    <span class="comment">// ptrdiff_t common = std::min(in.size(), out.size());</span></div>
+<div class="line"><a name="l01282"></a><span class="lineno"> 1282</span>&#160;    <span class="comment">// if ((in[_(0, common)] != out[_(0, common)]) ||</span></div>
+<div class="line"><a name="l01283"></a><span class="lineno"> 1283</span>&#160;    <span class="comment">//     math::anyNEZero(((in.size() &gt; out.size() ? in : out)[_(common,</span></div>
+<div class="line"><a name="l01284"></a><span class="lineno"> 1284</span>&#160;    <span class="comment">//     end)])))</span></div>
+<div class="line"><a name="l01285"></a><span class="lineno"> 1285</span>&#160;    <span class="comment">//   return legal = IndexMismatch;</span></div>
+<div class="line"><a name="l01286"></a><span class="lineno"> 1286</span>&#160;  }</div>
+<div class="line"><a name="l01287"></a><span class="lineno"> 1287</span>&#160;  <span class="keywordflow">return</span> setLegal(None);</div>
+<div class="line"><a name="l01288"></a><span class="lineno"> 1288</span>&#160;}</div>
+<div class="line"><a name="l01289"></a><span class="lineno"> 1289</span>&#160;<span class="comment">//</span></div>
+<div class="line"><a name="l01290"></a><span class="lineno"> 1290</span>&#160;} <span class="comment">// namespace IR</span></div>
+<div class="line"><a name="l01291"></a><span class="lineno"> 1291</span>&#160; </div>
+<div class="line"><a name="l01292"></a><span class="lineno"> 1292</span>&#160;<span class="keyword">namespace </span>poly {</div>
+<div class="line"><a name="l01293"></a><span class="lineno"> 1293</span>&#160;<span class="keyword">inline</span> <span class="keywordtype">void</span> Dependencies::copyDependencies(Arena&lt;&gt; *alloc, IR::Addr *src,</div>
+<div class="line"><a name="l01294"></a><span class="lineno"> 1294</span>&#160;                                           IR::Addr *dst) {</div>
+<div class="line"><a name="l01295"></a><span class="lineno"> 1295</span>&#160;  <span class="keywordflow">for</span> (int32_t <span class="keywordtype">id</span> : src-&gt;inputEdgeIDs(*<span class="keyword">this</span>)) {</div>
+<div class="line"><a name="l01296"></a><span class="lineno"> 1296</span>&#160;    IR::Addr *input = this-&gt;input(Dependence::ID{<span class="keywordtype">id</span>});</div>
+<div class="line"><a name="l01297"></a><span class="lineno"> 1297</span>&#160;    <span class="keywordflow">if</span> (input-&gt;isLoad()) <span class="keywordflow">continue</span>;</div>
+<div class="line"><a name="l01298"></a><span class="lineno"> 1298</span>&#160;    Dependence d = get(Dependence::ID{<span class="keywordtype">id</span>}, input, dst);</div>
+<div class="line"><a name="l01299"></a><span class="lineno"> 1299</span>&#160;    addEdge(alloc, d);</div>
+<div class="line"><a name="l01300"></a><span class="lineno"> 1300</span>&#160;  }</div>
+<div class="line"><a name="l01301"></a><span class="lineno"> 1301</span>&#160;  <span class="keywordflow">for</span> (int32_t <span class="keywordtype">id</span> : src-&gt;outputEdgeIDs(*<span class="keyword">this</span>)) {</div>
+<div class="line"><a name="l01302"></a><span class="lineno"> 1302</span>&#160;    IR::Addr *output = this-&gt;output(Dependence::ID{<span class="keywordtype">id</span>});</div>
+<div class="line"><a name="l01303"></a><span class="lineno"> 1303</span>&#160;    <span class="keywordflow">if</span> (output-&gt;isLoad()) <span class="keywordflow">continue</span>;</div>
+<div class="line"><a name="l01304"></a><span class="lineno"> 1304</span>&#160;    Dependence d = get(Dependence::ID{<span class="keywordtype">id</span>}, dst, output);</div>
+<div class="line"><a name="l01305"></a><span class="lineno"> 1305</span>&#160;    addEdge(alloc, d);</div>
+<div class="line"><a name="l01306"></a><span class="lineno"> 1306</span>&#160;  }</div>
+<div class="line"><a name="l01307"></a><span class="lineno"> 1307</span>&#160;}</div>
+<div class="line"><a name="l01308"></a><span class="lineno"> 1308</span>&#160; </div>
+<div class="line"><a name="l01309"></a><span class="lineno"> 1309</span>&#160;} <span class="comment">// namespace poly</span></div>
+<div class="line"><a name="l01310"></a><span class="lineno"> 1310</span>&#160; </div>
+<div class="line"><a name="l01311"></a><span class="lineno"> 1311</span>&#160;} <span class="comment">// namespace poly</span></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Addr_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Addr.html">poly::IR::Addr</a></div><div class="ttdef"><b>Definition:</b> Address.hpp:79</div></div>
-<div class="ttc" id="aclasspoly_1_1IR_1_1Addr_html_a76ac3593591501269b56f682f5e95ed3"><div class="ttname"><a href="classpoly_1_1IR_1_1Addr.html#a76ac3593591501269b56f682f5e95ed3">poly::IR::Addr::drop</a></div><div class="ttdeci">void drop(Dependencies)</div><div class="ttdoc">drop this and remove it from Dependencies</div><div class="ttdef"><b>Definition:</b> Dependence.hpp:1261</div></div>
+<div class="ttc" id="aclasspoly_1_1IR_1_1Addr_html_a76ac3593591501269b56f682f5e95ed3"><div class="ttname"><a href="classpoly_1_1IR_1_1Addr.html#a76ac3593591501269b56f682f5e95ed3">poly::IR::Addr::drop</a></div><div class="ttdeci">void drop(Dependencies)</div><div class="ttdoc">drop this and remove it from Dependencies</div><div class="ttdef"><b>Definition:</b> Dependence.hpp:1258</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Addr_html_af4838372d11fd32b964c9a7cb6d4b1b8"><div class="ttname"><a href="classpoly_1_1IR_1_1Addr.html#af4838372d11fd32b964c9a7cb6d4b1b8">poly::IR::Addr::indexMatrix</a></div><div class="ttdeci">constexpr auto indexMatrix() -&gt; MutDensePtrMatrix&lt; int64_t &gt;</div><div class="ttdef"><b>Definition:</b> Address.hpp:535</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Loop_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Loop.html">poly::IR::Loop</a></div><div class="ttdef"><b>Definition:</b> Node.hpp:289</div></div>
 <div class="ttc" id="aclasspoly_1_1poly_1_1DepPoly_html"><div class="ttname"><a href="classpoly_1_1poly_1_1DepPoly.html">poly::poly::DepPoly</a></div><div class="ttdef"><b>Definition:</b> DependencyPolyhedra.hpp:100</div></div>
-<div class="ttc" id="aclasspoly_1_1poly_1_1Dependencies_1_1Ref_html"><div class="ttname"><a href="classpoly_1_1poly_1_1Dependencies_1_1Ref.html">poly::poly::Dependencies::Ref</a></div><div class="ttdef"><b>Definition:</b> Dependence.hpp:1111</div></div>
+<div class="ttc" id="aclasspoly_1_1poly_1_1Dependencies_1_1Ref_html"><div class="ttname"><a href="classpoly_1_1poly_1_1Dependencies_1_1Ref.html">poly::poly::Dependencies::Ref</a></div><div class="ttdef"><b>Definition:</b> Dependence.hpp:1108</div></div>
 <div class="ttc" id="aclasspoly_1_1poly_1_1Dependencies_html"><div class="ttname"><a href="classpoly_1_1poly_1_1Dependencies.html">poly::poly::Dependencies</a></div><div class="ttdef"><b>Definition:</b> Dependence.hpp:541</div></div>
-<div class="ttc" id="aclasspoly_1_1poly_1_1Dependencies_html_a2aded15694d978e2abbb32d52a9fd059"><div class="ttname"><a href="classpoly_1_1poly_1_1Dependencies.html#a2aded15694d978e2abbb32d52a9fd059">poly::poly::Dependencies::registerEligible</a></div><div class="ttdeci">constexpr auto registerEligible(ID id) const -&gt; bool</div><div class="ttdef"><b>Definition:</b> Dependence.hpp:1186</div></div>
+<div class="ttc" id="aclasspoly_1_1poly_1_1Dependencies_html_a2aded15694d978e2abbb32d52a9fd059"><div class="ttname"><a href="classpoly_1_1poly_1_1Dependencies.html#a2aded15694d978e2abbb32d52a9fd059">poly::poly::Dependencies::registerEligible</a></div><div class="ttdeci">constexpr auto registerEligible(ID id) const -&gt; bool</div><div class="ttdef"><b>Definition:</b> Dependence.hpp:1183</div></div>
 <div class="ttc" id="aclasspoly_1_1poly_1_1Dependencies_html_aad261426ea6c9a40cc734eccd7d197a7"><div class="ttname"><a href="classpoly_1_1poly_1_1Dependencies.html#aad261426ea6c9a40cc734eccd7d197a7">poly::poly::Dependencies::removeEdge</a></div><div class="ttdeci">constexpr void removeEdge(ID id)</div><div class="ttdef"><b>Definition:</b> Dependence.hpp:1009</div></div>
 <div class="ttc" id="astructpoly_1_1poly_1_1Dependence_1_1ID_html"><div class="ttname"><a href="structpoly_1_1poly_1_1Dependence_1_1ID.html">poly::poly::Dependence::ID</a></div><div class="ttdef"><b>Definition:</b> Dependence.hpp:25</div></div>
 <div class="ttc" id="astructpoly_1_1poly_1_1Dependence_html"><div class="ttname"><a href="structpoly_1_1poly_1_1Dependence.html">poly::poly::Dependence</a></div><div class="ttdef"><b>Definition:</b> Dependence.hpp:23</div></div>

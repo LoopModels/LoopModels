@@ -67,6 +67,7 @@ $(function() {
 <div class="header">
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
+<a href="#pub-static-methods">Static Public Member Functions</a> &#124;
 <a href="#pub-attribs">Public Attributes</a> &#124;
 <a href="structpoly_1_1CostModeling_1_1Legality-members.html">List of all members</a>  </div>
   <div class="headertitle">
@@ -82,9 +83,6 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>minDistance
 <tr class="memitem:a1bbba84c1c45f442c2ae51c6adb146c9"><td class="memItemLeft" align="right" valign="top"><a id="a1bbba84c1c45f442c2ae51c6adb146c9"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>maxDistance</b> () const -&gt; uint16_t</td></tr>
 <tr class="separator:a1bbba84c1c45f442c2ae51c6adb146c9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a55f10d130405a1d6428b24d4cdb5e1d9"><td class="memItemLeft" align="right" valign="top"><a id="a55f10d130405a1d6428b24d4cdb5e1d9"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>maxIters</b> () const -&gt; uint16_t</td></tr>
-<tr class="separator:a55f10d130405a1d6428b24d4cdb5e1d9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0580a91c623233314167c3f700a9cbce"><td class="memItemLeft" align="right" valign="top"><a id="a0580a91c623233314167c3f700a9cbce"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&amp;=</b> (<a class="el" href="structpoly_1_1CostModeling_1_1Legality.html">Legality</a> other) -&gt; <a class="el" href="structpoly_1_1CostModeling_1_1Legality.html">Legality</a> &amp;</td></tr>
 <tr class="separator:a0580a91c623233314167c3f700a9cbce"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -94,12 +92,17 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&am
 <tr class="memitem:a56d8b397e648baabb65f5a0291dfea89"><td class="memItemLeft" align="right" valign="top"><a id="a56d8b397e648baabb65f5a0291dfea89"></a>
 constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Legality</b> (const <a class="el" href="structpoly_1_1CostModeling_1_1Legality.html">Legality</a> &amp;)=default</td></tr>
 <tr class="separator:a56d8b397e648baabb65f5a0291dfea89"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a453aef146ac2fd1b190c49b750e446d1"><td class="memItemLeft" align="right" valign="top"><a id="a453aef146ac2fd1b190c49b750e446d1"></a>
-constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Legality</b> (<a class="el" href="classpoly_1_1poly_1_1Dependencies.html">IR::Dependencies</a> deps, <a class="el" href="structpoly_1_1poly_1_1Dependence.html">Dependence</a> d)</td></tr>
-<tr class="separator:a453aef146ac2fd1b190c49b750e446d1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0347568911000bb18d3742014343ff80"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpoly_1_1CostModeling_1_1Legality.html#a0347568911000bb18d3742014343ff80">update</a> (<a class="el" href="classpoly_1_1poly_1_1Dependencies.html">poly::Dependencies</a> deps, <a class="el" href="classpoly_1_1IR_1_1Loop.html">IR::Loop</a> *L, <a class="el" href="structpoly_1_1poly_1_1Dependence.html">Dependence</a> d)</td></tr>
+<tr class="separator:a0347568911000bb18d3742014343ff80"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a054bdb6426904053a3ccd4ddf1751031"><td class="memItemLeft" align="right" valign="top"><a id="a054bdb6426904053a3ccd4ddf1751031"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>Legality</b> (<a class="el" href="structpoly_1_1CostModeling_1_1LoopDepSatisfaction.html">LoopDepSatisfaction</a> deps, <a class="el" href="classpoly_1_1IR_1_1Loop.html">IR::Loop</a> *L)</td></tr>
 <tr class="separator:a054bdb6426904053a3ccd4ddf1751031"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
+Static Public Member Functions</h2></td></tr>
+<tr class="memitem:a407b1daf8dc13a670330886cec41fa6b"><td class="memItemLeft" align="right" valign="top"><a id="a407b1daf8dc13a670330886cec41fa6b"></a>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>deeperAccess</b> (<a class="el" href="classpoly_1_1poly_1_1Dependencies.html">poly::Dependencies</a> deps, <a class="el" href="classpoly_1_1IR_1_1Loop.html">IR::Loop</a> *L, <a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> *in) -&gt; bool</td></tr>
+<tr class="separator:a407b1daf8dc13a670330886cec41fa6b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
@@ -112,10 +115,57 @@ uint16_t&#160;</td><td class="memItemRight" valign="bottom"><b>mindistance</b> {
 <tr class="memitem:a773b4f417031dce2dd2a175b36f072e9"><td class="memItemLeft" align="right" valign="top"><a id="a773b4f417031dce2dd2a175b36f072e9"></a>
 uint16_t&#160;</td><td class="memItemRight" valign="bottom"><b>maxdistance</b> {0}</td></tr>
 <tr class="separator:a773b4f417031dce2dd2a175b36f072e9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a265e4fa7723d8aa371d53b9fbef5709e"><td class="memItemLeft" align="right" valign="top"><a id="a265e4fa7723d8aa371d53b9fbef5709e"></a>
-uint16_t&#160;</td><td class="memItemRight" valign="bottom"><b>maxiters</b> {0}</td></tr>
-<tr class="separator:a265e4fa7723d8aa371d53b9fbef5709e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adc3b4fcd336061c90ac5a7e95b2f1498"><td class="memItemLeft" align="right" valign="top"><a id="adc3b4fcd336061c90ac5a7e95b2f1498"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>canPeel</b> {true}</td></tr>
+<tr class="separator:adc3b4fcd336061c90ac5a7e95b2f1498"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3d4caa439d5b710290466c03668bf467"><td class="memItemLeft" align="right" valign="top"><a id="a3d4caa439d5b710290466c03668bf467"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>canUnroll</b> {true}</td></tr>
+<tr class="separator:a3d4caa439d5b710290466c03668bf467"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
+<h2 class="groupheader">Member Function Documentation</h2>
+<a id="a0347568911000bb18d3742014343ff80"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0347568911000bb18d3742014343ff80">&#9670;&nbsp;</a></span>update()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void poly::CostModeling::Legality::update </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classpoly_1_1poly_1_1Dependencies.html">poly::Dependencies</a>&#160;</td>
+          <td class="paramname"><em>deps</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classpoly_1_1IR_1_1Loop.html">IR::Loop</a> *&#160;</td>
+          <td class="paramname"><em>L</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="structpoly_1_1poly_1_1Dependence.html">Dependence</a>&#160;</td>
+          <td class="paramname"><em>d</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Now we check if we're allowed any reorderings First of all, consider that unrolling is allowed if no memory accesses dependent on the <code>in</code> or <code>out</code> are in a deeper loop (e.g. example 3), even if vectorization is not.</p>
+
+</div>
+</div>
 <hr/>The documentation for this struct was generated from the following file:<ul>
 <li>include/Optimize/<a class="el" href="Legality_8hpp_source.html">Legality.hpp</a></li>
 </ul>
