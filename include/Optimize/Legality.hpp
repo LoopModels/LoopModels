@@ -95,24 +95,30 @@ namespace poly::CostModeling {
 // Okay, we'll take a somewhat different approach:
 // it shouldn't be too difficult to check for extra outputs, etc.
 // so we do that all here, after the `Addr` placements and simplifications
+// 
 struct Legality {
   // enum class Reduction { None = 0, Unordered = 1, Ordered = 2 };
   uint16_t unordered_reduction_count{0};
   uint16_t mindistance{std::numeric_limits<uint16_t>::max()};
   uint16_t maxdistance{0};
-  uint16_t maxiters{0};
+  bool canPeel{true};
+  bool canUnroll{true};
+  // uint16_t maxiters{0};
   [[nodiscard]] constexpr auto minDistance() const -> uint16_t {
     return mindistance;
   }
   [[nodiscard]] constexpr auto maxDistance() const -> uint16_t {
     return mindistance;
   }
-  [[nodiscard]] constexpr auto maxIters() const -> uint16_t { return maxiters; }
+  // [[nodiscard]] constexpr auto maxIters() const -> uint16_t { return
+  // maxiters; }
   constexpr auto operator&=(Legality other) -> Legality & {
     unordered_reduction_count += other.unordered_reduction_count;
     mindistance = std::min(mindistance, other.mindistance);
     maxdistance = std::max(maxdistance, other.maxdistance);
-    maxiters = std::max(maxiters, other.maxiters);
+    canPeel = canPeel & other.canPeel;
+    canUnroll = canUnroll & other.canUnroll;
+    // maxiters = std::max(maxiters, other.maxiters);
     return *this;
   }
   [[nodiscard]] constexpr auto operator&(Legality other) const -> Legality {
@@ -121,21 +127,39 @@ struct Legality {
   }
   constexpr Legality() = default;
   constexpr Legality(const Legality &) = default;
-  constexpr Legality(IR::Dependencies deps, Dependence d) {
+  static auto deeperAccess(poly::Dependencies deps, IR::Loop *L, IR::Addr *in)
+    -> bool {
+    return std::ranges::any_of(in->outputEdgeIDs(deps), [=](int32_t id) {
+      IR::Addr *a = deps.output(Dependence::ID{id});
+      return (a->getLoop() != L) && L->contains(a);
+    });
+  }
+  void update(poly::Dependencies deps, IR::Loop *L, Dependence d) {
     IR::Addr *in = d.out, *out = d.in;
-    if (d.revTimeEdge()) {
-      if (in->reassociableReductionPair() != out) {
-        mindistance = 0;
-        maxdistance = maxiters = std::numeric_limits<uint16_t>::max();
-      } else ++unordered_reduction_count;
+    if (d.revTimeEdge() && (in->reassociableReductionPair() != out)) {
+      ++unordered_reduction_count;
       return;
     }
-    // now we must analyze the dependence...
-    //
+    /// Now we check if we're allowed any reorderings
+    /// First of all, consider that unrolling is allowed if no memory accesses
+    /// dependent on the `in` or `out` are in a deeper loop (e.g. example 3),
+    /// even if vectorization is not.
+    if (canUnroll && d.revTimeEdge() && deeperAccess(deps, L, in)) {
+      mindistance = 0;
+      maxdistance = std::numeric_limits<uint16_t>::max();
+      canPeel = false;
+      canUnroll = false;
+      return;
+    }
+    if (mindistance || maxdistance != std::numeric_limits<uint16_t>::max()) {
+      // for now, just check peelability
+    }
+    if (!canPeel){
+      // then we have a dependence
+    }
   };
   Legality(LoopDepSatisfaction deps, IR::Loop *L) {
-    for (poly::Dependence d : deps.depencencies(L))
-      (*this) &= Legality(deps.deps, d);
+    for (poly::Dependence d : deps.depencencies(L)) update(deps.deps, L, d);
   }
 };
 

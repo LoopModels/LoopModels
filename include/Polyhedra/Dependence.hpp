@@ -1070,10 +1070,7 @@ public:
   constexpr auto revTimeEdge(ID i) -> int32_t & {
     return revTimeEdgePtr()[i.id];
   }
-  constexpr auto revTimeEdge(ID i) -> int32_t & {
-    return revTimeEdgePtr()[i.id];
-  }
-  constexpr auto revTimeEdge(ID i) const -> int32_t {
+  [[nodiscard]] constexpr auto revTimeEdge(ID i) const -> int32_t {
     return revTimeEdgePtr()[i.id];
   }
   constexpr auto depPoly(ID i) -> DepPoly *& { return depPolyPtr()[i.id]; }
