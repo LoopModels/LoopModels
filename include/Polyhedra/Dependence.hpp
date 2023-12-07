@@ -1,5 +1,7 @@
 #pragma once
 #include "IR/Address.hpp"
+#include <Math/SOA.hpp>
+#include <Containers/Tuple.hpp>
 #include "IR/Node.hpp"
 #include "Math/Array.hpp"
 #include "Math/Simplex.hpp"
@@ -26,11 +28,11 @@ struct Dependence {
     int32_t id;
     [[nodiscard]] constexpr explicit operator bool() const { return id >= 0; }
   };
-  enum class Type : uint8_t {
-    Strict = 0,
-    Reassociable = 1,
-    FreeOfDeeperDeps = 2,
-    Peelable = 4
+  enum MetaFlags : uint8_t {
+    Forward = 1,
+    Reassociable = 2,
+    FreeOfDeeperDeps = 4,
+    Peelable = 8
   };
 
   // private:
@@ -51,8 +53,13 @@ struct Dependence {
   // std::array<uint8_t, 7> satLvl{255, 255, 255, 255, 255, 255, 255};
   ID revTimeEdge_{-1};
   std::array<uint8_t, 2> satLvl;
-  bool forward;
   uint8_t meta{0};
+
+  // template <size_t I> [[nodiscard]] auto get() const -> const auto & {
+  //   if constexpr (I == 0) return depPoly;
+  //   else if constexpr (I==1) return dependenceSatisfaction;
+  //   else if constexpr (I==1) return dependenceBounding;
+  // }
 
   constexpr auto getSimplexPair() -> std::array<Valid<math::Simplex>, 2> {
     return {dependenceSatisfaction, dependenceBounding};
@@ -161,7 +168,7 @@ struct Dependence {
     return in->getArrayPointer();
   }
   /// indicates whether forward is non-empty
-  [[nodiscard]] constexpr auto isForward() const -> bool { return forward; }
+  [[nodiscard]] constexpr auto isForward() const -> bool { return meta&1; }
   [[nodiscard]] constexpr auto nodeIn() const -> const lp::ScheduledNode * {
     return in->getNode();
   }
@@ -257,12 +264,12 @@ struct Dependence {
              getNumOmegaCoefficients() ==
            ptrdiff_t(dependenceSatisfaction->getConstraints().numCol()));
   }
-  [[nodiscard]] constexpr auto getDepPoly() -> Valid<DepPoly> {
+  [[nodiscard]] constexpr auto getDepPoly()const -> Valid<DepPoly> {
     return depPoly;
   }
-  [[nodiscard]] constexpr auto getDepPoly() const -> Valid<const DepPoly> {
-    return depPoly;
-  }
+  // [[nodiscard]] constexpr auto getDepPoly() const -> Valid<const DepPoly> {
+  //   return depPoly;
+  // }
   [[nodiscard]] constexpr auto getNumConstraints() const -> unsigned {
     return dependenceBounding->getNumCons() +
            dependenceSatisfaction->getNumCons();
@@ -549,6 +556,9 @@ static_assert(sizeof(Dependence) <= 64);
 // i_0 = i_1
 // j_0 = j_1 - k_1
 class Dependencies {
+
+  math::ManagedSOA<containers::Tuple<IR::Addr*,IR::Addr*,std::array<math::Simplex*,2>,
+  DepPoly*,int32_t,int32_t,int32_t,int32_t,int32_t,std::array<uint8_t,2>,uint8_t>> datadeps;
   char *data{nullptr};
   int32_t numData{0};
   static constexpr int32_t initialCapacity = 16;
@@ -656,7 +666,7 @@ private:
                               .dependenceBounding = pair[1],
                               .in = x,
                               .out = y,
-                              .forward = isFwd});
+                              .meta = isFwd});
   }
   void timelessCheck(Arena<> *alloc, Valid<DepPoly> dxy, Valid<IR::Addr> x,
                      Valid<IR::Addr> y,
@@ -726,7 +736,7 @@ private:
                     .dependenceBounding = pair[1],
                     .in = in,
                     .out = out,
-                    .forward = isFwd};
+                    .meta = isFwd};
     invariant(out->getCurrentDepth() + in->getCurrentDepth(),
               dep0.getNumPhiCoefficients());
     ID d0ID{addEdge(alloc, dep0)}, prevID = d0ID;
