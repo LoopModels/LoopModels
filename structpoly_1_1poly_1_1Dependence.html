@@ -87,12 +87,12 @@ Classes</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
 Public Types</h2></td></tr>
-<tr class="memitem:aa96cc8aa0eff6a36dd853bb096de61ef"><td class="memItemLeft" align="right" valign="top"><a id="aa96cc8aa0eff6a36dd853bb096de61ef"></a>enum class &#160;</td><td class="memItemRight" valign="bottom"><b>Type</b> : uint8_t { <b>Strict</b> = 0
-, <b>Reassociable</b> = 1
-, <b>FreeOfDeeperDeps</b> = 2
-, <b>Peelable</b> = 4
+<tr class="memitem:a6c8bdd28c77afe41e48af5dc2f52c69b"><td class="memItemLeft" align="right" valign="top"><a id="a6c8bdd28c77afe41e48af5dc2f52c69b"></a>enum &#160;</td><td class="memItemRight" valign="bottom"><b>MetaFlags</b> : uint8_t { <b>Forward</b> = 1
+, <b>Reassociable</b> = 2
+, <b>FreeOfDeeperDeps</b> = 4
+, <b>Peelable</b> = 8
  }</td></tr>
-<tr class="separator:aa96cc8aa0eff6a36dd853bb096de61ef"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:a6c8bdd28c77afe41e48af5dc2f52c69b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
@@ -214,12 +214,9 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumDynam
 <tr class="memitem:a0fc1d36cad18a090a281037da391201d"><td class="memItemLeft" align="right" valign="top"><a id="a0fc1d36cad18a090a281037da391201d"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>validate</b> ()</td></tr>
 <tr class="separator:a0fc1d36cad18a090a281037da391201d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a733eeab4bdf357ff08770d556d67d455"><td class="memItemLeft" align="right" valign="top"><a id="a733eeab4bdf357ff08770d556d67d455"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getDepPoly</b> () -&gt; Valid&lt; <a class="el" href="classpoly_1_1poly_1_1DepPoly.html">DepPoly</a> &gt;</td></tr>
-<tr class="separator:a733eeab4bdf357ff08770d556d67d455"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a80eef1b4a3736aad3e7cf982cce55b20"><td class="memItemLeft" align="right" valign="top"><a id="a80eef1b4a3736aad3e7cf982cce55b20"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getDepPoly</b> () const -&gt; Valid&lt; const <a class="el" href="classpoly_1_1poly_1_1DepPoly.html">DepPoly</a> &gt;</td></tr>
-<tr class="separator:a80eef1b4a3736aad3e7cf982cce55b20"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa5f680bcb7b8dfb25043f1a1a9233968"><td class="memItemLeft" align="right" valign="top"><a id="aa5f680bcb7b8dfb25043f1a1a9233968"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getDepPoly</b> () const -&gt; Valid&lt; <a class="el" href="classpoly_1_1poly_1_1DepPoly.html">DepPoly</a> &gt;</td></tr>
+<tr class="separator:aa5f680bcb7b8dfb25043f1a1a9233968"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0174a6fe09a7feb82e2158a90afe9f62"><td class="memItemLeft" align="right" valign="top"><a id="a0174a6fe09a7feb82e2158a90afe9f62"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumConstraints</b> () const -&gt; unsigned</td></tr>
 <tr class="separator:a0174a6fe09a7feb82e2158a90afe9f62"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -325,9 +322,6 @@ Valid&lt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> &gt;&#1
 <tr class="memitem:addae631c1bed65977bf69bb2eb52fee6"><td class="memItemLeft" align="right" valign="top"><a id="addae631c1bed65977bf69bb2eb52fee6"></a>
 std::array&lt; uint8_t, 2 &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>satLvl</b></td></tr>
 <tr class="separator:addae631c1bed65977bf69bb2eb52fee6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a526012e6ef80de5298718bcd4d427c4d"><td class="memItemLeft" align="right" valign="top"><a id="a526012e6ef80de5298718bcd4d427c4d"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><b>forward</b></td></tr>
-<tr class="separator:a526012e6ef80de5298718bcd4d427c4d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8799381f1002f3e022e98b17bf14da9c"><td class="memItemLeft" align="right" valign="top"><a id="a8799381f1002f3e022e98b17bf14da9c"></a>
 uint8_t&#160;</td><td class="memItemRight" valign="bottom"><b>meta</b> {0}</td></tr>
 <tr class="separator:a8799381f1002f3e022e98b17bf14da9c"><td class="memSeparator" colspan="2">&#160;</td></tr>
