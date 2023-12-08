@@ -264,7 +264,7 @@ public:
   // as it doesn't store detecting invalidity.
   // It checks for invalidity, in which case it doesn't set the reassociable
   // reduction.
-  constexpr inline void maybeReassociableReduction(Dependencies);
+  constexpr inline void maybeReassociableReduction(const Dependencies &);
   constexpr auto reassociableReductionPair() -> Addr * {
     return reassociableReduction;
   }
@@ -304,19 +304,21 @@ public:
     return node;
   }
   constexpr void setNode(lp::ScheduledNode *n) { node = n; }
-  [[nodiscard]] inline auto inputAddrs(Dependencies) const;
-  [[nodiscard]] inline auto outputAddrs(Dependencies) const;
-  [[nodiscard]] inline auto inputAddrs(Dependencies, int depth) const;
-  [[nodiscard]] inline auto outputAddrs(Dependencies, int depth) const;
-  [[nodiscard]] inline auto inputEdges(Dependencies) const;
-  [[nodiscard]] inline auto outputEdges(Dependencies) const;
-  [[nodiscard]] inline auto inputEdges(Dependencies, int depth) const;
-  [[nodiscard]] inline auto outputEdges(Dependencies, int depth) const;
-  [[nodiscard]] inline auto inputEdgeIDs(Dependencies) const;
-  [[nodiscard]] inline auto outputEdgeIDs(Dependencies) const;
-  [[nodiscard]] inline auto inputEdgeIDs(Dependencies, int depth) const;
-  [[nodiscard]] inline auto outputEdgeIDs(Dependencies, int depth) const;
-  [[nodiscard]] inline auto unhoistableOutputs(Dependencies, int depth) const;
+  [[nodiscard]] inline auto inputAddrs(const Dependencies &) const;
+  [[nodiscard]] inline auto outputAddrs(const Dependencies &) const;
+  [[nodiscard]] inline auto inputAddrs(const Dependencies &, int depth) const;
+  [[nodiscard]] inline auto outputAddrs(const Dependencies &, int depth) const;
+  [[nodiscard]] inline auto inputEdges(const Dependencies &) const;
+  [[nodiscard]] inline auto outputEdges(const Dependencies &) const;
+  [[nodiscard]] inline auto inputEdges(const Dependencies &, int depth) const;
+  [[nodiscard]] inline auto outputEdges(const Dependencies &, int depth) const;
+  [[nodiscard]] inline auto inputEdgeIDs(const Dependencies &) const;
+  [[nodiscard]] inline auto outputEdgeIDs(const Dependencies &) const;
+  [[nodiscard]] inline auto inputEdgeIDs(const Dependencies &, int depth) const;
+  [[nodiscard]] inline auto outputEdgeIDs(const Dependencies &,
+                                          int depth) const;
+  [[nodiscard]] inline auto unhoistableOutputs(const Dependencies &,
+                                               int depth) const;
 
   [[nodiscard]] static auto zeroDim(Arena<> *alloc,
                                     llvm::SCEVUnknown const *arrayPtr,
@@ -639,7 +641,7 @@ public:
   }
 
   /// drop `this` and remove it from `Dependencies`
-  inline void drop(Dependencies);
+  inline void drop(Dependencies &);
 
   void printDotName(llvm::raw_ostream &os) const {
     if (isLoad()) os << "... = ";

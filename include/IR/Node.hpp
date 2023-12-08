@@ -390,7 +390,7 @@ public:
       L = L->getOuterLoop();
     return L;
   }
-  inline auto getLegality(poly::Dependencies, math::PtrVector<int32_t>)
+  inline auto getLegality(const poly::Dependencies &, math::PtrVector<int32_t>)
     -> LegalTransforms;
 };
 [[nodiscard]] inline constexpr auto Node::getLoop() const noexcept -> Loop * {

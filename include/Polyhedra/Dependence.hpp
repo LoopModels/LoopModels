@@ -1,7 +1,5 @@
 #pragma once
 #include "IR/Address.hpp"
-#include <Math/SOA.hpp>
-#include <Containers/Tuple.hpp>
 #include "IR/Node.hpp"
 #include "Math/Array.hpp"
 #include "Math/Simplex.hpp"
@@ -10,7 +8,9 @@
 #include "Polyhedra/Schedule.hpp"
 #include "Support/Iterators.hpp"
 #include <Alloc/Arena.hpp>
+#include <Containers/Tuple.hpp>
 #include <Math/Constructors.hpp>
+#include <Math/SOA.hpp>
 #include <Utilities/Invariant.hpp>
 #include <cstdint>
 #include <ranges>
@@ -23,6 +23,7 @@ namespace poly {
 /// It contains simplices representing constraints that affine schedules
 /// are allowed to take.
 struct Dependence {
+
   // public:
   struct ID {
     int32_t id;
@@ -64,6 +65,7 @@ struct Dependence {
   constexpr auto getSimplexPair() -> std::array<Valid<math::Simplex>, 2> {
     return {dependenceSatisfaction, dependenceBounding};
   }
+  constexpr auto getMeta() const -> uint8_t { return meta; }
 
   // public:
   friend class Dependencies;
@@ -168,7 +170,7 @@ struct Dependence {
     return in->getArrayPointer();
   }
   /// indicates whether forward is non-empty
-  [[nodiscard]] constexpr auto isForward() const -> bool { return meta&1; }
+  [[nodiscard]] constexpr auto isForward() const -> bool { return meta & 1; }
   [[nodiscard]] constexpr auto nodeIn() const -> const lp::ScheduledNode * {
     return in->getNode();
   }
@@ -232,7 +234,8 @@ struct Dependence {
     return out->getNaturalDepth();
   }
   [[nodiscard]] constexpr auto isInactive(size_t depth) const -> bool {
-    return (depth >= std::min(out->getCurrentDepth(), in->getCurrentDepth()));
+    return (depth >=
+            size_t(std::min(out->getCurrentDepth(), in->getCurrentDepth())));
   }
   [[nodiscard]] constexpr auto getNumLambda() const -> unsigned {
     return depPoly->getNumLambda() << 1;
@@ -264,7 +267,7 @@ struct Dependence {
              getNumOmegaCoefficients() ==
            ptrdiff_t(dependenceSatisfaction->getConstraints().numCol()));
   }
-  [[nodiscard]] constexpr auto getDepPoly()const -> Valid<DepPoly> {
+  [[nodiscard]] constexpr auto getDepPoly() const -> Valid<DepPoly> {
     return depPoly;
   }
   // [[nodiscard]] constexpr auto getDepPoly() const -> Valid<const DepPoly> {
@@ -556,103 +559,72 @@ static_assert(sizeof(Dependence) <= 64);
 // i_0 = i_1
 // j_0 = j_1 - k_1
 class Dependencies {
+  using Tuple = containers::Tuple<IR::Addr *, IR::Addr *,
+                                  std::array<Valid<math::Simplex>, 2>,
+                                  DepPoly *, int32_t, int32_t, int32_t, int32_t,
+                                  int32_t, std::array<uint8_t, 2>, uint8_t>;
 
-  math::ManagedSOA<containers::Tuple<IR::Addr*,IR::Addr*,std::array<math::Simplex*,2>,
-  DepPoly*,int32_t,int32_t,int32_t,int32_t,int32_t,std::array<uint8_t,2>,uint8_t>> datadeps;
-  char *data{nullptr};
-  int32_t numData{0};
-  static constexpr int32_t initialCapacity = 16;
-  // int32_t tombstone{-1};
+  math::ManagedSOA<Tuple> datadeps;
+
+  static constexpr size_t OutI = 0;
+  static constexpr size_t InI = 1;
+  static constexpr size_t SimplexPairI = 2;
+  static constexpr size_t DepPolyI = 3;
+  static constexpr size_t NextEdgeOutI = 4;
+  static constexpr size_t PrevEdgeOutI = 5;
+  static constexpr size_t NextEdgeInI = 6;
+  static constexpr size_t PrevEdgeInI = 7;
+  static constexpr size_t RevTimeEdgeI = 8;
+  static constexpr size_t SatLevelI = 9;
+  static constexpr size_t GetMetaI = 10;
 
 public:
   using ID = Dependence::ID;
-  constexpr Dependencies() noexcept = default;
-  constexpr Dependencies(Arena<> *alloc)
-    : data(alloc->allocate<char>(memNeeded(initialCapacity))) {}
-  constexpr Dependencies(const Dependencies &) noexcept = default; // or delete?
-  constexpr Dependencies(Dependencies &&) noexcept = default;      // or delete?
-  constexpr auto operator=(Dependencies &&other) noexcept
-    -> Dependencies & = default;
-  constexpr auto operator=(const Dependencies &other) noexcept
-    -> Dependencies & = default;
+  Dependencies(ptrdiff_t len) : datadeps(len) {}
+  Dependencies(const Dependencies &) noexcept = delete;
+  constexpr Dependencies(Dependencies &&) noexcept = default;
+  constexpr auto operator=(Dependencies &&other) noexcept -> Dependencies & {
+    datadeps = std::move(other.datadeps);
+    return *this;
+  };
 
   [[nodiscard]] constexpr auto size() const noexcept -> int32_t {
-    return numData;
+    return datadeps.size();
+  }
+
+  constexpr auto tup(Dependence d, ptrdiff_t i) -> Tuple {
+    IR::Addr *out = d.output(), *in = d.input();
+    if (out->getEdgeOut() >= 0) prevOut(ID{out->getEdgeOut()}) = i;
+    if (in->getEdgeIn() >= 0) prevIn(ID{in->getEdgeIn()}) = i;
+    in->setEdgeOut(i);
+    out->setEdgeIn(i);
+    return Tuple{out,
+                 in,
+                 d.getSimplexPair(),
+                 d.getDepPoly(),
+                 out->getEdgeOut(),
+                 -1,
+                 in->getEdgeIn(),
+                 -1,
+                 d.revTimeEdge().id,
+                 d.satLvl,
+                 d.getMeta()};
   }
 
 private:
   /// set(ID i, Dependence d)
   /// stores `d` at index `i`
   /// Dependence `d` is pushed to the fronts of the edgeOut and edgeIn chains.
-  constexpr void set(ID i, Dependence d) {
-    IR::Addr *out = d.output(), *in = d.input();
-    output(i) = out;
-    input(i) = in;
-    nextOut(i) = out->getEdgeOut();
-    if (out->getEdgeOut() >= 0) prevOut(ID{out->getEdgeOut()}) = i.id;
-    prevOut(i) = -1;
-    nextIn(i) = in->getEdgeIn();
-    if (in->getEdgeIn() >= 0) prevIn(ID{in->getEdgeIn()}) = i.id;
-    prevIn(i) = -1;
-    depSatBnd(i) = d.getSimplexPair();
-    revTimeEdge(i) = d.revTimeEdge().id;
-    depPoly(i) = d.getDepPoly();
-    satLevelPair(i) = d.satLvl;
-    isForward(i) = d.isForward();
-    in->setEdgeOut(i.id);
-    out->setEdgeIn(i.id);
-  }
-  /// NOTE: this reallocate implementation is dependent on `getCapacity()`
-  /// being defined as `std::bit_ceil(numData)`, and only getting called
-  /// when `numData == getCapacity()` and we're about to increment `numData`
-  /// after the call
-  /// TODO: would perhaps make more sense to use a normal heap allocator here...
-  void reallocate(Arena<> *alloc) {
-    size_t oldCapaciy = numData, newCapacity = 2 * oldCapaciy;
-    auto *newData = alloc->allocate<char>(memNeeded(newCapacity));
-    std::memcpy(newData + outAddrOffset * newCapacity,
-                data + outAddrOffset * oldCapaciy,
-                numData * sizeof(IR::Addr *));
-    std::memcpy(newData + inAddrOffset * newCapacity,
-                data + inAddrOffset * oldCapaciy, numData * sizeof(IR::Addr *));
-    std::memcpy(newData + depSatBndOffset * newCapacity,
-                data + depSatBndOffset * oldCapaciy,
-                numData * sizeof(std::array<Valid<math::Simplex>, 2>));
-    std::memcpy(newData + depPolyOffset * newCapacity,
-                data + depPolyOffset * oldCapaciy, numData * sizeof(DepPoly *));
-    std::memcpy(newData + nextEdgeOutOffset * newCapacity,
-                data + nextEdgeOutOffset * oldCapaciy,
-                numData * sizeof(int32_t));
-    std::memcpy(newData + prevEdgeOutOffset * newCapacity,
-                data + prevEdgeOutOffset * oldCapaciy,
-                numData * sizeof(int32_t));
-    std::memcpy(newData + nextEdgeInOffset * newCapacity,
-                data + nextEdgeInOffset * oldCapaciy,
-                numData * sizeof(int32_t));
-    std::memcpy(newData + prevEdgeInOffset * newCapacity,
-                data + prevEdgeInOffset * oldCapaciy,
-                numData * sizeof(int32_t));
-    std::memcpy(newData + revTimeEdgeOffset * newCapacity,
-                data + revTimeEdgeOffset * oldCapaciy,
-                numData * sizeof(int32_t));
-    std::memcpy(newData + satLevelsOffset * newCapacity,
-                data + satLevelsOffset * oldCapaciy,
-                numData * sizeof(std::array<uint8_t, 2>));
-    std::memcpy(newData + isForwardOffset * newCapacity,
-                data + isForwardOffset * oldCapaciy, numData * sizeof(bool));
-    data = newData;
-  }
-  auto addEdge(Arena<> *alloc, Dependence d) -> ID {
-    if (numData == getCapacity()) reallocate(alloc);
-    ID id{numData++};
-    set(id, d);
-    return id;
-  }
-  static constexpr auto memNeeded(size_t N) -> size_t {
-    return N * memNeededPer;
+  constexpr void set(ptrdiff_t i, Dependence d) { datadeps[i] = tup(d, i); }
+  constexpr void set(ID i, Dependence d) { set(i.id, d); }
+  auto addEdge(Dependence d) -> ID {
+    ptrdiff_t id{datadeps.size()};
+    invariant(id >= 0);
+    datadeps.push_back(tup(d, id));
+    return {int32_t(id)};
   }
 
-  void addOrdered(Arena<> *alloc, Valid<DepPoly> dxy, Valid<IR::Addr> x,
+  void addOrdered(Valid<poly::DepPoly> dxy, Valid<IR::Addr> x,
                   Valid<IR::Addr> y, std::array<Valid<math::Simplex>, 2> pair,
                   bool isFwd) {
     ptrdiff_t numLambda = dxy->getNumLambda();
@@ -661,18 +633,18 @@ private:
       std::swap(x, y);
     }
     pair[0]->truncateVars(1 + numLambda + dxy->getNumScheduleCoef());
-    addEdge(alloc, Dependence{.depPoly = dxy,
-                              .dependenceSatisfaction = pair[0],
-                              .dependenceBounding = pair[1],
-                              .in = x,
-                              .out = y,
-                              .meta = isFwd});
+    addEdge(Dependence{.depPoly = dxy,
+                       .dependenceSatisfaction = pair[0],
+                       .dependenceBounding = pair[1],
+                       .in = x,
+                       .out = y,
+                       .meta = isFwd});
   }
   void timelessCheck(Arena<> *alloc, Valid<DepPoly> dxy, Valid<IR::Addr> x,
                      Valid<IR::Addr> y,
                      std::array<Valid<math::Simplex>, 2> pair) {
     invariant(dxy->getTimeDim(), unsigned(0));
-    return addOrdered(alloc, dxy, x, y, pair,
+    return addOrdered(dxy, x, y, pair,
                       checkDirection(*alloc, pair, x, y, dxy->getNumLambda(),
                                      Col<>{dxy->getNumVar() + 1}));
   }
@@ -737,9 +709,9 @@ private:
                     .in = in,
                     .out = out,
                     .meta = isFwd};
-    invariant(out->getCurrentDepth() + in->getCurrentDepth(),
-              dep0.getNumPhiCoefficients());
-    ID d0ID{addEdge(alloc, dep0)}, prevID = d0ID;
+    invariant(ptrdiff_t(out->getCurrentDepth()) + in->getCurrentDepth(),
+              ptrdiff_t(dep0.getNumPhiCoefficients()));
+    ID d0ID{addEdge(dep0)}, prevID = d0ID;
     // pair is invalid
     const ptrdiff_t timeDim = dxy->getTimeDim(),
                     numVar = 1 + dxy->getNumVar() - timeDim;
@@ -749,8 +721,8 @@ private:
     // dep0.depPoly->truncateVars(numVar);
 
     // dep0.depPoly->setTimeDim(0);
-    invariant(out->getCurrentDepth() + in->getCurrentDepth(),
-              dep0.getNumPhiCoefficients());
+    invariant(ptrdiff_t(out->getCurrentDepth()) + in->getCurrentDepth(),
+              ptrdiff_t(dep0.getNumPhiCoefficients()));
     // now we need to check the time direction for all times
     // anything approaching 16 time dimensions would be insane
     for (ptrdiff_t t = 0;;) {
@@ -792,10 +764,10 @@ private:
                       .in = out,
                       .out = in,
                       .revTimeEdge_ = prevID,
-                      .forward = !isFwd};
-      invariant(out->getCurrentDepth() + in->getCurrentDepth(),
-                dep1.getNumPhiCoefficients());
-      prevID = addEdge(alloc, dep1);
+                      .meta = !isFwd};
+      invariant(ptrdiff_t(out->getCurrentDepth()) + in->getCurrentDepth(),
+                ptrdiff_t(dep1.getNumPhiCoefficients()));
+      prevID = addEdge(dep1);
       if (!repeat) break;
     }
     revTimeEdge(d0ID) = prevID.id;
@@ -859,7 +831,8 @@ private:
     const auto &[fxy, fyx] = p;
     unsigned numLoopsX = x->getCurrentDepth(), nTD = ptrdiff_t(nonTimeDim);
 #ifndef NDEBUG
-    const unsigned numLoopsCommon = std::min(numLoopsX, y->getCurrentDepth());
+    ptrdiff_t numLoopsCommon =
+      std::min(ptrdiff_t(numLoopsX), ptrdiff_t(y->getCurrentDepth()));
 #endif
     PtrVector<int64_t> xFusOmega = x->getFusionOmega();
     PtrVector<int64_t> yFusOmega = y->getFusionOmega();
@@ -896,132 +869,9 @@ private:
                       .in = in,
                       .out = out,
                       .satLvl = satLevelPair(i),
-                      .forward = isForward(i)
+                      .meta = getMeta(i)
 
     };
-  }
-
-  [[nodiscard]] constexpr auto getCapacity() const noexcept -> int32_t {
-    return std::max(initialCapacity, int32_t(std::bit_ceil(uint32_t(numData))));
-  }
-
-  // field order:
-  // IR::Addr* AddrOut
-  // IR::Addr* AddrIn
-  // std::array<Valid<math::Simplex>, 2> {depSat, depBnd}
-  // DepPoly* depPoly
-  // int32_t nextOut
-  // int32_t prevOut
-  // int32_t nextIn
-  // int32_t prevIn
-  // int32_t revTimeEdge
-  // std::array<uint8_t,2> satLevel
-  // bool isForward
-  static constexpr size_t outAddrOffset = 0;
-  static constexpr size_t inAddrOffset = outAddrOffset + sizeof(IR::Addr *);
-  static constexpr size_t depSatBndOffset = inAddrOffset + sizeof(IR::Addr *);
-  static constexpr size_t depPolyOffset =
-    inAddrOffset + sizeof(std::array<Valid<math::Simplex>, 2>);
-  static constexpr size_t nextEdgeOutOffset = depPolyOffset + sizeof(DepPoly *);
-  static constexpr size_t prevEdgeOutOffset = depPolyOffset + sizeof(int32_t);
-  static constexpr size_t nextEdgeInOffset =
-    prevEdgeOutOffset + sizeof(int32_t);
-  static constexpr size_t prevEdgeInOffset = nextEdgeInOffset + sizeof(int32_t);
-  static constexpr size_t revTimeEdgeOffset = depSatBndOffset + sizeof(int32_t);
-  static constexpr size_t satLevelsOffset = prevEdgeInOffset + sizeof(int32_t);
-  static constexpr size_t isForwardOffset =
-    satLevelsOffset + sizeof(std::array<uint8_t, 2>);
-  static constexpr size_t memNeededPer = isForwardOffset + sizeof(bool);
-
-  constexpr auto outAddrPtr() -> IR::Addr ** {
-    void *p = data + outAddrOffset * getCapacity();
-    return static_cast<IR::Addr **>(p);
-  }
-  [[nodiscard]] constexpr auto outAddrPtr() const -> IR::Addr *const * {
-    const void *p = data + outAddrOffset * getCapacity();
-    return static_cast<IR::Addr *const *>(p);
-  }
-  constexpr auto inAddrPtr() -> IR::Addr ** {
-    void *p = data + inAddrOffset * getCapacity();
-    return static_cast<IR::Addr **>(p);
-  }
-  [[nodiscard]] constexpr auto inAddrPtr() const -> IR::Addr *const * {
-    const void *p = data + inAddrOffset * getCapacity();
-    return static_cast<IR::Addr *const *>(p);
-  }
-  constexpr auto outEdgePtr() -> int32_t * {
-    void *p = data + nextEdgeOutOffset * getCapacity();
-    return static_cast<int32_t *>(p);
-  }
-  [[nodiscard]] constexpr auto outEdgePtr() const -> const int32_t * {
-    const void *p = data + nextEdgeOutOffset * getCapacity();
-    return static_cast<const int32_t *>(p);
-  }
-  constexpr auto prevOutEdgePtr() -> int32_t * {
-    void *p = data + prevEdgeOutOffset * getCapacity();
-    return static_cast<int32_t *>(p);
-  }
-  [[nodiscard]] constexpr auto prevOutEdgePtr() const -> const int32_t * {
-    const void *p = data + prevEdgeOutOffset * getCapacity();
-    return static_cast<const int32_t *>(p);
-  }
-  constexpr auto inEdgePtr() -> int32_t * {
-    void *p = data + nextEdgeInOffset * getCapacity();
-    return static_cast<int32_t *>(p);
-  }
-  [[nodiscard]] constexpr auto inEdgePtr() const -> const int32_t * {
-    const void *p = data + nextEdgeInOffset * getCapacity();
-    return static_cast<const int32_t *>(p);
-  }
-  constexpr auto prevInEdgePtr() -> int32_t * {
-    void *p = data + prevEdgeInOffset * getCapacity();
-    return static_cast<int32_t *>(p);
-  }
-  [[nodiscard]] constexpr auto prevEdgePtr() const -> const int32_t * {
-    const void *p = data + prevEdgeInOffset * getCapacity();
-    return static_cast<const int32_t *>(p);
-  }
-  constexpr auto revTimeEdgePtr() -> int32_t * {
-    void *p = data + revTimeEdgeOffset * getCapacity();
-    return static_cast<int32_t *>(p);
-  }
-  [[nodiscard]] constexpr auto revTimeEdgePtr() const -> const int32_t * {
-    void *p = data + revTimeEdgeOffset * getCapacity();
-    return static_cast<int32_t *>(p);
-  }
-  constexpr auto depSatBndPtr() -> std::array<Valid<math::Simplex>, 2> * {
-    void *p = data + depSatBndOffset * getCapacity();
-    return static_cast<std::array<Valid<math::Simplex>, 2> *>(p);
-  }
-  [[nodiscard]] constexpr auto depSatBndPtr() const
-    -> const std::array<Valid<math::Simplex>, 2> * {
-    const void *p = data + depSatBndOffset * getCapacity();
-    return static_cast<const std::array<Valid<math::Simplex>, 2> *>(p);
-  }
-  constexpr auto depPolyPtr() -> DepPoly ** {
-    void *p = data + depPolyOffset * getCapacity();
-    return static_cast<DepPoly **>(p);
-  }
-  [[nodiscard]] constexpr auto depPolyPtr() const -> DepPoly *const * {
-    const void *p = data + depPolyOffset * getCapacity();
-    return static_cast<DepPoly *const *>(p);
-  }
-  constexpr auto satLevelsPtr() -> std::array<uint8_t, 2> * {
-    void *p = data + satLevelsOffset * getCapacity();
-    return static_cast<std::array<uint8_t, 2> *>(p);
-  }
-  [[nodiscard]] constexpr auto satLevelsPtr() const
-    -> const std::array<uint8_t, 2> * {
-    const void *p = data + satLevelsOffset * getCapacity();
-    return static_cast<const std::array<uint8_t, 2> *>(p);
-  }
-  constexpr auto isForwardPtr() -> bool * {
-    void *p = data + isForwardOffset * getCapacity();
-    return static_cast<bool *>(p);
-  }
-  [[nodiscard]] constexpr auto isForwardPtr() const -> const bool * {
-    const void *p = data + isForwardOffset * getCapacity();
-    return static_cast<const bool *>(p);
   }
 
 public:
@@ -1045,67 +895,83 @@ public:
   [[nodiscard]] constexpr auto get(ID i) const -> Dependence {
     return get(i, input(i), output(i));
   }
-  constexpr auto outAddrs() -> MutPtrVector<IR::Addr *> {
-    return {outAddrPtr(), numData};
-  }
-  constexpr auto inAddrs() -> MutPtrVector<IR::Addr *> {
-    return {inAddrPtr(), numData};
-  }
+  // constexpr auto outAddrs() -> MutPtrVector<IR::Addr *> {
+  //   return {outAddrPtr(), numData};
+  // }
+  // constexpr auto inAddrs() -> MutPtrVector<IR::Addr *> {
+  //   return {inAddrPtr(), numData};
+  // }
   constexpr auto outEdges() -> MutPtrVector<int32_t> {
-    return {outEdgePtr(), numData};
+    return datadeps.template get<NextEdgeOutI>();
   }
   constexpr auto inEdges() -> MutPtrVector<int32_t> {
-    return {inEdgePtr(), numData};
+    return datadeps.template get<NextEdgeInI>();
   }
-  [[nodiscard]] constexpr auto outEdges() const -> PtrVector<int32_t> {
-    return {outEdgePtr(), unsigned(numData)};
+  constexpr auto outEdges() const -> PtrVector<int32_t> {
+    return datadeps.template get<NextEdgeOutI>();
   }
-  [[nodiscard]] constexpr auto inEdges() const -> PtrVector<int32_t> {
-    return {inEdgePtr(), unsigned(numData)};
+  constexpr auto inEdges() const -> PtrVector<int32_t> {
+    return datadeps.template get<NextEdgeInI>();
   }
-  constexpr auto satLevels() -> MutPtrVector<std::array<uint8_t, 2>> {
-    return {satLevelsPtr(), numData};
-  }
+  // [[nodiscard]] constexpr auto outEdges() const -> PtrVector<int32_t> {
+  //   return {outEdgePtr(), unsigned(numData)};
+  // }
+  // [[nodiscard]] constexpr auto inEdges() const -> PtrVector<int32_t> {
+  //   return {inEdgePtr(), unsigned(numData)};
+  // }
+  // constexpr auto satLevels() -> MutPtrVector<std::array<uint8_t, 2>> {
+  //   return {satLevelsPtr(), numData};
+  // }
 
   [[nodiscard]] constexpr auto output(ID i) -> IR::Addr *& {
-    return outAddrPtr()[i.id];
+    return datadeps.template get<OutI>(i.id);
   }
   [[nodiscard]] constexpr auto output(ID i) const -> IR::Addr * {
-    return outAddrPtr()[i.id];
+    return datadeps.template get<OutI>(i.id);
   }
   [[nodiscard]] constexpr auto input(ID i) -> IR::Addr *& {
-    return inAddrPtr()[i.id];
+    return datadeps.template get<InI>(i.id);
   }
   [[nodiscard]] constexpr auto input(ID i) const -> IR::Addr * {
-    return inAddrPtr()[i.id];
+    return datadeps.template get<InI>(i.id);
   }
-  constexpr auto nextOut(ID i) -> int32_t & { return outEdgePtr()[i.id]; }
-  constexpr auto prevOut(ID i) -> int32_t & { return prevOutEdgePtr()[i.id]; }
-  constexpr auto nextIn(ID i) -> int32_t & { return inEdgePtr()[i.id]; }
-  constexpr auto prevIn(ID i) -> int32_t & { return prevInEdgePtr()[i.id]; }
+  constexpr auto nextOut(ID i) -> int32_t & {
+    return datadeps.template get<NextEdgeOutI>(i.id);
+  }
+  constexpr auto prevOut(ID i) -> int32_t & {
+    return datadeps.template get<PrevEdgeOutI>(i.id);
+  }
+  constexpr auto nextIn(ID i) -> int32_t & {
+    return datadeps.template get<NextEdgeInI>(i.id);
+  }
+  constexpr auto prevIn(ID i) -> int32_t & {
+    return datadeps.template get<PrevEdgeInI>(i.id);
+  }
   constexpr auto depSatBnd(ID i) -> std::array<Valid<math::Simplex>, 2> & {
-    return depSatBndPtr()[i.id];
+    return datadeps.template get<SimplexPairI>(i.id);
   }
   constexpr auto revTimeEdge(ID i) -> int32_t & {
-    return revTimeEdgePtr()[i.id];
+    return datadeps.template get<RevTimeEdgeI>(i.id);
   }
   [[nodiscard]] constexpr auto revTimeEdge(ID i) const -> int32_t {
-    return revTimeEdgePtr()[i.id];
+    return datadeps.template get<RevTimeEdgeI>(i.id);
   }
-  constexpr auto depPoly(ID i) -> DepPoly *& { return depPolyPtr()[i.id]; }
+  constexpr auto depPoly(ID i) -> DepPoly *& {
+    return datadeps.template get<DepPolyI>(i.id);
+  }
   [[nodiscard]] constexpr auto depSatBnd(ID i) const
     -> std::array<Valid<math::Simplex>, 2> {
-    return depSatBndPtr()[i.id];
+    return datadeps.template get<SimplexPairI>(i.id);
   }
   [[nodiscard]] constexpr auto depPoly(ID i) const -> DepPoly * {
-    return depPolyPtr()[i.id];
+    return datadeps.template get<DepPolyI>(i.id);
   }
   constexpr auto satLevelPair(ID i) -> std::array<uint8_t, 2> & {
-    return satLevelsPtr()[i.id];
+    return datadeps.template get<SatLevelI>(i.id);
   }
   [[nodiscard]] constexpr auto satLevelPair(ID i) const
     -> std::array<uint8_t, 2> {
-    return satLevelsPtr()[i.id];
+    return datadeps.template get<SatLevelI>(i.id);
   }
   [[nodiscard]] constexpr auto satLevel(ID i) const -> uint8_t {
     return Dependence::satLevelMask(satLevelPair(i)[0]);
@@ -1117,11 +983,14 @@ public:
     return Dependence::satLevelMask(satLevelPair(i)[0]) > depth;
   }
 
-  [[nodiscard]] constexpr auto isForward(ID i) noexcept -> bool & {
-    return isForwardPtr()[i.id];
+  [[nodiscard]] constexpr auto getMeta(ID i) noexcept -> uint8_t & {
+    return datadeps.template get<GetMetaI>(i.id);
+  }
+  [[nodiscard]] constexpr auto getMeta(ID i) const noexcept -> uint8_t {
+    return datadeps.template get<GetMetaI>(i.id);
   }
   [[nodiscard]] constexpr auto isForward(ID i) const noexcept -> bool {
-    return isForwardPtr()[i.id];
+    return getMeta(i);
   }
 
   class Ref {
@@ -1153,15 +1022,15 @@ public:
     if (dxy->getTimeDim()) timeCheck(alloc, dxy, x, y, pair);
     else timelessCheck(alloc, dxy, x, y, pair);
   }
-  inline void copyDependencies(Arena<> *alloc, IR::Addr *src, IR::Addr *dst);
+  inline void copyDependencies(IR::Addr *src, IR::Addr *dst);
   // reload store `x`
   auto reload(Arena<> *alloc, Valid<IR::Addr> store) -> Valid<IR::Addr> {
     Valid<DepPoly> dxy{DepPoly::self(alloc, store)};
     std::array<Valid<math::Simplex>, 2> pair(dxy->farkasPair(alloc));
     Valid<IR::Addr> load = store->reload(alloc);
-    copyDependencies(alloc, store, load);
+    copyDependencies(store, load);
     if (dxy->getTimeDim()) timeCheck(alloc, dxy, store, load, pair, true);
-    else addOrdered(alloc, dxy, store, load, pair, true);
+    else addOrdered(dxy, store, load, pair, true);
     return load;
   }
   [[nodiscard]] constexpr auto inputEdgeIDs(int32_t id) const {
@@ -1195,6 +1064,14 @@ public:
     auto f = [=, this](int32_t id) { return output(Dependence::ID{id}); };
     return std::views::transform(f);
   }
+  [[nodiscard]] constexpr auto inputAddrTransform() const {
+    auto f = [=, this](int32_t id) { return input(Dependence::ID{id}); };
+    return std::views::transform(f);
+  }
+  [[nodiscard]] constexpr auto outputAddrTransform() const {
+    auto f = [=, this](int32_t id) { return output(Dependence::ID{id}); };
+    return std::views::transform(f);
+  }
   /// this function essentially indicates that this dependency does not prevent
   /// the hoisting of a memory access out of a loop, because a memory->register
   /// transform is possible.
@@ -1222,59 +1099,58 @@ public:
   }
 };
 
-static_assert(std::is_trivially_copyable_v<Dependencies>);
-static_assert(std::is_trivially_destructible_v<Dependencies>);
 } // namespace poly
 namespace IR {
 using poly::Dependencies;
 
-inline auto Addr::inputEdges(Dependencies deps) const {
+inline auto Addr::inputEdges(const Dependencies &deps) const {
   return deps.inputEdges(getEdgeIn());
 }
-inline auto Addr::outputEdges(Dependencies deps) const {
+inline auto Addr::outputEdges(const Dependencies &deps) const {
   return deps.outputEdges(getEdgeOut());
 }
-inline auto Addr::inputEdgeIDs(Dependencies deps) const {
+inline auto Addr::inputEdgeIDs(const Dependencies &deps) const {
   return deps.inputEdgeIDs(getEdgeIn());
 }
-inline auto Addr::outputEdgeIDs(Dependencies deps) const {
+inline auto Addr::outputEdgeIDs(const Dependencies &deps) const {
   return deps.outputEdgeIDs(getEdgeOut());
 }
-inline auto Addr::inputEdgeIDs(Dependencies deps, int depth) const {
+inline auto Addr::inputEdgeIDs(const Dependencies &deps, int depth) const {
   return inputEdgeIDs(deps) | deps.activeFilter(depth);
 }
-inline auto Addr::outputEdgeIDs(Dependencies deps, int depth) const {
+inline auto Addr::outputEdgeIDs(const Dependencies &deps, int depth) const {
   return outputEdgeIDs(deps) | deps.activeFilter(depth);
 }
 
-inline auto IR::Addr::inputAddrs(Dependencies deps) const {
+inline auto IR::Addr::inputAddrs(const Dependencies &deps) const {
   return inputEdgeIDs(deps) | deps.inputAddrTransform();
 }
-inline auto IR::Addr::outputAddrs(Dependencies deps) const {
+inline auto IR::Addr::outputAddrs(const Dependencies &deps) const {
   return outputEdgeIDs(deps) | deps.outputAddrTransform();
 }
-inline auto Addr::inputEdges(Dependencies deps, int depth) const {
+inline auto Addr::inputEdges(const Dependencies &deps, int depth) const {
   return inputEdgeIDs(deps) | deps.activeFilter(depth) |
          deps.getEdgeTransform();
 }
-inline auto Addr::outputEdges(Dependencies deps, int depth) const {
+inline auto Addr::outputEdges(const Dependencies &deps, int depth) const {
   return outputEdgeIDs(deps) | deps.activeFilter(depth) |
          deps.getEdgeTransform();
 }
-inline auto IR::Addr::inputAddrs(Dependencies deps, int depth) const {
+inline auto IR::Addr::inputAddrs(const Dependencies &deps, int depth) const {
   return inputEdgeIDs(deps, depth) | deps.inputAddrTransform();
 }
-inline auto IR::Addr::outputAddrs(Dependencies deps, int depth) const {
+inline auto IR::Addr::outputAddrs(const Dependencies &deps, int depth) const {
   return outputEdgeIDs(deps, depth) | deps.outputAddrTransform();
 }
-inline auto IR::Addr::unhoistableOutputs(Dependencies deps, int depth) const {
+inline auto IR::Addr::unhoistableOutputs(const Dependencies &deps,
+                                         int depth) const {
   return outputEdgeIDs(deps, depth) | deps.registerEligibleFilter() |
          deps.outputAddrTransform();
 }
 
-/// Addr::operator->(Dependencies deps)
+/// Addr::operator->(const Dependencies& deps)
 /// drop `this` from the graph, and remove it from `deps`
-inline void IR::Addr::drop(Dependencies deps) {
+inline void IR::Addr::drop(Dependencies &deps) {
   // NOTE: this doesn't get removed from the `origAddr` list/the addrChain
   if (IR::Loop *L = getLoop(); L->getChild() == this) L->setChild(getNext());
   removeFromList();
@@ -1283,7 +1159,7 @@ inline void IR::Addr::drop(Dependencies deps) {
 }
 
 using math::StridedVector;
-inline auto Loop::getLegality(poly::Dependencies deps,
+inline auto Loop::getLegality(const poly::Dependencies &deps,
                               math::PtrVector<int32_t> loopDeps)
   -> LegalTransforms {
   const auto legal = getLegal();
@@ -1309,19 +1185,18 @@ inline auto Loop::getLegality(poly::Dependencies deps,
 } // namespace IR
 
 namespace poly {
-inline void Dependencies::copyDependencies(Arena<> *alloc, IR::Addr *src,
-                                           IR::Addr *dst) {
+inline void Dependencies::copyDependencies(IR::Addr *src, IR::Addr *dst) {
   for (int32_t id : src->inputEdgeIDs(*this)) {
     IR::Addr *input = this->input(Dependence::ID{id});
     if (input->isLoad()) continue;
     Dependence d = get(Dependence::ID{id}, input, dst);
-    addEdge(alloc, d);
+    addEdge(d);
   }
   for (int32_t id : src->outputEdgeIDs(*this)) {
     IR::Addr *output = this->output(Dependence::ID{id});
     if (output->isLoad()) continue;
     Dependence d = get(Dependence::ID{id}, dst, output);
-    addEdge(alloc, d);
+    addEdge(d);
   }
 }
 
