@@ -588,11 +588,11 @@ public:
     return *this;
   };
 
-  [[nodiscard]] constexpr auto size() const noexcept -> int32_t {
+  [[nodiscard]] constexpr auto size() const noexcept -> ptrdiff_t {
     return datadeps.size();
   }
 
-  constexpr auto tup(Dependence d, ptrdiff_t i) -> Tuple {
+  constexpr auto tup(Dependence d, int32_t i) -> Tuple {
     IR::Addr *out = d.output(), *in = d.input();
     if (out->getEdgeOut() >= 0) prevOut(ID{out->getEdgeOut()}) = i;
     if (in->getEdgeIn() >= 0) prevIn(ID{in->getEdgeIn()}) = i;
@@ -615,10 +615,10 @@ private:
   /// set(ID i, Dependence d)
   /// stores `d` at index `i`
   /// Dependence `d` is pushed to the fronts of the edgeOut and edgeIn chains.
-  constexpr void set(ptrdiff_t i, Dependence d) { datadeps[i] = tup(d, i); }
+  constexpr void set(int32_t i, Dependence d) { datadeps[i] = tup(d, i); }
   constexpr void set(ID i, Dependence d) { set(i.id, d); }
   auto addEdge(Dependence d) -> ID {
-    ptrdiff_t id{datadeps.size()};
+    int32_t id{int32_t(datadeps.size())};
     invariant(id >= 0);
     datadeps.push_back(tup(d, id));
     return {int32_t(id)};
@@ -907,10 +907,10 @@ public:
   constexpr auto inEdges() -> MutPtrVector<int32_t> {
     return datadeps.template get<NextEdgeInI>();
   }
-  constexpr auto outEdges() const -> PtrVector<int32_t> {
+  [[nodiscard]] constexpr auto outEdges() const -> PtrVector<int32_t> {
     return datadeps.template get<NextEdgeOutI>();
   }
-  constexpr auto inEdges() const -> PtrVector<int32_t> {
+  [[nodiscard]] constexpr auto inEdges() const -> PtrVector<int32_t> {
     return datadeps.template get<NextEdgeInI>();
   }
   // [[nodiscard]] constexpr auto outEdges() const -> PtrVector<int32_t> {
