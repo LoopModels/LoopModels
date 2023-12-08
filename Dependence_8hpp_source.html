@@ -635,11 +635,11 @@ $(function() {
 <div class="line"><a name="l00588"></a><span class="lineno">  588</span>&#160;    <span class="keywordflow">return</span> *<span class="keyword">this</span>;</div>
 <div class="line"><a name="l00589"></a><span class="lineno">  589</span>&#160;  };</div>
 <div class="line"><a name="l00590"></a><span class="lineno">  590</span>&#160; </div>
-<div class="line"><a name="l00591"></a><span class="lineno">  591</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> size() <span class="keyword">const</span> noexcept -&gt; int32_t {</div>
+<div class="line"><a name="l00591"></a><span class="lineno">  591</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> size() <span class="keyword">const</span> noexcept -&gt; ptrdiff_t {</div>
 <div class="line"><a name="l00592"></a><span class="lineno">  592</span>&#160;    <span class="keywordflow">return</span> datadeps.size();</div>
 <div class="line"><a name="l00593"></a><span class="lineno">  593</span>&#160;  }</div>
 <div class="line"><a name="l00594"></a><span class="lineno">  594</span>&#160; </div>
-<div class="line"><a name="l00595"></a><span class="lineno">  595</span>&#160;  constexpr <span class="keyword">auto</span> tup(<a class="code" href="structpoly_1_1poly_1_1Dependence.html">Dependence</a> d, ptrdiff_t i) -&gt; Tuple {</div>
+<div class="line"><a name="l00595"></a><span class="lineno">  595</span>&#160;  constexpr <span class="keyword">auto</span> tup(<a class="code" href="structpoly_1_1poly_1_1Dependence.html">Dependence</a> d, int32_t i) -&gt; Tuple {</div>
 <div class="line"><a name="l00596"></a><span class="lineno">  596</span>&#160;    <a class="code" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> *out = d.output(), *in = d.input();</div>
 <div class="line"><a name="l00597"></a><span class="lineno">  597</span>&#160;    <span class="keywordflow">if</span> (out-&gt;getEdgeOut() &gt;= 0) prevOut(<a class="code" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">ID</a>{out-&gt;getEdgeOut()}) = i;</div>
 <div class="line"><a name="l00598"></a><span class="lineno">  598</span>&#160;    <span class="keywordflow">if</span> (in-&gt;getEdgeIn() &gt;= 0) prevIn(<a class="code" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">ID</a>{in-&gt;getEdgeIn()}) = i;</div>
@@ -659,10 +659,10 @@ $(function() {
 <div class="line"><a name="l00612"></a><span class="lineno">  612</span>&#160;  }</div>
 <div class="line"><a name="l00613"></a><span class="lineno">  613</span>&#160; </div>
 <div class="line"><a name="l00614"></a><span class="lineno">  614</span>&#160;<span class="keyword">private</span>:</div>
-<div class="line"><a name="l00618"></a><span class="lineno">  618</span>&#160;  constexpr <span class="keywordtype">void</span> set(ptrdiff_t i, <a class="code" href="structpoly_1_1poly_1_1Dependence.html">Dependence</a> d) { datadeps[i] = tup(d, i); }</div>
+<div class="line"><a name="l00618"></a><span class="lineno">  618</span>&#160;  constexpr <span class="keywordtype">void</span> set(int32_t i, <a class="code" href="structpoly_1_1poly_1_1Dependence.html">Dependence</a> d) { datadeps[i] = tup(d, i); }</div>
 <div class="line"><a name="l00619"></a><span class="lineno">  619</span>&#160;  constexpr <span class="keywordtype">void</span> set(<a class="code" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">ID</a> i, <a class="code" href="structpoly_1_1poly_1_1Dependence.html">Dependence</a> d) { set(i.id, d); }</div>
 <div class="line"><a name="l00620"></a><span class="lineno">  620</span>&#160;  <span class="keyword">auto</span> addEdge(<a class="code" href="structpoly_1_1poly_1_1Dependence.html">Dependence</a> d) -&gt; <a class="code" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">ID</a> {</div>
-<div class="line"><a name="l00621"></a><span class="lineno">  621</span>&#160;    ptrdiff_t <span class="keywordtype">id</span>{datadeps.size()};</div>
+<div class="line"><a name="l00621"></a><span class="lineno">  621</span>&#160;    int32_t <span class="keywordtype">id</span>{int32_t(datadeps.size())};</div>
 <div class="line"><a name="l00622"></a><span class="lineno">  622</span>&#160;    invariant(<span class="keywordtype">id</span> &gt;= 0);</div>
 <div class="line"><a name="l00623"></a><span class="lineno">  623</span>&#160;    datadeps.push_back(tup(d, <span class="keywordtype">id</span>));</div>
 <div class="line"><a name="l00624"></a><span class="lineno">  624</span>&#160;    <span class="keywordflow">return</span> {int32_t(<span class="keywordtype">id</span>)};</div>
@@ -950,10 +950,10 @@ $(function() {
 <div class="line"><a name="l00907"></a><span class="lineno">  907</span>&#160;  constexpr <span class="keyword">auto</span> inEdges() -&gt; MutPtrVector&lt;int32_t&gt; {</div>
 <div class="line"><a name="l00908"></a><span class="lineno">  908</span>&#160;    <span class="keywordflow">return</span> datadeps.template get&lt;NextEdgeInI&gt;();</div>
 <div class="line"><a name="l00909"></a><span class="lineno">  909</span>&#160;  }</div>
-<div class="line"><a name="l00910"></a><span class="lineno">  910</span>&#160;  constexpr <span class="keyword">auto</span> outEdges() const -&gt; PtrVector&lt;int32_t&gt; {</div>
+<div class="line"><a name="l00910"></a><span class="lineno">  910</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> outEdges() const -&gt; PtrVector&lt;int32_t&gt; {</div>
 <div class="line"><a name="l00911"></a><span class="lineno">  911</span>&#160;    <span class="keywordflow">return</span> datadeps.template get&lt;NextEdgeOutI&gt;();</div>
 <div class="line"><a name="l00912"></a><span class="lineno">  912</span>&#160;  }</div>
-<div class="line"><a name="l00913"></a><span class="lineno">  913</span>&#160;  constexpr <span class="keyword">auto</span> inEdges() const -&gt; PtrVector&lt;int32_t&gt; {</div>
+<div class="line"><a name="l00913"></a><span class="lineno">  913</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> inEdges() const -&gt; PtrVector&lt;int32_t&gt; {</div>
 <div class="line"><a name="l00914"></a><span class="lineno">  914</span>&#160;    <span class="keywordflow">return</span> datadeps.template get&lt;NextEdgeInI&gt;();</div>
 <div class="line"><a name="l00915"></a><span class="lineno">  915</span>&#160;  }</div>
 <div class="line"><a name="l00916"></a><span class="lineno">  916</span>&#160;  <span class="comment">// [[nodiscard]] constexpr auto outEdges() const -&gt; PtrVector&lt;int32_t&gt; {</span></div>
