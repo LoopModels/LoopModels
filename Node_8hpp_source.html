@@ -381,7 +381,7 @@ $(function() {
 <div class="line"><a name="l00390"></a><span class="lineno">  390</span>&#160;      L = L-&gt;getOuterLoop();</div>
 <div class="line"><a name="l00391"></a><span class="lineno">  391</span>&#160;    <span class="keywordflow">return</span> L;</div>
 <div class="line"><a name="l00392"></a><span class="lineno">  392</span>&#160;  }</div>
-<div class="line"><a name="l00393"></a><span class="lineno">  393</span>&#160;  <span class="keyword">inline</span> <span class="keyword">auto</span> getLegality(poly::Dependencies, math::PtrVector&lt;int32_t&gt;)</div>
+<div class="line"><a name="l00393"></a><span class="lineno">  393</span>&#160;  <span class="keyword">inline</span> <span class="keyword">auto</span> getLegality(<span class="keyword">const</span> poly::Dependencies &amp;, math::PtrVector&lt;int32_t&gt;)</div>
 <div class="line"><a name="l00394"></a><span class="lineno">  394</span>&#160;    -&gt; LegalTransforms;</div>
 <div class="line"><a name="l00395"></a><span class="lineno">  395</span>&#160;};</div>
 <div class="line"><a name="l00396"></a><span class="lineno">  396</span>&#160;[[nodiscard]] <span class="keyword">inline</span> constexpr <span class="keyword">auto</span> Node::getLoop() const noexcept -&gt; Loop * {</div>
