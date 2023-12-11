@@ -92,17 +92,17 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&am
 <tr class="memitem:a56d8b397e648baabb65f5a0291dfea89"><td class="memItemLeft" align="right" valign="top"><a id="a56d8b397e648baabb65f5a0291dfea89"></a>
 constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Legality</b> (const <a class="el" href="structpoly_1_1CostModeling_1_1Legality.html">Legality</a> &amp;)=default</td></tr>
 <tr class="separator:a56d8b397e648baabb65f5a0291dfea89"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0347568911000bb18d3742014343ff80"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpoly_1_1CostModeling_1_1Legality.html#a0347568911000bb18d3742014343ff80">update</a> (<a class="el" href="classpoly_1_1poly_1_1Dependencies.html">poly::Dependencies</a> deps, <a class="el" href="classpoly_1_1IR_1_1Loop.html">IR::Loop</a> *L, <a class="el" href="structpoly_1_1poly_1_1Dependence.html">Dependence</a> d)</td></tr>
-<tr class="separator:a0347568911000bb18d3742014343ff80"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a054bdb6426904053a3ccd4ddf1751031"><td class="memItemLeft" align="right" valign="top"><a id="a054bdb6426904053a3ccd4ddf1751031"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>Legality</b> (<a class="el" href="structpoly_1_1CostModeling_1_1LoopDepSatisfaction.html">LoopDepSatisfaction</a> deps, <a class="el" href="classpoly_1_1IR_1_1Loop.html">IR::Loop</a> *L)</td></tr>
-<tr class="separator:a054bdb6426904053a3ccd4ddf1751031"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afbc46ac5b8fa0b9aaa43cc077959496b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpoly_1_1CostModeling_1_1Legality.html#afbc46ac5b8fa0b9aaa43cc077959496b">update</a> (<a class="el" href="classpoly_1_1poly_1_1Dependencies.html">poly::Dependencies</a> &amp;deps, <a class="el" href="classpoly_1_1IR_1_1Loop.html">IR::Loop</a> *L, <a class="el" href="structpoly_1_1poly_1_1Dependence.html">Dependence</a> d)</td></tr>
+<tr class="separator:afbc46ac5b8fa0b9aaa43cc077959496b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aae2fd3583c7834737efd4dbf5f38fe3f"><td class="memItemLeft" align="right" valign="top"><a id="aae2fd3583c7834737efd4dbf5f38fe3f"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>Legality</b> (<a class="el" href="structpoly_1_1CostModeling_1_1LoopDepSatisfaction.html">LoopDepSatisfaction</a> &amp;deps, <a class="el" href="classpoly_1_1IR_1_1Loop.html">IR::Loop</a> *L)</td></tr>
+<tr class="separator:aae2fd3583c7834737efd4dbf5f38fe3f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
-<tr class="memitem:a407b1daf8dc13a670330886cec41fa6b"><td class="memItemLeft" align="right" valign="top"><a id="a407b1daf8dc13a670330886cec41fa6b"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>deeperAccess</b> (<a class="el" href="classpoly_1_1poly_1_1Dependencies.html">poly::Dependencies</a> deps, <a class="el" href="classpoly_1_1IR_1_1Loop.html">IR::Loop</a> *L, <a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> *in) -&gt; bool</td></tr>
-<tr class="separator:a407b1daf8dc13a670330886cec41fa6b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9b9c5970ea55bfbab4b93b9c2da8e135"><td class="memItemLeft" align="right" valign="top"><a id="a9b9c5970ea55bfbab4b93b9c2da8e135"></a>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>deeperAccess</b> (const <a class="el" href="classpoly_1_1poly_1_1Dependencies.html">poly::Dependencies</a> &amp;deps, <a class="el" href="classpoly_1_1IR_1_1Loop.html">IR::Loop</a> *L, <a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> *in) -&gt; bool</td></tr>
+<tr class="separator:a9b9c5970ea55bfbab4b93b9c2da8e135"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
@@ -123,8 +123,8 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><b>canUnroll</b> {true}<
 <tr class="separator:a3d4caa439d5b710290466c03668bf467"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Member Function Documentation</h2>
-<a id="a0347568911000bb18d3742014343ff80"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a0347568911000bb18d3742014343ff80">&#9670;&nbsp;</a></span>update()</h2>
+<a id="afbc46ac5b8fa0b9aaa43cc077959496b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#afbc46ac5b8fa0b9aaa43cc077959496b">&#9670;&nbsp;</a></span>update()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -135,7 +135,7 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><b>canUnroll</b> {true}<
         <tr>
           <td class="memname">void poly::CostModeling::Legality::update </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="classpoly_1_1poly_1_1Dependencies.html">poly::Dependencies</a>&#160;</td>
+          <td class="paramtype"><a class="el" href="classpoly_1_1poly_1_1Dependencies.html">poly::Dependencies</a> &amp;&#160;</td>
           <td class="paramname"><em>deps</em>, </td>
         </tr>
         <tr>
