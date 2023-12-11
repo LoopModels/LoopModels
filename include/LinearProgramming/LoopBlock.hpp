@@ -137,8 +137,8 @@ class LoopBlock {
   // dict::map<llvm::User *, Addr *> userToMem{};
   // dict::set<llvm::User *> visited{};
   // llvm::LoopInfo *LI;
-  IR::Dependencies deps;
-  alloc::OwningArena<> allocator{};
+  IR::Dependencies &deps;
+  alloc::Arena<> &allocator;
   // we may turn off edges because we've exceeded its loop depth
   // or because the dependence has already been satisfied at an
   // earlier level.
@@ -153,6 +153,9 @@ class LoopBlock {
   };
 
 public:
+  constexpr LoopBlock(IR::Dependencies &deps_, alloc::Arena<> &allocator_)
+    : deps(deps_), allocator(allocator_) {}
+
   struct OptimizationResult {
     IR::AddrChain addr;
     ScheduledNode *nodes;
@@ -165,7 +168,6 @@ public:
     }
   };
 
-  constexpr LoopBlock() = default;
   [[nodiscard]] auto optimize(IR::Cache &cache, IR::TreeResult tr)
     -> OptimizationResult {
     // first, we peel loops for which affine repr failed
@@ -193,7 +195,11 @@ public:
   [[nodiscard]] constexpr auto getAllocator() -> Arena<> * {
     return &allocator;
   }
-  [[nodiscard]] constexpr auto getDependencies() const -> IR::Dependencies {
+  [[nodiscard]] constexpr auto getDependencies() -> IR::Dependencies & {
+    return deps;
+  }
+  [[nodiscard]] constexpr auto getDependencies() const
+    -> const IR::Dependencies & {
     return deps;
   }
 
@@ -273,7 +279,7 @@ private:
       if (load.getParent() != nullptr) {
         Arena<> *alloc = cache.getAllocator();
         IR::Addr *reload = ((Addr *)load)->reload(alloc);
-        deps.copyDependencies(alloc, load, reload);
+        deps.copyDependencies(load, reload);
         invariant(reload->isLoad());
         load = reload;
         addr.addAddr(reload);
@@ -506,9 +512,9 @@ private:
     return math::SVector<unsigned, 4>{edge.getNumLambda(), edge.getDynSymDim(),
                                       edge.getNumConstraints(), 1};
   }
-  static constexpr auto countAuxParamsAndConstraints(IR::Dependencies deps,
-                                                     ScheduledNode *nodes,
-                                                     int depth)
+  static constexpr auto
+  countAuxParamsAndConstraints(const IR::Dependencies &deps,
+                               ScheduledNode *nodes, int depth)
     -> math::SVector<unsigned, 4> {
     math::SVector<unsigned, 4> params{};
     assert(allZero(params));
@@ -522,8 +528,9 @@ private:
   using BackupSat = math::ResizeableView<std::array<uint8_t, 2>, ptrdiff_t>;
   using Backup = containers::Pair<BackupSchedule, BackupSat>;
 
-  static constexpr auto
-  setScheduleMemoryOffsets(Dependencies deps, ScheduledNode *nodes, unsigned d)
+  static constexpr auto setScheduleMemoryOffsets(const Dependencies &deps,
+                                                 ScheduledNode *nodes,
+                                                 unsigned d)
     -> std::array<unsigned, 3> {
     // C, lambdas, omegas, Phis
     unsigned numOmegaCoefs = 0, numPhiCoefs = 0, numSlack = 0;
@@ -540,8 +547,8 @@ private:
     }
     return {numOmegaCoefs, numPhiCoefs, numSlack};
   }
-  static constexpr auto calcCoefs(Dependencies deps, ScheduledNode *nodes,
-                                  int d) -> CoefCounts {
+  static constexpr auto calcCoefs(const Dependencies &deps,
+                                  ScheduledNode *nodes, int d) -> CoefCounts {
     auto [numOmegaCoefs, numPhiCoefs, numSlack] =
       setScheduleMemoryOffsets(deps, nodes, d);
     auto [numLambda, numBounding, numConstraints, numActiveEdges] =
@@ -878,7 +885,7 @@ private:
     // Get a top sorting of SCC's; because we couldn't solve the graph
     // with these dependencies fused, we'll try splitting them.
     ScheduledNode *components =
-      graph::stronglyConnectedComponents(ScheduleGraph(d), node);
+      graph::stronglyConnectedComponents(ScheduleGraph(deps, d), node);
     if (components->getNextComponent() == nullptr) return {};
     // components are sorted in topological order.
     // We split all of them, solve independently,
@@ -1156,9 +1163,9 @@ private:
 };
 inline auto
 operator<<(llvm::raw_ostream &os,
-           containers::Pair<ScheduledNode *, Dependencies> nodesdeps)
+           containers::Pair<ScheduledNode *, Dependencies *> nodesdeps)
   -> llvm::raw_ostream & {
-  auto [nodes, deps] = nodesdeps;
+  const auto &[nodes, deps] = nodesdeps;
   os << "\nLoopBlock graph:\n";
   size_t i = 0;
   for (ScheduledNode *v : nodes->getVertices()) {
@@ -1170,7 +1177,7 @@ operator<<(llvm::raw_ostream &os,
   os << "\nLoopBlock Edges:";
   for (ScheduledNode *inNode : nodes->getVertices()) {
     poly::AffineSchedule sin = inNode->getSchedule();
-    for (Dependence edge : nodes->outputEdges(deps)) {
+    for (Dependence edge : nodes->outputEdges(*deps)) {
       os << "\n\n\tEdge = " << edge;
       ScheduledNode *outNode = edge.output()->getNode();
       os << "Schedule In: s.getPhi() =" << sin.getPhi()

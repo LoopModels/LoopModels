@@ -61,7 +61,8 @@ namespace poly::IR {
 /// `x[i] = acc` are top sorted. The load `acc = x[i]` should be the very
 /// first output topologically -- afterall, it occus before the store!!
 /// TODO: does `Addr` hoisting handle this??
-constexpr inline void Addr::maybeReassociableReduction(Dependencies deps) {
+constexpr inline void
+Addr::maybeReassociableReduction(const Dependencies &deps) {
   if (isLoad()) return;
   // we should have a store whose first output edge is the load for
   // the following iteration. This iter is the reverse-time
@@ -193,8 +194,8 @@ struct LoopIndependent {
 /// loop independent. We use the `bool` rather than a `nullptr` or optional so
 /// that we can still return those results we did find on failure.
 ///  NOLINTNEXTLINE(misc-no-recursion)
-inline auto searchLoopIndependentUsers(IR::Dependencies deps, IR::Loop *L,
-                                       IR::Node *N, int depth,
+inline auto searchLoopIndependentUsers(const IR::Dependencies &deps,
+                                       IR::Loop *L, IR::Node *N, int depth,
                                        LoopDepSummary summary)
   -> LoopIndependent {
   if (N->dependsOnParentLoop()) return {summary, false};
@@ -239,9 +240,9 @@ inline auto searchLoopIndependentUsers(IR::Dependencies deps, IR::Loop *L,
 /// `R`: remove from loop, if not `nullptr`, set the parent of `N` to `R`
 /// `R` is applied recursivvely, forwarded to all calls.
 // NOLINTNEXTLINE(misc-no-recursion)
-inline auto visitLoopDependent(IR::Dependencies deps, IR::Loop *L, IR::Node *N,
-                               int depth, IR::Node *body, IR::Loop *R = nullptr)
-  -> IR::Node * {
+inline auto visitLoopDependent(const IR::Dependencies &deps, IR::Loop *L,
+                               IR::Node *N, int depth, IR::Node *body,
+                               IR::Loop *R = nullptr) -> IR::Node * {
   invariant(N->getVisitDepth() != 254);
   // N may have been visited as a dependent of an inner loop, which is why
   // `visited` accepts a depth argument
@@ -332,7 +333,7 @@ inline auto visitLoopDependent(IR::Dependencies deps, IR::Loop *L, IR::Node *N,
   if (R) hoist(N, R, depth - 1);
   return body;
 }
-inline void addBody(IR::Dependencies deps, IR::Loop *root, int depth,
+inline void addBody(const IR::Dependencies &deps, IR::Loop *root, int depth,
                     IR::Node *nodes) {
   IR::Exit exit{}; // use to capture last node
   IR::Node *body{&exit};
@@ -343,7 +344,8 @@ inline void addBody(IR::Dependencies deps, IR::Loop *root, int depth,
   if (last) last->setNext(nullptr);
   root->setLast(last);
 }
-inline void topologicalSort(IR::Dependencies deps, IR::Loop *root, int depth) {
+inline void topologicalSort(const IR::Dependencies &deps, IR::Loop *root,
+                            int depth) {
   // basic plan for the top sort:
   // We iterate across all users, once all of node's users have been added,
   // we push it to the front of the list. Thus, we get a top-sorted list.
@@ -383,8 +385,8 @@ inline void topologicalSort(IR::Dependencies deps, IR::Loop *root, int depth) {
     body = visitLoopDependent(deps, root, N, depth, body, P);
 }
 // NOLINTNEXTLINE(misc-no-recursion)
-inline auto buildSubGraph(IR::Dependencies deps, IR::Loop *root, int depth,
-                          uint32_t id) -> uint32_t {
+inline auto buildSubGraph(const IR::Dependencies &deps, IR::Loop *root,
+                          int depth, uint32_t id) -> uint32_t {
   // We build the instruction graph, via traversing the tree, and then
   // top sorting as we recurse out
   for (IR::Loop *child : root->subLoops())
@@ -396,7 +398,8 @@ inline auto buildSubGraph(IR::Dependencies deps, IR::Loop *root, int depth,
   topologicalSort(deps, root, depth);
   return id;
 }
-inline auto buildGraph(IR::Dependencies deps, IR::Loop *root) -> uint32_t {
+inline auto buildGraph(const IR::Dependencies &deps, IR::Loop *root)
+  -> uint32_t {
   // We build the instruction graph, via traversing the tree, and then
   // top sorting as we recurse out
   uint32_t id = 0;
@@ -445,7 +448,7 @@ inline auto hasFutureReads(Arena<> *alloc, dict::set<llvm::BasicBlock *> &LBBs,
 }
 
 struct LoopDepSatisfaction {
-  IR::Dependencies deps;
+  IR::Dependencies &deps;
   MutPtrVector<int32_t> loopDeps;
 
   constexpr auto dependencyIDs(IR::Loop *L) {
@@ -457,7 +460,7 @@ struct LoopDepSatisfaction {
 };
 
 class IROptimizer {
-  IR::Dependencies deps;
+  IR::Dependencies &deps;
   IR::Cache &instructions;
   dict::set<llvm::BasicBlock *> &LBBs;
   dict::set<llvm::CallBase *> &eraseCandidates;
@@ -474,7 +477,7 @@ class IROptimizer {
   /// to depencencies handled at that level.
   /// We can use these dependencies for searching reductions for
   /// trying to prove legality.
-  static auto loopDepSats(Arena<> *alloc, IR::Dependencies deps,
+  static auto loopDepSats(Arena<> *alloc, IR::Dependencies &deps,
                           lp::LoopBlock::OptimizationResult res)
     -> MutPtrVector<int32_t> {
     MutPtrVector<int32_t> loopDeps{math::vector<int32_t>(alloc, deps.size())};
@@ -669,7 +672,7 @@ class IROptimizer {
   };
 
 public:
-  IROptimizer(IR::Dependencies deps, IR::Cache &instr,
+  IROptimizer(IR::Dependencies &deps, IR::Cache &instr,
               dict::set<llvm::BasicBlock *> &loopBBs,
               dict::set<llvm::CallBase *> &eraseCandidates_, IR::Loop *root,
               Arena<> *lalloc, lp::LoopBlock::OptimizationResult res,

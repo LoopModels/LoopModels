@@ -193,12 +193,12 @@ public:
     }
   };
   template <bool Out> struct Deps {
-    poly::Dependencies dep;
+    const poly::Dependencies *dep;
 
     constexpr auto operator()(int32_t id) const {
       if constexpr (Out)
-        return dep.outputEdgeIDs(id) | std::views::transform(OutNode{dep});
-      else return dep.inputEdgeIDs(id) | std::views::transform(InNode{dep});
+        return dep->outputEdgeIDs(id) | std::views::transform(OutNode{dep});
+      else return dep->inputEdgeIDs(id) | std::views::transform(InNode{dep});
     }
     constexpr auto operator()(IR::Addr *a) const {
       if constexpr (Out) return (*this)(a->getEdgeOut());
@@ -206,11 +206,11 @@ public:
     }
   };
   template <bool Out> struct DepIDs {
-    poly::Dependencies dep;
+    const poly::Dependencies *dep;
 
     constexpr auto operator()(int32_t id) const {
-      if constexpr (Out) return dep.outputEdgeIDs(id);
-      else return dep.inputEdgeIDs(id);
+      if constexpr (Out) return dep->outputEdgeIDs(id);
+      else return dep->inputEdgeIDs(id);
     }
     constexpr auto operator()(IR::Addr *a) const {
       if constexpr (Out) return (*this)(a->getEdgeOut());
@@ -218,15 +218,15 @@ public:
     }
   };
   template <bool Out> struct DepFilter {
-    poly::Dependencies dep;
+    const poly::Dependencies *dep;
     unsigned depth;
 
     constexpr auto operator()(int32_t id) const {
       if constexpr (Out)
-        return dep.outputEdgeIDs(id) | dep.activeFilter(depth) |
+        return dep->outputEdgeIDs(id) | dep->activeFilter(depth) |
                std::views::transform(OutNode{dep});
       else
-        return dep.inputEdgeIDs(id) | dep.activeFilter(depth) |
+        return dep->inputEdgeIDs(id) | dep->activeFilter(depth) |
                std::views::transform(InNode{dep});
     }
     constexpr auto operator()(IR::Addr *a) const {
@@ -237,31 +237,31 @@ public:
 
   // all nodes that are memory inputs to this one; i.e. all parents
   // NOTE: we may reach each node multiple times
-  [[nodiscard]] inline auto inNeighbors(IR::Dependencies dep) {
+  [[nodiscard]] inline auto inNeighbors(const IR::Dependencies &dep) {
     return utils::NestedList{utils::ListRange{store, NextAddr{}},
-                             Deps<false>{dep}};
+                             Deps<false>{&dep}};
   }
   // all nodes that are memory inputs to this one; i.e. all parents
   // NOTE: we may reach each node multiple times
 
   // all nodes that are memory outputs of this one; i.e. all children
   // NOTE: we may reach each node multiple times
-  [[nodiscard]] inline auto outNeighbors(IR::Dependencies dep) {
+  [[nodiscard]] inline auto outNeighbors(const IR::Dependencies &dep) {
     return utils::NestedList{utils::ListRange{store, NextAddr{}},
-                             Deps<true>{dep}};
+                             Deps<true>{&dep}};
   }
-  [[nodiscard]] inline auto inputEdgeIds(IR::Dependencies dep) const {
+  [[nodiscard]] inline auto inputEdgeIds(const IR::Dependencies &dep) const {
     return utils::NestedList{utils::ListRange{store, NextAddr{}},
-                             DepIDs<false>{dep}};
+                             DepIDs<false>{&dep}};
   }
-  [[nodiscard]] inline auto outputEdgeIds(IR::Dependencies dep) const {
+  [[nodiscard]] inline auto outputEdgeIds(const IR::Dependencies &dep) const {
     return utils::NestedList{utils::ListRange{store, NextAddr{}},
-                             DepIDs<true>{dep}};
+                             DepIDs<true>{&dep}};
   }
-  [[nodiscard]] inline auto inputEdgeIds(IR::Dependencies dep,
+  [[nodiscard]] inline auto inputEdgeIds(const IR::Dependencies &dep,
                                          int depth) const {
     static_assert(std::forward_iterator<
-                  decltype(DepIDs<false>{dep}((IR::Addr *)nullptr).begin())>);
+                  decltype(DepIDs<false>{&dep}((IR::Addr *)nullptr).begin())>);
     static_assert(std::forward_iterator<decltype(utils::ListRange{
                     store, NextAddr{}}.begin())>);
     static_assert(std::forward_iterator<decltype(inputEdgeIds(dep).begin())>);
@@ -276,83 +276,82 @@ public:
     return outputEdgeIds(dep) | dep.activeFilter(depth);
   }
 
-  [[nodiscard]] inline auto inputEdges(IR::Dependencies dep) {
+  [[nodiscard]] inline auto inputEdges(const IR::Dependencies &dep) {
     return utils::NestedList{
       utils::ListRange{store, NextAddr{},
                        [](Addr *a) -> int32_t { return a->getEdgeIn(); }},
-      [=](int32_t id) {
+      [&](int32_t id) {
         return dep.inputEdgeIDs(id) |
-               std::views::transform([=](int32_t i) -> Dependence {
-                 IR::Dependencies d2 = dep;
-                 return d2.get(Dependence::ID{i});
+               std::views::transform([&](int32_t i) -> Dependence {
+                 return dep.get(Dependence::ID{i});
                });
       }};
   }
-  [[nodiscard]] inline auto outputEdges(IR::Dependencies dep) {
+  [[nodiscard]] inline auto outputEdges(const IR::Dependencies &dep) {
 
     return utils::NestedList{
       utils::ListRange{store, NextAddr{},
                        [](Addr *a) -> int32_t { return a->getEdgeOut(); }},
-      [=](int32_t id) {
+      [&](int32_t id) {
         return dep.outputEdgeIDs(id) |
-               std::views::transform([=](int32_t i) -> Dependence {
-                 IR::Dependencies d2 = dep;
-                 return d2.get(Dependence::ID{i});
+               std::views::transform([&](int32_t i) -> Dependence {
+                 return dep.get(Dependence::ID{i});
                });
       }};
   }
 
-  [[nodiscard]] inline auto inputEdges(IR::Dependencies dep, int depth) {
+  [[nodiscard]] inline auto inputEdges(const IR::Dependencies &dep, int depth) {
     return utils::NestedList{
       utils::ListRange{store, NextAddr{},
                        [](Addr *a) -> int32_t { return a->getEdgeIn(); }},
-      [=](int32_t id) {
+      [&](int32_t id) {
         return dep.inputEdgeIDs(id) | dep.activeFilter(depth) |
-               std::views::transform([=](int32_t i) -> Dependence {
-                 IR::Dependencies d2 = dep;
-                 return d2.get(Dependence::ID{i});
+               std::views::transform([&](int32_t i) -> Dependence {
+                 return dep.get(Dependence::ID{i});
                });
       }};
   }
-  [[nodiscard]] inline auto outputEdges(IR::Dependencies dep, int depth) {
+  [[nodiscard]] inline auto outputEdges(const IR::Dependencies &dep,
+                                        int depth) {
 
     return utils::NestedList{
       utils::ListRange{store, NextAddr{},
                        [](Addr *a) -> int32_t { return a->getEdgeOut(); }},
-      [=](int32_t id) {
+      [&](int32_t id) {
         return dep.outputEdgeIDs(id) | dep.activeFilter(depth) |
-               std::views::transform([=](int32_t i) -> Dependence {
-                 IR::Dependencies d2 = dep;
-                 return d2.get(Dependence::ID{i});
+               std::views::transform([&](int32_t i) -> Dependence {
+                 return dep.get(Dependence::ID{i});
                });
       }};
   }
 
   struct InNode {
-    poly::Dependencies dep;
-    constexpr auto operator()(int32_t id) -> ScheduledNode * {
-      return dep.input(Dependence::ID{id})->getNode();
+    const poly::Dependencies *dep;
+    constexpr auto operator()(int32_t id) const -> ScheduledNode * {
+      return dep->input(Dependence::ID{id})->getNode();
     }
   };
   struct OutNode {
-    poly::Dependencies dep;
-    constexpr auto operator()(int32_t id) -> ScheduledNode * {
-      return dep.output(Dependence::ID{id})->getNode();
+    const poly::Dependencies *dep;
+    constexpr auto operator()(int32_t id) const -> ScheduledNode * {
+      return dep->output(Dependence::ID{id})->getNode();
     }
   };
-  [[nodiscard]] inline auto outNeighbors(IR::Dependencies dep, unsigned depth) {
+  [[nodiscard]] inline auto outNeighbors(const IR::Dependencies &dep,
+                                         unsigned depth) {
     return utils::NestedList{
       utils::ListRange{store, NextAddr{}, GetEdge<true>{}},
-      DepFilter<true>{dep, depth}};
+      DepFilter<true>{&dep, depth}};
   }
-  [[nodiscard]] inline auto inNeighbors(IR::Dependencies dep, unsigned depth) {
+  [[nodiscard]] inline auto inNeighbors(const IR::Dependencies &dep,
+                                        unsigned depth) {
     return utils::NestedList{
       utils::ListRange{store, NextAddr{}, GetEdge<false>{}},
-      DepFilter<false>{dep, depth}};
+      DepFilter<false>{&dep, depth}};
   }
-  [[nodiscard]] inline auto hasActiveEdges(IR::Dependencies dep,
+  [[nodiscard]] inline auto hasActiveEdges(const IR::Dependencies &dep,
                                            unsigned depth) const -> bool {
-    const auto f = [=](int32_t d) {
+    const auto f = [&](int32_t d) {
       return !dep.isSat(Dependence::ID{d}, depth);
     };
     return std::ranges::any_of(inputEdgeIds(dep), f) ||
@@ -483,12 +482,13 @@ static_assert(std::is_trivially_destructible_v<ScheduledNode>);
 static_assert(sizeof(ScheduledNode) <= 64); // fits in cache line
 
 class ScheduleGraph {
-  IR::Dependencies deps;
+  const IR::Dependencies &deps;
   unsigned depth_;
 
 public:
   using VertexType = ScheduledNode;
-  constexpr ScheduleGraph(unsigned depth) : depth_(depth) {}
+  constexpr ScheduleGraph(const IR::Dependencies &deps_, unsigned depth)
+    : deps(deps_), depth_(depth) {}
 
   [[nodiscard]] static constexpr auto getVertices(ScheduledNode *nodes)
     -> utils::ListRange<ScheduledNode, utils::GetNext, utils::Identity> {
@@ -510,10 +510,14 @@ public:
 
 namespace graph {
 // static_assert(AbstractPtrGraph<lp::ScheduledNode>);
-static_assert(std::forward_iterator<
-              decltype(lp::ScheduleGraph{0}.outNeighbors(nullptr).begin())>);
-static_assert(std::forward_iterator<
-              decltype(lp::ScheduleGraph{0}.inNeighbors(nullptr).begin())>);
+static_assert(std::forward_iterator<decltype(lp::ScheduleGraph{
+                std::declval<const IR::Dependencies &>(), 0}
+                                               .outNeighbors(nullptr)
+                                               .begin())>);
+static_assert(std::forward_iterator<decltype(lp::ScheduleGraph{
+                std::declval<const IR::Dependencies &>(), 0}
+                                               .inNeighbors(nullptr)
+                                               .begin())>);
 static_assert(AbstractPtrGraph<lp::ScheduleGraph>);
 } // namespace graph
 } // namespace poly
