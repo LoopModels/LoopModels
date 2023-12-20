@@ -287,6 +287,8 @@ static_assert(sizeof(Node) == 4 * sizeof(Node *) + 8);
 /// last is the last instruction in the body
 /// exit is the associated exit block
 class Loop : public Node {
+  // TOOD: this is to be replaced with
+  // the `Legality` struct
   enum LegalTransforms {
     Unknown = 0,
     DependenceFree = 1,

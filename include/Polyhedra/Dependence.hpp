@@ -65,7 +65,7 @@ struct Dependence {
   constexpr auto getSimplexPair() -> std::array<Valid<math::Simplex>, 2> {
     return {dependenceSatisfaction, dependenceBounding};
   }
-  constexpr auto getMeta() const -> uint8_t { return meta; }
+  [[nodiscard]] constexpr auto getMeta() const -> uint8_t { return meta; }
 
   // public:
   friend class Dependencies;
@@ -170,6 +170,8 @@ struct Dependence {
     return in->getArrayPointer();
   }
   /// indicates whether forward is non-empty
+  /// Direction in simplex [x,y]: Forward ? x -> y : y -> x
+  /// i.e., is the simplex `[in, out]` (forward) or `[out, in]` (!forward)
   [[nodiscard]] constexpr auto isForward() const -> bool { return meta & 1; }
   [[nodiscard]] constexpr auto nodeIn() const -> const lp::ScheduledNode * {
     return in->getNode();
