@@ -113,8 +113,7 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getTopPosit
 <tr class="separator:ac61084d6490f7fb15f6d2504adb5d2f4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab49520c0888ccdf75f17d8f7de22023e"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1IR_1_1Addr.html#ab49520c0888ccdf75f17d8f7de22023e">Addr</a> (const llvm::SCEVUnknown *arrayPtr, llvm::Instruction *user, unsigned numLoops)</td></tr>
 <tr class="separator:ab49520c0888ccdf75f17d8f7de22023e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a136186b97137aa0fcfd884a7033ceb0d"><td class="memItemLeft" align="right" valign="top"><a id="a136186b97137aa0fcfd884a7033ceb0d"></a>
-constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>rotate</b> (Valid&lt; <a class="el" href="classpoly_1_1poly_1_1Loop.html">poly::Loop</a> &gt; explicitLoop, SquarePtrMatrix&lt; int64_t &gt; Pinv, int64_t denom, PtrVector&lt; int64_t &gt; omega, int64_t *offsets)</td></tr>
+<tr class="memitem:a136186b97137aa0fcfd884a7033ceb0d"><td class="memItemLeft" align="right" valign="top">constexpr void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1IR_1_1Addr.html#a136186b97137aa0fcfd884a7033ceb0d">rotate</a> (Valid&lt; <a class="el" href="classpoly_1_1poly_1_1Loop.html">poly::Loop</a> &gt; explicitLoop, SquarePtrMatrix&lt; int64_t &gt; Pinv, int64_t denom, PtrVector&lt; int64_t &gt; omega, int64_t *offsets)</td></tr>
 <tr class="separator:a136186b97137aa0fcfd884a7033ceb0d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a09520f29a50bb1d2f3042b789824cb2d"><td class="memItemLeft" align="right" valign="top"><a id="a09520f29a50bb1d2f3042b789824cb2d"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>indexedByInnermostLoop</b> () -&gt; bool</td></tr>
@@ -834,6 +833,61 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><b>dependsOnParentLoop_<
 <p>we have the store <code>x[i]</code> is the source for the <code>x[i]</code> load on a future <code>j</code> iteration. However, our IR would be optimized into:</p>
 <p>for (int i = 0; i &lt; I; ++i){ acc = x[i]; for (int j = 0; j &lt; J; ++j) acc += A[j,i] * y[j]; x[i] = acc; }</p>
 <p>The same thing applies: <code>j</code> is the loop that satifies the dependency, but we hoisted the load/store pair out. This must be called after <code>sortEdges</code>, so that output edges of the store <code>x[i] = acc</code> are top sorted. The load <code>acc = x[i]</code> should be the very first output topologically &ndash; afterall, it occus before the store!! TODO: does <code><a class="el" href="classpoly_1_1IR_1_1Addr.html">Addr</a></code> hoisting handle this?? </p>
+
+</div>
+</div>
+<a id="a136186b97137aa0fcfd884a7033ceb0d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a136186b97137aa0fcfd884a7033ceb0d">&#9670;&nbsp;</a></span>rotate()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">constexpr void poly::IR::Addr::rotate </td>
+          <td>(</td>
+          <td class="paramtype">Valid&lt; <a class="el" href="classpoly_1_1poly_1_1Loop.html">poly::Loop</a> &gt;&#160;</td>
+          <td class="paramname"><em>explicitLoop</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">SquarePtrMatrix&lt; int64_t &gt;&#160;</td>
+          <td class="paramname"><em>Pinv</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int64_t&#160;</td>
+          <td class="paramname"><em>denom</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">PtrVector&lt; int64_t &gt;&#160;</td>
+          <td class="paramname"><em>omega</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int64_t *&#160;</td>
+          <td class="paramname"><em>offsets</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">constexpr</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>This gets called to rotate so that we can make direct comparisons down the road without needing rotations. </p>
 
 </div>
 </div>

@@ -10,5 +10,5 @@ var searchData=
   ['removeemptymask_149',['removeEmptyMask',['../structpoly_1_1IR_1_1Predicate_1_1Intersection.html#a03f0fec36c260a442aa37efaae474cdd',1,'poly::IR::Predicate::Intersection']]],
   ['replacealluseswith_150',['replaceAllUsesWith',['../classpoly_1_1IR_1_1Cache.html#a40325b31d215da23367410a8eb41519f',1,'poly::IR::Cache']]],
   ['result_151',['Result',['../structpoly_1_1lp_1_1Result.html',1,'poly::lp']]],
-  ['rotate_152',['rotate',['../classpoly_1_1poly_1_1Loop.html#a03240e7893974248eddd72423304b2b5',1,'poly::poly::Loop']]]
+  ['rotate_152',['rotate',['../classpoly_1_1IR_1_1Addr.html#a136186b97137aa0fcfd884a7033ceb0d',1,'poly::IR::Addr::rotate()'],['../classpoly_1_1poly_1_1Loop.html#a03240e7893974248eddd72423304b2b5',1,'poly::poly::Loop::rotate()']]]
 ];

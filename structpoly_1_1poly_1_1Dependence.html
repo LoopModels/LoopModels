@@ -139,9 +139,7 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>preventsReo
 <tr class="memitem:a2d8d2d9c5f6e03014aeff9730c60e98e"><td class="memItemLeft" align="right" valign="top"><a id="a2d8d2d9c5f6e03014aeff9730c60e98e"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getArrayPointer</b> () -&gt; const llvm::SCEV *</td></tr>
 <tr class="separator:a2d8d2d9c5f6e03014aeff9730c60e98e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af0d8b4e19c0fd884c1b46874a5cffd65"><td class="memItemLeft" align="right" valign="top"><a id="af0d8b4e19c0fd884c1b46874a5cffd65"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpoly_1_1poly_1_1Dependence.html#af0d8b4e19c0fd884c1b46874a5cffd65">isForward</a> () const -&gt; bool</td></tr>
-<tr class="memdesc:af0d8b4e19c0fd884c1b46874a5cffd65"><td class="mdescLeft">&#160;</td><td class="mdescRight">indicates whether forward is non-empty <br /></td></tr>
+<tr class="memitem:af0d8b4e19c0fd884c1b46874a5cffd65"><td class="memItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpoly_1_1poly_1_1Dependence.html#af0d8b4e19c0fd884c1b46874a5cffd65">isForward</a> () const -&gt; bool</td></tr>
 <tr class="separator:af0d8b4e19c0fd884c1b46874a5cffd65"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a90ee1fb55e9189d63060b6154534f27c"><td class="memItemLeft" align="right" valign="top"><a id="a90ee1fb55e9189d63060b6154534f27c"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>nodeIn</b> () const -&gt; const <a class="el" href="classpoly_1_1lp_1_1ScheduledNode.html">lp::ScheduledNode</a> *</td></tr>
@@ -341,6 +339,32 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> 
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p><a class="el" href="structpoly_1_1poly_1_1Dependence.html">Dependence</a> Represents a dependence relationship between two memory accesses. It contains simplices representing constraints that affine schedules are allowed to take. </p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
+<a id="af0d8b4e19c0fd884c1b46874a5cffd65"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af0d8b4e19c0fd884c1b46874a5cffd65">&#9670;&nbsp;</a></span>isForward()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">constexpr auto poly::poly::Dependence::isForward </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const -&gt; bool </td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">constexpr</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>indicates whether forward is non-empty Direction in simplex [x,y]: Forward ? x -&gt; y : y -&gt; x i.e., is the simplex <code>[in, out]</code> (forward) or <code>[out, in]</code> (!forward) </p>
+
+</div>
+</div>
 <a id="ad61450183ac23f948dd96d0b8090bc00"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ad61450183ac23f948dd96d0b8090bc00">&#9670;&nbsp;</a></span>setSatLevelLP()</h2>
 
