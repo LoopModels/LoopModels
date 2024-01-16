@@ -185,6 +185,8 @@ public:
                   numLoops),
       basePointer(arrayPtr), instr(user){};
 
+  /// This gets called to rotate so that we can make direct comparisons down the
+  /// road without needing rotations.
   constexpr void rotate(Valid<poly::Loop> explicitLoop,
                         SquarePtrMatrix<int64_t> Pinv, int64_t denom,
                         PtrVector<int64_t> omega, int64_t *offsets) {

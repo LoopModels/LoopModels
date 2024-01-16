@@ -1,4 +1,3 @@
-
 #pragma once
 
 #include "Dicts/BumpMapSet.hpp"
@@ -784,6 +783,30 @@ public:
 // In this example, note that the region `j_1 > i^0_s+3` is empty
 // so we have one parallel region, and then one serial region.
 //
+// Lets consider simpler checks. We have
+// [ 1 0 ] : x[i] -=
+// [ 0 1 ] : x[j]
+// [ 1 ]   : x[i] /=
+// we have a dependency when `i == j`. `i` carries the dependency, but we can
+// peel off the independent iters from `j`, and unroll `i` for these.
+//
+// How to identify:
+// [ 1 -1 ]
+// vs, if we had two `x[i]` or two `x[j]`
+// [ 0, 0 ]
+// An idea: look for non-zero so we can peel?
+// Or should we look specifically for `x[i] == x[j]` type pattern?
+// E.g., if we had
+// [ i,  j, k,  l ]
+// [ 2, -1, 2, -1 ]
+// we'd need a splitting algorithm.
+// E.g., split on the 2nd loop, so we get `j == 2*i + 2*k - l`
+// With this, we'd split iterations into groups
+// j  < 2*i + 2*k - l
+// j == 2*i + 2*k - l
+// j  > 2*i + 2*k - l
+// Subsetting the `k` and `l` iteration spaces may be a little annoying,
+// so we may initially want to restrict ourselves to peeling the innermost loop.
 ///
 /// Optimize the schedule
 inline void optimize(IR::Dependencies deps, IR::Cache &instr,
