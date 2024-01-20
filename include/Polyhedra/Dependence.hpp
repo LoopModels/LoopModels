@@ -1099,6 +1099,10 @@ public:
     };
     return std::views::filter(f);
   }
+  /// NOTE: this method uses `in` and `out` to check for reorderability, as
+  /// these get rotated after the simplex solve, while the stored `DepPoly` and
+  /// simplices do not.
+  inline void calcReorderability(IR::Loop *, int32_t);
 };
 
 } // namespace poly
@@ -1202,6 +1206,33 @@ inline void Dependencies::copyDependencies(IR::Addr *src, IR::Addr *dst) {
   }
 }
 
+inline void Dependencies::calcReorderability(IR::Loop *L, int32_t id) {
+  IR::Addr *in = input(Dependence::ID{id}), *out = output(Dependence::ID{id});
+  // clang-format off
+  // If we have a dependency nested inside `L`, we won't be able to reorder if either
+  // a) that dependency's output is `in`
+  // b) that dependency's input is `out`
+  // as we'd then have to maintain the order of this loop level's evaluations with respect
+  // to the subloop.
+  // Otherwise, we check
+  // 1. If this dependency may be peeled. For this, it must
+  //   a) be indexed by both `L` and a subloop of `L`.
+  //   b) have an equality relation, so that it occurs for a single iteration fo the subloop.
+  //   Then, we can split the subloop across this value, scalarizing around it.
+  // 2. Is this dependency reassociable? E.g., if it's connected by reassociable adds
+  //   (such as integer adds, or floating point with the reassociable FMF), then mark it as such.
+  // clang-format on
+  bool inDepends =
+    std::ranges::any_of(in->inputEdgeIDs(*this), [&](int32_t i) -> bool {
+      IR::Addr *a = input(Dependence::ID{i});
+      return (a->getLoop() != L) && L->contains(a);
+    });
+  bool outDepended =
+    std::ranges::any_of(out->outputEdgeIDs(*this), [&](int32_t i) -> bool {
+      IR::Addr *a = output(Dependence::ID{i});
+      return (a->getLoop() != L) && L->contains(a);
+    });
+}
 } // namespace poly
 
 } // namespace poly
