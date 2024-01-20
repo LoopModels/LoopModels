@@ -717,17 +717,23 @@ public:
 //     x[i+2] -= x[j]*U[j,i+2];
 //     x[i+3] -= x[j]*U[j,i+3];
 //   }
+//   // j+1 iteration for i=i iter goes here (but doesn't happen)
 //   x[i+1] /= U[i+1,i+1]; // store 1
 //   { // perform unrolled j = i + 1 iter
 //     int j = i+1; // these all depend on store 1
 //     x[i+2] -= x[j]*U[j,i+2];
 //     x[i+3] -= x[j]*U[j,i+3];
 //   }
+//   // j+2 iteration for i=i iter goes here (but doesn't happen)
+//   // j+2 iteration for i=i+1 iter goes here (but doesn't happen)
 //   x[i+2] /= U[i+2,i+2]; // store 2
 //   { // perform unrolled j = i + 2 iter
 //     int j = i+2; // this depends on store 2
 //     x[i+3] -= x[j]*U[j,i+3];
 //   }
+//   // j+3 iteration for i=i iter goes here (but doesn't happen)
+//   // j+3 iteration for i=i+1 iter goes here (but doesn't happen)
+//   // j+3 iteration for i=i+2 iter goes here (but doesn't happen)
 //   x[i+3] /= U[i+3,i+3];
 // }
 // The key to legality here is that we peel off the dependence polyhedra
