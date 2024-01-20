@@ -239,8 +239,47 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>outputAddrT
 <tr class="memitem:a63de09031672cf984070202444ade954"><td class="memItemLeft" align="right" valign="top"><a id="a63de09031672cf984070202444ade954"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>registerEligibleFilter</b> () const</td></tr>
 <tr class="separator:a63de09031672cf984070202444ade954"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a134162ae7e87f7c0ce8d233a9d24e996"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1poly_1_1Dependencies.html#a134162ae7e87f7c0ce8d233a9d24e996">calcReorderability</a> (<a class="el" href="classpoly_1_1IR_1_1Loop.html">IR::Loop</a> *, int32_t)</td></tr>
+<tr class="separator:a134162ae7e87f7c0ce8d233a9d24e996"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Member Function Documentation</h2>
+<a id="a134162ae7e87f7c0ce8d233a9d24e996"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a134162ae7e87f7c0ce8d233a9d24e996">&#9670;&nbsp;</a></span>calcReorderability()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void poly::poly::Dependencies::calcReorderability </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classpoly_1_1IR_1_1Loop.html">IR::Loop</a> *&#160;</td>
+          <td class="paramname"><em>L</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int32_t&#160;</td>
+          <td class="paramname"><em>id</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>NOTE: this method uses <code>in</code> and <code>out</code> to check for reorderability, as these get rotated after the simplex solve, while the stored <code><a class="el" href="classpoly_1_1poly_1_1DepPoly.html">DepPoly</a></code> and simplices do not. </p>
+
+</div>
+</div>
 <a id="a2aded15694d978e2abbb32d52a9fd059"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a2aded15694d978e2abbb32d52a9fd059">&#9670;&nbsp;</a></span>registerEligible()</h2>
 
