@@ -468,7 +468,7 @@ public:
     invariant(ptrdiff_t(R.numCol()), getNumLoops());
     invariant(ptrdiff_t(R.numRow()), getNumLoops());
     auto A{getA()};
-    const auto [M, N] = A.size();
+    const auto [M, N] = shape(A);
     auto syms{getSyms()};
     Valid<Loop> aln{Loop::allocate(alloc, L, ptrdiff_t(M) + numExtraVar,
                                    numLoops, syms, nonNeg)};

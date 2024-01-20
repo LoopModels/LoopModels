@@ -126,14 +126,18 @@ struct Legality {
   }
   constexpr Legality() = default;
   constexpr Legality(const Legality &) = default;
+  // deeperAccess(const poly::Dependencies &deps, IR::Loop *L, IR::Addr *in)
+  // are any of the outputs of `in` in a subloop of `L`
   static auto deeperAccess(const poly::Dependencies &deps, IR::Loop *L,
                            IR::Addr *in) -> bool {
-    return std::ranges::any_of(in->outputEdgeIDs(deps), [&](int32_t id) {
-      IR::Addr *a = deps.output(Dependence::ID{id});
-      return (a->getLoop() != L) && L->contains(a);
-    });
+    return std::ranges::any_of(in->outputEdgeIDs(deps),
+                               [&](int32_t id) -> bool {
+                                 IR::Addr *a = deps.output(Dependence::ID{id});
+                                 return (a->getLoop() != L) && L->contains(a);
+                               });
   }
   void update(poly::Dependencies &deps, IR::Loop *L, Dependence d) {
+    // note: the dependence hasn't been rotated
     IR::Addr *in = d.out, *out = d.in;
     if (d.revTimeEdge() && (in->reassociableReductionPair() != out)) {
       ++unordered_reduction_count;

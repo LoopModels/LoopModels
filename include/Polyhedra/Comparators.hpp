@@ -13,7 +13,6 @@
 #include <Math/VectorGreatestCommonDivisor.hpp>
 #include <Utilities/Invariant.hpp>
 #include <algorithm>
-#include <cassert>
 #include <cstddef>
 #include <cstdint>
 
@@ -126,9 +125,9 @@ template <typename T> struct BaseComparator {
                                             PtrVector<int64_t> y) const
     -> bool {
     const ptrdiff_t N = getNumConstTerms();
-    assert(delta.size() >= N);
-    assert(x.size() >= N);
-    assert(y.size() >= N);
+    invariant(delta.size() >= N);
+    invariant(x.size() >= N);
+    invariant(y.size() >= N);
     for (ptrdiff_t n = 0; n < N; ++n) delta[n] = x[n] - y[n];
     return static_cast<const T *>(this)->greaterEqual(delta);
   }
@@ -145,8 +144,8 @@ template <typename T> struct BaseComparator {
   [[nodiscard]] constexpr auto greater(PtrVector<int64_t> x,
                                        PtrVector<int64_t> y) const -> bool {
     const ptrdiff_t N = getNumConstTerms();
-    assert(N <= x.size());
-    assert(N <= y.size());
+    invariant(N <= x.size());
+    invariant(N <= y.size());
     Vector<int64_t> delta(N);
     for (ptrdiff_t n = 0; n < N; ++n) delta[n] = x[n] - y[n];
     --delta[0];
@@ -170,7 +169,7 @@ template <typename T> struct BaseComparator {
   [[nodiscard]] constexpr auto lessEqual(MutPtrVector<int64_t> x) const
     -> bool {
     const ptrdiff_t N = getNumConstTerms();
-    assert(N <= x.size());
+    invariant(N <= x.size());
     for (ptrdiff_t n = 0; n < N; ++n) x[n] *= -1;
     bool ret = static_cast<const T *>(this)->greaterEqual(x);
     for (ptrdiff_t n = 0; n < N; ++n) x[n] *= -1;
@@ -178,7 +177,7 @@ template <typename T> struct BaseComparator {
   }
   [[nodiscard]] constexpr auto lessEqual(PtrVector<int64_t> x) const -> bool {
     const ptrdiff_t N = getNumConstTerms();
-    assert(N <= x.size());
+    invariant(N <= x.size());
     Vector<int64_t> y{x[_(0, N)]};
     return lessEqual(y);
   }
@@ -193,13 +192,13 @@ template <typename T> struct BaseComparator {
   [[nodiscard]] constexpr auto lessEqual(PtrVector<int64_t> x, int64_t y) const
     -> bool {
     const ptrdiff_t N = getNumConstTerms();
-    assert(N <= x.size());
+    invariant(N <= x.size());
     Vector<int64_t> z{x[_(0, N)]};
     return lessEqual(z, y);
   }
   [[nodiscard]] constexpr auto less(MutPtrVector<int64_t> x) const -> bool {
     const ptrdiff_t N = getNumConstTerms();
-    assert(N <= x.size());
+    invariant(N <= x.size());
     int64_t x0 = x[0];
     x[0] = -x0 - 1;
     for (ptrdiff_t i = 1; i < N; ++i) x[i] *= -1;
@@ -210,7 +209,7 @@ template <typename T> struct BaseComparator {
   }
   [[nodiscard]] constexpr auto less(PtrVector<int64_t> x) const -> bool {
     const ptrdiff_t N = getNumConstTerms();
-    assert(N <= x.size());
+    invariant(N <= x.size());
     Vector<int64_t> y{x[_(0, N)]};
     return less(y);
   }
@@ -223,7 +222,7 @@ template <typename T> struct BaseComparator {
   [[nodiscard]] constexpr auto greater(PtrVector<int64_t> x) const -> bool {
     // TODO: avoid this needless memcopy and (possible) allocation?
     const ptrdiff_t N = getNumConstTerms();
-    assert(N <= x.size());
+    invariant(N <= x.size());
     Vector<int64_t> xm{x[_(0, N)]};
     return greater(math::view(xm));
   }
@@ -237,8 +236,8 @@ template <typename T> struct BaseComparator {
                                              PtrVector<int64_t> y) const
     -> bool {
     const ptrdiff_t N = getNumConstTerms();
-    assert(x.size() >= N);
-    assert(y.size() >= N);
+    invariant(x.size() >= N);
+    invariant(y.size() >= N);
     if (x[_(0, N)] == y[_(0, N)]) return true;
     Vector<int64_t> delta{x[_(0, N)] - y[_(0, N)]};
     return equal(delta);
@@ -836,7 +835,7 @@ constexpr void moveEqualities(DenseMatrix<int64_t> &, EmptyMatrix<int64_t>,
 constexpr void moveEqualities(DenseMatrix<int64_t> &A, math::IntMatrix<> &E,
                               const Comparator auto &C) {
   const ptrdiff_t numVar = ptrdiff_t(E.numCol());
-  assert(A.numCol() == numVar);
+  invariant(A.numCol() == numVar);
   if (A.numRow() <= 1) return;
   for (ptrdiff_t o = ptrdiff_t(A.numRow()) - 1; o > 0;) {
     for (ptrdiff_t i = o--; i < A.numRow(); ++i) {
